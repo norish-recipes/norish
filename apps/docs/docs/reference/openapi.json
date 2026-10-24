@@ -436,6 +436,38 @@
                         "null"
                       ]
                     },
+                    "nutritionExtras": {
+                      "anyOf": [
+                        {
+                          "type": "object",
+                          "propertyNames": {
+                            "type": "string",
+                            "enum": [
+                              "saturatedFat",
+                              "monounsaturatedFat",
+                              "polyunsaturatedFat",
+                              "transFat",
+                              "sugars",
+                              "fiber",
+                              "cholesterol",
+                              "sodium",
+                              "potassium",
+                              "calcium",
+                              "iron",
+                              "vitaminC",
+                              "vitaminA"
+                            ]
+                          },
+                          "additionalProperties": {
+                            "type": "number",
+                            "minimum": 0
+                          }
+                        },
+                        {
+                          "type": "null"
+                        }
+                      ]
+                    },
                     "originCountry": {
                       "type": [
                         "string",
@@ -1014,13 +1046,39 @@
                                 "number",
                                 "null"
                               ]
+                            },
+                            "extras": {
+                              "type": "object",
+                              "propertyNames": {
+                                "type": "string",
+                                "enum": [
+                                  "saturatedFat",
+                                  "monounsaturatedFat",
+                                  "polyunsaturatedFat",
+                                  "transFat",
+                                  "sugars",
+                                  "fiber",
+                                  "cholesterol",
+                                  "sodium",
+                                  "potassium",
+                                  "calcium",
+                                  "iron",
+                                  "vitaminC",
+                                  "vitaminA"
+                                ]
+                              },
+                              "additionalProperties": {
+                                "type": "number"
+                              },
+                              "description": "Other nutrients per serving, only those known: cholesterol, sodium, potassium, calcium, iron and vitaminC in milligrams, vitaminA in micrograms RAE, the rest in grams. The recipe's own value wins; the others are worked out from its lines."
                             }
                           },
                           "required": [
                             "calories",
                             "fat",
                             "carbs",
-                            "protein"
+                            "protein",
+                            "extras"
                           ],
                           "additionalProperties": false
                         },
@@ -1080,6 +1138,33 @@
                         ]
                       },
                       "description": "Datasets a worked-out total took a number from."
+                    },
+                    "extrasCoverage": {
+                      "type": "object",
+                      "propertyNames": {
+                        "type": "string",
+                        "enum": [
+                          "saturatedFat",
+                          "monounsaturatedFat",
+                          "polyunsaturatedFat",
+                          "transFat",
+                          "sugars",
+                          "fiber",
+                          "cholesterol",
+                          "sodium",
+                          "potassium",
+                          "calcium",
+                          "iron",
+                          "vitaminC",
+                          "vitaminA"
+                        ]
+                      },
+                      "additionalProperties": {
+                        "type": "number",
+                        "minimum": 0,
+                        "maximum": 1
+                      },
+                      "description": "For each extra nutrient, the share (0 to 1) of the counted ingredients by weight whose food knew it; 1 where the recipe states it. Below 1 the value is low by whatever the other ingredients hold."
                     }
                   },
                   "required": [
@@ -1087,7 +1172,8 @@
                     "perServing",
                     "estimated",
                     "leftOut",
-                    "credits"
+                    "credits",
+                    "extrasCoverage"
                   ],
                   "additionalProperties": false
                 }
@@ -1327,6 +1413,38 @@
                                 "type": "integer",
                                 "minimum": -2147483648,
                                 "maximum": 2147483647
+                              },
+                              {
+                                "type": "null"
+                              }
+                            ]
+                          },
+                          "nutritionExtras": {
+                            "anyOf": [
+                              {
+                                "type": "object",
+                                "propertyNames": {
+                                  "type": "string",
+                                  "enum": [
+                                    "saturatedFat",
+                                    "monounsaturatedFat",
+                                    "polyunsaturatedFat",
+                                    "transFat",
+                                    "sugars",
+                                    "fiber",
+                                    "cholesterol",
+                                    "sodium",
+                                    "potassium",
+                                    "calcium",
+                                    "iron",
+                                    "vitaminC",
+                                    "vitaminA"
+                                  ]
+                                },
+                                "additionalProperties": {
+                                  "type": "number",
+                                  "minimum": 0
+                                }
                               },
                               {
                                 "type": "null"
@@ -1634,6 +1752,38 @@
                     "type": [
                       "string",
                       "null"
+                    ]
+                  },
+                  "nutritionExtras": {
+                    "anyOf": [
+                      {
+                        "type": "object",
+                        "propertyNames": {
+                          "type": "string",
+                          "enum": [
+                            "saturatedFat",
+                            "monounsaturatedFat",
+                            "polyunsaturatedFat",
+                            "transFat",
+                            "sugars",
+                            "fiber",
+                            "cholesterol",
+                            "sodium",
+                            "potassium",
+                            "calcium",
+                            "iron",
+                            "vitaminC",
+                            "vitaminA"
+                          ]
+                        },
+                        "additionalProperties": {
+                          "type": "number",
+                          "minimum": 0
+                        }
+                      },
+                      {
+                        "type": "null"
+                      }
                     ]
                   },
                   "originCountry": {
@@ -2113,6 +2263,38 @@
                                 }
                               ]
                             },
+                            "nutritionExtras": {
+                              "anyOf": [
+                                {
+                                  "type": "object",
+                                  "propertyNames": {
+                                    "type": "string",
+                                    "enum": [
+                                      "saturatedFat",
+                                      "monounsaturatedFat",
+                                      "polyunsaturatedFat",
+                                      "transFat",
+                                      "sugars",
+                                      "fiber",
+                                      "cholesterol",
+                                      "sodium",
+                                      "potassium",
+                                      "calcium",
+                                      "iron",
+                                      "vitaminC",
+                                      "vitaminA"
+                                    ]
+                                  },
+                                  "additionalProperties": {
+                                    "type": "number",
+                                    "minimum": 0
+                                  }
+                                },
+                                {
+                                  "type": "null"
+                                }
+                              ]
+                            },
                             "originCountry": {
                               "type": [
                                 "string",
@@ -2454,6 +2636,38 @@
                                   "type": "integer",
                                   "minimum": -2147483648,
                                   "maximum": 2147483647
+                                },
+                                {
+                                  "type": "null"
+                                }
+                              ]
+                            },
+                            "nutritionExtras": {
+                              "anyOf": [
+                                {
+                                  "type": "object",
+                                  "propertyNames": {
+                                    "type": "string",
+                                    "enum": [
+                                      "saturatedFat",
+                                      "monounsaturatedFat",
+                                      "polyunsaturatedFat",
+                                      "transFat",
+                                      "sugars",
+                                      "fiber",
+                                      "cholesterol",
+                                      "sodium",
+                                      "potassium",
+                                      "calcium",
+                                      "iron",
+                                      "vitaminC",
+                                      "vitaminA"
+                                    ]
+                                  },
+                                  "additionalProperties": {
+                                    "type": "number",
+                                    "minimum": 0
+                                  }
                                 },
                                 {
                                   "type": "null"

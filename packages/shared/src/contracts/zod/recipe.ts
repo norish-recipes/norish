@@ -4,6 +4,7 @@ import { z } from "zod";
 import { measurementSystemEnum, recipes } from "@norish/db-schema/schema";
 
 import { primaryRecipeImage } from "../../lib/recipe-media";
+import { ExtraNutrientsSchema } from "../nutrients";
 import { CuisineSummarySchema } from "./cuisine";
 import { RecipeImagesArraySchema, RecipeImageSchema } from "./recipe-images";
 import {
@@ -17,16 +18,22 @@ import { TagNameSchema, TagSummarySchema } from "./tag";
 
 export const recipeCategorySchema = z.enum(["Breakfast", "Lunch", "Dinner", "Snack"]);
 
+// The stored nutrients beyond the four, by the catalogue's keys rather than as any JSON.
+const nutritionExtras = ExtraNutrientsSchema.nullish();
+
 export const RecipeSelectBaseSchema = createSelectSchema(recipes).extend({
   userId: z.string().nullable(),
+  nutritionExtras,
 });
-export const RecipeInsertBaseSchema = createInsertSchema(recipes).omit({
-  id: true,
-  updatedAt: true,
-  createdAt: true,
-  userId: true, // set from session server-side
-});
-export const RecipeUpdateBaseSchema = createUpdateSchema(recipes);
+export const RecipeInsertBaseSchema = createInsertSchema(recipes)
+  .omit({
+    id: true,
+    updatedAt: true,
+    createdAt: true,
+    userId: true, // set from session server-side
+  })
+  .extend({ nutritionExtras });
+export const RecipeUpdateBaseSchema = createUpdateSchema(recipes).extend({ nutritionExtras });
 
 export const AuthorSchema = z
   .object({

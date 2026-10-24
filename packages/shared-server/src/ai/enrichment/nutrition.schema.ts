@@ -3,8 +3,9 @@ import { z } from "zod";
 /**
  * Schema for AI-based nutrition estimation.
  *
- * Returns per-serving nutritional values. All four values are required and
- * non-negative: an estimate is complete or it is rejected, because replacement
+ * Returns per-serving nutritional values: the four, and the other nutrients a
+ * language model can estimate (`ESTIMATED_EXTRA_NUTRIENTS`). All are required
+ * and non-negative: an estimate is complete or it is rejected, because replacement
  * writes the whole group and a gap would be stored as null. Zero is a valid
  * estimate for a nutrient a recipe genuinely lacks.
  */
@@ -28,6 +29,19 @@ export const nutritionEstimationSchema = z
       .number()
       .min(0)
       .describe("Estimated protein per serving in grams; 0 when none. Required, never null."),
+    saturatedFat: z
+      .number()
+      .min(0)
+      .describe("Saturated fat per serving in grams, part of the fat; 0 when none."),
+    sugars: z
+      .number()
+      .min(0)
+      .describe("Sugars per serving in grams, part of the carbohydrates; 0 when none."),
+    fiber: z
+      .number()
+      .min(0)
+      .describe("Fiber per serving in grams, not part of the carbohydrates; 0 when none."),
+    sodium: z.number().min(0).describe("Sodium per serving in milligrams; 0 when none."),
   })
   .strict();
 
@@ -68,6 +82,28 @@ export const nutritionGapEstimationSchema = z
               .number()
               .min(0)
               .describe("This ingredient's protein per serving in grams; 0 when none."),
+            saturatedFat: z
+              .number()
+              .min(0)
+              .describe(
+                "Saturated fat per serving of this ingredient in grams, part of the fat; 0 when none."
+              ),
+            sugars: z
+              .number()
+              .min(0)
+              .describe(
+                "Sugars per serving of this ingredient in grams, part of the carbohydrates; 0 when none."
+              ),
+            fiber: z
+              .number()
+              .min(0)
+              .describe(
+                "Fiber per serving of this ingredient in grams, not part of the carbohydrates; 0 when none."
+              ),
+            sodium: z
+              .number()
+              .min(0)
+              .describe("Sodium per serving of this ingredient in milligrams; 0 when none."),
           })
           .strict()
       )

@@ -1,6 +1,7 @@
 import { z } from "zod";
 
 import { NUTRITION_CREDITS } from "@norish/shared/contracts/ingredient-nutrition";
+import { EXTRA_NUTRIENTS } from "@norish/shared/contracts/nutrients";
 import { MAX_RECIPE_PASTE_CHARS } from "@norish/shared/contracts/uploads";
 
 export const recipeAutocompleteInputSchema = z.object({
@@ -55,6 +56,11 @@ export const recipeNutritionOutputSchema = z.object({
       fat: nutritionValue("Fat in grams"),
       carbs: nutritionValue("Carbohydrates in grams"),
       protein: nutritionValue("Protein in grams"),
+      extras: z
+        .partialRecord(z.enum(EXTRA_NUTRIENTS), z.number())
+        .describe(
+          "Other nutrients per serving, only those known: cholesterol, sodium, potassium, calcium, iron and vitaminC in milligrams, vitaminA in micrograms RAE, the rest in grams. The recipe's own value wins; the others are worked out from its lines."
+        ),
     })
     .nullable(),
   estimated: z
@@ -81,4 +87,9 @@ export const recipeNutritionOutputSchema = z.object({
   credits: z
     .array(z.enum(NUTRITION_CREDITS))
     .describe("Datasets a worked-out total took a number from."),
+  extrasCoverage: z
+    .partialRecord(z.enum(EXTRA_NUTRIENTS), z.number().min(0).max(1))
+    .describe(
+      "For each extra nutrient, the share (0 to 1) of the counted ingredients by weight whose food knew it; 1 where the recipe states it. Below 1 the value is low by whatever the other ingredients hold."
+    ),
 });

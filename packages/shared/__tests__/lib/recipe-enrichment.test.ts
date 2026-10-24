@@ -420,7 +420,7 @@ describe("normalizeNutritionGroup", () => {
   it("normalizes blanks to null across the whole group", () => {
     expect(
       normalizeNutritionGroup({ calories: null, fat: "  ", carbs: "", protein: undefined })
-    ).toEqual({ calories: null, fat: null, carbs: null, protein: null });
+    ).toEqual({ calories: null, fat: null, carbs: null, protein: null, nutritionExtras: null });
   });
 
   it("keeps substantive values and nulls the rest", () => {
@@ -429,6 +429,7 @@ describe("normalizeNutritionGroup", () => {
       fat: "9.5",
       carbs: null,
       protein: null,
+      nutritionExtras: null,
     });
   });
 
@@ -438,7 +439,22 @@ describe("normalizeNutritionGroup", () => {
       fat: null,
       carbs: null,
       protein: null,
+      nutritionExtras: null,
     });
+  });
+
+  it("keeps an estimate's other nutrients together, dropping what is not a number", () => {
+    expect(
+      normalizeNutritionGroup({
+        calories: 300,
+        fat: 10,
+        carbs: 40,
+        protein: 12,
+        fiber: 6,
+        sugars: 0,
+        sodium: null,
+      }).nutritionExtras
+    ).toEqual({ fiber: 6, sugars: 0 });
   });
 });
 

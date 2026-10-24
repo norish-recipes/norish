@@ -1,5 +1,6 @@
 import { jsonb, pgTable, timestamp, uuid } from "drizzle-orm/pg-core";
 
+import type { StoredNutrients } from "./ingredient-nutrition";
 import { recipes } from "./recipes";
 
 /**
@@ -18,6 +19,8 @@ export interface EstimatedLineRow {
   fat: number;
   carbs: number;
   protein: number;
+  /** The other nutrients the model estimated for this line, per serving. */
+  extras?: StoredNutrients;
 }
 
 export const recipeNutritionEstimates = pgTable("recipe_nutrition_estimates", {

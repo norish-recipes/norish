@@ -25,15 +25,18 @@ import {
  * an edit to an amount moves it at once. The language model's stored share
  * of the lines left out is added while it still covers exactly those lines.
  * Null for a recipe that supplies Nutrition Information of its own, which
- * always wins, and while the Ingredients' nutrition is still being read.
+ * always wins, and while the Ingredients' nutrition is still being read;
+ * `evenIfSupplied` works it out regardless, for the nutrients beyond the
+ * four that the recipe's own Nutrition Information lacks.
  */
 export function useWorkedOutNutrition(
-  recipe: RecipeForNutrition | null
+  recipe: RecipeForNutrition | null,
+  { evenIfSupplied = false }: { evenIfSupplied?: boolean } = {}
 ): WorkedOutNutrition | null {
   const trpc = useTRPC();
   const { units } = useUnitsQuery();
   const rules = useSpellingRules();
-  const supplied = !recipe || suppliesNutrition(recipe);
+  const supplied = !recipe || (suppliesNutrition(recipe) && !evenIfSupplied);
   const lines = useMemo(
     () => (recipe && !supplied ? nutritionLinesOf(recipe) : []),
     [recipe, supplied]
