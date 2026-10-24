@@ -76,7 +76,8 @@
     "source": "Źródło",
     "addedBy": "Dodane przez {name}",
     "decreaseServings": "Mniej porcji",
-    "increaseServings": "Więcej porcji"
+    "increaseServings": "Więcej porcji",
+    "equipment": "Wyposażenie"
   },
   "actions": {
     "plan": "Zaplanuj",
@@ -223,7 +224,9 @@
     "clickToUpload": "Kliknij lub przeciągnij i upuść",
     "pasteToUpload": "aby wkleić",
     "imageFormats": "PNG, JPG, WEBP do 5MB",
-    "discardChangesConfirm": "Masz niezapisane zmiany. Odrzucić je i opuścić tę stronę?"
+    "discardChangesConfirm": "Masz niezapisane zmiany. Odrzucić je i opuścić tę stronę?",
+    "equipment": "Wyposażenie",
+    "equipmentHelp": "Wpisz przybory kuchenne i urządzenia potrzebne do tego przepisu."
   },
   "gallery": {
     "addImage": "Dodaj obraz",
@@ -342,7 +345,8 @@
     "swipeBackToSteps": "Przesuń w prawo, aby wrócić do kroków",
     "readyAt": "Gotowe około {time}",
     "timers": "Minutniki",
-    "nextStep": "Następny krok"
+    "nextStep": "Następny krok",
+    "equipment": "Przybory"
   },
   "enrichment": {
     "failed": "Wzbogacanie nie powiodło się",
@@ -431,5 +435,8 @@
     "print": "Drukuj / Zapisz PDF",
     "continued": "ciąg dalszy",
     "perServing": "Na porcję"
+  },
+  "equipmentInput": {
+    "placeholder": "np. Patelnia (28 cm)"
   }
 }

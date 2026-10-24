@@ -8,7 +8,8 @@
     "household": "가구",
     "caldav": "CalDAV",
     "admin": "관리자",
-    "ingredients": "재료"
+    "ingredients": "재료",
+    "equipment": "조리도구"
   },
   "user": {
     "signInMethods": {
@@ -1259,5 +1260,59 @@
       "signedOut": "세션이 만료되었습니다. 다시 로그인하여 내보내세요.",
       "notAllowed": "이 항목을 내보낼 권한이 없습니다."
     }
+  },
+  "equipment": {
+    "title": "조리도구",
+    "description": "Norish가 주방 도구, 기구, 아이콘 및 별칭을 연결하는 데 사용하는 조리도구 카탈로그입니다.",
+    "search": "조리도구 검색",
+    "empty": "조리도구를 찾을 수 없습니다",
+    "addEquipment": "조리도구 추가",
+    "createTitle": "조리도구 추가",
+    "nameSection": "이름",
+    "namePlaceholder": "예: 거품기",
+    "rename": "이름 바꾸기",
+    "spellingsSection": "별칭",
+    "addAlias": "별칭 추가",
+    "removeAlias": "{alias} 제거",
+    "keepAlias": "{alias} 유지",
+    "summary": "{spellings, plural, other {별칭 #개}}",
+    "delete": "삭제",
+    "deleteTitle": "{name}을(를) 삭제할까요?",
+    "deleteConfirm": "별칭도 함께 삭제됩니다. 레시피에서 아직 사용 중인 조리도구는 삭제할 수 없으니 대신 병합하세요.",
+    "icon": {
+      "change": "아이콘 변경",
+      "upload": "사진 업로드",
+      "remove": "아이콘 제거",
+      "failed": "이 사진으로 아이콘을 만들 수 없습니다."
+    },
+    "uses": {
+      "show": "사용처 보기",
+      "title": "{name}이(가) 사용되는 곳",
+      "recipes": "레시피",
+      "elsewhere": "열 수 없는 레시피에서 {count, plural, other {#회 더 사용}}",
+      "none": "더 이상 사용하는 곳이 없습니다"
+    },
+    "errors": {
+      "title": "조리도구를 변경할 수 없습니다",
+      "forbidden": "이 조리도구를 편집할 권한이 없습니다",
+      "not-found": "이 조리도구는 더 이상 존재하지 않습니다",
+      "name-taken": "다른 조리도구가 이미 이 이름을 사용합니다",
+      "spelling-taken": "이 별칭은 이미 다른 조리도구에 속해 있습니다",
+      "last-alias": "조리도구에는 최소 하나의 별칭이 남아야 합니다",
+      "alias-in-use": "레시피에서 아직 이 별칭을 사용합니다",
+      "ingredient-in-use": "레시피에서 아직 이 조리도구를 사용하고 있습니다",
+      "same-ingredient": "조리도구를 자기 자신과 병합할 수 없습니다",
+      "cycle": "조리도구는 자기 자신의 하위 종류가 될 수 없습니다",
+      "empty": "이름을 입력하세요",
+      "unknown": "문제가 발생했습니다. 다시 시도하세요."
+    },
+    "mergeInto": "다음으로 병합…",
+    "merge": "병합",
+    "mergedToast": "{name}은(는) 이제 {into}의 별칭입니다.",
+    "mergeTitle": "{name}은(는) 사라지고 선택한 조리도구의 별칭이 됩니다.",
+    "pickEquipment": "조리도구 검색",
+    "pickerHint": "입력하여 카탈로그 검색",
+    "pickerSearching": "검색 중…",
+    "pickerEmpty": "조리도구를 찾을 수 없습니다"
   }
 }

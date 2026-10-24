@@ -13,6 +13,7 @@ import SystemConvertMenu from "@/app/(app)/recipes/[id]/components/system-conver
 import { BackLink } from "@/components/page-transition";
 import AmountDisplayToggle from "@/components/recipes/amount-display-toggle";
 import AuthorChip from "@/components/recipes/author-chip";
+import { ReadonlyEquipmentList } from "@/components/recipes/readonly-equipment-list";
 import {
   ReadonlyRecipeMedia,
   ReadonlyRecipeSummary,
@@ -101,6 +102,16 @@ export default function RecipePageDesktop({ onPrint }: { onPrint: () => void }) 
               <AddToGroceries recipeId={recipe.id} />
             </Card.Content>
           </Card>
+
+          {/* Equipment Card */}
+          {recipe.equipment && recipe.equipment.length > 0 ? (
+            <Card className="rounded-2xl">
+              <Card.Content className="space-y-4 p-6">
+                <h2 className="text-lg font-semibold">{t("equipment")}</h2>
+                <ReadonlyEquipmentList equipment={recipe.equipment} />
+              </Card.Content>
+            </Card>
+          ) : null}
 
           {/* Nutrition Card */}
           <NutritionCard />

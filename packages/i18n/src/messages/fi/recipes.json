@@ -76,7 +76,8 @@
     "source": "Lähde",
     "addedBy": "Lisännyt {name}",
     "decreaseServings": "Vähemmän annoksia",
-    "increaseServings": "Enemmän annoksia"
+    "increaseServings": "Enemmän annoksia",
+    "equipment": "Välineet"
   },
   "actions": {
     "plan": "Suunnittele",
@@ -223,7 +224,9 @@
     "clickToUpload": "Napsauta lähettääksesi tai raahaa ja pudota",
     "pasteToUpload": "liittääksesi",
     "imageFormats": "PNG, JPG, WEBP enintään 5 Mt",
-    "discardChangesConfirm": "Sinulla on tallentamattomia muutoksia. Hylätäänkö ne ja poistutaan tältä sivulta?"
+    "discardChangesConfirm": "Sinulla on tallentamattomia muutoksia. Hylätäänkö ne ja poistutaan tältä sivulta?",
+    "equipment": "Välineet",
+    "equipmentHelp": "Kirjoita tähän reseptiin tarvittavat keittiövälineet ja laitteet."
   },
   "gallery": {
     "addImage": "Lisää kuva",
@@ -342,7 +345,8 @@
     "swipeBackToSteps": "Pyyhkäise oikealle palataksesi vaiheisiin",
     "readyAt": "Valmis noin klo {time}",
     "timers": "Ajastimet",
-    "nextStep": "Seuraava vaihe"
+    "nextStep": "Seuraava vaihe",
+    "equipment": "Välineet"
   },
   "enrichment": {
     "failed": "Rikastus epäonnistui",
@@ -431,5 +435,8 @@
     "print": "Tulosta / Tallenna PDF",
     "continued": "jatkuu",
     "perServing": "Annosta kohden"
+  },
+  "equipmentInput": {
+    "placeholder": "esim. Paistinpannu (28 cm)"
   }
 }

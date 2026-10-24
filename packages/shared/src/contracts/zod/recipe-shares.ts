@@ -1,5 +1,6 @@
 import { z } from "zod";
 
+import { PublicRecipeEquipmentSchema } from "./equipment";
 import { measurementSystems, recipeCategorySchema } from "./recipe";
 import { StepIngredientOutputSchema } from "./step-ingredients";
 
@@ -164,6 +165,7 @@ export const PublicRecipeViewSchema = z.object({
   categories: z.array(recipeCategorySchema).default([]),
   tags: z.array(PublicRecipeTagSchema).default([]),
   recipeIngredients: z.array(PublicRecipeIngredientSchema).default([]),
+  equipment: z.array(PublicRecipeEquipmentSchema).default([]),
   steps: z.array(PublicRecipeStepSchema).default([]),
   author: PublicRecipeAuthorSchema.nullable(),
   images: z.array(PublicRecipeImageSchema).default([]),

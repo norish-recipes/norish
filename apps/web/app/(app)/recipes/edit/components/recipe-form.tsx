@@ -1,10 +1,12 @@
 "use client";
 
+import type { RecipeEquipmentFormItem } from "@/components/recipes/equipment-input";
 import type { ParsedIngredient } from "@/components/recipes/ingredient-input";
 import type { RecipeGalleryMedia } from "@/components/recipes/media-gallery-input";
 import type { Step } from "@/components/recipes/step-input";
 import React, { useCallback, useMemo, useState } from "react";
 import { useRouter } from "next/navigation";
+import EquipmentInput from "@/components/recipes/equipment-input";
 import IngredientInput from "@/components/recipes/ingredient-input";
 import MeasurementSystemSelector from "@/components/recipes/measurement-system-selector";
 import MediaGalleryInput from "@/components/recipes/media-gallery-input";
@@ -68,6 +70,7 @@ export default function RecipeForm({ mode, initialData }: RecipeFormProps) {
   const [categories, setCategories] = useState<RecipeCategory[]>(initialData?.categories ?? []);
   const [ingredients, setIngredients] = useState<ParsedIngredient[]>([]);
   const [steps, setSteps] = useState<Step[]>([]);
+  const [equipment, setEquipment] = useState<RecipeEquipmentFormItem[]>([]);
   const [systemUsed, setSystemUsed] = useState<MeasurementSystem>(
     initialData?.systemUsed ?? "metric"
   );
@@ -123,6 +126,7 @@ export default function RecipeForm({ mode, initialData }: RecipeFormProps) {
       categories,
       ingredients,
       steps,
+      equipment,
       systemUsed,
       media,
       calories,
@@ -144,6 +148,7 @@ export default function RecipeForm({ mode, initialData }: RecipeFormProps) {
       categories,
       ingredients,
       steps,
+      equipment,
       systemUsed,
       media,
       calories,
@@ -212,6 +217,16 @@ export default function RecipeForm({ mode, initialData }: RecipeFormProps) {
       stepIngredients: s.stepIngredients || [],
     }));
     setSteps(initSteps);
+
+    const initEquipment: RecipeEquipmentFormItem[] = (initialData.equipment ?? []).map(
+      (eq, idx) => ({
+        id: eq.id,
+        version: eq.version,
+        name: eq.name,
+        order: eq.order ?? idx,
+      })
+    );
+    setEquipment(initEquipment);
     setInitializedRecipeId(initialData.id);
   }
 
@@ -342,6 +357,12 @@ export default function RecipeForm({ mode, initialData }: RecipeFormProps) {
         images: s.images || [],
         stepIngredients: s.stepIngredients || [],
       })),
+      equipment: equipment.map((eq, idx) => ({
+        id: eq.id,
+        version: eq.version,
+        name: eq.name,
+        order: idx,
+      })),
       // Images array field
       images,
       // Videos array field
@@ -386,6 +407,7 @@ export default function RecipeForm({ mode, initialData }: RecipeFormProps) {
     categories,
     ingredients,
     steps,
+    equipment,
     mode,
     initialData,
     createRecipe,
@@ -513,11 +535,28 @@ export default function RecipeForm({ mode, initialData }: RecipeFormProps) {
           </div>
         </section>
 
-        {/* 4. Instructions */}
+        {/* 4. Equipment */}
         <section>
           <h2 className="mb-4 flex items-center gap-2 text-xl font-semibold">
             <span className="bg-accent text-accent-foreground flex h-7 w-7 items-center justify-center rounded-full text-sm font-bold">
               4
+            </span>
+            {t("equipment")}
+          </h2>
+          <div className="ml-0 md:ml-9">
+            <div className="text-muted mb-3 flex items-center gap-1 text-base">
+              {t("equipmentHelp")}
+              <SmartInputHelp />
+            </div>
+            <EquipmentInput equipment={equipment} onChange={setEquipment} />
+          </div>
+        </section>
+
+        {/* 5. Instructions */}
+        <section>
+          <h2 className="mb-4 flex items-center gap-2 text-xl font-semibold">
+            <span className="bg-accent text-accent-foreground flex h-7 w-7 items-center justify-center rounded-full text-sm font-bold">
+              5
             </span>
             {t("instructions")}
             <span className="text-danger text-lg">*</span>
@@ -538,11 +577,11 @@ export default function RecipeForm({ mode, initialData }: RecipeFormProps) {
           </div>
         </section>
 
-        {/* 5. Tags & Categories */}
+        {/* 6. Tags & Categories */}
         <section>
           <h2 className="mb-4 flex items-center gap-2 text-xl font-semibold">
             <span className="bg-accent text-accent-foreground flex h-7 w-7 items-center justify-center rounded-full text-sm font-bold">
-              5
+              6
             </span>
             {t("tagsAndCategories")}
           </h2>
@@ -574,11 +613,11 @@ export default function RecipeForm({ mode, initialData }: RecipeFormProps) {
           </div>
         </section>
 
-        {/* 6. Nutrition */}
+        {/* 7. Nutrition */}
         <section>
           <h2 className="mb-4 flex items-center gap-2 text-xl font-semibold">
             <span className="bg-accent text-accent-foreground flex h-7 w-7 items-center justify-center rounded-full text-sm font-bold">
-              6
+              7
             </span>
             {t("nutrition")}
             <span className="text-muted text-sm font-normal">{t("nutritionPerServing")}</span>
@@ -625,11 +664,11 @@ export default function RecipeForm({ mode, initialData }: RecipeFormProps) {
           </div>
         </section>
 
-        {/* 7. Provenance */}
+        {/* 8. Provenance */}
         <section>
           <h2 className="mb-4 flex items-center gap-2 text-xl font-semibold">
             <span className="bg-accent text-accent-foreground flex h-7 w-7 items-center justify-center rounded-full text-sm font-bold">
-              7
+              8
             </span>
             {t("provenance")}
           </h2>
@@ -638,11 +677,11 @@ export default function RecipeForm({ mode, initialData }: RecipeFormProps) {
           </div>
         </section>
 
-        {/* 8. Details */}
+        {/* 9. Details */}
         <section>
           <h2 className="mb-4 flex items-center gap-2 text-xl font-semibold">
             <span className="bg-accent text-accent-foreground flex h-7 w-7 items-center justify-center rounded-full text-sm font-bold">
-              8
+              9
             </span>
             {t("details")}
           </h2>
@@ -677,11 +716,11 @@ export default function RecipeForm({ mode, initialData }: RecipeFormProps) {
           </div>
         </section>
 
-        {/* 9. Additional Information */}
+        {/* 10. Additional Information */}
         <section>
           <h2 className="mb-4 flex items-center gap-2 text-xl font-semibold">
             <span className="bg-accent text-accent-foreground flex h-7 w-7 items-center justify-center rounded-full text-sm font-bold">
-              9
+              10
             </span>
             {t("additionalInfo")}
           </h2>

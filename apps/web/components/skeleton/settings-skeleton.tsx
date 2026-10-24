@@ -87,6 +87,7 @@ const tabCards = (shape: SettingsShape): Record<SettingsTab, CardPlaceholder[]> 
     { icon: BookOpenIcon, section: "ingredients", description: true, rows: 6 },
     { icon: CircleStackIcon, section: "ingredients.dataSources", rows: 2 },
   ],
+  equipment: [{ icon: WrenchScrewdriverIcon, section: "equipment", description: true, rows: 6 }],
   admin: [
     { icon: Cog6ToothIcon, section: "admin.general", rows: 4 },
     { icon: UsersIcon, section: "admin.users", description: true, rows: 2 },

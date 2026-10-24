@@ -5,6 +5,7 @@ import { measurementSystemEnum, recipes } from "@norish/db-schema/schema";
 
 import { primaryRecipeImage } from "../../lib/recipe-media";
 import { CuisineSummarySchema } from "./cuisine";
+import { RecipeEquipmentInputSchema, RecipeEquipmentWithIdSchema } from "./equipment";
 import { RecipeImagesArraySchema, RecipeImageSchema } from "./recipe-images";
 import {
   RecipeIngredientInputBaseSchema,
@@ -123,6 +124,7 @@ export const RecipeNutritionEstimateSchema = z.object({
 
 export const FullRecipeSchema = RecipeSelectBaseSchema.extend({
   recipeIngredients: z.array(RecipeIngredientsWithIdSchema),
+  equipment: z.array(RecipeEquipmentWithIdSchema).default([]),
   steps: z.array(StepOutputSchema).default([]),
   tags: z.array(TagSummarySchema).default([]),
   // Recipe Provenance travels with the recipe, which is why an Offline reader
@@ -138,6 +140,7 @@ export const FullRecipeSchema = RecipeSelectBaseSchema.extend({
 export const FullRecipeInsertSchema = RecipeInsertBaseSchema.extend({
   id: z.uuid().optional(),
   recipeIngredients: z.array(RecipeIngredientInputSchema).default([]),
+  equipment: z.array(RecipeEquipmentInputSchema).default([]),
   tags: z.array(TagNameSchema).default([]),
   // Vocabulary row ids, as the recipe form sends them. Names would reintroduce
   // the create-on-write behaviour the vocabulary exists to prevent.
@@ -150,6 +153,7 @@ export const FullRecipeInsertSchema = RecipeInsertBaseSchema.extend({
 
 export const FullRecipeUpdateSchema = RecipeUpdateBaseSchema.extend({
   recipeIngredients: z.array(RecipeIngredientInputBaseSchema.partial()).optional(),
+  equipment: z.array(RecipeEquipmentInputSchema).optional(),
   tags: z.array(TagNameSchema).optional(),
   // Cuisines are picked from the vocabulary rather than typed, so an editor
   // sends ids. Passing an empty array clears them; omitting leaves them alone.

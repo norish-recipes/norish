@@ -54,8 +54,9 @@ describe("settings tab list", () => {
     render(<SettingsPageContent shape={shape} />);
 
     expect(screen.queryByRole("tab", { name: /tabs\.admin/ })).not.toBeInTheDocument();
-    // User, Household, CalDAV and Ingredients.
-    expect(screen.getAllByRole("tab")).toHaveLength(4);
+    // User, Household, CalDAV, Ingredients, and Equipment.
+    expect(screen.getAllByRole("tab")).toHaveLength(5);
+    expect(screen.getByRole("tab", { name: /tabs\.equipment/ })).toBeInTheDocument();
   });
 
   it("lands an administrator directly on a deep-linked admin tab", () => {

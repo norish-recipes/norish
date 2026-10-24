@@ -76,7 +76,8 @@
     "source": "Източник",
     "addedBy": "Добавено от {name}",
     "decreaseServings": "По-малко порции",
-    "increaseServings": "Повече порции"
+    "increaseServings": "Повече порции",
+    "equipment": "Оборудване"
   },
   "actions": {
     "plan": "Планирай",
@@ -223,7 +224,9 @@
     "clickToUpload": "Щракни, за да качиш, или плъзни и пусни",
     "pasteToUpload": "за поставяне",
     "imageFormats": "PNG, JPG, WEBP до 5MB",
-    "discardChangesConfirm": "Имаш незапазени промени. Да се отхвърлят ли и да напуснеш страницата?"
+    "discardChangesConfirm": "Имаш незапазени промени. Да се отхвърлят ли и да напуснеш страницата?",
+    "equipment": "Оборудване",
+    "equipmentHelp": "Въведете кухненските прибори и уреди, необходими за тази рецепта."
   },
   "gallery": {
     "addImage": "Добави изображение",
@@ -342,7 +345,8 @@
     "swipeBackToSteps": "Плъзни надясно за стъпките",
     "readyAt": "Готово около {time}",
     "timers": "Таймери",
-    "nextStep": "Следваща стъпка"
+    "nextStep": "Следваща стъпка",
+    "equipment": "Оборудване"
   },
   "enrichment": {
     "failed": "Обогатяването е неуспешно",
@@ -431,5 +435,8 @@
     "print": "Печат / Запазване като PDF",
     "continued": "продължение",
     "perServing": "На порция"
+  },
+  "equipmentInput": {
+    "placeholder": "напр. Тиган (28 см)"
   }
 }

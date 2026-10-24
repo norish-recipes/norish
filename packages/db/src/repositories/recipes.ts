@@ -54,6 +54,7 @@ import {
   RecipeDashboardSchema,
 } from "../zodSchemas";
 import { replaceRecipeCuisinesTx } from "./cuisines";
+import { syncRecipeEquipmentTx } from "./equipment";
 import {
   attachIngredientsToRecipeByInputTx,
   getUnitsForNormalization,
@@ -894,6 +895,10 @@ export async function createRecipeWithRefs(
       await replaceRecipeCuisinesTx(tx, rid, payload.cuisines);
     }
 
+    if (payload.equipment?.length) {
+      await syncRecipeEquipmentTx(tx, rid, userId ?? null, payload.equipment);
+    }
+
     if (payload.recipeIngredients.length) {
       await attachIngredientsToRecipeByInputTx(
         tx,
@@ -1110,6 +1115,11 @@ export async function getRecipeFull(id: string): Promise<FullRecipeDTO | null> {
         with: { cuisine: { columns: { id: true, name: true, version: true } } },
         orderBy: (rc, { asc }) => [asc(rc.order)],
       },
+      equipment: {
+        columns: { id: true, name: true, order: true, version: true },
+        with: { alias: { columns: { equipmentId: true } } },
+        orderBy: (re, { asc }) => [asc(re.order)],
+      },
       ingredients: {
         columns: {
           id: true,
@@ -1247,6 +1257,13 @@ export async function getRecipeFull(id: string): Promise<FullRecipeDTO | null> {
         name: cuisine.name,
         version: cuisine.version,
       })),
+    equipment: (full.equipment ?? []).map((re: any) => ({
+      id: re.id,
+      equipmentId: re.alias?.equipmentId ?? null,
+      name: re.name,
+      order: Number(re.order) || 0,
+      version: re.version,
+    })),
     recipeIngredients: (full.ingredients ?? []).map((ri: any) => ({
       id: ri.id,
       // The line's first food is the one the recipe shows.
@@ -1675,6 +1692,10 @@ export async function updateRecipeWithRefs(
     // which is deliberately distinct from an enrichment run writing nothing.
     if (payload.cuisines !== undefined) {
       await replaceRecipeCuisinesTx(tx, recipeId, payload.cuisines);
+    }
+
+    if (payload.equipment !== undefined) {
+      await syncRecipeEquipmentTx(tx, recipeId, userId, payload.equipment);
     }
 
     // Replace tags if provided

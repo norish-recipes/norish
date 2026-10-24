@@ -76,7 +76,8 @@
     "source": "Source",
     "addedBy": "Added by {name}",
     "decreaseServings": "Fewer servings",
-    "increaseServings": "More servings"
+    "increaseServings": "More servings",
+    "equipment": "Equipment"
   },
   "actions": {
     "plan": "Plan",
@@ -223,7 +224,9 @@
     "clickToUpload": "Click to upload or drag and drop",
     "pasteToUpload": "to paste",
     "imageFormats": "PNG, JPG, WEBP up to 5MB",
-    "discardChangesConfirm": "You have unsaved changes. Discard them and leave this page?"
+    "discardChangesConfirm": "You have unsaved changes. Discard them and leave this page?",
+    "equipment": "Equipment",
+    "equipmentHelp": "Type kitchen utensils and appliances needed for this recipe."
   },
   "gallery": {
     "addImage": "Add image",
@@ -342,7 +345,8 @@
     "swipeBackToSteps": "Swipe right for steps",
     "readyAt": "Ready around {time}",
     "timers": "Timers",
-    "nextStep": "Next step"
+    "nextStep": "Next step",
+    "equipment": "Equipment"
   },
   "enrichment": {
     "failed": "Enrichment failed",
@@ -431,5 +435,8 @@
     "print": "Print / Save PDF",
     "continued": "continued",
     "perServing": "Per serving"
+  },
+  "equipmentInput": {
+    "placeholder": "e.g., Frying pan (28 cm)"
   }
 }

@@ -1,3 +1,4 @@
+import { seedDefaultEquipment } from "@norish/db/repositories/equipment";
 import {
   readIngredientSeedState,
   refreshIngredientCatalogue,
@@ -15,6 +16,12 @@ import { dbLogger as log } from "@norish/shared-server/logger";
  * again, and the job monitor shows why this one did not land.
  */
 export async function seedIngredientCatalogueOnFirstBoot(): Promise<void> {
+  try {
+    await seedDefaultEquipment();
+  } catch (error) {
+    log.warn({ err: error }, "Equipment catalogue seed at boot failed");
+  }
+
   const state = await readIngredientSeedState();
 
   if (state.appliedAt) {

@@ -4,6 +4,7 @@ import { caldavRouter, caldavSubscriptions } from "./routers/caldav";
 import { calendarRouter } from "./routers/calendar";
 import { configRouter } from "./routers/config";
 import { cookbooksRouter } from "./routers/cookbooks";
+import { equipmentRouter } from "./routers/equipment";
 import { favoritesRouter } from "./routers/favorites";
 import { groceriesRouter } from "./routers/groceries";
 import { householdsAppRouter } from "./routers/households";
@@ -37,6 +38,7 @@ export const appRouter = router({
   stores: storesRouter,
   pantry: pantryRouter,
   ingredients: ingredientsRouter,
+  equipment: equipmentRouter,
   siteAuthTokens: siteAuthTokensRouter,
 });
 

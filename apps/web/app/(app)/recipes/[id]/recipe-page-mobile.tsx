@@ -11,6 +11,7 @@ import ServingsControl from "@/app/(app)/recipes/[id]/components/servings-contro
 import StepsList from "@/app/(app)/recipes/[id]/components/steps-list";
 import { BackLink } from "@/components/page-transition";
 import CookingTimeCard from "@/components/recipes/cooking-time-card";
+import { ReadonlyEquipmentList } from "@/components/recipes/readonly-equipment-list";
 import { ReadonlyRecipeMedia } from "@/components/recipes/readonly-recipe-sections";
 import RecipeHeaderMobile from "@/components/recipes/recipe-header-mobile";
 import {
@@ -181,6 +182,17 @@ export default function RecipePageMobile({ onPrint }: { onPrint: () => void }) {
             <AddToGroceries recipeId={recipe.id} />
           </Card.Content>
         </Card>
+
+        {recipe.equipment && recipe.equipment.length > 0 ? (
+          <Card className="rounded-2xl">
+            <Card.Content className="space-y-4 p-5">
+              <h2 className="text-lg font-semibold">{t("equipment")}</h2>
+              <div className="-mx-3">
+                <ReadonlyEquipmentList equipment={recipe.equipment} />
+              </div>
+            </Card.Content>
+          </Card>
+        ) : null}
 
         <Card className="rounded-2xl">
           <Card.Content className="space-y-4 p-5 text-left">

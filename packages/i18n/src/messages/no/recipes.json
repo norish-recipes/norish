@@ -76,7 +76,8 @@
     "source": "Kilde",
     "addedBy": "Lagt til av {name}",
     "decreaseServings": "Færre porsjoner",
-    "increaseServings": "Flere porsjoner"
+    "increaseServings": "Flere porsjoner",
+    "equipment": "Utstyr"
   },
   "actions": {
     "plan": "Planlegg",
@@ -223,7 +224,9 @@
     "clickToUpload": "Klikk for å laste opp eller dra og slipp",
     "pasteToUpload": "for å lime inn",
     "imageFormats": "PNG, JPG, WEBP opp til 5 MB",
-    "discardChangesConfirm": "Du har ulagrede endringer. Vil du forkaste dem og forlate siden?"
+    "discardChangesConfirm": "Du har ulagrede endringer. Vil du forkaste dem og forlate siden?",
+    "equipment": "Utstyr",
+    "equipmentHelp": "Skriv inn kjøkkenredskaper og apparater som trengs til denne oppskriften."
   },
   "gallery": {
     "addImage": "Legg til bilde",
@@ -342,7 +345,8 @@
     "swipeBackToSteps": "Sveip til høyre for trinn",
     "readyAt": "Ferdig rundt {time}",
     "timers": "Tidtakere",
-    "nextStep": "Neste steg"
+    "nextStep": "Neste steg",
+    "equipment": "Utstyr"
   },
   "enrichment": {
     "failed": "Berikelse mislyktes",
@@ -431,5 +435,8 @@
     "print": "Skriv ut / Lagre PDF",
     "continued": "fortsetter",
     "perServing": "Per porsjon"
+  },
+  "equipmentInput": {
+    "placeholder": "f.eks. Stekepanne (28 cm)"
   }
 }

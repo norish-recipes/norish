@@ -1,5 +1,6 @@
 "use client";
 
+import { ReadonlyEquipmentList } from "@/components/recipes/readonly-equipment-list";
 import { ReadonlyNutritionCard } from "@/components/recipes/readonly-nutrition";
 import {
   ReadonlyRecipeMedia,
@@ -39,6 +40,15 @@ export function SharedRecipePageDesktop() {
               <ShareRecipeIngredients />
             </Card.Content>
           </Card>
+
+          {recipe.equipment && recipe.equipment.length > 0 ? (
+            <Card className="bg-surface rounded-2xl shadow-md">
+              <Card.Content className="space-y-4 p-6">
+                <h2 className="text-lg font-semibold">{t("equipment")}</h2>
+                <ReadonlyEquipmentList equipment={recipe.equipment} />
+              </Card.Content>
+            </Card>
+          ) : null}
 
           <ReadonlyNutritionCard recipe={recipe} />
         </div>

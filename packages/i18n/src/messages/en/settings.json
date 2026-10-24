@@ -8,7 +8,8 @@
     "household": "Household",
     "caldav": "CalDAV",
     "admin": "Admin",
-    "ingredients": "Ingredients"
+    "ingredients": "Ingredients",
+    "equipment": "Equipment"
   },
   "user": {
     "signInMethods": {
@@ -1259,5 +1260,59 @@
       "signedOut": "Your session has expired. Sign in again to export.",
       "notAllowed": "You do not have permission to export this."
     }
+  },
+  "equipment": {
+    "title": "Equipment",
+    "description": "The equipment catalogue Norish uses to match utensils, appliances, icons and aliases.",
+    "search": "Search equipment",
+    "empty": "No equipment found",
+    "addEquipment": "Add equipment",
+    "createTitle": "Add equipment",
+    "nameSection": "Name",
+    "namePlaceholder": "e.g., Whisk",
+    "rename": "Rename",
+    "spellingsSection": "Aliases",
+    "addAlias": "Add an alias",
+    "removeAlias": "Remove {alias}",
+    "keepAlias": "Keep {alias}",
+    "summary": "{spellings, plural, one {# alias} other {# aliases}}",
+    "delete": "Delete",
+    "deleteTitle": "Delete {name}?",
+    "deleteConfirm": "Its aliases go with it. Equipment a recipe still uses cannot be deleted; merge it instead.",
+    "icon": {
+      "change": "Change the icon",
+      "upload": "Upload a picture",
+      "remove": "Remove icon",
+      "failed": "That picture could not be made into an icon."
+    },
+    "uses": {
+      "show": "Show where",
+      "title": "Where {name} is used",
+      "recipes": "Recipes",
+      "elsewhere": "{count, plural, one {# more use} other {# more uses}} in recipes you cannot open",
+      "none": "Nothing uses it any more"
+    },
+    "errors": {
+      "title": "Could not change the equipment",
+      "forbidden": "You may not edit this equipment",
+      "not-found": "This equipment no longer exists",
+      "name-taken": "Another equipment item already has this name",
+      "spelling-taken": "This alias already belongs to another equipment item",
+      "last-alias": "Equipment keeps at least one alias",
+      "alias-in-use": "Recipes still use this alias",
+      "ingredient-in-use": "Recipes still use this equipment",
+      "same-ingredient": "Equipment cannot be merged into itself",
+      "cycle": "Equipment cannot be a kind of itself",
+      "empty": "Enter a name",
+      "unknown": "Something went wrong. Try again."
+    },
+    "mergeInto": "Merge into…",
+    "merge": "Merge",
+    "mergedToast": "{name} is now an alias of {into}.",
+    "mergeTitle": "{name} disappears and becomes an alias of the equipment you pick.",
+    "pickEquipment": "Search for equipment",
+    "pickerHint": "Type to search the catalogue",
+    "pickerSearching": "Searching…",
+    "pickerEmpty": "No equipment found"
   }
 }

@@ -1,4 +1,4 @@
-export type SettingsTab = "user" | "household" | "caldav" | "ingredients" | "admin";
+export type SettingsTab = "user" | "household" | "caldav" | "ingredients" | "equipment" | "admin";
 
 /** What the server knows about the reader that decides which tabs and cards they get. */
 export type SettingsShape = {
@@ -16,6 +16,7 @@ export function openSettingsTab(
     case "household":
     case "caldav":
     case "ingredients":
+    case "equipment":
       return param;
     case "admin":
       return shape.showAdminTab ? "admin" : "user";

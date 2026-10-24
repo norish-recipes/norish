@@ -8,7 +8,8 @@
     "household": "Husstand",
     "caldav": "CalDAV",
     "admin": "Admin",
-    "ingredients": "Ingredienser"
+    "ingredients": "Ingredienser",
+    "equipment": "Udstyr"
   },
   "user": {
     "signInMethods": {
@@ -1259,5 +1260,59 @@
       "signedOut": "Din session er udløbet. Log ind igen for at eksportere.",
       "notAllowed": "Du har ikke tilladelse til at eksportere dette."
     }
+  },
+  "equipment": {
+    "title": "Udstyr",
+    "description": "Udstyrskataloget, som Norish bruger til at matche køkkenredskaber, apparater, ikoner og aliasser.",
+    "search": "Søg efter udstyr",
+    "empty": "Intet udstyr fundet",
+    "addEquipment": "Tilføj udstyr",
+    "createTitle": "Tilføj udstyr",
+    "nameSection": "Navn",
+    "namePlaceholder": "f.eks. Piskeris",
+    "rename": "Omdøb",
+    "spellingsSection": "Aliasser",
+    "addAlias": "Tilføj et alias",
+    "removeAlias": "Fjern {alias}",
+    "keepAlias": "Behold {alias}",
+    "summary": "{spellings, plural, one {# alias} other {# aliasser}}",
+    "delete": "Slet",
+    "deleteTitle": "Slet {name}?",
+    "deleteConfirm": "Dets aliasser slettes sammen med det. Udstyr, der stadig bruges i en opskrift, kan ikke slettes; flet det i stedet.",
+    "icon": {
+      "change": "Skift ikonet",
+      "upload": "Upload et billede",
+      "remove": "Fjern ikon",
+      "failed": "Det billede kunne ikke laves til et ikon."
+    },
+    "uses": {
+      "show": "Vis hvor",
+      "title": "Hvor {name} bruges",
+      "recipes": "Opskrifter",
+      "elsewhere": "{count, plural, one {# brug mere} other {# brug mere}} i opskrifter, du ikke kan åbne",
+      "none": "Intet bruger det længere"
+    },
+    "errors": {
+      "title": "Kunne ikke ændre udstyret",
+      "forbidden": "Du må ikke redigere dette udstyr",
+      "not-found": "Dette udstyr findes ikke længere",
+      "name-taken": "Et andet udstyr har allerede dette navn",
+      "spelling-taken": "Dette alias tilhører allerede et andet udstyr",
+      "last-alias": "Udstyr skal beholde mindst ét alias",
+      "alias-in-use": "Opskrifter bruger stadig dette alias",
+      "ingredient-in-use": "Opskrifter bruger stadig dette udstyr",
+      "same-ingredient": "Udstyr kan ikke flettes ind i sig selv",
+      "cycle": "Udstyr kan ikke være en slags af sig selv",
+      "empty": "Indtast et navn",
+      "unknown": "Noget gik galt. Prøv igen."
+    },
+    "mergeInto": "Flet ind i…",
+    "merge": "Flet",
+    "mergedToast": "{name} er nu et alias for {into}.",
+    "mergeTitle": "{name} forsvinder og bliver et alias for det udstyr, du vælger.",
+    "pickEquipment": "Søg efter udstyr",
+    "pickerHint": "Skriv for at søge i kataloget",
+    "pickerSearching": "Søger…",
+    "pickerEmpty": "Intet udstyr fundet"
   }
 }

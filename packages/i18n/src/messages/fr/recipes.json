@@ -76,7 +76,8 @@
     "source": "Source",
     "addedBy": "Ajouté par {name}",
     "decreaseServings": "Moins de portions",
-    "increaseServings": "Plus de portions"
+    "increaseServings": "Plus de portions",
+    "equipment": "Ustensiles"
   },
   "actions": {
     "plan": "Planifier",
@@ -223,7 +224,9 @@
     "clickToUpload": "Cliquez pour téléverser ou glissez-déposez",
     "pasteToUpload": "pour coller",
     "imageFormats": "PNG, JPG, WEBP jusqu’à 5 Mo",
-    "discardChangesConfirm": "Vous avez des modifications non enregistrées. Les ignorer et quitter cette page ?"
+    "discardChangesConfirm": "Vous avez des modifications non enregistrées. Les ignorer et quitter cette page ?",
+    "equipment": "Ustensiles",
+    "equipmentHelp": "Saisissez les ustensiles et appareils de cuisine nécessaires pour cette recette."
   },
   "gallery": {
     "addImage": "Ajouter une image",
@@ -342,7 +345,8 @@
     "swipeBackToSteps": "Glissez à droite pour les étapes",
     "readyAt": "Prêt vers {time}",
     "timers": "Minuteurs",
-    "nextStep": "Étape suivante"
+    "nextStep": "Étape suivante",
+    "equipment": "Ustensiles"
   },
   "enrichment": {
     "failed": "L'enrichissement a échoué",
@@ -431,5 +435,8 @@
     "print": "Imprimer / Enregistrer en PDF",
     "continued": "suite",
     "perServing": "Par portion"
+  },
+  "equipmentInput": {
+    "placeholder": "ex. Poêle à frire (28 cm)"
   }
 }

@@ -97,7 +97,8 @@ export function toSharedMediaUrl(
 export function mapRecipeToPublicRecipeView(
   recipe: FullRecipeDTO,
   shareToken: string,
-  icons: ReadonlyMap<string, string | null>
+  icons: ReadonlyMap<string, string | null>,
+  equipmentIcons?: ReadonlyMap<string, string | null>
 ): PublicRecipeViewDTO {
   return PublicRecipeViewSchema.parse({
     name: recipe.name,
@@ -125,6 +126,11 @@ export function mapRecipeToPublicRecipeView(
       systemUsed: ingredient.systemUsed,
       order: ingredient.order,
       icon: ingredient.ingredientId ? (icons.get(ingredient.ingredientId) ?? null) : null,
+    })),
+    equipment: (recipe.equipment ?? []).map((item) => ({
+      name: item.name,
+      order: item.order,
+      icon: item.equipmentId ? (equipmentIcons?.get(item.equipmentId) ?? null) : null,
     })),
     steps: (recipe.steps ?? []).map((step) => ({
       step: step.step,

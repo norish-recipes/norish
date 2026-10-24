@@ -38,3 +38,5 @@ export * from "./aisles";
 export * from "./pantry";
 export * from "./ingredient-nutrition";
 export * from "./recipe-nutrition-estimates";
+export * from "./equipment";
+export * from "./recipe-equipment";

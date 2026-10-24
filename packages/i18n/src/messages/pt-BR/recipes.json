@@ -76,7 +76,8 @@
     "source": "Fonte",
     "addedBy": "Adicionado por {name}",
     "decreaseServings": "Menos porções",
-    "increaseServings": "Mais porções"
+    "increaseServings": "Mais porções",
+    "equipment": "Utensílios"
   },
   "actions": {
     "plan": "Planejar",
@@ -223,7 +224,9 @@
     "clickToUpload": "Clique para enviar ou arraste e solte",
     "pasteToUpload": "para colar",
     "imageFormats": "PNG, JPG, WEBP até 5 MB",
-    "discardChangesConfirm": "Você tem alterações não salvas. Deseja descartá-las e sair desta página?"
+    "discardChangesConfirm": "Você tem alterações não salvas. Deseja descartá-las e sair desta página?",
+    "equipment": "Utensílios",
+    "equipmentHelp": "Digite os utensílios e eletrodomésticos necessários para esta receita."
   },
   "gallery": {
     "addImage": "Adicionar imagem",
@@ -342,7 +345,8 @@
     "swipeBackToSteps": "Deslize para a direita para ver as etapas",
     "readyAt": "Pronto por volta das {time}",
     "timers": "Temporizadores",
-    "nextStep": "Próximo passo"
+    "nextStep": "Próximo passo",
+    "equipment": "Utensílios"
   },
   "enrichment": {
     "failed": "Falha no enriquecimento",
@@ -431,5 +435,8 @@
     "print": "Imprimir / Salvar PDF",
     "continued": "continuação",
     "perServing": "Por porção"
+  },
+  "equipmentInput": {
+    "placeholder": "ex.: Frigideira (28 cm)"
   }
 }

@@ -281,7 +281,8 @@ export async function getActiveRecipeShareByToken(
 export async function getPublicRecipeView(
   recipeId: string,
   shareToken: string,
-  iconsFor: (ingredientIds: string[]) => Promise<ReadonlyMap<string, string | null>>
+  iconsFor: (ingredientIds: string[]) => Promise<ReadonlyMap<string, string | null>>,
+  equipmentIconsFor?: (equipmentIds: string[]) => Promise<ReadonlyMap<string, string | null>>
 ): Promise<PublicRecipeViewDTO | null> {
   const recipe = await getRecipeFull(recipeId);
 
@@ -289,11 +290,18 @@ export async function getPublicRecipeView(
     return null;
   }
 
-  const icons = await iconsFor(
-    recipe.recipeIngredients.flatMap((line) => (line.ingredientId ? [line.ingredientId] : []))
-  );
+  const [icons, equipmentIcons] = await Promise.all([
+    iconsFor(
+      recipe.recipeIngredients.flatMap((line) => (line.ingredientId ? [line.ingredientId] : []))
+    ),
+    equipmentIconsFor
+      ? equipmentIconsFor(
+          (recipe.equipment ?? []).flatMap((line) => (line.equipmentId ? [line.equipmentId] : []))
+        )
+      : Promise.resolve(undefined),
+  ]);
 
-  return mapRecipeToPublicRecipeView(recipe, shareToken, icons);
+  return mapRecipeToPublicRecipeView(recipe, shareToken, icons, equipmentIcons);
 }
 
 export { getRecipeShareStatus, mapRecipeToPublicRecipeView, resolveRecipeShareExpiresAt };

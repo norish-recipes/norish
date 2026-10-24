@@ -76,7 +76,8 @@
     "source": "Fonte",
     "addedBy": "Aggiunto da {name}",
     "decreaseServings": "Meno porzioni",
-    "increaseServings": "Più porzioni"
+    "increaseServings": "Più porzioni",
+    "equipment": "Utensili"
   },
   "actions": {
     "plan": "Pianifica",
@@ -223,7 +224,9 @@
     "clickToUpload": "Clicca per caricare o trascina e rilascia",
     "pasteToUpload": "per incollare",
     "imageFormats": "PNG, JPG, WEBP fino a 5MB",
-    "discardChangesConfirm": "Hai modifiche non salvate. Scartarle e lasciare questa pagina?"
+    "discardChangesConfirm": "Hai modifiche non salvate. Scartarle e lasciare questa pagina?",
+    "equipment": "Utensili",
+    "equipmentHelp": "Inserisci gli utensili e gli elettrodomestici necessari per questa ricetta."
   },
   "gallery": {
     "addImage": "Aggiungi immagine",
@@ -342,7 +345,8 @@
     "swipeBackToSteps": "Scorri a destra per i passaggi",
     "readyAt": "Pronto verso le {time}",
     "timers": "Timer",
-    "nextStep": "Passo successivo"
+    "nextStep": "Passo successivo",
+    "equipment": "Utensili"
   },
   "enrichment": {
     "failed": "Arricchimento non riuscito",
@@ -431,5 +435,8 @@
     "print": "Stampa / Salva PDF",
     "continued": "continua",
     "perServing": "Per porzione"
+  },
+  "equipmentInput": {
+    "placeholder": "es. Padella (28 cm)"
   }
 }

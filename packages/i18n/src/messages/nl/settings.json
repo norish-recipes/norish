@@ -8,7 +8,8 @@
     "household": "Huishouden",
     "caldav": "CalDAV",
     "admin": "Admin",
-    "ingredients": "Ingrediënten"
+    "ingredients": "Ingrediënten",
+    "equipment": "Keukengerei"
   },
   "user": {
     "signInMethods": {
@@ -1259,5 +1260,59 @@
       "signedOut": "Je sessie is verlopen. Meld je opnieuw aan om te exporteren.",
       "notAllowed": "Je hebt geen rechten om dit te exporteren."
     }
+  },
+  "equipment": {
+    "title": "Keukengerei",
+    "description": "De keukengereicatalogus die Norish gebruikt om keukengerei, apparaten, pictogrammen en aliassen te koppelen.",
+    "search": "Keukengerei zoeken",
+    "empty": "Geen keukengerei gevonden",
+    "addEquipment": "Keukengerei toevoegen",
+    "createTitle": "Keukengerei toevoegen",
+    "nameSection": "Naam",
+    "namePlaceholder": "bijv. Garde",
+    "rename": "Hernoemen",
+    "spellingsSection": "Aliassen",
+    "addAlias": "Alias toevoegen",
+    "removeAlias": "{alias} verwijderen",
+    "keepAlias": "{alias} behouden",
+    "summary": "{spellings, plural, one {# alias} other {# aliassen}}",
+    "delete": "Verwijderen",
+    "deleteTitle": "{name} verwijderen?",
+    "deleteConfirm": "De aliassen worden mee verwijderd. Keukengerei dat nog in een recept wordt gebruikt, kan niet worden verwijderd; voeg het in plaats daarvan samen.",
+    "icon": {
+      "change": "Pictogram wijzigen",
+      "upload": "Afbeelding uploaden",
+      "remove": "Pictogram verwijderen",
+      "failed": "Van deze afbeelding kon geen pictogram worden gemaakt."
+    },
+    "uses": {
+      "show": "Toon waar",
+      "title": "Waar {name} wordt gebruikt",
+      "recipes": "Recepten",
+      "elsewhere": "{count, plural, one {# ander gebruik} other {# andere gebruiken}} in recepten die je niet kunt openen",
+      "none": "Wordt nergens meer gebruikt"
+    },
+    "errors": {
+      "title": "Kon het keukengerei niet wijzigen",
+      "forbidden": "Je mag dit keukengerei niet bewerken",
+      "not-found": "Dit keukengerei bestaat niet meer",
+      "name-taken": "Ander keukengerei heeft deze naam al",
+      "spelling-taken": "Deze alias hoort al bij ander keukengerei",
+      "last-alias": "Keukengerei behoudt ten minste één alias",
+      "alias-in-use": "Recepten gebruiken deze alias nog",
+      "ingredient-in-use": "Recepten gebruiken dit keukengerei nog",
+      "same-ingredient": "Keukengerei kan niet met zichzelf worden samengevoegd",
+      "cycle": "Keukengerei kan geen soort van zichzelf zijn",
+      "empty": "Voer een naam in",
+      "unknown": "Er ging iets mis. Probeer het opnieuw."
+    },
+    "mergeInto": "Samenvoegen met…",
+    "merge": "Samenvoegen",
+    "mergedToast": "{name} is nu een alias van {into}.",
+    "mergeTitle": "{name} verdwijnt en wordt een alias van het gekozen keukengerei.",
+    "pickEquipment": "Keukengerei zoeken",
+    "pickerHint": "Typ om in de catalogus te zoeken",
+    "pickerSearching": "Zoeken…",
+    "pickerEmpty": "Geen keukengerei gevonden"
   }
 }

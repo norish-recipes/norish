@@ -43,6 +43,6 @@ export const config = {
   // future /login-history or /icons-admin still goes through the proxy. Shared
   // recipes (/share) check their own share token.
   matcher: [
-    "/((?!(?:api/auth|api/trpc|api/v1|trpc|_next|icons|ingredient-icons|brand|login|signup|auth-error|share|~offline|serwist|sounds)(?:/|$)|(?:manifest\\.webmanifest|sw\\.js|logo\\.svg|logo-small\\.svg|404\\.jpg|nora\\.jpg|robots\\.txt)$).*)",
+    "/((?!(?:api/auth|api/trpc|api/v1|trpc|_next|icons|ingredient-icons|equipment-icons|brand|login|signup|auth-error|share|~offline|serwist|sounds)(?:/|$)|(?:manifest\\.webmanifest|sw\\.js|logo\\.svg|logo-small\\.svg|404\\.jpg|nora\\.jpg|robots\\.txt)$).*)",
   ],
 };

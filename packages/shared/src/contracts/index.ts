@@ -23,6 +23,7 @@ export type * from "./dto/admin-users";
 export type * from "./dto/favorites";
 export type * from "./dto/recipe-shares";
 export type * from "./dto/cookbook";
+export type * from "./dto/equipment";
 export * from "./optimistic";
 export * from "./uploads";
 export * from "./store-types";

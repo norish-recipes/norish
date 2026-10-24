@@ -8,7 +8,8 @@
     "household": "Casa",
     "caldav": "CalDAV",
     "admin": "Admin",
-    "ingredients": "Ingredientes"
+    "ingredients": "Ingredientes",
+    "equipment": "Utensílios"
   },
   "user": {
     "signInMethods": {
@@ -1259,5 +1260,59 @@
       "signedOut": "Sua sessão expirou. Entre novamente para exportar.",
       "notAllowed": "Você não tem permissão para exportar isso."
     }
+  },
+  "equipment": {
+    "title": "Utensílios",
+    "description": "O catálogo de utensílios que o Norish usa para associar utensílios, eletrodomésticos, ícones e apelidos.",
+    "search": "Buscar utensílios",
+    "empty": "Nenhum utensílio encontrado",
+    "addEquipment": "Adicionar utensílio",
+    "createTitle": "Adicionar utensílio",
+    "nameSection": "Nome",
+    "namePlaceholder": "ex.: Fouet",
+    "rename": "Renomear",
+    "spellingsSection": "Apelidos",
+    "addAlias": "Adicionar um apelido",
+    "removeAlias": "Remover {alias}",
+    "keepAlias": "Manter {alias}",
+    "summary": "{spellings, plural, one {# apelido} other {# apelidos}}",
+    "delete": "Excluir",
+    "deleteTitle": "Excluir {name}?",
+    "deleteConfirm": "Seus apelidos serão excluídos junto. Um utensílio que ainda é usado em uma receita não pode ser excluído; mescle-o em vez disso.",
+    "icon": {
+      "change": "Alterar o ícone",
+      "upload": "Enviar uma imagem",
+      "remove": "Remover ícone",
+      "failed": "Não foi possível criar um ícone a partir dessa imagem."
+    },
+    "uses": {
+      "show": "Mostrar onde",
+      "title": "Onde {name} é usado",
+      "recipes": "Receitas",
+      "elsewhere": "{count, plural, one {# outro uso} other {# outros usos}} em receitas que você não pode abrir",
+      "none": "Nada mais usa este item"
+    },
+    "errors": {
+      "title": "Não foi possível alterar o utensílio",
+      "forbidden": "Você não tem permissão para editar este utensílio",
+      "not-found": "Este utensílio não existe mais",
+      "name-taken": "Outro utensílio já tem este nome",
+      "spelling-taken": "Este apelido já pertence a outro utensílio",
+      "last-alias": "O utensílio deve manter pelo menos um apelido",
+      "alias-in-use": "Receitas ainda usam este apelido",
+      "ingredient-in-use": "Receitas ainda usam este utensílio",
+      "same-ingredient": "Um utensílio não pode ser mesclado consigo mesmo",
+      "cycle": "Um utensílio não pode ser um tipo de si mesmo",
+      "empty": "Digite um nome",
+      "unknown": "Algo deu errado. Tente novamente."
+    },
+    "mergeInto": "Mesclar em…",
+    "merge": "Mesclar",
+    "mergedToast": "{name} agora é um apelido de {into}.",
+    "mergeTitle": "{name} desaparece e se torna um apelido do utensílio escolhido.",
+    "pickEquipment": "Buscar utensílio",
+    "pickerHint": "Digite para buscar no catálogo",
+    "pickerSearching": "Buscando…",
+    "pickerEmpty": "Nenhum utensílio encontrado"
   }
 }

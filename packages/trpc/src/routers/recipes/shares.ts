@@ -25,6 +25,7 @@ import {
   getUnits,
   isTimersEnabled,
 } from "@norish/shared-server/config/server-config-loader";
+import { equipmentIconAddresses } from "@norish/shared-server/equipment/icons";
 import { ingredientIconAddresses } from "@norish/shared-server/ingredients/icons";
 import { trpcLogger as log } from "@norish/shared-server/logger";
 import { recipes } from "@norish/shared-server/realtime/recipes";
@@ -243,7 +244,8 @@ const getShared = sharedRecipeProcedure.output(PublicRecipeViewSchema).query(asy
     ctx.sharedRecipe.share.recipeId,
     ctx.sharedRecipe.token,
     // Each line's icon by address: the public view carries no ids to look one up by.
-    ingredientIconAddresses
+    ingredientIconAddresses,
+    equipmentIconAddresses
   );
 
   if (!publicRecipe) {

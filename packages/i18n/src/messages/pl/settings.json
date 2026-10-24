@@ -8,7 +8,8 @@
     "household": "Gospodarstwo domowe",
     "caldav": "CalDAV",
     "admin": "Administrator",
-    "ingredients": "Składniki"
+    "ingredients": "Składniki",
+    "equipment": "Wyposażenie"
   },
   "user": {
     "signInMethods": {
@@ -1259,5 +1260,59 @@
       "signedOut": "Twoja sesja wygasła. Zaloguj się ponownie, aby eksportować.",
       "notAllowed": "Nie masz uprawnień, aby to eksportować."
     }
+  },
+  "equipment": {
+    "title": "Wyposażenie",
+    "description": "Katalog wyposażenia używany przez Norish do dopasowywania przyborów, urządzeń, ikon i aliasów.",
+    "search": "Szukaj wyposażenia",
+    "empty": "Nie znaleziono wyposażenia",
+    "addEquipment": "Dodaj wyposażenie",
+    "createTitle": "Dodaj wyposażenie",
+    "nameSection": "Nazwa",
+    "namePlaceholder": "np. Trzepaczka",
+    "rename": "Zmień nazwę",
+    "spellingsSection": "Aliasy",
+    "addAlias": "Dodaj alias",
+    "removeAlias": "Usuń {alias}",
+    "keepAlias": "Zachowaj {alias}",
+    "summary": "{spellings, plural, one {# alias} few {# aliasy} many {# aliasów} other {# aliasów}}",
+    "delete": "Usuń",
+    "deleteTitle": "Usunąć {name}?",
+    "deleteConfirm": "Jego aliasy zostaną usunięte razem z nim. Wyposażenia nadal używanego w przepisie nie można usunąć; zamiast tego połącz je z innym.",
+    "icon": {
+      "change": "Zmień ikonę",
+      "upload": "Prześlij obraz",
+      "remove": "Usuń ikonę",
+      "failed": "Z tego obrazu nie udało się utworzyć ikony."
+    },
+    "uses": {
+      "show": "Pokaż gdzie",
+      "title": "Gdzie użyto {name}",
+      "recipes": "Przepisy",
+      "elsewhere": "{count, plural, one {# inne użycie} few {# inne użycia} many {# innych użyć} other {# innych użyć}} w przepisach, których nie możesz otworzyć",
+      "none": "Nigdzie już nie jest używane"
+    },
+    "errors": {
+      "title": "Nie udało się zmienić wyposażenia",
+      "forbidden": "Nie możesz edytować tego wyposażenia",
+      "not-found": "To wyposażenie już nie istnieje",
+      "name-taken": "Inne wyposażenie ma już tę nazwę",
+      "spelling-taken": "Ten alias należy już do innego wyposażenia",
+      "last-alias": "Wyposażenie musi zachować co najmniej jeden alias",
+      "alias-in-use": "Przepisy nadal używają tego aliasu",
+      "ingredient-in-use": "Przepisy nadal używają tego wyposażenia",
+      "same-ingredient": "Nie można połączyć wyposażenia z samym sobą",
+      "cycle": "Wyposażenie nie może być rodzajem samego siebie",
+      "empty": "Wpisz nazwę",
+      "unknown": "Coś poszło nie tak. Spróbuj ponownie."
+    },
+    "mergeInto": "Połącz z…",
+    "merge": "Połącz",
+    "mergedToast": "{name} jest teraz aliasem dla {into}.",
+    "mergeTitle": "{name} zniknie i stanie się aliasem wybranego wyposażenia.",
+    "pickEquipment": "Szukaj wyposażenia",
+    "pickerHint": "Wpisz, aby przeszukać katalog",
+    "pickerSearching": "Szukanie…",
+    "pickerEmpty": "Nie znaleziono wyposażenia"
   }
 }

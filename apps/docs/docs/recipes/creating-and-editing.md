@@ -11,6 +11,7 @@ opens the same form.
 
 - **Ingredients** are free text, one per line, like `200 g spaghetti`. Norish
   reads the amount and unit as you type.
+- **Equipment** lists required kitchen tools and utensils, one per line (like `Frying pan`, `Blender`, or `Springform`).
 - **Steps** go one per row. Drag a row to reorder it.
 - **Photos** go on the recipe or on a step. A step can have several.
 
@@ -20,6 +21,10 @@ Start an ingredient or a step with `#` to make it a heading, like
 `# For the sauce`. Headings are not numbered as steps.
 
 ![A step section heading written with #](/img/screenshots/editor-section-heading.png)
+
+## Equipment
+
+Enter kitchen tools and utensils needed for the recipe, one per line (e.g. `Chef's knife`, `Frying pan`, `Springform pan`). Norish links them to the equipment catalogue and displays icons automatically on the recipe view.
 
 ## Recipe links with `/`
 

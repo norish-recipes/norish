@@ -636,6 +636,7 @@ describe("useRecipesMutations", () => {
         steps: [],
         tags: [],
         categories: [],
+        equipment: [],
         author: { id: "user-1", name: "User", image: null, version: 1 },
         images: [],
         videos: [],

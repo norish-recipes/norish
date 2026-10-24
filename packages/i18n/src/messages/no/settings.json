@@ -8,7 +8,8 @@
     "household": "Husstand",
     "caldav": "CalDAV",
     "admin": "Admin",
-    "ingredients": "Ingredienser"
+    "ingredients": "Ingredienser",
+    "equipment": "Utstyr"
   },
   "user": {
     "signInMethods": {
@@ -1259,5 +1260,59 @@
       "signedOut": "Økten din er utløpt. Logg inn igjen for å eksportere.",
       "notAllowed": "Du har ikke tillatelse til å eksportere dette."
     }
+  },
+  "equipment": {
+    "title": "Utstyr",
+    "description": "Utstyrskatalogen Norish bruker til å koble kjøkkenredskaper, apparater, ikoner og aliaser.",
+    "search": "Søk etter utstyr",
+    "empty": "Ingen utstyr funnet",
+    "addEquipment": "Legg til utstyr",
+    "createTitle": "Legg til utstyr",
+    "nameSection": "Navn",
+    "namePlaceholder": "f.eks. Visp",
+    "rename": "Gi nytt navn",
+    "spellingsSection": "Aliaser",
+    "addAlias": "Legg til et alias",
+    "removeAlias": "Fjern {alias}",
+    "keepAlias": "Behold {alias}",
+    "summary": "{spellings, plural, one {# alias} other {# aliaser}}",
+    "delete": "Slett",
+    "deleteTitle": "Slette {name}?",
+    "deleteConfirm": "Aliasene slettes også. Utstyr som fortsatt brukes i en oppskrift kan ikke slettes; slå det sammen i stedet.",
+    "icon": {
+      "change": "Endre ikonet",
+      "upload": "Last opp et bilde",
+      "remove": "Fjern ikon",
+      "failed": "Det bildet kunne ikke gjøres om til et ikon."
+    },
+    "uses": {
+      "show": "Vis hvor",
+      "title": "Hvor {name} brukes",
+      "recipes": "Oppskrifter",
+      "elsewhere": "{count, plural, one {# bruk til} other {# bruk til}} i oppskrifter du ikke kan åpne",
+      "none": "Ingenting bruker det lenger"
+    },
+    "errors": {
+      "title": "Kunne ikke endre utstyret",
+      "forbidden": "Du har ikke tillatelse til å redigere dette utstyret",
+      "not-found": "Dette utstyret finnes ikke lenger",
+      "name-taken": "Et annet utstyr har allerede dette navnet",
+      "spelling-taken": "Dette aliaset tilhører allerede et annet utstyr",
+      "last-alias": "Utstyr må beholde minst ett alias",
+      "alias-in-use": "Oppskrifter bruker fortsatt dette aliaset",
+      "ingredient-in-use": "Oppskrifter bruker fortsatt dette utstyret",
+      "same-ingredient": "Utstyr kan ikke slås sammen med seg selv",
+      "cycle": "Utstyr kan ikke være en type av seg selv",
+      "empty": "Skriv inn et navn",
+      "unknown": "Noe gikk galt. Prøv igjen."
+    },
+    "mergeInto": "Slå sammen med…",
+    "merge": "Slå sammen",
+    "mergedToast": "{name} er nå et alias for {into}.",
+    "mergeTitle": "{name} forsvinner og blir et alias for utstyret du velger.",
+    "pickEquipment": "Søk etter utstyr",
+    "pickerHint": "Skriv for å søke i katalogen",
+    "pickerSearching": "Søker…",
+    "pickerEmpty": "Ingen utstyr funnet"
   }
 }

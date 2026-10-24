@@ -3,11 +3,13 @@ import { relations } from "drizzle-orm";
 import { accounts, apiKeys, sessions, users } from "./auth";
 import { cookbookRecipes, cookbooks } from "./cookbooks";
 import { cuisines } from "./cuisines";
+import { equipment, equipmentAliases } from "./equipment";
 import { groceries } from "./groceries";
 import { householdUsers } from "./household-users";
 import { households } from "./households";
 import { ingredientAliases, ingredients } from "./ingredients";
 import { recipeCuisines } from "./recipe-cuisines";
+import { recipeEquipment } from "./recipe-equipment";
 import { recipeImages } from "./recipe-images";
 import { recipeIngredientFoods, recipeIngredients } from "./recipe-ingredients";
 import { recipeRatings } from "./recipe-ratings";
@@ -25,6 +27,7 @@ import { userAllergies } from "./user-allergies";
 
 export const recipesRelations = relations(recipes, ({ many }) => ({
   ingredients: many(recipeIngredients),
+  equipment: many(recipeEquipment),
   recipeTags: many(recipeTags),
   recipeCuisines: many(recipeCuisines),
   steps: many(steps),
@@ -274,5 +277,27 @@ export const userAllergiesRelations = relations(userAllergies, ({ one }) => ({
   tag: one(tags, {
     fields: [userAllergies.tagId],
     references: [tags.id],
+  }),
+}));
+
+export const equipmentRelations = relations(equipment, ({ many }) => ({
+  aliases: many(equipmentAliases),
+}));
+
+export const equipmentAliasesRelations = relations(equipmentAliases, ({ one }) => ({
+  equipment: one(equipment, {
+    fields: [equipmentAliases.equipmentId],
+    references: [equipment.id],
+  }),
+}));
+
+export const recipeEquipmentRelations = relations(recipeEquipment, ({ one }) => ({
+  recipe: one(recipes, {
+    fields: [recipeEquipment.recipeId],
+    references: [recipes.id],
+  }),
+  alias: one(equipmentAliases, {
+    fields: [recipeEquipment.equipmentAliasId],
+    references: [equipmentAliases.id],
   }),
 }));

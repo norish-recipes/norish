@@ -8,7 +8,8 @@
     "household": "Kotitalous",
     "caldav": "CalDAV",
     "admin": "Ylläpito",
-    "ingredients": "Ainesosat"
+    "ingredients": "Ainesosat",
+    "equipment": "Välineet"
   },
   "user": {
     "signInMethods": {
@@ -1259,5 +1260,59 @@
       "signedOut": "Istuntosi on vanhentunut. Kirjaudu uudelleen sisään viedäksesi.",
       "notAllowed": "Sinulla ei ole oikeutta viedä tätä."
     }
+  },
+  "equipment": {
+    "title": "Välineet",
+    "description": "Välineluettelo, jota Norish käyttää keittiövälineiden, laitteiden, kuvakkeiden ja aliasten yhdistämiseen.",
+    "search": "Etsi välineitä",
+    "empty": "Välineitä ei löytynyt",
+    "addEquipment": "Lisää väline",
+    "createTitle": "Lisää väline",
+    "nameSection": "Nimi",
+    "namePlaceholder": "esim. Vispilä",
+    "rename": "Nimeä uudelleen",
+    "spellingsSection": "Aliakset",
+    "addAlias": "Lisää alias",
+    "removeAlias": "Poista {alias}",
+    "keepAlias": "Säilytä {alias}",
+    "summary": "{spellings, plural, one {# alias} other {# aliasta}}",
+    "delete": "Poista",
+    "deleteTitle": "Poistetaanko {name}?",
+    "deleteConfirm": "Sen aliakset poistetaan samalla. Välinettä, jota käytetään vielä reseptissä, ei voi poistaa; yhdistä se sen sijaan.",
+    "icon": {
+      "change": "Vaihda kuvake",
+      "upload": "Lataa kuva",
+      "remove": "Poista kuvake",
+      "failed": "Kuvasta ei voitu luoda kuvaketta."
+    },
+    "uses": {
+      "show": "Näytä missä",
+      "title": "Missä kohdetta {name} käytetään",
+      "recipes": "Reseptit",
+      "elsewhere": "{count, plural, one {# muu käyttö} other {# muuta käyttöä}} resepteissä, joita et voi avata",
+      "none": "Mikään ei enää käytä tätä"
+    },
+    "errors": {
+      "title": "Välinettä ei voitu muuttaa",
+      "forbidden": "Et voi muokata tätä välinettä",
+      "not-found": "Tätä välinettä ei enää ole",
+      "name-taken": "Toisella välineellä on jo tämä nimi",
+      "spelling-taken": "Tämä alias kuuluu jo toiselle välineelle",
+      "last-alias": "Välineellä on oltava vähintään yksi alias",
+      "alias-in-use": "Reseptit käyttävät yhä tätä aliasta",
+      "ingredient-in-use": "Reseptit käyttävät yhä tätä välinettä",
+      "same-ingredient": "Välinettä ei voi yhdistää itseensä",
+      "cycle": "Väline ei voi olla itsensä alalaji",
+      "empty": "Syötä nimi",
+      "unknown": "Jokin meni pieleen. Yritä uudelleen."
+    },
+    "mergeInto": "Yhdistä kohteeseen…",
+    "merge": "Yhdistä",
+    "mergedToast": "{name} on nyt kohteen {into} alias.",
+    "mergeTitle": "{name} poistuu ja muuttuu valitsemasi välineen aliakseksi.",
+    "pickEquipment": "Etsi välinettä",
+    "pickerHint": "Kirjoita hakeaksesi luettelosta",
+    "pickerSearching": "Haetaan…",
+    "pickerEmpty": "Välineitä ei löytynyt"
   }
 }

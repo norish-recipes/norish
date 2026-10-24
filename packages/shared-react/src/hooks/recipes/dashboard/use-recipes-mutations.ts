@@ -193,6 +193,7 @@ function createOptimisticFullRecipe(input: FullRecipeInsertDTO): FullRecipeDTO |
     tags: (input.tags ?? []).map((tag) => ({ name: tag.name, version: 1 })),
     categories: input.categories ?? [],
     recipeIngredients: optimisticIngredients(input.recipeIngredients ?? [], systemUsed),
+    equipment: optimisticEquipment(input.equipment ?? []),
     steps: optimisticSteps(input.steps ?? [], systemUsed),
     author: undefined,
     images: optimisticImages(input.images ?? []),
@@ -217,6 +218,23 @@ function optimisticIngredients(
     systemUsed: ingredient.systemUsed ?? systemUsed,
     version: ingredient.version ?? 1,
   }));
+}
+
+function optimisticEquipment(
+  rows: NonNullable<FullRecipeUpdateDTO["equipment"]>,
+  previous?: FullRecipeDTO["equipment"]
+): FullRecipeDTO["equipment"] {
+  return rows.map((item, index) => {
+    const prev = item.id ? previous?.find((p) => p.id === item.id) : undefined;
+
+    return {
+      id: item.id ?? createOptimisticId(),
+      equipmentId: prev?.equipmentId ?? null,
+      name: item.name ?? "",
+      order: toNumber(item.order, index),
+      version: item.version ?? 1,
+    };
+  });
 }
 
 function optimisticSteps(
@@ -503,6 +521,9 @@ export function createUseRecipesMutations(
                 ? optimisticIngredients(data.recipeIngredients, previous.systemUsed)
                 : previous.recipeIngredients,
               steps: data.steps ? optimisticSteps(data.steps, previous.systemUsed) : previous.steps,
+              equipment: data.equipment
+                ? optimisticEquipment(data.equipment, previous.equipment)
+                : previous.equipment,
               // The form sends cuisine ids; the cache holds the entries. A removal
               // shows at once, an addition when the server answers.
               cuisines: data.cuisines

@@ -34,6 +34,7 @@ const baseRecipe: FullRecipeDTO = {
   createdAt: new Date("2026-03-31T00:00:00.000Z"),
   updatedAt: new Date("2026-03-31T00:00:00.000Z"),
   categories: [],
+  equipment: [],
   version: 1,
   recipeIngredients: [
     {

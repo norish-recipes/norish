@@ -76,7 +76,8 @@
     "source": "출처",
     "addedBy": "{name} 님이 추가함",
     "decreaseServings": "인분 줄이기",
-    "increaseServings": "인분 늘리기"
+    "increaseServings": "인분 늘리기",
+    "equipment": "조리도구"
   },
   "actions": {
     "plan": "계획",
@@ -223,7 +224,9 @@
     "clickToUpload": "클릭하여 업로드하거나 드래그 앤 드롭하세요.",
     "pasteToUpload": "붙여넣기",
     "imageFormats": "최대 5MB의 PNG, JPG, WEBP",
-    "discardChangesConfirm": "저장하지 않은 변경사항이 있습니다. 변경사항을 버리고 이 페이지를 떠나시겠어요?"
+    "discardChangesConfirm": "저장하지 않은 변경사항이 있습니다. 변경사항을 버리고 이 페이지를 떠나시겠어요?",
+    "equipment": "조리도구",
+    "equipmentHelp": "이 레시피에 필요한 주방 도구와 가전제품을 입력하세요."
   },
   "gallery": {
     "addImage": "이미지 추가",
@@ -342,7 +345,8 @@
     "swipeBackToSteps": "오른쪽으로 스와이프하여 단계 보기",
     "readyAt": "{time}쯤 완성",
     "timers": "타이머",
-    "nextStep": "다음 단계"
+    "nextStep": "다음 단계",
+    "equipment": "조리도구"
   },
   "enrichment": {
     "failed": "보강에 실패했습니다",
@@ -431,5 +435,8 @@
     "print": "인쇄 / PDF 저장",
     "continued": "계속",
     "perServing": "1인분당"
+  },
+  "equipmentInput": {
+    "placeholder": "예: 프라이팬 (28 cm)"
   }
 }

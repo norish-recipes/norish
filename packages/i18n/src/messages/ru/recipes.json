@@ -76,7 +76,8 @@
     "source": "Источник",
     "addedBy": "Добавил(а) {name}",
     "decreaseServings": "Меньше порций",
-    "increaseServings": "Больше порций"
+    "increaseServings": "Больше порций",
+    "equipment": "Инвентарь"
   },
   "actions": {
     "plan": "Запланировать",
@@ -223,7 +224,9 @@
     "clickToUpload": "Нажмите, чтобы загрузить, или перетащите файл",
     "pasteToUpload": "для вставки",
     "imageFormats": "PNG, JPG, WEBP до 5 МБ",
-    "discardChangesConfirm": "У вас есть несохранённые изменения. Отменить их и покинуть эту страницу?"
+    "discardChangesConfirm": "У вас есть несохранённые изменения. Отменить их и покинуть эту страницу?",
+    "equipment": "Инвентарь",
+    "equipmentHelp": "Введите кухонные принадлежности и приборы, необходимые для этого рецепта."
   },
   "gallery": {
     "addImage": "Добавить изображение",
@@ -342,7 +345,8 @@
     "swipeBackToSteps": "Проведите вправо для шагов",
     "readyAt": "Готово примерно в {time}",
     "timers": "Таймеры",
-    "nextStep": "Следующий шаг"
+    "nextStep": "Следующий шаг",
+    "equipment": "Оборудование"
   },
   "enrichment": {
     "failed": "Не удалось выполнить обогащение",
@@ -431,5 +435,8 @@
     "print": "Печать / Сохранить PDF",
     "continued": "продолжение",
     "perServing": "На порцию"
+  },
+  "equipmentInput": {
+    "placeholder": "напр., Сковорода (28 см)"
   }
 }

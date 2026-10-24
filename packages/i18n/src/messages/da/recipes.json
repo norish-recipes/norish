@@ -76,7 +76,8 @@
     "source": "Kilde",
     "addedBy": "Tilføjet af {name}",
     "decreaseServings": "Færre portioner",
-    "increaseServings": "Flere portioner"
+    "increaseServings": "Flere portioner",
+    "equipment": "Udstyr"
   },
   "actions": {
     "plan": "Planlæg",
@@ -223,7 +224,9 @@
     "clickToUpload": "Klik for at uploade eller træk og slip",
     "pasteToUpload": "for at indsætte",
     "imageFormats": "PNG, JPG, WEBP op til 5 MB",
-    "discardChangesConfirm": "Du har ændringer, der ikke er gemt. Vil du kassere dem og forlade siden?"
+    "discardChangesConfirm": "Du har ændringer, der ikke er gemt. Vil du kassere dem og forlade siden?",
+    "equipment": "Udstyr",
+    "equipmentHelp": "Skriv de køkkenredskaber og apparater, der skal bruges til denne opskrift."
   },
   "gallery": {
     "addImage": "Tilføj billede",
@@ -342,7 +345,8 @@
     "swipeBackToSteps": "Swipe til højre for trin",
     "readyAt": "Klar omkring {time}",
     "timers": "Timere",
-    "nextStep": "Næste trin"
+    "nextStep": "Næste trin",
+    "equipment": "Udstyr"
   },
   "enrichment": {
     "failed": "Berigelse mislykkedes",
@@ -431,5 +435,8 @@
     "print": "Udskriv / Gem PDF",
     "continued": "fortsat",
     "perServing": "Pr. portion"
+  },
+  "equipmentInput": {
+    "placeholder": "f.eks. Stegepande (28 cm)"
   }
 }

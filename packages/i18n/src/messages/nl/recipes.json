@@ -76,7 +76,8 @@
     "source": "Bron",
     "addedBy": "Toegevoegd door {name}",
     "decreaseServings": "Minder porties",
-    "increaseServings": "Meer porties"
+    "increaseServings": "Meer porties",
+    "equipment": "Keukengerei"
   },
   "actions": {
     "plan": "Plan",
@@ -223,7 +224,9 @@
     "clickToUpload": "Klik om te uploaden of sleep en zet neer",
     "pasteToUpload": "om te plakken",
     "imageFormats": "PNG, JPG, WEBP tot 5MB",
-    "discardChangesConfirm": "Je hebt niet-opgeslagen wijzigingen. Ze verwijderen en deze pagina verlaten?"
+    "discardChangesConfirm": "Je hebt niet-opgeslagen wijzigingen. Ze verwijderen en deze pagina verlaten?",
+    "equipment": "Keukengerei",
+    "equipmentHelp": "Typ het keukengerei en de apparaten die nodig zijn voor dit recept."
   },
   "gallery": {
     "addImage": "Afbeelding toevoegen",
@@ -342,7 +345,8 @@
     "swipeBackToSteps": "Veeg rechts voor stappen",
     "readyAt": "Rond {time} klaar",
     "timers": "Timers",
-    "nextStep": "Volgende stap"
+    "nextStep": "Volgende stap",
+    "equipment": "Keukengerei"
   },
   "enrichment": {
     "failed": "Verrijking mislukt",
@@ -431,5 +435,8 @@
     "print": "Afdrukken / Opslaan als PDF",
     "continued": "vervolg",
     "perServing": "Per portie"
+  },
+  "equipmentInput": {
+    "placeholder": "bijv. Koekenpan (28 cm)"
   }
 }

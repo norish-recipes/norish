@@ -76,7 +76,8 @@
     "source": "Джерело",
     "addedBy": "Автор: {name}",
     "decreaseServings": "Менше порцій",
-    "increaseServings": "Більше порцій"
+    "increaseServings": "Більше порцій",
+    "equipment": "Приладдя"
   },
   "actions": {
     "plan": "Запланувати",
@@ -223,7 +224,9 @@
     "clickToUpload": "Натисніть, щоб завантажити, або перетягніть файл",
     "pasteToUpload": "щоб вставити",
     "imageFormats": "PNG, JPG, WEBP до 5 МБ",
-    "discardChangesConfirm": "У вас є незбережені зміни. Відкинути їх і піти з цієї сторінки?"
+    "discardChangesConfirm": "У вас є незбережені зміни. Відкинути їх і піти з цієї сторінки?",
+    "equipment": "Приладдя",
+    "equipmentHelp": "Введіть кухонне приладдя та техніку, необхідні для цього рецепта."
   },
   "gallery": {
     "addImage": "Додати зображення",
@@ -342,7 +345,8 @@
     "swipeBackToSteps": "Проведіть управо до кроків",
     "readyAt": "Буде готово близько {time}",
     "timers": "Таймери",
-    "nextStep": "Наступний крок"
+    "nextStep": "Наступний крок",
+    "equipment": "Обладнання"
   },
   "enrichment": {
     "failed": "Не вдалося доповнити рецепт",
@@ -431,5 +435,8 @@
     "print": "Друк / Зберегти PDF",
     "continued": "продовження",
     "perServing": "На порцію"
+  },
+  "equipmentInput": {
+    "placeholder": "напр., Сковорідка (28 см)"
   }
 }

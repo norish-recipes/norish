@@ -1,5 +1,6 @@
 "use client";
 
+import type { RecipeEquipmentFormItem } from "@/components/recipes/equipment-input";
 import type { ParsedIngredient } from "@/components/recipes/ingredient-input";
 import type { RecipeGalleryMedia } from "@/components/recipes/media-gallery-input";
 import type { Step } from "@/components/recipes/step-input";
@@ -25,6 +26,7 @@ interface RecipeFormState {
   categories: RecipeCategory[];
   ingredients: ParsedIngredient[];
   steps: Step[];
+  equipment: RecipeEquipmentFormItem[];
   systemUsed: MeasurementSystem;
   media: RecipeGalleryMedia[];
   calories: number | null;
@@ -121,6 +123,12 @@ export function useRecipeFormDirtyState({
         version: step.version,
         images: step.images || [],
         stepIngredients: step.stepIngredients || [],
+      })),
+      equipment: (initialData?.equipment ?? []).map((eq, idx) => ({
+        id: eq.id,
+        version: eq.version,
+        name: eq.name,
+        order: eq.order ?? idx,
       })),
       systemUsed: initialData?.systemUsed ?? "metric",
       media: buildInitialMedia(initialData),

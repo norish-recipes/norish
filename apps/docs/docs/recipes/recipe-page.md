@@ -17,7 +17,7 @@ with none of the three has no bar.
 
 ## Sections
 
-Each section is its own card, in cooking order: **Ingredients**, **Steps**,
+Each section is its own card, in cooking order: **Ingredients**, **Equipment**, **Steps**,
 **Notes**, then **Cooking time**, **Nutrition**, **Provenance**, **Source** and
 the rating. Empty sections are left out.
 

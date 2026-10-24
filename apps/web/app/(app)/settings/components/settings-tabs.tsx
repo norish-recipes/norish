@@ -9,6 +9,7 @@ import {
   ServerIcon as ServerIconSolid,
   ShieldCheckIcon as ShieldCheckIconSolid,
   UserCircleIcon as UserCircleIconSolid,
+  WrenchScrewdriverIcon as WrenchScrewdriverIconSolid,
 } from "@heroicons/react/20/solid";
 import {
   BookOpenIcon as BookOpenIconOutline,
@@ -16,6 +17,7 @@ import {
   ServerIcon as ServerIconOutline,
   ShieldCheckIcon as ShieldCheckIconOutline,
   UserCircleIcon as UserCircleIconOutline,
+  WrenchScrewdriverIcon as WrenchScrewdriverIconOutline,
 } from "@heroicons/react/24/outline";
 import { Tabs } from "@heroui/react";
 import { useTranslations } from "next-intl";
@@ -72,6 +74,12 @@ export function SettingsTabs({
       label: t("tabs.ingredients"),
       activeIcon: BookOpenIconSolid,
       inactiveIcon: BookOpenIconOutline,
+    },
+    {
+      id: "equipment",
+      label: t("tabs.equipment"),
+      activeIcon: WrenchScrewdriverIconSolid,
+      inactiveIcon: WrenchScrewdriverIconOutline,
     },
     ...(shape.showAdminTab
       ? [

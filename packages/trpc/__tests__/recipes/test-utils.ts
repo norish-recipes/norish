@@ -151,6 +151,7 @@ export function createMockFullRecipe(overrides: Partial<FullRecipeDTO> = {}): Fu
     author: { id: "test-user-id", name: "Test User", image: null },
     images: [],
     videos: [],
+    equipment: [],
     ...overrides,
   };
 }

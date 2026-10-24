@@ -28,6 +28,13 @@ const IngredientsSettingsTab = dynamic(
   }
 );
 
+const EquipmentSettingsTab = dynamic(
+  () => import("../equipment/components/equipment-settings-content"),
+  {
+    loading: () => <SettingsTabSkeleton tab="equipment" />,
+  }
+);
+
 const AdminSettingsTab = dynamic(() => import("../admin/components/admin-settings-content"), {
   loading: () => <SettingsTabSkeleton tab="admin" />,
 });
@@ -41,6 +48,7 @@ export default function SettingsPageContent({ shape }: { shape: SettingsShape })
           household: <HouseholdSettingsTab />,
           caldav: <CalDavSettingsTab />,
           ingredients: <IngredientsSettingsTab />,
+          equipment: <EquipmentSettingsTab />,
           admin: <AdminSettingsTab />,
         })[tab]
       }

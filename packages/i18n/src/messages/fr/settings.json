@@ -8,7 +8,8 @@
     "household": "Foyer",
     "caldav": "CalDAV",
     "admin": "Admin",
-    "ingredients": "Ingrédients"
+    "ingredients": "Ingrédients",
+    "equipment": "Ustensiles"
   },
   "user": {
     "signInMethods": {
@@ -1259,5 +1260,59 @@
       "signedOut": "Votre session a expiré. Reconnectez-vous pour exporter.",
       "notAllowed": "Vous n'avez pas l'autorisation d'exporter ceci."
     }
+  },
+  "equipment": {
+    "title": "Ustensiles",
+    "description": "Le catalogue d’ustensiles utilisé par Norish pour associer ustensiles, appareils, icônes et alias.",
+    "search": "Rechercher un ustensile",
+    "empty": "Aucun ustensile trouvé",
+    "addEquipment": "Ajouter un ustensile",
+    "createTitle": "Ajouter un ustensile",
+    "nameSection": "Nom",
+    "namePlaceholder": "ex. Fouet",
+    "rename": "Renommer",
+    "spellingsSection": "Alias",
+    "addAlias": "Ajouter un alias",
+    "removeAlias": "Supprimer {alias}",
+    "keepAlias": "Conserver {alias}",
+    "summary": "{spellings, plural, one {# alias} other {# alias}}",
+    "delete": "Supprimer",
+    "deleteTitle": "Supprimer {name} ?",
+    "deleteConfirm": "Ses alias seront également supprimés. Un ustensile encore utilisé dans une recette ne peut pas être supprimé ; fusionnez-le plutôt.",
+    "icon": {
+      "change": "Changer l’icône",
+      "upload": "Téléverser une image",
+      "remove": "Supprimer l’icône",
+      "failed": "Impossible de créer une icône à partir de cette image."
+    },
+    "uses": {
+      "show": "Voir où",
+      "title": "Où {name} est utilisé",
+      "recipes": "Recettes",
+      "elsewhere": "{count, plural, one {# autre utilisation} other {# autres utilisations}} dans des recettes que vous ne pouvez pas ouvrir",
+      "none": "Plus aucune recette ne l’utilise"
+    },
+    "errors": {
+      "title": "Impossible de modifier l’ustensile",
+      "forbidden": "Vous n’êtes pas autorisé à modifier cet ustensile",
+      "not-found": "Cet ustensile n’existe plus",
+      "name-taken": "Un autre ustensile porte déjà ce nom",
+      "spelling-taken": "Cet alias appartient déjà à un autre ustensile",
+      "last-alias": "Un ustensile doit conserver au moins un alias",
+      "alias-in-use": "Des recettes utilisent encore cet alias",
+      "ingredient-in-use": "Des recettes utilisent encore cet ustensile",
+      "same-ingredient": "Un ustensile ne peut pas être fusionné avec lui-même",
+      "cycle": "Un ustensile ne peut pas être une sous-catégorie de lui-même",
+      "empty": "Saisissez un nom",
+      "unknown": "Une erreur est survenue. Réessayez."
+    },
+    "mergeInto": "Fusionner dans…",
+    "merge": "Fusionner",
+    "mergedToast": "{name} est désormais un alias de {into}.",
+    "mergeTitle": "{name} disparaît et devient un alias de l’ustensile sélectionné.",
+    "pickEquipment": "Rechercher un ustensile",
+    "pickerHint": "Tapez pour rechercher dans le catalogue",
+    "pickerSearching": "Recherche…",
+    "pickerEmpty": "Aucun ustensile trouvé"
   }
 }

@@ -8,7 +8,8 @@
     "household": "Haushalt",
     "caldav": "CalDAV",
     "admin": "Admin",
-    "ingredients": "Zutaten"
+    "ingredients": "Zutaten",
+    "equipment": "Utensilien"
   },
   "user": {
     "signInMethods": {
@@ -1259,5 +1260,59 @@
       "signedOut": "Deine Sitzung ist abgelaufen. Melde dich erneut an, um zu exportieren.",
       "notAllowed": "Du hast keine Berechtigung, dies zu exportieren."
     }
+  },
+  "equipment": {
+    "title": "Utensilien",
+    "description": "Der Utensilienkatalog, mit dem Norish Utensilien, Geräte, Symbole und Aliasse zuordnet.",
+    "search": "Utensilien suchen",
+    "empty": "Keine Utensilien gefunden",
+    "addEquipment": "Utensil hinzufügen",
+    "createTitle": "Utensil hinzufügen",
+    "nameSection": "Name",
+    "namePlaceholder": "z. B. Schneebesen",
+    "rename": "Umbenennen",
+    "spellingsSection": "Aliasse",
+    "addAlias": "Alias hinzufügen",
+    "removeAlias": "{alias} entfernen",
+    "keepAlias": "{alias} behalten",
+    "summary": "{spellings, plural, one {# Alias} other {# Aliasse}}",
+    "delete": "Löschen",
+    "deleteTitle": "{name} löschen?",
+    "deleteConfirm": "Die Aliasse werden mitgelöscht. Ein Utensil, das noch in einem Rezept verwendet wird, kann nicht gelöscht werden; führe es stattdessen zusammen.",
+    "icon": {
+      "change": "Symbol ändern",
+      "upload": "Bild hochladen",
+      "remove": "Symbol entfernen",
+      "failed": "Aus diesem Bild konnte kein Symbol erstellt werden."
+    },
+    "uses": {
+      "show": "Zeigen, wo",
+      "title": "Wo {name} verwendet wird",
+      "recipes": "Rezepte",
+      "elsewhere": "{count, plural, one {# weitere Verwendung} other {# weitere Verwendungen}} in Rezepten, die du nicht öffnen kannst",
+      "none": "Wird nirgendwo mehr verwendet"
+    },
+    "errors": {
+      "title": "Das Utensil konnte nicht geändert werden",
+      "forbidden": "Du darfst dieses Utensil nicht bearbeiten",
+      "not-found": "Dieses Utensil existiert nicht mehr",
+      "name-taken": "Ein anderes Utensil hat bereits diesen Namen",
+      "spelling-taken": "Dieser Alias gehört bereits zu einem anderen Utensil",
+      "last-alias": "Ein Utensil behält mindestens einen Alias",
+      "alias-in-use": "Rezepte verwenden diesen Alias noch",
+      "ingredient-in-use": "Rezepte verwenden dieses Utensil noch",
+      "same-ingredient": "Ein Utensil kann nicht mit sich selbst zusammengeführt werden",
+      "cycle": "Ein Utensil kann keine Unterart seiner selbst sein",
+      "empty": "Gib einen Namen ein",
+      "unknown": "Etwas ist schiefgelaufen. Versuche es erneut."
+    },
+    "mergeInto": "Zusammenführen mit…",
+    "merge": "Zusammenführen",
+    "mergedToast": "{name} ist jetzt ein Alias von {into}.",
+    "mergeTitle": "{name} wird entfernt und zu einem Alias des ausgewählten Utensils.",
+    "pickEquipment": "Nach Utensil suchen",
+    "pickerHint": "Tippe, um den Katalog zu durchsuchen",
+    "pickerSearching": "Suche…",
+    "pickerEmpty": "Keine Utensilien gefunden"
   }
 }

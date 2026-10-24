@@ -1,3 +1,4 @@
+import type { RecipeEquipmentFormItem } from "@/components/recipes/equipment-input";
 import type { ParsedIngredient } from "@/components/recipes/ingredient-input";
 import type { RecipeGalleryMedia } from "@/components/recipes/media-gallery-input";
 import type { Step } from "@/components/recipes/step-input";
@@ -21,6 +22,7 @@ interface RecipeFormState {
   categories: RecipeCategory[];
   ingredients: ParsedIngredient[];
   steps: Step[];
+  equipment: RecipeEquipmentFormItem[];
   systemUsed: MeasurementSystem;
   media: RecipeGalleryMedia[];
   calories: number | null;
@@ -64,6 +66,7 @@ const baseRecipe: FullRecipeDTO = {
   createdAt: new Date("2026-05-01T10:00:00.000Z"),
   updatedAt: new Date("2026-05-01T10:00:00.000Z"),
   categories: ["Dinner"],
+  equipment: [],
   version: 3,
   recipeIngredients: [
     {
@@ -171,6 +174,7 @@ function createInitialCurrent(overrides: Partial<RecipeFormState> = {}): RecipeF
         stepIngredients: [{ ingredientOrder: 0, share: 0.5, order: 0 }],
       },
     ],
+    equipment: [],
     systemUsed: "metric",
     media: [
       {
@@ -405,6 +409,7 @@ describe("useRecipeFormDirtyState", () => {
         categories: [],
         ingredients: [],
         steps: [],
+        equipment: [],
         systemUsed: "metric",
         media: [],
         calories: null,
@@ -476,6 +481,7 @@ describe("useRecipeFormDirtyState", () => {
         categories: [],
         ingredients: [],
         steps: [],
+        equipment: [],
         systemUsed: "metric",
         media: [],
         calories: null,

@@ -76,7 +76,8 @@
     "source": "Quelle",
     "addedBy": "Hinzugefügt von {name}",
     "decreaseServings": "Weniger Portionen",
-    "increaseServings": "Mehr Portionen"
+    "increaseServings": "Mehr Portionen",
+    "equipment": "Utensilien"
   },
   "actions": {
     "plan": "Planen",
@@ -223,7 +224,9 @@
     "clickToUpload": "Zum Hochladen klicken oder Drag & Drop",
     "pasteToUpload": "zum Einfügen",
     "imageFormats": "PNG, JPG, WEBP bis zu 5MB",
-    "discardChangesConfirm": "Sie haben ungespeicherte Änderungen. Verwerfen und diese Seite verlassen?"
+    "discardChangesConfirm": "Sie haben ungespeicherte Änderungen. Verwerfen und diese Seite verlassen?",
+    "equipment": "Utensilien",
+    "equipmentHelp": "Geben Sie die für dieses Rezept benötigten Küchenutensilien und Geräte ein."
   },
   "gallery": {
     "addImage": "Bild hinzufügen",
@@ -342,7 +345,8 @@
     "swipeBackToSteps": "Nach rechts wischen für Schritte",
     "readyAt": "Fertig gegen {time}",
     "timers": "Timer",
-    "nextStep": "Nächster Schritt"
+    "nextStep": "Nächster Schritt",
+    "equipment": "Utensilien"
   },
   "enrichment": {
     "failed": "Anreicherung fehlgeschlagen",
@@ -431,5 +435,8 @@
     "print": "Drucken / Als PDF speichern",
     "continued": "Fortsetzung",
     "perServing": "Pro Portion"
+  },
+  "equipmentInput": {
+    "placeholder": "z. B. Bratpfanne (28 cm)"
   }
 }

@@ -8,7 +8,8 @@
     "household": "Nucleo familiare",
     "caldav": "CalDAV",
     "admin": "Amministrazione",
-    "ingredients": "Ingredienti"
+    "ingredients": "Ingredienti",
+    "equipment": "Utensili"
   },
   "user": {
     "signInMethods": {
@@ -1259,5 +1260,59 @@
       "signedOut": "La tua sessione è scaduta. Accedi di nuovo per esportare.",
       "notAllowed": "Non hai il permesso di esportare questo contenuto."
     }
+  },
+  "equipment": {
+    "title": "Utensili",
+    "description": "Il catalogo degli utensili usato da Norish per associare utensili, elettrodomestici, icone e alias.",
+    "search": "Cerca utensili",
+    "empty": "Nessun utensile trovato",
+    "addEquipment": "Aggiungi utensile",
+    "createTitle": "Aggiungi utensile",
+    "nameSection": "Nome",
+    "namePlaceholder": "es. Frusta",
+    "rename": "Rinomina",
+    "spellingsSection": "Alias",
+    "addAlias": "Aggiungi un alias",
+    "removeAlias": "Rimuovi {alias}",
+    "keepAlias": "Mantieni {alias}",
+    "summary": "{spellings, plural, one {# alias} other {# alias}}",
+    "delete": "Elimina",
+    "deleteTitle": "Eliminare {name}?",
+    "deleteConfirm": "Anche i suoi alias verranno eliminati. Un utensile ancora usato in una ricetta non può essere eliminato; uniscilo invece a un altro.",
+    "icon": {
+      "change": "Cambia l’icona",
+      "upload": "Carica un’immagine",
+      "remove": "Rimuovi icona",
+      "failed": "Non è stato possibile creare un’icona da questa immagine."
+    },
+    "uses": {
+      "show": "Mostra dove",
+      "title": "Dove viene usato {name}",
+      "recipes": "Ricette",
+      "elsewhere": "{count, plural, one {# altro utilizzo} other {# altri utilizzi}} in ricette che non puoi aprire",
+      "none": "Non è più usato da nessuna parte"
+    },
+    "errors": {
+      "title": "Impossibile modificare l’utensile",
+      "forbidden": "Non hai il permesso di modificare questo utensile",
+      "not-found": "Questo utensile non esiste più",
+      "name-taken": "Un altro utensile ha già questo nome",
+      "spelling-taken": "Questo alias appartiene già a un altro utensile",
+      "last-alias": "Un utensile deve mantenere almeno un alias",
+      "alias-in-use": "Alcune ricette usano ancora questo alias",
+      "ingredient-in-use": "Alcune ricette usano ancora questo utensile",
+      "same-ingredient": "Un utensile non può essere unito a se stesso",
+      "cycle": "Un utensile non può essere un tipo di se stesso",
+      "empty": "Inserisci un nome",
+      "unknown": "Qualcosa è andato storto. Riprova."
+    },
+    "mergeInto": "Unisci in…",
+    "merge": "Unisci",
+    "mergedToast": "{name} è ora un alias di {into}.",
+    "mergeTitle": "{name} scompare e diventa un alias dell’utensile selezionato.",
+    "pickEquipment": "Cerca utensile",
+    "pickerHint": "Digita per cercare nel catalogo",
+    "pickerSearching": "Ricerca in corso…",
+    "pickerEmpty": "Nessun utensile trovato"
   }
 }
