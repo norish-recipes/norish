@@ -15,6 +15,7 @@ import type {
 import { reconcileCookingTime } from "@norish/shared/lib/cooking-time";
 import { formatAmount } from "@norish/shared/lib/format-amount";
 import { formatMinutesHM } from "@norish/shared/lib/helpers";
+import { isIngredientHeading } from "@norish/shared/lib/ingredient-text";
 import { primaryRecipeImage } from "@norish/shared/lib/recipe-media";
 import { resolveStepIngredients } from "@norish/shared/lib/step-ingredients";
 
@@ -137,20 +138,19 @@ export default function RecipePrintCard({
           <section aria-label={t("ingredients")}>
             <h2>{t("ingredients")}</h2>
             <ul className="recipe-print-ingredients">
-              {lines.map((line) => (
-                <li
-                  key={line.order}
-                  className={
-                    line.ingredientName.trim().startsWith("#") ? "recipe-print-heading" : undefined
-                  }
-                >
-                  {line.ingredientName.trim().startsWith("#") ? (
-                    <h3>{line.ingredientName.trim().replace(/^#+\s*/, "")}</h3>
-                  ) : (
-                    ingredientLabel(line.ingredientName, line.amount, line.unit)
-                  )}
-                </li>
-              ))}
+              {lines.map((line) => {
+                const heading = headingOf(line.ingredientName);
+
+                return (
+                  <li key={line.order} className={heading ? "recipe-print-heading" : undefined}>
+                    {heading ? (
+                      <h3>{heading}</h3>
+                    ) : (
+                      ingredientLabel(line.ingredientName, line.amount, line.unit)
+                    )}
+                  </li>
+                );
+              })}
             </ul>
           </section>
           {nutrition.hasData && (
@@ -178,10 +178,12 @@ export default function RecipePrintCard({
           <h2>{t("instructions")}</h2>
           <ol className="recipe-print-steps">
             {steps.map((step) => {
-              if (step.step.trim().startsWith("#"))
+              const heading = headingOf(step.step);
+
+              if (heading)
                 return (
                   <li key={step.order} className="recipe-print-heading">
-                    <h3>{step.step.trim().replace(/^#+\s*/, "")}</h3>
+                    <h3>{heading}</h3>
                   </li>
                 );
               stepNumber += 1;
@@ -230,4 +232,9 @@ export default function RecipePrintCard({
       )}
     </article>
   );
+}
+
+/** A "# For the sauce" line's title, or null for a line that is no heading. */
+function headingOf(text: string): string | null {
+  return isIngredientHeading(text) ? text.trim().replace(/^#+\s*/, "") : null;
 }

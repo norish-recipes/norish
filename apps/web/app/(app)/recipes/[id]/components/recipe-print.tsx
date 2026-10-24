@@ -1,7 +1,7 @@
 "use client";
 
 import type { CSSProperties } from "react";
-import { useEffect, useState } from "react";
+import { useState } from "react";
 import RecipePrintCard from "@/components/recipes/recipe-print-card";
 import { useTimerKeywordsQuery, useTimersEnabledQuery } from "@/hooks/config";
 import { useAmountDisplayPreference } from "@/hooks/use-amount-display-preference";
@@ -10,6 +10,7 @@ import { Button, Checkbox, Label, ListBox, Modal, Select } from "@heroui/react";
 import { useTranslations } from "next-intl";
 import { createPortal } from "react-dom";
 
+import { useHydrated } from "@norish/shared-react/hooks";
 import { primaryRecipeImage } from "@norish/shared/lib/recipe-media";
 
 import { useRecipeContextRequired } from "../context";
@@ -29,13 +30,12 @@ export default function RecipePrint({ open, onOpenChange }: Props) {
   const { timerKeywords } = useTimerKeywordsQuery();
   const t = useTranslations("recipes.print");
   const tActions = useTranslations("common.actions");
-  const [mounted, setMounted] = useState(false);
   const [includePhoto, setIncludePhoto] = useState(true);
   const [textSize, setTextSize] = useState(12);
+  // The print copy is portalled into document.body, which only the browser has.
+  const hydrated = useHydrated();
 
-  useEffect(() => setMounted(true), []);
-
-  if (!mounted) return null;
+  if (!hydrated) return null;
 
   const card = (
     <RecipePrintCard
@@ -110,7 +110,7 @@ export default function RecipePrint({ open, onOpenChange }: Props) {
       {createPortal(
         <div data-recipe-print style={{ "--recipe-print-size": `${textSize}pt` } as CSSProperties}>
           <style>{`@media print {
-            @page recipe { @top-left { content: ${JSON.stringify(`${recipe.name} — ${t("continued")}`)}; } }
+            @page recipe { @top-left { content: ${JSON.stringify(`${recipe.name} (${t("continued")})`)}; } }
             @page recipe:first { @top-left { content: none; } }
           }`}</style>
           {/* Fixed modal overlays do not paginate like normal document flow. */}
