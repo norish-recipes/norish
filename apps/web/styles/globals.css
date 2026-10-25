@@ -423,3 +423,11 @@
     animation: none !important;
   }
 }
+
+/* Arabic letters join their neighbours, and letter-spacing pulls them apart:
+   the tracked small-caps labels would show each letter on its own. Unlayered,
+   so it outranks every `tracking-*` utility without `!important`; an element
+   marked in another language keeps its tracking. */
+:lang(ar) {
+  letter-spacing: normal;
+}

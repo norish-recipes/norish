@@ -5,6 +5,7 @@ import { TIME_ZONE_COOKIE } from "@/lib/reader-today";
 import { NextIntlClientProvider } from "next-intl";
 import { getLocale, getMessages } from "next-intl/server";
 
+import { getLocaleDirection } from "@norish/i18n/config";
 import { BASE_PATH } from "@norish/shared/lib/base-path";
 
 import { appMetadata, appViewport } from "./metadata";
@@ -45,7 +46,7 @@ export default async function RootLayout({ children }: { children: React.ReactNo
   };
 
   return (
-    <html suppressHydrationWarning lang={locale}>
+    <html suppressHydrationWarning dir={getLocaleDirection(locale)} lang={locale}>
       <head>
         <meta content="yes" name="apple-mobile-web-app-capable" />
         {/* In the head, so it listens before the page's first render. */}

@@ -50,6 +50,14 @@ type RollingTextProps = {
 };
 
 /**
+ * Scripts whose letters connect to their neighbours: Arabic (with its
+ * supplements and presentation forms), Syriac, Thaana, N'Ko, Mongolian and the
+ * Indic scripts. Split into one slot per character, each letter would show in
+ * its isolated form.
+ */
+const JOINING_SCRIPT = /[\u0600-\u08FF\u0900-\u0DFF\u1800-\u18AF\uFB50-\uFDFF\uFE70-\uFEFF]/;
+
+/**
  * The value as slots, padded to `slots` with empty ones on the side it grows
  * from — the end for a word, the start for a number.
  */
@@ -88,14 +96,39 @@ export function RollingText({
     return <span className={className}>{value}</span>;
   }
 
+  // A joining script rolls as one whole slot, so its letters keep their shapes.
+  if (JOINING_SCRIPT.test(value)) {
+    return (
+      <span className={`relative inline-flex overflow-hidden ${className}`}>
+        {srValue && <span className="sr-only">{srValue}</span>}
+        <AnimatePresence initial={false} mode="popLayout">
+          <motion.span
+            key={value}
+            animate={{ y: "0%" }}
+            aria-hidden={Boolean(srValue) || undefined}
+            className="whitespace-pre"
+            exit={{ y: isRising ? "-100%" : "100%" }}
+            initial={{ y: isRising ? "100%" : "-100%" }}
+            transition={ROLL_TRANSITION}
+          >
+            {value}
+          </motion.span>
+        </AnimatePresence>
+      </span>
+    );
+  }
+
   const characters = toSlots(value, slots, keyFrom);
   // Whether the *value* is split, not the padded row: a one-character value
   // padded out to four slots is still read as one character.
   const isSplit = [...value].length > 1;
   const hideSlots = Boolean(srValue) && isSplit;
 
+  // Each slot is a flex item, and a right-to-left page lays flex items out
+  // right to left: "25" would read "52". What reaches here is a number or a
+  // left-to-right word, so the row keeps its own direction.
   return (
-    <span className={`inline-flex ${className}`}>
+    <span className={`inline-flex ${className}`} dir="ltr">
       {hideSlots && <span className="sr-only">{srValue}</span>}
 
       {characters.map((character, index) => (
