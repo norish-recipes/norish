@@ -1,7 +1,7 @@
 /**
  * A recipe's macros as calorie contribution.
  *
- * Fat carries 9 calories per gram, carbohydrate and protein 4 — so a gram
+ * Fat carries 9 calories per gram, carbohydrate and protein 4, fiber 2 — so a gram
  * share and a calorie share are different pictures of the same recipe, and
  * only the calorie one is talking about the same quantity as the calorie
  * figure beside it. The figure itself is never computed from here: a recipe's
@@ -9,7 +9,7 @@
  * disagree.
  */
 
-export type MacroKey = "fat" | "carbs" | "protein";
+export type MacroKey = "fat" | "carbs" | "fiber" | "protein";
 
 export type MacroCalorieShare = {
   key: MacroKey;
@@ -20,14 +20,16 @@ export type MacroCalorieShare = {
   share: number;
 };
 
-const CALORIES_PER_GRAM: Record<MacroKey, number> = {
+export const CALORIES_PER_GRAM: Record<MacroKey, number> = {
   fat: 9,
   carbs: 4,
+  // Fiber is counted apart from carbohydrate, at the EU labelling factor.
+  fiber: 2,
   protein: 4,
 };
 
 /** The order the arcs and the legend are drawn in. */
-const MACRO_ORDER: MacroKey[] = ["fat", "carbs", "protein"];
+const MACRO_ORDER: MacroKey[] = ["fat", "carbs", "fiber", "protein"];
 
 function storedGrams(value: number | string | null | undefined): number | null {
   const parsed = typeof value === "string" ? Number.parseFloat(value) : value;
@@ -46,6 +48,7 @@ function storedGrams(value: number | string | null | undefined): number | null {
 export function macroCalorieShares(macros: {
   fat?: number | string | null;
   carbs?: number | string | null;
+  fiber?: number | string | null;
   protein?: number | string | null;
 }): MacroCalorieShare[] {
   const stored = MACRO_ORDER.map((key) => ({ key, grams: storedGrams(macros[key]) })).filter(

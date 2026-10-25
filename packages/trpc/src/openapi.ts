@@ -26,6 +26,7 @@ import {
   importFromPasteProcedure,
   importFromUrlProcedure,
   listProcedure,
+  nutritionProcedure,
 } from "./routers/recipes/recipes";
 import { createStoreProcedure, listStoresProcedure } from "./routers/stores/stores";
 import { router } from "./trpc";
@@ -33,6 +34,7 @@ import { router } from "./trpc";
 export const openApiRouter = router({
   health,
   recipeGet: getProcedure,
+  recipeNutrition: nutritionProcedure,
   recipeSearch: listProcedure,
   recipeCreate: createRecipeProcedure,
   recipeImportUrl: importFromUrlProcedure,

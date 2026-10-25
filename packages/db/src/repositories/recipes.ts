@@ -874,6 +874,7 @@ export async function createRecipeWithRefs(
     fat: payload.fat ?? null,
     carbs: payload.carbs ?? null,
     protein: payload.protein ?? null,
+    nutritionExtras: payload.nutritionExtras ?? null,
     originCountry: normalizeOriginCountry(payload.originCountry),
     // The written name is the code's companion: without a code there is no
     // country to name, so a name supplied alone is dropped with it.
@@ -1119,6 +1120,7 @@ export async function getRecipeFull(id: string): Promise<FullRecipeDTO | null> {
       fat: true,
       carbs: true,
       protein: true,
+      nutritionExtras: true,
       originCountry: true,
       originCountryName: true,
       originRegion: true,
@@ -1227,6 +1229,7 @@ export async function getRecipeFull(id: string): Promise<FullRecipeDTO | null> {
     fat: full.fat ?? null,
     carbs: full.carbs ?? null,
     protein: full.protein ?? null,
+    nutritionExtras: full.nutritionExtras ?? null,
     originCountry: full.originCountry ?? null,
     originCountryName: full.originCountryName ?? null,
     originRegion: full.originRegion ?? null,
@@ -1661,6 +1664,7 @@ export async function updateRecipeWithRefs(
     if (payload.fat !== undefined) updateData.fat = payload.fat;
     if (payload.carbs !== undefined) updateData.carbs = payload.carbs;
     if (payload.protein !== undefined) updateData.protein = payload.protein;
+    if (payload.nutritionExtras !== undefined) updateData.nutritionExtras = payload.nutritionExtras;
     if (payload.originCountry !== undefined)
       updateData.originCountry = normalizeOriginCountry(payload.originCountry);
     if (payload.originCountryName !== undefined || payload.originCountry !== undefined)

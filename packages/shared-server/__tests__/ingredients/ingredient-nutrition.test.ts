@@ -38,7 +38,10 @@ import {
   NO_HOUSEHOLD,
   resolveIngredientNutrition,
 } from "@norish/shared-server/ingredients/nutrition/ingredient-nutrition";
-import { workOutRecipeNutrition } from "@norish/shared-server/ingredients/nutrition/recipe-nutrition";
+import {
+  readRecipeNutrition,
+  workOutRecipeNutrition,
+} from "@norish/shared-server/ingredients/nutrition/recipe-nutrition";
 import { buildCatalogueExport } from "@norish/shared-server/ingredients/seed/catalogue-export";
 import { ingredientAliasFold } from "@norish/shared/lib/spelling-keys";
 
@@ -49,7 +52,19 @@ const TABLE: SourceTable = {
   version: "test-1",
   editions: { ciqual: "2025-11-03" },
   foods: [
-    ["ciqual", "20034", "Onion, raw", 35, 0.2, 6.8, 1.1, null, null, null],
+    [
+      "ciqual",
+      "20034",
+      "Onion, raw",
+      35,
+      0.2,
+      6.8,
+      1.1,
+      null,
+      null,
+      null,
+      { fiber: 1.7, sugars: 4.3 },
+    ],
     ["usda", "170000", "Onions, raw", 40, 0.1, 9.3, 1.1, 110, 0.67, "11282"],
     ["ciqual", "1014", "Pure alcohol", 660, 0, 0, 0, null, null, null],
     ["ciqual", "5215", "Wine, white, dry", 55, 0, 0.2, 0.3, null, null, null],
@@ -189,7 +204,14 @@ describe("Ingredient Nutrition", () => {
     it("reads an Ingredient's own CIQUAL code, with the taxonomy's piece weight and USDA's density", async () => {
       await expect(read("en:onion")).resolves.toEqual({
         numbers: {
-          value: { kcal: 35, fat: 0.2, carbs: 6.8, protein: 1.1 },
+          // The other nutrients come with the numbers, from the same dataset food.
+          value: {
+            kcal: 35,
+            fat: 0.2,
+            carbs: 6.8,
+            protein: 1.1,
+            extras: { fiber: 1.7, sugars: 4.3 },
+          },
           source: { kind: "code", food: { dataset: "ciqual", code: "20034", name: "Onion, raw" } },
           borrowedFrom: null,
         },
@@ -571,6 +593,66 @@ describe("Ingredient Nutrition", () => {
 
     it("works nothing out for a recipe that supplies its own", async () => {
       await expect(workOutRecipeNutrition(recipe(320), NO_HOUSEHOLD)).resolves.toBeNull();
+    });
+
+    it("answers an API reader with the recipe's own numbers, and the other nutrients its lines know", async () => {
+      const answer = await readRecipeNutrition(recipe(320), NO_HOUSEHOLD);
+
+      expect(answer.source).toBe("supplied");
+      expect(answer.perServing).toMatchObject({
+        calories: 320,
+        fat: null,
+        carbs: null,
+        protein: null,
+      });
+      // Two onions are 300 g, over two servings: 1.7 g fiber and 4.3 g sugars per 100 g.
+      expect(answer.perServing?.extras.fiber).toBeCloseTo(2.55);
+      expect(answer.perServing?.extras.sugars).toBeCloseTo(6.45);
+      expect(answer.extrasCoverage).toEqual({ fiber: 1, sugars: 1 });
+      expect(answer.leftOut).toEqual([]);
+      // The onions' piece weight is Open Food Facts'.
+      expect(answer.credits).toEqual(["ciqual", "off"]);
+    });
+
+    it("lets a nutrient the recipe states win over its lines', each on its own", async () => {
+      const answer = await readRecipeNutrition(
+        { ...recipe(320), nutritionExtras: { fiber: 9 } },
+        NO_HOUSEHOLD
+      );
+
+      expect(answer.perServing?.extras.fiber).toBe(9);
+      expect(answer.perServing?.extras.sugars).toBeCloseTo(6.45);
+    });
+
+    it("answers an API reader with the worked-out total and the model's share, as the page shows it", async () => {
+      const key = (await workOutRecipeNutrition(recipe(), NO_HOUSEHOLD))!.leftOut[0]!.key;
+      const share = { key, calories: 60, fat: 0, carbs: 1, protein: 0 };
+      const answer = await readRecipeNutrition(
+        { ...recipe(), nutritionEstimate: { lines: [share] } },
+        NO_HOUSEHOLD
+      );
+
+      expect(answer.source).toBe("worked-out");
+      // Two onions are 300 g at 35 kcal per 100 g, over two servings, plus the brandy's share.
+      expect(answer.perServing?.calories).toBeCloseTo(112.5);
+      expect(answer.estimated).toBe(true);
+      expect(answer.leftOut).toEqual([
+        { name: "brandy", reason: "no-numbers", estimatedByAI: true },
+      ]);
+      expect(answer.credits).toContain("ciqual");
+    });
+
+    it("answers none, naming the lines, where nothing counts", async () => {
+      const brandyOnly = { ...recipe(), recipeIngredients: recipe().recipeIngredients.slice(1) };
+
+      await expect(readRecipeNutrition(brandyOnly, NO_HOUSEHOLD)).resolves.toEqual({
+        source: "none",
+        perServing: null,
+        estimated: false,
+        leftOut: [{ name: "brandy", reason: "no-numbers", estimatedByAI: false }],
+        credits: [],
+        extrasCoverage: {},
+      });
     });
 
     it("carries the language model's stored shares on the recipe, until they are dropped", async () => {

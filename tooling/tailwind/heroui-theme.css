@@ -51,6 +51,8 @@
     --nutrition-carbs-soft: color-mix(in oklch, var(--nutrition-carbs) 12%, transparent);
     --nutrition-fat: oklch(73.29% 0.1941 138.39);
     --nutrition-fat-soft: color-mix(in oklch, var(--nutrition-fat) 12%, transparent);
+    --nutrition-fiber: oklch(58.5% 0.155 305);
+    --nutrition-fiber-soft: color-mix(in oklch, var(--nutrition-fiber) 12%, transparent);
     --nutrition-protein: oklch(65.32% 0.2335 13.32);
     --nutrition-protein-soft: color-mix(in oklch, var(--nutrition-protein) 12%, transparent);
     --overlay: oklch(100% 0.0004 150.36);
@@ -107,6 +109,8 @@
     --nutrition-carbs-soft: color-mix(in oklch, var(--nutrition-carbs) 16%, transparent);
     --nutrition-fat: oklch(73.29% 0.1941 138.39);
     --nutrition-fat-soft: color-mix(in oklch, var(--nutrition-fat) 15%, transparent);
+    --nutrition-fiber: oklch(72% 0.13 305);
+    --nutrition-fiber-soft: color-mix(in oklch, var(--nutrition-fiber) 16%, transparent);
     --nutrition-protein: oklch(59.4% 0.1973 12.21);
     --nutrition-protein-soft: color-mix(in oklch, var(--nutrition-protein) 16%, transparent);
     --overlay: oklch(23.5% 0.008 80);
@@ -145,6 +149,8 @@
   --color-nutrition-carbs-soft: var(--nutrition-carbs-soft);
   --color-nutrition-fat: var(--nutrition-fat);
   --color-nutrition-fat-soft: var(--nutrition-fat-soft);
+  --color-nutrition-fiber: var(--nutrition-fiber);
+  --color-nutrition-fiber-soft: var(--nutrition-fiber-soft);
   --color-nutrition-protein: var(--nutrition-protein);
   --color-nutrition-protein-soft: var(--nutrition-protein-soft);
 }
@@ -171,6 +177,14 @@
 
 @utility bg-nutrition-fat-soft {
   background-color: var(--nutrition-fat-soft);
+}
+
+@utility text-nutrition-fiber {
+  color: var(--nutrition-fiber);
+}
+
+@utility bg-nutrition-fiber-soft {
+  background-color: var(--nutrition-fiber-soft);
 }
 
 @utility text-nutrition-protein {

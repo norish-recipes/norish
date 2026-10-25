@@ -519,6 +519,13 @@
       "when": 1791620600687,
       "tag": "0073_ingredient_plain_name",
       "breakpoints": true
+    },
+    {
+      "idx": 74,
+      "version": "7",
+      "when": 1792849724232,
+      "tag": "0074_extra_nutrients",
+      "breakpoints": true
     }
   ]
 }

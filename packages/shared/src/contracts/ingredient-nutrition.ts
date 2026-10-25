@@ -3,6 +3,7 @@
  * numbers per 100 g, its piece weight and its density, each with where it
  * came from, for one household.
  */
+import type { ExtraNutrients } from "./nutrients";
 
 /** The datasets a number can come from; `off` is Open Food Facts' own piece weights and densities. */
 export const NUTRITION_CREDITS = [
@@ -57,12 +58,13 @@ export interface NutritionFoodSummary extends NutritionFoodRef {
   density: number | null;
 }
 
-/** The four numbers per 100 g. */
+/** The four numbers per 100 g, and the other nutrients the same food gives, where known. */
 export interface Per100g {
   kcal: number;
   fat: number;
   carbs: number;
   protein: number;
+  extras?: ExtraNutrients;
 }
 
 /** One fact, where it came from, and the parent it was borrowed from, if it was. */

@@ -1,6 +1,7 @@
 import {
   doublePrecision,
   index,
+  jsonb,
   pgTable,
   primaryKey,
   text,
@@ -13,13 +14,20 @@ import { ingredients } from "./ingredients";
 import { mutableRowColumns } from "./shared";
 
 /**
+ * Nutrients beyond the four, by the keys of `@norish/shared/contracts/nutrients`,
+ * holding only those known. Readers check them through `knownExtras`.
+ */
+export type StoredNutrients = Partial<Record<string, number>>;
+
+/**
  * Ingredient Nutrition's source numbers (ADR-0039), as the committed source
  * table last applied them: replaced whole whenever a release carries a new
  * version of the table, never edited on an instance, and never holding a
  * household's correction.
  *
- * `nutritionFoods` is every dataset food: its four numbers per 100 g, and the
- * piece weight and density USDA's portions give it. A USDA food is keyed by
+ * `nutritionFoods` is every dataset food: its four numbers per 100 g, the other
+ * nutrients the dataset measured for it (`extras`, per 100 g, only those it
+ * gives), and the piece weight and density USDA's portions give it. A USDA food is keyed by
  * FDC id and carries the SR Legacy NDB number the taxonomy names it by.
  */
 export const nutritionFoods = pgTable(
@@ -32,6 +40,7 @@ export const nutritionFoods = pgTable(
     fat: doublePrecision("fat").notNull(),
     carbs: doublePrecision("carbs").notNull(),
     protein: doublePrecision("protein").notNull(),
+    extras: jsonb("extras").$type<StoredNutrients>(),
     pieceWeight: doublePrecision("piece_weight"),
     density: doublePrecision("density"),
     ndb: text("ndb"),
@@ -63,8 +72,8 @@ export const nutritionRules = pgTable(
  * the most recent winning; any member may correct any Ingredient, seeded or
  * not, with no edit policy in the way. Each of the three facts is either a
  * dataset food (`dataset:code`) or a number, or left to the sources: the
- * numbers per 100 g as all four of `kcal`, `fat`, `carbs` and `protein`, the
- * piece weight in grams, the density in grams per millilitre.
+ * numbers per 100 g as all four of `kcal`, `fat`, `carbs` and `protein` (with
+ * any other nutrients the label gives in `extras`), the piece weight in grams, the density in grams per millilitre.
  */
 export const ingredientNutritionCorrections = pgTable(
   "ingredient_nutrition_corrections",
@@ -81,6 +90,7 @@ export const ingredientNutritionCorrections = pgTable(
     fat: doublePrecision("fat"),
     carbs: doublePrecision("carbs"),
     protein: doublePrecision("protein"),
+    extras: jsonb("extras").$type<StoredNutrients>(),
     pieceWeightFood: text("piece_weight_food"),
     pieceWeight: doublePrecision("piece_weight"),
     densityFood: text("density_food"),

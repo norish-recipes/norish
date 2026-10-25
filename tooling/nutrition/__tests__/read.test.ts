@@ -43,13 +43,29 @@ describe("reading the datasets", () => {
     const { foods, names } = await readCiqualWorkbook(file);
 
     expect(foods).toEqual([
-      { code: "20034", name: "Onion, raw", kcal: 35, protein: 1.1, carbs: 6.8, fat: 0.25 },
-      { code: "11000", name: "Garlic, raw", kcal: 109, protein: 5.31, carbs: 18.6, fat: 0 },
+      {
+        code: "20034",
+        name: "Onion, raw",
+        kcal: 35,
+        protein: 1.1,
+        carbs: 6.8,
+        fat: 0.25,
+        extras: {},
+      },
+      {
+        code: "11000",
+        name: "Garlic, raw",
+        kcal: 109,
+        protein: 5.31,
+        carbs: 18.6,
+        fat: 0,
+        extras: {},
+      },
     ]);
     expect(names.get("13050")).toBe("Apple, pulp, raw");
   });
 
-  it("reads CIQUAL 2020's tab-separated table by the same columns", () => {
+  it("reads CIQUAL 2020's tab-separated table by the same columns, with the nutrients it gives", () => {
     const header = [
       "alim_code",
       "alim_nom_eng",
@@ -57,21 +73,34 @@ describe("reading the datasets", () => {
       "Protein (g/100g)",
       "Carbohydrate (g/100g)",
       "Fat (g/100g)",
+      "Fibres (g/100g)",
+      "Sugars (g/100g)",
+      "Sodium (mg/100g)",
+      "Retinol (\u00b5g/100g)",
+      "Beta-carotene (\u00b5g/100g)",
     ];
+    const row = ["20504", "Lentil, dried", "300", "24", "50", "1,5", "17", "2,3", "-", "0", "24"];
 
-    expect(
-      readCiqualTable(`${header.join("\t")}\n20504\tLentil, dried\t300\t24\t50\t1,5\n`).foods
-    ).toEqual([
-      { code: "20504", name: "Lentil, dried", kcal: 300, protein: 24, carbs: 50, fat: 1.5 },
+    expect(readCiqualTable(`${header.join("\t")}\n${row.join("\t")}\n`).foods).toEqual([
+      {
+        code: "20504",
+        name: "Lentil, dried",
+        kcal: 300,
+        protein: 24,
+        carbs: 50,
+        fat: 1.5,
+        // Sodium is not measured: unknown, not zero. Vitamin A is retinol plus a twelfth of beta-carotene.
+        extras: { fiber: 17, sugars: 2.3, vitaminA: 2 },
+      },
     ]);
   });
 
   it("reads CALNUT's middle bound", () => {
     const text = [
-      "alim_code,FOOD_LABEL,HYPOTH,nrj_kcal,proteines_g,glucides_g,lipides_g",
-      '13050,"Pomme, pulpe, crue",LB,"48,9","0,27","10,7","0,13"',
-      '13050,"Pomme, pulpe, crue",MB,"49,5","0,27","10,8","0,15"',
-      '13050,"Pomme, pulpe, crue",UB,"50,1","0,27","10,9","0,17"',
+      "alim_code,FOOD_LABEL,HYPOTH,nrj_kcal,proteines_g,glucides_g,lipides_g,fibres_g,sucres_g",
+      '13050,"Pomme, pulpe, crue",LB,"48,9","0,27","10,7","0,13","1,3","8,9"',
+      '13050,"Pomme, pulpe, crue",MB,"49,5","0,27","10,8","0,15","1,4","9,1"',
+      '13050,"Pomme, pulpe, crue",UB,"50,1","0,27","10,9","0,17","1,5","9,3"',
     ].join("\n");
 
     expect(readCalnut(text)).toEqual([
@@ -82,6 +111,7 @@ describe("reading the datasets", () => {
         protein: 0.27,
         carbs: 10.8,
         fat: 0.15,
+        extras: { fiber: 1.4, sugars: 9.1 },
       },
     ]);
   });
@@ -95,15 +125,26 @@ describe("reading the datasets", () => {
         "Fat (g)",
         "Carbohydrate (g)",
         "Energy (kcal) (kcal)",
+        "AOAC fibre (g)",
+        "Total sugars (g)",
       ],
-      ["", "", "PROT", "FAT", "CHO", "KCALS"],
-      ["", "", "Protein", "Fat", "Carbohydrate", "kcal"],
-      ["13-336", "Sauerkraut", "1.1", "Tr", "1.0", "9"],
-      ["17-999", "Something unmeasured", "N", "0.1", "1.0", "9"],
+      ["", "", "PROT", "FAT", "CHO", "KCALS", "AOACFIB", "TOTSUG"],
+      ["", "", "Protein", "Fat", "Carbohydrate", "kcal", "AOAC fibre", "Total sugars"],
+      ["13-336", "Sauerkraut", "1.1", "Tr", "1.0", "9", "2.5", "N"],
+      ["17-999", "Something unmeasured", "N", "0.1", "1.0", "9", "", ""],
     ]);
 
+    // The workbook here has no minerals or vitamins sheets: those nutrients are just unknown.
     await expect(readCofid(file)).resolves.toEqual([
-      { code: "13-336", name: "Sauerkraut", kcal: 9, protein: 1.1, carbs: 1, fat: 0 },
+      {
+        code: "13-336",
+        name: "Sauerkraut",
+        kcal: 9,
+        protein: 1.1,
+        carbs: 1,
+        fat: 0,
+        extras: { fiber: 2.5 },
+      },
     ]);
   });
 
@@ -113,7 +154,16 @@ describe("reading the datasets", () => {
         fdcId: "170000",
         ndb: "11282",
         name: "Onions, raw",
-        nutrients: { "1008": "40", "1003": "1.1", "1004": "0.1", "1005": "9.34" },
+        nutrients: {
+          "1008": "40",
+          "1003": "1.1",
+          "1004": "0.1",
+          "1005": "9.34",
+          "1079": "1.7",
+          "2000": "4.24",
+          "1093": "4",
+          "1106": "0",
+        },
       },
       {
         fdcId: "2000000",
@@ -128,7 +178,13 @@ describe("reading the datasets", () => {
     ]);
 
     await expect(readUsda(file, "sr-legacy")).resolves.toMatchObject([
-      { code: "170000", ndb: "11282", kcal: 40, carbs: 9.34 },
+      {
+        code: "170000",
+        ndb: "11282",
+        kcal: 40,
+        carbs: 9.34,
+        extras: { fiber: 1.7, sugars: 4.24, sodium: 4, vitaminA: 0 },
+      },
       { code: "2000000", ndb: null, kcal: 52, carbs: 8 },
     ]);
   });

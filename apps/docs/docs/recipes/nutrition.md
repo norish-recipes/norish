@@ -28,6 +28,22 @@ Norish turns each ingredient line into grams and uses the
 The total is divided by the servings. The nutrition card lists which lines were
 counted and why the others weren't.
 
+## Fiber, sugars, sodium and more
+
+Under the macros, the card also shows saturated fat, sugars, fiber and sodium
+when Norish knows them. Fiber gets its own part of the ring, at 2 kcal per
+gram, and sugars are the lighter part of the carbs.
+
+Each one comes from the recipe when its source states it. Otherwise Norish adds
+it up from the ingredients, with the [AI](../configuration/ai-provider.md)
+estimate for the lines it couldn't count. Not every food in the datasets has
+every value, so a total that only some of the counted lines add to is shown
+with **≥**: it is at least that much.
+
+Norish also keeps mono- and polyunsaturated fat, trans fat, cholesterol,
+potassium, calcium, iron, vitamin C and vitamin A where the datasets have
+them. The API returns them all.
+
 ## Where the numbers come from
 
 Open **Settings => Ingredients** and pick an ingredient to see its values per
@@ -66,3 +82,15 @@ pick one:
 - **From a label**: type the numbers from the pack.
 
 ![Correcting what a teaspoon of cumin weighs, from a label](/img/screenshots/ingredients-nutrition-correction.png)
+
+## Reading nutrition from the API
+
+Apps that read recipes through the [REST API](../reference/api.mdx), like a
+calorie tracker, get the same numbers per serving from
+`GET /api/v1/recipes/{id}/nutrition`. The answer says where the numbers come
+from: `supplied` when the recipe states them, `worked-out` when Norish works
+them out from the ingredients for your household, or `none`. A worked-out
+answer also lists the lines it left out and why, and says when it is
+estimated. The other nutrients are in `perServing.extras`, with
+`extrasCoverage` saying which share of the counted lines, by weight, each one
+covers.

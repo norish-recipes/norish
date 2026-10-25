@@ -122,3 +122,55 @@ describe("Nutrition donut", () => {
     expect(container).toBeEmptyDOMElement();
   });
 });
+
+describe("Nutrition donut with the other nutrients", () => {
+  const recipe = {
+    calories: 450,
+    fat: 10,
+    carbs: 20,
+    protein: 10,
+    nutritionExtras: { saturatedFat: 3, sugars: 10, fiber: 10, sodium: 480 },
+  };
+
+  it("gives fiber its own arc at two calories a gram, and the sugars a band across the carbs", () => {
+    const { container } = render(<NutritionBody portions={1} recipe={recipe} />);
+    const [fat, carbs, sugars, fiber, protein] = arcLengths(container);
+
+    expect(fat).toBeCloseTo((90 / 230) * 100);
+    expect(carbs).toBeCloseTo((80 / 230) * 100);
+    // Half the carbohydrate calories are sugars.
+    expect(sugars).toBeCloseTo(carbs! / 2);
+    expect(fiber).toBeCloseTo((20 / 230) * 100);
+    expect(protein).toBeCloseTo((40 / 230) * 100);
+    expect(screen.getByTestId("nutrition-sugars-band")).toBeInTheDocument();
+  });
+
+  it("lists saturates under fat and sugars under carbs, then sodium in milligrams", () => {
+    render(<NutritionBody portions={1} recipe={recipe} />);
+
+    expect(screen.getByTestId("nutrition-saturatedFat")).toHaveTextContent("3g");
+    expect(screen.getByTestId("nutrition-sugars")).toHaveTextContent("10g");
+    expect(screen.getByTestId("nutrition-sodium")).toHaveTextContent("480mg");
+  });
+
+  it("marks a nutrient as at least its value where not every counted line's food knew it", () => {
+    render(
+      <NutritionBody
+        portions={1}
+        recipe={{ ...recipe, extrasCoverage: { sugars: 1, sodium: 0.6 } }}
+      />
+    );
+
+    expect(screen.getByTestId("nutrition-sodium")).toHaveTextContent("≥");
+    expect(screen.getByTestId("nutrition-sugars")).not.toHaveTextContent("≥");
+  });
+
+  it("draws no fiber arc, band or rows for a recipe that knows none of them", () => {
+    const { container } = render(
+      <NutritionBody portions={1} recipe={{ calories: 400, fat: 10, carbs: 10, protein: 10 }} />
+    );
+
+    expect(arcs(container)).toHaveLength(3);
+    expect(screen.queryByTestId("nutrition-sodium")).not.toBeInTheDocument();
+  });
+});

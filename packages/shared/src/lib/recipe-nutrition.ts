@@ -37,7 +37,9 @@ import type {
   NutritionFact,
   Per100g,
 } from "@norish/shared/contracts/ingredient-nutrition";
+import type { ExtraNutrient, ExtraNutrients } from "@norish/shared/contracts/nutrients";
 import { creditOf, NUTRITION_CREDITS } from "@norish/shared/contracts/ingredient-nutrition";
+import { EXTRA_NUTRIENTS } from "@norish/shared/contracts/nutrients";
 import { foldName } from "@norish/shared/lib/fold-name";
 
 import type { SpellingRules } from "./spelling-keys";
@@ -53,6 +55,8 @@ export interface RecipeForNutrition {
   fat: number | string | null;
   carbs: number | string | null;
   protein: number | string | null;
+  /** The other nutrients the recipe states per serving, where it states them. */
+  nutritionExtras?: ExtraNutrients | null;
   recipeIngredients: ReadonlyArray<{
     id?: string;
     ingredientName: string;
@@ -105,12 +109,13 @@ export interface NutritionLine {
   ingredientId: string | null;
 }
 
-/** Calories and macros per serving. */
+/** Calories and macros per serving, and the other nutrients any counted line knew. */
 export interface NutritionPerServing {
   calories: number;
   fat: number;
   carbs: number;
   protein: number;
+  extras: ExtraNutrients;
 }
 
 /**
@@ -162,6 +167,7 @@ export interface EstimatedLine {
   fat: number;
   carbs: number;
   protein: number;
+  extras?: ExtraNutrients;
 }
 
 /** The language model's estimate of the lines a worked-out total left out: one share per line. */
@@ -172,6 +178,12 @@ export interface NutritionGapEstimate {
 export interface WorkedOutNutrition {
   /** Null where no line counted toward a total. */
   perServing: NutritionPerServing | null;
+  /**
+   * For each extra nutrient in `perServing.extras`, the share of the counted
+   * lines' grams whose food knew it, from 0 to 1: below 1 the value is low by
+   * whatever the other lines hold.
+   */
+  extrasCoverage: Partial<Record<ExtraNutrient, number>>;
   /** Every line left out of the counted total, in the recipe's order, each with why. */
   leftOut: LeftOutLine[];
   /** The lines the total counted. */
@@ -364,6 +376,9 @@ export function workOutNutrition({
   estimate?: NutritionGapEstimate | null;
 }): WorkedOutNutrition {
   const total = { calories: 0, fat: 0, carbs: 0, protein: 0 };
+  const extras: ExtraNutrients = {};
+  const knownGrams: Partial<Record<ExtraNutrient, number>> = {};
+  let countedGrams = 0;
   const leftOut: LeftOutLine[] = [];
   const counted: CountedLine[] = [];
   const credits = new Set<NutritionCredit>();
@@ -400,6 +415,14 @@ export function workOutNutrition({
     total.fat += brought.fat;
     total.carbs += brought.carbs;
     total.protein += brought.protein;
+    countedGrams += weighed.grams;
+    for (const key of EXTRA_NUTRIENTS) {
+      const per100g = weighed.numbers.value.extras?.[key];
+
+      if (per100g === undefined) continue;
+      extras[key] = (extras[key] ?? 0) + per100g * share;
+      knownGrams[key] = (knownGrams[key] ?? 0) + weighed.grams;
+    }
     counted.push({ lineId: line.id, name: line.name, grams: weighed.grams, ...brought });
     if (used.some((fact) => fact.borrowedFrom)) borrowedCalories += brought.calories;
     for (const fact of used) {
@@ -416,6 +439,7 @@ export function workOutNutrition({
   // or one edited since, stays listed as left out. Seasoning is never asked.
   const shareOf = new Map((estimate?.lines ?? []).map((line) => [line.key, line]));
   const share = { calories: 0, fat: 0, carbs: 0, protein: 0 };
+  const sharedExtras: ExtraNutrients = {};
 
   for (const line of leftOut) {
     const stored = line.reason === "seasoning" ? undefined : shareOf.get(line.key);
@@ -426,6 +450,11 @@ export function workOutNutrition({
     share.fat += stored.fat;
     share.carbs += stored.carbs;
     share.protein += stored.protein;
+    for (const key of EXTRA_NUTRIENTS) {
+      const value = stored.extras?.[key];
+
+      if (value !== undefined) sharedExtras[key] = (sharedExtras[key] ?? 0) + value;
+    }
   }
 
   const estimatedByAI = leftOut.some((line) => line.estimatedByAI);
@@ -437,11 +466,27 @@ export function workOutNutrition({
           fat: total.fat / divisor + share.fat,
           carbs: total.carbs / divisor + share.carbs,
           protein: total.protein / divisor + share.protein,
+          extras: Object.fromEntries(
+            EXTRA_NUTRIENTS.flatMap((key) =>
+              extras[key] === undefined && sharedExtras[key] === undefined
+                ? []
+                : [[key, (extras[key] ?? 0) / divisor + (sharedExtras[key] ?? 0)]]
+            )
+          ),
         }
       : null;
+  // A share the model estimated covers its own line; the dataset lines'
+  // coverage is by weight, as only they have one.
+  const extrasCoverage: Partial<Record<ExtraNutrient, number>> = Object.fromEntries(
+    Object.keys(perServing?.extras ?? {}).map((key) => [
+      key,
+      countedGrams > 0 ? (knownGrams[key as ExtraNutrient] ?? 0) / countedGrams : 1,
+    ])
+  );
 
   return {
     perServing,
+    extrasCoverage,
     leftOut,
     counted,
     estimated:

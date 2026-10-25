@@ -343,6 +343,38 @@
                         }
                       ]
                     },
+                    "nutritionExtras": {
+                      "anyOf": [
+                        {
+                          "type": "object",
+                          "propertyNames": {
+                            "type": "string",
+                            "enum": [
+                              "saturatedFat",
+                              "monounsaturatedFat",
+                              "polyunsaturatedFat",
+                              "transFat",
+                              "sugars",
+                              "fiber",
+                              "cholesterol",
+                              "sodium",
+                              "potassium",
+                              "calcium",
+                              "iron",
+                              "vitaminC",
+                              "vitaminA"
+                            ]
+                          },
+                          "additionalProperties": {
+                            "type": "number",
+                            "minimum": 0
+                          }
+                        },
+                        {
+                          "type": "null"
+                        }
+                      ]
+                    },
                     "originCountry": {
                       "anyOf": [
                         {
@@ -774,6 +806,31 @@
                                   },
                                   "protein": {
                                     "type": "number"
+                                  },
+                                  "extras": {
+                                    "type": "object",
+                                    "propertyNames": {
+                                      "type": "string",
+                                      "enum": [
+                                        "saturatedFat",
+                                        "monounsaturatedFat",
+                                        "polyunsaturatedFat",
+                                        "transFat",
+                                        "sugars",
+                                        "fiber",
+                                        "cholesterol",
+                                        "sodium",
+                                        "potassium",
+                                        "calcium",
+                                        "iron",
+                                        "vitaminC",
+                                        "vitaminA"
+                                      ]
+                                    },
+                                    "additionalProperties": {
+                                      "type": "number",
+                                      "minimum": 0
+                                    }
                                   }
                                 },
                                 "required": [
@@ -831,6 +888,256 @@
                     "cuisines",
                     "images",
                     "videos"
+                  ],
+                  "additionalProperties": false
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Missing or invalid API credentials",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/error.UNAUTHORIZED"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Recipe not found",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/error.NOT_FOUND"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/recipes/{id}/nutrition": {
+      "get": {
+        "operationId": "recipeNutrition",
+        "summary": "Get a recipe's nutrition per serving",
+        "description": "The recipe's own Nutrition Information, else the total worked out from its ingredients, as the recipe page shows it.",
+        "tags": [
+          "Recipes"
+        ],
+        "security": [
+          {
+            "ApiKeyAuth": []
+          },
+          {
+            "BearerAuth": []
+          }
+        ],
+        "parameters": [
+          {
+            "in": "path",
+            "name": "id",
+            "schema": {
+              "type": "string",
+              "format": "uuid",
+              "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$"
+            },
+            "required": true
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "source": {
+                      "type": "string",
+                      "enum": [
+                        "supplied",
+                        "worked-out",
+                        "none"
+                      ],
+                      "description": "supplied: the recipe's own Nutrition Information. worked-out: summed from its ingredient lines' dataset numbers for your household, plus the AI's stored share of lines that could not be counted. none: neither gives a number."
+                    },
+                    "perServing": {
+                      "anyOf": [
+                        {
+                          "type": "object",
+                          "properties": {
+                            "calories": {
+                              "anyOf": [
+                                {
+                                  "type": "number"
+                                },
+                                {
+                                  "type": "null"
+                                }
+                              ],
+                              "description": "Calories in kcal per serving; null where the recipe does not say"
+                            },
+                            "fat": {
+                              "anyOf": [
+                                {
+                                  "type": "number"
+                                },
+                                {
+                                  "type": "null"
+                                }
+                              ],
+                              "description": "Fat in grams per serving; null where the recipe does not say"
+                            },
+                            "carbs": {
+                              "anyOf": [
+                                {
+                                  "type": "number"
+                                },
+                                {
+                                  "type": "null"
+                                }
+                              ],
+                              "description": "Carbohydrates in grams per serving; null where the recipe does not say"
+                            },
+                            "protein": {
+                              "anyOf": [
+                                {
+                                  "type": "number"
+                                },
+                                {
+                                  "type": "null"
+                                }
+                              ],
+                              "description": "Protein in grams per serving; null where the recipe does not say"
+                            },
+                            "extras": {
+                              "type": "object",
+                              "propertyNames": {
+                                "type": "string",
+                                "enum": [
+                                  "saturatedFat",
+                                  "monounsaturatedFat",
+                                  "polyunsaturatedFat",
+                                  "transFat",
+                                  "sugars",
+                                  "fiber",
+                                  "cholesterol",
+                                  "sodium",
+                                  "potassium",
+                                  "calcium",
+                                  "iron",
+                                  "vitaminC",
+                                  "vitaminA"
+                                ]
+                              },
+                              "additionalProperties": {
+                                "type": "number"
+                              },
+                              "description": "Other nutrients per serving, only those known: cholesterol, sodium, potassium, calcium, iron and vitaminC in milligrams, vitaminA in micrograms RAE, the rest in grams. The recipe's own value wins; the others are worked out from its lines."
+                            }
+                          },
+                          "required": [
+                            "calories",
+                            "fat",
+                            "carbs",
+                            "protein",
+                            "extras"
+                          ],
+                          "additionalProperties": false
+                        },
+                        {
+                          "type": "null"
+                        }
+                      ]
+                    },
+                    "estimated": {
+                      "type": "boolean",
+                      "description": "Whether a worked-out total leans on parent foods for a tenth of its calories or more, or on the AI for a line."
+                    },
+                    "leftOut": {
+                      "type": "array",
+                      "items": {
+                        "type": "object",
+                        "properties": {
+                          "name": {
+                            "type": "string"
+                          },
+                          "reason": {
+                            "type": "string",
+                            "enum": [
+                              "seasoning",
+                              "no-amount",
+                              "no-size",
+                              "no-numbers",
+                              "no-spoon-weight",
+                              "no-piece-weight"
+                            ]
+                          },
+                          "estimatedByAI": {
+                            "type": "boolean",
+                            "description": "Whether the AI's share of this line is in the total."
+                          }
+                        },
+                        "required": [
+                          "name",
+                          "reason",
+                          "estimatedByAI"
+                        ],
+                        "additionalProperties": false
+                      },
+                      "description": "Lines a worked-out total did not count from the datasets, in recipe order."
+                    },
+                    "credits": {
+                      "type": "array",
+                      "items": {
+                        "type": "string",
+                        "enum": [
+                          "ciqual",
+                          "ciqual-2020",
+                          "calnut",
+                          "usda",
+                          "cofid",
+                          "off"
+                        ]
+                      },
+                      "description": "Datasets a worked-out total took a number from."
+                    },
+                    "extrasCoverage": {
+                      "type": "object",
+                      "propertyNames": {
+                        "type": "string",
+                        "enum": [
+                          "saturatedFat",
+                          "monounsaturatedFat",
+                          "polyunsaturatedFat",
+                          "transFat",
+                          "sugars",
+                          "fiber",
+                          "cholesterol",
+                          "sodium",
+                          "potassium",
+                          "calcium",
+                          "iron",
+                          "vitaminC",
+                          "vitaminA"
+                        ]
+                      },
+                      "additionalProperties": {
+                        "type": "number",
+                        "minimum": 0,
+                        "maximum": 1
+                      },
+                      "description": "For each extra nutrient, the share (0 to 1) of the counted ingredients by weight whose food knew it; 1 where the recipe states it. Below 1 the value is low by whatever the other ingredients hold."
+                    }
+                  },
+                  "required": [
+                    "source",
+                    "perServing",
+                    "estimated",
+                    "leftOut",
+                    "credits",
+                    "extrasCoverage"
                   ],
                   "additionalProperties": false
                 }
@@ -1096,6 +1403,38 @@
                                 "type": "integer",
                                 "minimum": -2147483648,
                                 "maximum": 2147483647
+                              },
+                              {
+                                "type": "null"
+                              }
+                            ]
+                          },
+                          "nutritionExtras": {
+                            "anyOf": [
+                              {
+                                "type": "object",
+                                "propertyNames": {
+                                  "type": "string",
+                                  "enum": [
+                                    "saturatedFat",
+                                    "monounsaturatedFat",
+                                    "polyunsaturatedFat",
+                                    "transFat",
+                                    "sugars",
+                                    "fiber",
+                                    "cholesterol",
+                                    "sodium",
+                                    "potassium",
+                                    "calcium",
+                                    "iron",
+                                    "vitaminC",
+                                    "vitaminA"
+                                  ]
+                                },
+                                "additionalProperties": {
+                                  "type": "number",
+                                  "minimum": 0
+                                }
                               },
                               {
                                 "type": "null"
@@ -1437,6 +1776,38 @@
                     "anyOf": [
                       {
                         "type": "string"
+                      },
+                      {
+                        "type": "null"
+                      }
+                    ]
+                  },
+                  "nutritionExtras": {
+                    "anyOf": [
+                      {
+                        "type": "object",
+                        "propertyNames": {
+                          "type": "string",
+                          "enum": [
+                            "saturatedFat",
+                            "monounsaturatedFat",
+                            "polyunsaturatedFat",
+                            "transFat",
+                            "sugars",
+                            "fiber",
+                            "cholesterol",
+                            "sodium",
+                            "potassium",
+                            "calcium",
+                            "iron",
+                            "vitaminC",
+                            "vitaminA"
+                          ]
+                        },
+                        "additionalProperties": {
+                          "type": "number",
+                          "minimum": 0
+                        }
                       },
                       {
                         "type": "null"
@@ -1980,6 +2351,38 @@
                                   "type": "integer",
                                   "minimum": -2147483648,
                                   "maximum": 2147483647
+                                },
+                                {
+                                  "type": "null"
+                                }
+                              ]
+                            },
+                            "nutritionExtras": {
+                              "anyOf": [
+                                {
+                                  "type": "object",
+                                  "propertyNames": {
+                                    "type": "string",
+                                    "enum": [
+                                      "saturatedFat",
+                                      "monounsaturatedFat",
+                                      "polyunsaturatedFat",
+                                      "transFat",
+                                      "sugars",
+                                      "fiber",
+                                      "cholesterol",
+                                      "sodium",
+                                      "potassium",
+                                      "calcium",
+                                      "iron",
+                                      "vitaminC",
+                                      "vitaminA"
+                                    ]
+                                  },
+                                  "additionalProperties": {
+                                    "type": "number",
+                                    "minimum": 0
+                                  }
                                 },
                                 {
                                   "type": "null"
