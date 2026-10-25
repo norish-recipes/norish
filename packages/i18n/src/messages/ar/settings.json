@@ -1,0 +1,1303 @@
+{
+  "page": {
+    "title": "الإعدادات",
+    "ariaLabel": "تبويبات الإعدادات"
+  },
+  "tabs": {
+    "user": "المستخدم",
+    "household": "المنزل",
+    "caldav": "CalDAV",
+    "admin": "الإدارة",
+    "ingredients": "المكوّنات"
+  },
+  "user": {
+    "profile": {
+      "title": "الملف الشخصي",
+      "nameLabel": "الاسم",
+      "namePlaceholder": "اسمك",
+      "emailLabel": "البريد الإلكتروني",
+      "avatarHint": "انقر على صورتك لتغييرها",
+      "deleteAvatar": "حذف الصورة الشخصية",
+      "saveChanges": "حفظ التغييرات"
+    },
+    "allergies": {
+      "title": "الحساسية",
+      "description": "أضف أنواع الحساسية الغذائية لديك لتصلك تنبيهات عند تخطيط وصفات تحتوي على مسبّبات الحساسية.",
+      "placeholder": "اكتب أنواع الحساسية (مثال: غلوتين، مكسرات، ألبان)...",
+      "saveButton": "حفظ الحساسية"
+    },
+    "apiKeys": {
+      "title": "مفاتيح API",
+      "description": "يمكن استخدام مفاتيح API لبناء تكاملات واختصارات وعمليات أتمتة خاصة.",
+      "docsLink": "فتح توثيق API",
+      "keyNameLabel": "اسم المفتاح (اختياري)",
+      "keyNamePlaceholder": "مثال: اختصار iOS",
+      "createKey": "إنشاء مفتاح",
+      "yourKeys": "مفاتيح API الخاصة بك",
+      "noKeys": "لا توجد مفاتيح API بعد. أنشئ مفتاحًا لتبدأ.",
+      "tableHeaders": {
+        "name": "الاسم",
+        "keyPrefix": "بادئة المفتاح",
+        "created": "تاريخ الإنشاء",
+        "status": "الحالة",
+        "actions": "الإجراءات"
+      },
+      "unnamed": "بلا اسم",
+      "active": "نشط",
+      "disabled": "معطّل",
+      "disableKey": "تعطيل المفتاح",
+      "enableKey": "تفعيل المفتاح",
+      "deleteKey": "حذف المفتاح",
+      "generatedModal": {
+        "title": "تم إنشاء مفتاح API",
+        "warning": "احفظ هذا المفتاح الآن! لن تتمكن من رؤيته مرة أخرى. نحتفظ فقط بقيمة hash له ولا يمكننا استعادته.",
+        "hint": "استخدم هذا المفتاح في ترويسة <code>x-api-key</code> عند إرسال طلبات API.",
+        "confirmButton": "حفظته"
+      },
+      "deleteModal": {
+        "title": "حذف مفتاح API",
+        "message": "هل أنت متأكد من حذف مفتاح API هذا؟ ستفقد التطبيقات التي تستخدمه الوصول فورًا. لا يمكن التراجع عن ذلك.",
+        "confirmButton": "حذف المفتاح"
+      }
+    },
+    "archiveImport": {
+      "title": "استيراد أرشيف وصفات",
+      "description": "استورد وصفات مصدّرة من Norish أو Mela أو Paprika أو Mealie أو Tandoor أو Recipe Keeper."
+    },
+    "archiveExport": {
+      "title": "تصدير أرشيف وصفات",
+      "description": "نزّل جميع الوصفات التي يمكنك رؤيتها.",
+      "button": "تصدير"
+    },
+    "siteAuthTokens": {
+      "title": "رموز المصادقة للمواقع",
+      "description": "ترويسات أو ملفات تعريف ارتباط تُرسل عند الاستيراد من مواقع تتطلب تسجيل الدخول، مثل Instagram أو Facebook.",
+      "accountsDescription": "سمِّ الحساب عندما يكون لديك أكثر من تسجيل دخول للموقع نفسه. يستخدم كل استيراد عندها أحد حسابات ذلك الموقع عشوائيًا، كي لا يتحمّل حساب واحد كل عمليات الاستيراد. الرمز الذي لا يحمل اسم حساب يُرسل مع كل استيراد من نطاقه.",
+      "domain": "النطاق",
+      "domainPlaceholder": "مثال: instagram.com",
+      "account": "الحساب",
+      "accountPlaceholder": "مثال: my_handle (اختياري)",
+      "accountShared": "كل الحسابات",
+      "name": "الاسم",
+      "namePlaceholder": "مثال: Cookie أو Authorization",
+      "value": "القيمة",
+      "valuePlaceholder": "قيمة الرمز أو ملف تعريف الارتباط",
+      "type": "النوع",
+      "typeHeader": "ترويسة",
+      "typeCookie": "ملف تعريف الارتباط",
+      "addButton": "إضافة رمز",
+      "noTokens": "لم يتم إعداد أي رموز مصادقة للمواقع.",
+      "tableHeaders": {
+        "domain": "النطاق",
+        "account": "الحساب",
+        "name": "الاسم",
+        "type": "النوع",
+        "created": "تاريخ الإنشاء",
+        "actions": "الإجراءات"
+      },
+      "deleteModal": {
+        "title": "حذف الرمز",
+        "message": "هل أنت متأكد من حذف رمز المصادقة هذا؟ قد يتوقف الاستيراد من هذا الموقع.",
+        "confirmButton": "حذف الرمز"
+      },
+      "accountsHelp": "حول الحسابات"
+    },
+    "dangerZone": {
+      "title": "منطقة الخطر",
+      "description": "بعد حذف حسابك لا يمكن التراجع. يرجى التأكد.",
+      "deleteButton": "حذف حسابي",
+      "deleteModal": {
+        "title": "حذف الحساب",
+        "permanentWarning": "هذا الإجراء نهائي ولا يمكن التراجع عنه!",
+        "dataWarning": "ستُحذف بياناتك الشخصية نهائيًا، بما فيها المشتريات ومواعيد التقويم والملاحظات.",
+        "recipesNote": "ستبقى الوصفات التي أنشأتها، لكنها لن تعود مرتبطة بحسابك.",
+        "adminNote": "إذا كنت مسؤول منزل فيه أعضاء آخرون، فعليك نقل صلاحيات المسؤول أولًا.",
+        "confirmButton": "حذف حسابي"
+      }
+    },
+    "preferences": {
+      "title": "التفضيلات",
+      "description": "خصّص تجربتك.",
+      "deviceKind": {
+        "help": "كيف تُحفظ التفضيلات",
+        "phone": "«{language}» و«{afterPlanning}» و«{measurements}» محفوظة لكل حساب، والباقي لكل نوع جهاز.",
+        "desktop": "«{language}» و«{afterPlanning}» و«{measurements}» محفوظة لكل حساب، والباقي لكل نوع جهاز."
+      },
+      "language": {
+        "title": "اللغة",
+        "description": "اختر لغتك المفضلة"
+      },
+      "hidden": {
+        "title": "العناصر المخفية",
+        "description": "أخفِ عناصر الواجهة التي لا تريد رؤيتها",
+        "placeholder": "لا شيء مخفي",
+        "options": {
+          "provenance": "الأصل",
+          "nutrition": "القيم الغذائية",
+          "notes": "الملاحظات",
+          "rating": "التقييمات",
+          "favorites": "المفضلة",
+          "conversion": "تحويل المكوّنات",
+          "timers": "مؤقّتات الوصفة",
+          "cookbooks": "كتب الطبخ",
+          "ingredientIcons": "أيقونات المكوّنات"
+        }
+      },
+      "todaySection": {
+        "title": "قسم اليوم",
+        "description": "كيف يظهر قسم اليوم في الصفحة الرئيسية",
+        "options": {
+          "always": "ظاهر دائمًا",
+          "planned": "الوجبات المخططة فقط",
+          "hidden": "مخفي"
+        }
+      },
+      "recipePageColor": {
+        "title": "لون صفحة الوصفة",
+        "description": "اختر تلوين صفحة الوصفة حسب الطبق أو اتباع ألوان المظهر",
+        "options": {
+          "dish": "من صورة الطبق",
+          "theme": "ألوان المظهر العادية"
+        }
+      },
+      "applyError": "تعذّر تطبيق التفضيل",
+      "afterPlanning": {
+        "title": "بعد تخطيط وصفة",
+        "description": "ما الذي يحدث عند تخطيط وصفة",
+        "options": {
+          "nothing": "لا شيء",
+          "openGroceries": "فتح لوحة المشتريات",
+          "addGroceries": "إضافة المكوّنات إلى المشتريات"
+        }
+      },
+      "measurements": {
+        "title": "القياسات",
+        "description": "نظام القياس الافتراضي للوصفات",
+        "options": {
+          "off": "بلا تحويل",
+          "metric": "متري",
+          "us": "أمريكي",
+          "metricWithAI": "متري بالذكاء الاصطناعي",
+          "usWithAI": "أمريكي بالذكاء الاصطناعي"
+        }
+      }
+    },
+    "shareLinks": {
+      "title": "روابط مشاركة الوصفات",
+      "description": "راجع جميع روابط الوصفات العامة التي أنشأتها وأدرها.",
+      "empty": "لا توجد روابط مشاركة.",
+      "table": {
+        "recipe": "الوصفة",
+        "status": "الحالة",
+        "created": "تاريخ الإنشاء",
+        "expires": "تاريخ الانتهاء",
+        "actions": "الإجراءات"
+      },
+      "revokeModal": {
+        "title": "إلغاء الرابط",
+        "message": "سيتوقف هذا الرابط لـ {recipeName} عن العمل حتى تعيد تفعيله.",
+        "confirm": "إلغاء الرابط"
+      },
+      "reactivateModal": {
+        "title": "إعادة تفعيل الرابط",
+        "message": "سيعود هذا الرابط لـ {recipeName} إلى العمل.",
+        "confirm": "إعادة التفعيل"
+      },
+      "deleteModal": {
+        "title": "حذف الرابط",
+        "message": "هل تريد حذف رابط المشاركة هذا لـ {recipeName}؟ لا يمكن التراجع عن ذلك.",
+        "confirm": "حذف الرابط"
+      }
+    }
+  },
+  "household": {
+    "info": {
+      "yourRole": "دورك",
+      "admin": "مسؤول",
+      "member": "عضو",
+      "members": "الأعضاء",
+      "leaveButton": "مغادرة المنزل",
+      "leaveModal": {
+        "title": "مغادرة المنزل",
+        "confirmMessage": "هل أنت متأكد من مغادرة {name}؟",
+        "adminWarning": "أنت المسؤول. عليك نقل صلاحيات المسؤول قبل المغادرة.",
+        "confirmButton": "مغادرة المنزل"
+      }
+    },
+    "members": {
+      "title": "الأعضاء",
+      "tableHeaders": {
+        "name": "الاسم",
+        "role": "الدور",
+        "actions": "الإجراءات"
+      },
+      "you": "أنت",
+      "kickButton": "إزالة",
+      "makeAdminButton": "تعيين كمسؤول",
+      "kickModal": {
+        "title": "إزالة مستخدم",
+        "confirmMessage": "هل أنت متأكد من إزالة {name} من المنزل؟",
+        "warning": "سيفقد الوصول إلى جميع الوصفات والمشتريات ومواعيد التقويم المشتركة.",
+        "confirmButton": "إزالة المستخدم"
+      },
+      "transferModal": {
+        "title": "نقل صلاحيات المسؤول",
+        "confirmMessage": "هل أنت متأكد من نقل صلاحيات المسؤول إلى {name}؟",
+        "warning": "ستصبح عضوًا عاديًا ولن تتمكن من إزالة المستخدمين أو إدارة رموز الانضمام.",
+        "confirmButton": "نقل الصلاحيات"
+      },
+      "toasts": {
+        "kickFailed": "تعذّرت إزالة المستخدم",
+        "transferSuccess": "نُقلت صلاحيات المسؤول إلى {name}",
+        "transferFailed": "تعذّر نقل صلاحيات المسؤول"
+      }
+    },
+    "joinCode": {
+      "title": "رمز الانضمام",
+      "shareDescription": "شارك هذا الرمز مع الآخرين لدعوتهم إلى منزلك.",
+      "expiresIn": "ينتهي بعد:",
+      "regenerateButton": "إنشاء رمز جديد",
+      "expired": "منتهي",
+      "noCodeDescription": "لا يوجد رمز انضمام فعّال. أنشئ رمزًا لدعوة أعضاء جدد.",
+      "generateButton": "إنشاء رمز انضمام",
+      "copySuccess": "تم نسخ رمز الانضمام",
+      "copyFailed": "تعذّر نسخ رمز الانضمام"
+    },
+    "create": {
+      "title": "إنشاء منزل",
+      "description": "أنشئ منزلًا جديدًا لمشاركة الوصفات والمشتريات مع العائلة أو الأصدقاء.",
+      "nameLabel": "اسم المنزل",
+      "namePlaceholder": "مثال: عائلة الحلبي",
+      "submitButton": "إنشاء المنزل"
+    },
+    "join": {
+      "title": "الانضمام إلى منزل",
+      "description": "أدخل رمز انضمام للانضمام إلى منزل موجود.",
+      "codeLabel": "رمز الانضمام",
+      "codePlaceholder": "رمز من 8 أحرف",
+      "submitButton": "الانضمام إلى المنزل"
+    }
+  },
+  "caldav": {
+    "setup": {
+      "title": "إعداد مزامنة CalDAV",
+      "description": "اربط تقويمًا يدعم CalDAV لمزامنة خطط الوجبات تلقائيًا",
+      "gettingStarted": "البدء مع CalDAV",
+      "providerDescription": "تحتاج إلى خدمة تقويم تدعم CalDAV. من المزوّدين الشائعين:",
+      "serverUrlLabel": "رابط الخادم",
+      "serverUrlDescription": "الرابط الأساسي لخادم CalDAV الخاص بك (مثال: https://dav.example.com)",
+      "serverUrlPlaceholder": "https://dav.example.com",
+      "usernameLabel": "اسم المستخدم",
+      "usernamePlaceholder": "اسم المستخدم",
+      "passwordLabel": "كلمة المرور",
+      "passwordPlaceholder": "أدخل كلمة المرور",
+      "calendarLabel": "التقويم",
+      "calendarPlaceholder": "اختر تقويمًا",
+      "calendarPlaceholderDisabled": "اختبر الاتصال أولًا",
+      "calendarDescription": "اختر التقويم الذي تريد مزامنة خطط الوجبات معه",
+      "calendarDescriptionDisabled": "اختبر الاتصال لتحميل التقويمات المتاحة",
+      "timeFormat": "الصيغة: HH:MM-HH:MM",
+      "timeFormatError": "يجب أن تكون الصيغة HH:MM-HH:MM",
+      "breakfastTime": "وقت الفطور",
+      "lunchTime": "وقت الغداء",
+      "dinnerTime": "وقت العشاء",
+      "snackTime": "وقت التصبيرة",
+      "testConnection": "اختبار الاتصال",
+      "saveConfiguration": "حفظ الإعدادات"
+    },
+    "config": {
+      "title": "إعدادات CalDAV",
+      "editTitle": "تعديل إعدادات CalDAV",
+      "serverUrl": "رابط الخادم",
+      "enabled": "مفعّل",
+      "disabled": "معطّل",
+      "editButton": "تعديل",
+      "deleteButton": "حذف",
+      "saveChanges": "حفظ التغييرات",
+      "advancedSettings": "إعدادات متقدمة",
+      "timezone": "المنطقة الزمنية: {timezone}",
+      "connectionStatus": {
+        "connected": "متصل",
+        "checking": "جارٍ الفحص...",
+        "disconnected": "غير متصل",
+        "unknown": "غير معروف"
+      }
+    },
+    "deleteModal": {
+      "title": "حذف إعدادات CalDAV",
+      "confirmMessage": "هل أنت متأكد من حذف إعدادات CalDAV؟",
+      "deleteEventsLabel": "حذف المواعيد المتزامنة",
+      "deleteEventsDescription": "إزالة جميع المواعيد التي أُنشئت في تقويم CalDAV الخاص بك",
+      "confirmButton": "حذف"
+    },
+    "syncStatus": {
+      "title": "حالة المزامنة",
+      "syncNow": "مزامنة الآن",
+      "clearFilter": "مسح التصفية",
+      "clickToFilter": "انقر على شارة للتصفية",
+      "showingItems": "عرض {start}-{end} من {total} عنصر",
+      "tableHeaders": {
+        "item": "العنصر",
+        "type": "النوع",
+        "date": "التاريخ",
+        "meal": "الوجبة",
+        "status": "الحالة",
+        "lastSync": "آخر مزامنة",
+        "error": "الخطأ"
+      },
+      "statuses": {
+        "synced": "متزامن",
+        "pending": "في الانتظار",
+        "failed": "فشل",
+        "removed": "أُزيل"
+      },
+      "emptyFiltered": "لا توجد عناصر بحالة {status}",
+      "emptyDefault": "لا توجد سجلات مزامنة",
+      "errorDetails": "تفاصيل الخطأ",
+      "pagination": "الصفحة {current} من {total}"
+    }
+  },
+  "ingredients": {
+    "title": "المكوّنات",
+    "description": "كتالوج المكوّنات الذي يستخدمه Norish لحساب القيم الغذائية وأيقونات المكوّنات والترجمات.",
+    "search": "البحث في المكوّنات",
+    "searchMatch": "المطابقة",
+    "searchIn": "البحث في",
+    "searchMatches": {
+      "contains": "يحتوي",
+      "exact": "مطابق تمامًا"
+    },
+    "searchFields": {
+      "name": "الاسم",
+      "translations": "الترجمات",
+      "parent": "الأصل"
+    },
+    "flaggedOnly": "المعلَّمة فقط",
+    "flagged": "معلَّم",
+    "flagReasons": {
+      "unknown": "لم يكن Norish متأكدًا من أن هذه مادة غذائية مستقلة.",
+      "ai-off": "الذكاء الاصطناعي معطّل، لذلك لم يُفحص إن كانت هذه مادة غذائية يعرفها Norish.",
+      "unknown-food": "لا توجد مادة غذائية معروفة تشترك بكلمة مع هذا الاسم، لذلك لم يُسأل الذكاء الاصطناعي.",
+      "ai-unsure": "سُئل الذكاء الاصطناعي إن كانت هذه مادة غذائية معروفة ولم يكن متأكدًا.",
+      "ai-unavailable": "لم يستجب الذكاء الاصطناعي في الوقت المناسب عند إضافة هذا الاسم.",
+      "ai-key-rejected": "رفض مزوّد الذكاء الاصطناعي مفتاح API، فلم يتمكن من فحص هذا الاسم.",
+      "food-gone": "ربطه الذكاء الاصطناعي بمادة غذائية دُمجت في غيرها قبل أن يُضاف الاسم إليها.",
+      "upgrade": "تعذّر ربطه بأي مادة غذائية معروفة.",
+      "seed-ambiguous": "يحتوي الكتالوج على عدة مواد غذائية قد يكون هذا إحداها."
+    },
+    "empty": "لم يُعثر على مكوّنات",
+    "emptyFlagged": "لا يوجد شيء معلَّم",
+    "rename": "إعادة تسمية",
+    "delete": "حذف",
+    "deleteTitle": "حذف {name}؟",
+    "deleteConfirm": "ستُحذف ترجماته معه، وكل ما علّمه منزلك لـ Norish عنه. لا يمكن حذف مكوّن ما زال مستخدمًا في وصفة أو في المشتريات أو المونة؛ ادمجه بدلًا من ذلك.",
+    "markDistinct": "تعليم كمستقل",
+    "summary": "{spellings, plural, one {ترجمة واحدة} two {ترجمتان} few {# ترجمات} many {# ترجمة} other {# ترجمة}}{kinds, plural, =0 {} one {، نوع واحد} two {، نوعان} few {، # أنواع} other {، # نوع}}{parent, select, none {} other {، الأصل: {parent}}}",
+    "askAI": "اسأل الذكاء الاصطناعي",
+    "fixCatalogue": "إصلاح الكتالوج",
+    "askAIRound": {
+      "intro": "يفحص الذكاء الاصطناعي مكان المكوّنات المعلَّمة ويصحّح الأسماء غير المتسقة. لا يتغيّر شيء حتى تؤكد الاقتراح.",
+      "scopeLabel": "ما الذي تريد إصلاحه",
+      "scopes": {
+        "unsuggested": "فحص المكوّنات المعلَّمة",
+        "suggested": "إعادة فحص الاقتراحات",
+        "name": "تنظيف الأسماء"
+      },
+      "hints": {
+        "unsuggested": "يبحث عن التكرار، أو مكوّن فرعي، أو إن كان مستقلًا.",
+        "suggested": "يعيد فحص المكوّنات المعلَّمة.",
+        "name": "ينظّف أسماء المكوّنات لتبقى باسم المكوّن فقط. تُشمل المكوّنات المعلَّمة إذا كان الخيار أعلاه محددًا."
+      },
+      "scopeSize": "{count, plural, =0 {لا توجد مكوّنات} one {مكوّن واحد · نحو {tokens} توكن} two {مكوّنان · نحو {tokens} توكن} few {# مكوّنات · نحو {tokens} توكن} many {# مكوّنًا · نحو {tokens} توكن} other {# مكوّن · نحو {tokens} توكن}}",
+      "modelTokens": "نحو {tokens} توكن",
+      "basisMeasured": "بناءً على ما استهلكته الجولة الأخيرة."
+    },
+    "roundProgress": "جارٍ سؤال الذكاء الاصطناعي · {done, number} من {total, number}",
+    "roundSection": {
+      "title": "جارٍ سؤال الذكاء الاصطناعي",
+      "progress": "{done, number} من {total, number}",
+      "waiting": "{count, plural, one {مكوّن واحد في الانتظار} two {مكوّنان في الانتظار} few {# مكوّنات في الانتظار} many {# مكوّنًا في الانتظار} other {# مكوّن في الانتظار}}"
+    },
+    "reviewing": "جارٍ سؤال الذكاء الاصطناعي…",
+    "aiOutcomes": {
+      "parent": "يقترح الذكاء الاصطناعي تصنيف {name} كنوع من {of}.",
+      "distinct": "يقترح الذكاء الاصطناعي أن {name} مادة غذائية مستقلة.",
+      "unsure": "ما زال الذكاء الاصطناعي غير متأكد مما هو {name}.",
+      "notFlagged": "{name} غير معلَّم.",
+      "skippedNotFlagged": "لم يعد {name} معلَّمًا.",
+      "skippedForbidden": "لا يحق لك تعديل {name}.",
+      "skippedNotFound": "كان {name} قد أُزيل عندما وصل إليه الذكاء الاصطناعي.",
+      "failed": "فشل السؤال عن {name}.",
+      "merge": "يقترح الذكاء الاصطناعي دمج {name} في {into}."
+    },
+    "aiTrace": {
+      "readAs": "قرأه الذكاء الاصطناعي على أنه «{name}».",
+      "compared": "قورن مع: {names}.",
+      "comparedNothing": "لم تكن هناك مادة غذائية معروفة للمقارنة بها.",
+      "fromWords": "بناءً على الاسم.",
+      "noFood": "لم يجد الذكاء الاصطناعي مادة غذائية في هذا الاسم."
+    },
+    "addAlias": "إضافة ترجمة",
+    "removeAlias": "إزالة {alias}",
+    "mergeInto": "دمج في…",
+    "merge": "دمج",
+    "mergedToast": "أصبح {name} ترجمةً لـ {into}. للتراجع، افتح {into} وانقل {name} خارجه.",
+    "mergeTitle": "سيختفي {name} ويصبح ترجمةً للمكوّن الذي تختاره.",
+    "moveTo": "نقل إلى",
+    "move": "نقل",
+    "moveAlias": "نقل {alias}",
+    "moveTitle": "نقل {alias} إلى مكوّن آخر.",
+    "newIngredient": "جعله مكوّنًا أساسيًا",
+    "pickIngredient": "البحث عن مكوّن",
+    "pickerHint": "اكتب للبحث في الكتالوج",
+    "pickerSearching": "جارٍ البحث…",
+    "pickerEmpty": "لم يُعثر على مكوّن",
+    "setParent": "تحديد الأصل…",
+    "parentTitle": "اختر المادة الغذائية التي يُعد {name} نوعًا منها.",
+    "clearParent": "إزالة الأصل",
+    "nameSection": "الاسم",
+    "parentSection": "الأصل",
+    "spellingsSection": "الترجمات",
+    "shownAs": "يظهر لك باسم {name}",
+    "changeParent": "تغيير الأصل…",
+    "spellingsCount": "{count, plural, zero {لا توجد ترجمات} one {ترجمة واحدة} two {ترجمتان} few {# ترجمات} many {# ترجمة} other {# ترجمة}}",
+    "dataSources": {
+      "title": "مصادر البيانات",
+      "notice": "كتالوج المكوّنات مبني على تصنيف المكوّنات في <off>Open Food Facts</off>، المتاح بموجب <odbl>رخصة قواعد البيانات المفتوحة (ODbL)</odbl>. والكتالوج الذي يبنيه Norish منه متاح بموجب الرخصة نفسها.",
+      "nutritionNotice": "القيم الغذائية لكل 100 غ مأخوذة من <ciqual>CIQUAL 2025</ciqual> وCALNUT (ANSES)، و<usda>USDA FoodData Central</usda> و<cofid>CoFID</cofid>، وتُربط عبر الرموز التي يمنحها Open Food Facts لكل مادة غذائية. تصحيحات المنزل أرقامه الخاصة، وليست أرقام قواعد البيانات.",
+      "download": "تنزيل كتالوج المكوّنات (JSON)"
+    },
+    "nutrition": {
+      "section": "القيم الغذائية",
+      "per100g": "لكل 100 غ",
+      "calories": "السعرات الحرارية",
+      "fat": "الدهون",
+      "carbs": "الكربوهيدرات",
+      "protein": "البروتين",
+      "kcal": "{value} سعرة",
+      "grams": "{value} غ",
+      "spoonGrams": {
+        "teaspoon": "{value} غ للملعقة الصغيرة",
+        "tablespoon": "{value} غ للملعقة الكبيرة",
+        "cup": "{value} غ للكاسة",
+        "hundredMl": "{value} غ لكل 100 مل"
+      },
+      "none": "لا توجد قيم غذائية لهذه المادة في Norish بعد. صحّحها لإضافة قيم.",
+      "noNumbers": "لا توجد أرقام لكل 100 غ بعد.",
+      "borrowed": "من {name}: {source}",
+      "source": {
+        "code": "{food} · {dataset}",
+        "fix": "{food} · {dataset}، اختيار Norish",
+        "name": "{food} · {dataset}، مطابقة حسب الاسم",
+        "householdFood": "{food} · {dataset}، اختيار منزلك",
+        "household": "أرقام منزلك الخاصة",
+        "taxonomy": "Open Food Facts"
+      },
+      "correct": "تصحيح",
+      "correctTitle": "تصحيح {name}",
+      "correctIntro": "التصحيحات خاصة بمنزلك فقط.",
+      "facts": {
+        "numbers": "لكل 100 غ",
+        "pieceWeight": "حبة واحدة"
+      },
+      "useSources": "بلا تصحيح",
+      "pickFood": "مادة من قاعدة بيانات",
+      "typeLabel": "من ملصق",
+      "label": {
+        "calories": "السعرات الحرارية (kcal)",
+        "fat": "الدهون (غ)",
+        "carbs": "الكربوهيدرات (غ)",
+        "protein": "البروتين (غ)",
+        "pieceGrams": "وزن الحبة الواحدة (غ)",
+        "spoonGrams": {
+          "teaspoon": "وزن الملعقة الصغيرة (غ)",
+          "tablespoon": "وزن الملعقة الكبيرة (غ)",
+          "cup": "وزن الكاسة (غ)",
+          "hundredMl": "وزن 100 مل (غ)"
+        }
+      },
+      "searchFood": "ابحث في قواعد البيانات، مثل milk semi-skimmed",
+      "foodHint": "اكتب بضع كلمات من اسم المادة الغذائية",
+      "searchingFoods": "جارٍ البحث…",
+      "noFoods": "لا توجد مادة في قواعد البيانات تحتوي كل هذه الكلمات.",
+      "remove": "إزالة تصحيحنا",
+      "saved": "تم حفظ التصحيح",
+      "removed": "تمت العودة إلى أرقام قواعد البيانات",
+      "errors": {
+        "title": "تعذّر حفظ التصحيح",
+        "unknown-food": "هذه المادة لم تعد موجودة في Norish.",
+        "empty": "صحّح قيمة واحدة على الأقل من الثلاث.",
+        "not-found": "هذه المادة الغذائية لم تعد موجودة.",
+        "unknown": "حدث خطأ ما. حاول مجددًا."
+      },
+      "onePieceLabel": "حبة واحدة",
+      "spoon": {
+        "teaspoon": "ملعقة صغيرة",
+        "tablespoon": "ملعقة كبيرة",
+        "cup": "كاسة",
+        "hundredMl": "100 مل"
+      },
+      "spoonAsk": "إضافة وزنها",
+      "summary": "{value} سعرة لكل 100 غ",
+      "summaryNone": "لا توجد قيم غذائية بعد",
+      "current": "حاليًا {value} · {source}",
+      "currentNone": "لا يوجد لدى Norish شيء لهذه المادة بعد"
+    },
+    "errors": {
+      "title": "تعذّر تغيير المكوّن",
+      "forbidden": "لا يحق لك تعديل هذا المكوّن",
+      "not-found": "هذا المكوّن لم يعد موجودًا",
+      "name-taken": "يوجد مكوّن آخر بهذا الاسم",
+      "spelling-taken": "هذه الترجمة تابعة لمكوّن آخر",
+      "last-alias": "يجب أن يحتفظ المكوّن بترجمة واحدة على الأقل",
+      "alias-in-use": "ما زالت وصفات أو مشتريات تستخدم هذه الترجمة",
+      "ingredient-in-use": "ما زالت وصفات أو مشتريات أو المونة تستخدم هذا المكوّن",
+      "same-ingredient": "لا يمكن دمج المكوّن في نفسه",
+      "cycle": "لا يمكن أن يكون المكوّن نوعًا من نفسه",
+      "empty": "أدخل اسمًا",
+      "unknown": "حدث خطأ ما. حاول مجددًا."
+    },
+    "uses": {
+      "show": "عرض الاستخدامات",
+      "title": "أين يُستخدم {name}",
+      "recipes": "الوصفات",
+      "groceries": "المشتريات",
+      "done": "مُنجز",
+      "repeats": "متكرر",
+      "pantry": "موجود في المونة",
+      "elsewhere": "{count, plural, one {استخدام واحد آخر} two {استخدامان آخران} few {# استخدامات أخرى} many {# استخدامًا آخر} other {# استخدام آخر}} في وصفات أو قوائم لا يمكنك فتحها",
+      "none": "لم يعد مستخدمًا في أي مكان"
+    },
+    "keepAlias": "الإبقاء على {alias}",
+    "reportOutcomes": {
+      "parent": "صُنّف تحت أصل",
+      "distinct": "مادة مستقلة",
+      "unsure": "غير متأكد",
+      "skipped": "تم تخطيه",
+      "failed": "فشل",
+      "merge": "دمج"
+    },
+    "expandKinds": "عرض أنواع {name}",
+    "collapseKinds": "إخفاء أنواع {name}",
+    "layoutSection": "العرض",
+    "asTree": "عرض هرمي",
+    "showOnly": "عرض فقط",
+    "standaloneOnly": "بلا أصل أو أنواع",
+    "findParent": "إيجاد الأصل بالذكاء الاصطناعي",
+    "findParentsAll": "إيجاد الأصول بالذكاء الاصطناعي",
+    "suggestion": {
+      "merge": "دمج {name} في {into}",
+      "parent": "تصنيف {name} تحت {of}",
+      "distinct": "إبقاء {name} مادة مستقلة",
+      "filedFromName": "صُنّف {name} تحت {of}",
+      "rename": "إعادة تسمية {name} إلى {to}"
+    },
+    "suggestionsTitle": "الاقتراحات",
+    "suggestionsEmpty": "لا يوجد ما ينتظرك.",
+    "suggestionsNone": "لا يوجد اقتراح",
+    "suggestionsOpen": "{count, plural, =0 {الاقتراحات} one {اقتراح واحد} two {اقتراحان} few {# اقتراحات} many {# اقتراحًا} other {# اقتراح}}",
+    "suggestionsFailed": "{count, plural, one {تعذّر تطبيق اقتراح واحد} two {تعذّر تطبيق اقتراحين} few {تعذّر تطبيق # اقتراحات} many {تعذّر تطبيق # اقتراحًا} other {تعذّر تطبيق # اقتراح}}: {reason}",
+    "confirmSuggestion": "تأكيد",
+    "dismissSuggestion": "تجاهل",
+    "confirmAll": "تأكيد الكل ({count})",
+    "dismissAll": "تجاهل الكل",
+    "suggestedByAI": "اقتراح الذكاء الاصطناعي",
+    "suggestedFromName": "بناءً على الاسم",
+    "proposal": {
+      "merge": "دمج في {into}",
+      "parent": "تصنيف تحت {of}",
+      "distinct": "مادة مستقلة",
+      "rename": "إعادة تسمية إلى {to}"
+    },
+    "skippedReasons": {
+      "notFlagged": "لم يعد معلَّمًا",
+      "forbidden": "لا يحق لك تعديله",
+      "notFound": "لم يعد موجودًا",
+      "settled": "الاسم محسوم مسبقًا، أو هناك اقتراح بالانتظار"
+    },
+    "icon": {
+      "change": "تغيير الأيقونة",
+      "upload": "رفع صورة",
+      "remove": "إزالة الأيقونة",
+      "failed": "تعذّر تحويل هذه الصورة إلى أيقونة.",
+      "generate": "إنشاء بالذكاء الاصطناعي",
+      "generateFailed": "تعذّر إنشاء الأيقونة."
+    },
+    "drawIcons": {
+      "open": "رسم الأيقونات",
+      "title": "رسم الأيقونات",
+      "intro": "يرسم مزوّد الصور أيقونة لكل مادة غذائية، وتصبح أيقونتها فورًا. يمكنك منح المادة أيقونة أخرى من لوحتها.",
+      "scopeLabel": "أي المواد",
+      "scopes": {
+        "bare": "المواد التي لا أيقونة لها إطلاقًا",
+        "unowned": "كل مادة ليست لها أيقونة خاصة"
+      },
+      "scopeSize": "{count, plural, =0 {لا توجد أيقونات} one {أيقونة واحدة} two {أيقونتان} few {# أيقونات} many {# أيقونة} other {# أيقونة}}",
+      "start": "رسم الأيقونات",
+      "progress": "جارٍ رسم الأيقونات · {done, number} من {total, number}",
+      "drawing": "جارٍ رسم الأيقونة…"
+    }
+  },
+  "admin": {
+    "shareLinks": {
+      "title": "الإشراف على مشاركة الوصفات",
+      "description": "راجع روابط الوصفات العامة على مستوى الخادم وتحكّم في دورة حياتها.",
+      "empty": "لا توجد روابط مشاركة.",
+      "table": {
+        "recipe": "الوصفة",
+        "owner": "المالك",
+        "status": "الحالة",
+        "created": "تاريخ الإنشاء",
+        "expires": "تاريخ الانتهاء",
+        "actions": "الإجراءات"
+      },
+      "revokeModal": {
+        "title": "إلغاء الرابط",
+        "message": "سيتوقف هذا الرابط لـ {recipeName} عن العمل حتى تتم إعادة تفعيله.",
+        "confirm": "إلغاء الرابط"
+      },
+      "reactivateModal": {
+        "title": "إعادة تفعيل الرابط",
+        "message": "سيعود هذا الرابط لـ {recipeName} إلى العمل.",
+        "confirm": "إعادة التفعيل"
+      },
+      "deleteModal": {
+        "title": "حذف الرابط",
+        "message": "هل تريد حذف رابط المشاركة هذا لـ {recipeName}؟ لا يمكن التراجع عن ذلك.",
+        "confirm": "حذف الرابط"
+      }
+    },
+    "general": {
+      "title": "عام",
+      "allowRegistration": "السماح بتسجيل مستخدمين جدد",
+      "registrationDescription": "عند التعطيل، يمكن للمستخدمين الحاليين فقط تسجيل الدخول",
+      "locales": "اللغات المفعّلة",
+      "localesDescription": "اختر اللغات التي يمكن للمستخدمين الاختيار منها",
+      "defaultLocale": "اللغة الافتراضية",
+      "defaultLocaleDescription": "اللغة المستخدمة للمستخدمين الجدد وكلغة احتياطية",
+      "saveLocales": "حفظ إعدادات اللغة",
+      "localesSaved": "تم حفظ إعدادات اللغة",
+      "localesError": "تعذّر حفظ إعدادات اللغة",
+      "atLeastOneLocale": "يجب تفعيل لغة واحدة على الأقل",
+      "export": {
+        "title": "أرشيف الوصفات",
+        "description": "نزّل جميع الوصفات الموجودة على هذا الخادم.",
+        "button": "تصدير أرشيف الوصفات"
+      }
+    },
+    "users": {
+      "title": "المستخدمون",
+      "description": "إدارة كل من لديه حساب على هذا الخادم.",
+      "table": {
+        "user": "المستخدم",
+        "role": "الدور",
+        "household": "المنزل",
+        "joined": "تاريخ الانضمام",
+        "actions": "الإجراءات"
+      },
+      "roles": {
+        "owner": "المالك",
+        "admin": "مسؤول"
+      },
+      "noHousehold": "بلا منزل",
+      "loading": "جارٍ تحميل المستخدمين…",
+      "empty": "لا يوجد مستخدمون بعد.",
+      "loadFailed": "تعذّر تحميل قائمة المستخدمين.",
+      "actions": {
+        "makeAdmin": "تعيين كمسؤول",
+        "revokeAdmin": "إزالة صلاحيات المسؤول",
+        "delete": "حذف المستخدم"
+      },
+      "deleteTitle": "حذف {name}؟",
+      "deleteConfirm": "سيؤدي هذا إلى حذف حساب المستخدم نهائيًا وإزالته من منزله. لا يمكن التراجع عن ذلك.",
+      "deleteSuccess": "تم حذف {name}",
+      "countSummary": "المجموع: {count, plural, zero {لا يوجد مستخدمون} one {مستخدم واحد} two {مستخدمان} few {# مستخدمين} many {# مستخدمًا} other {# مستخدم}}"
+    },
+    "registration": {
+      "title": "التسجيل",
+      "allowRegistration": "السماح بتسجيل مستخدمين جدد",
+      "description": "عند التعطيل، يمكن للمستخدمين الحاليين فقط تسجيل الدخول"
+    },
+    "permissions": {
+      "title": "الصلاحيات",
+      "description": "من يمكنه رؤية ما أنشأه الآخرون وتغييره. لمسؤولي الخادم صلاحية كاملة دائمًا.",
+      "recipes": "الوصفات",
+      "ingredients": "المكوّنات",
+      "viewRecipes": "عرض الوصفات",
+      "viewDescription": "من يمكنه رؤية الوصفات في الصفحة الرئيسية",
+      "editRecipes": "تعديل الوصفات",
+      "editDescription": "من يمكنه تعديل تفاصيل الوصفات",
+      "deleteRecipes": "حذف الوصفات",
+      "deleteDescription": "من يمكنه حذف الوصفات",
+      "levels": {
+        "everyone": "الجميع",
+        "everyoneDescription": "جميع المستخدمين المسجلين",
+        "household": "المنزل",
+        "householdDescription": "صاحب الوصفة وأعضاء منزله",
+        "owner": "المالك فقط",
+        "ownerDescription": "صاحب الوصفة فقط"
+      },
+      "note": "تتبع المشتريات ومواعيد التقويم قواعد المنزل دائمًا: يمكن لأعضاء المنزل تعديل عناصر بعضهم أو حذفها."
+    },
+    "ingredientPermissions": {
+      "title": "صلاحيات المكوّنات",
+      "description": "من يمكنه إعادة تسمية المكوّنات أو تعليمها كمستقلة أو إزالة ترجماتها. يمكن لأي شخص إضافة ترجمة.",
+      "editIngredients": "تعديل المكوّنات",
+      "editDescription": "من يمكنه تغيير مكوّن أضافه شخص آخر",
+      "levels": {
+        "everyone": "الجميع",
+        "everyoneDescription": "جميع المستخدمين المسجلين",
+        "household": "المنزل",
+        "householdDescription": "من أضافه وأعضاء منزله",
+        "owner": "المالك فقط",
+        "ownerDescription": "من أضافه فقط"
+      },
+      "note": "المكوّنات القادمة من الكتالوج المدمج لا يعدّلها إلا مسؤولو الخادم."
+    },
+    "system": {
+      "title": "إعدادات النظام",
+      "cleanup": {
+        "label": "أشهر التنظيف",
+        "description": "حذف الوجبات المخططة الأقدم من هذا العدد من الأشهر"
+      },
+      "server": {
+        "restartLabel": "إعادة تشغيل الخادم",
+        "restartDescription": "تطبيق تغييرات الإعدادات التي تتطلب إعادة تشغيل",
+        "restartButton": "إعادة تشغيل الخادم"
+      }
+    },
+    "restart": {
+      "title": "إعادة تشغيل الخادم",
+      "confirmMessage": "هل أنت متأكد من إعادة تشغيل الخادم؟",
+      "importantTitle": "مهم:",
+      "warning1": "سيتم قطع جميع الاتصالات النشطة",
+      "warning2": "سيكون الخادم غير متاح لبضع ثوانٍ",
+      "warning3": "تأكد من أن النشر لديك مُعدّ بـ <code>restart: always</code>، وإلا فلن يعود الخادم إلى العمل تلقائيًا",
+      "confirmButton": "إعادة التشغيل الآن"
+    },
+    "authProviders": {
+      "title": "مزوّدو تسجيل الدخول",
+      "requiresRestart": "يتطلب إعادة تشغيل",
+      "description": "اضبط طريقة تسجيل دخول المستخدمين.",
+      "passwordAuth": {
+        "title": "البريد الإلكتروني وكلمة المرور",
+        "description": "السماح للمستخدمين بتسجيل الدخول بالبريد الإلكتروني وكلمة المرور"
+      },
+      "oauthDescription": "اضبط مزوّدي OAuth لتسجيل الدخول الموحّد (SSO).",
+      "oidc": {
+        "title": "مزوّد OIDC",
+        "subtitle": "OpenID Connect عام",
+        "fields": {
+          "name": "اسم المزوّد",
+          "namePlaceholder": "مثال: Authentik، Keycloak",
+          "issuer": "رابط الجهة المُصدِرة (Issuer)",
+          "issuerPlaceholder": "https://your-idp.com",
+          "clientId": "معرّف العميل",
+          "clientSecret": "سرّ العميل",
+          "wellknown": "رابط Well-known (اختياري)",
+          "wellknownPlaceholder": "يُستنتج تلقائيًا من الجهة المُصدِرة إن لم يُحدَّد"
+        },
+        "claimMapping": {
+          "title": "ربط المطالبات (Claims)",
+          "description": "منح صلاحيات المسؤول وعضوية المنازل حسب مطالبات المجموعات لدى المزوّد.",
+          "securityWarning": "تحذير: تفعيل ربط المطالبات يتيح لمزوّد الهوية التحكم في صلاحيات المسؤول وعضوية المنازل. لا تفعّله إلا إذا كنت تثق تمامًا بمزوّد OIDC وقد أعددت مطالبات المجموعات بشكل صحيح.",
+          "scopes": "نطاقات (Scopes) إضافية",
+          "scopesPlaceholder": "groups, roles",
+          "scopesDescription": "قائمة نطاقات OAuth إضافية مفصولة بفواصل (مثال: groups لـ Keycloak)",
+          "groupsClaim": "مطالبة المجموعات",
+          "groupsClaimDescription": "اسم المطالبة التي تحتوي مجموعات المستخدم أو أدواره",
+          "adminGroup": "مجموعة المسؤولين",
+          "adminGroupDescription": "اسم المجموعة التي تمنح دور مسؤول الخادم (دون تمييز حالة الأحرف)",
+          "householdPrefix": "بادئة المنازل",
+          "householdPrefixDescription": "بادئة أسماء مجموعات المنازل (مثال: norish_household_family => المنزل 'family')"
+        }
+      },
+      "github": {
+        "title": "GitHub",
+        "subtitle": "GitHub OAuth",
+        "fields": {
+          "clientId": "معرّف العميل",
+          "clientSecret": "سرّ العميل"
+        }
+      },
+      "google": {
+        "title": "Google",
+        "subtitle": "Google OAuth",
+        "fields": {
+          "clientId": "معرّف العميل",
+          "clientIdPlaceholder": "*.apps.googleusercontent.com",
+          "clientSecret": "سرّ العميل"
+        }
+      },
+      "form": {
+        "testSuccess": "نجح الاتصال",
+        "removeTitle": "إزالة {provider}",
+        "removeConfirm": "هل أنت متأكد من إزالة هذا المزوّد؟"
+      },
+      "envBadge": {
+        "db": "مُدار من قاعدة البيانات",
+        "env": "مُدار من متغيرات البيئة"
+      }
+    },
+    "contentDetection": {
+      "title": "اكتشاف المحتوى",
+      "description": "اضبط طريقة اكتشاف الوصفات وقراءتها من صفحات الويب.",
+      "contentIndicators": {
+        "title": "مؤشرات المحتوى",
+        "subtitle": "كلمات تدل على صفحات الوصفات",
+        "description": "تكتشف مؤشرات المخطط (Schema) بيانات الوصفة المنظّمة (JSON-LD وmicrodata). أما مؤشرات المحتوى فهي كلمات توحي بأن الصفحة تحتوي على وصفة.",
+        "timersEnabled": {
+          "title": "تفعيل مؤقّتات الوصفات",
+          "description": "اكتشاف المؤقّتات في الوصفات وعرضها بشكل تفاعلي"
+        }
+      },
+      "units": {
+        "title": "وحدات القياس",
+        "subtitle": "تعريفات وحدات القياس للقراءة",
+        "description": "عرّف وحدات القياس مع اختصارها وجمعها وطرق كتابتها البديلة. تُستخدم عند قراءة كميات المكوّنات."
+      },
+      "ingredientWords": {
+        "title": "كلمات المكوّنات",
+        "subtitle": "الكلمات التي تُقرأ بها أسماء المكوّنات، لكل لغة",
+        "description": "كلمات يتجاهلها Norish عند مطابقة أسماء المكوّنات، مثل «مفروم» أو «كبير» أو «ات» في «بصلات»."
+      },
+      "recurrence": {
+        "title": "أنماط التكرار",
+        "subtitle": "عبارات باللغة الطبيعية للأغراض المتكررة",
+        "description": "كلمات في كل لغة تجعل الغرض متكررًا، مثل «كل أسبوع» أو «om de dag»."
+      },
+      "timerKeywords": {
+        "title": "كلمات المؤقّت",
+        "subtitle": "كلمات وحدات الوقت لاكتشاف المؤقّتات",
+        "description": "اضبط الكلمات المستخدمة لاكتشاف المؤقّتات في خطوات الوصفة. يدعم عدة لغات.",
+        "enableToggle": "تفعيل اكتشاف المؤقّتات",
+        "hoursLabel": "كلمات الساعات",
+        "hoursPlaceholder": "ساعة، ساعات، س",
+        "hoursHelp": "كلمات للساعات (مثال: ساعة، hour، stunde، heure)",
+        "minutesLabel": "كلمات الدقائق",
+        "minutesPlaceholder": "دقيقة، دقائق، د",
+        "minutesHelp": "كلمات للدقائق (مثال: دقيقة، minute، minuten)",
+        "secondsLabel": "كلمات الثواني",
+        "secondsPlaceholder": "ثانية، ثوان، ث",
+        "secondsHelp": "كلمات للثواني (مثال: ثانية، second، sekunde)",
+        "unsavedChanges": "تغييرات غير محفوظة"
+      }
+    },
+    "aiProcessing": {
+      "title": "الذكاء الاصطناعي والمعالجة",
+      "description": "اضبط ميزات الذكاء الاصطناعي لاستخراج الوصفات ومعالجة الفيديو.",
+      "aiConfig": {
+        "title": "إعدادات الذكاء الاصطناعي",
+        "subtitle": "قراءة الوصفات واستخراجها"
+      },
+      "video": {
+        "title": "معالجة الفيديو",
+        "subtitle": "استخراج فيديوهات وسائل التواصل وتفريغها نصيًا"
+      },
+      "imageGeneration": {
+        "title": "إنشاء الصور",
+        "subtitle": "رسم صورة للطبق للوصفات التي ليست لها صورة"
+      },
+      "decisionModel": {
+        "title": "نموذج القرار",
+        "subtitle": "إجابات سريعة ورخيصة للأسئلة المغلقة"
+      },
+      "prompts": {
+        "title": "التعليمات (Prompts)",
+        "subtitle": "تخصيص تعليمات الذكاء الاصطناعي لمعالجة الوصفات"
+      },
+      "cuisines": {
+        "title": "المطابخ",
+        "subtitle": "القائمة التي تختار منها الوصفات والذكاء الاصطناعي"
+      },
+      "bulkEnrichment": {
+        "title": "الإثراء الجماعي",
+        "subtitle": "تشغيل الإثراء المفعّل على جميع الوصفات",
+        "description": "إضافة جميع عمليات الإثراء المفعّلة إلى قائمة الانتظار",
+        "button": "إثراء جميع الوصفات",
+        "confirmTitle": "هل تريد تشغيل الإثراء على جميع الوصفات؟",
+        "confirmMessage": "سيضيف هذا مهام ذكاء اصطناعي إلى قائمة الانتظار لكل وصفة على هذا الخادم. سيعمل كل نوع إثراء مفعّل تلقائيًا حيثما تكون البيانات ناقصة.",
+        "replaceExisting": "الكتابة فوق البيانات الحالية",
+        "replaceExistingDescription": "إعادة إنشاء التصنيفات والقيم الغذائية والأصل ومكوّنات الخطوات حتى لو كانت الوصفة تحتوي عليها. أما الوسوم ومؤشرات الحساسية فيُضاف إليها فقط.",
+        "replaceWarning": "لا يمكن التراجع عن ذلك. ستُستبدل أيضًا البيانات التي أدخلتها بنفسك، بما فيها مكوّنات الخطوات التي ربطتها يدويًا: لا يوجد سجل يحدد القيم القادمة من الذكاء الاصطناعي.",
+        "costWarning": "قد تكون هذه العملية مكلفة: مع وجود وصفات كثيرة قد تستغرق وقتًا طويلًا، وقد تستهلك قدرًا كبيرًا من الرصيد لدى مزوّد ذكاء اصطناعي مدفوع.",
+        "confirmButton": "تشغيل على جميع الوصفات",
+        "confirmButtonReplace": "الكتابة فوق جميع الوصفات",
+        "queued": "{queued, plural, =0 {لا توجد عمليات في الانتظار} one {عملية واحدة في الانتظار} two {عمليتان في الانتظار} few {# عمليات في الانتظار} many {# عملية في الانتظار} other {# عملية في الانتظار}} على {recipes, plural, one {وصفة واحدة} two {وصفتين} few {# وصفات} many {# وصفة} other {# وصفة}}",
+        "aiDisabled": "الذكاء الاصطناعي معطّل على هذا الخادم. فعّله أولًا.",
+        "error": "تعذّر بدء الإثراء الجماعي",
+        "imageCount": "{count, plural, =0 {لن تُنشئ الجولة أي صورة.} one {ستُنشئ الجولة صورة واحدة.} two {ستُنشئ الجولة صورتين.} few {ستُنشئ الجولة # صور.} many {ستُنشئ الجولة # صورة.} other {ستُنشئ الجولة # صورة.}}"
+      }
+    },
+    "aiConfig": {
+      "enableAI": "تفعيل ميزات الذكاء الاصطناعي",
+      "enableAIDescription": "استخدام الذكاء الاصطناعي لاستخراج الوصفات من محتوى غير منظّم",
+      "configureWarning": "اضبط إعدادات مزوّد الذكاء الاصطناعي أدناه لتفعيل ميزاته.",
+      "provider": "مزوّد الذكاء الاصطناعي",
+      "providers": {
+        "openai": "OpenAI",
+        "azure": "Azure OpenAI",
+        "anthropic": "Anthropic",
+        "google": "Google AI",
+        "mistral": "Mistral AI",
+        "deepseek": "DeepSeek",
+        "perplexity": "Perplexity",
+        "groq": "Groq",
+        "ollama": "Ollama (محلي)",
+        "lmStudio": "LM Studio (محلي)",
+        "genericOpenai": "متوافق مع OpenAI (عام)"
+      },
+      "endpointUrl": "رابط نقطة الوصول (Endpoint)",
+      "azureEndpoint": "رابط مورد Azure (اختياري)",
+      "azureEndpointDescription": "نقطة وصول مخصّصة لـ Azure OpenAI. اتركه فارغًا للإعداد الافتراضي.",
+      "model": "النموذج",
+      "visionModel": "نموذج الرؤية (اختياري)",
+      "visionModelDescription": "اختياري: استخدم نموذجًا مختلفًا لمهام الصور والرؤية. اتركه فارغًا لاستخدام النموذج أعلاه.",
+      "apiKey": "مفتاح API",
+      "apiKeyPlaceholder": "أدخل مفتاح API",
+      "temperature": "درجة الحرارة (Temperature): {value}",
+      "temperatureHint": "أقل = أكثر دقة، أعلى = أكثر إبداعًا",
+      "maxTokens": "الحد الأقصى للتوكنز",
+      "requestTimeout": "مهلة الطلب (ms)",
+      "alwaysUseAI": "الاستيراد بالذكاء الاصطناعي دائمًا",
+      "alwaysUseAIDescription": "تجاوز القرّاء المنظّمين واستخراج الوصفات بالذكاء الاصطناعي فقط",
+      "connectionSuccess": "نجح الاتصال",
+      "testConnection": "اختبار الاتصال",
+      "vision": "رؤية",
+      "automaticEnrichment": "الإثراء التلقائي للوصفات",
+      "automaticEnrichmentDescription": "عمليات الإثراء بالذكاء الاصطناعي التي تعمل على الوصفات الجديدة. يمكن للأعضاء تشغيل كل منها يدويًا أيضًا.",
+      "automaticEnrichmentPlaceholder": "لا شيء يعمل تلقائيًا",
+      "automaticEnrichmentKinds": {
+        "autoTagging": "الوسوم التلقائية",
+        "autoTaggingDescription": "إضافة وسوم يقترحها الذكاء الاصطناعي إلى الوصفات الجديدة دون إزالة الوسوم الحالية",
+        "allergyDetection": "كشف الحساسية",
+        "allergyDetectionDescription": "إضافة وسوم الحساسية تلقائيًا عند استيراد الوصفات",
+        "autoCategorization": "التصنيف التلقائي",
+        "autoCategorizationDescription": "تحديد تصنيفات الوجبة للوصفات الجديدة التي لا تصنيف لها",
+        "nutritionEstimation": "تقدير القيم الغذائية",
+        "nutritionEstimationDescription": "تقدير السعرات والدهون والكربوهيدرات والبروتين للوصفات الجديدة التي لا تتضمنها",
+        "recipeProvenance": "أصل الوصفة",
+        "recipeProvenanceDescription": "معرفة البلد والمنطقة والمطابخ وكتابة ملاحظة قصيرة للوصفات الجديدة، مع ملء الناقص فقط",
+        "ingredientLinking": "ربط المكوّنات",
+        "ingredientLinkingDescription": "ربط كل خطوة بأسطر المكوّنات التي تستخدمها، للخطوات غير المرتبطة",
+        "imageGeneration": "إنشاء الصور",
+        "imageGenerationDescription": "رسم صورة للطبق للوصفات الجديدة التي ليست لها أي صورة"
+      },
+      "automaticIngredients": "تلقائيًا للمكوّنات الجديدة",
+      "automaticIngredientsDescription": "ما يحدث عند إضافة مكوّنات جديدة إلى الكتالوج.",
+      "automaticIngredientsKinds": {
+        "plainName": "تنظيف الاسم",
+        "plainNameDescription": "إزالة ما ليس جزءًا من اسم المادة، مثل الكميات ورموز العبوات",
+        "icon": "رسم أيقونة",
+        "iconDescription": "فقط للمادة التي لا أيقونة تُعرض لها، ولا حتى أيقونة أصلها"
+      },
+      "tagStrategy": "طريقة الوسوم",
+      "tagStrategyDescription": "الوسوم المسموح للوسم التلقائي باستخدامها، سواء عمل تلقائيًا أو يدويًا",
+      "tagStrategies": {
+        "predefined": "الوسوم المحددة مسبقًا فقط",
+        "predefinedDb": "المحددة مسبقًا + الوسوم الحالية",
+        "freeform": "يمكن للذكاء الاصطناعي إنشاء وسوم جديدة"
+      },
+      "cuisineStrategy": "طريقة المطابخ",
+      "cuisineStrategyDescription": "هل يمكن لمعرفة الأصل إضافة مطابخ جديدة إلى قائمتك أم الاختيار منها فقط",
+      "cuisineStrategies": {
+        "existing": "المطابخ الحالية فقط",
+        "extend": "يمكن للذكاء الاصطناعي إضافة مطابخ جديدة"
+      }
+    },
+    "modelListing": {
+      "empty": "لم تُرجَع أي نماذج. تحقق من مفتاح API أو نقطة الوصول، أو اكتب اسم النموذج.",
+      "refused": "رفض {provider} الطلب ({status}). تحقق من مفتاح API.",
+      "unreachable": "تعذّر الوصول إلى {provider}. تحقق من نقطة الوصول."
+    },
+    "videoConfig": {
+      "enableVideo": "تفعيل قراءة الفيديو",
+      "enableVideoDescription": "استخراج الوصفات من TikTok وInstagram وYouTube Shorts وFacebook وPinterest وغيرها",
+      "configureWarning": "اضبط مزوّد التفريغ النصي أدناه لتفعيل معالجة الفيديو.",
+      "aiDisabledWarning": "فعّل إعدادات الذكاء الاصطناعي قبل تشغيل معالجة الفيديو.",
+      "maxLength": "الحد الأقصى لطول الفيديو (بالثواني)",
+      "maxLengthDescription": "تستغرق الفيديوهات الأطول وقتًا وموارد أكثر للمعالجة",
+      "maxFileSize": "الحد الأقصى لحجم ملف الفيديو",
+      "maxFileSizeDescription": "الحجم الأقصى لملفات الفيديو التي يتم تنزيلها",
+      "ytDlpVersion": "إصدار yt-dlp",
+      "ytDlpVersionDescription": "إصدار yt-dlp الذي يعمل على هذا الخادم. لا يمكن تغييره من هنا.",
+      "ytDlpVersionMissing": "لم يُعثر على yt-dlp",
+      "ytDlpVersionUnknown": "تعذّر الفحص",
+      "ytDlpVersionLoading": "جارٍ الفحص …",
+      "ytDlpProxy": "وكيل yt-dlp",
+      "ytDlpProxyDescription": "وكيل HTTP/SOCKS5 لـ yt-dlp",
+      "transcription": "التفريغ النصي",
+      "transcriptionDescription": "تحويل صوت الفيديو إلى نص لاستخراج الوصفة",
+      "transcriptionProvider": "مزوّد التفريغ النصي",
+      "transcriptionProviderDescription": "تدعم OpenAI ونقاط الوصول المتوافقة مع OpenAI فقط التفريغ عبر Whisper",
+      "transcriptionProviders": {
+        "disabled": "معطّل",
+        "openai": "OpenAI Whisper",
+        "groq": "Groq Whisper",
+        "azure": "Azure OpenAI Whisper",
+        "ollama": "Ollama",
+        "genericOpenai": "متوافق مع OpenAI (عام)"
+      },
+      "transcriptionEndpoint": "رابط نقطة الوصول (Endpoint)",
+      "transcriptionEndpointDescription": "نقطة وصول متوافقة مع OpenAI تدعم Whisper، أو نقطة وصول Ollama",
+      "transcriptionModel": "النموذج",
+      "transcriptionModelDescription": "نموذج Whisper المستخدم للتفريغ النصي",
+      "transcriptionModelPlaceholder": "اختر اسم النموذج أو أدخله",
+      "transcriptionApiKey": "مفتاح API",
+      "transcriptionApiKeyDescription": "يُستخدم مفتاح API من إعدادات الذكاء الاصطناعي إن لم يُحدَّد",
+      "transcriptionApiKeyPlaceholder": "اتركه فارغًا لاستخدام مفتاح إعدادات الذكاء الاصطناعي",
+      "transcriptionApiKeyOptional": "مفتاح API (اختياري)",
+      "transcriptionApiKeyOptionalDescription": "معظم خوادم Whisper المحلية لا تتطلب مفتاح API",
+      "transcriptionApiKeyOptionalPlaceholder": "اتركه فارغًا للخوادم المحلية"
+    },
+    "imageGenerationConfig": {
+      "description": "تحتاج الصور إلى مزوّد خاص بها، لأن معظم مزوّدي الذكاء الاصطناعي لا يستطيعون الرسم.",
+      "provider": "مزوّد الصور",
+      "providers": {
+        "disabled": "معطّل",
+        "openai": "OpenAI",
+        "google": "Google AI",
+        "azure": "Azure OpenAI",
+        "ollama": "Ollama (محلي)",
+        "lmStudio": "LM Studio",
+        "genericOpenai": "متوافق مع OpenAI (عام)"
+      },
+      "endpoint": "رابط نقطة الوصول (Endpoint)",
+      "endpointOptional": "اختياري: رابط مورد Azure مخصّص",
+      "apiKey": "مفتاح API",
+      "apiKeyPlaceholder": "أدخل مفتاح API...",
+      "apiKeyInherited": "يُستخدم مفتاح API من إعدادات الذكاء الاصطناعي.",
+      "model": "نموذج الصور",
+      "modelPlaceholder": "مثال: gpt-image-1",
+      "modelDescription": "النموذج الذي يرسم الصورة. يجب أن يكون نموذج صور، لا نموذج نصوص.",
+      "fallbackHint": "المزوّد نفسه في إعدادات الذكاء الاصطناعي: تُستخدم نقطة الوصول ومفتاح API من هناك ما لم تحددهما هنا."
+    },
+    "decisionConfig": {
+      "provider": "مزوّد القرار",
+      "providers": {
+        "disabled": "معطّل",
+        "typesafe": "TypeSafe AI"
+      },
+      "apiKey": "مفتاح API",
+      "apiKeyPlaceholder": "أدخل مفتاح API...",
+      "apiKeyDescription": "احصل على مفتاح من حسابك على typesafe.ai",
+      "model": "نموذج القرار",
+      "endpoint": "رابط نقطة الوصول (Endpoint)",
+      "endpointDescription": "لوكيل أو بوابة؛ اتركه فارغًا في غير ذلك.",
+      "uses": "استخدام نموذج القرار في",
+      "usesPlaceholder": "لا شيء",
+      "useNames": {
+        "autoCategorization": "التصنيف التلقائي",
+        "autoCategorizationDescription": "تحديد ما إذا كانت الوصفة فطورًا أو غداءً أو عشاءً أو تصبيرة",
+        "autoTagging": "الوسوم التلقائية",
+        "autoTaggingDescription": "اختيار الوسوم من القائمة المحددة مسبقًا، وتأكيد كل وسم يقترحه الذكاء الاصطناعي",
+        "allergyDetection": "كشف الحساسية",
+        "allergyDetectionDescription": "تحديد مسبّبات الحساسية المنزلية الموجودة في الوصفة",
+        "recipeProvenance": "أصل الوصفة",
+        "recipeProvenanceDescription": "تحديد البلد والمطابخ قبل كتابة الملاحظة",
+        "groceryLinking": "ربط المشتريات",
+        "groceryLinkingDescription": "ترتيب المنتجات التي يعرضها المتجر وربط منتج عند التأكد منه",
+        "ingredientResolution": "تحديد المكوّنات",
+        "ingredientResolutionDescription": "تحديد ما إذا كان اسم المكوّن الجديد مادة غذائية يعرفها Norish",
+        "validateEnrichments": "التحقق من الإثراء",
+        "validateEnrichmentsDescription": "فحص نتائج كل عملية إثراء قبل حفظها"
+      },
+      "testConnection": "اختبار الاتصال",
+      "connectionSuccess": "نجح الاتصال",
+      "aiDisabledHint": "الذكاء الاصطناعي معطّل على هذا الخادم. فعّله من إعدادات الذكاء الاصطناعي لاختبار نموذج القرار واستخدامه."
+    },
+    "promptsConfig": {
+      "recipeExtraction": "تعليمات استخراج الوصفة",
+      "recipeExtractionDescription": "تُستخدم هذه التعليمات عند استخراج بيانات الوصفة من صفحات الويب أو نصوص الفيديو.",
+      "recipeExtractionPlaceholder": "أدخل تعليمات استخراج الوصفة...",
+      "imageExtraction": "تعليمات الاستخراج من الصور",
+      "imageExtractionDescription": "تُستخدم هذه التعليمات عند استخراج بيانات الوصفة من صور مرفوعة، مثل صور كتاب طبخ أو بطاقة وصفة.",
+      "imageExtractionPlaceholder": "أدخل تعليمات الاستخراج من الصور...",
+      "unitConversion": "تعليمات تحويل الوحدات",
+      "unitConversionDescription": "تُستخدم هذه التعليمات عند تحويل قياسات الوصفة بين النظامين المتري والأمريكي. المتغيرات المتاحة: sourceSystem وtargetSystem وunits",
+      "unitConversionPlaceholder": "أدخل تعليمات تحويل الوحدات...",
+      "nutritionEstimation": "تعليمات تقدير القيم الغذائية",
+      "nutritionEstimationDescription": "تُستخدم هذه التعليمات عند تقدير القيم الغذائية لوصفة. المتغيرات المتاحة: recipeName وservings وingredients",
+      "nutritionEstimationPlaceholder": "أدخل تعليمات تقدير القيم الغذائية...",
+      "autoTagging": "تعليمات الوسوم التلقائية",
+      "autoTaggingDescription": "تُستخدم هذه التعليمات لإنشاء وسوم للوصفات المستوردة. حدّد قواعد الوسوم وقائمة الوسوم المحددة مسبقًا.",
+      "autoTaggingPlaceholder": "أدخل تعليمات الوسوم التلقائية...",
+      "autoCategorization": "تعليمات التصنيف التلقائي",
+      "autoCategorizationDescription": "تُستخدم هذه التعليمات لتوزيع الوصفات على تصنيفات الوجبات (فطور، غداء، عشاء، تصبيرة).",
+      "autoCategorizationPlaceholder": "أدخل تعليمات التصنيف التلقائي...",
+      "allergyDetection": "تعليمات كشف الحساسية",
+      "allergyDetectionDescription": "تُستخدم هذه التعليمات لكشف مسبّبات الحساسية المحددة للمنزل في مكوّنات الوصفة.",
+      "allergyDetectionPlaceholder": "أدخل تعليمات كشف الحساسية...",
+      "recipeProvenance": "تعليمات أصل الوصفة",
+      "recipeProvenanceDescription": "تُستخدم هذه التعليمات لمعرفة أصل الوصفة. تُكتب الملاحظة الناتجة بلغة الوصفة نفسها. المتغيرات المتاحة: recipeName وdescription وingredients",
+      "recipeProvenancePlaceholder": "أدخل تعليمات أصل الوصفة...",
+      "ingredientLinking": "تعليمات ربط المكوّنات",
+      "ingredientLinkingDescription": "تُستخدم عند ربط كل خطوة بأسطر المكوّنات التي تستخدمها",
+      "ingredientLinkingPlaceholder": "تعليمات ربط المكوّنات بالخطوات...",
+      "ingredientResolution": "تعليمات تحديد المكوّنات",
+      "ingredientResolutionDescription": "تُستخدم عند تحديد ما إذا كان اسم المكوّن الجديد مادة غذائية يعرفها Norish",
+      "ingredientResolutionPlaceholder": "تعليمات التعرّف على أسماء المكوّنات...",
+      "imageGenerationBrief": "تعليمات وصف الصورة",
+      "imageGenerationBriefDescription": "تُستخدم لتحويل الوصفة إلى وصف بصري قصير قبل إنشاء صورتها. تُضاف الوصفة بعد التعليمات.",
+      "imageGenerationBriefPlaceholder": "تعليمات كتابة الوصف البصري...",
+      "imageGenerationStyle": "تعليمات أسلوب الصورة",
+      "imageGenerationStyleDescription": "تُرسل إلى نموذج الصور، ويُضاف الوصف البصري بعدها. تحدد المظهر المشترك لكل الصور المُنشأة.",
+      "imageGenerationStylePlaceholder": "تعليمات أسلوب الصورة...",
+      "ingredientIconStyle": "تعليمات أسلوب أيقونات المكوّنات",
+      "ingredientIconStyleDescription": "تُرسل إلى نموذج الصور عند رسم أيقونة مكوّن، ويُضاف بعدها اسم المادة وما هي نوع منه. تحدد المظهر المشترك لكل الأيقونات المرسومة.",
+      "ingredientIconStylePlaceholder": "تعليمات أسلوب أيقونات المكوّنات...",
+      "ingredientPlainName": "تعليمات تنظيف أسماء المكوّنات",
+      "ingredientPlainNameDescription": "تُرسل إلى النموذج اللغوي عندما ينظّف الذكاء الاصطناعي اسم مكوّن، ويُضاف بعدها الاسم وطرق كتابته الأخرى. تحدد ما يُزال من الاسم وما يُبقى عليه.",
+      "ingredientPlainNamePlaceholder": "تعليمات تنظيف أسماء المكوّنات..."
+    },
+    "unsavedChanges": "تغييرات غير محفوظة",
+    "jsonEditor": {
+      "placeholder": "أدخل إعدادات JSON...",
+      "invalidJson": "صيغة JSON غير صالحة",
+      "failedToSave": "تعذّر الحفظ",
+      "failedToRestore": "تعذّرت استعادة الإعدادات الافتراضية"
+    },
+    "jobQueue": {
+      "title": "قوائم المهام",
+      "description": "راقب مهام الخلفية في جميع القوائم: الحالة والخطوة الحالية والمدة والأخطاء.",
+      "empty": "لا توجد مهام",
+      "filters": {
+        "queue": "القائمة",
+        "allQueues": "جميع القوائم"
+      },
+      "status": {
+        "waiting": "في الانتظار",
+        "active": "نشطة",
+        "delayed": "مؤجلة",
+        "completed": "مكتملة",
+        "failed": "فاشلة",
+        "paused": "متوقفة مؤقتًا",
+        "prioritized": "ذات أولوية",
+        "unknown": "غير معروفة",
+        "hanging": "عالقة"
+      },
+      "stepStatus": {
+        "done": "تم",
+        "failed": "فشل",
+        "running": "قيد التنفيذ",
+        "skipped": "تم تخطيه",
+        "pending": "في الانتظار"
+      },
+      "steps": {
+        "dedupe-check": "فحص الموجود",
+        "fetch-allergies": "جلب الحساسية",
+        "parsing": "قراءة الوصفة",
+        "saving": "حفظ الوصفة",
+        "post-processing": "معالجة لاحقة",
+        "preparing-images": "تجهيز الصور",
+        "ai-extraction": "استخراج بالذكاء الاصطناعي",
+        "parsing-text": "قراءة النص الملصق",
+        "creating-recipes": "إنشاء الوصفات",
+        "ai-request": "طلب ذكاء اصطناعي",
+        "syncing-event": "مزامنة موعد التقويم",
+        "deleting-event": "حذف موعد التقويم",
+        "running": "تشغيل المهمة",
+        "searching": "البحث في المتجر",
+        "reading-product": "قراءة صفحة المنتج",
+        "saving-link": "حفظ الرابط",
+        "asking-ai": "سؤال الذكاء الاصطناعي عن المادة",
+        "drawing-icon": "رسم أيقونة المادة",
+        "naming": "تنظيف اسم المادة"
+      },
+      "queues": {
+        "recipe-import": "استيراد الوصفات",
+        "image-recipe-import": "الاستيراد من الصور",
+        "paste-recipe-import": "الاستيراد من نص ملصق",
+        "nutrition-estimation": "تقدير القيم الغذائية",
+        "auto-tagging": "الوسوم التلقائية",
+        "auto-categorization": "التصنيف التلقائي",
+        "allergy-detection": "كشف الحساسية",
+        "recipe-provenance": "أصل الوصفة",
+        "ingredient-linking": "ربط المكوّنات",
+        "caldav-sync": "مزامنة CalDAV",
+        "scheduled-tasks": "المهام المجدولة",
+        "image-generation": "إنشاء الصور",
+        "store-lookup": "البحث في المتاجر",
+        "ingredient-review": "سؤال الذكاء الاصطناعي عن المكوّنات",
+        "ingredient-icons": "رسم أيقونات المكوّنات",
+        "new-ingredients": "مكوّنات جديدة"
+      },
+      "summary": {
+        "failed": "{count} فاشلة"
+      },
+      "table": {
+        "job": "المهمة",
+        "status": "الحالة",
+        "step": "الخطوة",
+        "duration": "المدة",
+        "created": "تاريخ الإنشاء",
+        "runsAt": "تعمل {time}"
+      },
+      "detail": {
+        "title": "تفاصيل المهمة",
+        "notFound": "المهمة غير موجودة. ربما تم تنظيفها.",
+        "sections": {
+          "error": "الخطأ",
+          "pipelineSteps": "خطوات المعالجة",
+          "input": "المدخلات",
+          "logs": "السجلات",
+          "errors": "الأخطاء"
+        },
+        "fields": {
+          "queue": "القائمة",
+          "jobId": "معرّف المهمة",
+          "description": "الوصف",
+          "recipe": "الوصفة",
+          "created": "تاريخ الإنشاء",
+          "started": "بدأت",
+          "finished": "انتهت",
+          "duration": "المدة",
+          "attempts": "المحاولات",
+          "models": "النماذج",
+          "tokens": "التوكنز",
+          "runsAt": "موعد التشغيل",
+          "nextRun": "التشغيل التالي"
+        },
+        "modelTokens": "{tokens} توكن",
+        "attempt": "المحاولة {number}",
+        "stackTrace": "تتبّع المكدس (Stack trace)"
+      },
+      "actions": {
+        "retry": "إعادة المحاولة",
+        "remove": "إزالة"
+      },
+      "removeModal": {
+        "message": "هل تريد إزالة هذه المهمة نهائيًا؟",
+        "confirm": "إزالة المهمة"
+      },
+      "retention": {
+        "title": "الاحتفاظ بالمهام",
+        "keepCompleted": "الاحتفاظ بالمهام المكتملة",
+        "keepFailed": "الاحتفاظ بالمهام الفاشلة",
+        "maxAgeDays": "الحد الأقصى للعمر (بالأيام)",
+        "description": "عدد المهام المنتهية التي يُحتفظ بها في كل قائمة."
+      },
+      "pagination": "الصفحة {current} من {total}"
+    },
+    "cuisineVocabulary": {
+      "description": "المطابخ قائمة منتقاة تملكها أنت. تُعرض الأسماء تمامًا كما كُتبت هنا، في جميع اللغات.",
+      "namePlaceholder": "اسم المطبخ",
+      "addLabel": "إضافة مطبخ",
+      "renameLabel": "إعادة تسمية {name}",
+      "deleteLabel": "حذف {name}",
+      "deleteConfirm": "هل تريد حذف \"{name}\"؟ ستفقده الوصفات التي تستخدمه.",
+      "empty": "لا توجد مطابخ بعد.",
+      "duplicate": "يوجد مطبخ بهذا الاسم بالفعل.",
+      "saveFailed": "تعذّر حفظ هذا المطبخ."
+    }
+  },
+  "archiveExport": {
+    "progress": "جارٍ التصدير… {size}",
+    "errors": {
+      "failedTitle": "فشل التصدير",
+      "failedDescription": "تعذّر تنزيل أرشيف الوصفات. يرجى المحاولة مجددًا.",
+      "signedOut": "انتهت جلستك. سجّل الدخول مجددًا للتصدير.",
+      "notAllowed": "ليست لديك صلاحية لتصدير هذا."
+    }
+  }
+}

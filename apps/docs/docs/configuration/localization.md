@@ -27,6 +27,7 @@ Norish ships with these languages:
 |  🇫🇮  | Suomi              |     `fi`      |
 |  🇺🇦  | Українська         |     `uk`      |
 |  🇸🇪  | Svenska            |     `sv`      |
+|  🇪🇬  | العربية            |     `ar`      |
 
 Set the default language, and limit which ones people can pick:
 

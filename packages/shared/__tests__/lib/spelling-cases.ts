@@ -75,4 +75,14 @@ export const SPELLING_CASES: ReadonlyArray<readonly [string, string, boolean]> =
   ["cherrytomaten", "GR CHERRYTOMATEN", true],
   ["buttermilk", "Cup (250ml) - Buttermilk", true],
   ["honing", "tl. honing", true],
+  // Arabic: preparation and size words, its feminine plural, and its units.
+  ["بصلة", "بصلة مقطعة", true],
+  ["ثوم", "ثوم مهروس", true],
+  ["بصلة", "بصلة متوسطة الحجم", true],
+  ["بصلة", "بصلات", true],
+  ["الطحين", "2 كوب من الطحين", true],
+  ["ملح", "ملح حسب الرغبة", true],
+  ["ماء", "ماء دافئ", true],
+  // One onion (بصلة) is a spelling of onions (بصل).
+  ["بصل", "بصلة صغيرة مفرومة", true],
 ];

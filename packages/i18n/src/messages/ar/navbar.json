@@ -1,0 +1,63 @@
+{
+  "userMenu": {
+    "newRecipe": {
+      "title": "وصفة جديدة",
+      "description": "اكتب وصفتك الخاصة"
+    },
+    "importUrl": {
+      "title": "استيراد من رابط",
+      "description": "الصق رابط وصفة"
+    },
+    "settings": {
+      "title": "الإعدادات",
+      "description": "إدارة حسابك"
+    },
+    "logout": "تسجيل الخروج",
+    "signOutConfirm": {
+      "title": "هل تريد تجاهل التغييرات غير المتزامنة؟",
+      "description": "{count, plural, one {هناك تغيير واحد أُجري دون اتصال ولم يصل إلى الخادم بعد.} two {هناك تغييران أُجريا دون اتصال ولم يصلا إلى الخادم بعد.} few {هناك # تغييرات أُجريت دون اتصال ولم تصل إلى الخادم بعد.} many {هناك # تغييرًا أُجري دون اتصال ولم يصل إلى الخادم بعد.} other {هناك # تغيير أُجري دون اتصال ولم يصل إلى الخادم بعد.}} سيؤدي تسجيل الخروج إلى حذف هذه التغييرات المنتظرة نهائيًا وإزالة بيانات حسابك المحفوظة دون اتصال من هذا الجهاز."
+    },
+    "version": {
+      "updateAvailable": "الإصدار v{version} متاح"
+    }
+  },
+  "theme": {
+    "title": "المظهر",
+    "loading": "جارٍ التحميل…",
+    "light": "الوضع الفاتح",
+    "dark": "الوضع الداكن",
+    "system": "حسب النظام"
+  },
+  "nav": {
+    "home": "الوصفات",
+    "calendar": "التقويم",
+    "groceries": "المشتريات"
+  },
+  "mobile": {
+    "searchPlaceholder": "ابحث عن وصفات...",
+    "toggleSearch": "إظهار/إخفاء البحث",
+    "goBack": "رجوع"
+  },
+  "archiveImporter": {
+    "uploading": "جارٍ الرفع…",
+    "uploadFile": "رفع ملف",
+    "dragDrop": "أو اسحبه وأفلته هنا",
+    "formats": ".norishrecipes (Norish)، .melarecipes (Mela)، .paprikarecipes (Paprika)، .zip (Mealie/Tandoor/Recipe Keeper)",
+    "dropzoneLabel": "رفع ملف أرشيف وصفات",
+    "uploadingFile": "جارٍ رفع الملف…",
+    "processing": "جارٍ المعالجة: {details}",
+    "complete": "اكتمل: {details}",
+    "imported": "تم استيراد {count}",
+    "errors": "{count, plural, zero {لا توجد أخطاء} one {خطأ واحد} two {خطآن} few {# أخطاء} many {# خطأً} other {# خطأ}}",
+    "ofTotal": "{current} من {total}",
+    "progressLabel": "تقدّم الاستيراد",
+    "showNotes": "إظهار {count, plural, one {ملاحظة الاستيراد} two {ملاحظتي الاستيراد} few {# ملاحظات استيراد} many {# ملاحظة استيراد} other {# ملاحظة استيراد}}",
+    "hideNotes": "إخفاء {count, plural, one {ملاحظة الاستيراد} two {ملاحظتي الاستيراد} few {# ملاحظات استيراد} many {# ملاحظة استيراد} other {# ملاحظة استيراد}}",
+    "toasts": {
+      "startTitle": "بدأ استيراد الوصفات",
+      "startDescription": "{count, plural, one {جارٍ استيراد وصفة واحدة…} two {جارٍ استيراد وصفتين…} few {جارٍ استيراد # وصفات…} many {جارٍ استيراد # وصفة…} other {جارٍ استيراد # وصفة…}}",
+      "completeTitle": "اكتمل استيراد الوصفات",
+      "completeDescription": "{imported, plural, zero {لم تُستورد أي وصفة} one {تم استيراد وصفة واحدة} two {تم استيراد وصفتين} few {تم استيراد # وصفات} many {تم استيراد # وصفة} other {تم استيراد # وصفة}}{notes, plural, =0 {} one {، واحدة منها مع ملاحظة} two {، اثنتان منها مع ملاحظات} other {، # منها مع ملاحظات}}{errors, plural, =0 {} one {، خطأ واحد} two {، خطآن} few {، # أخطاء} other {، # خطأ}}"
+    }
+  }
+}

@@ -1,0 +1,57 @@
+{
+  "page": {
+    "title": "التقويم"
+  },
+  "mobile": {
+    "today": "اليوم",
+    "scrollToToday": "الانتقال إلى اليوم"
+  },
+  "editNote": {
+    "title": "تعديل الملاحظة",
+    "noteLabel": "ملاحظة",
+    "notePlaceholder": "اكتب ملاحظة...",
+    "date": "التاريخ",
+    "slot": "الوجبة"
+  },
+  "navigation": {
+    "previousMonth": "الشهر السابق",
+    "nextMonth": "الشهر التالي",
+    "prev": "السابق",
+    "next": "التالي"
+  },
+  "weekdays": {
+    "mon": "اثنين",
+    "tue": "ثلاثاء",
+    "wed": "أربعاء",
+    "thu": "خميس",
+    "fri": "جمعة",
+    "sat": "سبت",
+    "sun": "أحد"
+  },
+  "timeline": {
+    "noItems": "لا يوجد شيء مخطط",
+    "goToRecipe": "الانتقال إلى الوصفة",
+    "addItem": "إضافة",
+    "untitled": "بلا عنوان",
+    "serving": "حصة",
+    "servings": "حصص",
+    "noImage": "لا توجد صورة",
+    "recipe": "وصفة",
+    "note": "ملاحظة"
+  },
+  "editPlannedRecipe": {
+    "title": "تعديل الوصفة المخططة",
+    "date": "التاريخ",
+    "slot": "الوجبة"
+  },
+  "panel": {
+    "addToCalendar": "إضافة إلى التقويم",
+    "addRecipe": "إضافة وصفة",
+    "noDaysAvailable": "لا توجد أيام متاحة.",
+    "searchPlaceholder": "ابحث عن وصفات أو أضف ملاحظات...",
+    "addNote": "إضافة ملاحظة: {input}",
+    "randomRecipe": "وصفة عشوائية",
+    "noRecipesFound": "لم يُعثر على وصفات.",
+    "failedToLoadRecipes": "تعذّر تحميل الوصفات."
+  }
+}

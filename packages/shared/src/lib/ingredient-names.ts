@@ -52,6 +52,7 @@ export const CATALOGUE_LANGUAGES: readonly string[] = [
   "fi",
   "uk",
   "sv",
+  "ar",
 ];
 
 export function catalogueLanguagesFor(locale: string): readonly string[] {

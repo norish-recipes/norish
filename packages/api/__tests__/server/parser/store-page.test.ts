@@ -416,6 +416,8 @@ describe("prices as Europe writes them", () => {
     expect(currencyForUrl("https://www.dirk.nl/zoeken")).toBe("EUR");
     expect(currencyForUrl("https://shop.example.pl/szukaj")).toBe("PLN");
     expect(currencyForUrl("https://shop.example.ua/poshuk")).toBe("UAH");
+    expect(currencyForUrl("https://shop.example.sy/bahth")).toBe("SYP");
+    expect(currencyForUrl("https://shop.example.ae/search")).toBe("AED");
   });
 });
 

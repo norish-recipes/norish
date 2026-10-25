@@ -129,6 +129,24 @@ describe("parseTimerDurations", () => {
         5 * 60
       );
     });
+
+    it("detects Arabic keywords in their plural and short forms, and a range", () => {
+      expect(
+        parseTimerDurations("اطبخ لمدة 10 دقائق", defaultTimerKeywords)[0]?.durationSeconds
+      ).toBe(10 * 60);
+      expect(
+        parseTimerDurations("اخبز 1 ساعة ثم أخرجها", defaultTimerKeywords)[0]?.durationSeconds
+      ).toBe(3600);
+      expect(
+        parseTimerDurations("حرّك 30 ثانية ثم أطفئ النار", defaultTimerKeywords)[0]?.durationSeconds
+      ).toBe(30);
+      expect(parseTimerDurations("اسلق 5 د", defaultTimerKeywords)[0]?.durationSeconds).toBe(
+        5 * 60
+      );
+      expect(
+        parseTimerDurations("اخبز من 20 إلى 25 دقيقة", defaultTimerKeywords)[0]?.durationSeconds
+      ).toBe(25 * 60);
+    });
   });
 
   describe("custom keywords", () => {

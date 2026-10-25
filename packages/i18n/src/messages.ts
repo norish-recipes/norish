@@ -167,6 +167,15 @@ const MESSAGE_LOADERS: Record<LocaleCatalogCode, Partial<Record<MessageSection, 
     navbar: () => import("./messages/sv/navbar.json"),
     auth: () => import("./messages/sv/auth.json"),
   },
+  ar: {
+    common: () => import("./messages/ar/common.json"),
+    recipes: () => import("./messages/ar/recipes.json"),
+    groceries: () => import("./messages/ar/groceries.json"),
+    calendar: () => import("./messages/ar/calendar.json"),
+    settings: () => import("./messages/ar/settings.json"),
+    navbar: () => import("./messages/ar/navbar.json"),
+    auth: () => import("./messages/ar/auth.json"),
+  },
 };
 
 /** One section of a locale's catalogue, or null where the catalogue has none. */

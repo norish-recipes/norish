@@ -1,0 +1,427 @@
+{
+  "dashboard": {
+    "libraryTitle": "مكتبتك",
+    "recipesTitle": "وصفاتك",
+    "cookbooksTitle": "كتب الطبخ الخاصة بك",
+    "searchPlaceholder": "ابحث أو أضف وصفة...",
+    "searchRecipesPlaceholder": "ابحث عن وصفات...",
+    "libraryCount": "{count, plural, zero {لا شيء} one {عنصر واحد} two {عنصران} few {# عناصر} many {# عنصرًا} other {# عنصر}}",
+    "addRecipe": "إضافة وصفة",
+    "importFromUrl": "رابط",
+    "importFromPaste": "لصق",
+    "importFromImage": "صورة",
+    "searchFields": {
+      "title": "الاسم",
+      "description": "الوصف",
+      "ingredients": "المكوّنات",
+      "steps": "الخطوات",
+      "tags": "الوسوم"
+    },
+    "viewMode": {
+      "label": "عرض الوصفات",
+      "grid": "شبكة",
+      "list": "قائمة"
+    },
+    "libraryType": {
+      "label": "عرض",
+      "all": "الكل",
+      "recipes": "الوصفات",
+      "cookbooks": "كتب الطبخ"
+    }
+  },
+  "back": {
+    "all": "العودة إلى المكتبة",
+    "recipes": "العودة إلى الوصفات",
+    "cookbooks": "العودة إلى كتب الطبخ",
+    "named": "العودة إلى {name}",
+    "cookbook": "العودة إلى كتاب الطبخ",
+    "generic": "رجوع"
+  },
+  "empty": {
+    "title": "مكتبتك بانتظارك",
+    "description": "الصق رابط وصفة في حقل البحث في الأعلى وشاهد ما يحدث.",
+    "noResults": "لم يُعثر على وصفات",
+    "noResultsHint": "جرّب تعديل عوامل التصفية أو مسحها.",
+    "noCookbooks": "لا توجد كتب طبخ بعد",
+    "noCookbooksHint": "كتاب الطبخ مجموعة وصفات تحت عنوان واحد. أنشئ أول كتاب لترتيب مكتبتك."
+  },
+  "card": {
+    "noImage": "لا توجد صورة",
+    "viewGroceries": "عرض المشتريات",
+    "addToCalendar": "إضافة إلى التقويم",
+    "deleteRecipe": "حذف الوصفة",
+    "recipeOptions": "خيارات الوصفة"
+  },
+  "detail": {
+    "viewOriginal": "عرض الوصفة الأصلية",
+    "ingredients": "المكوّنات",
+    "ingredientOptions": "خيارات المكوّن",
+    "showMore": "عرض المزيد",
+    "showLess": "عرض أقل",
+    "steps": "الخطوات",
+    "notes": "ملاحظات",
+    "addToGroceries": "إضافة إلى المشتريات",
+    "ratingPrompt": "ما رأيك في هذه الوصفة؟",
+    "notFound": "الوصفة غير موجودة",
+    "notFoundMessage": "هذه الوصفة غير موجودة أو ليست لديك صلاحية لعرضها.",
+    "prep": "التحضير",
+    "total": "المجموع",
+    "planMeal": "تخطيط وجبة",
+    "recipeActions": "إجراءات الوصفة",
+    "instructions": "طريقة التحضير",
+    "cook": "طبخ",
+    "switchToDecimal": "عرض الأرقام العشرية",
+    "switchToFraction": "عرض الكسور",
+    "servingsCount": "{count, plural, one {حصة واحدة} two {حصتان} few {# حصص} many {# حصة} other {# حصة}}",
+    "source": "المصدر",
+    "addedBy": "أضافها {name}",
+    "decreaseServings": "حصص أقل",
+    "increaseServings": "حصص أكثر"
+  },
+  "actions": {
+    "plan": "تخطيط",
+    "groceries": "المشتريات",
+    "edit": "تعديل",
+    "delete": "حذف",
+    "share": "مشاركة",
+    "visitOriginal": "زيارة الوصفة الأصلية",
+    "addToCalendar": "إضافة إلى التقويم",
+    "autoTag": "وسوم تلقائية",
+    "autoTagging": "جارٍ إنشاء الوسوم...",
+    "autoCategorize": "تصنيف تلقائي",
+    "detectAllergies": "كشف مسبّبات الحساسية",
+    "detectingAllergies": "جارٍ كشف مسبّبات الحساسية...",
+    "estimateNutrition": "تقدير القيم الغذائية",
+    "estimatingNutrition": "جارٍ تقدير القيم الغذائية...",
+    "screenOn": "الشاشة مضاءة",
+    "keepScreenOn": "إبقاء الشاشة مضاءة",
+    "actionsLabel": "الإجراءات",
+    "autoCategorizing": "جارٍ التصنيف التلقائي…",
+    "inferProvenance": "معرفة أصل الوصفة",
+    "inferringProvenance": "جارٍ معرفة أصل الوصفة…",
+    "linkIngredients": "ربط المكوّنات بالخطوات",
+    "linkingIngredients": "جارٍ ربط المكوّنات…",
+    "enrichmentFailed": "فشلت المحاولة الأخيرة",
+    "generateImage": "إنشاء صورة",
+    "generatingImage": "جارٍ إنشاء الصورة…",
+    "cookbooks": "كتب الطبخ"
+  },
+  "sharePanel": {
+    "title": "مشاركة الوصفة",
+    "description": "أنشئ روابط عامة لـ {recipeName} وأدرها.",
+    "expiryLabel": "انتهاء صلاحية الرابط",
+    "createLink": "إنشاء رابط",
+    "latestLink": "أحدث رابط",
+    "currentLinks": "الروابط الحالية",
+    "empty": "لا توجد روابط مشاركة بعد.",
+    "createSuccess": "تم إنشاء رابط المشاركة",
+    "copySuccess": "تم نسخ الرابط",
+    "copyLink": "نسخ",
+    "openLink": "فتح",
+    "createdAt": "أُنشئ: {value}",
+    "expiresAt": "ينتهي: {value}",
+    "lastAccessedAt": "آخر فتح: {value}",
+    "never": "أبدًا",
+    "expiryOptions": {
+      "1day": "يوم واحد",
+      "1week": "أسبوع واحد",
+      "1month": "شهر واحد",
+      "1year": "سنة واحدة",
+      "forever": "بلا انتهاء"
+    },
+    "status": {
+      "active": "نشط",
+      "expired": "منتهي",
+      "revoked": "ملغى"
+    },
+    "revokeModal": {
+      "title": "إلغاء الرابط",
+      "message": "سيتوقف هذا الرابط لـ {recipeName} عن العمل حتى تعيد تفعيله.",
+      "confirm": "إلغاء الرابط"
+    },
+    "reactivateModal": {
+      "title": "إعادة تفعيل الرابط",
+      "message": "سيعود هذا الرابط لـ {recipeName} إلى العمل.",
+      "confirm": "إعادة التفعيل"
+    },
+    "deleteModal": {
+      "title": "حذف الرابط",
+      "message": "هل تريد حذف رابط المشاركة هذا لـ {recipeName}؟ لا يمكن التراجع عن ذلك.",
+      "confirm": "حذف الرابط"
+    }
+  },
+  "convert": {
+    "ariaLabel": "تحويل نظام القياس",
+    "toMetric": "تحويل إلى النظام المتري",
+    "toUS": "تحويل إلى النظام الأمريكي",
+    "toMetricWithAI": "تحويل إلى المتري بالذكاء الاصطناعي",
+    "toUSWithAI": "تحويل إلى الأمريكي بالذكاء الاصطناعي",
+    "converting": "جارٍ التحويل…",
+    "original": "الأصلي"
+  },
+  "deleteModal": {
+    "title": "حذف الوصفة",
+    "confirmMessage": "هل أنت متأكد من حذف \"{recipeName}\"؟",
+    "warning": "لا يمكن التراجع عن هذا الإجراء."
+  },
+  "form": {
+    "createTitle": "إنشاء وصفة",
+    "editTitle": "تعديل الوصفة",
+    "createDescription": "أضف وصفة جديدة إلى مجموعتك",
+    "editDescription": "حدّث تفاصيل وصفتك",
+    "initializingForm": "جارٍ تجهيز النموذج...",
+    "photo": "صورة",
+    "basicInfo": "المعلومات الأساسية",
+    "ingredients": "المكوّنات",
+    "instructions": "طريقة التحضير",
+    "tags": "الوسوم",
+    "nutrition": "القيم الغذائية",
+    "nutritionPerServing": "(لكل حصة، اختياري)",
+    "details": "التفاصيل",
+    "additionalInfo": "معلومات إضافية",
+    "recipeName": "اسم الوصفة",
+    "recipeNamePlaceholder": "مثال: كبة بالصينية",
+    "description": "الوصف",
+    "descriptionPlaceholder": "وصف قصير لما يميّز هذه الوصفة...",
+    "notes": "ملاحظات",
+    "notesPlaceholder": "أضف ملاحظات التحضير أو التعديلات أو نصائح التقديم...",
+    "ingredientsHelp": "اكتب المكوّنات مثل \"2 كاسة طحين\" - وسنستخرج الكميات والوحدات تلقائيًا.",
+    "instructionsHelp": "اكتب الخطوات بوضوح خطوةً بخطوة. اضغط Enter للانتقال إلى الخطوة التالية.",
+    "tagsHelp": "اكتب الوسوم وانقر على الاقتراحات لإضافتها. الوسوم الموجودة على الوصفة ممتلئة؛ والوسوم الجديدة لها إطار متقطع.",
+    "tagsAndCategories": "الوسوم والتصنيفات",
+    "categoriesHelp": "اختر تصنيفات الوجبة لهذه الوصفة.",
+    "category": {
+      "breakfast": "فطور",
+      "lunch": "غداء",
+      "dinner": "عشاء",
+      "snack": "تصبيرة"
+    },
+    "calories": "السعرات الحرارية",
+    "fat": "الدهون (غ)",
+    "carbs": "الكربوهيدرات (غ)",
+    "protein": "البروتين (غ)",
+    "provenance": "الأصل",
+    "provenanceHelp": "من أين تأتي هذه الوصفة.",
+    "originCountry": "البلد",
+    "originCountryPlaceholder": "بلا بلد",
+    "originRegion": "المنطقة",
+    "originRegionPlaceholder": "مثال: حلب",
+    "cuisines": "المطابخ",
+    "cuisinesHelp": "اختر من قائمة الخادم. يمكن اختيار أكثر من مطبخ للأطباق المدمجة.",
+    "provenanceNote": "ملاحظة",
+    "provenanceNotePlaceholder": "بضع جمل عن أصل هذا الطبق…",
+    "servings": "الحصص",
+    "cookingTimes": "أوقات الطبخ",
+    "optional": "(اختياري)",
+    "sourceUrl": "رابط المصدر",
+    "sourceUrlPlaceholder": "https://example.com/recipe",
+    "measurementSystemNote": "نحدّد نظام القياس تلقائيًا من المكوّنات، ويمكنك تغييره من هنا.",
+    "measurementSystemEditNote": " ملاحظة: هذا يغيّر اسم النظام فقط ولا يحوّل الوحدات. استخدم إجراء التحويل بعد الحفظ.",
+    "createRecipe": "إنشاء الوصفة",
+    "saveChanges": "حفظ التغييرات",
+    "uploading": "جارٍ الرفع...",
+    "clickToUpload": "انقر للرفع أو اسحب وأفلت",
+    "pasteToUpload": "للصق",
+    "imageFormats": "PNG، JPG، WEBP حتى 5MB",
+    "discardChangesConfirm": "لديك تغييرات غير محفوظة. هل تريد تجاهلها ومغادرة هذه الصفحة؟"
+  },
+  "gallery": {
+    "addImage": "إضافة صورة",
+    "uploading": "جارٍ الرفع...",
+    "uploadFailed": "فشل الرفع",
+    "dragToReorder": "اسحب لتغيير الترتيب",
+    "maxImagesReached": "الحد الأقصى المسموح {max} صور",
+    "maxVideosReached": "الحد الأقصى المسموح {max} مقاطع فيديو",
+    "invalidFileType": "نوع ملف غير صالح"
+  },
+  "carousel": {
+    "noImageAvailable": "لا توجد صورة",
+    "noMediaAvailable": "لا توجد وسائط",
+    "videoPlayer": {
+      "mute": "كتم الصوت",
+      "unmute": "تشغيل الصوت",
+      "fullscreen": "ملء الشاشة",
+      "exitFullscreen": "الخروج من ملء الشاشة"
+    }
+  },
+  "validation": {
+    "nameRequired": "اسم الوصفة مطلوب",
+    "ingredientsRequired": "يلزم مكوّن واحد على الأقل",
+    "stepsRequired": "تلزم خطوة واحدة على الأقل",
+    "servingsMin": "يجب ألا يقل عدد الحصص عن 1"
+  },
+  "nutrition": {
+    "title": "القيم الغذائية",
+    "calories": "السعرات الحرارية",
+    "fat": "الدهون",
+    "carbs": "الكربوهيدرات",
+    "protein": "البروتين",
+    "showingPortions": "القيم معروضة لـ {count, plural, one {حصة واحدة} two {حصتين} few {# حصص} many {# حصة} other {# حصة}}",
+    "noInfo": "لا تتوفر معلومات غذائية",
+    "estimateWithAI": "التقدير بالذكاء الاصطناعي",
+    "estimated": "تقديري",
+    "leftOut": "{count, plural, one {سطر واحد لم يُحتسب} two {سطران لم يُحتسبا} few {# أسطر لم تُحتسب} many {# سطرًا لم يُحتسب} other {# سطر لم يُحتسب}}",
+    "estimatedByAI": "مقدّر بالذكاء الاصطناعي",
+    "reasons": {
+      "seasoning": "بهارات",
+      "noAmount": "بلا كمية",
+      "noSize": "لا يوجد وزن لهذا المقياس",
+      "noNumbers": "لا توجد أرقام بعد",
+      "noSpoonWeight": "لا يوجد وزن للملعقة بعد",
+      "noPieceWeight": "لا يوجد وزن للحبة بعد"
+    },
+    "workedOutFrom": "محسوبة من المكوّنات، باستخدام {sources}.",
+    "householdNumbers": "أرقام منزلك"
+  },
+  "measurementSystem": {
+    "label": "نظام القياس",
+    "detected": "النظام المكتشف: {system}",
+    "metric": "متري",
+    "us": "أمريكي"
+  },
+  "timeInputs": {
+    "prep": "التحضير",
+    "cook": "الطبخ",
+    "total": "المجموع"
+  },
+  "stepInput": {
+    "stepPlaceholder": "الخطوة {number}: اشرح الخطوة...",
+    "stepPlaceholderShort": "الخطوة {number}"
+  },
+  "stepIngredients": {
+    "rowLabel": "المكوّنات المرتبطة",
+    "addLabel": "ربط مكوّن",
+    "pickerLabel": "ربط مكوّن بهذه الخطوة",
+    "shareLabel": "تغيير حصة {name}",
+    "share": {
+      "full": "السطر كاملًا",
+      "half": "نصف",
+      "third": "ثلث",
+      "quarter": "ربع",
+      "custom": "مخصّص…",
+      "amount": "كمية…"
+    },
+    "customShareLabel": "حصة مخصّصة",
+    "customAmountLabel": "الكمية",
+    "removeLabel": "إزالة {name}"
+  },
+  "ingredientInput": {
+    "placeholder": "مثال: 2 كاسة طحين"
+  },
+  "wakeLock": {
+    "keepScreenOn": "إبقاء الشاشة مضاءة",
+    "notSupported": "هذا المتصفح لا يدعم إبقاء الشاشة مضاءة",
+    "activeTooltip": "ستبقى الشاشة مضاءة أثناء الطبخ",
+    "inactiveTooltip": "إبقاء الشاشة مضاءة أثناء اتباع الخطوات",
+    "ariaLabel": "إبقاء الشاشة مضاءة"
+  },
+  "toasts": {
+    "imported": "تم استيراد الوصفة",
+    "failed": "فشلت عملية الوصفة",
+    "failedDescription": "حدث خطأ أثناء معالجة وصفتك. راجع وحدة تحكم المتصفح للاطلاع على التفاصيل التقنية.",
+    "batchImported": "تم استيراد الوصفات",
+    "batchImportedDescription": "تم استيراد {count} وصفات من الأرشيف",
+    "view": "عرض",
+    "open": "فتح"
+  },
+  "tags": {
+    "panel": {
+      "editTitle": "تعديل الوسم",
+      "editPlaceholder": "أدخل اسم الوسم...",
+      "duplicateTag": "هذا الوسم موجود بالفعل"
+    }
+  },
+  "cookMode": {
+    "steps": "الخطوات",
+    "ingredients": "المكوّنات",
+    "servings": "الحصص",
+    "serving": "{count, plural, one {حصة واحدة} two {حصتان} few {# حصص} many {# حصة} other {# حصة}}",
+    "stepCounter": "{current} / {total}",
+    "swipeSteps": "اسحب للتنقل بين الخطوات",
+    "swipeIngredients": "اسحب لليسار لعرض المكوّنات",
+    "swipeBackToSteps": "اسحب لليمين لعرض الخطوات",
+    "readyAt": "جاهزة نحو الساعة {time}",
+    "timers": "المؤقّتات",
+    "nextStep": "الخطوة التالية"
+  },
+  "enrichment": {
+    "failed": "فشل الإثراء",
+    "states": {
+      "queued": "في الانتظار",
+      "processing": "قيد التنفيذ",
+      "succeeded": "اكتمل",
+      "failed": "فشلت المحاولة الأخيرة"
+    },
+    "kinds": {
+      "auto-tagging": "الوسوم التلقائية",
+      "allergy-detection": "كشف مسبّبات الحساسية",
+      "auto-categorization": "التصنيف التلقائي",
+      "nutrition-estimation": "تقدير القيم الغذائية",
+      "recipe-provenance": "أصل الوصفة",
+      "ingredient-linking": "ربط المكوّنات",
+      "image-generation": "إنشاء الصور"
+    }
+  },
+  "provenance": {
+    "title": "الأصل",
+    "region": "المنطقة",
+    "cuisines": "المطابخ",
+    "inferring": "جارٍ معرفة أصل هذه الوصفة…",
+    "noInfo": "لا توجد معلومات عن الأصل بعد",
+    "inferWithAI": "المعرفة بالذكاء الاصطناعي"
+  },
+  "import": {
+    "alreadyExists": "هذه الوصفة لديك بالفعل",
+    "openExisting": "فتح"
+  },
+  "glanceBar": {
+    "totalTime": "الوقت الكلي",
+    "servings": "{count, plural, one {حصة} two {حصتان} few {حصص} many {حصة} other {حصة}}"
+  },
+  "cookingTime": {
+    "title": "وقت الطبخ",
+    "prep": "التحضير",
+    "cook": "الطبخ",
+    "other": "وقت آخر",
+    "total": "المجموع"
+  },
+  "cookbooks": {
+    "addCookbook": "إضافة كتاب طبخ",
+    "createTitle": "كتاب طبخ جديد",
+    "editTitle": "تعديل كتاب الطبخ",
+    "titleLabel": "العنوان",
+    "titlePlaceholder": "مثال: عشاء أيام الأسبوع",
+    "options": "خيارات كتاب الطبخ",
+    "deleteTitle": "حذف كتاب الطبخ",
+    "deleteConfirm": "هل أنت متأكد من حذف \"{title}\"؟",
+    "deleteKeepsRecipes": "ستبقى الوصفات التي يحتويها في مكتبتك.",
+    "recipeCount": "{count, plural, zero {لا توجد وصفات} one {وصفة واحدة} two {وصفتان} few {# وصفات} many {# وصفة} other {# وصفة}}",
+    "empty": "لا توجد وصفات بعد",
+    "singular": "كتاب طبخ",
+    "notFound": "كتاب الطبخ غير موجود",
+    "notFoundHint": "ربما حُذف، أو أنه غير ظاهر لك.",
+    "emptyHint": "أضف وصفات من قائمة الإجراءات السريعة لأي وصفة.",
+    "panelTitle": "إضافة إلى كتاب طبخ",
+    "newWithRecipe": "كتاب طبخ جديد يحتوي هذه الوصفة",
+    "noneEditable": "لا توجد كتب طبخ يمكنك تعديلها بعد.",
+    "cardTitle": "في كتب الطبخ",
+    "removeFromCookbook": "إزالة من كتاب الطبخ",
+    "noMatchingMembers": "لا توجد وصفات في هذا الكتاب تطابق عوامل التصفية.",
+    "membersLabel": "الوصفات في هذا الكتاب",
+    "showMore": "عرض المزيد",
+    "willBeCreated": "سيُنشأ عند الحفظ",
+    "manage": "إدارة",
+    "addRecipes": "إضافة وصفات",
+    "addRecipesTitle": "إضافة وصفات إلى {title}",
+    "searchRecipes": "البحث عن وصفات",
+    "noRecipesToAdd": "لم يُعثر على وصفات.",
+    "addCount": "{count, plural, one {إضافة وصفة واحدة} two {إضافة وصفتين} few {إضافة # وصفات} many {إضافة # وصفة} other {إضافة # وصفة}}",
+    "everythingAlreadyIn": "جميع الوصفات موجودة في هذا الكتاب بالفعل.",
+    "coverLabel": "الغلاف",
+    "chooseImage": "اختيار صورة",
+    "changeImage": "تغيير الصورة",
+    "removeImage": "إزالة الصورة",
+    "imageUploadFailed": "تعذّر رفع الصورة.",
+    "imageNeedsConnection": "يمكن تغيير الصور عند عودة الاتصال."
+  }
+}

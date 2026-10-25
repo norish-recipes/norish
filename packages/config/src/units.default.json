@@ -64,6 +64,10 @@
       {
         "locale": "sv",
         "name": "cl"
+      },
+      {
+        "locale": "ar",
+        "name": "سل"
       }
     ],
     "plural": [
@@ -130,6 +134,10 @@
       {
         "locale": "sv",
         "name": "centiliter"
+      },
+      {
+        "locale": "ar",
+        "name": "سنتيلتر"
       }
     ],
     "alternates": [
@@ -156,7 +164,9 @@
       "сантилітр",
       "сантилітри",
       "сантилітра",
-      "сантилітрів"
+      "сантилітрів",
+      "سنتيلتر",
+      "سل"
     ]
   },
   "deciliter": {
@@ -224,6 +234,10 @@
       {
         "locale": "sv",
         "name": "dl"
+      },
+      {
+        "locale": "ar",
+        "name": "دسل"
       }
     ],
     "plural": [
@@ -290,6 +304,10 @@
       {
         "locale": "sv",
         "name": "deciliter"
+      },
+      {
+        "locale": "ar",
+        "name": "ديسيلتر"
       }
     ],
     "alternates": [
@@ -317,7 +335,9 @@
       "децилітр",
       "децилітри",
       "децилітра",
-      "децилітрів"
+      "децилітрів",
+      "ديسيلتر",
+      "دسل"
     ]
   },
   "gram": {
@@ -385,6 +405,10 @@
       {
         "locale": "sv",
         "name": "g"
+      },
+      {
+        "locale": "ar",
+        "name": "غ"
       }
     ],
     "plural": [
@@ -451,6 +475,10 @@
       {
         "locale": "sv",
         "name": "gram"
+      },
+      {
+        "locale": "ar",
+        "name": "غرام"
       }
     ],
     "alternates": [
@@ -484,7 +512,13 @@
       "gramma",
       "grammaa",
       "грами",
-      "грамів"
+      "грамів",
+      "غ",
+      "غرام",
+      "غرامات",
+      "جرام",
+      "جم",
+      "غم"
     ]
   },
   "kilogram": {
@@ -727,6 +761,10 @@
       {
         "locale": "sv",
         "name": "tsk"
+      },
+      {
+        "locale": "ar",
+        "name": "م.ص"
       }
     ],
     "plural": [
@@ -793,6 +831,10 @@
       {
         "locale": "sv",
         "name": "teskedar"
+      },
+      {
+        "locale": "ar",
+        "name": "ملاعق صغيرة"
       }
     ],
     "alternates": [
@@ -858,7 +900,16 @@
       "tesked",
       "koffielepel",
       "koffielepels",
-      "kaffeelöffel"
+      "kaffeelöffel",
+      "ملعقة صغيرة",
+      "ملاعق صغيرة",
+      "معلقة صغيرة",
+      "م.ص",
+      "ملعقة شاي",
+      "ملعقة ص",
+      "ملاعق ص",
+      "معلقة ص",
+      "م ص"
     ]
   },
   "tablespoon": {
@@ -926,6 +977,10 @@
       {
         "locale": "sv",
         "name": "msk"
+      },
+      {
+        "locale": "ar",
+        "name": "م.ك"
       }
     ],
     "plural": [
@@ -992,6 +1047,10 @@
       {
         "locale": "sv",
         "name": "matskedar"
+      },
+      {
+        "locale": "ar",
+        "name": "ملاعق كبيرة"
       }
     ],
     "alternates": [
@@ -1057,7 +1116,16 @@
       "msk",
       "matskedar",
       "matsked",
-      "tbs"
+      "tbs",
+      "ملعقة كبيرة",
+      "ملاعق كبيرة",
+      "معلقة كبيرة",
+      "م.ك",
+      "ملعقة طعام",
+      "ملعقة ك",
+      "ملاعق ك",
+      "معلقة ك",
+      "م ك"
     ]
   },
   "knife_tip": {
@@ -1125,6 +1193,10 @@
       {
         "locale": "sv",
         "name": "knivsudd"
+      },
+      {
+        "locale": "ar",
+        "name": "رأس سكين"
       }
     ],
     "plural": [
@@ -1191,6 +1263,10 @@
       {
         "locale": "sv",
         "name": "knivsuddar"
+      },
+      {
+        "locale": "ar",
+        "name": "رؤوس سكين"
       }
     ],
     "alternates": [
@@ -1226,7 +1302,9 @@
       "на кінчику ножа",
       "кінчик ножа",
       "knivsudd",
-      "knivsuddar"
+      "knivsuddar",
+      "رأس سكين",
+      "راس سكين"
     ]
   },
   "pinch": {
@@ -1294,6 +1372,10 @@
       {
         "locale": "sv",
         "name": "nypa"
+      },
+      {
+        "locale": "ar",
+        "name": "رشة"
       }
     ],
     "plural": [
@@ -1360,6 +1442,10 @@
       {
         "locale": "sv",
         "name": "nypor"
+      },
+      {
+        "locale": "ar",
+        "name": "رشات"
       }
     ],
     "alternates": [
@@ -1407,7 +1493,9 @@
       "дрібку",
       "nypa",
       "nypor",
-      "snuf"
+      "snuf",
+      "رشة",
+      "رشات"
     ]
   },
   "piece": {
@@ -1475,6 +1563,10 @@
       {
         "locale": "sv",
         "name": "st"
+      },
+      {
+        "locale": "ar",
+        "name": "حبة"
       }
     ],
     "plural": [
@@ -1541,6 +1633,10 @@
       {
         "locale": "sv",
         "name": "stycken"
+      },
+      {
+        "locale": "ar",
+        "name": "حبات"
       }
     ],
     "alternates": [
@@ -1604,7 +1700,11 @@
       "st",
       "stycken",
       "styck",
-      "stycke"
+      "stycke",
+      "حبة",
+      "حبات",
+      "حبتان",
+      "حبتين"
     ]
   },
   "clove": {
@@ -1672,6 +1772,10 @@
       {
         "locale": "sv",
         "name": "klyfta"
+      },
+      {
+        "locale": "ar",
+        "name": "سن"
       }
     ],
     "plural": [
@@ -1738,6 +1842,10 @@
       {
         "locale": "sv",
         "name": "klyftor"
+      },
+      {
+        "locale": "ar",
+        "name": "أسنان"
       }
     ],
     "alternates": [
@@ -1773,7 +1881,12 @@
       "valkosipulinkynttä",
       "зубчиків",
       "klyfta",
-      "klyftor"
+      "klyftor",
+      "سن",
+      "فص",
+      "فصوص",
+      "أسنان",
+      "اسنان"
     ]
   },
   "leaf": {
@@ -1841,6 +1954,10 @@
       {
         "locale": "sv",
         "name": "blad"
+      },
+      {
+        "locale": "ar",
+        "name": "ورقة"
       }
     ],
     "plural": [
@@ -1907,6 +2024,10 @@
       {
         "locale": "sv",
         "name": "blad"
+      },
+      {
+        "locale": "ar",
+        "name": "أوراق"
       }
     ],
     "alternates": [
@@ -1941,7 +2062,10 @@
       "листок",
       "листки",
       "листка",
-      "листків"
+      "листків",
+      "ورقة",
+      "أوراق",
+      "ورقات"
     ]
   },
   "sprig": {
@@ -2009,6 +2133,10 @@
       {
         "locale": "sv",
         "name": "kvist"
+      },
+      {
+        "locale": "ar",
+        "name": "عرق"
       }
     ],
     "plural": [
@@ -2075,6 +2203,10 @@
       {
         "locale": "sv",
         "name": "kvistar"
+      },
+      {
+        "locale": "ar",
+        "name": "عروق"
       }
     ],
     "alternates": [
@@ -2115,7 +2247,11 @@
       "гілочки",
       "гілочок",
       "гілочку",
-      "kvistar"
+      "kvistar",
+      "عرق",
+      "عروق",
+      "غصن",
+      "أغصان"
     ]
   },
   "bunch": {
@@ -2183,6 +2319,10 @@
       {
         "locale": "sv",
         "name": "knippe"
+      },
+      {
+        "locale": "ar",
+        "name": "ضمة"
       }
     ],
     "plural": [
@@ -2249,6 +2389,10 @@
       {
         "locale": "sv",
         "name": "knippen"
+      },
+      {
+        "locale": "ar",
+        "name": "ضمم"
       }
     ],
     "alternates": [
@@ -2292,7 +2436,11 @@
       "kimppua",
       "пучків",
       "knippe",
-      "knippen"
+      "knippen",
+      "ضمة",
+      "ضمم",
+      "باقة",
+      "حزمة"
     ]
   },
   "stalk": {
@@ -2360,6 +2508,10 @@
       {
         "locale": "sv",
         "name": "stjälk"
+      },
+      {
+        "locale": "ar",
+        "name": "عود"
       }
     ],
     "plural": [
@@ -2426,6 +2578,10 @@
       {
         "locale": "sv",
         "name": "stjälkar"
+      },
+      {
+        "locale": "ar",
+        "name": "أعواد"
       }
     ],
     "alternates": [
@@ -2456,7 +2612,11 @@
       "стебла",
       "стебел",
       "stjälk",
-      "stjälkar"
+      "stjälkar",
+      "عود",
+      "أعواد",
+      "عيدان",
+      "ساق"
     ]
   },
   "pack": {
@@ -2524,6 +2684,10 @@
       {
         "locale": "sv",
         "name": "förp"
+      },
+      {
+        "locale": "ar",
+        "name": "باكيت"
       }
     ],
     "plural": [
@@ -2590,6 +2754,10 @@
       {
         "locale": "sv",
         "name": "förpackningar"
+      },
+      {
+        "locale": "ar",
+        "name": "باكيتات"
       }
     ],
     "alternates": [
@@ -2643,7 +2811,11 @@
       "förp",
       "förpackningar",
       "förpackning",
-      "förp."
+      "förp.",
+      "باكيت",
+      "باكيتات",
+      "عبوة",
+      "عبوات"
     ]
   },
   "can": {
@@ -2711,6 +2883,10 @@
       {
         "locale": "sv",
         "name": "burk"
+      },
+      {
+        "locale": "ar",
+        "name": "علبة معدنية"
       }
     ],
     "plural": [
@@ -2777,6 +2953,10 @@
       {
         "locale": "sv",
         "name": "burkar"
+      },
+      {
+        "locale": "ar",
+        "name": "علب معدنية"
       }
     ],
     "alternates": [
@@ -2822,7 +3002,11 @@
       "бляшанки",
       "бляшанок",
       "burk",
-      "burkar"
+      "burkar",
+      "علبة معدنية",
+      "علب معدنية",
+      "معلبة",
+      "علبة تنك"
     ]
   },
   "jar": {
@@ -2890,6 +3074,10 @@
       {
         "locale": "sv",
         "name": "glasburk"
+      },
+      {
+        "locale": "ar",
+        "name": "مرطبان"
       }
     ],
     "plural": [
@@ -2956,6 +3144,10 @@
       {
         "locale": "sv",
         "name": "glasburkar"
+      },
+      {
+        "locale": "ar",
+        "name": "مرطبانات"
       }
     ],
     "alternates": [
@@ -2998,7 +3190,10 @@
       "слоїків",
       "баночок",
       "glasburk",
-      "glasburkar"
+      "glasburkar",
+      "مرطبان",
+      "مرطبانات",
+      "قطرميز"
     ]
   },
   "bottle": {
@@ -3066,6 +3261,10 @@
       {
         "locale": "sv",
         "name": "flaska"
+      },
+      {
+        "locale": "ar",
+        "name": "قنينة"
       }
     ],
     "plural": [
@@ -3132,6 +3331,10 @@
       {
         "locale": "sv",
         "name": "flaskor"
+      },
+      {
+        "locale": "ar",
+        "name": "قناني"
       }
     ],
     "alternates": [
@@ -3171,7 +3374,11 @@
       "пляшки",
       "пляшок",
       "flaska",
-      "flaskor"
+      "flaskor",
+      "قنينة",
+      "قناني",
+      "زجاجة",
+      "زجاجات"
     ]
   },
   "bag": {
@@ -3239,6 +3446,10 @@
       {
         "locale": "sv",
         "name": "påse"
+      },
+      {
+        "locale": "ar",
+        "name": "كيس"
       }
     ],
     "plural": [
@@ -3305,6 +3516,10 @@
       {
         "locale": "sv",
         "name": "påsar"
+      },
+      {
+        "locale": "ar",
+        "name": "أكياس"
       }
     ],
     "alternates": [
@@ -3344,7 +3559,9 @@
       "пакети",
       "пакетів",
       "påse",
-      "påsar"
+      "påsar",
+      "كيس",
+      "أكياس"
     ]
   },
   "box": {
@@ -3412,6 +3629,10 @@
       {
         "locale": "sv",
         "name": "ask"
+      },
+      {
+        "locale": "ar",
+        "name": "علبة"
       }
     ],
     "plural": [
@@ -3478,6 +3699,10 @@
       {
         "locale": "sv",
         "name": "askar"
+      },
+      {
+        "locale": "ar",
+        "name": "علب"
       }
     ],
     "alternates": [
@@ -3510,7 +3735,10 @@
       "doos",
       "коробок",
       "ask",
-      "askar"
+      "askar",
+      "علبة",
+      "علب",
+      "كرتونة"
     ]
   },
   "handful": {
@@ -3578,6 +3806,10 @@
       {
         "locale": "sv",
         "name": "näve"
+      },
+      {
+        "locale": "ar",
+        "name": "كمشة"
       }
     ],
     "plural": [
@@ -3644,6 +3876,10 @@
       {
         "locale": "sv",
         "name": "nävar"
+      },
+      {
+        "locale": "ar",
+        "name": "كمشات"
       }
     ],
     "alternates": [
@@ -3685,7 +3921,11 @@
       "жменю",
       "näve",
       "nävar",
-      "handjevol"
+      "handjevol",
+      "كمشة",
+      "كمشات",
+      "حفنة",
+      "حفنات"
     ]
   },
   "splash": {
@@ -3753,6 +3993,10 @@
       {
         "locale": "sv",
         "name": "skvätt"
+      },
+      {
+        "locale": "ar",
+        "name": "دفقة"
       }
     ],
     "plural": [
@@ -3819,6 +4063,10 @@
       {
         "locale": "sv",
         "name": "skvättar"
+      },
+      {
+        "locale": "ar",
+        "name": "دفقات"
       }
     ],
     "alternates": [
@@ -3857,7 +4105,9 @@
       "ковтки",
       "ковтків",
       "skvätt",
-      "skvättar"
+      "skvättar",
+      "دفقة",
+      "دفقات"
     ]
   },
   "cup": {
@@ -3925,6 +4175,10 @@
       {
         "locale": "sv",
         "name": "cup"
+      },
+      {
+        "locale": "ar",
+        "name": "كاسة"
       }
     ],
     "plural": [
@@ -3991,6 +4245,10 @@
       {
         "locale": "sv",
         "name": "cups"
+      },
+      {
+        "locale": "ar",
+        "name": "كاسات"
       }
     ],
     "alternates": [
@@ -4043,7 +4301,11 @@
       "склянок",
       "склянку",
       "cup",
-      "cups"
+      "cups",
+      "كاسة",
+      "كاسات",
+      "كوب",
+      "أكواب"
     ]
   },
   "glass": {
@@ -4111,6 +4373,10 @@
       {
         "locale": "sv",
         "name": "glas"
+      },
+      {
+        "locale": "ar",
+        "name": "كأس"
       }
     ],
     "plural": [
@@ -4177,6 +4443,10 @@
       {
         "locale": "sv",
         "name": "glas"
+      },
+      {
+        "locale": "ar",
+        "name": "كؤوس"
       }
     ],
     "alternates": [
@@ -4212,7 +4482,9 @@
       "келих",
       "келихи",
       "келиха",
-      "келихів"
+      "келихів",
+      "كأس",
+      "كؤوس"
     ]
   },
   "slice": {
@@ -4280,6 +4552,10 @@
       {
         "locale": "sv",
         "name": "skiva"
+      },
+      {
+        "locale": "ar",
+        "name": "شريحة"
       }
     ],
     "plural": [
@@ -4346,6 +4622,10 @@
       {
         "locale": "sv",
         "name": "skivor"
+      },
+      {
+        "locale": "ar",
+        "name": "شرائح"
       }
     ],
     "alternates": [
@@ -4391,7 +4671,9 @@
       "скибки",
       "скибок",
       "skiva",
-      "skivor"
+      "skivor",
+      "شريحة",
+      "شرائح"
     ]
   },
   "strip": {
@@ -4459,6 +4741,10 @@
       {
         "locale": "sv",
         "name": "strimla"
+      },
+      {
+        "locale": "ar",
+        "name": "شريطة"
       }
     ],
     "plural": [
@@ -4525,6 +4811,10 @@
       {
         "locale": "sv",
         "name": "strimlor"
+      },
+      {
+        "locale": "ar",
+        "name": "شرائط"
       }
     ],
     "alternates": [
@@ -4556,7 +4846,9 @@
       "смужки",
       "смужок",
       "strimla",
-      "strimlor"
+      "strimlor",
+      "شريطة",
+      "شرائط"
     ]
   },
   "sheet": {
@@ -4624,6 +4916,10 @@
       {
         "locale": "sv",
         "name": "ark"
+      },
+      {
+        "locale": "ar",
+        "name": "رقاقة"
       }
     ],
     "plural": [
@@ -4690,6 +4986,10 @@
       {
         "locale": "sv",
         "name": "ark"
+      },
+      {
+        "locale": "ar",
+        "name": "رقائق"
       }
     ],
     "alternates": [
@@ -4720,7 +5020,9 @@
       "аркушів",
       "пластини",
       "пластин",
-      "ark"
+      "ark",
+      "رقاقة",
+      "رقائق"
     ]
   },
   "serving": {
@@ -4788,6 +5090,10 @@
       {
         "locale": "sv",
         "name": "portion"
+      },
+      {
+        "locale": "ar",
+        "name": "حصة"
       }
     ],
     "plural": [
@@ -4854,6 +5160,10 @@
       {
         "locale": "sv",
         "name": "portioner"
+      },
+      {
+        "locale": "ar",
+        "name": "حصص"
       }
     ],
     "alternates": [
@@ -4885,7 +5195,9 @@
       "порція",
       "порції",
       "порцій",
-      "portioner"
+      "portioner",
+      "حصة",
+      "حصص"
     ]
   },
   "round_slice": {
@@ -4953,6 +5265,10 @@
       {
         "locale": "sv",
         "name": "rund skiva"
+      },
+      {
+        "locale": "ar",
+        "name": "دولاب"
       }
     ],
     "plural": [
@@ -5019,6 +5335,10 @@
       {
         "locale": "sv",
         "name": "runda skivor"
+      },
+      {
+        "locale": "ar",
+        "name": "دواليب"
       }
     ],
     "alternates": [
@@ -5052,7 +5372,9 @@
       "кружечків",
       "кружків",
       "rund skiva",
-      "runda skivor"
+      "runda skivor",
+      "دولاب",
+      "دواليب"
     ]
   },
   "ring": {
@@ -5120,6 +5442,10 @@
       {
         "locale": "sv",
         "name": "ring"
+      },
+      {
+        "locale": "ar",
+        "name": "حلقة"
       }
     ],
     "plural": [
@@ -5186,6 +5512,10 @@
       {
         "locale": "sv",
         "name": "ringar"
+      },
+      {
+        "locale": "ar",
+        "name": "حلقات"
       }
     ],
     "alternates": [
@@ -5217,7 +5547,9 @@
       "кільце",
       "кільця",
       "кілець",
-      "ringar"
+      "ringar",
+      "حلقة",
+      "حلقات"
     ]
   },
   "ball": {
@@ -5285,6 +5617,10 @@
       {
         "locale": "sv",
         "name": "boll"
+      },
+      {
+        "locale": "ar",
+        "name": "كرة"
       }
     ],
     "plural": [
@@ -5351,6 +5687,10 @@
       {
         "locale": "sv",
         "name": "bollar"
+      },
+      {
+        "locale": "ar",
+        "name": "كرات"
       }
     ],
     "alternates": [
@@ -5381,7 +5721,9 @@
       "кульки",
       "кульок",
       "boll",
-      "bollar"
+      "bollar",
+      "كرة",
+      "كرات"
     ]
   },
   "dash": {
@@ -5449,6 +5791,10 @@
       {
         "locale": "sv",
         "name": "stänk"
+      },
+      {
+        "locale": "ar",
+        "name": "رشة خفيفة"
       }
     ],
     "plural": [
@@ -5515,6 +5861,10 @@
       {
         "locale": "sv",
         "name": "stänk"
+      },
+      {
+        "locale": "ar",
+        "name": "رشات خفيفة"
       }
     ],
     "alternates": [
@@ -5545,7 +5895,8 @@
       "крапелька",
       "крапельки",
       "крапельок",
-      "stänk"
+      "stänk",
+      "رشة خفيفة"
     ]
   },
   "drizzle": {
@@ -5613,6 +5964,10 @@
       {
         "locale": "sv",
         "name": "ringling"
+      },
+      {
+        "locale": "ar",
+        "name": "خيط"
       }
     ],
     "plural": [
@@ -5679,6 +6034,10 @@
       {
         "locale": "sv",
         "name": "ringlingar"
+      },
+      {
+        "locale": "ar",
+        "name": "خيوط"
       }
     ],
     "alternates": [
@@ -5710,7 +6069,9 @@
       "цівки",
       "цівок",
       "ringling",
-      "ringlingar"
+      "ringlingar",
+      "خيط",
+      "خيوط"
     ]
   },
   "scoop": {
@@ -5778,6 +6139,10 @@
       {
         "locale": "sv",
         "name": "skopa"
+      },
+      {
+        "locale": "ar",
+        "name": "مغرفة"
       }
     ],
     "plural": [
@@ -5844,6 +6209,10 @@
       {
         "locale": "sv",
         "name": "skopor"
+      },
+      {
+        "locale": "ar",
+        "name": "مغارف"
       }
     ],
     "alternates": [
@@ -5873,7 +6242,9 @@
       "ополоники",
       "ополоників",
       "skopa",
-      "skopor"
+      "skopor",
+      "مغرفة",
+      "مغارف"
     ]
   },
   "stick": {
@@ -5941,6 +6312,10 @@
       {
         "locale": "sv",
         "name": "stång"
+      },
+      {
+        "locale": "ar",
+        "name": "إصبع"
       }
     ],
     "plural": [
@@ -6007,6 +6382,10 @@
       {
         "locale": "sv",
         "name": "stänger"
+      },
+      {
+        "locale": "ar",
+        "name": "أصابع"
       }
     ],
     "alternates": [
@@ -6038,7 +6417,10 @@
       "палички",
       "паличок",
       "stång",
-      "stänger"
+      "stänger",
+      "إصبع",
+      "أصبع",
+      "أصابع"
     ]
   },
   "tub": {
@@ -6106,6 +6488,10 @@
       {
         "locale": "sv",
         "name": "tråg"
+      },
+      {
+        "locale": "ar",
+        "name": "علبة بلاستيكية"
       }
     ],
     "plural": [
@@ -6172,6 +6558,10 @@
       {
         "locale": "sv",
         "name": "tråg"
+      },
+      {
+        "locale": "ar",
+        "name": "علب بلاستيكية"
       }
     ],
     "alternates": [
@@ -6201,7 +6591,9 @@
       "rasiaa",
       "контейнери",
       "контейнерів",
-      "tråg"
+      "tråg",
+      "علبة بلاستيكية",
+      "علب بلاستيكية"
     ]
   },
   "capful": {
@@ -6269,6 +6661,10 @@
       {
         "locale": "sv",
         "name": "kapsyl"
+      },
+      {
+        "locale": "ar",
+        "name": "غطاء"
       }
     ],
     "plural": [
@@ -6335,6 +6731,10 @@
       {
         "locale": "sv",
         "name": "kapsyler"
+      },
+      {
+        "locale": "ar",
+        "name": "أغطية"
       }
     ],
     "alternates": [
@@ -6366,7 +6766,9 @@
       "ковпачки",
       "ковпачків",
       "kapsyl",
-      "kapsyler"
+      "kapsyler",
+      "غطاء",
+      "أغطية"
     ]
   },
   "pouch": {
@@ -6434,6 +6836,10 @@
       {
         "locale": "sv",
         "name": "portionspåse"
+      },
+      {
+        "locale": "ar",
+        "name": "ظرف"
       }
     ],
     "plural": [
@@ -6500,6 +6906,10 @@
       {
         "locale": "sv",
         "name": "portionspåsar"
+      },
+      {
+        "locale": "ar",
+        "name": "ظروف"
       }
     ],
     "alternates": [
@@ -6532,7 +6942,9 @@
       "пакетиків",
       "саше",
       "portionspåse",
-      "portionspåsar"
+      "portionspåsar",
+      "ظرف",
+      "ظروف"
     ]
   },
   "sleeve": {
@@ -6600,6 +7012,10 @@
       {
         "locale": "sv",
         "name": "innerförpackning"
+      },
+      {
+        "locale": "ar",
+        "name": "أنبوب"
       }
     ],
     "plural": [
@@ -6666,6 +7082,10 @@
       {
         "locale": "sv",
         "name": "innerförpackningar"
+      },
+      {
+        "locale": "ar",
+        "name": "أنابيب"
       }
     ],
     "alternates": [
@@ -6691,7 +7111,10 @@
       "тюбики",
       "тюбиків",
       "innerförpackning",
-      "innerförpackningar"
+      "innerförpackningar",
+      "أنبوب",
+      "أنابيب",
+      "تيوب"
     ]
   },
   "roll": {
@@ -6759,6 +7182,10 @@
       {
         "locale": "sv",
         "name": "rulle"
+      },
+      {
+        "locale": "ar",
+        "name": "لفة"
       }
     ],
     "plural": [
@@ -6825,6 +7252,10 @@
       {
         "locale": "sv",
         "name": "rullar"
+      },
+      {
+        "locale": "ar",
+        "name": "لفات"
       }
     ],
     "alternates": [
@@ -6857,7 +7288,9 @@
       "рулони",
       "рулонів",
       "rulle",
-      "rullar"
+      "rullar",
+      "لفة",
+      "لفات"
     ]
   },
   "ear": {
@@ -6925,6 +7358,10 @@
       {
         "locale": "sv",
         "name": "kolv"
+      },
+      {
+        "locale": "ar",
+        "name": "عرنوس"
       }
     ],
     "plural": [
@@ -6991,6 +7428,10 @@
       {
         "locale": "sv",
         "name": "kolvar"
+      },
+      {
+        "locale": "ar",
+        "name": "عرانيس"
       }
     ],
     "alternates": [
@@ -7023,7 +7464,10 @@
       "качана",
       "качанів",
       "kolv",
-      "kolvar"
+      "kolvar",
+      "عرنوس",
+      "عرانيس",
+      "كوز"
     ]
   },
   "wedge": {
@@ -7091,6 +7535,10 @@
       {
         "locale": "sv",
         "name": "klyftbit"
+      },
+      {
+        "locale": "ar",
+        "name": "شقفة"
       }
     ],
     "plural": [
@@ -7157,6 +7605,10 @@
       {
         "locale": "sv",
         "name": "klyftbitar"
+      },
+      {
+        "locale": "ar",
+        "name": "شقف"
       }
     ],
     "alternates": [
@@ -7184,7 +7636,9 @@
       "часточки",
       "часточок",
       "klyftbit",
-      "klyftbitar"
+      "klyftbitar",
+      "شقفة",
+      "شقف"
     ]
   },
   "chunk": {
@@ -7252,6 +7706,10 @@
       {
         "locale": "sv",
         "name": "bit"
+      },
+      {
+        "locale": "ar",
+        "name": "قطعة"
       }
     ],
     "plural": [
@@ -7318,6 +7776,10 @@
       {
         "locale": "sv",
         "name": "bitar"
+      },
+      {
+        "locale": "ar",
+        "name": "قطع"
       }
     ],
     "alternates": [
@@ -7350,7 +7812,9 @@
       "шматочок",
       "шматочки",
       "шматочків",
-      "bitar"
+      "bitar",
+      "قطعة",
+      "قطع"
     ]
   },
   "cube": {
@@ -7418,6 +7882,10 @@
       {
         "locale": "sv",
         "name": "tärning"
+      },
+      {
+        "locale": "ar",
+        "name": "مكعب"
       }
     ],
     "plural": [
@@ -7484,6 +7952,10 @@
       {
         "locale": "sv",
         "name": "tärningar"
+      },
+      {
+        "locale": "ar",
+        "name": "مكعبات"
       }
     ],
     "alternates": [
@@ -7514,7 +7986,9 @@
       "kuutiota",
       "кубиків",
       "tärning",
-      "tärningar"
+      "tärningar",
+      "مكعب",
+      "مكعبات"
     ]
   },
   "fillet": {
@@ -7582,6 +8056,10 @@
       {
         "locale": "sv",
         "name": "filé"
+      },
+      {
+        "locale": "ar",
+        "name": "فيليه"
       }
     ],
     "plural": [
@@ -7648,6 +8126,10 @@
       {
         "locale": "sv",
         "name": "filéer"
+      },
+      {
+        "locale": "ar",
+        "name": "فيليهات"
       }
     ],
     "alternates": [
@@ -7671,7 +8153,9 @@
       "filee",
       "fileetä",
       "філе",
-      "filéer"
+      "filéer",
+      "فيليه",
+      "فيليهات"
     ]
   },
   "heaping_tablespoon": {
@@ -7739,6 +8223,10 @@
       {
         "locale": "sv",
         "name": "rågad msk"
+      },
+      {
+        "locale": "ar",
+        "name": "م.ك وافرة"
       }
     ],
     "plural": [
@@ -7805,6 +8293,10 @@
       {
         "locale": "sv",
         "name": "rågade matskedar"
+      },
+      {
+        "locale": "ar",
+        "name": "ملاعق كبيرة وافرة"
       }
     ],
     "alternates": [
@@ -7868,7 +8360,9 @@
       "столової ложки з гіркою",
       "rågad msk",
       "rågade matskedar",
-      "rågad matsked"
+      "rågad matsked",
+      "ملعقة كبيرة وافرة",
+      "ملعقة كبيرة مكوّمة"
     ]
   },
   "scant_tablespoon": {
@@ -7936,6 +8430,10 @@
       {
         "locale": "sv",
         "name": "knapp msk"
+      },
+      {
+        "locale": "ar",
+        "name": "م.ك ناقصة"
       }
     ],
     "plural": [
@@ -8002,6 +8500,10 @@
       {
         "locale": "sv",
         "name": "knappa matskedar"
+      },
+      {
+        "locale": "ar",
+        "name": "ملاعق كبيرة ناقصة"
       }
     ],
     "alternates": [
@@ -8055,7 +8557,8 @@
       "столової ложки без гірки",
       "knapp msk",
       "knappa matskedar",
-      "knapp matsked"
+      "knapp matsked",
+      "ملعقة كبيرة ناقصة"
     ]
   },
   "generous_pinch": {
@@ -8123,6 +8626,10 @@
       {
         "locale": "sv",
         "name": "rejäl nypa"
+      },
+      {
+        "locale": "ar",
+        "name": "رشة وافرة"
       }
     ],
     "plural": [
@@ -8189,6 +8696,10 @@
       {
         "locale": "sv",
         "name": "rejäla nypor"
+      },
+      {
+        "locale": "ar",
+        "name": "رشات وافرة"
       }
     ],
     "alternates": [
@@ -8230,7 +8741,9 @@
       "rejäla nypor",
       "flinke snuf",
       "flink snufje",
-      "flinke snufjes"
+      "flinke snufjes",
+      "رشة وافرة",
+      "رشة كبيرة"
     ]
   },
   "large_splash": {
@@ -8298,6 +8811,10 @@
       {
         "locale": "sv",
         "name": "stor skvätt"
+      },
+      {
+        "locale": "ar",
+        "name": "دفقة كبيرة"
       }
     ],
     "plural": [
@@ -8364,6 +8881,10 @@
       {
         "locale": "sv",
         "name": "stora skvättar"
+      },
+      {
+        "locale": "ar",
+        "name": "دفقات كبيرة"
       }
     ],
     "alternates": [
@@ -8396,7 +8917,8 @@
       "великі ковтки",
       "великих ковтків",
       "stor skvätt",
-      "stora skvättar"
+      "stora skvättar",
+      "دفقة كبيرة"
     ]
   },
   "dozen": {
@@ -8464,6 +8986,10 @@
       {
         "locale": "sv",
         "name": "dussin"
+      },
+      {
+        "locale": "ar",
+        "name": "دزينة"
       }
     ],
     "plural": [
@@ -8530,6 +9056,10 @@
       {
         "locale": "sv",
         "name": "dussin"
+      },
+      {
+        "locale": "ar",
+        "name": "دزينة"
       }
     ],
     "alternates": [
@@ -8557,7 +9087,9 @@
       "tusinaa",
       "дюжини",
       "дюжин",
-      "dussin"
+      "dussin",
+      "دزينة",
+      "درزن"
     ]
   },
   "small_splash": {
@@ -8625,6 +9157,10 @@
       {
         "locale": "sv",
         "name": "liten skvätt"
+      },
+      {
+        "locale": "ar",
+        "name": "دفقة صغيرة"
       }
     ],
     "plural": [
@@ -8691,6 +9227,10 @@
       {
         "locale": "sv",
         "name": "små skvättar"
+      },
+      {
+        "locale": "ar",
+        "name": "دفقات صغيرة"
       }
     ],
     "alternates": [
@@ -8722,7 +9262,8 @@
       "невеликих ковтків",
       "маленький ковток",
       "liten skvätt",
-      "små skvättar"
+      "små skvättar",
+      "دفقة صغيرة"
     ]
   },
   "bulb": {
@@ -8790,6 +9331,10 @@
       {
         "locale": "sv",
         "name": "hel lök"
+      },
+      {
+        "locale": "ar",
+        "name": "درنة"
       }
     ],
     "plural": [
@@ -8856,6 +9401,10 @@
       {
         "locale": "sv",
         "name": "hela lökar"
+      },
+      {
+        "locale": "ar",
+        "name": "درنات"
       }
     ],
     "alternates": [
@@ -8878,7 +9427,9 @@
       "sipulia",
       "головок",
       "hel lök",
-      "hela lökar"
+      "hela lökar",
+      "درنة",
+      "درنات"
     ]
   },
   "head": {
@@ -8946,6 +9497,10 @@
       {
         "locale": "sv",
         "name": "huvud"
+      },
+      {
+        "locale": "ar",
+        "name": "رأس"
       }
     ],
     "plural": [
@@ -9012,6 +9567,10 @@
       {
         "locale": "sv",
         "name": "huvuden"
+      },
+      {
+        "locale": "ar",
+        "name": "رؤوس"
       }
     ],
     "alternates": [
@@ -9042,7 +9601,10 @@
       "голівки",
       "голівок",
       "huvud",
-      "huvuden"
+      "huvuden",
+      "رأس",
+      "رؤوس",
+      "راس"
     ]
   },
   "to_taste": {
@@ -9110,6 +9672,10 @@
       {
         "locale": "sv",
         "name": "efter smak"
+      },
+      {
+        "locale": "ar",
+        "name": "حسب الرغبة"
       }
     ],
     "plural": [
@@ -9176,6 +9742,10 @@
       {
         "locale": "sv",
         "name": "efter smak"
+      },
+      {
+        "locale": "ar",
+        "name": "حسب الرغبة"
       }
     ],
     "alternates": [
@@ -9204,7 +9774,9 @@
       "до смаку",
       "за смаком",
       "efter smak",
-      "as needed"
+      "as needed",
+      "حسب الرغبة",
+      "حسب الذوق"
     ]
   },
   "pound": {
@@ -9272,6 +9844,10 @@
       {
         "locale": "sv",
         "name": "lb"
+      },
+      {
+        "locale": "ar",
+        "name": "باوند"
       }
     ],
     "plural": [
@@ -9338,6 +9914,10 @@
       {
         "locale": "sv",
         "name": "pund"
+      },
+      {
+        "locale": "ar",
+        "name": "باوند"
       }
     ],
     "alternates": [
@@ -9360,7 +9940,9 @@
       "naula",
       "naulaa",
       "фунти",
-      "фунтів"
+      "фунтів",
+      "باوند",
+      "باوندات"
     ]
   },
   "bar": {
@@ -9428,6 +10010,10 @@
       {
         "locale": "sv",
         "name": "kaka"
+      },
+      {
+        "locale": "ar",
+        "name": "لوح"
       }
     ],
     "plural": [
@@ -9494,6 +10080,10 @@
       {
         "locale": "sv",
         "name": "kakor"
+      },
+      {
+        "locale": "ar",
+        "name": "ألواح"
       }
     ],
     "alternates": [
@@ -9523,7 +10113,9 @@
       "patukkaa",
       "плиток",
       "kaka",
-      "kakor"
+      "kakor",
+      "لوح",
+      "ألواح"
     ]
   },
   "bowl": {
@@ -9591,6 +10183,10 @@
       {
         "locale": "sv",
         "name": "skål"
+      },
+      {
+        "locale": "ar",
+        "name": "صحن"
       }
     ],
     "plural": [
@@ -9657,6 +10253,10 @@
       {
         "locale": "sv",
         "name": "skålar"
+      },
+      {
+        "locale": "ar",
+        "name": "صحون"
       }
     ],
     "alternates": [
@@ -9686,7 +10286,10 @@
       "kulhollinen",
       "мисок",
       "skål",
-      "skålar"
+      "skålar",
+      "صحن",
+      "صحون",
+      "وعاء"
     ]
   },
   "heaping_teaspoon": {
@@ -9754,6 +10357,10 @@
       {
         "locale": "sv",
         "name": "rågad tsk"
+      },
+      {
+        "locale": "ar",
+        "name": "م.ص وافرة"
       }
     ],
     "plural": [
@@ -9820,6 +10427,10 @@
       {
         "locale": "sv",
         "name": "rågade teskedar"
+      },
+      {
+        "locale": "ar",
+        "name": "ملاعق صغيرة وافرة"
       }
     ],
     "alternates": [
@@ -9881,7 +10492,9 @@
       "чайної ложки з гіркою",
       "rågad tsk",
       "rågade teskedar",
-      "rågad tesked"
+      "rågad tesked",
+      "ملعقة صغيرة وافرة",
+      "ملعقة صغيرة مكوّمة"
     ]
   },
   "scant_teaspoon": {
@@ -9949,6 +10562,10 @@
       {
         "locale": "sv",
         "name": "knapp tsk"
+      },
+      {
+        "locale": "ar",
+        "name": "م.ص ناقصة"
       }
     ],
     "plural": [
@@ -10015,6 +10632,10 @@
       {
         "locale": "sv",
         "name": "knappa teskedar"
+      },
+      {
+        "locale": "ar",
+        "name": "ملاعق صغيرة ناقصة"
       }
     ],
     "alternates": [
@@ -10066,7 +10687,8 @@
       "чайної ложки без гірки",
       "knapp tsk",
       "knappa teskedar",
-      "knapp tesked"
+      "knapp tesked",
+      "ملعقة صغيرة ناقصة"
     ]
   },
   "pot": {
@@ -10134,6 +10756,10 @@
       {
         "locale": "sv",
         "name": "kruka"
+      },
+      {
+        "locale": "ar",
+        "name": "طنجرة"
       }
     ],
     "plural": [
@@ -10200,6 +10826,10 @@
       {
         "locale": "sv",
         "name": "krukor"
+      },
+      {
+        "locale": "ar",
+        "name": "طناجر"
       }
     ],
     "alternates": [
@@ -10227,7 +10857,10 @@
       "каструлі",
       "каструль",
       "kruka",
-      "krukor"
+      "krukor",
+      "طنجرة",
+      "طناجر",
+      "قدر"
     ]
   },
   "drop": {
@@ -10295,6 +10928,10 @@
       {
         "locale": "sv",
         "name": "droppe"
+      },
+      {
+        "locale": "ar",
+        "name": "نقطة"
       }
     ],
     "plural": [
@@ -10361,6 +10998,10 @@
       {
         "locale": "sv",
         "name": "droppar"
+      },
+      {
+        "locale": "ar",
+        "name": "نقاط"
       }
     ],
     "alternates": [
@@ -10399,7 +11040,11 @@
       "крапель",
       "краплю",
       "droppe",
-      "droppar"
+      "droppar",
+      "نقطة",
+      "نقاط",
+      "قطرة",
+      "قطرات"
     ]
   },
   "ounce": {
@@ -10467,6 +11112,10 @@
       {
         "locale": "sv",
         "name": "oz"
+      },
+      {
+        "locale": "ar",
+        "name": "أونصة"
       }
     ],
     "plural": [
@@ -10533,6 +11182,10 @@
       {
         "locale": "sv",
         "name": "ounces"
+      },
+      {
+        "locale": "ar",
+        "name": "أونصات"
       }
     ],
     "alternates": [
@@ -10558,7 +11211,9 @@
       "унція",
       "унції",
       "унцій",
-      "ounces"
+      "ounces",
+      "أونصة",
+      "أونصات"
     ]
   },
   "milliliter": {
@@ -10626,6 +11281,10 @@
       {
         "locale": "sv",
         "name": "ml"
+      },
+      {
+        "locale": "ar",
+        "name": "مل"
       }
     ],
     "plural": [
@@ -10692,6 +11351,10 @@
       {
         "locale": "sv",
         "name": "milliliter"
+      },
+      {
+        "locale": "ar",
+        "name": "مليلتر"
       }
     ],
     "alternates": [
@@ -10720,7 +11383,10 @@
       "мілілітр",
       "мілілітри",
       "мілілітра",
-      "мілілітрів"
+      "мілілітрів",
+      "مل",
+      "مليلتر",
+      "ملل"
     ]
   },
   "liter": {
@@ -10788,6 +11454,10 @@
       {
         "locale": "sv",
         "name": "l"
+      },
+      {
+        "locale": "ar",
+        "name": "ل"
       }
     ],
     "plural": [
@@ -10854,6 +11524,10 @@
       {
         "locale": "sv",
         "name": "liter"
+      },
+      {
+        "locale": "ar",
+        "name": "لتر"
       }
     ],
     "alternates": [
@@ -10880,7 +11554,11 @@
       "літр",
       "літри",
       "літра",
-      "літрів"
+      "літрів",
+      "ل",
+      "لتر",
+      "ليتر",
+      "لترات"
     ]
   },
   "centimeter": {
@@ -10948,6 +11626,10 @@
       {
         "locale": "sv",
         "name": "cm"
+      },
+      {
+        "locale": "ar",
+        "name": "سم"
       }
     ],
     "plural": [
@@ -11014,6 +11696,10 @@
       {
         "locale": "sv",
         "name": "centimeter"
+      },
+      {
+        "locale": "ar",
+        "name": "سنتيمتر"
       }
     ],
     "alternates": [
@@ -11040,7 +11726,9 @@
       "senttimetri",
       "senttimetriä",
       "сантиметри",
-      "сантиметрів"
+      "сантиметрів",
+      "سم",
+      "سنتيمتر"
     ]
   },
   "to_serve": {
@@ -11108,6 +11796,10 @@
       {
         "locale": "sv",
         "name": "till servering"
+      },
+      {
+        "locale": "ar",
+        "name": "للتقديم"
       }
     ],
     "plural": [
@@ -11174,6 +11866,10 @@
       {
         "locale": "sv",
         "name": "till servering"
+      },
+      {
+        "locale": "ar",
+        "name": "للتقديم"
       }
     ],
     "alternates": [
@@ -11193,7 +11889,8 @@
       "tarjoiluun",
       "для подачі",
       "для сервірування",
-      "till servering"
+      "till servering",
+      "للتقديم"
     ]
   },
   "for_garnish": {
@@ -11261,6 +11958,10 @@
       {
         "locale": "sv",
         "name": "till garnering"
+      },
+      {
+        "locale": "ar",
+        "name": "للتزيين"
       }
     ],
     "plural": [
@@ -11327,6 +12028,10 @@
       {
         "locale": "sv",
         "name": "till garnering"
+      },
+      {
+        "locale": "ar",
+        "name": "للتزيين"
       }
     ],
     "alternates": [
@@ -11348,7 +12053,8 @@
       "koristeluun",
       "для прикраси",
       "для декору",
-      "till garnering"
+      "till garnering",
+      "للتزيين"
     ]
   },
   "optional": {
@@ -11416,6 +12122,10 @@
       {
         "locale": "sv",
         "name": "valfritt"
+      },
+      {
+        "locale": "ar",
+        "name": "اختياري"
       }
     ],
     "plural": [
@@ -11482,6 +12192,10 @@
       {
         "locale": "sv",
         "name": "valfritt"
+      },
+      {
+        "locale": "ar",
+        "name": "اختياري"
       }
     ],
     "alternates": [
@@ -11509,7 +12223,8 @@
       "efter ønske",
       "etter ønske",
       "efter önskan",
-      "원하는 만큼"
+      "원하는 만큼",
+      "اختياري"
     ]
   }
 }

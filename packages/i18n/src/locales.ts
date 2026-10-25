@@ -16,6 +16,7 @@ export const LOCALE_CATALOG = {
   fi: { name: "Suomi" },
   uk: { name: "Українська" },
   sv: { name: "Svenska" },
+  ar: { name: "العربية" },
 } as const;
 
 export type LocaleCatalogCode = keyof typeof LOCALE_CATALOG;
