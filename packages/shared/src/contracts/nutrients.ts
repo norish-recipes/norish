@@ -57,6 +57,25 @@ export const ESTIMATED_EXTRA_NUTRIENTS = [
 
 export type ExtraNutrients = Partial<Record<ExtraNutrient, number>>;
 
+/**
+ * A language model's answer schema in which each estimated extra it leaves
+ * out reads as null (unknown). The extras stay required in the JSON schema the
+ * model is given, as strict structured outputs need, but an answer without
+ * them, from a provider that drops them or a fixture written before them, is
+ * not refused whole: the four values it does give still count.
+ */
+export function missingExtrasAsNull<T extends z.ZodType>(schema: T) {
+  const unknown = Object.fromEntries(ESTIMATED_EXTRA_NUTRIENTS.map((key) => [key, null]));
+
+  return z.preprocess(
+    (value) =>
+      value !== null && typeof value === "object" && !Array.isArray(value)
+        ? { ...unknown, ...value }
+        : value,
+    schema
+  );
+}
+
 export const ExtraNutrientsSchema = z.partialRecord(
   z.enum(EXTRA_NUTRIENTS),
   z.number().finite().nonnegative()

@@ -1,5 +1,6 @@
 import { describe, expect, it } from "vitest";
 
+import { sourceNutritionSchema } from "@norish/api/parser/extraction.schema";
 import { extractNutrition, parseMilligrams } from "@norish/api/parser/parsers/nutrition";
 
 describe("the nutrients a source states beyond the four", () => {
@@ -37,5 +38,19 @@ describe("the nutrients a source states beyond the four", () => {
     [480, 480],
   ])("reads %j as %j milligrams", (raw, mg) => {
     expect(parseMilligrams(raw)).toBe(mg);
+  });
+});
+
+describe("an AI extraction's nutrition without the other nutrients", () => {
+  it("still reads the four, with the others unknown", () => {
+    const four = { calories: 300, fat: 10, carbs: 40, protein: 12 };
+
+    expect(sourceNutritionSchema.parse(four)).toEqual({
+      ...four,
+      saturatedFat: null,
+      sugars: null,
+      fiber: null,
+      sodium: null,
+    });
   });
 });
