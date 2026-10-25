@@ -1,5 +1,7 @@
 import { z } from "zod";
 
+import { missingExtrasAsNull } from "@norish/shared/contracts/nutrients";
+
 /**
  * Nutrition Information read from the source rather than estimated.
  *
@@ -7,41 +9,46 @@ import { z } from "zod";
  * nothing more; estimating the missing ones is the nutrition-estimation
  * enrichment worker's job, under the administrator's automatic setting.
  */
-export const sourceNutritionSchema = z
-  .object({
-    calories: z
-      .number()
-      .nullable()
-      .describe("Calories per serving stated by the source, else null"),
-    fat: z.number().nullable().describe("Fat per serving in grams stated by the source, else null"),
-    carbs: z
-      .number()
-      .nullable()
-      .describe("Carbohydrates per serving in grams stated by the source, else null"),
-    protein: z
-      .number()
-      .nullable()
-      .describe("Protein per serving in grams stated by the source, else null"),
-    saturatedFat: z
-      .number()
-      .nullable()
-      .describe("Saturated fat per serving in grams stated by the source, else null"),
-    sugars: z
-      .number()
-      .nullable()
-      .describe("Sugars per serving in grams stated by the source, else null"),
-    fiber: z
-      .number()
-      .nullable()
-      .describe("Fiber per serving in grams stated by the source, else null"),
-    sodium: z
-      .number()
-      .nullable()
-      .describe(
-        "Sodium per serving in milligrams stated by the source, else null. Where only salt is stated, sodium is salt in grams × 400."
-      ),
-  })
-  .strict();
+export const sourceNutritionSchema = missingExtrasAsNull(
+  z
+    .object({
+      calories: z
+        .number()
+        .nullable()
+        .describe("Calories per serving stated by the source, else null"),
+      fat: z
+        .number()
+        .nullable()
+        .describe("Fat per serving in grams stated by the source, else null"),
+      carbs: z
+        .number()
+        .nullable()
+        .describe("Carbohydrates per serving in grams stated by the source, else null"),
+      protein: z
+        .number()
+        .nullable()
+        .describe("Protein per serving in grams stated by the source, else null"),
+      saturatedFat: z
+        .number()
+        .nullable()
+        .describe("Saturated fat per serving in grams stated by the source, else null"),
+      sugars: z
+        .number()
+        .nullable()
+        .describe("Sugars per serving in grams stated by the source, else null"),
+      fiber: z
+        .number()
+        .nullable()
+        .describe("Fiber per serving in grams stated by the source, else null"),
+      sodium: z
+        .number()
+        .nullable()
+        .describe(
+          "Sodium per serving in milligrams stated by the source, else null. Where only salt is stated, sodium is salt in grams × 400."
+        ),
+    })
+    .strict()
+);
 
 export type SourceNutrition = z.infer<typeof sourceNutritionSchema>;
 
