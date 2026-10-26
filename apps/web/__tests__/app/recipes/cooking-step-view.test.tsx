@@ -10,7 +10,19 @@ beforeEach(() => {
 });
 
 vi.mock("@/components/recipe/smart-instruction", () => ({
-  SmartInstruction: ({ text }: { text: string }) => <span>{text}</span>,
+  SmartInstruction: ({
+    text,
+    recipeId,
+    recipeName,
+  }: {
+    text: string;
+    recipeId: string;
+    recipeName?: string;
+  }) => (
+    <span data-recipe-id={recipeId} data-recipe-name={recipeName}>
+      {text}
+    </span>
+  ),
 }));
 vi.mock("@/app/(app)/recipes/[id]/components/cookingmode/step-images", () => ({
   StepImages: () => null,
@@ -174,5 +186,98 @@ describe("CookingStepView discrete scroll layout", () => {
     fireEvent.touchEnd(activeScrollable, { changedTouches: [{ clientY: 100 }] });
 
     expect(onStepChange).toHaveBeenCalledWith(2);
+  });
+});
+
+describe("CookingStepView linked recipe steps", () => {
+  const DOUGH_LINES = [
+    { ingredientName: "flour", amount: 500, unit: "g", systemUsed: "metric", order: 0 },
+  ];
+  const LINKED_FROM = {
+    recipeId: "dough-1",
+    recipeName: "Pizza Dough",
+    depth: 1,
+    systemUsed: "metric",
+    ingredients: DOUGH_LINES,
+  };
+  // As resolved after a heading row: positions and originalIndex differ.
+  const LINKED_STEPS = [
+    {
+      originalIndex: 1,
+      stepNumber: 1,
+      text: "Make the [Pizza Dough](id:dough-1)",
+      heading: "Base",
+      images: [],
+      stepIngredients: [],
+    },
+    {
+      originalIndex: 0,
+      stepNumber: 2,
+      text: "Mix half the flour.",
+      images: [],
+      stepIngredients: [{ ingredientOrder: 0, share: 0.5, order: 0 }],
+      linkedFrom: LINKED_FROM,
+    },
+    {
+      originalIndex: 2,
+      stepNumber: 3,
+      text: "Stretch the dough.",
+      heading: "Base",
+      images: [],
+      stepIngredients: [],
+    },
+  ];
+
+  function renderLinked(activeStep: number) {
+    return render(
+      <CookingStepView
+        activeStep={activeStep}
+        displayIngredients={INGREDIENTS}
+        recipe={{
+          id: "pizza-1",
+          name: "Pizza",
+          image: null,
+          categories: [],
+          totalMinutes: 30,
+          servings: 2,
+          systemUsed: "metric",
+        }}
+        steps={LINKED_STEPS}
+      />
+    );
+  }
+
+  it("names the recipe a linked step comes from, and only on linked steps", () => {
+    renderLinked(1);
+
+    const chips = screen.getAllByTestId("cooking-step-linked-from");
+
+    expect(chips).toHaveLength(1);
+    expect(chips[0]).toHaveTextContent("fromRecipeNamed");
+    expect(screen.getByText("Mix half the flour.").closest("[class*='flex-col gap-6']")).toContain(
+      chips[0]
+    );
+  });
+
+  it("resolves a linked step's ingredients against its own recipe's lines", () => {
+    renderLinked(1);
+
+    expect(screen.getByText("250 g flour")).toBeInTheDocument();
+  });
+
+  it("starts a linked step's timers under the linked recipe", () => {
+    renderLinked(1);
+
+    expect(screen.getByText("Mix half the flour.")).toHaveAttribute("data-recipe-id", "dough-1");
+    expect(screen.getByText("Stretch the dough.")).toHaveAttribute("data-recipe-id", "pizza-1");
+  });
+
+  it("centres the active step by its position, whatever its original index", () => {
+    renderLinked(0);
+
+    const active = document.querySelectorAll(".can-scroll-natively");
+
+    expect(active).toHaveLength(1);
+    expect(active[0]).toHaveTextContent("Make the [Pizza Dough](id:dough-1)");
   });
 });

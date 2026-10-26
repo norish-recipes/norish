@@ -3,7 +3,7 @@
 import { useCallback, useEffect, useRef, useState } from "react";
 import { SmartInstruction } from "@/components/recipe/smart-instruction";
 import { StepIngredientsRow } from "@/components/recipes/step-ingredients-row";
-import { BookOpenIcon } from "@heroicons/react/20/solid";
+import { BookOpenIcon, LinkIcon } from "@heroicons/react/20/solid";
 import { Chip, ScrollShadow, Surface } from "@heroui/react";
 import { motion, useReducedMotion } from "motion/react";
 import { useTranslations } from "next-intl";
@@ -31,6 +31,7 @@ export function CookingStepView({
   onStepChange,
 }: CookingStepViewProps) {
   const tCookMode = useTranslations("recipes.cookMode");
+  const tLinked = useTranslations("recipes.linkedRecipe");
   const prefersReducedMotion = useReducedMotion();
 
   const containerRef = useRef<HTMLDivElement>(null);
@@ -198,8 +199,9 @@ export function CookingStepView({
         animate={{ y: wrapperY }}
         transition={prefersReducedMotion || !enableTransitions ? { duration: 0 } : PAGE_TRANSITION}
       >
-        {steps.map((step) => {
-          const i = step.originalIndex;
+        {steps.map((step, i) => {
+          // Positions, not originalIndex: a heading row or a linked recipe's
+          // steps make the two differ, and activeStep counts positions.
           const isCenter = i === activeStep;
           const isPrev = i < activeStep;
           const isNext = i > activeStep;
@@ -246,19 +248,29 @@ export function CookingStepView({
                     }
                     className={`flex flex-col gap-6 py-4 ${marginClass}`}
                   >
-                    {step.heading ? (
+                    {step.linkedFrom || step.heading ? (
                       <div className="flex min-w-0 flex-wrap items-center gap-2">
-                        <Chip color="accent" variant="soft">
-                          <BookOpenIcon className="size-4 translate-y-px" />
-                          <Chip.Label>{step.heading}</Chip.Label>
-                        </Chip>
+                        {step.linkedFrom ? (
+                          <Chip data-testid="cooking-step-linked-from" variant="soft">
+                            <LinkIcon className="size-4 translate-y-px" />
+                            <Chip.Label>
+                              {tLinked("fromRecipeNamed", { name: step.linkedFrom.recipeName })}
+                            </Chip.Label>
+                          </Chip>
+                        ) : null}
+                        {step.heading ? (
+                          <Chip color="accent" variant="soft">
+                            <BookOpenIcon className="size-4 translate-y-px" />
+                            <Chip.Label>{step.heading}</Chip.Label>
+                          </Chip>
+                        ) : null}
                       </div>
                     ) : null}
 
                     <div className="text-foreground min-w-0 text-2xl leading-relaxed font-medium md:text-3xl md:leading-relaxed">
                       <SmartInstruction
-                        recipeId={recipe.id}
-                        recipeName={recipe.name}
+                        recipeId={step.linkedFrom?.recipeId ?? recipe.id}
+                        recipeName={step.linkedFrom?.recipeName ?? recipe.name}
                         stepIndex={step.originalIndex}
                         text={step.text}
                       />
@@ -266,9 +278,9 @@ export function CookingStepView({
 
                     {step.stepIngredients.length > 0 && (
                       <StepIngredientsRow
-                        ingredients={displayIngredients}
+                        ingredients={step.linkedFrom?.ingredients ?? displayIngredients}
                         refs={step.stepIngredients}
-                        systemUsed={recipe.systemUsed}
+                        systemUsed={step.linkedFrom?.systemUsed ?? recipe.systemUsed}
                       />
                     )}
 

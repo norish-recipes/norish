@@ -1,3 +1,4 @@
+import type { LinkedIngredientsSection } from "@/components/recipes/linked-recipe-sections";
 import type { PointerEvent } from "react";
 
 import type { ResolvedCookingModeStep } from "./cooking-mode-steps";
@@ -11,6 +12,7 @@ export type IngredientLike = {
   unit: string | null;
   systemUsed: string;
   order: number;
+  ingredientId?: string | null;
 };
 
 /** What cooking mode needs to know about the recipe it is cooking. */
@@ -46,4 +48,9 @@ export type CookingModeDialogProps = {
   onTimersOpenChange: (open: boolean) => void;
   checkedIngredients: Set<number>;
   onCheckedIngredientsChange: (indices: Set<number>) => void;
+  /** The linked recipes' lines, in reading order, each under its recipe. */
+  linkedIngredients: LinkedIngredientsSection[];
+  /** Ticked linked lines, per linked recipe. */
+  checkedLinkedIngredients: Record<string, Set<number>>;
+  onCheckedLinkedIngredientsChange: (recipeId: string, indices: Set<number>) => void;
 };

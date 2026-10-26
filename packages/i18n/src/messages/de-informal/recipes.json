@@ -423,5 +423,15 @@
     "removeImage": "Bild entfernen",
     "imageUploadFailed": "Das Bild konnte nicht hochgeladen werden.",
     "imageNeedsConnection": "Bilder kannst du ändern, sobald du wieder online bist."
+  },
+  "linkedRecipe": {
+    "fromRecipe": "Aus Rezept",
+    "fromRecipeNamed": "Aus {name}",
+    "sectionLabel": "Schritte aus {name}",
+    "ingredientsLabel": "Zutaten aus {name}",
+    "showSteps": "Schritte anzeigen",
+    "hideSteps": "Schritte ausblenden",
+    "noSteps": "Dieses Rezept hat noch keine Schritte.",
+    "noIngredients": "Dieses Rezept hat noch keine Zutaten."
   }
 }

@@ -1,8 +1,14 @@
 "use client";
 
+import type { CookingModeLinkedSection } from "@/app/(app)/recipes/[id]/components/cookingmode/cooking-mode-steps";
 import type { PointerEvent as ReactPointerEvent } from "react";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
+import { useRecipeLinkedRecipes } from "@/app/(app)/recipes/[id]/components/use-recipe-linked-recipes";
 import { useWakeLockContext } from "@/app/(app)/recipes/[id]/components/wake-lock-context";
+import {
+  linkedSectionsByStep,
+  stepsReplacedByLinked,
+} from "@/components/recipes/linked-recipe-sections";
 import { TimerDock } from "@/components/timer-dock";
 import { useDevicePreference } from "@/context/device-preferences-context";
 import { useFloatingDock } from "@/hooks/use-floating-dock";
@@ -68,12 +74,49 @@ export default function CookingMode({
   // is the moment the cook started plus the recipe's total time.
   const [readyAt, setReadyAt] = useState<Date | null>(null);
   const [checkedIngredients, setCheckedIngredients] = useState<Set<number>>(() => new Set());
+  const [checkedLinkedIngredients, setCheckedLinkedIngredients] = useState<
+    Record<string, Set<number>>
+  >({});
+  const { tree, ingredientsFor } = useRecipeLinkedRecipes();
   const wakeLockOwnedRef = useRef(false);
   const swipeStartRef = useRef<SwipePoint | null>(null);
 
-  const steps = useMemo(
-    () => resolveCookingModeSteps(recipe.steps ?? [], recipe.systemUsed ?? "metric"),
-    [recipe.steps, recipe.systemUsed]
+  const steps = useMemo(() => {
+    // Every step that expands a linked recipe, the linked recipes' own included.
+    const nodes = [
+      ...(tree?.steps ?? []),
+      ...(tree?.sections ?? []).flatMap((section) => section.steps),
+    ];
+    const linkedByStep = linkedSectionsByStep(nodes);
+    const replaced = stepsReplacedByLinked(nodes);
+
+    return resolveCookingModeSteps(
+      recipe.steps ?? [],
+      recipe.systemUsed ?? "metric",
+      (step) =>
+        (linkedByStep.get(step) ?? []).map((section): CookingModeLinkedSection => ({
+          recipeId: section.recipe.id,
+          recipeName: section.recipe.name,
+          depth: section.depth,
+          systemUsed: section.systemUsed,
+          ingredients: ingredientsFor(section.recipe),
+          steps: section.steps.map((node) => node.step),
+        })),
+      (step) => replaced.has(step)
+    );
+  }, [ingredientsFor, recipe.steps, recipe.systemUsed, tree]);
+  const linkedIngredients = useMemo(
+    () =>
+      (tree?.sections ?? []).map((section) => ({
+        recipe: section.recipe,
+        ingredients: ingredientsFor(section.recipe),
+      })),
+    [ingredientsFor, tree]
+  );
+  const handleCheckedLinkedIngredientsChange = useCallback(
+    (recipeId: string, indices: Set<number>) =>
+      setCheckedLinkedIngredients((checked) => ({ ...checked, [recipeId]: indices })),
+    []
   );
   const displayIngredients =
     adjustedIngredients?.length > 0 ? adjustedIngredients : recipe.recipeIngredients;
@@ -215,6 +258,9 @@ export default function CookingMode({
     onViewChange: setActiveView,
     checkedIngredients,
     onCheckedIngredientsChange: setCheckedIngredients,
+    linkedIngredients,
+    checkedLinkedIngredients,
+    onCheckedLinkedIngredientsChange: handleCheckedLinkedIngredientsChange,
   };
 
   const open = () => {
@@ -224,6 +270,7 @@ export default function CookingMode({
     setActiveStep(0);
     setAreTimersOpen(false);
     setCheckedIngredients(new Set());
+    setCheckedLinkedIngredients({});
     setReadyAt(
       recipe.totalMinutes && recipe.totalMinutes > 0
         ? new Date(Date.now() + recipe.totalMinutes * 60_000)

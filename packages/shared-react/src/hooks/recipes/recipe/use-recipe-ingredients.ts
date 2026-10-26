@@ -1,4 +1,5 @@
 import type { RecipeIngredientsDto } from "@norish/shared/contracts";
+import { selectRowsForSystem } from "@norish/shared/lib/linked-recipes";
 
 import type { RecipeQueryResult } from "./use-recipe-query";
 
@@ -11,21 +12,7 @@ export type SystemScopedIngredientDto = RecipeIngredientsDto & { systemUsed: str
    unfiltered shows every ingredient once per system. Pick the preferred
    system when present, otherwise the recipe's own system, otherwise
    whichever system the entries actually use. */
-export function selectIngredientsForSystem<T extends { systemUsed: string }>(
-  ingredients: T[],
-  preferredSystem: string | null | undefined,
-  ownSystem: string | null | undefined
-): T[] {
-  for (const system of [preferredSystem, ownSystem, ingredients[0]?.systemUsed]) {
-    if (!system) continue;
-
-    const matches = ingredients.filter((ingredient) => ingredient.systemUsed === system);
-
-    if (matches.length > 0) return matches;
-  }
-
-  return [];
-}
+export const selectIngredientsForSystem = selectRowsForSystem;
 
 export function createUseRecipeIngredients(
   useRecipeQuery: (id: string | null) => RecipeQueryResult
@@ -42,6 +29,7 @@ export function createUseRecipeIngredients(
           )
         : ([] as SystemScopedIngredientDto[]),
       systemUsed: recipe?.systemUsed ?? null,
+      recipe,
       isLoading,
       error,
     };

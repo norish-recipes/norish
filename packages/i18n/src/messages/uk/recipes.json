@@ -423,5 +423,15 @@
     "removeImage": "Прибрати зображення",
     "imageUploadFailed": "Не вдалося завантажити зображення.",
     "imageNeedsConnection": "Зображення можна буде змінити, коли ви знову будете онлайн."
+  },
+  "linkedRecipe": {
+    "fromRecipe": "З рецепта",
+    "fromRecipeNamed": "З рецепта «{name}»",
+    "sectionLabel": "Кроки з рецепта «{name}»",
+    "ingredientsLabel": "Інгредієнти з рецепта «{name}»",
+    "showSteps": "Показати кроки",
+    "hideSteps": "Сховати кроки",
+    "noSteps": "У цьому рецепті ще немає кроків.",
+    "noIngredients": "У цьому рецепті ще немає інгредієнтів."
   }
 }

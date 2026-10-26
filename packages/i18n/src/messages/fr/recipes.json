@@ -423,5 +423,15 @@
     "removeImage": "Retirer l'image",
     "imageUploadFailed": "L'image n'a pas pu être envoyée.",
     "imageNeedsConnection": "Les images pourront être modifiées une fois de retour en ligne."
+  },
+  "linkedRecipe": {
+    "fromRecipe": "Depuis la recette",
+    "fromRecipeNamed": "Depuis {name}",
+    "sectionLabel": "Étapes de {name}",
+    "ingredientsLabel": "Ingrédients de {name}",
+    "showSteps": "Afficher les étapes",
+    "hideSteps": "Masquer les étapes",
+    "noSteps": "Cette recette n'a pas encore d'étapes.",
+    "noIngredients": "Cette recette n'a pas encore d'ingrédients."
   }
 }

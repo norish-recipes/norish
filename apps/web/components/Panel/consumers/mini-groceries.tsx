@@ -15,6 +15,7 @@ import { useGroceriesMutations, useGroceriesQuery } from "@/hooks/groceries";
 import { usePantryMutations, usePantryQuery } from "@/hooks/pantry";
 import {
   useLinkedRecipeIngredients,
+  useLinkedRecipes,
   useRecipeIngredients,
 } from "@/hooks/recipes/use-recipe-ingredients";
 import { useUnitFormatter } from "@/hooks/use-unit-formatter";
@@ -23,6 +24,7 @@ import { Button, Input, toast } from "@heroui/react";
 import { useTranslations } from "next-intl";
 
 import { formatServings, useServingsScaler } from "@norish/shared-react/hooks";
+import { selectRowsForSystem } from "@norish/shared/lib/linked-recipes";
 import { groceryOnTheList, pantryIngredientFor } from "@norish/shared/lib/pantry";
 
 type MiniGroceriesProps = {
@@ -137,6 +139,7 @@ export default function MiniGroceries({
   const {
     ingredients: rawIngredients,
     systemUsed,
+    recipe,
     isLoading,
   } = useRecipeIngredients(open || addAtOnce ? recipeId : null);
 
@@ -149,13 +152,31 @@ export default function MiniGroceries({
     systemUsed
   );
 
+  // The recipes the steps link to are cooked as part of this one, so their
+  // lines are bought with it; one linked from a line as well is bought once.
+  const { tree: linkedTree, isLoading: stepLinkedLoading } = useLinkedRecipes(recipe, systemUsed);
+  const stepLinkedIngredients = useMemo(
+    () =>
+      (linkedTree?.sections ?? [])
+        .filter((section) => !linkedRecipeIds.includes(section.recipe.id))
+        .flatMap((section) =>
+          selectRowsForSystem(
+            section.recipe.recipeIngredients as GroceryIngredient[],
+            systemUsed,
+            section.recipe.systemUsed
+          )
+        ),
+    [linkedTree, linkedRecipeIds, systemUsed]
+  );
+
   const ingredients = useMemo(
     () =>
       [
         ...(rawIngredients as GroceryIngredient[]),
         ...(linkedIngredients as GroceryIngredient[]),
+        ...stepLinkedIngredients,
       ].filter(isGroceryIngredient),
-    [rawIngredients, linkedIngredients]
+    [rawIngredients, linkedIngredients, stepLinkedIngredients]
   );
   const { servings, scaledIngredients, incrementServings, decrementServings } = useServingsScaler(
     ingredients,
@@ -370,7 +391,7 @@ export default function MiniGroceries({
 
   useEffect(() => {
     if (!addAtOnce || open || addedAtOnce.current) return;
-    if (isLoading || linkedLoading || pantryLoading) return;
+    if (isLoading || linkedLoading || stepLinkedLoading || pantryLoading) return;
     addedAtOnce.current = true;
     if (pantryUnavailable) onOpenChange(true);
     else if (toBuy.length === 0) close();
@@ -380,6 +401,7 @@ export default function MiniGroceries({
     open,
     isLoading,
     linkedLoading,
+    stepLinkedLoading,
     pantryLoading,
     pantryUnavailable,
     toBuy,

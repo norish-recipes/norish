@@ -423,5 +423,15 @@
     "removeImage": "Fjern bilde",
     "imageUploadFailed": "Bildet kunne ikke lastes opp.",
     "imageNeedsConnection": "Bilder kan endres når du er tilkoblet igjen."
+  },
+  "linkedRecipe": {
+    "fromRecipe": "Fra oppskrift",
+    "fromRecipeNamed": "Fra {name}",
+    "sectionLabel": "Trinn fra {name}",
+    "ingredientsLabel": "Ingredienser fra {name}",
+    "showSteps": "Vis trinn",
+    "hideSteps": "Skjul trinn",
+    "noSteps": "Denne oppskriften har ingen trinn ennå.",
+    "noIngredients": "Denne oppskriften har ingen ingredienser ennå."
   }
 }

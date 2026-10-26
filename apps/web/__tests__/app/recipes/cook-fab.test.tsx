@@ -34,6 +34,10 @@ vi.mock("@/app/(app)/recipes/[id]/components/wake-lock-context", () => ({
     disable: vi.fn(),
   }),
 }));
+// No recipe here links another; the linked expansion has its own tests.
+vi.mock("@/app/(app)/recipes/[id]/components/use-recipe-linked-recipes", () => ({
+  useRecipeLinkedRecipes: () => ({ tree: null, ingredientsFor: () => [] }),
+}));
 vi.mock("@/app/(app)/recipes/[id]/context", () => ({
   useRecipeContextRequired: () => ({
     adjustedIngredients: [],

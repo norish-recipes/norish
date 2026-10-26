@@ -1,6 +1,8 @@
 "use client";
 
+import type { ReactNode } from "react";
 import { use, useEffect } from "react";
+import { useRecipeLinkedRecipes } from "@/app/(app)/recipes/[id]/components/use-recipe-linked-recipes";
 import { IngredientIconsProvider } from "@/components/ingredients/ingredient-icon";
 import RecipePageTint from "@/components/recipes/recipe-page-tint";
 import { NotFoundView } from "@/components/shared/not-found-view";
@@ -9,7 +11,7 @@ import { useTranslations } from "next-intl";
 
 import { useAutoConversion } from "./components/use-system-conversion";
 import { WakeLockProvider } from "./components/wake-lock-context";
-import { RecipeContextProvider, useRecipeContext } from "./context";
+import { RecipeContextProvider, useRecipeContext, useRecipeContextRequired } from "./context";
 import RecipePageDesktop from "./recipe-page-desktop";
 import RecipePageMobile from "./recipe-page-mobile";
 
@@ -43,8 +45,7 @@ function RecipePageContent() {
   }
 
   return (
-    // Every surface of the page names the recipe's foods: its lines, cooking mode, the steps' chips.
-    <IngredientIconsProvider ids={recipe.recipeIngredients.map((line) => line.ingredientId)}>
+    <RecipeIngredientIcons>
       <RecipePageTint dishColor={recipe.dishColor}>
         {/* Desktop layout - smooth fade in */}
         <div key={`${recipe?.id}-desktop`} className="fade-in hidden md:block">
@@ -59,8 +60,23 @@ function RecipePageContent() {
           <RecipePageMobile />
         </div>
       </RecipePageTint>
-    </IngredientIconsProvider>
+    </RecipeIngredientIcons>
   );
+}
+
+/**
+ * Every surface of the page names the recipe's foods — its lines, cooking
+ * mode, the steps' chips — and those of the recipes its steps link to.
+ */
+function RecipeIngredientIcons({ children }: { children: ReactNode }) {
+  const { recipe } = useRecipeContextRequired();
+  const { tree } = useRecipeLinkedRecipes();
+  const ids = [
+    ...recipe.recipeIngredients,
+    ...(tree?.sections ?? []).flatMap((section) => section.recipe.recipeIngredients),
+  ].map((line) => line.ingredientId);
+
+  return <IngredientIconsProvider ids={ids}>{children}</IngredientIconsProvider>;
 }
 
 export default function RecipeDetailPage({ params }: Props) {

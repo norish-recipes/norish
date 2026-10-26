@@ -423,5 +423,15 @@
     "removeImage": "Poista kuva",
     "imageUploadFailed": "Kuvan lataaminen epäonnistui.",
     "imageNeedsConnection": "Kuvia voi vaihtaa, kun olet taas verkossa."
+  },
+  "linkedRecipe": {
+    "fromRecipe": "Reseptistä",
+    "fromRecipeNamed": "Reseptistä {name}",
+    "sectionLabel": "Vaiheet reseptistä {name}",
+    "ingredientsLabel": "Ainekset reseptistä {name}",
+    "showSteps": "Näytä vaiheet",
+    "hideSteps": "Piilota vaiheet",
+    "noSteps": "Tässä reseptissä ei ole vielä vaiheita.",
+    "noIngredients": "Tässä reseptissä ei ole vielä aineksia."
   }
 }

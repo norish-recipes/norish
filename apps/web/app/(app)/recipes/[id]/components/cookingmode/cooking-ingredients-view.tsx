@@ -3,6 +3,7 @@
 import ServingsControl from "@/app/(app)/recipes/[id]/components/servings-control";
 import SystemConvertMenu from "@/app/(app)/recipes/[id]/components/system-convert-menu";
 import AmountDisplayToggle from "@/components/recipes/amount-display-toggle";
+import { LinkedRecipeIngredientsSections } from "@/components/recipes/linked-recipe-sections";
 import { ReadonlyIngredientsList } from "@/components/recipes/readonly-ingredients-list";
 import { ScrollShadow, Separator } from "@heroui/react";
 import { useTranslations } from "next-intl";
@@ -11,7 +12,13 @@ import type { CookingModeDialogProps } from "./types";
 
 type CookingIngredientsViewProps = Pick<
   CookingModeDialogProps,
-  "displayIngredients" | "recipe" | "checkedIngredients" | "onCheckedIngredientsChange"
+  | "displayIngredients"
+  | "recipe"
+  | "checkedIngredients"
+  | "onCheckedIngredientsChange"
+  | "linkedIngredients"
+  | "checkedLinkedIngredients"
+  | "onCheckedLinkedIngredientsChange"
 > & {
   showTitle: boolean;
 };
@@ -22,6 +29,9 @@ export function CookingIngredientsView({
   showTitle,
   checkedIngredients,
   onCheckedIngredientsChange,
+  linkedIngredients,
+  checkedLinkedIngredients,
+  onCheckedLinkedIngredientsChange,
 }: CookingIngredientsViewProps) {
   const tCookMode = useTranslations("recipes.cookMode");
 
@@ -54,6 +64,17 @@ export function CookingIngredientsView({
             systemUsed={recipe.systemUsed}
             onCheckedIndicesChange={onCheckedIngredientsChange}
           />
+          {linkedIngredients.length > 0 ? (
+            <div className="mt-6">
+              <LinkedRecipeIngredientsSections
+                interactive
+                checkedByRecipe={checkedLinkedIngredients}
+                sections={linkedIngredients}
+                systemUsed={recipe.systemUsed}
+                onCheckedByRecipeChange={onCheckedLinkedIngredientsChange}
+              />
+            </div>
+          ) : null}
         </ScrollShadow>
       </div>
     </div>

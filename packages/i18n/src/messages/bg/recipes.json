@@ -423,5 +423,15 @@
     "removeImage": "Премахване на изображението",
     "imageUploadFailed": "Изображението не можа да бъде качено.",
     "imageNeedsConnection": "Изображенията могат да се сменят, когато отново сте онлайн."
+  },
+  "linkedRecipe": {
+    "fromRecipe": "От рецепта",
+    "fromRecipeNamed": "От рецептата „{name}“",
+    "sectionLabel": "Стъпки от рецептата „{name}“",
+    "ingredientsLabel": "Съставки от рецептата „{name}“",
+    "showSteps": "Покажи стъпките",
+    "hideSteps": "Скрий стъпките",
+    "noSteps": "Тази рецепта все още няма стъпки.",
+    "noIngredients": "Тази рецепта все още няма съставки."
   }
 }

@@ -61,6 +61,41 @@ The bottom bar also shows **Ready At**, the time you opened cooking mode plus
 the recipe's total time. Closing cooking mode ends the session, and opening it
 again starts at the first step.
 
+## Linked recipes
+
+When a step links another recipe with `/`, that recipe's steps show right after
+the step, in a section headed **From recipe** and the recipe's name. They count
+from 1, as on their own page, and the recipe's own steps carry on numbering
+after them. The arrow folds the section away. The name opens the recipe.
+
+![A pizza's steps with its linked dough's steps in place, and the dough's own linked starter inside them](/img/screenshots/recipe-linked-steps.png)
+
+The linked recipe's ingredients are listed after the recipe's own, under the
+same header, so everything the dish needs is in one list. They follow the
+servings you pick: doubling the pizza doubles its dough. **Add to groceries**
+adds them as well.
+
+A few rules keep this readable:
+
+- A step that is nothing but the link, like `/Garlic Aioli` on its own, is
+  replaced by the linked recipe's section rather than shown as a step of its
+  own. A step with other words, like "Make the /Pizza Dough and let it rest",
+  stays.
+- A recipe linked twice shows its steps only at the first link. Later links
+  stay plain links.
+- A linked recipe that links another shows that one inside it, up to three
+  levels deep.
+- A recipe that links back to one already shown stays a plain link.
+- A link to a recipe you can't open stays a plain link.
+
+Cooking mode goes through the linked steps in place. Each one is marked with
+the recipe it comes from, and the ingredients view lists the linked
+ingredients too.
+
+![Cooking mode on a step from the linked dough, marked From Neapolitan Dough](/img/screenshots/cooking-mode-linked-step.png)
+
+Shared recipe links show the link's name only, without the linked recipe.
+
 ## Page colour
 
 Each recipe page is tinted with a colour from its photo. The tint shows before

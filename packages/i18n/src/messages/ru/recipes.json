@@ -423,5 +423,15 @@
     "removeImage": "Убрать изображение",
     "imageUploadFailed": "Не удалось загрузить изображение.",
     "imageNeedsConnection": "Изображения можно будет изменить, когда вы снова будете в сети."
+  },
+  "linkedRecipe": {
+    "fromRecipe": "Из рецепта",
+    "fromRecipeNamed": "Из рецепта «{name}»",
+    "sectionLabel": "Шаги из рецепта «{name}»",
+    "ingredientsLabel": "Ингредиенты из рецепта «{name}»",
+    "showSteps": "Показать шаги",
+    "hideSteps": "Скрыть шаги",
+    "noSteps": "В этом рецепте пока нет шагов.",
+    "noIngredients": "В этом рецепте пока нет ингредиентов."
   }
 }

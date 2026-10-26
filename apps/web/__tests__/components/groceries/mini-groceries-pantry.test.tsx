@@ -85,6 +85,7 @@ vi.mock("@/hooks/recipes/use-recipe-ingredients", () => ({
     isLoading: false,
   }),
   useLinkedRecipeIngredients: () => ({ ingredients: [] }),
+  useLinkedRecipes: () => ({ tree: null, isLoading: false }),
 }));
 vi.mock("next-intl", () => ({
   useTranslations: () => (key: string, params?: Record<string, unknown>) =>

@@ -423,5 +423,15 @@
     "removeImage": "이미지 삭제",
     "imageUploadFailed": "이미지를 업로드하지 못했습니다.",
     "imageNeedsConnection": "다시 온라인 상태가 되면 이미지를 변경할 수 있습니다."
+  },
+  "linkedRecipe": {
+    "fromRecipe": "연결된 레시피",
+    "fromRecipeNamed": "{name}에서",
+    "sectionLabel": "{name}의 단계",
+    "ingredientsLabel": "{name}의 재료",
+    "showSteps": "단계 보기",
+    "hideSteps": "단계 숨기기",
+    "noSteps": "이 레시피에는 아직 단계가 없습니다.",
+    "noIngredients": "이 레시피에는 아직 재료가 없습니다."
   }
 }

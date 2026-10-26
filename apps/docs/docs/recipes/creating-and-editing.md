@@ -24,7 +24,9 @@ Start an ingredient or a step with `#` to make it a heading, like
 ## Recipe links with `/`
 
 Type `/` and a recipe name in a step to link that recipe, for example a dough
-or a stock you keep as its own recipe. Readers tap the link to open it.
+or a stock you keep as its own recipe. Readers tap the link to open it, and
+the recipe page shows the linked recipe's steps and ingredients in place, see
+[Linked recipes](./recipe-page.md#linked-recipes).
 
 ![The / recipe autocomplete open over a step](/img/screenshots/editor-recipe-link-autocomplete.png)
 

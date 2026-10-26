@@ -423,5 +423,15 @@
     "removeImage": "Afbeelding verwijderen",
     "imageUploadFailed": "De afbeelding kon niet worden geüpload.",
     "imageNeedsConnection": "Afbeeldingen kun je wijzigen zodra je weer online bent."
+  },
+  "linkedRecipe": {
+    "fromRecipe": "Uit recept",
+    "fromRecipeNamed": "Uit {name}",
+    "sectionLabel": "Stappen uit {name}",
+    "ingredientsLabel": "Ingrediënten uit {name}",
+    "showSteps": "Stappen tonen",
+    "hideSteps": "Stappen verbergen",
+    "noSteps": "Dit recept heeft nog geen stappen.",
+    "noIngredients": "Dit recept heeft nog geen ingrediënten."
   }
 }

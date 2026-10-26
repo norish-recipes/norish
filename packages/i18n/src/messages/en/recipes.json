@@ -423,5 +423,15 @@
     "removeImage": "Remove image",
     "imageUploadFailed": "The image could not be uploaded.",
     "imageNeedsConnection": "Images can be changed once you are back online."
+  },
+  "linkedRecipe": {
+    "fromRecipe": "From recipe",
+    "fromRecipeNamed": "From {name}",
+    "sectionLabel": "Steps from {name}",
+    "ingredientsLabel": "Ingredients from {name}",
+    "showSteps": "Show steps",
+    "hideSteps": "Hide steps",
+    "noSteps": "This recipe has no steps yet.",
+    "noIngredients": "This recipe has no ingredients yet."
   }
 }
