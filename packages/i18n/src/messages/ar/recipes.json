@@ -50,7 +50,8 @@
     "viewGroceries": "عرض المشتريات",
     "addToCalendar": "إضافة إلى التقويم",
     "deleteRecipe": "حذف الوصفة",
-    "recipeOptions": "خيارات الوصفة"
+    "recipeOptions": "خيارات الوصفة",
+    "pantryCoverage": "{percent} من المكوّنات متوفرة في المنزل"
   },
   "detail": {
     "viewOriginal": "عرض الوصفة الأصلية",
@@ -319,6 +320,9 @@
     "imported": "تم استيراد الوصفة",
     "failed": "فشلت عملية الوصفة",
     "failedDescription": "حدث خطأ أثناء معالجة وصفتك. راجع وحدة تحكم المتصفح للاطلاع على التفاصيل التقنية.",
+    "incomplete": "قد تكون هذه الوصفة ناقصة. قارنها بالمصدر.",
+    "notARecipe": "لا تبدو هذه الصفحة وصفة.",
+    "privateAddress": "الاستيراد من عناوين الشبكات الخاصة غير مسموح على هذا الخادم.",
     "batchImported": "تم استيراد الوصفات",
     "batchImportedDescription": "تم استيراد {count} وصفات من الأرشيف",
     "view": "عرض",
@@ -423,5 +427,13 @@
     "removeImage": "إزالة الصورة",
     "imageUploadFailed": "تعذّر رفع الصورة.",
     "imageNeedsConnection": "يمكن تغيير الصور عند عودة الاتصال."
+  },
+  "print": {
+    "title": "طباعة الوصفة",
+    "includePhoto": "تضمين الصورة",
+    "textSize": "حجم النص",
+    "print": "طباعة / حفظ PDF",
+    "continued": "تتمة",
+    "perServing": "لكل حصة"
   }
 }

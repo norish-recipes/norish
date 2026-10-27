@@ -9,9 +9,7 @@
   "editNote": {
     "title": "تعديل الملاحظة",
     "noteLabel": "ملاحظة",
-    "notePlaceholder": "اكتب ملاحظة...",
-    "date": "التاريخ",
-    "slot": "الوجبة"
+    "notePlaceholder": "اكتب ملاحظة..."
   },
   "navigation": {
     "previousMonth": "الشهر السابق",

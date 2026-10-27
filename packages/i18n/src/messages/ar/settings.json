@@ -11,6 +11,31 @@
     "ingredients": "المكوّنات"
   },
   "user": {
+    "signInMethods": {
+      "title": "طرق تسجيل الدخول",
+      "description": "اربط حسابك بتسجيل الدخول الموحّد (SSO).",
+      "password": "كلمة المرور",
+      "addAnother": "إضافة طريقة أخرى لتسجيل الدخول",
+      "addProvider": "ربط {provider}",
+      "added": "أُضيفت في {date}",
+      "remove": "إلغاء الربط",
+      "unavailable": "غير متاحة حاليًا",
+      "changePassword": "تغيير كلمة المرور",
+      "currentPassword": "كلمة المرور الحالية",
+      "newPassword": "كلمة المرور الجديدة",
+      "confirmPassword": "تأكيد كلمة المرور الجديدة",
+      "signOutOthers": "تسجيل الخروج من الجلسات الأخرى",
+      "passwordChanged": "تم تغيير كلمة المرور.",
+      "errors": {
+        "usedByAnotherAccount": "طريقة تسجيل الدخول هذه مستخدمة في حساب آخر.",
+        "lastMethod": "تحتاج إلى طريقة واحدة على الأقل لتسجيل الدخول.",
+        "signInAgain": "سجّل الدخول مجددًا لإلغاء الربط.",
+        "addFailed": "تعذّرت إضافة طريقة تسجيل الدخول هذه.",
+        "removeFailed": "تعذّر إلغاء ربط طريقة تسجيل الدخول هذه.",
+        "wrongPassword": "كلمة المرور الحالية غير صحيحة.",
+        "changeFailed": "تعذّر تغيير كلمة المرور. يُرجى المحاولة مجددًا."
+      }
+    },
     "profile": {
       "title": "الملف الشخصي",
       "nameLabel": "الاسم",
@@ -75,6 +100,7 @@
       "accountsDescription": "سمِّ الحساب عندما يكون لديك أكثر من تسجيل دخول للموقع نفسه. يستخدم كل استيراد عندها أحد حسابات ذلك الموقع عشوائيًا، كي لا يتحمّل حساب واحد كل عمليات الاستيراد. الرمز الذي لا يحمل اسم حساب يُرسل مع كل استيراد من نطاقه.",
       "domain": "النطاق",
       "domainPlaceholder": "مثال: instagram.com",
+      "domainNotFull": "أدخل النطاق كاملًا، مثل instagram.com.",
       "account": "الحساب",
       "accountPlaceholder": "مثال: my_handle (اختياري)",
       "accountShared": "كل الحسابات",
@@ -376,67 +402,26 @@
     "flagged": "معلَّم",
     "flagReasons": {
       "unknown": "لم يكن Norish متأكدًا من أن هذه مادة غذائية مستقلة.",
-      "ai-off": "الذكاء الاصطناعي معطّل، لذلك لم يُفحص إن كانت هذه مادة غذائية يعرفها Norish.",
       "unknown-food": "لا توجد مادة غذائية معروفة تشترك بكلمة مع هذا الاسم، لذلك لم يُسأل الذكاء الاصطناعي.",
       "ai-unsure": "سُئل الذكاء الاصطناعي إن كانت هذه مادة غذائية معروفة ولم يكن متأكدًا.",
-      "ai-unavailable": "لم يستجب الذكاء الاصطناعي في الوقت المناسب عند إضافة هذا الاسم.",
-      "ai-key-rejected": "رفض مزوّد الذكاء الاصطناعي مفتاح API، فلم يتمكن من فحص هذا الاسم.",
       "food-gone": "ربطه الذكاء الاصطناعي بمادة غذائية دُمجت في غيرها قبل أن يُضاف الاسم إليها.",
       "upgrade": "تعذّر ربطه بأي مادة غذائية معروفة.",
-      "seed-ambiguous": "يحتوي الكتالوج على عدة مواد غذائية قد يكون هذا إحداها."
+      "seed-ambiguous": "يحتوي الكتالوج على عدة مواد غذائية قد يكون هذا إحداها.",
+      "ai-junk": "رأى الذكاء الاصطناعي أن هذه ليست مادة غذائية، كأداة مطبخ أو جزء من سطر وصفة."
     },
     "empty": "لم يُعثر على مكوّنات",
     "emptyFlagged": "لا يوجد شيء معلَّم",
     "rename": "إعادة تسمية",
     "delete": "حذف",
     "deleteTitle": "حذف {name}؟",
-    "deleteConfirm": "ستُحذف ترجماته معه، وكل ما علّمه منزلك لـ Norish عنه. لا يمكن حذف مكوّن ما زال مستخدمًا في وصفة أو في المشتريات أو المونة؛ ادمجه بدلًا من ذلك.",
+    "deleteConfirm": "ستُحذف ترجماته معه، وكل ما علّمه منزلك لـ Norish عنه.",
+    "deleteTouches": {
+      "recipeLines": "{count, plural, zero {لا يتأثر أي سطر في الوصفات} one {سطر واحد في الوصفات يحتفظ بنصه من دونه} two {سطران في الوصفات يحتفظان بنصهما من دونه} few {# أسطر في الوصفات تحتفظ بنصها من دونه} many {# سطرًا في الوصفات تحتفظ بنصها من دونه} other {# سطر في الوصفات تحتفظ بنصها من دونه}}",
+      "groceries": "{count, plural, zero {لا يتأثر أي غرض في المشتريات} one {غرض واحد في المشتريات يحتفظ بنصه من دونه} two {غرضان في المشتريات يحتفظان بنصهما من دونه} few {# أغراض في المشتريات تحتفظ بنصها من دونه} many {# غرضًا في المشتريات تحتفظ بنصها من دونه} other {# غرض في المشتريات تحتفظ بنصها من دونه}}",
+      "pantry": "{count, plural, zero {لا يُزال أي غرض من المونة} one {يُزال غرض واحد من المونة} two {يُزال غرضان من المونة} few {تُزال # أغراض من المونة} many {يُزال # غرضًا من المونة} other {يُزال # غرض من المونة}}"
+    },
     "markDistinct": "تعليم كمستقل",
     "summary": "{spellings, plural, one {ترجمة واحدة} two {ترجمتان} few {# ترجمات} many {# ترجمة} other {# ترجمة}}{kinds, plural, =0 {} one {، نوع واحد} two {، نوعان} few {، # أنواع} other {، # نوع}}{parent, select, none {} other {، الأصل: {parent}}}",
-    "askAI": "اسأل الذكاء الاصطناعي",
-    "fixCatalogue": "إصلاح الكتالوج",
-    "askAIRound": {
-      "intro": "يفحص الذكاء الاصطناعي مكان المكوّنات المعلَّمة ويصحّح الأسماء غير المتسقة. لا يتغيّر شيء حتى تؤكد الاقتراح.",
-      "scopeLabel": "ما الذي تريد إصلاحه",
-      "scopes": {
-        "unsuggested": "فحص المكوّنات المعلَّمة",
-        "suggested": "إعادة فحص الاقتراحات",
-        "name": "تنظيف الأسماء"
-      },
-      "hints": {
-        "unsuggested": "يبحث عن التكرار، أو مكوّن فرعي، أو إن كان مستقلًا.",
-        "suggested": "يعيد فحص المكوّنات المعلَّمة.",
-        "name": "ينظّف أسماء المكوّنات لتبقى باسم المكوّن فقط. تُشمل المكوّنات المعلَّمة إذا كان الخيار أعلاه محددًا."
-      },
-      "scopeSize": "{count, plural, =0 {لا توجد مكوّنات} one {مكوّن واحد · نحو {tokens} توكن} two {مكوّنان · نحو {tokens} توكن} few {# مكوّنات · نحو {tokens} توكن} many {# مكوّنًا · نحو {tokens} توكن} other {# مكوّن · نحو {tokens} توكن}}",
-      "modelTokens": "نحو {tokens} توكن",
-      "basisMeasured": "بناءً على ما استهلكته الجولة الأخيرة."
-    },
-    "roundProgress": "جارٍ سؤال الذكاء الاصطناعي · {done, number} من {total, number}",
-    "roundSection": {
-      "title": "جارٍ سؤال الذكاء الاصطناعي",
-      "progress": "{done, number} من {total, number}",
-      "waiting": "{count, plural, one {مكوّن واحد في الانتظار} two {مكوّنان في الانتظار} few {# مكوّنات في الانتظار} many {# مكوّنًا في الانتظار} other {# مكوّن في الانتظار}}"
-    },
-    "reviewing": "جارٍ سؤال الذكاء الاصطناعي…",
-    "aiOutcomes": {
-      "parent": "يقترح الذكاء الاصطناعي تصنيف {name} كنوع من {of}.",
-      "distinct": "يقترح الذكاء الاصطناعي أن {name} مادة غذائية مستقلة.",
-      "unsure": "ما زال الذكاء الاصطناعي غير متأكد مما هو {name}.",
-      "notFlagged": "{name} غير معلَّم.",
-      "skippedNotFlagged": "لم يعد {name} معلَّمًا.",
-      "skippedForbidden": "لا يحق لك تعديل {name}.",
-      "skippedNotFound": "كان {name} قد أُزيل عندما وصل إليه الذكاء الاصطناعي.",
-      "failed": "فشل السؤال عن {name}.",
-      "merge": "يقترح الذكاء الاصطناعي دمج {name} في {into}."
-    },
-    "aiTrace": {
-      "readAs": "قرأه الذكاء الاصطناعي على أنه «{name}».",
-      "compared": "قورن مع: {names}.",
-      "comparedNothing": "لم تكن هناك مادة غذائية معروفة للمقارنة بها.",
-      "fromWords": "بناءً على الاسم.",
-      "noFood": "لم يجد الذكاء الاصطناعي مادة غذائية في هذا الاسم."
-    },
     "addAlias": "إضافة ترجمة",
     "removeAlias": "إزالة {alias}",
     "mergeInto": "دمج في…",
@@ -491,7 +476,8 @@
         "name": "{food} · {dataset}، مطابقة حسب الاسم",
         "householdFood": "{food} · {dataset}، اختيار منزلك",
         "household": "أرقام منزلك الخاصة",
-        "taxonomy": "Open Food Facts"
+        "taxonomy": "Open Food Facts",
+        "ai": "قدّرها الذكاء الاصطناعي"
       },
       "correct": "تصحيح",
       "correctTitle": "تصحيح {name}",
@@ -550,8 +536,6 @@
       "name-taken": "يوجد مكوّن آخر بهذا الاسم",
       "spelling-taken": "هذه الترجمة تابعة لمكوّن آخر",
       "last-alias": "يجب أن يحتفظ المكوّن بترجمة واحدة على الأقل",
-      "alias-in-use": "ما زالت وصفات أو مشتريات تستخدم هذه الترجمة",
-      "ingredient-in-use": "ما زالت وصفات أو مشتريات أو المونة تستخدم هذا المكوّن",
       "same-ingredient": "لا يمكن دمج المكوّن في نفسه",
       "cycle": "لا يمكن أن يكون المكوّن نوعًا من نفسه",
       "empty": "أدخل اسمًا",
@@ -569,51 +553,34 @@
       "none": "لم يعد مستخدمًا في أي مكان"
     },
     "keepAlias": "الإبقاء على {alias}",
-    "reportOutcomes": {
-      "parent": "صُنّف تحت أصل",
-      "distinct": "مادة مستقلة",
-      "unsure": "غير متأكد",
-      "skipped": "تم تخطيه",
-      "failed": "فشل",
-      "merge": "دمج"
-    },
+    "junkTitle": "هل تريد تمييز {alias} على أنه ليس مادة غذائية؟",
+    "junkBody": "لا يحمل أي مكوّن آخر هذه الترجمة. تتخطى الوصفات الجديدة النص المميّز على أنه ليس مادة غذائية.",
+    "junkRemove": "إزالة فقط",
+    "junkMark": "ليس مادة غذائية",
     "expandKinds": "عرض أنواع {name}",
     "collapseKinds": "إخفاء أنواع {name}",
     "layoutSection": "العرض",
     "asTree": "عرض هرمي",
     "showOnly": "عرض فقط",
     "standaloneOnly": "بلا أصل أو أنواع",
-    "findParent": "إيجاد الأصل بالذكاء الاصطناعي",
-    "findParentsAll": "إيجاد الأصول بالذكاء الاصطناعي",
-    "suggestion": {
-      "merge": "دمج {name} في {into}",
-      "parent": "تصنيف {name} تحت {of}",
-      "distinct": "إبقاء {name} مادة مستقلة",
-      "filedFromName": "صُنّف {name} تحت {of}",
-      "rename": "إعادة تسمية {name} إلى {to}"
-    },
-    "suggestionsTitle": "الاقتراحات",
-    "suggestionsEmpty": "لا يوجد ما ينتظرك.",
-    "suggestionsNone": "لا يوجد اقتراح",
-    "suggestionsOpen": "{count, plural, =0 {الاقتراحات} one {اقتراح واحد} two {اقتراحان} few {# اقتراحات} many {# اقتراحًا} other {# اقتراح}}",
-    "suggestionsFailed": "{count, plural, one {تعذّر تطبيق اقتراح واحد} two {تعذّر تطبيق اقتراحين} few {تعذّر تطبيق # اقتراحات} many {تعذّر تطبيق # اقتراحًا} other {تعذّر تطبيق # اقتراح}}: {reason}",
-    "confirmSuggestion": "تأكيد",
-    "dismissSuggestion": "تجاهل",
-    "confirmAll": "تأكيد الكل ({count})",
-    "dismissAll": "تجاهل الكل",
-    "suggestedByAI": "اقتراح الذكاء الاصطناعي",
-    "suggestedFromName": "بناءً على الاسم",
-    "proposal": {
-      "merge": "دمج في {into}",
-      "parent": "تصنيف تحت {of}",
-      "distinct": "مادة مستقلة",
-      "rename": "إعادة تسمية إلى {to}"
-    },
-    "skippedReasons": {
-      "notFlagged": "لم يعد معلَّمًا",
-      "forbidden": "لا يحق لك تعديله",
-      "notFound": "لم يعد موجودًا",
-      "settled": "الاسم محسوم مسبقًا، أو هناك اقتراح بالانتظار"
+    "changedByAI": {
+      "title": "تغييرات الذكاء الاصطناعي",
+      "open": "{count, plural, =0 {تغييرات الذكاء الاصطناعي} other {تغييرات الذكاء الاصطناعي · # للمراجعة}}",
+      "unsure": "غير متأكد",
+      "sure": "تم التغيير",
+      "empty": "لم يغيّر الذكاء الاصطناعي شيئًا خلال الشهر الماضي.",
+      "keep": "إبقاء",
+      "undo": "تراجع",
+      "keepAll": "إبقاء الكل",
+      "undoAll": "التراجع عن الكل",
+      "clear": "مسح",
+      "merge": "دُمج {from} فيه",
+      "parent": "صُنّف تحت {of}",
+      "parentDropped": "لم يعد تحت {of}",
+      "plainName": "أُعيدت تسميته من {from}",
+      "notAFood": "حُذف لأنه ليس مادة غذائية. تحتفظ أسطر الوصفات والمشتريات بنصها.",
+      "spellingRemoved": "أُزيلت الترجمة {from}",
+      "spellingMoved": "نُقلت الترجمة {from} إلى {of}"
     },
     "icon": {
       "change": "تغيير الأيقونة",
@@ -622,20 +589,6 @@
       "failed": "تعذّر تحويل هذه الصورة إلى أيقونة.",
       "generate": "إنشاء بالذكاء الاصطناعي",
       "generateFailed": "تعذّر إنشاء الأيقونة."
-    },
-    "drawIcons": {
-      "open": "رسم الأيقونات",
-      "title": "رسم الأيقونات",
-      "intro": "يرسم مزوّد الصور أيقونة لكل مادة غذائية، وتصبح أيقونتها فورًا. يمكنك منح المادة أيقونة أخرى من لوحتها.",
-      "scopeLabel": "أي المواد",
-      "scopes": {
-        "bare": "المواد التي لا أيقونة لها إطلاقًا",
-        "unowned": "كل مادة ليست لها أيقونة خاصة"
-      },
-      "scopeSize": "{count, plural, =0 {لا توجد أيقونات} one {أيقونة واحدة} two {أيقونتان} few {# أيقونات} many {# أيقونة} other {# أيقونة}}",
-      "start": "رسم الأيقونات",
-      "progress": "جارٍ رسم الأيقونات · {done, number} من {total, number}",
-      "drawing": "جارٍ رسم الأيقونة…"
     }
   },
   "admin": {
@@ -927,6 +880,58 @@
         "aiDisabled": "الذكاء الاصطناعي معطّل على هذا الخادم. فعّله أولًا.",
         "error": "تعذّر بدء الإثراء الجماعي",
         "imageCount": "{count, plural, =0 {لن تُنشئ الجولة أي صورة.} one {ستُنشئ الجولة صورة واحدة.} two {ستُنشئ الجولة صورتين.} few {ستُنشئ الجولة # صور.} many {ستُنشئ الجولة # صورة.} other {ستُنشئ الجولة # صورة.}}"
+      },
+      "ingredientCatalogue": {
+        "title": "كتالوج المكوّنات",
+        "subtitle": "ما يفعله الذكاء الاصطناعي بالمكوّنات الجديدة",
+        "automatic": "تلقائيًا للمكوّنات الجديدة",
+        "automaticDescription": "ما يفعله الذكاء الاصطناعي عند إضافة مكوّن إلى الكتالوج.",
+        "automaticPlaceholder": "لا شيء يعمل تلقائيًا",
+        "kinds": {
+          "cleanUp": "تنظيف المكوّنات الجديدة",
+          "cleanUpDescription": "دمج طرق الكتابة، وتحديد الأصل والاسم البسيط، وإزالة ما ليس مادة غذائية",
+          "nutrition": "إكمال القيم الغذائية الناقصة",
+          "nutritionDescription": "تقدير المغذيات الكبرى لكل 100 غ حيث لا توجد للمكوّن",
+          "conversions": "إكمال التحويلات الناقصة",
+          "conversionsDescription": "تقدير الكثافة ووزن الحبة حيث لا توجد للمكوّن",
+          "icon": "رسم الأيقونات الناقصة",
+          "iconDescription": "فقط للمكوّن الذي لا أيقونة تُعرض له، ولا حتى أيقونة أصله"
+        },
+        "cleanUpCatalogue": {
+          "title": "تنظيف الكتالوج",
+          "description": "اسأل الذكاء الاصطناعي عن المكوّنات الموجودة في الكتالوج.",
+          "running": "عملية تنظيف قيد التشغيل. تابعها في قائمة المهام.",
+          "button": "تنظيف الكتالوج",
+          "intro": "يدمج الذكاء الاصطناعي طرق الكتابة، ويحدد الأصول والأسماء البسيطة، ويزيل ما ليس مادة غذائية. يظهر كل تغيير في «تغييرات الذكاء الاصطناعي» مع إمكانية التراجع.",
+          "scopeLabel": "أي المكوّنات",
+          "scopes": {
+            "recipe-foods": "مواد الوصفات",
+            "recipe-foods-description": "مكوّنات جلبتها الوصفات ولم يقرر أحد بشأنها",
+            "whole-catalogue": "الكتالوج كاملًا",
+            "whole-catalogue-description": "كل المكوّنات، بما فيها المضمّنة، متجاوزًا ما قرره الأشخاص أو تراجعوا عنه. لا تُزال المكوّنات المضمّنة أبدًا."
+          },
+          "count": "{count, plural, zero {لن يسأل الذكاء الاصطناعي عن أي مكوّن.} one {سيسأل الذكاء الاصطناعي عن مكوّن واحد.} two {سيسأل الذكاء الاصطناعي عن مكوّنين.} few {سيسأل الذكاء الاصطناعي عن # مكوّنات.} many {سيسأل الذكاء الاصطناعي عن # مكوّنًا.} other {سيسأل الذكاء الاصطناعي عن # مكوّن.}}",
+          "start": "تنظيف",
+          "started": "{count, plural, zero {لا يوجد ما يُنظَّف} one {جارٍ تنظيف مكوّن واحد} two {جارٍ تنظيف مكوّنين} few {جارٍ تنظيف # مكوّنات} many {جارٍ تنظيف # مكوّنًا} other {جارٍ تنظيف # مكوّن}}",
+          "error": "تعذّر بدء التنظيف"
+        },
+        "fillGaps": {
+          "title": "إكمال النواقص",
+          "description": "دع الذكاء الاصطناعي يكمل ما ينقص المكوّنات.",
+          "running": "إكمال النواقص قيد التشغيل. تابعه في قائمة المهام.",
+          "button": "إكمال النواقص",
+          "intro": "لكل مكوّن في الكتالوج، يكمل الذكاء الاصطناعي فقط ما ليس لدى المكوّن شيء منه. لا يُستبدل أبدًا ما لدى المكوّن أصلًا.",
+          "kindsLabel": "ما يجب إكماله",
+          "kinds": {
+            "nutrition": "القيم الغذائية",
+            "conversions": "التحويلات",
+            "icons": "الأيقونات"
+          },
+          "count": "{count, plural, =0 {لا يوجد ما يُكمَل} one {مكوّن واحد} two {مكوّنان} few {# مكوّنات} many {# مكوّنًا} other {# مكوّن}}",
+          "start": "إكمال النواقص",
+          "started": "جارٍ إكمال النواقص. تابعه في قائمة المهام.",
+          "error": "تعذّر بدء إكمال النواقص"
+        }
       }
     },
     "aiConfig": {
@@ -983,14 +988,6 @@
         "imageGeneration": "إنشاء الصور",
         "imageGenerationDescription": "رسم صورة للطبق للوصفات الجديدة التي ليست لها أي صورة"
       },
-      "automaticIngredients": "تلقائيًا للمكوّنات الجديدة",
-      "automaticIngredientsDescription": "ما يحدث عند إضافة مكوّنات جديدة إلى الكتالوج.",
-      "automaticIngredientsKinds": {
-        "plainName": "تنظيف الاسم",
-        "plainNameDescription": "إزالة ما ليس جزءًا من اسم المادة، مثل الكميات ورموز العبوات",
-        "icon": "رسم أيقونة",
-        "iconDescription": "فقط للمادة التي لا أيقونة تُعرض لها، ولا حتى أيقونة أصلها"
-      },
       "tagStrategy": "طريقة الوسوم",
       "tagStrategyDescription": "الوسوم المسموح للوسم التلقائي باستخدامها، سواء عمل تلقائيًا أو يدويًا",
       "tagStrategies": {
@@ -1029,11 +1026,11 @@
       "transcription": "التفريغ النصي",
       "transcriptionDescription": "تحويل صوت الفيديو إلى نص لاستخراج الوصفة",
       "transcriptionProvider": "مزوّد التفريغ النصي",
-      "transcriptionProviderDescription": "تدعم OpenAI ونقاط الوصول المتوافقة مع OpenAI فقط التفريغ عبر Whisper",
       "transcriptionProviders": {
         "disabled": "معطّل",
         "openai": "OpenAI Whisper",
         "groq": "Groq Whisper",
+        "mistral": "Mistral Voxtral",
         "azure": "Azure OpenAI Whisper",
         "ollama": "Ollama",
         "genericOpenai": "متوافق مع OpenAI (عام)"
@@ -1041,7 +1038,7 @@
       "transcriptionEndpoint": "رابط نقطة الوصول (Endpoint)",
       "transcriptionEndpointDescription": "نقطة وصول متوافقة مع OpenAI تدعم Whisper، أو نقطة وصول Ollama",
       "transcriptionModel": "النموذج",
-      "transcriptionModelDescription": "نموذج Whisper المستخدم للتفريغ النصي",
+      "transcriptionModelDescription": "النموذج المستخدم للتفريغ النصي",
       "transcriptionModelPlaceholder": "اختر اسم النموذج أو أدخله",
       "transcriptionApiKey": "مفتاح API",
       "transcriptionApiKeyDescription": "يُستخدم مفتاح API من إعدادات الذكاء الاصطناعي إن لم يُحدَّد",
@@ -1049,6 +1046,27 @@
       "transcriptionApiKeyOptional": "مفتاح API (اختياري)",
       "transcriptionApiKeyOptionalDescription": "معظم خوادم Whisper المحلية لا تتطلب مفتاح API",
       "transcriptionApiKeyOptionalPlaceholder": "اتركه فارغًا للخوادم المحلية"
+    },
+    "pageRenderers": {
+      "title": "عارضات الصفحات",
+      "description": "متصفحات تقرأ الصفحات التي لا يقرؤها الجلب العادي. يُجرَّب Obscura أولًا، ثم متصفح Chromium، ثم أداة تجاوز الحماية.",
+      "obscura": "Obscura",
+      "obscuraDescription": "المتصفح بلا واجهة الذي يأتي مع Norish.",
+      "obscuraEndpoint": "نقطة وصول Obscura",
+      "cdpToken": "رمز CDP",
+      "cdpTokenDescription": "الرمز نفسه المستخدم في خدمة obscura.",
+      "chromium": "متصفح Chromium",
+      "chromiumDescription": "أي Chromium له نقطة وصول CDP.",
+      "chromiumEndpoint": "نقطة وصول Chromium",
+      "solver": "FlareSolverr أو Byparr",
+      "solverDescription": "يُجرَّب عندما تفشل المتصفحات. لا يتلقى أبدًا رموز المصادقة للمواقع.",
+      "solverEndpoint": "نقطة وصول أداة تجاوز الحماية",
+      "allowPrivateAddresses": "السماح بالعناوين الخاصة",
+      "allowPrivateAddressesDescription": "السماح لعمليات الاستيراد بالوصول إلى شبكتك المحلية. يرفض Obscura هذه العناوين في كل الأحوال.",
+      "navigationTimeout": "مهلة التنقل (ms)",
+      "navigationTimeoutDescription": "المدة الممنوحة للعارض لتحميل صفحة.",
+      "saved": "تم حفظ عارضات الصفحات",
+      "error": "تعذّر حفظ عارضات الصفحات"
     },
     "imageGenerationConfig": {
       "description": "تحتاج الصور إلى مزوّد خاص بها، لأن معظم مزوّدي الذكاء الاصطناعي لا يستطيعون الرسم.",
@@ -1103,8 +1121,7 @@
         "validateEnrichmentsDescription": "فحص نتائج كل عملية إثراء قبل حفظها"
       },
       "testConnection": "اختبار الاتصال",
-      "connectionSuccess": "نجح الاتصال",
-      "aiDisabledHint": "الذكاء الاصطناعي معطّل على هذا الخادم. فعّله من إعدادات الذكاء الاصطناعي لاختبار نموذج القرار واستخدامه."
+      "connectionSuccess": "نجح الاتصال"
     },
     "promptsConfig": {
       "recipeExtraction": "تعليمات استخراج الوصفة",
@@ -1135,8 +1152,11 @@
       "ingredientLinkingDescription": "تُستخدم عند ربط كل خطوة بأسطر المكوّنات التي تستخدمها",
       "ingredientLinkingPlaceholder": "تعليمات ربط المكوّنات بالخطوات...",
       "ingredientResolution": "تعليمات تحديد المكوّنات",
-      "ingredientResolutionDescription": "تُستخدم عند تحديد ما إذا كان اسم المكوّن الجديد مادة غذائية يعرفها Norish",
+      "ingredientResolutionDescription": "تُرسل إلى النموذج اللغوي عندما يقرأ الذكاء الاصطناعي اسم مكوّن جديد، ويُضاف بعدها الاسم والأصل المصنّف تحته. تحدد إن كان مادة غذائية واحدة أو عدة مواد أو ليس مادة غذائية.",
       "ingredientResolutionPlaceholder": "تعليمات التعرّف على أسماء المكوّنات...",
+      "ingredientMatch": "تعليمات مطابقة المكوّنات",
+      "ingredientMatchDescription": "تُرسل إلى النموذج اللغوي عندما تجد أسماء الذكاء الاصطناعي عدة مواد غذائية في الكتالوج، أو مواد لا يفرق بينها في الكتابة إلا حرف واحد، ويُضاف بعدها الاسم وتلك المواد. تحدد أيها هو الاسم، إن وُجد.",
+      "ingredientMatchPlaceholder": "تعليمات مطابقة أسماء المكوّنات بمواد الكتالوج...",
       "imageGenerationBrief": "تعليمات وصف الصورة",
       "imageGenerationBriefDescription": "تُستخدم لتحويل الوصفة إلى وصف بصري قصير قبل إنشاء صورتها. تُضاف الوصفة بعد التعليمات.",
       "imageGenerationBriefPlaceholder": "تعليمات كتابة الوصف البصري...",
@@ -1148,7 +1168,13 @@
       "ingredientIconStylePlaceholder": "تعليمات أسلوب أيقونات المكوّنات...",
       "ingredientPlainName": "تعليمات تنظيف أسماء المكوّنات",
       "ingredientPlainNameDescription": "تُرسل إلى النموذج اللغوي عندما ينظّف الذكاء الاصطناعي اسم مكوّن، ويُضاف بعدها الاسم وطرق كتابته الأخرى. تحدد ما يُزال من الاسم وما يُبقى عليه.",
-      "ingredientPlainNamePlaceholder": "تعليمات تنظيف أسماء المكوّنات..."
+      "ingredientPlainNamePlaceholder": "تعليمات تنظيف أسماء المكوّنات...",
+      "ingredientSpellingCheck": "تعليمات فحص ترجمات المكوّنات",
+      "ingredientSpellingCheckDescription": "تُرسل إلى النموذج اللغوي عند تنظيف الكتالوج كاملًا، لكل مكوّن في الكتالوج له ترجمات أضافها أشخاص أو عمليات استيراد أو دمج، ويُضاف بعدها المكوّن وتلك الترجمات وسطر وصفة يستخدم كلًّا منها. تحدد أيها يسمّي المكوّن، وأيها لا يسمّي مادة غذائية، وأيها يسمّي مادة أخرى.",
+      "ingredientSpellingCheckPlaceholder": "تعليمات فحص ترجمات المكوّنات...",
+      "ingredientNutrition": "تعليمات القيم الغذائية للمكوّنات",
+      "ingredientNutritionDescription": "تُرسل إلى النموذج اللغوي لمكوّن تنقصه القيم الغذائية أو الكثافة أو وزن الحبة، حيث يُسمح للذكاء الاصطناعي بإكمالها، ويُضاف بعدها المكوّن وما هو نوع منه. تقدّر فقط ما ينقص المكوّن.",
+      "ingredientNutritionPlaceholder": "تعليمات تقدير القيم الغذائية لمكوّن..."
     },
     "unsavedChanges": "تغييرات غير محفوظة",
     "jsonEditor": {
@@ -1171,7 +1197,7 @@
         "delayed": "مؤجلة",
         "completed": "مكتملة",
         "failed": "فاشلة",
-        "paused": "متوقفة مؤقتًا",
+        "cancelled": "ملغاة",
         "prioritized": "ذات أولوية",
         "unknown": "غير معروفة",
         "hanging": "عالقة"
@@ -1202,6 +1228,7 @@
         "saving-link": "حفظ الرابط",
         "asking-ai": "سؤال الذكاء الاصطناعي عن المادة",
         "drawing-icon": "رسم أيقونة المادة",
+        "filling-gaps": "إكمال نواقص المادة",
         "naming": "تنظيف اسم المادة"
       },
       "queues": {
@@ -1220,7 +1247,7 @@
         "store-lookup": "البحث في المتاجر",
         "ingredient-review": "سؤال الذكاء الاصطناعي عن المكوّنات",
         "ingredient-icons": "رسم أيقونات المكوّنات",
-        "new-ingredients": "مكوّنات جديدة"
+        "ingredient-fill": "إكمال نواقص المكوّنات"
       },
       "summary": {
         "failed": "{count} فاشلة"
@@ -1236,6 +1263,7 @@
       "detail": {
         "title": "تفاصيل المهمة",
         "notFound": "المهمة غير موجودة. ربما تم تنظيفها.",
+        "cancelledNote": "ألغى مسؤول هذه المهمة.",
         "sections": {
           "error": "الخطأ",
           "pipelineSteps": "خطوات المعالجة",
@@ -1264,6 +1292,8 @@
       },
       "actions": {
         "retry": "إعادة المحاولة",
+        "cancel": "إلغاء المهمة",
+        "cancelling": "جارٍ الإلغاء…",
         "remove": "إزالة"
       },
       "removeModal": {

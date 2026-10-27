@@ -58,6 +58,8 @@
     "searchTags": "البحث في الوسوم",
     "favoritesAndRating": "المفضلة والتقييم",
     "favorites": "المفضلة",
+    "pantry": "المونة",
+    "pantryOnly": "المكوّنات المتوفرة في المنزل",
     "cookingTime": "وقت الطبخ",
     "cookingTimeUnder15": "<15 دقيقة",
     "cookingTimeUnder30": "<30 دقيقة",
@@ -112,6 +114,11 @@
     "message": "إنها تتشمّم المكان لتعرف إلى أين كنت تريد الذهاب.",
     "imageAlt": "نورا تبدو محتارة"
   },
+  "errorPage": {
+    "title": "حدث خطأ ما.",
+    "message": "واجه Norish خطأً في هذه الصفحة.",
+    "retry": "حاول مجددًا"
+  },
   "import": {
     "url": {
       "title": "استيراد وصفة",
@@ -139,7 +146,7 @@
       "title": "استيراد من صورة",
       "dropzone": "أفلت الصور هنا أو انقر للاختيار",
       "paste": "للصق",
-      "formats": "يدعم JPG وPNG وWebP. الحد الأقصى 10MB لكل ملف.",
+      "formats": "يدعم JPG وPNG وWebP وPDF. الحد الأقصى 10MB لكل ملف.",
       "invalidType": "نوع ملف غير صالح",
       "notSupported": "{name} ليس بصيغة صورة مدعومة",
       "tooLarge": "الملف كبير جدًا",
@@ -178,12 +185,15 @@
     "daily": "يوميًا",
     "weekly": "أسبوعيًا",
     "monthly": "شهريًا",
+    "yearly": "سنويًا",
     "day": "يوم",
     "days": "أيام",
     "week": "أسبوع",
     "weeks": "أسابيع",
     "month": "شهر",
     "months": "أشهر",
+    "year": "سنة",
+    "years": "سنوات",
     "next": "التالي:",
     "every": "كل",
     "everyOther": "كل ثاني",
