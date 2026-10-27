@@ -117,8 +117,8 @@ const groups: Group[] = [
         body: "Any OIDC provider such as Authentik, Pocket ID, GitHub, Google, or plain email and password.",
       },
       {
-        title: "Fifteen languages",
-        body: "English, Nederlands, Deutsch, Français, Español, Italiano, Português, Polski, Dansk, Norsk, Suomi, Русский, Українська, Български and 한국어, translated by the community.",
+        title: "Seventeen languages",
+        body: "English, Nederlands, Deutsch, Français, Español, Italiano, Português, Polski, Dansk, Norsk, Svenska, Suomi, Русский, Українська, Български, العربية and 한국어, translated by the community.",
       },
       {
         title: "Installs like an app",
