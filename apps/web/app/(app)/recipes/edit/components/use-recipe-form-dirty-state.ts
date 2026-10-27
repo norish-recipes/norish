@@ -17,7 +17,7 @@ interface RecipeFormState {
   description: string;
   notes: string;
   url: string;
-  servings: number;
+  servings: number | null;
   prepMinutes: number | null;
   cookMinutes: number | null;
   totalMinutes: number | null;

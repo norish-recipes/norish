@@ -58,7 +58,8 @@ export default function RecipeForm({ mode, initialData }: RecipeFormProps) {
   const [description, setDescription] = useState(initialData?.description ?? "");
   const [notes, setNotes] = useState(initialData?.notes ?? "");
   const [url, setUrl] = useState(initialData?.url ?? "");
-  const [servings, setServings] = useState(initialData?.servings ?? 1);
+  // Null while the field is empty, so a count can be cleared and retyped.
+  const [servings, setServings] = useState<number | null>(initialData?.servings ?? 1);
   const [prepMinutes, setPrepMinutes] = useState<number | null>(initialData?.prepMinutes ?? null);
   const [cookMinutes, setCookMinutes] = useState<number | null>(initialData?.cookMinutes ?? null);
   const [totalMinutes, setTotalMinutes] = useState<number | null>(
@@ -270,14 +271,14 @@ export default function RecipeForm({ mode, initialData }: RecipeFormProps) {
     if (steps.length === 0) {
       newErrors.steps = tValidation("stepsRequired");
     }
-    if (servings < 1) {
+    if (servings === null || servings < 1) {
       newErrors.servings = tValidation("servingsMin");
     }
     setErrors(newErrors);
     return Object.keys(newErrors).length === 0;
   }, [name, ingredients, steps, servings, tValidation]);
   const handleSubmit = useCallback(() => {
-    if (!validate()) return;
+    if (!validate() || servings === null) return;
     setIsSubmitting(true);
     setErrors({});
     // Extract images from unified media state, preserving their order
@@ -652,8 +653,8 @@ export default function RecipeForm({ mode, initialData }: RecipeFormProps) {
                 className="w-full"
                 isInvalid={!!errors.servings}
                 type="number"
-                value={servings.toString()}
-                onChange={(value) => setServings(parseInt(value, 10) || 1)}
+                value={servings?.toString() ?? ""}
+                onChange={(value) => setServings(parseInt(value, 10) || null)}
               >
                 <Label>{t("servings")}</Label>
                 <Input min={1} placeholder="1" />
