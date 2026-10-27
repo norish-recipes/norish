@@ -540,7 +540,7 @@ describe("the ingredient catalogue seed", () => {
     it("puts its texts on the pile once per version, never again one a person took off", async () => {
       const outcome = await seedJunkPileOnce();
 
-      expect(outcome).toEqual({ added: 234 });
+      expect(outcome).toEqual({ added: 255 });
       expect((await listJunkFolds()).sort()).toEqual(
         JUNK_SEED.map((entry) => ingredientAliasFold(entry.text)).sort()
       );

@@ -40,6 +40,7 @@ export const JUNK_SEED_CONCEPTS: Readonly<
       fi: "ainekset",
       uk: "інгредієнти",
       sv: "ingredienser",
+      ar: ["المكونات", "مكونات"],
     },
   },
   "to taste": {
@@ -63,6 +64,7 @@ export const JUNK_SEED_CONCEPTS: Readonly<
       fi: "maun mukaan",
       uk: "за смаком",
       sv: "efter smak",
+      ar: ["حسب الرغبة", "حسب الذوق"],
     },
   },
   optional: {
@@ -86,6 +88,7 @@ export const JUNK_SEED_CONCEPTS: Readonly<
       fi: "valinnainen",
       uk: "за бажанням",
       sv: "valfritt",
+      ar: "اختياري",
     },
   },
   boneless: {
@@ -109,6 +112,7 @@ export const JUNK_SEED_CONCEPTS: Readonly<
       fi: "luuton",
       uk: "без кісток",
       sv: "benfri",
+      ar: ["بدون عظم", "منزوع العظم"],
     },
   },
   skinless: {
@@ -132,6 +136,7 @@ export const JUNK_SEED_CONCEPTS: Readonly<
       fi: "nahaton",
       uk: "без шкіри",
       sv: "utan skinn",
+      ar: ["بدون جلد", "منزوع الجلد"],
     },
   },
   // Dutch "gehakt" is minced meat, so chopped is "fijngehakt" there.
@@ -156,6 +161,7 @@ export const JUNK_SEED_CONCEPTS: Readonly<
       fi: "hienonnettu",
       uk: "нарізаний",
       sv: "hackad",
+      ar: "مفروم",
     },
   },
   "roughly chopped": {
@@ -179,6 +185,7 @@ export const JUNK_SEED_CONCEPTS: Readonly<
       fi: "karkeasti hienonnettu",
       uk: "крупно нарізаний",
       sv: ["grovhackad", "grovt hackad"],
+      ar: "مفروم خشن",
     },
   },
   melted: {
@@ -202,6 +209,7 @@ export const JUNK_SEED_CONCEPTS: Readonly<
       fi: "sulatettu",
       uk: "розтоплений",
       sv: "smält",
+      ar: "مذاب",
     },
   },
   overnight: {
@@ -225,6 +233,7 @@ export const JUNK_SEED_CONCEPTS: Readonly<
       fi: "yön yli",
       uk: "на ніч",
       sv: "över natten",
+      ar: "طوال الليل",
     },
   },
   "baking dish": {
@@ -248,6 +257,7 @@ export const JUNK_SEED_CONCEPTS: Readonly<
       fi: "uunivuoka",
       uk: "форма для запікання",
       sv: "ugnsform",
+      ar: "صينية فرن",
     },
   },
   "cake tin": {
@@ -271,6 +281,7 @@ export const JUNK_SEED_CONCEPTS: Readonly<
       fi: "kakkuvuoka",
       uk: "форма для кексу",
       sv: "kakform",
+      ar: "قالب كيك",
     },
   },
   "springform pan": {
@@ -294,6 +305,7 @@ export const JUNK_SEED_CONCEPTS: Readonly<
       fi: "irtopohjavuoka",
       uk: "рознімна форма",
       sv: "springform",
+      ar: "قالب قابل للفك",
     },
   },
   "food processor": {
@@ -317,6 +329,7 @@ export const JUNK_SEED_CONCEPTS: Readonly<
       fi: "monitoimikone",
       uk: "кухонний комбайн",
       sv: "matberedare",
+      ar: "محضرة طعام",
     },
   },
   "rolling pin": {
@@ -340,6 +353,7 @@ export const JUNK_SEED_CONCEPTS: Readonly<
       fi: "kaulin",
       uk: "качалка",
       sv: "kavel",
+      ar: ["شوبك", "نشابة"],
     },
   },
   // A recipe's open choice ("toppings as desired"), no food until someone picks one.
@@ -364,6 +378,7 @@ export const JUNK_SEED_CONCEPTS: Readonly<
       fi: "täytteet",
       uk: "топінги",
       sv: "toppingar",
+      ar: ["إضافات", "توبينغ"],
     },
   },
 };
