@@ -362,7 +362,9 @@ function parseWithLocale(
     }
   }
 
-  const rule = ruleOf(unitStr, units);
+  // "every day on friday" ("كل يوم جمعة") is that weekday each week.
+  const unitRule = ruleOf(unitStr, units);
+  const rule = weekdayStr && unitRule === "day" ? "week" : unitRule;
 
   // Determine weekday (if specified)
   let weekday: number | undefined;

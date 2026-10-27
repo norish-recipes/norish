@@ -81,6 +81,13 @@ describe("recurrence/parser Germanic locales", () => {
     expect(result.cleanText).toBe("Gym");
   });
 
+  it("reads a day on a weekday as that weekday each week", () => {
+    const result = parseRecurrence("Bread every day on friday", config);
+
+    expect(result.recurrence).toEqual({ rule: "week", interval: 1, weekday: 5 });
+    expect(result.cleanText).toBe("Bread");
+  });
+
   it("parses Dutch weekly recurrence with weekday", () => {
     const result = parseRecurrence("Sport elke week op dinsdag", config);
 
