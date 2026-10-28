@@ -40,12 +40,12 @@ export default function NoHouseholdView() {
           icon={HomeIcon}
           title={t("create.title")}
         >
-          <form className="flex flex-col gap-4" onSubmit={handleCreateHousehold}>
+          <form className="flex flex-1 flex-col gap-4" onSubmit={handleCreateHousehold}>
             <TextField isRequired value={householdName} onChange={setHouseholdName}>
               <Label>{t("create.nameLabel")}</Label>
               <Input variant="secondary" placeholder={t("create.namePlaceholder")} />
             </TextField>
-            <ActionButtonGroup>
+            <ActionButtonGroup className="mt-auto">
               <ActionButton action="create" isPending={isCreating} type="submit">
                 {t("create.submitButton")}
               </ActionButton>
@@ -59,7 +59,7 @@ export default function NoHouseholdView() {
           icon={UserGroupIcon}
           title={t("join.title")}
         >
-          <form className="flex flex-col gap-4" onSubmit={handleJoinHousehold}>
+          <form className="flex flex-1 flex-col gap-4" onSubmit={handleJoinHousehold}>
             <div className="flex flex-col gap-2">
               <Label>{t("join.codeLabel")}</Label>
               <InputOTP
@@ -86,7 +86,7 @@ export default function NoHouseholdView() {
                 </InputOTP.Group>
               </InputOTP>
             </div>
-            <ActionButtonGroup>
+            <ActionButtonGroup className="mt-auto">
               <ActionButton
                 action="apply"
                 icon={ArrowRightEndOnRectangleIcon}
