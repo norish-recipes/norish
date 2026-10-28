@@ -327,8 +327,7 @@
       "breakfastTime": "Heure du petit-déjeuner",
       "lunchTime": "Heure du déjeuner",
       "dinnerTime": "Heure du dîner",
-      "snackTime": "Heure de la collation",
-      "testConnection": "Tester la connexion"
+      "snackTime": "Heure de la collation"
     },
     "config": {
       "title": "Configuration CalDAV",
@@ -723,7 +722,7 @@
       "warning1": "Toutes les connexions actives seront interrompues",
       "warning2": "Le serveur sera indisponible quelques secondes",
       "warning3": "Assurez-vous que votre déploiement inclut <code>restart: always</code>, sinon il ne redémarrera pas automatiquement",
-      "confirmButton": "Redémarrer maintenant"
+      "confirmButton": "Redémarrer"
     },
     "authProviders": {
       "title": "Fournisseurs d’authentification",
@@ -864,15 +863,15 @@
         "title": "Enrichissement en masse",
         "subtitle": "Exécuter l'enrichissement activé sur toutes les recettes",
         "description": "Mettre en file d'attente tous les enrichissements activés",
-        "button": "Enrichir toutes les recettes",
+        "button": "Enrichir",
         "confirmTitle": "Exécuter l'enrichissement sur toutes les recettes ?",
         "confirmMessage": "Ceci met en file d'attente du travail d'IA pour chaque recette de ce serveur. Chaque type d'enrichissement dont l'interrupteur automatique est activé s'exécute là où des données manquent.",
         "replaceExisting": "Écraser les données existantes",
         "replaceExistingDescription": "Refaire les catégories, la nutrition, la provenance et les ingrédients des étapes même lorsqu'une recette les possède déjà. Les tags et les indications d'allergie ne sont jamais qu'ajoutés.",
         "replaceWarning": "Cette action est irréversible. Les données que vous avez saisies vous-même sont également remplacées, y compris les ingrédients d'étapes liés à la main : rien n'indique quelles valeurs viennent de l'IA.",
         "costWarning": "Cette opération peut être coûteuse : avec beaucoup de recettes, elle peut prendre longtemps et, avec un fournisseur d'IA payant, consommer une quantité importante de crédits.",
-        "confirmButton": "Exécuter sur toutes les recettes",
-        "confirmButtonReplace": "Écraser toutes les recettes",
+        "confirmButton": "Exécuter",
+        "confirmButtonReplace": "Écraser",
         "queued": "{queued, plural, =0 {Aucune exécution en file d'attente} one {# exécution en file d'attente} other {# exécutions en file d'attente}} pour {recipes, plural, one {# recette} other {# recettes}}",
         "aiDisabled": "L'IA est désactivée sur ce serveur. Activez d'abord l'IA.",
         "error": "Échec du démarrage de l'enrichissement en masse",
@@ -964,7 +963,6 @@
       "alwaysUseAI": "Toujours utiliser l’import IA",
       "alwaysUseAIDescription": "Ignore les parseurs structurés et utilise uniquement l’IA",
       "connectionSuccess": "Connexion réussie",
-      "testConnection": "Tester la connexion",
       "vision": "vision",
       "automaticEnrichment": "Enrichissement automatique des recettes",
       "automaticEnrichmentDescription": "Les enrichissements IA exécutés sur les nouvelles recettes. Les membres peuvent toujours lancer chacun manuellement.",
@@ -1064,7 +1062,6 @@
       "navigationTimeoutDescription": "Le temps accordé à un moteur de rendu pour charger une page.",
       "saved": "Moteurs de rendu de pages enregistrés",
       "error": "Échec de l'enregistrement des moteurs de rendu de pages",
-      "testConnection": "Tester la connexion",
       "connectionSuccess": "Connexion réussie"
     },
     "imageGenerationConfig": {
@@ -1119,7 +1116,6 @@
         "validateEnrichments": "Valider les enrichissements",
         "validateEnrichmentsDescription": "Vérifier les affirmations de chaque enrichissement avant leur enregistrement"
       },
-      "testConnection": "Tester la connexion",
       "connectionSuccess": "Connexion réussie"
     },
     "promptsConfig": {
@@ -1291,13 +1287,12 @@
       },
       "actions": {
         "retry": "Réessayer",
-        "cancel": "Annuler la tâche",
-        "cancelling": "Annulation…",
+        "cancel": "Arrêter",
+        "cancelling": "Arrêt…",
         "remove": "Supprimer"
       },
       "removeModal": {
-        "message": "Supprimer définitivement cette tâche ?",
-        "confirm": "Supprimer la tâche"
+        "message": "Supprimer définitivement cette tâche ?"
       },
       "retention": {
         "title": "Conservation des tâches",

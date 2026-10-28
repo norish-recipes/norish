@@ -142,7 +142,7 @@ export default function JsonEditor({
 
         {onRestoreDefaults && (
           <ActionButton action="reset" isDisabled={saving} onPress={handleRestoreDefaults}>
-            {tActions("restoreDefaults")}
+            {tActions("reset")}
           </ActionButton>
         )}
 

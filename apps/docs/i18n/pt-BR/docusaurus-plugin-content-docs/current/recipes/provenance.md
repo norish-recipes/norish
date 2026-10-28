@@ -57,5 +57,6 @@ está.
 
 :::note
 Apagar a procedência não inicia uma execução automática. Execute você mesmo, ou
-o **Enriquecer todas as receitas** de um administrador preenche esses dados.
+o **Enriquecer** do Enriquecimento em massa de um administrador preenche esses
+dados.
 :::

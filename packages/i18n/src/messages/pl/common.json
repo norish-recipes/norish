@@ -29,7 +29,6 @@
     "goHome": "Strona główna",
     "test": "Testuj",
     "format": "Formatuj",
-    "restoreDefaults": "Przywróć domyślne",
     "saveChanges": "Zapisz zmiany"
   },
   "secret": {

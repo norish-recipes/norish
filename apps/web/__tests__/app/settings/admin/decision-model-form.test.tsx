@@ -41,7 +41,7 @@ describe("DecisionModelForm endpoint", () => {
     fireEvent.change(screen.getByRole("textbox", { name: "endpoint" }), {
       target: { value: "http://litellm:4000/typesafe/v1" },
     });
-    fireEvent.click(screen.getByRole("button", { name: /testConnection/ }));
+    fireEvent.click(screen.getByRole("button", { name: "test" }));
     fireEvent.click(screen.getByRole("button", { name: "save" }));
 
     expect(testDecisionEndpoint).toHaveBeenCalledWith(

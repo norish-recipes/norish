@@ -327,8 +327,7 @@
       "breakfastTime": "Horário do café da manhã",
       "lunchTime": "Horário do almoço",
       "dinnerTime": "Horário do jantar",
-      "snackTime": "Horário do lanche",
-      "testConnection": "Testar conexão"
+      "snackTime": "Horário do lanche"
     },
     "config": {
       "title": "Configuração CalDAV",
@@ -723,7 +722,7 @@
       "warning1": "Todas as conexões ativas serão desconectadas",
       "warning2": "O servidor ficará indisponível por alguns segundos",
       "warning3": "Certifique-se de que sua implantação tenha <code>restart: always</code> configurado, ou o servidor não voltará online automaticamente",
-      "confirmButton": "Reiniciar agora"
+      "confirmButton": "Reiniciar"
     },
     "authProviders": {
       "title": "Provedores de autenticação",
@@ -864,15 +863,15 @@
         "title": "Enriquecimento em massa",
         "subtitle": "Executar o enriquecimento habilitado em todas as receitas",
         "description": "Colocar na fila todos os enriquecimentos ativados",
-        "button": "Enriquecer todas as receitas",
+        "button": "Enriquecer",
         "confirmTitle": "Executar o enriquecimento em todas as receitas?",
         "confirmMessage": "Isto coloca na fila trabalho de IA para cada receita deste servidor. Cada tipo de enriquecimento cujo interruptor automático esteja habilitado é executado onde faltam dados.",
         "replaceExisting": "Sobrescrever os dados existentes",
         "replaceExistingDescription": "Refazer categorias, nutrição, procedência e ingredientes das etapas mesmo quando a receita já os tem. Tags e indicações de alergia são apenas acrescentadas.",
         "replaceWarning": "Isso não pode ser desfeito. Os dados que você mesmo inseriu também são substituídos, incluindo ingredientes de etapas vinculados à mão: nada registra quais valores vieram da IA.",
         "costWarning": "Pode ser uma operação cara: com muitas receitas pode demorar bastante e, em um provedor de IA pago, consumir uma quantidade significativa de créditos.",
-        "confirmButton": "Executar em todas as receitas",
-        "confirmButtonReplace": "Sobrescrever todas as receitas",
+        "confirmButton": "Executar",
+        "confirmButtonReplace": "Sobrescrever",
         "queued": "{queued, plural, =0 {Nenhuma execução na fila} one {# execução na fila} other {# execuções na fila}} para {recipes, plural, one {# receita} other {# receitas}}",
         "aiDisabled": "A IA está desabilitada neste servidor. Habilite a IA primeiro.",
         "error": "Falha ao iniciar o enriquecimento em massa",
@@ -964,7 +963,6 @@
       "alwaysUseAI": "Sempre usar importação com IA",
       "alwaysUseAIDescription": "Ignorar analisadores estruturados e extrair receitas usando apenas IA",
       "connectionSuccess": "Conexão bem-sucedida",
-      "testConnection": "Testar conexão",
       "vision": "visão",
       "automaticEnrichment": "Enriquecimento automático de receitas",
       "automaticEnrichmentDescription": "Quais enriquecimentos por IA são executados em novas receitas. Os membros ainda podem executar cada um manualmente.",
@@ -1064,7 +1062,6 @@
       "navigationTimeoutDescription": "Quanto tempo um renderizador tem para carregar uma página.",
       "saved": "Renderizadores de páginas salvos",
       "error": "Falha ao salvar os renderizadores de páginas",
-      "testConnection": "Testar conexão",
       "connectionSuccess": "Conexão bem-sucedida"
     },
     "imageGenerationConfig": {
@@ -1119,7 +1116,6 @@
         "validateEnrichments": "Validar enriquecimentos",
         "validateEnrichmentsDescription": "Verificar as afirmações de cada enriquecimento antes de serem gravadas"
       },
-      "testConnection": "Testar conexão",
       "connectionSuccess": "Conexão bem-sucedida"
     },
     "promptsConfig": {
@@ -1291,13 +1287,12 @@
       },
       "actions": {
         "retry": "Tentar novamente",
-        "cancel": "Cancelar trabalho",
-        "cancelling": "Cancelando…",
+        "cancel": "Parar",
+        "cancelling": "Parando…",
         "remove": "Remover"
       },
       "removeModal": {
-        "message": "Remover este trabalho permanentemente?",
-        "confirm": "Remover trabalho"
+        "message": "Remover este trabalho permanentemente?"
       },
       "retention": {
         "title": "Retenção de trabalhos",

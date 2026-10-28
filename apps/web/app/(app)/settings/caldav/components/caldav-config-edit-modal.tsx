@@ -330,7 +330,7 @@ export default function CalDavConfigEditModal({ isOpen, onClose }: CalDavConfigE
                 isPending={testing}
                 onPress={handleTestConnection}
               >
-                {t("testConnection")}
+                {tActions("test")}
               </ActionButton>
               <ActionButton
                 action="save"

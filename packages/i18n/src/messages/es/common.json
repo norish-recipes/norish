@@ -29,7 +29,6 @@
     "goHome": "Ir Inicio",
     "test": "Probar",
     "format": "Formatear",
-    "restoreDefaults": "Restablecer valores predeterminados",
     "saveChanges": "Guardar cambios"
   },
   "secret": {

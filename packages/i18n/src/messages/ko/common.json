@@ -29,7 +29,6 @@
     "goHome": "집으로 이동",
     "test": "테스트",
     "format": "서식",
-    "restoreDefaults": "기본값 복원",
     "saveChanges": "변경사항 저장"
   },
   "secret": {

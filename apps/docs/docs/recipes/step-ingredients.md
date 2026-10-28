@@ -33,4 +33,4 @@ Your administrator can turn on **Ingredient linking** for new recipes under
 **Settings => Admin => AI**. It is off by default.
 
 The only run that replaces existing links is an administrator's
-**Enrich all recipes** with **Overwrite existing data** on.
+**Enrich** in Bulk enrichment with **Overwrite existing data** on.

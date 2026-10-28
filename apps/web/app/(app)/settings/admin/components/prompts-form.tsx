@@ -107,7 +107,7 @@ export default function PromptsForm({ onDirtyChange }: PromptsFormProps) {
 
       <ActionButtonGroup>
         <ActionButton action="reset" isPending={restoring} onPress={handleRestoreDefaults}>
-          {tActions("restoreDefaults")}
+          {tActions("reset")}
         </ActionButton>
         <ActionButton
           action="save"

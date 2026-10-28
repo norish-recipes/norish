@@ -185,7 +185,7 @@ test.describe("the Chromium browser", () => {
 
     await card.getByLabel("Chromium endpoint").fill(endpoint);
     await expect(result).toHaveCount(0);
-    await card.getByRole("button", { name: "Test connection" }).click();
+    await card.getByRole("button", { name: "Test", exact: true }).click();
     await expect(result).toHaveText("Connection successful");
   });
 

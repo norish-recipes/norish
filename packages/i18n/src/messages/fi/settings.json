@@ -327,8 +327,7 @@
       "breakfastTime": "Aamiaisen aika",
       "lunchTime": "Lounaan aika",
       "dinnerTime": "Päivällisen aika",
-      "snackTime": "Välipalan aika",
-      "testConnection": "Testaa yhteys"
+      "snackTime": "Välipalan aika"
     },
     "config": {
       "title": "CalDAV-asetukset",
@@ -723,7 +722,7 @@
       "warning1": "Kaikki aktiiviset yhteydet katkaistaan",
       "warning2": "Palvelin ei ole käytettävissä muutamaan sekuntiin",
       "warning3": "Varmista, että asennuksessasi on määritetty <code>restart: always</code>, muuten palvelin ei käynnisty automaattisesti takaisin",
-      "confirmButton": "Käynnistä nyt uudelleen"
+      "confirmButton": "Käynnistä uudelleen"
     },
     "authProviders": {
       "title": "Kirjautumistavat",
@@ -864,15 +863,15 @@
         "title": "Joukkorikastus",
         "subtitle": "Aja käytössä olevat rikastukset kaikille resepteille",
         "description": "Aseta kaikki käytössä olevat rikastukset jonoon",
-        "button": "Rikasta kaikki reseptit",
+        "button": "Rikasta",
         "confirmTitle": "Ajetaanko rikastus kaikille resepteille?",
         "confirmMessage": "Tämä asettaa jonoon tekoälytyötä jokaiselle tämän palvelimen reseptille. Jokainen rikastustyyppi, jonka automaattinen kytkin on päällä, ajetaan siellä missä tietoja puuttuu.",
         "replaceExisting": "Korvaa olemassa olevat tiedot",
         "replaceExistingDescription": "Tee kategoriat, ravintosisältö, alkuperä ja työvaiheiden ainesosat uudelleen myös silloin, kun resepti jo sisältää ne. Tunnisteita ja allergiamerkintöjä ainoastaan lisätään.",
         "replaceWarning": "Tätä ei voi kumota. Myös itse syöttämäsi tiedot korvataan, mukaan lukien käsin linkittämäsi työvaiheiden ainesosat: mikään ei kirjaa, mitkä arvot ovat tekoälyn tuottamia.",
         "costWarning": "Tämä voi olla raskas toiminto: jos reseptejä on paljon, se voi kestää kauan ja kuluttaa maksullisella tekoälypalvelulla huomattavasti krediittejä.",
-        "confirmButton": "Aja kaikille resepteille",
-        "confirmButtonReplace": "Korvaa kaikki reseptit",
+        "confirmButton": "Aja",
+        "confirmButtonReplace": "Korvaa",
         "queued": "{queued, plural, =0 {Ei jonotettuja ajoja} one {# ajo jonossa} other {# ajoa jonossa}}, {recipes, plural, one {# reseptille} other {# reseptille}}",
         "aiDisabled": "Tekoäly on pois käytöstä tällä palvelimella. Ota tekoäly ensin käyttöön.",
         "error": "Joukkorikastuksen käynnistys epäonnistui",
@@ -964,7 +963,6 @@
       "alwaysUseAI": "Käytä aina tekoälytuontia",
       "alwaysUseAIDescription": "Ohita rakenteiset jäsentimet ja poimi reseptit vain tekoälyllä",
       "connectionSuccess": "Yhteys onnistui",
-      "testConnection": "Testaa yhteys",
       "vision": "konenäkö",
       "automaticEnrichment": "Reseptien automaattinen rikastus",
       "automaticEnrichmentDescription": "Mitkä tekoälyrikastukset ajetaan uusille resepteille. Jäsenet voivat silti ajaa kunkin käsin.",
@@ -1064,7 +1062,6 @@
       "navigationTimeoutDescription": "Kuinka kauan renderöijällä on aikaa ladata sivu.",
       "saved": "Sivujen renderöijät tallennettu",
       "error": "Sivujen renderöijien tallennus epäonnistui",
-      "testConnection": "Testaa yhteys",
       "connectionSuccess": "Yhteys onnistui"
     },
     "imageGenerationConfig": {
@@ -1119,7 +1116,6 @@
         "validateEnrichments": "Rikastusten tarkistus",
         "validateEnrichmentsDescription": "Tarkista jokaisen rikastusajon omat väitteet ennen kuin ne tallennetaan"
       },
-      "testConnection": "Testaa yhteys",
       "connectionSuccess": "Yhteys onnistui"
     },
     "promptsConfig": {
@@ -1291,13 +1287,12 @@
       },
       "actions": {
         "retry": "Yritä uudelleen",
-        "cancel": "Peru työ",
-        "cancelling": "Perutaan…",
+        "cancel": "Pysäytä",
+        "cancelling": "Pysäytetään…",
         "remove": "Poista"
       },
       "removeModal": {
-        "message": "Poistetaanko tämä työ pysyvästi?",
-        "confirm": "Poista työ"
+        "message": "Poistetaanko tämä työ pysyvästi?"
       },
       "retention": {
         "title": "Töiden säilytys",

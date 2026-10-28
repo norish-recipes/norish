@@ -103,7 +103,7 @@ export function ActionButton({
 
   return (
     <Button
-      className={classNames(iconOnly ? undefined : "min-w-24", config.className, className)}
+      className={classNames(iconOnly ? undefined : "min-w-28", config.className, className)}
       isIconOnly={iconOnly}
       variant={variant ?? config.variant}
       {...props}

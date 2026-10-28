@@ -327,8 +327,7 @@
       "breakfastTime": "Ontbijttijd",
       "lunchTime": "Lunchtijd",
       "dinnerTime": "Dinnertijd",
-      "snackTime": "Snacktijd",
-      "testConnection": "Test verbinding"
+      "snackTime": "Snacktijd"
     },
     "config": {
       "title": "CalDAV Configuratie",
@@ -723,7 +722,7 @@
       "warning1": "Alle actieve verbindingen worden verbroken",
       "warning2": "De server is enkele seconden niet beschikbaar",
       "warning3": "Zorg ervoor dat je deployment <code>restart: always</code> is geconfigureerd, anders start de server mogelijk niet opnieuw op",
-      "confirmButton": "Nu herstarten"
+      "confirmButton": "Herstarten"
     },
     "authProviders": {
       "title": "Authenticatieproviders",
@@ -864,15 +863,15 @@
         "title": "Bulkverrijking",
         "subtitle": "Voer ingeschakelde verrijking uit op elk recept",
         "description": "Zet alle ingeschakelde verrijkingen in de wachtrij",
-        "button": "Alle recepten verrijken",
+        "button": "Verrijken",
         "confirmTitle": "Verrijking op alle recepten uitvoeren?",
         "confirmMessage": "Dit zet AI-werk in de wachtrij voor elk recept op deze server. Elke verrijkingssoort waarvan de automatische schakelaar aanstaat draait waar gegevens ontbreken.",
         "replaceExisting": "Bestaande gegevens overschrijven",
         "replaceExistingDescription": "Categorieën, voedingswaarden, herkomst en stapingrediënten opnieuw bepalen, ook als een recept ze al heeft. Tags en allergiemeldingen worden altijd alleen aangevuld.",
         "replaceWarning": "Dit kan niet ongedaan worden gemaakt. Ook gegevens die je zelf hebt ingevoerd worden vervangen, inclusief stapingrediënten die je handmatig hebt gekoppeld: nergens is vastgelegd welke waarden van AI komen.",
         "costWarning": "Dit kan een kostbare bewerking zijn: met veel recepten kan het lang duren en bij een betaalde AI-provider veel tegoed verbruiken.",
-        "confirmButton": "Op alle recepten uitvoeren",
-        "confirmButtonReplace": "Alle recepten overschrijven",
+        "confirmButton": "Uitvoeren",
+        "confirmButtonReplace": "Overschrijven",
         "queued": "{queued, plural, =0 {Geen runs in wachtrij} one {# run in wachtrij} other {# runs in wachtrij}} voor {recipes, plural, one {# recept} other {# recepten}}",
         "aiDisabled": "AI is uitgeschakeld op deze server. Schakel eerst AI in.",
         "error": "Bulkverrijking starten mislukt",
@@ -964,7 +963,6 @@
       "alwaysUseAI": "Altijd AI gebruiken voor import",
       "alwaysUseAIDescription": "Sla gestructureerde parsers over en extraheer recepten alleen met AI",
       "connectionSuccess": "Verbinding succesvol",
-      "testConnection": "Test verbinding",
       "vision": "vision",
       "automaticEnrichment": "Automatische receptverrijking",
       "automaticEnrichmentDescription": "Welke AI-verrijkingen op nieuwe recepten draaien. Leden kunnen elke verrijking nog steeds handmatig starten.",
@@ -1064,7 +1062,6 @@
       "navigationTimeoutDescription": "Hoe lang een renderer krijgt om een pagina te laden.",
       "saved": "Paginarenderers opgeslagen",
       "error": "Paginarenderers opslaan mislukt",
-      "testConnection": "Test verbinding",
       "connectionSuccess": "Verbinding succesvol"
     },
     "imageGenerationConfig": {
@@ -1119,7 +1116,6 @@
         "validateEnrichments": "Verrijkingen valideren",
         "validateEnrichmentsDescription": "Controleer de eigen claims van elke verrijkingsrun voordat ze worden opgeslagen"
       },
-      "testConnection": "Test verbinding",
       "connectionSuccess": "Verbinding succesvol"
     },
     "promptsConfig": {
@@ -1291,13 +1287,12 @@
       },
       "actions": {
         "retry": "Opnieuw proberen",
-        "cancel": "Job annuleren",
-        "cancelling": "Annuleren…",
+        "cancel": "Stoppen",
+        "cancelling": "Stoppen…",
         "remove": "Verwijderen"
       },
       "removeModal": {
-        "message": "Deze job definitief verwijderen?",
-        "confirm": "Job verwijderen"
+        "message": "Deze job definitief verwijderen?"
       },
       "retention": {
         "title": "Jobs bewaren",

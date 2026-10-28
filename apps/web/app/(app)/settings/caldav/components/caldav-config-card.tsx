@@ -234,7 +234,7 @@ export default function CalDavConfigCard() {
           isPending={testing}
           onPress={handleTestConnection}
         >
-          {t("testConnection")}
+          {tActions("test")}
         </ActionButton>
         <ActionButton
           action="save"

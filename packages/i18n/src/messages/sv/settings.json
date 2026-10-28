@@ -327,8 +327,7 @@
       "breakfastTime": "Frukosttid",
       "lunchTime": "Lunchtid",
       "dinnerTime": "Middagstid",
-      "snackTime": "Tid för mellanmål",
-      "testConnection": "Testa anslutning"
+      "snackTime": "Tid för mellanmål"
     },
     "config": {
       "title": "CalDAV-konfiguration",
@@ -723,7 +722,7 @@
       "warning1": "Alla aktiva anslutningar kopplas från",
       "warning2": "Servern är otillgänglig i några sekunder",
       "warning3": "Se till att installationen har <code>restart: always</code> inställt, annars startar servern inte automatiskt igen",
-      "confirmButton": "Starta om nu"
+      "confirmButton": "Starta om"
     },
     "authProviders": {
       "title": "Inloggningsleverantörer",
@@ -864,15 +863,15 @@
         "title": "Komplettera alla recept",
         "subtitle": "Kör aktiverade kompletteringar på alla recept",
         "description": "Köa alla aktiverade kompletteringar",
-        "button": "Komplettera alla recept",
+        "button": "Komplettera",
         "confirmTitle": "Köra komplettering på alla recept?",
         "confirmMessage": "Detta köar AI-arbete för varje recept på servern. Varje automatiskt aktiverad komplettering körs där uppgifter saknas.",
         "replaceExisting": "Skriv över befintliga uppgifter",
         "replaceExistingDescription": "Gör om kategorier, näringsvärden, ursprung och stegens ingredienser även där de redan finns. Taggar och allergimarkeringar kompletteras endast.",
         "replaceWarning": "Detta går inte att ångra. Även uppgifter du angett själv ersätts, inklusive ingredienser du kopplat till steg manuellt: det finns ingen registrering av vilka värden som kom från AI.",
         "costWarning": "Detta kan bli kostsamt: med många recept kan det ta lång tid och förbruka mycket krediter hos en betald AI-leverantör.",
-        "confirmButton": "Kör på alla recept",
-        "confirmButtonReplace": "Skriv över alla recept",
+        "confirmButton": "Kör",
+        "confirmButtonReplace": "Skriv över",
         "queued": "{queued, plural, =0 {Inga körningar köade} one {# körning köad} other {# körningar köade}} för {recipes, plural, one {# recept} other {# recept}}",
         "aiDisabled": "AI är avstängt på servern. Aktivera AI först.",
         "error": "Det gick inte att starta kompletteringen",
@@ -964,7 +963,6 @@
       "alwaysUseAI": "Använd alltid AI vid import",
       "alwaysUseAIDescription": "Hoppa över strukturerade tolkar och extrahera recept enbart med AI",
       "connectionSuccess": "Anslutningen lyckades",
-      "testConnection": "Testa anslutning",
       "vision": "bildtolkning",
       "automaticEnrichment": "Automatisk receptkomplettering",
       "automaticEnrichmentDescription": "Vilka AI-kompletteringar som körs på nya recept. Medlemmar kan fortfarande köra var och en manuellt.",
@@ -1064,7 +1062,6 @@
       "navigationTimeoutDescription": "Hur lång tid en renderare får på sig att läsa in en sida.",
       "saved": "Sidrenderarna har sparats",
       "error": "Det gick inte att spara sidrenderarna",
-      "testConnection": "Testa anslutning",
       "connectionSuccess": "Anslutningen lyckades"
     },
     "imageGenerationConfig": {
@@ -1119,7 +1116,6 @@
         "validateEnrichments": "Validera kompletteringar",
         "validateEnrichmentsDescription": "Kontrollera varje kompletterings påståenden innan de sparas"
       },
-      "testConnection": "Testa anslutning",
       "connectionSuccess": "Anslutningen lyckades"
     },
     "promptsConfig": {
@@ -1291,13 +1287,12 @@
       },
       "actions": {
         "retry": "Försök igen",
-        "cancel": "Avbryt jobb",
-        "cancelling": "Avbryter…",
+        "cancel": "Stoppa",
+        "cancelling": "Stoppar…",
         "remove": "Ta bort"
       },
       "removeModal": {
-        "message": "Ta bort det här jobbet permanent?",
-        "confirm": "Ta bort jobb"
+        "message": "Ta bort det här jobbet permanent?"
       },
       "retention": {
         "title": "Lagring av jobbhistorik",

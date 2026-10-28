@@ -29,7 +29,6 @@
     "goHome": "Etusivulle",
     "test": "Testaa",
     "format": "Muotoile",
-    "restoreDefaults": "Palauta oletukset",
     "saveChanges": "Tallenna muutokset"
   },
   "secret": {

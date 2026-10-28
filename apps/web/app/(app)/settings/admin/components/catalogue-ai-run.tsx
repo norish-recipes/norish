@@ -92,6 +92,7 @@ export function CatalogueAIRun({
                   {tActions("cancel")}
                 </ActionButton>
                 <AIButton
+                  className="min-w-28"
                   data-testid={`${testId}-start`}
                   isDisabled={!canStart}
                   isPending={starting}

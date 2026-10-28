@@ -327,8 +327,7 @@
       "breakfastTime": "Frokosttidspunkt",
       "lunchTime": "Lunsjtidspunkt",
       "dinnerTime": "Middagstidspunkt",
-      "snackTime": "Snackstidspunkt",
-      "testConnection": "Test tilkobling"
+      "snackTime": "Snackstidspunkt"
     },
     "config": {
       "title": "CalDAV-konfigurasjon",
@@ -723,7 +722,7 @@
       "warning1": "Alle aktive tilkoblinger vil bli avbrutt",
       "warning2": "Serveren vil være utilgjengelig i noen sekunder",
       "warning3": "Sørg for at oppsettet ditt har <code>restart: always</code> konfigurert, ellers vil ikke serveren komme online igjen automatisk",
-      "confirmButton": "Start på nytt nå"
+      "confirmButton": "Start på nytt"
     },
     "authProviders": {
       "title": "Autentiseringsleverandører",
@@ -864,15 +863,15 @@
         "title": "Masseberikelse",
         "subtitle": "Kjør aktivert berikelse på alle oppskrifter",
         "description": "Legg alle aktiverte berikelser i kø",
-        "button": "Berik alle oppskrifter",
+        "button": "Berik",
         "confirmTitle": "Kjøre berikelse på alle oppskrifter?",
         "confirmMessage": "Dette setter AI-arbeid i kø for hver oppskrift på denne serveren. Hver berikelsestype med automatisk bryter slått på kjøres der data mangler.",
         "replaceExisting": "Overskriv eksisterende data",
         "replaceExistingDescription": "Gjør kategorier, næringsinnhold, opphav og trinningredienser på nytt, også der en oppskrift allerede har dem. Tagger og allergimerknader blir bare lagt til.",
         "replaceWarning": "Dette kan ikke angres. Data du har lagt inn selv blir også erstattet, inkludert trinningredienser du har koblet for hånd: ingenting registrerer hvilke verdier som kom fra AI.",
         "costWarning": "Dette kan være en kostbar operasjon: Med mange oppskrifter kan det ta lang tid og hos en betalt AI-leverandør bruke betydelig kreditt.",
-        "confirmButton": "Kjør på alle oppskrifter",
-        "confirmButtonReplace": "Overskriv alle oppskrifter",
+        "confirmButton": "Kjør",
+        "confirmButtonReplace": "Overskriv",
         "queued": "{queued, plural, =0 {Ingen kjøringer i kø} one {# kjøring i kø} other {# kjøringer i kø}} for {recipes, plural, one {# oppskrift} other {# oppskrifter}}",
         "aiDisabled": "AI er deaktivert på denne serveren. Aktiver AI først.",
         "error": "Kunne ikke starte masseberikelse",
@@ -964,7 +963,6 @@
       "alwaysUseAI": "Bruk alltid AI-import",
       "alwaysUseAIDescription": "Hopp over strukturerte analysatorer og trekk ut oppskrifter med AI alene",
       "connectionSuccess": "Tilkobling vellykket",
-      "testConnection": "Test tilkobling",
       "vision": "visjon",
       "automaticEnrichment": "Automatisk oppskriftsberikelse",
       "automaticEnrichmentDescription": "Hvilke AI-berikelser som kjøres på nye oppskrifter. Medlemmer kan fortsatt kjøre hver enkelt manuelt.",
@@ -1064,7 +1062,6 @@
       "navigationTimeoutDescription": "Hvor lang tid en renderer får til å laste en side.",
       "saved": "Siderenderere lagret",
       "error": "Kunne ikke lagre siderenderere",
-      "testConnection": "Test tilkobling",
       "connectionSuccess": "Tilkobling vellykket"
     },
     "imageGenerationConfig": {
@@ -1119,7 +1116,6 @@
         "validateEnrichments": "Valider berikelser",
         "validateEnrichmentsDescription": "Kontroller hver berikelseskjørings egne påstander før de lagres"
       },
-      "testConnection": "Test tilkobling",
       "connectionSuccess": "Tilkobling vellykket"
     },
     "promptsConfig": {
@@ -1291,13 +1287,12 @@
       },
       "actions": {
         "retry": "Prøv igjen",
-        "cancel": "Avbryt jobb",
-        "cancelling": "Avbryter…",
+        "cancel": "Stopp",
+        "cancelling": "Stopper…",
         "remove": "Fjern"
       },
       "removeModal": {
-        "message": "Fjerne denne jobben permanent?",
-        "confirm": "Fjern jobb"
+        "message": "Fjerne denne jobben permanent?"
       },
       "retention": {
         "title": "Oppbevaring av jobber",

@@ -644,7 +644,7 @@ export default function AIConfigForm({ onDirtyChange }: AIConfigFormProps) {
 
       <ActionButtonGroup className="pt-2">
         <ActionButton action="test" isDisabled={!enabled} isPending={testing} onPress={handleTest}>
-          {t("testConnection")}
+          {tActions("test")}
         </ActionButton>
         <ActionButton
           action="save"

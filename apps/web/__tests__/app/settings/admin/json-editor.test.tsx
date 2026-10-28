@@ -50,7 +50,7 @@ describe("JsonEditor", () => {
       />
     );
 
-    expect(screen.getByRole("button", { name: "restoreDefaults" })).toBeEnabled();
+    expect(screen.getByRole("button", { name: "reset" })).toBeEnabled();
   });
 
   it("calls restore mutation and shows refreshed value", async () => {
@@ -82,7 +82,7 @@ describe("JsonEditor", () => {
 
     expect(screen.getByLabelText("json")).toHaveValue('{\n  "foo": "custom"\n}');
 
-    fireEvent.click(screen.getByRole("button", { name: "restoreDefaults" }));
+    fireEvent.click(screen.getByRole("button", { name: "reset" }));
 
     await waitFor(() => {
       expect(restoreMutation).toHaveBeenCalledTimes(1);

@@ -8,9 +8,9 @@ import { useTRPC } from "@/app/providers/trpc-provider";
 import { ActionButton, ActionButtonGroup } from "@/components/shared/action-button";
 import SecretInput from "@/components/shared/secret-input";
 import { showSafeErrorToast } from "@/lib/ui/safe-error-toast";
-import { BeakerIcon, TrashIcon } from "@heroicons/react/16/solid";
+import { TrashIcon } from "@heroicons/react/16/solid";
 import { GlobeAltIcon } from "@heroicons/react/24/outline";
-import { Button, Description, Input, Label, Separator, TextField, toast } from "@heroui/react";
+import { Description, Input, Label, Separator, TextField, toast } from "@heroui/react";
 import { useMutation, useQuery } from "@tanstack/react-query";
 import { useTranslations } from "next-intl";
 
@@ -130,7 +130,7 @@ export default function PageRenderersCard() {
             <Label>{t("obscuraEndpoint")}</Label>
             <Input placeholder={OBSCURA_PLACEHOLDER} variant="secondary" />
           </TextField>
-          <div className="flex flex-col items-start gap-2">
+          <div className="flex flex-col gap-2">
             <SecretInput
               className="w-full"
               description={t("cdpTokenDescription")}
@@ -141,14 +141,15 @@ export default function PageRenderersCard() {
               onValueChange={set("cdpToken")}
             />
             {keepsStoredToken && (
-              <Button
-                size="sm"
-                variant="tertiary"
-                onPress={() => setForm((f) => ({ ...f, cdpToken: "", cdpTokenCleared: true }))}
-              >
-                <TrashIcon className="size-4" />
-                {tActions("clear")}
-              </Button>
+              <ActionButtonGroup>
+                <ActionButton
+                  action="dismiss"
+                  icon={TrashIcon}
+                  onPress={() => setForm((f) => ({ ...f, cdpToken: "", cdpTokenCleared: true }))}
+                >
+                  {tActions("clear")}
+                </ActionButton>
+              </ActionButtonGroup>
             )}
           </div>
         </>
@@ -217,7 +218,7 @@ export default function PageRenderersCard() {
 }
 
 /**
- * The Chromium browser or the solver: its switch, its endpoint and a Test connection. Switching it
+ * The Chromium browser or the solver: its switch, its endpoint and a Test button. Switching it
  * on fills in the compose service's endpoint when there is none, and tests it.
  */
 function TestedRenderer({
@@ -238,6 +239,7 @@ function TestedRenderer({
   onEndpointChange: (endpoint: string) => void;
 }) {
   const t = useTranslations("settings.admin.pageRenderers");
+  const tActions = useTranslations("common.actions");
   const trpc = useTRPC();
   const test = useMutation(trpc.admin.testPageRenderer.mutationOptions());
 
@@ -277,17 +279,16 @@ function TestedRenderer({
             result={test.error ? { success: false, error: test.error.message } : test.data}
             successLabel={t("connectionSuccess")}
           />
-          <Button
-            className="self-start"
-            isDisabled={!endpoint.trim()}
-            isPending={test.isPending}
-            size="sm"
-            variant="tertiary"
-            onPress={() => test.mutate({ renderer, endpoint: endpoint.trim() })}
-          >
-            <BeakerIcon className="size-4" />
-            {t("testConnection")}
-          </Button>
+          <ActionButtonGroup>
+            <ActionButton
+              action="test"
+              isDisabled={!endpoint.trim()}
+              isPending={test.isPending}
+              onPress={() => test.mutate({ renderer, endpoint: endpoint.trim() })}
+            >
+              {tActions("test")}
+            </ActionButton>
+          </ActionButtonGroup>
         </div>
       )}
     </>

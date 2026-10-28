@@ -55,5 +55,5 @@ gave. A recipe with a country, a note and at least one cuisine is left alone.
 
 :::note
 Clearing provenance doesn't start an automatic run. Run it yourself, or an
-administrator's **Enrich all recipes** fills it in.
+administrator's **Enrich** in Bulk enrichment fills it in.
 :::

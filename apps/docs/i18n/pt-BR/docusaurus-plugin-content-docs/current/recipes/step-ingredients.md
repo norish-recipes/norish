@@ -36,5 +36,5 @@ O administrador pode ativar a **Vinculação de ingredientes** para receitas nov
 em **Configurações => Admin => IA e processamento**. Ela vem desligada por padrão.
 
 A única execução que substitui vínculos existentes é a de um administrador em
-**Enriquecer todas as receitas** com **Sobrescrever os dados existentes**
+**Enriquecer** do Enriquecimento em massa com **Sobrescrever os dados existentes**
 ativado.

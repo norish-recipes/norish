@@ -390,11 +390,11 @@ test("an administrator cancels a running AI job, and the job monitor shows it Ca
 
     const dialog = page.getByRole("dialog");
 
-    await dialog.getByRole("button", { name: "Cancel job" }).click();
-    await expect(dialog.getByRole("button", { name: "Cancelling…" })).toBeVisible();
+    await dialog.getByRole("button", { name: "Stop", exact: true }).click();
+    await expect(dialog.getByRole("button", { name: "Stopping…" })).toBeVisible();
     await expect(dialog.getByText("Cancelled", { exact: true })).toBeVisible({ timeout: 15_000 });
     await expect(dialog.getByText("An administrator cancelled this job.")).toBeVisible();
-    await expect(dialog.getByRole("button", { name: "Cancelling…" })).toHaveCount(0);
+    await expect(dialog.getByRole("button", { name: "Stopping…" })).toHaveCount(0);
 
     // Cancelled for good: the monitor reads Cancelled only for a job in BullMQ's
     // failed set, which nothing retries from on its own, so the provider was asked once.
@@ -403,7 +403,7 @@ test("an administrator cancels a running AI job, and the job monitor shows it Ca
     // Retried by hand, the job runs again, and its new run offers Cancel again.
     await dialog.getByRole("button", { name: "Retry" }).click();
     await expect.poll(() => chatRequestCount(), { timeout: 30_000 }).toBe(2);
-    await dialog.getByRole("button", { name: "Cancel job" }).click();
+    await dialog.getByRole("button", { name: "Stop", exact: true }).click();
     await expect(dialog.getByText("Cancelled", { exact: true })).toBeVisible({ timeout: 15_000 });
   } finally {
     stack.ai.control.release();

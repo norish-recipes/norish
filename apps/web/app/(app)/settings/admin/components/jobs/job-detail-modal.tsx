@@ -398,7 +398,7 @@ export default function JobDetailModal({ queue, jobId, onClose }: Props) {
                       variant="danger"
                       onPress={handleRemove}
                     >
-                      {t("removeModal.confirm")}
+                      {tActions("remove")}
                     </ActionButton>
                   </ActionButtonGroup>
                 ) : (

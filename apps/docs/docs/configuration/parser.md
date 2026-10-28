@@ -32,8 +32,8 @@ Set them up under **Settings => Admin => Page renderers**.
   `http://byparr:8191/v1`. Each page it reads starts a new browser, which takes
   a few seconds.
 
-Switching the Chromium browser or the solver on tests its endpoint, and **Test
-connection** tests it again: Norish connects to the browser, and has the solver
+Switching the Chromium browser or the solver on tests its endpoint, and **Test** tests
+it again: Norish connects to the browser, and has the solver
 read `https://example.com`.
 
 Site authentication tokens go to Obscura and the Chromium browser, which keep

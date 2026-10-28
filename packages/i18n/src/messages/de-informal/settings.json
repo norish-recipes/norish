@@ -327,8 +327,7 @@
       "breakfastTime": "Frühstückszeit",
       "lunchTime": "Mittagessenszeit",
       "dinnerTime": "Abendessenszeit",
-      "snackTime": "Snack-Zeit",
-      "testConnection": "Verbindung testen"
+      "snackTime": "Snack-Zeit"
     },
     "config": {
       "title": "CalDAV-Konfiguration",
@@ -723,7 +722,7 @@
       "warning1": "Alle aktiven Verbindungen werden getrennt",
       "warning2": "Der Server ist für ein paar Sekunden nicht verfügbar",
       "warning3": "Stelle sicher, dass deine Bereitstellung <code>restart: always</code> konfiguriert hat, sonst startet der Server nicht automatisch neu",
-      "confirmButton": "Jetzt neu starten"
+      "confirmButton": "Neu starten"
     },
     "authProviders": {
       "title": "Authentifizierungsanbieter",
@@ -864,15 +863,15 @@
         "title": "Massen-Anreicherung",
         "subtitle": "Aktivierte Anreicherung für alle Rezepte ausführen",
         "description": "Alle aktivierten Anreicherungen in die Warteschlange stellen",
-        "button": "Alle Rezepte anreichern",
+        "button": "Anreichern",
         "confirmTitle": "Anreicherung für alle Rezepte ausführen?",
         "confirmMessage": "Dies stellt KI-Arbeit für jedes Rezept auf diesem Server in die Warteschlange. Jede Anreicherungsart, deren automatischer Schalter aktiviert ist, läuft überall dort, wo Daten fehlen.",
         "replaceExisting": "Vorhandene Daten überschreiben",
         "replaceExistingDescription": "Kategorien, Nährwerte, Herkunft und Schritt-Zutaten neu ermitteln, auch wenn ein Rezept sie schon hat. Tags und Allergiehinweise werden immer nur ergänzt.",
         "replaceWarning": "Das lässt sich nicht rückgängig machen. Auch selbst eingegebene Daten werden ersetzt, einschließlich von Hand verknüpfter Schritt-Zutaten: Es ist nirgends festgehalten, welche Werte von der KI stammen.",
         "costWarning": "Dies kann ein teurer Vorgang sein: Bei vielen Rezepten kann es lange dauern und bei einem kostenpflichtigen KI-Anbieter erhebliches Guthaben verbrauchen.",
-        "confirmButton": "Für alle Rezepte ausführen",
-        "confirmButtonReplace": "Alle Rezepte überschreiben",
+        "confirmButton": "Ausführen",
+        "confirmButtonReplace": "Überschreiben",
         "queued": "{queued, plural, =0 {Keine Läufe in Warteschlange} one {# Lauf in Warteschlange} other {# Läufe in Warteschlange}} für {recipes, plural, one {# Rezept} other {# Rezepte}}",
         "aiDisabled": "KI ist auf diesem Server deaktiviert. Aktiviere zuerst KI.",
         "error": "Massen-Anreicherung konnte nicht gestartet werden",
@@ -964,7 +963,6 @@
       "alwaysUseAI": "Immer KI-Import verwenden",
       "alwaysUseAIDescription": "Überspringe strukturierte Parser und extrahiere Rezepte nur mit KI",
       "connectionSuccess": "Verbindung erfolgreich",
-      "testConnection": "Verbindung testen",
       "vision": "Vision",
       "automaticEnrichment": "Automatische Rezeptanreicherung",
       "automaticEnrichmentDescription": "Welche KI-Anreicherungen bei neuen Rezepten laufen. Mitglieder können jede weiterhin manuell starten.",
@@ -1064,7 +1062,6 @@
       "navigationTimeoutDescription": "Wie lange ein Renderer zum Laden einer Seite bekommt.",
       "saved": "Seiten-Renderer gespeichert",
       "error": "Seiten-Renderer konnten nicht gespeichert werden",
-      "testConnection": "Verbindung testen",
       "connectionSuccess": "Verbindung erfolgreich"
     },
     "imageGenerationConfig": {
@@ -1119,7 +1116,6 @@
         "validateEnrichments": "Anreicherungen prüfen",
         "validateEnrichmentsDescription": "Die eigenen Aussagen jedes Anreicherungslaufs prüfen, bevor sie gespeichert werden"
       },
-      "testConnection": "Verbindung testen",
       "connectionSuccess": "Verbindung erfolgreich"
     },
     "promptsConfig": {
@@ -1291,13 +1287,12 @@
       },
       "actions": {
         "retry": "Erneut versuchen",
-        "cancel": "Job abbrechen",
-        "cancelling": "Wird abgebrochen…",
+        "cancel": "Stoppen",
+        "cancelling": "Wird gestoppt…",
         "remove": "Entfernen"
       },
       "removeModal": {
-        "message": "Diesen Job endgültig entfernen?",
-        "confirm": "Job entfernen"
+        "message": "Diesen Job endgültig entfernen?"
       },
       "retention": {
         "title": "Job-Aufbewahrung",

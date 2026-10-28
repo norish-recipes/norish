@@ -327,8 +327,7 @@
       "breakfastTime": "아침 식사 시간",
       "lunchTime": "점심시간",
       "dinnerTime": "저녁 식사 시간",
-      "snackTime": "간식 시간",
-      "testConnection": "연결 테스트"
+      "snackTime": "간식 시간"
     },
     "config": {
       "title": "CalDAV 구성",
@@ -723,7 +722,7 @@
       "warning1": "모든 활성 연결이 끊어집니다.",
       "warning2": "몇 초 동안 서버를 사용할 수 없습니다.",
       "warning3": "배포에 <code>restart: Always</code>가 구성되어 있는지 확인하세요. 그렇지 않으면 서버가 자동으로 온라인 상태로 돌아오지 않습니다.",
-      "confirmButton": "지금 다시 시작"
+      "confirmButton": "다시 시작"
     },
     "authProviders": {
       "title": "인증 제공자",
@@ -864,15 +863,15 @@
         "title": "대량 보강",
         "subtitle": "모든 레시피에 활성화된 보강 실행",
         "description": "사용 설정된 모든 보강을 대기열에 추가",
-        "button": "모든 레시피 보강",
+        "button": "보강",
         "confirmTitle": "모든 레시피에 보강을 실행할까요?",
         "confirmMessage": "이 서버의 모든 레시피에 대한 AI 작업을 대기열에 추가합니다. 자동 스위치가 켜진 모든 보강 종류가 데이터가 없는 곳에서 실행됩니다.",
         "replaceExisting": "기존 데이터 덮어쓰기",
         "replaceExistingDescription": "레시피에 이미 있더라도 분류, 영양 정보, 출처, 단계별 재료를 다시 만듭니다. 태그와 알레르기 표시는 추가만 됩니다.",
         "replaceWarning": "되돌릴 수 없습니다. 직접 입력한 데이터도 함께 대체되며, 손으로 연결한 단계별 재료도 포함됩니다. 어떤 값이 AI에서 왔는지는 기록되지 않습니다.",
         "costWarning": "비용이 많이 드는 작업일 수 있습니다. 레시피가 많으면 오래 걸릴 수 있고, 유료 AI 제공업체에서는 상당한 크레딧을 사용할 수 있습니다.",
-        "confirmButton": "모든 레시피에 실행",
-        "confirmButtonReplace": "모든 레시피 덮어쓰기",
+        "confirmButton": "실행",
+        "confirmButtonReplace": "덮어쓰기",
         "queued": "{recipes, plural, other {#개 레시피}}에 대해 {queued, plural, =0 {대기 중인 실행 없음} other {#개 실행 대기 중}}",
         "aiDisabled": "이 서버에서 AI가 비활성화되어 있습니다. 먼저 AI를 활성화하세요.",
         "error": "대량 보강을 시작하지 못했습니다",
@@ -964,7 +963,6 @@
       "alwaysUseAI": "항상 AI 가져오기 사용",
       "alwaysUseAIDescription": "구조화된 파서를 건너뛰고 AI만 사용하여 레시피 추출",
       "connectionSuccess": "연결 성공",
-      "testConnection": "연결 테스트",
       "vision": "비전",
       "automaticEnrichment": "자동 레시피 보강",
       "automaticEnrichmentDescription": "새 레시피에 실행할 AI 보강입니다. 구성원은 각 항목을 계속 직접 실행할 수 있습니다.",
@@ -1064,7 +1062,6 @@
       "navigationTimeoutDescription": "렌더러가 페이지를 불러오는 데 주어지는 시간입니다.",
       "saved": "페이지 렌더러를 저장했습니다",
       "error": "페이지 렌더러를 저장하지 못했습니다",
-      "testConnection": "연결 테스트",
       "connectionSuccess": "연결 성공"
     },
     "imageGenerationConfig": {
@@ -1119,7 +1116,6 @@
         "validateEnrichments": "보강 검증",
         "validateEnrichmentsDescription": "각 보강 실행의 결과를 저장하기 전에 검사"
       },
-      "testConnection": "연결 테스트",
       "connectionSuccess": "연결 성공"
     },
     "promptsConfig": {
@@ -1291,13 +1287,12 @@
       },
       "actions": {
         "retry": "다시 시도",
-        "cancel": "작업 취소",
-        "cancelling": "취소 중…",
+        "cancel": "중지",
+        "cancelling": "중지 중…",
         "remove": "삭제"
       },
       "removeModal": {
-        "message": "이 작업을 영구적으로 삭제하시겠습니까?",
-        "confirm": "작업 삭제"
+        "message": "이 작업을 영구적으로 삭제하시겠습니까?"
       },
       "retention": {
         "title": "작업 보관",

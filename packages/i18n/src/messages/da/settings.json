@@ -327,8 +327,7 @@
       "breakfastTime": "Morgenmadstidspunkt",
       "lunchTime": "Frokoststidspunkt",
       "dinnerTime": "Aftensmadstidspunkt",
-      "snackTime": "Snacktidspunkt",
-      "testConnection": "Test forbindelse"
+      "snackTime": "Snacktidspunkt"
     },
     "config": {
       "title": "CalDAV-konfiguration",
@@ -723,7 +722,7 @@
       "warning1": "Alle aktive forbindelser vil blive afbrudt",
       "warning2": "Serveren vil være utilgængelig i et par sekunder",
       "warning3": "Sørg for, at din opsætning har <code>restart: always</code> konfigureret, ellers vil serveren ikke komme online igen automatisk",
-      "confirmButton": "Genstart nu"
+      "confirmButton": "Genstart"
     },
     "authProviders": {
       "title": "Godkendelsesudbydere",
@@ -864,15 +863,15 @@
         "title": "Masseberigelse",
         "subtitle": "Kør aktiveret berigelse på alle opskrifter",
         "description": "Sæt alle aktiverede berigelser i kø",
-        "button": "Berig alle opskrifter",
+        "button": "Berig",
         "confirmTitle": "Kør berigelse på alle opskrifter?",
         "confirmMessage": "Dette sætter AI-arbejde i kø for hver opskrift på denne server. Hver berigelsestype, hvis automatiske kontakt er slået til, kører hvor der mangler data.",
         "replaceExisting": "Overskriv eksisterende data",
         "replaceExistingDescription": "Lav kategorier, næringsindhold, oprindelse og triningredienser om, også hvor en opskrift allerede har dem. Tags og allergiangivelser bliver kun tilføjet.",
         "replaceWarning": "Dette kan ikke fortrydes. Data, du selv har indtastet, bliver også erstattet, inklusive triningredienser, du har knyttet manuelt: intet registrerer, hvilke værdier der kom fra AI.",
         "costWarning": "Dette kan være en dyr operation: Med mange opskrifter kan det tage lang tid og hos en betalt AI-udbyder bruge betydelig kredit.",
-        "confirmButton": "Kør på alle opskrifter",
-        "confirmButtonReplace": "Overskriv alle opskrifter",
+        "confirmButton": "Kør",
+        "confirmButtonReplace": "Overskriv",
         "queued": "{queued, plural, =0 {Ingen kørsler i kø} one {# kørsel i kø} other {# kørsler i kø}} for {recipes, plural, one {# opskrift} other {# opskrifter}}",
         "aiDisabled": "AI er deaktiveret på denne server. Aktivér AI først.",
         "error": "Kunne ikke starte masseberigelse",
@@ -964,7 +963,6 @@
       "alwaysUseAI": "Brug altid AI-import",
       "alwaysUseAIDescription": "Spring strukturerede analysatorer over og udtræk opskrifter med AI alene",
       "connectionSuccess": "Forbindelse lykkedes",
-      "testConnection": "Test forbindelse",
       "vision": "vision",
       "automaticEnrichment": "Automatisk opskriftsberigelse",
       "automaticEnrichmentDescription": "Hvilke AI-berigelser der kører på nye opskrifter. Medlemmer kan stadig køre hver enkelt manuelt.",
@@ -1064,7 +1062,6 @@
       "navigationTimeoutDescription": "Hvor lang tid en renderer får til at indlæse en side.",
       "saved": "Siderenderere gemt",
       "error": "Kunne ikke gemme siderenderere",
-      "testConnection": "Test forbindelse",
       "connectionSuccess": "Forbindelse lykkedes"
     },
     "imageGenerationConfig": {
@@ -1119,7 +1116,6 @@
         "validateEnrichments": "Validér berigelser",
         "validateEnrichmentsDescription": "Kontrollér hver berigelseskørsels egne påstande, før de gemmes"
       },
-      "testConnection": "Test forbindelse",
       "connectionSuccess": "Forbindelse lykkedes"
     },
     "promptsConfig": {
@@ -1291,13 +1287,12 @@
       },
       "actions": {
         "retry": "Prøv igen",
-        "cancel": "Annuller job",
-        "cancelling": "Annullerer…",
+        "cancel": "Stop",
+        "cancelling": "Stopper…",
         "remove": "Fjern"
       },
       "removeModal": {
-        "message": "Fjern dette job permanent?",
-        "confirm": "Fjern job"
+        "message": "Fjern dette job permanent?"
       },
       "retention": {
         "title": "Opbevaring af job",

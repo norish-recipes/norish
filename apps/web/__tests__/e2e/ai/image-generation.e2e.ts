@@ -235,7 +235,7 @@ test.describe("the bulk sweep", () => {
   test("fills gaps only by default, and says it will generate one image", async () => {
     const panel = await openBulkPanel();
 
-    await panel.getByRole("button", { name: "Enrich all recipes" }).click();
+    await panel.getByRole("button", { name: "Enrich", exact: true }).click();
 
     // The confirmation names the number before anything runs: one recipe
     // holds no image at all, so one image.
@@ -243,7 +243,7 @@ test.describe("the bulk sweep", () => {
       timeout: 15_000,
     });
 
-    await page.getByRole("button", { name: "Run on all recipes" }).click();
+    await page.getByRole("button", { name: "Run", exact: true }).click();
 
     await expect
       .poll(async () => readStoredGalleryImages(stack, GAP_RECIPE), {
@@ -262,7 +262,7 @@ test.describe("the bulk sweep", () => {
   test("reaches every recipe with overwrite on, and says it will generate two", async () => {
     const panel = await openBulkPanel();
 
-    await panel.getByRole("button", { name: "Enrich all recipes" }).click();
+    await panel.getByRole("button", { name: "Enrich", exact: true }).click();
 
     await expect(page.getByText("The sweep will generate 1 image.")).toBeVisible({
       timeout: 15_000,
@@ -276,7 +276,7 @@ test.describe("the bulk sweep", () => {
     await expect(page.getByText("The sweep will generate 2 images.")).toBeVisible();
     await expect(page.getByText("This cannot be undone.", { exact: false })).toBeVisible();
 
-    await page.getByRole("button", { name: "Overwrite all recipes" }).click();
+    await page.getByRole("button", { name: "Replace", exact: true }).click();
 
     await expect
       .poll(async () => readStoredGalleryImages(stack, PHOTO_RECIPE), {

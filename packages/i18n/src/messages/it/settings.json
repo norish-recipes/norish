@@ -327,8 +327,7 @@
       "breakfastTime": "Orario colazione",
       "lunchTime": "Orario pranzo",
       "dinnerTime": "Orario cena",
-      "snackTime": "Orario spuntino",
-      "testConnection": "Testa connessione"
+      "snackTime": "Orario spuntino"
     },
     "config": {
       "title": "Configurazione CalDAV",
@@ -723,7 +722,7 @@
       "warning1": "Tutte le connessioni attive verranno disconnesse",
       "warning2": "Il server non sarà disponibile per alcuni secondi",
       "warning3": "Assicurati che il tuo deployment abbia <code>restart: always</code> configurato, altrimenti il server non tornerà online automaticamente",
-      "confirmButton": "Riavvia ora"
+      "confirmButton": "Riavvia"
     },
     "authProviders": {
       "title": "Provider di autenticazione",
@@ -864,15 +863,15 @@
         "title": "Arricchimento in blocco",
         "subtitle": "Esegui l'arricchimento abilitato su tutte le ricette",
         "description": "Accoda tutti gli arricchimenti attivi",
-        "button": "Arricchisci tutte le ricette",
+        "button": "Arricchisci",
         "confirmTitle": "Eseguire l'arricchimento su tutte le ricette?",
         "confirmMessage": "Questo mette in coda lavoro di IA per ogni ricetta di questo server. Ogni tipo di arricchimento il cui interruttore automatico è abilitato viene eseguito dove mancano dati.",
         "replaceExisting": "Sovrascrivere i dati esistenti",
         "replaceExistingDescription": "Rifare categorie, valori nutrizionali, provenienza e ingredienti dei passaggi anche quando la ricetta li ha già. Tag e indicazioni sulle allergie vengono solo aggiunti.",
         "replaceWarning": "L'operazione non può essere annullata. Vengono sostituiti anche i dati inseriti da te, compresi gli ingredienti dei passaggi collegati a mano: non è registrato quali valori provengano dall'IA.",
         "costWarning": "Può essere un'operazione costosa: con molte ricette può richiedere molto tempo e, con un provider di IA a pagamento, consumare una quantità significativa di crediti.",
-        "confirmButton": "Esegui su tutte le ricette",
-        "confirmButtonReplace": "Sovrascrivi tutte le ricette",
+        "confirmButton": "Esegui",
+        "confirmButtonReplace": "Sovrascrivi",
         "queued": "{queued, plural, =0 {Nessuna esecuzione in coda} one {# esecuzione in coda} other {# esecuzioni in coda}} per {recipes, plural, one {# ricetta} other {# ricette}}",
         "aiDisabled": "L'IA è disabilitata su questo server. Abilita prima l'IA.",
         "error": "Avvio dell'arricchimento in blocco non riuscito",
@@ -964,7 +963,6 @@
       "alwaysUseAI": "Usa sempre importazione IA",
       "alwaysUseAIDescription": "Salta i parser strutturati ed estrai le ricette usando solo l'IA",
       "connectionSuccess": "Connessione riuscita",
-      "testConnection": "Testa connessione",
       "vision": "visione",
       "automaticEnrichment": "Arricchimento automatico delle ricette",
       "automaticEnrichmentDescription": "Quali arricchimenti AI vengono eseguiti sulle nuove ricette. I membri possono comunque eseguirli a mano.",
@@ -1064,7 +1062,6 @@
       "navigationTimeoutDescription": "Quanto tempo ha un renderer per caricare una pagina.",
       "saved": "Renderer di pagine salvati",
       "error": "Impossibile salvare i renderer di pagine",
-      "testConnection": "Testa connessione",
       "connectionSuccess": "Connessione riuscita"
     },
     "imageGenerationConfig": {
@@ -1119,7 +1116,6 @@
         "validateEnrichments": "Convalida arricchimenti",
         "validateEnrichmentsDescription": "Verificare le affermazioni di ogni arricchimento prima che vengano salvate"
       },
-      "testConnection": "Testa connessione",
       "connectionSuccess": "Connessione riuscita"
     },
     "promptsConfig": {
@@ -1291,13 +1287,12 @@
       },
       "actions": {
         "retry": "Riprova",
-        "cancel": "Annulla job",
-        "cancelling": "Annullamento…",
+        "cancel": "Interrompi",
+        "cancelling": "Interruzione…",
         "remove": "Rimuovi"
       },
       "removeModal": {
-        "message": "Rimuovere definitivamente questo job?",
-        "confirm": "Rimuovi job"
+        "message": "Rimuovere definitivamente questo job?"
       },
       "retention": {
         "title": "Conservazione dei job",

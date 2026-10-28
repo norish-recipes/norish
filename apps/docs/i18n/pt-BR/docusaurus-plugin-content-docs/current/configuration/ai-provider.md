@@ -206,7 +206,7 @@ mostram quais modelos um trabalho usou.
 O enriquecimento automático só é executado em receitas novas. Para atualizar as
 demais, use
 **Configurações => Admin => IA e processamento => Enriquecimento em massa =>
-Enriquecer todas as receitas**. Isso executa todos os enriquecimentos ativados
+Enriquecer**. Isso executa todos os enriquecimentos ativados
 em todas as receitas, o que pode custar caro.
 
 ![Contagem de imagens do enriquecimento em massa](/img/screenshots/bulk-enrichment-image-count.png)

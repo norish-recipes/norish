@@ -327,8 +327,7 @@
       "breakfastTime": "Godzina śniadania",
       "lunchTime": "Godzina lunchu",
       "dinnerTime": "Godzina kolacji",
-      "snackTime": "Godzina przekąski",
-      "testConnection": "Testuj połączenie"
+      "snackTime": "Godzina przekąski"
     },
     "config": {
       "title": "Konfiguracja CalDAV",
@@ -723,7 +722,7 @@
       "warning1": "Wszystkie aktywne połączenia zostaną przerwane",
       "warning2": "Serwer będzie niedostępny przez kilka sekund",
       "warning3": "Upewnij się, że wdrożenie ma ustawione <code>restart: always</code>, inaczej serwer może nie uruchomić się ponownie automatycznie",
-      "confirmButton": "Restartuj teraz"
+      "confirmButton": "Restartuj"
     },
     "authProviders": {
       "title": "Dostawcy uwierzytelniania",
@@ -864,15 +863,15 @@
         "title": "Masowe wzbogacanie",
         "subtitle": "Uruchom włączone wzbogacanie dla wszystkich przepisów",
         "description": "Dodaj do kolejki wszystkie włączone wzbogacania",
-        "button": "Wzbogać wszystkie przepisy",
+        "button": "Wzbogać",
         "confirmTitle": "Uruchomić wzbogacanie dla wszystkich przepisów?",
         "confirmMessage": "To dodaje do kolejki pracę AI dla każdego przepisu na tym serwerze. Każdy rodzaj wzbogacania z włączonym przełącznikiem automatycznym uruchamia się tam, gdzie brakuje danych.",
         "replaceExisting": "Nadpisz istniejące dane",
         "replaceExistingDescription": "Ponownie ustal kategorie, wartości odżywcze, pochodzenie i składniki kroków, nawet jeśli przepis już je ma. Tagi i informacje o alergenach są wyłącznie dodawane.",
         "replaceWarning": "Tej operacji nie można cofnąć. Zastąpione zostaną także dane wprowadzone przez Ciebie, w tym składniki kroków powiązane ręcznie: nigdzie nie zapisano, które wartości pochodzą od AI.",
         "costWarning": "To może być kosztowna operacja: przy wielu przepisach może potrwać długo, a u płatnego dostawcy AI zużyć znaczną ilość kredytów.",
-        "confirmButton": "Uruchom dla wszystkich przepisów",
-        "confirmButtonReplace": "Nadpisz wszystkie przepisy",
+        "confirmButton": "Uruchom",
+        "confirmButtonReplace": "Nadpisz",
         "queued": "{queued, plural, =0 {Brak uruchomień w kolejce} one {# uruchomienie w kolejce} few {# uruchomienia w kolejce} many {# uruchomień w kolejce} other {# uruchomienia w kolejce}} dla {recipes, plural, one {# przepisu} few {# przepisów} many {# przepisów} other {# przepisu}}",
         "aiDisabled": "AI jest wyłączone na tym serwerze. Najpierw włącz AI.",
         "error": "Nie udało się uruchomić masowego wzbogacania",
@@ -964,7 +963,6 @@
       "alwaysUseAI": "Zawsze używaj AI przy imporcie",
       "alwaysUseAIDescription": "Pomijaj parsowanie ustrukturyzowane i wyciągaj przepisy wyłącznie przez AI",
       "connectionSuccess": "Połączenie udane",
-      "testConnection": "Testuj połączenie",
       "vision": "vision",
       "automaticEnrichment": "Automatyczne wzbogacanie przepisów",
       "automaticEnrichmentDescription": "Które wzbogacania AI są uruchamiane dla nowych przepisów. Członkowie nadal mogą uruchomić każde ręcznie.",
@@ -1064,7 +1062,6 @@
       "navigationTimeoutDescription": "Ile czasu renderer ma na załadowanie strony.",
       "saved": "Renderery stron zapisane",
       "error": "Nie udało się zapisać rendererów stron",
-      "testConnection": "Testuj połączenie",
       "connectionSuccess": "Połączenie udane"
     },
     "imageGenerationConfig": {
@@ -1119,7 +1116,6 @@
         "validateEnrichments": "Walidacja wzbogaceń",
         "validateEnrichmentsDescription": "Sprawdzić własne ustalenia każdego wzbogacenia przed ich zapisem"
       },
-      "testConnection": "Testuj połączenie",
       "connectionSuccess": "Połączenie udane"
     },
     "promptsConfig": {
@@ -1291,13 +1287,12 @@
       },
       "actions": {
         "retry": "Ponów",
-        "cancel": "Anuluj zadanie",
-        "cancelling": "Anulowanie…",
+        "cancel": "Zatrzymaj",
+        "cancelling": "Zatrzymywanie…",
         "remove": "Usuń"
       },
       "removeModal": {
-        "message": "Trwale usunąć to zadanie?",
-        "confirm": "Usuń zadanie"
+        "message": "Trwale usunąć to zadanie?"
       },
       "retention": {
         "title": "Przechowywanie zadań",

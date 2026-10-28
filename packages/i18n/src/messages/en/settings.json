@@ -327,8 +327,7 @@
       "breakfastTime": "Breakfast time",
       "lunchTime": "Lunch time",
       "dinnerTime": "Dinner time",
-      "snackTime": "Snack time",
-      "testConnection": "Test connection"
+      "snackTime": "Snack time"
     },
     "config": {
       "title": "CalDAV configuration",
@@ -723,7 +722,7 @@
       "warning1": "All active connections will be disconnected",
       "warning2": "The server will be unavailable for a few seconds",
       "warning3": "Ensure your deployment has <code>restart: always</code> configured, or the server will not come back online automatically",
-      "confirmButton": "Restart now"
+      "confirmButton": "Restart"
     },
     "authProviders": {
       "title": "Authentication providers",
@@ -864,15 +863,15 @@
         "title": "Bulk enrichment",
         "subtitle": "Run enabled enrichment on every recipe",
         "description": "Queue all enabled enrichments",
-        "button": "Enrich all recipes",
+        "button": "Enrich",
         "confirmTitle": "Run enrichment on all recipes?",
         "confirmMessage": "This queues AI work for every recipe on this server. Every enrichment kind whose automatic switch is enabled runs wherever data is missing.",
         "replaceExisting": "Overwrite existing data",
         "replaceExistingDescription": "Redo categories, nutrition, provenance and step ingredients even where a recipe already has them. Tags and allergy indications are only ever added to.",
         "replaceWarning": "This cannot be undone. Data you entered yourself is replaced too, including step ingredients you linked by hand: nothing records which values came from AI.",
         "costWarning": "This can be an expensive operation: with many recipes it may take a long time and, on a paid AI provider, use a significant amount of credits.",
-        "confirmButton": "Run on all recipes",
-        "confirmButtonReplace": "Overwrite all recipes",
+        "confirmButton": "Run",
+        "confirmButtonReplace": "Replace",
         "queued": "{queued, plural, =0 {No runs queued} one {# run queued} other {# runs queued}} across {recipes, plural, one {# recipe} other {# recipes}}",
         "aiDisabled": "AI is disabled on this server. Enable AI first.",
         "error": "Failed to start bulk enrichment",
@@ -964,7 +963,6 @@
       "alwaysUseAI": "Always use AI importing",
       "alwaysUseAIDescription": "Skip structured parsers and extract recipes using AI only",
       "connectionSuccess": "Connection successful",
-      "testConnection": "Test connection",
       "vision": "vision",
       "automaticEnrichment": "Automatic recipe enrichment",
       "automaticEnrichmentDescription": "Which AI enrichments run on new recipes. Members can still run each one by hand.",
@@ -1064,7 +1062,6 @@
       "navigationTimeoutDescription": "How long a renderer is given to load a page.",
       "saved": "Page renderers saved",
       "error": "Failed to save page renderers",
-      "testConnection": "Test connection",
       "connectionSuccess": "Connection successful"
     },
     "imageGenerationConfig": {
@@ -1119,7 +1116,6 @@
         "validateEnrichments": "Validate enrichments",
         "validateEnrichmentsDescription": "Check every enrichment run's own claims before they are written"
       },
-      "testConnection": "Test connection",
       "connectionSuccess": "Connection successful"
     },
     "promptsConfig": {
@@ -1291,13 +1287,12 @@
       },
       "actions": {
         "retry": "Retry",
-        "cancel": "Cancel job",
-        "cancelling": "Cancelling…",
+        "cancel": "Stop",
+        "cancelling": "Stopping…",
         "remove": "Remove"
       },
       "removeModal": {
-        "message": "Permanently remove this job?",
-        "confirm": "Remove job"
+        "message": "Permanently remove this job?"
       },
       "retention": {
         "title": "Job retention",

@@ -29,7 +29,6 @@
     "goHome": "Gå til forsiden",
     "test": "Test",
     "format": "Formater",
-    "restoreDefaults": "Gjenopprett standardinnstillinger",
     "saveChanges": "Lagre endringer"
   },
   "secret": {

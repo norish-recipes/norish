@@ -29,7 +29,6 @@
     "goHome": "Aller à l'accueil",
     "test": "Tester",
     "format": "Formater",
-    "restoreDefaults": "Recharger paramètres par défaut",
     "saveChanges": "Sauvegarder changements"
   },
   "secret": {

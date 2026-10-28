@@ -211,7 +211,7 @@ export default function TimerKeywordsEditor({
 
       <ActionButtonGroup>
         <ActionButton action="reset" isDisabled={saving} onPress={handleRestoreDefaults}>
-          {tActions("restoreDefaults")}
+          {tActions("reset")}
         </ActionButton>
         <ActionButton
           action="save"

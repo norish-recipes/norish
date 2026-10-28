@@ -34,8 +34,8 @@ Configure-os em **Configurações => Admin => Renderizadores de páginas**.
   troque por `http://byparr:8191/v1`. Cada página que ele lê inicia um navegador
   novo, o que leva alguns segundos.
 
-Ativar o navegador Chromium ou o solucionador testa o endpoint dele, e **Testar
-conexão** testa de novo: o Norish se conecta ao navegador e pede ao solucionador
+Ativar o navegador Chromium ou o solucionador testa o endpoint dele, e **Testar**
+testa de novo: o Norish se conecta ao navegador e pede ao solucionador
 que leia `https://example.com`.
 
 Os tokens de autenticação em sites vão para o Obscura e para o navegador

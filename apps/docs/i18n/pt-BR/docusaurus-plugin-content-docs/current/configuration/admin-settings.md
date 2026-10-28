@@ -83,9 +83,8 @@ Abra um trabalho para ver mais detalhes sobre a tarefa.
 
 ![Um trabalho cancelado no monitor de trabalhos](/img/screenshots/admin-job-cancelled.png)
 
-Um trabalho em execução pode ser interrompido nos detalhes dele com **Cancelar
-trabalho**. Uma requisição de IA que o trabalho está aguardando para na hora; o
+Um trabalho em execução pode ser interrompido nos detalhes dele com **Parar**. Uma requisição de IA que o trabalho está aguardando para na hora; o
 restante do trabalho termina primeiro a etapa atual, e até lá o botão mostra
-**Cancelando…**. Depois disso o trabalho aparece como **Cancelado** e não é
+**Parando…**. Depois disso o trabalho aparece como **Cancelado** e não é
 repetido automaticamente; **Tentar novamente** o executa de novo se ele foi
 cancelado por engano.
