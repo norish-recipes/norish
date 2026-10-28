@@ -30,8 +30,13 @@ Configure-os em **Configurações => Admin => Renderizadores de páginas**.
 - **FlareSolverr ou Byparr** é tentado quando os navegadores não recebem nenhuma
   página ou recebem uma verificação anti-bot, como um desafio da Cloudflare. O
   arquivo compose de exemplo traz os dois como serviços comentados: descomente
-  um e informe o endpoint dele, como `http://flaresolverr:8191/v1`. Cada página
-  que ele lê inicia um navegador novo, o que leva alguns segundos.
+  um e ative-o. O Norish preenche `http://flaresolverr:8191/v1`; para o Byparr,
+  troque por `http://byparr:8191/v1`. Cada página que ele lê inicia um navegador
+  novo, o que leva alguns segundos.
+
+Ativar o navegador Chromium ou o solucionador testa o endpoint dele, e **Testar
+conexão** testa de novo: o Norish se conecta ao navegador e pede ao solucionador
+que leia `https://example.com`.
 
 Os tokens de autenticação em sites vão para o Obscura e para o navegador
 Chromium, que os restringem ao site do token. O solucionador recebe a página
@@ -76,7 +81,7 @@ inicialização. Os dois têm licença BSD-3.
 - Ele roda apenas em amd64, porque o upstream só compila para Linux x86_64.
 - Ele precisa de `shm_size: 1gb`, como no exemplo. Com os 64 MB padrão do
   Docker, ele trava.
-- O endpoint dele é `http://chromium:9222`.
+- O endpoint dele é `http://chromium:9222`, preenchido quando você o ativa.
 
 Qualquer outro Chromium com um endpoint CDP também funciona, inclusive um
 navegador hospedado. Se o endpoint levar um token na query string, como

@@ -27,9 +27,14 @@ Set them up under **Settings => Admin => Page renderers**.
   shows on Allerhande. See [Chromium browser](#chromium-browser).
 - **FlareSolverr or Byparr** is tried when the browsers get no page or a bot
   check, like a Cloudflare challenge. The example compose file has both as
-  commented-out services: uncomment one and enter its endpoint, like
-  `http://flaresolverr:8191/v1`. Each page it reads starts a new browser, which
-  takes a few seconds.
+  commented-out services: uncomment one and switch it on. Norish fills in
+  `http://flaresolverr:8191/v1`; for Byparr, change it to
+  `http://byparr:8191/v1`. Each page it reads starts a new browser, which takes
+  a few seconds.
+
+Switching the Chromium browser or the solver on tests its endpoint, and **Test
+connection** tests it again: Norish connects to the browser, and has the solver
+read `https://example.com`.
 
 Site authentication tokens go to Obscura and the Chromium browser, which keep
 them to the token's site. The solver gets the page without them, so a page that
@@ -70,7 +75,7 @@ licensed.
 
 - It runs on amd64 only, because upstream builds Linux for x86_64 only.
 - It needs `shm_size: 1gb`, as in the example. Docker's default 64 MB crashes it.
-- Its endpoint is `http://chromium:9222`.
+- Its endpoint is `http://chromium:9222`, filled in when you switch it on.
 
 Any other Chromium with a CDP endpoint works too, including a hosted browser.
 If the endpoint carries a token in its query string, like

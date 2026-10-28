@@ -17,6 +17,9 @@ import { createMockAdminContext, createMockAdminUser, createMockUser } from "./t
 vi.mock("@norish/db/repositories/users", () => import("../mocks/users"));
 vi.mock("@norish/db/repositories/server-config", () => import("../mocks/server-config"));
 vi.mock("@norish/shared-server/ai/prompts/loader", () => ({ getEffectivePrompts: vi.fn() }));
+const { testEndpoint } = vi.hoisted(() => ({ testEndpoint: vi.fn() }));
+
+vi.mock("@norish/shared-server/page-renderers", () => ({ testPageRenderer: testEndpoint }));
 vi.mock("@norish/shared-server/logger", () => ({
   trpcLogger: { debug: vi.fn(), info: vi.fn(), warn: vi.fn(), error: vi.fn() },
   createLogger: () => ({ debug: vi.fn(), info: vi.fn(), warn: vi.fn(), error: vi.fn() }),
@@ -38,6 +41,7 @@ function createCaller(admin = true) {
 
 beforeEach(() => {
   resetServerConfigMocks();
+  testEndpoint.mockClear();
   isUserServerAdmin.mockImplementation((userId: string) =>
     Promise.resolve(userId === createMockAdminUser().id)
   );
@@ -141,5 +145,26 @@ describe("updatePageRenderers", () => {
       /Server admin access required/i
     );
     expect(setConfig).not.toHaveBeenCalled();
+  });
+});
+
+describe("testPageRenderer", () => {
+  it("tests the endpoint as typed, not the stored one", async () => {
+    testEndpoint.mockResolvedValue({ success: false, error: "connect ECONNREFUSED" });
+
+    await expect(
+      createCaller().testPageRenderer({ renderer: "solver", endpoint: " http://byparr:8191/v1 " })
+    ).resolves.toEqual({ success: false, error: "connect ECONNREFUSED" });
+    expect(testEndpoint).toHaveBeenCalledWith("solver", "http://byparr:8191/v1");
+  });
+
+  it("refuses a non-admin", async () => {
+    await expect(
+      createCaller(false).testPageRenderer({
+        renderer: "chromium",
+        endpoint: "http://chromium:9222",
+      })
+    ).rejects.toThrow(/Server admin access required/i);
+    expect(testEndpoint).not.toHaveBeenCalled();
   });
 });

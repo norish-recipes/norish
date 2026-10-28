@@ -164,6 +164,31 @@ test.describe("the Chromium browser", () => {
     });
   });
 
+  test("switching it on fills in the compose endpoint and tests it, and a test reaches it", async ({
+    aiStack,
+    page,
+  }) => {
+    await saveSetting(aiStack, { ...before, chromium: { enabled: false, endpoint: "" } });
+    await page.goto("/settings?tab=admin");
+    const card = cardOf(page);
+    const result = card.getByRole("status");
+
+    await card.scrollIntoViewIfNeeded();
+    await submitMutation(page, "admin.testPageRenderer", () =>
+      card.getByRole("switch", { name: "Chromium browser" }).press("Space")
+    );
+    // eslint-disable-next-line sonarjs/no-clear-text-protocols -- the example compose file's chromium service, without TLS
+    await expect(card.getByLabel("Chromium endpoint")).toHaveValue("http://chromium:9222");
+    // The compose service's name does not resolve on the runner.
+    await expect(result).toBeVisible();
+    await expect(result).not.toHaveText("Connection successful");
+
+    await card.getByLabel("Chromium endpoint").fill(endpoint);
+    await expect(result).toHaveCount(0);
+    await card.getByRole("button", { name: "Test connection" }).click();
+    await expect(result).toHaveText("Connection successful");
+  });
+
   test("an import reads a recipe behind a bot check that the plain fetch cannot", async ({
     aiStack,
   }) => {

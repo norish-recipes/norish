@@ -1,14 +1,13 @@
-import { lookup } from "node:dns/promises";
-import { BlockList, isIP } from "node:net";
+import { BlockList } from "node:net";
 import type { LookupAddress } from "node:dns";
 import type { BrowserContext, Page } from "playwright-core";
-import { z } from "zod";
 
 import type { BrowserRenderer } from "@norish/api/parser/browser-connections";
 import type { SiteAuthTokenDecryptedDto } from "@norish/shared/contracts/dto/site-auth-tokens";
 import { getBrowser } from "@norish/api/parser/browser-connections";
 import { getPageRenderersConfig } from "@norish/shared-server/config/server-config-loader";
 import { parserLogger as log } from "@norish/shared-server/logger";
+import { addressesOf, byAddress, solve } from "@norish/shared-server/page-renderers";
 import { isHostOnDomain } from "@norish/shared/lib/helpers";
 import { withTimeout } from "@norish/shared/lib/with-timeout";
 
@@ -16,8 +15,6 @@ import { withTimeout } from "@norish/shared/lib/with-timeout";
 const SETTLE_TIMEOUT_MS = 15_000;
 const SETTLE_POLL_MS = 500;
 const PLAIN_FETCH_TIMEOUT_MS = 15_000;
-/** A solver launches a browser before it navigates, so it is given this on top of the timeout. */
-const SOLVER_LAUNCH_MS = 15_000;
 const MAX_REDIRECTS = 10;
 /** Below this, a page with no title of its own, or a block page's title, is a bot check. */
 const STUB_MAX_BYTES = 20_000;
@@ -115,11 +112,6 @@ async function isRefusedHost(hostname: string, allowPrivateAddresses: boolean): 
 
   // A name that does not resolve is left to the fetch to fail.
   return (await addressesOf(hostname).catch(() => [])).some(isPrivate);
-}
-
-/** Every address a host resolves to; an address, bracketed or not, resolves to itself. */
-function addressesOf(hostname: string): Promise<LookupAddress[]> {
-  return lookup(hostname.replace(/^\[|\]$/g, ""), { all: true });
 }
 
 function isPrivate({ address, family }: LookupAddress): boolean {
@@ -293,34 +285,6 @@ function loadedContent(page: Page): Promise<string | null> {
 }
 
 /**
- * The endpoint with its host as an address: Chromium's DevTools server refuses a Host header that
- * is not an IP or localhost. https and wss endpoints sit behind proxies without that check.
- */
-async function byAddress(endpoint: string): Promise<string> {
-  const url = URL.parse(endpoint);
-
-  if (
-    !url ||
-    !/^(?:http|ws):$/.test(url.protocol) ||
-    isIP(url.hostname.replace(/^\[|\]$/g, "")) ||
-    /(?:^|\.)localhost$/.test(url.hostname)
-  ) {
-    return endpoint;
-  }
-
-  // A name that does not resolve is dialled as given, so the failure names it. IPv4 first, where
-  // the shipped image's socat listens, then the lowest, so rotating records keep one connection.
-  const [resolved] = (await addressesOf(url.hostname).catch(() => [])).sort(
-    (a, b) => a.family - b.family || a.address.localeCompare(b.address)
-  );
-
-  if (!resolved) return endpoint;
-  url.hostname = resolved.family === 6 ? `[${resolved.address}]` : resolved.address;
-
-  return url.href;
-}
-
-/**
  * Render a page with the Page Renderers that are switched on and return its HTML.
  *
  * The renderer owns the browser identity, JavaScript execution, page settling,
@@ -447,38 +411,19 @@ function answered(
   return page;
 }
 
-const SolverReplySchema = z.object({
-  status: z.literal("ok"),
-  solution: z.object({ response: z.string() }),
-});
-
-/**
- * Ask a FlareSolverr-compatible solver for the page. FlareSolverr and Byparr both hard-code the
- * page's status to 200, so a solved page reports none, and its answer is read once.
- */
+/** Ask a FlareSolverr-compatible solver for the page, read once. */
 async function renderInSolver(
   targetUrl: string,
   endpoint: string,
   maxTimeout: number
 ): Promise<RenderedPage> {
   try {
-    const response = await fetch(endpoint, {
-      method: "POST",
-      headers: { "content-type": "application/json" },
-      body: JSON.stringify({ cmd: "request.get", url: targetUrl, maxTimeout }),
-      signal: AbortSignal.timeout(maxTimeout + SOLVER_LAUNCH_MS),
-    });
-    const reply = SolverReplySchema.safeParse(
-      response.ok ? await response.json().catch(() => null) : null
-    );
-
-    if (reply.success) return { html: reply.data.solution.response, status: null };
-    log.warn({ url: targetUrl, status: response.status }, "The solver could not render the page");
+    return { html: await solve(targetUrl, endpoint, maxTimeout), status: null };
   } catch (error) {
     log.warn({ err: error, url: targetUrl }, "The solver could not render the page");
-  }
 
-  return { html: "", status: null };
+    return { html: "", status: null };
+  }
 }
 
 /**

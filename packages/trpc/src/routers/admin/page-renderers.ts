@@ -1,7 +1,10 @@
+import { z } from "zod";
+
 import type { PageRenderersConfig } from "@norish/config/zod/server-config";
 import { PageRenderersConfigSchema, ServerConfigKeys } from "@norish/config/zod/server-config";
 import { getConfig, setConfig } from "@norish/db/repositories/server-config";
 import { trpcLogger as log } from "@norish/shared-server/logger";
+import { testPageRenderer as testEndpoint } from "@norish/shared-server/page-renderers";
 
 import { adminProcedure } from "../../middleware";
 import { router } from "../../trpc";
@@ -39,7 +42,17 @@ const updatePageRenderers = adminProcedure
     return { success: true };
   });
 
+/** Test the Chromium browser or the solver at an endpoint, saved or not. */
+const testPageRenderer = adminProcedure
+  .input(z.object({ renderer: z.enum(["chromium", "solver"]), endpoint: z.string().trim().min(1) }))
+  .mutation(async ({ input, ctx }) => {
+    log.info({ userId: ctx.user.id, renderer: input.renderer }, "Testing a Page Renderer");
+
+    return testEndpoint(input.renderer, input.endpoint);
+  });
+
 export const pageRenderersProcedures = router({
   getPageRenderers,
   updatePageRenderers,
+  testPageRenderer,
 });
