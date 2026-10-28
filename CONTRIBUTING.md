@@ -38,6 +38,11 @@ Edit `.env.local` with your local configuration. At minimum, you need:
 - `AUTH_URL` - Your local URL (e.g., `http://localhost:3000`)
 - `MASTER_KEY` - Generate with `openssl rand -base64 32`
 
+If you open the dev server through a proxy or a hostname other than `localhost`
+(for example `https://norish.mybox.test`), add that host to `ALLOWED_DEV_ORIGINS`
+(comma separated, wildcards such as `*.mybox.test` allowed). Otherwise Next.js
+blocks hot reload from it.
+
 ### 4. Start Required Services
 
 ```bash

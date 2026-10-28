@@ -4,6 +4,7 @@ import { fileURLToPath } from "node:url";
 import { withSerwist } from "@serwist/turbopack";
 import createNextIntlPlugin from "next-intl/plugin";
 
+import { withExtraDevOrigins } from "./config/allowed-dev-origins.js";
 import { getNextIntlRequestConfigPath } from "./config/next-intl-request-config-path.js";
 
 const configDirectory = dirname(fileURLToPath(import.meta.url));
@@ -63,14 +64,17 @@ export default withSerwist(
     // Norish never uses the image optimizer, and /_next/image is unauthenticated
     // (the auth proxy skips _next); unoptimized makes Next answer it with 404.
     images: { unoptimized: true },
-    allowedDevOrigins: [
-      "localhost",
-      "192.168.2.13",
-      "192.168.2.25",
-      "192.168.50.11",
-      "http://mac-mini.local",
-      "*.local",
-    ],
+    allowedDevOrigins: withExtraDevOrigins(
+      [
+        "localhost",
+        "192.168.2.13",
+        "192.168.2.25",
+        "192.168.50.11",
+        "http://mac-mini.local",
+        "*.local",
+      ],
+      process.env.ALLOWED_DEV_ORIGINS
+    ),
     devIndicators: false,
     env: {
       NEXT_PUBLIC_APP_VERSION: packageJson.version,
