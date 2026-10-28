@@ -7,8 +7,9 @@ import { useTRPC } from "@/app/providers/trpc-provider";
 import { IngredientIconsProvider } from "@/components/ingredients/ingredient-icon";
 import { IngredientPanel } from "@/components/ingredients/ingredient-panel";
 import { isOpenChange, useAIChanges } from "@/components/ingredients/use-ai-changes";
-import { FunnelIcon } from "@heroicons/react/16/solid";
-import { BookOpenIcon, SparklesIcon } from "@heroicons/react/24/outline";
+import { ActionButton } from "@/components/shared/action-button";
+import { FunnelIcon, SparklesIcon } from "@heroicons/react/16/solid";
+import { BookOpenIcon } from "@heroicons/react/24/outline";
 import { Button, Skeleton } from "@heroui/react";
 import { keepPreviousData, useInfiniteQuery, useQueryClient } from "@tanstack/react-query";
 import { useLocale, useTranslations } from "next-intl";
@@ -107,15 +108,15 @@ export default function IngredientsSettingsContent() {
         <SettingsCard
           actions={
             changes.length > 0 ? (
-              <Button
+              <ActionButton
+                action="edit"
                 data-testid="ingredients-ai-changes-open"
+                icon={SparklesIcon}
                 size="sm"
-                variant="tertiary"
                 onPress={() => setChangesOpen(true)}
               >
-                <SparklesIcon className="size-4" />
                 {t("changedByAI.open", { count: unsure })}
-              </Button>
+              </ActionButton>
             ) : null
           }
           description={t("description")}

@@ -2,6 +2,7 @@
 
 import { useRef, useState } from "react";
 import { SettingsCard } from "@/app/(app)/settings/components/settings-card";
+import { ActionButton, ActionButtonGroup } from "@/components/shared/action-button";
 import UserAvatar from "@/components/shared/user-avatar";
 import { usePending } from "@/hooks/use-pending";
 import { TrashIcon } from "@heroicons/react/16/solid";
@@ -14,6 +15,7 @@ import { useUserSettingsContext } from "../context";
 
 export default function ProfileCard() {
   const t = useTranslations("settings.user.profile");
+  const tActions = useTranslations("common.actions");
   const { user, updateName, updateImage, deleteImage, isDeletingAvatar } = useUserSettingsContext();
   const [name, setName] = useState(user?.name || "");
   const [syncedName, setSyncedName] = useState(user?.name);
@@ -140,16 +142,16 @@ export default function ProfileCard() {
         <Label>{t("emailLabel")}</Label>
         <Input variant="secondary" />
       </TextField>
-      <div className="flex justify-end">
-        <Button
+      <ActionButtonGroup>
+        <ActionButton
+          action="save"
           isDisabled={!hasPendingChanges}
-          onPress={handleSaveProfile}
-          variant="primary"
           isPending={saving}
+          onPress={handleSaveProfile}
         >
-          {t("saveChanges")}
-        </Button>
-      </div>
+          {tActions("save")}
+        </ActionButton>
+      </ActionButtonGroup>
     </SettingsCard>
   );
 }

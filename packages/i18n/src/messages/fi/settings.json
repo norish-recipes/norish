@@ -42,14 +42,12 @@
       "namePlaceholder": "Nimesi",
       "emailLabel": "Sähköposti",
       "avatarHint": "Vaihda kuva napsauttamalla profiilikuvaasi",
-      "deleteAvatar": "Poista profiilikuva",
-      "saveChanges": "Tallenna muutokset"
+      "deleteAvatar": "Poista profiilikuva"
     },
     "allergies": {
       "title": "Allergiat",
       "description": "Lisää ruoka-allergiasi, niin saat varoituksen suunnitellessasi reseptejä, jotka sisältävät allergeeneja.",
-      "placeholder": "Kirjoita allergiat (esim. gluteeni, pähkinät, maito)...",
-      "saveButton": "Tallenna allergiat"
+      "placeholder": "Kirjoita allergiat (esim. gluteeni, pähkinät, maito)..."
     },
     "apiKeys": {
       "title": "API-avaimet",
@@ -77,7 +75,8 @@
         "title": "API-avain luotu",
         "warning": "Tallenna tämä avain nyt! Et näe sitä enää uudelleen. Tallennamme vain tiivisteen emmekä voi palauttaa tätä avainta.",
         "hint": "Käytä tätä avainta <code>x-api-key</code>-otsakkeessa API-pyyntöjä tehdessäsi.",
-        "confirmButton": "Olen tallentanut sen"
+        "confirmButton": "Olen tallentanut sen",
+        "copyButton": "Kopioi avain"
       },
       "deleteModal": {
         "title": "Poista API-avain",
@@ -287,7 +286,8 @@
       "noCodeDescription": "Ei aktiivista liittymiskoodia. Luo koodi kutsuaksesi uusia jäseniä.",
       "generateButton": "Luo liittymiskoodi",
       "copySuccess": "Liittymiskoodi kopioitu",
-      "copyFailed": "Liittymiskoodin kopiointi epäonnistui"
+      "copyFailed": "Liittymiskoodin kopiointi epäonnistui",
+      "copyButton": "Kopioi liittymiskoodi"
     },
     "create": {
       "title": "Luo kotitalous",
@@ -328,8 +328,7 @@
       "lunchTime": "Lounaan aika",
       "dinnerTime": "Päivällisen aika",
       "snackTime": "Välipalan aika",
-      "testConnection": "Testaa yhteys",
-      "saveConfiguration": "Tallenna asetukset"
+      "testConnection": "Testaa yhteys"
     },
     "config": {
       "title": "CalDAV-asetukset",
@@ -339,7 +338,6 @@
       "disabled": "Pois käytöstä",
       "editButton": "Muokkaa",
       "deleteButton": "Poista",
-      "saveChanges": "Tallenna muutokset",
       "advancedSettings": "Lisäasetukset",
       "timezone": "Aikavyöhyke: {timezone}",
       "connectionStatus": {
@@ -628,7 +626,6 @@
       "localesDescription": "Valitse, mistä kielistä käyttäjät voivat valita",
       "defaultLocale": "Oletuskieli",
       "defaultLocaleDescription": "Uusien käyttäjien kieli ja varakieli",
-      "saveLocales": "Tallenna kieliasetukset",
       "localesSaved": "Kieliasetukset tallennettu",
       "localesError": "Kieliasetusten tallennus epäonnistui",
       "atLeastOneLocale": "Vähintään yhden kielen on oltava käytössä",
@@ -1066,7 +1063,9 @@
       "navigationTimeout": "Navigoinnin aikakatkaisu (ms)",
       "navigationTimeoutDescription": "Kuinka kauan renderöijällä on aikaa ladata sivu.",
       "saved": "Sivujen renderöijät tallennettu",
-      "error": "Sivujen renderöijien tallennus epäonnistui"
+      "error": "Sivujen renderöijien tallennus epäonnistui",
+      "testConnection": "Testaa yhteys",
+      "connectionSuccess": "Yhteys onnistui"
     },
     "imageGenerationConfig": {
       "description": "Kuvat tarvitsevat oman palveluntarjoajan, koska useimmat tekoälypalvelut eivät osaa piirtää.",

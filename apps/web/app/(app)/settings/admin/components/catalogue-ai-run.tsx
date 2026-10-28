@@ -2,10 +2,11 @@
 
 import type { ReactNode } from "react";
 import { SettingRow } from "@/app/(app)/settings/components/setting-row";
+import { ActionButton, ActionButtonGroup } from "@/components/shared/action-button";
 import { AIButton } from "@/components/shared/ai-button";
 import { cssAIIconColor } from "@/config/css-tokens";
-import { SparklesIcon, XMarkIcon } from "@heroicons/react/24/outline";
-import { Button, Modal, Spinner } from "@heroui/react";
+import { SparklesIcon } from "@heroicons/react/24/outline";
+import { Modal, Spinner } from "@heroui/react";
 import { useTranslations } from "next-intl";
 import { twMerge } from "tailwind-merge";
 
@@ -60,6 +61,7 @@ export function CatalogueAIRun({
   return (
     <SettingRow description={description} title={title}>
       <AIButton
+        fullWidth
         data-testid={testId}
         isDisabled={!aiConfig?.enabled || !counted || running}
         variant="tertiary"
@@ -85,19 +87,20 @@ export function CatalogueAIRun({
               )}
             </Modal.Body>
             <Modal.Footer>
-              <Button variant="tertiary" onPress={() => onOpenChange(false)}>
-                <XMarkIcon className="size-4" />
-                {tActions("cancel")}
-              </Button>
-              <AIButton
-                data-testid={`${testId}-start`}
-                isDisabled={!canStart}
-                isPending={starting}
-                variant="secondary"
-                onPress={onStart}
-              >
-                {start}
-              </AIButton>
+              <ActionButtonGroup>
+                <ActionButton action="cancel" onPress={() => onOpenChange(false)}>
+                  {tActions("cancel")}
+                </ActionButton>
+                <AIButton
+                  data-testid={`${testId}-start`}
+                  isDisabled={!canStart}
+                  isPending={starting}
+                  variant="secondary"
+                  onPress={onStart}
+                >
+                  {start}
+                </AIButton>
+              </ActionButtonGroup>
             </Modal.Footer>
           </Modal.Dialog>
         </Modal.Container>

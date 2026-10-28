@@ -2,9 +2,9 @@
 
 import { useState } from "react";
 import { SettingsCard } from "@/app/(app)/settings/components/settings-card";
-import { TrashIcon } from "@heroicons/react/16/solid";
+import { ActionButton, ActionButtonGroup } from "@/components/shared/action-button";
 import { ExclamationCircleIcon } from "@heroicons/react/24/outline";
-import { Button, Modal } from "@heroui/react";
+import { Modal } from "@heroui/react";
 import { useTranslations } from "next-intl";
 
 import { useUserSettingsContext } from "../context";
@@ -25,12 +25,11 @@ export default function DangerZoneCard() {
         icon={ExclamationCircleIcon}
         title={t("title")}
       >
-        <div className="flex justify-end">
-          <Button onPress={() => setShowAccountDeleteModal(true)} variant="danger-soft">
-            {<TrashIcon className="h-4 w-4" />}
+        <ActionButtonGroup>
+          <ActionButton action="delete" onPress={() => setShowAccountDeleteModal(true)}>
             {t("deleteButton")}
-          </Button>
-        </div>
+          </ActionButton>
+        </ActionButtonGroup>
       </SettingsCard>
 
       {/* Delete Account Confirmation */}
@@ -53,12 +52,14 @@ export default function DangerZoneCard() {
                   <p className="mt-2">{t("deleteModal.adminNote")}</p>
                 </Modal.Body>
                 <Modal.Footer>
-                  <Button onPress={onClose} variant="tertiary">
-                    {tActions("cancel")}
-                  </Button>
-                  <Button onPress={handleDeleteAccount} variant="danger">
-                    {t("deleteModal.confirmButton")}
-                  </Button>
+                  <ActionButtonGroup>
+                    <ActionButton action="cancel" onPress={onClose}>
+                      {tActions("cancel")}
+                    </ActionButton>
+                    <ActionButton action="delete" variant="danger" onPress={handleDeleteAccount}>
+                      {t("deleteModal.confirmButton")}
+                    </ActionButton>
+                  </ActionButtonGroup>
                 </Modal.Footer>
               </>
             )}

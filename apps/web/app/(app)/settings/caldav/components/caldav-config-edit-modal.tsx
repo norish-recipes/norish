@@ -1,11 +1,11 @@
 "use client";
 
 import { useCallback, useEffect, useRef, useState } from "react";
+import { ActionButton, ActionButtonGroup } from "@/components/shared/action-button";
 import SecretInput from "@/components/shared/secret-input";
 import { ServerIcon } from "@heroicons/react/24/outline";
 import {
   Accordion,
-  Button,
   Chip,
   Description,
   FieldError,
@@ -29,6 +29,7 @@ interface CalDavConfigEditModalProps {
 export default function CalDavConfigEditModal({ isOpen, onClose }: CalDavConfigEditModalProps) {
   const t = useTranslations("settings.caldav.setup");
   const tConfig = useTranslations("settings.caldav.config");
+  const tActions = useTranslations("common.actions");
   const {
     config,
     saveConfig,
@@ -322,22 +323,24 @@ export default function CalDavConfigEditModal({ isOpen, onClose }: CalDavConfigE
             </div>
           </Modal.Body>
           <Modal.Footer>
-            <Button
-              isDisabled={!serverUrl || !username || (!password && !config)}
-              onPress={handleTestConnection}
-              variant="secondary"
-              isPending={testing}
-            >
-              {t("testConnection")}
-            </Button>
-            <Button
-              isDisabled={!canSave || Object.keys(timeErrors).length > 0}
-              onPress={handleSave}
-              variant="primary"
-              isPending={saving}
-            >
-              {tConfig("saveChanges")}
-            </Button>
+            <ActionButtonGroup>
+              <ActionButton
+                action="test"
+                isDisabled={!serverUrl || !username || (!password && !config)}
+                isPending={testing}
+                onPress={handleTestConnection}
+              >
+                {t("testConnection")}
+              </ActionButton>
+              <ActionButton
+                action="save"
+                isDisabled={!canSave || Object.keys(timeErrors).length > 0}
+                isPending={saving}
+                onPress={handleSave}
+              >
+                {tActions("save")}
+              </ActionButton>
+            </ActionButtonGroup>
           </Modal.Footer>
         </Modal.Dialog>
       </Modal.Container>

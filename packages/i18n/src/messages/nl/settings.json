@@ -42,14 +42,12 @@
       "namePlaceholder": "Je naam",
       "emailLabel": "E-mail",
       "avatarHint": "Klik op je avatar om de afbeelding te wijzigen",
-      "deleteAvatar": "Profielfoto verwijderen",
-      "saveChanges": "Wijzigingen opslaan"
+      "deleteAvatar": "Profielfoto verwijderen"
     },
     "allergies": {
       "title": "Allergieën",
       "description": "Voeg je voedselallergieën toe om gewaarschuwd te worden bij het plannen van recepten met allergenen.",
-      "placeholder": "Typ allergieën (bijv. gluten, noten, zuivel)...",
-      "saveButton": "Allergieën opslaan"
+      "placeholder": "Typ allergieën (bijv. gluten, noten, zuivel)..."
     },
     "apiKeys": {
       "title": "API-sleutels",
@@ -77,7 +75,8 @@
         "title": "API-sleutel gegenereerd",
         "warning": "Sla deze sleutel nu op! Je kunt hem niet opnieuw zien. We slaan alleen een hash op en kunnen deze sleutel niet herstellen.",
         "hint": "Gebruik deze sleutel in de <code>x-api-key</code> header bij het maken van API-aanvragen.",
-        "confirmButton": "Ik heb het opgeslagen"
+        "confirmButton": "Ik heb het opgeslagen",
+        "copyButton": "Sleutel kopiëren"
       },
       "deleteModal": {
         "title": "API-sleutel verwijderen",
@@ -287,7 +286,8 @@
       "noCodeDescription": "Geen actieve join code. Genereer er een om nieuwe leden uit te nodigen.",
       "generateButton": "Genereer join Code",
       "copySuccess": "Join-code gekopieerd",
-      "copyFailed": "Join-code kopieren mislukt"
+      "copyFailed": "Join-code kopieren mislukt",
+      "copyButton": "Join code kopiëren"
     },
     "create": {
       "title": "Huishouden aanmaken",
@@ -328,8 +328,7 @@
       "lunchTime": "Lunchtijd",
       "dinnerTime": "Dinnertijd",
       "snackTime": "Snacktijd",
-      "testConnection": "Test verbinding",
-      "saveConfiguration": "Configuratie opslaan"
+      "testConnection": "Test verbinding"
     },
     "config": {
       "title": "CalDAV Configuratie",
@@ -339,7 +338,6 @@
       "disabled": "Uitgeschakeld",
       "editButton": "Bewerk",
       "deleteButton": "Verwijder",
-      "saveChanges": "Wijzigingen opslaan",
       "advancedSettings": "Geavanceerde instellingen",
       "timezone": "Tijdzone: {timezone}",
       "connectionStatus": {
@@ -628,7 +626,6 @@
       "localesDescription": "Selecteer welke talen gebruikers kunnen kiezen",
       "defaultLocale": "Standaardtaal",
       "defaultLocaleDescription": "Taal voor nieuwe gebruikers en als fallback",
-      "saveLocales": "Taalinstellingen opslaan",
       "localesSaved": "Taalinstellingen opgeslagen",
       "localesError": "Taalinstellingen opslaan mislukt",
       "atLeastOneLocale": "Minimaal één taal moet ingeschakeld zijn",
@@ -1066,7 +1063,9 @@
       "navigationTimeout": "Navigatietime-out (ms)",
       "navigationTimeoutDescription": "Hoe lang een renderer krijgt om een pagina te laden.",
       "saved": "Paginarenderers opgeslagen",
-      "error": "Paginarenderers opslaan mislukt"
+      "error": "Paginarenderers opslaan mislukt",
+      "testConnection": "Test verbinding",
+      "connectionSuccess": "Verbinding succesvol"
     },
     "imageGenerationConfig": {
       "description": "Afbeeldingen hebben een eigen provider nodig, omdat de meeste AI-providers niet kunnen tekenen.",

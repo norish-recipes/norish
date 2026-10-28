@@ -2,8 +2,9 @@
 
 import { useState } from "react";
 import SettingsSwitch from "@/app/(app)/settings/components/settings-switch";
+import { ActionButton, ActionButtonGroup } from "@/components/shared/action-button";
 import { usePending } from "@/hooks/use-pending";
-import { Button, Modal } from "@heroui/react";
+import { Modal } from "@heroui/react";
 import { useTranslations } from "next-intl";
 
 interface DeleteCalDavModalProps {
@@ -41,12 +42,19 @@ export default function DeleteCalDavModal({ isOpen, onClose, onConfirm }: Delete
             </div>
           </Modal.Body>
           <Modal.Footer>
-            <Button onPress={onClose} variant="tertiary">
-              {tActions("cancel")}
-            </Button>
-            <Button onPress={handleConfirm} variant="danger" isPending={deleting}>
-              {t("confirmButton")}
-            </Button>
+            <ActionButtonGroup>
+              <ActionButton action="cancel" onPress={onClose}>
+                {tActions("cancel")}
+              </ActionButton>
+              <ActionButton
+                action="delete"
+                isPending={deleting}
+                variant="danger"
+                onPress={handleConfirm}
+              >
+                {t("confirmButton")}
+              </ActionButton>
+            </ActionButtonGroup>
           </Modal.Footer>
         </Modal.Dialog>
       </Modal.Container>

@@ -1,8 +1,8 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { ArrowPathIcon } from "@heroicons/react/16/solid";
-import { Button, Description, Label, TextArea, TextField } from "@heroui/react";
+import { ActionButton, ActionButtonGroup } from "@/components/shared/action-button";
+import { Description, Label, TextArea, TextField } from "@heroui/react";
 import { useTranslations } from "next-intl";
 
 import type { PromptsConfig } from "@norish/config/zod/server-config";
@@ -105,15 +105,19 @@ export default function PromptsForm({ onDirtyChange }: PromptsFormProps) {
         </div>
       ))}
 
-      <div className="flex flex-wrap items-center justify-between gap-2">
-        <Button isPending={restoring} variant="tertiary" onPress={handleRestoreDefaults}>
-          {!restoring && <ArrowPathIcon className="h-5 w-5" />}
+      <ActionButtonGroup>
+        <ActionButton action="reset" isPending={restoring} onPress={handleRestoreDefaults}>
           {tActions("restoreDefaults")}
-        </Button>
-        <Button isDisabled={!hasChanges} isPending={saving} variant="primary" onPress={handleSave}>
+        </ActionButton>
+        <ActionButton
+          action="save"
+          isDisabled={!hasChanges}
+          isPending={saving}
+          onPress={handleSave}
+        >
           {tActions("save")}
-        </Button>
-      </div>
+        </ActionButton>
+      </ActionButtonGroup>
     </div>
   );
 }

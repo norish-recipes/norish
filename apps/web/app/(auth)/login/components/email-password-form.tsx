@@ -2,6 +2,7 @@
 
 import { useState } from "react";
 import { usePending } from "@/hooks/use-pending";
+import { ArrowRightEndOnRectangleIcon } from "@heroicons/react/16/solid";
 import { EnvelopeIcon, LockClosedIcon } from "@heroicons/react/24/outline";
 import { Button, FieldError, InputGroup, Label, Link, TextField } from "@heroui/react";
 import { useTranslations } from "next-intl";
@@ -104,6 +105,7 @@ export function EmailPasswordForm({
         type="submit"
         variant="primary"
       >
+        <ArrowRightEndOnRectangleIcon className="size-4" />
         {t("signIn")}
       </Button>
 

@@ -3,10 +3,11 @@
 import { useState } from "react";
 import { SettingRow } from "@/app/(app)/settings/components/setting-row";
 import { SettingsCard } from "@/app/(app)/settings/components/settings-card";
+import { ActionButton, ActionButtonGroup } from "@/components/shared/action-button";
 import { usePending } from "@/hooks/use-pending";
 import { ArrowPathIcon } from "@heroicons/react/16/solid";
 import { WrenchScrewdriverIcon } from "@heroicons/react/24/outline";
-import { Button, Input, Separator, TextField, useOverlayState } from "@heroui/react";
+import { Input, Separator, TextField, useOverlayState } from "@heroui/react";
 import { useTranslations } from "next-intl";
 
 import { useAdminSettingsContext } from "../context";
@@ -58,24 +59,29 @@ export default function SystemCard() {
           <Input max={24} min={1} variant="secondary" />
         </TextField>
       </SettingRow>
-      <div className="flex justify-end">
-        <Button
+      <ActionButtonGroup>
+        <ActionButton
+          action="save"
           isDisabled={!hasSchedulerChanges}
           isPending={saving}
-          variant="primary"
           onPress={handleSaveScheduler}
         >
           {tActions("save")}
-        </Button>
-      </div>
+        </ActionButton>
+      </ActionButtonGroup>
 
       <Separator />
 
       <SettingRow description={t("server.restartDescription")} title={t("server.restartLabel")}>
-        <Button variant="tertiary" onPress={restartModal.open}>
-          <ArrowPathIcon className="h-5 w-5" />
+        <ActionButton
+          fullWidth
+          action="apply"
+          icon={ArrowPathIcon}
+          variant="tertiary"
+          onPress={restartModal.open}
+        >
           {t("server.restartButton")}
-        </Button>
+        </ActionButton>
       </SettingRow>
 
       <RestartConfirmationModal

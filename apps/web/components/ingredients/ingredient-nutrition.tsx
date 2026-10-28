@@ -5,6 +5,7 @@ import { useState } from "react";
 import { useTRPC } from "@/app/providers/trpc-provider";
 import Panel from "@/components/Panel/Panel";
 import { ActionButton, ActionButtonGroup } from "@/components/shared/action-button";
+import { PlusIcon } from "@heroicons/react/16/solid";
 import { ChevronRightIcon } from "@heroicons/react/24/outline";
 import { Button, Skeleton } from "@heroui/react";
 import { useQuery } from "@tanstack/react-query";
@@ -189,6 +190,7 @@ function NutritionFacts({
                 variant="secondary"
                 onPress={onAskSpoon}
               >
+                <PlusIcon className="size-4" />
                 {t("spoonAsk")}
               </Button>
             </Fact>

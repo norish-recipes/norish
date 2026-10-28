@@ -2,8 +2,10 @@
 
 import { SubmitEvent, useState } from "react";
 import { SettingsCard } from "@/app/(app)/settings/components/settings-card";
+import { ActionButton, ActionButtonGroup } from "@/components/shared/action-button";
+import { ArrowRightEndOnRectangleIcon } from "@heroicons/react/16/solid";
 import { HomeIcon, UserGroupIcon } from "@heroicons/react/24/outline";
-import { Button, Input, InputOTP, Label, REGEXP_ONLY_DIGITS, TextField } from "@heroui/react";
+import { Input, InputOTP, Label, REGEXP_ONLY_DIGITS, TextField } from "@heroui/react";
 import { useTranslations } from "next-intl";
 
 import { useHouseholdSettingsContext } from "../context";
@@ -43,11 +45,11 @@ export default function NoHouseholdView() {
               <Label>{t("create.nameLabel")}</Label>
               <Input variant="secondary" placeholder={t("create.namePlaceholder")} />
             </TextField>
-            <div className="flex justify-end">
-              <Button type="submit" variant="primary" isPending={isCreating}>
+            <ActionButtonGroup>
+              <ActionButton action="create" isPending={isCreating} type="submit">
                 {t("create.submitButton")}
-              </Button>
-            </div>
+              </ActionButton>
+            </ActionButtonGroup>
           </form>
         </SettingsCard>
 
@@ -84,11 +86,16 @@ export default function NoHouseholdView() {
                 </InputOTP.Group>
               </InputOTP>
             </div>
-            <div className="flex justify-end">
-              <Button type="submit" variant="primary" isPending={isJoining}>
+            <ActionButtonGroup>
+              <ActionButton
+                action="apply"
+                icon={ArrowRightEndOnRectangleIcon}
+                isPending={isJoining}
+                type="submit"
+              >
                 {t("join.submitButton")}
-              </Button>
-            </div>
+              </ActionButton>
+            </ActionButtonGroup>
           </form>
         </SettingsCard>
       </div>

@@ -1,5 +1,6 @@
 "use client";
 
+import { ArrowUturnLeftIcon, CheckIcon } from "@heroicons/react/16/solid";
 import { Button } from "@heroui/react";
 import { useTranslations } from "next-intl";
 
@@ -28,6 +29,7 @@ export function AIChangeActions({
         variant="danger-soft"
         onPress={() => onUndo(change)}
       >
+        <ArrowUturnLeftIcon className="size-4" />
         {t("changedByAI.undo")}
       </Button>
       {isOpenChange(change) ? (
@@ -37,6 +39,7 @@ export function AIChangeActions({
           variant="secondary"
           onPress={() => onKeep(change)}
         >
+          <CheckIcon className="size-4" />
           {t("changedByAI.keep")}
         </Button>
       ) : null}

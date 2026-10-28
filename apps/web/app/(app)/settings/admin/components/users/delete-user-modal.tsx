@@ -1,7 +1,8 @@
 "use client";
 
+import { ActionButton, ActionButtonGroup } from "@/components/shared/action-button";
 import { ExclamationTriangleIcon } from "@heroicons/react/16/solid";
-import { Button, Modal } from "@heroui/react";
+import { Modal } from "@heroui/react";
 import { useTranslations } from "next-intl";
 
 interface DeleteUserModalProps {
@@ -34,12 +35,19 @@ export function DeleteUserModal({
             <p>{t("deleteConfirm")}</p>
           </Modal.Body>
           <Modal.Footer>
-            <Button isDisabled={isDeleting} onPress={onClose} variant="tertiary">
-              {tActions("cancel")}
-            </Button>
-            <Button isPending={isDeleting} onPress={onConfirm} variant="danger">
-              {tActions("remove")}
-            </Button>
+            <ActionButtonGroup>
+              <ActionButton action="cancel" isDisabled={isDeleting} onPress={onClose}>
+                {tActions("cancel")}
+              </ActionButton>
+              <ActionButton
+                action="delete"
+                isPending={isDeleting}
+                variant="danger"
+                onPress={onConfirm}
+              >
+                {tActions("remove")}
+              </ActionButton>
+            </ActionButtonGroup>
           </Modal.Footer>
         </Modal.Dialog>
       </Modal.Container>

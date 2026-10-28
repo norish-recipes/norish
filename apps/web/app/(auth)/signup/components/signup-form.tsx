@@ -3,6 +3,7 @@
 import { useState } from "react";
 import { usePending } from "@/hooks/use-pending";
 import { safeOrigin } from "@/lib/back-destination";
+import { UserPlusIcon } from "@heroicons/react/16/solid";
 import { EnvelopeIcon, LockClosedIcon, UserIcon } from "@heroicons/react/24/outline";
 import { Button, Description, FieldError, InputGroup, Label, Link, TextField } from "@heroui/react";
 import { useTranslations } from "next-intl";
@@ -162,12 +163,14 @@ export function SignupForm({ callbackUrl = APP_ROOT }: SignupFormProps) {
       {error && <AuthAlert description={error} title={t("errors.title")} />}
 
       <Button
-        className="mt-2"
+        fullWidth
+        className="mt-2 h-11"
         isDisabled={!isFormValid}
         isPending={isLoading || isLeaving}
         type="submit"
         variant="primary"
       >
+        <UserPlusIcon className="size-4" />
         {t("createAccount")}
       </Button>
 

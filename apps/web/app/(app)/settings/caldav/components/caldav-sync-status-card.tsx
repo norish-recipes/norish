@@ -1,6 +1,7 @@
 "use client";
 
 import { SettingsCard } from "@/app/(app)/settings/components/settings-card";
+import { ActionButton } from "@/components/shared/action-button";
 import { ChipButton } from "@/components/shared/chip-button";
 import {
   ArrowPathIcon,
@@ -8,6 +9,7 @@ import {
   ChevronRightIcon,
   ClockIcon,
   InformationCircleIcon,
+  XMarkIcon,
 } from "@heroicons/react/16/solid";
 import { Button, Chip, Pagination, Popover, Table } from "@heroui/react";
 import { useFormatter, useNow, useTranslations } from "next-intl";
@@ -76,16 +78,15 @@ export default function CalDavSyncStatusCard() {
   return (
     <SettingsCard
       actions={
-        <Button
-          className="min-w-16"
+        <ActionButton
+          action="apply"
+          icon={ArrowPathIcon}
           isPending={syncing}
           size="sm"
-          variant="primary"
           onPress={triggerManualSync}
         >
-          {<ArrowPathIcon className="h-4 w-4" />}
           {t("syncNow")}
-        </Button>
+        </ActionButton>
       }
       icon={ClockIcon}
       title={t("title")}
@@ -139,7 +140,6 @@ export default function CalDavSyncStatusCard() {
         <div className="flex items-center justify-between">
           {syncStatusFilter ? (
             <Button
-              className="h-8 min-w-16"
               size="sm"
               variant="tertiary"
               onPress={() => {
@@ -147,6 +147,7 @@ export default function CalDavSyncStatusCard() {
                 setSyncStatusPage(1);
               }}
             >
+              <XMarkIcon className="size-4" />
               {t("clearFilter")}
             </Button>
           ) : (
@@ -219,7 +220,7 @@ export default function CalDavSyncStatusCard() {
                         <Popover.Trigger>
                           <Button
                             isIconOnly
-                            className="min-w-unit-8 w-unit-8 h-unit-8"
+                            aria-label={t("errorDetails")}
                             size="sm"
                             variant="tertiary"
                           >

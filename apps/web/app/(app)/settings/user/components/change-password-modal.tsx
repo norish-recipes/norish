@@ -1,17 +1,10 @@
 "use client";
 
 import { useState } from "react";
+import { ActionButton, ActionButtonGroup } from "@/components/shared/action-button";
 import UiSwitch from "@/components/shared/ui-switch";
-import {
-  Button,
-  Description,
-  FieldError,
-  Input,
-  Label,
-  Modal,
-  TextField,
-  toast,
-} from "@heroui/react";
+import { KeyIcon } from "@heroicons/react/16/solid";
+import { Description, FieldError, Input, Label, Modal, TextField, toast } from "@heroui/react";
 import { useMutation } from "@tanstack/react-query";
 import { useTranslations } from "next-intl";
 
@@ -131,12 +124,20 @@ function ChangePasswordForm({ close }: { close: () => void }) {
         </UiSwitch>
       </Modal.Body>
       <Modal.Footer>
-        <Button variant="tertiary" onPress={close}>
-          {tActions("cancel")}
-        </Button>
-        <Button isDisabled={!isValid} isPending={change.isPending} type="submit" variant="primary">
-          {t("changePassword")}
-        </Button>
+        <ActionButtonGroup>
+          <ActionButton action="cancel" onPress={close}>
+            {tActions("cancel")}
+          </ActionButton>
+          <ActionButton
+            action="save"
+            icon={KeyIcon}
+            isDisabled={!isValid}
+            isPending={change.isPending}
+            type="submit"
+          >
+            {t("changePassword")}
+          </ActionButton>
+        </ActionButtonGroup>
       </Modal.Footer>
     </form>
   );

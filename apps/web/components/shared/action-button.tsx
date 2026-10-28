@@ -8,6 +8,7 @@ import {
   ArrowPathIcon,
   ArrowRightIcon,
   ArrowUturnLeftIcon,
+  BeakerIcon,
   CheckIcon,
   DocumentDuplicateIcon,
   MinusIcon,
@@ -37,6 +38,7 @@ type ActionKind =
   | "remove"
   | "reset"
   | "save"
+  | "test"
   | "undo";
 
 type ActionConfig = {
@@ -66,6 +68,7 @@ const ACTION_CONFIG: Record<ActionKind, ActionConfig> = {
   remove: { icon: XMarkIcon, variant: "danger-soft" },
   reset: { icon: ArrowPathIcon, variant: "tertiary", className: WARNING_SOFT },
   save: { icon: CheckIcon, variant: "primary" },
+  test: { icon: BeakerIcon, variant: "tertiary" },
   undo: { icon: ArrowUturnLeftIcon, variant: "danger-soft" },
 };
 
@@ -77,6 +80,8 @@ type ActionButtonProps = Omit<ButtonProps, "children" | "className"> & {
   action: ActionKind;
   className?: string;
   children: ReactNode;
+  /** An icon that says more than the action's own, where one does. */
+  icon?: ActionIcon;
   showIcon?: boolean;
 };
 
@@ -87,12 +92,13 @@ export function ActionButton({
   action,
   children,
   className,
+  icon,
   showIcon,
   variant,
   ...props
 }: ActionButtonProps) {
   const config = ACTION_CONFIG[action];
-  const Icon = config.icon;
+  const Icon = icon ?? config.icon;
   const iconOnly = use(IconOnlyContext);
 
   return (
@@ -153,7 +159,7 @@ export function IconActionButton({
 }
 
 /**
- * A panel footer's buttons. `start` holds the destructive one (Delete, Remove), pinned left;
+ * A footer's buttons: a panel's, a card's or a modal's. `start` holds the destructive one (Delete, Remove), pinned left;
  * the rest sit together at the end, primary last. When the labels do not fit on one row,
  * the start button drops its label to an icon (its name stays for screen readers).
  */

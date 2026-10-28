@@ -15,12 +15,8 @@ import UiSwitch from "@/components/shared/ui-switch";
 import { useSpellingRules } from "@/hooks/config";
 import { useGroceriesQuery } from "@/hooks/groceries";
 import { usePantryMutations, usePantryQuery } from "@/hooks/pantry";
-import {
-  ArrowUturnLeftIcon,
-  ChevronRightIcon,
-  PencilSquareIcon,
-  XMarkIcon,
-} from "@heroicons/react/24/outline";
+import { ArrowsRightLeftIcon, PencilSquareIcon } from "@heroicons/react/16/solid";
+import { ArrowUturnLeftIcon, ChevronRightIcon, XMarkIcon } from "@heroicons/react/24/outline";
 import { Button, Chip, Input, Skeleton, TextField, toast } from "@heroui/react";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { useLocale, useTranslations } from "next-intl";
@@ -479,6 +475,7 @@ function IngredientPanelContent({
                       )
                     }
                   >
+                    <ArrowsRightLeftIcon className="size-4" />
                     {t("markDistinct")}
                   </Button>
                 </div>

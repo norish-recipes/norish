@@ -1,19 +1,11 @@
 "use client";
 
 import { useCallback, useEffect, useMemo, useState } from "react";
+import { ActionButton, ActionButtonGroup } from "@/components/shared/action-button";
 import SecretInput from "@/components/shared/secret-input";
 import { useAvailableModelsQuery } from "@/hooks/admin";
 import { usePending } from "@/hooks/use-pending";
-import {
-  Button,
-  ComboBox,
-  Description,
-  Input,
-  Label,
-  ListBox,
-  Select,
-  TextField,
-} from "@heroui/react";
+import { ComboBox, Description, Input, Label, ListBox, Select, TextField } from "@heroui/react";
 import { useTranslations } from "next-intl";
 
 import type { ImageGenerationProvider } from "@norish/config/zod/server-config";
@@ -265,11 +257,16 @@ export default function ImageGenerationForm({ onDirtyChange }: ImageGenerationFo
         </ComboBox>
       )}
 
-      <div className="flex flex-wrap items-center justify-end gap-2 pt-2">
-        <Button isDisabled={!hasChanges} onPress={handleSave} variant="primary" isPending={saving}>
+      <ActionButtonGroup className="pt-2">
+        <ActionButton
+          action="save"
+          isDisabled={!hasChanges}
+          isPending={saving}
+          onPress={handleSave}
+        >
           {tActions("save")}
-        </Button>
-      </div>
+        </ActionButton>
+      </ActionButtonGroup>
     </div>
   );
 }

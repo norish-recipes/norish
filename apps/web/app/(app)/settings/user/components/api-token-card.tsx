@@ -2,17 +2,15 @@
 
 import { useState } from "react";
 import { SettingsCard } from "@/app/(app)/settings/components/settings-card";
-import { usePending } from "@/hooks/use-pending";
 import {
-  ArrowTopRightOnSquareIcon,
-  ClipboardDocumentIcon,
-  KeyIcon,
-  PauseIcon,
-  PlayIcon,
-  PlusIcon,
-  TrashIcon,
-} from "@heroicons/react/24/outline";
-import { Button, Chip, Input, Label, Modal, Table, TextField } from "@heroui/react";
+  ActionButton,
+  ActionButtonGroup,
+  IconActionButton,
+} from "@/components/shared/action-button";
+import { usePending } from "@/hooks/use-pending";
+import { ClipboardDocumentIcon, PauseIcon, PlayIcon } from "@heroicons/react/16/solid";
+import { ArrowTopRightOnSquareIcon, KeyIcon } from "@heroicons/react/24/outline";
+import { Chip, Input, Label, Modal, Table, TextField } from "@heroui/react";
 import { useFormatter, useTranslations } from "next-intl";
 
 import NewFeatureChip from "../../components/new-feature-chip";
@@ -74,12 +72,11 @@ export default function ApiKeyCard() {
             <Label>{t("keyNameLabel")}</Label>
             <Input variant="secondary" placeholder={t("keyNamePlaceholder")} />
           </TextField>
-          <div className="flex justify-end">
-            <Button onPress={handleGenerateKey} variant="primary" isPending={generatingKey}>
-              {<PlusIcon className="h-4 w-4" />}
+          <ActionButtonGroup>
+            <ActionButton action="create" isPending={generatingKey} onPress={handleGenerateKey}>
               {t("createKey")}
-            </Button>
-          </div>
+            </ActionButton>
+          </ActionButtonGroup>
         </div>
 
         {/* Existing keys list */}
@@ -115,31 +112,22 @@ export default function ApiKeyCard() {
                         </Table.Cell>
                         <Table.Cell>
                           <div className="flex gap-1">
-                            <Button
-                              isIconOnly
-                              aria-label={key.enabled ? t("disableKey") : t("enableKey")}
+                            <IconActionButton
+                              action="edit"
+                              icon={key.enabled ? PauseIcon : PlayIcon}
+                              label={key.enabled ? t("disableKey") : t("enableKey")}
                               size="sm"
                               onPress={() => toggleApiKey(key.id, !key.enabled)}
-                              variant="tertiary"
-                            >
-                              {key.enabled ? (
-                                <PauseIcon className="h-4 w-4" />
-                              ) : (
-                                <PlayIcon className="h-4 w-4" />
-                              )}
-                            </Button>
-                            <Button
-                              isIconOnly
-                              aria-label={t("deleteKey")}
+                            />
+                            <IconActionButton
+                              action="delete"
+                              label={t("deleteKey")}
                               size="sm"
                               onPress={() => {
                                 setKeyToDelete(key.id);
                                 setShowDeleteModal(true);
                               }}
-                              variant="danger-soft"
-                            >
-                              <TrashIcon className="h-4 w-4" />
-                            </Button>
+                            />
                           </div>
                         </Table.Cell>
                       </Table.Row>
@@ -175,9 +163,13 @@ export default function ApiKeyCard() {
                       className="font-mono text-xs"
                       value={generatedKey || ""}
                     />
-                    <Button isIconOnly onPress={handleCopyKey}>
-                      <ClipboardDocumentIcon className="h-4 w-4" />
-                    </Button>
+                    <IconActionButton
+                      action="duplicate"
+                      icon={ClipboardDocumentIcon}
+                      label={t("generatedModal.copyButton")}
+                      variant="primary"
+                      onPress={handleCopyKey}
+                    />
                   </div>
                   <p className="text-muted mt-2 text-xs">
                     {t.rich("generatedModal.hint", {
@@ -188,15 +180,17 @@ export default function ApiKeyCard() {
                   </p>
                 </Modal.Body>
                 <Modal.Footer>
-                  <Button
-                    onPress={() => {
-                      setGeneratedKey(null);
-                      onClose();
-                    }}
-                    variant="primary"
-                  >
-                    {t("generatedModal.confirmButton")}
-                  </Button>
+                  <ActionButtonGroup>
+                    <ActionButton
+                      action="done"
+                      onPress={() => {
+                        setGeneratedKey(null);
+                        onClose();
+                      }}
+                    >
+                      {t("generatedModal.confirmButton")}
+                    </ActionButton>
+                  </ActionButtonGroup>
                 </Modal.Footer>
               </>
             )}
@@ -218,15 +212,18 @@ export default function ApiKeyCard() {
                   <p>{t("deleteModal.message")}</p>
                 </Modal.Body>
                 <Modal.Footer>
-                  <Button onPress={onClose} variant="tertiary">
-                    {tActions("cancel")}
-                  </Button>
-                  <Button
-                    onPress={() => keyToDelete && handleDeleteKey(keyToDelete)}
-                    variant="danger"
-                  >
-                    {t("deleteModal.confirmButton")}
-                  </Button>
+                  <ActionButtonGroup>
+                    <ActionButton action="cancel" onPress={onClose}>
+                      {tActions("cancel")}
+                    </ActionButton>
+                    <ActionButton
+                      action="delete"
+                      variant="danger"
+                      onPress={() => keyToDelete && handleDeleteKey(keyToDelete)}
+                    >
+                      {t("deleteModal.confirmButton")}
+                    </ActionButton>
+                  </ActionButtonGroup>
                 </Modal.Footer>
               </>
             )}

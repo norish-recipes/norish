@@ -2,7 +2,7 @@
 
 import { useTRPC } from "@/app/providers/trpc-provider";
 import { ActionButton, ActionButtonGroup } from "@/components/shared/action-button";
-import { ExclamationTriangleIcon } from "@heroicons/react/16/solid";
+import { ExclamationTriangleIcon, EyeIcon } from "@heroicons/react/16/solid";
 import { Button, Modal } from "@heroui/react";
 import { useQuery } from "@tanstack/react-query";
 import { useTranslations } from "next-intl";
@@ -55,6 +55,7 @@ export function DeleteIngredientModal({
                   ))}
                 </ul>
                 <Button size="sm" variant="tertiary" onPress={onShowUses}>
+                  <EyeIcon className="size-4" />
                   {t("uses.show")}
                 </Button>
               </div>

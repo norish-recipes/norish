@@ -2,11 +2,11 @@
 
 import { useEffect, useRef, useState } from "react";
 import { SettingsCard } from "@/app/(app)/settings/components/settings-card";
+import { ActionButton, ActionButtonGroup } from "@/components/shared/action-button";
 import { Note } from "@/components/shared/note";
 import { EyeIcon, EyeSlashIcon } from "@heroicons/react/16/solid";
 import { ServerIcon } from "@heroicons/react/24/outline";
 import {
-  Button,
   Description,
   Input,
   InputGroup,
@@ -26,6 +26,8 @@ import CalDavConfigSummary from "./caldav-config-summary";
 
 export default function CalDavConfigCard() {
   const t = useTranslations("settings.caldav.setup");
+  const tActions = useTranslations("common.actions");
+  const tSecret = useTranslations("common.secret");
   const { config, saveConfig, isSavingConfig: saving } = useCalDavSettingsContext();
   const {
     isOpen: isEditModalOpen,
@@ -147,6 +149,7 @@ export default function CalDavConfigCard() {
             <InputGroup.Input placeholder={t("passwordPlaceholder")} />
             <InputGroup.Suffix>
               <button
+                aria-label={showPassword ? tSecret("hide") : tSecret("reveal")}
                 className="focus:outline-none"
                 type="button"
                 onClick={() => setShowPassword(!showPassword)}
@@ -224,24 +227,24 @@ export default function CalDavConfigCard() {
         </div>
       )}
 
-      <div className="flex flex-wrap justify-end gap-2">
-        <Button
+      <ActionButtonGroup>
+        <ActionButton
+          action="test"
           isDisabled={!canSave}
-          onPress={handleTestConnection}
-          variant="secondary"
           isPending={testing}
+          onPress={handleTestConnection}
         >
           {t("testConnection")}
-        </Button>
-        <Button
+        </ActionButton>
+        <ActionButton
+          action="save"
           isDisabled={!canSave}
-          onPress={handleInitialSetup}
-          variant="primary"
           isPending={saving}
+          onPress={handleInitialSetup}
         >
-          {t("saveConfiguration")}
-        </Button>
-      </div>
+          {tActions("save")}
+        </ActionButton>
+      </ActionButtonGroup>
     </SettingsCard>
   );
 }

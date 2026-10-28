@@ -3,13 +3,12 @@
 import { useCallback, useEffect, useMemo, useState } from "react";
 import { SettingRow, SwitchRow } from "@/app/(app)/settings/components/setting-row";
 import SettingsSwitch from "@/app/(app)/settings/components/settings-switch";
+import { ActionButton, ActionButtonGroup } from "@/components/shared/action-button";
 import { Note } from "@/components/shared/note";
 import SecretInput from "@/components/shared/secret-input";
 import { useAvailableModelsQuery } from "@/hooks/admin";
 import { usePending } from "@/hooks/use-pending";
-import { BeakerIcon, CheckIcon, XMarkIcon } from "@heroicons/react/16/solid";
 import {
-  Button,
   ComboBox,
   Description,
   Input,
@@ -36,6 +35,7 @@ import {
 } from "@norish/config/zod/server-config";
 
 import { useAdminSettingsContext } from "../context";
+import { ConnectionTestResult } from "./connection-test-result";
 import ModelListingEmptyState from "./model-listing-empty-state";
 
 interface AIConfigFormProps {
@@ -640,38 +640,21 @@ export default function AIConfigForm({ onDirtyChange }: AIConfigFormProps) {
         </Select.Popover>
       </Select>
 
-      {testResult && (
-        <div
-          className={`flex items-center gap-2 rounded-lg p-2 ${testResult.success ? "bg-success/10 text-success" : "bg-danger/10 text-danger"}`}
-        >
-          {testResult.success ? (
-            <>
-              <CheckIcon className="h-4 w-4" />
-              {t("connectionSuccess")}
-            </>
-          ) : (
-            <>
-              <XMarkIcon className="h-4 w-4" />
-              {testResult.error}
-            </>
-          )}
-        </div>
-      )}
+      <ConnectionTestResult result={testResult} successLabel={t("connectionSuccess")} />
 
-      <div className="flex flex-wrap items-center justify-end gap-2 pt-2">
-        <Button isDisabled={!enabled} onPress={handleTest} variant="tertiary" isPending={testing}>
-          {<BeakerIcon className="h-5 w-5" />}
+      <ActionButtonGroup className="pt-2">
+        <ActionButton action="test" isDisabled={!enabled} isPending={testing} onPress={handleTest}>
           {t("testConnection")}
-        </Button>
-        <Button
+        </ActionButton>
+        <ActionButton
+          action="save"
           isDisabled={!canEnable || !hasChanges}
-          onPress={handleSave}
-          variant="primary"
           isPending={saving}
+          onPress={handleSave}
         >
           {tActions("save")}
-        </Button>
-      </div>
+        </ActionButton>
+      </ActionButtonGroup>
     </div>
   );
 }

@@ -2,6 +2,11 @@
 
 import { useSyncExternalStore } from "react";
 import { SettingsCard } from "@/app/(app)/settings/components/settings-card";
+import {
+  ActionButton,
+  ActionButtonGroup,
+  IconActionButton,
+} from "@/components/shared/action-button";
 import { showSafeErrorToast } from "@/lib/ui/safe-error-toast";
 import {
   ArrowPathIcon,
@@ -92,21 +97,20 @@ export default function JoinCodeCard() {
               className="font-mono text-lg tracking-wider"
               value={adminHousehold.joinCode || ""}
             />
-            <Button isIconOnly onPress={handleCopyJoinCode}>
-              <ClipboardDocumentIconSolid className="h-4 w-4" />
-            </Button>
+            <IconActionButton
+              action="duplicate"
+              icon={ClipboardDocumentIconSolid}
+              label={t("copyButton")}
+              variant="primary"
+              onPress={handleCopyJoinCode}
+            />
           </div>
           <div className="flex items-center justify-between">
             <span className="text-muted text-base">
               {t("expiresIn")} <span className="text-warning font-medium">{timeRemaining}</span>
             </span>
-            <Button
-              size="sm"
-              onPress={handleRegenerateCode}
-              variant="tertiary"
-              className="min-w-16"
-            >
-              {<ArrowPathIcon className="h-4 w-4" />}
+            <Button size="sm" variant="tertiary" onPress={handleRegenerateCode}>
+              <ArrowPathIcon className="size-4" />
               {t("regenerateButton")}
             </Button>
           </div>
@@ -114,12 +118,11 @@ export default function JoinCodeCard() {
       ) : (
         <>
           <p className="text-muted text-base">{t("noCodeDescription")}</p>
-          <div className="flex justify-end">
-            <Button onPress={handleRegenerateCode} variant="primary">
-              {<ArrowPathIcon className="h-4 w-4" />}
+          <ActionButtonGroup>
+            <ActionButton action="create" icon={ArrowPathIcon} onPress={handleRegenerateCode}>
               {t("generateButton")}
-            </Button>
-          </div>
+            </ActionButton>
+          </ActionButtonGroup>
         </>
       )}
     </SettingsCard>

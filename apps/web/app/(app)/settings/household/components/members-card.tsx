@@ -2,10 +2,11 @@
 
 import { useState } from "react";
 import { SettingsCard } from "@/app/(app)/settings/components/settings-card";
+import { ActionButton, ActionButtonGroup } from "@/components/shared/action-button";
 import { showSafeErrorToast } from "@/lib/ui/safe-error-toast";
 import { ShieldCheckIcon, UserMinusIcon } from "@heroicons/react/16/solid";
 import { UserGroupIcon } from "@heroicons/react/24/outline";
-import { Button, Chip, Modal, Table, toast } from "@heroui/react";
+import { Chip, Modal, Table, toast } from "@heroui/react";
 import { useTranslations } from "next-intl";
 
 import { useHouseholdSettingsContext } from "../context";
@@ -112,7 +113,9 @@ export default function MembersCard() {
                         <div className="flex gap-2">
                           {isAdmin && !isSelf && (
                             <>
-                              <Button
+                              <ActionButton
+                                action="remove"
+                                icon={UserMinusIcon}
                                 size="sm"
                                 onPress={() => {
                                   setUserToKick({
@@ -121,14 +124,13 @@ export default function MembersCard() {
                                   });
                                   setShowKickModal(true);
                                 }}
-                                variant="danger-soft"
-                                className="min-w-16"
                               >
-                                {<UserMinusIcon className="h-4 w-4" />}
                                 {t("kickButton")}
-                              </Button>
+                              </ActionButton>
                               {!isUserAdmin && (
-                                <Button
+                                <ActionButton
+                                  action="edit"
+                                  icon={ShieldCheckIcon}
                                   size="sm"
                                   onPress={() => {
                                     setUserToTransfer({
@@ -137,12 +139,9 @@ export default function MembersCard() {
                                     });
                                     setShowTransferModal(true);
                                   }}
-                                  variant="tertiary"
-                                  className="min-w-16"
                                 >
-                                  {<ShieldCheckIcon className="h-4 w-4" />}
                                   {t("makeAdminButton")}
-                                </Button>
+                                </ActionButton>
                               )}
                             </>
                           )}
@@ -173,12 +172,19 @@ export default function MembersCard() {
                   <p className="text-muted mt-2 text-base">{t("kickModal.warning")}</p>
                 </Modal.Body>
                 <Modal.Footer>
-                  <Button onPress={onClose} variant="tertiary">
-                    {tActions("cancel")}
-                  </Button>
-                  <Button onPress={handleKickUser} variant="danger">
-                    {t("kickModal.confirmButton")}
-                  </Button>
+                  <ActionButtonGroup>
+                    <ActionButton action="cancel" onPress={onClose}>
+                      {tActions("cancel")}
+                    </ActionButton>
+                    <ActionButton
+                      action="remove"
+                      icon={UserMinusIcon}
+                      variant="danger"
+                      onPress={handleKickUser}
+                    >
+                      {t("kickModal.confirmButton")}
+                    </ActionButton>
+                  </ActionButtonGroup>
                 </Modal.Footer>
               </>
             )}
@@ -205,12 +211,18 @@ export default function MembersCard() {
                   <p className="text-muted mt-2 text-base">{t("transferModal.warning")}</p>
                 </Modal.Body>
                 <Modal.Footer>
-                  <Button onPress={onClose} variant="tertiary">
-                    {tActions("cancel")}
-                  </Button>
-                  <Button onPress={handleTransferAdmin} variant="primary">
-                    {t("transferModal.confirmButton")}
-                  </Button>
+                  <ActionButtonGroup>
+                    <ActionButton action="cancel" onPress={onClose}>
+                      {tActions("cancel")}
+                    </ActionButton>
+                    <ActionButton
+                      action="apply"
+                      icon={ShieldCheckIcon}
+                      onPress={handleTransferAdmin}
+                    >
+                      {t("transferModal.confirmButton")}
+                    </ActionButton>
+                  </ActionButtonGroup>
                 </Modal.Footer>
               </>
             )}

@@ -2,6 +2,7 @@
 
 import { useState } from "react";
 import { SettingsCard } from "@/app/(app)/settings/components/settings-card";
+import { ActionButton, ActionButtonGroup } from "@/components/shared/action-button";
 import { ChipButton } from "@/components/shared/chip-button";
 import DataTable from "@/components/ui/data-table";
 import {
@@ -12,7 +13,6 @@ import {
 } from "@/hooks/admin";
 import { ChevronLeftIcon, ChevronRightIcon, QueueListIcon } from "@heroicons/react/24/outline";
 import {
-  Button,
   Chip,
   Input,
   Label,
@@ -189,16 +189,16 @@ export default function JobQueueCard() {
           {retentionField("keepFailed", t("retention.keepFailed"), 10, 5000)}
           {retentionField("maxAgeDays", t("retention.maxAgeDays"), 1, 90)}
         </div>
-        <div className="flex justify-end">
-          <Button
+        <ActionButtonGroup>
+          <ActionButton
+            action="save"
             isDisabled={!hasRetentionChanges}
             isPending={isUpdatingRetention}
-            variant="primary"
             onPress={handleSaveRetention}
           >
             {tActions("save")}
-          </Button>
-        </div>
+          </ActionButton>
+        </ActionButtonGroup>
       </div>
 
       {/* Jobs */}

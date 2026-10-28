@@ -1,17 +1,16 @@
 "use client";
 
 import { useState } from "react";
+import { ActionButton, ActionButtonGroup } from "@/components/shared/action-button";
 import { useJobDetailQuery, useJobQueueMutations } from "@/hooks/admin";
+import { ArrowPathIcon, StopCircleIcon } from "@heroicons/react/16/solid";
 import {
-  ArrowPathIcon,
   CheckCircleIcon,
   ClockIcon,
   MinusCircleIcon,
-  StopCircleIcon,
-  TrashIcon,
   XCircleIcon,
 } from "@heroicons/react/24/outline";
-import { Accordion, Button, Chip, Modal, Spinner } from "@heroui/react";
+import { Accordion, Chip, Modal, Spinner } from "@heroui/react";
 import { useFormatter, useTranslations } from "next-intl";
 
 import type {
@@ -387,41 +386,55 @@ export default function JobDetailModal({ queue, jobId, onClose }: Props) {
               </Modal.Body>
               <Modal.Footer>
                 {confirmAction === "remove" ? (
-                  <>
-                    <span className="text-muted mr-auto self-center text-sm">
-                      {t("removeModal.message")}
-                    </span>
-                    <Button variant="tertiary" onPress={() => setConfirmAction(null)}>
+                  <ActionButtonGroup
+                    start={<span className="text-muted text-sm">{t("removeModal.message")}</span>}
+                  >
+                    <ActionButton action="cancel" onPress={() => setConfirmAction(null)}>
                       {tActions("cancel")}
-                    </Button>
-                    <Button isPending={isRemoving} variant="danger" onPress={handleRemove}>
+                    </ActionButton>
+                    <ActionButton
+                      action="delete"
+                      isPending={isRemoving}
+                      variant="danger"
+                      onPress={handleRemove}
+                    >
                       {t("removeModal.confirm")}
-                    </Button>
-                  </>
+                    </ActionButton>
+                  </ActionButtonGroup>
                 ) : (
-                  <>
-                    {job?.state === "failed" || job?.state === "cancelled" ? (
-                      <Button isPending={isRetrying} variant="primary" onPress={handleRetry}>
-                        <ArrowPathIcon className="h-4 w-4" />
-                        {t("actions.retry")}
-                      </Button>
-                    ) : null}
-                    {job?.state === "active" ? (
-                      <Button isPending={isCancelling} variant="danger-soft" onPress={handleCancel}>
-                        {isCancelling ? null : <StopCircleIcon className="h-4 w-4" />}
-                        {isCancelling ? t("actions.cancelling") : t("actions.cancel")}
-                      </Button>
-                    ) : null}
-                    {job && !job.isRepeat && job.state !== "active" ? (
-                      <Button variant="danger-soft" onPress={() => setConfirmAction("remove")}>
-                        <TrashIcon className="h-4 w-4" />
-                        {t("actions.remove")}
-                      </Button>
-                    ) : null}
-                    <Button variant="tertiary" onPress={close}>
+                  <ActionButtonGroup
+                    start={
+                      job && !job.isRepeat && job.state !== "active" ? (
+                        <ActionButton action="delete" onPress={() => setConfirmAction("remove")}>
+                          {t("actions.remove")}
+                        </ActionButton>
+                      ) : null
+                    }
+                  >
+                    <ActionButton action="dismiss" onPress={close}>
                       {tActions("close")}
-                    </Button>
-                  </>
+                    </ActionButton>
+                    {job?.state === "active" ? (
+                      <ActionButton
+                        action="remove"
+                        icon={StopCircleIcon}
+                        isPending={isCancelling}
+                        onPress={handleCancel}
+                      >
+                        {isCancelling ? t("actions.cancelling") : t("actions.cancel")}
+                      </ActionButton>
+                    ) : null}
+                    {job?.state === "failed" || job?.state === "cancelled" ? (
+                      <ActionButton
+                        action="apply"
+                        icon={ArrowPathIcon}
+                        isPending={isRetrying}
+                        onPress={handleRetry}
+                      >
+                        {t("actions.retry")}
+                      </ActionButton>
+                    ) : null}
+                  </ActionButtonGroup>
                 )}
               </Modal.Footer>
             </>

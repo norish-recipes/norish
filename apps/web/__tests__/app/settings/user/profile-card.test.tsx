@@ -62,7 +62,7 @@ describe("ProfileCard", () => {
 
   it("enables save and uploads avatar only after save", async () => {
     const { container } = render(<ProfileCard />);
-    const saveButton = screen.getByRole("button", { name: "saveChanges" });
+    const saveButton = screen.getByRole("button", { name: "save" });
 
     expect(saveButton).toBeDisabled();
 

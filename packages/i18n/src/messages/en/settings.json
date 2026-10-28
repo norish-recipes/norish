@@ -42,14 +42,12 @@
       "namePlaceholder": "Your name",
       "emailLabel": "Email",
       "avatarHint": "Click your avatar to change picture",
-      "deleteAvatar": "Delete profile picture",
-      "saveChanges": "Save changes"
+      "deleteAvatar": "Delete profile picture"
     },
     "allergies": {
       "title": "Allergies",
       "description": "Add your food allergies to receive warnings when planning recipes that contain allergens.",
-      "placeholder": "Type allergies (e.g., gluten, nuts, dairy)...",
-      "saveButton": "Save allergies"
+      "placeholder": "Type allergies (e.g., gluten, nuts, dairy)..."
     },
     "apiKeys": {
       "title": "API keys",
@@ -77,7 +75,8 @@
         "title": "API key generated",
         "warning": "Save this key now! You won't be able to see it again. We store only a hash and cannot recover this key.",
         "hint": "Use this key in the <code>x-api-key</code> header when making API requests.",
-        "confirmButton": "I've saved it"
+        "confirmButton": "I've saved it",
+        "copyButton": "Copy key"
       },
       "deleteModal": {
         "title": "Delete API key",
@@ -287,7 +286,8 @@
       "noCodeDescription": "No active join code. Generate one to invite new members.",
       "generateButton": "Generate join code",
       "copySuccess": "Join code copied",
-      "copyFailed": "Failed to copy join code"
+      "copyFailed": "Failed to copy join code",
+      "copyButton": "Copy join code"
     },
     "create": {
       "title": "Create household",
@@ -328,8 +328,7 @@
       "lunchTime": "Lunch time",
       "dinnerTime": "Dinner time",
       "snackTime": "Snack time",
-      "testConnection": "Test connection",
-      "saveConfiguration": "Save configuration"
+      "testConnection": "Test connection"
     },
     "config": {
       "title": "CalDAV configuration",
@@ -339,7 +338,6 @@
       "disabled": "Disabled",
       "editButton": "Edit",
       "deleteButton": "Delete",
-      "saveChanges": "Save changes",
       "advancedSettings": "Advanced settings",
       "timezone": "Timezone: {timezone}",
       "connectionStatus": {
@@ -628,7 +626,6 @@
       "localesDescription": "Select which languages users can choose from",
       "defaultLocale": "Default language",
       "defaultLocaleDescription": "Language used for new users and as fallback",
-      "saveLocales": "Save language settings",
       "localesSaved": "Language settings saved",
       "localesError": "Failed to save language settings",
       "atLeastOneLocale": "At least one language must be enabled",
@@ -1066,7 +1063,9 @@
       "navigationTimeout": "Navigation timeout (ms)",
       "navigationTimeoutDescription": "How long a renderer is given to load a page.",
       "saved": "Page renderers saved",
-      "error": "Failed to save page renderers"
+      "error": "Failed to save page renderers",
+      "testConnection": "Test connection",
+      "connectionSuccess": "Connection successful"
     },
     "imageGenerationConfig": {
       "description": "Pictures need their own provider, since most AI providers cannot draw.",

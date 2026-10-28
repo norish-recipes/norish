@@ -3,8 +3,12 @@
 import { Suspense } from "react";
 import Link from "next/link";
 import { useSearchParams } from "next/navigation";
-import { ExclamationTriangleIcon, ShieldExclamationIcon } from "@heroicons/react/16/solid";
-import { Button, Skeleton } from "@heroui/react";
+import {
+  ArrowLeftIcon,
+  ExclamationTriangleIcon,
+  ShieldExclamationIcon,
+} from "@heroicons/react/16/solid";
+import { buttonVariants, Skeleton } from "@heroui/react";
 import { useTranslations } from "next-intl";
 
 import { createClientLogger } from "@norish/shared/lib/logger";
@@ -39,10 +43,12 @@ function BackToLogin() {
   const t = useTranslations("auth.errors");
 
   return (
-    <Link href="/login?logout=true">
-      <Button className="rounded-lg px-6" variant="primary">
-        {t("backToLogin")}
-      </Button>
+    <Link
+      className={buttonVariants({ fullWidth: true, variant: "primary", className: "h-11" })}
+      href="/login?logout=true"
+    >
+      <ArrowLeftIcon className="size-4" />
+      {t("backToLogin")}
     </Link>
   );
 }

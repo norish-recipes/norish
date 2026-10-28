@@ -8,23 +8,25 @@ import { useTRPC } from "@/app/providers/trpc-provider";
 import { ActionButton, ActionButtonGroup } from "@/components/shared/action-button";
 import SecretInput from "@/components/shared/secret-input";
 import { showSafeErrorToast } from "@/lib/ui/safe-error-toast";
-import { GlobeAltIcon, TrashIcon } from "@heroicons/react/24/outline";
+import { BeakerIcon, TrashIcon } from "@heroicons/react/16/solid";
+import { GlobeAltIcon } from "@heroicons/react/24/outline";
 import { Button, Description, Input, Label, Separator, TextField, toast } from "@heroui/react";
 import { useMutation, useQuery } from "@tanstack/react-query";
 import { useTranslations } from "next-intl";
 
 import type { PageRenderersConfig } from "@norish/config/zod/server-config";
 
+import { ConnectionTestResult } from "./connection-test-result";
 import { UnsavedChangesChip } from "./unsaved-changes-chip";
 
 const DEFAULT_TIMEOUT_MS = 45_000;
 // These answer on the private compose network, without TLS.
 // eslint-disable-next-line sonarjs/no-clear-text-protocols -- placeholder for the shipped service
 const OBSCURA_PLACEHOLDER = "ws://obscura:9222";
-// eslint-disable-next-line sonarjs/no-clear-text-protocols -- placeholder for the commented-out service
-const CHROMIUM_PLACEHOLDER = "http://chromium:9222";
-// eslint-disable-next-line sonarjs/no-clear-text-protocols -- placeholder for the commented-out service
-const SOLVER_PLACEHOLDER = "http://flaresolverr:8191/v1";
+// eslint-disable-next-line sonarjs/no-clear-text-protocols -- default for the commented-out service
+const CHROMIUM_DEFAULT = "http://chromium:9222";
+// eslint-disable-next-line sonarjs/no-clear-text-protocols -- default for the commented-out service
+const SOLVER_DEFAULT = "http://flaresolverr:8191/v1";
 
 /** The form's copy of the setting: every field a string or switch, the token as typed. */
 function formFrom(config: PageRenderersConfig | null | undefined) {
@@ -154,37 +156,27 @@ export default function PageRenderersCard() {
 
       <Separator />
 
-      <SwitchRow description={t("chromiumDescription")} title={t("chromium")}>
-        <SettingsSwitch
-          aria-label={t("chromium")}
-          isDisabled={stored.isLoading}
-          isSelected={form.chromiumEnabled}
-          onValueChange={set("chromiumEnabled")}
-        />
-      </SwitchRow>
-      {form.chromiumEnabled && (
-        <TextField value={form.chromiumEndpoint} onChange={set("chromiumEndpoint")}>
-          <Label>{t("chromiumEndpoint")}</Label>
-          <Input placeholder={CHROMIUM_PLACEHOLDER} variant="secondary" />
-        </TextField>
-      )}
+      <TestedRenderer
+        defaultEndpoint={CHROMIUM_DEFAULT}
+        enabled={form.chromiumEnabled}
+        endpoint={form.chromiumEndpoint}
+        isLoading={stored.isLoading}
+        renderer="chromium"
+        onEnabledChange={set("chromiumEnabled")}
+        onEndpointChange={set("chromiumEndpoint")}
+      />
 
       <Separator />
 
-      <SwitchRow description={t("solverDescription")} title={t("solver")}>
-        <SettingsSwitch
-          aria-label={t("solver")}
-          isDisabled={stored.isLoading}
-          isSelected={form.solverEnabled}
-          onValueChange={set("solverEnabled")}
-        />
-      </SwitchRow>
-      {form.solverEnabled && (
-        <TextField value={form.solverEndpoint} onChange={set("solverEndpoint")}>
-          <Label>{t("solverEndpoint")}</Label>
-          <Input placeholder={SOLVER_PLACEHOLDER} variant="secondary" />
-        </TextField>
-      )}
+      <TestedRenderer
+        defaultEndpoint={SOLVER_DEFAULT}
+        enabled={form.solverEnabled}
+        endpoint={form.solverEndpoint}
+        isLoading={stored.isLoading}
+        renderer="solver"
+        onEnabledChange={set("solverEnabled")}
+        onEndpointChange={set("solverEndpoint")}
+      />
 
       <Separator />
 
@@ -221,5 +213,83 @@ export default function PageRenderersCard() {
         </ActionButton>
       </ActionButtonGroup>
     </SettingsCard>
+  );
+}
+
+/**
+ * The Chromium browser or the solver: its switch, its endpoint and a Test connection. Switching it
+ * on fills in the compose service's endpoint when there is none, and tests it.
+ */
+function TestedRenderer({
+  renderer,
+  defaultEndpoint,
+  enabled,
+  endpoint,
+  isLoading,
+  onEnabledChange,
+  onEndpointChange,
+}: {
+  renderer: "chromium" | "solver";
+  defaultEndpoint: string;
+  enabled: boolean;
+  endpoint: string;
+  isLoading: boolean;
+  onEnabledChange: (enabled: boolean) => void;
+  onEndpointChange: (endpoint: string) => void;
+}) {
+  const t = useTranslations("settings.admin.pageRenderers");
+  const trpc = useTRPC();
+  const test = useMutation(trpc.admin.testPageRenderer.mutationOptions());
+
+  const handleSwitch = (on: boolean) => {
+    onEnabledChange(on);
+    test.reset();
+    if (!on) return;
+    const filled = endpoint.trim() || defaultEndpoint;
+
+    onEndpointChange(filled);
+    test.mutate({ renderer, endpoint: filled });
+  };
+
+  return (
+    <>
+      <SwitchRow description={t(`${renderer}Description`)} title={t(renderer)}>
+        <SettingsSwitch
+          aria-label={t(renderer)}
+          isDisabled={isLoading}
+          isSelected={enabled}
+          onValueChange={handleSwitch}
+        />
+      </SwitchRow>
+      {enabled && (
+        <div className="flex flex-col gap-2">
+          <TextField
+            value={endpoint}
+            onChange={(value) => {
+              onEndpointChange(value);
+              test.reset();
+            }}
+          >
+            <Label>{t(`${renderer}Endpoint`)}</Label>
+            <Input placeholder={defaultEndpoint} variant="secondary" />
+          </TextField>
+          <ConnectionTestResult
+            result={test.error ? { success: false, error: test.error.message } : test.data}
+            successLabel={t("connectionSuccess")}
+          />
+          <Button
+            className="self-start"
+            isDisabled={!endpoint.trim()}
+            isPending={test.isPending}
+            size="sm"
+            variant="tertiary"
+            onPress={() => test.mutate({ renderer, endpoint: endpoint.trim() })}
+          >
+            <BeakerIcon className="size-4" />
+            {t("testConnection")}
+          </Button>
+        </div>
+      )}
+    </>
   );
 }

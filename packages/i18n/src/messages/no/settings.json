@@ -42,14 +42,12 @@
       "namePlaceholder": "Ditt navn",
       "emailLabel": "E-post",
       "avatarHint": "Klikk på avataren din for å bytte bilde",
-      "deleteAvatar": "Slett profilbilde",
-      "saveChanges": "Lagre endringer"
+      "deleteAvatar": "Slett profilbilde"
     },
     "allergies": {
       "title": "Allergier",
       "description": "Legg til matallergiene dine for å få advarsler når du planlegger oppskrifter med allergener.",
-      "placeholder": "Skriv allergier (f.eks. gluten, nøtter, meieriprodukter)...",
-      "saveButton": "Lagre allergier"
+      "placeholder": "Skriv allergier (f.eks. gluten, nøtter, meieriprodukter)..."
     },
     "apiKeys": {
       "title": "API-nøkler",
@@ -77,7 +75,8 @@
         "title": "API-nøkkel generert",
         "warning": "Lagre denne nøkkelen nå! Du vil ikke kunne se den igjen. Vi lagrer bare en hash og kan ikke gjenopprette denne nøkkelen.",
         "hint": "Bruk denne nøkkelen i <code>x-api-key</code>-headeren når du sender API-forespørsler.",
-        "confirmButton": "Jeg har lagret den"
+        "confirmButton": "Jeg har lagret den",
+        "copyButton": "Kopier nøkkel"
       },
       "deleteModal": {
         "title": "Slett API-nøkkel",
@@ -287,7 +286,8 @@
       "noCodeDescription": "Ingen aktiv invitasjonskode. Generer én for å invitere nye medlemmer.",
       "generateButton": "Generer invitasjonskode",
       "copySuccess": "Invitasjonskode kopiert",
-      "copyFailed": "Kunne ikke kopiere invitasjonskoden"
+      "copyFailed": "Kunne ikke kopiere invitasjonskoden",
+      "copyButton": "Kopier invitasjonskode"
     },
     "create": {
       "title": "Opprett husstand",
@@ -328,8 +328,7 @@
       "lunchTime": "Lunsjtidspunkt",
       "dinnerTime": "Middagstidspunkt",
       "snackTime": "Snackstidspunkt",
-      "testConnection": "Test tilkobling",
-      "saveConfiguration": "Lagre konfigurasjon"
+      "testConnection": "Test tilkobling"
     },
     "config": {
       "title": "CalDAV-konfigurasjon",
@@ -339,7 +338,6 @@
       "disabled": "Deaktivert",
       "editButton": "Rediger",
       "deleteButton": "Slett",
-      "saveChanges": "Lagre endringer",
       "advancedSettings": "Avanserte innstillinger",
       "timezone": "Tidssone: {timezone}",
       "connectionStatus": {
@@ -628,7 +626,6 @@
       "localesDescription": "Velg hvilke språk brukere kan velge mellom",
       "defaultLocale": "Standardspråk",
       "defaultLocaleDescription": "Språk brukt for nye brukere og som reserve",
-      "saveLocales": "Lagre språkinnstillinger",
       "localesSaved": "Språkinnstillinger lagret",
       "localesError": "Kunne ikke lagre språkinnstillinger",
       "atLeastOneLocale": "Minst ett språk må være aktivert",
@@ -1066,7 +1063,9 @@
       "navigationTimeout": "Navigasjonstidsavbrudd (ms)",
       "navigationTimeoutDescription": "Hvor lang tid en renderer får til å laste en side.",
       "saved": "Siderenderere lagret",
-      "error": "Kunne ikke lagre siderenderere"
+      "error": "Kunne ikke lagre siderenderere",
+      "testConnection": "Test tilkobling",
+      "connectionSuccess": "Tilkobling vellykket"
     },
     "imageGenerationConfig": {
       "description": "Bilder trenger sin egen leverandør, siden de fleste AI-leverandører ikke kan tegne.",

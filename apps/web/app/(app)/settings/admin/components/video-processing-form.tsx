@@ -3,12 +3,12 @@
 import { useCallback, useEffect, useMemo, useState } from "react";
 import { SwitchRow } from "@/app/(app)/settings/components/setting-row";
 import SettingsSwitch from "@/app/(app)/settings/components/settings-switch";
+import { ActionButton, ActionButtonGroup } from "@/components/shared/action-button";
 import { Note } from "@/components/shared/note";
 import SecretInput from "@/components/shared/secret-input";
 import { useAvailableTranscriptionModelsQuery, useYtDlpVersionQuery } from "@/hooks/admin";
 import { usePending } from "@/hooks/use-pending";
 import {
-  Button,
   ComboBox,
   Description,
   Input,
@@ -442,16 +442,16 @@ export default function VideoProcessingForm({ onDirtyChange }: VideoProcessingFo
         </>
       )}
 
-      <div className="flex items-center justify-end pt-2">
-        <Button
+      <ActionButtonGroup className="pt-2">
+        <ActionButton
+          action="save"
           isDisabled={!canEnable || !hasChanges}
-          onPress={handleSave}
-          variant="primary"
           isPending={saving}
+          onPress={handleSave}
         >
           {tActions("save")}
-        </Button>
-      </div>
+        </ActionButton>
+      </ActionButtonGroup>
     </div>
   );
 }

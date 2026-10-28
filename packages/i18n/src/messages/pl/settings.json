@@ -42,14 +42,12 @@
       "namePlaceholder": "Twoje imię",
       "emailLabel": "E-mail",
       "avatarHint": "Kliknij swój awatar, aby zmienić zdjęcie",
-      "deleteAvatar": "Usuń zdjęcie profilowe",
-      "saveChanges": "Zapisz zmiany"
+      "deleteAvatar": "Usuń zdjęcie profilowe"
     },
     "allergies": {
       "title": "Alergie",
       "description": "Dodaj swoje alergie pokarmowe, aby otrzymywać ostrzeżenia podczas planowania przepisów zawierających alergeny.",
-      "placeholder": "Wpisz alergie (np. gluten, orzechy, nabiał)...",
-      "saveButton": "Zapisz alergie"
+      "placeholder": "Wpisz alergie (np. gluten, orzechy, nabiał)..."
     },
     "apiKeys": {
       "title": "Klucze API",
@@ -77,7 +75,8 @@
         "title": "Wygenerowano klucz API",
         "warning": "Zapisz ten klucz teraz! Nie będzie można go później ponownie wyświetlić. Przechowujemy tylko jego hash i nie możemy go odzyskać.",
         "hint": "Użyj tego klucza w nagłówku <code>x-api-key</code> podczas wykonywania zapytań do API.",
-        "confirmButton": "Zapisałem(-am)"
+        "confirmButton": "Zapisałem(-am)",
+        "copyButton": "Kopiuj klucz"
       },
       "deleteModal": {
         "title": "Usuń klucz API",
@@ -287,7 +286,8 @@
       "noCodeDescription": "Brak aktywnego kodu dołączenia. Wygeneruj go, aby zaprosić nowych członków.",
       "generateButton": "Wygeneruj kod dołączenia",
       "copySuccess": "Skopiowano kod dołączenia",
-      "copyFailed": "Nie udało się skopiować kodu dołączenia"
+      "copyFailed": "Nie udało się skopiować kodu dołączenia",
+      "copyButton": "Kopiuj kod dołączenia"
     },
     "create": {
       "title": "Utwórz gospodarstwo domowe",
@@ -328,8 +328,7 @@
       "lunchTime": "Godzina lunchu",
       "dinnerTime": "Godzina kolacji",
       "snackTime": "Godzina przekąski",
-      "testConnection": "Testuj połączenie",
-      "saveConfiguration": "Zapisz konfigurację"
+      "testConnection": "Testuj połączenie"
     },
     "config": {
       "title": "Konfiguracja CalDAV",
@@ -339,7 +338,6 @@
       "disabled": "Wyłączone",
       "editButton": "Edytuj",
       "deleteButton": "Usuń",
-      "saveChanges": "Zapisz zmiany",
       "advancedSettings": "Ustawienia zaawansowane",
       "timezone": "Strefa czasowa: {timezone}",
       "connectionStatus": {
@@ -628,7 +626,6 @@
       "localesDescription": "Wybierz, które języki będą dostępne dla użytkowników",
       "defaultLocale": "Domyślny język",
       "defaultLocaleDescription": "Język używany dla nowych użytkowników i jako zapasowy",
-      "saveLocales": "Zapisz ustawienia językowe",
       "localesSaved": "Zapisano ustawienia językowe",
       "localesError": "Nie udało się zapisać ustawień językowych",
       "atLeastOneLocale": "Musi być włączony co najmniej jeden język",
@@ -1066,7 +1063,9 @@
       "navigationTimeout": "Limit czasu nawigacji (ms)",
       "navigationTimeoutDescription": "Ile czasu renderer ma na załadowanie strony.",
       "saved": "Renderery stron zapisane",
-      "error": "Nie udało się zapisać rendererów stron"
+      "error": "Nie udało się zapisać rendererów stron",
+      "testConnection": "Testuj połączenie",
+      "connectionSuccess": "Połączenie udane"
     },
     "imageGenerationConfig": {
       "description": "Obrazy wymagają własnego dostawcy, ponieważ większość dostawców AI nie potrafi rysować.",

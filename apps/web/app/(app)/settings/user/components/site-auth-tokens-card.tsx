@@ -3,11 +3,15 @@
 import { useState } from "react";
 import { SettingsCard } from "@/app/(app)/settings/components/settings-card";
 import { useTRPC } from "@/app/providers/trpc-provider";
+import {
+  ActionButton,
+  ActionButtonGroup,
+  IconActionButton,
+} from "@/components/shared/action-button";
 import { InfoHint } from "@/components/shared/info-hint";
 import { showSafeErrorToast } from "@/lib/ui/safe-error-toast";
-import { PlusIcon, ShieldCheckIcon, TrashIcon } from "@heroicons/react/24/outline";
+import { ShieldCheckIcon } from "@heroicons/react/24/outline";
 import {
-  Button,
   Chip,
   FieldError,
   Input,
@@ -179,17 +183,16 @@ export default function SiteAuthTokensCard() {
               </Select.Popover>
             </Select>
           </div>
-          <div className="flex justify-end">
-            <Button
+          <ActionButtonGroup>
+            <ActionButton
+              action="add"
               isDisabled={!isFormValid}
-              onPress={handleCreate}
-              variant="primary"
               isPending={isCreating}
+              onPress={handleCreate}
             >
-              {<PlusIcon className="h-4 w-4" />}
               {t("addButton")}
-            </Button>
-          </div>
+            </ActionButton>
+          </ActionButtonGroup>
         </div>
 
         {/* Token list */}
@@ -233,18 +236,15 @@ export default function SiteAuthTokensCard() {
                         </Table.Cell>
                         <Table.Cell>{format.dateTime(new Date(token.createdAt))}</Table.Cell>
                         <Table.Cell>
-                          <Button
-                            isIconOnly
-                            aria-label={t("deleteModal.confirmButton")}
+                          <IconActionButton
+                            action="delete"
+                            label={t("deleteModal.confirmButton")}
                             size="sm"
                             onPress={() => {
                               setTokenToDelete(token.id);
                               setShowDeleteModal(true);
                             }}
-                            variant="danger-soft"
-                          >
-                            <TrashIcon className="h-4 w-4" />
-                          </Button>
+                          />
                         </Table.Cell>
                       </Table.Row>
                     ))}
@@ -273,16 +273,19 @@ export default function SiteAuthTokensCard() {
                   <p>{t("deleteModal.message")}</p>
                 </Modal.Body>
                 <Modal.Footer>
-                  <Button onPress={onClose} variant="tertiary">
-                    {tActions("cancel")}
-                  </Button>
-                  <Button
-                    onPress={() => tokenToDelete && handleDelete(tokenToDelete)}
-                    variant="danger"
-                    isPending={removeMutation.isPending}
-                  >
-                    {t("deleteModal.confirmButton")}
-                  </Button>
+                  <ActionButtonGroup>
+                    <ActionButton action="cancel" onPress={onClose}>
+                      {tActions("cancel")}
+                    </ActionButton>
+                    <ActionButton
+                      action="delete"
+                      isPending={removeMutation.isPending}
+                      variant="danger"
+                      onPress={() => tokenToDelete && handleDelete(tokenToDelete)}
+                    >
+                      {t("deleteModal.confirmButton")}
+                    </ActionButton>
+                  </ActionButtonGroup>
                 </Modal.Footer>
               </>
             )}

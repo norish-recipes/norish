@@ -42,14 +42,12 @@
       "namePlaceholder": "Votre nom",
       "emailLabel": "E-mail",
       "avatarHint": "Cliquez sur votre avatar pour changer l'image",
-      "deleteAvatar": "Supprimer la photo de profil",
-      "saveChanges": "Enregistrer les modifications"
+      "deleteAvatar": "Supprimer la photo de profil"
     },
     "allergies": {
       "title": "Allergies",
       "description": "Ajoutez vos allergies alimentaires pour être averti lors de la planification de recettes contenant des allergènes.",
-      "placeholder": "Tapez des allergies (ex. : gluten, noix, lactose)...",
-      "saveButton": "Enregistrer les allergies"
+      "placeholder": "Tapez des allergies (ex. : gluten, noix, lactose)..."
     },
     "apiKeys": {
       "title": "Clés API",
@@ -77,7 +75,8 @@
         "title": "Clé API générée",
         "warning": "Enregistrez cette clé maintenant ! Vous ne pourrez plus la revoir. Nous n’en stockons qu’un hachage et ne pouvons pas la récupérer.",
         "hint": "Utilisez cette clé dans l’en-tête <code>x-api-key</code> lors de vos requêtes API.",
-        "confirmButton": "Je l’ai sauvegardée"
+        "confirmButton": "Je l’ai sauvegardée",
+        "copyButton": "Copier la clé"
       },
       "deleteModal": {
         "title": "Supprimer la clé API",
@@ -287,7 +286,8 @@
       "noCodeDescription": "Aucun code actif. Générez-en un pour inviter de nouveaux membres.",
       "generateButton": "Générer un code",
       "copySuccess": "Code copié",
-      "copyFailed": "Impossible de copier le code"
+      "copyFailed": "Impossible de copier le code",
+      "copyButton": "Copier le code d’invitation"
     },
     "create": {
       "title": "Créer un foyer",
@@ -328,8 +328,7 @@
       "lunchTime": "Heure du déjeuner",
       "dinnerTime": "Heure du dîner",
       "snackTime": "Heure de la collation",
-      "testConnection": "Tester la connexion",
-      "saveConfiguration": "Enregistrer la configuration"
+      "testConnection": "Tester la connexion"
     },
     "config": {
       "title": "Configuration CalDAV",
@@ -339,7 +338,6 @@
       "disabled": "Désactivé",
       "editButton": "Modifier",
       "deleteButton": "Supprimer",
-      "saveChanges": "Enregistrer les modifications",
       "advancedSettings": "Paramètres avancés",
       "timezone": "Fuseau horaire : {timezone}",
       "connectionStatus": {
@@ -628,7 +626,6 @@
       "localesDescription": "Sélectionnez les langues disponibles pour les utilisateurs",
       "defaultLocale": "Langue par défaut",
       "defaultLocaleDescription": "Langue utilisée pour les nouveaux utilisateurs et comme langue de repli",
-      "saveLocales": "Enregistrer les paramètres de langue",
       "localesSaved": "Paramètres de langue enregistrés",
       "localesError": "Échec de l'enregistrement des paramètres de langue",
       "atLeastOneLocale": "Au moins une langue doit être activée",
@@ -1066,7 +1063,9 @@
       "navigationTimeout": "Délai de navigation (ms)",
       "navigationTimeoutDescription": "Le temps accordé à un moteur de rendu pour charger une page.",
       "saved": "Moteurs de rendu de pages enregistrés",
-      "error": "Échec de l'enregistrement des moteurs de rendu de pages"
+      "error": "Échec de l'enregistrement des moteurs de rendu de pages",
+      "testConnection": "Tester la connexion",
+      "connectionSuccess": "Connexion réussie"
     },
     "imageGenerationConfig": {
       "description": "Les images ont besoin de leur propre fournisseur, car la plupart des fournisseurs d'IA ne savent pas dessiner.",

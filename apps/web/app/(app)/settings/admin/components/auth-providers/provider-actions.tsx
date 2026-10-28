@@ -1,7 +1,6 @@
 "use client";
 
-import { BeakerIcon, TrashIcon } from "@heroicons/react/16/solid";
-import { Button } from "@heroui/react";
+import { ActionButton, ActionButtonGroup } from "@/components/shared/action-button";
 import { useTranslations } from "next-intl";
 
 interface ProviderActionsProps {
@@ -24,22 +23,22 @@ export function ProviderActions({
 }: ProviderActionsProps) {
   const tActions = useTranslations("common.actions");
   return (
-    <div className="flex flex-wrap items-center justify-between gap-2 pt-2">
-      {hasConfig && (
-        <Button onPress={onDeleteClick} variant="danger-soft">
-          {<TrashIcon className="h-5 w-5" />}
-          {tActions("remove")}
-        </Button>
-      )}
-      <div className="ml-auto flex gap-2">
-        <Button onPress={onTest} variant="tertiary" isPending={testing}>
-          {<BeakerIcon className="h-5 w-5" />}
-          {tActions("test")}
-        </Button>
-        <Button isDisabled={!hasChanges} onPress={onSave} variant="primary" isPending={saving}>
-          {tActions("save")}
-        </Button>
-      </div>
-    </div>
+    <ActionButtonGroup
+      className="pt-2"
+      start={
+        hasConfig ? (
+          <ActionButton action="delete" onPress={onDeleteClick}>
+            {tActions("remove")}
+          </ActionButton>
+        ) : null
+      }
+    >
+      <ActionButton action="test" isPending={testing} onPress={onTest}>
+        {tActions("test")}
+      </ActionButton>
+      <ActionButton action="save" isDisabled={!hasChanges} isPending={saving} onPress={onSave}>
+        {tActions("save")}
+      </ActionButton>
+    </ActionButtonGroup>
   );
 }

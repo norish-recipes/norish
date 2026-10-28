@@ -2,8 +2,9 @@
 
 import { useEffect, useMemo, useState } from "react";
 import { SettingRow } from "@/app/(app)/settings/components/setting-row";
+import { ActionButton, ActionButtonGroup } from "@/components/shared/action-button";
 import { usePending } from "@/hooks/use-pending";
-import { Button, Label, ListBox, Select } from "@heroui/react";
+import { Label, ListBox, Select } from "@heroui/react";
 import { useTranslations } from "next-intl";
 
 import type { AutomaticIngredientsConfig } from "@norish/config/zod/server-config";
@@ -123,16 +124,16 @@ export default function IngredientCatalogueForm({ onDirtyChange }: IngredientCat
         </Select>
       </SettingRow>
 
-      <div className="flex flex-wrap items-center justify-end gap-2 pt-2">
-        <Button
+      <ActionButtonGroup className="pt-2">
+        <ActionButton
+          action="save"
           isDisabled={!aiConfig || !hasChanges}
           isPending={saving}
-          variant="primary"
           onPress={handleSave}
         >
           {tActions("save")}
-        </Button>
-      </div>
+        </ActionButton>
+      </ActionButtonGroup>
 
       <CleanUpCatalogue />
       <FillGaps />

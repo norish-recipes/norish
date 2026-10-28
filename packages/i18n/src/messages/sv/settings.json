@@ -42,14 +42,12 @@
       "namePlaceholder": "Ditt namn",
       "emailLabel": "E-post",
       "avatarHint": "Klicka på din profilbild för att byta bild",
-      "deleteAvatar": "Ta bort profilbild",
-      "saveChanges": "Spara ändringar"
+      "deleteAvatar": "Ta bort profilbild"
     },
     "allergies": {
       "title": "Allergier",
       "description": "Ange dina matallergier för att få varningar när du planerar recept som innehåller allergener.",
-      "placeholder": "Ange allergier (t.ex. gluten, nötter, mjölk)...",
-      "saveButton": "Spara allergier"
+      "placeholder": "Ange allergier (t.ex. gluten, nötter, mjölk)..."
     },
     "apiKeys": {
       "title": "API-nycklar",
@@ -77,7 +75,8 @@
         "title": "API-nyckeln har skapats",
         "warning": "Spara nyckeln nu! Du kan inte se den igen. Vi lagrar bara ett hashvärde och kan inte återskapa nyckeln.",
         "hint": "Använd nyckeln i HTTP-headern <code>x-api-key</code> vid API-anrop.",
-        "confirmButton": "Jag har sparat den"
+        "confirmButton": "Jag har sparat den",
+        "copyButton": "Kopiera nyckel"
       },
       "deleteModal": {
         "title": "Ta bort API-nyckel",
@@ -287,7 +286,8 @@
       "noCodeDescription": "Ingen aktiv inbjudningskod. Skapa en för att bjuda in nya medlemmar.",
       "generateButton": "Skapa inbjudningskod",
       "copySuccess": "Inbjudningskoden har kopierats",
-      "copyFailed": "Det gick inte att kopiera inbjudningskoden"
+      "copyFailed": "Det gick inte att kopiera inbjudningskoden",
+      "copyButton": "Kopiera inbjudningskod"
     },
     "create": {
       "title": "Skapa hushåll",
@@ -328,8 +328,7 @@
       "lunchTime": "Lunchtid",
       "dinnerTime": "Middagstid",
       "snackTime": "Tid för mellanmål",
-      "testConnection": "Testa anslutning",
-      "saveConfiguration": "Spara konfiguration"
+      "testConnection": "Testa anslutning"
     },
     "config": {
       "title": "CalDAV-konfiguration",
@@ -339,7 +338,6 @@
       "disabled": "Avstängd",
       "editButton": "Redigera",
       "deleteButton": "Ta bort",
-      "saveChanges": "Spara ändringar",
       "advancedSettings": "Avancerade inställningar",
       "timezone": "Tidszon: {timezone}",
       "connectionStatus": {
@@ -628,7 +626,6 @@
       "localesDescription": "Välj vilka språk användarna kan välja mellan",
       "defaultLocale": "Standardspråk",
       "defaultLocaleDescription": "Språk för nya användare och när en översättning saknas",
-      "saveLocales": "Spara språkinställningar",
       "localesSaved": "Språkinställningarna har sparats",
       "localesError": "Det gick inte att spara språkinställningarna",
       "atLeastOneLocale": "Minst ett språk måste vara aktiverat",
@@ -1066,7 +1063,9 @@
       "navigationTimeout": "Tidsgräns för navigering (ms)",
       "navigationTimeoutDescription": "Hur lång tid en renderare får på sig att läsa in en sida.",
       "saved": "Sidrenderarna har sparats",
-      "error": "Det gick inte att spara sidrenderarna"
+      "error": "Det gick inte att spara sidrenderarna",
+      "testConnection": "Testa anslutning",
+      "connectionSuccess": "Anslutningen lyckades"
     },
     "imageGenerationConfig": {
       "description": "Bilder behöver en egen leverantör eftersom de flesta AI-leverantörer inte kan skapa bilder.",

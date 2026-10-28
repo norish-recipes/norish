@@ -1,9 +1,10 @@
 "use client";
 
 import { useCallback, useEffect, useState } from "react";
+import { ActionButton, ActionButtonGroup } from "@/components/shared/action-button";
 import { usePending } from "@/hooks/use-pending";
-import { ArrowPathIcon, ExclamationTriangleIcon } from "@heroicons/react/16/solid";
-import { Button, TextArea } from "@heroui/react";
+import { CodeBracketIcon, ExclamationTriangleIcon } from "@heroicons/react/16/solid";
+import { TextArea } from "@heroui/react";
 import { useTranslations } from "next-intl";
 
 interface JsonEditorProps {
@@ -128,32 +129,32 @@ export default function JsonEditor({
         </div>
       )}
 
-      <div className="flex flex-wrap items-center justify-end gap-2">
-        <Button
+      <ActionButtonGroup>
+        <ActionButton
+          action="edit"
           className="hidden sm:inline-flex"
+          icon={CodeBracketIcon}
           isDisabled={disabled || saving}
           onPress={handleFormat}
-          variant="tertiary"
         >
           {tActions("format")}
-        </Button>
+        </ActionButton>
 
         {onRestoreDefaults && (
-          <Button isDisabled={saving} onPress={handleRestoreDefaults} variant="tertiary">
-            {<ArrowPathIcon className="h-5 w-5" />}
+          <ActionButton action="reset" isDisabled={saving} onPress={handleRestoreDefaults}>
             {tActions("restoreDefaults")}
-          </Button>
+          </ActionButton>
         )}
 
-        <Button
+        <ActionButton
+          action="save"
           isDisabled={disabled || !!error || !isDirty}
-          onPress={handleSave}
-          variant="primary"
           isPending={saving}
+          onPress={handleSave}
         >
           {tActions("save")}
-        </Button>
-      </div>
+        </ActionButton>
+      </ActionButtonGroup>
     </div>
   );
 }

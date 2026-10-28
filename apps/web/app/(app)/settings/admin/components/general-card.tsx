@@ -5,10 +5,11 @@ import ArchiveExportButton from "@/app/(app)/settings/components/archive-export-
 import { SettingRow, SwitchRow } from "@/app/(app)/settings/components/setting-row";
 import { SettingsCard } from "@/app/(app)/settings/components/settings-card";
 import SettingsSwitch from "@/app/(app)/settings/components/settings-switch";
+import { ActionButton, ActionButtonGroup } from "@/components/shared/action-button";
 import { usePending } from "@/hooks/use-pending";
 import { showSafeErrorToast } from "@/lib/ui/safe-error-toast";
 import { Cog6ToothIcon } from "@heroicons/react/24/outline";
-import { Button, ListBox, Select, Separator, toast } from "@heroui/react";
+import { ListBox, Select, Separator, toast } from "@heroui/react";
 import { useTranslations } from "next-intl";
 
 import { useAdminSettingsContext } from "../context";
@@ -16,6 +17,7 @@ import { UnsavedChangesChip } from "./unsaved-changes-chip";
 
 export default function GeneralCard() {
   const t = useTranslations("settings.admin.general");
+  const tActions = useTranslations("common.actions");
   const tErrors = useTranslations("common.errors");
   const { registrationEnabled, updateRegistration, localeConfig, updateLocaleConfig, isLoading } =
     useAdminSettingsContext();
@@ -208,23 +210,22 @@ export default function GeneralCard() {
         </Select>
       </SettingRow>
 
-      {/* Save Button */}
-      <div className="flex justify-end">
-        <Button
+      <ActionButtonGroup>
+        <ActionButton
+          action="save"
           isDisabled={isLoading || !hasLocaleChanges}
-          onPress={handleSaveLocales}
-          variant="primary"
           isPending={isSaving}
+          onPress={handleSaveLocales}
         >
-          {t("saveLocales")}
-        </Button>
-      </div>
+          {tActions("save")}
+        </ActionButton>
+      </ActionButtonGroup>
 
       <Separator />
 
       {/* Instance-wide Recipe Archive export */}
       <SettingRow description={t("export.description")} title={t("export.title")}>
-        <ArchiveExportButton label={t("export.button")} scope="instance" />
+        <ArchiveExportButton fullWidth label={t("export.button")} scope="instance" />
       </SettingRow>
     </SettingsCard>
   );

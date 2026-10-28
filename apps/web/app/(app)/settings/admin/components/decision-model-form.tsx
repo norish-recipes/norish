@@ -2,10 +2,10 @@
 
 import { useCallback, useEffect, useMemo, useState } from "react";
 import { SettingRow } from "@/app/(app)/settings/components/setting-row";
+import { ActionButton, ActionButtonGroup } from "@/components/shared/action-button";
 import SecretInput from "@/components/shared/secret-input";
 import { usePending } from "@/hooks/use-pending";
-import { BeakerIcon, CheckIcon, XMarkIcon } from "@heroicons/react/16/solid";
-import { Button, Description, Input, Label, ListBox, Select, TextField } from "@heroui/react";
+import { Description, Input, Label, ListBox, Select, TextField } from "@heroui/react";
 import { useTranslations } from "next-intl";
 
 import type { DecisionProvider, DecisionUse } from "@norish/config/zod/server-config";
@@ -18,6 +18,7 @@ import {
 } from "@norish/config/zod/server-config";
 
 import { useAdminSettingsContext } from "../context";
+import { ConnectionTestResult } from "./connection-test-result";
 
 interface DecisionModelFormProps {
   onDirtyChange?: (isDirty: boolean) => void;
@@ -224,33 +225,21 @@ export default function DecisionModelForm({ onDirtyChange }: DecisionModelFormPr
         </Select>
       </SettingRow>
 
-      {testResult && (
-        <div
-          className={`flex items-center gap-2 rounded-lg p-2 ${testResult.success ? "bg-success/10 text-success" : "bg-danger/10 text-danger"}`}
-        >
-          {testResult.success ? (
-            <>
-              <CheckIcon className="h-4 w-4" />
-              {t("connectionSuccess")}
-            </>
-          ) : (
-            <>
-              <XMarkIcon className="h-4 w-4" />
-              {testResult.error}
-            </>
-          )}
-        </div>
-      )}
+      <ConnectionTestResult result={testResult} successLabel={t("connectionSuccess")} />
 
-      <div className="flex flex-wrap items-center justify-end gap-2 pt-2">
-        <Button isDisabled={!enabled} onPress={handleTest} variant="tertiary" isPending={testing}>
-          {<BeakerIcon className="h-5 w-5" />}
+      <ActionButtonGroup className="pt-2">
+        <ActionButton action="test" isDisabled={!enabled} isPending={testing} onPress={handleTest}>
           {t("testConnection")}
-        </Button>
-        <Button isDisabled={!hasChanges} onPress={handleSave} variant="primary" isPending={saving}>
+        </ActionButton>
+        <ActionButton
+          action="save"
+          isDisabled={!hasChanges}
+          isPending={saving}
+          onPress={handleSave}
+        >
           {tActions("save")}
-        </Button>
-      </div>
+        </ActionButton>
+      </ActionButtonGroup>
     </div>
   );
 }

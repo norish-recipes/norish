@@ -42,14 +42,12 @@
       "namePlaceholder": "Il tuo nome",
       "emailLabel": "Email",
       "avatarHint": "Clicca sul tuo avatar per cambiare immagine",
-      "deleteAvatar": "Elimina immagine del profilo",
-      "saveChanges": "Salva modifiche"
+      "deleteAvatar": "Elimina immagine del profilo"
     },
     "allergies": {
       "title": "Allergie",
       "description": "Aggiungi le tue allergie alimentari per ricevere avvisi quando pianifichi ricette che contengono allergeni.",
-      "placeholder": "Digita le allergie (es. glutine, frutta a guscio, latticini)...",
-      "saveButton": "Salva allergie"
+      "placeholder": "Digita le allergie (es. glutine, frutta a guscio, latticini)..."
     },
     "apiKeys": {
       "title": "Chiavi API",
@@ -77,7 +75,8 @@
         "title": "Chiave API generata",
         "warning": "Salva questa chiave ora! Non potrai vederla di nuovo. Conserviamo solo un hash e non possiamo recuperare questa chiave.",
         "hint": "Usa questa chiave nell'header <code>x-api-key</code> quando effettui richieste API.",
-        "confirmButton": "L'ho salvata"
+        "confirmButton": "L'ho salvata",
+        "copyButton": "Copia chiave"
       },
       "deleteModal": {
         "title": "Elimina chiave API",
@@ -287,7 +286,8 @@
       "noCodeDescription": "Nessun codice di accesso attivo. Generane uno per invitare nuovi membri.",
       "generateButton": "Genera codice di accesso",
       "copySuccess": "Codice di accesso copiato",
-      "copyFailed": "Impossibile copiare il codice di accesso"
+      "copyFailed": "Impossibile copiare il codice di accesso",
+      "copyButton": "Copia codice di accesso"
     },
     "create": {
       "title": "Crea nucleo familiare",
@@ -328,8 +328,7 @@
       "lunchTime": "Orario pranzo",
       "dinnerTime": "Orario cena",
       "snackTime": "Orario spuntino",
-      "testConnection": "Testa connessione",
-      "saveConfiguration": "Salva configurazione"
+      "testConnection": "Testa connessione"
     },
     "config": {
       "title": "Configurazione CalDAV",
@@ -339,7 +338,6 @@
       "disabled": "Disabilitato",
       "editButton": "Modifica",
       "deleteButton": "Elimina",
-      "saveChanges": "Salva modifiche",
       "advancedSettings": "Impostazioni avanzate",
       "timezone": "Fuso orario: {timezone}",
       "connectionStatus": {
@@ -628,7 +626,6 @@
       "localesDescription": "Seleziona quali lingue gli utenti possono scegliere",
       "defaultLocale": "Lingua predefinita",
       "defaultLocaleDescription": "Lingua utilizzata per i nuovi utenti e come fallback",
-      "saveLocales": "Salva impostazioni lingua",
       "localesSaved": "Impostazioni lingua salvate",
       "localesError": "Salvataggio impostazioni lingua non riuscito",
       "atLeastOneLocale": "Almeno una lingua deve essere abilitata",
@@ -1066,7 +1063,9 @@
       "navigationTimeout": "Timeout di navigazione (ms)",
       "navigationTimeoutDescription": "Quanto tempo ha un renderer per caricare una pagina.",
       "saved": "Renderer di pagine salvati",
-      "error": "Impossibile salvare i renderer di pagine"
+      "error": "Impossibile salvare i renderer di pagine",
+      "testConnection": "Testa connessione",
+      "connectionSuccess": "Connessione riuscita"
     },
     "imageGenerationConfig": {
       "description": "Le immagini richiedono un proprio provider, perché la maggior parte dei provider IA non sa disegnare.",

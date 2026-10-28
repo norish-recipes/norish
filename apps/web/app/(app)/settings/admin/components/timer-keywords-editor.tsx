@@ -3,9 +3,10 @@
 import { useCallback, useEffect, useState } from "react";
 import { SwitchRow } from "@/app/(app)/settings/components/setting-row";
 import SettingsSwitch from "@/app/(app)/settings/components/settings-switch";
+import { ActionButton, ActionButtonGroup } from "@/components/shared/action-button";
 import { usePending } from "@/hooks/use-pending";
-import { ArrowPathIcon, ExclamationTriangleIcon } from "@heroicons/react/16/solid";
-import { Button, Description, Label, TextArea, TextField } from "@heroui/react";
+import { ExclamationTriangleIcon } from "@heroicons/react/16/solid";
+import { Description, Label, TextArea, TextField } from "@heroui/react";
 import { useTranslations } from "next-intl";
 
 interface TimerKeywordsEditorProps {
@@ -208,21 +209,19 @@ export default function TimerKeywordsEditor({
         </div>
       )}
 
-      <div className="flex flex-wrap items-center justify-end gap-2">
-        <Button isDisabled={saving} onPress={handleRestoreDefaults} variant="tertiary">
-          {<ArrowPathIcon className="h-5 w-5" />}
+      <ActionButtonGroup>
+        <ActionButton action="reset" isDisabled={saving} onPress={handleRestoreDefaults}>
           {tActions("restoreDefaults")}
-        </Button>
-
-        <Button
+        </ActionButton>
+        <ActionButton
+          action="save"
           isDisabled={!!error || !isDirty}
-          onPress={handleSave}
-          variant="primary"
           isPending={saving}
+          onPress={handleSave}
         >
           {tActions("save")}
-        </Button>
-      </div>
+        </ActionButton>
+      </ActionButtonGroup>
     </div>
   );
 }

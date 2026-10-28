@@ -42,14 +42,12 @@
       "namePlaceholder": "اسمك",
       "emailLabel": "البريد الإلكتروني",
       "avatarHint": "انقر على صورتك لتغييرها",
-      "deleteAvatar": "حذف الصورة الشخصية",
-      "saveChanges": "حفظ التغييرات"
+      "deleteAvatar": "حذف الصورة الشخصية"
     },
     "allergies": {
       "title": "الحساسية",
       "description": "أضف أنواع الحساسية الغذائية لديك لتصلك تنبيهات عند تخطيط وصفات تحتوي على مسبّبات الحساسية.",
-      "placeholder": "اكتب أنواع الحساسية (مثال: غلوتين، مكسرات، ألبان)...",
-      "saveButton": "حفظ الحساسية"
+      "placeholder": "اكتب أنواع الحساسية (مثال: غلوتين، مكسرات، ألبان)..."
     },
     "apiKeys": {
       "title": "مفاتيح API",
@@ -77,7 +75,8 @@
         "title": "تم إنشاء مفتاح API",
         "warning": "احفظ هذا المفتاح الآن! لن تتمكن من رؤيته مرة أخرى. نحتفظ فقط بقيمة hash له ولا يمكننا استعادته.",
         "hint": "استخدم هذا المفتاح في ترويسة <code>x-api-key</code> عند إرسال طلبات API.",
-        "confirmButton": "حفظته"
+        "confirmButton": "حفظته",
+        "copyButton": "نسخ المفتاح"
       },
       "deleteModal": {
         "title": "حذف مفتاح API",
@@ -287,7 +286,8 @@
       "noCodeDescription": "لا يوجد رمز انضمام فعّال. أنشئ رمزًا لدعوة أعضاء جدد.",
       "generateButton": "إنشاء رمز انضمام",
       "copySuccess": "تم نسخ رمز الانضمام",
-      "copyFailed": "تعذّر نسخ رمز الانضمام"
+      "copyFailed": "تعذّر نسخ رمز الانضمام",
+      "copyButton": "نسخ رمز الانضمام"
     },
     "create": {
       "title": "إنشاء منزل",
@@ -328,8 +328,7 @@
       "lunchTime": "وقت الغداء",
       "dinnerTime": "وقت العشاء",
       "snackTime": "وقت التصبيرة",
-      "testConnection": "اختبار الاتصال",
-      "saveConfiguration": "حفظ الإعدادات"
+      "testConnection": "اختبار الاتصال"
     },
     "config": {
       "title": "إعدادات CalDAV",
@@ -339,7 +338,6 @@
       "disabled": "معطّل",
       "editButton": "تعديل",
       "deleteButton": "حذف",
-      "saveChanges": "حفظ التغييرات",
       "advancedSettings": "إعدادات متقدمة",
       "timezone": "المنطقة الزمنية: {timezone}",
       "connectionStatus": {
@@ -628,7 +626,6 @@
       "localesDescription": "اختر اللغات التي يمكن للمستخدمين الاختيار منها",
       "defaultLocale": "اللغة الافتراضية",
       "defaultLocaleDescription": "اللغة المستخدمة للمستخدمين الجدد وكلغة احتياطية",
-      "saveLocales": "حفظ إعدادات اللغة",
       "localesSaved": "تم حفظ إعدادات اللغة",
       "localesError": "تعذّر حفظ إعدادات اللغة",
       "atLeastOneLocale": "يجب تفعيل لغة واحدة على الأقل",
@@ -1066,7 +1063,9 @@
       "navigationTimeout": "مهلة التنقل (ms)",
       "navigationTimeoutDescription": "المدة الممنوحة للعارض لتحميل صفحة.",
       "saved": "تم حفظ عارضات الصفحات",
-      "error": "تعذّر حفظ عارضات الصفحات"
+      "error": "تعذّر حفظ عارضات الصفحات",
+      "testConnection": "اختبار الاتصال",
+      "connectionSuccess": "نجح الاتصال"
     },
     "imageGenerationConfig": {
       "description": "تحتاج الصور إلى مزوّد خاص بها، لأن معظم مزوّدي الذكاء الاصطناعي لا يستطيعون الرسم.",
