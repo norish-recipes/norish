@@ -5,7 +5,7 @@ Until 0.20, seeding copied the nine shipped prompt texts into the `prompts` conf
 The stored row now carries **only administrator overrides**: a field is present exactly when its text differs from the shipped default. Everything else — the admin form, every model request, "Restore defaults" — is a merge of that row over the shipped prompt files at read time. The definition of "is this an override" lives in one pure module (`shared-server/ai/prompts/overrides.ts`) shared by the save path and the read path:
 
 - **Save** drops any submitted field that is blank or equal to the current shipped default. Saving an untouched form stores nothing; reverting a prompt to the default text by hand un-pins it. A save can no longer freeze anything.
-- **Boot** pruned legacy rows to genuine overrides from 0.20 to 0.25, dropping any text equal to a default some earlier release shipped and the legacy `isOverridden` flag. 0.26 removed that migration: an install older than 0.20 reaches 0.26 through 0.25.1.
+- **Boot** pruned legacy rows to genuine overrides from 0.20 to 0.25, dropping any text equal to a default some earlier release shipped and the legacy `isOverridden` flag. Since 0.26 it lives in `packages/api/src/startup/upgrades/` and prunes only rows still carrying `isOverridden`, against the texts releases up to 0.25 shipped, frozen in a file there.
 - **Read** merges stored overrides over `loadDefaultPrompts()`. A missing row means no overrides; the schema's required fields are gone, so a row from any era parses.
 
 ## Consequences
