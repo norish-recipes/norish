@@ -4,16 +4,9 @@ import type { KeyboardEvent } from "react";
 import { useState } from "react";
 import Panel from "@/components/Panel/Panel";
 import { AnimatedNumber } from "@/components/recipes/animated-number";
+import { ActionButton, ActionButtonGroup } from "@/components/shared/action-button";
 import { MinusIcon, PlusIcon } from "@heroicons/react/16/solid";
-import {
-  Button,
-  Input,
-  InputGroup,
-  Label,
-  TextField,
-  ToggleButton,
-  ToggleButtonGroup,
-} from "@heroui/react";
+import { Button, InputGroup } from "@heroui/react";
 import { useTranslations } from "next-intl";
 
 import { formatAmountAsDecimal } from "@norish/shared/lib/format-amount";
@@ -153,6 +146,8 @@ function ServingsPanel({
 }) {
   const t = useTranslations("recipes.form");
   const tDetail = useTranslations("recipes.detail");
+  const tGlance = useTranslations("recipes.glanceBar");
+  const tActions = useTranslations("common.actions");
   const picked = MULTIPLIERS.find((multiplier) => original * multiplier === servings);
   // The typed text, applied as it is typed: closing the panel commits nothing.
   // Typing in one field rewrites the other, so both always say the same.
@@ -182,51 +177,59 @@ function ServingsPanel({
 
   return (
     <Panel open={open} title={t("servings")} onOpenChange={onOpenChange}>
-      <Panel.Body className="gap-4 pb-6">
+      <Panel.Body className="gap-3">
         <div className="grid grid-cols-2 gap-3">
-          <TextField value={draft.servings} onChange={(text) => type("servings", text)}>
-            <Label>{t("servings")}</Label>
-            <Input
-              className="h-12 text-center text-base"
+          <InputGroup className="h-12" variant="secondary">
+            <InputGroup.Input
+              aria-label={t("servings")}
+              className="min-w-0 text-base"
               inputMode="decimal"
-              variant="secondary"
+              value={draft.servings}
+              onChange={(e) => type("servings", e.target.value)}
               onKeyDown={closeOnEnter}
             />
-          </TextField>
-          <TextField value={draft.multiplier} onChange={(text) => type("multiplier", text)}>
-            <Label>{tDetail("multiplier")}</Label>
-            <InputGroup className="h-12" variant="secondary">
-              <InputGroup.Input
-                className="min-w-0 text-center text-base"
-                inputMode="decimal"
-                onKeyDown={closeOnEnter}
-              />
-              <InputGroup.Suffix>×</InputGroup.Suffix>
-            </InputGroup>
-          </TextField>
+            <InputGroup.Suffix>{tGlance("servings", { count: servings })}</InputGroup.Suffix>
+          </InputGroup>
+          <InputGroup className="h-12" variant="secondary">
+            {/* Before the figure: an × at the end of a field reads as "clear". */}
+            <InputGroup.Prefix>×</InputGroup.Prefix>
+            <InputGroup.Input
+              aria-label={tDetail("multiplier")}
+              className="min-w-0 text-base"
+              inputMode="decimal"
+              value={draft.multiplier}
+              onChange={(e) => type("multiplier", e.target.value)}
+              onKeyDown={closeOnEnter}
+            />
+          </InputGroup>
         </div>
 
-        {/* A pick is the whole answer, so it closes the panel; tapping the
-            current one deselects it, which changes nothing. */}
-        <ToggleButtonGroup
-          fullWidth
-          aria-label={t("servings")}
-          selectedKeys={picked === undefined ? [] : [String(picked)]}
-          selectionMode="single"
-          onSelectionChange={(keys) => {
-            const [key] = keys;
-
-            if (key !== undefined) onChange(original * Number(key));
-            onOpenChange(false);
-          }}
-        >
+        {/* A pick is the whole answer, so it closes the panel. */}
+        <div className="grid grid-cols-5 gap-2">
           {MULTIPLIERS.map((multiplier) => (
-            <ToggleButton key={multiplier} id={String(multiplier)}>
+            <Button
+              key={multiplier}
+              fullWidth
+              aria-pressed={picked === multiplier}
+              size="sm"
+              variant={picked === multiplier ? "primary" : "tertiary"}
+              onPress={() => {
+                onChange(original * multiplier);
+                onOpenChange(false);
+              }}
+            >
               {multiplier === 0.5 ? "½×" : `${multiplier}×`}
-            </ToggleButton>
+            </Button>
           ))}
-        </ToggleButtonGroup>
+        </div>
       </Panel.Body>
+      <Panel.Footer>
+        <ActionButtonGroup>
+          <ActionButton action="done" onPress={() => onOpenChange(false)}>
+            {tActions("done")}
+          </ActionButton>
+        </ActionButtonGroup>
+      </Panel.Footer>
     </Panel>
   );
 }

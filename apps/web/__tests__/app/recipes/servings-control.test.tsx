@@ -29,6 +29,7 @@ vi.mock("@/components/Panel/Panel", () => {
     open ? <div data-testid="servings-panel">{children}</div> : null;
 
   Panel.Body = ({ children }: { children: ReactNode }) => <div>{children}</div>;
+  Panel.Footer = ({ children }: { children: ReactNode }) => <div>{children}</div>;
 
   return { default: Panel };
 });
@@ -44,7 +45,7 @@ describe("ServingsControl's panel (#682)", () => {
     render(<ServingsControl />);
 
     fireEvent.click(screen.getByRole("button", { name: "5 servings" }));
-    fireEvent.click(screen.getByRole("radio", { name: "2×" }));
+    fireEvent.click(screen.getByRole("button", { name: "2×" }));
 
     expect(recipeState.setIngredientAmounts).toHaveBeenCalledWith(8);
     expect(screen.queryByTestId("servings-panel")).toBeNull();
@@ -56,8 +57,8 @@ describe("ServingsControl's panel (#682)", () => {
 
     fireEvent.click(screen.getByRole("button", { name: "2 servings" }));
 
-    expect(screen.getByRole("radio", { name: "½×" })).toBeChecked();
-    expect(screen.getByRole("radio", { name: "1×" })).not.toBeChecked();
+    expect(screen.getByRole("button", { name: "½×" })).toHaveAttribute("aria-pressed", "true");
+    expect(screen.getByRole("button", { name: "1×" })).toHaveAttribute("aria-pressed", "false");
   });
 
   it("takes any number of servings as it is typed, decimal commas too", () => {
@@ -93,6 +94,9 @@ describe("ServingsControl's panel (#682)", () => {
 
     fireEvent.change(servings, { target: { value: "10" } });
     expect(multiplier).toHaveValue("2.5");
+
+    fireEvent.click(screen.getByRole("button", { name: "common.actions.done" }));
+    expect(screen.queryByTestId("servings-panel")).toBeNull();
   });
 
   it("is a plain figure where no panel can open", () => {

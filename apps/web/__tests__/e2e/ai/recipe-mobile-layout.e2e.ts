@@ -306,7 +306,7 @@ test("tapping the servings opens a panel that multiplies the recipe or takes any
   const panel = page.getByRole("dialog", { name: "Servings" });
 
   await figure("4").click();
-  await panel.getByRole("radio", { name: "2×" }).click();
+  await panel.getByRole("button", { name: "2×" }).click();
   await expect(panel).toBeHidden();
   await expect(figure("8")).toBeVisible();
 
