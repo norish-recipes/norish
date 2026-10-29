@@ -77,7 +77,8 @@
     "source": "Источник",
     "addedBy": "Добавил(а) {name}",
     "decreaseServings": "Меньше порций",
-    "increaseServings": "Больше порций"
+    "increaseServings": "Больше порций",
+    "multiplier": "Множитель"
   },
   "actions": {
     "plan": "Запланировать",

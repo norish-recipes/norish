@@ -77,7 +77,8 @@
     "source": "Kilde",
     "addedBy": "Tilføjet af {name}",
     "decreaseServings": "Færre portioner",
-    "increaseServings": "Flere portioner"
+    "increaseServings": "Flere portioner",
+    "multiplier": "Faktor"
   },
   "actions": {
     "plan": "Planlæg",

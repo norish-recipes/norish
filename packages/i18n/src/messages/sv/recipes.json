@@ -77,7 +77,8 @@
     "source": "Källa",
     "addedBy": "Tillagt av {name}",
     "decreaseServings": "Färre portioner",
-    "increaseServings": "Fler portioner"
+    "increaseServings": "Fler portioner",
+    "multiplier": "Faktor"
   },
   "actions": {
     "plan": "Planera",

@@ -77,7 +77,8 @@
     "source": "المصدر",
     "addedBy": "أضافها {name}",
     "decreaseServings": "حصص أقل",
-    "increaseServings": "حصص أكثر"
+    "increaseServings": "حصص أكثر",
+    "multiplier": "المضاعف"
   },
   "actions": {
     "plan": "تخطيط",

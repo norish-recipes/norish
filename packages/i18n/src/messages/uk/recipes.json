@@ -77,7 +77,8 @@
     "source": "Джерело",
     "addedBy": "Автор: {name}",
     "decreaseServings": "Менше порцій",
-    "increaseServings": "Більше порцій"
+    "increaseServings": "Більше порцій",
+    "multiplier": "Множник"
   },
   "actions": {
     "plan": "Запланувати",

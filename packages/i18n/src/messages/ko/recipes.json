@@ -77,7 +77,8 @@
     "source": "출처",
     "addedBy": "{name} 님이 추가함",
     "decreaseServings": "인분 줄이기",
-    "increaseServings": "인분 늘리기"
+    "increaseServings": "인분 늘리기",
+    "multiplier": "배율"
   },
   "actions": {
     "plan": "계획",

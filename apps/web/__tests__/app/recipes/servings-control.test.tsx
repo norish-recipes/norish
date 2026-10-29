@@ -64,7 +64,7 @@ describe("ServingsControl's panel (#682)", () => {
     render(<ServingsControl />);
 
     fireEvent.click(screen.getByRole("button", { name: "4 servings" }));
-    const field = screen.getByRole("textbox");
+    const field = screen.getByRole("textbox", { name: "recipes.form.servings" });
 
     expect(field).toHaveValue("4");
     fireEvent.change(field, { target: { value: "1,5" } });
@@ -76,6 +76,23 @@ describe("ServingsControl's panel (#682)", () => {
 
     fireEvent.keyDown(field, { key: "Enter" });
     expect(screen.queryByTestId("servings-panel")).toBeNull();
+  });
+
+  it("takes any multiplier, and each field follows the other", () => {
+    render(<ServingsControl />);
+
+    fireEvent.click(screen.getByRole("button", { name: "4 servings" }));
+    const servings = screen.getByRole("textbox", { name: "recipes.form.servings" });
+    const multiplier = screen.getByRole("textbox", { name: "recipes.detail.multiplier" });
+
+    expect(multiplier).toHaveValue("1");
+    fireEvent.change(multiplier, { target: { value: "1,5" } });
+    expect(recipeState.setIngredientAmounts).toHaveBeenLastCalledWith(6);
+    expect(servings).toHaveValue("6");
+    expect(multiplier).toHaveValue("1,5");
+
+    fireEvent.change(servings, { target: { value: "10" } });
+    expect(multiplier).toHaveValue("2.5");
   });
 
   it("is a plain figure where no panel can open", () => {

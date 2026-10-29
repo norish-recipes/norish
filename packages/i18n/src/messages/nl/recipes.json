@@ -77,7 +77,8 @@
     "source": "Bron",
     "addedBy": "Toegevoegd door {name}",
     "decreaseServings": "Minder porties",
-    "increaseServings": "Meer porties"
+    "increaseServings": "Meer porties",
+    "multiplier": "Factor"
   },
   "actions": {
     "plan": "Plannen",

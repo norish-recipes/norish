@@ -77,7 +77,8 @@
     "source": "Fuente",
     "addedBy": "Añadido por {name}",
     "decreaseServings": "Menos raciones",
-    "increaseServings": "Más raciones"
+    "increaseServings": "Más raciones",
+    "multiplier": "Multiplicador"
   },
   "actions": {
     "plan": "Planificar",

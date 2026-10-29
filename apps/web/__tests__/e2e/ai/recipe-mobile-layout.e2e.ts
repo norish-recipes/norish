@@ -297,7 +297,7 @@ test("hiding Nutrition Information takes the card and the Glance Bar's calories 
   }
 });
 
-test("tapping the servings opens a panel that multiplies the recipe or takes any number (#682)", async () => {
+test("tapping the servings opens a panel that multiplies the recipe or takes any number or multiplier (#682)", async () => {
   await page.goto(`/recipes/${recipeId}`);
 
   // Both page trees render the control; only the phone tree's copy is visible.
@@ -316,4 +316,12 @@ test("tapping the servings opens a panel that multiplies the recipe or takes any
   await page.keyboard.press("Escape");
   await expect(panel).toBeHidden();
   await expect(figure("1.5")).toBeVisible();
+
+  // A multiplier counts from the recipe's own 4 servings, whatever is shown.
+  await figure("1.5").click();
+  await panel.getByRole("textbox", { name: "Multiplier" }).fill("2,5");
+  await expect(panel.getByRole("textbox", { name: "Servings" })).toHaveValue("10");
+  await page.keyboard.press("Enter");
+  await expect(panel).toBeHidden();
+  await expect(figure("10")).toBeVisible();
 });

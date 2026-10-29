@@ -77,7 +77,8 @@
     "source": "Lähde",
     "addedBy": "Lisännyt {name}",
     "decreaseServings": "Vähemmän annoksia",
-    "increaseServings": "Enemmän annoksia"
+    "increaseServings": "Enemmän annoksia",
+    "multiplier": "Kerroin"
   },
   "actions": {
     "plan": "Suunnittele",
