@@ -545,36 +545,21 @@ describe("an identity provider that is down when Norish starts", () => {
     const port = Number(new URL(issuer).port);
 
     await idp.stop();
-    vi.useFakeTimers({ toFake: ["Date"] });
 
     try {
       authModule = await importAuth();
 
-      // Held the way the auth route holds it, from before the instance is rebuilt.
+      // Held the way the auth route holds it.
       const handler = authModule.auth.handler;
       const startSignIn = () =>
         handler(post("/sign-in/social", { provider: "oidc", callbackURL: "/" }));
 
       expect((await startSignIn()).status).toBe(404);
 
-      // A provider that is back is asked again only once the retry delay is up.
+      // Better Auth asks a provider it skipped at startup again on the next sign-in with it.
       await idp.start(port);
-      expect((await startSignIn()).status).toBe(404);
-
-      vi.setSystemTime(Date.now() + 30_000);
-
-      // The next use builds a replacement in the background, which takes over
-      // once it has the provider.
-      await authModule.auth.api.getSession({ headers: new Headers() });
-      await vi.waitFor(async () => {
-        const ctx = await authModule.auth.$context;
-
-        expect(ctx.socialProviders.map((provider) => provider.id)).toContain("oidc");
-      });
-
       expect((await startSignIn()).status).toBe(200);
     } finally {
-      vi.useRealTimers();
       if (!idp.listening) await idp.start(port);
     }
   });
