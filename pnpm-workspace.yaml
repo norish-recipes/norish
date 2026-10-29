@@ -28,7 +28,7 @@ catalog:
   "@vitejs/plugin-react": ^6.1.2
   archiver: ^8.0.0
   better-auth: 1.7.14
-  bullmq: ^6.3.14
+  bullmq: ^6.5.0
   date-fns: ^4.4.0
   drizzle-orm: 0.45.4
   eslint: 10.12.0
