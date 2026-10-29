@@ -32,7 +32,7 @@
     "drizzle-orm": "catalog:",
     "html-entities": "catalog:",
     "next": "catalog:",
-    "playwright-core": "^1.64.0",
+    "playwright-core": "^1.64.1",
     "superjson": "catalog:",
     "zod": "catalog:"
   },

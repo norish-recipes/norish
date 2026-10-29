@@ -15,7 +15,7 @@ catalog:
   "@heroui/react": 3.2.6
   "@heroui/styles": 3.2.6
   "@tailwindcss/postcss": ^4.3.3
-  "@tanstack/react-query": 5.104.2
+  "@tanstack/react-query": 5.105.0
   "@testcontainers/postgresql": ^12.2.1
   "@testcontainers/valkey": ^12.2.1
   "@trpc/client": 11.19.0
@@ -35,23 +35,23 @@ catalog:
   fuse.js: ^7.5.0
   html-entities: ^2.6.0
   ioredis: ^6.0.0
-  jsdom: ^30.1.2
+  jsdom: ^30.1.3
   jszip: 3.10.2
   next: 16.4.3
   pg: 8.23.1
-  postcss: ^8.5.30
+  postcss: ^8.5.32
   prettier: ^3.9.10
   react: 19.3.1
   react-dom: 19.3.1
   server-only: ^0.0.1
   superjson: ^2.2.6
   tailwindcss: ^4.3.3
-  trpc-to-openapi: ^3.3.0
+  trpc-to-openapi: ^3.3.3
   tsx: 4.23.15
-  turbo: ^2.11.7
+  turbo: ^2.11.10
   typescript: 6.0.3
-  vite: ^8.3.4
-  vitest: ^5.0.4
+  vite: ^8.3.5
+  vitest: ^5.0.5
   ws: 8.22.0
   zod: 4.6.7
   zod-openapi: ^5.4.6
