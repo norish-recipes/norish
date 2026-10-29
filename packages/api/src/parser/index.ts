@@ -5,7 +5,10 @@ import { isBotCheck, plainFetch, renderPage } from "@norish/api/parser/fetch";
 import { isParseComplete, isRecipe } from "@norish/api/parser/import-triage";
 import { extractRecipeNodesFromJsonLd } from "@norish/api/parser/jsonld";
 import { summarisePage } from "@norish/api/parser/page-summary";
-import { adaptRecipeScrapersResponse } from "@norish/api/parser/python/adapter";
+import {
+  adaptRecipeScrapersResponse,
+  collectIngredientStrings,
+} from "@norish/api/parser/python/adapter";
 import { callRecipeScrapersParser } from "@norish/api/parser/python/client";
 import { extractRecipeWithAI } from "@norish/api/parser/recipe-extraction";
 import {
@@ -22,6 +25,7 @@ import {
 } from "@norish/shared/contracts/realtime/recipes";
 import { ErrorWithDetail } from "@norish/shared/lib/error-extensions";
 import { hasRecipeName, hasSteps, isVideoUrl } from "@norish/shared/lib/helpers";
+import { isIngredientHeading } from "@norish/shared/lib/ingredient-text";
 
 export interface ParseRecipeResult {
   recipe: FullRecipeInsertDTO;
@@ -65,6 +69,8 @@ interface StructuredParserFailure {
 interface StructuredParseOutcome {
   recipe: FullRecipeInsertDTO | null;
   failure: StructuredParserFailure | null;
+  /** The scraper's ingredient lines, with the "# " headings JSON-LD has no room for. */
+  ingredientLines?: string[];
 }
 
 /**
@@ -140,18 +146,26 @@ async function tryExtractWithAI(
 /**
  * Try AI extraction with smallest/cleanest input first (JSON-LD),
  * then the full HTML, which may hold a method the JSON-LD lacks.
+ * `ingredientLines` from the scraper stand in for the JSON-LD's flat list
+ * when they hold the recipe's sections.
  */
 async function extractWithAIPreference(
   html: string,
   recipeId: string,
   url: string,
-  requireAI: boolean
+  requireAI: boolean,
+  ingredientLines: string[] = []
 ): Promise<FullRecipeInsertDTO | null> {
   const jsonLdNodes = extractRecipeNodesFromJsonLd(html);
 
   if (jsonLdNodes.length > 0) {
     log.info({ url }, "AI: using extracted JSON-LD as input (fewer tokens)");
-    const jsonLdInput = JSON.stringify(jsonLdNodes, null, 2);
+    const sectioned = jsonLdNodes.length === 1 && ingredientLines.some(isIngredientHeading);
+    const jsonLdInput = JSON.stringify(
+      sectioned ? [{ ...jsonLdNodes[0], recipeIngredient: ingredientLines }] : jsonLdNodes,
+      null,
+      2
+    );
 
     const fromJsonLd = await tryExtractWithAI(jsonLdInput, recipeId, url, requireAI, html);
 
@@ -192,7 +206,11 @@ async function tryStructuredParser(
     const adapted = await adaptRecipeScrapersResponse(response, recipeId, url);
 
     if (hasRecipeName(adapted)) {
-      return { recipe: adapted, failure: null };
+      return {
+        recipe: adapted,
+        failure: null,
+        ingredientLines: collectIngredientStrings(response.recipe),
+      };
     }
 
     return {
@@ -312,7 +330,13 @@ export async function parseRecipeFromUrl(
     if (incomplete && aiEnabled) {
       log.info({ url }, "Structured parse judged incomplete, attempting AI extraction");
 
-      const recipe = await extractWithAIPreference(html, recipeId, url, false);
+      const recipe = await extractWithAIPreference(
+        html,
+        recipeId,
+        url,
+        false,
+        structured.ingredientLines
+      );
 
       if (recipe) return { recipe, usedAI: true, ...(hasSteps(recipe) ? {} : { incomplete }) };
     }

@@ -48,5 +48,40 @@ class ParserInstructionsTests(unittest.TestCase):
         self.assertFalse(recipe.get("instructions_list"))
 
 
+    def test_hands_over_steps_in_sections_as_they_are(self) -> None:
+        # recipe-scrapers would make "Für den Salat" a step of its own.
+        steps = [
+            {
+                "@type": "HowToSection",
+                "name": "Für den Salat",
+                "itemListElement": [{"@type": "HowToStep", "text": "Kartoffeln kochen."}],
+            },
+            {
+                "@type": "HowToSection",
+                "name": "Für das Dressing",
+                "itemListElement": [{"@type": "HowToStep", "text": "Zwiebel würfeln."}],
+            },
+        ]
+        recipe = _parse(
+            {
+                "name": "Kartoffelsalat",
+                "recipeIngredient": ["1 kg Kartoffeln"],
+                "recipeInstructions": steps,
+            }
+        )
+
+        self.assertEqual(recipe["recipeInstructions"], steps)
+
+    def test_steps_without_sections_stay_the_scrapers(self) -> None:
+        recipe = _parse(
+            {
+                "name": "Kartoffelsalat",
+                "recipeIngredient": ["1 kg Kartoffeln"],
+                "recipeInstructions": [{"@type": "HowToStep", "text": "Kartoffeln kochen."}],
+            }
+        )
+
+        self.assertIsNone(recipe.get("recipeInstructions"))
+
 if __name__ == "__main__":
     unittest.main()

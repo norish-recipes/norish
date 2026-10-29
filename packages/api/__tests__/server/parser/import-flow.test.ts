@@ -9,6 +9,7 @@ const mockRenderStatus = vi.fn((): number | null => 200);
 const mockPlainFetch = vi.fn();
 const mockCallRecipeScrapersParser = vi.fn();
 const mockAdaptRecipeScrapersResponse = vi.fn();
+const mockCollectIngredientStrings = vi.fn();
 const mockProcessVideoRecipe = vi.fn();
 const mockIsAIEnabled = vi.fn();
 const mockShouldAlwaysUseAI = vi.fn();
@@ -52,6 +53,7 @@ vi.mock("@norish/api/parser/python/client", () => ({
 
 vi.mock("@norish/api/parser/python/adapter", () => ({
   adaptRecipeScrapersResponse: mockAdaptRecipeScrapersResponse,
+  collectIngredientStrings: mockCollectIngredientStrings,
 }));
 
 vi.mock("@norish/api/video/processor", () => ({
@@ -154,6 +156,7 @@ describe("parseRecipeFromUrl import flow", () => {
       media: { images: [], videos: [] },
     });
     mockAdaptRecipeScrapersResponse.mockResolvedValue(structuredRecipe);
+    mockCollectIngredientStrings.mockReturnValue(["1 egg"]);
     mockProcessVideoRecipe.mockResolvedValue(structuredRecipe);
     mockExtractRecipeWithAI.mockResolvedValue(aiRecipe);
   });
@@ -355,6 +358,35 @@ describe("parseRecipeFromUrl import flow", () => {
         "https://example.com/recipe",
         withJsonLd
       );
+    });
+
+    it("reads the sections the scraper found in place of the JSON-LD's flat list (#685)", async () => {
+      const sectioned = ["# For the mash", "1 kg potatoes", "# For the sauce", "500 g lentils"];
+
+      mockIsParseComplete.mockResolvedValue(false);
+      mockCollectIngredientStrings.mockReturnValue(sectioned);
+
+      const { parseRecipeFromUrl } = await import("@norish/api/parser");
+
+      await parseRecipeFromUrl("https://example.com/recipe", "recipe-1");
+
+      const [input] = mockExtractRecipeWithAI.mock.calls[0] as [string];
+
+      expect(JSON.parse(input)).toMatchObject([
+        { name: "Lentil soup", recipeIngredient: sectioned },
+      ]);
+    });
+
+    it("keeps the JSON-LD's own list when the scraper found no sections", async () => {
+      mockIsParseComplete.mockResolvedValue(false);
+
+      const { parseRecipeFromUrl } = await import("@norish/api/parser");
+
+      await parseRecipeFromUrl("https://example.com/recipe", "recipe-1");
+
+      const [input] = mockExtractRecipeWithAI.mock.calls[0] as [string];
+
+      expect(JSON.parse(input)[0]).not.toHaveProperty("recipeIngredient");
     });
 
     it("keeps the JSON-LD result when the full HTML has no steps either", async () => {

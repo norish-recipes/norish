@@ -328,6 +328,23 @@ def _fill_missing_instructions(scraper: Any, recipe: dict[str, Any]) -> None:
     recipe["instructions_list"] = [line for line in instructions.split("\n") if line]
 
 
+def _keep_instruction_sections(scraper: Any, recipe: dict[str, Any]) -> None:
+    """Hand over the page's schema.org steps as they are when they come in sections.
+
+    recipe-scrapers turns a HowToSection's name into a step of its own; Norish
+    reads the sections into headings.
+    """
+    try:
+        steps = scraper.schema.data.get("recipeInstructions")
+    except Exception:
+        return
+
+    if isinstance(steps, list) and any(
+        isinstance(step, dict) and "HowToSection" in str(step.get("@type")) for step in steps
+    ):
+        recipe["recipeInstructions"] = steps
+
+
 def _map_failure_code(error: Exception) -> FailureCode:
     if isinstance(error, WebsiteNotImplementedError):
         return "WebsiteNotImplementedError"
@@ -373,6 +390,7 @@ def parse_recipe(request: ParseRequest) -> ParseResponse:
         parser = _build_parser_metadata(scraper, mode)
         recipe = scraper.to_json()
         _fill_missing_instructions(scraper, recipe)
+        _keep_instruction_sections(scraper, recipe)
 
         logger.info(
             "parser scrape success url=%s scraper=%s mode=%s",

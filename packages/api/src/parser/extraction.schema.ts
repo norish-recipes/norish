@@ -27,6 +27,10 @@ export const sourceNutritionSchema = z
 
 export type SourceNutrition = z.infer<typeof sourceNutritionSchema>;
 
+/** How a list keeps the sections the source splits it into. */
+const SECTION_RULE =
+  'A section heading the source gives, like "For the sauce", is a line of its own starting with "# ".';
+
 /**
  * Dual-system recipe schema for AI extraction.
  * Extracts both metric and US measurements simultaneously.
@@ -57,10 +61,12 @@ export const recipeExtractionSchema = z
       .object({
         metric: z
           .array(z.string())
-          .describe("Ingredients with metric measurements (g, ml, kg, L, °C)"),
+          .describe(`Ingredients with metric measurements (g, ml, kg, L, °C). ${SECTION_RULE}`),
         us: z
           .array(z.string())
-          .describe("Ingredients with US measurements (cups, tbsp, tsp, oz, lb, °F)"),
+          .describe(
+            `Ingredients with US measurements (cups, tbsp, tsp, oz, lb, °F). ${SECTION_RULE}`
+          ),
       })
       .strict(),
     recipeInstructions: z
@@ -68,12 +74,12 @@ export const recipeExtractionSchema = z
         metric: z
           .array(z.string())
           .describe(
-            "Cooking steps with metric measurements. Empty when the source states none; never invent steps."
+            `Cooking steps with metric measurements. Empty when the source states none; never invent steps. ${SECTION_RULE}`
           ),
         us: z
           .array(z.string())
           .describe(
-            "Cooking steps with US measurements. Empty when the source states none; never invent steps."
+            `Cooking steps with US measurements. Empty when the source states none; never invent steps. ${SECTION_RULE}`
           ),
       })
       .strict(),
