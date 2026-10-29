@@ -31,6 +31,14 @@ the rating. Empty sections are left out.
 
 ![The Cooking time card with an Other Time segment, above the Nutrition ring](/img/screenshots/recipe-page-cards.png)
 
+## Servings
+
+The **-** and **+** beside Ingredients change the servings one at a time, and
+every amount follows. Tap the number between them for more: **½×** to **4×**
+multiply the servings the recipe was written for, or type any number, like 1.5.
+
+![The Servings panel over a recipe, with the number field and the ½× to 4× multipliers](/img/screenshots/recipe-servings-panel.png)
+
 ## Metric and US measurements
 
 The Ingredients card's menu converts a recipe between metric and US units,
