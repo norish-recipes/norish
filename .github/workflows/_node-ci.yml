@@ -81,7 +81,7 @@ jobs:
       # The parser's own tests run under uv, as the E2E job installs it.
       - name: Install uv
         if: ${{ !cancelled() && steps.setup.outcome == 'success' }}
-        uses: astral-sh/setup-uv@v10.0.1
+        uses: astral-sh/setup-uv@v10.3.3
         with:
           cache-dependency-glob: apps/parser-api/uv.lock
 
@@ -144,7 +144,7 @@ jobs:
 
       # setup-uv stopped publishing floating major tags with v8; pin exactly.
       - name: Install uv
-        uses: astral-sh/setup-uv@v10.0.1
+        uses: astral-sh/setup-uv@v10.3.3
         # Its default cache key globs the whole checkout, following pnpm 12's workspace symlinks in
         # node_modules back into the repo until the job times out.
         with:
