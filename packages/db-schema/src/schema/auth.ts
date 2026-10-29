@@ -69,7 +69,7 @@ export const accounts = pgTable(
     providerId: text("providerId").notNull(),
     accountId: text("accountId").notNull(),
 
-    // OAuth tokens (not encrypted - short-lived, minimal security benefit)
+    // OAuth tokens: Better Auth's columns, left empty (Norish drops them while signing in)
     accessToken: text("accessToken"),
     refreshToken: text("refreshToken"),
     idToken: text("idToken"),

@@ -116,6 +116,10 @@ function decryptUser(user: any): any {
   };
 }
 
+// Norish reads a provider's tokens while signing in and never calls the provider after, so
+// none are stored: Better Auth needs them only for endpoints Norish does not use.
+const NO_PROVIDER_TOKENS = { accessToken: null, refreshToken: null, idToken: null };
+
 function oidcDiscoveryUrl(oidc: { wellknown?: string; issuer: string }): string {
   return oidc.wellknown || new URL(".well-known/openid-configuration", oidc.issuer).toString();
 }
@@ -453,7 +457,7 @@ function createBetterAuth() {
               return false;
             }
 
-            return { data: account };
+            return { data: { ...account, ...NO_PROVIDER_TOKENS } };
           },
           after: async (account) => {
             // Process OIDC claims after account is created/updated
@@ -481,6 +485,7 @@ function createBetterAuth() {
           },
         },
         update: {
+          before: async (account) => ({ data: { ...account, ...NO_PROVIDER_TOKENS } }),
           after: async (account) => {
             // Also process on account update (subsequent logins update tokens)
             if (account.providerId === "oidc" && account.accountId) {

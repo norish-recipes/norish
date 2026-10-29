@@ -273,6 +273,15 @@ describe("OIDC sign-in", () => {
     expect(store.account).toHaveLength(1);
   });
 
+  it("keeps none of the provider's tokens, also after a later sign-in", async () => {
+    await signInWithOIDC(ADA);
+    await signInWithOIDC(ADA);
+
+    expect(store.account).toEqual([
+      expect.objectContaining({ accessToken: null, refreshToken: null, idToken: null }),
+    ]);
+  });
+
   it("sends the callback URL the docs tell administrators to register", async () => {
     const { authorizationUrl } = await signInWithOIDC(ADA);
 
