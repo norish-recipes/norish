@@ -715,6 +715,38 @@ describe("EditGroceryPanel, the product's details", () => {
   });
 });
 
+describe("AddGroceryPanel, where the cursor is", () => {
+  const props = {
+    stores: STORES,
+    onCreate: () => undefined,
+    onCreateRecurring: () => undefined,
+    onOpenChange: () => undefined,
+  };
+
+  it("is in the name field every time the panel opens", () => {
+    const { rerender } = render(<AddGroceryPanel open={true} {...props} />);
+
+    expect(screen.getByPlaceholderText("placeholder")).toHaveFocus();
+
+    rerender(<AddGroceryPanel open={false} {...props} />);
+    rerender(<AddGroceryPanel open={true} {...props} />);
+
+    expect(screen.getByPlaceholderText("placeholder")).toHaveFocus();
+  });
+
+  it("goes back to the name field after Add, for the next grocery", () => {
+    render(<AddGroceryPanel open={true} {...props} />);
+
+    fireEvent.change(screen.getByPlaceholderText("placeholder"), { target: { value: "milk" } });
+    const add = screen.getByRole("button", { name: "add" });
+
+    act(() => add.focus());
+    fireEvent.click(add);
+
+    expect(screen.getByPlaceholderText("placeholder")).toHaveFocus();
+  });
+});
+
 describe("AddGroceryPanel, the order of its fields and what it refuses", () => {
   it("puts the recurrence control under the name and before the Store, and waits on a price", () => {
     const onCreate = vi.fn();
