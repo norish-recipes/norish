@@ -117,27 +117,32 @@ async function rowsShowing(page: Page, values: string[]): Promise<ShownRow[]> {
   }, values);
 }
 
-/**
- * The grip of the row holding `value` once it has stopped moving: a list in a
- * panel slides in with it, and a press at a passing position misses the grip.
- */
-async function settledGrip(page: Page, value: string): Promise<Point> {
+/** Where `read` points once it has held still for three frames. */
+async function settled(page: Page, read: () => Promise<Point | undefined>): Promise<Point> {
   let last: Point | undefined;
   let still = 0;
 
   await expect
     .poll(async () => {
       await page.evaluate(() => new Promise((resolve) => requestAnimationFrame(resolve)));
-      const grip = (await rowsShowing(page, [value]))[0]?.grip;
+      const at = await read();
 
-      still = grip && last && grip.x === last.x && grip.y === last.y ? still + 1 : 0;
-      last = grip;
+      still = at && last && at.x === last.x && at.y === last.y ? still + 1 : 0;
+      last = at;
 
       return still;
     })
     .toBeGreaterThanOrEqual(3);
 
   return last!;
+}
+
+/**
+ * The grip of the row holding `value` once it has stopped moving: a list in a
+ * panel slides in with it, and a press at a passing position misses the grip.
+ */
+async function settledGrip(page: Page, value: string): Promise<Point> {
+  return settled(page, async () => (await rowsShowing(page, [value]))[0]?.grip);
 }
 
 async function orderOf(page: Page, values: string[]): Promise<string[]> {
@@ -318,11 +323,14 @@ test("a recipe card swipes open to its actions with a finger", async ({ browser,
       await finger.release();
     }
     // The actions sit beside the card in its swipable row, hidden until it opens.
-    await page
+    const action = page
       .getByRole("row")
       .filter({ has: card })
-      .getByRole("button", { name: "Add to calendar" })
-      .click();
+      .getByRole("button", { name: "Add to calendar" });
+
+    // A click retried on a moving button scrolls it to the top, and a scroll closes the row.
+    await settled(page, async () => (await action.boundingBox()) ?? undefined);
+    await action.click();
     await expect(page.getByRole("dialog")).toBeVisible();
   } finally {
     await context.close();
