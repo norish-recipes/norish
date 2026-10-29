@@ -32,6 +32,15 @@ Cada seção é um cartão próprio, na ordem do preparo: **Ingredientes**,
 
 ![O cartão Tempo de cozinha com um segmento Outro tempo, acima do anel de Nutrição](/img/screenshots/recipe-page-cards.png)
 
+## Porções {#servings}
+
+Os botões **-** e **+** ao lado de Ingredientes mudam as porções uma de cada
+vez, e todas as quantidades acompanham. Toque no número entre eles para mais:
+de **½×** a **4×** multiplicam as porções para as quais a receita foi escrita,
+ou digite qualquer número de porções ou qualquer multiplicador, como 1,5.
+
+![O painel Porções sobre uma receita, com os campos Porções e Multiplicador acima dos botões de ½× a 4×](/img/screenshots/recipe-servings-panel.png)
+
 ## Medidas métricas e dos EUA {#metric-and-us-measurements}
 
 O menu do cartão Ingredientes converte a receita entre unidades métricas e

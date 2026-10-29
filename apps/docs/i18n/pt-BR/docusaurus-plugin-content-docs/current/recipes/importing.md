@@ -29,8 +29,8 @@ está configurada.
 
 - **Adicionar receita => Colar** aceita uma receita em texto simples ou em
   [JSON-LD](https://schema.org/Recipe).
-- **Adicionar receita => Imagem** lê uma receita a partir de fotos ou capturas
-  de tela, com até 10 imagens em uma única receita.
+- **Adicionar receita => Imagem** lê uma receita a partir de fotos, capturas de
+  tela ou um PDF, com até 10 imagens ou páginas de PDF em uma única receita.
 
 :::note
 Texto simples e imagens exigem um [provedor de IA](/configuration/ai-provider).

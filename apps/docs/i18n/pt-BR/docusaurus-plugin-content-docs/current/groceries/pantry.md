@@ -19,11 +19,15 @@ Quando você adiciona uma receita às compras, os alimentos que estão na despen
 ficam de fora e aparecem em **Na sua despensa**. Toque no ícone de caixa em
 qualquer outra linha para adicionar esse alimento à despensa.
 
+Nos filtros de receitas, **Ingredientes em casa** lista as receitas para as
+quais a sua despensa tem ingredientes, as mais completas primeiro. Cada cartão
+mostra a parte dos ingredientes que você tem.
+
 ## Limitações {#limitations}
 
 - Ela não tem quantidades nem datas de validade. Quando algo acabar, coloque-o
   na lista.
 - Ela compara ingredientes inteiros, então "salt" nunca corresponde a "salted
   butter".
-- Só adicionar uma receita consulta a despensa. Itens que você digita são sempre
-  adicionados.
+- Só adicionar uma receita e o filtro de receitas consultam a despensa. Itens
+  que você digita são sempre adicionados.
