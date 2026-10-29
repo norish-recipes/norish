@@ -233,7 +233,7 @@ Dailymotion, Douyin, Bilibili e RedNote contam como vídeos.
 | -------------------------- | --------------------------------------------------------------------- | ----------------------------------------- |
 | `VIDEO_PARSING_ENABLED`    | Ativa a análise de vídeos                                             | `false`                                   |
 | `VIDEO_MAX_LENGTH_SECONDS` | Duração máxima aceita para o vídeo                                    | `120`                                     |
-| `YT_DLP_VERSION`           | Versão do yt-dlp para desenvolvimento (a imagem Docker já traz a sua) | `2026.08.19`                              |
+| `YT_DLP_VERSION`           | Versão do yt-dlp para desenvolvimento (a imagem Docker já traz a sua) | `2026.10.26`                              |
 | `YT_DLP_BIN_DIR`           | Pasta que contém o binário do yt-dlp                                  | `./.runtime/bin` (dev), `/app/bin` (prod) |
 | `YT_DLP_PROXY`             | URL de proxy HTTP/SOCKS para os downloads do yt-dlp                   | (vazio)                                   |
 
