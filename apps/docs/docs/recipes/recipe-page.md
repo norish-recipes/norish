@@ -35,9 +35,10 @@ the rating. Empty sections are left out.
 
 The **-** and **+** beside Ingredients change the servings one at a time, and
 every amount follows. Tap the number between them for more: **½×** to **4×**
-multiply the servings the recipe was written for, or type any number, like 1.5.
+multiply the servings the recipe was written for, or type any number of
+servings or any multiplier, like 1.5.
 
-![The Servings panel over a recipe, with the number field and the ½× to 4× multipliers](/img/screenshots/recipe-servings-panel.png)
+![The Servings panel over a recipe, with the Servings and Multiplier fields above the ½× to 4× buttons](/img/screenshots/recipe-servings-panel.png)
 
 ## Metric and US measurements
 
