@@ -101,7 +101,7 @@
     "playwright-core": "^1.64.0",
     "sharp": "^0.35.5",
     "superjson": "catalog:",
-    "tsdav": "^2.4.0",
+    "tsdav": "^2.5.0",
     "undici": "^8.11.2",
     "uuid": "14.0.3",
     "zod": "catalog:"
