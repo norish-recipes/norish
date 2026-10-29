@@ -913,6 +913,8 @@ export const IngredientSeedStateSchema = z.object({
   correctionsVersion: z.number().int().default(0),
   /** The junk pile seed's version last put on the pile (`JUNK_SEED`). */
   junkSeedVersion: z.number().int().default(0),
+  /** The upgrades from older releases last run (`UPGRADES_VERSION`, startup/upgrades). */
+  upgradesVersion: z.number().int().default(0),
 });
 
 export type IngredientSeedState = z.infer<typeof IngredientSeedStateSchema>;

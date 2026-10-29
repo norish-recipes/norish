@@ -228,7 +228,8 @@ export async function updateIngredientSeedState(
  * none), recorded once through unless it answers null; null where run. Refetched on `changed`.
  */
 export async function oncePerVersion<T extends object>(
-  key: "rungVersion" | "cleanupVersion" | "correctionsVersion" | "junkSeedVersion",
+  key:
+    "rungVersion" | "cleanupVersion" | "correctionsVersion" | "junkSeedVersion" | "upgradesVersion",
   version: number,
   {
     pass,

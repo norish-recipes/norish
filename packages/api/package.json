@@ -7,6 +7,7 @@
     ".": "./src/index.ts",
     "./parser": "./src/parser/index.ts",
     "./recipes/enrichment-listener": "./src/recipes/enrichment-listener.ts",
+    "./startup/upgrades": "./src/startup/upgrades/index.ts",
     "./*": "./src/*.ts"
   },
   "scripts": {

@@ -12,6 +12,10 @@ import { seedServerConfig } from "@norish/api/startup/seed-config";
 import { seedIngredientCatalogueOnFirstBoot } from "@norish/api/startup/seed-ingredient-catalogue";
 import { seedJunkPileOnBoot } from "@norish/api/startup/seed-junk-pile";
 import { registerShutdownHandlers } from "@norish/api/startup/shutdown";
+import {
+  upgradeDataFromOlderReleases,
+  upgradeSettingsFromOlderReleases,
+} from "@norish/api/startup/upgrades";
 import { initializeVideoProcessing } from "@norish/api/startup/video-processing";
 import { initializeServerConfig, SERVER_CONFIG } from "@norish/config/env-config-server";
 import { initializeQueues } from "@norish/queue/registry";
@@ -36,12 +40,16 @@ async function main() {
   await runMigrations();
   log.info("-".repeat(50));
 
+  // Before the config sync, which drops the fields an older release's settings still hold.
+  await upgradeSettingsFromOlderReleases();
   await seedServerConfig();
   log.info("-".repeat(50));
 
   // A first boot seeds the catalogue before traffic; later boots leave it to
   // the refresh job, so an unchanged file never holds the server up.
   await seedIngredientCatalogueOnFirstBoot();
+  // After the seed, so an older release's rows land on the catalogue's foods as an import would.
+  await upgradeDataFromOlderReleases();
   // Spellings the seed now gives another food move once, with the foods their words filed there.
   await correctSeedOnBoot();
   log.info("-".repeat(50));
