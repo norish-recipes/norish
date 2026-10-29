@@ -42,7 +42,7 @@ function buildCompose(masterKey: string, obscuraToken: string) {
 
   # Renders recipe pages for URL imports
   obscura:
-    image: norishapp/obscura:0.2.4-norish.2
+    image: norishapp/obscura:0.2.5-norish.1
     environment:
       OBSCURA_CDP_TOKEN: ${obscuraToken}
 

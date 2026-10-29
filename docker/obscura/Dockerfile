@@ -17,7 +17,7 @@
 # workflow reads.
 
 ARG OBSCURA_REPO=https://github.com/norish-recipes/obscura
-ARG OBSCURA_VERSION=0.2.4-norish.1
+ARG OBSCURA_VERSION=0.2.5-norish.1
 
 # Only here to fetch: the runtime image below has no shell to do it in.
 FROM debian:12-slim AS fetch

@@ -14,7 +14,7 @@ services:
   # server with stealth on and private-network protection intact, so it needs
   # no command of its own — see docker/obscura/README.md.
   obscura:
-    image: norishapp/obscura:0.2.4-norish.2
+    image: norishapp/obscura:0.2.5-norish.1
     restart: unless-stopped
     environment:
       # Development only. .env.example sets the same value for the app.

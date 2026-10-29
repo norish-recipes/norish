@@ -63,7 +63,7 @@ O Obscura só escuta em um endereço de rede quando o seu `OBSCURA_CDP_TOKEN` te
 pelo menos 32 caracteres, e o Norish precisa enviar o mesmo token. Gere um com
 `openssl rand -hex 32`.
 
-Os arquivos compose fixam uma imagem exata do Obscura, como `0.2.4-norish.2`.
+Os arquivos compose fixam uma imagem exata do Obscura, como `0.2.5-norish.1`.
 Para uma versão contínua (rolling release), use `norishapp/obscura:latest`.
 
 Uma página só conta como carregada quando suas imagens e scripts também
