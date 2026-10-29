@@ -40,7 +40,7 @@ export function CookingIngredientsView({
         ) : null}
         <div className="flex min-w-0 shrink-0 items-center justify-end gap-1.5 overflow-x-auto md:gap-2">
           <AmountDisplayToggle compact={!showTitle} />
-          {recipe.servings ? <ServingsControl compact={!showTitle} /> : null}
+          {recipe.servings ? <ServingsControl compact={!showTitle} withPanel={false} /> : null}
           {recipe.systemUsed ? <SystemConvertMenu compact={!showTitle} /> : null}
         </div>
       </div>

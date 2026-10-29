@@ -296,3 +296,24 @@ test("hiding Nutrition Information takes the card and the Glance Bar's calories 
     await clearDevicePreferences();
   }
 });
+
+test("tapping the servings opens a panel that multiplies the recipe or takes any number (#682)", async () => {
+  await page.goto(`/recipes/${recipeId}`);
+
+  // Both page trees render the control; only the phone tree's copy is visible.
+  const figure = (servings: string) =>
+    page.getByRole("button", { name: `${servings} servings`, exact: true }).locator("visible=true");
+  const panel = page.getByRole("dialog", { name: "Servings" });
+
+  await figure("4").click();
+  await panel.getByRole("radio", { name: "2×" }).click();
+  await expect(panel).toBeHidden();
+  await expect(figure("8")).toBeVisible();
+
+  // Typed servings apply as they are typed, so closing the panel keeps them.
+  await figure("8").click();
+  await panel.getByRole("textbox", { name: "Servings" }).fill("1,5");
+  await page.keyboard.press("Escape");
+  await expect(panel).toBeHidden();
+  await expect(figure("1.5")).toBeVisible();
+});
