@@ -26,7 +26,7 @@ RUN --mount=type=bind,source=package.json,target=/tmp/package.json \
 # inside node_modules.
 ENV PNPM_CONFIG_STORE_DIR=/root/.local/share/pnpm/store
 
-COPY --from=ghcr.io/astral-sh/uv:0.13.0 /uv /uvx /bin/
+COPY --from=ghcr.io/astral-sh/uv:0.13.6 /uv /uvx /bin/
 
 ENV UV_LINK_MODE=copy \
   UV_PYTHON_DOWNLOADS=0 \
