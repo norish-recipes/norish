@@ -7,9 +7,9 @@ packages:
   - tooling/*
 
 catalog:
-  "@better-auth/api-key": 1.7.7
-  "@better-auth/core": 1.7.7
-  "@better-auth/utils": 0.4.2
+  "@better-auth/api-key": 1.7.14
+  "@better-auth/core": 1.7.14
+  "@better-auth/utils": 0.5.1
   "@eslint/js": ^10.0.1
   "@heroicons/react": 2.2.0
   "@heroui/react": 3.2.6
@@ -27,7 +27,7 @@ catalog:
   "@types/react-dom": 19.3.0
   "@vitejs/plugin-react": ^6.1.2
   archiver: ^8.0.0
-  better-auth: 1.7.7
+  better-auth: 1.7.14
   bullmq: ^6.3.14
   date-fns: ^4.4.0
   drizzle-orm: 0.45.4
