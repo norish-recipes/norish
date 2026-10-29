@@ -1,10 +1,11 @@
-import { and, asc, desc, eq, gt, isNotNull, isNull, sql } from "drizzle-orm";
+import { and, asc, desc, eq, gt, isNotNull, isNull, or, sql } from "drizzle-orm";
 
 import type { IngredientRef } from "@norish/db/repositories/ingredient-aliases";
 import type { NamingRow, NamingRows } from "@norish/db/repositories/ingredient-cleanup";
 import type { ParkedLinkRow } from "@norish/db/schema";
 import { db } from "@norish/db/drizzle";
 import {
+  accounts,
   aisleLinks,
   groceries,
   ingredients,
@@ -32,6 +33,23 @@ export async function listGalleryImages(): Promise<
 
 export async function updateGalleryImageUrl(imageId: string, image: string): Promise<void> {
   await db.update(recipeImages).set({ image }).where(eq(recipeImages.id, imageId));
+}
+
+/** Clears the sign-in providers' tokens older releases stored; returns how many accounts held some. */
+export async function clearStoredOAuthTokens(): Promise<number> {
+  const cleared = await db
+    .update(accounts)
+    .set({ accessToken: null, refreshToken: null, idToken: null })
+    .where(
+      or(
+        isNotNull(accounts.accessToken),
+        isNotNull(accounts.refreshToken),
+        isNotNull(accounts.idToken)
+      )
+    )
+    .returning({ id: accounts.id });
+
+  return cleared.length;
 }
 
 /** Recipes with a picture and no Dish Colour. */

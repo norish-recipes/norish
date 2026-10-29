@@ -9,6 +9,7 @@ import { upgradeRecipeImageLayout } from "./before-0-15-5-recipe-images";
 import { upgradePromptCopies, upgradeTaggingSettings } from "./before-0-20-settings";
 import { upgradeDishColours } from "./before-0-22-dish-colours";
 import { upgradeIngredients } from "./before-0-25-ingredients";
+import { upgradeOAuthTokens } from "./before-0-26-oauth-tokens";
 
 /** Raised when a release adds an upgrade, so every instance runs the data upgrades once more. */
 export const UPGRADES_VERSION = 1;
@@ -28,8 +29,9 @@ export async function upgradeDataFromOlderReleases(): Promise<void> {
           const pictures = await upgradeRecipeImageLayout();
           const dishColours = await upgradeDishColours();
           const ingredients = await upgradeIngredients();
+          const oauthTokens = await upgradeOAuthTokens();
 
-          return { pictures, dishColours, ...ingredients };
+          return { pictures, dishColours, oauthTokens, ...ingredients };
         },
         changed: ({ rows, links }) => rows + links > 0,
         done: "Upgraded data from older releases",
