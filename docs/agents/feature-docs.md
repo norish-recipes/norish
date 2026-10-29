@@ -5,6 +5,8 @@ Definition of done for user-visible work: a feature lands together with its rele
 ## What every feature ships with
 
 1. **A release-notes section.** Add a short entry to the Target Version's page, `apps/docs/docs/release-notes/<target>.md` — a `###` under `## Features`, or a bullet under `## Fixes and Improvements`, as fits. Write for users and self-hosting operators in plain product language (use the glossary's vocabulary); internal-only work (refactors, test tooling, ADR records) is deliberately unpublished (ADR-0010).
+   - Measure against the last release users have (its git tag), not the branch: a fix to something that never shipped, or to a feature new in the same release, is no entry; fold it into that feature's section.
+   - English only. The pt-BR site shows the English page, so link with absolute paths (`/recipes/importing#through-the-api`); a relative `.md` link breaks its build.
 
 2. **Documentation with screenshots.** Create or update the relevant page(s) under `apps/docs/docs/` showing how the feature works. Screenshots live in `apps/docs/static/img/screenshots/`, are updated manually outside the browser acceptance gate, and are embedded as `![…](/img/screenshots/<file>.png)`. A feature isn't documented until a reader can see it working.
 
