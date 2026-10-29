@@ -528,3 +528,21 @@ describe("MiniGroceries with a Pantry", () => {
     expect(linkedAskedFor.at(-1)).toEqual(["recipe-1", "recipe-2"]);
   });
 });
+
+describe("MiniGroceries on the recipe page", () => {
+  beforeEach(() => {
+    linkedLines = [];
+    pantry = [];
+    groceries = [];
+  });
+
+  it("opens at the servings picked on the page after it mounted", () => {
+    const props = { recipeId: "r1", originalServings: 2, onOpenChange: () => undefined };
+    const view = render(<MiniGroceries {...props} initialServings={2} open={false} />);
+
+    view.rerender(<MiniGroceries {...props} initialServings={4} open={false} />);
+    view.rerender(<MiniGroceries {...props} open initialServings={4} />);
+
+    expect(screen.getByText("1000 g")).toBeInTheDocument();
+  });
+});

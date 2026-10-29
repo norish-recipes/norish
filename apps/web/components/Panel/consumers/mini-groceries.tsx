@@ -161,11 +161,8 @@ export default function MiniGroceries({
       ),
     [rawIngredients, linkedIngredients]
   );
-  const { servings, scaledIngredients, incrementServings, decrementServings } = useServingsScaler(
-    ingredients,
-    originalServings,
-    initialServings
-  );
+  const { servings, scaledIngredients, setServings, incrementServings, decrementServings } =
+    useServingsScaler(ingredients, originalServings, initialServings);
   const [selectedIds, setSelectedIds] = useState<string[]>([]);
   const [editingId, setEditingId] = useState<string | null>(null);
   const [editValue, setEditValue] = useState<string>("");
@@ -234,6 +231,8 @@ export default function MiniGroceries({
     setEditingId(null);
     setEditValue("");
     setEditedIngredients({});
+    // The panel is mounted with the page, so each opening takes the servings picked there.
+    if (open) setServings(initialServings ?? originalServings);
   }
 
   useEffect(() => {
