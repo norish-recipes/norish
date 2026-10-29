@@ -202,6 +202,12 @@ const serwist = new Serwist({
   },
 });
 
+// Upgrade from before 0.20 (see packages/api/src/startup/upgrades): its `apis` cache holds
+// personal responses nothing reads, expires or clears on sign-out (ADR-0005).
+self.addEventListener("activate", (event) => {
+  event.waitUntil(caches.delete("apis").catch(() => false));
+});
+
 // A page handing over an export response body to be streamed out as a
 // download. Additive to Serwist's own message listener — message events are
 // delivered to every listener, so returning false here simply leaves the
