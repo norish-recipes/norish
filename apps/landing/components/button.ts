@@ -6,6 +6,6 @@ export const button = {
   primary: `${base} bg-accent text-accent-foreground hover:bg-accent-deep`,
   secondary: `${base} bg-surface text-foreground ring-border hover:bg-surface-secondary ring-1`,
   /** On the green self-host band. */
-  onAccent: `${base} bg-background text-accent hover:bg-surface`,
+  onAccent: `${base} bg-paper text-accent hover:bg-paper/85`,
   onAccentQuiet: `${base} bg-accent-deep text-accent-foreground hover:bg-foreground hover:text-background`,
 };

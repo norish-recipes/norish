@@ -30,7 +30,15 @@ const PHOTO = [
   [800, 1067],
 ];
 
-/** Mirrors SHOTS in components/shot.tsx. */
+/** Mirrors SHOTS in components/shot.tsx. Captures come in both themes, photos in one. */
+const THEMED = new Set([
+  "recipe-mobile",
+  "cooking-mobile",
+  "calendar-mobile",
+  "groceries-mobile",
+  "pantry-mobile",
+  "recipe-web",
+]);
 const SHOTS = {
   "recipe-mobile": MOBILE,
   "cooking-mobile": MOBILE,
@@ -54,7 +62,11 @@ await mkdir(outDir, { recursive: true });
 let written = 0;
 const warnings = [];
 
-for (const [base, sizes] of Object.entries(SHOTS)) {
+const sources = Object.entries(SHOTS).flatMap(([base, sizes]) =>
+  THEMED.has(base) ? ["light", "dark"].map((theme) => [`${base}-${theme}`, sizes]) : [[base, sizes]]
+);
+
+for (const [base, sizes] of sources) {
   const source = join(sourceDir, `${base}.jpg`);
 
   let image;

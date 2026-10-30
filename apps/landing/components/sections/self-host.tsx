@@ -66,7 +66,7 @@ export function SelfHost() {
             key={fact.title}
             className="bg-accent-deep flex items-center gap-4 rounded-3xl px-6 py-5"
           >
-            <span className="bg-background text-accent grid size-11 shrink-0 place-items-center rounded-full [&>svg]:size-5.5">
+            <span className="bg-paper text-accent grid size-11 shrink-0 place-items-center rounded-full [&>svg]:size-5.5">
               {fact.icon}
             </span>
             <span className="flex flex-col gap-0.5">

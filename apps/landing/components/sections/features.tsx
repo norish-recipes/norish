@@ -6,7 +6,7 @@ import { Shot } from "../shot";
 function Title({ children, accent }: { children: ReactNode; accent: string }) {
   return (
     <h3 className="text-[1.75rem] leading-[1.1] font-semibold tracking-[-0.022em] sm:text-[2rem]">
-      {children} <span className="text-accent">{accent}</span>
+      {children} <span className="text-accent-text">{accent}</span>
     </h3>
   );
 }
@@ -72,7 +72,7 @@ export function Features() {
           <Shot
             alt="A Greek Yogurt Naan recipe scaled to 16 servings, with nutrition worked out from the ingredients"
             base="recipe-web"
-            className="ring-border mt-4 block h-auto w-full min-w-0 rounded-[1.25rem] ring-1 md:mt-0"
+            className="ring-border mt-4 h-auto w-full min-w-0 rounded-[1.25rem] ring-1 md:mt-0"
             sizes="(min-width: 72rem) 44rem, 90vw"
           />
         </article>

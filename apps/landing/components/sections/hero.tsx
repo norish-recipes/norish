@@ -9,7 +9,7 @@ export function Hero() {
   return (
     <section className="mx-auto flex max-w-7xl flex-col items-center gap-6 px-4 pt-32 text-center sm:px-10 sm:pt-40">
       <h1 className="text-[clamp(3.25rem,8vw,6.5rem)] leading-none font-semibold tracking-[-0.022em] text-balance">
-        Dinner, sorted <span className="text-accent">together.</span>
+        Dinner, sorted <span className="text-accent-text">together.</span>
       </h1>
       <p className="text-muted max-w-[34ch] text-xl text-pretty">
         One recipe app for the whole household to enjoy.

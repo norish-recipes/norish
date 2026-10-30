@@ -1,23 +1,19 @@
 /*
- * Takes the screen captures (6 screens x web/mobile, light theme) from a
- * running Norish instance and writes them into `assets/screenshots`, ready for
+ * Takes every capture the landing page shows, in both themes, from a running
+ * Norish instance and writes them into `assets/screenshots`, ready for
  * `pnpm --filter @norish/landing shots`.
  *
  *   NORISH_URL=http://localhost:3000 \
  *   NORISH_EMAIL=demo@example.test NORISH_PASSWORD=... \
  *   NORISH_RECIPE_ID=<uuid of the recipe to open and cook> \
+ *   NORISH_SCALE_RECIPE_ID=<uuid of the recipe shown scaled on the desktop> \
  *   node scripts/capture-shots.mjs
  *
  * Playwright resolves from the monorepo root. The account should already hold
- * the seeded story described in assets/screenshots/README.md. Staged details
- * handled here: cooking mode advances to step NORISH_COOK_STEP (default 2; pick
- * one whose ingredient chips fit under the instruction), the mobile dashboard
- * is captured in list view, and the recipe page alone uses a wider web
- * viewport so the page reads less cramped.
- *
- * `NORISH_FORMS=mobile` (or `web`) takes half the set. The README's one
- * session rule still holds — a half run is for retaking a form whose layout
- * changed, not for topping up a set from a different day.
+ * the story described in assets/screenshots/README.md. Cooking mode advances to
+ * step NORISH_COOK_STEP (default 3; pick one whose ingredient chips fit under
+ * the instruction), and the desktop recipe is shown at NORISH_SERVINGS
+ * (default 16). Every page is shot from its top with the pointer in a corner.
  */
 import { dirname, join } from "node:path";
 import { fileURLToPath } from "node:url";
@@ -27,10 +23,14 @@ const BASE = process.env.NORISH_URL ?? "http://localhost:3000";
 const EMAIL = process.env.NORISH_EMAIL;
 const PASSWORD = process.env.NORISH_PASSWORD;
 const RECIPE_ID = process.env.NORISH_RECIPE_ID;
-const COOK_STEP = Number(process.env.NORISH_COOK_STEP ?? 2);
+const SCALE_RECIPE_ID = process.env.NORISH_SCALE_RECIPE_ID;
+const COOK_STEP = Number(process.env.NORISH_COOK_STEP ?? 3);
+const SERVINGS = Number(process.env.NORISH_SERVINGS ?? 16);
 
-if (!EMAIL || !PASSWORD || !RECIPE_ID) {
-  console.error("Set NORISH_EMAIL, NORISH_PASSWORD and NORISH_RECIPE_ID (see file header).");
+if (!EMAIL || !PASSWORD || !RECIPE_ID || !SCALE_RECIPE_ID) {
+  console.error(
+    "Set NORISH_EMAIL, NORISH_PASSWORD, NORISH_RECIPE_ID and NORISH_SCALE_RECIPE_ID (see file header)."
+  );
   process.exit(1);
 }
 
@@ -42,39 +42,20 @@ const hideDevUi = `
   [data-next-badge-root], [data-nextjs-dev-tools-button] { display: none !important; }
 `;
 
-const ALL_FORMS = {
-  web: { width: 900, height: 675 },
-  mobile: { width: 390, height: 773 },
-};
-
-const wanted = process.env.NORISH_FORMS?.split(",").map((form) => form.trim());
-const FORMS = wanted
-  ? Object.fromEntries(Object.entries(ALL_FORMS).filter(([form]) => wanted.includes(form)))
-  : ALL_FORMS;
-
-if (!Object.keys(FORMS).length) {
-  console.error(`NORISH_FORMS must name one of: ${Object.keys(ALL_FORMS).join(", ")}`);
-  process.exit(1);
-}
+const PHONE = { width: 390, height: 773 };
+const DESKTOP = { width: 1760, height: 1300 };
 
 /* Norish keeps preferences per device kind, told apart by the user agent, so
    the phone pass has to look like a phone or it reads the desktop's. */
 const PHONE_UA =
   "Mozilla/5.0 (iPhone; CPU iPhone OS 18_0 like Mac OS X) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/18.0 Mobile/15E148 Safari/604.1";
 
-/* The recipe page alone is captured at a physically wider viewport — same
-   4:3, so the optimizer crops nothing, but the page gets room to breathe. */
-const RECIPE_WEB = { width: 1200, height: 900 };
-
 const sleep = (ms) => new Promise((resolve) => setTimeout(resolve, ms));
 
 /*
- * A screen is only worth capturing once it has stopped being a skeleton. The
- * library, the recipe photos and the planned week all arrive well after the
- * navigation itself settles, and a fixed sleep either wastes time or catches
- * a half-drawn frame. Falls through with a warning rather than throwing, so
- * one slow screen cannot strand a run that is otherwise fine — but a warning
- * means that capture wants checking before it is committed.
+ * A screen is only worth capturing once it has stopped being a skeleton. Falls
+ * through with a warning rather than throwing, so one slow screen cannot strand
+ * a run, but a warning means that capture wants checking before it is committed.
  */
 async function settle(page, label) {
   await page
@@ -91,89 +72,97 @@ async function settle(page, label) {
   await sleep(1200);
 }
 
+async function signIn(context) {
+  // Auth sign-in is rate limited; wait it out rather than fail halfway.
+  for (let attempt = 0; attempt < 8; attempt += 1) {
+    const login = await context.request.post(`${BASE}/api/auth/sign-in/email`, {
+      data: { email: EMAIL, password: PASSWORD },
+    });
+
+    if (login.status() === 200) return;
+    await sleep(15_000);
+  }
+  throw new Error("sign-in kept failing; check credentials or rate limit");
+}
+
 const browser = await chromium.launch();
 
-for (const [form, viewport] of Object.entries(FORMS)) {
-  for (const theme of ["light"]) {
+for (const theme of ["light", "dark"]) {
+  for (const [form, viewport] of [
+    ["mobile", PHONE],
+    ["web", DESKTOP],
+  ]) {
     const context = await browser.newContext({
       viewport,
       deviceScaleFactor: 2,
+      reducedMotion: "reduce",
       extraHTTPHeaders: { origin: BASE },
       ...(form === "mobile" ? { userAgent: PHONE_UA } : {}),
     });
 
-    // Auth sign-in is rate limited; wait it out rather than fail four shots in.
-    let signedIn = false;
-    for (let attempt = 0; attempt < 8 && !signedIn; attempt += 1) {
-      const login = await context.request.post(`${BASE}/api/auth/sign-in/email`, {
-        data: { email: EMAIL, password: PASSWORD },
-      });
-
-      if (login.status() === 200) signedIn = true;
-      else await sleep(15_000);
-    }
-    if (!signedIn) throw new Error("sign-in kept failing; check credentials or rate limit");
+    await signIn(context);
 
     const page = await context.newPage();
 
     await page.addInitScript((value) => window.localStorage.setItem("theme", value), theme);
 
+    const open = async (path, label) => {
+      await page.goto(`${BASE}${path}`, { waitUntil: "networkidle" }).catch(() => {});
+      await settle(page, label);
+    };
+
     const shoot = async (name) => {
       await page.addStyleTag({ content: hideDevUi }).catch(() => {});
+      await page.mouse.move(1, viewport.height - 1);
+      await sleep(400);
       await page.screenshot({
-        path: join(outDir, `${name}-${form}.jpg`),
+        path: join(outDir, `${name}-${theme}.jpg`),
         type: "jpeg",
         quality: 92,
       });
-      console.log("captured", `${name}-${form}`);
+      console.log("captured", `${name}-${theme}`);
     };
 
-    await page.goto(`${BASE}/`, { waitUntil: "networkidle" }).catch(() => {});
-    await settle(page, `dashboard-${form}-${theme}`);
-
-    // The mobile dashboard ships in list view: a device preference on the
-    // account, so pressing List once keeps it for every later run.
-    if (form === "mobile") {
-      const list = page.getByRole("tab", { name: "List" });
-
-      if ((await list.getAttribute("aria-selected")) !== "true") {
-        await list.click();
-        await settle(page, `dashboard-${form}-${theme} in list view`);
-      }
-    }
-    await shoot("dashboard");
-
-    if (form === "web") await page.setViewportSize(RECIPE_WEB);
-    await page.goto(`${BASE}/recipes/${RECIPE_ID}`, { waitUntil: "networkidle" }).catch(() => {});
-    await settle(page, `recipe-${form}-${theme}`);
-    await shoot("recipe");
-
     if (form === "web") {
-      await page.setViewportSize(viewport);
-      await page.waitForTimeout(800);
+      await open(`/recipes/${SCALE_RECIPE_ID}`, `recipe-web-${theme}`);
+
+      const servings = page.getByRole("button", { name: /^\d+ servings$/ }).first();
+
+      for (let tries = 0; tries < 40; tries += 1) {
+        const now = Number((await servings.textContent())?.trim());
+
+        if (now === SERVINGS) break;
+        await page
+          .getByRole("button", { name: now < SERVINGS ? "More servings" : "Fewer servings" })
+          .first()
+          .click();
+        await sleep(250);
+      }
+      await page.evaluate(() => window.scrollTo(0, 0));
+      await sleep(800);
+      await shoot("recipe-web");
+    } else {
+      await open(`/recipes/${RECIPE_ID}`, `recipe-mobile-${theme}`);
+      await shoot("recipe-mobile");
+
+      // Exact, because a step's timer can carry "cook" in its name too.
+      await page.getByRole("button", { name: "Cook", exact: true }).first().click();
+      await sleep(1500);
+      for (let step = 1; step < COOK_STEP; step += 1) {
+        await page.keyboard.press("ArrowDown");
+        await sleep(900);
+      }
+      await shoot("cooking-mobile");
+
+      await open("/calendar", `calendar-mobile-${theme}`);
+      await shoot("calendar-mobile");
+
+      await open("/groceries", `groceries-mobile-${theme}`);
+      await shoot("groceries-mobile");
+
+      await open("/groceries/pantry", `pantry-mobile-${theme}`);
+      await shoot("pantry-mobile");
     }
-
-    // Exact, because a step's timer can carry "cook" in its name too.
-    await page.getByRole("button", { name: "Cook", exact: true }).first().click({ timeout: 8000 });
-    await page.waitForTimeout(1500);
-    for (let step = 1; step < COOK_STEP; step += 1) {
-      await page.keyboard.press("ArrowDown");
-      await page.waitForTimeout(900);
-    }
-    await page.waitForTimeout(600);
-    await shoot("cooking");
-
-    await page.goto(`${BASE}/calendar`, { waitUntil: "networkidle" }).catch(() => {});
-    await settle(page, `calendar-${form}-${theme}`);
-    await shoot("calendar");
-
-    await page.goto(`${BASE}/groceries`, { waitUntil: "networkidle" }).catch(() => {});
-    await settle(page, `groceries-${form}-${theme}`);
-    await shoot("groceries");
-
-    await page.goto(`${BASE}/groceries/pantry`, { waitUntil: "networkidle" }).catch(() => {});
-    await settle(page, `pantry-${form}-${theme}`);
-    await shoot("pantry");
 
     await context.close();
   }

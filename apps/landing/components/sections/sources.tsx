@@ -18,7 +18,7 @@ export function Sources() {
       <div className="mx-auto flex max-w-6xl flex-col gap-10 px-4 py-24 sm:px-10">
         <div className="flex flex-wrap items-end justify-between gap-x-10 gap-y-4">
           <h2 className="text-[clamp(2.5rem,5vw,4rem)] leading-[1.02] font-semibold tracking-[-0.022em]">
-            Any source, <span className="text-accent">any recipe.</span>
+            Any source, <span className="text-accent-text">any recipe.</span>
           </h2>
           <p className="text-muted max-w-[38ch] text-[1.0625rem] text-pretty">
             Videos, photos and text use your AI provider. Everything else works without one.

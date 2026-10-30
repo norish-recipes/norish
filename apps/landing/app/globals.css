@@ -19,6 +19,16 @@
     --source-tiktok: var(--foreground);
     --source-photos: oklch(68% 0.17 55);
     --source-pdf: oklch(55% 0.19 25);
+
+    /* The green of a heading's key words, and the paper the green band's
+       buttons sit on: both hold their light-theme look in the dark. */
+    --accent-text: var(--accent);
+    --paper: oklch(96.4% 0.016 88);
+  }
+
+  .dark,
+  [data-theme="dark"] {
+    --accent-text: oklch(72% 0.12 150.36);
   }
 }
 
@@ -36,6 +46,8 @@
   --color-accent: var(--accent);
   --color-accent-deep: var(--accent-deep);
   --color-accent-foreground: var(--accent-foreground);
+  --color-accent-text: var(--accent-text);
+  --color-paper: var(--paper);
   --color-border: var(--border);
   --color-focus: var(--focus);
   --color-default: var(--default);
