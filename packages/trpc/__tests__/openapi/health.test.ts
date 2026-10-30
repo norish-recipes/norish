@@ -77,15 +77,6 @@ describe("openapi health endpoint", () => {
     vi.restoreAllMocks();
   });
 
-  it("no longer answers the removed /health", async () => {
-    getSessionMock.mockResolvedValue(null);
-
-    const response = await handleOpenApiRequest(new Request("http://localhost/api/v1/health"));
-
-    expect(response.status).toBe(404);
-    expect(getOpenApiDocument().paths["/health"]).toBeUndefined();
-  });
-
   it("rejects anonymous requests to protected openapi endpoints", async () => {
     getSessionMock.mockResolvedValue(null);
 
@@ -254,6 +245,21 @@ describe("openapi liveness and readiness endpoints", () => {
       await expect(response.json()).resolves.toEqual(
         expect.objectContaining({ message: "Valkey is error" })
       );
+    });
+  });
+
+  describe("/health", () => {
+    it("still answers as ready, marked deprecated", async () => {
+      parserAnswers(503);
+      getValkeyHealthMock.mockResolvedValue({ status: "error" });
+
+      const response = await get("/health");
+
+      expect(response.status).toBe(503);
+      await expect(response.json()).resolves.toEqual(
+        expect.objectContaining({ message: "Valkey is error" })
+      );
+      expect(getOpenApiDocument().paths["/health"]?.get?.deprecated).toBe(true);
     });
   });
 

@@ -15,16 +15,16 @@ See `.scratch/architecture-after-upgrades/spec.md`, Health checks.
 - [x] Two tRPC OpenAPI procedures sit beside `health` in `packages/trpc/src/routers/config/procedures.ts`, under the Health tag, with `protect: false`:
   - [x] `GET /api/v1/health/live` answers 200 while the process responds and the parser answers its health check, and 503 when the parser doesn't. It checks no Postgres and no Redis. (Norish runs the parser itself, so a restart fixes a hung one.)
   - [x] `GET /api/v1/health/ready` answers 503 when Postgres or Redis fails, and 200 otherwise. The parser's state is in the body and never fails the check.
-- [x] `GET /api/v1/health` is removed and answers 404 (changed 2026-10-15; it was first kept as deprecated).
+- [x] `GET /api/v1/health` is a deprecated alias that answers exactly like ready (changed 2026-10-30; removed on 2026-10-15).
 - [x] The image's `HEALTHCHECK` and `docker/docker-compose.example.yml` call live.
 - [x] `docker/docker-compose.test.yml` and the E2E harness (`apps/web/__tests__/e2e/harness/production-stack.ts`) call ready. Where the harness needs the parser, it checks the parser's own health.
 - [x] The health tests (`packages/trpc/__tests__/openapi/health.test.ts`) cover:
   - [x] live fails on a parser that doesn't answer, and stays 200 with Postgres or Redis down
   - [x] ready fails on Postgres or Redis, and stays 200 with the parser down
-  - [x] `/health` answers 404
+  - [x] `/health` answers like ready and is documented as deprecated
 - [x] `openapi.json` is regenerated, so the docs' API reference shows both endpoints and no `/health`.
 - [x] The image builds and boots: its healthcheck reports healthy, and stays healthy with Redis stopped.
-- [x] Release notes, under Upgrade notes: `/api/v1/health/live` is for restarts and `/api/v1/health/ready` is for traffic (Kubernetes readiness probes, load balancers), and the image's healthcheck now calls live. `/api/v1/health` is removed; point a probe that called it at live or ready.
+- [x] Release notes, under Upgrade notes: `/api/v1/health/live` is for restarts and `/api/v1/health/ready` is for traffic (Kubernetes readiness probes, load balancers), and the image's healthcheck now calls live. `/api/v1/health` still works, answers like ready, and is deprecated.
 
 ## Comments
 
@@ -39,3 +39,4 @@ See `.scratch/architecture-after-upgrades/spec.md`, Health checks.
 - 2026-10-15, from the branch review:
   - **`/api/v1/health` is removed.** The maintainer ruled out keeping compat code in 0.26, so the deprecated endpoint, its `getServiceHealth` and its response schema are gone, and `/health` answers 404. The Upgrade note says to point a probe that called it at live or ready. User story 50 is answered by that note instead of by the endpoint.
   - **Ready waits on the parser two seconds at most.** It reused the parser's 15-second request timeout, so a hung parser held ready past any probe's timeout, and the app's connectivity probe (5 s) showed Offline: the outage this ticket set out to contain. Live keeps the longer wait, so a parser busy with a big page doesn't get Norish restarted. A test spies the timeout ready passes.
+- 2026-10-30. **`/api/v1/health` is back as a deprecated alias of ready.** The maintainer wants old probes to keep working. It shares ready's `checkReady()` and response, so unlike the 0.25 endpoint it ignores the parser and has no `versions`. It is registered after live and ready in `openApiRouter`, since the spec generator gives all health endpoints the 503 text of the first one registered.

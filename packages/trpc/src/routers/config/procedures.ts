@@ -223,6 +223,23 @@ export const healthLive = publicProcedure
     return { status: "ok" as const, parser };
   });
 
+async function checkReady() {
+  const [db, valkey, parser] = await Promise.all([
+    getDatabaseHealth(),
+    getValkeyHealth(),
+    getParserHealth(READY_PARSER_TIMEOUT_MS),
+  ]);
+
+  if (db.status !== "ok" || valkey.status !== "ok") {
+    throw new TRPCError({
+      code: "SERVICE_UNAVAILABLE",
+      message: db.status !== "ok" ? `Database is ${db.status}` : `Valkey is ${valkey.status}`,
+    });
+  }
+
+  return { status: "ok" as const, db, valkey, parser };
+}
+
 /**
  * Whether to send Norish traffic: Postgres and Valkey must answer. The parser
  * is reported but never fails it, since only URL imports need it.
@@ -242,22 +259,26 @@ export const healthReady = publicProcedure
     },
   })
   .output(readyResponseSchema)
-  .query(async () => {
-    const [db, valkey, parser] = await Promise.all([
-      getDatabaseHealth(),
-      getValkeyHealth(),
-      getParserHealth(READY_PARSER_TIMEOUT_MS),
-    ]);
+  .query(checkReady);
 
-    if (db.status !== "ok" || valkey.status !== "ok") {
-      throw new TRPCError({
-        code: "SERVICE_UNAVAILABLE",
-        message: db.status !== "ok" ? `Database is ${db.status}` : `Valkey is ${valkey.status}`,
-      });
-    }
-
-    return { status: "ok" as const, db, valkey, parser };
-  });
+/** The pre-0.26 endpoint, kept so existing probes keep working; it answers as ready. */
+export const health = publicProcedure
+  .meta({
+    openapi: {
+      method: "GET",
+      path: "/health",
+      protect: false,
+      tags: ["Health"],
+      summary: "Check whether Norish is ready for traffic (deprecated)",
+      description:
+        "Deprecated: use /health/live for restart probes and /health/ready for traffic. Answers exactly as /health/ready.",
+      deprecated: true,
+      successDescription: "The database and Valkey are healthy.",
+      errorResponses: { 503: "The database or Valkey is unhealthy or unreachable" },
+    },
+  })
+  .output(readyResponseSchema)
+  .query(checkReady);
 
 export const configProcedures = router({
   localeConfig,
@@ -270,6 +291,7 @@ export const configProcedures = router({
   timersEnabled,
   timerKeywords,
   authProviders,
+  health,
   healthLive,
   healthReady,
 });

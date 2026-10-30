@@ -114,7 +114,7 @@ The upgrades landed as version bumps. The code around them still carries workaro
 
 - `/api/v1/health/live` answers whether to restart Norish. It checks only what a restart can fix: the process and the parser it runs.
 - `/api/v1/health/ready` answers whether to send Norish traffic. It checks Postgres and Redis, and reports the parser without failing on it.
-- `/api/v1/health` is removed (the maintainer, 2026-10-15: no compat code in 0.26); an Upgrade note says which endpoint replaces it.
+- `/api/v1/health` stays as a deprecated alias that answers exactly like ready (the maintainer, 2026-10-30: keep old probes working; it was removed on 2026-10-15).
 - The image's healthcheck calls live.
 
 **Installs and the image.**
@@ -183,7 +183,7 @@ The upgrades landed as version bumps. The code around them still carries workaro
 47. As a contributor, I want the React Compiler's lint rules on, so that code the compiler can't optimise is flagged when I write it.
 48. As a self-hosting operator, I want a health check that fails only when restarting Norish would help, so that my orchestrator doesn't restart Norish through a Postgres or Redis outage.
 49. As a self-hosting operator behind a load balancer, I want a health check that says whether Norish can serve requests, so that traffic stops while Postgres or Redis is down and returns when they are back.
-50. As a self-hosting operator whose probes call `/api/v1/health`, I want the release notes to tell me what replaces it, so that I can repoint my probes when I upgrade. (Changed 2026-10-15: the endpoint is removed, not kept.)
+50. As a self-hosting operator whose probes call `/api/v1/health`, I want it to keep working, and the release notes to tell me what replaces it, so that I can repoint my probes at my own pace. (Changed 2026-10-30: kept as a deprecated alias of ready.)
 51. As a contributor, I want an import of a package my workspace doesn't declare to fail typecheck or tests, so that it never works on my machine and then breaks in the image.
 52. As a contributor, I want production to load the same source, resolved the same way, as dev and the tests, so that "the tests passed and the built server threw" can't happen.
 53. As a contributor, I want a gate to fail when source code imports a devDependency, so that a package the image leaves out is caught before release, not on the first request that needs it.
@@ -314,7 +314,7 @@ Moved to `.scratch/dependency-upgrades/` on 2026-10-14, where the maintainer cho
   - **`GET /api/v1/health/live`** answers 200 while the process responds and the parser answers its own health check. It checks no Postgres and no Redis.
     - The parser is included because Norish runs it. The custom server starts it as a child process on the internal parser URL (`apps/web/server/embedded-parser.ts`), and a restart fixes a parser that hangs. A parser that exits already shuts the server down.
   - **`GET /api/v1/health/ready`** answers 503 when Postgres or Redis fails, reusing the sweep's ticket 53 Redis ping. The parser's state is in the response body, but it doesn't fail the check, because the parser is needed only for URL imports. It waits on the parser two seconds at most, like the Redis ping, so a hung parser can't hold it.
-- **`GET /api/v1/health`** is removed, with an Upgrade note (changed 2026-10-15; it was first kept as deprecated).
+- **`GET /api/v1/health`** is a deprecated alias of ready: same check, same body (changed 2026-10-30; removed on 2026-10-15, before that kept with its old checks).
 - **Who calls what:**
   - The image's `HEALTHCHECK` and `docker/docker-compose.example.yml` call live. Docker has only one healthcheck, and Swarm and autoheal restart on it.
   - `docker/docker-compose.test.yml` and the E2E harness (`apps/web/__tests__/e2e/harness/production-stack.ts`) call ready. Where the harness needs the parser, it checks the parser's own health.
@@ -382,7 +382,7 @@ Moved to `.scratch/dependency-upgrades/` on 2026-10-14, where the maintainer cho
   - if Cache Components are adopted: a back-navigation pass, with the existing first-paint fidelity spec staying green
 - **One structural test** asserts that every route handler under the signed-in app performs the session check.
 - The layout's gate has a test for a session whose user row is gone: it is revoked and redirected to the login page. The deleted-account path itself is covered by the sweep's ticket 10 (`auth-handler.test.ts`).
-- The health tests (`packages/trpc/__tests__/openapi/health.test.ts`) cover each endpoint's failure cases: live fails on a parser that doesn't answer and ignores Postgres and Redis; ready fails on Postgres or Redis and ignores the parser, waiting on one that never answers no longer than two seconds; the removed `/health` answers 404.
+- The health tests (`packages/trpc/__tests__/openapi/health.test.ts`) cover each endpoint's failure cases: live fails on a parser that doesn't answer and ignores Postgres and Redis; ready fails on Postgres or Redis and ignores the parser, waiting on one that never answers no longer than two seconds; `/health` answers like ready and is documented as deprecated.
 - The AI Runtime's existing unit tests, with their mocked transport, gain one assertion that the abort signal reaches the transport.
 - **Measurements, recorded in their tickets, not as tests:**
   - time to skeleton, before and after
@@ -435,7 +435,7 @@ Moved to `.scratch/dependency-upgrades/` on 2026-10-14, where the maintainer cho
     - Ticket 01 writes: "A recipe import or calendar sync that failed and is due to retry now retries as soon as its wait is over. Before, the retry did not run until another import or sync was started, even after a restart." The maintainer will rewrite it.
   - Ticket 13 writes, under Fixes and Improvements: "The Docker image is about 30% smaller to download."
   - Ticket 12 writes, under Upgrade notes: "The image starts the server with `node --import tsx /app/apps/web/server/index.ts`. If you override the container's command, update it."
-  - Upgrade notes: two new health endpoints. `/api/v1/health/live` is for restarts, `/api/v1/health/ready` is for traffic, and the image's healthcheck now calls live. `/api/v1/health` is removed; point a probe that called it at live or ready. Ticket 11 writes this.
+  - Upgrade notes: two new health endpoints. `/api/v1/health/live` is for restarts, `/api/v1/health/ready` is for traffic, and the image's healthcheck now calls live. `/api/v1/health` still works, answers like ready, and is deprecated. Ticket 11 writes this.
   - The rest is internal and stays unpublished (ADR-0010).
 - **Docs.** The admin settings page documents cancelling a job, with a screenshot.
 - **Mobile.** Hoisting arrived with the Expo app, which has since left the workspace.

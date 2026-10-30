@@ -187,6 +187,96 @@
         }
       }
     },
+    "/health": {
+      "get": {
+        "operationId": "health",
+        "summary": "Check whether Norish is ready for traffic (deprecated)",
+        "description": "Deprecated: use /health/live for restart probes and /health/ready for traffic. Answers exactly as /health/ready.",
+        "tags": [
+          "Health"
+        ],
+        "deprecated": true,
+        "responses": {
+          "200": {
+            "description": "The database and Valkey are healthy.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "status": {
+                      "type": "string",
+                      "const": "ok"
+                    },
+                    "db": {
+                      "type": "object",
+                      "properties": {
+                        "status": {
+                          "type": "string",
+                          "const": "ok"
+                        }
+                      },
+                      "required": [
+                        "status"
+                      ],
+                      "additionalProperties": false
+                    },
+                    "valkey": {
+                      "type": "object",
+                      "properties": {
+                        "status": {
+                          "type": "string",
+                          "const": "ok"
+                        }
+                      },
+                      "required": [
+                        "status"
+                      ],
+                      "additionalProperties": false
+                    },
+                    "parser": {
+                      "type": "object",
+                      "properties": {
+                        "status": {
+                          "type": "string"
+                        },
+                        "statusCode": {
+                          "type": "number"
+                        },
+                        "recipeScrapersVersion": {
+                          "type": "string"
+                        }
+                      },
+                      "required": [
+                        "status"
+                      ],
+                      "additionalProperties": false
+                    }
+                  },
+                  "required": [
+                    "status",
+                    "db",
+                    "valkey",
+                    "parser"
+                  ],
+                  "additionalProperties": false
+                }
+              }
+            }
+          },
+          "503": {
+            "description": "The parser service is unhealthy or unreachable",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/error.SERVICE_UNAVAILABLE"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
     "/recipes/{id}": {
       "get": {
         "operationId": "recipeGet",

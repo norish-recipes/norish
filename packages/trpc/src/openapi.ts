@@ -12,7 +12,7 @@ import {
   listTodayPlannedRecipesProcedure,
   listWeekPlannedRecipesProcedure,
 } from "./routers/calendar/planned-items";
-import { healthLive, healthReady } from "./routers/config/procedures";
+import { health, healthLive, healthReady } from "./routers/config/procedures";
 import {
   assignGroceryToStoreProcedure,
   createGroceryProcedure,
@@ -35,6 +35,7 @@ import { router } from "./trpc";
 export const openApiRouter = router({
   healthLive,
   healthReady,
+  health,
   recipeGet: getProcedure,
   recipeSearch: listProcedure,
   recipeCreate: createRecipeProcedure,
