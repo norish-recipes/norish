@@ -26,28 +26,16 @@ your `AUTH_URL` as the host:
 
 ## Linking accounts
 
-Norish never links accounts on its own. Signing in with a provider whose email already belongs to
-another account is refused with "This email is already in use."
-
-When the server offers more than one sign-in method, you can connect another under **Settings =>
-User => Sign-in methods**. Press **Connect** with the provider's name and sign in there with the
-account you want to connect; the provider asks even when you are already signed in to it. You come
-back to Settings with the method listed, and from then on either one signs you in to the same
-account. The provider's email doesn't have to match the one Norish has. Connecting OIDC applies its
-claims at once, as your next OIDC sign-in would.
-
-**Disconnect** takes a method off again. The last method the server offers can't be disconnected,
-and a password counts only while password sign-in is on. A method the server no longer offers stays
-listed as not currently available.
-
-**Change password** on the Password row asks for your current password and a new one of at least 8
-characters. **Sign out other sessions** is on by default: your other devices have to sign in again,
-this one stays signed in. The Password row shows whenever you have a password, even on a server that
-offers no other method.
-
-![The Change password dialog](/img/screenshots/settings-change-password.png)
+Norish doesn't link accounts automatically. To add another sign-in method, go to
+**Settings => User=> Sign-in methods** and press **Connect**. The provider's email doesn't have
+to match yours.
 
 ![The Sign-in methods card in user settings](/img/screenshots/settings-sign-in-methods.png)
+
+- You can't disconnect your last sign-in method.
+- **Change password** signs out your other devices by default.
+
+![The Change password dialog](/img/screenshots/settings-change-password.png)
 
 ## Password
 

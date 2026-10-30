@@ -85,9 +85,7 @@ To turn it off, set **Settings => User => Recipe page color** to
 ## Print a recipe or save a PDF
 
 Choose **Print recipe** from the recipe's three-dot menu to print an A4
-recipe card or save it as a PDF to share. The card includes ingredients,
-instructions and nutrition, using your selected servings and measurements.
-You can include the recipe photo and adjust the text size.
+recipe card or save it as a PDF to share.
 
 ## Shared recipes
 

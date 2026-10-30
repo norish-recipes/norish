@@ -63,8 +63,7 @@ header themselves and get a sign-in rate limit of their own.
 
 ## Base path
 
-Serve Norish under a path, like `https://example.com/norish`, when a reverse proxy already serves
-the domain.
+Serve Norish under a path, like `https://example.com/norish`
 
 | Variable                | Description                     | Default           |
 | ----------------------- | ------------------------------- | ----------------- |
@@ -151,9 +150,4 @@ Norish seeds its [ingredient catalogue](../groceries/ingredients.md) from the
 refreshes it every night at midnight.
 
 On a server without internet, serve a copy of `ingredients.txt` from a local
-mirror and point `INGREDIENT_CATALOGUE_URL` at it, or leave it empty. Norish
-works either way.
-
-The taxonomy is under the
-[Open Database License (ODbL)](https://opendatacommons.org/licenses/odbl/1-0/).
-Download it under **Settings => Ingredients => Data sources**.
+mirror and point `INGREDIENT_CATALOGUE_URL` at it.

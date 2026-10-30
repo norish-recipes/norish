@@ -22,32 +22,6 @@ saying so.
 - The [job queues](#job-queues)
 - The scheduler and a server restart
 
-## Ingredient words
-
-**Content detection => Ingredient words** lists the words Norish ignores when
-it matches an ingredient name to a food. The list is per locale:
-
-- `preparation`: how a food is prepared, like "chopped" or "diced"
-- `sizes`: like "large" or "small"
-- `approximately`: like "about"
-- `connectors`: words between a measure and the food, like "of" in "a pinch of
-  nutmeg"
-- `joiners`: words between two preparations, like "and" in "peeled and
-  chopped"
-- `together` and `alternatives`: words between two foods, like "en" in "zout
-  en peper" and "of" in "boter of olie". "&" and "+" are "and", "/" is "or",
-  also written without spaces ("salt/pepper"). A recipe line is split there only
-  when each part is a known food, and never where Norish knows the whole name
-  ("mac and cheese")
-- `endsBefore`: where a name ends, like "in" in "tuna in olive oil", which is
-  tuna, or "for" in "greek yogurt for topping"
-- `forms`: cuts and forms after a food's name, like "blokjes" in "mango
-  blokjes". A new ingredient named so is filed under the food. A cut alone is
-  never a parent, so "peen julienne" goes under carrot
-- `notFoods`: words that are never a food on their own, like "and" or "with"
-- `inflections`: plural and diminutive endings, so "onions" becomes "onion" and
-  "cherries" becomes "cherry"
-
 ## Permissions
 
 **Recipes** sets who may view, edit and delete a recipe someone else added:
@@ -62,6 +36,49 @@ server shares one [ingredient catalogue](../groceries/ingredients.md).
 - **Owner only**: only the person who added it.
 
 Merging two ingredients needs permission on both. Anyone can add a translation.
+
+## Ingredient words
+
+**Content detection => Ingredient words** holds the words Norish uses to find
+the food in an ingredient line. Each locale has its own lists, and Norish reads
+every recipe with all of them, since it doesn't know a recipe's language.
+
+These words are taken off the name:
+
+- `preparation`: what was done to the food. "Finely chopped onion" is onion.
+- `sizes`: "2 large onions" is onions. A size used as the unit, as in "2
+  large", counts pieces.
+- `approximately`: words that make an amount a guess, like "about" in "about
+  200 g flour".
+- `connectors`: the word between an amount and the food, like "of" in "a pinch
+  of nutmeg".
+- `joiners`: the word between two preparations, like "and" in "peeled and
+  chopped ginger". Norish only drops it there.
+
+These words split a line into separate foods:
+
+- `together`: foods you need all of, like "and" in "salt and pepper". The
+  grocery list gets salt and pepper.
+- `alternatives`: foods where any one will do, like "or" in "butter or oil".
+  The grocery list gets only the first, butter. A shorter part borrows the
+  other part's words, so "cherry or grape tomatoes" is cherry tomatoes or grape
+  tomatoes.
+
+Both lists also hold symbols: "&" and "+" in `together`, "/" in
+`alternatives`, also written without spaces ("salt/pepper"). Norish splits a
+line only when each part is a known food, and never where it knows the whole
+name ("mac and cheese").
+
+These words help Norish read the name:
+
+- `endsBefore`: words that start a note after the name. "Tuna in olive oil" is
+  tuna, and "greek yogurt for topping" is greek yogurt.
+- `forms`: cuts and forms that follow a food's name. "Chicken strips" goes
+  under chicken. A cut on its own is never a food, so "carrot julienne" also
+  goes under carrot.
+- `notFoods`: words that never name a food on their own, like "the" or "some".
+- `inflections`: plural endings and the singular ending each stands for, so
+  "onions" is onion and "cherries" is cherry.
 
 ## Job queues
 
