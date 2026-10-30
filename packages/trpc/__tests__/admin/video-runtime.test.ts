@@ -36,7 +36,6 @@ function createCaller(admin = true) {
 }
 
 beforeEach(() => {
-  vi.clearAllMocks();
   isUserServerAdmin.mockImplementation((userId: string) =>
     Promise.resolve(userId === createMockAdminUser().id)
   );

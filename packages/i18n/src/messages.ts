@@ -158,7 +158,35 @@ const MESSAGE_LOADERS: Record<LocaleCatalogCode, Partial<Record<MessageSection, 
     navbar: () => import("./messages/uk/navbar.json"),
     auth: () => import("./messages/uk/auth.json"),
   },
+  sv: {
+    common: () => import("./messages/sv/common.json"),
+    recipes: () => import("./messages/sv/recipes.json"),
+    groceries: () => import("./messages/sv/groceries.json"),
+    calendar: () => import("./messages/sv/calendar.json"),
+    settings: () => import("./messages/sv/settings.json"),
+    navbar: () => import("./messages/sv/navbar.json"),
+    auth: () => import("./messages/sv/auth.json"),
+  },
+  ar: {
+    common: () => import("./messages/ar/common.json"),
+    recipes: () => import("./messages/ar/recipes.json"),
+    groceries: () => import("./messages/ar/groceries.json"),
+    calendar: () => import("./messages/ar/calendar.json"),
+    settings: () => import("./messages/ar/settings.json"),
+    navbar: () => import("./messages/ar/navbar.json"),
+    auth: () => import("./messages/ar/auth.json"),
+  },
 };
+
+/** One section of a locale's catalogue, or null where the catalogue has none. */
+export async function loadMessageSection(
+  locale: LocaleCatalogCode,
+  section: MessageSection
+): Promise<Record<string, unknown> | null> {
+  const load = MESSAGE_LOADERS[locale]?.[section];
+
+  return load ? (await load()).default : null;
+}
 
 export async function loadLocaleMessages(locale: string): Promise<Record<string, unknown>> {
   const messages: Record<string, unknown> = {};

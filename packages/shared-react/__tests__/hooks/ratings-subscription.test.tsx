@@ -64,7 +64,6 @@ let invalidateQueries: ReturnType<typeof vi.spyOn>;
 const onRatingFailed = vi.fn();
 
 beforeEach(() => {
-  vi.clearAllMocks();
   queryClient = new QueryClient({ defaultOptions: { queries: { retry: false } } });
   queryClient.setQueryData(LIST_KEY, {
     pages: [

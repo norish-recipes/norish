@@ -15,7 +15,8 @@ const context = vi.hoisted(() => ({ decisionConfig: undefined as unknown }));
 vi.mock("@/app/(app)/settings/admin/context", () => ({
   useAdminSettingsContext: () => ({
     decisionConfig: context.decisionConfig,
-    aiConfig: { enabled: true },
+    // AI off: the Decision block is its own switch, so Test and Save still work.
+    aiConfig: { enabled: false },
     updateDecisionConfig,
     testDecisionEndpoint,
     fetchConfigSecret: vi.fn(),
@@ -29,8 +30,8 @@ const { default: DecisionModelForm } =
 
 describe("DecisionModelForm endpoint", () => {
   beforeEach(() => {
-    vi.clearAllMocks();
     testDecisionEndpoint.mockResolvedValue({ success: true });
+    updateDecisionConfig.mockResolvedValue(undefined);
     context.decisionConfig = { provider: "typesafe", apiKey: "••••", model: "von-1.3.0" };
   });
 
@@ -40,7 +41,7 @@ describe("DecisionModelForm endpoint", () => {
     fireEvent.change(screen.getByRole("textbox", { name: "endpoint" }), {
       target: { value: "http://litellm:4000/typesafe/v1" },
     });
-    fireEvent.click(screen.getByRole("button", { name: /testConnection/ }));
+    fireEvent.click(screen.getByRole("button", { name: "test" }));
     fireEvent.click(screen.getByRole("button", { name: "save" }));
 
     expect(testDecisionEndpoint).toHaveBeenCalledWith(

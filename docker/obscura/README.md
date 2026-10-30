@@ -4,10 +4,14 @@ Norish renders JavaScript-heavy recipe pages before parsing them. That rendering
 happens in [Obscura](https://github.com/h4ckf0r0day/obscura), a Rust headless
 browser that speaks the Chrome DevTools Protocol, running as its own container
 beside the application. The Norish server connects to it over
-`OBSCURA_ENDPOINT`; it is the only rendered-page engine, with no Chrome fallback.
+the endpoint set under **Settings => Admin => Page renderers**, and tries it
+first; a FlareSolverr-compatible solver can be the second (ADR-0019).
 
-This directory repackages upstream's release into the image the shipped Compose
-examples use.
+This directory repackages a release into the image the shipped Compose examples
+use. The release comes from Norish's fork,
+[norish-recipes/obscura](https://github.com/norish-recipes/obscura): upstream's
+release built with the patches in its `patches/`, which send header tokens only
+to their own site. The fork builds each new upstream release on its own.
 
 ## Why not just pull upstream's image
 
@@ -63,7 +67,7 @@ that `main` ships.
 
 ## Publishing a new build
 
-The **Publish Obscura image** workflow (`.github/workflows/obscura-image.yml`)
+The **Publish browser images** workflow (`.github/workflows/browser-images.yml`)
 runs on every push to `main` or `rc/**` that changes this directory. It
 publishes the pinned tag when the registry doesn't have it yet, building
 `linux/amd64` and `linux/arm64` on native runners and assembling the
@@ -73,8 +77,9 @@ that already exists unless told to.
 
 To move to a newer Obscura:
 
-1. Update `OBSCURA_VERSION` and `OBSCURA_IMAGE_TAG` in `pin.env`, and the
-   matching `ARG` defaults in `Dockerfile`.
+1. Take the newest release of the fork, set `OBSCURA_VERSION` to it and bump
+   `OBSCURA_IMAGE_TAG` in `pin.env`, and the matching `ARG` defaults in
+   `Dockerfile`.
 2. Push. The rc branch publishes the tag, and the merge to `main` moves
    `latest`.
 3. Update the image tag in every Compose surface the repository ships — the

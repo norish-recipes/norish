@@ -2,6 +2,11 @@ from __future__ import annotations
 
 import json
 import logging
+import os
+import re
+import signal
+import threading
+import time
 from typing import Any, Literal
 from urllib.parse import urljoin, urlparse
 
@@ -74,6 +79,30 @@ ParseResponse = ParseSuccess | ParseFailure
 
 app = FastAPI(title="Norish Parser API", version="0.1.0")
 logger = logging.getLogger("uvicorn.error")
+
+
+def _stop_with_parent() -> None:
+    """Stop this parser's process group once the Norish server that started it is gone, even killed."""
+    parent = int(os.environ.get("PARSER_API_PARENT_PID") or 0)
+
+    if not parent or not hasattr(os, "killpg"):
+        return
+
+    def watch() -> None:
+        while True:
+            time.sleep(2)
+            try:
+                os.kill(parent, 0)
+            except ProcessLookupError:
+                os.killpg(os.getpgrp(), signal.SIGTERM)
+                return
+            except PermissionError:
+                pass
+
+    threading.Thread(target=watch, daemon=True).start()
+
+
+_stop_with_parent()
 
 
 def _trimmed(value: Any) -> str | None:
@@ -299,6 +328,23 @@ def _fill_missing_instructions(scraper: Any, recipe: dict[str, Any]) -> None:
     recipe["instructions_list"] = [line for line in instructions.split("\n") if line]
 
 
+def _keep_instruction_sections(scraper: Any, recipe: dict[str, Any]) -> None:
+    """Hand over the page's schema.org steps as they are when they come in sections.
+
+    recipe-scrapers turns a HowToSection's name into a step of its own; Norish
+    reads the sections into headings.
+    """
+    try:
+        steps = scraper.schema.data.get("recipeInstructions")
+    except Exception:
+        return
+
+    if isinstance(steps, list) and any(
+        isinstance(step, dict) and "HowToSection" in str(step.get("@type")) for step in steps
+    ):
+        recipe["recipeInstructions"] = steps
+
+
 def _map_failure_code(error: Exception) -> FailureCode:
     if isinstance(error, WebsiteNotImplementedError):
         return "WebsiteNotImplementedError"
@@ -309,7 +355,18 @@ def _map_failure_code(error: Exception) -> FailureCode:
     return "ParserError"
 
 
+# extruct drops every JSON-LD block on a page when one tag is empty. No part of the pattern scans
+# past the next `<` or `>`, which keeps it linear; type and emptiness are checked outside it.
+SCRIPT = re.compile(r"<script\b([^<>]*)>([^<]*)</script[^<>]*>", re.IGNORECASE)
+
+
+def _drop_empty_json_ld(match: re.Match[str]) -> str:
+    empty = "application/ld+json" in match[1].lower() and not match[2].strip()
+    return "" if empty else match[0]
+
+
 def _run_scraper(html: str, url: str) -> tuple[Any, Literal["supported", "wild"]]:
+    html = SCRIPT.sub(_drop_empty_json_ld, html)
     try:
         return scrape_html(html=html, org_url=url, best_image=True), "supported"
     except WebsiteNotImplementedError:
@@ -333,6 +390,7 @@ def parse_recipe(request: ParseRequest) -> ParseResponse:
         parser = _build_parser_metadata(scraper, mode)
         recipe = scraper.to_json()
         _fill_missing_instructions(scraper, recipe)
+        _keep_instruction_sections(scraper, recipe)
 
         logger.info(
             "parser scrape success url=%s scraper=%s mode=%s",

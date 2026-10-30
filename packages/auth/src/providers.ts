@@ -6,6 +6,7 @@ import type {
 import type { ProviderInfo } from "@norish/shared/contracts";
 import { ServerConfigKeys } from "@norish/config/zod/server-config";
 import { getConfig } from "@norish/db/repositories/server-config";
+import { SIGN_IN_METHODS } from "@norish/shared/contracts/dto/auth";
 
 export async function getAvailableProviders(): Promise<ProviderInfo[]> {
   const providers: ProviderInfo[] = [];
@@ -14,48 +15,28 @@ export async function getAvailableProviders(): Promise<ProviderInfo[]> {
   const passwordEnabled = await getConfig<boolean>(ServerConfigKeys.PASSWORD_AUTH_ENABLED);
 
   if (passwordEnabled) {
-    providers.push({
-      id: "credential",
-      name: "Email",
-      icon: "mdi:email-outline",
-      type: "credential",
-    });
+    providers.push(SIGN_IN_METHODS.credential);
   }
 
   // Check GitHub provider
   const github = await getConfig<AuthProviderGitHub>(ServerConfigKeys.AUTH_PROVIDER_GITHUB, true);
 
   if (github?.clientId) {
-    providers.push({
-      id: "github",
-      name: "GitHub",
-      icon: "mdi:github",
-      type: "oauth",
-    });
+    providers.push(SIGN_IN_METHODS.github);
   }
 
   // Check Google provider
   const google = await getConfig<AuthProviderGoogle>(ServerConfigKeys.AUTH_PROVIDER_GOOGLE, true);
 
   if (google?.clientId) {
-    providers.push({
-      id: "google",
-      name: "Google",
-      icon: "flat-color-icons:google",
-      type: "oauth",
-    });
+    providers.push(SIGN_IN_METHODS.google);
   }
 
   // Check OIDC provider
   const oidc = await getConfig<AuthProviderOIDC>(ServerConfigKeys.AUTH_PROVIDER_OIDC, true);
 
   if (oidc?.clientId && oidc?.issuer) {
-    providers.push({
-      id: "oidc",
-      name: oidc.name || "SSO",
-      icon: "mdi:shield-account-outline",
-      type: "oauth",
-    });
+    providers.push({ ...SIGN_IN_METHODS.oidc, name: oidc.name || SIGN_IN_METHODS.oidc.name });
   }
 
   return providers;

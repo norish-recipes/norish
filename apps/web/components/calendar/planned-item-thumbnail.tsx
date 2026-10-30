@@ -4,6 +4,8 @@ import { memo, useState } from "react";
 import { PencilSquareIcon, PhotoIcon } from "@heroicons/react/24/outline";
 import { useTranslations } from "next-intl";
 
+import { addBasePath } from "@norish/shared/lib/base-path";
+
 type Size = "sm" | "md";
 
 const sizeClasses: Record<Size, string> = {
@@ -47,7 +49,7 @@ export const PlannedItemThumbnail = memo(function PlannedItemThumbnail({
         <img
           alt={alt}
           className="h-full w-full object-cover"
-          src={imageSrc}
+          src={addBasePath(imageSrc)}
           onError={() => setFailedSrc(imageSrc)}
         />
       </div>

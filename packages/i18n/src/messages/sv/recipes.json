@@ -1,0 +1,440 @@
+{
+  "dashboard": {
+    "libraryTitle": "Ditt bibliotek",
+    "recipesTitle": "Dina recept",
+    "cookbooksTitle": "Dina kokböcker",
+    "searchPlaceholder": "Sök efter eller lägg till recept...",
+    "searchRecipesPlaceholder": "Sök efter recept...",
+    "libraryCount": "{count, plural, one {# objekt} other {# objekt}}",
+    "addRecipe": "Lägg till recept",
+    "importFromUrl": "Webbadress",
+    "importFromPaste": "Klistra in",
+    "importFromImage": "Bild",
+    "searchFields": {
+      "title": "Titel",
+      "description": "Beskrivning",
+      "ingredients": "Ingredienser",
+      "steps": "Steg",
+      "tags": "Taggar"
+    },
+    "viewMode": {
+      "label": "Receptvy",
+      "grid": "Rutnät",
+      "list": "Lista"
+    },
+    "libraryType": {
+      "label": "Visa",
+      "all": "Alla",
+      "recipes": "Recept",
+      "cookbooks": "Kokböcker"
+    }
+  },
+  "back": {
+    "all": "Tillbaka till biblioteket",
+    "recipes": "Tillbaka till recepten",
+    "cookbooks": "Tillbaka till kokböckerna",
+    "named": "Tillbaka till {name}",
+    "cookbook": "Tillbaka till kokboken",
+    "generic": "Tillbaka"
+  },
+  "empty": {
+    "title": "Ditt bibliotek väntar",
+    "description": "Klistra in en receptlänk i sökfältet ovan så hämtar vi receptet.",
+    "noResults": "Inga recept hittades",
+    "noResultsHint": "Prova att ändra eller rensa dina filter.",
+    "noCookbooks": "Inga kokböcker ännu",
+    "noCookbooksHint": "En kokbok är en samling recept med en titel. Skapa din första för att få ordning i biblioteket."
+  },
+  "card": {
+    "noImage": "Ingen bild tillgänglig",
+    "viewGroceries": "Visa inköpslista",
+    "addToCalendar": "Lägg till i kalendern",
+    "deleteRecipe": "Ta bort recept",
+    "recipeOptions": "Receptalternativ",
+    "pantryCoverage": "{percent} av ingredienserna hemma"
+  },
+  "detail": {
+    "viewOriginal": "Visa originalrecept",
+    "ingredients": "Ingredienser",
+    "ingredientOptions": "Ingrediensalternativ",
+    "showMore": "Visa mer",
+    "showLess": "Visa mindre",
+    "steps": "Steg",
+    "notes": "Anteckningar",
+    "addToGroceries": "Lägg till i inköpslistan",
+    "ratingPrompt": "Vad tyckte du om det här receptet?",
+    "notFound": "Receptet hittades inte",
+    "notFoundMessage": "Det här receptet finns inte, eller så har du inte behörighet att visa det.",
+    "prep": "förberedelse",
+    "total": "totalt",
+    "planMeal": "Planera måltid",
+    "recipeActions": "Receptåtgärder",
+    "instructions": "Gör så här",
+    "cook": "Laga mat",
+    "switchToDecimal": "Visa decimaler",
+    "switchToFraction": "Visa bråk",
+    "servingsCount": "{count, plural, one {# portion} other {# portioner}}",
+    "source": "Källa",
+    "addedBy": "Tillagt av {name}",
+    "decreaseServings": "Färre portioner",
+    "increaseServings": "Fler portioner",
+    "multiplier": "Faktor"
+  },
+  "actions": {
+    "plan": "Planera",
+    "groceries": "Inköpslista",
+    "edit": "Redigera",
+    "delete": "Ta bort",
+    "share": "Dela",
+    "visitOriginal": "Visa originalrecept",
+    "addToCalendar": "Lägg till i kalendern",
+    "autoTag": "Tagga automatiskt",
+    "autoTagging": "Skapar taggar...",
+    "autoCategorize": "Kategorisera automatiskt",
+    "detectAllergies": "Identifiera allergener",
+    "detectingAllergies": "Identifierar allergener...",
+    "estimateNutrition": "Uppskatta näringsvärden",
+    "estimatingNutrition": "Uppskattar näringsvärden...",
+    "screenOn": "Skärmen på",
+    "keepScreenOn": "Håll skärmen tänd",
+    "actionsLabel": "Åtgärder",
+    "autoCategorizing": "Kategoriserar automatiskt…",
+    "inferProvenance": "Ta reda på ursprung",
+    "inferringProvenance": "Tar reda på ursprung…",
+    "linkIngredients": "Koppla ingredienser till steg",
+    "linkingIngredients": "Kopplar ingredienser…",
+    "enrichmentFailed": "Den senaste körningen misslyckades",
+    "generateImage": "Skapa bild",
+    "generatingImage": "Skapar bild…",
+    "cookbooks": "Kokböcker"
+  },
+  "sharePanel": {
+    "title": "Dela recept",
+    "description": "Skapa och hantera offentliga länkar till {recipeName}.",
+    "expiryLabel": "Länkens giltighetstid",
+    "createLink": "Skapa länk",
+    "latestLink": "Senaste länken",
+    "currentLinks": "Befintliga länkar",
+    "empty": "Inga delningslänkar ännu.",
+    "createSuccess": "Delningslänken har skapats",
+    "copySuccess": "Länken har kopierats",
+    "copyLink": "Kopiera",
+    "openLink": "Öppna",
+    "createdAt": "Skapad: {value}",
+    "expiresAt": "Upphör: {value}",
+    "lastAccessedAt": "Senast öppnad: {value}",
+    "never": "Aldrig",
+    "expiryOptions": {
+      "1day": "1 dag",
+      "1week": "1 vecka",
+      "1month": "1 månad",
+      "1year": "1 år",
+      "forever": "Aldrig"
+    },
+    "status": {
+      "active": "Aktiv",
+      "expired": "Utgången",
+      "revoked": "Återkallad"
+    },
+    "revokeModal": {
+      "title": "Återkalla länk",
+      "message": "Den här länken till {recipeName} slutar fungera tills du aktiverar den igen.",
+      "confirm": "Återkalla"
+    },
+    "reactivateModal": {
+      "title": "Aktivera länken igen",
+      "message": "Den här länken till {recipeName} blir aktiv igen.",
+      "confirm": "Aktivera igen"
+    },
+    "deleteModal": {
+      "title": "Ta bort länk",
+      "message": "Ta bort den här delningslänken till {recipeName}? Det går inte att ångra.",
+      "confirm": "Ta bort länk"
+    }
+  },
+  "convert": {
+    "ariaLabel": "Omvandla måttsystem",
+    "toMetric": "Omvandla till metriska mått",
+    "toUS": "Omvandla till amerikanska mått",
+    "toMetricWithAI": "Omvandla till metriska mått med AI",
+    "toUSWithAI": "Omvandla till amerikanska mått med AI",
+    "converting": "Omvandlar…",
+    "original": "Original"
+  },
+  "deleteModal": {
+    "title": "Ta bort recept",
+    "confirmMessage": "Vill du ta bort ”{recipeName}”?",
+    "warning": "Det går inte att ångra den här åtgärden."
+  },
+  "form": {
+    "createTitle": "Skapa recept",
+    "editTitle": "Redigera recept",
+    "createDescription": "Lägg till ett nytt recept i din samling",
+    "editDescription": "Uppdatera receptets uppgifter",
+    "initializingForm": "Förbereder formuläret...",
+    "photo": "Foto",
+    "basicInfo": "Grunduppgifter",
+    "ingredients": "Ingredienser",
+    "instructions": "Gör så här",
+    "tags": "Taggar",
+    "nutrition": "Näringsvärden",
+    "nutritionPerServing": "(per portion, valfritt)",
+    "details": "Detaljer",
+    "additionalInfo": "Övrig information",
+    "recipeName": "Receptnamn",
+    "recipeNamePlaceholder": "T.ex. Chokladkakor",
+    "description": "Beskrivning",
+    "descriptionPlaceholder": "En kort beskrivning av vad som gör receptet speciellt...",
+    "notes": "Anteckningar",
+    "notesPlaceholder": "Lägg till förberedelsetips, anpassningar eller serveringsförslag...",
+    "ingredientsHelp": "Skriv ingredienser som ”2 dl mjöl” så tolkar vi mängder och enheter automatiskt.",
+    "instructionsHelp": "Skriv tydliga instruktioner steg för steg. Tryck på Enter för att gå till nästa steg.",
+    "tagsHelp": "Skriv taggar och klicka på förslag för att lägga till dem. Befintliga taggar är fyllda, nya taggar har en streckad ram.",
+    "tagsAndCategories": "Taggar och kategorier",
+    "categoriesHelp": "Välj måltidskategorier för det här receptet.",
+    "category": {
+      "breakfast": "Frukost",
+      "lunch": "Lunch",
+      "dinner": "Middag",
+      "snack": "Mellanmål"
+    },
+    "calories": "Kalorier",
+    "fat": "Fett (g)",
+    "carbs": "Kolhydrater (g)",
+    "protein": "Protein (g)",
+    "provenance": "Ursprung",
+    "provenanceHelp": "Var det här receptet kommer ifrån.",
+    "originCountry": "Land",
+    "originCountryPlaceholder": "Inget land",
+    "originRegion": "Region",
+    "originRegionPlaceholder": "T.ex. Sicilien",
+    "cuisines": "Matkulturer",
+    "cuisinesHelp": "Välj från serverns lista. Flera kan passa för en rätt som blandar matkulturer.",
+    "provenanceNote": "Anteckning",
+    "provenanceNotePlaceholder": "Några meningar om var den här rätten kommer ifrån…",
+    "servings": "Portioner",
+    "cookingTimes": "Tillagningstider",
+    "optional": "(valfritt)",
+    "sourceUrl": "Källans webbadress",
+    "sourceUrlPlaceholder": "https://exempel.se/recept",
+    "measurementSystemNote": "Vi identifierar måttsystemet utifrån ingredienserna, men du kan ändra det här.",
+    "measurementSystemEditNote": " Obs! Detta ändrar måttsystemets etikett men omvandlar inte enheterna. Använd Omvandla efter att du har sparat.",
+    "createRecipe": "Skapa recept",
+    "saveChanges": "Spara ändringar",
+    "uploading": "Laddar upp...",
+    "clickToUpload": "Klicka för att ladda upp eller dra och släpp",
+    "pasteToUpload": "för att klistra in",
+    "imageFormats": "PNG, JPG, WEBP upp till 5 MB",
+    "discardChangesConfirm": "Du har osparade ändringar. Vill du kasta dem och lämna sidan?"
+  },
+  "gallery": {
+    "addImage": "Lägg till bild",
+    "uploading": "Laddar upp...",
+    "uploadFailed": "Uppladdningen misslyckades",
+    "dragToReorder": "Dra för att ändra ordning",
+    "maxImagesReached": "Högst {max} bilder tillåts",
+    "maxVideosReached": "Högst {max} videor tillåts",
+    "invalidFileType": "Ogiltig filtyp"
+  },
+  "carousel": {
+    "noImageAvailable": "Ingen bild tillgänglig",
+    "noMediaAvailable": "Inga medier tillgängliga",
+    "videoPlayer": {
+      "mute": "Stäng av ljud",
+      "unmute": "Slå på ljud",
+      "fullscreen": "Visa helskärm",
+      "exitFullscreen": "Lämna helskärm"
+    }
+  },
+  "validation": {
+    "nameRequired": "Receptnamn krävs",
+    "ingredientsRequired": "Minst en ingrediens krävs",
+    "stepsRequired": "Minst ett steg krävs",
+    "servingsMin": "Antalet portioner måste vara minst 1"
+  },
+  "nutrition": {
+    "title": "Näringsvärden",
+    "calories": "Kalorier",
+    "fat": "Fett",
+    "carbs": "Kolhydrater",
+    "protein": "Protein",
+    "showingPortions": "Visar värden för {count} {count, plural, one {portion} other {portioner}}",
+    "noInfo": "Inga näringsvärden tillgängliga",
+    "estimateWithAI": "Uppskatta med AI",
+    "estimated": "Uppskattat",
+    "leftOut": "{count, plural, one {# rad ej medräknad} other {# rader ej medräknade}}",
+    "estimatedByAI": "uppskattat av AI",
+    "reasons": {
+      "seasoning": "krydda",
+      "noAmount": "ingen mängd",
+      "noSize": "ingen vikt för det här måttet",
+      "noNumbers": "inga värden ännu",
+      "noSpoonWeight": "ingen vikt per sked ännu",
+      "noPieceWeight": "ingen styckvikt ännu"
+    },
+    "workedOutFrom": "Beräknat utifrån ingredienserna med {sources}.",
+    "householdNumbers": "ditt hushålls värden"
+  },
+  "measurementSystem": {
+    "label": "Måttsystem",
+    "detected": "Identifierat: {system}",
+    "metric": "Metriskt",
+    "us": "Amerikanskt"
+  },
+  "timeInputs": {
+    "prep": "Förberedelse",
+    "cook": "Tillagning",
+    "total": "Totalt"
+  },
+  "stepInput": {
+    "stepPlaceholder": "Steg {number}: Beskriv steget...",
+    "stepPlaceholderShort": "Steg {number}"
+  },
+  "stepIngredients": {
+    "rowLabel": "Kopplade ingredienser",
+    "addLabel": "Koppla ingrediens",
+    "pickerLabel": "Koppla en ingrediens till det här steget",
+    "shareLabel": "Ändra andelen av {name}",
+    "share": {
+      "full": "Hela raden",
+      "half": "Hälften",
+      "third": "En tredjedel",
+      "quarter": "En fjärdedel",
+      "custom": "Anpassad…",
+      "amount": "Mängd…"
+    },
+    "customShareLabel": "Anpassad andel",
+    "customAmountLabel": "Mängd",
+    "removeLabel": "Ta bort {name}"
+  },
+  "ingredientInput": {
+    "placeholder": "T.ex. 2 dl mjöl"
+  },
+  "wakeLock": {
+    "keepScreenOn": "Håll skärmen tänd",
+    "notSupported": "Den här webbläsaren stöder inte att hålla skärmen tänd",
+    "activeTooltip": "Skärmen hålls tänd medan du lagar mat",
+    "inactiveTooltip": "Håll skärmen tänd medan du följer stegen",
+    "ariaLabel": "Håll skärmen tänd"
+  },
+  "toasts": {
+    "imported": "Receptet har importerats",
+    "failed": "Receptåtgärden misslyckades",
+    "failedDescription": "Något gick fel när receptet bearbetades. Teknisk information finns i webbläsarens konsol.",
+    "incomplete": "Receptet kan vara ofullständigt. Jämför det med källan.",
+    "notARecipe": "Den här sidan ser inte ut som ett recept.",
+    "privateAddress": "Import från privata nätverksadresser är inte tillåten på den här servern.",
+    "batchImported": "Recepten har importerats",
+    "batchImportedDescription": "{count} recept importerade från arkivet",
+    "view": "Visa",
+    "open": "Öppna"
+  },
+  "tags": {
+    "panel": {
+      "editTitle": "Redigera tagg",
+      "editPlaceholder": "Ange taggnamn...",
+      "duplicateTag": "Den här taggen finns redan"
+    }
+  },
+  "cookMode": {
+    "steps": "Steg",
+    "ingredients": "Ingredienser",
+    "servings": "Portioner",
+    "serving": "{count, plural, one {# portion} other {# portioner}}",
+    "stepCounter": "{current} / {total}",
+    "swipeSteps": "Svep för att byta steg",
+    "swipeIngredients": "Svep åt vänster för ingredienser",
+    "swipeBackToSteps": "Svep åt höger för steg",
+    "readyAt": "Klart ungefär {time}",
+    "timers": "Timrar",
+    "nextStep": "Nästa steg"
+  },
+  "enrichment": {
+    "failed": "Kompletteringen misslyckades",
+    "states": {
+      "queued": "I kö",
+      "processing": "Pågår",
+      "succeeded": "Klart",
+      "failed": "Den senaste körningen misslyckades"
+    },
+    "kinds": {
+      "auto-tagging": "Automatisk taggning",
+      "allergy-detection": "Identifiering av allergener",
+      "auto-categorization": "Automatisk kategorisering",
+      "nutrition-estimation": "Uppskattning av näringsvärden",
+      "recipe-provenance": "Receptets ursprung",
+      "ingredient-linking": "Koppling av ingredienser",
+      "image-generation": "Bildgenerering"
+    }
+  },
+  "provenance": {
+    "title": "Ursprung",
+    "region": "Region",
+    "cuisines": "Matkulturer",
+    "inferring": "Tar reda på var det här receptet kommer ifrån…",
+    "noInfo": "Ingen information om ursprung ännu",
+    "inferWithAI": "Ta reda på med AI"
+  },
+  "import": {
+    "alreadyExists": "Du har redan det här receptet",
+    "openExisting": "Öppna"
+  },
+  "glanceBar": {
+    "totalTime": "Total tid",
+    "servings": "{count, plural, one {portion} other {portioner}}"
+  },
+  "cookingTime": {
+    "title": "Tillagningstid",
+    "prep": "Förberedelse",
+    "cook": "Tillagning",
+    "other": "Övrig tid",
+    "total": "Totalt"
+  },
+  "cookbooks": {
+    "addCookbook": "Lägg till kokbok",
+    "createTitle": "Ny kokbok",
+    "editTitle": "Redigera kokbok",
+    "titleLabel": "Titel",
+    "titlePlaceholder": "T.ex. Vardagsmiddagar",
+    "options": "Kokboksalternativ",
+    "deleteTitle": "Ta bort kokbok",
+    "deleteConfirm": "Vill du ta bort ”{title}”?",
+    "deleteKeepsRecipes": "Recepten i kokboken finns kvar i biblioteket.",
+    "recipeCount": "{count, plural, one {# recept} other {# recept}}",
+    "empty": "Inga recept ännu",
+    "singular": "Kokbok",
+    "notFound": "Kokboken hittades inte",
+    "notFoundHint": "Den kan ha tagits bort eller vara dold för dig.",
+    "emptyHint": "Lägg till recept via receptens snabbmeny.",
+    "panelTitle": "Lägg till i kokbok",
+    "newWithRecipe": "Ny kokbok med det här receptet",
+    "noneEditable": "Det finns inga kokböcker du kan redigera ännu.",
+    "cardTitle": "I kokböcker",
+    "removeFromCookbook": "Ta bort från kokbok",
+    "noMatchingMembers": "Inga recept i den här kokboken matchar dina filter.",
+    "membersLabel": "Recept i den här kokboken",
+    "showMore": "Visa fler",
+    "willBeCreated": "Skapas när du sparar",
+    "manage": "Hantera",
+    "addRecipes": "Lägg till recept",
+    "addRecipesTitle": "Lägg till recept i {title}",
+    "searchRecipes": "Sök efter recept",
+    "noRecipesToAdd": "Inga recept hittades.",
+    "addCount": "{count, plural, one {Lägg till # recept} other {Lägg till # recept}}",
+    "everythingAlreadyIn": "Alla recept finns redan i den här kokboken.",
+    "coverLabel": "Omslag",
+    "chooseImage": "Välj bild",
+    "changeImage": "Byt bild",
+    "removeImage": "Ta bort bild",
+    "imageUploadFailed": "Det gick inte att ladda upp bilden.",
+    "imageNeedsConnection": "Du kan byta bilder när du är online igen."
+  },
+  "print": {
+    "title": "Skriv ut recept",
+    "includePhoto": "Ta med foto",
+    "textSize": "Textstorlek",
+    "print": "Skriv ut / Spara som PDF",
+    "continued": "forts.",
+    "perServing": "Per portion"
+  }
+}

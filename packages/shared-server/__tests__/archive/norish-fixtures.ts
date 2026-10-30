@@ -38,6 +38,7 @@ export function buildFullRecipe(overrides: Partial<FullRecipeDTO> = {}): FullRec
       {
         id: "22222222-2222-4222-8222-222222222222",
         ingredientId: "33333333-3333-4333-8333-333333333333",
+        foods: [{ ingredientId: "33333333-3333-4333-8333-333333333333", name: "spaghetti" }],
         ingredientName: "spaghetti",
         amount: 400,
         unit: "g",

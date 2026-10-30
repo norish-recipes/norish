@@ -3,7 +3,7 @@
  * `createWSClient` replaced by a recorder of the options it was given.
  */
 
-import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
+import { beforeEach, describe, expect, it, vi } from "vitest";
 
 type RecordedWsClient = {
   options: {
@@ -64,10 +64,6 @@ function createLinks(overrides: Record<string, unknown> = {}) {
 
 beforeEach(() => {
   wsClients.length = 0;
-});
-
-afterEach(() => {
-  vi.clearAllMocks();
 });
 
 describe("webSocketRetryDelayMs", () => {

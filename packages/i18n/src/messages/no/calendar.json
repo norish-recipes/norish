@@ -9,9 +9,7 @@
   "editNote": {
     "title": "Rediger notat",
     "noteLabel": "Notat",
-    "notePlaceholder": "Skriv notat...",
-    "date": "Dato",
-    "slot": "Tidsluke"
+    "notePlaceholder": "Skriv notat..."
   },
   "navigation": {
     "previousMonth": "Forrige måned",

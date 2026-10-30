@@ -1,9 +1,7 @@
 // @vitest-environment node
 /**
  * The one definition of the image a recipe leads with: the first gallery
- * image by order, falling back to the legacy scalar. Every thumbnail reader
- * resolves through this, which is what lets the `recipes.image` column head
- * toward removal.
+ * image by order. Every thumbnail reader resolves through this.
  */
 import { describe, expect, it } from "vitest";
 
@@ -13,7 +11,6 @@ describe("primaryRecipeImage", () => {
   it("leads with the first gallery image by order, whatever the array order", () => {
     expect(
       primaryRecipeImage({
-        image: "/recipes/r/legacy.jpg",
         images: [
           { image: "/recipes/r/second.jpg", order: 2 },
           { image: "/recipes/r/first.jpg", order: 0 },
@@ -22,15 +19,8 @@ describe("primaryRecipeImage", () => {
     ).toBe("/recipes/r/first.jpg");
   });
 
-  it("falls back to the legacy scalar only when the gallery is empty", () => {
-    expect(primaryRecipeImage({ image: "/recipes/r/legacy.jpg", images: [] })).toBe(
-      "/recipes/r/legacy.jpg"
-    );
-    expect(primaryRecipeImage({ image: "/recipes/r/legacy.jpg" })).toBe("/recipes/r/legacy.jpg");
-  });
-
-  it("returns null when the recipe holds no image anywhere", () => {
-    expect(primaryRecipeImage({ image: null, images: [] })).toBeNull();
+  it("returns null when the gallery is empty", () => {
+    expect(primaryRecipeImage({ images: [] })).toBeNull();
     expect(primaryRecipeImage({})).toBeNull();
   });
 

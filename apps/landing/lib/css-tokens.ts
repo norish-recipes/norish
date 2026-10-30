@@ -4,5 +4,8 @@ export const links = {
   docs: "https://docs.norish.dev",
   selfHost: "https://docs.norish.dev/quick-start",
   keyGen: "https://docs.norish.dev/quick-start",
-  license: "https://github.com/norish-recipes/norish/blob/main/LICENSE",
+  dockerHub: "https://hub.docker.com/r/norishapp/norish",
+  coffee: "https://buymeacoffee.com/mikevanes",
+  contributing: "https://github.com/norish-recipes/norish/blob/main/CONTRIBUTING.md",
+  issues: "https://github.com/norish-recipes/norish/issues",
 } as const;

@@ -31,6 +31,8 @@ export function createUseRecipeShareMutations(
   }
 ) {
   return function useRecipeShareMutations(recipeId: string | null): RecipeShareMutationsResult {
+    "use memo";
+
     const trpc = useTRPC();
     const {
       invalidateRecipeShares,
@@ -57,6 +59,7 @@ export function createUseRecipeShareMutations(
         },
       })
     );
+    const { mutateAsync: mutateCreateAsync } = createMutation;
 
     const updateMutation = useMutation(
       trpc.recipes.shareUpdate.mutationOptions({
@@ -65,6 +68,7 @@ export function createUseRecipeShareMutations(
         },
       })
     );
+    const { mutate: mutateUpdate } = updateMutation;
 
     const revokeMutation = useMutation(
       trpc.recipes.shareRevoke.mutationOptions({
@@ -73,6 +77,7 @@ export function createUseRecipeShareMutations(
         },
       })
     );
+    const { mutate: mutateRevoke } = revokeMutation;
 
     const reactivateMutation = useMutation(
       trpc.recipes.shareReactivate.mutationOptions({
@@ -81,6 +86,7 @@ export function createUseRecipeShareMutations(
         },
       })
     );
+    const { mutate: mutateReactivate } = reactivateMutation;
 
     const deleteMutation = useMutation(
       trpc.recipes.shareDelete.mutationOptions({
@@ -95,6 +101,7 @@ export function createUseRecipeShareMutations(
         },
       })
     );
+    const { mutate: mutateDelete } = deleteMutation;
 
     return {
       createShare: async (expiresIn = "forever") => {
@@ -102,19 +109,19 @@ export function createUseRecipeShareMutations(
           return null;
         }
 
-        return createMutation.mutateAsync({ recipeId, expiresIn });
+        return mutateCreateAsync({ recipeId, expiresIn });
       },
       updateShare: (input) => {
-        updateMutation.mutate(input);
+        mutateUpdate(input);
       },
       revokeShare: (id, version) => {
-        revokeMutation.mutate({ id, version });
+        mutateRevoke({ id, version });
       },
       reactivateShare: (id, version) => {
-        reactivateMutation.mutate({ id, version });
+        mutateReactivate({ id, version });
       },
       deleteShare: (id, version) => {
-        deleteMutation.mutate({ id, version });
+        mutateDelete({ id, version });
       },
       isCreating: createMutation.isPending,
       isUpdating: updateMutation.isPending,

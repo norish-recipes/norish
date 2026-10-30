@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useState } from "react";
 import { useTRPC } from "@/app/providers/trpc-provider";
 import { Button, Modal, Radio, RadioGroup } from "@heroui/react";
 import { useQuery } from "@tanstack/react-query";
@@ -34,11 +34,13 @@ export function DeleteStoreModal({
   });
 
   // Reset state when modal opens
-  useEffect(() => {
-    if (isOpen) {
-      setDeleteOption("keep");
-    }
-  }, [isOpen]);
+  const [wasOpen, setWasOpen] = useState(isOpen);
+
+  if (wasOpen !== isOpen) {
+    setWasOpen(isOpen);
+    if (isOpen) setDeleteOption("keep");
+  }
+
   const handleConfirm = () => {
     if (!storeId) return;
     onConfirm(storeId, deleteOption === "delete");
@@ -80,7 +82,7 @@ export function DeleteStoreModal({
                 <RadioGroup
                   className="gap-3"
                   value={deleteOption}
-                  onValueChange={(v) => setDeleteOption(v as "keep" | "delete")}
+                  onChange={(v) => setDeleteOption(v === "delete" ? "delete" : "keep")}
                 >
                   <Radio value="keep">
                     <Radio.Content>

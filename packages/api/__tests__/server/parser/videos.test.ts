@@ -1,5 +1,5 @@
 // @vitest-environment node
-import { beforeEach, describe, expect, it, vi } from "vitest";
+import { describe, expect, it, vi } from "vitest";
 
 // Import after mocks are set up
 import { parseVideos } from "@norish/api/parser/parsers/videos";
@@ -33,10 +33,6 @@ vi.mock("@norish/shared-server/logger", () => ({
 }));
 
 describe("parseVideos - VideoObject extraction", () => {
-  beforeEach(() => {
-    vi.clearAllMocks();
-  });
-
   describe("VideoObject detection", () => {
     it("returns empty array when videoField is null", async () => {
       const result = await parseVideos(null, "test-recipe-id");

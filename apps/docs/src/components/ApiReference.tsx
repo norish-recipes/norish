@@ -15,7 +15,7 @@ import clsx from "clsx";
 
 type Schema = {
   $ref?: string;
-  type?: string;
+  type?: string | string[];
   format?: string;
   title?: string;
   description?: string;
@@ -100,10 +100,18 @@ export function apiToc(spec: Spec): TOCItem[] {
 }
 
 export default function ApiReference({ spec }: { spec: Spec }) {
-  const resolve = (schema: Schema): Schema =>
-    schema.$ref
-      ? resolve(spec.components?.schemas?.[schema.$ref.split("/").pop() ?? ""] ?? {})
-      : schema;
+  const resolve: Resolve = (schema) => {
+    if (schema.$ref) {
+      return resolve(spec.components?.schemas?.[schema.$ref.split("/").pop() ?? ""] ?? {});
+    }
+
+    const { type, ...rest } = schema;
+
+    // zod writes a nullable primitive as `type: ["string", "null"]`; read it as the anyOf it means.
+    return Array.isArray(type)
+      ? { ...rest, anyOf: type.map((option) => ({ type: option })) }
+      : { ...rest, type };
+  };
   const server = spec.servers?.[0];
   const baseUrl = (server?.url ?? "").replace(
     /\{(\w+)\}/g,
@@ -145,7 +153,8 @@ export default function ApiReference({ spec }: { spec: Spec }) {
   );
 }
 
-type Resolve = (schema: Schema) => Schema;
+// A resolved schema has no $ref left to follow and a single `type`.
+type Resolve = (schema: Schema) => Schema & { type?: string };
 
 function EndpointSection({
   endpoint: { method, path, operation },

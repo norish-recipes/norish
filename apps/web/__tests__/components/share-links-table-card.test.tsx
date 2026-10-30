@@ -5,11 +5,11 @@ import { beforeAll, describe, expect, it, vi } from "vitest";
 import type { RecipeShareInventoryDto } from "@norish/shared/contracts/dto/recipe-shares";
 
 vi.mock("next-intl", () => ({
+  useFormatter: () => ({ dateTime: (date: Date) => date.toISOString() }),
   useTranslations: (namespace?: string) => {
     const translations: Record<string, string> = {
       "common.actions.cancel": "Cancel",
       "common.actions.confirm": "Confirm",
-      "common.status.loading": "Loading",
       "settings.user.shareLinks.title": "Share links",
       "settings.user.shareLinks.description": "Manage links",
       "settings.user.shareLinks.empty": "No links",
@@ -64,10 +64,14 @@ describe("ShareLinksTableCard", () => {
     const shares: RecipeShareInventoryDto[] = [
       {
         id: "share-1",
+        userId: "user-1",
         recipeId: "recipe-1",
         recipeName: "Pasta",
         createdAt: new Date("2026-01-01T00:00:00Z"),
+        updatedAt: new Date("2026-01-01T00:00:00Z"),
         expiresAt: null,
+        revokedAt: null,
+        lastAccessedAt: null,
         status: "active",
         version: 1,
       },

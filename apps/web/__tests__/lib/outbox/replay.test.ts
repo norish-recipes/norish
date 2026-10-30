@@ -110,7 +110,7 @@ describe("runReplayPass", () => {
 
     expect(result.halted).toBe("retry");
     expect(result.retryAfterMs).toBe(retryDelayMs(1));
-    expect((await store.forOwner("u1"))[0].attempts).toBe(1);
+    expect((await store.forOwner("u1"))[0]!.attempts).toBe(1);
   });
 
   it("parks an ambiguous entry once its retry budget is exhausted", async () => {
@@ -125,7 +125,7 @@ describe("runReplayPass", () => {
     // a parks (exhausted), b still drains.
     expect(result.halted).toBeNull();
     expect((await store.forOwner("u1", "parked")).map((x) => x.id)).toContain("a");
-    expect((await store.forOwner("u1", "parked"))[0].parkedReason).toBe("retries-exhausted");
+    expect((await store.forOwner("u1", "parked"))[0]!.parkedReason).toBe("retries-exhausted");
   });
 
   it("parks a create's dependent edits with it (one broken story)", async () => {

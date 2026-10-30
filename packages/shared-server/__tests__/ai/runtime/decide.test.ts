@@ -9,7 +9,7 @@
  */
 import { createServer } from "node:http";
 import type { AddressInfo } from "node:net";
-import { afterAll, afterEach, beforeAll, beforeEach, describe, expect, it, vi } from "vitest";
+import { afterAll, beforeAll, beforeEach, describe, expect, it, vi } from "vitest";
 
 import type { AIConfig, DecisionConfig } from "@norish/config/zod/server-config";
 
@@ -36,9 +36,8 @@ vi.mock("@norish/shared-server/logger", () => ({
   createLogger: () => logger,
 }));
 
-const { decide, estimateDecisionInputTokens, testDecisionModel } =
-  await import("@norish/shared-server/ai/runtime/runtime");
-const { AIConfigurationError, AIDisabledError, AIProviderError, AIResponseError } =
+const { decide, testDecisionModel } = await import("@norish/shared-server/ai/runtime/runtime");
+const { AIConfigurationError, AIProviderError, AIResponseError, isTimedOut } =
   await import("@norish/shared-server/ai/runtime/errors");
 const { createModelUseLedger, runWithModelUseLedger } =
   await import("@norish/shared-server/ai/runtime/model-use-ledger");
@@ -159,10 +158,6 @@ beforeEach(() => {
   mockGetDecisionConfig.mockResolvedValue(decisionConfig());
 });
 
-afterEach(() => {
-  vi.clearAllMocks();
-});
-
 describe("decide", () => {
   it("asks every question in one request against TypeSafe's wire shape", async () => {
     await ask();
@@ -208,11 +203,14 @@ describe("decide", () => {
     expect(captured[0]!.body.model).toBe("jev-2026-09-01");
   });
 
-  it("refuses non-retryably when AI is disabled, without a request", async () => {
-    mockGetAIConfig.mockResolvedValue(aiConfig({ enabled: false }));
+  it.each([
+    ["AI is switched off", () => aiConfig({ enabled: false })],
+    ["no AI block is stored", () => null],
+  ])("answers when %s: the Decision block is its own switch", async (_case, stored) => {
+    mockGetAIConfig.mockResolvedValue(stored());
 
-    await expect(ask()).rejects.toBeInstanceOf(AIDisabledError);
-    expect(captured).toHaveLength(0);
+    await expect(ask()).resolves.toMatchObject({ model: "jev-2026-09-01" });
+    expect(captured).toHaveLength(1);
   });
 
   it.each([
@@ -349,6 +347,19 @@ describe("the job's model ledger", () => {
     ]);
   });
 
+  it("ends a Decision past the feature's own deadline, recorded as a failed use", async () => {
+    holdResponses = true;
+    const ledger = createModelUseLedger();
+    const failure = await runWithModelUseLedger(ledger, () =>
+      decide({ feature: "runtime-test", state, questions, timeoutMs: 200 }).catch(
+        (error: unknown) => error
+      )
+    );
+
+    expect(isTimedOut(failure)).toBe(true);
+    expect(ledger.uses).toEqual([{ provider: "typesafe", model: "jev-latest", outcome: "failed" }]);
+  });
+
   it("records nothing for a refusal that sent no request", async () => {
     const ledger = createModelUseLedger();
 
@@ -356,32 +367,6 @@ describe("the job's model ledger", () => {
     await runWithModelUseLedger(ledger, () => ask().catch(() => undefined));
 
     expect(ledger.uses).toEqual([]);
-  });
-});
-
-describe("an estimate of a Decision", () => {
-  it("counts the state and the questions as JSON, four characters a token, for the configured model, and asks nothing", async () => {
-    const questions = {
-      food: {
-        type: "choice" as const,
-        instructions: "Which food is it?",
-        criteria: { same_1: "Is onion", new: "Is none of these" },
-      },
-    };
-    const small = await estimateDecisionInputTokens({ state: { name: "uien" }, questions });
-    const large = await estimateDecisionInputTokens({
-      state: { name: "u".repeat(4004) },
-      questions,
-    });
-
-    expect(large.tokens - small.tokens).toBe(1000);
-    expect(small).toEqual({
-      provider: "typesafe",
-      model: expect.any(String),
-      tokens: Math.ceil(JSON.stringify({ state: { name: "uien" }, questions }).length / 4),
-    });
-    expect(small.model).not.toBe("");
-    expect(captured).toHaveLength(0);
   });
 });
 
@@ -417,8 +402,12 @@ describe("testDecisionModel", () => {
     expect(result.error).toMatch(/rejected the API key/);
   });
 
-  it("explains that AI is off rather than sending a request", async () => {
+  it("tests the Decision Model with AI switched off", async () => {
     mockGetAIConfig.mockResolvedValue(aiConfig({ enabled: false }));
+    reply = () => ({
+      status: 200,
+      body: { model: "jev-2026-09-01", answers: { isTest: { type: "noul", noul: 0.99 } } },
+    });
 
     const result = await testDecisionModel({
       provider: "typesafe",
@@ -426,8 +415,7 @@ describe("testDecisionModel", () => {
       endpoint: baseUrl,
     });
 
-    expect(result.success).toBe(false);
-    expect(result.error).toMatch(/disabled/i);
-    expect(captured).toHaveLength(0);
+    expect(result).toEqual({ success: true });
+    expect(captured).toHaveLength(1);
   });
 });

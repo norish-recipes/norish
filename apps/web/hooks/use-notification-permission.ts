@@ -1,6 +1,6 @@
 "use client";
 
-import { useCallback, useEffect, useState } from "react";
+import { useCallback, useState, useSyncExternalStore } from "react";
 
 import { createClientLogger } from "@norish/shared/lib/logger";
 
@@ -19,22 +19,23 @@ interface UseNotificationPermissionReturn {
   requestPermission: () => Promise<NotificationPermission | "unsupported">;
 }
 
+const noSubscription = () => () => {};
+
+function readPermission(): NotificationPermission | "unsupported" {
+  return "Notification" in window ? Notification.permission : "unsupported";
+}
+
 export function useNotificationPermission(): UseNotificationPermissionReturn {
-  const [isSupported, setIsSupported] = useState(false);
-  const [permission, setPermission] = useState<NotificationPermission | "unsupported">(
-    "unsupported"
+  // Browser support and current permission: "unsupported" on the server and
+  // while hydrating, like the markup the server sent.
+  const browserPermission = useSyncExternalStore<NotificationPermission | "unsupported">(
+    noSubscription,
+    readPermission,
+    () => "unsupported"
   );
-
-  // Check browser support and current permission on mount
-  useEffect(() => {
-    const supported = "Notification" in window;
-
-    setIsSupported(supported);
-
-    if (supported) {
-      setPermission(Notification.permission);
-    }
-  }, []);
+  const [requested, setRequested] = useState<NotificationPermission | null>(null);
+  const isSupported = browserPermission !== "unsupported";
+  const permission = requested ?? browserPermission;
 
   const requestPermission = useCallback(async (): Promise<
     NotificationPermission | "unsupported"
@@ -47,7 +48,7 @@ export function useNotificationPermission(): UseNotificationPermissionReturn {
 
     // Already granted or denied — no need to prompt
     if (Notification.permission !== "default") {
-      setPermission(Notification.permission);
+      setRequested(Notification.permission);
 
       return Notification.permission;
     }
@@ -55,7 +56,7 @@ export function useNotificationPermission(): UseNotificationPermissionReturn {
     try {
       const result = await Notification.requestPermission();
 
-      setPermission(result);
+      setRequested(result);
       logger.info(`Notification permission: ${result}`);
 
       return result;

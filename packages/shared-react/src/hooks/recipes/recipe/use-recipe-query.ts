@@ -20,6 +20,8 @@ export type RecipeQueryResult = {
 
 export function createUseRecipeQuery({ useTRPC }: CreateRecipeHooksOptions) {
   return function useRecipeQuery(id: string | null): RecipeQueryResult {
+    "use memo";
+
     const trpc = useTRPC();
     const queryClient = useQueryClient();
 

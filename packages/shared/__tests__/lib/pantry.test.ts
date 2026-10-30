@@ -1,6 +1,7 @@
 import { describe, expect, it } from "vitest";
 
 import type { PantryIngredientDto } from "@norish/shared/contracts";
+import { foodsToBuy } from "@norish/shared/lib/line-foods";
 import {
   groceryOnTheList,
   pantryIngredientFor,
@@ -74,6 +75,42 @@ describe("pantryIngredientFor", () => {
     expect(pantryIngredientFor(pantry, text("extra virgin olive oil"))).toBeNull();
     expect(pantryIngredientFor(pantry, text("salted butter"))).toBeNull();
     expect(pantryIngredientFor(pantry, text("sea salt"))).toBeNull();
+  });
+
+  it("covers an or line where any of its foods is kept, and an and line food by food", () => {
+    const butterOrOil = foodsToBuy([
+      {
+        id: "l1",
+        ingredientId: "i-butter",
+        ingredientName: "boter of olie",
+        joined: "alternatives" as const,
+        foods: [
+          { ingredientId: "i-butter", name: "boter" },
+          { ingredientId: "i-olive oil", name: "olie" },
+        ],
+      },
+    ]);
+    const saltAndPepper = foodsToBuy([
+      {
+        id: "l2",
+        ingredientId: "i-salt",
+        ingredientName: "zout en peper",
+        joined: "together" as const,
+        foods: [
+          { ingredientId: "i-salt", name: "zout" },
+          { ingredientId: "i-pepper", name: "peper" },
+        ],
+      },
+    ]);
+
+    expect(butterOrOil.map((line) => pantryIngredientFor(pantry, line)?.name)).toEqual([
+      "Olive Oil",
+    ]);
+    expect(pantryIngredientFor([item("lard", "lard")], butterOrOil[0]!)).toBeNull();
+    expect(saltAndPepper.map((line) => pantryIngredientFor(pantry, line)?.name ?? null)).toEqual([
+      "Salt",
+      null,
+    ]);
   });
 
   it("is null for nothing at all", () => {

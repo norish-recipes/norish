@@ -63,21 +63,7 @@ vi.mock("@/hooks/recipes/use-worked-out-nutrition", () => ({
 vi.mock("@/app/(app)/recipes/[id]/context", () => ({
   useRecipeContext: () => ({ recipe: stubRecipe }),
   useRecipeContextRequired: () => ({
-    recipe: {
-      id: "r1",
-      name: "Recipe",
-      url: null,
-      description: "desc",
-      categories: [],
-      prepMinutes: 10,
-      cookMinutes: 20,
-      totalMinutes: 30,
-      tags: [],
-      author: null,
-      notes: null,
-      servings: 2,
-      systemUsed: null,
-    },
+    recipe: stubRecipe,
     currentServings: 2,
     allergies: [],
     allergySet: new Set<string>(),
@@ -178,7 +164,7 @@ describe("recipe pages favorite visibility", () => {
   it("keeps tap interactions enabled on desktop when favorites are hidden", () => {
     userPreferencesState.hidden = ["favorites"];
 
-    render(<RecipePageDesktop />);
+    render(<RecipePageDesktop onPrint={() => {}} />);
 
     expect(screen.getByTestId("double-tap-container")).toHaveAttribute("data-disabled", "false");
     expect(screen.getByTestId("double-tap-container")).toHaveAttribute(
@@ -190,12 +176,27 @@ describe("recipe pages favorite visibility", () => {
   it("keeps tap interactions enabled on mobile when favorites are hidden", () => {
     userPreferencesState.hidden = ["favorites"];
 
-    render(<RecipePageMobile />);
+    render(<RecipePageMobile onPrint={() => {}} />);
 
     expect(screen.getByTestId("double-tap-container")).toHaveAttribute("data-disabled", "false");
     expect(screen.getByTestId("double-tap-container")).toHaveAttribute(
       "data-doubletap-enabled",
       "false"
     );
+  });
+});
+
+describe("recipe page servings", () => {
+  it("leaves a recipe without servings out of the ingredients header on desktop", () => {
+    stubRecipe.servings = 0;
+
+    try {
+      render(<RecipePageDesktop onPrint={() => {}} />);
+
+      expect(screen.queryByText("servings-control")).not.toBeInTheDocument();
+      expect(screen.queryByText("0")).not.toBeInTheDocument();
+    } finally {
+      stubRecipe.servings = 2;
+    }
   });
 });

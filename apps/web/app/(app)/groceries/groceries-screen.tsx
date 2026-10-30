@@ -4,7 +4,8 @@ import { usePathname } from "next/navigation";
 import { useConnectivity } from "@/app/providers/connectivity-provider";
 import { PantryView } from "@/components/groceries";
 import { usePantryQuery, usePantrySuggestions } from "@/hooks/pantry";
-import { AnimatePresence, motion, useReducedMotion } from "motion/react";
+import { usePrefersReducedMotion } from "@/hooks/use-prefers-reduced-motion";
+import { AnimatePresence, motion } from "motion/react";
 
 import type { GroceriesView } from "./components/groceries-header";
 import AddGroceryButton from "./components/add-grocery-button";
@@ -27,7 +28,7 @@ const SLIDE_PX = 24;
  */
 export function GroceriesScreen() {
   const view: GroceriesView = usePathname()?.startsWith("/groceries/pantry") ? "pantry" : "list";
-  const offset = useReducedMotion() ? 0 : view === "pantry" ? SLIDE_PX : -SLIDE_PX;
+  const offset = usePrefersReducedMotion() ? 0 : view === "pantry" ? SLIDE_PX : -SLIDE_PX;
   const { isOffline } = useConnectivity();
 
   usePantryQuery();

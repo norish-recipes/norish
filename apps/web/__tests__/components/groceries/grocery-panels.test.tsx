@@ -194,14 +194,22 @@ vi.mock("next-intl", () => ({
   useLocale: () => "en",
 }));
 
-vi.mock("@/components/Panel/Panel", () => {
+vi.mock("@/hooks/use-is-mobile", () => ({ useIsMobile: () => false }));
+
+vi.mock("@/components/Panel/Panel", async () => {
   const Panel = ({ children, open }: { children: ReactNode; open: boolean }) =>
     open ? <div>{children}</div> : null;
 
   Panel.Body = ({ children }: { children: ReactNode }) => <div>{children}</div>;
   Panel.Footer = ({ children }: { children: ReactNode }) => <div>{children}</div>;
 
-  return { default: Panel, usePanelPortalContainer: () => undefined };
+  return {
+    default: Panel,
+    PanelPortal: ({ children }: { children: React.ReactNode }) => children,
+    PanelComboBoxPopover: (
+      await vi.importActual<typeof import("@/components/Panel/Panel")>("@/components/Panel/Panel")
+    ).PanelComboBoxPopover,
+  };
 });
 
 vi.mock("@/components/Panel/consumers/recurrence-panel", () => ({
@@ -704,6 +712,38 @@ describe("EditGroceryPanel, the product's details", () => {
 
     expect(screen.queryByTestId("product-price-error")).not.toBeInTheDocument();
     expect(screen.getByTestId("action-save")).toBeEnabled();
+  });
+});
+
+describe("AddGroceryPanel, where the cursor is", () => {
+  const props = {
+    stores: STORES,
+    onCreate: () => undefined,
+    onCreateRecurring: () => undefined,
+    onOpenChange: () => undefined,
+  };
+
+  it("is in the name field every time the panel opens", () => {
+    const { rerender } = render(<AddGroceryPanel open={true} {...props} />);
+
+    expect(screen.getByPlaceholderText("placeholder")).toHaveFocus();
+
+    rerender(<AddGroceryPanel open={false} {...props} />);
+    rerender(<AddGroceryPanel open={true} {...props} />);
+
+    expect(screen.getByPlaceholderText("placeholder")).toHaveFocus();
+  });
+
+  it("goes back to the name field after Add, for the next grocery", () => {
+    render(<AddGroceryPanel open={true} {...props} />);
+
+    fireEvent.change(screen.getByPlaceholderText("placeholder"), { target: { value: "milk" } });
+    const add = screen.getByRole("button", { name: "add" });
+
+    act(() => add.focus());
+    fireEvent.click(add);
+
+    expect(screen.getByPlaceholderText("placeholder")).toHaveFocus();
   });
 });
 

@@ -27,9 +27,8 @@
     "aiImport": "AI Importeren",
     "importWithAI": "Importeren met AI",
     "goHome": "Ga naar home",
-    "test": "Test",
+    "test": "Testen",
     "format": "Formatteren",
-    "restoreDefaults": "Resetten",
     "saveChanges": "Wijzigingen opslaan"
   },
   "secret": {
@@ -58,6 +57,8 @@
     "searchTags": "Zoek tags",
     "favoritesAndRating": "Favorieten & Beoordeling",
     "favorites": "Favorieten",
+    "pantry": "Voorraadkast",
+    "pantryOnly": "Ingrediënten in huis",
     "cookingTime": "Kooktijd",
     "cookingTimeUnder15": "<15 min",
     "cookingTimeUnder30": "<30 min",
@@ -101,7 +102,7 @@
     "serverUnreachableBanner": "Kan de Norish-server niet bereiken, opgeslagen gegevens worden getoond",
     "live": "Verbonden",
     "offline": "Offline",
-    "openDetails": "Connection details"
+    "openDetails": "Verbindingsdetails"
   },
   "language": {
     "title": "Taal"
@@ -112,11 +113,16 @@
     "message": "Ze snuffelt rond om te vinden waar je naartoe wilde.",
     "imageAlt": "Nora kijkt verward"
   },
+  "errorPage": {
+    "title": "Er ging iets mis.",
+    "message": "Norish liep op deze pagina tegen een fout aan.",
+    "retry": "Opnieuw proberen"
+  },
   "import": {
     "url": {
       "title": "Recept importeren",
       "label": "Recept URL",
-      "placeholder": "https://example.com/your-recipe",
+      "placeholder": "https://example.com/jouw-recept",
       "failed": "Importeren van recept mislukt",
       "failedWithAI": "Importeren van recept met AI mislukt"
     },
@@ -139,7 +145,7 @@
       "title": "Importeren vanuit afbeelding",
       "dropzone": "Sleep afbeeldingen hierheen of klik om te bladeren",
       "paste": "om te plakken",
-      "formats": "Ondersteunt JPG, PNG, WebP. Maximaal 10MB per bestand.",
+      "formats": "Ondersteunt JPG, PNG, WebP, PDF. Maximaal 10MB per bestand.",
       "invalidType": "Ongeldig bestandstype",
       "notSupported": "{name} is geen ondersteund afbeeldingsformaat",
       "tooLarge": "Bestand te groot",
@@ -178,12 +184,15 @@
     "daily": "Dagelijks",
     "weekly": "Wekelijks",
     "monthly": "Maandelijks",
+    "yearly": "Jaarlijks",
     "day": "dag",
     "days": "dagen",
     "week": "week",
     "weeks": "weken",
     "month": "maand",
     "months": "maanden",
+    "year": "jaar",
+    "years": "jaar",
     "next": "Volgende:",
     "every": "Elke",
     "everyOther": "Om de",
@@ -217,63 +226,63 @@
     "done_action": "Klaar",
     "one": "Timer",
     "other": "Timers",
-    "label_one": "1 Timer",
-    "label_other": "{count} Timers",
+    "label_one": "1 timer",
+    "label_other": "{count} timers",
     "notification_title": "Timer afgelopen",
     "notification_body": "{label} is klaar!",
     "notifications_disabled": "Meldingen zijn uitgeschakeld",
     "notifications_disabled_hint": "Schakel meldingen in via je browserinstellingen om waarschuwingen te ontvangen wanneer timers op de achtergrond aflopen."
   },
   "offlineStatus": {
-    "title": "Connection & offline",
+    "title": "Verbinding & offline",
     "connection": {
-      "heading": "Connection",
-      "live": "Live",
+      "heading": "Verbinding",
+      "live": "Verbonden",
       "offline": "Offline",
-      "forced": "Offline (forced)",
-      "liveDescription": "Connected to Norish. Changes sync as you make them.",
-      "offlineDescription": "Can't reach Norish. Showing cached data; changes are queued and sync when you're back.",
-      "forcedDescription": "Offline is forced for development. The backend is reachable but every request is blocked.",
+      "forced": "Offline (geforceerd)",
+      "liveDescription": "Verbonden met Norish. Wijzigingen worden meteen gesynchroniseerd.",
+      "offlineDescription": "Kan Norish niet bereiken. Opgeslagen gegevens worden getoond; wijzigingen komen in de wachtrij en worden gesynchroniseerd zodra je weer online bent.",
+      "forcedDescription": "Offline is geforceerd voor ontwikkeling. De backend is bereikbaar, maar elk verzoek wordt geblokkeerd.",
       "devBadge": "dev"
     },
     "cache": {
-      "heading": "Offline cache",
-      "recipes": "Recipes",
+      "heading": "Offlinecache",
+      "recipes": "Recepten",
       "cookbooks": "Kookboeken",
-      "groceries": "Groceries",
-      "stores": "Stores",
-      "planned": "This week",
-      "dataAge": "Data from {when}",
-      "dataAgeUnknown": "Not warmed yet",
-      "wipe": "Clear cached data",
-      "wipeConfirmBody": "Remove the offline copy of your recipes, groceries, stores and plan? Your queued changes are kept.",
-      "wipeConfirmOfflineBody": "You're offline — clearing now leaves nothing to show until you reconnect. Your queued changes are kept.",
-      "wipeConfirm": "Clear",
-      "wipeCancel": "Keep"
+      "groceries": "Boodschappen",
+      "stores": "Winkels",
+      "planned": "Deze week",
+      "dataAge": "Bijgewerkt {when}",
+      "dataAgeUnknown": "Nog niet gevuld",
+      "wipe": "Opgeslagen gegevens wissen",
+      "wipeConfirmBody": "De offline kopie van je recepten, boodschappen, winkels en planning verwijderen? Je wijzigingen in de wachtrij blijven bewaard.",
+      "wipeConfirmOfflineBody": "Je bent offline. Als je nu wist, is er niets meer te zien tot je weer verbinding hebt. Je wijzigingen in de wachtrij blijven bewaard.",
+      "wipeConfirm": "Wissen",
+      "wipeCancel": "Behouden"
     },
     "outbox": {
-      "heading": "Queued changes",
-      "empty": "Nothing queued — everything's synced.",
-      "pending": "{count, plural, =0 {No changes waiting} one {# change waiting} other {# changes waiting}}",
-      "syncing": "{count, plural, =0 {Syncing} one {Syncing # change} other {Syncing # changes}}",
-      "syncNow": "Sync now",
-      "retryAll": "Retry all",
-      "discardAll": "Discard all",
-      "discardConfirmBody": "{count, plural, one {Permanently discard # queued change? It won't be sent.} other {Permanently discard # queued changes? They won't be sent.}}",
-      "discardConfirm": "Discard",
-      "discardCancel": "Keep",
+      "heading": "Wijzigingen in de wachtrij",
+      "empty": "Niets in de wachtrij, alles is gesynchroniseerd.",
+      "pending": "{count, plural, =0 {Geen wachtende wijzigingen} one {# wijziging wacht} other {# wijzigingen wachten}}",
+      "syncing": "{count, plural, =0 {Synchroniseren} one {# wijziging synchroniseren} other {# wijzigingen synchroniseren}}",
+      "syncNow": "Nu synchroniseren",
+      "retryAll": "Alles opnieuw proberen",
+      "discardAll": "Alles verwerpen",
+      "discardConfirmBody": "{count, plural, one {# wijziging in de wachtrij definitief verwerpen? Deze wordt niet verzonden.} other {# wijzigingen in de wachtrij definitief verwerpen? Ze worden niet verzonden.}}",
+      "discardConfirm": "Verwerpen",
+      "discardCancel": "Behouden",
       "status": {
-        "pending": "Syncing",
-        "parked": "Needs attention",
+        "pending": "Synchroniseren",
+        "parked": "Vraagt aandacht",
         "conflicted": "Conflict"
       }
     },
     "devToggle": {
-      "heading": "Developer",
-      "force": "Force offline",
-      "description": "Blocks the backend transport to exercise the offline runtime. Dev builds only.",
-      "on": "On",
-      "off": "Off"
+      "heading": "Ontwikkelaar",
+      "force": "Offline forceren",
+      "description": "Blokkeert het backendtransport om de offline-runtime te testen. Alleen in dev-builds.",
+      "on": "Aan",
+      "off": "Uit"
     }
   },
   "offlineFallback": {

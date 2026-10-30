@@ -5,6 +5,8 @@ import type { CreateRecipeHooksOptions } from "../types";
 
 export function createUsePendingRecipesQuery({ useTRPC }: CreateRecipeHooksOptions) {
   return function usePendingRecipesQuery() {
+    "use memo";
+
     const trpc = useTRPC();
 
     const { data, isLoading, error } = useQuery({

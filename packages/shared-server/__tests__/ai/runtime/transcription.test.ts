@@ -4,9 +4,9 @@
  *
  * Transcription is tested at the provider-construction level: each provider is
  * pointed at a local HTTP server (or, for the two whose base URL is fixed, a
- * stubbed global fetch) and the assertion is that the request arrives at the
- * correct URL in the correct shape, through the shared transport, with the
- * AI timeout applied.
+ * stub in place of the shared transport's fetch) and the assertion is that the
+ * request arrives at the correct URL in the correct shape, through the shared
+ * transport, with the AI timeout applied.
  */
 
 import { mkdtempSync, writeFileSync } from "node:fs";
@@ -18,6 +18,23 @@ import type { AddressInfo } from "node:net";
 import { afterAll, afterEach, beforeAll, beforeEach, describe, expect, it, vi } from "vitest";
 
 import type { VideoConfig } from "@norish/config/zod/server-config";
+
+/** When set, the shared transport's fetch is this stub instead of the network. */
+const transport = vi.hoisted(() => ({ stub: null as typeof fetch | null }));
+
+vi.mock("@norish/shared-server/ai/runtime/transport", async (importOriginal) => {
+  const actual =
+    await importOriginal<typeof import("@norish/shared-server/ai/runtime/transport")>();
+
+  return {
+    ...actual,
+    createFetchWithTimeout: (timeoutMs: number): typeof fetch => {
+      const network = actual.createFetchWithTimeout(timeoutMs);
+
+      return (url, init) => (transport.stub ?? network)(url, init);
+    },
+  };
+});
 
 const mockGetVideoConfig = vi.fn();
 const mockGetAIConfig = vi.fn();
@@ -106,7 +123,6 @@ function videoConfig(overrides: Partial<VideoConfig>): VideoConfig {
 }
 
 beforeEach(() => {
-  vi.clearAllMocks();
   captured = [];
   reply = { text: "local transcript" };
   holdResponses = false;
@@ -114,7 +130,7 @@ beforeEach(() => {
 });
 
 afterEach(() => {
-  vi.unstubAllGlobals();
+  transport.stub = null;
 });
 
 describe("transcription requests reach the provider correctly", () => {
@@ -221,17 +237,14 @@ describe("transcription requests reach the provider correctly", () => {
   it("openai posts multipart form data to api.openai.com with the bearer key", async () => {
     const sent: { url: string; init?: RequestInit }[] = [];
 
-    vi.stubGlobal(
-      "fetch",
-      vi.fn(async (url: string | URL | Request, init?: RequestInit) => {
-        sent.push({ url: String(url), init });
+    transport.stub = vi.fn(async (url: string | URL | Request, init?: RequestInit) => {
+      sent.push({ url: String(url), init });
 
-        return new Response(JSON.stringify({ text: "openai transcript" }), {
-          status: 200,
-          headers: { "content-type": "application/json" },
-        });
-      })
-    );
+      return new Response(JSON.stringify({ text: "openai transcript" }), {
+        status: 200,
+        headers: { "content-type": "application/json" },
+      });
+    });
     mockGetVideoConfig.mockResolvedValue(
       videoConfig({ transcriptionProvider: "openai", transcriptionApiKey: "openai-key" })
     );
@@ -256,17 +269,14 @@ describe("transcription requests reach the provider correctly", () => {
   it("groq posts multipart form data to api.groq.com with the bearer key", async () => {
     const sent: { url: string; init?: RequestInit }[] = [];
 
-    vi.stubGlobal(
-      "fetch",
-      vi.fn(async (url: string | URL | Request, init?: RequestInit) => {
-        sent.push({ url: String(url), init });
+    transport.stub = vi.fn(async (url: string | URL | Request, init?: RequestInit) => {
+      sent.push({ url: String(url), init });
 
-        return new Response(JSON.stringify({ text: "groq transcript", x_groq: { id: "req_1" } }), {
-          status: 200,
-          headers: { "content-type": "application/json" },
-        });
-      })
-    );
+      return new Response(JSON.stringify({ text: "groq transcript", x_groq: { id: "req_1" } }), {
+        status: 200,
+        headers: { "content-type": "application/json" },
+      });
+    });
     mockGetVideoConfig.mockResolvedValue(
       videoConfig({
         transcriptionProvider: "groq",
@@ -289,6 +299,34 @@ describe("transcription requests reach the provider correctly", () => {
     const form = sent[0]!.init?.body as FormData;
 
     expect(form.get("model")).toBe("whisper-large-v3");
+  });
+
+  it("mistral posts multipart form data to api.mistral.ai with the bearer key (#644)", async () => {
+    const sent: { url: string; init?: RequestInit }[] = [];
+
+    transport.stub = vi.fn(async (url: string | URL | Request, init?: RequestInit) => {
+      sent.push({ url: String(url), init });
+
+      return new Response(
+        JSON.stringify({ model: "voxtral-mini-latest", text: "mistral transcript", segments: [] }),
+        { status: 200, headers: { "content-type": "application/json" } }
+      );
+    });
+    mockGetVideoConfig.mockResolvedValue(
+      videoConfig({
+        transcriptionProvider: "mistral",
+        transcriptionApiKey: "mistral-key",
+        transcriptionModel: "voxtral-mini-latest",
+      })
+    );
+
+    const transcript = await transcribe(audioPath);
+
+    expect(transcript).toBe("mistral transcript");
+    expect(sent).toHaveLength(1);
+    expect(sent[0]!.url).toBe("https://api.mistral.ai/v1/audio/transcriptions");
+    expect(new Headers(sent[0]!.init?.headers).get("authorization")).toBe("Bearer mistral-key");
+    expect((sent[0]!.init?.body as FormData).get("model")).toBe("voxtral-mini-latest");
   });
 
   it("falls back to the AI configuration's endpoint and key when transcription has none", async () => {

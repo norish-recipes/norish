@@ -11,20 +11,43 @@
     "ingredients": "Ингредиенты"
   },
   "user": {
+    "signInMethods": {
+      "title": "Способы входа",
+      "description": "Подключите аккаунт к SSO.",
+      "password": "Пароль",
+      "addAnother": "Добавьте другой способ входа",
+      "addProvider": "Подключить {provider}",
+      "added": "Добавлено {date}",
+      "remove": "Отключить",
+      "unavailable": "Сейчас недоступно",
+      "changePassword": "Изменить пароль",
+      "currentPassword": "Текущий пароль",
+      "newPassword": "Новый пароль",
+      "confirmPassword": "Подтвердите новый пароль",
+      "signOutOthers": "Завершить другие сеансы",
+      "passwordChanged": "Пароль изменён.",
+      "errors": {
+        "usedByAnotherAccount": "Этот вход уже используется другим аккаунтом.",
+        "lastMethod": "Нужен хотя бы один способ входа.",
+        "signInAgain": "Войдите снова, чтобы удалить его.",
+        "addFailed": "Не удалось добавить этот способ входа.",
+        "removeFailed": "Не удалось удалить этот способ входа.",
+        "wrongPassword": "Текущий пароль неверен.",
+        "changeFailed": "Не удалось изменить пароль. Попробуйте ещё раз."
+      }
+    },
     "profile": {
       "title": "Профиль",
       "nameLabel": "Имя",
       "namePlaceholder": "Ваше имя",
       "emailLabel": "Электронная почта",
       "avatarHint": "Нажмите на аватар, чтобы изменить изображение",
-      "deleteAvatar": "Удалить фото профиля",
-      "saveChanges": "Сохранить изменения"
+      "deleteAvatar": "Удалить фото профиля"
     },
     "allergies": {
       "title": "Аллергии",
       "description": "Добавьте ваши пищевые аллергии, чтобы получать предупреждения при планировании рецептов с аллергенами.",
-      "placeholder": "Введите аллергии (например, глютен, орехи, молочные продукты)...",
-      "saveButton": "Сохранить аллергии"
+      "placeholder": "Введите аллергии (например, глютен, орехи, молочные продукты)..."
     },
     "apiKeys": {
       "title": "API-ключи",
@@ -52,7 +75,8 @@
         "title": "API-ключ создан",
         "warning": "Сохраните этот ключ прямо сейчас! Вы больше не сможете его увидеть. Мы храним только хэш и не можем восстановить этот ключ.",
         "hint": "Используйте этот ключ в заголовке <code>x-api-key</code> при выполнении API-запросов.",
-        "confirmButton": "Я сохранил(а) ключ"
+        "confirmButton": "Я сохранил(а) ключ",
+        "copyButton": "Копировать ключ"
       },
       "deleteModal": {
         "title": "Удалить API-ключ",
@@ -75,6 +99,7 @@
       "accountsDescription": "Задайте имя аккаунта, если у вас несколько входов на сайт. Тогда каждый импорт использует один из аккаунтов этого сайта, выбранный случайно, чтобы ни один вход не нёс все импорты. Токен без имени аккаунта отправляется при каждом импорте с его домена.",
       "domain": "Домен",
       "domainPlaceholder": "например, instagram.com",
+      "domainNotFull": "Введите полный домен, например instagram.com.",
       "account": "Аккаунт",
       "accountPlaceholder": "напр. my_handle (необязательно)",
       "accountShared": "Все аккаунты",
@@ -176,9 +201,9 @@
         "options": {
           "off": "Не преобразовывать",
           "metric": "Метрическая",
-          "us": "US",
+          "us": "Американская",
           "metricWithAI": "Метрическая с ИИ",
-          "usWithAI": "US с ИИ"
+          "usWithAI": "Американская с ИИ"
         }
       }
     },
@@ -261,7 +286,8 @@
       "noCodeDescription": "Нет активного кода приглашения. Сгенерируйте его, чтобы приглашать новых участников.",
       "generateButton": "Сгенерировать код приглашения",
       "copySuccess": "Код приглашения скопирован",
-      "copyFailed": "Не удалось скопировать код приглашения"
+      "copyFailed": "Не удалось скопировать код приглашения",
+      "copyButton": "Копировать код приглашения"
     },
     "create": {
       "title": "Создать семейную группу",
@@ -288,7 +314,7 @@
       "serverUrlDescription": "Базовый URL вашего CalDAV-сервера (например, https://dav.example.com)",
       "serverUrlPlaceholder": "https://dav.example.com",
       "usernameLabel": "Имя пользователя",
-      "usernamePlaceholder": "username",
+      "usernamePlaceholder": "имя пользователя",
       "passwordLabel": "Пароль",
       "passwordPlaceholder": "Введите пароль",
       "calendarLabel": "Календарь",
@@ -301,9 +327,7 @@
       "breakfastTime": "Время завтрака",
       "lunchTime": "Время обеда",
       "dinnerTime": "Время ужина",
-      "snackTime": "Время перекуса",
-      "testConnection": "Проверить подключение",
-      "saveConfiguration": "Сохранить настройки"
+      "snackTime": "Время перекуса"
     },
     "config": {
       "title": "Настройки CalDAV",
@@ -313,7 +337,6 @@
       "disabled": "Отключено",
       "editButton": "Редактировать",
       "deleteButton": "Удалить",
-      "saveChanges": "Сохранить изменения",
       "advancedSettings": "Расширенные настройки",
       "timezone": "Часовой пояс: {timezone}",
       "connectionStatus": {
@@ -354,7 +377,7 @@
       "emptyFiltered": "Элементы со статусом «{status}» не найдены",
       "emptyDefault": "Записи синхронизации не найдены",
       "errorDetails": "Подробности ошибки",
-      "pagination": "Page {current} of {total}"
+      "pagination": "Страница {current} из {total}"
     }
   },
   "ingredients": {
@@ -376,67 +399,26 @@
     "flagged": "Отмечен",
     "flagReasons": {
       "unknown": "Norish не был уверен, что это отдельный ингредиент.",
-      "ai-off": "ИИ выключен, поэтому никто не проверил, знает ли Norish этот ингредиент.",
       "unknown-food": "Ни один известный ингредиент не имеет общего слова с этим названием, поэтому ИИ не спрашивали.",
       "ai-unsure": "ИИ спросили, известный ли это ингредиент, и он не был уверен.",
-      "ai-unavailable": "ИИ не ответил вовремя, когда это название добавляли.",
-      "ai-key-rejected": "Провайдер ИИ отклонил API-ключ, поэтому ИИ не смог проверить это название.",
       "food-gone": "ИИ сопоставил это с ингредиентом, который объединили до того, как название успело присоединиться.",
       "upgrade": "Не удалось сопоставить ни один известный ингредиент.",
-      "seed-ambiguous": "В каталоге несколько ингредиентов, которыми это может быть."
+      "seed-ambiguous": "В каталоге несколько ингредиентов, которыми это может быть.",
+      "ai-junk": "ИИ решил, что это не продукт, а, например, кухонный инструмент или обрывок строки рецепта."
     },
     "empty": "Ингредиенты не найдены",
     "emptyFlagged": "Ничего не отмечено",
     "rename": "Переименовать",
     "delete": "Удалить",
     "deleteTitle": "Удалить {name}?",
-    "deleteConfirm": "Вместе с ним уйдут его перевода и всё, чему ваша семья научила Norish о нём. Ингредиент, который ещё используется в рецепте, покупке или кладовой, удалить нельзя; вместо этого объедините его.",
+    "deleteConfirm": "Вместе с ним уйдут его переводы и всё, чему ваша семья научила Norish о нём.",
+    "deleteTouches": {
+      "recipeLines": "{count, plural, one {# строка рецепта сохранит свой текст, но без этого ингредиента} few {# строки рецептов сохранят свой текст, но без этого ингредиента} many {# строк рецептов сохранят свой текст, но без этого ингредиента} other {# строки рецептов сохранят свой текст, но без этого ингредиента}}",
+      "groceries": "{count, plural, one {# покупка сохранит свой текст, но без этого ингредиента} few {# покупки сохранят свой текст, но без этого ингредиента} many {# покупок сохранят свой текст, но без этого ингредиента} other {# покупки сохранят свой текст, но без этого ингредиента}}",
+      "pantry": "{count, plural, one {# позиция в кладовой будет удалена} few {# позиции в кладовой будут удалены} many {# позиций в кладовой будут удалены} other {# позиции в кладовой будут удалены}}"
+    },
     "markDistinct": "Отметить как отдельный",
     "summary": "{spellings, plural, one {# перевод} few {# перевода} other {# переводов}}{kinds, plural, =0 {} one {, # вид} few {, # вида} many {, # видов} other {, # вида}}{parent, select, none {} other {, родительский: {parent}}}",
-    "askAI": "Спросить ИИ",
-    "fixCatalogue": "Исправить каталог",
-    "askAIRound": {
-      "intro": "ИИ проверяет, куда относятся отмеченные ингредиенты, и исправляет несогласованные названия. Ничего не изменится, пока вы не подтвердите предложение.",
-      "scopeLabel": "Что исправить",
-      "scopes": {
-        "unsuggested": "Проверить отмеченные ингредиенты",
-        "suggested": "Перепроверить предложения",
-        "name": "Очистить названия"
-      },
-      "hints": {
-        "unsuggested": "Ищет дубликаты, дочерние или уникальные ингредиенты.",
-        "suggested": "Перепроверяет отмеченные ингредиенты.",
-        "name": "Очищает названия ингредиентов до самого ингредиента. Отмеченные ингредиенты включаются, если отмечен флажок выше."
-      },
-      "scopeSize": "{count, plural, =0 {Нет ингредиентов} one {# ингредиент · около {tokens} токенов} few {# ингредиента · около {tokens} токенов} many {# ингредиентов · около {tokens} токенов} other {# ингредиента · около {tokens} токенов}}",
-      "modelTokens": "около {tokens} токенов",
-      "basisMeasured": "По расходу последнего раунда."
-    },
-    "roundProgress": "Опрос ИИ · {done, number} из {total, number}",
-    "roundSection": {
-      "title": "Опрос ИИ",
-      "progress": "{done, number} из {total, number}",
-      "waiting": "{count, plural, one {# ингредиент ждёт} few {# ингредиента ждут} many {# ингредиентов ждут} other {# ингредиента ждут}}"
-    },
-    "reviewing": "Спрашиваем ИИ…",
-    "aiOutcomes": {
-      "parent": "ИИ предлагает отнести {name} к разновидностям {of}.",
-      "distinct": "ИИ предлагает считать {name} отдельным продуктом.",
-      "unsure": "ИИ всё ещё не уверен, что такое {name}.",
-      "notFlagged": "{name} не отмечен.",
-      "skippedNotFlagged": "{name} уже не был помечен.",
-      "skippedForbidden": "{name} вы не можете менять.",
-      "skippedNotFound": "{name} исчез, пока ИИ до него дошёл.",
-      "failed": "Запрос о {name} не удался.",
-      "merge": "ИИ предлагает объединить {name} с {into}."
-    },
-    "aiTrace": {
-      "readAs": "ИИ прочитал это как «{name}».",
-      "compared": "Сравнивалось с: {names}.",
-      "comparedNothing": "Не было известного продукта для сравнения.",
-      "fromWords": "Based on name.",
-      "noFood": "ИИ не нашёл в этом названии продукта."
-    },
     "addAlias": "Добавить перевод",
     "removeAlias": "Удалить {alias}",
     "mergeInto": "Объединить с…",
@@ -474,8 +456,8 @@
       "fat": "Жиры",
       "carbs": "Углеводы",
       "protein": "Белки",
-      "kcal": "{value} kcal",
-      "grams": "{value} g",
+      "kcal": "{value} ккал",
+      "grams": "{value} г",
       "spoonGrams": {
         "teaspoon": "{value} г в чайной ложке",
         "tablespoon": "{value} г в столовой ложке",
@@ -491,7 +473,8 @@
         "name": "{food} · {dataset}, найдено по названию",
         "householdFood": "{food} · {dataset}, выбрано вашей семьёй",
         "household": "Собственные значения вашей семьи",
-        "taxonomy": "Open Food Facts"
+        "taxonomy": "Open Food Facts",
+        "ai": "Оценено ИИ"
       },
       "correct": "Исправить",
       "correctTitle": "Исправить {name}",
@@ -504,10 +487,10 @@
       "pickFood": "Продукт из наборов данных",
       "typeLabel": "С этикетки",
       "label": {
-        "calories": "Калории (kcal)",
-        "fat": "Жиры (g)",
-        "carbs": "Углеводы (g)",
-        "protein": "Белки (g)",
+        "calories": "Калории (ккал)",
+        "fat": "Жиры (г)",
+        "carbs": "Углеводы (г)",
+        "protein": "Белки (г)",
         "pieceGrams": "Одна штука весит (г)",
         "spoonGrams": {
           "teaspoon": "Чайная ложка весит (г)",
@@ -550,8 +533,6 @@
       "name-taken": "Это название уже у другого ингредиента",
       "spelling-taken": "Это перевод уже принадлежит другому ингредиенту",
       "last-alias": "У ингредиента остаётся хотя бы одно перевод",
-      "alias-in-use": "Рецепты или покупки всё ещё используют это перевод",
-      "ingredient-in-use": "Рецепты, покупки или кладовая всё ещё используют этот ингредиент",
       "same-ingredient": "Ингредиент нельзя объединить с самим собой",
       "cycle": "Ингредиент не может быть разновидностью самого себя",
       "empty": "Введите название",
@@ -569,51 +550,34 @@
       "none": "Больше ничего это не использует"
     },
     "keepAlias": "Оставить {alias}",
-    "reportOutcomes": {
-      "parent": "Под родителем",
-      "distinct": "Отдельный продукт",
-      "unsure": "Не уверен",
-      "skipped": "Пропущено",
-      "failed": "Ошибка",
-      "merge": "Объединить"
-    },
+    "junkTitle": "Отметить {alias} как не продукт?",
+    "junkBody": "Ни у одного другого ингредиента нет этого перевода. Новые рецепты пропускают текст, отмеченный как не продукт.",
+    "junkRemove": "Просто удалить",
+    "junkMark": "Не продукт",
     "expandKinds": "Показать виды {name}",
     "collapseKinds": "Скрыть виды {name}",
     "layoutSection": "Вид",
     "asTree": "Иерархический вид",
     "showOnly": "Показывать только",
     "standaloneOnly": "Без родителя и видов",
-    "findParent": "Найти родителя с ИИ",
-    "findParentsAll": "Найти родителей с ИИ",
-    "suggestion": {
-      "merge": "Объединить {name} с {into}",
-      "parent": "Отнести {name} к {of}",
-      "distinct": "Оставить {name} отдельным продуктом",
-      "filedFromName": "{name} filed under {of}",
-      "rename": "Переименовать {name} в {to}"
-    },
-    "suggestionsTitle": "Предложения ИИ",
-    "suggestionsEmpty": "Ничего не ждёт вашего решения.",
-    "suggestionsNone": "Без предложения",
-    "suggestionsOpen": "{count, plural, =0 {Предложения} one {# предложение} few {# предложения} many {# предложений} other {# предложения}}",
-    "suggestionsFailed": "Не удалось применить {count, plural, one {# предложение} few {# предложения} many {# предложений} other {# предложения}}: {reason}",
-    "confirmSuggestion": "Подтвердить",
-    "dismissSuggestion": "Отклонить",
-    "confirmAll": "Подтвердить все ({count})",
-    "dismissAll": "Отклонить все",
-    "suggestedByAI": "Предложено ИИ",
-    "suggestedFromName": "Based on name",
-    "proposal": {
-      "merge": "Merge into {into}",
-      "parent": "File under {of}",
-      "distinct": "Food of its own",
-      "rename": "Переименовать в {to}"
-    },
-    "skippedReasons": {
-      "notFlagged": "No longer flagged",
-      "forbidden": "Not yours to edit",
-      "notFound": "No longer exists",
-      "settled": "Название уже закреплено, или ждёт предложение"
+    "changedByAI": {
+      "title": "Изменено ИИ",
+      "open": "{count, plural, =0 {Изменено ИИ} other {Изменено ИИ · проверить: #}}",
+      "unsure": "Не уверен",
+      "sure": "Изменено",
+      "empty": "За последний месяц ИИ ничего не изменил.",
+      "keep": "Оставить",
+      "undo": "Отменить",
+      "keepAll": "Оставить все",
+      "undoAll": "Отменить все",
+      "clear": "Очистить",
+      "merge": "{from} объединено сюда",
+      "parent": "Помещено в {of}",
+      "parentDropped": "Больше не в {of}",
+      "plainName": "Переименовано из {from}",
+      "notAFood": "Удалено, так как это не продукт. Строки рецепта и покупки сохраняют свой текст.",
+      "spellingRemoved": "Перевод {from} удалён",
+      "spellingMoved": "Перевод {from} перенесён в {of}"
     },
     "icon": {
       "change": "Изменить значок",
@@ -622,20 +586,6 @@
       "failed": "Из этого изображения не удалось сделать значок.",
       "generate": "Создать с помощью ИИ",
       "generateFailed": "Не удалось создать значок."
-    },
-    "drawIcons": {
-      "open": "Нарисовать значки",
-      "title": "Нарисовать значки",
-      "intro": "Поставщик изображений рисует значок для каждого продукта, и он сразу становится собственным значком продукта. Другой значок продукту можно задать в его панели.",
-      "scopeLabel": "Какие продукты",
-      "scopes": {
-        "bare": "Только продукты совсем без значка",
-        "unowned": "Все продукты без собственного значка"
-      },
-      "scopeSize": "{count, plural, =0 {Нет значков} one {# значок} few {# значка} many {# значков} other {# значка}}",
-      "start": "Нарисовать значки",
-      "progress": "Рисуем значки · {done, number} из {total, number}",
-      "drawing": "Рисуем значок…"
     }
   },
   "admin": {
@@ -675,7 +625,6 @@
       "localesDescription": "Выберите, какие языки смогут выбирать пользователи",
       "defaultLocale": "Язык по умолчанию",
       "defaultLocaleDescription": "Язык для новых пользователей и язык-резерв",
-      "saveLocales": "Сохранить языковые настройки",
       "localesSaved": "Языковые настройки сохранены",
       "localesError": "Не удалось сохранить языковые настройки",
       "atLeastOneLocale": "Должен быть включён хотя бы один язык",
@@ -773,7 +722,7 @@
       "warning1": "Все активные подключения будут разорваны",
       "warning2": "Сервер будет недоступен несколько секунд",
       "warning3": "Убедитесь, что в вашем деплое настроено <code>restart: always</code>, иначе сервер не поднимется автоматически",
-      "confirmButton": "Перезапустить сейчас"
+      "confirmButton": "Перезапустить"
     },
     "authProviders": {
       "title": "Провайдеры аутентификации",
@@ -872,13 +821,13 @@
         "description": "Настройте ключевые слова, используемые для обнаружения таймеров в инструкциях рецепта. Поддерживает несколько языков.",
         "enableToggle": "Включить определение таймеров",
         "hoursLabel": "Ключевые слова часов",
-        "hoursPlaceholder": "hour, hours, hr, hrs, h",
+        "hoursPlaceholder": "час, часа, часов, ч",
         "hoursHelp": "Ключевые слова для часов (например, hour, stunde, heure, uur)",
         "minutesLabel": "Ключевые слова минут",
-        "minutesPlaceholder": "minute, minutes, min, mins, m",
+        "minutesPlaceholder": "минута, минуты, минут, мин",
         "minutesHelp": "Ключевые слова для минут (например, minute, minuten, minuut)",
         "secondsLabel": "Ключевые слова секунд",
-        "secondsPlaceholder": "second, seconds, sec, secs, s",
+        "secondsPlaceholder": "секунда, секунды, секунд, сек",
         "secondsHelp": "Ключевые слова для секунд (например, second, sekunde, seconde)",
         "unsavedChanges": "Несохранённые изменения"
       }
@@ -914,19 +863,71 @@
         "title": "Массовое обогащение",
         "subtitle": "Запустить включённое обогащение для всех рецептов",
         "description": "Поставить в очередь все включённые обогащения",
-        "button": "Обогатить все рецепты",
+        "button": "Обогатить",
         "confirmTitle": "Запустить обогащение для всех рецептов?",
         "confirmMessage": "Это поставит в очередь работу ИИ для каждого рецепта на этом сервере. Каждый вид обогащения с включённым автоматическим переключателем выполняется там, где не хватает данных.",
         "replaceExisting": "Перезаписать существующие данные",
         "replaceExistingDescription": "Заново определить категории, пищевую ценность, происхождение и ингредиенты шагов, даже если они у рецепта уже есть. Теги и указания об аллергенах только добавляются.",
         "replaceWarning": "Это действие необратимо. Данные, введённые вами вручную, тоже будут заменены, включая ингредиенты шагов, связанные вручную: нигде не записано, какие значения получены от ИИ.",
         "costWarning": "Это может быть дорогая операция: при большом количестве рецептов она может занять много времени, а у платного провайдера ИИ, израсходовать значительное количество кредитов.",
-        "confirmButton": "Запустить для всех рецептов",
-        "confirmButtonReplace": "Перезаписать все рецепты",
+        "confirmButton": "Запустить",
+        "confirmButtonReplace": "Перезаписать",
         "queued": "{queued, plural, =0 {Нет запусков в очереди} one {# запуск в очереди} few {# запуска в очереди} many {# запусков в очереди} other {# запуска в очереди}} для {recipes, plural, one {# рецепта} few {# рецептов} many {# рецептов} other {# рецепта}}",
         "aiDisabled": "ИИ отключён на этом сервере. Сначала включите ИИ.",
         "error": "Не удалось запустить массовое обогащение",
         "imageCount": "{count, plural, =0 {Изображения генерироваться не будут.} one {Будет сгенерировано # изображение.} few {Будет сгенерировано # изображения.} many {Будет сгенерировано # изображений.} other {Будет сгенерировано # изображения.}}"
+      },
+      "ingredientCatalogue": {
+        "title": "Каталог ингредиентов",
+        "subtitle": "Что ИИ делает с новыми ингредиентами",
+        "automatic": "Автоматически для новых ингредиентов",
+        "automaticDescription": "Что делает ИИ, когда ингредиент добавляется в каталог.",
+        "automaticPlaceholder": "Ничего не выполняется автоматически",
+        "kinds": {
+          "cleanUp": "Приводить в порядок новые ингредиенты",
+          "cleanUpDescription": "Объединять написания, задавать родителя и простое название, удалять то, что не является едой",
+          "nutrition": "Заполнять недостающую пищевую ценность",
+          "nutritionDescription": "Оценивать БЖУ на 100 г, если у ингредиента их нет",
+          "conversions": "Заполнять недостающие пересчёты",
+          "conversionsDescription": "Оценивать плотность и вес штуки, если у ингредиента их нет",
+          "icon": "Рисовать недостающие значки",
+          "iconDescription": "Только для ингредиента без значка, даже без значка родителя"
+        },
+        "cleanUpCatalogue": {
+          "title": "Очистить каталог",
+          "description": "Спросить ИИ об ингредиентах, которые уже есть в каталоге.",
+          "running": "Идёт очистка. Следите за ней в очереди задач.",
+          "button": "Очистить каталог",
+          "intro": "ИИ объединяет написания, задаёт родителей и простые названия и удаляет то, что не является едой. Каждое изменение есть в списке «Изменено ИИ», с отменой.",
+          "scopeLabel": "Какие ингредиенты",
+          "scopes": {
+            "recipe-foods": "Продукты из рецептов",
+            "recipe-foods-description": "Ингредиенты из рецептов, о которых ещё никто не принял решение",
+            "whole-catalogue": "Весь каталог",
+            "whole-catalogue-description": "Все ингредиенты, включая встроенные, без учёта решений и отмен людей. Встроенные никогда не удаляются."
+          },
+          "count": "{count, plural, one {ИИ спросит о # ингредиенте.} few {ИИ спросит о # ингредиентах.} many {ИИ спросит о # ингредиентах.} other {ИИ спросит о # ингредиента.}}",
+          "start": "Очистить",
+          "started": "{count, plural, one {Очищается # ингредиент} few {Очищаются # ингредиента} many {Очищаются # ингредиентов} other {Очищается # ингредиента}}",
+          "error": "Не удалось начать очистку"
+        },
+        "fillGaps": {
+          "title": "Заполнить пробелы",
+          "description": "Пусть ИИ дополнит то, чего не хватает ингредиентам.",
+          "running": "Идёт заполнение пробелов. Следите за ним в очереди задач.",
+          "button": "Заполнить пробелы",
+          "intro": "Для каждого ингредиента в каталоге ИИ дополняет только то, чего у него нет своего. То, что у ингредиента уже есть, никогда не заменяется.",
+          "kindsLabel": "Что заполнить",
+          "kinds": {
+            "nutrition": "Пищевая ценность",
+            "conversions": "Пересчёты",
+            "icons": "Значки"
+          },
+          "count": "{count, plural, =0 {Нечего заполнять} one {# ингредиент} few {# ингредиента} many {# ингредиентов} other {# ингредиента}}",
+          "start": "Заполнить пробелы",
+          "started": "Заполнение пробелов началось. Следите за ним в очереди задач.",
+          "error": "Не удалось начать заполнение пробелов"
+        }
       }
     },
     "aiConfig": {
@@ -962,7 +963,6 @@
       "alwaysUseAI": "Всегда использовать импорт с ИИ",
       "alwaysUseAIDescription": "Пропускать структурированные парсеры и извлекать рецепт только с помощью ИИ",
       "connectionSuccess": "Подключение успешно",
-      "testConnection": "Проверить подключение",
       "vision": "vision",
       "automaticEnrichment": "Автоматическое обогащение рецептов",
       "automaticEnrichmentDescription": "Какие обогащения ИИ запускаются для новых рецептов. Участники по-прежнему могут запускать каждое вручную.",
@@ -982,14 +982,6 @@
         "ingredientLinkingDescription": "Связывает каждый шаг с используемыми строками ингредиентов, только для шагов без связей",
         "imageGeneration": "Генерация изображений",
         "imageGenerationDescription": "Нарисовать фото блюда для новых рецептов, у которых нет ни одного изображения"
-      },
-      "automaticIngredients": "Автоматически для новых ингредиентов",
-      "automaticIngredientsDescription": "Что происходит, когда в каталог добавляются новые ингредиенты.",
-      "automaticIngredientsKinds": {
-        "plainName": "Очистить название",
-        "plainNameDescription": "Убрать всё, что не является продуктом, например количества и коды упаковки",
-        "icon": "Нарисовать значок",
-        "iconDescription": "Только для продукта без значка, даже без значка родителя"
       },
       "tagStrategy": "Стратегия тегов",
       "tagStrategyDescription": "Какие теги может использовать автоматическое тегирование, как автоматически, так и вручную",
@@ -1024,16 +1016,16 @@
       "ytDlpVersionMissing": "Двоичный файл yt-dlp не найден",
       "ytDlpVersionUnknown": "Не удалось проверить",
       "ytDlpVersionLoading": "Проверка …",
-      "ytDlpProxy": "yt-dlp Proxy",
+      "ytDlpProxy": "Прокси yt-dlp",
       "ytDlpProxyDescription": "HTTP/SOCKS5-прокси для yt-dlp",
       "transcription": "Транскрибация",
       "transcriptionDescription": "Преобразование аудио в текст для извлечения рецептов",
       "transcriptionProvider": "Провайдер транскрибации",
-      "transcriptionProviderDescription": "Только OpenAI и совместимые эндпоинты поддерживают транскрибацию Whisper",
       "transcriptionProviders": {
         "disabled": "Отключено",
         "openai": "OpenAI Whisper",
         "groq": "Groq Whisper",
+        "mistral": "Mistral Voxtral",
         "azure": "Azure OpenAI Whisper",
         "ollama": "Ollama",
         "genericOpenai": "Совместимый с OpenAI"
@@ -1041,7 +1033,7 @@
       "transcriptionEndpoint": "URL эндпоинта",
       "transcriptionEndpointDescription": "OpenAI-совместимый эндпоинт с поддержкой Whisper или эндпоинт Ollama",
       "transcriptionModel": "Модель",
-      "transcriptionModelDescription": "Модель Whisper для транскрибации",
+      "transcriptionModelDescription": "Модель для транскрибации",
       "transcriptionModelPlaceholder": "Выберите или введите название модели",
       "transcriptionApiKey": "API-ключ",
       "transcriptionApiKeyDescription": "Если не задан, используется API-ключ из настроек ИИ",
@@ -1049,6 +1041,28 @@
       "transcriptionApiKeyOptional": "API-ключ (необязательно)",
       "transcriptionApiKeyOptionalDescription": "Большинство локальных Whisper-серверов не требуют API-ключ",
       "transcriptionApiKeyOptionalPlaceholder": "Оставьте пустым для локальных серверов"
+    },
+    "pageRenderers": {
+      "title": "Рендереры страниц",
+      "description": "Браузеры, которые читают страницы, недоступные обычному запросу. Сначала Obscura, затем браузер Chromium, затем решатель.",
+      "obscura": "Obscura",
+      "obscuraDescription": "Headless-браузер, поставляемый с Norish.",
+      "obscuraEndpoint": "Адрес Obscura",
+      "cdpToken": "Токен CDP",
+      "cdpTokenDescription": "Тот же токен, что и в сервисе obscura.",
+      "chromium": "Браузер Chromium",
+      "chromiumDescription": "Любой Chromium с CDP-адресом.",
+      "chromiumEndpoint": "Адрес Chromium",
+      "solver": "FlareSolverr или Byparr",
+      "solverDescription": "Используется, если браузеры не справились. Никогда не получает токены аутентификации сайтов.",
+      "solverEndpoint": "Адрес решателя",
+      "allowPrivateAddresses": "Разрешить частные адреса",
+      "allowPrivateAddressesDescription": "Позволяет импорту обращаться к вашей локальной сети. Obscura отклоняет их в любом случае.",
+      "navigationTimeout": "Тайм-аут навигации (мс)",
+      "navigationTimeoutDescription": "Сколько времени даётся рендереру на загрузку страницы.",
+      "saved": "Рендереры страниц сохранены",
+      "error": "Не удалось сохранить рендереры страниц",
+      "connectionSuccess": "Подключение успешно"
     },
     "imageGenerationConfig": {
       "description": "Для изображений нужен отдельный провайдер, так как большинство ИИ-провайдеров не умеют рисовать.",
@@ -1102,9 +1116,7 @@
         "validateEnrichments": "Проверка обогащений",
         "validateEnrichmentsDescription": "Проверять собственные утверждения каждого обогащения перед записью"
       },
-      "testConnection": "Проверить подключение",
-      "connectionSuccess": "Подключение успешно",
-      "aiDisabledHint": "AI отключён на этом сервере. Включите его в конфигурации AI, чтобы проверять и использовать модель решений."
+      "connectionSuccess": "Подключение успешно"
     },
     "promptsConfig": {
       "recipeExtraction": "Промпт извлечения рецепта",
@@ -1135,8 +1147,11 @@
       "ingredientLinkingDescription": "Используется при связывании каждого шага со строками ингредиентов",
       "ingredientLinkingPlaceholder": "Промпт для связывания ингредиентов с шагами...",
       "ingredientResolution": "Промпт распознавания ингредиентов",
-      "ingredientResolutionDescription": "Используется, чтобы решить, является ли новое название ингредиента продуктом, который Norish уже знает",
+      "ingredientResolutionDescription": "Отправляется языковой модели, когда ИИ читает название нового ингредиента; после него добавляются название и ингредиент, к которому он сейчас отнесён. Говорит, один это продукт, несколько или ни одного.",
       "ingredientResolutionPlaceholder": "Промпт для распознавания названий ингредиентов...",
+      "ingredientMatch": "Промпт сопоставления ингредиентов",
+      "ingredientMatchDescription": "Отправляется языковой модели, когда названия от ИИ находят в каталоге несколько продуктов или только продукты, отличающиеся на одну букву; после него добавляются название и эти продукты. Говорит, какой из них это название, если какой-то.",
+      "ingredientMatchPlaceholder": "Промпт для сопоставления названий ингредиентов с каталогом...",
       "imageGenerationBrief": "Промпт визуального описания",
       "imageGenerationBriefDescription": "Превращает рецепт в короткое визуальное описание перед генерацией изображения. Рецепт добавляется после промпта.",
       "imageGenerationBriefPlaceholder": "Промпт для визуального описания...",
@@ -1148,7 +1163,13 @@
       "ingredientIconStylePlaceholder": "Промпт для стиля значков ингредиентов...",
       "ingredientPlainName": "Промпт очистки названий ингредиентов",
       "ingredientPlainNameDescription": "Отправляется языковой модели, когда ИИ очищает название ингредиента; после него добавляются название и его другие написания. Говорит, что убрать из названия, а что оставить.",
-      "ingredientPlainNamePlaceholder": "Промпт очистки названий ингредиентов..."
+      "ingredientPlainNamePlaceholder": "Промпт очистки названий ингредиентов...",
+      "ingredientSpellingCheck": "Промпт проверки переводов",
+      "ingredientSpellingCheckDescription": "Отправляется языковой модели при очистке всего каталога, для каждого ингредиента из каталога с переводами, которые добавили люди, импорт или объединения; после него добавляются ингредиент, эти переводы и по одной строке рецепта для каждого. Говорит, какие из них называют ингредиент, никакой продукт или другой продукт.",
+      "ingredientSpellingCheckPlaceholder": "Промпт для проверки переводов ингредиентов...",
+      "ingredientNutrition": "Промпт пищевой ценности ингредиентов",
+      "ingredientNutritionDescription": "Отправляется языковой модели для ингредиента без собственной пищевой ценности, плотности или веса штуки, когда ИИ может их заполнить; после него добавляются ингредиент и то, разновидностью чего он является. Оценивает только то, чего ингредиенту не хватает.",
+      "ingredientNutritionPlaceholder": "Промпт для оценки пищевой ценности ингредиента..."
     },
     "unsavedChanges": "Несохранённые изменения",
     "jsonEditor": {
@@ -1158,126 +1179,129 @@
       "failedToRestore": "Не удалось восстановить значения по умолчанию"
     },
     "jobQueue": {
-      "title": "Job Queues",
-      "description": "Monitor background jobs across all queues: status, current step, duration, and failures.",
-      "empty": "No jobs found",
+      "title": "Очереди задач",
+      "description": "Отслеживайте фоновые задачи во всех очередях: статус, текущий шаг, длительность и сбои.",
+      "empty": "Задачи не найдены",
       "filters": {
-        "queue": "Queue",
-        "allQueues": "All queues"
+        "queue": "Очередь",
+        "allQueues": "Все очереди"
       },
       "status": {
-        "waiting": "Waiting",
-        "active": "Active",
-        "delayed": "Delayed",
-        "completed": "Completed",
-        "failed": "Failed",
-        "paused": "Paused",
-        "prioritized": "Prioritized",
-        "unknown": "Unknown",
-        "hanging": "Hanging"
+        "waiting": "Ожидает",
+        "active": "Выполняется",
+        "delayed": "Отложена",
+        "completed": "Завершена",
+        "failed": "Сбой",
+        "cancelled": "Отменена",
+        "prioritized": "С приоритетом",
+        "unknown": "Неизвестно",
+        "hanging": "Зависла"
       },
       "stepStatus": {
-        "done": "Done",
-        "failed": "Failed",
-        "running": "Running",
-        "skipped": "Skipped",
-        "pending": "Pending"
+        "done": "Готово",
+        "failed": "Сбой",
+        "running": "Выполняется",
+        "skipped": "Пропущен",
+        "pending": "Ожидает"
       },
       "steps": {
-        "dedupe-check": "Check existing",
-        "fetch-allergies": "Fetch allergies",
-        "parsing": "Parse recipe",
-        "saving": "Save recipe",
-        "post-processing": "Post processing",
-        "preparing-images": "Prepare images",
-        "ai-extraction": "AI extraction",
-        "parsing-text": "Parse pasted text",
-        "creating-recipes": "Create recipes",
-        "ai-request": "AI request",
-        "syncing-event": "Sync calendar event",
-        "deleting-event": "Delete calendar event",
-        "running": "Run task",
-        "searching": "Search the shop",
-        "reading-product": "Read the product page",
-        "saving-link": "Save the link",
-        "asking-ai": "Ask AI about the food",
+        "dedupe-check": "Проверить на дубликаты",
+        "fetch-allergies": "Получить аллергены",
+        "parsing": "Разобрать рецепт",
+        "saving": "Сохранить рецепт",
+        "post-processing": "Постобработка",
+        "preparing-images": "Подготовить изображения",
+        "ai-extraction": "Извлечение с помощью ИИ",
+        "parsing-text": "Разобрать вставленный текст",
+        "creating-recipes": "Создать рецепты",
+        "ai-request": "Запрос к ИИ",
+        "syncing-event": "Синхронизировать событие календаря",
+        "deleting-event": "Удалить событие календаря",
+        "running": "Выполнить задачу",
+        "searching": "Искать в магазине",
+        "reading-product": "Прочитать страницу товара",
+        "saving-link": "Сохранить ссылку",
+        "asking-ai": "Спросить ИИ о продукте",
         "drawing-icon": "Нарисовать значок продукта",
+        "filling-gaps": "Заполнить пробелы продукта",
         "naming": "Очистить название продукта"
       },
       "queues": {
-        "recipe-import": "Recipe import",
-        "image-recipe-import": "Image import",
-        "paste-recipe-import": "Paste import",
-        "nutrition-estimation": "Nutrition estimation",
-        "auto-tagging": "Auto-tagging",
-        "auto-categorization": "Auto-categorization",
-        "allergy-detection": "Allergy detection",
+        "recipe-import": "Импорт рецептов",
+        "image-recipe-import": "Импорт из изображений",
+        "paste-recipe-import": "Импорт вставленного текста",
+        "nutrition-estimation": "Оценка пищевой ценности",
+        "auto-tagging": "Автоматические теги",
+        "auto-categorization": "Автоматическая категоризация",
+        "allergy-detection": "Определение аллергенов",
         "recipe-provenance": "Происхождение рецепта",
         "ingredient-linking": "Связывание ингредиентов",
-        "caldav-sync": "CalDAV sync",
-        "scheduled-tasks": "Scheduled tasks",
+        "caldav-sync": "Синхронизация CalDAV",
+        "scheduled-tasks": "Задачи по расписанию",
         "image-generation": "Генерация изображений",
         "store-lookup": "Поиск в магазине",
         "ingredient-review": "Спросить ИИ об ингредиентах",
         "ingredient-icons": "Рисование значков ингредиентов",
-        "new-ingredients": "Новые ингредиенты"
+        "ingredient-fill": "Заполнение пробелов ингредиентов"
       },
       "summary": {
-        "failed": "{count} failed"
+        "failed": "Сбоев: {count}"
       },
       "table": {
-        "job": "Job",
-        "status": "Status",
-        "step": "Step",
-        "duration": "Duration",
-        "created": "Created",
-        "runsAt": "Runs {time}"
+        "job": "Задача",
+        "status": "Статус",
+        "step": "Шаг",
+        "duration": "Длительность",
+        "created": "Создана",
+        "runsAt": "Запуск {time}"
       },
       "detail": {
-        "title": "Job Details",
-        "notFound": "Job not found. It may have been cleaned up.",
+        "title": "Подробности задачи",
+        "notFound": "Задача не найдена. Возможно, она была удалена при очистке.",
+        "cancelledNote": "Администратор отменил эту задачу.",
         "sections": {
-          "error": "Error",
-          "pipelineSteps": "Pipeline Steps",
-          "input": "Input",
-          "logs": "Logs",
-          "errors": "Errors"
+          "error": "Ошибка",
+          "pipelineSteps": "Этапы обработки",
+          "input": "Входные данные",
+          "logs": "Журнал",
+          "errors": "Ошибки"
         },
         "fields": {
-          "queue": "Queue",
-          "jobId": "Job ID",
-          "description": "Description",
-          "recipe": "Recipe",
-          "created": "Created",
-          "started": "Started",
-          "finished": "Finished",
-          "duration": "Duration",
-          "attempts": "Attempts",
+          "queue": "Очередь",
+          "jobId": "ID задачи",
+          "description": "Описание",
+          "recipe": "Рецепт",
+          "created": "Создана",
+          "started": "Начата",
+          "finished": "Завершена",
+          "duration": "Длительность",
+          "attempts": "Попытки",
           "models": "Модели",
           "tokens": "Токены",
-          "runsAt": "Runs at",
-          "nextRun": "Next run"
+          "runsAt": "Запуск",
+          "nextRun": "Следующий запуск"
         },
         "modelTokens": "{tokens} токенов",
-        "attempt": "Attempt {number}",
-        "stackTrace": "Stack trace"
+        "attempt": "Попытка {number}",
+        "stackTrace": "Трассировка стека"
       },
       "actions": {
-        "retry": "Retry",
-        "remove": "Remove"
+        "retry": "Повторить",
+        "cancel": "Остановить",
+        "cancelling": "Остановка…",
+        "remove": "Удалить"
       },
       "removeModal": {
-        "message": "Permanently remove this job?",
-        "confirm": "Remove job"
+        "message": "Безвозвратно удалить эту задачу?"
       },
       "retention": {
-        "title": "Job Retention",
-        "keepCompleted": "Keep completed jobs",
-        "keepFailed": "Keep failed jobs",
-        "maxAgeDays": "Max age (days)",
+        "title": "Хранение задач",
+        "keepCompleted": "Хранить завершённые задачи",
+        "keepFailed": "Хранить задачи со сбоем",
+        "maxAgeDays": "Макс. срок (дни)",
         "description": "Сколько завершённых задач хранить в каждой очереди."
       },
-      "pagination": "Page {current} of {total}"
+      "pagination": "Страница {current} из {total}"
     },
     "cuisineVocabulary": {
       "description": "Кухни, это выверенный словарь, которым владеете вы. Названия показываются ровно так, как записаны здесь, на всех языках.",

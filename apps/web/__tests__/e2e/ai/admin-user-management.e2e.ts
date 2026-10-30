@@ -45,7 +45,7 @@ function throwaway(tag: string) {
 }
 
 test("lists every account with the role it holds", async () => {
-  const guest = await signUpThrowawayUser(stack.baseURL, throwaway("listed"));
+  const guest = await signUpThrowawayUser(stack, throwaway("listed"));
   const table = await openUsersTable(page);
 
   await expect(userRow(table, "ai-e2e-a@norish.test")).toContainText("Owner");
@@ -59,7 +59,7 @@ test("lists every account with the role it holds", async () => {
 });
 
 test("grants and revokes admin access", async () => {
-  const guest = await signUpThrowawayUser(stack.baseURL, throwaway("promoted"));
+  const guest = await signUpThrowawayUser(stack, throwaway("promoted"));
   const table = await openUsersTable(page);
   const row = userRow(table, guest.email);
 
@@ -83,8 +83,8 @@ test("offers the server owner neither a role change nor a delete", async () => {
 });
 
 test("deleting a household's admin hands the household to who is left", async () => {
-  const leaving = await signUpThrowawayUser(stack.baseURL, throwaway("leaving"));
-  const staying = await signUpThrowawayUser(stack.baseURL, throwaway("staying"));
+  const leaving = await signUpThrowawayUser(stack, throwaway("leaving"));
+  const staying = await signUpThrowawayUser(stack, throwaway("staying"));
   const householdId = await seedHousehold("People E2E Household", leaving.id, [
     leaving.id,
     staying.id,
@@ -103,7 +103,7 @@ test("deleting a household's admin hands the household to who is left", async ()
   });
 
   await expect(userRow(table, leaving.email)).toHaveCount(0);
-  expect(await countUserRow(leaving.id)).toBe(0);
+  expect(await countUserRow(stack, leaving.id)).toBe(0);
 
   const household = await readHousehold(householdId);
 
@@ -113,7 +113,7 @@ test("deleting a household's admin hands the household to who is left", async ()
 });
 
 test("deleting the last member of a household lets the household go", async () => {
-  const alone = await signUpThrowawayUser(stack.baseURL, throwaway("alone"));
+  const alone = await signUpThrowawayUser(stack, throwaway("alone"));
   const householdId = await seedHousehold("People E2E Solo Household", alone.id, [alone.id]);
 
   const table = await openUsersTable(page);

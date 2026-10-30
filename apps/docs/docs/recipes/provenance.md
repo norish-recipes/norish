@@ -6,12 +6,12 @@ description: Where a recipe comes from, its country, region and cuisines.
 
 # Recipe provenance
 
-Provenance is where a recipe comes from. Norish records:
+Provenance describes where a recipe comes from:
 
 - **Country**
 - **Region**, when the dish belongs to one
 - **Cuisines**, one or more
-- **Note**, a few sentences on how Norish concluded this
+- **Note**, a short explanation of the origin
 
 The country's flag shows before the recipe title and beside the recipe on your
 dashboard.
@@ -21,14 +21,14 @@ dashboard.
 The country name and the note are in the recipe's language, not yours. A Dutch
 recipe for a Turkish dish says _Turkije_. The note is never translated.
 
-When several countries claim a dish, Norish picks the strongest claim and names
-the others in the note.
+When several countries claim a dish, the strongest claim is chosen and the
+others are named in the note.
 
 ## Cuisines
 
 Cuisines come from a list your administrator keeps under
-**Settings => Admin => AI & processing => Cuisines**. Norish ships with a
-starting list.
+**Settings => Admin => AI & processing => Cuisines**. A starting list is
+included.
 
 ![Managing the Cuisine vocabulary in admin settings](/img/screenshots/admin-cuisines.png)
 
@@ -48,12 +48,11 @@ whether AI may add cuisines to the list. By default it may only pick from it.
 - **Work Out Provenance** in a recipe's actions menu runs it any time, and
   replaces the country, region, cuisines and note together.
 
-An automatic run only fills in what is missing and keeps what you or the source
-gave. A recipe with a country, a note and at least one cuisine is left alone.
+Automatic runs fill only missing values and keep data from you or the source. A recipe with a country, a note and at least one cuisine is left alone.
 
 ![Editing recipe provenance in the recipe form](/img/screenshots/provenance-form.png)
 
 :::note
 Clearing provenance doesn't start an automatic run. Run it yourself, or an
-administrator's **Enrich all recipes** fills it in.
+administrator's **Enrich** in Bulk enrichment fills it in.
 :::

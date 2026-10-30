@@ -1,6 +1,7 @@
 import { createOpenApiFetchHandler, generateOpenApiDocument } from "trpc-to-openapi";
 
 import type { OperationId } from "@norish/shared/contracts/realtime/envelope";
+import { apiKeyRetryAfter } from "@norish/auth/api-key-rate-limit";
 import { isOperationId } from "@norish/shared/lib/operation-helpers";
 
 import { createHttpContextFromHeaders } from "./context";
@@ -11,7 +12,7 @@ import {
   listTodayPlannedRecipesProcedure,
   listWeekPlannedRecipesProcedure,
 } from "./routers/calendar/planned-items";
-import { health } from "./routers/config/procedures";
+import { health, healthLive, healthReady } from "./routers/config/procedures";
 import {
   assignGroceryToStoreProcedure,
   createGroceryProcedure,
@@ -25,17 +26,21 @@ import {
   getProcedure,
   importFromPasteProcedure,
   importFromUrlProcedure,
+  importStatusProcedure,
   listProcedure,
 } from "./routers/recipes/recipes";
 import { createStoreProcedure, listStoresProcedure } from "./routers/stores/stores";
 import { router } from "./trpc";
 
 export const openApiRouter = router({
+  healthLive,
+  healthReady,
   health,
   recipeGet: getProcedure,
   recipeSearch: listProcedure,
   recipeCreate: createRecipeProcedure,
   recipeImportUrl: importFromUrlProcedure,
+  recipeImportStatus: importStatusProcedure,
   recipeImportPaste: importFromPasteProcedure,
   groceryList: listGroceriesProcedure,
   groceryCreate: createGroceryProcedure,
@@ -79,12 +84,17 @@ export function handleOpenApiRequest(req: Request) {
     router: openApiRouter,
     req,
     createContext: () => createOpenApiContext(req),
+    responseMeta: ({ errors }) => {
+      const retryAfter = apiKeyRetryAfter(errors[0]?.cause);
+
+      return retryAfter ? { headers: { "Retry-After": retryAfter } } : {};
+    },
   });
 }
 
 // The spec is published on the docs site, so the server is a variable each reader
 // fills in with their own instance.
-export function getOpenApiDocument() {
+export function getOpenApiDocument(): ReturnType<typeof generateOpenApiDocument> {
   const serverUrl = "{server}/api/v1";
   const document = generateOpenApiDocument(openApiRouter, {
     title: "Norish Recipe API",

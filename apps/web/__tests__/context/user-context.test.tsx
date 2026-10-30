@@ -1,7 +1,7 @@
 import { ReactNode } from "react";
 import { UserProvider, useUserContext } from "@/context/user-context";
 import { renderHook } from "@testing-library/react";
-import { beforeEach, describe, expect, it, vi } from "vitest";
+import { describe, expect, it, vi } from "vitest";
 
 const mockUseUser = vi.hoisted(() => vi.fn());
 const mockUseTRPC = vi.hoisted(() => vi.fn());
@@ -25,10 +25,6 @@ function Wrapper({ children }: { children: ReactNode }) {
 }
 
 describe("UserContext", () => {
-  beforeEach(() => {
-    vi.clearAllMocks();
-  });
-
   it("prefers fresh user profile data for avatar over stale session user", () => {
     mockUseUser.mockReturnValue({
       user: {

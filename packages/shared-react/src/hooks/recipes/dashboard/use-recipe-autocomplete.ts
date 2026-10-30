@@ -4,6 +4,8 @@ import type { CreateRecipeHooksOptions } from "../types";
 
 export function createUseRecipeAutocomplete({ useTRPC }: CreateRecipeHooksOptions) {
   return function useRecipeAutocomplete(query: string, enabled: boolean) {
+    "use memo";
+
     const trpc = useTRPC();
 
     const { data: suggestions, isLoading } = useQuery({

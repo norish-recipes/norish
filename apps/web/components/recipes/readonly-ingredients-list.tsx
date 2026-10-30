@@ -10,7 +10,7 @@ import { useUnitFormatter } from "@/hooks/use-unit-formatter";
 import { useLocale } from "next-intl";
 
 import type { UnitsMap } from "@norish/config/zod/server-config";
-import { useUnitFormatter as useSharedUnitFormatter } from "@norish/shared-react/hooks";
+import { createUnitFormatter } from "@norish/shared-react/hooks";
 import { formatAmount } from "@norish/shared/lib/format-amount";
 import { namesNoFood } from "@norish/shared/lib/ingredient-text";
 
@@ -68,29 +68,6 @@ function ReadonlyIngredientsListContent({
     }
   };
 
-  const onKeyToggle = (e: React.KeyboardEvent, idx: number) => {
-    if (!interactive) {
-      return;
-    }
-
-    if ((e.target as HTMLElement | null)?.closest("[data-ingredient-checkbox]")) {
-      return;
-    }
-
-    if (e.key === "Enter" || e.key === " ") {
-      e.preventDefault();
-      toggle(idx);
-    }
-  };
-
-  const onRowClick = (e: React.MouseEvent, idx: number) => {
-    if ((e.target as HTMLElement | null)?.closest("[data-ingredient-checkbox]")) {
-      return;
-    }
-
-    toggle(idx);
-  };
-
   return (
     <ul className="space-y-2">
       {ingredients
@@ -103,7 +80,7 @@ function ReadonlyIngredientsListContent({
             const headingText = it.ingredientName.trim().replace(/^#+\s*/, "");
 
             return (
-              <li key={`heading-${idx}`} className="list-none">
+              <li key={it.order} className="list-none">
                 <div className="px-3 py-2">
                   <h3 className="text-foreground text-base font-semibold">{headingText}</h3>
                 </div>
@@ -111,85 +88,144 @@ function ReadonlyIngredientsListContent({
             );
           }
 
-          const amount = formatAmount(it.amount, mode);
-          const unit = it.unit ? formatUnitOnly(it.unit, it.amount) : "";
-          const isChecked = checked.has(idx);
-          const wrapperClassName = interactive
-            ? `group flex cursor-pointer items-center gap-2 rounded-xl px-3 py-2.5 md:gap-3 transition-all duration-200 select-none ${
-                isChecked ? "bg-surface-secondary/50" : "hover:bg-surface-secondary"
-              }`
-            : "flex items-start gap-2 rounded-xl px-3 py-2.5 md:gap-3";
-
           return (
-            <li key={`${it.ingredientName}-${idx}`}>
-              <div
-                aria-pressed={interactive ? isChecked : undefined}
-                className={wrapperClassName}
-                role={interactive ? "button" : undefined}
-                tabIndex={interactive ? 0 : undefined}
-                onClick={(e) => onRowClick(e, idx)}
-                onKeyDown={(e) => onKeyToggle(e, idx)}
-              >
-                {interactive ? (
-                  <span data-ingredient-checkbox className="shrink-0">
-                    <GroceryCheckbox
-                      aria-label={it.ingredientName}
-                      isSelected={isChecked}
-                      size="md"
-                      onChange={() => toggle(idx)}
-                    />
-                  </span>
-                ) : (
-                  <span className="bg-surface-secondary mt-1 h-2.5 w-2.5 shrink-0 rounded-full" />
-                )}
-
-                {/* A line that names no food ("200 g" alone) gets no icon, like a heading. */}
-                {namesNoFood(it.ingredientName) ? null : (
-                  <IngredientIcon
-                    className={interactive && isChecked ? "opacity-50" : undefined}
-                    ingredientId={it.ingredientId}
-                    src={it.icon}
-                  />
-                )}
-
-                <div
-                  className={`flex flex-1 flex-wrap items-baseline gap-x-1.5 gap-y-0.5 transition-opacity duration-200 ${
-                    interactive && isChecked ? "opacity-50" : ""
-                  }`}
-                >
-                  {amount !== "" && (
-                    // Servings and unit conversions both rewrite this in
-                    // place, so it moves rather than blinks.
-                    <AnimatedNumber
-                      className={`text-base font-bold ${
-                        interactive && isChecked ? "text-muted line-through" : "text-foreground"
-                      }`}
-                      value={amount}
-                    />
-                  )}
-                  {unit && (
-                    <span
-                      className={`text-base font-bold ${
-                        interactive && isChecked ? "text-muted line-through" : "text-accent"
-                      }`}
-                    >
-                      {unit}
-                    </span>
-                  )}
-                  <span
-                    className={`text-base ${interactive && isChecked ? "text-muted line-through" : "text-base"}`}
-                  >
-                    <SmartMarkdownRenderer
-                      disableLinks={interactive && isChecked}
-                      text={it.ingredientName}
-                    />
-                  </span>
-                </div>
-              </div>
-            </li>
+            <IngredientLine
+              key={it.order}
+              amount={formatAmount(it.amount, mode)}
+              icon={it.icon}
+              idx={idx}
+              ingredientId={it.ingredientId}
+              ingredientName={it.ingredientName}
+              interactive={interactive}
+              isChecked={checked.has(idx)}
+              unit={it.unit ? formatUnitOnly(it.unit, it.amount) : ""}
+              onToggle={toggle}
+            />
           );
         })}
     </ul>
+  );
+}
+
+/**
+ * One line of the list. Its own component so that a change to one line, or to
+ * every line's amount when the servings change, re-renders the text alone and
+ * not the checkbox and icon beside it.
+ */
+function IngredientLine({
+  ingredientName,
+  ingredientId,
+  icon,
+  amount,
+  unit,
+  idx,
+  isChecked,
+  interactive,
+  onToggle,
+}: {
+  ingredientName: string;
+  ingredientId?: string | null;
+  icon?: string | null;
+  amount: string;
+  unit: string;
+  idx: number;
+  isChecked: boolean;
+  interactive: boolean;
+  onToggle: (idx: number) => void;
+}) {
+  const onKeyToggle = (e: React.KeyboardEvent) => {
+    if (!interactive) {
+      return;
+    }
+
+    if ((e.target as HTMLElement | null)?.closest("[data-ingredient-checkbox]")) {
+      return;
+    }
+
+    if (e.key === "Enter" || e.key === " ") {
+      e.preventDefault();
+      onToggle(idx);
+    }
+  };
+
+  const onRowClick = (e: React.MouseEvent) => {
+    if ((e.target as HTMLElement | null)?.closest("[data-ingredient-checkbox]")) {
+      return;
+    }
+
+    onToggle(idx);
+  };
+
+  const wrapperClassName = interactive
+    ? `group flex cursor-pointer items-center gap-2 rounded-xl px-3 py-2.5 md:gap-3 transition-all duration-200 select-none ${
+        isChecked ? "bg-surface-secondary/50" : "hover:bg-surface-secondary"
+      }`
+    : "flex items-start gap-2 rounded-xl px-3 py-2.5 md:gap-3";
+
+  return (
+    <li>
+      <div
+        aria-pressed={interactive ? isChecked : undefined}
+        className={wrapperClassName}
+        role={interactive ? "button" : undefined}
+        tabIndex={interactive ? 0 : undefined}
+        onClick={onRowClick}
+        onKeyDown={onKeyToggle}
+      >
+        {interactive ? (
+          <span data-ingredient-checkbox className="shrink-0">
+            <GroceryCheckbox
+              aria-label={ingredientName}
+              isSelected={isChecked}
+              size="md"
+              onChange={() => onToggle(idx)}
+            />
+          </span>
+        ) : (
+          <span className="bg-surface-secondary mt-1 h-2.5 w-2.5 shrink-0 rounded-full" />
+        )}
+
+        {/* A line that names no food ("200 g" alone) gets no icon, like a heading. */}
+        {namesNoFood(ingredientName) ? null : (
+          <IngredientIcon
+            className={interactive && isChecked ? "opacity-50" : undefined}
+            ingredientId={ingredientId}
+            src={icon}
+          />
+        )}
+
+        <div
+          className={`flex flex-1 flex-wrap items-baseline gap-x-1.5 gap-y-0.5 transition-opacity duration-200 ${
+            interactive && isChecked ? "opacity-50" : ""
+          }`}
+        >
+          {amount !== "" && (
+            // Servings and unit conversions both rewrite this in
+            // place, so it moves rather than blinks.
+            <AnimatedNumber
+              className={`text-base font-bold ${
+                interactive && isChecked ? "text-muted line-through" : "text-foreground"
+              }`}
+              value={amount}
+            />
+          )}
+          {unit && (
+            <span
+              className={`text-base font-bold ${
+                interactive && isChecked ? "text-muted line-through" : "text-accent"
+              }`}
+            >
+              {unit}
+            </span>
+          )}
+          <span
+            className={`text-base ${interactive && isChecked ? "text-muted line-through" : "text-base"}`}
+          >
+            <SmartMarkdownRenderer disableLinks={interactive && isChecked} text={ingredientName} />
+          </span>
+        </div>
+      </div>
+    </li>
   );
 }
 
@@ -198,7 +234,7 @@ function ReadonlyIngredientsListWithConfiguredUnits({
   ...props
 }: ReadonlyIngredientsListProps & { units: UnitsMap }) {
   const locale = useLocale();
-  const { formatUnitOnly } = useSharedUnitFormatter({ locale, units });
+  const { formatUnitOnly } = createUnitFormatter({ locale, units });
 
   return <ReadonlyIngredientsListContent {...props} formatUnitOnly={formatUnitOnly} />;
 }

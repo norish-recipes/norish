@@ -1,6 +1,6 @@
 "use client";
 
-import SettingsSkeleton from "@/components/skeleton/settings-skeleton";
+import { SettingsTabSkeleton } from "@/components/skeleton/settings-skeleton";
 
 import { AdminSettingsProvider, useAdminSettingsContext } from "../context";
 import AIProcessingCard from "./ai-processing-card";
@@ -8,6 +8,7 @@ import { AuthProvidersCard } from "./auth-providers";
 import ContentDetectionCard from "./content-detection-card";
 import GeneralCard from "./general-card";
 import JobQueueCard from "./job-queue-card";
+import PageRenderersCard from "./page-renderers-card";
 import PermissionPolicyCard from "./permission-policy-card";
 import AdminShareLinksCard from "./share-links-card";
 import SystemCard from "./system-card";
@@ -17,7 +18,7 @@ function AdminSettingsContent() {
   const { isLoading } = useAdminSettingsContext();
 
   if (isLoading) {
-    return <SettingsSkeleton />;
+    return <SettingsTabSkeleton tab="admin" />;
   }
 
   return (
@@ -28,6 +29,7 @@ function AdminSettingsContent() {
       <AdminShareLinksCard />
       <AuthProvidersCard />
       <ContentDetectionCard />
+      <PageRenderersCard />
       <AIProcessingCard />
       <JobQueueCard />
       <SystemCard />

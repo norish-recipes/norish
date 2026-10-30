@@ -2,8 +2,10 @@
 
 import { useState } from "react";
 import { useTRPC } from "@/app/providers/trpc-provider";
+import { ActionButton } from "@/components/shared/action-button";
 import { showSafeErrorToast } from "@/lib/ui/safe-error-toast";
-import { Button, toast } from "@heroui/react";
+import { SparklesIcon } from "@heroicons/react/16/solid";
+import { toast } from "@heroui/react";
 import { useMutation, useQuery } from "@tanstack/react-query";
 import { TRPCClientError } from "@trpc/client";
 import { useTranslations } from "next-intl";
@@ -65,9 +67,15 @@ export default function BulkEnrichmentForm() {
             })}
           </span>
         )}
-        <Button isPending={enrichAllMutation.isPending} variant="tertiary" onPress={openConfirm}>
+        <ActionButton
+          action="apply"
+          icon={SparklesIcon}
+          isPending={enrichAllMutation.isPending}
+          variant="tertiary"
+          onPress={openConfirm}
+        >
           {t("button")}
-        </Button>
+        </ActionButton>
       </div>
       <BulkEnrichmentConfirmationModal
         imageCounts={imageCountQuery.data}

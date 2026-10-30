@@ -22,6 +22,23 @@ import { z } from "zod";
 
 import type { AIConfig } from "@norish/config/zod/server-config";
 
+/** When set, the shared transport's fetch is this stub instead of the network. */
+const transport = vi.hoisted(() => ({ stub: null as typeof fetch | null }));
+
+vi.mock("@norish/shared-server/ai/runtime/transport", async (importOriginal) => {
+  const actual =
+    await importOriginal<typeof import("@norish/shared-server/ai/runtime/transport")>();
+
+  return {
+    ...actual,
+    createFetchWithTimeout: (timeoutMs: number): typeof fetch => {
+      const network = actual.createFetchWithTimeout(timeoutMs);
+
+      return (url, init) => (transport.stub ?? network)(url, init);
+    },
+  };
+});
+
 const mockGetAIConfig = vi.fn();
 const mockGetPrompts = vi.fn();
 
@@ -38,9 +55,9 @@ vi.mock("@norish/shared-server/logger", () => {
   return { aiLogger: logger, serverLogger: logger, createLogger: () => logger };
 });
 
-const { estimateStructuredInputTokens, generateStructured } =
-  await import("@norish/shared-server/ai/runtime/runtime");
-const { AIProviderError } = await import("@norish/shared-server/ai/runtime/errors");
+const { generateStructured } = await import("@norish/shared-server/ai/runtime/runtime");
+const { aiLogger } = await import("@norish/shared-server/logger");
+const { AIProviderError, isTimedOut } = await import("@norish/shared-server/ai/runtime/errors");
 const { createModelUseLedger, runWithModelUseLedger } =
   await import("@norish/shared-server/ai/runtime/model-use-ledger");
 const { forgetKeyRejection, listKeyRejections } =
@@ -52,6 +69,8 @@ interface CapturedRequest {
 
 let captured: CapturedRequest[] = [];
 let replies: (() => { status: number; body: unknown })[] = [];
+/** Leaves every request unanswered, as a model still thinking does. */
+let holdReplies = false;
 
 /** The answer the model gives when it plays along, with the usage it reports. */
 function tagged(
@@ -96,6 +115,7 @@ const server = createServer((req, res) => {
   req.on("data", (chunk) => chunks.push(chunk as Buffer));
   req.on("end", () => {
     captured.push({ body: JSON.parse(Buffer.concat(chunks).toString() || "{}") });
+    if (holdReplies) return;
 
     const next = replies.length > 1 ? replies.shift() : replies[0];
     const { status, body } = (next ?? (() => tagged()))();
@@ -144,13 +164,14 @@ function responseFormats(): unknown[] {
 
 beforeEach(() => {
   captured = [];
+  holdReplies = false;
   replies = [() => tagged()];
   mockGetAIConfig.mockResolvedValue(aiConfig());
   mockGetPrompts.mockResolvedValue({});
 });
 
 afterEach(() => {
-  vi.clearAllMocks();
+  transport.stub = null;
 });
 
 describe("an endpoint that serves structured output", () => {
@@ -159,6 +180,62 @@ describe("an endpoint that serves structured output", () => {
 
     expect(captured).toHaveLength(1);
     expect(responseFormats()[0]).toMatchObject({ type: "json_schema" });
+  });
+});
+
+describe("Mistral, whose schema is only a hint unless asked to be strict", () => {
+  it("is asked for a strict JSON schema (#646)", async () => {
+    const sent: Record<string, unknown>[] = [];
+
+    transport.stub = vi.fn(async (_url: string | URL | Request, init?: RequestInit) => {
+      sent.push(JSON.parse(String(init?.body)));
+
+      return new Response(JSON.stringify(tagged().body), {
+        status: 200,
+        headers: { "content-type": "application/json" },
+      });
+    });
+    mockGetAIConfig.mockResolvedValue(
+      aiConfig({ provider: "mistral", apiKey: "mistral-key", endpoint: undefined })
+    );
+
+    await expect(generate()).resolves.toEqual({ tags: ["Italian"] });
+
+    expect(sent[0]!.response_format).toMatchObject({
+      type: "json_schema",
+      json_schema: { strict: true },
+    });
+  });
+
+  it("is retried once in plain JSON mode when it refuses the strict schema", async () => {
+    const sent: Record<string, unknown>[] = [];
+    const answers = [
+      { status: 400, body: { message: "Invalid JSON schema for strict mode" } },
+      tagged(),
+    ];
+
+    transport.stub = vi.fn(async (_url: string | URL | Request, init?: RequestInit) => {
+      sent.push(JSON.parse(String(init?.body)));
+      const { status, body } = answers.shift()!;
+
+      return new Response(JSON.stringify(body), {
+        status,
+        headers: { "content-type": "application/json" },
+      });
+    });
+    mockGetAIConfig.mockResolvedValue(
+      aiConfig({ provider: "mistral", apiKey: "mistral-key", endpoint: undefined })
+    );
+
+    await expect(generate()).resolves.toEqual({ tags: ["Italian"] });
+
+    expect(sent.map((body) => body.response_format)).toEqual([
+      expect.objectContaining({ type: "json_schema" }),
+      { type: "json_object" },
+    ]);
+    expect(JSON.stringify(sent[1]!.messages)).toContain("tags");
+    // @ai-sdk/mistral puts the schema in the prompt itself, so Norish's copy would double it.
+    expect(JSON.stringify(sent[1]!.messages).match(/properties/g)).toHaveLength(1);
   });
 });
 
@@ -216,6 +293,25 @@ describe("a failure that is not about the request's shape", () => {
 
     expect((failure as Error).message).toContain("API key");
     expect(captured).toHaveLength(1);
+  });
+
+  it("is logged as the typed error, leaving the request body to the debug line (#645)", async () => {
+    vi.mocked(aiLogger.error).mockClear();
+    vi.mocked(aiLogger.debug).mockClear();
+    replies = [() => ({ status: 401, body: { error: { message: "invalid key" } } })];
+
+    const failure = await generate().catch((error: unknown) => error);
+    const [fields, message] = vi.mocked(aiLogger.error).mock.calls.at(-1) as unknown as [
+      Record<string, unknown>,
+      string,
+    ];
+
+    expect(message).toBe("AI request failed");
+    expect(fields).toMatchObject({ err: failure, statusCode: 401, retryable: false });
+    expect(vi.mocked(aiLogger.debug)).toHaveBeenCalledWith(
+      expect.objectContaining({ err: (failure as Error).cause }),
+      "AI request failed: raw provider error"
+    );
   });
 });
 
@@ -296,6 +392,19 @@ describe("the job's model ledger", () => {
     expect(captured).toHaveLength(0);
   });
 
+  it("ends a request past the feature's own deadline, recorded as a failed use with no tokens", async () => {
+    holdReplies = true;
+    const ledger = createModelUseLedger();
+    const failure = await runWithModelUseLedger(ledger, () =>
+      generateStructured({ prompt: "auto-tagging", schema, timeoutMs: 200 }).catch(
+        (error: unknown) => error
+      )
+    );
+
+    expect(isTimedOut(failure)).toBe(true);
+    expect(ledger.uses).toEqual([{ ...use, outcome: "failed" }]);
+  });
+
   it("records one failed use when both request shapes are refused", async () => {
     const ledger = createModelUseLedger();
 
@@ -341,39 +450,19 @@ describe("a key the provider refuses", () => {
   });
 });
 
-describe("an estimate of a request", () => {
-  /** What one request under the auto-tagging prompt would send, with these sections. */
-  const estimate = async (sections: string[]) =>
-    (await estimateStructuredInputTokens({ prompt: "auto-tagging", schema, sections })).tokens;
+describe("the job's abort signal", () => {
+  it("ends the request in flight when the job is stopped, and the job asks nothing more", async () => {
+    holdReplies = true;
+    const job = new AbortController();
+    const ledger = createModelUseLedger(job.signal);
+    const asked = runWithModelUseLedger(ledger, generate);
 
-  it("names the model the request would go to", async () => {
-    await expect(
-      estimateStructuredInputTokens({ prompt: "auto-tagging", schema, sections: [] })
-    ).resolves.toMatchObject({ provider: "generic-openai", model: "test-model" });
-  });
+    await vi.waitFor(() => expect(captured).toHaveLength(1));
+    job.abort("Cancelled by an administrator");
 
-  it("counts the sections a feature appends, four characters a token", async () => {
-    const bare = await estimate([]);
-    const withRecipe = await estimate(["x".repeat(4000)]);
-
-    // The section, and the blank line it is joined by.
-    expect(withRecipe - bare).toBeGreaterThanOrEqual(1000);
-    expect(withRecipe - bare).toBeLessThanOrEqual(1001);
-  });
-
-  it("counts the prompt as the administrator left it, not the shipped one", async () => {
-    const shipped = await estimate([]);
-
-    mockGetPrompts.mockResolvedValue({ autoTagging: "Tag it." });
-
-    expect(await estimate([])).toBeLessThan(shipped);
-  });
-
-  it("counts the system message and the answer's schema too, and asks nothing", async () => {
-    mockGetPrompts.mockResolvedValue({ autoTagging: "" });
-
-    // An empty prompt still sends the system message and the schema.
-    expect(await estimate([])).toBeGreaterThan(20);
-    expect(captured).toHaveLength(0);
+    // A stopped job is no timeout, so a feature does not ask again.
+    expect(isTimedOut(await asked.catch((error: unknown) => error))).toBe(false);
+    await expect(runWithModelUseLedger(ledger, generate)).rejects.toThrow();
+    expect(captured).toHaveLength(1);
   });
 });

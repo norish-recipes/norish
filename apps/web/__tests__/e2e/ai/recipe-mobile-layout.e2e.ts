@@ -10,12 +10,11 @@
  * its no-flash paths live in the offline project.
  */
 import type { BrowserContext, Page } from "@playwright/test";
-import { request } from "@playwright/test";
-import { Client } from "pg";
 
 import type { AIE2EStack } from "./fixture";
 import { clearDevicePreferences, setDevicePreferences } from "../harness/device-preferences";
-import { databaseUrl } from "./database";
+import { waitForRecipe } from "../harness/recipes";
+import { callTrpc } from "../harness/trpc";
 import { expect, test } from "./fixture";
 import { setAutomaticEnrichment } from "./recipe-enrichment-support";
 
@@ -128,7 +127,7 @@ function boxesOverlap(
 
 test.beforeAll(async ({ aiStack, browser }) => {
   stack = aiStack;
-  await setAutomaticEnrichment({});
+  await setAutomaticEnrichment(stack, {});
 
   // Everything the spec asserts is phone behaviour, so the shared desktop
   // context stays unused and this suite drives its own phone-sized one.
@@ -143,46 +142,15 @@ test.beforeAll(async ({ aiStack, browser }) => {
 
   // Seed through the same mutation the recipe form uses: full control over
   // times, servings, nutrition and source, no AI involved.
-  const api = await request.newContext({
-    baseURL: stack.baseURL,
-    extraHTTPHeaders: {
-      origin: stack.baseURL,
-      cookie: stack.ownerCookies.map((cookie) => `${cookie.name}=${cookie.value}`).join("; "),
-    },
-  });
-
-  try {
-    const response = await api.post("/api/trpc/recipes.create", {
-      data: { json: RECIPE },
-    });
-
-    if (!response.ok()) throw new Error(`recipes.create failed: ${response.status()}`);
-
-    const body = (await response.json()) as { result: { data: { json: string } } };
-
-    recipeId = body.result.data.json;
-  } finally {
-    await api.dispose();
-  }
+  recipeId = await callTrpc<string>(stack.baseURL, stack.ownerCookies, "recipes.create", RECIPE);
 
   // The mutation answers before the transaction lands; wait for the rows.
-  const database = new Client({ connectionString: databaseUrl() });
-
-  await database.connect();
-  try {
-    await expect
-      .poll(
-        async () => {
-          const rows = await database.query("select 1 from steps where recipe_id = $1", [recipeId]);
-
-          return rows.rowCount;
-        },
-        { timeout: 30_000 }
-      )
-      .toBe(RECIPE.steps.length);
-  } finally {
-    await database.end();
-  }
+  await waitForRecipe(
+    stack.baseURL,
+    stack.ownerCookies,
+    recipeId,
+    (recipe) => recipe.steps.length === RECIPE.steps.length
+  );
 });
 
 test.afterAll(async () => {
@@ -325,6 +293,35 @@ test("hiding Nutrition Information takes the card and the Glance Bar's calories 
     await expect(glanceBar).not.toContainText("640");
     await expect(page.locator("h2:visible").filter({ hasText: "Nutrition" })).toHaveCount(0);
   } finally {
-    await clearDevicePreferences(databaseUrl());
+    await clearDevicePreferences();
   }
+});
+
+test("tapping the servings opens a panel that multiplies the recipe or takes any number or multiplier (#682)", async () => {
+  await page.goto(`/recipes/${recipeId}`);
+
+  // Both page trees render the control; only the phone tree's copy is visible.
+  const figure = (servings: string) =>
+    page.getByRole("button", { name: `${servings} servings`, exact: true }).locator("visible=true");
+  const panel = page.getByRole("dialog", { name: "Servings" });
+
+  await figure("4").click();
+  await panel.getByRole("button", { name: "2×" }).click();
+  await expect(panel).toBeHidden();
+  await expect(figure("8")).toBeVisible();
+
+  // Typed servings apply as they are typed, so closing the panel keeps them.
+  await figure("8").click();
+  await panel.getByRole("textbox", { name: "Servings" }).fill("1,5");
+  await page.keyboard.press("Escape");
+  await expect(panel).toBeHidden();
+  await expect(figure("1.5")).toBeVisible();
+
+  // A multiplier counts from the recipe's own 4 servings, whatever is shown.
+  await figure("1.5").click();
+  await panel.getByRole("textbox", { name: "Multiplier" }).fill("2,5");
+  await expect(panel.getByRole("textbox", { name: "Servings" })).toHaveValue("10");
+  await page.keyboard.press("Enter");
+  await expect(panel).toBeHidden();
+  await expect(figure("10")).toBeVisible();
 });

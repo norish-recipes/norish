@@ -44,8 +44,6 @@ vi.mock("@norish/shared-server/logger", () => ({
 
 describe("adaptRecipeScrapersResponse", () => {
   beforeEach(() => {
-    vi.clearAllMocks();
-
     mockGetUnits.mockResolvedValue({});
     mockParseIngredients.mockReturnValue({
       ingredients: [
@@ -63,7 +61,6 @@ describe("adaptRecipeScrapersResponse", () => {
     mockParseSteps.mockReturnValue([{ step: "Cook it", systemUsed: "metric", order: 1 }]);
     mockParseImages.mockResolvedValue({
       images: [{ image: "/recipes/recipe-1/image.jpg", order: 0 }],
-      primaryImage: "/recipes/recipe-1/image.jpg",
     });
     mockParseVideos.mockResolvedValue({
       videos: [
@@ -131,7 +128,7 @@ describe("adaptRecipeScrapersResponse", () => {
     expect(result).toEqual(
       expect.objectContaining({
         url: "https://example.com/canonical-recipe",
-        image: "/recipes/recipe-1/image.jpg",
+        images: [{ image: "/recipes/recipe-1/image.jpg", order: 0 }],
         videos: expect.arrayContaining([
           expect.objectContaining({
             video: "/recipes/recipe-1/video.mp4",
@@ -255,5 +252,42 @@ describe("adaptRecipeScrapersResponse", () => {
     );
 
     expect(mockParseImages).toHaveBeenCalledWith("https://cdn.example.com/primary.jpg", "recipe-1");
+  });
+
+  describe("the ingredient lines", () => {
+    it("open each named group with its heading, over the flat list (#685)", async () => {
+      const { collectIngredientStrings } = await import("@norish/api/parser/python/adapter");
+
+      expect(
+        collectIngredientStrings({
+          ingredients: ["2 lb potatoes", "1 lb lamb"],
+          ingredient_groups: [
+            { purpose: "For the Mashed Potatoes", ingredients: ["2 lb potatoes"] },
+            { purpose: "For the Meat Sauce", ingredients: ["1 lb lamb"] },
+          ],
+        })
+      ).toEqual([
+        "# For the Mashed Potatoes",
+        "2 lb potatoes",
+        "# For the Meat Sauce",
+        "1 lb lamb",
+      ]);
+    });
+
+    it("are the flat list when the recipe has one group", async () => {
+      const { collectIngredientStrings } = await import("@norish/api/parser/python/adapter");
+
+      expect(
+        collectIngredientStrings({
+          ingredients: ["1 egg"],
+          ingredient_groups: [{ purpose: "Ingredients", ingredients: ["1 egg"] }],
+        })
+      ).toEqual(["1 egg"]);
+      expect(
+        collectIngredientStrings({
+          ingredient_groups: [{ purpose: null, ingredients: ["1 egg"] }],
+        })
+      ).toEqual(["1 egg"]);
+    });
   });
 });

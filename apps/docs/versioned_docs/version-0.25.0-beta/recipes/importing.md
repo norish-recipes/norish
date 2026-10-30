@@ -28,7 +28,7 @@ will check of that URL is a recipe and attempt to import it.
 ## From pasted text or a photo
 
 - **Add Recipe => Paste** takes a recipe as plain text or in [JSON-LD](https://schema.org/Recipe) format.
-- **Add Recipe => Image** turns an image into a recipe, Norish can combine up to 10 images into a single recipe. 
+- **Add Recipe => Image** turns an image into a recipe, Norish can combine up to 10 images into a single recipe.
 
 :::note
 Using free text or a images requires an AI provider setup.

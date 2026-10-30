@@ -2,6 +2,7 @@
 
 import { useCallback, useEffect, useMemo, useState } from "react";
 import SecretInput from "@/components/shared/secret-input";
+import { usePending } from "@/hooks/use-pending";
 import { showSafeErrorToast } from "@/lib/ui/safe-error-toast";
 import { Input, Label, TextField, useOverlayState } from "@heroui/react";
 import { useTranslations } from "next-intl";
@@ -56,9 +57,9 @@ export function AuthProviderForm({
       {} as Record<string, string>
     )
   );
-  const [testing, setTesting] = useState(false);
+  const [testing, whileTesting] = usePending();
   const [testResult, setTestResult] = useState<TestResult | null>(null);
-  const [saving, setSaving] = useState(false);
+  const [saving, whileSaving] = usePending();
   const deleteModal = useOverlayState();
 
   const hasChanges = useMemo(
@@ -85,20 +86,14 @@ export function AuthProviderForm({
   );
 
   const handleTest = async () => {
-    setTesting(true);
     setTestResult(null);
-    try {
-      const testValues = Object.fromEntries(fields.map((f) => [f.key, values[f.key] || undefined]));
+    const testValues = Object.fromEntries(fields.map((f) => [f.key, values[f.key] || undefined]));
 
-      setTestResult(await testAuthProvider(providerKey, testValues));
-    } finally {
-      setTesting(false);
-    }
+    await whileTesting(() => testAuthProvider(providerKey, testValues).then(setTestResult));
   };
 
   const handleSave = async () => {
-    setSaving(true);
-    try {
+    const save = async () => {
       const saveValues = Object.fromEntries(fields.map((f) => [f.key, values[f.key] || undefined]));
 
       // Route to correct update function (OIDC uses OIDCProviderForm, not this generic form)
@@ -122,9 +117,9 @@ export function AuthProviderForm({
 
         return cleared;
       });
-    } finally {
-      setSaving(false);
-    }
+    };
+
+    await whileSaving(() => save());
   };
 
   const handleDelete = async () => {

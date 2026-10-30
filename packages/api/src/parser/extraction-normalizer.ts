@@ -57,7 +57,8 @@ export interface ValidationResult {
 }
 
 /**
- * Validate that AI extraction output has all required fields.
+ * Validate that AI extraction output has a name and ingredients in both
+ * systems. Steps are optional: some recipes have none (#646).
  */
 export function validateExtractionOutput(output: RecipeExtractionOutput | null): ValidationResult {
   if (!output || Object.keys(output).length === 0) {
@@ -75,9 +76,7 @@ export function validateExtractionOutput(output: RecipeExtractionOutput | null):
   if (
     !output.name ||
     !output.recipeIngredient?.metric?.length ||
-    !output.recipeIngredient?.us?.length ||
-    !output.recipeInstructions?.metric?.length ||
-    !output.recipeInstructions?.us?.length
+    !output.recipeIngredient?.us?.length
   ) {
     return {
       valid: false,

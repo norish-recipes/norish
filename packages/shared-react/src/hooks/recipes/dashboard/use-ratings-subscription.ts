@@ -28,6 +28,8 @@ export type RatingsSubscriptionCallbacks = {
  */
 export function createUseRatingsSubscription({ useTRPC }: CreateRecipeHooksOptions) {
   return function useRatingsSubscription(callbacks: RatingsSubscriptionCallbacks = {}) {
+    "use memo";
+
     const trpc = useTRPC();
     const queryClient = useQueryClient();
 

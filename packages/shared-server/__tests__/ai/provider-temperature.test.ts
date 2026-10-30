@@ -11,10 +11,16 @@
  */
 
 import { generateText } from "ai";
-import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
+import { beforeEach, describe, expect, it, vi } from "vitest";
 
 import { createModelsFromConfig } from "@norish/shared-server/ai/runtime/providers";
 import { resetTemperatureFallbackCache } from "@norish/shared-server/ai/runtime/temperature-fallback";
+
+const transport = vi.hoisted(() => ({ fetch: vi.fn<typeof fetch>() }));
+
+vi.mock("@norish/shared-server/ai/runtime/transport", () => ({
+  createFetchWithTimeout: () => transport.fetch,
+}));
 
 /** Bodies of every request the provider made, newest last. */
 let sentBodies: Record<string, unknown>[] = [];
@@ -71,20 +77,13 @@ beforeEach(() => {
   replies = [];
   resetTemperatureFallbackCache();
 
-  vi.stubGlobal(
-    "fetch",
-    vi.fn(async (_url: string, init?: RequestInit) => {
-      sentBodies.push(JSON.parse(String(init?.body ?? "{}")) as Record<string, unknown>);
+  transport.fetch.mockImplementation(async (_url, init) => {
+    sentBodies.push(JSON.parse(String(init?.body ?? "{}")) as Record<string, unknown>);
 
-      const reply = replies.length > 1 ? replies.shift() : replies[0];
+    const reply = replies.length > 1 ? replies.shift() : replies[0];
 
-      return reply ? reply() : anthropicAnswer();
-    })
-  );
-});
-
-afterEach(() => {
-  vi.unstubAllGlobals();
+    return reply ? reply() : anthropicAnswer();
+  });
 });
 
 describe("configured temperature", () => {

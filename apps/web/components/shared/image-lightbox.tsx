@@ -7,6 +7,7 @@ import { Carousel } from "@/components/ui/carousel";
 import { XMarkIcon } from "@heroicons/react/16/solid";
 import { Button, Modal, Tooltip } from "@heroui/react";
 
+import { addBasePath } from "@norish/shared/lib/base-path";
 import { cssMediaControl } from "@norish/web/config/css-tokens";
 
 import { FallbackPlaceholder, useImageErrors } from "./fallback-image";
@@ -48,21 +49,18 @@ export default function ImageLightbox({
     () => getSafeIndex(initialIndex, images.length),
     [images.length, initialIndex]
   );
+  const [seededFor, setSeededFor] = useState({ isOpen, index: safeInitialIndex });
+
+  if (isOpen !== seededFor.isOpen || safeInitialIndex !== seededFor.index) {
+    setSeededFor({ isOpen, index: safeInitialIndex });
+
+    if (isOpen) setCurrentIndex(safeInitialIndex);
+  }
+
   const currentImage = images[getSafeIndex(currentIndex, images.length)];
   const showNavigation = images.length > 1;
 
-  useEffect(() => {
-    if (!isOpen) return;
-
-    setCurrentIndex(safeInitialIndex);
-  }, [isOpen, safeInitialIndex]);
-
-  useEffect(() => {
-    if (!api || !isOpen || images.length === 0) return;
-
-    api.scrollTo(safeInitialIndex, true);
-  }, [api, images.length, isOpen, safeInitialIndex]);
-
+  // Listens before the scroll below, so the slide it lands on is never missed.
   useEffect(() => {
     if (!api) return;
 
@@ -70,7 +68,6 @@ export default function ImageLightbox({
       setCurrentIndex(api.selectedScrollSnap());
     };
 
-    syncSelectedIndex();
     api.on("select", syncSelectedIndex);
     api.on("reInit", syncSelectedIndex);
 
@@ -79,6 +76,12 @@ export default function ImageLightbox({
       api.off("reInit", syncSelectedIndex);
     };
   }, [api]);
+
+  useEffect(() => {
+    if (!api || !isOpen || images.length === 0) return;
+
+    api.scrollTo(safeInitialIndex, true);
+  }, [api, images.length, isOpen, safeInitialIndex]);
 
   if (!isOpen || images.length === 0 || !currentImage) return null;
 
@@ -173,6 +176,9 @@ export default function ImageLightbox({
                   <Carousel.Content className="items-center">
                     {images.map((image, index) => (
                       <Carousel.Item
+                        // The same picture can sit here twice (uploads are named by content hash), so
+                        // only its place tells the two apart; the list keeps its stored order.
+                        // eslint-disable-next-line @eslint-react/no-array-index-key
                         key={`${image.src}-${index}`}
                         className="flex items-center justify-center"
                       >
@@ -184,13 +190,12 @@ export default function ImageLightbox({
                         ) : (
                           <Image
                             data-lightbox-interactive
-                            unoptimized
                             alt={image.alt || `Image ${index + 1}`}
                             className="max-h-[68dvh] w-auto max-w-full rounded-2xl object-contain select-none sm:rounded-3xl"
                             draggable={false}
                             height={760}
                             sizes="(min-width: 1280px) 1120px, 92vw"
-                            src={image.src}
+                            src={addBasePath(image.src)}
                             width={1120}
                             onError={() => handleImageError(image.src)}
                           />
@@ -208,10 +213,13 @@ export default function ImageLightbox({
                 >
                   {images.map((image, index) => (
                     <Carousel.Thumbnail
+                      // The same picture can sit here twice (uploads are named by content hash), so
+                      // only its place tells the two apart; the list keeps its stored order.
+                      // eslint-disable-next-line @eslint-react/no-array-index-key
                       key={`${image.src}-thumbnail-${index}`}
                       alt={image.alt || `Image ${index + 1}`}
                       index={index}
-                      src={image.src}
+                      src={addBasePath(image.src)}
                     />
                   ))}
                 </Carousel.Thumbnails>
@@ -227,13 +235,12 @@ export default function ImageLightbox({
                 ) : (
                   <Image
                     data-lightbox-interactive
-                    unoptimized
                     alt={currentImage.alt || "Image"}
                     className="max-h-[68dvh] w-auto max-w-full rounded-2xl object-contain select-none sm:rounded-3xl"
                     draggable={false}
                     height={760}
                     sizes="(min-width: 1280px) 1120px, 92vw"
-                    src={currentImage.src}
+                    src={addBasePath(currentImage.src)}
                     width={1120}
                     onError={() => handleImageError(currentImage.src)}
                   />

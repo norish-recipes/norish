@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useRef, useState } from "react";
 import { AisleSelector } from "@/components/groceries/aisle-selector";
 import { GroceryProductField } from "@/components/groceries/grocery-product-field";
 import { GroceryRecurrenceControl } from "@/components/groceries/grocery-recurrence-control";
@@ -46,6 +46,8 @@ export default function AddGroceryPanel({
   // One per grocery added, so the panel that stays open for the next one is
   // not still showing the last one's product.
   const [added, setAdded] = useState(0);
+  const [wasOpen, setWasOpen] = useState(open);
+  const nameRef = useRef<HTMLInputElement>(null);
   const {
     itemName,
     setItemName,
@@ -61,14 +63,15 @@ export default function AddGroceryPanel({
   });
 
   // Reset form when panel closes
-  useEffect(() => {
+  if (open !== wasOpen) {
+    setWasOpen(open);
     if (!open) {
       reset();
       setPurchaseAmount(null);
       setSelectedStoreId(null);
       setProductValid(true);
     }
-  }, [open, reset]);
+  }
   const price = useProductChoice({
     itemName,
     stores,
@@ -104,6 +107,8 @@ export default function AddGroceryPanel({
     reset();
     setPurchaseAmount(null);
     setAdded((count) => count + 1);
+    // The name field is where the next grocery goes, however this one was added.
+    nameRef.current?.focus();
     // Keep the store selection for batch adding to same store
   };
   const handleRecurrenceSave = (pattern: RecurrencePattern | null) => {
@@ -121,6 +126,11 @@ export default function AddGroceryPanel({
         <Panel.Body>
           <div className="space-y-3">
             <Input
+              ref={nameRef}
+              // Opening the panel is the ask to type a grocery; the drawer
+              // mounts its content afresh on every open.
+              // eslint-disable-next-line jsx-a11y-x/no-autofocus
+              autoFocus
               className="h-12 text-base font-medium"
               placeholder={t("placeholder")}
               style={{

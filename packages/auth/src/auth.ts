@@ -1,10 +1,9 @@
 import type { BetterAuthOptions, Where } from "better-auth";
 import type { DBAdapter } from "better-auth/adapters";
 import { apiKey } from "@better-auth/api-key";
-import { expo } from "@better-auth/expo";
 import { betterAuth } from "better-auth";
 import { drizzleAdapter } from "better-auth/adapters/drizzle";
-import { APIError, createAuthMiddleware } from "better-auth/api";
+import { APIError, createAuthMiddleware, getSessionFromCtx } from "better-auth/api";
 import { nextCookies } from "better-auth/next-js";
 import { genericOAuth } from "better-auth/plugins";
 
@@ -19,14 +18,17 @@ import { countUsers } from "@norish/db/repositories/users";
 import * as schema from "@norish/db/schema/auth";
 import { isRegistrationEnabled } from "@norish/shared-server/config/server-config-loader";
 import { authLogger } from "@norish/shared-server/logger";
-import { getPublisherClient } from "@norish/shared-server/redis/client";
+import { keepsOfferedSignInMethod, LAST_SIGN_IN_METHOD } from "@norish/shared/contracts/dto/auth";
+import { addBasePath } from "@norish/shared/lib/base-path";
 
+import { consumeApiKeyRequest } from "./api-key-rate-limit";
 import {
   getPendingOIDCProfile,
   mergeOIDCTokenClaims,
   processClaimsForUser,
   storeOIDCProfile,
 } from "./claim-processor";
+import { API_KEY_HEADERS } from "./credentials";
 import {
   getCachedGitHubProvider,
   getCachedGoogleProvider,
@@ -34,6 +36,8 @@ import {
   getCachedOIDCProvider,
   getCachedPasswordAuthEnabled,
 } from "./provider-cache";
+import { getAvailableProviders } from "./providers";
+import { valkeySecondaryStorage } from "./secondary-storage";
 
 /**
  * Creates a wrapped adapter factory that intercepts user email lookups
@@ -45,8 +49,7 @@ import {
  *
  * The user it finds by email, or joined onto an account (an OAuth sign-in),
  * comes back decrypted: Better Auth compares the provider's verified email
- * with it to mark the user verified, and only links further providers to a
- * verified user.
+ * with it to mark the user verified, and seeds the session with it.
  */
 function createEncryptedEmailAdapter<T extends BetterAuthOptions>(
   baseAdapterFactory: (options: T) => DBAdapter<T>
@@ -80,19 +83,25 @@ function createEncryptedEmailAdapter<T extends BetterAuthOptions>(
 
         const result = await baseAdapter.findOne(params);
 
-        if (
-          params.model === "account" &&
-          result &&
-          typeof result === "object" &&
-          "user" in result
-        ) {
-          return { ...result, user: decryptUser(result.user) };
-        }
+        return params.model === "account" ? decryptJoinedUser(result) : result;
+      },
+      // Better Auth finds the owner of an OAuth account with a findMany joined
+      // onto the user.
+      findMany: async <R>(params: Parameters<DBAdapter<T>["findMany"]>[0]) => {
+        const results = await baseAdapter.findMany<R>(params);
 
-        return result;
+        return params.model === "account" ? results.map((row) => decryptJoinedUser(row)) : results;
       },
     };
   };
+}
+
+function decryptJoinedUser<T>(row: T): T {
+  if (row && typeof row === "object" && "user" in row) {
+    return { ...row, user: decryptUser(row.user) };
+  }
+
+  return row;
 }
 
 // Helper to decrypt user object fields
@@ -106,6 +115,67 @@ function decryptUser(user: any): any {
     image: safeDecrypt(user.image),
   };
 }
+
+// Norish reads a provider's tokens while signing in and never calls the provider after, so
+// none are stored: Better Auth needs them only for endpoints Norish does not use.
+const NO_PROVIDER_TOKENS = { accessToken: null, refreshToken: null, idToken: null };
+
+function oidcDiscoveryUrl(oidc: { wellknown?: string; issuer: string }): string {
+  return oidc.wellknown || new URL(".well-known/openid-configuration", oidc.issuer).toString();
+}
+
+/**
+ * An add asks the provider which account rather than reusing its session: its account picker
+ * where it lists one, a fresh sign-in otherwise (Authentik and Pocket ID before 2.7 list none).
+ */
+async function addPrompt(provider: string): Promise<string | undefined> {
+  if (provider === "google" || provider === "github") return "select_account";
+
+  const oidc = getCachedOIDCProvider();
+
+  if (provider !== "oidc" || !oidc) return undefined;
+
+  const discovery = await fetch(oidcDiscoveryUrl(oidc), { signal: AbortSignal.timeout(5000) })
+    .then((response) => response.json() as Promise<{ prompt_values_supported?: unknown }>)
+    .catch(() => null);
+  const supported = discovery?.prompt_values_supported;
+
+  return Array.isArray(supported) && supported.includes("select_account")
+    ? "select_account"
+    : "login";
+}
+
+// For any client: an add picks its account, and removing never leaves no method the server offers.
+const guardSignInMethods = createAuthMiddleware(async (ctx) => {
+  if (ctx.path === "/link-social") {
+    const prompt = await addPrompt(ctx.body?.provider);
+
+    return prompt
+      ? {
+          context: {
+            body: { ...ctx.body, additionalParams: { ...ctx.body.additionalParams, prompt } },
+          },
+        }
+      : undefined;
+  }
+
+  if (ctx.path !== "/unlink-account") return;
+
+  const session = await getSessionFromCtx(ctx);
+
+  // The endpoint refuses a request without a session itself.
+  if (!session) return;
+
+  const accounts = await ctx.context.internalAdapter.findAccounts(session.user.id);
+  const offered = new Set((await getAvailableProviders()).map((provider) => provider.id));
+
+  if (!keepsOfferedSignInMethod(accounts, ctx.body?.accountId, offered)) {
+    throw new APIError("BAD_REQUEST", {
+      code: LAST_SIGN_IN_METHOD,
+      message: "This is the last way to sign in",
+    });
+  }
+});
 
 // Build social providers configuration from cached DB values
 function buildSocialProviders() {
@@ -132,12 +202,18 @@ function buildSocialProviders() {
   return providers;
 }
 
+function isOIDCConfigured(): boolean {
+  const oidcProvider = getCachedOIDCProvider();
+
+  return Boolean(oidcProvider?.clientId && oidcProvider.clientSecret && oidcProvider.issuer);
+}
+
 function buildOIDCProviders() {
   const providers: any[] = [];
 
   const oidcProvider = getCachedOIDCProvider();
 
-  if (oidcProvider?.clientId && oidcProvider?.clientSecret && oidcProvider?.issuer) {
+  if (oidcProvider && isOIDCConfigured()) {
     // Build scopes: base scopes + any additional configured scopes
     const baseScopes = ["openid", "profile", "email"];
     const additionalScopes = oidcProvider.claimConfig?.scopes ?? [];
@@ -145,21 +221,17 @@ function buildOIDCProviders() {
 
     providers.push({
       providerId: "oidc",
-      discoveryUrl:
-        oidcProvider.wellknown ||
-        new URL(".well-known/openid-configuration", oidcProvider.issuer).toString(),
+      discoveryUrl: oidcDiscoveryUrl(oidcProvider),
       clientId: oidcProvider.clientId,
       clientSecret: oidcProvider.clientSecret,
       scopes: allScopes,
       pkce: true,
+      // Signing out of Norish leaves the identity provider's session alone.
+      disableProviderLogout: true,
       // Store full profile for claim processing after session creation
       // Merges claims from ID token and userinfo endpoint (ID token takes precedence for groups)
       getUserInfo: async (tokens: { accessToken: string; idToken?: string }) => {
-        const discoveryUrl =
-          oidcProvider.wellknown ||
-          new URL(".well-known/openid-configuration", oidcProvider.issuer).toString();
-
-        const result = await mergeOIDCTokenClaims(tokens, discoveryUrl);
+        const result = await mergeOIDCTokenClaims(tokens, oidcDiscoveryUrl(oidcProvider));
 
         if (!result) {
           return null;
@@ -168,15 +240,17 @@ function buildOIDCProviders() {
         const { profile, groupsSource } = result;
         const sub = profile.sub as string;
 
-        // Store the merged profile in Redis for claim processing
+        // Store the merged profile in Valkey for claim processing
         await storeOIDCProfile(sub, profile);
         authLogger.debug(
           { sub, hasGroups: "groups" in profile, groupsSource },
-          "Stored merged OIDC profile in Redis for claim processing"
+          "Stored merged OIDC profile in Valkey for claim processing"
         );
 
         return {
           id: sub,
+          // Better Auth keys an OIDC account on the subject.
+          sub,
           email: (profile.email as string) || undefined,
           name: (profile.name as string) || (profile.preferred_username as string) || undefined,
           image: (profile.picture as string) || undefined,
@@ -227,44 +301,27 @@ function createBetterAuth() {
   return betterAuth({
     database: encryptedEmailAdapter,
     secret: AUTH_SECRET,
-    baseURL: SERVER_CONFIG.AUTH_URL,
+    // A path in `baseURL` would replace `basePath`, so the prefix rides on `basePath` alone.
+    baseURL: new URL(SERVER_CONFIG.AUTH_URL).origin,
+    basePath: addBasePath("/api/auth"),
     trustedOrigins: [
       SERVER_CONFIG.AUTH_URL,
       ...SERVER_CONFIG.TRUSTED_ORIGINS,
-      "mobile://",
       ...(process.env.NODE_ENV === "development"
         ? [
+            /* eslint-disable sonarjs/no-clear-text-protocols -- development only: a phone on the LAN reaches the dev server over plain http */
             "http://*/*",
             "http://10.0.0.*:*/*",
             "http://192.168.*.*:*/*",
             "http://172.*.*.*:*/*",
             "http://localhost:*/*",
-            "exp://", // Trust all Expo URLs (prefix matching)
-            "exp://**", // Trust all Expo URLs (wildcard matching)
-            "exp://192.168.*.*:*/**", // Trust 192.168.x.x IP range with any port and path
+            /* eslint-enable sonarjs/no-clear-text-protocols */
           ]
         : []),
     ],
-    secondaryStorage: {
-      get: async (key: string) => {
-        const redis = await getPublisherClient();
-
-        return redis.get(key);
-      },
-      set: async (key: string, value: string, ttl?: number) => {
-        const redis = await getPublisherClient();
-
-        if (ttl) {
-          await redis.setex(key, ttl, value);
-        } else {
-          await redis.set(key, value);
-        }
-      },
-      delete: async (key: string) => {
-        const redis = await getPublisherClient();
-
-        await redis.del(key);
-      },
+    secondaryStorage: valkeySecondaryStorage,
+    advanced: {
+      ipAddress: { trustedProxies: SERVER_CONFIG.TRUSTED_PROXIES },
     },
     // Rate limiting configuration. Values come from the environment so a test
     // harness can lift the ceiling; the defaults are the production ones.
@@ -311,7 +368,11 @@ function createBetterAuth() {
       }),
       accountLinking: {
         enabled: true,
+        // Signing in never links, even on a matching email: that is how accounts are taken
+        // over. A signed-in add proves both sides, so it needs no verified or matching email.
+        disableImplicitLinking: true,
         trustedProviders: ["oidc", "google", "github"],
+        allowDifferentEmails: true,
       },
     },
     socialProviders: buildSocialProviders(),
@@ -325,7 +386,10 @@ function createBetterAuth() {
             const isFirstUser = userCount === 0;
 
             if (!registrationEnabled && !isFirstUser) {
+              // The OAuth callback sends an error to the auth-error page only
+              // when it carries a code; without one the browser gets bare JSON.
               throw new APIError("FORBIDDEN", {
+                code: "REGISTRATION_IS_CURRENTLY_DISABLED",
                 message: "Registration is currently disabled",
               });
             }
@@ -385,8 +449,15 @@ function createBetterAuth() {
       },
       account: {
         create: {
-          before: async (account) => {
-            return { data: account };
+          before: async (account, ctx) => {
+            // One identity per provider, also when two adds started together both finish.
+            const accounts = await ctx?.context.internalAdapter.findAccounts(account.userId);
+
+            if (accounts?.some((existing) => existing.providerId === account.providerId)) {
+              return false;
+            }
+
+            return { data: { ...account, ...NO_PROVIDER_TOKENS } };
           },
           after: async (account) => {
             // Process OIDC claims after account is created/updated
@@ -414,6 +485,7 @@ function createBetterAuth() {
           },
         },
         update: {
+          before: async (account) => ({ data: { ...account, ...NO_PROVIDER_TOKENS } }),
           after: async (account) => {
             // Also process on account update (subsequent logins update tokens)
             if (account.providerId === "oidc" && account.accountId) {
@@ -447,20 +519,16 @@ function createBetterAuth() {
 
       apiKey({
         enableSessionForAPIKeys: true,
-        rateLimit: {
-          enabled: true,
-          timeWindow: 1000 * 60 * 60 * 1,
-          maxRequests: 500,
-        },
-        apiKeyHeaders: ["x-api-key", "bearer"],
+        rateLimit: { enabled: false },
+        customAPIKeyValidator: ({ key }) => consumeApiKeyRequest(key),
+        apiKeyHeaders: [...API_KEY_HEADERS],
       }),
-
-      expo(),
 
       nextCookies(),
     ],
 
     hooks: {
+      before: guardSignInMethods,
       after: createAuthMiddleware(async (ctx) => {
         const returned = ctx.context.returned;
 
@@ -483,14 +551,8 @@ function createBetterAuth() {
   });
 }
 
-// Type for the auth instance including plugin API methods used by this package.
-type AuthInstance = ReturnType<typeof betterAuth> & {
-  api: ReturnType<typeof betterAuth>["api"] & ApiKeyAuthService;
-};
-
-function createAuth(): AuthInstance {
-  return createBetterAuth() as AuthInstance;
-}
+// The configured instance's own type, so plugin API methods are included.
+type AuthInstance = ReturnType<typeof createBetterAuth>;
 
 // Lazy-initialized auth instance
 let _auth: AuthInstance | null = null;
@@ -501,11 +563,9 @@ let _auth: AuthInstance | null = null;
  */
 export const auth = new Proxy({} as AuthInstance, {
   get(_target, prop) {
-    if (!_auth) {
-      _auth = createAuth();
-    }
+    _auth ??= createBetterAuth();
 
-    return (_auth as any)[prop];
+    return Reflect.get(_auth, prop);
   },
 });
 

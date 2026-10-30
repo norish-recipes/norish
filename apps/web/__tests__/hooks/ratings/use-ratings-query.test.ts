@@ -30,7 +30,6 @@ describe("useRatingQuery", () => {
   const testRecipeId = "recipe-123";
 
   beforeEach(() => {
-    vi.clearAllMocks();
     queryClient = createTestQueryClient();
   });
 

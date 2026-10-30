@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from "react";
 import { useTRPC } from "@/app/providers/trpc-provider";
-import { usePanelPortalContainer } from "@/components/Panel/Panel";
+import { PanelComboBoxPopover } from "@/components/Panel/Panel";
 import { ComboBox, Input, Label, ListBox } from "@heroui/react";
 import { useQuery } from "@tanstack/react-query";
 import { useLocale, useTranslations } from "next-intl";
@@ -36,7 +36,6 @@ export function IngredientPicker({
   const locale = useLocale();
   const trpc = useTRPC();
   // Inside a Panel the options must portal into it, or vaul swallows every tap (#511).
-  const portalContainer = usePanelPortalContainer();
   const [term, setTerm] = useState("");
   const [search, setSearch] = useState("");
   const [picked, setPicked] = useState<string | null>(null);
@@ -64,7 +63,7 @@ export function IngredientPicker({
       items={options}
       // The list opens once there is something to search by, never empty on focus.
       menuTrigger="input"
-      selectedKey={picked}
+      value={picked}
       variant="secondary"
       onInputChange={(value) => {
         setTerm(value);
@@ -73,7 +72,7 @@ export function IngredientPicker({
           onPick(null);
         }
       }}
-      onSelectionChange={(key) => {
+      onChange={(key) => {
         const option = options.find((candidate) => candidate.id === key);
 
         if (!option) return;
@@ -90,7 +89,7 @@ export function IngredientPicker({
         placeholder={t("pickIngredient")}
         variant="secondary"
       />
-      <ComboBox.Popover UNSTABLE_portalContainer={portalContainer}>
+      <PanelComboBoxPopover>
         <ListBox
           renderEmptyState={() => (
             <p className="text-muted px-3 py-2 text-sm">
@@ -112,7 +111,7 @@ export function IngredientPicker({
             </ListBox.Item>
           )}
         </ListBox>
-      </ComboBox.Popover>
+      </PanelComboBoxPopover>
     </ComboBox>
   );
 }

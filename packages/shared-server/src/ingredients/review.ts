@@ -1,241 +1,200 @@
 /**
- * Ask AI about an Ingredient after the fact (ADR-0037): the question rung 3
- * asks of a new name, asked again of a food a person wants sorted out, with
- * the food itself left out of the candidates and a second look by the plain
- * food AI says it is. AI never edits the catalogue here: a sure answer is
- * recorded as a suggestion — merge into X, a kind of X, or a food of its own
- * — for a person to confirm or dismiss. A parent is proposed even when AI
- * was not sure of it; an unsure answer that names nothing leaves the flag,
- * with the reason brought up to date. The question always looks for a
- * parent: it asks what the food is a kind of, never what is a kind of it.
- * Follows `edit` on the Ingredient.
+ * The AI pass over a food (ADR-0037): AI reads its name, the code looks the reading up, and the
+ * answer is made as an AI Change. The review queue runs it.
  */
-import type { FlaggedCatalogueIngredient } from "@norish/db/repositories/ingredient-catalogue";
 import type {
   FlagReason,
-  ModelTokenEstimate,
   ReviewOutcome,
-  ReviewReport,
-  ReviewVerdict,
-  SuggestionKind,
+  ReviewTrace,
 } from "@norish/shared/contracts/ingredient-catalogue";
+import { wasParentSetByAI } from "@norish/db/repositories/ingredient-ai-changes";
 import {
   findCatalogueIngredient,
-  findCatalogueIngredientStates,
-  listFlaggedCatalogueIngredients,
   setIngredientFlagReason,
 } from "@norish/db/repositories/ingredient-catalogue";
+import { noTrace } from "@norish/shared/contracts/ingredient-catalogue";
+import { distinctFoods } from "@norish/shared/lib/line-foods";
+
+import type { AIResolution } from "../ai/resolution/ingredient-resolution";
+import type { SpellingCheckOutcome } from "./spelling-check";
+import { askWhatFoodThisIs, findFoodNamed } from "../ai/resolution/ingredient-resolution";
 import {
-  deleteSuggestionFor,
-  upsertIngredientSuggestion,
-} from "@norish/db/repositories/ingredient-suggestions";
-import { getIngredientPermissionPolicy } from "@norish/shared-server/config/server-config-loader";
-import { stripPreparation } from "@norish/shared/lib/spelling-keys";
-
-import type { AskTrace } from "../ai/resolution/ingredient-resolution";
-import type { CatalogueActor } from "./catalogue";
-import { askWhatFoodThisIs, estimateQuestionTokens } from "../ai/resolution/ingredient-resolution";
-import { CatalogueEditError, mayEditIngredientRow } from "./catalogue";
-
-/**
- * How long a person's question may take. Longer than an import's budget: the
- * language model may be asked twice, and the person asked for the wait.
- */
-export const REVIEW_BUDGET_MS = 30_000;
+  deleteByAI,
+  flagByAnswer,
+  isOverriding,
+  mergeByAI,
+  overridingDecisions,
+  parentByAI,
+  skippedBy,
+  splitByAI,
+} from "./ai-changes";
+import { ingredientChanges } from "./changes";
+import { announcingAfter } from "./minted";
+import { nameAfterAnswer } from "./plain-names";
+import { resolveParts } from "./resolver";
+import { checkSpellingsOf } from "./spelling-check";
 
 export type { ReviewOutcome };
 
-type Answer = Awaited<ReturnType<typeof askWhatFoodThisIs>>;
+/** What a Clean up came to for a food: AI's answer, and for a seeded food its spellings' check. */
+export type CleanUpOutcome = ReviewOutcome & { spellings?: SpellingCheckOutcome };
 
-/** Why a question got no answer at all: AI off, failing, or its key refused. */
-const NO_ANSWER: readonly FlagReason[] = ["ai-off", "ai-unavailable", "ai-key-rejected"];
+/**
+ * A whole-catalogue Clean up of one food (CONTEXT.md), overriding a person's decisions and undos.
+ * A seeded food is the catalogue's own: only the spellings added to it are checked.
+ */
+export async function cleanUpOverWholeCatalogue(ingredientId: string): Promise<CleanUpOutcome> {
+  return await overridingDecisions(async () => {
+    if (!(await findCatalogueIngredient(ingredientId))?.seeded)
+      return await askAIAbout(ingredientId);
 
-/** The food, if the actor may edit it; refused otherwise. */
-async function editableRow(actor: CatalogueActor, ingredientId: string) {
-  const [row, policy] = await Promise.all([
-    findCatalogueIngredient(ingredientId),
-    getIngredientPermissionPolicy(),
-  ]);
+    return {
+      outcome: "skipped",
+      reason: "seeded",
+      ...noTrace(),
+      spellings: await checkSpellingsOf(ingredientId),
+    };
+  });
+}
 
-  if (!row) throw new CatalogueEditError("not-found");
-  if (!mayEditIngredientRow(policy.edit, actor, row.ownerId)) {
-    throw new CatalogueEditError("forbidden");
+/** Ask AI what a food is and make the answer; a food not merged away then gets its Plain Name. */
+export async function askAIAbout(ingredientId: string): Promise<ReviewOutcome> {
+  const row = await findCatalogueIngredient(ingredientId);
+  const trace = noTrace();
+
+  if (!row) return { outcome: "skipped", reason: "not-found", ...trace };
+  if (!row.askable && !isOverriding()) return { outcome: "skipped", reason: "decided", ...trace };
+
+  const current = row.parentId ? await findCatalogueIngredient(row.parentId) : null;
+  const filedUnder = current && {
+    ...current,
+    byAI: await wasParentSetByAI(ingredientId, current.id),
+  };
+  const answer = await askWhatFoodThisIs(row.name, { excludeId: ingredientId, filedUnder, trace });
+
+  if (answer.kind === "same") {
+    const into = await findCatalogueIngredient(answer.ingredientId);
+    const applied = into ? await mergeByAI(ingredientId, into.id, answer.sure) : "gone";
+
+    if (!into || applied === "gone") return await foodGone(ingredientId, trace);
+    if (applied !== "applied") return { ...skippedBy(applied), ...trace };
+
+    return { outcome: "merge", into: into.name, sure: answer.sure, ...trace };
+  }
+  // A seeded food is never deleted, so it is neither split nor taken for not a food.
+  if (row.seeded && (answer.kind === "several" || answer.kind === "not-a-food")) {
+    return { outcome: "skipped", reason: "seeded", ...trace };
+  }
+  if (answer.kind === "several") return await announcingAfter(() => split(row, answer, trace));
+  if (answer.kind === "not-a-food") {
+    // A tool goes unsure too (Mike, ticket 08); an unsure "names nothing" is only flagged.
+    return answer.sure || answer.tool
+      ? await deleted(ingredientId, trace)
+      : await doubted(ingredientId, "ai-junk", trace);
+  }
+  // No answer leaves the food unreviewed, not flagged.
+  if (answer.kind === "unanswered")
+    return { outcome: "unanswered", reason: answer.reason, ...trace };
+
+  const { sure } = answer;
+  // A parent merged away while AI read is found again by its name: the merge moved its spellings.
+  const parent =
+    answer.parent &&
+    ((await findCatalogueIngredient(answer.parent.id)) ??
+      (await foundAgain(answer.parent.name, ingredientId)));
+  // No parent from AI drops the current one, but never a seeded food's; a person's is never asked.
+  const { outcome: filed, previous } =
+    parent || (row.parentId && !row.seeded)
+      ? await parentByAI(ingredientId, parent?.id ?? null, sure)
+      : { outcome: null, previous: null };
+  const dropped =
+    !parent && filed === "applied" && previous ? await findCatalogueIngredient(previous) : null;
+
+  if (filed === "decided") return { outcome: "skipped", reason: "decided", ...trace };
+  if (filed !== "applied") await flagByAnswer(ingredientId, sure);
+  if (filed === "undone") return { outcome: "skipped", reason: "undone", ...trace };
+
+  const named =
+    row.seeded || (row.nameSettled && !isOverriding()) ? null : await nameAfterAnswer(ingredientId);
+
+  if (named) return { ...trace, ...named };
+  if (filed && filed !== "applied") return { ...skippedBy(filed), ...trace };
+  if (parent && filed === "applied") return { outcome: "parent", of: parent.name, sure, ...trace };
+  if (dropped) return { outcome: "no-parent", from: dropped.name, sure, ...trace };
+
+  return sure
+    ? { outcome: "distinct", ...trace }
+    : { outcome: "unsure", reason: "ai-unsure", ...trace };
+}
+
+async function foundAgain(name: string, excludeId: string) {
+  const named = await findFoodNamed(name, excludeId);
+
+  return named.kind === "found" ? await findCatalogueIngredient(named.food.ingredientId) : null;
+}
+
+/**
+ * Several foods: a part AI found or picked is that food, the others rungs 1-2 or a mint (no slip),
+ * and the food's rows name them instead; a part spelled by the food moves to the food named for it.
+ */
+async function split(
+  food: { id: string; ownerId: string | null },
+  answer: Extract<AIResolution, { kind: "several" }>,
+  trace: ReviewTrace
+): Promise<ReviewOutcome> {
+  if (!answer.sure) return await doubted(food.id, "ai-unsure", trace);
+  // A person may have decided about the food while AI was asked: mint no parts for nothing.
+  const now = await findCatalogueIngredient(food.id);
+
+  if (!now) return { outcome: "skipped", reason: "not-found", ...trace };
+  if (!now.askable && !isOverriding()) return { outcome: "skipped", reason: "decided", ...trace };
+
+  const read = await resolveParts(
+    answer.parts.map((part) => (part.found ? { ...part.found, text: part.text } : part.text)),
+    { userId: food.ownerId },
+    "split"
+  );
+  const parts = distinctFoods(read);
+  const [first, ...rest] = parts;
+
+  // Two parts spelled by the food itself would fold into one: which spelling is which is unknown.
+  if (!first || read.filter((part) => part.ingredientId === food.id).length > 1) {
+    return await doubted(food.id, "ai-unsure", trace);
   }
 
-  return row;
+  const applied = await splitByAI(food.id, [first, ...rest], answer.joined);
+
+  if (applied === "refused") return await doubted(food.id, "ai-unsure", trace);
+  if (applied !== "applied") return { ...skippedBy(applied), ...trace };
+
+  return { outcome: "split", into: parts.map((part) => part.text), ...trace };
 }
 
-async function ask(ingredientId: string, name: string, trace: AskTrace): Promise<Answer> {
-  return askWhatFoodThisIs(name, stripPreparation(name), {
-    excludeId: ingredientId,
-    thorough: true,
-    budgetMs: REVIEW_BUDGET_MS,
-    trace,
-  });
+/** Not a food: the food goes, and its rows keep their text. */
+async function deleted(ingredientId: string, trace: ReviewTrace): Promise<ReviewOutcome> {
+  const outcome = await deleteByAI(ingredientId);
+
+  if (outcome === "kept") return { outcome: "unsure", reason: "ai-junk", ...trace };
+  if (outcome === "applied") return { outcome: "not-a-food", ...trace };
+
+  return { ...skippedBy(outcome), ...trace };
 }
 
-/**
- * The Flagged Ingredients the actor may edit, by name, each saying whether a
- * suggestion waits on it: what a round of Fix catalogue asks about.
- */
-export async function listReviewableIngredients(
-  actor: CatalogueActor
-): Promise<FlaggedCatalogueIngredient[]> {
-  const [rows, policy] = await Promise.all([
-    listFlaggedCatalogueIngredients(),
-    getIngredientPermissionPolicy(),
-  ]);
-
-  return rows.filter((row) => mayEditIngredientRow(policy.edit, actor, row.ownerId));
-}
-
-/** How many of a round's foods the estimate reads, spread over them: enough to even out their names. */
-const ESTIMATE_SAMPLE = 5;
-
-/** A few of a round's names, spread over them, for an estimate to read. */
-export function estimateSample(names: readonly string[]): string[] {
-  const every = Math.max(1, Math.floor(names.length / ESTIMATE_SAMPLE));
-
-  return names.filter((_, index) => index % every === 0).slice(0, ESTIMATE_SAMPLE);
-}
-
-/**
- * About how many tokens one food's question takes on each model it asks,
- * counted from what would be sent for a few of these names, before any round
- * was measured.
- */
-export async function estimateReviewTokens(
-  names: readonly string[]
-): Promise<ModelTokenEstimate[]> {
-  return estimateQuestionTokens(
-    estimateSample(names).map((text) => ({ text, bare: stripPreparation(text) }))
-  );
-}
-
-/** Ask AI about a Flagged Ingredient, and record what it proposes. */
-export async function reviewFlaggedWithAI(
-  actor: CatalogueActor,
-  ingredientId: string
-): Promise<ReviewOutcome> {
-  const row = await editableRow(actor, ingredientId);
-  const trace: AskTrace = { considered: [], englishName: null };
-
-  if (!row.flagged) return { outcome: "not-flagged", ...trace };
-
-  const verdict = await suggest(ingredientId, await ask(ingredientId, row.name, trace), trace, {
-    distinct: true,
-  });
-
-  if (verdict.outcome === "unsure") await setIngredientFlagReason(ingredientId, verdict.reason);
-
-  return { ...verdict, ...trace };
-}
-
-/**
- * Ask AI what food an Ingredient is a kind of, flagged or not, and record
- * what it proposes. "A food of its own" proposes nothing for a food nobody
- * doubted, and an unsure answer leaves the food as it is.
- */
-export async function findParentWithAI(
-  actor: CatalogueActor,
-  ingredientId: string
-): Promise<ReviewOutcome> {
-  const row = await editableRow(actor, ingredientId);
-  const trace: AskTrace = { considered: [], englishName: null };
-  const verdict = await suggest(ingredientId, await ask(ingredientId, row.name, trace), trace, {
-    distinct: row.flagged,
-  });
-
-  return { ...verdict, ...trace };
-}
-
-/**
- * Record the answer as a suggestion, replacing what AI proposed before (an
- * answer that proposes nothing drops it), and say what it proposes. A food
- * AI names that went away meanwhile is a person's turn after all. `distinct` says whether "a food of its own" is
- * worth proposing: only for a flagged food, whose flag it would clear.
- */
-async function suggest(
+/** An answer AI was not sure of that would change too much to make: the food is flagged with it. */
+async function doubted(
   ingredientId: string,
-  answer: Answer,
-  trace: AskTrace,
-  options: { distinct: boolean }
-): Promise<Exclude<ReviewVerdict, { outcome: "not-flagged" }>> {
-  const record = (kind: SuggestionKind, targetId: string | null) =>
-    upsertIngredientSuggestion({
-      ingredientId,
-      kind,
-      targetId,
-      englishName: trace.englishName,
-      considered: trace.considered,
-    });
-  const targetId = answer.kind === "same" ? answer.ingredientId : answer.kindOf;
+  reason: FlagReason,
+  trace: ReviewTrace
+): Promise<ReviewOutcome> {
+  await flagByAnswer(ingredientId, false, reason);
 
-  // A parent is proposed even when AI was not sure of it: a person confirms it either way.
-  if (targetId) {
-    const target = await findCatalogueIngredient(targetId);
-
-    if (!target) {
-      await deleteSuggestionFor(ingredientId);
-
-      return { outcome: "unsure", reason: "food-gone" };
-    }
-    if (answer.kind === "same") {
-      await record("merge", target.id);
-
-      return { outcome: "merge", into: target.name };
-    }
-    await record("parent", target.id);
-
-    return { outcome: "parent", of: target.name };
-  }
-  if (answer.kind === "same") return { outcome: "unsure", reason: "food-gone" };
-  if (answer.flagged) {
-    // An unsure answer replaces what AI proposed before; no answer leaves it waiting.
-    if (!NO_ANSWER.includes(answer.reason)) await deleteSuggestionFor(ingredientId);
-
-    return { outcome: "unsure", reason: answer.reason };
-  }
-  if (options.distinct) await record("distinct", null);
-  else await deleteSuggestionFor(ingredientId);
-
-  return { outcome: "distinct" };
+  return { outcome: "unsure", reason, ...trace };
 }
 
-/** The outcomes a round leaves no suggestion behind for, which its report lists. */
-const UNSUGGESTED: ReadonlySet<string> = new Set(["unsure", "skipped", "failed"]);
+/** The food AI named was merged away meanwhile: the food stays as it was, and its flag says so. */
+async function foodGone(ingredientId: string, trace: ReviewTrace): Promise<ReviewOutcome> {
+  await setIngredientFlagReason(ingredientId, "food-gone");
+  await ingredientChanges().changed([ingredientId]);
 
-/**
- * A finished round's report as it stands now. A food it got no suggestion
- * for is listed while the question it was asked is still open: still flagged
- * after a review, still without a parent after a round of Find parents, its
- * name still unsettled after Clean names. One settled since, or gone, drops
- * out. A round still running is as it was.
- */
-export async function withoutSettled(report: ReviewReport): Promise<ReviewReport> {
-  if (!report.finished) return report;
-
-  const unsuggested = report.entries.filter((entry) => UNSUGGESTED.has(entry.outcome));
-  const states = await findCatalogueIngredientStates(
-    unsuggested.map((entry) => entry.ingredientId)
-  );
-  const open = ({ ingredientId, mode }: ReviewReport["entries"][number]) => {
-    const state = states.get(ingredientId);
-
-    if (!state) return false;
-
-    switch (mode) {
-      case "parent":
-        return !state.parentId;
-      case "name":
-        return !state.nameSettled;
-      default:
-        return state.flagged;
-    }
-  };
-
-  return {
-    ...report,
-    entries: report.entries.filter((entry) => !UNSUGGESTED.has(entry.outcome) || open(entry)),
-  };
+  return { outcome: "unsure", reason: "food-gone", ...trace };
 }

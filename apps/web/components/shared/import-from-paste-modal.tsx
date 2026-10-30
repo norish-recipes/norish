@@ -46,9 +46,8 @@ export default function ImportFromPasteModal({ isOpen, onOpenChange }: ImportFro
         error,
         context: "import-from-paste-modal:import",
       });
-    } finally {
-      setIsSubmitting(false);
     }
+    setIsSubmitting(false);
   }, [importRecipeFromPaste, onOpenChange, router, t, tErrors, text]);
   const handleAIImport = useCallback(() => {
     const trimmed = text.trim();
@@ -82,9 +81,8 @@ export default function ImportFromPasteModal({ isOpen, onOpenChange }: ImportFro
         error,
         context: "import-from-paste-modal:import-ai",
       });
-    } finally {
-      setIsSubmitting(false);
     }
+    setIsSubmitting(false);
   }, [importRecipeFromPasteWithAI, onOpenChange, router, t, tErrors, text]);
   const handleOpenChange = useCallback(
     (open: boolean) => {

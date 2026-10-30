@@ -1,13 +1,9 @@
 import { fireEvent, render, screen, waitFor } from "@testing-library/react";
-import { afterAll, beforeAll, beforeEach, describe, expect, it, vi } from "vitest";
+import { describe, expect, it, vi } from "vitest";
 
 import "@testing-library/jest-dom";
 
 import { CookingStepView } from "@/app/(app)/recipes/[id]/components/cookingmode/cooking-step-view";
-
-beforeEach(() => {
-  vi.clearAllMocks();
-});
 
 vi.mock("@/components/recipe/smart-instruction", () => ({
   SmartInstruction: ({ text }: { text: string }) => <span>{text}</span>,
@@ -156,7 +152,7 @@ describe("CookingStepView discrete scroll layout", () => {
 
     // Find the active step's scrollable container
     const scrollables = document.querySelectorAll(".can-scroll-natively");
-    const activeScrollable = scrollables[0]; // the only one rendered with this class is the active step
+    const activeScrollable = scrollables[0]!; // the only one rendered with this class is the active step
 
     // Mock the layout geometry of the scrollable container
     Object.defineProperty(activeScrollable, "scrollTop", { value: 50, configurable: true });

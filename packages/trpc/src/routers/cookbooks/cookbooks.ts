@@ -22,17 +22,17 @@ import {
 } from "@norish/shared/contracts/zod";
 
 import { formDataInputSchema, getFormDataString } from "../../form-data";
-import { authedProcedure } from "../../middleware";
+import { authedProcedure, viewerOf } from "../../middleware";
 import { router } from "../../trpc";
 import { assertRecipeAccess } from "../recipes/helpers";
 import { extractAndValidateImage } from "../recipes/images";
-import { assertCookbookAccess, emitCookbookEvent, listContextFor } from "./helpers";
+import { assertCookbookAccess, emitCookbookEvent } from "./helpers";
 
 const list = authedProcedure
   .input(CookbookListInputSchema)
   .output(CookbookListResultSchema)
   .query(async ({ ctx, input }) => {
-    const result = await listCookbooks(listContextFor(ctx), {
+    const result = await listCookbooks(viewerOf(ctx), {
       limit: input.limit,
       offset: input.cursor,
       search: input.search,
@@ -50,7 +50,7 @@ const get = authedProcedure
   .input(CookbookGetInputSchema)
   .output(CookbookSummarySchema)
   .query(async ({ ctx, input }) => {
-    const cookbook = await getCookbookForViewer(listContextFor(ctx), input.id);
+    const cookbook = await getCookbookForViewer(viewerOf(ctx), input.id);
 
     if (!cookbook) {
       throw new TRPCError({ code: "NOT_FOUND", message: "Cookbook not found" });
@@ -119,7 +119,7 @@ const update = authedProcedure
 
     // The member summaries are viewer-scoped, so the echo carries the actor's
     // own view of the updated cookbook rather than a bare row.
-    const [cookbook] = await withMemberSummaries(listContextFor(ctx), [outcome.value]);
+    const [cookbook] = await withMemberSummaries(viewerOf(ctx), [outcome.value]);
 
     if (!cookbook) return null;
 

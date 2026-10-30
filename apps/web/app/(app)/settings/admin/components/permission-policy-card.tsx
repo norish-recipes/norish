@@ -58,20 +58,14 @@ export default function PermissionPolicyCard() {
     if (!recipePermissionPolicy) return;
 
     setSaving(action);
-    try {
-      await updateRecipePermissionPolicy({ ...recipePermissionPolicy, [action]: value });
-    } finally {
-      setSaving(null);
-    }
+    await updateRecipePermissionPolicy({ ...recipePermissionPolicy, [action]: value }).finally(() =>
+      setSaving(null)
+    );
   };
 
   const handleIngredientChange = async (edit: PermissionLevel) => {
     setSaving("ingredients");
-    try {
-      await updateIngredientPermissionPolicy({ edit });
-    } finally {
-      setSaving(null);
-    }
+    await updateIngredientPermissionPolicy({ edit }).finally(() => setSaving(null));
   };
 
   const renderPolicySelect = (action: PolicyAction, ariaLabel: string) => (

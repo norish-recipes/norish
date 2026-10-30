@@ -59,7 +59,6 @@ const EXTRACTED = {
 const HTML = "<html><body><main><h1>Pesto pasta</h1><p>200 g spaghetti</p></main></body></html>";
 
 beforeEach(() => {
-  vi.clearAllMocks();
   mocked.generateStructured.mockResolvedValue(EXTRACTED);
   mocked.shadowScore.mockResolvedValue(2);
   mocked.extractImageCandidates.mockReturnValue([]);
@@ -96,11 +95,21 @@ describe("extractRecipeWithAI", () => {
   it("refuses an empty shell before scoring or normalising anything", async () => {
     mocked.generateStructured.mockResolvedValue({
       ...EXTRACTED,
+      recipeIngredient: { metric: [], us: [] },
       recipeInstructions: { metric: [], us: [] },
     });
 
     await expect(extractRecipeWithAI(HTML, "recipe-1")).rejects.toThrow(/missing required fields/);
     expect(mocked.shadowScore).not.toHaveBeenCalled();
     expect(mocked.normalizeExtractionOutput).not.toHaveBeenCalled();
+  });
+
+  it("keeps a recipe that states no steps (#646)", async () => {
+    const stepless = { ...EXTRACTED, recipeInstructions: { metric: [], us: [] } };
+
+    mocked.generateStructured.mockResolvedValue(stepless);
+
+    await expect(extractRecipeWithAI(HTML, "recipe-1")).resolves.toMatchObject({ id: "recipe-1" });
+    expect(mocked.normalizeExtractionOutput).toHaveBeenCalledWith(stepless, expect.anything());
   });
 });

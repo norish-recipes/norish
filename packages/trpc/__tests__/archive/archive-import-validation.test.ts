@@ -1,6 +1,6 @@
 // @vitest-environment node
 import JSZip from "jszip";
-import { beforeEach, describe, expect, it, vi } from "vitest";
+import { describe, expect, it, vi } from "vitest";
 
 import { archiveRouter } from "@norish/trpc/routers/archive/archive";
 
@@ -56,10 +56,6 @@ vi.mock("@norish/shared-server/config/server-config-loader", () => ({
 }));
 
 describe("archiveRouter.importArchive", () => {
-  beforeEach(() => {
-    vi.clearAllMocks();
-  });
-
   it("accepts .paprikarecipes files", async () => {
     const caller = archiveRouter.createCaller({
       user: {

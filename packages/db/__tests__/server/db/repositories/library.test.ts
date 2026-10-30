@@ -15,11 +15,22 @@ import type { RecipeListContext } from "@norish/db/repositories/recipes";
 import { ServerConfigKeys } from "@norish/config/zod/server-config";
 import { addRecipeToCookbook, createCookbook } from "@norish/db/repositories/cookbooks";
 import { listLibrary } from "@norish/db/repositories/library";
-import { deleteRecipeById } from "@norish/db/repositories/recipes";
+import { deleteRecipeById, listRecipes } from "@norish/db/repositories/recipes";
 import { deleteConfig, setConfig } from "@norish/db/repositories/server-config";
-import { cookbooks as cookbooksTable, recipeRatings } from "@norish/db/schema";
+import {
+  cookbooks as cookbooksTable,
+  ingredients,
+  pantryIngredients,
+  recipeRatings,
+} from "@norish/db/schema";
 
-import { createTestRecipe, createTestUser, getTestDb } from "../../../helpers/db-test-helpers";
+import { resolveIngredients } from "../../../../../shared-server/src/ingredients/resolver";
+import {
+  createTestRecipe,
+  createTestUser,
+  getTestDb,
+  insertTestRecipeLine,
+} from "../../../helpers/db-test-helpers";
 import { RepositoryTestBase } from "../../../helpers/repository-test-base";
 
 type PermissionLevel = "everyone" | "household" | "owner";
@@ -79,10 +90,29 @@ describe("the Library union", () => {
     // rows are the whole library and the expected orders are exact.
     await deleteRecipeById(baseRecipeId);
 
-    const alphaRecipe = await createTestRecipe(ownerId, { name: "Aubergine bake" });
+    // Every row's time is set here: recipes would take this machine's clock and cookbooks the
+    // database's, and a skew between the two reorders the date sorts.
+    const minute = (n: number) => new Date(Date.UTC(2026, 0, 1, 12, n));
+    const alphaRecipe = await createTestRecipe(ownerId, {
+      name: "Aubergine bake",
+      createdAt: minute(0),
+    });
     const bravoCookbook = await createCookbook({ userId: ownerId, title: "Brunch" });
-    const charlieRecipe = await createTestRecipe(ownerId, { name: "Carrot soup" });
+    const charlieRecipe = await createTestRecipe(ownerId, {
+      name: "Carrot soup",
+      createdAt: minute(2),
+    });
     const deltaCookbook = await createCookbook({ userId: ownerId, title: "Dinner party" });
+
+    for (const [cookbook, at] of [
+      [bravoCookbook, minute(1)],
+      [deltaCookbook, minute(3)],
+    ] as const) {
+      await getTestDb()
+        .update(cookbooksTable)
+        .set({ createdAt: at })
+        .where(eq(cookbooksTable.id, cookbook.id));
+    }
 
     return { alphaRecipe, bravoCookbook, charlieRecipe, deltaCookbook };
   }
@@ -262,6 +292,7 @@ describe("the Library union", () => {
         { categories: ["Dinner"] as const },
         { tags: ["vegetarian"] },
         { favoritesOnly: true },
+        { pantryOnly: true },
       ]) {
         const result = await listLibrary(viewer(ownerId), { ...base, ...params });
 
@@ -290,6 +321,89 @@ describe("the Library union", () => {
       expect(
         result.items.map((item) => (item.kind === "recipe" ? item.recipe.id : ""))
       ).not.toContain(unrated.id);
+    });
+  });
+
+  describe("the pantry filter", () => {
+    it("keeps the recipes the household's Pantry covers a line of, most complete first", async () => {
+      const housemate = await createTestUser({ name: "Housemate" });
+      const names = ["onion", "red onion", "olive oil", "butter", "salt", "garlic", "black garlic"];
+      const resolved = await resolveIngredients(names, { userId: ownerId });
+      const food = Object.fromEntries(names.map((name, i) => [name, resolved[i]!]));
+      const db = getTestDb();
+
+      for (const [child, parent] of [
+        ["red onion", "onion"],
+        ["black garlic", "garlic"],
+      ] as const) {
+        await db
+          .update(ingredients)
+          .set({ parentId: food[parent]!.ingredientId })
+          .where(eq(ingredients.id, food[child]!.ingredientId));
+      }
+
+      // A housemate keeps them: the Pantry is the household's.
+      await db.insert(pantryIngredients).values(
+        ["red onion", "olive oil", "garlic"].map((name) => ({
+          userId: housemate.id,
+          ingredientId: food[name]!.ingredientId,
+          ingredientAliasId: food[name]!.aliasId,
+        }))
+      );
+
+      async function recipe(name: string, lines: Array<[string[], "together" | "alternatives"?]>) {
+        const made = await createTestRecipe(ownerId, { name });
+
+        await insertTestRecipeLine({ recipeId: made.id, name: "# For the pan" });
+
+        for (const [foods, joined] of lines) {
+          await insertTestRecipeLine(
+            { recipeId: made.id, name: foods.join(" or "), joined },
+            foods.map((name) => food[name]!.aliasId)
+          );
+        }
+      }
+
+      // Red onion covers onion; a line of alternatives needs any one of them.
+      await recipe("Covered", [[["onion"]], [["butter", "olive oil"], "alternatives"]]);
+      await recipe("Missing salt", [[["onion"]], [["salt"]]]);
+      await recipe("Needs both", [[["olive oil", "salt"], "together"]]);
+      // Garlic never covers a kind of it.
+      await recipe("Wrong kind", [[["black garlic"]]]);
+      await recipe("Names no food", []);
+
+      const household = viewer(ownerId, [ownerId, housemate.id]);
+      const result = await listLibrary(household, { ...base, pantryOnly: true });
+      const coverage = result.items.map((item) =>
+        item.kind === "recipe" ? [item.recipe.name, item.recipe.pantryCoverage] : []
+      );
+
+      // Nothing at home, or no food named, leaves a recipe out.
+      expect(coverage).toEqual([
+        ["Covered", 1],
+        ["Missing salt", 0.5],
+      ]);
+      expect(result.total).toBe(2);
+
+      // A cookbook's page orders its members the same way.
+      const members = await listRecipes(
+        household,
+        50,
+        0,
+        undefined,
+        undefined,
+        undefined,
+        undefined,
+        undefined,
+        undefined,
+        undefined,
+        undefined,
+        { pantryOnly: true }
+      );
+
+      expect(members.recipes.map((recipe) => [recipe.name, recipe.pantryCoverage])).toEqual(
+        coverage
+      );
     });
   });
 

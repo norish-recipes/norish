@@ -29,7 +29,6 @@
     "goHome": "Etusivulle",
     "test": "Testaa",
     "format": "Muotoile",
-    "restoreDefaults": "Palauta oletukset",
     "saveChanges": "Tallenna muutokset"
   },
   "secret": {
@@ -58,6 +57,8 @@
     "searchTags": "Hae tunnisteita",
     "favoritesAndRating": "Suosikit ja arvosana",
     "favorites": "Suosikit",
+    "pantry": "Ruokakomero",
+    "pantryOnly": "Ainekset kotona",
     "cookingTime": "Valmistusaika",
     "cookingTimeUnder15": "<15 min",
     "cookingTimeUnder30": "<30 min",
@@ -100,7 +101,7 @@
     "offlineBanner": "Olet offline-tilassa, näytetään välimuistin tiedot",
     "serverUnreachableBanner": "Norish-palvelinta ei tavoiteta, näytetään välimuistin tiedot",
     "live": "Yhteydessä",
-    "offline": "Offline",
+    "offline": "Offline-tilassa",
     "openDetails": "Yhteyden tiedot"
   },
   "language": {
@@ -111,6 +112,11 @@
     "title": "Nora on ymmällään.",
     "message": "Hän nuuskii ympäriinsä löytääkseen, minne halusit mennä.",
     "imageAlt": "Nora näyttää hämmentyneeltä"
+  },
+  "errorPage": {
+    "title": "Jokin meni pieleen.",
+    "message": "Norish kohtasi virheen tällä sivulla.",
+    "retry": "Yritä uudelleen"
   },
   "import": {
     "url": {
@@ -139,7 +145,7 @@
       "title": "Tuo kuvasta",
       "dropzone": "Pudota kuvat tähän tai selaa napsauttamalla",
       "paste": "liittääksesi",
-      "formats": "Tukee JPG-, PNG- ja WebP-muotoja. Enintään 10 Mt tiedostoa kohden.",
+      "formats": "Tukee JPG-, PNG-, WebP- ja PDF-muotoja. Enintään 10 Mt tiedostoa kohden.",
       "invalidType": "Virheellinen tiedostotyyppi",
       "notSupported": "{name} ei ole tuettu kuvamuoto",
       "tooLarge": "Tiedosto on liian suuri",
@@ -178,12 +184,15 @@
     "daily": "Päivittäin",
     "weekly": "Viikoittain",
     "monthly": "Kuukausittain",
+    "yearly": "Vuosittain",
     "day": "päivä",
     "days": "päivää",
     "week": "viikko",
     "weeks": "viikkoa",
     "month": "kuukausi",
     "months": "kuukautta",
+    "year": "vuosi",
+    "years": "vuotta",
     "next": "Seuraava:",
     "every": "Joka",
     "everyOther": "Joka toinen",
@@ -229,7 +238,7 @@
     "connection": {
       "heading": "Yhteys",
       "live": "Yhteydessä",
-      "offline": "Offline",
+      "offline": "Offline-tilassa",
       "forced": "Offline (pakotettu)",
       "liveDescription": "Yhteys Norishiin on muodostettu. Muutokset synkronoituvat sitä mukaa kun teet niitä.",
       "offlineDescription": "Norishia ei tavoiteta. Näytetään välimuistin tiedot; muutokset jonotetaan ja synkronoidaan kun yhteys palaa.",

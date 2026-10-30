@@ -12,6 +12,8 @@ export type AdminConfigsData = Record<ServerConfigKey, unknown>;
 
 export function createUseAdminQuery({ useTRPC }: CreateAdminHooksOptions) {
   function useAdminConfigsQuery() {
+    "use memo";
+
     const trpc = useTRPC();
     const queryClient = useQueryClient();
     const queryKey = trpc.admin.getAllConfigs.queryKey();
@@ -38,6 +40,8 @@ export function createUseAdminQuery({ useTRPC }: CreateAdminHooksOptions) {
     purpose?: "text" | "image";
     enabled?: boolean;
   }) {
+    "use memo";
+
     const trpc = useTRPC();
     const { provider, endpoint, apiKey, purpose, enabled = true } = options;
 
@@ -68,6 +72,8 @@ export function createUseAdminQuery({ useTRPC }: CreateAdminHooksOptions) {
     apiKey?: string;
     enabled?: boolean;
   }) {
+    "use memo";
+
     const trpc = useTRPC();
     const { provider, endpoint, apiKey, enabled = true } = options;
 
@@ -97,6 +103,8 @@ export function createUseAdminQuery({ useTRPC }: CreateAdminHooksOptions) {
    * is no binary to ask. Only fetched while the video screen is usable.
    */
   function useYtDlpVersionQuery(options: { enabled?: boolean } = {}) {
+    "use memo";
+
     const trpc = useTRPC();
     const { enabled = true } = options;
 

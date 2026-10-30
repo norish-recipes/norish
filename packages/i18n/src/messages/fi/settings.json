@@ -11,20 +11,43 @@
     "ingredients": "Ainesosat"
   },
   "user": {
+    "signInMethods": {
+      "title": "Kirjautumistavat",
+      "description": "Yhdistä tilisi SSO:hon.",
+      "password": "Salasana",
+      "addAnother": "Lisää toinen kirjautumistapa",
+      "addProvider": "Yhdistä {provider}",
+      "added": "Lisätty {date}",
+      "remove": "Katkaise yhteys",
+      "unavailable": "Ei tällä hetkellä käytettävissä",
+      "changePassword": "Vaihda salasana",
+      "currentPassword": "Nykyinen salasana",
+      "newPassword": "Uusi salasana",
+      "confirmPassword": "Vahvista uusi salasana",
+      "signOutOthers": "Kirjaa muut istunnot ulos",
+      "passwordChanged": "Salasana vaihdettu.",
+      "errors": {
+        "usedByAnotherAccount": "Tätä kirjautumista käyttää jo toinen tili.",
+        "lastMethod": "Tarvitset vähintään yhden tavan kirjautua.",
+        "signInAgain": "Kirjaudu uudelleen poistaaksesi tämän.",
+        "addFailed": "Kirjautumistapaa ei voitu lisätä.",
+        "removeFailed": "Kirjautumistapaa ei voitu poistaa.",
+        "wrongPassword": "Nykyinen salasana on väärä.",
+        "changeFailed": "Salasanaa ei voitu vaihtaa. Yritä uudelleen."
+      }
+    },
     "profile": {
       "title": "Profiili",
       "nameLabel": "Nimi",
       "namePlaceholder": "Nimesi",
       "emailLabel": "Sähköposti",
       "avatarHint": "Vaihda kuva napsauttamalla profiilikuvaasi",
-      "deleteAvatar": "Poista profiilikuva",
-      "saveChanges": "Tallenna muutokset"
+      "deleteAvatar": "Poista profiilikuva"
     },
     "allergies": {
       "title": "Allergiat",
       "description": "Lisää ruoka-allergiasi, niin saat varoituksen suunnitellessasi reseptejä, jotka sisältävät allergeeneja.",
-      "placeholder": "Kirjoita allergiat (esim. gluteeni, pähkinät, maito)...",
-      "saveButton": "Tallenna allergiat"
+      "placeholder": "Kirjoita allergiat (esim. gluteeni, pähkinät, maito)..."
     },
     "apiKeys": {
       "title": "API-avaimet",
@@ -52,7 +75,8 @@
         "title": "API-avain luotu",
         "warning": "Tallenna tämä avain nyt! Et näe sitä enää uudelleen. Tallennamme vain tiivisteen emmekä voi palauttaa tätä avainta.",
         "hint": "Käytä tätä avainta <code>x-api-key</code>-otsakkeessa API-pyyntöjä tehdessäsi.",
-        "confirmButton": "Olen tallentanut sen"
+        "confirmButton": "Olen tallentanut sen",
+        "copyButton": "Kopioi avain"
       },
       "deleteModal": {
         "title": "Poista API-avain",
@@ -75,6 +99,7 @@
       "accountsDescription": "Nimeä tili, kun sinulla on sivustolle useampi kuin yksi kirjautuminen. Jokainen tuonti käyttää tällöin satunnaisesti valittua sivuston tiliä, jolloin yksikään kirjautuminen ei kanna kaikkia tuonteja. Ilman tilin nimeä jätetty tunniste lähetetään kaikissa oman verkkotunnuksensa tuonneissa.",
       "domain": "Verkkotunnus",
       "domainPlaceholder": "esim. instagram.com",
+      "domainNotFull": "Anna koko verkkotunnus, esim. instagram.com.",
       "account": "Tili",
       "accountPlaceholder": "esim. oma_tunnus (valinnainen)",
       "accountShared": "Kaikki tilit",
@@ -261,7 +286,8 @@
       "noCodeDescription": "Ei aktiivista liittymiskoodia. Luo koodi kutsuaksesi uusia jäseniä.",
       "generateButton": "Luo liittymiskoodi",
       "copySuccess": "Liittymiskoodi kopioitu",
-      "copyFailed": "Liittymiskoodin kopiointi epäonnistui"
+      "copyFailed": "Liittymiskoodin kopiointi epäonnistui",
+      "copyButton": "Kopioi liittymiskoodi"
     },
     "create": {
       "title": "Luo kotitalous",
@@ -301,9 +327,7 @@
       "breakfastTime": "Aamiaisen aika",
       "lunchTime": "Lounaan aika",
       "dinnerTime": "Päivällisen aika",
-      "snackTime": "Välipalan aika",
-      "testConnection": "Testaa yhteys",
-      "saveConfiguration": "Tallenna asetukset"
+      "snackTime": "Välipalan aika"
     },
     "config": {
       "title": "CalDAV-asetukset",
@@ -313,7 +337,6 @@
       "disabled": "Pois käytöstä",
       "editButton": "Muokkaa",
       "deleteButton": "Poista",
-      "saveChanges": "Tallenna muutokset",
       "advancedSettings": "Lisäasetukset",
       "timezone": "Aikavyöhyke: {timezone}",
       "connectionStatus": {
@@ -376,67 +399,26 @@
     "flagged": "Merkitty",
     "flagReasons": {
       "unknown": "Norish ei ollut varma, onko tämä oma ainesosansa.",
-      "ai-off": "Tekoäly on pois päältä, joten mikään ei tarkistanut, tunteeko Norish tämän jo.",
       "unknown-food": "Mikään tunnettu ainesosa ei jaa sanaa tämän nimen kanssa, joten tekoälyltä ei kysytty.",
       "ai-unsure": "Tekoälyltä kysyttiin, onko tämä tunnettu ainesosa, eikä se ollut varma.",
-      "ai-unavailable": "Tekoäly ei vastannut ajoissa, kun tämä nimi lisättiin.",
-      "ai-key-rejected": "Tekoälypalvelu hylkäsi API-avaimen, joten tekoäly ei voinut tarkistaa tätä nimeä.",
       "food-gone": "Tekoäly yhdisti tämän ainesosaan, joka yhdistettiin ennen kuin nimi ehti mukaan.",
       "upgrade": "Vastaavaa tunnettua ainesosaa ei löytynyt.",
-      "seed-ambiguous": "Luettelo tuntee useita ainesosia, joita tämä voisi olla."
+      "seed-ambiguous": "Luettelo tuntee useita ainesosia, joita tämä voisi olla.",
+      "ai-junk": "Tekoäly arveli, ettei tämä ole ainesosa, vaan esimerkiksi keittiöväline tai reseptirivin katkelma."
     },
     "empty": "Ainesosia ei löytynyt",
     "emptyFlagged": "Mitään ei ole merkitty",
     "rename": "Nimeä uudelleen",
     "delete": "Poista",
     "deleteTitle": "Poistetaanko {name}?",
-    "deleteConfirm": "Sen käännökset lähtevät mukana, samoin se mitä kotitaloutesi on opettanut Norishille siitä. Ainesosaa, jota resepti, ostos tai ruokakomero yhä käyttää, ei voi poistaa; yhdistä se sen sijaan.",
+    "deleteConfirm": "Sen käännökset lähtevät mukana, samoin se mitä kotitaloutesi on opettanut Norishille siitä.",
+    "deleteTouches": {
+      "recipeLines": "{count, plural, one {# reseptin rivi säilyttää tekstinsä ilman ainesosaa} other {# reseptien riviä säilyttää tekstinsä ilman ainesosaa}}",
+      "groceries": "{count, plural, one {# ostos säilyttää tekstinsä ilman ainesosaa} other {# ostosta säilyttää tekstinsä ilman ainesosaa}}",
+      "pantry": "{count, plural, one {# ruokakomeron tuote poistetaan} other {# ruokakomeron tuotetta poistetaan}}"
+    },
     "markDistinct": "Merkitse erilliseksi",
     "summary": "{spellings, plural, one {# käännös} other {# käännöstä}}{kinds, plural, =0 {} one {, # laji} other {, # lajia}}{parent, select, none {} other {, yläkäsite: {parent}}}",
-    "askAI": "Kysy tekoälyltä",
-    "fixCatalogue": "Korjaa luettelo",
-    "askAIRound": {
-      "intro": "Tekoäly selvittää, minne merkityt ainesosat kuuluvat, ja korjaa epäyhtenäiset nimet. Mikään ei muutu ennen kuin vahvistat ehdotuksen.",
-      "scopeLabel": "Mitä korjataan",
-      "scopes": {
-        "unsuggested": "Tarkista merkityt ainesosat",
-        "suggested": "Tarkista ehdotukset uudelleen",
-        "name": "Siivoa nimet"
-      },
-      "hints": {
-        "unsuggested": "Etsii kaksoiskappaleita, ala-ainesosia tai ainutlaatuisia.",
-        "suggested": "Tarkistaa merkityt ainesosat uudelleen.",
-        "name": "Siistii ainesosien nimet pelkäksi ainesosaksi. Merkityt ainesosat ovat mukana, jos yllä oleva valintaruutu on valittuna."
-      },
-      "scopeSize": "{count, plural, =0 {Ei ainesosia} one {# ainesosa · noin {tokens} tokenia} other {# ainesosaa · noin {tokens} tokenia}}",
-      "modelTokens": "noin {tokens} tokenia",
-      "basisMeasured": "Edellisen kierroksen käytön mukaan."
-    },
-    "roundProgress": "Kysytään tekoälyltä · {done, number}/{total, number}",
-    "roundSection": {
-      "title": "Kysytään tekoälyltä",
-      "progress": "{done, number}/{total, number}",
-      "waiting": "{count, plural, one {# ainesosa odottaa} other {# ainesosaa odottaa}}"
-    },
-    "reviewing": "Kysytään tekoälyltä…",
-    "aiOutcomes": {
-      "parent": "Tekoäly ehdottaa, että {name} luokitellaan kohteen {of} alalajiksi.",
-      "distinct": "Tekoäly ehdottaa, että {name} on oma ainesosansa.",
-      "unsure": "Tekoäly ei vieläkään ole varma, mikä {name} on.",
-      "notFlagged": "{name} ei ole merkitty.",
-      "skippedNotFlagged": "{name} ei ollut enää merkitty.",
-      "skippedForbidden": "{name} ei ole sinun muutettavissasi.",
-      "skippedNotFound": "{name} oli poissa, kun tekoäly ehti siihen.",
-      "failed": "Kysymys aineesta {name} epäonnistui.",
-      "merge": "Tekoäly ehdottaa, että {name} yhdistetään kohteeseen {into}."
-    },
-    "aiTrace": {
-      "readAs": "Tekoäly luki sen nimellä ”{name}”.",
-      "compared": "Verrattiin: {names}.",
-      "comparedNothing": "Ei ollut tunnettua ruoka-ainetta, johon verrata.",
-      "fromWords": "Based on name.",
-      "noFood": "Tekoäly ei löytänyt tästä nimestä ruoka-ainetta."
-    },
     "addAlias": "Lisää käännös",
     "removeAlias": "Poista {alias}",
     "mergeInto": "Yhdistä…",
@@ -491,7 +473,8 @@
         "name": "{food} · {dataset}, löydetty nimellä",
         "householdFood": "{food} · {dataset}, kotitaloutesi valitsema",
         "household": "Kotitaloutesi omat arvot",
-        "taxonomy": "Open Food Facts"
+        "taxonomy": "Open Food Facts",
+        "ai": "Tekoälyn arvio"
       },
       "correct": "Korjaa",
       "correctTitle": "Korjaa {name}",
@@ -550,8 +533,6 @@
       "name-taken": "Toisella ainesosalla on jo tämä nimi",
       "spelling-taken": "Tämä käännös kuuluu jo toiselle ainesosalle",
       "last-alias": "Ainesosalla on aina vähintään yksi käännös",
-      "alias-in-use": "Reseptit tai ostokset käyttävät vielä tätä käännöstä",
-      "ingredient-in-use": "Reseptit, ostokset tai ruokakomero käyttävät yhä tätä ainesosaa",
       "same-ingredient": "Ainesosaa ei voi yhdistää itseensä",
       "cycle": "Ainesosa ei voi olla oma lajikkeensa",
       "empty": "Anna nimi",
@@ -569,51 +550,34 @@
       "none": "Mikään ei enää käytä sitä"
     },
     "keepAlias": "Säilytä {alias}",
-    "reportOutcomes": {
-      "parent": "Yläkäsitteen alle",
-      "distinct": "Oma ruoka-aine",
-      "unsure": "Epävarma",
-      "skipped": "Ohitettu",
-      "failed": "Epäonnistui",
-      "merge": "Yhdistä"
-    },
+    "junkTitle": "Merkitäänkö {alias} muuksi kuin ainesosaksi?",
+    "junkBody": "Millään muulla ainesosalla ei ole tätä käännöstä. Uudet reseptit ohittavat tekstin, joka on merkitty muuksi kuin ainesosaksi.",
+    "junkRemove": "Poista vain",
+    "junkMark": "Ei ainesosa",
     "expandKinds": "Näytä lajit: {name}",
     "collapseKinds": "Piilota lajit: {name}",
     "layoutSection": "Näkymä",
     "asTree": "Hierarkkinen näkymä",
     "showOnly": "Näytä vain",
     "standaloneOnly": "Ilman yläkäsitettä tai lajeja",
-    "findParent": "Etsi yläkäsite tekoälyllä",
-    "findParentsAll": "Etsi yläkäsitteet tekoälyllä",
-    "suggestion": {
-      "merge": "Yhdistä {name} kohteeseen {into}",
-      "parent": "Luokittele {name} kohteen {of} alle",
-      "distinct": "Pidä {name} omana ainesosanaan",
-      "filedFromName": "{name} filed under {of}",
-      "rename": "Nimeä {name} uudelleen: {to}"
-    },
-    "suggestionsTitle": "Tekoälyn ehdotukset",
-    "suggestionsEmpty": "Mikään ei odota sinua.",
-    "suggestionsNone": "Ei ehdotusta",
-    "suggestionsOpen": "{count, plural, =0 {Ehdotukset} one {# ehdotus} other {# ehdotusta}}",
-    "suggestionsFailed": "{count, plural, one {# ehdotusta} other {# ehdotusta}} ei voitu ottaa käyttöön: {reason}",
-    "confirmSuggestion": "Vahvista",
-    "dismissSuggestion": "Hylkää",
-    "confirmAll": "Vahvista kaikki ({count})",
-    "dismissAll": "Hylkää kaikki",
-    "suggestedByAI": "Tekoälyn ehdottama",
-    "suggestedFromName": "Based on name",
-    "proposal": {
-      "merge": "Merge into {into}",
-      "parent": "File under {of}",
-      "distinct": "Food of its own",
-      "rename": "Nimeä uudelleen: {to}"
-    },
-    "skippedReasons": {
-      "notFlagged": "No longer flagged",
-      "forbidden": "Not yours to edit",
-      "notFound": "No longer exists",
-      "settled": "Nimi on jo vahvistettu, tai ehdotus odottaa"
+    "changedByAI": {
+      "title": "Tekoälyn muutokset",
+      "open": "{count, plural, =0 {Tekoälyn muutokset} other {Tekoälyn muutokset · # tarkistettavaa}}",
+      "unsure": "Ei varma",
+      "sure": "Muutettu",
+      "empty": "Tekoäly ei ole muuttanut mitään viimeisen kuukauden aikana.",
+      "keep": "Pidä",
+      "undo": "Peru",
+      "keepAll": "Pidä kaikki",
+      "undoAll": "Peru kaikki",
+      "clear": "Tyhjennä",
+      "merge": "{from} yhdistetty tähän",
+      "parent": "Sijoitettu kohtaan {of}",
+      "parentDropped": "Ei enää kohdassa {of}",
+      "plainName": "Nimetty uudelleen, oli {from}",
+      "notAFood": "Poistettu, koska se ei ole ainesosa. Reseptirivit ja ostokset säilyttävät tekstinsä.",
+      "spellingRemoved": "Käännös {from} poistettu",
+      "spellingMoved": "Käännös {from} siirretty kohteeseen {of}"
     },
     "icon": {
       "change": "Vaihda kuvake",
@@ -622,20 +586,6 @@
       "failed": "Kuvasta ei voitu tehdä kuvaketta.",
       "generate": "Luo tekoälyllä",
       "generateFailed": "Kuvaketta ei voitu luoda."
-    },
-    "drawIcons": {
-      "open": "Piirrä kuvakkeet",
-      "title": "Piirrä kuvakkeet",
-      "intro": "Kuvapalvelu piirtää jokaiselle ruoalle kuvakkeen, josta tulee heti ruoan oma. Ruoalle voi antaa toisen kuvakkeen sen paneelissa.",
-      "scopeLabel": "Mitkä ruoat",
-      "scopes": {
-        "bare": "Vain ruoat, joilla ei ole lainkaan kuvaketta",
-        "unowned": "Kaikki ruoat ilman omaa kuvaketta"
-      },
-      "scopeSize": "{count, plural, =0 {Ei kuvakkeita} one {# kuvake} other {# kuvaketta}}",
-      "start": "Piirrä kuvakkeet",
-      "progress": "Piirretään kuvakkeita · {done, number}/{total, number}",
-      "drawing": "Piirretään kuvaketta…"
     }
   },
   "admin": {
@@ -675,7 +625,6 @@
       "localesDescription": "Valitse, mistä kielistä käyttäjät voivat valita",
       "defaultLocale": "Oletuskieli",
       "defaultLocaleDescription": "Uusien käyttäjien kieli ja varakieli",
-      "saveLocales": "Tallenna kieliasetukset",
       "localesSaved": "Kieliasetukset tallennettu",
       "localesError": "Kieliasetusten tallennus epäonnistui",
       "atLeastOneLocale": "Vähintään yhden kielen on oltava käytössä",
@@ -773,7 +722,7 @@
       "warning1": "Kaikki aktiiviset yhteydet katkaistaan",
       "warning2": "Palvelin ei ole käytettävissä muutamaan sekuntiin",
       "warning3": "Varmista, että asennuksessasi on määritetty <code>restart: always</code>, muuten palvelin ei käynnisty automaattisesti takaisin",
-      "confirmButton": "Käynnistä nyt uudelleen"
+      "confirmButton": "Käynnistä uudelleen"
     },
     "authProviders": {
       "title": "Kirjautumistavat",
@@ -792,8 +741,8 @@
           "namePlaceholder": "esim. Authentik, Keycloak",
           "issuer": "Myöntäjän osoite",
           "issuerPlaceholder": "https://your-idp.com",
-          "clientId": "Client ID",
-          "clientSecret": "Client secret",
+          "clientId": "Asiakastunnus",
+          "clientSecret": "Asiakassalaisuus",
           "wellknown": "Well-known-osoite (valinnainen)",
           "wellknownPlaceholder": "Johdetaan myöntäjästä automaattisesti, jos ei asetettu"
         },
@@ -816,17 +765,17 @@
         "title": "GitHub",
         "subtitle": "GitHub OAuth",
         "fields": {
-          "clientId": "Client ID",
-          "clientSecret": "Client secret"
+          "clientId": "Asiakastunnus",
+          "clientSecret": "Asiakassalaisuus"
         }
       },
       "google": {
         "title": "Google",
         "subtitle": "Google OAuth",
         "fields": {
-          "clientId": "Client ID",
+          "clientId": "Asiakastunnus",
           "clientIdPlaceholder": "*.apps.googleusercontent.com",
-          "clientSecret": "Client secret"
+          "clientSecret": "Asiakassalaisuus"
         }
       },
       "form": {
@@ -914,19 +863,71 @@
         "title": "Joukkorikastus",
         "subtitle": "Aja käytössä olevat rikastukset kaikille resepteille",
         "description": "Aseta kaikki käytössä olevat rikastukset jonoon",
-        "button": "Rikasta kaikki reseptit",
+        "button": "Rikasta",
         "confirmTitle": "Ajetaanko rikastus kaikille resepteille?",
         "confirmMessage": "Tämä asettaa jonoon tekoälytyötä jokaiselle tämän palvelimen reseptille. Jokainen rikastustyyppi, jonka automaattinen kytkin on päällä, ajetaan siellä missä tietoja puuttuu.",
         "replaceExisting": "Korvaa olemassa olevat tiedot",
         "replaceExistingDescription": "Tee kategoriat, ravintosisältö, alkuperä ja työvaiheiden ainesosat uudelleen myös silloin, kun resepti jo sisältää ne. Tunnisteita ja allergiamerkintöjä ainoastaan lisätään.",
         "replaceWarning": "Tätä ei voi kumota. Myös itse syöttämäsi tiedot korvataan, mukaan lukien käsin linkittämäsi työvaiheiden ainesosat: mikään ei kirjaa, mitkä arvot ovat tekoälyn tuottamia.",
         "costWarning": "Tämä voi olla raskas toiminto: jos reseptejä on paljon, se voi kestää kauan ja kuluttaa maksullisella tekoälypalvelulla huomattavasti krediittejä.",
-        "confirmButton": "Aja kaikille resepteille",
-        "confirmButtonReplace": "Korvaa kaikki reseptit",
+        "confirmButton": "Aja",
+        "confirmButtonReplace": "Korvaa",
         "queued": "{queued, plural, =0 {Ei jonotettuja ajoja} one {# ajo jonossa} other {# ajoa jonossa}}, {recipes, plural, one {# reseptille} other {# reseptille}}",
         "aiDisabled": "Tekoäly on pois käytöstä tällä palvelimella. Ota tekoäly ensin käyttöön.",
         "error": "Joukkorikastuksen käynnistys epäonnistui",
         "imageCount": "{count, plural, =0 {Ajo ei luo yhtään kuvaa.} one {Ajo luo # kuvan.} other {Ajo luo # kuvaa.}}"
+      },
+      "ingredientCatalogue": {
+        "title": "Ainesosaluettelo",
+        "subtitle": "Mitä tekoäly tekee uusille ainesosille",
+        "automatic": "Automaattisesti uusille ainesosille",
+        "automaticDescription": "Mitä tekoäly tekee, kun luetteloon lisätään ainesosa.",
+        "automaticPlaceholder": "Mitään ei ajeta automaattisesti",
+        "kinds": {
+          "cleanUp": "Siivoa uudet ainesosat",
+          "cleanUpDescription": "Yhdistä kirjoitusasut, aseta yläkäsite ja pelkkä nimi, poista se, mikä ei ole ruokaa",
+          "nutrition": "Täydennä puuttuvat ravintoarvot",
+          "nutritionDescription": "Arvioi makrot 100 g:aa kohti, jos ainesosalla ei ole niitä",
+          "conversions": "Täydennä puuttuvat muunnokset",
+          "conversionsDescription": "Arvioi tiheys ja kappalepaino, jos ainesosalla ei ole niitä",
+          "icon": "Piirrä puuttuvat kuvakkeet",
+          "iconDescription": "Vain ainesosalle, jolla ei ole kuvaketta, ei edes yläkäsitteensä"
+        },
+        "cleanUpCatalogue": {
+          "title": "Siivoa luettelo",
+          "description": "Kysy tekoälyltä luettelossa jo olevista aineksista.",
+          "running": "Siivous on käynnissä. Seuraa sitä työjonossa.",
+          "button": "Siivoa luettelo",
+          "intro": "Tekoäly yhdistää kirjoitusasuja, asettaa yläkäsitteet ja selkeät nimet ja poistaa sen, mikä ei ole ruokaa. Jokainen muutos näkyy kohdassa Tekoälyn muutokset, ja sen voi kumota.",
+          "scopeLabel": "Mitkä ainekset",
+          "scopes": {
+            "recipe-foods": "Reseptien ainekset",
+            "recipe-foods-description": "Reseptien tuomat ainekset, joista kukaan ei ole päättänyt",
+            "whole-catalogue": "Koko luettelo",
+            "whole-catalogue-description": "Kaikki ainekset, myös sisäänrakennetut, välittämättä siitä, mitä ihmiset päättivät tai kumosivat. Sisäänrakennettuja ei koskaan poisteta."
+          },
+          "count": "{count, plural, one {Tekoäly kysyy # aineksesta.} other {Tekoäly kysyy # aineksesta.}}",
+          "start": "Siivoa",
+          "started": "{count, plural, one {Siivotaan # ainesta} other {Siivotaan # ainesta}}",
+          "error": "Siivousta ei voitu aloittaa"
+        },
+        "fillGaps": {
+          "title": "Täydennä puutteet",
+          "description": "Anna tekoälyn täydentää, mitä aineksilta puuttuu.",
+          "running": "Täydennys on käynnissä. Seuraa sitä työjonossa.",
+          "button": "Täydennä puutteet",
+          "intro": "Tekoäly täydentää jokaiselle luettelon ainekselle vain sen, mitä sillä ei ole omasta takaa. Mitään, mitä aineksella jo on, ei koskaan korvata.",
+          "kindsLabel": "Mitä täydennetään",
+          "kinds": {
+            "nutrition": "Ravintoarvot",
+            "conversions": "Muunnokset",
+            "icons": "Kuvakkeet"
+          },
+          "count": "{count, plural, =0 {Ei täydennettävää} one {# aines} other {# ainesta}}",
+          "start": "Täydennä puutteet",
+          "started": "Puutteita täydennetään. Seuraa sitä työjonossa.",
+          "error": "Täydennystä ei voitu aloittaa"
+        }
       }
     },
     "aiConfig": {
@@ -962,7 +963,6 @@
       "alwaysUseAI": "Käytä aina tekoälytuontia",
       "alwaysUseAIDescription": "Ohita rakenteiset jäsentimet ja poimi reseptit vain tekoälyllä",
       "connectionSuccess": "Yhteys onnistui",
-      "testConnection": "Testaa yhteys",
       "vision": "konenäkö",
       "automaticEnrichment": "Reseptien automaattinen rikastus",
       "automaticEnrichmentDescription": "Mitkä tekoälyrikastukset ajetaan uusille resepteille. Jäsenet voivat silti ajaa kunkin käsin.",
@@ -982,14 +982,6 @@
         "ingredientLinkingDescription": "Linkitä jokainen työvaihe käyttämiinsä ainesosariveihin niissä vaiheissa, joissa linkkejä ei ole",
         "imageGeneration": "Kuvien luonti",
         "imageGenerationDescription": "Piirrä kuva ruoasta uusille resepteille, joilla ei ole lainkaan kuvaa"
-      },
-      "automaticIngredients": "Automaattisesti uusille ainesosille",
-      "automaticIngredientsDescription": "Mitä tapahtuu, kun luetteloon lisätään uusia ainesosia.",
-      "automaticIngredientsKinds": {
-        "plainName": "Siivoa nimi",
-        "plainNameDescription": "Poista se, mikä ei ole ruoka-ainetta, kuten määrät ja pakkauskoodit",
-        "icon": "Piirrä kuvake",
-        "iconDescription": "Vain ruoka-aineelle, jolla ei ole kuvaketta, ei edes yläkäsitteensä"
       },
       "tagStrategy": "Sallitut tunnisteet",
       "tagStrategyDescription": "Mitä tunnisteita tunnisteiden luonti saa käyttää, ajetaanpa se automaattisesti tai käsin",
@@ -1029,11 +1021,11 @@
       "transcription": "Litterointi",
       "transcriptionDescription": "Muunna videon ääni tekstiksi reseptin poimintaa varten",
       "transcriptionProvider": "Litterointipalvelu",
-      "transcriptionProviderDescription": "Vain OpenAI ja OpenAI-yhteensopivat päätepisteet tukevat Whisper-litterointia",
       "transcriptionProviders": {
         "disabled": "Pois käytöstä",
         "openai": "OpenAI Whisper",
         "groq": "Groq Whisper",
+        "mistral": "Mistral Voxtral",
         "azure": "Azure OpenAI Whisper",
         "ollama": "Ollama",
         "genericOpenai": "Yleinen OpenAI-yhteensopiva"
@@ -1041,7 +1033,7 @@
       "transcriptionEndpoint": "Päätepisteen osoite",
       "transcriptionEndpointDescription": "OpenAI-yhteensopiva päätepiste Whisper-tuella tai Ollama-päätepiste",
       "transcriptionModel": "Malli",
-      "transcriptionModelDescription": "Litterointiin käytettävä Whisper-malli",
+      "transcriptionModelDescription": "Litterointiin käytettävä malli",
       "transcriptionModelPlaceholder": "Valitse tai kirjoita mallin nimi",
       "transcriptionApiKey": "API-avain",
       "transcriptionApiKeyDescription": "Käyttää tekoälyasetusten API-avainta, jos tätä ei ole asetettu",
@@ -1049,6 +1041,28 @@
       "transcriptionApiKeyOptional": "API-avain (valinnainen)",
       "transcriptionApiKeyOptionalDescription": "Useimmat paikalliset Whisper-palvelimet eivät vaadi API-avainta",
       "transcriptionApiKeyOptionalPlaceholder": "Jätä tyhjäksi paikallisia palvelimia varten"
+    },
+    "pageRenderers": {
+      "title": "Sivujen renderöijät",
+      "description": "Selaimet, jotka lukevat sivuja, joita tavallinen haku ei pysty lukemaan. Ensin Obscura, sitten Chromium-selain ja lopuksi ratkaisija.",
+      "obscura": "Obscura",
+      "obscuraDescription": "Norishin mukana tuleva headless-selain.",
+      "obscuraEndpoint": "Obscuran päätepiste",
+      "cdpToken": "CDP-tunnus",
+      "cdpTokenDescription": "Sama tunnus kuin obscura-palvelussa.",
+      "chromium": "Chromium-selain",
+      "chromiumDescription": "Mikä tahansa Chromium, jolla on CDP-päätepiste.",
+      "chromiumEndpoint": "Chromiumin päätepiste",
+      "solver": "FlareSolverr tai Byparr",
+      "solverDescription": "Kokeillaan, kun selaimet epäonnistuvat. Se ei koskaan saa sivustojen todennustunnuksia.",
+      "solverEndpoint": "Ratkaisijan päätepiste",
+      "allowPrivateAddresses": "Salli yksityiset osoitteet",
+      "allowPrivateAddressesDescription": "Antaa tuontien tavoittaa paikallisen verkkosi. Obscura hylkää ne joka tapauksessa.",
+      "navigationTimeout": "Navigoinnin aikakatkaisu (ms)",
+      "navigationTimeoutDescription": "Kuinka kauan renderöijällä on aikaa ladata sivu.",
+      "saved": "Sivujen renderöijät tallennettu",
+      "error": "Sivujen renderöijien tallennus epäonnistui",
+      "connectionSuccess": "Yhteys onnistui"
     },
     "imageGenerationConfig": {
       "description": "Kuvat tarvitsevat oman palveluntarjoajan, koska useimmat tekoälypalvelut eivät osaa piirtää.",
@@ -1102,9 +1116,7 @@
         "validateEnrichments": "Rikastusten tarkistus",
         "validateEnrichmentsDescription": "Tarkista jokaisen rikastusajon omat väitteet ennen kuin ne tallennetaan"
       },
-      "testConnection": "Testaa yhteys",
-      "connectionSuccess": "Yhteys onnistui",
-      "aiDisabledHint": "Tekoäly on poistettu käytöstä tällä palvelimella. Ota se käyttöön tekoälyasetuksissa, jotta voit testata ja käyttää päätösmallia."
+      "connectionSuccess": "Yhteys onnistui"
     },
     "promptsConfig": {
       "recipeExtraction": "Reseptin poiminnan kehote",
@@ -1135,8 +1147,11 @@
       "ingredientLinkingDescription": "Käytetään linkitettäessä jokainen työvaihe käyttämiinsä ainesosariveihin",
       "ingredientLinkingPlaceholder": "Kehote ainesosien linkittämiseen työvaiheisiin...",
       "ingredientResolution": "Ainesosien tunnistuksen kehote",
-      "ingredientResolutionDescription": "Käytetään päättämään, onko uusi ainesosan nimi ruoka, jonka Norish jo tuntee",
+      "ingredientResolutionDescription": "Lähetetään kielimallille, kun tekoäly lukee uuden ainesosan nimen, ja nimi sekä ainesosa, jonka alle se nyt kuuluu, lisätään perään. Kertoo, onko se yksi ainesosa, useampi vai ei mikään.",
       "ingredientResolutionPlaceholder": "Kehote ainesosien nimien tunnistamiseen...",
+      "ingredientMatch": "Ainesosien yhdistämisen kehote",
+      "ingredientMatchDescription": "Lähetetään kielimallille, kun tekoälyn antamat nimet löytävät luettelosta useita ainesosia tai vain ainesosia, jotka eroavat yhden kirjaimen verran, ja nimi sekä nuo ainesosat lisätään perään. Kertoo, mikä niistä nimi on, jos mikään.",
+      "ingredientMatchPlaceholder": "Kehote ainesosien nimien yhdistämiseen luetteloon...",
       "imageGenerationBrief": "Kuvabriefin kehote",
       "imageGenerationBriefDescription": "Käytetään muuntamaan resepti lyhyeksi visuaaliseksi briefiksi ennen kuvan luontia. Resepti liitetään kehotteen perään.",
       "imageGenerationBriefPlaceholder": "Kehote visuaalisen briefin kirjoittamiseen...",
@@ -1148,7 +1163,13 @@
       "ingredientIconStylePlaceholder": "Kehote ainesosakuvakkeiden tyylille...",
       "ingredientPlainName": "Ainesosien nimien siivouskehote",
       "ingredientPlainNameDescription": "Lähetetään kielimallille, kun tekoäly siivoaa ainesosan nimen, ja nimi sekä sen muut kirjoitusasut lisätään perään. Kertoo, mitä nimestä poistetaan ja mitä jätetään.",
-      "ingredientPlainNamePlaceholder": "Kehote ainesosien nimien siivoamiseen..."
+      "ingredientPlainNamePlaceholder": "Kehote ainesosien nimien siivoamiseen...",
+      "ingredientSpellingCheck": "Käännösten tarkistuskehote",
+      "ingredientSpellingCheckDescription": "Lähetetään kielimallille, kun koko luettelo siivotaan, jokaisesta luettelon ainesosasta, jolla on ihmisten, tuontien tai yhdistämisten lisäämiä käännöksiä, ja ainesosa, nuo käännökset ja kustakin yksi reseptirivi lisätään perään. Kertoo, mitkä niistä nimeävät ainesosan, eivät mitään ainesosaa tai toisen ainesosan.",
+      "ingredientSpellingCheckPlaceholder": "Kehote ainesosien käännösten tarkistamiseen...",
+      "ingredientNutrition": "Ainesosien ravintoarvokehote",
+      "ingredientNutritionDescription": "Lähetetään kielimallille ainesosasta, jolta puuttuu oma ravintoarvo, tiheys tai kappalepaino, kun tekoäly saa täydentää ne, ja ainesosa sekä se, minkä lajia se on, lisätään perään. Arvioi vain sen, mitä ainesosalta puuttuu.",
+      "ingredientNutritionPlaceholder": "Kehote ainesosan ravintoarvon arvioimiseen..."
     },
     "unsavedChanges": "Tallentamattomia muutoksia",
     "jsonEditor": {
@@ -1171,7 +1192,7 @@
         "delayed": "Viivästetty",
         "completed": "Valmis",
         "failed": "Epäonnistui",
-        "paused": "Keskeytetty",
+        "cancelled": "Peruttu",
         "prioritized": "Priorisoitu",
         "unknown": "Tuntematon",
         "hanging": "Jumissa"
@@ -1200,8 +1221,9 @@
         "searching": "Hae kaupasta",
         "reading-product": "Lue tuotesivu",
         "saving-link": "Tallenna linkki",
-        "asking-ai": "Ask AI about the food",
+        "asking-ai": "Kysy tekoälyltä ruoka-aineesta",
         "drawing-icon": "Piirrä ruoan kuvake",
+        "filling-gaps": "Täydennä ruoka-aineen aukot",
         "naming": "Siivoa ruoka-aineen nimi"
       },
       "queues": {
@@ -1220,7 +1242,7 @@
         "store-lookup": "Kaupan haku",
         "ingredient-review": "Kysy tekoälyltä ainesosista",
         "ingredient-icons": "Ainesosien kuvakkeiden piirto",
-        "new-ingredients": "Uudet ainesosat"
+        "ingredient-fill": "Ainesosien aukkojen täydennys"
       },
       "summary": {
         "failed": "{count} epäonnistui"
@@ -1236,6 +1258,7 @@
       "detail": {
         "title": "Työn tiedot",
         "notFound": "Työtä ei löytynyt. Se on voitu siivota pois.",
+        "cancelledNote": "Ylläpitäjä perui tämän työn.",
         "sections": {
           "error": "Virhe",
           "pipelineSteps": "Käsittelyvaiheet",
@@ -1264,11 +1287,12 @@
       },
       "actions": {
         "retry": "Yritä uudelleen",
+        "cancel": "Pysäytä",
+        "cancelling": "Pysäytetään…",
         "remove": "Poista"
       },
       "removeModal": {
-        "message": "Poistetaanko tämä työ pysyvästi?",
-        "confirm": "Poista työ"
+        "message": "Poistetaanko tämä työ pysyvästi?"
       },
       "retention": {
         "title": "Töiden säilytys",

@@ -75,14 +75,12 @@ export const JOB_PIPELINES: Record<QueueName, string[]> = {
   [QUEUE_NAMES.INGREDIENT_REVIEW]: ["asking-ai"],
   // One step per food, "drawing-icon:3/12", each carrying what came of it.
   [QUEUE_NAMES.INGREDIENT_ICONS]: ["drawing-icon"],
-  // Per food, its Plain Name then its icon, each where the administrator turned it on.
-  [QUEUE_NAMES.NEW_INGREDIENTS]: ["naming", "drawing-icon"],
+  // One step per food, "filling-gaps:3/12", each carrying what came of it.
+  [QUEUE_NAMES.INGREDIENT_FILL]: ["filling-gaps"],
 };
 
 /**
  * Parse a progress value into step progress, if it has the expected shape.
- * Normalizes the legacy flat `{ step, attempt, timeline }` shape into the
- * per-attempt `attempts` array so old in-flight jobs still render.
  */
 export function readStepProgress(progress: unknown): JobStepProgress | null {
   if (
@@ -94,26 +92,12 @@ export function readStepProgress(progress: unknown): JobStepProgress | null {
     return null;
   }
 
-  const parsed = progress as Partial<JobStepProgress> & {
-    attempt?: number;
-    timeline?: JobStepEvent[];
-  };
-
-  let attempts: JobAttemptTimeline[];
-
-  if (Array.isArray(parsed.attempts)) {
-    attempts = parsed.attempts;
-  } else if (Array.isArray(parsed.timeline)) {
-    // Legacy flat shape → single attempt.
-    attempts = [{ attempt: (parsed.attempt ?? 0) + 1, timeline: parsed.timeline }];
-  } else {
-    attempts = [];
-  }
+  const parsed = progress as Partial<JobStepProgress>;
 
   return {
     step: parsed.step as string,
     updatedAt: parsed.updatedAt ?? 0,
-    attempts,
+    attempts: Array.isArray(parsed.attempts) ? parsed.attempts : [],
   };
 }
 
@@ -155,6 +139,18 @@ function isMergeable(value: unknown): value is Record<string, unknown> {
   return typeof value === "object" && value !== null && !Array.isArray(value);
 }
 
+/** For each job a worker here is running, whether an administrator cancelled it. */
+const cancelChecks = new WeakMap<Job, () => boolean>();
+
+/**
+ * Registered by the worker for each job it starts, so the job's next step
+ * report stops it once cancelled: a step boundary is where work that does not
+ * watch its abort signal stops.
+ */
+export function stopAtNextStepOnceCancelled(job: Job, cancelled: () => boolean): void {
+  cancelChecks.set(job, cancelled);
+}
+
 /**
  * Report that the job is entering a new processing step.
  *
@@ -163,9 +159,12 @@ function isMergeable(value: unknown): value is Record<string, unknown> {
  * still name it when the step goes on to fail. `completeStep` merges its own
  * detail on top rather than replacing it.
  *
- * Best-effort: monitoring must never fail the job itself.
+ * Best-effort: monitoring must never fail the job itself. A job an
+ * administrator cancelled stops here instead of entering the step.
  */
 export async function reportStep(job: Job, step: string, detail?: unknown): Promise<void> {
+  if (cancelChecks.get(job)?.()) throw new Error(`Cancelled before ${step}`);
+
   try {
     const now = Date.now();
     const attempts = cloneAttempts(job);

@@ -24,8 +24,6 @@ const LOAD_MORE_MARGIN = "600px";
  */
 export function IngredientList({
   rows,
-  reviewing,
-  drawing,
   settling,
   hasMore,
   isFetchingMore,
@@ -35,10 +33,6 @@ export function IngredientList({
 }: {
   /** The foods to list, in order, each with its depth in the tree. */
   rows: IngredientTreeRow[];
-  /** The foods waiting their turn in a round of Ask AI. */
-  reviewing: ReadonlySet<string>;
-  /** The foods waiting their turn in a Draw icons round. */
-  drawing: ReadonlySet<string>;
   /** A search or filter is being applied: the list dims but stays. */
   settling: boolean;
   hasMore: boolean;
@@ -48,6 +42,10 @@ export function IngredientList({
   /** Fold a food's kinds out or back; absent where the list is flat. */
   onToggleKinds?: (id: string) => void;
 }) {
+  // TanStack Virtual hands back one mutable instance, so compiled memoisation
+  // would keep its first rows.
+  "use no memo";
+
   const containerRef = useRef<HTMLDivElement>(null);
   const endRef = useRef<HTMLDivElement>(null);
   // Whether the end of the list is within reach of the viewport.
@@ -121,11 +119,9 @@ export function IngredientList({
             >
               <IngredientRow
                 depth={row.depth}
-                drawing={drawing.has(row.item.id)}
                 expanded={row.expanded}
                 item={row.item}
                 loadingKinds={row.loading}
-                reviewing={reviewing.has(row.item.id)}
                 onOpen={onOpen}
                 onToggleKinds={onToggleKinds}
               />

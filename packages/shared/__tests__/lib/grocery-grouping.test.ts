@@ -7,7 +7,10 @@
 import { describe, expect, it } from "vitest";
 
 import type { GroceryDto } from "@norish/shared/contracts";
-import { groupGroceriesByIngredient } from "@norish/shared/lib/grocery-grouping";
+import {
+  groupGroceriesByIngredient,
+  normalizeIngredientNameForGrouping,
+} from "@norish/shared/lib/grocery-grouping";
 
 let nextSortOrder = 0;
 
@@ -133,5 +136,39 @@ describe("groupGroceriesByIngredient", () => {
     expect(grouped.get("store-a")).toHaveLength(1);
     expect(grouped.get("store-b")).toHaveLength(1);
     expect(grouped.get("store-a")?.[0]?.totalAmount).toBe(1);
+  });
+});
+
+describe("normalizeIngredientNameForGrouping", () => {
+  it("leaves out what is in brackets, with the spaces around it", () => {
+    expect(normalizeIngredientNameForGrouping("  Tomatoes (diced)  [optional] {fresh}  ")).toBe(
+      "tomatoes"
+    );
+    expect(normalizeIngredientNameForGrouping("Onion (red)chopped")).toBe("onion chopped");
+    expect(normalizeIngredientNameForGrouping("Salt\t(to taste)\tand  pepper")).toBe(
+      "salt and pepper"
+    );
+    expect(normalizeIngredientNameForGrouping("(2)")).toBe("");
+  });
+
+  it("leaves out brackets inside brackets too, and keeps a bracket that never closes", () => {
+    expect(normalizeIngredientNameForGrouping("Tomatoes (canned (400 g))")).toBe("tomatoes");
+    expect(normalizeIngredientNameForGrouping("Flour [type 00 (or plain)] sifted")).toBe(
+      "flour sifted"
+    );
+    expect(normalizeIngredientNameForGrouping("Onion (red")).toBe("onion (red");
+  });
+
+  it("names a group without the brackets of its first line", () => {
+    const [group] = groupsOf([grocery("Tomatoes  (diced) [optional]", 2), grocery("tomatoes", 1)]);
+
+    expect(group?.displayName).toBe("Tomatoes");
+    expect(group?.sources).toHaveLength(2);
+  });
+
+  it("names a group without nested brackets either", () => {
+    const [group] = groupsOf([grocery("Tomatoes (canned (400 g))", 1)]);
+
+    expect(group?.displayName).toBe("Tomatoes");
   });
 });

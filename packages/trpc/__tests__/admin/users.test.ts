@@ -16,7 +16,7 @@ import { createMockAdminContext, createMockAdminUser } from "./test-utils";
 const deleteUserAccount = vi.hoisted(() => vi.fn());
 
 vi.mock("@norish/db/repositories/users", () => import("../mocks/users"));
-vi.mock("@norish/shared-server/accounts/deletion", () => ({ deleteUserAccount }));
+vi.mock("@norish/auth/account-deletion", () => ({ deleteUserAccount }));
 vi.mock("@norish/shared-server/logger", () => ({
   trpcLogger: { debug: vi.fn(), info: vi.fn(), warn: vi.fn(), error: vi.fn() },
   createLogger: () => ({ debug: vi.fn(), info: vi.fn(), warn: vi.fn(), error: vi.fn() }),

@@ -176,7 +176,6 @@ async function rehomeArchiveMediaToRecipe(
   return {
     ...dto,
     id: targetRecipeId,
-    image: rewriteRecipeMediaUrl(dto.image, sourceRecipeId, targetRecipeId),
     images: dto.images?.map((image) => ({
       ...image,
       image: rewriteRecipeMediaUrl(image.image, sourceRecipeId, targetRecipeId) ?? image.image,

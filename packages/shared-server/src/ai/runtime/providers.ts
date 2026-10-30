@@ -10,7 +10,7 @@
  */
 
 import type {
-  Experimental_EvaluationModel as EvaluationModel,
+  Experimental_DecisionModel as DecisionModel,
   ImageModel,
   TranscriptionModel,
 } from "ai";
@@ -37,6 +37,7 @@ import {
   normalizeOpenAICompatibleEndpoint,
 } from "./endpoints";
 import { imageModelKey, withoutRefusedImageParameters } from "./image-parameter-fallback";
+import { requestSignal } from "./model-use-ledger";
 import { withTemperatureFallback } from "./temperature-fallback";
 import { createFetchWithTimeout } from "./transport";
 
@@ -44,18 +45,17 @@ import { createFetchWithTimeout } from "./transport";
  * Providers reached through a base URL an operator typed, rather than a service
  * whose capabilities the SDK knows. What such an endpoint can actually serve is
  * decided by whatever sits behind it — an aggregator resolves a model to one of
- * several upstream providers — so it is the only place where asking for a
- * strict JSON schema may be refused by something that answers everything else
- * (#538).
+ * several upstream providers — so asking for a strict JSON schema may be
+ * refused by something that answers everything else (#538).
  */
 const OPENAI_COMPATIBLE_PROVIDERS: ReadonlySet<AIProvider> = new Set([
   "generic-openai",
   "lm-studio",
 ]);
 
-/** Whether a plain-JSON retry is available for this provider (#538). */
+/** Whether a plain-JSON retry is available: typed-URL endpoints, and Mistral's strict mode (#646). */
 export function canDegradeToJsonMode(provider: AIProvider): boolean {
-  return OPENAI_COMPATIBLE_PROVIDERS.has(provider);
+  return OPENAI_COMPATIBLE_PROVIDERS.has(provider) || provider === "mistral";
 }
 
 export interface ModelBuildOptions {
@@ -297,8 +297,7 @@ const SQUARE: ImageShape = { size: "1024x1024" };
 /**
  * The widest landscape OpenAI's image models accept. The DALL·E family tops
  * out at 1792×1024, the gpt-image family at 1536×1024; a model this guess is
- * wrong about fails at request time with the provider's own message, exactly
- * as a mistyped model name does (ADR-0024).
+ * wrong about refuses it and is asked for the square instead (ADR-0014).
  */
 function openAILandscapeSize(model: string): `${number}x${number}` {
   return model.startsWith("dall-e") ? "1792x1024" : "1536x1024";
@@ -409,7 +408,8 @@ export function createImageModelFromConfig(config: {
         model: compatible.imageModel(model),
         providerName: provider === "lm-studio" ? "LM Studio" : "Generic OpenAI",
         // No published size list to lean on, so ask for exactly the stored
-        // shape: self-hosted image servers generally accept arbitrary sizes.
+        // shape: self-hosted image servers generally accept arbitrary sizes,
+        // and one that refuses it is asked for the square.
         landscape: { size: "1280x720" },
         square: SQUARE,
       };
@@ -421,14 +421,14 @@ export function createImageModelFromConfig(config: {
 // Decision models — the Decision Model's own provider (ADR-0035)
 // ============================================================================
 
-/** An evaluation model plus the name its log lines carry. */
+/** A decision model plus the name its log lines carry. */
 export interface DecisionModelConfig {
-  model: EvaluationModel;
+  model: DecisionModel;
   providerName: string;
 }
 
 /**
- * Build the evaluation model from the Decision block. Only `typesafe` is
+ * Build the decision model from the Decision block. Only `typesafe` is
  * constructible: the config enum keeps `disabled` out, and Vercel's AI
  * Gateway is a second case here and a base URL when it is wanted. The
  * provider's default key comes from an environment variable Norish never
@@ -453,7 +453,7 @@ export function createDecisionModelFromConfig(config: {
           apiKey,
           baseURL: endpoint,
           fetch: createFetchWithTimeout(timeoutMs),
-        }).evaluationModel(model),
+        }).decisionModel(model),
         providerName: "TypeSafe AI",
       };
     }
@@ -475,7 +475,7 @@ export interface TranscriptionClientOptions {
  * Build a transcription model for the providers the AI SDK serves natively.
  */
 export function createTranscriptionModel(
-  provider: "openai" | "groq" | "azure",
+  provider: "openai" | "groq" | "azure" | "mistral",
   { apiKey, model, endpoint, timeoutMs }: TranscriptionClientOptions
 ): TranscriptionModel {
   const customFetch = createFetchWithTimeout(timeoutMs);
@@ -486,6 +486,9 @@ export function createTranscriptionModel(
 
     case "groq":
       return createGroq({ apiKey, fetch: customFetch }).transcription(model);
+
+    case "mistral":
+      return createMistral({ apiKey, fetch: customFetch }).transcription(model);
 
     case "azure": {
       const azure = endpoint
@@ -558,7 +561,7 @@ export async function requestOllamaTranscription({
       stream: false,
       input_audio: [audio],
     }),
-    signal: AbortSignal.timeout(timeoutMs),
+    signal: requestSignal(timeoutMs),
   });
 
   if (!response.ok) {

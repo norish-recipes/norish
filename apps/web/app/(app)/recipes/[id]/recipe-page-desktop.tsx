@@ -1,6 +1,5 @@
 "use client";
 
-import Link from "next/link";
 import ActionsMenu from "@/app/(app)/recipes/[id]/components/actions-menu";
 import AddToGroceries from "@/app/(app)/recipes/[id]/components/add-to-groceries-button";
 import CookbooksCard from "@/app/(app)/recipes/[id]/components/cookbooks-card";
@@ -11,6 +10,7 @@ import NutritionCard from "@/app/(app)/recipes/[id]/components/nutrition-card";
 import ProvenanceCard from "@/app/(app)/recipes/[id]/components/provenance-card";
 import StepsList from "@/app/(app)/recipes/[id]/components/steps-list";
 import SystemConvertMenu from "@/app/(app)/recipes/[id]/components/system-convert-menu";
+import { BackLink } from "@/components/page-transition";
 import AmountDisplayToggle from "@/components/recipes/amount-display-toggle";
 import AuthorChip from "@/components/recipes/author-chip";
 import {
@@ -32,7 +32,7 @@ import StarRating from "@norish/ui/star-rating";
 import ServingsControl from "./components/servings-control";
 import { useRecipeContextRequired } from "./context";
 
-export default function RecipePageDesktop() {
+export default function RecipePageDesktop({ onPrint }: { onPrint: () => void }) {
   const {
     recipe,
     currentServings: _currentServings,
@@ -49,19 +49,19 @@ export default function RecipePageDesktop() {
 
   const isFavorite = checkFavorite(recipe.id);
   const handleToggleFavorite = () => toggleFavorite(recipe.id);
-  const handleRateRecipe = (rating: number) => rateRecipe(recipe.id, rating);
+  const handleRateRecipe = (rating: number | null) => rateRecipe(recipe.id, rating);
 
   return (
     <div className="hidden flex-col space-y-6 px-6 pb-10 md:flex">
       {/* Back link */}
       <div className="w-fit">
-        <Link
+        <BackLink
           className="text-muted hover:text-foreground flex items-center gap-1 text-base no-underline"
           href={back.href}
         >
           <ArrowLeftIcon className="h-4 w-4" />
           {back.label}
-        </Link>
+        </BackLink>
       </div>
 
       {/* Main content grid: 2 columns */}
@@ -72,7 +72,7 @@ export default function RecipePageDesktop() {
           <Card className="rounded-2xl">
             <Card.Content className="space-y-5 p-6">
               <ReadonlyRecipeSummary
-                actions={<ActionsMenu id={recipe.id} />}
+                actions={<ActionsMenu id={recipe.id} onPrint={onPrint} />}
                 allergies={allergies}
                 allergySet={allergySet}
                 recipe={recipe}
@@ -90,7 +90,7 @@ export default function RecipePageDesktop() {
                 <h2 className="text-lg font-semibold">{t("ingredients")}</h2>
                 <div className="flex flex-wrap items-center gap-2">
                   <AmountDisplayToggle />
-                  {recipe.servings && <ServingsControl />}
+                  {recipe.servings > 0 && <ServingsControl />}
                   {recipe.systemUsed && <SystemConvertMenu />}
                 </div>
               </div>
@@ -162,6 +162,7 @@ export default function RecipePageDesktop() {
               <div className="bg-surface-secondary mx-3 mt-4 mb-3 flex flex-col items-center gap-4 rounded-xl py-6">
                 <p className="text-muted font-medium">{t("ratingPrompt")}</p>
                 <StarRating
+                  allowClear={userRating !== null}
                   isLoading={isRating || isRatingLoading}
                   value={userRating ?? averageRating}
                   onChange={handleRateRecipe}

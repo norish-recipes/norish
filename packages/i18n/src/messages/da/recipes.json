@@ -50,7 +50,8 @@
     "viewGroceries": "Se indkøbsliste",
     "addToCalendar": "Tilføj til kalender",
     "deleteRecipe": "Slet opskrift",
-    "recipeOptions": "Opskriftsindstillinger"
+    "recipeOptions": "Opskriftsindstillinger",
+    "pantryCoverage": "{percent} af ingredienserne er hjemme"
   },
   "detail": {
     "viewOriginal": "Se original opskrift",
@@ -65,7 +66,7 @@
     "notFound": "Opskrift ikke fundet",
     "notFoundMessage": "Denne opskrift eksisterer ikke, eller du har ikke adgang til at se den.",
     "prep": "forberedelse",
-    "total": "total",
+    "total": "i alt",
     "planMeal": "Planlæg måltid",
     "recipeActions": "Opskrifthandlinger",
     "instructions": "Fremgangsmåde",
@@ -76,7 +77,8 @@
     "source": "Kilde",
     "addedBy": "Tilføjet af {name}",
     "decreaseServings": "Færre portioner",
-    "increaseServings": "Flere portioner"
+    "increaseServings": "Flere portioner",
+    "multiplier": "Faktor"
   },
   "actions": {
     "plan": "Planlæg",
@@ -86,7 +88,7 @@
     "share": "Del",
     "visitOriginal": "Besøg original opskrift",
     "addToCalendar": "Tilføj til kalender",
-    "autoTag": "Auto-tag",
+    "autoTag": "Tag automatisk",
     "autoTagging": "Genererer tags...",
     "autoCategorize": "Kategoriser automatisk",
     "detectAllergies": "Registrér allergener",
@@ -282,7 +284,7 @@
   "timeInputs": {
     "prep": "Forberedelse",
     "cook": "Tilberedning",
-    "total": "Total"
+    "total": "I alt"
   },
   "stepInput": {
     "stepPlaceholder": "Trin {number}: Beskriv trinnet...",
@@ -319,6 +321,9 @@
     "imported": "Opskrift importeret",
     "failed": "Opskrifthandling mislykkedes",
     "failedDescription": "Noget gik galt under behandling af din opskrift. Tjek browserkonsollen for tekniske detaljer.",
+    "incomplete": "Denne opskrift er muligvis ufuldstændig. Sammenlign den med kilden.",
+    "notARecipe": "Denne side ligner ikke en opskrift.",
+    "privateAddress": "Import fra private netværksadresser er ikke tilladt på denne server.",
     "batchImported": "Opskrifter importeret",
     "batchImportedDescription": "{count} opskrifter importeret fra arkiv",
     "view": "Se",
@@ -423,5 +428,13 @@
     "removeImage": "Fjern billede",
     "imageUploadFailed": "Billedet kunne ikke uploades.",
     "imageNeedsConnection": "Billeder kan ændres, når du er online igen."
+  },
+  "print": {
+    "title": "Udskriv opskrift",
+    "includePhoto": "Medtag billede",
+    "textSize": "Tekststørrelse",
+    "print": "Udskriv / Gem PDF",
+    "continued": "fortsat",
+    "perServing": "Pr. portion"
   }
 }

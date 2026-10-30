@@ -1,7 +1,7 @@
 "use client";
 
 import type { Key } from "react";
-import { usePanelPortalContainer } from "@/components/Panel/Panel";
+import { PanelPortal } from "@/components/Panel/Panel";
 import { Label, ListBox, Select } from "@heroui/react";
 import { useTranslations } from "next-intl";
 
@@ -26,7 +26,6 @@ interface AisleSelectorProps {
  */
 export function AisleSelector({ aisles, selectedAisleId, onSelectionChange }: AisleSelectorProps) {
   const t = useTranslations("groceries.panel");
-  const portalContainer = usePanelPortalContainer();
   const ordered = sortAisles(aisles);
   // An aisle the Store no longer has reads as none, rather than as a blank.
   const selectedKey = ordered.some((aisle) => aisle.id === selectedAisleId)
@@ -41,31 +40,28 @@ export function AisleSelector({ aisles, selectedAisleId, onSelectionChange }: Ai
 
   return (
     <div data-testid="aisle-selector">
-      <Select
-        fullWidth
-        selectedKey={selectedKey}
-        variant="secondary"
-        onSelectionChange={handleChange}
-      >
+      <Select fullWidth value={selectedKey} variant="secondary" onChange={handleChange}>
         <Label>{t("aisle")}</Label>
         <Select.Trigger className="min-h-12 items-center">
           <Select.Value className="flex items-center" />
           <Select.Indicator />
         </Select.Trigger>
-        <Select.Popover UNSTABLE_portalContainer={portalContainer}>
-          <ListBox>
-            <ListBox.Item id={NO_AISLE} textValue={t("noAisle")}>
-              <span className="text-muted">{t("noAisle")}</span>
-              <ListBox.ItemIndicator />
-            </ListBox.Item>
-            {ordered.map((aisle) => (
-              <ListBox.Item key={aisle.id} id={aisle.id} textValue={aisle.name}>
-                <span>{aisle.name}</span>
+        <PanelPortal>
+          <Select.Popover>
+            <ListBox>
+              <ListBox.Item id={NO_AISLE} textValue={t("noAisle")}>
+                <span className="text-muted">{t("noAisle")}</span>
                 <ListBox.ItemIndicator />
               </ListBox.Item>
-            ))}
-          </ListBox>
-        </Select.Popover>
+              {ordered.map((aisle) => (
+                <ListBox.Item key={aisle.id} id={aisle.id} textValue={aisle.name}>
+                  <span>{aisle.name}</span>
+                  <ListBox.ItemIndicator />
+                </ListBox.Item>
+              ))}
+            </ListBox>
+          </Select.Popover>
+        </PanelPortal>
       </Select>
     </div>
   );

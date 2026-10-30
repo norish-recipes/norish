@@ -180,14 +180,26 @@ export function readOpenSearchTemplate(xml: string, descriptionUrl: string): str
   // Everything optional but the term is left out — `{startPage?}` and its kind
   // would otherwise survive into the address as literal braces — and a template
   // that requires something Norish cannot fill is not an address at all.
-  const withMark = (template as string)
-    .replace(/\{searchTerms\??\}/g, TERM_MARK)
-    .replace(/([?&])[^&=]+=\{[^}]*\?\}(&|$)/g, (_, lead: string, tail: string) =>
-      tail ? lead : ""
-    )
-    .replace(/[?&]$/, "");
+  const marked = (template as string).replace(/\{searchTerms\??\}/g, TERM_MARK);
+  // Everything after the first ? is the query, so a ? inside it belongs to a
+  // parameter.
+  const queryAt = marked.indexOf("?");
+  const path = queryAt < 0 ? marked : marked.slice(0, queryAt);
+  const kept =
+    queryAt < 0
+      ? []
+      : marked
+          .slice(queryAt + 1)
+          .split("&")
+          .filter((parameter) => {
+            const equals = parameter.indexOf("=");
+            const value = equals < 0 ? "" : parameter.slice(equals + 1);
 
-  if (/\{[^}]+\}/.test(withMark)) return null;
+            return parameter !== "" && !(value.startsWith("{") && value.endsWith("?}"));
+          });
+  const withMark = kept.length > 0 ? `${path}?${kept.join("&")}` : path;
+
+  if (withMark.includes("{")) return null;
   const resolved = resolveUrl(withMark, descriptionUrl);
 
   return resolved ? resolved.replace(TERM_MARK, SEARCH_ADDRESS_PLACEHOLDER) : null;

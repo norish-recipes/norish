@@ -34,7 +34,7 @@ import {
 export interface IconSet {
   /** Open Food Facts id → the shipped icon's file. */
   icons: Readonly<Record<string, string>>;
-  /** The entries drawn no icon on purpose; a Draw icons round never draws them either. */
+  /** The entries drawn no icon on purpose; Fill gaps never draws them either. */
   none: readonly string[];
 }
 

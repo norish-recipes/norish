@@ -1,24 +1,8 @@
 import type { NutritionCodes } from "@norish/db/schema";
 
 /**
- * The Open Food Facts ingredients taxonomy, read (ADR-0038). The file is a
- * list of entries separated by blank lines; within one entry
- *
- *   < en: onion-family vegetable      a parent, named in any of its languages
- *   en: onion, onions                 the entry's names in one language
- *   nl: ui, uien, ajuin
- *   wikidata:en: Q3406628             a property
- *   ciqual_food_code:en: 20034        a property Norish reads (`NutritionCodes`)
- *
- * and `#` starts a comment. Of the properties, only those about nutrition
- * are kept: the dataset codes, the piece weight and the density (ADR-0039). The first name line names the entry: its id is
- * that language and the first name, as Open Food Facts itself keys it
- * ("en:onion"). `xx:` names hold in every language. A block with no names
- * (the synonyms and stopwords at the top of the file) is not an entry.
- *
- * Pure: the whole file is read before anything is applied, and a line that is
- * none of these, as an HTML error page served in the file's place would be,
- * makes the whole file malformed.
+ * The Open Food Facts taxonomy, read (ADR-0038): blank-line entries of `< parent`, `lang: names`
+ * and nutrition properties, keyed by first name ("en:onion"). Pure: a stray line rejects it all.
  */
 
 /** One name of an entry, in the language it is written in (null for `xx:`, every language). */

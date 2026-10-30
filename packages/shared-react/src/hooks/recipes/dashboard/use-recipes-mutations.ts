@@ -8,6 +8,7 @@ import type {
   MeasurementSystem,
   RecipeDashboardDTO,
 } from "@norish/shared/contracts";
+import { primaryRecipeImage } from "@norish/shared/lib/recipe-media";
 
 import type { CreateRecipeHooksOptions } from "../types";
 import type { RecipesCacheHelpers } from "./use-recipes-cache";
@@ -44,6 +45,7 @@ type UpdateMutationContext = {
 };
 
 function createOptimisticPendingRecipeId(): string {
+  // eslint-disable-next-line sonarjs/pseudo-random -- a placeholder id needs to be unique, not unpredictable
   return `${OPTIMISTIC_PENDING_RECIPE_PREFIX}${Date.now()}-${Math.random().toString(36).slice(2, 10)}`;
 }
 
@@ -139,12 +141,14 @@ function createOptimisticId(): string {
     globalThis.crypto.getRandomValues(bytes);
   } else {
     for (let index = 0; index < bytes.length; index += 1) {
+      // eslint-disable-next-line sonarjs/pseudo-random -- fallback where Web Crypto is missing; the id needs to be unique, not unpredictable
       bytes[index] = Math.floor(Math.random() * 256);
     }
   }
 
-  bytes[6] = (bytes[6] & 0x0f) | 0x40;
-  bytes[8] = (bytes[8] & 0x3f) | 0x80;
+  // Fixed length 16, so both indexes exist.
+  bytes[6] = (bytes[6]! & 0x0f) | 0x40;
+  bytes[8] = (bytes[8]! & 0x3f) | 0x80;
 
   const hex = Array.from(bytes, (byte) => byte.toString(16).padStart(2, "0"));
 
@@ -166,7 +170,6 @@ function createOptimisticFullRecipe(input: FullRecipeInsertDTO): FullRecipeDTO |
     description: input.description ?? null,
     notes: input.notes ?? null,
     url: input.url ?? null,
-    image: input.image ?? null,
     servings: input.servings ?? 1,
     prepMinutes: input.prepMinutes ?? null,
     cookMinutes: input.cookMinutes ?? null,
@@ -183,54 +186,85 @@ function createOptimisticFullRecipe(input: FullRecipeInsertDTO): FullRecipeDTO |
     originRegion: input.originRegion ?? null,
     provenanceNote: input.provenanceNote ?? null,
     cuisines: [],
+    originalSystem: null,
+    dishColor: null,
     createdAt: now,
     updatedAt: now,
     tags: (input.tags ?? []).map((tag) => ({ name: tag.name, version: 1 })),
     categories: input.categories ?? [],
-    recipeIngredients: (input.recipeIngredients ?? []).map((ingredient, index) => ({
-      id: ingredient.id ?? createOptimisticId(),
-      ingredientId: ingredient.ingredientId ?? null,
-      ingredientName: ingredient.ingredientName ?? "",
-      amount: toNullableNumber(ingredient.amount),
-      unit: ingredient.unit ?? null,
-      order: toNumber(ingredient.order, index),
-      systemUsed: ingredient.systemUsed ?? systemUsed,
-      version: ingredient.version ?? 1,
-    })),
-    steps: (input.steps ?? []).map((step, index) => ({
-      step: step.step,
-      systemUsed: step.systemUsed ?? systemUsed,
-      order: toNumber(step.order, index),
-      version: step.version ?? 1,
-      images: (step.images ?? []).map((image) => ({
-        id: image.id ?? createOptimisticId(),
-        image: image.image,
-        order: toNumber(image.order),
-        version: image.version ?? 1,
-      })),
-      stepIngredients: (step.stepIngredients ?? []).map((ref, refIndex) => ({
-        ingredientOrder: toNumber(ref.ingredientOrder),
-        share: toNumber(ref.share, 1),
-        order: toNumber(ref.order, refIndex),
-      })),
-    })),
+    recipeIngredients: optimisticIngredients(input.recipeIngredients ?? [], systemUsed),
+    steps: optimisticSteps(input.steps ?? [], systemUsed),
     author: undefined,
-    images: (input.images ?? []).map((image) => ({
+    images: optimisticImages(input.images ?? []),
+    videos: optimisticVideos(input.videos ?? []),
+    version: 1,
+  };
+}
+
+// The row shapes a create or an update sends, made whole for the cache: an
+// optimistic row needs an id and every field the detail view reads.
+function optimisticIngredients(
+  rows: NonNullable<FullRecipeUpdateDTO["recipeIngredients"]>,
+  systemUsed: MeasurementSystem
+): FullRecipeDTO["recipeIngredients"] {
+  return rows.map((ingredient, index) => ({
+    id: ingredient.id ?? createOptimisticId(),
+    ingredientId: ingredient.ingredientId ?? null,
+    ingredientName: ingredient.ingredientName ?? "",
+    amount: toNullableNumber(ingredient.amount),
+    unit: ingredient.unit ?? null,
+    order: toNumber(ingredient.order, index),
+    systemUsed: ingredient.systemUsed ?? systemUsed,
+    version: ingredient.version ?? 1,
+  }));
+}
+
+function optimisticSteps(
+  rows: NonNullable<FullRecipeUpdateDTO["steps"]>,
+  systemUsed: MeasurementSystem
+): FullRecipeDTO["steps"] {
+  return rows.map((step, index) => ({
+    step: step.step,
+    systemUsed: step.systemUsed ?? systemUsed,
+    order: toNumber(step.order, index),
+    version: step.version ?? 1,
+    images: (step.images ?? []).map((image) => ({
       id: image.id ?? createOptimisticId(),
       image: image.image,
       order: toNumber(image.order),
       version: image.version ?? 1,
     })),
-    videos: (input.videos ?? []).map((video) => ({
-      id: video.id ?? createOptimisticId(),
-      video: video.video,
-      thumbnail: video.thumbnail ?? null,
-      duration: toNullableNumber(video.duration),
-      order: toNumber(video.order),
-      version: video.version ?? 1,
+    stepIngredients: (step.stepIngredients ?? []).map((ref, refIndex) => ({
+      ingredientOrder: toNumber(ref.ingredientOrder),
+      share: toNumber(ref.share, 1),
+      order: toNumber(ref.order, refIndex),
     })),
-    version: 1,
-  };
+  }));
+}
+
+function optimisticImages(
+  rows: NonNullable<FullRecipeUpdateDTO["images"]>
+): FullRecipeDTO["images"] {
+  return rows.map((image) => ({
+    id: image.id ?? createOptimisticId(),
+    image: image.image,
+    order: toNumber(image.order),
+    generated: image.generated ?? false,
+    version: image.version ?? 1,
+  }));
+}
+
+function optimisticVideos(
+  rows: NonNullable<FullRecipeUpdateDTO["videos"]>
+): FullRecipeDTO["videos"] {
+  return rows.map((video) => ({
+    id: video.id ?? createOptimisticId(),
+    video: video.video,
+    thumbnail: video.thumbnail ?? null,
+    duration: toNullableNumber(video.duration),
+    order: toNumber(video.order),
+    version: video.version ?? 1,
+  }));
 }
 
 function createOptimisticDashboardRecipe(recipe: FullRecipeDTO): RecipeDashboardDTO {
@@ -241,7 +275,7 @@ function createOptimisticDashboardRecipe(recipe: FullRecipeDTO): RecipeDashboard
     description: recipe.description,
     notes: recipe.notes,
     url: recipe.url,
-    image: recipe.image,
+    image: primaryRecipeImage(recipe),
     servings: recipe.servings,
     prepMinutes: recipe.prepMinutes,
     cookMinutes: recipe.cookMinutes,
@@ -275,7 +309,6 @@ export type RecipesMutationsResult = {
 };
 
 export type RecipesMutationErrorHandler = (error: unknown, operation: string) => void;
-export type RecipeCreatedAdapter = (recipeId: string) => void;
 /**
  * Told when an import found a recipe the household already holds. Not an
  * error — the id is the one the caller was reaching for, so an app can offer
@@ -298,9 +331,10 @@ export function createUseRecipesMutations(
 ) {
   return function useRecipesMutations(
     onError?: RecipesMutationErrorHandler,
-    onRecipeCreated?: RecipeCreatedAdapter,
     onRecipeAlreadyExists?: RecipeAlreadyExistsAdapter
   ): RecipesMutationsResult {
+    "use memo";
+
     const trpc = useTRPC();
     const queryClient = useQueryClient();
     const {
@@ -353,6 +387,7 @@ export function createUseRecipesMutations(
         },
       })
     );
+    const { mutate: mutateImport } = importMutation;
     const imageImportMutation = useMutation(
       trpc.recipes.importFromImages.mutationOptions({
         onMutate: () => {
@@ -376,6 +411,7 @@ export function createUseRecipesMutations(
         },
       })
     );
+    const { mutate: mutateImageImport } = imageImportMutation;
     const pasteImportMutation = useMutation(
       trpc.recipes.importFromPaste.mutationOptions({
         onMutate: () => {
@@ -416,6 +452,7 @@ export function createUseRecipesMutations(
         },
       })
     );
+    const { mutate: mutatePasteImport } = pasteImportMutation;
     const createMutation = useMutation(
       trpc.recipes.create.mutationOptions({
         onMutate: async (input) => {
@@ -438,7 +475,6 @@ export function createUseRecipesMutations(
           });
 
           queryClient.setQueryData<FullRecipeDTO | null>(detailQueryKey, optimisticRecipe);
-          onRecipeCreated?.(optimisticRecipe.id);
           setAllRecipesData((previousData) =>
             addRecipeToLists(previousData, createOptimisticDashboardRecipe(optimisticRecipe))
           );
@@ -447,6 +483,7 @@ export function createUseRecipesMutations(
         },
       })
     );
+    const { mutate: mutateCreate } = createMutation;
     const updateMutation = useMutation(
       trpc.recipes.update.mutationOptions({
         onMutate: async ({ id, data }) => {
@@ -462,11 +499,23 @@ export function createUseRecipesMutations(
             return {
               ...previous,
               ...data,
-              recipeIngredients: data.recipeIngredients ?? previous.recipeIngredients,
-              steps: data.steps ?? previous.steps,
-              tags: data.tags ?? previous.tags,
-              images: data.images ?? previous.images,
-              videos: data.videos ?? previous.videos,
+              recipeIngredients: data.recipeIngredients
+                ? optimisticIngredients(data.recipeIngredients, previous.systemUsed)
+                : previous.recipeIngredients,
+              steps: data.steps ? optimisticSteps(data.steps, previous.systemUsed) : previous.steps,
+              // The form sends cuisine ids; the cache holds the entries. A removal
+              // shows at once, an addition when the server answers.
+              cuisines: data.cuisines
+                ? previous.cuisines.filter((cuisine) => data.cuisines?.includes(cuisine.id))
+                : previous.cuisines,
+              tags: data.tags
+                ? data.tags.map(({ name }) => ({
+                    name,
+                    version: previous.tags.find((tag) => tag.name === name)?.version ?? 1,
+                  }))
+                : previous.tags,
+              images: data.images ? optimisticImages(data.images) : previous.images,
+              videos: data.videos ? optimisticVideos(data.videos) : previous.videos,
             };
           });
 
@@ -474,6 +523,7 @@ export function createUseRecipesMutations(
         },
       })
     );
+    const { mutate: mutateUpdate } = updateMutation;
     const deleteMutation = useMutation(
       trpc.recipes.delete.mutationOptions({
         onMutate: async ({ id }) => {
@@ -514,7 +564,10 @@ export function createUseRecipesMutations(
         },
       })
     );
-    const convertMutation = useMutation(trpc.recipes.convertMeasurements.mutationOptions());
+    const { mutate: mutateDelete } = deleteMutation;
+    const { mutate: mutateConvert } = useMutation(
+      trpc.recipes.convertMeasurements.mutationOptions()
+    );
 
     const restoreDeletedRecipe = (context: DeleteMutationContext | undefined): void => {
       if (!context) {
@@ -547,15 +600,15 @@ export function createUseRecipesMutations(
     };
 
     const importRecipe = (url: string): void => {
-      importMutation.mutate({ url });
+      mutateImport({ url });
     };
 
     const importRecipeWithAI = (url: string): void => {
-      importMutation.mutate({ url, forceAI: true });
+      mutateImport({ url, forceAI: true });
     };
 
     const createRecipe = (input: FullRecipeInsertDTO): void => {
-      createMutation.mutate(input, {
+      mutateCreate(input, {
         onError: (error, _variables, context) => {
           onError?.(error, "create");
 
@@ -578,7 +631,7 @@ export function createUseRecipesMutations(
     };
 
     const updateRecipe = (id: string, input: FullRecipeUpdateDTO): void => {
-      updateMutation.mutate(
+      mutateUpdate(
         { id, version: input.version ?? 1, data: input },
         {
           onError: (error, _variables, context) => {
@@ -602,7 +655,7 @@ export function createUseRecipesMutations(
     };
 
     const deleteRecipe = (id: string, version: number): void => {
-      deleteMutation.mutate({ id, version });
+      mutateDelete({ id, version });
     };
 
     const convertMeasurements = (
@@ -610,7 +663,7 @@ export function createUseRecipesMutations(
       targetSystem: MeasurementSystem,
       version: number
     ): void => {
-      convertMutation.mutate(
+      mutateConvert(
         { recipeId, targetSystem, version },
         {
           onError: (error) => {
@@ -633,15 +686,15 @@ export function createUseRecipesMutations(
 
       const imageInput = formData as Parameters<typeof imageImportMutation.mutate>[0];
 
-      imageImportMutation.mutate(imageInput);
+      mutateImageImport(imageInput);
     };
 
     const importRecipeFromPaste = (text: string): void => {
-      pasteImportMutation.mutate({ text });
+      mutatePasteImport({ text });
     };
 
     const importRecipeFromPasteWithAI = (text: string): void => {
-      pasteImportMutation.mutate({ text, forceAI: true });
+      mutatePasteImport({ text, forceAI: true });
     };
 
     return {

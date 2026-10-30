@@ -50,7 +50,8 @@
     "viewGroceries": "장보기 보기",
     "addToCalendar": "캘린더에 추가",
     "deleteRecipe": "레시피 삭제",
-    "recipeOptions": "레시피 옵션"
+    "recipeOptions": "레시피 옵션",
+    "pantryCoverage": "재료의 {percent}가 집에 있음"
   },
   "detail": {
     "viewOriginal": "원본 레시피 보기",
@@ -76,7 +77,8 @@
     "source": "출처",
     "addedBy": "{name} 님이 추가함",
     "decreaseServings": "인분 줄이기",
-    "increaseServings": "인분 늘리기"
+    "increaseServings": "인분 늘리기",
+    "multiplier": "배율"
   },
   "actions": {
     "plan": "계획",
@@ -319,6 +321,9 @@
     "imported": "레시피 가져오기 완료",
     "failed": "레시피 작업이 실패했습니다.",
     "failedDescription": "레시피를 처리하는 중 문제가 발생했습니다. 기술적인 세부사항은 브라우저 콘솔을 확인하세요.",
+    "incomplete": "이 레시피는 불완전할 수 있습니다. 원본과 비교해 확인하세요.",
+    "notARecipe": "이 페이지는 레시피가 아닌 것 같습니다.",
+    "privateAddress": "이 서버에서는 사설 네트워크 주소에서 가져오기가 허용되지 않습니다.",
     "batchImported": "레시피 가져오기 완료",
     "batchImportedDescription": "아카이브에서 {count}개 레시피를 가져왔습니다.",
     "view": "보기",
@@ -423,5 +428,13 @@
     "removeImage": "이미지 삭제",
     "imageUploadFailed": "이미지를 업로드하지 못했습니다.",
     "imageNeedsConnection": "다시 온라인 상태가 되면 이미지를 변경할 수 있습니다."
+  },
+  "print": {
+    "title": "레시피 인쇄",
+    "includePhoto": "사진 포함",
+    "textSize": "글자 크기",
+    "print": "인쇄 / PDF 저장",
+    "continued": "계속",
+    "perServing": "1인분당"
   }
 }

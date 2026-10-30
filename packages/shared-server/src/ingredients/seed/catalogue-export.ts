@@ -43,7 +43,7 @@ export const NUTRITION_SOURCES = [
 /** One fact as the export states it: the value, the source food (`dataset:code`), and the lender. */
 interface ExportedFact<T> {
   value: T;
-  /** The dataset food it was taken from, or `taxonomy` for Open Food Facts' own value. */
+  /** The dataset food it was taken from, `taxonomy` for Open Food Facts' own value, `ai` for AI's. */
   source: string;
   /** The Ingredient it was borrowed from, if it was. */
   borrowedFrom: string | null;
@@ -61,7 +61,7 @@ export interface CatalogueExport {
     aliases: Array<{ text: string; locale: string | null }>;
     /** The codes the taxonomy gives the food in the open food datasets. */
     nutritionCodes: NutritionCodes | null;
-    /** Its Ingredient Nutrition from the datasets alone, without any household's correction. */
+    /** Its Ingredient Nutrition, AI's estimates included, without any household's correction. */
     nutrition: {
       per100g: ExportedFact<Per100g> | null;
       pieceWeight: ExportedFact<number> | null;
@@ -85,11 +85,8 @@ function exported<T>(fact: NutritionFact<T> | null): ExportedFact<T> | null {
 }
 
 /**
- * The whole ingredient catalogue — every Ingredient, its spellings, its
- * parent, its nutrition codes and the numbers the datasets give it — as the
- * machine-readable copy the ODbL asks a derived database be offered in
- * (ADR-0038, ADR-0039). It names no one: owners are left out, and so is
- * every household's correction.
+ * The whole catalogue (Ingredients, spellings, parents, nutrition codes and numbers) as the copy
+ * the ODbL asks for (ADR-0038, ADR-0039); no owners, no household corrections.
  */
 export async function buildCatalogueExport(exportedAt: Date): Promise<CatalogueExport> {
   const { ingredients, aliases } = await listCatalogueForExport();

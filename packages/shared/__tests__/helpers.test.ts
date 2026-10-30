@@ -1,6 +1,7 @@
 import { describe, expect, it } from "vitest";
 
 import type { UnitsMap } from "@norish/config/zod/server-config";
+import defaultUnits from "@norish/config/units.default.json";
 import {
   addWeeks,
   avatarFilenameFromImagePath,
@@ -12,6 +13,7 @@ import {
   hasRecipeName,
   hasRecipeNameIngredientsAndSteps,
   isAvatarFilenameForUser,
+  normalizeUrl,
   parseIngredientWithDefaults,
   parseIsoDuration,
   stripHtmlTags,
@@ -156,6 +158,157 @@ describe("parseIngredientWithDefaults", () => {
     expect(result[0].unitOfMeasureID).toBe("piece");
     expect(result[0].quantity).toBe(2);
   });
+
+  // A pasted list often keeps its bullets. The parser read the dash as the
+  // start of a range and the others as text, so a bullet is taken off first.
+  it.each([
+    ["- 2 cups flour", 2, "cup", "flour"],
+    ["• 1 tbsp oil", 1, "tablespoon", "oil"],
+    ["* 3 eggs", 3, null, "eggs"],
+    ["– 100 g sugar", 100, "gram", "sugar"],
+    ["- 1/2 tsp salt", 0.5, "teaspoon", "salt"],
+    // No amount is negative: a dash against the number is a bullet too. The
+    // parser read "-1 egg" as 1 of nothing and "-2 tbsp butter" as plain text.
+    ["-1 egg", 1, null, "egg"],
+    ["-2 tbsp butter", 2, "tablespoon", "butter"],
+    ["–1 cup flour", 1, "cup", "flour"],
+  ])("reads the bulleted line %j as the line without its bullet", (line, quantity, unit, name) => {
+    const [result] = parseIngredientWithDefaults(line);
+
+    expect(result).toMatchObject({
+      quantity,
+      quantity2: null,
+      unitOfMeasureID: unit,
+      description: name,
+    });
+  });
+
+  it("keeps ranges, a dash inside the line, and skips blank lines", () => {
+    expect(parseIngredientWithDefaults("2-3 cloves garlic")[0]).toMatchObject({
+      quantity: 2,
+      quantity2: 3,
+      unitOfMeasureID: "clove",
+      description: "garlic",
+    });
+    expect(parseIngredientWithDefaults("2 - 3 cloves garlic")[0]).toMatchObject({
+      quantity: 2,
+      quantity2: 3,
+      description: "garlic",
+    });
+    expect(parseIngredientWithDefaults("salt - to taste")[0]).toMatchObject({
+      quantity: null,
+      description: "salt - to taste",
+    });
+    expect(
+      parseIngredientWithDefaults(["1 cup milk", "", "2 eggs"]).map((line) => line.description)
+    ).toEqual(["milk", "eggs"]);
+  });
+});
+
+describe("parseIngredientWithDefaults keeps every word of a line (#635)", () => {
+  const parse = (line: string) => parseIngredientWithDefaults(line, defaultUnits as UnitsMap)[0];
+  const asWritten = (description: string) => ({
+    quantity: null,
+    unitOfMeasureID: null,
+    description,
+  });
+
+  it("reads past a list marker, and drops a line that is only one", () => {
+    expect(parse("• 2 uova")).toMatchObject({ quantity: 2, description: "uova" });
+    expect(parse("●1 limone")).toMatchObject({ quantity: 1, description: "limone" });
+    expect(parse("- sale e pepe")).toMatchObject(asWritten("sale e pepe"));
+    expect(parseIngredientWithDefaults(["•", "2 uova"], defaultUnits as UnitsMap)).toHaveLength(1);
+    expect(parse("•⚫3 peperoni")).toMatchObject({ quantity: 3, description: "peperoni" });
+  });
+
+  it('reads a "." before a digit as a marker in a list whose lines carry markers', () => {
+    const list = parseIngredientWithDefaults(
+      ["•2 uova", ".80 g di Pecorino", "• .5 l latte"],
+      defaultUnits as UnitsMap
+    );
+
+    expect(list.map(({ quantity }) => quantity)).toEqual([2, 80, 0.5]);
+    expect(parse(".5 cup milk")).toMatchObject({ quantity: 0.5 });
+  });
+
+  it("still reads an amount and unit written at the end", () => {
+    expect(parse("Burro 20 g")).toMatchObject({
+      quantity: 20,
+      unitOfMeasureID: "gram",
+      description: "Burro",
+    });
+    expect(parse("limoni 0,5")).toMatchObject({ quantity: 0.5, description: "limoni" });
+  });
+
+  it("keeps the word after an amount at the end of a line, and the amount so it scales", () => {
+    expect(parse("Scorsa di 1 limone")).toMatchObject({
+      quantity: 1,
+      description: "Scorsa di limone",
+    });
+    expect(parse("patate dolci 4 grandi")).toMatchObject({
+      quantity: 4,
+      description: "patate dolci grandi",
+    });
+  });
+
+  it("reads an amount written mid-line, with its unit, and leaves one in brackets", () => {
+    expect(parse("patate 400 g lesse")).toMatchObject({
+      quantity: 400,
+      unitOfMeasureID: "gram",
+      description: "patate lesse",
+    });
+    expect(parse("melanzane 3 medio grandi")).toMatchObject({
+      quantity: 3,
+      unitOfMeasureID: null,
+      description: "melanzane medio grandi",
+    });
+    expect(parse("farina 00 50 g per infarinare")).toMatchObject({
+      quantity: 50,
+      unitOfMeasureID: "gram",
+      description: "farina 00 per infarinare",
+    });
+    expect(parse("SPECK (50gr a persona)")).toMatchObject(asWritten("SPECK (50gr a persona)"));
+    expect(parse("Crema: 150g Mascarpone")).toMatchObject({
+      quantity: 150,
+      unitOfMeasureID: "gram",
+      description: "Crema: Mascarpone",
+    });
+    expect(parse("INGREDIENTI per 12 persone:")).toMatchObject(
+      asWritten("INGREDIENTI per 12 persone:")
+    );
+  });
+
+  it("reads a range as its lower end, a slash too unless it is a fraction", () => {
+    expect(parse("2-3 rametti di menta")).toMatchObject({ quantity: 2 });
+    expect(parse("10/15 pomodorini")).toMatchObject({ quantity: 10, description: "pomodorini" });
+    expect(parse("1/2 limone")).toMatchObject({ quantity: 0.5 });
+    expect(parse("2/3 tazza di burro")?.quantity).toBeCloseTo(0.667, 3);
+  });
+
+  it("keeps a zero amount without a unit as written, and drops one beside a unit", () => {
+    expect(parse("farina 00")).toMatchObject(asWritten("farina 00"));
+    expect(parse("0 to_taste Sale")).toMatchObject({
+      quantity: null,
+      unitOfMeasureID: "to_taste",
+      description: "Sale",
+    });
+  });
+
+  it("reads a unit without a number only where it means an amount", () => {
+    expect(parse("q.b. sale")).toMatchObject({ unitOfMeasureID: "to_taste", description: "sale" });
+    expect(parse("un pizzico di sale")).toMatchObject({ unitOfMeasureID: "pinch" });
+    expect(parse("un po' di olio per ungere")).toMatchObject(
+      asWritten("un po' di olio per ungere")
+    );
+    expect(parse("in una sola fetta")).toMatchObject(asWritten("in una sola fetta"));
+  });
+
+  it("never reads a unit that leaves no words", () => {
+    expect(parse("Per decorare:")).toMatchObject({
+      ...asWritten("Per decorare:"),
+      isGroupHeader: true,
+    });
+  });
 });
 
 describe("stripHtmlTags", () => {
@@ -165,6 +318,10 @@ describe("stripHtmlTags", () => {
 
   it("removes multiple tags", () => {
     expect(stripHtmlTags("<b>Bold</b> and <i>italic</i>")).toBe("Bold and italic");
+  });
+
+  it("keeps a lone < that opens no tag", () => {
+    expect(stripHtmlTags("if a < b <b>bold</b>")).toBe("if a < b bold");
   });
 
   it("removes nested tags", () => {
@@ -229,10 +386,26 @@ describe("stripHtmlTags", () => {
     );
   });
 
+  it("removes the space before closing punctuation at the end", () => {
+    expect(stripHtmlTags("<p>&ldquo;Quoted &rdquo;</p>")).toBe("\u201CQuoted\u201D");
+    expect(stripHtmlTags("Serve with rice (or bread )")).toBe("Serve with rice (or bread)");
+    expect(stripHtmlTags("Keep the ( space ) inside")).toBe("Keep the ( space ) inside");
+  });
+
   it("handles mixed entities and HTML tags", () => {
     expect(stripHtmlTags("<p>&ldquo;Hello&nbsp;<b>World</b>&rdquo;</p>")).toBe(
       "\u201CHello World\u201D"
     );
+  });
+});
+
+describe("normalizeUrl", () => {
+  it("drops trailing slashes and tracking parameters, in lower case", () => {
+    expect(normalizeUrl("https://Example.com/Recipes/Soup///?utm_source=x&id=2")).toBe(
+      "https://example.com/recipes/soup?id=2"
+    );
+    expect(normalizeUrl("https://example.com/a/b/")).toBe("https://example.com/a/b");
+    expect(normalizeUrl("https://example.com/a//b")).toBe("https://example.com/a//b");
   });
 });
 

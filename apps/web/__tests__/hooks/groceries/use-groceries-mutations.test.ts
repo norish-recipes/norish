@@ -1,3 +1,4 @@
+import { dehydrate, hydrate } from "@tanstack/react-query";
 import { act, renderHook } from "@testing-library/react";
 import { beforeAll, beforeEach, describe, expect, it, vi } from "vitest";
 
@@ -155,7 +156,6 @@ describe("useGroceriesMutations", () => {
   });
 
   beforeEach(() => {
-    vi.clearAllMocks();
     queryClient = createTestQueryClient();
   });
 
@@ -231,6 +231,46 @@ describe("useGroceriesMutations", () => {
       });
     });
 
+    it("puts every grocery a typed name became on the list, in place of the one typed", () => {
+      queryClient.setQueryData(
+        ["groceries", "list"],
+        createMockGroceriesData([createMockGrocery({ id: "existing", name: "Milk" })], [])
+      );
+
+      const { result } = renderHook(() => useGroceriesMutations(), {
+        wrapper: createTestWrapper(queryClient),
+      });
+
+      act(() => result.current.createGrocery("zout en peper"));
+
+      const [[sent], options] = _mockMutations.create.mock.calls.at(-1) as [
+        [{ id: string }],
+        { onSuccess: (result: unknown) => void },
+      ];
+      const zout = createMockGrocery({ id: sent.id, name: "zout" });
+      const peper = createMockGrocery({ id: "peper", name: "peper" });
+
+      act(() =>
+        options.onSuccess({
+          ids: [zout.id, peper.id],
+          createdGroceries: [zout, peper],
+          updatedGroceries: [],
+          returnedGroceries: [zout, peper],
+        })
+      );
+
+      const data = queryClient.getQueryData<ReturnType<typeof createMockGroceriesData>>([
+        "groceries",
+        "list",
+      ]);
+
+      expect(data?.groceries.map((grocery) => grocery.name).sort()).toEqual([
+        "Milk",
+        "peper",
+        "zout",
+      ]);
+    });
+
     it("removes an optimistic grocery and reports a failed Outbox admission", () => {
       queryClient.setQueryData(
         ["groceries", "list"],
@@ -295,6 +335,73 @@ describe("useGroceriesMutations", () => {
         "The grocery change was not saved. Please try again."
       );
       expect(data?.groceries[0]).toMatchObject({ id: "g1", isDone: false, version: 3 });
+    });
+  });
+
+  describe("a list read already under way", () => {
+    it("does not land over a grocery checked off while it ran", async () => {
+      const before = createMockGroceriesData(
+        [createMockGrocery({ id: "g1", isDone: false, version: 3 })],
+        []
+      );
+      let answerRead: (data: typeof before) => void = () => {};
+
+      // Fresh, so mounting reads nothing of its own.
+      queryClient.setQueryDefaults(["groceries", "list"], { staleTime: Infinity });
+      queryClient.setQueryData(["groceries", "list"], before);
+
+      const { result } = renderHook(() => useGroceriesMutations(), {
+        wrapper: createTestWrapper(queryClient),
+      });
+      // The page's own read, answered with the list as it was before the tick.
+      const read = queryClient
+        .query({
+          queryKey: ["groceries", "list"],
+          queryFn: () => new Promise<typeof before>((resolve) => (answerRead = resolve)),
+          staleTime: 0,
+        })
+        .catch(() => undefined);
+
+      act(() => result.current.toggleGroceries(["g1"], true));
+      answerRead(before);
+      await read;
+
+      const data = queryClient.getQueryData<typeof before>(["groceries", "list"]);
+
+      expect(data?.groceries[0]).toMatchObject({ id: "g1", isDone: true, version: 4 });
+    });
+
+    it("keeps a list restored while it waited, as an offline load restores it", () => {
+      const restored = createMockGroceriesData(
+        [createMockGrocery({ id: "g1", isDone: false, version: 3 })],
+        []
+      );
+
+      queryClient.setQueryDefaults(["groceries", "list"], { staleTime: Infinity });
+      // The read starts before the stored list is restored, and waits.
+      void queryClient
+        .query({
+          queryKey: ["groceries", "list"],
+          queryFn: () => new Promise<typeof restored>(() => {}),
+          staleTime: 0,
+        })
+        .catch(() => undefined);
+      // The stored copy, restored the way the persister restores it.
+      const stored = createTestQueryClient();
+
+      stored.setQueryData(["groceries", "list"], restored);
+      hydrate(queryClient, dehydrate(stored));
+      expect(queryClient.getQueryData(["groceries", "list"])).toEqual(restored);
+
+      const { result } = renderHook(() => useGroceriesMutations(), {
+        wrapper: createTestWrapper(queryClient),
+      });
+
+      act(() => result.current.toggleGroceries(["g1"], true));
+
+      const data = queryClient.getQueryData<typeof restored>(["groceries", "list"]);
+
+      expect(data?.groceries[0]).toMatchObject({ id: "g1", isDone: true, version: 4 });
     });
   });
 

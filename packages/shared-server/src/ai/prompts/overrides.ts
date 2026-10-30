@@ -1,4 +1,4 @@
-import type { PromptsConfigInput, PromptValues } from "@norish/config/zod/server-config";
+import type { PromptsConfig, PromptValues } from "@norish/config/zod/server-config";
 
 /**
  * Override semantics for administrator-editable prompts.
@@ -24,16 +24,16 @@ export const PROMPT_CONFIG_FIELDS = [
   "recipeProvenance",
   "ingredientLinking",
   "ingredientResolution",
+  "ingredientMatch",
   "imageGenerationBrief",
   "imageGenerationStyle",
   "ingredientIconStyle",
   "ingredientPlainName",
-] as const satisfies readonly (keyof PromptsConfigInput)[];
+  "ingredientSpellingCheck",
+  "ingredientNutrition",
+] as const satisfies readonly (keyof PromptsConfig)[];
 
 export type PromptConfigField = (typeof PROMPT_CONFIG_FIELDS)[number];
-
-/** Default texts shipped by earlier releases, per field. */
-export type RetiredPromptDefaults = Partial<Record<PromptConfigField, readonly string[]>>;
 
 /**
  * A prompt differing only in line endings or surrounding whitespace is the
@@ -51,24 +51,16 @@ export function isSamePromptText(a: string, b: string): boolean {
 /**
  * Reduce a stored row (or a submitted form) to the overrides it actually
  * contains. A field carries no intent — and is dropped — when it is missing,
- * blank, equal to the shipped default, or equal to a retired default some
- * earlier release seeded into the database.
- *
- * Retired defaults are matched only from the boot migration: a legacy row
- * cannot say whether its texts were typed or merely seeded, so texts a
- * release shipped are treated as seeded. An administrator who deliberately
- * re-saves an old wording afterwards keeps it, because the save path matches
- * against current defaults alone.
+ * blank, or equal to the shipped default.
  */
 export function pruneToOverrides(
   stored: Partial<Record<string, unknown>> | null,
-  defaults: PromptValues,
-  retiredDefaults?: RetiredPromptDefaults
-): { overrides: PromptsConfigInput; changed: boolean } {
-  const overrides: PromptsConfigInput = {};
+  defaults: PromptValues
+): PromptsConfig {
+  const overrides: PromptsConfig = {};
 
   if (!stored) {
-    return { overrides, changed: false };
+    return overrides;
   }
 
   for (const field of PROMPT_CONFIG_FIELDS) {
@@ -82,18 +74,10 @@ export function pruneToOverrides(
       continue;
     }
 
-    if (retiredDefaults?.[field]?.some((retired) => isSamePromptText(value, retired))) {
-      continue;
-    }
-
     overrides[field] = value;
   }
 
-  const changed =
-    "isOverridden" in stored ||
-    PROMPT_CONFIG_FIELDS.some((field) => stored[field] !== overrides[field]);
-
-  return { overrides, changed };
+  return overrides;
 }
 
 /**
@@ -104,7 +88,7 @@ export function mergeWithDefaults(
   stored: Partial<Record<string, unknown>> | null,
   defaults: PromptValues
 ): { values: PromptValues; overriddenFields: PromptConfigField[] } {
-  const { overrides } = pruneToOverrides(stored, defaults);
+  const overrides = pruneToOverrides(stored, defaults);
   const values = { ...defaults };
   const overriddenFields: PromptConfigField[] = [];
 

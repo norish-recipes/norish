@@ -1,6 +1,6 @@
 import ImportRecipeModal from "@/components/shared/import-recipe-modal";
 import { fireEvent, render, screen, waitFor } from "@testing-library/react";
-import { beforeEach, describe, expect, it, vi } from "vitest";
+import { describe, expect, it, vi } from "vitest";
 
 const modalMock = vi.hoisted(() => vi.fn());
 
@@ -71,10 +71,6 @@ vi.mock("@heroui/react", () => ({
 }));
 
 describe("ImportRecipeModal", () => {
-  beforeEach(() => {
-    vi.clearAllMocks();
-  });
-
   it("renders above desktop menu and overlay stacks", () => {
     render(<ImportRecipeModal isOpen onOpenChange={vi.fn()} />);
 

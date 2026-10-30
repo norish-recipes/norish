@@ -13,7 +13,6 @@ vi.mock("@/context/user-context", () => ({
 
 describe("AuthorChip avatar src", () => {
   beforeEach(() => {
-    vi.clearAllMocks();
     mockCurrentUser = { id: "user-1" };
   });
 

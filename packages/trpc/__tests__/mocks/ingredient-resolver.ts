@@ -35,3 +35,5 @@ export const writeResolved = async <R, T>(
   resolve: () => Promise<R>,
   write: (resolved: R) => Promise<T>
 ) => write(await resolve());
+
+export const forgetSpellingRules = vi.fn();

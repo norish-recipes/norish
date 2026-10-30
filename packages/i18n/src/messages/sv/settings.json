@@ -1,0 +1,1327 @@
+{
+  "page": {
+    "title": "Inställningar",
+    "ariaLabel": "Inställningsflikar"
+  },
+  "tabs": {
+    "user": "Användare",
+    "household": "Hushåll",
+    "caldav": "CalDAV",
+    "admin": "Administration",
+    "ingredients": "Ingredienser"
+  },
+  "user": {
+    "signInMethods": {
+      "title": "Inloggningsmetoder",
+      "description": "Koppla ditt konto till SSO.",
+      "password": "Lösenord",
+      "addAnother": "Lägg till ett annat sätt att logga in",
+      "addProvider": "Koppla {provider}",
+      "added": "Tillagd {date}",
+      "remove": "Koppla från",
+      "unavailable": "Inte tillgänglig just nu",
+      "changePassword": "Byt lösenord",
+      "currentPassword": "Nuvarande lösenord",
+      "newPassword": "Nytt lösenord",
+      "confirmPassword": "Bekräfta nytt lösenord",
+      "signOutOthers": "Logga ut andra sessioner",
+      "passwordChanged": "Lösenordet har ändrats.",
+      "errors": {
+        "usedByAnotherAccount": "Den här inloggningen används redan av ett annat konto.",
+        "lastMethod": "Du behöver minst ett sätt att logga in.",
+        "signInAgain": "Logga in igen för att koppla från den här.",
+        "addFailed": "Det gick inte att lägga till inloggningsmetoden.",
+        "removeFailed": "Det gick inte att koppla från inloggningsmetoden.",
+        "wrongPassword": "Det nuvarande lösenordet är fel.",
+        "changeFailed": "Det gick inte att byta lösenord. Försök igen."
+      }
+    },
+    "profile": {
+      "title": "Profil",
+      "nameLabel": "Namn",
+      "namePlaceholder": "Ditt namn",
+      "emailLabel": "E-post",
+      "avatarHint": "Klicka på din profilbild för att byta bild",
+      "deleteAvatar": "Ta bort profilbild"
+    },
+    "allergies": {
+      "title": "Allergier",
+      "description": "Ange dina matallergier för att få varningar när du planerar recept som innehåller allergener.",
+      "placeholder": "Ange allergier (t.ex. gluten, nötter, mjölk)..."
+    },
+    "apiKeys": {
+      "title": "API-nycklar",
+      "description": "API-nycklar kan användas för egna integrationer, genvägar och automatiseringar.",
+      "docsLink": "Öppna API-dokumentationen",
+      "keyNameLabel": "Nyckelnamn (valfritt)",
+      "keyNamePlaceholder": "T.ex. iOS-genväg",
+      "createKey": "Skapa nyckel",
+      "yourKeys": "Dina API-nycklar",
+      "noKeys": "Inga API-nycklar ännu. Skapa en för att komma igång.",
+      "tableHeaders": {
+        "name": "NAMN",
+        "keyPrefix": "NYCKELPREFIX",
+        "created": "SKAPAD",
+        "status": "STATUS",
+        "actions": "ÅTGÄRDER"
+      },
+      "unnamed": "Namnlös",
+      "active": "Aktiv",
+      "disabled": "Avstängd",
+      "disableKey": "Stäng av nyckel",
+      "enableKey": "Aktivera nyckel",
+      "deleteKey": "Ta bort nyckel",
+      "generatedModal": {
+        "title": "API-nyckeln har skapats",
+        "warning": "Spara nyckeln nu! Du kan inte se den igen. Vi lagrar bara ett hashvärde och kan inte återskapa nyckeln.",
+        "hint": "Använd nyckeln i HTTP-headern <code>x-api-key</code> vid API-anrop.",
+        "confirmButton": "Jag har sparat den",
+        "copyButton": "Kopiera nyckel"
+      },
+      "deleteModal": {
+        "title": "Ta bort API-nyckel",
+        "message": "Vill du ta bort den här API-nyckeln? Alla appar som använder den förlorar omedelbart åtkomsten. Det går inte att ångra.",
+        "confirmButton": "Ta bort nyckel"
+      }
+    },
+    "archiveImport": {
+      "title": "Importera receptarkiv",
+      "description": "Importera recept exporterade från Norish, Mela, Paprika, Mealie, Tandoor eller Recipe Keeper."
+    },
+    "archiveExport": {
+      "title": "Exportera receptarkiv",
+      "description": "Ladda ner alla recept du har tillgång till.",
+      "button": "Exportera"
+    },
+    "siteAuthTokens": {
+      "title": "Autentiseringstoken för webbplatser",
+      "description": "HTTP-headrar eller kakor som skickas vid import från webbplatser som kräver inloggning, till exempel Instagram eller Facebook.",
+      "accountsDescription": "Namnge kontona om du har flera inloggningar på samma webbplats. Varje import använder ett slumpmässigt valt konto för webbplatsen, så att alla importer inte belastar samma inloggning. En token utan kontonamn skickas med varje import för sin domän.",
+      "domain": "Domän",
+      "domainPlaceholder": "T.ex. instagram.com",
+      "domainNotFull": "Ange hela domänen, till exempel instagram.com.",
+      "account": "Konto",
+      "accountPlaceholder": "T.ex. mitt_kontonamn (valfritt)",
+      "accountShared": "Alla konton",
+      "name": "Namn",
+      "namePlaceholder": "T.ex. Cookie eller Authorization",
+      "value": "Värde",
+      "valuePlaceholder": "Tokenvärde eller kakvärde",
+      "type": "Typ",
+      "typeHeader": "HTTP-header",
+      "typeCookie": "Kaka",
+      "addButton": "Lägg till token",
+      "noTokens": "Inga autentiseringstoken för webbplatser har angetts.",
+      "tableHeaders": {
+        "domain": "DOMÄN",
+        "account": "KONTO",
+        "name": "NAMN",
+        "type": "TYP",
+        "created": "SKAPAD",
+        "actions": "ÅTGÄRDER"
+      },
+      "deleteModal": {
+        "title": "Ta bort token",
+        "message": "Vill du ta bort den här autentiseringstoken? Import från den här webbplatsen kan sluta fungera.",
+        "confirmButton": "Ta bort token"
+      },
+      "accountsHelp": "Om konton"
+    },
+    "dangerZone": {
+      "title": "Riskfyllda åtgärder",
+      "description": "Om du tar bort ditt konto går det inte att återställa det. Försäkra dig om att du vill fortsätta.",
+      "deleteButton": "Ta bort mitt konto",
+      "deleteModal": {
+        "title": "Ta bort konto",
+        "permanentWarning": "Den här åtgärden är permanent och går inte att ångra!",
+        "dataWarning": "Dina personliga data, inklusive inköpslistor, kalenderposter och anteckningar, tas bort permanent.",
+        "recipesNote": "Recept du har skapat behålls men kopplas inte längre till ditt konto.",
+        "adminNote": "Om du är administratör i ett hushåll med andra medlemmar måste du först överföra administratörsbehörigheten.",
+        "confirmButton": "Ta bort mitt konto"
+      }
+    },
+    "preferences": {
+      "title": "Preferenser",
+      "description": "Anpassa din upplevelse.",
+      "deviceKind": {
+        "help": "Så sparas preferenser",
+        "phone": "”{language}”, ”{afterPlanning}” och ”{measurements}” sparas per konto. Resten sparas per enhetstyp.",
+        "desktop": "”{language}”, ”{afterPlanning}” och ”{measurements}” sparas per konto. Resten sparas per enhetstyp."
+      },
+      "language": {
+        "title": "Språk",
+        "description": "Välj önskat språk"
+      },
+      "hidden": {
+        "title": "Dolda objekt",
+        "description": "Dölj de delar av gränssnittet du inte vill se",
+        "placeholder": "Inget dolt",
+        "options": {
+          "provenance": "Ursprung",
+          "nutrition": "Näringsvärden",
+          "notes": "Anteckningar",
+          "rating": "Betyg",
+          "favorites": "Favoriter",
+          "conversion": "Omvandling av ingredienser",
+          "timers": "Recepttimrar",
+          "cookbooks": "Kokböcker",
+          "ingredientIcons": "Ingrediensikoner"
+        }
+      },
+      "todaySection": {
+        "title": "Idag-sektionen",
+        "description": "Hur Idag-sektionen på startsidan visas",
+        "options": {
+          "always": "Alltid synlig",
+          "planned": "Endast planerade måltider",
+          "hidden": "Dold"
+        }
+      },
+      "recipePageColor": {
+        "title": "Receptsidans färg",
+        "description": "Välj om receptsidan ska färgas efter bilden eller följa temats färger",
+        "options": {
+          "dish": "Från bilden av rätten",
+          "theme": "Temats vanliga färger"
+        }
+      },
+      "applyError": "Det gick inte att tillämpa inställningen",
+      "afterPlanning": {
+        "title": "Efter att ett recept planerats",
+        "description": "Vad som händer när du planerar ett recept",
+        "options": {
+          "nothing": "Ingenting",
+          "openGroceries": "Öppna inköpspanelen",
+          "addGroceries": "Lägg till ingredienser i inköpslistan"
+        }
+      },
+      "measurements": {
+        "title": "Mått",
+        "description": "Standardmåttsystem för recept",
+        "options": {
+          "off": "Omvandla inte",
+          "metric": "Metriskt",
+          "us": "Amerikanskt",
+          "metricWithAI": "Metriskt med AI",
+          "usWithAI": "Amerikanskt med AI"
+        }
+      }
+    },
+    "shareLinks": {
+      "title": "Delningslänkar till recept",
+      "description": "Granska och hantera alla offentliga receptlänkar du har skapat.",
+      "empty": "Inga delningslänkar hittades.",
+      "table": {
+        "recipe": "RECEPT",
+        "status": "STATUS",
+        "created": "SKAPAD",
+        "expires": "UPPHÖR",
+        "actions": "ÅTGÄRDER"
+      },
+      "revokeModal": {
+        "title": "Återkalla länk",
+        "message": "Den här länken till {recipeName} slutar fungera tills du aktiverar den igen.",
+        "confirm": "Återkalla"
+      },
+      "reactivateModal": {
+        "title": "Aktivera länken igen",
+        "message": "Den här länken till {recipeName} blir aktiv igen.",
+        "confirm": "Aktivera igen"
+      },
+      "deleteModal": {
+        "title": "Ta bort länk",
+        "message": "Ta bort den här delningslänken till {recipeName}? Det går inte att ångra.",
+        "confirm": "Ta bort länk"
+      }
+    }
+  },
+  "household": {
+    "info": {
+      "yourRole": "Din roll",
+      "admin": "Administratör",
+      "member": "Medlem",
+      "members": "Medlemmar",
+      "leaveButton": "Lämna hushåll",
+      "leaveModal": {
+        "title": "Lämna hushåll",
+        "confirmMessage": "Vill du lämna {name}?",
+        "adminWarning": "Du är administratör. Du måste överföra administratörsbehörigheten innan du lämnar.",
+        "confirmButton": "Lämna hushåll"
+      }
+    },
+    "members": {
+      "title": "Medlemmar",
+      "tableHeaders": {
+        "name": "NAMN",
+        "role": "ROLL",
+        "actions": "ÅTGÄRDER"
+      },
+      "you": "Du",
+      "kickButton": "Ta bort",
+      "makeAdminButton": "Gör till administratör",
+      "kickModal": {
+        "title": "Ta bort användare",
+        "confirmMessage": "Vill du ta bort {name} från hushållet?",
+        "warning": "Användaren förlorar åtkomsten till alla delade recept, inköpslistor och kalenderposter.",
+        "confirmButton": "Ta bort användare"
+      },
+      "transferModal": {
+        "title": "Överför administratörsbehörighet",
+        "confirmMessage": "Vill du överföra administratörsbehörigheten till {name}?",
+        "warning": "Du blir en vanlig medlem och kan inte längre ta bort användare eller hantera inbjudningskoder.",
+        "confirmButton": "Överför administratörsbehörighet"
+      },
+      "toasts": {
+        "kickFailed": "Det gick inte att ta bort användaren",
+        "transferSuccess": "Administratörsbehörigheten har överförts till {name}",
+        "transferFailed": "Det gick inte att överföra administratörsbehörigheten"
+      }
+    },
+    "joinCode": {
+      "title": "Inbjudningskod",
+      "shareDescription": "Dela den här koden för att bjuda in andra till ditt hushåll.",
+      "expiresIn": "Upphör om:",
+      "regenerateButton": "Skapa ny kod",
+      "expired": "Utgången",
+      "noCodeDescription": "Ingen aktiv inbjudningskod. Skapa en för att bjuda in nya medlemmar.",
+      "generateButton": "Skapa inbjudningskod",
+      "copySuccess": "Inbjudningskoden har kopierats",
+      "copyFailed": "Det gick inte att kopiera inbjudningskoden",
+      "copyButton": "Kopiera inbjudningskod"
+    },
+    "create": {
+      "title": "Skapa hushåll",
+      "description": "Skapa ett hushåll för att dela recept och inköpslistor med familj eller vänner.",
+      "nameLabel": "Hushållets namn",
+      "namePlaceholder": "T.ex. Familjen Andersson",
+      "submitButton": "Skapa hushåll"
+    },
+    "join": {
+      "title": "Gå med i hushåll",
+      "description": "Ange en inbjudningskod för att gå med i ett befintligt hushåll.",
+      "codeLabel": "Inbjudningskod",
+      "codePlaceholder": "Kod med 8 tecken",
+      "submitButton": "Gå med i hushåll"
+    }
+  },
+  "caldav": {
+    "setup": {
+      "title": "Ställ in CalDAV-synkronisering",
+      "description": "Anslut din CalDAV-kompatibla kalender för att synkronisera måltidsplaneringen automatiskt",
+      "gettingStarted": "Kom igång med CalDAV",
+      "providerDescription": "Du behöver en CalDAV-kompatibel kalendertjänst. Några vanliga leverantörer är:",
+      "serverUrlLabel": "Serveradress",
+      "serverUrlDescription": "Basadressen till din CalDAV-server (t.ex. https://dav.exempel.se)",
+      "serverUrlPlaceholder": "https://dav.exempel.se",
+      "usernameLabel": "Användarnamn",
+      "usernamePlaceholder": "användarnamn",
+      "passwordLabel": "Lösenord",
+      "passwordPlaceholder": "Ange lösenord",
+      "calendarLabel": "Kalender",
+      "calendarPlaceholder": "Välj en kalender",
+      "calendarPlaceholderDisabled": "Testa anslutningen först",
+      "calendarDescription": "Välj vilken kalender måltidsplaneringen ska synkroniseras med",
+      "calendarDescriptionDisabled": "Testa anslutningen för att hämta tillgängliga kalendrar",
+      "timeFormat": "Format: HH:MM-HH:MM",
+      "timeFormatError": "Formatet måste vara HH:MM-HH:MM",
+      "breakfastTime": "Frukosttid",
+      "lunchTime": "Lunchtid",
+      "dinnerTime": "Middagstid",
+      "snackTime": "Tid för mellanmål"
+    },
+    "config": {
+      "title": "CalDAV-konfiguration",
+      "editTitle": "Redigera CalDAV-konfiguration",
+      "serverUrl": "Serveradress",
+      "enabled": "Aktiverad",
+      "disabled": "Avstängd",
+      "editButton": "Redigera",
+      "deleteButton": "Ta bort",
+      "advancedSettings": "Avancerade inställningar",
+      "timezone": "Tidszon: {timezone}",
+      "connectionStatus": {
+        "connected": "Ansluten",
+        "checking": "Kontrollerar...",
+        "disconnected": "Frånkopplad",
+        "unknown": "Okänd"
+      }
+    },
+    "deleteModal": {
+      "title": "Ta bort CalDAV-konfiguration",
+      "confirmMessage": "Vill du ta bort din CalDAV-konfiguration?",
+      "deleteEventsLabel": "Ta bort synkroniserade händelser",
+      "deleteEventsDescription": "Ta bort alla händelser som skapats i din CalDAV-kalender",
+      "confirmButton": "Ta bort"
+    },
+    "syncStatus": {
+      "title": "Synkroniseringsstatus",
+      "syncNow": "Synkronisera nu",
+      "clearFilter": "Rensa filter",
+      "clickToFilter": "Klicka på en statusetikett för att filtrera",
+      "showingItems": "Visar {start}-{end} av {total} poster",
+      "tableHeaders": {
+        "item": "POST",
+        "type": "TYP",
+        "date": "DATUM",
+        "meal": "MÅLTID",
+        "status": "STATUS",
+        "lastSync": "SENAST SYNKRONISERAD",
+        "error": "FEL"
+      },
+      "statuses": {
+        "synced": "Synkroniserad",
+        "pending": "Väntar",
+        "failed": "Misslyckades",
+        "removed": "Borttagen"
+      },
+      "emptyFiltered": "Inga poster med status {status} hittades",
+      "emptyDefault": "Ingen synkroniseringshistorik hittades",
+      "errorDetails": "Felinformation",
+      "pagination": "Sida {current} av {total}"
+    }
+  },
+  "ingredients": {
+    "title": "Ingredienser",
+    "description": "Ingredienskatalogen som Norish använder för att bestämma näringsvärden, ingrediensikoner och översättningar.",
+    "search": "Sök efter ingredienser",
+    "searchMatch": "Matchning",
+    "searchIn": "Sök i",
+    "searchMatches": {
+      "contains": "Innehåller",
+      "exact": "Exakt"
+    },
+    "searchFields": {
+      "name": "Namn",
+      "translations": "Översättningar",
+      "parent": "Överordnad ingrediens"
+    },
+    "flaggedOnly": "Endast flaggade",
+    "flagged": "Flaggad",
+    "flagReasons": {
+      "unknown": "Norish kunde inte avgöra om detta är ett eget livsmedel.",
+      "unknown-food": "Inget känt livsmedel delar något ord med det här namnet, så AI tillfrågades inte.",
+      "ai-unsure": "AI tillfrågades om detta är ett känt livsmedel men kunde inte avgöra det.",
+      "food-gone": "AI matchade detta med ett livsmedel som hann slås ihop med ett annat innan namnet kunde kopplas till det.",
+      "upgrade": "Inget känt livsmedel kunde matchas.",
+      "seed-ambiguous": "Katalogen innehåller flera livsmedel som detta kan vara.",
+      "ai-junk": "AI bedömde att detta inte är ett livsmedel, till exempel ett köksredskap eller en del av en receptrad."
+    },
+    "empty": "Inga ingredienser hittades",
+    "emptyFlagged": "Inget är flaggat",
+    "rename": "Byt namn",
+    "delete": "Ta bort",
+    "deleteTitle": "Ta bort {name}?",
+    "deleteConfirm": "Översättningarna och det ditt hushåll har lärt Norish om ingrediensen tas också bort. En ingrediens som fortfarande används i ett recept, inköpslistan eller skafferiet kan inte tas bort. Slå ihop den med en annan istället.",
+    "deleteTouches": {
+      "recipeLines": "{count, plural, one {# receptrad behåller sin text utan den} other {# receptrader behåller sin text utan den}}",
+      "groceries": "{count, plural, one {# inköpsvara behåller sin text utan den} other {# inköpsvaror behåller sin text utan den}}",
+      "pantry": "{count, plural, one {# vara i skafferiet tas bort} other {# varor i skafferiet tas bort}}"
+    },
+    "markDistinct": "Markera som eget livsmedel",
+    "summary": "{spellings, plural, one {# översättning} other {# översättningar}}{kinds, plural, =0 {} one {, # sort} other {, # sorter}}{parent, select, none {} other {, överordnad: {parent}}}",
+    "addAlias": "Lägg till översättning",
+    "removeAlias": "Ta bort {alias}",
+    "mergeInto": "Slå ihop med…",
+    "merge": "Slå ihop",
+    "mergedToast": "{name} är nu en översättning av {into}. Öppna {into} och flytta ut {name} igen för att ångra.",
+    "mergeTitle": "{name} försvinner och blir en översättning av ingrediensen du väljer.",
+    "moveTo": "Flytta till",
+    "move": "Flytta",
+    "moveAlias": "Flytta {alias}",
+    "moveTitle": "Flytta {alias} till en annan ingrediens.",
+    "newIngredient": "Gör till en basingrediens",
+    "pickIngredient": "Sök efter en ingrediens",
+    "pickerHint": "Skriv för att söka i katalogen",
+    "pickerSearching": "Söker…",
+    "pickerEmpty": "Ingen ingrediens hittades",
+    "setParent": "Ange överordnad ingrediens…",
+    "parentTitle": "Välj det livsmedel som {name} är en sorts variant av.",
+    "clearParent": "Ta bort överordnad ingrediens",
+    "nameSection": "Namn",
+    "parentSection": "Överordnad ingrediens",
+    "spellingsSection": "Översättningar",
+    "shownAs": "Visas för dig som {name}",
+    "changeParent": "Byt överordnad ingrediens…",
+    "spellingsCount": "{count, plural, one {# översättning} other {# översättningar}}",
+    "dataSources": {
+      "title": "Datakällor",
+      "notice": "Ingredienskatalogen bygger på ingredienstaxonomin från <off>Open Food Facts</off>, som är tillgänglig under <odbl>Open Database License (ODbL)</odbl>. Katalogen som Norish skapar utifrån den tillhandahålls under samma licens.",
+      "nutritionNotice": "Näringsvärden per 100 g kommer från <ciqual>CIQUAL 2025</ciqual> och CALNUT (ANSES), <usda>USDA FoodData Central</usda> och <cofid>CoFID</cofid>, sammankopplade via koderna som Open Food Facts ger varje livsmedel. Hushållets rättelser är egna värden och kommer inte från datamängderna.",
+      "download": "Ladda ner ingredienskatalogen (JSON)"
+    },
+    "nutrition": {
+      "section": "Näringsvärden",
+      "per100g": "Per 100 g",
+      "calories": "Kalorier",
+      "fat": "Fett",
+      "carbs": "Kolhydrater",
+      "protein": "Protein",
+      "kcal": "{value} kcal",
+      "grams": "{value} g",
+      "spoonGrams": {
+        "teaspoon": "{value} g per tesked",
+        "tablespoon": "{value} g per matsked",
+        "cup": "{value} g per cup",
+        "hundredMl": "{value} g per 100 ml"
+      },
+      "none": "Norish har inga näringsvärden för det här livsmedlet ännu. Lägg till värden genom att rätta det.",
+      "noNumbers": "Inga värden per 100 g ännu.",
+      "borrowed": "Från {name}: {source}",
+      "source": {
+        "code": "{food} · {dataset}",
+        "fix": "{food} · {dataset}, valt av Norish",
+        "name": "{food} · {dataset}, matchat efter namn",
+        "householdFood": "{food} · {dataset}, valt av ditt hushåll",
+        "household": "Ditt hushålls egna värden",
+        "taxonomy": "Open Food Facts",
+        "ai": "Uppskattat av AI"
+      },
+      "correct": "Rätta",
+      "correctTitle": "Rätta {name}",
+      "correctIntro": "Rättelser gäller bara för ditt hushåll.",
+      "facts": {
+        "numbers": "Per 100 g",
+        "pieceWeight": "Ett styck"
+      },
+      "useSources": "Ingen rättelse",
+      "pickFood": "Ett livsmedel från en datakälla",
+      "typeLabel": "Från en förpackning",
+      "label": {
+        "calories": "Kalorier (kcal)",
+        "fat": "Fett (g)",
+        "carbs": "Kolhydrater (g)",
+        "protein": "Protein (g)",
+        "pieceGrams": "Ett styck väger (g)",
+        "spoonGrams": {
+          "teaspoon": "En tesked väger (g)",
+          "tablespoon": "En matsked väger (g)",
+          "cup": "En cup väger (g)",
+          "hundredMl": "100 ml väger (g)"
+        }
+      },
+      "searchFood": "Sök i datakällorna, till exempel mellanmjölk",
+      "foodHint": "Skriv några ord ur livsmedlets namn",
+      "searchingFoods": "Söker…",
+      "noFoods": "Inget livsmedel i datakällorna innehåller alla de orden.",
+      "remove": "Ta bort vår rättelse",
+      "saved": "Rättelsen har sparats",
+      "removed": "Återställt till datakällornas värden",
+      "errors": {
+        "title": "Det gick inte att spara rättelsen",
+        "unknown-food": "Det livsmedlet från datakällan finns inte längre i Norish.",
+        "empty": "Rätta minst ett av de tre alternativen.",
+        "not-found": "Det här livsmedlet har tagits bort.",
+        "unknown": "Något gick fel. Försök igen."
+      },
+      "onePieceLabel": "Ett styck",
+      "spoon": {
+        "teaspoon": "En tesked",
+        "tablespoon": "En matsked",
+        "cup": "En cup",
+        "hundredMl": "100 ml"
+      },
+      "spoonAsk": "Lägg till dess vikt",
+      "summary": "{value} kcal per 100 g",
+      "summaryNone": "Inga näringsvärden ännu",
+      "current": "Nu {value} · {source}",
+      "currentNone": "Norish har inga uppgifter om detta ännu"
+    },
+    "errors": {
+      "title": "Det gick inte att ändra ingrediensen",
+      "forbidden": "Du har inte behörighet att redigera den här ingrediensen",
+      "not-found": "Den här ingrediensen finns inte längre",
+      "name-taken": "En annan ingrediens har redan det här namnet",
+      "spelling-taken": "Den här översättningen tillhör redan en annan ingrediens",
+      "last-alias": "En ingrediens måste ha minst en översättning",
+      "same-ingredient": "En ingrediens kan inte slås ihop med sig själv",
+      "cycle": "En ingrediens kan inte vara en variant av sig själv",
+      "empty": "Ange ett namn",
+      "unknown": "Något gick fel. Försök igen."
+    },
+    "uses": {
+      "show": "Visa var",
+      "title": "Här används {name}",
+      "recipes": "Recept",
+      "groceries": "Inköpslista",
+      "done": "klart",
+      "repeats": "upprepas",
+      "pantry": "Finns i skafferiet",
+      "elsewhere": "{count, plural, one {# ytterligare användning} other {# ytterligare användningar}} i recept eller listor du inte kan öppna",
+      "none": "Används inte längre"
+    },
+    "keepAlias": "Behåll {alias}",
+    "junkTitle": "Markera {alias} som inte ett livsmedel?",
+    "junkBody": "Ingen annan ingrediens har den här översättningen. Nya recept hoppar över text som markerats som inte ett livsmedel.",
+    "junkRemove": "Ta bara bort",
+    "junkMark": "Inte ett livsmedel",
+    "expandKinds": "Visa sorter av {name}",
+    "collapseKinds": "Dölj sorter av {name}",
+    "layoutSection": "Layout",
+    "asTree": "Hierarkisk vy",
+    "showOnly": "Visa endast",
+    "standaloneOnly": "Utan överordnad ingrediens eller sorter",
+    "changedByAI": {
+      "title": "Ändrat av AI",
+      "open": "{count, plural, =0 {Ändrat av AI} other {Ändrat av AI · # att kontrollera}}",
+      "unsure": "Osäkert",
+      "sure": "Ändrat",
+      "empty": "AI har inte ändrat något den senaste månaden.",
+      "keep": "Behåll",
+      "undo": "Ångra",
+      "keepAll": "Behåll alla",
+      "undoAll": "Ångra alla",
+      "clear": "Rensa",
+      "merge": "{from} slogs ihop med den",
+      "parent": "Klassificerad under {of}",
+      "parentDropped": "Inte längre under {of}",
+      "plainName": "Namnet ändrat från {from}",
+      "notAFood": "Borttagen eftersom den inte är ett livsmedel. Dess receptrader och inköpsvaror behåller sin text.",
+      "spellingRemoved": "Översättningen {from} togs bort",
+      "spellingMoved": "Översättningen {from} flyttades till {of}"
+    },
+    "icon": {
+      "change": "Byt ikon",
+      "upload": "Ladda upp en bild",
+      "remove": "Ta bort ikon",
+      "failed": "Det gick inte att skapa en ikon av den bilden.",
+      "generate": "Skapa med AI",
+      "generateFailed": "Det gick inte att skapa ikonen."
+    }
+  },
+  "admin": {
+    "shareLinks": {
+      "title": "Moderering av receptdelning",
+      "description": "Granska offentliga receptlänkar på servern och hantera deras giltighet.",
+      "empty": "Inga delningslänkar hittades.",
+      "table": {
+        "recipe": "RECEPT",
+        "owner": "ÄGARE",
+        "status": "STATUS",
+        "created": "SKAPAD",
+        "expires": "UPPHÖR",
+        "actions": "ÅTGÄRDER"
+      },
+      "revokeModal": {
+        "title": "Återkalla länk",
+        "message": "Den här länken till {recipeName} slutar fungera tills den aktiveras igen.",
+        "confirm": "Återkalla"
+      },
+      "reactivateModal": {
+        "title": "Aktivera länken igen",
+        "message": "Den här länken till {recipeName} blir aktiv igen.",
+        "confirm": "Aktivera igen"
+      },
+      "deleteModal": {
+        "title": "Ta bort länk",
+        "message": "Ta bort den här delningslänken till {recipeName}? Det går inte att ångra.",
+        "confirm": "Ta bort länk"
+      }
+    },
+    "general": {
+      "title": "Allmänt",
+      "allowRegistration": "Tillåt registrering av nya användare",
+      "registrationDescription": "Om detta är avstängt kan bara befintliga användare logga in",
+      "locales": "Aktiverade språk",
+      "localesDescription": "Välj vilka språk användarna kan välja mellan",
+      "defaultLocale": "Standardspråk",
+      "defaultLocaleDescription": "Språk för nya användare och när en översättning saknas",
+      "localesSaved": "Språkinställningarna har sparats",
+      "localesError": "Det gick inte att spara språkinställningarna",
+      "atLeastOneLocale": "Minst ett språk måste vara aktiverat",
+      "export": {
+        "title": "Receptarkiv",
+        "description": "Ladda ner alla recept på den här servern.",
+        "button": "Exportera receptarkiv"
+      }
+    },
+    "users": {
+      "title": "Användare",
+      "description": "Hantera alla som har ett konto på den här servern.",
+      "table": {
+        "user": "Användare",
+        "role": "Roll",
+        "household": "Hushåll",
+        "joined": "Gick med",
+        "actions": "Åtgärder"
+      },
+      "roles": {
+        "owner": "Ägare",
+        "admin": "Administratör"
+      },
+      "noHousehold": "Inget hushåll",
+      "loading": "Läser in användare…",
+      "empty": "Inga användare ännu.",
+      "loadFailed": "Det gick inte att hämta användarlistan.",
+      "actions": {
+        "makeAdmin": "Gör till administratör",
+        "revokeAdmin": "Ta bort administratörsbehörighet",
+        "delete": "Ta bort användare"
+      },
+      "deleteTitle": "Ta bort {name}?",
+      "deleteConfirm": "Detta tar permanent bort användarens konto och tar bort användaren från hushållet. Det går inte att ångra.",
+      "deleteSuccess": "{name} har tagits bort",
+      "countSummary": "Totalt {count, plural, one {# användare} other {# användare}}"
+    },
+    "registration": {
+      "title": "Registrering",
+      "allowRegistration": "Tillåt registrering av nya användare",
+      "description": "Om detta är avstängt kan bara befintliga användare logga in"
+    },
+    "permissions": {
+      "title": "Behörigheter",
+      "description": "Vem som får se och ändra det andra har skapat. Serveradministratörer har alltid full åtkomst.",
+      "recipes": "Recept",
+      "ingredients": "Ingredienser",
+      "viewRecipes": "Visa recept",
+      "viewDescription": "Vem som kan se recept på startsidan",
+      "editRecipes": "Redigera recept",
+      "editDescription": "Vem som kan ändra receptuppgifter",
+      "deleteRecipes": "Ta bort recept",
+      "deleteDescription": "Vem som kan ta bort recept",
+      "levels": {
+        "everyone": "Alla",
+        "everyoneDescription": "Alla inloggade användare",
+        "household": "Hushåll",
+        "householdDescription": "Receptets ägare och medlemmarna i ägarens hushåll",
+        "owner": "Endast ägaren",
+        "ownerDescription": "Endast receptets ägare"
+      },
+      "note": "Inköpslistor och kalenderposter följer alltid hushållets regler: medlemmar kan redigera och ta bort varandras poster."
+    },
+    "ingredientPermissions": {
+      "title": "Ingrediensbehörigheter",
+      "description": "Vem som får byta namn på ingredienser, markera dem som egna livsmedel eller ta bort deras översättningar. Alla kan lägga till en översättning.",
+      "editIngredients": "Redigera ingredienser",
+      "editDescription": "Vem som kan ändra en ingrediens som någon annan har lagt till",
+      "levels": {
+        "everyone": "Alla",
+        "everyoneDescription": "Alla inloggade användare",
+        "household": "Hushåll",
+        "householdDescription": "Den som lade till ingrediensen och medlemmarna i samma hushåll",
+        "owner": "Endast ägaren",
+        "ownerDescription": "Endast den som lade till ingrediensen"
+      },
+      "note": "Ingredienser från den inbyggda katalogen kan bara redigeras av serveradministratörer."
+    },
+    "system": {
+      "title": "Systeminställningar",
+      "cleanup": {
+        "label": "Månader att behålla",
+        "description": "Ta bort planerade måltider som är äldre än så här många månader"
+      },
+      "server": {
+        "restartLabel": "Starta om servern",
+        "restartDescription": "Tillämpa konfigurationsändringar som kräver omstart",
+        "restartButton": "Starta om servern"
+      }
+    },
+    "restart": {
+      "title": "Starta om servern",
+      "confirmMessage": "Vill du starta om servern?",
+      "importantTitle": "Viktigt:",
+      "warning1": "Alla aktiva anslutningar kopplas från",
+      "warning2": "Servern är otillgänglig i några sekunder",
+      "warning3": "Se till att installationen har <code>restart: always</code> inställt, annars startar servern inte automatiskt igen",
+      "confirmButton": "Starta om"
+    },
+    "authProviders": {
+      "title": "Inloggningsleverantörer",
+      "requiresRestart": "Kräver omstart",
+      "description": "Ställ in hur användare loggar in.",
+      "passwordAuth": {
+        "title": "E-post och lösenord",
+        "description": "Tillåt användare att logga in med e-post och lösenord"
+      },
+      "oauthDescription": "Konfigurera OAuth-leverantörer för enkel inloggning (SSO).",
+      "oidc": {
+        "title": "OIDC-leverantör",
+        "subtitle": "Generell OpenID Connect",
+        "fields": {
+          "name": "Leverantörens namn",
+          "namePlaceholder": "T.ex. Authentik, Keycloak",
+          "issuer": "Utfärdarens webbadress",
+          "issuerPlaceholder": "https://din-idp.se",
+          "clientId": "Klient-ID",
+          "clientSecret": "Klienthemlighet",
+          "wellknown": "Well-known-adress (valfritt)",
+          "wellknownPlaceholder": "Härleds automatiskt från utfärdaren om den lämnas tom"
+        },
+        "claimMapping": {
+          "title": "Attributmappning",
+          "description": "Tilldela administratörsbehörighet och hushåll utifrån leverantörens gruppattribut.",
+          "securityWarning": "Varning: Med attributmappning kan din identitetsleverantör styra administratörsbehörighet och hushållsmedlemskap. Aktivera bara detta om du litar helt på din OIDC-leverantör och har konfigurerat gruppattributen korrekt.",
+          "scopes": "Ytterligare behörighetsomfång",
+          "scopesPlaceholder": "groups, roles",
+          "scopesDescription": "Kommaseparerad lista med ytterligare OAuth-omfång att begära (t.ex. groups för Keycloak)",
+          "groupsClaim": "Gruppattribut",
+          "groupsClaimDescription": "Namnet på attributet som innehåller användargrupper eller roller",
+          "adminGroup": "Administratörsgrupp",
+          "adminGroupDescription": "Gruppnamn som ger rollen som serveradministratör (skiftlägesokänsligt)",
+          "householdPrefix": "Hushållsprefix",
+          "householdPrefixDescription": "Prefix för hushållens gruppnamn (t.ex. norish_household_familjen => hushållet ”familjen”)"
+        }
+      },
+      "github": {
+        "title": "GitHub",
+        "subtitle": "GitHub OAuth",
+        "fields": {
+          "clientId": "Klient-ID",
+          "clientSecret": "Klienthemlighet"
+        }
+      },
+      "google": {
+        "title": "Google",
+        "subtitle": "Google OAuth",
+        "fields": {
+          "clientId": "Klient-ID",
+          "clientIdPlaceholder": "*.apps.googleusercontent.com",
+          "clientSecret": "Klienthemlighet"
+        }
+      },
+      "form": {
+        "testSuccess": "Anslutningen lyckades",
+        "removeTitle": "Ta bort {provider}",
+        "removeConfirm": "Vill du ta bort den här leverantören?"
+      },
+      "envBadge": {
+        "db": "Hanteras i databasen",
+        "env": "Hanteras via miljövariabel"
+      }
+    },
+    "contentDetection": {
+      "title": "Innehållsidentifiering",
+      "description": "Ställ in hur recept identifieras och tolkas från webbsidor.",
+      "contentIndicators": {
+        "title": "Innehållsindikatorer",
+        "subtitle": "Nyckelord som identifierar receptsidor",
+        "description": "Schemaindikatorer identifierar strukturerade receptdata (JSON-LD, mikrodata). Innehållsindikatorer är nyckelord som tyder på att en sida innehåller ett recept.",
+        "timersEnabled": {
+          "title": "Aktivera recepttimrar",
+          "description": "Identifiera och visa interaktiva timrar i recept"
+        }
+      },
+      "units": {
+        "title": "Måttenheter",
+        "subtitle": "Definitioner av måttenheter för tolkning",
+        "description": "Definiera måttenheter med förkortningar, pluralformer och alternativa stavningar. Används för att tolka mängder i ingredienslistor."
+      },
+      "ingredientWords": {
+        "title": "Ingrediensord",
+        "subtitle": "Ord som används vid tolkning av ingrediensnamn, per språk",
+        "description": "Ord som Norish hoppar över när ingrediensnamn matchas, till exempel ”hackad”, ”stor” eller ”s” i engelska ”onions”."
+      },
+      "recurrence": {
+        "title": "Upprepningsmönster",
+        "subtitle": "Språkmönster för återkommande varor",
+        "description": "Ord per språk som gör att en vara upprepas, till exempel ”varje vecka” eller ”varannan dag”."
+      },
+      "timerKeywords": {
+        "title": "Nyckelord för timrar",
+        "subtitle": "Tidsenheter som används för att hitta timrar",
+        "description": "Ange nyckelord för att hitta timrar i receptinstruktioner. Stöder flera språk.",
+        "enableToggle": "Aktivera timeridentifiering",
+        "hoursLabel": "Nyckelord för timmar",
+        "hoursPlaceholder": "timme, timmar, tim, h",
+        "hoursHelp": "Nyckelord för timmar (t.ex. timme, stunde, heure, uur)",
+        "minutesLabel": "Nyckelord för minuter",
+        "minutesPlaceholder": "minut, minuter, min, m",
+        "minutesHelp": "Nyckelord för minuter (t.ex. minut, minuten, minuut)",
+        "secondsLabel": "Nyckelord för sekunder",
+        "secondsPlaceholder": "sekund, sekunder, sek, s",
+        "secondsHelp": "Nyckelord för sekunder (t.ex. sekund, sekunde, seconde)",
+        "unsavedChanges": "Osparade ändringar"
+      }
+    },
+    "aiProcessing": {
+      "title": "AI och bearbetning",
+      "description": "Konfigurera AI-funktioner för receptextrahering och videobearbetning.",
+      "aiConfig": {
+        "title": "AI-konfiguration",
+        "subtitle": "Recepttolkning och extrahering"
+      },
+      "video": {
+        "title": "Videobearbetning",
+        "subtitle": "Extrahering och transkribering av videor från sociala medier"
+      },
+      "imageGeneration": {
+        "title": "Bildgenerering",
+        "subtitle": "Skapa en bild av rätten för recept som saknar bild"
+      },
+      "decisionModel": {
+        "title": "Beslutsmodell",
+        "subtitle": "Snabba, billiga svar på avgränsade frågor"
+      },
+      "prompts": {
+        "title": "Promptar",
+        "subtitle": "Anpassa AI-instruktioner för receptbearbetning"
+      },
+      "cuisines": {
+        "title": "Matkulturer",
+        "subtitle": "Listan som recept och AI väljer från"
+      },
+      "bulkEnrichment": {
+        "title": "Komplettera alla recept",
+        "subtitle": "Kör aktiverade kompletteringar på alla recept",
+        "description": "Köa alla aktiverade kompletteringar",
+        "button": "Komplettera",
+        "confirmTitle": "Köra komplettering på alla recept?",
+        "confirmMessage": "Detta köar AI-arbete för varje recept på servern. Varje automatiskt aktiverad komplettering körs där uppgifter saknas.",
+        "replaceExisting": "Skriv över befintliga uppgifter",
+        "replaceExistingDescription": "Gör om kategorier, näringsvärden, ursprung och stegens ingredienser även där de redan finns. Taggar och allergimarkeringar kompletteras endast.",
+        "replaceWarning": "Detta går inte att ångra. Även uppgifter du angett själv ersätts, inklusive ingredienser du kopplat till steg manuellt: det finns ingen registrering av vilka värden som kom från AI.",
+        "costWarning": "Detta kan bli kostsamt: med många recept kan det ta lång tid och förbruka mycket krediter hos en betald AI-leverantör.",
+        "confirmButton": "Kör",
+        "confirmButtonReplace": "Skriv över",
+        "queued": "{queued, plural, =0 {Inga körningar köade} one {# körning köad} other {# körningar köade}} för {recipes, plural, one {# recept} other {# recept}}",
+        "aiDisabled": "AI är avstängt på servern. Aktivera AI först.",
+        "error": "Det gick inte att starta kompletteringen",
+        "imageCount": "{count, plural, =0 {Körningen skapar inga bilder.} one {Körningen skapar # bild.} other {Körningen skapar # bilder.}}"
+      },
+      "ingredientCatalogue": {
+        "title": "Ingredienskatalog",
+        "subtitle": "Vad AI gör med nya ingredienser",
+        "automatic": "Automatiskt för nya ingredienser",
+        "automaticDescription": "Vad AI gör när en ingrediens läggs till i katalogen.",
+        "automaticPlaceholder": "Inget körs automatiskt",
+        "kinds": {
+          "cleanUp": "Städa nya ingredienser",
+          "cleanUpDescription": "Slå ihop stavningar, ange överordnad ingrediens och rensat namn, ta bort det som inte är livsmedel",
+          "nutrition": "Fyll i saknade näringsvärden",
+          "nutritionDescription": "Uppskatta makronäringsämnen per 100 g där ingrediensen saknar dem",
+          "conversions": "Fyll i saknade omvandlingar",
+          "conversionsDescription": "Uppskatta densitet och styckvikt där ingrediensen saknar dem",
+          "icon": "Skapa saknade ikoner",
+          "iconDescription": "Endast för ingredienser som inte har någon ikon att visa, inte heller från sin överordnade ingrediens"
+        },
+        "cleanUpCatalogue": {
+          "title": "Städa katalogen",
+          "description": "Fråga AI om ingredienserna som redan finns i katalogen.",
+          "running": "En städning pågår. Följ den under Jobbköer.",
+          "button": "Städa katalogen",
+          "intro": "AI slår ihop stavningar, anger överordnade ingredienser och rensade namn och tar bort det som inte är livsmedel. Varje ändring listas under Ändrat av AI, med Ångra.",
+          "scopeLabel": "Vilka ingredienser",
+          "scopes": {
+            "recipe-foods": "Livsmedel från recept",
+            "recipe-foods-description": "Ingredienser som recept har fört in och som ingen har tagit ställning till",
+            "whole-catalogue": "Hela katalogen",
+            "whole-catalogue-description": "Alla ingredienser, även inbyggda, och det som någon har bestämt eller ångrat skrivs över. Inbyggda ingredienser tas aldrig bort."
+          },
+          "count": "{count, plural, one {AI kommer att fråga om # ingrediens.} other {AI kommer att fråga om # ingredienser.}}",
+          "start": "Städa",
+          "started": "{count, plural, one {Städar # ingrediens} other {Städar # ingredienser}}",
+          "error": "Det gick inte att starta städningen"
+        },
+        "fillGaps": {
+          "title": "Fyll luckor",
+          "description": "Låt AI fylla i det som ingredienserna saknar.",
+          "running": "Fyll luckor körs. Följ det under Jobbköer.",
+          "button": "Fyll luckor",
+          "intro": "För varje ingrediens i katalogen fyller AI bara i det som ingrediensen inte har något eget av. Det som en ingrediens redan har ersätts aldrig.",
+          "kindsLabel": "Vad som ska fyllas i",
+          "kinds": {
+            "nutrition": "Näringsvärden",
+            "conversions": "Omvandlingar",
+            "icons": "Ikoner"
+          },
+          "count": "{count, plural, =0 {Inget att fylla i} one {# ingrediens} other {# ingredienser}}",
+          "start": "Fyll luckor",
+          "started": "Fyller luckor. Följ det under Jobbköer.",
+          "error": "Det gick inte att börja fylla luckor"
+        }
+      }
+    },
+    "aiConfig": {
+      "enableAI": "Aktivera AI-funktioner",
+      "enableAIDescription": "Använd AI för att extrahera recept från ostrukturerat innehåll",
+      "configureWarning": "Konfigurera AI-leverantören nedan för att aktivera AI-funktioner.",
+      "provider": "AI-leverantör",
+      "providers": {
+        "openai": "OpenAI",
+        "azure": "Azure OpenAI",
+        "anthropic": "Anthropic",
+        "google": "Google AI",
+        "mistral": "Mistral AI",
+        "deepseek": "DeepSeek",
+        "perplexity": "Perplexity",
+        "groq": "Groq",
+        "ollama": "Ollama (lokal)",
+        "lmStudio": "LM Studio (lokal)",
+        "genericOpenai": "Generell OpenAI-kompatibel"
+      },
+      "endpointUrl": "API-adress",
+      "azureEndpoint": "Azure-resursens adress (valfritt)",
+      "azureEndpointDescription": "Anpassad adress till Azure OpenAI. Lämna tomt för standardadressen.",
+      "model": "Modell",
+      "visionModel": "Bildtolkningsmodell (valfritt)",
+      "visionModelDescription": "Valfritt: Använd en annan modell för bildtolkning. Lämna tomt för att använda modellen ovan.",
+      "apiKey": "API-nyckel",
+      "apiKeyPlaceholder": "Ange API-nyckel",
+      "temperature": "Temperatur: {value}",
+      "temperatureHint": "Lägre = mer fokuserat, högre = mer kreativt",
+      "maxTokens": "Maximalt antal token",
+      "requestTimeout": "Tidsgräns för anrop (ms)",
+      "alwaysUseAI": "Använd alltid AI vid import",
+      "alwaysUseAIDescription": "Hoppa över strukturerade tolkar och extrahera recept enbart med AI",
+      "connectionSuccess": "Anslutningen lyckades",
+      "vision": "bildtolkning",
+      "automaticEnrichment": "Automatisk receptkomplettering",
+      "automaticEnrichmentDescription": "Vilka AI-kompletteringar som körs på nya recept. Medlemmar kan fortfarande köra var och en manuellt.",
+      "automaticEnrichmentPlaceholder": "Inget körs automatiskt",
+      "automaticEnrichmentKinds": {
+        "autoTagging": "Automatisk taggning",
+        "autoTaggingDescription": "Lägg till AI-föreslagna taggar i nya recept utan att ta bort befintliga taggar",
+        "allergyDetection": "Identifiering av allergener",
+        "allergyDetectionDescription": "Lägg automatiskt till allergirelaterade taggar vid receptimport",
+        "autoCategorization": "Automatisk kategorisering",
+        "autoCategorizationDescription": "Ange måltidskategorier för nya recept som saknar dem",
+        "nutritionEstimation": "Uppskattning av näringsvärden",
+        "nutritionEstimationDescription": "Uppskatta kalorier, fett, kolhydrater och protein för nya recept som saknar dessa uppgifter",
+        "recipeProvenance": "Receptets ursprung",
+        "recipeProvenanceDescription": "Ta reda på land, region, matkulturer och en kort beskrivning för nya recept. Fyll bara i det som saknas",
+        "ingredientLinking": "Koppling av ingredienser",
+        "ingredientLinkingDescription": "Koppla varje steg till de ingrediensrader det använder, för steg som saknar kopplingar",
+        "imageGeneration": "Bildgenerering",
+        "imageGenerationDescription": "Skapa en bild av rätten för nya recept som helt saknar bild"
+      },
+      "tagStrategy": "Taggstrategi",
+      "tagStrategyDescription": "Vilka taggar automatisk taggning får använda, oavsett om den körs automatiskt eller manuellt",
+      "tagStrategies": {
+        "predefined": "Endast fördefinierade taggar",
+        "predefinedDb": "Fördefinierade och befintliga taggar",
+        "freeform": "AI får skapa nya taggar"
+      },
+      "cuisineStrategy": "Strategi för matkulturer",
+      "cuisineStrategyDescription": "Om AI får lägga till nya matkulturer när ursprung bestäms eller bara välja från listan",
+      "cuisineStrategies": {
+        "existing": "Endast befintliga matkulturer",
+        "extend": "AI får lägga till nya matkulturer"
+      }
+    },
+    "modelListing": {
+      "empty": "Inga modeller returnerades. Kontrollera API-nyckeln och adressen eller skriv ett modellnamn.",
+      "refused": "{provider} nekade anropet ({status}). Kontrollera API-nyckeln.",
+      "unreachable": "Det gick inte att nå {provider}. Kontrollera adressen."
+    },
+    "videoConfig": {
+      "enableVideo": "Aktivera videotolkning",
+      "enableVideoDescription": "Extrahera recept från TikTok, Instagram, YouTube Shorts, Facebook, Pinterest med flera",
+      "configureWarning": "Konfigurera en transkriberingsleverantör nedan för att aktivera videobearbetning.",
+      "aiDisabledWarning": "Aktivera AI-konfigurationen innan du slår på videobearbetning.",
+      "maxLength": "Maximal videolängd (sekunder)",
+      "maxLengthDescription": "Längre videor tar mer tid och resurser att bearbeta",
+      "maxFileSize": "Maximal videofilstorlek",
+      "maxFileSizeDescription": "Maximal storlek för nedladdade videofiler",
+      "ytDlpVersion": "yt-dlp-version",
+      "ytDlpVersionDescription": "Den version av yt-dlp som körs på servern. Kan inte ändras här.",
+      "ytDlpVersionMissing": "Ingen yt-dlp-installation hittades",
+      "ytDlpVersionUnknown": "Det gick inte att kontrollera",
+      "ytDlpVersionLoading": "Kontrollerar …",
+      "ytDlpProxy": "yt-dlp-proxy",
+      "ytDlpProxyDescription": "HTTP/SOCKS5-proxy för yt-dlp",
+      "transcription": "Transkribering",
+      "transcriptionDescription": "Omvandla videoljud till text för receptextrahering",
+      "transcriptionProvider": "Transkriberingsleverantör",
+      "transcriptionProviders": {
+        "disabled": "Avstängd",
+        "openai": "OpenAI Whisper",
+        "groq": "Groq Whisper",
+        "mistral": "Mistral Voxtral",
+        "azure": "Azure OpenAI Whisper",
+        "ollama": "Ollama",
+        "genericOpenai": "Generell OpenAI-kompatibel"
+      },
+      "transcriptionEndpoint": "API-adress",
+      "transcriptionEndpointDescription": "OpenAI-kompatibelt API med Whisper-stöd eller Ollama-API",
+      "transcriptionModel": "Modell",
+      "transcriptionModelDescription": "Whisper-modell för transkribering",
+      "transcriptionModelPlaceholder": "Välj eller ange modellnamn",
+      "transcriptionApiKey": "API-nyckel",
+      "transcriptionApiKeyDescription": "Använder API-nyckeln från AI-konfigurationen om ingen anges",
+      "transcriptionApiKeyPlaceholder": "Lämna tomt för att använda nyckeln från AI-konfigurationen",
+      "transcriptionApiKeyOptional": "API-nyckel (valfritt)",
+      "transcriptionApiKeyOptionalDescription": "De flesta lokala Whisper-servrar kräver ingen API-nyckel",
+      "transcriptionApiKeyOptionalPlaceholder": "Lämna tomt för lokala servrar"
+    },
+    "pageRenderers": {
+      "title": "Sidrenderare",
+      "description": "Webbläsare som läser sidor som en vanlig hämtning inte klarar. Obscura provas först, sedan Chromium-webbläsaren och sist lösaren.",
+      "obscura": "Obscura",
+      "obscuraDescription": "Den headless-webbläsare som ingår i Norish.",
+      "obscuraEndpoint": "Obscura-adress",
+      "cdpToken": "CDP-token",
+      "cdpTokenDescription": "Samma token som på obscura-tjänsten.",
+      "chromium": "Chromium-webbläsare",
+      "chromiumDescription": "Valfri Chromium med en CDP-adress.",
+      "chromiumEndpoint": "Chromium-adress",
+      "solver": "FlareSolverr eller Byparr",
+      "solverDescription": "Provas när webbläsarna misslyckas. Den får aldrig autentiseringstoken för webbplatser.",
+      "solverEndpoint": "Lösarens adress",
+      "allowPrivateAddresses": "Tillåt privata adresser",
+      "allowPrivateAddressesDescription": "Låt importer nå ditt lokala nätverk. Obscura nekar dessa oavsett.",
+      "navigationTimeout": "Tidsgräns för navigering (ms)",
+      "navigationTimeoutDescription": "Hur lång tid en renderare får på sig att läsa in en sida.",
+      "saved": "Sidrenderarna har sparats",
+      "error": "Det gick inte att spara sidrenderarna",
+      "connectionSuccess": "Anslutningen lyckades"
+    },
+    "imageGenerationConfig": {
+      "description": "Bilder behöver en egen leverantör eftersom de flesta AI-leverantörer inte kan skapa bilder.",
+      "provider": "Bildleverantör",
+      "providers": {
+        "disabled": "Avstängd",
+        "openai": "OpenAI",
+        "google": "Google AI",
+        "azure": "Azure OpenAI",
+        "ollama": "Ollama (lokal)",
+        "lmStudio": "LM Studio",
+        "genericOpenai": "Generell OpenAI-kompatibel"
+      },
+      "endpoint": "API-adress",
+      "endpointOptional": "Valfritt: anpassad adress till Azure-resursen",
+      "apiKey": "API-nyckel",
+      "apiKeyPlaceholder": "Ange API-nyckel...",
+      "apiKeyInherited": "Använder API-nyckeln från din AI-konfiguration.",
+      "model": "Bildmodell",
+      "modelPlaceholder": "T.ex. gpt-image-1",
+      "modelDescription": "Modellen som skapar bilden. Det måste vara en bildmodell, inte en textmodell.",
+      "fallbackHint": "Samma leverantör som i AI-konfigurationen: adressen och API-nyckeln hämtas därifrån om du inte anger dem här."
+    },
+    "decisionConfig": {
+      "provider": "Leverantör för beslut",
+      "providers": {
+        "disabled": "Avstängd",
+        "typesafe": "TypeSafe AI"
+      },
+      "apiKey": "API-nyckel",
+      "apiKeyPlaceholder": "Ange API-nyckel...",
+      "apiKeyDescription": "Hämta en nyckel från ditt konto på typesafe.ai",
+      "model": "Beslutsmodell",
+      "endpoint": "API-adress",
+      "endpointDescription": "För proxy eller gateway. Lämna annars tomt.",
+      "uses": "Använd beslutsmodellen för",
+      "usesPlaceholder": "Ingenting",
+      "useNames": {
+        "autoCategorization": "Automatisk kategorisering",
+        "autoCategorizationDescription": "Avgör om ett recept är frukost, lunch, middag eller mellanmål",
+        "autoTagging": "Automatisk taggning",
+        "autoTaggingDescription": "Välj taggar från den fördefinierade listan och bekräfta varje tagg som AI föreslår",
+        "allergyDetection": "Identifiering av allergener",
+        "allergyDetectionDescription": "Avgör vilka av hushållets allergener ett recept innehåller",
+        "recipeProvenance": "Receptets ursprung",
+        "recipeProvenanceDescription": "Fastställ land och matkulturer innan beskrivningen skrivs",
+        "groceryLinking": "Koppling av inköpsvaror",
+        "groceryLinkingDescription": "Rangordna butikens produkter och koppla en produkt när modellen är säker",
+        "ingredientResolution": "Identifiering av ingredienser",
+        "ingredientResolutionDescription": "Avgör om ett nytt ingrediensnamn är ett livsmedel som Norish redan känner till",
+        "validateEnrichments": "Validera kompletteringar",
+        "validateEnrichmentsDescription": "Kontrollera varje kompletterings påståenden innan de sparas"
+      },
+      "connectionSuccess": "Anslutningen lyckades"
+    },
+    "promptsConfig": {
+      "recipeExtraction": "Prompt för receptextrahering",
+      "recipeExtractionDescription": "Den här prompten används för att extrahera receptdata från webbsidor eller videotranskriberingar.",
+      "recipeExtractionPlaceholder": "Ange prompten för receptextrahering...",
+      "imageExtraction": "Prompt för bildextrahering",
+      "imageExtractionDescription": "Den här prompten används för att extrahera receptdata från uppladdade bilder, till exempel foton av en kokbok eller ett receptkort.",
+      "imageExtractionPlaceholder": "Ange prompten för bildextrahering...",
+      "unitConversion": "Prompt för enhetsomvandling",
+      "unitConversionDescription": "Den här prompten används för att omvandla receptmått mellan metriska och amerikanska måttsystem. Tillgängliga variabler: sourceSystem, targetSystem, units",
+      "unitConversionPlaceholder": "Ange prompten för enhetsomvandling...",
+      "nutritionEstimation": "Prompt för uppskattning av näringsvärden",
+      "nutritionEstimationDescription": "Den här prompten används för att uppskatta näringsvärden för ett recept. Tillgängliga variabler: recipeName, servings, ingredients",
+      "nutritionEstimationPlaceholder": "Ange prompten för uppskattning av näringsvärden...",
+      "autoTagging": "Prompt för automatisk taggning",
+      "autoTaggingDescription": "Den här prompten används för att skapa taggar för importerade recept. Ange taggningsregler och en lista med fördefinierade taggar.",
+      "autoTaggingPlaceholder": "Ange prompten för automatisk taggning...",
+      "autoCategorization": "Prompt för automatisk kategorisering",
+      "autoCategorizationDescription": "Den här prompten används för att sortera recept i måltidskategorier (frukost, lunch, middag, mellanmål).",
+      "autoCategorizationPlaceholder": "Ange prompten för automatisk kategorisering...",
+      "allergyDetection": "Prompt för identifiering av allergener",
+      "allergyDetectionDescription": "Den här prompten används för att identifiera hushållets angivna allergener bland receptets ingredienser.",
+      "allergyDetectionPlaceholder": "Ange prompten för identifiering av allergener...",
+      "recipeProvenance": "Prompt för receptets ursprung",
+      "recipeProvenanceDescription": "Den här prompten används för att ta reda på var ett recept kommer ifrån. Beskrivningen skrivs på samma språk som receptet. Tillgängliga variabler: recipeName, description, ingredients",
+      "recipeProvenancePlaceholder": "Ange prompten för receptets ursprung...",
+      "ingredientLinking": "Prompt för koppling av ingredienser",
+      "ingredientLinkingDescription": "Används för att koppla varje steg till de ingrediensrader det använder",
+      "ingredientLinkingPlaceholder": "Prompt för att koppla ingredienser till steg...",
+      "ingredientResolution": "Prompt för identifiering av ingredienser",
+      "ingredientResolutionDescription": "Används för att avgöra om ett nytt ingrediensnamn är ett livsmedel som Norish redan känner till",
+      "ingredientResolutionPlaceholder": "Prompt för att känna igen ingrediensnamn...",
+      "ingredientMatch": "Prompt för matchning av ingredienser",
+      "ingredientMatchDescription": "Skickas till språkmodellen när AI:s namn hittar flera livsmedel i katalogen, eller bara livsmedel som skiljer sig med en bokstav, med namnet och de livsmedlen tillagda efteråt. Anger vilket av dem namnet är, om något.",
+      "ingredientMatchPlaceholder": "Prompt för att matcha ingrediensnamn mot livsmedel i katalogen...",
+      "imageGenerationBrief": "Prompt för bildbeskrivning",
+      "imageGenerationBriefDescription": "Används för att göra om ett recept till en kort bildbeskrivning innan bilden skapas. Receptet läggs till efter prompten.",
+      "imageGenerationBriefPlaceholder": "Prompt för att skriva bildbeskrivningen...",
+      "imageGenerationStyle": "Prompt för bildstil",
+      "imageGenerationStyleDescription": "Skickas till bildmodellen med bildbeskrivningen tillagd efteråt. Anger den gemensamma stilen för alla skapade bilder.",
+      "imageGenerationStylePlaceholder": "Prompt för bildstilen...",
+      "ingredientIconStyle": "Prompt för ingrediensikonernas stil",
+      "ingredientIconStyleDescription": "Skickas till bildmodellen när en ingrediensikon skapas, med livsmedlets namn och dess överordnade ingrediens tillagda efteråt. Anger den gemensamma stilen för alla skapade ikoner.",
+      "ingredientIconStylePlaceholder": "Prompt för ingrediensikonernas stil...",
+      "ingredientPlainName": "Prompt för rensning av ingrediensnamn",
+      "ingredientPlainNameDescription": "Skickas till språkmodellen när AI rensar ett ingrediensnamn, med namnet och alternativa stavningar tillagda efteråt. Anger vad som ska tas bort och behållas.",
+      "ingredientPlainNamePlaceholder": "Prompt för att rensa ingrediensnamn...",
+      "ingredientSpellingCheck": "Prompt för kontroll av ingrediensöversättningar",
+      "ingredientSpellingCheckDescription": "Skickas till språkmodellen vid en städning av hela katalogen, för varje ingrediens i katalogen med översättningar som personer, importer eller sammanslagningar har lagt till, med ingrediensen, de översättningarna och en receptrad som använder var och en tillagda efteråt. Anger vilka av dem som namnger ingrediensen, inget livsmedel eller ett annat livsmedel.",
+      "ingredientSpellingCheckPlaceholder": "Prompt för att kontrollera ingrediensöversättningar...",
+      "ingredientNutrition": "Prompt för ingrediensers näringsvärden",
+      "ingredientNutritionDescription": "Skickas till språkmodellen för en ingrediens som saknar näringsvärden, densitet eller styckvikt, där AI får fylla i dem, med ingrediensen och vad den är en sorts variant av tillagda efteråt. Uppskattar bara det som ingrediensen saknar.",
+      "ingredientNutritionPlaceholder": "Prompt för att uppskatta en ingrediens näringsvärden..."
+    },
+    "unsavedChanges": "Osparade ändringar",
+    "jsonEditor": {
+      "placeholder": "Ange JSON-konfiguration...",
+      "invalidJson": "Ogiltigt JSON-format",
+      "failedToSave": "Det gick inte att spara",
+      "failedToRestore": "Det gick inte att återställa standardvärden"
+    },
+    "jobQueue": {
+      "title": "Jobbköer",
+      "description": "Övervaka bakgrundsjobb i alla köer: status, aktuellt steg, tidsåtgång och fel.",
+      "empty": "Inga jobb hittades",
+      "filters": {
+        "queue": "Kö",
+        "allQueues": "Alla köer"
+      },
+      "status": {
+        "waiting": "Väntar",
+        "active": "Aktivt",
+        "delayed": "Fördröjt",
+        "completed": "Klart",
+        "failed": "Misslyckat",
+        "cancelled": "Avbrutet",
+        "prioritized": "Prioriterat",
+        "unknown": "Okänt",
+        "hanging": "Har hängt sig"
+      },
+      "stepStatus": {
+        "done": "Klart",
+        "failed": "Misslyckades",
+        "running": "Körs",
+        "skipped": "Överhoppat",
+        "pending": "Väntar"
+      },
+      "steps": {
+        "dedupe-check": "Kontrollera befintliga",
+        "fetch-allergies": "Hämta allergier",
+        "parsing": "Tolka recept",
+        "saving": "Spara recept",
+        "post-processing": "Efterbearbetning",
+        "preparing-images": "Förbered bilder",
+        "ai-extraction": "AI-extrahering",
+        "parsing-text": "Tolka inklistrad text",
+        "creating-recipes": "Skapa recept",
+        "ai-request": "AI-anrop",
+        "syncing-event": "Synkronisera kalenderhändelse",
+        "deleting-event": "Ta bort kalenderhändelse",
+        "running": "Kör uppgift",
+        "searching": "Sök i butiken",
+        "reading-product": "Läs produktsidan",
+        "saving-link": "Spara länken",
+        "asking-ai": "Fråga AI om livsmedlet",
+        "drawing-icon": "Skapa livsmedlets ikon",
+        "filling-gaps": "Fyll livsmedlets luckor",
+        "naming": "Rensa livsmedlets namn"
+      },
+      "queues": {
+        "recipe-import": "Receptimport",
+        "image-recipe-import": "Bildimport",
+        "paste-recipe-import": "Import av inklistrad text",
+        "nutrition-estimation": "Uppskattning av näringsvärden",
+        "auto-tagging": "Automatisk taggning",
+        "auto-categorization": "Automatisk kategorisering",
+        "allergy-detection": "Identifiering av allergener",
+        "recipe-provenance": "Receptets ursprung",
+        "ingredient-linking": "Koppling av ingredienser",
+        "caldav-sync": "CalDAV-synkronisering",
+        "scheduled-tasks": "Schemalagda uppgifter",
+        "image-generation": "Bildgenerering",
+        "store-lookup": "Butikssökning",
+        "ingredient-review": "Fråga AI om ingredienser",
+        "ingredient-icons": "Skapa ingrediensikoner",
+        "ingredient-fill": "Fyll luckor i ingredienser"
+      },
+      "summary": {
+        "failed": "{count} misslyckade"
+      },
+      "table": {
+        "job": "Jobb",
+        "status": "Status",
+        "step": "Steg",
+        "duration": "Tidsåtgång",
+        "created": "Skapat",
+        "runsAt": "Körs {time}"
+      },
+      "detail": {
+        "title": "Jobbinformation",
+        "notFound": "Jobbet hittades inte. Det kan ha rensats bort.",
+        "cancelledNote": "En administratör avbröt det här jobbet.",
+        "sections": {
+          "error": "Fel",
+          "pipelineSteps": "Bearbetningssteg",
+          "input": "Indata",
+          "logs": "Loggar",
+          "errors": "Fel"
+        },
+        "fields": {
+          "queue": "Kö",
+          "jobId": "Jobb-ID",
+          "description": "Beskrivning",
+          "recipe": "Recept",
+          "created": "Skapat",
+          "started": "Startat",
+          "finished": "Avslutat",
+          "duration": "Tidsåtgång",
+          "attempts": "Försök",
+          "models": "Modeller",
+          "tokens": "Token",
+          "runsAt": "Körs",
+          "nextRun": "Nästa körning"
+        },
+        "modelTokens": "{tokens} token",
+        "attempt": "Försök {number}",
+        "stackTrace": "Stackspårning"
+      },
+      "actions": {
+        "retry": "Försök igen",
+        "cancel": "Stoppa",
+        "cancelling": "Stoppar…",
+        "remove": "Ta bort"
+      },
+      "removeModal": {
+        "message": "Ta bort det här jobbet permanent?"
+      },
+      "retention": {
+        "title": "Lagring av jobbhistorik",
+        "keepCompleted": "Behåll slutförda jobb",
+        "keepFailed": "Behåll misslyckade jobb",
+        "maxAgeDays": "Maximal ålder (dagar)",
+        "description": "Hur många avslutade jobb som ska behållas per kö."
+      },
+      "pagination": "Sida {current} av {total}"
+    },
+    "cuisineVocabulary": {
+      "description": "Matkulturer är en lista som du själv förvaltar. Namnen visas exakt som de skrivs här, på alla språk.",
+      "namePlaceholder": "Matkulturens namn",
+      "addLabel": "Lägg till matkultur",
+      "renameLabel": "Byt namn på {name}",
+      "deleteLabel": "Ta bort {name}",
+      "deleteConfirm": "Ta bort ”{name}”? Den tas bort från recepten som använder den.",
+      "empty": "Inga matkulturer ännu.",
+      "duplicate": "En matkultur med det namnet finns redan.",
+      "saveFailed": "Det gick inte att spara matkulturen."
+    }
+  },
+  "archiveExport": {
+    "progress": "Exporterar… {size}",
+    "errors": {
+      "failedTitle": "Exporten misslyckades",
+      "failedDescription": "Det gick inte att ladda ner receptarkivet. Försök igen.",
+      "signedOut": "Din session har gått ut. Logga in igen för att exportera.",
+      "notAllowed": "Du har inte behörighet att exportera detta."
+    }
+  }
+}

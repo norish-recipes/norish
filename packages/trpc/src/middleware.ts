@@ -1,5 +1,6 @@
 import { TRPCError } from "@trpc/server";
 
+import type { RecipeListContext } from "@norish/db";
 import type { FullRecipeDTO, HouseholdWithUsersNamesDto, User } from "@norish/shared/contracts";
 import type { RecipeShareDto } from "@norish/shared/contracts/dto/recipe-shares";
 import type { OperationId } from "@norish/shared/contracts/realtime/envelope";
@@ -9,17 +10,13 @@ import { getRecipeFull } from "@norish/db/repositories/recipes";
 import { getCachedHouseholdForUser } from "@norish/shared-server/cache/household";
 import { runWithOperationContext } from "@norish/shared-server/lib/operation-context";
 import { ResolveSharedRecipeInputSchema } from "@norish/shared/contracts/zod/recipe-shares";
+import { viewerAndHouseholdIds } from "@norish/shared/lib/household";
 
 import type { Context } from "./context";
 import { withIdempotency } from "./idempotency-middleware";
 import { middleware, publicProcedure } from "./trpc";
 
-/**
- * Middleware that enforces authentication and provides full context:
- * - User authentication
- * - Household resolution
- */
-const withAuth = middleware(async ({ ctx, next }) => {
+function signedInUser(ctx: Context): User {
   if (!ctx.user) {
     throw new TRPCError({
       code: "UNAUTHORIZED",
@@ -27,12 +24,20 @@ const withAuth = middleware(async ({ ctx, next }) => {
     });
   }
 
-  const user = ctx.user;
+  return ctx.user;
+}
+
+/**
+ * Middleware that enforces authentication and provides full context:
+ * - User authentication
+ * - Household resolution
+ */
+const withAuth = middleware(async ({ ctx, next }) => {
+  const user = signedInUser(ctx);
 
   const household = ctx.household ?? (await getCachedHouseholdForUser(user.id));
 
   const householdUserIds = household?.users.map((u: { id: string }) => u.id) ?? [];
-  const allUserIds = [user.id, ...householdUserIds].filter((id, i, arr) => arr.indexOf(id) === i);
   const householdKey = household?.id ?? user.id;
   const isServerAdmin = user.isServerAdmin ?? false;
 
@@ -45,7 +50,7 @@ const withAuth = middleware(async ({ ctx, next }) => {
         user,
         household,
         householdKey,
-        userIds: allUserIds,
+        userIds: viewerAndHouseholdIds({ userId: user.id, householdUserIds }),
         householdUserIds: householdUserIds.length > 0 ? householdUserIds : null,
         isServerAdmin,
         operationId: ctx.operationId ?? null,
@@ -68,6 +73,11 @@ const withAuth = middleware(async ({ ctx, next }) => {
  * Queries and mutations without the header pass straight through.
  */
 export const authedProcedure = publicProcedure.use(withIdempotency).use(withAuth);
+
+/** Signed in, nothing more: a realtime subscription reads its household itself. */
+export const signedInProcedure = publicProcedure.use(({ ctx, next }) =>
+  next({ ctx: { ...ctx, user: signedInUser(ctx) } })
+);
 
 export type SharedRecipeProcedureContext = Context & {
   sharedRecipe: {
@@ -104,15 +114,27 @@ export const sharedRecipeProcedure = publicProcedure
     });
   });
 
-export type AuthedProcedureContext = Context & {
+export type AuthedProcedureContext = Omit<Context, "household"> & {
   user: User;
-  household: HouseholdWithUsersNamesDto | null;
+  // The request's own household, or the cached one `withAuth` falls back to.
+  household: Context["household"] | HouseholdWithUsersNamesDto | null;
   householdKey: string;
   userIds: string[];
   householdUserIds: string[] | null;
   isServerAdmin: boolean;
   operationId: OperationId | null;
 };
+
+/** The caller, as the repositories scope what a viewer may read and edit. */
+export function viewerOf(
+  ctx: Pick<AuthedProcedureContext, "householdUserIds" | "isServerAdmin"> & { user: { id: string } }
+): RecipeListContext {
+  return {
+    userId: ctx.user.id,
+    householdUserIds: ctx.householdUserIds,
+    isServerAdmin: ctx.isServerAdmin,
+  };
+}
 
 /**
  * Middleware that enforces server admin access.

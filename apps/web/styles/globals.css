@@ -2,10 +2,10 @@
 @import "@fontsource-variable/inter";
 @import "@fontsource-variable/fira-code";
 @import "@fontsource-variable/fraunces/wght.css";
-@import "@heroui/styles";
+@import "./heroui.css";
 @import "@norish/tailwind-config/heroui-theme";
 @import "@norish/tailwind-config/marks";
-@source "../../../node_modules/@heroui/styles/dist/**/*.{css,js,ts,jsx,tsx}";
+@source "../node_modules/@heroui/styles/dist/**/*.{css,js,ts,jsx,tsx}";
 
 @custom-variant light (&:is(:root, .light *, [data-theme="light"] *));
 @custom-variant dark (&:is(.dark *, [data-theme="dark"] *));
@@ -281,5 +281,145 @@
       from var(--untinted-surface-tertiary) l calc(var(--dish-c, 0) * 0.7) var(--dish-h, 0)
     );
     --default: oklch(from var(--untinted-default) l calc(var(--dish-c, 0) * 0.5) var(--dish-h, 0));
+  }
+}
+
+/* View transitions. PageTransition classes a page `nav-forward`, or `nav-back` for a back link or a
+   tab to the left (components/page-transition.tsx), and app/layout.tsx types the sign-in. */
+:root {
+  --vt-ease: cubic-bezier(0.2, 0, 0, 1);
+  /* Where an arriving page starts: from the right, or from the left going back. */
+  --vt-from: 40px 0;
+}
+
+/* Clicks pass through the overlay to the live page. Named layers still ignore hits while they
+   animate, which is why the slides stay short. */
+::view-transition {
+  pointer-events: none;
+}
+
+/* No route cross-fade: what sits outside the pages and bars changes at once. */
+::view-transition-old(root),
+::view-transition-new(root) {
+  animation: none;
+}
+
+/* Only the arriving page moves: Safari leaves an animated outgoing page standing under the new
+   one, and a plain `display: none` loses to its own styles there. */
+::view-transition-old(.nav-forward),
+::view-transition-old(.nav-back) {
+  display: none !important;
+}
+
+::view-transition-new(.nav-forward),
+::view-transition-new(.nav-back) {
+  animation: 300ms var(--vt-ease) both vt-in;
+}
+
+::view-transition-new(.nav-back) {
+  --vt-from: -40px 0;
+}
+
+@keyframes vt-in {
+  from {
+    opacity: 0;
+    translate: var(--vt-from);
+  }
+}
+
+/* The recipe tint is a fixed underlay, named so it fades in place under the pages. The old tint
+   fades out here; the new one runs its own fade-in (recipe-page-tint.tsx), so it fades once. */
+::view-transition-group(root) {
+  z-index: -2;
+}
+
+::view-transition-group(recipe-tint) {
+  z-index: -1;
+  animation-duration: 300ms;
+}
+
+::view-transition-new(recipe-tint) {
+  animation: none;
+}
+
+/* The navigation bars (`app-bar`) hold still above the moving pages. */
+::view-transition-group(.app-bar) {
+  z-index: 1;
+  animation: none;
+}
+
+::view-transition-old(.app-bar) {
+  display: none;
+}
+
+::view-transition-new(.app-bar) {
+  animation: none;
+}
+
+/* Signing in is a cross-document transition; app/layout.tsx skips every other one. */
+@view-transition {
+  navigation: auto;
+}
+
+/* Named only for sign-in, so every other navigation captures just the pages and bars. */
+:root:active-view-transition-type(sign-in) {
+  & [data-app-container] {
+    view-transition-name: app;
+  }
+
+  & [data-app-container] [data-brand-logo] {
+    view-transition-name: brand-logo;
+  }
+}
+
+::view-transition-old(auth-screen) {
+  animation: 320ms ease-in both vt-auth-leave;
+}
+
+@keyframes vt-auth-leave {
+  to {
+    opacity: 0;
+    scale: 0.94;
+    filter: blur(8px);
+  }
+}
+
+/* On sign-in, the auth page's logo (auth-frame.tsx) moves onto the navbar's. */
+::view-transition-group(brand-logo) {
+  animation-duration: 640ms;
+  animation-timing-function: var(--vt-ease);
+}
+
+::view-transition-new(app) {
+  animation: 520ms var(--vt-ease) 180ms both vt-app-arrive;
+}
+
+@keyframes vt-app-arrive {
+  from {
+    opacity: 0;
+    translate: 0 28px;
+    scale: 0.98;
+  }
+}
+
+/* The bars come in last, each from its own edge of the screen. */
+:root:active-view-transition-type(sign-in)::view-transition-new(.app-bar) {
+  animation: 480ms var(--vt-ease) 220ms both vt-in;
+}
+
+::view-transition-new(app-navbar) {
+  --vt-from: 0 -24px;
+}
+
+::view-transition-new(app-mobile-nav) {
+  --vt-from: 0 24px;
+}
+
+/* A reader who prefers reduced motion gets none of it. */
+@media (prefers-reduced-motion: reduce) {
+  ::view-transition-group(*),
+  ::view-transition-old(*),
+  ::view-transition-new(*) {
+    animation: none !important;
   }
 }

@@ -1,27 +1,38 @@
 "use client";
 
-import { ExclamationTriangleIcon } from "@heroicons/react/16/solid";
+import { useTRPC } from "@/app/providers/trpc-provider";
+import { ActionButton, ActionButtonGroup } from "@/components/shared/action-button";
+import { ExclamationTriangleIcon, EyeIcon } from "@heroicons/react/16/solid";
 import { Button, Modal } from "@heroui/react";
+import { useQuery } from "@tanstack/react-query";
 import { useTranslations } from "next-intl";
 
-/**
- * Asks before an Ingredient goes: its spellings go with it, and what the
- * household taught Norish about it. An Ingredient something still uses is
- * refused by the server, so this only confirms the intent.
- */
+const DELETE_TOUCHES = ["recipeLines", "groceries", "pantry"] as const;
+
+/** Asks before an Ingredient goes, saying how many lines, groceries and pantry items it touches. */
 export function DeleteIngredientModal({
+  ingredientId,
   isOpen,
   name,
   onClose,
   onConfirm,
+  onShowUses,
 }: {
+  ingredientId: string;
   isOpen: boolean;
   name: string;
   onClose: () => void;
   onConfirm: () => void;
+  onShowUses: () => void;
 }) {
   const t = useTranslations("settings.ingredients");
   const tActions = useTranslations("common.actions");
+  const trpc = useTRPC();
+  const { data, isPending } = useQuery({
+    ...trpc.ingredients.uses.queryOptions({ ingredientId }),
+    enabled: isOpen,
+  });
+  const touched = DELETE_TOUCHES.filter((key) => (data?.counts[key] ?? 0) > 0);
 
   return (
     <Modal.Backdrop className="z-[1099]" isOpen={isOpen} onOpenChange={onClose}>
@@ -31,16 +42,41 @@ export function DeleteIngredientModal({
             <ExclamationTriangleIcon className="text-danger h-5 w-5" />
             {t("deleteTitle", { name })}
           </Modal.Header>
-          <Modal.Body>
+          <Modal.Body className="flex flex-col gap-3">
             <p>{t("deleteConfirm")}</p>
+            {data && touched.length > 0 ? (
+              <div className="flex flex-col items-start gap-2">
+                <ul
+                  className="text-muted list-disc pl-5 text-sm"
+                  data-testid="ingredient-delete-touches"
+                >
+                  {touched.map((key) => (
+                    <li key={key}>{t(`deleteTouches.${key}`, { count: data.counts[key] })}</li>
+                  ))}
+                </ul>
+                <Button size="sm" variant="tertiary" onPress={onShowUses}>
+                  <EyeIcon className="size-4" />
+                  {t("uses.show")}
+                </Button>
+              </div>
+            ) : null}
           </Modal.Body>
           <Modal.Footer>
-            <Button variant="tertiary" onPress={onClose}>
-              {tActions("cancel")}
-            </Button>
-            <Button data-testid="ingredient-delete-confirm" variant="danger" onPress={onConfirm}>
-              {tActions("delete")}
-            </Button>
+            <ActionButtonGroup>
+              <ActionButton action="cancel" onPress={onClose}>
+                {tActions("cancel")}
+              </ActionButton>
+              <ActionButton
+                action="delete"
+                data-testid="ingredient-delete-confirm"
+                // Not before the counts are read; a failed read leaves it open.
+                isDisabled={isPending}
+                variant="danger"
+                onPress={onConfirm}
+              >
+                {tActions("delete")}
+              </ActionButton>
+            </ActionButtonGroup>
           </Modal.Footer>
         </Modal.Dialog>
       </Modal.Container>

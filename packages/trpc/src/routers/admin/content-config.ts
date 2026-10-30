@@ -4,8 +4,8 @@ import type { TimerKeywordsConfig } from "@norish/config/zod/server-config";
 import {
   ContentIndicatorsSchema,
   IngredientWordsMapSchema,
-  PromptsConfigInputSchema,
-  RecurrenceConfigSchema,
+  PromptsConfigSchema,
+  RecurrenceLocalesSchema,
   ServerConfigKeys,
   TimerKeywordsInputSchema,
   UnitsMapSchema,
@@ -115,8 +115,8 @@ const updateIngredientWords = adminProcedure.input(z.string()).mutation(async ({
 });
 
 /**
- * Update recurrence config.
- * Accepts a JSON string that gets parsed and validated.
+ * Update the recurrence words per language. Accepts a JSON string, parsed and validated, and
+ * marks the words as the administrator's, so a release's new words no longer replace them.
  */
 const updateRecurrenceConfig = adminProcedure.input(z.string()).mutation(async ({ input, ctx }) => {
   log.info({ userId: ctx.user.id }, "Updating recurrence config");
@@ -129,13 +129,18 @@ const updateRecurrenceConfig = adminProcedure.input(z.string()).mutation(async (
     return { success: false, error: "Invalid JSON format" };
   }
 
-  const result = RecurrenceConfigSchema.safeParse(parsed);
+  const result = RecurrenceLocalesSchema.safeParse(parsed);
 
   if (!result.success) {
     return { success: false, error: result.error.message };
   }
 
-  await setConfig(ServerConfigKeys.RECURRENCE_CONFIG, result.data, ctx.user.id, false);
+  await setConfig(
+    ServerConfigKeys.RECURRENCE_CONFIG,
+    { locales: result.data, isOverridden: true },
+    ctx.user.id,
+    false
+  );
 
   return { success: true };
 });
@@ -159,20 +164,18 @@ const getPrompts = adminProcedure.query(async () => {
  * never pins prompts the administrator did not change — and reverting a
  * prompt to the default text un-pins it.
  */
-const updatePrompts = adminProcedure
-  .input(PromptsConfigInputSchema)
-  .mutation(async ({ input, ctx }) => {
-    const { overrides } = pruneToOverrides(input, loadDefaultPrompts());
+const updatePrompts = adminProcedure.input(PromptsConfigSchema).mutation(async ({ input, ctx }) => {
+  const overrides = pruneToOverrides(input, loadDefaultPrompts());
 
-    log.info(
-      { userId: ctx.user.id, overriddenFields: Object.keys(overrides) },
-      "Updating prompts config"
-    );
+  log.info(
+    { userId: ctx.user.id, overriddenFields: Object.keys(overrides) },
+    "Updating prompts config"
+  );
 
-    await setConfig(ServerConfigKeys.PROMPTS, overrides, ctx.user.id, false);
+  await setConfig(ServerConfigKeys.PROMPTS, overrides, ctx.user.id, false);
 
-    return { success: true };
-  });
+  return { success: true };
+});
 
 /**
  * Get timer keywords config.

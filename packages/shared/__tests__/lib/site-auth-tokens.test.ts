@@ -108,13 +108,6 @@ describe("getMatchingTokens", () => {
   });
 
   describe("case insensitivity", () => {
-    it("matches when the token domain has mixed case", () => {
-      const tokens = [makeToken({ domain: "Instagram.COM" })];
-      const result = getMatchingTokens(tokens, "https://instagram.com/p/123");
-
-      expect(result).toHaveLength(1);
-    });
-
     it("matches when the URL has mixed case", () => {
       const tokens = [makeToken({ domain: "instagram.com" })];
       const result = getMatchingTokens(tokens, "https://INSTAGRAM.COM/p/123");
@@ -123,34 +116,38 @@ describe("getMatchingTokens", () => {
     });
   });
 
-  describe("bare word domain (no TLD)", () => {
-    it("matches a full URL when token domain is just a bare word like 'instagram'", () => {
-      const tokens = [makeToken({ domain: "instagram" })];
-      const result = getMatchingTokens(tokens, "https://www.instagram.com/p/123");
+  describe("a full domain", () => {
+    it("matches its own host and its subdomains, and no look-alike", () => {
+      const tokens = [makeToken({ domain: "instagram.com" })];
+      const matches = (url: string) => getMatchingTokens(tokens, url).length === 1;
 
-      expect(result).toHaveLength(1);
+      expect(matches("https://instagram.com/p/123")).toBe(true);
+      expect(matches("https://www.instagram.com/p/123")).toBe(true);
+      expect(matches("https://instagram.evil.com/p/123")).toBe(false);
+      expect(matches("https://notinstagram.com/p/123")).toBe(false);
+    });
+  });
+
+  describe("a bare word saved before domains had to be full", () => {
+    it("matches no site", () => {
+      const tokens = [makeToken({ domain: "instagram" })];
+
+      for (const url of [
+        "https://instagram.com/p/123",
+        "https://www.instagram.com/p/123",
+        "https://instagram.evil.com/p/123",
+      ]) {
+        expect(getMatchingTokens(tokens, url), url).toEqual([]);
+      }
     });
 
-    it("matches a URL without subdomain when token domain has no TLD", () => {
-      const tokens = [makeToken({ domain: "instagram" })];
-      const result = getMatchingTokens(tokens, "https://instagram.com/p/123");
-
-      expect(result).toHaveLength(1);
-    });
-
-    it("does not match unrelated domains that happen to contain the bare word", () => {
-      // "notinstagram.com" starts with "notinstagram", not "instagram."
-      const tokens = [makeToken({ domain: "instagram" })];
-      const result = getMatchingTokens(tokens, "https://notinstagram.com");
-
-      expect(result).toHaveLength(0);
-    });
-
-    it("matches when URL hostname is exactly the bare word", () => {
-      const tokens = [makeToken({ domain: "instagram" })];
-      const result = getMatchingTokens(tokens, "instagram");
-
-      expect(result).toHaveLength(1);
+    it("matches no host under a top-level domain of that name, nor a single-label host", () => {
+      expect(getMatchingTokens([makeToken({ domain: "shop" })], "https://attacker.shop/")).toEqual(
+        []
+      );
+      expect(
+        getMatchingTokens([makeToken({ domain: "instagram" })], "https://instagram/p/123")
+      ).toEqual([]);
     });
   });
 

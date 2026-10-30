@@ -66,7 +66,6 @@ function comeBack() {
 
 describe("ClipboardImportPrompt", () => {
   beforeEach(() => {
-    vi.clearAllMocks();
     window.sessionStorage.clear();
     toastMock.mockReturnValue("toast-key");
     vi.spyOn(document, "hasFocus").mockReturnValue(true);

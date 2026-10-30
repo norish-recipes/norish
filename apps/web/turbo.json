@@ -3,7 +3,7 @@
   "extends": ["//"],
   "tasks": {
     "build": {
-      "outputs": [".next/**", "dist-server/**"]
+      "outputs": [".next/**"]
     },
     "test": {
       "env": ["DATABASE_URL", "MASTER_KEY", "AUTH_URL"]
@@ -12,6 +12,9 @@
       "cache": false,
       "persistent": true,
       "env": ["DATABASE_URL", "MASTER_KEY", "AUTH_URL"]
+    },
+    "typecheck": {
+      "dependsOn": ["$TURBO_EXTENDS$", "@norish/trpc#build"]
     }
   }
 }

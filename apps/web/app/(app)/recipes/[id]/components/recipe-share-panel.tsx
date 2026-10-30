@@ -2,7 +2,7 @@
 
 import { useMemo, useState } from "react";
 import { useTRPC } from "@/app/providers/trpc-provider";
-import Panel, { usePanelPortalContainer } from "@/components/Panel/Panel";
+import Panel, { PanelPortal } from "@/components/Panel/Panel";
 import RecipeShareStatusChip from "@/components/recipes/recipe-share-status-chip";
 import { sharedRecipeShareHooks } from "@/hooks/recipes/shared-recipe-hooks";
 import { showSafeErrorToast } from "@/lib/ui/safe-error-toast";
@@ -14,11 +14,22 @@ import {
   PlayIcon,
   TrashIcon,
 } from "@heroicons/react/24/outline";
-import { Button, Card, Input, Label, ListBox, Select, Spinner, toast } from "@heroui/react";
+import {
+  Button,
+  buttonVariants,
+  Card,
+  Input,
+  Label,
+  ListBox,
+  Select,
+  Spinner,
+  toast,
+} from "@heroui/react";
 import { useMutation } from "@tanstack/react-query";
 import { useTranslations } from "next-intl";
 
 import type { CreateRecipeShareInputDto } from "@norish/shared/contracts";
+import { addBasePath } from "@norish/shared/lib/base-path";
 
 import { useRecipeContextRequired } from "../context";
 
@@ -69,7 +80,7 @@ export default function RecipeSharePanel({ open, onOpenChange }: Props) {
         invalidateMyRecipeShares();
         invalidateAdminRecipeShares();
         invalidateRecipeShare(data.id);
-        setLatestCreatedUrl(new URL(data.url, window.location.origin).toString());
+        setLatestCreatedUrl(new URL(addBasePath(data.url), window.location.origin).toString());
         toast(t("createSuccess"), {
           variant: "success",
         });
@@ -135,21 +146,22 @@ export default function RecipeSharePanel({ open, onOpenChange }: Props) {
                       {<ClipboardDocumentIcon className="h-4 w-4" />}
                       {t("copyLink")}
                     </Button>
-                    <Button
-                      as="a"
+                    <a
+                      className={buttonVariants({
+                        size: "sm",
+                        variant: "tertiary",
+                        className: "min-w-16",
+                      })}
                       href={latestCreatedUrl}
                       rel="noopener noreferrer"
-                      size="sm"
                       target="_blank"
-                      variant="tertiary"
-                      className="min-w-16"
                     >
                       {<ArrowTopRightOnSquareIcon className="h-4 w-4" />}
                       {t("openLink")}
-                    </Button>
+                    </a>
                   </div>
                 </div>
-                <Input isReadOnly value={latestCreatedUrl} />
+                <Input readOnly value={latestCreatedUrl} />
               </div>
             )}
           </Card.Content>
@@ -191,7 +203,7 @@ export default function RecipeSharePanel({ open, onOpenChange }: Props) {
                           {share.lastAccessedAt && (
                             <p>
                               {t("lastAccessedAt", {
-                                value: formatDate(share.lastAccessedAt),
+                                value: formatDate(share.lastAccessedAt) ?? t("never"),
                               })}
                             </p>
                           )}
@@ -254,7 +266,6 @@ function ExpirySelect({
   onSelectExpiry: (value: CreateRecipeShareInputDto["expiresIn"]) => void;
 }) {
   const t = useTranslations("recipes.sharePanel");
-  const portalContainer = usePanelPortalContainer();
 
   return (
     <Select
@@ -272,20 +283,22 @@ function ExpirySelect({
         <Select.Value />
         <Select.Indicator />
       </Select.Trigger>
-      <Select.Popover UNSTABLE_portalContainer={portalContainer}>
-        <ListBox>
-          {expiryOptions.map((option) => {
-            const label = t(`expiryOptions.${option}`);
+      <PanelPortal>
+        <Select.Popover>
+          <ListBox>
+            {expiryOptions.map((option) => {
+              const label = t(`expiryOptions.${option}`);
 
-            return (
-              <ListBox.Item key={option} id={option} textValue={label}>
-                <Label>{label}</Label>
-                <ListBox.ItemIndicator />
-              </ListBox.Item>
-            );
-          })}
-        </ListBox>
-      </Select.Popover>
+              return (
+                <ListBox.Item key={option} id={option} textValue={label}>
+                  <Label>{label}</Label>
+                  <ListBox.ItemIndicator />
+                </ListBox.Item>
+              );
+            })}
+          </ListBox>
+        </Select.Popover>
+      </PanelPortal>
     </Select>
   );
 }

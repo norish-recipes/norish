@@ -15,8 +15,6 @@ export function useRecipePrefetch(recipeId: string, enabled = true) {
   const queryClient = useQueryClient();
   const elementRef = useRef<HTMLDivElement>(null);
   const hasTriggeredRef = useRef(false);
-  const retryCountRef = useRef(0);
-  const MAX_RETRIES = 2;
 
   useEffect(() => {
     if (!enabled || !recipeId || typeof window === "undefined") return;
@@ -27,17 +25,8 @@ export function useRecipePrefetch(recipeId: string, enabled = true) {
           // Only trigger once when element enters viewport
           if (entry.isIntersecting && !hasTriggeredRef.current) {
             hasTriggeredRef.current = true;
-            // Prefetch the recipe data with error handling
-            queryClient.prefetchQuery(trpc.recipes.get.queryOptions({ id: recipeId })).catch(() => {
-              // Retry prefetch once on failure (network blip)
-              if (retryCountRef.current < MAX_RETRIES) {
-                retryCountRef.current++;
-                setTimeout(() => {
-                  queryClient.prefetchQuery(trpc.recipes.get.queryOptions({ id: recipeId }));
-                }, 1000); // Retry after 1s
-              }
-              // If retry fails, it's ok - data will load normally when user clicks
-            });
+            // A failed prefetch is fine: the data loads normally when the user clicks.
+            queryClient.query(trpc.recipes.get.queryOptions({ id: recipeId })).catch(() => {});
           }
         });
       },

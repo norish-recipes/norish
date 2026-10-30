@@ -63,10 +63,6 @@ describe("buildAutoTaggingSections", () => {
     ingredients: ["spaghetti", "eggs", "pancetta", "parmesan", "black pepper"],
   };
 
-  beforeEach(() => {
-    vi.clearAllMocks();
-  });
-
   describe("when automatic auto-tagging is switched off", () => {
     it("still builds sections, because the strategy is not an enablement check", async () => {
       vi.mocked(getTagStrategy).mockResolvedValue("predefined");

@@ -494,7 +494,7 @@ describe("Tandoor Parser", () => {
         imageBuffer
       );
 
-      expect(dto.image).toBe("mocked-image-guid");
+      expect(dto.images).toEqual([{ image: "mocked-image-guid", order: 0 }]);
     });
 
     it("detects US system from cup units", async () => {
@@ -589,7 +589,7 @@ describe("Tandoor Parser", () => {
 
         expect(dto.recipeIngredients).toMatchObject([
           { ingredientName: "# For the dough", amount: null, unit: null, order: 0 },
-          { ingredientName: "flour", amount: 200, unit: "g", order: 1, foodText: "flour" },
+          { ingredientName: "flour", amount: 200, unit: "g", order: 1, foodTexts: ["flour"] },
         ]);
         // The Heading counts as a line, but is never one of the step's ingredients.
         expect(dto.steps![0].stepIngredients).toEqual([{ ingredientOrder: 1, share: 1, order: 0 }]);
@@ -654,8 +654,8 @@ describe("Tandoor Parser", () => {
 
         expect(dto.recipeIngredients).toMatchObject([
           // The line reads as Tandoor shows it and resolves from the food's name.
-          { ingredientName: "onions", foodText: "onion" },
-          { ingredientName: "lemon", foodText: "lemon" },
+          { ingredientName: "onions", foodTexts: ["onion"] },
+          { ingredientName: "lemon", foodTexts: ["lemon"] },
           { ingredientName: "lime", amount: null },
         ]);
       });

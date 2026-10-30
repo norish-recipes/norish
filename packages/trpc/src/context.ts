@@ -1,8 +1,10 @@
 import type { FetchCreateContextFnOptions } from "@trpc/server/adapters/fetch";
 import type { CreateWSSContextFnOptions } from "@trpc/server/adapters/ws";
+import { TRPCError } from "@trpc/server";
 
 import type { User } from "@norish/shared/contracts";
 import type { OperationId } from "@norish/shared/contracts/realtime/envelope";
+import { apiKeyRetryAfter } from "@norish/auth/api-key-rate-limit";
 import { readSessionPrincipal, verifySessionPrincipal } from "@norish/auth/session";
 import { getHouseholdForUser } from "@norish/db";
 import { trpcLogger as log } from "@norish/shared-server/logger";
@@ -90,7 +92,16 @@ export async function createHttpContextFromHeaders(
       : null;
 
     return { user, household, connectionId: null, operationId };
-  } catch {
+  } catch (error) {
+    // "Slow down" must not read as "your key was revoked" (#670).
+    if (apiKeyRetryAfter(error)) {
+      throw new TRPCError({
+        code: "TOO_MANY_REQUESTS",
+        message: "Rate limit exceeded.",
+        cause: error,
+      });
+    }
+
     return anonymous;
   }
 }

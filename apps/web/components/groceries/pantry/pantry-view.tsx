@@ -11,6 +11,7 @@ import { IconActionButton } from "@/components/shared/action-button";
 import { useSpellingRules } from "@/hooks/config";
 import { useGroceriesQuery } from "@/hooks/groceries";
 import { usePantryMutations, usePantryQuery } from "@/hooks/pantry";
+import { useHiddenItemVisibility } from "@/hooks/user/use-hidden-item-visibility";
 import { MagnifyingGlassIcon, PlusIcon } from "@heroicons/react/16/solid";
 import { Button, InputGroup, Skeleton, TextField, toast } from "@heroui/react";
 import { useQuery } from "@tanstack/react-query";
@@ -62,28 +63,19 @@ export function PantryView() {
   const rules = useSpellingRules();
   const { isOffline } = useConnectivity();
   const { items, isLoading, isUnavailable } = usePantryQuery();
+  const { showIngredientIcons } = useHiddenItemVisibility();
   const { addPantryIngredient } = usePantryMutations();
   const { groceries } = useGroceriesQuery();
   const putOnTheList = usePutOnTheList();
   const [draft, setDraft] = useState("");
   const [openId, setOpenId] = useState<string | null>(null);
-  const field = useRef<HTMLInputElement>(null);
+  const fieldRef = useRef<HTMLInputElement>(null);
   const typed = draft.trim();
   const [search] = useDebounceValue(typed, SEARCH_DELAY_MS);
   const catalogue = useQuery({
-    ...trpc.ingredients.list.queryOptions({ search, locale }),
+    ...trpc.ingredients.list.queryOptions({ search, locale, listedOnly: false }),
     enabled: !isOffline && search.length >= SEARCH_MIN_LENGTH,
   });
-
-  if (isLoading) {
-    return (
-      <div className="flex flex-col gap-2" data-testid="pantry-loading">
-        {Array.from({ length: 5 }, (_, index) => (
-          <Skeleton key={index} className="h-11 rounded-lg" />
-        ))}
-      </div>
-    );
-  }
 
   if (isUnavailable) {
     return (
@@ -101,7 +93,7 @@ export function PantryView() {
     );
     setDraft("");
     // The field is where the next food goes, however the last one was added.
-    field.current?.focus();
+    fieldRef.current?.focus();
   };
 
   const duplicate =
@@ -131,7 +123,8 @@ export function PantryView() {
   return (
     <IngredientIconsProvider ids={items.map((item) => item.ingredientId)}>
       <div className="flex flex-col gap-6">
-        <div className="flex flex-col gap-2">
+        {/* While the Pantry loads, the field is drawn but takes nothing: a food added then could double one already kept. */}
+        <div className="flex flex-col gap-2" inert={isLoading}>
           <TextField aria-label={t("fieldLabel")} value={draft} onChange={setDraft}>
             {/* Shaped as the dashboard's search field is. */}
             <InputGroup className="h-12">
@@ -139,7 +132,7 @@ export function PantryView() {
                 <MagnifyingGlassIcon aria-hidden className="text-muted size-5" />
               </InputGroup.Prefix>
               <InputGroup.Input
-                ref={field}
+                ref={fieldRef}
                 data-testid="pantry-name"
                 maxLength={PANTRY_INGREDIENT_NAME_MAX_LENGTH}
                 placeholder={t("fieldPlaceholder")}
@@ -175,7 +168,21 @@ export function PantryView() {
           ) : null}
         </div>
 
-        {items.length === 0 ? (
+        {isLoading ? (
+          <div
+            className="divide-border divide-y overflow-hidden rounded-lg"
+            data-testid="pantry-loading"
+          >
+            {Array.from({ length: 5 }, (_, index) => (
+              <div key={index} className="bg-surface flex min-h-12 items-center gap-3 px-4 py-2">
+                {showIngredientIcons && (
+                  <Skeleton className="size-6 shrink-0 rounded-full md:size-8" />
+                )}
+                <Skeleton className="h-4 w-32 rounded-md" />
+              </div>
+            ))}
+          </div>
+        ) : items.length === 0 ? (
           <p className="text-muted py-2 text-center" data-testid="pantry-empty">
             {t("empty")}
           </p>

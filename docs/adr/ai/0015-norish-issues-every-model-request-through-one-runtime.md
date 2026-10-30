@@ -18,3 +18,7 @@ Where AI code lives is now a sentence rather than a dependency-graph accident: *
 ## Amendment, 2026-09-21
 
 The runtime records one more thing per request, beside the usage log line: which provider and model answered, and whether the request completed or failed, on a per-job model-use ledger (`ai/runtime/model-use-ledger.ts`, AsyncLocalStorage like the operation context). The queue writes it onto the job's attempt and the admin job detail shows it. This is model identity, not token usage, so the sentence above still holds for usage; what changes is that the runtime now has one deliberate output channel besides its return value, and it is a monitoring record a worker opens and closes, never something a feature reads. Persisting usage remains the separate feature it was.
+
+## Amendment, 2026-10-15
+
+The ledger also carries the job's abort signal. The worker opens the ledger with the signal its job runs under, and the runtime binds every request it makes inside that ledger to it through `requestSignal`, beside the request's own deadline. An administrator's cancel or a shutdown therefore aborts the call in flight and refuses the next one, without any feature passing a signal down. It stays one store rather than two because both facts have the same lifetime and the same opener: whatever opens a job's ledger opens its signal. Outside a job there is no signal, and a request has only its deadline.

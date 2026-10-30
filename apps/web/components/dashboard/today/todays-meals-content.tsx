@@ -3,13 +3,13 @@
 import { useLayoutEffect, useMemo, useRef, useState } from "react";
 import { useCalendarContext } from "@/app/(app)/calendar/context";
 import MiniRecipes from "@/components/Panel/consumers/mini-recipes";
+import { useReaderToday } from "@/components/reader-today";
 import TodaysMealsSkeleton from "@/components/skeleton/todays-meals-skeleton";
 import { ScrollShadow } from "@heroui/react";
 import { useLocale, useTranslations } from "next-intl";
 
 import type { Slot } from "@norish/shared/contracts";
 import type { TodaySectionVisibility } from "@norish/shared/contracts/zod/device-preferences";
-import { dateKey } from "@norish/shared/lib/helpers";
 
 import TodayMealSlotCard from "./today-meal-slot-card";
 import { slotTranslationKeys, TODAY_MEAL_SLOTS } from "./todays-meals-constants";
@@ -23,7 +23,7 @@ export default function TodaysMealsContent({ visibility }: TodaysMealsContentPro
   const locale = useLocale();
   const tCalendar = useTranslations("calendar");
   const tSlots = useTranslations("common.slots");
-  const todayKey = useMemo(() => dateKey(new Date()), []);
+  const todayKey = useReaderToday();
   const todayDate = useMemo(() => new Date(`${todayKey}T00:00:00`), [todayKey]);
   const { plannedItemsByDate, isLoading } = useCalendarContext();
   const [planningSlot, setPlanningSlot] = useState<Slot | undefined>(undefined);
@@ -75,7 +75,8 @@ export default function TodaysMealsContent({ visibility }: TodaysMealsContentPro
     setPlanningOpen(true);
   };
 
-  if (!isLoading && visibleSlots.length === 0) return null;
+  // Planned-only can hide the whole row, so it shows nothing until the plan says.
+  if (visibleSlots.length === 0) return null;
 
   return (
     <section aria-labelledby="today-meals-heading" className="flex shrink-0 flex-col gap-4">

@@ -54,6 +54,28 @@ describe("transcription model listing", () => {
     ]);
   });
 
+  it("returns Mistral's Voxtral transcription models, and not its speech ones (#644)", async () => {
+    const fetchMock = stubFetch(
+      new Response(
+        JSON.stringify({
+          object: "list",
+          data: [
+            { id: "mistral-large-latest", object: "model" },
+            { id: "voxtral-mini-latest", object: "model" },
+            { id: "voxtral-mini-2602", object: "model" },
+            { id: "voxtral-mini-tts-latest", object: "model" },
+          ],
+        }),
+        { status: 200 }
+      )
+    );
+
+    const models = await listTranscriptionModels("mistral", { apiKey: "mistral-key" });
+
+    expect(models.map((m) => m.id)).toEqual(["voxtral-mini-2602", "voxtral-mini-latest"]);
+    expect(fetchMock).toHaveBeenCalledWith("https://api.mistral.ai/v1/models", expect.anything());
+  });
+
   it("reports a rejected key rather than an empty list", async () => {
     stubFetch(new Response("{}", { status: 401, statusText: "Unauthorized" }));
 

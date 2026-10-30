@@ -24,6 +24,8 @@ export function createUseArchiveSubscription({
   useToastAdapter,
 }: CreateUseArchiveSubscriptionOptions) {
   return function useArchiveImportSubscription(): void {
+    "use memo";
+
     const trpc = useTRPC();
     const { setImportState } = useArchiveImportCacheHelpers();
     const toastAdapter = useToastAdapter();

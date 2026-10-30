@@ -8,7 +8,7 @@
  * reacts to it. Each typed error carries whether a retry could succeed.
  */
 
-import { APICallError, NoObjectGeneratedError } from "ai";
+import { APICallError, NoObjectGeneratedError, RetryError } from "ai";
 import { describe, expect, it } from "vitest";
 
 import {
@@ -16,6 +16,8 @@ import {
   AIDisabledError,
   AIProviderError,
   AIResponseError,
+  isCredentialRejection,
+  rateLimitWaitMs,
   toAIError,
 } from "@norish/shared-server/ai/runtime/errors";
 
@@ -77,6 +79,34 @@ describe("toAIError", () => {
 
     expect(error.retryable).toBe(true);
     expect(error.message).toContain("rate-limited");
+  });
+
+  it("classifies the last attempt once the SDK's own retries give up on a rate limit (#645)", () => {
+    const rateLimited = apiCallError(429);
+    const exhausted = new RetryError({
+      message: "Failed after 3 attempts.",
+      reason: "maxRetriesExceeded",
+      errors: [apiCallError(429), apiCallError(429), rateLimited],
+    });
+
+    const error = toAIError(exhausted);
+
+    expect(error).toBeInstanceOf(AIProviderError);
+    expect(error.message).toBe("The AI provider rate-limited the request.");
+    expect(error.cause).toBe(rateLimited);
+    expect(rateLimitWaitMs(error)).toBe(15_000);
+    expect(rateLimitWaitMs(exhausted)).toBe(15_000);
+  });
+
+  it("reads a refused key through the SDK's RetryError", () => {
+    const exhausted = new RetryError({
+      message: "Failed after 2 attempts.",
+      reason: "errorNotRetryable",
+      errors: [apiCallError(503), apiCallError(401)],
+    });
+
+    expect(isCredentialRejection(exhausted)).toBe(true);
+    expect(toAIError(exhausted).retryable).toBe(false);
   });
 
   it("marks a provider 5xx as retryable", () => {

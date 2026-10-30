@@ -9,7 +9,7 @@
  *
  * `publish` never rejects in production: the mutation already committed and
  * its announcement must not fail it. A payload that fails its schema throws
- * outside production so a test catches the rot; a Redis failure is always
+ * outside production so a test catches the rot; a Valkey failure is always
  * logged and dropped.
  */
 
@@ -33,7 +33,7 @@ import type {
 import { SERVER_CONFIG } from "@norish/config/env-config-server";
 import { getCurrentOperationId } from "@norish/shared-server/lib/operation-context";
 import { createLogger } from "@norish/shared-server/logger";
-import { getPublisherClient } from "@norish/shared-server/redis/client";
+import { getPublisherClient } from "@norish/shared-server/valkey/client";
 import { ENVELOPE_VERSION } from "@norish/shared/contracts/realtime/envelope";
 
 import { buildChannel, streamKeyFor } from "./channel";

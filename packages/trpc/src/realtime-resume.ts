@@ -26,7 +26,7 @@ import {
   RESUME_MAXLEN,
   ZERO_STREAM_ID,
 } from "@norish/shared-server/realtime/resume";
-import { getPublisherClient } from "@norish/shared-server/redis/client";
+import { getPublisherClient } from "@norish/shared-server/valkey/client";
 import { isEventEnvelope } from "@norish/shared/contracts/realtime/envelope";
 
 export interface OpenedCursor {
@@ -48,10 +48,10 @@ export async function openCursor(
   const identityHash = identityHashFor(identity);
 
   if (lastEventId == null) {
-    const redis = await getPublisherClient();
+    const valkey = await getPublisherClient();
     const ids = await Promise.all(
       channels.map(async (channel) => {
-        const latest = await redis.xrevrange(streamKeyFor(channel), "+", "-", "COUNT", 1);
+        const latest = await valkey.xrevrange(streamKeyFor(channel), "+", "-", "COUNT", 1);
 
         return latest[0]?.[0] ?? ZERO_STREAM_ID;
       })
@@ -64,7 +64,7 @@ export async function openCursor(
 
   // A user who left a household never reads that household's stream: the
   // channels come from the current context, and a cursor minted for another
-  // identity is refused before Redis is touched.
+  // identity is refused before Valkey is touched.
   if (cursor.identityHash !== identityHash || cursor.ids.length !== channels.length) {
     throw new RealtimeLaggedError(channels[0] ?? "", "identity-changed", 0);
   }
@@ -100,7 +100,7 @@ function parseEntry(index: number, id: string, fields: string[]): Replayed | nul
 
 /** Read every channel's buffer after the cursor and merge the entries by id. */
 async function replayBuffer(channels: string[], cursor: RealtimeCursor): Promise<Replayed[]> {
-  const redis = await getPublisherClient();
+  const valkey = await getPublisherClient();
   const perChannel = await Promise.all(
     channels.map(async (channel, index): Promise<Replayed[]> => {
       const after = cursor.ids[index]!;
@@ -108,7 +108,7 @@ async function replayBuffer(channels: string[], cursor: RealtimeCursor): Promise
       if (after === ZERO_STREAM_ID) return [];
 
       const key = streamKeyFor(channel);
-      const first = await redis.xrange(key, "-", "+", "COUNT", 1);
+      const first = await valkey.xrange(key, "-", "+", "COUNT", 1);
 
       // A missing key with a cursor younger than the TTL means nothing was
       // published since: the stream expired after its last write, which the
@@ -120,7 +120,7 @@ async function replayBuffer(channels: string[], cursor: RealtimeCursor): Promise
         throw new RealtimeLaggedError(channel, "cursor-trimmed", 0);
       }
 
-      const entries = await redis.xrange(key, `(${after}`, "+", "COUNT", RESUME_MAXLEN);
+      const entries = await valkey.xrange(key, `(${after}`, "+", "COUNT", RESUME_MAXLEN);
 
       return entries
         .map(([id, fields]) => parseEntry(index, id, fields))
@@ -141,7 +141,7 @@ type Pulled =
  * Race N live iterables, tagging each envelope with the index of the channel
  * it came from. Ends when every source has ended; a thrown error ends all.
  * A rejection is captured as a value, so when every channel lags at once
- * (a Redis reconnect ends all of them) the ones the race did not pick are
+ * (a Valkey reconnect ends all of them) the ones the race did not pick are
  * never left as unhandled rejections.
  */
 async function* mergeLive(

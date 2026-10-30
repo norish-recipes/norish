@@ -107,9 +107,7 @@ async function decideAllergens(
       questions,
     });
 
-    for (const allergen of batch) {
-      const { probability } = answers[allergen];
-
+    for (const [allergen, { probability }] of Object.entries(answers)) {
       if (probability >= PRESENT_THRESHOLD) present.push(allergen);
       else if (probability > ABSENT_THRESHOLD) doubtful.push(allergen);
     }

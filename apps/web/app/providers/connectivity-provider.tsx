@@ -4,8 +4,8 @@ import type { ConnectivitySnapshot, ConnectivityState } from "@/lib/connectivity
 import type { ReactNode } from "react";
 import {
   createContext,
+  use,
   useCallback,
-  useContext,
   useEffect,
   useMemo,
   useRef,
@@ -64,7 +64,7 @@ const ConnectivityContext = createContext<ConnectivityValue>({
 });
 
 export function useConnectivity(): ConnectivityValue {
-  return useContext(ConnectivityContext);
+  return use(ConnectivityContext);
 }
 
 const serverForcedSnapshot = () => false;
@@ -88,9 +88,8 @@ export function ConnectivityProvider({ children }: { children: ReactNode }) {
     serverForcedSnapshot
   );
 
+  // The loop below is the only writer of snapshot, and it writes this ref first.
   const snapshotRef = useRef<ConnectivitySnapshot>(snapshot);
-
-  snapshotRef.current = snapshot;
 
   // Imperative handle to force an out-of-band probe; swapped for a no-op on unmount.
   const probeNowRef = useRef<() => void>(() => {});
@@ -227,5 +226,5 @@ export function ConnectivityProvider({ children }: { children: ReactNode }) {
     };
   }, [snapshot.state, forced, probeNow, subscribeLiveProbes]);
 
-  return <ConnectivityContext.Provider value={value}>{children}</ConnectivityContext.Provider>;
+  return <ConnectivityContext value={value}>{children}</ConnectivityContext>;
 }

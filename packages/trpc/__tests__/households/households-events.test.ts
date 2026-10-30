@@ -78,7 +78,6 @@ describe("household mutations announce before they restart the socket", () => {
   const ctx = createMockAuthedContext(user, household);
 
   beforeEach(() => {
-    vi.clearAllMocks();
     households.reset();
     householdDb.getAllergiesForUsers.mockResolvedValue([]);
     householdDb.getHouseholdForUser.mockResolvedValue(household);

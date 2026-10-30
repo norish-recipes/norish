@@ -51,23 +51,23 @@ describe("chooseUnmistakable", () => {
     expect(chooseUnmistakable([candidate("Halfvolle melk")], "halfvole melk")?.name).toBe(
       "Halfvolle melk"
     );
-    expect(chooseUnmistakable([candidate("Geitenkaas plakken")], "geitekaas plaken")?.name).toBe(
-      "Geitenkaas plakken"
-    );
   });
 
-  it("allows a short name no slip, a longer one a second", () => {
+  it("allows one slip from five letters, never two and never the first letter", () => {
     // One letter of four is a different word.
     expect(chooseUnmistakable([candidate("Meel")], "melk")).toBeNull();
     expect(chooseUnmistakable([candidate("Kaars")], "kaas")).toBeNull();
-    // Two of eight is too many; two of nine is a name typed wrong twice.
+    // Two slips are another food as often as a name typed wrong twice.
+    expect(chooseUnmistakable([candidate("Geitenkaas plakken")], "geitekaas plaken")).toBeNull();
     expect(chooseUnmistakable([candidate("Snoepjes")], "snoepies")?.name).toBe("Snoepjes");
     expect(chooseUnmistakable([candidate("Snoepjes")], "snoepis")).toBeNull();
+    expect(chooseUnmistakable([candidate("Kipfilet")], "visfilet")).toBeNull();
+    expect(chooseUnmistakable([candidate("Raps")], "wraps")).toBeNull();
     expect(chooseUnmistakable([candidate("Roomboter")], "roomboten")?.name).toBe("Roomboter");
     expect(chooseUnmistakable([candidate("Roomboter")], "roombote")?.name).toBe("Roomboter");
   });
 
-  it("takes the nearest name where several are within reach", () => {
+  it("takes the name one slip away over one two slips away", () => {
     expect(
       chooseUnmistakable(
         [candidate("Halfvolle mel", "b"), candidate("Halfvolle melk", "a")],
@@ -82,8 +82,7 @@ describe("chooseUnmistakable", () => {
     ).toBeNull();
   });
 
-  // Fuse finds a name inside a longer one for nothing; a name is read from
-  // both sides so that "oude kaas" is not the "jonge kaas" it sits inside.
+  // A name sitting inside a longer one is no slip of it: "oude kaas" is not "jonge kaas".
   it("links nothing to a longer name the grocery's merely sits inside", () => {
     expect(chooseUnmistakable([candidate("Jonge kaas")], "oude kaas")).toBeNull();
   });

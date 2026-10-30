@@ -1,6 +1,6 @@
 "use client";
 
-import { useCallback, useEffect, useState } from "react";
+import { useCallback, useState } from "react";
 
 import type { StoreDto } from "@norish/shared/contracts";
 
@@ -40,12 +40,11 @@ export function useAisleChoice(options: {
     aisleId: string | null;
   } | null>(null);
 
-  useEffect(() => {
-    setHeld(null);
-  }, [storeId, resetOn]);
-
   const current =
     held !== null && held.storeId === storeId && held.resetToken === resetOn ? held : null;
+
+  if (held !== null && !current) setHeld(null);
+
   // What the Store remembers — an aisle it still has; one removed in the
   // editor is no answer — unless the shopper has chosen otherwise here.
   const remembered = useCallback(() => {

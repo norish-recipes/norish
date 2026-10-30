@@ -3,13 +3,14 @@
 import type { ParsedIngredient } from "@/components/recipes/ingredient-input";
 import type { RecipeGalleryMedia } from "@/components/recipes/media-gallery-input";
 import type { Step } from "@/components/recipes/step-input";
-import React, { useCallback, useEffect, useMemo, useRef, useState } from "react";
+import React, { useCallback, useMemo, useState } from "react";
 import { useRouter } from "next/navigation";
 import IngredientInput from "@/components/recipes/ingredient-input";
 import MeasurementSystemSelector from "@/components/recipes/measurement-system-selector";
 import MediaGalleryInput from "@/components/recipes/media-gallery-input";
 import StepInput from "@/components/recipes/step-input";
 import TimeInputs from "@/components/recipes/time-inputs";
+import { ChipButton } from "@/components/shared/chip-button";
 import SmartInputHelp from "@/components/shared/smart-input-help";
 import SmartTextInput from "@/components/shared/smart-text-input";
 import TagInput from "@/components/shared/tag-input";
@@ -18,10 +19,11 @@ import { useRecipesContext } from "@/context/recipes-context";
 import { useUnitsQuery } from "@/hooks/config";
 import { useRecipeId } from "@/hooks/recipes";
 import { useUnsavedNavigationGuard } from "@/hooks/use-unsaved-navigation-guard";
-import { Button, Chip, FieldError, Input, Label, TextField } from "@heroui/react";
+import { Button, FieldError, Input, Label, TextField } from "@heroui/react";
 import { useLocale, useTranslations } from "next-intl";
 
 import type { FullRecipeDTO, MeasurementSystem, RecipeCategory } from "@norish/shared/contracts";
+import { useHydrated } from "@norish/shared-react/hooks";
 import { inferSystemUsedFromParsed } from "@norish/shared/lib/determine-recipe-system";
 import { parseIngredientWithDefaults } from "@norish/shared/lib/helpers";
 import { createClientLogger } from "@norish/shared/lib/logger";
@@ -29,7 +31,7 @@ import { formatUnit } from "@norish/shared/lib/unit-localization";
 
 import type { ProvenanceFormValue } from "./provenance-fields";
 import ProvenanceFields, { EMPTY_PROVENANCE_FORM_VALUE } from "./provenance-fields";
-import { useRecipeFormDirtyState } from "./use-recipe-form-dirty-state";
+import { buildInitialMedia, useRecipeFormDirtyState } from "./use-recipe-form-dirty-state";
 
 const log = createClientLogger("RecipeForm");
 const ALL_CATEGORIES: RecipeCategory[] = ["Breakfast", "Lunch", "Dinner", "Snack"];
@@ -49,18 +51,15 @@ export default function RecipeForm({ mode, initialData }: RecipeFormProps) {
   const tCommon = useTranslations("common.actions");
 
   // Use hook for ID reservation
-  const {
-    recipeId,
-    isLoading: isLoadingRecipeId,
-    error: recipeIdError,
-  } = useRecipeId(mode, initialData?.id);
+  const { recipeId, isLoading: isLoadingRecipeId } = useRecipeId(mode, initialData?.id);
 
   // Form state
   const [name, setName] = useState(initialData?.name ?? "");
   const [description, setDescription] = useState(initialData?.description ?? "");
   const [notes, setNotes] = useState(initialData?.notes ?? "");
   const [url, setUrl] = useState(initialData?.url ?? "");
-  const [servings, setServings] = useState(initialData?.servings ?? 1);
+  // Null while the field is empty, so a count can be cleared and retyped.
+  const [servings, setServings] = useState<number | null>(initialData?.servings ?? 1);
   const [prepMinutes, setPrepMinutes] = useState<number | null>(initialData?.prepMinutes ?? null);
   const [cookMinutes, setCookMinutes] = useState<number | null>(initialData?.cookMinutes ?? null);
   const [totalMinutes, setTotalMinutes] = useState<number | null>(
@@ -75,50 +74,18 @@ export default function RecipeForm({ mode, initialData }: RecipeFormProps) {
   );
   const [detectedSystem, setDetectedSystem] = useState<MeasurementSystem | null>(null);
   const [manuallySetSystem, setManuallySetSystem] = useState(false);
-  const initializedRecipeIdRef = useRef<string | null>(null);
+  const [initializedRecipeId, setInitializedRecipeId] = useState<string | null>(null);
+  // False on the server and while hydrating, so the browser's first render matches
+  // the server's form, which never has the lines filled in.
+  const isHydrated = useHydrated();
+  const [detectedFor, setDetectedFor] = useState({
+    ingredients,
+    manuallySetSystem,
+    isLoadingUnits,
+  });
 
   // Media state - unified array of images and videos
-  const [media, setMedia] = useState<RecipeGalleryMedia[]>(() => {
-    const items: RecipeGalleryMedia[] = [];
-
-    // Add images from initialData
-    if (initialData?.images && initialData.images.length > 0) {
-      initialData.images.forEach((img) => {
-        items.push({
-          id: img.id,
-          type: "image",
-          src: img.image,
-          order: img.order,
-          version: img.version,
-        });
-      });
-    } else if (initialData?.image) {
-      // Fallback to legacy single image field
-      items.push({
-        type: "image",
-        src: initialData.image,
-        order: 0,
-      });
-    }
-
-    // Add videos from initialData
-    if (initialData?.videos && initialData.videos.length > 0) {
-      initialData.videos.forEach((vid) => {
-        items.push({
-          id: vid.id,
-          type: "video",
-          src: vid.video,
-          thumbnail: vid.thumbnail,
-          duration: vid.duration,
-          order: vid.order,
-          version: vid.version,
-        });
-      });
-    }
-
-    // Sort by order to maintain unified ordering
-    return items.sort((a, b) => a.order - b.order);
-  });
+  const [media, setMedia] = useState<RecipeGalleryMedia[]>(() => buildInitialMedia(initialData));
 
   // Nutrition state
   const [calories, setCalories] = useState<number | null>(initialData?.calories ?? null);
@@ -190,7 +157,7 @@ export default function RecipeForm({ mode, initialData }: RecipeFormProps) {
   const hasUnsavedChanges = useRecipeFormDirtyState({
     current: currentFormState,
     initialData,
-    initializedRecipeId: initializedRecipeIdRef.current,
+    initializedRecipeId,
     locale,
     mode,
     units,
@@ -211,22 +178,15 @@ export default function RecipeForm({ mode, initialData }: RecipeFormProps) {
     navigateBack();
   }, [allowNavigation, confirmDiscardChanges, navigateBack]);
 
-  // Show recipe ID error if reservation failed
-  useEffect(() => {
-    if (recipeIdError) {
-      setErrors((prev) => ({
-        ...prev,
-        general: recipeIdError,
-      }));
-    }
-  }, [recipeIdError]);
-
   // Initialize ingredients and steps from initialData
   // Filter by the current systemUsed to only show items for the active measurement system
-  useEffect(() => {
-    if (mode !== "edit" || !initialData || isLoadingUnits) return;
-    if (initializedRecipeIdRef.current === initialData.id) return;
-
+  if (
+    isHydrated &&
+    mode === "edit" &&
+    initialData &&
+    !isLoadingUnits &&
+    initializedRecipeId !== initialData.id
+  ) {
     // Filter ingredients by the recipe's measurement system
     const filteredIngredients = initialData.recipeIngredients.filter(
       (ing) => ing.systemUsed === initialData.systemUsed
@@ -253,42 +213,48 @@ export default function RecipeForm({ mode, initialData }: RecipeFormProps) {
       stepIngredients: s.stepIngredients || [],
     }));
     setSteps(initSteps);
-    initializedRecipeIdRef.current = initialData.id;
-  }, [initialData, isLoadingUnits, locale, mode, units]);
+    setInitializedRecipeId(initialData.id);
+  }
 
   // Detect measurement system from ingredients and auto-select for new recipes only.
   // Existing recipes already have an explicit active system, and re-detection can flip it on save.
-  useEffect(() => {
-    if (mode !== "create" || ingredients.length === 0 || manuallySetSystem) return;
+  if (
+    detectedFor.ingredients !== ingredients ||
+    detectedFor.manuallySetSystem !== manuallySetSystem ||
+    detectedFor.isLoadingUnits !== isLoadingUnits
+  ) {
+    setDetectedFor({ ingredients, manuallySetSystem, isLoadingUnits });
 
-    const ingredientLines = ingredients.map((ing) =>
-      `${ing.amount ?? ""} ${ing.unit ?? ""} ${ing.ingredientName}`.trim()
-    );
-    const parsed = parseIngredientWithDefaults(ingredientLines, units);
-
-    if (parsed.length > 0) {
-      const detected = inferSystemUsedFromParsed(parsed);
-
-      setDetectedSystem(detected);
-      setSystemUsed(detected);
-      setIngredients((prev) =>
-        prev.some((ing) => ing.systemUsed !== detected)
-          ? prev.map((ing) => ({
-              ...ing,
-              systemUsed: detected,
-            }))
-          : prev
+    if (mode === "create" && ingredients.length > 0 && !manuallySetSystem) {
+      const ingredientLines = ingredients.map((ing) =>
+        `${ing.amount ?? ""} ${ing.unit ?? ""} ${ing.ingredientName}`.trim()
       );
-      setSteps((prev) =>
-        prev.some((step) => step.systemUsed !== detected)
-          ? prev.map((step) => ({
-              ...step,
-              systemUsed: detected,
-            }))
-          : prev
-      );
+      const parsed = parseIngredientWithDefaults(ingredientLines, units);
+
+      if (parsed.length > 0) {
+        const detected = inferSystemUsedFromParsed(parsed);
+
+        setDetectedSystem(detected);
+        setSystemUsed(detected);
+        setIngredients((prev) =>
+          prev.some((ing) => ing.systemUsed !== detected)
+            ? prev.map((ing) => ({
+                ...ing,
+                systemUsed: detected,
+              }))
+            : prev
+        );
+        setSteps((prev) =>
+          prev.some((step) => step.systemUsed !== detected)
+            ? prev.map((step) => ({
+                ...step,
+                systemUsed: detected,
+              }))
+            : prev
+        );
+      }
     }
-  }, [ingredients, manuallySetSystem, mode, units]);
+  }
   const toggleCategory = useCallback((category: RecipeCategory) => {
     setCategories((prev) =>
       prev.includes(category) ? prev.filter((c) => c !== category) : [...prev, category]
@@ -305,116 +271,107 @@ export default function RecipeForm({ mode, initialData }: RecipeFormProps) {
     if (steps.length === 0) {
       newErrors.steps = tValidation("stepsRequired");
     }
-    if (servings < 1) {
+    if (servings === null || servings < 1) {
       newErrors.servings = tValidation("servingsMin");
     }
     setErrors(newErrors);
     return Object.keys(newErrors).length === 0;
   }, [name, ingredients, steps, servings, tValidation]);
-  const handleSubmit = useCallback(async () => {
-    if (!validate()) return;
+  const handleSubmit = useCallback(() => {
+    if (!validate() || servings === null) return;
     setIsSubmitting(true);
     setErrors({});
-    try {
-      // Extract images from unified media state, preserving their order
-      const images = media
-        .filter((m) => m.type === "image")
-        .map((img) => ({
-          id: img.id,
-          image: img.src,
-          order: img.order,
-          version: img.version,
-        }));
+    // Extract images from unified media state, preserving their order
+    const images = media
+      .filter((m) => m.type === "image")
+      .map((img) => ({
+        id: img.id,
+        image: img.src,
+        order: img.order,
+        version: img.version,
+      }));
 
-      // Extract videos from unified media state, preserving their order
-      const videos = media
-        .filter((m) => m.type === "video")
-        .map((vid) => ({
-          id: vid.id,
-          video: vid.src,
-          thumbnail: vid.thumbnail ?? null,
-          duration: vid.duration ?? null,
-          order: vid.order,
-          version: vid.version,
-        }));
-      const recipeData = {
-        name: name.trim(),
-        description: description.trim() || null,
-        notes: notes.trim() || null,
-        url: url.trim() || null,
-        servings,
-        prepMinutes: prepMinutes ?? undefined,
-        cookMinutes: cookMinutes ?? undefined,
-        totalMinutes: totalMinutes ?? undefined,
-        calories,
-        fat: fat != null ? fat.toString() : null,
-        carbs: carbs != null ? carbs.toString() : null,
-        protein: protein != null ? protein.toString() : null,
-        originCountry: provenance.originCountry,
-        originCountryName: provenance.originCountryName,
-        originRegion: provenance.originRegion.trim() || null,
-        provenanceNote: provenance.provenanceNote.trim() || null,
-        cuisines: provenance.cuisineIds,
-        systemUsed,
-        tags: tags.map((t) => ({
-          name: t,
-        })),
-        categories,
-        recipeIngredients: ingredients.map((ing, idx) => ({
-          id: ing.id,
-          version: ing.version,
-          ingredientName: ing.ingredientName,
-          ingredientId: null,
-          amount: ing.amount,
-          unit: ing.unit,
-          order: idx,
-          systemUsed: ing.systemUsed,
-        })),
-        steps: steps.map((s, idx) => ({
-          step: s.step,
-          order: idx,
-          systemUsed: s.systemUsed,
-          version: s.version,
-          images: s.images || [],
-          stepIngredients: s.stepIngredients || [],
-        })),
-        // Images array field
-        images,
-        // Videos array field
-        videos,
-      };
+    // Extract videos from unified media state, preserving their order
+    const videos = media
+      .filter((m) => m.type === "video")
+      .map((vid) => ({
+        id: vid.id,
+        video: vid.src,
+        thumbnail: vid.thumbnail ?? null,
+        duration: vid.duration ?? null,
+        order: vid.order,
+        version: vid.version,
+      }));
+    const recipeData = {
+      name: name.trim(),
+      description: description.trim() || null,
+      notes: notes.trim() || null,
+      url: url.trim() || null,
+      servings,
+      prepMinutes: prepMinutes ?? undefined,
+      cookMinutes: cookMinutes ?? undefined,
+      totalMinutes: totalMinutes ?? undefined,
+      calories,
+      fat: fat != null ? fat.toString() : null,
+      carbs: carbs != null ? carbs.toString() : null,
+      protein: protein != null ? protein.toString() : null,
+      originCountry: provenance.originCountry,
+      originCountryName: provenance.originCountryName,
+      originRegion: provenance.originRegion.trim() || null,
+      provenanceNote: provenance.provenanceNote.trim() || null,
+      cuisines: provenance.cuisineIds,
+      systemUsed,
+      tags: tags.map((t) => ({
+        name: t,
+      })),
+      categories,
+      recipeIngredients: ingredients.map((ing, idx) => ({
+        id: ing.id,
+        version: ing.version,
+        ingredientName: ing.ingredientName,
+        ingredientId: null,
+        amount: ing.amount,
+        unit: ing.unit,
+        order: idx,
+        systemUsed: ing.systemUsed,
+      })),
+      steps: steps.map((s, idx) => ({
+        step: s.step,
+        order: idx,
+        systemUsed: s.systemUsed,
+        version: s.version,
+        images: s.images || [],
+        stepIngredients: s.stepIngredients || [],
+      })),
+      // Images array field
+      images,
+      // Videos array field
+      videos,
+    };
+    const editing = mode === "edit" ? initialData : undefined;
+
+    try {
       if (mode === "create") {
-        try {
-          allowNavigation();
-          await createRecipe({
-            ...recipeData,
-            id: recipeId!,
-          });
-        } catch (err) {
-          disallowNavigation();
-          log.error(
-            {
-              err,
-            },
-            "Failed to create recipe"
-          );
-          throw err;
-        }
-      } else if (mode === "edit" && initialData) {
         allowNavigation();
-        await updateRecipe(initialData.id, {
+        createRecipe({
           ...recipeData,
-          version: initialData.version,
+          id: recipeId!,
+        });
+      } else if (editing) {
+        allowNavigation();
+        updateRecipe(editing.id, {
+          ...recipeData,
+          version: editing.version,
         });
       }
     } catch (err) {
+      log.error({ err }, "Failed to save recipe");
       disallowNavigation();
       setErrors({
         submit: (err as Error).message,
       });
-    } finally {
-      setIsSubmitting(false);
     }
+    setIsSubmitting(false);
   }, [
     validate,
     name,
@@ -455,7 +412,7 @@ export default function RecipeForm({ mode, initialData }: RecipeFormProps) {
 
   // Show skeleton while reserving recipe ID for create mode
   if (isLoadingRecipeId) {
-    return <EditRecipeSkeleton />;
+    return <EditRecipeSkeleton mode={mode} />;
   }
   return (
     <div className="mx-auto w-full max-w-3xl overflow-hidden px-4 py-6 md:py-8">
@@ -542,10 +499,10 @@ export default function RecipeForm({ mode, initialData }: RecipeFormProps) {
             <span className="text-danger text-lg">*</span>
           </h2>
           <div className="ml-0 md:ml-9">
-            <p className="text-muted mb-3 flex items-center gap-1 text-base">
+            <div className="text-muted mb-3 flex items-center gap-1 text-base">
               {t("ingredientsHelp")}
               <SmartInputHelp />
-            </p>
+            </div>
             <IngredientInput
               ingredients={ingredients}
               systemUsed={systemUsed}
@@ -567,10 +524,10 @@ export default function RecipeForm({ mode, initialData }: RecipeFormProps) {
             <span className="text-danger text-lg">*</span>
           </h2>
           <div className="ml-0 md:ml-9">
-            <p className="text-muted mb-3 flex items-center gap-1 text-base">
+            <div className="text-muted mb-3 flex items-center gap-1 text-base">
               {t("instructionsHelp")}
               <SmartInputHelp showIngredientMention />
-            </p>
+            </div>
             <StepInput
               ingredients={ingredients}
               recipeId={recipeId ?? undefined}
@@ -601,18 +558,16 @@ export default function RecipeForm({ mode, initialData }: RecipeFormProps) {
                 {ALL_CATEGORIES.map((category) => {
                   const active = categories.includes(category);
                   return (
-                    <Chip
+                    <ChipButton
                       key={category}
-                      as="button"
                       aria-pressed={active}
                       className="chip--on-ground h-8 cursor-pointer rounded-full px-3 text-sm"
                       color={active ? "accent" : "default"}
-                      type="button"
                       variant={active ? "primary" : "tertiary"}
                       onClick={() => toggleCategory(category)}
                     >
                       {t(`category.${category.toLowerCase()}`)}
-                    </Chip>
+                    </ChipButton>
                   );
                 })}
               </div>
@@ -698,8 +653,8 @@ export default function RecipeForm({ mode, initialData }: RecipeFormProps) {
                 className="w-full"
                 isInvalid={!!errors.servings}
                 type="number"
-                value={servings.toString()}
-                onChange={(value) => setServings(parseInt(value, 10) || 1)}
+                value={servings?.toString() ?? ""}
+                onChange={(value) => setServings(parseInt(value, 10) || null)}
               >
                 <Label>{t("servings")}</Label>
                 <Input min={1} placeholder="1" />

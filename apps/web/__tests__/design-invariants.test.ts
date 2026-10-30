@@ -41,7 +41,6 @@ const IGNORED_DIRECTORIES = new Set([
   "apps",
   "build",
   "dist",
-  "dist-server",
   "node_modules",
   "public",
   "test-results",

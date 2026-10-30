@@ -1,6 +1,10 @@
 import { z } from "zod";
 
-import { FullRecipeInsertSchema } from "@norish/shared/contracts/zod";
+import {
+  FullRecipeInsertSchema,
+  RecipeIngredientInputSchema,
+  RecipeIngredientsSelectBaseSchema,
+} from "@norish/shared/contracts/zod";
 
 /**
  * The Recipe Archive format (`.norishrecipes`): a plain zip with a root
@@ -67,7 +71,9 @@ export type NorishManifest = z.output<typeof NorishManifestSchema>;
  *   recipe (added within version 1, so an older importer ignores them).
  *
  * Ingredient references likewise travel by name: `ingredientId` is
- * instance-local, so the writer nulls it and fills `ingredientName`.
+ * instance-local, so the writer nulls it and fills `ingredientName`. A line's
+ * `foods` are its foods' spellings in order, with their `joined` (added within
+ * version 1: a line without them is read from its text).
  */
 export const NorishArchiveRecipeSchema = FullRecipeInsertSchema.omit({
   // Archive ids are folder keys only; the importer mints fresh ids.
@@ -78,6 +84,17 @@ export const NorishArchiveRecipeSchema = FullRecipeInsertSchema.omit({
   // recipe.json is stripped here — the receiving instance extracts its own.
   dishColor: true,
 }).extend({
+  // The hero: the recipe's primary gallery image, kept in the archive format
+  // (ADR-0022) though recipes no longer store a single image.
+  image: z.string().nullable().optional(),
+  recipeIngredients: z
+    .array(
+      RecipeIngredientInputSchema.safeExtend({
+        foods: z.array(z.string()).optional(),
+        joined: RecipeIngredientsSelectBaseSchema.shape.joined.optional(),
+      })
+    )
+    .default([]),
   cuisines: z.array(z.string()).default([]),
   authorName: z.string().nullable().optional(),
   rating: z.number().int().min(1).max(5).optional(),

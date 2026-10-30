@@ -1,4 +1,4 @@
-import { createContext, useCallback, useContext, useMemo } from "react";
+import { createContext, use, useCallback, useMemo } from "react";
 
 import type { FullRecipeInsertDTO, FullRecipeUpdateDTO } from "@norish/shared/contracts";
 
@@ -91,8 +91,13 @@ export function createRecipesContext({
   queryDefaults,
 }: CreateRecipesContextOptions) {
   const RecipesContext = createContext<SharedRecipesContextValue | null>(null);
+  // Settled once here rather than called with `?.()`: the compiler only
+  // compiles a component whose hooks it sees called unconditionally.
+  const useRatingsSubscriptionOrNone = useRatingsSubscription ?? (() => {});
 
   function RecipesProvider({ children }: { children: React.ReactNode }) {
+    "use memo";
+
     const { filters, clearFilters, isHydrated } = useRecipesFiltersContext();
     const navigation = useNavigationAdapter();
     const toastAdapter = useToastAdapter();
@@ -142,7 +147,7 @@ export function createRecipesContext({
     );
 
     useRecipesSubscription(subscriptionToasts);
-    useRatingsSubscription?.(ratingsToasts);
+    useRatingsSubscriptionOrNone(ratingsToasts);
 
     const openRecipe = useCallback(
       (id: string) => {
@@ -241,11 +246,13 @@ export function createRecipesContext({
       ]
     );
 
-    return <RecipesContext.Provider value={value}>{children}</RecipesContext.Provider>;
+    return <RecipesContext value={value}>{children}</RecipesContext>;
   }
 
   function useRecipesContext() {
-    const context = useContext(RecipesContext);
+    "use memo";
+
+    const context = use(RecipesContext);
 
     if (!context) {
       throw new Error("useRecipesContext must be used within RecipesProvider");

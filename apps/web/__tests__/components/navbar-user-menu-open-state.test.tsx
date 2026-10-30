@@ -49,7 +49,6 @@ vi.mock("@/hooks/user/use-language-switch", () => ({
     icon: null,
     isChanging: false,
     label: "English",
-    mounted: true,
   }),
 }));
 
@@ -207,7 +206,7 @@ describe("NavbarUserMenu open state", () => {
 
     const triggers = screen.getAllByLabelText("Open user menu");
 
-    fireEvent.click(triggers[0]);
+    fireEvent.click(triggers[0]!);
 
     expect(screen.getAllByRole("menu")).toHaveLength(1);
     expect(screen.getAllByRole("menuitem", { name: "logout" })).toHaveLength(1);

@@ -9,9 +9,7 @@
   "editNote": {
     "title": "Muokkaa huomautusta",
     "noteLabel": "Huomautus",
-    "notePlaceholder": "Kirjoita huomautus...",
-    "date": "Päivämäärä",
-    "slot": "Ateria"
+    "notePlaceholder": "Kirjoita huomautus..."
   },
   "navigation": {
     "previousMonth": "Edellinen kuukausi",

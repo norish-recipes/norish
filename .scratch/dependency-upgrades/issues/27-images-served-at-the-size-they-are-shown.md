@@ -1,8 +1,8 @@
 # 27 — Images are served at the size they're shown
 
-Status: ready-for-agent
+Status: wontfix
 Blocked by: 01 (the optimizer is off)
-Target release: 0.26.0-beta
+Target release: none
 
 Spec: `.scratch/dependency-upgrades/spec.md`
 
@@ -88,3 +88,4 @@ This can ship as two PRs: (a) variants on write, the routes and the UI; (b) the 
 - Checked:
   - `fetchInternalImage`'s empty headers and the `loader !== 'default'` 404 in the next 16.4.0 tarball;
   - Norish's media routes, `storage.ts` sizes and the Warm Set in this repo.
+- 2026-10-13 — Dropped by the maintainer. `/_next/image` stays switched off (ticket 26); Norish keeps serving one stored size.

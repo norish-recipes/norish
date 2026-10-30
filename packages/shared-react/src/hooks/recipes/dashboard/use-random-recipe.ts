@@ -13,12 +13,14 @@ export type RandomRecipeResult = {
 
 export function createUseRandomRecipe({ useTRPC }: CreateRecipeHooksOptions) {
   return function useRandomRecipe() {
+    "use memo";
+
     const trpc = useTRPC();
     const queryClient = useQueryClient();
 
     const getRandomRecipe = useCallback(
       async (category?: RecipeCategory): Promise<RandomRecipeResult> => {
-        return queryClient.fetchQuery({
+        return queryClient.query({
           ...trpc.recipes.getRandomRecipe.queryOptions({ category }),
           staleTime: 0,
           gcTime: 0,

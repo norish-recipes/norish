@@ -24,8 +24,9 @@ import { readFile } from "node:fs/promises";
 import { extname } from "node:path";
 import type { z } from "zod";
 import {
+  APICallError,
   asSchema,
-  experimental_evaluate as evaluate,
+  experimental_decide as decideWithModel,
   generateImage as generateImageWithModel,
   generateText,
   Output,
@@ -39,6 +40,7 @@ import type {
   TranscriptionProvider,
 } from "@norish/config/zod/server-config";
 import {
+  DEFAULT_AI_TIMEOUT_MS,
   isCloudTranscriptionProvider,
   isDecisionConfigValid,
   isImageGenerationConfigValid,
@@ -54,6 +56,7 @@ import {
 import { aiLogger } from "@norish/shared-server/logger";
 
 import type { PromptName } from "../prompts/loader";
+import type { AIError } from "./errors";
 import type { ImageTier } from "./providers";
 import { fillPrompt, loadPrompt } from "../prompts/loader";
 import {
@@ -68,12 +71,15 @@ import {
 } from "./errors";
 import {
   imageModelKey,
+  isRequestRefusal,
   refusedImageParameter,
   refusedImageParameters,
+  refusesLandscape,
   rememberRefusedImageParameter,
+  rememberRefusedLandscape,
 } from "./image-parameter-fallback";
 import { forgetKeyRejection, noteKeyRejection } from "./key-rejections";
-import { recordModelUse } from "./model-use-ledger";
+import { recordModelUse, requestSignal } from "./model-use-ledger";
 import {
   canDegradeToJsonMode,
   createDecisionModelFromConfig,
@@ -83,6 +89,7 @@ import {
   createTranscriptionModel,
   requestOllamaTranscription,
 } from "./providers";
+import { SYSTEM_MESSAGES as SYSTEM_MESSAGE_TEXTS } from "./system-messages";
 
 // ============================================================================
 // System messages — code-owned, keyed by the prompt they accompany
@@ -99,42 +106,8 @@ export type StructuredPromptName = Exclude<PromptName, ImagePromptName>;
 /** The prompts that start an image request: a dish's picture's style, and an Ingredient Icon's. */
 export type ImagePromptName = "image-generation-style" | "ingredient-icon-style";
 
-/**
- * System messages are not configuration. They encode invariants the code
- * depends on: schema-parseable output, and Recipe Provenance's deliberate
- * silence about language — a system message naming a language would override
- * the prompt's inference from the recipe. An administrator's intent is
- * already expressible in the prompt, which follows the system message.
- */
-const SYSTEM_MESSAGES: Record<StructuredPromptName, string> = {
-  "recipe-extraction": "You extract recipe data as JSON-LD with both metric and US measurements.",
-  "image-extraction":
-    "You extract recipe data from images as JSON-LD with both metric and US measurements.",
-  "unit-conversion": "Convert recipe measurements between metric and US systems.",
-  "nutrition-estimation":
-    "Estimate nutritional values for this recipe based on the ingredients. Return accurate per-serving values.",
-  "auto-tagging":
-    "You are a recipe tagging assistant. Analyze the recipe and assign relevant tags based on the provided rules.",
-  "auto-categorization":
-    "You are a culinary assistant that assigns breakfast/lunch/dinner/snack categories to recipes.",
-  "allergy-detection":
-    "You are an allergy detection assistant. Analyze recipe ingredients to identify allergens. Be accurate and only report allergens that are definitely present.",
-  // Deliberately no language instruction: the prompt decides the note's
-  // language from the recipe, and a system message naming one would win.
-  "recipe-provenance":
-    "You are a culinary historian who places dishes in their country and region of origin.",
-  "ingredient-linking":
-    "You are a careful recipe reader who says which ingredient lines each step uses, and only what the text supports.",
-  "ingredient-resolution":
-    "You keep a catalogue of foods and say whether a name is a food already in it, a kind of one, or a food of its own.",
-  "ingredient-plain-name":
-    "You keep a catalogue of foods tidy, and give a name back with only the food left in it, in its own language.",
-  // English by instruction, not by system message alone: the brief is a model
-  // instruction rather than recipe content, so ADR-0018's language care does
-  // not apply to it.
-  "image-generation-brief":
-    "You write short visual briefs that tell an image model what a finished dish looks like.",
-};
+/** Each structured prompt's system message; typed here so a prompt without one fails to compile. */
+const SYSTEM_MESSAGES: Record<StructuredPromptName, string> = SYSTEM_MESSAGE_TEXTS;
 
 // ============================================================================
 // Structured generation
@@ -170,6 +143,8 @@ export interface GenerateOptions<T> {
   fill?: Record<string, string>;
   /** Images to read. Their presence is what selects the vision model. */
   images?: readonly AIImage[];
+  /** How long this request may take, where the feature's budget is not the AI timeout. */
+  timeoutMs?: number;
 }
 
 /**
@@ -213,6 +188,8 @@ function reportedTokens(usage: {
 
 interface ObjectRequest<T> {
   config: AIConfig;
+  /** When the request is given up on; the transport keeps the AI timeout. */
+  deadlineMs: number;
   promptName: StructuredPromptName;
   prompt: string;
   schema: z.ZodType<T>;
@@ -227,6 +204,7 @@ interface ObjectRequest<T> {
 /** One model round trip, in whichever structured-output mode was asked for. */
 async function requestObject<T>({
   config,
+  deadlineMs,
   promptName,
   prompt,
   schema,
@@ -240,9 +218,11 @@ async function requestObject<T>({
   // Vision selection is implicit: the presence of images selects the vision
   // model, so images cannot be silently dropped by a forgotten flag.
   const useVision = images.length > 0;
-  const instructions = jsonMode
-    ? `${SYSTEM_MESSAGES[promptName]}\n\n${await jsonModeInstruction(schema)}`
-    : SYSTEM_MESSAGES[promptName];
+  // @ai-sdk/mistral puts the schema in the prompt itself once structured outputs are off.
+  const instructions =
+    jsonMode && config.provider !== "mistral"
+      ? `${SYSTEM_MESSAGES[promptName]}\n\n${await jsonModeInstruction(schema)}`
+      : SYSTEM_MESSAGES[promptName];
 
   aiLogger.debug(
     {
@@ -261,7 +241,11 @@ async function requestObject<T>({
     instructions,
     temperature: config.temperature,
     maxOutputTokens: config.maxTokens,
-    abortSignal: AbortSignal.timeout(config.timeoutMs),
+    abortSignal: requestSignal(deadlineMs),
+    // Mistral alone defaults to a non-strict schema, which it treats as a hint (#646).
+    providerOptions: {
+      mistral: jsonMode ? { structuredOutputs: false } : { strictJsonSchema: true },
+    },
     ...(useVision
       ? {
           messages: [
@@ -296,16 +280,36 @@ async function requestObject<T>({
   return { output: result.output, tokens: result.usage ? reportedTokens(result.usage) : undefined };
 }
 
+/**
+ * Log a failure as the typed error plus its status code. The raw SDK error
+ * carries the request body and response headers, so it is logged at debug only.
+ */
+function logFailure(
+  level: "error" | "warn",
+  error: unknown,
+  context: Record<string, unknown>,
+  message: string
+): AIError {
+  const aiError = toAIError(error);
+  const cause = aiError.cause;
+
+  aiLogger[level](
+    {
+      ...context,
+      err: aiError,
+      statusCode: APICallError.isInstance(cause) ? cause.statusCode : undefined,
+      retryable: aiError.retryable,
+    },
+    message
+  );
+  aiLogger.debug({ ...context, err: error }, `${message}: raw provider error`);
+
+  return aiError;
+}
+
 /** Log a failed request once, as the typed error the caller will see. */
 function reportFailure(promptName: StructuredPromptName, error: unknown): never {
-  const aiError = toAIError(error);
-
-  aiLogger.error(
-    { err: error, feature: promptName, retryable: aiError.retryable },
-    "AI request failed"
-  );
-
-  throw aiError;
+  throw logFailure("error", error, { feature: promptName }, "AI request failed");
 }
 
 /**
@@ -322,10 +326,11 @@ function reportFailure(promptName: StructuredPromptName, error: unknown): never 
  * account's settings. So a refused request shape is retried once in plain JSON
  * mode with the schema in the prompt, which most models handle, and only a
  * second refusal is reported — naming the missing capability rather than the
- * aggregator's guess, and not worth another queue attempt (#538).
+ * aggregator's guess, and not worth another queue attempt (#538). Mistral gets
+ * the same retry when it refuses a schema in strict mode (#646).
  */
 export async function generateStructured<T>(options: GenerateOptions<T>): Promise<T> {
-  const { prompt: promptName, schema, sections = [], fill, images = [] } = options;
+  const { prompt: promptName, schema, sections = [], fill, images = [], timeoutMs } = options;
 
   const config = await getAIConfig(true);
 
@@ -346,6 +351,7 @@ export async function generateStructured<T>(options: GenerateOptions<T>): Promis
   try {
     const { output, tokens } = await requestStructured({
       config,
+      deadlineMs: timeoutMs ?? config.timeoutMs,
       promptName,
       prompt,
       schema,
@@ -375,44 +381,6 @@ async function assemblePrompt(
   return [filled, ...sections].join("\n\n");
 }
 
-/**
- * Characters to a token: the rule of thumb for English across the common
- * tokenizers. Only an estimate reads it; nothing sent depends on it.
- */
-const CHARS_PER_TOKEN = 4;
-
-/** About how many tokens a request would send, and the model it would go to. */
-export interface TokenEstimate {
-  provider: string;
-  model: string;
-  tokens: number;
-}
-
-/**
- * About how many tokens one structured request would send before its answer:
- * the system message, the administrator's prompt as it stands, the sections,
- * and the answer's schema, which a strict request carries beside the prompt
- * and a plain-JSON one inside it. Nothing is asked. For a feature that says
- * what a batch of requests costs before anyone starts it; once asked, the
- * provider's own count is in the model-use ledger.
- */
-export async function estimateStructuredInputTokens<T>(
-  options: Pick<GenerateOptions<T>, "prompt" | "schema" | "sections" | "fill">
-): Promise<TokenEstimate> {
-  const { prompt: promptName, schema, sections = [], fill } = options;
-  const [config, prompt] = await Promise.all([
-    getAIConfig(true),
-    assemblePrompt(promptName, sections, fill),
-  ]);
-  const instructions = `${SYSTEM_MESSAGES[promptName]}\n\n${await jsonModeInstruction(schema)}`;
-
-  return {
-    provider: config?.provider ?? "",
-    model: config ? selectedModelId(config, false) : "",
-    tokens: Math.ceil((instructions.length + prompt.length) / CHARS_PER_TOKEN),
-  };
-}
-
 /** The model a structured request runs on: the vision model when images ride along. */
 function selectedModelId(config: AIConfig, useVision: boolean): string {
   return useVision ? (config.visionModel ?? config.model) : config.model;
@@ -421,6 +389,7 @@ function selectedModelId(config: AIConfig, useVision: boolean): string {
 /** The structured request itself: a strict schema first, a plain-JSON retry where that helps (#538). */
 async function requestStructured<T>(request: {
   config: AIConfig;
+  deadlineMs: number;
   promptName: StructuredPromptName;
   prompt: string;
   schema: z.ZodType<T>;
@@ -435,8 +404,10 @@ async function requestStructured<T>(request: {
       reportFailure(promptName, error);
     }
 
-    aiLogger.warn(
-      { err: error, feature: promptName, provider: config.provider },
+    logFailure(
+      "warn",
+      error,
+      { feature: promptName, provider: config.provider },
       "Endpoint refused a JSON-schema request, retrying in plain JSON mode"
     );
 
@@ -445,8 +416,10 @@ async function requestStructured<T>(request: {
     } catch (fallbackError) {
       if (!isRequestShapeRejection(fallbackError)) reportFailure(promptName, fallbackError);
 
-      aiLogger.error(
-        { err: fallbackError, feature: promptName, provider: config.provider },
+      logFailure(
+        "error",
+        fallbackError,
+        { feature: promptName, provider: config.provider },
         "Endpoint served neither JSON-schema nor plain JSON output"
       );
 
@@ -513,7 +486,7 @@ export async function transcribe(audioPath: string): Promise<string> {
   // API key is optional for local providers (Ollama, faster-whisper-server).
   const apiKey = videoConfig.transcriptionApiKey || aiConfig?.apiKey || "";
   // Transcription follows the existing AI timeout; there is no second knob.
-  const timeoutMs = aiConfig?.timeoutMs ?? 300_000;
+  const timeoutMs = aiConfig?.timeoutMs ?? DEFAULT_AI_TIMEOUT_MS;
 
   if (!apiKey && isCloudTranscriptionProvider(provider)) {
     throw new AIConfigurationError(
@@ -541,9 +514,8 @@ export async function transcribe(audioPath: string): Promise<string> {
 
     return transcript;
   } catch (error) {
-    const aiError = toAIError(error);
+    const aiError = logFailure("error", error, { provider, model }, "Transcription failed");
 
-    aiLogger.error({ err: error, provider, retryable: aiError.retryable }, "Transcription failed");
     recordModelUse({ provider, model, outcome: "failed" });
     noteKeyRejection("video_config", error);
 
@@ -566,11 +538,12 @@ async function transcribeWithProvider(
   switch (provider) {
     case "openai":
     case "groq":
-    case "azure": {
+    case "azure":
+    case "mistral": {
       const result = await transcribeWithModel({
         model: createTranscriptionModel(provider, { apiKey, model, endpoint, timeoutMs }),
         audio: await readFile(audioPath),
-        abortSignal: AbortSignal.timeout(timeoutMs),
+        abortSignal: requestSignal(timeoutMs),
       });
 
       aiLogger.debug(
@@ -591,7 +564,7 @@ async function transcribeWithProvider(
 
       const response = await client.audio.transcriptions.create(
         { file: createReadStream(audioPath), model, response_format: "json" },
-        { signal: AbortSignal.timeout(timeoutMs) }
+        { signal: requestSignal(timeoutMs) }
       );
 
       return requireTranscript(response.text);
@@ -709,18 +682,21 @@ export async function generateImage(options: GenerateImageOptions): Promise<Gene
 
     const providerOptions =
       tier || transparent ? imageModel.preferences?.({ tier, transparent }) : undefined;
-    const draw = () =>
+    const draw = (asked: "landscape" | "square") =>
       generateImageWithModel({
         model: imageModel.model,
         prompt,
-        ...imageModel[shape],
+        ...imageModel[asked],
         ...(providerOptions ? { providerOptions } : {}),
         // Image calls are billed per request, so the SDK's silent in-call
         // retries are disabled: the queue's attempts are the one retry budget.
         maxRetries: 0,
-        abortSignal: AbortSignal.timeout(aiConfig.timeoutMs),
+        abortSignal: requestSignal(aiConfig.timeoutMs),
       });
     const key = imageModelKey(provider, model);
+    let asked: "landscape" | "square" =
+      shape === "landscape" && refusesLandscape(key) ? "square" : shape;
+    let landscapeRefusal: unknown;
     let result: Awaited<ReturnType<typeof draw>> | undefined;
 
     // A model that refuses a parameter it may go without is asked again
@@ -728,18 +704,32 @@ export async function generateImage(options: GenerateImageOptions): Promise<Gene
     // request is not billed.
     while (!result) {
       try {
-        result = await draw();
+        result = await draw(asked);
       } catch (error) {
         const refused = refusedImageParameter(error);
 
-        if (!refused || refusedImageParameters(key).has(refused)) throw error;
-        aiLogger.warn(
-          { feature: promptName, provider, model, parameter: refused },
-          "Image model refused a parameter; asking again without it"
-        );
-        rememberRefusedImageParameter(key, refused);
+        if (refused && !refusedImageParameters(key).has(refused)) {
+          aiLogger.warn(
+            { feature: promptName, provider, model, parameter: refused },
+            "Image model refused a parameter; asking again without it"
+          );
+          rememberRefusedImageParameter(key, refused);
+        } else if (asked === "landscape" && isRequestRefusal(error)) {
+          // The refusal names no parameter, so the size is the likely one; if
+          // the square is refused too, the landscape's refusal is reported.
+          aiLogger.warn(
+            { feature: promptName, provider, model },
+            "Image model refused the landscape; asking for the square"
+          );
+          landscapeRefusal = error;
+          asked = "square";
+        } else {
+          throw landscapeRefusal && isRequestRefusal(error) ? landscapeRefusal : error;
+        }
       }
     }
+
+    if (landscapeRefusal) rememberRefusedLandscape(key);
 
     const bytes = Buffer.from(result.image.uint8Array);
 
@@ -773,8 +763,10 @@ export async function generateImage(options: GenerateImageOptions): Promise<Gene
         "Image provider's rate limit"
       );
     } else {
-      aiLogger.error(
-        { err: error, feature: promptName, provider, model, retryable: aiError.retryable },
+      logFailure(
+        "error",
+        error,
+        { feature: promptName, provider, model },
         "Image generation failed"
       );
     }
@@ -877,6 +869,8 @@ export interface DecideOptions<Q extends DecisionQuestions> {
   feature: string;
   state: DecisionState;
   questions: Q;
+  /** How long this Decision may take, where the feature's budget is not the AI timeout. */
+  timeoutMs?: number;
 }
 
 /** The answer shape the SDK hands back, before it is typed per question. */
@@ -916,6 +910,8 @@ interface DecisionRequest<Q extends DecisionQuestions> {
     endpoint: string;
   };
   timeoutMs: number;
+  /** When the request is given up on, where not at `timeoutMs`; the transport keeps that. */
+  deadlineMs?: number;
 }
 
 /** One Decision Model round trip: every question asked together, every answer typed. */
@@ -925,6 +921,7 @@ async function requestDecision<Q extends DecisionQuestions>({
   questions,
   settings,
   timeoutMs,
+  deadlineMs,
 }: DecisionRequest<Q>): Promise<Answered<DecisionResult<Q>>> {
   const decisionModel = createDecisionModelFromConfig({ ...settings, timeoutMs });
   const asked: DecisionQuestions = questions;
@@ -940,11 +937,11 @@ async function requestDecision<Q extends DecisionQuestions>({
     "Sending Decision request"
   );
 
-  const result = await evaluate({
+  const result = await decideWithModel({
     model: decisionModel.model,
     state,
     questions: asked,
-    abortSignal: AbortSignal.timeout(timeoutMs),
+    abortSignal: requestSignal(deadlineMs ?? timeoutMs),
     // Like image generation, the SDK's silent in-call retries are off: the
     // queue's attempts are the one retry budget.
     maxRetries: 0,
@@ -1017,29 +1014,24 @@ async function requestDecision<Q extends DecisionQuestions>({
  * with their full distributions.
  *
  * Reads the Decision block rather than the server's AI provider (ADR-0035),
- * follows the global AI switch, and runs under the one AI timeout on the
- * shared transport (ADR-0015). Thresholds belong to the feature: nothing here
- * decides whether an answer is sure enough.
+ * so it answers with the global AI switch off, and runs under the one AI
+ * timeout on the shared transport (ADR-0015). Thresholds belong to the
+ * feature: nothing here decides whether an answer is sure enough.
  *
- * Throws an {@link AIError} on failure: disabled AI and a missing block never
- * retry, an answer that does not match the questions always does, and
+ * Throws an {@link AIError} on failure: a missing block never retries, an
+ * answer that does not match the questions always does, and
  * provider failures follow the SDK's own retryability. A feature that has a
  * fallback catches all of them alike and takes it.
  */
 export async function decide<const Q extends DecisionQuestions>(
   options: DecideOptions<Q>
 ): Promise<DecisionResult<Q>> {
-  const { feature, state, questions } = options;
+  const { feature, state, questions, timeoutMs } = options;
 
   const [aiConfig, decisionConfig] = await Promise.all([
     getAIConfig(true),
     getDecisionConfig(true),
   ]);
-
-  if (!aiConfig?.enabled) {
-    aiLogger.info({ feature }, "AI features are disabled, refusing AI request");
-    throw new AIDisabledError();
-  }
 
   if (!isDecisionConfigValid(decisionConfig)) {
     throw new AIConfigurationError(
@@ -1058,7 +1050,8 @@ export async function decide<const Q extends DecisionQuestions>(
       state,
       questions,
       settings,
-      timeoutMs: aiConfig.timeoutMs,
+      timeoutMs: aiConfig?.timeoutMs ?? DEFAULT_AI_TIMEOUT_MS,
+      deadlineMs: timeoutMs,
     });
 
     // The resolved id, so the job monitor shows the release behind jev-latest.
@@ -1072,21 +1065,16 @@ export async function decide<const Q extends DecisionQuestions>(
 
     return result;
   } catch (error) {
-    const aiError = toAIError(error);
-
     // Warn, not error: every feature that decides has a fallback and says at
     // its own level what the failure meant, so the runtime's line is the
     // provider detail beside it, not a second alarm for a handled case.
-    aiLogger.warn(
-      {
-        err: error,
-        feature,
-        provider: settings.provider,
-        model: settings.model,
-        retryable: aiError.retryable,
-      },
+    const aiError = logFailure(
+      "warn",
+      error,
+      { feature, provider: settings.provider, model: settings.model },
       "Decision failed"
     );
+
     recordModelUse({ provider: settings.provider, model: settings.model, outcome: "failed" });
     noteKeyRejection("decision_config", error);
 
@@ -1094,45 +1082,19 @@ export async function decide<const Q extends DecisionQuestions>(
   }
 }
 
-/**
- * About how many tokens one Decision would send: its state and questions as
- * JSON, to the Decision Model as configured. That model wraps them in
- * instructions of its own, which come on top and are not Norish's to count.
- * Nothing is asked.
- */
-export async function estimateDecisionInputTokens({
-  state,
-  questions,
-}: Pick<DecideOptions<DecisionQuestions>, "state" | "questions">): Promise<TokenEstimate> {
-  const decisionConfig = await getDecisionConfig(true);
-  const settings = isDecisionConfigValid(decisionConfig)
-    ? resolveDecisionSettings(decisionConfig)
-    : null;
-
-  return {
-    provider: decisionConfig?.provider ?? "",
-    model: settings?.model ?? "",
-    tokens: Math.ceil(JSON.stringify({ state, questions }).length / CHARS_PER_TOKEN),
-  };
-}
-
-/** How long the admin's Test button waits, whatever the AI timeout is tuned to. */
-const DECISION_TEST_TIMEOUT_MS = 15_000;
+/** How long the admin's Test buttons wait, whatever the AI timeout is tuned to. */
+const TEST_BUTTON_TIMEOUT_MS = 15_000;
 
 /**
  * The admin form's Test button: one trivial Boolean question against the
  * settings as typed, not as stored, so a typo is caught before a queue
- * worker discovers it. Answers success or the provider's own reason, and
- * follows the global AI switch like every other request.
+ * worker discovers it. Answers success or the provider's own reason, with the
+ * global AI switch on or off, as `decide` does.
  */
 export async function testDecisionModel(
   config: Pick<DecisionConfig, "provider" | "apiKey" | "model" | "endpoint">
 ): Promise<{ success: boolean; error?: string }> {
   const aiConfig = await getAIConfig(true);
-
-  if (!aiConfig?.enabled) {
-    return { success: false, error: new AIDisabledError().message };
-  }
 
   if (config.provider === "disabled") {
     return { success: false, error: "Select a Decision Model provider first." };
@@ -1150,7 +1112,7 @@ export async function testDecisionModel(
       state: "test",
       questions: { isTest: { type: "boolean", instructions: "Is this a test?" } },
       settings,
-      timeoutMs: Math.min(aiConfig.timeoutMs, DECISION_TEST_TIMEOUT_MS),
+      timeoutMs: Math.min(aiConfig?.timeoutMs ?? DEFAULT_AI_TIMEOUT_MS, TEST_BUTTON_TIMEOUT_MS),
     });
 
     return { success: true };
@@ -1162,6 +1124,41 @@ export async function testDecisionModel(
 
     if (isCredentialRejection(error)) {
       return { success: false, error: "The Decision Model provider rejected the API key." };
+    }
+
+    return { success: false, error: toAIError(error).message };
+  }
+}
+
+/**
+ * The AI form's Test button for Perplexity, which lists no models to ask
+ * about: one tiny question to its quickest Agent API preset, with the key as
+ * typed, through the provider the real requests use.
+ */
+export async function testPerplexityKey(
+  apiKey: string
+): Promise<{ success: boolean; error?: string }> {
+  const { model } = createModelsFromConfig({
+    provider: "perplexity",
+    model: "fast",
+    apiKey,
+    timeoutMs: TEST_BUTTON_TIMEOUT_MS,
+  });
+
+  try {
+    await generateText({
+      model,
+      prompt: "Hi",
+      maxOutputTokens: 16,
+      abortSignal: AbortSignal.timeout(TEST_BUTTON_TIMEOUT_MS),
+    });
+
+    return { success: true };
+  } catch (error) {
+    aiLogger.warn({ err: error, provider: "perplexity" }, "Perplexity test failed");
+
+    if (isCredentialRejection(error)) {
+      return { success: false, error: "Invalid API key" };
     }
 
     return { success: false, error: toAIError(error).message };

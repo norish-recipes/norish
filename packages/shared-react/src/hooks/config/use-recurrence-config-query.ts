@@ -4,6 +4,8 @@ import type { CreateConfigHooksOptions } from "./types";
 
 export function createUseRecurrenceConfigQuery({ useTRPC }: CreateConfigHooksOptions) {
   return function useRecurrenceConfigQuery() {
+    "use memo";
+
     const trpc = useTRPC();
 
     const { data, error, isLoading } = useQuery({

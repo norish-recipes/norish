@@ -48,7 +48,6 @@ vi.mock("@norish/shared-server/ai/prompts/loader", () => ({
 
 describe("Auth Provider Sync Logic", () => {
   beforeEach(() => {
-    vi.clearAllMocks();
     mockServerConfig = {};
     mockDeleteConfig.mockResolvedValue(undefined);
     mockNormalizeAndBackfillConfig.mockResolvedValue(false);
@@ -535,6 +534,83 @@ describe("Auth Provider Sync Logic", () => {
       );
 
       expect(oidcCall).toBeUndefined();
+    });
+  });
+
+  describe("Password sign-in", () => {
+    let store: Map<string, unknown>;
+
+    beforeEach(() => {
+      store = new Map();
+      mockGetConfig.mockImplementation(async (key: string) => store.get(key) ?? null);
+      mockConfigExists.mockImplementation(async (key: string) => store.has(key));
+      mockSetConfig.mockImplementation(async (key: string, value: unknown) => {
+        store.set(key, value);
+      });
+      mockDeleteConfig.mockImplementation(async (key: string) => {
+        store.delete(key);
+      });
+    });
+
+    // The schema's defaults that boot reads past the provider sync.
+    const boot = async () => {
+      mockServerConfig = { ENABLED_LOCALES: [], OIDC_SCOPES: [], ...mockServerConfig } as never;
+      vi.resetModules();
+      const { seedServerConfig } = await import("@norish/api/startup/seed-config");
+
+      await seedServerConfig();
+    };
+
+    const OIDC_ENV = {
+      OIDC_ISSUER: "https://auth.example.com",
+      OIDC_CLIENT_ID: "client",
+      OIDC_CLIENT_SECRET: "secret",
+    };
+
+    it("is seeded from PASSWORD_AUTH_ENABLED, also beside an OIDC provider", async () => {
+      mockServerConfig = { ...OIDC_ENV, PASSWORD_AUTH_ENABLED: true } as never;
+
+      await boot();
+
+      expect(store.get(ServerConfigKeys.PASSWORD_AUTH_ENABLED)).toBe(true);
+      expect(store.get(ServerConfigKeys.AUTH_PROVIDER_OIDC)).toBeTruthy();
+    });
+
+    it("follows PASSWORD_AUTH_ENABLED on every boot, not only the first", async () => {
+      mockServerConfig = OIDC_ENV;
+      await boot();
+
+      mockServerConfig = { ...OIDC_ENV, PASSWORD_AUTH_ENABLED: true } as never;
+      await boot();
+
+      expect(store.get(ServerConfigKeys.PASSWORD_AUTH_ENABLED)).toBe(true);
+    });
+
+    it("is off by default beside a provider from the environment", async () => {
+      mockServerConfig = OIDC_ENV;
+
+      await boot();
+
+      expect(store.get(ServerConfigKeys.PASSWORD_AUTH_ENABLED)).toBe(false);
+    });
+
+    it("comes back on when the environment removes the last provider", async () => {
+      mockServerConfig = OIDC_ENV;
+      await boot();
+
+      mockServerConfig = {};
+      await boot();
+
+      expect(store.has(ServerConfigKeys.AUTH_PROVIDER_OIDC)).toBe(false);
+      expect(store.get(ServerConfigKeys.PASSWORD_AUTH_ENABLED)).toBe(true);
+    });
+
+    it("stays off while a provider remains", async () => {
+      mockServerConfig = OIDC_ENV;
+      await boot();
+      await boot();
+
+      expect(store.get(ServerConfigKeys.PASSWORD_AUTH_ENABLED)).toBe(false);
     });
   });
 });

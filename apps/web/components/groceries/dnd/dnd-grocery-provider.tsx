@@ -1,6 +1,6 @@
 "use client";
 
-import { createContext, useContext, useMemo } from "react";
+import { createContext, use, useMemo } from "react";
 import {
   DndContext,
   DragOverlay,
@@ -20,7 +20,7 @@ import { useGroceryDnd } from "./use-grocery-dnd";
 const DndGroceryContext = createContext<DndGroceryContextValue | null>(null);
 
 export function useDndGroceryContext(): DndGroceryContextValue {
-  const ctx = useContext(DndGroceryContext);
+  const ctx = use(DndGroceryContext);
 
   if (!ctx) throw new Error("useDndGroceryContext must be used within DndGroceryProvider");
 
@@ -89,7 +89,7 @@ export function DndGroceryProvider({
   );
 
   return (
-    <DndGroceryContext.Provider value={contextValue}>
+    <DndGroceryContext value={contextValue}>
       <DndContext
         collisionDetection={collisionDetection}
         measuring={{
@@ -115,6 +115,6 @@ export function DndGroceryProvider({
           ) : null}
         </DragOverlay>
       </DndContext>
-    </DndGroceryContext.Provider>
+    </DndGroceryContext>
   );
 }

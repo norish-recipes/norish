@@ -5,7 +5,9 @@ import { adminConfigProcedures } from "./config";
 import { contentConfigProcedures } from "./content-config";
 import { cuisinesProcedures } from "./cuisines";
 import { generalProcedures } from "./general";
+import { ingredientCatalogueProcedures } from "./ingredient-catalogue";
 import { jobQueueProcedures } from "./job-queue";
+import { pageRenderersProcedures } from "./page-renderers";
 import { permissionsProcedures } from "./permissions";
 import { systemProcedures } from "./system";
 import { usersProcedures } from "./users";
@@ -30,11 +32,17 @@ export const adminRouter = router({
   // Job queue monitoring
   jobs: jobQueueProcedures,
 
+  // Clean up catalogue
+  ingredientCatalogue: ingredientCatalogueProcedures,
+
   // AI and video
   ...aiConfigProcedures._def.procedures,
 
   // What the downloader binary actually is, as opposed to what is configured
   ...videoRuntimeProcedures._def.procedures,
+
+  // Obscura and the solver that read pages (ADR-0019)
+  ...pageRenderersProcedures._def.procedures,
 
   // Permissions (recipe policy)
   ...permissionsProcedures._def.procedures,

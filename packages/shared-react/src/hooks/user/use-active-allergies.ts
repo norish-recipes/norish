@@ -23,6 +23,8 @@ export function createUseActiveAllergies({
   useUserAllergiesQuery,
 }: CreateUseActiveAllergiesOptions) {
   return function useActiveAllergies(): UseActiveAllergiesResult {
+    "use memo";
+
     const { household } = useHouseholdContext();
     const { allergies: userAllergies } = useUserAllergiesQuery();
 

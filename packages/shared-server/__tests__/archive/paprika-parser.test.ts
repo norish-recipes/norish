@@ -243,7 +243,7 @@ describe("Paprika Parser", () => {
         imageBuffer
       );
 
-      expect(dto.image).toBe("mocked-image-guid");
+      expect(dto.images).toEqual([{ image: "mocked-image-guid", order: 0 }]);
     });
 
     it("uses source_url over source", async () => {

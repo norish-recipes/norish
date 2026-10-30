@@ -1,0 +1,333 @@
+name: Publish browser images
+
+# The Page Renderer browsers, Obscura and Chromium, are published on their own cadence, not with
+# every application release: an image changes only when its `docker/<browser>/pin.env` moves.
+# Bumping the pin is enough. The push to `rc/**` publishes the new tag, and the push to `main`
+# moves `latest` to it, the way the Norish image is promoted. Daily, fingerprint-chromium's latest
+# release is published as `<version>-norish.1` too, so a pin bump finds it built.
+on:
+  schedule:
+    - cron: "41 5 * * *"
+  workflow_dispatch:
+    inputs:
+      browser:
+        description: The image to publish.
+        type: choice
+        options:
+          - obscura
+          - chromium
+      allow-overwrite:
+        description: >-
+          Republish even if the tag already exists. Off by default because the
+          tag is meant to be immutable. Bump the build counter in pin.env
+          instead of overwriting what operators are already running.
+        type: boolean
+        default: false
+  # Publishes each pinned tag the registry does not have yet. A push that
+  # changes a build without bumping its pin finds its tag there and does nothing.
+  push:
+    branches:
+      - main
+      - "rc/**"
+    paths:
+      - "docker/obscura/**"
+      - "docker/chromium/**"
+      - ".github/workflows/browser-images.yml"
+  # Build-only validation. A PR that edits an image build assembles both images
+  # before merge; nothing is pushed.
+  pull_request:
+    paths:
+      - "docker/obscura/**"
+      - "docker/chromium/**"
+      - ".github/workflows/browser-images.yml"
+
+permissions:
+  contents: read
+
+concurrency:
+  group: browser-images-${{ github.event_name }}-${{ github.event.pull_request.number || github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  plan:
+    name: Read pins
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    # Browser names only: an image name holds the Docker Hub username, a secret,
+    # which Actions drops from job outputs. Every job reads pin.env itself.
+    outputs:
+      builds: ${{ steps.plan.outputs.builds }}
+      publish: ${{ steps.plan.outputs.publish }}
+      promote: ${{ steps.plan.outputs.promote }}
+      release: ${{ steps.plan.outputs.release }}
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v7
+
+      # Authenticated so an anonymous pull-rate limit cannot be mistaken for
+      # "tag does not exist" by the check below.
+      - name: Login to container registry
+        if: ${{ github.event_name != 'pull_request' }}
+        uses: ./tooling/github/registry-login
+        with:
+          dockerhub-username: ${{ secrets.DOCKERHUB_USERNAME }}
+          dockerhub-password: ${{ secrets.DOCKERHUB_PASSWORD }}
+
+      # A push publishes a tag the registry does not have; a manual run refuses one it has unless
+      # told to overwrite it. A pull request builds every image and publishes nothing. The daily
+      # run publishes fingerprint-chromium's latest release in place of the pinned one.
+      - name: Decide what to publish
+        id: plan
+        env:
+          GH_TOKEN: ${{ github.token }}
+          EVENT: ${{ github.event_name }}
+          REF: ${{ github.ref }}
+          ONLY: ${{ inputs.browser }}
+          ALLOW_OVERWRITE: ${{ inputs.allow-overwrite }}
+        run: |
+          set -euo pipefail
+          builds=()
+          publish=()
+          promote=()
+          for browser in obscura chromium; do
+            if [ -n "$ONLY" ] && [ "$browser" != "$ONLY" ]; then continue; fi
+            if [ "$EVENT" = "schedule" ] && [ "$browser" != "chromium" ]; then continue; fi
+            build=false
+            if [ "$EVENT" = "pull_request" ]; then
+              build=true
+            else
+              pin="docker/$browser/pin.env"
+              tag="$(sed -n "s/^${browser^^}_IMAGE_TAG=//p" "$pin")"
+              if [ "$EVENT" = "schedule" ]; then
+                repo="$(sed -n "s|^CHROMIUM_REPO=https://github.com/||p" "$pin")"
+                read -r version archive digest < <(gh api "repos/$repo/releases/latest" --jq \
+                  '[.tag_name, (.assets[] | select(.name | endswith("x86_64_linux.tar.xz")) | .name, .digest)] | join(" ")')
+                if [ -z "$archive" ] || [[ "$digest" != sha256:* ]]; then
+                  echo "$repo $version has no x86_64 Linux archive with a digest." >&2
+                  exit 1
+                fi
+                tag="${version}-norish.1"
+                printf 'release<<EOF\nCHROMIUM_VERSION=%s\nCHROMIUM_ARCHIVE=%s\nCHROMIUM_SHA256=%s\nCHROMIUM_IMAGE_TAG=%s\nEOF\n' \
+                  "$version" "$archive" "${digest#sha256:}" "$tag" >> "$GITHUB_OUTPUT"
+              fi
+              ref="$(sed -n "s/^${browser^^}_IMAGE=//p" "$pin"):$tag"
+              if ! docker buildx imagetools inspect --raw "$ref" >/dev/null 2>&1; then
+                echo "$ref is unpublished, publishing."
+                build=true
+              elif [ "$EVENT" = "workflow_dispatch" ] && [ "$ALLOW_OVERWRITE" = "true" ]; then
+                echo "$ref is already published, overwriting as asked."
+                build=true
+              elif [ "$EVENT" = "workflow_dispatch" ]; then
+                echo "$ref is already published. Bump its tag in docker/$browser/pin.env," >&2
+                echo "or re-run with allow-overwrite if you really mean to replace it." >&2
+                exit 1
+              else
+                echo "$ref is already published, nothing to build."
+              fi
+              if [ "$build" = "true" ]; then publish+=("$browser"); fi
+              if [ "$REF" = "refs/heads/main" ] && [ "$EVENT" != "schedule" ]; then promote+=("$browser"); fi
+            fi
+            if [ "$build" = "true" ]; then
+              # Obscura ships both architectures; fingerprint-chromium builds Linux for x86_64 only.
+              arches="amd64 arm64"
+              if [ "$browser" = "chromium" ]; then arches="amd64"; fi
+              for arch in $arches; do builds+=("$browser $arch"); done
+            fi
+          done
+          {
+            echo "builds=$(printf '%s\n' "${builds[@]}" | jq -cRn '[inputs | select(. != "") | split(" ") | {browser: .[0], arch: .[1]}]')"
+            echo "publish=$(jq -cn '$ARGS.positional' --args "${publish[@]}")"
+            echo "promote=$(jq -cn '$ARGS.positional' --args "${promote[@]}")"
+          } >> "$GITHUB_OUTPUT"
+
+  build:
+    name: ${{ matrix.browser }} linux/${{ matrix.arch }}
+    needs: plan
+    if: ${{ needs.plan.outputs.builds != '[]' }}
+    # Native runners per architecture, so the fetch stage's shell runs directly
+    # rather than under QEMU.
+    runs-on: ${{ matrix.arch == 'arm64' && 'ubuntu-24.04-arm' || 'ubuntu-latest' }}
+    # Fetch and repackage, there is no compile here.
+    timeout-minutes: 20
+    env:
+      BROWSER: ${{ matrix.browser }}
+      PUBLISH: ${{ contains(fromJSON(needs.plan.outputs.publish), matrix.browser) }}
+      HAS_REGISTRY_CREDS: ${{ secrets.DOCKERHUB_USERNAME != '' }}
+    strategy:
+      fail-fast: false
+      matrix:
+        include: ${{ fromJSON(needs.plan.outputs.builds) }}
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v7
+
+      # The pin's release lines are the build's args; the image name and tag stay out of them.
+      - name: Read pin.env
+        env:
+          RELEASE: ${{ needs.plan.outputs.release }}
+        run: |
+          set -euo pipefail
+          pin="docker/${BROWSER}/pin.env"
+          if [ -n "$RELEASE" ]; then
+            { grep -Ev '^CHROMIUM_(VERSION|ARCHIVE|SHA256|IMAGE_TAG)=' "$pin"; echo "$RELEASE"; } > "$RUNNER_TEMP/pin.env"
+            pin="$RUNNER_TEMP/pin.env"
+          fi
+          sed -n "s/^${BROWSER^^}_IMAGE=/IMAGE=/p" "$pin" >> "$GITHUB_ENV"
+          {
+            echo "BUILD_ARGS<<EOF"
+            grep -E '^[A-Z][A-Z0-9_]*=' "$pin" | grep -Ev '^[A-Z]+_IMAGE(_TAG)?='
+            echo "EOF"
+          } >> "$GITHUB_ENV"
+
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v4
+
+      # Non-push builds log in too: the Debian and distroless base images come
+      # from rate-limited registries that runners share an IP on. Guarded on the
+      # secret so fork PRs pull anonymously instead of failing a login.
+      - name: Login to container registry
+        if: ${{ env.PUBLISH == 'true' || env.HAS_REGISTRY_CREDS == 'true' }}
+        uses: ./tooling/github/registry-login
+        with:
+          dockerhub-username: ${{ secrets.DOCKERHUB_USERNAME }}
+          dockerhub-password: ${{ secrets.DOCKERHUB_PASSWORD }}
+
+      - name: Resolve build output
+        id: mode
+        run: |
+          set -euo pipefail
+          if [ "$PUBLISH" = "true" ]; then
+            echo "outputs=type=image,name=${IMAGE},push-by-digest=true,name-canonical=true,push=true" >> "$GITHUB_OUTPUT"
+          else
+            # cacheonly: the point of a PR build is that the Dockerfile still
+            # resolves and the archive is still fetchable, not the artifact.
+            echo "outputs=type=cacheonly" >> "$GITHUB_OUTPUT"
+          fi
+
+      - name: Build image
+        id: build
+        uses: docker/build-push-action@v7
+        with:
+          # The build downloads the browser itself, so the context is just its folder.
+          context: ./docker/${{ matrix.browser }}
+          file: ./docker/${{ matrix.browser }}/Dockerfile
+          platforms: linux/${{ matrix.arch }}
+          build-args: ${{ env.BUILD_ARGS }}
+          outputs: ${{ steps.mode.outputs.outputs }}
+
+      # buildx cannot hand digests between jobs directly, so each becomes an
+      # empty marker file named after the hash.
+      - name: Export digest
+        if: ${{ env.PUBLISH == 'true' }}
+        env:
+          DIGEST: ${{ steps.build.outputs.digest }}
+        run: |
+          set -euo pipefail
+          mkdir -p /tmp/digests
+          touch "/tmp/digests/${DIGEST#sha256:}"
+
+      - name: Upload digest
+        if: ${{ env.PUBLISH == 'true' }}
+        uses: actions/upload-artifact@v7
+        with:
+          name: digests-${{ matrix.browser }}-${{ matrix.arch }}
+          path: /tmp/digests/*
+          if-no-files-found: error
+          retention-days: 1
+
+  merge:
+    name: ${{ matrix.browser }} manifest
+    needs: [plan, build]
+    if: ${{ needs.plan.outputs.publish != '[]' }}
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    env:
+      BROWSER: ${{ matrix.browser }}
+    strategy:
+      fail-fast: false
+      matrix:
+        browser: ${{ fromJSON(needs.plan.outputs.publish) }}
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v7
+
+      - name: Read pin.env
+        env:
+          RELEASE: ${{ needs.plan.outputs.release }}
+        run: |
+          sed -n "s/^${BROWSER^^}_IMAGE=/IMAGE=/p" "docker/${BROWSER}/pin.env" >> "$GITHUB_ENV"
+          sed -n "s/^${BROWSER^^}_IMAGE_TAG=/TAG=/p" <<< "${RELEASE:-$(cat "docker/${BROWSER}/pin.env")}" >> "$GITHUB_ENV"
+
+      - name: Download digests
+        uses: actions/download-artifact@v8
+        with:
+          path: /tmp/digests
+          pattern: digests-${{ matrix.browser }}-*
+          merge-multiple: true
+
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v4
+
+      - name: Login to container registry
+        uses: ./tooling/github/registry-login
+        with:
+          dockerhub-username: ${{ secrets.DOCKERHUB_USERNAME }}
+          dockerhub-password: ${{ secrets.DOCKERHUB_PASSWORD }}
+
+      # One immutable tag: the shipped Compose files pin it, so an ordinary
+      # `docker compose pull` cannot change a browser under a running Norish
+      # release. `latest` is the promote job's.
+      - name: Create manifest
+        working-directory: /tmp/digests
+        run: |
+          set -euo pipefail
+          shopt -s nullglob
+
+          refs=()
+          for digest in *; do refs+=("${IMAGE}@sha256:${digest}"); done
+          if [ ${#refs[@]} -eq 0 ]; then
+            echo "No digests were produced by the build jobs." >&2
+            exit 1
+          fi
+          echo "Assembling ${IMAGE}:${TAG} from: ${refs[*]}"
+          docker buildx imagetools create --tag "${IMAGE}:${TAG}" "${refs[@]}"
+
+      # Not a gate: each build job uploads its digest with `if-no-files-found: error`.
+      # This is the publish log's record of what landed, for whoever reads it later.
+      - name: Show what was published
+        run: docker buildx imagetools inspect "${IMAGE}:${TAG}"
+
+  # `latest` is the rolling release: the pinned tag main ships. It runs after a
+  # publish, or alone when main merged a tag an rc push already published.
+  promote:
+    name: ${{ matrix.browser }} latest
+    needs: [plan, merge]
+    if: ${{ !failure() && !cancelled() && needs.plan.outputs.promote != '[]' }}
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    env:
+      BROWSER: ${{ matrix.browser }}
+    strategy:
+      fail-fast: false
+      matrix:
+        browser: ${{ fromJSON(needs.plan.outputs.promote) }}
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v7
+
+      - name: Read pin.env
+        run: |
+          sed -n "s/^${BROWSER^^}_IMAGE=/IMAGE=/p" "docker/${BROWSER}/pin.env" >> "$GITHUB_ENV"
+          sed -n "s/^${BROWSER^^}_IMAGE_TAG=/TAG=/p" "docker/${BROWSER}/pin.env" >> "$GITHUB_ENV"
+
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v4
+
+      - name: Login to container registry
+        uses: ./tooling/github/registry-login
+        with:
+          dockerhub-username: ${{ secrets.DOCKERHUB_USERNAME }}
+          dockerhub-password: ${{ secrets.DOCKERHUB_PASSWORD }}
+
+      - name: Point latest at the pinned tag
+        run: docker buildx imagetools create --tag "${IMAGE}:latest" "${IMAGE}:${TAG}"

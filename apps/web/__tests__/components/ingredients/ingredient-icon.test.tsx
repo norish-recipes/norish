@@ -1,14 +1,14 @@
 /**
  * An Ingredient Icon beside a food's name: the icon the surface read for the
  * food, or one given outright, else nothing (an empty slot only while the
- * read is on its way, a muted placeholder only where asked for); and nothing
+ * read is on its way, a muted food glyph only where asked for); and nothing
  * at all, slot included, for a reader who hid Ingredient Icons.
  */
 import type { ReactNode } from "react";
 import { IngredientIcon, IngredientIconsProvider } from "@/components/ingredients/ingredient-icon";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { render, screen, waitFor } from "@testing-library/react";
-import { beforeEach, describe, expect, it, vi } from "vitest";
+import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 
 const ONION = "11111111-1111-4111-8111-111111111111";
 const KOHLRABI = "22222222-2222-4222-8222-222222222222";
@@ -59,6 +59,10 @@ beforeEach(() => {
   mocks.asked = [];
 });
 
+afterEach(() => {
+  vi.unstubAllEnvs();
+});
+
 describe("IngredientIcon", () => {
   it("shows each food's icon from one read for the whole surface, nothing where it has none", async () => {
     const { container } = onSurface(
@@ -76,6 +80,17 @@ describe("IngredientIcon", () => {
     expect(mocks.asked).toEqual([{ ids: [ONION, KOHLRABI].sort() }]);
   });
 
+  it("prefixes its address when the app is served under a base path", async () => {
+    vi.stubEnv("NEXT_PUBLIC_BASE_PATH", "/norish");
+    vi.resetModules();
+    const { IngredientIcon: BasedIngredientIcon } =
+      await import("@/components/ingredients/ingredient-icon");
+
+    render(<BasedIngredientIcon src={ONION_ICON} />);
+
+    expect(screen.getByTestId("ingredient-icon")).toHaveAttribute("src", `/norish${ONION_ICON}`);
+  });
+
   it("holds an empty slot while the read is on its way, so the line does not jump", async () => {
     const { container } = onSurface([ONION], <IngredientIcon ingredientId={ONION} />);
 
@@ -91,7 +106,7 @@ describe("IngredientIcon", () => {
     expect(mocks.asked).toEqual([]);
   });
 
-  it("shows a muted placeholder for no icon only where asked, as the panel field does", () => {
+  it("shows a muted food glyph for no icon only where asked, as the list and panel do", () => {
     const { container } = onSurface(
       [],
       <>
@@ -102,6 +117,7 @@ describe("IngredientIcon", () => {
 
     expect(container.childElementCount).toBe(1);
     expect(screen.getByTestId("ingredient-icon-placeholder")).toHaveClass("size-16");
+    expect(screen.getByTestId("ingredient-icon-placeholder").querySelector("svg")).not.toBeNull();
   });
 
   it("shows nothing, placeholder and slot included, to a reader who hid Ingredient Icons", () => {

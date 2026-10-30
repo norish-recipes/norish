@@ -1,6 +1,6 @@
 # 02 — Better Auth moves to the patched 1.6 line
 
-Status: ready-for-agent
+Status: resolved
 Blocked by: None — can start immediately
 Target release: 0.25.0-beta (safe fixes only; a backport to 0.24 is open question 2 in the spec)
 
@@ -86,3 +86,4 @@ How Norish uses Better Auth: `packages/auth/src/auth.ts` (`betterAuth({...})`, c
   - @better-auth/expo 1.6.9 to 1.6.33 and 1.7.7;
   - @better-auth/utils 0.4.0, 0.4.2 and 0.5.0;
   - `npm audit` on scratch probes for 1.6.9, 1.6.33 and 1.7.7 (the last two report 0 advisories).
+- 2026-10-13 — Shipped in 0.25.0 (c7627004, 19b94609, 888000a8; PR #617). The `account_not_linked` copy is "This email is already in use.", not the wording above, and the encrypted-email adapter now returns the decrypted user.

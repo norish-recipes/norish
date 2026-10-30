@@ -7,6 +7,7 @@ import {
   TRANSCRIPTION_AUDIO_FALLBACKS,
   TRANSCRIPTION_AUDIO_FORMAT,
   TRANSCRIPTION_AUDIO_QUALITY,
+  ytDlpArgs,
 } from "@norish/api/video/yt-dlp";
 
 describe("download video format selector", () => {
@@ -55,4 +56,23 @@ describe("the metadata probe", () => {
     expect(METADATA_PROBE_ARGS).toEqual(["--dump-json"]);
     expect(METADATA_PROBE_ARGS).not.toContain("-f");
   });
+});
+
+describe("the yt-dlp command line", () => {
+  // GHSA-732x-jh4x-wg8j: a pasted VideoObject contentUrl of
+  // "--update-to=<repo>" was read as an option and replaced the binary.
+  it("puts the URL behind --, so it is never read as an option", () => {
+    expect(ytDlpArgs("https://example.com/v.mp4", ["--dump-json"])).toEqual([
+      "--dump-json",
+      "--",
+      "https://example.com/v.mp4",
+    ]);
+  });
+
+  it.each(["--update-to=attacker/yt-dlp@latest", "file:///etc/passwd", "not a url", ""])(
+    "refuses %j",
+    (url) => {
+      expect(() => ytDlpArgs(url, [])).toThrow("Unsupported URL");
+    }
+  );
 });

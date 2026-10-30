@@ -1,6 +1,7 @@
 import "server-only";
 
 import { cookies } from "next/headers";
+import { readReaderTimeZone } from "@/lib/reader-today-server";
 import { readRequestProfile } from "@/lib/request-profile";
 import { getRequestConfig } from "next-intl/server";
 
@@ -74,5 +75,7 @@ export default getRequestConfig(async () => {
   return {
     locale,
     messages,
+    // The server and the browser format dates in this one zone; without the cookie, the server's.
+    timeZone: await readReaderTimeZone().catch(() => undefined),
   };
 });

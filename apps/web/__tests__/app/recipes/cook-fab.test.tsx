@@ -47,9 +47,6 @@ vi.mock("@/app/(app)/recipes/[id]/context", () => ({
     },
   }),
 }));
-vi.mock("@/app/(app)/recipes/[id]/components/cookingmode/use-is-desktop-cooking-mode", () => ({
-  useIsDesktopCookingMode: () => false,
-}));
 vi.mock("@/app/(app)/recipes/[id]/components/cookingmode/mobile-cooking-mode-dialog", () => ({
   MobileCookingModeDialog: () => <div data-testid="cooking-dialog" />,
 }));

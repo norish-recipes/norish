@@ -15,27 +15,32 @@
  * does not have to pull the AI SDK in behind it.
  */
 
+import { withoutTrailingSlashes } from "@norish/shared/lib/helpers";
+
 /** The Azure SDK expects the /openai path suffix on a configured endpoint. */
 export function normalizeAzureEndpoint(endpoint: string): string {
-  const baseUrl = endpoint.replace(/\/+$/, "");
+  const baseUrl = withoutTrailingSlashes(endpoint);
 
   return baseUrl.endsWith("/openai") ? baseUrl : `${baseUrl}/openai`;
 }
 
 /**
- * OpenAI-compatible endpoints are addressed under /v1.
+ * OpenAI-compatible endpoints are addressed under a version segment.
+ *
+ * `/v1` is added when the endpoint's path names no version. One that does is
+ * used as written: `…/paas/v4`, or Google's `…/v1beta/openai`.
  *
  * Both conventions people write are accepted and mean the same thing:
  * `https://openrouter.ai/api` and `https://openrouter.ai/api/v1` both address
  * `…/api/v1`, and a trailing slash never doubles the segment.
  */
 export function normalizeOpenAICompatibleEndpoint(endpoint: string): string {
-  const baseUrl = endpoint.replace(/\/+$/, "");
+  const baseUrl = withoutTrailingSlashes(endpoint);
 
-  return baseUrl.endsWith("/v1") ? baseUrl : `${baseUrl}/v1`;
+  return /\/v\d+(?:[a-z]+\d*)?(?=\/|$)/.test(baseUrl) ? baseUrl : `${baseUrl}/v1`;
 }
 
 /** Ollama is addressed at its host root, without a trailing slash or /api. */
 export function normalizeOllamaEndpoint(endpoint: string): string {
-  return endpoint.replace(/\/+$/, "").replace(/\/api$/, "");
+  return withoutTrailingSlashes(endpoint).replace(/\/api$/, "");
 }

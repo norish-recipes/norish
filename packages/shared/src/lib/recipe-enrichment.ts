@@ -498,7 +498,6 @@ export function toEnrichmentLifecycleState(
     case "waiting-children":
     case "delayed":
     case "prioritized":
-    case "paused":
       return "queued";
     case "active":
       return "processing";

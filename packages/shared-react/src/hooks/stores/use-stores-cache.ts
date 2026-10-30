@@ -5,6 +5,8 @@ import type { CreateStoresHooksOptions, StoresCacheHelpers, StoresData } from ".
 
 export function createUseStoresCache({ useTRPC }: CreateStoresHooksOptions) {
   return function useStoresCacheHelpers(): StoresCacheHelpers {
+    "use memo";
+
     const trpc = useTRPC();
     const queryClient = useQueryClient();
     const queryKey = trpc.stores.list.queryKey();

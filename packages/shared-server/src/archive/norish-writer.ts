@@ -1,6 +1,6 @@
 import { Readable } from "node:stream";
 import type { Archiver } from "archiver";
-import archiver from "archiver";
+import { ZipArchive } from "archiver";
 
 import { FullRecipeDTO } from "@norish/shared/contracts";
 import { primaryRecipeImage } from "@norish/shared/lib/recipe-media";
@@ -108,9 +108,8 @@ export function collectRecipeMediaRefs(recipe: FullRecipeDTO): NorishArchiveMedi
     refs.push({ webPath, archivePath });
   };
 
-  // The hero is the resolved primary, not the deprecated scalar: new rows
-  // no longer carry the scalar at all, and a receiving instance on an older
-  // release reads the hero for its dashboard thumbnail.
+  // The hero is the resolved primary. It travels beside the gallery so a
+  // receiving instance on an older release reads it for its thumbnail.
   const hero = primaryRecipeImage(recipe);
   const heroBasename = localMediaBasename(hero, recipe.id);
 
@@ -150,8 +149,8 @@ export function collectRecipeMediaRefs(recipe: FullRecipeDTO): NorishArchiveMedi
  * Map a full recipe record to the `recipe.json` wire shape.
  *
  * Instance-local identifiers never travel: cuisine ids flatten to names,
- * ingredient ids are nulled in favour of names, and row ids/versions on
- * nested records are dropped entirely. Local media references become
+ * ingredient ids are nulled in favour of names and their foods' spellings,
+ * and row ids/versions on nested records are dropped entirely. Local media references become
  * relative paths into the recipe's archive folder; external URLs travel
  * unchanged; media that did not make it into the archive is dropped rather
  * than exported as a dead reference.
@@ -201,6 +200,8 @@ function buildArchiveRecipe(record: NorishArchiveRecord): NorishArchiveRecipe {
     recipeIngredients: recipe.recipeIngredients.map((ingredient) => ({
       ingredientId: null,
       ingredientName: ingredient.ingredientName,
+      foods: ingredient.foods?.map((food) => food.name) ?? [],
+      joined: ingredient.joined ?? null,
       amount: ingredient.amount,
       unit: ingredient.unit,
       systemUsed: ingredient.systemUsed,
@@ -310,7 +311,7 @@ function appendRecord(archive: Archiver, record: NorishArchiveRecord): void {
  * instead of corrupting the download.
  */
 export function streamNorishArchive(input: NorishArchiveInput): Readable {
-  const archive = archiver("zip", { zlib: { level: 6 } });
+  const archive = new ZipArchive({ zlib: { level: 6 } });
 
   archive.append(JSON.stringify(buildManifest(input), null, 2), {
     name: NORISH_ARCHIVE_MANIFEST_FILE,

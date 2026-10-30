@@ -58,7 +58,6 @@ describe("household stale mutation handling", () => {
   const ctx = createMockAuthedContext(user, household);
 
   beforeEach(() => {
-    vi.clearAllMocks();
     householdDb.getHouseholdForUser.mockResolvedValue({
       ...household,
       version: 3,

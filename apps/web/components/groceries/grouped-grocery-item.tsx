@@ -283,11 +283,7 @@ function SourceItem({ source, recurringGroceries, onToggle, onEdit }: SourceItem
         </div>
 
         {/* Recipe name as subtitle */}
-        {recipeName && (
-          <span className={`truncate text-xs ${grocery.isDone ? "text-muted" : "text-muted"}`}>
-            {recipeName}
-          </span>
-        )}
+        {recipeName && <span className="text-muted truncate text-xs">{recipeName}</span>}
 
         {/* Recurring pill if applicable */}
         {recurringGrocery && (

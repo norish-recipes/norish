@@ -4,6 +4,8 @@ import type { CreateConfigHooksOptions } from "./types";
 
 export function createUseTimersEnabledBaseQuery({ useTRPC }: CreateConfigHooksOptions) {
   return function useTimersEnabledBaseQuery() {
+    "use memo";
+
     const trpc = useTRPC();
 
     const { data, error, isLoading } = useQuery({

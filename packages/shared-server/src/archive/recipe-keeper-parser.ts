@@ -221,7 +221,6 @@ export async function parseRecipeKeeperRecipeToDTO(
       fat: fat != null ? fat.toString() : null,
       carbs: carbs != null ? carbs.toString() : null,
       protein: protein != null ? protein.toString() : null,
-      image: images[0]?.image,
       images,
     },
     importedRating: recipe.rating,

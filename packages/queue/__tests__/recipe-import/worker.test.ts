@@ -7,10 +7,20 @@
  * the worker threads it into the write.
  */
 import type { Job } from "bullmq";
+import { UnrecoverableError } from "bullmq";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 
 import type { RecipeImportJobData } from "@norish/queue/contracts/job-types";
 import { readStepProgress } from "@norish/queue/job-steps";
+import {
+  AIConfigurationError,
+  AIProviderError,
+  AIResponseError,
+} from "@norish/shared-server/ai/runtime/errors";
+import {
+  NOT_A_RECIPE_REASON,
+  PRIVATE_ADDRESS_REASON,
+} from "@norish/shared/contracts/realtime/recipes";
 import { ErrorWithDetail } from "@norish/shared/lib/error-extensions";
 
 const createRecipeWithRefs = vi.fn();
@@ -20,6 +30,13 @@ const getDecryptedTokensByUserId = vi.fn();
 const publishRecipe = vi.fn(async () => undefined);
 const parseRecipeFromUrl = vi.fn();
 const withDishColor = vi.fn();
+/** Which errors read as a rate limit; the reading itself is pinned in errors.test.ts. */
+const rateLimitWaitMs = vi.hoisted(() => vi.fn((_error: unknown): number | null => null));
+
+vi.mock("@norish/shared-server/ai/runtime/errors", async (importOriginal) => ({
+  ...(await importOriginal<typeof import("@norish/shared-server/ai/runtime/errors")>()),
+  rateLimitWaitMs,
+}));
 
 vi.mock("@norish/db", () => ({
   createRecipeWithRefs,
@@ -80,8 +97,6 @@ const PARSED_RECIPE = {
 
 describe("processImportJob", () => {
   beforeEach(() => {
-    vi.clearAllMocks();
-
     recipeExistsByUrlForPolicy.mockResolvedValue({ exists: false });
     getDecryptedTokensByUserId.mockResolvedValue([]);
     parseRecipeFromUrl.mockResolvedValue({ recipe: PARSED_RECIPE, usedAI: false });
@@ -112,6 +127,28 @@ describe("processImportJob", () => {
       "user-1",
       expect.objectContaining({ name: "Imported Stew", dishColor: "#7c4a1e" })
     );
+  });
+
+  it("ends on the existing recipe when the URL is already in the library", async () => {
+    const { processRecipeImportJob } = await import("../../src/recipe-import/worker");
+
+    recipeExistsByUrlForPolicy.mockResolvedValue({ exists: true, existingRecipeId: "recipe-12" });
+
+    await expect(
+      processRecipeImportJob({
+        id: "job-2",
+        attemptsMade: 0,
+        opts: {},
+        data: {
+          url: "https://example.com/stew",
+          recipeId: "recipe-78",
+          userId: "user-1",
+          householdKey: "household-1",
+          householdUserIds: null,
+        },
+      } as unknown as Job<RecipeImportJobData>)
+    ).resolves.toBe("recipe-12");
+    expect(createRecipeWithRefs).not.toHaveBeenCalled();
   });
 
   it("leaves what the parser saw on the parsing step when the parse fails", async () => {
@@ -189,6 +226,174 @@ describe("processImportJob", () => {
       pythonParser,
       page,
     });
+  });
+
+  describe("an AI failure (#645)", () => {
+    const job = () =>
+      ({
+        id: "job-1",
+        attemptsMade: 0,
+        opts: { attempts: 3 },
+        progress: 0,
+        updateProgress: vi.fn(async () => undefined),
+        log: vi.fn(async () => 0),
+        data: {
+          url: "https://www.instagram.com/reel/ABC123/",
+          recipeId: "recipe-77",
+          userId: "user-1",
+          householdKey: "household-1",
+          householdUserIds: null,
+        },
+      }) as unknown as Job<RecipeImportJobData>;
+
+    /** How the video path hands an AI failure up: wrapped, with the original as cause. */
+    const wrapped = (cause: Error) =>
+      new Error(`Failed to process video recipe: ${cause.message}`, { cause });
+
+    it("stops retrying a rate limit the SDK already retried", async () => {
+      const rateLimited = new AIProviderError("The AI provider rate-limited the request.", {
+        retryable: true,
+      });
+
+      rateLimitWaitMs.mockImplementation((error) => (error === rateLimited ? 15_000 : null));
+      const original = wrapped(rateLimited);
+
+      parseRecipeFromUrl.mockRejectedValue(original);
+
+      const { processRecipeImportJob } = await import("../../src/recipe-import/worker");
+      const failure = await processRecipeImportJob(job()).catch((error: unknown) => error);
+
+      expect(failure).toBeInstanceOf(UnrecoverableError);
+      expect((failure as Error).message).toBe(
+        "Failed to process video recipe: The AI provider rate-limited the request."
+      );
+      expect((failure as Error).cause).toBe(original);
+    });
+
+    it("stops retrying an AI error no retry can fix", async () => {
+      parseRecipeFromUrl.mockRejectedValue(wrapped(new AIConfigurationError("No API key.")));
+
+      const { processRecipeImportJob } = await import("../../src/recipe-import/worker");
+
+      await expect(processRecipeImportJob(job())).rejects.toBeInstanceOf(UnrecoverableError);
+    });
+
+    it("leaves a retryable AI error to the queue's attempts", async () => {
+      const unusable = wrapped(new AIResponseError("missing required fields"));
+
+      parseRecipeFromUrl.mockRejectedValue(unusable);
+
+      const { processRecipeImportJob } = await import("../../src/recipe-import/worker");
+
+      await expect(processRecipeImportJob(job())).rejects.toBe(unusable);
+    });
+  });
+
+  it("stops retrying a page the Decision Model clearly says is not a recipe", async () => {
+    const pythonParser = { recipe: { title: "" } };
+    const verdict = new ErrorWithDetail(NOT_A_RECIPE_REASON, { pythonParser });
+
+    parseRecipeFromUrl.mockRejectedValue(verdict);
+
+    const { processRecipeImportJob } = await import("../../src/recipe-import/worker");
+    const job = {
+      id: "job-1",
+      attemptsMade: 0,
+      opts: { attempts: 3 },
+      progress: 0,
+      updateProgress: vi.fn(async (progress: unknown) => {
+        job.progress = progress;
+      }),
+      log: vi.fn(async () => 0),
+      data: {
+        url: "https://example.com/about",
+        recipeId: "recipe-77",
+        userId: "user-1",
+        householdKey: "household-1",
+        householdUserIds: null,
+      },
+    };
+    const failure = await processRecipeImportJob(job as unknown as Job<RecipeImportJobData>).catch(
+      (error: unknown) => error
+    );
+
+    expect(failure).toBeInstanceOf(UnrecoverableError);
+    expect((failure as Error).message).toBe(NOT_A_RECIPE_REASON);
+    expect((failure as Error).cause).toBe(verdict);
+    expect(readStepProgress(job.progress)?.attempts[0]?.timeline.at(-1)).toMatchObject({
+      id: "parsing",
+      detail: { pythonParser },
+    });
+  });
+
+  it("stops retrying a private address the server refuses", async () => {
+    parseRecipeFromUrl.mockRejectedValue(new Error(PRIVATE_ADDRESS_REASON));
+
+    const { processRecipeImportJob } = await import("../../src/recipe-import/worker");
+    const job = {
+      id: "job-1",
+      attemptsMade: 0,
+      opts: { attempts: 3 },
+      progress: 0,
+      updateProgress: vi.fn(async (progress: unknown) => {
+        job.progress = progress;
+      }),
+      log: vi.fn(async () => 0),
+      data: {
+        url: "http://192.168.1.1/",
+        recipeId: "recipe-78",
+        userId: "user-1",
+        householdKey: "household-1",
+        householdUserIds: null,
+      },
+    };
+    const failure = await processRecipeImportJob(job as unknown as Job<RecipeImportJobData>).catch(
+      (error: unknown) => error
+    );
+
+    expect(failure).toBeInstanceOf(UnrecoverableError);
+    expect((failure as Error).message).toBe(PRIVATE_ADDRESS_REASON);
+  });
+
+  it("carries a possibly incomplete parse to the job monitor and the importer's toast", async () => {
+    parseRecipeFromUrl.mockResolvedValue({
+      recipe: PARSED_RECIPE,
+      usedAI: false,
+      incomplete: true,
+    });
+
+    const { processRecipeImportJob } = await import("../../src/recipe-import/worker");
+    const job = {
+      id: "job-1",
+      attemptsMade: 0,
+      opts: {},
+      progress: 0,
+      updateProgress: vi.fn(async (progress: unknown) => {
+        job.progress = progress;
+      }),
+      log: vi.fn(async () => 0),
+      data: {
+        url: "https://example.com/thin",
+        recipeId: "recipe-77",
+        userId: "user-1",
+        householdKey: "household-1",
+        householdUserIds: null,
+      },
+    };
+
+    await processRecipeImportJob(job as unknown as Job<RecipeImportJobData>);
+
+    const timeline = readStepProgress(job.progress)?.attempts[0]?.timeline ?? [];
+
+    expect(timeline.find((event) => event.id === "parsing")?.detail).toEqual({
+      usedAI: false,
+      incomplete: true,
+    });
+    expect(publishRecipe).toHaveBeenCalledWith(
+      "imported",
+      expect.objectContaining({ pendingRecipeId: "recipe-77", incomplete: true }),
+      expect.anything()
+    );
   });
 
   describe("site authentication tokens", () => {

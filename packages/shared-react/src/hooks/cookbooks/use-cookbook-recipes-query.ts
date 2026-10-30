@@ -5,6 +5,7 @@ import type { RecipeDashboardDTO } from "@norish/shared/contracts";
 
 import type { RecipeFilters } from "../recipes/dashboard";
 import type { CreateCookbookHooksOptions } from "./types";
+import { byNextCursor, cookbookRecipesInput } from "../../contexts/recipes/list-queries";
 
 type InfiniteMemberPages = {
   pages: { recipes: RecipeDashboardDTO[]; total: number; nextCursor: number | null }[];
@@ -51,36 +52,13 @@ export function createUseCookbookRecipesQuery({ useTRPC }: CreateCookbookHooksOp
     filters: RecipeFilters & { favoritesOnly?: boolean } = {},
     { enabled = true }: { enabled?: boolean } = {}
   ): CookbookRecipesQueryResult {
+    "use memo";
+
     const trpc = useTRPC();
     const queryClient = useQueryClient();
-    const {
-      limit = 50,
-      search,
-      searchFields,
-      tags,
-      categories,
-      filterMode = "AND",
-      sortMode = "dateDesc",
-      minRating,
-      maxCookingTime,
-      favoritesOnly = false,
-    } = filters;
-
     const infiniteQueryOptions = trpc.cookbooks.recipes.infiniteQueryOptions(
-      {
-        cookbookId,
-        limit,
-        search,
-        searchFields,
-        tags,
-        categories,
-        filterMode,
-        sortMode,
-        minRating,
-        maxCookingTime,
-        favoritesOnly,
-      },
-      { getNextPageParam: (lastPage) => lastPage.nextCursor }
+      cookbookRecipesInput(cookbookId, filters),
+      byNextCursor
     );
     const queryKey = infiniteQueryOptions.queryKey;
     const memberListPath = useMemo(

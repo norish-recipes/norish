@@ -1,7 +1,7 @@
 # 23 — The parked mobile app stops counting against the audit
 
-Status: needs-triage
-Blocked by: None — can start immediately
+Status: resolved
+Blocked by: 25 (type checking)
 Target release: 0.26.0-beta
 
 Spec: `.scratch/dependency-upgrades/spec.md`
@@ -19,38 +19,27 @@ Spec: `.scratch/dependency-upgrades/spec.md`
 **But it still costs something:**
 
 - The Expo cluster is linked into `packages/auth` through `@better-auth/expo`'s optional peers.
-- It keeps ticket 07's audit gate noisy.
+- It keeps every audit noisy.
 - It makes every audit read worse than the shipped product is.
 
 The Expo SDK 56 → 57 upgrade belongs to the mobile rewrite, not to this effort.
 
-**Decision needed. Options:**
+**Decision (2026-10-13): take apps/mobile out of the pnpm workspace, and stop mounting its server plugin.**
 
-1. **Leave it for the rewrite.** Allowlist the advisories in the audit gate.
-2. **Add seven in-major overrides.** These were tested:
-   - `"@xmldom/xmldom@>=0.8.0 <0.8.15": ^0.8.15`
-   - `"brace-expansion@>=5.0.0 <5.0.12": ^5.0.12`
-   - `"compression@<1.8.2": ^1.8.2`
-   - `"nanoid@<3.3.18": ^3.3.18`
-   - `"shell-quote@<1.11.0": ^1.11.0`
-   - `"svgo@>=3.0.0 <3.3.5": ^3.3.5`
-   - `"ws@>=7.0.0 <7.5.11": ^7.5.11`
-
-   Left afterwards: braces and node-forge (no fix exists), and uuid 7, decode-uri-component and image-size (fixed only in new majors).
-
-3. **Take apps/mobile out of the pnpm workspace** — `"!apps/mobile"` in `pnpm-workspace.yaml`, as apps/docs already is — and re-lock from scratch. A lockfile-only install keeps the stale Expo peers, so the full re-lock is needed.
-   - Afterwards only braces remains, via `@next/eslint-plugin-next` › fast-glob: dev-only, with no fix.
-   - `pnpm dev:mobile` would need its own install inside apps/mobile.
-   - Consider at the same time not mounting `expo()` in `packages/auth/src/auth.ts`, and dropping `@better-auth/expo` while the app is parked. Then no production server exposes the Expo authorization proxy at all. Ticket 02 fixed the open redirect it carried, but the endpoint has no user.
-
-**Recommendation: option 3.** It matches what "parked" means, removes the noise, and the rewrite starts from a clean slate.
+- Add `"!apps/mobile"` to `pnpm-workspace.yaml`, as apps/docs already is, and re-lock from scratch. A lockfile-only install keeps the stale Expo peers, so the full re-lock is needed.
+- apps/mobile keeps its own install: `pnpm install --ignore-workspace` inside it, and `pnpm dev:mobile` still starts it. Its `@norish/*` imports must still resolve; if they come through the workspace today, point them at the packages with `link:` paths.
+- Remove `expo()` from `packages/auth/src/auth.ts` and drop `@better-auth/expo` from the server. No production server then exposes the Expo authorization proxy, which has no user while the app is parked. The rewrite adds it back.
+- Afterwards the only non-mobile finding expected is braces, via `@next/eslint-plugin-next` › fast-glob: dev-only, with no fix (ticket 03 records it).
 
 ## Acceptance criteria (once decided)
 
-- [ ] **Audit.** `pnpm audit` reflects only what the decision keeps, and ticket 07's allowlist is updated to match.
-- [ ] **Docs.** For option 3: `AGENTS.md`'s apps/mobile note and `CONTRIBUTING.md` say how to install and start the parked app, and `pnpm dev:mobile` still starts it.
+- [ ] **Audit.** `pnpm audit` no longer lists the Expo cluster.
+- [ ] **Server.** `pnpm why @better-auth/expo` prints nothing outside apps/mobile, and the auth tests pass without `expo()`.
+- [ ] **Docs.** `AGENTS.md`'s apps/mobile note and `CONTRIBUTING.md` say how to install and start the parked app, and `pnpm dev:mobile` still starts it.
 - [ ] **Gates.** The repo gates pass.
 
 ## Comments
 
 - Filed 2026-10-12 with the spec.
+- 2026-10-13 — The maintainer chose option 3 and dropping `expo()` for now.
+- 2026-10-13 — Done. apps/mobile is outside the workspace with its own `pnpm-lock.yaml`; its `catalog:` entries are pinned to the versions the catalog held, and its `@norish/*` packages use `link:`. `pnpm dev:mobile` starts Metro. The server no longer mounts `expo()` or trusts `mobile://`/`exp://` origins. Taking it out exposed a hidden dependency: apps/web's tests used `@testing-library/user-event`, which only expo-router pulled in; apps/web now declares it. `pnpm audit` on the workspace: 130 findings (44 high, 70 moderate, 16 low), none from Expo.

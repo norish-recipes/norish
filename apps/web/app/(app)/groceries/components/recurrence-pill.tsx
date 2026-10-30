@@ -6,6 +6,7 @@ import { useTranslations } from "next-intl";
 
 import type { RecurringGroceryDto } from "@norish/shared/contracts";
 import type { RecurrenceTranslations } from "@norish/shared/lib/recurrence/formatter";
+import { recurrencePatternOf } from "@norish/shared/contracts/recurrence";
 import { isOverdue } from "@norish/shared/lib/recurrence/calculator";
 import {
   formatNextOccurrence,
@@ -42,6 +43,8 @@ export function RecurrencePill({
     weeks: t("weeks"),
     month: t("month"),
     months: t("months"),
+    year: t("year"),
+    years: t("years"),
     today: t("today"),
     tomorrow: t("tomorrow"),
     weekdaysFull: {
@@ -55,11 +58,7 @@ export function RecurrencePill({
     },
   };
 
-  const pattern = {
-    rule: recurringGrocery.recurrenceRule as "day" | "week" | "month",
-    interval: recurringGrocery.recurrenceInterval,
-    weekday: recurringGrocery.recurrenceWeekday ?? undefined,
-  };
+  const pattern = recurrencePatternOf(recurringGrocery);
 
   const summary = formatRecurrenceSummary(pattern, formatterTranslations);
   const nextDateText = formatNextOccurrence(recurringGrocery.nextPlannedFor, formatterTranslations);

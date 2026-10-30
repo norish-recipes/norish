@@ -50,7 +50,8 @@
     "viewGroceries": "Se handleliste",
     "addToCalendar": "Legg til i kalender",
     "deleteRecipe": "Slett oppskrift",
-    "recipeOptions": "Oppskriftsvalg"
+    "recipeOptions": "Oppskriftsvalg",
+    "pantryCoverage": "{percent} av ingrediensene hjemme"
   },
   "detail": {
     "viewOriginal": "Se original oppskrift",
@@ -76,7 +77,8 @@
     "source": "Kilde",
     "addedBy": "Lagt til av {name}",
     "decreaseServings": "Færre porsjoner",
-    "increaseServings": "Flere porsjoner"
+    "increaseServings": "Flere porsjoner",
+    "multiplier": "Faktor"
   },
   "actions": {
     "plan": "Planlegg",
@@ -86,7 +88,7 @@
     "share": "Del",
     "visitOriginal": "Besøk original oppskrift",
     "addToCalendar": "Legg til i kalender",
-    "autoTag": "Auto-tag",
+    "autoTag": "Tagg automatisk",
     "autoTagging": "Genererer tags...",
     "autoCategorize": "Kategoriser automatisk",
     "detectAllergies": "Registrer allergener",
@@ -319,6 +321,9 @@
     "imported": "Oppskrift importert",
     "failed": "Oppskrifthandling mislyktes",
     "failedDescription": "Noe gikk galt under behandling av oppskriften din. Sjekk nettleserkonsollen for tekniske detaljer.",
+    "incomplete": "Denne oppskriften kan være ufullstendig. Sammenlign den med kilden.",
+    "notARecipe": "Denne siden ser ikke ut som en oppskrift.",
+    "privateAddress": "Import fra private nettverksadresser er ikke tillatt på denne serveren.",
     "batchImported": "Oppskrifter importert",
     "batchImportedDescription": "{count} oppskrifter importert fra arkiv",
     "view": "Se",
@@ -423,5 +428,13 @@
     "removeImage": "Fjern bilde",
     "imageUploadFailed": "Bildet kunne ikke lastes opp.",
     "imageNeedsConnection": "Bilder kan endres når du er tilkoblet igjen."
+  },
+  "print": {
+    "title": "Skriv ut oppskrift",
+    "includePhoto": "Ta med bilde",
+    "textSize": "Tekststørrelse",
+    "print": "Skriv ut / Lagre PDF",
+    "continued": "fortsetter",
+    "perServing": "Per porsjon"
   }
 }

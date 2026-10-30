@@ -4,6 +4,6 @@ The Warm Set guarantees the 50 most-recent recipes in full, topped up by the Cac
 
 ## Consequences
 
-- The recipe create hook gains deliberate awareness of the Warm Set (a warm `gcTime` stamp) — recorded here so it is not later "cleaned up" as a stray option.
-- The Warm Set can briefly exceed its 50-recipe floor after several creates; the next warm re-selects the canonical 50, so the overage self-heals.
+- The warm `gcTime` comes from query defaults on `recipes.get` and `cookbooks.get`, registered when the web query client is created, so a create's seed is held without the create hooks knowing about the Warm Set — recorded here so those defaults are not later "cleaned up" as stray options. Until 2026-10-14 the create hooks stamped it themselves, through query-core internals.
+- The defaults also hold a recipe or cookbook the reader merely opened, so the Warm Set can exceed its 50-recipe floor after several creates or reads; the next warm re-selects the canonical 50 and the rest age out with the offline cache.
 - Shipped as its own commit, separate from the status-modal commit that prompted it.

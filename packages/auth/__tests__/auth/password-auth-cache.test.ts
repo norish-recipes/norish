@@ -19,7 +19,6 @@ vi.mock("@norish/auth/provider-cache", () => ({
 
 describe("Provider Cache - Password Auth", () => {
   beforeEach(() => {
-    vi.clearAllMocks();
     mockProviderCache.github = null;
     mockProviderCache.google = null;
     mockProviderCache.oidc = null;
@@ -47,44 +46,43 @@ describe("Provider Cache - Password Auth", () => {
   });
 });
 
-describe("Password Auth Seed Config", () => {
-  const mockGetConfig = vi.fn();
-  const mockSetConfig = vi.fn();
-  const mockConfigExists = vi.fn();
-  let mockServerConfig: Record<string, string | undefined> = {};
+const mockGetConfig = vi.fn();
+const mockSetConfig = vi.fn();
+const mockConfigExists = vi.fn();
+let mockServerConfig: Record<string, string | undefined> = {};
 
+vi.mock("@norish/db/repositories/server-config", () => ({
+  getConfig: () => mockGetConfig(),
+  setConfig: (...args: unknown[]) => mockSetConfig(...args),
+  configExists: () => mockConfigExists(),
+}));
+
+vi.mock("@norish/config/env-config-server", () => ({
+  get SERVER_CONFIG() {
+    return mockServerConfig;
+  },
+}));
+
+vi.mock("@norish/shared-server/logger", () => ({
+  serverLogger: { info: vi.fn(), debug: vi.fn(), warn: vi.fn(), error: vi.fn() },
+}));
+
+vi.mock("@norish/config/units.default.json", () => ({ default: {} }));
+vi.mock("@norish/config/content-indicators.default.json", () => ({
+  default: { schemaIndicators: [], contentIndicators: [] },
+}));
+vi.mock("@norish/config/recurrence-config.default.json", () => ({
+  default: { locales: {} },
+}));
+
+describe("Password Auth Seed Config", () => {
   beforeEach(() => {
-    vi.clearAllMocks();
     mockServerConfig = {};
   });
 
   afterEach(() => {
     vi.resetModules();
   });
-
-  vi.mock("@norish/db/repositories/server-config", () => ({
-    getConfig: () => mockGetConfig(),
-    setConfig: (...args: unknown[]) => mockSetConfig(...args),
-    configExists: () => mockConfigExists(),
-  }));
-
-  vi.mock("@norish/config/env-config-server", () => ({
-    get SERVER_CONFIG() {
-      return mockServerConfig;
-    },
-  }));
-
-  vi.mock("@norish/shared-server/logger", () => ({
-    serverLogger: { info: vi.fn(), debug: vi.fn(), warn: vi.fn(), error: vi.fn() },
-  }));
-
-  vi.mock("@norish/config/units.default.json", () => ({ default: {} }));
-  vi.mock("@norish/config/content-indicators.default.json", () => ({
-    default: { schemaIndicators: [], contentIndicators: [] },
-  }));
-  vi.mock("@norish/config/recurrence-config.default.json", () => ({
-    default: { locales: {} },
-  }));
 
   describe("hasOAuthEnvConfigured helper", () => {
     it("should detect when OIDC env vars are configured", () => {

@@ -178,7 +178,6 @@ describe("calendar planned recipe openapi procedures", () => {
   let ctx: ReturnType<typeof createMockAuthedContext>;
 
   beforeEach(() => {
-    vi.clearAllMocks();
     vi.useFakeTimers();
     vi.setSystemTime(new Date("2025-01-15T12:00:00"));
     ctx = createMockAuthedContext(mockUser, mockHousehold);
@@ -400,7 +399,6 @@ describe("calendar planned items procedures", () => {
   let ctx: ReturnType<typeof createMockAuthedContext>;
 
   beforeEach(() => {
-    vi.clearAllMocks();
     ctx = createMockAuthedContext(mockUser, mockHousehold);
   });
 

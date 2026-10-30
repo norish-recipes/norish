@@ -85,12 +85,6 @@ export type EditableCookbooksQueryResult = {
 
 export type CreateCookbookHooksOptions = CreateRecipeHooksOptions & {
   /**
-   * Hold a just-created cookbook at the offline cache's lifetime, so it joins
-   * the guaranteed floor immediately rather than at the next warm (ADR-0008).
-   * Absent on a client with no offline cache.
-   */
-  usePromoteCreatedCookbook?: () => (cookbookId: string) => void;
-  /**
    * The signed-in reader's id, so a cookbook created while Offline is shown
    * as theirs rather than as Orphaned (ADR-0027). Absent where no user
    * context is available.

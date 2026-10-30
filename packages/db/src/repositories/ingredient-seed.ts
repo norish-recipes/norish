@@ -1,30 +1,39 @@
-import { and, eq, inArray, isNotNull, isNull, sql } from "drizzle-orm";
+import type { SQL } from "drizzle-orm";
+import { and, eq, inArray, isNotNull, isNull, like, not, or, sql } from "drizzle-orm";
 
 import type { DbTransaction } from "@norish/db/drizzle";
 import type { NutritionCodes } from "@norish/db/schema";
 import { db } from "@norish/db/drizzle";
 import {
   aisleLinks,
-  groceries,
   ingredientAliases,
   ingredientNutritionCorrections,
   ingredients,
   ingredientStorePreferences,
-  ingredientSuggestions,
-  pantryIngredients,
-  recipeIngredients,
-  recurringGroceries,
   storeProductLinks,
 } from "@norish/db/schema";
 
-import { findIngredientAncestors, lockTree } from "./ingredient-relocation";
+import type { NamingRows } from "./ingredient-cleanup";
+import {
+  clearAIFlagUnlessOpen,
+  parentIsOpenAnswer,
+  takeOpenParentChanges,
+  vouchForOpenAIChanges,
+  wasParentUndone,
+} from "./ingredient-ai-changes";
+import { likeLiteral } from "./ingredient-aliases";
+import {
+  deleteCatalogueAlias,
+  ingredientIsListed,
+  ingredientIsNamed,
+  nameIsFree,
+} from "./ingredient-catalogue";
+import { findRowsNamingSpellings } from "./ingredient-cleanup";
+import { closesCycle, lockFoods, lockTree, moveCatalogueAlias } from "./ingredient-relocation";
 
 /**
- * The catalogue seed's writes (ADR-0038). Applying the seed upserts seeded
- * Ingredients, their seeded aliases and their seeded parents, and nothing a
- * person made: an owned alias, a merge, an alias move and a parent a person
- * set all outlive every refresh. The one pass that merges existing Ingredients
- * into the seed reads through here and merges through the catalogue.
+ * The catalogue seed's writes (ADR-0038): seeded Ingredients, aliases and parents are upserted, and
+ * what a person made (an own alias, a merge, a move, a parent) outlives every refresh.
  */
 
 /** One taxonomy entry as the seed applies it, its spellings already folded. */
@@ -94,23 +103,28 @@ function chunks<T>(items: readonly T[]): T[][] {
 async function holdersOf(
   tx: DbTransaction,
   folds: readonly string[]
-): Promise<Map<string, string>> {
-  const held = new Map<string, string>();
+): Promise<Map<string, { ingredientId: string; locale: string | null; seeded: boolean }>> {
+  const held = new Map<string, { ingredientId: string; locale: string | null; seeded: boolean }>();
 
   for (const part of chunks([...new Set(folds)])) {
     const rows = await tx
-      .select({ fold: ingredientAliases.fold, ingredientId: ingredientAliases.ingredientId })
+      .select({
+        fold: ingredientAliases.fold,
+        ingredientId: ingredientAliases.ingredientId,
+        locale: ingredientAliases.locale,
+        seeded: ingredientAliases.seeded,
+      })
       .from(ingredientAliases)
       .where(inArray(ingredientAliases.fold, part));
 
-    for (const row of rows) held.set(row.fold, row.ingredientId);
+    for (const { fold, ...holder } of rows) held.set(fold, holder);
   }
 
   return held;
 }
 
 /** Whether giving `id` the parent `parentId` would make it its own ancestor. */
-function closesCycle(parents: ReadonlyMap<string, string | null>, id: string, parentId: string) {
+function closesCycleIn(parents: ReadonlyMap<string, string | null>, id: string, parentId: string) {
   let current: string | null | undefined = parentId;
 
   for (let depth = 0; current && depth < 64; depth += 1) {
@@ -122,25 +136,8 @@ function closesCycle(parents: ReadonlyMap<string, string | null>, id: string, pa
 }
 
 /**
- * Apply a parsed, validated seed in one transaction, so a failure leaves the
- * last good seed exactly as it was.
- *
- * - An entry's Ingredient is the one that already carries its id; else the
- *   one that holds its name as a spelling or as a name, which is adopted
- *   (given the id) when it carries no other; else a new, ownerless one. An
- *   adopted Ingredient takes the entry's name where no other holds it, and
- *   is flagged no longer: the seed vouches for it, and files it.
- *   One that carries another entry's id absorbed this entry in a merge, and
- *   the entry is left there.
- * - Every spelling of every entry is added as a seeded alias; a spelling
- *   another Ingredient already holds stays where it is, and is reported.
- * - An entry's first parent becomes its Ingredient's parent, unless a person
- *   set or cleared that Ingredient's parent, or the parent would close a
- *   cycle. An entry with no parent leaves its Ingredient's parent alone.
- * - A seeded Ingredient the file no longer lists is removed only when nothing
- *   uses it: no line, grocery, recurring grocery or Pantry Ingredient
- *   through any of its spellings, no link, preference or nutrition
- *   correction, no spelling a person added, and no child.
+ * Apply a parsed seed in one transaction: an entry finds (by id, else name, adopting it) or mints
+ * its food, adds its spellings and a parent no person set; a dropped food goes only unused.
  */
 export async function applyIngredientSeed(entries: readonly SeedEntry[]): Promise<SeedOutcome> {
   return await db.transaction(async (tx) => {
@@ -188,7 +185,8 @@ export async function applyIngredientSeed(entries: readonly SeedEntry[]): Promis
         continue;
       }
 
-      const holder = nameHolders.get(entry.nameFold) ?? byName.get(entry.name.toLowerCase());
+      const holder =
+        nameHolders.get(entry.nameFold)?.ingredientId ?? byName.get(entry.name.toLowerCase());
       const row = holder ? byId.get(holder) : undefined;
 
       if (!row) {
@@ -206,15 +204,9 @@ export async function applyIngredientSeed(entries: readonly SeedEntry[]): Promis
             version: sql`${ingredients.version} + 1`,
           })
           .where(eq(ingredients.id, row.id));
-        // Where its words would file it is the seed's to say now.
-        await tx
-          .delete(ingredientSuggestions)
-          .where(
-            and(
-              eq(ingredientSuggestions.ingredientId, row.id),
-              eq(ingredientSuggestions.source, "words")
-            )
-          );
+        // The seed vouches for the food: it files it, and AI's merges into it are sure.
+        await takeOpenParentChanges(tx, row.id);
+        await vouchForOpenAIChanges(tx, row.id);
         outcome.adopted += 1;
       } else {
         outcome.absorbed += 1;
@@ -289,13 +281,30 @@ export async function applyIngredientSeed(entries: readonly SeedEntry[]): Promis
 
     const notAdded = [...wanted.keys()].filter((fold) => !added.has(fold));
     const holders = await holdersOf(tx, notAdded);
+    const restamps: Array<{ fold: string; locale: string | null }> = [];
 
     for (const fold of notAdded) {
       const claim = wanted.get(fold)!;
+      const holder = holders.get(fold);
 
-      if (holders.get(fold) !== claim.row.ingredientId) {
+      if (holder?.ingredientId !== claim.row.ingredientId) {
         outcome.aliasCollisions.push({ fold, offId: claim.offId });
+      } else if (holder.seeded && holder.locale !== (claim.row.locale ?? null)) {
+        restamps.push({ fold, locale: claim.row.locale ?? null });
       }
+    }
+
+    // A spelling the entry keeps takes the language the file now gives it first.
+    for (const part of chunks(restamps)) {
+      const values = sql.join(
+        part.map(({ fold, locale }) => sql`(${fold}, ${locale}::text)`),
+        sql`, `
+      );
+
+      await tx.execute(sql`
+        update ${ingredientAliases} set locale = v.locale
+        from (values ${values}) as v(fold, locale)
+        where ${ingredientAliases}.fold = v.fold`);
     }
 
     // Parents, where no person chose one.
@@ -312,7 +321,7 @@ export async function applyIngredientSeed(entries: readonly SeedEntry[]): Promis
 
       // A parent the resolver set from an AI answer stays where the file has none.
       if (parentId === null || parentId === row.parentId || parentId === id) continue;
-      if (parentId && closesCycle(parents, id, parentId)) {
+      if (parentId && closesCycleIn(parents, id, parentId)) {
         outcome.parentCycles += 1;
         continue;
       }
@@ -372,18 +381,12 @@ export async function applyIngredientSeed(entries: readonly SeedEntry[]): Promis
 
 /** Remove the seeded Ingredients the file no longer lists, where nothing uses them. */
 async function removeUnusedDropped(tx: DbTransaction, listed: readonly string[]): Promise<number> {
-  const usedThroughAlias = (table: typeof recipeIngredients | typeof groceries) => sql`exists (
-    select 1 from ${ingredientAliases} a join ${table} r on r.ingredient_alias_id = a.id
-    where a.ingredient_id = ${ingredients.id})`;
   const usedById = (
     table:
       | typeof aisleLinks
       | typeof storeProductLinks
       | typeof ingredientStorePreferences
       | typeof ingredientNutritionCorrections
-      | typeof pantryIngredients
-      | typeof recurringGroceries
-      | typeof groceries
   ) => sql`exists (select 1 from ${table} r where r.ingredient_id = ${ingredients.id})`;
 
   const removed = await tx
@@ -396,12 +399,7 @@ async function removeUnusedDropped(tx: DbTransaction, listed: readonly string[])
         listed.length > 0
           ? sql`${ingredients.offId} <> all(${sql.param([...listed])}::text[])`
           : undefined,
-        sql`not ${usedThroughAlias(recipeIngredients)}`,
-        sql`not ${usedThroughAlias(groceries)}`,
-        sql`not ${usedById(recurringGroceries)}`,
-        // A grocery the upgrade has not given an alias yet points at its food alone.
-        sql`not ${usedById(groceries)}`,
-        sql`not ${usedById(pantryIngredients)}`,
+        sql`not ${ingredientIsNamed()}`,
         sql`not ${usedById(aisleLinks)}`,
         sql`not ${usedById(storeProductLinks)}`,
         sql`not ${usedById(ingredientStorePreferences)}`,
@@ -413,6 +411,101 @@ async function removeUnusedDropped(tx: DbTransaction, listed: readonly string[])
     .returning({ id: ingredients.id });
 
   return removed.length;
+}
+
+/** One Ingredient with its seeded spellings, each in its own language, outside a seed file; its id. */
+export async function insertSeededIngredient(
+  ingredient: typeof ingredients.$inferInsert,
+  aliases: ReadonlyArray<{ text: string; fold: string; locale: string | null }>
+): Promise<string> {
+  return await db.transaction(async (tx) => {
+    const [row] = await tx.insert(ingredients).values(ingredient).returning({ id: ingredients.id });
+
+    if (!row) throw new Error("Failed to insert ingredient");
+    if (aliases.length > 0) {
+      await tx
+        .insert(ingredientAliases)
+        .values(aliases.map((alias) => ({ ...alias, ingredientId: row.id, seeded: true })));
+    }
+
+    return row.id;
+  });
+}
+
+/** The spelling `fold` on `fromId`, its foods locked; null where one of them is gone. */
+async function lockSpellingOn(
+  tx: DbTransaction,
+  fold: string,
+  fromId: string,
+  foodIds: readonly string[]
+): Promise<string | null> {
+  if (!(await lockFoods(tx, foodIds))) return null;
+  const [alias] = await tx
+    .select({ id: ingredientAliases.id })
+    .from(ingredientAliases)
+    .where(and(eq(ingredientAliases.fold, fold), eq(ingredientAliases.ingredientId, fromId)));
+
+  return alias?.id ?? null;
+}
+
+/** Move a seeded spelling, with its rows, from one seeded food to another that the seed now gives it. */
+export async function moveSeededSpelling(
+  fold: string,
+  fromId: string,
+  toId: string
+): Promise<boolean> {
+  return await db.transaction(async (tx) => {
+    const aliasId = await lockSpellingOn(tx, fold, fromId, [fromId, toId]);
+
+    if (!aliasId) return false;
+    await moveCatalogueAlias(tx, aliasId, toId);
+
+    return true;
+  });
+}
+
+/** Take a seeded spelling the seed gives no food off its food; the rows that named it, to read again. */
+export async function takeOffSeededSpelling(
+  fold: string,
+  fromId: string
+): Promise<NamingRows | null> {
+  return await db.transaction(async (tx) => {
+    const aliasId = await lockSpellingOn(tx, fold, fromId, [fromId]);
+
+    if (!aliasId) return null;
+    const rows = await findRowsNamingSpellings(tx, [aliasId]);
+
+    await deleteCatalogueAlias(tx, aliasId);
+
+    return rows;
+  });
+}
+
+/** The listed own foods under `parentId` that no person filed there. */
+export async function listUnchosenOwnChildren(
+  parentId: string
+): Promise<Array<{ id: string; name: string }>> {
+  return await db
+    .select({ id: ingredients.id, name: ingredients.name })
+    .from(ingredients)
+    .where(
+      and(
+        eq(ingredients.parentId, parentId),
+        isNull(ingredients.offId),
+        eq(ingredients.parentChosen, false),
+        // A hidden food (a grocery's) keeps its parent, and so its aisle.
+        ingredientIsListed()
+      )
+    );
+}
+
+/** Re-file an own food the words filed under `fromId` under `toId` (`fileUnder`). Whether it moved. */
+export async function refileOwnFood(id: string, fromId: string, toId: string): Promise<boolean> {
+  return await fileUnder(
+    id,
+    toId,
+    and(eq(ingredients.parentId, fromId), isNull(ingredients.offId))
+  );
 }
 
 /** Every seeded Ingredient, by the taxonomy entry it stands for. */
@@ -448,43 +541,48 @@ export async function flagIngredient(id: string): Promise<void> {
     .where(eq(ingredients.id, id));
 }
 
+/** An undecided mint; `answered`: AI's parent answer about it is open. */
+export interface UndecidedMint {
+  id: string;
+  name: string;
+  parentId: string | null;
+  answered: boolean;
+  aliases: string[];
+}
+
 /**
- * The Flagged Ingredients Norish minted itself and no person has decided
- * about: no taxonomy entry, not kept distinct, no parent a person chose (a
- * rename clears the flag, so a flagged one was not renamed since). What the
- * startup pass looks at again whenever the resolver's rules change.
+ * The listed own Ingredients no person decided about (no entry, not distinct, no chosen parent),
+ * flagged or not, which the startup recheck reads again when the rules change.
  */
-export async function listUndecidedMints(): Promise<
-  Array<{ id: string; name: string; parentId: string | null; aliases: string[] }>
-> {
+export async function listUndecidedMints(): Promise<UndecidedMint[]> {
   const rows = await db
     .select({
       id: ingredients.id,
       name: ingredients.name,
       parentId: ingredients.parentId,
+      answered: parentIsOpenAnswer,
       alias: ingredientAliases.text,
     })
     .from(ingredients)
     .innerJoin(ingredientAliases, eq(ingredientAliases.ingredientId, ingredients.id))
     .where(
       and(
-        eq(ingredients.flagged, true),
         isNull(ingredients.offId),
         eq(ingredients.keptDistinct, false),
-        eq(ingredients.parentChosen, false)
+        eq(ingredients.parentChosen, false),
+        // A hidden food (a grocery's) is left alone: its aisle walks its parent.
+        ingredientIsListed()
       )
     )
     .orderBy(ingredients.createdAt, ingredients.id, ingredientAliases.createdAt);
-  const byId = new Map<
-    string,
-    { id: string; name: string; parentId: string | null; aliases: string[] }
-  >();
+  const byId = new Map<string, UndecidedMint>();
 
   for (const row of rows) {
     const mint = byId.get(row.id) ?? {
       id: row.id,
       name: row.name,
       parentId: row.parentId,
+      answered: row.answered,
       aliases: [],
     };
 
@@ -496,12 +594,46 @@ export async function listUndecidedMints(): Promise<
 }
 
 /**
- * Give an undecided mint the plain name the resolver would mint it under
- * today: the name as a spelling, so later lines that strip to it land here
- * and a sibling mint that strips to it merges here, and as its name where
- * the mint still carries the text it was minted for, no other Ingredient
- * holds the plain name, and its name is not settled (AI or a person named
- * it). A spelling another Ingredient holds is left there.
+ * The undecided listed own foods without a parent, `ids` aside, a spelling of which holds a
+ * spelling of one of `ids` as whole words: the earlier variants those new foods may be the parent of.
+ */
+export async function listParentlessMintsSpelledWith(
+  ids: readonly string[]
+): Promise<Array<{ id: string; name: string }>> {
+  if (ids.length === 0) return [];
+  const spelled = await db
+    .select({ fold: ingredientAliases.fold })
+    .from(ingredientAliases)
+    .where(inArray(ingredientAliases.ingredientId, [...ids]));
+
+  if (spelled.length === 0) return [];
+  const holds = spelled.flatMap(({ fold }) =>
+    [`% ${likeLiteral(fold)}`, `${likeLiteral(fold)} %`, `% ${likeLiteral(fold)} %`].map(
+      (pattern) => like(ingredientAliases.fold, pattern)
+    )
+  );
+
+  return await db
+    .selectDistinct({ id: ingredients.id, name: ingredients.name })
+    .from(ingredients)
+    .innerJoin(ingredientAliases, eq(ingredientAliases.ingredientId, ingredients.id))
+    .where(
+      and(
+        isNull(ingredients.offId),
+        isNull(ingredients.parentId),
+        eq(ingredients.keptDistinct, false),
+        eq(ingredients.parentChosen, false),
+        not(inArray(ingredients.id, [...ids])),
+        sql`not ${parentIsOpenAnswer}`,
+        ingredientIsListed(),
+        or(...holds)
+      )
+    );
+}
+
+/**
+ * Give an undecided mint today's plain name as a spelling, and as its name where it keeps its
+ * minted text and the name is free and unsettled; a spelling another food holds stays.
  */
 export async function adoptPlainName(
   id: string,
@@ -518,31 +650,32 @@ export async function adoptPlainName(
       .where(
         and(
           eq(ingredients.id, id),
-          eq(ingredients.flagged, true),
           eq(ingredients.parentChosen, false),
           eq(ingredients.nameSettled, false),
-          sql`not exists (select 1 from ${ingredients} o where o.id <> ${id} and lower(o.name) = lower(${plain.text}))`
+          nameIsFree(id, plain.text)
         )
       );
   });
 }
 
 /**
- * File an undecided mint under the parent its words suggest, leaving it
- * flagged and the parent unchosen: only where it still has no parent, no
- * person decided about it meanwhile, and the parent would close no cycle.
- * With `suggest`, a `words` suggestion is recorded beside it for a person
- * to confirm or dismiss, replacing any older one. Whether it was filed.
+ * File an undecided mint without a parent under its words' one, its flag as it was, unless a person
+ * decided about it meanwhile or a cycle closes. Whether it was filed.
  */
-export async function fileUndecidedMint(
-  id: string,
-  parentId: string,
-  suggest = false
-): Promise<boolean> {
+export async function fileUndecidedMint(id: string, parentId: string): Promise<boolean> {
+  return await fileUnder(id, parentId, isNull(ingredients.parentId));
+}
+
+/**
+ * File the words' parent where `where` still holds, no person decided (kept distinct, kept a
+ * change or chose a parent), no cycle closes and no person undid it. Whether it was filed.
+ */
+async function fileUnder(id: string, parentId: string, where: SQL | undefined): Promise<boolean> {
   return await db.transaction(async (tx) => {
     await lockTree(tx);
-    if ((await findIngredientAncestors([parentId], tx)).get(parentId)?.includes(id)) return false;
-    if (id === parentId) return false;
+    if (await closesCycle(tx, id, parentId)) return false;
+    // A person undid this parent once: AI and the words never set it again.
+    if (await wasParentUndone(tx, id, parentId)) return false;
 
     const filed = await tx
       .update(ingredients)
@@ -550,33 +683,18 @@ export async function fileUndecidedMint(
       .where(
         and(
           eq(ingredients.id, id),
-          isNull(ingredients.parentId),
-          eq(ingredients.flagged, true),
+          where,
           eq(ingredients.keptDistinct, false),
           eq(ingredients.parentChosen, false)
         )
       )
       .returning({ id: ingredients.id });
 
-    if (filed.length > 0 && suggest) {
-      const values = { kind: "parent", targetId: parentId, source: "words" };
+    if (filed.length === 0) return false;
+    // AI's open answer goes with the old parent; the words' parent leaves no doubt behind.
+    if (await takeOpenParentChanges(tx, id)) await clearAIFlagUnlessOpen(tx, id);
 
-      await tx
-        .insert(ingredientSuggestions)
-        .values({ ingredientId: id, ...values })
-        .onConflictDoUpdate({
-          target: ingredientSuggestions.ingredientId,
-          set: {
-            ...values,
-            englishName: null,
-            considered: [],
-            proposedName: null,
-            createdAt: new Date(),
-          },
-        });
-    }
-
-    return filed.length > 0;
+    return true;
   });
 }
 

@@ -20,6 +20,8 @@ export function createUseRecipeShareSubscription(
     recipeId: string | null,
     callbacks: RecipeShareSubscriptionCallbacks = {}
   ) {
+    "use memo";
+
     const trpc = useTRPC();
     const {
       invalidateRecipeShares,

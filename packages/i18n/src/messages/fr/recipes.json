@@ -50,7 +50,8 @@
     "viewGroceries": "Voir les courses",
     "addToCalendar": "Ajouter au calendrier",
     "deleteRecipe": "Supprimer la recette",
-    "recipeOptions": "Options de recette"
+    "recipeOptions": "Options de recette",
+    "pantryCoverage": "{percent} des ingrédients à la maison"
   },
   "detail": {
     "viewOriginal": "Voir la recette originale",
@@ -76,7 +77,8 @@
     "source": "Source",
     "addedBy": "Ajouté par {name}",
     "decreaseServings": "Moins de portions",
-    "increaseServings": "Plus de portions"
+    "increaseServings": "Plus de portions",
+    "multiplier": "Multiplicateur"
   },
   "actions": {
     "plan": "Planifier",
@@ -319,6 +321,9 @@
     "imported": "Recette importée",
     "failed": "Échec de l'opération",
     "failedDescription": "Une erreur s'est produite pendant le traitement de votre recette. Consultez la console du navigateur pour les détails techniques.",
+    "incomplete": "Cette recette est peut-être incomplète. Comparez-la avec la source.",
+    "notARecipe": "Cette page ne semble pas être une recette.",
+    "privateAddress": "Les imports depuis des adresses de réseau privé ne sont pas autorisés sur ce serveur.",
     "batchImported": "Recettes importées",
     "batchImportedDescription": "{count} recettes importées depuis l'archive",
     "view": "Voir",
@@ -423,5 +428,13 @@
     "removeImage": "Retirer l'image",
     "imageUploadFailed": "L'image n'a pas pu être envoyée.",
     "imageNeedsConnection": "Les images pourront être modifiées une fois de retour en ligne."
+  },
+  "print": {
+    "title": "Imprimer la recette",
+    "includePhoto": "Inclure la photo",
+    "textSize": "Taille du texte",
+    "print": "Imprimer / Enregistrer en PDF",
+    "continued": "suite",
+    "perServing": "Par portion"
   }
 }

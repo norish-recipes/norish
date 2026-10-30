@@ -174,13 +174,12 @@ export const StoreReorderSchema = z.object({
 });
 
 // Ingredient store preference schemas
-export const IngredientStorePreferenceSelectSchema = createSelectSchema(ingredientStorePreferences)
-  .omit({
-    createdAt: true,
-    updatedAt: true,
-    normalizedName: true,
-  })
-  .extend({ ingredientId: z.uuid() });
+export const IngredientStorePreferenceSelectSchema = createSelectSchema(
+  ingredientStorePreferences
+).omit({
+  createdAt: true,
+  updatedAt: true,
+});
 
 export const IngredientStorePreferenceInsertSchema = z.object({
   userId: z.string(),

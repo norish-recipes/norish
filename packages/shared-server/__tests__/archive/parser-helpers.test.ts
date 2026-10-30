@@ -1,7 +1,10 @@
 // @vitest-environment node
 import { describe, expect, it, vi } from "vitest";
 
-import { buildRecipeDTO } from "@norish/shared-server/archive/parser-helpers";
+import {
+  buildRecipeDTO,
+  parseHumanDurationToMinutes,
+} from "@norish/shared-server/archive/parser-helpers";
 
 vi.mock("@norish/shared-server/config/server-config-loader", () => ({
   getUnits: vi.fn().mockResolvedValue({}),
@@ -21,6 +24,27 @@ vi.mock("@norish/shared/lib/helpers", async (importOriginal) => {
       }))
     ),
   };
+});
+
+describe("parseHumanDurationToMinutes", () => {
+  it.each([
+    ["1 hr 30 min", 90],
+    ["1h30m", 90],
+    ["90 minutes", 90],
+    ["2 hours", 120],
+    ["12h", 720],
+    ["45 Mins", 45],
+    ["1:30", 90],
+    ["medium heat", undefined],
+    ["", undefined],
+  ])("reads %j as %j", (text, minutes) => {
+    expect(parseHumanDurationToMinutes(text)).toBe(minutes);
+  });
+
+  // A field of digits was rescanned from every position, quadratic in its length.
+  it("reads a long run of digits in linear time", () => {
+    expect(parseHumanDurationToMinutes("1".repeat(200_000))).toBeUndefined();
+  });
 });
 
 describe("buildRecipeDTO", () => {

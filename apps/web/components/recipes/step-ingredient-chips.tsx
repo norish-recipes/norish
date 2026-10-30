@@ -94,14 +94,15 @@ export function StepIngredientChips({
   const [customValue, setCustomValue] = useState("");
   // A line whose chip should open its ask as soon as it exists — set by the
   // picker on attach, or fed in from the mention gesture via autoEntryOrder.
-  const [pendingEntryOrder, setPendingEntryOrder] = useState<number | null>(null);
+  const [pendingEntryOrder, setPendingEntryOrder] = useState<number | null>(autoEntryOrder ?? null);
+  const [adoptedAutoEntryOrder, setAdoptedAutoEntryOrder] = useState(autoEntryOrder);
   const customInputRef = useRef<HTMLInputElement | null>(null);
   // What the input opened with: leaving it untouched must change nothing, so
   // a rounded amount prefill cannot drift the stored share on a mere blur.
-  const customOpenedWithRef = useRef("");
+  const [customOpenedWith, setCustomOpenedWith] = useState("");
   // Whether the open entry was an automatic ask (attach) rather than a
   // deliberate menu choice — only asks hand focus back on keyboard close.
-  const autoOpenedRef = useRef(false);
+  const [autoOpened, setAutoOpened] = useState(false);
   // Closing hands focus away, which blurs the still-mounted input — and that
   // blur re-enters commit with the stale typed value. One close per open.
   const closingRef = useRef(false);
@@ -111,6 +112,7 @@ export function StepIngredientChips({
   // guards. The prefill is selected whole so typing replaces it.
   useEffect(() => {
     if (customIndex !== null) {
+      closingRef.current = false;
       customInputRef.current?.focus();
       customInputRef.current?.select();
     }
@@ -141,9 +143,9 @@ export function StepIngredientChips({
     if (closingRef.current) return;
     closingRef.current = true;
 
-    const wasAuto = autoOpenedRef.current;
+    const wasAuto = autoOpened;
 
-    autoOpenedRef.current = false;
+    setAutoOpened(false);
     setCustomIndex(null);
     setCustomValue("");
     if (wasAuto && viaKeyboard) onEntryKeyboardClose?.();
@@ -158,7 +160,7 @@ export function StepIngredientChips({
     const parsed = Number(customValue);
     const line = linesByOrder.get(refs[index]?.ingredientOrder ?? -1);
     const lineAmount = line ? toLineAmount(line.amount) : null;
-    const edited = customValue !== customOpenedWithRef.current;
+    const edited = customValue !== customOpenedWith;
 
     if (edited && Number.isFinite(parsed) && parsed > 0) {
       setShareAt(index, lineAmount == null ? parsed : parsed / lineAmount);
@@ -178,42 +180,43 @@ export function StepIngredientChips({
       const openedWith =
         derived == null ? String(ref?.share ?? 1) : String(Math.round(derived * 100) / 100);
 
-      closingRef.current = false;
       setCustomIndex(index);
       setCustomValue(openedWith);
-      customOpenedWithRef.current = openedWith;
+      setCustomOpenedWith(openedWith);
     },
     [refs, linesByOrder]
   );
 
   // The mention gesture asks from outside: adopt the order and confirm, so
   // the same ask is never replayed by a later render.
+  if (autoEntryOrder !== adoptedAutoEntryOrder) {
+    setAdoptedAutoEntryOrder(autoEntryOrder);
+    if (autoEntryOrder != null) setPendingEntryOrder(autoEntryOrder);
+  }
+
   useEffect(() => {
-    if (autoEntryOrder == null) return;
-    setPendingEntryOrder(autoEntryOrder);
-    onAutoEntryHandled?.();
+    if (autoEntryOrder != null) onAutoEntryHandled?.();
   }, [autoEntryOrder, onAutoEntryHandled]);
 
   // Open the ask the moment the attached chip exists. An amountless line has
   // no number to ask for and consumes the ask silently. This is the deciding
   // half of the mention's willAsk prediction in step-input — the two must
   // agree, or a mention would give up focus for an ask that never opens.
-  useEffect(() => {
-    if (pendingEntryOrder == null) return;
+  const pendingIndex =
+    pendingEntryOrder == null
+      ? -1
+      : refs.findIndex((ref) => ref.ingredientOrder === pendingEntryOrder);
 
-    const index = refs.findIndex((ref) => ref.ingredientOrder === pendingEntryOrder);
-
-    if (index === -1) return;
-
+  if (pendingEntryOrder != null && pendingIndex !== -1) {
     setPendingEntryOrder(null);
 
     const line = linesByOrder.get(pendingEntryOrder);
 
-    if (!line || toLineAmount(line.amount) == null) return;
-
-    autoOpenedRef.current = true;
-    openCustom(index);
-  }, [pendingEntryOrder, refs, linesByOrder, openCustom]);
+    if (line && toLineAmount(line.amount) != null) {
+      setAutoOpened(true);
+      openCustom(pendingIndex);
+    }
+  }
 
   if (refs.length === 0 && available.length === 0) return null;
 
@@ -303,7 +306,7 @@ export function StepIngredientChips({
                       id="custom"
                       textValue={customEntryLabel}
                       onAction={() => {
-                        autoOpenedRef.current = false;
+                        setAutoOpened(false);
                         openCustom(index);
                       }}
                     >

@@ -12,23 +12,33 @@ import { recipeExistsByUrlForPolicy } from "@norish/db";
 import { getRecipePermissionPolicy } from "@norish/shared-server/config/server-config-loader";
 import { createLogger } from "@norish/shared-server/logger";
 
-import { generateJobId, isJobInQueue, removeRetainedTerminalJob } from "../helpers";
+import { recipeImportDeduplicationId } from "../helpers";
 
 const log = createLogger("queue:recipe-import");
 
 /**
  * Add a recipe import job to the queue.
  * First checks if recipe already exists in DB (policy-aware).
- * Returns conflict status if a duplicate job already exists in queue.
+ * Returns conflict status while an import of the same URL is still in flight:
+ * the URL's id is BullMQ's deduplication id, which it frees once that import
+ * finishes, so a finished import kept in the history never blocks a new one.
  */
 export async function addImportJob(
   queue: Queue<RecipeImportJobData>,
   data: RecipeImportJobData
 ): Promise<AddImportJobResult> {
   const policy = await getRecipePermissionPolicy();
-  const jobId = generateJobId(data.url, data.userId, data.householdKey, policy.view);
+  const deduplicationId = recipeImportDeduplicationId(
+    data.url,
+    data.userId,
+    data.householdKey,
+    policy.view
+  );
 
-  log.debug({ url: data.url, jobId, policy: policy.view }, "Attempting to add import job");
+  log.debug(
+    { url: data.url, deduplicationId, policy: policy.view },
+    "Attempting to add import job"
+  );
 
   const existingCheck = await recipeExistsByUrlForPolicy(
     data.url,
@@ -46,29 +56,16 @@ export async function addImportJob(
     return { status: "exists", existingRecipeId: existingCheck.existingRecipeId };
   }
 
-  if (await isJobInQueue(queue, jobId)) {
-    log.warn({ url: data.url, jobId }, "Duplicate import job rejected");
+  const job = await queue.add("import", data, {
+    jobId: data.recipeId,
+    deduplication: { id: deduplicationId },
+  });
 
-    return { status: "duplicate", existingJobId: jobId };
-  }
+  // BullMQ answers a deduplicated add with the job already holding the id.
+  if (job.id && job.id !== data.recipeId) {
+    log.warn({ url: data.url, existingJobId: job.id }, "Duplicate import job rejected");
 
-  // A completed or failed job retained for history still occupies the
-  // deterministic id, and BullMQ would silently ignore the add below.
-  const removed = await removeRetainedTerminalJob(queue, jobId);
-
-  if (removed) {
-    log.info({ url: data.url, jobId }, "Removed retained terminal job to free import job id");
-  }
-
-  const job = await queue.add("import", data, { jobId });
-  const stored = await queue.getJob(jobId);
-
-  if (stored && stored.data.recipeId !== data.recipeId) {
-    // Another producer won the deterministic-id race between our checks and
-    // BullMQ's atomic add: its job is the real one and ours was ignored.
-    log.warn({ url: data.url, jobId }, "Import job id claimed by a concurrent add");
-
-    return { status: "duplicate", existingJobId: jobId };
+    return { status: "duplicate", existingJobId: job.id };
   }
 
   log.info(

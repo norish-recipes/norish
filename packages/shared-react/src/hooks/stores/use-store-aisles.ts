@@ -55,6 +55,8 @@ export interface StoreAislesResult {
 
 export function createUseStoreAisles({ useTRPC }: CreateStoresHooksOptions) {
   return function useStoreAisles(): StoreAislesResult {
+    "use memo";
+
     const trpc = useTRPC();
     const { data, isLoading } = useQuery(trpc.stores.aisleLinks.queryOptions());
     const byKey = useMemo(() => {
@@ -76,15 +78,15 @@ export function createUseStoreAisles({ useTRPC }: CreateStoresHooksOptions) {
     const listFoods = useMemo(
       () =>
         [...new Set((list?.groceries ?? []).flatMap((grocery) => grocery.ingredientId ?? []))]
-          .sort()
+          .sort((a, b) => a.localeCompare(b))
           .join(","),
       [list]
     );
-    const askedFoods = useRef(listFoods);
+    const askedFoodsRef = useRef(listFoods);
 
     useEffect(() => {
-      if (askedFoods.current === listFoods) return;
-      askedFoods.current = listFoods;
+      if (askedFoodsRef.current === listFoods) return;
+      askedFoodsRef.current = listFoods;
       void queryClient.invalidateQueries({ queryKey: trpc.stores.aisleLinks.queryKey() });
     }, [listFoods, queryClient, trpc]);
 
@@ -110,6 +112,8 @@ export function createUseStoreAisles({ useTRPC }: CreateStoresHooksOptions) {
  */
 export function createUseStoreAislesSubscription({ useTRPC }: CreateStoresHooksOptions) {
   return function useStoreAislesSubscription() {
+    "use memo";
+
     const trpc = useTRPC();
     const queryClient = useQueryClient();
     const queryKey = trpc.stores.aisleLinks.queryKey();

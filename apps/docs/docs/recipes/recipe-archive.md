@@ -6,9 +6,8 @@ description: Export your recipes as one file and import them into any Norish ser
 
 # Recipe Archive
 
-A **Recipe Archive** is one `.norishrecipes` file with every recipe you can
-see, including photos and videos. It holds recipes only, so it is **not** a
-backup.
+A **Recipe Archive** is a `.norishrecipes` file of all recipes you can see,
+including photos and videos. It is **not** a server backup.
 
 ## Exporting
 
@@ -30,12 +29,12 @@ that is the `RecipeKeeper_….zip` file.
 
 - **The recipes become yours.** The original author's name stays on the recipe
   as attribution.
-- **A matching recipe is overwritten, not duplicated.** Norish matches on the
-  URL, or on the name when one of the two has no URL, within your household.
+- **A matching recipe is overwritten, not duplicated.** Recipes are matched
+  within your household by URL, or by name when either recipe has no URL.
   Importing your own archive again updates your recipes. Two recipes with the
   same name in one archive are both kept.
-- **Cookbooks come along by name.** Each recipe goes into your cookbook of that
-  name, which is created if you don't have one. Cookbook covers and empty
+- **Cookbooks are matched by name.** Each recipe joins your cookbook with
+  that name, created if needed. Cookbook covers and empty
   cookbooks are not imported.
 
 :::note

@@ -19,11 +19,13 @@ const nextConfig: NextConfig = {
   // request, and Next refuses to serve dev resources to one by default. The
   // page still arrives, but its scripts do not, and every scroll reveal is left
   // hidden — a blank page. Dev only; the static export has no such check.
-  allowedDevOrigins: ["*.local", "mac-mini.local"],
+  allowedDevOrigins: ["*.local", "mac-mini.local", "192.168.50.11"],
   turbopack: {
     root: resolve(configDirectory, "../.."),
   },
   devIndicators: false,
+  // The root AGENTS.md carries the Next guidance for the whole repo.
+  agentRules: false,
   env: {
     NEXT_PUBLIC_BASE_PATH: basePath,
   },

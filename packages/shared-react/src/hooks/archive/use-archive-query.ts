@@ -9,6 +9,8 @@ const log = createClientLogger("ArchiveImport");
 
 export function createUseArchiveQuery() {
   return function useArchiveImportQuery(): ArchiveImportQueryResult {
+    "use memo";
+
     const queryClient = useQueryClient();
 
     const { data: state } = useQuery<ArchiveImportState>({

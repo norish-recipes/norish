@@ -10,14 +10,21 @@
  * page without the AI provider being asked, and an unsure Decision hands the
  * kind back to the AI provider whose answer the Decision Model then checks.
  */
+import { createServer } from "node:http";
 import type { Page } from "@playwright/test";
+import type { AddressInfo } from "node:net";
 import { request } from "@playwright/test";
 
 import type { TypeSafeAnswer } from "../harness/ai-provider";
 import type { AIE2EStack } from "./fixture";
+import { submitMutation } from "../harness/trpc";
 import { expect, test } from "./fixture";
 import { submitPasteImport } from "./import-support";
-import { readStoredCategories, setAutomaticEnrichment } from "./recipe-enrichment-support";
+import {
+  readStoredCategories,
+  setAutomaticEnrichment,
+  updateAIConfig,
+} from "./recipe-enrichment-support";
 
 test.describe.configure({ mode: "serial" });
 
@@ -84,7 +91,7 @@ test.beforeEach(({ aiStack, page: fixturePage }) => {
 });
 
 test.afterAll(async () => {
-  await setAutomaticEnrichment({}).catch(() => undefined);
+  await setAutomaticEnrichment(stack, {}).catch(() => undefined);
   await configureDecisionModel({ provider: "disabled" }).catch(() => undefined);
 });
 
@@ -224,7 +231,7 @@ function chatRequestCount(): number {
 
 test("a Decision settles automatic categorization, and the AI provider is never asked for it", async () => {
   await decisionModelAtHarness();
-  await setAutomaticEnrichment({ autoCategorization: true });
+  await setAutomaticEnrichment(stack, { autoCategorization: true });
   stack.ai.control.reset();
   stack.ai.control.decideWith(answers({ Breakfast: 0.02, Lunch: 0.03, Dinner: 0.97, Snack: 0.01 }));
 
@@ -233,7 +240,7 @@ test("a Decision settles automatic categorization, and the AI provider is never 
   await eventuallyOnRecipe(async () => {
     await expect(page.getByText("Dinner").first()).toBeVisible({ timeout: 3_000 });
   });
-  expect(await readStoredCategories("Decision Categories Stew")).toEqual(["Dinner"]);
+  expect(await readStoredCategories(stack, "Decision Categories Stew")).toEqual(["Dinner"]);
 
   // The Decision went over loopback to the harness's TypeSafe route, and the
   // one chat completion was the extraction: categorization never reached the
@@ -244,7 +251,7 @@ test("a Decision settles automatic categorization, and the AI provider is never 
 
 test("an unsure Decision hands categorization to the AI provider, whose answer is then checked", async () => {
   await decisionModelAtHarness();
-  await setAutomaticEnrichment({ autoCategorization: true });
+  await setAutomaticEnrichment(stack, { autoCategorization: true });
   stack.ai.control.reset();
   // Nothing clears the category threshold (0.6), and the validation question
   // on the AI provider's answer ("Lunch") is answered from the same set: above
@@ -259,7 +266,7 @@ test("an unsure Decision hands categorization to the AI provider, whose answer i
   await eventuallyOnRecipe(async () => {
     await expect(page.getByText("Lunch").first()).toBeVisible({ timeout: 3_000 });
   });
-  expect(await readStoredCategories("Unsure Decision Stew")).toEqual(["Lunch"]);
+  expect(await readStoredCategories(stack, "Unsure Decision Stew")).toEqual(["Lunch"]);
 
   // The extraction and the categorization both went to the AI provider; the
   // Decision Model was asked at least twice, for the kind and for its check.
@@ -284,7 +291,7 @@ test("an unsure Decision hands categorization to the AI provider, whose answer i
 
 test("a disabled Decision block leaves every kind to the AI provider", async () => {
   await configureDecisionModel({ provider: "disabled" });
-  await setAutomaticEnrichment({ autoCategorization: true });
+  await setAutomaticEnrichment(stack, { autoCategorization: true });
   stack.ai.control.reset();
   stack.ai.control.setDecisionDefault(null);
 
@@ -296,8 +303,109 @@ test("a disabled Decision block leaves every kind to the AI provider", async () 
   await eventuallyOnRecipe(async () => {
     await expect(page.getByText("Snack").first()).toBeVisible({ timeout: 3_000 });
   });
-  expect(await readStoredCategories("No Decision Stew")).toEqual(["Snack"]);
+  expect(await readStoredCategories(stack, "No Decision Stew")).toEqual(["Snack"]);
 
   expect(stack.ai.control.decisionRequestCount).toBe(0);
   expect(chatRequestCount()).toBe(2);
+});
+
+/** A recipe site with one page whose JSON-LD names a dish, one ingredient and one step. */
+async function serveThinRecipe(name: string): Promise<{ url: string; close: () => Promise<void> }> {
+  const recipe = {
+    "@context": "https://schema.org",
+    "@type": "Recipe",
+    name,
+    recipeIngredient: ["2 eggs"],
+    recipeInstructions: [{ "@type": "HowToStep", text: "Cook the eggs." }],
+  };
+  const html = `<!doctype html><html><head><title>${name}</title><script type="application/ld+json">${JSON.stringify(recipe)}</script></head><body><h1>${name}</h1></body></html>`;
+  const server = createServer((_request, response) => {
+    response.writeHead(200, { "content-type": "text/html; charset=utf-8" });
+    response.end(html);
+  });
+
+  await new Promise<void>((resolve) => server.listen(0, "127.0.0.1", resolve));
+
+  return {
+    url: `http://127.0.0.1:${(server.address() as AddressInfo).port}/thin-recipe`,
+    close: () => new Promise((resolve) => server.close(() => resolve())),
+  };
+}
+
+test("with only the Decision Model, a thin recipe imports with a warning that it may be incomplete", async () => {
+  await decisionModelAtHarness();
+  await setAutomaticEnrichment(stack, {});
+  await updateAIConfig(stack, { enabled: false });
+  stack.ai.control.reset();
+  // No AI provider: any chat request is a bug in the import, not extra work.
+  stack.ai.control.setDefault(null);
+  stack.ai.control.decideWith({
+    completeness: { type: "score", score: 0.3, probabilities: { 0: 0.7, 1: 0.3, 2: 0 } },
+  });
+
+  const site = await serveThinRecipe("Thin Decision Eggs");
+
+  try {
+    await page.goto("/");
+    await page.getByTestId("add-library-button").click();
+    await page.getByRole("menuitem", { name: "URL" }).click();
+    await page.getByLabel("Recipe URL").fill(site.url);
+    await submitMutation(page, "recipes.importFromUrl", () =>
+      page.getByRole("button", { name: "Import", exact: true }).click()
+    );
+
+    await expect(
+      page.getByText("This recipe may be incomplete. Check it against the source.")
+    ).toBeVisible({ timeout: 60_000 });
+    await expect(page.getByRole("heading", { name: "Thin Decision Eggs", level: 3 })).toBeVisible();
+    expect(stack.ai.control.decisionRequestCount).toBeGreaterThanOrEqual(1);
+    expect(chatRequestCount()).toBe(0);
+  } finally {
+    await site.close();
+    await updateAIConfig(stack, { enabled: true });
+  }
+});
+
+test("an administrator cancels a running AI job, and the job monitor shows it Cancelled", async () => {
+  await configureDecisionModel({ provider: "disabled" });
+  await setAutomaticEnrichment(stack, {});
+  stack.ai.control.reset();
+  stack.ai.control.setDefault(null);
+  // The extraction request arrives and is never answered: the job stays active on it.
+  stack.ai.control.hold();
+
+  try {
+    await page.goto("/");
+    await submitPasteImport(page, "Import Held Stew — the harness never answers.");
+    await expect.poll(() => chatRequestCount(), { timeout: 30_000 }).toBe(1);
+
+    await page.goto("/settings?tab=admin");
+    const running = page
+      .getByRole("row")
+      .filter({ hasText: "Paste import" })
+      .filter({ hasText: "Active" });
+
+    await expect(running).toHaveCount(1, { timeout: 15_000 });
+    await running.click();
+
+    const dialog = page.getByRole("dialog");
+
+    await dialog.getByRole("button", { name: "Stop", exact: true }).click();
+    await expect(dialog.getByRole("button", { name: "Stopping…" })).toBeVisible();
+    await expect(dialog.getByText("Cancelled", { exact: true })).toBeVisible({ timeout: 15_000 });
+    await expect(dialog.getByText("An administrator cancelled this job.")).toBeVisible();
+    await expect(dialog.getByRole("button", { name: "Stopping…" })).toHaveCount(0);
+
+    // Cancelled for good: the monitor reads Cancelled only for a job in BullMQ's
+    // failed set, which nothing retries from on its own, so the provider was asked once.
+    expect(chatRequestCount()).toBe(1);
+
+    // Retried by hand, the job runs again, and its new run offers Cancel again.
+    await dialog.getByRole("button", { name: "Retry" }).click();
+    await expect.poll(() => chatRequestCount(), { timeout: 30_000 }).toBe(2);
+    await dialog.getByRole("button", { name: "Stop", exact: true }).click();
+    await expect(dialog.getByText("Cancelled", { exact: true })).toBeVisible({ timeout: 15_000 });
+  } finally {
+    stack.ai.control.release();
+  }
 });

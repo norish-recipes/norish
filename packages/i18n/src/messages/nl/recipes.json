@@ -50,7 +50,8 @@
     "viewGroceries": "Bekijk boodschappen",
     "addToCalendar": "Toevoegen aan agenda",
     "deleteRecipe": "Recept verwijderen",
-    "recipeOptions": "Receptopties"
+    "recipeOptions": "Receptopties",
+    "pantryCoverage": "{percent} van de ingrediënten in huis"
   },
   "detail": {
     "viewOriginal": "Bekijk origineel recept",
@@ -76,17 +77,18 @@
     "source": "Bron",
     "addedBy": "Toegevoegd door {name}",
     "decreaseServings": "Minder porties",
-    "increaseServings": "Meer porties"
+    "increaseServings": "Meer porties",
+    "multiplier": "Factor"
   },
   "actions": {
-    "plan": "Plan",
+    "plan": "Plannen",
     "groceries": "Boodschappen",
     "edit": "Bewerken",
     "delete": "Verwijder",
     "share": "Delen",
     "visitOriginal": "Bekijk Origineel Recept",
     "addToCalendar": "Toevoegen aan Agenda",
-    "autoTag": "Auto-tag",
+    "autoTag": "Automatisch taggen",
     "autoTagging": "Tags genereren...",
     "autoCategorize": "Auto Categoriseren",
     "detectAllergies": "Detecteer Allergieën",
@@ -319,10 +321,13 @@
     "imported": "Recept geïmporteerd",
     "failed": "Receptbewerking mislukt",
     "failedDescription": "Er ging iets mis tijdens het verwerken van je recept. Bekijk de browserconsole voor technische details.",
+    "incomplete": "Dit recept is mogelijk onvolledig. Vergelijk het met de bron.",
+    "notARecipe": "Deze pagina lijkt geen recept te zijn.",
+    "privateAddress": "Imports van privénetwerkadressen zijn op deze server niet toegestaan.",
     "batchImported": "Recepten geïmporteerd",
     "batchImportedDescription": "{count} recepten geïmporteerd uit archief",
     "view": "Bekijk",
-    "open": "Open"
+    "open": "Openen"
   },
   "tags": {
     "panel": {
@@ -423,5 +428,13 @@
     "removeImage": "Afbeelding verwijderen",
     "imageUploadFailed": "De afbeelding kon niet worden geüpload.",
     "imageNeedsConnection": "Afbeeldingen kun je wijzigen zodra je weer online bent."
+  },
+  "print": {
+    "title": "Recept afdrukken",
+    "includePhoto": "Foto opnemen",
+    "textSize": "Tekstgrootte",
+    "print": "Afdrukken / Opslaan als PDF",
+    "continued": "vervolg",
+    "perServing": "Per portie"
   }
 }

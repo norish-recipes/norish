@@ -3,15 +3,10 @@
 import { useCallback, useEffect, useState } from "react";
 import { SettingsCard } from "@/app/(app)/settings/components/settings-card";
 import SettingsSwitch from "@/app/(app)/settings/components/settings-switch";
-import {
-  ArrowPathIcon,
-  CheckCircleIcon,
-  PencilIcon,
-  TrashIcon,
-  XCircleIcon,
-} from "@heroicons/react/16/solid";
+import { ActionButton } from "@/components/shared/action-button";
+import { ArrowPathIcon, CheckCircleIcon, XCircleIcon } from "@heroicons/react/16/solid";
 import { ServerIcon } from "@heroicons/react/24/outline";
-import { Button, Chip, useOverlayState } from "@heroui/react";
+import { Chip, useOverlayState } from "@heroui/react";
 import { useTranslations } from "next-intl";
 
 import { useCalDavSettingsContext } from "../context";
@@ -41,20 +36,16 @@ export default function CalDavConfigSummary({ onEditClick }: CalDavConfigSummary
   const checkConnection = useCallback(async () => {
     if (!config) return;
     setConnectionStatus("checking");
-    try {
-      const result = await checkConnectionStatus();
-      setConnectionStatus(result.success ? "connected" : "disconnected");
-      setLastCheck(new Date());
+    const result = await checkConnectionStatus().catch(() => null);
 
-      // Reset interval to 60s on success, use exponential backoff on failure
-      if (result.success) {
-        setPollingInterval(60000);
-      } else {
-        setPollingInterval((prev) => Math.min(prev * 2, 300000)); // Max 5 minutes
-      }
-    } catch (_error) {
-      setConnectionStatus("disconnected");
-      setPollingInterval((prev) => Math.min(prev * 2, 300000));
+    setConnectionStatus(result?.success ? "connected" : "disconnected");
+    if (result) setLastCheck(new Date());
+
+    // Reset interval to 60s on success, use exponential backoff on failure
+    if (result?.success) {
+      setPollingInterval(60000);
+    } else {
+      setPollingInterval((prev) => Math.min(prev * 2, 300000)); // Max 5 minutes
     }
   }, [config, checkConnectionStatus]);
 
@@ -123,14 +114,12 @@ export default function CalDavConfigSummary({ onEditClick }: CalDavConfigSummary
       <SettingsCard
         actions={
           <>
-            <Button size="sm" onPress={onEditClick} variant="tertiary" className="min-w-16">
-              {<PencilIcon className="h-4 w-4" />}
+            <ActionButton action="edit" size="sm" onPress={onEditClick}>
               {t("editButton")}
-            </Button>
-            <Button size="sm" onPress={onDeleteOpen} variant="danger-soft" className="min-w-16">
-              {<TrashIcon className="h-4 w-4" />}
+            </ActionButton>
+            <ActionButton action="delete" size="sm" onPress={onDeleteOpen}>
               {t("deleteButton")}
-            </Button>
+            </ActionButton>
           </>
         }
         badges={

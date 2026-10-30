@@ -8,6 +8,7 @@ function shuffleArray<T>(array: T[]): T[] {
   const shuffled = [...array];
 
   for (let i = shuffled.length - 1; i > 0; i--) {
+    // eslint-disable-next-line sonarjs/pseudo-random -- picking a recipe to cook needs no unpredictability
     const j = Math.floor(Math.random() * (i + 1));
 
     [shuffled[i]!, shuffled[j]!] = [shuffled[j]!, shuffled[i]!];
@@ -41,9 +42,11 @@ export function selectWeightedRandomRecipe(
   const totalWeight = weights.reduce((sum, weight) => sum + weight, 0);
 
   if (totalWeight <= 0) {
+    // eslint-disable-next-line sonarjs/pseudo-random -- picking a recipe to cook needs no unpredictability
     return candidates[Math.floor(Math.random() * candidates.length)] ?? null;
   }
 
+  // eslint-disable-next-line sonarjs/pseudo-random -- picking a recipe to cook needs no unpredictability
   let random = Math.random() * totalWeight;
 
   for (let i = 0; i < shuffled.length; i++) {

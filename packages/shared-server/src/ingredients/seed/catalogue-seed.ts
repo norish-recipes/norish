@@ -1,12 +1,6 @@
 /**
- * The ingredient catalogue seed (ADR-0038): the Open Food Facts ingredients
- * taxonomy, fetched nightly and applied as seeded Ingredients, aliases and
- * parents, so a new instance already knows that "ui" is "onion".
- *
- * The seed is an improvement, never a dependency: with no URL, or no
- * internet, Norish resolves names without it. A fetch that fails, or a file
- * that does not read as a taxonomy, throws before anything is applied, so the
- * last good seed stays and the job monitor shows the failure.
+ * The catalogue seed (ADR-0038): the Open Food Facts taxonomy fetched nightly as seeded
+ * Ingredients. Never a dependency: a failed fetch or bad file throws before applying anything.
  */
 import type { IngredientSeedState } from "@norish/config/zod/server-config";
 import type { SeedEntry, SeedOutcome } from "@norish/db/repositories/ingredient-seed";
@@ -23,7 +17,12 @@ import {
 import { getConfig, setConfig } from "@norish/db/repositories/server-config";
 import { createLogger } from "@norish/shared-server/logger";
 import { ingredients as ingredientsRealtime } from "@norish/shared-server/realtime/ingredients";
-import { ingredientAliasFold, stripPreparation } from "@norish/shared/lib/spelling-keys";
+import { norishReads } from "@norish/shared/lib/ingredient-names";
+import {
+  ingredientAliasFold,
+  stripPreparation,
+  withoutStrayMarks,
+} from "@norish/shared/lib/spelling-keys";
 
 import { cleanIngredientText } from "../resolver";
 import { parseTaxonomy } from "./parse-taxonomy";
@@ -39,10 +38,71 @@ const MIN_KEPT_SHARE = 0.5;
 /** The largest file read: a guard against a mirror serving something else entirely. */
 const MAX_FILE_BYTES = 64 * 1024 * 1024;
 
+/** A seeded text cleaned of stray marks ("3wu)" is "3wu"); its brackets tell foods apart, so they stay. */
+function seedText(text: string): string {
+  return withoutStrayMarks(cleanIngredientText(text));
+}
+
+/**
+ * Spellings Open Food Facts gives the wrong entry, moved as each file is read (`to: null`: taken
+ * off); raise `SEED_CORRECTIONS_VERSION` with each, for `correctSeedOnce`.
+ */
+export const SPELLING_MOVES: ReadonlyArray<{
+  from: string;
+  to: string | null;
+  spellings: string[];
+}> = [
+  // Its coating also holds seasoning's names; a seasoning is a spice mix (ingredient-cleanup 21).
+  {
+    from: "en:coating",
+    to: "en:mixed-spices",
+    spellings: ["seasoning", "sazonador", "fűszerezés", "ochucující", "シーズニング"],
+  },
+  // Yam comes first in the file, so its Croatian "jam" took jam's own name (ingredient-cleanup 32).
+  { from: "en:yam", to: "en:jam", spellings: ["jam"] },
+  // AI's parent "steak" found patty by its French name; the file has no drumstick (ticket 52).
+  { from: "en:patty", to: "en:beef-steak", spellings: ["steak"] },
+  { from: "en:chicken-thigh", to: null, spellings: ["chicken drumstick"] },
+];
+
+/** 4: steak to beef steak, chicken drumstick off chicken thigh (ingredient-cleanup 52). */
+export const SEED_CORRECTIONS_VERSION = 4;
+
+/** The entries with each move made where the file has its food: no other entry keeps the spelling. */
+function corrected(entries: readonly SeedEntry[]): SeedEntry[] {
+  const offIds = new Set(entries.map((entry) => entry.offId));
+  const owner = new Map<string, string | null>();
+
+  for (const move of SPELLING_MOVES) {
+    if (move.to && !offIds.has(move.to)) continue;
+    for (const spelling of move.spellings) owner.set(ingredientAliasFold(spelling), move.to);
+  }
+
+  const moved = entries.flatMap((entry) => entry.aliases.filter((alias) => owner.has(alias.fold)));
+
+  return entries.map((entry) => {
+    const kept = entry.aliases.filter(
+      (alias) => !owner.has(alias.fold) || owner.get(alias.fold) === entry.offId
+    );
+    const gained = moved.filter(
+      (alias, index) =>
+        owner.get(alias.fold) === entry.offId &&
+        !kept.some((own) => own.fold === alias.fold) &&
+        moved.findIndex((other) => other.fold === alias.fold) === index
+    );
+
+    return { ...entry, aliases: [...kept, ...gained] };
+  });
+}
+
 /** A taxonomy file, read and folded into the entries the seed applies. */
 export function seedEntriesOf(file: string): SeedEntry[] {
+  return corrected(seedEntriesFrom(file));
+}
+
+function seedEntriesFrom(file: string): SeedEntry[] {
   return parseTaxonomy(file).flatMap((entry) => {
-    const name = cleanIngredientText(entry.name);
+    const name = seedText(entry.name);
 
     if (!name) return [];
 
@@ -53,8 +113,9 @@ export function seedEntriesOf(file: string): SeedEntry[] {
         nameFold: ingredientAliasFold(name),
         parentOffId: entry.parentIds[0] ?? null,
         nutrition: entry.nutrition,
-        aliases: entry.names.flatMap(({ text, locale }) => {
-          const cleaned = cleanIngredientText(text);
+        // A spelling the entry's languages share goes to the first: one Norish reads (kaas nl, not af).
+        aliases: norishFirst(entry.names).flatMap(({ text, locale }) => {
+          const cleaned = seedText(text);
 
           return cleaned ? [{ text: cleaned, fold: ingredientAliasFold(cleaned), locale }] : [];
         }),
@@ -63,20 +124,12 @@ export function seedEntriesOf(file: string): SeedEntry[] {
   });
 }
 
-/**
- * Apply a taxonomy file: read the whole of it first, then apply it in one
- * transaction. A file that does not read as a taxonomy throws and applies
- * nothing.
- */
-export async function applySeedFile(file: string): Promise<{
-  entries: SeedEntry[];
-  outcome: SeedOutcome;
-}> {
-  return await applySeedEntries(seedEntriesOf(file));
+function norishFirst<T extends { locale: string | null }>(names: readonly T[]): T[] {
+  return [...names].sort((a, b) => Number(norishReads(b.locale)) - Number(norishReads(a.locale)));
 }
 
 /** Apply entries already read from a taxonomy file, in one transaction. */
-async function applySeedEntries(entries: SeedEntry[]): Promise<{
+export async function applySeedEntries(entries: SeedEntry[]): Promise<{
   entries: SeedEntry[];
   outcome: SeedOutcome;
 }> {
@@ -96,13 +149,8 @@ async function applySeedEntries(entries: SeedEntry[]): Promise<{
 }
 
 /**
- * The seed's one pass over the Ingredients made before it, which an upgrade
- * leaves only where its first boot had no seed to resolve against: each one
- * whose spellings (or the same with their preparation stripped) the seed
- * gives to exactly one entry is merged into that entry's Ingredient, as sure
- * as an exact alias match; one whose spellings the seed gives to several is
- * flagged, for a person to sort out. The language model is not asked: this
- * walks an instance's whole history at once.
+ * The first seed's pass over older Ingredients, no AI: one whose spellings (or stripped ones) the
+ * seed gives one entry merges into it, one it gives several is flagged.
  */
 export async function mergeExistingIntoSeed(
   entries: readonly SeedEntry[]
@@ -175,14 +223,44 @@ export async function updateIngredientSeedState(
   );
 }
 
+/**
+ * A startup pass once per `version` of the seed state's `key`, handed the version last run (0 for
+ * none), recorded once through unless it answers null; null where run. Refetched on `changed`.
+ */
+export async function oncePerVersion<T extends object>(
+  key:
+    "rungVersion" | "cleanupVersion" | "correctionsVersion" | "junkSeedVersion" | "upgradesVersion",
+  version: number,
+  {
+    pass,
+    changed,
+    done,
+  }: { pass: (from: number) => Promise<T | null>; changed: (outcome: T) => boolean; done: string }
+): Promise<T | null> {
+  const from = (await readIngredientSeedState())[key];
+
+  if (from === version) return null;
+
+  const outcome = await pass(from);
+
+  if (outcome === null) return null;
+
+  const fields: Record<string, unknown> = { ...outcome, [key]: version };
+
+  await updateIngredientSeedState({ [key]: version });
+  log.info(fields, done);
+  if (changed(outcome)) {
+    await ingredientsRealtime.publish("changed", { ingredientIds: [] }, undefined);
+  }
+
+  return outcome;
+}
+
 export type RefreshResult = "disabled" | "unchanged" | "applied";
 
 /**
- * Fetch the taxonomy and apply it where it changed since the last good seed.
- * The request is conditional on the last file's validators, and those are
- * stored only once the file has been applied, so a failed apply is retried
- * in full the next time. The first applied seed is followed by the one pass
- * over the Ingredients that existed before it.
+ * Fetch the taxonomy, conditional on the last applied file's validators, and apply it where it
+ * changed; the first applied seed is followed by `mergeExistingIntoSeed`.
  */
 export async function refreshIngredientCatalogue(
   fetchImpl: typeof fetch = fetch
@@ -234,17 +312,16 @@ export async function refreshIngredientCatalogue(
   const firstSeed = !state.mergedExisting;
   const merged = firstSeed ? (await mergeExistingIntoSeed(entries)).merged : 0;
 
-  // The validators are stored only once the file and the one pass are both
-  // through, so a failure in either is retried in full the next time. After
-  // a first seed, the undecided mints made before it are looked at again
-  // against it (`recheckUndecidedMintsOnRungChange`).
+  // The validators are stored only once the file and the pass are through, so a failure retries in
+  // full; after a first seed, `rungVersion: 0` rechecks the older mints against it.
   await updateIngredientSeedState({
     etag: response.headers.get("etag"),
     lastModified: response.headers.get("last-modified"),
     appliedAt: new Date().toISOString(),
     entries: entries.length,
     mergedExisting: true,
-    ...(firstSeed ? { rungVersion: 0 } : {}),
+    // A first seed is read with every correction, so none is left to make.
+    ...(firstSeed ? { rungVersion: 0, correctionsVersion: SEED_CORRECTIONS_VERSION } : {}),
   });
 
   // Merges, parents and removals change which food lines mean: open clients

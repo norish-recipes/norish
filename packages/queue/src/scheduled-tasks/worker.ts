@@ -1,30 +1,22 @@
 import type { Job } from "bullmq";
-import { Worker } from "bullmq";
 
+import { sweepAIChanges } from "@norish/db/repositories/ingredient-ai-changes";
 import { requireQueueApiHandler } from "@norish/queue/api-handlers";
-import { getBullClient } from "@norish/queue/redis/bullmq";
 import { cleanupOldCalendarData } from "@norish/queue/scheduler/old-calendar-cleanup";
 import { cleanupOldGroceries } from "@norish/queue/scheduler/old-groceries-cleanup";
 import { checkRecurringGroceries } from "@norish/queue/scheduler/recurring-grocery-check";
+import { sweepUnusedIngredients } from "@norish/shared-server/ingredients/catalogue";
 import { sweepIngredientIcons } from "@norish/shared-server/ingredients/icon-drafts";
 import { refreshIngredientCatalogue } from "@norish/shared-server/ingredients/seed/catalogue-seed";
 import { recheckUndecidedMintsOnRungChange } from "@norish/shared-server/ingredients/seed/recheck-mints";
 import { createLogger } from "@norish/shared-server/logger";
 
-import type { ScheduledTaskJobData } from "./queue";
-import { baseWorkerOptions, QUEUE_NAMES, STALLED_INTERVAL, WORKER_CONCURRENCY } from "../config";
-import { instrumentProcessor } from "../instrumented-processor";
+import type { ScheduledTaskJobData } from "./tasks";
+import { createWorker } from "../create-worker";
 import { reportStep } from "../job-steps";
+import { QUEUE_NAMES } from "../queue-names";
 
 const log = createLogger("worker:scheduled-tasks");
-
-// Read on every access, never copied into a module-local — see the note on
-// `globalForRegistry` in ../registry.ts for why this module is evaluated more
-// than once per process. Here the cost of getting it wrong is a rival always-on
-// worker that the first instance's shutdown cannot reach.
-const globalForWorker = globalThis as unknown as {
-  scheduledTasksWorker: Worker<ScheduledTaskJobData> | null;
-};
 
 async function processScheduledTask(job: Job<ScheduledTaskJobData>): Promise<void> {
   const cleanupOrphanedImages = requireQueueApiHandler("cleanupOrphanedImages");
@@ -102,55 +94,20 @@ async function processScheduledTask(job: Job<ScheduledTaskJobData>): Promise<voi
       break;
     }
 
+    case "ingredient-sweep": {
+      // Own foods nothing has named for 90 days go; a seeded one never does.
+      const result = await sweepUnusedIngredients();
+      const changesSwept = await sweepAIChanges();
+
+      log.info({ deleted: result.deleted, changesSwept }, "Ingredient sweep completed");
+      break;
+    }
+
     default:
       throw new Error(`Unknown scheduled task type: ${taskType}`);
   }
 }
 
 export function startScheduledTasksWorker(): void {
-  if (globalForWorker.scheduledTasksWorker) {
-    log.warn("Scheduled tasks worker already running");
-
-    return;
-  }
-
-  const worker = new Worker<ScheduledTaskJobData>(
-    QUEUE_NAMES.SCHEDULED_TASKS,
-    instrumentProcessor(processScheduledTask),
-    {
-      connection: getBullClient(),
-      ...baseWorkerOptions,
-      stalledInterval: STALLED_INTERVAL[QUEUE_NAMES.SCHEDULED_TASKS],
-      concurrency: WORKER_CONCURRENCY[QUEUE_NAMES.SCHEDULED_TASKS],
-    }
-  );
-
-  worker.on("completed", (job) => {
-    log.debug({ jobId: job.id, taskType: job.data.taskType }, "Scheduled task completed");
-  });
-
-  worker.on("failed", (job, error) => {
-    log.error(
-      { jobId: job?.id, taskType: job?.data.taskType, error: error.message },
-      "Scheduled task failed"
-    );
-  });
-
-  worker.on("error", (error) => {
-    log.error({ err: error }, "Scheduled tasks worker error");
-  });
-
-  globalForWorker.scheduledTasksWorker = worker;
-  log.info("Scheduled tasks worker started");
-}
-
-export async function stopScheduledTasksWorker(): Promise<void> {
-  const worker = globalForWorker.scheduledTasksWorker;
-
-  if (worker) {
-    worker.removeAllListeners();
-    await worker.close();
-    globalForWorker.scheduledTasksWorker = null;
-    log.info("Scheduled tasks worker stopped");
-  }
+  createWorker(QUEUE_NAMES.SCHEDULED_TASKS, processScheduledTask);
 }

@@ -33,8 +33,6 @@ vi.mock("@norish/shared-server/logger", () => ({
 
 describe("runStartupMaintenanceCleanup", () => {
   beforeEach(() => {
-    vi.clearAllMocks();
-
     mockCleanupOrphanedImages.mockResolvedValue({ deleted: 3, errors: 1 });
     mockCleanupOrphanedStepImages.mockResolvedValue({ deleted: 2, errors: 1 });
     mockCleanupOrphanedAvatars.mockResolvedValue({ deleted: 1, errors: 0 });

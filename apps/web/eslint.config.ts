@@ -36,7 +36,7 @@ export default defineConfig(
     rules: {
       // Playwright names its fixture callback `use`, and the React Hooks rule
       // reads every call of it as the `use` hook. Nothing here is a component.
-      "react-hooks/rules-of-hooks": "off",
+      "@eslint-react/rules-of-hooks": "off",
       // `async ({}, use) => {}` is how a fixture declares it takes no fixtures.
       "no-empty-pattern": "off",
       // The harness composes the environment of a real server child process,
@@ -45,17 +45,22 @@ export default defineConfig(
     },
   },
   {
-    // app/sw.ts is excluded from tsconfig.json (it typechecks against webworker
-    // libs via tsconfig.sw.json), so the project service can't place it; let it
-    // lint under the default project instead of erroring.
+    // The service worker has its own type program (tsconfig.sw.json, with the
+    // WebWorker lib), which the project service does not find for it.
+    files: ["app/sw.ts"],
     languageOptions: {
       parserOptions: {
-        projectService: {
-          allowDefaultProject: ["app/sw.ts"],
-        },
+        projectService: false,
+        project: "./tsconfig.sw.json",
         tsconfigRootDir: import.meta.dirname,
       },
     },
+  },
+  {
+    // A skeleton's rows are placeholders: they have no identity and never
+    // reorder, so their position is the only key they have.
+    files: ["components/skeleton/**/*.tsx"],
+    rules: { "@eslint-react/no-array-index-key": "off" },
   },
   {
     // The browser scenarios drive a harness served from localhost, which is a

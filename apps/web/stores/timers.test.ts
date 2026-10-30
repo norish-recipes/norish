@@ -89,8 +89,8 @@ describe("useTimerStore", () => {
 
     const { timers } = useTimerStore.getState();
 
-    expect(timers[0].status).toBe("running");
-    expect(timers[0].lastTickAt).not.toBeNull();
+    expect(timers[0]!.status).toBe("running");
+    expect(timers[0]!.lastTickAt).not.toBeNull();
   });
 
   it("pauses a timer", () => {
@@ -102,8 +102,8 @@ describe("useTimerStore", () => {
 
     const { timers } = useTimerStore.getState();
 
-    expect(timers[0].status).toBe("paused");
-    expect(timers[0].lastTickAt).toBeNull();
+    expect(timers[0]!.status).toBe("paused");
+    expect(timers[0]!.lastTickAt).toBeNull();
   });
 
   it("resets a timer", () => {
@@ -118,13 +118,13 @@ describe("useTimerStore", () => {
 
     let { timers } = useTimerStore.getState();
 
-    expect(timers[0].remainingMs).toBeLessThan(60000);
+    expect(timers[0]!.remainingMs).toBeLessThan(60000);
 
     resetTimer("test-1");
 
     timers = useTimerStore.getState().timers;
-    expect(timers[0].remainingMs).toBe(60000);
-    expect(timers[0].status).toBe("paused");
+    expect(timers[0]!.remainingMs).toBe(60000);
+    expect(timers[0]!.status).toBe("paused");
   });
 
   it("ticks correctly", () => {
@@ -143,7 +143,7 @@ describe("useTimerStore", () => {
     const expectedRemainingIds = 60000 - 1000;
 
     // Allow for slight execution delays
-    expect(timers[0].remainingMs).toBeCloseTo(expectedRemainingIds, -2);
+    expect(timers[0]!.remainingMs).toBeCloseTo(expectedRemainingIds, -2);
   });
 
   it("completes a timer", () => {
@@ -158,8 +158,8 @@ describe("useTimerStore", () => {
 
     const { timers } = useTimerStore.getState();
 
-    expect(timers[0].remainingMs).toBe(0);
-    expect(timers[0].status).toBe("completed");
+    expect(timers[0]!.remainingMs).toBe(0);
+    expect(timers[0]!.status).toBe("completed");
   });
 
   it("uses high-attention notification options when timer completes in background", async () => {
@@ -196,6 +196,7 @@ describe("useTimerStore", () => {
       "Test Timer",
       expect.objectContaining({
         body: "Timer complete!",
+        icon: "/brand/icon-192.png",
         tag: "timer-complete",
         renotify: true,
         requireInteraction: true,
@@ -211,22 +212,22 @@ describe("useTimerStore", () => {
 
     // Add 1 minute
     adjustTimer("test-adj", 60000);
-    expect(useTimerStore.getState().timers[0].remainingMs).toBe(120000);
+    expect(useTimerStore.getState().timers[0]!.remainingMs).toBe(120000);
 
     // Subtract 30 seconds
     adjustTimer("test-adj", -30000);
-    expect(useTimerStore.getState().timers[0].remainingMs).toBe(90000);
+    expect(useTimerStore.getState().timers[0]!.remainingMs).toBe(90000);
 
     // Subtract to zero -> verify completion
     adjustTimer("test-adj", -100000); // More than remaining
-    let t = useTimerStore.getState().timers[0];
+    let t = useTimerStore.getState().timers[0]!;
 
     expect(t.remainingMs).toBe(0);
     expect(t.status).toBe("completed");
 
     // Add time to completed timer -> verify restart
     adjustTimer("test-adj", 30000);
-    t = useTimerStore.getState().timers[0];
+    t = useTimerStore.getState().timers[0]!;
     expect(t.remainingMs).toBe(30000);
     expect(t.status).toBe("running");
   });

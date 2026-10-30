@@ -1,7 +1,7 @@
 "use client";
 
 import type { ArchiveImportQueryResult } from "@/hooks/archive";
-import { createContext, ReactNode, useContext } from "react";
+import { createContext, ReactNode, use } from "react";
 import { useArchiveImportQuery, useArchiveImportSubscription } from "@/hooks/archive";
 
 const ArchiveImportContext = createContext<ArchiveImportQueryResult | null>(null);
@@ -11,13 +11,11 @@ export function ArchiveImportProvider({ children }: { children: ReactNode }) {
   useArchiveImportSubscription();
   const importState = useArchiveImportQuery();
 
-  return (
-    <ArchiveImportContext.Provider value={importState}>{children}</ArchiveImportContext.Provider>
-  );
+  return <ArchiveImportContext value={importState}>{children}</ArchiveImportContext>;
 }
 
 export function useArchiveImportContext() {
-  const ctx = useContext(ArchiveImportContext);
+  const ctx = use(ArchiveImportContext);
 
   if (!ctx) {
     throw new Error("useArchiveImportContext must be used within ArchiveImportProvider");

@@ -1,59 +1,52 @@
-import { NextRequest, NextResponse } from "next/server";
-import { shouldBypassAuthProxy } from "@/lib/recipe-share-access";
+import type { NextRequest } from "next/server";
+import { NextResponse } from "next/server";
+import { DESTINATION_HEADER, loginPath } from "@/lib/auth/login-redirect";
 
-import { getVerifiedSession } from "@norish/auth/session";
+import { hasCredential } from "@norish/auth/credentials";
 import { SERVER_CONFIG } from "@norish/config/env-config-server";
+import { addBasePath } from "@norish/shared/lib/base-path";
 
-export async function proxy(request: NextRequest) {
-  // WebSocket upgrade requests should not be redirected - they'll be handled at the app level
-  const isWebSocket =
-    request.headers.get("upgrade")?.toLowerCase() === "websocket" &&
-    request.headers.get("connection")?.toLowerCase().includes("upgrade");
+/**
+ * An optimistic check, as Next intends a proxy's to be: a request without a
+ * session cookie or API key goes to the login page, and one with either goes
+ * on. It reads no session and no database, so a page's skeleton and a grid of
+ * images start loading at once; the signed-in layout, the media routes and
+ * tRPC check the session behind the credential.
+ */
+export function proxy(request: NextRequest) {
+  const destination = request.nextUrl.pathname + request.nextUrl.search;
 
-  if (isWebSocket) {
-    return NextResponse.next();
+  if (hasCredential(request.headers)) {
+    const headers = new Headers(request.headers);
+
+    headers.set(DESTINATION_HEADER, destination);
+
+    return NextResponse.next({ request: { headers } });
   }
 
-  if (shouldBypassAuthProxy(request)) {
-    return NextResponse.next();
-  }
-
-  const identity = await getVerifiedSession(request.headers);
-
-  if (identity) {
-    return NextResponse.next();
-  }
-
-  // Invalid, expired, or orphaned session - redirect to login
-  // Use X-Forwarded headers when behind a reverse proxy
-  const forwardedOrigin = getPublicOrigin(request);
-  let loginUrl: URL;
-
-  if (forwardedOrigin && SERVER_CONFIG.TRUSTED_ORIGINS.includes(forwardedOrigin)) {
-    loginUrl = new URL("/login", forwardedOrigin);
-  } else {
-    loginUrl = new URL("/login", SERVER_CONFIG.AUTH_URL);
-  }
-
-  loginUrl.searchParams.set("callbackUrl", request.nextUrl.pathname + request.nextUrl.search);
-
-  return NextResponse.redirect(loginUrl, 307);
+  return NextResponse.redirect(
+    new URL(addBasePath(loginPath(destination)), loginOrigin(request)),
+    307
+  );
 }
 
-function getPublicOrigin(request: NextRequest) {
+/** The public origin, from the X-Forwarded headers when a trusted reverse proxy sets them. */
+function loginOrigin(request: NextRequest): string {
   const h = request.headers;
-
   const proto = h.get("x-forwarded-proto") ?? request.nextUrl.protocol.replace(":", "");
-
   const host = h.get("x-forwarded-host") ?? h.get("host");
+  const forwarded = host ? `${proto}://${host}` : null;
 
-  if (!host) return null;
-
-  return `${proto}://${host}`;
+  return forwarded && SERVER_CONFIG.TRUSTED_ORIGINS.includes(forwarded)
+    ? forwarded
+    : SERVER_CONFIG.AUTH_URL;
 }
 
 export const config = {
+  // Each directory is skipped with what is under it and each file exactly, so a
+  // future /login-history or /icons-admin still goes through the proxy. Shared
+  // recipes (/share) check their own share token.
   matcher: [
-    "/((?!api/auth|api/trpc|api/v1|trpc|_next|icons|ingredient-icons/|brand/|login|signup|auth-error|~offline|serwist/|manifest\\.webmanifest|sw\\.js|logo\\.svg|logo-small\\.svg|404\\.jpg|nora\\.jpg|robots|sounds/).*)",
+    "/((?!(?:api/auth|api/trpc|api/v1|trpc|_next|icons|ingredient-icons|brand|login|signup|auth-error|share|~offline|serwist|sounds)(?:/|$)|(?:manifest\\.webmanifest|sw\\.js|logo\\.svg|logo-small\\.svg|404\\.jpg|nora\\.jpg|robots\\.txt)$).*)",
   ],
 };

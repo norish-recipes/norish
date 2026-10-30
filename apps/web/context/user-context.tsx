@@ -1,14 +1,17 @@
 "use client";
 
-import { createContext, ReactNode, useCallback, useContext } from "react";
+import { createContext, ReactNode, use, useCallback } from "react";
 import { useTRPC } from "@/app/providers/trpc-provider";
 import { clearOfflineStateForSignOut } from "@/lib/offline/sign-out";
 import { useQuery } from "@tanstack/react-query";
 
 import type { UserContextValue } from "@norish/shared-react/contexts";
+import type { User } from "@norish/shared/contracts";
 import { createUserContext } from "@norish/shared-react/contexts";
 import { useUser } from "@norish/shared-react/hooks";
+import { ReaderSeedProvider } from "@norish/shared-react/hooks/use-user";
 import { signOut as betterAuthSignOut } from "@norish/shared/lib/auth/client";
+import { addBasePath } from "@norish/shared/lib/base-path";
 
 // Create the shared base context
 const shared = createUserContext({
@@ -35,7 +38,7 @@ const shared = createUserContext({
       await clearOfflineStateForSignOut({
         discardQueue: options?.discardQueue ?? false,
       });
-      window.location.href = "/login?logout=true";
+      window.location.href = addBasePath("/login?logout=true");
     }, []);
   },
   useFreshUserQuery: (userId) => {
@@ -55,22 +58,25 @@ type WebUserContextType = UserContextValue;
 
 const WebUserContext = createContext<WebUserContextType | null>(null);
 
-export function UserProvider({ children }: { children: ReactNode }) {
+/** `reader`: who the server verified for this document, until the session answers. */
+export function UserProvider({ children, reader }: { children: ReactNode; reader?: User }) {
   return (
-    <shared.UserProvider>
-      <WebUserProviderInner>{children}</WebUserProviderInner>
-    </shared.UserProvider>
+    <ReaderSeedProvider reader={reader ?? null}>
+      <shared.UserProvider>
+        <WebUserProviderInner>{children}</WebUserProviderInner>
+      </shared.UserProvider>
+    </ReaderSeedProvider>
   );
 }
 
 function WebUserProviderInner({ children }: { children: ReactNode }) {
   const sharedContext = shared.useUserContext();
 
-  return <WebUserContext.Provider value={sharedContext}>{children}</WebUserContext.Provider>;
+  return <WebUserContext value={sharedContext}>{children}</WebUserContext>;
 }
 
 export function useUserContext(): WebUserContextType {
-  const context = useContext(WebUserContext);
+  const context = use(WebUserContext);
 
   if (!context) {
     throw new Error("useUserContext must be used within UserProvider");

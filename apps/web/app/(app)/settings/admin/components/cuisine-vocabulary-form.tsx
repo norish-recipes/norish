@@ -1,9 +1,13 @@
 "use client";
 
 import { useCallback, useState } from "react";
+import {
+  ActionButton,
+  ActionButtonGroup,
+  IconActionButton,
+} from "@/components/shared/action-button";
 import { useCuisinesQuery } from "@/hooks/config";
-import { CheckIcon, PencilIcon, PlusIcon, TrashIcon, XMarkIcon } from "@heroicons/react/16/solid";
-import { Button, Input, Modal, ScrollShadow, TextField } from "@heroui/react";
+import { Input, Modal, ScrollShadow, TextField } from "@heroui/react";
 import { useTranslations } from "next-intl";
 
 import { useCuisineAdminMutations } from "../hooks/use-cuisine-admin-mutations";
@@ -80,14 +84,13 @@ export default function CuisineVocabularyForm() {
         >
           <Input placeholder={t("namePlaceholder")} variant="secondary" />
         </TextField>
-        <Button
+        <ActionButton
+          action="add"
           isDisabled={newName.trim().length === 0 || isPending}
-          variant="primary"
           onPress={handleAdd}
         >
-          <PlusIcon className="h-4 w-4" />
           {tActions("add")}
-        </Button>
+        </ActionButton>
       </div>
 
       {error && <p className="text-danger text-sm">{t(error)}</p>}
@@ -113,44 +116,40 @@ export default function CuisineVocabularyForm() {
                 >
                   <Input variant="secondary" />
                 </TextField>
-                <Button
-                  aria-label={tActions("save")}
+                <IconActionButton
+                  action="save"
                   isDisabled={editingName.trim().length === 0 || isPending}
-                  variant="primary"
+                  label={tActions("save")}
+                  size="sm"
                   onPress={handleRename}
-                >
-                  <CheckIcon className="h-4 w-4" />
-                </Button>
-                <Button
-                  aria-label={tActions("cancel")}
+                />
+                <IconActionButton
+                  action="cancel"
+                  label={tActions("cancel")}
+                  size="sm"
                   onPress={() => setEditingId(null)}
-                  variant="tertiary"
-                >
-                  <XMarkIcon className="h-4 w-4" />
-                </Button>
+                />
               </li>
             ) : (
               <li key={cuisine.id} className="flex items-center justify-between gap-2 py-2">
                 <span className="text-base">{cuisine.name}</span>
                 <div className="flex items-center gap-1">
-                  <Button
-                    aria-label={t("renameLabel", { name: cuisine.name })}
+                  <IconActionButton
+                    action="edit"
+                    label={t("renameLabel", { name: cuisine.name })}
+                    size="sm"
                     onPress={() => {
                       setError(null);
                       setEditingId(cuisine.id);
                       setEditingName(cuisine.name);
                     }}
-                    variant="tertiary"
-                  >
-                    <PencilIcon className="h-4 w-4" />
-                  </Button>
-                  <Button
-                    aria-label={t("deleteLabel", { name: cuisine.name })}
+                  />
+                  <IconActionButton
+                    action="delete"
+                    label={t("deleteLabel", { name: cuisine.name })}
+                    size="sm"
                     onPress={() => setPendingDelete({ id: cuisine.id, name: cuisine.name })}
-                    variant="tertiary"
-                  >
-                    <TrashIcon className="text-danger h-4 w-4" />
-                  </Button>
+                  />
                 </div>
               </li>
             )
@@ -168,24 +167,27 @@ export default function CuisineVocabularyForm() {
                   <p>{t("deleteConfirm", { name: pendingDelete?.name ?? "" })}</p>
                 </Modal.Body>
                 <Modal.Footer>
-                  <Button onPress={close} variant="tertiary">
-                    {tActions("cancel")}
-                  </Button>
-                  <Button
-                    onPress={() => {
-                      const target = pendingDelete;
+                  <ActionButtonGroup>
+                    <ActionButton action="cancel" onPress={close}>
+                      {tActions("cancel")}
+                    </ActionButton>
+                    <ActionButton
+                      action="delete"
+                      variant="danger"
+                      onPress={() => {
+                        const target = pendingDelete;
 
-                      if (!target) return;
+                        if (!target) return;
 
-                      void run(
-                        () => remove(target.id),
-                        () => setPendingDelete(null)
-                      );
-                    }}
-                    variant="danger"
-                  >
-                    {tActions("delete")}
-                  </Button>
+                        void run(
+                          () => remove(target.id),
+                          () => setPendingDelete(null)
+                        );
+                      }}
+                    >
+                      {tActions("delete")}
+                    </ActionButton>
+                  </ActionButtonGroup>
                 </Modal.Footer>
               </>
             )}

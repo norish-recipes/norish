@@ -6,7 +6,8 @@
  * ledger, and whatever the AI Runtime recorded there — through any of its
  * entry points, however deep in the call tree — is written onto the job's
  * current attempt when the processor settles, resolved or thrown. A job that
- * asked no model records nothing.
+ * asked no model records nothing. The ledger carries the job's abort signal,
+ * which every request the job makes is bound to.
  */
 
 import type { Job, Processor } from "bullmq";
@@ -19,11 +20,11 @@ import {
 import { recordModelUses } from "./job-steps";
 
 export function createModelLedgerProcessor<T>(processor: Processor<T>): Processor<T> {
-  return async (job: Job<T>, token?: string) => {
-    const ledger = createModelUseLedger();
+  return async (job: Job<T>, token?: string, signal?: AbortSignal) => {
+    const ledger = createModelUseLedger(signal);
 
     try {
-      return await runWithModelUseLedger(ledger, () => processor(job, token));
+      return await runWithModelUseLedger(ledger, () => processor(job, token, signal));
     } finally {
       if (ledger.uses.length > 0) {
         await recordModelUses(job, ledger.uses);

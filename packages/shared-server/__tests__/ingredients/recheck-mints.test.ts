@@ -1,47 +1,40 @@
 // @vitest-environment node
 /**
- * The startup pass over old Flagged Ingredients, against a real database:
+ * The startup pass over old undecided mints, against a real database:
  * mints an instance's history left behind ("salt to taste", "verse
  * peterselie") reach the seeded Ingredients they name once the resolver's
  * rules improve, a person's decisions are left alone, and the pass runs once
  * per rung version.
  */
-import { eq } from "drizzle-orm";
+import { eq, inArray } from "drizzle-orm";
 import { afterAll, beforeAll, beforeEach, describe, expect, it } from "vitest";
 
-import type { SeedEntry } from "@norish/db/repositories/ingredient-seed";
 import type { CatalogueActor } from "@norish/shared-server/ingredients/catalogue";
 import { ServerConfigKeys } from "@norish/config/zod/server-config";
 import { createRecipeWithRefs, getRecipeFull } from "@norish/db";
-import { mintIngredientWithAliases } from "@norish/db/repositories/ingredient-aliases";
+import { listAIChanges } from "@norish/db/repositories/ingredient-ai-changes";
 import {
   applyIngredientSeed,
+  fileUndecidedMint,
   listSeededIngredientIds,
 } from "@norish/db/repositories/ingredient-seed";
-import { listIngredientSuggestions } from "@norish/db/repositories/ingredient-suggestions";
-import { ingredients, serverConfig } from "@norish/db/schema";
+import { groceries, ingredients, serverConfig } from "@norish/db/schema";
+import { parentByAI } from "@norish/shared-server/ingredients/ai-changes";
 import { listIngredients, markDistinct } from "@norish/shared-server/ingredients/catalogue";
 import { withResolvedIngredients } from "@norish/shared-server/ingredients/recipe-lines";
 import { RUNG_VERSION } from "@norish/shared-server/ingredients/resolver";
 import { readIngredientSeedState } from "@norish/shared-server/ingredients/seed/catalogue-seed";
 import { recheckUndecidedMintsOnRungChange } from "@norish/shared-server/ingredients/seed/recheck-mints";
-import { ingredientAliasFold } from "@norish/shared/lib/spelling-keys";
 
-import { getTestDb } from "../../../db/__tests__/helpers/db-test-helpers";
+import {
+  getTestDb,
+  mintTestFood,
+  nameInATestRecipe,
+} from "../../../db/__tests__/helpers/db-test-helpers";
 import { RepositoryTestBase } from "../../../db/__tests__/helpers/repository-test-base";
+import { seedEntry } from "../helpers/seed-entries";
 
-function entry(offId: string, ...names: string[]): SeedEntry {
-  return {
-    offId,
-    name: names[0]!,
-    nameFold: ingredientAliasFold(names[0]!),
-    parentOffId: null,
-    nutrition: null,
-    aliases: names.map((text) => ({ text, fold: ingredientAliasFold(text), locale: null })),
-  };
-}
-
-describe("looking at old Flagged Ingredients again", () => {
+describe("looking at old undecided mints again", () => {
   const testBase = new RepositoryTestBase("test_recheck_mints");
 
   let actor: CatalogueActor;
@@ -59,11 +52,13 @@ describe("looking at old Flagged Ingredients again", () => {
       .delete(serverConfig)
       .where(eq(serverConfig.key, ServerConfigKeys.INGREDIENT_SEED_STATE));
     await applyIngredientSeed([
-      entry("en:salt", "salt", "zout"),
-      entry("en:parsley", "parsley", "peterselie"),
-      entry("en:cumin", "cumin"),
-      entry("en:garlic", "garlic"),
-      entry("en:chickpea", "chickpeas"),
+      seedEntry("en:salt", "salt", "zout"),
+      seedEntry("en:parsley", "parsley", "peterselie"),
+      seedEntry("en:cumin", "cumin"),
+      seedEntry("en:garlic", "garlic"),
+      seedEntry("en:chickpea", "chickpeas"),
+      seedEntry("en:tea", "tea", "te"),
+      seedEntry("en:oil", "oil", "olie"),
     ]);
     seeded = await listSeededIngredientIds();
   });
@@ -74,16 +69,16 @@ describe("looking at old Flagged Ingredients again", () => {
 
   /** A mint as the resolver made it before its rules changed: the text whole, flagged. */
   async function legacyMint(text: string): Promise<string> {
-    const [row] = await mintIngredientWithAliases({
-      name: text,
-      aliases: [{ text, fold: ingredientAliasFold(text) }],
+    const minted = await mintTestFood(text, {
       ownerId: actor.userId,
-      locale: null,
       flagged: true,
       flagReason: "upgrade",
     });
 
-    return row!.ingredientId;
+    // A recipe names it, so AI may change it too.
+    await nameInATestRecipe(actor.userId, minted.aliasId, text);
+
+    return minted.ingredientId;
   }
 
   async function shown(id: string) {
@@ -133,6 +128,71 @@ describe("looking at old Flagged Ingredients again", () => {
     });
   });
 
+  it("rechecks an unflagged mint no person decided about, as one made today", async () => {
+    const merged = await legacyMint("salt to taste");
+    const filed = await legacyMint("verse peterselie");
+
+    await getTestDb()
+      .update(ingredients)
+      .set({ flagged: false, flagReason: null })
+      .where(inArray(ingredients.id, [merged, filed]));
+
+    await expect(recheckUndecidedMintsOnRungChange()).resolves.toEqual({ merged: 1, filed: 1 });
+    expect(await shown(merged)).toBeNull();
+    expect(await shown(filed)).toMatchObject({
+      flagged: false,
+      parent: { id: seeded.get("en:parsley") },
+    });
+  });
+
+  it("leaves an unflagged mint a person decided about alone", async () => {
+    const distinct = await legacyMint("naar smaak zout");
+    const parented = await legacyMint("ground cumin");
+
+    await markDistinct(actor, distinct);
+    await getTestDb()
+      .update(ingredients)
+      .set({ parentId: seeded.get("en:salt")!, parentChosen: true, flagged: false })
+      .where(eq(ingredients.id, parented));
+
+    await expect(recheckUndecidedMintsOnRungChange()).resolves.toEqual({ merged: 0, filed: 0 });
+    expect(await shown(distinct)).toMatchObject({ flagged: false });
+    expect(await shown(parented)).toMatchObject({ parent: { id: seeded.get("en:salt") } });
+  });
+
+  it("leaves a grocery food alone: no parent from its words, no merge", async () => {
+    const grocery = async (text: string) => {
+      const minted = await mintTestFood(text, {
+        ownerId: actor.userId,
+        flagged: true,
+        flagReason: "upgrade",
+      });
+
+      await getTestDb().insert(groceries).values({
+        userId: actor.userId,
+        name: text,
+        ingredientAliasId: minted.aliasId,
+        ingredientId: minted.ingredientId,
+      });
+
+      return minted.ingredientId;
+    };
+    const parsley = await grocery("verse peterselie");
+    const salt = await grocery("salt to taste");
+
+    await expect(recheckUndecidedMintsOnRungChange()).resolves.toEqual({ merged: 0, filed: 0 });
+    const row = async (id: string) =>
+      (
+        await getTestDb()
+          .select({ parentId: ingredients.parentId })
+          .from(ingredients)
+          .where(eq(ingredients.id, id))
+      )[0];
+
+    await expect(row(parsley)).resolves.toEqual({ parentId: null });
+    await expect(row(salt)).resolves.toEqual({ parentId: null });
+  });
+
   it("merges a legacy mint whose preparation was written without a comma", async () => {
     const legacy = await legacyMint("can of chickpeas drained and rinsed");
 
@@ -145,14 +205,16 @@ describe("looking at old Flagged Ingredients again", () => {
     const sliced = await legacyMint("garlic cloves thinly sliced");
     const chopped = await legacyMint("garlic cloves, finely chopped");
 
-    await expect(recheckUndecidedMintsOnRungChange()).resolves.toEqual({ merged: 2, filed: 1 });
+    await expect(recheckUndecidedMintsOnRungChange()).resolves.toEqual({ merged: 2, filed: 0 });
     expect(await shown(sliced)).toBeNull();
     expect(await shown(chopped)).toBeNull();
+    // Garlic starts the name before no cut alone, so it gives no parent.
     expect(await shown(crushed)).toMatchObject({
       name: "garlic cloves",
       flagged: true,
-      parent: { id: seeded.get("en:garlic") },
+      parent: null,
     });
+    expect(await listAIChanges()).toHaveLength(0);
     expect((await shown(crushed))!.aliases.map((alias) => alias.text).sort()).toEqual([
       "garlic cloves",
       "garlic cloves crushed",
@@ -161,17 +223,40 @@ describe("looking at old Flagged Ingredients again", () => {
     ]);
   });
 
-  it("files a legacy mint under a food inside its words, with a suggestion to confirm", async () => {
-    const legacy = await legacyMint("garlic cloves crushed");
+  it("files a legacy mint under the food it is read up to a note as, and leaves AI's", async () => {
+    const oil = await legacyMint("olie om te bakken");
+    const answered = await legacyMint("zwarte te bakken");
+
+    await parentByAI(answered, seeded.get("en:tea")!, false);
 
     await expect(recheckUndecidedMintsOnRungChange()).resolves.toEqual({ merged: 0, filed: 1 });
-    expect(await shown(legacy)).toMatchObject({
-      flagged: true,
-      parent: { id: seeded.get("en:garlic") },
-    });
-    expect(await listIngredientSuggestions()).toMatchObject([
-      { ingredientId: legacy, kind: "parent", source: "words" },
-    ]);
+    expect(await shown(oil)).toMatchObject({ flagged: true, parent: { id: seeded.get("en:oil") } });
+    expect(await shown(answered)).toMatchObject({ parent: { id: seeded.get("en:tea") } });
+    expect(
+      (await listAIChanges()).map((change) => [change.ingredient?.id, change.target?.id])
+    ).toEqual([[answered, seeded.get("en:tea")]]);
+  });
+
+  it("files the variants of a legacy mint under it, as its words name it", async () => {
+    const krieltjes = await legacyMint("krieltjes");
+    const red = await legacyMint("roodschillige krieltjes");
+    const peeled = await legacyMint("krieltjes in de schil");
+
+    await expect(recheckUndecidedMintsOnRungChange()).resolves.toEqual({ merged: 0, filed: 2 });
+    expect(await shown(red)).toMatchObject({ parent: { id: krieltjes } });
+    expect(await shown(peeled)).toMatchObject({ parent: { id: krieltjes } });
+    expect(await shown(krieltjes)).toMatchObject({ parent: null });
+  });
+
+  it("leaves a mint AI took a parent from without one, sure or not", async () => {
+    const legacy = await legacyMint("ground cumin");
+
+    await fileUndecidedMint(legacy, seeded.get("en:cumin")!);
+    await parentByAI(legacy, null, false);
+
+    await expect(recheckUndecidedMintsOnRungChange()).resolves.toEqual({ merged: 0, filed: 0 });
+    expect(await shown(legacy)).toMatchObject({ flagged: true, parent: null });
+    expect(await listAIChanges()).toMatchObject([{ target: null, sure: false }]);
   });
 
   it("leaves alone what a person decided, even under a flag raised again since", async () => {

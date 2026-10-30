@@ -1,6 +1,9 @@
 import type { IngredientWordsMap, UnitsMap } from "@norish/config/zod/server-config";
-import defaultIngredientWords from "@norish/config/ingredient-words.default.json";
+import type { LineJoin } from "@norish/shared/lib/line-foods";
+import defaultIngredientWords from "@norish/config/ingredient-words.default.json" with { type: "json" };
 import { foldName } from "@norish/shared/lib/fold-name";
+import { stripBracketed } from "@norish/shared/lib/helpers";
+import { catalogueLanguagesFor } from "@norish/shared/lib/ingredient-names";
 import { MEASURE_MAP_IDS } from "@norish/shared/lib/units";
 
 /**
@@ -28,6 +31,84 @@ export function ingredientAliasFold(text: string): string {
  */
 const MENTION = /(^|\s)@[\p{L}\p{N}_.]+/gu;
 
+/** A mark at a text's start that is no part of a name: "+ / - :", list bullets, wiki pipes. */
+const LEADING_MARK = /[\s+\-–—/:;,|*•·~]/u;
+
+/** The same at its end, and a bracket opened there, which closes nothing. */
+const TRAILING_MARK = /[\s+\-–—/:;,|*•·~([{]/u;
+
+function withoutEdgeMarks(text: string): string {
+  let start = 0;
+  let end = text.length;
+
+  while (start < end && LEADING_MARK.test(text[start]!)) start += 1;
+  while (end > start && TRAILING_MARK.test(text[end - 1]!)) end -= 1;
+
+  return text.slice(start, end);
+}
+
+const OPENER_OF: Readonly<Record<string, string>> = { ")": "(", "]": "[", "}": "{" };
+const OPENERS = new Set(Object.values(OPENER_OF));
+
+/**
+ * The text without a closing bracket that never opened ("3wu)", "|चौलाई}}") and the marks at
+ * its edges; one never closed stays, as preparation to the end (`stripPreparation`).
+ */
+export function withoutStrayMarks(text: string): string {
+  const open: string[] = [];
+  let kept = "";
+
+  for (const char of text) {
+    const opener = OPENER_OF[char];
+
+    if (OPENERS.has(char)) open.push(char);
+    else if (opener && open.at(-1) !== opener) {
+      kept += " ";
+      continue;
+    } else if (opener) open.pop();
+    kept += char;
+  }
+
+  return withoutEdgeMarks(kept).replace(/\s+/g, " ");
+}
+
+/** Brackets doubled around a note: "((ontdooid))", "{{…}}", stripped whole. */
+const DOUBLED_BRACKETS = /\(\s*\([^()]*\)\s*\)|\[\s*\[[^[\]]*\]\s*\]|\{\s*\{[^{}]*\}\s*\}/g;
+
+/** A price a recipe site writes beside its food: "$0.02", "€1,50", "0,02 €". */
+const PRICE = /\p{Sc}\s?\d+(?:[.,]\d+)?|(?<![\d.,])\d+(?:[.,]\d+)?\s?\p{Sc}/gu;
+
+/** A note a recipe refers to: "(Note 1)", "(see notes 2 & 3)". */
+const NOTE = /[([][^()[\]]*\bnotes?\b[^()[\]]*[)\]]/giu;
+
+/** A bracket a price or note left empty. */
+const EMPTY_BRACKETS = /\(\s*\)|\[\s*\]|\{\s*\}/g;
+
+/** The "null" an old import wrote before a name for an amount it lacked ("null zout"). */
+const OLD_IMPORT_NULL = /^\s*(?:null\s+)+/iu;
+
+/**
+ * The text a spelling is read from, without stray marks, doubled brackets, prices and notes
+ * (ADR-0037); cleaned until nothing changes, so cleaning it again reads the same.
+ */
+export function cleanSpelling(text: string): string {
+  let clean = text;
+
+  for (let last = ""; clean !== last;) {
+    last = clean;
+    clean = withoutStrayMarks(
+      clean
+        .replace(PRICE, " ")
+        .replace(NOTE, " ")
+        .replace(DOUBLED_BRACKETS, " ")
+        .replace(EMPTY_BRACKETS, " ")
+        .replace(OLD_IMPORT_NULL, " ")
+    );
+  }
+
+  return clean;
+}
+
 /**
  * The text with its preparation stripped: brackets removed, then cut at the
  * first comma. A bracket never closed ("onion (red, diced") is a preparation
@@ -35,13 +116,12 @@ const MENTION = /(^|\s)@[\p{L}\p{N}_.]+/gu;
  * either, wherever it stands: "@blueband_nl Finesse" is "Finesse".
  */
 export function stripPreparation(text: string): string {
-  return text
-    .replace(/\([^)]*\)|\[[^\]]*\]/g, " ")
-    .replace(/[([].*$/, " ")
-    .split(",")[0]!
-    .replace(MENTION, " ")
-    .replace(/\s+/g, " ")
-    .trim();
+  return withoutStrayMarks(
+    stripBracketed(text)
+      .replace(/[([].*/, " ")
+      .split(",")[0]!
+      .replace(MENTION, " ")
+  );
 }
 
 /**
@@ -50,8 +130,9 @@ export function stripPreparation(text: string): string {
  * "for garnish", "optional"). A piece is left alone, because those words name
  * foods too: "onion rings" are not onion, and "glass noodles" are not
  * noodles. A weight or a volume goes only at the start (`MEASURE_MAP_IDS`).
+ * Also the only units a line names without a number ("q.b. sale").
  */
-const STRIPPED_UNITS = new Set([
+export const VAGUE_UNITS: ReadonlySet<string> = new Set([
   "to_taste",
   "to_serve",
   "for_garnish",
@@ -102,6 +183,13 @@ const CONTAINER_UNITS = new Set([
  */
 export type Phrase = readonly string[];
 
+/** A word that joins foods in one name, and how ("zout en peper", "boter of olie"). */
+export interface JoiningWord {
+  joined: LineJoin;
+  /** The catalogue languages whose connectors it is: English "of" joins a measure ("juice of a lemon"). */
+  connectorIn: ReadonlySet<string>;
+}
+
 export interface SpellingRules {
   either: ReadonlyArray<Phrase>;
   leading: ReadonlyArray<Phrase>;
@@ -110,10 +198,15 @@ export interface SpellingRules {
   measureWords: ReadonlySet<string>;
   preparation: ReadonlySet<string>;
   joiners: ReadonlySet<string>;
+  /** The words that join foods, by `ingredientAliasFold`, since "&" folds to nothing. */
+  joiningWords: ReadonlyMap<string, JoiningWord>;
   connectors: ReadonlySet<string>;
   approximately: ReadonlyArray<Phrase>;
   sizes: ReadonlySet<string>;
-  servedWith: ReadonlySet<string>;
+  /** Cuts and forms of a food, after its name: "mango blokjes". */
+  forms: ReadonlySet<string>;
+  /** The words a name ends before: what it comes in, or a note ("greek yogurt for topping"). */
+  endsBefore: ReadonlySet<string>;
   notFoods: ReadonlySet<string>;
   /** Folded [plural ending, singular ending] pairs, the longest plural ending first. */
   inflections: ReadonlyArray<readonly [string, string]>;
@@ -140,7 +233,7 @@ export function spellingRules(
       ...(unit?.plural ?? []).map((form) => form?.name),
       ...(unit?.alternates ?? []),
     ];
-    const into = STRIPPED_UNITS.has(id)
+    const into = VAGUE_UNITS.has(id)
       ? either
       : CONTAINER_UNITS.has(id) || MEASURE_MAP_IDS.has(id)
         ? leading
@@ -179,6 +272,27 @@ export function spellingRules(
     if (pair[0] && pair[0] !== pair[1]) inflections.set(pair.join("→"), pair);
   }
 
+  const connectorIn = (fold: string) =>
+    new Set(
+      Object.entries(words ?? {})
+        .filter(([, language]) =>
+          (language.connectors ?? []).some((word) => foldName(word) === fold)
+        )
+        .flatMap(([locale]) => catalogueLanguagesFor(locale))
+    );
+  const joiningWords = new Map<string, JoiningWord>();
+
+  for (const joined of ["together", "alternatives"] as const satisfies readonly LineJoin[]) {
+    // One token each ("en/of" is one), as a name is split at its tokens.
+    for (const word of languages.flatMap((language) => language[joined] ?? [])) {
+      const fold = ingredientAliasFold(word);
+
+      if (word.trim() && !/\s/.test(word.trim()) && !joiningWords.has(fold)) {
+        joiningWords.set(fold, { joined, connectorIn: connectorIn(fold) });
+      }
+    }
+  }
+
   return {
     either: longestFirst(either),
     leading: longestFirst(leading),
@@ -186,10 +300,12 @@ export function spellingRules(
     measureWords: new Set([...measures.keys()].filter((fold) => !fold.includes(" "))),
     preparation: wordsOf((language) => language.preparation),
     joiners: wordsOf((language) => language.joiners),
+    joiningWords,
     connectors: wordsOf((language) => language.connectors),
     approximately: longestFirst(approximately),
     sizes: wordsOf((language) => language.sizes),
-    servedWith: wordsOf((language) => language.servedWith),
+    forms: wordsOf((language) => language.forms),
+    endsBefore: wordsOf((language) => language.endsBefore),
     notFoods: wordsOf((language) => language.notFoods),
     inflections: [...inflections.values()].sort((a, b) => b[0].length - a[0].length),
   };
@@ -214,7 +330,8 @@ function isGluedQuantity(word: string, rules: SpellingRules): boolean {
  * Which words of a folded text name the food: the range left once a
  * quantity at the start (an approximation, a number, its unit and the word
  * joining it, as an import that never parsed the line left them: "ongeveer
- * 4 el bosui", "400g can chickpeas"), the units-map phrases at either end, a
+ * 4 el bosui", "400g can chickpeas"), a joining word left at the start ("di
+ * farina"), the units-map phrases at either end, a
  * container, weight or volume at the start, and the preparation and size
  * words at either end are taken off, whole words only. A phrase inside the name stays, and a
  * text is never stripped to nothing: where it would be, the whole text
@@ -265,6 +382,12 @@ function foodWordRange(words: readonly string[], rules: SpellingRules): [number,
       stripped = true;
     }
 
+    // "di farina": the parser took "200 g" off and left the word joining it to the food.
+    if (end - start > 1 && rules.connectors.has(words[start]!)) {
+      start += 1;
+      stripped = true;
+    }
+
     const trailing = rules.either.find(endsWith);
 
     if (trailing) {
@@ -300,7 +423,8 @@ function foodWordRange(words: readonly string[], rules: SpellingRules): [number,
 }
 
 /**
- * A text's keys: its fold (rung 1); its bare name, the text without its
+ * A text's keys: its clean text (`cleanSpelling`), which the rest are read
+ * from; its fold (rung 1); its bare name, the text without its
  * preparation after a comma or in brackets, and that name's fold (rung 2,
  * empty where nothing is left); and its plain name, the bare name without
  * the units map's phrases, a container, weight or volume at its start,
@@ -309,6 +433,7 @@ function foodWordRange(words: readonly string[], rules: SpellingRules): [number,
  * plain name.
  */
 export interface SpellingKeys {
+  clean: string;
   fold: string;
   bare: string;
   bareFold: string;
@@ -357,7 +482,8 @@ export function spellingKeys(
   text: string,
   rules: SpellingRules = BASE_SPELLING_RULES
 ): SpellingKeys {
-  const bare = stripPreparation(text);
+  const clean = cleanSpelling(text);
+  const bare = stripPreparation(clean);
   const bareFold = bare ? ingredientAliasFold(bare) : "";
   const words = foldWordsOf(bare);
   const range = foodWordRange(
@@ -374,7 +500,8 @@ export function spellingKeys(
   const plain = plainFold ? textOfRange(bare, words, range) : bare;
 
   return {
-    fold: ingredientAliasFold(text),
+    clean,
+    fold: ingredientAliasFold(clean),
     bare,
     bareFold,
     plain,
@@ -396,6 +523,93 @@ export function foodKey(
   const keys = spellingKeys(text, rules);
 
   return keys.plainFold || keys.fold;
+}
+
+/** `spellingKeys` with the size and preparation words kept: "petite potatoes" is not "potatoes". */
+export function wholeSpellingKeys(text: string, rules = BASE_SPELLING_RULES): SpellingKeys {
+  const keys = spellingKeys(text, rules);
+
+  return { ...keys, plain: keys.bare, plainFold: keys.bareFold || keys.fold };
+}
+
+/** Where a key's words end before a note ("in", "om", "for"), from its second word; else -1. */
+export function noteAt(words: readonly string[], rules: SpellingRules): number {
+  return words.findIndex((word, index) => index > 0 && rules.endsBefore.has(word));
+}
+
+/**
+ * A key's words before its note and after it ("olie om te bakken": "olie", "te bakken"); none
+ * where the note's word also joins foods somewhere: Spanish "en" (in) is Dutch "and".
+ */
+export function notedParts(
+  key: string,
+  rules: SpellingRules
+): { head: string; rest: string } | null {
+  const words = key.split(" ");
+  const at = noteAt(words, rules);
+
+  if (at < 0 || rules.joiningWords.has(words[at]!)) return null;
+
+  return { head: words.slice(0, at).join(" "), rest: words.slice(at + 1).join(" ") };
+}
+
+/** `foodKey` with the size and preparation words kept, as AI's names are read: "sliced ham" stays. */
+export function wholeFoodKey(text: string | null | undefined, rules = BASE_SPELLING_RULES): string {
+  return text?.trim() ? wholeSpellingKeys(text, rules).plainFold : "";
+}
+
+/** A name split at the words that join foods in it. */
+export interface JoinedParts {
+  /** Each part as written. */
+  parts: string[];
+  joined: LineJoin;
+  /** The joining words it was split at, each as written. */
+  words: Array<JoiningWord & { text: string }>;
+}
+
+/** A token cut at a mark between two letters ("salt/pepper"), unless it joins foods whole ("and/or"). */
+function gluedParts(token: string, rules: SpellingRules): string[] {
+  if (rules.joiningWords.has(ingredientAliasFold(token))) return [token];
+
+  return token.split(/(?<=\p{L})([/&+])(?=\p{L})/u);
+}
+
+/**
+ * A name's parts at its joining words, outside brackets; null where none stands between two
+ * parts or "and" and "or" are mixed. Whether the parts are foods is the resolver's to say.
+ */
+export function joinedParts(
+  text: string,
+  rules: SpellingRules = BASE_SPELLING_RULES
+): JoinedParts | null {
+  const parts: string[][] = [[]];
+  const words: JoinedParts["words"] = [];
+  let depth = 0;
+  const tokens = cleanSpelling(text)
+    .split(" ")
+    .flatMap((token) => gluedParts(token, rules));
+
+  for (const token of tokens) {
+    const brackets = token.replace(/[^()[\]{}]/g, "");
+    const word =
+      depth === 0 && !brackets ? rules.joiningWords.get(ingredientAliasFold(token)) : undefined;
+
+    for (const bracket of brackets) depth += "([{".includes(bracket) ? 1 : -1;
+    if (word) {
+      words.push({ ...word, text: token });
+      parts.push([]);
+    } else {
+      parts.at(-1)!.push(token);
+    }
+  }
+
+  const joined = words[0]?.joined;
+
+  if (!joined || words.some((word) => word.joined !== joined) || parts.some((p) => !p.length)) {
+    return null;
+  }
+
+  return { parts: parts.map((part) => part.join(" ")), joined, words };
 }
 
 /**
@@ -442,23 +656,16 @@ export function inflectedReadings(
   return [...readings];
 }
 
-/** The keys a text may be met by: its food key, and that key's singular readings. */
-export function foodKeys(
-  text: string | null | undefined,
-  rules: SpellingRules = BASE_SPELLING_RULES
-): string[] {
-  const key = foodKey(text, rules);
-
-  return key ? [key, ...inflectedReadings(key, rules)] : [];
-}
-
-/** Whether two texts name one food by spelling alone, plurals and diminutives included. */
+/** Whether two texts name one food by spelling alone, by `keyOf`: plurals and diminutives count. */
 export function sameFood(
   a: string | null | undefined,
   b: string | null | undefined,
-  rules: SpellingRules = BASE_SPELLING_RULES
+  rules: SpellingRules = BASE_SPELLING_RULES,
+  keyOf = foodKey
 ): boolean {
-  const keysOfA = new Set(foodKeys(a, rules));
+  const keysOf = (text: string | null | undefined) =>
+    [keyOf(text, rules)].flatMap((key) => (key ? [key, ...inflectedReadings(key, rules)] : []));
+  const keysOfA = new Set(keysOf(a));
 
-  return foodKeys(b, rules).some((key) => keysOfA.has(key));
+  return keysOf(b).some((key) => keysOfA.has(key));
 }

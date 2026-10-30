@@ -4,20 +4,14 @@
  * today's rule as the fallback (ADR-0035).
  *
  * 1. Is this page a recipe at all? Asked of the sanitized page text when the
- *    structured parser found nothing, before an AI extraction is attempted.
+ *    structured parser found nothing; a clear no is the import's error.
  * 2. Does this caption hold a recipe? The same question, of an Instagram or
  *    Facebook caption where the processor used to count characters.
- * 3. Is the structured parse complete enough? A Score on the recipe the
- *    structured parser returned; below the constant, AI extraction runs for
- *    this page as if `alwaysUseAI` were on.
+ * 3. Is the structured parse complete enough? Below the constant, AI extraction
+ *    runs as if `alwaysUseAI` were on, and a parse kept anyway is flagged.
  *
- * None of the three has an administrator switch: they serve Norish's own
- * import algorithm, only ever make an import cheaper or refuse a page that
- * was never a recipe, and are not a household preference. Every answer here
- * is an opinion or none: any `AIError` from `decide` — and a server with no
- * Decision Model at all — is "no opinion", a warn log, and the call site's
- * own rule. Each question is one Decision; the page and the parse are asked
- * at different points and the second may never happen.
+ * None has an administrator switch or needs AI to be on. Any `AIError` from
+ * `decide`, or no Decision Model, is "no opinion" and the call site's own rule.
  */
 
 import { asDecisionState } from "@norish/shared-server/ai/enrichment/verification";

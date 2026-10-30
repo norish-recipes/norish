@@ -19,8 +19,7 @@ import {
 } from "@norish/db";
 import { getStoreOwnerId } from "@norish/db/repositories/stores";
 import { getUnits } from "@norish/shared-server/config/server-config-loader";
-import { resolveGroceryName } from "@norish/shared-server/ingredients/groceries";
-import { writeResolved } from "@norish/shared-server/ingredients/resolver";
+import { groceryPartsOf } from "@norish/shared-server/ingredients/groceries";
 import { trpcLogger as log } from "@norish/shared-server/logger";
 import { groceries } from "@norish/shared-server/realtime/groceries";
 import {
@@ -40,6 +39,7 @@ import {
   createGroceriesData,
   deleteGroceriesData,
   listGroceriesData,
+  otherFoods,
   rememberStorePreference,
   toggleGroceriesData,
 } from "./groceries-helpers";
@@ -108,50 +108,61 @@ const update = authedProcedure.input(GroceryUpdateInputSchema).mutation(({ ctx, 
         });
       }
 
-      // A grocery from a recipe line keeps the line's food while its text
-      // still says what the line says; an amount or Store edit re-points nothing.
+      // A grocery keeps its food while its text is unchanged, so an amount or
+      // Store edit re-points nothing; one from a recipe line also follows the line.
       const [current] = await getGroceriesByIds([groceryId]);
-      const updatedGroceries = await writeResolved(
-        () =>
-          resolveGroceryName(
-            {
-              name: parsedIngredient.description,
-              recipeIngredientId: current?.recipeIngredientId ?? null,
-            },
-            { userId: ctx.user.id }
-          ),
-        async (ingredient) => {
-          const updateData: GroceryUpdateDto = {
-            id: groceryId,
-            version,
-            name: parsedIngredient.description,
-            ingredientAliasId: ingredient.ingredientAliasId,
-            ingredientId: ingredient.ingredientId,
-            amount: parsedIngredient.quantity,
-            purchaseAmount,
-            unit: parsedIngredient.unitOfMeasure,
-          };
+      const recipeIngredientId = current?.recipeIngredientId ?? null;
+      // A new name joining foods renames it to the first and adds the rest, each finding its own
+      // Store and pack count as a typed add does.
+      const [renamed, ...others] = await groceryPartsOf({
+        name: parsedIngredient.description,
+        recipeIngredientId,
+        groceryId,
+      });
+      const { edited } = await createGroceriesData(
+        ctx,
+        otherFoods(others, parsedIngredient, recipeIngredientId),
+        {
+          name: renamed,
+          write: async (ingredient, tx) => {
+            const updateData: GroceryUpdateDto = {
+              id: groceryId,
+              version,
+              name: renamed.name,
+              ingredientAliasId: ingredient.ingredientAliasId,
+              ingredientId: ingredient.ingredientId,
+              amount: parsedIngredient.quantity,
+              purchaseAmount,
+              unit: parsedIngredient.unitOfMeasure,
+            };
 
-          // When storeId is explicitly provided, include it in the update
-          // (null means "unsorted", undefined means "don't change")
-          if (storeId !== undefined) {
-            updateData.storeId = storeId;
-          }
+            // When storeId is explicitly provided, include it in the update
+            // (null means "unsorted", undefined means "don't change")
+            if (storeId !== undefined) {
+              updateData.storeId = storeId;
+            }
 
-          const parsed = GroceryUpdateBaseSchema.safeParse(updateData);
+            const parsed = GroceryUpdateBaseSchema.safeParse(updateData);
 
-          if (!parsed.success) {
-            throw new TRPCError({
-              code: "BAD_REQUEST",
-              message: "Invalid grocery data",
-            });
-          }
+            if (!parsed.success) {
+              throw new TRPCError({
+                code: "BAD_REQUEST",
+                message: "Invalid grocery data",
+              });
+            }
 
-          return await updateGroceries([parsed.data as GroceryUpdateDto]);
+            const [updated] = await updateGroceries(
+              [parsed.data as GroceryUpdateDto],
+              ctx.userIds,
+              tx
+            );
+
+            return updated ?? null;
+          },
         }
       );
 
-      if (updatedGroceries.length === 0) {
+      if (!edited) {
         log.info(
           { userId: ctx.user.id, groceryId, version },
           "Stale grocery update; requesting client refresh"
@@ -169,20 +180,9 @@ const update = authedProcedure.input(GroceryUpdateInputSchema).mutation(({ ctx, 
 
       // Editing the store through the panel implies "remember this store for
       // this ingredient", matching the previous assignToStore behaviour.
-      await rememberStorePreference(ctx.user.id, updatedGroceries[0]?.ingredientId, storeId);
-
-      // A rename asks a new question rather than carrying the old answer to a
-      // name it was never about.
-      await noticeGroceries(ctx, updatedGroceries);
+      await rememberStorePreference(ctx.user.id, edited.ingredientId, storeId);
 
       log.debug({ userId: ctx.user.id, groceryId }, "Grocery updated");
-      void groceries.publish(
-        "updated",
-        {
-          changedGroceries: updatedGroceries,
-        },
-        { householdKey: ctx.householdKey }
-      );
     })
     .catch((err) => {
       log.error({ err, userId: ctx.user.id, groceryId }, "Failed to update grocery");
@@ -268,28 +268,22 @@ export const createGroceryProcedure = authedProcedure
       protect: true,
       tags: ["Groceries"],
       summary: "Create a grocery",
+      description:
+        "Answers with a grocery per food the name names: `zout en peper` is `zout` and `peper`. A name already on the list adds to that grocery.",
       errorResponses: {
         401: "Missing or invalid API credentials",
       },
     },
   })
   .input(createGroceryApiInputSchema)
-  .output(GrocerySelectBaseSchema)
+  .output(z.array(GrocerySelectBaseSchema))
   .mutation(async ({ ctx, input }) => {
     log.info({ userId: ctx.user.id }, "Creating grocery via API");
 
     try {
-      const result = await createGroceriesData(ctx, [input]);
-      const grocery = result.returnedGroceries[0];
+      const { returnedGroceries } = await createGroceriesData(ctx, [input]);
 
-      if (!grocery) {
-        throw new TRPCError({
-          code: "INTERNAL_SERVER_ERROR",
-          message: "Failed to create grocery",
-        });
-      }
-
-      return grocery;
+      return returnedGroceries;
     } catch (err) {
       log.error({ err, userId: ctx.user.id }, "Failed to create grocery via API");
       void groceries.publish(
@@ -544,7 +538,7 @@ const reorderInStore = authedProcedure
         }
 
         // Perform reorder (and optional store changes)
-        const updated = await reorderGroceriesInStore(updates);
+        const updated = await reorderGroceriesInStore(updates, ctx.userIds);
 
         if (updated.length !== updates.length) {
           log.info(

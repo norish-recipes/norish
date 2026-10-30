@@ -27,6 +27,8 @@ vi.mock("bullmq", async (importOriginal) => {
 
     addBulk = vi.fn(async (jobs: unknown[]) => jobs);
 
+    on = vi.fn();
+
     close = vi.fn(async () => undefined);
   }
 

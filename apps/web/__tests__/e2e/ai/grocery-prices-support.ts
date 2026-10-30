@@ -1,107 +1,62 @@
-import { Client } from "pg";
+import type { ResolvedProductLink } from "@norish/shared/contracts/dto/store-products";
+import { findNewestGroceryNamed } from "@norish/db/repositories/groceries";
 
-import { databaseUrl } from "./database";
+import type { AIE2EStack } from "./fixture";
+import { queryTrpc } from "../harness/trpc";
+import { createPlainStore, listStores } from "./grocery-aisles-support";
 
-/**
- * A Store pointing at the harness's own shop. Created straight in the
- * database: the paste-and-derive flow has its own unit tests, and what these
- * scenarios are about is what happens to a Grocery afterwards.
- */
-export async function createShopStore(name: string, shopUrl: string): Promise<string> {
-  const database = new Client({ connectionString: databaseUrl() });
+/** A Store pointing at the harness's own shop; the paste-and-derive flow has its own unit tests. */
+export async function createShopStore(
+  stack: AIE2EStack,
+  name: string,
+  shopUrl: string
+): Promise<string> {
+  const store = await createPlainStore(stack, name, {
+    website: shopUrl,
+    searchAddress: `${shopUrl}/search?q={query}`,
+  });
 
-  await database.connect();
-
-  try {
-    const owner = (
-      await database.query<{ id: string }>(`select id from "user" order by "createdAt" asc limit 1`)
-    ).rows[0];
-
-    if (!owner) throw new Error("The harness has provisioned no accounts");
-    const inserted = await database.query<{ id: string }>(
-      `insert into stores (user_id, name, website, search_address)
-       values ($1, $2, $3, $4)
-       returning id`,
-      [owner.id, name, shopUrl, `${shopUrl}/search?q={query}`]
-    );
-
-    return inserted.rows[0]!.id;
-  } finally {
-    await database.end();
-  }
+  return store.id;
 }
 
-/**
- * What the household's Stores have learned the Ingredient a grocery name
- * resolves to means. The name is read as an Ingredient Alias's fold.
- */
+/** What the household's Stores have learned the Ingredient a grocery name reads as means. */
 export async function readStoredLink(
+  stack: AIE2EStack,
   name: string
-): Promise<{ productName: string | null; price: string | null } | null> {
-  const database = new Client({ connectionString: databaseUrl() });
-
-  await database.connect();
-
-  try {
-    const rows = await database.query<{ name: string | null; price: string | null }>(
-      `select p.name, p.price
-         from store_product_links l
-         left join store_products p on p.id = l.store_product_id
-         join ingredient_aliases ia on ia.ingredient_id = l.ingredient_id
-        where ia.fold = $1`,
-      [name]
+): Promise<{ productName: string | null; price: number | null } | null> {
+  for (const store of await listStores(stack)) {
+    const link = await queryTrpc<ResolvedProductLink | null>(
+      stack.baseURL,
+      stack.ownerCookies,
+      "stores.linkFor",
+      { storeId: store.id, name }
     );
 
-    if (rows.rows.length === 0) return null;
-
-    return { productName: rows.rows[0]?.name ?? null, price: rows.rows[0]?.price ?? null };
-  } finally {
-    await database.end();
+    if (link)
+      return { productName: link.product?.name ?? null, price: link.product?.price ?? null };
   }
+
+  return null;
 }
 
-/** The stored requirement and purchase override, used to wait for the server write. */
+/**
+ * The stored requirement and purchase override, to wait for the server write. A repository read:
+ * the list has no creation time, so the newest of same-named groceries (a rerun's) has no route.
+ */
 export async function readGroceryAmount(
   name: string
 ): Promise<{ amount: number | null; purchaseAmount: number | null } | null> {
-  const database = new Client({ connectionString: databaseUrl() });
-  await database.connect();
-  try {
-    const result = await database.query<{ amount: string | null; purchase_amount: string | null }>(
-      "select amount, purchase_amount from groceries where name = $1 order by created_at desc limit 1",
-      [name]
-    );
-    const row = result.rows[0];
-    return row
-      ? {
-          amount: row.amount === null ? null : Number(row.amount),
-          purchaseAmount: row.purchase_amount === null ? null : Number(row.purchase_amount),
-        }
-      : null;
-  } finally {
-    await database.end();
-  }
+  const grocery = await findNewestGroceryNamed(name);
+
+  return grocery
+    ? { amount: grocery.amount, purchaseAmount: grocery.purchaseAmount ?? null }
+    : null;
 }
 
-/** Which Store a grocery sits under, as the database has it. */
-export async function readGroceryStore(name: string): Promise<string | null> {
-  const database = new Client({ connectionString: databaseUrl() });
+/** Which Store the newest grocery of that name sits under. */
+export async function readGroceryStore(stack: AIE2EStack, name: string): Promise<string | null> {
+  const storeId = (await findNewestGroceryNamed(name))?.storeId;
+  const stores = await listStores(stack);
 
-  await database.connect();
-
-  try {
-    const rows = await database.query<{ name: string | null }>(
-      `select s.name
-         from groceries g
-         left join stores s on s.id = g.store_id
-        where g.name = $1
-        order by g.created_at desc
-        limit 1`,
-      [name]
-    );
-
-    return rows.rows[0]?.name ?? null;
-  } finally {
-    await database.end();
-  }
+  return stores.find((store) => store.id === storeId)?.name ?? null;
 }

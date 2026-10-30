@@ -1,6 +1,6 @@
 # 09 — Clear the remaining critical and high findings
 
-Status: ready-for-agent
+Status: superseded
 Target version: 0.26.0-beta
 Blocked by: 06, 07, 08
 
@@ -17,3 +17,4 @@ The mobile findings that remain are listed under `## Comments` here as accepted,
 - [ ] `pnpm audit --audit-level=high` lists only the accepted mobile entries.
 - [ ] `pnpm audit --audit-level=high` in `apps/docs` lists nothing, and the docs build.
 - [ ] `pnpm lint`, `pnpm test:run`, `pnpm build`, `pnpm deps:cycles`, `pnpm format:check` pass.
+- 2026-10-13 — Superseded by `.scratch/dependency-upgrades/` (decided with the maintainer the same day).

@@ -1,7 +1,7 @@
 "use client";
 
 import type { ChangeEvent } from "react";
-import { useCallback, useEffect, useMemo, useState, useTransition } from "react";
+import { useCallback, useMemo, useState, useTransition } from "react";
 import { SelectableRow } from "@/components/cookbooks/selectable-row";
 import Panel from "@/components/Panel/Panel";
 import { ActionButton, ActionButtonGroup } from "@/components/shared/action-button";
@@ -12,6 +12,7 @@ import { Button, Input, Spinner } from "@heroui/react";
 import { useTranslations } from "next-intl";
 
 import type { CookbookSummaryDTO } from "@norish/shared/contracts";
+import { addBasePath } from "@norish/shared/lib/base-path";
 
 /** Tall enough that the list is the panel rather than a strip under a field. */
 const PANEL_HEIGHT = "h-[75dvh]";
@@ -60,13 +61,16 @@ export function CookbookAddRecipesPanel({
     [recipes, members]
   );
 
-  useEffect(() => {
+  const [wasOpen, setWasOpen] = useState(open);
+
+  if (open !== wasOpen) {
+    setWasOpen(open);
     if (!open) {
       setRawInput("");
       setSearch("");
       setSelected([]);
     }
-  }, [open]);
+  }
 
   const handleSearch = (event: ChangeEvent<HTMLInputElement>) => {
     const value = event.target.value;
@@ -134,7 +138,7 @@ export function CookbookAddRecipesPanel({
                           alt=""
                           className="h-full w-full object-cover"
                           loading="lazy"
-                          src={recipe.image}
+                          src={addBasePath(recipe.image)}
                         />
                       ) : (
                         <PhotoIcon aria-hidden className="h-5 w-5 opacity-70" />

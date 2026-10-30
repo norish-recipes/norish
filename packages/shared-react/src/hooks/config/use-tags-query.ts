@@ -4,6 +4,8 @@ import type { CreateConfigHooksOptions } from "./types";
 
 export function createUseTagsQuery({ useTRPC }: CreateConfigHooksOptions) {
   return function useTagsQuery() {
+    "use memo";
+
     const trpc = useTRPC();
 
     const { data, error, isLoading } = useQuery({

@@ -85,7 +85,6 @@ describe("useRecipeSubscription", () => {
   let queryClient: ReturnType<typeof createTestQueryClient>;
 
   beforeEach(() => {
-    vi.clearAllMocks();
     Object.keys(subscriptionCallbacks).forEach((key) => {
       delete subscriptionCallbacks[key];
     });

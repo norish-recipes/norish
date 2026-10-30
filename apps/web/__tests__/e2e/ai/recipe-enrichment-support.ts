@@ -1,9 +1,13 @@
 import type { Page } from "@playwright/test";
-import { Client } from "pg";
 
-import type { SessionCookies } from "./fixture";
+import type { AIConfig } from "@norish/config/zod/server-config";
+
+import type { AIE2EStack, SessionCookies } from "./fixture";
+import { recipeNamed } from "../harness/recipes";
 import { callTrpc, submitMutation } from "../harness/trpc";
-import { databaseUrl } from "./database";
+
+/** The owner's way into the app, which every admin-only setting here goes through. */
+export type OwnerApi = Pick<AIE2EStack, "baseURL" | "ownerCookies">;
 
 /**
  * Ask for a manual enrichment run from the recipe's Actions menu, and do not
@@ -23,6 +27,7 @@ export async function requestEnrichment(page: Page, action: string): Promise<voi
 }
 
 export async function setAutomaticEnrichment(
+  stack: OwnerApi,
   switches: Partial<
     Record<
       | "autoTagging"
@@ -36,51 +41,41 @@ export async function setAutomaticEnrichment(
     >
   >
 ): Promise<void> {
-  const database = new Client({ connectionString: databaseUrl() });
-
-  await database.connect();
-
-  try {
-    await database.query(
-      `update server_config
-         set value = jsonb_set(value, '{automaticEnrichment}', $1::jsonb, true)
-       where key = 'ai_config'`,
-      [
-        JSON.stringify({
-          autoTagging: false,
-          allergyDetection: false,
-          autoCategorization: false,
-          nutritionEstimation: false,
-          recipeProvenance: false,
-          ingredientLinking: false,
-          imageGeneration: false,
-          ...switches,
-        }),
-      ]
-    );
-  } finally {
-    await database.end();
-  }
+  await updateAIConfig(stack, {
+    automaticEnrichment: {
+      autoTagging: false,
+      allergyDetection: false,
+      autoCategorization: false,
+      nutritionEstimation: false,
+      recipeProvenance: false,
+      ingredientLinking: false,
+      imageGeneration: false,
+      ...switches,
+    },
+  });
 }
 
-export async function readStoredCategories(recipeName: string): Promise<string[]> {
-  const database = new Client({ connectionString: databaseUrl() });
+/** Change fields of the AI configuration through the admin settings, keeping the rest. */
+export async function updateAIConfig(stack: OwnerApi, change: Partial<AIConfig>): Promise<void> {
+  const { ai_config: stored } = await callTrpc<{ ai_config?: AIConfig | null }>(
+    stack.baseURL,
+    stack.ownerCookies,
+    "admin.getAllConfigs"
+  );
 
-  await database.connect();
+  if (!stored) throw new Error("The AI configuration is missing");
+  await callTrpc(stack.baseURL, stack.ownerCookies, "admin.updateAIConfig", {
+    ...stored,
+    ...change,
+  });
+}
 
-  try {
-    const recipe = await database.query<{ categories: string[] }>(
-      "select array_to_json(categories) as categories from recipes where name = $1",
-      [recipeName]
-    );
-    const row = recipe.rows[0];
+export async function readStoredCategories(stack: OwnerApi, recipeName: string): Promise<string[]> {
+  const recipe = await recipeNamed(stack.baseURL, stack.ownerCookies, recipeName);
 
-    if (!row) throw new Error(`Recipe not found: ${recipeName}`);
+  if (!recipe) throw new Error(`Recipe not found: ${recipeName}`);
 
-    return row.categories;
-  } finally {
-    await database.end();
-  }
+  return recipe.categories;
 }
 
 export async function supplyUserAllergies(

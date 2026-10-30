@@ -1,12 +1,12 @@
 ---
 sidebar_position: 5
 title: Localization
-description: All available languages in Norish.
+description: Available languages and locale settings.
 ---
 
 # Localization
 
-Norish ships with these languages:
+Available languages:
 
 | Flag | Language           |     Code      |
 | :--: | ------------------ | :-----------: |
@@ -26,6 +26,8 @@ Norish ships with these languages:
 |  🇧🇬  | Български          |     `bg`      |
 |  🇫🇮  | Suomi              |     `fi`      |
 |  🇺🇦  | Українська         |     `uk`      |
+|  🇸🇪  | Svenska            |     `sv`      |
+|  🇪🇬  | العربية            |     `ar`      |
 
 Set the default language, and limit which ones people can pick:
 

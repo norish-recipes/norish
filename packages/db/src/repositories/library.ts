@@ -11,6 +11,7 @@ import type {
   SortOrder,
 } from "@norish/shared/contracts";
 import { db } from "@norish/db/drizzle";
+import { viewerAndHouseholdIds } from "@norish/shared/lib/household";
 
 import type { RecipeListContext } from "./recipes";
 import {
@@ -22,6 +23,7 @@ import {
   tags as tagsTable,
 } from "../schema";
 import { cookbookTitleMatch, listCookbooksByIds } from "./cookbooks";
+import { pantryCoverageSql } from "./pantry-coverage";
 import { buildOwnerPolicyCondition, listDashboardRecipesByIds, recipeSearchSql } from "./recipes";
 
 export type LibraryListParams = {
@@ -36,6 +38,7 @@ export type LibraryListParams = {
   maxCookingTime?: number;
   categories?: RecipeCategory[];
   favoritesOnly?: boolean;
+  pantryOnly?: boolean;
   type?: LibraryTypeFilter;
 };
 
@@ -65,7 +68,8 @@ function hasRecipeOnlyFilter(params: LibraryListParams): boolean {
     params.maxCookingTime !== undefined ||
     (params.categories?.length ?? 0) > 0 ||
     (params.tags?.length ?? 0) > 0 ||
-    params.favoritesOnly === true
+    params.favoritesOnly === true ||
+    params.pantryOnly === true
   );
 }
 
@@ -88,7 +92,7 @@ function rowsOf<T>(result: unknown): T[] {
  * against them; a reader who unticks Title in "Search in" takes cookbooks out
  * of search entirely, which is the honest reading of that control (ADR-0026).
  *
- * Recipe-only filters — rating, cooking time, categories, tags, favourites —
+ * Recipe-only filters — rating, cooking time, categories, tags, favourites, pantry —
  * drop cookbooks out the same way a recipe missing that data drops out.
  *
  * The recipe branch's correlated subqueries spell `"recipes"."…"` by hand:
@@ -111,6 +115,7 @@ export async function listLibrary(
     maxCookingTime,
     categories,
     favoritesOnly,
+    pantryOnly,
     type = "all",
   } = params;
 
@@ -128,6 +133,8 @@ export async function listLibrary(
   }
 
   const branches: SQL[] = [];
+  // Recipes with something at home, most complete first (#679).
+  const pantryCoverage = pantryOnly ? pantryCoverageSql(viewerAndHouseholdIds(ctx)) : undefined;
 
   if (includeRecipes) {
     const conditions: SQL[] = [];
@@ -194,7 +201,8 @@ export async function listLibrary(
              "recipes"."name" AS title,
              "recipes"."created_at" AS created_at,
              0 AS pinned,
-             ${searchSql ? searchSql.rank : sql`0::real`} AS rank
+             ${searchSql ? searchSql.rank : sql`0::real`} AS rank,
+             ${pantryCoverage ?? sql`NULL::real`} AS pantry_coverage
       FROM ${recipes}
       ${conditions.length ? sql`WHERE ${sql.join(conditions, sql` AND `)}` : sql``}
     `);
@@ -213,7 +221,8 @@ export async function listLibrary(
              "cookbooks"."title" AS title,
              "cookbooks"."created_at" AS created_at,
              ${search ? sql`1` : sql`0`} AS pinned,
-             0::real AS rank
+             0::real AS rank,
+             NULL::real AS pantry_coverage
       FROM ${cookbooks}
       ${conditions.length ? sql`WHERE ${sql.join(conditions, sql` AND `)}` : sql``}
     `);
@@ -221,18 +230,25 @@ export async function listLibrary(
 
   const union = sql.join(branches, sql` UNION ALL `);
   const baseOrder = LIBRARY_ORDER_BY[sortMode] ?? LIBRARY_ORDER_BY.dateDesc;
-  const orderBy = search
-    ? sql`ORDER BY pinned DESC, rank DESC, ${baseOrder}, id ASC`
-    : sql`ORDER BY ${baseOrder}, id ASC`;
+  const orderBy = sql`ORDER BY ${sql.join(
+    [
+      ...(pantryCoverage ? [sql`pantry_coverage DESC`] : []),
+      ...(search ? [sql`pinned DESC, rank DESC`] : []),
+      baseOrder,
+      sql`id ASC`,
+    ],
+    sql`, `
+  )}`;
+  const where = pantryCoverage ? sql`WHERE pantry_coverage > 0` : sql``;
 
   const [pageResult, totalResult] = await Promise.all([
     db.execute(
-      sql`WITH library AS (${union}) SELECT kind, id FROM library ${orderBy} LIMIT ${limit} OFFSET ${offset}`
+      sql`WITH library AS (${union}) SELECT kind, id, pantry_coverage FROM library ${where} ${orderBy} LIMIT ${limit} OFFSET ${offset}`
     ),
-    db.execute(sql`WITH library AS (${union}) SELECT COUNT(*)::int AS total FROM library`),
+    db.execute(sql`WITH library AS (${union}) SELECT COUNT(*)::int AS total FROM library ${where}`),
   ]);
 
-  const page = rowsOf<{ kind: string; id: string }>(pageResult);
+  const page = rowsOf<{ kind: string; id: string; pantry_coverage: number | null }>(pageResult);
   const total = Number(rowsOf<{ total: number | string }>(totalResult)[0]?.total ?? 0);
 
   const [recipeCards, cookbookCards] = await Promise.all([
@@ -250,7 +266,17 @@ export async function listLibrary(
     if (row.kind === "recipe") {
       const recipe = recipesById.get(row.id);
 
-      return recipe ? [{ kind: "recipe" as const, recipe }] : [];
+      if (!recipe) return [];
+
+      return [
+        {
+          kind: "recipe" as const,
+          recipe:
+            row.pantry_coverage === null
+              ? recipe
+              : { ...recipe, pantryCoverage: row.pantry_coverage },
+        },
+      ];
     }
 
     const cookbook = cookbooksById.get(row.id);

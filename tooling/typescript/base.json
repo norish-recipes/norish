@@ -1,12 +1,13 @@
 {
   "$schema": "https://json.schemastore.org/tsconfig",
+  // TypeScript 6 already turns on strict and esModuleInterop, and with module Preserve it
+  // resolves like a bundler and imports JSON. Its types list starts empty, so a workspace
+  // that uses Node names "node" in its own tsconfig.
   "compilerOptions": {
-    "esModuleInterop": true,
     "skipLibCheck": true,
     "target": "ES2022",
     "lib": ["ES2022"],
     "allowJs": true,
-    "resolveJsonModule": true,
     "moduleDetection": "force",
     "isolatedModules": true,
     "allowImportingTsExtensions": true,
@@ -15,11 +16,9 @@
     "disableSourceOfProjectReferenceRedirect": true,
     "tsBuildInfoFile": "${configDir}/.cache/tsbuildinfo.json",
 
-    "strict": true,
     "noUncheckedIndexedAccess": true,
 
     "module": "Preserve",
-    "moduleResolution": "Bundler",
     "noEmit": true
   },
   "exclude": ["node_modules", "build", "dist", ".next", ".expo"]

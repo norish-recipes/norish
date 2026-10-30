@@ -16,6 +16,8 @@ type Payload<E extends EventName<PantryRealtime>> = PayloadOf<PantryRealtime, E>
  */
 export function createUsePantrySubscription({ useTRPC }: CreatePantryHooksOptions) {
   return function usePantrySubscription() {
+    "use memo";
+
     const trpc = useTRPC();
     const queryClient = useQueryClient();
     const queryKey = trpc.pantry.list.queryKey();
@@ -23,6 +25,12 @@ export function createUsePantrySubscription({ useTRPC }: CreatePantryHooksOption
     const suggestionsKey = trpc.pantry.suggestions.queryKey();
     // A lagged subscription reads the Pantry again; the merges cannot close a gap.
     const lag = { lagQueryKeys: [queryKey, suggestionsKey] };
+    // Recipe lists filtered to what the Pantry covers read it too.
+    const invalidateCovered = () => {
+      void queryClient.invalidateQueries({ queryKey: suggestionsKey });
+      void queryClient.invalidateQueries(trpc.library.list.pathFilter());
+      void queryClient.invalidateQueries(trpc.cookbooks.recipes.pathFilter());
+    };
 
     useRealtimeSubscription<Payload<"added">>(trpc.pantry.onAdded, {
       ...lag,
@@ -30,7 +38,7 @@ export function createUsePantrySubscription({ useTRPC }: CreatePantryHooksOption
         queryClient.setQueryData<PantryData>(queryKey, (prev) =>
           mergePantryAdded(prev ?? [], item)
         );
-        void queryClient.invalidateQueries({ queryKey: suggestionsKey });
+        invalidateCovered();
       },
     });
 
@@ -40,7 +48,7 @@ export function createUsePantrySubscription({ useTRPC }: CreatePantryHooksOption
         queryClient.setQueryData<PantryData>(queryKey, (prev) =>
           mergePantryRemoved(prev ?? [], itemId)
         );
-        void queryClient.invalidateQueries({ queryKey: suggestionsKey });
+        invalidateCovered();
       },
     });
   };

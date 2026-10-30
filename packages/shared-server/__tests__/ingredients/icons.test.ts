@@ -22,14 +22,16 @@ import {
   CatalogueEditError,
   mergeIngredients,
   saveDraft,
-  setDrawnIcon,
   setParent,
 } from "@norish/shared-server/ingredients/catalogue";
 import {
   DRAFT_ICON_GRACE_MS,
   sweepIngredientIcons,
 } from "@norish/shared-server/ingredients/icon-drafts";
-import { drawNewIngredientIcon } from "@norish/shared-server/ingredients/icon-rounds";
+import {
+  drawNewIngredientIcon,
+  listFoodsShowingNoIcon,
+} from "@norish/shared-server/ingredients/icon-rounds";
 import { ingredientIcons } from "@norish/shared-server/ingredients/icons";
 import { resolveIngredients } from "@norish/shared-server/ingredients/resolver";
 
@@ -220,18 +222,7 @@ describe("Ingredient Icons", () => {
     expect((await fs.readdir(dir)).sort()).toEqual([OWN, OTHER_OWN, fresh].sort());
   });
 
-  it("never lets a drawn icon replace one a person set while it was being drawn", async () => {
-    const onion = await food("onion", { icon: OWN });
-    const kohlrabi = await food("kohlrabi");
-
-    await expect(setDrawnIcon(actor, onion, OTHER_OWN)).resolves.toBe(false);
-    expect(await shown(onion)).toBe(address(OWN));
-
-    await expect(setDrawnIcon(actor, kohlrabi, OTHER_OWN)).resolves.toBe(true);
-    expect(await shown(kohlrabi)).toBe(address(OTHER_OWN));
-  });
-
-  it("draws a new food an icon only where it would show none at all", async () => {
+  it("lists and draws a food AI left an icon only where it would show none at all", async () => {
     // A food on a flat background, as the provider draws one.
     const square = await sharp(
       Buffer.from(
@@ -248,11 +239,23 @@ describe("Ingredient Icons", () => {
 
     await getTestDb().update(ingredients).set({ parentId: onion }).where(eq(ingredients.id, red));
 
-    // A red onion keeps showing the onion: nothing is drawn.
-    await expect(drawNewIngredientIcon(red, SET)).resolves.toBe(false);
+    // A red onion keeps showing the onion, and a food merged away is gone: neither is listed.
+    const merged = await food("romanesco");
+
+    await getTestDb().delete(ingredients).where(eq(ingredients.id, merged));
+    // A vague group stays without one on purpose.
+    const vegetables = await food("vegetables", { offId: "en:vegetables" });
+
+    await expect(
+      listFoodsShowingNoIcon([red, kohlrabi, onion, merged, vegetables], SET)
+    ).resolves.toEqual([{ id: kohlrabi, name: "kohlrabi" }]);
+    await expect(drawNewIngredientIcon(red, SET)).resolves.toEqual({
+      outcome: "skipped",
+      reason: "has-icon",
+    });
     expect(drawer.drawIngredientIcon).not.toHaveBeenCalled();
 
-    await expect(drawNewIngredientIcon(kohlrabi, SET)).resolves.toBe(true);
+    await expect(drawNewIngredientIcon(kohlrabi, SET)).resolves.toEqual({ outcome: "drawn" });
     expect(drawer.drawIngredientIcon).toHaveBeenCalledWith({ name: "kohlrabi", kindOf: [] });
     await expect(ingredientIcons([kohlrabi], SET)).resolves.toEqual(
       new Map([

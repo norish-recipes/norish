@@ -4,6 +4,7 @@ import { useMemo } from "react";
 import { useStoresContext } from "@/app/(app)/groceries/stores-context";
 import { IngredientIconsProvider } from "@/components/ingredients/ingredient-icon";
 import { useUnitsQuery } from "@/hooks/config/use-units-query";
+import { useStructuralSharing } from "@/hooks/use-structural-sharing";
 import { ShoppingCartIcon } from "@heroicons/react/24/outline";
 import { motion } from "motion/react";
 import { useTranslations } from "next-intl";
@@ -112,7 +113,7 @@ function GroceryListContent({
   }, [stores, groupedGroceries]);
 
   // Compute grouped groceries by ingredient (for grouped mode)
-  const ingredientGroups = useMemo(() => {
+  const builtGroups = useMemo(() => {
     if (!groupSimilarIngredients) return null;
 
     // Groups are per aisle per Store, so a filing that lands regroups the list.
@@ -123,6 +124,10 @@ function GroceryListContent({
       (grocery) => aisleFor(grocery.storeId, grocery.ingredientId)
     );
   }, [groupSimilarIngredients, groceries, getRecipeNameForGrocery, customUnits, aisleFor]);
+  // A group whose groceries did not change keeps its object, so its row does
+  // not re-render for a change to another.
+  const sharedGroupEntries = useStructuralSharing(builtGroups ? [...builtGroups] : null);
+  const ingredientGroups = sharedGroupEntries ? new Map(sharedGroupEntries) : null;
 
   // Check if there are any groceries at all
   const hasGroceries = groceries.length > 0;

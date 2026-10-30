@@ -1,0 +1,310 @@
+{
+  "actions": {
+    "save": "Spara",
+    "cancel": "Avbryt",
+    "delete": "Ta bort",
+    "duplicate": "Duplicera",
+    "edit": "Redigera",
+    "create": "Skapa",
+    "add": "Lägg till",
+    "remove": "Ta bort",
+    "close": "Stäng",
+    "apply": "Tillämpa",
+    "reset": "Återställ",
+    "clear": "Rensa",
+    "selectAll": "Markera alla",
+    "deselectAll": "Avmarkera alla",
+    "confirm": "Bekräfta",
+    "back": "Tillbaka",
+    "next": "Nästa",
+    "done": "Klart",
+    "retry": "Försök igen",
+    "submit": "Skicka",
+    "search": "Sök",
+    "filter": "Filtrera",
+    "sort": "Sortera",
+    "import": "Importera",
+    "aiImport": "AI-import",
+    "importWithAI": "Importera med AI",
+    "goHome": "Till startsidan",
+    "test": "Testa",
+    "format": "Formatera",
+    "saveChanges": "Spara ändringar"
+  },
+  "secret": {
+    "reveal": "Visa hemlighet",
+    "hide": "Dölj hemlighet",
+    "keepsCurrent": "Lämna tomt för att behålla det sparade värdet."
+  },
+  "status": {
+    "loading": "Läser in...",
+    "saving": "Sparar...",
+    "deleting": "Tar bort...",
+    "error": "Fel",
+    "success": "Klart",
+    "noResults": "Inga resultat hittades",
+    "changing": "Ändrar…"
+  },
+  "filters": {
+    "title": "Filter",
+    "search": "Sök",
+    "searchIn": "Sök i",
+    "sort": "Sortera",
+    "mode": "Läge",
+    "modeAll": "Alla",
+    "modeAny": "Något",
+    "tags": "Taggar",
+    "searchTags": "Sök efter taggar",
+    "favoritesAndRating": "Favoriter och betyg",
+    "favorites": "Favoriter",
+    "pantry": "Skafferi",
+    "pantryOnly": "Ingredienser hemma",
+    "cookingTime": "Tillagningstid",
+    "cookingTimeUnder15": "<15 min",
+    "cookingTimeUnder30": "<30 min",
+    "cookingTimeUnder60": "<60 min",
+    "cookingTimeUnder120": "<120 min",
+    "categories": "Kategorier",
+    "category": {
+      "breakfast": "Frukost",
+      "lunch": "Lunch",
+      "dinner": "Middag",
+      "snack": "Mellanmål"
+    },
+    "sortByTitle": "Titel",
+    "sortByDate": "Datum",
+    "clearFilters": "Rensa filter"
+  },
+  "time": {
+    "minutes": "min",
+    "hours": "tim"
+  },
+  "validation": {
+    "required": "Det här fältet är obligatoriskt",
+    "invalidUrl": "Ange en giltig webbadress"
+  },
+  "errors": {
+    "operationFailed": "Åtgärden misslyckades",
+    "nameCannotBeEmpty": "Namnet får inte vara tomt",
+    "technicalDetails": "Något gick fel. Teknisk information finns i webbläsarens konsol."
+  },
+  "slots": {
+    "breakfast": "Frukost",
+    "lunch": "Lunch",
+    "dinner": "Middag",
+    "snack": "Mellanmål",
+    "chooseSlot": "Välj måltid"
+  },
+  "connection": {
+    "connecting": "Ansluter till Norish...",
+    "checkInternet": "Kontrollera din internetanslutning",
+    "offlineBanner": "Du är offline. Sparade data visas",
+    "serverUnreachableBanner": "Det går inte att nå Norish-servern. Sparade data visas",
+    "live": "Ansluten",
+    "offline": "Offline",
+    "openDetails": "Anslutningsinformation"
+  },
+  "language": {
+    "title": "Språk"
+  },
+  "notFound": {
+    "code": "404",
+    "title": "Nora är förvirrad.",
+    "message": "Hon nosar runt för att hitta dit du ville gå.",
+    "imageAlt": "Nora ser förvirrad ut"
+  },
+  "errorPage": {
+    "title": "Något gick fel.",
+    "message": "Norish stötte på ett fel på den här sidan.",
+    "retry": "Försök igen"
+  },
+  "import": {
+    "url": {
+      "title": "Importera recept",
+      "label": "Receptets webbadress",
+      "placeholder": "https://exempel.se/ditt-recept",
+      "failed": "Det gick inte att importera receptet",
+      "failedWithAI": "Det gick inte att importera receptet med AI"
+    },
+    "clipboard": {
+      "title": "Importera ett recept från länken du kopierade?"
+    },
+    "paste": {
+      "title": "Importera inklistrad text",
+      "label": "Recepttext eller JSON-LD",
+      "placeholder": "Klistra in ett recept som fritext eller JSON-LD här...",
+      "characters": "{count} / {max} tecken",
+      "tooLarge": "Den inklistrade texten är för stor",
+      "maxCharacters": "Högst {max} tecken per recept",
+      "importing": "Importerar recept...",
+      "importingWithAI": "Importerar recept med AI...",
+      "inProgress": "Import pågår, vänta...",
+      "failed": "Importen misslyckades"
+    },
+    "image": {
+      "title": "Importera från bild",
+      "dropzone": "Släpp bilder här eller klicka för att välja",
+      "paste": "för att klistra in",
+      "formats": "Stöder JPG, PNG, WebP och PDF. Högst 10 MB per fil.",
+      "invalidType": "Ogiltig filtyp",
+      "notSupported": "{name} har ett bildformat som inte stöds",
+      "tooLarge": "Filen är för stor",
+      "exceeds": "{name} överskrider gränsen på 10 MB",
+      "tooMany": "För många filer",
+      "maxFiles": "Högst {max} filer tillåts",
+      "importing": "Importerar recept från bilder...",
+      "analyzing": "Analyserar dina bilder, vänta...",
+      "failed": "Importen misslyckades",
+      "selectedCount": "{count} bilder valda – de kombineras till ett recept",
+      "library": "Bildbibliotek",
+      "takePhoto": "Ta foto",
+      "counter": "{count} / {max} foton",
+      "importFromCount": "Importera från {count, plural, one {# foto} other {# foton}}"
+    },
+    "menu": {
+      "description": "Importera från en webbadress, skanna ett foto eller börja från grunden."
+    }
+  },
+  "formatting": {
+    "title": "Formateringstips",
+    "heading": "Börja en rad med <strong>#</strong> för en rubrik",
+    "bold": "Omge texten med <strong>**dubbla asterisker**</strong> för fetstil",
+    "recipeLink": "Skriv <strong>/receptnamn</strong> för att länka till ett annat recept",
+    "ingredientMention": "Skriv <strong>@</strong> för att koppla en ingrediens till steget – ordet hamnar i meningen och länken visas som en etikett under den",
+    "helpAriaLabel": "Hjälp med formatering"
+  },
+  "tagInput": {
+    "placeholder": "Skriv taggar åtskilda med mellanslag..."
+  },
+  "recurrence": {
+    "title": "Upprepa",
+    "frequency": "Hur ofta",
+    "interval": "Intervall",
+    "onDay": "På dagen",
+    "daily": "Varje dag",
+    "weekly": "Varje vecka",
+    "monthly": "Varje månad",
+    "yearly": "Varje år",
+    "day": "dag",
+    "days": "dagar",
+    "week": "vecka",
+    "weeks": "veckor",
+    "month": "månad",
+    "months": "månader",
+    "year": "år",
+    "years": "år",
+    "next": "Nästa:",
+    "every": "Varje",
+    "everyOther": "Varannan",
+    "on": "på",
+    "today": "idag",
+    "tomorrow": "imorgon",
+    "weekdays": {
+      "sun": "sön",
+      "mon": "mån",
+      "tue": "tis",
+      "wed": "ons",
+      "thu": "tor",
+      "fri": "fre",
+      "sat": "lör"
+    },
+    "weekdaysFull": {
+      "0": "söndag",
+      "1": "måndag",
+      "2": "tisdag",
+      "3": "onsdag",
+      "4": "torsdag",
+      "5": "fredag",
+      "6": "lördag"
+    }
+  },
+  "badges": {
+    "new": "Ny"
+  },
+  "timer": {
+    "done": "Klart",
+    "done_action": "Klart",
+    "one": "Timer",
+    "other": "Timrar",
+    "label_one": "1 timer",
+    "label_other": "{count} timrar",
+    "notification_title": "Timern är klar",
+    "notification_body": "{label} är klar!",
+    "notifications_disabled": "Aviseringar är avstängda",
+    "notifications_disabled_hint": "Aktivera aviseringar i webbläsarens inställningar för att få en avisering när en timer blir klar i bakgrunden."
+  },
+  "offlineStatus": {
+    "title": "Anslutning och offline",
+    "connection": {
+      "heading": "Anslutning",
+      "live": "Ansluten",
+      "offline": "Offline",
+      "forced": "Offline (tvingat)",
+      "liveDescription": "Ansluten till Norish. Ändringar synkroniseras löpande.",
+      "offlineDescription": "Det går inte att nå Norish. Sparade data visas. Ändringar köas och synkroniseras när anslutningen är tillbaka.",
+      "forcedDescription": "Offlineläget är tvingat för utveckling. Servern kan nås men alla anrop blockeras.",
+      "devBadge": "utv"
+    },
+    "cache": {
+      "heading": "Offlinecache",
+      "recipes": "Recept",
+      "cookbooks": "Kokböcker",
+      "groceries": "Inköpslista",
+      "stores": "Butiker",
+      "planned": "Den här veckan",
+      "dataAge": "Data från {when}",
+      "dataAgeUnknown": "Inga data har sparats ännu",
+      "wipe": "Rensa sparade data",
+      "wipeConfirmBody": "Ta bort offlinekopian av dina recept, inköpslistor, butiker och din planering? Dina köade ändringar behålls.",
+      "wipeConfirmOfflineBody": "Du är offline. Om du rensar nu finns inget att visa förrän du ansluter igen. Dina köade ändringar behålls.",
+      "wipeConfirm": "Rensa",
+      "wipeCancel": "Behåll"
+    },
+    "outbox": {
+      "heading": "Köade ändringar",
+      "empty": "Inget i kö – allt är synkroniserat.",
+      "pending": "{count, plural, =0 {Inga ändringar väntar} one {# ändring väntar} other {# ändringar väntar}}",
+      "syncing": "{count, plural, =0 {Synkroniserar} one {Synkroniserar # ändring} other {Synkroniserar # ändringar}}",
+      "syncNow": "Synkronisera nu",
+      "retryAll": "Försök med alla igen",
+      "discardAll": "Kasta alla",
+      "discardConfirmBody": "{count, plural, one {Kasta # köad ändring permanent? Den kommer inte att skickas.} other {Kasta # köade ändringar permanent? De kommer inte att skickas.}}",
+      "discardConfirm": "Kasta",
+      "discardCancel": "Behåll",
+      "status": {
+        "pending": "Synkroniserar",
+        "parked": "Behöver åtgärdas",
+        "conflicted": "Konflikt"
+      }
+    },
+    "devToggle": {
+      "heading": "Utvecklare",
+      "force": "Tvinga offlineläge",
+      "description": "Blockerar anslutningen till servern för att testa offlineläget. Endast i utvecklingsversioner.",
+      "on": "På",
+      "off": "Av"
+    }
+  },
+  "offlineFallback": {
+    "title": "Nora är också offline.",
+    "body": "Den här sidan är inte sparad för offlinebruk. Sidor du nyligen besökt finns fortfarande här.",
+    "backOnlineTitle": "Nora hittade anslutningen!",
+    "backOnlineBody": "Norish kan nås igen. Försök läsa in sidan.",
+    "retry": "Försök igen",
+    "home": "Öppna Norish"
+  },
+  "queuedOffline": {
+    "title": "Du är offline",
+    "description": "Åtgärden har köats. Norish slutför den automatiskt när du är online igen."
+  },
+  "storageUnavailable": {
+    "title": "Det gick inte att starta",
+    "description": "Norish kunde inte läsa sin säkra lagring och kan därför inte avgöra vilken server appen tillhör. Inget har ändrats. Försök igen eller starta om appen.",
+    "detailsLabel": "Teknisk information"
+  },
+  "aiKeyRejected": {
+    "title": "En AI-nyckel har slutat fungera",
+    "description": "Leverantören har nekat API-nyckeln för {blocks} sedan {since}. Spara en ny nyckel för att få dessa AI-funktioner att fungera igen.",
+    "openSettings": "Öppna inställningar"
+  }
+}

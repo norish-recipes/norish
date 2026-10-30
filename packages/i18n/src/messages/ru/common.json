@@ -29,7 +29,6 @@
     "goHome": "На главную",
     "test": "Тест",
     "format": "Форматировать",
-    "restoreDefaults": "Восстановить по умолчанию",
     "saveChanges": "Сохранить изменения"
   },
   "secret": {
@@ -58,6 +57,8 @@
     "searchTags": "Поиск тегов",
     "favoritesAndRating": "Избранное и рейтинг",
     "favorites": "Избранное",
+    "pantry": "Кладовая",
+    "pantryOnly": "Ингредиенты дома",
     "cookingTime": "Время приготовления",
     "cookingTimeUnder15": "<15 мин",
     "cookingTimeUnder30": "<30 мин",
@@ -96,7 +97,7 @@
     "serverUnreachableBanner": "Не удаётся связаться с сервером Norish, показываем сохранённые данные",
     "live": "На связи",
     "offline": "Не в сети",
-    "openDetails": "Connection details"
+    "openDetails": "Подробности подключения"
   },
   "language": {
     "title": "Язык"
@@ -106,6 +107,11 @@
     "title": "Нора в замешательстве.",
     "message": "Она принюхивается, чтобы понять, куда вы хотели попасть.",
     "imageAlt": "Озадаченная Нора"
+  },
+  "errorPage": {
+    "title": "Что-то пошло не так.",
+    "message": "Norish столкнулся с ошибкой на этой странице.",
+    "retry": "Повторить"
   },
   "import": {
     "url": {
@@ -134,7 +140,7 @@
       "title": "Импорт из изображения",
       "dropzone": "Перетащите изображения сюда или нажмите для выбора",
       "paste": "для вставки",
-      "formats": "Поддерживаются JPG, PNG, WebP. Максимум 10 МБ на файл.",
+      "formats": "Поддерживаются JPG, PNG, WebP, PDF. Максимум 10 МБ на файл.",
       "invalidType": "Недопустимый тип файла",
       "notSupported": "{name} не поддерживается",
       "tooLarge": "Файл слишком большой",
@@ -173,12 +179,15 @@
     "daily": "Ежедневно",
     "weekly": "Еженедельно",
     "monthly": "Ежемесячно",
+    "yearly": "Ежегодно",
     "day": "день",
     "days": "дней",
     "week": "неделя",
     "weeks": "недель",
     "month": "месяц",
     "months": "месяцев",
+    "year": "год",
+    "years": "лет",
     "next": "Следующее:",
     "every": "Каждый",
     "everyOther": "Каждый второй",
@@ -225,55 +234,55 @@
     "notifications_disabled_hint": "Включите уведомления в настройках браузера, чтобы получать оповещения при завершении таймеров в фоновом режиме."
   },
   "offlineStatus": {
-    "title": "Connection & offline",
+    "title": "Подключение и офлайн",
     "connection": {
-      "heading": "Connection",
-      "live": "Live",
-      "offline": "Offline",
-      "forced": "Offline (forced)",
-      "liveDescription": "Connected to Norish. Changes sync as you make them.",
-      "offlineDescription": "Can't reach Norish. Showing cached data; changes are queued and sync when you're back.",
-      "forcedDescription": "Offline is forced for development. The backend is reachable but every request is blocked.",
-      "devBadge": "dev"
+      "heading": "Подключение",
+      "live": "На связи",
+      "offline": "Не в сети",
+      "forced": "Не в сети (принудительно)",
+      "liveDescription": "Подключено к Norish. Изменения синхронизируются сразу.",
+      "offlineDescription": "Не удаётся связаться с Norish. Показаны сохранённые данные; изменения ставятся в очередь и синхронизируются, когда связь вернётся.",
+      "forcedDescription": "Офлайн-режим включён принудительно для разработки. Сервер доступен, но все запросы блокируются.",
+      "devBadge": "разраб."
     },
     "cache": {
-      "heading": "Offline cache",
-      "recipes": "Recipes",
+      "heading": "Офлайн-кэш",
+      "recipes": "Рецепты",
       "cookbooks": "Кулинарные книги",
-      "groceries": "Groceries",
-      "stores": "Stores",
-      "planned": "This week",
-      "dataAge": "Data from {when}",
-      "dataAgeUnknown": "Not warmed yet",
-      "wipe": "Clear cached data",
-      "wipeConfirmBody": "Remove the offline copy of your recipes, groceries, stores and plan? Your queued changes are kept.",
-      "wipeConfirmOfflineBody": "You're offline — clearing now leaves nothing to show until you reconnect. Your queued changes are kept.",
-      "wipeConfirm": "Clear",
-      "wipeCancel": "Keep"
+      "groceries": "Покупки",
+      "stores": "Магазины",
+      "planned": "Эта неделя",
+      "dataAge": "Обновлено {when}",
+      "dataAgeUnknown": "Ещё не загружено",
+      "wipe": "Очистить сохранённые данные",
+      "wipeConfirmBody": "Удалить офлайн-копию ваших рецептов, покупок, магазинов и плана? Изменения в очереди сохранятся.",
+      "wipeConfirmOfflineBody": "Вы офлайн: если очистить сейчас, до повторного подключения показать будет нечего. Изменения в очереди сохранятся.",
+      "wipeConfirm": "Очистить",
+      "wipeCancel": "Оставить"
     },
     "outbox": {
-      "heading": "Queued changes",
-      "empty": "Nothing queued — everything's synced.",
-      "pending": "{count, plural, =0 {No changes waiting} one {# change waiting} other {# changes waiting}}",
-      "syncing": "{count, plural, =0 {Syncing} one {Syncing # change} other {Syncing # changes}}",
-      "syncNow": "Sync now",
-      "retryAll": "Retry all",
-      "discardAll": "Discard all",
-      "discardConfirmBody": "{count, plural, one {Permanently discard # queued change? It won't be sent.} other {Permanently discard # queued changes? They won't be sent.}}",
-      "discardConfirm": "Discard",
-      "discardCancel": "Keep",
+      "heading": "Изменения в очереди",
+      "empty": "Очередь пуста, всё синхронизировано.",
+      "pending": "{count, plural, =0 {Нет ожидающих изменений} one {# изменение ожидает} few {# изменения ожидают} many {# изменений ожидают} other {# изменения ожидают}}",
+      "syncing": "{count, plural, =0 {Синхронизация} one {Синхронизация # изменения} few {Синхронизация # изменений} many {Синхронизация # изменений} other {Синхронизация # изменения}}",
+      "syncNow": "Синхронизировать сейчас",
+      "retryAll": "Повторить все",
+      "discardAll": "Удалить все",
+      "discardConfirmBody": "{count, plural, one {Безвозвратно удалить # изменение из очереди? Оно не будет отправлено.} few {Безвозвратно удалить # изменения из очереди? Они не будут отправлены.} many {Безвозвратно удалить # изменений из очереди? Они не будут отправлены.} other {Безвозвратно удалить # изменения из очереди? Они не будут отправлены.}}",
+      "discardConfirm": "Удалить",
+      "discardCancel": "Оставить",
       "status": {
-        "pending": "Syncing",
-        "parked": "Needs attention",
-        "conflicted": "Conflict"
+        "pending": "Синхронизация",
+        "parked": "Требует внимания",
+        "conflicted": "Конфликт"
       }
     },
     "devToggle": {
-      "heading": "Developer",
-      "force": "Force offline",
-      "description": "Blocks the backend transport to exercise the offline runtime. Dev builds only.",
-      "on": "On",
-      "off": "Off"
+      "heading": "Разработка",
+      "force": "Принудительный офлайн",
+      "description": "Блокирует связь с сервером, чтобы проверить работу офлайн. Только в сборках для разработки.",
+      "on": "Вкл.",
+      "off": "Выкл."
     }
   },
   "offlineFallback": {

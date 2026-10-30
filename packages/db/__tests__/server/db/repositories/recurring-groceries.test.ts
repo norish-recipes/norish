@@ -3,9 +3,11 @@
 import { eq } from "drizzle-orm";
 import { afterAll, beforeAll, beforeEach, describe, expect, it } from "vitest";
 
+import type { GroceryInsertDto } from "@norish/shared/contracts/dto/groceries";
+import { withTransaction } from "@norish/db/drizzle";
 import {
   checkRecurringGrocery,
-  createRecurringGrocery,
+  createRecurringGroceries,
   deleteRecurringGroceryById,
   detachRecurringGrocery,
   updateRecurringGroceryWithGrocery,
@@ -34,35 +36,136 @@ describe("recurring groceries transactional writes", () => {
     await testBase.teardown();
   });
 
+  /** A recurring grocery and the grocery it puts on the list, as a create writes them. */
+  function recurringRow(name: string, grocery: Partial<GroceryInsertDto> = {}) {
+    const id = crypto.randomUUID();
+
+    return {
+      recurring: {
+        id,
+        userId: testUserId,
+        name,
+        amount: 1,
+        unit: "liter",
+        recurrenceRule: "week" as const,
+        recurrenceInterval: 1,
+        recurrenceWeekday: null,
+        nextPlannedFor: "2026-07-01",
+        lastCheckedDate: null,
+      },
+      grocery: {
+        id: crypto.randomUUID(),
+        groceries: {
+          userId: testUserId,
+          name,
+          unit: "liter",
+          amount: 1,
+          isDone: false,
+          recurringGroceryId: id,
+          recipeIngredientId: null,
+          storeId: null,
+          ...grocery,
+        },
+      },
+    };
+  }
+
   async function createRecurringWithGrocery() {
-    const recurring = await createRecurringGrocery({
-      id: crypto.randomUUID(),
-      userId: testUserId,
-      name: "Milk",
-      amount: 1,
-      unit: "liter",
-      recurrenceRule: "week",
-      recurrenceInterval: 1,
-      recurrenceWeekday: null,
-      nextPlannedFor: "2026-07-01",
-      lastCheckedDate: null,
+    const {
+      created: [made],
+    } = await createRecurringGroceries([recurringRow("Milk")], [testUserId]);
+
+    return { recurring: made!.recurringGrocery, grocery: made!.grocery };
+  }
+
+  describe("createRecurringGroceries", () => {
+    it("creates each recurring grocery with the grocery it puts on the list", async () => {
+      const { created } = await createRecurringGroceries(
+        [recurringRow("Zout"), recurringRow("Peper")],
+        [testUserId]
+      );
+
+      expect(
+        created.map(({ recurringGrocery, grocery }) => [
+          recurringGrocery.name,
+          grocery.name,
+          grocery.recurringGroceryId === recurringGrocery.id,
+        ])
+      ).toEqual([
+        ["Zout", "Zout", true],
+        ["Peper", "Peper", true],
+      ]);
     });
 
-    const db = getTestDb();
-    const [grocery] = await db
-      .insert(groceries)
-      .values({
-        userId: testUserId,
-        name: "Milk",
-        unit: "liter",
-        amount: "1",
-        isDone: false,
-        recurringGroceryId: recurring.id,
-      })
-      .returning();
+    it("creates none when one of them cannot be written", async () => {
+      await expect(
+        createRecurringGroceries(
+          [recurringRow("Zout"), recurringRow("Peper", { storeId: crypto.randomUUID() })],
+          [testUserId]
+        )
+      ).rejects.toThrow();
 
-    return { recurring, grocery };
-  }
+      const db = getTestDb();
+
+      await expect(db.select().from(recurringGroceries)).resolves.toEqual([]);
+      await expect(db.select().from(groceries)).resolves.toEqual([]);
+    });
+  });
+
+  describe("inside a caller's transaction", () => {
+    it("undoes only a stale edit, and the transaction writes on", async () => {
+      const { recurring, grocery } = await createRecurringWithGrocery();
+      const stale = { id: grocery.id, version: grocery.version + 5 };
+      const outcomes = await withTransaction(async (tx) => {
+        const updated = await updateRecurringGroceryWithGrocery(
+          { id: recurring.id, version: recurring.version, name: "Oat milk" },
+          stale,
+          tx
+        );
+        const detached = await detachRecurringGrocery(
+          {
+            recurringGroceryId: recurring.id,
+            recurringVersion: recurring.version,
+            grocery: { ...stale, name: "Oat milk", unit: "liter", amount: 2 },
+          },
+          tx
+        );
+        const made = await createRecurringGroceries([recurringRow("Zout")], [testUserId], tx);
+
+        return [updated.stale, detached.stale, made.created.length];
+      });
+      const db = getTestDb();
+
+      expect(outcomes).toEqual([true, true, 1]);
+      await expect(
+        db
+          .select({ name: recurringGroceries.name, version: recurringGroceries.version })
+          .from(recurringGroceries)
+      ).resolves.toEqual(
+        expect.arrayContaining([
+          { name: "Milk", version: recurring.version },
+          { name: "Zout", version: 1 },
+        ])
+      );
+      await expect(
+        db.select({ name: groceries.name }).from(groceries).where(eq(groceries.id, grocery.id))
+      ).resolves.toEqual([{ name: "Milk" }]);
+    });
+
+    it("is undone with the transaction", async () => {
+      await expect(
+        withTransaction(async (tx) => {
+          await createRecurringGroceries([recurringRow("Zout")], [testUserId], tx);
+          throw new Error("a later write failed");
+        })
+      ).rejects.toThrow("a later write failed");
+
+      const db = getTestDb();
+
+      await expect(db.select().from(recurringGroceries)).resolves.toEqual([]);
+      await expect(db.select().from(groceries)).resolves.toEqual([]);
+    });
+  });
 
   describe("detachRecurringGrocery", () => {
     it("deletes the recurring row and applies the grocery edit atomically", async () => {

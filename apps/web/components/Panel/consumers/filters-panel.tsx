@@ -1,21 +1,23 @@
 "use client";
 
-import { useCallback, useEffect, useState } from "react";
+import { useCallback, useState } from "react";
 import SearchFieldToggles from "@/components/dashboard/search-field-toggles";
 import Panel from "@/components/Panel/Panel";
 import { ActionButton, ActionButtonGroup } from "@/components/shared/action-button";
+import { ChipButton } from "@/components/shared/chip-button";
 import ChipSkeleton from "@/components/skeleton/chip-skeleton";
 import { useRecipesFiltersContext } from "@/context/recipes-filters-context";
 import { useTagsQuery } from "@/hooks/config";
 import { useHiddenItemVisibility } from "@/hooks/user/use-hidden-item-visibility";
 import {
+  ArchiveBoxIcon,
   ArrowRightIcon,
   CheckIcon,
   HeartIcon,
   MagnifyingGlassIcon,
   XMarkIcon,
 } from "@heroicons/react/16/solid";
-import { Button, Chip, Input } from "@heroui/react";
+import { Button, Input } from "@heroui/react";
 import { motion } from "motion/react";
 import { useTranslations } from "next-intl";
 
@@ -114,11 +116,12 @@ export default function FiltersPanel({ open, onOpenChange }: FiltersPanelProps) 
   const [workingTags, setWorkingTags] = useState<string[]>(filters.searchTags);
   const [workingCategories, setWorkingCategories] = useState<RecipeCategory[]>(filters.categories);
   const [localFilterMode, setLocalFilterMode] = useState<FilterMode>(filters.filterMode);
-  const [localSortMode, setLocalSortMode] = useState<SortOrder>(
+  const [localSortMode, setLocalSortMode] = useState<SortOrder>(() =>
     normalizeSortMode(filters.sortMode)
   );
   const [localInput, setLocalInput] = useState(filters.rawInput);
   const [localFavoritesOnly, setLocalFavoritesOnly] = useState(filters.showFavoritesOnly);
+  const [localPantryOnly, setLocalPantryOnly] = useState(filters.showPantryOnly);
   const [localMinRating, setLocalMinRating] = useState<number | null>(filters.minRating);
   const [localMaxCookingTime, setLocalMaxCookingTime] = useState<number | null>(
     filters.maxCookingTime ?? null
@@ -126,19 +129,22 @@ export default function FiltersPanel({ open, onOpenChange }: FiltersPanelProps) 
   const [localSearchFields, setLocalSearchFields] = useState<SearchField[]>([
     ...filters.searchFields,
   ]);
+  const [prevFilters, setPrevFilters] = useState(filters);
   const { tags: allTags, isLoading } = useTagsQuery();
 
-  useEffect(() => {
+  if (filters !== prevFilters) {
+    setPrevFilters(filters);
     setWorkingTags(filters.searchTags);
     setWorkingCategories(filters.categories);
     setLocalFilterMode(filters.filterMode);
     setLocalSortMode(normalizeSortMode(filters.sortMode));
     setLocalInput(filters.rawInput);
     setLocalFavoritesOnly(filters.showFavoritesOnly);
+    setLocalPantryOnly(filters.showPantryOnly);
     setLocalMinRating(filters.minRating);
     setLocalMaxCookingTime(filters.maxCookingTime ?? null);
     setLocalSearchFields([...filters.searchFields]);
-  }, [filters]);
+  }
   const toggleTag = useCallback((tag: string) => {
     setWorkingTags((prev) => (prev.includes(tag) ? prev.filter((t) => t !== tag) : [...prev, tag]));
   }, []);
@@ -175,6 +181,7 @@ export default function FiltersPanel({ open, onOpenChange }: FiltersPanelProps) 
     setLocalSortMode("dateDesc");
     setLocalInput("");
     setLocalFavoritesOnly(false);
+    setLocalPantryOnly(false);
     setLocalMinRating(null);
     setLocalMaxCookingTime(null);
     setLocalSearchFields([...DEFAULT_RECIPE_FILTERS.searchFields]);
@@ -188,6 +195,7 @@ export default function FiltersPanel({ open, onOpenChange }: FiltersPanelProps) 
       sortMode: localSortMode,
       rawInput: localInput,
       showFavoritesOnly: showFavorites ? localFavoritesOnly : false,
+      showPantryOnly: localPantryOnly,
       minRating: showRatings ? localMinRating : null,
       maxCookingTime: localMaxCookingTime,
       searchFields: localSearchFields,
@@ -201,6 +209,7 @@ export default function FiltersPanel({ open, onOpenChange }: FiltersPanelProps) 
     localSortMode,
     localInput,
     localFavoritesOnly,
+    localPantryOnly,
     localMinRating,
     localMaxCookingTime,
     localSearchFields,
@@ -355,6 +364,23 @@ export default function FiltersPanel({ open, onOpenChange }: FiltersPanelProps) 
             </section>
           )}
 
+          {/* Pantry */}
+          <section>
+            <h3 className="text-muted mb-2 text-[11px] font-medium tracking-wide uppercase">
+              {t("pantry")}
+            </h3>
+            <Button
+              aria-pressed={localPantryOnly}
+              className="h-9 min-w-16 rounded-full px-3 text-xs"
+              size="sm"
+              variant={localPantryOnly ? "primary" : "tertiary"}
+              onPress={() => setLocalPantryOnly(!localPantryOnly)}
+            >
+              <ArchiveBoxIcon className="size-3.5" />
+              {t("pantryOnly")}
+            </Button>
+          </section>
+
           {/* Cooking time */}
           <section>
             <h3 className="text-muted mb-2 text-[11px] font-medium tracking-wide uppercase">
@@ -389,15 +415,16 @@ export default function FiltersPanel({ open, onOpenChange }: FiltersPanelProps) 
                 const active = workingCategories.includes(category);
 
                 return (
-                  <Chip
+                  <ChipButton
                     key={category}
+                    aria-pressed={active}
                     className="h-7 cursor-pointer px-2 text-[11px]"
                     color={active ? "accent" : "default"}
                     variant={active ? "primary" : "tertiary"}
                     onClick={() => toggleCategory(category)}
                   >
                     {t(`category.${category.toLowerCase()}`)}
-                  </Chip>
+                  </ChipButton>
                 );
               })}
             </div>
@@ -428,15 +455,16 @@ export default function FiltersPanel({ open, onOpenChange }: FiltersPanelProps) 
                     const active = workingTags.includes(tag);
 
                     return (
-                      <Chip
+                      <ChipButton
                         key={tag}
+                        aria-pressed={active}
                         className="h-7 cursor-pointer px-2 text-[11px]"
                         color={active ? "accent" : "default"}
                         variant={active ? "primary" : "tertiary"}
                         onClick={() => toggleTag(tag)}
                       >
                         {tag}
-                      </Chip>
+                      </ChipButton>
                     );
                   })}
               </div>

@@ -4,12 +4,14 @@ import React, {
   createContext,
   ReactElement,
   ReactNode,
+  use,
   useCallback,
-  useContext,
   useMemo,
   useState,
 } from "react";
-import { CloseButton } from "@heroui/react";
+import { useIsMobile } from "@/hooks/use-is-mobile";
+import { CloseButton, ComboBox } from "@heroui/react";
+import { UNSAFE_PortalProvider } from "react-aria";
 import { twMerge } from "tailwind-merge";
 import { Drawer } from "vaul";
 
@@ -22,7 +24,6 @@ export interface PanelProps {
   /** Beside the title, outside it: a status chip, say. The dialog's name stays the title. */
   titleAddon?: ReactNode;
   children: ReactNode;
-  trigger?: ReactElement;
   open?: boolean;
   nested?: boolean;
   onOpenChange?: (open: boolean) => void;
@@ -44,37 +45,59 @@ const PanelContext = createContext<{
 }>({ open: false, close: () => {}, toggle: () => {}, portalContainer: null });
 
 export function usePanel() {
-  return useContext(PanelContext);
+  return use(PanelContext);
 }
 
 /**
- * The container an overlay opened inside a Panel must portal into.
+ * Portals the overlays inside it into the open Panel.
  *
- * Undefined outside a Panel, which leaves the default `<body>` container in
- * place. Verified in a real browser at a phone-sized viewport: with a Panel
- * open, `<body>` computes `pointer-events: none` and every popover portalled
- * there inherits it — a menu, a select and a date picker alike all render and
- * swallow every tap (#511). Portalling into the panel puts them back under
- * vaul's own `pointer-events: auto`.
+ * Outside a Panel they keep the default `<body>` container. Verified in a real
+ * browser at a phone-sized viewport: with a Panel open, `<body>` computes
+ * `pointer-events: none` and every popover portalled there inherits it — a
+ * menu, a select and a date picker alike all render and swallow every tap
+ * (#511). Portalling into the panel puts them back under vaul's own
+ * `pointer-events: auto`. Wrap popovers only: a full-viewport modal portalled
+ * into the panel would be sized by the drawer's transform.
  *
- * `UNSTABLE_portalContainer` is React Aria's deprecated-but-supported escape
- * hatch. Its replacement, `UNSAFE_PortalProvider`, ships in `react-aria`, which
- * `react-aria-components` does not share a module instance with here — so
- * "modernising" this swaps a working prop for a silently ignored one.
+ * React Aria Components only hears this provider from its own copy of
+ * `react-aria`, so this app's `react-aria` must stay on the exact version RAC
+ * pins, or overlays silently go back to `<body>`.
  */
-export function usePanelPortalContainer(): HTMLElement | undefined {
-  return usePanel().portalContainer ?? undefined;
+export function PanelPortal({ children }: { children: ReactNode }) {
+  const { portalContainer } = usePanel();
+
+  return (
+    <UNSAFE_PortalProvider getContainer={portalContainer ? () => portalContainer : undefined}>
+      {children}
+    </UNSAFE_PortalProvider>
+  );
+}
+
+/** How tall a phone's results may grow above the input: about five rows. */
+const PHONE_RESULTS_MAX_HEIGHT = 240;
+
+/**
+ * A ComboBox's results inside a Panel. On a phone they open above the input: they open
+ * nearly empty, so React Aria never flips them, and below is where the keyboard is.
+ */
+export function PanelComboBoxPopover({ children }: { children: ReactNode }) {
+  const phone = useIsMobile();
+
+  return (
+    <PanelPortal>
+      <ComboBox.Popover
+        maxHeight={phone ? PHONE_RESULTS_MAX_HEIGHT : undefined}
+        placement={phone ? "top" : undefined}
+      >
+        {children}
+      </ComboBox.Popover>
+    </PanelPortal>
+  );
 }
 
 type PanelSectionProps = {
   children: ReactNode;
   className?: string;
-};
-
-type PanelTriggerProps = {
-  "aria-expanded"?: boolean;
-  "aria-haspopup"?: "dialog";
-  onClick?: (event: unknown) => void;
 };
 
 const PANEL_MAX_HEIGHT_CLASS = "max-h-[80dvh]";
@@ -110,7 +133,6 @@ const PanelRoot: React.FC<PanelProps> = ({
   titleAddon,
   nested = false,
   children,
-  trigger,
   open: controlledOpen,
   onOpenChange,
 }) => {
@@ -136,6 +158,9 @@ const PanelRoot: React.FC<PanelProps> = ({
     const footer: ReactNode[] = [];
     const footerClasses: string[] = [];
 
+    // The slot API: Panel.Body and Panel.Footer are placed by type into fixed
+    // regions of the drawer, so the panel has to read its own children.
+    // eslint-disable-next-line @eslint-react/no-children-for-each
     React.Children.forEach(children, (child) => {
       if (React.isValidElement(child) && child.type === PanelFooter) {
         const element = child as ReactElement<PanelSectionProps>;
@@ -169,30 +194,14 @@ const PanelRoot: React.FC<PanelProps> = ({
   const bodyClasses = twMerge("flex min-h-0 flex-1 flex-col", bodyClassName);
   const footerClasses = twMerge("shrink-0", footerClassName);
 
-  const panelTrigger = trigger as ReactElement<PanelTriggerProps> | undefined;
-  const triggerElement =
-    panelTrigger &&
-    React.cloneElement(panelTrigger, {
-      "aria-haspopup": "dialog",
-      "aria-expanded": open,
-      onClick: (event: unknown) => {
-        const original = panelTrigger.props.onClick;
-
-        if (typeof original === "function") original(event);
-        toggle();
-      },
-    });
   const Root = nested ? Drawer.NestedRoot : Drawer.Root;
 
   return (
-    <div data-panel className={className}>
-      {trigger && <span className="inline-flex">{triggerElement}</span>}
-
+    // Its drawer portals out, so the wrapper takes no space: an empty box in a flex row adds a gap.
+    <div data-panel className={twMerge("contents", className)}>
       {/* vaul keeps the content mounted after close, so gate on `open` — a
           closed panel must not capture overlays. */}
-      <PanelContext.Provider
-        value={{ open, close, toggle, portalContainer: open ? contentElement : null }}
-      >
+      <PanelContext value={{ open, close, toggle, portalContainer: open ? contentElement : null }}>
         {/* repositionInputs resizes the sheet and force-scrolls the focused field to
             the top of its scroll container on iOS, which throws a scrolled panel body
             out of view; Radix's RemoveScroll still locks the page behind the sheet. */}
@@ -268,7 +277,7 @@ const PanelRoot: React.FC<PanelProps> = ({
             </Drawer.Content>
           </Drawer.Portal>
         </Root>
-      </PanelContext.Provider>
+      </PanelContext>
     </div>
   );
 };

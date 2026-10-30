@@ -50,19 +50,30 @@ function normalizeDelimitedStrings(value: unknown): string[] {
     .filter(Boolean);
 }
 
-function collectIngredientStrings(recipe: ScraperRecipe): string[] {
+/**
+ * The recipe's ingredient lines. A recipe in sections ("For the mash") comes as
+ * groups named by their purpose, which the flat list loses, so each named group
+ * opens with its "# " heading.
+ */
+export function collectIngredientStrings(recipe: ScraperRecipe): string[] {
+  const groups = (Array.isArray(recipe.ingredient_groups) ? recipe.ingredient_groups : []).map(
+    (group) => {
+      const { ingredients, purpose } = (group ?? {}) as {
+        ingredients?: unknown;
+        purpose?: unknown;
+      };
+
+      return { heading: normalizeString(purpose), lines: normalizeStringList(ingredients) };
+    }
+  );
+
+  if (groups.length > 1) {
+    return groups.flatMap(({ heading, lines }) => (heading ? [`# ${heading}`, ...lines] : lines));
+  }
+
   const direct = normalizeStringList(recipe.ingredients);
 
-  if (direct.length > 0) return direct;
-
-  const groups = Array.isArray(recipe.ingredient_groups) ? recipe.ingredient_groups : [];
-
-  return groups.flatMap((group) => {
-    if (!group || typeof group !== "object") return [];
-    const ingredients = (group as { ingredients?: unknown }).ingredients;
-
-    return normalizeStringList(ingredients);
-  });
+  return direct.length > 0 ? direct : groups.flatMap(({ lines }) => lines);
 }
 
 function collectInstructionSource(recipe: ScraperRecipe): unknown {
@@ -203,7 +214,7 @@ export async function adaptRecipeScrapersResponse(
   );
   const steps = parseSteps(collectInstructionSource(recipe), systemUsed);
   const imageSource = recipe.image ?? success.media.images;
-  const { images, primaryImage } = await parseImages(imageSource, recipeId);
+  const { images } = await parseImages(imageSource, recipeId);
   const { videos } = await parseVideos(adaptEmbeddedVideos(success.media.videos), recipeId);
   const nutrition = buildNutrition(recipe);
 
@@ -213,7 +224,6 @@ export async function adaptRecipeScrapersResponse(
     description: normalizeString(recipe.description),
     notes: undefined,
     url: success.canonicalUrl ?? originalUrl,
-    image: primaryImage,
     servings: getServings(recipe.yields),
     prepMinutes: typeof recipe.prep_time === "number" ? recipe.prep_time : undefined,
     cookMinutes: typeof recipe.cook_time === "number" ? recipe.cook_time : undefined,

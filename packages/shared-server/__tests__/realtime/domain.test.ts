@@ -14,7 +14,7 @@ const logged = vi.hoisted(() => ({
   trace: vi.fn(),
 }));
 
-const redis = vi.hoisted(() => {
+const valkey = vi.hoisted(() => {
   const client = {
     publish: vi.fn(async () => 1),
     realtimePublish: undefined as undefined | ReturnType<typeof vi.fn>,
@@ -26,11 +26,11 @@ const redis = vi.hoisted(() => {
   return client;
 });
 
-const getPublisherClient = vi.hoisted(() => vi.fn(async () => redis));
+const getPublisherClient = vi.hoisted(() => vi.fn(async () => valkey));
 
 vi.mock("@norish/config/env-config-server", () => ({ SERVER_CONFIG: config }));
 vi.mock("@norish/shared-server/logger", () => ({ createLogger: () => logged }));
-vi.mock("@norish/shared-server/redis/client", () => ({ getPublisherClient }));
+vi.mock("@norish/shared-server/valkey/client", () => ({ getPublisherClient }));
 
 const { runWithOperationContext } = await import("@norish/shared-server/lib/operation-context");
 const { defineRealtimeDomain, EVENT_ID_PLACEHOLDER, RealtimePayloadError } =
@@ -47,18 +47,17 @@ const catalogue = defineRealtimeCatalogue("grocery", {
 const domain = defineRealtimeDomain(catalogue);
 
 function lastPublished(): RealtimeEventEnvelope {
-  const call = redis.realtimePublish?.mock.calls.at(-1) as unknown[] | undefined;
-  const bare = redis.publish.mock.calls.at(-1) as unknown[] | undefined;
+  const call = valkey.realtimePublish?.mock.calls.at(-1) as unknown[] | undefined;
+  const bare = valkey.publish.mock.calls.at(-1) as unknown[] | undefined;
   const message = (call?.[2] ?? bare?.[1]) as string;
 
   return superjson.parse(message);
 }
 
 beforeEach(() => {
-  vi.clearAllMocks();
   config.NODE_ENV = "development";
-  redis.realtimePublish = undefined;
-  getPublisherClient.mockResolvedValue(redis);
+  valkey.realtimePublish = undefined;
+  getPublisherClient.mockResolvedValue(valkey);
 });
 
 afterEach(() => {
@@ -122,27 +121,27 @@ describe("publish", () => {
   it("records one realtimePublish call with the stream key, MAXLEN ~ 1000 and TTL 86400", async () => {
     await domain.publish("created", { ids: ["g-1"] }, { householdKey: "hh-1" });
 
-    expect(redis.defineCommand).toHaveBeenCalledWith(
+    expect(valkey.defineCommand).toHaveBeenCalledWith(
       "realtimePublish",
       expect.objectContaining({ numberOfKeys: 2, lua: expect.stringContaining("MAXLEN") })
     );
-    expect(redis.realtimePublish).toHaveBeenCalledTimes(1);
-    expect(redis.realtimePublish).toHaveBeenCalledWith(
+    expect(valkey.realtimePublish).toHaveBeenCalledTimes(1);
+    expect(valkey.realtimePublish).toHaveBeenCalledWith(
       "norish:stream:grocery:household:hh-1:created",
       "norish:grocery:household:hh-1:created",
       expect.stringContaining(`"eventId":"${EVENT_ID_PLACEHOLDER}"`),
       1000,
       86400
     );
-    expect(redis.publish).not.toHaveBeenCalled();
+    expect(valkey.publish).not.toHaveBeenCalled();
   });
 
   it("registers the script once per client", async () => {
     await domain.publish("created", { ids: ["g-1"] }, { householdKey: "hh-1" });
     await domain.publish("created", { ids: ["g-2"] }, { householdKey: "hh-1" });
 
-    expect(redis.defineCommand).toHaveBeenCalledTimes(1);
-    expect(redis.realtimePublish).toHaveBeenCalledTimes(2);
+    expect(valkey.defineCommand).toHaveBeenCalledTimes(1);
+    expect(valkey.realtimePublish).toHaveBeenCalledTimes(2);
   });
 
   it("builds an envelope with the placeholder id, the validated payload and the resolved scope", async () => {
@@ -178,13 +177,13 @@ describe("publish", () => {
   it("publishes an internal event bare, with a UUID id and no stream call", async () => {
     await domain.publish("becameUsable", { recipeId: "r-1" }, undefined);
 
-    expect(redis.publish).toHaveBeenCalledTimes(1);
-    expect(redis.publish).toHaveBeenCalledWith(
+    expect(valkey.publish).toHaveBeenCalledTimes(1);
+    expect(valkey.publish).toHaveBeenCalledWith(
       "norish:grocery:internal:becameUsable",
       expect.any(String)
     );
-    expect(redis.defineCommand).not.toHaveBeenCalled();
-    expect(redis.realtimePublish).toBeUndefined();
+    expect(valkey.defineCommand).not.toHaveBeenCalled();
+    expect(valkey.realtimePublish).toBeUndefined();
 
     const envelope = lastPublished();
 
@@ -226,8 +225,8 @@ describe("publish", () => {
     expect(getPublisherClient).not.toHaveBeenCalled();
   });
 
-  it("never rejects on a Redis error", async () => {
-    getPublisherClient.mockRejectedValueOnce(new Error("redis is down"));
+  it("never rejects on a Valkey error", async () => {
+    getPublisherClient.mockRejectedValueOnce(new Error("valkey is down"));
 
     await expect(
       domain.publish("created", { ids: ["g-1"] }, { householdKey: "hh-1" })
@@ -237,8 +236,8 @@ describe("publish", () => {
       expect.any(String)
     );
 
-    redis.defineCommand.mockImplementationOnce(() => {
-      redis.realtimePublish = vi.fn(async () => {
+    valkey.defineCommand.mockImplementationOnce(() => {
+      valkey.realtimePublish = vi.fn(async () => {
         throw new Error("NOSCRIPT");
       });
     });

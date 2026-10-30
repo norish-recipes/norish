@@ -1,6 +1,6 @@
 # 07 — Better Auth 1.7 with no manual steps
 
-Status: ready-for-agent
+Status: superseded
 Target version: 0.26.0-beta
 Blocked by: 06
 
@@ -23,3 +23,7 @@ If the callback pin holds, record it as an ADR under `docs/adr/` (every self-hos
 - [ ] Password sign-in, API keys and an already-linked provider sign-in work as before (auth E2E specs).
 - [ ] Release notes, docs and, if needed, an Upgrade notes line written.
 - [ ] `pnpm lint`, `pnpm test:run`, `pnpm i18n:check`, `pnpm build`, `pnpm deps:cycles`, `pnpm format:check` pass.
+
+## Comments
+
+- 2026-10-13 — Superseded by `.scratch/dependency-upgrades/` (decided with the maintainer the same day).

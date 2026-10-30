@@ -207,8 +207,6 @@ describe("norish recipe extraction", () => {
 
 describe("parseNorishRecipeToDTO", () => {
   beforeEach(() => {
-    vi.clearAllMocks();
-
     mockSaveImageBytes.mockResolvedValue(`/recipes/${RECIPE_ID}/saved-image.jpg`);
     mockSaveStepImageBytes.mockResolvedValue(`/recipes/${RECIPE_ID}/steps/saved-step.jpg`);
     mockSaveVideoBytes.mockResolvedValue({
@@ -334,8 +332,6 @@ describe("parseNorishRecipeToDTO media rehoming", () => {
   }
 
   beforeEach(() => {
-    vi.clearAllMocks();
-
     mockSaveImageBytes.mockResolvedValue(`/recipes/${RECIPE_ID}/saved-image.jpg`);
     mockSaveStepImageBytes.mockResolvedValue(`/recipes/${RECIPE_ID}/steps/saved-step.jpg`);
     mockSaveVideoBytes.mockResolvedValue({
@@ -367,7 +363,8 @@ describe("parseNorishRecipeToDTO media rehoming", () => {
       buildMediaFolder()
     );
 
-    expect(mockSaveImageBytes).toHaveBeenCalledWith(Buffer.from("hero-bytes"), RECIPE_ID);
+    // The hero is the gallery's primary, saved once through the gallery.
+    expect(mockSaveImageBytes).not.toHaveBeenCalledWith(Buffer.from("hero-bytes"), RECIPE_ID);
     expect(mockSaveImageBytes).toHaveBeenCalledWith(Buffer.from("gallery-bytes"), RECIPE_ID);
     expect(mockSaveImageBytes).toHaveBeenCalledWith(Buffer.from("thumb-bytes"), RECIPE_ID);
     expect(mockSaveStepImageBytes).toHaveBeenCalledWith(Buffer.from("step-bytes"), RECIPE_ID);
@@ -378,7 +375,6 @@ describe("parseNorishRecipeToDTO media rehoming", () => {
       42
     );
 
-    expect(dto.image).toBe(`/recipes/${RECIPE_ID}/saved-image.jpg`);
     expect(dto.images).toEqual([{ image: `/recipes/${RECIPE_ID}/saved-image.jpg`, order: 0 }]);
     expect(dto.steps[0]?.images).toEqual([
       { image: `/recipes/${RECIPE_ID}/steps/saved-step.jpg`, order: 0 },
@@ -414,6 +410,18 @@ describe("parseNorishRecipeToDTO media rehoming", () => {
     ]);
   });
 
+  it("takes the hero into the gallery from an archive written before recipes had one", async () => {
+    const { dto } = await parseNorishRecipeToDTO(
+      buildArchiveRecipeJson({ image: "images/hero.jpg" }),
+      RECIPE_ID,
+      cuisineLookup,
+      buildMediaFolder()
+    );
+
+    expect(mockSaveImageBytes).toHaveBeenCalledWith(Buffer.from("hero-bytes"), RECIPE_ID);
+    expect(dto.images).toEqual([{ image: `/recipes/${RECIPE_ID}/saved-image.jpg`, order: 0 }]);
+  });
+
   it("keeps external media URLs without touching the media pipeline", async () => {
     const { dto } = await parseNorishRecipeToDTO(
       buildArchiveRecipeJson({ image: "https://example.com/hero.jpg" }),
@@ -422,7 +430,7 @@ describe("parseNorishRecipeToDTO media rehoming", () => {
       buildMediaFolder()
     );
 
-    expect(dto.image).toBe("https://example.com/hero.jpg");
+    expect(dto.images).toEqual([{ image: "https://example.com/hero.jpg", order: 0 }]);
     expect(mockSaveImageBytes).not.toHaveBeenCalled();
   });
 
@@ -437,7 +445,6 @@ describe("parseNorishRecipeToDTO media rehoming", () => {
       buildMediaFolder()
     );
 
-    expect(dto.image).toBeNull();
     expect(dto.images).toEqual([]);
   });
 
@@ -454,7 +461,7 @@ describe("parseNorishRecipeToDTO media rehoming", () => {
       zip.folder("folder-a")
     );
 
-    expect(dto.image).toBeNull();
+    expect(dto.images).toEqual([]);
     expect(mockSaveImageBytes).not.toHaveBeenCalled();
   });
 
@@ -468,7 +475,7 @@ describe("parseNorishRecipeToDTO media rehoming", () => {
       buildMediaFolder()
     );
 
-    expect(dto.image).toBeNull();
+    expect(dto.images).toEqual([]);
     expect(dto.name).toBe("Archived Soup");
   });
 
@@ -480,7 +487,6 @@ describe("parseNorishRecipeToDTO media rehoming", () => {
       buildMediaFolder()
     );
 
-    expect(dto.image).toBeNull();
     expect(dto.images).toEqual([]);
     expect(dto.videos).toEqual([]);
     expect(mockSaveImageBytes).not.toHaveBeenCalled();

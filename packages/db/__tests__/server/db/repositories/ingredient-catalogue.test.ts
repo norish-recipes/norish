@@ -1,12 +1,15 @@
 // @vitest-environment node
 
+import { eq } from "drizzle-orm";
 import { afterAll, beforeAll, beforeEach, describe, expect, it } from "vitest";
 
+import { withTransaction } from "@norish/db/drizzle";
 import {
-  listCatalogueAliasesOf,
+  deleteCatalogueAlias,
   listCatalogueIngredients,
   listIngredientUses,
 } from "@norish/db/repositories/ingredient-catalogue";
+import { insertSeededIngredient } from "@norish/db/repositories/ingredient-seed";
 import * as schema from "@norish/db/schema";
 import { parseIngredientSearch } from "@norish/shared/lib/ingredient-search";
 
@@ -15,7 +18,9 @@ import {
   createTestRecipe,
   createTestRecipeIngredients,
   createTestUser,
+  firstSpellingId,
   getTestDb,
+  insertTestRecipeLine,
 } from "../../../helpers/db-test-helpers";
 import { RepositoryTestBase } from "../../../helpers/repository-test-base";
 
@@ -87,8 +92,8 @@ describe("listCatalogueIngredients search", () => {
 });
 
 /**
- * What still uses a food: the spellings something points at, and the uses
- * one viewer may see, the rest counted.
+ * What still uses a food: the uses one viewer may see, the rest counted, and
+ * everything a delete would touch.
  */
 describe("ingredient uses", () => {
   const testBase = new RepositoryTestBase("test_ingredient_uses");
@@ -132,36 +137,137 @@ describe("ingredient uses", () => {
     await testBase.teardown();
   });
 
-  it("marks a spelling something points at as in use", async () => {
-    const [row] = await listCatalogueIngredients({
-      search: null,
-      flaggedOnly: false,
-      limit: 10,
-      offset: 0,
-    });
-
-    expect(row!.aliases.map(({ text, inUse }) => [text, inUse])).toEqual([
-      ["kipfilet", true],
-      ["kipfilet met de hand", true],
-    ]);
-    await getTestDb().delete(schema.recipeIngredients);
-    expect((await listCatalogueAliasesOf(chickenId)).map(({ inUse }) => inUse)).toEqual([
-      false,
-      true,
-    ]);
-  });
-
-  it("lists the uses the viewer may see, a recipe once, and counts the rest", async () => {
+  it("lists the uses the viewer may see, a recipe once, and counts everything a delete touches", async () => {
     expect(
       await listIngredientUses(
-        { userId: me.id, userIds: [me.id], householdUserIds: null, isServerAdmin: false },
+        { userId: me.id, householdUserIds: null, isServerAdmin: false },
         chickenId
       )
     ).toEqual({
       recipes: [{ id: recipeId, name: "Saté" }],
-      groceries: [{ name: "kipfilet met de hand", done: true, recurring: false }],
+      groceries: [
+        { id: expect.any(String), name: "kipfilet met de hand", done: true, recurring: false },
+      ],
       pantry: true,
       elsewhere: 1,
+      counts: { recipeLines: 2, groceries: 2, pantry: 1 },
     });
+  });
+
+  it("lists a line naming several foods under each of them", async () => {
+    const satay = await createTestIngredient({ name: "satésaus" });
+    const ricePan = (await createTestRecipe(me.id, { name: "Rijstpan" })).id;
+
+    await insertTestRecipeLine(
+      { recipeId: ricePan, name: "kipfilet en satésaus", joined: "together", order: "0" },
+      [(await firstSpellingId(chickenId))!, (await firstSpellingId(satay!.id))!]
+    );
+
+    const viewer = { userId: me.id, householdUserIds: null, isServerAdmin: false };
+
+    expect((await listIngredientUses(viewer, satay!.id)).recipes).toEqual([
+      { id: ricePan, name: "Rijstpan" },
+    ]);
+    expect((await listIngredientUses(viewer, chickenId)).counts.recipeLines).toBe(3);
+  });
+
+  it("lists and counts a repeating grocery once, not again for the copy it keeps on the list", async () => {
+    const db = getTestDb();
+    const [recurring] = await db
+      .insert(schema.recurringGroceries)
+      .values({
+        userId: me.id,
+        name: "kipfilet",
+        ingredientId: chickenId,
+        recurrenceRule: "week",
+        nextPlannedFor: "2027-01-01",
+      })
+      .returning({ id: schema.recurringGroceries.id });
+
+    await db.insert(schema.groceries).values({
+      userId: me.id,
+      name: "kipfilet",
+      ingredientId: chickenId,
+      recurringGroceryId: recurring!.id,
+    });
+
+    const uses = await listIngredientUses(
+      { userId: me.id, householdUserIds: null, isServerAdmin: false },
+      chickenId
+    );
+
+    expect(uses.groceries).toEqual([
+      { id: expect.any(String), name: "kipfilet met de hand", done: true, recurring: false },
+      { id: recurring!.id, name: "kipfilet", done: false, recurring: true },
+    ]);
+    expect(uses.elsewhere).toBe(1);
+    expect(uses.counts.groceries).toBe(3);
+  });
+});
+
+describe("removing a spelling", () => {
+  const testBase = new RepositoryTestBase("test_catalogue_alias_removal");
+
+  beforeAll(async () => {
+    await testBase.setup();
+  });
+
+  beforeEach(async () => {
+    await testBase.beforeEachTest();
+  });
+
+  afterAll(async () => {
+    await testBase.teardown();
+  });
+
+  it("refuses a food's last spelling, which would leave what used it nowhere to go", async () => {
+    const salt = (await createTestIngredient({ name: "zout" }))!;
+    const [only] = await getTestDb()
+      .select({ id: schema.ingredientAliases.id })
+      .from(schema.ingredientAliases)
+      .where(eq(schema.ingredientAliases.ingredientId, salt.id));
+
+    await expect(withTransaction((tx) => deleteCatalogueAlias(tx, only!.id))).rejects.toThrow(
+      "last"
+    );
+  });
+});
+
+describe("insertSeededIngredient", () => {
+  const testBase = new RepositoryTestBase("test_insert_seeded_ingredient");
+
+  beforeAll(async () => {
+    await testBase.setup();
+  });
+
+  beforeEach(async () => {
+    await testBase.beforeEachTest();
+  });
+
+  afterAll(async () => {
+    await testBase.teardown();
+  });
+
+  it("writes the food with each spelling seeded, in its own language", async () => {
+    const id = await insertSeededIngredient({ name: "courgette", flagged: true }, [
+      { text: "courgette", fold: "courgette", locale: "en" },
+      { text: "zucchine", fold: "zucchine", locale: "it" },
+    ]);
+    const db = getTestDb();
+    const [food] = await db.select().from(schema.ingredients).where(eq(schema.ingredients.id, id));
+    const spellings = await db
+      .select()
+      .from(schema.ingredientAliases)
+      .where(eq(schema.ingredientAliases.ingredientId, id));
+
+    expect(food).toMatchObject({ name: "courgette", flagged: true });
+    expect(
+      spellings
+        .map(({ text, locale, seeded }) => ({ text, locale, seeded }))
+        .sort((a, b) => a.text.localeCompare(b.text))
+    ).toEqual([
+      { text: "courgette", locale: "en", seeded: true },
+      { text: "zucchine", locale: "it", seeded: true },
+    ]);
   });
 });

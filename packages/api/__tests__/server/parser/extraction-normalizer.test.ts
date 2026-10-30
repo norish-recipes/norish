@@ -68,26 +68,17 @@ describe("validateExtractionOutput", () => {
       expect(result.details?.metricIngredients).toBe(1);
       expect(result.details?.usIngredients).toBe(0);
     });
+  });
 
-    it("returns invalid when metric steps are missing", () => {
+  describe("when the source states no steps", () => {
+    it("returns valid, because some recipes have none (#646)", () => {
       const output = createPartialOutput({
-        recipeInstructions: { metric: [], us: ["Mix well"] },
+        recipeInstructions: { metric: [], us: [] },
       });
       const result = validateExtractionOutput(output);
 
-      expect(result.valid).toBe(false);
+      expect(result.valid).toBe(true);
       expect(result.details?.metricSteps).toBe(0);
-      expect(result.details?.usSteps).toBe(1);
-    });
-
-    it("returns invalid when US steps are missing", () => {
-      const output = createPartialOutput({
-        recipeInstructions: { metric: ["Mix well"], us: [] },
-      });
-      const result = validateExtractionOutput(output);
-
-      expect(result.valid).toBe(false);
-      expect(result.details?.metricSteps).toBe(1);
       expect(result.details?.usSteps).toBe(0);
     });
   });

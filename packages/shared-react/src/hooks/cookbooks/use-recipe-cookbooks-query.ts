@@ -12,6 +12,8 @@ export function createUseRecipeCookbooksQuery({ useTRPC }: CreateCookbookHooksOp
     recipeId: string | null,
     { enabled = true }: { enabled?: boolean } = {}
   ): RecipeCookbooksQueryResult {
+    "use memo";
+
     const trpc = useTRPC();
     const { data, isLoading } = useQuery({
       ...trpc.cookbooks.forRecipe.queryOptions({ recipeId: recipeId ?? "" }),
@@ -37,6 +39,8 @@ export function createUseEditableCookbooksQuery({ useTRPC }: CreateCookbookHooks
     recipeId: string | null,
     { enabled = true }: { enabled?: boolean } = {}
   ): EditableCookbooksQueryResult {
+    "use memo";
+
     const trpc = useTRPC();
     const editable = useQuery({
       ...trpc.cookbooks.editable.queryOptions(),

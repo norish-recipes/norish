@@ -9,9 +9,7 @@
   "editNote": {
     "title": "Editar nota",
     "noteLabel": "Nota",
-    "notePlaceholder": "Insira uma nota...",
-    "date": "Data",
-    "slot": "Horário"
+    "notePlaceholder": "Insira uma nota..."
   },
   "navigation": {
     "previousMonth": "Mês anterior",

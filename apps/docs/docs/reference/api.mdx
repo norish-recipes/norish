@@ -1,7 +1,7 @@
 ---
 sidebar_position: 1
 title: API reference
-description: The Norish public HTTP API under /api/v1.
+description: Public HTTP API endpoints under /api/v1.
 ---
 
 import ApiReference, { apiToc } from "@site/src/components/ApiReference";
@@ -13,5 +13,7 @@ export const toc = apiToc(spec);
 # API reference
 
 Create an API key under **Settings => User => API keys** and send it as an `x-api-key` header or as `Authorization: Bearer <key>`. Replace `https://norish.example.com` in the examples with the address of your own server.
+
+Each key allows 500 requests an hour. Further requests return `429 Too Many Requests`; the `Retry-After` header gives the wait in seconds.
 
 <ApiReference spec={spec} />

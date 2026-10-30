@@ -11,6 +11,8 @@
  * the wire shape asserted here must survive extraction moving packages and
  * the runtime taking over the provider call.
  */
+import { readFile } from "node:fs/promises";
+import path from "node:path";
 import type { Page } from "@playwright/test";
 
 import type { AIE2EStack } from "./fixture";
@@ -45,13 +47,16 @@ const IMAGE_RECIPE = {
   nutrition: { calories: null, fat: null, carbs: null, protein: null },
 };
 
+// Two A4 pages of a recipe, printed to PDF by Chromium.
+const TWO_PAGE_PDF = path.join(import.meta.dirname, "fixtures/two-page-recipe.pdf");
+
 let stack: AIE2EStack;
 let page: Page;
 
 test.beforeEach(async ({ aiStack, page: fixturePage }) => {
   stack = aiStack;
   page = fixturePage;
-  await setAutomaticEnrichment({});
+  await setAutomaticEnrichment(stack, {});
 });
 
 test("a browser image import reaches the provider as a vision request and persists the result", async () => {
@@ -71,10 +76,40 @@ test("a browser image import reaches the provider as a vision request and persis
 
   expect(ai.control.requestCount).toBeGreaterThanOrEqual(1);
 
-  // The provider saw one request, on the chat-completions path, whose message
-  // content carries the uploaded image alongside the prompt text — the wire
-  // shape of a vision request.
-  const request = ai.control.requests.at(-1)!;
+  const parts = lastVisionRequestParts();
+
+  expect(parts.some((part) => part.type === "text")).toBe(true);
+  expect(parts.some((part) => part.type === "image_url")).toBe(true);
+});
+
+test("a PDF import reaches the provider as one picture per page (#637)", async () => {
+  const name = "Scanned Pancakes";
+
+  stack.ai.control.succeedWith({ ...IMAGE_RECIPE, name });
+
+  await page.goto("/");
+  await submitImageImport(page, {
+    name: "scanned-recipe.pdf",
+    mimeType: "application/pdf",
+    buffer: await readFile(TWO_PAGE_PDF),
+  });
+
+  await expect(async () => {
+    await page.reload();
+    await expect(page.getByText(name).first()).toBeVisible({ timeout: 3_000 });
+  }).toPass({ timeout: 60_000, intervals: [1_000, 2_000, 5_000] });
+
+  // The browser drew the pages, so any vision model reads them.
+  expect(lastVisionRequestParts().filter((part) => part.type === "image_url")).toHaveLength(2);
+});
+
+/**
+ * The content parts of the provider's last request, which went to the
+ * chat-completions path with the uploads beside the prompt text: the wire
+ * shape of a vision request.
+ */
+function lastVisionRequestParts(): { type: string }[] {
+  const request = stack.ai.control.requests.at(-1)!;
 
   expect(request.path).toBe("/v1/chat/completions");
 
@@ -86,8 +121,5 @@ test("a browser image import reaches the provider as a vision request and persis
   expect(userMessage).toBeDefined();
   expect(Array.isArray(userMessage!.content)).toBe(true);
 
-  const parts = userMessage!.content as { type: string }[];
-
-  expect(parts.some((part) => part.type === "text")).toBe(true);
-  expect(parts.some((part) => part.type === "image_url")).toBe(true);
-});
+  return userMessage!.content as { type: string }[];
+}

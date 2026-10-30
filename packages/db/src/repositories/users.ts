@@ -338,6 +338,17 @@ export async function clearUserAvatar(
   return appliedOutcome(undefined);
 }
 
+/** The user's Sign-in Methods: one account row per provider, password included. */
+export async function getSignInMethodsForUser(
+  userId: string
+): Promise<{ id: string; providerId: string; createdAt: Date }[]> {
+  return db
+    .select({ id: accounts.id, providerId: accounts.providerId, createdAt: accounts.createdAt })
+    .from(accounts)
+    .where(eq(accounts.userId, userId))
+    .orderBy(accounts.createdAt);
+}
+
 export async function getAdapterUserByAccount(
   provider: string,
   providerAccountId: string
@@ -593,6 +604,19 @@ export async function setUserDevicePreferences(
     .update(users)
     .set({
       preferences: sql`jsonb_set(coalesce(${users.preferences}, '{}'::jsonb), array[${kind}::text], ${block} || ${JSON.stringify(updates)}::jsonb)`,
+    })
+    .where(eq(users.id, userId));
+}
+
+/**
+ * Clear the user's Changed by AI as of the database's clock, which also stamps the changes. The
+ * profile's version is left alone, as a Device Preference's is.
+ */
+export async function markAIChangesCleared(userId: string): Promise<void> {
+  await db
+    .update(users)
+    .set({
+      preferences: sql`coalesce(${users.preferences}, '{}'::jsonb) || jsonb_build_object('aiChangesClearedAt', now())`,
     })
     .where(eq(users.id, userId));
 }

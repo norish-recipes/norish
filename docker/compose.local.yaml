@@ -11,7 +11,7 @@ services:
       # can reach the browser, not so the CDP server faces the network.
       - "127.0.0.1:9222:9222"
 
-  redis:
-    container_name: norish-redis-local
+  valkey:
+    container_name: norish-valkey-local
     ports:
       - "6379:6379"

@@ -49,7 +49,6 @@ describe("useUserMutations", () => {
   let queryClient: ReturnType<typeof createTestQueryClient>;
 
   beforeEach(() => {
-    vi.clearAllMocks();
     queryClient = createTestQueryClient();
   });
 
@@ -135,15 +134,19 @@ describe("useUserMutations", () => {
         wrapper: createTestWrapper(queryClient),
       });
 
-      // Verify the functions are async (their .constructor.name or toString)
-      expect(result.current.updateName.constructor.name).toBe("AsyncFunction");
-      expect(result.current.uploadAvatar.constructor.name).toBe("AsyncFunction");
-      expect(result.current.deleteAvatar.constructor.name).toBe("AsyncFunction");
-      expect(result.current.deleteAccount.constructor.name).toBe("AsyncFunction");
-      expect(result.current.createApiKey.constructor.name).toBe("AsyncFunction");
-      expect(result.current.deleteApiKey.constructor.name).toBe("AsyncFunction");
-      expect(result.current.toggleApiKey.constructor.name).toBe("AsyncFunction");
-      expect(result.current.setAllergies.constructor.name).toBe("AsyncFunction");
+      const calls = [
+        result.current.updateName("Name"),
+        result.current.uploadAvatar(new File([], "avatar.png")),
+        result.current.deleteAvatar(),
+        result.current.deleteAccount(),
+        result.current.createApiKey("Key"),
+        result.current.deleteApiKey("key-1"),
+        result.current.toggleApiKey("key-1", false),
+        result.current.setAllergies([]),
+      ];
+
+      for (const call of calls) expect(call).toBeInstanceOf(Promise);
+      await Promise.all(calls);
     });
 
     it("rolls back optimistic preferences update on failure", async () => {

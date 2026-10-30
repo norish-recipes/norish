@@ -69,8 +69,6 @@ vi.mock("@norish/shared-server/media/storage", () => ({
 
 describe("processImageImportJob", () => {
   beforeEach(() => {
-    vi.clearAllMocks();
-
     extractRecipeFromImages.mockResolvedValue({
       id: "recipe-123",
       name: "Extracted Recipe",
@@ -111,11 +109,13 @@ describe("processImageImportJob", () => {
 
   it("passes the job recipeId through extraction and image persistence", async () => {
     const { processImageImportJob } = await import("../../src/image-import/worker");
+    const updateData = vi.fn();
 
     await processImageImportJob({
       id: "job-1",
       attemptsMade: 0,
       opts: {},
+      updateData,
       data: {
         recipeId: "recipe-123",
         userId: "user-1",
@@ -141,6 +141,12 @@ describe("processImageImportJob", () => {
     expect(addRecipeImages).toHaveBeenCalledWith("recipe-123", [
       { image: "/recipes/recipe-123/uploaded.jpg", order: 0 },
     ]);
+    // The finished job is retained without the uploaded images.
+    expect(updateData).toHaveBeenCalledWith(
+      expect.objectContaining({
+        files: [{ data: "", mimeType: "image/jpeg", filename: "recipe.jpg" }],
+      })
+    );
   });
 
   it("stores the Dish Colour extracted from the saved image (vision path)", async () => {
@@ -150,6 +156,7 @@ describe("processImageImportJob", () => {
       id: "job-2",
       attemptsMade: 0,
       opts: {},
+      updateData: vi.fn(),
       data: {
         recipeId: "recipe-123",
         userId: "user-1",

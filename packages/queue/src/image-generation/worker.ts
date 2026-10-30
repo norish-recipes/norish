@@ -6,7 +6,6 @@
  * The result is stored through the one replacement operation (ADR-0025) and
  * the Dish Colour is recomputed from the image just written, so the canonical
  * recipe update carries the new tint.
- * Uses lazy worker pattern - starts on-demand and pauses when idle.
  *
  * The worker holds no database handle and composes no queries: eligibility
  * was the coordinator's decision, and the storage operation is the only
@@ -22,17 +21,18 @@ import { createLogger } from "@norish/shared-server/logger";
 import { refreshDishColorForRecipe } from "@norish/shared-server/media/dish-color";
 import { storeGeneratedRecipeImage } from "@norish/shared-server/media/generated-image";
 
-import { defineLazyWorker, QUEUE_NAMES } from "../config";
+import { createWorker } from "../create-worker";
 import {
   handleEnrichmentJobFailure,
   runEnrichmentJob,
   toRecipeSummary,
 } from "../enrichment/worker-runner";
 import { reportStep } from "../job-steps";
+import { QUEUE_NAMES } from "../queue-names";
 
 const log = createLogger("worker:image-generation");
 
-/** Exported so the job body can be exercised without a Redis-backed worker. */
+/** Exported so the job body can be exercised without a Valkey-backed worker. */
 export async function processImageGenerationJob(job: Job<RecipeEnrichmentJobData>): Promise<void> {
   await runEnrichmentJob(job, async (recipe) => {
     // Brief first: an image model is prompted rather than reasoned with, so
@@ -61,11 +61,8 @@ export async function processImageGenerationJob(job: Job<RecipeEnrichmentJobData
   });
 }
 
-const imageGenerationWorker = defineLazyWorker<RecipeEnrichmentJobData>(
-  QUEUE_NAMES.IMAGE_GENERATION,
-  processImageGenerationJob,
-  handleEnrichmentJobFailure
-);
-
-export const startImageGenerationWorker = imageGenerationWorker.start;
-export const stopImageGenerationWorker = imageGenerationWorker.stop;
+export function startImageGenerationWorker(): void {
+  createWorker<RecipeEnrichmentJobData>(QUEUE_NAMES.IMAGE_GENERATION, processImageGenerationJob, {
+    onFailed: handleEnrichmentJobFailure,
+  });
+}

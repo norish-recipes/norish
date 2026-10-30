@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useState } from "react";
 import Panel from "@/components/Panel/Panel";
 import {
   ActionButton,
@@ -12,12 +12,14 @@ import { ToggleButton, ToggleButtonGroup } from "@heroui/react";
 import { AnimatePresence, motion } from "motion/react";
 import { useTranslations } from "next-intl";
 
-import type { RecurrencePattern } from "@norish/shared/contracts/recurrence";
+import type { RecurrencePattern, RecurrenceRule } from "@norish/shared/contracts/recurrence";
 import type { RecurrenceTranslations } from "@norish/shared/lib/recurrence/formatter";
+import { isRecurrenceRule } from "@norish/shared/contracts/recurrence";
 import { calculateNextOccurrence, getTodayString } from "@norish/shared/lib/recurrence/calculator";
 import {
   formatNextOccurrence,
   formatRecurrenceSummary,
+  recurrenceUnitKey,
 } from "@norish/shared/lib/recurrence/formatter";
 
 type RecurrencePanelProps = {
@@ -40,6 +42,7 @@ export function RecurrencePanel({
   const t = useTranslations("common.recurrence");
   const tActions = useTranslations("common.actions");
   const [pattern, setPattern] = useState<RecurrencePattern | null>(initialPattern || null);
+  const [seededFrom, setSeededFrom] = useState({ open, initialPattern });
 
   // Build translations object for the formatter
   const formatterTranslations: RecurrenceTranslations = {
@@ -52,6 +55,8 @@ export function RecurrencePanel({
     weeks: t("weeks"),
     month: t("month"),
     months: t("months"),
+    year: t("year"),
+    years: t("years"),
     today: t("today"),
     tomorrow: t("tomorrow"),
     weekdaysFull: {
@@ -66,15 +71,16 @@ export function RecurrencePanel({
   };
 
   // Initialize pattern when panel opens
-  useEffect(() => {
+  if (seededFrom.open !== open || seededFrom.initialPattern !== initialPattern) {
+    setSeededFrom({ open, initialPattern });
     if (open) {
       setPattern(initialPattern || null);
     }
-  }, [open, initialPattern]);
+  }
   const handlePatternChange = (newPattern: RecurrencePattern) => {
     setPattern(newPattern);
   };
-  const handleFrequencyChange = (rule: "day" | "week" | "month") => {
+  const handleFrequencyChange = (rule: RecurrenceRule) => {
     const newPattern: RecurrencePattern = {
       rule,
       interval: pattern?.interval || 1,
@@ -117,7 +123,6 @@ export function RecurrencePanel({
   const showWeekdaySelector = pattern?.rule === "week" || pattern?.rule === "month";
   return (
     <Panel
-      className={nested ? "contents" : undefined}
       nested={nested}
       open={open}
       title={t("title")}
@@ -144,7 +149,7 @@ export function RecurrencePanel({
             onSelectionChange={(keys) => {
               const [rule] = Array.from(keys);
 
-              if (rule === "day" || rule === "week" || rule === "month") {
+              if (isRecurrenceRule(rule)) {
                 handleFrequencyChange(rule);
               }
             }}
@@ -159,6 +164,10 @@ export function RecurrencePanel({
             <ToggleButton className="font-medium" id="month">
               <ToggleButtonGroup.Separator />
               {t("monthly")}
+            </ToggleButton>
+            <ToggleButton className="font-medium" id="year">
+              <ToggleButtonGroup.Separator />
+              {t("yearly")}
             </ToggleButton>
           </ToggleButtonGroup>
         </div>
@@ -195,19 +204,7 @@ export function RecurrencePanel({
               />
               <div className="bg-surface-secondary flex-1 rounded-lg px-2 py-2.5 text-center">
                 <span className="text-foreground text-xl font-bold">{pattern.interval}</span>
-                <span className="text-muted ml-1.5 text-xs">
-                  {pattern.rule === "day"
-                    ? pattern.interval === 1
-                      ? t("day")
-                      : t("days")
-                    : pattern.rule === "week"
-                      ? pattern.interval === 1
-                        ? t("week")
-                        : t("weeks")
-                      : pattern.interval === 1
-                        ? t("month")
-                        : t("months")}
-                </span>
+                <span className="text-muted ml-1.5 text-xs">{t(recurrenceUnitKey(pattern))}</span>
               </div>
               <IconActionButton
                 action="increase"
@@ -263,7 +260,7 @@ export function RecurrencePanel({
               >
                 {WEEKDAY_KEYS.map((key, index) => (
                   <ToggleButton
-                    key={index}
+                    key={key}
                     className="min-w-0 flex-1 px-2 text-xs font-medium"
                     id={String(index)}
                   >

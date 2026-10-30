@@ -5,6 +5,7 @@ import React, { useCallback, useRef, useState } from "react";
 import NextImage from "next/image";
 import { useRecipeImages, useRecipeVideos } from "@/hooks/recipes";
 import { useClipboardImagePaste } from "@/hooks/use-clipboard-image-paste";
+import { usePending } from "@/hooks/use-pending";
 import {
   closestCenter,
   DndContext,
@@ -34,6 +35,7 @@ import { useTranslations } from "next-intl";
 
 import { MAX_RECIPE_IMAGES } from "@norish/shared/contracts/zod/recipe-images";
 import { MAX_RECIPE_VIDEOS } from "@norish/shared/contracts/zod/recipe-videos";
+import { addBasePath } from "@norish/shared/lib/base-path";
 import { createClientLogger } from "@norish/shared/lib/logger";
 
 const log = createClientLogger("MediaGalleryInput");
@@ -142,10 +144,9 @@ function SortableMediaItem({ item, index, onDelete, isFirstImage }: SortableMedi
           {item.thumbnail ? (
             <NextImage
               fill
-              unoptimized
               alt={`Video ${index + 1}`}
               className="object-cover"
-              src={item.thumbnail}
+              src={addBasePath(item.thumbnail)}
             />
           ) : (
             <div className="bg-surface-tertiary flex h-full w-full items-center justify-center">
@@ -168,10 +169,9 @@ function SortableMediaItem({ item, index, onDelete, isFirstImage }: SortableMedi
       ) : (
         <NextImage
           fill
-          unoptimized
           alt={`Image ${index + 1}`}
           className="object-cover"
-          src={item.src}
+          src={addBasePath(item.src)}
         />
       )}
 
@@ -196,7 +196,7 @@ export default function MediaGalleryInput({
   const { uploadGalleryVideo, deleteGalleryVideo } = useRecipeVideos();
 
   const [dragActive, setDragActive] = useState(false);
-  const [isUploading, setIsUploading] = useState(false);
+  const [isUploading, whileUploading] = usePending();
   const [uploadError, setUploadError] = useState<string | null>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
 
@@ -287,12 +287,10 @@ export default function MediaGalleryInput({
         return;
       }
 
-      setIsUploading(true);
       setUploadError(null);
 
-      try {
-        const nextOrder = media.length;
-
+      const nextOrder = media.length;
+      const upload = async () => {
         if (isVideo) {
           // Get duration from video file
           const duration = await getVideoDuration(file);
@@ -333,13 +331,15 @@ export default function MediaGalleryInput({
             setTimeout(() => setUploadError(null), 3000);
           }
         }
-      } catch (err) {
-        log.error({ err }, "Failed to upload media");
-        setUploadError(t("uploadFailed"));
-        setTimeout(() => setUploadError(null), 3000);
-      } finally {
-        setIsUploading(false);
-      }
+      };
+
+      await whileUploading(() =>
+        upload().catch((err: unknown) => {
+          log.error({ err }, "Failed to upload media");
+          setUploadError(t("uploadFailed"));
+          setTimeout(() => setUploadError(null), 3000);
+        })
+      );
     },
     [
       media,
@@ -352,6 +352,7 @@ export default function MediaGalleryInput({
       recipeId,
       onChange,
       t,
+      whileUploading,
     ]
   );
 
@@ -362,17 +363,12 @@ export default function MediaGalleryInput({
 
       onChange(reordered);
 
-      try {
-        if (id) {
-          if (type === "video") {
-            await deleteGalleryVideo(id, version ?? 1);
-          } else {
-            await deleteGalleryImage(id, version ?? 1);
-          }
-        }
-      } catch (err) {
-        log.error({ err }, "Failed to delete media");
-      }
+      if (!id) return;
+      const remove = type === "video" ? deleteGalleryVideo : deleteGalleryImage;
+
+      await remove(id, version ?? 1).catch((err: unknown) =>
+        log.error({ err }, "Failed to delete media")
+      );
     },
     [media, onChange, deleteGalleryImage, deleteGalleryVideo]
   );
@@ -413,9 +409,9 @@ export default function MediaGalleryInput({
   };
 
   const { getOnPasteHandler } = useClipboardImagePaste({
-    onFiles: (files) => {
-      if (files.length > 0) {
-        handleUpload(files[0]);
+    onFiles: ([file]) => {
+      if (file) {
+        handleUpload(file);
       }
     },
   });

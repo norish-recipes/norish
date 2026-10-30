@@ -1,9 +1,8 @@
-import type { RecipeListContext } from "@norish/db";
 import { listLibrary } from "@norish/db/repositories/library";
 import { trpcLogger as log } from "@norish/shared-server/logger";
 import { LibraryListInputSchema, LibraryListResultSchema } from "@norish/shared/contracts/zod";
 
-import { authedProcedure } from "../../middleware";
+import { authedProcedure, viewerOf } from "../../middleware";
 import { router } from "../../trpc";
 
 /**
@@ -16,11 +15,7 @@ const list = authedProcedure
   .input(LibraryListInputSchema)
   .output(LibraryListResultSchema)
   .query(async ({ ctx, input }) => {
-    const listCtx: RecipeListContext = {
-      userId: ctx.user.id,
-      householdUserIds: ctx.householdUserIds,
-      isServerAdmin: ctx.isServerAdmin,
-    };
+    const listCtx = viewerOf(ctx);
 
     const result = await listLibrary(listCtx, {
       limit: input.limit,
@@ -34,6 +29,7 @@ const list = authedProcedure
       maxCookingTime: input.maxCookingTime,
       categories: input.categories,
       favoritesOnly: input.favoritesOnly,
+      pantryOnly: input.pantryOnly,
       type: input.type,
     });
 

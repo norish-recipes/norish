@@ -398,7 +398,7 @@ describe("Mealie Parser", () => {
         amount: 3,
         unit: "cup",
         // The food Mealie named is what the line resolves from.
-        foodText: "margarine",
+        foodTexts: ["margarine"],
       });
     });
 
@@ -735,7 +735,7 @@ describe("Mealie Parser", () => {
       );
 
       expect(dto).not.toBeNull();
-      expect(dto!.image).toBe("mocked-image-guid");
+      expect(dto!.images).toEqual([{ image: "mocked-image-guid", order: 0 }]);
     });
 
     it("falls back to note when original_text is missing", async () => {

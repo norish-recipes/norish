@@ -29,7 +29,6 @@
     "goHome": "Zur Startseite",
     "test": "Testen",
     "format": "Formatieren",
-    "restoreDefaults": "Auf Standard zurücksetzen",
     "saveChanges": "Änderungen speichern"
   },
   "secret": {
@@ -58,6 +57,8 @@
     "searchTags": "Tags durchsuchen",
     "favoritesAndRating": "Favoriten & Bewertung",
     "favorites": "Favoriten",
+    "pantry": "Vorratskammer",
+    "pantryOnly": "Zutaten zu Hause",
     "cookingTime": "Kochzeit",
     "cookingTimeUnder15": "<15 Min",
     "cookingTimeUnder30": "<30 Min",
@@ -101,7 +102,7 @@
     "serverUnreachableBanner": "Der Norish-Server ist nicht erreichbar, zwischengespeicherte Daten werden angezeigt",
     "live": "Verbunden",
     "offline": "Offline",
-    "openDetails": "Connection details"
+    "openDetails": "Verbindungsdetails"
   },
   "language": {
     "title": "Sprache"
@@ -111,6 +112,11 @@
     "title": "Nora ist verwirrt.",
     "message": "Sie schnüffelt herum, um herauszufinden, wohin Sie wollten.",
     "imageAlt": "Nora schaut verwirrt"
+  },
+  "errorPage": {
+    "title": "Etwas ist schiefgelaufen.",
+    "message": "Norish ist auf dieser Seite auf einen Fehler gestoßen.",
+    "retry": "Erneut versuchen"
   },
   "import": {
     "url": {
@@ -139,7 +145,7 @@
       "title": "Aus Bild importieren",
       "dropzone": "Bilder hier ablegen oder klicken zum Durchsuchen",
       "paste": "zum Einfügen",
-      "formats": "Unterstützt JPG, PNG, WebP. Max 10 MB pro Datei.",
+      "formats": "Unterstützt JPG, PNG, WebP, PDF. Max 10 MB pro Datei.",
       "invalidType": "Ungültiger Dateityp",
       "notSupported": "{name} ist kein unterstütztes Bildformat",
       "tooLarge": "Datei zu groß",
@@ -178,12 +184,15 @@
     "daily": "Täglich",
     "weekly": "Wöchentlich",
     "monthly": "Monatlich",
+    "yearly": "Jährlich",
     "day": "Tag",
     "days": "Tage",
     "week": "Woche",
     "weeks": "Wochen",
     "month": "Monat",
     "months": "Monate",
+    "year": "Jahr",
+    "years": "Jahre",
     "next": "Nächste:",
     "every": "Jeden/Jede",
     "everyOther": "Jeden zweiten/Jede zweite",
@@ -225,55 +234,55 @@
     "notifications_disabled_hint": "Aktivieren Sie Benachrichtigungen in Ihren Browser-Einstellungen, um Hinweise zu erhalten, wenn Timer im Hintergrund ablaufen."
   },
   "offlineStatus": {
-    "title": "Connection & offline",
+    "title": "Verbindung & Offline-Modus",
     "connection": {
-      "heading": "Connection",
-      "live": "Live",
+      "heading": "Verbindung",
+      "live": "Verbunden",
       "offline": "Offline",
-      "forced": "Offline (forced)",
-      "liveDescription": "Connected to Norish. Changes sync as you make them.",
-      "offlineDescription": "Can't reach Norish. Showing cached data; changes are queued and sync when you're back.",
-      "forcedDescription": "Offline is forced for development. The backend is reachable but every request is blocked.",
+      "forced": "Offline (erzwungen)",
+      "liveDescription": "Mit Norish verbunden. Änderungen werden sofort synchronisiert.",
+      "offlineDescription": "Norish ist nicht erreichbar. Zwischengespeicherte Daten werden angezeigt; Änderungen werden vorgemerkt und synchronisiert, sobald Sie wieder online sind.",
+      "forcedDescription": "Der Offline-Modus ist für die Entwicklung erzwungen. Das Backend ist erreichbar, aber jede Anfrage wird blockiert.",
       "devBadge": "dev"
     },
     "cache": {
-      "heading": "Offline cache",
-      "recipes": "Recipes",
+      "heading": "Offline-Speicher",
+      "recipes": "Rezepte",
       "cookbooks": "Kochbücher",
-      "groceries": "Groceries",
-      "stores": "Stores",
-      "planned": "This week",
-      "dataAge": "Data from {when}",
-      "dataAgeUnknown": "Not warmed yet",
-      "wipe": "Clear cached data",
-      "wipeConfirmBody": "Remove the offline copy of your recipes, groceries, stores and plan? Your queued changes are kept.",
-      "wipeConfirmOfflineBody": "You're offline — clearing now leaves nothing to show until you reconnect. Your queued changes are kept.",
-      "wipeConfirm": "Clear",
-      "wipeCancel": "Keep"
+      "groceries": "Einkäufe",
+      "stores": "Geschäfte",
+      "planned": "Diese Woche",
+      "dataAge": "Stand: {when}",
+      "dataAgeUnknown": "Noch nicht zwischengespeichert",
+      "wipe": "Zwischengespeicherte Daten löschen",
+      "wipeConfirmBody": "Die Offline-Kopie Ihrer Rezepte, Einkäufe, Geschäfte und Planung entfernen? Ihre ausstehenden Änderungen bleiben erhalten.",
+      "wipeConfirmOfflineBody": "Sie sind offline. Wenn Sie jetzt löschen, wird bis zur erneuten Verbindung nichts angezeigt. Ihre ausstehenden Änderungen bleiben erhalten.",
+      "wipeConfirm": "Löschen",
+      "wipeCancel": "Behalten"
     },
     "outbox": {
-      "heading": "Queued changes",
-      "empty": "Nothing queued — everything's synced.",
-      "pending": "{count, plural, =0 {No changes waiting} one {# change waiting} other {# changes waiting}}",
-      "syncing": "{count, plural, =0 {Syncing} one {Syncing # change} other {Syncing # changes}}",
-      "syncNow": "Sync now",
-      "retryAll": "Retry all",
-      "discardAll": "Discard all",
-      "discardConfirmBody": "{count, plural, one {Permanently discard # queued change? It won't be sent.} other {Permanently discard # queued changes? They won't be sent.}}",
-      "discardConfirm": "Discard",
-      "discardCancel": "Keep",
+      "heading": "Ausstehende Änderungen",
+      "empty": "Nichts ausstehend, alles ist synchronisiert.",
+      "pending": "{count, plural, =0 {Keine ausstehenden Änderungen} one {# Änderung ausstehend} other {# Änderungen ausstehend}}",
+      "syncing": "{count, plural, =0 {Wird synchronisiert} one {# Änderung wird synchronisiert} other {# Änderungen werden synchronisiert}}",
+      "syncNow": "Jetzt synchronisieren",
+      "retryAll": "Alle erneut versuchen",
+      "discardAll": "Alle verwerfen",
+      "discardConfirmBody": "{count, plural, one {# ausstehende Änderung endgültig verwerfen? Sie wird nicht gesendet.} other {# ausstehende Änderungen endgültig verwerfen? Sie werden nicht gesendet.}}",
+      "discardConfirm": "Verwerfen",
+      "discardCancel": "Behalten",
       "status": {
-        "pending": "Syncing",
-        "parked": "Needs attention",
-        "conflicted": "Conflict"
+        "pending": "Wird synchronisiert",
+        "parked": "Erfordert Aufmerksamkeit",
+        "conflicted": "Konflikt"
       }
     },
     "devToggle": {
-      "heading": "Developer",
-      "force": "Force offline",
-      "description": "Blocks the backend transport to exercise the offline runtime. Dev builds only.",
-      "on": "On",
-      "off": "Off"
+      "heading": "Entwickler",
+      "force": "Offline erzwingen",
+      "description": "Blockiert den Backend-Transport, um die Offline-Laufzeit zu testen. Nur in Dev-Builds.",
+      "on": "Ein",
+      "off": "Aus"
     }
   },
   "offlineFallback": {

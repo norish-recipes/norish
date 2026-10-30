@@ -15,6 +15,7 @@ describe("ingredient text", () => {
     expect(namesNoFood("# For the sauce")).toBe(true);
     expect(namesNoFood(")")).toBe(true);
     expect(namesNoFood("[object Object]")).toBe(true);
+    expect(namesNoFood("null [object Object]")).toBe(true);
     expect(namesNoFood("onions")).toBe(false);
   });
 

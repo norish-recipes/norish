@@ -19,7 +19,8 @@
       "unitWords": {
         "day": ["day", "days", "daily"],
         "week": ["week", "weeks", "weekly"],
-        "month": ["month", "months", "monthly"]
+        "month": ["month", "months", "monthly"],
+        "year": ["year", "years", "yearly", "annually"]
       },
       "weekdayWords": {
         "sunday": 0,
@@ -40,7 +41,7 @@
       "intervalHints": []
     },
     "nl": {
-      "everyWords": ["elke", "ieder", "iedere"],
+      "everyWords": ["elk", "elke", "ieder", "iedere"],
       "otherWords": ["andere"],
       "onWords": ["op"],
       "numberWords": {
@@ -58,7 +59,8 @@
       "unitWords": {
         "day": ["dag", "dagen", "dagelijks"],
         "week": ["week", "weken", "wekelijks", "weekelijks"],
-        "month": ["maand", "maanden", "maandelijks"]
+        "month": ["maand", "maanden", "maandelijks"],
+        "year": ["jaar", "jaren", "jaarlijks"]
       },
       "weekdayWords": {
         "zondag": 0,
@@ -122,7 +124,8 @@
       "unitWords": {
         "day": ["일", "하루", "매일"],
         "week": ["주", "매주", "주일"],
-        "month": ["월", "개월", "매월"]
+        "month": ["월", "개월", "매월"],
+        "year": ["년", "해", "매년"]
       },
       "weekdayWords": {
         "일요일": 0,
@@ -159,7 +162,7 @@
       ]
     },
     "es": {
-      "everyWords": ["cada"],
+      "everyWords": ["a cada", "cada"],
       "otherWords": ["otro", "otra"],
       "onWords": ["el", "los"],
       "numberWords": {
@@ -177,7 +180,8 @@
       "unitWords": {
         "day": ["dia", "dias", "día", "días", "diario"],
         "week": ["semana", "semanas", "semanal"],
-        "month": ["mes", "meses", "mensual"]
+        "month": ["mes", "meses", "mensual"],
+        "year": ["año", "años", "anual"]
       },
       "weekdayWords": {
         "domingo": 0,
@@ -227,7 +231,8 @@
       "unitWords": {
         "day": ["dag", "dage", "dagligt", "daglig"],
         "week": ["uge", "uger", "ugentligt", "ugentlig"],
-        "month": ["måned", "måneder", "månedligt", "månedlig"]
+        "month": ["måned", "måneder", "månedligt", "månedlig"],
+        "year": ["år", "årligt", "årlig"]
       },
       "weekdayWords": {
         "søndag": 0,
@@ -282,7 +287,8 @@
       "unitWords": {
         "day": ["jour", "jours", "quotidien", "quotidienne"],
         "week": ["semaine", "semaines", "hebdomadaire"],
-        "month": ["mois", "mensuel", "mensuelle"]
+        "month": ["mois", "mensuel", "mensuelle"],
+        "year": ["an", "ans", "année", "années", "annuel", "annuelle"]
       },
       "weekdayWords": {
         "dimanche": 0,
@@ -328,7 +334,8 @@
       "unitWords": {
         "day": ["giorno", "giorni", "giornaliero", "quotidiano"],
         "week": ["settimana", "settimane", "settimanale"],
-        "month": ["mese", "mesi", "mensile"]
+        "month": ["mese", "mesi", "mensile"],
+        "year": ["anno", "anni", "annuale"]
       },
       "weekdayWords": {
         "domenica": 0,
@@ -389,7 +396,8 @@
       "unitWords": {
         "day": ["день", "дні", "днів", "дня"],
         "week": ["тиждень", "тижні", "тижнів", "тижня"],
-        "month": ["місяць", "місяці", "місяців", "місяця"]
+        "month": ["місяць", "місяці", "місяців", "місяця"],
+        "year": ["рік", "роки", "років", "року"]
       },
       "weekdayWords": {
         "неділя": 0,
@@ -442,6 +450,636 @@
           "phrases": ["щомісяця", "щомісячно", "раз на місяць"],
           "interval": 1,
           "rule": "month"
+        },
+        {
+          "phrases": ["щороку", "щорічно", "раз на рік"],
+          "interval": 1,
+          "rule": "year"
+        }
+      ]
+    },
+    "de": {
+      "everyWords": ["jeden", "jede", "jedes", "alle"],
+      "otherWords": ["zweiten", "zweite"],
+      "onWords": ["am", "an"],
+      "numberWords": {
+        "ein": 1,
+        "eine": 1,
+        "einen": 1,
+        "zwei": 2,
+        "drei": 3,
+        "vier": 4,
+        "fünf": 5,
+        "sechs": 6,
+        "sieben": 7,
+        "acht": 8,
+        "neun": 9,
+        "zehn": 10
+      },
+      "unitWords": {
+        "day": ["tag", "tage", "tagen"],
+        "week": ["woche", "wochen"],
+        "month": ["monat", "monate", "monaten"],
+        "year": ["jahr", "jahre", "jahren"]
+      },
+      "weekdayWords": {
+        "sonntag": 0,
+        "montag": 1,
+        "dienstag": 2,
+        "mittwoch": 3,
+        "donnerstag": 4,
+        "freitag": 5,
+        "samstag": 6,
+        "sonnabend": 6
+      },
+      "intervalHints": [
+        {
+          "phrases": ["täglich"],
+          "interval": 1,
+          "rule": "day"
+        },
+        {
+          "phrases": ["wöchentlich"],
+          "interval": 1,
+          "rule": "week"
+        },
+        {
+          "phrases": ["zweiwöchentlich"],
+          "interval": 2,
+          "rule": "week"
+        },
+        {
+          "phrases": ["monatlich"],
+          "interval": 1,
+          "rule": "month"
+        },
+        {
+          "phrases": ["jährlich"],
+          "interval": 1,
+          "rule": "year"
+        }
+      ]
+    },
+    "pl": {
+      "everyWords": ["co", "każdy", "każdą", "każde", "każdego"],
+      "otherWords": ["drugi", "drugą", "drugie"],
+      "onWords": ["w", "we"],
+      "numberWords": {
+        "jeden": 1,
+        "jedna": 1,
+        "dwa": 2,
+        "dwie": 2,
+        "trzy": 3,
+        "cztery": 4,
+        "pięć": 5,
+        "sześć": 6,
+        "siedem": 7,
+        "osiem": 8,
+        "dziewięć": 9,
+        "dziesięć": 10
+      },
+      "unitWords": {
+        "day": ["dzień", "dni", "dnia"],
+        "week": ["tydzień", "tygodnie", "tygodni", "tygodnia"],
+        "month": ["miesiąc", "miesiące", "miesięcy", "miesiąca"],
+        "year": ["rok", "roku", "lata", "lat"]
+      },
+      "weekdayWords": {
+        "niedziela": 0,
+        "niedzielę": 0,
+        "poniedziałek": 1,
+        "wtorek": 2,
+        "środa": 3,
+        "środę": 3,
+        "czwartek": 4,
+        "piątek": 5,
+        "sobota": 6,
+        "sobotę": 6
+      },
+      "intervalHints": [
+        {
+          "phrases": ["codziennie"],
+          "interval": 1,
+          "rule": "day"
+        },
+        {
+          "phrases": ["raz w tygodniu"],
+          "interval": 1,
+          "rule": "week"
+        },
+        {
+          "phrases": ["raz w miesiącu"],
+          "interval": 1,
+          "rule": "month"
+        },
+        {
+          "phrases": ["corocznie", "raz w roku"],
+          "interval": 1,
+          "rule": "year"
+        }
+      ]
+    },
+    "ru": {
+      "everyWords": ["каждый", "каждую", "каждое", "каждые", "каждого", "каждой"],
+      "otherWords": ["второй", "вторую"],
+      "onWords": ["в", "во", "по"],
+      "numberWords": {
+        "один": 1,
+        "одна": 1,
+        "два": 2,
+        "две": 2,
+        "три": 3,
+        "четыре": 4,
+        "пять": 5,
+        "шесть": 6,
+        "семь": 7,
+        "восемь": 8,
+        "девять": 9,
+        "десять": 10
+      },
+      "unitWords": {
+        "day": ["день", "дня", "дней"],
+        "week": ["неделю", "неделя", "недели", "недель"],
+        "month": ["месяц", "месяца", "месяцев"],
+        "year": ["год", "года", "лет"]
+      },
+      "weekdayWords": {
+        "воскресенье": 0,
+        "понедельник": 1,
+        "вторник": 2,
+        "среда": 3,
+        "среду": 3,
+        "четверг": 4,
+        "пятница": 5,
+        "пятницу": 5,
+        "суббота": 6,
+        "субботу": 6
+      },
+      "intervalHints": [
+        {
+          "phrases": ["ежедневно"],
+          "interval": 1,
+          "rule": "day"
+        },
+        {
+          "phrases": ["через день"],
+          "interval": 2,
+          "rule": "day"
+        },
+        {
+          "phrases": ["еженедельно", "раз в неделю"],
+          "interval": 1,
+          "rule": "week"
+        },
+        {
+          "phrases": ["раз в две недели"],
+          "interval": 2,
+          "rule": "week"
+        },
+        {
+          "phrases": ["ежемесячно", "раз в месяц"],
+          "interval": 1,
+          "rule": "month"
+        },
+        {
+          "phrases": ["ежегодно", "раз в год"],
+          "interval": 1,
+          "rule": "year"
+        }
+      ]
+    },
+    "fi": {
+      "everyWords": ["joka"],
+      "otherWords": ["toinen"],
+      "onWords": [],
+      "numberWords": {
+        "yksi": 1,
+        "kaksi": 2,
+        "kolme": 3,
+        "neljä": 4,
+        "viisi": 5,
+        "kuusi": 6,
+        "seitsemän": 7,
+        "kahdeksan": 8,
+        "yhdeksän": 9,
+        "kymmenen": 10
+      },
+      "unitWords": {
+        "day": ["päivä", "päivää", "päivän"],
+        "week": ["viikko", "viikkoa", "viikon"],
+        "month": ["kuukausi", "kuukautta", "kuukauden"],
+        "year": ["vuosi", "vuotta", "vuoden"]
+      },
+      "weekdayWords": {
+        "sunnuntai": 0,
+        "sunnuntaina": 0,
+        "maanantai": 1,
+        "maanantaina": 1,
+        "tiistai": 2,
+        "tiistaina": 2,
+        "keskiviikko": 3,
+        "keskiviikkona": 3,
+        "torstai": 4,
+        "torstaina": 4,
+        "perjantai": 5,
+        "perjantaina": 5,
+        "lauantai": 6,
+        "lauantaina": 6
+      },
+      "intervalHints": [
+        {
+          "phrases": ["päivittäin"],
+          "interval": 1,
+          "rule": "day"
+        },
+        {
+          "phrases": ["viikoittain"],
+          "interval": 1,
+          "rule": "week"
+        },
+        {
+          "phrases": ["kahden viikon välein"],
+          "interval": 2,
+          "rule": "week"
+        },
+        {
+          "phrases": ["kuukausittain"],
+          "interval": 1,
+          "rule": "month"
+        },
+        {
+          "phrases": ["vuosittain"],
+          "interval": 1,
+          "rule": "year"
+        }
+      ]
+    },
+    "no": {
+      "everyWords": ["hver", "hvert"],
+      "otherWords": ["annen", "annet"],
+      "onWords": ["på"],
+      "numberWords": {
+        "en": 1,
+        "ett": 1,
+        "to": 2,
+        "tre": 3,
+        "fire": 4,
+        "fem": 5,
+        "seks": 6,
+        "sju": 7,
+        "syv": 7,
+        "åtte": 8,
+        "ni": 9,
+        "ti": 10
+      },
+      "unitWords": {
+        "day": ["dag", "dager"],
+        "week": ["uke", "uker"],
+        "month": ["måned", "måneder"],
+        "year": ["år"]
+      },
+      "weekdayWords": {
+        "søndag": 0,
+        "mandag": 1,
+        "tirsdag": 2,
+        "onsdag": 3,
+        "torsdag": 4,
+        "fredag": 5,
+        "lørdag": 6
+      },
+      "intervalHints": [
+        {
+          "phrases": ["daglig"],
+          "interval": 1,
+          "rule": "day"
+        },
+        {
+          "phrases": ["ukentlig"],
+          "interval": 1,
+          "rule": "week"
+        },
+        {
+          "phrases": ["annenhver uke"],
+          "interval": 2,
+          "rule": "week"
+        },
+        {
+          "phrases": ["månedlig"],
+          "interval": 1,
+          "rule": "month"
+        },
+        {
+          "phrases": ["årlig"],
+          "interval": 1,
+          "rule": "year"
+        }
+      ]
+    },
+    "bg": {
+      "everyWords": ["всеки", "всяка", "всяко"],
+      "otherWords": ["втори", "втора"],
+      "onWords": ["в", "във"],
+      "numberWords": {
+        "един": 1,
+        "една": 1,
+        "два": 2,
+        "две": 2,
+        "три": 3,
+        "четири": 4,
+        "пет": 5,
+        "шест": 6,
+        "седем": 7,
+        "осем": 8,
+        "девет": 9,
+        "десет": 10
+      },
+      "unitWords": {
+        "day": ["ден", "дни", "дена"],
+        "week": ["седмица", "седмици"],
+        "month": ["месец", "месеца", "месеци"],
+        "year": ["година", "години"]
+      },
+      "weekdayWords": {
+        "неделя": 0,
+        "понеделник": 1,
+        "вторник": 2,
+        "сряда": 3,
+        "четвъртък": 4,
+        "петък": 5,
+        "събота": 6
+      },
+      "intervalHints": [
+        {
+          "phrases": ["ежедневно"],
+          "interval": 1,
+          "rule": "day"
+        },
+        {
+          "phrases": ["през ден"],
+          "interval": 2,
+          "rule": "day"
+        },
+        {
+          "phrases": ["ежеседмично", "веднъж седмично"],
+          "interval": 1,
+          "rule": "week"
+        },
+        {
+          "phrases": ["ежемесечно", "веднъж месечно"],
+          "interval": 1,
+          "rule": "month"
+        },
+        {
+          "phrases": ["ежегодно", "веднъж годишно"],
+          "interval": 1,
+          "rule": "year"
+        }
+      ]
+    },
+    "pt": {
+      "everyWords": ["a cada", "cada", "todo", "toda"],
+      "otherWords": ["outro", "outra"],
+      "onWords": ["na", "no", "às", "aos"],
+      "numberWords": {
+        "um": 1,
+        "uma": 1,
+        "dois": 2,
+        "duas": 2,
+        "três": 3,
+        "quatro": 4,
+        "cinco": 5,
+        "seis": 6,
+        "sete": 7,
+        "oito": 8,
+        "nove": 9,
+        "dez": 10
+      },
+      "unitWords": {
+        "day": ["dia", "dias"],
+        "week": ["semana", "semanas"],
+        "month": ["mês", "mes", "meses"],
+        "year": ["ano", "anos"]
+      },
+      "weekdayWords": {
+        "domingo": 0,
+        "segunda": 1,
+        "segunda-feira": 1,
+        "terça": 2,
+        "terça-feira": 2,
+        "quarta": 3,
+        "quarta-feira": 3,
+        "quinta": 4,
+        "quinta-feira": 4,
+        "sexta": 5,
+        "sexta-feira": 5,
+        "sábado": 6,
+        "sabado": 6
+      },
+      "intervalHints": [
+        {
+          "phrases": ["todos os dias", "diariamente"],
+          "interval": 1,
+          "rule": "day"
+        },
+        {
+          "phrases": ["dia sim, dia não"],
+          "interval": 2,
+          "rule": "day"
+        },
+        {
+          "phrases": ["todas as semanas", "semanalmente"],
+          "interval": 1,
+          "rule": "week"
+        },
+        {
+          "phrases": ["todos os meses", "mensalmente"],
+          "interval": 1,
+          "rule": "month"
+        },
+        {
+          "phrases": ["todos os anos", "anualmente"],
+          "interval": 1,
+          "rule": "year"
+        }
+      ]
+    },
+    "sv": {
+      "everyWords": ["varje", "var", "vart"],
+      "otherWords": ["annan", "annat"],
+      "onWords": ["på"],
+      "numberWords": {
+        "en": 1,
+        "ett": 1,
+        "två": 2,
+        "tre": 3,
+        "fyra": 4,
+        "fem": 5,
+        "sex": 6,
+        "sju": 7,
+        "åtta": 8,
+        "nio": 9,
+        "tio": 10,
+        "andra": 2,
+        "tredje": 3,
+        "fjärde": 4,
+        "femte": 5,
+        "sjätte": 6,
+        "sjunde": 7,
+        "åttonde": 8,
+        "nionde": 9,
+        "tionde": 10
+      },
+      "unitWords": {
+        "day": ["dag", "dagar"],
+        "week": ["vecka", "veckor"],
+        "month": ["månad", "månader"],
+        "year": ["år"]
+      },
+      "weekdayWords": {
+        "söndag": 0,
+        "måndag": 1,
+        "tisdag": 2,
+        "onsdag": 3,
+        "torsdag": 4,
+        "fredag": 5,
+        "lördag": 6
+      },
+      "intervalHints": [
+        {
+          "phrases": ["dagligen"],
+          "interval": 1,
+          "rule": "day"
+        },
+        {
+          "phrases": ["varannan dag"],
+          "interval": 2,
+          "rule": "day"
+        },
+        {
+          "phrases": ["veckovis"],
+          "interval": 1,
+          "rule": "week"
+        },
+        {
+          "phrases": ["varannan vecka"],
+          "interval": 2,
+          "rule": "week"
+        },
+        {
+          "phrases": ["månadsvis"],
+          "interval": 1,
+          "rule": "month"
+        },
+        {
+          "phrases": ["varannan månad"],
+          "interval": 2,
+          "rule": "month"
+        },
+        {
+          "phrases": ["årligen"],
+          "interval": 1,
+          "rule": "year"
+        },
+        {
+          "phrases": ["vartannat år"],
+          "interval": 2,
+          "rule": "year"
+        }
+      ]
+    },
+    "ar": {
+      "everyWords": ["كل"],
+      "otherWords": ["ثاني"],
+      "onWords": ["يوم", "في"],
+      "numberWords": {
+        "واحد": 1,
+        "ثلاثة": 3,
+        "ثلاث": 3,
+        "أربعة": 4,
+        "اربعة": 4,
+        "أربع": 4,
+        "اربع": 4,
+        "خمسة": 5,
+        "خمس": 5,
+        "ستة": 6,
+        "ست": 6,
+        "سبعة": 7,
+        "سبع": 7,
+        "ثمانية": 8,
+        "ثماني": 8,
+        "تسعة": 9,
+        "تسع": 9,
+        "عشرة": 10,
+        "عشر": 10
+      },
+      "unitWords": {
+        "day": ["يوم", "أيام", "ايام"],
+        "week": ["أسبوع", "اسبوع", "أسابيع", "اسابيع"],
+        "month": ["شهر", "أشهر", "اشهر", "شهور"],
+        "year": ["سنة", "سنوات", "سنين", "عام", "أعوام", "اعوام"]
+      },
+      "weekdayWords": {
+        "الأحد": 0,
+        "الاحد": 0,
+        "أحد": 0,
+        "احد": 0,
+        "الاثنين": 1,
+        "الإثنين": 1,
+        "اثنين": 1,
+        "إثنين": 1,
+        "الثلاثاء": 2,
+        "ثلاثاء": 2,
+        "الأربعاء": 3,
+        "الاربعاء": 3,
+        "أربعاء": 3,
+        "اربعاء": 3,
+        "الخميس": 4,
+        "خميس": 4,
+        "الجمعة": 5,
+        "جمعة": 5,
+        "السبت": 6,
+        "سبت": 6
+      },
+      "intervalHints": [
+        {
+          "phrases": ["يوميًا", "يوميا"],
+          "interval": 1,
+          "rule": "day"
+        },
+        {
+          "phrases": ["كل يومين"],
+          "interval": 2,
+          "rule": "day"
+        },
+        {
+          "phrases": ["أسبوعيًا", "أسبوعيا", "اسبوعيا"],
+          "interval": 1,
+          "rule": "week"
+        },
+        {
+          "phrases": ["كل أسبوعين", "كل اسبوعين"],
+          "interval": 2,
+          "rule": "week"
+        },
+        {
+          "phrases": ["شهريًا", "شهريا"],
+          "interval": 1,
+          "rule": "month"
+        },
+        {
+          "phrases": ["كل شهرين"],
+          "interval": 2,
+          "rule": "month"
+        },
+        {
+          "phrases": ["سنويًا", "سنويا"],
+          "interval": 1,
+          "rule": "year"
+        },
+        {
+          "phrases": ["كل سنتين", "كل عامين"],
+          "interval": 2,
+          "rule": "year"
         }
       ]
     }

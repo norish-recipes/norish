@@ -7,14 +7,18 @@
  */
 
 import type { NodePgDatabase } from "drizzle-orm/node-postgres";
-import { eq, sql } from "drizzle-orm";
+import { and, eq, sql } from "drizzle-orm";
 import { drizzle } from "drizzle-orm/node-postgres";
 import pg from "pg";
 
+import type { MintIngredientInput } from "@norish/db/repositories/ingredient-aliases";
 import type { FullRecipeDTO, MeasurementSystem } from "@norish/shared/contracts";
 import { encrypt, hashToken } from "@norish/config/crypto";
 import { getRecipeFull } from "@norish/db";
+import { mintIngredientWithAliases } from "@norish/db/repositories/ingredient-aliases";
+import { isFirstLineFood, writeRecipeLineFoodsTx } from "@norish/db/repositories/ingredients";
 import * as schema from "@norish/db/schema";
+import { ingredientAliasFold } from "@norish/shared/lib/spelling-keys";
 
 const { Pool } = pg;
 
@@ -87,6 +91,9 @@ export async function cleanDatabase() {
   // Groceries point at Ingredient Aliases, which go with their Ingredients.
   await db.delete(schema.groceries);
   await db.delete(schema.recurringGroceries);
+  // A deleted food's AI Changes name no food, so they do not go with the Ingredients.
+  await db.delete(schema.ingredientJunkPile);
+  await db.delete(schema.ingredientAIChanges);
   await db.delete(schema.ingredients);
   await db.delete(schema.plannedItems);
   await db.delete(schema.householdUsers);
@@ -165,6 +172,23 @@ export async function createTestIngredient(
   return ingredient;
 }
 
+/** A food Norish knows by one spelling, minted as the resolver would; shared, unflagged. */
+export async function mintTestFood(
+  text: string,
+  options: Partial<Omit<MintIngredientInput, "name" | "aliases">> = {}
+) {
+  const [row] = await mintIngredientWithAliases({
+    name: text,
+    aliases: [{ text, fold: ingredientAliasFold(text) }],
+    ownerId: null,
+    locale: null,
+    flagged: false,
+    ...options,
+  });
+
+  return row!;
+}
+
 /**
  * Create a test recipe with basic fields
  */
@@ -226,24 +250,39 @@ export async function createTestRecipeShare(
 /**
  * Create test recipe ingredients
  */
+/** Insert a recipe line and the foods it names, in order, as the app writes them. */
+export async function insertTestRecipeLine(
+  values: typeof schema.recipeIngredients.$inferInsert,
+  aliasIds: readonly string[] = []
+) {
+  const db = getTestDb();
+  const [line] = await db.insert(schema.recipeIngredients).values(values).returning();
+
+  if (aliasIds.length > 0) {
+    await db.transaction((tx) => writeRecipeLineFoodsTx(tx, [{ id: line!.id, aliasIds }]));
+  }
+
+  return line!;
+}
+
+/** A new recipe of `userId`'s with a line naming `aliasId`: AI asks only about recipe foods. */
+export async function nameInATestRecipe(userId: string, aliasId: string, text = "a line") {
+  const recipe = await createTestRecipe(userId);
+
+  return await insertTestRecipeLine({ recipeId: recipe.id, name: text }, [aliasId]);
+}
+
 export async function createTestRecipeIngredients(
   recipeId: string,
   ingredientId: string,
   systemUsed: MeasurementSystem,
   overrides: Partial<typeof schema.recipeIngredients.$inferInsert> = {}
 ) {
-  const db = getTestDb();
-  const [alias] = await db
-    .select({ id: schema.ingredientAliases.id })
-    .from(schema.ingredientAliases)
-    .where(eq(schema.ingredientAliases.ingredientId, ingredientId))
-    .limit(1);
+  const alias = await firstSpellingId(ingredientId);
 
-  const [recipeIngredient] = await db
-    .insert(schema.recipeIngredients)
-    .values({
+  return await insertTestRecipeLine(
+    {
       recipeId,
-      ingredientAliasId: alias?.id ?? null,
       name: overrides.name ?? "Test ingredient",
       amount: overrides.amount ?? "1",
       unit: overrides.unit ?? "cup",
@@ -251,10 +290,21 @@ export async function createTestRecipeIngredients(
       systemUsed,
       createdAt: overrides.createdAt ?? new Date(),
       updatedAt: overrides.updatedAt ?? new Date(),
-    })
-    .returning();
+    },
+    alias ? [alias] : []
+  );
+}
 
-  return recipeIngredient;
+/** The id of an Ingredient's first spelling, if it has one. */
+export async function firstSpellingId(ingredientId: string): Promise<string | undefined> {
+  const [alias] = await getTestDb()
+    .select({ id: schema.ingredientAliases.id })
+    .from(schema.ingredientAliases)
+    .where(eq(schema.ingredientAliases.ingredientId, ingredientId))
+    .orderBy(schema.ingredientAliases.createdAt)
+    .limit(1);
+
+  return alias?.id;
 }
 
 /**
@@ -288,7 +338,7 @@ export async function createTestRecipeStep(
 export async function getRecipeIngredients(recipeId: string) {
   const db = getTestDb();
 
-  // A line reaches its Ingredient through its alias.
+  // A line reaches its Ingredient through its first food's alias.
   const rows = await db
     .select({
       line: schema.recipeIngredients,
@@ -296,12 +346,29 @@ export async function getRecipeIngredients(recipeId: string) {
     })
     .from(schema.recipeIngredients)
     .leftJoin(
+      schema.recipeIngredientFoods,
+      and(
+        eq(schema.recipeIngredientFoods.recipeIngredientId, schema.recipeIngredients.id),
+        isFirstLineFood()
+      )
+    )
+    .leftJoin(
       schema.ingredientAliases,
-      eq(schema.ingredientAliases.id, schema.recipeIngredients.ingredientAliasId)
+      eq(schema.ingredientAliases.id, schema.recipeIngredientFoods.ingredientAliasId)
     )
     .where(sql`${schema.recipeIngredients.recipeId} = ${recipeId}`);
 
   return rows.map(({ line, ingredientId }) => ({ ...line, ingredientId }));
+}
+
+/** The texts of an Ingredient's spellings, sorted. */
+export async function getSpellingTexts(ingredientId: string): Promise<string[]> {
+  const rows = await getTestDb()
+    .select({ text: schema.ingredientAliases.text })
+    .from(schema.ingredientAliases)
+    .where(eq(schema.ingredientAliases.ingredientId, ingredientId));
+
+  return rows.map((row) => row.text).sort();
 }
 
 /**

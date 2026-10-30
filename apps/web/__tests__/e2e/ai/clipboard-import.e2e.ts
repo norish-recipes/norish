@@ -47,6 +47,12 @@ test.beforeEach(async ({ context }) => {
   await context.grantPermissions(["clipboard-read", "clipboard-write"]);
 });
 
+// The worker's browser keeps one clipboard for every context, and a page reads it as it mounts:
+// a link left by one scenario would be offered at the start of the next.
+test.afterEach(async ({ page }) => {
+  await page.evaluate(() => navigator.clipboard.writeText("")).catch(() => {});
+});
+
 test("a copied link is offered on the dashboard, and Import queues it", async ({ page }) => {
   await openDashboard(page);
   await copyAndComeBack(page, COPIED_LINK);

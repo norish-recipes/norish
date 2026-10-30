@@ -18,6 +18,9 @@ const execFileAsync = promisify(execFile);
 
 const ytDlpFilename = process.platform === "win32" ? "yt-dlp.exe" : "yt-dlp";
 
+// The binary can't change under a running server, and each ask unpacks the whole binary (seconds).
+let found: Promise<string | null> | undefined;
+
 /**
  * Ask the downloader binary which release it is.
  *
@@ -25,7 +28,18 @@ const ytDlpFilename = process.platform === "win32" ? "yt-dlp.exe" : "yt-dlp";
  * imported anything yet, or an image built without one. Callers must say so
  * plainly rather than showing "unknown" where a version belongs.
  */
-export async function getYtDlpVersion(): Promise<string | null> {
+export function getYtDlpVersion(): Promise<string | null> {
+  found ??= askYtDlpVersion().then((version) => {
+    // No binary yet: ask again next time.
+    if (!version) found = undefined;
+
+    return version;
+  });
+
+  return found;
+}
+
+async function askYtDlpVersion(): Promise<string | null> {
   const ytDlpPath = path.resolve(SERVER_CONFIG.YT_DLP_BIN_DIR, ytDlpFilename);
 
   try {

@@ -11,6 +11,24 @@ export interface TimeInputsProps {
   onChange: (field: "prepMinutes" | "cookMinutes" | "totalMinutes", value: number | null) => void;
 }
 
+// Editing and navigation keys the digit-only fields let through.
+const PASSTHROUGH_KEYS = new Set([
+  "Backspace",
+  "Tab",
+  "Escape",
+  "Enter",
+  "Delete",
+  "Home",
+  "End",
+  "ArrowLeft",
+  "ArrowRight",
+  "ArrowUp",
+  "ArrowDown",
+]);
+const CLIPBOARD_KEYS = new Set(["a", "c", "v", "x"]);
+// The same shortcuts by physical key, for layouts whose letters are not Latin.
+const CLIPBOARD_CODES = new Set(["KeyA", "KeyC", "KeyV", "KeyX"]);
+
 export default function TimeInputs({
   prepMinutes,
   cookMinutes,
@@ -43,25 +61,15 @@ export default function TimeInputs({
   );
 
   const handleKeyDown = useCallback((e: React.KeyboardEvent<HTMLInputElement>) => {
-    // Allow: backspace, delete, tab, escape, enter
-    if ([8, 9, 27, 13, 46].includes(e.keyCode)) {
-      return;
-    }
-    // Allow: Ctrl+A, Ctrl+C, Ctrl+V, Ctrl+X
+    if (PASSTHROUGH_KEYS.has(e.key)) return;
+    // Ctrl/Cmd + A, C, V, X
     if (
-      (e.keyCode === 65 || e.keyCode === 67 || e.keyCode === 86 || e.keyCode === 88) &&
-      (e.ctrlKey || e.metaKey)
-    ) {
+      (e.ctrlKey || e.metaKey) &&
+      (CLIPBOARD_KEYS.has(e.key.toLowerCase()) || CLIPBOARD_CODES.has(e.code))
+    )
       return;
-    }
-    // Allow: home, end, left, right, up, down
-    if (e.keyCode >= 35 && e.keyCode <= 40) {
-      return;
-    }
-    // Ensure that it is a number and stop the keypress if not
-    if ((e.shiftKey || e.keyCode < 48 || e.keyCode > 57) && (e.keyCode < 96 || e.keyCode > 105)) {
-      e.preventDefault();
-    }
+    // Anything else must type a digit
+    if (!/^\d$/.test(e.key)) e.preventDefault();
   }, []);
 
   return (

@@ -10,11 +10,12 @@ import RecipeViewModeToggle, {
 } from "@/components/dashboard/recipe-view-mode-toggle";
 import SearchInput from "@/components/dashboard/search-input";
 import TodaysMeals from "@/components/dashboard/today/todays-meals";
+import RecipeGridSkeleton from "@/components/skeleton/recipe-grid-skeleton";
 import { Tabs } from "@heroui/react";
 
 const LIBRARY_HEADING_ID = "recipe-library-heading";
 
-function RecipeLibrary() {
+function RecipeLibrary({ skeleton }: { skeleton: boolean }) {
   return (
     <section aria-labelledby={LIBRARY_HEADING_ID} className="flex min-h-0 flex-1 flex-col">
       <RecipeViewModeTabs>
@@ -34,23 +35,26 @@ function RecipeLibrary() {
         </div>
 
         <Tabs.Panel className="mt-0 min-h-0 flex-1 p-0" id="grid">
-          <LibraryView variant="grid" />
+          {skeleton ? <RecipeGridSkeleton variant="grid" /> : <LibraryView variant="grid" />}
         </Tabs.Panel>
         <Tabs.Panel className="mt-0 min-h-0 flex-1 p-0" id="list">
-          <LibraryView variant="list" />
+          {skeleton ? <RecipeGridSkeleton variant="list" /> : <LibraryView variant="list" />}
         </Tabs.Panel>
       </RecipeViewModeTabs>
     </section>
   );
 }
 
-/** The dashboard surface shared by the Live route and Offline bootstrap. */
-export function Dashboard() {
+/**
+ * The dashboard surface shared by the Live route and Offline bootstrap. `skeleton` is the route's
+ * loading state: grey cards stand in for the Library, so its grid and scroll memory mount once.
+ */
+export function Dashboard({ skeleton = false }: { skeleton?: boolean }) {
   return (
     <div className="flex min-h-0 w-full flex-1 flex-col gap-8">
       <TodaysMeals />
-      <RecipeLibrary />
-      <FloatingRecipeChip />
+      <RecipeLibrary skeleton={skeleton} />
+      {skeleton ? null : <FloatingRecipeChip />}
     </div>
   );
 }

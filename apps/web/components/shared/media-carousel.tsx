@@ -8,6 +8,7 @@ import VideoPlayer from "@/components/shared/video-player";
 import { Carousel, useCarousel } from "@/components/ui/carousel";
 import { useTranslations } from "next-intl";
 
+import { addBasePath } from "@norish/shared/lib/base-path";
 import { cssMediaControlBare } from "@norish/web/config/css-tokens";
 
 export interface MediaItem {
@@ -33,7 +34,6 @@ interface RecipeMedia {
     image: string;
     order?: number;
   }>;
-  image?: string | null;
 }
 
 /**
@@ -67,15 +67,6 @@ export function buildMediaItems(recipe: RecipeMedia): MediaItem[] {
         id: img.id,
       });
     }
-  }
-
-  // Fallback to legacy recipe.image if no images array
-  if ((!recipe.images || recipe.images.length === 0) && recipe.image) {
-    items.push({
-      type: "image" as const,
-      src: recipe.image,
-      order: 999,
-    });
   }
 
   return items;
@@ -143,14 +134,21 @@ function MediaCarouselSlides({
   return (
     <Carousel.Content className="h-full">
       {sortedItems.map((item, index) => (
-        <Carousel.Item key={`${item.id ?? item.src}-${index}`} className="h-full">
+        <Carousel.Item
+          // Public pages carry no ids, and the same picture can sit here twice
+          // (uploads are named by content hash), so only its place tells the two
+          // apart; the list keeps its stored order.
+          // eslint-disable-next-line @eslint-react/no-array-index-key
+          key={`${item.id ?? item.src}-${index}`}
+          className="h-full"
+        >
           <div className={mediaBoxClassName}>
             {item.type === "video" ? (
               <VideoPlayer
                 className="h-full w-full"
                 duration={item.duration}
-                poster={item.thumbnail || undefined}
-                src={item.src}
+                poster={item.thumbnail ? addBasePath(item.thumbnail) : undefined}
+                src={addBasePath(item.src)}
                 onControlsVisibilityChange={
                   index === safeIndex ? onActiveVideoControlsVisibilityChange : undefined
                 }
@@ -175,11 +173,10 @@ function MediaCarouselSlides({
               >
                 <NextImage
                   fill
-                  unoptimized
                   alt={`Recipe media ${index + 1}`}
                   className="object-cover transition-transform duration-500 group-hover:scale-105"
                   sizes="(min-width: 1024px) 60vw, (min-width: 768px) 50vw, 100vw"
-                  src={item.src}
+                  src={addBasePath(item.src)}
                   onError={() => handleImageError(item.src)}
                 />
               </div>
@@ -231,6 +228,8 @@ export default function MediaCarousel({
     if (sortedItems.length !== 1) return;
 
     const activeItem = sortedItems[0];
+
+    if (!activeItem) return;
 
     onActiveItemChange?.(activeItem, 0);
 
@@ -290,6 +289,8 @@ export default function MediaCarousel({
   if (sortedItems.length === 1) {
     const item = sortedItems[0];
 
+    if (!item) return null;
+
     return (
       <>
         <div
@@ -299,8 +300,8 @@ export default function MediaCarousel({
             <VideoPlayer
               className="h-full w-full"
               duration={item.duration}
-              poster={item.thumbnail || undefined}
-              src={item.src}
+              poster={item.thumbnail ? addBasePath(item.thumbnail) : undefined}
+              src={addBasePath(item.src)}
               onControlsVisibilityChange={onActiveVideoControlsVisibilityChange}
               onFullscreenAvailabilityChange={onActiveVideoFullscreenChange}
             />
@@ -321,11 +322,10 @@ export default function MediaCarousel({
             >
               <NextImage
                 fill
-                unoptimized
                 alt="Recipe image"
                 className="object-cover transition-transform duration-500 group-hover:scale-105"
                 sizes="(min-width: 1024px) 60vw, (min-width: 768px) 50vw, 100vw"
-                src={item.src}
+                src={addBasePath(item.src)}
                 onError={() => handleImageError(item.src)}
               />
             </div>

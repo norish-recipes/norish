@@ -60,7 +60,6 @@ function recipe(overrides: Record<string, unknown> = {}) {
     recipeIngredients: [{ ingredientName: "flour" }],
     steps: [{ step: "Mix the flour in.", systemUsed: "metric", order: 0 }],
     categories: [],
-    image: null,
     images: [],
     calories: null,
     fat: null,
@@ -79,7 +78,6 @@ function outcome(results: Awaited<ReturnType<typeof enrichRecipe>>, kind: Recipe
 }
 
 beforeEach(() => {
-  vi.clearAllMocks();
   getRecipeFull.mockResolvedValue(recipe());
   getHouseholdMemberIds.mockResolvedValue(["user-1"]);
   getAllergiesForUsers.mockResolvedValue(["Milk"]);
@@ -340,7 +338,7 @@ describe("automatic enrollment", () => {
 
   it("keeps enrolling siblings when one producer throws", async () => {
     addEnrichmentJob.mockImplementation(async (_queue, data) => {
-      if (data.kind === "auto-tagging") throw new Error("redis is down");
+      if (data.kind === "auto-tagging") throw new Error("valkey is down");
 
       return { kind: data.kind, status: "queued", jobId: "job" };
     });
@@ -350,7 +348,7 @@ describe("automatic enrollment", () => {
     expect(outcome(results, "auto-tagging")).toEqual({
       kind: "auto-tagging",
       status: "failed-to-queue",
-      error: "redis is down",
+      error: "valkey is down",
     });
     expect(results.filter((r) => r.status === "queued")).toHaveLength(KIND_COUNT - 1);
   });
@@ -396,26 +394,6 @@ describe("image generation eligibility", () => {
       reason: "supplied-data-present",
     });
     expect(outcome(results, "auto-tagging")?.status).toBe("queued");
-  });
-
-  it("skips an ordinary automatic run for a recipe with only the legacy scalar", async () => {
-    getRecipeFull.mockResolvedValue(recipe({ image: "/recipes/recipe-1/hero.jpg", images: [] }));
-
-    const results = await enrichRecipe(context, { origin: "automatic" });
-
-    expect(outcome(results, "image-generation")).toEqual({
-      kind: "image-generation",
-      status: "skipped",
-      reason: "supplied-data-present",
-    });
-  });
-
-  it("treats a blank legacy scalar as no image at all", async () => {
-    getRecipeFull.mockResolvedValue(recipe({ image: "   ", images: [] }));
-
-    const results = await enrichRecipe(context, { origin: "automatic" });
-
-    expect(outcome(results, "image-generation")?.status).toBe("queued");
   });
 
   it("does not skip a manual request over a stored image", async () => {
@@ -629,12 +607,12 @@ describe("manual enrollment", () => {
   });
 
   it("returns failed-to-queue immediately when the producer throws", async () => {
-    addEnrichmentJob.mockRejectedValue(new Error("redis is down"));
+    addEnrichmentJob.mockRejectedValue(new Error("valkey is down"));
 
     const results = await enrichRecipe(context, { origin: "manual", kind: "auto-tagging" });
 
     expect(results).toEqual([
-      { kind: "auto-tagging", status: "failed-to-queue", error: "redis is down" },
+      { kind: "auto-tagging", status: "failed-to-queue", error: "valkey is down" },
     ]);
   });
 });

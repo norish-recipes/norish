@@ -5,6 +5,8 @@ import type { CreateHouseholdHooksOptions, HouseholdCacheHelpers, HouseholdData 
 
 export function createUseHouseholdCache({ useTRPC }: CreateHouseholdHooksOptions) {
   return function useHouseholdCacheHelpers(): HouseholdCacheHelpers {
+    "use memo";
+
     const trpc = useTRPC();
     const queryClient = useQueryClient();
     const queryKey = trpc.households.get.queryKey();

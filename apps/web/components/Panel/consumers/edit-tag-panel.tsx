@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useMemo, useState } from "react";
+import { useMemo, useState } from "react";
 import Panel from "@/components/Panel/Panel";
 import { ActionButton, ActionButtonGroup } from "@/components/shared/action-button";
 import { FieldError, Input, TextField } from "@heroui/react";
@@ -25,15 +25,17 @@ export default function EditTagPanel({
   const t = useTranslations("recipes.tags.panel");
   const tActions = useTranslations("common.actions");
   const [tagName, setTagName] = useState("");
+  const [seededFrom, setSeededFrom] = useState<{ open: boolean; tag: string } | null>(null);
 
   // Initialize form with tag data when opening
-  useEffect(() => {
+  if (seededFrom?.open !== open || seededFrom.tag !== tag) {
+    setSeededFrom({ open, tag });
     if (open) {
       setTagName(tag);
     } else {
       setTagName("");
     }
-  }, [open, tag]);
+  }
 
   // Check if the new name conflicts with an existing tag (case-insensitive)
   // Exclude the current tag being edited from the check

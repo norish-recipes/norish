@@ -3,7 +3,7 @@ import { and, eq, inArray, sql } from "drizzle-orm";
 import Fuse from "fuse.js";
 import z from "zod";
 
-import type { DbTransaction } from "@norish/db/drizzle";
+import type { Db } from "@norish/db/drizzle";
 import type {
   AisleDto,
   IngredientStorePreferenceDto,
@@ -43,10 +43,7 @@ const FUSE_OPTIONS: IFuseOptions<IngredientStorePreferenceDto & { ingredientName
  * back with the Store's ordered aisle list attached, in one query for however
  * many Stores, before it is parsed as a Store.
  */
-async function withAisles(
-  rows: (typeof stores.$inferSelect)[],
-  tx: typeof db | DbTransaction = db
-): Promise<StoreDto[]> {
+async function withAisles(rows: (typeof stores.$inferSelect)[], tx: Db = db): Promise<StoreDto[]> {
   const aisles = await listAislesByStoreIds(
     rows.map((row) => row.id),
     tx
@@ -106,7 +103,7 @@ export async function checkStoreNameExistsInHousehold(
   }
 
   const [row] = await db
-    .select({ count: sql<number>`count(*)` })
+    .select({ count: sql<number>`count(*)::int` })
     .from(stores)
     .where(and(...conditions));
 
@@ -253,7 +250,7 @@ export async function deleteStore(
 
       // Only delete store if it is empty after processing the snapshot
       const [remainingCount] = await trx
-        .select({ count: sql<number>`count(*)` })
+        .select({ count: sql<number>`count(*)::int` })
         .from(groceries)
         .where(eq(groceries.storeId, storeId));
 
@@ -330,7 +327,7 @@ export async function getStoreOwnerId(storeId: string): Promise<string | null> {
 
 export async function countGroceriesInStore(storeId: string): Promise<number> {
   const [row] = await db
-    .select({ count: sql<number>`count(*)` })
+    .select({ count: sql<number>`count(*)::int` })
     .from(groceries)
     .where(eq(groceries.storeId, storeId));
 

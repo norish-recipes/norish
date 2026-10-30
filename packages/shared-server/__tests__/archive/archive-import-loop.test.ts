@@ -1,4 +1,4 @@
-import { beforeEach, describe, expect, it, vi } from "vitest";
+import { beforeAll, beforeEach, describe, expect, it, vi } from "vitest";
 
 // @vitest-environment node
 
@@ -73,14 +73,19 @@ async function* itemsOf(items: unknown[]) {
 }
 
 async function runLoop(items: unknown[]) {
-  const { importRecipeItems } = await import("@norish/shared-server/archive/parser");
-
-  return importRecipeItems(itemsOf(items) as never, "user-1", ["user-1"]);
+  return parser.importRecipeItems(itemsOf(items) as never, "user-1", ["user-1"]);
 }
+
+let parser: typeof import("@norish/shared-server/archive/parser");
+
+// Loaded once, in a hook: the parser's import graph is heavy, and loaded
+// inside a test it spent that test's 5 s budget on a busy machine.
+beforeAll(async () => {
+  parser = await import("@norish/shared-server/archive/parser");
+});
 
 describe("the archive import loop", () => {
   beforeEach(() => {
-    vi.clearAllMocks();
     mockFindExistingRecipe.mockResolvedValue(null);
     mockCreateRecipeWithRefs.mockImplementation(async (recipeId: string) => ({
       status: "inserted",
@@ -150,9 +155,7 @@ describe("the archive import loop", () => {
 
       mockFindExistingRecipe.mockResolvedValueOnce("existing-1").mockResolvedValueOnce(null);
 
-      const { importRecipeItems } = await import("@norish/shared-server/archive/parser");
-
-      await importRecipeItems(
+      await parser.importRecipeItems(
         itemsOf([item("Tiramisù", "https://a.example/t"), fresh]) as never,
         "user-1",
         ["user-1"],
@@ -197,9 +200,12 @@ describe("the archive import loop", () => {
       const second = item("Panettone", undefined, { cookbooks: ["Kerst"] });
       const onProgress = vi.fn();
 
-      const { importRecipeItems } = await import("@norish/shared-server/archive/parser");
-
-      await importRecipeItems(itemsOf([first, second]) as never, "user-1", ["user-1"], onProgress);
+      await parser.importRecipeItems(
+        itemsOf([first, second]) as never,
+        "user-1",
+        ["user-1"],
+        onProgress
+      );
 
       expect(onProgress.mock.calls.map((call) => call[4]?.cookbooks)).toEqual([
         [{ cookbookId: "cookbook-Kerst", created: { id: "cookbook-Kerst" } }],
@@ -225,9 +231,7 @@ describe("the archive import loop", () => {
     });
 
     it("files nothing without an importing user", async () => {
-      const { importRecipeItems } = await import("@norish/shared-server/archive/parser");
-
-      await importRecipeItems(
+      await parser.importRecipeItems(
         itemsOf([item("Tiramisù", undefined, { cookbooks: ["Dolci"] })]) as never,
         undefined,
         ["user-1"]

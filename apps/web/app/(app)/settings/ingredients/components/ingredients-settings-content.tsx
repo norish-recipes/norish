@@ -6,30 +6,17 @@ import { SettingsCard } from "@/app/(app)/settings/components/settings-card";
 import { useTRPC } from "@/app/providers/trpc-provider";
 import { IngredientIconsProvider } from "@/components/ingredients/ingredient-icon";
 import { IngredientPanel } from "@/components/ingredients/ingredient-panel";
-import { useIngredientSuggestions } from "@/components/ingredients/use-ingredient-suggestions";
-import { AIButton } from "@/components/shared/ai-button";
-import { usePermissionsContext } from "@/context/permissions-context";
-import { showSafeErrorToast } from "@/lib/ui/safe-error-toast";
-import { FunnelIcon } from "@heroicons/react/16/solid";
-import { BookOpenIcon, SparklesIcon } from "@heroicons/react/24/outline";
-import { Button, Spinner } from "@heroui/react";
-import {
-  keepPreviousData,
-  useInfiniteQuery,
-  useMutation,
-  useQuery,
-  useQueryClient,
-} from "@tanstack/react-query";
+import { isOpenChange, useAIChanges } from "@/components/ingredients/use-ai-changes";
+import { ActionButton } from "@/components/shared/action-button";
+import { FunnelIcon, SparklesIcon } from "@heroicons/react/16/solid";
+import { BookOpenIcon } from "@heroicons/react/24/outline";
+import { Button, Skeleton } from "@heroui/react";
+import { keepPreviousData, useInfiniteQuery, useQueryClient } from "@tanstack/react-query";
 import { useLocale, useTranslations } from "next-intl";
 
-import type { FixPart } from "@norish/shared/contracts/ingredient-catalogue";
-import type { ReviewRound } from "@norish/shared/contracts/realtime/ingredients";
-import { useRealtimeSubscription } from "@norish/shared-react/realtime";
-
 import type { IngredientFilters } from "./ingredient-filters-panel";
+import { ChangedByAIPanel } from "./changed-by-ai-panel";
 import DataSourcesCard from "./data-sources-card";
-import { DrawIconsControl, useIconRound } from "./draw-icons-control";
-import { FixCatalogueModal } from "./fix-catalogue-modal";
 import {
   DEFAULT_INGREDIENT_FILTERS,
   hasIngredientFilters,
@@ -37,7 +24,6 @@ import {
 } from "./ingredient-filters-panel";
 import { IngredientList } from "./ingredient-list";
 import { IngredientSearch } from "./ingredient-search";
-import { SuggestionsPanel, UNSUGGESTED } from "./suggestions-panel";
 import { useIngredientTree } from "./use-ingredient-tree";
 
 /**
@@ -55,8 +41,6 @@ import { useIngredientTree } from "./use-ingredient-tree";
 export default function IngredientsSettingsContent() {
   const t = useTranslations("settings.ingredients");
   const tFilters = useTranslations("common.filters");
-  // AI buttons go with AI: with it off for the instance, nothing here offers it.
-  const { isAIEnabled } = usePermissionsContext();
   const locale = useLocale();
   const trpc = useTRPC();
   const queryClient = useQueryClient();
@@ -108,106 +92,14 @@ export default function IngredientsSettingsContent() {
       Promise.all([
         queryClient.invalidateQueries({ queryKey: trpc.ingredients.list.pathKey() }),
         queryClient.invalidateQueries({ queryKey: trpc.ingredients.kinds.pathKey() }),
-        queryClient.invalidateQueries({ queryKey: trpc.ingredients.suggestions.pathKey() }),
-        queryClient.invalidateQueries({ queryKey: trpc.ingredients.reviewScope.pathKey() }),
-        queryClient.invalidateQueries({ queryKey: trpc.ingredients.reviewReport.pathKey() }),
+        queryClient.invalidateQueries({ queryKey: trpc.ingredients.aiChanges.pathKey() }),
       ]),
     [queryClient, trpc]
   );
 
-  // Asking AI about the flagged foods is one job on the server, a step per
-  // food, that outlives this tab. Which foods is asked first, in a dialog: the
-  // catalogue's, not the screen's, so a round may be every flagged food there
-  // is. The page watches the round over the socket: each answer lands as a
-  // suggestion waiting on a person, and the round's count follows. A round is
-  // the instance's, so a tab opened mid-round, or a housemate's, shows the
-  // same count and is not offered a second round.
-  const startRound = useMutation(trpc.ingredients.reviewAllWithAI.mutationOptions());
-  const roundQuery = useQuery(trpc.ingredients.reviewRound.queryOptions());
-  const [round, setRound] = useState<ReviewRound | null>(null);
-  const [startedJobId, setStartedJobId] = useState<string | null>(null);
-  const [fixOpen, setFixOpen] = useState(false);
-  // The last round this tab saw end; before one ends, the instance's latest, which the server finds.
-  const [reportJobId, setReportJobId] = useState<string | null>(null);
-  const [suggestionsOpen, setSuggestionsOpen] = useState(false);
-  const { suggestions } = useIngredientSuggestions();
-  // What that round got no suggestion for, and is still open, rides along with the suggestions.
-  const report = useQuery(
-    trpc.ingredients.reviewReport.queryOptions(reportJobId ? { jobId: reportJobId } : {})
-  );
-  const hasUnsuggested =
-    report.data?.entries.some((entry) => UNSUGGESTED.has(entry.outcome)) ?? false;
-  const running = round?.finished ? null : (round ?? roundQuery.data ?? null);
-  // Under the standalone filter, the round asks what each food is a kind of instead.
-  const standaloneIds = filters.standaloneOnly
-    ? shown.filter((item) => !item.parent && item.canEdit).map((item) => item.id)
-    : [];
-  // Each flagged row shows its own turn in the round rather than a count above the list.
-  const reviewing = useMemo(() => new Set(running?.pending ?? []), [running?.pending]);
-  // A Draw icons round, likewise: each food it has still to draw shows its turn in its icon's place.
-  const iconRound = useIconRound(() => void refresh());
-  const drawing = useMemo(
-    () => new Set(iconRound.running?.pending ?? []),
-    [iconRound.running?.pending]
-  );
-
-  useRealtimeSubscription<ReviewRound>(trpc.ingredients.onReview, {
-    lagQueryKeys: [trpc.ingredients.reviewRound.queryKey()],
-    onEvent: (payload) => {
-      setRound(payload);
-      // What the round has written down shows as it goes: its suggestions, the flags it updated.
-      void refresh();
-      if (!payload.finished) return;
-      void queryClient.invalidateQueries({ queryKey: trpc.ingredients.reviewRound.queryKey() });
-      setReportJobId(payload.jobId);
-      // What AI suggests opens for whoever asked; everyone else sees the count in the header.
-      if (payload.jobId !== startedJobId) return;
-      setStartedJobId(null);
-      setSuggestionsOpen(true);
-    },
-  });
-
-  /** Start a round and watch it: every food it asks about shows its turn until the round ends. */
-  const startAndWatch = async (input: Parameters<typeof startRound.mutateAsync>[0]) => {
-    try {
-      const started = await startRound.mutateAsync(input);
-
-      setStartedJobId(started.jobId);
-      setRound({
-        jobId: started.jobId,
-        done: 0,
-        total: started.total,
-        counts: {
-          merge: 0,
-          parent: 0,
-          distinct: 0,
-          unsure: 0,
-          rename: 0,
-          plain: 0,
-          skipped: 0,
-          failed: 0,
-        },
-        pending: started.pending,
-        finished: false,
-      });
-
-      return true;
-    } catch (error) {
-      showSafeErrorToast({
-        title: t("errors.title"),
-        description: t("errors.unknown"),
-        error,
-        context: "ingredients:review-all",
-      });
-
-      return false;
-    }
-  };
-
-  // The server picks the foods for the parts, however many: the dialog closes once the round is on.
-  const fixCatalogue = async (parts: FixPart[]) => {
-    if (await startAndWatch({ mode: "fix", parts })) setFixOpen(false);
-  };
+  const [changesOpen, setChangesOpen] = useState(false);
+  const { changes } = useAIChanges();
+  const unsure = changes.filter(isOpenChange).length;
 
   return (
     // The rows carry their icons; the provider says whether the reader hid them.
@@ -215,58 +107,17 @@ export default function IngredientsSettingsContent() {
       <div className="flex flex-col gap-6">
         <SettingsCard
           actions={
-            <>
-              {suggestions.length > 0 || hasUnsuggested ? (
-                <Button
-                  data-testid="ingredients-suggestions-open"
-                  size="sm"
-                  variant="tertiary"
-                  onPress={() => setSuggestionsOpen(true)}
-                >
-                  <SparklesIcon className="size-4" />
-                  {t("suggestionsOpen", { count: suggestions.length })}
-                </Button>
-              ) : null}
-              {running ? (
-                // A round in progress takes the place of the buttons that start one, and opens what it has done so far.
-                <Button
-                  data-testid="ingredients-round-progress"
-                  size="sm"
-                  variant="tertiary"
-                  onPress={() => setSuggestionsOpen(true)}
-                >
-                  <Spinner color="current" size="sm" />
-                  <span className="tabular-nums">
-                    {t("roundProgress", { done: running.done, total: running.total })}
-                  </span>
-                </Button>
-              ) : null}
-              {isAIEnabled && standaloneIds.length > 0 && !running ? (
-                <AIButton
-                  data-testid="ingredients-find-parents-all"
-                  isDisabled={startRound.isPending}
-                  size="sm"
-                  variant="tertiary"
-                  onPress={() =>
-                    void startAndWatch({ mode: "parent", ingredientIds: standaloneIds })
-                  }
-                >
-                  {t("findParentsAll")}
-                </AIButton>
-              ) : null}
-              <DrawIconsControl round={iconRound} />
-              {isAIEnabled && !running ? (
-                <AIButton
-                  data-testid="ingredients-fix-catalogue"
-                  isDisabled={startRound.isPending}
-                  size="sm"
-                  variant="tertiary"
-                  onPress={() => setFixOpen(true)}
-                >
-                  {t("fixCatalogue")}
-                </AIButton>
-              ) : null}
-            </>
+            changes.length > 0 ? (
+              <ActionButton
+                action="edit"
+                data-testid="ingredients-ai-changes-open"
+                icon={SparklesIcon}
+                size="sm"
+                onPress={() => setChangesOpen(true)}
+              >
+                {t("changedByAI.open", { count: unsure })}
+              </ActionButton>
+            ) : null
           }
           description={t("description")}
           icon={BookOpenIcon}
@@ -294,17 +145,22 @@ export default function IngredientsSettingsContent() {
             onSearch={onSearch}
           />
 
-          {!isLoading && items.length === 0 ? (
+          {isLoading ? (
+            // The same rows the tab's skeleton draws, until the first page arrives.
+            <div className="flex flex-col gap-4">
+              {Array.from({ length: 5 }, (_, i) => (
+                <Skeleton key={i} className="h-12 w-full rounded-lg" />
+              ))}
+            </div>
+          ) : items.length === 0 ? (
             <p className="text-muted py-6 text-center" data-testid="ingredients-empty">
               {filters.flaggedOnly ? t("emptyFlagged") : t("empty")}
             </p>
           ) : (
             <IngredientList
-              drawing={drawing}
               hasMore={hasNextPage}
               isFetchingMore={isFetchingNextPage}
               loadMore={loadMore}
-              reviewing={reviewing}
               rows={tree.rows}
               settling={settling}
               onOpen={setOpenId}
@@ -324,23 +180,13 @@ export default function IngredientsSettingsContent() {
           id={openId}
           item={openItem}
           open={openId !== null}
-          reviewing={openId !== null && reviewing.has(openId)}
           onChanged={refresh}
           onClose={() => setOpenId(null)}
         />
-        <FixCatalogueModal
-          isOpen={fixOpen}
-          isStarting={startRound.isPending}
-          onClose={() => setFixOpen(false)}
-          onStart={(parts) => void fixCatalogue(parts)}
-        />
-        <SuggestionsPanel
-          jobId={reportJobId}
-          open={suggestionsOpen}
-          reviewing={reviewing}
-          round={running}
+        <ChangedByAIPanel
+          open={changesOpen}
           onChanged={refresh}
-          onClose={() => setSuggestionsOpen(false)}
+          onClose={() => setChangesOpen(false)}
         />
       </div>
     </IngredientIconsProvider>

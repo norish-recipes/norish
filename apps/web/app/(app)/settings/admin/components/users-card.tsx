@@ -2,6 +2,7 @@
 
 import { useState } from "react";
 import { SettingsCard } from "@/app/(app)/settings/components/settings-card";
+import { IconActionButton } from "@/components/shared/action-button";
 import UserAvatar from "@/components/shared/user-avatar";
 import DataTable from "@/components/ui/data-table";
 import { useUserContext } from "@/context/user-context";
@@ -9,11 +10,10 @@ import { useUserMutations, useUsersListQuery } from "@/hooks/admin";
 import { showSafeErrorToast } from "@/lib/ui/safe-error-toast";
 import {
   ShieldCheckIcon as ShieldCheckIconSolid,
-  TrashIcon,
   UserGroupIcon as UserGroupIconSolid,
 } from "@heroicons/react/16/solid";
 import { UsersIcon } from "@heroicons/react/24/outline";
-import { Button, toast, Tooltip } from "@heroui/react";
+import { toast } from "@heroui/react";
 import { useTranslations } from "next-intl";
 
 import type { AdminUserRowDTO } from "@norish/shared/contracts";
@@ -35,18 +35,16 @@ export default function UsersCard() {
   const handleToggleAdmin = async (row: AdminUserRowDTO) => {
     setPendingRoleChangeId(row.id);
 
-    try {
-      const result = await setAdminStatus(row.id, !row.isServerAdmin);
-
-      if (!result.success) {
-        showSafeErrorToast({
-          title: tErrors("operationFailed"),
-          description: result.error,
-        });
-      }
-    } finally {
-      setPendingRoleChangeId(null);
-    }
+    await setAdminStatus(row.id, !row.isServerAdmin)
+      .then((result) => {
+        if (!result.success) {
+          showSafeErrorToast({
+            title: tErrors("operationFailed"),
+            description: result.error,
+          });
+        }
+      })
+      .finally(() => setPendingRoleChangeId(null));
   };
 
   const handleConfirmDelete = async () => {
@@ -130,42 +128,22 @@ export default function UsersCard() {
 
               return (
                 <div className="flex justify-center gap-1">
-                  <Tooltip delay={0}>
-                    <Button
-                      isIconOnly
-                      aria-label={
-                        row.isServerAdmin ? t("actions.revokeAdmin") : t("actions.makeAdmin")
-                      }
-                      isDisabled={!canChangeRole || roleBusy}
-                      isPending={roleBusy}
-                      variant={row.isServerAdmin ? "danger-soft" : "tertiary"}
-                      onPress={() => void handleToggleAdmin(row)}
-                    >
-                      {row.isServerAdmin ? (
-                        <ShieldMinusIcon className="h-4 w-4" />
-                      ) : (
-                        <ShieldCheckIconSolid className="h-4 w-4" />
-                      )}
-                    </Button>
-                    <Tooltip.Content placement="top">
-                      <p>{row.isServerAdmin ? t("actions.revokeAdmin") : t("actions.makeAdmin")}</p>
-                    </Tooltip.Content>
-                  </Tooltip>
-
-                  <Tooltip delay={0}>
-                    <Button
-                      isIconOnly
-                      aria-label={t("actions.delete")}
-                      isDisabled={!canDelete}
-                      variant="danger-soft"
-                      onPress={() => setUserToDelete(row)}
-                    >
-                      <TrashIcon className="h-4 w-4" />
-                    </Button>
-                    <Tooltip.Content placement="top">
-                      <p>{t("actions.delete")}</p>
-                    </Tooltip.Content>
-                  </Tooltip>
+                  <IconActionButton
+                    action={row.isServerAdmin ? "remove" : "edit"}
+                    icon={row.isServerAdmin ? ShieldMinusIcon : ShieldCheckIconSolid}
+                    isDisabled={!canChangeRole || roleBusy}
+                    isPending={roleBusy}
+                    label={row.isServerAdmin ? t("actions.revokeAdmin") : t("actions.makeAdmin")}
+                    size="sm"
+                    onPress={() => void handleToggleAdmin(row)}
+                  />
+                  <IconActionButton
+                    action="delete"
+                    isDisabled={!canDelete}
+                    label={t("actions.delete")}
+                    size="sm"
+                    onPress={() => setUserToDelete(row)}
+                  />
                 </div>
               );
             },

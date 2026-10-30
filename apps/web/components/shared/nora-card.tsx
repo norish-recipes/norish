@@ -4,6 +4,8 @@ import type { ReactNode } from "react";
 import { Card } from "@heroui/react";
 import { useTranslations } from "next-intl";
 
+import { addBasePath } from "@norish/shared/lib/base-path";
+
 type NoraCardProps = {
   code?: string;
   title: string;
@@ -27,7 +29,7 @@ export function NoraCard({ code, title, message, children }: NoraCardProps) {
         <img
           alt={t("imageAlt")}
           className="absolute inset-0 h-full w-full object-cover transition-transform duration-300 ease-in-out group-hover:scale-105"
-          src="/404.jpg"
+          src={addBasePath("/404.jpg")}
         />
         <div className="from-surface/90 absolute inset-0 bg-gradient-to-t via-transparent to-transparent" />
       </div>

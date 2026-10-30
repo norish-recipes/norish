@@ -16,6 +16,8 @@ export type SharedRecipeQueryResult = {
 
 export function createUseSharedRecipeQuery({ useTRPC }: CreateRecipeHooksOptions) {
   return function useSharedRecipeQuery(token: string | null): SharedRecipeQueryResult {
+    "use memo";
+
     const trpc = useTRPC();
     const queryClient = useQueryClient();
     const queryKey = trpc.recipes.getShared.queryKey({ token: token ?? "" });

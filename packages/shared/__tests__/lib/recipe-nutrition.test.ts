@@ -343,6 +343,25 @@ describe("workOutNutrition", () => {
     ).toMatchObject({ perServing: { calories: 360 }, credits: [], household: true });
   });
 
+  it("counts AI's estimate as borrowed, credited to no dataset and no household", () => {
+    const estimated = new Map(NUTRITION);
+
+    estimated.set("rice", {
+      numbers: fact(per100g(350, 1, 78, 7), { kind: "ai" }),
+      pieceWeight: null,
+      density: null,
+    });
+
+    expect(
+      workOutNutrition({
+        lines: [line(100, "gram", "rice")],
+        servings: 1,
+        nutrition: estimated,
+        seasoning: phrases,
+      })
+    ).toMatchObject({ estimated: true, credits: [], household: false });
+  });
+
   describe("with the language model's estimate of the lines left out", () => {
     const oil = line(null, null, "olive-oil", "olive oil for frying");
     const brandy = line(50, "milliliter", "brandy", "brandy");
@@ -489,6 +508,37 @@ describe("a recipe's lines and supplied numbers", () => {
     expect(nutritionLinesOf(recipe)).toEqual([
       { id: "b", name: "200 g onion", amount: 200, unit: "gram", ingredientId: "onion" },
     ]);
+  });
+
+  it("counts an or line as its first food, and an and line as each food at the full amount", () => {
+    const joined = (joined: "together" | "alternatives", id: string) => ({
+      id,
+      ingredientName: `100 g rice ${joined === "together" ? "en" : "of"} onion`,
+      ingredientId: "rice",
+      joined,
+      foods: [
+        { ingredientId: "rice", name: "rice" },
+        { ingredientId: "onion", name: "onion" },
+      ],
+      amount: 100,
+      unit: "gram",
+      systemUsed: "metric",
+    });
+    const lines = nutritionLinesOf({
+      ...recipe,
+      servings: 1,
+      recipeIngredients: [joined("alternatives", "d"), joined("together", "e")],
+    });
+
+    expect(lines).toEqual([
+      { id: "d", name: "rice", amount: 100, unit: "gram", ingredientId: "rice" },
+      { id: "e", name: "rice", amount: 100, unit: "gram", ingredientId: "rice" },
+      { id: "e:1", name: "onion", amount: 100, unit: "gram", ingredientId: "onion" },
+    ]);
+    expect(
+      workOutNutrition({ lines, servings: 1, nutrition: NUTRITION, seasoning: [] }).perServing
+        ?.calories
+    ).toBe(350 + 350 + 40);
   });
 
   it("takes any value the recipe supplies as the whole group, and works nothing out beside it", () => {

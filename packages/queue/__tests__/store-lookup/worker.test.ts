@@ -3,19 +3,14 @@
  * What a lookup that failed leaves behind, and what a lookup tells the job
  * monitor. BullMQ retries a match job that threw; only the attempt that spends
  * the last try gives up, and that is the one that must not leave a Pending
- * Link saying the shop is still being asked. The worker is built by hand, not
- * through the lazy worker manager, so it must wrap its processor itself: the
- * models a lookup asks reach the job monitor the way a lazy worker's do.
+ * Link saying the shop is still being asked.
  */
+import { UnrecoverableError } from "bullmq";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 
+import { closeWorkers } from "@norish/queue/create-worker";
 import { readStepProgress } from "@norish/queue/job-steps";
-import {
-  forgetFailedLookup,
-  startStoreLookupWorker,
-  stopStoreLookupWorker,
-} from "@norish/queue/store-lookup/worker";
-import { recordModelUse } from "@norish/shared-server/ai/runtime/model-use-ledger";
+import { forgetFailedLookup, startStoreLookupWorker } from "@norish/queue/store-lookup/worker";
 
 const clearPendingLink = vi.hoisted(() => vi.fn());
 const lookup = vi.hoisted(() => ({ matchGroceryName: vi.fn(), refreshProducts: vi.fn() }));
@@ -28,8 +23,9 @@ vi.mock("bullmq", async (importOriginal) => {
 
   class MockWorker {
     on = vi.fn();
+    pause = vi.fn(async () => undefined);
+    cancelAllJobs = vi.fn();
     close = vi.fn(async () => undefined);
-    removeAllListeners = vi.fn();
 
     constructor(_queueName: string, processor: (job: unknown) => Promise<unknown>) {
       captured.processor = processor;
@@ -39,11 +35,8 @@ vi.mock("bullmq", async (importOriginal) => {
   return { ...actual, Worker: MockWorker };
 });
 vi.mock("@norish/db/repositories/store-products", () => ({ clearPendingLink }));
-vi.mock("@norish/queue/redis/bullmq", () => ({ getBullClient: vi.fn() }));
+vi.mock("@norish/queue/valkey/bullmq", () => ({ getBullClient: vi.fn() }));
 vi.mock("@norish/queue/store-lookup/lookup", () => lookup);
-const findIngredientFor = vi.hoisted(() => vi.fn());
-
-vi.mock("@norish/shared-server/ingredients/resolver", () => ({ findIngredientFor }));
 
 const STORE = "11111111-1111-4111-8111-111111111111";
 const match = {
@@ -75,25 +68,39 @@ describe("forgetFailedLookup", () => {
     clearPendingLink.mockReset();
   });
 
+  const failure = new Error("shop away");
+
   it("clears the Pending Link of a match job that has spent its attempts", async () => {
-    await forgetFailedLookup({ data: match, attemptsMade: 2, opts: { attempts: 2 } });
+    await forgetFailedLookup({ data: match, attemptsMade: 2, opts: { attempts: 2 } }, failure);
+
+    expect(clearPendingLink).toHaveBeenCalledExactlyOnceWith(STORE, "ingredient-kaas");
+  });
+
+  it("clears it for a match job an administrator cancelled, attempts left or not", async () => {
+    await forgetFailedLookup(
+      { data: match, attemptsMade: 1, opts: { attempts: 2 } },
+      new UnrecoverableError("Cancelled by an administrator")
+    );
 
     expect(clearPendingLink).toHaveBeenCalledExactlyOnceWith(STORE, "ingredient-kaas");
   });
 
   it("leaves the Pending Link while an attempt is still to come", async () => {
-    await forgetFailedLookup({ data: match, attemptsMade: 1, opts: { attempts: 2 } });
+    await forgetFailedLookup({ data: match, attemptsMade: 1, opts: { attempts: 2 } }, failure);
 
     expect(clearPendingLink).not.toHaveBeenCalled();
   });
 
   it("has nothing to clear for a refresh, or for no job at all", async () => {
-    await forgetFailedLookup({
-      data: { kind: "refresh", storeId: STORE, productIds: ["p1"], householdKey: "h" },
-      attemptsMade: 2,
-      opts: { attempts: 2 },
-    });
-    await forgetFailedLookup(undefined);
+    await forgetFailedLookup(
+      {
+        data: { kind: "refresh", storeId: STORE, productIds: ["p1"], householdKey: "h" },
+        attemptsMade: 2,
+        opts: { attempts: 2 },
+      },
+      failure
+    );
+    await forgetFailedLookup(undefined, failure);
 
     expect(clearPendingLink).not.toHaveBeenCalled();
   });
@@ -108,39 +115,7 @@ describe("startStoreLookupWorker", () => {
   });
 
   afterEach(async () => {
-    await stopStoreLookupWorker();
-  });
-
-  it("hands BullMQ a processor that writes the models a lookup asked onto the job", async () => {
-    lookup.matchGroceryName.mockImplementation(async () => {
-      recordModelUse({ provider: "typesafe", model: "jev-2026-09-01", outcome: "completed" });
-
-      return { matched: false };
-    });
-    const job = fakeJob(match);
-
-    await captured.processor!(job);
-
-    expect(readStepProgress(job.progress)?.attempts[0]?.models).toEqual([
-      { provider: "typesafe", model: "jev-2026-09-01", outcome: "completed" },
-    ]);
-  });
-
-  it("answers a question queued before questions named their Ingredient, by its name", async () => {
-    const { ingredientId: _none, ...queuedBeforeTheUpgrade } = match;
-
-    findIngredientFor.mockResolvedValueOnce({
-      aliasId: "alias-kaas",
-      ingredientId: "ingredient-kaas",
-    });
-    lookup.matchGroceryName.mockResolvedValueOnce({ matched: true });
-
-    await captured.processor!(fakeJob(queuedBeforeTheUpgrade));
-
-    expect(findIngredientFor).toHaveBeenCalledWith("kaas");
-    expect(lookup.matchGroceryName).toHaveBeenCalledWith(
-      expect.objectContaining({ storeId: STORE, ingredientId: "ingredient-kaas", name: "kaas" })
-    );
+    await closeWorkers(0);
   });
 
   it("reports what a match was told beside its steps", async () => {

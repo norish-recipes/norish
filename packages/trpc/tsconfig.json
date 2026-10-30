@@ -2,8 +2,8 @@
   "extends": "@norish/tsconfig/compiled-package.json",
   "compilerOptions": {
     "module": "Preserve",
-    "moduleResolution": "Bundler",
-    "rootDir": "./src"
+    "rootDir": "./src",
+    "types": ["node"]
   },
   "include": ["src"],
   "exclude": ["node_modules"]

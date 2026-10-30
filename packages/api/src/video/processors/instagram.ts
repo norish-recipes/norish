@@ -1,3 +1,5 @@
+import { decode } from "html-entities";
+
 import type { RecipeVerdict } from "@norish/api/parser/import-triage";
 import type { FullRecipeInsertDTO } from "@norish/shared/contracts/dto/recipe";
 import type { SiteAuthTokenDecryptedDto } from "@norish/shared/contracts/dto/site-auth-tokens";
@@ -8,51 +10,27 @@ import { extractRecipeFromVideo } from "@norish/api/video/normalizer";
 import { transcribe } from "@norish/shared-server/ai/runtime/runtime";
 import { videoLogger as log } from "@norish/shared-server/logger";
 import { downloadImage } from "@norish/shared-server/media/storage";
+import { hasSteps } from "@norish/shared/lib/helpers";
 
 import type { VideoMetadata, VideoProcessorContext } from "../types";
 import { BaseVideoProcessor } from "../base-processor";
-import { isMediaUnavailable } from "../errors";
+import { captionFailureAllowsTranscription, isMediaUnavailable } from "../errors";
+
+/** The page's description meta tag, with either attribute order. */
+const CAPTION_META_PATTERNS = [
+  /<meta\s+(?:name|property)=["'](?:og:description|description)["']\s+content=["']([^"']+)["']/i,
+  /<meta\s+content=["']([^"']+)["']\s+(?:name|property)=["'](?:og:description|description)["']/i,
+];
 
 /**
  * Extract caption/description from Instagram/Facebook page HTML.
  */
 function extractCaptionFromHtml(html: string): string {
-  // Try meta description first
-  const metaMatch = html.match(
-    /<meta\s+(?:name|property)=["'](?:og:description|description)["']\s+content=["']([^"']+)["']/i
-  );
+  for (const pattern of CAPTION_META_PATTERNS) {
+    const content = html.match(pattern)?.[1];
+    const decoded = content ? decode(content) : "";
 
-  if (metaMatch?.[1]) {
-    const decoded = metaMatch[1]
-      .replace(/&quot;/g, '"')
-      .replace(/&amp;/g, "&")
-      .replace(/&lt;/g, "<")
-      .replace(/&gt;/g, ">")
-      .replace(/&#x27;/g, "'")
-      .replace(/&#39;/g, "'");
-
-    if (decoded.length > 50) {
-      return decoded;
-    }
-  }
-
-  // Try alternate meta tag format
-  const altMetaMatch = html.match(
-    /<meta\s+content=["']([^"']+)["']\s+(?:name|property)=["'](?:og:description|description)["']/i
-  );
-
-  if (altMetaMatch?.[1]) {
-    const decoded = altMetaMatch[1]
-      .replace(/&quot;/g, '"')
-      .replace(/&amp;/g, "&")
-      .replace(/&lt;/g, "<")
-      .replace(/&gt;/g, ">")
-      .replace(/&#x27;/g, "'")
-      .replace(/&#39;/g, "'");
-
-    if (decoded.length > 50) {
-      return decoded;
-    }
+    if (decoded.length > 50) return decoded;
   }
 
   return "";
@@ -150,20 +128,16 @@ export class InstagramProcessor extends BaseVideoProcessor {
 
     // If yt-dlp returned no usable caption, render the post and read its caption
     if (!holdsRecipe) {
-      log.info({ url }, "Description holds no recipe, rendering the post in Obscura");
-      try {
-        const html = await fetchRenderedPage(url, tokens);
+      log.info({ url }, "Description holds no recipe, rendering the post");
+      const html = await fetchRenderedPage(url, tokens);
 
-        if (html) {
-          description = extractCaptionFromHtml(html);
-          log.info(
-            { url, descriptionLength: description.length },
-            "Extracted caption from the rendered page"
-          );
-          holdsRecipe = captionMayHoldRecipe(description, await judgeRecipe(description), 50);
-        }
-      } catch (err) {
-        log.warn({ url, err }, "Failed to render the post in Obscura");
+      if (html) {
+        description = extractCaptionFromHtml(html);
+        log.info(
+          { url, descriptionLength: description.length },
+          "Extracted caption from the rendered page"
+        );
+        holdsRecipe = captionMayHoldRecipe(description, await judgeRecipe(description), 50);
       }
     }
 
@@ -178,7 +152,9 @@ export class InstagramProcessor extends BaseVideoProcessor {
       recipe = await extractRecipeWithAI(description, recipeId, url);
     } catch (error) {
       log.warn({ url, err: error }, "AI extraction failed for Instagram image post");
-      throw new Error("Instagram image posts are only supported if the caption contains a recipe");
+      throw new Error("Instagram image posts are only supported if the caption contains a recipe", {
+        cause: error,
+      });
     }
 
     // Download thumbnail as recipe image
@@ -186,7 +162,6 @@ export class InstagramProcessor extends BaseVideoProcessor {
       try {
         const imagePath = await downloadImage(metadata.thumbnail, recipeId);
 
-        recipe.image = imagePath;
         recipe.images = [{ image: imagePath, order: 0 }];
       } catch {
         log.debug({ url }, "Failed to download Instagram thumbnail");
@@ -229,6 +204,7 @@ export class InstagramProcessor extends BaseVideoProcessor {
       // caption is weighed, so it is asked once.
       const descriptionText = metadata.description?.trim() || "";
       const verdict = await judgeRecipe(descriptionText);
+      let captionRecipe: FullRecipeInsertDTO | null = null;
 
       if (captionClearlyHoldsRecipe(descriptionText, verdict, 201)) {
         log.info(
@@ -241,13 +217,22 @@ export class InstagramProcessor extends BaseVideoProcessor {
         try {
           const recipe = await extractRecipeFromVideo(descriptionText, metadata, recipeId, url);
 
-          log.info({ url }, "Successfully extracted recipe from description");
-          const savedVideo = videoPath
-            ? await this.saveVideo(videoPath, recipeId, metadata.duration)
-            : null;
+          if (hasSteps(recipe)) {
+            log.info({ url }, "Successfully extracted recipe from description");
+            const savedVideo = videoPath
+              ? await this.saveVideo(videoPath, recipeId, metadata.duration)
+              : null;
 
-          return this.addVideoToRecipe(recipe, savedVideo);
+            return this.addVideoToRecipe(recipe, savedVideo);
+          }
+
+          captionRecipe = recipe;
+          log.info({ url }, "Description held no steps, transcribing for the method");
         } catch (descriptionExtractionError) {
+          if (!captionFailureAllowsTranscription(descriptionExtractionError)) {
+            throw descriptionExtractionError;
+          }
+
           log.info(
             { url, err: descriptionExtractionError },
             "Description extraction failed, falling back to transcription"
@@ -256,40 +241,37 @@ export class InstagramProcessor extends BaseVideoProcessor {
       }
 
       // Fall back to audio transcription
-      try {
-        audioPath = await this.downloadAudio(url, tokens);
-      } catch (audioError) {
-        // If audio download fails, try description-based extraction as last resort
-        log.warn(
-          { url, err: audioError },
-          "Audio download failed, attempting description extraction"
-        );
+      const recipe = await this.withTranscriptSteps(captionRecipe, async () => {
+        try {
+          audioPath = await this.downloadAudio(url, tokens);
+        } catch (audioError) {
+          // If audio download fails, try description-based extraction as last resort
+          log.warn(
+            { url, err: audioError },
+            "Audio download failed, attempting description extraction"
+          );
 
-        if (captionMayHoldRecipe(descriptionText, verdict, 50)) {
-          try {
-            const recipe = await extractRecipeWithAI(descriptionText, recipeId, url);
-            const savedVideo = videoPath
-              ? await this.saveVideo(videoPath, recipeId, metadata.duration)
-              : null;
-
-            return this.addVideoToRecipe(recipe, savedVideo);
-          } catch (descriptionError) {
-            log.warn({ url, err: descriptionError }, "Description extraction failed too");
+          if (!captionRecipe && captionMayHoldRecipe(descriptionText, verdict, 50)) {
+            try {
+              return await extractRecipeWithAI(descriptionText, recipeId, url);
+            } catch (descriptionError) {
+              log.warn({ url, err: descriptionError }, "Description extraction failed too");
+            }
           }
+
+          throw audioError;
         }
 
-        throw audioError;
-      }
+        log.info({ url }, "Starting audio transcription");
+        const transcript = await transcribe(audioPath);
 
-      log.info({ url }, "Starting audio transcription");
-      const transcript = await transcribe(audioPath);
+        log.info({ url, transcriptLength: transcript.length }, "Audio transcribed");
 
-      log.info({ url, transcriptLength: transcript.length }, "Audio transcribed");
+        // Combine transcript with description
+        const combinedText = [transcript, descriptionText].filter(Boolean).join("\n\n---\n\n");
 
-      // Combine transcript with description
-      const combinedText = [transcript, descriptionText].filter(Boolean).join("\n\n---\n\n");
-
-      const recipe = await extractRecipeFromVideo(combinedText, metadata, recipeId, url);
+        return extractRecipeFromVideo(combinedText, metadata, recipeId, url);
+      });
 
       const savedVideo = videoPath
         ? await this.saveVideo(videoPath, recipeId, metadata.duration)

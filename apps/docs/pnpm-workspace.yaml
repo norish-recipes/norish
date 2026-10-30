@@ -2,7 +2,9 @@
 # Having its own pnpm-workspace.yaml makes this directory its own install root, so the
 # Docusaurus dependency tree never touches the root React 19 catalog. Builds/deploys
 # are fully self-contained.
-onlyBuiltDependencies:
-  - "@swc/core"
-  - core-js
-  - core-js-pure
+allowBuilds:
+  "@swc/core": true
+  core-js: true
+  core-js-pure: true
+  esbuild: false
+  workerd: false

@@ -19,7 +19,7 @@ export default function ContentDetectionCard() {
     contentIndicators,
     units,
     ingredientWords,
-    recurrenceConfig,
+    recurrenceLocales,
     timerKeywords,
     updateContentIndicators,
     updateUnits,
@@ -187,7 +187,7 @@ export default function ContentDetectionCard() {
               <div>
                 <JsonEditor
                   description={t("recurrence.description")}
-                  value={recurrenceConfig}
+                  value={recurrenceLocales}
                   onDirtyChange={updateDirtySection("recurrence")}
                   onRestoreDefaults={() => restoreDefaultConfig(ServerConfigKeys.RECURRENCE_CONFIG)}
                   onSave={updateRecurrenceConfig}

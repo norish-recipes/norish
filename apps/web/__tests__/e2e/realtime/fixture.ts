@@ -1,11 +1,13 @@
 import type { Browser, BrowserContext, Page } from "@playwright/test";
 import { test as base, expect } from "@playwright/test";
 
+import type { AdminUserRowDTO } from "@norish/shared/contracts";
+
 import type { SessionCookies } from "../harness/auth";
 import { signIn } from "../harness/auth";
-import { withDatabase } from "../harness/database";
 import { hydratingBrowser } from "../harness/hydration";
 import { ProductionStack } from "../harness/production-stack";
+import { callTrpc } from "../harness/trpc";
 
 export const USER_A = {
   email: "realtime-a@norish.test",
@@ -122,20 +124,16 @@ interface RealtimeWorkerFixtures {
 }
 
 /** A is the first sign-up and therefore the server owner; B is the other account. */
-async function readUserIds(databaseUrl: string): Promise<Record<Identity, string>> {
-  return withDatabase(databaseUrl, async (database) => {
-    const rows = await database.query<{ id: string; is_owner: boolean }>(
-      `select id, "isServerOwner" as is_owner from "user"`
-    );
-    const a = rows.rows.find((row) => row.is_owner)?.id;
-    const b = rows.rows.find((row) => !row.is_owner)?.id;
+async function readUserIds(baseURL: string, ownerCookies: SessionCookies) {
+  const users = await callTrpc<AdminUserRowDTO[]>(baseURL, ownerCookies, "admin.users.list");
+  const a = users.find((user) => user.email === USER_A.email && user.isServerOwner)?.id;
+  const b = users.find((user) => user.email === USER_B.email)?.id;
 
-    if (!a || !b || rows.rows.length !== 2) {
-      throw new Error("The realtime harness did not provision exactly the owner and one member");
-    }
+  if (!a || !b || users.length !== 2) {
+    throw new Error("The realtime harness did not provision exactly the owner and one member");
+  }
 
-    return { a, b };
-  });
+  return { a, b };
 }
 
 function makeContextFactory(
@@ -184,13 +182,12 @@ export const test = base.extend<NoTestFixtures, RealtimeWorkerFixtures>({
     async ({ browser }, use) => {
       const stack = new ProductionStack({
         project: "realtime",
-        port: 3300,
         databaseName: "norish_realtime_e2e",
         users: [USER_A, USER_B],
         captureLogs: true,
         environment: {
           // The scenarios assert on warn-level lines: a lagged subscription,
-          // a Redis reconnect. The server logger reads NEXT_PUBLIC_LOG_LEVEL first.
+          // a Valkey reconnect. The server logger reads NEXT_PUBLIC_LOG_LEVEL first.
           LOG_LEVEL: "warn",
           NEXT_PUBLIC_LOG_LEVEL: "warn",
           TRPC_LOG_LEVEL: "warn",
@@ -206,7 +203,7 @@ export const test = base.extend<NoTestFixtures, RealtimeWorkerFixtures>({
           signIn(stack.baseURL, USER_B),
         ]);
         const cookies = { a: cookiesA, b: cookiesB };
-        const userIds = await readUserIds(stack.databaseUrl);
+        const userIds = await readUserIds(stack.baseURL, cookiesA);
 
         await use({
           baseURL: stack.baseURL,

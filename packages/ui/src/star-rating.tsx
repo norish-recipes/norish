@@ -18,7 +18,7 @@ type StarRatingProps = StarRatingBaseProps &
   (
     | {
         /** Re-selecting the current value clears the rating (calls onChange with null) */
-        allowClear: true;
+        allowClear: boolean;
         onChange: (value: number | null) => void;
       }
     | { allowClear?: false; onChange: (value: number) => void }

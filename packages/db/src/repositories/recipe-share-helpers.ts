@@ -104,7 +104,6 @@ export function mapRecipeToPublicRecipeView(
     description: recipe.description ?? null,
     notes: recipe.notes ?? null,
     url: recipe.url ?? null,
-    image: toSharedMediaUrl(recipe.image, shareToken),
     // The Dish Colour travels to the share page so a shared link tints the
     // way the app does (ADR-0023); it stays a colour, never a media URL.
     dishColor: recipe.dishColor ?? null,

@@ -60,7 +60,6 @@ function fakeSocket() {
 
 describe("connection invalidation on the hub", () => {
   beforeEach(() => {
-    vi.clearAllMocks();
     hub.handlers.clear();
   });
 

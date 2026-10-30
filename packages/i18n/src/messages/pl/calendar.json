@@ -4,9 +4,7 @@
   "editNote": {
     "title": "Edytuj notatkę",
     "noteLabel": "Notatka",
-    "notePlaceholder": "Wpisz notatkę...",
-    "date": "Data",
-    "slot": "Posiłek"
+    "notePlaceholder": "Wpisz notatkę..."
   },
   "navigation": {
     "previousMonth": "Poprzedni miesiąc",

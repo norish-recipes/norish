@@ -17,7 +17,7 @@ interface RecipeFormState {
   description: string;
   notes: string;
   url: string;
-  servings: number;
+  servings: number | null;
   prepMinutes: number | null;
   cookMinutes: number | null;
   totalMinutes: number | null;
@@ -43,7 +43,8 @@ interface UseRecipeFormDirtyStateOptions {
   units: UnitsMap;
 }
 
-function buildInitialMedia(initialData?: FullRecipeDTO): RecipeGalleryMedia[] {
+/** A recipe's images and videos as the media editor holds them, in one order. */
+export function buildInitialMedia(initialData?: FullRecipeDTO): RecipeGalleryMedia[] {
   const media: RecipeGalleryMedia[] = [];
 
   if (initialData?.images && initialData.images.length > 0) {
@@ -56,8 +57,6 @@ function buildInitialMedia(initialData?: FullRecipeDTO): RecipeGalleryMedia[] {
         version: img.version,
       });
     });
-  } else if (initialData?.image) {
-    media.push({ type: "image", src: initialData.image, order: 0 });
   }
 
   if (initialData?.videos && initialData.videos.length > 0) {

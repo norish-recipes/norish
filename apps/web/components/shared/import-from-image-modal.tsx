@@ -8,6 +8,7 @@ import { DropZone } from "@/components/ui/drop-zone";
 import { useUploadLimitsQuery } from "@/hooks/config";
 import { useRecipesMutations } from "@/hooks/recipes";
 import { useClipboardImagePaste } from "@/hooks/use-clipboard-image-paste";
+import { pdfPagesAsImages } from "@/lib/pdf-pages";
 import { showSafeErrorToast } from "@/lib/ui/safe-error-toast";
 import { PhotoIcon, SparklesIcon, XMarkIcon } from "@heroicons/react/16/solid";
 import { Button, Kbd, Modal, toast } from "@heroui/react";
@@ -28,7 +29,9 @@ interface FilePreview {
   file: File;
   preview: string;
 }
-const OCR_IMAGE_ACCEPT = ALLOWED_OCR_MIME_TYPES.join(",");
+const PDF_MIME_TYPE = "application/pdf";
+const OCR_ACCEPTED_TYPES = [...ALLOWED_OCR_MIME_TYPES, PDF_MIME_TYPE];
+const OCR_IMAGE_ACCEPT = OCR_ACCEPTED_TYPES.join(",");
 
 export default function ImportFromImageModal({ isOpen, onOpenChange }: ImportFromImageModalProps) {
   const t = useTranslations("common.import.image");
@@ -117,10 +120,31 @@ export default function ImportFromImageModal({ isOpen, onOpenChange }: ImportFro
     },
     [t, limits.maxImageSize]
   );
+  // A PDF goes in as its pages, drawn as pictures.
+  const handleAddFilesOrPdfs = useCallback(
+    (selectedFiles: File[] | FileList | null) => {
+      if (!selectedFiles) return;
+      void Promise.all(
+        Array.from(selectedFiles).map((file) =>
+          file.type === PDF_MIME_TYPE
+            ? pdfPagesAsImages(file, MAX_OCR_FILES).catch(() => {
+                toast(t("invalidType"), {
+                  description: t("notSupported", { name: file.name }),
+                  variant: "danger",
+                });
+
+                return [];
+              })
+            : [file]
+        )
+      ).then((pages) => handleAddFiles(pages.flat()));
+    },
+    [handleAddFiles, t]
+  );
 
   useClipboardImagePaste({
     enabled: isOpen,
-    onFiles: (pastedFiles) => handleAddFiles(pastedFiles),
+    onFiles: (pastedFiles) => handleAddFilesOrPdfs(pastedFiles),
   });
   const handleRemoveFile = useCallback((id: string) => {
     setFiles((prev) => {
@@ -142,13 +166,13 @@ export default function ImportFromImageModal({ isOpen, onOpenChange }: ImportFro
           }
         }
 
-        handleAddFiles(droppedFiles);
+        handleAddFilesOrPdfs(droppedFiles);
       })();
     },
-    [handleAddFiles]
+    [handleAddFilesOrPdfs]
   );
   const getDropOperation = useCallback<NonNullable<DropZoneAreaProps["getDropOperation"]>>(
-    (types) => (ALLOWED_OCR_MIME_TYPES.some((type) => types.has(type)) ? "copy" : "cancel"),
+    (types) => (OCR_ACCEPTED_TYPES.some((type) => types.has(type)) ? "copy" : "cancel"),
     []
   );
   const handleImport = useCallback(() => {
@@ -177,9 +201,8 @@ export default function ImportFromImageModal({ isOpen, onOpenChange }: ImportFro
         error,
         context: "import-from-image-modal:import",
       });
-    } finally {
-      setIsSubmitting(false);
     }
+    setIsSubmitting(false);
   }, [files, importRecipeFromImages, onOpenChange, router, t, tErrors]);
   const handleOpenChange = useCallback(
     (open: boolean) => {
@@ -211,11 +234,19 @@ export default function ImportFromImageModal({ isOpen, onOpenChange }: ImportFro
                     <DropZone.Label>{t("dropzone")}</DropZone.Label>
                     <DropZone.Description>{t("formats")}</DropZone.Description>
                     <DropZone.Description className="flex items-center justify-center gap-1.5">
-                      <Kbd keys={["ctrl"]}>V</Kbd> {t("paste")}
+                      <Kbd>
+                        <Kbd.Abbr keyValue="ctrl" />
+                        <Kbd.Content>V</Kbd.Content>
+                      </Kbd>{" "}
+                      {t("paste")}
                     </DropZone.Description>
                     <DropZone.Trigger>{t("library")}</DropZone.Trigger>
                   </DropZone.Area>
-                  <DropZone.Input multiple accept={OCR_IMAGE_ACCEPT} onSelect={handleAddFiles} />
+                  <DropZone.Input
+                    multiple
+                    accept={OCR_IMAGE_ACCEPT}
+                    onSelect={handleAddFilesOrPdfs}
+                  />
                 </DropZone>
 
                 {/* File previews */}
@@ -224,7 +255,6 @@ export default function ImportFromImageModal({ isOpen, onOpenChange }: ImportFro
                     {files.map(({ id, file, preview }) => (
                       <div key={id} className="group relative">
                         <Image
-                          unoptimized
                           alt={file.name}
                           className="h-20 w-full rounded-lg object-cover"
                           height={80}

@@ -3,6 +3,7 @@
 import { useState } from "react";
 import Panel from "@/components/Panel/Panel";
 import { useIsMobile } from "@/hooks/use-is-mobile";
+import { usePending } from "@/hooks/use-pending";
 import { OFFLINE_FORCED_AVAILABLE } from "@/lib/connectivity";
 import {
   ArrowPathIcon,
@@ -14,7 +15,7 @@ import {
   TrashIcon,
 } from "@heroicons/react/16/solid";
 import { Button, Modal } from "@heroui/react";
-import { useFormatter, useTranslations } from "next-intl";
+import { useFormatter, useNow, useTranslations } from "next-intl";
 
 import type { OfflineStatus } from "./use-offline-status";
 import { useOfflineStatus } from "./use-offline-status";
@@ -100,16 +101,10 @@ function ConfirmInline({
   onCancel,
   onConfirm,
 }: ConfirmInlineProps) {
-  const [busy, setBusy] = useState(false);
+  const [busy, whileBusy] = usePending();
 
   const confirm = async () => {
-    setBusy(true);
-
-    try {
-      await onConfirm();
-    } finally {
-      setBusy(false);
-    }
+    await whileBusy(() => onConfirm());
   };
 
   return (
@@ -152,6 +147,8 @@ function ConnectionSection({ status }: { status: OfflineStatus }) {
 function CacheSection({ status }: { status: OfflineStatus }) {
   const t = useTranslations("common.offlineStatus.cache");
   const format = useFormatter();
+  // relativeTime needs a clock; this one moves on each minute.
+  const now = useNow({ updateInterval: 60_000 });
   const { counts } = status;
   const [confirming, setConfirming] = useState(false);
 
@@ -184,7 +181,7 @@ function CacheSection({ status }: { status: OfflineStatus }) {
       {status.isOffline ? (
         <p className="text-muted text-xs">
           {status.lastWarmedAt
-            ? t("dataAge", { when: format.relativeTime(new Date(status.lastWarmedAt)) })
+            ? t("dataAge", { when: format.relativeTime(new Date(status.lastWarmedAt), now) })
             : t("dataAgeUnknown")}
         </p>
       ) : null}

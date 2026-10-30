@@ -1,8 +1,9 @@
 "use client";
 
+import { ActionButton, ActionButtonGroup } from "@/components/shared/action-button";
 import { Note } from "@/components/shared/note";
-import { ExclamationTriangleIcon } from "@heroicons/react/16/solid";
-import { Button, Modal } from "@heroui/react";
+import { ArrowPathIcon, ExclamationTriangleIcon } from "@heroicons/react/16/solid";
+import { Modal } from "@heroui/react";
 import { useTranslations } from "next-intl";
 
 type RestartConfirmationModalProps = {
@@ -40,12 +41,19 @@ export default function RestartConfirmationModal({
             </Note>
           </Modal.Body>
           <Modal.Footer>
-            <Button onPress={onClose} variant="tertiary">
-              {tActions("cancel")}
-            </Button>
-            <Button onPress={onConfirm} variant="secondary">
-              {t("confirmButton")}
-            </Button>
+            <ActionButtonGroup>
+              <ActionButton action="cancel" onPress={onClose}>
+                {tActions("cancel")}
+              </ActionButton>
+              <ActionButton
+                action="apply"
+                icon={ArrowPathIcon}
+                variant="secondary"
+                onPress={onConfirm}
+              >
+                {t("confirmButton")}
+              </ActionButton>
+            </ActionButtonGroup>
           </Modal.Footer>
         </Modal.Dialog>
       </Modal.Container>

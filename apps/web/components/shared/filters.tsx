@@ -15,13 +15,16 @@ export default function Filters() {
     const hasCategories = filters.categories.length > 0;
     const hasRating = filters.minRating !== null;
     const hasCookingTime = filters.maxCookingTime !== null;
-    return hasSearch || hasTags || hasCategories || hasRating || hasCookingTime;
+    return (
+      hasSearch || hasTags || hasCategories || hasRating || hasCookingTime || filters.showPantryOnly
+    );
   }, [
     filters.rawInput,
     filters.searchTags,
     filters.categories,
     filters.minRating,
     filters.maxCookingTime,
+    filters.showPantryOnly,
   ]);
   return (
     <>

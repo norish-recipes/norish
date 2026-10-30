@@ -42,8 +42,6 @@ const RECIPE_B = "99999999-9999-4999-8999-999999999999";
 
 describe("norish export service", () => {
   beforeEach(() => {
-    vi.clearAllMocks();
-
     mockListVisibleRecipeIds.mockResolvedValue([RECIPE_A, RECIPE_B]);
     mockGetRecipeFull.mockImplementation(async (id: string) =>
       buildFullRecipe({ id, name: `Recipe ${id.slice(0, 8)}` })

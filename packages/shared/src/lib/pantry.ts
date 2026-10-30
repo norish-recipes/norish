@@ -2,7 +2,12 @@ import type { PantryIngredientDto } from "@norish/shared/contracts";
 import type { LocaleNames } from "@norish/shared/lib/ingredient-names";
 import type { SpellingRules } from "@norish/shared/lib/spelling-keys";
 import { ingredientDisplayName } from "@norish/shared/lib/ingredient-names";
-import { BASE_SPELLING_RULES, foodKey, sameFood } from "@norish/shared/lib/spelling-keys";
+import {
+  BASE_SPELLING_RULES,
+  foodKey,
+  notedParts,
+  sameFood,
+} from "@norish/shared/lib/spelling-keys";
 
 /**
  * The Pantry Ingredient that covers a line, or null where the household has
@@ -17,24 +22,35 @@ import { BASE_SPELLING_RULES, foodKey, sameFood } from "@norish/shared/lib/spell
  * against the Ingredient's name or its name in a language, so "onions,
  * diced", "salt to taste" and "uien" are covered offline as they will be
  * once synced, and on nothing looser: "salt" never covers "salted butter",
- * because Norish never guesses from words.
+ * because Norish never guesses from words. A line of alternatives (`foodsToBuy`)
+ * is covered by any of its foods.
  */
 export function pantryIngredientFor(
   items: readonly PantryIngredientDto[],
-  line: { ingredientId?: string | null; ingredientName?: string | null },
+  line: {
+    ingredientId?: string | null;
+    ingredientName?: string | null;
+    alternativeIds?: readonly string[];
+  },
   rules: SpellingRules = BASE_SPELLING_RULES
 ): PantryIngredientDto | null {
   const key = foodKey(line.ingredientName, rules);
+  // Read up to a note as the resolver does ("olie om te bakken" is olie); only the resolver knows
+  // whether the words after it name a food ("kip met rijst"), which syncing settles.
+  const noted = notedParts(key, rules)?.head;
+  const ids = line.ingredientId ? [line.ingredientId, ...(line.alternativeIds ?? [])] : [];
 
   return (
     items.find((item) =>
       // A Pantry Ingredient added offline has no Ingredient until it syncs,
       // and meanwhile is matched on its name like any unresolved text.
-      line.ingredientId && item.ingredientId
-        ? item.ingredientId === line.ingredientId || item.ancestorIds.includes(line.ingredientId)
+      ids.length > 0 && item.ingredientId
+        ? ids.some((id) => item.ingredientId === id || item.ancestorIds.includes(id))
         : key !== "" &&
-          [item.name, ...Object.values(item.localeNames ?? {})].some((name) =>
-            sameFood(name, line.ingredientName, rules)
+          [item.name, ...Object.values(item.localeNames ?? {})].some(
+            (name) =>
+              sameFood(name, line.ingredientName, rules) ||
+              (noted !== undefined && sameFood(name, noted, rules))
           )
     ) ?? null
   );

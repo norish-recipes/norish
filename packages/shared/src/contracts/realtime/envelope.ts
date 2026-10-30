@@ -54,7 +54,7 @@ export interface RealtimeEventMeta {
   namespace: string;
   /** Routing scope of the channel the event went out on. */
   scope: RealtimeEventScope;
-  /** Full resolved Redis channel string. */
+  /** Full resolved Valkey channel string. */
   channel: string;
   /** ISO 8601 timestamp of when the event occurred. */
   occurredAt: string;
@@ -82,7 +82,7 @@ export const CURSOR_MARK: RealtimeCursorMark = Object.freeze({ mark: "cursor" })
 
 /**
  * The message of the `PRECONDITION_FAILED` error a subscription ends with when
- * it cannot continue in order: queue overflow, a Redis reconnect, or a cursor
+ * it cannot continue in order: queue overflow, a Valkey reconnect, or a cursor
  * it cannot resume from. The client's one reaction is to refetch and resubscribe.
  */
 export const REALTIME_LAGGED = "REALTIME_LAGGED";

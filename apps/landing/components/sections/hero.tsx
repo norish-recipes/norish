@@ -1,71 +1,51 @@
-import type { CSSProperties } from "react";
 import { links } from "@/lib/css-tokens";
+import { BookOpenIcon, CommandLineIcon } from "@heroicons/react/24/outline";
 
-import { Action } from "../action";
-import { Drift } from "../drift";
-import { GitHubIcon } from "../icons";
-import { Mark } from "../marks";
-import { Reveal } from "../reveal";
-import { SourceFlow } from "../source-flow";
+import { button } from "../button";
+import { Shot } from "../shot";
 
+/** The household's week in hand: tonight's recipe, with the calendar and the list fanned behind it. */
 export function Hero() {
   return (
-    <section className="relative px-5 pt-32 pb-20 sm:px-8 sm:pt-40 sm:pb-28" id="top">
-      <div
-        aria-hidden
-        className="hero-wash pointer-events-none absolute inset-x-0 top-0 -z-10 h-160"
-      />
+    <section className="mx-auto flex max-w-7xl flex-col items-center gap-6 px-4 pt-32 text-center sm:px-10 sm:pt-36">
+      <h1 className="hero-in text-[clamp(2.75rem,6vw,4.5rem)] leading-none font-semibold tracking-[-0.022em] text-balance">
+        Dinner, sorted <span className="text-accent-text">together.</span>
+      </h1>
+      <p className="hero-in text-muted text-xl text-balance [--delay:120ms]">
+        One recipe app for the whole household to enjoy.
+      </p>
+      <div className="hero-in flex flex-wrap justify-center gap-3 [--delay:240ms]">
+        <a className={button.primary} href="#self-host">
+          <CommandLineIcon />
+          Self-host it
+        </a>
+        <a className={button.secondary} href={links.docs}>
+          <BookOpenIcon />
+          Read the docs
+        </a>
+      </div>
 
-      <Drift>
-        {/* Only where there is margin to spare: on a phone the copy fills the
-            width and there is nowhere for one to sit that is not in the way. */}
-        <div aria-hidden className="pointer-events-none absolute inset-0 hidden lg:block">
-          <Mark at="top-[25%] left-[6%] size-11" depth={1.2} shape="lemon" turn={15} />
-          <Mark at="top-[18%] right-[8%] size-10" delay={200} depth={-1} shape="sprig" turn={12} />
-          <Mark
-            at="bottom-[13%] left-[10%] size-11"
-            delay={340}
-            depth={-1.4}
-            shape="mushroom"
-            turn={17}
-          />
-        </div>
-
-        <div className="mx-auto max-w-2xl text-center">
-          <Reveal>
-            <h1 className="font-serif text-[2.75rem] leading-[1.05] font-medium text-balance sm:text-6xl">
-              Any recipe, any source.
-            </h1>
-          </Reveal>
-
-          <Reveal delay={90}>
-            <p className="text-muted mx-auto mt-6 max-w-lg text-base leading-relaxed text-pretty sm:text-lg">
-              A link, video, photo, or plain text. Norish reads it and turns it into a clean,
-              structured recipe for you and everyone you cook with.
-            </p>
-          </Reveal>
-
-          <Reveal delay={170}>
-            <div className="mt-9 flex items-center justify-center gap-2">
-              <Action href="#self-host">Get started</Action>
-              <Action external href={links.github} variant="secondary">
-                <GitHubIcon className="size-4" />
-                GitHub
-              </Action>
-            </div>
-          </Reveal>
-        </div>
-
-        {/* Two equal halves, so the seam between them — where the strands all
-            meet — is the middle of the page. The sources need less than their
-            half and sit against the seam; the width here is set by the half
-            the recipe wants, not by the half the sources want. */}
-        <Reveal className="mx-auto mt-16 max-w-3xl sm:mt-20 md:max-w-4xl lg:max-w-6xl" delay={250}>
-          <div className="parallax" style={{ "--depth": 0.5 } as CSSProperties}>
-            <SourceFlow />
-          </div>
-        </Reveal>
-      </Drift>
+      <div className="phones relative mt-8 flex w-full max-w-[57.5rem] justify-center pb-20">
+        <Shot
+          alt=""
+          base="calendar-mobile"
+          className="phone fan fan-left absolute top-[4.5rem] left-[5%] w-[29%] max-w-[17rem]"
+          sizes="17rem"
+        />
+        <Shot
+          alt=""
+          base="groceries-mobile"
+          className="phone fan fan-right absolute top-[4.5rem] right-[5%] w-[29%] max-w-[17rem]"
+          sizes="17rem"
+        />
+        <Shot
+          eager
+          alt="The Steak Bowls recipe in Norish on a phone, with the meal calendar and grocery list beside it"
+          base="recipe-mobile"
+          className="phone hero-phone relative w-[35%] max-w-80 min-w-56"
+          sizes="20rem"
+        />
+      </div>
     </section>
   );
 }

@@ -23,6 +23,7 @@ import type { VideoMetadata } from "@norish/api/video/types";
 import type { FullRecipeInsertDTO } from "@norish/shared/contracts/dto/recipe";
 import { MediaUnavailableError } from "@norish/api/video/errors";
 import { InstagramProcessor } from "@norish/api/video/processors/instagram";
+import { AIProviderError, AIResponseError } from "@norish/shared-server/ai/runtime/errors";
 
 /** Every boundary the processor reaches through, and nothing else. */
 const boundary = vi.hoisted(() => ({
@@ -92,7 +93,15 @@ function metadata(over: Partial<VideoMetadata>): VideoMetadata {
 
 /** A fresh recipe per call - the processor writes images onto what it gets. */
 function recipe(): FullRecipeInsertDTO {
-  return { name: "Pasta" } as FullRecipeInsertDTO;
+  return {
+    name: "Pasta",
+    steps: [{ step: "Boil the pasta.", systemUsed: "metric", order: 0 }],
+  } as FullRecipeInsertDTO;
+}
+
+/** What a caption that lists only the ingredients extracts to. */
+function steplessRecipe(): FullRecipeInsertDTO {
+  return { name: "Caption pasta", steps: [] } as FullRecipeInsertDTO;
 }
 
 function process() {
@@ -112,7 +121,6 @@ function mediaIsAvailable() {
 }
 
 beforeEach(() => {
-  vi.clearAllMocks();
   mediaIsAvailable();
   boundary.downloadImage.mockResolvedValue("recipes/recipe-1/thumb.jpg");
   // No Decision Model: import triage has no opinion and the length rules stand.
@@ -218,6 +226,76 @@ describe("an Unclassified Post", () => {
 
     await expect(process()).rejects.toThrow("AI provider returned an error");
     expect(boundary.extractRecipeWithAI).not.toHaveBeenCalled();
+  });
+});
+
+describe("a caption extraction that fails (#645)", () => {
+  beforeEach(() => {
+    boundary.getVideoMetadata.mockResolvedValue(
+      metadata({ videoStream: "present", duration: 47, description: LONG_CAPTION })
+    );
+    boundary.downloadVideoAudio.mockResolvedValue("/tmp/a.mp3");
+    boundary.transcribe.mockResolvedValue("first, boil the water");
+  });
+
+  it("fails the import without transcribing when the AI provider refused", async () => {
+    const rateLimited = new AIProviderError("The AI provider rate-limited the request.", {
+      retryable: true,
+    });
+
+    boundary.extractRecipeFromVideo.mockRejectedValue(rateLimited);
+
+    await expect(process()).rejects.toBe(rateLimited);
+    expect(boundary.transcribe).not.toHaveBeenCalled();
+  });
+
+  it("falls back to transcription when the caption held no usable recipe", async () => {
+    boundary.extractRecipeFromVideo
+      .mockRejectedValueOnce(new AIResponseError("missing required fields"))
+      .mockResolvedValueOnce(recipe());
+
+    await expect(process()).resolves.toMatchObject({ name: "Pasta" });
+    expect(boundary.transcribe).toHaveBeenCalledWith("/tmp/a.mp3");
+  });
+});
+
+describe("a caption recipe without steps", () => {
+  beforeEach(() => {
+    boundary.getVideoMetadata.mockResolvedValue(
+      metadata({ videoStream: "present", duration: 47, description: LONG_CAPTION })
+    );
+    boundary.downloadVideoAudio.mockResolvedValue("/tmp/a.mp3");
+    boundary.transcribe.mockResolvedValue("first, boil the water");
+  });
+
+  it("transcribes the video for its method", async () => {
+    boundary.extractRecipeFromVideo
+      .mockResolvedValueOnce(steplessRecipe())
+      .mockResolvedValueOnce(recipe());
+
+    await expect(process()).resolves.toMatchObject({
+      name: "Pasta",
+      videos: [{ video: "recipes/recipe-1/v.mp4", duration: 47, order: 0 }],
+    });
+    expect(boundary.transcribe).toHaveBeenCalledWith("/tmp/a.mp3");
+  });
+
+  it("keeps the caption recipe when the transcript has no steps either", async () => {
+    boundary.extractRecipeFromVideo
+      .mockResolvedValueOnce(steplessRecipe())
+      .mockResolvedValueOnce({ name: "Spoken pasta", steps: [] } as FullRecipeInsertDTO);
+
+    await expect(process()).resolves.toMatchObject({ name: "Caption pasta" });
+  });
+
+  it("keeps the caption recipe when transcription fails", async () => {
+    boundary.extractRecipeFromVideo.mockResolvedValueOnce(steplessRecipe());
+    boundary.transcribe.mockRejectedValue(new Error("Transcription provider unreachable"));
+
+    await expect(process()).resolves.toMatchObject({
+      name: "Caption pasta",
+      videos: [{ video: "recipes/recipe-1/v.mp4", duration: 47, order: 0 }],
+    });
   });
 });
 

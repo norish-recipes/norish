@@ -1,23 +1,19 @@
-import { Client } from "pg";
+import { expect } from "@playwright/test";
 
-import { databaseUrl } from "./database";
+import { removeRating } from "@norish/db/repositories/ratings";
 
-async function withDatabase<T>(run: (database: Client) => Promise<T>): Promise<T> {
-  const database = new Client({ connectionString: databaseUrl() });
+import type { AIE2EStack } from "./fixture";
+import { userIdOf } from "../harness/accounts";
+import { readRecipe, recipeIdsNamed } from "../harness/recipes";
+import { callTrpc, queryTrpc } from "../harness/trpc";
+import { OWNER } from "./fixture";
 
-  await database.connect();
-
-  try {
-    return await run(database);
-  } finally {
-    await database.end();
-  }
-}
+type Owner = Pick<AIE2EStack, "baseURL" | "ownerCookies">;
 
 export interface StoredRecipe {
   id: string;
   userId: string | null;
-  /** Gallery image web paths, hero image first when the recipe has one */
+  /** Gallery image web paths, in order */
   images: string[];
 }
 
@@ -25,34 +21,16 @@ export interface StoredRecipe {
  * Every stored recipe carrying this name. More than one row is a duplicate —
  * exactly what overwrite-on-match promises not to produce.
  */
-export function readStoredRecipes(name: string): Promise<StoredRecipe[]> {
-  return withDatabase(async (database) => {
-    const result = await database.query<{
-      id: string;
-      user_id: string | null;
-      hero: string | null;
-      gallery: string[];
-    }>(
-      `select r.id,
-              r.user_id,
-              r.image as hero,
-              coalesce(
-                array_agg(i.image order by i."order") filter (where i.image is not null),
-                '{}'
-              ) as gallery
-         from recipes r
-         left join recipe_images i on i.recipe_id = r.id
-        where r.name = $1
-        group by r.id`,
-      [name]
-    );
+export async function readStoredRecipes(stack: Owner, name: string): Promise<StoredRecipe[]> {
+  const recipes = await Promise.all(
+    (await recipeIdsNamed(name)).map((id) => readRecipe(stack.baseURL, stack.ownerCookies, id))
+  );
 
-    return result.rows.map((row) => ({
-      id: row.id,
-      userId: row.user_id,
-      images: [...(row.hero ? [row.hero] : []), ...row.gallery],
-    }));
-  });
+  return recipes.flatMap((recipe) =>
+    recipe
+      ? [{ id: recipe.id, userId: recipe.userId, images: recipe.images.map(({ image }) => image) }]
+      : []
+  );
 }
 
 export interface RecipeMarks {
@@ -60,50 +38,37 @@ export interface RecipeMarks {
   favorite: boolean;
 }
 
-export function readMarks(userId: string, recipeId: string): Promise<RecipeMarks> {
-  return withDatabase(async (database) => {
-    const rating = await database.query<{ rating: number }>(
-      "select rating from recipe_ratings where user_id = $1 and recipe_id = $2",
-      [userId, recipeId]
-    );
-    const favorite = await database.query(
-      "select 1 from recipe_favorites where user_id = $1 and recipe_id = $2",
-      [userId, recipeId]
-    );
+/** The owner's own rating and favourite on a recipe. */
+export async function readMarks(stack: Owner, recipeId: string): Promise<RecipeMarks> {
+  const [{ userRating }, { isFavorite }] = await Promise.all([
+    queryTrpc<{ userRating: number | null }>(
+      stack.baseURL,
+      stack.ownerCookies,
+      "ratings.getUserRating",
+      { recipeId }
+    ),
+    queryTrpc<{ isFavorite: boolean }>(stack.baseURL, stack.ownerCookies, "favorites.check", {
+      recipeId,
+    }),
+  ]);
 
-    return {
-      rating: rating.rows[0]?.rating ?? null,
-      favorite: favorite.rowCount === 1,
-    };
-  });
+  return { rating: userRating, favorite: isFavorite };
 }
 
-/** Mark a recipe as the exporting user, so the marks have something to travel with. */
-export function applyMarks(userId: string, recipeId: string, rating: number): Promise<void> {
-  return withDatabase(async (database) => {
-    await database.query(
-      `insert into recipe_ratings (user_id, recipe_id, rating) values ($1, $2, $3)
-       on conflict (user_id, recipe_id) do update set rating = excluded.rating`,
-      [userId, recipeId, rating]
-    );
-    await database.query(
-      `insert into recipe_favorites (user_id, recipe_id) values ($1, $2)
-       on conflict (user_id, recipe_id) do nothing`,
-      [userId, recipeId]
-    );
-  });
+/** Mark a recipe as the owner, so the marks have something to travel with. */
+export async function applyMarks(stack: Owner, recipeId: string, rating: number): Promise<void> {
+  await callTrpc(stack.baseURL, stack.ownerCookies, "ratings.rate", { recipeId, rating });
+  await setFavorite(stack, recipeId, true);
+  // The rating is written after the mutation answers.
+  await expect.poll(async () => (await readMarks(stack, recipeId)).rating).toBe(rating);
 }
 
-/** Wipe the marks between export and reimport, so restoring them proves the import applied them. */
-export function clearMarks(userId: string, recipeId: string): Promise<void> {
-  return withDatabase(async (database) => {
-    await database.query("delete from recipe_ratings where user_id = $1 and recipe_id = $2", [
-      userId,
-      recipeId,
-    ]);
-    await database.query("delete from recipe_favorites where user_id = $1 and recipe_id = $2", [
-      userId,
-      recipeId,
-    ]);
-  });
+/** Wipe the marks between export and reimport; the app can't take a rating back, so the repository does. */
+export async function clearMarks(stack: Owner, recipeId: string): Promise<void> {
+  await removeRating(await userIdOf(OWNER), recipeId);
+  await setFavorite(stack, recipeId, false);
+}
+
+async function setFavorite(stack: Owner, recipeId: string, isFavorite: boolean): Promise<void> {
+  await callTrpc(stack.baseURL, stack.ownerCookies, "favorites.toggle", { recipeId, isFavorite });
 }

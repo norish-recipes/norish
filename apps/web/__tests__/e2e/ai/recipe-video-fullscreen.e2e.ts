@@ -15,11 +15,12 @@
 import fs from "node:fs/promises";
 import path from "node:path";
 import type { BrowserContext, Page } from "@playwright/test";
-import { request } from "@playwright/test";
-import { Client } from "pg";
+
+import { addRecipeVideos } from "@norish/db/repositories/recipes";
 
 import type { AIE2EStack } from "./fixture";
-import { databaseUrl } from "./database";
+import { waitForRecipe } from "../harness/recipes";
+import { callTrpc } from "../harness/trpc";
 import { expect, test } from "./fixture";
 import { setAutomaticEnrichment } from "./recipe-enrichment-support";
 
@@ -84,7 +85,7 @@ function videoState() {
 
 test.beforeAll(async ({ aiStack, browser }) => {
   stack = aiStack;
-  await setAutomaticEnrichment({});
+  await setAutomaticEnrichment(stack, {});
 
   context = await browser.newContext({
     baseURL: stack.baseURL,
@@ -94,25 +95,7 @@ test.beforeAll(async ({ aiStack, browser }) => {
   });
   page = await context.newPage();
 
-  const api = await request.newContext({
-    baseURL: stack.baseURL,
-    extraHTTPHeaders: {
-      origin: stack.baseURL,
-      cookie: stack.ownerCookies.map((cookie) => `${cookie.name}=${cookie.value}`).join("; "),
-    },
-  });
-
-  try {
-    const response = await api.post("/api/trpc/recipes.create", { data: { json: RECIPE } });
-
-    if (!response.ok()) throw new Error(`recipes.create failed: ${response.status()}`);
-
-    const body = (await response.json()) as { result: { data: { json: string } } };
-
-    recipeId = body.result.data.json;
-  } finally {
-    await api.dispose();
-  }
+  recipeId = await callTrpc<string>(stack.baseURL, stack.ownerCookies, "recipes.create", RECIPE);
 
   // The gallery upload mutation transcodes; this spec is about watching a
   // video, not about ingesting one, so the clip is put where the media route
@@ -122,30 +105,13 @@ test.beforeAll(async ({ aiStack, browser }) => {
   await fs.mkdir(recipeDir, { recursive: true });
   await fs.copyFile(PORTRAIT_CLIP, path.join(recipeDir, CLIP_FILENAME));
 
-  const database = new Client({ connectionString: databaseUrl() });
+  // The mutation answers before its transaction lands, so the row the video
+  // points at is not there yet.
+  await waitForRecipe(stack.baseURL, stack.ownerCookies, recipeId);
 
-  await database.connect();
-  try {
-    // The mutation answers before its transaction lands, so the row the video
-    // points at is not there yet.
-    await expect
-      .poll(
-        async () => {
-          const rows = await database.query("select 1 from recipes where id = $1", [recipeId]);
-
-          return rows.rowCount;
-        },
-        { timeout: 30_000 }
-      )
-      .toBe(1);
-
-    await database.query(
-      `insert into recipe_videos (recipe_id, video, duration, "order") values ($1, $2, $3, 0)`,
-      [recipeId, `/recipes/${recipeId}/${CLIP_FILENAME}`, 3]
-    );
-  } finally {
-    await database.end();
-  }
+  await addRecipeVideos(recipeId, [
+    { video: `/recipes/${recipeId}/${CLIP_FILENAME}`, duration: 3, order: 0 },
+  ]);
 });
 
 test.afterAll(async () => {

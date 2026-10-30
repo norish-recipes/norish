@@ -4,13 +4,14 @@
  * The two paths a shopper actually walks: a name the Store recognises without
  * being asked, which is priced on its own; and a name it does not, which
  * opens the picker and is chosen by hand. The real Norish server, database,
- * Redis, the always-on store lookup worker, the reader, tRPC and realtime are
+ * Valkey, the always-on store lookup worker, the reader, tRPC and realtime are
  * all in the path — only the supermarket is ours, because visiting a real one
  * from a test suite would be flaky and rude in equal measure.
  */
 import type { Page } from "@playwright/test";
 
 import type { FakeShop } from "../harness/fake-shop";
+import type { AIE2EStack } from "./fixture";
 import { createFakeShop } from "../harness/fake-shop";
 import { expect, test } from "./fixture";
 import { dragRowTo } from "./grocery-dnd-support";
@@ -27,11 +28,13 @@ const STORE_NAME = "E2E Shop";
 
 let shop: FakeShop;
 let page: Page;
+let stack: AIE2EStack;
 
 test.beforeAll(async ({ browser, aiStack }) => {
+  stack = aiStack;
   shop = createFakeShop();
   await shop.start();
-  await createShopStore(STORE_NAME, shop.url);
+  await createShopStore(stack, STORE_NAME, shop.url);
 
   const context = await browser.newContext({
     baseURL: aiStack.baseURL,
@@ -62,7 +65,7 @@ async function addGroceryToShop(name: string, shown: string = name): Promise<voi
   // The add panel stays open for batch adding; the list underneath is what
   // every assertion here is about.
   await page.getByRole("button", { name: "Close panel" }).click();
-  await expect(page.getByRole("dialog")).toBeHidden();
+  await expect(page.getByRole("dialog")).toHaveCount(0);
 }
 
 /** One grocery's own row, whichever Store's section it is sitting in. */
@@ -96,7 +99,7 @@ test("a name the shop states unmistakably is priced without being asked", async 
   await expect(rowFor("oude kaas").getByTestId("grocery-price-pending")).toBeHidden();
   // The row says which of the shop's products that price is for.
   await expect(page.getByTestId("grocery-product").first()).toHaveText("Oude kaas");
-  expect((await readStoredLink("oude kaas"))?.productName).toBe("Oude kaas");
+  expect((await readStoredLink(stack, "oude kaas"))?.productName).toBe("Oude kaas");
 });
 
 test("the grocery's own panel says which product it is, and can be pointed at another", async () => {
@@ -118,12 +121,12 @@ test("the grocery's own panel says which product it is, and can be pointed at an
   await page.getByRole("option", { name: /Roomboter/ }).click({ timeout: 30_000 });
 
   // Still nothing written: the panel's own Save is what commits a choice.
-  expect((await readStoredLink("oude kaas"))?.productName).toBe("Oude kaas");
+  expect((await readStoredLink(stack, "oude kaas"))?.productName).toBe("Oude kaas");
 
   await page.getByRole("button", { name: "Save", exact: true }).click();
 
   await expect
-    .poll(async () => (await readStoredLink("oude kaas"))?.productName, { timeout: 30_000 })
+    .poll(async () => (await readStoredLink(stack, "oude kaas"))?.productName, { timeout: 30_000 })
     .toBe("Roomboter");
   await expect(page.getByTestId("grocery-product").first()).toHaveText("Roomboter");
 });
@@ -164,7 +167,9 @@ test("a name the shop does not state is left to the shopper, and priced on Save"
   // A Miss is written, so the name is not searched again every time the list
   // is opened, and the row simply carries no price rather than an error.
   await expect
-    .poll(async () => (await readStoredLink("beleg"))?.productName ?? "miss", { timeout: 60_000 })
+    .poll(async () => (await readStoredLink(stack, "beleg"))?.productName ?? "miss", {
+      timeout: 60_000,
+    })
     .toBe("miss");
 
   await page.reload();
@@ -178,12 +183,12 @@ test("a name the shop does not state is left to the shopper, and priced on Save"
   await expect(page.getByTestId("grocery-product-field")).toHaveValue("Bruin brood");
 
   // Nothing is written until the panel's own Save.
-  expect((await readStoredLink("beleg"))?.productName ?? null).toBeNull();
+  expect((await readStoredLink(stack, "beleg"))?.productName ?? null).toBeNull();
 
   await page.getByRole("button", { name: "Save", exact: true }).click();
 
   await expect
-    .poll(async () => (await readStoredLink("beleg"))?.productName, { timeout: 30_000 })
+    .poll(async () => (await readStoredLink(stack, "beleg"))?.productName, { timeout: 30_000 })
     .toBe("Bruin brood");
 
   await expect(
@@ -208,8 +213,8 @@ test("a shop that answers nothing takes a price by hand, with no button to press
   await page.getByRole("button", { name: "Save", exact: true }).click();
 
   await expect
-    .poll(async () => (await readStoredLink("sterrenstof"))?.price, { timeout: 30_000 })
-    .toBe("3.50");
+    .poll(async () => (await readStoredLink(stack, "sterrenstof"))?.price, { timeout: 30_000 })
+    .toBe(3.5);
 
   // Reopened, the panel offers the page that was typed.
   await page.getByText("sterrenstof").first().click();
@@ -241,13 +246,13 @@ test("a product chosen while adding is not overruled by the lookup queued for it
   // Long enough for the always-on lookup queue to have had its say.
   await page.waitForTimeout(10_000);
 
-  expect((await readStoredLink("kaasplakken"))?.productName).toBe("Roomboter");
+  expect((await readStoredLink(stack, "kaasplakken"))?.productName).toBe("Roomboter");
 });
 
 test("a grocery dragged into another Store is priced there, on the list", async () => {
   const second = "Second Shop";
 
-  await createShopStore(second, shop.url);
+  await createShopStore(stack, second, shop.url);
   // A name no other scenario on this list uses, so every locator below is
   // about one row and one grocery.
   await page.goto("/groceries");
@@ -286,9 +291,9 @@ test("a grocery dragged into another Store is priced there, on the list", async 
   // shopper opening anything to make it look.
   await dragGroceryToStore("roomboter", STORE_NAME);
 
-  await expect(page.getByRole("dialog")).toBeHidden();
+  await expect(page.getByRole("dialog")).toHaveCount(0);
   await expect
-    .poll(async () => readGroceryStore("roomboter"), { timeout: 30_000 })
+    .poll(async () => readGroceryStore(stack, "roomboter"), { timeout: 30_000 })
     .toBe(STORE_NAME);
   await expect(rowFor("roomboter").getByTestId("grocery-product")).toHaveText("Roomboter", {
     timeout: 30_000,
@@ -314,11 +319,11 @@ test("700 g of a 500 g pack is two packs, on the row and at the heading", async 
   // screen, adds up to the number in its heading.
   const section = row.locator("xpath=ancestor::*[@data-store-id]").first();
   const money = (text: string | null) =>
-    Number(text?.match(/\d+[.,]\d{2}/)?.[0].replace(",", ".") ?? 0);
+    Number(text?.match(/(?<!\d)\d+[.,]\d{2}/)?.[0].replace(",", ".") ?? 0);
 
   await expect(section.getByTestId("store-total")).toBeVisible();
   // The heading reads what is left and what it costs, in one line.
-  await expect(section.getByTestId("store-meta")).toContainText(/\d+ items · /);
+  await expect(section.getByTestId("store-meta")).toContainText(/(?<!\d)\d+ items · /);
   const heading = money(await section.getByTestId("store-total").textContent());
   const costs = await section.getByTestId("grocery-line-cost").allTextContents();
   const sum = costs.map(money).reduce((total, cost) => Math.round((total + cost) * 100) / 100, 0);
@@ -468,7 +473,7 @@ test("a linked product is unlinked from the panel, and the row is unpriced", asy
   await expect(page.getByTestId("grocery-product-field")).toHaveValue("");
   await expect(page.getByTestId("product-by-hand-price")).toHaveValue("");
   // Nothing is written until the panel's own Save.
-  expect((await readStoredLink("bakbloem"))?.productName).toBe("Tarwebloem");
+  expect((await readStoredLink(stack, "bakbloem"))?.productName).toBe("Tarwebloem");
 
   await page.getByRole("button", { name: "Save", exact: true }).click();
 
@@ -477,7 +482,7 @@ test("a linked product is unlinked from the panel, and the row is unpriced", asy
   await expect
     .poll(
       async () => {
-        const link = await readStoredLink("bakbloem");
+        const link = await readStoredLink(stack, "bakbloem");
 
         return link ? (link.productName ?? "miss") : "gone";
       },

@@ -29,7 +29,6 @@
     "goHome": "Gå til forsiden",
     "test": "Test",
     "format": "Formater",
-    "restoreDefaults": "Gjenopprett standardinnstillinger",
     "saveChanges": "Lagre endringer"
   },
   "secret": {
@@ -58,6 +57,8 @@
     "searchTags": "Søk tags",
     "favoritesAndRating": "Favoritter og vurdering",
     "favorites": "Favoritter",
+    "pantry": "Spiskammer",
+    "pantryOnly": "Ingredienser hjemme",
     "cookingTime": "Tilberedningstid",
     "cookingTimeUnder15": "<15 min",
     "cookingTimeUnder30": "<30 min",
@@ -101,7 +102,7 @@
     "serverUnreachableBanner": "Norish-serveren er ikke tilgjengelig, viser bufrede data",
     "live": "Tilkoblet",
     "offline": "Frakoblet",
-    "openDetails": "Connection details"
+    "openDetails": "Tilkoblingsdetaljer"
   },
   "language": {
     "title": "Språk"
@@ -111,6 +112,11 @@
     "title": "Nora er forvirret.",
     "message": "Hun snuser rundt for å finne ut hvor du skulle.",
     "imageAlt": "Nora ser forvirret ut"
+  },
+  "errorPage": {
+    "title": "Noe gikk galt.",
+    "message": "Norish støtte på en feil på denne siden.",
+    "retry": "Prøv igjen"
   },
   "import": {
     "url": {
@@ -139,7 +145,7 @@
       "title": "Importer fra bilde",
       "dropzone": "Slipp bilder her eller klikk for å bla",
       "paste": "for å lime inn",
-      "formats": "Støtter JPG, PNG, WebP. Maks. 10 MB per fil.",
+      "formats": "Støtter JPG, PNG, WebP, PDF. Maks. 10 MB per fil.",
       "invalidType": "Ugyldig filtype",
       "notSupported": "{name} er ikke et støttet bildeformat",
       "tooLarge": "Filen er for stor",
@@ -178,12 +184,15 @@
     "daily": "Daglig",
     "weekly": "Ukentlig",
     "monthly": "Månedlig",
+    "yearly": "Årlig",
     "day": "dag",
     "days": "dager",
     "week": "uke",
     "weeks": "uker",
     "month": "måned",
     "months": "måneder",
+    "year": "år",
+    "years": "år",
     "next": "Neste:",
     "every": "Hver",
     "everyOther": "Annenhver",
@@ -225,55 +234,55 @@
     "notifications_disabled_hint": "Aktiver varsler i nettleserinnstillingene for å motta alarmer når timere avsluttes i bakgrunnen."
   },
   "offlineStatus": {
-    "title": "Connection & offline",
+    "title": "Tilkobling og frakoblet bruk",
     "connection": {
-      "heading": "Connection",
-      "live": "Live",
-      "offline": "Offline",
-      "forced": "Offline (forced)",
-      "liveDescription": "Connected to Norish. Changes sync as you make them.",
-      "offlineDescription": "Can't reach Norish. Showing cached data; changes are queued and sync when you're back.",
-      "forcedDescription": "Offline is forced for development. The backend is reachable but every request is blocked.",
+      "heading": "Tilkobling",
+      "live": "Tilkoblet",
+      "offline": "Frakoblet",
+      "forced": "Frakoblet (tvunget)",
+      "liveDescription": "Koblet til Norish. Endringer synkroniseres mens du gjør dem.",
+      "offlineDescription": "Får ikke kontakt med Norish. Viser bufrede data; endringer legges i kø og synkroniseres når du er tilkoblet igjen.",
+      "forcedDescription": "Frakoblet modus er tvunget for utvikling. Backend er tilgjengelig, men alle forespørsler blokkeres.",
       "devBadge": "dev"
     },
     "cache": {
-      "heading": "Offline cache",
-      "recipes": "Recipes",
+      "heading": "Buffer for frakoblet bruk",
+      "recipes": "Oppskrifter",
       "cookbooks": "Kokebøker",
-      "groceries": "Groceries",
-      "stores": "Stores",
-      "planned": "This week",
-      "dataAge": "Data from {when}",
-      "dataAgeUnknown": "Not warmed yet",
-      "wipe": "Clear cached data",
-      "wipeConfirmBody": "Remove the offline copy of your recipes, groceries, stores and plan? Your queued changes are kept.",
-      "wipeConfirmOfflineBody": "You're offline — clearing now leaves nothing to show until you reconnect. Your queued changes are kept.",
-      "wipeConfirm": "Clear",
-      "wipeCancel": "Keep"
+      "groceries": "Handlevarer",
+      "stores": "Butikker",
+      "planned": "Denne uken",
+      "dataAge": "Data oppdatert {when}",
+      "dataAgeUnknown": "Ikke hentet ennå",
+      "wipe": "Tøm bufrede data",
+      "wipeConfirmBody": "Fjerne den frakoblede kopien av oppskriftene, handlevarene, butikkene og måltidsplanen din? Endringene dine i kø beholdes.",
+      "wipeConfirmOfflineBody": "Du er frakoblet. Tømmer du nå, er det ingenting å vise før du kobler til igjen. Endringene dine i kø beholdes.",
+      "wipeConfirm": "Tøm",
+      "wipeCancel": "Behold"
     },
     "outbox": {
-      "heading": "Queued changes",
-      "empty": "Nothing queued — everything's synced.",
-      "pending": "{count, plural, =0 {No changes waiting} one {# change waiting} other {# changes waiting}}",
-      "syncing": "{count, plural, =0 {Syncing} one {Syncing # change} other {Syncing # changes}}",
-      "syncNow": "Sync now",
-      "retryAll": "Retry all",
-      "discardAll": "Discard all",
-      "discardConfirmBody": "{count, plural, one {Permanently discard # queued change? It won't be sent.} other {Permanently discard # queued changes? They won't be sent.}}",
-      "discardConfirm": "Discard",
-      "discardCancel": "Keep",
+      "heading": "Endringer i kø",
+      "empty": "Ingenting i kø. Alt er synkronisert.",
+      "pending": "{count, plural, =0 {Ingen endringer venter} one {# endring venter} other {# endringer venter}}",
+      "syncing": "{count, plural, =0 {Synkroniserer} one {Synkroniserer # endring} other {Synkroniserer # endringer}}",
+      "syncNow": "Synkroniser nå",
+      "retryAll": "Prøv alle igjen",
+      "discardAll": "Forkast alle",
+      "discardConfirmBody": "{count, plural, one {Forkaste # endring i kø permanent? Den blir ikke sendt.} other {Forkaste # endringer i kø permanent? De blir ikke sendt.}}",
+      "discardConfirm": "Forkast",
+      "discardCancel": "Behold",
       "status": {
-        "pending": "Syncing",
-        "parked": "Needs attention",
-        "conflicted": "Conflict"
+        "pending": "Synkroniserer",
+        "parked": "Trenger oppmerksomhet",
+        "conflicted": "Konflikt"
       }
     },
     "devToggle": {
-      "heading": "Developer",
-      "force": "Force offline",
-      "description": "Blocks the backend transport to exercise the offline runtime. Dev builds only.",
-      "on": "On",
-      "off": "Off"
+      "heading": "Utvikler",
+      "force": "Tving frakoblet",
+      "description": "Blokkerer backend-transporten for å teste frakoblet kjøring. Bare i utviklingsbygg.",
+      "on": "På",
+      "off": "Av"
     }
   },
   "offlineFallback": {

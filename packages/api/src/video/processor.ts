@@ -53,13 +53,13 @@ export async function processVideoRecipe(
 
   log.info({ url, processor: processor.name }, "Starting video recipe processing");
 
+  // No error log here: the import worker logs the failed job with this error.
   try {
     return await processor.process({ url, recipeId, tokens });
   } catch (error: unknown) {
     const errorMessage = error instanceof Error ? error.message : "Unknown error";
 
-    log.error({ err: error, processor: processor.name }, "Failed to process video");
-    throw new Error(`Failed to process video recipe: ${errorMessage}`);
+    throw new Error(`Failed to process video recipe: ${errorMessage}`, { cause: error });
   }
 }
 

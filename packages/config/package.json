@@ -1,6 +1,6 @@
 {
   "name": "@norish/config",
-  "version": "0.25.1-beta",
+  "version": "0.26.0-beta",
   "private": true,
   "type": "module",
   "exports": {
@@ -23,7 +23,7 @@
     "test": "vitest run --config ./vitest.config.ts"
   },
   "dependencies": {
-    "dotenv": "17.4.2",
+    "dotenv": "18.0.9",
     "server-only": "catalog:",
     "zod": "catalog:"
   },
@@ -31,9 +31,11 @@
     "@norish/eslint-config": "workspace:*",
     "@norish/prettier-config": "workspace:*",
     "@norish/tsconfig": "workspace:*",
+    "@types/node": "catalog:",
     "eslint": "catalog:",
     "prettier": "catalog:",
-    "@types/node": "catalog:",
+    "typescript": "catalog:",
+    "vite": "catalog:",
     "vitest": "catalog:"
   },
   "prettier": "@norish/prettier-config"

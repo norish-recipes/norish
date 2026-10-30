@@ -15,7 +15,7 @@ import { normalizeOllamaEndpoint, normalizeOpenAICompatibleEndpoint } from "../r
 // ============================================================================
 
 /** Keywords for identifying audio/transcription models. */
-const AUDIO_MODEL_KEYWORDS = ["whisper", "audio", "speech", "transcri", "voice"];
+const AUDIO_MODEL_KEYWORDS = ["whisper", "audio", "speech", "transcri", "voice", "voxtral"];
 
 /** How each provider is named back to the administrator who configured it. */
 const PROVIDER_LABELS: Record<string, string> = {
@@ -73,7 +73,8 @@ export class ModelListingError extends Error {
 function isAudioModel(modelId: string): boolean {
   const lower = modelId.toLowerCase();
 
-  return AUDIO_MODEL_KEYWORDS.some((kw) => lower.includes(kw));
+  // Text-to-speech models speak, they do not transcribe: Mistral's are named voxtral-*-tts.
+  return AUDIO_MODEL_KEYWORDS.some((kw) => lower.includes(kw)) && !lower.includes("tts");
 }
 
 // ============================================================================
@@ -425,13 +426,14 @@ export async function listModels(
       return listOpenAICompatibleModels(endpoint, apiKey);
 
     case "perplexity":
-      // Perplexity doesn't have a models list endpoint
+      // Perplexity has no models list endpoint; these are its Agent API
+      // presets, from quickest to most thorough. Images are sent as input_image.
       return [
-        { id: "sonar", name: "Sonar", supportsVision: true },
-        { id: "sonar-pro", name: "Sonar Pro", supportsVision: true },
-        { id: "sonar-reasoning", name: "Sonar Reasoning", supportsVision: true },
-        { id: "sonar-reasoning-pro", name: "Sonar Reasoning Pro", supportsVision: true },
-        { id: "sonar-deep-research", name: "Sonar Deep Research", supportsVision: true },
+        { id: "fast", name: "Fast", supportsVision: true },
+        { id: "low", name: "Low", supportsVision: true },
+        { id: "medium", name: "Medium", supportsVision: true },
+        { id: "high", name: "High", supportsVision: true },
+        { id: "xhigh", name: "Extra high", supportsVision: true },
       ];
 
     case "azure":
@@ -451,30 +453,24 @@ export async function listModels(
 // Transcription Models
 // ============================================================================
 
-/**
- * List available transcription (Whisper) models from OpenAI.
- */
-export async function listOpenAITranscriptionModels(apiKey: string): Promise<AvailableModel[]> {
-  const models = await fetchModelsRaw({
-    url: "https://api.openai.com/v1/models",
-    headers: { Authorization: `Bearer ${apiKey}` },
-    provider: "openai",
-  });
-
-  return models
-    .filter((m) => isAudioModel(m.id))
-    .map((m) => ({ id: m.id, name: m.id, supportsVision: false }))
-    .sort((a, b) => a.id.localeCompare(b.id));
-}
+/** Cloud transcription providers' model lists, all OpenAI-shaped and keyed by bearer token. */
+const TRANSCRIPTION_MODEL_LISTS = {
+  openai: "https://api.openai.com/v1/models",
+  groq: "https://api.groq.com/openai/v1/models",
+  mistral: "https://api.mistral.ai/v1/models",
+} as const;
 
 /**
- * List available transcription models from Groq.
+ * List a cloud provider's transcription models: the audio models in its model list.
  */
-export async function listGroqTranscriptionModels(apiKey: string): Promise<AvailableModel[]> {
+async function listCloudTranscriptionModels(
+  provider: keyof typeof TRANSCRIPTION_MODEL_LISTS,
+  apiKey: string
+): Promise<AvailableModel[]> {
   const models = await fetchModelsRaw({
-    url: "https://api.groq.com/openai/v1/models",
+    url: TRANSCRIPTION_MODEL_LISTS[provider],
     headers: { Authorization: `Bearer ${apiKey}` },
-    provider: "groq",
+    provider,
   });
 
   return models
@@ -544,22 +540,15 @@ export async function listTranscriptionModels(
 
   switch (provider) {
     case "openai":
-      if (!apiKey) {
-        aiLogger.debug("Cannot list OpenAI transcription models without API key");
-
-        return [];
-      }
-
-      return listOpenAITranscriptionModels(apiKey);
-
     case "groq":
+    case "mistral":
       if (!apiKey) {
-        aiLogger.debug("Cannot list Groq transcription models without API key");
+        aiLogger.debug({ provider }, "Cannot list transcription models without API key");
 
         return [];
       }
 
-      return listGroqTranscriptionModels(apiKey);
+      return listCloudTranscriptionModels(provider, apiKey);
 
     case "azure":
       // Azure uses deployment names - return common whisper models as suggestions

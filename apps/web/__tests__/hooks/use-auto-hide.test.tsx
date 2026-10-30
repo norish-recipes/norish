@@ -1,3 +1,4 @@
+import { startTransition } from "react";
 import { act, renderHook } from "@testing-library/react";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 
@@ -15,6 +16,7 @@ const mocks = vi.hoisted(() => {
   const state = {
     onScroll: null as null | ((latest: number) => void),
     scrollY: 0,
+    pathname: "/groceries",
   };
 
   return {
@@ -33,7 +35,7 @@ vi.mock("motion/react", () => ({
   },
 }));
 vi.mock("next/navigation", () => ({
-  usePathname: () => "/groceries",
+  usePathname: () => mocks.state.pathname,
 }));
 
 function setViewport(height: number, pageHeight: number) {
@@ -66,6 +68,7 @@ function settle() {
 beforeEach(() => {
   vi.useFakeTimers();
   mocks.state.scrollY = 0;
+  mocks.state.pathname = "/groceries";
   Object.defineProperty(window, "scrollY", { configurable: true, value: 0 });
   setViewport(VIEWPORT_HEIGHT, PAGE_HEIGHT);
 });
@@ -155,6 +158,42 @@ describe("useAutoHide", () => {
       setViewport(VIEWPORT_HEIGHT, MID_PAGE + VIEWPORT_HEIGHT);
       vi.advanceTimersByTime(1100);
     });
+
+    expect(result.current.isVisible).toBe(true);
+  });
+
+  it("stays shown after the pointer leaves a nav that only hides on scroll", () => {
+    const { result } = renderHook(() => useAutoHide({ idleDelay: Infinity }));
+
+    settle();
+    scrollTo(MID_PAGE);
+    act(() => result.current.onHoverStart());
+    expect(result.current.isVisible).toBe(true);
+
+    // A page transition takes the hover away too; browsers run an Infinity timeout at once.
+    act(() => result.current.onHoverEnd());
+    act(() => {
+      vi.advanceTimersByTime(10_000);
+    });
+
+    expect(result.current.isVisible).toBe(true);
+  });
+
+  it("shows on a new page however often the last one asked it to hide", () => {
+    const { result, rerender } = renderHook(() => useAutoHide());
+
+    settle();
+    // Every scrolled frame asks to hide, long after it already has.
+    scrollTo(MID_PAGE);
+    scrollTo(MID_PAGE + 100);
+    scrollTo(MID_PAGE + 200);
+    expect(result.current.isVisible).toBe(false);
+
+    // A navigation renders as a transition; the next ordinary render must not
+    // replay the old page's requests over the new page's reset.
+    mocks.state.pathname = "/calendar";
+    act(() => startTransition(() => rerender()));
+    act(() => rerender());
 
     expect(result.current.isVisible).toBe(true);
   });

@@ -2,11 +2,11 @@
 
 import type { DateValue } from "@internationalized/date";
 import type { Key } from "react";
-import { useEffect, useState } from "react";
+import { useState } from "react";
 import Link from "next/link";
 import { useCalendarContext } from "@/app/(app)/calendar/context";
 import { PlannedItemThumbnail } from "@/components/calendar/planned-item-thumbnail";
-import { Panel, usePanelPortalContainer } from "@/components/Panel/Panel";
+import { Panel, PanelPortal } from "@/components/Panel/Panel";
 import { ActionButton, ActionButtonGroup } from "@/components/shared/action-button";
 import { ArrowTopRightOnSquareIcon } from "@heroicons/react/16/solid";
 import { Calendar, DateField, DatePicker, Label, ListBox, Select } from "@heroui/react";
@@ -37,18 +37,20 @@ export function EditPlannedRecipePanel({
   slot,
 }: EditPlannedRecipePanelProps) {
   const { deletePlanned, moveItem, planMeal } = useCalendarContext();
-  const [selectedDate, setSelectedDate] = useState<DateValue>(parseDate(date));
+  const [selectedDate, setSelectedDate] = useState<DateValue>(() => parseDate(date));
   const [selectedSlot, setSelectedSlot] = useState<Slot>(slot);
+  const [seededFrom, setSeededFrom] = useState({ open, date, slot });
   const t = useTranslations("calendar.editPlannedRecipe");
   const tSlots = useTranslations("common.slots");
   const tActions = useTranslations("common.actions");
   const tTimeline = useTranslations("calendar.timeline");
-  useEffect(() => {
+  if (seededFrom.open !== open || seededFrom.date !== date || seededFrom.slot !== slot) {
+    setSeededFrom({ open, date, slot });
     if (open) {
       setSelectedDate(parseDate(date));
       setSelectedSlot(slot);
     }
-  }, [open, date, slot]);
+  }
   const handleSave = () => {
     const newDateStr = selectedDate.toString();
     const locationChanged = newDateStr !== date || selectedSlot !== slot;
@@ -119,7 +121,7 @@ export function EditPlannedRecipePanel({
  * Its own component so the portal container is read from inside the Panel — a
  * hook called in the Panel's parent sees no panel at all.
  */
-function DateAndSlotFields({
+export function DateAndSlotFields({
   selectedDate,
   selectedSlot,
   onSelectDate,
@@ -132,7 +134,6 @@ function DateAndSlotFields({
 }) {
   const t = useTranslations("calendar.editPlannedRecipe");
   const tSlots = useTranslations("common.slots");
-  const portalContainer = usePanelPortalContainer();
 
   return (
     <div className="grid gap-4 sm:grid-cols-2">
@@ -152,29 +153,31 @@ function DateAndSlotFields({
             </DatePicker.Trigger>
           </DateField.Suffix>
         </DateField.Group>
-        <DatePicker.Popover UNSTABLE_portalContainer={portalContainer}>
-          <Calendar aria-label={t("date")}>
-            <Calendar.Header>
-              <Calendar.YearPickerTrigger>
-                <Calendar.YearPickerTriggerHeading />
-                <Calendar.YearPickerTriggerIndicator />
-              </Calendar.YearPickerTrigger>
-              <Calendar.NavButton slot="previous" />
-              <Calendar.NavButton slot="next" />
-            </Calendar.Header>
-            <Calendar.Grid>
-              <Calendar.GridHeader>
-                {(day) => <Calendar.HeaderCell>{day}</Calendar.HeaderCell>}
-              </Calendar.GridHeader>
-              <Calendar.GridBody>{(date) => <Calendar.Cell date={date} />}</Calendar.GridBody>
-            </Calendar.Grid>
-            <Calendar.YearPickerGrid>
-              <Calendar.YearPickerGridBody>
-                {({ year }) => <Calendar.YearPickerCell year={year} />}
-              </Calendar.YearPickerGridBody>
-            </Calendar.YearPickerGrid>
-          </Calendar>
-        </DatePicker.Popover>
+        <PanelPortal>
+          <DatePicker.Popover>
+            <Calendar aria-label={t("date")}>
+              <Calendar.Header>
+                <Calendar.YearPickerTrigger>
+                  <Calendar.YearPickerTriggerHeading />
+                  <Calendar.YearPickerTriggerIndicator />
+                </Calendar.YearPickerTrigger>
+                <Calendar.NavButton slot="previous" />
+                <Calendar.NavButton slot="next" />
+              </Calendar.Header>
+              <Calendar.Grid>
+                <Calendar.GridHeader>
+                  {(day) => <Calendar.HeaderCell>{day}</Calendar.HeaderCell>}
+                </Calendar.GridHeader>
+                <Calendar.GridBody>{(date) => <Calendar.Cell date={date} />}</Calendar.GridBody>
+              </Calendar.Grid>
+              <Calendar.YearPickerGrid>
+                <Calendar.YearPickerGridBody>
+                  {({ year }) => <Calendar.YearPickerCell year={year} />}
+                </Calendar.YearPickerGridBody>
+              </Calendar.YearPickerGrid>
+            </Calendar>
+          </DatePicker.Popover>
+        </PanelPortal>
       </DatePicker>
       <Select
         className="w-full"
@@ -187,16 +190,18 @@ function DateAndSlotFields({
           <Select.Value />
           <Select.Indicator />
         </Select.Trigger>
-        <Select.Popover UNSTABLE_portalContainer={portalContainer}>
-          <ListBox>
-            {SLOTS.map((s) => (
-              <ListBox.Item key={s} id={s} textValue={tSlots(s.toLowerCase())}>
-                {tSlots(s.toLowerCase())}
-                <ListBox.ItemIndicator />
-              </ListBox.Item>
-            ))}
-          </ListBox>
-        </Select.Popover>
+        <PanelPortal>
+          <Select.Popover>
+            <ListBox>
+              {SLOTS.map((s) => (
+                <ListBox.Item key={s} id={s} textValue={tSlots(s.toLowerCase())}>
+                  {tSlots(s.toLowerCase())}
+                  <ListBox.ItemIndicator />
+                </ListBox.Item>
+              ))}
+            </ListBox>
+          </Select.Popover>
+        </PanelPortal>
       </Select>
     </div>
   );

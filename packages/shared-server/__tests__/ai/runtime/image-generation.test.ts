@@ -9,7 +9,7 @@
 import { createServer } from "node:http";
 import type { AddressInfo } from "node:net";
 import sharp from "sharp";
-import { afterAll, afterEach, beforeAll, beforeEach, describe, expect, it, vi } from "vitest";
+import { afterAll, beforeAll, beforeEach, describe, expect, it, vi } from "vitest";
 
 import type { AIConfig, ImageGenerationConfig } from "@norish/config/zod/server-config";
 
@@ -129,10 +129,6 @@ beforeEach(() => {
   mockGetPrompts.mockResolvedValue({});
 });
 
-afterEach(() => {
-  vi.clearAllMocks();
-});
-
 describe("generateImage", () => {
   it("returns the provider's image bytes from the configured image provider", async () => {
     const result = await generateImage({
@@ -160,6 +156,39 @@ describe("generateImage", () => {
     const [width, height] = size.split("x").map(Number);
 
     expect(width).toBeGreaterThan(height ?? Number.NaN);
+  });
+
+  it("draws the square where the model refuses the landscape, and asks for it from then on", async () => {
+    // Gemini behind an OpenAI-compatible endpoint takes only 1024x1024, and its refusal names nothing.
+    reply = () =>
+      captured.at(-1)?.body.size === "1024x1024"
+        ? { status: 200, body: { data: [{ b64_json: imageBase64 }] } }
+        : { status: 400, body: { error: { message: "Request contains an invalid argument." } } };
+
+    await generateImage({ prompt: "image-generation-style", sections: [] });
+    await generateImage({ prompt: "image-generation-style", sections: [] });
+
+    expect(captured.map((request) => request.body.size)).toEqual([
+      "1280x720",
+      "1024x1024",
+      "1024x1024",
+    ]);
+  });
+
+  it("reports the landscape's refusal when the square is refused too, and remembers nothing", async () => {
+    reply = () => ({ status: 400, body: { error: { message: "content policy refusal" } } });
+
+    await expect(generateImage({ prompt: "image-generation-style" })).rejects.toThrow(
+      /content policy refusal/
+    );
+    await generateImage({ prompt: "image-generation-style" }).catch(() => undefined);
+
+    expect(captured.map((request) => request.body.size)).toEqual([
+      "1280x720",
+      "1024x1024",
+      "1280x720",
+      "1024x1024",
+    ]);
   });
 
   it("draws through Ollama's native generate route with a landscape width and height", async () => {

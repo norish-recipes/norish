@@ -1,7 +1,7 @@
 // @vitest-environment node
 import { isTrackedEnvelope, TRPCError } from "@trpc/server";
 import superjson from "superjson";
-import { beforeEach, describe, expect, it, vi } from "vitest";
+import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import { z } from "zod";
 
 import type { RealtimeLaggedError as RealtimeLaggedErrorType } from "@norish/shared-server/realtime/hub";
@@ -94,7 +94,7 @@ type FakeLiveSourceLike = {
 
 type StreamEntry = [id: string, fields: string[]];
 
-const redis = vi.hoisted(() => {
+const valkey = vi.hoisted(() => {
   const streams = new Map<string, StreamEntry[]>();
 
   const compare = (a: string, b: string) => {
@@ -142,8 +142,8 @@ vi.mock("@norish/shared-server/realtime/hub", async (importOriginal) => ({
   ...(await importOriginal<typeof import("@norish/shared-server/realtime/hub")>()),
   getRealtimeHub: () => ({ subscribe: hub.subscribe, on: vi.fn(), stats: vi.fn() }),
 }));
-vi.mock("@norish/shared-server/redis/client", () => ({
-  getPublisherClient: vi.fn(async () => redis),
+vi.mock("@norish/shared-server/valkey/client", () => ({
+  getPublisherClient: vi.fn(async () => valkey),
 }));
 vi.mock("@norish/shared-server/logger", () => ({
   trpcLogger: logged,
@@ -158,7 +158,9 @@ const { defineRealtimeDomain } = await import("@norish/shared-server/realtime/do
 const { encodeCursor, identityHashFor, RESUME_TTL_SECONDS } =
   await import("@norish/shared-server/realtime/resume");
 const { createCallerFactory, router } = await import("../src/trpc");
-const { realtimeSubscription } = await import("../src/realtime-subscription");
+const { realtimeSubscription, UNAVAILABLE_LAG_PAUSE_MS } =
+  await import("../src/realtime-subscription");
+const { getCachedHouseholdForUser } = await import("@norish/shared-server/cache/household");
 
 /* -------------------------------------------------------------- fixtures */
 
@@ -216,7 +218,7 @@ function envelope(channel: string, eventId: string, payload: unknown): RealtimeE
 function seedStream(channel: string, entries: Array<[id: string, payload: unknown]>) {
   const key = `norish:stream:${channel.slice("norish:".length)}`;
 
-  redis.streams.set(
+  valkey.streams.set(
     key,
     entries.map(([entryId, payload]) => [
       entryId,
@@ -276,8 +278,7 @@ function laggedCause(error: TRPCError): RealtimeLaggedErrorType {
 }
 
 beforeEach(() => {
-  vi.clearAllMocks();
-  redis.streams.clear();
+  valkey.streams.clear();
   hub.sources.clear();
   hub.subscribe.mockImplementation(
     (channel: string, opts: { signal?: AbortSignal; maxQueue?: number } = {}) => {
@@ -355,8 +356,8 @@ describe("fresh subscription", () => {
 
     expect(first.data).toEqual({ mark: "cursor" });
     expect(first.cursor).toBe(encodeCursor({ identityHash: hash, ids: [id(2), "0-0", id(3)] }));
-    expect(redis.xrevrange).toHaveBeenCalledTimes(3);
-    expect(redis.xrange).not.toHaveBeenCalled();
+    expect(valkey.xrevrange).toHaveBeenCalledTimes(3);
+    expect(valkey.xrange).not.toHaveBeenCalled();
     controller.abort();
   });
 
@@ -368,7 +369,7 @@ describe("fresh subscription", () => {
 
       return new FakeLiveSource(channel, undefined, opts.signal);
     });
-    redis.xrevrange.mockImplementationOnce(async () => {
+    valkey.xrevrange.mockImplementationOnce(async () => {
       order.push("read");
 
       return [];
@@ -437,12 +438,12 @@ describe("fresh subscription", () => {
     const pending = iterator.next();
 
     for (const [channel, source] of hub.sources) {
-      source.fail(new RealtimeLaggedError(channel, "redis-reconnect", 0));
+      source.fail(new RealtimeLaggedError(channel, "valkey-reconnect", 0));
     }
 
     const cause = laggedCause(await failure(pending));
 
-    expect(cause.reason).toBe("redis-reconnect");
+    expect(cause.reason).toBe("valkey-reconnect");
     for (const source of hub.sources.values()) {
       expect(source.returned).toHaveBeenCalled();
     }
@@ -490,8 +491,8 @@ describe("resume", () => {
     expect((third.data as RealtimeEventEnvelope).meta.eventId).toBe(id(3));
     expect(third.cursor).toBe(encodeCursor({ identityHash: hash, ids: [id(3)] }));
 
-    expect(redis.xrange).toHaveBeenCalledWith(CREATED_STREAM, `(${id(1)}`, "+", "COUNT", 1000);
-    expect(redis.xrevrange).not.toHaveBeenCalled();
+    expect(valkey.xrange).toHaveBeenCalledWith(CREATED_STREAM, `(${id(1)}`, "+", "COUNT", 1000);
+    expect(valkey.xrevrange).not.toHaveBeenCalled();
 
     hub.sources.get(CREATED)!.push(envelope(CREATED, id(4), { ids: ["g-4"] }));
 
@@ -557,7 +558,7 @@ describe("resume", () => {
     expect(got[0]!.cursor).toBe(encodeCursor({ identityHash: hash, ids: [id(5), id(2), "0-0"] }));
     expect(got[1]!.cursor).toBe(encodeCursor({ identityHash: hash, ids: [id(5), id(6), "0-0"] }));
     // The user channel's cursor was 0-0: nothing seen, nothing to replay.
-    expect(redis.xrange).not.toHaveBeenCalledWith(
+    expect(valkey.xrange).not.toHaveBeenCalledWith(
       `norish:stream:grocery:user:${USER}:imported`,
       expect.anything(),
       expect.anything(),
@@ -596,11 +597,11 @@ describe("resume", () => {
     const cause = laggedCause(await failure(iterator.next()));
 
     expect(cause).toMatchObject({ channel: CREATED, reason: "cursor-trimmed" });
-    expect(redis.xrange).toHaveBeenCalledTimes(1);
+    expect(valkey.xrange).toHaveBeenCalledTimes(1);
     controller.abort();
   });
 
-  it("is Lagged cursor-expired without a Redis call when the cursor is older than the TTL", async () => {
+  it("is Lagged cursor-expired without a Valkey call when the cursor is older than the TTL", async () => {
     const stale = `${Date.now() - RESUME_TTL_SECONDS * 1_000 - 5_000}-0`;
     const { iterator, controller } = await subscribe("onCreated", {
       lastEventId: encodeCursor({ identityHash: hash, ids: [stale] }),
@@ -609,8 +610,8 @@ describe("resume", () => {
     const cause = laggedCause(await failure(iterator.next()));
 
     expect(cause.reason).toBe("cursor-expired");
-    expect(redis.xrange).not.toHaveBeenCalled();
-    expect(redis.xrevrange).not.toHaveBeenCalled();
+    expect(valkey.xrange).not.toHaveBeenCalled();
+    expect(valkey.xrevrange).not.toHaveBeenCalled();
     controller.abort();
   });
 
@@ -620,7 +621,7 @@ describe("resume", () => {
     const cause = laggedCause(await failure(iterator.next()));
 
     expect(cause.reason).toBe("cursor-invalid");
-    expect(redis.xrange).not.toHaveBeenCalled();
+    expect(valkey.xrange).not.toHaveBeenCalled();
     controller.abort();
   });
 
@@ -643,8 +644,8 @@ describe("resume", () => {
     const cause = laggedCause(await failure(iterator.next()));
 
     expect(cause.reason).toBe("identity-changed");
-    expect(redis.xrange).not.toHaveBeenCalled();
-    expect(redis.xrevrange).not.toHaveBeenCalled();
+    expect(valkey.xrange).not.toHaveBeenCalled();
+    expect(valkey.xrevrange).not.toHaveBeenCalled();
     controller.abort();
   });
 
@@ -656,6 +657,53 @@ describe("resume", () => {
     const cause = laggedCause(await failure(iterator.next()));
 
     expect(cause.reason).toBe("identity-changed");
+    controller.abort();
+  });
+});
+
+describe("a read that fails", () => {
+  beforeEach(() => vi.useFakeTimers());
+  afterEach(() => vi.useRealTimers());
+
+  /** Lagged `unavailable`, but only after the pause, so a lasting fault cannot spin the client. */
+  async function laggedAfterThePause(pending: Promise<unknown>) {
+    let settled = false;
+    const ended = failure(pending).finally(() => {
+      settled = true;
+    });
+
+    await vi.advanceTimersByTimeAsync(UNAVAILABLE_LAG_PAUSE_MS - 1);
+    expect(settled).toBe(false);
+    await vi.advanceTimersByTimeAsync(1);
+
+    return laggedCause(await ended);
+  }
+
+  it("ends Lagged unavailable when the socket's household lookup fails", async () => {
+    vi.mocked(getCachedHouseholdForUser).mockRejectedValueOnce(new Error("Command timed out"));
+
+    const { iterator, controller } = await subscribe(
+      "onCreated",
+      undefined,
+      createMockAuthedContext(undefined, null)
+    );
+
+    expect((await laggedAfterThePause(iterator.next())).reason).toBe("unavailable");
+    expect(logged.warn).toHaveBeenCalledWith(
+      expect.objectContaining({ userId: USER, event: "created", reason: "unavailable" }),
+      "Realtime subscription lagged"
+    );
+    controller.abort();
+  });
+
+  it("ends Lagged unavailable when a stream read fails, and returns every live iterable", async () => {
+    valkey.xrevrange.mockRejectedValueOnce(new Error("Command timed out"));
+
+    const { iterator, controller } = await subscribe("onCreated");
+    const cause = await laggedAfterThePause(iterator.next());
+
+    expect(cause).toMatchObject({ channel: CREATED, reason: "unavailable" });
+    expect(hub.sources.get(CREATED)!.returned).toHaveBeenCalled();
     controller.abort();
   });
 });

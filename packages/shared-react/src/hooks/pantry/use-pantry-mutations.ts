@@ -23,11 +23,15 @@ export function createUsePantryMutations({
   usePantryQuery,
 }: CreateUsePantryMutationsOptions) {
   return function usePantryMutations(): PantryMutationsResult {
+    "use memo";
+
     const trpc = useTRPC();
     const { setPantryData, invalidate } = usePantryQuery();
 
     const addMutation = useMutation(trpc.pantry.add.mutationOptions());
+    const { mutate: mutateAdd } = addMutation;
     const removeMutation = useMutation(trpc.pantry.remove.mutationOptions());
+    const { mutate: mutateRemove } = removeMutation;
 
     /**
      * The food joins the Pantry on this screen at once, under a client-minted
@@ -60,7 +64,7 @@ export function createUsePantryMutations({
       insertOptimistic();
 
       return new Promise((resolve, reject) => {
-        addMutation.mutate(payload, {
+        mutateAdd(payload, {
           onSuccess: (heldId) => {
             // The household already had the food: the server answered with
             // that item's id, and the tentative row is one too many.
@@ -83,7 +87,7 @@ export function createUsePantryMutations({
 
     const removePantryIngredient = (id: string) => {
       setPantryData((prev) => mergePantryRemoved(prev ?? [], id));
-      removeMutation.mutate({ id }, { onError: invalidateUnlessPreserved(invalidate) });
+      mutateRemove({ id }, { onError: invalidateUnlessPreserved(invalidate) });
     };
 
     return {

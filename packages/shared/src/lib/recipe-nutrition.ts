@@ -40,8 +40,10 @@ import type {
 import { creditOf, NUTRITION_CREDITS } from "@norish/shared/contracts/ingredient-nutrition";
 import { foldName } from "@norish/shared/lib/fold-name";
 
+import type { LineWithFoods } from "./line-foods";
 import type { SpellingRules } from "./spelling-keys";
 import type { ResolvedUnit } from "./units";
+import { foodsToBuy } from "./line-foods";
 import { BASE_SPELLING_RULES } from "./spelling-keys";
 import { resolveUnit } from "./units";
 
@@ -53,14 +55,15 @@ export interface RecipeForNutrition {
   fat: number | string | null;
   carbs: number | string | null;
   protein: number | string | null;
-  recipeIngredients: ReadonlyArray<{
-    id?: string;
-    ingredientName: string;
-    ingredientId: string | null;
-    amount: number | string | null;
-    unit: string | null;
-    systemUsed: string;
-  }>;
+  recipeIngredients: ReadonlyArray<
+    LineWithFoods & {
+      ingredientName: string;
+      ingredientId: string | null;
+      amount: number | string | null;
+      unit: string | null;
+      systemUsed: string;
+    }
+  >;
   /** The language model's stored estimate of the lines left out, where the recipe travels with it. */
   nutritionEstimate?: NutritionGapEstimate | null;
 }
@@ -76,22 +79,23 @@ export function suppliesNutrition(recipe: RecipeForNutrition): boolean {
 }
 
 /**
- * The lines a total is worked out from: the ones in the recipe's own
- * measurement system (a recipe may keep a converted copy of each), without
- * the `#` headings.
+ * The lines a total is worked out from: those in the recipe's own measurement system, without
+ * the `#` headings, each food as it is counted (`foodsToBuy`).
  */
 export function nutritionLinesOf(recipe: RecipeForNutrition): NutritionLine[] {
   const own = recipe.recipeIngredients.filter((line) => line.systemUsed === recipe.systemUsed);
 
-  return (own.length > 0 ? own : recipe.recipeIngredients)
-    .filter((line) => !line.ingredientName.trim().startsWith("#"))
-    .map((line, index) => ({
-      id: line.id ?? `line-${index}`,
-      name: line.ingredientName,
-      amount: line.amount === null || line.amount === "" ? null : Number(line.amount),
-      unit: line.unit,
-      ingredientId: line.ingredientId,
-    }));
+  return foodsToBuy(
+    (own.length > 0 ? own : recipe.recipeIngredients).filter(
+      (line) => !line.ingredientName.trim().startsWith("#")
+    )
+  ).map((line, index) => ({
+    id: line.id ?? `line-${index}`,
+    name: line.ingredientName,
+    amount: line.amount === null || line.amount === "" ? null : Number(line.amount),
+    unit: line.unit,
+    ingredientId: line.ingredientId,
+  }));
 }
 
 /** One recipe line, as the arithmetic reads it. */
@@ -230,7 +234,7 @@ export function bracketedGrams(
       phrase.every((word, index) => folded[index] === word)
     );
     const at = approximation?.length ?? 0;
-    const quantity = /^[~±≈]?(\d*[.,]?\d+)(\p{L}*\.?)$/u.exec(tokens[at] ?? "");
+    const quantity = /^[~±≈]?(\d+(?:[.,]\d+)?|[.,]\d+)(\p{L}*\.?)$/u.exec(tokens[at] ?? "");
 
     if (!quantity) continue;
 
@@ -401,12 +405,15 @@ export function workOutNutrition({
     total.carbs += brought.carbs;
     total.protein += brought.protein;
     counted.push({ lineId: line.id, name: line.name, grams: weighed.grams, ...brought });
-    if (used.some((fact) => fact.borrowedFrom)) borrowedCalories += brought.calories;
+    // AI's estimate is as much a guess as a parent's numbers.
+    if (used.some((fact) => fact.borrowedFrom || fact.source.kind === "ai")) {
+      borrowedCalories += brought.calories;
+    }
     for (const fact of used) {
       const credit = creditOf(fact.source);
 
       if (credit) credits.add(credit);
-      else household = true;
+      else if (fact.source.kind === "household") household = true;
     }
   }
 

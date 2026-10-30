@@ -47,7 +47,6 @@ const CONFIG = {
 };
 
 beforeEach(() => {
-  vi.clearAllMocks();
   mockGetCaldavConfigDecrypted.mockResolvedValue(CONFIG);
   mockCreateEvent.mockImplementation(({ uid }: { uid?: string }) =>
     Promise.resolve({ uid: uid ?? "generated-uid", href: "h", rawIcs: "" })

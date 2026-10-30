@@ -6,7 +6,7 @@ description: Sign in with a password, OIDC, GitHub or Google.
 
 # Authentication
 
-Norish supports email and password, OIDC, GitHub and Google sign-in. Set up one
+Sign in with email and password, OIDC, GitHub or Google. Set up one
 provider with environment variables for the first sign-in, then manage the rest
 under **Settings => Admin**.
 
@@ -18,15 +18,30 @@ turns off.
 When you register an OAuth or OIDC application, use these callback URLs with
 your `AUTH_URL` as the host:
 
-| Provider | Callback URL                                                      |
-| -------- | ----------------------------------------------------------------- |
-| OIDC     | `https://example.norish-domain.com/api/auth/oauth2/callback/oidc` |
-| GitHub   | `https://example.norish-domain.com/api/auth/callback/github`      |
-| Google   | `https://example.norish-domain.com/api/auth/callback/google`      |
+| Provider | Callback URL                                                 |
+| -------- | ------------------------------------------------------------ |
+| OIDC     | `https://example.norish-domain.com/api/auth/callback/oidc`   |
+| GitHub   | `https://example.norish-domain.com/api/auth/callback/github` |
+| Google   | `https://example.norish-domain.com/api/auth/callback/google` |
+
+## Linking accounts
+
+Accounts aren't linked automatically. To add a sign-in method, go to
+**Settings => User => Sign-in methods** and press **Connect**. The provider's email doesn't have
+to match yours.
+
+![The Sign-in methods card in user settings](/img/screenshots/settings-sign-in-methods.png)
+
+- You can't disconnect your last sign-in method.
+- **Change password** signs out your other devices by default.
+
+![The Change password dialog](/img/screenshots/settings-change-password.png)
 
 ## Password
 
-Email and password sign-in is on when no other provider is set up.
+Email and password sign-in is on when no other provider is set up. Set `PASSWORD_AUTH_ENABLED` to
+turn it on or off at every start, overriding the admin setting. If no other
+sign-in method is available at startup, password sign-in is turned back on.
 
 | Variable                | Description                     | Default |
 | ----------------------- | ------------------------------- | ------- |
@@ -35,6 +50,8 @@ Email and password sign-in is on when no other provider is set up.
 ## OIDC
 
 Works with any OpenID Connect provider, like Authentik, Pocket ID or Keycloak.
+ID tokens are checked against the provider's published signing keys. The provider
+must sign them with an RS or ES key; HS256 is not supported.
 
 ```yaml title="docker-compose.yml (environment)"
 OIDC_NAME: NoraId

@@ -1,6 +1,6 @@
 import { z } from "zod";
 
-const slotSchema = z.enum(["Breakfast", "Lunch", "Dinner", "Snack"]);
+export const slotSchema = z.enum(["Breakfast", "Lunch", "Dinner", "Snack"]);
 
 const plannedItemTypeSchema = z.enum(["recipe", "note"]);
 

@@ -1,9 +1,9 @@
 // @vitest-environment node
 /**
  * The override semantics every prompt surface shares: a stored field is an
- * override exactly when its text differs from the shipped default — current
- * or retired. Saving, booting, and reading all delegate here, so this is
- * where the "saved defaults freeze forever" regression is pinned down.
+ * override exactly when its text differs from the shipped default. Saving and
+ * reading both delegate here, so this is where the "saved defaults freeze
+ * forever" regression is pinned down.
  */
 import { describe, expect, it } from "vitest";
 
@@ -26,10 +26,13 @@ const DEFAULTS: PromptValues = {
   recipeProvenance: "Infer the provenance.",
   ingredientLinking: "Link the ingredients.",
   ingredientResolution: "Recognise the ingredient.",
+  ingredientMatch: "Match the ingredient.",
   imageGenerationBrief: "Write the visual brief.",
   imageGenerationStyle: "Draw the dish.",
   ingredientIconStyle: "Draw the food.",
   ingredientPlainName: "Tidy the name.",
+  ingredientSpellingCheck: "Check the spellings.",
+  ingredientNutrition: "Estimate the food.",
 };
 
 describe("isSamePromptText", () => {
@@ -41,45 +44,23 @@ describe("isSamePromptText", () => {
 
 describe("pruneToOverrides", () => {
   it("keeps only texts that differ from the shipped defaults", () => {
-    const { overrides, changed } = pruneToOverrides(
-      { ...DEFAULTS, autoTagging: "My tagging rules" },
-      DEFAULTS
-    );
-
-    expect(overrides).toEqual({ autoTagging: "My tagging rules" });
-    expect(changed).toBe(true);
+    expect(pruneToOverrides({ ...DEFAULTS, autoTagging: "My tagging rules" }, DEFAULTS)).toEqual({
+      autoTagging: "My tagging rules",
+    });
   });
 
-  it("drops blanks, non-strings, and the legacy isOverridden flag", () => {
-    const { overrides, changed } = pruneToOverrides(
-      { recipeExtraction: "   ", unitConversion: 7, isOverridden: true },
-      DEFAULTS
-    );
-
-    expect(overrides).toEqual({});
-    expect(changed).toBe(true);
+  it("drops blanks and non-strings", () => {
+    expect(pruneToOverrides({ recipeExtraction: "   ", unitConversion: 7 }, DEFAULTS)).toEqual({});
   });
 
-  it("drops texts matching a retired default, but only when given them", () => {
+  it("keeps an earlier release's wording an administrator saved on purpose", () => {
     const stored = { recipeExtraction: "Extract the recipe (2024 wording)." };
-    const retired = { recipeExtraction: ["Extract the recipe (2024 wording)."] };
 
-    expect(pruneToOverrides(stored, DEFAULTS, retired).overrides).toEqual({});
-    // The save path passes no retired defaults: an administrator pasting an
-    // old wording on purpose keeps it as an override.
-    expect(pruneToOverrides(stored, DEFAULTS).overrides).toEqual(stored);
-  });
-
-  it("reports an already-clean row as unchanged", () => {
-    const stored = { recipeProvenance: "My provenance rules" };
-    const { overrides, changed } = pruneToOverrides(stored, DEFAULTS);
-
-    expect(overrides).toEqual(stored);
-    expect(changed).toBe(false);
+    expect(pruneToOverrides(stored, DEFAULTS)).toEqual(stored);
   });
 
   it("handles a missing row", () => {
-    expect(pruneToOverrides(null, DEFAULTS)).toEqual({ overrides: {}, changed: false });
+    expect(pruneToOverrides(null, DEFAULTS)).toEqual({});
   });
 });
 

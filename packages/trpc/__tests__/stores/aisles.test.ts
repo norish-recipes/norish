@@ -50,7 +50,6 @@ describe("filing a name at a Store", () => {
   const caller = aisleProcedures.createCaller(createMockCallerContext(ctx));
 
   beforeEach(() => {
-    vi.clearAllMocks();
     storesRepository.getStoreOwnerId.mockResolvedValue(ctx.user.id);
     assertHouseholdAccess.mockResolvedValue(undefined);
     aislesRepository.getAisleById.mockResolvedValue({ id: ZUIVEL, storeId: STORE, name: "Zuivel" });

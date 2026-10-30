@@ -50,7 +50,8 @@
     "viewGroceries": "Näytä ostokset",
     "addToCalendar": "Lisää kalenteriin",
     "deleteRecipe": "Poista resepti",
-    "recipeOptions": "Reseptin asetukset"
+    "recipeOptions": "Reseptin asetukset",
+    "pantryCoverage": "{percent} aineksista kotona"
   },
   "detail": {
     "viewOriginal": "Näytä alkuperäinen resepti",
@@ -76,7 +77,8 @@
     "source": "Lähde",
     "addedBy": "Lisännyt {name}",
     "decreaseServings": "Vähemmän annoksia",
-    "increaseServings": "Enemmän annoksia"
+    "increaseServings": "Enemmän annoksia",
+    "multiplier": "Kerroin"
   },
   "actions": {
     "plan": "Suunnittele",
@@ -319,6 +321,9 @@
     "imported": "Resepti tuotu",
     "failed": "Reseptitoiminto epäonnistui",
     "failedDescription": "Reseptin käsittelyssä meni jokin pieleen. Tekniset tiedot löytyvät selaimen konsolista.",
+    "incomplete": "Tämä resepti voi olla puutteellinen. Vertaa sitä lähteeseen.",
+    "notARecipe": "Tämä sivu ei näytä reseptiltä.",
+    "privateAddress": "Tuonnit yksityisistä verkko-osoitteista eivät ole sallittuja tällä palvelimella.",
     "batchImported": "Reseptit tuotu",
     "batchImportedDescription": "{count} reseptiä tuotu arkistosta",
     "view": "Näytä",
@@ -423,5 +428,13 @@
     "removeImage": "Poista kuva",
     "imageUploadFailed": "Kuvan lataaminen epäonnistui.",
     "imageNeedsConnection": "Kuvia voi vaihtaa, kun olet taas verkossa."
+  },
+  "print": {
+    "title": "Tulosta resepti",
+    "includePhoto": "Sisällytä kuva",
+    "textSize": "Tekstin koko",
+    "print": "Tulosta / Tallenna PDF",
+    "continued": "jatkuu",
+    "perServing": "Annosta kohden"
   }
 }

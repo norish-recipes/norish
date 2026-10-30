@@ -30,7 +30,6 @@ const RECIPE = {
 };
 
 beforeEach(() => {
-  vi.clearAllMocks();
   mocked.generateStructured.mockResolvedValue({ brief: "A thick green pea soup in a bowl." });
 });
 

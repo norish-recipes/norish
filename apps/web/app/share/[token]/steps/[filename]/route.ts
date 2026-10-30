@@ -9,7 +9,7 @@ export const runtime = "nodejs";
 
 export async function GET(
   _req: Request,
-  { params }: { params: Promise<{ token: string; filename: string }> }
+  { params }: RouteContext<"/share/[token]/steps/[filename]">
 ) {
   const { token, filename } = await params;
 

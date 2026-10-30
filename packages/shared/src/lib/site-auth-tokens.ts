@@ -7,17 +7,11 @@
  */
 
 import type { SiteAuthTokenDecryptedDto } from "@norish/shared/contracts/dto/site-auth-tokens";
+import { isHostOnDomain } from "@norish/shared/lib/helpers";
 
 /**
- * Filters tokens whose domain matches the given URL's hostname via suffix match.
- *
- * Handles various input formats:
- * - Full URLs: "https://www.instagram.com/p/123"
- * - Bare domains: "instagram.com", "www.instagram.com"
- * - Bare words: "instagram" (matches any hostname with "instagram" as a segment)
- *
- * Token domain "instagram.com" matches hostnames "instagram.com", "www.instagram.com", etc.
- * Token domain "instagram" matches "instagram.com", "www.instagram.com", etc.
+ * The tokens for a URL's site: token domain "instagram.com" matches "instagram.com" and
+ * "www.instagram.com". The URL may be a full URL or a bare domain with or without a path.
  */
 export function getMatchingTokens(
   tokens: SiteAuthTokenDecryptedDto[],
@@ -27,21 +21,7 @@ export function getMatchingTokens(
 
   if (!hostname) return [];
 
-  return tokens.filter((token) => {
-    const domain = token.domain.toLowerCase();
-
-    // Exact match or suffix match (e.g. "instagram.com" matches "www.instagram.com")
-    if (hostname === domain || hostname.endsWith(`.${domain}`)) return true;
-
-    // Bare word match: token domain has no dot (e.g. "instagram")
-    // Match if hostname starts with the word followed by a dot (e.g. "instagram.com")
-    // or contains it as a segment (e.g. "www.instagram.com")
-    if (!domain.includes(".")) {
-      return hostname.startsWith(`${domain}.`) || hostname.includes(`.${domain}.`);
-    }
-
-    return false;
-  });
+  return tokens.filter((token) => isHostOnDomain(hostname, token.domain));
 }
 
 /**
@@ -136,5 +116,6 @@ export function rotateCredentialSet(sets: CredentialSet[]): CredentialSet | null
   if (sets.length === 0) return null;
   if (sets.length === 1) return sets[0] ?? null;
 
+  // eslint-disable-next-line sonarjs/pseudo-random -- spreads imports over the accounts; nothing depends on the pick being unpredictable
   return sets[Math.floor(Math.random() * sets.length)] ?? null;
 }

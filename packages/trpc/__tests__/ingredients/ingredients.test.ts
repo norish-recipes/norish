@@ -7,6 +7,7 @@
 import { beforeEach, describe, expect, it, vi } from "vitest";
 
 import type { PermissionLevel } from "@norish/config/zod/server-config";
+import { CatalogueEditError } from "@norish/shared-server/ingredients/catalogue";
 
 import { ingredientsRouter } from "../../src/routers/ingredients";
 import {
@@ -15,7 +16,7 @@ import {
   createMockHousehold,
   createMockUser,
 } from "../calendar/test-utils";
-import { isAIEnabled } from "../mocks/permissions";
+import { TX } from "../mocks/drizzle";
 import { ingredients as ingredientsRealtime } from "../mocks/realtime/ingredients";
 
 const catalogue = vi.hoisted(() => ({
@@ -24,35 +25,40 @@ const catalogue = vi.hoisted(() => ({
   deleteCatalogueIngredient: vi.fn(),
   findCatalogueAliasOwner: vi.fn(),
   findCatalogueIngredient: vi.fn(),
-  findCatalogueIngredientNames: vi.fn(),
   findCatalogueIngredientOwner: vi.fn(),
   findIngredientIdByFold: vi.fn(),
   insertCatalogueAlias: vi.fn(),
-  isAliasInUse: vi.fn(),
-  isIngredientInUse: vi.fn(),
   listCatalogueAliasesOf: vi.fn(),
   listCatalogueIngredients: vi.fn(),
   renameCatalogueIngredient: vi.fn(),
 }));
 const relocation = vi.hoisted(() => ({
+  closesCycle: vi.fn(async () => false),
   countAliasesOf: vi.fn(),
   findIngredientAncestors: vi.fn(),
   insertCatalogueIngredient: vi.fn(),
+  lockIngredientNamed: vi.fn(async () => null),
+  lockFoods: vi.fn(async () => true),
   lockIngredients: vi.fn(async (_tx: unknown, ids: readonly string[]) => ids.length),
   lockTree: vi.fn(),
   mergeCatalogueIngredients: vi.fn(),
   moveCatalogueAlias: vi.fn(),
   setCatalogueIngredientParent: vi.fn(),
+  writeGroceryParts: vi.fn(),
+}));
+// What a deleted food named, resolved again: nothing, here.
+const cleanup = vi.hoisted(() => ({
+  findRowsNamingFood: vi.fn(async () => ({ lines: [], groceries: [], recurring: [] })),
+  repointLines: vi.fn(),
 }));
 const aliases = vi.hoisted(() => ({ findLocaleNames: vi.fn(async () => new Map()) }));
+const junkPile = vi.hoisted(() => ({
+  addToJunkPile: vi.fn(async () => 1),
+  takeOffJunkPile: vi.fn(async () => 0),
+}));
 const iconsRepo = vi.hoisted(() => ({
   findIconLineage: vi.fn(async (): Promise<Map<string, unknown>> => new Map()),
-  listIconCatalogue: vi.fn(async (): Promise<Map<string, unknown>> => new Map()),
   setIngredientIcon: vi.fn(async () => true),
-}));
-const iconQueue = vi.hoisted(() => ({
-  add: vi.fn(async () => ({ id: "icons-1" })),
-  getJobs: vi.fn(async () => []),
 }));
 const iconFiles = vi.hoisted(() => ({
   storeIngredientIcon: vi.fn(async () => "0123456789abcdef0123456789abcdef.webp"),
@@ -61,46 +67,19 @@ const iconFiles = vi.hoisted(() => ({
 const policy = vi.hoisted(() => ({
   getIngredientPermissionPolicy: vi.fn(),
   canDrawImages: vi.fn(async () => true),
+  getUnits: vi.fn(async () => ({})),
 }));
 const drawer = vi.hoisted(() => ({
   drawIngredientIcon: vi.fn(async () => ({ bytes: Buffer.from([9, 9]), mediaType: "image/png" })),
 }));
-const suggestionsRepo = vi.hoisted(() => ({
-  deleteIngredientSuggestion: vi.fn(),
-  deleteSuggestionFor: vi.fn(),
-  findIngredientSuggestions: vi.fn(async (): Promise<unknown[]> => []),
-  listIngredientSuggestions: vi.fn(async (): Promise<unknown[]> => []),
+const aiChangesRepo = vi.hoisted(() => ({ keepOpenAIChangesOf: vi.fn() }));
+const aiChanges = vi.hoisted(() => ({
+  listAIChangesFor: vi.fn(async (): Promise<unknown[]> => []),
+  keepAIChange: vi.fn(),
+  undoAIChange: vi.fn(),
 }));
-const reviewer = vi.hoisted(() => ({
-  reviewFlaggedWithAI: vi.fn(),
-  findParentWithAI: vi.fn(),
-  listReviewableIngredients: vi.fn(async (): Promise<unknown[]> => []),
-  estimateReviewTokens: vi.fn(async (): Promise<unknown[]> => []),
-  // What has been settled since is the service's to drop; here every food is still open.
-  withoutSettled: vi.fn(async (report: unknown) => report),
-}));
-
-const plainNames = vi.hoisted(() => ({
-  listNameableIngredients: vi.fn(async (): Promise<unknown[]> => []),
-  estimateCleanTokens: vi.fn(async (): Promise<unknown[]> => []),
-}));
-
-const reviewQueue = vi.hoisted(() => ({
-  add: vi.fn(async () => ({ id: "round-1" })),
-  getJobs: vi.fn(async () => []),
-  getJob: vi.fn(async (): Promise<unknown> => null),
-}));
-
-// Each edit is one transaction; here it is the mocked repositories' to ignore.
-const TX = vi.hoisted(() => ({ tx: true }));
-
-vi.mock("@norish/db/drizzle", () => ({
-  withTransaction: (run: (tx: unknown) => unknown) => run(TX),
-}));
+vi.mock("@norish/db/drizzle", () => import("../mocks/drizzle"));
 vi.mock("@norish/auth/permissions", () => import("../mocks/permissions"));
-vi.mock("@norish/queue/registry", () => ({
-  getQueues: () => ({ ingredientReview: reviewQueue, ingredientIcons: iconQueue }),
-}));
 // A fixture set stands in for the one Norish ships: onion drawn, vegetable a vague group.
 vi.mock("@norish/shared-server/ingredients/icons", async (original) => ({
   ...(await original<typeof import("@norish/shared-server/ingredients/icons")>()),
@@ -109,18 +88,19 @@ vi.mock("@norish/shared-server/ingredients/icons", async (original) => ({
     none: ["en:vegetable"],
   }),
 }));
-vi.mock("@norish/queue/redis/bullmq", () => ({ getBullClient: vi.fn() }));
+vi.mock("@norish/queue/valkey/bullmq", () => ({ getBullClient: vi.fn() }));
 vi.mock("@norish/db/repositories/ingredient-catalogue", () => catalogue);
 vi.mock("@norish/db/repositories/ingredient-relocation", () => relocation);
+vi.mock("@norish/db/repositories/ingredient-cleanup", () => cleanup);
 vi.mock("@norish/db/repositories/ingredient-aliases", () => aliases);
+vi.mock("@norish/db/repositories/ingredient-junk-pile", () => junkPile);
 vi.mock("@norish/db/repositories/ingredient-icons", () => iconsRepo);
 vi.mock("@norish/shared-server/media/ingredient-icon", async (original) => ({
   ...(await original<typeof import("@norish/shared-server/media/ingredient-icon")>()),
   ...iconFiles,
 }));
-vi.mock("@norish/db/repositories/ingredient-suggestions", () => suggestionsRepo);
-vi.mock("@norish/shared-server/ingredients/review", () => reviewer);
-vi.mock("@norish/shared-server/ingredients/plain-names", () => plainNames);
+vi.mock("@norish/db/repositories/ingredient-ai-changes", () => aiChangesRepo);
+vi.mock("@norish/shared-server/ingredients/ai-changes", () => aiChanges);
 vi.mock("@norish/shared-server/ai/enrichment/ingredient-icon-drawer", () => drawer);
 vi.mock("@norish/shared-server/config/server-config-loader", () => policy);
 vi.mock("@norish/shared-server/ingredients/resolver", () => import("../mocks/ingredient-resolver"));
@@ -136,7 +116,6 @@ vi.mock("@norish/shared-server/logger", () => ({
 const ONION = "11111111-1111-4111-8111-111111111111";
 const ALIAS = "22222222-2222-4222-8222-222222222222";
 const UIEN = "33333333-3333-4333-8333-333333333333";
-const TONIJN = "66666666-6666-4666-8666-666666666666";
 const ME = "test-user-id";
 const HOUSEMATE = "household-member-id";
 const STRANGER = "someone-elsewhere";
@@ -156,11 +135,15 @@ function withPolicy(edit: PermissionLevel) {
 
 function ownedBy(ownerId: string | null) {
   catalogue.findCatalogueIngredientOwner.mockResolvedValue({ ownerId });
-  catalogue.findCatalogueAliasOwner.mockResolvedValue({ ownerId, ingredientId: ONION, text: "ui" });
+  catalogue.findCatalogueAliasOwner.mockResolvedValue({
+    ownerId,
+    ingredientId: ONION,
+    text: "ui",
+    fold: "ui",
+  });
 }
 
 beforeEach(() => {
-  vi.clearAllMocks();
   ingredientsRealtime.reset();
   withPolicy("household");
   relocation.mergeCatalogueIngredients.mockResolvedValue(true);
@@ -169,8 +152,6 @@ beforeEach(() => {
   relocation.insertCatalogueIngredient.mockResolvedValue(UIEN);
   catalogue.renameCatalogueIngredient.mockResolvedValue({ id: ONION });
   catalogue.keepIngredientDistinct.mockResolvedValue({ id: ONION });
-  catalogue.isAliasInUse.mockResolvedValue(false);
-  catalogue.isIngredientInUse.mockResolvedValue(false);
   catalogue.insertCatalogueAlias.mockResolvedValue({ id: ALIAS, text: "Onion", ownerId: ME });
 });
 
@@ -266,6 +247,21 @@ describe("the edit policy", () => {
       }
     }
   );
+
+  it("puts a draft's spelling marked as not a food on the junk pile, and a plain removal nowhere", async () => {
+    withPolicy("everyone");
+    ownedBy(ME);
+    relocation.countAliasesOf.mockResolvedValue(3);
+
+    await expect(
+      callerFor().saveDraft({ ingredientId: ONION, add: [], remove: [ALIAS], junk: [ALIAS] })
+    ).resolves.toEqual({ success: true });
+    expect(junkPile.addToJunkPile).toHaveBeenCalledWith(TX, ["ui"], { reason: "person" });
+
+    junkPile.addToJunkPile.mockClear();
+    await callerFor().saveDraft({ ingredientId: ONION, add: [], remove: [ALIAS] });
+    expect(junkPile.addToJunkPile).not.toHaveBeenCalled();
+  });
 
   it("leaves a seeded, ownerless Ingredient to administrators, whatever the policy", async () => {
     withPolicy("everyone");
@@ -422,448 +418,48 @@ describe("the edit policy", () => {
   });
 });
 
-describe("asking AI about a flagged Ingredient", () => {
-  it("answers what came of it, and announces the change", async () => {
-    reviewer.reviewFlaggedWithAI.mockResolvedValue({ outcome: "merge", into: "onion" });
+describe("AI Changes", () => {
+  const CHANGE = "44444444-4444-4444-8444-444444444444";
 
-    await expect(callerFor().reviewWithAI({ ingredientId: UIEN })).resolves.toEqual({
-      outcome: "merge",
-      into: "onion",
-    });
-    expect(ingredientsRealtime.published).toEqual([
-      expect.objectContaining({ event: "changed", payload: { ingredientIds: [UIEN] } }),
-    ]);
-  });
+  it("lists what Changed by AI shows the viewer", async () => {
+    aiChanges.listAIChangesFor.mockResolvedValueOnce([{ id: CHANGE, kind: "merge" }]);
 
-  it("announces nothing where nothing was flagged", async () => {
-    reviewer.reviewFlaggedWithAI.mockResolvedValue({ outcome: "not-flagged" });
-
-    await callerFor().reviewWithAI({ ingredientId: UIEN });
-
-    expect(ingredientsRealtime.published).toHaveLength(0);
-  });
-});
-
-describe("a round of Ask AI over flagged Ingredients", () => {
-  beforeEach(() => {
-    reviewQueue.add.mockClear();
-    reviewQueue.getJobs.mockReset();
-    reviewQueue.getJobs.mockResolvedValue([]);
-    reviewer.listReviewableIngredients.mockReset().mockResolvedValue([]);
-    reviewer.estimateReviewTokens.mockReset().mockResolvedValue([]);
-  });
-
-  it("queues one job over the parts picked, each food asked its own question, and answers the job to watch", async () => {
-    reviewer.listReviewableIngredients.mockResolvedValue([
-      { id: UIEN, name: "uien", ownerId: ME, suggested: false },
-      { id: ONION, name: "onion", ownerId: HOUSEMATE, suggested: true },
-    ]);
-    plainNames.listNameableIngredients.mockResolvedValueOnce([{ id: TONIJN, name: "GR TONIJN" }]);
-
-    await expect(
-      callerFor().reviewAllWithAI({ mode: "fix", parts: ["unsuggested", "name"] })
-    ).resolves.toEqual({ jobId: "round-1", total: 2, pending: [UIEN, TONIJN] });
-
-    // The foods are the whole catalogue's the asker may edit, not a page's.
-    expect(reviewer.listReviewableIngredients).toHaveBeenCalledExactlyOnceWith({
+    await expect(callerFor().aiChanges()).resolves.toEqual([{ id: CHANGE, kind: "merge" }]);
+    expect(aiChanges.listAIChangesFor).toHaveBeenCalledWith({
       userId: ME,
       householdUserIds: [ME, HOUSEMATE],
       isServerAdmin: false,
     });
-    // The flagged food with a suggestion is left alone: its part was not picked.
-    expect(reviewQueue.add).toHaveBeenCalledExactlyOnceWith("review", {
-      ingredients: [
-        { id: UIEN, name: "uien", mode: "review" },
-        { id: TONIJN, name: "GR TONIJN", mode: "name" },
-      ],
-      actor: { userId: ME, householdUserIds: [ME, HOUSEMATE], isServerAdmin: false },
-    });
-    // Nothing is asked here: the round asks, and announces, from the worker.
-    expect(reviewer.reviewFlaggedWithAI).not.toHaveBeenCalled();
-    expect(ingredientsRealtime.published).toHaveLength(0);
   });
 
-  it("asks what each food on the page is a kind of instead, when told to", async () => {
-    catalogue.findCatalogueIngredientNames.mockResolvedValue(new Map([[UIEN, "uien"]]));
-
-    await expect(
-      callerFor().reviewAllWithAI({ mode: "parent", ingredientIds: [UIEN, ONION] })
-    ).resolves.toEqual({ jobId: "round-1", total: 2, pending: [UIEN, ONION] });
-
-    // A food the catalogue no longer names keeps its id as its name.
-    expect(reviewQueue.add).toHaveBeenCalledExactlyOnceWith(
-      "review",
-      expect.objectContaining({
-        ingredients: [
-          { id: UIEN, name: "uien", mode: "parent" },
-          { id: ONION, name: ONION, mode: "parent" },
-        ],
-      })
+  it("keeps and undoes a change as the viewer", async () => {
+    await expect(callerFor().keepAIChange({ changeId: CHANGE })).resolves.toEqual({
+      success: true,
+    });
+    await expect(callerFor().undoAIChange({ changeId: CHANGE })).resolves.toEqual({
+      success: true,
+    });
+    expect(aiChanges.keepAIChange).toHaveBeenCalledWith(
+      expect.objectContaining({ userId: ME }),
+      CHANGE
     );
-    expect(reviewer.listReviewableIngredients).not.toHaveBeenCalled();
-  });
-
-  it("says how many foods each flagged part holds, and the tokens a food took in the last round", async () => {
-    reviewer.listReviewableIngredients.mockResolvedValue([
-      { id: UIEN, name: "uien", ownerId: ME, suggested: false },
-      { id: ONION, name: "onion", ownerId: ME, suggested: true },
-    ]);
-    reviewQueue.getJobs.mockImplementation((async (types: string[]) =>
-      types.includes("completed")
-        ? [
-            {
-              id: "round-0",
-              data: { ingredients: [{ id: UIEN, name: "uien", mode: "review" }] },
-              progress: {
-                step: "asking-ai:1/1",
-                updatedAt: 1,
-                attempts: [
-                  {
-                    attempt: 1,
-                    timeline: [
-                      {
-                        id: "asking-ai:1/1",
-                        startedAt: 1,
-                        endedAt: 2,
-                        detail: { ingredientId: UIEN, mode: "review", outcome: "distinct" },
-                        models: [
-                          { provider: "openai", model: "gpt", outcome: "completed", tokens: 1864 },
-                          {
-                            provider: "typesafe",
-                            model: "jev",
-                            outcome: "completed",
-                            tokens: 1689,
-                          },
-                        ],
-                      },
-                    ],
-                  },
-                ],
-              },
-            },
-          ]
-        : []) as never);
-
-    await expect(callerFor().reviewScope()).resolves.toEqual({
-      unsuggested: 1,
-      suggested: 1,
-      tokens: {
-        basis: "measured",
-        foods: 1,
-        models: [
-          { provider: "openai", model: "gpt", perFood: 1864 },
-          { provider: "typesafe", model: "jev", perFood: 1689 },
-        ],
-      },
-    });
-    expect(reviewer.estimateReviewTokens).not.toHaveBeenCalled();
-  });
-
-  it("counts a food's tokens from the prompt before any round was measured", async () => {
-    reviewer.listReviewableIngredients.mockResolvedValue([
-      { id: UIEN, name: "uien", ownerId: ME, suggested: false },
-    ]);
-    const models = [{ provider: "openai", model: "gpt-5.6-luna", perFood: 2600 }];
-
-    reviewer.estimateReviewTokens.mockResolvedValue(models);
-
-    await expect(callerFor().reviewScope()).resolves.toEqual({
-      unsuggested: 1,
-      suggested: 0,
-      tokens: { basis: "prompt", models },
-    });
-    expect(reviewer.estimateReviewTokens).toHaveBeenCalledWith(["uien"]);
-  });
-
-  it("refuses every AI question while AI is off for the instance", async () => {
-    isAIEnabled.mockResolvedValue(false);
-
-    await expect(callerFor().reviewWithAI({ ingredientId: UIEN })).rejects.toThrow(
-      "AI features are disabled"
+    expect(aiChanges.undoAIChange).toHaveBeenCalledWith(
+      expect.objectContaining({ userId: ME }),
+      CHANGE
     );
-    await expect(callerFor().findParentWithAI({ ingredientId: UIEN })).rejects.toThrow(
-      "AI features are disabled"
-    );
-    await expect(
-      callerFor().reviewAllWithAI({ mode: "fix", parts: ["suggested"] })
-    ).rejects.toThrow("AI features are disabled");
-    await expect(callerFor().reviewScope()).rejects.toThrow("AI features are disabled");
-    expect(reviewer.reviewFlaggedWithAI).not.toHaveBeenCalled();
-    expect(reviewer.listReviewableIngredients).not.toHaveBeenCalled();
-    expect(reviewQueue.add).not.toHaveBeenCalled();
-    isAIEnabled.mockResolvedValue(true);
   });
 
-  it("asks what one food is a kind of, and announces the suggestion", async () => {
-    reviewer.findParentWithAI.mockResolvedValueOnce({
-      outcome: "parent",
-      of: "onion",
-      considered: ["onion"],
-      englishName: null,
+  it("says why a change could not be undone", async () => {
+    aiChanges.undoAIChange.mockRejectedValueOnce(new CatalogueEditError("forbidden"));
+    aiChanges.keepAIChange.mockRejectedValueOnce(new CatalogueEditError("name-taken"));
+
+    await expect(callerFor().undoAIChange({ changeId: CHANGE })).rejects.toMatchObject({
+      code: "FORBIDDEN",
+      message: "forbidden",
     });
-
-    await expect(callerFor().findParentWithAI({ ingredientId: UIEN })).resolves.toMatchObject({
-      outcome: "parent",
-      of: "onion",
+    await expect(callerFor().keepAIChange({ changeId: CHANGE })).rejects.toMatchObject({
+      code: "CONFLICT",
     });
-    expect(reviewer.findParentWithAI).toHaveBeenCalledWith(expect.anything(), UIEN);
-    expect(ingredientsRealtime.published).toHaveLength(1);
-  });
-
-  it("cleans the names of the foods the server picks, as a round of its own", async () => {
-    plainNames.listNameableIngredients.mockResolvedValueOnce([{ id: UIEN, name: "GR UIEN" }]);
-
-    await expect(callerFor().reviewAllWithAI({ mode: "fix", parts: ["name"] })).resolves.toEqual({
-      jobId: "round-1",
-      total: 1,
-      pending: [UIEN],
-    });
-    expect(reviewQueue.add).toHaveBeenCalledExactlyOnceWith(
-      "review",
-      expect.objectContaining({ ingredients: [{ id: UIEN, name: "GR UIEN", mode: "name" }] })
-    );
-    expect(reviewer.listReviewableIngredients).not.toHaveBeenCalled();
-  });
-
-  it("says how many names a round of Clean names would ask about, and what a food takes", async () => {
-    plainNames.listNameableIngredients.mockResolvedValueOnce([
-      { id: UIEN, name: "GR UIEN" },
-      { id: ONION, name: "onion" },
-    ]);
-    plainNames.estimateCleanTokens.mockResolvedValueOnce([
-      { provider: "openai", model: "gpt-5.6-luna", perFood: 200 },
-    ]);
-
-    await expect(callerFor().nameScope()).resolves.toEqual({
-      foods: 2,
-      tokens: {
-        basis: "prompt",
-        models: [{ provider: "openai", model: "gpt-5.6-luna", perFood: 200 }],
-      },
-    });
-    expect(plainNames.estimateCleanTokens).toHaveBeenCalledWith(["GR UIEN", "onion"]);
-  });
-
-  it("asks about nothing without a food", async () => {
-    await expect(
-      callerFor().reviewAllWithAI({ mode: "parent", ingredientIds: [] })
-    ).rejects.toMatchObject({ code: "BAD_REQUEST" });
-    // Nothing left in the parts picked by the time the round would start.
-    await expect(
-      callerFor().reviewAllWithAI({ mode: "fix", parts: ["unsuggested"] })
-    ).rejects.toMatchObject({ code: "BAD_REQUEST" });
-    expect(reviewQueue.add).not.toHaveBeenCalled();
-  });
-
-  it("tells a page that opens mid-round how far the round is", async () => {
-    reviewQueue.getJobs.mockResolvedValue([
-      {
-        id: "round-1",
-        data: {
-          ingredients: [
-            { id: UIEN, name: "uien" },
-            { id: ONION, name: "onion" },
-          ],
-        },
-        progress: {},
-      },
-    ]);
-
-    await expect(callerFor().reviewRound()).resolves.toEqual({
-      jobId: "round-1",
-      done: 0,
-      total: 2,
-      counts: {
-        merge: 0,
-        parent: 0,
-        distinct: 0,
-        unsure: 0,
-        rename: 0,
-        plain: 0,
-        skipped: 0,
-        failed: 0,
-      },
-      pending: [UIEN, ONION],
-      finished: false,
-    });
-    await expect(callerFor().reviewRound()).resolves.not.toBeNull();
-
-    reviewQueue.getJobs.mockResolvedValue([]);
-    await expect(callerFor().reviewRound()).resolves.toBeNull();
-  });
-
-  it("reads a round back, food by food, for the summary the page offers", async () => {
-    reviewQueue.getJob.mockResolvedValue({
-      id: "round-1",
-      data: { ingredients: [{ id: UIEN, name: "uien" }] },
-      progress: {
-        step: "asking-ai:1/1",
-        updatedAt: 1,
-        attempts: [
-          {
-            attempt: 1,
-            timeline: [
-              {
-                id: "asking-ai:1/1",
-                startedAt: 1,
-                endedAt: 2,
-                detail: {
-                  ingredientId: UIEN,
-                  name: "uien",
-                  outcome: "merge",
-                  into: "onion",
-                  considered: ["onion"],
-                  englishName: "onions",
-                },
-              },
-            ],
-          },
-        ],
-      },
-      getState: async () => "completed",
-    });
-
-    await expect(callerFor().reviewReport({ jobId: "round-1" })).resolves.toEqual({
-      jobId: "round-1",
-      finished: true,
-      entries: [
-        {
-          ingredientId: UIEN,
-          name: "uien",
-          outcome: "merge",
-          into: "onion",
-          considered: ["onion"],
-          englishName: "onions",
-        },
-      ],
-      waiting: [],
-    });
-    expect(reviewQueue.getJob).toHaveBeenCalledWith("round-1");
-
-    expect(reviewer.withoutSettled).toHaveBeenCalled();
-
-    // Without a job, the round to have ended last.
-    reviewQueue.getJobs.mockResolvedValueOnce([{ id: "round-1", finishedOn: 2 }] as never);
-    await expect(callerFor().reviewReport({})).resolves.toMatchObject({ jobId: "round-1" });
-
-    reviewQueue.getJob.mockResolvedValue(null);
-    await expect(callerFor().reviewReport({ jobId: "gone" })).resolves.toBeNull();
-  });
-});
-
-describe("AI's suggestions", () => {
-  const SUGGESTION = "44444444-4444-4444-8444-444444444444";
-  const OTHER = "55555555-5555-4555-8555-555555555555";
-
-  function suggested(kind: "merge" | "parent" | "distinct", ownerId: string | null = ME) {
-    return {
-      id: SUGGESTION,
-      ingredientId: UIEN,
-      ingredientName: "uien",
-      ingredientOwnerId: ownerId,
-      kind,
-      target: kind === "distinct" ? null : { id: ONION, name: "onion" },
-      englishName: "onions",
-      considered: ["onion"],
-      source: "ai" as const,
-    };
-  }
-
-  it("lists only what the viewer may answer", async () => {
-    suggestionsRepo.listIngredientSuggestions.mockResolvedValueOnce([
-      suggested("parent"),
-      { ...suggested("distinct", STRANGER), id: OTHER },
-    ]);
-
-    const listed = await callerFor().suggestions();
-
-    expect(listed.map((it) => [it.kind, it.target?.name ?? null])).toEqual([["parent", "onion"]]);
-  });
-
-  /** The suggestions the repository holds, found by id whatever order they are asked for in. */
-  function holding(...stored: ReturnType<typeof suggested>[]) {
-    suggestionsRepo.findIngredientSuggestions.mockImplementation(async (ids: readonly string[]) =>
-      stored.filter((it) => ids.includes(it.id))
-    );
-  }
-
-  it("confirms a parent as the viewer's own edit, which settles it", async () => {
-    ownedBy(ME);
-    holding(suggested("parent"));
-
-    await expect(callerFor().confirmSuggestions({ suggestionIds: [SUGGESTION] })).resolves.toEqual({
-      done: 1,
-      failed: 0,
-      refusal: null,
-    });
-    expect(relocation.setCatalogueIngredientParent).toHaveBeenCalledWith(TX, UIEN, ONION);
-    expect(suggestionsRepo.deleteSuggestionFor).toHaveBeenCalledWith(UIEN, TX);
-    expect(ingredientsRealtime.published).toHaveLength(1);
-  });
-
-  it("confirms a merge and a food of its own the way the page's own edits do", async () => {
-    ownedBy(ME);
-    holding(suggested("merge"), { ...suggested("distinct"), id: OTHER });
-
-    await expect(
-      callerFor().confirmSuggestions({ suggestionIds: [SUGGESTION, OTHER] })
-    ).resolves.toMatchObject({ done: 2, failed: 0 });
-    expect(relocation.mergeCatalogueIngredients).toHaveBeenCalledWith(TX, UIEN, ONION);
-    expect(catalogue.keepIngredientDistinct).toHaveBeenCalledWith(TX, UIEN);
-    // What both changed is announced once, together.
-    expect(ingredientsRealtime.published).toHaveLength(1);
-  });
-
-  it("confirms well over five hundred at once, and announces them together", async () => {
-    ownedBy(ME);
-    const many = Array.from({ length: 1300 }, (_, index) => ({
-      ...suggested("parent"),
-      id: `00000000-0000-4000-8000-${String(index).padStart(12, "0")}`,
-    }));
-
-    holding(...many);
-
-    await expect(
-      callerFor().confirmSuggestions({ suggestionIds: many.map((it) => it.id) })
-    ).resolves.toEqual({ done: 1300, failed: 0, refusal: null });
-    expect(relocation.setCatalogueIngredientParent).toHaveBeenCalledTimes(1300);
-    expect(ingredientsRealtime.published).toHaveLength(1);
-  });
-
-  it("counts a suggestion gone by its turn as settled, not refused", async () => {
-    holding();
-
-    await expect(callerFor().confirmSuggestions({ suggestionIds: [SUGGESTION] })).resolves.toEqual({
-      done: 0,
-      failed: 0,
-      refusal: null,
-    });
-  });
-
-  it("goes on past a refused one and says why", async () => {
-    ownedBy(STRANGER);
-    holding(suggested("parent", STRANGER), { ...suggested("parent", STRANGER), id: OTHER });
-
-    await expect(
-      callerFor().confirmSuggestions({ suggestionIds: [SUGGESTION, OTHER] })
-    ).resolves.toEqual({ done: 0, failed: 2, refusal: "forbidden" });
-    expect(relocation.setCatalogueIngredientParent).not.toHaveBeenCalled();
-    expect(ingredientsRealtime.published).toHaveLength(0);
-  });
-
-  it("dismisses a suggestion without touching the food, under the edit policy", async () => {
-    holding(suggested("merge"));
-
-    await expect(
-      callerFor().dismissSuggestions({ suggestionIds: [SUGGESTION] })
-    ).resolves.toMatchObject({ done: 1 });
-    expect(suggestionsRepo.deleteIngredientSuggestion).toHaveBeenCalledWith(SUGGESTION);
-    expect(relocation.mergeCatalogueIngredients).not.toHaveBeenCalled();
-
-    holding(suggested("merge", STRANGER));
-    await expect(
-      callerFor().dismissSuggestions({ suggestionIds: [SUGGESTION] })
-    ).resolves.toMatchObject({ done: 0, refusal: "forbidden" });
   });
 });
 
@@ -953,21 +549,11 @@ describe("refusals", () => {
 
   it("refuses a parent that would close a cycle", async () => {
     // The parent sits under the food already.
-    relocation.findIngredientAncestors.mockResolvedValue(new Map([[UIEN, [ONION]]]));
+    relocation.closesCycle.mockResolvedValueOnce(true);
 
     await expect(
       callerFor().setParent({ ingredientId: ONION, parentId: UIEN })
     ).rejects.toMatchObject({ code: "CONFLICT", message: "cycle" });
-    expect(ingredientsRealtime.published).toHaveLength(0);
-  });
-
-  it("refuses to delete an Ingredient something still uses", async () => {
-    catalogue.isIngredientInUse.mockResolvedValue(true);
-
-    await expect(callerFor().remove({ ingredientId: ONION })).rejects.toMatchObject({
-      code: "CONFLICT",
-      message: "ingredient-in-use",
-    });
     expect(ingredientsRealtime.published).toHaveLength(0);
   });
 
@@ -987,17 +573,11 @@ describe("refusals", () => {
     });
   });
 
-  it("refuses to remove an Ingredient's last alias, or one something points at", async () => {
+  it("refuses to remove an Ingredient's last alias", async () => {
     relocation.countAliasesOf.mockResolvedValueOnce(1);
     await expect(callerFor().removeAlias({ aliasId: ALIAS })).rejects.toMatchObject({
       code: "CONFLICT",
       message: "last-alias",
-    });
-
-    catalogue.isAliasInUse.mockResolvedValueOnce(true);
-    await expect(callerFor().removeAlias({ aliasId: ALIAS })).rejects.toMatchObject({
-      code: "CONFLICT",
-      message: "alias-in-use",
     });
   });
 
@@ -1091,7 +671,6 @@ describe("the list", () => {
               locale: null,
               seeded: false,
               canRemove: true,
-              inUse: false,
             },
           ],
           hiddenSpellings: 1,
@@ -1104,21 +683,13 @@ describe("the list", () => {
   it("lists every spelling of one Ingredient on request", async () => {
     withPolicy("household");
     catalogue.listCatalogueAliasesOf.mockResolvedValue([
-      { id: ALIAS, text: "onions", ownerId: HOUSEMATE, inUse: true },
+      { id: ALIAS, text: "onions", ownerId: HOUSEMATE },
       { id: "seeded-alias", text: "ui", ownerId: null, locale: "nl", seeded: true },
     ]);
 
-    // A spelling something points at keeps canRemove, which moving it needs, and says it is in use.
     await expect(callerFor().spellings({ ingredientId: ONION })).resolves.toEqual([
-      { id: ALIAS, text: "onions", locale: null, seeded: false, canRemove: true, inUse: true },
-      {
-        id: "seeded-alias",
-        text: "ui",
-        locale: "nl",
-        seeded: true,
-        canRemove: false,
-        inUse: false,
-      },
+      { id: ALIAS, text: "onions", locale: null, seeded: false, canRemove: true },
+      { id: "seeded-alias", text: "ui", locale: "nl", seeded: true, canRemove: false },
     ]);
   });
 });
@@ -1289,94 +860,4 @@ describe("Ingredient Icons", () => {
       }
     }
   );
-
-  describe("a Draw icons round", () => {
-    const RED = "66666666-6666-4666-8666-666666666666";
-    const KOHLRABI = "77777777-7777-4777-8777-777777777777";
-    const VEGETABLE = "88888888-8888-4888-8888-888888888888";
-    const CARROT = "99999999-9999-4999-8999-999999999999";
-    const SALSIFY = "aaaaaaaa-aaaa-4aaa-8aaa-aaaaaaaaaaab";
-    const PARSNIP = "bbbbbbbb-bbbb-4bbb-8bbb-bbbbbbbbbbbc";
-
-    function catalogue(
-      ...foods: Array<
-        [
-          string,
-          string,
-          Partial<{ parentId: string; offId: string; icon: string; ownerId: string | null }>,
-        ]
-      >
-    ) {
-      iconsRepo.listIconCatalogue.mockResolvedValue(
-        new Map(
-          foods.map(([id, name, values]) => [
-            id,
-            { id, name, parentId: null, offId: null, icon: null, ownerId: ME, ...values },
-          ])
-        )
-      );
-    }
-
-    beforeEach(() => {
-      withPolicy("household");
-      catalogue(
-        // Shipped an icon: drawn only by the wider scope.
-        [ONION, "onion", { offId: "en:onion" }],
-        // Borrows the onion's: drawn only by the wider scope.
-        [RED, "red onion", { parentId: ONION, ownerId: HOUSEMATE }],
-        // No icon anywhere: drawn by both.
-        [KOHLRABI, "kohlrabi", {}],
-        // A vague group, and a food with an icon of its own: drawn by neither.
-        [VEGETABLE, "vegetable", { offId: "en:vegetable" }],
-        [CARROT, "carrot", { icon: FILE }],
-        // Out of the member's reach: a stranger's, and a seeded one.
-        [SALSIFY, "salsify", { ownerId: STRANGER }],
-        [PARSNIP, "parsnip", { ownerId: null }]
-      );
-    });
-
-    it("counts each scope over the whole catalogue, only what the asker may edit and never a vague group", async () => {
-      await expect(callerFor().iconScope()).resolves.toEqual({ bare: 1, unowned: 3 });
-      await expect(callerFor({ admin: true }).iconScope()).resolves.toEqual({
-        bare: 3,
-        unowned: 5,
-      });
-    });
-
-    it("starts one round over the scope's foods, as the asker", async () => {
-      await expect(callerFor().drawIcons({ scope: "unowned" })).resolves.toEqual({
-        jobId: "icons-1",
-        total: 3,
-        pending: [KOHLRABI, ONION, RED],
-      });
-      expect(iconQueue.add).toHaveBeenCalledWith("draw", {
-        ingredients: [
-          { id: KOHLRABI, name: "kohlrabi" },
-          { id: ONION, name: "onion" },
-          { id: RED, name: "red onion" },
-        ],
-        actor: expect.objectContaining({ userId: ME, isServerAdmin: false }),
-      });
-    });
-
-    it("refuses a round with nothing to draw", async () => {
-      catalogue([CARROT, "carrot", { icon: FILE }]);
-
-      await expect(callerFor().drawIcons({ scope: "bare" })).rejects.toMatchObject({
-        code: "BAD_REQUEST",
-      });
-      expect(iconQueue.add).not.toHaveBeenCalled();
-    });
-
-    it("offers no round, and starts none, where nothing can draw", async () => {
-      policy.canDrawImages.mockResolvedValue(false);
-
-      await expect(callerFor().iconScope()).rejects.toMatchObject({ code: "PRECONDITION_FAILED" });
-      await expect(callerFor().drawIcons({ scope: "bare" })).rejects.toMatchObject({
-        code: "PRECONDITION_FAILED",
-      });
-      expect(iconQueue.add).not.toHaveBeenCalled();
-      policy.canDrawImages.mockResolvedValue(true);
-    });
-  });
 });

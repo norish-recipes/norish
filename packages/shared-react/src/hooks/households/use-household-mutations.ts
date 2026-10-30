@@ -19,6 +19,8 @@ export function createUseHouseholdMutations({
   useCurrentUserName,
 }: CreateUseHouseholdMutationsOptions) {
   return function useHouseholdMutations(): HouseholdMutationsResult {
+    "use memo";
+
     const trpc = useTRPC();
     const { household, setHouseholdData, invalidate, currentUserId } = useHouseholdQuery();
     const userName = useCurrentUserName();
@@ -26,12 +28,16 @@ export function createUseHouseholdMutations({
     const getHouseholdVersion = (householdId: string): number =>
       household?.id === householdId ? household.version : 1;
 
-    const createMutation = useMutation(trpc.households.create.mutationOptions());
-    const joinMutation = useMutation(trpc.households.join.mutationOptions());
-    const leaveMutation = useMutation(trpc.households.leave.mutationOptions());
-    const kickMutation = useMutation(trpc.households.kick.mutationOptions());
-    const regenerateCodeMutation = useMutation(trpc.households.regenerateCode.mutationOptions());
-    const transferAdminMutation = useMutation(trpc.households.transferAdmin.mutationOptions());
+    const { mutate: mutateCreate } = useMutation(trpc.households.create.mutationOptions());
+    const { mutate: mutateJoin } = useMutation(trpc.households.join.mutationOptions());
+    const { mutate: mutateLeave } = useMutation(trpc.households.leave.mutationOptions());
+    const { mutate: mutateKick } = useMutation(trpc.households.kick.mutationOptions());
+    const { mutate: mutateRegenerateCode } = useMutation(
+      trpc.households.regenerateCode.mutationOptions()
+    );
+    const { mutate: mutateTransferAdmin } = useMutation(
+      trpc.households.transferAdmin.mutationOptions()
+    );
 
     const createHousehold = (name: string): void => {
       if (!name.trim()) {
@@ -42,7 +48,7 @@ export function createUseHouseholdMutations({
         throw new Error("User ID not available");
       }
 
-      createMutation.mutate(
+      mutateCreate(
         { name: name.trim() },
         {
           onSuccess: ({ id }) => {
@@ -81,7 +87,7 @@ export function createUseHouseholdMutations({
         throw new Error("User ID not available");
       }
 
-      joinMutation.mutate(
+      mutateJoin(
         { code: code.trim() },
         {
           // Optimistic update will come from the subscription (onCreated)
@@ -96,7 +102,7 @@ export function createUseHouseholdMutations({
           ? (household.users.find((user) => user.id === currentUserId)?.version ?? 1)
           : 1;
 
-      leaveMutation.mutate(
+      mutateLeave(
         { householdId, version: currentMembershipVersion },
         {
           onSuccess: () => {
@@ -117,7 +123,7 @@ export function createUseHouseholdMutations({
           ? (household.users.find((user) => user.id === userId)?.version ?? 1)
           : 1;
 
-      kickMutation.mutate(
+      mutateKick(
         { householdId, userId, version: memberVersion },
         {
           onSuccess: () => {
@@ -140,7 +146,7 @@ export function createUseHouseholdMutations({
     };
 
     const regenerateJoinCode = (householdId: string): void => {
-      regenerateCodeMutation.mutate(
+      mutateRegenerateCode(
         { householdId, version: getHouseholdVersion(householdId) },
         {
           // The new join code will come from the subscription
@@ -150,7 +156,7 @@ export function createUseHouseholdMutations({
     };
 
     const transferAdmin = (householdId: string, newAdminId: string): void => {
-      transferAdminMutation.mutate(
+      mutateTransferAdmin(
         { householdId, newAdminId, version: getHouseholdVersion(householdId) },
         {
           onSuccess: () => {

@@ -30,6 +30,7 @@ const connectionManager = vi.hoisted(() => ({
 }));
 
 vi.mock("@norish/auth/session", () => ({ getVerifiedSession }));
+vi.mock("@norish/auth/api-key-rate-limit", () => ({ apiKeyRetryAfter: () => null }));
 vi.mock("@norish/config/env-config-server", () => ({
   SERVER_CONFIG: {
     NODE_ENV: "production",
@@ -95,7 +96,6 @@ async function connectAuthenticated(): Promise<WebSocket> {
 }
 
 beforeEach(async () => {
-  vi.clearAllMocks();
   getVerifiedSession.mockResolvedValue(identity);
   connectionManager.startConnectionInvalidation.mockReturnValue(connectionManager.stopInvalidation);
 
@@ -196,7 +196,7 @@ describe("upgrade", () => {
   });
 
   it("treats a verification failure like no session", async () => {
-    getVerifiedSession.mockRejectedValue(new Error("redis down"));
+    getVerifiedSession.mockRejectedValue(new Error("valkey down"));
 
     const outcome = await connect();
 

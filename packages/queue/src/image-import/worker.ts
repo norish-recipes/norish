@@ -3,7 +3,6 @@
  *
  * Processes image-based recipe import jobs from the queue.
  * Uses AI vision models to extract recipe data from images.
- * Uses lazy worker pattern - starts on-demand and pauses when idle.
  */
 
 import type { Job } from "bullmq";
@@ -18,9 +17,10 @@ import { dishColorForImageUrl } from "@norish/shared-server/media/dish-color";
 import { deleteRecipeImagesDir, saveImageBytes } from "@norish/shared-server/media/storage";
 import { recipes } from "@norish/shared-server/realtime/recipes";
 
-import { defineLazyWorker, QUEUE_NAMES } from "../config";
+import { createWorker } from "../create-worker";
 import { announceUsableRecipe } from "../enrichment/announce";
 import { reportStep } from "../job-steps";
+import { QUEUE_NAMES } from "../queue-names";
 
 const log = createLogger("worker:image-import");
 
@@ -105,6 +105,10 @@ export async function processImageImportJob(job: Job<ImageImportJobData>): Promi
   // Vision parsing is a reader, not an inference step: an image import enters
   // the same enrichment flow as every other creation path.
   await announceUsableRecipe(created, { userId, householdKey, householdUserIds });
+
+  // A finished import is kept as long as the retention says, but not its
+  // images: they are base64 in the job data and would sit in Valkey with it.
+  await job.updateData({ ...job.data, files: files.map((file) => ({ ...file, data: "" })) });
 }
 
 /**
@@ -117,16 +121,6 @@ async function handleJobFailed(
   if (!job) return;
 
   const { recipeId, userId, householdKey, files } = job.data;
-
-  log.error(
-    {
-      jobId: job.id,
-      recipeId,
-      fileCount: files.length,
-      error: error.message,
-    },
-    "Image import job failed"
-  );
 
   await deleteRecipeImagesDir(recipeId);
 
@@ -145,14 +139,6 @@ async function handleJobFailed(
   );
 }
 
-/**
- * Start the image import worker (lazy - starts on demand).
- */
-const imageImportWorker = defineLazyWorker(
-  QUEUE_NAMES.IMAGE_IMPORT,
-  processImageImportJob,
-  handleJobFailed
-);
-
-export const startImageImportWorker = imageImportWorker.start;
-export const stopImageImportWorker = imageImportWorker.stop;
+export function startImageImportWorker(): void {
+  createWorker(QUEUE_NAMES.IMAGE_IMPORT, processImageImportJob, { onFailed: handleJobFailed });
+}

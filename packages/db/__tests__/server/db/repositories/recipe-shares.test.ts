@@ -148,11 +148,6 @@ describe("recipe share repository", () => {
       order: "0",
     });
 
-    await db
-      .update(schema.recipes)
-      .set({ image: `/recipes/${testRecipeId}/cover.jpg` })
-      .where(eq(schema.recipes.id, testRecipeId));
-
     await db.insert(schema.recipeImages).values({
       recipeId: testRecipeId,
       image: `/recipes/${testRecipeId}/gallery.jpg`,
@@ -176,7 +171,7 @@ describe("recipe share repository", () => {
     expect(publicRecipe).not.toBeNull();
     expect(publicRecipe).not.toHaveProperty("id");
     expect(publicRecipe).not.toHaveProperty("userId");
-    expect(publicRecipe?.image).toBe(`/share/${token}/media/cover.jpg`);
+    expect(publicRecipe).not.toHaveProperty("image");
     expect(publicRecipe?.images[0]?.image).toBe(`/share/${token}/media/gallery.jpg`);
     expect(publicRecipe?.videos[0]?.video).toBe(`/share/${token}/media/demo.mp4`);
     expect(publicRecipe?.videos[0]?.thumbnail).toBe(`/share/${token}/media/demo-thumb.jpg`);

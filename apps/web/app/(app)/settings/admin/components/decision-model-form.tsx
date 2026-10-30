@@ -2,9 +2,10 @@
 
 import { useCallback, useEffect, useMemo, useState } from "react";
 import { SettingRow } from "@/app/(app)/settings/components/setting-row";
+import { ActionButton, ActionButtonGroup } from "@/components/shared/action-button";
 import SecretInput from "@/components/shared/secret-input";
-import { BeakerIcon, CheckIcon, XMarkIcon } from "@heroicons/react/16/solid";
-import { Button, Description, Input, Label, ListBox, Select, TextField } from "@heroui/react";
+import { usePending } from "@/hooks/use-pending";
+import { Description, Input, Label, ListBox, Select, TextField } from "@heroui/react";
 import { useTranslations } from "next-intl";
 
 import type { DecisionProvider, DecisionUse } from "@norish/config/zod/server-config";
@@ -17,6 +18,7 @@ import {
 } from "@norish/config/zod/server-config";
 
 import { useAdminSettingsContext } from "../context";
+import { ConnectionTestResult } from "./connection-test-result";
 
 interface DecisionModelFormProps {
   onDirtyChange?: (isDirty: boolean) => void;
@@ -33,13 +35,8 @@ function sameUses(a: readonly DecisionUse[], b: readonly DecisionUse[]): boolean
 export default function DecisionModelForm({ onDirtyChange }: DecisionModelFormProps) {
   const t = useTranslations("settings.admin.decisionConfig");
   const tActions = useTranslations("common.actions");
-  const {
-    decisionConfig,
-    aiConfig,
-    updateDecisionConfig,
-    testDecisionEndpoint,
-    fetchConfigSecret,
-  } = useAdminSettingsContext();
+  const { decisionConfig, updateDecisionConfig, testDecisionEndpoint, fetchConfigSecret } =
+    useAdminSettingsContext();
   const [provider, setProvider] = useState<DecisionProvider>(
     decisionConfig?.provider ?? "disabled"
   );
@@ -52,21 +49,23 @@ export default function DecisionModelForm({ onDirtyChange }: DecisionModelFormPr
   // fresh block starts with: enabling the Decision Model enables everything
   // it can do, and an administrator deselects what they do not want.
   const [uses, setUses] = useState<DecisionUse[]>(decisionConfig?.uses ?? [...DECISION_USES]);
-  const [testing, setTesting] = useState(false);
+  const [testing, whileTesting] = usePending();
   const [testResult, setTestResult] = useState<{ success: boolean; error?: string } | null>(null);
-  const [saving, setSaving] = useState(false);
+  const [saving, whileSaving] = usePending();
 
-  useEffect(() => {
+  const [prevDecisionConfig, setPrevDecisionConfig] = useState(decisionConfig);
+
+  if (decisionConfig !== prevDecisionConfig) {
+    setPrevDecisionConfig(decisionConfig);
     if (decisionConfig) {
       setProvider(decisionConfig.provider);
       setModel(decisionConfig.model ?? DEFAULT_DECISION_MODEL);
       setEndpoint(decisionConfig.endpoint ?? "");
       setUses(decisionConfig.uses ?? [...DECISION_USES]);
     }
-  }, [decisionConfig]);
+  }
 
   const enabled = provider !== "disabled";
-  const aiEnabled = aiConfig?.enabled ?? false;
   // This block never borrows the AI configuration's key — the provider never
   // matches — so a stored key is only ever its own.
   const hasStoredApiKey = !!decisionConfig?.apiKey && decisionConfig.provider === provider;
@@ -105,26 +104,20 @@ export default function DecisionModelForm({ onDirtyChange }: DecisionModelFormPr
   };
 
   const handleTest = async () => {
-    setTesting(true);
     setTestResult(null);
-    try {
-      const result = await testDecisionEndpoint({
+    await whileTesting(() =>
+      testDecisionEndpoint({
         provider,
         apiKey: apiKey || undefined,
         model: model || undefined,
         endpoint: endpoint.trim() || undefined,
-      });
-
-      setTestResult(result);
-    } finally {
-      setTesting(false);
-    }
+      }).then(setTestResult)
+    );
   };
 
   const handleSave = async () => {
-    setSaving(true);
-    try {
-      await updateDecisionConfig({
+    await whileSaving(() =>
+      updateDecisionConfig({
         provider,
         model: model || undefined,
         endpoint: endpoint.trim() || undefined,
@@ -133,11 +126,8 @@ export default function DecisionModelForm({ onDirtyChange }: DecisionModelFormPr
         // Every use selected is stored as no list, so the block keeps meaning
         // "every use" and a use added later is on for it (ADR-0035).
         uses: selectedDecisionUses(uses),
-      });
-      setApiKey("");
-    } finally {
-      setSaving(false);
-    }
+      }).then(() => setApiKey(""))
+    );
   };
 
   return (
@@ -235,40 +225,21 @@ export default function DecisionModelForm({ onDirtyChange }: DecisionModelFormPr
         </Select>
       </SettingRow>
 
-      {enabled && !aiEnabled && <p className="text-muted text-xs">{t("aiDisabledHint")}</p>}
+      <ConnectionTestResult result={testResult} successLabel={t("connectionSuccess")} />
 
-      {testResult && (
-        <div
-          className={`flex items-center gap-2 rounded-lg p-2 ${testResult.success ? "bg-success/10 text-success" : "bg-danger/10 text-danger"}`}
+      <ActionButtonGroup className="pt-2">
+        <ActionButton action="test" isDisabled={!enabled} isPending={testing} onPress={handleTest}>
+          {tActions("test")}
+        </ActionButton>
+        <ActionButton
+          action="save"
+          isDisabled={!hasChanges}
+          isPending={saving}
+          onPress={handleSave}
         >
-          {testResult.success ? (
-            <>
-              <CheckIcon className="h-4 w-4" />
-              {t("connectionSuccess")}
-            </>
-          ) : (
-            <>
-              <XMarkIcon className="h-4 w-4" />
-              {testResult.error}
-            </>
-          )}
-        </div>
-      )}
-
-      <div className="flex flex-wrap items-center justify-end gap-2 pt-2">
-        <Button
-          isDisabled={!enabled || !aiEnabled}
-          onPress={handleTest}
-          variant="tertiary"
-          isPending={testing}
-        >
-          {<BeakerIcon className="h-5 w-5" />}
-          {t("testConnection")}
-        </Button>
-        <Button isDisabled={!hasChanges} onPress={handleSave} variant="primary" isPending={saving}>
           {tActions("save")}
-        </Button>
-      </div>
+        </ActionButton>
+      </ActionButtonGroup>
     </div>
   );
 }

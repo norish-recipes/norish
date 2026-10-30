@@ -9,7 +9,7 @@ import { households } from "./households";
 import { ingredientAliases, ingredients } from "./ingredients";
 import { recipeCuisines } from "./recipe-cuisines";
 import { recipeImages } from "./recipe-images";
-import { recipeIngredients } from "./recipe-ingredients";
+import { recipeIngredientFoods, recipeIngredients } from "./recipe-ingredients";
 import { recipeRatings } from "./recipe-ratings";
 import { recipeShares } from "./recipe-shares";
 import { recipeTags } from "./recipe-tags";
@@ -124,13 +124,21 @@ export const recipeTagsRelations = relations(recipeTags, ({ one }) => ({
   }),
 }));
 
-export const recipeIngredientsRelations = relations(recipeIngredients, ({ one }) => ({
+export const recipeIngredientsRelations = relations(recipeIngredients, ({ one, many }) => ({
   recipe: one(recipes, {
     fields: [recipeIngredients.recipeId],
     references: [recipes.id],
   }),
+  foods: many(recipeIngredientFoods),
+}));
+
+export const recipeIngredientFoodsRelations = relations(recipeIngredientFoods, ({ one }) => ({
+  line: one(recipeIngredients, {
+    fields: [recipeIngredientFoods.recipeIngredientId],
+    references: [recipeIngredients.id],
+  }),
   alias: one(ingredientAliases, {
-    fields: [recipeIngredients.ingredientAliasId],
+    fields: [recipeIngredientFoods.ingredientAliasId],
     references: [ingredientAliases.id],
   }),
 }));

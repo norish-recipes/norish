@@ -4,6 +4,8 @@ import type { CreateRatingsHooksOptions } from "./types";
 
 export function createUseRatingQuery({ useTRPC }: CreateRatingsHooksOptions) {
   return function useRatingQuery(recipeId: string) {
+    "use memo";
+
     const trpc = useTRPC();
 
     const averageQuery = useQuery(trpc.ratings.getAverage.queryOptions({ recipeId }));

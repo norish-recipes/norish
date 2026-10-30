@@ -5,7 +5,6 @@ import { buildInternalParserApiUrl, SERVER_CONFIG } from "@norish/config/env-con
 import { getDatabaseHealth } from "@norish/db/drizzle";
 import { listCuisines } from "@norish/db/repositories/cuisines";
 import { listAllTagNames, listTagNamesForUsers } from "@norish/db/repositories/tags";
-import { getAppVersions, trpcLogger as log } from "@norish/shared-server";
 import {
   getIngredientWords,
   getLocaleConfig,
@@ -16,78 +15,52 @@ import {
   isRegistrationEnabled,
   isTimersEnabled,
 } from "@norish/shared-server/config/server-config-loader";
+import { trpcLogger as log } from "@norish/shared-server/logger";
+import { getValkeyHealth } from "@norish/shared-server/valkey/client";
 
 import { authedProcedure } from "../../middleware";
 import { publicProcedure, router } from "../../trpc";
-import { healthyResponseSchema, parserHealthSchema } from "./config-openapi-types";
+import {
+  liveResponseSchema,
+  parserHealthSchema,
+  readyResponseSchema,
+} from "./config-openapi-types";
 
-export async function getServiceHealth() {
-  const parserHealthUrl = buildInternalParserApiUrl("/health");
-  const [databaseHealth, parserHealth, appVersions] = await Promise.all([
-    getDatabaseHealth(),
-    (async () => {
-      try {
-        const response = await fetch(parserHealthUrl, {
-          signal: AbortSignal.timeout(SERVER_CONFIG.PARSER_API_TIMEOUT_MS),
-        });
+/** Ready only reports the parser, so it waits on it no longer than on Valkey's ping. */
+const READY_PARSER_TIMEOUT_MS = 2_000;
 
-        if (!response.ok) {
-          return {
-            status: "error" as const,
-            statusCode: response.status,
-          };
-        }
+/** The internal parser's own health check, which Norish runs as its child process. */
+async function getParserHealth(timeoutMs = SERVER_CONFIG.PARSER_API_TIMEOUT_MS) {
+  try {
+    const response = await fetch(buildInternalParserApiUrl("/health"), {
+      signal: AbortSignal.timeout(timeoutMs),
+    });
 
-        const parsedHealth = parserHealthSchema.parse(await response.json());
+    if (!response.ok) {
+      return {
+        status: "error" as const,
+        statusCode: response.status,
+      };
+    }
 
-        if (parsedHealth.status !== "ok") {
-          return {
-            status: parsedHealth.status ?? "unknown",
-            recipeScrapersVersion: parsedHealth.recipeScrapersVersion,
-          };
-        }
+    const parsedHealth = parserHealthSchema.parse(await response.json());
 
-        return {
-          status: "ok" as const,
-          recipeScrapersVersion: parsedHealth.recipeScrapersVersion,
-        };
-      } catch {
-        return {
-          status: "unreachable" as const,
-        };
-      }
-    })(),
-    getAppVersions(),
-  ]);
+    if (parsedHealth.status !== "ok") {
+      return {
+        status: parsedHealth.status ?? "unknown",
+        recipeScrapersVersion: parsedHealth.recipeScrapersVersion,
+      };
+    }
 
-  if (databaseHealth.status !== "ok") {
     return {
-      status: "degraded" as const,
-      db: databaseHealth,
-      parser: parserHealth,
-    };
-  }
-
-  if (parserHealth.status !== "ok") {
-    return {
-      status: "degraded" as const,
-      db: databaseHealth,
-      parser: parserHealth,
-    };
-  }
-
-  return {
-    status: "ok" as const,
-    db: databaseHealth,
-    versions: {
-      ...appVersions,
-      scraper: parserHealth.recipeScrapersVersion,
-    },
-    parser: {
       status: "ok" as const,
-      recipeScrapersVersion: parserHealth.recipeScrapersVersion,
-    },
-  };
+      recipeScrapersVersion: parsedHealth.recipeScrapersVersion,
+    };
+  } catch {
+    return {
+      status: "unreachable" as const,
+    };
+  }
 }
 
 /**
@@ -217,6 +190,78 @@ const authProviders = publicProcedure.query(async () => {
   return { providers, registrationEnabled, passwordAuthEnabled };
 });
 
+/**
+ * Whether to restart Norish: only what a restart can fix. Norish runs the
+ * parser itself, so a hung parser fails it; Postgres and Valkey do not, since
+ * restarting Norish fixes neither.
+ */
+export const healthLive = publicProcedure
+  .meta({
+    openapi: {
+      method: "GET",
+      path: "/health/live",
+      protect: false,
+      tags: ["Health"],
+      summary: "Check whether Norish is alive",
+      description:
+        "Answers 200 while the server responds and its internal parser answers its own health check. Checks neither the database nor Valkey. Point restart probes (Docker HEALTHCHECK, Kubernetes liveness) here.",
+      successDescription: "The server and its parser are alive.",
+      errorResponses: { 503: "The parser service is unhealthy or unreachable" },
+    },
+  })
+  .output(liveResponseSchema)
+  .query(async () => {
+    const parser = await getParserHealth();
+
+    if (parser.status !== "ok") {
+      throw new TRPCError({
+        code: "SERVICE_UNAVAILABLE",
+        message: `Parser service is ${parser.status}`,
+      });
+    }
+
+    return { status: "ok" as const, parser };
+  });
+
+async function checkReady() {
+  const [db, valkey, parser] = await Promise.all([
+    getDatabaseHealth(),
+    getValkeyHealth(),
+    getParserHealth(READY_PARSER_TIMEOUT_MS),
+  ]);
+
+  if (db.status !== "ok" || valkey.status !== "ok") {
+    throw new TRPCError({
+      code: "SERVICE_UNAVAILABLE",
+      message: db.status !== "ok" ? `Database is ${db.status}` : `Valkey is ${valkey.status}`,
+    });
+  }
+
+  return { status: "ok" as const, db, valkey, parser };
+}
+
+/**
+ * Whether to send Norish traffic: Postgres and Valkey must answer. The parser
+ * is reported but never fails it, since only URL imports need it.
+ */
+export const healthReady = publicProcedure
+  .meta({
+    openapi: {
+      method: "GET",
+      path: "/health/ready",
+      protect: false,
+      tags: ["Health"],
+      summary: "Check whether Norish is ready for traffic",
+      description:
+        "Answers 503 while the database or Valkey is unreachable, and 200 otherwise. The parser's state is in the response but does not fail the check. Point readiness probes and load balancers here.",
+      successDescription: "The database and Valkey are healthy.",
+      errorResponses: { 503: "The database or Valkey is unhealthy or unreachable" },
+    },
+  })
+  .output(readyResponseSchema)
+  .query(checkReady);
+
+/** The pre-0.26 endpoint, kept so existing probes keep working; it answers as ready. */
 export const health = publicProcedure
   .meta({
     openapi: {
@@ -224,31 +269,16 @@ export const health = publicProcedure
       path: "/health",
       protect: false,
       tags: ["Health"],
-      summary: "Check API health",
+      summary: "Check whether Norish is ready for traffic (deprecated)",
       description:
-        "Reports API availability and verifies both the database connection and internal parser service are healthy.",
-      successDescription: "The API, database, and parser service are healthy.",
-      errorResponses: {
-        503: "The API is up but the database or parser service is unhealthy or unreachable",
-      },
+        "Deprecated: use /health/live for restart probes and /health/ready for traffic. Answers exactly as /health/ready.",
+      deprecated: true,
+      successDescription: "The database and Valkey are healthy.",
+      errorResponses: { 503: "The database or Valkey is unhealthy or unreachable" },
     },
   })
-  .output(healthyResponseSchema)
-  .query(async () => {
-    const health = await getServiceHealth();
-
-    if (health.status !== "ok") {
-      throw new TRPCError({
-        code: "SERVICE_UNAVAILABLE",
-        message:
-          health.db.status !== "ok"
-            ? `Database is ${health.db.status}`
-            : `Parser service is ${health.parser.status}`,
-      });
-    }
-
-    return health;
-  });
+  .output(readyResponseSchema)
+  .query(checkReady);
 
 export const configProcedures = router({
   localeConfig,
@@ -262,4 +292,6 @@ export const configProcedures = router({
   timerKeywords,
   authProviders,
   health,
+  healthLive,
+  healthReady,
 });

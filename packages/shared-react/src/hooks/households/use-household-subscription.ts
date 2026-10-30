@@ -25,6 +25,8 @@ export function createUseHouseholdSubscription({
   useToastAdapter,
 }: CreateUseHouseholdSubscriptionOptions) {
   return function useHouseholdSubscription() {
+    "use memo";
+
     const trpc = useTRPC();
     const currentUserId = useCurrentUserId();
     const {

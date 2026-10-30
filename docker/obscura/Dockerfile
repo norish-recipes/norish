@@ -7,7 +7,8 @@
 # platform but only one image, and that image is the render-only build — its
 # binary has no stealth transport in it, so `serve --stealth` there is a flag
 # with nothing behind it. This repackages the `-stealth` archive, which is the
-# render+stealth build.
+# render+stealth build, from Norish's fork: upstream's release with the patches
+# in https://github.com/norish-recipes/obscura/tree/norish/patches applied.
 #
 # There is no compile here: fetch the archive for the target architecture, copy
 # the two binaries into distroless/cc.
@@ -15,8 +16,8 @@
 # The defaults below mirror docker/obscura/pin.env, which is what the publish
 # workflow reads.
 
-ARG OBSCURA_REPO=https://github.com/h4ckf0r0day/obscura
-ARG OBSCURA_VERSION=0.2.4
+ARG OBSCURA_REPO=https://github.com/norish-recipes/obscura
+ARG OBSCURA_VERSION=0.2.5-norish.1
 
 # Only here to fetch: the runtime image below has no shell to do it in.
 FROM debian:12-slim AS fetch

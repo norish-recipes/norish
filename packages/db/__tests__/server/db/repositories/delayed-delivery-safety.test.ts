@@ -78,7 +78,10 @@ describe("delayed-delivery repository safety", () => {
       })
       .returning();
 
-    const result = await updateGroceries([{ id: grocery.id, version: 2, name: "Oat milk" }]);
+    const result = await updateGroceries(
+      [{ id: grocery.id, version: 2, name: "Oat milk" }],
+      [testUserId]
+    );
     const [stored] = await db.select().from(groceries).where(eq(groceries.id, grocery.id)).limit(1);
 
     expect(result).toEqual([]);

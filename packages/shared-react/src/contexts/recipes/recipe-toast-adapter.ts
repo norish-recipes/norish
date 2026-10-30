@@ -1,11 +1,22 @@
+import {
+  NOT_A_RECIPE_REASON,
+  PRIVATE_ADDRESS_REASON,
+} from "@norish/shared/contracts/realtime/recipes";
+
 import type {
   RatingsSubscriptionCallbacks,
   RecipesSubscriptionCallbacks,
 } from "../../hooks/recipes/dashboard";
 import type { ToastAdapter, ToastSeverity } from "../toast-adapter";
-import { readProcessingToastPayload, readToastMessage } from "../toast-adapter";
+import { readToastMessage } from "../toast-adapter";
 
 export type RecipeToastSeverity = ToastSeverity;
+
+/** The server reasons a person can act on, each with its translation. */
+const TRANSLATED_REASONS: Record<string, string> = {
+  [NOT_A_RECIPE_REASON]: "recipes.toasts.notARecipe",
+  [PRIVATE_ADDRESS_REASON]: "recipes.toasts.privateAddress",
+};
 export type RecipeToastAdapter = ToastAdapter;
 
 export function createRecipeImportToasts(adapter: RecipeToastAdapter) {
@@ -39,8 +50,11 @@ export function createRecipeSubscriptionToasts(
           : null;
 
       adapter.show({
-        severity: "success",
+        severity: payload.incomplete ? "warning" : "success",
         title: adapter.translate("recipes.toasts.imported"),
+        description: payload.incomplete
+          ? adapter.translate("recipes.toasts.incomplete")
+          : undefined,
         actionLabel: recipeId ? adapter.translate("recipes.toasts.view") : undefined,
         onActionPress:
           recipeId && options?.onOpenRecipe
@@ -51,11 +65,15 @@ export function createRecipeSubscriptionToasts(
       });
     },
     onFailed: (payload) => {
+      const reasonKey = payload.reason ? TRANSLATED_REASONS[payload.reason] : undefined;
+
       adapter.show({
         severity: "danger",
         title: adapter.translate("recipes.toasts.failed"),
-        description:
-          readToastMessage(payload) ?? adapter.translate("recipes.toasts.failedDescription"),
+        // Server reasons stay in the job monitor; the ones a person can act on are translated.
+        description: reasonKey
+          ? adapter.translate(reasonKey)
+          : (readToastMessage(payload) ?? adapter.translate("recipes.toasts.failedDescription")),
       });
     },
   };

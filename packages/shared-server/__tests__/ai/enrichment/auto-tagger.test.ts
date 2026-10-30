@@ -75,7 +75,6 @@ describe("Auto-Tagger", () => {
   };
 
   beforeEach(() => {
-    vi.clearAllMocks();
     vi.mocked(getTagStrategy).mockResolvedValue("predefined");
     mocked.generateStructured.mockResolvedValue({ tags: [] });
     // No Decision Model for validation unless a test says otherwise: every

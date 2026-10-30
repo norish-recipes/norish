@@ -9,7 +9,7 @@
  */
 
 import { TRPCError } from "@trpc/server";
-import { beforeEach, describe, expect, it, vi } from "vitest";
+import { describe, expect, it, vi } from "vitest";
 
 import {
   createCookbook,
@@ -32,7 +32,7 @@ vi.mock("@norish/shared-server/media/storage", () => ({
   sweepCookbookImages: vi.fn(),
 }));
 // The auth middleware resolves the household itself; the test hands it one on
-// the base context so nothing reaches the cache or Redis.
+// the base context so nothing reaches the cache or Valkey.
 vi.mock("@norish/shared-server/cache/household", () => ({
   getCachedHouseholdForUser: vi.fn().mockResolvedValue(null),
 }));
@@ -75,10 +75,6 @@ function cookbookSummary(overrides: Record<string, unknown> = {}) {
 }
 
 describe("cookbook procedures", () => {
-  beforeEach(() => {
-    vi.clearAllMocks();
-  });
-
   describe("create", () => {
     it("stores a title against the caller and echoes the new cookbook", async () => {
       const summary = cookbookSummary();

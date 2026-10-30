@@ -15,6 +15,8 @@
  * only its first request pays for the rejected round trip. The fetch the
  * image model is built with leaves remembered parameters out of the body,
  * which reaches the one the SDK adds as well as the ones Norish passes.
+ * A dish's landscape is a preference too: a model that refuses it draws the
+ * square, which the save path crops (Gemini takes only 1024×1024).
  */
 import { APICallError } from "ai";
 
@@ -26,6 +28,9 @@ const DROPPABLE = ["response_format", "quality", "background"] as const;
 
 /** What each image model refused, keyed by `provider:model`. Process-local on purpose (ADR-0014). */
 const refusedByModel = new Map<string, Set<string>>();
+
+/** Image models that refused a dish's landscape and draw the square instead. */
+const refusingLandscape = new Set<string>();
 
 export function imageModelKey(provider: string, model: string): string {
   return `${provider}:${model}`;
@@ -46,8 +51,7 @@ export function rememberRefusedImageParameter(key: string, parameter: string): v
  * null: OpenAI names it in `error.param`, and its message quotes it.
  */
 export function refusedImageParameter(error: unknown): string | null {
-  if (!APICallError.isInstance(error)) return null;
-  if (error.statusCode !== 400 && error.statusCode !== 422) return null;
+  if (!isRequestRefusal(error)) return null;
 
   const named = (error.data as { error?: { param?: unknown } } | undefined)?.error?.param;
   const text = `${error.message} ${typeof error.responseBody === "string" ? error.responseBody : ""}`;
@@ -57,6 +61,21 @@ export function refusedImageParameter(error: unknown): string | null {
     DROPPABLE.find((parameter) => text.includes(`'${parameter}'`)) ??
     null
   );
+}
+
+/** A provider's 400 or 422: the request itself refused, not the provider's health. */
+export function isRequestRefusal(error: unknown): error is APICallError {
+  return APICallError.isInstance(error) && (error.statusCode === 400 || error.statusCode === 422);
+}
+
+/** Whether an image model refused the landscape before. */
+export function refusesLandscape(key: string): boolean {
+  return refusingLandscape.has(key);
+}
+
+/** Remember that an image model draws a dish's picture only as the square. */
+export function rememberRefusedLandscape(key: string): void {
+  refusingLandscape.add(key);
 }
 
 /** A fetch that leaves the parameters this model refused out of a JSON request body. */
@@ -83,4 +102,5 @@ export function withoutRefusedImageParameters(fetchImpl: typeof fetch, key: stri
 /** Test seam: forget every refusal learned. */
 export function resetImageParameterFallback(): void {
   refusedByModel.clear();
+  refusingLandscape.clear();
 }

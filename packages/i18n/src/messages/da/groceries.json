@@ -48,7 +48,7 @@
       "red": "Rød",
       "grey": "Grå",
       "blue": "Blå",
-      "violet": "Violet"
+      "violet": "Lilla"
     },
     "confirmDelete": "Er du sikker på, at du vil slette {storeName}?",
     "deleteWarning": "Varer i denne butik flyttes til Usorteret.",

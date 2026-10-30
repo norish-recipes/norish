@@ -43,8 +43,9 @@ export function formatAmountAsDecimal(n: number | null | string): string {
   if (isNaN(num)) return String(n);
   if (Number.isInteger(num)) return String(num);
 
-  // Remove trailing zeros (e.g., 2.50 -> 2.5)
-  return num.toFixed(2).replace(/\.?0+$/, "");
+  // Remove trailing zeros (e.g., 2.50 -> 2.5); a zero only starts the run when
+  // no zero or point stands before it, so the match never restarts inside one.
+  return num.toFixed(2).replace(/\.0+$|(?<![.0])0+$/, "");
 }
 
 /**

@@ -1,7 +1,8 @@
 "use client";
 
+import type { CookbookQueryResult } from "@/hooks/cookbooks";
+import type { ReactNode } from "react";
 import { useCallback, useState } from "react";
-import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { CookbookAddRecipesPanel } from "@/components/cookbooks/cookbook-add-recipes-panel";
 import { CookbookEditPanel, DeleteCookbookModal } from "@/components/cookbooks/cookbook-panels";
@@ -9,7 +10,9 @@ import RecipeViewModeToggle, {
   RecipeViewModeTabs,
 } from "@/components/dashboard/recipe-view-mode-toggle";
 import SearchInput from "@/components/dashboard/search-input";
+import { BackLink } from "@/components/page-transition";
 import { NotFoundView } from "@/components/shared/not-found-view";
+import RecipeGridSkeleton from "@/components/skeleton/recipe-grid-skeleton";
 import { usePermissionsContext } from "@/context/permissions-context";
 import { useCookbookQuery, useCookbooksMutations } from "@/hooks/cookbooks";
 import { useBackDestination } from "@/hooks/use-back-destination";
@@ -20,7 +23,7 @@ import {
   PlusIcon,
   TrashIcon,
 } from "@heroicons/react/16/solid";
-import { Button, Dropdown, Label, Spinner, Tabs } from "@heroui/react";
+import { Button, Dropdown, Label, Skeleton, Tabs } from "@heroui/react";
 import { useTranslations } from "next-intl";
 import { twMerge } from "tailwind-merge";
 
@@ -34,6 +37,85 @@ import {
 import CookbookMembers from "./cookbook-members";
 
 const COOKBOOK_HEADING_ID = "cookbook-heading";
+
+/**
+ * The page's header: the way back, the title over its count, the view toggle
+ * and the cookbook's actions, and the search. Grey until the cookbook is read.
+ */
+function CookbookHeader({
+  cookbook,
+  actions,
+}: {
+  cookbook?: CookbookQueryResult["cookbook"];
+  actions?: ReactNode;
+}) {
+  const t = useTranslations("recipes.cookbooks");
+  const back = useBackDestination();
+
+  return (
+    <div className="flex shrink-0 flex-col gap-4">
+      {/* A cookbook is reached from the Library and from a recipe that is
+          in it, so the way back names wherever that was. */}
+      <div className="w-fit">
+        <BackLink
+          className="text-muted hover:text-foreground flex items-center gap-1 text-base no-underline"
+          href={back.href}
+        >
+          <ArrowLeftIcon className="h-4 w-4" />
+          {cookbook ? back.label : <Skeleton className="my-1 h-4 w-28 rounded-md" />}
+        </BackLink>
+      </div>
+
+      <div className="flex min-h-10 flex-wrap items-center justify-between gap-3">
+        {/* The count under the title, as Today's date sits under Today, so a
+            long title keeps the row instead of giving way to it */}
+        {cookbook ? (
+          <div className="min-w-0">
+            <h1
+              className="text-foreground text-2xl leading-8 font-semibold break-words"
+              id={COOKBOOK_HEADING_ID}
+            >
+              {cookbook.title}
+            </h1>
+            <p className="text-muted mt-1 text-sm">
+              {t("recipeCount", { count: cookbook.memberCount })}
+            </p>
+          </div>
+        ) : (
+          <div className="flex flex-col gap-2 py-1">
+            <Skeleton className="h-6 w-48 rounded-lg" />
+            <Skeleton className="h-4 w-20 rounded-md" />
+          </div>
+        )}
+
+        <div className="flex items-center gap-2">
+          <RecipeViewModeToggle />
+          {actions}
+        </div>
+      </div>
+
+      <div className="min-w-0">
+        <SearchInput />
+      </div>
+    </div>
+  );
+}
+
+/** The cookbook page before its cookbook is read: its header and the Library's grid skeleton. */
+export function CookbookSkeleton() {
+  return (
+    <section className="flex min-h-0 flex-1 flex-col">
+      <RecipeViewModeTabs>
+        <CookbookHeader />
+        {(["grid", "list"] as const).map((variant) => (
+          <Tabs.Panel key={variant} className="mt-0 min-h-0 flex-1 p-0" id={variant}>
+            <RecipeGridSkeleton variant={variant} />
+          </Tabs.Panel>
+        ))}
+      </RecipeViewModeTabs>
+    </section>
+  );
+}
 
 /**
  * A cookbook's own page: its own address, so it can be linked, bookmarked and
@@ -51,7 +133,6 @@ export default function CookbookPage({ cookbookId }: { cookbookId: string }) {
   const { cookbook, isNotFound } = useCookbookQuery(cookbookId);
   const { deleteCookbook } = useCookbooksMutations();
   const { canEditRecipe, canDeleteRecipe } = usePermissionsContext();
-  const back = useBackDestination();
   const [menuOpen, setMenuOpen] = useState(false);
   const [editOpen, setEditOpen] = useState(false);
   const [addOpen, setAddOpen] = useState(false);
@@ -68,13 +149,7 @@ export default function CookbookPage({ cookbookId }: { cookbookId: string }) {
     return <NotFoundView message={t("notFoundHint")} title={t("notFound")} />;
   }
 
-  if (!cookbook) {
-    return (
-      <div className="flex min-h-[40vh] items-center justify-center">
-        <Spinner color="accent" size="lg" />
-      </div>
-    );
-  }
+  if (!cookbook) return <CookbookSkeleton />;
 
   // Cookbooks answer to the recipe permission policy (ADR-0027).
   const canEdit = cookbook.userId ? canEditRecipe(cookbook.userId) : true;
@@ -83,137 +158,99 @@ export default function CookbookPage({ cookbookId }: { cookbookId: string }) {
   return (
     <section aria-labelledby={COOKBOOK_HEADING_ID} className="flex min-h-0 flex-1 flex-col">
       <RecipeViewModeTabs>
-        <div className="flex shrink-0 flex-col gap-4">
-          {/* A cookbook is reached from the Library and from a recipe that is
-              in it, so the way back names wherever that was. */}
-          <div className="w-fit">
-            <Link
-              className="text-muted hover:text-foreground flex items-center gap-1 text-base no-underline"
-              href={back.href}
-            >
-              <ArrowLeftIcon className="h-4 w-4" />
-              {back.label}
-            </Link>
-          </div>
-
-          <div className="flex min-h-10 flex-wrap items-center justify-between gap-3">
-            {/* The count under the title, as Today's date sits under Today, so a
-                long title keeps the row instead of giving way to it */}
-            <div className="min-w-0">
-              <h1
-                className="text-foreground text-2xl leading-8 font-semibold break-words"
-                id={COOKBOOK_HEADING_ID}
-              >
-                {cookbook.title}
-              </h1>
-              <p className="text-muted mt-1 text-sm">
-                {t("recipeCount", { count: cookbook.memberCount })}
-              </p>
-            </div>
-
-            <div className="flex items-center gap-2">
-              <RecipeViewModeToggle />
-              {(canEdit || canDelete) && (
-                <Dropdown isOpen={menuOpen} onOpenChange={setMenuOpen}>
-                  <Button
-                    isIconOnly
-                    aria-label={t("options")}
-                    className={`transition active:scale-95 ${cssHeaderIconControl}`}
-                    size="md"
-                    variant="tertiary"
-                  >
-                    <EllipsisHorizontalIcon className={cssHeaderIcon} />
-                  </Button>
-                  <Dropdown.Popover className="bg-overlay z-[500]" placement="bottom end">
-                    <Dropdown.Menu aria-label={t("options")}>
-                      {canEdit ? (
-                        <Dropdown.Item
-                          key="add"
-                          className="py-1 data-[focus=true]:bg-transparent data-[hovered=true]:bg-transparent"
-                          id="add"
-                          textValue={t("addRecipes")}
+        <CookbookHeader
+          actions={
+            (canEdit || canDelete) && (
+              <Dropdown isOpen={menuOpen} onOpenChange={setMenuOpen}>
+                <Button
+                  isIconOnly
+                  aria-label={t("options")}
+                  className={`transition active:scale-95 ${cssHeaderIconControl}`}
+                  size="md"
+                  variant="tertiary"
+                >
+                  <EllipsisHorizontalIcon className={cssHeaderIcon} />
+                </Button>
+                <Dropdown.Popover className="bg-overlay z-[500]" placement="bottom end">
+                  <Dropdown.Menu aria-label={t("options")}>
+                    {canEdit ? (
+                      <Dropdown.Item
+                        key="add"
+                        className="py-1 data-[focus=true]:bg-transparent data-[hovered=true]:bg-transparent"
+                        id="add"
+                        textValue={t("addRecipes")}
+                      >
+                        <Button
+                          className={twMerge("w-full justify-start bg-transparent", cssButtonPill)}
+                          size="md"
+                          variant="tertiary"
+                          onPress={() => {
+                            setMenuOpen(false);
+                            setAddOpen(true);
+                          }}
                         >
-                          <Button
-                            className={twMerge(
-                              "w-full justify-start bg-transparent",
-                              cssButtonPill
-                            )}
-                            size="md"
-                            variant="tertiary"
-                            onPress={() => {
-                              setMenuOpen(false);
-                              setAddOpen(true);
-                            }}
-                          >
-                            <PlusIcon className="text-muted size-4" />
-                            <Label className="text-sm font-medium">{t("addRecipes")}</Label>
-                          </Button>
-                        </Dropdown.Item>
-                      ) : null}
-                      {canEdit ? (
-                        <Dropdown.Item
-                          key="edit"
-                          className="py-1 data-[focus=true]:bg-transparent data-[hovered=true]:bg-transparent"
-                          id="edit"
-                          textValue={t("editTitle")}
+                          <PlusIcon className="text-muted size-4" />
+                          <Label className="text-sm font-medium">{t("addRecipes")}</Label>
+                        </Button>
+                      </Dropdown.Item>
+                    ) : null}
+                    {canEdit ? (
+                      <Dropdown.Item
+                        key="edit"
+                        className="py-1 data-[focus=true]:bg-transparent data-[hovered=true]:bg-transparent"
+                        id="edit"
+                        textValue={t("editTitle")}
+                      >
+                        <Button
+                          className={twMerge("w-full justify-start bg-transparent", cssButtonPill)}
+                          size="md"
+                          variant="tertiary"
+                          // The menu closes before the action runs, so its
+                          // items cannot rebuild mid-exit and steal focus
+                          // from the panel the action opens.
+                          onPress={() => {
+                            setMenuOpen(false);
+                            setEditOpen(true);
+                          }}
                         >
-                          <Button
-                            className={twMerge(
-                              "w-full justify-start bg-transparent",
-                              cssButtonPill
-                            )}
-                            size="md"
-                            variant="tertiary"
-                            // The menu closes before the action runs, so its
-                            // items cannot rebuild mid-exit and steal focus
-                            // from the panel the action opens.
-                            onPress={() => {
-                              setMenuOpen(false);
-                              setEditOpen(true);
-                            }}
-                          >
-                            <PencilSquareIcon className="text-muted size-4" />
-                            <Label className="text-sm font-medium">{t("editTitle")}</Label>
-                          </Button>
-                        </Dropdown.Item>
-                      ) : null}
-                      {canDelete ? (
-                        <Dropdown.Item
-                          key="delete"
-                          className="py-1 data-[focus=true]:bg-transparent data-[hovered=true]:bg-transparent"
-                          id="delete"
-                          textValue={t("deleteTitle")}
+                          <PencilSquareIcon className="text-muted size-4" />
+                          <Label className="text-sm font-medium">{t("editTitle")}</Label>
+                        </Button>
+                      </Dropdown.Item>
+                    ) : null}
+                    {canDelete ? (
+                      <Dropdown.Item
+                        key="delete"
+                        className="py-1 data-[focus=true]:bg-transparent data-[hovered=true]:bg-transparent"
+                        id="delete"
+                        textValue={t("deleteTitle")}
+                      >
+                        <Button
+                          className={twMerge(
+                            "w-full justify-start bg-transparent",
+                            cssButtonPillDanger
+                          )}
+                          size="md"
+                          variant="tertiary"
+                          onPress={() => {
+                            setMenuOpen(false);
+                            setDeleteOpen(true);
+                          }}
                         >
-                          <Button
-                            className={twMerge(
-                              "w-full justify-start bg-transparent",
-                              cssButtonPillDanger
-                            )}
-                            size="md"
-                            variant="tertiary"
-                            onPress={() => {
-                              setMenuOpen(false);
-                              setDeleteOpen(true);
-                            }}
-                          >
-                            <TrashIcon className="text-danger size-4" />
-                            <Label className="text-danger text-sm font-medium">
-                              {t("deleteTitle")}
-                            </Label>
-                          </Button>
-                        </Dropdown.Item>
-                      ) : null}
-                    </Dropdown.Menu>
-                  </Dropdown.Popover>
-                </Dropdown>
-              )}
-            </div>
-          </div>
-
-          <div className="min-w-0">
-            <SearchInput />
-          </div>
-        </div>
+                          <TrashIcon className="text-danger size-4" />
+                          <Label className="text-danger text-sm font-medium">
+                            {t("deleteTitle")}
+                          </Label>
+                        </Button>
+                      </Dropdown.Item>
+                    ) : null}
+                  </Dropdown.Menu>
+                </Dropdown.Popover>
+              </Dropdown>
+            )
+          }
+          cookbook={cookbook}
+        />
 
         <Tabs.Panel className="mt-0 min-h-0 flex-1 p-0" id="grid">
           <CookbookMembers cookbookId={cookbookId} variant="grid" />

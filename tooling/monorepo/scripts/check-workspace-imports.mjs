@@ -11,7 +11,6 @@ const IGNORED_DIRS = new Set([
   ".turbo",
   "build",
   "dist",
-  "dist-server",
   "node_modules",
 ]);
 

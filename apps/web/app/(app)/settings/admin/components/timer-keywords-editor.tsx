@@ -3,8 +3,10 @@
 import { useCallback, useEffect, useState } from "react";
 import { SwitchRow } from "@/app/(app)/settings/components/setting-row";
 import SettingsSwitch from "@/app/(app)/settings/components/settings-switch";
-import { ArrowPathIcon, ExclamationTriangleIcon } from "@heroicons/react/16/solid";
-import { Button, Description, Label, TextArea, TextField } from "@heroui/react";
+import { ActionButton, ActionButtonGroup } from "@/components/shared/action-button";
+import { usePending } from "@/hooks/use-pending";
+import { ExclamationTriangleIcon } from "@heroicons/react/16/solid";
+import { Description, Label, TextArea, TextField } from "@heroui/react";
 import { useTranslations } from "next-intl";
 
 interface TimerKeywordsEditorProps {
@@ -39,22 +41,29 @@ export default function TimerKeywordsEditor({
   const t = useTranslations("settings.admin.contentDetection.timerKeywords");
   const tActions = useTranslations("common.actions");
   const [isEnabled, setIsEnabled] = useState(enabled);
-  const [hoursText, setHoursText] = useState("");
-  const [minutesText, setMinutesText] = useState("");
-  const [secondsText, setSecondsText] = useState("");
+  const [hoursText, setHoursText] = useState(() => hours.join(", "));
+  const [minutesText, setMinutesText] = useState(() => minutes.join(", "));
+  const [secondsText, setSecondsText] = useState(() => seconds.join(", "));
   const [error, setError] = useState<string | null>(null);
-  const [saving, setSaving] = useState(false);
+  const [saving, whileSaving] = usePending();
   const [isDirty, setIsDirty] = useState(false);
+  const [prevKeywords, setPrevKeywords] = useState({ enabled, hours, minutes, seconds });
 
   // Initialize text when keywords change
-  useEffect(() => {
+  if (
+    enabled !== prevKeywords.enabled ||
+    hours !== prevKeywords.hours ||
+    minutes !== prevKeywords.minutes ||
+    seconds !== prevKeywords.seconds
+  ) {
+    setPrevKeywords({ enabled, hours, minutes, seconds });
     setHoursText(hours.join(", "));
     setMinutesText(minutes.join(", "));
     setSecondsText(seconds.join(", "));
     setIsEnabled(enabled);
     setIsDirty(false);
     setError(null);
-  }, [enabled, hours, minutes, seconds]);
+  }
   useEffect(() => {
     onDirtyChange?.(isDirty);
   }, [isDirty, onDirtyChange]);
@@ -109,38 +118,36 @@ export default function TimerKeywordsEditor({
       setError("At least one keyword required in hours, minutes, or seconds");
       return;
     }
-    setSaving(true);
-    try {
-      const result = await onUpdate({
+    await whileSaving(() =>
+      onUpdate({
         enabled: isEnabled,
         hours: parsedHours,
         minutes: parsedMinutes,
         seconds: parsedSeconds,
-      });
-      if (result.success) {
-        setIsDirty(false);
-      } else if (result.error) {
-        setError(result.error);
-      }
-    } catch (e) {
-      setError(e instanceof Error ? e.message : "Failed to save");
-    } finally {
-      setSaving(false);
-    }
-  }, [hoursText, minutesText, secondsText, isEnabled, error, onUpdate]);
+      })
+        .then((result) => {
+          if (result.success) {
+            setIsDirty(false);
+          } else if (result.error) {
+            setError(result.error);
+          }
+        })
+        .catch((e: unknown) => setError(e instanceof Error ? e.message : "Failed to save"))
+    );
+  }, [hoursText, minutesText, secondsText, isEnabled, error, onUpdate, whileSaving]);
   const handleRestoreDefaults = useCallback(async () => {
-    setSaving(true);
-    try {
-      const result = await onRestoreDefaults();
-      if (!result.success && result.error) {
-        setError(result.error);
-      }
-    } catch (e) {
-      setError(e instanceof Error ? e.message : "Failed to restore defaults");
-    } finally {
-      setSaving(false);
-    }
-  }, [onRestoreDefaults]);
+    await whileSaving(() =>
+      onRestoreDefaults()
+        .then((result) => {
+          if (!result.success && result.error) {
+            setError(result.error);
+          }
+        })
+        .catch((e: unknown) =>
+          setError(e instanceof Error ? e.message : "Failed to restore defaults")
+        )
+    );
+  }, [onRestoreDefaults, whileSaving]);
   return (
     <div className="flex flex-col gap-4">
       <SwitchRow description={t("description")} title={t("enableToggle")}>
@@ -202,21 +209,19 @@ export default function TimerKeywordsEditor({
         </div>
       )}
 
-      <div className="flex flex-wrap items-center justify-end gap-2">
-        <Button isDisabled={saving} onPress={handleRestoreDefaults} variant="tertiary">
-          {<ArrowPathIcon className="h-5 w-5" />}
-          {tActions("restoreDefaults")}
-        </Button>
-
-        <Button
+      <ActionButtonGroup>
+        <ActionButton action="reset" isDisabled={saving} onPress={handleRestoreDefaults}>
+          {tActions("reset")}
+        </ActionButton>
+        <ActionButton
+          action="save"
           isDisabled={!!error || !isDirty}
-          onPress={handleSave}
-          variant="primary"
           isPending={saving}
+          onPress={handleSave}
         >
           {tActions("save")}
-        </Button>
-      </div>
+        </ActionButton>
+      </ActionButtonGroup>
     </div>
   );
 }

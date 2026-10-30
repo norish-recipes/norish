@@ -19,8 +19,8 @@ export const UserCaldavConfigUpdateSchema = createUpdateSchema(userCaldavConfig)
 // Decrypted config for client display
 export const UserCaldavConfigDecryptedSchema = z.object({
   userId: z.string(),
-  serverUrl: z.string().url(),
-  calendarUrl: z.string().url().optional().nullable(),
+  serverUrl: z.url(),
+  calendarUrl: z.url().optional().nullable(),
   username: z.string(),
   password: z.string(),
   enabled: z.boolean(),
@@ -40,8 +40,8 @@ export const UserCaldavConfigWithoutPasswordSchema = UserCaldavConfigDecryptedSc
 // Input for saving config (before encryption)
 export const SaveCaldavConfigInputSchema = z.object({
   version: z.number().int().positive().optional(),
-  serverUrl: z.string().url(),
-  calendarUrl: z.string().url().optional().nullable(),
+  serverUrl: z.url(),
+  calendarUrl: z.url().optional().nullable(),
   username: z.string().min(1),
   password: z.string().min(1),
   enabled: z.boolean(),

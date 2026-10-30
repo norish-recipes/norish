@@ -7,7 +7,7 @@ import { saveImageBytes } from "@norish/shared-server/media/storage";
 import { FullRecipeInsertDTO } from "@norish/shared/contracts";
 import { inferSystemUsedFromParsed } from "@norish/shared/lib/determine-recipe-system";
 
-import { sumMinutes, withLineFoodTexts } from "./parser-helpers";
+import { galleryOf, sumMinutes, withLineFoodTexts } from "./parser-helpers";
 
 // Zod schemas for Tandoor recipe structure
 const TandoorFoodSchema = z.object({
@@ -343,7 +343,7 @@ export async function parseTandoorRecipeToDTO(
     id: recipeId,
     name: name,
     url: validated.source_url || undefined,
-    image: image || undefined,
+    images: galleryOf(image),
     description: validated.description || undefined,
     servings: validated.servings || undefined,
     systemUsed: systemUsed,
@@ -353,7 +353,7 @@ export async function parseTandoorRecipeToDTO(
     steps: steps,
     tags: tags,
     categories: categories,
-  } as FullRecipeInsertDTO;
+  };
 
   // Validate against our schema
   const parsed = FullRecipeInsertSchema.safeParse(dto);

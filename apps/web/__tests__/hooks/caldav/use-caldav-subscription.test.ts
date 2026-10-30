@@ -79,7 +79,6 @@ vi.mock("@/app/providers/trpc-provider", () => ({
 
 describe("CalDAV Subscription Hook", () => {
   beforeEach(() => {
-    vi.clearAllMocks();
     _subscriptionCallback = null;
     mockSubscriptionEmitter.removeAllListeners();
   });
@@ -217,9 +216,9 @@ describe("CalDAV Subscription Hook", () => {
         status.id === updatedStatus.id ? updatedStatus : status
       );
 
-      expect(newStatuses[0].syncStatus).toBe("synced");
-      expect(newStatuses[0].version).toBe(2);
-      expect(newStatuses[1].syncStatus).toBe("pending");
+      expect(newStatuses[0]!.syncStatus).toBe("synced");
+      expect(newStatuses[0]!.version).toBe(2);
+      expect(newStatuses[1]!.syncStatus).toBe("pending");
     });
 
     it("summary calculation reflects status changes", () => {
@@ -251,7 +250,7 @@ describe("CalDAV Subscription Hook", () => {
       const updatedStatuses = statusExists ? existingStatuses : [newStatus, ...existingStatuses];
 
       expect(updatedStatuses).toHaveLength(2);
-      expect(updatedStatuses[0].id).toBe("status-2");
+      expect(updatedStatuses[0]!.id).toBe("status-2");
     });
   });
 });

@@ -2,7 +2,7 @@
  * Pure Live/Offline state machine for the web connectivity runtime.
  *
  * "Offline" means the Norish backend's HTTP surface is unreachable — the verdict
- * comes from probing `/api/v1/health` (see {@link ./probe}), never from
+ * comes from probing `/api/v1/health/ready` (see {@link ./probe}), never from
  * `navigator.onLine`, which measures the internet rather than the backend.
  *
  * This module is intentionally free of React and DOM concerns so the transition

@@ -38,6 +38,21 @@ const SEEDED = {
   },
 };
 
+/** The recurrence words the upgraded release ships: English, now with a year. */
+const SHIPPED_RECURRENCE = {
+  locales: {
+    en: {
+      everyWords: ["every"],
+      otherWords: ["other"],
+      onWords: ["on"],
+      numberWords: {},
+      unitWords: { day: ["day"], week: ["week"], month: ["month"], year: ["year"] },
+      weekdayWords: {},
+      intervalHints: [],
+    },
+  },
+};
+
 const mockStore = new Map<string, unknown>();
 const mockGetConfig = vi.fn((key: string) => Promise.resolve(mockStore.get(key) ?? null));
 const mockSetConfig = vi.fn((key: string, value: unknown) => {
@@ -86,12 +101,7 @@ vi.mock("@norish/config/units.default.json", () => ({ default: SHIPPED }));
 vi.mock("@norish/config/content-indicators.default.json", () => ({
   default: { schemaIndicators: [], contentIndicators: [] },
 }));
-vi.mock("@norish/config/recurrence-config.default.json", () => ({ default: { locales: {} } }));
-
-vi.mock("@norish/shared-server/ai/prompts/loader", () => ({
-  loadDefaultPrompts: vi.fn(() => ({})),
-  loadRetiredDefaultPrompts: vi.fn(() => ({})),
-}));
+vi.mock("@norish/config/recurrence-config.default.json", () => ({ default: SHIPPED_RECURRENCE }));
 
 async function bootOnce(): Promise<void> {
   const { seedServerConfig } = await import("@norish/api/startup/seed-config");
@@ -105,7 +115,6 @@ function storedUnits(): { units: unknown; isOverridden: boolean } {
 }
 
 beforeEach(() => {
-  vi.clearAllMocks();
   vi.resetModules();
   mockStore.clear();
   mockServerConfig = {
@@ -122,6 +131,10 @@ beforeEach(() => {
     VIDEO_MAX_LENGTH_SECONDS: 120,
     TRANSCRIPTION_PROVIDER: "disabled",
     TRANSCRIPTION_MODEL: "whisper-1",
+    OBSCURA_ENDPOINT: "ws://obscura:9222",
+    PAGE_SOLVER_ENABLED: false,
+    ALLOW_PRIVATE_ADDRESSES: false,
+    PAGE_RENDERER_TIMEOUT_MS: 45000,
   };
 
   // Rows every boot walks past, stored as a healthy deployment has them, so
@@ -132,7 +145,7 @@ beforeEach(() => {
     schemaIndicators: [],
     contentIndicators: [],
   });
-  mockStore.set(ServerConfigKeys.RECURRENCE_CONFIG, { locales: {} });
+  mockStore.set(ServerConfigKeys.RECURRENCE_CONFIG, { ...SHIPPED_RECURRENCE, isOverridden: false });
   mockStore.set(ServerConfigKeys.SCHEDULER_CLEANUP_MONTHS, 3);
   mockStore.set(ServerConfigKeys.JOB_RETENTION, {
     keepCompleted: 100,
@@ -265,5 +278,52 @@ describe("the ingredient words", () => {
 
     expect(storedWords().isOverridden).toBe(true);
     expect(storedWords().words.nl).toMatchObject({ preparation: ["gesnipperd"] });
+  });
+});
+
+describe("the recurrence words", () => {
+  function storedRecurrence() {
+    return mockStore.get(ServerConfigKeys.RECURRENCE_CONFIG);
+  }
+
+  it("follow the shipped words on a deployment that stored them before they could be edited", async () => {
+    const en = SHIPPED_RECURRENCE.locales.en;
+
+    mockStore.set(ServerConfigKeys.RECURRENCE_CONFIG, {
+      locales: {
+        en: { ...en, unitWords: { day: ["day"], week: ["week"], month: ["month"] } },
+      },
+    });
+
+    await bootOnce();
+
+    expect(storedRecurrence()).toEqual({ ...SHIPPED_RECURRENCE, isOverridden: false });
+  });
+
+  it("are not rewritten where they already match the file", async () => {
+    mockStore.set(ServerConfigKeys.RECURRENCE_CONFIG, {
+      ...SHIPPED_RECURRENCE,
+      isOverridden: false,
+    });
+
+    await bootOnce();
+
+    expect(
+      mockSetConfig.mock.calls.some(([key]) => key === ServerConfigKeys.RECURRENCE_CONFIG),
+      "rewrote recurrence words that already match the file"
+    ).toBe(false);
+  });
+
+  it("stay as an administrator edited them", async () => {
+    const edited = {
+      locales: { nl: { ...SHIPPED_RECURRENCE.locales.en, everyWords: ["elke"] } },
+      isOverridden: true,
+    };
+
+    mockStore.set(ServerConfigKeys.RECURRENCE_CONFIG, edited);
+
+    await bootOnce();
+
+    expect(storedRecurrence()).toEqual(edited);
   });
 });

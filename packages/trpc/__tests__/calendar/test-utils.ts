@@ -2,8 +2,8 @@ import { vi } from "vitest";
 
 import type {
   HouseholdWithUsersNamesDto,
-  NoteViewDto,
-  PlannedRecipeViewDto,
+  PlannedNoteItem,
+  PlannedRecipeItem,
   Slot,
   User,
 } from "@norish/shared/contracts";
@@ -85,8 +85,8 @@ export function createMockCallerContext(
  * Create a mock planned recipe for testing
  */
 export function createMockPlannedRecipe(
-  overrides: Partial<PlannedRecipeViewDto> = {}
-): PlannedRecipeViewDto {
+  overrides: Partial<PlannedRecipeItem> = {}
+): PlannedRecipeItem {
   return {
     id: `planned-recipe-${crypto.randomUUID()}`,
     recipeId: "recipe-1",
@@ -103,7 +103,7 @@ export function createMockPlannedRecipe(
 /**
  * Create a mock note for testing
  */
-export function createMockNote(overrides: Partial<NoteViewDto> = {}): NoteViewDto {
+export function createMockNote(overrides: Partial<PlannedNoteItem> = {}): PlannedNoteItem {
   return {
     id: `note-${crypto.randomUUID()}`,
     title: "Test Note",

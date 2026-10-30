@@ -12,15 +12,24 @@ services:
       AUTH_URL: http://norish.example.com # The URL where Norish is reachable
       DATABASE_URL: postgres://postgres:norish@db:5432/norish
       MASTER_KEY: <32-byte-base64-key> # Generate with: openssl rand -base64 32
-      OBSCURA_ENDPOINT: ws://obscura:9222 # Obscura CDP endpoint used to render pages for URL imports
+
+      # Page renderers: seed Settings => Admin => Page renderers at first start
+      OBSCURA_ENDPOINT: ws://obscura:9222 # Obscura CDP endpoint. Empty: Obscura off
       OBSCURA_CDP_TOKEN: <random-token> # Generate with: openssl rand -hex 32. Same value on the obscura service
+      # A Chromium browser, tried after Obscura. Uncomment with the chromium service below
+      # CHROMIUM_BROWSER_ENDPOINT: http://chromium:9222
+      # A FlareSolverr-compatible solver, tried when the browsers fail. Uncomment one with its service below
+      # PAGE_SOLVER_ENABLED: true
+      # PAGE_SOLVER_ENDPOINT: http://flaresolverr:8191/v1
+      # PAGE_SOLVER_ENDPOINT: http://byparr:8191/v1
 
       # Optional
       UPLOADS_DIR: /app/uploads # Runtime volume path
       # PARSER_API_TIMEOUT_MS: 15000
-      # OBSCURA_NAVIGATION_TIMEOUT_MS: 45000 # How long a URL import waits for the page to load
+      # PAGE_RENDERER_TIMEOUT_MS: 45000 # How long a Page Renderer is given to load a page
       # NEXT_PUBLIC_LOG_LEVEL: info       # trace, debug, info, warn, error, fatal (default: info in prod, debug in dev)
       # TRUSTED_ORIGINS:http://192.168.1.100:3000,https://norish.example.com  # Additional trusted origins, comma separated. Useful when behind a proxy or using multiple domains.
+      # TRUSTED_PROXIES: 173.245.48.0/20,10.0.0.2 # Reverse proxy IPs or CIDR ranges, comma separated. Needed behind more than one proxy.
 
       # ─────────────────────────────────────────────────────────────────────────
       # FIRST USER SETUP
@@ -50,13 +59,13 @@ services:
       # GOOGLE_CLIENT_ID: <google-client-id>
       # GOOGLE_CLIENT_SECRET: <google-client-secret>
 
-      # Redis for real-time events (required)
-      REDIS_URL: redis://redis:6379
+      # Valkey for real-time events (required)
+      VALKEY_URL: valkey://valkey:6379
     healthcheck:
       test:
         [
           "CMD-SHELL",
-          'node -e "require(''http'').get(''http://localhost:3000/api/v1/health'', r => process.exit(r.statusCode===200?0:1))"',
+          'node -e "require(''http'').get(''http://localhost:3000'' + (process.env.NEXT_PUBLIC_BASE_PATH || '''') + ''/api/v1/health/live'', r => process.exit(r.statusCode===200?0:1))"',
         ]
       interval: 1m
       timeout: 15s
@@ -64,7 +73,7 @@ services:
       start_period: 1m
     depends_on:
       - db
-      - redis
+      - valkey
 
   # PostgreSQL Database
   db:
@@ -84,22 +93,41 @@ services:
   # the Compose network; no host port on purpose, since anyone who can reach
   # the CDP server can drive the browser.
   obscura:
-    image: norishapp/obscura:0.2.4-norish.1
+    image: norishapp/obscura:0.2.5-norish.1
     container_name: norish-obscura
     restart: unless-stopped
     environment:
       OBSCURA_CDP_TOKEN: <random-token> # Same value as on the norish service
 
-  # Redis for real-time events
-  redis:
-    image: redis:8.10.1
-    container_name: norish-redis
+  # A fingerprint-spoofing Chromium for pages that challenge Obscura, such as
+  # Allerhande's. amd64 only. No host port: its CDP server takes no password.
+  # chromium:
+  #   image: norishapp/chromium:150.0.7871.186-norish.1
+  #   container_name: norish-chromium
+  #   restart: unless-stopped
+  #   shm_size: 1gb # Docker's default 64 MB crashes it
+
+  # A solver for pages that challenge Obscura. Run one of the two, with no
+  # host port: its /v1 endpoint takes no password.
+  # flaresolverr:
+  #   image: ghcr.io/flaresolverr/flaresolverr:v3.5.2
+  #   container_name: norish-flaresolverr
+  #   restart: unless-stopped
+  # byparr:
+  #   image: ghcr.io/thephaseless/byparr:3.0.4
+  #   container_name: norish-byparr
+  #   restart: unless-stopped
+
+  # Valkey for real-time events
+  valkey:
+    image: valkey/valkey:9
+    container_name: norish-valkey
     restart: unless-stopped
     volumes:
-      - redis_data:/data
+      - valkey_data:/data
 
 # Use this or map the volume to a host path if you want to persist data
 volumes:
   db_data:
   norish_data:
-  redis_data:
+  valkey_data:

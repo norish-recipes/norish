@@ -14,6 +14,7 @@ import { useHiddenItemVisibility } from "@/hooks/user/use-hidden-item-visibility
 import { withOrigin } from "@/lib/back-destination";
 import { useAppStore } from "@/stores/useAppStore";
 import {
+  ArchiveBoxIcon,
   CalendarDaysIcon,
   ClockIcon,
   EllipsisHorizontalIcon,
@@ -25,10 +26,11 @@ import {
 } from "@heroicons/react/20/solid";
 import { PhotoIcon } from "@heroicons/react/24/outline";
 import { Button, Card, Chip, Tooltip, useOverlayState } from "@heroui/react";
-import { useTranslations } from "next-intl";
+import { useFormatter, useTranslations } from "next-intl";
 
 import { RecipeDashboardDTO } from "@norish/shared/contracts";
 import { RECIPE_DASHBOARD_KEYS } from "@norish/shared/contracts/zod";
+import { addBasePath } from "@norish/shared/lib/base-path";
 import {
   formatMinutesHM,
   isAllergenTag,
@@ -138,6 +140,7 @@ function RecipeCardComponent({
   } = useOverlayState();
   const t = useTranslations("recipes.card");
   const tCookbooks = useTranslations("recipes.cookbooks");
+  const format = useFormatter();
   const { showRatings, showFavorites } = useHiddenItemVisibility();
 
   // Automatically prefetch recipe when card enters viewport
@@ -181,7 +184,7 @@ function RecipeCardComponent({
   const description = recipe.description?.trim() || "";
 
   // The resolved primary image: the list projection serves the first gallery
-  // image, with the deprecated legacy scalar only as a fallback.
+  // image.
   const thumbnailImage = recipe.image;
   const showImage = thumbnailImage && failedImage !== thumbnailImage;
 
@@ -287,7 +290,7 @@ function RecipeCardComponent({
         alt={recipe.name}
         className={`pointer-events-none h-full w-full object-cover transition-transform duration-300 ease-in-out ${open ? "scale-100" : hoverScaleClass} `}
         loading="lazy"
-        src={thumbnailImage}
+        src={addBasePath(thumbnailImage)}
         onError={() => setFailedImage(thumbnailImage)}
       />
     ) : (
@@ -298,8 +301,22 @@ function RecipeCardComponent({
       </div>
     );
 
+  const pantryPercent =
+    recipe.pantryCoverage === undefined
+      ? null
+      : format.number(recipe.pantryCoverage, { style: "percent" });
+
   const facts = (
     <>
+      {pantryPercent && (
+        <CardFact
+          icon={ArchiveBoxIcon}
+          iconClassName={recipe.pantryCoverage === 1 ? "text-success" : "text-muted"}
+        >
+          <span aria-hidden>{pantryPercent}</span>
+          <span className="sr-only">{t("pantryCoverage", { percent: pantryPercent })}</span>
+        </CardFact>
+      )}
       {typeof averageRating === "number" && averageRating > 0 && showRatings && (
         <CardFact icon={StarIcon} iconClassName="text-warning">
           {Math.round(averageRating)}

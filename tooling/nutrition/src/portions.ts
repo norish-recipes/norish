@@ -66,6 +66,7 @@ export function pieceWeightOf(portions: readonly Portion[]): number | null {
  * (yields 2 cups whipped)" is the cream as poured.
  */
 function isWhipped(portion: Portion): boolean {
+  // eslint-disable-next-line sonarjs/super-linear-regex -- reads the portion labels this tool downloads, not outside input; a narrower pattern could change the tables
   return /\bwhipped\b/.test(label(portion).replace(/\([^)]*\)/g, ""));
 }
 

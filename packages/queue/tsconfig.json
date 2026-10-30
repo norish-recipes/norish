@@ -2,6 +2,7 @@
   "extends": "@norish/tsconfig/compiled-package.json",
   "compilerOptions": {
     "rootDir": "./src",
+    "types": ["node"],
     "paths": {
       "@norish/queue/*": ["./src/*"]
     }

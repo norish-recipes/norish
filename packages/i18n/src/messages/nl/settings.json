@@ -11,20 +11,43 @@
     "ingredients": "Ingrediënten"
   },
   "user": {
+    "signInMethods": {
+      "title": "Inlogmethoden",
+      "description": "Koppel je account aan SSO.",
+      "password": "Wachtwoord",
+      "addAnother": "Voeg een andere manier van inloggen toe",
+      "addProvider": "{provider} koppelen",
+      "added": "Toegevoegd op {date}",
+      "remove": "Ontkoppelen",
+      "unavailable": "Momenteel niet beschikbaar",
+      "changePassword": "Wachtwoord wijzigen",
+      "currentPassword": "Huidig wachtwoord",
+      "newPassword": "Nieuw wachtwoord",
+      "confirmPassword": "Bevestig nieuw wachtwoord",
+      "signOutOthers": "Andere sessies afmelden",
+      "passwordChanged": "Wachtwoord gewijzigd.",
+      "errors": {
+        "usedByAnotherAccount": "Deze inlog wordt al door een ander account gebruikt.",
+        "lastMethod": "Je hebt minstens één manier nodig om in te loggen.",
+        "signInAgain": "Log opnieuw in om dit te verwijderen.",
+        "addFailed": "Deze inlogmethode kon niet worden toegevoegd.",
+        "removeFailed": "Deze inlogmethode kon niet worden verwijderd.",
+        "wrongPassword": "Het huidige wachtwoord is onjuist.",
+        "changeFailed": "Wachtwoord wijzigen mislukt. Probeer het opnieuw."
+      }
+    },
     "profile": {
       "title": "Profiel",
       "nameLabel": "Naam",
       "namePlaceholder": "Je naam",
       "emailLabel": "E-mail",
       "avatarHint": "Klik op je avatar om de afbeelding te wijzigen",
-      "deleteAvatar": "Profielfoto verwijderen",
-      "saveChanges": "Wijzigingen opslaan"
+      "deleteAvatar": "Profielfoto verwijderen"
     },
     "allergies": {
       "title": "Allergieën",
       "description": "Voeg je voedselallergieën toe om gewaarschuwd te worden bij het plannen van recepten met allergenen.",
-      "placeholder": "Typ allergieën (bijv. gluten, noten, zuivel)...",
-      "saveButton": "Allergieën opslaan"
+      "placeholder": "Typ allergieën (bijv. gluten, noten, zuivel)..."
     },
     "apiKeys": {
       "title": "API-sleutels",
@@ -52,7 +75,8 @@
         "title": "API-sleutel gegenereerd",
         "warning": "Sla deze sleutel nu op! Je kunt hem niet opnieuw zien. We slaan alleen een hash op en kunnen deze sleutel niet herstellen.",
         "hint": "Gebruik deze sleutel in de <code>x-api-key</code> header bij het maken van API-aanvragen.",
-        "confirmButton": "Ik heb het opgeslagen"
+        "confirmButton": "Ik heb het opgeslagen",
+        "copyButton": "Sleutel kopiëren"
       },
       "deleteModal": {
         "title": "API-sleutel verwijderen",
@@ -75,6 +99,7 @@
       "accountsDescription": "Geef een account een naam als je meerdere logins voor een site hebt. Elke import gebruikt dan één van de accounts van die site, willekeurig gekozen, zodat niet één login alle imports draagt. Een token zonder accountnaam wordt bij elke import voor dat domein meegestuurd.",
       "domain": "Domein",
       "domainPlaceholder": "bijv. instagram.com",
+      "domainNotFull": "Voer het volledige domein in, bijv. instagram.com.",
       "account": "Account",
       "accountPlaceholder": "bijv. mijn_handle (optioneel)",
       "accountShared": "Alle accounts",
@@ -253,7 +278,7 @@
       }
     },
     "joinCode": {
-      "title": "Join Code",
+      "title": "Join code",
       "shareDescription": "Deel deze code met anderen om ze uit te nodigen voor je huishouden.",
       "expiresIn": "Verloopt over:",
       "regenerateButton": "Opnieuw genereren",
@@ -261,7 +286,8 @@
       "noCodeDescription": "Geen actieve join code. Genereer er een om nieuwe leden uit te nodigen.",
       "generateButton": "Genereer join Code",
       "copySuccess": "Join-code gekopieerd",
-      "copyFailed": "Join-code kopieren mislukt"
+      "copyFailed": "Join-code kopieren mislukt",
+      "copyButton": "Join code kopiëren"
     },
     "create": {
       "title": "Huishouden aanmaken",
@@ -284,7 +310,7 @@
       "description": "Verbind je calendar om geplande maaltijden te synchroniseren.",
       "gettingStarted": "Aan de slag met CalDAV",
       "providerDescription": "Je hebt een CalDAV-compatibele kalenderdienst nodig. Populaire providers zijn onder andere:",
-      "serverUrlLabel": "Server URL",
+      "serverUrlLabel": "Server-URL",
       "serverUrlDescription": "Basis-URL van je CalDAV-server (bijv. https://dav.example.com)",
       "serverUrlPlaceholder": "https://dav.example.com",
       "usernameLabel": "Gebruikersnaam",
@@ -301,19 +327,16 @@
       "breakfastTime": "Ontbijttijd",
       "lunchTime": "Lunchtijd",
       "dinnerTime": "Dinnertijd",
-      "snackTime": "Snacktijd",
-      "testConnection": "Test verbinding",
-      "saveConfiguration": "Configuratie opslaan"
+      "snackTime": "Snacktijd"
     },
     "config": {
       "title": "CalDAV Configuratie",
       "editTitle": "Bewerk CalDAV Configuratie",
-      "serverUrl": "Server URL",
+      "serverUrl": "Server-URL",
       "enabled": "Ingeschakeld",
       "disabled": "Uitgeschakeld",
       "editButton": "Bewerk",
       "deleteButton": "Verwijder",
-      "saveChanges": "Wijzigingen opslaan",
       "advancedSettings": "Geavanceerde instellingen",
       "timezone": "Tijdzone: {timezone}",
       "connectionStatus": {
@@ -354,7 +377,7 @@
       "emptyFiltered": "Geen {status} items gevonden",
       "emptyDefault": "Geen synchronisatiegegevens gevonden",
       "errorDetails": "Foutdetails",
-      "pagination": "Page {current} of {total}"
+      "pagination": "Pagina {current} van {total}"
     }
   },
   "ingredients": {
@@ -376,67 +399,26 @@
     "flagged": "Gemarkeerd",
     "flagReasons": {
       "unknown": "Norish wist niet zeker of dit een eigen ingrediënt is.",
-      "ai-off": "AI staat uit, dus niets heeft gecontroleerd of Norish dit al kent.",
       "unknown-food": "Geen bekend ingrediënt deelt een woord met deze naam, dus AI is niet gevraagd.",
       "ai-unsure": "AI is gevraagd of dit een bekend ingrediënt is en wist het niet zeker.",
-      "ai-unavailable": "AI antwoordde niet op tijd toen deze naam werd toegevoegd.",
-      "ai-key-rejected": "De AI-provider heeft de API-sleutel geweigerd, dus AI kon deze naam niet controleren.",
       "food-gone": "AI koppelde dit aan een ingrediënt dat werd samengevoegd voordat de naam erbij kon.",
       "upgrade": "Er kon geen bekend ingrediënt aan worden gekoppeld.",
-      "seed-ambiguous": "De catalogus kent meerdere ingrediënten die dit kunnen zijn."
+      "seed-ambiguous": "De catalogus kent meerdere ingrediënten die dit kunnen zijn.",
+      "ai-junk": "AI dacht dat dit geen ingrediënt is, zoals keukengerei of een stukje van een receptregel."
     },
     "empty": "Geen ingrediënten gevonden",
     "emptyFlagged": "Niets is gemarkeerd",
     "rename": "Hernoemen",
     "delete": "Verwijderen",
     "deleteTitle": "{name} verwijderen?",
-    "deleteConfirm": "De vertalingen gaan mee, en wat je huishouden Norish erover leerde. Een ingrediënt dat een recept, boodschap of voorraaditem nog gebruikt kan niet weg; voeg het dan samen.",
+    "deleteConfirm": "De vertalingen gaan mee, en wat je huishouden Norish erover leerde.",
+    "deleteTouches": {
+      "recipeLines": "{count, plural, one {# receptregel houdt zijn tekst, zonder dit ingrediënt} other {# receptregels houden hun tekst, zonder dit ingrediënt}}",
+      "groceries": "{count, plural, one {# boodschap houdt zijn tekst, zonder dit ingrediënt} other {# boodschappen houden hun tekst, zonder dit ingrediënt}}",
+      "pantry": "{count, plural, one {# voorraaditem gaat weg} other {# voorraaditems gaan weg}}"
+    },
     "markDistinct": "Markeer als apart",
     "summary": "{spellings, plural, one {# vertaling} other {# vertalingen}}{kinds, plural, =0 {} one {, # soort} other {, # soorten}}{parent, select, none {} other {, hoofdingrediënt: {parent}}}",
-    "askAI": "Vraag AI",
-    "fixCatalogue": "Catalogus verbeteren",
-    "askAIRound": {
-      "intro": "AI zoekt uit waar gemarkeerde ingrediënten horen en verbetert inconsistente namen. Er verandert niets tot je een voorstel bevestigt.",
-      "scopeLabel": "Wat verbeteren",
-      "scopes": {
-        "unsuggested": "Gemarkeerde ingrediënten nakijken",
-        "suggested": "Voorstellen opnieuw nakijken",
-        "name": "Namen opschonen"
-      },
-      "hints": {
-        "unsuggested": "Zoekt naar dubbelen, subingrediënten of unieke ingrediënten.",
-        "suggested": "Kijkt gemarkeerde ingrediënten opnieuw na.",
-        "name": "Schoont ingrediëntnamen op tot alleen het ingrediënt. Gemarkeerde ingrediënten doen mee als het vakje hierboven is aangevinkt."
-      },
-      "scopeSize": "{count, plural, =0 {Geen ingrediënten} one {# ingrediënt · ongeveer {tokens} tokens} other {# ingrediënten · ongeveer {tokens} tokens}}",
-      "modelTokens": "ongeveer {tokens} tokens",
-      "basisMeasured": "Op basis van wat de vorige ronde gebruikte."
-    },
-    "roundProgress": "AI wordt gevraagd · {done, number} van {total, number}",
-    "roundSection": {
-      "title": "AI wordt gevraagd",
-      "progress": "{done, number} van {total, number}",
-      "waiting": "{count, plural, one {# ingrediënt wacht} other {# ingrediënten wachten}}"
-    },
-    "reviewing": "AI wordt gevraagd…",
-    "aiOutcomes": {
-      "parent": "AI stelt voor {name} te plaatsen als een soort {of}.",
-      "distinct": "AI stelt voor dat {name} een eigen ingrediënt is.",
-      "unsure": "AI weet nog steeds niet zeker wat {name} is.",
-      "notFlagged": "{name} is niet gemarkeerd.",
-      "skippedNotFlagged": "{name} was niet meer gemarkeerd.",
-      "skippedForbidden": "{name} mag je niet wijzigen.",
-      "skippedNotFound": "{name} was al weg toen AI eraan toekwam.",
-      "failed": "Vragen naar {name} is mislukt.",
-      "merge": "AI stelt voor {name} samen te voegen met {into}."
-    },
-    "aiTrace": {
-      "readAs": "AI las het als “{name}”.",
-      "compared": "Vergeleken met: {names}.",
-      "comparedNothing": "Er was geen bekend ingrediënt om het mee te vergelijken.",
-      "fromWords": "Op basis van de naam.",
-      "noFood": "AI vond geen ingrediënt in deze naam."
-    },
     "addAlias": "Vertaling toevoegen",
     "removeAlias": "{alias} verwijderen",
     "mergeInto": "Samenvoegen met…",
@@ -491,7 +473,8 @@
         "name": "{food} · {dataset}, gevonden op naam",
         "householdFood": "{food} · {dataset}, gekozen door je huishouden",
         "household": "De eigen waarden van je huishouden",
-        "taxonomy": "Open Food Facts"
+        "taxonomy": "Open Food Facts",
+        "ai": "Geschat door AI"
       },
       "correct": "Corrigeren",
       "correctTitle": "{name} corrigeren",
@@ -550,8 +533,6 @@
       "name-taken": "Een ander ingrediënt heeft deze naam al",
       "spelling-taken": "Deze vertaling hoort al bij een ander ingrediënt",
       "last-alias": "Een ingrediënt houdt minstens één vertaling",
-      "alias-in-use": "Recepten of boodschappen gebruiken deze vertaling nog",
-      "ingredient-in-use": "Recepten, boodschappen of de voorraad gebruiken dit ingrediënt nog",
       "same-ingredient": "Een ingrediënt kan niet met zichzelf worden samengevoegd",
       "cycle": "Een ingrediënt kan geen soort van zichzelf zijn",
       "empty": "Voer een naam in",
@@ -569,51 +550,34 @@
       "none": "Niets gebruikt het meer"
     },
     "keepAlias": "{alias} behouden",
-    "reportOutcomes": {
-      "parent": "Onder een ouder geplaatst",
-      "distinct": "Eigen ingrediënt",
-      "unsure": "Niet zeker",
-      "skipped": "Overgeslagen",
-      "failed": "Mislukt",
-      "merge": "Samenvoegen"
-    },
+    "junkTitle": "{alias} markeren als geen ingrediënt?",
+    "junkBody": "Geen ander ingrediënt heeft deze vertaling. Nieuwe recepten slaan tekst over die als geen ingrediënt is gemarkeerd.",
+    "junkRemove": "Alleen verwijderen",
+    "junkMark": "Geen ingrediënt",
     "expandKinds": "Toon de soorten {name}",
     "collapseKinds": "Verberg de soorten {name}",
     "layoutSection": "Weergave",
     "asTree": "Hiërarchische weergave",
     "showOnly": "Toon alleen",
     "standaloneOnly": "Zonder ouder of soorten",
-    "findParent": "Ouder zoeken met AI",
-    "findParentsAll": "Ouders zoeken met AI",
-    "suggestion": {
-      "merge": "{name} samenvoegen met {into}",
-      "parent": "{name} plaatsen onder {of}",
-      "distinct": "{name} houden als eigen ingrediënt",
-      "filedFromName": "{name} geplaatst onder {of}",
-      "rename": "{name} hernoemen naar {to}"
-    },
-    "suggestionsTitle": "Voorstellen",
-    "suggestionsEmpty": "Er wacht niets op je.",
-    "suggestionsNone": "Geen voorstel",
-    "suggestionsOpen": "{count, plural, =0 {Voorstellen} one {# voorstel} other {# voorstellen}}",
-    "suggestionsFailed": "{count, plural, one {# voorstel kon} other {# voorstellen konden}} niet worden toegepast: {reason}",
-    "confirmSuggestion": "Bevestigen",
-    "dismissSuggestion": "Negeren",
-    "confirmAll": "Alles bevestigen ({count})",
-    "dismissAll": "Alles negeren",
-    "suggestedByAI": "Voorgesteld door AI",
-    "suggestedFromName": "Op basis van de naam",
-    "proposal": {
-      "merge": "Samenvoegen met {into}",
-      "parent": "Plaatsen onder {of}",
-      "distinct": "Eigen ingrediënt",
-      "rename": "Hernoemen naar {to}"
-    },
-    "skippedReasons": {
-      "notFlagged": "Niet meer gemarkeerd",
-      "forbidden": "Niet van jou om te bewerken",
-      "notFound": "Bestaat niet meer",
-      "settled": "Naam staat al vast, of er wacht een suggestie"
+    "changedByAI": {
+      "title": "Gewijzigd door AI",
+      "open": "{count, plural, =0 {Gewijzigd door AI} other {Gewijzigd door AI · # na te kijken}}",
+      "unsure": "Niet zeker",
+      "sure": "Gewijzigd",
+      "empty": "AI heeft de afgelopen maand niets gewijzigd.",
+      "keep": "Houden",
+      "undo": "Ongedaan maken",
+      "keepAll": "Alles houden",
+      "undoAll": "Alles ongedaan maken",
+      "clear": "Wissen",
+      "merge": "{from} hiermee samengevoegd",
+      "parent": "Geplaatst onder {of}",
+      "parentDropped": "Niet meer onder {of}",
+      "plainName": "Hernoemd van {from}",
+      "notAFood": "Verwijderd, want het is geen ingrediënt. De receptregels en boodschappen houden hun tekst.",
+      "spellingRemoved": "Vertaling {from} verwijderd",
+      "spellingMoved": "Vertaling {from} verplaatst naar {of}"
     },
     "icon": {
       "change": "Icoon wijzigen",
@@ -622,20 +586,6 @@
       "failed": "Van deze afbeelding kon geen icoon worden gemaakt.",
       "generate": "Genereren met AI",
       "generateFailed": "Het icoon kon niet worden gegenereerd."
-    },
-    "drawIcons": {
-      "open": "Iconen tekenen",
-      "title": "Iconen tekenen",
-      "intro": "De afbeeldingsprovider tekent voor elk voedingsmiddel een icoon, dat meteen het eigen icoon wordt. Een voedingsmiddel kun je in zijn paneel een ander icoon geven.",
-      "scopeLabel": "Welke voedingsmiddelen",
-      "scopes": {
-        "bare": "Alleen voedingsmiddelen zonder enig icoon",
-        "unowned": "Elk voedingsmiddel zonder eigen icoon"
-      },
-      "scopeSize": "{count, plural, =0 {Geen iconen} one {# icoon} other {# iconen}}",
-      "start": "Iconen tekenen",
-      "progress": "Iconen tekenen · {done, number} van {total, number}",
-      "drawing": "Icoon tekenen…"
     }
   },
   "admin": {
@@ -675,7 +625,6 @@
       "localesDescription": "Selecteer welke talen gebruikers kunnen kiezen",
       "defaultLocale": "Standaardtaal",
       "defaultLocaleDescription": "Taal voor nieuwe gebruikers en als fallback",
-      "saveLocales": "Taalinstellingen opslaan",
       "localesSaved": "Taalinstellingen opgeslagen",
       "localesError": "Taalinstellingen opslaan mislukt",
       "atLeastOneLocale": "Minimaal één taal moet ingeschakeld zijn",
@@ -773,7 +722,7 @@
       "warning1": "Alle actieve verbindingen worden verbroken",
       "warning2": "De server is enkele seconden niet beschikbaar",
       "warning3": "Zorg ervoor dat je deployment <code>restart: always</code> is geconfigureerd, anders start de server mogelijk niet opnieuw op",
-      "confirmButton": "Nu herstarten"
+      "confirmButton": "Herstarten"
     },
     "authProviders": {
       "title": "Authenticatieproviders",
@@ -790,7 +739,7 @@
         "fields": {
           "name": "Providernaam",
           "namePlaceholder": "bijv. Authentik, Keycloak",
-          "issuer": "Issuer URL",
+          "issuer": "Issuer-URL",
           "issuerPlaceholder": "https://your-idp.com",
           "clientId": "Client ID",
           "clientSecret": "Client Secret",
@@ -914,19 +863,71 @@
         "title": "Bulkverrijking",
         "subtitle": "Voer ingeschakelde verrijking uit op elk recept",
         "description": "Zet alle ingeschakelde verrijkingen in de wachtrij",
-        "button": "Alle recepten verrijken",
+        "button": "Verrijken",
         "confirmTitle": "Verrijking op alle recepten uitvoeren?",
         "confirmMessage": "Dit zet AI-werk in de wachtrij voor elk recept op deze server. Elke verrijkingssoort waarvan de automatische schakelaar aanstaat draait waar gegevens ontbreken.",
         "replaceExisting": "Bestaande gegevens overschrijven",
         "replaceExistingDescription": "Categorieën, voedingswaarden, herkomst en stapingrediënten opnieuw bepalen, ook als een recept ze al heeft. Tags en allergiemeldingen worden altijd alleen aangevuld.",
         "replaceWarning": "Dit kan niet ongedaan worden gemaakt. Ook gegevens die je zelf hebt ingevoerd worden vervangen, inclusief stapingrediënten die je handmatig hebt gekoppeld: nergens is vastgelegd welke waarden van AI komen.",
         "costWarning": "Dit kan een kostbare bewerking zijn: met veel recepten kan het lang duren en bij een betaalde AI-provider veel tegoed verbruiken.",
-        "confirmButton": "Op alle recepten uitvoeren",
-        "confirmButtonReplace": "Alle recepten overschrijven",
+        "confirmButton": "Uitvoeren",
+        "confirmButtonReplace": "Overschrijven",
         "queued": "{queued, plural, =0 {Geen runs in wachtrij} one {# run in wachtrij} other {# runs in wachtrij}} voor {recipes, plural, one {# recept} other {# recepten}}",
         "aiDisabled": "AI is uitgeschakeld op deze server. Schakel eerst AI in.",
         "error": "Bulkverrijking starten mislukt",
         "imageCount": "{count, plural, =0 {Er worden geen afbeeldingen gegenereerd.} one {Er wordt # afbeelding gegenereerd.} other {Er worden # afbeeldingen gegenereerd.}}"
+      },
+      "ingredientCatalogue": {
+        "title": "Ingrediëntencatalogus",
+        "subtitle": "Wat AI met nieuwe ingrediënten doet",
+        "automatic": "Automatisch voor nieuwe ingrediënten",
+        "automaticDescription": "Wat AI doet wanneer er een ingrediënt aan de catalogus wordt toegevoegd.",
+        "automaticPlaceholder": "Niets draait automatisch",
+        "kinds": {
+          "cleanUp": "Nieuwe ingrediënten opschonen",
+          "cleanUpDescription": "Spellingen samenvoegen, een ouder en een gewone naam geven, verwijderen wat geen voedsel is",
+          "nutrition": "Ontbrekende voedingswaarden aanvullen",
+          "nutritionDescription": "Macro's per 100 g schatten waar het ingrediënt er geen heeft",
+          "conversions": "Ontbrekende omrekeningen aanvullen",
+          "conversionsDescription": "Dichtheid en stukgewicht schatten waar het ingrediënt die niet heeft",
+          "icon": "Ontbrekende iconen tekenen",
+          "iconDescription": "Alleen voor een ingrediënt zonder icoon, ook niet dat van zijn ouder"
+        },
+        "cleanUpCatalogue": {
+          "title": "Catalogus opschonen",
+          "description": "Vraag AI naar de ingrediënten die al in de catalogus staan.",
+          "running": "Er loopt een opschoning. Volg die in de takenwachtrij.",
+          "button": "Catalogus opschonen",
+          "intro": "AI voegt spellingen samen, kiest ouders en gewone namen en verwijdert wat geen voedsel is. Elke wijziging staat onder Gewijzigd door AI, met Ongedaan maken.",
+          "scopeLabel": "Welke ingrediënten",
+          "scopes": {
+            "recipe-foods": "Receptingrediënten",
+            "recipe-foods-description": "Ingrediënten uit recepten waarover nog niemand heeft beslist",
+            "whole-catalogue": "Hele catalogus",
+            "whole-catalogue-description": "Elk ingrediënt, ook de ingebouwde, ongeacht wat mensen kozen of ongedaan maakten. Ingebouwde worden nooit verwijderd."
+          },
+          "count": "{count, plural, one {AI vraagt naar # ingrediënt.} other {AI vraagt naar # ingrediënten.}}",
+          "start": "Opschonen",
+          "started": "{count, plural, one {# ingrediënt wordt opgeschoond} other {# ingrediënten worden opgeschoond}}",
+          "error": "Opschonen kon niet starten"
+        },
+        "fillGaps": {
+          "title": "Gaten opvullen",
+          "description": "Laat AI aanvullen wat ingrediënten missen.",
+          "running": "Gaten opvullen loopt. Volg het in de takenwachtrij.",
+          "button": "Gaten opvullen",
+          "intro": "AI vult voor elk ingrediënt in de catalogus alleen aan wat het zelf nog niet heeft. Wat een ingrediënt al heeft, wordt nooit vervangen.",
+          "kindsLabel": "Wat aanvullen",
+          "kinds": {
+            "nutrition": "Voedingswaarden",
+            "conversions": "Omrekeningen",
+            "icons": "Iconen"
+          },
+          "count": "{count, plural, =0 {Niets aan te vullen} one {# ingrediënt} other {# ingrediënten}}",
+          "start": "Gaten opvullen",
+          "started": "Gaten worden opgevuld. Volg het in de takenwachtrij.",
+          "error": "Gaten opvullen kon niet starten"
+        }
       }
     },
     "aiConfig": {
@@ -947,7 +948,7 @@
         "lmStudio": "LM Studio (Lokaal)",
         "genericOpenai": "Generieke OpenAI-compatibel"
       },
-      "endpointUrl": "Endpoint URL",
+      "endpointUrl": "Endpoint-URL",
       "azureEndpoint": "Azure Resource URL (Optioneel)",
       "azureEndpointDescription": "Optionele Azure OpenAI endpoint. Laat leeg voor standaard OpenAI endpoint.",
       "model": "Model",
@@ -957,12 +958,11 @@
       "apiKeyPlaceholder": "Voer API-sleutel in",
       "temperature": "Temperatuur: {value}",
       "temperatureHint": "Lager = gefocuster, Hoger = creatiever",
-      "maxTokens": "Max Tokens",
+      "maxTokens": "Max. tokens",
       "requestTimeout": "Time-out van aanvraag (ms)",
       "alwaysUseAI": "Altijd AI gebruiken voor import",
       "alwaysUseAIDescription": "Sla gestructureerde parsers over en extraheer recepten alleen met AI",
       "connectionSuccess": "Verbinding succesvol",
-      "testConnection": "Test verbinding",
       "vision": "vision",
       "automaticEnrichment": "Automatische receptverrijking",
       "automaticEnrichmentDescription": "Welke AI-verrijkingen op nieuwe recepten draaien. Leden kunnen elke verrijking nog steeds handmatig starten.",
@@ -982,14 +982,6 @@
         "ingredientLinkingDescription": "Koppel elke stap aan de ingrediëntregels die hij gebruikt, voor stappen zonder koppelingen",
         "imageGeneration": "Afbeeldingen Genereren",
         "imageGenerationDescription": "Teken een foto van het gerecht voor nieuwe recepten die helemaal geen afbeelding hebben"
-      },
-      "automaticIngredients": "Automatisch voor nieuwe ingrediënten",
-      "automaticIngredientsDescription": "Wat er gebeurt als er nieuwe ingrediënten aan de catalogus worden toegevoegd.",
-      "automaticIngredientsKinds": {
-        "plainName": "Naam opschonen",
-        "plainNameDescription": "Haal weg wat niet het ingrediënt is, zoals hoeveelheden en verpakkingscodes",
-        "icon": "Icoon tekenen",
-        "iconDescription": "Alleen voor een ingrediënt zonder icoon, ook niet dat van zijn ouder"
       },
       "tagStrategy": "Tagstrategie",
       "tagStrategyDescription": "Welke tags automatisch taggen mag gebruiken, of het nu automatisch of handmatig draait",
@@ -1024,24 +1016,24 @@
       "ytDlpVersionMissing": "Geen yt-dlp-binary gevonden",
       "ytDlpVersionUnknown": "Kon niet worden gecontroleerd",
       "ytDlpVersionLoading": "Bezig met ophalen …",
-      "ytDlpProxy": "yt-dlp Proxy",
+      "ytDlpProxy": "yt-dlp-proxy",
       "ytDlpProxyDescription": "HTTP/SOCKS5-proxy voor yt-dlp",
       "transcription": "Transcriptie",
       "transcriptionDescription": "Converteer video-audio naar tekst voor receptextractie",
       "transcriptionProvider": "Transcriptieprovider",
-      "transcriptionProviderDescription": "Alleen OpenAI en OpenAI-compatibele endpoints ondersteunen Whisper-transcriptie",
       "transcriptionProviders": {
         "disabled": "Uitgeschakeld",
         "openai": "OpenAI Whisper",
         "groq": "Groq Whisper",
+        "mistral": "Mistral Voxtral",
         "azure": "Azure OpenAI Whisper",
         "ollama": "Ollama",
         "genericOpenai": "Generieke OpenAI-compatibel"
       },
-      "transcriptionEndpoint": "Endpoint URL",
+      "transcriptionEndpoint": "Endpoint-URL",
       "transcriptionEndpointDescription": "OpenAI-compatibele endpoint met Whisper-ondersteuning, of Ollama endpoint",
       "transcriptionModel": "Model",
-      "transcriptionModelDescription": "Whisper-model voor transcriptie",
+      "transcriptionModelDescription": "Model voor transcriptie",
       "transcriptionModelPlaceholder": "Selecteer of voer modelnaam in",
       "transcriptionApiKey": "API-sleutel",
       "transcriptionApiKeyDescription": "Valt terug op AI-configuratie API-sleutel indien niet ingesteld",
@@ -1049,6 +1041,28 @@
       "transcriptionApiKeyOptional": "API-sleutel (Optioneel)",
       "transcriptionApiKeyOptionalDescription": "De meeste lokale Whisper-servers vereisen geen API-sleutel",
       "transcriptionApiKeyOptionalPlaceholder": "Laat leeg voor lokale servers"
+    },
+    "pageRenderers": {
+      "title": "Paginarenderers",
+      "description": "Browsers die pagina's lezen die een gewone fetch niet kan lezen. Eerst Obscura, dan de Chromium-browser, dan de solver.",
+      "obscura": "Obscura",
+      "obscuraDescription": "De headless browser die met Norish wordt meegeleverd.",
+      "obscuraEndpoint": "Obscura-endpoint",
+      "cdpToken": "CDP-token",
+      "cdpTokenDescription": "Hetzelfde token als op de obscura-service.",
+      "chromium": "Chromium-browser",
+      "chromiumDescription": "Elke Chromium met een CDP-endpoint.",
+      "chromiumEndpoint": "Chromium-endpoint",
+      "solver": "FlareSolverr of Byparr",
+      "solverDescription": "Wordt geprobeerd als de browsers falen. Krijgt nooit site-authenticatietokens.",
+      "solverEndpoint": "Solver-endpoint",
+      "allowPrivateAddresses": "Privéadressen toestaan",
+      "allowPrivateAddressesDescription": "Laat imports je lokale netwerk bereiken. Obscura weigert deze hoe dan ook.",
+      "navigationTimeout": "Navigatietime-out (ms)",
+      "navigationTimeoutDescription": "Hoe lang een renderer krijgt om een pagina te laden.",
+      "saved": "Paginarenderers opgeslagen",
+      "error": "Paginarenderers opslaan mislukt",
+      "connectionSuccess": "Verbinding succesvol"
     },
     "imageGenerationConfig": {
       "description": "Afbeeldingen hebben een eigen provider nodig, omdat de meeste AI-providers niet kunnen tekenen.",
@@ -1062,7 +1076,7 @@
         "lmStudio": "LM Studio",
         "genericOpenai": "Generieke OpenAI-compatibel"
       },
-      "endpoint": "Endpoint URL",
+      "endpoint": "Endpoint-URL",
       "endpointOptional": "Optioneel: eigen Azure resource-URL",
       "apiKey": "API-sleutel",
       "apiKeyPlaceholder": "Voer API-sleutel in...",
@@ -1082,7 +1096,7 @@
       "apiKeyPlaceholder": "Voer API-sleutel in...",
       "apiKeyDescription": "Haal een sleutel op in je account op typesafe.ai",
       "model": "Beslismodel",
-      "endpoint": "Endpoint URL",
+      "endpoint": "Endpoint-URL",
       "endpointDescription": "Voor een proxy of gateway; laat anders leeg.",
       "uses": "Gebruik het Beslismodel voor",
       "usesPlaceholder": "Niets",
@@ -1102,9 +1116,7 @@
         "validateEnrichments": "Verrijkingen valideren",
         "validateEnrichmentsDescription": "Controleer de eigen claims van elke verrijkingsrun voordat ze worden opgeslagen"
       },
-      "testConnection": "Test verbinding",
-      "connectionSuccess": "Verbinding succesvol",
-      "aiDisabledHint": "AI is uitgeschakeld op deze server. Schakel het in bij AI-configuratie om het Beslismodel te testen en te gebruiken."
+      "connectionSuccess": "Verbinding succesvol"
     },
     "promptsConfig": {
       "recipeExtraction": "Receptextractie Prompt",
@@ -1119,7 +1131,7 @@
       "nutritionEstimation": "Voedingswaarde Schatting Prompt",
       "nutritionEstimationDescription": "Deze prompt wordt gebruikt bij het schatten van voedingsinformatie voor een recept. Beschikbare variabelen: recipeName, servings, ingredients",
       "nutritionEstimationPlaceholder": "Voer de voedingswaarde prompt in...",
-      "autoTagging": "Auto-tagging Prompt",
+      "autoTagging": "Prompt voor automatisch taggen",
       "autoTaggingDescription": "Deze prompt wordt gebruikt om tags te genereren voor geïmporteerde recepten. Definieer taggingregels en een lijst met voorgedefinieerde tags.",
       "autoTaggingPlaceholder": "Voer de auto-tagging prompt in...",
       "autoCategorization": "Prompt voor automatische categorisering",
@@ -1135,8 +1147,11 @@
       "ingredientLinkingDescription": "Gebruikt bij het koppelen van elke stap aan de ingrediëntregels die hij gebruikt",
       "ingredientLinkingPlaceholder": "Prompt voor het koppelen van ingrediënten aan stappen...",
       "ingredientResolution": "Prompt voor ingrediëntherkenning",
-      "ingredientResolutionDescription": "Gebruikt om te beslissen of een nieuwe ingrediëntnaam een voedingsmiddel is dat Norish al kent",
+      "ingredientResolutionDescription": "Wordt naar het taalmodel gestuurd als AI de naam van een nieuw ingrediënt leest, met de naam en het ingrediënt waaronder het nu valt erachter. Zegt of het één ingrediënt is, meerdere of geen ingrediënt.",
       "ingredientResolutionPlaceholder": "Prompt voor het herkennen van ingrediëntnamen...",
+      "ingredientMatch": "Prompt voor het koppelen van ingrediënten",
+      "ingredientMatchDescription": "Wordt naar het taalmodel gestuurd als de namen van AI meerdere ingrediënten in de catalogus vinden, of alleen ingrediënten die een letter anders gespeld zijn, met de naam en die ingrediënten erachter. Zegt welke daarvan de naam is, als er een is.",
+      "ingredientMatchPlaceholder": "Prompt voor het koppelen van ingrediëntnamen aan de catalogus...",
       "imageGenerationBrief": "Afbeeldingsomschrijving Prompt",
       "imageGenerationBriefDescription": "Gebruikt om een recept om te zetten in een korte visuele omschrijving voordat de afbeelding wordt gegenereerd. Het recept wordt na de prompt toegevoegd.",
       "imageGenerationBriefPlaceholder": "Prompt voor de visuele omschrijving...",
@@ -1148,7 +1163,13 @@
       "ingredientIconStylePlaceholder": "Prompt voor de stijl van ingrediënticonen...",
       "ingredientPlainName": "Prompt voor het opschonen van ingrediëntnamen",
       "ingredientPlainNameDescription": "Wordt naar het taalmodel gestuurd als AI de naam van een ingrediënt opschoont, met de naam en de andere schrijfwijzen erachter. Zegt wat er van een naam af moet en wat blijft.",
-      "ingredientPlainNamePlaceholder": "Prompt voor het opschonen van ingrediëntnamen..."
+      "ingredientPlainNamePlaceholder": "Prompt voor het opschonen van ingrediëntnamen...",
+      "ingredientSpellingCheck": "Prompt voor het controleren van vertalingen",
+      "ingredientSpellingCheckDescription": "Wordt naar het taalmodel gestuurd bij het opschonen van de hele catalogus, voor elk ingrediënt uit de catalogus met vertalingen die mensen, imports of samenvoegingen toevoegden, met het ingrediënt, die vertalingen en per vertaling een receptregel erachter. Zegt welke het ingrediënt noemen, geen ingrediënt noemen of een ander ingrediënt noemen.",
+      "ingredientSpellingCheckPlaceholder": "Prompt voor het controleren van vertalingen...",
+      "ingredientNutrition": "Prompt voor de voedingswaarde van ingrediënten",
+      "ingredientNutritionDescription": "Wordt naar het taalmodel gestuurd voor een ingrediënt zonder eigen voedingswaarde, dichtheid of stukgewicht, waar AI die mag aanvullen, met het ingrediënt en waar het een soort van is erachter. Schat alleen wat het ingrediënt mist.",
+      "ingredientNutritionPlaceholder": "Prompt voor het schatten van de voedingswaarde van een ingrediënt..."
     },
     "unsavedChanges": "Niet-opgeslagen wijzigingen",
     "jsonEditor": {
@@ -1158,126 +1179,129 @@
       "failedToRestore": "Resetten herstellen mislukt"
     },
     "jobQueue": {
-      "title": "Job Queues",
-      "description": "Monitor background jobs across all queues: status, current step, duration, and failures.",
-      "empty": "No jobs found",
+      "title": "Jobwachtrijen",
+      "description": "Volg achtergrondjobs in alle wachtrijen: status, huidige stap, duur en fouten.",
+      "empty": "Geen jobs gevonden",
       "filters": {
-        "queue": "Queue",
-        "allQueues": "All queues"
+        "queue": "Wachtrij",
+        "allQueues": "Alle wachtrijen"
       },
       "status": {
-        "waiting": "Waiting",
-        "active": "Active",
-        "delayed": "Delayed",
-        "completed": "Completed",
-        "failed": "Failed",
-        "paused": "Paused",
-        "prioritized": "Prioritized",
-        "unknown": "Unknown",
-        "hanging": "Hanging"
+        "waiting": "Wachtend",
+        "active": "Actief",
+        "delayed": "Uitgesteld",
+        "completed": "Voltooid",
+        "failed": "Mislukt",
+        "cancelled": "Geannuleerd",
+        "prioritized": "Met voorrang",
+        "unknown": "Onbekend",
+        "hanging": "Vastgelopen"
       },
       "stepStatus": {
-        "done": "Done",
-        "failed": "Failed",
-        "running": "Running",
-        "skipped": "Skipped",
-        "pending": "Pending"
+        "done": "Klaar",
+        "failed": "Mislukt",
+        "running": "Bezig",
+        "skipped": "Overgeslagen",
+        "pending": "Wachtend"
       },
       "steps": {
-        "dedupe-check": "Check existing",
-        "fetch-allergies": "Fetch allergies",
-        "parsing": "Parse recipe",
-        "saving": "Save recipe",
-        "post-processing": "Post processing",
-        "preparing-images": "Prepare images",
-        "ai-extraction": "AI extraction",
-        "parsing-text": "Parse pasted text",
-        "creating-recipes": "Create recipes",
-        "ai-request": "AI request",
-        "syncing-event": "Sync calendar event",
-        "deleting-event": "Delete calendar event",
-        "running": "Run task",
-        "searching": "Search the shop",
-        "reading-product": "Read the product page",
-        "saving-link": "Save the link",
-        "asking-ai": "Ask AI about the food",
+        "dedupe-check": "Op bestaande controleren",
+        "fetch-allergies": "Allergieën ophalen",
+        "parsing": "Recept verwerken",
+        "saving": "Recept opslaan",
+        "post-processing": "Nabewerking",
+        "preparing-images": "Afbeeldingen voorbereiden",
+        "ai-extraction": "AI-extractie",
+        "parsing-text": "Geplakte tekst verwerken",
+        "creating-recipes": "Recepten aanmaken",
+        "ai-request": "AI-verzoek",
+        "syncing-event": "Agenda-evenement synchroniseren",
+        "deleting-event": "Agenda-evenement verwijderen",
+        "running": "Taak uitvoeren",
+        "searching": "De winkel doorzoeken",
+        "reading-product": "De productpagina lezen",
+        "saving-link": "De koppeling opslaan",
+        "asking-ai": "De AI vragen over het voedingsmiddel",
         "drawing-icon": "Het icoon van het voedingsmiddel tekenen",
+        "filling-gaps": "De gaten van het voedingsmiddel aanvullen",
         "naming": "Naam van het ingrediënt opschonen"
       },
       "queues": {
-        "recipe-import": "Recipe import",
-        "image-recipe-import": "Image import",
-        "paste-recipe-import": "Paste import",
-        "nutrition-estimation": "Nutrition estimation",
-        "auto-tagging": "Auto-tagging",
-        "auto-categorization": "Auto-categorization",
-        "allergy-detection": "Allergy detection",
+        "recipe-import": "Receptimport",
+        "image-recipe-import": "Afbeeldingsimport",
+        "paste-recipe-import": "Klembordimport",
+        "nutrition-estimation": "Voedingswaarde schatten",
+        "auto-tagging": "Automatisch taggen",
+        "auto-categorization": "Automatisch categoriseren",
+        "allergy-detection": "Allergieën detecteren",
         "recipe-provenance": "Herkomst van recept",
         "ingredient-linking": "Ingrediëntkoppeling",
-        "caldav-sync": "CalDAV sync",
-        "scheduled-tasks": "Scheduled tasks",
+        "caldav-sync": "CalDAV-synchronisatie",
+        "scheduled-tasks": "Geplande taken",
         "image-generation": "Afbeeldingen genereren",
         "store-lookup": "Winkelopzoeking",
         "ingredient-review": "AI vragen over ingrediënten",
         "ingredient-icons": "Ingrediënticonen tekenen",
-        "new-ingredients": "Nieuwe ingrediënten"
+        "ingredient-fill": "Gaten in ingrediënten aanvullen"
       },
       "summary": {
-        "failed": "{count} failed"
+        "failed": "{count} mislukt"
       },
       "table": {
         "job": "Job",
         "status": "Status",
-        "step": "Step",
-        "duration": "Duration",
-        "created": "Created",
-        "runsAt": "Runs {time}"
+        "step": "Stap",
+        "duration": "Duur",
+        "created": "Aangemaakt",
+        "runsAt": "Start {time}"
       },
       "detail": {
-        "title": "Job Details",
-        "notFound": "Job not found. It may have been cleaned up.",
+        "title": "Jobdetails",
+        "notFound": "Job niet gevonden. Mogelijk is deze al opgeruimd.",
+        "cancelledNote": "Een beheerder heeft deze job geannuleerd.",
         "sections": {
-          "error": "Error",
-          "pipelineSteps": "Pipeline Steps",
-          "input": "Input",
+          "error": "Fout",
+          "pipelineSteps": "Pipelinestappen",
+          "input": "Invoer",
           "logs": "Logs",
-          "errors": "Errors"
+          "errors": "Fouten"
         },
         "fields": {
-          "queue": "Queue",
-          "jobId": "Job ID",
-          "description": "Description",
-          "recipe": "Recipe",
-          "created": "Created",
-          "started": "Started",
-          "finished": "Finished",
-          "duration": "Duration",
-          "attempts": "Attempts",
+          "queue": "Wachtrij",
+          "jobId": "Job-ID",
+          "description": "Beschrijving",
+          "recipe": "Recept",
+          "created": "Aangemaakt",
+          "started": "Gestart",
+          "finished": "Afgerond",
+          "duration": "Duur",
+          "attempts": "Pogingen",
           "models": "Modellen",
           "tokens": "Tokens",
-          "runsAt": "Runs at",
-          "nextRun": "Next run"
+          "runsAt": "Start om",
+          "nextRun": "Volgende uitvoering"
         },
         "modelTokens": "{tokens} tokens",
-        "attempt": "Attempt {number}",
-        "stackTrace": "Stack trace"
+        "attempt": "Poging {number}",
+        "stackTrace": "Stacktrace"
       },
       "actions": {
-        "retry": "Retry",
-        "remove": "Remove"
+        "retry": "Opnieuw proberen",
+        "cancel": "Stoppen",
+        "cancelling": "Stoppen…",
+        "remove": "Verwijderen"
       },
       "removeModal": {
-        "message": "Permanently remove this job?",
-        "confirm": "Remove job"
+        "message": "Deze job definitief verwijderen?"
       },
       "retention": {
-        "title": "Job Retention",
-        "keepCompleted": "Keep completed jobs",
-        "keepFailed": "Keep failed jobs",
-        "maxAgeDays": "Max age (days)",
+        "title": "Jobs bewaren",
+        "keepCompleted": "Voltooide jobs bewaren",
+        "keepFailed": "Mislukte jobs bewaren",
+        "maxAgeDays": "Max. leeftijd (dagen)",
         "description": "Hoeveel afgeronde jobs per wachtrij bewaard blijven."
       },
-      "pagination": "Page {current} of {total}"
+      "pagination": "Pagina {current} van {total}"
     },
     "cuisineVocabulary": {
       "description": "Keukens zijn een gecureerde woordenlijst die jij beheert. Namen worden in elke taal getoond zoals ze hier staan.",

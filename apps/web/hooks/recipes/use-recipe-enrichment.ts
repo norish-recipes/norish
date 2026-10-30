@@ -9,7 +9,7 @@ import type { RecipeEnrichmentKind } from "@norish/shared/lib/recipe-enrichment"
 
 import { sharedRecipeFamilyHooks } from "./shared-recipe-hooks";
 
-const sharedUseRecipeEnrichment = sharedRecipeFamilyHooks.useRecipeEnrichment;
+const useSharedRecipeEnrichment = sharedRecipeFamilyHooks.useRecipeEnrichment;
 
 /**
  * Recipe Enrichment lifecycle and manual requests for every kind.
@@ -32,5 +32,5 @@ export function useRecipeEnrichment(recipeId: string) {
     [t]
   );
 
-  return sharedUseRecipeEnrichment(recipeId, user?.id ?? null, { onManualError });
+  return useSharedRecipeEnrichment(recipeId, user?.id ?? null, { onManualError });
 }

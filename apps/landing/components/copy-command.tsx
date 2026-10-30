@@ -41,7 +41,7 @@ export function CopyCommand({
   const collapsed = collapsible && !expanded;
 
   return (
-    <div className="border-border bg-surface overflow-hidden rounded-2xl border text-left shadow-[0_30px_70px_-45px_rgb(0_0_0/0.5)]">
+    <div className="border-border bg-surface text-foreground overflow-hidden rounded-2xl border text-left shadow-[0_30px_70px_-45px_rgb(0_0_0/0.5)]">
       <div className="border-border flex items-center justify-between border-b px-4 py-2.5">
         <span className="text-muted font-mono text-xs">{filename}</span>
         <button

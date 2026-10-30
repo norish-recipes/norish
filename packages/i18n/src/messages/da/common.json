@@ -29,7 +29,6 @@
     "goHome": "Gå til forsiden",
     "test": "Test",
     "format": "Formater",
-    "restoreDefaults": "Gendan standardindstillinger",
     "saveChanges": "Gem ændringer"
   },
   "secret": {
@@ -58,6 +57,8 @@
     "searchTags": "Søg tags",
     "favoritesAndRating": "Favoritter og bedømmelse",
     "favorites": "Favoritter",
+    "pantry": "Spisekammer",
+    "pantryOnly": "Ingredienser hjemme",
     "cookingTime": "Tilberedningstid",
     "cookingTimeUnder15": "<15 min",
     "cookingTimeUnder30": "<30 min",
@@ -101,7 +102,7 @@
     "serverUnreachableBanner": "Norish-serveren er ikke tilgængelig, ser cachelagrede data",
     "live": "Forbundet",
     "offline": "Offline",
-    "openDetails": "Connection details"
+    "openDetails": "Forbindelsesdetaljer"
   },
   "language": {
     "title": "Sprog"
@@ -111,6 +112,11 @@
     "title": "Nora er forvirret.",
     "message": "Hun snuser rundt for at finde ud af, hvor du ville hen.",
     "imageAlt": "Nora ser forvirret ud"
+  },
+  "errorPage": {
+    "title": "Noget gik galt.",
+    "message": "Norish stødte på en fejl på denne side.",
+    "retry": "Prøv igen"
   },
   "import": {
     "url": {
@@ -139,7 +145,7 @@
       "title": "Importer fra billede",
       "dropzone": "Slip billeder her eller klik for at gennemse",
       "paste": "for at indsætte",
-      "formats": "Understøtter JPG, PNG, WebP. Maks. 10 MB pr. fil.",
+      "formats": "Understøtter JPG, PNG, WebP, PDF. Maks. 10 MB pr. fil.",
       "invalidType": "Ugyldig filtype",
       "notSupported": "{name} er ikke et understøttet billedformat",
       "tooLarge": "Filen er for stor",
@@ -178,12 +184,15 @@
     "daily": "Dagligt",
     "weekly": "Ugentligt",
     "monthly": "Månedligt",
+    "yearly": "Årligt",
     "day": "dag",
     "days": "dage",
     "week": "uge",
     "weeks": "uger",
     "month": "måned",
     "months": "måneder",
+    "year": "år",
+    "years": "år",
     "next": "Næste:",
     "every": "Hver",
     "everyOther": "Hver anden",
@@ -225,55 +234,55 @@
     "notifications_disabled_hint": "Aktiver notifikationer i dine browserindstillinger for at modtage alarmer, når timere afsluttes i baggrunden."
   },
   "offlineStatus": {
-    "title": "Connection & offline",
+    "title": "Forbindelse og offline",
     "connection": {
-      "heading": "Connection",
-      "live": "Live",
+      "heading": "Forbindelse",
+      "live": "Forbundet",
       "offline": "Offline",
-      "forced": "Offline (forced)",
-      "liveDescription": "Connected to Norish. Changes sync as you make them.",
-      "offlineDescription": "Can't reach Norish. Showing cached data; changes are queued and sync when you're back.",
-      "forcedDescription": "Offline is forced for development. The backend is reachable but every request is blocked.",
+      "forced": "Offline (tvunget)",
+      "liveDescription": "Forbundet til Norish. Ændringer synkroniseres, mens du laver dem.",
+      "offlineDescription": "Kan ikke nå Norish. Viser cachelagrede data; ændringer sættes i kø og synkroniseres, når du er online igen.",
+      "forcedDescription": "Offline er tvunget til udvikling. Backenden kan nås, men alle forespørgsler blokeres.",
       "devBadge": "dev"
     },
     "cache": {
-      "heading": "Offline cache",
-      "recipes": "Recipes",
+      "heading": "Offline-cache",
+      "recipes": "Opskrifter",
       "cookbooks": "Kogebøger",
-      "groceries": "Groceries",
-      "stores": "Stores",
-      "planned": "This week",
-      "dataAge": "Data from {when}",
-      "dataAgeUnknown": "Not warmed yet",
-      "wipe": "Clear cached data",
-      "wipeConfirmBody": "Remove the offline copy of your recipes, groceries, stores and plan? Your queued changes are kept.",
-      "wipeConfirmOfflineBody": "You're offline — clearing now leaves nothing to show until you reconnect. Your queued changes are kept.",
-      "wipeConfirm": "Clear",
-      "wipeCancel": "Keep"
+      "groceries": "Indkøbsvarer",
+      "stores": "Butikker",
+      "planned": "Denne uge",
+      "dataAge": "Data opdateret {when}",
+      "dataAgeUnknown": "Ikke hentet endnu",
+      "wipe": "Ryd cachelagrede data",
+      "wipeConfirmBody": "Fjern offlinekopien af dine opskrifter, indkøbsvarer, butikker og måltidsplan? Dine ændringer i kø bevares.",
+      "wipeConfirmOfflineBody": "Du er offline. Rydder du nu, er der intet at vise, før du har forbindelse igen. Dine ændringer i kø bevares.",
+      "wipeConfirm": "Ryd",
+      "wipeCancel": "Behold"
     },
     "outbox": {
-      "heading": "Queued changes",
-      "empty": "Nothing queued — everything's synced.",
-      "pending": "{count, plural, =0 {No changes waiting} one {# change waiting} other {# changes waiting}}",
-      "syncing": "{count, plural, =0 {Syncing} one {Syncing # change} other {Syncing # changes}}",
-      "syncNow": "Sync now",
-      "retryAll": "Retry all",
-      "discardAll": "Discard all",
-      "discardConfirmBody": "{count, plural, one {Permanently discard # queued change? It won't be sent.} other {Permanently discard # queued changes? They won't be sent.}}",
-      "discardConfirm": "Discard",
-      "discardCancel": "Keep",
+      "heading": "Ændringer i kø",
+      "empty": "Intet i kø. Alt er synkroniseret.",
+      "pending": "{count, plural, =0 {Ingen ændringer venter} one {# ændring venter} other {# ændringer venter}}",
+      "syncing": "{count, plural, =0 {Synkroniserer} one {Synkroniserer # ændring} other {Synkroniserer # ændringer}}",
+      "syncNow": "Synkroniser nu",
+      "retryAll": "Prøv alle igen",
+      "discardAll": "Kassér alle",
+      "discardConfirmBody": "{count, plural, one {Kassér # ændring i kø permanent? Den bliver ikke sendt.} other {Kassér # ændringer i kø permanent? De bliver ikke sendt.}}",
+      "discardConfirm": "Kassér",
+      "discardCancel": "Behold",
       "status": {
-        "pending": "Syncing",
-        "parked": "Needs attention",
-        "conflicted": "Conflict"
+        "pending": "Synkroniserer",
+        "parked": "Kræver opmærksomhed",
+        "conflicted": "Konflikt"
       }
     },
     "devToggle": {
-      "heading": "Developer",
-      "force": "Force offline",
-      "description": "Blocks the backend transport to exercise the offline runtime. Dev builds only.",
-      "on": "On",
-      "off": "Off"
+      "heading": "Udvikler",
+      "force": "Tving offline",
+      "description": "Blokerer backend-transporten for at afprøve offlinekørslen. Kun i udviklingsbuilds.",
+      "on": "Til",
+      "off": "Fra"
     }
   },
   "offlineFallback": {

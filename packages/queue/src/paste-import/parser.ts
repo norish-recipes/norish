@@ -255,7 +255,6 @@ async function normalizeRecipeFromYamlValue(
               typeof rawRecipe.sourceUrl === "string" && isUrl(rawRecipe.sourceUrl)
                 ? rawRecipe.sourceUrl.trim()
                 : null,
-            image: images[0]?.image ?? null,
             servings: normalizeMinutes(rawRecipe.servings) ?? 1,
             prepMinutes: normalizeMinutes(rawRecipe.prepMinutes),
             cookMinutes: normalizeMinutes(rawRecipe.cookMinutes),

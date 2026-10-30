@@ -29,7 +29,6 @@
     "goHome": "집으로 이동",
     "test": "테스트",
     "format": "서식",
-    "restoreDefaults": "기본값 복원",
     "saveChanges": "변경사항 저장"
   },
   "secret": {
@@ -58,6 +57,8 @@
     "searchTags": "태그 검색",
     "favoritesAndRating": "즐겨찾기 및 평가",
     "favorites": "즐겨찾기",
+    "pantry": "팬트리",
+    "pantryOnly": "집에 있는 재료",
     "cookingTime": "조리시간",
     "cookingTimeUnder15": "15분 미만",
     "cookingTimeUnder30": "30분 미만",
@@ -101,7 +102,7 @@
     "serverUnreachableBanner": "Norish 서버에 연결할 수 없습니다 캐시된 데이터를 표시합니다",
     "live": "연결됨",
     "offline": "오프라인",
-    "openDetails": "Connection details"
+    "openDetails": "연결 세부정보"
   },
   "language": {
     "title": "언어"
@@ -111,6 +112,11 @@
     "title": "노라가 헷갈려해요.",
     "message": "노라가 여기저기 킁킁대며 가려던 곳을 찾고 있어요.",
     "imageAlt": "어리둥절한 노라"
+  },
+  "errorPage": {
+    "title": "문제가 발생했어요.",
+    "message": "이 페이지에서 Norish에 오류가 발생했어요.",
+    "retry": "다시 시도"
   },
   "import": {
     "url": {
@@ -139,7 +145,7 @@
       "title": "이미지에서 가져오기",
       "dropzone": "여기에 이미지를 놓거나 클릭하여 찾아보세요.",
       "paste": "붙여넣기",
-      "formats": "파일 당 최대 10MB 용량의 JPG, PNG, WebP를 지원합니다.",
+      "formats": "파일 당 최대 10MB 용량의 JPG, PNG, WebP, PDF를 지원합니다.",
       "invalidType": "잘못된 파일 형식",
       "notSupported": "{name}은(는) 지원되지 않는 이미지 형식입니다.",
       "tooLarge": "파일이 너무 큽니다.",
@@ -178,12 +184,15 @@
     "daily": "매일",
     "weekly": "매주",
     "monthly": "매월",
+    "yearly": "매년",
     "day": "일",
     "days": "일",
     "week": "주",
     "weeks": "주",
     "month": "월",
     "months": "개월",
+    "year": "년",
+    "years": "년",
     "next": "다음:",
     "every": "매",
     "everyOther": "격",
@@ -225,55 +234,55 @@
     "notifications_disabled_hint": "타이머가 백그라운드에서 완료될 때 알림을 받으려면 브라우저 설정에서 알림을 활성화하세요."
   },
   "offlineStatus": {
-    "title": "Connection & offline",
+    "title": "연결 및 오프라인",
     "connection": {
-      "heading": "Connection",
-      "live": "Live",
-      "offline": "Offline",
-      "forced": "Offline (forced)",
-      "liveDescription": "Connected to Norish. Changes sync as you make them.",
-      "offlineDescription": "Can't reach Norish. Showing cached data; changes are queued and sync when you're back.",
-      "forcedDescription": "Offline is forced for development. The backend is reachable but every request is blocked.",
+      "heading": "연결",
+      "live": "연결됨",
+      "offline": "오프라인",
+      "forced": "오프라인 (강제)",
+      "liveDescription": "Norish에 연결되었습니다. 변경 사항은 바로 동기화됩니다.",
+      "offlineDescription": "Norish에 연결할 수 없습니다. 캐시된 데이터를 표시하며, 변경 사항은 대기열에 추가되었다가 다시 연결되면 동기화됩니다.",
+      "forcedDescription": "개발을 위해 오프라인 모드가 강제로 켜져 있습니다. 백엔드에는 연결할 수 있지만 모든 요청이 차단됩니다.",
       "devBadge": "dev"
     },
     "cache": {
-      "heading": "Offline cache",
-      "recipes": "Recipes",
+      "heading": "오프라인 캐시",
+      "recipes": "레시피",
       "cookbooks": "요리책",
-      "groceries": "Groceries",
-      "stores": "Stores",
-      "planned": "This week",
-      "dataAge": "Data from {when}",
-      "dataAgeUnknown": "Not warmed yet",
-      "wipe": "Clear cached data",
-      "wipeConfirmBody": "Remove the offline copy of your recipes, groceries, stores and plan? Your queued changes are kept.",
-      "wipeConfirmOfflineBody": "You're offline — clearing now leaves nothing to show until you reconnect. Your queued changes are kept.",
-      "wipeConfirm": "Clear",
-      "wipeCancel": "Keep"
+      "groceries": "장보기",
+      "stores": "매장",
+      "planned": "이번 주",
+      "dataAge": "{when}의 데이터",
+      "dataAgeUnknown": "아직 캐시되지 않음",
+      "wipe": "캐시된 데이터 지우기",
+      "wipeConfirmBody": "레시피, 장보기, 매장, 식사 계획의 오프라인 사본을 삭제할까요? 대기 중인 변경 사항은 유지됩니다.",
+      "wipeConfirmOfflineBody": "오프라인 상태입니다. 지금 지우면 다시 연결될 때까지 표시할 내용이 없습니다. 대기 중인 변경 사항은 유지됩니다.",
+      "wipeConfirm": "지우기",
+      "wipeCancel": "유지"
     },
     "outbox": {
-      "heading": "Queued changes",
-      "empty": "Nothing queued — everything's synced.",
-      "pending": "{count, plural, =0 {No changes waiting} one {# change waiting} other {# changes waiting}}",
-      "syncing": "{count, plural, =0 {Syncing} one {Syncing # change} other {Syncing # changes}}",
-      "syncNow": "Sync now",
-      "retryAll": "Retry all",
-      "discardAll": "Discard all",
-      "discardConfirmBody": "{count, plural, one {Permanently discard # queued change? It won't be sent.} other {Permanently discard # queued changes? They won't be sent.}}",
-      "discardConfirm": "Discard",
-      "discardCancel": "Keep",
+      "heading": "대기 중인 변경 사항",
+      "empty": "대기 중인 항목이 없습니다. 모두 동기화되었습니다.",
+      "pending": "{count, plural, =0 {대기 중인 변경 사항 없음} other {변경 사항 #개 대기 중}}",
+      "syncing": "{count, plural, =0 {동기화 중} other {변경 사항 #개 동기화 중}}",
+      "syncNow": "지금 동기화",
+      "retryAll": "모두 다시 시도",
+      "discardAll": "모두 삭제",
+      "discardConfirmBody": "{count, plural, other {대기 중인 변경 사항 #개를 영구적으로 삭제할까요? 전송되지 않습니다.}}",
+      "discardConfirm": "삭제",
+      "discardCancel": "유지",
       "status": {
-        "pending": "Syncing",
-        "parked": "Needs attention",
-        "conflicted": "Conflict"
+        "pending": "동기화 중",
+        "parked": "확인 필요",
+        "conflicted": "충돌"
       }
     },
     "devToggle": {
-      "heading": "Developer",
-      "force": "Force offline",
-      "description": "Blocks the backend transport to exercise the offline runtime. Dev builds only.",
-      "on": "On",
-      "off": "Off"
+      "heading": "개발자",
+      "force": "오프라인 강제",
+      "description": "오프라인 런타임을 테스트하기 위해 백엔드 전송을 차단합니다. 개발 빌드 전용입니다.",
+      "on": "켜짐",
+      "off": "꺼짐"
     }
   },
   "offlineFallback": {

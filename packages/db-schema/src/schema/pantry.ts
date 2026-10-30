@@ -25,7 +25,9 @@ export const pantryIngredients = pgTable(
     ingredientId: uuid("ingredient_id")
       .notNull()
       .references(() => ingredients.id, { onDelete: "cascade" }),
-    ingredientAliasId: uuid("ingredient_alias_id").references(() => ingredientAliases.id),
+    ingredientAliasId: uuid("ingredient_alias_id").references(() => ingredientAliases.id, {
+      onDelete: "cascade",
+    }),
     ...mutableRowColumns,
   },
   (t) => [

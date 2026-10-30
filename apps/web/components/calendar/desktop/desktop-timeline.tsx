@@ -5,7 +5,9 @@ import type { DragEndEvent, DragOverEvent, DragStartEvent } from "@dnd-kit/core"
 import { useCallback, useEffect, useLayoutEffect, useMemo, useRef, useState } from "react";
 import { useCalendarContext } from "@/app/(app)/calendar/context";
 import { SLOT_ORDER } from "@/components/calendar/mobile/types";
+import { useReaderToday } from "@/components/reader-today";
 import { CalendarSkeletonDesktop } from "@/components/skeleton/calendar-skeleton";
+import { useViewport } from "@/hooks/use-viewport";
 import {
   DndContext,
   DragOverlay,
@@ -28,14 +30,6 @@ import { DesktopDayCard } from "./desktop-day-card";
 import { DesktopDragOverlay } from "./desktop-drag-overlay";
 import { DesktopScrollToToday } from "./desktop-scroll-to-today";
 
-function startOfDay(date: Date): Date {
-  const d = new Date(date);
-
-  d.setHours(0, 0, 0, 0);
-
-  return d;
-}
-
 const ESTIMATED_ROW_HEIGHT = 420; // Card height (400) + gap (20)
 
 type DesktopTimelineProps = {
@@ -45,6 +39,10 @@ type DesktopTimelineProps = {
 };
 
 export function DesktopTimeline({ onAddItem, onNoteClick, onRecipeClick }: DesktopTimelineProps) {
+  // TanStack Virtual hands back one mutable instance, so compiled memoisation
+  // would keep its first rows.
+  "use no memo";
+
   const locale = useLocale();
   const tSlots = useTranslations("common.slots");
 
@@ -59,8 +57,8 @@ export function DesktopTimeline({ onAddItem, onNoteClick, onRecipeClick }: Deskt
   } = useCalendarContext();
 
   // Responsive column count: 3 for lg+, 2 for md
-  const { width = 1024, height: _windowHeight } = useWindowSize();
-  const columnCount = width >= 1024 ? 3 : 2;
+  const columnCount = useViewport((width) => (width >= 1024 ? 3 : 2));
+  const { height: _windowHeight } = useWindowSize();
 
   // Generate all days in range from context, padded to fill complete rows
   const allDays = useMemo(() => {
@@ -114,8 +112,8 @@ export function DesktopTimeline({ onAddItem, onNoteClick, onRecipeClick }: Deskt
   );
 
   // Today tracking
-  const today = useMemo(() => startOfDay(new Date()), []);
-  const todayKey = useMemo(() => dateKey(today), [today]);
+  const todayKey = useReaderToday();
+  const today = useMemo(() => new Date(`${todayKey}T00:00:00`), [todayKey]);
   const todayRowIndex = useMemo(() => {
     const dayIndex = allDays.findIndex((d) => dateKey(d) === todayKey);
 
@@ -125,13 +123,18 @@ export function DesktopTimeline({ onAddItem, onNoteClick, onRecipeClick }: Deskt
   // Container ref for scroll margin calculation
   const containerRef = useRef<HTMLDivElement>(null);
 
-  // Calculate scroll margin from container position
-  const scrollMargin = useMemo(() => {
-    if (typeof window === "undefined" || !containerRef.current) return 0;
-    const rect = containerRef.current.getBoundingClientRect();
+  // Calculate scroll margin from container position. The container's offset is
+  // read, not tracked: a resize is what moves it, so it is measured on one and
+  // the timeline counts from the top of the page until then.
+  const [scrollMargin, setScrollMargin] = useState(0);
+  const measuredHeightRef = useRef(_windowHeight);
 
-    return rect.top + window.scrollY;
-    // eslint-disable-next-line react-hooks/exhaustive-deps
+  useLayoutEffect(() => {
+    if (_windowHeight === measuredHeightRef.current) return;
+    measuredHeightRef.current = _windowHeight;
+    setScrollMargin(
+      containerRef.current ? containerRef.current.getBoundingClientRect().top + window.scrollY : 0
+    );
   }, [_windowHeight]);
 
   // Window virtualizer (like mobile/recipe grid)
@@ -368,7 +371,9 @@ export function DesktopTimeline({ onAddItem, onNoteClick, onRecipeClick }: Deskt
     [activeItem]
   );
 
-  if (isLoading) {
+  // Also before the window is measured, which the server and the hydrating render never are: with
+  // a seeded range the days draw on the first measured frame, without a request.
+  if (isLoading || virtualItems.length === 0) {
     return <CalendarSkeletonDesktop />;
   }
 

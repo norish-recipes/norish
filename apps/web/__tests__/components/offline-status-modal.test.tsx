@@ -29,6 +29,7 @@ vi.mock("@/components/Panel/Panel", () => ({
 vi.mock("next-intl", () => ({
   useTranslations: () => (key: string) => key,
   useFormatter: () => ({ relativeTime: () => "3 days ago" }),
+  useNow: () => new Date(),
 }));
 
 vi.mock("@heroui/react", () => ({

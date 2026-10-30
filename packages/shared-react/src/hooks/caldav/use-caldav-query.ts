@@ -9,6 +9,8 @@ import type {
 
 export function createUseCaldavQuery({ useTRPC }: CreateCaldavHooksOptions) {
   function useCaldavConfigQuery(): CaldavConfigQueryResult {
+    "use memo";
+
     const trpc = useTRPC();
     const queryClient = useQueryClient();
     const queryKey = trpc.caldav.getConfig.queryKey();
@@ -25,6 +27,8 @@ export function createUseCaldavQuery({ useTRPC }: CreateCaldavHooksOptions) {
   }
 
   function useCaldavPasswordQuery() {
+    "use memo";
+
     const trpc = useTRPC();
     const { data, error, isLoading } = useQuery(
       trpc.caldav.getPassword.queryOptions(undefined, {
@@ -41,6 +45,8 @@ export function createUseCaldavQuery({ useTRPC }: CreateCaldavHooksOptions) {
     pageSize: number = 20,
     statusFilter?: "pending" | "synced" | "failed" | "removed"
   ): CaldavSyncStatusQueryResult {
+    "use memo";
+
     const trpc = useTRPC();
     const queryClient = useQueryClient();
     const queryKey = trpc.caldav.getSyncStatus.queryKey({ page, pageSize, statusFilter });
@@ -62,6 +68,8 @@ export function createUseCaldavQuery({ useTRPC }: CreateCaldavHooksOptions) {
   }
 
   function useCaldavSummaryQuery(): CaldavSummaryQueryResult {
+    "use memo";
+
     const trpc = useTRPC();
     const queryClient = useQueryClient();
     const queryKey = trpc.caldav.getSummary.queryKey();
@@ -77,6 +85,8 @@ export function createUseCaldavQuery({ useTRPC }: CreateCaldavHooksOptions) {
   }
 
   function useCaldavConnectionQuery() {
+    "use memo";
+
     const trpc = useTRPC();
     const queryClient = useQueryClient();
     const queryKey = trpc.caldav.checkConnection.queryKey();

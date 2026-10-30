@@ -99,7 +99,6 @@ function buildUploadInput(version = 3) {
 
 describe("avatar caching contract (ADR-0021)", () => {
   beforeEach(() => {
-    vi.clearAllMocks();
     vi.spyOn(Date, "now").mockReturnValue(1755000000000);
 
     mockFs.mkdir.mockResolvedValue(undefined);

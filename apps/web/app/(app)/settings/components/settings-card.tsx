@@ -4,7 +4,10 @@ import type { ComponentPropsWithoutRef, ComponentType, ReactNode, SVGProps } fro
 import { Accordion, Card } from "@heroui/react";
 import { twMerge } from "tailwind-merge";
 
-interface SettingsCardProps extends Omit<ComponentPropsWithoutRef<typeof Card>, "title"> {
+interface SettingsCardProps extends Omit<
+  ComponentPropsWithoutRef<typeof Card>,
+  "title" | "children"
+> {
   /** The outline icon that names the card at a glance. */
   icon: ComponentType<SVGProps<SVGSVGElement>>;
   title: ReactNode;

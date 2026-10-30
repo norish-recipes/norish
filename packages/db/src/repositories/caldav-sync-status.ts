@@ -129,7 +129,7 @@ export async function getCaldavSyncStatusesByUser(
 
   // Get total count
   let countQuery = db
-    .select({ count: sql<number>`count(*)` })
+    .select({ count: sql<number>`count(*)::int` })
     .from(caldavSyncStatus)
     .where(eq(caldavSyncStatus.userId, userId))
     .$dynamic();
@@ -233,7 +233,7 @@ export async function getSyncStatusSummary(
   const rows = await db
     .select({
       syncStatus: caldavSyncStatus.syncStatus,
-      count: sql<number>`count(*)`,
+      count: sql<number>`count(*)::int`,
     })
     .from(caldavSyncStatus)
     .where(eq(caldavSyncStatus.userId, userId))

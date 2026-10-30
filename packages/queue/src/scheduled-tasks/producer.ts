@@ -9,8 +9,8 @@ import type { Queue } from "bullmq";
 
 import { createLogger } from "@norish/shared-server/logger";
 
-import type { ScheduledTaskJobData } from "./queue";
-import { SCHEDULED_TASKS } from "./queue";
+import type { ScheduledTaskJobData } from "./tasks";
+import { SCHEDULED_TASKS } from "./tasks";
 
 const log = createLogger("queue:scheduled-tasks");
 
@@ -25,11 +25,11 @@ function isKnownTask(data: ScheduledTaskJobData | undefined): boolean {
  * What a removed scheduled task leaves behind. Taking its schedule away does
  * not take away the jobs that schedule already put in the queue, so a task
  * type this build no longer knows keeps arriving — and keeps failing, every
- * few seconds, in a Redis nobody thinks to empty. Clear those out here, where
+ * few seconds, in a Valkey nobody thinks to empty. Clear those out here, where
  * the list of tasks that do exist is already in hand.
  */
 async function removeStrandedTasks(queue: Queue<ScheduledTaskJobData>): Promise<void> {
-  const queued = await queue.getJobs(["waiting", "delayed", "paused", "failed"]);
+  const queued = await queue.getJobs(["waiting", "delayed", "failed"]);
   const stranded = queued.filter((job) => !isKnownTask(job.data));
 
   for (const job of stranded) {
@@ -50,11 +50,11 @@ async function removeStrandedTasks(queue: Queue<ScheduledTaskJobData>): Promise<
 }
 
 /**
- * Initialize repeatable jobs for all scheduled tasks.
- * Called once during server startup.
+ * Register every scheduled task as a Job Scheduler. Called once during server
+ * startup.
  */
 export async function initializeScheduledJobs(queue: Queue<ScheduledTaskJobData>): Promise<void> {
-  // Remove any stale repeatable jobs first to ensure clean state
+  // Remove every existing schedule first, so a task this build dropped stops running.
   const existing = await queue.getJobSchedulers();
 
   for (const job of existing) {
@@ -63,27 +63,25 @@ export async function initializeScheduledJobs(queue: Queue<ScheduledTaskJobData>
   await removeStrandedTasks(queue);
 
   for (const taskType of SCHEDULED_TASKS) {
-    await queue.add(
+    await queue.upsertJobScheduler(
       taskType,
-      { taskType },
-      { repeat: { pattern: CRON_MIDNIGHT }, jobId: taskType }
+      { pattern: CRON_MIDNIGHT },
+      { name: taskType, data: { taskType } }
     );
   }
 
   // The first boot seeds the catalogue before the server starts; every boot
   // still asks once here, so a seed that failed at boot is retried without
   // waiting for midnight. The fetch is conditional, so asking about a seed
-  // already applied costs one small request. Once is once: a boot that finds
-  // the ask still queued (a dev server restarts on every saved file) adds
-  // nothing, or the queue fills with fetches that all say "unchanged".
-  const pending = await queue.getJobs(["waiting", "delayed", "active", "prioritized"]);
-  const asked = pending.some(
-    (job) => job.data?.taskType === "ingredient-catalogue-refresh" && !job.repeatJobKey
+  // already applied costs one small request. Once is once: while the ask is
+  // still queued or running (a dev server restarts on every saved file), a
+  // second boot's ask is deduplicated onto it; BullMQ frees the id once the
+  // ask finishes, so the next boot asks again.
+  await queue.add(
+    "ingredient-catalogue-refresh",
+    { taskType: "ingredient-catalogue-refresh" },
+    { deduplication: { id: "boot-ingredient-catalogue-refresh" } }
   );
 
-  if (!asked) {
-    await queue.add("ingredient-catalogue-refresh", { taskType: "ingredient-catalogue-refresh" });
-  }
-
-  log.info("Repeatable scheduled jobs initialized (daily at midnight)");
+  log.info("Scheduled tasks registered (daily at midnight)");
 }

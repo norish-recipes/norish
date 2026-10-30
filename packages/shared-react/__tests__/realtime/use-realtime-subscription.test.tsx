@@ -170,7 +170,7 @@ describe("useRealtimeSubscription", () => {
     expect(() => current().observer.onData?.(envelope({ n: 1 }))).toThrow(TypeError);
   });
 
-  it("on REALTIME_LAGGED invalidates exactly lagQueryKeys, then resets to a cursor-less subscription", () => {
+  it("on REALTIME_LAGGED resets to a cursor-less subscription, and invalidates exactly lagQueryKeys once it is live", () => {
     const invalidate = vi.spyOn(queryClient, "invalidateQueries");
     const keys = [[["groceries"]], [["stores", "list"]]];
 
@@ -182,13 +182,27 @@ describe("useRealtimeSubscription", () => {
       first.observer.onError?.(lagged());
     });
 
-    expect(invalidate).toHaveBeenCalledTimes(2);
-    expect(invalidate).toHaveBeenNthCalledWith(1, { queryKey: keys[0] });
-    expect(invalidate).toHaveBeenNthCalledWith(2, { queryKey: keys[1] });
     expect(first.unsubscribe).toHaveBeenCalledTimes(1);
     expect(subscriptions).toHaveLength(2);
     expect(current()).not.toBe(first);
     expect(current().input).toBeUndefined();
+    // An event published before the fresh subscription is live would miss it
+    // and an early refetch both: the refetch waits for its Cursor Mark.
+    expect(invalidate).not.toHaveBeenCalled();
+
+    act(() => {
+      current().observer.onData?.(tracked(CURSOR_MARK));
+    });
+
+    expect(invalidate).toHaveBeenCalledTimes(2);
+    expect(invalidate).toHaveBeenNthCalledWith(1, { queryKey: keys[0] });
+    expect(invalidate).toHaveBeenNthCalledWith(2, { queryKey: keys[1] });
+
+    // Once: a later Cursor Mark (a reconnect's resume) is no lag to catch up on.
+    act(() => {
+      current().observer.onData?.(tracked(CURSOR_MARK));
+    });
+    expect(invalidate).toHaveBeenCalledTimes(2);
   });
 
   it("prefers onLag over lagQueryKeys", () => {
@@ -199,6 +213,9 @@ describe("useRealtimeSubscription", () => {
 
     act(() => {
       current().observer.onError?.(lagged());
+    });
+    act(() => {
+      current().observer.onData?.(tracked(CURSOR_MARK));
     });
 
     expect(onLag).toHaveBeenCalledTimes(1);

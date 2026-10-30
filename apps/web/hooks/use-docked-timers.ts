@@ -1,9 +1,10 @@
 "use client";
 
 import type { Timer } from "@/stores/timers";
-import { useEffect, useState } from "react";
 import { useTimersEnabledQuery } from "@/hooks/config";
 import { useTimerStore } from "@/stores/timers";
+
+import { useHydrated } from "@norish/shared-react/hooks";
 
 const NO_TIMERS: Timer[] = [];
 
@@ -20,11 +21,7 @@ const NO_TIMERS: Timer[] = [];
 export function useDockedTimers(): Timer[] {
   const { timersEnabled } = useTimersEnabledQuery();
   const timers = useTimerStore((state) => state.timers);
-  const [isHydrated, setIsHydrated] = useState(false);
-
-  useEffect(() => {
-    setIsHydrated(true);
-  }, []);
+  const isHydrated = useHydrated();
 
   if (!isHydrated || !timersEnabled || timers.length === 0) return NO_TIMERS;
 

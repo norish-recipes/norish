@@ -6,8 +6,7 @@ description: Connect Norish to PostgreSQL.
 
 # Database
 
-Norish stores its data in **PostgreSQL**. Set the connection with
-`DATABASE_URL`:
+Set `DATABASE_URL` to connect to **PostgreSQL**:
 
 ```yaml title="docker-compose.yml (environment)"
 DATABASE_URL: postgres://postgres:norish@db:5432/norish
@@ -19,8 +18,8 @@ DATABASE_URL: postgres://postgres:norish@db:5432/norish
 
 ## Separate variables
 
-Without `DATABASE_URL`, Norish builds the URL from the variables below. With
-none of them set, it uses `postgresql://postgres:norish@localhost:5432/norish`.
+Without `DATABASE_URL`, the connection uses the variables below. With
+none set, it defaults to `postgresql://postgres:norish@localhost:5432/norish`.
 
 | Variable            | Description       | Default     |
 | ------------------- | ----------------- | ----------- |

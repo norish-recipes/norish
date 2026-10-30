@@ -4,11 +4,8 @@ import { use } from "react";
 
 import CookbookPage from "./cookbook-page";
 
-type Props = {
-  params: Promise<{ id: string }>;
-};
-
-export default function CookbookRoute({ params }: Props) {
+// Only the params: the offline shell renders this page with no search params.
+export default function CookbookRoute({ params }: Pick<PageProps<"/cookbooks/[id]">, "params">) {
   const { id } = use(params);
 
   return <CookbookPage cookbookId={id} />;

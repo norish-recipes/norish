@@ -98,7 +98,6 @@ function render(currentUserId: string | null = "user-1") {
 }
 
 beforeEach(() => {
-  vi.clearAllMocks();
   manualErrors = [];
   latest = null;
   // Never settles: these tests seed the cache and then assert on realtime

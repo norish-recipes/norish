@@ -56,6 +56,8 @@ export function createUseStoresMutations({
   useStoresQuery,
 }: CreateUseStoresMutationsOptions) {
   return function useStoresMutations(): StoresMutationsResult {
+    "use memo";
+
     const trpc = useTRPC();
     const queryClient = useQueryClient();
     const { setStoresData, invalidate, stores } = useStoresQuery();
@@ -67,11 +69,17 @@ export function createUseStoresMutations({
     const invalidateUnlessQueued = invalidateUnlessPreserved(invalidate);
 
     const createMutation = useMutation(trpc.stores.create.mutationOptions());
+    const { mutate: mutateCreate } = createMutation;
     const updateMutation = useMutation(trpc.stores.update.mutationOptions());
+    const { mutate: mutateUpdate } = updateMutation;
     const deleteMutation = useMutation(trpc.stores.delete.mutationOptions());
+    const { mutate: mutateDelete } = deleteMutation;
     const reorderMutation = useMutation(trpc.stores.reorder.mutationOptions());
-    const checkMutation = useMutation(trpc.stores.checkSearchAddress.mutationOptions());
-    const fileMutation = useMutation(trpc.stores.fileGroceryName.mutationOptions());
+    const { mutate: mutateReorder } = reorderMutation;
+    const { mutateAsync: mutateCheckAsync } = useMutation(
+      trpc.stores.checkSearchAddress.mutationOptions()
+    );
+    const { mutate: mutateFile } = useMutation(trpc.stores.fileGroceryName.mutationOptions());
 
     const createStore = (data: StoreCreateDto): Promise<string> => {
       // Client-minted id, honoured on insert so a queued offline create stays
@@ -100,7 +108,7 @@ export function createUseStoresMutations({
       };
 
       return new Promise((resolve, reject) => {
-        createMutation.mutate(payload, {
+        mutateCreate(payload, {
           onSuccess: (storeId) => {
             insertOptimistic(storeId);
             resolve(storeId);
@@ -139,7 +147,7 @@ export function createUseStoresMutations({
         });
       });
 
-      updateMutation.mutate(
+      mutateUpdate(
         { ...data, version: getStoreVersion(data.id) },
         {
           onError: invalidateUnlessQueued,
@@ -165,7 +173,7 @@ export function createUseStoresMutations({
         grocerySnapshot,
       };
 
-      deleteMutation.mutate(input, {
+      mutateDelete(input, {
         onError: () => invalidate(),
       });
     };
@@ -184,7 +192,7 @@ export function createUseStoresMutations({
           .filter((s): s is StoreDto => s !== null);
       });
 
-      reorderMutation.mutate(
+      mutateReorder(
         {
           stores: storeIds.map((id) => ({ id, version: getStoreVersion(id) })),
         },
@@ -205,7 +213,7 @@ export function createUseStoresMutations({
       searchAddress: string | null,
       website: string | null
     ): Promise<StoreSearchAddressResult> =>
-      checkMutation.mutateAsync({ storeId, term, searchAddress, website }).then((result) => {
+      mutateCheckAsync({ storeId, term, searchAddress, website }).then((result) => {
         invalidate();
 
         return result;
@@ -242,7 +250,7 @@ export function createUseStoresMutations({
           mergeAisleFiling(prev ?? [], { storeId, ingredientId, aisleId })
         );
       }
-      fileMutation.mutate(
+      mutateFile(
         { storeId, name, aisleId },
         {
           onError: invalidateUnlessPreserved(() =>

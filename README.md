@@ -1,31 +1,9 @@
-<p align="center">
-  <img src="./.github/assets/logo.svg" width="100%" alt="Norish Logo" />
-</p>
+<p align="center"><a href="https://norish.dev"><img src=".github/assets/readme/link-top-website.png" width="20%" align="top" alt="Website"></a><a href="https://docs.norish.dev"><img src=".github/assets/readme/link-top-docs.png" width="20%" align="top" alt="Docs"></a><a href="https://github.com/norish-recipes/Norish/blob/main/LICENSE"><img src=".github/assets/readme/link-top-license.png" width="20%" align="top" alt="License: AGPL-3.0"></a><a href="https://hub.docker.com/r/norishapp/norish"><img src=".github/assets/readme/link-top-docker.png" width="20%" align="top" alt="Docker Hub"></a><a href="https://buymeacoffee.com/mikevanes"><img src=".github/assets/readme/link-top-coffee.png" width="20%" align="top" alt="Buy me a coffee"></a><img src=".github/assets/readme/hero.png" width="100%" align="top" alt="Norish. Any source, any recipe. Import from recipe sites, YouTube, Instagram, photos and pasted text."><a href="#quick-start"><img src=".github/assets/readme/quickstart.png" width="100%" align="top" alt="Set it up using Docker Compose. Jump to the quick start."></a><img src=".github/assets/readme/duo.png" width="100%" align="top" alt="Scale any recipe: change the servings or switch between US and metric. Focus on cooking: timers, the ingredients each step needs, and the screen stays on."><img src=".github/assets/readme/trio.png" width="100%" align="top" alt="Plan the week in one shared meal calendar, do the groceries on a list synced in real time, and skip what is already in your pantry."><img src=".github/assets/readme/selfhost.png" width="100%" align="top" alt="Free and open source. Works offline, sign in with OIDC, GitHub, Google or email, and 17 languages."><a href="https://norish.dev"><img src=".github/assets/readme/link-website.png" width="20%" align="top" alt="Website"></a><a href="https://docs.norish.dev"><img src=".github/assets/readme/link-docs.png" width="20%" align="top" alt="Docs"></a><a href="https://github.com/norish-recipes/Norish/blob/main/LICENSE"><img src=".github/assets/readme/link-license.png" width="20%" align="top" alt="License: AGPL-3.0"></a><a href="https://hub.docker.com/r/norishapp/norish"><img src=".github/assets/readme/link-docker.png" width="20%" align="top" alt="Docker Hub"></a><a href="https://buymeacoffee.com/mikevanes"><img src=".github/assets/readme/link-coffee.png" width="20%" align="top" alt="Buy me a coffee"></a></p>
 
-<p align="center">
-  <a href="https://norish.dev"><img src="https://img.shields.io/badge/Website-norish.dev-22c55e?style=for-the-badge&logo=googlechrome&logoColor=white" alt="Website" /></a>
-  <a href="https://docs.norish.dev"><img src="https://img.shields.io/badge/Docs-docs.norish.dev-22c55e?style=for-the-badge&logo=readthedocs&logoColor=white" alt="Documentation" /></a>
-  <a href="https://github.com/norish-recipes/Norish/blob/main/LICENSE"><img src="https://img.shields.io/github/license/norish-recipes/Norish?style=for-the-badge" alt="License" /></a>
-  <a href="https://github.com/norish-recipes/Norish/actions"><img src="https://img.shields.io/github/actions/workflow/status/norish-recipes/Norish/release-build.yml?style=for-the-badge&logo=github" alt="Build Status" /></a>
-  <a href="https://hub.docker.com/r/norishapp/norish"><img src="https://img.shields.io/docker/pulls/norishapp/norish?style=for-the-badge&logo=docker" alt="Docker Pulls" /></a>
-  <a href="https://hub.docker.com/r/norishapp/norish"><img src="https://img.shields.io/docker/image-size/norishapp/norish?style=for-the-badge&logo=docker" alt="Docker Image Size" /></a>
-  <a href="https://buymeacoffee.com/mikevanes"><img src="https://img.shields.io/badge/Buy%20Me%20a%20Coffee-ffdd00?style=for-the-badge&logo=buy-me-a-coffee&logoColor=black" alt="Buy Me a Coffee" /></a>
-</p>
+<a name="quick-start"></a>
+<p><img src=".github/assets/readme/quickstart-head.png" width="100%" align="top" alt="Quick start: save the file below as compose.yaml, set the two secrets and run docker compose up -d"></p>
 
----
-
-# Norish
-
-Norish is a real-time, household-first recipe app for planning meals, sharing groceries, and cooking together.
-
-**For the website and documentation see: [norish.dev](https://norish.dev) and [docs.norish.dev](https://docs.norish.dev)**
-
-## Quick start
-
-The fastest way to try Norish is Docker Compose. At a minimum you need a `DATABASE_URL` and a `MASTER_KEY`:
-
-> [!TIP]
-> Generate a `MASTER_KEY` with `openssl rand -base64 32`. Keep it secret and stable — it derives the encryption keys, so changing it later invalidates previously encrypted data.
+Generate `MASTER_KEY` with `openssl rand -base64 32` and keep it stable: it derives the encryption keys.
 
 ```yaml
 services:
@@ -43,14 +21,14 @@ services:
       MASTER_KEY: <32-byte-base64-key> # openssl rand -base64 32
       OBSCURA_ENDPOINT: ws://obscura:9222
       OBSCURA_CDP_TOKEN: <random-token> # openssl rand -hex 32, same value on obscura
-      REDIS_URL: redis://redis:6379
+      VALKEY_URL: valkey://valkey:6379
       UPLOADS_DIR: /app/uploads
       
     healthcheck:
       test:
         [
           "CMD-SHELL",
-          'node -e "require(''http'').get(''http://localhost:3000/api/v1/health'', r => process.exit(r.statusCode===200?0:1))"',
+          'node -e "require(''http'').get(''http://localhost:3000'' + (process.env.NEXT_PUBLIC_BASE_PATH || '''') + ''/api/v1/health/live'', r => process.exit(r.statusCode===200?0:1))"',
         ]
       interval: 1m
       timeout: 15s
@@ -58,7 +36,7 @@ services:
       start_period: 1m
     depends_on:
       - db
-      - redis
+      - valkey
 
   db:
     image: postgres:17-alpine
@@ -73,37 +51,25 @@ services:
 
   # Renders recipe pages for URL imports
   obscura:
-    image: norishapp/obscura:0.2.4-norish.1
+    image: norishapp/obscura:0.2.5-norish.1
     container_name: norish-obscura
     restart: unless-stopped
     environment:
       OBSCURA_CDP_TOKEN: <random-token>
 
-  redis:
-    image: redis:8.4.0
-    container_name: norish-redis
+  valkey:
+    image: valkey/valkey:9
+    container_name: norish-valkey
     restart: unless-stopped
     volumes:
-      - redis_data:/data
+      - valkey_data:/data
 
 volumes:
   db_data:
   norish_data:
-  redis_data:
+  valkey_data:
 ```
 
-## Contributing
+<p><a href="https://docs.norish.dev"><img src=".github/assets/readme/quickstart-foot.png" width="100%" align="top" alt="Reverse proxy, sign-in providers and AI are in the docs. Setup guide."></a></p>
 
-Contributions are welcome! See [CONTRIBUTING.md](CONTRIBUTING.md) or the [development docs](https://docs.norish.dev/development/setup) to get started.
-
-## License
-
-Norish is licensed under [AGPL-3.0](LICENSE).
-
----
-
-# Nora
-
-Last but not least, a picture of our lovely dog Nora:
-
-<img src="./apps/web/public/nora.jpg" width="25%" alt="Nora" />
+<p><img src=".github/assets/readme/outro.png" width="100%" align="top" alt="Contributions welcome. If you don't have any programming skills, making issues is appreciated and helps make Norish a better app. Norish is free software under AGPL-3.0. Last but not least, our dog Nora."><a href="https://github.com/norish-recipes/Norish/blob/main/CONTRIBUTING.md"><img src=".github/assets/readme/link-contributing.png" width="50%" align="top" alt="Contributing guide"></a><a href="https://docs.norish.dev/development/setup"><img src=".github/assets/readme/link-dev-setup.png" width="50%" align="top" alt="Development setup"></a></p>

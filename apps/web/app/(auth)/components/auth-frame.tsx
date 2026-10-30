@@ -23,7 +23,7 @@ export function AuthFrame({ children, contentClassName, footer }: AuthFrameProps
           so it stands down below the usual md boundary. */}
       <BrandLogo
         priority
-        className="mb-6 hidden w-full max-w-72 md:block"
+        className="mb-6 hidden w-full max-w-72 [view-transition-name:brand-logo] md:block"
         height={78}
         width={288}
       />

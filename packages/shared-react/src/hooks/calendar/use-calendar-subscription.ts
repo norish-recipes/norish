@@ -17,6 +17,8 @@ export function createUseCalendarSubscription({
   useCalendarCacheHelpers,
 }: CreateUseCalendarSubscriptionOptions) {
   return function useCalendarSubscription(startISO: string, endISO: string) {
+    "use memo";
+
     const trpc = useTRPC();
     const { setCalendarData, invalidate, upsertItemAcrossRanges, removeItemAcrossRanges } =
       useCalendarCacheHelpers(startISO, endISO);

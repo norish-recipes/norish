@@ -2,9 +2,10 @@
 
 import { useState } from "react";
 import { SettingsCard } from "@/app/(app)/settings/components/settings-card";
+import { ActionButton, ActionButtonGroup } from "@/components/shared/action-button";
 import { ArrowLeftStartOnRectangleIcon } from "@heroicons/react/16/solid";
 import { HomeIcon } from "@heroicons/react/24/outline";
-import { Button, Chip, Modal, Separator } from "@heroui/react";
+import { Chip, Modal, Separator } from "@heroui/react";
 import { useTranslations } from "next-intl";
 
 import { useHouseholdSettingsContext } from "../context";
@@ -40,12 +41,15 @@ export default function HouseholdInfoCard() {
           <span className="text-base font-medium">{household.users.length}</span>
         </div>
         <Separator />
-        <div className="flex justify-end">
-          <Button onPress={() => setShowLeaveModal(true)} variant="danger-soft">
-            {<ArrowLeftStartOnRectangleIcon className="h-4 w-4" />}
+        <ActionButtonGroup>
+          <ActionButton
+            action="remove"
+            icon={ArrowLeftStartOnRectangleIcon}
+            onPress={() => setShowLeaveModal(true)}
+          >
             {t("leaveButton")}
-          </Button>
-        </div>
+          </ActionButton>
+        </ActionButtonGroup>
       </SettingsCard>
 
       {/* Leave Household Modal */}
@@ -66,12 +70,19 @@ export default function HouseholdInfoCard() {
                   )}
                 </Modal.Body>
                 <Modal.Footer>
-                  <Button onPress={onClose} variant="tertiary">
-                    {tActions("cancel")}
-                  </Button>
-                  <Button onPress={handleLeaveHousehold} variant="danger">
-                    {t("leaveModal.confirmButton")}
-                  </Button>
+                  <ActionButtonGroup>
+                    <ActionButton action="cancel" onPress={onClose}>
+                      {tActions("cancel")}
+                    </ActionButton>
+                    <ActionButton
+                      action="remove"
+                      icon={ArrowLeftStartOnRectangleIcon}
+                      variant="danger"
+                      onPress={handleLeaveHousehold}
+                    >
+                      {t("leaveModal.confirmButton")}
+                    </ActionButton>
+                  </ActionButtonGroup>
                 </Modal.Footer>
               </>
             )}

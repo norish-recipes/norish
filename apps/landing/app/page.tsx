@@ -1,25 +1,23 @@
-import { Closing } from "@/components/sections/closing";
+import { ScrollEffects } from "@/components/scroll-effects";
 import { Features } from "@/components/sections/features";
-import { Footer } from "@/components/sections/footer";
 import { Hero } from "@/components/sections/hero";
-import { Moments } from "@/components/sections/moments";
+import { Nora } from "@/components/sections/nora";
 import { SelfHost } from "@/components/sections/self-host";
-import { Tour } from "@/components/sections/tour";
+import { Sources } from "@/components/sections/sources";
 import { SiteHeader } from "@/components/site-header";
 
 export default function HomePage() {
   return (
     <>
+      <ScrollEffects />
       <SiteHeader />
-      <main>
+      <main id="top">
         <Hero />
-        <Moments />
-        <Tour />
+        <Sources />
         <Features />
+        <Nora />
         <SelfHost />
-        <Closing />
       </main>
-      <Footer />
     </>
   );
 }

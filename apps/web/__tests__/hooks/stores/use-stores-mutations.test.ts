@@ -3,7 +3,7 @@ import { createElement } from "react";
 import { useStoresMutations } from "@/hooks/stores/use-stores-mutations";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { act, renderHook } from "@testing-library/react";
-import { beforeEach, describe, expect, it, vi } from "vitest";
+import { describe, expect, it, vi } from "vitest";
 
 const mockDeleteMutation = vi.fn();
 
@@ -72,10 +72,6 @@ function createWrapper() {
 }
 
 describe("useStoresMutations", () => {
-  beforeEach(() => {
-    vi.clearAllMocks();
-  });
-
   it("sends the store version with the grocery snapshot on delete", () => {
     const { result } = renderHook(() => useStoresMutations(), {
       wrapper: createWrapper(),

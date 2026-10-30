@@ -1,158 +1,88 @@
 /**
- * Ingredient Review Worker
- *
- * A round of Ask AI over Flagged Ingredients (ADR-0037), one job for however
- * many foods a person asked about, one step per food. Each food is asked the
- * question the Ingredients page's own Ask AI asks, a few at once, and a sure
- * answer is left as a suggestion for a person to confirm. Clean names asks a
- * food for its Plain Name instead, and leaves a rename; one round may ask
- * both, and a flagged food AI calls a food of its own is asked its Plain Name
- * next. The round's count
- * follows over the socket as answers come, and the changes are announced
- * together once every food is answered, so the suggestions arrive as one. The round outlives the tab that started it. A food no
- * longer flagged, or one the asker may not edit, is passed over, and a food
- * whose question or edit broke is recorded as failed on its own step, with
- * the cause; neither ends the round. Only the round's own bookkeeping can fail
- * it, and the retry asks again, replacing the suggestions it left. Uses the lazy
- * worker pattern, which wraps the processor so the models each question asks
- * reach the job monitor.
+ * The AI pass over Ingredients (ADR-0037, amended 2026-10-17): a step per food, each answer an AI
+ * Change, then the foods it answered for and still there get their missing icon and gaps.
  */
 
 import type { Job } from "bullmq";
 
 import type { IngredientReviewJobData } from "@norish/queue/contracts/job-types";
 import type { ModelUse } from "@norish/shared-server/ai/runtime/model-use-ledger";
-import type { PlainNameOutcome } from "@norish/shared-server/ingredients/plain-names";
-import type { ReviewOutcome } from "@norish/shared-server/ingredients/review";
+import type { CleanUpOutcome } from "@norish/shared-server/ingredients/review";
 import { SERVER_CONFIG } from "@norish/config/env-config-server";
 import {
   createModelUseLedger,
   recordModelUse,
   runWithModelUseLedger,
 } from "@norish/shared-server/ai/runtime/model-use-ledger";
-import { CatalogueEditError } from "@norish/shared-server/ingredients/catalogue";
-import { cleanNameWithAI } from "@norish/shared-server/ingredients/plain-names";
-import { findParentWithAI, reviewFlaggedWithAI } from "@norish/shared-server/ingredients/review";
+import { announcingTogether } from "@norish/shared-server/ingredients/changes";
+import { askAIAbout, cleanUpOverWholeCatalogue } from "@norish/shared-server/ingredients/review";
 import { createLogger } from "@norish/shared-server/logger";
-import { ingredients } from "@norish/shared-server/realtime/ingredients";
 
 import type { JobStepEvent } from "../job-steps";
-import type { ReviewStepDetail } from "./progress";
-import { defineLazyWorker, QUEUE_NAMES } from "../config";
+import { createWorker } from "../create-worker";
+import { describeError } from "../helpers";
+import { queueIconAndFills } from "../ingredient-fill/producer";
 import { recordCompletedSteps } from "../job-steps";
-import { REVIEW_STEP, summarizeReviewRound } from "./progress";
+import { QUEUE_NAMES } from "../queue-names";
+import { CATALOGUE_CLEAN_UP } from "./producer";
 
 const log = createLogger("worker:ingredient-review");
 
-/** An error's message, with the cause a wrapper hides: a failed query names the database's complaint. */
-function describe(error: unknown): string {
-  if (!(error instanceof Error)) return String(error);
-  const cause = error.cause instanceof Error ? error.cause.message : null;
+/** The base id of every food's step; the food's place in the pass follows a colon. */
+export const REVIEW_STEP = "asking-ai";
 
-  return cause ? `${error.message}: ${cause}` : error.message;
-}
+/** What a food's step records: the answer made and what AI was asked, a skip, or what broke. */
+export type ReviewStepDetail = { ingredientId: string; name?: string } & (
+  CleanUpOutcome | { outcome: "failed"; error: string }
+);
 
-/**
- * A flagged food AI called a food of its own is asked its Plain Name next, so
- * one round cleans it too: the rename or merge it comes to, which replaced
- * the "distinct" waiting on it, or null where the "distinct" stays. A name
- * question that broke leaves the review's answer standing.
- */
-async function nameAfterReview(
-  job: Job<IngredientReviewJobData>,
-  ingredientId: string
-): Promise<Extract<PlainNameOutcome, { outcome: "rename" | "merge" }> | null> {
-  try {
-    const named = await cleanNameWithAI(job.data.actor, ingredientId, { afterReview: true });
-
-    return named.outcome === "rename" || named.outcome === "merge" ? named : null;
-  } catch (error) {
-    log.warn({ err: error, jobId: job.id, ingredientId }, "Cleaning a reviewed food's name failed");
-
-    return null;
-  }
-}
-
-/**
- * The question, asked of one food. Nothing here ends the round: a refusal is
- * the food's, and an error — the model, the database — is recorded on the
- * food's step for the monitor and counted, so the other foods still get asked.
- */
+/** The question, asked of one food; an error is recorded on its step, and the pass goes on. */
 async function ask(
   job: Job<IngredientReviewJobData>,
-  { id: ingredientId, mode }: IngredientReviewJobData["ingredients"][number]
+  question: (ingredientId: string) => Promise<CleanUpOutcome>,
+  ingredientId: string
 ): Promise<ReviewStepDetail> {
   try {
-    if (mode === "name") {
-      return { ingredientId, ...(await cleanNameWithAI(job.data.actor, ingredientId)) };
-    }
-
-    const outcome: ReviewOutcome =
-      mode === "parent"
-        ? await findParentWithAI(job.data.actor, ingredientId)
-        : await reviewFlaggedWithAI(job.data.actor, ingredientId);
-
-    if (outcome.outcome === "not-flagged") {
-      return { ingredientId, outcome: "skipped", reason: "not-flagged" };
-    }
-    if (mode === "review" && outcome.outcome === "distinct") {
-      return { ingredientId, ...((await nameAfterReview(job, ingredientId)) ?? outcome) };
-    }
-
-    return { ingredientId, ...outcome };
+    return { ingredientId, ...(await question(ingredientId)) };
   } catch (error) {
-    if (
-      error instanceof CatalogueEditError &&
-      (error.refusal === "forbidden" || error.refusal === "not-found")
-    ) {
-      return { ingredientId, outcome: "skipped", reason: error.refusal };
-    }
     log.error({ err: error, jobId: job.id, ingredientId }, "Asking AI about a food failed");
 
-    return { ingredientId, outcome: "failed", error: describe(error) };
+    return { ingredientId, outcome: "failed" as const, error: describeError(error) };
   }
 }
 
-/** Tell every open page how far the round is. Best-effort: the round itself has gone through. */
-async function announceRound(job: Job<IngredientReviewJobData>, finished: boolean): Promise<void> {
-  try {
-    await ingredients.publish("review", summarizeReviewRound(job, finished), undefined);
-  } catch (error) {
-    log.warn({ err: error, jobId: job.id }, "Could not announce the round's progress");
-  }
-}
-
-/**
- * How many foods are asked about at once (`INGREDIENT_REVIEW_CONCURRENCY`).
- * The questions are independent, so a round of twenty takes a couple of
- * questions' time rather than twenty; a self-hosted model that struggles
- * with parallel requests gets a lower number.
- */
+/** How many foods are asked about at once (`INGREDIENT_REVIEW_CONCURRENCY`). */
 function reviewConcurrency(): number {
   return SERVER_CONFIG.INGREDIENT_REVIEW_CONCURRENCY;
 }
 
-/**
- * How many times a round writes its answers down and tells the pages how far
- * it has come. A round may be every flagged food in the catalogue, and the
- * job's progress is one value rewritten whole on each write, so a write per
- * food would store the square of the round's size; twenty keep it linear.
- */
-const ROUND_WRITES = 20;
+/** How many times a pass writes its answers down: progress is rewritten whole on each write. */
+const PASS_WRITES = 20;
 
-/** Exported so the job body can be exercised without a Redis-backed worker. */
-export async function processIngredientReviewJob(job: Job<IngredientReviewJobData>): Promise<void> {
+/** Whether AI answered for the food: a later pass may still merge one it could not reach. */
+function answered(detail: ReviewStepDetail): boolean {
+  return detail.outcome !== "failed" && detail.outcome !== "unanswered";
+}
+
+/** Exported so the job body can be exercised without a Valkey-backed worker. */
+export async function processIngredientReviewJob(
+  job: Job<IngredientReviewJobData>,
+  _token?: string,
+  signal?: AbortSignal
+): Promise<void> {
   const { ingredients: foods } = job.data;
-  const changed: string[] = [];
-  const writeEvery = Math.max(1, Math.ceil(foods.length / ROUND_WRITES));
+  const question = job.data.wholeCatalogue ? cleanUpOverWholeCatalogue : askAIAbout;
+  const writeEvery = Math.max(1, Math.ceil(foods.length / PASS_WRITES));
   let next = 0;
   let settled = 0;
+  // The foods AI answered for, which may be drawn once the pass is over.
+  const done = new Set<string>();
   // The answers not yet written down, as the steps the job monitor shows.
   let unwritten: (JobStepEvent & { endedAt: number })[] = [];
   // Writes go out one after another, so the timeline keeps the order foods settled in.
   let recording = Promise.resolve();
 
-  log.info({ jobId: job.id, count: foods.length }, "Asking AI about flagged Ingredients");
+  log.info({ jobId: job.id, count: foods.length }, "Asking AI about Ingredients");
 
   const record = (
     food: IngredientReviewJobData["ingredients"][number],
@@ -160,80 +90,54 @@ export async function processIngredientReviewJob(job: Job<IngredientReviewJobDat
     detail: ReviewStepDetail,
     models: ModelUse[]
   ) => {
-    const { ingredientId, ...outcome } = detail;
-
     settled += 1;
+    if (answered(detail)) done.add(detail.ingredientId);
     unwritten.push({
       id: `${REVIEW_STEP}:${settled}/${foods.length}`,
       startedAt,
       endedAt: Date.now(),
-      detail: { ingredientId, name: food.name, mode: food.mode, ...outcome },
+      detail: { ...detail, name: food.name },
       models,
     });
-    // A suggestion recorded, or a flag's reason brought up to date, is worth announcing.
-    if (detail.outcome !== "skipped" && detail.outcome !== "failed") changed.push(food.id);
     if (unwritten.length < writeEvery && settled < foods.length) return recording;
 
     const steps = unwritten;
-    const over = settled === foods.length;
 
     unwritten = [];
-    recording = recording.then(async () => {
-      await recordCompletedSteps(job, steps);
-      // The count, and which foods still wait, follow as answers are written down.
-      if (!over) await announceRound(job, false);
-    });
+    recording = recording.then(() => recordCompletedSteps(job, steps));
 
     return recording;
   };
 
   const askNext = async (): Promise<void> => {
-    while (next < foods.length) {
+    // A cancelled pass asks no further food.
+    while (next < foods.length && !signal?.aborted) {
       const food = foods[next++]!;
       const startedAt = Date.now();
-      // The food's own requests, so a round that asks two questions still says
-      // what each took; the attempt's ledger gets them too, for the job monitor.
+      // The food's own requests, so the monitor says what each food took; the
+      // attempt's ledger gets them too.
       const own = createModelUseLedger();
-      const detail = await runWithModelUseLedger(own, () => ask(job, food));
+      const detail = await runWithModelUseLedger(own, () => ask(job, question, food.id));
 
       for (const use of own.uses) recordModelUse(use);
       await record(food, startedAt, detail, own.uses);
     }
   };
 
-  await Promise.all(
-    Array.from({ length: Math.min(reviewConcurrency(), foods.length) }, () => askNext())
+  // What the pass changed is announced once, together, as it ends.
+  await announcingTogether(() =>
+    Promise.all(
+      Array.from({ length: Math.min(reviewConcurrency(), foods.length) }, () => askNext())
+    )
   );
   await recording;
-
-  if (changed.length > 0) {
-    try {
-      await ingredients.publish("changed", { ingredientIds: changed }, undefined);
-    } catch (error) {
-      log.warn({ err: error, jobId: job.id }, "Could not announce the round's Ingredient changes");
-    }
+  signal?.throwIfAborted();
+  // Drawing many is Fill gaps' work: only a mint's pass draws.
+  if (job.name !== CATALOGUE_CLEAN_UP) {
+    await queueIconAndFills(foods.flatMap((food) => (done.has(food.id) ? [food.id] : [])));
   }
-  await announceRound(job, true);
 }
 
-/**
- * A round that gave up ends on every open page too, at the count it reached.
- * An attempt that will be retried says nothing: the round is still on.
- */
-export async function handleIngredientReviewFailure(
-  job: Job<IngredientReviewJobData> | undefined,
-  error: Error
-): Promise<void> {
-  log.error({ jobId: job?.id, err: error }, "A round of Ask AI failed");
-  if (!job || job.attemptsMade < (job.opts.attempts ?? 1)) return;
-  await announceRound(job, true);
+export function startIngredientReviewWorker(): void {
+  createWorker<IngredientReviewJobData>(QUEUE_NAMES.INGREDIENT_REVIEW, processIngredientReviewJob);
 }
-
-const ingredientReviewWorker = defineLazyWorker<IngredientReviewJobData>(
-  QUEUE_NAMES.INGREDIENT_REVIEW,
-  processIngredientReviewJob,
-  handleIngredientReviewFailure
-);
-
-export const startIngredientReviewWorker = ingredientReviewWorker.start;
-export const stopIngredientReviewWorker = ingredientReviewWorker.stop;

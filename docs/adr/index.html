@@ -653,16 +653,16 @@
           </p>
         </li>
         <li>
-          <a href="imports/0019-obscura-is-the-only-rendered-page-engine.md"
-            >ADR-0019 — Obscura is the only rendered-page engine</a
+          <a href="imports/0019-page-renderers-are-tried-in-a-fixed-order.md"
+            >ADR-0019 — Page Renderers are tried in a fixed order, and the solver never gets tokens</a
           >
           <p>
-            <b>Accepted and implemented.</b> URL imports render in one Norish-owned Obscura sidecar,
-            repackaged from upstream's render+stealth release archive at a pinned version, started
-            with stealth always on, reached with official Playwright Core over CDP; private-network
-            protection is retained. Rejects upstream's render-only image, a from-source build, a
-            Chrome fallback or per-site engine policy, and any Norish-authored fingerprint beside
-            Obscura's.
+            <b>Accepted, not yet implemented.</b> Every caller fetches plainly first, then tries
+            Obscura, then a Chromium browser, then a FlareSolverr-compatible solver, each switched on
+            in admin settings; a renderer fails on empty HTML or a bot check. Site Auth Tokens go to
+            Obscura and the Chromium browser and never to the solver, and an Allow private addresses
+            switch, off by default, guards the plain fetch, the Chromium browser and the solver. Rejects one engine only, racing, per-site
+            routing, cookies through FlareSolverr, Camoufox, and licence-gated browsers.
           </p>
         </li>
         <li>

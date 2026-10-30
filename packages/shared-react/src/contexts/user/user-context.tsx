@@ -1,4 +1,4 @@
-import { createContext, useContext, useMemo } from "react";
+import { createContext, use, useMemo } from "react";
 
 import type { User } from "@norish/shared/contracts";
 
@@ -27,12 +27,17 @@ export function createUserContext({
   useFreshUserQuery,
 }: CreateUserContextOptions) {
   const SharedUserContext = createContext<UserContextValue | null>(null);
+  // Settled once here rather than called with `?.()`: the compiler only
+  // compiles a component whose hooks it sees called unconditionally.
+  const useFreshUserQueryOrNone = useFreshUserQuery ?? (() => undefined);
 
   function UserProvider({ children }: { children: React.ReactNode }) {
+    "use memo";
+
     const { user: sessionUser, isLoading } = useSessionUser();
     const signOut = useSignOut();
 
-    const freshUser = useFreshUserQuery?.(sessionUser?.id);
+    const freshUser = useFreshUserQueryOrNone(sessionUser?.id);
     const user = freshUser?.user ?? sessionUser;
 
     const value = useMemo<UserContextValue>(
@@ -44,11 +49,13 @@ export function createUserContext({
       [user, isLoading, signOut]
     );
 
-    return <SharedUserContext.Provider value={value}>{children}</SharedUserContext.Provider>;
+    return <SharedUserContext value={value}>{children}</SharedUserContext>;
   }
 
   function useUserContext(): UserContextValue {
-    const context = useContext(SharedUserContext);
+    "use memo";
+
+    const context = use(SharedUserContext);
 
     if (!context) {
       throw new Error("useUserContext must be used within UserProvider");

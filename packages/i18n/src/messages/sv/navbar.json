@@ -1,0 +1,63 @@
+{
+  "userMenu": {
+    "newRecipe": {
+      "title": "Nytt recept",
+      "description": "Skriv ett eget recept"
+    },
+    "importUrl": {
+      "title": "Importera från webbadress",
+      "description": "Klistra in en receptlänk"
+    },
+    "settings": {
+      "title": "Inställningar",
+      "description": "Hantera ditt konto"
+    },
+    "logout": "Logga ut",
+    "signOutConfirm": {
+      "title": "Kasta osynkroniserade ändringar?",
+      "description": "{count, plural, one {# ändring som gjorts offline har inte nått servern ännu.} other {# ändringar som gjorts offline har inte nått servern ännu.}} Om du loggar ut kastas dessa väntande ändringar permanent och kontots offlinedata tas bort från den här enheten."
+    },
+    "version": {
+      "updateAvailable": "v{version} finns tillgänglig"
+    }
+  },
+  "theme": {
+    "title": "Tema",
+    "loading": "Läser in…",
+    "light": "Ljust läge",
+    "dark": "Mörkt läge",
+    "system": "Systeminställning"
+  },
+  "nav": {
+    "home": "Recept",
+    "calendar": "Kalender",
+    "groceries": "Inköpslista"
+  },
+  "mobile": {
+    "searchPlaceholder": "Sök efter recept...",
+    "toggleSearch": "Visa eller dölj sökning",
+    "goBack": "Gå tillbaka"
+  },
+  "archiveImporter": {
+    "uploading": "Laddar upp…",
+    "uploadFile": "Ladda upp en fil",
+    "dragDrop": "eller dra och släpp",
+    "formats": ".norishrecipes (Norish), .melarecipes (Mela), .paprikarecipes (Paprika), .zip (Mealie/Tandoor/Recipe Keeper)",
+    "dropzoneLabel": "Ladda upp ett receptarkiv",
+    "uploadingFile": "Laddar upp fil…",
+    "processing": "Bearbetar: {details}",
+    "complete": "Klart: {details}",
+    "imported": "{count} importerade",
+    "errors": "{count, plural, one {# fel} other {# fel}}",
+    "ofTotal": "{current} av {total}",
+    "progressLabel": "Importförlopp",
+    "showNotes": "Visa {count, plural, one {# importanmärkning} other {# importanmärkningar}}",
+    "hideNotes": "Dölj {count, plural, one {# importanmärkning} other {# importanmärkningar}}",
+    "toasts": {
+      "startTitle": "Receptimporten har startat",
+      "startDescription": "{count, plural, one {Importerar # recept…} other {Importerar # recept…}}",
+      "completeTitle": "Receptimporten är klar",
+      "completeDescription": "{imported, plural, one {Importerade # recept} other {Importerade # recept}}{notes, plural, =0 {} one {, # med en anmärkning} other {, # med anmärkningar}}{errors, plural, =0 {} one {, # fel} other {, # fel}}"
+    }
+  }
+}

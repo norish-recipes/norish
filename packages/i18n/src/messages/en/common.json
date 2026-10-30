@@ -29,7 +29,6 @@
     "goHome": "Go Home",
     "test": "Test",
     "format": "Format",
-    "restoreDefaults": "Restore defaults",
     "saveChanges": "Save Changes"
   },
   "secret": {
@@ -58,6 +57,8 @@
     "searchTags": "Search tags",
     "favoritesAndRating": "Favorites & Rating",
     "favorites": "Favorites",
+    "pantry": "Pantry",
+    "pantryOnly": "Ingredients at home",
     "cookingTime": "Cooking time",
     "cookingTimeUnder15": "<15 min",
     "cookingTimeUnder30": "<30 min",
@@ -112,6 +113,11 @@
     "message": "She is sniffing around to find where you wanted to go.",
     "imageAlt": "Nora looking confused"
   },
+  "errorPage": {
+    "title": "Something went wrong.",
+    "message": "Norish ran into an error on this page.",
+    "retry": "Try again"
+  },
   "import": {
     "url": {
       "title": "Import recipe",
@@ -139,7 +145,7 @@
       "title": "Import from Image",
       "dropzone": "Drop images here or click to browse",
       "paste": "to paste",
-      "formats": "Supports JPG, PNG, WebP. Max 10MB per file.",
+      "formats": "Supports JPG, PNG, WebP, PDF. Max 10MB per file.",
       "invalidType": "Invalid file type",
       "notSupported": "{name} is not a supported image format",
       "tooLarge": "File too large",
@@ -178,12 +184,15 @@
     "daily": "Daily",
     "weekly": "Weekly",
     "monthly": "Monthly",
+    "yearly": "Yearly",
     "day": "day",
     "days": "days",
     "week": "week",
     "weeks": "weeks",
     "month": "month",
     "months": "months",
+    "year": "year",
+    "years": "years",
     "next": "Next:",
     "every": "Every",
     "everyOther": "Every other",

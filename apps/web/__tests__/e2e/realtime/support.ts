@@ -2,8 +2,10 @@ import type { Page, WebSocket as PageSocket } from "@playwright/test";
 import { request } from "@playwright/test";
 import { WebSocket as RawSocket } from "ws";
 
+import { findNewestGroceryNamed } from "@norish/db/repositories/groceries";
+
 import type { Identity, RealtimeStack, SessionCookies } from "./fixture";
-import { withDatabase } from "../harness/database";
+import { callTrpc } from "../harness/trpc";
 import { waitForSocket } from "./fixture";
 
 const TRPC_JSON = { "content-type": "application/json" };
@@ -30,53 +32,52 @@ export async function callMutation<T = unknown>(
   return { ok: response.ok(), status: response.status(), data: body?.result?.data?.json ?? null };
 }
 
+/** Read one tRPC query that takes no input over HTTP as the context's user. */
+export async function callQuery<T>(page: Page, baseURL: string, procedure: string): Promise<T> {
+  const response = await page.request.get(`${baseURL}/api/trpc/${procedure}`, {
+    headers: { origin: baseURL },
+  });
+
+  if (!response.ok()) throw new Error(`${procedure} failed with HTTP ${response.status()}`);
+
+  return ((await response.json()) as { result: { data: { json: T } } }).result.data.json;
+}
+
 export interface HouseholdRow {
   id: string;
-  joinCode: string;
+  /** Only the household's admin is shown the code. */
+  joinCode: string | null;
 }
 
 /**
- * The household a user belongs to, once the asynchronous create/join has
- * landed. Create inserts the household with a code and then replaces it
- * (version 2), so a household is read only once its code is the one that stays.
+ * The household as `identity` reads it, once the asynchronous create/join has landed. Create
+ * inserts the household and then replaces its code (version 2), so only version 2 on counts.
  */
 export async function readHousehold(
   stack: RealtimeStack,
-  userId: string
+  identity: Identity
 ): Promise<HouseholdRow | null> {
-  return withDatabase(stack.server.databaseUrl, async (database) => {
-    const rows = await database.query<{ id: string; join_code: string | null }>(
-      `select h.id, h.join_code
-         from households h
-         join household_users hu on hu.household_id = h.id
-        where hu.user_id = $1
-          and h.version > 1`,
-      [userId]
-    );
-    const row = rows.rows[0];
+  const { household } = await callTrpc<{
+    household: { id: string; version: number; joinCode?: string | null } | null;
+  }>(stack.baseURL, stack.cookies[identity], "households.get");
 
-    return row && row.join_code ? { id: row.id, joinCode: row.join_code } : null;
-  });
+  return household && household.version > 1
+    ? { id: household.id, joinCode: household.joinCode ?? null }
+    : null;
 }
 
+/** The newest grocery by this name: a new grocery takes the top of its store's list. */
 export async function readGrocery(
-  stack: RealtimeStack,
   name: string
 ): Promise<{ id: string; version: number; isDone: boolean } | null> {
-  return withDatabase(stack.server.databaseUrl, async (database) => {
-    const rows = await database.query<{ id: string; version: number; is_done: boolean }>(
-      `select id, version, is_done from groceries where name = $1 order by created_at desc limit 1`,
-      [name]
-    );
-    const row = rows.rows[0];
+  const grocery = await findNewestGroceryNamed(name);
 
-    return row ? { id: row.id, version: row.version, isDone: row.is_done } : null;
-  });
+  return grocery ? { id: grocery.id, version: grocery.version, isDone: grocery.isDone } : null;
 }
 
 /**
  * Revoke every session of a user, the way Better Auth does it (sessions live
- * in Redis, so a row delete would not do). The browser keeps its cookie; the
+ * in Valkey, so a row delete would not do). The browser keeps its cookie; the
  * next thing to present it learns that it is worthless.
  */
 export async function revokeSessions(stack: RealtimeStack, identity: Identity): Promise<void> {
@@ -176,8 +177,8 @@ export function sessionHeaders(stack: RealtimeStack, identity: Identity): Record
   return { cookie: cookieHeader(stack.cookies[identity]) };
 }
 
-export async function redisClientCount(stack: RealtimeStack): Promise<number> {
-  const list = await stack.server.redisCli("client", "list");
+export async function valkeyClientCount(stack: RealtimeStack): Promise<number> {
+  const list = await stack.server.valkeyCli("client", "list");
 
   // The CLI that ran the command is one of the listed clients; it is there
   // every time, so it cancels out of any comparison.

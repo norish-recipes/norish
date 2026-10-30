@@ -9,9 +9,7 @@
   "editNote": {
     "title": "Notitie bewerken",
     "noteLabel": "Notitie",
-    "notePlaceholder": "Voer notitie in...",
-    "date": "Datum",
-    "slot": "Tijdstip"
+    "notePlaceholder": "Voer notitie in..."
   },
   "navigation": {
     "previousMonth": "Vorige maand",

@@ -20,6 +20,8 @@ const defaultState: ArchiveImportState = {
 
 export function createUseArchiveCache() {
   return function useArchiveImportCacheHelpers(): ArchiveImportCacheHelpers {
+    "use memo";
+
     const queryClient = useQueryClient();
 
     const setImportState = useCallback(

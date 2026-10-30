@@ -5,6 +5,8 @@ import { normalizeLocaleConfig } from "./normalize-locale-config";
 
 export function createUseLocaleConfigQuery({ useTRPC }: CreateConfigHooksOptions) {
   return function useLocaleConfigQuery() {
+    "use memo";
+
     const trpc = useTRPC();
 
     const { data, error, isLoading } = useQuery({

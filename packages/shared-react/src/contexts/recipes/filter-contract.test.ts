@@ -25,6 +25,7 @@ describe("recipe filter contract", () => {
       maxCookingTime: undefined,
       type: "all",
       favoritesOnly: false,
+      pantryOnly: false,
     });
     expect(serializeRecipeFilters(DEFAULT_RECIPE_FILTERS)).toBe(JSON.stringify(queryFilters));
   });
@@ -37,6 +38,7 @@ describe("recipe filter contract", () => {
         searchTags: ["vegetarian"],
         searchFields: ["name"],
         showFavoritesOnly: true,
+        showPantryOnly: true,
         minRating: 4,
         maxCookingTime: 30,
         categories: ["Dinner"],
@@ -46,6 +48,7 @@ describe("recipe filter contract", () => {
       filterMode: "AND",
       searchTags: ["vegetarian"],
       showFavoritesOnly: true,
+      showPantryOnly: true,
       minRating: 4,
       maxCookingTime: 30,
       categories: ["Dinner"],

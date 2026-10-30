@@ -19,6 +19,7 @@ import type { User } from "@norish/shared/contracts";
 import { getVerifiedSession } from "@norish/auth/session";
 import { SERVER_CONFIG } from "@norish/config/env-config-server";
 import { trpcLogger } from "@norish/shared-server/logger";
+import { addBasePath } from "@norish/shared/lib/base-path";
 
 import {
   registerConnection,
@@ -34,6 +35,9 @@ export const WS_CLOSE_SERVICE_RESTART = 1012;
 
 /** How long a client gets to answer the 1012 close frame before its socket is dropped. */
 const CLOSE_GRACE_MS = 2_000;
+
+/** The socket path, under the base path. */
+const TRPC_WS_PATH = addBasePath("/trpc");
 
 // ws exports differ between ESM (named exports) and CJS (default export with Server)
 const wsInterop = wsModule as unknown as {
@@ -154,7 +158,7 @@ export function initTrpcWebSocket(server: Server) {
     trpcLogger.trace({ pathname: url.pathname, host }, "WebSocket upgrade request");
 
     // Only handle /trpc WebSocket path
-    if (url.pathname !== "/trpc") {
+    if (url.pathname !== TRPC_WS_PATH) {
       // In development, let Next.js HMR handle other WebSocket paths
       // In production, reject unknown WebSocket upgrades to prevent socket leaks
       if (SERVER_CONFIG.NODE_ENV !== "development") {

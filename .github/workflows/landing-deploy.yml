@@ -41,9 +41,9 @@ jobs:
         env:
           CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
           CLOUDFLARE_ACCOUNT_ID: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
-        # Run wrangler via `pnpm dlx` instead of cloudflare/wrangler-action so we
-        # don't have to add wrangler to the workspace (the action's pnpm auto-install
-        # fails on the monorepo root) and to avoid the action's deprecated Node 20
-        # runtime. --branch=main marks this as a production deploy (matches the
-        # project's production branch), so it publishes to norish.dev.
-        run: pnpm dlx wrangler@4 pages deploy apps/landing/out --project-name=norish --branch=main
+        # wrangler is a devDependency of the landing app, so this job runs the
+        # release the lockfile records, integrity hash included; it holds the
+        # Cloudflare token. --branch=main marks this as a production deploy
+        # (matches the project's production branch), so it publishes to norish.dev.
+        working-directory: apps/landing
+        run: pnpm exec wrangler pages deploy out --project-name=norish --branch=main

@@ -4,15 +4,23 @@ import { rm } from "node:fs/promises";
 import net from "node:net";
 import path from "node:path";
 import type { StartedPostgreSqlContainer } from "@testcontainers/postgresql";
-import type { StartedRedisContainer } from "@testcontainers/redis";
+import type { StartedValkeyContainer } from "@testcontainers/valkey";
 import type { ChildProcess } from "node:child_process";
 import { PostgreSqlContainer } from "@testcontainers/postgresql";
-import { RedisContainer } from "@testcontainers/redis";
-import { Client } from "pg";
+import { ValkeyContainer } from "@testcontainers/valkey";
+
+import { setConfig } from "@norish/db/repositories/server-config";
+
+import {
+  VALKEY_IMAGE,
+  valkeyUrl,
+} from "../../../../../packages/shared-server/__tests__/helpers/valkey";
+import { BUILT_BASE_PATH } from "./build";
+import { MASTER_KEY } from "./environment";
+import { connectRepositories, disconnectRepositories } from "./repositories";
 
 const WEB_DIR = path.resolve(import.meta.dirname, "../../..");
-const REPO_ROOT = path.resolve(import.meta.dirname, "../../../../..");
-const DIST_SERVER_ENTRY = path.join(REPO_ROOT, "dist-server/index.mjs");
+const BUILD_ID = path.join(WEB_DIR, ".next/BUILD_ID");
 const E2E_RUNTIME_DIR = path.resolve(import.meta.dirname, "../.runtime");
 const START_TIMEOUT_MS = 90_000;
 const STOP_TIMEOUT_MS = 15_000;
@@ -24,8 +32,7 @@ export interface HarnessUser {
 }
 
 interface ProductionStackOptions {
-  project: "offline" | "ai" | "realtime";
-  port: number;
+  project: "offline" | "ai" | "realtime" | "base-path";
   databaseName: string;
   users: readonly [HarnessUser, HarnessUser];
   /**
@@ -48,9 +55,9 @@ export interface ProductionServer {
 }
 
 function ensureBuilt(): void {
-  if (!existsSync(DIST_SERVER_ENTRY)) {
+  if (!existsSync(BUILD_ID)) {
     throw new Error(
-      `Missing ${DIST_SERVER_ENTRY}. Run pnpm test:e2e at the repository root to build and run the complete browser gate.`
+      `Missing ${BUILD_ID}. Run pnpm test:e2e at the repository root to build and run the complete browser gate.`
     );
   }
 }
@@ -60,14 +67,14 @@ function delay(milliseconds: number): Promise<void> {
 }
 
 /**
- * A host port nobody is listening on right now. Redis gets a fixed binding to
+ * A host port nobody is listening on right now. Valkey gets a fixed binding to
  * it rather than a kernel-assigned one, because Docker re-assigns ephemeral
  * host ports on a container restart and a fixed binding survives one — which
- * is what lets a scenario restart Redis under a server that keeps its URL.
- * The embedded parser gets one too, so stacks running side by side never
- * share (or kill) each other's parser.
+ * is what lets a scenario restart Valkey under a server that keeps its URL.
+ * The server and the embedded parser get one too, so stacks running side by
+ * side, or beside a dev server, never share (or kill) each other's ports.
  */
-function freeHostPort(): Promise<number> {
+export function freeHostPort(): Promise<number> {
   return new Promise((resolve, reject) => {
     const probe = net.createServer();
 
@@ -128,27 +135,42 @@ async function stopAll(
 }
 
 export class ProductionStack {
-  readonly baseURL: string;
   readonly uploadsDir: string;
-  private readonly port: number;
+  private serverPort: number | null = null;
   private readonly runtimeDir: string;
   private parserPort: number | null = null;
   private postgres: StartedPostgreSqlContainer | null = null;
-  private redis: StartedRedisContainer | null = null;
+  private valkey: StartedValkeyContainer | null = null;
   private activeServer: ProductionServer | null = null;
   private databaseConnectionUrl: string | null = null;
-  private redisConnectionUrl: string | null = null;
+  private valkeyConnectionUrl: string | null = null;
   private capturedLogs: string[] = [];
 
   constructor(private readonly options: ProductionStackOptions) {
-    // Every Playwright worker boots its own stack, so each takes the
-    // project's port plus its worker index and a runtime directory of its own.
+    // Every Playwright worker boots its own stack, so each takes a runtime
+    // directory of its own, and a free port once it starts.
     const worker = Number(process.env.TEST_PARALLEL_INDEX ?? 0);
 
-    this.port = options.port + worker;
-    this.baseURL = `http://localhost:${this.port}`;
     this.runtimeDir = path.join(E2E_RUNTIME_DIR, `${options.project}-${worker}`);
     this.uploadsDir = path.join(this.runtimeDir, "uploads");
+  }
+
+  /** Fixed for the stack's life: a restarted server keeps its origin. */
+  get origin(): string {
+    return `http://localhost:${this.port}`;
+  }
+
+  /** The origin plus the base path the build was made for. */
+  get baseURL(): string {
+    return `${this.origin}${BUILT_BASE_PATH}`;
+  }
+
+  private get port(): number {
+    if (this.serverPort === null) {
+      throw new Error(`[${this.options.project}] server port is not allocated`);
+    }
+
+    return this.serverPort;
   }
 
   get databaseUrl(): string {
@@ -159,12 +181,12 @@ export class ProductionStack {
     return this.databaseConnectionUrl;
   }
 
-  get redisUrl(): string {
-    if (!this.redisConnectionUrl) {
-      throw new Error(`[${this.options.project}] Redis is not provisioned`);
+  get valkeyUrl(): string {
+    if (!this.valkeyConnectionUrl) {
+      throw new Error(`[${this.options.project}] Valkey is not provisioned`);
     }
 
-    return this.redisConnectionUrl;
+    return this.valkeyConnectionUrl;
   }
 
   /** Everything the server wrote since the last `clearLogs()`, one entry per line. */
@@ -176,30 +198,30 @@ export class ProductionStack {
     this.capturedLogs = [];
   }
 
-  /** Run one `redis-cli` command inside the Redis container and return its output. */
-  async redisCli(command: string, ...args: string[]): Promise<string> {
-    if (!this.redis) {
-      throw new Error(`[${this.options.project}] Redis is not provisioned`);
+  /** Run one `valkey-cli` command inside the Valkey container and return its output. */
+  async valkeyCli(command: string, ...args: string[]): Promise<string> {
+    if (!this.valkey) {
+      throw new Error(`[${this.options.project}] Valkey is not provisioned`);
     }
 
-    return (await this.redis.executeCliCmd(command, args)).trim();
+    return (await this.valkey.executeCliCmd(command, args)).trim();
   }
 
   /**
-   * Restart the Redis container in place, the way an operator would: a
-   * SIGTERM, which lets Redis write its snapshot, so sessions and the Resume
+   * Restart the Valkey container in place, the way an operator would: a
+   * SIGTERM, which lets Valkey write its snapshot, so sessions and the Resume
    * Buffer come back with it (testcontainers' default is an immediate kill,
    * after which every session is gone and every request is anonymous). Its
    * host port is a fixed binding, so it survives the restart and the
    * server's clients reconnect on their own — which is the point.
    */
-  async restartRedis(): Promise<void> {
-    if (!this.redis) {
-      throw new Error(`[${this.options.project}] Redis is not provisioned`);
+  async restartValkey(): Promise<void> {
+    if (!this.valkey) {
+      throw new Error(`[${this.options.project}] Valkey is not provisioned`);
     }
 
     // Milliseconds: testcontainers converts this to Docker's seconds itself.
-    await this.redis.restart({ timeout: 10_000 });
+    await this.valkey.restart({ timeout: 10_000 });
   }
 
   async start(): Promise<void> {
@@ -209,24 +231,25 @@ export class ProductionStack {
     let phase = "container provisioning";
 
     try {
-      const redisHostPort = await freeHostPort();
+      this.serverPort = await freeHostPort();
+      const valkeyHostPort = await freeHostPort();
 
       this.parserPort = await freeHostPort();
-      const [postgresResult, redisResult] = await Promise.allSettled([
+      const [postgresResult, valkeyResult] = await Promise.allSettled([
         new PostgreSqlContainer("postgres:17-alpine")
           .withDatabase(this.options.databaseName)
           .withUsername(this.options.databaseName)
           .withPassword(this.options.databaseName)
           .start(),
-        new RedisContainer("redis:8.6.2-alpine")
-          .withExposedPorts({ container: 6379, host: redisHostPort })
+        new ValkeyContainer(VALKEY_IMAGE)
+          .withExposedPorts({ container: 6379, host: valkeyHostPort })
           .start(),
       ]);
 
       if (postgresResult.status === "fulfilled") this.postgres = postgresResult.value;
-      if (redisResult.status === "fulfilled") this.redis = redisResult.value;
+      if (valkeyResult.status === "fulfilled") this.valkey = valkeyResult.value;
 
-      const provisioningFailures = [postgresResult, redisResult]
+      const provisioningFailures = [postgresResult, valkeyResult]
         .filter((result): result is PromiseRejectedResult => result.status === "rejected")
         .map((result) => result.reason);
 
@@ -244,7 +267,8 @@ export class ProductionStack {
       }
 
       this.databaseConnectionUrl = this.postgres!.getConnectionUri();
-      this.redisConnectionUrl = this.redis!.getConnectionUrl();
+      this.valkeyConnectionUrl = valkeyUrl(this.valkey!);
+      await connectRepositories(this.databaseConnectionUrl);
 
       phase = "migration boot";
       await this.startServer();
@@ -269,7 +293,9 @@ export class ProductionStack {
       try {
         await this.stop();
       } catch (cleanupError) {
-        throw new AggregateError([setupError, cleanupError], setupError.message);
+        throw new AggregateError([setupError, cleanupError], setupError.message, {
+          cause: cleanupError,
+        });
       }
 
       throw setupError;
@@ -287,7 +313,8 @@ export class ProductionStack {
     }
 
     const capture = this.options.captureLogs === true;
-    const child: ChildProcess = spawn(process.execPath, [DIST_SERVER_ENTRY], {
+    // As production starts it: the server's source through tsx, from apps/web.
+    const child: ChildProcess = spawn(process.execPath, ["--import", "tsx", "server/index.ts"], {
       cwd: WEB_DIR,
       env: this.serverEnvironment(),
       stdio: ["ignore", capture ? "pipe" : "inherit", capture ? "pipe" : "inherit"],
@@ -296,7 +323,17 @@ export class ProductionStack {
     if (capture) {
       this.captureOutput(child);
     }
-    const exited = new Promise<void>((resolve) => child.once("exit", () => resolve()));
+    // After a fixture setup timeout the worker calls process.exit without reaching stop(),
+    // which would leave this server running with PPID 1.
+    const killWithWorker = () => child.kill("SIGKILL");
+
+    process.once("exit", killWithWorker);
+    const exited = new Promise<void>((resolve) =>
+      child.once("exit", () => {
+        process.off("exit", killWithWorker);
+        resolve();
+      })
+    );
     let stopped = false;
     const server: ProductionServer = {
       stop: async () => {
@@ -350,7 +387,7 @@ export class ProductionStack {
       try {
         await this.stopServer();
       } catch (cleanupError) {
-        throw new AggregateError([error, cleanupError], String(error));
+        throw new AggregateError([error, cleanupError], String(error), { cause: cleanupError });
       }
 
       throw error;
@@ -372,17 +409,18 @@ export class ProductionStack {
 
   async stop(): Promise<void> {
     const postgres = this.postgres;
-    const redis = this.redis;
+    const valkey = this.valkey;
 
     this.postgres = null;
-    this.redis = null;
+    this.valkey = null;
 
     await stopAll([
       { label: `[${this.options.project}] production server`, run: () => this.stopServer() },
+      { label: `[${this.options.project}] repository pool`, run: () => disconnectRepositories() },
       {
-        label: `[${this.options.project}] Redis`,
+        label: `[${this.options.project}] Valkey`,
         run: async () => {
-          await redis?.stop();
+          await valkey?.stop();
         },
       },
       {
@@ -432,10 +470,11 @@ export class ProductionStack {
       PORT: String(this.port),
       PARSER_API_PORT: String(this.parserPort),
       DATABASE_URL: this.databaseUrl,
-      REDIS_URL: this.redisConnectionUrl!,
+      VALKEY_URL: this.valkeyConnectionUrl!,
       AUTH_URL: this.baseURL,
-      TRUSTED_ORIGINS: this.baseURL,
-      MASTER_KEY: "X4fjLgB8egCPwlOQW8iC3JGXAtUIMUOGmk/y29n+YSw=",
+      TRUSTED_ORIGINS: this.origin,
+      NEXT_PUBLIC_BASE_PATH: BUILT_BASE_PATH,
+      MASTER_KEY,
       UPLOADS_DIR: this.uploadsDir,
       LOG_LEVEL: "error",
       NEXT_PUBLIC_LOG_LEVEL: "error",
@@ -449,43 +488,39 @@ export class ProductionStack {
       // Nothing outbound: a spec that needs an ingredient catalogue seeds its
       // own, rather than the server fetching Open Food Facts at boot.
       INGREDIENT_CATALOGUE_URL: "",
+      // The fake shop and recipe pages answer on loopback.
+      ALLOW_PRIVATE_ADDRESSES: "true",
       ...this.options.environment,
     };
   }
 
+  /**
+   * Ready for traffic, and its embedded parser answering too: readiness alone
+   * does not wait for the parser, which URL-import specs need.
+   */
   private async isHealthy(): Promise<boolean> {
     try {
-      const response = await fetch(`${this.baseURL}/api/v1/health`, {
-        signal: AbortSignal.timeout(2_000),
-      });
+      const responses = await Promise.all([
+        fetch(`${this.baseURL}/api/v1/health/ready`, { signal: AbortSignal.timeout(2_000) }),
+        fetch(`http://127.0.0.1:${this.parserPort}/health`, { signal: AbortSignal.timeout(2_000) }),
+      ]);
 
-      return response.ok;
+      return responses.every((response) => response.ok);
     } catch {
       return false;
     }
   }
 
   private async forceAuthenticationConfig(): Promise<void> {
-    const database = new Client({ connectionString: this.databaseUrl });
-
-    await database.connect();
-
-    try {
-      await database.query(
-        `update server_config set value = 'true'::jsonb
-         where key in ('password_auth_enabled', 'registration_enabled')`
-      );
-    } finally {
-      await database.end();
-    }
-
-    await this.redis!.executeCliCmd("flushall");
+    await setConfig("password_auth_enabled", true, null);
+    await setConfig("registration_enabled", true, null);
+    await this.valkey!.executeCliCmd("flushall");
   }
 
   private async signUp(user: HarnessUser): Promise<void> {
     const response = await fetch(`${this.baseURL}/api/auth/sign-up/email`, {
       method: "POST",
-      headers: { "content-type": "application/json", origin: this.baseURL },
+      headers: { "content-type": "application/json", origin: this.origin },
       body: JSON.stringify(user),
     });
 

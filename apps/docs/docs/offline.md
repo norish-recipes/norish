@@ -6,8 +6,8 @@ description: Using Norish offline.
 
 # Use Norish offline
 
-The Norish web app keeps an offline cache on your device, so it keeps working
-when your server can't be reached. The cache holds:
+An offline cache on your device lets you keep using the web app when your
+server can't be reached. It holds:
 
 - your 50 most recent recipes
 - every cookbook you can see and which recipes are in it
@@ -32,13 +32,13 @@ bottom. The dialog shows what this device has stored.
 
 ## Changes made offline
 
-Changes you make offline wait in the outbox and show as **Queued**. Norish
-sends them when the server is back. You don't need to keep the page open.
+Offline changes wait in the outbox as **Queued** and are sent when the
+server is back. You don't need to keep the page open.
 
 A queued change can have the following states:
 
 - **Syncing**: waiting to be sent, or being sent.
-- **Needs attention**: sending failed several times and Norish stopped trying.
+- **Needs attention**: sending failed several times and retries stopped.
 - **Conflict**: the same thing changed on the server first. Check it and retry
   if you still want your change.
 

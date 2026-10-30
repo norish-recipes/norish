@@ -46,7 +46,6 @@ function scoreAnswer(score: number) {
 }
 
 beforeEach(() => {
-  vi.clearAllMocks();
   vi.mocked(isDecisionModelConfigured).mockResolvedValue(true);
 });
 

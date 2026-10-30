@@ -21,4 +21,24 @@ describe("RecipeImportInputSchema", () => {
     expect(RecipeImportInputSchema.safeParse({ url: "not a link" }).success).toBe(false);
     expect(RecipeImportInputSchema.safeParse({ url: "" }).success).toBe(false);
   });
+
+  it("refuses a link that is not a web page", () => {
+    for (const url of [
+      "file:///etc/passwd",
+      "gopher://127.0.0.1:6379/_x",
+      "javascript://%0aalert(1)",
+      "ftp://example.com/recipe",
+    ]) {
+      expect(RecipeImportInputSchema.safeParse({ url }).success, url).toBe(false);
+    }
+  });
+
+  it("passes the link on as a browser reads it, so the host checked is the host fetched", () => {
+    expect(RecipeImportInputSchema.parse({ url: "https://instagram.com\\@evil.com/x" }).url).toBe(
+      "https://instagram.com/@evil.com/x"
+    );
+    expect(RecipeImportInputSchema.parse({ url: "HTTPS://Example.COM/Udon" }).url).toBe(
+      "https://example.com/Udon"
+    );
+  });
 });

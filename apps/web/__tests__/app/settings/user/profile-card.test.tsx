@@ -56,14 +56,13 @@ class MockFileReader {
 
 describe("ProfileCard", () => {
   beforeEach(() => {
-    vi.clearAllMocks();
     vi.stubGlobal("FileReader", MockFileReader);
     mockUser = { name: "Alice", email: "alice@example.com", image: null };
   });
 
   it("enables save and uploads avatar only after save", async () => {
     const { container } = render(<ProfileCard />);
-    const saveButton = screen.getByRole("button", { name: "saveChanges" });
+    const saveButton = screen.getByRole("button", { name: "save" });
 
     expect(saveButton).toBeDisabled();
 

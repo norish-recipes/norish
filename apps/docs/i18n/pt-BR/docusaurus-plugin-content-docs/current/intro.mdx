@@ -1,0 +1,118 @@
+---
+id: intro
+title: Introdução
+slug: /
+sidebar_position: 1
+sidebar_label: Introdução
+# The logo below is the page heading.
+hide_title: true
+description: Norish é um app de receitas em tempo real, pensado para a casa toda, para planejar refeições, compartilhar a lista de compras e cozinhar juntos.
+---
+
+import {
+  ArrowDownTrayIcon,
+  BoltIcon,
+  CalendarDaysIcon,
+  ChartPieIcon,
+  DevicePhoneMobileIcon,
+  LanguageIcon,
+  ShieldCheckIcon,
+} from "@heroicons/react/24/outline";
+import BrowserMockup from "@site/src/components/BrowserMockup";
+import { Feature, FeatureGrid } from "@site/src/components/FeatureGrid";
+import GitHubIcon from "@site/src/components/GitHubIcon";
+import Languages from "@site/src/components/Languages";
+import LinkCard, { DocLinkCard, LinkCardGrid } from "@site/src/components/LinkCard";
+import PhoneMockup from "@site/src/components/PhoneMockup";
+
+<h1>
+  <img alt="Norish" className="h-14 w-auto" src="/img/logo.svg" />
+</h1>
+
+<div className="heroMockup">
+  <BrowserMockup base="dashboard-web" alt="O painel do Norish" />
+  <PhoneMockup base="dashboard-mobile" alt="O Norish no celular" />
+</div>
+
+## O que é o Norish? {#what-is-norish}
+
+O Norish é um gerenciador de receitas com planejamento de refeições e listas de
+compras. As alterações são sincronizadas ao vivo: uma receita que alguém importa
+aparece para você na mesma hora.
+
+> **O nome** vem de Nora (nossa cachorra) + _dish_ (prato, em inglês). Por
+> coincidência, também soa como _nourish_ ("nutrir").
+
+## Principais recursos {#core-features}
+
+<FeatureGrid>
+  <Feature className="sm:col-span-2" icon={<ArrowDownTrayIcon />} title="Importe de qualquer fonte">
+    Importe de sites, vídeos, imagens ou texto simples.
+  </Feature>
+  <Feature icon={<CalendarDaysIcon />} title="Planeje e compre">
+    Planeje sua semana e monte uma lista de compras.
+  </Feature>
+  <Feature icon={<ChartPieIcon />} title="Cálculo de macros">
+    Informação nutricional calculada a partir dos ingredientes, conversão entre sistema métrico e
+    americano, e avisos de alergia.
+  </Feature>
+  <Feature icon={<BoltIcon />} title="Sincronizado em tempo real">
+    Receitas, compras e planejamento de refeições se atualizam para todos em tempo real.
+  </Feature>
+  <Feature icon={<DevicePhoneMobileIcon />} title="Feito para o celular">
+    Feito para usar no celular, mesmo offline.
+  </Feature>
+  <Feature icon={<ShieldCheckIcon />} title="SSO e login com senha">
+    Entre com senha, OIDC, GitHub ou Google.
+  </Feature>
+  <Feature icon={<LanguageIcon />} title="Vários idiomas">
+    <Languages />
+  </Feature>
+</FeatureGrid>
+
+## Para onde ir agora {#where-to-next}
+
+<LinkCardGrid>
+  <DocLinkCard doc="quick-start" eyebrow="Rodar" className="sm:col-span-2" />
+  <DocLinkCard doc="configuration/authentication" eyebrow="Login" />
+  <DocLinkCard doc="configuration/ai-provider" eyebrow="Recursos de IA" />
+  <DocLinkCard doc="configuration/server-runtime" eyebrow="Configurar" />
+  <DocLinkCard doc="configuration/admin-settings" eyebrow="Configurar" />
+  <DocLinkCard doc="reference/api" eyebrow="Integrar" />
+  <DocLinkCard doc="development/setup" eyebrow="Contribuir" />
+</LinkCardGrid>
+
+## Apps e extensões da comunidade {#community-apps-and-extensions}
+
+<LinkCardGrid>
+  <LinkCard
+    href="https://github.com/AfoxDesignz/Norish-Quick-Import-Extension"
+    eyebrow="Extensão de navegador"
+    icon={<GitHubIcon className="text-muted size-4.5" />}
+    title="Norish Quick Import Extension"
+    description="Importe receitas para o Norish direto do navegador. Mantida pela comunidade."
+  />
+</LinkCardGrid>
+
+## Alternativas de código aberto {#foss-alternatives}
+
+<LinkCardGrid>
+  <LinkCard
+    href="https://mealie.io/"
+    eyebrow="mealie.io"
+    title="Mealie"
+    icon={<img alt="" className="size-6" src="/img/mealie.png" />}
+    description="Um gerenciador de receitas e planejador de refeições auto-hospedado."
+  />
+  <LinkCard
+    href="https://tandoor.dev/"
+    eyebrow="tandoor.dev"
+    title="Tandoor"
+    icon={<img alt="" className="size-6" src="/img/tandoor.svg" />}
+    description="Um gerenciador de receitas auto-hospedado com planejamento de refeições e listas de compras."
+  />
+</LinkCardGrid>
+
+## Licença {#license}
+
+O Norish é licenciado sob a [AGPL-3.0](https://github.com/norish-recipes/Norish/blob/main/LICENSE).

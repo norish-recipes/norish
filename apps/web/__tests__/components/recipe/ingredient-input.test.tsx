@@ -58,7 +58,7 @@ describe("IngredientInput", () => {
     fireEvent.blur(input);
     expect(onChange).toHaveBeenCalledTimes(1);
 
-    const rows = onChange.mock.calls[0][0];
+    const rows = onChange.mock.calls[0]![0];
 
     expect(rows).toHaveLength(1);
     expect(rows[0].ingredientName).toContain("pinto beans");
@@ -78,7 +78,7 @@ describe("IngredientInput", () => {
 
     vi.advanceTimersByTime(300);
     expect(onChange).toHaveBeenCalledTimes(1);
-    expect(onChange.mock.calls[0][0][0].ingredientName).toContain("pinto beans");
+    expect(onChange.mock.calls[0]![0][0].ingredientName).toContain("pinto beans");
   });
 
   it("shows each row's food icon once the name names a known food, and a heading none", () => {

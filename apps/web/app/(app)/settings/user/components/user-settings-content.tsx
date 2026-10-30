@@ -9,12 +9,14 @@ import DangerZoneCard from "./danger-zone-card";
 import PreferencesCard from "./preferences-card";
 import ProfileCard from "./profile-card";
 import ShareLinksCard from "./share-links-card";
+import SignInMethodsCard from "./sign-in-methods-card";
 import SiteAuthTokensCard from "./site-auth-tokens-card";
 
 function UserSettingsContent() {
   return (
     <div className="flex w-full flex-col gap-6">
       <ProfileCard />
+      <SignInMethodsCard />
       <PreferencesCard />
       <AllergiesCard />
       <ApiTokenCard />

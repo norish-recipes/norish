@@ -1,6 +1,6 @@
 "use client";
 
-import { createContext, useContext, useMemo } from "react";
+import { createContext, use, useMemo } from "react";
 import { useGroupedGroceryDnd } from "@/hooks/groceries/use-grouped-grocery-dnd";
 import {
   DndContext,
@@ -20,7 +20,7 @@ import { GroupDragOverlay } from "./group-drag-overlay";
 const DndGroupedGroceryContext = createContext<DndGroupedGroceryContextValue | null>(null);
 
 export function useDndGroupedGroceryContext(): DndGroupedGroceryContextValue {
-  const ctx = useContext(DndGroupedGroceryContext);
+  const ctx = use(DndGroupedGroceryContext);
 
   if (!ctx)
     throw new Error("useDndGroupedGroceryContext must be used within DndGroupedGroceryProvider");
@@ -84,7 +84,7 @@ export function DndGroupedGroceryProvider({
   );
 
   return (
-    <DndGroupedGroceryContext.Provider value={contextValue}>
+    <DndGroupedGroceryContext value={contextValue}>
       <DndContext
         collisionDetection={collisionDetection}
         measuring={{
@@ -104,6 +104,6 @@ export function DndGroupedGroceryProvider({
           {activeGroup ? <GroupDragOverlay group={activeGroup} /> : null}
         </DragOverlay>
       </DndContext>
-    </DndGroupedGroceryContext.Provider>
+    </DndGroupedGroceryContext>
   );
 }

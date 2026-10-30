@@ -1,0 +1,74 @@
+{
+  "version.label": {
+    "message": "0.26.0-beta",
+    "description": "The label for version current"
+  },
+  "sidebar.docsSidebar.category.Recipes": {
+    "message": "Receitas",
+    "description": "The label for category 'Recipes' in sidebar 'docsSidebar'"
+  },
+  "sidebar.docsSidebar.category.Recipes.link.generated-index.title": {
+    "message": "Receitas",
+    "description": "The generated-index page title for category 'Recipes' in sidebar 'docsSidebar'"
+  },
+  "sidebar.docsSidebar.category.Recipes.link.generated-index.description": {
+    "message": "Importe, edite e enriqueça receitas.",
+    "description": "The generated-index page description for category 'Recipes' in sidebar 'docsSidebar'"
+  },
+  "sidebar.docsSidebar.category.Groceries": {
+    "message": "Compras",
+    "description": "The label for category 'Groceries' in sidebar 'docsSidebar'"
+  },
+  "sidebar.docsSidebar.category.Groceries.link.generated-index.title": {
+    "message": "Compras",
+    "description": "The generated-index page title for category 'Groceries' in sidebar 'docsSidebar'"
+  },
+  "sidebar.docsSidebar.category.Groceries.link.generated-index.description": {
+    "message": "A lista de compras da casa.",
+    "description": "The generated-index page description for category 'Groceries' in sidebar 'docsSidebar'"
+  },
+  "sidebar.docsSidebar.category.Configuration": {
+    "message": "Configuração",
+    "description": "The label for category 'Configuration' in sidebar 'docsSidebar'"
+  },
+  "sidebar.docsSidebar.category.Configuration.link.generated-index.title": {
+    "message": "Configuração",
+    "description": "The generated-index page title for category 'Configuration' in sidebar 'docsSidebar'"
+  },
+  "sidebar.docsSidebar.category.Configuration.link.generated-index.description": {
+    "message": "Configure seu servidor Norish: login, IA, banco de dados, runtime, idiomas, o parser de receitas e as configurações de administração.",
+    "description": "The generated-index page description for category 'Configuration' in sidebar 'docsSidebar'"
+  },
+  "sidebar.docsSidebar.category.Development": {
+    "message": "Desenvolvimento",
+    "description": "The label for category 'Development' in sidebar 'docsSidebar'"
+  },
+  "sidebar.docsSidebar.category.Development.link.generated-index.title": {
+    "message": "Desenvolvimento",
+    "description": "The generated-index page title for category 'Development' in sidebar 'docsSidebar'"
+  },
+  "sidebar.docsSidebar.category.Development.link.generated-index.description": {
+    "message": "Rode o Norish localmente e contribua.",
+    "description": "The generated-index page description for category 'Development' in sidebar 'docsSidebar'"
+  },
+  "sidebar.docsSidebar.category.Reference": {
+    "message": "Referência",
+    "description": "The label for category 'Reference' in sidebar 'docsSidebar'"
+  },
+  "sidebar.docsSidebar.category.Reference.link.generated-index.title": {
+    "message": "Referência",
+    "description": "The generated-index page title for category 'Reference' in sidebar 'docsSidebar'"
+  },
+  "sidebar.docsSidebar.category.Reference.link.generated-index.description": {
+    "message": "A API HTTP do Norish.",
+    "description": "The generated-index page description for category 'Reference' in sidebar 'docsSidebar'"
+  },
+  "sidebar.docsSidebar.category.Release notes": {
+    "message": "Notas de versão",
+    "description": "The label for category 'Release notes' in sidebar 'docsSidebar'"
+  },
+  "sidebar.docsSidebar.category.Release notes.link.generated-index.description": {
+    "message": "Destaques e notas de atualização de cada versão do Norish.",
+    "description": "The generated-index page description for category 'Release notes' in sidebar 'docsSidebar'"
+  }
+}

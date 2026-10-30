@@ -1,3 +1,4 @@
+import type { Ingredient } from "parse-ingredient";
 import { decode } from "html-entities";
 import { jsonrepair } from "jsonrepair";
 import { parseIngredient } from "parse-ingredient";
@@ -6,15 +7,42 @@ import type { FlatUnitsMap, UnitsMap } from "@norish/config/zod/server-config";
 import type { FullRecipeInsertDTO } from "@norish/shared/contracts/dto/recipe";
 import type { MultiWordUnit } from "@norish/shared/lib/unit-localization";
 import { httpUrlSchema } from "@norish/shared/lib/schema";
+import { VAGUE_UNITS } from "@norish/shared/lib/spelling-keys";
 import {
   collectMultiWordUnits,
   findLeadingUnit,
   flattenForLibrary,
 } from "@norish/shared/lib/unit-localization";
 
+/** A span holding no bracket of its own kind, per set of bracket kinds stripped. */
+const INNERMOST_BRACKETED = {
+  roundOrSquare: /\([^()]*\)|\[[^[\]]*\]/g,
+  roundSquareOrCurly: /\([^()]*\)|\[[^[\]]*\]|\{[^{}]*\}/g,
+} as const;
+
+/**
+ * The text with every bracketed span of `kinds` replaced by a space, brackets
+ * inside brackets included. Each pass peels one level off the innermost
+ * spans; a bracket that never closes stays.
+ */
+// ponytail: one pass per nesting level, fine for names; a depth scanner if long nested text ever comes through
+export function stripBracketed(
+  text: string,
+  kinds: keyof typeof INNERMOST_BRACKETED = "roundOrSquare"
+): string {
+  let previous: string;
+
+  do {
+    previous = text;
+    text = text.replace(INNERMOST_BRACKETED[kinds], " ");
+  } while (text !== previous);
+
+  return text;
+}
+
 export function stripHtmlTags(input: string): string {
   // 1. Remove HTML tags first (replace with space to preserve word boundaries)
-  const withoutTags = input.replace(/<[^>]*>/g, " ");
+  const withoutTags = input.replace(/<[^<>]*>/g, " ");
 
   // 2. Decode HTML entities
   const decoded = decode(withoutTags);
@@ -26,7 +54,7 @@ export function stripHtmlTags(input: string): string {
   const trimmed = normalized.trim();
 
   // 5. Remove space before closing punctuation at end (including Unicode quotes)
-  const cleaned = trimmed.replace(/\s+(["\u201D\u201C\u2019\u2018'»\]\)]+)$/g, "$1");
+  const cleaned = trimmed.replace(/(?<!\s)\s+(["\u201D\u201C\u2019\u2018'»\]\)]+)$/g, "$1");
 
   return cleaned;
 }
@@ -88,30 +116,144 @@ export function parseIngredientWithDefaults(
   input: string | string[],
   units: UnitsMap = {}
 ): ReturnType<typeof parseIngredient> {
-  const lines = Array.isArray(input) ? input : [input];
-  const merged: any[] = [];
+  const lines = (Array.isArray(input) ? input : [input]).flatMap((line) =>
+    line ? line.toString().split(/\r?\n/) : []
+  );
 
   // Flatten locale-aware units for parse-ingredient library
   const flatUnits = flattenForLibrary(units);
   const multiWordUnits = collectMultiWordUnits(units);
+  const parse = (text: string) => parseLine(text, flatUnits, multiWordUnits);
 
-  for (const line of lines) {
-    if (!line) continue;
+  return withoutListMarkers(lines).flatMap((text) => {
+    if (!text) return [];
 
-    // Normalize comma decimals to periods (European format => US format)
-    const normalizedLine = line.toString().replace(/(\d),(\d)/g, "$1.$2");
+    const parsed = parse(text);
+    const [only] = parsed;
 
-    const collapsed = withMultiWordUnitCollapsed(normalizedLine, multiWordUnits, flatUnits);
+    // A heading keeps its number: "INGREDIENTI per 12 persone:"
+    return parsed.length === 1 &&
+      only!.quantity == null &&
+      !only!.unitOfMeasureID &&
+      !text.endsWith(":")
+      ? (withAmountInFront(text, parse) ?? parsed)
+      : parsed;
+  });
+}
 
-    // Parse with flattened units
-    const parsed = parseIngredient(collapsed.line, {
-      additionalUOMs: collapsed.units,
-    });
+function parseLine(
+  text: string,
+  flatUnits: FlatUnitsMap,
+  multiWordUnits: readonly MultiWordUnit[]
+): Ingredient[] {
+  // Normalize comma decimals to periods (European format => US format)
+  const normalizedLine = text.replace(/(\d),(\d)/g, "$1.$2").replace(SLASH_NUMBERS, slashRange);
+  const collapsed = withMultiWordUnitCollapsed(normalizedLine, multiWordUnits, flatUnits);
 
-    merged.push(...(collapsed.unitText ? restoreUnitText(parsed, collapsed.unitText) : parsed));
+  // Parse with flattened units
+  const parsed = parseIngredient(collapsed.line, {
+    additionalUOMs: collapsed.units,
+  });
+  const restored = collapsed.unitText ? restoreUnitText(parsed, collapsed.unitText) : parsed;
+
+  return restored.map((ingredient) => withEveryWord(ingredient, normalizedLine, text));
+}
+
+/** List markers a pasted line opens with ("• 2 uova", "•⚫3 peperoni"): layout, not words. */
+const LIST_MARKER = /^(?:[•●○◦▪■□◆◇‣⁃∙·⚫*–—-]\s*)+/u;
+
+/**
+ * The lines without the list markers they open with. Where a list's lines carry markers, an export
+ * that turned some into "." (".80 g di Pecorino" beside "•2 uova") marks with "." before a digit too.
+ */
+export function withoutListMarkers(lines: readonly string[]): string[] {
+  const listed = lines.some((line) => LIST_MARKER.test(line.trim()));
+
+  return lines.map((line) => {
+    const text = line.trim();
+    const unmarked = text.replace(LIST_MARKER, "");
+
+    return listed && unmarked === text ? text.replace(/^\.(?=\d)/, "") : unmarked;
+  });
+}
+
+/** "a/b" as a line's amount: a fraction, or a range written with a slash ("10/15 pomodorini"). */
+const SLASH_NUMBERS = /^(\d+)\/(\d+)(?![\d/])/;
+
+/** The denominators a recipe writes a fraction with; any other "a/b", or one over 1, is a range. */
+const FRACTION_DENOMINATORS = new Set([2, 3, 4, 6, 8, 16]);
+
+function slashRange(fraction: string, from: string, to: string): string {
+  return FRACTION_DENOMINATORS.has(Number(to)) && Number(from) < Number(to)
+    ? fraction
+    : `${from}-${to}`;
+}
+
+/** An amount written as one word mid-line: "400", "400g", "1,5", "2-3", "½"; never zero ("farina 00"). */
+const MID_LINE_AMOUNT = /^(?!0+(?:[.,]0+)?$)(?:\d+(?:[.,/]\d+)?(?:[-–]\d+)?\p{L}*|[¼-¾⅐-⅞])$/u;
+
+/** "patate 400 g lesse" as "400 g patate lesse": parse-ingredient reads an amount only at a line's ends.
+ * The amount moves with its unit word, unless glued to one ("150g"); one in brackets stays. */
+function withAmountInFront(
+  text: string,
+  parse: (line: string) => Ingredient[]
+): Ingredient[] | null {
+  const tokens = text.split(/\s+/);
+  let depth = 0;
+  const at = tokens.findIndex((token, index) => {
+    const outside = depth === 0 && !/[([]/.test(token);
+
+    depth += (token.match(/[([]/g)?.length ?? 0) - (token.match(/[)\]]/g)?.length ?? 0);
+
+    return index > 0 && outside && MID_LINE_AMOUNT.test(token);
+  });
+
+  if (at < 1) return null;
+
+  const moved = (count: number) =>
+    [...tokens.slice(at, at + count), ...tokens.slice(0, at), ...tokens.slice(at + count)].join(
+      " "
+    );
+  const withUnit = /\p{L}$/u.test(tokens[at]!) ? [] : parse(moved(2));
+
+  return withUnit.length === 1 && withUnit[0]!.unitOfMeasureID ? withUnit : parse(moved(1));
+}
+
+/** A character an amount is written with: a digit or a vulgar fraction. */
+const AMOUNT_CHAR = /[\d¼-¾⅐-⅞]/u;
+
+/** The parse with every word kept, and its amount, so the line still scales. parse-ingredient
+ * drops a word after an amount at the end ("Scorsa di 1 limone") and reads a unit with no number. */
+function withEveryWord(ingredient: Ingredient, line: string, text: string): Ingredient {
+  const { quantity, unitOfMeasureID, description } = ingredient;
+
+  // "farina 00" read as no flour; "Per decorare:" as the unit "for garnish" and the food ":"
+  if ((quantity === 0 && !unitOfMeasureID) || !/[\p{L}\p{N}]/u.test(description)) {
+    return asWritten(text);
+  }
+  // "0 to_taste Sale", as another app exported a vague amount
+  if (quantity === 0) return { ...ingredient, quantity: null };
+  if (quantity == null) {
+    return !unitOfMeasureID || VAGUE_UNITS.has(unitOfMeasureID) ? ingredient : asWritten(text);
   }
 
-  return merged as any;
+  const lastWord = line.trimEnd().split(/\s+/).at(-1)!;
+  const dropped =
+    !unitOfMeasureID && !AMOUNT_CHAR.test(lastWord.at(-1)!) && !description.endsWith(lastWord);
+
+  return dropped ? { ...ingredient, description: `${description} ${lastWord}` } : ingredient;
+}
+
+/** A line kept whole: no amount, no unit, its words as the food. */
+function asWritten(text: string): Ingredient {
+  return {
+    quantity: null,
+    quantity2: null,
+    unitOfMeasureID: null,
+    unitOfMeasure: null,
+    description: text,
+    isGroupHeader: text.endsWith(":"),
+  };
 }
 
 /** Put the collapsed unit name back wherever the placeholder survived. */
@@ -179,6 +321,11 @@ export function hasRecipeName(
   recipe: FullRecipeInsertDTO | null | undefined
 ): recipe is FullRecipeInsertDTO {
   return Boolean(recipe?.name?.trim());
+}
+
+/** An extracted recipe may validly have no steps (#646). */
+export function hasSteps(recipe: FullRecipeInsertDTO): boolean {
+  return (recipe.steps?.length ?? 0) > 0;
 }
 
 export const debounce = <F extends (...args: any[]) => any>(func: F, waitFor: number = 300) => {
@@ -274,15 +421,22 @@ const VIDEO_PLATFORM_HOSTS = [
  * routed into the video pipeline.
  */
 export function isVideoUrl(str: string): boolean {
-  if (!isUrl(str)) return false;
+  return isUrl(str) && isOnDomain(str, ...VIDEO_PLATFORM_HOSTS);
+}
 
-  try {
-    const hostname = new URL(str).hostname.toLowerCase();
+/**
+ * Whether `hostname` is `domain` or a subdomain of it, matched at a dot boundary. A domain without
+ * a dot is a bare word or a top-level domain (`shop`), and no host is on it.
+ */
+export function isHostOnDomain(hostname: string, domain: string): boolean {
+  return domain.includes(".") && (hostname === domain || hostname.endsWith(`.${domain}`));
+}
 
-    return VIDEO_PLATFORM_HOSTS.some((host) => hostname === host || hostname.endsWith(`.${host}`));
-  } catch {
-    return false;
-  }
+/** Whether the URL's host is one of `domains` or a subdomain of one (`instagram.com.example.net` is neither). */
+export function isOnDomain(url: string, ...domains: string[]): boolean {
+  const hostname = URL.parse(url)?.hostname.toLowerCase();
+
+  return !!hostname && domains.some((domain) => isHostOnDomain(hostname, domain));
 }
 
 export const toArr = (v: any) => (Array.isArray(v) ? v : []);
@@ -323,6 +477,11 @@ export function dateKey(d: Date): string {
   return `${y}-${m}-${day}`;
 }
 
+/** The text without its trailing slashes, where they are not part of `//` (a bare `https://` keeps both). */
+export function withoutTrailingSlashes(text: string): string {
+  return text.replace(/(?<!\/)\/+$/, "");
+}
+
 /**
  * Normalize URL for consistent deduplication.
  * Removes trailing slashes, normalizes protocol, and strips tracking params.
@@ -332,7 +491,7 @@ export function normalizeUrl(url: string): string {
     const parsed = new URL(url);
 
     // Remove trailing slash from pathname
-    parsed.pathname = parsed.pathname.replace(/\/+$/, "");
+    parsed.pathname = withoutTrailingSlashes(parsed.pathname);
 
     // Remove common tracking params
     parsed.searchParams.delete("utm_source");

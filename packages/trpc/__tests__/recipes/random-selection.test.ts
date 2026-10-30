@@ -4,13 +4,9 @@
  * Tests weighted random selection logic with household favorites and ratings.
  */
 
-import { beforeEach, describe, expect, it, vi } from "vitest";
+import { describe, expect, it } from "vitest";
 
 describe("Random Recipe Selection", () => {
-  beforeEach(() => {
-    vi.clearAllMocks();
-  });
-
   describe("Weighting Logic", () => {
     it("calculates base weight of 1.0 for recipes without favorites or ratings", () => {
       const candidate = {

@@ -50,7 +50,8 @@
     "viewGroceries": "Einkaufsliste anzeigen",
     "addToCalendar": "Zum Kalender hinzufügen",
     "deleteRecipe": "Rezept löschen",
-    "recipeOptions": "Rezeptoptionen"
+    "recipeOptions": "Rezeptoptionen",
+    "pantryCoverage": "{percent} der Zutaten zu Hause"
   },
   "detail": {
     "viewOriginal": "Originalrezept anzeigen",
@@ -76,7 +77,8 @@
     "source": "Quelle",
     "addedBy": "Hinzugefügt von {name}",
     "decreaseServings": "Weniger Portionen",
-    "increaseServings": "Mehr Portionen"
+    "increaseServings": "Mehr Portionen",
+    "multiplier": "Faktor"
   },
   "actions": {
     "plan": "Planen",
@@ -199,7 +201,7 @@
     "calories": "Kalorien",
     "fat": "Fett (g)",
     "carbs": "Kohlenhydrate (g)",
-    "protein": "Protein (g)",
+    "protein": "Eiweiß (g)",
     "provenance": "Herkunft",
     "provenanceHelp": "Woher dieses Rezept stammt.",
     "originCountry": "Land",
@@ -255,7 +257,7 @@
     "calories": "Kalorien",
     "fat": "Fett",
     "carbs": "Kohlenhydrate",
-    "protein": "Protein",
+    "protein": "Eiweiß",
     "showingPortions": "Zeige Werte für {count} {count, plural, one {Portion} other {Portionen}}",
     "noInfo": "Keine Nährwertinformationen verfügbar",
     "estimateWithAI": "Mit KI schätzen",
@@ -319,6 +321,9 @@
     "imported": "Rezept importiert",
     "failed": "Rezept-Operation fehlgeschlagen",
     "failedDescription": "Beim Verarbeiten Ihres Rezepts ist ein Fehler aufgetreten. Sehen Sie in der Browser-Konsole nach technischen Details.",
+    "incomplete": "Dieses Rezept ist möglicherweise unvollständig. Vergleichen Sie es mit der Quelle.",
+    "notARecipe": "Diese Seite scheint kein Rezept zu sein.",
+    "privateAddress": "Importe von privaten Netzwerkadressen sind auf diesem Server nicht erlaubt.",
     "batchImported": "Rezepte importiert",
     "batchImportedDescription": "{count} Rezepte aus Archiv importiert",
     "view": "Anzeigen",
@@ -423,5 +428,13 @@
     "removeImage": "Bild entfernen",
     "imageUploadFailed": "Das Bild konnte nicht hochgeladen werden.",
     "imageNeedsConnection": "Bilder können Sie ändern, sobald Sie wieder online sind."
+  },
+  "print": {
+    "title": "Rezept drucken",
+    "includePhoto": "Foto mitdrucken",
+    "textSize": "Textgröße",
+    "print": "Drucken / Als PDF speichern",
+    "continued": "Fortsetzung",
+    "perServing": "Pro Portion"
   }
 }

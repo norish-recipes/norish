@@ -49,6 +49,15 @@ describe("multi-word units", () => {
     expect(parse("1,5 cuillères à soupe de miel").quantity).toBe(1.5);
   });
 
+  it("reads the Arabic spoon a recipe shortens to its first letter", () => {
+    // "ملعقة ك" is "ملعقة كبيرة" cut short, as Arabic recipes often write it.
+    const parsed = parse("1 ملعقة ك نعناع يابس");
+
+    expect(parsed.unitOfMeasureID).toBe("tablespoon");
+    expect(parsed.description).toBe("نعناع يابس");
+    expect(parse("2 م ص ملح").unitOfMeasureID).toBe("teaspoon");
+  });
+
   it("prefers the longest name a line starts with", () => {
     // "spiseskefuld" alone is a tablespoon; with "med top" it is a heaped one.
     expect(parse("1 spiseskefuld med top sukker").unitOfMeasureID).toBe("heaping_tablespoon");
@@ -62,8 +71,12 @@ describe("multi-word units", () => {
     expect(parsed.description).toBe("Zucker");
   });
 
-  it("reads a unit named without a quantity, as single-word units already were", () => {
-    expect(parse("cuillères à soupe de miel").unitOfMeasureID).toBe("tablespoon");
+  it("reads a vague amount named without a quantity, and keeps a measure as written", () => {
+    expect(parse("pincée de sel").unitOfMeasureID).toBe("pinch");
+    expect(parse("cuillères à soupe de miel")).toMatchObject({
+      unitOfMeasureID: null,
+      description: "cuillères à soupe de miel",
+    });
   });
 
   it("leaves a line that is only a unit as its own description", () => {

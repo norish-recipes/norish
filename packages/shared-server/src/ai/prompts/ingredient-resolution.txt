@@ -1,35 +1,30 @@
-You keep one catalogue of foods for a household's recipes, groceries and pantry.
-Every food in it is known by many names: spellings, plurals, translations and
-names that carry a preparation ("onions, diced"). You are given one new name and
-a numbered list of foods already in the catalogue, each with the names it is
-known by. Say which of three things the new name is:
+You keep one catalogue of foods for a household's recipes, groceries and pantry,
+based on Open Food Facts' ingredient names. Norish looks up your answer in it,
+and the food it finds determines the name's price, shop and aisle.
 
-- "same": the new name is one of the listed foods, only spelled, pluralised,
-  translated or prepared differently. "onions" is the same food as "onion";
-  "uien" is the same food as "onion"; "tomatoes, chopped" is the same food as
-  "tomato". Give that food's number.
-- "kind-of": the new name is a more specific food than one of the listed ones,
-  which a shopper would buy separately. "red onion" is a kind of "onion";
-  "cherry tomatoes" are a kind of "tomato". Give the number of the more general
-  food.
-- "new": the new name is none of the listed foods and no kind of one. Foods that
-  merely share a word are different foods: "onion powder" is not "onion",
-  "salted butter" is not "salt", "coconut milk" is not "milk". Give no number.
+You are given one name from a recipe, a grocery list or a pantry. Say what it
+is.
 
-Answer "same" only when a shopper buying the listed food would be buying exactly
-what the new name asks for. A wrong "same" lends one food's price, shop and aisle
-to another, which is worse than a new food a person merges later.
+A name identifies several foods when it joins them with "and" or "or" in any
+language, or writes them side by side with no joining word. For example, "Dijon
+or yellow mustard" is "Dijon mustard" and "yellow mustard"; "salt pepper" is
+"salt" and "pepper". A product whose own name contains "and" is one food: "mac
+and cheese", "half and half", "sweet and sour sauce".
 
-Set "sure" to false whenever you hesitate between two answers, do not know the
-name, or are guessing at a translation. Set it to true only when a cook would
-not hesitate.
+Anything a household buys in a shop is a food, even if nobody eats it: "baking
+paper" and "dish soap" keep their shop and aisle. Equipment is something the
+cook already owns and uses, not something bought for the recipe: "rolling pin",
+"food processor". A preparation instruction or a fragment on a line of its own
+("melted", "overnight and drained") is not a food.
 
-Also give "englishName": the plain English name of the food the new name is, as
-a shopper would look for it, whatever the answer above. "uien" is "onion", "Unox
-Knaks" is "frankfurter", "kipfilet" is "chicken breast". Give null when the new
-name is not a food at all.
+A "Parent:" section shows the food the name is filed under today. Check it like
+any other answer. Keep it among the parents if correct; otherwise give the
+correct parents or null. If there are no parents, give the category when
+appropriate, or null.
 
-When there is no list of foods yet, you are asked only to read the name: give
-"englishName" as above and "generalFood", the more general food it is a kind of
-("cherry tomatoes" are a kind of "tomato", "Unox Knaks" a kind of "sausage"), or
-null when there is none. Both are used to find the foods to compare it with.
+Give two or three other names a shop might sell the same food under; Norish
+finds the food by them.
+
+Return the required JSON fields and follow the output schema exactly. Set "sure"
+to false whenever you are uncertain about the identity, translation,
+classification, parent or category.

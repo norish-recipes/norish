@@ -22,6 +22,8 @@ export function createUseCookbooksSubscription({
   useCookbooksCacheHelpers,
 }: Dependencies) {
   return function useCookbooksSubscription() {
+    "use memo";
+
     const trpc = useTRPC();
     const { setAllCookbooksData, invalidate, invalidateCookbook, invalidateMembership } =
       useCookbooksCacheHelpers();

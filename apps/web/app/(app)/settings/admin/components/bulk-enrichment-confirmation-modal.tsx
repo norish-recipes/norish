@@ -1,9 +1,10 @@
 "use client";
 
 import SettingsSwitch from "@/app/(app)/settings/components/settings-switch";
+import { ActionButton, ActionButtonGroup } from "@/components/shared/action-button";
 import { Note } from "@/components/shared/note";
-import { ExclamationTriangleIcon } from "@heroicons/react/16/solid";
-import { Button, Modal } from "@heroui/react";
+import { ExclamationTriangleIcon, SparklesIcon } from "@heroicons/react/16/solid";
+import { Modal } from "@heroui/react";
 import { useTranslations } from "next-intl";
 
 type ImageGenerationSweepCounts =
@@ -67,12 +68,19 @@ export default function BulkEnrichmentConfirmationModal({
             </Note>
           </Modal.Body>
           <Modal.Footer>
-            <Button variant="tertiary" onPress={onClose}>
-              {tActions("cancel")}
-            </Button>
-            <Button variant={replaceExisting ? "danger" : "secondary"} onPress={onConfirm}>
-              {replaceExisting ? t("confirmButtonReplace") : t("confirmButton")}
-            </Button>
+            <ActionButtonGroup>
+              <ActionButton action="cancel" onPress={onClose}>
+                {tActions("cancel")}
+              </ActionButton>
+              <ActionButton
+                action="apply"
+                icon={SparklesIcon}
+                variant={replaceExisting ? "danger" : "secondary"}
+                onPress={onConfirm}
+              >
+                {replaceExisting ? t("confirmButtonReplace") : t("confirmButton")}
+              </ActionButton>
+            </ActionButtonGroup>
           </Modal.Footer>
         </Modal.Dialog>
       </Modal.Container>

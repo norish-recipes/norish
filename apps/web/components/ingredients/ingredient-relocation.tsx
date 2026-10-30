@@ -1,9 +1,9 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useState } from "react";
 import Panel from "@/components/Panel/Panel";
 import { ActionButton, ActionButtonGroup } from "@/components/shared/action-button";
-import { PlusIcon } from "@heroicons/react/24/outline";
+import { PlusIcon } from "@heroicons/react/16/solid";
 import { Button } from "@heroui/react";
 import { useTranslations } from "next-intl";
 
@@ -23,13 +23,11 @@ export type Relocation =
 export function IngredientRelocationPanel({
   relocation,
   ingredient,
-  busy,
   onConfirm,
   onClose,
 }: {
   relocation: Relocation | null;
   ingredient: { id: string; name: string };
-  busy: boolean;
   onConfirm: (relocation: Relocation, target: IngredientPick) => void;
   onClose: () => void;
 }) {
@@ -40,9 +38,7 @@ export function IngredientRelocationPanel({
   const [shown, setShown] = useState<Relocation | null>(null);
   const asked = relocation ?? shown;
 
-  useEffect(() => {
-    if (relocation) setShown(relocation);
-  }, [relocation]);
+  if (relocation && relocation !== shown) setShown(relocation);
 
   const close = () => {
     setTarget(null);
@@ -52,7 +48,6 @@ export function IngredientRelocationPanel({
   return (
     <Panel
       nested
-      className="contents"
       open={relocation !== null}
       title={
         asked?.kind === "move"
@@ -94,7 +89,6 @@ export function IngredientRelocationPanel({
               <Button
                 className="self-start"
                 data-testid="ingredient-relocation-new"
-                isDisabled={busy}
                 size="sm"
                 variant="ghost"
                 onPress={() => onConfirm(asked, { id: null })}
@@ -108,14 +102,13 @@ export function IngredientRelocationPanel({
       </Panel.Body>
       <Panel.Footer>
         <ActionButtonGroup>
-          <ActionButton action="cancel" isDisabled={busy} onPress={close}>
+          <ActionButton action="cancel" onPress={close}>
             {tActions("cancel")}
           </ActionButton>
           <ActionButton
             action="apply"
             data-testid="ingredient-relocation-confirm"
-            isDisabled={busy || !target || !asked}
-            isPending={busy}
+            isDisabled={!target || !asked}
             onPress={() => {
               if (asked && target) onConfirm(asked, target);
             }}

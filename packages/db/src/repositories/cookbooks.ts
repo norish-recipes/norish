@@ -162,8 +162,7 @@ async function memberTags(
  * One membership join under the same view-policy condition the recipe list
  * applies, so the count and the list agree by construction and two readers
  * may honestly see two different counts (ADR-0027). Images resolve through
- * the same gallery-first SQL recipes use, so the deprecated scalar is never
- * read directly. Ordered by the member's own creation time so the mosaic and
+ * the same gallery-first SQL recipes use. Ordered by the member's own creation time so the mosaic and
  * the derived description are stable between reads.
  */
 async function memberSummaries(

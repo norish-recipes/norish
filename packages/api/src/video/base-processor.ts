@@ -10,6 +10,7 @@ import {
 } from "@norish/api/video/yt-dlp";
 import { videoLogger as log } from "@norish/shared-server/logger";
 import { convertToMp4, saveVideoFile } from "@norish/shared-server/media/storage";
+import { hasSteps } from "@norish/shared/lib/helpers";
 
 import type { VideoMetadata, VideoProcessor, VideoProcessorContext } from "./types";
 
@@ -114,6 +115,27 @@ export abstract class BaseVideoProcessor implements VideoProcessor {
       if (path) {
         await cleanupFile(path);
       }
+    }
+  }
+
+  /**
+   * A caption recipe without steps still tries the transcript for its method,
+   * and is kept when the transcript brings none or fails.
+   */
+  protected async withTranscriptSteps(
+    captionRecipe: FullRecipeInsertDTO | null,
+    fromTranscript: () => Promise<FullRecipeInsertDTO>
+  ): Promise<FullRecipeInsertDTO> {
+    if (!captionRecipe) return fromTranscript();
+
+    try {
+      const recipe = await fromTranscript();
+
+      return hasSteps(recipe) ? recipe : captionRecipe;
+    } catch (err) {
+      log.warn({ err }, "Transcription failed, keeping the caption recipe without steps");
+
+      return captionRecipe;
     }
   }
 

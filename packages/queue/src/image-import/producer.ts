@@ -5,6 +5,7 @@
  * Accepts a queue instance - does not manage lifecycle.
  */
 
+import { randomUUID } from "node:crypto";
 import type { Queue } from "bullmq";
 
 import type {
@@ -13,44 +14,38 @@ import type {
 } from "@norish/queue/contracts/job-types";
 import { createLogger } from "@norish/shared-server/logger";
 
-import { isJobInQueue, removeRetainedTerminalJob } from "../helpers";
-
 const log = createLogger("queue:image-import");
 
-function generateImageJobId(recipeId: string): string {
-  return `image-import_${recipeId}`;
-}
-
 /**
- * Add an image import job to the queue.
- * Returns conflict status if a duplicate job already exists.
+ * Add an image import job to the queue. Its recipe is BullMQ's deduplication
+ * id, freed once the import finishes: an add for a recipe whose import is
+ * still in flight is answered as a duplicate.
  */
 export async function addImageImportJob(
   queue: Queue<ImageImportJobData>,
   data: ImageImportJobData
 ): Promise<AddImageImportJobResult> {
-  const jobId = generateImageJobId(data.recipeId);
+  const jobId = randomUUID();
 
   log.debug(
     { recipeId: data.recipeId, jobId, fileCount: data.files.length },
     "Adding image import job"
   );
 
-  if (await isJobInQueue(queue, jobId)) {
-    log.warn({ recipeId: data.recipeId, jobId }, "Duplicate image import job rejected");
+  const job = await queue.add("image-import", data, {
+    jobId,
+    deduplication: { id: `image-import_${data.recipeId}` },
+  });
 
-    return { status: "duplicate", existingJobId: jobId };
+  // BullMQ answers a deduplicated add with the job already holding the id.
+  if (job.id && job.id !== jobId) {
+    log.warn(
+      { recipeId: data.recipeId, existingJobId: job.id },
+      "Duplicate image import job rejected"
+    );
+
+    return { status: "duplicate", existingJobId: job.id };
   }
-
-  // A retained terminal job under the same id would make the add below a
-  // silent BullMQ no-op.
-  const removed = await removeRetainedTerminalJob(queue, jobId);
-
-  if (removed) {
-    log.debug({ recipeId: data.recipeId, jobId }, "Removed retained terminal job to free job id");
-  }
-
-  const job = await queue.add("image-import", data, { jobId });
 
   log.info(
     { jobId: job.id, recipeId: data.recipeId, fileCount: data.files.length },

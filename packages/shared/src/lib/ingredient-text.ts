@@ -30,8 +30,8 @@ function isAmountAlone(text: string): boolean {
 /**
  * Whether a recipe line's text names no food: a heading, a text with no
  * letter or digit in any script (")", "—"), the "[object Object]" an old
- * import wrote where it meant a name, or an amount alone. Kept as written,
- * and given no alias.
+ * import wrote where it meant a name (after a "null" amount or not), or an
+ * amount alone. Kept as written, and given no alias.
  */
 export function namesNoFood(text: string | null | undefined): boolean {
   const trimmed = (text ?? "").trim();
@@ -39,7 +39,7 @@ export function namesNoFood(text: string | null | undefined): boolean {
   return (
     isIngredientHeading(trimmed) ||
     !/[\p{L}\p{N}]/u.test(trimmed) ||
-    trimmed === "[object Object]" ||
+    /^(?:null\s+)*\[object Object\]$/iu.test(trimmed) ||
     isAmountAlone(trimmed)
   );
 }
@@ -50,6 +50,19 @@ export interface RecipeLineText {
   /** As stored or sent: a number, a numeric string, or nothing. */
   amount?: unknown;
   unit?: string | null;
+}
+
+/** A line's amount as a number, NaN where it has none. */
+export function lineAmount(amount: unknown): number {
+  return amount === null || amount === undefined || amount === "" ? NaN : Number(amount);
+}
+
+/**
+ * Whether a recipe line names no food: its text names none, or it ends with
+ * a colon where no amount stands ("Voor de salade:"), the import's heading rule.
+ */
+export function lineNamesNoFood({ text, amount }: RecipeLineText): boolean {
+  return namesNoFood(text) || (text.trimEnd().endsWith(":") && Number.isNaN(lineAmount(amount)));
 }
 
 /**
@@ -63,7 +76,7 @@ export interface RecipeLineText {
  * start of a text may be the food's own ("glass noodles").
  */
 export function lineFoodText({ text, amount, unit }: RecipeLineText, units: UnitsMap): string {
-  const count = amount === null || amount === undefined || amount === "" ? NaN : Number(amount);
+  const count = lineAmount(amount);
 
   if (unit || !Number.isFinite(count)) return text;
 

@@ -5,15 +5,19 @@ written, and you give its plain name: the name with everything that is not the
 food taken off.
 
 Take off amounts, units and sizes ("200 g", "heaped cups", "large"),
-preparation ("finely chopped", "gesnipperd"), pack codes and shop abbreviations
-("GR", "TL"), social media handles ("@blueband_nl") and marketing words.
+preparation ("finely chopped", "gesnipperd"), what it comes in or is served
+with ("uit blik", "in water", "naar keuze", "for the coating"), pack codes and
+shop abbreviations ("GR", "TL"), social media handles ("@blueband_nl") and
+marketing words.
 
 Keep the language the name is written in: never translate it. Keep the brand or
 product name, and any marker that names a different product: a fat percentage,
 "zero", "light", "lactose-free".
 
-Write a food in lower case and a brand with its own capitals. "GR TONIJN UIT
-BLIK" is "tonijn uit blik"; "heaped cups plain flour" is "plain flour";
+Write a food in lower case, keeping the capitals its language always writes
+("Italian sausage", "Maris Piper potatoes"), and a brand with its own capitals.
+"GR TONIJN UIT BLIK" is "tonijn"; "Oyster Sauce" is "oyster sauce"; "heaped
+cups plain flour" is "plain flour";
 "Finesse 15%", also written "@blueband_nl Finesse 15%", is "Blue Band Finesse
 15%"; "Unox Knaks" stays "Unox Knaks".
 

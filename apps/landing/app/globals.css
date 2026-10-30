@@ -1,94 +1,89 @@
 @import "tailwindcss";
 @import "@fontsource-variable/inter";
-@import "@fontsource-variable/fraunces/wght.css";
 @import "@norish/tailwind-config/heroui-theme";
-@import "@norish/tailwind-config/marks";
-@import "lenis/dist/lenis.css";
 
-@custom-variant light (&:is(:root, .light *, [data-theme="light"] *));
 @custom-variant dark (&:is(.dark *, [data-theme="dark"] *));
 
 @layer theme {
   :root {
     --font-inter: "Inter Variable", system-ui, sans-serif;
-    --font-fraunces: "Fraunces Variable", ui-serif, Georgia, serif;
+    --accent-deep: oklch(41% 0.08 150.36);
+    /* Phone bezels and the code panel stay dark in both themes. */
+    --bezel: oklch(21.03% 0.0015 150.36);
+    --bezel-foreground: oklch(99.11% 0.0015 150.36);
+
+    /* Each import source wears its own colour; TikTok's is the ink. */
+    --source-site: var(--accent);
+    --source-youtube: oklch(60% 0.24 27);
+    --source-instagram: oklch(58% 0.23 0);
+    --source-tiktok: var(--foreground);
+    --source-tiktok-tint: oklch(85% 0.12 195);
+    --source-photos: oklch(68% 0.17 55);
+    --source-pdf: oklch(55% 0.19 25);
+
+    /* The green of a heading's key words, and the paper the green band's
+       buttons sit on: both hold their light-theme look in the dark. */
+    --accent-text: var(--accent);
+    --paper: oklch(96.4% 0.016 88);
+    /* Shadows stay dark in both themes; a light one reads as a glow. */
+    --shadow: oklch(0% 0 0 / 0.28);
   }
 
-  /*
-   * Import sources need to be told apart at a glance. These reuse the app's own
-   * semantic hues rather than inventing a second palette; only the social pink
-   * has no counterpart in the product.
-   */
-  :root {
-    --tint-site: var(--accent);
-    --tint-video: var(--danger);
-    --tint-social: oklch(62% 0.185 350);
-    --tint-photo: var(--warning);
-    --tint-text: var(--nutrition-carbs);
+  .dark,
+  [data-theme="dark"] {
+    --accent-text: oklch(72% 0.12 150.36);
   }
 }
 
 /*
  * The product's own tokens (imported above) drive every colour here. HeroUI's
- * component CSS is deliberately not imported — the landing page uses none of
+ * component CSS is deliberately not imported: the landing page uses none of
  * its components, so only this token bridge is needed.
  */
 @theme inline {
   --color-background: var(--background);
   --color-foreground: var(--foreground);
   --color-surface: var(--surface);
-  --color-surface-foreground: var(--surface-foreground);
   --color-surface-secondary: var(--surface-secondary);
-  --color-surface-tertiary: var(--surface-tertiary);
-  --color-overlay: var(--overlay);
   --color-muted: var(--muted);
   --color-accent: var(--accent);
+  --color-accent-deep: var(--accent-deep);
   --color-accent-foreground: var(--accent-foreground);
+  --color-accent-text: var(--accent-text);
+  --color-paper: var(--paper);
   --color-border: var(--border);
-  --color-separator: var(--separator);
   --color-focus: var(--focus);
   --color-default: var(--default);
-  --color-success: var(--success);
-  --color-warning: var(--warning);
-  --color-danger: var(--danger);
-
-  --color-tint-site: var(--tint-site);
-  --color-tint-video: var(--tint-video);
-  --color-tint-social: var(--tint-social);
-  --color-tint-photo: var(--tint-photo);
-  --color-tint-text: var(--tint-text);
+  --color-bezel: var(--bezel);
+  --color-bezel-foreground: var(--bezel-foreground);
 
   --font-sans: var(--font-inter);
-  --font-serif: var(--font-fraunces);
 
   /* One easing for the whole page: a long, settled deceleration. */
   --ease-calm: cubic-bezier(0.16, 1, 0.3, 1);
 }
 
 @layer base {
-  /* Lenis drives the scroll wherever it is running, hash links included, and
-     the two fighting over the same scroll position reads as a stutter. Where it
-     is not — no scripting — the browser's own smoothing is still wanted. */
-  html:not(.lenis) {
+  html,
+  body {
+    overflow-x: clip;
+  }
+
+  html {
     scroll-behavior: smooth;
   }
 
-  /* Fraunces ships a soft, slightly quirky default; dial it toward the
-     bookish end so headlines read calm rather than decorative. */
-  .font-serif {
-    font-variation-settings:
-      "SOFT" 0,
-      "WONK" 0;
-    letter-spacing: -0.015em;
-  }
-
   ::selection {
-    background-color: color-mix(in oklch, var(--accent) 22%, transparent);
+    background-color: color-mix(in oklab, var(--accent) 22%, transparent);
   }
 
   :focus-visible {
     outline: 2px solid var(--focus);
     outline-offset: 3px;
+  }
+
+  #self-host :focus-visible {
+    outline-color: var(--accent-foreground);
   }
 }
 
@@ -99,25 +94,192 @@
 }
 
 @layer components {
-  /* The only tint on the page: a still, barely-there warmth behind the hero.
-     Light only — over the dark ground the same wash reads as a murky glow
-     hanging off the top of the page, so dark rests on plain background. */
-  .hero-wash {
-    background: radial-gradient(
-      58% 52% at 50% 0%,
-      color-mix(in oklch, var(--accent) 9%, transparent),
-      transparent 70%
-    );
+  .phone {
+    display: block;
+    height: auto;
+    border: 9px solid var(--bezel);
+    border-radius: 2.5rem;
+    background: var(--bezel);
+    box-shadow: 0 20px 40px -24px var(--shadow);
   }
 
-  .dark .hero-wash,
-  [data-theme="dark"] .hero-wash {
-    background: none;
+  /* A phone rising out of the bottom of its tile. */
+  .phone-crop {
+    border-bottom: 0;
+    border-radius: 2.5rem 2.5rem 0 0;
+  }
+
+  /* The hero's outer phones fan open a little further under the pointer. */
+  .fan {
+    transition: transform 0.3s var(--ease-calm);
+  }
+
+  .fan-left {
+    transform: rotate(-7deg) translate(0, 24px);
+  }
+
+  .fan-right {
+    transform: rotate(7deg) translate(0, 24px);
+  }
+
+  .phones:hover .fan-left {
+    transform: rotate(-9deg) translate(-12px, 28px);
+  }
+
+  .phones:hover .fan-right {
+    transform: rotate(9deg) translate(12px, 28px);
+  }
+
+  @media (width < 45rem) {
+    .fan {
+      display: none;
+    }
+  }
+
+  .source-chip {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.75rem;
+    min-height: 3.5rem;
+    padding: 0 1.25rem 0 0.5rem;
+    border-radius: 999px;
+    background: color-mix(in oklab, var(--chip-tint) 14%, var(--background));
+    font-size: 1.125rem;
+    font-weight: 600;
+    letter-spacing: -0.01em;
+  }
+
+  .source-chip-icon {
+    display: grid;
+    place-items: center;
+    width: 2.5rem;
+    height: 2.5rem;
+    flex: none;
+    border-radius: 50%;
+    background: var(--surface);
+    color: var(--chip);
+
+    & > svg {
+      width: 1.25rem;
+      height: 1.25rem;
+    }
+  }
+
+  .bento {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr);
+    gap: 1.25rem;
+  }
+
+  .tile {
+    display: flex;
+    min-height: 27.5rem;
+    flex-direction: column;
+    gap: 0.75rem;
+    overflow: hidden;
+    border-radius: 2rem;
+    padding: 2rem 2rem 0;
+  }
+
+  @media (width >= 56rem) {
+    .bento {
+      grid-template-columns: repeat(6, minmax(0, 1fr));
+      grid-template-rows: 26.25rem 26.25rem auto;
+    }
+
+    .tile {
+      min-height: 0;
+    }
+
+    .tile-plan {
+      grid-column: span 4;
+    }
+
+    .tile-groceries {
+      grid-column: span 2;
+      grid-row: span 2;
+    }
+
+    .tile-pantry,
+    .tile-cooking {
+      grid-column: span 2;
+    }
+
+    .tile-recipe {
+      grid-column: span 6;
+    }
+  }
+
+  /* The bento's grounds, from the app's own nutrition hues. */
+  .tint-orange {
+    background: color-mix(in oklab, var(--nutrition-calories) 22%, var(--background));
+  }
+
+  .tint-blue {
+    background: color-mix(in oklab, var(--nutrition-carbs) 16%, var(--background));
+  }
+
+  .tint-green {
+    background: color-mix(in oklab, var(--nutrition-fat) 20%, var(--background));
+  }
+
+  .tint-red {
+    background: color-mix(in oklab, var(--nutrition-protein) 14%, var(--background));
+  }
+
+  /* Over the dark ground the same mixes turn muddy, so they stay a hint. */
+  :is(.dark, [data-theme="dark"]) {
+    .tint-orange {
+      background: color-mix(in oklab, var(--nutrition-calories) 9%, var(--surface));
+    }
+
+    .tint-blue {
+      background: color-mix(in oklab, var(--nutrition-carbs) 9%, var(--surface));
+    }
+
+    .tint-green {
+      background: color-mix(in oklab, var(--nutrition-fat) 8%, var(--surface));
+    }
+
+    .tint-red {
+      background: color-mix(in oklab, var(--nutrition-protein) 8%, var(--surface));
+    }
+
+    .source-chip {
+      background: color-mix(in oklab, var(--chip-tint) 10%, var(--surface));
+    }
+  }
+
+  .polaroid {
+    position: absolute;
+    top: 1.5rem;
+    left: 18%;
+    display: flex;
+    width: 64%;
+    max-width: 23.75rem;
+    flex-direction: column;
+    gap: 1rem;
+    margin: 0;
+    padding: 1rem 1rem 1.5rem;
+    border-radius: 0.5rem;
+    /* Polaroids are white in either theme. */
+    background: var(--paper);
+    color: var(--bezel);
+    box-shadow: 0 24px 48px -24px var(--shadow);
+    transition:
+      translate 0.45s var(--ease-calm),
+      rotate 0.45s var(--ease-calm);
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    .fan,
+    .polaroid {
+      transition: none;
+    }
   }
 }
 
 @utility scrollbar-hide {
-  -ms-overflow-style: none;
   scrollbar-width: none;
 
   &::-webkit-scrollbar {
@@ -126,737 +288,116 @@
 }
 
 /*
- * Scroll reveal. Elements start displaced and settle once observed. The `.js`
- * guard means a scripting-free browser gets the finished state immediately
- * rather than a blank page, and reduced-motion skips the movement entirely.
+ * Motion. The hero plays once on load in pure CSS; everything further down is
+ * revealed by components/scroll-effects.tsx, which only hides blocks once it
+ * has put `motion` on the root. Reduced motion gets a still page throughout.
  */
-.js .reveal {
-  opacity: 0;
-  translate: 0 14px;
-  transition:
-    opacity 0.75s var(--ease-calm),
-    translate 0.75s var(--ease-calm);
-  transition-delay: var(--reveal-delay, 0ms);
-}
+@media (prefers-reduced-motion: no-preference) {
+  .hero-in {
+    animation: hero-in 0.9s var(--ease-calm) backwards;
+    animation-delay: var(--delay, 0ms);
+  }
 
-.js .reveal[data-shown="true"] {
-  opacity: 1;
-  translate: none;
-}
+  .hero-phone {
+    animation: hero-phone 1.1s var(--ease-calm) 0.25s backwards;
+  }
 
-@media (prefers-reduced-motion: reduce) {
-  .js .reveal {
-    opacity: 1;
-    translate: none;
-    transition: none;
+  /* The outer phones fan out from behind the middle one. */
+  .fan-left {
+    animation: fan-left 1.1s var(--ease-calm) 0.45s backwards;
+  }
+
+  .fan-right {
+    animation: fan-right 1.1s var(--ease-calm) 0.45s backwards;
+  }
+
+  /* And spread further apart as the page scrolls away from them. */
+  .motion .fan-left {
+    translate: calc(var(--scroll, 0) * -0.08px) calc(var(--scroll, 0) * 0.14px);
+  }
+
+  .motion .fan-right {
+    translate: calc(var(--scroll, 0) * 0.08px) calc(var(--scroll, 0) * 0.14px);
+  }
+
+  .motion .hero-phone {
+    translate: 0 calc(var(--scroll, 0) * -0.05px);
+  }
+
+  .motion .reveal {
+    transition:
+      opacity 0.8s var(--ease-calm),
+      translate 1s var(--ease-calm),
+      scale 1s var(--ease-calm),
+      filter 0.8s var(--ease-calm);
+    transition-delay: var(--delay, 0ms);
+  }
+
+  .motion .reveal:not([data-shown]) {
+    opacity: 0;
+    translate: 0 4rem;
+    scale: 0.94;
+    filter: blur(10px);
+  }
+
+  .motion .reveal-left:not([data-shown]) {
+    translate: -5rem 0;
+  }
+
+  .motion .reveal-right:not([data-shown]) {
+    translate: 5rem 0;
+    rotate: 6deg;
+  }
+
+  .motion .reveal-right {
+    transition-property: opacity, translate, scale, filter, rotate;
+  }
+
+  .motion .reveal-pop:not([data-shown]) {
+    translate: 0 1.5rem;
+    scale: 0.7;
+  }
+
+  /* A tile's phone rises out of it a beat after the tile lands. */
+  .motion .tile .phone {
+    transition: translate 1.2s var(--ease-calm);
+    transition-delay: calc(var(--delay, 0ms) + 0.25s);
+  }
+
+  .motion .tile:not([data-shown]) .phone {
+    translate: 0 7rem;
   }
 }
 
-/* A screenshot settling into place — slightly deeper than a text reveal. */
-.js .reveal-media {
-  opacity: 0;
-  scale: 0.985;
-  translate: 0 20px;
-  transition:
-    opacity 0.9s var(--ease-calm),
-    scale 0.9s var(--ease-calm),
-    translate 0.9s var(--ease-calm);
-  transition-delay: var(--reveal-delay, 0ms);
-}
-
-.js .reveal-media[data-shown="true"] {
-  opacity: 1;
-  scale: 1;
-  translate: none;
-}
-
-@media (prefers-reduced-motion: reduce) {
-  .js .reveal-media {
-    opacity: 1;
-    scale: 1;
-    translate: none;
-    transition: none;
-  }
-}
-
-/* `.stroke-in`, which the hero's strands share with the marks in the margins,
-   lives beside the shared theme tokens — see @norish/tailwind-config/marks. */
-
-/*
- * The hero's strands carry something along them once they are drawn: a short
- * dash running the length of each one, which is the import happening. They are
- * held still until the strand they belong to has finished drawing.
- */
-.flow-pulse {
-  stroke-dasharray: 0.07 0.93;
-  stroke-dashoffset: 1;
-  opacity: 0;
-}
-
-.js [data-shown="true"] .flow-pulse {
-  opacity: 0.9;
-  animation: flow-run 3.4s linear infinite;
-  transition: opacity 0.6s var(--ease-calm) 1s;
-}
-
-@keyframes flow-run {
+@keyframes hero-in {
   from {
-    stroke-dashoffset: 1;
-  }
-  to {
-    stroke-dashoffset: 0;
-  }
-}
-
-@media (prefers-reduced-motion: reduce) {
-  .js [data-shown="true"] .flow-pulse {
     opacity: 0;
-    animation: none;
+    translate: 0 2rem;
+    filter: blur(8px);
   }
 }
 
-/* The marks themselves — `.mark` and its slow turn — live beside the shared
-   theme tokens, since the app draws them too. `Drift` is what measures the
-   block's crossing and writes `--drift` for them to travel on. */
-
-/* Anything that rides the same measurement, at its own share of it. */
-.parallax {
-  translate: 0 calc(var(--drift, 0) * var(--depth, 1) * -1.5rem);
-}
-
-@media (prefers-reduced-motion: reduce) {
-  .parallax {
-    translate: none;
-  }
-}
-
-/*
- * Line drawings — a bowl, a week, a pan on the heat. Same idea as the hero
- * strands, except every stroke is dashed to exactly its own length (each one
- * carries `pathLength="1"`), so one rule draws a short tick and a long curve at
- * the same rate and no drawing needs a measurement written into it.
- *
- * How far along a drawing is comes from `--draw`, which the step it belongs to
- * writes as it arrives; the strokes each take their turn inside that, ordered
- * by `--doodle-step`. With nothing written, the drawing is finished.
- */
-.doodle-line,
-.doodle-trace {
-  --drawn: clamp(0, (var(--draw, 1) - var(--doodle-step, 0) * 0.095) / 0.4, 1);
-}
-
-.doodle-line {
-  stroke-dasharray: 1;
-  stroke-dashoffset: calc(1 - var(--drawn));
-  /* A round cap on a dash of no length is still a dot, so a drawing that has
-     not started yet would be a scatter of them. Hold it back until it has. */
-  opacity: clamp(0, var(--drawn) * 14, 1);
-}
-
-/* The guide a thing travels along, which is a hint rather than a line: it
-   arrives with the stroke it belongs to instead of being drawn itself. */
-.doodle-trace {
-  stroke-dasharray: 0.022 0.03;
-  opacity: calc(var(--drawn) * 0.5);
-}
-
-/* A detail that arrives after its drawing has finished, like the planned meal
-   landing on the calendar. */
-.doodle-dot {
-  opacity: calc((var(--draw, 1) - 0.75) / 0.25);
-}
-
-/*
- * A part of a drawing that keeps happening after the drawing is finished: the
- * sources going into the bowl. It is scrubbed rather than played, off the whole
- * of the step's turn (`--settle`) rather than the shorter stretch the drawing
- * itself takes, so it runs both ways and holds wherever the scroll left it.
- *
- * Each one starts a little after the one before, travels its own distance in,
- * and is gone by the time it is inside. With nothing written the step has not
- * arrived yet, so everything rests where it was drawn.
- */
-.doodle-drop {
-  --fall: clamp(0, (var(--settle, 0) - 0.4 - var(--fall-step, 0) * 0.08) / 0.36, 1);
-
-  transform: translate(
-    calc(var(--fall) * var(--drop-x, 0px)),
-    calc(var(--fall) * var(--drop-y, 90px))
-  );
-  opacity: calc(1 - clamp(0, (var(--fall) - 0.6) / 0.4, 1));
-}
-
-/* And what is left in the bowl once they are in it. */
-.doodle-lands {
-  --landed: clamp(0, (var(--settle, 0) - 0.72) / 0.22, 1);
-
-  fill: none;
-  stroke: currentColor;
-  stroke-width: 2;
-  stroke-linecap: round;
-  stroke-dasharray: 1;
-  stroke-dashoffset: calc(1 - var(--landed));
-  opacity: clamp(0, var(--landed) * 14, 1);
-}
-
-/* Under reduced motion nothing goes anywhere: the scene holds the composition
-   it was drawn in, three sources above an empty bowl. */
-@media (prefers-reduced-motion: reduce) {
-  .doodle-drop {
-    transform: none;
-    opacity: 1;
-  }
-
-  .doodle-lands {
-    opacity: 0;
-  }
-}
-
-/*
- * Steam never stops rising: each strand climbs, thins out, and starts again,
- * far enough and bright enough to be caught out of the corner of an eye.
- * Staggered, and gone entirely for anyone who asked for less motion.
- *
- * It runs on its own clock rather than on the scroll. The strands are a third
- * of a cycle apart and the offsets are negative, which starts each one
- * part-way into the drift instead of holding it at nothing: a pan is steaming
- * the moment it is drawn, at whatever point of the cycle you happen to arrive
- * at it, rather than beginning a slow first rise once some threshold has been
- * crossed. Nothing here waits to be scrolled to, so nothing here can fail to
- * start.
- *
- * A drawing carrying more than three strands needs another line here; there is
- * no counting in CSS, and the timing is better off in one place than written
- * into every strand of every drawing.
- */
-.steam-line {
-  --steam-cycle: 4.4s;
-
-  /* Percentages in the drift are of the strand itself, not the whole drawing. */
-  transform-box: fill-box;
-  animation: steam-drift var(--steam-cycle) ease-in-out infinite;
-}
-
-.steam-line:nth-child(2) {
-  animation-delay: calc(var(--steam-cycle) / -3);
-}
-
-.steam-line:nth-child(3) {
-  animation-delay: calc(var(--steam-cycle) / -1.5);
-}
-
-/* What is steaming has to have been drawn first, so in a scene the strands
-   come up with the last of the drawing rather than hanging in the air over an
-   unfinished pan. With nothing written the drawing is finished and they are
-   simply on, which is the closing's mark and the scripting-free page. */
-.doodle-steam {
-  opacity: clamp(0, (var(--draw, 1) - 0.62) / 0.3, 1);
-}
-
-@keyframes steam-drift {
-  0% {
-    translate: 0 14%;
-    opacity: 0;
-  }
-  22% {
-    opacity: 0.95;
-  }
-  70% {
-    opacity: 0.55;
-  }
-  100% {
-    translate: 0 -26%;
-    opacity: 0;
-  }
-}
-
-@media (prefers-reduced-motion: reduce) {
-  .steam-line {
-    animation: none;
-    opacity: 0.5;
-    translate: none;
-  }
-}
-
-/*
- * The hero recipe keeps moving, barely. The dish photo drifts in its frame
- * and the ingredient rows step in one after another once the fragment has
- * revealed. All of it is decoration on the fragment itself — none of it
- * implies an interaction — and all of it stands down under reduced motion.
- */
-.js .ingredient-row {
-  opacity: 0;
-  translate: 10px 0;
-  transition:
-    opacity 0.55s var(--ease-calm),
-    translate 0.55s var(--ease-calm);
-  transition-delay: var(--row-delay, 0ms);
-}
-
-.js .reveal[data-shown="true"] .ingredient-row {
-  opacity: 1;
-  translate: none;
-}
-
-.recipe-photo {
-  animation: recipe-drift 24s ease-in-out infinite alternate;
-}
-
-@keyframes recipe-drift {
+@keyframes hero-phone {
   from {
-    scale: 1;
-  }
-  to {
-    scale: 1.045;
-  }
-}
-
-@media (prefers-reduced-motion: reduce) {
-  .js .ingredient-row {
-    opacity: 1;
-    translate: none;
-    transition: none;
-  }
-
-  .recipe-photo {
-    animation: none;
+    opacity: 0;
+    translate: 0 6rem;
+    scale: 0.92;
   }
 }
 
-/*
- * Import, plan, cook. The rail is a row of three steps, one of them filling the
- * readable width with the next ghosting in past the right edge, and every
- * measurement here is worked out from the width of the pin, so a step starts
- * exactly where the rest of the page does at any size.
- *
- * On its own the rail is what it looks like: a row you swipe, snapping to each
- * step, every drawing finished and every rule loaded. With scripting the
- * section holds the screen instead and `moments.tsx` walks the rail along with
- * the scroll, writing where it has got to as `--walk`, how far each step has
- * arrived as `--draw` and `--fill`, and how lit each dot is as `--lit`. Nothing
- * in this file decides any of that timing.
- */
-.moments-pin {
-  container-type: inline-size;
-  position: relative;
-
-  /* The page gutter, so a step starts where every other section does. */
-  --pad: 1.25rem;
-  --gutter: calc(max(0px, (100cqw - 64rem) / 2) + var(--pad));
-  --gap: clamp(1rem, 4cqw, 3rem);
-  /* How much of the next step shows once this one has settled. */
-  --peek: clamp(1.5rem, 6cqw, 9rem);
-  --panel: min(60rem, 100cqw - var(--gutter) - var(--peek) - var(--gap));
-  --stride: calc(var(--panel) + var(--gap));
-}
-
-@media (width >= 40rem) {
-  .moments-pin {
-    --pad: 2rem;
+@keyframes fan-left {
+  from {
+    opacity: 0;
+    translate: 45% 3rem;
+    rotate: 7deg;
   }
 }
 
-.moments-viewport {
-  overflow-x: auto;
-  overscroll-behavior-x: contain;
-  scroll-snap-type: x mandatory;
-  scroll-padding-inline-start: var(--gutter);
-  scrollbar-width: none;
-  padding-block: 0.5rem;
-  /* Steps waiting their turn fade out at both edges rather than being cut. */
-  mask-image: linear-gradient(
-    to right,
-    transparent 0,
-    black var(--gutter),
-    black calc(100% - var(--peek)),
-    transparent 100%
-  );
-}
-
-.moments-viewport::-webkit-scrollbar {
-  display: none;
-}
-
-.moments-track {
-  display: flex;
-  gap: var(--gap);
-  padding-inline: var(--gutter);
-}
-
-.moment {
-  flex: 0 0 var(--panel);
-  scroll-snap-align: start;
-}
-
-.moment-fill {
-  transform: scaleX(var(--fill, 1));
-}
-
-/*
- * A step is a drawing and some words. Stacked, the drawing goes on top, where
- * it fills the room the words leave; side by side it moves out to the right of
- * them, which is where the eye goes next after reading.
- */
-.moment-body {
-  display: grid;
-  gap: 2.5rem;
-}
-
-.moment-scene {
-  width: min(100%, 16.5rem);
-  height: auto;
-}
-
-@container (width >= 60rem) {
-  .moment-body {
-    grid-template-columns: minmax(0, 1fr) auto;
-    align-items: center;
-    gap: 3.5rem;
-  }
-
-  .moment-words {
-    grid-area: 1 / 1;
-  }
-
-  .moment-scene {
-    grid-area: 1 / 2;
-    width: 24rem;
-  }
-}
-
-/* Progress belongs to the walked rail; a swiped one shows its own position. */
-.moments-dots {
-  display: none;
-  align-items: center;
-  gap: 0.5rem;
-}
-
-.js .moments-stage {
-  /* The runway: how long the section keeps the screen for its steps, and so how
-     far a reader travels to walk one. Driven by the step count, because adding
-     a step should lengthen the section rather than squeeze the others. */
-  height: calc(var(--steps) * 100svh + 100svh);
-}
-
-.js .moments-pin {
-  position: sticky;
-  top: 0;
-  display: grid;
-  /* One column the width of the pin: without the explicit minmax the rail,
-     which is three steps wide, would size the column and carry everything
-     beside it off the side of the page. */
-  grid-template-columns: minmax(0, 1fr);
-  align-content: center;
-  min-height: 100svh;
-}
-
-.js .moments-viewport {
-  overflow-x: clip;
-  scroll-snap-type: none;
-}
-
-.js .moments-track {
-  transform: translateX(calc(var(--stride) * var(--walk, 0) * -1));
-  will-change: transform;
-}
-
-.js .moments-dots {
-  display: flex;
-}
-
-/*
- * One end of one move a held section makes: nothing to look at, only somewhere
- * for the scroll to be stopped. It sits `--at` of the way along the runway —
- * the section's height less the screen it holds — which is the same share of
- * the section that `stopsOf` puts it at. `components/snapping.tsx` hands the
- * set of them to Lenis.
- */
-.snap-point {
-  position: absolute;
-  inset-inline: 0;
-  top: calc(var(--at, 0) * (100% - 100svh));
-  height: 1px;
-  pointer-events: none;
-}
-
-/* The stops are measured against the runway they mark out, so the sections
-   holding them have to be what they are measured from. */
-.moments-stage,
-.tour-stage {
-  position: relative;
-}
-
-/*
- * How far along a sequence you are: a run of dots where the one you are on has
- * drawn itself out into a bar. Shared by the rail and the tour, both of which
- * write `--lit` per dot as the scroll moves between one and the next.
- */
-.progress-dot {
-  height: 0.25rem;
-  width: calc(0.25rem + var(--lit, 0) * 1.5rem);
-  border-radius: 999px;
-  background-color: var(--accent);
-  opacity: calc(0.16 + 0.84 * var(--lit, 0));
-}
-
-/*
- * The tour, told at two sizes.
- *
- * Wide enough for two columns, the copy walks down the page and the capture
- * keeps up with it: one sticky stack on the right where each screen fades in
- * over the one before it as its block comes up, with the blocks either side
- * sitting back in ghost.
- *
- * Narrower than that there is no second column to hold anything still, so the
- * section holds the screen instead. The copy blocks stack in one grid cell
- * above the capture and only the one being read is painted, pushed up out of
- * the column as the next arrives from below.
- *
- * `tour.tsx` writes both of them here: `--lit`, which screen is up, and
- * `--push`, which side of it everything else sits on. The reading position on
- * the wide layout is scrubbed from the scroll; the screen itself is committed
- * and played out by the transitions below. Without scripting the section is a
- * plain column: every block of copy in ink, the first capture under them.
- */
-.tour-pin {
-  padding-block: 6rem;
-}
-
-.tour-grid {
-  display: grid;
-  grid-template-columns: minmax(0, 1fr);
-  gap: 3rem;
-}
-
-/* Without scripting there is nothing to swap the blocks over, so they simply
-   follow one another down the page and all of them are readable. */
-.tour-step + .tour-step {
-  margin-top: 4.5rem;
-}
-
-.tour-shots {
-  position: relative;
-}
-
-.screen-layer {
-  position: absolute;
-  inset-inline: 0;
-  top: 0;
-  opacity: var(--lit, 0);
-}
-
-/* The first frame is left in the flow, so the stack is exactly as tall as one
-   capture in its window: the chrome above a capture is a fixed height and the
-   capture itself scales with the column, which no aspect ratio can state. */
-.screen-layer:first-child {
-  position: relative;
-  opacity: var(--lit, 1);
-}
-
-.tour-dots {
-  display: none;
-  align-items: center;
-  justify-content: center;
-  gap: 0.5rem;
-  margin-top: 2.5rem;
-}
-
-.js .tour-dots {
-  display: flex;
-}
-
-.js .tour-stage {
-  /* The runway: a screen of scroll for each capture, plus the one it holds. The
-     same measure the rail uses, so a flick carries the reader one screen here
-     and one step there rather than one of each. */
-  height: calc(var(--screens) * 100svh + 100svh);
-}
-
-/*
- * Everything the held stage shows has to fit one screen at once, on a tall
- * phone and a short one, so the room between its parts and the size of the
- * capture are all worked out from the height of the screen rather than fixed.
- */
-.js .tour-pin {
-  position: sticky;
-  top: 0;
-  display: grid;
-  grid-template-columns: minmax(0, 1fr);
-  align-content: center;
-  min-height: 100svh;
-  padding-block: clamp(2.5rem, 7svh, 7rem);
-}
-
-.js .tour-grid {
-  gap: clamp(1.25rem, 4svh, 3rem);
-}
-
-.js .tour-copy {
-  /* Every block sits in the same cell, so the stack is as tall as the longest
-     one and the capture below it never moves as the copy swaps. They rest on
-     the bottom of it, which keeps the gap to the capture the same for all of
-     them and leaves the slack where there is nothing to look at. */
-  display: grid;
-  align-items: end;
-}
-
-/*
- * Stacked, the screen is swapped by pushing it up the way you are reading:
- * what you have read leaves upward and its replacement arrives from below,
- * copy and capture together so the two read as one move rather than two.
- *
- * The push runs on its own clock rather than on the scroll — `tour.tsx` says
- * only which screen is up, and the transition here plays the change out. What
- * arrives waits for what it replaces to be gone before it starts, so there is
- * never a frame with two screenshots showing through each other.
- */
-.js .tour-step {
-  grid-area: 1 / 1;
-  margin-top: 0;
-  opacity: var(--lit, 1);
-  translate: 0 calc(var(--push, 0) * -1.5rem);
-  /* Only one block is ever readable, so none of them should be selectable. */
-  pointer-events: none;
-}
-
-.js .tour-step,
-.js .screen-layer {
-  transition:
-    opacity 0.3s var(--ease-calm),
-    translate 0.46s var(--ease-calm);
-  /* Read off the state being moved to, so arriving is delayed and leaving is
-     not: `--lit` is 1 on the screen coming up and 0 on the one going away. The
-     wait is a shade under the fade it is waiting on, which hands over without
-     ever showing both and without showing neither. */
-  transition-delay: calc(var(--lit, 0) * 0.28s);
-}
-
-.js .screen-layer {
-  translate: 0 calc(var(--push, 0) * -8%);
-  /* A beat behind the copy in both directions, so the words start going up
-     before the picture does and the two do not move as one slab. */
-  transition-delay: calc(0.07s + var(--lit, 0) * 0.28s);
-}
-
-.js .tour-shots {
-  width: min(100%, 46svh);
-  margin-inline: auto;
-}
-
-/* The dots are told the same thing the screens are, so the bar draws itself
-   out under the screen it belongs to as that screen arrives. */
-.js .tour-dots .progress-dot {
-  transition:
-    width 0.46s var(--ease-calm),
-    opacity 0.46s var(--ease-calm);
-}
-
-.js .tour-dots {
-  margin-top: clamp(1rem, 3svh, 2.5rem);
-}
-
-@media (prefers-reduced-motion: reduce) {
-  .js .tour-step,
-  .js .screen-layer {
-    translate: none;
-    transition: none;
-  }
-
-  .js .tour-dots .progress-dot {
-    transition: none;
-  }
-}
-
-@media (width >= 40rem) {
-  .tour-pin {
-    padding-block: 7rem;
-  }
-}
-
-@media (width >= 64rem) {
-  .tour-grid,
-  .js .tour-grid {
-    grid-template-columns: minmax(0, 20rem) minmax(0, 1fr);
-    align-items: start;
-    gap: 2.5rem;
-  }
-
-  .js .tour-stage {
-    height: auto;
-  }
-
-  .js .tour-pin {
-    position: static;
-    display: block;
-    min-height: 0;
-    padding-block: 7rem;
-  }
-
-  .js .tour-shots {
-    width: 100%;
-  }
-
-  /* The head puts the first block on the line the moment the section is
-     reached, so it opens level with the capture rather than above it; the tail
-     keeps the capture held while the last block is read. Each block owns a
-     stretch of scroll a little shorter than the screen, and rests on the line
-     for most of it. */
-  .tour-copy,
-  .js .tour-copy {
-    display: block;
-    padding-block: calc(38svh - 7rem) 30svh;
-  }
-
-  .tour-step,
-  .tour-step + .tour-step {
-    height: 62svh;
-    margin-top: 0;
-  }
-
-  /* Beside its capture a block of copy is a reading position rather than a
-     picture: it stays scrubbed, held in ghost until it reaches the line, so
-     it takes neither the push nor the transition that plays one. */
-  .js .tour-step {
-    opacity: calc(0.28 + 0.72 * var(--lit, 1));
-    translate: none;
-    transition: none;
-    pointer-events: auto;
-  }
-
-  /* The capture still commits, but there is nowhere to push it to beside a
-     column of copy that is not moving, so it only fades. */
-  .js .screen-layer {
-    translate: none;
-  }
-
-  .tour-block {
-    position: sticky;
-    top: 38svh;
-  }
-
-  /* Sticky alone holds a block on the line until the one after it arrives to
-     push it off, which is to say the two are touching at the moment it leaves.
-     Carrying every block a little in the direction it is being read pulls them
-     apart before then: the one on the line drifts up off it while it is still
-     being read, the one behind hangs back below, and the gap between them
-     never closes. Scrubbed, because this is the reading moving rather than a
-     picture changing. */
-  .js .tour-block {
-    translate: 0 calc(var(--push, 0) * -3.5rem);
-  }
-
-  .tour-rail {
-    position: sticky;
-    top: 0;
-    display: flex;
-    height: 100svh;
-    flex-direction: column;
-    justify-content: center;
-  }
-
-  .tour-dots,
-  .js .tour-dots {
-    margin-top: 2.25rem;
+@keyframes fan-right {
+  from {
+    opacity: 0;
+    translate: -45% 3rem;
+    rotate: -7deg;
   }
 }
 
@@ -905,34 +446,5 @@
     clip-path: circle(
       var(--theme-reveal-r, 120vmax) at var(--theme-reveal-x, 50%) var(--theme-reveal-y, 0%)
     );
-  }
-}
-
-/*
- * Feature accordions. Native <details>; where the browser can animate a box to
- * `auto` (interpolate-size) the content glides open, everywhere else it simply
- * appears. The plus icon rotating into a cross is handled in the markup.
- */
-@supports (interpolate-size: allow-keywords) {
-  .accordion {
-    interpolate-size: allow-keywords;
-  }
-
-  .accordion::details-content {
-    block-size: 0;
-    overflow-y: clip;
-    transition:
-      block-size 0.4s var(--ease-calm),
-      content-visibility 0.4s allow-discrete;
-  }
-
-  .accordion[open]::details-content {
-    block-size: auto;
-  }
-
-  @media (prefers-reduced-motion: reduce) {
-    .accordion::details-content {
-      transition: none;
-    }
   }
 }

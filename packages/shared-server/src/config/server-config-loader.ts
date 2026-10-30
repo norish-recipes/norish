@@ -22,6 +22,7 @@ import type {
   ImageGenerationConfig,
   IngredientPermissionPolicy,
   IngredientWordsMap,
+  PageRenderersConfig,
   PromptsConfig,
   RecipePermissionPolicy,
   RecurrenceConfig,
@@ -30,12 +31,12 @@ import type {
   UnitsMap,
   VideoConfig,
 } from "@norish/config/zod/server-config";
-import defaultContentIndicators from "@norish/config/content-indicators.default.json";
+import defaultContentIndicators from "@norish/config/content-indicators.default.json" with { type: "json" };
 import { SERVER_CONFIG } from "@norish/config/env-config-server";
-import defaultIngredientWords from "@norish/config/ingredient-words.default.json";
-import defaultRecurrenceConfig from "@norish/config/recurrence-config.default.json";
-import defaultTimerKeywords from "@norish/config/timer-keywords.default.json";
-import defaultUnits from "@norish/config/units.default.json";
+import defaultIngredientWords from "@norish/config/ingredient-words.default.json" with { type: "json" };
+import defaultRecurrenceConfig from "@norish/config/recurrence-config.default.json" with { type: "json" };
+import defaultTimerKeywords from "@norish/config/timer-keywords.default.json" with { type: "json" };
+import defaultUnits from "@norish/config/units.default.json" with { type: "json" };
 import {
   AIConfigSchema,
   DecisionConfigSchema,
@@ -49,9 +50,9 @@ import {
   isDecisionConfigValid,
   isDecisionUseSelected,
   isImageGenerationConfigValid,
+  PageRenderersConfigSchema,
   ServerConfigKeys,
   UnitsConfigSchema,
-  UnitsMapSchema,
 } from "@norish/config/zod/server-config";
 import { getConfig } from "@norish/db/repositories/server-config";
 import { DEFAULT_LOCALE } from "@norish/i18n/config";
@@ -92,21 +93,6 @@ export async function getUnits(): Promise<UnitsMap> {
 
   if (wrapped.success) {
     return wrapped.data.units;
-  }
-
-  const legacyWrapped =
-    typeof value === "object" && value !== null && "units" in value && "isOverwritten" in value
-      ? UnitsMapSchema.safeParse((value as { units: unknown }).units)
-      : null;
-
-  if (legacyWrapped?.success) {
-    return legacyWrapped.data;
-  }
-
-  const legacy = UnitsMapSchema.safeParse(value);
-
-  if (legacy.success) {
-    return legacy.data;
   }
 
   return defaultUnits as UnitsMap;
@@ -168,7 +154,7 @@ export async function getTimerKeywords(): Promise<TimerKeywordsConfig> {
 export async function getRecurrenceConfig(): Promise<RecurrenceConfig> {
   const value = await getConfig<RecurrenceConfig>(ServerConfigKeys.RECURRENCE_CONFIG);
 
-  return value ?? (defaultRecurrenceConfig as RecurrenceConfig);
+  return value ?? { locales: defaultRecurrenceConfig.locales, isOverridden: false };
 }
 
 /**
@@ -206,6 +192,44 @@ export async function getVideoConfig(includeSecrets = false): Promise<VideoConfi
 }
 
 /**
+ * The Page Renderers setting as the environment describes it, which seeds the row at first boot.
+ * Obscura is on unless `OBSCURA_ENDPOINT` is set empty; the Chromium browser once its endpoint is set.
+ */
+export function buildPageRenderersConfigFromEnv(): PageRenderersConfig {
+  const solverEndpoint = SERVER_CONFIG.PAGE_SOLVER_ENDPOINT || undefined;
+  const chromiumEndpoint = SERVER_CONFIG.CHROMIUM_BROWSER_ENDPOINT?.trim() ?? "";
+
+  return {
+    obscura: {
+      enabled: SERVER_CONFIG.OBSCURA_ENDPOINT !== "",
+      endpoint: SERVER_CONFIG.OBSCURA_ENDPOINT,
+      cdpToken: SERVER_CONFIG.OBSCURA_CDP_TOKEN || undefined,
+    },
+    chromium: { enabled: chromiumEndpoint !== "", endpoint: chromiumEndpoint },
+    solver: {
+      enabled: SERVER_CONFIG.PAGE_SOLVER_ENABLED && solverEndpoint !== undefined,
+      endpoint: solverEndpoint,
+    },
+    allowPrivateAddresses: SERVER_CONFIG.ALLOW_PRIVATE_ADDRESSES,
+    navigationTimeoutMs: SERVER_CONFIG.PAGE_RENDERER_TIMEOUT_MS,
+  };
+}
+
+/** The Page Renderers setting with the CDP token decrypted; the environment's until it is seeded. */
+export async function getPageRenderersConfig(): Promise<PageRenderersConfig> {
+  const stored = await getConfig<PageRenderersConfig>(ServerConfigKeys.PAGE_RENDERERS, true);
+
+  if (stored === null) return buildPageRenderersConfigFromEnv();
+
+  const parsed = PageRenderersConfigSchema.safeParse(stored);
+
+  if (parsed.success) return parsed.data;
+  serverLogger.warn({ issues: parsed.error.issues }, "Stored Page Renderers setting is invalid");
+
+  return buildPageRenderersConfigFromEnv();
+}
+
+/**
  * Get the Image Generation configuration block. Ships unconfigured: a
  * deployment that never saved it has no row and gets null.
  * @param includeSecrets - If true, includes the decrypted API key
@@ -237,8 +261,8 @@ export async function isImageGenerationConfigured(): Promise<boolean> {
 
 /**
  * Whether the instance can draw: AI on and an Image Generation provider
- * configured. What Generate and Draw icons on the Ingredients page follow,
- * so a button is hidden rather than offered to fail.
+ * configured. What Generate in a food's icon menu and Fill gaps' Icons
+ * follow, so neither is offered to fail.
  */
 export async function canDrawImages(): Promise<boolean> {
   const [enabled, configured] = await Promise.all([isAIEnabled(), isImageGenerationConfigured()]);
@@ -274,8 +298,8 @@ export async function getDecisionConfig(includeSecrets = false): Promise<Decisio
 
 /**
  * Whether a Decision could be served at all: a provider is selected and its
- * key is stored. Says nothing about the global AI switch, which the runtime
- * checks on every request.
+ * key is stored. The Decision block is its own switch, apart from the global
+ * AI one.
  */
 export async function isDecisionModelConfigured(): Promise<boolean> {
   return isDecisionConfigValid(await getDecisionConfig(true));
@@ -283,17 +307,13 @@ export async function isDecisionModelConfigured(): Promise<boolean> {
 
 /**
  * The one question a feature asks before composing a Decision: is there a
- * Decision Model, is AI on at all, and did the administrator leave this use
- * selected. False on every count when no Decision Model is configured, so a
- * feature's fallback is the path it takes on a server that never heard of
- * one. A block with no stored selection means every use.
+ * Decision Model, and did the administrator leave this use selected. False
+ * when no Decision Model is configured, so a feature's fallback is the path
+ * it takes on a server that never heard of one. A block with no stored
+ * selection means every use. The global AI switch does not enter into it.
  */
 export async function isDecisionUseEnabled(use: DecisionUse): Promise<boolean> {
-  const [aiConfig, decisionConfig] = await Promise.all([getAIConfig(), getDecisionConfig(true)]);
-
-  if (!aiConfig?.enabled) return false;
-
-  return isDecisionUseSelected(decisionConfig, use);
+  return isDecisionUseSelected(await getDecisionConfig(true), use);
 }
 
 /**
@@ -409,17 +429,19 @@ export async function getAutomaticEnrichmentConfig(): Promise<AutomaticEnrichmen
 }
 
 /**
- * What runs on a food just minted by someone's action: its Plain Name, its
- * icon. Both off while AI is off; the icon also needs an image provider.
+ * What AI does to a newly minted food. All off while AI is off; the icon also without an image
+ * provider.
  */
 export async function getAutomaticIngredientsConfig(): Promise<AutomaticIngredientsConfig> {
   const aiConfig = await getAIConfig();
 
   if (!aiConfig?.enabled) return DEFAULT_AUTOMATIC_INGREDIENTS;
+  const { automaticIngredients } = aiConfig;
 
-  const { plainName, icon } = aiConfig.automaticIngredients;
-
-  return { plainName, icon: icon && (await isImageGenerationConfigured()) };
+  return {
+    ...automaticIngredients,
+    icon: automaticIngredients.icon && (await isImageGenerationConfigured()),
+  };
 }
 
 // ============================================================================

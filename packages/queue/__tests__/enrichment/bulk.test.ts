@@ -72,7 +72,6 @@ function recipe(id: string, overrides: Record<string, unknown> = {}) {
 }
 
 beforeEach(() => {
-  vi.clearAllMocks();
   getRecipeFull.mockImplementation(async (id: string) => recipe(id));
   getHouseholdMemberIds.mockResolvedValue(["user-1"]);
   getAllergiesForUsers.mockResolvedValue(["Milk"]);

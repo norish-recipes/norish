@@ -38,7 +38,6 @@ vi.mock("@norish/shared-server/logger", () => ({
 
 describe("cleanupOrphanedAvatars retention (ADR-0021)", () => {
   beforeEach(() => {
-    vi.clearAllMocks();
     fsMocks.unlink.mockResolvedValue(undefined);
   });
 

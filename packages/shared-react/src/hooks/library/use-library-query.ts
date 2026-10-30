@@ -6,6 +6,7 @@ import type { LibraryItemDTO, LibraryTypeFilter } from "@norish/shared/contracts
 
 import type { RecipeFilters } from "../recipes/dashboard";
 import type { CreateRecipeHooksOptions } from "../recipes/types";
+import { byNextCursor, libraryListInput } from "../../contexts/recipes/list-queries";
 
 export type LibraryFilters = RecipeFilters & {
   type?: LibraryTypeFilter;
@@ -36,40 +37,13 @@ export function createUseLibraryQuery({ useTRPC }: CreateRecipeHooksOptions) {
     filters: LibraryFilters = {},
     { enabled = true }: { enabled?: boolean } = {}
   ): LibraryQueryResult {
+    "use memo";
+
     const trpc = useTRPC();
     const queryClient = useQueryClient();
-    const {
-      // The same default the recipe list uses, so the Warm Set's guaranteed
-      // floor and the reader's own first page are one cache entry rather than
-      // two (ADR-0009).
-      limit = 100,
-      search,
-      searchFields,
-      tags,
-      categories,
-      filterMode = "AND",
-      sortMode = "dateDesc",
-      minRating,
-      maxCookingTime,
-      favoritesOnly = false,
-      type = "all",
-    } = filters;
-
     const infiniteQueryOptions = trpc.library.list.infiniteQueryOptions(
-      {
-        limit,
-        search,
-        searchFields,
-        tags,
-        categories,
-        filterMode,
-        sortMode,
-        minRating,
-        maxCookingTime,
-        favoritesOnly,
-        type,
-      },
-      { getNextPageParam: (lastPage) => lastPage.nextCursor }
+      libraryListInput(filters),
+      byNextCursor
     );
     const queryKey = infiniteQueryOptions.queryKey;
 

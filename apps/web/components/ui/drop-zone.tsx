@@ -1,7 +1,7 @@
 "use client";
 
 import type { ComponentPropsWithoutRef, ReactNode, RefObject } from "react";
-import { createContext, useCallback, useContext, useMemo, useRef } from "react";
+import { createContext, use, useCallback, useMemo, useRef } from "react";
 import { Button } from "@heroui/react";
 import { DropZone as RACDropZone, Text } from "react-aria-components";
 import { twMerge } from "tailwind-merge";
@@ -16,7 +16,7 @@ type DropZoneContextValue = {
 const DropZoneContext = createContext<DropZoneContextValue | null>(null);
 
 function useDropZone() {
-  const context = useContext(DropZoneContext);
+  const context = use(DropZoneContext);
 
   if (!context) {
     throw new Error("DropZone compound components must be used within a <DropZone>");
@@ -31,11 +31,11 @@ function DropZoneRoot({ children, className, ...props }: ComponentPropsWithoutRe
   const value = useMemo(() => ({ inputRef, openFilePicker }), [openFilePicker]);
 
   return (
-    <DropZoneContext.Provider value={value}>
+    <DropZoneContext value={value}>
       <div className={twMerge("flex flex-col gap-3", className)} data-slot="drop-zone" {...props}>
         {children}
       </div>
-    </DropZoneContext.Provider>
+    </DropZoneContext>
   );
 }
 
@@ -94,8 +94,12 @@ function DropZoneDescription({ children, className, ...props }: ComponentPropsWi
   );
 }
 
-interface DropZoneTriggerProps extends Omit<ComponentPropsWithoutRef<typeof Button>, "children"> {
+interface DropZoneTriggerProps extends Omit<
+  ComponentPropsWithoutRef<typeof Button>,
+  "children" | "className"
+> {
   children?: ReactNode;
+  className?: string;
 }
 
 function DropZoneTrigger({ children, className, ...props }: DropZoneTriggerProps) {

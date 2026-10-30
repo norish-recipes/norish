@@ -1,6 +1,6 @@
 "use client";
 
-import { createContext, ReactNode, useCallback, useContext, useState } from "react";
+import { createContext, ReactNode, use, useCallback, useState } from "react";
 import {
   useCaldavConfigQuery,
   useCaldavConnectionQuery,
@@ -20,6 +20,8 @@ import type {
   UserCaldavConfigWithoutPasswordDto,
 } from "@norish/shared/contracts";
 import type { CaldavSyncStatus } from "@norish/shared/contracts/dto/caldav-sync-status";
+
+import { FIRST_SYNC_STATUS_PAGE } from "./first-sync-status-page";
 
 type SaveCaldavConfigInput = {
   serverUrl: string;
@@ -84,14 +86,16 @@ export function CalDavSettingsProvider({ children }: { children: ReactNode }) {
   // Queries
   const { config, isLoading: isLoadingConfig, setConfig: _setConfig } = useCaldavConfigQuery();
   const { password: storedPassword, isLoading: _isLoadingPassword } = useCaldavPasswordQuery();
-  const [syncStatusPage, setSyncStatusPage] = useState(1);
-  const [syncStatusFilter, setSyncStatusFilter] = useState<CaldavSyncStatus | undefined>("pending");
+  const [syncStatusPage, setSyncStatusPage] = useState<number>(FIRST_SYNC_STATUS_PAGE.page);
+  const [syncStatusFilter, setSyncStatusFilter] = useState<CaldavSyncStatus | undefined>(
+    FIRST_SYNC_STATUS_PAGE.statusFilter
+  );
 
   const {
     statuses: syncStatuses,
     total: syncStatusTotal,
     isLoading: isLoadingSyncStatus,
-  } = useCaldavSyncStatusQuery(syncStatusPage, 20, syncStatusFilter);
+  } = useCaldavSyncStatusQuery(syncStatusPage, FIRST_SYNC_STATUS_PAGE.pageSize, syncStatusFilter);
 
   const { summary: syncStatusSummary } = useCaldavSummaryQuery();
 
@@ -260,7 +264,7 @@ export function CalDavSettingsProvider({ children }: { children: ReactNode }) {
   }, [storedPassword]);
 
   return (
-    <CalDavSettingsContext.Provider
+    <CalDavSettingsContext
       value={{
         config,
         isLoading: isLoadingConfig || isLoadingSyncStatus,
@@ -290,12 +294,12 @@ export function CalDavSettingsProvider({ children }: { children: ReactNode }) {
       }}
     >
       {children}
-    </CalDavSettingsContext.Provider>
+    </CalDavSettingsContext>
   );
 }
 
 export function useCalDavSettingsContext() {
-  const context = useContext(CalDavSettingsContext);
+  const context = use(CalDavSettingsContext);
 
   if (!context) {
     throw new Error("useCalDavSettingsContext must be used within CalDavSettingsProvider");

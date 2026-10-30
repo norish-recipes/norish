@@ -2,7 +2,6 @@
 
 import { useRouter } from "next/navigation";
 import { useTRPC } from "@/app/providers/trpc-provider";
-import { useWarmSet } from "@/hooks/use-warm-set";
 import { showActionToast } from "@/lib/ui/action-toast";
 import { isQueuedForReplay, showQueuedOfflineToast } from "@/lib/ui/queued-offline-toast";
 import { showSafeErrorToast } from "@/lib/ui/safe-error-toast";
@@ -23,7 +22,6 @@ const useSharedRecipesMutations = createUseRecipesMutations(
 export type { RecipesMutationsResult };
 
 export function useRecipesMutations(): RecipesMutationsResult {
-  const warmSet = useWarmSet();
   const router = useRouter();
   const tErrors = useTranslations("common.errors");
   const tQueued = useTranslations("common.queuedOffline");
@@ -62,9 +60,5 @@ export function useRecipesMutations(): RecipesMutationsResult {
     });
   };
 
-  return useSharedRecipesMutations(
-    showMutationErrorToast,
-    warmSet.promoteCreatedRecipe,
-    showAlreadyExistsToast
-  );
+  return useSharedRecipesMutations(showMutationErrorToast, showAlreadyExistsToast);
 }

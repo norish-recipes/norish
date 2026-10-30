@@ -1,6 +1,6 @@
 {
   "name": "@norish/i18n",
-  "version": "0.25.1-beta",
+  "version": "0.26.0-beta",
   "private": true,
   "type": "module",
   "scripts": {
@@ -22,8 +22,10 @@
     "@norish/eslint-config": "workspace:*",
     "@norish/prettier-config": "workspace:*",
     "@norish/tsconfig": "workspace:*",
+    "@types/node": "catalog:",
     "eslint": "catalog:",
-    "prettier": "catalog:"
+    "prettier": "catalog:",
+    "typescript": "catalog:"
   },
   "prettier": "@norish/prettier-config"
 }

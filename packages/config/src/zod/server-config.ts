@@ -26,6 +26,7 @@ export const ServerConfigKeys = {
   LOCALE_CONFIG: "locale_config",
   TIMER_KEYWORDS: "timer_keywords",
   INGREDIENT_WORDS: "ingredient_words",
+  PAGE_RENDERERS: "page_renderers",
 } as const;
 
 export type ServerConfigKey = (typeof ServerConfigKeys)[keyof typeof ServerConfigKeys];
@@ -132,10 +133,6 @@ export type TimerKeywordsInput = z.infer<typeof TimerKeywordsInputSchema>;
  * default. Defaults live in the shipped prompt files and are merged in at
  * read time, so a new release's prompts reach every deployment that never
  * customized them.
- *
- * `isOverridden` is the pre-0.20 row-level flag. It froze all prompts after
- * any save; rows still carrying it are pruned to real overrides at boot, and
- * it is never written again.
  */
 export const PromptsConfigSchema = z.object({
   recipeExtraction: z.string().optional(),
@@ -145,6 +142,7 @@ export const PromptsConfigSchema = z.object({
   recipeProvenance: z.string().optional(),
   ingredientLinking: z.string().optional(),
   ingredientResolution: z.string().optional(),
+  ingredientMatch: z.string().optional(),
   imageExtraction: z.string().optional(),
   autoCategorization: z.string().optional(),
   allergyDetection: z.string().optional(),
@@ -152,16 +150,14 @@ export const PromptsConfigSchema = z.object({
   imageGenerationStyle: z.string().optional(),
   ingredientIconStyle: z.string().optional(),
   ingredientPlainName: z.string().optional(),
-  isOverridden: z.boolean().optional(),
+  ingredientSpellingCheck: z.string().optional(),
+  ingredientNutrition: z.string().optional(),
 });
 
 export type PromptsConfig = z.infer<typeof PromptsConfigSchema>;
 
-export const PromptsConfigInputSchema = PromptsConfigSchema.omit({ isOverridden: true });
-export type PromptsConfigInput = z.infer<typeof PromptsConfigInputSchema>;
-
 /** One text per prompt, nothing missing: the shape of shipped defaults and of the merged admin view. */
-export type PromptValues = Required<PromptsConfigInput>;
+export type PromptValues = Required<PromptsConfig>;
 
 // ============================================================================
 // i18n Locale Configuration Schema
@@ -220,16 +216,22 @@ export const IngredientWordsLanguageSchema = z.object({
   preparation: z.array(z.string()).default([]),
   /** The word between two preparations: "peeled and chopped". */
   joiners: z.array(z.string()).default([]),
+  /** The words between foods needed together in one name: "zout en peper". */
+  together: z.array(z.string()).default([]),
+  /** The words between foods any one of which will do: "boter of olie". */
+  alternatives: z.array(z.string()).default([]),
   /** The word between a leading measure and its food: "a pinch of nutmeg". */
   connectors: z.array(z.string()).default([]),
-  /** After these comes what a food is packed or served in or with: "tuna in olive oil". */
-  servedWith: z.array(z.string()).default([]),
+  /** The words a name ends before, which start what it comes in or a note: "greek yogurt for topping". */
+  endsBefore: z.array(z.string()).default([]),
   /** Words that never name a food alone, however another language spells one with them. */
   notFoods: z.array(z.string()).default([]),
   /** Words that say an amount is a guess: "about", "ongeveer". */
   approximately: z.array(z.string()).default([]),
   /** Sizes: "large", "grote". A line's unit that is one counts a piece. */
   sizes: z.array(z.string()).default([]),
+  /** Cuts and forms of a food, after its name: "mango blokjes", "chicken strips". */
+  forms: z.array(z.string()).default([]),
   /** Plural and diminutive endings, each with the ending of the form it stands for. */
   inflections: z.array(z.tuple([z.string(), z.string()])).default([]),
 });
@@ -274,13 +276,22 @@ export const LocaleConfigSchema = z.object({
   otherWords: z.array(z.string()),
   onWords: z.array(z.string()),
   numberWords: z.record(z.string(), z.number().int().positive()),
-  unitWords: z.record(z.string(), z.array(z.string())),
+  unitWords: z.object({
+    day: z.array(z.string()),
+    week: z.array(z.string()),
+    month: z.array(z.string()),
+    year: z.array(z.string()),
+  }),
   weekdayWords: z.record(z.string(), z.number().int().min(0).max(6)),
   intervalHints: z.array(IntervalHintSchema),
 });
 
+export const RecurrenceLocalesSchema = z.record(z.string(), LocaleConfigSchema);
+
+/** The recurrence words as stored, with whether an administrator edited them. */
 export const RecurrenceConfigSchema = z.object({
-  locales: z.record(z.string(), LocaleConfigSchema),
+  locales: RecurrenceLocalesSchema,
+  isOverridden: z.boolean().default(false),
 });
 
 export type RecurrenceConfig = z.infer<typeof RecurrenceConfigSchema>;
@@ -304,19 +315,6 @@ export const AIProviderSchema = z.enum([
 ]);
 
 export type AIProvider = z.infer<typeof AIProviderSchema>;
-
-/**
- * Legacy auto-tagging mode. Superseded by the independent `automaticEnrichment.autoTagging`
- * switch plus `tagStrategy`; still accepted on read so stored config migrates in place.
- */
-export const AutoTaggingModeSchema = z.enum([
-  "disabled",
-  "predefined",
-  "predefined_db",
-  "freeform",
-]);
-
-export type AutoTaggingMode = z.infer<typeof AutoTaggingModeSchema>;
 
 /** How auto-tagging picks tag names. Independent of whether auto-tagging runs automatically. */
 export const TagStrategySchema = z.enum(["predefined", "predefined_db", "freeform"]);
@@ -371,20 +369,22 @@ export const DEFAULT_AUTOMATIC_ENRICHMENT: AutomaticEnrichmentConfig = {
 };
 
 /**
- * What runs on a food just minted by someone's action (ADR-0037, amended
- * 2026-10-10): AI gives it its Plain Name, and the image provider draws it an
- * icon where it would show none. Both cost a request per food, so both are
- * off until an administrator opts in.
+ * What AI does to a newly minted food, each off until an administrator opts in: clean it up
+ * (merge, parent, Plain Name), fill its missing nutrition and conversions, draw its missing icon.
  */
 export const AutomaticIngredientsSchema = z.object({
-  plainName: z.boolean(),
+  cleanUp: z.boolean(),
+  nutrition: z.boolean(),
+  conversions: z.boolean(),
   icon: z.boolean(),
 });
 
 export type AutomaticIngredientsConfig = z.infer<typeof AutomaticIngredientsSchema>;
 
 export const DEFAULT_AUTOMATIC_INGREDIENTS: AutomaticIngredientsConfig = {
-  plainName: false,
+  cleanUp: false,
+  nutrition: false,
+  conversions: false,
   icon: false,
 };
 
@@ -392,6 +392,9 @@ export const DEFAULT_TAG_STRATEGY: TagStrategy = "predefined";
 
 /** Restrictive by default: an administrator opts in to letting AI mint Cuisines. */
 export const DEFAULT_CUISINE_STRATEGY: CuisineStrategy = "existing";
+
+/** How long an AI request may run when the AI block stores no timeout. */
+export const DEFAULT_AI_TIMEOUT_MS = 300_000;
 
 export const AIConfigInputSchema = z.object({
   enabled: z.boolean(),
@@ -402,51 +405,28 @@ export const AIConfigInputSchema = z.object({
   apiKey: z.string().optional(),
   temperature: z.number().min(0).max(2),
   maxTokens: z.number().int().positive(),
-  timeoutMs: z.number().int().positive().optional().default(300000),
+  timeoutMs: z.number().int().positive().optional().default(DEFAULT_AI_TIMEOUT_MS),
   alwaysUseAI: z.boolean().default(false),
   tagStrategy: TagStrategySchema.optional(),
   cuisineStrategy: CuisineStrategySchema.optional(),
   automaticEnrichment: AutomaticEnrichmentSchema.partial().optional(),
   automaticIngredients: AutomaticIngredientsSchema.partial().optional(),
-  /** @deprecated Migrated into `automaticEnrichment.autoTagging` + `tagStrategy`. */
-  autoTaggingMode: AutoTaggingModeSchema.optional(),
-  /** @deprecated Migrated into `automaticEnrichment.allergyDetection`. */
-  autoTagAllergies: z.boolean().optional(),
 });
 
 /**
- * The canonical AI configuration contract. Stored config written before the
- * unified enrichment flow still parses: legacy fields migrate without changing
- * effective enabledness, and canonical values always win over legacy ones.
+ * The canonical AI configuration contract: every setting a stored config
+ * leaves out takes its default.
  */
 export const AIConfigSchema = AIConfigInputSchema.transform(
-  ({
-    autoTaggingMode,
-    autoTagAllergies,
-    tagStrategy,
-    cuisineStrategy,
-    automaticEnrichment,
-    automaticIngredients,
-    ...rest
-  }) => {
-    const legacyAutoTaggingOn =
-      autoTaggingMode === undefined ? undefined : autoTaggingMode !== "disabled";
-    const legacyStrategy =
-      autoTaggingMode === undefined || autoTaggingMode === "disabled" ? undefined : autoTaggingMode;
-
+  ({ tagStrategy, cuisineStrategy, automaticEnrichment, automaticIngredients, ...rest }) => {
     return {
       ...rest,
-      tagStrategy: tagStrategy ?? legacyStrategy ?? DEFAULT_TAG_STRATEGY,
+      tagStrategy: tagStrategy ?? DEFAULT_TAG_STRATEGY,
       cuisineStrategy: cuisineStrategy ?? DEFAULT_CUISINE_STRATEGY,
       automaticEnrichment: {
-        autoTagging:
-          automaticEnrichment?.autoTagging ??
-          legacyAutoTaggingOn ??
-          DEFAULT_AUTOMATIC_ENRICHMENT.autoTagging,
+        autoTagging: automaticEnrichment?.autoTagging ?? DEFAULT_AUTOMATIC_ENRICHMENT.autoTagging,
         allergyDetection:
-          automaticEnrichment?.allergyDetection ??
-          autoTagAllergies ??
-          DEFAULT_AUTOMATIC_ENRICHMENT.allergyDetection,
+          automaticEnrichment?.allergyDetection ?? DEFAULT_AUTOMATIC_ENRICHMENT.allergyDetection,
         autoCategorization:
           automaticEnrichment?.autoCategorization ??
           DEFAULT_AUTOMATIC_ENRICHMENT.autoCategorization,
@@ -475,6 +455,7 @@ export type AIConfigInput = z.input<typeof AIConfigSchema>;
 export const TranscriptionProviderSchema = z.enum([
   "openai",
   "groq",
+  "mistral",
   "azure",
   "generic-openai",
   "ollama",
@@ -487,6 +468,7 @@ export type TranscriptionProvider = z.infer<typeof TranscriptionProviderSchema>;
 export const TRANSCRIPTION_PROVIDERS_ENABLED = [
   "openai",
   "groq",
+  "mistral",
   "azure",
   "generic-openai",
   "ollama",
@@ -496,6 +478,7 @@ export const TRANSCRIPTION_PROVIDERS_ENABLED = [
 export const TRANSCRIPTION_PROVIDERS_CLOUD = [
   "openai",
   "groq",
+  "mistral",
   "azure",
 ] as const satisfies readonly TranscriptionProvider[];
 
@@ -510,6 +493,7 @@ export const TRANSCRIPTION_PROVIDERS_NEED_ENDPOINT = [
 export const TRANSCRIPTION_PROVIDERS_WITH_MODEL_LISTING = [
   "openai",
   "groq",
+  "mistral",
   "generic-openai",
   "ollama",
 ] as const satisfies readonly TranscriptionProvider[];
@@ -547,7 +531,7 @@ export function transcriptionProviderSupportsModelListing(
  * Sites that break as a site changes (Instagram most of all) are fixed in yt-dlp
  * releases, so this trails the newest release rather than leading it.
  */
-export const DEFAULT_YT_DLP_VERSION = "2026.08.19";
+export const DEFAULT_YT_DLP_VERSION = "2026.10.26";
 
 export const VideoConfigSchema = z.object({
   enabled: z.boolean(),
@@ -562,6 +546,48 @@ export const VideoConfigSchema = z.object({
 });
 
 export type VideoConfig = z.infer<typeof VideoConfigSchema>;
+
+// ============================================================================
+// Page Renderers (ADR-0019)
+// ============================================================================
+
+/** The browser services tried, in this order, for a page a plain fetch cannot read. */
+export const PageRenderersConfigSchema = z.object({
+  obscura: z
+    .object({
+      enabled: z.boolean(),
+      endpoint: z.string().trim(),
+      cdpToken: z.string().optional(),
+    })
+    .refine((obscura) => !obscura.enabled || obscura.endpoint !== "", {
+      message: "Endpoint is required",
+      path: ["endpoint"],
+    }),
+  /** Any Chromium with a CDP endpoint; a hosted browser's token may ride in its query string. */
+  chromium: z
+    .object({
+      enabled: z.boolean(),
+      endpoint: z.string().trim(),
+    })
+    .refine((chromium) => !chromium.enabled || chromium.endpoint !== "", {
+      message: "Endpoint is required",
+      path: ["endpoint"],
+    })
+    .default({ enabled: false, endpoint: "" }),
+  solver: z
+    .object({
+      enabled: z.boolean(),
+      endpoint: z.url("Endpoint must be a valid URL").optional(),
+    })
+    .refine((solver) => !solver.enabled || solver.endpoint !== undefined, {
+      message: "Endpoint is required",
+      path: ["endpoint"],
+    }),
+  allowPrivateAddresses: z.boolean(),
+  navigationTimeoutMs: z.number().int().positive(),
+});
+
+export type PageRenderersConfig = z.infer<typeof PageRenderersConfigSchema>;
 
 // ============================================================================
 // Image Generation Configuration Schema
@@ -881,6 +907,14 @@ export const IngredientSeedStateSchema = z.object({
   rungVersion: z.number().int().default(0),
   /** The version of Ingredient Nutrition's source table last applied (ADR-0039). */
   nutritionVersion: z.string().nullable().default(null),
+  /** The first-start cleanup's `CLEANUP_VERSION` last run (ADR-0037). */
+  cleanupVersion: z.number().int().default(0),
+  /** The seed's `SEED_CORRECTIONS_VERSION` last made on the seeded foods. */
+  correctionsVersion: z.number().int().default(0),
+  /** The junk pile seed's version last put on the pile (`JUNK_SEED`). */
+  junkSeedVersion: z.number().int().default(0),
+  /** The upgrades from older releases last run (`UPGRADES_VERSION`, startup/upgrades). */
+  upgradesVersion: z.number().int().default(0),
 });
 
 export type IngredientSeedState = z.infer<typeof IngredientSeedStateSchema>;
@@ -931,37 +965,6 @@ export type UserServerRole = z.infer<typeof UserServerRoleSchema>;
 // Validation helpers
 // ============================================================================
 
-const SERVER_CONFIG_MIGRATIONS: Partial<Record<ServerConfigKey, (value: unknown) => unknown>> = {
-  [ServerConfigKeys.UNITS]: (value) => {
-    const legacyWrapped =
-      typeof value === "object" && value !== null && "units" in value && "isOverwritten" in value
-        ? UnitsMapSchema.safeParse((value as { units: unknown }).units)
-        : null;
-
-    if (legacyWrapped?.success) {
-      return {
-        units: legacyWrapped.data,
-        isOverridden: false,
-      };
-    }
-
-    const legacy = UnitsMapSchema.safeParse(value);
-
-    if (legacy.success) {
-      return {
-        units: legacy.data,
-        isOverridden: false,
-      };
-    }
-
-    return value;
-  },
-};
-
-function migrateConfigValue(key: ServerConfigKey, value: unknown): unknown {
-  return SERVER_CONFIG_MIGRATIONS[key]?.(value) ?? value;
-}
-
 /**
  * Get the appropriate Zod schema for a given config key
  */
@@ -1007,6 +1010,8 @@ export function getSchemaForConfigKey(key: ServerConfigKey): z.ZodType {
       return TimerKeywordsSchema;
     case ServerConfigKeys.INGREDIENT_WORDS:
       return IngredientWordsConfigSchema;
+    case ServerConfigKeys.PAGE_RENDERERS:
+      return PageRenderersConfigSchema;
     default:
       return z.any();
   }
@@ -1021,7 +1026,7 @@ export function normalizeConfigValue(
 ): { success: true; data: unknown } | { success: false; error: z.ZodError } {
   const schema = getSchemaForConfigKey(key);
 
-  return schema.safeParse(migrateConfigValue(key, value));
+  return schema.safeParse(value);
 }
 
 /**
@@ -1045,6 +1050,7 @@ export const SENSITIVE_CONFIG_KEYS: ServerConfigKey[] = [
   ServerConfigKeys.VIDEO_CONFIG,
   ServerConfigKeys.IMAGE_GENERATION_CONFIG,
   ServerConfigKeys.DECISION_CONFIG,
+  ServerConfigKeys.PAGE_RENDERERS,
 ];
 
 /**

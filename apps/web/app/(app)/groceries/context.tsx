@@ -1,6 +1,6 @@
 "use client";
 
-import { createContext, ReactNode, useCallback, useContext, useMemo, useState } from "react";
+import { createContext, ReactNode, use, useCallback, useMemo, useState } from "react";
 import { useDevicePreference } from "@/context/device-preferences-context";
 import {
   useGroceriesMutations,
@@ -48,7 +48,7 @@ type GroceriesUiContextValue = {
   setGroupSimilarIngredients: (enabled: boolean) => void;
 };
 
-const GroceriesUiCtx = createContext<GroceriesUiContextValue | null>(null);
+const GroceriesUiContext = createContext<GroceriesUiContextValue | null>(null);
 
 type GroceriesUiProviderProps = {
   children: ReactNode;
@@ -107,11 +107,11 @@ function GroceriesUiProvider({ children }: GroceriesUiProviderProps) {
     ]
   );
 
-  return <GroceriesUiCtx.Provider value={uiValue}>{children}</GroceriesUiCtx.Provider>;
+  return <GroceriesUiContext value={uiValue}>{children}</GroceriesUiContext>;
 }
 
 export function useGroceriesUiContext() {
-  const ctx = useContext(GroceriesUiCtx);
+  const ctx = use(GroceriesUiContext);
 
   if (!ctx) throw new Error("useGroceriesUiContext must be used within GroceriesContextProvider");
 

@@ -13,7 +13,8 @@
  */
 
 import type { OfflineIdb } from "@/lib/offline/idb";
-import { deleteImageCache } from "@/lib/offline/cache-names";
+import type { DehydratedState, Query } from "@tanstack/react-query";
+import { deletePersonalCaches } from "@/lib/offline/cache-names";
 import { KEYVAL_STORE, offlineIdb } from "@/lib/offline/idb";
 import {
   CACHE_OWNER_STORAGE_KEY,
@@ -27,6 +28,10 @@ import {
   persistQueryClientSubscribe,
 } from "@tanstack/query-persist-client-core";
 import { QueryClient } from "@tanstack/react-query";
+import { createTRPCClient } from "@trpc/client";
+import { createTRPCOptionsProxy } from "@trpc/tanstack-react-query";
+
+import type { AppRouter } from "@norish/trpc/client";
 
 /** Discard a restored cache older than this (ADR: 7-day maxAge). */
 export const CACHE_MAX_AGE_MS = 7 * 24 * 60 * 60 * 1000;
@@ -38,7 +43,7 @@ export const CACHE_MAX_AGE_MS = 7 * 24 * 60 * 60 * 1000;
  */
 // NEXT_PUBLIC values are intentionally exposed to the browser by Next.js.
 // eslint-disable-next-line no-restricted-properties
-export const CACHE_BUSTER = process.env.NEXT_PUBLIC_APP_VERSION ?? "0.0.0";
+export const CACHE_BUSTER = process.env.NEXT_PUBLIC_APP_VERSION;
 
 /** Placeholder owner before any user is confirmed; never actually persisted. */
 const ANON_OWNER = "__anon__";
@@ -69,18 +74,49 @@ function writeBootOwner(ownerId: string): void {
   }
 }
 
+/** The data each query held as the server sent it with this page load, by query hash. */
+const serverCopies = new Map<string, unknown>();
+
+/**
+ * Note the reads the server sent with the page (QuerySeed). Browser only: on the server this
+ * module outlives a request.
+ */
+export function markServerCopies(state: DehydratedState | undefined): void {
+  if (typeof window === "undefined") return;
+
+  for (const { queryHash, state: query } of state?.queries ?? []) {
+    serverCopies.set(queryHash, query.data);
+  }
+}
+
+const STALE_TIME_MS = 1000 * 60 * 5;
+
+/**
+ * A server copy, unchanged and under the stale time (a document the worker kept can be old), is
+ * current. Every other copy refetches on mount: a restored one may predate a change made elsewhere.
+ */
+const refetchOnMount = (query: Query) =>
+  // Never on the server: a seeded query marked as refetching renders a spinner there, which the
+  // hydrating render does not.
+  typeof window === "undefined" ||
+  (serverCopies.has(query.queryHash) &&
+    serverCopies.get(query.queryHash) === query.state.data &&
+    !query.isStaleByTime(STALE_TIME_MS))
+    ? false
+    : ("always" as const);
+
 /** Persist usable read data even when its latest background refetch failed. */
 const shouldDehydrateQuery = (query: { state: { data: unknown } }) =>
   query.state.data !== undefined;
 
 function createQueryClient(): QueryClient {
-  return new QueryClient({
+  const queryClient = new QueryClient({
     defaultOptions: {
       queries: {
-        staleTime: 1000 * 60 * 5,
+        staleTime: STALE_TIME_MS,
         gcTime: 1000 * 60 * 10,
         refetchOnWindowFocus: true,
-        refetchOnMount: "always",
+        refetchOnMount,
         retry: 1,
       },
       mutations: {
@@ -93,6 +129,24 @@ function createQueryClient(): QueryClient {
       },
     },
   });
+
+  // Defaults are read when a query is built, so registering them here, before
+  // any read or restore, gives every such entry the offline cache's lifetime
+  // however it got in: the Warm Set, the page the reader opened, or the seed a
+  // create writes Live or Offline.
+  // The reads a reader opens or makes that must outlive a trip Offline: a recipe
+  // and a cookbook (ADR-0008). tRPC builds their path keys, so each matches every
+  // id; the proxy only names keys and never sends a request.
+  const keys = createTRPCOptionsProxy<AppRouter>({
+    client: createTRPCClient<AppRouter>({ links: [] }),
+    queryClient,
+  });
+
+  for (const pathKey of [keys.recipes.get.pathKey(), keys.cookbooks.get.pathKey()]) {
+    queryClient.setQueryDefaults(pathKey, { gcTime: CACHE_MAX_AGE_MS });
+  }
+
+  return queryClient;
 }
 
 export interface CacheManager {
@@ -143,7 +197,7 @@ export function createCacheManager(idb: OfflineIdb): CacheManager {
     await Promise.allSettled([
       idb.del(KEYVAL_STORE, queryCacheKey(owner)),
       clearLastWarmedAt(owner, idb),
-      deleteImageCache(),
+      deletePersonalCaches(),
     ]);
   }
 
@@ -195,6 +249,7 @@ export function createCacheManager(idb: OfflineIdb): CacheManager {
       unsubscribe?.();
       unsubscribe = null;
       queryClient.clear();
+      serverCopies.clear();
 
       await Promise.all([
         clearOwnerReadArtifacts(knownOwner),
@@ -235,11 +290,12 @@ export function createCacheManager(idb: OfflineIdb): CacheManager {
           unsubscribe?.();
           unsubscribe = null;
           queryClient.clear();
+          serverCopies.clear();
 
           if (owner) {
             await clearOwnerReadArtifacts(owner);
           } else {
-            await Promise.allSettled([deleteImageCache()]);
+            await Promise.allSettled([deletePersonalCaches()]);
           }
 
           if (cause === "sign-out") {
@@ -281,5 +337,7 @@ export const cacheManager = createCacheManager(offlineIdb);
 
 /** The seam handed to the provider bundle's `getQueryClient`. */
 export function getPersistedQueryClient(): QueryClient {
-  return cacheManager.queryClient;
+  // The module's client is the browser's. Each server render gets its own, or a page the server
+  // seeded with one reader's data would leave it for the next request.
+  return typeof window === "undefined" ? createQueryClient() : cacheManager.queryClient;
 }

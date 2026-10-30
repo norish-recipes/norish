@@ -79,6 +79,11 @@ export const CookbookForRecipeInputSchema = z.object({
   recipeId: z.uuid(),
 });
 
+const PantryOnlySchema = z
+  .boolean()
+  .default(false)
+  .describe("Restrict to recipes the household's Pantry covers every food of. Recipes only.");
+
 /**
  * A cookbook's members, read through the recipe list's own input so the page
  * honours the reader's sort, search and filters without inventing anything.
@@ -89,6 +94,7 @@ export const CookbookRecipesInputSchema = RecipeListInputSchema.extend({
     .boolean()
     .default(false)
     .describe("Restrict to the caller's favourites, as the Library's own list does."),
+  pantryOnly: PantryOnlySchema,
 });
 
 export const CookbookUpdateInputSchema = z
@@ -178,6 +184,7 @@ export const LibraryListInputSchema = RecipeListInputSchema.extend({
     .boolean()
     .default(false)
     .describe("Restrict to the caller's favourites. Recipes only."),
+  pantryOnly: PantryOnlySchema,
 });
 
 export const LibraryListResultSchema = z.object({

@@ -3,11 +3,7 @@
 import { MinusIcon, PlusIcon } from "@heroicons/react/16/solid";
 import { Button } from "@heroui/react";
 
-function formatServings(n: number): string {
-  if (Number.isInteger(n)) return String(n);
-
-  return n.toFixed(2).replace(/\.?0+$/, "");
-}
+import { formatAmountAsDecimal } from "@norish/shared/lib/format-amount";
 
 export function ShareServingsControl({
   servings,
@@ -38,7 +34,7 @@ export function ShareServingsControl({
       >
         <MinusIcon className="h-4 w-4" />
       </Button>
-      <span className="min-w-8 text-center text-sm">{formatServings(servings)}</span>
+      <span className="min-w-8 text-center text-sm">{formatAmountAsDecimal(servings)}</span>
       <Button
         isIconOnly
         aria-label="Increase servings"

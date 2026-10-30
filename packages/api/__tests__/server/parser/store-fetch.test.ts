@@ -5,7 +5,18 @@ import { fetchStorePage } from "@norish/api/parser/store-fetch";
 
 const renderPage = vi.hoisted(() => vi.fn<(url: string) => Promise<string>>());
 
-vi.mock("@norish/api/parser/fetch", () => ({ fetchRenderedPage: renderPage }));
+// Every shop resolves to a public address, so no lookup leaves the process.
+vi.mock("node:dns/promises", () => ({
+  lookup: async () => [{ address: "93.184.215.14", family: 4 }],
+}));
+vi.mock("@norish/shared-server/config/server-config-loader", () => ({
+  getPageRenderersConfig: async () => ({ allowPrivateAddresses: false }),
+}));
+
+vi.mock("@norish/api/parser/fetch", async (importOriginal) => ({
+  ...(await importOriginal<typeof import("@norish/api/parser/fetch")>()),
+  fetchRenderedPage: renderPage,
+}));
 
 const A_REAL_PAGE = `<html><head><title>Zoekresultaten</title></head><body>${"x".repeat(30_000)}</body></html>`;
 const A_CHALLENGE = "<html><body>checking your browser</body></html>";
@@ -126,14 +137,5 @@ describe("fetchStorePage", () => {
     expect(settled?.(A_REAL_PAGE)).toBe(false);
     expect(settled?.(A_REAL_PAGE.replace("<body>", "<body>shelf"))).toBe(true);
     expect(settled?.(A_CHALLENGE)).toBe(false);
-  });
-
-  it("still reads a plain-fetchable shop when Obscura is out of reach", async () => {
-    vi.stubGlobal("fetch", answerWith(A_REAL_PAGE));
-    renderPage.mockRejectedValue(new Error("Obscura is not reachable"));
-
-    await expect(
-      fetchStorePage("https://www.dirk.nl/zoeken/producten/kaas")
-    ).resolves.toMatchObject({ html: A_REAL_PAGE, rendered: false });
   });
 });

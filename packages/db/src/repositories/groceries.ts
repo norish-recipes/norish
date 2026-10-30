@@ -1,18 +1,21 @@
-import { and, asc, eq, inArray, isNull, lte, sql } from "drizzle-orm";
+import { and, asc, desc, eq, inArray, isNull, lte, sql } from "drizzle-orm";
 import z from "zod";
 
+import type { Db, DbTransaction } from "@norish/db/drizzle";
 import type {
   GroceryDto,
   GroceryInsertDto,
   GroceryUpdateDto,
 } from "@norish/shared/contracts/dto/groceries";
-import { db } from "@norish/db/drizzle";
+import { db, holdLock } from "@norish/db/drizzle";
 import { groceries, householdUsers, recipeIngredients, recipes } from "@norish/db/schema";
 import {
   GroceryInsertBaseSchema,
   GrocerySelectBaseSchema,
   GroceryUpdateBaseSchema,
 } from "@norish/shared/contracts/zod";
+
+import type { IngredientRef } from "./ingredient-aliases";
 
 export async function getGroceryById(id: string): Promise<GroceryDto | null> {
   const [row] = await db.select().from(groceries).where(eq(groceries.id, id)).limit(1);
@@ -26,6 +29,18 @@ export async function getGroceryById(id: string): Promise<GroceryDto | null> {
   return parsed.data;
 }
 
+/** The grocery last added under this name, on anyone's list. */
+export async function findNewestGroceryNamed(name: string): Promise<GroceryDto | null> {
+  const [row] = await db
+    .select()
+    .from(groceries)
+    .where(eq(groceries.name, name))
+    .orderBy(desc(groceries.createdAt))
+    .limit(1);
+
+  return row ? GrocerySelectBaseSchema.parse(row) : null;
+}
+
 export async function getGroceriesByIds(ids: string[]): Promise<GroceryDto[]> {
   if (ids.length === 0) return [];
 
@@ -36,6 +51,30 @@ export async function getGroceriesByIds(ids: string[]): Promise<GroceryDto[]> {
   if (!parsed.success) throw new Error("Failed to parse groceries by ids");
 
   return parsed.data;
+}
+
+/** Groceries' texts and the food each names, by id; one naming no food has none (ADR-0037). */
+export async function findGroceryFoods(
+  ids: readonly string[]
+): Promise<Map<string, { name: string | null; food: IngredientRef | null }>> {
+  if (ids.length === 0) return new Map();
+
+  const rows = await db
+    .select({
+      id: groceries.id,
+      name: groceries.name,
+      aliasId: groceries.ingredientAliasId,
+      ingredientId: groceries.ingredientId,
+    })
+    .from(groceries)
+    .where(inArray(groceries.id, [...new Set(ids)]));
+
+  return new Map(
+    rows.map(({ id, name, aliasId, ingredientId }) => [
+      id,
+      { name, food: aliasId && ingredientId ? { aliasId, ingredientId } : null },
+    ])
+  );
 }
 
 export async function listGroceriesByUser(
@@ -122,9 +161,20 @@ function parseRows(rows: unknown[], what: string): GroceryDto[] {
   return parsed.data;
 }
 
+/**
+ * Hold the household's list until the transaction ends. Every write of several of its rows takes
+ * this before its first, so two such writes wait for each other rather than deadlock.
+ */
+export async function lockGroceryList(tx: DbTransaction, householdUserIds: readonly string[]) {
+  const household = [...householdUserIds].sort((a, b) => a.localeCompare(b)).join(",");
+
+  await holdLock(tx, `groceries:${household}`);
+}
+
 export async function createGroceries(
   items: { id: string; groceries: GroceryInsertDto }[],
-  householdUserIds: string[]
+  householdUserIds: string[],
+  tx: Db = db
 ): Promise<CreatedGroceries> {
   if (!items.length) return { created: [], shifted: [] };
 
@@ -138,7 +188,9 @@ export async function createGroceries(
     return { ...parsed.data, id };
   });
 
-  return await db.transaction(async (trx) => {
+  return await tx.transaction(async (trx) => {
+    await lockGroceryList(trx, householdUserIds);
+
     // Group items by storeId for efficient updates
     const storeGroups = new Map<string | null, typeof prepared>();
 
@@ -194,47 +246,6 @@ export async function createGroceries(
   });
 }
 
-export async function createGrocery(
-  id: string,
-  input: GroceryInsertDto,
-  householdUserIds: string[]
-): Promise<{ created: GroceryDto; shifted: GroceryDto[] }> {
-  const parsed = GroceryInsertBaseSchema.safeParse(input);
-
-  if (!parsed.success) throw new Error("Invalid GroceryInsertDto");
-
-  return await db.transaction(async (trx) => {
-    // Increment sortOrder for all unchecked items in the same store (or null store)
-    const rows = await trx
-      .update(groceries)
-      .set({
-        sortOrder: sql`${groceries.sortOrder} + 1`,
-        updatedAt: new Date(),
-        version: sql`${groceries.version} + 1`,
-      })
-      .where(
-        and(
-          inArray(groceries.userId, householdUserIds),
-          eq(groceries.isDone, false),
-          input.storeId ? eq(groceries.storeId, input.storeId) : isNull(groceries.storeId)
-        )
-      )
-      .returning();
-
-    // Insert new grocery at sortOrder 0 (top of list)
-    const [row] = await trx
-      .insert(groceries)
-      .values({ id, ...(parsed.data as any), sortOrder: 0 })
-      .returning();
-
-    const validated = GrocerySelectBaseSchema.safeParse(row);
-
-    if (!validated.success) throw new Error("Failed to parse created grocery");
-
-    return { created: validated.data, shifted: parseRows(rows, "shifted groceries") };
-  });
-}
-
 export async function updateGrocery(input: GroceryUpdateDto): Promise<GroceryDto | null> {
   const parsed = GroceryUpdateBaseSchema.safeParse(input);
 
@@ -260,12 +271,18 @@ export async function updateGrocery(input: GroceryUpdateDto): Promise<GroceryDto
   return validated.data;
 }
 
-export async function updateGroceries(input: GroceryUpdateDto[]): Promise<GroceryDto[]> {
+export async function updateGroceries(
+  input: GroceryUpdateDto[],
+  householdUserIds: readonly string[],
+  tx: Db = db
+): Promise<GroceryDto[]> {
   const parsed = z.array(GroceryUpdateBaseSchema).safeParse(input);
 
   if (!parsed.success) throw new Error("Invalid GroceryUpdateDto array");
 
-  return await db.transaction(async (trx) => {
+  return await tx.transaction(async (trx) => {
+    await lockGroceryList(trx, householdUserIds);
+
     const updatedGroceries: GroceryDto[] = [];
 
     for (const g of parsed.data) {
@@ -325,13 +342,16 @@ export async function deleteGroceryById(id: string): Promise<void> {
 }
 
 export async function deleteGroceryByIds(
-  items: Array<{ id: string; version: number }>
+  items: Array<{ id: string; version: number }>,
+  householdUserIds: readonly string[]
 ): Promise<{ deletedIds: string[]; staleIds: string[] }> {
   if (items.length === 0) {
     return { deletedIds: [], staleIds: [] };
   }
 
   return await db.transaction(async (trx) => {
+    await lockGroceryList(trx, householdUserIds);
+
     const deletedIds: string[] = [];
     const staleIds: string[] = [];
 
@@ -401,11 +421,14 @@ export async function getGroceryOwnerIds(groceryIds: string[]): Promise<Map<stri
  * Optionally updates storeId for items that moved between stores
  */
 export async function reorderGroceriesInStore(
-  updates: { id: string; version: number; sortOrder: number; storeId?: string | null }[]
+  updates: { id: string; version: number; sortOrder: number; storeId?: string | null }[],
+  householdUserIds: readonly string[]
 ): Promise<GroceryDto[]> {
   if (updates.length === 0) return [];
 
   return await db.transaction(async (trx) => {
+    await lockGroceryList(trx, householdUserIds);
+
     const updatedGroceries: GroceryDto[] = [];
 
     for (const { id, version, sortOrder, storeId } of updates) {
@@ -453,28 +476,26 @@ export async function markAllDoneInStore(
 
   if (groceriesToMark && groceriesToMark.length === 0) return [];
 
-  if (!groceriesToMark) {
-    const whereConditions = [
-      inArray(groceries.userId, userIds),
-      eq(groceries.isDone, false),
-      storeId ? eq(groceries.storeId, storeId) : isNull(groceries.storeId),
-    ];
-
-    const rows = await db
-      .update(groceries)
-      .set({ isDone: true, updatedAt: new Date(), version: sql`${groceries.version} + 1` })
-      .where(and(...whereConditions))
-      .returning();
-
-    const parsed = z.array(GrocerySelectBaseSchema).safeParse(rows);
-
-    if (!parsed.success) throw new Error("Failed to parse marked groceries");
-
-    return parsed.data;
-  }
-
   return await db.transaction(async (trx) => {
-    const updatedRows = [];
+    await lockGroceryList(trx, userIds);
+
+    if (!groceriesToMark) {
+      const whereConditions = [
+        inArray(groceries.userId, userIds),
+        eq(groceries.isDone, false),
+        storeId ? eq(groceries.storeId, storeId) : isNull(groceries.storeId),
+      ];
+
+      const rows = await trx
+        .update(groceries)
+        .set({ isDone: true, updatedAt: new Date(), version: sql`${groceries.version} + 1` })
+        .where(and(...whereConditions))
+        .returning();
+
+      return parseRows(rows, "marked groceries");
+    }
+
+    const updatedRows: (typeof groceries.$inferSelect)[] = [];
 
     for (const grocery of groceriesToMark) {
       const whereConditions = [
@@ -496,11 +517,7 @@ export async function markAllDoneInStore(
       }
     }
 
-    const parsed = z.array(GrocerySelectBaseSchema).safeParse(updatedRows);
-
-    if (!parsed.success) throw new Error("Failed to parse marked groceries");
-
-    return parsed.data;
+    return parseRows(updatedRows, "marked groceries");
   });
 }
 
@@ -517,22 +534,24 @@ export async function deleteDoneInStore(
 
   if (groceriesToDelete && groceriesToDelete.length === 0) return [];
 
-  if (!groceriesToDelete) {
-    const whereConditions = [
-      inArray(groceries.userId, userIds),
-      eq(groceries.isDone, true),
-      storeId ? eq(groceries.storeId, storeId) : isNull(groceries.storeId),
-    ];
-
-    const rows = await db
-      .delete(groceries)
-      .where(and(...whereConditions))
-      .returning({ id: groceries.id });
-
-    return rows.map((r) => r.id);
-  }
-
   return await db.transaction(async (trx) => {
+    await lockGroceryList(trx, userIds);
+
+    if (!groceriesToDelete) {
+      const whereConditions = [
+        inArray(groceries.userId, userIds),
+        eq(groceries.isDone, true),
+        storeId ? eq(groceries.storeId, storeId) : isNull(groceries.storeId),
+      ];
+
+      const rows = await trx
+        .delete(groceries)
+        .where(and(...whereConditions))
+        .returning({ id: groceries.id });
+
+      return rows.map((r) => r.id);
+    }
+
     const deletedIds: string[] = [];
 
     for (const grocery of groceriesToDelete) {

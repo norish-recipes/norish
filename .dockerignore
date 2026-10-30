@@ -8,13 +8,15 @@ node_modules
 **/.ruff_cache
 *.py[cod]
 .next
+**/.next
+# Local data: development uploads, the production copy and its key.
+.runtime
 .git
 .gitignore
 .env*
 # A local .env.production is deliberately copied into locally-built images;
 # CI builds from a clean checkout never have one.
 !.env.production
-dist-server
 coverage
 .vscode
 .idea
@@ -51,10 +53,15 @@ tooling/**/dist
 
 # Mobile app
 apps/mobile/**
-!apps/mobile/package.json
 
 # Community app references
 apps/quick-import-extension/**
 
 # Docs — not needed in Docker build
 docs/
+
+# Tests run outside the image build, and none of them ships.
+**/__tests__
+**/tests
+**/*.test.ts
+**/*.test.tsx

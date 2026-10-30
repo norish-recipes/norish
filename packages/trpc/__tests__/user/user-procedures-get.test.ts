@@ -1,5 +1,5 @@
 // @vitest-environment node
-import { beforeEach, describe, expect, it, vi } from "vitest";
+import { describe, expect, it, vi } from "vitest";
 
 import { userProcedures } from "@norish/trpc/routers/user/user";
 
@@ -35,10 +35,6 @@ vi.mock("@norish/shared-server/cache/household", () => ({
   getCachedHouseholdForUser: vi.fn(),
 }));
 
-vi.mock("@norish/api/startup/media-cleanup", () => ({
-  deleteAvatarByFilename: vi.fn(),
-}));
-
 vi.mock("@norish/config/env-config-server", () => ({
   SERVER_CONFIG: {
     MASTER_KEY: "QmFzZTY0RW5jb2RlZE1hc3RlcktleU1pbjMyQ2hhcnM=",
@@ -54,10 +50,6 @@ vi.mock("fs/promises", () => ({
 }));
 
 describe("userProcedures.get", () => {
-  beforeEach(() => {
-    vi.clearAllMocks();
-  });
-
   it("returns latest user profile from database instead of stale ctx.user", async () => {
     mockDb.getApiKeysForUser.mockResolvedValue([]);
     mockDb.getUserById.mockResolvedValue({

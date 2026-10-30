@@ -17,7 +17,7 @@ export const runtime = "nodejs";
  * and carries no household's data, so the route sits outside the auth proxy
  * and a shared recipe read signed out shows its icons too.
  */
-export async function GET(_req: Request, { params }: { params: Promise<{ file: string }> }) {
+export async function GET(_req: Request, { params }: RouteContext<"/ingredient-icons/[file]">) {
   const { file } = await params;
 
   if (!ICON_FILE_PATTERN.test(file)) {

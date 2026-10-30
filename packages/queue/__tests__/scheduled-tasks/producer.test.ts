@@ -3,14 +3,14 @@
  * Starting the scheduled tasks. What matters here is not the cron pattern but
  * what happens to a task the code used to have: removing its schedule leaves
  * the jobs that schedule already queued behind, and the worker then fails on
- * every one of them until somebody empties the Redis they sit in.
+ * every one of them until somebody empties the Valkey they sit in.
  */
 import type { Job, Queue } from "bullmq";
-import { beforeEach, describe, expect, it, vi } from "vitest";
+import { describe, expect, it, vi } from "vitest";
 
-import type { ScheduledTaskJobData } from "@norish/queue/scheduled-tasks/queue";
+import type { ScheduledTaskJobData } from "@norish/queue/scheduled-tasks/tasks";
 import { initializeScheduledJobs } from "@norish/queue/scheduled-tasks/producer";
-import { SCHEDULED_TASKS } from "@norish/queue/scheduled-tasks/queue";
+import { SCHEDULED_TASKS } from "@norish/queue/scheduled-tasks/tasks";
 
 vi.mock("@norish/shared-server/logger", () => ({
   createLogger: () => ({ debug: vi.fn(), info: vi.fn(), warn: vi.fn(), error: vi.fn() }),
@@ -29,6 +29,7 @@ function fakeJob(taskType: string): FakeJob {
 function fakeQueue(queued: FakeJob[]) {
   return {
     add: vi.fn(async () => Promise.resolve()),
+    upsertJobScheduler: vi.fn(async () => Promise.resolve()),
     getJobSchedulers: vi.fn(async () => Promise.resolve([{ key: "old-sweep" }])),
     removeJobScheduler: vi.fn(async () => Promise.resolve()),
     getJobs: vi.fn(async () => Promise.resolve(queued)),
@@ -36,22 +37,21 @@ function fakeQueue(queued: FakeJob[]) {
 }
 
 describe("initializeScheduledJobs", () => {
-  beforeEach(() => {
-    vi.clearAllMocks();
-  });
-
   it("registers every task this build knows, and only those", async () => {
     const queue = fakeQueue([]);
 
     await initializeScheduledJobs(queue);
 
-    const registered = vi
-      .mocked(queue.add)
-      .mock.calls.filter(([, , options]) => options?.repeat)
-      .map(([name]) => name);
-
-    expect(registered).toEqual([...SCHEDULED_TASKS]);
-    expect(registered).toContain("ingredient-catalogue-refresh");
+    // Job Schedulers: `add` with `repeat` is gone in BullMQ 6, and a task
+    // registered that way would run once and never again.
+    expect(vi.mocked(queue.upsertJobScheduler).mock.calls).toEqual(
+      SCHEDULED_TASKS.map((taskType) => [
+        taskType,
+        { pattern: "0 0 * * *" },
+        { name: taskType, data: { taskType } },
+      ])
+    );
+    expect(SCHEDULED_TASKS).toContain("ingredient-catalogue-refresh");
   });
 
   it("asks for the ingredient catalogue at once, so a new instance does not wait for midnight", async () => {
@@ -59,22 +59,13 @@ describe("initializeScheduledJobs", () => {
 
     await initializeScheduledJobs(queue);
 
-    const immediate = vi.mocked(queue.add).mock.calls.filter(([, , options]) => !options?.repeat);
-
-    expect(immediate).toEqual([
-      ["ingredient-catalogue-refresh", { taskType: "ingredient-catalogue-refresh" }],
+    expect(vi.mocked(queue.add).mock.calls).toEqual([
+      [
+        "ingredient-catalogue-refresh",
+        { taskType: "ingredient-catalogue-refresh" },
+        { deduplication: { id: "boot-ingredient-catalogue-refresh" } },
+      ],
     ]);
-  });
-
-  it("asks only once: a boot with a catalogue fetch still queued adds no second one", async () => {
-    // A dev server restarts on every saved file; each boot must not queue another fetch.
-    const queue = fakeQueue([fakeJob("ingredient-catalogue-refresh")]);
-
-    await initializeScheduledJobs(queue);
-
-    const immediate = vi.mocked(queue.add).mock.calls.filter(([, , options]) => !options?.repeat);
-
-    expect(immediate).toEqual([]);
   });
 
   it("clears out a task type the code no longer has", async () => {

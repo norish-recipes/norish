@@ -102,7 +102,6 @@ let rendered: ReturnType<typeof renderHookWithClient>;
 let invalidateQueries: ReturnType<typeof vi.spyOn>;
 
 beforeEach(() => {
-  vi.clearAllMocks();
   queryClient = new QueryClient({ defaultOptions: { queries: { retry: false } } });
   queryClient.setQueryData(LIST_KEY, {
     pages: [{ recipes: [dashboardRecipe()], total: 1, nextCursor: null }],

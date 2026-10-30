@@ -1,381 +1,488 @@
 /**
- * Rung 3 of the ingredient resolver: what a name no alias matches is, asked
- * of AI before anything is minted (ADR-0037). The candidates are the
- * Ingredients with a word starting the way one of the name's words does, and
- * the question is whether the name is one of them, a kind of one, or a food
- * of its own. Two paths, in a fixed order (ADR-0035): a Decision when a
- * Decision Model is configured and this use is on, and otherwise — or when
- * the Decision is unsure, or fails — a language-model request under the
- * administrator-editable `ingredient-resolution` Prompt.
- *
- * Nothing here fails a save: every failure is a warn log and a flagged mint,
- * so an import never stops because resolution's AI did.
+ * The background pass asks AI what a minted food is (ADR-0037): one reading, the code's lookup, and
+ * a second question where that finds several foods or only slips. Failures are logged, not thrown.
  */
 import { z } from "zod";
 
-import type { IngredientCandidate } from "@norish/db/repositories/ingredient-aliases";
-import type { FlagReason, ModelTokenEstimate } from "@norish/shared/contracts/ingredient-catalogue";
-import {
-  findIngredientCandidates,
-  findIngredientCandidatesById,
-  findIngredientsNamed,
+import type {
+  IngredientCandidate,
+  IngredientRef,
 } from "@norish/db/repositories/ingredient-aliases";
+import type { ReviewTrace, UnansweredReason } from "@norish/shared/contracts/ingredient-catalogue";
+import type { LineJoin } from "@norish/shared/lib/line-foods";
+import { findIngredientCandidatesByIds } from "@norish/db/repositories/ingredient-aliases";
 import {
   isAIEnabled,
   isDecisionUseEnabled,
 } from "@norish/shared-server/config/server-config-loader";
 import { aiLogger } from "@norish/shared-server/logger";
+import { noTrace } from "@norish/shared/contracts/ingredient-catalogue";
 import { foldName } from "@norish/shared/lib/fold-name";
+import { distinctFoods } from "@norish/shared/lib/line-foods";
+import { sameFood, wholeFoodKey } from "@norish/shared/lib/spelling-keys";
 
-import type { TokenEstimate } from "../runtime/runtime";
+import { currentRules, findFood, isExact, refOf } from "../../ingredients/resolver";
 import { isCredentialRejection } from "../runtime/errors";
-import {
-  decide,
-  estimateDecisionInputTokens,
-  estimateStructuredInputTokens,
-  generateStructured,
-} from "../runtime/runtime";
+import { decide, generateStructured } from "../runtime/runtime";
+import { onceMoreOnTimeout } from "../runtime/timeout-retry";
 
 /**
- * At or above: the Decision's pick is acted on — a text it names as a known
- * food becomes that food's spelling. A wrong "same" lends one food's Product
- * Link and Aisle to another and nobody notices, where a wrong "new" is one
- * merge on the Ingredients page, so the bar is high. A named constant with a
- * test, never a setting.
+ * At or above: a known food the Decision picks is merged into. A wrong "same" lends one food's
+ * Product Link and Aisle to another unnoticed, a wrong "new" is one merge away: so the bar is high.
  */
 export const RESOLUTION_THRESHOLD = 0.8;
 
-/** How many known foods one question considers: two options each, plus new. */
-export const MAX_CANDIDATES = 20;
+/** At or above: a slip of the fingers the Decision picks is sure, so it is not flagged. */
+export const SURE_SLIP_THRESHOLD = 0.9;
 
-/** How many letters of a word the candidate search matches on: "onio" finds onion and onions. */
-const WORD_START = 4;
+/** How long one AI request (one per question, a split's parts too) may take; past it, once more. */
+export const REQUEST_BUDGET_MS = 30_000;
 
 /** How many of a candidate's other names one question shows. */
 const SHOWN_ALIASES = 5;
 
 /**
- * What rung 3 made of a name: a known food it is, or a food of its own to
- * mint — flagged where nothing sure said so, and under a known food as its
- * Parent Ingredient where the answer was that it is a kind of that food.
+ * What rung 3 made of a name: a known food, a food of its own (under its parent, if any), several
+ * foods with their parts, not a food, or no answer and why.
  */
 export type AIResolution =
-  | { kind: "same"; ingredientId: string }
-  | { kind: "new"; kindOf: string | null; flagged: false; reason: null }
-  | { kind: "new"; kindOf: string | null; flagged: true; reason: FlagReason };
+  | { kind: "same"; ingredientId: string; sure: boolean }
+  | { kind: "own"; parent: { id: string; name: string } | null; sure: boolean }
+  | { kind: "several"; parts: ReadPart[]; joined: LineJoin; sure: boolean }
+  | { kind: "not-a-food"; sure: boolean; tool: boolean }
+  | { kind: "unanswered"; reason: UnansweredReason };
 
-/** A food of its own that nothing sure vouched for: rung 4's flagged mint, and why. */
-export function flaggedNew(reason: FlagReason, kindOf: string | null = null): AIResolution {
-  return { kind: "new", kindOf, flagged: true, reason };
+/** A part of several foods as written, and the food AI's names for it found or AI picked, if any. */
+export interface ReadPart {
+  text: string;
+  found: IngredientRef | null;
 }
 
-/** The flagged mint for a failed request: a refused key says so, so the cause is not a guess. */
-function failedNew(error: unknown): AIResolution {
-  return flaggedNew(isCredentialRejection(error) ? "ai-key-rejected" : "ai-unavailable");
+/** A question AI gave no answer to, thrown to the entry, with why. */
+class Unanswered extends Error {
+  constructor(readonly reason: UnansweredReason) {
+    super(reason);
+  }
 }
 
-/**
- * How long one name may wait on AI before it is minted flagged instead. Rung 3
- * runs inside a person's grocery add as well as an import, and a failing
- * provider retries; nothing a shopper does should hang on that. What arrives
- * after the budget is ignored.
- */
-export const RESOLUTION_BUDGET_MS = 8000;
+/** A failed request: a refused key says so, so the cause is not a guess. */
+function failed(error: unknown): Unanswered {
+  return new Unanswered(isCredentialRejection(error) ? "ai-key-rejected" : "ai-unavailable");
+}
 
-/** How a question may be asked: on the way in, or when a person asks again. */
+/** How a question is asked. */
 export interface AskOptions {
-  /** An Ingredient never offered as a candidate: the one the question is about. */
-  excludeId?: string | null;
+  /** The Ingredient the question is about, never its own answer. */
+  excludeId: string;
   /**
-   * Read the name first: ask the language model what plain food it is and
-   * what more general food it is a kind of ("uien" is "onion"; "cherry
-   * tomatoes" are a kind of "tomato"), look both up exactly, and put those
-   * foods to the question alongside what the name's own words find. An
-   * import never does this — a shopper is waiting — but a person who asks
-   * about a flagged food is asking for exactly this effort.
+   * The parent it is filed under now, so AI judges it rather than makes one up, and whether an AI
+   * Change put it there (a person's parent is never asked about).
    */
-  thorough?: boolean;
-  /** How long to wait for an answer before minting flagged instead. */
-  budgetMs?: number;
-  /**
-   * The food the name's own words point at (the resolver's parent from
-   * words), always put to the question as a candidate. An answer that agrees
-   * with it is taken as sure, and a disagreement between the language model
-   * and the words is settled by the Decision where there is one.
-   */
-  wordsParent?: { id: string } | null;
+  filedUnder: { id: string; name: string; byAI: boolean } | null;
   /** Where to record what was asked, for a person who wants to know: filled in as it goes. */
-  trace?: AskTrace;
+  trace: ReviewTrace;
 }
 
-/** What one question came to: the foods the name was compared with, and what AI read it as. */
-interface Reading {
-  englishName: string | null;
-  generalFood: string | null;
-  sure: boolean;
-}
-
-/** What one question came to: the foods the name was compared with, and what AI read the name as. */
-export interface AskTrace {
-  considered: string[];
-  englishName: string | null;
-}
-
-/** The starts of a name's words the candidate search matches on. Numbers name no food. */
-function wordStarts(text: string): string[] {
-  return foldName(text)
-    .split(" ")
-    .filter((word) => word.length > 0 && !/^\p{N}+$/u.test(word))
-    .map((word) => word.slice(0, WORD_START));
-}
-
-/**
- * Ask what `text` is. `bare` is the text with its preparation stripped, which
- * is what the candidates are searched by: "onions, diced" is about onions.
- * With AI switched off, or with nothing that could be the same food, nothing
- * is asked and the mint is flagged: no step vouched for it, and a translation
- * sharing no letters with its food ("ui" and "onion") is exactly what only a
- * person can catch. An answer later than `RESOLUTION_BUDGET_MS` is a flagged
- * mint too.
- */
-export async function askWhatFoodThisIs(
-  text: string,
-  bare: string,
-  options: AskOptions = {}
-): Promise<AIResolution> {
-  if (!(await isAIEnabled())) return flaggedNew("ai-off");
-
-  const excludeId = options.excludeId ?? null;
-  const words = options.wordsParent ?? null;
-  const found = await findIngredientCandidates(wordStarts(bare || text), MAX_CANDIDATES, excludeId);
-  const candidates =
-    words && !found.some((candidate) => candidate.id === words.id)
-      ? [...(await findIngredientCandidatesById([words.id])), ...found]
-      : found;
-
-  if (candidates.length === 0 && !options.thorough) return flaggedNew("unknown-food");
-
-  const budgetMs = options.budgetMs ?? RESOLUTION_BUDGET_MS;
-  let timer: ReturnType<typeof setTimeout> | undefined;
-  const outOfTime = new Promise<AIResolution>((resolve) => {
-    timer = setTimeout(() => {
-      aiLogger.warn(
-        { feature: "ingredient-resolution", text, budgetMs },
-        "Ingredient resolution ran out of time, minting a flagged Ingredient"
-      );
-      resolve(flaggedNew("ai-unavailable"));
-    }, budgetMs);
-  });
-  const trace = options.trace ?? { considered: [], englishName: null };
-  const asked = (
-    options.thorough
-      ? readThenCompare(text, candidates, excludeId, trace)
-      : askAbout(text, candidates)
-  ).then((answer) => settleWithWords(text, answer, words, candidates));
-
-  if (!options.thorough) trace.considered.push(...candidates.map((candidate) => candidate.name));
+/** Ask what `text` is: AI reads it, and the code looks the reading up. */
+export async function askWhatFoodThisIs(text: string, options: AskOptions): Promise<AIResolution> {
+  if (!(await isAIEnabled())) return { kind: "unanswered", reason: "ai-off" };
 
   try {
-    return await Promise.race([asked, outOfTime]);
-  } finally {
-    clearTimeout(timer);
+    return await readThenLookUp(text, options);
+  } catch (error) {
+    if (error instanceof Unanswered) return { kind: "unanswered", reason: error.reason };
+    throw error;
   }
 }
 
 /**
- * Read first, then compare. The language model says what plain food the
- * name is and what it is a kind of; those two are looked up exactly, with
- * their parents, and joined to what the name's own words found. One question
- * is then asked over all of them. With nothing to compare even then, the
- * reading stands: a food of its own, flagged unless the model was sure.
+ * The reading, looked up: a food the names find is the one, else it is its own under `parentOf`,
+ * unless the names find a food other than that parent. Flagged unless AI was sure.
  */
-async function readThenCompare(
+async function readThenLookUp(
   text: string,
-  found: readonly IngredientCandidate[],
-  excludeId: string | null,
-  trace: AskTrace
-): Promise<Answered> {
-  let readingError: unknown;
-  const reading = await readName(text).catch((error: unknown) => {
-    aiLogger.warn({ err: error, feature: "ingredient-resolution", text }, "Reading a name failed");
-    readingError = error;
-
-    return null;
-  });
-
-  trace.englishName = reading?.englishName ?? null;
-
-  const named = await findIngredientsNamed(
-    [reading?.englishName, reading?.generalFood].map((name) => foldName(name ?? "")),
-    excludeId
-  );
-  const have = new Set(named.map((candidate) => candidate.id));
-  const candidates = [...named, ...found.filter((candidate) => !have.has(candidate.id))].slice(
-    0,
-    MAX_CANDIDATES
-  );
-
-  trace.considered.push(...candidates.map((candidate) => candidate.name));
-  if (candidates.length > 0) return await askAbout(text, candidates);
-  if (!reading) return { answer: failedNew(readingError), from: "language-model" };
-
-  return {
-    answer: reading.sure
-      ? { kind: "new", kindOf: null, flagged: false, reason: null }
-      : flaggedNew("ai-unsure"),
-    from: "language-model",
-  };
-}
-
-/** An answer and which path gave it: the Decision's word is final, the language model's is not. */
-interface Answered {
-  answer: AIResolution;
-  from: "decision" | "language-model";
-}
-
-/**
- * The words' say against AI's. Where AI names the food the words point at,
- * sure or not, the two agree and the answer is sure: a kind of that food,
- * unflagged. Where the language model names another food, or none, and a
- * Decision Model is in use, the Decision has the final call between the two;
- * a pick below the threshold leaves the language model's answer as it was.
- * Without a Decision Model AI's answer stands. A Decision's own answer is
- * never second-guessed: it saw the words' food among its options.
- */
-async function settleWithWords(
-  text: string,
-  { answer, from }: Answered,
-  words: { id: string } | null,
-  candidates: readonly IngredientCandidate[]
+  { excludeId, filedUnder, trace }: AskOptions
 ): Promise<AIResolution> {
-  if (!words) return answer;
-  if (answer.kind === "same") return answer;
-  if (answer.kindOf === words.id)
-    return { kind: "new", kindOf: words.id, flagged: false, reason: null };
-  if (from === "decision" || !(await isDecisionUseEnabled("ingredientResolution"))) return answer;
+  const reading = await askReading(text, filedUnder?.name ?? null).catch((error: unknown) => {
+    aiLogger.warn({ err: error, feature: "ingredient-resolution", text }, "Reading a name failed");
 
-  const wordsFood = candidates.find((candidate) => candidate.id === words.id);
-  const aiFood = answer.kindOf
-    ? candidates.find((candidate) => candidate.id === answer.kindOf)
-    : null;
-
-  if (!wordsFood || (answer.kindOf && !aiFood)) return answer;
-
-  const settled = await decideBetween(text, wordsFood, aiFood ?? null).catch((error: unknown) => {
-    aiLogger.warn(
-      { err: error, feature: "ingredient-resolution", text },
-      "Decision between the words' food and the language model's failed"
-    );
-
-    return null;
+    throw failed(error);
   });
 
-  return settled ?? answer;
+  if (!reading) throw new Unanswered("ai-unavailable");
+  if (reading.kind === "not-a-food") return reading;
+  if (reading.kind === "several") {
+    trace.parts = reading.foods.map((food) => food.written);
+    if (!reading.sure) return { kind: "several", parts: [], joined: reading.joined, sure: false };
+
+    const parts: ReadPart[] = [];
+
+    for (const food of reading.foods) {
+      const found = await findNamed(
+        { name: food.written, readAs: food },
+        excludeId,
+        namesOf(food),
+        trace
+      );
+
+      parts.push({ text: food.written, found: found.food });
+    }
+
+    return { kind: "several", parts, joined: reading.joined, sure: true };
+  }
+
+  const [food] = reading.foods;
+
+  Object.assign(trace, {
+    englishName: food.englishName,
+    parents: food.parents,
+    nativeParents: food.nativeParents,
+    category: food.category,
+    otherNames: food.otherNames,
+  });
+
+  const found = await findNamed({ name: text, readAs: food }, excludeId, namesOf(food), trace);
+
+  const same = (ingredientId: string): AIResolution => ({
+    kind: "same",
+    ingredientId,
+    sure: reading.sure && found.sure,
+  });
+
+  // The English name finding a food exactly, or an other name that spells one of AI's parents
+  // (plurals included, read whole), says the name is that food, its parent or not.
+  const rules = await currentRules();
+  const parents = [...food.nativeParents, ...food.parents];
+  const parentNamed = food.otherNames.some((name) =>
+    parents.some((parent) => sameFood(name, parent, rules, wholeFoodKey))
+  );
+
+  if (found.food && ((food.englishName && found.byFirstName) || parentNamed)) {
+    return same(found.food.ingredientId);
+  }
+  const category = found.food ? null : food.category;
+  const parent = await parentOf(parents, category, found.food, { excludeId, filedUnder, trace });
+
+  // A food only AI's other names (or a slip) find is never the parent AI gave: filed under it.
+  if (found.food && parent?.food?.id !== found.food.ingredientId) {
+    return same(found.food.ingredientId);
+  }
+
+  // A parent or category AI named that the catalogue lacks keeps the parent AI gave the food.
+  const keptByAI = parent && filedUnder?.byAI ? filedUnder : null;
+
+  return {
+    kind: "own",
+    parent: parent?.food ?? keptByAI,
+    sure: reading.sure && found.sure && (parent?.sure ?? true),
+  };
 }
 
 /**
- * One two-way Choice: a kind of the words' food, or what the language model
- * said (a kind of another food, or a food of its own). Null below the
- * threshold.
+ * The first of AI's parents that finds a food (one finding `named` before it), else the category; one
+ * that is the last words of the parent the food has ("pepper" for "red bell pepper") is it.
  */
-async function decideBetween(
-  text: string,
-  wordsFood: IngredientCandidate,
-  aiFood: IngredientCandidate | null
-): Promise<AIResolution | null> {
-  const criteria = {
-    words: `Is a kind of ${wordsFood.name}`,
-    ai: aiFood ? `Is a kind of ${aiFood.name}` : "Is none of these, but a food of its own",
-  };
-  const { answers } = await decide({
-    feature: "ingredient-resolution",
-    state: {
-      name: text,
-      foods: [wordsFood, ...(aiFood ? [aiFood] : [])].map((candidate) => ({
-        name: candidate.name,
-        alsoKnownAs: candidate.aliases.slice(0, SHOWN_ALIASES),
-      })),
-    },
-    questions: {
-      food: {
-        type: "choice",
-        instructions:
-          "The name's own words say it is a kind of the first food; a language model read it otherwise. Which is right?",
-        criteria,
-      },
-    },
-  });
-  const { choice, probabilities } = answers.food;
-  const probability = probabilities[choice] ?? 0;
+async function parentOf(
+  parents: readonly string[],
+  category: string | null,
+  named: IngredientRef | null,
+  { excludeId, filedUnder, trace }: AskOptions
+): Promise<{ food: { id: string; name: string } | null; sure: boolean } | null> {
+  const current = filedUnder && ` ${foldName(filedUnder.name)}`;
 
-  aiLogger.info(
-    { text, words: wordsFood.name, ai: aiFood?.name ?? null, choice, probability },
-    "Decision settled the words' food against the language model's"
+  if (current && parents.some((name) => current.endsWith(` ${foldName(name)}`))) {
+    return { food: filedUnder, sure: true };
+  }
+  if (parents.length > 0) {
+    const byParent = await findFood(parents, { except: excludeId, among: "listed" });
+    const findsNamed = byParent.findIndex((foods) =>
+      foods.some((one) => one.ingredientId === named?.ingredientId)
+    );
+    const at = Math.max(
+      0,
+      findsNamed >= 0 ? findsNamed : byParent.findIndex((foods) => foods.length > 0)
+    );
+    const parent = parents[at]!;
+    const found = await pickAmong({ name: parent, readAs: NOTHING_READ }, [byParent[at]!], trace);
+
+    if (found.food || !category) {
+      return {
+        food: found.food && { id: found.food.ingredientId, name: parent },
+        sure: found.sure,
+      };
+    }
+  }
+  if (!category) return null;
+  const filed = await findByName(category, excludeId, trace, "seeded");
+
+  return { food: filed.food && { id: filed.food.ingredientId, name: category }, sure: filed.sure };
+}
+
+/**
+ * The listed food other than `excludeId` a name AI gave finds, as any AI name is looked up
+ * (`findNamed`); "unanswered" where the second question got no answer.
+ */
+export async function findFoodNamed(
+  name: string,
+  excludeId: string
+): Promise<{ kind: "found"; food: IngredientRef } | { kind: "not-found" | "unanswered" }> {
+  try {
+    const { food } = await findByName(name, excludeId, noTrace());
+
+    return food ? { kind: "found", food } : { kind: "not-found" };
+  } catch (error) {
+    if (error instanceof Unanswered) return { kind: "unanswered" };
+    throw error;
+  }
+}
+
+/** `findNamed` for a name AI gave alone, with no reading of its own (a category). */
+function findByName(name: string, excludeId: string, trace: ReviewTrace, among?: "seeded") {
+  return findNamed({ name, readAs: NOTHING_READ }, excludeId, [name], trace, among);
+}
+
+/** A read food's names to look up: its English name and the other names a shop sells it under. */
+function namesOf(food: ReadFood): string[] {
+  return [food.englishName, ...food.otherNames].filter((name) => name !== null);
+}
+
+/** A name the second question is about: as written, and what AI read it as. */
+interface Asked {
+  name: string;
+  readAs: { englishName: string | null; parents: string[]; category: string | null };
+}
+
+/** The reading of a name AI gave alone, a parent's or a category's. */
+const NOTHING_READ: Asked["readAs"] = { englishName: null, parents: [], category: null };
+
+/** The food names found, and whether the first name found it by its own spelling. */
+interface Found {
+  food: IngredientRef | null;
+  sure: boolean;
+  byFirstName: boolean;
+}
+
+/** A found food as the second question shows it, with the spelling of it that matched. */
+type Candidate = IngredientCandidate & { matched: string };
+
+/**
+ * The `among` food other than `excludeId` these names find: an exact spelling wins, else several or
+ * slips alone are asked about. Sure where the answer is.
+ */
+async function findNamed(
+  asked: Asked,
+  excludeId: string,
+  names: readonly string[],
+  trace: ReviewTrace,
+  among: "listed" | "seeded" = "listed"
+): Promise<Found> {
+  return await pickAmong(asked, await findFood(names, { except: excludeId, among }), trace);
+}
+
+/** The food among what each name found: an exact spelling wins, else several or slips are asked about. */
+async function pickAmong(
+  asked: Asked,
+  byName: Awaited<ReturnType<typeof findFood>>,
+  trace: ReviewTrace
+): Promise<Found> {
+  const found = byName.flat();
+  const exact = found.filter(isExact);
+  const ranked = distinctFoods(
+    exact.length > 0 ? exact : [...found].sort((a, b) => b.score - a.score)
   );
+  let pick: Pick = { ingredientId: ranked[0]?.ingredientId ?? null, sure: true };
 
-  if (probability < RESOLUTION_THRESHOLD) return null;
+  // One exact food is the answer; slips alone are asked about even when only one was found.
+  if (ranked.length > (exact.length > 0 ? 1 : 0)) {
+    const matched = new Map(ranked.map((one) => [one.ingredientId, one.matched]));
+    const ids = [...matched.keys()];
+    const candidates = (await findIngredientCandidatesByIds(ids)).map((candidate) => ({
+      ...candidate,
+      matched: matched.get(candidate.id) ?? candidate.name,
+    }));
+
+    trace.considered.push(...candidates.map((candidate) => candidate.name));
+    pick = await askWhich(asked, candidates, exact.length === 0);
+  }
+
+  const picked = ranked.find((one) => one.ingredientId === pick.ingredientId);
 
   return {
-    kind: "new",
-    kindOf: choice === "words" ? wordsFood.id : (aiFood?.id ?? null),
-    flagged: false,
-    reason: null,
+    food: picked ? refOf(picked) : null,
+    sure: pick.sure,
+    byFirstName: !!byName[0]?.some(
+      (one) => isExact(one) && one.ingredientId === picked?.ingredientId
+    ),
   };
 }
 
-const readingSchema = z
+/** One food as the language model read it, its names trimmed, blanks dropped. */
+interface ReadFood {
+  written: string;
+  englishName: string | null;
+  parents: string[];
+  nativeParents: string[];
+  category: string | null;
+  otherNames: string[];
+}
+
+/** What the language model read a name as, its shape checked. */
+type Reading =
+  | { kind: "food"; foods: [ReadFood]; sure: boolean }
+  | { kind: "several"; foods: ReadFood[]; joined: LineJoin; sure: boolean }
+  | { kind: "not-a-food"; sure: boolean; tool: boolean };
+
+const readFoodSchema = z
   .object({
+    written: z
+      .string()
+      .describe("This food's part of the name, as written and in the name's language."),
     englishName: z
       .string()
+      .describe(
+        'Its English name, without what the cook does to it ("tomatoes, chopped" is "tomato") but with what makes it another product ("pumpkin puree", "baby potatoes").'
+      ),
+    parents: z
+      .array(z.string())
       .nullable()
-      .describe("The plain English name of the food this name is; null when it is not a food."),
-    generalFood: z
+      .describe(
+        'Two or three English wordings of the plain food a shopper buys that this is made of or sold as, the most specific first ("burger buns" is "bun" and "bread roll", "chocolate whey" is "whey protein" and "whey"). Null when there is none, or when the name is that plain food itself.'
+      ),
+    nativeParents: z
+      .array(z.string())
+      .nullable()
+      .describe(
+        'The same parents in the name\'s own language, the most specific first ("mager kipgehakt" is "kipgehakt" and "gehakt"). Null when there are no parents.'
+      ),
+    category: z
       .string()
       .nullable()
       .describe(
-        "The more general food it is a kind of, in plain English, or null when it is not a kind of anything more general."
+        'The general group it belongs under ("spice", "sauce", "dog food"), used only when the catalogue has no food named by its parents. Null when no group fits.'
       ),
-    sure: z.boolean(),
+    otherNames: z
+      .array(z.string())
+      .nullable()
+      .describe(
+        'Two or three other names a shop might sell the same food under ("hot dog sausage" and "wiener" for "frankfurter"), or null when there are none.'
+      ),
   })
   .strict();
 
-/** What the language model is told when it is asked only to read a name. */
-function readingSections(text: string): string[] {
-  return [
-    `New name: ${text}`,
-    "There is no list of foods yet. Say what plain food this name is (englishName), and what more general food it is a kind of (generalFood), so the catalogue can be searched for them.",
-  ];
+/** One flat object, since OpenAI's strict mode refuses a choice of schemas at the top. */
+const readingSchema = z
+  .object({
+    sure: z
+      .boolean()
+      .describe(
+        "True only when a cook would not hesitate. False when you hesitate between two answers, do not know the name, or guess at a translation."
+      ),
+    action: z
+      .object({
+        kind: z
+          .enum(["food", "several", "not-a-food"])
+          .describe(
+            "food: the name is one food. several: it names more than one. not-a-food: it names none."
+          ),
+        joined: z
+          .enum(["together", "alternatives"])
+          .nullable()
+          .describe(
+            "For several: together when the recipe needs all of them, alternatives when any one will do. Null otherwise."
+          ),
+        reason: z
+          .enum(["equipment", "preparation", "note", "gibberish"])
+          .nullable()
+          .describe(
+            "For not-a-food: equipment the cook already owns, a preparation or fragment on its own line, a note, or gibberish. Null otherwise."
+          ),
+      })
+      .strict(),
+    foods: z
+      .array(readFoodSchema)
+      .describe("One entry for food, one per food for several, none for not-a-food."),
+  })
+  .strict();
+
+/**
+ * The answer as a reading, or null where its shape breaks: a food has one entry, several have two
+ * or more and a join, not a food has none and a reason.
+ */
+function asReading(answer: z.infer<typeof readingSchema>): Reading | null {
+  const plain = (name: string | null) => name?.trim() || null;
+  const plainAll = (names: string[] | null) =>
+    (names ?? []).map(plain).filter((name) => name !== null);
+  const foods = answer.foods.map((food) => ({
+    written: food.written.trim(),
+    englishName: plain(food.englishName),
+    parents: plainAll(food.parents),
+    nativeParents: plainAll(food.nativeParents),
+    category: plain(food.category),
+    otherNames: plainAll(food.otherNames),
+  }));
+  const { kind, joined, reason } = answer.action;
+  const [first, ...rest] = foods;
+
+  if (kind === "food" && first && rest.length === 0) {
+    return { kind, foods: [first], sure: answer.sure };
+  }
+  if (kind === "several" && foods.length > 1 && joined) {
+    return { kind, foods, joined, sure: answer.sure };
+  }
+  if (kind === "not-a-food" && foods.length === 0 && reason) {
+    return { kind, sure: answer.sure, tool: reason === "equipment" };
+  }
+
+  return null;
 }
 
-/** What the language model reads a name as, with no catalogue in front of it. */
-async function readName(text: string): Promise<Reading> {
-  const reading = await generateStructured({
-    prompt: "ingredient-resolution",
-    schema: readingSchema,
-    sections: readingSections(text),
-  });
+/** What the language model reads a name as, asked once more where the answer breaks its shape. */
+async function askReading(text: string, filedUnder: string | null): Promise<Reading | null> {
+  const sections = [`Name: ${text}`, ...(filedUnder ? [`Parent: ${filedUnder}`] : [])];
+  const ask = onceMoreOnTimeout("ingredient-resolution");
 
-  aiLogger.info({ text, ...reading }, "Language model read what food a name is");
+  for (let attempt = 1; attempt <= 2; attempt++) {
+    const answer = await ask(() =>
+      generateStructured({
+        prompt: "ingredient-resolution",
+        schema: readingSchema,
+        sections,
+        timeoutMs: REQUEST_BUDGET_MS,
+      })
+    );
+    const reading = asReading(answer);
 
-  return {
-    englishName: reading.englishName?.trim() || null,
-    generalFood: reading.generalFood?.trim() || null,
-    sure: reading.sure,
-  };
+    aiLogger.info({ text, attempt, ...answer }, "Language model read what food a name is");
+    if (reading) return reading;
+    aiLogger.warn(
+      { feature: "ingredient-resolution", text, attempt },
+      "The reading broke its shape"
+    );
+  }
+
+  return null;
+}
+
+/** Which of the found foods the name is, or none (null), and whether AI was sure. */
+interface Pick {
+  ingredientId: string | null;
+  sure: boolean;
 }
 
 /**
- * The Decision, then the language model where the Decision is unsure, off or
- * failing. With nothing to compare the name with, only the language model is
- * asked.
+ * The Decision, then the language model where the Decision is below its threshold, off or failing.
+ * A failed language model throws `Unanswered`.
  */
-async function askAbout(
-  text: string,
-  candidates: readonly IngredientCandidate[]
-): Promise<Answered> {
-  if (candidates.length > 0 && (await isDecisionUseEnabled("ingredientResolution"))) {
+async function askWhich(
+  asked: Asked,
+  candidates: readonly Candidate[],
+  slips: boolean
+): Promise<Pick> {
+  const text = asked.name;
+
+  if (await isDecisionUseEnabled("ingredientResolution")) {
     // A Decision failure of any retryability is a warn log and the fallback.
-    const decided = await decideFood(text, candidates).catch((error: unknown) => {
+    const decided = await decideFood(asked, candidates, slips).catch((error: unknown) => {
       aiLogger.warn(
         { err: error, feature: "ingredient-resolution", text },
         "Decision failed, falling back to the language model"
@@ -384,60 +491,74 @@ async function askAbout(
       return null;
     });
 
-    if (decided) return { answer: decided, from: "decision" };
+    if (decided) return decided;
   }
 
-  const answer = await askLanguageModel(text, candidates).catch((error: unknown) => {
+  return await askLanguageModel(asked, candidates).catch((error: unknown) => {
     aiLogger.warn(
       { err: error, feature: "ingredient-resolution", text },
-      "Ingredient resolution failed, minting a flagged Ingredient"
+      "Ingredient resolution failed, flagging the Ingredient"
     );
 
-    return failedNew(error);
+    throw failed(error);
   });
-
-  return { answer, from: "language-model" };
 }
 
-const NEW = "new";
+const NONE = "none";
 
-/**
- * One Choice over every candidate twice — the food itself, or a kind of it —
- * plus a food of its own, with the answer each option stands for. The
- * descriptions are the domain's own option set, which is why a Decision has
- * no Prompt.
- */
-function foodChoice(text: string, candidates: readonly IngredientCandidate[]) {
-  const options = new Map<string, AIResolution>();
+/** Just the fields that are set: no null, no empty list. */
+function present<T extends Record<string, unknown>>(fields: T): Partial<T> {
+  return Object.fromEntries(
+    Object.entries(fields).filter(
+      ([, value]) => value !== null && !(Array.isArray(value) && value.length === 0)
+    )
+  ) as Partial<T>;
+}
+
+/** The spelling that found a candidate, where it is not its name, and its other spellings, capped. */
+function spellingsOf({ name, matched, aliases }: Candidate) {
+  return {
+    matched: matched === name ? null : matched,
+    others: aliases.filter((alias) => alias !== matched).slice(0, SHOWN_ALIASES),
+  };
+}
+
+/** One Choice over the found foods, plus none of them. The descriptions are the option set, so a Decision has no Prompt. */
+function foodChoice({ name, readAs }: Asked, candidates: readonly Candidate[]) {
+  const options = new Map<string, string | null>();
   const criteria: Record<string, string> = {};
 
   candidates.forEach((candidate, index) => {
     criteria[`same_${index + 1}`] = `Is ${candidate.name}`;
-    options.set(`same_${index + 1}`, { kind: "same", ingredientId: candidate.id });
-    criteria[`kind_${index + 1}`] = `Is a kind of ${candidate.name}`;
-    options.set(`kind_${index + 1}`, {
-      kind: "new",
-      kindOf: candidate.id,
-      flagged: false,
-      reason: null,
-    });
+    options.set(`same_${index + 1}`, candidate.id);
   });
-  criteria[NEW] = "Is none of these, but a food of its own";
-  options.set(NEW, { kind: "new", kindOf: null, flagged: false, reason: null });
+  criteria[NONE] = "Is none of these";
+  options.set(NONE, null);
 
   return {
     state: {
-      name: text,
-      foods: candidates.map((candidate) => ({
-        name: candidate.name,
-        alsoKnownAs: candidate.aliases.slice(0, SHOWN_ALIASES),
-      })),
+      name,
+      ...present({
+        englishName: readAs.englishName,
+        parents: readAs.parents,
+        category: readAs.category,
+      }),
+      foods: candidates.map((candidate) => {
+        const { matched, others } = spellingsOf(candidate);
+
+        return present({
+          name: candidate.name,
+          parent: candidate.parent,
+          matched,
+          alsoKnownAs: others,
+        });
+      }),
     },
     questions: {
       food: {
         type: "choice" as const,
         instructions:
-          "Which food in the catalogue does this name name, if any? A name that only shares a word with a food is a different food.",
+          "Which food in the catalogue is exactly the item this name asks for, if any? A food's matched is its spelling the name came close to. A similar spelling, a shared word, a related product or a substitute is a different food, but a brand's product is its plain food. When in doubt, none of these.",
         criteria,
       },
     },
@@ -446,15 +567,23 @@ function foodChoice(text: string, candidates: readonly IngredientCandidate[]) {
 }
 
 /**
- * The Decision over a name's candidates. Null where the pick is below the
- * threshold: the unclear case, for the language model.
+ * The Decision's pick among the found foods; null where it is below the threshold. A slip it picks
+ * is sure only at `SURE_SLIP_THRESHOLD`.
  */
 async function decideFood(
-  text: string,
-  candidates: readonly IngredientCandidate[]
-): Promise<AIResolution | null> {
-  const { state, questions, options } = foodChoice(text, candidates);
-  const { answers } = await decide({ feature: "ingredient-resolution", state, questions });
+  asked: Asked,
+  candidates: readonly Candidate[],
+  slips: boolean
+): Promise<Pick | null> {
+  const text = asked.name;
+  const { state, questions, options } = foodChoice(asked, candidates);
+  // No second Decision: one that times out falls back to the language model.
+  const { answers } = await decide({
+    feature: "ingredient-resolution",
+    state,
+    questions,
+    timeoutMs: REQUEST_BUDGET_MS,
+  });
   const { choice, probabilities } = answers.food;
   const probability = probabilities[choice] ?? 0;
 
@@ -463,135 +592,64 @@ async function decideFood(
     "Decision answered what food a name is"
   );
 
-  return probability >= RESOLUTION_THRESHOLD ? (options.get(choice) ?? null) : null;
+  if (probability < RESOLUTION_THRESHOLD || !options.has(choice)) return null;
+
+  const ingredientId = options.get(choice) ?? null;
+
+  return { ingredientId, sure: !slips || !ingredientId || probability >= SURE_SLIP_THRESHOLD };
 }
 
-const languageModelAnswerSchema = z
-  .object({
-    verdict: z.enum(["same", "kind-of", "new"]),
-    food: z
-      .number()
-      .int()
-      .nullable()
-      .describe("The number of the listed food, for same and kind-of; null for new."),
-    sure: z.boolean(),
-    englishName: z
-      .string()
-      .nullable()
-      .describe(
-        "The plain English name of the food this name is, as a shopper would look for it; null when it is not a food."
-      ),
-  })
-  .strict();
-
-/** What the language model is told when it compares a name with the catalogue's foods. */
-function comparingSections(text: string, candidates: readonly IngredientCandidate[]): string[] {
-  return [
-    `New name: ${text}`,
-    candidates.length === 0
-      ? "Foods in the catalogue: none share a word with the new name."
-      : [
-          "Foods in the catalogue:",
-          ...candidates.map((candidate, index) =>
-            candidate.aliases.length > 0
-              ? `${index + 1}. ${candidate.name} (also: ${candidate.aliases.slice(0, SHOWN_ALIASES).join(", ")})`
-              : `${index + 1}. ${candidate.name}`
-          ),
-        ].join("\n"),
-  ];
+/** The language model's answer over these candidates: one of their names exactly, or none. */
+function matchSchema(candidates: readonly Candidate[]) {
+  return z
+    .object({
+      food: z
+        .enum(candidates.map((candidate) => candidate.name))
+        .nullable()
+        .describe(
+          "The listed food's name, exactly as listed, when the name is that item. Null when it is none of them."
+        ),
+      sure: z.boolean().describe("True only when a cook would not hesitate over the match."),
+    })
+    .strict();
 }
 
-/**
- * The language model's answer to the same question, under the administrator's
- * Prompt. It says itself whether it is sure, and an unsure answer mints a
- * flagged food rather than joining one.
- */
+/** The language model's pick among the found foods, under the administrator's Prompt. */
 async function askLanguageModel(
-  text: string,
-  candidates: readonly IngredientCandidate[]
-): Promise<AIResolution> {
-  const answer = await generateStructured({
-    prompt: "ingredient-resolution",
-    schema: languageModelAnswerSchema,
-    sections: comparingSections(text, candidates),
-  });
-  const food = answer.food === null ? undefined : candidates[answer.food - 1];
+  { name: text, readAs }: Asked,
+  candidates: readonly Candidate[]
+): Promise<Pick> {
+  const reading = [
+    readAs.englishName ? `English name: ${readAs.englishName}` : null,
+    readAs.parents.length > 0 ? `Parents: ${readAs.parents.join(", ")}` : null,
+    readAs.category ? `Category: ${readAs.category}` : null,
+  ].filter((line) => line !== null);
+  const foodLine = (candidate: Candidate) => {
+    const { matched, others } = spellingsOf(candidate);
+    const about = [
+      candidate.parent ? `parent: ${candidate.parent}` : null,
+      matched ? `matched: ${matched}` : null,
+      others.length > 0 ? `also: ${others.join(", ")}` : null,
+    ].filter((part) => part !== null);
 
-  aiLogger.info({ text, ...answer }, "Language model answered what food a name is");
-
-  if (answer.verdict === "same") {
-    return food && answer.sure ? { kind: "same", ingredientId: food.id } : flaggedNew("ai-unsure");
-  }
-
-  const kindOf = answer.verdict === "kind-of" ? (food?.id ?? null) : null;
-
-  return answer.sure
-    ? { kind: "new", kindOf, flagged: false, reason: null }
-    : flaggedNew("ai-unsure", kindOf);
-}
-
-/**
- * What the answer to one request takes on top of what is sent: a small JSON
- * object. A model that reasons before it answers takes more.
- */
-const ANSWER_TOKENS = 50;
-
-/**
- * About how many tokens asking a person's question about these names takes
- * on each model it asks, a name on average, counted from what would be sent
- * rather than by asking: the reading and the comparison with the foods each
- * name's words find on the language model, and the Decision where one is in
- * use, each with its answer. Every request counts in full, though a sure
- * Decision spares the comparison and a reading the catalogue finds nothing
- * for spares both. `bare` is each text without its preparation, as
- * `askWhatFoodThisIs` takes it.
- */
-export async function estimateQuestionTokens(
-  names: readonly { text: string; bare: string }[]
-): Promise<ModelTokenEstimate[]> {
-  if (names.length === 0) return [];
-  const deciding = await isDecisionUseEnabled("ingredientResolution");
-  const byModel = new Map<string, TokenEstimate>();
-  const add = ({ provider, model, tokens }: TokenEstimate) => {
-    const key = `${provider}\u0000${model}`;
-    const seen = byModel.get(key) ?? { provider, model, tokens: 0 };
-
-    seen.tokens += tokens + ANSWER_TOKENS;
-    byModel.set(key, seen);
+    return `- ${candidate.name}${about.length > 0 ? ` (${about.join("; ")})` : ""}`;
   };
-
-  await Promise.all(
-    names.map(async ({ text, bare }) => {
-      const candidates = await findIngredientCandidates(
-        wordStarts(bare || text),
-        MAX_CANDIDATES,
-        null
-      );
-      const [reading, comparing, decision] = await Promise.all([
-        estimateStructuredInputTokens({
-          prompt: "ingredient-resolution",
-          schema: readingSchema,
-          sections: readingSections(text),
-        }),
-        estimateStructuredInputTokens({
-          prompt: "ingredient-resolution",
-          schema: languageModelAnswerSchema,
-          sections: comparingSections(text, candidates),
-        }),
-        deciding && candidates.length > 0
-          ? estimateDecisionInputTokens(foodChoice(text, candidates))
-          : null,
-      ]);
-
-      add(reading);
-      add(comparing);
-      if (decision) add(decision);
+  const answer = await onceMoreOnTimeout("ingredient-match")(() =>
+    generateStructured({
+      prompt: "ingredient-match",
+      schema: matchSchema(candidates),
+      timeoutMs: REQUEST_BUDGET_MS,
+      sections: [
+        `Name: ${text}`,
+        ...reading,
+        ["Foods in the catalogue it may be:", ...candidates.map(foodLine)].join("\n"),
+      ],
     })
   );
+  // Names are unique ignoring case (uqidx_ingredients_name_lower), so the name is the id.
+  const food = candidates.find((candidate) => candidate.name === answer.food);
 
-  return [...byModel.values()].map(({ provider, model, tokens }) => ({
-    provider,
-    model,
-    perFood: Math.round(tokens / names.length),
-  }));
+  aiLogger.info({ text, ...answer }, "Language model picked which food a name is");
+
+  return { ingredientId: food?.id ?? null, sure: answer.sure };
 }

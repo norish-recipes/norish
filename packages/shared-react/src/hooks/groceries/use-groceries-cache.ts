@@ -5,6 +5,8 @@ import type { CreateGroceriesHooksOptions, GroceriesCacheHelpers, GroceriesData 
 
 export function createUseGroceriesCache({ useTRPC }: CreateGroceriesHooksOptions) {
   return function useGroceriesCacheHelpers(): GroceriesCacheHelpers {
+    "use memo";
+
     const trpc = useTRPC();
     const queryClient = useQueryClient();
     const queryKey = trpc.groceries.list.queryKey();

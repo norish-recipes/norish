@@ -1,7 +1,9 @@
 import { and, desc, eq, inArray, lte, sql } from "drizzle-orm";
 import z from "zod";
 
-import type { GroceryDto } from "@norish/shared/contracts/dto/groceries";
+import type { Db } from "@norish/db/drizzle";
+import type { GroceryDto, GroceryInsertDto } from "@norish/shared/contracts/dto/groceries";
+import type { RecurrenceRule } from "@norish/shared/contracts/recurrence";
 import { db } from "@norish/db/drizzle";
 import { dbLogger } from "@norish/db/logger";
 import { groceries, recurringGroceries } from "@norish/db/schema";
@@ -14,7 +16,9 @@ import {
 } from "@norish/shared/contracts/zod";
 import { getTodayString, shouldBeActive } from "@norish/shared/lib/recurrence/calculator";
 
+import type { CreatedGroceries } from "./groceries";
 import type { MutationOutcome } from "./mutation-outcomes";
+import { createGroceries } from "./groceries";
 import { appliedOutcome, staleOutcome } from "./mutation-outcomes";
 
 export type RecurringGroceryDto = z.output<typeof RecurringGrocerySelectBaseSchema>;
@@ -110,21 +114,52 @@ export async function listDueRecurringGroceries(
   return parsed.data;
 }
 
-export async function createRecurringGrocery(
-  data: RecurringGroceryInsertDto
-): Promise<RecurringGroceryDto> {
-  const insertData = {
-    ...data,
-    amount: data.amount != null ? String(data.amount) : null,
-  };
+/** Recurring groceries made, each with the grocery it put on the list (`CreatedGroceries`). */
+export interface CreatedRecurringGroceries extends Pick<CreatedGroceries, "shifted"> {
+  created: Array<{ recurringGrocery: RecurringGroceryDto; grocery: GroceryDto }>;
+}
 
-  const [row] = await db.insert(recurringGroceries).values(insertData).returning();
+/** Create recurring groceries and the grocery each puts on the list, all or none. */
+export async function createRecurringGroceries(
+  items: Array<{
+    recurring: RecurringGroceryInsertDto;
+    grocery: { id: string; groceries: GroceryInsertDto };
+  }>,
+  householdUserIds: string[],
+  tx: Db = db
+): Promise<CreatedRecurringGroceries> {
+  return await tx.transaction(async (trx) => {
+    const rows = await trx
+      .insert(recurringGroceries)
+      .values(
+        items.map(({ recurring }) => ({
+          ...recurring,
+          amount: recurring.amount != null ? String(recurring.amount) : null,
+        }))
+      )
+      .returning();
+    const parsed = z.array(RecurringGrocerySelectBaseSchema).safeParse(rows);
 
-  const parsed = RecurringGrocerySelectBaseSchema.safeParse(row);
+    if (!parsed.success) throw new Error("Failed to parse created recurring groceries");
 
-  if (!parsed.success) throw new Error("Failed to parse created recurring grocery");
+    const made = await createGroceries(
+      items.map(({ grocery }) => grocery),
+      householdUserIds,
+      trx
+    );
+    const groceryOf = new Map(made.created.map((grocery) => [grocery.recurringGroceryId, grocery]));
 
-  return parsed.data;
+    return {
+      created: parsed.data.map((recurringGrocery) => {
+        const grocery = groceryOf.get(recurringGrocery.id);
+
+        if (!grocery) throw new Error("Failed to create a recurring grocery's grocery");
+
+        return { recurringGrocery, grocery };
+      }),
+      shifted: made.shifted,
+    };
+  });
 }
 
 export async function updateRecurringGrocery(
@@ -180,7 +215,8 @@ export async function updateRecurringGroceryWithGrocery(
     version: number;
     storeId?: string | null;
     purchaseAmount?: number | null;
-  }
+  },
+  tx: Db = db
 ): Promise<MutationOutcome<{ recurringGrocery: RecurringGroceryDto; grocery: GroceryDto }>> {
   const updateData = {
     ...recurringData,
@@ -189,7 +225,7 @@ export async function updateRecurringGroceryWithGrocery(
   };
 
   try {
-    const result = await db.transaction(async (trx) => {
+    const result = await tx.transaction(async (trx) => {
       const recurringWhere = [eq(recurringGroceries.id, recurringData.id!)];
 
       if (recurringData.version) {
@@ -245,27 +281,30 @@ export async function updateRecurringGroceryWithGrocery(
   }
 }
 
-export async function detachRecurringGrocery(input: {
-  recurringGroceryId: string;
-  recurringVersion: number;
-  grocery: {
-    id: string;
-    version: number;
-    name: string | null;
-    ingredientAliasId?: string | null;
-    ingredientId?: string | null;
-    unit: string | null;
-    amount: number | null;
-    storeId?: string | null;
-    purchaseAmount?: number | null;
-  };
-}): Promise<MutationOutcome<GroceryDto>> {
+export async function detachRecurringGrocery(
+  input: {
+    recurringGroceryId: string;
+    recurringVersion: number;
+    grocery: {
+      id: string;
+      version: number;
+      name: string | null;
+      ingredientAliasId?: string | null;
+      ingredientId?: string | null;
+      unit: string | null;
+      amount: number | null;
+      storeId?: string | null;
+      purchaseAmount?: number | null;
+    };
+  },
+  tx: Db = db
+): Promise<MutationOutcome<GroceryDto>> {
   const groceryUpdate = GroceryUpdateBaseSchema.safeParse(input.grocery);
 
   if (!groceryUpdate.success) throw new Error("Invalid grocery update for detach");
 
   try {
-    const grocery = await db.transaction(async (trx) => {
+    const grocery = await tx.transaction(async (trx) => {
       const deleted = await trx
         .delete(recurringGroceries)
         .where(
@@ -421,7 +460,7 @@ export type DueRecurringGrocery = {
     amount: number | null;
     nextPlannedFor: string;
     lastCheckedDate: string | null;
-    recurrenceRule: string;
+    recurrenceRule: RecurrenceRule;
     recurrenceInterval: number;
     recurrenceWeekday: number | null;
   };

@@ -1,10 +1,13 @@
 "use client";
 
 import { useCallback, useEffect, useRef, useState } from "react";
+import { ActionButton } from "@/components/shared/action-button";
 import { startArchiveDownload } from "@/lib/export/archive-download-client";
 import { showSafeErrorToast } from "@/lib/ui/safe-error-toast";
-import { Button } from "@heroui/react";
+import { ArrowDownTrayIcon } from "@heroicons/react/16/solid";
 import { useTranslations } from "next-intl";
+
+import { addBasePath } from "@norish/shared/lib/base-path";
 
 /**
  * `viewer` exports everything the pressing user can see under the view
@@ -25,6 +28,7 @@ const HANDOFF_GUARD_MS = 3000;
 export interface ArchiveExportButtonProps {
   label: string;
   scope?: ArchiveExportScope;
+  fullWidth?: boolean;
 }
 
 function exportUrl(scope: ArchiveExportScope): string {
@@ -46,22 +50,26 @@ const FALLBACK_FILE_NAME = "norish-recipes.norishrecipes";
  * download and the button falls back to a short guard. Either way an
  * unauthorised export is reported here rather than replacing the page.
  */
-export default function ArchiveExportButton({ label, scope = "viewer" }: ArchiveExportButtonProps) {
+export default function ArchiveExportButton({
+  label,
+  scope = "viewer",
+  fullWidth,
+}: ArchiveExportButtonProps) {
   const t = useTranslations("settings.archiveExport");
   const [exporting, setExporting] = useState(false);
   const [bytes, setBytes] = useState(0);
-  const guardTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
-  const mounted = useRef(true);
+  const guardTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const mountedRef = useRef(true);
 
   useEffect(() => {
     return () => {
-      mounted.current = false;
-      if (guardTimer.current) clearTimeout(guardTimer.current);
+      mountedRef.current = false;
+      if (guardTimerRef.current) clearTimeout(guardTimerRef.current);
     };
   }, []);
 
   const finish = useCallback(() => {
-    if (!mounted.current) return;
+    if (!mountedRef.current) return;
     setExporting(false);
     setBytes(0);
   }, []);
@@ -73,10 +81,10 @@ export default function ArchiveExportButton({ label, scope = "viewer" }: Archive
     setBytes(0);
 
     const outcome = await startArchiveDownload({
-      url: exportUrl(scope),
+      url: addBasePath(exportUrl(scope)),
       fallbackFileName: FALLBACK_FILE_NAME,
       onProgress: (transferred) => {
-        if (mounted.current) setBytes(transferred);
+        if (mountedRef.current) setBytes(transferred);
       },
     });
 
@@ -102,7 +110,7 @@ export default function ArchiveExportButton({ label, scope = "viewer" }: Archive
 
     if (outcome.status === "handedOff") {
       // Nothing will tell us when this ends, so only guard the second press.
-      guardTimer.current = setTimeout(finish, HANDOFF_GUARD_MS);
+      guardTimerRef.current = setTimeout(finish, HANDOFF_GUARD_MS);
 
       return;
     }
@@ -111,9 +119,15 @@ export default function ArchiveExportButton({ label, scope = "viewer" }: Archive
   };
 
   return (
-    <Button isPending={exporting} variant="primary" onPress={handleExport}>
+    <ActionButton
+      action="apply"
+      fullWidth={fullWidth}
+      icon={ArrowDownTrayIcon}
+      isPending={exporting}
+      onPress={handleExport}
+    >
       {exporting && bytes > 0 ? t("progress", { size: formatBytes(bytes) }) : label}
-    </Button>
+    </ActionButton>
   );
 }
 

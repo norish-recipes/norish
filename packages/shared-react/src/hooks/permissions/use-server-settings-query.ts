@@ -5,6 +5,8 @@ import { normalizePermissionsData } from "./selectors";
 
 export function createUseServerSettingsQuery({ useTRPC }: CreatePermissionsHooksOptions) {
   return function useServerSettingsQuery() {
+    "use memo";
+
     const trpc = useTRPC();
     const { data, error, isLoading } = useQuery(trpc.permissions.get.queryOptions());
     const normalized = normalizePermissionsData(data as PermissionsData | undefined);

@@ -1,12 +1,14 @@
 "use client";
 
 import { useState } from "react";
-import { useRouter } from "next/navigation";
+import { usePending } from "@/hooks/use-pending";
+import { ArrowRightEndOnRectangleIcon } from "@heroicons/react/16/solid";
 import { EnvelopeIcon, LockClosedIcon } from "@heroicons/react/24/outline";
 import { Button, FieldError, InputGroup, Label, Link, TextField } from "@heroui/react";
 import { useTranslations } from "next-intl";
 
 import { signIn } from "@norish/shared/lib/auth/client";
+import { APP_ROOT } from "@norish/shared/lib/base-path";
 
 import { AuthAlert } from "../../components/auth-alert";
 
@@ -15,36 +17,33 @@ interface EmailPasswordFormProps {
   registrationEnabled?: boolean;
 }
 export function EmailPasswordForm({
-  callbackUrl = "/",
+  callbackUrl = APP_ROOT,
   registrationEnabled = false,
 }: EmailPasswordFormProps) {
   const t = useTranslations("auth.emailPassword");
-  const router = useRouter();
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
-  const [isLoading, setIsLoading] = useState(false);
+  const [isLoading, whileLoading] = usePending();
+  // Set once signed in, so the button stays busy while the redirect loads the app.
+  const [isLeaving, setIsLeaving] = useState(false);
   const [error, setError] = useState<string | null>(null);
-  const handleSubmit = async (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.SubmitEvent) => {
     e.preventDefault();
-    setIsLoading(true);
     setError(null);
-    try {
-      const result = await signIn.email({
-        email,
-        password,
-        callbackURL: callbackUrl,
-      });
-
-      if (result.error) {
-        setError(result.error.message || t("errors.invalidCredentials"));
-      } else {
-        router.push(callbackUrl);
-      }
-    } catch {
-      setError(t("errors.generic"));
-    } finally {
-      setIsLoading(false);
-    }
+    await whileLoading(() =>
+      signIn
+        .email({
+          email,
+          password,
+          callbackURL: callbackUrl,
+        })
+        .then((result) => {
+          // On success Better Auth's redirect plugin sets `location.href` to `callbackURL`.
+          if (result.error) setError(result.error.message || t("errors.invalidCredentials"));
+          else setIsLeaving(true);
+        })
+        .catch(() => setError(t("errors.generic")))
+    );
   };
 
   return (
@@ -102,10 +101,11 @@ export function EmailPasswordForm({
         fullWidth
         className="mt-2 h-11"
         isDisabled={!email || !password}
-        isPending={isLoading}
+        isPending={isLoading || isLeaving}
         type="submit"
         variant="primary"
       >
+        <ArrowRightEndOnRectangleIcon className="size-4" />
         {t("signIn")}
       </Button>
 
@@ -114,7 +114,7 @@ export function EmailPasswordForm({
           {t("noAccount")}{" "}
           <Link
             className="text-sm"
-            href={`/signup${callbackUrl !== "/" ? `?callbackUrl=${encodeURIComponent(callbackUrl)}` : ""}`}
+            href={`/signup${callbackUrl !== APP_ROOT ? `?callbackUrl=${encodeURIComponent(callbackUrl)}` : ""}`}
           >
             {t("signUp")}
           </Link>

@@ -1,11 +1,11 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { ArrowPathIcon } from "@heroicons/react/16/solid";
-import { Button, Description, Label, Spinner, TextArea, TextField } from "@heroui/react";
+import { ActionButton, ActionButtonGroup } from "@/components/shared/action-button";
+import { Description, Label, TextArea, TextField } from "@heroui/react";
 import { useTranslations } from "next-intl";
 
-import type { PromptsConfigInput } from "@norish/config/zod/server-config";
+import type { PromptsConfig } from "@norish/config/zod/server-config";
 import { ServerConfigKeys } from "@norish/config/zod/server-config";
 
 import { useAdminSettingsContext } from "../context";
@@ -26,11 +26,14 @@ const PROMPT_FIELDS = [
   { key: "recipeProvenance", rows: 6 },
   { key: "ingredientLinking", rows: 6 },
   { key: "ingredientResolution", rows: 6 },
+  { key: "ingredientMatch", rows: 6 },
   { key: "imageGenerationBrief", rows: 6 },
   { key: "imageGenerationStyle", rows: 4 },
   { key: "ingredientIconStyle", rows: 4 },
   { key: "ingredientPlainName", rows: 8 },
-] as const satisfies readonly { key: keyof PromptsConfigInput; rows: number }[];
+  { key: "ingredientSpellingCheck", rows: 8 },
+  { key: "ingredientNutrition", rows: 8 },
+] as const satisfies readonly { key: keyof PromptsConfig; rows: number }[];
 
 type PromptKey = (typeof PROMPT_FIELDS)[number]["key"];
 
@@ -46,16 +49,18 @@ interface PromptsFormProps {
 export default function PromptsForm({ onDirtyChange }: PromptsFormProps) {
   const t = useTranslations("settings.admin.promptsConfig");
   const tActions = useTranslations("common.actions");
-  const { prompts, isLoading, updatePrompts, restoreDefaultConfig } = useAdminSettingsContext();
+  const { prompts, updatePrompts, restoreDefaultConfig } = useAdminSettingsContext();
   const [values, setValues] = useState<PromptValues>(EMPTY_VALUES);
   const [saving, setSaving] = useState(false);
   const [restoring, setRestoring] = useState(false);
-  const [hasChanges, setHasChanges] = useState(false);
+  // Starts unset so prompts present on the first render seed the form too.
+  const [prevPrompts, setPrevPrompts] = useState<typeof prompts>();
 
   // Initialize from context. A prompt added after the stored config was
   // written has no stored value; the loader falls back to the shipped file
   // until an administrator saves one.
-  useEffect(() => {
+  if (prompts !== prevPrompts) {
+    setPrevPrompts(prompts);
     if (prompts) {
       setValues(
         Object.fromEntries(
@@ -63,14 +68,12 @@ export default function PromptsForm({ onDirtyChange }: PromptsFormProps) {
         ) as PromptValues
       );
     }
-  }, [prompts]);
+  }
 
   // Track changes
-  useEffect(() => {
-    if (prompts) {
-      setHasChanges(PROMPT_FIELDS.some(({ key }) => values[key] !== (prompts[key] ?? "")));
-    }
-  }, [values, prompts]);
+  const hasChanges =
+    !!prompts && PROMPT_FIELDS.some(({ key }) => values[key] !== (prompts[key] ?? ""));
+
   useEffect(() => {
     onDirtyChange?.(hasChanges);
   }, [hasChanges, onDirtyChange]);
@@ -87,14 +90,6 @@ export default function PromptsForm({ onDirtyChange }: PromptsFormProps) {
     });
   };
 
-  if (isLoading) {
-    return (
-      <div className="flex items-center justify-center p-8">
-        <Spinner size="lg" />
-      </div>
-    );
-  }
-
   return (
     <div className="flex flex-col gap-6">
       {PROMPT_FIELDS.map(({ key, rows }) => (
@@ -110,15 +105,19 @@ export default function PromptsForm({ onDirtyChange }: PromptsFormProps) {
         </div>
       ))}
 
-      <div className="flex flex-wrap items-center justify-between gap-2">
-        <Button isPending={restoring} variant="tertiary" onPress={handleRestoreDefaults}>
-          {!restoring && <ArrowPathIcon className="h-5 w-5" />}
-          {tActions("restoreDefaults")}
-        </Button>
-        <Button isDisabled={!hasChanges} isPending={saving} variant="primary" onPress={handleSave}>
+      <ActionButtonGroup>
+        <ActionButton action="reset" isPending={restoring} onPress={handleRestoreDefaults}>
+          {tActions("reset")}
+        </ActionButton>
+        <ActionButton
+          action="save"
+          isDisabled={!hasChanges}
+          isPending={saving}
+          onPress={handleSave}
+        >
           {tActions("save")}
-        </Button>
-      </div>
+        </ActionButton>
+      </ActionButtonGroup>
     </div>
   );
 }

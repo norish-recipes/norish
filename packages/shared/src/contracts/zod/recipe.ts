@@ -54,11 +54,21 @@ export const RecipeDashboardSchema = RecipeSelectBaseSchema.omit({
   // tints, so the dashboard has no use for it.
   dishColor: true,
 }).extend({
+  // The resolved primary image: the first gallery image.
+  image: z.string().nullable(),
   tags: z.array(TagSummarySchema).default([]),
   categories: z.array(recipeCategorySchema).default([]),
   author: AuthorSchema,
   averageRating: z.number().nullable().optional(),
   ratingCount: z.number().optional(),
+  pantryCoverage: z
+    .number()
+    .min(0)
+    .max(1)
+    .optional()
+    .describe(
+      "Share of the recipe's ingredient lines the household's pantry covers, 0 to 1. Only lists filtered to the pantry in the app carry it."
+    ),
 });
 
 /**
@@ -78,9 +88,8 @@ export const RECIPE_DASHBOARD_KEYS = Object.keys(RecipeDashboardSchema.shape) as
  * dashboard-only aggregates (averageRating, ratingCount), and overwriting
  * them with undefined would wipe live values off the cards.
  *
- * The dashboard's `image` is the resolved primary (gallery first, legacy
- * scalar as fallback), so it is derived rather than copied — a raw scalar
- * copy would blank a gallery-only recipe's thumbnail on every echo.
+ * The dashboard's `image` is the resolved primary, the first gallery image,
+ * so it is derived from the echo's gallery rather than copied.
  */
 export function patchDashboardRecipeFromFull(
   dashboardRecipe: z.output<typeof RecipeDashboardSchema>,
@@ -95,7 +104,7 @@ export function patchDashboardRecipeFromFull(
     }
   }
 
-  if ("image" in echo || "images" in echo) {
+  if ("images" in echo) {
     patched.image = primaryRecipeImage(fullRecipe);
   }
 
@@ -218,13 +227,13 @@ export const RecipeDeleteInputSchema = z.object({
 });
 
 export const RecipeImportInputSchema = z.object({
-  // "www.site.com/recipe" names a page as well as a full link does, so a
-  // missing scheme is filled in rather than refused.
+  // "www.site.com/recipe" names a page as well as a full link does, so a missing scheme is filled
+  // in. Only a web page is accepted, passed on as parsed, so the host checked is the host fetched.
   url: z
     .string()
     .trim()
     .transform((url) => (/^[a-z][a-z\d+.-]*:\/\//i.test(url) ? url : `https://${url}`))
-    .pipe(z.url()),
+    .pipe(z.url({ protocol: /^https?$/, normalize: true })),
 });
 
 export const RecipeConvertInputSchema = z.object({
@@ -266,4 +275,31 @@ export const RecipeImportResultSchema = z.object({
   recipeId: z.uuid(),
   status: z.enum(["queued", "exists"]),
   recipe: RecipeDashboardSchema.nullable().optional(),
+  statusUrl: z.string().optional().describe("Relative URL to check the status of this import job"),
+});
+
+export const RecipeImportStatusInputSchema = z.object({
+  recipeId: z.uuid().describe("The recipe ID assigned to the import job"),
+  wait: z.coerce
+    .number()
+    .int()
+    .min(0)
+    .max(60)
+    .optional()
+    .describe("Optional seconds to wait (long-polling) for the job to complete or fail (max 60)"),
+});
+
+export const RecipeImportStatusSchema = z.object({
+  recipeId: z.uuid().describe("The recipe ID assigned to the import"),
+  url: z.string().optional().describe("Source URL of the recipe being imported"),
+  status: z
+    .enum(["waiting", "active", "completed", "failed"])
+    .describe("Current processing status of the import job"),
+  step: z
+    .string()
+    .nullable()
+    .optional()
+    .describe("Current step being executed (e.g. dedupe-check, parsing, saving)"),
+  error: z.string().nullable().optional().describe("Error message if the import failed"),
+  recipe: RecipeDashboardSchema.nullable().optional().describe("Recipe data if import completed"),
 });

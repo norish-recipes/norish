@@ -1,7 +1,12 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useSyncExternalStore } from "react";
 import { SettingsCard } from "@/app/(app)/settings/components/settings-card";
+import {
+  ActionButton,
+  ActionButtonGroup,
+  IconActionButton,
+} from "@/components/shared/action-button";
 import { showSafeErrorToast } from "@/lib/ui/safe-error-toast";
 import {
   ArrowPathIcon,
@@ -15,41 +20,27 @@ import type { HouseholdAdminSettingsDto } from "@norish/shared/contracts/dto/hou
 
 import { useHouseholdSettingsContext } from "../context";
 
+const noSubscription = () => () => {};
+const nowToTheSecond = () => Math.floor(Date.now() / 1000) * 1000;
+
+function subscribeToSeconds(onTick: () => void) {
+  const interval = setInterval(onTick, 1000);
+
+  return () => clearInterval(interval);
+}
+
 export default function JoinCodeCard() {
   const t = useTranslations("settings.household.joinCode");
   const tErrors = useTranslations("common.errors");
   const { household, currentUserId, regenerateJoinCode } = useHouseholdSettingsContext();
-  const [timeRemaining, setTimeRemaining] = useState<string>("");
-
-  // Calculate time remaining for join code
-  useEffect(() => {
-    if (
-      !household ||
-      !("joinCode" in household) ||
-      !household.joinCode ||
-      !household.joinCodeExpiresAt
-    ) {
-      setTimeRemaining("");
-      return;
-    }
-    const calculateTime = () => {
-      // Type guard again inside the function
-      if (!household || !("joinCodeExpiresAt" in household) || !household.joinCodeExpiresAt) return;
-      const now = new Date();
-      const expires = new Date(household.joinCodeExpiresAt);
-      const diff = expires.getTime() - now.getTime();
-      if (diff <= 0) {
-        setTimeRemaining("Expired");
-        return;
-      }
-      const minutes = Math.floor(diff / 60000);
-      const seconds = Math.floor((diff % 60000) / 1000);
-      setTimeRemaining(`${minutes}m ${seconds}s`);
-    };
-    calculateTime();
-    const interval = setInterval(calculateTime, 1000);
-    return () => clearInterval(interval);
-  }, [household]);
+  const joinCodeExpiresAt =
+    household && "joinCode" in household && household.joinCode ? household.joinCodeExpiresAt : null;
+  // The clock the countdown reads, to the second, ticking while a code counts down.
+  const now = useSyncExternalStore(
+    joinCodeExpiresAt ? subscribeToSeconds : noSubscription,
+    nowToTheSecond,
+    nowToTheSecond
+  );
   if (!household) return null;
 
   // Check if current user is admin and if household has admin fields
@@ -64,9 +55,14 @@ export default function JoinCodeCard() {
 
   // Now TypeScript knows household has joinCode fields
   const adminHousehold = household as HouseholdAdminSettingsDto;
-  const joinCodeExpired = adminHousehold.joinCodeExpiresAt
-    ? new Date(adminHousehold.joinCodeExpiresAt) < new Date()
-    : true;
+  const msRemaining = adminHousehold.joinCodeExpiresAt
+    ? new Date(adminHousehold.joinCodeExpiresAt).getTime() - now
+    : -1;
+  const joinCodeExpired = msRemaining <= 0;
+  const timeRemaining =
+    msRemaining <= 0
+      ? "Expired"
+      : `${Math.floor(msRemaining / 60000)}m ${Math.floor((msRemaining % 60000) / 1000)}s`;
   const handleCopyJoinCode = async () => {
     // Type guard ensures household has joinCode
     if ("joinCode" in household && household.joinCode) {
@@ -97,25 +93,24 @@ export default function JoinCodeCard() {
           <div className="flex gap-2">
             <Input
               variant="secondary"
-              isReadOnly
+              readOnly
               className="font-mono text-lg tracking-wider"
               value={adminHousehold.joinCode || ""}
             />
-            <Button isIconOnly onPress={handleCopyJoinCode}>
-              <ClipboardDocumentIconSolid className="h-4 w-4" />
-            </Button>
+            <IconActionButton
+              action="duplicate"
+              icon={ClipboardDocumentIconSolid}
+              label={t("copyButton")}
+              variant="primary"
+              onPress={handleCopyJoinCode}
+            />
           </div>
           <div className="flex items-center justify-between">
             <span className="text-muted text-base">
               {t("expiresIn")} <span className="text-warning font-medium">{timeRemaining}</span>
             </span>
-            <Button
-              size="sm"
-              onPress={handleRegenerateCode}
-              variant="tertiary"
-              className="min-w-16"
-            >
-              {<ArrowPathIcon className="h-4 w-4" />}
+            <Button size="sm" variant="tertiary" onPress={handleRegenerateCode}>
+              <ArrowPathIcon className="size-4" />
               {t("regenerateButton")}
             </Button>
           </div>
@@ -123,12 +118,11 @@ export default function JoinCodeCard() {
       ) : (
         <>
           <p className="text-muted text-base">{t("noCodeDescription")}</p>
-          <div className="flex justify-end">
-            <Button onPress={handleRegenerateCode} variant="primary">
-              {<ArrowPathIcon className="h-4 w-4" />}
+          <ActionButtonGroup>
+            <ActionButton action="create" icon={ArrowPathIcon} onPress={handleRegenerateCode}>
               {t("generateButton")}
-            </Button>
-          </div>
+            </ActionButton>
+          </ActionButtonGroup>
         </>
       )}
     </SettingsCard>

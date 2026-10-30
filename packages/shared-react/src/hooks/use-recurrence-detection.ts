@@ -27,17 +27,20 @@ export function createUseRecurrenceDetection({
     itemName,
     enabled = true,
   }: UseRecurrenceDetectionOptions) {
+    "use memo";
+
     const { recurrenceConfig } = useRecurrenceConfigQuery();
 
     const [detectedPattern, setDetectedPattern] = useState<DetectedPattern | null>(null);
     const [isParsing, startTransition] = useTransition();
+    const canDetect = Boolean(enabled && itemName.trim() && recurrenceConfig);
+
+    if (!canDetect && detectedPattern) {
+      setDetectedPattern(null);
+    }
 
     useEffect(() => {
-      if (!enabled || !itemName.trim() || !recurrenceConfig) {
-        setDetectedPattern(null);
-
-        return;
-      }
+      if (!canDetect) return;
 
       startTransition(() => {
         try {
@@ -56,7 +59,7 @@ export function createUseRecurrenceDetection({
           setDetectedPattern(null);
         }
       });
-    }, [itemName, recurrenceConfig, enabled]);
+    }, [itemName, recurrenceConfig, canDetect]);
 
     return {
       detectedPattern,

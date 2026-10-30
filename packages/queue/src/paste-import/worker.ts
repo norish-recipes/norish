@@ -2,7 +2,6 @@
  * Paste Import Worker
  *
  * Processes pasted recipe text or pasted JSON-LD.
- * Uses lazy worker pattern - starts on-demand and pauses when idle.
  */
 
 import type { Job } from "bullmq";
@@ -30,9 +29,10 @@ import { MAX_RECIPE_PASTE_CHARS } from "@norish/shared/contracts/uploads";
 import { FullRecipeInsertSchema } from "@norish/shared/contracts/zod";
 import { hasRecipeNameIngredientsAndSteps } from "@norish/shared/lib/helpers";
 
-import { defineLazyWorker, QUEUE_NAMES } from "../config";
+import { createWorker, isFinalFailure } from "../create-worker";
 import { announceUsableRecipe } from "../enrichment/announce";
 import { completeStep, reportStep } from "../job-steps";
+import { QUEUE_NAMES } from "../queue-names";
 
 const log = createLogger("worker:paste-import");
 
@@ -247,24 +247,11 @@ async function handleJobFailed(
   if (!job) return;
 
   const { recipeIds, userId, householdKey } = job.data;
-  const maxAttempts = job.opts.attempts ?? 3;
-  const isFinalFailure = job.attemptsMade >= maxAttempts;
-
-  log.error(
-    {
-      jobId: job.id,
-      recipeIds,
-      attempt: job.attemptsMade,
-      maxAttempts,
-      isFinalFailure,
-      error: error.message,
-    },
-    "Paste import job failed"
-  );
+  const isFinal = isFinalFailure(job, error);
 
   await Promise.all(recipeIds.map((recipeId) => deleteRecipeImagesDir(recipeId)));
 
-  if (isFinalFailure) {
+  if (isFinal) {
     const policy = await getRecipePermissionPolicy();
     const ctx = { userId, householdKey };
 
@@ -282,11 +269,6 @@ async function handleJobFailed(
   }
 }
 
-const pasteImportWorker = defineLazyWorker(
-  QUEUE_NAMES.PASTE_IMPORT,
-  processPasteImportJob,
-  handleJobFailed
-);
-
-export const startPasteImportWorker = pasteImportWorker.start;
-export const stopPasteImportWorker = pasteImportWorker.stop;
+export function startPasteImportWorker(): void {
+  createWorker(QUEUE_NAMES.PASTE_IMPORT, processPasteImportJob, { onFailed: handleJobFailed });
+}

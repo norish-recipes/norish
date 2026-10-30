@@ -2,6 +2,7 @@ import {
   addDays,
   addMonths,
   addWeeks,
+  addYears,
   format,
   getDay,
   isAfter,
@@ -11,7 +12,14 @@ import {
   startOfDay,
 } from "date-fns";
 
-import type { RecurrencePattern } from "@norish/shared/contracts/recurrence";
+import type { RecurrencePattern, RecurrenceRule } from "@norish/shared/contracts/recurrence";
+
+const ADD_INTERVAL: Record<RecurrenceRule, (date: Date, amount: number) => Date> = {
+  day: addDays,
+  week: addWeeks,
+  month: addMonths,
+  year: addYears,
+};
 
 /**
  * Calculate the next occurrence date based on a recurrence pattern.
@@ -35,61 +43,21 @@ export function calculateNextOccurrence(
     : startOfDay(parseISO(currentNextDate));
   const isNewItem = !fromDate && isSameDay(baseDate, today);
 
+  const { rule, interval, weekday } = pattern;
   let nextDate: Date;
 
-  switch (pattern.rule) {
-    case "day":
-      // For new items, start today
-      // For checked items, add interval from the check date (fromDate)
-      if (isNewItem) {
-        nextDate = today;
-      } else {
-        nextDate = addDays(baseDate, pattern.interval);
-      }
-      // Advance by full intervals until not in the past
-      while (isBefore(nextDate, today)) {
-        nextDate = addDays(nextDate, pattern.interval);
-      }
-      break;
+  if (rule === "week" && weekday !== undefined) {
+    nextDate = calculateNextWeekday(baseDate, interval, weekday, isNewItem);
+  } else if (rule === "month" && weekday !== undefined) {
+    nextDate = calculateNextMonthlyWeekday(baseDate, interval, weekday, isNewItem);
+  } else {
+    // A new item starts today; a checked one an interval after its base, stepped past today.
+    const add = ADD_INTERVAL[rule];
 
-    case "week":
-      if (pattern.weekday !== undefined) {
-        nextDate = calculateNextWeekday(baseDate, pattern.interval, pattern.weekday, isNewItem);
-      } else {
-        if (isNewItem) {
-          nextDate = today;
-        } else {
-          nextDate = addWeeks(baseDate, pattern.interval);
-        }
-        while (isBefore(nextDate, today)) {
-          nextDate = addWeeks(nextDate, pattern.interval);
-        }
-      }
-      break;
-
-    case "month":
-      if (pattern.weekday !== undefined) {
-        nextDate = calculateNextMonthlyWeekday(
-          baseDate,
-          pattern.interval,
-          pattern.weekday,
-          isNewItem
-        );
-      } else {
-        if (isNewItem) {
-          nextDate = today;
-        } else {
-          nextDate = addMonths(baseDate, pattern.interval);
-        }
-        // Advance by full intervals until not in the past
-        while (isBefore(nextDate, today)) {
-          nextDate = addMonths(nextDate, pattern.interval);
-        }
-      }
-      break;
-
-    default:
-      nextDate = addDays(baseDate, 1);
+    nextDate = isNewItem ? today : add(baseDate, interval);
+    while (isBefore(nextDate, today)) {
+      nextDate = add(nextDate, interval);
+    }
   }
 
   const result = format(nextDate, "yyyy-MM-dd");

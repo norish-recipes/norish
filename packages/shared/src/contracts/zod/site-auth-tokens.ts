@@ -11,12 +11,16 @@ export const SiteAuthTokenInsertSchema = createInsertSchema(siteAuthTokens).omit
   updatedAt: true,
 });
 
+/** A full domain such as `instagram.com`, which also covers its subdomains. */
+export const TokenDomainSchema = z
+  .string()
+  .trim()
+  .toLowerCase()
+  .includes(".", { error: "Enter the full domain, such as instagram.com." });
+
 // Input for creating a token (before encryption)
 export const CreateSiteAuthTokenInputSchema = z.object({
-  domain: z
-    .string()
-    .min(1)
-    .transform((v) => v.toLowerCase().trim()),
+  domain: TokenDomainSchema,
   // Blank and absent both mean "not tied to one account".
   account: z
     .string()
@@ -32,11 +36,7 @@ export const CreateSiteAuthTokenInputSchema = z.object({
 export const UpdateSiteAuthTokenInputSchema = z.object({
   id: z.uuid(),
   version: z.number().int().positive(),
-  domain: z
-    .string()
-    .min(1)
-    .transform((v) => v.toLowerCase().trim())
-    .optional(),
+  domain: TokenDomainSchema.optional(),
   account: z.string().trim().nullable().optional(),
   name: z.string().min(1).optional(),
   value: z.string().min(1).optional(),

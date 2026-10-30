@@ -50,7 +50,8 @@
     "viewGroceries": "Ver lista de compras",
     "addToCalendar": "Adicionar ao calendário",
     "deleteRecipe": "Excluir receita",
-    "recipeOptions": "Opções da receita"
+    "recipeOptions": "Opções da receita",
+    "pantryCoverage": "{percent} dos ingredientes em casa"
   },
   "detail": {
     "viewOriginal": "Ver receita original",
@@ -76,7 +77,8 @@
     "source": "Fonte",
     "addedBy": "Adicionado por {name}",
     "decreaseServings": "Menos porções",
-    "increaseServings": "Mais porções"
+    "increaseServings": "Mais porções",
+    "multiplier": "Multiplicador"
   },
   "actions": {
     "plan": "Planejar",
@@ -319,6 +321,9 @@
     "imported": "Receita importada",
     "failed": "Falha na operação da receita",
     "failedDescription": "Algo deu errado ao processar sua receita. Verifique o console do navegador para detalhes técnicos.",
+    "incomplete": "Esta receita pode estar incompleta. Compare-a com a fonte.",
+    "notARecipe": "Esta página não parece ser uma receita.",
+    "privateAddress": "Importações de endereços de rede privada não são permitidas neste servidor.",
     "batchImported": "Receitas importadas",
     "batchImportedDescription": "{count} receitas importadas do arquivo",
     "view": "Ver",
@@ -423,5 +428,13 @@
     "removeImage": "Remover imagem",
     "imageUploadFailed": "Não foi possível enviar a imagem.",
     "imageNeedsConnection": "Você pode trocar imagens quando estiver online de novo."
+  },
+  "print": {
+    "title": "Imprimir receita",
+    "includePhoto": "Incluir foto",
+    "textSize": "Tamanho do texto",
+    "print": "Imprimir / Salvar PDF",
+    "continued": "continuação",
+    "perServing": "Por porção"
   }
 }

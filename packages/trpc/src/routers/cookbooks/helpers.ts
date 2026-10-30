@@ -2,7 +2,6 @@ import { TRPCError } from "@trpc/server";
 
 import type { PermissionAction } from "@norish/auth/permissions";
 import type { PermissionLevel } from "@norish/config/zod/server-config";
-import type { RecipeListContext } from "@norish/db";
 import type { ClientEventName, PayloadOf } from "@norish/shared/contracts/realtime/catalogue";
 import type { CookbooksRealtime } from "@norish/shared/contracts/realtime/cookbooks";
 import { canAccessResource } from "@norish/auth/permissions";
@@ -17,14 +16,6 @@ export type CookbookUserContext = {
   householdKey: string;
   isServerAdmin: boolean;
 };
-
-export function listContextFor(ctx: CookbookUserContext): RecipeListContext {
-  return {
-    userId: ctx.user.id,
-    householdUserIds: ctx.householdUserIds,
-    isServerAdmin: ctx.isServerAdmin,
-  };
-}
 
 /**
  * Cookbooks answer to the recipe permission policy, not a rule of their own

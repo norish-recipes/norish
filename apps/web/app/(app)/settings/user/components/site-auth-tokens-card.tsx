@@ -3,12 +3,17 @@
 import { useState } from "react";
 import { SettingsCard } from "@/app/(app)/settings/components/settings-card";
 import { useTRPC } from "@/app/providers/trpc-provider";
+import {
+  ActionButton,
+  ActionButtonGroup,
+  IconActionButton,
+} from "@/components/shared/action-button";
 import { InfoHint } from "@/components/shared/info-hint";
 import { showSafeErrorToast } from "@/lib/ui/safe-error-toast";
-import { PlusIcon, ShieldCheckIcon, TrashIcon } from "@heroicons/react/24/outline";
+import { ShieldCheckIcon } from "@heroicons/react/24/outline";
 import {
-  Button,
   Chip,
+  FieldError,
   Input,
   Label,
   ListBox,
@@ -18,12 +23,15 @@ import {
   TextField,
 } from "@heroui/react";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
-import { useTranslations } from "next-intl";
+import { useFormatter, useTranslations } from "next-intl";
+
+import { TokenDomainSchema } from "@norish/shared/contracts/zod/site-auth-tokens";
 
 export default function SiteAuthTokensCard() {
   const t = useTranslations("settings.user.siteAuthTokens");
   const tErrors = useTranslations("common.errors");
   const tActions = useTranslations("common.actions");
+  const format = useFormatter();
   const trpc = useTRPC();
   const queryClient = useQueryClient();
 
@@ -49,58 +57,63 @@ export default function SiteAuthTokensCard() {
   const handleCreate = async () => {
     if (!domain.trim() || !name.trim() || !value.trim()) return;
     setIsCreating(true);
-    try {
-      const newToken = await createMutation.mutateAsync({
+    await createMutation
+      .mutateAsync({
         domain,
         account,
         name,
         value,
         type,
-      });
-      queryClient.setQueryData(listQueryOptions.queryKey, (prev: typeof tokens | undefined) =>
-        prev ? [...prev, newToken] : [newToken]
+      })
+      .then((newToken) => {
+        queryClient.setQueryData(listQueryOptions.queryKey, (prev: typeof tokens | undefined) =>
+          prev ? [...prev, newToken] : [newToken]
+        );
+        setDomain("");
+        setAccount("");
+        setName("");
+        setValue("");
+        setType("header");
+      })
+      .catch((error: unknown) =>
+        showSafeErrorToast({
+          title: tErrors("operationFailed"),
+          description: tErrors("technicalDetails"),
+          color: "danger",
+          error,
+          context: "site-auth-tokens:create",
+        })
       );
-      setDomain("");
-      setAccount("");
-      setName("");
-      setValue("");
-      setType("header");
-    } catch (error) {
-      showSafeErrorToast({
-        title: tErrors("operationFailed"),
-        description: tErrors("technicalDetails"),
-        color: "danger",
-        error,
-        context: "site-auth-tokens:create",
-      });
-    } finally {
-      setIsCreating(false);
-    }
+    setIsCreating(false);
   };
   const handleDelete = async (tokenId: string) => {
-    try {
-      const tokenVersion = tokens.find((token) => token.id === tokenId)?.version ?? 1;
-      await removeMutation.mutateAsync({
+    const tokenVersion = tokens.find((token) => token.id === tokenId)?.version ?? 1;
+
+    await removeMutation
+      .mutateAsync({
         id: tokenId,
         version: tokenVersion,
-      });
-      queryClient.setQueryData(listQueryOptions.queryKey, (prev: typeof tokens | undefined) =>
-        prev ? prev.filter((t) => t.id !== tokenId) : prev
+      })
+      .then(() =>
+        queryClient.setQueryData(listQueryOptions.queryKey, (prev: typeof tokens | undefined) =>
+          prev ? prev.filter((t) => t.id !== tokenId) : prev
+        )
+      )
+      .catch((error: unknown) =>
+        showSafeErrorToast({
+          title: tErrors("operationFailed"),
+          description: tErrors("technicalDetails"),
+          color: "danger",
+          error,
+          context: "site-auth-tokens:delete",
+        })
       );
-    } catch (error) {
-      showSafeErrorToast({
-        title: tErrors("operationFailed"),
-        description: tErrors("technicalDetails"),
-        color: "danger",
-        error,
-        context: "site-auth-tokens:delete",
-      });
-    } finally {
-      setShowDeleteModal(false);
-      setTokenToDelete(null);
-    }
+    setShowDeleteModal(false);
+    setTokenToDelete(null);
   };
-  const isFormValid = domain.trim() && name.trim() && value.trim();
+  // A token's domain is a full domain, which also covers its subdomains.
+  const isDomainBare = domain.trim() !== "" && !TokenDomainSchema.safeParse(domain).success;
+  const isFormValid = domain.trim() && !isDomainBare && name.trim() && value.trim();
 
   // Sorted so a site's accounts read as the sets they are, rather than in the
   // order they happened to be added.
@@ -117,9 +130,15 @@ export default function SiteAuthTokensCard() {
         {/* Create form */}
         <div className="flex flex-col gap-3">
           <div className="grid gap-3 md:grid-cols-2 xl:grid-cols-[minmax(0,1fr)_minmax(0,1fr)_minmax(0,1fr)_minmax(0,1fr)_9rem] xl:items-end">
-            <TextField className="min-w-0" value={domain} onChange={setDomain}>
+            <TextField
+              className="min-w-0"
+              isInvalid={isDomainBare}
+              value={domain}
+              onChange={setDomain}
+            >
               <Label>{t("domain")}</Label>
               <Input variant="secondary" placeholder={t("domainPlaceholder")} />
+              <FieldError>{t("domainNotFull")}</FieldError>
             </TextField>
             <TextField className="min-w-0" value={account} onChange={setAccount}>
               <span className="flex h-5 items-center gap-1">
@@ -164,17 +183,16 @@ export default function SiteAuthTokensCard() {
               </Select.Popover>
             </Select>
           </div>
-          <div className="flex justify-end">
-            <Button
+          <ActionButtonGroup>
+            <ActionButton
+              action="add"
               isDisabled={!isFormValid}
-              onPress={handleCreate}
-              variant="primary"
               isPending={isCreating}
+              onPress={handleCreate}
             >
-              {<PlusIcon className="h-4 w-4" />}
               {t("addButton")}
-            </Button>
-          </div>
+            </ActionButton>
+          </ActionButtonGroup>
         </div>
 
         {/* Token list */}
@@ -216,20 +234,17 @@ export default function SiteAuthTokensCard() {
                             {token.type === "header" ? t("typeHeader") : t("typeCookie")}
                           </Chip>
                         </Table.Cell>
-                        <Table.Cell>{new Date(token.createdAt).toLocaleDateString()}</Table.Cell>
+                        <Table.Cell>{format.dateTime(new Date(token.createdAt))}</Table.Cell>
                         <Table.Cell>
-                          <Button
-                            isIconOnly
+                          <IconActionButton
+                            action="delete"
+                            label={t("deleteModal.confirmButton")}
                             size="sm"
-                            title={t("deleteModal.confirmButton")}
                             onPress={() => {
                               setTokenToDelete(token.id);
                               setShowDeleteModal(true);
                             }}
-                            variant="danger-soft"
-                          >
-                            <TrashIcon className="h-4 w-4" />
-                          </Button>
+                          />
                         </Table.Cell>
                       </Table.Row>
                     ))}
@@ -258,16 +273,19 @@ export default function SiteAuthTokensCard() {
                   <p>{t("deleteModal.message")}</p>
                 </Modal.Body>
                 <Modal.Footer>
-                  <Button onPress={onClose} variant="tertiary">
-                    {tActions("cancel")}
-                  </Button>
-                  <Button
-                    onPress={() => tokenToDelete && handleDelete(tokenToDelete)}
-                    variant="danger"
-                    isPending={removeMutation.isPending}
-                  >
-                    {t("deleteModal.confirmButton")}
-                  </Button>
+                  <ActionButtonGroup>
+                    <ActionButton action="cancel" onPress={onClose}>
+                      {tActions("cancel")}
+                    </ActionButton>
+                    <ActionButton
+                      action="delete"
+                      isPending={removeMutation.isPending}
+                      variant="danger"
+                      onPress={() => tokenToDelete && handleDelete(tokenToDelete)}
+                    >
+                      {t("deleteModal.confirmButton")}
+                    </ActionButton>
+                  </ActionButtonGroup>
                 </Modal.Footer>
               </>
             )}

@@ -296,14 +296,11 @@ export async function parseNorishRecipeToDTO(
     image: wireImage,
     images: wireImages,
     videos: wireVideos,
+    recipeIngredients: wireLines,
     ...rest
   } = parsed.data;
 
   const { cuisineIds, droppedCuisines } = matchCuisineNames(cuisineNames, cuisineIdsByName);
-
-  const image = await rehomeMediaReference(recipeFolder, wireImage, (bytes) =>
-    saveImageBytes(bytes, recipeId)
-  );
 
   const images: Array<{ image: string; order: number; generated?: boolean }> = [];
 
@@ -322,6 +319,16 @@ export async function parseNorishRecipeToDTO(
         ...(galleryImage.generated === true ? { generated: true } : {}),
       });
     }
+  }
+
+  // The hero is the gallery's primary, so it only stands alone in an archive
+  // written before recipes had a gallery.
+  if (images.length === 0) {
+    const hero = await rehomeMediaReference(recipeFolder, wireImage, (bytes) =>
+      saveImageBytes(bytes, recipeId)
+    );
+
+    if (hero) images.push({ image: hero, order: 0 });
   }
 
   const rehomedSteps: FullRecipeInsertDTO["steps"] = [];
@@ -370,9 +377,12 @@ export async function parseNorishRecipeToDTO(
 
   const dto: FullRecipeInsertDTO = {
     ...rest,
+    // A line's foods travel as their spellings, which the resolver reads before its text.
+    recipeIngredients: wireLines.map(({ foods, ...line }) =>
+      foods?.length ? { ...line, foodTexts: foods } : line
+    ),
     id: recipeId,
     cuisines: cuisineIds,
-    image,
     images,
     videos,
     steps: rehomedSteps,

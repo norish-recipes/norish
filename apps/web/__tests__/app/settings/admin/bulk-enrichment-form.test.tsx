@@ -48,8 +48,6 @@ vi.mock("@/app/(app)/settings/components/settings-switch", () => ({
   ),
 }));
 
-vi.mock("@heroicons/react/16/solid", () => ({ ExclamationTriangleIcon: () => <span /> }));
-
 vi.mock("@heroui/react", () => {
   const Passthrough = ({ children }: { children?: React.ReactNode }) => <div>{children}</div>;
 
@@ -88,7 +86,6 @@ function openConfirmation() {
 }
 
 beforeEach(() => {
-  vi.clearAllMocks();
   sweepCounts.current = undefined;
   mockUseTRPC.mockReturnValue({
     admin: {

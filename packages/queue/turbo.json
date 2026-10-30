@@ -3,7 +3,7 @@
   "extends": ["//"],
   "tasks": {
     "test": {
-      "env": ["DATABASE_URL", "MASTER_KEY", "AUTH_URL", "REDIS_URL"]
+      "env": ["DATABASE_URL", "MASTER_KEY", "AUTH_URL", "VALKEY_URL"]
     }
   }
 }

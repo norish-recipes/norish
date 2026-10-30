@@ -140,7 +140,10 @@ const CASED_UNIT_WORDS = new Set(["T", "t"]);
  * word means never depends on the order a server reads the map in.
  */
 export function foldUnitWord(word: string): string {
-  const bare = word.trim().replace(/\.+$/, "").replace(/\s+/g, " ");
+  const bare = word
+    .trim()
+    .replace(/(?<!\.)\.+$/, "")
+    .replace(/\s+/g, " ");
 
   return CASED_UNIT_WORDS.has(bare) ? bare : bare.toLowerCase();
 }

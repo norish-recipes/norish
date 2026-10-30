@@ -17,8 +17,8 @@ Save the file below as `docker-compose.yml` and run:
 docker compose up -d
 ```
 
-Then open [http://localhost:3000](http://localhost:3000). The first user to
-sign in becomes the server owner, see [First run](#first-run).
+Then open [http://localhost:3000](http://localhost:3000). See [First run](#first-run)
+for account setup.
 
 <QuickStartCompose />
 
@@ -31,7 +31,7 @@ openssl rand -base64 32 # MASTER_KEY
 openssl rand -hex 32    # OBSCURA_CDP_TOKEN, the same value on both services
 ```
 
-Keep them secret. Norish derives its encryption keys from `MASTER_KEY`, so
+Keep them secret. Encryption keys are derived from `MASTER_KEY`, so
 changing it makes previously encrypted data unreadable.
 :::
 
@@ -46,7 +46,7 @@ The repository has a longer, commented template at
 | --------- | ---------------------------------------------- |
 | `norish`  | The Norish app server.                         |
 | `db`      | PostgreSQL database.                           |
-| `redis`   | Real-time events and background jobs.          |
+| `valkey`  | Real-time events and background jobs.          |
 | `obscura` | Headless browser that loads pages for imports. |
 
 ## First run

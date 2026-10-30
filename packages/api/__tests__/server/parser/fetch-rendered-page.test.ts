@@ -14,11 +14,11 @@
  * rendered page is the page it asked for: a shop's bot check and a shop's
  * empty results page are the same two kilobytes to everybody else.
  */
-import { beforeEach, describe, expect, it, vi } from "vitest";
+import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 
+import type { PageRenderersConfig } from "@norish/config/zod/server-config";
 import type { SiteAuthTokenDecryptedDto } from "@norish/shared/contracts/dto/site-auth-tokens";
 import { fetchRenderedPage, renderPage } from "@norish/api/parser/fetch";
-import { SERVER_CONFIG } from "@norish/config/env-config-server";
 
 const { mockGetBrowser, mockNewContext, mockNewPage, mockGoto, mockContent, mockClose } =
   vi.hoisted(() => {
@@ -32,7 +32,13 @@ const { mockGetBrowser, mockNewContext, mockNewPage, mockGoto, mockContent, mock
     return { mockGetBrowser, mockNewContext, mockNewPage, mockGoto, mockContent, mockClose };
   });
 
-vi.mock("@norish/api/obscura", () => ({ getBrowser: mockGetBrowser }));
+vi.mock("@norish/api/parser/browser-connections", () => ({ getBrowser: mockGetBrowser }));
+
+let renderers: PageRenderersConfig;
+
+vi.mock("@norish/shared-server/config/server-config-loader", () => ({
+  getPageRenderersConfig: async () => renderers,
+}));
 
 vi.mock("@norish/shared-server/logger", () => ({
   parserLogger: { debug: vi.fn(), warn: vi.fn(), info: vi.fn(), error: vi.fn() },
@@ -78,10 +84,16 @@ function makeToken(
 }
 
 beforeEach(() => {
-  vi.clearAllMocks();
-
+  renderers = {
+    obscura: { enabled: true, endpoint: "ws://obscura:9222", cdpToken: "cdp-token" },
+    chromium: { enabled: false, endpoint: "" },
+    solver: { enabled: false },
+    allowPrivateAddresses: false,
+    navigationTimeoutMs: 30_000,
+  };
+  mockGetBrowser.mockClear();
   mockGoto.mockResolvedValue(undefined);
-  mockContent.mockResolvedValue("<html>rendered</html>");
+  mockContent.mockResolvedValue("<html><head><title>Rendered</title></head></html>");
   mockClose.mockResolvedValue(undefined);
   responseListeners = [];
   mockNewPage.mockResolvedValue({
@@ -94,16 +106,32 @@ beforeEach(() => {
   });
   mockNewContext.mockImplementation(async () => ({
     addCookies: vi.fn(),
+    newCDPSession: vi.fn().mockResolvedValue({
+      send: vi.fn(async (_method: string, params: { scopeDomain?: string }) => ({
+        scopeDomain: params.scopeDomain,
+      })),
+    }),
     newPage: mockNewPage,
     close: mockClose,
   }));
   mockGetBrowser.mockResolvedValue({ newContext: mockNewContext });
 });
 
+afterEach(() => vi.useRealTimers());
+
 describe("fetchRenderedPage – rendered-page contract", () => {
+  it("never hands the browser a link that is not a web page", async () => {
+    mockGetBrowser.mockClear();
+    for (const url of ["file:///etc/passwd", "gopher://127.0.0.1:6379/_x", "not a link"]) {
+      await expect(renderPage(url), url).resolves.toEqual({ html: "", status: null });
+    }
+
+    expect(mockGetBrowser).not.toHaveBeenCalled();
+  });
+
   it("returns the HTML Obscura rendered", async () => {
     await expect(fetchRenderedPage("https://example.com/recipe")).resolves.toBe(
-      "<html>rendered</html>"
+      "<html><head><title>Rendered</title></head></html>"
     );
   });
 
@@ -116,6 +144,8 @@ describe("fetchRenderedPage – rendered-page contract", () => {
   });
 
   it("navigates once, under one bounded deadline", async () => {
+    // Held still, so none of the deadline is used up on the way to the navigation.
+    vi.useFakeTimers({ toFake: ["Date"] });
     await fetchRenderedPage("https://example.com/recipe");
 
     expect(mockGoto).toHaveBeenCalledOnce();
@@ -123,7 +153,29 @@ describe("fetchRenderedPage – rendered-page contract", () => {
     const [url, options] = mockGoto.mock.calls[0] as [string, { timeout?: number }];
 
     expect(url).toBe("https://example.com/recipe");
-    expect(options.timeout).toBe(SERVER_CONFIG.OBSCURA_NAVIGATION_TIMEOUT_MS);
+    expect(options.timeout).toBe(30_000);
+  });
+
+  it("dials the Obscura endpoint and token the administrator saved", async () => {
+    vi.useFakeTimers({ toFake: ["Date"] });
+    await fetchRenderedPage("https://example.com/recipe");
+
+    expect(mockGetBrowser).toHaveBeenCalledWith(
+      "obscura",
+      "ws://obscura:9222",
+      "cdp-token",
+      30_000
+    );
+  });
+
+  it("reports no HTML without dialling Obscura when it is switched off", async () => {
+    renderers.obscura.enabled = false;
+
+    await expect(renderPage("https://example.com/recipe")).resolves.toEqual({
+      html: "",
+      status: null,
+    });
+    expect(mockGetBrowser).not.toHaveBeenCalled();
   });
 
   it("supplies no browser identity of its own", async () => {
@@ -135,12 +187,14 @@ describe("fetchRenderedPage – rendered-page contract", () => {
     expect(contextOptions()).toEqual({});
   });
 
-  it("adds no referer, client hints or fetch metadata alongside a user's headers", async () => {
-    await fetchRenderedPage("https://example.com/recipe", [
-      makeToken({ name: "Authorization", value: "Bearer abc123", type: "header" }),
-    ]);
+  it("configures the context with nothing, header tokens included: they go to the page only", async () => {
+    await expect(
+      fetchRenderedPage("https://example.com/recipe", [
+        makeToken({ name: "Authorization", value: "Bearer abc123", type: "header" }),
+      ])
+    ).resolves.toBe("<html><head><title>Rendered</title></head></html>");
 
-    expect(contextOptions()).toEqual({ extraHTTPHeaders: { Authorization: "Bearer abc123" } });
+    expect(contextOptions()).toEqual({});
   });
 
   it("reads the page once when the caller has no reading of its own", async () => {
@@ -152,25 +206,25 @@ describe("fetchRenderedPage – rendered-page contract", () => {
   it("waits for a page that answered with a bot check to become itself", async () => {
     mockContent
       .mockResolvedValueOnce("<html>a bot check</html>")
-      .mockResolvedValue("<html>the shop</html>");
+      .mockResolvedValue("<html><head><title>the shop</title></head></html>");
 
     await expect(
       fetchRenderedPage("https://example.com/zoeken", undefined, (html) =>
         html.includes("the shop")
       )
-    ).resolves.toBe("<html>the shop</html>");
+    ).resolves.toBe("<html><head><title>the shop</title></head></html>");
   });
 
   it("counts a page it cannot read mid-navigation as one still becoming itself", async () => {
     mockContent
       .mockRejectedValueOnce(new Error("the page is navigating and changing the content"))
-      .mockResolvedValue("<html>the shop</html>");
+      .mockResolvedValue("<html><head><title>the shop</title></head></html>");
 
     await expect(
       fetchRenderedPage("https://example.com/zoeken", undefined, (html) =>
         html.includes("the shop")
       )
-    ).resolves.toBe("<html>the shop</html>");
+    ).resolves.toBe("<html><head><title>the shop</title></head></html>");
   });
 
   it("closes the context when navigation fails, and reports no HTML", async () => {
@@ -181,7 +235,7 @@ describe("fetchRenderedPage – rendered-page contract", () => {
   });
 
   it("reports no HTML when Obscura is unreachable", async () => {
-    mockGetBrowser.mockRejectedValue(new Error("Obscura is not available."));
+    mockGetBrowser.mockResolvedValue(null);
 
     await expect(fetchRenderedPage("https://example.com/recipe")).resolves.toBe("");
     expect(mockNewContext).not.toHaveBeenCalled();
@@ -191,22 +245,22 @@ describe("fetchRenderedPage – rendered-page contract", () => {
     mockClose.mockRejectedValue(new Error("context already gone"));
 
     await expect(fetchRenderedPage("https://example.com/recipe")).resolves.toBe(
-      "<html>rendered</html>"
+      "<html><head><title>Rendered</title></head></html>"
     );
   });
 });
 
 describe("renderPage – the status a site answered with", () => {
-  it("reports the status the document arrived with", async () => {
+  it("reports a refused document's status, with no HTML", async () => {
     mockGoto.mockResolvedValue(fakeResponse(403));
 
     await expect(renderPage("https://example.com/recipe")).resolves.toEqual({
-      html: "<html>rendered</html>",
+      html: "",
       status: 403,
     });
   });
 
-  it("reports the real page's status when a bot check answers 403 first", async () => {
+  it("reads the real page when a bot check answers 403 first", async () => {
     mockGoto.mockImplementation(async () => {
       emitResponse(fakeResponse(403));
       emitResponse(fakeResponse(200));
@@ -214,7 +268,8 @@ describe("renderPage – the status a site answered with", () => {
       return fakeResponse(403);
     });
 
-    await expect(renderPage("https://example.com/recipe")).resolves.toMatchObject({
+    await expect(renderPage("https://example.com/recipe")).resolves.toEqual({
+      html: "<html><head><title>Rendered</title></head></html>",
       status: 200,
     });
   });

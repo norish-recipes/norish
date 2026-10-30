@@ -7,8 +7,12 @@ import sharp from "sharp";
 import { v5 as uuidv5 } from "uuid";
 
 import { SERVER_CONFIG } from "@norish/config/env-config-server";
-import { getMaxVideoFileSize } from "@norish/shared-server/config/server-config-loader";
+import {
+  getMaxVideoFileSize,
+  getPageRenderersConfig,
+} from "@norish/shared-server/config/server-config-loader";
 import { serverLogger as log } from "@norish/shared-server/logger";
+import { guardedFetch } from "@norish/shared-server/private-addresses";
 
 // TODO: This file needs a lot of cleaning up
 // Lots of AI generated code to get heic-convert working.
@@ -103,7 +107,7 @@ function extFromBuffer(buf: Buffer): string | undefined {
     buf[6] === 0x79 &&
     buf[7] === 0x70
   ) {
-    const brand = buf.slice(8, 12).toString("ascii");
+    const brand = buf.subarray(8, 12).toString("ascii");
 
     if (brand === "avif") return ".avif";
     if (
@@ -232,26 +236,6 @@ async function convertToJpeg(
 
     log.error({ err: e, sourceExt }, "Conversion failed");
     throw new Error(`Failed to convert ${sourceExt} to JPEG: ${errorMsg}`, { cause: e });
-  }
-}
-
-// --- Fetch with timeout ---
-async function fetchWithTimeout(url: string, timeoutMs: number = FETCH_TIMEOUT): Promise<Response> {
-  const controller = new AbortController();
-  const timeoutId = setTimeout(() => controller.abort(), timeoutMs);
-
-  try {
-    const response = await fetch(url, { signal: controller.signal });
-
-    clearTimeout(timeoutId);
-
-    return response;
-  } catch (e) {
-    clearTimeout(timeoutId);
-    if (e instanceof Error && e.name === "AbortError") {
-      throw new Error(`Request timeout after ${timeoutMs}ms`, { cause: e });
-    }
-    throw e;
   }
 }
 
@@ -433,7 +417,13 @@ export async function downloadImage(url: string, recipeId: string): Promise<stri
     throw new Error(`Invalid URL: ${url}`);
   }
 
-  const res = await fetchWithTimeout(url);
+  // The URL comes from an imported page, so it reaches only what a page fetch may.
+  const { allowPrivateAddresses } = await getPageRenderersConfig();
+  const res = await guardedFetch(
+    url,
+    { signal: AbortSignal.timeout(FETCH_TIMEOUT) },
+    allowPrivateAddresses
+  );
 
   if (!res.ok || !res.body) {
     throw new Error(`Failed to download image: ${res.status} ${res.statusText}`);
@@ -1080,7 +1070,7 @@ function extFromVideoBuffer(buf: Buffer): string | undefined {
     buf[6] === 0x79 &&
     buf[7] === 0x70
   ) {
-    const brand = buf.slice(8, 12).toString("ascii");
+    const brand = buf.subarray(8, 12).toString("ascii");
 
     // Common MP4 brands
     if (

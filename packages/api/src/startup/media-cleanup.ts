@@ -118,12 +118,8 @@ export async function cleanupOrphanedImages(): Promise<{ deleted: number; errors
 
     const mediaReferences = await listAllRecipeMediaReferences();
 
-    const existingRecipeIds = new Set(mediaReferences.recipes.map((recipe) => recipe.id));
+    const existingRecipeIds = new Set(mediaReferences.recipeIds);
     const referencedRootFiles = new Map<string, Set<string>>();
-
-    for (const recipe of mediaReferences.recipes) {
-      registerRootMediaReference(referencedRootFiles, recipe.image);
-    }
 
     for (const imageUrl of mediaReferences.galleryImageUrls) {
       registerRootMediaReference(referencedRootFiles, imageUrl);

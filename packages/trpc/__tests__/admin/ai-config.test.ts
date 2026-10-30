@@ -73,7 +73,6 @@ const ALL_ON = {
 };
 
 beforeEach(() => {
-  vi.clearAllMocks();
   isUserServerAdmin.mockImplementation((userId: string) =>
     Promise.resolve(userId === createMockAdminUser().id)
   );

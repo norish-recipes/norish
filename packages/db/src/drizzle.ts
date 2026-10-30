@@ -36,12 +36,20 @@ export type DbTransaction = Parameters<
   Parameters<NodePgDatabase<typeof schema>["transaction"]>[0]
 >[0];
 
+/** The connection a caller is already inside, or the shared one. */
+export type Db = typeof db | DbTransaction;
+
 /**
  * Run repository operations inside a single database transaction without
  * exposing the raw client to callers outside the db package.
  */
 export async function withTransaction<T>(fn: (tx: DbTransaction) => Promise<T>): Promise<T> {
   return await db.transaction(fn);
+}
+
+/** Hold an advisory lock on `key` until the transaction ends; a second holder waits for it. */
+export async function holdLock(tx: DbTransaction, key: string): Promise<void> {
+  await tx.execute(sql`select pg_advisory_xact_lock(hashtext(${key}::text))`);
 }
 
 /**

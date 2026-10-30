@@ -40,7 +40,8 @@ export interface NutritionFoodRef {
  * - `fix`: a dataset food Norish chose for this food (its fix list);
  * - `code`: the dataset food the taxonomy's code for this food names;
  * - `name`: a dataset food matched by name when the build script ran;
- * - `taxonomy`: Open Food Facts' own piece weight or density.
+ * - `taxonomy`: Open Food Facts' own piece weight or density;
+ * - `ai`: AI's estimate, where the food had none of its own (Fill Gaps).
  */
 export type NutritionSource =
   | { kind: "household" }
@@ -48,7 +49,8 @@ export type NutritionSource =
   | { kind: "fix"; food: NutritionFoodRef }
   | { kind: "code"; food: NutritionFoodRef }
   | { kind: "name"; food: NutritionFoodRef }
-  | { kind: "taxonomy" };
+  | { kind: "taxonomy" }
+  | { kind: "ai" };
 
 /** A dataset food as a correction's search offers it: what it is, its calories, its portions. */
 export interface NutritionFoodSummary extends NutritionFoodRef {
@@ -81,10 +83,11 @@ export interface IngredientNutrition {
   density: NutritionFact<number> | null;
 }
 
-/** Which dataset a fact credits, or null for the household's own numbers. */
+/** Which dataset a fact credits, or null for the household's own numbers and AI's estimate. */
 export function creditOf(source: NutritionSource): NutritionCredit | null {
   switch (source.kind) {
     case "household":
+    case "ai":
       return null;
     case "taxonomy":
       return "off";

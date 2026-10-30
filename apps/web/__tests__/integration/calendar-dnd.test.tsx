@@ -122,7 +122,6 @@ describe("Calendar DnD Integration", () => {
   let queryClient: ReturnType<typeof createTestQueryClient>;
 
   beforeEach(() => {
-    vi.clearAllMocks();
     queryClient = createTestQueryClient();
     mockPlannedItemsByDate = {};
   });

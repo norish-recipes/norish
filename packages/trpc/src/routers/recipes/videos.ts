@@ -1,5 +1,4 @@
 import path from "path";
-import { z } from "zod";
 
 import {
   addRecipeVideos,
@@ -18,6 +17,7 @@ import type { FormDataInput, UploadedFile } from "../../form-data";
 import { formDataInputSchema, getUploadedFile } from "../../form-data";
 import { authedProcedure } from "../../middleware";
 import { router } from "../../trpc";
+import { assertRecipeAccess, mediaRecipeId } from "./helpers";
 
 // --- Shared Helpers ---
 
@@ -66,7 +66,7 @@ async function extractAndValidateVideo(formData: FormDataInput): Promise<VideoVa
 const uploadGalleryVideo = authedProcedure
   .input(formDataInputSchema)
   .mutation(async ({ ctx, input }) => {
-    const recipeId = input.get("recipeId") as string | null;
+    const recipeId = mediaRecipeId(input.get("recipeId"));
     const orderStr = input.get("order") as string | null;
     const durationStr = input.get("duration") as string | null;
 
@@ -75,6 +75,9 @@ const uploadGalleryVideo = authedProcedure
     if (!recipeId) {
       return { success: false, error: "Recipe ID is required" };
     }
+
+    // A recipe not stored yet (the new-recipe form uploads first) is the caller's own.
+    await assertRecipeAccess(ctx, recipeId, "edit");
 
     // Check max videos limit
     const currentCount = await countRecipeVideos(recipeId);
@@ -169,14 +172,15 @@ const deleteGalleryVideo = authedProcedure
   .mutation(async ({ ctx, input }) => {
     log.debug({ userId: ctx.user.id, videoId: input.videoId }, "Deleting gallery video");
 
+    const videoRecord = await getRecipeVideoById(input.videoId);
+
+    if (!videoRecord) {
+      return { success: false, error: "Video not found" };
+    }
+
+    await assertRecipeAccess(ctx, videoRecord.recipeId, "edit");
+
     try {
-      // Get video record to get the URL
-      const videoRecord = await getRecipeVideoById(input.videoId);
-
-      if (!videoRecord) {
-        return { success: false, error: "Video not found" };
-      }
-
       // Delete from filesystem
       try {
         await deleteVideoByUrl(videoRecord.video);

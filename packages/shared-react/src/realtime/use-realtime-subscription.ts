@@ -8,12 +8,17 @@
  * link on reconnect without this hook knowing.
  *
  * One reaction to a subscription that fell out of order (`REALTIME_LAGGED`):
- * refetch the domain — `onLag`, or invalidate `lagQueryKeys` — and start a
- * fresh subscription with no cursor. Anything that is neither a Cursor Mark
- * nor an envelope is a programming error, not a case to tolerate.
+ * start a fresh subscription with no cursor, and refetch the domain —
+ * `onLag`, or invalidate `lagQueryKeys` — once its Cursor Mark says it is
+ * live. The server registers the subscription before it sends that mark, so
+ * every event from then on reaches the subscription and every one before it
+ * is in the refetch; refetching at the lag instead left a gap between the
+ * two, in which an event reached neither. Anything that is neither a Cursor
+ * Mark nor an envelope is a programming error, not a case to tolerate.
  */
 
 import type { QueryKey } from "@tanstack/react-query";
+import { useRef } from "react";
 import { useQueryClient } from "@tanstack/react-query";
 import { TRPCClientError } from "@trpc/client";
 import { useSubscription } from "@trpc/tanstack-react-query";
@@ -80,6 +85,20 @@ export function useRealtimeSubscription<P>(
   handlers: RealtimeSubscriptionHandlers<P>
 ) {
   const queryClient = useQueryClient();
+  // A lag the fresh subscription has yet to catch up on.
+  const catchUpPending = useRef(false);
+
+  const catchUp = () => {
+    if (handlers.onLag) {
+      handlers.onLag();
+
+      return;
+    }
+
+    for (const queryKey of handlers.lagQueryKeys ?? []) {
+      void queryClient.invalidateQueries({ queryKey });
+    }
+  };
 
   // tRPC reads `"enabled" in opts`, not its value: a key that is present but
   // undefined disables the subscription. Only a stated choice is passed on.
@@ -93,8 +112,16 @@ export function useRealtimeSubscription<P>(
 
       const item = data.data;
 
-      // A Cursor Mark carries no event: the transport tracks it, handlers never see it.
-      if (isCursorMark(item)) return;
+      // A Cursor Mark carries no event: the transport tracks it, handlers never
+      // see it. It does say the subscription is live, which a lag waits for.
+      if (isCursorMark(item)) {
+        if (catchUpPending.current) {
+          catchUpPending.current = false;
+          catchUp();
+        }
+
+        return;
+      }
 
       assertEventEnvelope<P>(item);
       handlers.onEvent(item.payload, item.meta);
@@ -102,15 +129,8 @@ export function useRealtimeSubscription<P>(
     onError: (err) => {
       if (!isRealtimeLagged(err)) return;
 
-      if (handlers.onLag) {
-        handlers.onLag();
-      } else {
-        for (const queryKey of handlers.lagQueryKeys ?? []) {
-          void queryClient.invalidateQueries({ queryKey });
-        }
-      }
-
-      // A fresh subscription, no cursor: the refetch above is the catch-up.
+      // A fresh subscription, no cursor; the refetch follows its Cursor Mark.
+      catchUpPending.current = true;
       subscription.reset();
     },
   });

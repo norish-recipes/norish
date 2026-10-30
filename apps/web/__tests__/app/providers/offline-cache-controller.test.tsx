@@ -74,7 +74,7 @@ const liveProbes = vi.hoisted(() => {
     },
   };
 });
-const createRecovery = vi.hoisted(() => vi.fn(() => recovery));
+const createRecovery = vi.hoisted(() => vi.fn((_deps: { owner: () => string | null }) => recovery));
 
 let user: { id: string } | null = null;
 let connectivity = { isLive: true, isOffline: false };
@@ -103,7 +103,7 @@ vi.mock("@/lib/query-cache", () => ({
   },
 }));
 vi.mock("@/hooks/use-warm-set", () => ({
-  useWarmSet: () => ({ topUp: warmSetTopUp, inspect: vi.fn(), promoteCreatedRecipe: vi.fn() }),
+  useWarmSet: () => ({ topUp: warmSetTopUp, inspect: vi.fn() }),
 }));
 vi.mock("@/lib/outbox", () => ({
   outboxStore: outbox.store,
@@ -111,12 +111,12 @@ vi.mock("@/lib/outbox", () => ({
 }));
 vi.mock("@/lib/outbox/recovery", () => ({ createRecovery }));
 
-function renderController() {
+function renderController(seededUserId?: string) {
   const queryClient = new QueryClient();
 
   const result = render(
     <QueryClientProvider client={queryClient}>
-      <OfflineCacheController>
+      <OfflineCacheController seededUserId={seededUserId}>
         <div>child</div>
       </OfflineCacheController>
     </QueryClientProvider>
@@ -167,6 +167,46 @@ describe("OfflineCacheController", () => {
         isOffline: false,
       })
     );
+  });
+
+  it("restores from the layout's seeded id without waiting for the session", async () => {
+    user = null;
+    renderController("u1");
+
+    await waitFor(() =>
+      expect(cache.reconcileIdentity).toHaveBeenCalledWith({
+        sessionUserId: "u1",
+        isOffline: false,
+      })
+    );
+    expect(cache.reconcileIdentity).not.toHaveBeenCalledWith(
+      expect.objectContaining({ sessionUserId: null })
+    );
+  });
+
+  it("switches away from a previous owner when the seeded id differs", async () => {
+    let finishSwitch: (() => void) | undefined;
+
+    cache.state.owner = "u0";
+    cache.reconcileIdentity.mockImplementationOnce(
+      () =>
+        new Promise<void>((resolve) => {
+          finishSwitch = () => {
+            cache.publish("u1");
+            resolve();
+          };
+        })
+    );
+    renderController("u1");
+
+    // The departed owner's reads are purged inside reconcileIdentity; until it
+    // settles, nothing renders against their cache.
+    expect(cache.reconcileIdentity).toHaveBeenCalledWith({ sessionUserId: "u1", isOffline: false });
+    expect(screen.queryByText("child")).not.toBeInTheDocument();
+
+    finishSwitch?.();
+
+    await screen.findByText("child");
   });
 
   it("keeps children mounted through a cold start while the owner is still restoring", async () => {
@@ -235,7 +275,7 @@ describe("OfflineCacheController", () => {
     renderController();
 
     await waitFor(() => expect(createRecovery).toHaveBeenCalled());
-    const resolver = createRecovery.mock.calls.at(-1)?.[0].owner as () => string | null;
+    const resolver = createRecovery.mock.lastCall![0].owner;
 
     expect(resolver()).toBe("u1");
   });

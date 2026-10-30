@@ -1,6 +1,6 @@
 {
   "name": "@norish/shared-react",
-  "version": "0.25.1-beta",
+  "version": "0.26.0-beta",
   "private": true,
   "type": "module",
   "exports": {
@@ -15,6 +15,8 @@
     "./hooks/recipes/recipe": "./src/hooks/recipes/recipe/index.ts",
     "./hooks/use-user": "./src/hooks/use-user.ts",
     "./contexts": "./src/contexts/index.ts",
+    "./filter-contract": "./src/contexts/recipes/filter-contract.ts",
+    "./list-queries": "./src/contexts/recipes/list-queries.ts",
     "./providers": "./src/providers/index.ts",
     "./realtime": "./src/realtime/index.ts"
   },
@@ -22,7 +24,7 @@
     "build": "rm -rf dist && pnpm exec tsc -p tsconfig.json --noCheck",
     "lint": "eslint --flag unstable_native_nodejs_ts_config",
     "format": "prettier --check . --ignore-path ../../.gitignore",
-    "typecheck": "pnpm exec tsc --noEmit --noCheck",
+    "typecheck": "pnpm exec tsc --noEmit",
     "clean": "git clean -xdf .cache .turbo node_modules dist",
     "test": "vitest run --config ./vitest.config.ts"
   },
@@ -42,11 +44,15 @@
     "@norish/eslint-config": "workspace:*",
     "@norish/prettier-config": "workspace:*",
     "@norish/tsconfig": "workspace:*",
+    "@testing-library/react": "^16.3.3",
     "@types/node": "catalog:",
     "@types/react": "catalog:",
     "eslint": "catalog:",
     "jsdom": "catalog:",
     "prettier": "catalog:",
+    "react-dom": "catalog:",
+    "typescript": "catalog:",
+    "vite": "catalog:",
     "vitest": "catalog:"
   },
   "prettier": "@norish/prettier-config"

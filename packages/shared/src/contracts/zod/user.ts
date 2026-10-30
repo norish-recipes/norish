@@ -35,6 +35,8 @@ export const UserPreferencesSchema = z.object({
   measurementSystem: z.enum(MEASUREMENT_SYSTEM_CHOICES).optional().catch(undefined),
   phone: DevicePreferencesSchema.optional().catch(undefined),
   desktop: DevicePreferencesSchema.optional().catch(undefined),
+  /** When the person cleared Changed by AI: what was settled by then is no longer listed to them. */
+  aiChangesClearedAt: z.coerce.date().optional().catch(undefined),
 });
 
 export type UserPreferencesDto = z.infer<typeof UserPreferencesSchema>;

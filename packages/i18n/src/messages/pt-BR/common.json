@@ -29,7 +29,6 @@
     "goHome": "Ir para o início",
     "test": "Testar",
     "format": "Formatar",
-    "restoreDefaults": "Restaurar padrões",
     "saveChanges": "Salvar alterações"
   },
   "secret": {
@@ -58,6 +57,8 @@
     "searchTags": "Buscar tags",
     "favoritesAndRating": "Favoritos e avaliação",
     "favorites": "Favoritos",
+    "pantry": "Despensa",
+    "pantryOnly": "Ingredientes em casa",
     "cookingTime": "Tempo de preparo",
     "cookingTimeUnder15": "<15 min",
     "cookingTimeUnder30": "<30 min",
@@ -101,7 +102,7 @@
     "serverUnreachableBanner": "Não foi possível acessar o servidor Norish, mostrando dados em cache",
     "live": "Conectado",
     "offline": "Offline",
-    "openDetails": "Connection details"
+    "openDetails": "Detalhes da conexão"
   },
   "language": {
     "title": "Idioma"
@@ -111,6 +112,11 @@
     "title": "A Nora está confusa.",
     "message": "Ela está farejando por aí para descobrir aonde você queria ir.",
     "imageAlt": "Nora com cara de confusa"
+  },
+  "errorPage": {
+    "title": "Algo deu errado.",
+    "message": "O Norish encontrou um erro nesta página.",
+    "retry": "Tentar novamente"
   },
   "import": {
     "url": {
@@ -139,7 +145,7 @@
       "title": "Importar de imagem",
       "dropzone": "Solte imagens aqui ou clique para procurar",
       "paste": "para colar",
-      "formats": "Compatível com JPG, PNG, WebP. Máx. 10 MB por arquivo.",
+      "formats": "Compatível com JPG, PNG, WebP, PDF. Máx. 10 MB por arquivo.",
       "invalidType": "Tipo de arquivo inválido",
       "notSupported": "{name} não é um formato de imagem compatível",
       "tooLarge": "Arquivo muito grande",
@@ -178,12 +184,15 @@
     "daily": "Diário",
     "weekly": "Semanal",
     "monthly": "Mensal",
+    "yearly": "Anual",
     "day": "dia",
     "days": "dias",
     "week": "semana",
     "weeks": "semanas",
     "month": "mês",
     "months": "meses",
+    "year": "ano",
+    "years": "anos",
     "next": "Próximo:",
     "every": "A cada",
     "everyOther": "A cada dois",
@@ -225,55 +234,55 @@
     "notifications_disabled_hint": "Ative as notificações nas configurações do navegador para receber alertas quando os temporizadores terminarem em segundo plano."
   },
   "offlineStatus": {
-    "title": "Connection & offline",
+    "title": "Conexão e modo offline",
     "connection": {
-      "heading": "Connection",
-      "live": "Live",
+      "heading": "Conexão",
+      "live": "Conectado",
       "offline": "Offline",
-      "forced": "Offline (forced)",
-      "liveDescription": "Connected to Norish. Changes sync as you make them.",
-      "offlineDescription": "Can't reach Norish. Showing cached data; changes are queued and sync when you're back.",
-      "forcedDescription": "Offline is forced for development. The backend is reachable but every request is blocked.",
+      "forced": "Offline (forçado)",
+      "liveDescription": "Conectado ao Norish. As alterações são sincronizadas conforme você as faz.",
+      "offlineDescription": "Não foi possível acessar o Norish. Mostrando dados em cache; as alterações ficam na fila e são sincronizadas quando você voltar.",
+      "forcedDescription": "O modo offline está forçado para desenvolvimento. O backend está acessível, mas todas as requisições são bloqueadas.",
       "devBadge": "dev"
     },
     "cache": {
-      "heading": "Offline cache",
-      "recipes": "Recipes",
+      "heading": "Cache offline",
+      "recipes": "Receitas",
       "cookbooks": "Livros de receitas",
-      "groceries": "Groceries",
-      "stores": "Stores",
-      "planned": "This week",
-      "dataAge": "Data from {when}",
-      "dataAgeUnknown": "Not warmed yet",
-      "wipe": "Clear cached data",
-      "wipeConfirmBody": "Remove the offline copy of your recipes, groceries, stores and plan? Your queued changes are kept.",
-      "wipeConfirmOfflineBody": "You're offline — clearing now leaves nothing to show until you reconnect. Your queued changes are kept.",
-      "wipeConfirm": "Clear",
-      "wipeCancel": "Keep"
+      "groceries": "Compras",
+      "stores": "Lojas",
+      "planned": "Esta semana",
+      "dataAge": "Dados de {when}",
+      "dataAgeUnknown": "Ainda não carregado",
+      "wipe": "Limpar dados em cache",
+      "wipeConfirmBody": "Remover a cópia offline das suas receitas, compras, lojas e planejamento? Suas alterações na fila serão mantidas.",
+      "wipeConfirmOfflineBody": "Você está offline — se limpar agora, não haverá nada para mostrar até você se reconectar. Suas alterações na fila serão mantidas.",
+      "wipeConfirm": "Limpar",
+      "wipeCancel": "Manter"
     },
     "outbox": {
-      "heading": "Queued changes",
-      "empty": "Nothing queued — everything's synced.",
-      "pending": "{count, plural, =0 {No changes waiting} one {# change waiting} other {# changes waiting}}",
-      "syncing": "{count, plural, =0 {Syncing} one {Syncing # change} other {Syncing # changes}}",
-      "syncNow": "Sync now",
-      "retryAll": "Retry all",
-      "discardAll": "Discard all",
-      "discardConfirmBody": "{count, plural, one {Permanently discard # queued change? It won't be sent.} other {Permanently discard # queued changes? They won't be sent.}}",
-      "discardConfirm": "Discard",
-      "discardCancel": "Keep",
+      "heading": "Alterações na fila",
+      "empty": "Nada na fila — tudo sincronizado.",
+      "pending": "{count, plural, =0 {Nenhuma alteração aguardando} one {# alteração aguardando} other {# alterações aguardando}}",
+      "syncing": "{count, plural, =0 {Sincronizando} one {Sincronizando # alteração} other {Sincronizando # alterações}}",
+      "syncNow": "Sincronizar agora",
+      "retryAll": "Tentar todas novamente",
+      "discardAll": "Descartar todas",
+      "discardConfirmBody": "{count, plural, one {Descartar permanentemente # alteração na fila? Ela não será enviada.} other {Descartar permanentemente # alterações na fila? Elas não serão enviadas.}}",
+      "discardConfirm": "Descartar",
+      "discardCancel": "Manter",
       "status": {
-        "pending": "Syncing",
-        "parked": "Needs attention",
-        "conflicted": "Conflict"
+        "pending": "Sincronizando",
+        "parked": "Requer atenção",
+        "conflicted": "Conflito"
       }
     },
     "devToggle": {
-      "heading": "Developer",
-      "force": "Force offline",
-      "description": "Blocks the backend transport to exercise the offline runtime. Dev builds only.",
-      "on": "On",
-      "off": "Off"
+      "heading": "Desenvolvedor",
+      "force": "Forçar modo offline",
+      "description": "Bloqueia a comunicação com o backend para testar o funcionamento offline. Apenas em builds de desenvolvimento.",
+      "on": "Ligado",
+      "off": "Desligado"
     }
   },
   "offlineFallback": {

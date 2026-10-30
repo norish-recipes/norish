@@ -13,6 +13,7 @@ import BulkEnrichmentForm from "./bulk-enrichment-form";
 import CuisineVocabularyForm from "./cuisine-vocabulary-form";
 import DecisionModelForm from "./decision-model-form";
 import ImageGenerationForm from "./image-generation-form";
+import IngredientCatalogueForm from "./ingredient-catalogue-form";
 import PromptsForm from "./prompts-form";
 import { UnsavedChangesChip } from "./unsaved-changes-chip";
 import VideoProcessingForm from "./video-processing-form";
@@ -26,6 +27,7 @@ export default function AIProcessingCard() {
     imageGeneration: false,
     decisionModel: false,
     prompts: false,
+    ingredientCatalogue: false,
   });
 
   const updateDirtySection = useCallback(
@@ -175,6 +177,26 @@ export default function AIProcessingCard() {
           <Accordion.Panel>
             <Accordion.Body>
               <BulkEnrichmentForm />
+            </Accordion.Body>
+          </Accordion.Panel>
+        </Accordion.Item>
+
+        <Accordion.Item id="ingredientCatalogue">
+          <Accordion.Heading>
+            <Accordion.Trigger>
+              <div className="flex min-w-0 flex-col items-start gap-1">
+                <div className="flex flex-wrap items-center gap-2">
+                  {t("ingredientCatalogue.title")}
+                  {dirtySections.ingredientCatalogue && <UnsavedChangesChip />}
+                </div>
+                <span className="text-muted text-sm">{t("ingredientCatalogue.subtitle")}</span>
+              </div>
+              <Accordion.Indicator />
+            </Accordion.Trigger>
+          </Accordion.Heading>
+          <Accordion.Panel>
+            <Accordion.Body>
+              <IngredientCatalogueForm onDirtyChange={updateDirtySection("ingredientCatalogue")} />
             </Accordion.Body>
           </Accordion.Panel>
         </Accordion.Item>

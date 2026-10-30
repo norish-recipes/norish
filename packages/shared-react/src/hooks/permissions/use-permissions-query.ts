@@ -9,6 +9,8 @@ import { useRealtimeSubscription } from "../../realtime/use-realtime-subscriptio
 
 export function createUsePermissionsQuery({ useTRPC }: CreatePermissionsHooksOptions) {
   return function usePermissionsQuery() {
+    "use memo";
+
     const trpc = useTRPC();
     const queryClient = useQueryClient();
 

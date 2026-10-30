@@ -24,6 +24,8 @@ export function createUseAmountDisplayPreference({
     setMode: (mode: AmountDisplayMode) => void;
     toggleMode: () => void;
   } {
+    "use memo";
+
     const [mode, setModeInternal] = useStorage<AmountDisplayMode>(
       "norish:amount-display-mode",
       DEFAULT_MODE,

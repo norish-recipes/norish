@@ -7,20 +7,27 @@ import type { RealtimeEventEnvelope } from "@norish/shared/contracts/realtime/en
 const createSubscriberClient = vi.fn();
 const logged = { warn: vi.fn(), error: vi.fn(), info: vi.fn(), debug: vi.fn(), trace: vi.fn() };
 
-vi.mock("@norish/shared-server/redis/client", () => ({ createSubscriberClient }));
+vi.mock("@norish/shared-server/valkey/client", () => ({ createSubscriberClient }));
 
 vi.mock("@norish/shared-server/logger", () => ({
   createLogger: () => logged,
 }));
 
-const { getRealtimeHub, RealtimeLaggedError, startRealtimeHub, stopRealtimeHub } =
-  await import("../../src/realtime/hub");
+const {
+  getRealtimeHub,
+  HEARTBEAT_INTERVAL_MS,
+  RealtimeLaggedError,
+  startRealtimeHub,
+  stopRealtimeHub,
+} = await import("../../src/realtime/hub");
 
-/** A Redis subscriber connection: an EventEmitter that records SUBSCRIBE / UNSUBSCRIBE. */
+/** A Valkey subscriber connection: an EventEmitter that records SUBSCRIBE / UNSUBSCRIBE. */
 class FakeSubscriber extends EventEmitter {
   readonly subscribed = new Set<string>();
   readonly calls: string[] = [];
-  quit = vi.fn(async () => "OK");
+  status = "ready";
+  disconnect = vi.fn();
+  ping = vi.fn(async () => "PONG");
   unsubscribe = vi.fn(async (channel?: string) => {
     this.calls.push(`unsubscribe:${channel ?? "*"}`);
 
@@ -66,7 +73,6 @@ async function settle() {
 let subscriber: FakeSubscriber;
 
 beforeEach(() => {
-  vi.clearAllMocks();
   subscriber = new FakeSubscriber();
   createSubscriberClient.mockResolvedValue(subscriber);
 });
@@ -107,7 +113,7 @@ describe("start and stop", () => {
     expect(getRealtimeHub()).toBe(getRealtimeHub());
   });
 
-  it("ends every iterable cleanly, unsubscribes everything and quits on stop", async () => {
+  it("ends every iterable cleanly and disconnects on stop, without an UNSUBSCRIBE a dead socket would never answer", async () => {
     await startRealtimeHub();
 
     const iterator = getRealtimeHub().subscribe(CHANNEL)[Symbol.asyncIterator]();
@@ -117,9 +123,37 @@ describe("start and stop", () => {
     await stopRealtimeHub();
 
     await expect(pending).resolves.toEqual({ value: undefined, done: true });
-    expect(subscriber.unsubscribe).toHaveBeenCalledWith();
-    expect(subscriber.quit).toHaveBeenCalledOnce();
+    expect(subscriber.unsubscribe).not.toHaveBeenCalled();
+    expect(subscriber.disconnect).toHaveBeenCalledOnce();
     expect(getRealtimeHub().stats()).toEqual({ channels: 0, listeners: 0, dropped: 0 });
+  });
+});
+
+describe("heartbeat", () => {
+  beforeEach(() => {
+    vi.useFakeTimers({ toFake: ["setInterval", "clearInterval"] });
+  });
+
+  afterEach(() => {
+    vi.useRealTimers();
+  });
+
+  it("pings every fifteen seconds while connected, and stops on stop", async () => {
+    await startRealtimeHub();
+
+    vi.advanceTimersByTime(HEARTBEAT_INTERVAL_MS);
+    expect(HEARTBEAT_INTERVAL_MS).toBe(15_000);
+    expect(subscriber.ping).toHaveBeenCalledOnce();
+
+    // Not while reconnecting: the PING would only queue up behind the outage.
+    subscriber.status = "reconnecting";
+    vi.advanceTimersByTime(HEARTBEAT_INTERVAL_MS);
+    expect(subscriber.ping).toHaveBeenCalledOnce();
+
+    subscriber.status = "ready";
+    await stopRealtimeHub();
+    vi.advanceTimersByTime(HEARTBEAT_INTERVAL_MS);
+    expect(subscriber.ping).toHaveBeenCalledOnce();
   });
 });
 
@@ -145,7 +179,7 @@ describe("refcounting", () => {
     expect(getRealtimeHub().stats().channels).toBe(0);
   });
 
-  it("leaves exactly one Redis subscription after subscribe → abort → subscribe in one tick", async () => {
+  it("leaves exactly one Valkey subscription after subscribe → abort → subscribe in one tick", async () => {
     const first = new AbortController();
     const second = new AbortController();
 
@@ -160,7 +194,7 @@ describe("refcounting", () => {
     expect(getRealtimeHub().stats().listeners).toBe(1);
   });
 
-  it("serialises Redis-side operations per channel so a resubscribe never races an unsubscribe", async () => {
+  it("serialises Valkey-side operations per channel so a resubscribe never races an unsubscribe", async () => {
     const controller = new AbortController();
 
     getRealtimeHub().subscribe(CHANNEL, { signal: controller.signal });
@@ -207,11 +241,11 @@ describe("refcounting", () => {
   });
 
   it("surfaces a failed SUBSCRIBE on the first next() and releases the listener", async () => {
-    subscriber.subscribe.mockRejectedValueOnce(new Error("redis is down"));
+    subscriber.subscribe.mockRejectedValueOnce(new Error("valkey is down"));
 
     const iterator = getRealtimeHub().subscribe(CHANNEL)[Symbol.asyncIterator]();
 
-    await expect(iterator.next()).rejects.toThrow("redis is down");
+    await expect(iterator.next()).rejects.toThrow("valkey is down");
     expect(getRealtimeHub().stats().listeners).toBe(0);
   });
 });
@@ -372,12 +406,12 @@ describe("abort", () => {
   });
 });
 
-describe("Redis reconnect", () => {
+describe("Valkey reconnect", () => {
   beforeEach(async () => {
     await startRealtimeHub();
   });
 
-  it("logs realtime.reconnected, ends live iterables with redis-reconnect and issues no SUBSCRIBE of its own", async () => {
+  it("logs realtime.reconnected, ends live iterables with valkey-reconnect and issues no SUBSCRIBE of its own", async () => {
     const handler = vi.fn();
     const controller = new AbortController();
 
@@ -394,7 +428,7 @@ describe("Redis reconnect", () => {
     subscriber.emit("ready");
     subscriber.emit("ready");
 
-    await expect(pending).rejects.toMatchObject({ reason: "redis-reconnect", dropped: 0 });
+    await expect(pending).rejects.toMatchObject({ reason: "valkey-reconnect", dropped: 0 });
     expect(logged.warn).toHaveBeenCalledWith(
       expect.objectContaining({
         event: "realtime.reconnected",
@@ -416,7 +450,7 @@ describe("Redis reconnect", () => {
   });
 });
 
-describe("refcounting across a Redis round trip", () => {
+describe("refcounting across a Valkey round trip", () => {
   beforeEach(async () => {
     await startRealtimeHub();
   });
@@ -428,7 +462,7 @@ describe("refcounting across a Redis round trip", () => {
     await settle();
     expect(subscriber.calls).toEqual([`subscribe:${CHANNEL}`]);
 
-    // Hold the UNSUBSCRIBE round trip open, the way a busy Redis would.
+    // Hold the UNSUBSCRIBE round trip open, the way a busy Valkey would.
     let releaseUnsubscribe!: () => void;
 
     subscriber.unsubscribe.mockImplementationOnce(async (channel?: string) => {
@@ -445,7 +479,7 @@ describe("refcounting across a Redis round trip", () => {
     expect(subscriber.calls).toEqual([`subscribe:${CHANNEL}`, `unsubscribe:${CHANNEL}`]);
 
     // The client's reset after a lag lands in that window: a new listener on
-    // the same channel, registered before Redis has answered the UNSUBSCRIBE.
+    // the same channel, registered before Valkey has answered the UNSUBSCRIBE.
     const second = getRealtimeHub().subscribe(CHANNEL)[Symbol.asyncIterator]();
     const pending = second.next();
 

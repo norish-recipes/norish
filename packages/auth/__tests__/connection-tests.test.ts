@@ -59,6 +59,10 @@ describe("testAIEndpoint", () => {
     );
   });
 
+  it("keeps a version segment other than v1", async () => {
+    expect(await urlFor("https://api.example.com/v4")).toBe("https://api.example.com/v4/models");
+  });
+
   it("asks the same base URL the AI Runtime builds its client on", async () => {
     for (const endpoint of [
       "https://openrouter.ai/api/v1",

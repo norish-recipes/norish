@@ -4,10 +4,16 @@ import { useState } from "react";
 import NewFeatureChip from "@/app/(app)/settings/components/new-feature-chip";
 import { SettingsCard } from "@/app/(app)/settings/components/settings-card";
 import RecipeShareStatusChip from "@/components/recipes/recipe-share-status-chip";
+import {
+  ActionButton,
+  ActionButtonGroup,
+  IconActionButton,
+} from "@/components/shared/action-button";
 import { sharedRecipeShareHooks } from "@/hooks/recipes/shared-recipe-hooks";
-import { LinkIcon, PauseIcon, PlayIcon, TrashIcon } from "@heroicons/react/24/outline";
-import { Button, Modal, Table } from "@heroui/react";
-import { useTranslations } from "next-intl";
+import { PauseIcon, PlayIcon } from "@heroicons/react/16/solid";
+import { LinkIcon } from "@heroicons/react/24/outline";
+import { Modal, Skeleton, Table } from "@heroui/react";
+import { useFormatter, useTranslations } from "next-intl";
 
 import type {
   AdminRecipeShareInventoryDto,
@@ -26,9 +32,21 @@ type Props = {
   showOwner?: boolean;
 };
 type ColumnKey = "recipe" | "owner" | "status" | "created" | "expires" | "actions";
-function formatDate(date: Date | null) {
-  return date ? new Date(date).toLocaleString() : "-";
-}
+/** toLocaleString's fields, in the locale and zone next-intl gives server and browser alike. */
+const DATE_AND_TIME = {
+  year: "numeric",
+  month: "numeric",
+  day: "numeric",
+  hour: "numeric",
+  minute: "2-digit",
+  second: "2-digit",
+} as const;
+/** Each confirm's button: Delete is the irreversible one, Revoke can be undone. */
+const CONFIRM_BUTTONS = {
+  revoke: { action: "remove", icon: PauseIcon, variant: "danger-soft" },
+  reactivate: { action: "apply", icon: PlayIcon, variant: "primary" },
+  delete: { action: "delete", variant: "danger" },
+} as const;
 function hasOwnerFields(share: ShareRow): share is AdminRecipeShareInventoryDto {
   return "ownerId" in share;
 }
@@ -39,8 +57,10 @@ export default function ShareLinksTableCard({
   showOwner = false,
 }: Props) {
   const t = useTranslations(namespace);
-  const tCommon = useTranslations("common");
   const tActions = useTranslations("common.actions");
+  const format = useFormatter();
+  const formatDate = (date: Date | null) =>
+    date ? format.dateTime(new Date(date), DATE_AND_TIME) : "-";
   const { revokeShare, reactivateShare, deleteShare, isRevoking, isReactivating, isDeleting } =
     sharedRecipeShareHooks.useRecipeShareMutations(null);
   const [confirmAction, setConfirmAction] = useState<ConfirmAction>(null);
@@ -103,9 +123,10 @@ export default function ShareLinksTableCard({
         return (
           <div className="flex gap-1">
             {share.status === "active" ? (
-              <Button
-                isIconOnly
-                aria-label={t("revokeModal.title")}
+              <IconActionButton
+                action="edit"
+                icon={PauseIcon}
+                label={t("revokeModal.title")}
                 size="sm"
                 onPress={() =>
                   setConfirmAction({
@@ -113,15 +134,13 @@ export default function ShareLinksTableCard({
                     type: "revoke",
                   })
                 }
-                variant="tertiary"
-              >
-                <PauseIcon className="h-4 w-4" />
-              </Button>
+              />
             ) : null}
             {share.status === "revoked" ? (
-              <Button
-                isIconOnly
-                aria-label={t("reactivateModal.title")}
+              <IconActionButton
+                action="edit"
+                icon={PlayIcon}
+                label={t("reactivateModal.title")}
                 size="sm"
                 onPress={() =>
                   setConfirmAction({
@@ -129,14 +148,11 @@ export default function ShareLinksTableCard({
                     type: "reactivate",
                   })
                 }
-                variant="tertiary"
-              >
-                <PlayIcon className="h-4 w-4" />
-              </Button>
+              />
             ) : null}
-            <Button
-              isIconOnly
-              aria-label={t("deleteModal.title")}
+            <IconActionButton
+              action="delete"
+              label={t("deleteModal.title")}
               size="sm"
               onPress={() =>
                 setConfirmAction({
@@ -144,10 +160,7 @@ export default function ShareLinksTableCard({
                   type: "delete",
                 })
               }
-              variant="danger-soft"
-            >
-              <TrashIcon className="h-4 w-4" />
-            </Button>
+            />
           </div>
         );
     }
@@ -160,10 +173,11 @@ export default function ShareLinksTableCard({
         icon={LinkIcon}
         title={t("title")}
       >
-        {shares.length === 0 ? (
-          <p className="text-muted text-base">
-            {isLoading ? tCommon("status.loading") : t("empty")}
-          </p>
+        {isLoading ? (
+          // The tab skeleton's row for this card.
+          <Skeleton className="h-12 w-full rounded-lg" />
+        ) : shares.length === 0 ? (
+          <p className="text-muted text-base">{t("empty")}</p>
         ) : (
           <Table>
             <Table.ScrollContainer>
@@ -211,15 +225,20 @@ export default function ShareLinksTableCard({
                   </p>
                 </Modal.Body>
                 <Modal.Footer>
-                  <Button onPress={onClose} variant="tertiary">
-                    {tActions("cancel")}
-                  </Button>
-                  <Button
-                    onPress={handleConfirm}
-                    isPending={isRevoking || isReactivating || isDeleting}
-                  >
-                    {confirmAction ? t(`${confirmAction.type}Modal.confirm`) : tActions("confirm")}
-                  </Button>
+                  <ActionButtonGroup>
+                    <ActionButton action="cancel" onPress={onClose}>
+                      {tActions("cancel")}
+                    </ActionButton>
+                    <ActionButton
+                      {...CONFIRM_BUTTONS[confirmAction?.type ?? "reactivate"]}
+                      isPending={isRevoking || isReactivating || isDeleting}
+                      onPress={handleConfirm}
+                    >
+                      {confirmAction
+                        ? t(`${confirmAction.type}Modal.confirm`)
+                        : tActions("confirm")}
+                    </ActionButton>
+                  </ActionButtonGroup>
                 </Modal.Footer>
               </>
             )}

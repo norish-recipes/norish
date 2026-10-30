@@ -50,7 +50,8 @@
     "viewGroceries": "Переглянути покупки",
     "addToCalendar": "Додати в календар",
     "deleteRecipe": "Видалити рецепт",
-    "recipeOptions": "Параметри рецепта"
+    "recipeOptions": "Параметри рецепта",
+    "pantryCoverage": "{percent} інгредієнтів вдома"
   },
   "detail": {
     "viewOriginal": "Переглянути оригінальний рецепт",
@@ -76,7 +77,8 @@
     "source": "Джерело",
     "addedBy": "Автор: {name}",
     "decreaseServings": "Менше порцій",
-    "increaseServings": "Більше порцій"
+    "increaseServings": "Більше порцій",
+    "multiplier": "Множник"
   },
   "actions": {
     "plan": "Запланувати",
@@ -319,6 +321,9 @@
     "imported": "Рецепт імпортовано",
     "failed": "Не вдалося обробити рецепт",
     "failedDescription": "Під час обробки рецепта щось пішло не так. Технічні подробиці дивіться в консолі браузера.",
+    "incomplete": "Цей рецепт може бути неповним. Звірте його з джерелом.",
+    "notARecipe": "Ця сторінка не схожа на рецепт.",
+    "privateAddress": "Імпорт з адрес приватної мережі на цьому сервері заборонено.",
     "batchImported": "Рецепти імпортовано",
     "batchImportedDescription": "Імпортовано рецептів з архіву: {count}",
     "view": "Переглянути",
@@ -423,5 +428,13 @@
     "removeImage": "Прибрати зображення",
     "imageUploadFailed": "Не вдалося завантажити зображення.",
     "imageNeedsConnection": "Зображення можна буде змінити, коли ви знову будете онлайн."
+  },
+  "print": {
+    "title": "Друк рецепта",
+    "includePhoto": "Додати фото",
+    "textSize": "Розмір тексту",
+    "print": "Друк / Зберегти PDF",
+    "continued": "продовження",
+    "perServing": "На порцію"
   }
 }

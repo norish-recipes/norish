@@ -1,7 +1,7 @@
 // @vitest-environment node
 import { initTRPC } from "@trpc/server";
 import superjson from "superjson";
-import { beforeEach, describe, expect, it, vi } from "vitest";
+import { describe, expect, it, vi } from "vitest";
 
 import { canAccessResource } from "../mocks/permissions";
 // Import mocks
@@ -25,10 +25,6 @@ const t = initTRPC.context<ReturnType<typeof createMockAuthedContext>>().create(
 });
 
 describe("recipe permission enforcement", () => {
-  beforeEach(() => {
-    vi.clearAllMocks();
-  });
-
   describe("view policy", () => {
     it("owner can always view their own recipe", async () => {
       const user = createMockUser({ id: "owner-id" });

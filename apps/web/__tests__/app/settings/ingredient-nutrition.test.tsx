@@ -92,7 +92,7 @@ vi.mock("@/components/Panel/Panel", () => {
   Panel.Body = ({ children }: any) => <div>{children}</div>;
   Panel.Footer = ({ children }: any) => <div>{children}</div>;
 
-  return { default: Panel, usePanelPortalContainer: () => undefined };
+  return { default: Panel, PanelPortal: ({ children }: { children: React.ReactNode }) => children };
 });
 
 const ONION_RAW = { dataset: "ciqual" as const, code: "20034", name: "Onion, raw" };
@@ -108,7 +108,6 @@ const correction = () => screen.getByRole("dialog", { name: /^correctTitle/ });
 
 describe("an Ingredient's nutrition in its panel", () => {
   beforeEach(() => {
-    vi.clearAllMocks();
     mocks.pending = false;
     mocks.measure = null;
     mocks.nutrition = {
@@ -163,6 +162,18 @@ describe("an Ingredient's nutrition in its panel", () => {
     expect(screen.getByTestId("ingredient-nutrition-source")).toHaveTextContent(
       'borrowed {"name":"onion"'
     );
+  });
+
+  it("says when AI estimated the numbers", () => {
+    mocks.nutrition = {
+      ...mocks.nutrition!,
+      numbers: { ...mocks.nutrition!.numbers!, source: { kind: "ai" } },
+    };
+
+    render(<IngredientNutritionSection ingredientId="onion" name="onion" />);
+    openNutrition();
+
+    expect(screen.getByTestId("ingredient-nutrition-source")).toHaveTextContent("source.ai");
   });
 
   it("says it knows nothing where it does not", () => {

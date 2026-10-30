@@ -3,9 +3,11 @@ import { extractRecipeFromVideo } from "@norish/api/video/normalizer";
 import { downloadCaptions, parseVttFile } from "@norish/api/video/yt-dlp";
 import { transcribe } from "@norish/shared-server/ai/runtime/runtime";
 import { videoLogger as log } from "@norish/shared-server/logger";
+import { hasSteps } from "@norish/shared/lib/helpers";
 
 import type { VideoProcessorContext } from "../types";
 import { BaseVideoProcessor } from "../base-processor";
+import { captionFailureAllowsTranscription } from "../errors";
 
 /**
  * YouTube video processor.
@@ -55,6 +57,7 @@ export class YouTubeProcessor extends BaseVideoProcessor {
 
       // If we have substantial caption/description content, try extraction without audio
       const hasSubstantialContent = combinedCaptionAndDescription.length > 200;
+      let captionRecipe: FullRecipeInsertDTO | null = null;
 
       if (hasSubstantialContent) {
         log.info(
@@ -72,13 +75,22 @@ export class YouTubeProcessor extends BaseVideoProcessor {
             url
           );
 
-          log.info({ url }, "Successfully extracted recipe from captions + description");
-          const savedVideo = videoPath
-            ? await this.saveVideo(videoPath, recipeId, metadata.duration)
-            : null;
+          if (hasSteps(recipe)) {
+            log.info({ url }, "Successfully extracted recipe from captions + description");
+            const savedVideo = videoPath
+              ? await this.saveVideo(videoPath, recipeId, metadata.duration)
+              : null;
 
-          return this.addVideoToRecipe(recipe, savedVideo);
+            return this.addVideoToRecipe(recipe, savedVideo);
+          }
+
+          captionRecipe = recipe;
+          log.info({ url }, "Captions held no steps, transcribing for the method");
         } catch (captionExtractionError) {
+          if (!captionFailureAllowsTranscription(captionExtractionError)) {
+            throw captionExtractionError;
+          }
+
           log.info(
             { url, err: captionExtractionError },
             "Caption/description extraction failed, falling back to transcription"
@@ -87,24 +99,21 @@ export class YouTubeProcessor extends BaseVideoProcessor {
       }
 
       // Fall back to audio transcription
-      audioPath = await this.downloadAudio(url, tokens);
-      log.info({ url }, "Starting audio transcription");
+      const recipe = await this.withTranscriptSteps(captionRecipe, async () => {
+        audioPath = await this.downloadAudio(url, tokens);
+        log.info({ url }, "Starting audio transcription");
 
-      const transcript = await transcribe(audioPath);
+        const transcript = await transcribe(audioPath);
 
-      log.info({ url, transcriptLength: transcript.length }, "Audio transcribed");
+        log.info({ url, transcriptLength: transcript.length }, "Audio transcribed");
 
-      // Combine transcript with description
-      const combinedTranscriptAndDescription = [transcript, descriptionText]
-        .filter(Boolean)
-        .join("\n\n---\n\n");
+        // Combine transcript with description
+        const combinedTranscriptAndDescription = [transcript, descriptionText]
+          .filter(Boolean)
+          .join("\n\n---\n\n");
 
-      const recipe = await extractRecipeFromVideo(
-        combinedTranscriptAndDescription,
-        metadata,
-        recipeId,
-        url
-      );
+        return extractRecipeFromVideo(combinedTranscriptAndDescription, metadata, recipeId, url);
+      });
 
       const savedVideo = videoPath
         ? await this.saveVideo(videoPath, recipeId, metadata.duration)

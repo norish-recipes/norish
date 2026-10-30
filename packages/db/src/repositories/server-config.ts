@@ -231,10 +231,17 @@ const SENSITIVE_FIELDS = [
   "password",
   "token",
   "transcriptionApiKey",
+  "cdpToken",
 ];
 
+const MASK = "••••••••";
+
+function isPlainObject(value: unknown): value is Record<string, unknown> {
+  return typeof value === "object" && value !== null && !Array.isArray(value);
+}
+
 /**
- * Merge sensitive fields from existing config with new values.
+ * Merge sensitive fields from existing config with new values, nested blocks included.
  * If a sensitive field in the new value is empty/undefined or matches the mask,
  * preserve the existing value — unless the caller named it in `dropSecrets`,
  * which forgets it instead.
@@ -244,29 +251,28 @@ function mergeSensitiveFields(
   incoming: unknown,
   dropSecrets: readonly string[] = []
 ): unknown {
-  if (
-    typeof existing !== "object" ||
-    existing === null ||
-    typeof incoming !== "object" ||
-    incoming === null
-  ) {
+  if (!isPlainObject(existing) || !isPlainObject(incoming)) {
     return incoming;
   }
 
-  const existingObj = existing as Record<string, unknown>;
-  const incomingObj = incoming as Record<string, unknown>;
-  const merged = { ...incomingObj };
+  const merged = { ...incoming };
+
+  for (const [field, incomingValue] of Object.entries(incoming)) {
+    if (isPlainObject(incomingValue)) {
+      merged[field] = mergeSensitiveFields(existing[field], incomingValue, dropSecrets);
+    }
+  }
 
   for (const field of SENSITIVE_FIELDS) {
-    const incomingValue = incomingObj[field];
-    const existingValue = existingObj[field];
+    const incomingValue = incoming[field];
+    const existingValue = existing[field];
 
     // If incoming is empty, undefined, or the mask placeholder, preserve existing
     if (
       incomingValue === undefined ||
       incomingValue === null ||
       incomingValue === "" ||
-      incomingValue === "••••••••"
+      incomingValue === MASK
     ) {
       if (dropSecrets.includes(field)) {
         delete merged[field];
@@ -284,16 +290,17 @@ function mergeSensitiveFields(
 }
 
 function maskSensitiveFields(value: unknown): unknown {
-  if (typeof value !== "object" || value === null) {
+  if (!isPlainObject(value)) {
     return value;
   }
 
-  const masked = { ...(value as Record<string, unknown>) };
+  const masked: Record<string, unknown> = {};
 
-  for (const field of SENSITIVE_FIELDS) {
-    if (field in masked && typeof masked[field] === "string" && masked[field] !== "") {
-      masked[field] = "••••••••";
-    }
+  for (const [field, inner] of Object.entries(value)) {
+    masked[field] =
+      SENSITIVE_FIELDS.includes(field) && typeof inner === "string" && inner !== ""
+        ? MASK
+        : maskSensitiveFields(inner);
   }
 
   return masked;

@@ -11,20 +11,43 @@
     "ingredients": "Ingredientes"
   },
   "user": {
+    "signInMethods": {
+      "title": "Métodos de login",
+      "description": "Conecte sua conta com SSO.",
+      "password": "Senha",
+      "addAnother": "Adicione outra forma de entrar",
+      "addProvider": "Conectar {provider}",
+      "added": "Adicionado em {date}",
+      "remove": "Desconectar",
+      "unavailable": "Indisponível no momento",
+      "changePassword": "Alterar senha",
+      "currentPassword": "Senha atual",
+      "newPassword": "Nova senha",
+      "confirmPassword": "Confirmar nova senha",
+      "signOutOthers": "Encerrar outras sessões",
+      "passwordChanged": "Senha alterada.",
+      "errors": {
+        "usedByAnotherAccount": "Este login já é usado por outra conta.",
+        "lastMethod": "Você precisa de pelo menos uma forma de entrar.",
+        "signInAgain": "Entre novamente para remover isto.",
+        "addFailed": "Não foi possível adicionar este método de login.",
+        "removeFailed": "Não foi possível remover este método de login.",
+        "wrongPassword": "A senha atual está incorreta.",
+        "changeFailed": "Não foi possível alterar a senha. Tente novamente."
+      }
+    },
     "profile": {
       "title": "Perfil",
       "nameLabel": "Nome",
       "namePlaceholder": "Seu nome",
       "emailLabel": "E-mail",
       "avatarHint": "Clique no seu avatar para alterar a imagem",
-      "deleteAvatar": "Excluir foto de perfil",
-      "saveChanges": "Salvar alterações"
+      "deleteAvatar": "Excluir foto de perfil"
     },
     "allergies": {
       "title": "Alergias",
       "description": "Adicione suas alergias alimentares para receber avisos ao planejar receitas que contenham alérgenos.",
-      "placeholder": "Digite alergias (ex.: glúten, nozes, laticínios)...",
-      "saveButton": "Salvar alergias"
+      "placeholder": "Digite alergias (ex.: glúten, nozes, laticínios)..."
     },
     "apiKeys": {
       "title": "Chaves de API",
@@ -52,7 +75,8 @@
         "title": "Chave de API gerada",
         "warning": "Salve esta chave agora! Você não poderá vê-la novamente. Armazenamos apenas um hash e não podemos recuperar esta chave.",
         "hint": "Use esta chave no cabeçalho <code>x-api-key</code> ao fazer solicitações à API.",
-        "confirmButton": "Eu salvei"
+        "confirmButton": "Eu salvei",
+        "copyButton": "Copiar chave"
       },
       "deleteModal": {
         "title": "Excluir chave de API",
@@ -75,6 +99,7 @@
       "accountsDescription": "Dê um nome à conta quando você tiver mais de um login para um site. Cada importação passa a usar uma das contas desse site, escolhida ao acaso, para que nenhum login carregue todas as importações. Um token sem nome de conta é enviado em toda importação do seu domínio.",
       "domain": "Domínio",
       "domainPlaceholder": "ex.: instagram.com",
+      "domainNotFull": "Digite o domínio completo, ex.: instagram.com.",
       "account": "Conta",
       "accountPlaceholder": "ex. meu_usuario (opcional)",
       "accountShared": "Todas as contas",
@@ -145,12 +170,12 @@
       },
       "applyError": "Falha ao aplicar preferência",
       "todaySection": {
-        "title": "Today Section",
+        "title": "Seção Hoje",
         "description": "Como a seção Hoje do painel se comporta",
         "options": {
-          "always": "Always visible",
-          "planned": "Only planned meals",
-          "hidden": "Hidden"
+          "always": "Sempre visível",
+          "planned": "Somente refeições planejadas",
+          "hidden": "Oculta"
         }
       },
       "recipePageColor": {
@@ -261,7 +286,8 @@
       "noCodeDescription": "Nenhum código de entrada ativo. Gere um para convidar novos membros.",
       "generateButton": "Gerar código de entrada",
       "copySuccess": "Código de entrada copiado",
-      "copyFailed": "Falha ao copiar código de entrada"
+      "copyFailed": "Falha ao copiar código de entrada",
+      "copyButton": "Copiar código de entrada"
     },
     "create": {
       "title": "Criar casa",
@@ -301,9 +327,7 @@
       "breakfastTime": "Horário do café da manhã",
       "lunchTime": "Horário do almoço",
       "dinnerTime": "Horário do jantar",
-      "snackTime": "Horário do lanche",
-      "testConnection": "Testar conexão",
-      "saveConfiguration": "Salvar configuração"
+      "snackTime": "Horário do lanche"
     },
     "config": {
       "title": "Configuração CalDAV",
@@ -313,7 +337,6 @@
       "disabled": "Desativado",
       "editButton": "Editar",
       "deleteButton": "Excluir",
-      "saveChanges": "Salvar alterações",
       "advancedSettings": "Configurações avançadas",
       "timezone": "Fuso horário: {timezone}",
       "connectionStatus": {
@@ -354,7 +377,7 @@
       "emptyFiltered": "Nenhum item com status {status} encontrado",
       "emptyDefault": "Nenhum registro de sincronização encontrado",
       "errorDetails": "Detalhes do erro",
-      "pagination": "Page {current} of {total}"
+      "pagination": "Página {current} de {total}"
     }
   },
   "ingredients": {
@@ -376,67 +399,26 @@
     "flagged": "Marcado",
     "flagReasons": {
       "unknown": "O Norish não tinha certeza de que este é um ingrediente próprio.",
-      "ai-off": "A IA está desligada, então nada verificou se o Norish já o conhece.",
       "unknown-food": "Nenhum ingrediente conhecido compartilha uma palavra com este nome, então a IA não foi consultada.",
       "ai-unsure": "A IA foi consultada se é um ingrediente conhecido e não tinha certeza.",
-      "ai-unavailable": "A IA não respondeu a tempo quando este nome foi adicionado.",
-      "ai-key-rejected": "O provedor de IA rejeitou a chave de API, então a IA não conseguiu verificar este nome.",
       "food-gone": "A IA o associou a um ingrediente mesclado antes que o nome pudesse se juntar a ele.",
       "upgrade": "Nenhum ingrediente conhecido correspondente foi encontrado.",
-      "seed-ambiguous": "O catálogo conhece vários ingredientes que este poderia ser."
+      "seed-ambiguous": "O catálogo conhece vários ingredientes que este poderia ser.",
+      "ai-junk": "A IA achou que isto não é um alimento, como um utensílio de cozinha ou um trecho de uma linha de receita."
     },
     "empty": "Nenhum ingrediente encontrado",
     "emptyFlagged": "Nada está marcado",
     "rename": "Renomear",
     "delete": "Excluir",
     "deleteTitle": "Excluir {name}?",
-    "deleteConfirm": "Suas traduções vão junto, e o que sua casa ensinou ao Norish sobre ele. Um ingrediente que uma receita, uma compra ou a despensa ainda usa não pode ser excluído; mescle-o em vez disso.",
+    "deleteConfirm": "Suas traduções vão junto, e o que sua casa ensinou ao Norish sobre ele.",
+    "deleteTouches": {
+      "recipeLines": "{count, plural, one {# linha de receita mantém seu texto, sem este ingrediente} other {# linhas de receita mantêm seu texto, sem este ingrediente}}",
+      "groceries": "{count, plural, one {# compra mantém seu texto, sem este ingrediente} other {# compras mantêm seu texto, sem este ingrediente}}",
+      "pantry": "{count, plural, one {# item da despensa é removido} other {# itens da despensa são removidos}}"
+    },
     "markDistinct": "Marcar como distinto",
     "summary": "{spellings, plural, one {# tradução} other {# traduções}}{kinds, plural, =0 {} one {, # tipo} other {, # tipos}}{parent, select, none {} other {, pai: {parent}}}",
-    "askAI": "Perguntar à IA",
-    "fixCatalogue": "Corrigir catálogo",
-    "askAIRound": {
-      "intro": "A IA verifica onde os ingredientes sinalizados se encaixam e corrige nomes inconsistentes. Nada muda até você confirmar uma sugestão.",
-      "scopeLabel": "O que corrigir",
-      "scopes": {
-        "unsuggested": "Verificar ingredientes sinalizados",
-        "suggested": "Verificar sugestões de novo",
-        "name": "Limpar nomes"
-      },
-      "hints": {
-        "unsuggested": "Procura duplicatas, ingredientes filhos ou únicos.",
-        "suggested": "Verifica de novo os ingredientes sinalizados.",
-        "name": "Limpa os nomes dos ingredientes para deixar só o ingrediente. Os ingredientes sinalizados entram se a caixa acima estiver marcada."
-      },
-      "scopeSize": "{count, plural, =0 {Nenhum ingrediente} one {# ingrediente · cerca de {tokens} tokens} other {# ingredientes · cerca de {tokens} tokens}}",
-      "modelTokens": "cerca de {tokens} tokens",
-      "basisMeasured": "Com base no que a última rodada usou."
-    },
-    "roundProgress": "Perguntando à IA · {done, number} de {total, number}",
-    "roundSection": {
-      "title": "Perguntando à IA",
-      "progress": "{done, number} de {total, number}",
-      "waiting": "{count, plural, one {# ingrediente esperando} other {# ingredientes esperando}}"
-    },
-    "reviewing": "Perguntando à IA…",
-    "aiOutcomes": {
-      "parent": "A IA sugere classificar {name} como um tipo de {of}.",
-      "distinct": "A IA sugere que {name} é um alimento próprio.",
-      "unsure": "A IA ainda não tem certeza do que é {name}.",
-      "notFlagged": "{name} não está sinalizado.",
-      "skippedNotFlagged": "{name} não estava mais marcado.",
-      "skippedForbidden": "{name} não é seu para alterar.",
-      "skippedNotFound": "{name} já não existia quando a IA chegou.",
-      "failed": "A pergunta sobre {name} falhou.",
-      "merge": "A IA sugere mesclar {name} com {into}."
-    },
-    "aiTrace": {
-      "readAs": "A IA leu como “{name}”.",
-      "compared": "Comparado com: {names}.",
-      "comparedNothing": "Não havia alimento conhecido para comparar.",
-      "fromWords": "Based on name.",
-      "noFood": "A IA não encontrou nenhum alimento neste nome."
-    },
     "addAlias": "Adicionar uma tradução",
     "removeAlias": "Remover {alias}",
     "mergeInto": "Mesclar com…",
@@ -491,7 +473,8 @@
         "name": "{food} · {dataset}, encontrado pelo nome",
         "householdFood": "{food} · {dataset}, escolhido pela sua casa",
         "household": "Os valores próprios da sua casa",
-        "taxonomy": "Open Food Facts"
+        "taxonomy": "Open Food Facts",
+        "ai": "Estimado pela IA"
       },
       "correct": "Corrigir",
       "correctTitle": "Corrigir {name}",
@@ -550,8 +533,6 @@
       "name-taken": "Outro ingrediente já tem este nome",
       "spelling-taken": "Esta tradução já pertence a outro ingrediente",
       "last-alias": "Um ingrediente mantém pelo menos uma tradução",
-      "alias-in-use": "Receitas ou compras ainda usam esta tradução",
-      "ingredient-in-use": "Receitas, compras ou a despensa ainda usam este ingrediente",
       "same-ingredient": "Um ingrediente não pode ser mesclado consigo mesmo",
       "cycle": "Um ingrediente não pode ser um tipo de si mesmo",
       "empty": "Digite um nome",
@@ -569,51 +550,34 @@
       "none": "Nada usa mais isso"
     },
     "keepAlias": "Manter {alias}",
-    "reportOutcomes": {
-      "parent": "Sob um pai",
-      "distinct": "Alimento próprio",
-      "unsure": "Sem certeza",
-      "skipped": "Ignorado",
-      "failed": "Falhou",
-      "merge": "Mesclar"
-    },
+    "junkTitle": "Marcar {alias} como não sendo um alimento?",
+    "junkBody": "Nenhum outro ingrediente tem esta tradução. Receitas novas ignoram texto marcado como não sendo um alimento.",
+    "junkRemove": "Só remover",
+    "junkMark": "Não é um alimento",
     "expandKinds": "Mostrar os tipos de {name}",
     "collapseKinds": "Ocultar os tipos de {name}",
     "layoutSection": "Exibição",
     "asTree": "Visualização hierárquica",
     "showOnly": "Mostrar apenas",
     "standaloneOnly": "Sem pai nem tipos",
-    "findParent": "Encontrar pai com IA",
-    "findParentsAll": "Encontrar pais com IA",
-    "suggestion": {
-      "merge": "Mesclar {name} com {into}",
-      "parent": "Classificar {name} em {of}",
-      "distinct": "Manter {name} como alimento próprio",
-      "filedFromName": "{name} filed under {of}",
-      "rename": "Renomear {name} para {to}"
-    },
-    "suggestionsTitle": "Sugestões da IA",
-    "suggestionsEmpty": "Nada aguardando você.",
-    "suggestionsNone": "Sem sugestão",
-    "suggestionsOpen": "{count, plural, =0 {Sugestões} one {# sugestão} other {# sugestões}}",
-    "suggestionsFailed": "{count, plural, one {# sugestão não pôde ser aplicada} other {# sugestões não puderam ser aplicadas}}: {reason}",
-    "confirmSuggestion": "Confirmar",
-    "dismissSuggestion": "Descartar",
-    "confirmAll": "Confirmar tudo ({count})",
-    "dismissAll": "Descartar tudo",
-    "suggestedByAI": "Sugerido pela IA",
-    "suggestedFromName": "Based on name",
-    "proposal": {
-      "merge": "Merge into {into}",
-      "parent": "File under {of}",
-      "distinct": "Food of its own",
-      "rename": "Renomear para {to}"
-    },
-    "skippedReasons": {
-      "notFlagged": "No longer flagged",
-      "forbidden": "Not yours to edit",
-      "notFound": "No longer exists",
-      "settled": "Nome já definido, ou há uma sugestão esperando"
+    "changedByAI": {
+      "title": "Alterado pela IA",
+      "open": "{count, plural, =0 {Alterado pela IA} other {Alterado pela IA · # para verificar}}",
+      "unsure": "Incerto",
+      "sure": "Alterado",
+      "empty": "A IA não alterou nada no último mês.",
+      "keep": "Manter",
+      "undo": "Desfazer",
+      "keepAll": "Manter todas",
+      "undoAll": "Desfazer todas",
+      "clear": "Limpar",
+      "merge": "{from} mesclado aqui",
+      "parent": "Classificado sob {of}",
+      "parentDropped": "Não está mais sob {of}",
+      "plainName": "Renomeado de {from}",
+      "notAFood": "Excluído, pois não é um alimento. As linhas da receita e as compras mantêm o texto.",
+      "spellingRemoved": "Tradução {from} removida",
+      "spellingMoved": "Tradução {from} movida para {of}"
     },
     "icon": {
       "change": "Alterar o ícone",
@@ -622,20 +586,6 @@
       "failed": "Não foi possível criar um ícone com essa imagem.",
       "generate": "Gerar com IA",
       "generateFailed": "Não foi possível gerar o ícone."
-    },
-    "drawIcons": {
-      "open": "Desenhar ícones",
-      "title": "Desenhar ícones",
-      "intro": "O provedor de imagens desenha um ícone para cada alimento, que passa a ser dele na hora. Você pode dar outro ícone a um alimento no painel dele.",
-      "scopeLabel": "Quais alimentos",
-      "scopes": {
-        "bare": "Só alimentos sem nenhum ícone",
-        "unowned": "Todos os alimentos sem ícone próprio"
-      },
-      "scopeSize": "{count, plural, =0 {Nenhum ícone} one {# ícone} other {# ícones}}",
-      "start": "Desenhar ícones",
-      "progress": "Desenhando ícones · {done, number} de {total, number}",
-      "drawing": "Desenhando ícone…"
     }
   },
   "admin": {
@@ -675,7 +625,6 @@
       "localesDescription": "Selecione quais idiomas os usuários podem escolher",
       "defaultLocale": "Idioma padrão",
       "defaultLocaleDescription": "Idioma usado para novos usuários e como fallback",
-      "saveLocales": "Salvar configurações de idioma",
       "localesSaved": "Configurações de idioma salvas",
       "localesError": "Falha ao salvar configurações de idioma",
       "atLeastOneLocale": "Pelo menos um idioma deve estar ativado",
@@ -773,7 +722,7 @@
       "warning1": "Todas as conexões ativas serão desconectadas",
       "warning2": "O servidor ficará indisponível por alguns segundos",
       "warning3": "Certifique-se de que sua implantação tenha <code>restart: always</code> configurado, ou o servidor não voltará online automaticamente",
-      "confirmButton": "Reiniciar agora"
+      "confirmButton": "Reiniciar"
     },
     "authProviders": {
       "title": "Provedores de autenticação",
@@ -914,19 +863,71 @@
         "title": "Enriquecimento em massa",
         "subtitle": "Executar o enriquecimento habilitado em todas as receitas",
         "description": "Colocar na fila todos os enriquecimentos ativados",
-        "button": "Enriquecer todas as receitas",
+        "button": "Enriquecer",
         "confirmTitle": "Executar o enriquecimento em todas as receitas?",
         "confirmMessage": "Isto coloca na fila trabalho de IA para cada receita deste servidor. Cada tipo de enriquecimento cujo interruptor automático esteja habilitado é executado onde faltam dados.",
         "replaceExisting": "Sobrescrever os dados existentes",
         "replaceExistingDescription": "Refazer categorias, nutrição, procedência e ingredientes das etapas mesmo quando a receita já os tem. Tags e indicações de alergia são apenas acrescentadas.",
         "replaceWarning": "Isso não pode ser desfeito. Os dados que você mesmo inseriu também são substituídos, incluindo ingredientes de etapas vinculados à mão: nada registra quais valores vieram da IA.",
         "costWarning": "Pode ser uma operação cara: com muitas receitas pode demorar bastante e, em um provedor de IA pago, consumir uma quantidade significativa de créditos.",
-        "confirmButton": "Executar em todas as receitas",
-        "confirmButtonReplace": "Sobrescrever todas as receitas",
+        "confirmButton": "Executar",
+        "confirmButtonReplace": "Sobrescrever",
         "queued": "{queued, plural, =0 {Nenhuma execução na fila} one {# execução na fila} other {# execuções na fila}} para {recipes, plural, one {# receita} other {# receitas}}",
         "aiDisabled": "A IA está desabilitada neste servidor. Habilite a IA primeiro.",
         "error": "Falha ao iniciar o enriquecimento em massa",
         "imageCount": "{count, plural, =0 {Nenhuma imagem será gerada.} one {# imagem será gerada.} other {# imagens serão geradas.}}"
+      },
+      "ingredientCatalogue": {
+        "title": "Catálogo de ingredientes",
+        "subtitle": "O que a IA faz com ingredientes novos",
+        "automatic": "Automático para ingredientes novos",
+        "automaticDescription": "O que a IA faz quando um ingrediente é adicionado ao catálogo.",
+        "automaticPlaceholder": "Nada é executado automaticamente",
+        "kinds": {
+          "cleanUp": "Organizar ingredientes novos",
+          "cleanUpDescription": "Mesclar grafias, definir um pai e um nome simples, remover o que não é alimento",
+          "nutrition": "Preencher nutrição ausente",
+          "nutritionDescription": "Estimar macros por 100 g onde o ingrediente não tem",
+          "conversions": "Preencher conversões ausentes",
+          "conversionsDescription": "Estimar densidade e peso por unidade onde o ingrediente não tem",
+          "icon": "Desenhar ícones ausentes",
+          "iconDescription": "Só para um ingrediente sem ícone, nem mesmo o do pai"
+        },
+        "cleanUpCatalogue": {
+          "title": "Limpar o catálogo",
+          "description": "Perguntar à IA sobre os ingredientes que já estão no catálogo.",
+          "running": "Uma limpeza está em andamento. Acompanhe na fila de tarefas.",
+          "button": "Limpar o catálogo",
+          "intro": "A IA junta grafias, define pais e nomes simples e remove o que não é alimento. Cada mudança aparece em Alterado pela IA, com Desfazer.",
+          "scopeLabel": "Quais ingredientes",
+          "scopes": {
+            "recipe-foods": "Alimentos das receitas",
+            "recipe-foods-description": "Ingredientes trazidos pelas receitas sobre os quais ninguém decidiu",
+            "whole-catalogue": "Catálogo inteiro",
+            "whole-catalogue-description": "Todos os ingredientes, inclusive os embutidos, ignorando o que as pessoas decidiram ou desfizeram. Os embutidos nunca são removidos."
+          },
+          "count": "{count, plural, one {A IA vai perguntar sobre # ingrediente.} other {A IA vai perguntar sobre # ingredientes.}}",
+          "start": "Limpar",
+          "started": "{count, plural, one {Limpando # ingrediente} other {Limpando # ingredientes}}",
+          "error": "Não foi possível iniciar a limpeza"
+        },
+        "fillGaps": {
+          "title": "Preencher lacunas",
+          "description": "Deixe a IA completar o que falta nos ingredientes.",
+          "running": "O preenchimento de lacunas está em andamento. Acompanhe na fila de tarefas.",
+          "button": "Preencher lacunas",
+          "intro": "Para cada ingrediente do catálogo, a IA preenche apenas o que ele não tem por conta própria. O que um ingrediente já tem nunca é substituído.",
+          "kindsLabel": "O que preencher",
+          "kinds": {
+            "nutrition": "Nutrição",
+            "conversions": "Conversões",
+            "icons": "Ícones"
+          },
+          "count": "{count, plural, =0 {Nada a preencher} one {# ingrediente} other {# ingredientes}}",
+          "start": "Preencher lacunas",
+          "started": "Preenchendo lacunas. Acompanhe na fila de tarefas.",
+          "error": "Não foi possível iniciar o preenchimento de lacunas"
+        }
       }
     },
     "aiConfig": {
@@ -962,7 +963,6 @@
       "alwaysUseAI": "Sempre usar importação com IA",
       "alwaysUseAIDescription": "Ignorar analisadores estruturados e extrair receitas usando apenas IA",
       "connectionSuccess": "Conexão bem-sucedida",
-      "testConnection": "Testar conexão",
       "vision": "visão",
       "automaticEnrichment": "Enriquecimento automático de receitas",
       "automaticEnrichmentDescription": "Quais enriquecimentos por IA são executados em novas receitas. Os membros ainda podem executar cada um manualmente.",
@@ -982,14 +982,6 @@
         "ingredientLinkingDescription": "Vincula cada etapa às linhas de ingredientes que ela usa, para etapas sem vínculos",
         "imageGeneration": "Geração de Imagens",
         "imageGenerationDescription": "Desenhe uma foto do prato para receitas novas que não têm nenhuma imagem"
-      },
-      "automaticIngredients": "Automático para ingredientes novos",
-      "automaticIngredientsDescription": "O que acontece quando novos ingredientes são adicionados ao catálogo.",
-      "automaticIngredientsKinds": {
-        "plainName": "Limpar o nome",
-        "plainNameDescription": "Tirar o que não é o alimento, como quantidades e códigos de embalagem",
-        "icon": "Desenhar um ícone",
-        "iconDescription": "Só para um alimento sem ícone, nem mesmo o do pai"
       },
       "tagStrategy": "Estratégia de tags",
       "tagStrategyDescription": "Quais tags a marcação automática pode usar, seja executada automática ou manualmente",
@@ -1029,11 +1021,11 @@
       "transcription": "Transcrição",
       "transcriptionDescription": "Converter áudio de vídeo em texto para extração de receitas",
       "transcriptionProvider": "Provedor de transcrição",
-      "transcriptionProviderDescription": "Apenas endpoints OpenAI e compatíveis com OpenAI oferecem suporte à transcrição Whisper",
       "transcriptionProviders": {
         "disabled": "Desativado",
         "openai": "OpenAI Whisper",
         "groq": "Groq Whisper",
+        "mistral": "Mistral Voxtral",
         "azure": "Azure OpenAI Whisper",
         "ollama": "Ollama",
         "genericOpenai": "Genérico compatível com OpenAI"
@@ -1041,7 +1033,7 @@
       "transcriptionEndpoint": "URL do endpoint",
       "transcriptionEndpointDescription": "Endpoint compatível com OpenAI com suporte a Whisper, ou endpoint Ollama",
       "transcriptionModel": "Modelo",
-      "transcriptionModelDescription": "Modelo Whisper a usar para transcrição",
+      "transcriptionModelDescription": "Modelo a usar para transcrição",
       "transcriptionModelPlaceholder": "Selecione ou insira o nome do modelo",
       "transcriptionApiKey": "Chave de API",
       "transcriptionApiKeyDescription": "Usa a chave de API da configuração de IA se não for definida",
@@ -1049,6 +1041,28 @@
       "transcriptionApiKeyOptional": "Chave de API (opcional)",
       "transcriptionApiKeyOptionalDescription": "A maioria dos servidores Whisper locais não exige chave de API",
       "transcriptionApiKeyOptionalPlaceholder": "Deixe em branco para servidores locais"
+    },
+    "pageRenderers": {
+      "title": "Renderizadores de páginas",
+      "description": "Navegadores que leem páginas que uma requisição simples não consegue ler. Primeiro o Obscura, depois o navegador Chromium e por fim o solucionador.",
+      "obscura": "Obscura",
+      "obscuraDescription": "O navegador headless que acompanha o Norish.",
+      "obscuraEndpoint": "Endpoint do Obscura",
+      "cdpToken": "Token CDP",
+      "cdpTokenDescription": "O mesmo token do serviço obscura.",
+      "chromium": "Navegador Chromium",
+      "chromiumDescription": "Qualquer Chromium com um endpoint CDP.",
+      "chromiumEndpoint": "Endpoint do Chromium",
+      "solver": "FlareSolverr ou Byparr",
+      "solverDescription": "Usado quando os navegadores falham. Nunca recebe tokens de autenticação de sites.",
+      "solverEndpoint": "Endpoint do solucionador",
+      "allowPrivateAddresses": "Permitir endereços privados",
+      "allowPrivateAddressesDescription": "Permite que importações alcancem sua rede local. O Obscura as recusa de qualquer forma.",
+      "navigationTimeout": "Tempo limite de navegação (ms)",
+      "navigationTimeoutDescription": "Quanto tempo um renderizador tem para carregar uma página.",
+      "saved": "Renderizadores de páginas salvos",
+      "error": "Falha ao salvar os renderizadores de páginas",
+      "connectionSuccess": "Conexão bem-sucedida"
     },
     "imageGenerationConfig": {
       "description": "Imagens precisam de um provedor próprio, já que a maioria dos provedores de IA não sabe desenhar.",
@@ -1102,9 +1116,7 @@
         "validateEnrichments": "Validar enriquecimentos",
         "validateEnrichmentsDescription": "Verificar as afirmações de cada enriquecimento antes de serem gravadas"
       },
-      "testConnection": "Testar conexão",
-      "connectionSuccess": "Conexão bem-sucedida",
-      "aiDisabledHint": "A IA está desativada neste servidor. Ative-a na configuração de IA para testar e usar o modelo de decisão."
+      "connectionSuccess": "Conexão bem-sucedida"
     },
     "promptsConfig": {
       "recipeExtraction": "Prompt de extração de receita",
@@ -1135,8 +1147,11 @@
       "ingredientLinkingDescription": "Usado ao vincular cada etapa às linhas de ingredientes que utiliza",
       "ingredientLinkingPlaceholder": "Prompt para vincular ingredientes às etapas...",
       "ingredientResolution": "Prompt de reconhecimento de ingredientes",
-      "ingredientResolutionDescription": "Usado para decidir se um novo nome de ingrediente é um alimento que o Norish já conhece",
+      "ingredientResolutionDescription": "Enviado ao modelo de linguagem quando a IA lê o nome de um novo ingrediente, com o nome e o ingrediente em que ele está classificado anexados depois. Diz se é um alimento, vários ou nenhum.",
       "ingredientResolutionPlaceholder": "Prompt para reconhecer nomes de ingredientes...",
+      "ingredientMatch": "Prompt de correspondência de ingredientes",
+      "ingredientMatchDescription": "Enviado ao modelo de linguagem quando os nomes dados pela IA encontram vários alimentos no catálogo, ou só alimentos escritos com uma letra de diferença, com o nome e esses alimentos anexados depois. Diz qual deles é o nome, se for algum.",
+      "ingredientMatchPlaceholder": "Prompt para associar nomes de ingredientes ao catálogo...",
       "imageGenerationBrief": "Prompt de descrição visual",
       "imageGenerationBriefDescription": "Usado para transformar uma receita em uma breve descrição visual antes de gerar a imagem. A receita é anexada após o prompt.",
       "imageGenerationBriefPlaceholder": "Prompt para a descrição visual...",
@@ -1148,7 +1163,13 @@
       "ingredientIconStylePlaceholder": "Prompt para o estilo dos ícones de ingredientes...",
       "ingredientPlainName": "Prompt para limpar nomes de ingredientes",
       "ingredientPlainNameDescription": "Enviado ao modelo de linguagem quando a IA limpa o nome de um ingrediente, com o nome e suas outras grafias anexados depois. Diz o que tirar de um nome e o que manter.",
-      "ingredientPlainNamePlaceholder": "Prompt para limpar nomes de ingredientes..."
+      "ingredientPlainNamePlaceholder": "Prompt para limpar nomes de ingredientes...",
+      "ingredientSpellingCheck": "Prompt de verificação de traduções",
+      "ingredientSpellingCheckDescription": "Enviado ao modelo de linguagem ao limpar o catálogo inteiro, para cada ingrediente do catálogo com traduções que pessoas, importações ou mesclagens adicionaram, com o ingrediente, essas traduções e uma linha de receita de cada uma anexados depois. Diz quais nomeiam o ingrediente, nenhum alimento ou outro alimento.",
+      "ingredientSpellingCheckPlaceholder": "Prompt para verificar traduções de ingredientes...",
+      "ingredientNutrition": "Prompt de nutrição de ingredientes",
+      "ingredientNutritionDescription": "Enviado ao modelo de linguagem para um ingrediente sem nutrição, densidade ou peso por unidade próprios, quando a IA pode preenchê-los, com o ingrediente e do que ele é um tipo anexados depois. Estima só o que falta ao ingrediente.",
+      "ingredientNutritionPlaceholder": "Prompt para estimar a nutrição de um ingrediente..."
     },
     "unsavedChanges": "Alterações não salvas",
     "jsonEditor": {
@@ -1158,126 +1179,129 @@
       "failedToRestore": "Falha ao restaurar padrões"
     },
     "jobQueue": {
-      "title": "Job Queues",
-      "description": "Monitor background jobs across all queues: status, current step, duration, and failures.",
-      "empty": "No jobs found",
+      "title": "Filas de trabalhos",
+      "description": "Monitore os trabalhos em segundo plano de todas as filas: status, etapa atual, duração e falhas.",
+      "empty": "Nenhum trabalho encontrado",
       "filters": {
-        "queue": "Queue",
-        "allQueues": "All queues"
+        "queue": "Fila",
+        "allQueues": "Todas as filas"
       },
       "status": {
-        "waiting": "Waiting",
-        "active": "Active",
-        "delayed": "Delayed",
-        "completed": "Completed",
-        "failed": "Failed",
-        "paused": "Paused",
-        "prioritized": "Prioritized",
-        "unknown": "Unknown",
-        "hanging": "Hanging"
+        "waiting": "Aguardando",
+        "active": "Ativo",
+        "delayed": "Adiado",
+        "completed": "Concluído",
+        "failed": "Falhou",
+        "cancelled": "Cancelado",
+        "prioritized": "Priorizado",
+        "unknown": "Desconhecido",
+        "hanging": "Travado"
       },
       "stepStatus": {
-        "done": "Done",
-        "failed": "Failed",
-        "running": "Running",
-        "skipped": "Skipped",
-        "pending": "Pending"
+        "done": "Concluída",
+        "failed": "Falhou",
+        "running": "Em execução",
+        "skipped": "Ignorada",
+        "pending": "Pendente"
       },
       "steps": {
-        "dedupe-check": "Check existing",
-        "fetch-allergies": "Fetch allergies",
-        "parsing": "Parse recipe",
-        "saving": "Save recipe",
-        "post-processing": "Post processing",
-        "preparing-images": "Prepare images",
-        "ai-extraction": "AI extraction",
-        "parsing-text": "Parse pasted text",
-        "creating-recipes": "Create recipes",
-        "ai-request": "AI request",
-        "syncing-event": "Sync calendar event",
-        "deleting-event": "Delete calendar event",
-        "running": "Run task",
-        "searching": "Search the shop",
-        "reading-product": "Read the product page",
-        "saving-link": "Save the link",
-        "asking-ai": "Ask AI about the food",
+        "dedupe-check": "Verificar existentes",
+        "fetch-allergies": "Buscar alergias",
+        "parsing": "Analisar receita",
+        "saving": "Salvar receita",
+        "post-processing": "Pós-processamento",
+        "preparing-images": "Preparar imagens",
+        "ai-extraction": "Extração por IA",
+        "parsing-text": "Analisar texto colado",
+        "creating-recipes": "Criar receitas",
+        "ai-request": "Requisição à IA",
+        "syncing-event": "Sincronizar evento do calendário",
+        "deleting-event": "Excluir evento do calendário",
+        "running": "Executar tarefa",
+        "searching": "Buscar na loja",
+        "reading-product": "Ler a página do produto",
+        "saving-link": "Salvar o link",
+        "asking-ai": "Perguntar à IA sobre o alimento",
         "drawing-icon": "Desenhar o ícone do alimento",
+        "filling-gaps": "Preencher as lacunas do alimento",
         "naming": "Limpar o nome do alimento"
       },
       "queues": {
-        "recipe-import": "Recipe import",
-        "image-recipe-import": "Image import",
-        "paste-recipe-import": "Paste import",
-        "nutrition-estimation": "Nutrition estimation",
-        "auto-tagging": "Auto-tagging",
-        "auto-categorization": "Auto-categorization",
-        "allergy-detection": "Allergy detection",
+        "recipe-import": "Importação de receitas",
+        "image-recipe-import": "Importação por imagem",
+        "paste-recipe-import": "Importação por texto colado",
+        "nutrition-estimation": "Estimativa nutricional",
+        "auto-tagging": "Tags automáticas",
+        "auto-categorization": "Categorização automática",
+        "allergy-detection": "Detecção de alergias",
         "recipe-provenance": "Procedência da receita",
         "ingredient-linking": "Vinculação de ingredientes",
-        "caldav-sync": "CalDAV sync",
-        "scheduled-tasks": "Scheduled tasks",
+        "caldav-sync": "Sincronização CalDAV",
+        "scheduled-tasks": "Tarefas agendadas",
         "image-generation": "Geração de imagens",
         "store-lookup": "Consulta de loja",
         "ingredient-review": "Perguntar à IA sobre ingredientes",
         "ingredient-icons": "Desenhar ícones de ingredientes",
-        "new-ingredients": "Ingredientes novos"
+        "ingredient-fill": "Preencher lacunas de ingredientes"
       },
       "summary": {
-        "failed": "{count} failed"
+        "failed": "{count} com falha"
       },
       "table": {
-        "job": "Job",
+        "job": "Trabalho",
         "status": "Status",
-        "step": "Step",
-        "duration": "Duration",
-        "created": "Created",
-        "runsAt": "Runs {time}"
+        "step": "Etapa",
+        "duration": "Duração",
+        "created": "Criado",
+        "runsAt": "Executa {time}"
       },
       "detail": {
-        "title": "Job Details",
-        "notFound": "Job not found. It may have been cleaned up.",
+        "title": "Detalhes do trabalho",
+        "notFound": "Trabalho não encontrado. Ele pode ter sido removido na limpeza.",
+        "cancelledNote": "Um administrador cancelou este trabalho.",
         "sections": {
-          "error": "Error",
-          "pipelineSteps": "Pipeline Steps",
-          "input": "Input",
+          "error": "Erro",
+          "pipelineSteps": "Etapas do pipeline",
+          "input": "Entrada",
           "logs": "Logs",
-          "errors": "Errors"
+          "errors": "Erros"
         },
         "fields": {
-          "queue": "Queue",
-          "jobId": "Job ID",
-          "description": "Description",
-          "recipe": "Recipe",
-          "created": "Created",
-          "started": "Started",
-          "finished": "Finished",
-          "duration": "Duration",
-          "attempts": "Attempts",
+          "queue": "Fila",
+          "jobId": "ID do trabalho",
+          "description": "Descrição",
+          "recipe": "Receita",
+          "created": "Criado",
+          "started": "Iniciado",
+          "finished": "Finalizado",
+          "duration": "Duração",
+          "attempts": "Tentativas",
           "models": "Modelos",
           "tokens": "Tokens",
-          "runsAt": "Runs at",
-          "nextRun": "Next run"
+          "runsAt": "Executa em",
+          "nextRun": "Próxima execução"
         },
         "modelTokens": "{tokens} tokens",
-        "attempt": "Attempt {number}",
+        "attempt": "Tentativa {number}",
         "stackTrace": "Stack trace"
       },
       "actions": {
-        "retry": "Retry",
-        "remove": "Remove"
+        "retry": "Tentar novamente",
+        "cancel": "Parar",
+        "cancelling": "Parando…",
+        "remove": "Remover"
       },
       "removeModal": {
-        "message": "Permanently remove this job?",
-        "confirm": "Remove job"
+        "message": "Remover este trabalho permanentemente?"
       },
       "retention": {
-        "title": "Job Retention",
-        "keepCompleted": "Keep completed jobs",
-        "keepFailed": "Keep failed jobs",
-        "maxAgeDays": "Max age (days)",
+        "title": "Retenção de trabalhos",
+        "keepCompleted": "Manter trabalhos concluídos",
+        "keepFailed": "Manter trabalhos com falha",
+        "maxAgeDays": "Idade máxima (dias)",
         "description": "Quantos trabalhos concluídos manter por fila."
       },
-      "pagination": "Page {current} of {total}"
+      "pagination": "Página {current} de {total}"
     },
     "cuisineVocabulary": {
       "description": "Culinárias são um vocabulário curado que você controla. Os nomes aparecem exatamente como escritos aqui, em todos os idiomas.",

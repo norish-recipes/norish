@@ -185,8 +185,7 @@ export interface GeneratedImageReplacement {
   imageUrl: string;
   /**
    * URLs this recipe no longer references anywhere — not by a surviving
-   * gallery row, not by the legacy scalar, and not as the image just
-   * written. The repository holds no filesystem, so removing the files is
+   * gallery row, and not as the image just written. The repository holds no filesystem, so removing the files is
    * the caller's job.
    */
   replacedImageUrls: string[];
@@ -203,10 +202,6 @@ export interface GeneratedImageReplacement {
  * most one Generated Image and re-runs replace their own predecessor rather
  * than accumulating toward the gallery cap.
  *
- * The deprecated `recipes.image` scalar is cleared in the same transaction:
- * every reader resolves gallery-first, and a stale scalar would keep naming
- * a file this write may just have released.
- *
  * Eligibility is what keeps automatic runs off stored photographs; by the
  * time this runs, the coordinator has decided the slot may be consumed.
  *
@@ -219,7 +214,7 @@ export async function replaceRecipePrimaryImageWithGenerated(
 ): Promise<GeneratedImageReplacement | null> {
   return await db.transaction(async (tx) => {
     const [recipe] = await tx
-      .select({ id: recipes.id, image: recipes.image })
+      .select({ id: recipes.id })
       .from(recipes)
       .where(eq(recipes.id, recipeId))
       .for("update");
@@ -256,20 +251,16 @@ export async function replaceRecipePrimaryImageWithGenerated(
 
     await tx
       .update(recipes)
-      .set({ image: null, updatedAt: new Date(), version: sql`${recipes.version} + 1` })
+      .set({ updatedAt: new Date(), version: sql`${recipes.version} + 1` })
       .where(eq(recipes.id, recipeId));
 
     // A file is released only when nothing on this recipe references it any
-    // more: duplicate-content rows share a URL, and the legacy scalar often
-    // names the same file as the displaced primary.
+    // more: duplicate-content rows share a URL.
     const displacedIds = new Set(displaced.map((row) => row.id));
     const survivingUrls = new Set(
       rows.filter((row) => !displacedIds.has(row.id)).map((row) => row.image)
     );
-    const previousScalar = (recipe.image ?? "").trim();
     const candidates = new Set(displaced.map((row) => row.image));
-
-    if (previousScalar !== "") candidates.add(previousScalar);
 
     return {
       imageUrl,

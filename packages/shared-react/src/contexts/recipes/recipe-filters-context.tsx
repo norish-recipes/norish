@@ -1,10 +1,12 @@
-import { createContext, useCallback, useContext, useEffect, useMemo, useState } from "react";
+import { createContext, use, useCallback, useEffect, useMemo, useState } from "react";
 
 import { SearchField } from "@norish/shared/contracts";
 
 import type { RecipeFiltersStorageAdapter } from "../../hooks/recipes/dashboard/recipe-filters-storage-adapter";
-import type { CanonicalRecipeFilters } from "./filter-contract";
+import type { CanonicalRecipeFilters, PersistedRecipeFilters } from "./filter-contract";
 import {
+  canonicalRecipeFilters,
+  changedRecipeFilters,
   DEFAULT_RECIPE_FILTERS,
   normalizePersistedRecipeFilters,
   toggleSearchFieldIn,
@@ -31,54 +33,64 @@ export function createRecipeFiltersContext({
 }: CreateRecipeFiltersContextOptions = {}) {
   const RecipeFiltersContext = createContext<RecipeFiltersContextValue | null>(null);
 
-  function RecipeFiltersProvider({ children }: { children: React.ReactNode }) {
-    const [filters, setFilterState] = useState(DEFAULT_RECIPE_FILTERS);
-    const [isHydrated, setHydrated] = useState(storageAdapter === undefined);
+  /**
+   * `initialFilters`: the stored filters as the server read them (web, from a cookie), so the first
+   * render is under them. Storage is still read after mount, and wins: a kept document can be old.
+   */
+  function RecipeFiltersProvider({
+    children,
+    initialFilters,
+  }: {
+    children: React.ReactNode;
+    initialFilters?: PersistedRecipeFilters;
+  }) {
+    "use memo";
+
+    const [filterState, setFilterState] = useState(() =>
+      initialFilters ? canonicalRecipeFilters(initialFilters) : DEFAULT_RECIPE_FILTERS
+    );
+    const [storageRead, setStorageRead] = useState(storageAdapter === undefined);
+    const isHydrated = storageRead || initialFilters !== undefined;
 
     useEffect(() => {
       if (!storageAdapter) return;
 
       let mounted = true;
 
-      const loadPersistedFilters = async () => {
-        try {
-          const rawValue = await storageAdapter.getItem(storageKey);
+      void Promise.resolve()
+        .then(() => storageAdapter.getItem(storageKey))
+        .then((rawValue) => {
+          if (!mounted || !rawValue) return;
 
-          if (!mounted) return;
-
-          if (!rawValue) {
-            setHydrated(true);
-
-            return;
-          }
-
-          const parsed = JSON.parse(rawValue) as unknown;
-          const normalized = normalizePersistedRecipeFilters(parsed);
+          const normalized = normalizePersistedRecipeFilters(JSON.parse(rawValue) as unknown);
 
           if (normalized) {
-            setFilterState((previous) => ({ ...previous, ...normalized }));
+            setFilterState((previous) =>
+              Object.keys(changedRecipeFilters(normalized, previous)).length === 0
+                ? previous
+                : { ...previous, ...normalized }
+            );
           }
-        } finally {
+        })
+        .finally(() => {
           if (mounted) {
-            setHydrated(true);
+            setStorageRead(true);
           }
-        }
-      };
-
-      void loadPersistedFilters();
+        });
 
       return () => {
         mounted = false;
       };
-    }, [storageAdapter, storageKey]);
+    }, []);
 
+    // Not before storage is read, or the first render's filters would overwrite newer ones.
     useEffect(() => {
-      if (!storageAdapter || !isHydrated) return;
+      if (!storageAdapter || !storageRead) return;
 
-      const { rawInput: _rawInput, ...persisted } = filters;
+      const { rawInput: _rawInput, ...persisted } = filterState;
 
       void storageAdapter.setItem(storageKey, JSON.stringify(persisted));
-    }, [filters, isHydrated, storageAdapter, storageKey]);
+    }, [filterState, storageRead]);
 
     const setFilters = useCallback((next: Partial<CanonicalRecipeFilters>) => {
       setFilterState((previous) => ({ ...previous, ...next }));
@@ -92,7 +104,7 @@ export function createRecipeFiltersContext({
         libraryType: previous.libraryType,
       }));
       void storageAdapter?.removeItem(storageKey);
-    }, [storageAdapter, storageKey]);
+    }, []);
 
     const toggleSearchField = useCallback((field: SearchField) => {
       setFilterState((previous) => ({
@@ -102,14 +114,16 @@ export function createRecipeFiltersContext({
     }, []);
 
     const value = useMemo<RecipeFiltersContextValue>(
-      () => ({ filters, setFilters, clearFilters, toggleSearchField, isHydrated }),
-      [filters, setFilters, clearFilters, toggleSearchField, isHydrated]
+      () => ({ filters: filterState, setFilters, clearFilters, toggleSearchField, isHydrated }),
+      [filterState, setFilters, clearFilters, toggleSearchField, isHydrated]
     );
 
-    return <RecipeFiltersContext.Provider value={value}>{children}</RecipeFiltersContext.Provider>;
+    return <RecipeFiltersContext value={value}>{children}</RecipeFiltersContext>;
   }
 
   function useRecipeFiltersContext() {
+    "use memo";
+
     const context = useOptionalRecipeFiltersContext();
 
     if (!context) {
@@ -128,7 +142,9 @@ export function createRecipeFiltersContext({
    * happens to be one.
    */
   function useOptionalRecipeFiltersContext() {
-    return useContext(RecipeFiltersContext);
+    "use memo";
+
+    return use(RecipeFiltersContext);
   }
 
   return {

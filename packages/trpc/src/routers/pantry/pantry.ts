@@ -30,29 +30,31 @@ const suggestions = authedProcedure.query(async ({ ctx }): Promise<PantrySuggest
 });
 
 /**
- * Put a food in the Pantry: a typed name, resolved to an Ingredient so "Olive
- * Oil" and "olive oil, cold-pressed" are one item, or a picked Ingredient,
- * kept as picked. An Ingredient the household already has is that item, and
- * nothing is written or announced for it. Returns the item's id, which is
- * the client's own for a food that was not there (ADR-0003).
+ * Put a typed or picked food in the Pantry, announcing each item made, and answer the first's id:
+ * the client's own for a food that was not there (ADR-0003), else the item the household has.
  */
 const add = authedProcedure.input(PantryIngredientAddSchema).mutation(async ({ ctx, input }) => {
   const id = input.id ?? crypto.randomUUID();
   const actor = { userId: ctx.user.id, userIds: ctx.userIds };
-  const added =
+  const items =
     "ingredientId" in input
       ? await addPickedToPantry(id, { ...actor, ingredientId: input.ingredientId })
       : await addToPantry(id, { ...actor, name: input.name });
+  const [first] = items;
 
-  if (!added) throw new TRPCError({ code: "NOT_FOUND", message: "Ingredient not found" });
-  const { item, created } = added;
+  if (!first) {
+    throw "ingredientId" in input
+      ? new TRPCError({ code: "NOT_FOUND", message: "Ingredient not found" })
+      : new TRPCError({ code: "BAD_REQUEST", message: "Names no food" });
+  }
 
-  if (created) {
+  for (const { item, created } of items) {
+    if (!created) continue;
     log.info({ userId: ctx.user.id, pantryIngredientId: item.id }, "Pantry ingredient added");
     void pantry.publish("added", { item }, { householdKey: ctx.householdKey });
   }
 
-  return item.id;
+  return first.item.id;
 });
 
 /** Take a name out of the Pantry: any member of the household may. */

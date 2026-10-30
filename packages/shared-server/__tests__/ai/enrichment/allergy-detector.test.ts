@@ -69,7 +69,6 @@ const CLEAR = { Gluten: 0.98, Nuts: 0.95, Dairy: 0.9, Shellfish: 0.01 };
 
 describe("detectAllergiesInRecipe", () => {
   beforeEach(() => {
-    vi.clearAllMocks();
     vi.mocked(isDecisionUseEnabled).mockResolvedValue(true);
     mocked.decide.mockResolvedValue(decided(CLEAR));
     mocked.generateStructured.mockResolvedValue({ detectedAllergens: ["Gluten", "Dairy"] });

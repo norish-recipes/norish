@@ -61,23 +61,16 @@ export function extractJobOperationId<T>(data: T): OperationId | undefined {
  * This ensures that any events emitted during job processing will carry the
  * operationId that was attached when the job was enqueued.
  *
- * @example
- * ```ts
- * const worker = new Worker(
- *   QUEUE_NAME,
- *   createContextAwareProcessor(processImportJob),
- *   options
- * );
- * ```
+ * `createWorker` wraps every processor with it; nothing else builds a Worker.
  */
 export function createContextAwareProcessor<T>(processor: Processor<T>): Processor<T> {
-  return (job: Job<T>, token?: string) => {
+  return (job: Job<T>, token?: string, signal?: AbortSignal) => {
     const operationId = extractJobOperationId(job.data);
 
     if (!operationId) {
-      return processor(job, token);
+      return processor(job, token, signal);
     }
 
-    return runWithOperationContext({ operationId }, () => processor(job, token));
+    return runWithOperationContext({ operationId }, () => processor(job, token, signal));
   };
 }

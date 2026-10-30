@@ -61,7 +61,6 @@ function plannedItem(overrides: Record<string, unknown> = {}) {
 }
 
 beforeEach(() => {
-  vi.clearAllMocks();
   mockGetCaldavConfigDecrypted.mockResolvedValue(CONFIG);
   mockAddCaldavSyncJob.mockResolvedValue({ id: "job" });
   mockListPlannedItemsByUserAndDateRange.mockResolvedValue([]);
@@ -125,7 +124,7 @@ describe("syncAllFutureItems", () => {
       plannedItem(),
       plannedItem({ id: "item-2" }),
     ]);
-    mockAddCaldavSyncJob.mockRejectedValueOnce(new Error("redis down"));
+    mockAddCaldavSyncJob.mockRejectedValueOnce(new Error("valkey down"));
 
     const result = await syncAllFutureItems("user-1");
 

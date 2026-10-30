@@ -32,9 +32,6 @@ vi.mock("@norish/config/env-config-server", () => ({
     UPLOADS_DIR: "/tmp/uploads",
   },
 }));
-vi.mock("@norish/api/startup/media-cleanup", () => ({
-  deleteAvatarByFilename: vi.fn().mockResolvedValue(undefined),
-}));
 vi.mock("fs/promises", () => ({
   writeFile: vi.fn().mockResolvedValue(undefined),
   mkdir: vi.fn().mockResolvedValue(undefined),
@@ -61,7 +58,6 @@ describe("user procedures", () => {
   const mockUser = createMockUser();
 
   beforeEach(() => {
-    vi.clearAllMocks();
     resetUserMocks();
   });
 

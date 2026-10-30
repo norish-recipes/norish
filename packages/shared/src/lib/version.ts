@@ -11,7 +11,7 @@ export function isUpdateAvailable(current: string, latest: string | null): boole
 
   // Normalize: extract major.minor.patch as numbers
   const normalize = (v: string): [number, number, number] => {
-    const base = v.replace(/-.*$/, ""); // Strip suffix like -beta
+    const base = v.replace(/-.*/, ""); // Strip suffix like -beta
     const parts = base.split(".").map(Number);
 
     return [parts[0] ?? 0, parts[1] ?? 0, parts[2] ?? 0];

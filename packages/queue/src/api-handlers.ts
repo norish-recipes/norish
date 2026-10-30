@@ -13,6 +13,8 @@ import type { ImageImportFile } from "./contracts/job-types";
 export interface QueueParseRecipeResult {
   recipe: FullRecipeInsertDTO;
   usedAI: boolean;
+  /** Import triage scored the kept structured parse as incomplete */
+  incomplete?: boolean;
   /** Why the Python parser came up empty when AI extraction stood in for it */
   parserDiagnostics?: Record<string, unknown>;
 }
@@ -71,7 +73,7 @@ export interface QueueApiHandlers {
   /** Whether a Search Address works, asked with the user's own term. */
   verifySearchAddress(searchAddress: string, term: string | null): Promise<SearchAddressCheck>;
   /**
-   * One Store Visit: a plain fetch, and Obscura only when that is turned away.
+   * One Store Visit: a plain fetch, and the Page Renderers only when that is turned away.
    * The `url` handed back is the address the shop answered from, which is what
    * the page must be read against.
    */

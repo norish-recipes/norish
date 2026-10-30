@@ -1,9 +1,11 @@
 "use client";
 
-import { FormEvent, useState } from "react";
+import { SubmitEvent, useState } from "react";
 import { SettingsCard } from "@/app/(app)/settings/components/settings-card";
+import { ActionButton, ActionButtonGroup } from "@/components/shared/action-button";
+import { ArrowRightEndOnRectangleIcon } from "@heroicons/react/16/solid";
 import { HomeIcon, UserGroupIcon } from "@heroicons/react/24/outline";
-import { Button, Input, InputOTP, Label, REGEXP_ONLY_DIGITS, TextField } from "@heroui/react";
+import { Input, InputOTP, Label, REGEXP_ONLY_DIGITS, TextField } from "@heroui/react";
 import { useTranslations } from "next-intl";
 
 import { useHouseholdSettingsContext } from "../context";
@@ -15,14 +17,14 @@ export default function NoHouseholdView() {
   const [joinCode, setJoinCode] = useState("");
   const [isCreating, setIsCreating] = useState(false);
   const [isJoining, setIsJoining] = useState(false);
-  const handleCreateHousehold = async (e: FormEvent) => {
+  const handleCreateHousehold = async (e: SubmitEvent) => {
     e.preventDefault();
     setIsCreating(true);
     createHousehold(householdName);
     setHouseholdName("");
     setIsCreating(false);
   };
-  const handleJoinHousehold = async (e: FormEvent) => {
+  const handleJoinHousehold = async (e: SubmitEvent) => {
     e.preventDefault();
     setIsJoining(true);
     joinHousehold(joinCode);
@@ -38,16 +40,16 @@ export default function NoHouseholdView() {
           icon={HomeIcon}
           title={t("create.title")}
         >
-          <form className="flex flex-col gap-4" onSubmit={handleCreateHousehold}>
+          <form className="flex flex-1 flex-col gap-4" onSubmit={handleCreateHousehold}>
             <TextField isRequired value={householdName} onChange={setHouseholdName}>
               <Label>{t("create.nameLabel")}</Label>
               <Input variant="secondary" placeholder={t("create.namePlaceholder")} />
             </TextField>
-            <div className="flex justify-end">
-              <Button type="submit" variant="primary" isPending={isCreating}>
+            <ActionButtonGroup className="mt-auto">
+              <ActionButton action="create" isPending={isCreating} type="submit">
                 {t("create.submitButton")}
-              </Button>
-            </div>
+              </ActionButton>
+            </ActionButtonGroup>
           </form>
         </SettingsCard>
 
@@ -57,7 +59,7 @@ export default function NoHouseholdView() {
           icon={UserGroupIcon}
           title={t("join.title")}
         >
-          <form className="flex flex-col gap-4" onSubmit={handleJoinHousehold}>
+          <form className="flex flex-1 flex-col gap-4" onSubmit={handleJoinHousehold}>
             <div className="flex flex-col gap-2">
               <Label>{t("join.codeLabel")}</Label>
               <InputOTP
@@ -74,6 +76,8 @@ export default function NoHouseholdView() {
                         against the white card. */}
                   {Array.from({ length: 6 }).map((_, index) => (
                     <InputOTP.Slot
+                      // A code slot is its position.
+                      // eslint-disable-next-line @eslint-react/no-array-index-key
                       key={index}
                       className="border-field-border bg-default text-foreground hover:bg-default data-[active=true]:bg-default data-[filled=true]:bg-default h-12 w-10 flex-none shadow-none"
                       index={index}
@@ -82,11 +86,16 @@ export default function NoHouseholdView() {
                 </InputOTP.Group>
               </InputOTP>
             </div>
-            <div className="flex justify-end">
-              <Button type="submit" variant="primary" isPending={isJoining}>
+            <ActionButtonGroup className="mt-auto">
+              <ActionButton
+                action="apply"
+                icon={ArrowRightEndOnRectangleIcon}
+                isPending={isJoining}
+                type="submit"
+              >
                 {t("join.submitButton")}
-              </Button>
-            </div>
+              </ActionButton>
+            </ActionButtonGroup>
           </form>
         </SettingsCard>
       </div>

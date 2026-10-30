@@ -14,11 +14,8 @@
     "clean": "git clean -xdf .next .turbo out node_modules"
   },
   "dependencies": {
-    "@fontsource-variable/fraunces": "^5.2.5",
     "@fontsource-variable/inter": "^5.3.0",
     "@heroicons/react": "catalog:",
-    "@norish/ui": "workspace:*",
-    "lenis": "^1.3.26",
     "next": "catalog:",
     "next-themes": "0.4.6",
     "react": "catalog:",
@@ -34,10 +31,13 @@
     "@types/react": "catalog:",
     "@types/react-dom": "catalog:",
     "eslint": "catalog:",
+    "playwright": "^1.64.1",
     "postcss": "catalog:",
     "prettier": "catalog:",
+    "sharp": "^0.35.5",
     "tailwindcss": "catalog:",
-    "typescript": "catalog:"
+    "typescript": "catalog:",
+    "wrangler": "4.154.0"
   },
   "prettier": "@norish/prettier-config"
 }

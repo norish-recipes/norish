@@ -9,9 +9,7 @@
   "editNote": {
     "title": "Редактиране на бележка",
     "noteLabel": "Бележка",
-    "notePlaceholder": "Въведи бележка...",
-    "date": "Дата",
-    "slot": "Хранене"
+    "notePlaceholder": "Въведи бележка..."
   },
   "navigation": {
     "previousMonth": "Предходен месец",

@@ -12,7 +12,7 @@
  */
 
 import { InvalidResponseDataError } from "@ai-sdk/provider";
-import { APICallError, NoImageGeneratedError, NoObjectGeneratedError } from "ai";
+import { APICallError, NoImageGeneratedError, NoObjectGeneratedError, RetryError } from "ai";
 
 export abstract class AIError extends Error {
   /** Whether the same request could succeed on a retry, without operator action. */
@@ -79,15 +79,31 @@ function describeAPICallError(error: APICallError): string {
   return error.message;
 }
 
-/** A timeout from `AbortSignal.timeout` or the shared transport. */
+/**
+ * The provider's own failure: read through a typed AI error to its cause, and
+ * through the SDK's RetryError to the last attempt's error.
+ */
+function providerFailure(error: unknown): unknown {
+  const cause = error instanceof AIError ? error.cause : error;
+
+  return RetryError.isInstance(cause) ? cause.lastError : cause;
+}
+
+const TIMEOUT_NAMES = new Set(["TimeoutError", "HeadersTimeoutError", "BodyTimeoutError"]);
+
+/** A timeout from `AbortSignal.timeout` or the shared transport, or an aborted request. */
 function isTimeout(error: unknown): boolean {
-  return (
-    error instanceof Error &&
-    (error.name === "TimeoutError" ||
-      error.name === "AbortError" ||
-      error.name === "HeadersTimeoutError" ||
-      error.name === "BodyTimeoutError")
-  );
+  return error instanceof Error && (error.name === "AbortError" || TIMEOUT_NAMES.has(error.name));
+}
+
+/**
+ * Whether a request ran out of time, as opposed to a stopped job or any other
+ * failure. Reads through a typed AI error to its cause.
+ */
+export function isTimedOut(error: unknown): boolean {
+  const cause = error instanceof AIError ? error.cause : error;
+
+  return cause instanceof Error && TIMEOUT_NAMES.has(cause.name);
 }
 
 /**
@@ -102,9 +118,11 @@ function isTimeout(error: unknown): boolean {
  * are classified together.
  */
 export function isRequestShapeRejection(error: unknown): boolean {
-  if (!APICallError.isInstance(error)) return false;
+  const cause = providerFailure(error);
 
-  const status = error.statusCode;
+  if (!APICallError.isInstance(cause)) return false;
+
+  const status = cause.statusCode;
 
   return status === 400 || status === 404 || status === 422 || status === 501;
 }
@@ -115,7 +133,7 @@ export function isRequestShapeRejection(error: unknown): boolean {
  * by typing a different key. Reads through a typed AI error to its cause.
  */
 export function isCredentialRejection(error: unknown): boolean {
-  const cause = error instanceof AIError ? error.cause : error;
+  const cause = providerFailure(error);
 
   if (!APICallError.isInstance(cause)) return false;
 
@@ -129,7 +147,7 @@ export function isCredentialRejection(error: unknown): boolean {
  * header gets a guess of fifteen seconds.
  */
 export function rateLimitWaitMs(error: unknown): number | null {
-  const cause = error instanceof AIError ? error.cause : error;
+  const cause = providerFailure(error);
 
   if (!APICallError.isInstance(cause) || cause.statusCode !== 429) return null;
 
@@ -149,6 +167,9 @@ export function rateLimitWaitMs(error: unknown): number | null {
  */
 export function toAIError(error: unknown): AIError {
   if (error instanceof AIError) return error;
+
+  // The SDK's own retries gave up: classify the last attempt, so a 429 stays a rate limit (#645).
+  if (RetryError.isInstance(error)) return toAIError(error.lastError);
 
   if (NoObjectGeneratedError.isInstance(error)) {
     return new AIResponseError("The model's response did not match the expected shape.", {

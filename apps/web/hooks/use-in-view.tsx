@@ -6,9 +6,14 @@ export default function useInView(ref: React.RefObject<HTMLElement | null>, root
   useEffect(() => {
     if (!ref.current) return;
 
-    const observer = new IntersectionObserver(([entry]) => setIsInView(entry.isIntersecting), {
-      rootMargin,
-    });
+    const observer = new IntersectionObserver(
+      ([entry]) => {
+        if (entry) setIsInView(entry.isIntersecting);
+      },
+      {
+        rootMargin,
+      }
+    );
 
     observer.observe(ref.current);
 

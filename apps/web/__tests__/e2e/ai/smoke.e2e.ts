@@ -52,7 +52,7 @@ let page: Page;
 test.beforeEach(async ({ aiStack, page: fixturePage }) => {
   stack = aiStack;
   page = fixturePage;
-  await setAutomaticEnrichment({});
+  await setAutomaticEnrichment(stack, {});
 });
 
 test("a browser AI paste import receives the controlled provider response", async () => {
