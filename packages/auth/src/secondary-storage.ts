@@ -6,8 +6,8 @@ import { getPublisherClient } from "@norish/shared-server/valkey/client";
 // runs a fixed length from its first request. One script, so no request can
 // slip in between the two commands.
 const INCREMENT_SCRIPT = `
-local count = server.call("INCR", KEYS[1])
-if count == 1 then server.call("EXPIRE", KEYS[1], ARGV[1]) end
+local count = redis.call("INCR", KEYS[1])
+if count == 1 then redis.call("EXPIRE", KEYS[1], ARGV[1]) end
 return count
 `;
 

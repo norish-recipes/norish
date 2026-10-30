@@ -79,6 +79,11 @@ if (!process.env.DATABASE_URL) {
   process.env.DATABASE_URL = `postgresql://${credentials}@${host}:${port}/${db}`;
 }
 
+// An install from before Valkey still names its server REDIS_URL.
+if (!process.env.VALKEY_URL && process.env.REDIS_URL) {
+  process.env.VALKEY_URL = process.env.REDIS_URL;
+}
+
 const isBuild =
   process.env.SKIP_ENV_VALIDATION === "1" ||
   process.env.VITEST === "true" ||
@@ -232,7 +237,7 @@ const ServerConfigFields = z.object({
   MAX_IMAGE_FILE_SIZE: z.coerce.number().default(10 * 1024 * 1024), // 10MB
   MAX_VIDEO_FILE_SIZE: z.coerce.number().default(100 * 1024 * 1024), // 100MB
 
-  // Valkey connection (valkey:// or valkeys://). Required at runtime, like DATABASE_URL
+  // valkey:// or redis:// (valkeys:// or rediss:// for TLS). Required at runtime, like DATABASE_URL
   VALKEY_URL: isBuild ? z.url().default("valkey://localhost:6379") : z.url(),
 
   // Internationalization

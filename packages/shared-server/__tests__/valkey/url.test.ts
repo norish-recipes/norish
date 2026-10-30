@@ -29,6 +29,16 @@ describe("parseValkeyUrl", () => {
     expect(parseValkeyUrl("valkeys://host")).toEqual({ host: "host", port: 6379, tls: {} });
   });
 
+  it("reads redis:// and rediss:// the same way, for an install still on Redis", () => {
+    expect(parseValkeyUrl("redis://:secret@redis:6380/1")).toEqual({
+      host: "redis",
+      port: 6380,
+      password: "secret",
+      db: 1,
+    });
+    expect(parseValkeyUrl("rediss://host")).toEqual({ host: "host", port: 6379, tls: {} });
+  });
+
   it("decodes percent-encoded credentials", () => {
     expect(parseValkeyUrl("valkey://us%40er:p%40ss@host")).toMatchObject({
       username: "us@er",
@@ -40,8 +50,8 @@ describe("parseValkeyUrl", () => {
     expect(() => parseValkeyUrl("valkey://host/two")).toThrow(/database index/);
   });
 
-  it("rejects a scheme that is not valkey or valkeys, redis:// included", () => {
+  it("rejects any other scheme", () => {
     expect(() => parseValkeyUrl("http://host:6379")).toThrow(/scheme/);
-    expect(() => parseValkeyUrl("redis://host:6379")).toThrow(/use valkey:\/\/ or valkeys:\/\//);
+    expect(() => parseValkeyUrl("redisx://host:6379")).toThrow(/scheme/);
   });
 });

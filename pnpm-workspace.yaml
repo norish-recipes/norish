@@ -46,6 +46,7 @@ catalog:
   server-only: ^0.0.1
   superjson: ^2.2.6
   tailwindcss: ^4.3.3
+  testcontainers: ^12.2.1
   trpc-to-openapi: ^3.3.3
   tsx: 4.23.15
   turbo: ^2.11.10

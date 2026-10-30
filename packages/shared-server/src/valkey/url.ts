@@ -4,7 +4,8 @@
  * The one place a `VALKEY_URL` is turned into ioredis connection options. Both
  * the pub/sub client and BullMQ's connection build on it, so a URL shape that
  * works for one works for the other: `valkey://user:pass@host:6379/2` keeps
- * its username and database index, and `valkeys://host` turns TLS on.
+ * its username and database index, and `valkeys://host` turns TLS on. Redis
+ * speaks the same protocol, so `redis://` and `rediss://` work the same way.
  */
 
 import type { ConnectionOptions } from "node:tls";
@@ -23,9 +24,9 @@ const DEFAULT_PORT = 6379;
 export function parseValkeyUrl(url: string): ParsedValkeyUrl {
   const parsed = new URL(url);
 
-  if (parsed.protocol !== "valkey:" && parsed.protocol !== "valkeys:") {
+  if (!/^(?:valkey|redis)s?:$/.test(parsed.protocol)) {
     throw new Error(
-      `Unsupported Valkey URL scheme: ${parsed.protocol} (use valkey:// or valkeys://)`
+      `Unsupported Valkey URL scheme: ${parsed.protocol} (use valkey://, redis://, valkeys:// or rediss://)`
     );
   }
 
@@ -54,7 +55,7 @@ export function parseValkeyUrl(url: string): ParsedValkeyUrl {
     result.db = db;
   }
 
-  if (parsed.protocol === "valkeys:") {
+  if (parsed.protocol === "valkeys:" || parsed.protocol === "rediss:") {
     result.tls = {};
   }
 

@@ -1,12 +1,10 @@
 /**
- * The `realtimePublish` Lua script against compose's Valkey, connected with the
- * production options: a Lua script can only be proven by Valkey itself.
+ * The `realtimePublish` Lua script against compose's Valkey and the Redis 0.25 shipped, connected
+ * with the production options: a Lua script can only be proven by the server itself.
  */
 
 // @vitest-environment node
 
-import type { StartedValkeyContainer } from "@testcontainers/valkey";
-import { ValkeyContainer } from "@testcontainers/valkey";
 import Valkey from "ioredis";
 import superjson from "superjson";
 import { afterAll, beforeAll, describe, expect, it, vi } from "vitest";
@@ -20,7 +18,7 @@ import {
   RESUME_TTL_SECONDS,
 } from "../../src/realtime/resume";
 import { getValkeyConnectionOptions } from "../../src/valkey/client";
-import { VALKEY_IMAGE, valkeyUrl } from "../helpers/valkey";
+import { REDIS_IMAGE, startServer, VALKEY_IMAGE } from "../helpers/valkey";
 
 vi.mock("@norish/config/env-config-server", () => ({ SERVER_CONFIG: { VALKEY_URL: "" } }));
 
@@ -42,14 +40,14 @@ function envelope(payload: unknown): RealtimeEventEnvelope {
   };
 }
 
-describe("realtimePublish against Valkey", () => {
-  let container: StartedValkeyContainer;
+describe.each([VALKEY_IMAGE, REDIS_IMAGE])("realtimePublish against %s", (image) => {
+  let server: Awaited<ReturnType<typeof startServer>>;
   let publisher: Valkey;
   let subscriber: Valkey;
 
   beforeAll(async () => {
-    container = await new ValkeyContainer(VALKEY_IMAGE).start();
-    publisher = new Valkey(getValkeyConnectionOptions(valkeyUrl(container)));
+    server = await startServer(image);
+    publisher = new Valkey(getValkeyConnectionOptions(server.url));
     subscriber = publisher.duplicate();
     registerRealtimePublish(publisher);
     await subscriber.subscribe(CHANNEL);
@@ -58,7 +56,7 @@ describe("realtimePublish against Valkey", () => {
   afterAll(async () => {
     await subscriber?.quit();
     await publisher?.quit();
-    await container?.stop();
+    await server?.stop();
   });
 
   it("publishes the envelope with the stream entry id in place of the placeholder", async () => {

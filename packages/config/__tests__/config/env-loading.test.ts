@@ -21,6 +21,7 @@ beforeEach(() => {
   process.chdir(path.join(tmpDir, "apps", "web"));
   process.env = { ...originalEnv, NODE_ENV: "development", SKIP_ENV_VALIDATION: "1" };
   delete process.env.VALKEY_URL;
+  delete process.env.REDIS_URL;
 });
 
 afterEach(() => {
@@ -52,6 +53,26 @@ it("runs on the process environment alone when there is no file", async () => {
   const { SERVER_CONFIG } = await import("@norish/config/env-config-server");
 
   expect(SERVER_CONFIG.VALKEY_URL).toBe("valkey://from-process:6379");
+});
+
+it("falls back to REDIS_URL from before Valkey, and VALKEY_URL wins over it", async () => {
+  expect((await import("@norish/config/env-config-server")).SERVER_CONFIG.VALKEY_URL).toBe(
+    "valkey://localhost:6379"
+  );
+
+  vi.resetModules();
+  process.env.REDIS_URL = "redis://redis:6379";
+
+  expect((await import("@norish/config/env-config-server")).SERVER_CONFIG.VALKEY_URL).toBe(
+    "redis://redis:6379"
+  );
+
+  vi.resetModules();
+  process.env.VALKEY_URL = "valkey://valkey:6379";
+
+  expect((await import("@norish/config/env-config-server")).SERVER_CONFIG.VALKEY_URL).toBe(
+    "valkey://valkey:6379"
+  );
 });
 
 it("refuses an AUTH_URL whose path is not the base path the app was built for", async () => {

@@ -116,6 +116,7 @@
     "drizzle-orm": "catalog:",
     "eslint": "catalog:",
     "prettier": "catalog:",
+    "testcontainers": "catalog:",
     "typescript": "catalog:",
     "vite": "catalog:",
     "vitest": "catalog:"

@@ -2,6 +2,7 @@ import { readFileSync } from "node:fs";
 import { connect, createServer } from "node:net";
 import type { StartedValkeyContainer } from "@testcontainers/valkey";
 import type { AddressInfo, Socket } from "node:net";
+import { GenericContainer, Wait } from "testcontainers";
 
 /**
  * The Valkey image docker/compose.base.yaml ships. Every test that runs against
@@ -20,6 +21,22 @@ function composeValkeyImage(): string {
   if (!image) throw new Error("docker/compose.base.yaml names no Valkey image");
 
   return image;
+}
+
+/** The Redis image 0.25 shipped, which an install may keep: code with Lua runs on both. */
+export const REDIS_IMAGE = "redis:8.10.1";
+
+/** Starts a Valkey or Redis image with its own command, and resolves to its URL. */
+export async function startServer(image: string) {
+  const container = await new GenericContainer(image)
+    .withExposedPorts(6379)
+    .withWaitStrategy(Wait.forLogMessage("Ready to accept connections"))
+    .start();
+
+  return {
+    url: `valkey://${container.getHost()}:${container.getMappedPort(6379)}`,
+    stop: () => container.stop(),
+  };
 }
 
 /** The container's URL as VALKEY_URL takes it: testcontainers hands out redis://. */

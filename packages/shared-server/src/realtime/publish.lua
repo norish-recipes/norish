@@ -10,7 +10,7 @@
 -- buffered copy carry the same id. Because append and publish happen in one
 -- script, a live event can never be observed before its buffered copy exists.
 
-local id = server.call('XADD', KEYS[1], 'MAXLEN', '~', ARGV[2], '*', 'e', ARGV[1])
+local id = redis.call('XADD', KEYS[1], 'MAXLEN', '~', ARGV[2], '*', 'e', ARGV[1])
 
 local envelope = ARGV[1]
 local placeholder = '"eventId":"$ID$"'
@@ -23,7 +23,7 @@ if first then
     .. string.sub(envelope, last + 1)
 end
 
-server.call('PUBLISH', KEYS[2], envelope)
-server.call('EXPIRE', KEYS[1], ARGV[3])
+redis.call('PUBLISH', KEYS[2], envelope)
+redis.call('EXPIRE', KEYS[1], ARGV[3])
 
 return id
