@@ -1048,7 +1048,13 @@
       "transcriptionApiKeyPlaceholder": "Залиште порожнім, щоб використати ключ із конфігурації ШІ",
       "transcriptionApiKeyOptional": "Ключ API (необов’язково)",
       "transcriptionApiKeyOptionalDescription": "Більшість локальних серверів Whisper не потребують ключа API",
-      "transcriptionApiKeyOptionalPlaceholder": "Залиште порожнім для локальних серверів"
+      "transcriptionApiKeyOptionalPlaceholder": "Залиште порожнім для локальних серверів",
+      "transcriptionAudioFormat": "Формат завантаження",
+      "transcriptionAudioFormatDescription": "MP3 зменшує розмір завантаження. Виберіть WAV для серверів, які читають лише WAV, наприклад mlx-serve",
+      "transcriptionAudioFormats": {
+        "mp3": "MP3 (менший)",
+        "wav": "WAV (16 кГц, моно)"
+      }
     },
     "imageGenerationConfig": {
       "description": "Для зображень потрібен окремий провайдер, бо більшість провайдерів ШІ не вміють малювати.",

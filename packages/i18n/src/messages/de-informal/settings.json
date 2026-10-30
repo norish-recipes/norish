@@ -1048,7 +1048,13 @@
       "transcriptionApiKeyPlaceholder": "Leer lassen, um KI-Konfigurations-Schlüssel zu verwenden",
       "transcriptionApiKeyOptional": "API-Schlüssel (Optional)",
       "transcriptionApiKeyOptionalDescription": "Die meisten lokalen Whisper-Server brauchen keinen API-Schlüssel",
-      "transcriptionApiKeyOptionalPlaceholder": "Leer lassen für lokale Server"
+      "transcriptionApiKeyOptionalPlaceholder": "Leer lassen für lokale Server",
+      "transcriptionAudioFormat": "Upload-Format",
+      "transcriptionAudioFormatDescription": "MP3 hält Uploads klein. Wähle WAV für Server, die nur WAV lesen, z. B. mlx-serve",
+      "transcriptionAudioFormats": {
+        "mp3": "MP3 (kleiner)",
+        "wav": "WAV (16 kHz mono)"
+      }
     },
     "imageGenerationConfig": {
       "description": "Bilder brauchen einen eigenen Anbieter, da die meisten KI-Anbieter nicht zeichnen können.",

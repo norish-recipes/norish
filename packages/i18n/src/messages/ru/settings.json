@@ -1048,7 +1048,13 @@
       "transcriptionApiKeyPlaceholder": "Оставьте пустым, чтобы использовать ключ из настроек ИИ",
       "transcriptionApiKeyOptional": "API-ключ (необязательно)",
       "transcriptionApiKeyOptionalDescription": "Большинство локальных Whisper-серверов не требуют API-ключ",
-      "transcriptionApiKeyOptionalPlaceholder": "Оставьте пустым для локальных серверов"
+      "transcriptionApiKeyOptionalPlaceholder": "Оставьте пустым для локальных серверов",
+      "transcriptionAudioFormat": "Формат загрузки",
+      "transcriptionAudioFormatDescription": "MP3 уменьшает размер загрузки. Выберите WAV для серверов, которые читают только WAV, например mlx-serve",
+      "transcriptionAudioFormats": {
+        "mp3": "MP3 (меньше)",
+        "wav": "WAV (16 кГц, моно)"
+      }
     },
     "imageGenerationConfig": {
       "description": "Для изображений нужен отдельный провайдер, так как большинство ИИ-провайдеров не умеют рисовать.",

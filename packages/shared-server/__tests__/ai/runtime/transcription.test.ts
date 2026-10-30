@@ -9,7 +9,8 @@
  * AI timeout applied.
  */
 
-import { mkdtempSync, writeFileSync } from "node:fs";
+import { execFileSync } from "node:child_process";
+import { existsSync, mkdtempSync, writeFileSync } from "node:fs";
 import { createServer } from "node:http";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
@@ -54,14 +55,31 @@ let captured: CapturedRequest[] = [];
 let reply: unknown = { text: "local transcript" };
 /** When set, the server records the request but never answers it. */
 let holdResponses = false;
+/** The WAV upload converts real audio, so its test needs ffmpeg on PATH. */
+const hasFfmpeg = (() => {
+  try {
+    execFileSync("ffmpeg", ["-version"], { stdio: "ignore" });
+
+    return true;
+  } catch {
+    return false;
+  }
+})();
 
 let audioPath: string;
+/** A real, decodable MP3; only created when ffmpeg is available. */
+let realMp3Path: string;
 
 beforeAll(async () => {
   const dir = mkdtempSync(join(tmpdir(), "norish-transcription-"));
 
   audioPath = join(dir, "sample.mp3");
   writeFileSync(audioPath, Buffer.from("not real audio, providers upload bytes verbatim"));
+
+  realMp3Path = join(dir, "tone.mp3");
+  if (hasFfmpeg) {
+    execFileSync("ffmpeg", ["-v", "error", "-f", "lavfi", "-i", "sine=duration=1", realMp3Path]);
+  }
 
   server = createServer((req: IncomingMessage, res) => {
     const chunks: Buffer[] = [];
@@ -140,8 +158,35 @@ describe("transcription requests reach the provider correctly", () => {
     expect(body).toContain('name="model"');
     expect(body).toContain("faster-whisper");
     expect(body).toContain('name="file"');
+    // MP3 by default: the extracted audio goes up untouched.
+    expect(body).toContain("not real audio, providers upload bytes verbatim");
     // No key configured means no Authorization header - not a placeholder one.
     expect(captured[0]!.authorization).toBeUndefined();
+  });
+
+  it.skipIf(!hasFfmpeg)("generic-openai sends a 16 kHz mono WAV when asked for WAV", async () => {
+    mockGetVideoConfig.mockResolvedValue(
+      videoConfig({
+        transcriptionProvider: "generic-openai",
+        transcriptionEndpoint: baseUrl,
+        transcriptionModel: "qwen3-asr",
+        transcriptionAudioFormat: "wav",
+      })
+    );
+
+    const transcript = await transcribe(realMp3Path);
+
+    expect(transcript).toBe("local transcript");
+    expect(captured).toHaveLength(1);
+
+    const body = captured[0]!.body;
+    const wav = body.subarray(body.indexOf("RIFF"));
+
+    expect(wav.toString("latin1", 8, 12)).toBe("WAVE");
+    expect(wav.readUInt16LE(22)).toBe(1); // mono
+    expect(wav.readUInt32LE(24)).toBe(16_000); // 16 kHz
+    // The converted copy is removed once the endpoint has answered.
+    expect(existsSync(`${realMp3Path}.16k.wav`)).toBe(false);
   });
 
   it("records the transcription model on the job's ledger", async () => {

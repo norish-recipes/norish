@@ -36,6 +36,7 @@ import type {
   AIConfig,
   DecisionConfig,
   DecisionProvider,
+  TranscriptionAudioFormat,
   TranscriptionProvider,
 } from "@norish/config/zod/server-config";
 import {
@@ -83,6 +84,7 @@ import {
   createTranscriptionModel,
   requestOllamaTranscription,
 } from "./providers";
+import { withWavCopy } from "./wav-copy";
 
 // ============================================================================
 // System messages — code-owned, keyed by the prompt they accompany
@@ -514,6 +516,7 @@ export async function transcribe(audioPath: string): Promise<string> {
   const apiKey = videoConfig.transcriptionApiKey || aiConfig?.apiKey || "";
   // Transcription follows the existing AI timeout; there is no second knob.
   const timeoutMs = aiConfig?.timeoutMs ?? 300_000;
+  const audioFormat = videoConfig.transcriptionAudioFormat ?? "mp3";
 
   if (!apiKey && isCloudTranscriptionProvider(provider)) {
     throw new AIConfigurationError(
@@ -530,6 +533,7 @@ export async function transcribe(audioPath: string): Promise<string> {
       model,
       endpoint,
       timeoutMs,
+      audioFormat,
     });
 
     aiLogger.info(
@@ -557,11 +561,13 @@ interface TranscriptionRequest {
   model: string;
   endpoint?: string;
   timeoutMs: number;
+  /** What a generic endpoint is sent; the other providers all read the MP3. */
+  audioFormat: TranscriptionAudioFormat;
 }
 
 async function transcribeWithProvider(
   provider: Exclude<TranscriptionProvider, "disabled">,
-  { audioPath, apiKey, model, endpoint, timeoutMs }: TranscriptionRequest
+  { audioPath, apiKey, model, endpoint, timeoutMs, audioFormat }: TranscriptionRequest
 ): Promise<string> {
   switch (provider) {
     case "openai":
@@ -588,13 +594,16 @@ async function transcribeWithProvider(
 
     case "generic-openai": {
       const client = createGenericTranscriptionClient({ apiKey, endpoint, timeoutMs });
+      const send = async (path: string) => {
+        const response = await client.audio.transcriptions.create(
+          { file: createReadStream(path), model, response_format: "json" },
+          { signal: AbortSignal.timeout(timeoutMs) }
+        );
 
-      const response = await client.audio.transcriptions.create(
-        { file: createReadStream(audioPath), model, response_format: "json" },
-        { signal: AbortSignal.timeout(timeoutMs) }
-      );
+        return requireTranscript(response.text);
+      };
 
-      return requireTranscript(response.text);
+      return audioFormat === "wav" ? withWavCopy(audioPath, send) : send(audioPath);
     }
 
     case "ollama": {

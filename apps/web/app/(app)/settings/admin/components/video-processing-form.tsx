@@ -20,7 +20,10 @@ import {
 } from "@heroui/react";
 import { useTranslations } from "next-intl";
 
-import type { TranscriptionProvider } from "@norish/config/zod/server-config";
+import type {
+  TranscriptionAudioFormat,
+  TranscriptionProvider,
+} from "@norish/config/zod/server-config";
 import {
   isCloudTranscriptionProvider,
   ServerConfigKeys,
@@ -50,6 +53,7 @@ const TRANSCRIPTION_PROVIDER_OPTIONS: TranscriptionProvider[] = [
   "ollama",
   "generic-openai",
 ];
+const TRANSCRIPTION_AUDIO_FORMAT_OPTIONS: TranscriptionAudioFormat[] = ["mp3", "wav"];
 export default function VideoProcessingForm({ onDirtyChange }: VideoProcessingFormProps) {
   const t = useTranslations("settings.admin.videoConfig");
   const tActions = useTranslations("common.actions");
@@ -72,6 +76,8 @@ export default function VideoProcessingForm({ onDirtyChange }: VideoProcessingFo
   const [transcriptionModel, setTranscriptionModel] = useState(
     videoConfig?.transcriptionModel ?? ""
   );
+  const [transcriptionAudioFormat, setTranscriptionAudioFormat] =
+    useState<TranscriptionAudioFormat>(videoConfig?.transcriptionAudioFormat ?? "mp3");
   const [saving, setSaving] = useState(false);
   useEffect(() => {
     if (videoConfig) {
@@ -82,6 +88,7 @@ export default function VideoProcessingForm({ onDirtyChange }: VideoProcessingFo
       setTranscriptionProvider(videoConfig.transcriptionProvider);
       setTranscriptionEndpoint(videoConfig.transcriptionEndpoint ?? "");
       setTranscriptionModel(videoConfig.transcriptionModel);
+      setTranscriptionAudioFormat(videoConfig.transcriptionAudioFormat ?? "mp3");
     }
   }, [videoConfig]);
   const transcriptionEnabled = transcriptionProvider !== "disabled";
@@ -213,6 +220,7 @@ export default function VideoProcessingForm({ onDirtyChange }: VideoProcessingFo
       transcriptionProvider !== videoConfig.transcriptionProvider ||
       transcriptionEndpoint !== (videoConfig.transcriptionEndpoint ?? "") ||
       transcriptionModel !== videoConfig.transcriptionModel ||
+      transcriptionAudioFormat !== (videoConfig.transcriptionAudioFormat ?? "mp3") ||
       transcriptionApiKey.trim() !== ""
     );
   }, [
@@ -224,6 +232,7 @@ export default function VideoProcessingForm({ onDirtyChange }: VideoProcessingFo
     transcriptionProvider,
     transcriptionEndpoint,
     transcriptionModel,
+    transcriptionAudioFormat,
     transcriptionApiKey,
   ]);
   useEffect(() => {
@@ -246,6 +255,7 @@ export default function VideoProcessingForm({ onDirtyChange }: VideoProcessingFo
         transcriptionEndpoint: transcriptionEndpoint || undefined,
         transcriptionApiKey: transcriptionApiKey || undefined,
         transcriptionModel,
+        transcriptionAudioFormat,
       });
       // The stored key is what the field now stands for; leaving the typed one
       // behind is what left this form claiming unsaved changes forever.
@@ -444,6 +454,42 @@ export default function VideoProcessingForm({ onDirtyChange }: VideoProcessingFo
               <Input variant="secondary" placeholder={t("transcriptionModelPlaceholder")} />
               <Description>{t("transcriptionModelDescription")}</Description>
             </TextField>
+          )}
+
+          {/* Only a generic endpoint may be a server that reads nothing but WAV */}
+          {transcriptionProvider === "generic-openai" && (
+            <Select
+              variant="secondary"
+              isDisabled={isVideoUiDisabled}
+              value={transcriptionAudioFormat}
+              onChange={(selected) => {
+                if (typeof selected === "string") {
+                  setTranscriptionAudioFormat(selected as TranscriptionAudioFormat);
+                }
+              }}
+            >
+              <Label>{t("transcriptionAudioFormat")}</Label>
+              <Select.Trigger>
+                <Select.Value />
+                <Select.Indicator />
+              </Select.Trigger>
+              <span className="text-muted px-1 text-xs">
+                {t("transcriptionAudioFormatDescription")}
+              </span>
+              <Select.Popover>
+                <ListBox>
+                  {TRANSCRIPTION_AUDIO_FORMAT_OPTIONS.map((option) => {
+                    const label = t(`transcriptionAudioFormats.${option}`);
+
+                    return (
+                      <ListBox.Item key={option} id={option} textValue={label}>
+                        {label}
+                      </ListBox.Item>
+                    );
+                  })}
+                </ListBox>
+              </Select.Popover>
+            </Select>
           )}
         </>
       )}

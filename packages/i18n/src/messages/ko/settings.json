@@ -1048,7 +1048,13 @@
       "transcriptionApiKeyPlaceholder": "AI 구성 키를 사용하려면 비워 두세요.",
       "transcriptionApiKeyOptional": "API 키(선택사항)",
       "transcriptionApiKeyOptionalDescription": "대부분의 로컬 Whisper 서버에는 API 키가 필요하지 않습니다.",
-      "transcriptionApiKeyOptionalPlaceholder": "로컬 서버의 경우 비워 두세요."
+      "transcriptionApiKeyOptionalPlaceholder": "로컬 서버의 경우 비워 두세요.",
+      "transcriptionAudioFormat": "업로드 형식",
+      "transcriptionAudioFormatDescription": "MP3는 업로드 크기를 작게 유지합니다. mlx-serve처럼 WAV만 읽는 서버에는 WAV를 선택하세요",
+      "transcriptionAudioFormats": {
+        "mp3": "MP3 (더 작음)",
+        "wav": "WAV (16kHz 모노)"
+      }
     },
     "imageGenerationConfig": {
       "description": "대부분의 AI 제공자는 그림을 그릴 수 없으므로 이미지에는 별도 제공자가 필요합니다.",
