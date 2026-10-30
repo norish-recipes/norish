@@ -937,6 +937,202 @@
         }
       }
     },
+    "/recipes/{id}/nutrition": {
+      "get": {
+        "operationId": "recipeNutrition",
+        "summary": "Get a recipe's nutrition per serving",
+        "description": "The recipe's own Nutrition Information, else the total worked out from its ingredients, as the recipe page shows it.",
+        "tags": [
+          "Recipes"
+        ],
+        "security": [
+          {
+            "ApiKeyAuth": []
+          },
+          {
+            "BearerAuth": []
+          }
+        ],
+        "parameters": [
+          {
+            "in": "path",
+            "name": "id",
+            "schema": {
+              "type": "string",
+              "format": "uuid",
+              "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$"
+            },
+            "required": true
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "source": {
+                      "type": "string",
+                      "enum": [
+                        "supplied",
+                        "worked-out",
+                        "none"
+                      ],
+                      "description": "supplied: the recipe's own Nutrition Information. worked-out: summed from its ingredient lines' dataset numbers for your household, plus the AI's stored share of lines that could not be counted. none: neither gives a number."
+                    },
+                    "perServing": {
+                      "anyOf": [
+                        {
+                          "type": "object",
+                          "properties": {
+                            "calories": {
+                              "anyOf": [
+                                {
+                                  "type": "number"
+                                },
+                                {
+                                  "type": "null"
+                                }
+                              ],
+                              "description": "Calories in kcal per serving; null where the recipe does not say"
+                            },
+                            "fat": {
+                              "anyOf": [
+                                {
+                                  "type": "number"
+                                },
+                                {
+                                  "type": "null"
+                                }
+                              ],
+                              "description": "Fat in grams per serving; null where the recipe does not say"
+                            },
+                            "carbs": {
+                              "anyOf": [
+                                {
+                                  "type": "number"
+                                },
+                                {
+                                  "type": "null"
+                                }
+                              ],
+                              "description": "Carbohydrates in grams per serving; null where the recipe does not say"
+                            },
+                            "protein": {
+                              "anyOf": [
+                                {
+                                  "type": "number"
+                                },
+                                {
+                                  "type": "null"
+                                }
+                              ],
+                              "description": "Protein in grams per serving; null where the recipe does not say"
+                            }
+                          },
+                          "required": [
+                            "calories",
+                            "fat",
+                            "carbs",
+                            "protein"
+                          ],
+                          "additionalProperties": false
+                        },
+                        {
+                          "type": "null"
+                        }
+                      ]
+                    },
+                    "estimated": {
+                      "type": "boolean",
+                      "description": "Whether a worked-out total leans on parent foods for a tenth of its calories or more, or on the AI for a line."
+                    },
+                    "leftOut": {
+                      "type": "array",
+                      "items": {
+                        "type": "object",
+                        "properties": {
+                          "name": {
+                            "type": "string"
+                          },
+                          "reason": {
+                            "type": "string",
+                            "enum": [
+                              "seasoning",
+                              "no-amount",
+                              "no-size",
+                              "no-numbers",
+                              "no-spoon-weight",
+                              "no-piece-weight"
+                            ]
+                          },
+                          "estimatedByAI": {
+                            "type": "boolean",
+                            "description": "Whether the AI's share of this line is in the total."
+                          }
+                        },
+                        "required": [
+                          "name",
+                          "reason",
+                          "estimatedByAI"
+                        ],
+                        "additionalProperties": false
+                      },
+                      "description": "Lines a worked-out total did not count from the datasets, in recipe order."
+                    },
+                    "credits": {
+                      "type": "array",
+                      "items": {
+                        "type": "string",
+                        "enum": [
+                          "ciqual",
+                          "ciqual-2020",
+                          "calnut",
+                          "usda",
+                          "cofid",
+                          "off"
+                        ]
+                      },
+                      "description": "Datasets a worked-out total took a number from."
+                    }
+                  },
+                  "required": [
+                    "source",
+                    "perServing",
+                    "estimated",
+                    "leftOut",
+                    "credits"
+                  ],
+                  "additionalProperties": false
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Missing or invalid API credentials",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/error.UNAUTHORIZED"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Recipe not found",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/error.NOT_FOUND"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
     "/recipes/search": {
       "post": {
         "operationId": "recipeSearch",
