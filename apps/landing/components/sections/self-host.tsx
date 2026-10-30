@@ -1,68 +1,92 @@
-import type { CSSProperties } from "react";
+import type { ReactNode } from "react";
 import { links } from "@/lib/css-tokens";
-import { ArrowUpRightIcon } from "@heroicons/react/24/outline";
+import {
+  CommandLineIcon,
+  GlobeAltIcon,
+  LockClosedIcon,
+  SignalSlashIcon,
+} from "@heroicons/react/24/outline";
 
-import { Action } from "../action";
-import { DotList } from "../dot-list";
-import { Drift } from "../drift";
+import { BrandLogo } from "../brand-logo";
+import { button } from "../button";
+import { ComposePanel } from "../compose-panel";
 import { GitHubIcon } from "../icons";
-import { Mark } from "../marks";
-import { Reveal } from "../reveal";
-import { SelfHostCompose } from "./self-host-compose";
 
+const facts: { icon: ReactNode; title: string; detail: string }[] = [
+  { icon: <SignalSlashIcon />, title: "Works offline", detail: "Syncs when you reconnect" },
+  { icon: <LockClosedIcon />, title: "Sign in your way", detail: "OIDC, GitHub, Google, email" },
+  { icon: <GlobeAltIcon />, title: "17 languages", detail: "From Arabic to Ukrainian" },
+];
+
+const footerLinks = [
+  { label: "Docs", href: links.docs },
+  { label: "GitHub", href: links.github },
+  { label: "Docker Hub", href: links.dockerHub },
+  { label: "Buy me a coffee", href: links.coffee },
+];
+
+/** The green band the page ends on: the compose file, what you get, and the footer. */
 export function SelfHost() {
   return (
-    <section
-      className="border-border relative scroll-mt-24 border-t px-5 py-24 sm:px-8 sm:py-32"
-      id="self-host"
-    >
-      <Drift>
-        <div aria-hidden className="pointer-events-none absolute inset-0 hidden lg:block">
-          <Mark at="top-[18%] left-[4%] size-11" depth={1.1} shape="tomato" turn={16} />
-          <Mark
-            at="right-[3%] bottom-[20%] size-11"
-            delay={180}
-            depth={-1.2}
-            shape="pear"
-            turn={13}
-          />
-        </div>
+    <section className="bg-accent text-accent-foreground scroll-mt-24" id="self-host">
+      <svg
+        aria-hidden
+        className="fill-background -mt-px block h-24 w-full"
+        preserveAspectRatio="none"
+        viewBox="0 0 1440 120"
+      >
+        <path d="M0 0H1440V40C1180 110 920 10 660 50C420 88 200 120 0 70Z" />
+      </svg>
 
-        <div className="mx-auto grid max-w-5xl items-start gap-14 lg:grid-cols-2 lg:gap-16">
-          <Reveal className="min-w-0">
-            <h2 className="font-serif text-3xl leading-tight font-medium text-balance sm:text-4xl">
-              Your recipes, your server
-            </h2>
-            <p className="text-muted mt-4 text-pretty">
-              Norish is free and fully open source under the AGPL-3.0 license. Run it on your own
-              hardware with Docker: no subscription, no account with us, nothing to migrate away
-              from later.
-            </p>
-
-            <DotList
-              className="mt-6 text-sm"
-              items={["AGPL-3.0", "Self-hosted", "One Docker command"]}
-            />
-
-            <div className="mt-8 flex flex-wrap items-center gap-2">
-              <Action external href={links.github}>
-                <GitHubIcon className="size-4" />
-                View on GitHub
-              </Action>
-              <Action external href={links.selfHost} variant="secondary">
-                Read the docs
-                <ArrowUpRightIcon className="size-3.5" />
-              </Action>
-            </div>
-          </Reveal>
-
-          {/* The card rides a little behind the words beside it, so the two
-              columns are not quite one flat sheet as you go past. */}
-          <div className="parallax min-w-0" style={{ "--depth": 0.45 } as CSSProperties}>
-            <SelfHostCompose />
+      <div className="mx-auto flex max-w-6xl flex-wrap items-center gap-12 px-4 pt-12 pb-16 sm:px-10">
+        <div className="flex min-w-0 flex-1 basis-[22rem] flex-col gap-5">
+          <h2 className="text-[clamp(2.5rem,5vw,4rem)] leading-[1.02] font-semibold tracking-[-0.022em]">
+            Free and open source.
+          </h2>
+          <p className="max-w-[36ch] text-lg text-pretty opacity-85">
+            Your kitchen on your server. One compose file and it is running.
+          </p>
+          <div className="flex flex-wrap gap-3">
+            <a className={button.onAccent} href={links.selfHost}>
+              <CommandLineIcon />
+              Quick start
+            </a>
+            <a className={button.onAccentQuiet} href={links.github}>
+              <GitHubIcon />
+              Source code
+            </a>
           </div>
         </div>
-      </Drift>
+        <ComposePanel />
+      </div>
+
+      <ul className="mx-auto grid max-w-6xl grid-cols-[repeat(auto-fit,minmax(min(100%,16rem),1fr))] gap-4 px-4 pb-20 sm:px-10">
+        {facts.map((fact) => (
+          <li
+            key={fact.title}
+            className="bg-accent-deep flex items-center gap-4 rounded-3xl px-6 py-5"
+          >
+            <span className="bg-background text-accent grid size-11 shrink-0 place-items-center rounded-full [&>svg]:size-5.5">
+              {fact.icon}
+            </span>
+            <span className="flex flex-col gap-0.5">
+              <strong className="text-[1.0625rem] font-semibold">{fact.title}</strong>
+              <span className="text-[0.9375rem] opacity-85">{fact.detail}</span>
+            </span>
+          </li>
+        ))}
+      </ul>
+
+      <footer className="border-accent-deep mx-auto flex max-w-6xl flex-wrap items-center justify-between gap-6 border-t px-4 pt-10 pb-14 sm:px-10">
+        <BrandLogo cream height={40} width={149} />
+        <nav aria-label="Footer" className="flex flex-wrap gap-x-7 gap-y-3 text-[0.9375rem]">
+          {footerLinks.map((link) => (
+            <a key={link.label} className="hover:underline" href={link.href}>
+              {link.label}
+            </a>
+          ))}
+        </nav>
+      </footer>
     </section>
   );
 }

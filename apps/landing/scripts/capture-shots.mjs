@@ -1,5 +1,5 @@
 /*
- * Takes all twenty-four tour captures (6 screens x web/mobile x light/dark) from a
+ * Takes the screen captures (6 screens x web/mobile, light theme) from a
  * running Norish instance and writes them into `assets/screenshots`, ready for
  * `pnpm --filter @norish/landing shots`.
  *
@@ -94,7 +94,7 @@ async function settle(page, label) {
 const browser = await chromium.launch();
 
 for (const [form, viewport] of Object.entries(FORMS)) {
-  for (const theme of ["light", "dark"]) {
+  for (const theme of ["light"]) {
     const context = await browser.newContext({
       viewport,
       deviceScaleFactor: 2,
@@ -121,11 +121,11 @@ for (const [form, viewport] of Object.entries(FORMS)) {
     const shoot = async (name) => {
       await page.addStyleTag({ content: hideDevUi }).catch(() => {});
       await page.screenshot({
-        path: join(outDir, `${name}-${form}-${theme}.jpg`),
+        path: join(outDir, `${name}-${form}.jpg`),
         type: "jpeg",
         quality: 92,
       });
-      console.log("captured", `${name}-${form}-${theme}`);
+      console.log("captured", `${name}-${form}`);
     };
 
     await page.goto(`${BASE}/`, { waitUntil: "networkidle" }).catch(() => {});

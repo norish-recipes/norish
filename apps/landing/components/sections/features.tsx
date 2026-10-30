@@ -1,205 +1,81 @@
-import { PlusIcon } from "@heroicons/react/24/outline";
+import type { ReactNode } from "react";
 
-import { Reveal } from "../reveal";
+import type { ShotName } from "../shot";
+import { Shot } from "../shot";
 
-type Feature = {
-  title: string;
-  body: string;
-  /** Marks a capability that only runs once you supply an AI provider. */
-  ai?: true;
-  /** Marks something that is on the way rather than shipped. */
-  pending?: true;
-};
+function Title({ children, accent }: { children: ReactNode; accent: string }) {
+  return (
+    <h3 className="text-[1.75rem] leading-[1.1] font-semibold tracking-[-0.022em] sm:text-[2rem]">
+      {children} <span className="text-accent">{accent}</span>
+    </h3>
+  );
+}
 
-type Group = {
-  name: string;
-  /** A full class pair, written out so Tailwind's scanner can see it. */
-  tint: string;
-  features: Feature[];
-};
+function Phone({ base, alt, className }: { base: ShotName; alt: string; className: string }) {
+  return <Shot alt={alt} base={base} className={`phone ${className}`} sizes="18rem" />;
+}
 
-const groups: Group[] = [
-  {
-    name: "Importing recipes",
-    tint: "bg-tint-site",
-    features: [
-      {
-        title: "From a link",
-        body: "Websites, blogs and recipe apps. Norish turns the structured data into a clean recipe, no clutter.",
-      },
-      {
-        title: "From a video",
-        body: "YouTube, Instagram, Facebook and more. When a video has no audio, Norish reads its description instead.",
-        ai: true,
-      },
-      {
-        title: "From a photo",
-        body: "A screenshot, a page of a cookbook, a card in someone's handwriting. Up to ten photos are combined into a single recipe.",
-        ai: true,
-      },
-      {
-        title: "From pasted text",
-        body: "Free text or raw JSON-LD. Useful when a site will not cooperate and you can still copy what is on it.",
-      },
-      {
-        title: "Filled in afterwards",
-        body: "Tags, meal categories, cuisines, allergens and provenance are worked out in the background once a recipe lands.",
-        ai: true,
-      },
-    ],
-  },
-  {
-    name: "Cooking and planning",
-    tint: "bg-tint-photo",
-    features: [
-      {
-        title: "Cookbooks",
-        body: "Group recipes into cookbooks of your choosing, each with its own cover: the weeknight dinners, the Christmas baking, everything out of your grandmother's book.",
-      },
-      {
-        title: "Cooking mode",
-        body: "Step-by-step and easy on the eye, with timers where the step needs them, quantities already scaled, and a screen that stays awake.",
-      },
-      {
-        title: "Linked ingredients in steps",
-        body: "A step can carry the ingredient lines it uses and how much of each, like half the water or three of the five eggs. Scaled the recipe? The linked ingredients scale along.",
-      },
-      {
-        title: "Scaling and units",
-        body: "Set the servings and every quantity re-does itself. Metric and US measurements swap with one tap, or automatically as a recipe opens.",
-      },
-      {
-        title: "Nutrition",
-        body: "Calories, protein, carbs and fat per serving, calculated from food databases such as CIQUAL and USDA FoodData Central.",
-      },
-      {
-        title: "Plan together",
-        body: "Drop recipes onto the calendar your household shares, or sync it to your own calendar over CalDAV.",
-      },
-      {
-        title: "Real-time, always",
-        body: "Edit a recipe, tick an item, plan a recipe. The whole household sees it on every device, no refresh needed.",
-      },
-      {
-        title: "Works even when offline",
-        body: "Your fifty most recent recipes, all groceries and the current calendar window stay on the device. Changes you make offline queue up and replay themselves when you come back online.",
-      },
-    ],
-  },
-  {
-    name: "Groceries and pantry",
-    tint: "bg-tint-video",
-    features: [
-      {
-        title: "Shop together",
-        body: "One shared list, sorted by aisle, with recurring items and prices from the shop you use.",
-      },
-      {
-        title: "Pantry",
-        body: "Keep track of what is already on the shelf. Adding a recipe to your groceries leaves those ingredients off the list.",
-      },
-      {
-        title: "Ingredient catalogue",
-        body: "Ingredients are matched to foods from Open Food Facts, with an icon beside them. The pantry still recognises a food when a recipe names it in another language.",
-      },
-    ],
-  },
-  {
-    name: "Running it",
-    tint: "bg-tint-text",
-    features: [
-      {
-        title: "Bring your own AI or use the cloud",
-        body: "OpenAI, Anthropic, or Ollama and LM Studio on your own machine. Use the model you like how you like.",
-      },
-      {
-        title: "Auth how you like it",
-        body: "Any OIDC provider such as Authentik, Pocket ID, GitHub, Google, or plain email and password.",
-      },
-      {
-        title: "Seventeen languages",
-        body: "English, Nederlands, Deutsch, Français, Español, Italiano, Português, Polski, Dansk, Norsk, Svenska, Suomi, Русский, Українська, Български, العربية and 한국어, translated by the community.",
-      },
-      {
-        title: "Installs like an app",
-        body: "Add Norish as a PWA and use it just like an app.",
-      },
-      {
-        title: "Native apps",
-        body: "iOS and Android, on the same household you already share.",
-        pending: true,
-      },
-    ],
-  },
-];
-
+/** A bento of what the household does with it, each tile wearing one of the app's own hues. */
 export function Features() {
   return (
-    <section
-      className="border-border scroll-mt-24 border-t px-5 py-24 sm:px-8 sm:py-32"
-      id="features"
-    >
-      <div className="mx-auto grid max-w-5xl gap-12 lg:grid-cols-[18rem_1fr] lg:gap-20">
-        <Reveal className="lg:sticky lg:top-28 lg:self-start">
-          <h2 className="font-serif text-3xl leading-tight font-medium text-balance sm:text-4xl">
-            Features
-          </h2>
-          <p className="text-muted mt-4 text-sm leading-relaxed text-pretty">
-            A recipe manager first, and then rather a lot more. All of it arrives in the same
-            container; open whatever you are curious about.
-          </p>
-        </Reveal>
-
-        <div>
-          {/* One accordion per group. The `name` makes them exclusive where the
-              browser supports it, so the list never grows past one group. */}
-          <div className="border-border border-t">
-            {groups.map(({ name, tint, features }, groupIndex) => (
-              <Reveal key={name} delay={groupIndex * 80}>
-                <details
-                  className="accordion group border-border border-b"
-                  name="feature-groups"
-                  open={groupIndex === 0 || undefined}
-                >
-                  <summary className="flex cursor-pointer list-none items-center gap-2.5 py-5 [&::-webkit-details-marker]:hidden">
-                    <span aria-hidden className={`size-1.5 rounded-full ${tint}`} />
-                    <h3 className="text-sm font-medium">{name}</h3>
-                    <span className="text-muted ml-auto flex items-center gap-3 text-xs">
-                      {features.length}
-                      <PlusIcon className="size-4 shrink-0 transition-transform duration-300 group-open:rotate-45" />
-                    </span>
-                  </summary>
-
-                  <ul className="pb-3">
-                    {features.map(({ title, body, ai, pending }) => (
-                      <li
-                        key={title}
-                        className="border-separator grid gap-1.5 border-t py-5 sm:grid-cols-[11rem_1fr] sm:gap-8"
-                      >
-                        <h4 className="flex items-start gap-2 text-sm font-medium">
-                          {title}
-                          {pending ? (
-                            <span className="text-muted border-border mt-px rounded-full border px-2 py-0.5 text-[10px] leading-4 font-normal">
-                              soon
-                            </span>
-                          ) : null}
-                        </h4>
-                        <p className="text-muted text-sm leading-relaxed text-pretty">
-                          {body}
-                          {ai ? <sup className="text-muted/70">*</sup> : null}
-                        </p>
-                      </li>
-                    ))}
-                  </ul>
-                </details>
-              </Reveal>
-            ))}
+    <section className="mx-auto max-w-6xl scroll-mt-24 px-4 py-24 sm:px-10" id="features">
+      <div className="bento">
+        <article className="tile tile-plan tint-orange sm:flex-row sm:gap-8">
+          <div className="flex flex-1 flex-col gap-3 pt-2">
+            <Title accent="the week">Plan</Title>
+            <p className="max-w-[30ch] text-[1.0625rem]">
+              One meal calendar for the household, optionally synced over CalDAV.
+            </p>
           </div>
+          <Phone
+            alt="The meal calendar on a phone"
+            base="calendar-mobile"
+            className="phone-crop mx-auto mt-4 w-[min(80%,17.5rem)] sm:w-[min(44%,17.5rem)]"
+          />
+        </article>
 
-          <p className="text-muted/70 mt-6 text-xs">
-            * Needs an AI provider, which you bring and configure yourself.
-          </p>
-        </div>
+        <article className="tile tile-groceries tint-blue">
+          <Title accent="the groceries">Do</Title>
+          <p className="text-[1.0625rem]">By store and aisle, with prices, synced in real time.</p>
+          <Phone
+            alt="The grocery list on a phone, with prices per line"
+            base="groceries-mobile"
+            className="mx-auto mt-auto mb-8 w-[90%] max-w-75"
+          />
+        </article>
+
+        <article className="tile tile-pantry tint-green">
+          <Title accent="the pantry">Skip</Title>
+          <p>Pantry foods stay off the grocery list.</p>
+          <Phone
+            alt="The pantry on a phone"
+            base="pantry-mobile"
+            className="phone-crop mx-auto mt-5 w-[78%] max-w-72"
+          />
+        </article>
+
+        <article className="tile tile-cooking tint-red">
+          <Title accent="cooking">Focus on</Title>
+          <p>Step timers, and the screen stays on.</p>
+          <Phone
+            alt="Cooking mode on a phone, one step at a time"
+            base="cooking-mobile"
+            className="phone-crop mx-auto mt-5 w-[78%] max-w-72"
+          />
+        </article>
+
+        <article className="tile tile-recipe bg-surface ring-border pb-8 ring-1 ring-inset md:flex-row md:items-center md:gap-10">
+          <div className="flex flex-col gap-3 md:w-80 md:shrink-0">
+            <Title accent="that works">A recipe page</Title>
+            <p className="text-[1.0625rem]">Remove the clutter, and focus on the recipe at hand.</p>
+          </div>
+          <Shot
+            alt="A Greek Yogurt Naan recipe scaled to 16 servings, with nutrition worked out from the ingredients"
+            base="recipe-web"
+            className="ring-border mt-4 block h-auto w-full min-w-0 rounded-[1.25rem] ring-1 md:mt-0"
+            sizes="(min-width: 72rem) 44rem, 90vw"
+          />
+        </article>
       </div>
     </section>
   );

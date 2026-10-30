@@ -53,24 +53,14 @@ export const viewport: Viewport = {
   width: "device-width",
   initialScale: 1,
   themeColor: [
-    { media: "(prefers-color-scheme: light)", color: "#fffef7" },
+    { media: "(prefers-color-scheme: light)", color: "#f8f3e7" },
     { media: "(prefers-color-scheme: dark)", color: "#336640" },
   ],
 };
 
-// Scroll reveals hide their content until observed. Marking the document as
-// scripted lets that rule apply only where JS can undo it, so a scripting-free
-// browser still gets a fully readable page.
-const markScripted = `document.documentElement.classList.add("js")`;
-
 export default function RootLayout({ children }: { children: React.ReactNode }) {
   return (
     <html suppressHydrationWarning lang="en">
-      <head>
-        {/* A constant, and React escapes a script's text children, so it goes in as raw HTML. */}
-        {/* eslint-disable-next-line @eslint-react/dom-no-dangerously-set-innerhtml */}
-        <script dangerouslySetInnerHTML={{ __html: markScripted }} />
-      </head>
       <body className="bg-background text-foreground min-h-dvh font-sans antialiased">
         <Providers>{children}</Providers>
       </body>
