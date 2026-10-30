@@ -35,15 +35,16 @@ export function Sources() {
             Videos, photos and text use your AI provider. Everything else works without one.
           </p>
         </div>
-        <ul className="reveal flex flex-wrap gap-3">
-          {sources.map((source) => (
+        <ul className="flex flex-wrap gap-3">
+          {sources.map((source, index) => (
             <li
               key={source.label}
-              className="source-chip"
+              className="reveal reveal-pop source-chip"
               style={
                 {
                   "--chip": source.color,
                   "--chip-tint": source.tint ?? source.color,
+                  "--delay": `${index * 70}ms`,
                 } as CSSProperties
               }
             >

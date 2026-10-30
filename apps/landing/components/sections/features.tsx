@@ -34,7 +34,7 @@ export function Features() {
           />
         </article>
 
-        <article className="reveal tile tile-groceries tint-blue">
+        <article className="reveal tile tile-groceries tint-blue [--delay:120ms]">
           <Title accent="the groceries">Do</Title>
           <p className="text-[1.0625rem]">By store and aisle, with prices, synced in real time.</p>
           <Phone
@@ -54,7 +54,7 @@ export function Features() {
           />
         </article>
 
-        <article className="reveal tile tile-cooking tint-red">
+        <article className="reveal tile tile-cooking tint-red [--delay:120ms]">
           <Title accent="cooking">Focus on</Title>
           <p>Step timers, and the screen stays on.</p>
           <Phone

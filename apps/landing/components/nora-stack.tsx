@@ -38,7 +38,7 @@ export function NoraStack() {
   return (
     <button
       aria-label="Show another photo of Nora"
-      className="reveal relative block min-h-[34rem] min-w-0 flex-1 basis-[26rem] cursor-pointer rounded-lg sm:min-h-[40rem]"
+      className="reveal reveal-right relative block min-h-[34rem] min-w-0 flex-1 basis-[26rem] cursor-pointer rounded-lg sm:min-h-[40rem]"
       type="button"
       onClick={next}
     >

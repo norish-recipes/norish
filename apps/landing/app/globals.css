@@ -74,7 +74,7 @@
   }
 
   ::selection {
-    background-color: color-mix(in oklch, var(--accent) 22%, transparent);
+    background-color: color-mix(in oklab, var(--accent) 22%, transparent);
   }
 
   :focus-visible {
@@ -143,7 +143,7 @@
     min-height: 3.5rem;
     padding: 0 1.25rem 0 0.5rem;
     border-radius: 999px;
-    background: color-mix(in oklch, var(--chip-tint) 14%, var(--background));
+    background: color-mix(in oklab, var(--chip-tint) 14%, var(--background));
     font-size: 1.125rem;
     font-weight: 600;
     letter-spacing: -0.01em;
@@ -212,41 +212,41 @@
 
   /* The bento's grounds, from the app's own nutrition hues. */
   .tint-orange {
-    background: color-mix(in oklch, var(--nutrition-calories) 22%, var(--background));
+    background: color-mix(in oklab, var(--nutrition-calories) 22%, var(--background));
   }
 
   .tint-blue {
-    background: color-mix(in oklch, var(--nutrition-carbs) 16%, var(--background));
+    background: color-mix(in oklab, var(--nutrition-carbs) 16%, var(--background));
   }
 
   .tint-green {
-    background: color-mix(in oklch, var(--nutrition-fat) 20%, var(--background));
+    background: color-mix(in oklab, var(--nutrition-fat) 20%, var(--background));
   }
 
   .tint-red {
-    background: color-mix(in oklch, var(--nutrition-protein) 14%, var(--background));
+    background: color-mix(in oklab, var(--nutrition-protein) 14%, var(--background));
   }
 
   /* Over the dark ground the same mixes turn muddy, so they stay a hint. */
   :is(.dark, [data-theme="dark"]) {
     .tint-orange {
-      background: color-mix(in oklch, var(--nutrition-calories) 9%, var(--surface));
+      background: color-mix(in oklab, var(--nutrition-calories) 9%, var(--surface));
     }
 
     .tint-blue {
-      background: color-mix(in oklch, var(--nutrition-carbs) 9%, var(--surface));
+      background: color-mix(in oklab, var(--nutrition-carbs) 9%, var(--surface));
     }
 
     .tint-green {
-      background: color-mix(in oklch, var(--nutrition-fat) 8%, var(--surface));
+      background: color-mix(in oklab, var(--nutrition-fat) 8%, var(--surface));
     }
 
     .tint-red {
-      background: color-mix(in oklch, var(--nutrition-protein) 8%, var(--surface));
+      background: color-mix(in oklab, var(--nutrition-protein) 8%, var(--surface));
     }
 
     .source-chip {
-      background: color-mix(in oklch, var(--chip-tint) 10%, var(--surface));
+      background: color-mix(in oklab, var(--chip-tint) 10%, var(--surface));
     }
   }
 
@@ -262,7 +262,9 @@
     margin: 0;
     padding: 1rem 1rem 1.5rem;
     border-radius: 0.5rem;
-    background: var(--surface);
+    /* Polaroids are white in either theme. */
+    background: var(--paper);
+    color: var(--bezel);
     box-shadow: 0 24px 48px -24px var(--shadow);
     transition:
       translate 0.45s var(--ease-calm),
@@ -286,50 +288,116 @@
 }
 
 /*
- * Scroll effects, driven by the scroll position itself rather than a script.
- * Browsers without scroll timelines, and reduced motion, get the still page.
+ * Motion. The hero plays once on load in pure CSS; everything further down is
+ * revealed by components/scroll-effects.tsx, which only hides blocks once it
+ * has put `motion` on the root. Reduced motion gets a still page throughout.
  */
-@supports (animation-timeline: view()) {
-  @media (prefers-reduced-motion: no-preference) {
-    /* A block settles into place as it comes up the screen. */
-    .reveal {
-      animation: reveal linear both;
-      animation-timeline: view();
-      animation-range: entry 0% entry 60%;
-    }
+@media (prefers-reduced-motion: no-preference) {
+  .hero-in {
+    animation: hero-in 0.9s var(--ease-calm) backwards;
+    animation-delay: var(--delay, 0ms);
+  }
 
-    /* Phones rise out of their tiles a beat behind the tile itself. */
-    .tile .phone {
-      animation: rise linear both;
-      animation-timeline: view();
-      animation-range: entry 10% cover 40%;
-    }
+  .hero-phone {
+    animation: hero-phone 1.1s var(--ease-calm) 0.25s backwards;
+  }
 
-    /* The hero's outer phones drift down as the page moves away from them. */
-    .fan {
-      animation: drift linear both;
-      animation-timeline: scroll(root);
-      animation-range: 0 60vh;
-    }
+  /* The outer phones fan out from behind the middle one. */
+  .fan-left {
+    animation: fan-left 1.1s var(--ease-calm) 0.45s backwards;
+  }
+
+  .fan-right {
+    animation: fan-right 1.1s var(--ease-calm) 0.45s backwards;
+  }
+
+  /* And spread further apart as the page scrolls away from them. */
+  .motion .fan-left {
+    translate: calc(var(--scroll, 0) * -0.08px) calc(var(--scroll, 0) * 0.14px);
+  }
+
+  .motion .fan-right {
+    translate: calc(var(--scroll, 0) * 0.08px) calc(var(--scroll, 0) * 0.14px);
+  }
+
+  .motion .hero-phone {
+    translate: 0 calc(var(--scroll, 0) * -0.05px);
+  }
+
+  .motion .reveal {
+    transition:
+      opacity 0.8s var(--ease-calm),
+      translate 1s var(--ease-calm),
+      scale 1s var(--ease-calm),
+      filter 0.8s var(--ease-calm);
+    transition-delay: var(--delay, 0ms);
+  }
+
+  .motion .reveal:not([data-shown]) {
+    opacity: 0;
+    translate: 0 4rem;
+    scale: 0.94;
+    filter: blur(10px);
+  }
+
+  .motion .reveal-left:not([data-shown]) {
+    translate: -5rem 0;
+  }
+
+  .motion .reveal-right:not([data-shown]) {
+    translate: 5rem 0;
+    rotate: 6deg;
+  }
+
+  .motion .reveal-right {
+    transition-property: opacity, translate, scale, filter, rotate;
+  }
+
+  .motion .reveal-pop:not([data-shown]) {
+    translate: 0 1.5rem;
+    scale: 0.7;
+  }
+
+  /* A tile's phone rises out of it a beat after the tile lands. */
+  .motion .tile .phone {
+    transition: translate 1.2s var(--ease-calm);
+    transition-delay: calc(var(--delay, 0ms) + 0.25s);
+  }
+
+  .motion .tile:not([data-shown]) .phone {
+    translate: 0 7rem;
   }
 }
 
-@keyframes reveal {
+@keyframes hero-in {
   from {
     opacity: 0;
-    translate: 0 1.5rem;
+    translate: 0 2rem;
+    filter: blur(8px);
   }
 }
 
-@keyframes rise {
+@keyframes hero-phone {
   from {
-    translate: 0 2.5rem;
+    opacity: 0;
+    translate: 0 6rem;
+    scale: 0.92;
   }
 }
 
-@keyframes drift {
-  to {
-    translate: 0 3rem;
+@keyframes fan-left {
+  from {
+    opacity: 0;
+    translate: 45% 3rem;
+    rotate: 7deg;
+  }
+}
+
+@keyframes fan-right {
+  from {
+    opacity: 0;
+    translate: -45% 3rem;
+    rotate: -7deg;
   }
 }
 

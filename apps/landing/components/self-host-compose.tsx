@@ -93,7 +93,7 @@ export function SelfHostCompose() {
   const ready = masterKey !== PLACEHOLDER;
 
   return (
-    <div className="reveal min-w-0 flex-[1.6] basis-[32rem]">
+    <div className="reveal min-w-0 flex-[1.6] basis-[32rem] [--delay:150ms]">
       <CopyCommand collapsible code={buildCompose(masterKey, obscuraToken)} />
       <p className="text-accent-foreground/85 mt-3 flex items-start gap-1.5 text-xs text-pretty">
         <LockClosedIcon className="mt-0.5 size-3.5 shrink-0" />

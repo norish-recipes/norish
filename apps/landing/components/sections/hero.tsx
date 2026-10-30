@@ -8,13 +8,13 @@ import { Shot } from "../shot";
 export function Hero() {
   return (
     <section className="mx-auto flex max-w-7xl flex-col items-center gap-6 px-4 pt-32 text-center sm:px-10 sm:pt-36">
-      <h1 className="text-[clamp(2.75rem,6vw,4.5rem)] leading-none font-semibold tracking-[-0.022em] text-balance">
+      <h1 className="hero-in text-[clamp(2.75rem,6vw,4.5rem)] leading-none font-semibold tracking-[-0.022em] text-balance">
         Dinner, sorted <span className="text-accent-text">together.</span>
       </h1>
-      <p className="text-muted text-xl text-balance">
+      <p className="hero-in text-muted text-xl text-balance [--delay:120ms]">
         One recipe app for the whole household to enjoy.
       </p>
-      <div className="flex flex-wrap justify-center gap-3">
+      <div className="hero-in flex flex-wrap justify-center gap-3 [--delay:240ms]">
         <a className={button.primary} href="#self-host">
           <CommandLineIcon />
           Self-host it
@@ -42,7 +42,7 @@ export function Hero() {
           eager
           alt="The Steak Bowls recipe in Norish on a phone, with the meal calendar and grocery list beside it"
           base="recipe-mobile"
-          className="phone relative w-[35%] max-w-80 min-w-56"
+          className="phone hero-phone relative w-[35%] max-w-80 min-w-56"
           sizes="20rem"
         />
       </div>

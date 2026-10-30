@@ -1,4 +1,4 @@
-import type { ReactNode } from "react";
+import type { CSSProperties, ReactNode } from "react";
 import { links } from "@/lib/css-tokens";
 import {
   CommandLineIcon,
@@ -60,11 +60,12 @@ export function SelfHost() {
         <SelfHostCompose />
       </div>
 
-      <ul className="reveal mx-auto grid max-w-6xl grid-cols-[repeat(auto-fit,minmax(min(100%,16rem),1fr))] gap-4 px-4 pb-20 sm:px-10">
-        {facts.map((fact) => (
+      <ul className="mx-auto grid max-w-6xl grid-cols-[repeat(auto-fit,minmax(min(100%,16rem),1fr))] gap-4 px-4 pb-20 sm:px-10">
+        {facts.map((fact, index) => (
           <li
             key={fact.title}
-            className="bg-accent-deep flex items-center gap-4 rounded-3xl px-6 py-5"
+            className="reveal reveal-pop bg-accent-deep flex items-center gap-4 rounded-3xl px-6 py-5"
+            style={{ "--delay": `${index * 110}ms` } as CSSProperties}
           >
             <span className="bg-paper text-accent grid size-11 shrink-0 place-items-center rounded-full [&>svg]:size-5.5">
               {fact.icon}

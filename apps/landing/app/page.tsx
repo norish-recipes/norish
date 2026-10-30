@@ -1,3 +1,4 @@
+import { ScrollEffects } from "@/components/scroll-effects";
 import { Features } from "@/components/sections/features";
 import { Hero } from "@/components/sections/hero";
 import { Nora } from "@/components/sections/nora";
@@ -8,6 +9,7 @@ import { SiteHeader } from "@/components/site-header";
 export default function HomePage() {
   return (
     <>
+      <ScrollEffects />
       <SiteHeader />
       <main id="top">
         <Hero />
