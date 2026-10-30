@@ -9,8 +9,8 @@ import {
 
 import { BrandLogo } from "../brand-logo";
 import { button } from "../button";
-import { ComposePanel } from "../compose-panel";
 import { GitHubIcon } from "../icons";
+import { SelfHostCompose } from "../self-host-compose";
 
 const facts: { icon: ReactNode; title: string; detail: string }[] = [
   { icon: <SignalSlashIcon />, title: "Works offline", detail: "Syncs when you reconnect" },
@@ -57,7 +57,7 @@ export function SelfHost() {
             </a>
           </div>
         </div>
-        <ComposePanel />
+        <SelfHostCompose />
       </div>
 
       <ul className="mx-auto grid max-w-6xl grid-cols-[repeat(auto-fit,minmax(min(100%,16rem),1fr))] gap-4 px-4 pb-20 sm:px-10">

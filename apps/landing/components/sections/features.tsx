@@ -30,7 +30,7 @@ export function Features() {
           <Phone
             alt="The meal calendar on a phone"
             base="calendar-mobile"
-            className="phone-crop mx-auto mt-4 w-[min(80%,17.5rem)] sm:w-[min(44%,17.5rem)]"
+            className="phone-crop mx-auto mt-4 w-[min(80%,17.5rem)] self-start sm:w-[min(44%,17.5rem)]"
           />
         </article>
 
