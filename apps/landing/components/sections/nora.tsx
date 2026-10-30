@@ -7,7 +7,7 @@ import { NoraStack } from "../nora-stack";
 export function Nora() {
   return (
     <section className="mx-auto flex max-w-6xl flex-wrap items-center gap-16 px-4 pb-28 sm:px-10">
-      <div className="flex min-w-0 flex-1 basis-[25rem] flex-col gap-5">
+      <div className="reveal flex min-w-0 flex-1 basis-[25rem] flex-col gap-5">
         <h2 className="text-[clamp(3rem,6vw,5rem)] leading-none font-semibold tracking-[-0.022em]">
           Nora <span className="text-accent-text">+ dish.</span>
         </h2>

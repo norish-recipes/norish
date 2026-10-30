@@ -39,7 +39,7 @@ export function SelfHost() {
       </svg>
 
       <div className="mx-auto flex max-w-6xl flex-wrap items-center gap-12 px-4 pt-12 pb-16 sm:px-10">
-        <div className="flex min-w-0 flex-1 basis-[22rem] flex-col gap-5">
+        <div className="reveal flex min-w-0 flex-1 basis-[22rem] flex-col gap-5">
           <h2 className="text-[clamp(2.5rem,5vw,4rem)] leading-[1.02] font-semibold tracking-[-0.022em]">
             Free and open source.
           </h2>
@@ -60,7 +60,7 @@ export function SelfHost() {
         <SelfHostCompose />
       </div>
 
-      <ul className="mx-auto grid max-w-6xl grid-cols-[repeat(auto-fit,minmax(min(100%,16rem),1fr))] gap-4 px-4 pb-20 sm:px-10">
+      <ul className="reveal mx-auto grid max-w-6xl grid-cols-[repeat(auto-fit,minmax(min(100%,16rem),1fr))] gap-4 px-4 pb-20 sm:px-10">
         {facts.map((fact) => (
           <li
             key={fact.title}

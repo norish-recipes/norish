@@ -20,7 +20,7 @@ export function Features() {
   return (
     <section className="mx-auto max-w-6xl scroll-mt-24 px-4 py-24 sm:px-10" id="features">
       <div className="bento">
-        <article className="tile tile-plan tint-orange sm:flex-row sm:gap-8">
+        <article className="reveal tile tile-plan tint-orange sm:flex-row sm:gap-8">
           <div className="flex flex-1 flex-col gap-3 pt-2">
             <Title accent="the week">Plan</Title>
             <p className="max-w-[30ch] text-[1.0625rem]">
@@ -34,7 +34,7 @@ export function Features() {
           />
         </article>
 
-        <article className="tile tile-groceries tint-blue">
+        <article className="reveal tile tile-groceries tint-blue">
           <Title accent="the groceries">Do</Title>
           <p className="text-[1.0625rem]">By store and aisle, with prices, synced in real time.</p>
           <Phone
@@ -44,7 +44,7 @@ export function Features() {
           />
         </article>
 
-        <article className="tile tile-pantry tint-green">
+        <article className="reveal tile tile-pantry tint-green">
           <Title accent="the pantry">Skip</Title>
           <p>Pantry foods stay off the grocery list.</p>
           <Phone
@@ -54,7 +54,7 @@ export function Features() {
           />
         </article>
 
-        <article className="tile tile-cooking tint-red">
+        <article className="reveal tile tile-cooking tint-red">
           <Title accent="cooking">Focus on</Title>
           <p>Step timers, and the screen stays on.</p>
           <Phone
@@ -64,7 +64,7 @@ export function Features() {
           />
         </article>
 
-        <article className="tile tile-recipe bg-surface ring-border pb-8 ring-1 ring-inset md:flex-row md:items-center md:gap-10">
+        <article className="reveal tile tile-recipe bg-surface ring-border pb-8 ring-1 ring-inset md:flex-row md:items-center md:gap-10">
           <div className="flex flex-col gap-3 md:w-80 md:shrink-0">
             <Title accent="that works">A recipe page</Title>
             <p className="text-[1.0625rem]">Remove the clutter, and focus on the recipe at hand.</p>

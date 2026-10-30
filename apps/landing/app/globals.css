@@ -17,6 +17,7 @@
     --source-youtube: oklch(60% 0.24 27);
     --source-instagram: oklch(58% 0.23 0);
     --source-tiktok: var(--foreground);
+    --source-tiktok-tint: oklch(85% 0.12 195);
     --source-photos: oklch(68% 0.17 55);
     --source-pdf: oklch(55% 0.19 25);
 
@@ -142,7 +143,7 @@
     min-height: 3.5rem;
     padding: 0 1.25rem 0 0.5rem;
     border-radius: 999px;
-    background: color-mix(in oklch, var(--chip) 12%, var(--background));
+    background: color-mix(in oklch, var(--chip-tint) 14%, var(--background));
     font-size: 1.125rem;
     font-weight: 600;
     letter-spacing: -0.01em;
@@ -245,7 +246,7 @@
     }
 
     .source-chip {
-      background: color-mix(in oklch, var(--chip) 10%, var(--surface));
+      background: color-mix(in oklch, var(--chip-tint) 10%, var(--surface));
     }
   }
 
@@ -281,6 +282,54 @@
 
   &::-webkit-scrollbar {
     display: none;
+  }
+}
+
+/*
+ * Scroll effects, driven by the scroll position itself rather than a script.
+ * Browsers without scroll timelines, and reduced motion, get the still page.
+ */
+@supports (animation-timeline: view()) {
+  @media (prefers-reduced-motion: no-preference) {
+    /* A block settles into place as it comes up the screen. */
+    .reveal {
+      animation: reveal linear both;
+      animation-timeline: view();
+      animation-range: entry 0% entry 60%;
+    }
+
+    /* Phones rise out of their tiles a beat behind the tile itself. */
+    .tile .phone {
+      animation: rise linear both;
+      animation-timeline: view();
+      animation-range: entry 10% cover 40%;
+    }
+
+    /* The hero's outer phones drift down as the page moves away from them. */
+    .fan {
+      animation: drift linear both;
+      animation-timeline: scroll(root);
+      animation-range: 0 60vh;
+    }
+  }
+}
+
+@keyframes reveal {
+  from {
+    opacity: 0;
+    translate: 0 1.5rem;
+  }
+}
+
+@keyframes rise {
+  from {
+    translate: 0 2.5rem;
+  }
+}
+
+@keyframes drift {
+  to {
+    translate: 0 3rem;
   }
 }
 
