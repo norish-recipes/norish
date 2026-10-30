@@ -12,7 +12,7 @@ description: Manage users.
 
 ## Roles
 
-- **Owner**: the first account on the server. Only one person can be the owner.
+- **Owner**: the server's first account and only owner.
 - **Admin**: can open everything under **Settings => Admin**.
 
 The shield button on a row grants or revokes admin access. You can't revoke
@@ -20,8 +20,8 @@ your own and you can't change the owner's.
 
 ## Deleting a user
 
-The bin button deletes the account after you confirm. You can't delete the
-owner or your own account here. Delete your own under **Settings => Account**.
+Press the bin button and confirm to delete an account. You can't delete the
+owner or yourself here; delete your own account under **Settings => Account**.
 
 The person's groceries, meal plan, cookbook memberships and preferences are
 deleted with the account.

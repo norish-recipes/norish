@@ -19,8 +19,7 @@ Ingredients can have an icon. It shows:
 ## Which icon shows
 
 1. The ingredient's own icon, uploaded or generated.
-2. The built-in icon. Norish ships icons for the foods in its starting
-   catalogue.
+2. The built-in icon, included for foods in the starting catalogue.
 3. The parent's icon, so "red onion" shows the onion.
 
 An ingredient with none of these shows a placeholder on the Ingredients page
@@ -28,11 +27,11 @@ and in its panel.
 
 ## Setting an icon
 
-Open the ingredient on the Ingredients page, or anywhere its panel opens, and
-click its icon:
+Open an ingredient's panel from the Ingredients page or elsewhere, then click
+its icon:
 
-- **Upload a picture** takes or uploads a photo. Norish removes the background
-  when it can.
+- **Upload a picture** takes or uploads a photo and removes the background
+  when possible.
 - **Generate with AI** draws one with your server's
   [image provider](../configuration/ai-provider.md#image-generation). Brands are never drawn.
 - **Remove icon** removes it.
@@ -43,7 +42,7 @@ An administrator can have AI draw missing icons for new ingredients, or for
 every ingredient at once with **Fill gaps**. See
 [Ingredient catalogue](../configuration/ai-provider.md#ingredient-catalogue).
 Only an ingredient with no icon to show, not even its parent's, gets one.
-Broad groups like "vegetable" stay without.
+Broad groups like "vegetable" don't get an icon.
 
 ## Hiding icons
 

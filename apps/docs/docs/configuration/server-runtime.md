@@ -6,7 +6,7 @@ description: Core server settings, the encryption key, health checks, networking
 
 # Server & runtime
 
-Settings for the Norish server. Most have working defaults, but you must provide your own
+Most server settings have working defaults. You must provide your own
 `MASTER_KEY`.
 
 ## Core
@@ -21,8 +21,8 @@ Settings for the Norish server. Most have working defaults, but you must provide
 | `VALKEY_URL` | Valkey connection URL (`valkey://` or `valkeys://`) for events and jobs | (required)                             |
 
 :::info Generate a `MASTER_KEY`
-Norish derives the keys that encrypt stored secrets from `MASTER_KEY`, so
-changing it makes them unreadable. Generate one with:
+`MASTER_KEY` is used to derive encryption keys for stored secrets. Changing
+it makes those secrets unreadable. Generate one with:
 
 ```bash
 openssl rand -base64 32
@@ -46,24 +46,25 @@ openssl rand -base64 32
 | `TRUSTED_ORIGINS` | Comma-separated additional trusted origins                 | (empty) |
 | `TRUSTED_PROXIES` | Comma-separated IPs or CIDR ranges of your reverse proxies | (empty) |
 
-Set `TRUSTED_ORIGINS` when people reach Norish on more than one address, for
+Set `TRUSTED_ORIGINS` when people use more than one server address, for
 example `http://192.168.1.100:3000,https://norish.example.com`. The WebSocket
 refuses origins it doesn't trust, see
 [Origin check](./websocket.md#origin-check).
 
-Set `TRUSTED_PROXIES` when Norish sits behind more than one reverse proxy, for example
+Set `TRUSTED_PROXIES` when the server sits behind more than one reverse proxy, such as
 Cloudflare in front of Nginx Proxy Manager. List the address or range of every proxy; for
-Cloudflare that is its [published ranges](https://www.cloudflare.com/ips/). Without it, Norish
-cannot tell visitors apart and everyone shares one rate limit for signing in and session checks.
+Cloudflare that is its [published ranges](https://www.cloudflare.com/ips/). Without it,
+visitors share one rate limit for sign-in and session checks.
 Behind a single proxy it is not needed.
 
-Norish tells visitors apart by the `X-Forwarded-For` header your proxy adds, so only the proxy
-should be able to reach Norish's port. A visitor who connects to the port directly can set that
+Visitors are identified by the `X-Forwarded-For` header your proxy adds, so only
+the proxy should be able to reach the app's port. A visitor who connects to the port directly can set that
 header themselves and get a sign-in rate limit of their own.
 
 ## Base path
 
-Serve Norish under a path, like `https://example.com/norish`
+To serve the app under a path such as `https://example.com/norish`, build it with
+`NEXT_PUBLIC_BASE_PATH`.
 
 | Variable                | Description                     | Default           |
 | ----------------------- | ------------------------------- | ----------------- |
@@ -78,7 +79,7 @@ docker build -f docker/Dockerfile \
   -t norish:base-path .
 ```
 
-Set `AUTH_URL` to the address with the path; Norish refuses to start when the two differ:
+Set `AUTH_URL` to the same address and path; a mismatch prevents startup:
 
 ```dotenv
 AUTH_URL=https://example.com/norish
@@ -140,14 +141,14 @@ Registration turns off after the first user signs in, see
 
 ## Ingredient catalogue
 
-| Variable                        | Description                                                                                                              | Default                                  |
-| ------------------------------- | ------------------------------------------------------------------------------------------------------------------------ | ---------------------------------------- |
-| `INGREDIENT_CATALOGUE_URL`      | Where the ingredient catalogue seed is fetched from, nightly and at startup. Empty turns the fetch off                   | The Open Food Facts ingredients taxonomy |
-| `INGREDIENT_REVIEW_CONCURRENCY` | How many ingredients are asked at once, from 1 to 50. Lower it when a self-hosted model struggles with parallel requests | `10`                                     |
+| Variable                        | Description                                                                                                     | Default                                  |
+| ------------------------------- | --------------------------------------------------------------------------------------------------------------- | ---------------------------------------- |
+| `INGREDIENT_CATALOGUE_URL`      | Catalogue seed URL, fetched at startup and nightly. Empty disables fetching                                     | The Open Food Facts ingredients taxonomy |
+| `INGREDIENT_REVIEW_CONCURRENCY` | Concurrent AI ingredient reviews (1–50). Lower this for self-hosted models that struggle with parallel requests | `10`                                     |
 
-Norish seeds its [ingredient catalogue](../groceries/ingredients.md) from the
+The [ingredient catalogue](../groceries/ingredients.md) is seeded from the
 [Open Food Facts](https://world.openfoodfacts.org) ingredients taxonomy and
-refreshes it every night at midnight.
+refreshed every night at midnight.
 
 On a server without internet, serve a copy of `ingredients.txt` from a local
 mirror and point `INGREDIENT_CATALOGUE_URL` at it.

@@ -6,11 +6,11 @@ description: Group groceries by aisle within a Store.
 
 # Aisles
 
-A Store can have aisles to group groceries on your list. Aisles appear in the order you set, including when they're empty.
+Aisles group groceries within a Store. They appear in your chosen order, even when empty.
 
 ## Managing aisles
 
-Open **Manage Stores** and edit a Store. Add an aisle by typing its name below the colour picker and pressing Enter. Edit a name to rename an aisle, drag the handle to reorder it, or press **X** to remove it.
+Open **Manage Stores** and edit a Store. Below the colour picker, type an aisle name and press Enter. Edit its name to rename it, drag its handle to reorder it, or press **X** to remove it.
 
 ![The store editor, with the Store's aisles under the colour picker](/img/screenshots/groceries-aisles-editor.png)
 
@@ -30,6 +30,6 @@ Groceries without an aisle appear at the top of their Store.
 
 Aisles are remembered per Store and [ingredient](./ingredients.md), so different names for the same ingredient can share an aisle. For example, assigning "melk" to Zuivel also assigns "milk" and "Melk (halfvol)" to that aisle.
 
-Renaming an aisle keeps its groceries. Removing an aisle leaves its groceries unassigned. Each Store remembers its own aisles, and deleting a Store deletes its aisle settings.
+Renaming an aisle keeps its groceries; removing it leaves them unassigned. Deleting a Store deletes its aisle settings.
 
 Groceries with the same name and unit share a row, so moving that row moves them all.

@@ -6,7 +6,7 @@ description: Let AI add tags, allergies, categories, nutrition, provenance, step
 
 # Recipe enrichment
 
-With AI set up, Norish can fill in a recipe for you:
+With AI set up, recipes can be enriched with:
 
 - **Tags**
 - **Allergy tags** for the allergies set in your household
@@ -27,8 +27,8 @@ Anything you entered, or that the source stated, wins over an automatic run:
 
 - **Categories**: a recipe with any meal category is left alone.
 - **Nutrition**: a recipe that states all four values is left alone. Otherwise,
-  when Norish has nutrition data for more than 80% of the ingredients, it works
-  the values out without AI. Below that, the AI estimates what is missing.
+  when nutrition data covers more than 80% of the ingredients, values are
+  calculated without AI. Below that, the AI estimates what is missing.
 - **Provenance**: only the missing parts are filled in, around what is there.
 - **Step ingredients**: only steps without ingredients get them.
 - **Image**: only recipes without any image get one.

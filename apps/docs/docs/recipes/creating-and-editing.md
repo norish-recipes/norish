@@ -6,11 +6,10 @@ description: The recipe form, with headings (#), recipe links (/) and step ingre
 
 # Creating and editing recipes
 
-**Add Recipe** opens the recipe form. Editing a recipe from its actions menu
-opens the same form.
+Open the form with **Add Recipe**, or **Edit** in a recipe's actions menu.
 
-- **Ingredients** are free text, one per line, like `200 g spaghetti`. Norish
-  reads the amount and unit as you type.
+- **Ingredients** are free text, one per line, like `200 g spaghetti`. The
+  amount and unit are read as you type.
 - **Steps** go one per row. Drag a row to reorder it.
 - **Photos** go on the recipe or on a step. A step can have several.
 
@@ -35,13 +34,13 @@ plain text, and the ingredient shows as a chip under the step.
 
 ![The @ mention autocomplete, with chips beneath the step](/img/screenshots/editor-mention-chips.png)
 
-The **Link ingredient** picker under each step adds a chip without naming the
-ingredient in the text, so _"add the spices"_ can carry all of them.
+Use **Link ingredient** below a step to add chips without changing its text;
+_"add the spices"_ can link all the spices.
 
-When the ingredient line has an amount, Norish asks how much this step uses.
+For ingredient lines with an amount, a prompt asks how much this step uses.
 Type the number and press Enter, or press Escape to use the whole line.
 
-![The ask: an amount entry opens over a freshly attached chip](/img/screenshots/editor-amount-ask.png)
+![Amount entry for a newly linked ingredient](/img/screenshots/editor-amount-ask.png)
 
 **Amount…** on a chip changes it later: half, a third, a quarter, or an exact
 amount. On a line of five eggs, entering **3** makes the step read _3 eggs_.

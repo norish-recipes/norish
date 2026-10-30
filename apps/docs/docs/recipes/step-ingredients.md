@@ -6,8 +6,8 @@ description: Show the ingredients and amounts each step uses, linked by hand or 
 
 # Step ingredients
 
-A step can show the ingredients it uses, with their amounts. _"Add half the
-water"_ shows **25 ml water** when the recipe has 50 ml, and _"add the spices"_
+Linked ingredients appear below each step with their amounts. _"Add half the
+water"_ shows **25 ml water** when the recipe has 50 ml; _"add the spices"_
 shows each spice. The step's text stays as written.
 
 ![Amounts under a step on the recipe page](/img/screenshots/step-ingredients-recipe.png)
@@ -26,8 +26,8 @@ amount. Amounts follow the servings and the metric or US conversion. See
 
 ## Letting AI fill the gaps
 
-**Link Ingredients to Steps** in a recipe's actions menu has AI link the steps
-that have no ingredients yet. Steps you linked yourself are never changed.
+Choose **Link Ingredients to Steps** in a recipe's actions menu to have AI
+fill steps that have no ingredients yet. Steps you linked yourself are never changed.
 
 Your administrator can turn on **Ingredient linking** for new recipes under
 **Settings => Admin => AI**. It is off by default.

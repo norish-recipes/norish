@@ -16,7 +16,7 @@ and desktop.
 - **Ratings**: the rating card.
 - **Favorites**: the heart and the favorites filter.
 - **Ingredient conversion**: the metric and US conversion menu.
-- **Recipe timers**: timers Norish finds in the steps.
+- **Recipe timers**: timers detected in the steps.
 - **Cookbooks**: the cookbooks card at the end of a recipe.
 - **Ingredient icons**: see [Ingredient icons](../groceries/ingredient-icons.md).
 

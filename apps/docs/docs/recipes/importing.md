@@ -12,11 +12,10 @@ description: Import a recipe from a link, text, photos or another app.
 clipboard is filled in for you, so you copy the address, open the dialog and
 press **Import**.
 
-You can also paste a link in the dashboard search bar. Norish checks whether
-the page holds a recipe and imports it.
+Paste a link in the dashboard search bar to check for a recipe and import it.
 
-In Chromium-based browsers, Norish can offer to import a copied link on any
-page once you allow clipboard access. Safari and Firefox don't allow this, so
+In Chromium-based browsers, allow clipboard access to receive an import
+prompt for copied links on any page. Safari and Firefox don't allow this, so
 paste the link there instead.
 
 ![Norish asking to import a copied link](/img/screenshots/import-clipboard-prompt.png)
@@ -44,7 +43,7 @@ whole, see [Recipe Archive](./recipe-archive.md#importing-an-archive).
 ## Through the API
 
 Scripts and other tools import a link with `POST /api/v1/recipes/import/url`,
-which answers with a `statusUrl`. `GET /api/v1/recipes/import/status/{recipeId}`
+which returns a `statusUrl`. `GET /api/v1/recipes/import/status/{recipeId}`
 says whether the import is waiting, running, done or failed, with the recipe or
 the reason. Add `?wait=30` to hold the request until the import ends, for up to
 60 seconds. See the [API reference](../reference/api.mdx).

@@ -6,7 +6,7 @@ description: Sign in with a password, OIDC, GitHub or Google.
 
 # Authentication
 
-Norish supports email and password, OIDC, GitHub and Google sign-in. Set up one
+Sign in with email and password, OIDC, GitHub or Google. Set up one
 provider with environment variables for the first sign-in, then manage the rest
 under **Settings => Admin**.
 
@@ -26,8 +26,8 @@ your `AUTH_URL` as the host:
 
 ## Linking accounts
 
-Norish doesn't link accounts automatically. To add another sign-in method, go to
-**Settings => User=> Sign-in methods** and press **Connect**. The provider's email doesn't have
+Accounts aren't linked automatically. To add a sign-in method, go to
+**Settings => User => Sign-in methods** and press **Connect**. The provider's email doesn't have
 to match yours.
 
 ![The Sign-in methods card in user settings](/img/screenshots/settings-sign-in-methods.png)
@@ -40,8 +40,8 @@ to match yours.
 ## Password
 
 Email and password sign-in is on when no other provider is set up. Set `PASSWORD_AUTH_ENABLED` to
-turn it on or off yourself: Norish applies it at every start, over the setting in the admin settings.
-If no other way to sign in is left at start, Norish turns password sign-in back on.
+turn it on or off at every start, overriding the admin setting. If no other
+sign-in method is available at startup, password sign-in is turned back on.
 
 | Variable                | Description                     | Default |
 | ----------------------- | ------------------------------- | ------- |
@@ -50,8 +50,8 @@ If no other way to sign in is left at start, Norish turns password sign-in back 
 ## OIDC
 
 Works with any OpenID Connect provider, like Authentik, Pocket ID or Keycloak.
-Norish checks ID tokens against the provider's published signing keys, so the provider must sign
-them with an RS or ES key; HS256 is not supported.
+ID tokens are checked against the provider's published signing keys. The provider
+must sign them with an RS or ES key; HS256 is not supported.
 
 ```yaml title="docker-compose.yml (environment)"
 OIDC_NAME: NoraId

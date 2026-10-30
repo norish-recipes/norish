@@ -6,10 +6,9 @@ description: How URL imports load and read recipe pages.
 
 # Recipe parser
 
-A URL import first fetches the page plainly. A page that already holds a
-recipe in its HTML is read straight away. Any other page goes to the **page
-renderers**, browsers that read pages a plain fetch cannot. Norish then reads
-the recipe with [recipe-scrapers](https://github.com/hhursev/recipe-scrapers).
+URL imports first fetch the page directly. If its HTML contains a recipe,
+extraction starts immediately. Other pages go to the **page renderers**, which
+load content that a direct fetch cannot read. Recipes are extracted with [recipe-scrapers](https://github.com/hhursev/recipe-scrapers).
 When that finds nothing and [AI](./ai-provider.md) is set up, the AI reads the
 page instead. Video links go through
 [video import](./ai-provider.md#video-import).
@@ -27,21 +26,21 @@ Set them up under **Settings => Admin => Page renderers**.
   shows on Allerhande. See [Chromium browser](#chromium-browser).
 - **FlareSolverr or Byparr** is tried when the browsers get no page or a bot
   check, like a Cloudflare challenge. The example compose file has both as
-  commented-out services: uncomment one and switch it on. Norish fills in
+  commented-out services: uncomment one and switch it on. The default endpoint is
   `http://flaresolverr:8191/v1`; for Byparr, change it to
   `http://byparr:8191/v1`. Each page it reads starts a new browser, which takes
   a few seconds.
 
-Switching the Chromium browser or the solver on tests its endpoint, and **Test** tests
-it again: Norish connects to the browser, and has the solver
-read `https://example.com`.
+Enabling the Chromium browser or solver tests its endpoint. **Test** repeats
+the check: a connection to the browser, or a request through the solver to
+`https://example.com`.
 
-Site authentication tokens go to Obscura and the Chromium browser, which keep
-them to the token's site. The solver gets the page without them, so a page that
-needs you signed in needs one of the browsers. See
+Obscura and Chromium receive site authentication tokens only for the token's
+site. The solver receives none, so pages that require sign-in need one of the
+browsers. See
 [Site authentication](./site-authentication.md).
 
-With all three off, Norish only fetches pages plainly. If no page renderer can
+With all three off, imports use only the direct fetch. If no page renderer can
 read a page, the import fails.
 
 **Allow private addresses** is off by default, so imports and shop pages can't
@@ -56,21 +55,21 @@ that can reach Obscura or the Chromium browser can drive it, and the solvers
 take no password.
 
 Obscura only starts on a network address when its `OBSCURA_CDP_TOKEN` is at
-least 32 characters, and Norish has to send the same token. Generate one with
+least 32 characters, and the app must send the same token. Generate one with
 `openssl rand -hex 32`.
 
 The compose files pin an exact Obscura image, like `0.2.5-norish.1`. For a
 rolling release, use `norishapp/obscura:latest` instead.
 
-A page counts as loaded once its images and scripts have finished too. If slow
-sites fail with a timeout, raise the navigation timeout.
+Page loading waits for images and scripts too. Raise the navigation timeout
+if slow sites time out.
 
 ### Chromium browser
 
-The example compose file has a commented-out `chromium` service. Its image,
-`norishapp/chromium`, is Norish's build of
-[fingerprint-chromium](https://github.com/adryfish/fingerprint-chromium), a
-Chromium that gets a new browser fingerprint on every start. Both are BSD-3
+The example compose file includes a commented-out `chromium` service using
+`norishapp/chromium`, a build of
+[fingerprint-chromium](https://github.com/adryfish/fingerprint-chromium) with a
+new browser fingerprint on every start. Both are BSD-3
 licensed.
 
 - It runs on amd64 only, because upstream builds Linux for x86_64 only.
@@ -79,13 +78,13 @@ licensed.
 
 Any other Chromium with a CDP endpoint works too, including a hosted browser.
 If the endpoint carries a token in its query string, like
-`wss://browser.example/cdp?token=...`, Norish leaves the query string out of its
+`wss://browser.example/cdp?token=...`, the query string is omitted from
 logs.
 
 ## Settings
 
-These set up the page renderers at the first start. After that they live in
-admin settings, and changing the variables does nothing.
+These variables seed the page renderers at first start. After that, change
+them in admin settings; editing the variables has no effect.
 
 | Variable                    | Description                                                   | Default             |
 | --------------------------- | ------------------------------------------------------------- | ------------------- |
@@ -103,7 +102,7 @@ admin settings, and changing the variables does nothing.
 
 ## Content detection
 
-Overrides for how Norish detects recipe content. Most servers don't need these.
+Recipe-content detection overrides. Most servers don't need these.
 
 | Variable              | Description                                     | Default |
 | --------------------- | ----------------------------------------------- | ------- |

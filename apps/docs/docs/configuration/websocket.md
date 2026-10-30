@@ -6,7 +6,7 @@ description: The realtime WebSocket, reverse proxy setup and the origin check.
 
 # WebSocket & realtime
 
-Norish pushes changes to open browsers over a WebSocket. Without it the app
+Changes reach open browsers over a WebSocket. Without it the app
 still works, but other people's changes require manual refreshing.
 
 ## The endpoint
@@ -36,7 +36,7 @@ location / {
 }
 ```
 
-Norish pings every 20 seconds, so keep `proxy_read_timeout` above 25 seconds.
+The server pings every 20 seconds, so keep `proxy_read_timeout` above 25 seconds.
 A lower value closes the socket between pings and the app keeps reconnecting.
 
 ### Caddy
@@ -56,8 +56,8 @@ Traefik forwards upgrades on any HTTP router. If you set
 
 ## Origin check
 
-Norish answers `403 Forbidden` to a WebSocket from an origin it doesn't trust.
-It trusts:
+WebSocket connections from untrusted origins receive `403 Forbidden`. Trusted
+origins are:
 
 - the origin of `AUTH_URL`
 - every entry in `TRUSTED_ORIGINS`

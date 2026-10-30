@@ -10,8 +10,8 @@ A **Cookbook** is a named set of recipes.
 
 ## Making one
 
-In the Library, select the **Cookbooks** chip and press **+ Cookbook**, then
-give it a title. Under **All**, the add menu offers a cookbook as well.
+In the Library, select **Cookbooks**, press **+ Cookbook** and enter a title.
+You can also create one from the add menu under **All**.
 
 ![Creating a cookbook from the Library](/img/screenshots/cookbooks-create.png)
 
@@ -31,12 +31,12 @@ The end of a recipe page lists the cookbooks it is in. Hide that card under
 
 ## Editing one
 
-**Edit cookbook**, on its card in the Library or in the menu on its page,
-changes the cover, the name and which recipes it holds. Without a cover image,
+Choose **Edit cookbook** from its Library card or page menu to change its
+cover, name and recipes. Without a cover image,
 a cookbook shows photos of its recipes. Changing the cover needs a connection.
 
-To take out a single recipe, swipe it left on the cookbook's page or open its
-three dots, and press the minus.
+To remove a recipe, swipe it left on the cookbook page or open its three-dot
+menu, then press the minus button.
 
 ![Editing a cookbook: its cover, name and what is in it, in one panel](/img/screenshots/cookbooks-edit.png)
 
@@ -47,6 +47,6 @@ your administrator set.
 
 - Deleting a cookbook keeps its recipes.
 - Deleting a recipe removes it from every cookbook.
-- A cookbook stays when the person who made it deletes their account.
+- Cookbooks remain when their creator deletes their account.
 
 Every cookbook you can see is available [offline](../offline.md).

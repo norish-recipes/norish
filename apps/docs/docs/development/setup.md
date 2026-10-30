@@ -47,5 +47,5 @@ pnpm run dev
 
 ## Contributing
 
-The commands, code style and pull request process can be found on GitHub in
+See the commands, code style and pull request process in
 [CONTRIBUTING.md](https://github.com/norish-recipes/Norish/blob/main/CONTRIBUTING.md).
