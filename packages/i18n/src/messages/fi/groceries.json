@@ -11,7 +11,8 @@
     "groupIngredients": "Ryhmittele ainesosat",
     "pantry": "Ruokakomero",
     "list": "Lista",
-    "views": "Ostoslistan näkymät"
+    "views": "Ostoslistan näkymät",
+    "clearList": "Tyhjennä lista"
   },
   "empty": {
     "title": "Ostoslistasi odottaa",
@@ -30,7 +31,9 @@
     "deleteDone": "Poista tehdyt",
     "done": "{count} tehty",
     "allDone": "Kaikki tehty",
-    "total": "Vielä ostettavaa"
+    "total": "Vielä ostettavaa",
+    "recipeActions": "Reseptin toiminnot",
+    "clearAll": "Tyhjennä kaikki"
   },
   "storeManager": {
     "title": "Hallinnoi kauppoja",
@@ -186,5 +189,12 @@
     "onePack": "hinta yhdeltä pakkaukselta",
     "sale": "Tarjous",
     "regularPrice": "Normaalihinta {price}"
+  },
+  "clearConfirm": {
+    "listTitle": "Tyhjennetäänkö lista?",
+    "listDescription": "Tämä poistaa ostoslistaltasi {count, plural, one {# tuotteen} other {# tuotetta}}. Tätä ei voi perua.",
+    "sectionTitle": "Tyhjennetäänkö {name}?",
+    "sectionDescription": "Tämä poistaa kohteesta {name} {count, plural, one {# tuotteen} other {# tuotetta}}. Tätä ei voi perua.",
+    "confirm": "Tyhjennä"
   }
 }

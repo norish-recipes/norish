@@ -36,6 +36,7 @@ interface StoreSectionProps {
   defaultExpanded?: boolean;
   onMarkAllDone?: () => void;
   onDeleteDone?: () => void;
+  onClearAll?: () => void;
   getRecipeNameForGrocery?: (grocery: GroceryDto) => string | null;
 }
 
@@ -53,6 +54,7 @@ function StoreSectionComponent({
   defaultExpanded = true,
   onMarkAllDone,
   onDeleteDone,
+  onClearAll,
   getRecipeNameForGrocery,
 }: StoreSectionProps) {
   const [isExpanded, setIsExpanded] = useState(defaultExpanded);
@@ -191,7 +193,7 @@ function StoreSectionComponent({
   // The heading, handed to the container so a drop on it lands in the Store
   const headerElement = (
     <StoreHeading
-      actions={groceries.length > 0 ? { onMarkAllDone, onDeleteDone } : undefined}
+      actions={groceries.length > 0 ? { onMarkAllDone, onDeleteDone, onClearAll } : undefined}
       activeCount={activeCount}
       doneCount={doneCount}
       dot={store !== null}

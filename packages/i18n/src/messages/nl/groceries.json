@@ -9,6 +9,7 @@
     "manageStores": "Winkels beheren",
     "storeViewOptions": "Winkelweergave opties",
     "groupIngredients": "Groepeer ingrediënten",
+    "clearList": "Lijst leegmaken",
     "pantry": "Voorraadkast",
     "list": "Lijst",
     "views": "Boodschappenweergaven"
@@ -26,8 +27,10 @@
   "store": {
     "unsorted": "Ongeordend",
     "storeActions": "Winkelacties",
+    "recipeActions": "Receptacties",
     "markAllDone": "Markeer alles als gekocht",
     "deleteDone": "Verwijder gekocht",
+    "clearAll": "Alles wissen",
     "done": "{count} gedaan",
     "allDone": "Alles gedaan",
     "total": "Nog te kopen"
@@ -177,6 +180,13 @@
     "invalidPrice": "Vul een prijs in, zoals 2,49",
     "invalidCurrency": "Een valuta bestaat uit drie letters, zoals EUR",
     "openPage": "Openen bij {store}"
+  },
+  "clearConfirm": {
+    "listTitle": "Lijst leegmaken?",
+    "listDescription": "Hiermee verwijder je {count, plural, one {# item} other {# items}} uit je boodschappenlijst. Dit kan niet ongedaan worden gemaakt.",
+    "sectionTitle": "{name} leegmaken?",
+    "sectionDescription": "Hiermee verwijder je {count, plural, one {# item} other {# items}} uit {name}. Dit kan niet ongedaan worden gemaakt.",
+    "confirm": "Leegmaken"
   },
   "price": {
     "pending": "Prijs wordt opgezocht",

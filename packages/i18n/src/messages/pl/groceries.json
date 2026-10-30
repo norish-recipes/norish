@@ -9,6 +9,7 @@
     "manageStores": "Zarządzaj sklepami",
     "storeViewOptions": "Opcje widoku sklepu",
     "groupIngredients": "Grupuj składniki",
+    "clearList": "Wyczyść listę",
     "pantry": "Spiżarnia",
     "list": "Lista",
     "views": "Widoki zakupów"
@@ -26,8 +27,10 @@
   "store": {
     "unsorted": "Nieposortowane",
     "storeActions": "Akcje sklepu",
+    "recipeActions": "Akcje przepisu",
     "markAllDone": "Zaznacz wszystkie",
     "deleteDone": "Usuń zaznaczone",
+    "clearAll": "Wyczyść wszystko",
     "done": "{count} gotowe",
     "allDone": "Wszystko gotowe",
     "total": "Jeszcze do kupienia"
@@ -177,6 +180,13 @@
     "invalidPrice": "Wpisz cenę, np. 2,49",
     "invalidCurrency": "Waluta to trzy litery, np. EUR",
     "openPage": "Otwórz w {store}"
+  },
+  "clearConfirm": {
+    "listTitle": "Wyczyścić listę?",
+    "listDescription": "Spowoduje to usunięcie {count, plural, one {# produktu} few {# produktów} many {# produktów} other {# produktu}} z listy zakupów. Tej czynności nie można cofnąć.",
+    "sectionTitle": "Wyczyścić {name}?",
+    "sectionDescription": "Spowoduje to usunięcie {count, plural, one {# produktu} few {# produktów} many {# produktów} other {# produktu}} z {name}. Tej czynności nie można cofnąć.",
+    "confirm": "Wyczyść"
   },
   "price": {
     "pending": "Sprawdzanie ceny",
