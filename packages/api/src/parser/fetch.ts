@@ -1,5 +1,3 @@
-import { BlockList } from "node:net";
-import type { LookupAddress } from "node:dns";
 import type { BrowserContext, Page } from "playwright-core";
 
 import type { BrowserRenderer } from "@norish/api/parser/browser-connections";
@@ -7,7 +5,13 @@ import type { SiteAuthTokenDecryptedDto } from "@norish/shared/contracts/dto/sit
 import { getBrowser } from "@norish/api/parser/browser-connections";
 import { getPageRenderersConfig } from "@norish/shared-server/config/server-config-loader";
 import { parserLogger as log } from "@norish/shared-server/logger";
-import { addressesOf, byAddress, solve } from "@norish/shared-server/page-renderers";
+import { byAddress, solve } from "@norish/shared-server/page-renderers";
+import {
+  addressesOf,
+  guardedFetch,
+  isPrivate,
+  isRefusedHost,
+} from "@norish/shared-server/private-addresses";
 import { isHostOnDomain } from "@norish/shared/lib/helpers";
 import { withTimeout } from "@norish/shared/lib/with-timeout";
 
@@ -77,45 +81,6 @@ async function settledContent(
   }
 
   return html ?? "";
-}
-
-/**
- * Loopback, RFC1918, CGNAT (Tailscale), benchmarking, link-local, multicast, reserved, unique-local,
- * NAT64 and unspecified; IPv4-mapped IPv6 matches too.
- */
-const PRIVATE_ADDRESSES = new BlockList();
-
-/* eslint-disable sonarjs/no-hardcoded-ip -- the private ranges are what is refused */
-PRIVATE_ADDRESSES.addSubnet("0.0.0.0", 8, "ipv4");
-PRIVATE_ADDRESSES.addSubnet("127.0.0.0", 8, "ipv4");
-PRIVATE_ADDRESSES.addSubnet("10.0.0.0", 8, "ipv4");
-PRIVATE_ADDRESSES.addSubnet("172.16.0.0", 12, "ipv4");
-PRIVATE_ADDRESSES.addSubnet("192.168.0.0", 16, "ipv4");
-PRIVATE_ADDRESSES.addSubnet("169.254.0.0", 16, "ipv4");
-PRIVATE_ADDRESSES.addSubnet("100.64.0.0", 10, "ipv4");
-PRIVATE_ADDRESSES.addSubnet("198.18.0.0", 15, "ipv4");
-PRIVATE_ADDRESSES.addSubnet("224.0.0.0", 4, "ipv4");
-PRIVATE_ADDRESSES.addSubnet("240.0.0.0", 4, "ipv4");
-PRIVATE_ADDRESSES.addAddress("::", "ipv6");
-PRIVATE_ADDRESSES.addAddress("::1", "ipv6");
-PRIVATE_ADDRESSES.addSubnet("fc00::", 7, "ipv6");
-PRIVATE_ADDRESSES.addSubnet("fe80::", 10, "ipv6");
-PRIVATE_ADDRESSES.addSubnet("64:ff9b::", 96, "ipv6");
-/* eslint-enable sonarjs/no-hardcoded-ip */
-
-/**
- * Whether a host is refused: it is, or resolves to, a private address the administrator does not
- * allow. Redirects inside the solver's browser and DNS rebinding are not covered.
- */
-async function isRefusedHost(hostname: string, allowPrivateAddresses: boolean): Promise<boolean> {
-  if (allowPrivateAddresses) return false;
-
-  // A name that does not resolve is left to the fetch to fail.
-  return (await addressesOf(hostname).catch(() => [])).some(isPrivate);
-}
-
-function isPrivate({ address, family }: LookupAddress): boolean {
-  return PRIVATE_ADDRESSES.check(address, family === 6 ? "ipv6" : "ipv4");
 }
 
 /** A rendered page and the HTTP status its document last arrived with. */
@@ -230,16 +195,20 @@ export async function plainFetch(
 
       const { headerTokens, cookieTokens } = byType(tokensFor(parsed, options.tokens));
       const cookie = cookieTokens.map(({ name, value }) => `${name}=${value}`).join("; ");
-      const response = await fetch(url, {
-        headers: {
-          "user-agent": userAgent,
-          ...options.headers,
-          ...Object.fromEntries(headerTokens.map(({ name, value }) => [name, value])),
-          ...(cookie ? { cookie } : {}),
+      const response = await guardedFetch(
+        url,
+        {
+          headers: {
+            "user-agent": userAgent,
+            ...options.headers,
+            ...Object.fromEntries(headerTokens.map(({ name, value }) => [name, value])),
+            ...(cookie ? { cookie } : {}),
+          },
+          redirect: "manual",
+          signal,
         },
-        redirect: "manual",
-        signal,
-      });
+        allowPrivateAddresses
+      );
       const location =
         response.status >= 300 && response.status < 400 ? response.headers.get("location") : null;
 

@@ -7,8 +7,12 @@ import sharp from "sharp";
 import { v5 as uuidv5 } from "uuid";
 
 import { SERVER_CONFIG } from "@norish/config/env-config-server";
-import { getMaxVideoFileSize } from "@norish/shared-server/config/server-config-loader";
+import {
+  getMaxVideoFileSize,
+  getPageRenderersConfig,
+} from "@norish/shared-server/config/server-config-loader";
 import { serverLogger as log } from "@norish/shared-server/logger";
+import { guardedFetch } from "@norish/shared-server/private-addresses";
 
 // TODO: This file needs a lot of cleaning up
 // Lots of AI generated code to get heic-convert working.
@@ -413,7 +417,13 @@ export async function downloadImage(url: string, recipeId: string): Promise<stri
     throw new Error(`Invalid URL: ${url}`);
   }
 
-  const res = await fetch(url, { signal: AbortSignal.timeout(FETCH_TIMEOUT) });
+  // The URL comes from an imported page, so it reaches only what a page fetch may.
+  const { allowPrivateAddresses } = await getPageRenderersConfig();
+  const res = await guardedFetch(
+    url,
+    { signal: AbortSignal.timeout(FETCH_TIMEOUT) },
+    allowPrivateAddresses
+  );
 
   if (!res.ok || !res.body) {
     throw new Error(`Failed to download image: ${res.status} ${res.statusText}`);

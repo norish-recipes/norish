@@ -1,18 +1,12 @@
-import { lookup } from "node:dns/promises";
 import { isIP } from "node:net";
-import type { LookupAddress } from "node:dns";
 import { chromium } from "playwright-core";
 import { z } from "zod";
 
 import { getPageRenderersConfig } from "@norish/shared-server/config/server-config-loader";
+import { addressesOf } from "@norish/shared-server/private-addresses";
 
 /** A solver launches a browser before it navigates, so it is given this on top of the timeout. */
 const SOLVER_LAUNCH_MS = 15_000;
-
-/** Every address a host resolves to; an address, bracketed or not, resolves to itself. */
-export function addressesOf(hostname: string): Promise<LookupAddress[]> {
-  return lookup(hostname.replace(/^\[|\]$/g, ""), { all: true });
-}
 
 /**
  * The endpoint with its host as an address: Chromium's DevTools server refuses a Host header that

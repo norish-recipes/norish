@@ -88,6 +88,9 @@ describe("plainFetch – private addresses refused by default", () => {
     "http://[fd12:3456::1]/",
     "http://[fe80::1]/",
     "http://[::ffff:127.0.0.1]/",
+    "http://[::127.0.0.1]/",
+    "http://[2002:7f00:1::]/",
+    "http://[2001:0:4136:e378:8000:63bf:3fff:fdd2]/",
     "http://2130706433/",
   ])("refuses %s without fetching it", async (url) => {
     const requested = serve(() => new Response(PAGE));

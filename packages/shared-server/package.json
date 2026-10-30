@@ -41,6 +41,7 @@
     "./lib/workspace-paths": "./src/lib/workspace-paths.ts",
     "./lib/operation-context": "./src/lib/operation-context.ts",
     "./page-renderers": "./src/page-renderers.ts",
+    "./private-addresses": "./src/private-addresses.ts",
     "./realtime/archive": "./src/realtime/archive.ts",
     "./realtime/caldav": "./src/realtime/caldav.ts",
     "./realtime/calendar": "./src/realtime/calendar.ts",
