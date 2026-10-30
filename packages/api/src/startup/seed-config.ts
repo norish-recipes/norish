@@ -140,6 +140,7 @@ const REQUIRED_CONFIGS: ConfigDefinition[] = [
       transcriptionEndpoint: SERVER_CONFIG.TRANSCRIPTION_ENDPOINT || undefined,
       transcriptionApiKey: SERVER_CONFIG.TRANSCRIPTION_API_KEY || undefined,
       transcriptionModel: SERVER_CONFIG.TRANSCRIPTION_MODEL,
+      transcriptionAudioFormat: SERVER_CONFIG.TRANSCRIPTION_AUDIO_FORMAT,
     }),
     sensitive: true, // sensitive due to transcription API key
     description: `Video config (${SERVER_CONFIG.VIDEO_PARSING_ENABLED ? "enabled" : "disabled"})`,

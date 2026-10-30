@@ -1048,7 +1048,13 @@
       "transcriptionApiKeyPlaceholder": "Deixe em branco para usar a chave da configuração de IA",
       "transcriptionApiKeyOptional": "Chave de API (opcional)",
       "transcriptionApiKeyOptionalDescription": "A maioria dos servidores Whisper locais não exige chave de API",
-      "transcriptionApiKeyOptionalPlaceholder": "Deixe em branco para servidores locais"
+      "transcriptionApiKeyOptionalPlaceholder": "Deixe em branco para servidores locais",
+      "transcriptionAudioFormat": "Formato de envio",
+      "transcriptionAudioFormatDescription": "MP3 mantém os envios pequenos. Escolha WAV para servidores que só leem WAV, como o mlx-serve",
+      "transcriptionAudioFormats": {
+        "mp3": "MP3 (menor)",
+        "wav": "WAV (16 kHz mono)"
+      }
     },
     "imageGenerationConfig": {
       "description": "Imagens precisam de um provedor próprio, já que a maioria dos provedores de IA não sabe desenhar.",

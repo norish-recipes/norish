@@ -1048,7 +1048,13 @@
       "transcriptionApiKeyPlaceholder": "Остави празно, за да използваш ключа от AI конфигурацията",
       "transcriptionApiKeyOptional": "API ключ (незадължително)",
       "transcriptionApiKeyOptionalDescription": "Повечето локални Whisper сървъри не изискват API ключ",
-      "transcriptionApiKeyOptionalPlaceholder": "Остави празно за локални сървъри"
+      "transcriptionApiKeyOptionalPlaceholder": "Остави празно за локални сървъри",
+      "transcriptionAudioFormat": "Формат за качване",
+      "transcriptionAudioFormatDescription": "MP3 поддържа файловете малки. Изберете WAV за сървъри, които четат само WAV, като mlx-serve",
+      "transcriptionAudioFormats": {
+        "mp3": "MP3 (по-малък)",
+        "wav": "WAV (16 kHz, моно)"
+      }
     },
     "imageGenerationConfig": {
       "description": "Изображенията изискват собствен доставчик, тъй като повечето AI доставчици не могат да рисуват.",

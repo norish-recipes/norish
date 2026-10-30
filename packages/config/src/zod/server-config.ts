@@ -549,6 +549,17 @@ export function transcriptionProviderSupportsModelListing(
  */
 export const DEFAULT_YT_DLP_VERSION = "2026.08.19";
 
+/**
+ * The audio a generic OpenAI-compatible transcription endpoint is sent.
+ *
+ * MP3 keeps uploads small (#439). Some servers decode nothing but WAV -
+ * mlx-serve's Qwen3-ASR refuses an MP3 with a 400 - so they are sent 16 kHz
+ * mono PCM instead, the rate speech models resample to anyway.
+ */
+export const TranscriptionAudioFormatSchema = z.enum(["mp3", "wav"]);
+
+export type TranscriptionAudioFormat = z.infer<typeof TranscriptionAudioFormatSchema>;
+
 export const VideoConfigSchema = z.object({
   enabled: z.boolean(),
   maxLengthSeconds: z.number().int().positive(),
@@ -559,6 +570,8 @@ export const VideoConfigSchema = z.object({
   transcriptionEndpoint: z.url("Endpoint must be a valid URL").optional(),
   transcriptionApiKey: z.string().optional(),
   transcriptionModel: z.string().min(1, "Model is required"),
+  // Generic OpenAI-compatible endpoints only; absent means MP3.
+  transcriptionAudioFormat: TranscriptionAudioFormatSchema.optional(),
 });
 
 export type VideoConfig = z.infer<typeof VideoConfigSchema>;

@@ -1048,7 +1048,13 @@
       "transcriptionApiKeyPlaceholder": "Jätä tyhjäksi käyttääksesi tekoälyasetusten avainta",
       "transcriptionApiKeyOptional": "API-avain (valinnainen)",
       "transcriptionApiKeyOptionalDescription": "Useimmat paikalliset Whisper-palvelimet eivät vaadi API-avainta",
-      "transcriptionApiKeyOptionalPlaceholder": "Jätä tyhjäksi paikallisia palvelimia varten"
+      "transcriptionApiKeyOptionalPlaceholder": "Jätä tyhjäksi paikallisia palvelimia varten",
+      "transcriptionAudioFormat": "Lähetysmuoto",
+      "transcriptionAudioFormatDescription": "MP3 pitää lähetykset pieninä. Valitse WAV palvelimille, jotka lukevat vain WAV-tiedostoja, kuten mlx-serve",
+      "transcriptionAudioFormats": {
+        "mp3": "MP3 (pienempi)",
+        "wav": "WAV (16 kHz mono)"
+      }
     },
     "imageGenerationConfig": {
       "description": "Kuvat tarvitsevat oman palveluntarjoajan, koska useimmat tekoälypalvelut eivät osaa piirtää.",

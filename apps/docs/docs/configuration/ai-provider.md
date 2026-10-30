@@ -202,11 +202,17 @@ and RedNote count as videos.
 
 Transcription turns a video's audio into text.
 
-| Variable                 | Description                                     | Default     |
-| ------------------------ | ----------------------------------------------- | ----------- |
-| `TRANSCRIPTION_PROVIDER` | Transcription provider                          | `disabled`  |
-| `TRANSCRIPTION_ENDPOINT` | Transcription endpoint (local/custom providers) | (empty)     |
-| `TRANSCRIPTION_API_KEY`  | Transcription API key                           | (empty)     |
-| `TRANSCRIPTION_MODEL`    | Transcription model                             | `whisper-1` |
+| Variable                     | Description                                      | Default     |
+| ---------------------------- | ------------------------------------------------ | ----------- |
+| `TRANSCRIPTION_PROVIDER`     | Transcription provider                           | `disabled`  |
+| `TRANSCRIPTION_ENDPOINT`     | Transcription endpoint (local/custom providers)  | (empty)     |
+| `TRANSCRIPTION_API_KEY`      | Transcription API key                            | (empty)     |
+| `TRANSCRIPTION_MODEL`        | Transcription model                              | `whisper-1` |
+| `TRANSCRIPTION_AUDIO_FORMAT` | Audio sent to a generic endpoint: `mp3` or `wav` | `mp3`       |
 
 When the endpoint or API key is empty, transcription uses the AI provider's.
+
+Audio is sent as MP3 to keep uploads small. Some OpenAI-compatible servers
+read only WAV (mlx-serve's Qwen3-ASR models, for example): for a generic
+OpenAI-compatible endpoint, set **Upload format** to WAV and Norish sends
+16 kHz mono WAV instead, about 2 MB per minute of audio.

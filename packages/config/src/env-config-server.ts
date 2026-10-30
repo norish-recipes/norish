@@ -210,6 +210,7 @@ const ServerConfigSchema = z.object({
   TRANSCRIPTION_ENDPOINT: z.string().optional(), // Required for local providers
   TRANSCRIPTION_API_KEY: z.string().optional(), // Can use AI_API_KEY if not set
   TRANSCRIPTION_MODEL: z.string().default("whisper-1"),
+  TRANSCRIPTION_AUDIO_FORMAT: z.enum(["mp3", "wav"]).default("mp3"), // generic-openai only
 
   UNITS_JSON: z.string().optional(),
   CONTENT_INDICATORS: z.string().optional(),

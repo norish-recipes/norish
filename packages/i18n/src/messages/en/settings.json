@@ -1048,7 +1048,13 @@
       "transcriptionApiKeyPlaceholder": "Leave empty to use AI config key",
       "transcriptionApiKeyOptional": "API key (optional)",
       "transcriptionApiKeyOptionalDescription": "Most local Whisper servers don't require an API key",
-      "transcriptionApiKeyOptionalPlaceholder": "Leave empty for local servers"
+      "transcriptionApiKeyOptionalPlaceholder": "Leave empty for local servers",
+      "transcriptionAudioFormat": "Upload format",
+      "transcriptionAudioFormatDescription": "MP3 keeps uploads small. Choose WAV for servers that only read WAV, such as mlx-serve",
+      "transcriptionAudioFormats": {
+        "mp3": "MP3 (smaller)",
+        "wav": "WAV (16 kHz mono)"
+      }
     },
     "imageGenerationConfig": {
       "description": "Pictures need their own provider, since most AI providers cannot draw.",

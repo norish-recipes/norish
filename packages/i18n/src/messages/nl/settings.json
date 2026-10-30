@@ -1048,7 +1048,13 @@
       "transcriptionApiKeyPlaceholder": "Laat leeg om AI config sleutel te gebruiken",
       "transcriptionApiKeyOptional": "API-sleutel (Optioneel)",
       "transcriptionApiKeyOptionalDescription": "De meeste lokale Whisper-servers vereisen geen API-sleutel",
-      "transcriptionApiKeyOptionalPlaceholder": "Laat leeg voor lokale servers"
+      "transcriptionApiKeyOptionalPlaceholder": "Laat leeg voor lokale servers",
+      "transcriptionAudioFormat": "Uploadformaat",
+      "transcriptionAudioFormatDescription": "MP3 houdt uploads klein. Kies WAV voor servers die alleen WAV lezen, zoals mlx-serve",
+      "transcriptionAudioFormats": {
+        "mp3": "MP3 (kleiner)",
+        "wav": "WAV (16 kHz mono)"
+      }
     },
     "imageGenerationConfig": {
       "description": "Afbeeldingen hebben een eigen provider nodig, omdat de meeste AI-providers niet kunnen tekenen.",
