@@ -13,11 +13,15 @@ const photos: { base: ShotName; alt: string; caption: string }[] = [
     alt: "Nora, an Australian Shepherd, leaning into the camera on a yellow and blue mosaic bench",
     caption: "Nora invites you to use Norish",
   },
-  { base: "nora-snow", alt: "Nora in profile, sitting in the snow", caption: "Nora in the snow" },
+  {
+    base: "nora-snow",
+    alt: "Nora in profile, sitting in the snow",
+    caption: "Snow day means soup day",
+  },
   {
     base: "nora-sunset",
     alt: "Nora lying on a wall in the evening sun",
-    caption: "Nora in the evening sun",
+    caption: "Waiting for dinner since five",
   },
 ];
 

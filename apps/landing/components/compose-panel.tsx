@@ -5,28 +5,25 @@ import { ArrowPathIcon, CheckIcon, ClipboardIcon } from "@heroicons/react/24/out
 
 import { button } from "./button";
 
-type Secrets = { masterKey: string; obscuraToken: string; dbPassword: string };
+type Secrets = { masterKey: string; obscuraToken: string };
 
 const placeholders: Secrets = {
   masterKey: "<openssl rand -base64 32>",
   obscuraToken: "<openssl rand -hex 32>",
-  dbPassword: "<openssl rand -hex 16>",
 };
 
 function randomBytes(count: number) {
   return crypto.getRandomValues(new Uint8Array(count));
 }
 
-function hex(count: number) {
-  return Array.from(randomBytes(count), (byte) => byte.toString(16).padStart(2, "0")).join("");
-}
-
 function generate(): Secrets {
   return {
     // Matches `openssl rand -base64 32`.
     masterKey: btoa(String.fromCharCode(...randomBytes(32))),
-    obscuraToken: hex(32),
-    dbPassword: hex(16),
+    // Matches `openssl rand -hex 32`.
+    obscuraToken: Array.from(randomBytes(32), (byte) => byte.toString(16).padStart(2, "0")).join(
+      ""
+    ),
   };
 }
 
@@ -46,7 +43,7 @@ function regenerate() {
   for (const listener of listeners) listener();
 }
 
-function compose({ masterKey, obscuraToken, dbPassword }: Secrets) {
+function compose({ masterKey, obscuraToken }: Secrets) {
   return `services:
   norish:
     image: norishapp/norish:latest
@@ -58,7 +55,7 @@ function compose({ masterKey, obscuraToken, dbPassword }: Secrets) {
       - norish_data:/app/uploads
     environment:
       AUTH_URL: http://localhost:3000
-      DATABASE_URL: postgres://postgres:${dbPassword}@db:5432/norish
+      DATABASE_URL: postgres://postgres:norish@db:5432/norish
       MASTER_KEY: ${masterKey}
       OBSCURA_ENDPOINT: ws://obscura:9222
       OBSCURA_CDP_TOKEN: ${obscuraToken}
@@ -84,7 +81,7 @@ function compose({ masterKey, obscuraToken, dbPassword }: Secrets) {
     restart: unless-stopped
     environment:
       POSTGRES_USER: postgres
-      POSTGRES_PASSWORD: ${dbPassword}
+      POSTGRES_PASSWORD: norish
       POSTGRES_DB: norish
     volumes:
       - db_data:/var/lib/postgresql/data
