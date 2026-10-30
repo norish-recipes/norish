@@ -42,6 +42,7 @@ export function getDefaultConfigValue(key: ServerConfigKey): unknown {
         ytDlpProxy: undefined,
         transcriptionProvider: "disabled",
         transcriptionModel: "whisper-1",
+        transcriptionAudioFormat: "mp3",
       };
     case ServerConfigKeys.RECIPE_PERMISSION_POLICY:
       return DEFAULT_RECIPE_PERMISSION_POLICY;
