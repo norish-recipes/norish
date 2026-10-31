@@ -341,7 +341,6 @@ const deleteProcedure = authedProcedure
 
     assertRecipeAccess(ctx, id, "delete")
       .then(async () => {
-        await deleteRecipeImagesDir(id);
         const result = await deleteRecipeById(id, version);
 
         if (result.stale) {
@@ -349,6 +348,9 @@ const deleteProcedure = authedProcedure
 
           return;
         }
+
+        // Only once the row is gone: a stale delete leaves a recipe that still needs them.
+        await deleteRecipeImagesDir(id);
 
         log.info({ userId: ctx.user.id, recipeId: id }, "Recipe deleted");
         const policy = await getRecipePermissionPolicy();
