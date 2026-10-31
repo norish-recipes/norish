@@ -51,7 +51,8 @@
     "addToCalendar": "Добавить в календарь",
     "deleteRecipe": "Удалить рецепт",
     "recipeOptions": "Параметры рецепта",
-    "pantryCoverage": "{percent} ингредиентов дома"
+    "pantryCoverage": "{percent} ингредиентов дома",
+    "select": "Выбрать"
   },
   "detail": {
     "viewOriginal": "Открыть оригинальный рецепт",
@@ -164,7 +165,9 @@
   "deleteModal": {
     "title": "Удалить рецепт",
     "confirmMessage": "Вы уверены, что хотите удалить «{recipeName}»?",
-    "warning": "Это действие нельзя отменить."
+    "warning": "Это действие нельзя отменить.",
+    "confirmCount": "Удалить {count, plural, one {# рецепт} few {# рецепта} many {# рецептов} other {# рецепта}}?",
+    "keptCount": "{count, plural, one {# рецепт останется} few {# рецепта останутся} many {# рецептов останется} other {# рецепта останется}}: у вас нет прав на удаление."
   },
   "form": {
     "createTitle": "Создать рецепт",
@@ -327,7 +330,8 @@
     "batchImported": "Рецепты импортированы",
     "batchImportedDescription": "{count} {count, plural, one {рецепт} few {рецепта} many {рецептов} other {рецепта}} импортировано из архива",
     "view": "Просмотр",
-    "open": "Открыть"
+    "open": "Открыть",
+    "deleteKept": "{count, plural, one {# рецепт изменён} few {# рецепта изменены} many {# рецептов изменено} other {# рецепта изменено}} другим пользователем и сохранён."
   },
   "tags": {
     "panel": {
@@ -436,5 +440,15 @@
     "print": "Печать / Сохранить PDF",
     "continued": "продолжение",
     "perServing": "На порцию"
+  },
+  "selection": {
+    "toolbar": "Выбранные рецепты",
+    "count": "Выбрано: {count}",
+    "clear": "Снять выделение",
+    "addToCookbook": "Добавить в кулинарную книгу",
+    "remove": "Убрать",
+    "newCookbook": "Новая кулинарная книга",
+    "filedInto": "{count, plural, one {# рецепт добавлен} few {# рецепта добавлено} many {# рецептов добавлено} other {# рецепта добавлено}} в {title}",
+    "filedIntoMany": "{count, plural, one {# рецепт добавлен} few {# рецепта добавлено} many {# рецептов добавлено} other {# рецепта добавлено}} в кулинарные книги: {cookbooks}"
   }
 }

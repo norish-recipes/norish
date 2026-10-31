@@ -51,7 +51,8 @@
     "addToCalendar": "Toevoegen aan agenda",
     "deleteRecipe": "Recept verwijderen",
     "recipeOptions": "Receptopties",
-    "pantryCoverage": "{percent} van de ingrediënten in huis"
+    "pantryCoverage": "{percent} van de ingrediënten in huis",
+    "select": "Selecteren"
   },
   "detail": {
     "viewOriginal": "Bekijk origineel recept",
@@ -164,7 +165,9 @@
   "deleteModal": {
     "title": "Recept verwijderen",
     "confirmMessage": "Weet je zeker dat je \"{recipeName}\" wilt verwijderen?",
-    "warning": "Deze actie kan niet ongedaan worden gemaakt."
+    "warning": "Deze actie kan niet ongedaan worden gemaakt.",
+    "confirmCount": "{count, plural, one {# recept} other {# recepten}} verwijderen?",
+    "keptCount": "{count, plural, one {# recept blijft} other {# recepten blijven}} staan, omdat je {count, plural, one {het} other {ze}} niet mag verwijderen."
   },
   "form": {
     "createTitle": "Recept Maken",
@@ -327,7 +330,8 @@
     "batchImported": "Recepten geïmporteerd",
     "batchImportedDescription": "{count} recepten geïmporteerd uit archief",
     "view": "Bekijk",
-    "open": "Openen"
+    "open": "Openen",
+    "deleteKept": "{count, plural, one {# recept is} other {# recepten zijn}} door iemand anders gewijzigd en bewaard."
   },
   "tags": {
     "panel": {
@@ -436,5 +440,15 @@
     "print": "Afdrukken / Opslaan als PDF",
     "continued": "vervolg",
     "perServing": "Per portie"
+  },
+  "selection": {
+    "toolbar": "Geselecteerde recepten",
+    "count": "{count} geselecteerd",
+    "clear": "Selectie wissen",
+    "addToCookbook": "Aan kookboek toevoegen",
+    "remove": "Verwijderen",
+    "newCookbook": "Nieuw kookboek",
+    "filedInto": "{count, plural, one {# recept} other {# recepten}} toegevoegd aan {title}",
+    "filedIntoMany": "{count, plural, one {# recept} other {# recepten}} toegevoegd aan {cookbooks} kookboeken"
   }
 }

@@ -51,7 +51,8 @@
     "addToCalendar": "Додати в календар",
     "deleteRecipe": "Видалити рецепт",
     "recipeOptions": "Параметри рецепта",
-    "pantryCoverage": "{percent} інгредієнтів вдома"
+    "pantryCoverage": "{percent} інгредієнтів вдома",
+    "select": "Вибрати"
   },
   "detail": {
     "viewOriginal": "Переглянути оригінальний рецепт",
@@ -164,7 +165,9 @@
   "deleteModal": {
     "title": "Видалити рецепт",
     "confirmMessage": "Ви впевнені, що хочете видалити «{recipeName}»?",
-    "warning": "Цю дію не можна скасувати."
+    "warning": "Цю дію не можна скасувати.",
+    "confirmCount": "Видалити {count, plural, one {# рецепт} few {# рецепти} many {# рецептів} other {# рецепта}}?",
+    "keptCount": "{count, plural, one {# рецепт залишиться} few {# рецепти залишаться} many {# рецептів залишиться} other {# рецепта залишиться}}: у вас немає прав на видалення."
   },
   "form": {
     "createTitle": "Створити рецепт",
@@ -327,7 +330,8 @@
     "batchImported": "Рецепти імпортовано",
     "batchImportedDescription": "Імпортовано рецептів з архіву: {count}",
     "view": "Переглянути",
-    "open": "Відкрити"
+    "open": "Відкрити",
+    "deleteKept": "{count, plural, one {# рецепт змінено} few {# рецепти змінено} many {# рецептів змінено} other {# рецепта змінено}} іншим користувачем і збережено."
   },
   "tags": {
     "panel": {
@@ -436,5 +440,15 @@
     "print": "Друк / Зберегти PDF",
     "continued": "продовження",
     "perServing": "На порцію"
+  },
+  "selection": {
+    "toolbar": "Вибрані рецепти",
+    "count": "Вибрано: {count}",
+    "clear": "Скасувати вибір",
+    "addToCookbook": "Додати до кулінарної книги",
+    "remove": "Прибрати",
+    "newCookbook": "Нова кулінарна книга",
+    "filedInto": "{count, plural, one {# рецепт додано} few {# рецепти додано} many {# рецептів додано} other {# рецепта додано}} до {title}",
+    "filedIntoMany": "{count, plural, one {# рецепт додано} few {# рецепти додано} many {# рецептів додано} other {# рецепта додано}} до кулінарних книг: {cookbooks}"
   }
 }

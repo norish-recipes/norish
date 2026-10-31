@@ -51,7 +51,8 @@
     "addToCalendar": "Tilføj til kalender",
     "deleteRecipe": "Slet opskrift",
     "recipeOptions": "Opskriftsindstillinger",
-    "pantryCoverage": "{percent} af ingredienserne er hjemme"
+    "pantryCoverage": "{percent} af ingredienserne er hjemme",
+    "select": "Vælg"
   },
   "detail": {
     "viewOriginal": "Se original opskrift",
@@ -164,7 +165,9 @@
   "deleteModal": {
     "title": "Slet opskrift",
     "confirmMessage": "Er du sikker på, at du vil slette \"{recipeName}\"?",
-    "warning": "Denne handling kan ikke fortrydes."
+    "warning": "Denne handling kan ikke fortrydes.",
+    "confirmCount": "Slet {count, plural, one {# opskrift} other {# opskrifter}}?",
+    "keptCount": "{count, plural, one {# opskrift bliver} other {# opskrifter bliver}}, fordi du ikke må slette {count, plural, one {den} other {dem}}."
   },
   "form": {
     "createTitle": "Opret opskrift",
@@ -327,7 +330,8 @@
     "batchImported": "Opskrifter importeret",
     "batchImportedDescription": "{count} opskrifter importeret fra arkiv",
     "view": "Se",
-    "open": "Åbn"
+    "open": "Åbn",
+    "deleteKept": "{count, plural, one {# opskrift blev} other {# opskrifter blev}} ændret af en anden og beholdt."
   },
   "tags": {
     "panel": {
@@ -436,5 +440,15 @@
     "print": "Udskriv / Gem PDF",
     "continued": "fortsat",
     "perServing": "Pr. portion"
+  },
+  "selection": {
+    "toolbar": "Valgte opskrifter",
+    "count": "{count} valgt",
+    "clear": "Ryd valg",
+    "addToCookbook": "Føj til kogebog",
+    "remove": "Fjern",
+    "newCookbook": "Ny kogebog",
+    "filedInto": "{count, plural, one {# opskrift} other {# opskrifter}} føjet til {title}",
+    "filedIntoMany": "{count, plural, one {# opskrift} other {# opskrifter}} føjet til {cookbooks} kogebøger"
   }
 }

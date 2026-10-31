@@ -51,7 +51,8 @@
     "addToCalendar": "Добави в календара",
     "deleteRecipe": "Изтрий рецептата",
     "recipeOptions": "Опции за рецептата",
-    "pantryCoverage": "{percent} от съставките са вкъщи"
+    "pantryCoverage": "{percent} от съставките са вкъщи",
+    "select": "Избери"
   },
   "detail": {
     "viewOriginal": "Виж оригиналната рецепта",
@@ -164,7 +165,9 @@
   "deleteModal": {
     "title": "Изтриване на рецепта",
     "confirmMessage": "Наистина ли искаш да изтриеш „{recipeName}“?",
-    "warning": "Това действие не може да бъде отменено."
+    "warning": "Това действие не може да бъде отменено.",
+    "confirmCount": "Изтриване на {count, plural, one {# рецепта} other {# рецепти}}?",
+    "keptCount": "{count, plural, one {# рецепта остава} other {# рецепти остават}}, защото нямате право да {count, plural, one {я} other {ги}} изтриете."
   },
   "form": {
     "createTitle": "Създаване на рецепта",
@@ -327,7 +330,8 @@
     "batchImported": "Рецептите са импортирани",
     "batchImportedDescription": "{count} рецепти импортирани от архив",
     "view": "Виж",
-    "open": "Отвори"
+    "open": "Отвори",
+    "deleteKept": "{count, plural, one {# рецепта е променена} other {# рецепти са променени}} от някой друг и {count, plural, one {запазена} other {запазени}}."
   },
   "tags": {
     "panel": {
@@ -436,5 +440,15 @@
     "print": "Печат / Запазване като PDF",
     "continued": "продължение",
     "perServing": "На порция"
+  },
+  "selection": {
+    "toolbar": "Избрани рецепти",
+    "count": "{count} избрани",
+    "clear": "Изчисти избора",
+    "addToCookbook": "Добави в готварска книга",
+    "remove": "Премахни",
+    "newCookbook": "Нова готварска книга",
+    "filedInto": "{count, plural, one {# рецепта е добавена} other {# рецепти са добавени}} в {title}",
+    "filedIntoMany": "{count, plural, one {# рецепта е добавена} other {# рецепти са добавени}} в {cookbooks} готварски книги"
   }
 }

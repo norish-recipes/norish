@@ -51,7 +51,8 @@
     "addToCalendar": "Adicionar ao calendário",
     "deleteRecipe": "Excluir receita",
     "recipeOptions": "Opções da receita",
-    "pantryCoverage": "{percent} dos ingredientes em casa"
+    "pantryCoverage": "{percent} dos ingredientes em casa",
+    "select": "Selecionar"
   },
   "detail": {
     "viewOriginal": "Ver receita original",
@@ -164,7 +165,9 @@
   "deleteModal": {
     "title": "Excluir receita",
     "confirmMessage": "Tem certeza de que deseja excluir \"{recipeName}\"?",
-    "warning": "Esta ação não pode ser desfeita."
+    "warning": "Esta ação não pode ser desfeita.",
+    "confirmCount": "Excluir {count, plural, one {# receita} other {# receitas}}?",
+    "keptCount": "{count, plural, one {# receita fica} other {# receitas ficam}}, porque você não pode {count, plural, one {excluí-la} other {excluí-las}}."
   },
   "form": {
     "createTitle": "Criar receita",
@@ -327,7 +330,8 @@
     "batchImported": "Receitas importadas",
     "batchImportedDescription": "{count} receitas importadas do arquivo",
     "view": "Ver",
-    "open": "Abrir"
+    "open": "Abrir",
+    "deleteKept": "{count, plural, one {# receita foi alterada} other {# receitas foram alteradas}} por outra pessoa e {count, plural, one {mantida} other {mantidas}}."
   },
   "tags": {
     "panel": {
@@ -436,5 +440,15 @@
     "print": "Imprimir / Salvar PDF",
     "continued": "continuação",
     "perServing": "Por porção"
+  },
+  "selection": {
+    "toolbar": "Receitas selecionadas",
+    "count": "{count} selecionadas",
+    "clear": "Limpar seleção",
+    "addToCookbook": "Adicionar ao livro de receitas",
+    "remove": "Remover",
+    "newCookbook": "Novo livro de receitas",
+    "filedInto": "{count, plural, one {# receita adicionada} other {# receitas adicionadas}} a {title}",
+    "filedIntoMany": "{count, plural, one {# receita adicionada} other {# receitas adicionadas}} a {cookbooks} livros de receitas"
   }
 }

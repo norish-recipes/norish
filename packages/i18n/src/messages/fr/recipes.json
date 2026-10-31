@@ -51,7 +51,8 @@
     "addToCalendar": "Ajouter au calendrier",
     "deleteRecipe": "Supprimer la recette",
     "recipeOptions": "Options de recette",
-    "pantryCoverage": "{percent} des ingrédients à la maison"
+    "pantryCoverage": "{percent} des ingrédients à la maison",
+    "select": "Sélectionner"
   },
   "detail": {
     "viewOriginal": "Voir la recette originale",
@@ -164,7 +165,9 @@
   "deleteModal": {
     "title": "Supprimer la recette",
     "confirmMessage": "Êtes-vous sûr de vouloir supprimer \"{recipeName}\" ?",
-    "warning": "Cette action ne peut pas être annulée."
+    "warning": "Cette action ne peut pas être annulée.",
+    "confirmCount": "Supprimer {count, plural, one {# recette} other {# recettes}} ?",
+    "keptCount": "{count, plural, one {# recette reste} other {# recettes restent}}, car vous n’avez pas le droit de {count, plural, one {la} other {les}} supprimer."
   },
   "form": {
     "createTitle": "Créer une recette",
@@ -327,7 +330,8 @@
     "batchImported": "Recettes importées",
     "batchImportedDescription": "{count} recettes importées depuis l'archive",
     "view": "Voir",
-    "open": "Ouvrir"
+    "open": "Ouvrir",
+    "deleteKept": "{count, plural, one {# recette a été modifiée} other {# recettes ont été modifiées}} par quelqu’un d’autre et {count, plural, one {conservée} other {conservées}}."
   },
   "tags": {
     "panel": {
@@ -436,5 +440,15 @@
     "print": "Imprimer / Enregistrer en PDF",
     "continued": "suite",
     "perServing": "Par portion"
+  },
+  "selection": {
+    "toolbar": "Recettes sélectionnées",
+    "count": "{count} sélectionnée(s)",
+    "clear": "Effacer la sélection",
+    "addToCookbook": "Ajouter au livre de recettes",
+    "remove": "Retirer",
+    "newCookbook": "Nouveau livre de recettes",
+    "filedInto": "{count, plural, one {# recette ajoutée} other {# recettes ajoutées}} à {title}",
+    "filedIntoMany": "{count, plural, one {# recette ajoutée} other {# recettes ajoutées}} à {cookbooks} livres de recettes"
   }
 }

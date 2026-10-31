@@ -51,7 +51,8 @@
     "addToCalendar": "Lägg till i kalendern",
     "deleteRecipe": "Ta bort recept",
     "recipeOptions": "Receptalternativ",
-    "pantryCoverage": "{percent} av ingredienserna hemma"
+    "pantryCoverage": "{percent} av ingredienserna hemma",
+    "select": "Välj"
   },
   "detail": {
     "viewOriginal": "Visa originalrecept",
@@ -164,7 +165,9 @@
   "deleteModal": {
     "title": "Ta bort recept",
     "confirmMessage": "Vill du ta bort ”{recipeName}”?",
-    "warning": "Det går inte att ångra den här åtgärden."
+    "warning": "Det går inte att ångra den här åtgärden.",
+    "confirmCount": "Radera {count, plural, one {# recept} other {# recept}}?",
+    "keptCount": "{count, plural, one {# recept blir kvar} other {# recept blir kvar}}, eftersom du inte får radera {count, plural, one {det} other {dem}}."
   },
   "form": {
     "createTitle": "Skapa recept",
@@ -327,7 +330,8 @@
     "batchImported": "Recepten har importerats",
     "batchImportedDescription": "{count} recept importerade från arkivet",
     "view": "Visa",
-    "open": "Öppna"
+    "open": "Öppna",
+    "deleteKept": "{count, plural, one {# recept ändrades} other {# recept ändrades}} av någon annan och behölls."
   },
   "tags": {
     "panel": {
@@ -436,5 +440,15 @@
     "print": "Skriv ut / Spara som PDF",
     "continued": "forts.",
     "perServing": "Per portion"
+  },
+  "selection": {
+    "toolbar": "Valda recept",
+    "count": "{count} valda",
+    "clear": "Rensa urval",
+    "addToCookbook": "Lägg till i kokbok",
+    "remove": "Ta bort",
+    "newCookbook": "Ny kokbok",
+    "filedInto": "{count, plural, one {# recept} other {# recept}} tillagda i {title}",
+    "filedIntoMany": "{count, plural, one {# recept} other {# recept}} tillagda i {cookbooks} kokböcker"
   }
 }
