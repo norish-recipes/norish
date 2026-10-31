@@ -338,9 +338,8 @@ const updateCategories = authedProcedure
   });
 
 /**
- * Delete recipes, each on its own: one the reader may not delete is skipped,
- * one edited since the reader saw it is kept, and one already gone counts as
- * deleted, so a Replay after others changed the data still succeeds.
+ * Delete each recipe on its own: skipped if not permitted, kept if edited since, done if gone,
+ * so a Replay after others changed the data still succeeds.
  */
 const deleteProcedure = authedProcedure
   .input(RecipeDeleteInputSchema)

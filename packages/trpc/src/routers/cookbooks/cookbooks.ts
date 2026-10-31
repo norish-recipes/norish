@@ -63,10 +63,8 @@ const create = authedProcedure
   .input(CookbookCreateInputSchema)
   .output(CookbookSummarySchema)
   .mutation(async ({ ctx, input }) => {
-    // A cookbook made from recipes holds them from the first moment, so
-    // "these belong together" is one step. Only view rights on each recipe
-    // are needed, and no recipe is written (ADR-0027). One gone or unseen by
-    // the time a queued create replays is left out; the cookbook still lands.
+    // View rights on each recipe suffice and no recipe is written (ADR-0027); one gone or
+    // unseen by the time a queued create replays is left out, and the cookbook still lands.
     const access = await recipeAccess(ctx, input.recipeIds, "view");
     const recipeIds = input.recipeIds.filter((recipeId) => access.get(recipeId) === true);
 

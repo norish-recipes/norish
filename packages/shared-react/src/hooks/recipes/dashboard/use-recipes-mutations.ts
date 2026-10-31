@@ -13,7 +13,7 @@ import { primaryRecipeImage } from "@norish/shared/lib/recipe-media";
 import type { CreateRecipeHooksOptions } from "../types";
 import type { RecipesCacheHelpers } from "./use-recipes-cache";
 import { shouldPreserveOptimisticUpdate as preserveOptimisticUpdate } from "../../optimistic-updates";
-import { OPTIMISTIC_PENDING_RECIPE_PREFIX } from "./use-recipes-cache";
+import { OPTIMISTIC_PENDING_RECIPE_PREFIX, removeRecipesFromLists } from "./use-recipes-cache";
 
 type RecipeListPage = {
   recipes: RecipeDashboardDTO[];
@@ -46,33 +46,6 @@ type UpdateMutationContext = {
 function createOptimisticPendingRecipeId(): string {
   // eslint-disable-next-line sonarjs/pseudo-random -- a placeholder id needs to be unique, not unpredictable
   return `${OPTIMISTIC_PENDING_RECIPE_PREFIX}${Date.now()}-${Math.random().toString(36).slice(2, 10)}`;
-}
-
-export function removeRecipesFromLists(
-  previousData: InfiniteRecipeData | undefined,
-  recipeIds: ReadonlySet<string>
-): InfiniteRecipeData | undefined {
-  if (!previousData?.pages) {
-    return previousData;
-  }
-
-  const removed = previousData.pages.reduce(
-    (count, page) => count + page.recipes.filter((recipe) => recipeIds.has(recipe.id)).length,
-    0
-  );
-
-  if (removed === 0) {
-    return previousData;
-  }
-
-  return {
-    ...previousData,
-    pages: previousData.pages.map((page) => ({
-      ...page,
-      recipes: page.recipes.filter((recipe) => !recipeIds.has(recipe.id)),
-      total: Math.max(page.total - removed, 0),
-    })),
-  };
 }
 
 function restoreRecipeLists(
@@ -554,6 +527,17 @@ export function createUseRecipesMutations(
           }
 
           return { previousDetails, previousRecipeLists };
+        },
+        // A recipe skipped or kept left the lists tentatively; refetching brings it back.
+        onSuccess: ({ deletedIds }, { recipes }) => {
+          const deleted = new Set(deletedIds);
+          const survivors = recipes.filter((recipe) => !deleted.has(recipe.id));
+
+          if (survivors.length === 0) return;
+          invalidate();
+          for (const { id } of survivors) {
+            void queryClient.invalidateQueries({ queryKey: trpc.recipes.get.queryKey({ id }) });
+          }
         },
         onError: (error, _variables, context) => {
           onError?.(error, "delete");

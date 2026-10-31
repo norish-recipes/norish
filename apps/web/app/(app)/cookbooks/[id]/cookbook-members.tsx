@@ -21,10 +21,7 @@ import {
   toRecipesQueryFilters,
 } from "@norish/shared-react/contexts";
 
-/**
- * Selecting a cookbook's members, above its grid and list so switching the
- * view keeps the selection. Reads the same member list the grid reads.
- */
+/** Selecting a cookbook's members, above its grid and list so switching view keeps it. */
 export function CookbookSelection({
   cookbook,
   children,
@@ -33,10 +30,13 @@ export function CookbookSelection({
   children: ReactNode;
 }) {
   const { filters, isHydrated } = useRecipesFiltersContext();
-  const queryFilters = useMemo(() => toRecipesQueryFilters(filters), [filters]);
-  const { recipes, removeMember } = useCookbookRecipesQuery(cookbook.id, queryFilters, {
-    enabled: isHydrated,
-  });
+  const { recipes, removeMember } = useCookbookRecipesQuery(
+    cookbook.id,
+    toRecipesQueryFilters(filters),
+    {
+      enabled: isHydrated,
+    }
+  );
 
   return (
     <RecipeSelectionProvider recipes={recipes}>

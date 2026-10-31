@@ -8,7 +8,7 @@ import { patchDashboardRecipeFromFull } from "@norish/shared/contracts/zod";
 import type { CreateRecipeHooksOptions } from "../types";
 import type { InfiniteRecipeData, RecipesCacheHelpers } from "./use-recipes-cache";
 import { useRealtimeSubscription } from "../../../realtime/use-realtime-subscription";
-import { removeRecipesFromLists } from "./use-recipes-mutations";
+import { removeRecipesFromLists } from "./use-recipes-cache";
 
 type Payload<E extends EventName<RecipesRealtime>> = PayloadOf<RecipesRealtime, E>;
 
@@ -142,6 +142,9 @@ export function createUseRecipesSubscription(
       // The kept recipes left the lists tentatively; refetching brings them back.
       onEvent: (payload) => {
         invalidate();
+        for (const id of payload.ids) {
+          void queryClient.invalidateQueries({ queryKey: trpc.recipes.get.queryKey({ id }) });
+        }
         callbacks.onDeleteKept?.(payload);
       },
     });

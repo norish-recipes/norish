@@ -15,9 +15,8 @@ import { useTranslations } from "next-intl";
 import type { CookbookSummaryDTO } from "@norish/shared/contracts";
 
 /**
- * The action bar over a page's recipe selection: the count, the actions and
- * the way out. On a cookbook page it also takes the selection out of that
- * cookbook, and `onLeave` drops rows from its member list.
+ * The action bar over a page's recipe selection. On a cookbook page it can also take the
+ * selection out of that cookbook; `onLeave` drops rows from the member list.
  */
 export default function RecipeSelectionBar({
   cookbook,
@@ -29,7 +28,7 @@ export default function RecipeSelectionBar({
   const selection = useRecipeSelection();
   const t = useTranslations("recipes.selection");
   const tActions = useTranslations("common.actions");
-  const { canDeleteRecipe } = usePermissionsContext();
+  const { canDeleteRecipe, canEditRecipe } = usePermissionsContext();
   const { deleteRecipes } = useRecipesContext();
   const { setMembership } = useCookbooksMutations();
   const [deleteOpen, setDeleteOpen] = useState(false);
@@ -48,6 +47,8 @@ export default function RecipeSelectionBar({
   // Orphaned recipes are anyone's to delete, as a single delete has it.
   const deletable = selected.filter((recipe) => !recipe.userId || canDeleteRecipe(recipe.userId));
   const recipeIds = selected.map((recipe) => recipe.id);
+  // Cookbooks answer to the recipe permission policy (ADR-0027).
+  const canRemove = cookbook ? !cookbook.userId || canEditRecipe(cookbook.userId) : false;
 
   const confirmDelete = () => {
     setDeleteOpen(false);
@@ -84,7 +85,7 @@ export default function RecipeSelectionBar({
             <BookOpenIcon className="size-4" />
             <ActionBar.Label>{t("addToCookbook")}</ActionBar.Label>
           </Button>
-          {cookbook && (
+          {canRemove && (
             <Button
               className={actionBarButtonClassName}
               size="sm"

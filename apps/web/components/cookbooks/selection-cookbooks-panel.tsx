@@ -14,9 +14,8 @@ import { useTranslations } from "next-intl";
 const PANEL_HEIGHT = "h-[65dvh]";
 
 /**
- * File a selection of recipes into cookbooks: pick any the reader may edit,
- * name a new one, or both, and Save files the lot. Recipes already in a
- * picked cookbook stay as they are.
+ * File a selection into picked cookbooks the reader may edit, a newly named one, or both.
+ * Recipes already in a picked cookbook stay as they are.
  */
 export function SelectionCookbooksPanel({
   open,

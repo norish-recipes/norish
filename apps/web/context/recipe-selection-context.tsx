@@ -1,7 +1,7 @@
 "use client";
 
 import type { ReactNode } from "react";
-import { createContext, use, useCallback, useEffect, useMemo, useState } from "react";
+import { createContext, use, useEffect, useState } from "react";
 import { useTRPC } from "@/app/providers/trpc-provider";
 
 import type { RecipeDashboardDTO } from "@norish/shared/contracts";
@@ -36,10 +36,8 @@ function pick({ id, version, userId }: SelectedRecipe): SelectedRecipe {
 }
 
 /**
- * Which recipes the reader has selected on this page. It holds ids, not
- * cards, so a search, filter or view change keeps the selection, and leaving
- * the page drops it with the provider. `recipes` is the page's loaded list, in
- * the order the grid shows it.
+ * The page's selected recipes, by id, so search, filters and view changes keep it.
+ * `recipes` is the page's loaded list in grid order, for Shift ranges.
  */
 export function RecipeSelectionProvider({
   recipes,
@@ -54,7 +52,7 @@ export function RecipeSelectionProvider({
   const [leaving, setLeaving] = useState<ReadonlySet<string>>(() => new Set());
   const isSelecting = selected.size > 0;
 
-  const toggle = useCallback((recipe: SelectedRecipe) => {
+  const toggle = (recipe: SelectedRecipe) => {
     setSelected((previous) => {
       const next = new Map(previous);
 
@@ -64,46 +62,43 @@ export function RecipeSelectionProvider({
       return next;
     });
     setAnchor(recipe.id);
-  }, []);
+  };
 
-  const selectRange = useCallback(
-    (recipe: SelectedRecipe) => {
-      const ids = recipes.map((entry) => entry.id);
-      const from = anchor ? ids.indexOf(anchor) : -1;
-      const to = ids.indexOf(recipe.id);
+  const selectRange = (recipe: SelectedRecipe) => {
+    const ids = recipes.map((entry) => entry.id);
+    const from = anchor ? ids.indexOf(anchor) : -1;
+    const to = ids.indexOf(recipe.id);
 
-      if (from < 0 || to < 0) {
-        toggle(recipe);
+    if (from < 0 || to < 0) {
+      toggle(recipe);
 
-        return;
+      return;
+    }
+
+    setSelected((previous) => {
+      const next = new Map(previous);
+
+      for (const entry of recipes.slice(Math.min(from, to), Math.max(from, to) + 1)) {
+        next.set(entry.id, pick(entry));
       }
 
-      setSelected((previous) => {
-        const next = new Map(previous);
+      return next;
+    });
+  };
 
-        for (const entry of recipes.slice(Math.min(from, to), Math.max(from, to) + 1)) {
-          next.set(entry.id, pick(entry));
-        }
-
-        return next;
-      });
-    },
-    [recipes, anchor, toggle]
-  );
-
-  const clear = useCallback(() => {
+  const clear = () => {
     setSelected(new Map());
     setAnchor(null);
-  }, []);
+  };
 
-  const playLeaving = useCallback((recipeIds: string[], then: () => void) => {
+  const playLeaving = (recipeIds: string[], then: () => void) => {
     setLeaving(new Set(recipeIds));
     // Not cleared on unmount: the delete must still go out if the reader leaves.
     setTimeout(() => {
       then();
       setLeaving(new Set());
     }, LEAVE_MS);
-  }, []);
+  };
 
   useEffect(() => {
     if (!isSelecting) return;
@@ -134,22 +129,17 @@ export function RecipeSelectionProvider({
     },
   });
 
-  const value = useMemo<RecipeSelection>(() => {
-    const loaded = new Map(recipes.map((recipe) => [recipe.id, recipe]));
-
-    return {
-      isSelecting,
-      isSelected: (recipeId) => selected.has(recipeId),
-      selectedRecipes: [...selected.values()].map((recipe) =>
-        pick(loaded.get(recipe.id) ?? recipe)
-      ),
-      toggle,
-      selectRange,
-      clear,
-      isLeaving: (recipeId) => leaving.has(recipeId),
-      playLeaving,
-    };
-  }, [recipes, selected, isSelecting, toggle, selectRange, clear, leaving, playLeaving]);
+  const loaded = new Map(recipes.map((recipe) => [recipe.id, recipe]));
+  const value: RecipeSelection = {
+    isSelecting,
+    isSelected: (recipeId) => selected.has(recipeId),
+    selectedRecipes: [...selected.values()].map((recipe) => pick(loaded.get(recipe.id) ?? recipe)),
+    toggle,
+    selectRange,
+    clear,
+    isLeaving: (recipeId) => leaving.has(recipeId),
+    playLeaving,
+  };
 
   return <RecipeSelectionContext value={value}>{children}</RecipeSelectionContext>;
 }

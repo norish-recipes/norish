@@ -60,11 +60,7 @@ export const CookbookCreateInputSchema = z.object({
   // at the right cookbook once replayed (ADR-0003).
   id: clientMintedId,
   title: CookbookTitleSchema,
-  /**
-   * File these recipes into the new cookbook in one step, so "these belong
-   * together" is one decision rather than two. Needs view rights on each
-   * recipe and nothing more (ADR-0027); ones gone or unseen are left out.
-   */
+  /** Filed in the same step; view rights on each suffice (ADR-0027), gone or unseen ones are left out. */
   recipeIds: z.array(z.uuid()).default([]),
 });
 

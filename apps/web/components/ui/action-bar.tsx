@@ -9,9 +9,8 @@ import { AnimatePresence, motion } from "motion/react";
 import { twMerge } from "tailwind-merge";
 
 /**
- * A floating bar of actions on whatever is selected, in the place of the
- * mobile nav and the Library pill while it is open. A count goes in Prefix,
- * the actions in Content and the way out in Suffix.
+ * A floating bar of actions on a selection, standing in for the mobile nav and Library pill.
+ * Prefix holds the count, Content the actions, Suffix the way out.
  */
 function ActionBarRoot({
   isOpen,
@@ -42,11 +41,10 @@ function ActionBarRoot({
         <motion.div
           key="action-bar"
           animate={{ opacity: 1, y: 0 }}
-          className="pointer-events-none fixed inset-x-0 z-[60] flex justify-center px-4 md:bottom-8"
+          // The mobile nav's inset on a phone, the Library pill's on a desktop.
+          className="pointer-events-none fixed inset-x-0 bottom-[max(calc(env(safe-area-inset-bottom)-0.2rem),1rem)] z-[60] flex justify-center px-4 md:bottom-8"
           exit={{ opacity: 0, y: offset }}
           initial={{ opacity: 0, y: offset }}
-          // The mobile nav's own inset, so the bar lands where the nav stood.
-          style={{ bottom: "max(calc(env(safe-area-inset-bottom) - 0.2rem), 1rem)" }}
           transition={{ duration: 0.2 }}
         >
           <Toolbar
