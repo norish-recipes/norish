@@ -1,9 +1,6 @@
 /**
- * Selecting recipes in the Library and on a cookbook page, and acting on the
- * selection from the action bar, in a real browser against the
- * production-like stack: how selecting starts and ends, what it survives,
- * where the bar stands, and what Delete, Add to cookbook and Remove from
- * cookbook leave behind.
+ * Selecting recipes in the Library and on a cookbook page, and acting on them from the
+ * action bar, in a real browser against the production-like stack.
  */
 import type { Browser, BrowserContext, Locator, Page } from "@playwright/test";
 
@@ -249,6 +246,86 @@ test("at phone width the bar takes the place of the bottom navigation", async ({
 
     await page.getByRole("button", { name: "Clear selection" }).click();
     await expect(home).toBeVisible();
+  } finally {
+    await context.close();
+  }
+});
+
+test("on a desktop the bar takes the Library pill's place, and leaving the page clears it", async ({
+  browser,
+  aiStack,
+}) => {
+  const word = token("Pill");
+  const names = [`${word} Tart`];
+  const { context, page } = await libraryWith(browser, aiStack, names, { query: word });
+
+  try {
+    const pill = page.getByRole("button", { name: /^\d+ items?$/ });
+
+    await expect(pill).toBeVisible();
+    await card(page, names[0]!).click({ modifiers: ["ControlOrMeta"] });
+    await expect(bar(page)).toBeVisible();
+    await expect(pill).toBeHidden();
+
+    await page.getByRole("link", { name: "Groceries" }).first().click();
+    await expect(page).toHaveURL(/\/groceries/);
+    await page.getByRole("link", { name: "Recipes" }).first().click();
+    await search(page, word, names[0]!);
+    await expect(bar(page)).toBeHidden();
+  } finally {
+    await context.close();
+  }
+});
+
+test("a selected recipe deleted elsewhere leaves the selection, ending it when it was the last", async ({
+  browser,
+  aiStack,
+}) => {
+  const word = token("Prune");
+  const names = [`${word} Flan`, `${word} Pie`];
+  const { context, page, ids } = await libraryWith(browser, aiStack, names, { query: word });
+
+  try {
+    await card(page, names[0]!).click({ modifiers: ["ControlOrMeta"] });
+    await toggle(page, names[1]!).click();
+    await expectCount(page, 2);
+
+    await callTrpc(aiStack.baseURL, aiStack.ownerCookies, "recipes.delete", {
+      recipes: [{ id: ids[0]!, version: 1 }],
+    });
+    await expectCount(page, 1);
+
+    await callTrpc(aiStack.baseURL, aiStack.ownerCookies, "recipes.delete", {
+      recipes: [{ id: ids[1]!, version: 1 }],
+    });
+    await expect(bar(page)).toBeHidden();
+  } finally {
+    await context.close();
+  }
+});
+
+test("a Shift range passes over a cookbook card without selecting it", async ({
+  browser,
+  aiStack,
+}) => {
+  const word = token("Skip");
+  const older = `${word} Older`;
+  const newer = `${word} Newer`;
+  const shelf = `${word} Shelf`;
+
+  await seedRecipe(older);
+  await seedCookbook(aiStack, shelf, []);
+  const { context, page } = await libraryWith(browser, aiStack, [newer], { query: word });
+
+  try {
+    // Newest first: the newer recipe, the cookbook, then the older recipe.
+    const shelfCard = page.locator("[data-cookbook-card]").filter({ hasText: shelf }).first();
+
+    await expect(shelfCard).toBeVisible();
+    await expect(card(page, older)).toBeVisible();
+    await card(page, newer).click({ modifiers: ["ControlOrMeta"] });
+    await toggle(page, older).click({ modifiers: ["Shift"] });
+    await expectCount(page, 2);
   } finally {
     await context.close();
   }
