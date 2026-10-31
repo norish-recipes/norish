@@ -184,6 +184,13 @@ async function extractWithAIPreference(
   return tryExtractWithAI(html, recipeId, url, requireAI, html);
 }
 
+/** The scraper's ingredient lines with their section headings, or none when it fails. */
+async function scrapedIngredientLines(url: string, html: string): Promise<string[]> {
+  const response = await callRecipeScrapersParser({ url, html }).catch(() => null);
+
+  return response?.ok ? collectIngredientStrings(response.recipe) : [];
+}
+
 async function tryStructuredParser(
   url: string,
   html: string,
@@ -312,7 +319,12 @@ export async function parseRecipeFromUrl(
   const useAIOnly = Boolean(forceAI || (await shouldAlwaysUseAI()));
 
   if (useAIOnly) {
-    const recipe = await extractWithAIPreference(html, recipeId, url, true);
+    // JSON-LD has no room for ingredient sections; the scraper's groups keep their headings (#685).
+    const ingredientLines =
+      extractRecipeNodesFromJsonLd(html).length === 1
+        ? await scrapedIngredientLines(url, html)
+        : [];
+    const recipe = await extractWithAIPreference(html, recipeId, url, true, ingredientLines);
 
     if (!recipe) throw new Error("AI extraction failed");
 

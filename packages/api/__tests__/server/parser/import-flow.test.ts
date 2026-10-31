@@ -377,6 +377,22 @@ describe("parseRecipeFromUrl import flow", () => {
       ]);
     });
 
+    it("asks the scraper for the sections when AI is forced (#685)", async () => {
+      const sectioned = ["# For the mash", "1 kg potatoes", "# For the sauce", "500 g lentils"];
+
+      mockCollectIngredientStrings.mockReturnValue(sectioned);
+
+      const { parseRecipeFromUrl } = await import("@norish/api/parser");
+
+      await parseRecipeFromUrl("https://example.com/recipe", "recipe-1", true);
+
+      const [input] = mockExtractRecipeWithAI.mock.calls[0] as [string];
+
+      expect(JSON.parse(input)).toMatchObject([
+        { name: "Lentil soup", recipeIngredient: sectioned },
+      ]);
+    });
+
     it("keeps the JSON-LD's own list when the scraper found no sections", async () => {
       mockIsParseComplete.mockResolvedValue(false);
 
