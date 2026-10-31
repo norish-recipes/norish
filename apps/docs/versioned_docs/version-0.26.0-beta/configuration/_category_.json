@@ -1,0 +1,9 @@
+{
+  "label": "Configuration",
+  "position": 4,
+  "link": {
+    "type": "generated-index",
+    "title": "Configuration",
+    "description": "Configure your Norish server: sign-in, AI, database, runtime, languages, the recipe parser and admin settings."
+  }
+}
