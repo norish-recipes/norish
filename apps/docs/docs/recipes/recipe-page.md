@@ -57,6 +57,13 @@ recipes that have no converted copy yet.
 
 ![The Ingredients card options on a phone, offering Convert to US and Convert to US with AI](/img/screenshots/recipe-convert-menu.png)
 
+## Units
+
+Units are written out by default, like `500 grams`. To show `500 g` and
+`2 tbsp` instead, set **Settings => User => Preferences => Units** to
+`Abbreviated`. Units without a short form, like cups and cloves, stay as
+words. This is kept separately for phone and desktop.
+
 ## Cooking mode
 
 The **Cook** button in the bottom-left corner opens cooking mode. It shows one

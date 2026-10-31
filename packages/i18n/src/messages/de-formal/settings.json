@@ -185,6 +185,14 @@
           "theme": "Normale Themenfarben"
         }
       },
+      "unitStyle": {
+        "title": "Einheiten",
+        "description": "Einheiten ausschreiben oder abkürzen, z. B. g und EL",
+        "options": {
+          "written": "Ausgeschrieben",
+          "abbreviated": "Abgekürzt"
+        }
+      },
       "applyError": "Einstellung konnte nicht angewendet werden",
       "afterPlanning": {
         "title": "Nach dem Planen eines Rezepts",

@@ -227,6 +227,7 @@ function renderDirtyState(options: {
       locale: "en",
       mode: options.mode ?? "edit",
       units,
+      unitStyle: "written",
     })
   );
 }

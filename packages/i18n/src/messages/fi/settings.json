@@ -185,6 +185,14 @@
           "theme": "Teeman perusvärit"
         }
       },
+      "unitStyle": {
+        "title": "Yksiköt",
+        "description": "Kirjoita yksiköt kokonaan tai lyhennettyinä, kuten g ja rkl",
+        "options": {
+          "written": "Kokonaan",
+          "abbreviated": "Lyhennettyinä"
+        }
+      },
       "applyError": "Asetuksen käyttöönotto epäonnistui",
       "afterPlanning": {
         "title": "Reseptin suunnittelun jälkeen",

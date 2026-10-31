@@ -185,6 +185,14 @@
           "theme": "ألوان المظهر العادية"
         }
       },
+      "unitStyle": {
+        "title": "الوحدات",
+        "description": "اكتب الوحدات كاملة أو مختصرة، مثل غ وم.ك",
+        "options": {
+          "written": "كاملة",
+          "abbreviated": "مختصرة"
+        }
+      },
       "applyError": "تعذّر تطبيق التفضيل",
       "afterPlanning": {
         "title": "بعد تخطيط وصفة",

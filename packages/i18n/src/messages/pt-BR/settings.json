@@ -186,6 +186,14 @@
           "theme": "Cores do tema"
         }
       },
+      "unitStyle": {
+        "title": "Unidades",
+        "description": "Escrever as unidades por extenso ou abreviadas, como g e ml",
+        "options": {
+          "written": "Por extenso",
+          "abbreviated": "Abreviadas"
+        }
+      },
       "afterPlanning": {
         "title": "Depois de planejar uma receita",
         "description": "O que acontece quando você planeja uma receita",

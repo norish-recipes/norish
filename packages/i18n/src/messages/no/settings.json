@@ -185,6 +185,14 @@
           "theme": "Temaets farger"
         }
       },
+      "unitStyle": {
+        "title": "Enheter",
+        "description": "Skriv enheter fullt ut eller forkortet, som g og ss",
+        "options": {
+          "written": "Fullt ut",
+          "abbreviated": "Forkortet"
+        }
+      },
       "applyError": "Kunne ikke bruke preferanse",
       "afterPlanning": {
         "title": "Etter planlegging av en oppskrift",

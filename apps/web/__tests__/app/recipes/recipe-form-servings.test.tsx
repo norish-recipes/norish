@@ -14,6 +14,9 @@ vi.mock("@/context/recipes-context", () => ({
   useRecipesContext: () => ({ createRecipe: mocks.createRecipe, updateRecipe: vi.fn() }),
 }));
 vi.mock("@/hooks/config", () => ({ useUnitsQuery: () => ({ units: {}, isLoading: false }) }));
+vi.mock("@/context/device-preferences-context", async () =>
+  (await import("../../helpers/device-preferences-mock")).mockDevicePreferences()
+);
 vi.mock("@/hooks/recipes", () => ({
   useRecipeId: () => ({ recipeId: "recipe-1", isLoading: false, error: null }),
 }));

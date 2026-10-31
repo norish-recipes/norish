@@ -186,6 +186,14 @@
           "theme": "Gewone themakleuren"
         }
       },
+      "unitStyle": {
+        "title": "Eenheden",
+        "description": "Schrijf eenheden voluit of afgekort, zoals g en el",
+        "options": {
+          "written": "Voluit",
+          "abbreviated": "Afgekort"
+        }
+      },
       "afterPlanning": {
         "title": "Na het plannen van een recept",
         "description": "Wat er gebeurt als je een recept plant",

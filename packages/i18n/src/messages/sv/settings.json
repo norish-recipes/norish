@@ -185,6 +185,14 @@
           "theme": "Temats vanliga färger"
         }
       },
+      "unitStyle": {
+        "title": "Enheter",
+        "description": "Skriv ut enheter helt eller förkortat, som g och msk",
+        "options": {
+          "written": "Utskrivna",
+          "abbreviated": "Förkortade"
+        }
+      },
       "applyError": "Det gick inte att tillämpa inställningen",
       "afterPlanning": {
         "title": "Efter att ett recept planerats",

@@ -5,6 +5,7 @@ import { GroceryCheckbox } from "@/components/groceries/grocery-checkbox";
 import { IngredientIcon } from "@/components/ingredients/ingredient-icon";
 import { AnimatedNumber } from "@/components/recipes/animated-number";
 import SmartMarkdownRenderer from "@/components/shared/smart-markdown-renderer";
+import { useDevicePreference } from "@/context/device-preferences-context";
 import { useAmountDisplayPreference } from "@/hooks/use-amount-display-preference";
 import { useUnitFormatter } from "@/hooks/use-unit-formatter";
 import { useLocale } from "next-intl";
@@ -234,7 +235,8 @@ function ReadonlyIngredientsListWithConfiguredUnits({
   ...props
 }: ReadonlyIngredientsListProps & { units: UnitsMap }) {
   const locale = useLocale();
-  const { formatUnitOnly } = createUnitFormatter({ locale, units });
+  const [unitStyle] = useDevicePreference("unitStyle");
+  const { formatUnitOnly } = createUnitFormatter({ locale, units, unitStyle });
 
   return <ReadonlyIngredientsListContent {...props} formatUnitOnly={formatUnitOnly} />;
 }

@@ -1,5 +1,6 @@
 import type { FlatUnitsMap, UnitsMap } from "@norish/config/zod/server-config";
 
+import type { UnitStyle } from "../contracts/zod/device-preferences";
 import { selectUnitForm } from "./unit-form-selector";
 
 /**
@@ -248,11 +249,31 @@ function getLocalizedUnitName(
   return forms[0]?.name ?? null;
 }
 
+/**
+ * Whether a unit's short form abbreviates its plural ("g" for "grams", "el"
+ * for "eetlepels") rather than being its singular ("cup", "leaf"): the last
+ * words differ, and the short one is two letters or shares under two with it.
+ */
+function isAbbreviation(short: string, plural: string): boolean {
+  const lastWord = (name: string) => name.trim().toLowerCase().split(/\s+/).at(-1) ?? "";
+  const a = lastWord(short);
+  const b = lastWord(plural);
+
+  if (a === b) return false;
+
+  let shared = 0;
+
+  while (shared < a.length && a[shared] === b[shared]) shared++;
+
+  return a.length <= 2 || shared < 2;
+}
+
 export function formatUnit(
   unitId: string,
   userLocale: string,
   config: UnitsMap,
-  quantity?: number | null
+  quantity?: number | null,
+  style: UnitStyle = "written"
 ): string {
   const unitDef = config[unitId];
 
@@ -260,6 +281,10 @@ export function formatUnit(
 
   const singular = getLocalizedUnitName(unitDef.short, userLocale);
   const plural = getLocalizedUnitName(unitDef.plural, userLocale);
+
+  if (style === "abbreviated" && singular && plural && isAbbreviation(singular, plural)) {
+    return singular;
+  }
 
   return (
     selectUnitForm(quantity, {

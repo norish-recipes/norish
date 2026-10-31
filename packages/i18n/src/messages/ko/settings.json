@@ -185,6 +185,14 @@
           "theme": "기본 테마 색상"
         }
       },
+      "unitStyle": {
+        "title": "단위",
+        "description": "단위를 풀어서 쓰거나 g, ml처럼 줄여서 표시합니다",
+        "options": {
+          "written": "풀어서",
+          "abbreviated": "줄여서"
+        }
+      },
       "applyError": "환경설정을 적용하지 못했습니다",
       "afterPlanning": {
         "title": "레시피 계획 후",

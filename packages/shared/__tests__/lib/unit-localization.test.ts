@@ -292,4 +292,26 @@ describe("Unit Localization", () => {
       expect(Array.isArray(flattened.gram.alternates)).toBe(true);
     });
   });
+
+  describe("formatUnit abbreviated", () => {
+    const units = defaultUnits as UnitsMap;
+
+    it("keeps an abbreviation at any amount", () => {
+      expect(formatUnit("gram", "en", units, 500, "abbreviated")).toBe("g");
+      expect(formatUnit("milliliter", "en", units, 250, "abbreviated")).toBe("ml");
+      expect(formatUnit("tablespoon", "en", units, 2, "abbreviated")).toBe("tbsp");
+      expect(formatUnit("heaping_tablespoon", "en", units, 2, "abbreviated")).toBe("heaping tbsp");
+      expect(formatUnit("tablespoon", "nl", units, 2, "abbreviated")).toBe("el");
+    });
+
+    it("still pluralises a unit whose short form is a word", () => {
+      expect(formatUnit("cup", "en", units, 2, "abbreviated")).toBe("cups");
+      expect(formatUnit("leaf", "en", units, 3, "abbreviated")).toBe("leaves");
+      expect(formatUnit("clove", "nl", units, 3, "abbreviated")).toBe("tenen");
+    });
+
+    it("writes units out by default", () => {
+      expect(formatUnit("gram", "en", units, 500)).toBe("grams");
+    });
+  });
 });

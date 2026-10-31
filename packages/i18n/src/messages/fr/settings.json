@@ -185,6 +185,14 @@
           "theme": "Couleurs du thème"
         }
       },
+      "unitStyle": {
+        "title": "Unités",
+        "description": "Écrire les unités en toutes lettres ou en abrégé, comme g et càs",
+        "options": {
+          "written": "En toutes lettres",
+          "abbreviated": "Abrégées"
+        }
+      },
       "applyError": "Échec de l'application du paramètre",
       "afterPlanning": {
         "title": "Après avoir planifié une recette",

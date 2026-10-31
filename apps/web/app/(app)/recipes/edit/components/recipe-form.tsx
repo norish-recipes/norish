@@ -15,6 +15,7 @@ import SmartInputHelp from "@/components/shared/smart-input-help";
 import SmartTextInput from "@/components/shared/smart-text-input";
 import TagInput from "@/components/shared/tag-input";
 import EditRecipeSkeleton from "@/components/skeleton/edit-recipe-skeleton";
+import { useDevicePreference } from "@/context/device-preferences-context";
 import { useRecipesContext } from "@/context/recipes-context";
 import { useUnitsQuery } from "@/hooks/config";
 import { useRecipeId } from "@/hooks/recipes";
@@ -44,6 +45,7 @@ export default function RecipeForm({ mode, initialData }: RecipeFormProps) {
   const { createRecipe, updateRecipe } = useRecipesContext();
   const locale = useLocale();
   const { units, isLoading: isLoadingUnits } = useUnitsQuery();
+  const [unitStyle] = useDevicePreference("unitStyle");
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [errors, setErrors] = useState<Record<string, string>>({});
   const t = useTranslations("recipes.form");
@@ -161,6 +163,7 @@ export default function RecipeForm({ mode, initialData }: RecipeFormProps) {
     locale,
     mode,
     units,
+    unitStyle,
   });
   const navigateBack = useCallback(() => router.back(), [router]);
   const {
@@ -196,7 +199,7 @@ export default function RecipeForm({ mode, initialData }: RecipeFormProps) {
       version: ing.version,
       ingredientName: ing.ingredientName,
       amount: ing.amount,
-      unit: ing.unit ? formatUnit(ing.unit, locale, units, ing.amount) : null,
+      unit: ing.unit ? formatUnit(ing.unit, locale, units, ing.amount, unitStyle) : null,
       order: ing.order,
       systemUsed: ing.systemUsed,
     }));

@@ -185,6 +185,14 @@
           "theme": "Temaets farver"
         }
       },
+      "unitStyle": {
+        "title": "Enheder",
+        "description": "Skriv enheder fuldt ud eller forkortet, som g og ml",
+        "options": {
+          "written": "Fuldt ud",
+          "abbreviated": "Forkortet"
+        }
+      },
       "applyError": "Kunne ikke anvende præference",
       "afterPlanning": {
         "title": "Efter planlægning af en opskrift",

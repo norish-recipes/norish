@@ -185,6 +185,14 @@
           "theme": "Kolory motywu"
         }
       },
+      "unitStyle": {
+        "title": "Jednostki",
+        "description": "Zapisuj jednostki w pełnym brzmieniu lub skrótem, np. g i ml",
+        "options": {
+          "written": "Pełne nazwy",
+          "abbreviated": "Skróty"
+        }
+      },
       "applyError": "Nie udało się zastosować preferencji",
       "afterPlanning": {
         "title": "Po zaplanowaniu przepisu",
