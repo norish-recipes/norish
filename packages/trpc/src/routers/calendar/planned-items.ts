@@ -38,6 +38,7 @@ import {
   createPlannedRecipeInputSchema,
   deletePlannedRecipeOutputSchema,
   listItemsInput,
+  listPlannedRecipesInput,
   plannedRecipeListItemSchema,
   plannedRecipeMutationOutputSchema,
 } from "./planned-items-openapi-types";
@@ -51,17 +52,19 @@ export const listTodayPlannedRecipesProcedure = authedProcedure
       protect: true,
       tags: ["Planned Recipes"],
       summary: "Get planned recipes for today",
-      description: '"Today" is the day in the server\'s timezone.',
+      description:
+        '"Today" is the day in the server\'s timezone. `include=notes` also returns planned notes.',
       errorResponses: {
         401: "Missing or invalid API credentials",
       },
     },
   })
+  .input(listPlannedRecipesInput)
   .output(z.array(plannedRecipeListItemSchema))
-  .query(async ({ ctx }) => {
+  .query(async ({ ctx, input }) => {
     const today = dateKey(getServerToday());
 
-    return listPlannedRecipesByRange(ctx, today, today);
+    return listPlannedRecipesByRange(ctx, today, today, input.include === "notes");
   });
 
 export const listWeekPlannedRecipesProcedure = authedProcedure
@@ -72,20 +75,23 @@ export const listWeekPlannedRecipesProcedure = authedProcedure
       protect: true,
       tags: ["Planned Recipes"],
       summary: "Get planned recipes for the current week",
-      description: "The week runs Monday through Sunday in the server's timezone.",
+      description:
+        "The week runs Monday through Sunday in the server's timezone. `include=notes` also returns planned notes.",
       errorResponses: {
         401: "Missing or invalid API credentials",
       },
     },
   })
+  .input(listPlannedRecipesInput)
   .output(z.array(plannedRecipeListItemSchema))
-  .query(async ({ ctx }) => {
+  .query(async ({ ctx, input }) => {
     const today = getServerToday();
 
     return listPlannedRecipesByRange(
       ctx,
       dateKey(startOfServerWeek(today)),
-      dateKey(endOfServerWeek(today))
+      dateKey(endOfServerWeek(today)),
+      input.include === "notes"
     );
   });
 
@@ -97,17 +103,24 @@ export const listMonthPlannedRecipesProcedure = authedProcedure
       protect: true,
       tags: ["Planned Recipes"],
       summary: "Get planned recipes for the current month",
-      description: "The month is the calendar month in the server's timezone.",
+      description:
+        "The month is the calendar month in the server's timezone. `include=notes` also returns planned notes.",
       errorResponses: {
         401: "Missing or invalid API credentials",
       },
     },
   })
+  .input(listPlannedRecipesInput)
   .output(z.array(plannedRecipeListItemSchema))
-  .query(async ({ ctx }) => {
+  .query(async ({ ctx, input }) => {
     const today = getServerToday();
 
-    return listPlannedRecipesByRange(ctx, dateKey(startOfMonth(today)), dateKey(endOfMonth(today)));
+    return listPlannedRecipesByRange(
+      ctx,
+      dateKey(startOfMonth(today)),
+      dateKey(endOfMonth(today)),
+      input.include === "notes"
+    );
   });
 
 export const createPlannedRecipeProcedure = authedProcedure

@@ -60,19 +60,15 @@ export function buildPlannedItemPayload(
   };
 }
 
-export function toPlannedRecipeListItem(
-  item: PlannedItemWithRecipeRow
-): PlannedRecipeListItem | null {
-  if (item.itemType !== "recipe" || !item.recipeId) {
-    return null;
-  }
-
+export function toPlannedRecipeListItem(item: PlannedItemWithRecipeRow): PlannedRecipeListItem {
   return {
     id: item.id,
     date: item.date,
     slot: item.slot,
     sortOrder: item.sortOrder,
+    itemType: item.itemType,
     recipeId: item.recipeId,
+    title: item.title,
     version: item.version,
     recipeName: item.recipeName,
     recipeImage: item.recipeImage,
@@ -120,13 +116,14 @@ export async function listItemsByRange(
 export async function listPlannedRecipesByRange(
   ctx: CalendarProcedureContext,
   startISO: string,
-  endISO: string
+  endISO: string,
+  includeNotes = false
 ) {
   const items = await listItemsByRange(ctx, startISO, endISO);
 
   return items
-    .map(toPlannedRecipeListItem)
-    .filter((item): item is PlannedRecipeListItem => item !== null);
+    .filter((item) => (item.itemType === "recipe" && item.recipeId) || includeNotes)
+    .map(toPlannedRecipeListItem);
 }
 
 export async function createCalendarItem(ctx: CalendarProcedureContext, input: CreateItemInput) {

@@ -226,7 +226,7 @@ describe("calendar planned recipe openapi procedures", () => {
     ]);
 
     const caller = openApiCalendarRouter.createCaller(createMockCallerContext(ctx));
-    const result = await caller.listTodayPlannedRecipes();
+    const result = await caller.listTodayPlannedRecipes({});
 
     expect(listPlannedItemsByUserAndDateRange).toHaveBeenCalledWith(
       ctx.userIds,
@@ -239,7 +239,9 @@ describe("calendar planned recipe openapi procedures", () => {
         date: "2025-01-15",
         slot: "Breakfast",
         sortOrder: 0,
+        itemType: "recipe",
         recipeId: expect.any(String),
+        title: null,
         version: 1,
         recipeName: "Omelette",
         recipeImage: null,
@@ -247,13 +249,20 @@ describe("calendar planned recipe openapi procedures", () => {
         calories: 250,
       },
     ]);
+
+    const withNotes = await caller.listTodayPlannedRecipes({ include: "notes" });
+
+    expect(withNotes.map((item) => [item.itemType, item.title])).toEqual([
+      ["recipe", null],
+      ["note", "Leftovers"],
+    ]);
   });
 
   it("lists the current week's planned recipes using server time", async () => {
     listPlannedItemsByUserAndDateRange.mockResolvedValue([]);
 
     const caller = openApiCalendarRouter.createCaller(createMockCallerContext(ctx));
-    await caller.listWeekPlannedRecipes();
+    await caller.listWeekPlannedRecipes({});
 
     expect(listPlannedItemsByUserAndDateRange).toHaveBeenCalledWith(
       ctx.userIds,
@@ -266,7 +275,7 @@ describe("calendar planned recipe openapi procedures", () => {
     listPlannedItemsByUserAndDateRange.mockResolvedValue([]);
 
     const caller = openApiCalendarRouter.createCaller(createMockCallerContext(ctx));
-    await caller.listMonthPlannedRecipes();
+    await caller.listMonthPlannedRecipes({});
 
     expect(listPlannedItemsByUserAndDateRange).toHaveBeenCalledWith(
       ctx.userIds,

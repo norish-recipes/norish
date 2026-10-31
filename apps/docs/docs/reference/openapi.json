@@ -3926,7 +3926,7 @@
       "get": {
         "operationId": "plannedRecipesToday",
         "summary": "Get planned recipes for today",
-        "description": "\"Today\" is the day in the server's timezone.",
+        "description": "\"Today\" is the day in the server's timezone. `include=notes` also returns planned notes.",
         "tags": [
           "Planned Recipes"
         ],
@@ -3936,6 +3936,18 @@
           },
           {
             "BearerAuth": []
+          }
+        ],
+        "parameters": [
+          {
+            "in": "query",
+            "name": "include",
+            "schema": {
+              "type": "string",
+              "enum": [
+                "notes"
+              ]
+            }
           }
         ],
         "responses": {
@@ -3970,10 +3982,30 @@
                         "minimum": -9007199254740991,
                         "maximum": 9007199254740991
                       },
-                      "recipeId": {
+                      "itemType": {
                         "type": "string",
-                        "format": "uuid",
-                        "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$"
+                        "enum": [
+                          "recipe",
+                          "note"
+                        ]
+                      },
+                      "recipeId": {
+                        "anyOf": [
+                          {
+                            "type": "string",
+                            "format": "uuid",
+                            "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$"
+                          },
+                          {
+                            "type": "null"
+                          }
+                        ]
+                      },
+                      "title": {
+                        "type": [
+                          "string",
+                          "null"
+                        ]
                       },
                       "version": {
                         "type": "integer",
@@ -4010,7 +4042,9 @@
                       "date",
                       "slot",
                       "sortOrder",
+                      "itemType",
                       "recipeId",
+                      "title",
                       "version",
                       "recipeName",
                       "recipeImage",
@@ -4040,7 +4074,7 @@
       "get": {
         "operationId": "plannedRecipesWeek",
         "summary": "Get planned recipes for the current week",
-        "description": "The week runs Monday through Sunday in the server's timezone.",
+        "description": "The week runs Monday through Sunday in the server's timezone. `include=notes` also returns planned notes.",
         "tags": [
           "Planned Recipes"
         ],
@@ -4050,6 +4084,18 @@
           },
           {
             "BearerAuth": []
+          }
+        ],
+        "parameters": [
+          {
+            "in": "query",
+            "name": "include",
+            "schema": {
+              "type": "string",
+              "enum": [
+                "notes"
+              ]
+            }
           }
         ],
         "responses": {
@@ -4084,10 +4130,30 @@
                         "minimum": -9007199254740991,
                         "maximum": 9007199254740991
                       },
-                      "recipeId": {
+                      "itemType": {
                         "type": "string",
-                        "format": "uuid",
-                        "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$"
+                        "enum": [
+                          "recipe",
+                          "note"
+                        ]
+                      },
+                      "recipeId": {
+                        "anyOf": [
+                          {
+                            "type": "string",
+                            "format": "uuid",
+                            "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$"
+                          },
+                          {
+                            "type": "null"
+                          }
+                        ]
+                      },
+                      "title": {
+                        "type": [
+                          "string",
+                          "null"
+                        ]
                       },
                       "version": {
                         "type": "integer",
@@ -4124,7 +4190,9 @@
                       "date",
                       "slot",
                       "sortOrder",
+                      "itemType",
                       "recipeId",
+                      "title",
                       "version",
                       "recipeName",
                       "recipeImage",
@@ -4154,7 +4222,7 @@
       "get": {
         "operationId": "plannedRecipesMonth",
         "summary": "Get planned recipes for the current month",
-        "description": "The month is the calendar month in the server's timezone.",
+        "description": "The month is the calendar month in the server's timezone. `include=notes` also returns planned notes.",
         "tags": [
           "Planned Recipes"
         ],
@@ -4164,6 +4232,18 @@
           },
           {
             "BearerAuth": []
+          }
+        ],
+        "parameters": [
+          {
+            "in": "query",
+            "name": "include",
+            "schema": {
+              "type": "string",
+              "enum": [
+                "notes"
+              ]
+            }
           }
         ],
         "responses": {
@@ -4198,10 +4278,30 @@
                         "minimum": -9007199254740991,
                         "maximum": 9007199254740991
                       },
-                      "recipeId": {
+                      "itemType": {
                         "type": "string",
-                        "format": "uuid",
-                        "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$"
+                        "enum": [
+                          "recipe",
+                          "note"
+                        ]
+                      },
+                      "recipeId": {
+                        "anyOf": [
+                          {
+                            "type": "string",
+                            "format": "uuid",
+                            "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$"
+                          },
+                          {
+                            "type": "null"
+                          }
+                        ]
+                      },
+                      "title": {
+                        "type": [
+                          "string",
+                          "null"
+                        ]
                       },
                       "version": {
                         "type": "integer",
@@ -4238,7 +4338,9 @@
                       "date",
                       "slot",
                       "sortOrder",
+                      "itemType",
                       "recipeId",
+                      "title",
                       "version",
                       "recipeName",
                       "recipeImage",
