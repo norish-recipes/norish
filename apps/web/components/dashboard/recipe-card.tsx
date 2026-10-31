@@ -1,7 +1,7 @@
 "use client";
 
 import type { MouseEvent } from "react";
-import { memo, useCallback, useMemo, useRef, useState } from "react";
+import { memo, useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { usePathname, useRouter } from "next/navigation";
 import { MiniCalendar, MiniGroceries } from "@/components/Panel/consumers";
 import OriginFlag from "@/components/recipes/origin-flag";
@@ -163,6 +163,15 @@ function RecipeCardComponent({
       selection?.toggle(recipe);
     },
   });
+
+  // A bulk delete plays the single delete's animation, and the card stays
+  // hidden from its end until the list drops it.
+  const isLeaving = selection?.isLeaving(recipe.id) ?? false;
+  const [hasLeft, setHasLeft] = useState(false);
+
+  useEffect(() => {
+    if (isLeaving) rowRef.current?.triggerDeleteAnimation(() => setHasLeft(true));
+  }, [isLeaving]);
 
   // Cmd/Ctrl-click toggles and Shift-click selects a range, selecting or not;
   // caught before the card's own click can navigate.
@@ -592,7 +601,7 @@ function RecipeCardComponent({
   return (
     <>
       <div
-        className="relative [-webkit-touch-callout:none] select-none"
+        className={`relative [-webkit-touch-callout:none] select-none ${hasLeft ? "invisible" : ""}`}
         onClickCapture={handleModifierClick}
         {...longPressProps}
       >

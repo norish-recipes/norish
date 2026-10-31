@@ -34,7 +34,7 @@ import {
   cssHeaderIconControl,
 } from "@norish/web/config/css-tokens";
 
-import CookbookMembers from "./cookbook-members";
+import CookbookMembers, { CookbookSelection } from "./cookbook-members";
 
 const COOKBOOK_HEADING_ID = "cookbook-heading";
 
@@ -157,7 +157,8 @@ export default function CookbookPage({ cookbookId }: { cookbookId: string }) {
 
   return (
     <section aria-labelledby={COOKBOOK_HEADING_ID} className="flex min-h-0 flex-1 flex-col">
-      <RecipeViewModeTabs>
+      <CookbookSelection cookbook={cookbook}>
+        <RecipeViewModeTabs>
         <CookbookHeader
           actions={
             (canEdit || canDelete) && (
@@ -258,7 +259,8 @@ export default function CookbookPage({ cookbookId }: { cookbookId: string }) {
         <Tabs.Panel className="mt-0 min-h-0 flex-1 p-0" id="list">
           <CookbookMembers cookbookId={cookbookId} variant="list" />
         </Tabs.Panel>
-      </RecipeViewModeTabs>
+        </RecipeViewModeTabs>
+      </CookbookSelection>
 
       <CookbookEditPanel cookbook={cookbook} open={editOpen} onOpenChange={setEditOpen} />
 

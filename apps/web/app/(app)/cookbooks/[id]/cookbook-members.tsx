@@ -1,21 +1,55 @@
 "use client";
 
 import type { LibraryGridItem } from "@/lib/library-items";
+import type { ReactNode } from "react";
 import { useCallback, useMemo } from "react";
 import LibraryGrid from "@/components/dashboard/library-grid";
 import RecipeCard from "@/components/dashboard/recipe-card";
+import RecipeSelectionBar from "@/components/dashboard/recipe-selection-bar";
+import { RecipeSelectionProvider } from "@/context/recipe-selection-context";
 import { useRecipesContext } from "@/context/recipes-context";
 import { useRecipesFiltersContext } from "@/context/recipes-filters-context";
 import { useCookbookRecipesQuery, useCookbooksMutations } from "@/hooks/cookbooks";
 import { Card } from "@heroui/react";
 import { useTranslations } from "next-intl";
 
+import type { CookbookSummaryDTO } from "@norish/shared/contracts";
 import type { RecipeViewMode } from "@norish/shared/contracts/zod/device-preferences";
 import {
   hasAppliedRecipeFilters,
   serializeRecipeFilters,
   toRecipesQueryFilters,
 } from "@norish/shared-react/contexts";
+
+/**
+ * Selecting a cookbook's members, above its grid and list so switching the
+ * view keeps the selection. Reads the same member list the grid reads.
+ */
+export function CookbookSelection({
+  cookbook,
+  children,
+}: {
+  cookbook: CookbookSummaryDTO;
+  children: ReactNode;
+}) {
+  const { filters, isHydrated } = useRecipesFiltersContext();
+  const queryFilters = useMemo(() => toRecipesQueryFilters(filters), [filters]);
+  const { recipes, removeMember } = useCookbookRecipesQuery(cookbook.id, queryFilters, {
+    enabled: isHydrated,
+  });
+
+  return (
+    <RecipeSelectionProvider recipes={recipes}>
+      {children}
+      <RecipeSelectionBar
+        cookbook={cookbook}
+        onLeave={(recipeIds) => {
+          for (const recipeId of recipeIds) removeMember(recipeId);
+        }}
+      />
+    </RecipeSelectionProvider>
+  );
+}
 
 /**
  * A cookbook's members, through the same grid the Library uses.

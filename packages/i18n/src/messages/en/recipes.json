@@ -444,6 +444,11 @@
   "selection": {
     "toolbar": "Selected recipes",
     "count": "{count} selected",
-    "clear": "Clear selection"
+    "clear": "Clear selection",
+    "addToCookbook": "Add to cookbook",
+    "remove": "Remove",
+    "newCookbook": "New cookbook",
+    "filedInto": "{count, plural, one {# recipe} other {# recipes}} added to {title}",
+    "filedIntoMany": "{count, plural, one {# recipe} other {# recipes}} added to {cookbooks} cookbooks"
   }
 }

@@ -20,7 +20,14 @@ type RecipeSelection = {
   /** Select every loaded recipe from the anchor to this one, in on-screen order. */
   selectRange: (recipe: SelectedRecipe) => void;
   clear: () => void;
+  /** Whether this card is playing its way out after a bulk delete. */
+  isLeaving: (recipeId: string) => boolean;
+  /** Play the delete animation on these cards where they are on screen, then run `then`. */
+  playLeaving: (recipeIds: string[], then: () => void) => void;
 };
+
+/** The card's delete animation, start to finish (SwipeableRow's commitDelete). */
+const LEAVE_MS = 500;
 
 const RecipeSelectionContext = createContext<RecipeSelection | null>(null);
 
@@ -44,6 +51,7 @@ export function RecipeSelectionProvider({
   const trpc = useTRPC();
   const [selected, setSelected] = useState<ReadonlyMap<string, SelectedRecipe>>(() => new Map());
   const [anchor, setAnchor] = useState<string | null>(null);
+  const [leaving, setLeaving] = useState<ReadonlySet<string>>(() => new Set());
   const isSelecting = selected.size > 0;
 
   const toggle = useCallback((recipe: SelectedRecipe) => {
@@ -88,6 +96,15 @@ export function RecipeSelectionProvider({
     setAnchor(null);
   }, []);
 
+  const playLeaving = useCallback((recipeIds: string[], then: () => void) => {
+    setLeaving(new Set(recipeIds));
+    // Not cleared on unmount: the delete must still go out if the reader leaves.
+    setTimeout(() => {
+      then();
+      setLeaving(new Set());
+    }, LEAVE_MS);
+  }, []);
+
   useEffect(() => {
     if (!isSelecting) return;
 
@@ -129,8 +146,10 @@ export function RecipeSelectionProvider({
       toggle,
       selectRange,
       clear,
+      isLeaving: (recipeId) => leaving.has(recipeId),
+      playLeaving,
     };
-  }, [recipes, selected, isSelecting, toggle, selectRange, clear]);
+  }, [recipes, selected, isSelecting, toggle, selectRange, clear, leaving, playLeaving]);
 
   return <RecipeSelectionContext value={value}>{children}</RecipeSelectionContext>;
 }
