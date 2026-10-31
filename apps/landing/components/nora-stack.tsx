@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useRef, useState } from "react";
 
 import type { ShotName } from "./shot";
 import { Shot } from "./shot";
@@ -26,27 +26,48 @@ const photos: { base: ShotName; alt: string; caption: string }[] = [
 /** Where each place in the pile sits, front first. */
 const pile = [
   "z-3 rotate-4",
-  "z-2 -translate-x-14 translate-y-2.5 -rotate-6",
-  "z-1 -translate-x-26 translate-y-6.5 -rotate-14",
+  "z-2 -translate-x-[15%] translate-y-2.5 -rotate-6",
+  "z-1 -translate-x-[27%] translate-y-6.5 -rotate-14",
 ];
 
-/** Polaroids of Nora in a pile; pressing the pile sends the front one to the back. */
+/** How long each photo stays on top before the next one comes up, in ms. */
+const TURN_EVERY = 5000;
+
+/**
+ * Polaroids of Nora in a pile. Every few seconds, or on a press, the front one
+ * swings out and tucks in at the back; the pile holds still under the pointer.
+ */
 export function NoraStack() {
-  const [front, setFront] = useState(0);
-  const next = () => setFront((front + 1) % photos.length);
+  const [turns, setTurns] = useState(0);
+  const pileRef = useRef<HTMLButtonElement>(null);
+  const front = turns % photos.length;
+  const back = (front + photos.length - 1) % photos.length;
+
+  // Depends on turns so a press restarts the wait.
+  useEffect(() => {
+    if (window.matchMedia("(prefers-reduced-motion: reduce)").matches) return;
+
+    const timer = setInterval(() => {
+      if (!pileRef.current?.matches(":hover")) setTurns((count) => count + 1);
+    }, TURN_EVERY);
+
+    return () => clearInterval(timer);
+  }, [turns]);
 
   return (
     <button
+      ref={pileRef}
       aria-label="Show another photo of Nora"
-      className="reveal reveal-right relative block min-h-[34rem] min-w-0 flex-1 basis-[26rem] cursor-pointer rounded-lg sm:min-h-[40rem]"
+      className="reveal reveal-right relative block aspect-[5/6] min-w-0 cursor-pointer rounded-lg max-sm:order-last sm:col-start-2 sm:row-span-2 sm:row-start-1 sm:self-center"
       type="button"
-      onClick={next}
+      onClick={() => setTurns(turns + 1)}
     >
       {photos.map((photo, index) => (
         <figure
           key={photo.base}
           aria-hidden={index !== front}
           className={`polaroid ${pile[(index - front + photos.length) % photos.length]}`}
+          data-tucking={turns > 0 && index === back ? true : undefined}
         >
           <Shot
             alt={photo.alt}

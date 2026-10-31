@@ -25,7 +25,7 @@ export function Hero() {
         </a>
       </div>
 
-      <div className="phones relative mt-8 flex w-full max-w-[57.5rem] justify-center pb-20">
+      <div className="relative mt-8 flex w-full max-w-[57.5rem] justify-center pb-20">
         <Shot
           alt=""
           base="calendar-mobile"

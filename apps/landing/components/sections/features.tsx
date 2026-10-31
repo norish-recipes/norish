@@ -34,13 +34,13 @@ export function Features() {
           />
         </article>
 
-        <article className="reveal tile tile-groceries tint-blue [--delay:120ms]">
+        <article className="reveal tile tile-groceries tint-blue pb-8 [--delay:120ms]">
           <Title accent="the groceries">Do</Title>
           <p className="text-[1.0625rem]">By store and aisle, with prices, synced in real time.</p>
           <Phone
             alt="The grocery list on a phone, with prices per line"
             base="groceries-mobile"
-            className="mx-auto mt-auto mb-8 w-[90%] max-w-75"
+            className="mx-auto my-auto w-full max-w-75"
           />
         </article>
 
