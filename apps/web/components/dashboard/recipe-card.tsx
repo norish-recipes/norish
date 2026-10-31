@@ -14,6 +14,7 @@ import { useMountedOnceOpened } from "@/hooks/use-mounted-once-opened";
 import { useHiddenItemVisibility } from "@/hooks/user/use-hidden-item-visibility";
 import { withOrigin } from "@/lib/back-destination";
 import { useAppStore } from "@/stores/useAppStore";
+import { CheckIcon } from "@heroicons/react/16/solid";
 import {
   ArchiveBoxIcon,
   CalendarDaysIcon,
@@ -26,7 +27,6 @@ import {
   TrashIcon,
   UserGroupIcon,
 } from "@heroicons/react/20/solid";
-import { CheckIcon } from "@heroicons/react/16/solid";
 import { PhotoIcon } from "@heroicons/react/24/outline";
 import { Button, Card, Chip, Tooltip, useOverlayState } from "@heroui/react";
 import { useFormatter, useTranslations } from "next-intl";
@@ -309,15 +309,7 @@ function RecipeCardComponent({
     }
 
     return baseActions;
-  }, [
-    showDeleteAction,
-    handleDeleteClick,
-    t,
-    onRemoveFromCookbook,
-    recipe,
-    tCookbooks,
-    selection,
-  ]);
+  }, [showDeleteAction, handleDeleteClick, t, onRemoveFromCookbook, recipe, tCookbooks, selection]);
 
   const optionsButton = (
     <div className="hidden md:block" role="presentation" onClick={stopParentActivation}>
@@ -516,7 +508,9 @@ function RecipeCardComponent({
                 </div>
 
                 <div className="mt-3">{metadataChips}</div>
-                <div className="absolute top-1/2 right-3 -translate-y-1/2">{optionsButton}</div>
+                {!isSelecting && (
+                  <div className="absolute top-1/2 right-3 -translate-y-1/2">{optionsButton}</div>
+                )}
               </Card.Content>
             </div>
           </Card>
@@ -559,10 +553,15 @@ function RecipeCardComponent({
 
               <RecipeMetadata
                 isFavorite={recipeIsFavorite}
-                onOptionsPress={() => {
-                  if (rowRef.current?.isOpen()) rowRef.current?.closeRow();
-                  else rowRef.current?.openRow();
-                }}
+                // The selection badge takes this corner while selecting.
+                onOptionsPress={
+                  isSelecting
+                    ? undefined
+                    : () => {
+                        if (rowRef.current?.isOpen()) rowRef.current?.closeRow();
+                        else rowRef.current?.openRow();
+                      }
+                }
                 onToggleFavorite={showFavorites ? handleToggleFavorite : undefined}
               />
 
@@ -601,7 +600,7 @@ function RecipeCardComponent({
   return (
     <>
       <div
-        className={`relative [-webkit-touch-callout:none] select-none ${hasLeft ? "invisible" : ""}`}
+        className={`relative select-none [-webkit-touch-callout:none] ${hasLeft ? "invisible" : ""}`}
         onClickCapture={handleModifierClick}
         {...longPressProps}
       >
@@ -620,7 +619,7 @@ function RecipeCardComponent({
           <button
             aria-label={recipe.name}
             aria-pressed={isSelected}
-            className={`absolute inset-0 z-30 cursor-pointer outline-none focus-visible:ring-2 focus-visible:ring-accent ${variant === "list" ? "rounded-2xl" : "rounded-3xl"} ${isSelected ? "ring-accent bg-accent/10 ring-4 ring-inset" : ""}`}
+            className={`focus-visible:ring-accent absolute inset-0 z-30 cursor-pointer outline-none focus-visible:ring-2 ${variant === "list" ? "rounded-2xl" : "rounded-3xl"} ${isSelected ? "ring-accent bg-accent/10 ring-4 ring-inset" : ""}`}
             data-selected={isSelected}
             data-testid="recipe-select-toggle"
             type="button"

@@ -3,6 +3,7 @@
 import HeartButton from "@/components/shared/heart-button";
 import { EllipsisHorizontalIcon } from "@heroicons/react/20/solid";
 import { Button } from "@heroui/react";
+import { useTranslations } from "next-intl";
 
 interface RecipeMetadataProps {
   onOptionsPress?: () => void;
@@ -14,6 +15,7 @@ export default function RecipeMetadata({
   isFavorite = false,
   onToggleFavorite,
 }: RecipeMetadataProps) {
+  const t = useTranslations("recipes.card");
   return (
     <>
       {/* Heart button - top left (only shown when favorited) */}
@@ -34,6 +36,7 @@ export default function RecipeMetadata({
         {onOptionsPress && (
           <Button
             isIconOnly
+            aria-label={t("recipeOptions")}
             className="bg-surface text-foreground hidden h-6 w-6 min-w-0 p-0 shadow-md md:flex"
             size="sm"
             variant="tertiary"
