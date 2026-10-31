@@ -59,11 +59,11 @@ export function createUseCookbooksSubscription({
 
     useRealtimeSubscription<Payload<"membershipChanged">>(trpc.cookbooks.onMembershipChanged, {
       ...lag,
-      onEvent: ({ recipeId, cookbookId }) => {
+      onEvent: ({ recipeIds, cookbookId }) => {
         // The member count and the derived cover are computed per reader on
         // the server, so a membership change is a refetch rather than a
         // local guess.
-        invalidateMembership(recipeId);
+        for (const recipeId of recipeIds) invalidateMembership(recipeId);
         invalidateCookbook(cookbookId);
         invalidate();
       },

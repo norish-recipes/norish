@@ -4,7 +4,7 @@ import { z } from "zod";
 import type { PermissionAction } from "@norish/auth/permissions";
 import type { FullRecipeDTO } from "@norish/shared/contracts";
 import { canAccessResource } from "@norish/auth/permissions";
-import { getRecipeFull, getRecipeOwnerId } from "@norish/db";
+import { getRecipeFull, getRecipeOwnerId, getRecipeOwnerIds } from "@norish/db";
 import { getRecipePermissionPolicy } from "@norish/shared-server/config/server-config-loader";
 import { trpcLogger as log } from "@norish/shared-server/logger";
 import { recipes } from "@norish/shared-server/realtime/recipes";
@@ -69,6 +69,44 @@ export async function assertRecipeAccess(
       message: "You do not have permission to access this recipe",
     });
   }
+}
+
+/**
+ * Whether the reader may do `action` to each of these recipes. Orphaned ones
+ * are open to everyone; ones that do not exist are left out of the map.
+ */
+export async function recipeAccess(
+  ctx: Pick<RecipeUserContext, "user" | "householdUserIds" | "isServerAdmin">,
+  recipeIds: string[],
+  action: PermissionAction
+): Promise<Map<string, boolean>> {
+  const owners = await getRecipeOwnerIds(recipeIds);
+  const byOwner = new Map<string, Promise<boolean>>();
+  const access = new Map<string, boolean>();
+
+  for (const [recipeId, ownerId] of owners) {
+    if (ownerId === null) {
+      access.set(recipeId, true);
+      continue;
+    }
+
+    let allowed = byOwner.get(ownerId);
+
+    if (!allowed) {
+      allowed = canAccessResource(
+        action,
+        ctx.user.id,
+        ownerId,
+        ctx.householdUserIds,
+        ctx.isServerAdmin
+      );
+      byOwner.set(ownerId, allowed);
+    }
+
+    access.set(recipeId, await allowed);
+  }
+
+  return access;
 }
 
 /**

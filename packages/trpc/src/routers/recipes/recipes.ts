@@ -12,7 +12,6 @@ import {
   FullRecipeInsertSchema,
   getRandomRecipeCandidates,
   getRecipeFull,
-  getRecipeOwnerIds,
   listRecipes,
   RecipeConvertInputSchema,
   RecipeDeleteInputSchema,
@@ -64,7 +63,12 @@ import { ENRICHMENT_KINDS } from "@norish/shared/lib/recipe-enrichment";
 import { formDataInputSchema, isUploadedFile } from "../../form-data";
 import { authedProcedure, viewerOf } from "../../middleware";
 import { router } from "../../trpc";
-import { assertRecipeAccess, findRecipeForViewer, handleRecipeError } from "./helpers";
+import {
+  assertRecipeAccess,
+  findRecipeForViewer,
+  handleRecipeError,
+  recipeAccess,
+} from "./helpers";
 import {
   randomRecipeInputSchema,
   recipeAutocompleteInputSchema,
@@ -343,33 +347,13 @@ const deleteProcedure = authedProcedure
   .mutation(async ({ ctx, input }) => {
     log.info({ userId: ctx.user.id, count: input.recipes.length }, "Deleting recipes");
 
-    const owners = await getRecipeOwnerIds(input.recipes.map((recipe) => recipe.id));
-    const allowedByOwner = new Map<string, Promise<boolean>>();
-    const mayDelete = (ownerId: string) => {
-      let allowed = allowedByOwner.get(ownerId);
-
-      if (!allowed) {
-        allowed = canAccessResource(
-          "delete",
-          ctx.user.id,
-          ownerId,
-          ctx.householdUserIds,
-          ctx.isServerAdmin
-        );
-        allowedByOwner.set(ownerId, allowed);
-      }
-
-      return allowed;
-    };
-    const permitted: typeof input.recipes = [];
-
-    for (const recipe of input.recipes) {
-      // Missing or Orphaned (no owner): anyone may delete it.
-      const ownerId = owners.get(recipe.id);
-
-      if (ownerId && !(await mayDelete(ownerId))) continue;
-      permitted.push(recipe);
-    }
+    const access = await recipeAccess(
+      ctx,
+      input.recipes.map((recipe) => recipe.id),
+      "delete"
+    );
+    // One already gone is not in the map and counts as deleted.
+    const permitted = input.recipes.filter((recipe) => access.get(recipe.id) !== false);
 
     const { deletedIds, staleIds } = await deleteRecipesByIds(permitted);
 

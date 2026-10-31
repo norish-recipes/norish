@@ -310,12 +310,12 @@ describe("archiveRouter.importArchive", () => {
     expect(cookbooks.publish).toHaveBeenCalledWith("created", { cookbook: made }, target);
     expect(cookbooks.publish).toHaveBeenCalledWith(
       "membershipChanged",
-      { cookbookId: made.id, recipeId: "recipe-1", isMember: true },
+      { cookbookId: made.id, recipeIds: ["recipe-1"], isMember: true },
       target
     );
     expect(cookbooks.publish).toHaveBeenCalledWith(
       "membershipChanged",
-      { cookbookId: made.id, recipeId: "recipe-2", isMember: true },
+      { cookbookId: made.id, recipeIds: ["recipe-2"], isMember: true },
       target
     );
   });

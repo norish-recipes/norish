@@ -55,7 +55,7 @@ export default function CookbookMembers({
   // row now rather than waiting for a refetch that Offline never comes.
   const removeFromCookbook = useCallback(
     (recipeId: string) => {
-      setMembership({ cookbookId, recipeId, isMember: false });
+      setMembership({ cookbookId, recipeIds: [recipeId], isMember: false });
       removeMember(recipeId);
     },
     [setMembership, cookbookId, removeMember]

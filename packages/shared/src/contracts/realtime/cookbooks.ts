@@ -19,10 +19,14 @@ export const cookbooksRealtime = defineRealtimeCatalogue("cookbook", {
   // z.custom: CookbookSummaryDTO's schema carries derived fields; kept opaque for now.
   updated: { scope: "policy", payload: z.custom<{ cookbook: CookbookSummaryDTO }>() },
   deleted: { scope: "policy", payload: z.object({ id: z.string() }) },
-  /** A recipe was filed into, or taken out of, a cookbook. */
+  /** Recipes were filed into, or taken out of, a cookbook. */
   membershipChanged: {
     scope: "policy",
-    payload: z.object({ cookbookId: z.string(), recipeId: z.string(), isMember: z.boolean() }),
+    payload: z.object({
+      cookbookId: z.string(),
+      recipeIds: z.array(z.string()),
+      isMember: z.boolean(),
+    }),
   },
 });
 

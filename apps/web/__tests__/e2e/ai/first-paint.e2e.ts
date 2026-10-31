@@ -464,7 +464,7 @@ test("a full load of a cookbook carries the cookbook in the server's markup", as
   const cookbook = await callApi<{ id: string }>("cookbooks.create", {
     id: crypto.randomUUID(),
     title: "Served Cookbook",
-    recipeId: await ensureRecipe(),
+    recipeIds: [await ensureRecipe()],
   });
   const { context, page } = await openStatic(browser, "phone");
 
@@ -617,7 +617,7 @@ test("a cookbook opens in the list stored for the desktop, never as a grid first
   const cookbook = await callApi<{ id: string }>("cookbooks.create", {
     id: crypto.randomUUID(),
     title: "First Paint Cookbook",
-    recipeId: id,
+    recipeIds: [id],
   });
 
   await seed("desktop", { recipeViewMode: "list" });
@@ -951,14 +951,14 @@ test("a cookbook opened under stored filters asks for its members once and never
   const cookbook = await callApi<{ id: string }>("cookbooks.create", {
     id: crypto.randomUUID(),
     title: "Filtered Cookbook",
-    recipeId: dinner,
+    recipeIds: [dinner],
   });
 
   created.cookbooks.push(cookbook.id);
 
   await callApi("cookbooks.setMembership", {
     cookbookId: cookbook.id,
-    recipeId: breakfast,
+    recipeIds: [breakfast],
     isMember: true,
   });
   const { context, page } = await openLive(browser, "phone");
@@ -1010,7 +1010,7 @@ test("a full load of a cookbook draws its members in the server's markup", async
   const cookbook = await callApi<{ id: string }>("cookbooks.create", {
     id: crypto.randomUUID(),
     title: "Served Members",
-    recipeId: id,
+    recipeIds: [id],
   });
 
   created.cookbooks.push(cookbook.id);

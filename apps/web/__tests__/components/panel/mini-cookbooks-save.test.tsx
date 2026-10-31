@@ -109,7 +109,11 @@ describe("MiniCookbooks", () => {
     fireEvent.click(screen.getByTestId("save-cookbook-membership"));
 
     expect(setMembership).toHaveBeenCalledWith(
-      expect.objectContaining({ cookbookId: "cookbook-1", recipeId: "recipe-1", isMember: true })
+      expect.objectContaining({
+        cookbookId: "cookbook-1",
+        recipeIds: ["recipe-1"],
+        isMember: true,
+      })
     );
   });
 
@@ -149,6 +153,6 @@ describe("MiniCookbooks", () => {
 
     fireEvent.click(screen.getByTestId("save-cookbook-membership"));
 
-    expect(createCookbook).toHaveBeenCalledWith({ title: "Christmas", recipeId: "recipe-1" });
+    expect(createCookbook).toHaveBeenCalledWith({ title: "Christmas", recipeIds: ["recipe-1"] });
   });
 });

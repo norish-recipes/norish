@@ -207,11 +207,11 @@ export function CookbookEditPanel({
       });
     }
 
-    for (const recipeId of removed) {
-      setMembership({ cookbookId, recipeId, isMember: false, cookbook });
-      // The member list is this cookbook's own read, so drop the row now
+    if (removed.length > 0) {
+      setMembership({ cookbookId, recipeIds: removed, isMember: false, cookbook });
+      // The member list is this cookbook's own read, so drop the rows now
       // rather than waiting for a refetch that Offline never comes.
-      removeMember(recipeId);
+      for (const recipeId of removed) removeMember(recipeId);
     }
 
     onOpenChange(false);

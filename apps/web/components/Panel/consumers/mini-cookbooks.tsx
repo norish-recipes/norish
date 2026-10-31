@@ -87,13 +87,13 @@ export default function MiniCookbooks({ open, onOpenChange, recipeId }: MiniCook
 
       if (next === undefined || next === cookbook.containsRecipe) continue;
 
-      setMembership({ cookbookId: cookbook.id, recipeId, isMember: next, cookbook });
+      setMembership({ cookbookId: cookbook.id, recipeIds: [recipeId], isMember: next, cookbook });
     }
 
     // Only what is on screen as a pending row. Adding it is the moment the
     // reader confirms a new cookbook, and a half-typed title is not that.
     for (const entry of pending) {
-      void createCookbook({ title: entry.title, recipeId });
+      void createCookbook({ title: entry.title, recipeIds: [recipeId] });
     }
 
     onOpenChange(false);

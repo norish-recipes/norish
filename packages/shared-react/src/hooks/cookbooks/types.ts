@@ -50,7 +50,7 @@ export type CookbooksCacheHelpers = {
 
 export type CookbooksMutationsResult = {
   /** Resolves with the cookbook's id — client-minted, so it is known up front. */
-  createCookbook: (input: { title: string; recipeId?: string }) => Promise<string>;
+  createCookbook: (input: { title: string; recipeIds?: string[] }) => Promise<string>;
   /** `image`: a URL from `uploadCookbookImage`, null to clear it, absent to keep it. */
   updateCookbook: (input: {
     id: string;
@@ -60,10 +60,10 @@ export type CookbooksMutationsResult = {
   }) => void;
   uploadCookbookImage: (cookbookId: string, file: Blob) => Promise<string>;
   deleteCookbook: (input: { id: string; version: number }) => void;
-  /** File a recipe into a cookbook, or take it out — the same call both ways. */
+  /** File recipes into a cookbook, or take them out — the same call both ways. */
   setMembership: (input: {
     cookbookId: string;
-    recipeId: string;
+    recipeIds: string[];
     isMember: boolean;
     cookbook?: CookbookSummaryDTO;
   }) => void;

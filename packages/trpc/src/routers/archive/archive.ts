@@ -159,7 +159,7 @@ async function runArchiveImportAsync(
     for (const { recipeId, filing } of batchFilings) {
       void cookbooks.publish(
         "membershipChanged",
-        { cookbookId: filing.cookbookId, recipeId, isMember: true },
+        { cookbookId: filing.cookbookId, recipeIds: [recipeId], isMember: true },
         target
       );
     }

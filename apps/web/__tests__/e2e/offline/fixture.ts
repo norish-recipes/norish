@@ -73,7 +73,7 @@ async function seed(stack: ProductionStack, cookiesA: SessionCookies): Promise<v
   await asA("cookbooks.create", {
     id: SEEDED_COOKBOOK_ID,
     title: SEEDED_COOKBOOK_TITLE,
-    recipeId: SEEDED_RECIPE_ID,
+    recipeIds: [SEEDED_RECIPE_ID],
   });
   await asA("groceries.create", [{ name: SEEDED_GROCERY_NAME, unit: null, amount: 2 }]);
   // The browser's date, not the container's: the Postgres container runs UTC,
