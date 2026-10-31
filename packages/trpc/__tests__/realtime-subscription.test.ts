@@ -545,7 +545,7 @@ describe("resume", () => {
 
     const got: Array<{ recipeId: string; cursor: string }> = [];
 
-    for (let i = 0; i < 2; i++) {
+    for (let i = 0; i < 3; i++) {
       const item = await take(iterator);
 
       got.push({
@@ -554,17 +554,11 @@ describe("resume", () => {
       });
     }
 
-    expect(got.map((g) => g.recipeId)).toEqual(["h5", "b6"]);
-    expect(got[0]!.cursor).toBe(encodeCursor({ identityHash: hash, ids: [id(5), id(2), "0-0"] }));
-    expect(got[1]!.cursor).toBe(encodeCursor({ identityHash: hash, ids: [id(5), id(6), "0-0"] }));
-    // The user channel's cursor was 0-0: nothing seen, nothing to replay.
-    expect(valkey.xrange).not.toHaveBeenCalledWith(
-      `norish:stream:grocery:user:${USER}:imported`,
-      expect.anything(),
-      expect.anything(),
-      expect.anything(),
-      expect.anything()
-    );
+    // The user channel's cursor was 0-0: it had never been written when the
+    // cursor was minted, so everything in it now came after and is replayed.
+    expect(got.map((g) => g.recipeId)).toEqual(["u4", "h5", "b6"]);
+    expect(got[0]!.cursor).toBe(encodeCursor({ identityHash: hash, ids: [id(1), id(2), id(4)] }));
+    expect(got[2]!.cursor).toBe(encodeCursor({ identityHash: hash, ids: [id(5), id(6), id(4)] }));
     controller.abort();
   });
 
