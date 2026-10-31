@@ -52,6 +52,7 @@ const { extractRecipeWithAI, EXTRACTION_FAITHFULNESS_LEVELS } =
 const EXTRACTED = {
   name: "Pesto pasta",
   description: null,
+  sourceSystem: "metric",
   recipeIngredient: { metric: ["200 g spaghetti"], us: ["7 oz spaghetti"] },
   recipeInstructions: { metric: ["Boil the pasta."], us: ["Boil the pasta."] },
 };
@@ -95,6 +96,7 @@ describe("extractRecipeWithAI", () => {
   it("refuses an empty shell before scoring or normalising anything", async () => {
     mocked.generateStructured.mockResolvedValue({
       ...EXTRACTED,
+      sourceSystem: "metric",
       recipeIngredient: { metric: [], us: [] },
       recipeInstructions: { metric: [], us: [] },
     });

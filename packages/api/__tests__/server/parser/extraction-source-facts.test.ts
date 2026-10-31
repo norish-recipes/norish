@@ -62,6 +62,7 @@ describe("extraction schema keeps explicit source facts", () => {
     prepTime: null,
     cookTime: null,
     totalTime: null,
+    sourceSystem: "metric",
     recipeIngredient: { metric: ["200 g pasta"], us: ["7 oz pasta"] },
     recipeInstructions: { metric: ["Boil"], us: ["Boil"] },
     keywords: ["italian"],

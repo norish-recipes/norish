@@ -32,6 +32,7 @@ function linkableRecipe(name: string) {
     prepTime: null,
     cookTime: null,
     totalTime: null,
+    sourceSystem: "metric",
     recipeIngredient: {
       metric: ["5 g salt", "3 g pepper", "2 g paprika", "50 ml water"],
       us: ["1 tsp salt", "0.5 tsp pepper", "0.5 tsp paprika", "0.25 cup water"],

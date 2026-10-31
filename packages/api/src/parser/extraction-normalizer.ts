@@ -141,6 +141,8 @@ export async function normalizeExtractionOutput(
     systemUsed: "us" as const,
   }));
 
+  // Both copies are written by the model; the recipe opens in the one the source used (#693).
+  normalized.systemUsed = output.sourceSystem;
   // Set URL if provided
   normalized.url = url ?? null;
   normalized.notes = typeof output.notes === "string" ? decode(output.notes) : null;

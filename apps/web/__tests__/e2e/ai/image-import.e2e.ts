@@ -33,6 +33,7 @@ const IMAGE_RECIPE = {
   prepTime: null,
   cookTime: null,
   totalTime: null,
+  sourceSystem: "metric",
   recipeIngredient: {
     metric: ["150 g red lentils", "400 ml water"],
     us: ["5 oz red lentils", "1.5 cups water"],
