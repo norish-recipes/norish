@@ -8,6 +8,7 @@ import OriginFlag from "@/components/recipes/origin-flag";
 import HeartButton from "@/components/shared/heart-button";
 import SmartMarkdownRenderer from "@/components/shared/smart-markdown-renderer";
 import { usePermissionsContext } from "@/context/permissions-context";
+import { useRecipeSelection } from "@/context/recipe-selection-context";
 import { useRecipePrefetch } from "@/hooks/recipes/use-recipe-prefetch";
 import { useMountedOnceOpened } from "@/hooks/use-mounted-once-opened";
 import { useHiddenItemVisibility } from "@/hooks/user/use-hidden-item-visibility";
@@ -16,6 +17,7 @@ import { useAppStore } from "@/stores/useAppStore";
 import {
   ArchiveBoxIcon,
   CalendarDaysIcon,
+  CheckCircleIcon,
   ClockIcon,
   EllipsisHorizontalIcon,
   MinusCircleIcon,
@@ -24,9 +26,11 @@ import {
   TrashIcon,
   UserGroupIcon,
 } from "@heroicons/react/20/solid";
+import { CheckIcon } from "@heroicons/react/16/solid";
 import { PhotoIcon } from "@heroicons/react/24/outline";
 import { Button, Card, Chip, Tooltip, useOverlayState } from "@heroui/react";
 import { useFormatter, useTranslations } from "next-intl";
+import { useLongPress } from "react-aria";
 
 import { RecipeDashboardDTO } from "@norish/shared/contracts";
 import { RECIPE_DASHBOARD_KEYS } from "@norish/shared/contracts/zod";
@@ -146,6 +150,30 @@ function RecipeCardComponent({
   // Automatically prefetch recipe when card enters viewport
   const cardRef = useRecipePrefetch(recipe.id);
 
+  const selection = useRecipeSelection();
+  const isSelecting = selection?.isSelecting ?? false;
+  const isSelected = selection?.isSelected(recipe.id) ?? false;
+  // A press that began before the overlay appeared, like the long press that
+  // started selecting, must not toggle the card again on release.
+  const overlayPressArmedRef = useRef(false);
+  const { longPressProps } = useLongPress({
+    isDisabled: !selection || isSelecting,
+    onLongPress: () => {
+      rowRef.current?.closeRow();
+      selection?.toggle(recipe);
+    },
+  });
+
+  // Cmd/Ctrl-click toggles and Shift-click selects a range, selecting or not;
+  // caught before the card's own click can navigate.
+  const handleModifierClick = (event: MouseEvent) => {
+    if (!selection || !(event.metaKey || event.ctrlKey || event.shiftKey)) return;
+    event.preventDefault();
+    event.stopPropagation();
+    if (event.shiftKey) selection.selectRange(recipe);
+    else selection.toggle(recipe);
+  };
+
   const averageRating = recipe.averageRating ?? null;
 
   const handleNavigate = useCallback(() => {
@@ -218,7 +246,22 @@ function RecipeCardComponent({
   const showDeleteAction = recipe.userId ? canDeleteRecipe(recipe.userId) : true;
 
   const actions: SwipeAction[] = useMemo(() => {
-    const baseActions: SwipeAction[] = [
+    const baseActions: SwipeAction[] = [];
+
+    if (selection) {
+      baseActions.push({
+        key: "select",
+        icon: CheckCircleIcon,
+        color: "accent",
+        onPress: () => {
+          rowRef.current?.closeRow();
+          selection.toggle(recipe);
+        },
+        label: t("select"),
+      });
+    }
+
+    baseActions.push(
       {
         key: "groceries",
         icon: ShoppingBagIcon,
@@ -232,8 +275,8 @@ function RecipeCardComponent({
         color: "warning",
         onPress: () => setCalendarOpen(true),
         label: t("addToCalendar"),
-      },
-    ];
+      }
+    );
 
     if (onRemoveFromCookbook) {
       // Taking a recipe out of the cookbook it is being read in. This never
@@ -257,7 +300,15 @@ function RecipeCardComponent({
     }
 
     return baseActions;
-  }, [showDeleteAction, handleDeleteClick, t, onRemoveFromCookbook, recipe.id, tCookbooks]);
+  }, [
+    showDeleteAction,
+    handleDeleteClick,
+    t,
+    onRemoveFromCookbook,
+    recipe,
+    tCookbooks,
+    selection,
+  ]);
 
   const optionsButton = (
     <div className="hidden md:block" role="presentation" onClick={stopParentActivation}>
@@ -289,6 +340,7 @@ function RecipeCardComponent({
       <img
         alt={recipe.name}
         className={`pointer-events-none h-full w-full object-cover transition-transform duration-300 ease-in-out ${open ? "scale-100" : hoverScaleClass} `}
+        draggable={false}
         loading="lazy"
         src={addBasePath(thumbnailImage)}
         onError={() => setFailedImage(thumbnailImage)}
@@ -539,14 +591,49 @@ function RecipeCardComponent({
 
   return (
     <>
-      <SwipeableRow
-        ref={rowRef}
-        actions={actions}
-        disableSwipeOnDesktop={true}
-        onOpenChange={setOpen}
+      <div
+        className="relative [-webkit-touch-callout:none] select-none"
+        onClickCapture={handleModifierClick}
+        {...longPressProps}
       >
-        {cardContent}
-      </SwipeableRow>
+        <div inert={isSelecting}>
+          <SwipeableRow
+            ref={rowRef}
+            actions={actions}
+            disableSwipeOnDesktop={true}
+            onOpenChange={setOpen}
+          >
+            {cardContent}
+          </SwipeableRow>
+        </div>
+
+        {isSelecting && (
+          <button
+            aria-label={recipe.name}
+            aria-pressed={isSelected}
+            className={`absolute inset-0 z-30 cursor-pointer outline-none focus-visible:ring-2 focus-visible:ring-accent ${variant === "list" ? "rounded-2xl" : "rounded-3xl"} ${isSelected ? "ring-accent bg-accent/10 ring-4 ring-inset" : ""}`}
+            data-selected={isSelected}
+            data-testid="recipe-select-toggle"
+            type="button"
+            onClick={(event) => {
+              // A keyboard or screen-reader click has no pointer before it.
+              if (event.detail > 0 && !overlayPressArmedRef.current) return;
+              overlayPressArmedRef.current = false;
+              selection?.toggle(recipe);
+            }}
+            onPointerDown={() => {
+              overlayPressArmedRef.current = true;
+            }}
+          >
+            <span
+              aria-hidden
+              className={`absolute top-3 right-3 flex size-7 items-center justify-center rounded-full border-2 shadow-sm ${isSelected ? "bg-accent border-accent text-accent-foreground" : "border-white bg-black/30"}`}
+            >
+              {isSelected && <CheckIcon className="size-4" />}
+            </span>
+          </button>
+        )}
+      </div>
 
       {/* Calendar panel */}
       {calendarMounted && (

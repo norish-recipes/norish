@@ -11,6 +11,7 @@ import {
 } from "@/components/navbar/nav-tabs";
 import NavbarUserMenu from "@/components/navbar/navbar-user-menu";
 import { useAutoHide } from "@/hooks/auto-hide";
+import { useAppStore } from "@/stores/useAppStore";
 import {
   CalendarDaysIcon,
   ClipboardDocumentListIcon,
@@ -45,6 +46,8 @@ export const MobileNav = () => {
   const pathname = usePathname();
   const activeTab = navTabPosition(pathname);
   const [userMenuOpen, setUserMenuOpen] = useState(false);
+  // An action bar stands in the nav's place while it is up.
+  const actionBarOpen = useAppStore((state) => state.actionBarOpen);
 
   const { isVisible, show } = useAutoHide({
     disabled: userMenuOpen,
@@ -87,7 +90,7 @@ export const MobileNav = () => {
           it reads the same scale, so the pair stays aligned at either size. */}
       <motion.div
         animate={{ scale: isVisible ? 1 : MOBILE_NAV_SHRUNKEN_SCALE }}
-        className="fixed inset-x-0 z-[60] px-4 [view-transition-class:app-bar] [view-transition-name:app-mobile-nav] md:hidden"
+        className={`fixed inset-x-0 z-[60] px-4 ${actionBarOpen ? "invisible" : ""} [view-transition-class:app-bar] [view-transition-name:app-mobile-nav] md:hidden`}
         initial={false}
         style={{
           bottom: "max(calc(env(safe-area-inset-bottom) - 0.2rem), 1rem)",

@@ -11,6 +11,7 @@ import RecipeCard from "@/components/dashboard/recipe-card";
 import RecipeCardSkeleton from "@/components/skeleton/recipe-card-skeleton";
 import { useRecipesContext } from "@/context/recipes-context";
 import { useRecipesFiltersContext } from "@/context/recipes-filters-context";
+import { useRecipeSelection } from "@/context/recipe-selection-context";
 import { useCookbooksMutations } from "@/hooks/cookbooks";
 import { useLibraryQuery } from "@/hooks/library";
 
@@ -39,6 +40,7 @@ export default function LibraryView({ variant }: { variant: RecipeViewMode }) {
     allergies,
   } = useRecipesContext();
   const { deleteCookbook } = useCookbooksMutations();
+  const isSelecting = useRecipeSelection()?.isSelecting ?? false;
 
   // The same filters the context passes, so both share one cache entry and
   // one request.
@@ -65,18 +67,25 @@ export default function LibraryView({ variant }: { variant: RecipeViewMode }) {
 
   const renderItem = useCallback(
     (item: LibraryGridItem) => {
-      if (item.kind === "pending") {
-        return <RecipeCardSkeleton variant={variant} />;
-      }
-
-      if (item.kind === "cookbook") {
+      // A selection holds recipes only: cookbooks and imports still running
+      // step back while it is open.
+      if (item.kind !== "recipe") {
         return (
-          <CookbookCard
-            allergies={allergies}
-            cookbook={item.cookbook}
-            variant={variant}
-            onDelete={deleteCookbook}
-          />
+          <div
+            className={isSelecting ? "opacity-40 transition-opacity" : "transition-opacity"}
+            inert={isSelecting}
+          >
+            {item.kind === "pending" ? (
+              <RecipeCardSkeleton variant={variant} />
+            ) : (
+              <CookbookCard
+                allergies={allergies}
+                cookbook={item.cookbook}
+                variant={variant}
+                onDelete={deleteCookbook}
+              />
+            )}
+          </div>
         );
       }
 
@@ -91,7 +100,7 @@ export default function LibraryView({ variant }: { variant: RecipeViewMode }) {
         />
       );
     },
-    [variant, allergies, isFavorite, deleteRecipes, toggleFavorite, deleteCookbook]
+    [variant, allergies, isFavorite, deleteRecipes, toggleFavorite, deleteCookbook, isSelecting]
   );
 
   const emptyState =

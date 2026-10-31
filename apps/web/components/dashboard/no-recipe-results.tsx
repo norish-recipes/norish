@@ -10,6 +10,7 @@ interface NoRecipeResultsProps {
 export default function NoRecipeResults({ onClear }: NoRecipeResultsProps) {
   const t = useTranslations("recipes.empty");
   const tCommon = useTranslations("common.filters");
+
   return (
     <div className="flex flex-col items-center justify-center px-4 py-16">
       <Card className="border-border bg-surface shadow-surface w-full max-w-2xl border">
@@ -23,7 +24,7 @@ export default function NoRecipeResults({ onClear }: NoRecipeResultsProps) {
             <p className="text-muted">{t("noResultsHint")}</p>
           </div>
 
-          <Button onPress={onClear} variant="primary" className="rounded-full">
+          <Button className="rounded-full" variant="primary" onPress={onClear}>
             {tCommon("clearFilters")}
           </Button>
         </Card.Content>

@@ -51,7 +51,8 @@
     "addToCalendar": "Add to calendar",
     "deleteRecipe": "Delete recipe",
     "recipeOptions": "Recipe options",
-    "pantryCoverage": "{percent} of the ingredients at home"
+    "pantryCoverage": "{percent} of the ingredients at home",
+    "select": "Select"
   },
   "detail": {
     "viewOriginal": "View original recipe",
@@ -439,5 +440,10 @@
     "print": "Print / Save PDF",
     "continued": "continued",
     "perServing": "Per serving"
+  },
+  "selection": {
+    "toolbar": "Selected recipes",
+    "count": "{count} selected",
+    "clear": "Clear selection"
   }
 }

@@ -36,8 +36,8 @@ export default function RecipeMetadata({
             isIconOnly
             className="bg-surface text-foreground hidden h-6 w-6 min-w-0 p-0 shadow-md md:flex"
             size="sm"
-            onPress={onOptionsPress}
             variant="tertiary"
+            onPress={onOptionsPress}
           >
             <EllipsisHorizontalIcon className="h-4 w-4" />
           </Button>
