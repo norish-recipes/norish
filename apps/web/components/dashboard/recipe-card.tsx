@@ -2,6 +2,7 @@
 
 import type { MouseEvent } from "react";
 import { memo, useCallback, useMemo, useRef, useState } from "react";
+import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
 import { MiniCalendar, MiniGroceries } from "@/components/Panel/consumers";
 import OriginFlag from "@/components/recipes/origin-flag";
@@ -54,6 +55,18 @@ type RecipeCardProps = {
   /** Inside a cookbook, the card's last action takes the recipe out of it instead of deleting it. */
   onRemoveFromCookbook?: (recipeId: string) => void;
 };
+
+type ClickModifiers = Pick<MouseEvent, "button" | "metaKey" | "ctrlKey" | "shiftKey" | "altKey">;
+
+/** A plain left click; a modified or middle click is the browser's, to open the link elsewhere. */
+function isPlainClick(event: ClickModifiers) {
+  return event.button === 0 && !event.metaKey && !event.ctrlKey && !event.shiftKey && !event.altKey;
+}
+
+/** The card is a real link (#555): plain clicks stay with its handlers, and no button opens a tab. */
+function keepClicksInPage(event: MouseEvent) {
+  if (isPlainClick(event) || (event.target as Element).closest("button")) event.preventDefault();
+}
 
 type RecipeTagValue = RecipeDashboardDTO["tags"][number] | string | null | undefined;
 
@@ -144,17 +157,19 @@ function RecipeCardComponent({
   const { showRatings, showFavorites } = useHiddenItemVisibility();
 
   // Automatically prefetch recipe when card enters viewport
-  const cardRef = useRecipePrefetch(recipe.id);
+  const cardRef = useRecipePrefetch<HTMLAnchorElement>(recipe.id);
 
   const averageRating = recipe.averageRating ?? null;
+
+  const recipeHref = withOrigin(`/recipes/${recipe.id}`, pathname);
 
   const handleNavigate = useCallback(() => {
     if (recipe.id && !open && !mobileSearchOpen) {
       // Navigate immediately - skeleton shows while data loads
       // Prefetch is already happening via useRecipePrefetch hook
-      router.push(withOrigin(`/recipes/${recipe.id}`, pathname));
+      router.push(recipeHref);
     }
-  }, [router, recipe.id, open, mobileSearchOpen, pathname]);
+  }, [router, recipe.id, open, mobileSearchOpen, recipeHref]);
 
   const totalMinutes =
     recipe.totalMinutes ?? ((recipe.prepMinutes ?? 0) + (recipe.cookMinutes ?? 0) || undefined);
@@ -390,16 +405,19 @@ function RecipeCardComponent({
 
   const cardContent =
     variant === "list" ? (
-      <div
+      <Link
         ref={cardRef}
         data-recipe-card
-        className={`relative h-[128px] w-full overflow-hidden transition-all duration-300 ${open ? "rounded-none opacity-70" : "rounded-2xl"} `}
-        role="button"
+        className={`relative block h-[128px] w-full overflow-hidden transition-all duration-300 ${open ? "rounded-none opacity-70" : "rounded-2xl"} `}
+        href={recipeHref}
+        prefetch={false}
         tabIndex={open ? 0 : -1}
-        onClick={() => {
+        onClick={(e) => {
+          if (!isPlainClick(e)) return;
           if (open) rowRef.current?.closeRow();
           else handleNavigate();
         }}
+        onClickCapture={keepClicksInPage}
         onKeyDown={(e) => {
           if (e.key === "Enter" || e.key === " ") {
             e.preventDefault();
@@ -411,7 +429,12 @@ function RecipeCardComponent({
         <div className="group/row relative h-full w-full">
           <Card className="border-border bg-surface relative h-full w-full overflow-hidden rounded-2xl border p-0">
             <div className="flex h-full min-w-0 items-stretch">
-              <div role="presentation" onClick={stopParentActivation}>
+              <div
+                role="presentation"
+                onClick={(e) => {
+                  if (isPlainClick(e)) e.stopPropagation();
+                }}
+              >
                 <DoubleTapContainer
                   className="bg-surface-secondary relative h-full w-[112px] shrink-0 cursor-pointer overflow-hidden"
                   disabled={open || mobileSearchOpen}
@@ -460,17 +483,19 @@ function RecipeCardComponent({
             </div>
           </Card>
         </div>
-      </div>
+      </Link>
     ) : (
-      <div
+      <Link
         ref={cardRef}
         data-recipe-card
-        className={`relative h-[286px] w-full overflow-hidden transition-all duration-300 sm:h-[378px] ${open ? "rounded-none opacity-70" : "rounded-3xl"} `}
-        role="button"
+        className={`relative block h-[286px] w-full overflow-hidden transition-all duration-300 sm:h-[378px] ${open ? "rounded-none opacity-70" : "rounded-3xl"} `}
+        href={recipeHref}
+        prefetch={false}
         tabIndex={open ? 0 : -1}
         onClick={() => {
           if (open) rowRef.current?.closeRow();
         }}
+        onClickCapture={keepClicksInPage}
         onKeyDown={(e) => {
           if ((e.key === "Enter" || e.key === " ") && open) {
             e.preventDefault();
@@ -510,7 +535,9 @@ function RecipeCardComponent({
 
             <Card.Content
               className="flex h-[124px] cursor-pointer flex-col overflow-hidden px-3 pt-2.5 pb-3 sm:h-[140px] sm:px-4 sm:pt-3"
-              onClick={handleNavigate}
+              onClick={(e) => {
+                if (isPlainClick(e)) handleNavigate();
+              }}
             >
               <h3
                 className={`text-foreground line-clamp-2 shrink-0 text-sm font-semibold sm:text-base ${open ? "" : "group-hover/row:underline"} `}
@@ -534,7 +561,7 @@ function RecipeCardComponent({
             </Card.Content>
           </Card>
         </div>
-      </div>
+      </Link>
     );
 
   return (

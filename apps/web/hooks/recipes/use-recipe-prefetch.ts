@@ -10,10 +10,13 @@ import { useQueryClient } from "@tanstack/react-query";
  *
  * Can be used in recipe cards, calendar items, or any component that links to recipes.
  */
-export function useRecipePrefetch(recipeId: string, enabled = true) {
+export function useRecipePrefetch<T extends HTMLElement = HTMLDivElement>(
+  recipeId: string,
+  enabled = true
+) {
   const trpc = useTRPC();
   const queryClient = useQueryClient();
-  const elementRef = useRef<HTMLDivElement>(null);
+  const elementRef = useRef<T>(null);
   const hasTriggeredRef = useRef(false);
 
   useEffect(() => {
