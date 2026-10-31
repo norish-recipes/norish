@@ -44,6 +44,7 @@ const useTRPC = (() => ({
     onImported: procedure("onImported"),
     onUpdated: procedure("onUpdated"),
     onDeleted: procedure("onDeleted"),
+    onDeleteKept: procedure("onDeleteKept"),
     onConverted: procedure("onConverted"),
     onFailed: procedure("onFailed"),
     onRecipeBatchCreated: procedure("onRecipeBatchCreated"),
@@ -137,6 +138,7 @@ describe("useRecipesSubscription", () => {
         "onConverted",
         "onCreated",
         "onDeleted",
+        "onDeleteKept",
         "onFailed",
         "onImportStarted",
         "onImported",
@@ -179,7 +181,7 @@ describe("useRecipesSubscription", () => {
   });
 
   it("removes a deleted recipe from the list and invalidates its detail query", () => {
-    emit("onDeleted", { id: "recipe-1" });
+    emit("onDeleted", { ids: ["recipe-1"] });
 
     expect(queryClient.getQueryData(LIST_KEY)).toEqual(
       expect.objectContaining({ pages: [expect.objectContaining({ recipes: [], total: 0 })] })
