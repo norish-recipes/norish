@@ -76,6 +76,12 @@ export function createRecipeSubscriptionToasts(
           : (readToastMessage(payload) ?? adapter.translate("recipes.toasts.failedDescription")),
       });
     },
+    onDeleteKept: ({ ids }) => {
+      adapter.show({
+        severity: "warning",
+        title: adapter.translate("recipes.toasts.deleteKept", { count: ids.length }),
+      });
+    },
   };
 }
 

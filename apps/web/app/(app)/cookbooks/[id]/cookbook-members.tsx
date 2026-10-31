@@ -33,7 +33,7 @@ export default function CookbookMembers({
 }) {
   const t = useTranslations("recipes.cookbooks");
   const { filters, isHydrated } = useRecipesFiltersContext();
-  const { isFavorite, toggleFavorite, deleteRecipe, allergies } = useRecipesContext();
+  const { isFavorite, toggleFavorite, deleteRecipes, allergies } = useRecipesContext();
   const { setMembership } = useCookbooksMutations();
 
   const queryFilters = useMemo(() => toRecipesQueryFilters(filters), [filters]);
@@ -71,13 +71,13 @@ export default function CookbookMembers({
           isFavorite={isFavorite(item.recipe.id)}
           recipe={item.recipe}
           variant={variant}
-          onDelete={deleteRecipe}
+          onDelete={deleteRecipes}
           onRemoveFromCookbook={removeFromCookbook}
           onToggleFavorite={toggleFavorite}
         />
       );
     },
-    [allergies, isFavorite, deleteRecipe, toggleFavorite, variant, removeFromCookbook]
+    [allergies, isFavorite, deleteRecipes, toggleFavorite, variant, removeFromCookbook]
   );
 
   // The contract's own predicate, so "no matches" here means what it means on

@@ -719,7 +719,7 @@ test.afterAll(async () => {
   for (const id of created.recipes) {
     const recipe = await readRecipe(stack.baseURL, stack.ownerCookies, id);
 
-    if (recipe) await callApi("recipes.delete", { id, version: recipe.version });
+    if (recipe) await callApi("recipes.delete", { recipes: [{ id, version: recipe.version }] });
   }
   // Store and recipe deletes land after their mutations answer.
   await expect

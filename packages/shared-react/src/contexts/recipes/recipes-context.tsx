@@ -44,7 +44,7 @@ export type SharedRecipesContextValue = {
   importRecipeWithAI: (url: string) => void;
   createRecipe: (input: FullRecipeInsertDTO) => void;
   updateRecipe: (id: string, input: FullRecipeUpdateDTO) => void;
-  deleteRecipe: (id: string, version: number) => void;
+  deleteRecipes: RecipesMutationsResult["deleteRecipes"];
   invalidate: () => void;
   openRecipe: (id: string) => void;
 };
@@ -65,7 +65,7 @@ type CreateRecipesContextOptions = {
   useRecipesQuery: (filters: RecipeFilters, options?: { enabled?: boolean }) => RecipesQueryResult;
   useRecipesMutations: () => Pick<
     RecipesMutationsResult,
-    "importRecipe" | "importRecipeWithAI" | "createRecipe" | "updateRecipe" | "deleteRecipe"
+    "importRecipe" | "importRecipeWithAI" | "createRecipe" | "updateRecipe" | "deleteRecipes"
   >;
   useFavoritesQuery: () => Pick<FavoritesQueryResult, "favoriteIds" | "isFavorite" | "isLoading">;
   useFavoritesMutation: () => Pick<FavoritesMutationResult, "toggleFavorite">;
@@ -130,7 +130,7 @@ export function createRecipesContext({
       importRecipeWithAI: importRecipeWithAIMutation,
       createRecipe,
       updateRecipe,
-      deleteRecipe,
+      deleteRecipes,
     } = useRecipesMutations();
     const { favoriteIds, isFavorite, isLoading: isFavoritesLoading } = useFavoritesQuery();
     const { toggleFavorite } = useFavoritesMutation();
@@ -214,7 +214,7 @@ export function createRecipesContext({
         importRecipeWithAI,
         createRecipe: wrappedCreateRecipe,
         updateRecipe: wrappedUpdateRecipe,
-        deleteRecipe,
+        deleteRecipes,
         invalidate,
         openRecipe,
       }),
@@ -240,7 +240,7 @@ export function createRecipesContext({
         importRecipeWithAI,
         wrappedCreateRecipe,
         wrappedUpdateRecipe,
-        deleteRecipe,
+        deleteRecipes,
         invalidate,
         openRecipe,
       ]

@@ -1,17 +1,19 @@
-export type CompatibleMessageTranslator = (messageId: string) => string;
+type MessageValues = Record<string, string | number>;
 
-type ScopedMessageTranslator = (messageKey: string) => string;
+export type CompatibleMessageTranslator = (messageId: string, values?: MessageValues) => string;
+
+type ScopedMessageTranslator = (messageKey: string, values?: MessageValues) => string;
 
 export function createIntlMessageTranslator(
-  formatMessage: (descriptor: { id: string }) => string
+  formatMessage: (descriptor: { id: string }, values?: MessageValues) => string
 ): CompatibleMessageTranslator {
-  return (messageId) => formatMessage({ id: messageId });
+  return (messageId, values) => formatMessage({ id: messageId }, values);
 }
 
 export function createScopedMessageTranslator(
   translators: Record<string, ScopedMessageTranslator>
 ): CompatibleMessageTranslator {
-  return (messageId) => {
+  return (messageId, values) => {
     const [scope, ...rest] = messageId.split(".");
 
     if (!scope || rest.length === 0) {
@@ -24,6 +26,6 @@ export function createScopedMessageTranslator(
       return messageId;
     }
 
-    return translate(rest.join("."));
+    return translate(rest.join("."), values);
   };
 }

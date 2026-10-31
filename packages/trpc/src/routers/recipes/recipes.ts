@@ -8,10 +8,11 @@ import type { RecipeEnrichmentSkipReason } from "@norish/shared/lib/recipe-enric
 import { canAccessResource, isAIEnabled as checkAIEnabled } from "@norish/auth/permissions";
 import {
   dashboardRecipe,
-  deleteRecipeById,
+  deleteRecipesByIds,
   FullRecipeInsertSchema,
   getRandomRecipeCandidates,
   getRecipeFull,
+  getRecipeOwnerIds,
   listRecipes,
   RecipeConvertInputSchema,
   RecipeDeleteInputSchema,
@@ -332,38 +333,66 @@ const updateCategories = authedProcedure
     return { success: true };
   });
 
+/**
+ * Delete recipes, each on its own: one the reader may not delete is skipped,
+ * one edited since the reader saw it is kept, and one already gone counts as
+ * deleted, so a Replay after others changed the data still succeeds.
+ */
 const deleteProcedure = authedProcedure
   .input(RecipeDeleteInputSchema)
-  .mutation(({ ctx, input }) => {
-    const { id, version } = input;
+  .mutation(async ({ ctx, input }) => {
+    log.info({ userId: ctx.user.id, count: input.recipes.length }, "Deleting recipes");
 
-    log.info({ userId: ctx.user.id, recipeId: id }, "Deleting recipe");
+    const owners = await getRecipeOwnerIds(input.recipes.map((recipe) => recipe.id));
+    const allowedByOwner = new Map<string, Promise<boolean>>();
+    const mayDelete = (ownerId: string) => {
+      let allowed = allowedByOwner.get(ownerId);
 
-    assertRecipeAccess(ctx, id, "delete")
-      .then(async () => {
-        const result = await deleteRecipeById(id, version);
-
-        if (result.stale) {
-          log.info({ userId: ctx.user.id, recipeId: id, version }, "Ignoring stale recipe delete");
-
-          return;
-        }
-
-        // Only once the row is gone: a stale delete leaves a recipe that still needs them.
-        await deleteRecipeImagesDir(id);
-
-        log.info({ userId: ctx.user.id, recipeId: id }, "Recipe deleted");
-        const policy = await getRecipePermissionPolicy();
-
-        void recipes.publish(
-          "deleted",
-          { id },
-          { viewPolicy: policy.view, userId: ctx.user.id, householdKey: ctx.householdKey }
+      if (!allowed) {
+        allowed = canAccessResource(
+          "delete",
+          ctx.user.id,
+          ownerId,
+          ctx.householdUserIds,
+          ctx.isServerAdmin
         );
-      })
-      .catch((err) => handleRecipeError(ctx, err, "delete recipe", { recipeId: id }));
+        allowedByOwner.set(ownerId, allowed);
+      }
 
-    return { success: true };
+      return allowed;
+    };
+    const permitted: typeof input.recipes = [];
+
+    for (const recipe of input.recipes) {
+      // Missing or Orphaned (no owner): anyone may delete it.
+      const ownerId = owners.get(recipe.id);
+
+      if (ownerId && !(await mayDelete(ownerId))) continue;
+      permitted.push(recipe);
+    }
+
+    const { deletedIds, staleIds } = await deleteRecipesByIds(permitted);
+
+    // Only once the rows are gone: a kept recipe still needs its images.
+    await Promise.all(deletedIds.map((id) => deleteRecipeImagesDir(id)));
+
+    const policy = await getRecipePermissionPolicy();
+
+    if (deletedIds.length > 0) {
+      log.info({ userId: ctx.user.id, count: deletedIds.length }, "Recipes deleted");
+      void recipes.publish(
+        "deleted",
+        { ids: deletedIds },
+        { viewPolicy: policy.view, userId: ctx.user.id, householdKey: ctx.householdKey }
+      );
+    }
+
+    if (staleIds.length > 0) {
+      log.info({ userId: ctx.user.id, recipeIds: staleIds }, "Kept recipes edited elsewhere");
+      void recipes.publish("deleteKept", { ids: staleIds }, { userId: ctx.user.id });
+    }
+
+    return { deletedIds, staleIds };
   });
 
 export const importFromUrlProcedure = authedProcedure

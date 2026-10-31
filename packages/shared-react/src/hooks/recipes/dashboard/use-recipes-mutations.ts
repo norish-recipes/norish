@@ -34,8 +34,7 @@ type CreateMutationContext = {
 };
 
 type DeleteMutationContext = {
-  detailQueryKey: QueryKey;
-  previousDetail: FullRecipeDTO | null | undefined;
+  previousDetails: [QueryKey, FullRecipeDTO | null | undefined][];
   previousRecipeLists: [QueryKey, InfiniteRecipeData | undefined][];
 };
 
@@ -49,19 +48,20 @@ function createOptimisticPendingRecipeId(): string {
   return `${OPTIMISTIC_PENDING_RECIPE_PREFIX}${Date.now()}-${Math.random().toString(36).slice(2, 10)}`;
 }
 
-function removeRecipeFromLists(
+export function removeRecipesFromLists(
   previousData: InfiniteRecipeData | undefined,
-  recipeId: string
+  recipeIds: ReadonlySet<string>
 ): InfiniteRecipeData | undefined {
   if (!previousData?.pages) {
     return previousData;
   }
 
-  const recipeExists = previousData.pages.some((page) =>
-    page.recipes.some((recipe) => recipe.id === recipeId)
+  const removed = previousData.pages.reduce(
+    (count, page) => count + page.recipes.filter((recipe) => recipeIds.has(recipe.id)).length,
+    0
   );
 
-  if (!recipeExists) {
+  if (removed === 0) {
     return previousData;
   }
 
@@ -69,8 +69,8 @@ function removeRecipeFromLists(
     ...previousData,
     pages: previousData.pages.map((page) => ({
       ...page,
-      recipes: page.recipes.filter((recipe) => recipe.id !== recipeId),
-      total: Math.max(page.total - 1, 0),
+      recipes: page.recipes.filter((recipe) => !recipeIds.has(recipe.id)),
+      total: Math.max(page.total - removed, 0),
     })),
   };
 }
@@ -304,7 +304,8 @@ export type RecipesMutationsResult = {
   importRecipeFromPasteWithAI: (text: string) => void;
   createRecipe: (input: FullRecipeInsertDTO) => void;
   updateRecipe: (id: string, input: FullRecipeUpdateDTO) => void;
-  deleteRecipe: (id: string, version: number) => void;
+  /** Delete recipes, each at the version the reader saw; one call however many. */
+  deleteRecipes: (recipes: Array<{ id: string; version: number }>) => void;
   convertMeasurements: (recipeId: string, system: MeasurementSystem, version: number) => void;
 };
 
@@ -526,27 +527,33 @@ export function createUseRecipesMutations(
     const { mutate: mutateUpdate } = updateMutation;
     const deleteMutation = useMutation(
       trpc.recipes.delete.mutationOptions({
-        onMutate: async ({ id }) => {
-          const detailQueryKey = trpc.recipes.get.queryKey({ id });
+        onMutate: async ({ recipes }) => {
+          const ids = new Set(recipes.map((recipe) => recipe.id));
+          const detailQueryKeys = [...ids].map((id) => trpc.recipes.get.queryKey({ id }));
 
           await Promise.all([
             queryClient.cancelQueries({ queryKey: recipesPath }),
-            queryClient.cancelQueries({ queryKey: detailQueryKey }),
+            ...detailQueryKeys.map((queryKey) => queryClient.cancelQueries({ queryKey })),
           ]);
 
           const previousRecipeLists = queryClient.getQueriesData<InfiniteRecipeData>({
             queryKey: recipesPath,
           });
-          const previousDetail = queryClient.getQueryData<FullRecipeDTO | null>(detailQueryKey);
+          const previousDetails = detailQueryKeys.map(
+            (queryKey) =>
+              [queryKey, queryClient.getQueryData<FullRecipeDTO | null>(queryKey)] as [
+                QueryKey,
+                FullRecipeDTO | null | undefined,
+              ]
+          );
 
-          setAllRecipesData((previousData) => removeRecipeFromLists(previousData, id));
-          queryClient.setQueryData<FullRecipeDTO | null>(detailQueryKey, null);
+          setAllRecipesData((previousData) => removeRecipesFromLists(previousData, ids));
 
-          return {
-            detailQueryKey,
-            previousDetail,
-            previousRecipeLists,
-          };
+          for (const queryKey of detailQueryKeys) {
+            queryClient.setQueryData<FullRecipeDTO | null>(queryKey, null);
+          }
+
+          return { previousDetails, previousRecipeLists };
         },
         onError: (error, _variables, context) => {
           onError?.(error, "delete");
@@ -555,11 +562,11 @@ export function createUseRecipesMutations(
             return;
           }
 
-          restoreDeletedRecipe(context);
+          restoreDeletedRecipes(context);
           invalidate();
 
-          if (context?.detailQueryKey) {
-            queryClient.invalidateQueries({ queryKey: context.detailQueryKey });
+          for (const [queryKey] of context?.previousDetails ?? []) {
+            queryClient.invalidateQueries({ queryKey });
           }
         },
       })
@@ -569,16 +576,16 @@ export function createUseRecipesMutations(
       trpc.recipes.convertMeasurements.mutationOptions()
     );
 
-    const restoreDeletedRecipe = (context: DeleteMutationContext | undefined): void => {
+    const restoreDeletedRecipes = (context: DeleteMutationContext | undefined): void => {
       if (!context) {
         return;
       }
 
       restoreRecipeLists(queryClient, context.previousRecipeLists);
-      queryClient.setQueryData<FullRecipeDTO | null | undefined>(
-        context.detailQueryKey,
-        context.previousDetail
-      );
+
+      for (const [queryKey, detail] of context.previousDetails) {
+        queryClient.setQueryData<FullRecipeDTO | null | undefined>(queryKey, detail);
+      }
     };
 
     const handleImportError = (
@@ -654,8 +661,8 @@ export function createUseRecipesMutations(
       );
     };
 
-    const deleteRecipe = (id: string, version: number): void => {
-      mutateDelete({ id, version });
+    const deleteRecipes = (recipes: Array<{ id: string; version: number }>): void => {
+      if (recipes.length > 0) mutateDelete({ recipes });
     };
 
     const convertMeasurements = (
@@ -705,7 +712,7 @@ export function createUseRecipesMutations(
       importRecipeFromPasteWithAI,
       createRecipe,
       updateRecipe,
-      deleteRecipe,
+      deleteRecipes,
       convertMeasurements,
     };
   };

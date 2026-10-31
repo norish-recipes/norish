@@ -50,7 +50,7 @@ type RecipeCardProps = {
   allergies: string[];
   variant?: "grid" | "list";
   onToggleFavorite: (recipeId: string) => void;
-  onDelete: (recipeId: string, version: number) => void;
+  onDelete: (recipes: Array<{ id: string; version: number }>) => void;
   /** Inside a cookbook, the card's last action takes the recipe out of it instead of deleting it. */
   onRemoveFromCookbook?: (recipeId: string) => void;
 };
@@ -209,7 +209,7 @@ function RecipeCardComponent({
     onDeleteModalClose();
     // Trigger the delete animation, then delete the recipe
     rowRef.current?.triggerDeleteAnimation(() => {
-      onDelete(recipe.id, recipe.version);
+      onDelete([{ id: recipe.id, version: recipe.version }]);
     });
   }, [onDelete, recipe.id, recipe.version, onDeleteModalClose]);
 

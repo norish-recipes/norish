@@ -69,7 +69,7 @@ export default function ActionsMenu({ id, buttonClassName, onPrint }: Props) {
   const router = useRouter();
 
   const { canEditRecipe, canDeleteRecipe, isAIEnabled } = usePermissionsContext();
-  const { deleteRecipe } = useRecipesContext();
+  const { deleteRecipes } = useRecipesContext();
   const { recipe, enrichment } = useRecipeContextRequired();
 
   const { allergies } = useActiveAllergies();
@@ -87,9 +87,9 @@ export default function ActionsMenu({ id, buttonClassName, onPrint }: Props) {
 
   const handleDeleteConfirm = React.useCallback(() => {
     onDeleteModalClose();
-    deleteRecipe(id, recipe.version);
+    deleteRecipes([{ id, version: recipe.version }]);
     router.push("/");
-  }, [deleteRecipe, id, recipe.version, router, onDeleteModalClose]);
+  }, [deleteRecipes, id, recipe.version, router, onDeleteModalClose]);
 
   const menuItems = useMemo(() => {
     const items: MenuItem[] = [

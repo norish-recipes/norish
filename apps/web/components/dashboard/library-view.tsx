@@ -35,7 +35,7 @@ export default function LibraryView({ variant }: { variant: RecipeViewMode }) {
     filterKey,
     isFavorite,
     toggleFavorite,
-    deleteRecipe,
+    deleteRecipes,
     allergies,
   } = useRecipesContext();
   const { deleteCookbook } = useCookbooksMutations();
@@ -86,12 +86,12 @@ export default function LibraryView({ variant }: { variant: RecipeViewMode }) {
           isFavorite={isFavorite(item.recipe.id)}
           recipe={item.recipe}
           variant={variant}
-          onDelete={deleteRecipe}
+          onDelete={deleteRecipes}
           onToggleFavorite={toggleFavorite}
         />
       );
     },
-    [variant, allergies, isFavorite, deleteRecipe, toggleFavorite, deleteCookbook]
+    [variant, allergies, isFavorite, deleteRecipes, toggleFavorite, deleteCookbook]
   );
 
   const emptyState =
