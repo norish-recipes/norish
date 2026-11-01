@@ -84,6 +84,7 @@ export default function LibraryGrid({
   const viewMode = variant;
   const containerRef = useRef<HTMLDivElement>(null);
   const hasTriggeredLoadMoreRef = useRef(false);
+  const loadedCountRef = useRef(items.length);
 
   // Items per virtual row, from the window width. The list keeps its rows but
   // lays them side by side on desktops.
@@ -147,6 +148,14 @@ export default function LibraryGrid({
 
   // Infinite scroll: trigger loadMore when near the end
   useEffect(() => {
+    // A page has arrived: ask again if the end is still near. With several items to a row a
+    // page can add fewer rows than the overscan and threshold cover, so the reader would never
+    // leave the near-end range that rearms the trigger below.
+    if (items.length !== loadedCountRef.current) {
+      loadedCountRef.current = items.length;
+      hasTriggeredLoadMoreRef.current = false;
+    }
+
     if (virtualRows.length === 0) return;
 
     const lastRow = virtualRows[virtualRows.length - 1];
@@ -164,7 +173,7 @@ export default function LibraryGrid({
     if (!isNearEnd) {
       hasTriggeredLoadMoreRef.current = false;
     }
-  }, [virtualRows, rowCount, loadMoreRowThreshold, isFetchingMore, loadMore]);
+  }, [virtualRows, rowCount, loadMoreRowThreshold, isFetchingMore, loadMore, items.length]);
 
   // Show skeleton loading state logic: the first load shows it from the start
   // (seeded above), a finished load hides it at once, a reload only after a beat.

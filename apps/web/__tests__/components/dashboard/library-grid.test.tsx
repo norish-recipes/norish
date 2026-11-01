@@ -97,6 +97,41 @@ describe("LibraryGrid", () => {
   });
 });
 
+describe("LibraryGrid infinite scroll", () => {
+  function pending(count: number): LibraryGridItem[] {
+    return Array.from({ length: count }, (_, i) => ({ kind: "pending", id: `page-${i}` }));
+  }
+
+  it("asks for the next page again when a page lands and the end is still near", () => {
+    device.kind = "desktop";
+    setViewportWidth(1440);
+    const loadMore = vi.fn();
+    const grid = (items: LibraryGridItem[], isFetchingMore: boolean) => (
+      <LibraryGrid
+        emptyState={null}
+        isFetchingMore={isFetchingMore}
+        isLoading={false}
+        items={items}
+        loadMore={loadMore}
+        renderItem={(item) => <span>{item.id}</span>}
+        scrollKey={`library-grid-test-${scrollKey++}`}
+        variant="list"
+      />
+    );
+
+    // Three to a row: thirty items are ten rows, all within the overscan, so the end is near.
+    const { rerender } = render(grid(pending(30), false));
+
+    expect(loadMore).toHaveBeenCalledTimes(1);
+
+    rerender(grid(pending(30), true));
+    // The next page adds only five rows, so the last drawn row stays within the threshold.
+    rerender(grid(pending(45), false));
+
+    expect(loadMore).toHaveBeenCalledTimes(2);
+  });
+});
+
 describe("RecipeGridSkeleton", () => {
   it.each([
     ["list", ["grid-cols-1", "lg:grid-cols-2", "xl:grid-cols-3"]],
