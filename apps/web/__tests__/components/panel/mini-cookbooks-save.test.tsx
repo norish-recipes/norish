@@ -95,7 +95,7 @@ vi.mock("@heroui/react", () => {
 });
 
 function renderPanel() {
-  return render(<MiniCookbooks open recipeId="recipe-1" onOpenChange={vi.fn()} />);
+  return render(<MiniCookbooks open recipeIds={["recipe-1"]} onOpenChange={vi.fn()} />);
 }
 
 describe("MiniCookbooks", () => {

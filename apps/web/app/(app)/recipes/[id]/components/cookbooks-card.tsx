@@ -70,7 +70,7 @@ export default function CookbooksCard() {
         </Card.Content>
       </Card>
 
-      <MiniCookbooks open={panelOpen} recipeId={recipe.id} onOpenChange={setPanelOpen} />
+      <MiniCookbooks open={panelOpen} recipeIds={[recipe.id]} onOpenChange={setPanelOpen} />
     </>
   );
 }

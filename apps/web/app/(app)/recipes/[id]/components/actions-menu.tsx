@@ -323,7 +323,7 @@ export default function ActionsMenu({ id, buttonClassName, onPrint }: Props) {
 
       <MiniCalendar open={openCalendar} recipeId={id} onOpenChange={setOpenCalendar} />
 
-      <MiniCookbooks open={openCookbooks} recipeId={id} onOpenChange={setOpenCookbooks} />
+      <MiniCookbooks open={openCookbooks} recipeIds={[id]} onOpenChange={setOpenCookbooks} />
 
       <RecipeSharePanel open={openSharePanel} onOpenChange={setOpenSharePanel} />
 

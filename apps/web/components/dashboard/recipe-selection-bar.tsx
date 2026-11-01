@@ -1,16 +1,19 @@
 "use client";
 
 import { useState } from "react";
-import { SelectionCookbooksPanel } from "@/components/cookbooks/selection-cookbooks-panel";
+import { useRouter } from "next/navigation";
+import { MiniCookbooks } from "@/components/Panel/consumers";
 import { DeleteRecipeModal } from "@/components/shared/delete-recipe-modal";
 import { ActionBar, actionBarButtonClassName } from "@/components/ui/action-bar";
 import { usePermissionsContext } from "@/context/permissions-context";
 import { useRecipeSelection } from "@/context/recipe-selection-context";
 import { useRecipesContext } from "@/context/recipes-context";
 import { useCookbooksMutations } from "@/hooks/cookbooks";
+import { showActionToast } from "@/lib/ui/action-toast";
 import { BookOpenIcon, MinusCircleIcon, TrashIcon, XMarkIcon } from "@heroicons/react/16/solid";
 import { Button } from "@heroui/react";
 import { useTranslations } from "next-intl";
+import { twMerge } from "tailwind-merge";
 
 import type { CookbookSummaryDTO } from "@norish/shared/contracts";
 
@@ -28,6 +31,8 @@ export default function RecipeSelectionBar({
   const selection = useRecipeSelection();
   const t = useTranslations("recipes.selection");
   const tActions = useTranslations("common.actions");
+  const tToasts = useTranslations("recipes.toasts");
+  const router = useRouter();
   const { canDeleteRecipe, canEditRecipe } = usePermissionsContext();
   const { deleteRecipes } = useRecipesContext();
   const { setMembership } = useCookbooksMutations();
@@ -69,6 +74,21 @@ export default function RecipeSelectionBar({
     clear();
   };
 
+  const announceFiled = (filed: Array<{ id: string; title: string }>, filedCount: number) => {
+    const first = filed[0];
+
+    if (!first) return;
+    showActionToast(
+      filed.length === 1
+        ? t("filedInto", { count: filedCount, title: first.title })
+        : t("filedIntoMany", { count: filedCount, cookbooks: filed.length }),
+      {
+        variant: "success",
+        action: { label: tToasts("open"), onPress: () => router.push(`/cookbooks/${first.id}`) },
+      }
+    );
+  };
+
   return (
     <>
       <ActionBar aria-label={t("toolbar")} isOpen={isSelecting}>
@@ -87,7 +107,7 @@ export default function RecipeSelectionBar({
           </Button>
           {canRemove && (
             <Button
-              className={actionBarButtonClassName}
+              className={twMerge(actionBarButtonClassName, "text-warning")}
               size="sm"
               variant="ghost"
               onPress={removeFromCookbook}
@@ -97,7 +117,7 @@ export default function RecipeSelectionBar({
             </Button>
           )}
           <Button
-            className={actionBarButtonClassName}
+            className={twMerge(actionBarButtonClassName, "text-danger")}
             isDisabled={deletable.length === 0}
             size="sm"
             variant="ghost"
@@ -129,12 +149,15 @@ export default function RecipeSelectionBar({
         onConfirm={confirmDelete}
       />
 
-      <SelectionCookbooksPanel
+      <MiniCookbooks
         excludeCookbookId={cookbook?.id}
         open={cookbooksOpen}
         recipeIds={recipeIds}
-        onFiled={clear}
         onOpenChange={setCookbooksOpen}
+        onSaved={(filed) => {
+          clear();
+          announceFiled(filed, recipeIds.length);
+        }}
       />
     </>
   );
