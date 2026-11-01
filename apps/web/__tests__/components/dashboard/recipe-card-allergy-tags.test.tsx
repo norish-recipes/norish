@@ -162,13 +162,12 @@ describe("RecipeCard list view allergy tags", () => {
     const chips = visibleChips();
     const texts = chips.map((c) => c.textContent);
 
-    // Allergen leads even though it is stored last; "dinner" overflows into +1.
-    expect(texts).toEqual(["Lactose", "pasta", "+1"]);
+    // Allergen leads even though it is stored last; the rest overflow into +2.
+    expect(texts).toEqual(["Lactose", "+2"]);
     expect(chips[0]).toHaveAttribute("data-color", "warning");
     expect(chips[0]).toHaveAttribute("data-variant", "primary");
     expect(chips[1]).toHaveAttribute("data-color", "");
     expect(chips[1]).toHaveAttribute("data-variant", "tertiary");
-    expect(chips[2]).toHaveAttribute("data-color", "");
   });
 
   it("keeps the overflow chip neutral when no allergen is hidden", () => {
@@ -176,7 +175,7 @@ describe("RecipeCard list view allergy tags", () => {
 
     const chips = visibleChips();
 
-    expect(chips.map((c) => c.textContent)).toEqual(["pasta", "dinner", "+1"]);
+    expect(chips.map((c) => c.textContent)).toEqual(["pasta", "+2"]);
 
     for (const chip of chips) {
       expect(chip).toHaveAttribute("data-color", "");
@@ -189,9 +188,9 @@ describe("RecipeCard list view allergy tags", () => {
 
     const chips = visibleChips();
 
-    expect(chips.map((c) => c.textContent)).toEqual(["Lactose", "Noten", "+2"]);
-    expect(chips[2]).toHaveAttribute("data-color", "warning");
-    expect(chips[2]).toHaveAttribute("data-variant", "primary");
+    expect(chips.map((c) => c.textContent)).toEqual(["Lactose", "+3"]);
+    expect(chips[1]).toHaveAttribute("data-color", "warning");
+    expect(chips[1]).toHaveAttribute("data-variant", "primary");
 
     // The tooltip lists every tag, allergens first and marked.
     const tooltipChips = within(tagTooltip()).getAllByTestId("chip");

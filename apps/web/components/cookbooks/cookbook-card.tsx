@@ -187,7 +187,8 @@ function CookbookCardComponent({
     </div>
   );
 
-  const listChipClassName = "rounded-full px-2 text-[11px]";
+  // Narrower than on the cover, so a row's facts and chips always fit two lines.
+  const listChipClassName = "max-w-[6rem] rounded-full px-2 text-[11px]";
 
   const metadataChips = (
     <div
@@ -197,6 +198,8 @@ function CookbookCardComponent({
       <CookbookMetadata
         allergens={allergens}
         chipClassName={listChipClassName}
+        // Each fact wraps on its own, so a narrow row never cuts one off.
+        factsClassName="contents"
         memberCount={cookbook.memberCount}
         servings={servings}
         timeLabel={timeLabel}
@@ -278,20 +281,23 @@ function CookbookCardComponent({
                 />
               </div>
 
-              <Card.Content className="relative flex h-full min-w-0 flex-1 flex-col justify-center py-3 pr-4 pl-4 md:pr-12">
-                <h3
-                  className={`text-foreground truncate text-base leading-5 font-semibold ${rowOpen ? "" : "group-hover/row:underline"}`}
-                  title={cookbook.title}
-                >
-                  {kindMark}
-                  {cookbook.title}
-                </h3>
-                {description && (
-                  <p className="text-muted mt-1 truncate text-sm" title={description}>
-                    {description}
-                  </p>
-                )}
-                <div className="mt-3">{metadataChips}</div>
+              <Card.Content className="relative flex h-full min-w-0 flex-1 flex-col justify-between py-3 pr-4 pl-4 md:pr-12">
+                {/* Two lines of title, or one plus the description, as on a recipe row. */}
+                <div className="max-h-11 min-w-0 overflow-hidden">
+                  <h3
+                    className={`text-foreground line-clamp-2 text-base leading-5 font-semibold break-words ${rowOpen ? "" : "group-hover/row:underline"}`}
+                    title={cookbook.title}
+                  >
+                    {kindMark}
+                    {cookbook.title}
+                  </h3>
+                  {description && (
+                    <p className="text-muted mt-1 truncate text-sm" title={description}>
+                      {description}
+                    </p>
+                  )}
+                </div>
+                <div className="mt-2">{metadataChips}</div>
                 <div className="absolute top-1/2 right-3 -translate-y-1/2">{optionsButton}</div>
               </Card.Content>
             </div>
@@ -330,7 +336,10 @@ function CookbookCardComponent({
               {coverMetadata}
               {allergens.length > 0 && (
                 <div className="absolute inset-x-0 bottom-0 z-30 flex flex-wrap gap-2 overflow-hidden p-2">
-                  <CookbookAllergenChips allergens={allergens} chipClassName="shadow-md" />
+                  <CookbookAllergenChips
+                    allergens={allergens}
+                    chipClassName="max-w-[8rem] shadow-md"
+                  />
                 </div>
               )}
             </div>

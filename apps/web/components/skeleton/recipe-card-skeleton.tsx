@@ -13,10 +13,12 @@ function RecipeCardSkeletonComponent({ variant = "grid" }: RecipeCardSkeletonPro
       <Card data-recipe-card className="h-[128px] w-full gap-0 overflow-hidden rounded-2xl p-0">
         <div className="flex h-full min-w-0 items-stretch">
           <Skeleton className="h-full w-[112px] shrink-0 rounded-none" />
-          <Card.Content className="min-w-0 flex-1 px-4 py-3">
-            <Skeleton className="h-4 w-2/3 rounded" />
-            <Skeleton className="mt-3 h-3 w-full rounded" />
-            <div className="mt-4 flex gap-2">
+          <Card.Content className="flex min-w-0 flex-1 flex-col justify-between px-4 py-3">
+            <div>
+              <Skeleton className="h-4 w-2/3 rounded" />
+              <Skeleton className="mt-3 h-3 w-full rounded" />
+            </div>
+            <div className="flex gap-2">
               <Skeleton className="h-6 w-16 rounded-full" />
               <Skeleton className="h-6 w-14 rounded-full" />
               <Skeleton className="h-6 w-20 rounded-full" />

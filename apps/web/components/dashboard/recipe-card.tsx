@@ -162,9 +162,10 @@ function RecipeCardComponent({
 
   const servings = recipe.servings;
   const allergySet = useMemo(() => new Set(allergies.map((a) => a.toLowerCase())), [allergies]);
-  // Allergen tags always sort ahead of the rest, so the two visible list-view
-  // chips (and the tooltip behind "+N") surface the warning instead of hiding
-  // it. The grid overlay applies the same priority inside RecipeTags.
+  // Allergen tags always sort ahead of the rest, so the visible list-view chip
+  // (and the tooltip behind "+N") surfaces the warning instead of hiding it.
+  // One chip, so that even a narrow row fits its facts, one tag and "+N" on two
+  // lines. The grid overlay applies the same priority inside RecipeTags.
   const tagNames = useMemo(
     () =>
       sortTagsWithAllergyPriority(
@@ -173,7 +174,7 @@ function RecipeCardComponent({
       ).map((t) => t.name),
     [recipe.tags, allergies]
   );
-  const visibleTagNames = tagNames.slice(0, 2);
+  const visibleTagNames = tagNames.slice(0, 1);
   const hiddenTagCount = tagNames.length - visibleTagNames.length;
   // More allergens than visible slots: the overflow chip inherits the warning
   // so the danger is never folded away into a neutral "+N".
@@ -334,7 +335,8 @@ function RecipeCardComponent({
       className="flex min-w-0 flex-wrap items-center gap-1.5 overflow-hidden"
       title={tagNames.length > 0 ? tagNames.join(", ") : undefined}
     >
-      <span className="flex items-center gap-1.5 empty:hidden">{facts}</span>
+      {/* Each fact wraps on its own, so a narrow row never cuts one off. */}
+      <span className="contents">{facts}</span>
 
       {visibleTagNames.map((tag) => {
         const isAllergen = isAllergenTag(tag, allergySet);
@@ -342,7 +344,7 @@ function RecipeCardComponent({
         return (
           <Chip
             key={tag.toLowerCase()}
-            className={`max-w-[8rem] min-w-0 rounded-full px-2 text-[11px] ${isAllergen ? "" : "dark:bg-surface-tertiary"}`}
+            className={`max-w-[6rem] min-w-0 rounded-full px-2 text-[11px] ${isAllergen ? "" : "dark:bg-surface-tertiary"}`}
             color={isAllergen ? "warning" : undefined}
             size="sm"
             variant={isAllergen ? "primary" : "tertiary"}
@@ -354,7 +356,11 @@ function RecipeCardComponent({
 
       {hiddenTagCount > 0 && (
         <Tooltip delay={0}>
-          <Tooltip.Trigger aria-label={tagNames.join(", ")} onClick={stopParentActivation}>
+          <Tooltip.Trigger
+            aria-label={tagNames.join(", ")}
+            className="flex shrink-0"
+            onClick={stopParentActivation}
+          >
             <Chip
               className={`shrink-0 rounded-full px-2 text-[11px] ${hiddenAllergenCount > 0 ? "" : "dark:bg-surface-tertiary"}`}
               color={hiddenAllergenCount > 0 ? "warning" : undefined}
@@ -436,11 +442,13 @@ function RecipeCardComponent({
                 </DoubleTapContainer>
               </div>
 
-              <Card.Content className="relative flex h-full min-w-0 flex-1 flex-col justify-center py-3 pr-4 pl-4 md:pr-12">
+              <Card.Content className="relative flex h-full min-w-0 flex-1 flex-col justify-between py-3 pr-4 pl-4 md:pr-12">
                 <div className="flex min-w-0 items-start">
-                  <div className="min-w-0 flex-1">
+                  {/* Two lines of title, or one plus the description: a long title takes the
+                      description's line, so the chips below always keep two lines of room. */}
+                  <div className="max-h-11 min-w-0 flex-1 overflow-hidden">
                     <h3
-                      className={`text-foreground truncate text-base leading-5 font-semibold ${open ? "" : "group-hover/row:underline"} `}
+                      className={`text-foreground line-clamp-2 text-base leading-5 font-semibold break-words ${open ? "" : "group-hover/row:underline"} `}
                       title={recipe.name}
                     >
                       <OriginFlag className="mr-1.5" originCountry={recipe.originCountry} />
@@ -454,7 +462,7 @@ function RecipeCardComponent({
                   </div>
                 </div>
 
-                <div className="mt-3">{metadataChips}</div>
+                <div className="mt-2">{metadataChips}</div>
                 <div className="absolute top-1/2 right-3 -translate-y-1/2">{optionsButton}</div>
               </Card.Content>
             </div>
