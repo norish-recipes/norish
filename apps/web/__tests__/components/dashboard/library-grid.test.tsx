@@ -4,10 +4,7 @@ import RecipeGridSkeleton from "@/components/skeleton/recipe-grid-skeleton";
 import { render, screen } from "@testing-library/react";
 import { describe, expect, it, vi } from "vitest";
 
-import type {
-  DeviceKind,
-  RecipeViewMode,
-} from "@norish/shared/contracts/zod/device-preferences";
+import type { DeviceKind, RecipeViewMode } from "@norish/shared/contracts/zod/device-preferences";
 
 const device = vi.hoisted(() => ({ kind: "desktop" as DeviceKind }));
 
@@ -60,18 +57,24 @@ function firstRow(container: HTMLElement): string[] {
 describe("LibraryGrid", () => {
   it.each([
     [390, "phone", ["item-0"]],
-    [1440, "desktop", ["item-0", "item-1"]],
-  ] as const)("at %ipx (%s) puts the right number of list rows side by side", (width, kind, ids) => {
-    device.kind = kind;
-    setViewportWidth(width);
+    [1100, "desktop", ["item-0", "item-1"]],
+    [1440, "desktop", ["item-0", "item-1", "item-2"]],
+  ] as const)(
+    "at %ipx (%s) puts the right number of list rows side by side",
+    (width, kind, ids) => {
+      device.kind = kind;
+      setViewportWidth(width);
 
-    const { container } = renderGrid("list");
+      const { container } = renderGrid("list");
 
-    expect(firstRow(container)).toEqual(ids);
-    expect(container.querySelector<HTMLElement>('[data-index="0"] > .grid')?.style).toMatchObject({
-      gridTemplateColumns: `repeat(${ids.length}, minmax(0, 1fr))`,
-    });
-  });
+      expect(firstRow(container)).toEqual(ids);
+      expect(container.querySelector<HTMLElement>('[data-index="0"] > .grid')?.style).toMatchObject(
+        {
+          gridTemplateColumns: `repeat(${ids.length}, minmax(0, 1fr))`,
+        }
+      );
+    }
+  );
 
   it("keeps four grid cards to a row on a desktop", () => {
     device.kind = "desktop";
@@ -96,7 +99,7 @@ describe("LibraryGrid", () => {
 
 describe("RecipeGridSkeleton", () => {
   it.each([
-    ["list", ["grid-cols-1", "lg:grid-cols-2"]],
+    ["list", ["grid-cols-1", "lg:grid-cols-2", "xl:grid-cols-3"]],
     ["grid", ["grid-cols-2", "lg:grid-cols-4"]],
   ] as const)("lays the %s skeleton out in the library's columns", (variant, columns) => {
     const { container } = render(<RecipeGridSkeleton variant={variant} />);

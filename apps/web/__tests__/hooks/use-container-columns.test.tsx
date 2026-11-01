@@ -4,10 +4,7 @@ import { hydrateRoot } from "react-dom/client";
 import { renderToString } from "react-dom/server";
 import { describe, expect, it, vi } from "vitest";
 
-import type {
-  DeviceKind,
-  RecipeViewMode,
-} from "@norish/shared/contracts/zod/device-preferences";
+import type { DeviceKind, RecipeViewMode } from "@norish/shared/contracts/zod/device-preferences";
 
 const device = vi.hoisted(() => ({ kind: "phone" as DeviceKind }));
 
@@ -34,7 +31,9 @@ describe("useContainerColumns", () => {
     [390, "list", 1],
     [1023, "list", 1],
     [1024, "list", 2],
-    [1920, "list", 2],
+    [1279, "list", 2],
+    [1280, "list", 3],
+    [1920, "list", 3],
   ] as const)("at %ipx lays the %s out in %i columns", (width, viewMode, columns) => {
     setViewportWidth(width);
 
@@ -48,6 +47,13 @@ describe("useContainerColumns", () => {
 
     const { result } = renderHook(() => useContainerColumns("list"));
 
+    expect(result.current).toBe(3);
+
+    act(() => {
+      setViewportWidth(1100);
+      window.dispatchEvent(new Event("resize"));
+    });
+
     expect(result.current).toBe(2);
 
     act(() => {
@@ -60,7 +66,7 @@ describe("useContainerColumns", () => {
 
   it.each([
     ["phone", "list 1"],
-    ["desktop", "list 2"],
+    ["desktop", "list 3"],
   ] as const)("draws the list for a %s on the server, whatever the window", (kind, markup) => {
     device.kind = kind;
     setViewportWidth(kind === "phone" ? 1920 : 400);
@@ -82,7 +88,7 @@ describe("useContainerColumns", () => {
     });
 
     expect(onRecoverableError).not.toHaveBeenCalled();
-    expect(container.textContent).toBe("list 2");
+    expect(container.textContent).toBe("list 3");
     container.remove();
   });
 });

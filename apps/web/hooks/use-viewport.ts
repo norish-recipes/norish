@@ -3,10 +3,14 @@
 import { useSyncExternalStore } from "react";
 import { useDeviceKind } from "@/context/device-preferences-context";
 
-/** The window the server and the hydrating render assume for each Device Kind. */
+/**
+ * The window the server and the hydrating render assume for each Device Kind.
+ * The desktop's is as wide as the main column gets (`max-w-7xl`), so the
+ * library's widest layout is drawn from the first frame on most desktops.
+ */
 export const DEVICE_KIND_WINDOW = {
   phone: { width: 390, height: 844 },
-  desktop: { width: 1024, height: 768 },
+  desktop: { width: 1280, height: 768 },
 } as const;
 
 function subscribe(onChange: () => void): () => void {
