@@ -430,3 +430,7 @@ The docs page that describes the Public API. It is generated from the code, neve
 **Base Path**:
 The URL prefix an instance is served under, set at build time with `NEXT_PUBLIC_BASE_PATH`; empty at the domain root. Every absolute URL the app emits carries it: routes, assets, the manifest, the service-worker scope, the tRPC socket and the healthcheck. It is a property of the image, not a per-request rewrite.
 _Avoid_: Subpath (ambiguous with a route), Mount point (a proxy's word, not the app's)
+
+**Demo Instance**:
+An instance whose administrator has switched it to demo: every write is refused for everyone, while the whole UI stays available, and a refused action says only that the instance is a read-only demo. Its data is a curated set prepared before the switch is turned on. The public one runs at demo.norish.dev under one shared account.
+_Avoid_: Sandbox (suggests writes that are thrown away), Read-only user (the refusal belongs to the instance, not an account)
