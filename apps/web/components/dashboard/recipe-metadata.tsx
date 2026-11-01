@@ -16,6 +16,7 @@ export default function RecipeMetadata({
   onToggleFavorite,
 }: RecipeMetadataProps) {
   const t = useTranslations("recipes.card");
+
   return (
     <>
       {/* Heart button - top left (only shown when favorited) */}

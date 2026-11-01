@@ -141,8 +141,11 @@ describe("TodaysMeals", () => {
 
     render(<TodaysMeals />);
 
-    fireEvent.click(screen.getByRole("button", { name: "Pasta Night" }));
-    expect(pushMock).toHaveBeenCalledWith("/recipes/recipe-42");
+    // A real link, so it opens in a new tab too (#555).
+    expect(screen.getByRole("link", { name: "Pasta Night" })).toHaveAttribute(
+      "href",
+      "/recipes/recipe-42"
+    );
 
     const emptyBreakfastButton = screen.getByRole("button", { name: "Add Recipe Breakfast" });
 
