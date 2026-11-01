@@ -3,6 +3,7 @@
 import type { MouseEvent } from "react";
 import { memo, useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { usePathname, useRouter } from "next/navigation";
+import { GroceryCheckbox, isCheckboxEvent } from "@/components/groceries/grocery-checkbox";
 import { MiniCalendar, MiniGroceries } from "@/components/Panel/consumers";
 import OriginFlag from "@/components/recipes/origin-flag";
 import HeartButton from "@/components/shared/heart-button";
@@ -14,7 +15,6 @@ import { useMountedOnceOpened } from "@/hooks/use-mounted-once-opened";
 import { useHiddenItemVisibility } from "@/hooks/user/use-hidden-item-visibility";
 import { withOrigin } from "@/lib/back-destination";
 import { useAppStore } from "@/stores/useAppStore";
-import { CheckIcon } from "@heroicons/react/16/solid";
 import {
   ArchiveBoxIcon,
   CalendarDaysIcon,
@@ -616,30 +616,30 @@ function RecipeCardComponent({
         </div>
 
         {isSelecting && (
-          <button
-            aria-label={recipe.name}
-            aria-pressed={isSelected}
-            className={`focus-visible:ring-accent absolute inset-0 z-30 cursor-pointer outline-none focus-visible:ring-2 ${variant === "list" ? "rounded-2xl" : "rounded-3xl"} ${isSelected ? "ring-accent bg-accent/10 ring-4 ring-inset" : ""}`}
+          // The checkbox is the control; the rest of the card is a bigger target for a pointer.
+          <div
+            className="absolute inset-0 z-30 cursor-pointer"
             data-selected={isSelected}
             data-testid="recipe-select-toggle"
-            type="button"
+            role="presentation"
             onClick={(event) => {
-              // A keyboard or screen-reader click has no pointer before it.
-              if (event.detail > 0 && !overlayPressArmedRef.current) return;
+              if (isCheckboxEvent(event) || !overlayPressArmedRef.current) return;
               overlayPressArmedRef.current = false;
               selection?.toggle(recipe);
             }}
-            onPointerDown={() => {
-              overlayPressArmedRef.current = true;
+            onPointerDown={(event) => {
+              overlayPressArmedRef.current = !isCheckboxEvent(event);
             }}
           >
-            <span
-              aria-hidden
-              className={`absolute top-3 right-3 flex size-7 items-center justify-center rounded-full border-2 shadow-sm ${isSelected ? "bg-accent border-accent text-accent-foreground" : "border-white bg-black/30"}`}
-            >
-              {isSelected && <CheckIcon className="size-4" />}
+            <span className="absolute top-4 right-4 drop-shadow-md">
+              <GroceryCheckbox
+                aria-label={recipe.name}
+                className="[--border-width-field:2px] [--default:rgb(0_0_0/0.3)] [--field-border:white] [--field-border-hover:white]"
+                isSelected={isSelected}
+                onChange={() => selection?.toggle(recipe)}
+              />
             </span>
-          </button>
+          </div>
         )}
       </div>
 

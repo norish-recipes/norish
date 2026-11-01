@@ -71,11 +71,11 @@ async function longPress(page: Page, name: string) {
   await page.mouse.up();
 }
 
-/** The card's selection toggle, which covers it while selecting. */
+/** The layer over a card while selecting, which holds its checkbox. */
 function toggle(page: Page, name: string): Locator {
   return page
-    .getByRole("button", { name, exact: true })
-    .and(page.getByTestId("recipe-select-toggle"));
+    .getByTestId("recipe-select-toggle")
+    .filter({ has: page.getByRole("checkbox", { name, exact: true }) });
 }
 
 /**
@@ -470,8 +470,9 @@ test("recipes picked across two searches file into a new cookbook, and Open land
     await expectCount(page, 3);
 
     await bar(page).getByRole("button", { name: "Add to cookbook" }).click();
-    await page.getByTestId("selection-new-cookbook-title").fill(title);
-    await page.getByTestId("save-selection-cookbooks").click();
+    await page.getByTestId("new-cookbook-title").fill(title);
+    await page.getByTestId("new-cookbook-title").press("Enter");
+    await page.getByTestId("save-cookbook-membership").click();
 
     await expect(bar(page)).toBeHidden();
     const toast = page
@@ -505,7 +506,7 @@ test("filing into a cookbook that already holds one of the recipes keeps one mem
     await toggle(page, names[1]!).click();
     await bar(page).getByRole("button", { name: "Add to cookbook" }).click();
     await page.locator(`[data-cookbook-toggle="${title}"]`).click();
-    await page.getByTestId("save-selection-cookbooks").click();
+    await page.getByTestId("save-cookbook-membership").click();
 
     await expect(page.locator("[data-action-toast]")).toContainText(`2 recipes added to ${title}`);
     await expect
@@ -565,8 +566,9 @@ test("on a cookbook page, Add to cookbook copies and Delete deletes for good", a
     await card(page, names[0]!).click({ modifiers: ["ControlOrMeta"] });
     await toggle(page, names[1]!).click();
     await bar(page).getByRole("button", { name: "Add to cookbook" }).click();
-    await page.getByTestId("selection-new-cookbook-title").fill(copy);
-    await page.getByTestId("save-selection-cookbooks").click();
+    await page.getByTestId("new-cookbook-title").fill(copy);
+    await page.getByTestId("new-cookbook-title").press("Enter");
+    await page.getByTestId("save-cookbook-membership").click();
     await expect
       .poll(() => readCookbookMembers(aiStack, copy))
       .toEqual([...names].sort((a, b) => a.localeCompare(b)));

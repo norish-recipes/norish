@@ -46,7 +46,9 @@ test("a bulk delete made offline keeps the recipe edited meanwhile, and says so"
   const names = ["Offline Bulk Bagel", "Offline Bulk Brioche", "Offline Bulk Bun"];
   const card = (name: string) => page.locator("[data-recipe-card]").filter({ hasText: name });
   const toggle = (name: string) =>
-    page.getByRole("button", { name, exact: true }).and(page.getByTestId("recipe-select-toggle"));
+    page
+      .getByTestId("recipe-select-toggle")
+      .filter({ has: page.getByRole("checkbox", { name, exact: true }) });
 
   await offlineHarness.transition("live");
   const userId = await userIdOf(USER_A);
