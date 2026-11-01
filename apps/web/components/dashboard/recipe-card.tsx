@@ -436,11 +436,11 @@ function RecipeCardComponent({
                 </DoubleTapContainer>
               </div>
 
-              <Card.Content className="relative flex h-full min-w-0 flex-1 flex-col justify-center py-3 pr-4 pl-4 md:pr-12">
+              <Card.Content className="relative flex h-full min-w-0 flex-1 flex-col justify-between py-3 pr-4 pl-4 md:pr-12">
                 <div className="flex min-w-0 items-start">
                   <div className="min-w-0 flex-1">
                     <h3
-                      className={`text-foreground truncate text-base leading-5 font-semibold ${open ? "" : "group-hover/row:underline"} `}
+                      className={`text-foreground line-clamp-2 text-base leading-5 font-semibold break-words ${open ? "" : "group-hover/row:underline"} `}
                       title={recipe.name}
                     >
                       <OriginFlag className="mr-1.5" originCountry={recipe.originCountry} />
