@@ -191,7 +191,7 @@ function CookbookCardComponent({
 
   const metadataChips = (
     <div
-      className="flex min-w-0 flex-wrap items-center gap-1.5 overflow-hidden"
+      className="flex min-w-0 items-center gap-1.5 overflow-hidden"
       title={allergens.length > 0 ? allergens.join(", ") : undefined}
     >
       <CookbookMetadata

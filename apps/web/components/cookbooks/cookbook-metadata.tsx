@@ -9,11 +9,11 @@ import { useTranslations } from "next-intl";
  * How many allergens a card names before folding the rest into a count.
  *
  * The list row gets fewer, because there it shares one line with the count,
- * the time and the servings — the same five-chip budget a recipe list row
- * keeps, so a cookbook row wraps no more often than the row above it.
+ * the time and the servings — the same budget a recipe list row keeps (its
+ * facts, one chip and "+N"), so a cookbook row never needs a second line.
  */
 const VISIBLE_ALLERGENS = 3;
-export const VISIBLE_ALLERGENS_IN_ROW = 2;
+export const VISIBLE_ALLERGENS_IN_ROW = 1;
 
 /**
  * The allergens a reader would meet somewhere inside a cookbook.
@@ -39,7 +39,7 @@ export function CookbookAllergenChips({
       {visible.map((tag) => (
         <Chip
           key={tag.toLowerCase()}
-          className={`max-w-[8rem] min-w-0 ${chipClassName}`}
+          className={`max-w-[8rem] min-w-0 shrink ${chipClassName}`}
           color="warning"
           size="sm"
           variant="primary"
@@ -90,7 +90,7 @@ export function CookbookMetadata({
 
   return (
     <>
-      <span className="flex items-center gap-1 sm:gap-1.5">
+      <span className="flex shrink-0 items-center gap-1 sm:gap-1.5">
         <CardFact>{t("recipeCount", { count: memberCount })}</CardFact>
         {timeLabel && <CardFact icon={ClockIcon}>{timeLabel}</CardFact>}
         {typeof servings === "number" && servings > 0 && (

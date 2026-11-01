@@ -162,9 +162,10 @@ function RecipeCardComponent({
 
   const servings = recipe.servings;
   const allergySet = useMemo(() => new Set(allergies.map((a) => a.toLowerCase())), [allergies]);
-  // Allergen tags always sort ahead of the rest, so the two visible list-view
-  // chips (and the tooltip behind "+N") surface the warning instead of hiding
-  // it. The grid overlay applies the same priority inside RecipeTags.
+  // Allergen tags always sort ahead of the rest, so the visible list-view chip
+  // (and the tooltip behind "+N") surfaces the warning instead of hiding it.
+  // One chip, because a narrow row has room for its facts, one tag and "+N" on
+  // a single line. The grid overlay applies the same priority inside RecipeTags.
   const tagNames = useMemo(
     () =>
       sortTagsWithAllergyPriority(
@@ -173,7 +174,7 @@ function RecipeCardComponent({
       ).map((t) => t.name),
     [recipe.tags, allergies]
   );
-  const visibleTagNames = tagNames.slice(0, 2);
+  const visibleTagNames = tagNames.slice(0, 1);
   const hiddenTagCount = tagNames.length - visibleTagNames.length;
   // More allergens than visible slots: the overflow chip inherits the warning
   // so the danger is never folded away into a neutral "+N".
@@ -331,10 +332,10 @@ function RecipeCardComponent({
 
   const metadataChips = (
     <div
-      className="flex min-w-0 flex-wrap items-center gap-1.5 overflow-hidden"
+      className="flex min-w-0 items-center gap-1.5 overflow-hidden"
       title={tagNames.length > 0 ? tagNames.join(", ") : undefined}
     >
-      <span className="flex items-center gap-1.5 empty:hidden">{facts}</span>
+      <span className="flex shrink-0 items-center gap-1.5 empty:hidden">{facts}</span>
 
       {visibleTagNames.map((tag) => {
         const isAllergen = isAllergenTag(tag, allergySet);
@@ -342,7 +343,7 @@ function RecipeCardComponent({
         return (
           <Chip
             key={tag.toLowerCase()}
-            className={`max-w-[8rem] min-w-0 rounded-full px-2 text-[11px] ${isAllergen ? "" : "dark:bg-surface-tertiary"}`}
+            className={`max-w-[8rem] min-w-0 shrink rounded-full px-2 text-[11px] ${isAllergen ? "" : "dark:bg-surface-tertiary"}`}
             color={isAllergen ? "warning" : undefined}
             size="sm"
             variant={isAllergen ? "primary" : "tertiary"}
@@ -354,7 +355,11 @@ function RecipeCardComponent({
 
       {hiddenTagCount > 0 && (
         <Tooltip delay={0}>
-          <Tooltip.Trigger aria-label={tagNames.join(", ")} onClick={stopParentActivation}>
+          <Tooltip.Trigger
+            aria-label={tagNames.join(", ")}
+            className="flex shrink-0"
+            onClick={stopParentActivation}
+          >
             <Chip
               className={`shrink-0 rounded-full px-2 text-[11px] ${hiddenAllergenCount > 0 ? "" : "dark:bg-surface-tertiary"}`}
               color={hiddenAllergenCount > 0 ? "warning" : undefined}
