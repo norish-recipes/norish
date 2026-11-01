@@ -29,6 +29,8 @@ import RecipeGridSkeleton from "../skeleton/recipe-grid-skeleton";
 const ESTIMATED_GRID_ROW_HEIGHT = 394;
 const ESTIMATED_PHONE_GRID_ROW_HEIGHT = 302;
 const ESTIMATED_LIST_ROW_HEIGHT = 144;
+// Overscan and load-more distance are counted in rows, so they stay the same
+// distance in pixels whatever the number of columns.
 const GRID_ROW_OVERSCAN = 3;
 const LIST_ROW_OVERSCAN = 12;
 const GRID_LOAD_MORE_ROW_THRESHOLD = 2;
@@ -83,9 +85,9 @@ export default function LibraryGrid({
   const containerRef = useRef<HTMLDivElement>(null);
   const hasTriggeredLoadMoreRef = useRef(false);
 
-  // Responsive column count from CSS variable
-  const columnCount = useContainerColumns();
-  const effectiveColumnCount = viewMode === "list" ? 1 : columnCount;
+  // Items per virtual row, from the window width. The list keeps its rows but
+  // lays them side by side on desktops.
+  const effectiveColumnCount = useContainerColumns(viewMode);
   const rowOverscan = viewMode === "list" ? LIST_ROW_OVERSCAN : GRID_ROW_OVERSCAN;
   const loadMoreRowThreshold =
     viewMode === "list" ? LIST_LOAD_MORE_ROW_THRESHOLD : GRID_LOAD_MORE_ROW_THRESHOLD;
@@ -234,13 +236,8 @@ export default function LibraryGrid({
                   }}
                 >
                   <div
-                    className={viewMode === "list" ? "flex flex-col gap-4" : "grid gap-4"}
-                    style={{
-                      gridTemplateColumns:
-                        viewMode === "list"
-                          ? undefined
-                          : `repeat(${effectiveColumnCount}, minmax(0, 1fr))`,
-                    }}
+                    className="grid gap-4"
+                    style={{ gridTemplateColumns: `repeat(${effectiveColumnCount}, minmax(0, 1fr))` }}
                   >
                     {rowItems.map((item) => (
                       <div key={`${item.kind}-${item.id}`}>{renderItem(item)}</div>
