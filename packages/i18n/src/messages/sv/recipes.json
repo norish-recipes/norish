@@ -51,8 +51,7 @@
     "addToCalendar": "Lägg till i kalendern",
     "deleteRecipe": "Ta bort recept",
     "recipeOptions": "Receptalternativ",
-    "pantryCoverage": "{percent} av ingredienserna hemma",
-    "select": "Välj"
+    "pantryCoverage": "{percent} av ingredienserna hemma"
   },
   "detail": {
     "viewOriginal": "Visa originalrecept",

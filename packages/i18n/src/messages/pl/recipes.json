@@ -51,8 +51,7 @@
     "addToCalendar": "Dodaj do kalendarza",
     "deleteRecipe": "Usuń przepis",
     "recipeOptions": "Opcje przepisu",
-    "pantryCoverage": "{percent} składników w domu",
-    "select": "Zaznacz"
+    "pantryCoverage": "{percent} składników w domu"
   },
   "detail": {
     "viewOriginal": "Zobacz oryginalny przepis",

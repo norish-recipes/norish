@@ -51,8 +51,7 @@
     "addToCalendar": "إضافة إلى التقويم",
     "deleteRecipe": "حذف الوصفة",
     "recipeOptions": "خيارات الوصفة",
-    "pantryCoverage": "{percent} من المكوّنات متوفرة في المنزل",
-    "select": "تحديد"
+    "pantryCoverage": "{percent} من المكوّنات متوفرة في المنزل"
   },
   "detail": {
     "viewOriginal": "عرض الوصفة الأصلية",

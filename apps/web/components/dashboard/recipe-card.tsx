@@ -19,7 +19,6 @@ import { useAppStore } from "@/stores/useAppStore";
 import {
   ArchiveBoxIcon,
   CalendarDaysIcon,
-  CheckCircleIcon,
   ClockIcon,
   EllipsisHorizontalIcon,
   MinusCircleIcon,
@@ -269,22 +268,7 @@ function RecipeCardComponent({
   const showDeleteAction = recipe.userId ? canDeleteRecipe(recipe.userId) : true;
 
   const actions: SwipeAction[] = useMemo(() => {
-    const baseActions: SwipeAction[] = [];
-
-    if (selection) {
-      baseActions.push({
-        key: "select",
-        icon: CheckCircleIcon,
-        color: "accent",
-        onPress: () => {
-          rowRef.current?.closeRow();
-          selection.toggle(recipe);
-        },
-        label: t("select"),
-      });
-    }
-
-    baseActions.push(
+    const baseActions: SwipeAction[] = [
       {
         key: "groceries",
         icon: ShoppingBagIcon,
@@ -298,8 +282,8 @@ function RecipeCardComponent({
         color: "warning",
         onPress: () => setCalendarOpen(true),
         label: t("addToCalendar"),
-      }
-    );
+      },
+    ];
 
     if (onRemoveFromCookbook) {
       // Taking a recipe out of the cookbook it is being read in. This never
@@ -323,7 +307,7 @@ function RecipeCardComponent({
     }
 
     return baseActions;
-  }, [showDeleteAction, handleDeleteClick, t, onRemoveFromCookbook, recipe, tCookbooks, selection]);
+  }, [showDeleteAction, handleDeleteClick, t, onRemoveFromCookbook, recipe.id, tCookbooks]);
 
   const optionsButton = (
     <div className="hidden md:block" role="presentation" onClick={stopParentActivation}>

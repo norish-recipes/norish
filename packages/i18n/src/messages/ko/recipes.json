@@ -51,8 +51,7 @@
     "addToCalendar": "캘린더에 추가",
     "deleteRecipe": "레시피 삭제",
     "recipeOptions": "레시피 옵션",
-    "pantryCoverage": "재료의 {percent}가 집에 있음",
-    "select": "선택"
+    "pantryCoverage": "재료의 {percent}가 집에 있음"
   },
   "detail": {
     "viewOriginal": "원본 레시피 보기",

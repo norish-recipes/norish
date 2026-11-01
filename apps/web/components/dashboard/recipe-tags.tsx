@@ -61,6 +61,8 @@ export default function RecipeTags({ tags, allergies = [] }: RecipeTagsProps) {
       role="presentation"
       onClick={(e) => e.stopPropagation()}
       onKeyDown={(e) => e.stopPropagation()}
+      // The card is a link: without this a mouse drag starts the browser's link drag instead.
+      onMouseDown={(e) => e.preventDefault()}
       onPointerDown={(e) => e.stopPropagation()}
     >
       <motion.div

@@ -51,8 +51,7 @@
     "addToCalendar": "Добавить в календарь",
     "deleteRecipe": "Удалить рецепт",
     "recipeOptions": "Параметры рецепта",
-    "pantryCoverage": "{percent} ингредиентов дома",
-    "select": "Выбрать"
+    "pantryCoverage": "{percent} ингредиентов дома"
   },
   "detail": {
     "viewOriginal": "Открыть оригинальный рецепт",

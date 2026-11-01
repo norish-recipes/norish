@@ -128,8 +128,8 @@ export default function SwipeableRow({
   ref,
 }: Props) {
   // Validate actions length
-  if (actions.length < 1 || actions.length > 4) {
-    log.error("actions must contain 1-4 items, got %d", String(actions.length));
+  if (actions.length < 1 || actions.length > 3) {
+    log.error("actions must contain 1-3 items, got %d", String(actions.length));
   }
 
   const [isOpen, setIsOpen] = useState(false);

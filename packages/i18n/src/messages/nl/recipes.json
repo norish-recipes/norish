@@ -51,8 +51,7 @@
     "addToCalendar": "Toevoegen aan agenda",
     "deleteRecipe": "Recept verwijderen",
     "recipeOptions": "Receptopties",
-    "pantryCoverage": "{percent} van de ingrediënten in huis",
-    "select": "Selecteren"
+    "pantryCoverage": "{percent} van de ingrediënten in huis"
   },
   "detail": {
     "viewOriginal": "Bekijk origineel recept",

@@ -146,31 +146,13 @@ test("a long press starts selecting, and a tap then toggles without opening the 
   }
 });
 
-test("the Select action in a card's row starts selecting, and Escape ends it", async ({
-  browser,
-  aiStack,
-}) => {
-  const word = token("Row");
+test("Escape ends selecting", async ({ browser, aiStack }) => {
+  const word = token("Escape");
   const names = [`${word} Stew`];
   const { context, page } = await libraryWith(browser, aiStack, names, { query: word });
 
   try {
-    const select = page
-      .getByRole("row")
-      .filter({ has: card(page, names[0]!) })
-      .getByRole("button", { name: "Select", exact: true });
-
-    // A press before the row listens opens nothing, and a late list refresh
-    // closes an open row, so open and press until the bar shows.
-    await expect(async () => {
-      if (await bar(page).isVisible()) return;
-      if (!(await select.isVisible())) {
-        await card(page, names[0]!).locator('button[aria-label="Recipe options"]').click();
-      }
-      await settled(page, select);
-      await select.click({ timeout: 2_000 });
-      await expect(bar(page)).toBeVisible({ timeout: 2_000 });
-    }).toPass({ timeout: 45_000 });
+    await card(page, names[0]!).click({ modifiers: ["Shift"] });
     await expectCount(page, 1);
 
     await page.keyboard.press("Escape");
