@@ -5,7 +5,8 @@
  * widens: one column on a phone, two from Tailwind's `lg`, three from `xl`.
  * What only a browser can settle is the layout itself — rows that really sit
  * next to each other, the server's first frame already in the right number of
- * columns, and a long title wrapping inside its row rather than being cut off.
+ * columns, a long title wrapping inside its row rather than being cut off, and
+ * a fully populated row keeping every fact and its allergen warning in view.
  */
 import type { Browser, BrowserContext, Page } from "@playwright/test";
 
@@ -18,6 +19,7 @@ import {
   setDevicePreferences,
 } from "../harness/device-preferences";
 import { createRecipe } from "../harness/recipes";
+import { callTrpc } from "../harness/trpc";
 import { expect, test } from "./fixture";
 
 test.describe.configure({ mode: "serial" });
@@ -197,5 +199,98 @@ test("a long title wraps onto a second line inside its row", async ({ browser })
     expect(layout).toEqual({ lines: 2, cut: false, insideCard: true });
   } finally {
     await context.close();
+  }
+});
+
+/** Every chip of the row titled `title`, and whether any of them falls outside the row. */
+function rowChips(page: Page, title: string) {
+  return page.evaluate((wanted) => {
+    const heading = [
+      ...document.querySelectorAll<HTMLElement>("[data-recipe-card] h3, [data-cookbook-card] h3"),
+    ].find((candidate) => candidate.title === wanted);
+    const content = heading?.closest<HTMLElement>(".flex-col");
+    // The facts sit in a `display: contents` group, so the row is that group's parent.
+    let chips = content?.querySelector<HTMLElement>(".chip")?.parentElement ?? null;
+
+    if (chips && getComputedStyle(chips).display === "contents") chips = chips.parentElement;
+    if (!content || !chips) return null;
+
+    const box = content.getBoundingClientRect();
+    const bottom = box.bottom - parseFloat(getComputedStyle(content).paddingBottom) + 0.5;
+    const row = chips.getBoundingClientRect();
+    const items = [...chips.querySelectorAll<HTMLElement>(".chip")];
+
+    return {
+      texts: items.map((item) => item.textContent?.trim() ?? ""),
+      warnings: items.filter((item) => item.dataset.color === "warning").length,
+      allInView: items.every((item) => {
+        const r = item.getBoundingClientRect();
+
+        return r.right <= row.right + 0.5 && r.bottom <= Math.min(row.bottom, bottom) + 0.5;
+      }),
+    };
+  }, title);
+}
+
+test("a fully populated row keeps every fact and its allergen warning in view", async ({
+  browser,
+}) => {
+  const recipeTitle = "Baked Mac and Cheese with Crispy Breadcrumbs";
+  const cookbookTitle = "Comfort Food for Busy Weeknights";
+  const { allergies, version } = await callTrpc<{ allergies: string[]; version: number }>(
+    stack.baseURL,
+    stack.ownerCookies,
+    "user.getAllergies"
+  );
+  const recipeId = await createRecipe(stack.baseURL, stack.ownerCookies, recipeTitle, [], {
+    servings: 12,
+    totalMinutes: 95,
+    tags: [{ name: "Gluten" }, { name: "Lactose" }, { name: "comfort food classics" }],
+  });
+
+  await callTrpc(stack.baseURL, stack.ownerCookies, "ratings.rate", { recipeId, rating: 5 });
+  await callTrpc(stack.baseURL, stack.ownerCookies, "cookbooks.create", {
+    id: crypto.randomUUID(),
+    title: cookbookTitle,
+    recipeId,
+  });
+  await callTrpc(stack.baseURL, stack.ownerCookies, "user.setAllergies", {
+    allergies: ["gluten", "lactose"],
+    version,
+  });
+
+  try {
+    for (const [kind, width] of [
+      ["phone", 390],
+      ["desktop", 1440],
+    ] as const) {
+      const { context, page } = await openLibrary(browser, kind, width);
+
+      try {
+        // Rating, time and servings, one tag and the count of the rest, the allergen first.
+        await expect
+          .poll(() => rowChips(page, recipeTitle))
+          .toEqual({
+            texts: ["5", "1:35h", "12", "Gluten", "+2"],
+            warnings: 2,
+            allInView: true,
+          });
+        await expect.poll(async () => (await rowChips(page, cookbookTitle))?.allInView).toBe(true);
+        expect((await rowChips(page, cookbookTitle))?.warnings).toBeGreaterThan(0);
+      } finally {
+        await context.close();
+      }
+    }
+  } finally {
+    const current = await callTrpc<{ version: number }>(
+      stack.baseURL,
+      stack.ownerCookies,
+      "user.getAllergies"
+    );
+
+    await callTrpc(stack.baseURL, stack.ownerCookies, "user.setAllergies", {
+      allergies,
+      version: current.version,
+    });
   }
 });

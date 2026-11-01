@@ -164,8 +164,8 @@ function RecipeCardComponent({
   const allergySet = useMemo(() => new Set(allergies.map((a) => a.toLowerCase())), [allergies]);
   // Allergen tags always sort ahead of the rest, so the visible list-view chip
   // (and the tooltip behind "+N") surfaces the warning instead of hiding it.
-  // One chip, because a narrow row has room for its facts, one tag and "+N" on
-  // a single line. The grid overlay applies the same priority inside RecipeTags.
+  // One chip, so that even a narrow row fits its facts, one tag and "+N" on two
+  // lines. The grid overlay applies the same priority inside RecipeTags.
   const tagNames = useMemo(
     () =>
       sortTagsWithAllergyPriority(
@@ -332,10 +332,11 @@ function RecipeCardComponent({
 
   const metadataChips = (
     <div
-      className="flex min-w-0 items-center gap-1.5 overflow-hidden"
+      className="flex min-w-0 flex-wrap items-center gap-1.5 overflow-hidden"
       title={tagNames.length > 0 ? tagNames.join(", ") : undefined}
     >
-      <span className="flex shrink-0 items-center gap-1.5 empty:hidden">{facts}</span>
+      {/* Each fact wraps on its own, so a narrow row never cuts one off. */}
+      <span className="contents">{facts}</span>
 
       {visibleTagNames.map((tag) => {
         const isAllergen = isAllergenTag(tag, allergySet);
@@ -343,7 +344,7 @@ function RecipeCardComponent({
         return (
           <Chip
             key={tag.toLowerCase()}
-            className={`max-w-[8rem] min-w-0 shrink rounded-full px-2 text-[11px] ${isAllergen ? "" : "dark:bg-surface-tertiary"}`}
+            className={`max-w-[6rem] min-w-0 rounded-full px-2 text-[11px] ${isAllergen ? "" : "dark:bg-surface-tertiary"}`}
             color={isAllergen ? "warning" : undefined}
             size="sm"
             variant={isAllergen ? "primary" : "tertiary"}
@@ -443,7 +444,9 @@ function RecipeCardComponent({
 
               <Card.Content className="relative flex h-full min-w-0 flex-1 flex-col justify-between py-3 pr-4 pl-4 md:pr-12">
                 <div className="flex min-w-0 items-start">
-                  <div className="min-w-0 flex-1">
+                  {/* Two lines of title, or one plus the description: a long title takes the
+                      description's line, so the chips below always keep two lines of room. */}
+                  <div className="max-h-11 min-w-0 flex-1 overflow-hidden">
                     <h3
                       className={`text-foreground line-clamp-2 text-base leading-5 font-semibold break-words ${open ? "" : "group-hover/row:underline"} `}
                       title={recipe.name}
@@ -459,7 +462,7 @@ function RecipeCardComponent({
                   </div>
                 </div>
 
-                <div className="mt-3">{metadataChips}</div>
+                <div className="mt-2">{metadataChips}</div>
                 <div className="absolute top-1/2 right-3 -translate-y-1/2">{optionsButton}</div>
               </Card.Content>
             </div>

@@ -10,7 +10,7 @@ import { useTranslations } from "next-intl";
  *
  * The list row gets fewer, because there it shares one line with the count,
  * the time and the servings — the same budget a recipe list row keeps (its
- * facts, one chip and "+N"), so a cookbook row never needs a second line.
+ * facts, one chip and "+N"), so a cookbook row never needs a third line.
  */
 const VISIBLE_ALLERGENS = 3;
 export const VISIBLE_ALLERGENS_IN_ROW = 1;
@@ -39,7 +39,7 @@ export function CookbookAllergenChips({
       {visible.map((tag) => (
         <Chip
           key={tag.toLowerCase()}
-          className={`max-w-[8rem] min-w-0 shrink ${chipClassName}`}
+          className={`min-w-0 ${chipClassName}`}
           color="warning"
           size="sm"
           variant="primary"
@@ -77,6 +77,7 @@ export function CookbookMetadata({
   allergens,
   visibleAllergens,
   chipClassName = "",
+  factsClassName = "",
 }: {
   memberCount: number;
   timeLabel?: string;
@@ -85,12 +86,14 @@ export function CookbookMetadata({
   allergens?: string[];
   visibleAllergens?: number;
   chipClassName?: string;
+  /** Extra classes for the group of facts, e.g. to let each one wrap on its own. */
+  factsClassName?: string;
 }) {
   const t = useTranslations("recipes.cookbooks");
 
   return (
     <>
-      <span className="flex shrink-0 items-center gap-1 sm:gap-1.5">
+      <span className={`flex items-center gap-1 sm:gap-1.5 ${factsClassName}`}>
         <CardFact>{t("recipeCount", { count: memberCount })}</CardFact>
         {timeLabel && <CardFact icon={ClockIcon}>{timeLabel}</CardFact>}
         {typeof servings === "number" && servings > 0 && (
