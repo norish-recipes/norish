@@ -99,6 +99,6 @@ function Label({ children }: { children: ReactNode }) {
 
 /** The chrome-surface look for a button in the bar. */
 export const actionBarButtonClassName =
-  "text-chrome-foreground hover:bg-chrome-hover data-[hovered=true]:bg-chrome-hover rounded-full bg-transparent";
+  "text-chrome-foreground data-[hovered=true]:bg-chrome-foreground/12 data-[pressed=true]:bg-chrome-foreground/20 rounded-full bg-transparent";
 
 export const ActionBar = Object.assign(ActionBarRoot, { Prefix, Content, Suffix, Label });
