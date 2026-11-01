@@ -12,8 +12,9 @@ Select recipes in the Library or on a cookbook page to act on all of them at onc
 
 - Press and hold a recipe card.
 - Or swipe a card left, or open its three dots, and press **Select**.
-- On a computer, Cmd-click (Ctrl-click on Windows and Linux) a card. Shift-click
-  selects every card between the last one you clicked and this one.
+- On a computer, Shift-click a card. Another Shift-click selects every card
+  between the last one you clicked and this one. Cmd-click (Ctrl-click on
+  Windows and Linux) still opens the recipe in a new tab.
 
 While you are selecting, a tap adds or removes a card. Cookbooks and recipes
 that are still importing can't be selected.

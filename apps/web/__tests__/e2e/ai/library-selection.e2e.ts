@@ -180,7 +180,7 @@ test("the Select action in a card's row starts selecting, and Escape ends it", a
   }
 });
 
-test("Cmd-click toggles a card and Shift-click selects a range, skipping nothing loaded", async ({
+test("Shift-click starts selecting and a second one selects a range, while Cmd-click opens a tab", async ({
   browser,
   aiStack,
 }) => {
@@ -190,7 +190,13 @@ test("Cmd-click toggles a card and Shift-click selects a range, skipping nothing
   const { context, page } = await libraryWith(browser, aiStack, names, { query: word });
 
   try {
-    await card(page, `${word} Alpha`).click({ modifiers: ["ControlOrMeta"] });
+    const tab = context.waitForEvent("page");
+
+    await card(page, `${word} Beta`).click({ modifiers: ["ControlOrMeta"] });
+    await (await tab).close();
+    await expect(bar(page)).toBeHidden();
+
+    await card(page, `${word} Alpha`).click({ modifiers: ["Shift"] });
     await expectCount(page, 1);
     await expect(page).toHaveURL(/\/$/);
 
@@ -215,7 +221,7 @@ test("the selection survives a search change, and the count includes what it hid
   });
 
   try {
-    await card(page, pasta).click({ modifiers: ["ControlOrMeta"] });
+    await card(page, pasta).click({ modifiers: ["Shift"] });
     await search(page, pizza, pizza);
     await expect(card(page, pasta)).toBeHidden();
     await toggle(page, pizza).click();
@@ -263,7 +269,7 @@ test("on a desktop the bar takes the Library pill's place, and leaving the page 
     const pill = page.getByRole("button", { name: /^\d+ items?$/ });
 
     await expect(pill).toBeVisible();
-    await card(page, names[0]!).click({ modifiers: ["ControlOrMeta"] });
+    await card(page, names[0]!).click({ modifiers: ["Shift"] });
     await expect(bar(page)).toBeVisible();
     await expect(pill).toBeHidden();
 
@@ -286,7 +292,7 @@ test("a selected recipe deleted elsewhere leaves the selection, ending it when i
   const { context, page, ids } = await libraryWith(browser, aiStack, names, { query: word });
 
   try {
-    await card(page, names[0]!).click({ modifiers: ["ControlOrMeta"] });
+    await card(page, names[0]!).click({ modifiers: ["Shift"] });
     await toggle(page, names[1]!).click();
     await expectCount(page, 2);
 
@@ -323,7 +329,7 @@ test("a Shift range passes over a cookbook card without selecting it", async ({
 
     await expect(shelfCard).toBeVisible();
     await expect(card(page, older)).toBeVisible();
-    await card(page, newer).click({ modifiers: ["ControlOrMeta"] });
+    await card(page, newer).click({ modifiers: ["Shift"] });
     await toggle(page, older).click({ modifiers: ["Shift"] });
     await expectCount(page, 2);
   } finally {
@@ -340,7 +346,7 @@ test("Delete removes the selection after a confirmation naming the count", async
   const { context, page } = await libraryWith(browser, aiStack, names, { query: word });
 
   try {
-    await card(page, names[0]!).click({ modifiers: ["ControlOrMeta"] });
+    await card(page, names[0]!).click({ modifiers: ["Shift"] });
     await toggle(page, names[1]!).click();
     await bar(page).getByRole("button", { name: "Delete" }).click();
 
@@ -394,7 +400,7 @@ test("Delete says how many stay when the reader may not delete some", async ({
 
   try {
     await expect(card(page, memberRecipe)).toBeVisible();
-    await card(page, names[0]!).click({ modifiers: ["ControlOrMeta"] });
+    await card(page, names[0]!).click({ modifiers: ["Shift"] });
     await toggle(page, memberRecipe).click();
     await bar(page).getByRole("button", { name: "Delete" }).click();
 
@@ -437,7 +443,7 @@ test("Delete is unavailable when no selected recipe may be deleted", async ({
   });
 
   try {
-    await card(page, names[0]!).click({ modifiers: ["ControlOrMeta"] });
+    await card(page, names[0]!).click({ modifiers: ["Shift"] });
     await expect(bar(page).getByRole("button", { name: "Delete" })).toBeDisabled();
   } finally {
     await context.close();
@@ -463,7 +469,7 @@ test("recipes picked across two searches file into a new cookbook, and Open land
 
   try {
     await search(page, `${word} Pasta`, pasta[0]!);
-    await card(page, pasta[0]!).click({ modifiers: ["ControlOrMeta"] });
+    await card(page, pasta[0]!).click({ modifiers: ["Shift"] });
     await toggle(page, pasta[1]!).click();
     await search(page, `${word} Pizza`, pizza[0]!);
     await toggle(page, pizza[0]!).click();
@@ -502,7 +508,7 @@ test("filing into a cookbook that already holds one of the recipes keeps one mem
   await seedCookbook(aiStack, title, [ids[0]!]);
 
   try {
-    await card(page, names[0]!).click({ modifiers: ["ControlOrMeta"] });
+    await card(page, names[0]!).click({ modifiers: ["Shift"] });
     await toggle(page, names[1]!).click();
     await bar(page).getByRole("button", { name: "Add to cookbook" }).click();
     await page.locator(`[data-cookbook-toggle="${title}"]`).click();
@@ -534,7 +540,7 @@ test("on a cookbook page, Remove takes the selection out and leaves the cookbook
     await page.goto(`/cookbooks/${cookbookId}`);
     for (const name of names) await expect(card(page, name)).toBeVisible();
 
-    await card(page, names[0]!).click({ modifiers: ["ControlOrMeta"] });
+    await card(page, names[0]!).click({ modifiers: ["Shift"] });
     await toggle(page, names[1]!).click();
     await bar(page).getByRole("button", { name: "Remove" }).click();
 
@@ -563,7 +569,7 @@ test("on a cookbook page, Add to cookbook copies and Delete deletes for good", a
 
   try {
     await page.goto(`/cookbooks/${cookbookId}`);
-    await card(page, names[0]!).click({ modifiers: ["ControlOrMeta"] });
+    await card(page, names[0]!).click({ modifiers: ["Shift"] });
     await toggle(page, names[1]!).click();
     await bar(page).getByRole("button", { name: "Add to cookbook" }).click();
     await page.getByTestId("new-cookbook-title").fill(copy);
@@ -573,7 +579,7 @@ test("on a cookbook page, Add to cookbook copies and Delete deletes for good", a
       .poll(() => readCookbookMembers(aiStack, copy))
       .toEqual([...names].sort((a, b) => a.localeCompare(b)));
 
-    await card(page, names[0]!).click({ modifiers: ["ControlOrMeta"] });
+    await card(page, names[0]!).click({ modifiers: ["Shift"] });
     await bar(page).getByRole("button", { name: "Delete" }).click();
     await page.getByRole("dialog").getByRole("button", { name: "Delete" }).click();
 

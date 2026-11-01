@@ -186,14 +186,13 @@ function RecipeCardComponent({
     if (isLeaving) rowRef.current?.triggerDeleteAnimation(() => setHasLeft(true));
   }, [isLeaving]);
 
-  // Cmd/Ctrl-click toggles and Shift-click selects a range, selecting or not;
-  // caught before the card's own click can navigate.
-  const handleModifierClick = (event: MouseEvent) => {
-    if (!selection || !(event.metaKey || event.ctrlKey || event.shiftKey)) return;
+  // Shift-click selects a range from the last card, or starts with this one;
+  // Cmd/Ctrl-click stays the link's, opening a new tab (#555).
+  const handleShiftClick = (event: MouseEvent) => {
+    if (!selection || !event.shiftKey) return;
     event.preventDefault();
     event.stopPropagation();
-    if (event.shiftKey) selection.selectRange(recipe);
-    else selection.toggle(recipe);
+    selection.selectRange(recipe);
   };
 
   const averageRating = recipe.averageRating ?? null;
@@ -628,7 +627,7 @@ function RecipeCardComponent({
     <>
       <div
         className={`relative select-none [-webkit-touch-callout:none] ${hasLeft ? "invisible" : ""}`}
-        onClickCapture={handleModifierClick}
+        onClickCapture={handleShiftClick}
         {...longPressProps}
       >
         <div inert={isSelecting}>

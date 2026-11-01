@@ -62,7 +62,7 @@ test("a bulk delete made offline keeps the recipe edited meanwhile, and says so"
   for (const name of names) await expect(card(name)).toBeVisible();
 
   await offlineHarness.transition("stopped");
-  await card(names[0]!).click({ modifiers: ["ControlOrMeta"] });
+  await card(names[0]!).click({ modifiers: ["Shift"] });
   await toggle(names[1]!).click();
   await toggle(names[2]!).click();
   await page
