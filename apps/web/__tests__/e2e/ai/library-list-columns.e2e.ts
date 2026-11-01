@@ -202,31 +202,29 @@ test("a long title wraps onto a second line inside its row", async ({ browser })
   }
 });
 
-/** Every chip of the row titled `title`, and whether any of them falls outside the row. */
+/** Every chip of the row titled `title`, and whether all of them sit inside the row. */
 function rowChips(page: Page, title: string) {
   return page.evaluate((wanted) => {
     const heading = [
       ...document.querySelectorAll<HTMLElement>("[data-recipe-card] h3, [data-cookbook-card] h3"),
     ].find((candidate) => candidate.title === wanted);
     const content = heading?.closest<HTMLElement>(".flex-col");
-    // The facts sit in a `display: contents` group, so the row is that group's parent.
-    let chips = content?.querySelector<HTMLElement>(".chip")?.parentElement ?? null;
 
-    if (chips && getComputedStyle(chips).display === "contents") chips = chips.parentElement;
-    if (!content || !chips) return null;
+    if (!content) return null;
 
+    const style = getComputedStyle(content);
     const box = content.getBoundingClientRect();
-    const bottom = box.bottom - parseFloat(getComputedStyle(content).paddingBottom) + 0.5;
-    const row = chips.getBoundingClientRect();
-    const items = [...chips.querySelectorAll<HTMLElement>(".chip")];
+    const right = box.right - parseFloat(style.paddingRight) + 0.5;
+    const bottom = box.bottom - parseFloat(style.paddingBottom) + 0.5;
+    const items = [...content.querySelectorAll<HTMLElement>(".chip")];
 
     return {
       texts: items.map((item) => item.textContent?.trim() ?? ""),
-      warnings: items.filter((item) => item.dataset.color === "warning").length,
+      warnings: items.filter((item) => item.classList.contains("chip--warning")).length,
       allInView: items.every((item) => {
         const r = item.getBoundingClientRect();
 
-        return r.right <= row.right + 0.5 && r.bottom <= Math.min(row.bottom, bottom) + 0.5;
+        return r.right <= right && r.bottom <= bottom;
       }),
     };
   }, title);
