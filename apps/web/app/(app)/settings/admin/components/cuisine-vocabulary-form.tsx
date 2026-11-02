@@ -157,8 +157,12 @@ export default function CuisineVocabularyForm() {
         </ul>
       </ScrollShadow>
 
-      <Modal.Backdrop isOpen={pendingDelete !== null} onOpenChange={() => setPendingDelete(null)}>
-        <Modal.Container>
+      <Modal.Backdrop
+        className="z-[1099]"
+        isOpen={pendingDelete !== null}
+        onOpenChange={() => setPendingDelete(null)}
+      >
+        <Modal.Container className="z-[1100]">
           <Modal.Dialog>
             {({ close }) => (
               <>
