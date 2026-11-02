@@ -1,15 +1,21 @@
 "use client";
 
-import { Fragment, useMemo, useState } from "react";
+import { useMemo, useState } from "react";
 import { AnimatedNumber } from "@/components/recipes/animated-number";
-import { BeakerIcon, BoltIcon, CubeIcon, FireIcon, SwatchIcon } from "@heroicons/react/16/solid";
+import {
+  BeakerIcon,
+  BoltIcon,
+  ChevronDownIcon,
+  CubeIcon,
+  FireIcon,
+} from "@heroicons/react/16/solid";
 import { Card, Separator } from "@heroui/react";
 import { useTranslations } from "next-intl";
 
 import type { ExtraNutrient, ExtraNutrients } from "@norish/shared/contracts/nutrients";
 import type { MacroCalorieShare, MacroKey } from "@norish/shared/lib/nutrition-macros";
 import { EXTRA_NUTRIENT_UNITS, knownExtras } from "@norish/shared/contracts/nutrients";
-import { CALORIES_PER_GRAM, macroCalorieShares } from "@norish/shared/lib/nutrition-macros";
+import { macroCalorieShares } from "@norish/shared/lib/nutrition-macros";
 
 import NutritionPortionControl from "./nutrition-portion-control";
 
@@ -27,7 +33,6 @@ export type NutritionRecipeLike = {
 const MACRO_STYLES: Record<MacroKey, { color: string; label: string; icon: typeof BeakerIcon }> = {
   fat: { color: "text-nutrition-fat", label: "fat", icon: BeakerIcon },
   carbs: { color: "text-nutrition-carbs", label: "carbs", icon: CubeIcon },
-  fiber: { color: "text-nutrition-fiber", label: "fiber", icon: SwatchIcon },
   protein: { color: "text-nutrition-protein", label: "protein", icon: BoltIcon },
 };
 
@@ -36,6 +41,9 @@ const PART_OF: Partial<Record<MacroKey, "saturatedFat" | "sugars">> = {
   fat: "saturatedFat",
   carbs: "sugars",
 };
+
+/** The nutrients behind "More nutrients", in the order they are listed. */
+const MORE_NUTRIENTS = ["fiber", "sodium"] as const satisfies ExtraNutrient[];
 
 export function getNutritionData(recipe: NutritionRecipeLike, portions: number) {
   const parsedFat = typeof recipe.fat === "string" ? parseFloat(recipe.fat) : recipe.fat;
@@ -53,7 +61,6 @@ export function getNutritionData(recipe: NutritionRecipeLike, portions: number) 
       fat: parsedFat != null ? parsedFat * portions : null,
       carbs: parsedCarbs != null ? parsedCarbs * portions : null,
       protein: parsedProtein != null ? parsedProtein * portions : null,
-      fiber: extras.fiber != null ? extras.fiber * portions : null,
     },
     extras: Object.fromEntries(
       Object.entries(extras).map(([key, value]) => [key, value * portions])
@@ -61,10 +68,10 @@ export function getNutritionData(recipe: NutritionRecipeLike, portions: number) 
   };
 }
 
-/** The asterisk after the calories of a total that left lines out, explained beneath it. */
-function CaloriesMark() {
+/** The asterisk after a value that may be higher, explained beneath the values. */
+function Star({ testId }: { testId?: string }) {
   return (
-    <span aria-hidden className="text-muted" data-testid="nutrition-calories-mark">
+    <span aria-hidden className="text-muted" data-testid={testId}>
       *
     </span>
   );
@@ -72,20 +79,17 @@ function CaloriesMark() {
 
 /**
  * The macro ring: one arc per stored macro, sized by the calories it
- * contributes rather than by its weight in grams, with the sugars a lighter
- * band at the start of the carbohydrate arc. The recipe's own stored
+ * contributes rather than by its weight in grams. The recipe's own stored
  * calories sit in the centre — the arcs and that figure may disagree, and
  * where they do the stored figure wins, because a calorie count computed
  * from macros is not a number anybody supplied.
  */
 function NutritionDonut({
   shares,
-  sugars,
   calories,
   marked,
 }: {
   shares: MacroCalorieShare[];
-  sugars: number | null;
   calories: number | null;
   marked: boolean;
 }) {
@@ -97,7 +101,11 @@ function NutritionDonut({
       <svg aria-hidden className="size-full -rotate-90" viewBox="0 0 36 36">
         {shares.map((macro) => {
           const length = macro.share * 100;
-          const arc = (
+          const offset = -drawn;
+
+          drawn += length;
+
+          return (
             <circle
               key={macro.key}
               className={MACRO_STYLES[macro.key].color}
@@ -108,37 +116,10 @@ function NutritionDonut({
               r="15.9155"
               stroke="currentColor"
               strokeDasharray={`${length} ${100 - length}`}
-              strokeDashoffset={-drawn}
+              strokeDashoffset={offset}
               strokeWidth="3.6"
             />
           );
-
-          const sugarCalories =
-            macro.key === "carbs" && sugars ? sugars * CALORIES_PER_GRAM.carbs : 0;
-          const sugarLength =
-            macro.calories > 0 ? length * Math.min(sugarCalories / macro.calories, 1) : 0;
-          const band =
-            sugarLength > 0 ? (
-              <circle
-                key="sugars"
-                className="text-background"
-                cx="18"
-                cy="18"
-                data-testid="nutrition-sugars-band"
-                fill="none"
-                opacity={0.4}
-                pathLength={100}
-                r="15.9155"
-                stroke="currentColor"
-                strokeDasharray={`${sugarLength} ${100 - sugarLength}`}
-                strokeDashoffset={-drawn}
-                strokeWidth="3.6"
-              />
-            ) : null;
-
-          drawn += length;
-
-          return [arc, band];
         })}
       </svg>
       {calories != null && (
@@ -148,7 +129,7 @@ function NutritionDonut({
               className="text-foreground text-2xl leading-none font-semibold"
               value={String(Math.round(calories))}
             />
-            {marked ? <CaloriesMark /> : null}
+            {marked ? <Star testId="nutrition-calories-mark" /> : null}
           </span>
           <span className="text-muted mt-1 text-xs">{t("calories")}</span>
         </div>
@@ -159,10 +140,12 @@ function NutritionDonut({
 
 /**
  * A recipe's nutrition values: a macro ring with the stored calories in its
- * centre and the macros as its legend. A recipe with calories and no macros
- * has no ring to draw, so its calories are shown as a row of their own.
- * `marked` puts an asterisk after the calories of a worked-out total that
- * left lines out; what it means is said beneath.
+ * centre and the macros as its legend, saturates and sugars beneath fat and
+ * carbs as labels list them, and fiber and sodium behind "More nutrients".
+ * A recipe with calories and no macros has no ring to draw, so its calories
+ * are shown as a row of their own. `marked` puts an asterisk after the
+ * calories of a worked-out total that left lines out; what it means is said
+ * beneath, by the card.
  */
 export function NutritionBody({
   recipe,
@@ -174,16 +157,18 @@ export function NutritionBody({
   marked?: boolean;
 }) {
   const t = useTranslations("recipes.nutrition");
+  const [moreOpen, setMoreOpen] = useState(false);
   // The arcs read the stored macros, so the portion control moves the legend
   // and leaves the ring where it is.
-  const shares = useMemo(
-    () => macroCalorieShares({ ...recipe, fiber: knownExtras(recipe.nutritionExtras).fiber }),
-    [recipe]
-  );
+  const shares = useMemo(() => macroCalorieShares(recipe), [recipe]);
   const { values, extras } = getNutritionData(recipe, portions);
-  const perServing = knownExtras(recipe.nutritionExtras);
-  // A worked-out extra that not every counted line knew is at least what it says.
-  const atLeast = (key: ExtraNutrient) => (recipe.extrasCoverage?.[key] ?? 1) < 1;
+  // A worked-out extra that not every counted line knew may be higher than it says.
+  const partial = (key: ExtraNutrient) => (recipe.extrasCoverage?.[key] ?? 1) < 1;
+  const more = MORE_NUTRIENTS.filter((key) => extras[key] !== undefined);
+  const parts = shares.flatMap((macro) => PART_OF[macro.key] ?? []);
+  // The card explains the asterisk when lines were left out; otherwise it is said here.
+  const starNote =
+    !marked && [...parts, ...more].some((key) => extras[key] !== undefined && partial(key));
 
   if (shares.length === 0) {
     if (values.calories == null) return null;
@@ -199,112 +184,118 @@ export function NutritionBody({
         <span className="text-foreground flex items-baseline text-base font-semibold">
           <AnimatedNumber value={String(Math.round(values.calories))} />
           <span className="text-muted ml-1 font-normal">kcal</span>
-          {marked ? <CaloriesMark /> : null}
+          {marked ? <Star testId="nutrition-calories-mark" /> : null}
         </span>
       </div>
     );
   }
 
   return (
-    <div className="flex items-center gap-5">
-      <NutritionDonut
-        calories={values.calories}
-        marked={marked}
-        shares={shares}
-        sugars={perServing.sugars ?? null}
-      />
-      <dl className="divide-border min-w-0 flex-1 divide-y">
-        {shares.map((macro) => {
-          const style = MACRO_STYLES[macro.key];
-          const value = values[macro.key];
-          const part = PART_OF[macro.key];
-          const partValue = part ? extras[part] : undefined;
+    <div className="flex flex-col gap-3">
+      <div className="flex items-center gap-5">
+        <NutritionDonut calories={values.calories} marked={marked} shares={shares} />
+        <dl className="divide-border min-w-0 flex-1 divide-y">
+          {shares.map((macro) => {
+            const style = MACRO_STYLES[macro.key];
+            const value = values[macro.key];
+            const part = PART_OF[macro.key];
+            const partValue = part ? extras[part] : undefined;
+            const withPart = part !== undefined && partValue !== undefined;
 
-          const withPart = part !== undefined && partValue !== undefined;
-
-          return (
-            <Fragment key={macro.key}>
-              <div
-                className={`flex items-center justify-between gap-2 ${withPart ? "border-b-0 pt-2" : "py-2"}`}
-              >
-                <dt className="flex min-w-0 items-center gap-2">
-                  <style.icon className={`${style.color} size-4 shrink-0`} />
-                  <span className="truncate text-base">{t(style.label)}</span>
-                </dt>
-                <dd className="text-foreground flex items-baseline text-base font-semibold">
-                  {macro.key === "fiber" && atLeast("fiber") ? <AtLeast /> : null}
-                  <AnimatedNumber value={String(Math.round(value ?? macro.grams))} />
-                  <span className="text-muted ml-1 font-normal">g</span>
-                </dd>
+            return (
+              <div key={macro.key} className={withPart ? "flex flex-col gap-1 py-2" : "py-2"}>
+                <div className="flex items-center justify-between gap-2">
+                  <dt className="flex min-w-0 items-center gap-2">
+                    <style.icon className={`${style.color} size-4 shrink-0`} />
+                    <span className="truncate text-base">{t(style.label)}</span>
+                  </dt>
+                  <dd className="text-foreground flex items-baseline text-base font-semibold">
+                    <AnimatedNumber value={String(Math.round(value ?? macro.grams))} />
+                    <span className="text-muted ml-1 font-normal">g</span>
+                  </dd>
+                </div>
+                {withPart ? (
+                  <div
+                    className="text-muted flex items-center justify-between gap-2 pl-6 text-sm"
+                    data-testid={`nutrition-${part}`}
+                  >
+                    <dt className="truncate">{t(part)}</dt>
+                    <dd className="flex items-baseline">
+                      <NutrientValue nutrient={part} partial={partial(part)} value={partValue} />
+                    </dd>
+                  </div>
+                ) : null}
               </div>
-              {withPart ? (
-                <ExtraRow
-                  atLeast={atLeast(part)}
-                  label={t(part)}
-                  nutrient={part}
-                  testId={`nutrition-${part}`}
-                  value={partValue}
-                />
-              ) : null}
-            </Fragment>
-          );
-        })}
-        {extras.sodium !== undefined ? (
-          <ExtraRow
-            prominent
-            atLeast={atLeast("sodium")}
-            label={t("sodium")}
-            nutrient="sodium"
-            testId="nutrition-sodium"
-            value={extras.sodium}
-          />
-        ) : null}
-      </dl>
+            );
+          })}
+        </dl>
+      </div>
+      {more.length > 0 ? (
+        <div className="border-border border-t">
+          <button
+            aria-expanded={moreOpen}
+            className="text-muted hover:text-foreground flex min-h-11 w-full items-center justify-between text-sm transition-colors"
+            data-testid="nutrition-more-toggle"
+            type="button"
+            onClick={() => setMoreOpen((wasOpen) => !wasOpen)}
+          >
+            <span>{t(moreOpen ? "fewerNutrients" : "moreNutrients")}</span>
+            <ChevronDownIcon
+              className={`size-4 shrink-0 transition-transform ${moreOpen ? "rotate-180" : ""}`}
+            />
+          </button>
+          {moreOpen ? (
+            <dl className="grid grid-cols-2 gap-x-6 gap-y-1.5 pb-1" data-testid="nutrition-more">
+              {more.map((key) => (
+                <div
+                  key={key}
+                  className="flex items-baseline justify-between gap-2 text-sm"
+                  data-testid={`nutrition-${key}`}
+                >
+                  <dt className="text-muted truncate">{t(key)}</dt>
+                  <dd className="text-foreground flex items-baseline">
+                    <NutrientValue nutrient={key} partial={partial(key)} value={extras[key]!} />
+                  </dd>
+                </div>
+              ))}
+            </dl>
+          ) : null}
+        </div>
+      ) : null}
+      {starNote ? (
+        <p className="text-muted text-xs" data-testid="nutrition-star-note">
+          * {t("starredMayBeHigher")}
+        </p>
+      ) : null}
     </div>
   );
 }
 
-/** The mark before a value that is a lower bound: not every counted line's food knew it. */
-function AtLeast() {
-  return (
-    <span className="text-muted mr-0.5 font-normal" data-testid="nutrition-at-least">
-      ≥
-    </span>
-  );
-}
-
-/** A nutrient listed beneath a macro, or on its own row, in its own unit. */
-function ExtraRow({
-  label,
+/**
+ * One of the other nutrients in its own unit, starred where it may be higher.
+ * A value that may be higher and rounds to nothing says nothing: "—", not "0".
+ */
+function NutrientValue({
   nutrient,
   value,
-  atLeast,
-  prominent = false,
-  testId,
+  partial,
 }: {
-  label: string;
   nutrient: ExtraNutrient;
   value: number;
-  atLeast: boolean;
-  prominent?: boolean;
-  testId: string;
+  partial: boolean;
 }) {
   const unit = EXTRA_NUTRIENT_UNITS[nutrient];
   // Grams to a tenth, as labels give them; milligrams and micrograms whole.
   const shown = unit === "g" ? Math.round(value * 10) / 10 : Math.round(value);
 
+  if (partial && shown === 0) return <span data-testid="nutrition-unknown">—</span>;
+
   return (
-    <div
-      className={`flex items-center justify-between gap-2 ${prominent ? "py-2 text-base" : "text-muted pb-2 pl-6 text-sm"}`}
-      data-testid={testId}
-    >
-      <dt className="truncate">{label}</dt>
-      <dd className={`flex items-baseline ${prominent ? "text-foreground font-semibold" : ""}`}>
-        {atLeast ? <AtLeast /> : null}
-        <AnimatedNumber value={String(shown)} />
-        <span className="text-muted ml-1 font-normal">{unit}</span>
-      </dd>
-    </div>
+    <>
+      <AnimatedNumber value={String(shown)} />
+      {partial ? <Star testId="nutrition-partial" /> : null}
+      <span className="text-muted ml-1">{unit}</span>
+    </>
   );
 }
 

@@ -1,4 +1,4 @@
-import { render, screen } from "@testing-library/react";
+import { fireEvent, render, screen } from "@testing-library/react";
 import { describe, expect, it, vi } from "vitest";
 
 import "@testing-library/jest-dom";
@@ -132,45 +132,88 @@ describe("Nutrition donut with the other nutrients", () => {
     nutritionExtras: { saturatedFat: 3, sugars: 10, fiber: 10, sodium: 480 },
   };
 
-  it("gives fiber its own arc at two calories a gram, and the sugars a band across the carbs", () => {
+  it("keeps the ring to fat, carbs and protein", () => {
     const { container } = render(<NutritionBody portions={1} recipe={recipe} />);
-    const [fat, carbs, sugars, fiber, protein] = arcLengths(container);
+    const [fat, carbs, protein] = arcLengths(container);
 
-    expect(fat).toBeCloseTo((90 / 230) * 100);
-    expect(carbs).toBeCloseTo((80 / 230) * 100);
-    // Half the carbohydrate calories are sugars.
-    expect(sugars).toBeCloseTo(carbs! / 2);
-    expect(fiber).toBeCloseTo((20 / 230) * 100);
-    expect(protein).toBeCloseTo((40 / 230) * 100);
-    expect(screen.getByTestId("nutrition-sugars-band")).toBeInTheDocument();
+    expect(arcs(container)).toHaveLength(3);
+    expect(fat).toBeCloseTo((90 / 210) * 100);
+    expect(carbs).toBeCloseTo((80 / 210) * 100);
+    expect(protein).toBeCloseTo((40 / 210) * 100);
   });
 
-  it("lists saturates under fat and sugars under carbs, then sodium in milligrams", () => {
+  it("lists saturates under fat and sugars under carbs", () => {
     render(<NutritionBody portions={1} recipe={recipe} />);
 
-    expect(screen.getByTestId("nutrition-saturatedFat")).toHaveTextContent("3g");
+    expect(screen.getByTestId("nutrition-saturatedFat")).toHaveTextContent(
+      "recipes.nutrition.saturatedFat3g"
+    );
     expect(screen.getByTestId("nutrition-sugars")).toHaveTextContent("10g");
+  });
+
+  it("keeps fiber and sodium behind More nutrients until it is opened", () => {
+    render(<NutritionBody portions={1} recipe={recipe} />);
+    const toggle = screen.getByTestId("nutrition-more-toggle");
+
+    expect(toggle).toHaveAttribute("aria-expanded", "false");
+    expect(toggle).toHaveTextContent("recipes.nutrition.moreNutrients");
+    expect(screen.queryByTestId("nutrition-sodium")).not.toBeInTheDocument();
+
+    fireEvent.click(toggle);
+
+    expect(toggle).toHaveAttribute("aria-expanded", "true");
+    expect(toggle).toHaveTextContent("recipes.nutrition.fewerNutrients");
+    expect(screen.getByTestId("nutrition-fiber")).toHaveTextContent("10g");
     expect(screen.getByTestId("nutrition-sodium")).toHaveTextContent("480mg");
   });
 
-  it("marks a nutrient as at least its value where not every counted line's food knew it", () => {
+  it("stars a nutrient that not every counted line's food knew, and says why", () => {
     render(
       <NutritionBody
         portions={1}
-        recipe={{ ...recipe, extrasCoverage: { sugars: 1, sodium: 0.6 } }}
+        recipe={{ ...recipe, extrasCoverage: { sugars: 0.6, saturatedFat: 1 } }}
       />
     );
 
-    expect(screen.getByTestId("nutrition-sodium")).toHaveTextContent("≥");
-    expect(screen.getByTestId("nutrition-sugars")).not.toHaveTextContent("≥");
+    expect(screen.getByTestId("nutrition-sugars")).toHaveTextContent("10*g");
+    expect(screen.getByTestId("nutrition-saturatedFat")).not.toHaveTextContent("*");
+    expect(screen.getByTestId("nutrition-star-note")).toHaveTextContent(
+      "recipes.nutrition.starredMayBeHigher"
+    );
   });
 
-  it("draws no fiber arc, band or rows for a recipe that knows none of them", () => {
-    const { container } = render(
+  it("leaves the explanation to the card when lines were left out", () => {
+    render(
+      <NutritionBody marked portions={1} recipe={{ ...recipe, extrasCoverage: { sugars: 0.6 } }} />
+    );
+
+    expect(screen.getByTestId("nutrition-sugars")).toHaveTextContent("*");
+    expect(screen.queryByTestId("nutrition-star-note")).not.toBeInTheDocument();
+  });
+
+  it("shows a dash, not zero, for a partial value that rounds to nothing", () => {
+    render(
+      <NutritionBody
+        portions={1}
+        recipe={{
+          ...recipe,
+          nutritionExtras: { saturatedFat: 0.01, sugars: 0 },
+          extrasCoverage: { saturatedFat: 0.3 },
+        }}
+      />
+    );
+
+    expect(screen.getByTestId("nutrition-saturatedFat")).toHaveTextContent("—");
+    // A value every line knew is a real zero.
+    expect(screen.getByTestId("nutrition-sugars")).toHaveTextContent("0g");
+  });
+
+  it("draws no sub-rows or More nutrients for a recipe that knows none of them", () => {
+    render(
       <NutritionBody portions={1} recipe={{ calories: 400, fat: 10, carbs: 10, protein: 10 }} />
     );
 
-    expect(arcs(container)).toHaveLength(3);
-    expect(screen.queryByTestId("nutrition-sodium")).not.toBeInTheDocument();
+    expect(screen.queryByTestId("nutrition-sugars")).not.toBeInTheDocument();
+    expect(screen.queryByTestId("nutrition-more-toggle")).not.toBeInTheDocument();
   });
 });

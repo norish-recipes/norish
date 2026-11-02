@@ -30,15 +30,16 @@ counted and why the others weren't.
 
 ## Fiber, sugars, sodium and more
 
-Under the macros, the card also shows saturated fat, sugars, fiber and sodium
-when Norish knows them. Fiber gets its own part of the ring, at 2 kcal per
-gram, and sugars are the lighter part of the carbs.
+The card lists saturates under fat and sugars under carbs, the way food labels
+do, when Norish knows them. Fiber and sodium are under **More nutrients**. The
+ring stays fat, carbs and protein.
 
 Each one comes from the recipe when its source states it. Otherwise Norish adds
 it up from the ingredients, with the [AI](../configuration/ai-provider.md)
 estimate for the lines it couldn't count. Not every food in the datasets has
-every value, so a total that only some of the counted lines add to is shown
-with **≥**: it is at least that much.
+every value, so a total that only some of the counted lines add to is marked
+with **\***: it may be higher. Where that total rounds to 0, the card shows
+**—** instead.
 
 Norish also keeps mono- and polyunsaturated fat, trans fat, cholesterol,
 potassium, calcium, iron, vitamin C and vitamin A where the datasets have
