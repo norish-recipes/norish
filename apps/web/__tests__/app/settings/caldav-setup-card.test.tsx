@@ -3,7 +3,7 @@
  * nothing tests on a keystroke: a half-typed password failed and never retried (#703).
  */
 import CalDavConfigCard from "@/app/(app)/settings/caldav/components/caldav-config-card";
-import { fireEvent, render, screen } from "@testing-library/react";
+import { fireEvent, render, screen, waitFor } from "@testing-library/react";
 import { describe, expect, it, vi } from "vitest";
 
 import "@testing-library/jest-dom";
@@ -12,7 +12,10 @@ vi.mock("next-intl", () => ({
   useTranslations: () => (key: string) => key,
 }));
 
-const testConnection = vi.fn(async () => ({ success: false, message: "fetch failed" }));
+const testConnection = vi.fn(async (..._args: unknown[]): Promise<Record<string, unknown>> => ({
+  success: false,
+  message: "fetch failed",
+}));
 
 vi.mock("@/app/(app)/settings/caldav/context", () => ({
   useCalDavSettingsContext: () => ({ config: null, saveConfig: vi.fn(), testConnection }),
@@ -38,7 +41,35 @@ describe("CalDAV setup card", () => {
     expect(testConnection).toHaveBeenCalledWith(
       "https://cloud.example/remote.php/dav",
       "chef",
-      "s"
+      "s",
+      null
+    );
+  });
+
+  it("tests again trusting the certificate the server was refused over (#703)", async () => {
+    testConnection.mockResolvedValueOnce({
+      success: false,
+      message: "fetch failed: unable to get local issuer certificate",
+      untrustedCertificate: { pem: "PEM", name: "nextcloud.internal", fingerprint: "AB:CD" },
+    });
+    render(<CalDavConfigCard />);
+    const field = (name: string) => screen.getByPlaceholderText(`${name}Placeholder`);
+
+    fireEvent.change(field("serverUrl"), { target: { value: "https://nextcloud.internal/dav" } });
+    fireEvent.change(field("username"), { target: { value: "chef" } });
+    fireEvent.change(field("password"), { target: { value: "secret" } });
+    fireEvent.click(screen.getByRole("button", { name: "test" }));
+
+    expect(await screen.findByText("AB:CD")).toBeInTheDocument();
+    fireEvent.click(screen.getByRole("button", { name: "trust" }));
+
+    await waitFor(() =>
+      expect(testConnection).toHaveBeenLastCalledWith(
+        "https://nextcloud.internal/dav",
+        "chef",
+        "secret",
+        "PEM"
+      )
     );
   });
 });

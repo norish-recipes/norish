@@ -136,6 +136,7 @@ export function createMockCaldavConfig(
     userId: "test-user-id",
     serverUrl: "https://caldav.example.com",
     username: "testuser",
+    trustedCertificate: null,
     enabled: true,
     breakfastTime: "08:00-09:00",
     lunchTime: "12:00-13:00",

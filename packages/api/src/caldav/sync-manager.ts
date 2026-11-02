@@ -85,6 +85,7 @@ export async function syncPlannedItem(
     calendarUrl: config.calendarUrl ?? undefined,
     username: config.username,
     password: config.password,
+    trustedCertificate: config.trustedCertificate ?? undefined,
   });
 
   const { start, end } = getEventTimeRange(date, slot, config);
@@ -140,6 +141,7 @@ export async function deletePlannedItem(userId: string, itemId: string): Promise
       calendarUrl: config.calendarUrl ?? undefined,
       username: config.username,
       password: config.password,
+      trustedCertificate: config.trustedCertificate ?? undefined,
     });
 
     await client.deleteEvent(syncStatus.caldavEventUid);

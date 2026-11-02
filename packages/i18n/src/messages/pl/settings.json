@@ -335,7 +335,13 @@
       "breakfastTime": "Godzina śniadania",
       "lunchTime": "Godzina lunchu",
       "dinnerTime": "Godzina kolacji",
-      "snackTime": "Godzina przekąski"
+      "snackTime": "Godzina przekąski",
+      "untrustedCertificate": {
+        "title": "Niezaufany certyfikat",
+        "description": "Żaden publiczny urząd certyfikacji nie poręcza za {name}. Zaufaj mu tylko wtedy, gdy to Twój własny serwer.",
+        "fingerprint": "Odcisk SHA-256",
+        "trust": "Zaufaj"
+      }
     },
     "config": {
       "title": "Konfiguracja CalDAV",

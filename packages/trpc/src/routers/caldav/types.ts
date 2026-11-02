@@ -1,6 +1,7 @@
 import { z } from "zod";
 
 import type { SaveCaldavConfigInputDto } from "@norish/shared/contracts";
+import { isCertificate } from "@norish/shared-server/caldav/trusted-certificate";
 import {
   DeleteCaldavConfigInputSchema as SharedDeleteCaldavConfigInputSchema,
   SaveCaldavConfigInputSchema as SharedSaveCaldavConfigInputSchema,
@@ -23,17 +24,27 @@ type DeleteCaldavConfigOutputValue = {
   deleteEvents: boolean;
 };
 
+/** A PEM certificate the user chose to trust for their server. */
+const TrustedCertificateSchema = z
+  .string()
+  .max(16_384)
+  .refine(isCertificate, "Not a certificate")
+  .nullable()
+  .optional();
+
 export const SaveCaldavConfigInputSchema: z.ZodType<
   SaveCaldavConfigInputValue,
   SaveCaldavConfigInputValue
 > = SharedSaveCaldavConfigInputSchema.extend({
   password: z.string().optional(),
+  trustedCertificate: TrustedCertificateSchema,
 });
 
 export const TestCaldavConnectionInputSchema = z.object({
   serverUrl: z.url(),
   username: z.string().min(1),
   password: z.string().min(1),
+  trustedCertificate: TrustedCertificateSchema,
 });
 
 export const DeleteCaldavConfigInputSchema: z.ZodType<
@@ -51,6 +62,7 @@ export const FetchCalendarsInputSchema = z.object({
   serverUrl: z.url(),
   username: z.string().min(1),
   password: z.string().min(1),
+  trustedCertificate: TrustedCertificateSchema,
 });
 
 export type SaveCaldavConfigInput = z.infer<typeof SaveCaldavConfigInputSchema>;

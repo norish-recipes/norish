@@ -79,6 +79,7 @@ export type SaveCaldavConfigInput = {
   calendarUrl?: string | null;
   username: string;
   password: string;
+  trustedCertificate?: string | null;
   enabled: boolean;
   breakfastTime: string;
   lunchTime: string;
@@ -90,6 +91,7 @@ export type TestConnectionInput = {
   serverUrl: string;
   username: string;
   password: string;
+  trustedCertificate?: string | null;
 };
 
 export type FetchCalendarsInput = {

@@ -335,7 +335,13 @@
       "breakfastTime": "Ontbijttijd",
       "lunchTime": "Lunchtijd",
       "dinnerTime": "Dinnertijd",
-      "snackTime": "Snacktijd"
+      "snackTime": "Snacktijd",
+      "untrustedCertificate": {
+        "title": "Niet-vertrouwd certificaat",
+        "description": "Geen publieke certificaatautoriteit staat in voor {name}. Vertrouw het alleen als dit je eigen server is.",
+        "fingerprint": "SHA-256-vingerafdruk",
+        "trust": "Vertrouwen"
+      }
     },
     "config": {
       "title": "CalDAV Configuratie",

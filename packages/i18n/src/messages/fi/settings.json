@@ -335,7 +335,13 @@
       "breakfastTime": "Aamiaisen aika",
       "lunchTime": "Lounaan aika",
       "dinnerTime": "Päivällisen aika",
-      "snackTime": "Välipalan aika"
+      "snackTime": "Välipalan aika",
+      "untrustedCertificate": {
+        "title": "Ei-luotettu varmenne",
+        "description": "Mikään julkinen varmentaja ei takaa kohdetta {name}. Luota siihen vain, jos tämä on oma palvelimesi.",
+        "fingerprint": "SHA-256-sormenjälki",
+        "trust": "Luota"
+      }
     },
     "config": {
       "title": "CalDAV-asetukset",

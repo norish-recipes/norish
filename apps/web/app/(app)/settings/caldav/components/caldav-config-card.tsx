@@ -23,6 +23,7 @@ import { useCalDavSettingsContext } from "../context";
 import { useConnectionTest } from "../use-connection-test";
 import CalDavConfigEditModal from "./caldav-config-edit-modal";
 import CalDavConfigSummary from "./caldav-config-summary";
+import { UntrustedCertificateNote } from "./untrusted-certificate-note";
 
 export default function CalDavConfigCard() {
   const t = useTranslations("settings.caldav.setup");
@@ -38,8 +39,15 @@ export default function CalDavConfigCard() {
   // Initial setup form state (only used when no config exists)
   const [serverUrl, setServerUrl] = useState("");
   const [calendarUrl, setCalendarUrl] = useState<string | null>(null);
-  const { calendars, testResult, setTestResult, testing, runTest } =
-    useConnectionTest(setCalendarUrl);
+  const {
+    calendars,
+    testResult,
+    setTestResult,
+    testing,
+    runTest,
+    trustedCertificate,
+    trustAndRetest,
+  } = useConnectionTest(setCalendarUrl);
   const [username, setUsername] = useState("");
   const [password, setPassword] = useState("");
   const [showPassword, setShowPassword] = useState(false);
@@ -61,6 +69,7 @@ export default function CalDavConfigCard() {
       lunchTime,
       dinnerTime,
       snackTime,
+      trustedCertificate,
     }).then(() => setPassword("")); // Clear password after save
   };
 
@@ -203,12 +212,20 @@ export default function CalDavConfigCard() {
         </TextField>
       </div>
 
-      {testResult && (
-        <div
-          className={`rounded-lg p-3 text-base ${testResult.success ? "bg-success/10 text-success" : "bg-danger/10 text-danger"}`}
-        >
-          {testResult.message}
-        </div>
+      {testResult?.untrustedCertificate ? (
+        <UntrustedCertificateNote
+          certificate={testResult.untrustedCertificate}
+          isPending={testing}
+          onTrust={() => trustAndRetest(serverUrl, username, password, calendarUrl)}
+        />
+      ) : (
+        testResult && (
+          <div
+            className={`rounded-lg p-3 text-base ${testResult.success ? "bg-success/10 text-success" : "bg-danger/10 text-danger"}`}
+          >
+            {testResult.message}
+          </div>
+        )
       )}
 
       <ActionButtonGroup>

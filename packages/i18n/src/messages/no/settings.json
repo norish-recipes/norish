@@ -335,7 +335,13 @@
       "breakfastTime": "Frokosttidspunkt",
       "lunchTime": "Lunsjtidspunkt",
       "dinnerTime": "Middagstidspunkt",
-      "snackTime": "Snackstidspunkt"
+      "snackTime": "Snackstidspunkt",
+      "untrustedCertificate": {
+        "title": "Ikke-klarert sertifikat",
+        "description": "Ingen offentlig sertifikatutsteder går god for {name}. Stol bare på det hvis dette er din egen server.",
+        "fingerprint": "SHA-256-fingeravtrykk",
+        "trust": "Stol på"
+      }
     },
     "config": {
       "title": "CalDAV-konfigurasjon",

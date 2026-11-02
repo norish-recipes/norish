@@ -21,6 +21,7 @@ import { useTranslations } from "next-intl";
 
 import { useCalDavSettingsContext } from "../context";
 import { useConnectionTest } from "../use-connection-test";
+import { UntrustedCertificateNote } from "./untrusted-certificate-note";
 
 interface CalDavConfigEditModalProps {
   isOpen: boolean;
@@ -38,8 +39,17 @@ export default function CalDavConfigEditModal({ isOpen, onClose }: CalDavConfigE
   } = useCalDavSettingsContext();
   const [serverUrl, setServerUrl] = useState("");
   const [calendarUrl, setCalendarUrl] = useState<string | null>(null);
-  const { calendars, setCalendars, testResult, setTestResult, testing, runTest } =
-    useConnectionTest(setCalendarUrl);
+  const {
+    calendars,
+    setCalendars,
+    testResult,
+    setTestResult,
+    testing,
+    runTest,
+    trustedCertificate,
+    setTrustedCertificate,
+    trustAndRetest,
+  } = useConnectionTest(setCalendarUrl);
   const [username, setUsername] = useState("");
   const [password, setPassword] = useState("");
   const [enabled, setEnabled] = useState(true);
@@ -81,6 +91,7 @@ export default function CalDavConfigEditModal({ isOpen, onClose }: CalDavConfigE
       setLunchTime(config.lunchTime);
       setDinnerTime(config.dinnerTime);
       setSnackTime(config.snackTime);
+      setTrustedCertificate(config.trustedCertificate);
       setTestResult(null);
       setCalendars([]);
     }
@@ -147,6 +158,7 @@ export default function CalDavConfigEditModal({ isOpen, onClose }: CalDavConfigE
       lunchTime,
       dinnerTime,
       snackTime,
+      trustedCertificate,
     }).then(() => onClose());
   };
   const canSave = serverUrl && username && (password || config) && calendarUrl;
@@ -183,10 +195,23 @@ export default function CalDavConfigEditModal({ isOpen, onClose }: CalDavConfigE
               />
 
               {/* Test Connection Result */}
-              {testResult && (
-                <Chip color={testResult.success ? "success" : "danger"} size="sm" variant="soft">
-                  {testResult.message}
-                </Chip>
+              {testResult?.untrustedCertificate ? (
+                <UntrustedCertificateNote
+                  certificate={testResult.untrustedCertificate}
+                  isPending={testing}
+                  onTrust={async () => {
+                    const passwordToUse =
+                      password || (config ? await getCaldavPassword() : null) || "";
+
+                    await trustAndRetest(serverUrl, username, passwordToUse, calendarUrl);
+                  }}
+                />
+              ) : (
+                testResult && (
+                  <Chip color={testResult.success ? "success" : "danger"} size="sm" variant="soft">
+                    {testResult.message}
+                  </Chip>
+                )
               )}
 
               {/* Calendar Selection - always visible, disabled until calendars fetched */}

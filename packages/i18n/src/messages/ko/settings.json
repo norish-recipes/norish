@@ -335,7 +335,13 @@
       "breakfastTime": "아침 식사 시간",
       "lunchTime": "점심시간",
       "dinnerTime": "저녁 식사 시간",
-      "snackTime": "간식 시간"
+      "snackTime": "간식 시간",
+      "untrustedCertificate": {
+        "title": "신뢰할 수 없는 인증서",
+        "description": "{name}을(를) 보증하는 공개 인증 기관이 없습니다. 본인의 서버인 경우에만 신뢰하세요.",
+        "fingerprint": "SHA-256 지문",
+        "trust": "신뢰"
+      }
     },
     "config": {
       "title": "CalDAV 구성",

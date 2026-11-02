@@ -335,7 +335,13 @@
       "breakfastTime": "Orario colazione",
       "lunchTime": "Orario pranzo",
       "dinnerTime": "Orario cena",
-      "snackTime": "Orario spuntino"
+      "snackTime": "Orario spuntino",
+      "untrustedCertificate": {
+        "title": "Certificato non attendibile",
+        "description": "Nessuna autorità di certificazione pubblica garantisce {name}. Consideralo attendibile solo se è il tuo server.",
+        "fingerprint": "Impronta SHA-256",
+        "trust": "Considera attendibile"
+      }
     },
     "config": {
       "title": "Configurazione CalDAV",

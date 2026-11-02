@@ -23,6 +23,7 @@ export const UserCaldavConfigDecryptedSchema = z.object({
   calendarUrl: z.url().optional().nullable(),
   username: z.string(),
   password: z.string(),
+  trustedCertificate: z.string().nullable(),
   enabled: z.boolean(),
   breakfastTime: z.string(),
   lunchTime: z.string(),
@@ -44,6 +45,8 @@ export const SaveCaldavConfigInputSchema = z.object({
   calendarUrl: z.url().optional().nullable(),
   username: z.string().min(1),
   password: z.string().min(1),
+  /** PEM of a certificate the user chose to trust for this server; null trusts only the usual ones. */
+  trustedCertificate: z.string().max(16_384).nullable().optional(),
   enabled: z.boolean(),
   breakfastTime: z.string().regex(/^\d{2}:\d{2}-\d{2}:\d{2}$/),
   lunchTime: z.string().regex(/^\d{2}:\d{2}-\d{2}:\d{2}$/),

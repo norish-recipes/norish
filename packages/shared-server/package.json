@@ -29,6 +29,7 @@
     "./archive/recipe-keeper-parser": "./src/archive/recipe-keeper-parser.ts",
     "./archive/parser-helpers": "./src/archive/parser-helpers.ts",
     "./caldav/client": "./src/caldav/client.ts",
+    "./caldav/trusted-certificate": "./src/caldav/trusted-certificate.ts",
     "./caldav/sync": "./src/caldav/sync.ts",
     "./ai/enrichment/*": "./src/ai/enrichment/*.ts",
     "./ai/resolution/*": "./src/ai/resolution/*.ts",

@@ -43,6 +43,7 @@ function decryptConfig(config: UserCaldavConfigDto): UserCaldavConfigDecryptedDt
     calendarUrl: config.calendarUrlEnc ? decrypt(config.calendarUrlEnc) : null,
     username: decrypt(config.usernameEnc),
     password: decrypt(config.passwordEnc),
+    trustedCertificate: config.trustedCertificateEnc ? decrypt(config.trustedCertificateEnc) : null,
     enabled: config.enabled,
     breakfastTime: config.breakfastTime,
     lunchTime: config.lunchTime,
@@ -92,6 +93,9 @@ export async function saveCaldavConfig(
     calendarUrlEnc: validated.data.calendarUrl ? encrypt(validated.data.calendarUrl) : null,
     usernameEnc: encrypt(validated.data.username),
     passwordEnc: encrypt(validated.data.password),
+    trustedCertificateEnc: validated.data.trustedCertificate
+      ? encrypt(validated.data.trustedCertificate)
+      : null,
     enabled: validated.data.enabled,
     breakfastTime: validated.data.breakfastTime,
     lunchTime: validated.data.lunchTime,

@@ -589,6 +589,13 @@
       "when": 1793258265709,
       "tag": "0083_parked_name_keyed_links",
       "breakpoints": true
+    },
+    {
+      "idx": 84,
+      "version": "7",
+      "when": 1793647791062,
+      "tag": "0084_caldav_trusted_certificate",
+      "breakpoints": true
     }
   ]
 }
