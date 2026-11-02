@@ -4,6 +4,8 @@ import superjson from "superjson";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 
 import { recipesRouter } from "../../src/routers/recipes";
+import { updateRecipeProcedure } from "../../src/routers/recipes/recipes";
+import { router } from "../../src/trpc";
 import { canAccessResource } from "../mocks/permissions";
 import { recipes } from "../mocks/realtime/recipes";
 // Import mocks for assertions
@@ -628,6 +630,88 @@ describe("recipes procedures", () => {
         { householdKey: ctx.householdKey }
       );
       expect(result).toEqual({ success: true });
+    });
+  });
+
+  describe("edit via the API", () => {
+    const recipeId = "66666666-6666-4666-8666-666666666666";
+
+    function createCaller() {
+      return router({ updateRecipe: updateRecipeProcedure }).createCaller({
+        ...ctx,
+        connectionId: null,
+        operationId: null,
+      });
+    }
+
+    it("waits for the edit and returns the stored recipe", async () => {
+      const edited = createValidFullRecipe({ id: recipeId, name: "Renamed", version: 2 });
+
+      getRecipeFull.mockResolvedValue(edited);
+      getRecipeOwnerId.mockResolvedValue(ctx.user.id);
+      canAccessResource.mockResolvedValue(true);
+      updateRecipeWithRefs.mockResolvedValue({ stale: false });
+
+      const result = await createCaller().updateRecipe({
+        id: recipeId,
+        data: { name: "Renamed" },
+        version: 1,
+      });
+
+      expect(updateRecipeWithRefs).toHaveBeenCalledWith(
+        recipeId,
+        ctx.user.id,
+        expect.objectContaining({ name: "Renamed" }),
+        1
+      );
+      expect(result).toEqual({ recipe: edited, stale: false });
+      expect(recipes.publish).toHaveBeenCalledWith(
+        "updated",
+        { recipe: edited },
+        expect.anything()
+      );
+    });
+
+    it("reports a stale version without publishing", async () => {
+      getRecipeFull.mockResolvedValue(createValidFullRecipe({ id: recipeId }));
+      getRecipeOwnerId.mockResolvedValue(ctx.user.id);
+      canAccessResource.mockResolvedValue(true);
+      updateRecipeWithRefs.mockResolvedValue({ stale: true });
+
+      const result = await createCaller().updateRecipe({
+        id: recipeId,
+        data: { name: "Renamed" },
+        version: 1,
+      });
+
+      expect(result).toEqual({ recipe: null, stale: true });
+      expect(recipes.publish).not.toHaveBeenCalledWith(
+        "updated",
+        expect.anything(),
+        expect.anything()
+      );
+    });
+
+    it("throws NOT_FOUND for a recipe that does not exist", async () => {
+      getRecipeFull.mockResolvedValue(null);
+
+      await expect(
+        createCaller().updateRecipe({ id: recipeId, data: { name: "x" }, version: 1 })
+      ).rejects.toMatchObject({ code: "NOT_FOUND" });
+      expect(updateRecipeWithRefs).not.toHaveBeenCalled();
+    });
+
+    it("throws FORBIDDEN when the caller may view but not edit", async () => {
+      getRecipeFull.mockResolvedValue(
+        createValidFullRecipe({ id: recipeId, userId: "other-user-id" })
+      );
+      getRecipeOwnerId.mockResolvedValue("other-user-id");
+      canAccessResource.mockImplementation(async (action: string) => action === "view");
+
+      await expect(
+        createCaller().updateRecipe({ id: recipeId, data: { name: "x" }, version: 1 })
+      ).rejects.toMatchObject({ code: "FORBIDDEN" });
+      expect(updateRecipeWithRefs).not.toHaveBeenCalled();
     });
   });
 

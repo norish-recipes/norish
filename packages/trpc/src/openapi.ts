@@ -28,6 +28,7 @@ import {
   importFromUrlProcedure,
   importStatusProcedure,
   listProcedure,
+  updateRecipeProcedure,
 } from "./routers/recipes/recipes";
 import { createStoreProcedure, listStoresProcedure } from "./routers/stores/stores";
 import { router } from "./trpc";
@@ -39,6 +40,7 @@ export const openApiRouter = router({
   recipeGet: getProcedure,
   recipeSearch: listProcedure,
   recipeCreate: createRecipeProcedure,
+  recipeUpdate: updateRecipeProcedure,
   recipeImportUrl: importFromUrlProcedure,
   recipeImportStatus: importStatusProcedure,
   recipeImportPaste: importFromPasteProcedure,
