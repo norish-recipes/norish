@@ -300,16 +300,3 @@ export async function testCalDavConnection(
     };
   }
 }
-
-/**
- * Fetch available calendars from a CalDAV server
- */
-export async function fetchCalDavCalendars(
-  serverUrl: string,
-  username: string,
-  password: string
-): Promise<CalDavCalendarInfo[]> {
-  const client = new CalDavClient({ serverUrl, username, password });
-
-  return client.fetchCalendars();
-}

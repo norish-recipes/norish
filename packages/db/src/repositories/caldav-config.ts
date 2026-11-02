@@ -35,13 +35,8 @@ export async function getCaldavConfigByUserId(userId: string): Promise<UserCalda
   return validated.data;
 }
 
-export async function getCaldavConfigDecrypted(
-  userId: string
-): Promise<UserCaldavConfigDecryptedDto | null> {
-  const config = await getCaldavConfigByUserId(userId);
-
-  if (!config) return null;
-
+/** The stored row with its encrypted fields read back. */
+function decryptConfig(config: UserCaldavConfigDto): UserCaldavConfigDecryptedDto {
   return {
     userId: config.userId,
     serverUrl: decrypt(config.serverUrlEnc),
@@ -59,6 +54,14 @@ export async function getCaldavConfigDecrypted(
   };
 }
 
+export async function getCaldavConfigDecrypted(
+  userId: string
+): Promise<UserCaldavConfigDecryptedDto | null> {
+  const config = await getCaldavConfigByUserId(userId);
+
+  return config ? decryptConfig(config) : null;
+}
+
 /**
  * Get CalDAV config without password (for security)
  * Password should only be retrieved when explicitly needed
@@ -70,20 +73,9 @@ export async function getCaldavConfigWithoutPassword(
 
   if (!config) return null;
 
-  return {
-    userId: config.userId,
-    serverUrl: decrypt(config.serverUrlEnc),
-    calendarUrl: config.calendarUrlEnc ? decrypt(config.calendarUrlEnc) : null,
-    username: decrypt(config.usernameEnc),
-    enabled: config.enabled,
-    breakfastTime: config.breakfastTime,
-    lunchTime: config.lunchTime,
-    dinnerTime: config.dinnerTime,
-    snackTime: config.snackTime,
-    version: config.version,
-    createdAt: config.createdAt,
-    updatedAt: config.updatedAt,
-  };
+  const { password: _password, ...withoutPassword } = decryptConfig(config);
+
+  return withoutPassword;
 }
 
 export async function saveCaldavConfig(
@@ -189,21 +181,7 @@ export async function getHouseholdCaldavConfigs(
   for (const row of rows) {
     if (!userIds.includes(row.userId)) continue;
 
-    const decrypted: UserCaldavConfigDecryptedDto = {
-      userId: row.userId,
-      serverUrl: decrypt(row.serverUrlEnc),
-      calendarUrl: row.calendarUrlEnc ? decrypt(row.calendarUrlEnc) : null,
-      username: decrypt(row.usernameEnc),
-      password: decrypt(row.passwordEnc),
-      enabled: row.enabled,
-      breakfastTime: row.breakfastTime,
-      lunchTime: row.lunchTime,
-      dinnerTime: row.dinnerTime,
-      snackTime: row.snackTime,
-      version: row.version,
-      createdAt: row.createdAt,
-      updatedAt: row.updatedAt,
-    };
+    const decrypted = decryptConfig(row);
 
     // Use serverUrl as key for deduplication
     const existingUserId = configMap.get(decrypted.serverUrl)?.userId;
