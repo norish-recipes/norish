@@ -148,7 +148,13 @@ export class CalDavClient {
 
       return {
         success: false,
-        message: error instanceof Error ? error.message : "Connection failed",
+        // fetch's own message is only "fetch failed"; the cause says why (#703).
+        message:
+          error instanceof Error
+            ? [error.message, error.cause instanceof Error && error.cause.message]
+                .filter(Boolean)
+                .join(": ")
+            : "Connection failed",
       };
     }
   }

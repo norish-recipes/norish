@@ -119,3 +119,16 @@ describe("updateEvent", () => {
     );
   });
 });
+
+describe("testConnection", () => {
+  it("says why fetch failed, not just that it did", async () => {
+    mockLogin.mockRejectedValue(
+      new TypeError("fetch failed", { cause: new Error("unable to get local issuer certificate") })
+    );
+
+    await expect(client().testConnection()).resolves.toEqual({
+      success: false,
+      message: "fetch failed: unable to get local issuer certificate",
+    });
+  });
+});

@@ -126,14 +126,6 @@ export default function CalDavConfigEditModal({ isOpen, onClose }: CalDavConfigE
     const passwordToUse = password || (config ? await getCaldavPassword() : null) || "";
     await runTest(serverUrl, username, passwordToUse, calendarUrl);
   };
-
-  // Auto-test connection when password is entered (for new password)
-  useEffect(() => {
-    if (serverUrl && username && password && !testing && !hasAutoTestedRef.current && isOpen) {
-      hasAutoTestedRef.current = true;
-      runTest(serverUrl, username, password, calendarUrl);
-    }
-  }, [password, serverUrl, username, testing, isOpen, runTest, calendarUrl]);
   const handleSave = async () => {
     // Validate time formats
     const breakfastValid = validateTimeFormat(breakfastTime, "breakfast");

@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useRef, useState } from "react";
+import { useState } from "react";
 import { SettingsCard } from "@/app/(app)/settings/components/settings-card";
 import { ActionButton, ActionButtonGroup } from "@/components/shared/action-button";
 import { Note } from "@/components/shared/note";
@@ -48,23 +48,7 @@ export default function CalDavConfigCard() {
   const [dinnerTime, setDinnerTime] = useState("18:00-19:00");
   const [snackTime, setSnackTime] = useState("15:00-16:00");
 
-  // Track if we've already auto-tested to avoid duplicate calls
-  const hasAutoTestedRef = useRef(false);
   const handleTestConnection = () => runTest(serverUrl, username, password, calendarUrl);
-
-  // Auto-test connection when all credentials are filled
-  useEffect(() => {
-    // Skip if already testing or if we've already auto-tested
-    if (testing || hasAutoTestedRef.current) return;
-    if (serverUrl && username && password) {
-      hasAutoTestedRef.current = true;
-      void runTest(serverUrl, username, password, calendarUrl);
-    }
-    // Reset auto-test flag if credentials change after a test
-    if (!serverUrl || !username || !password) {
-      hasAutoTestedRef.current = false;
-    }
-  }, [serverUrl, username, password, testing, runTest, calendarUrl]);
   const handleInitialSetup = async () => {
     setTestResult(null);
     await saveConfig({
@@ -230,7 +214,7 @@ export default function CalDavConfigCard() {
       <ActionButtonGroup>
         <ActionButton
           action="test"
-          isDisabled={!canSave}
+          isDisabled={!serverUrl || !username || !password}
           isPending={testing}
           onPress={handleTestConnection}
         >

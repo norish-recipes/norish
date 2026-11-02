@@ -61,6 +61,22 @@ Visitors are identified by the `X-Forwarded-For` header your proxy adds, so only
 the proxy should be able to reach the app's port. A visitor who connects to the port directly can set that
 header themselves and get a sign-in rate limit of their own.
 
+## Private certificates
+
+Norish refuses a server whose HTTPS certificate is signed by your own certificate
+authority, such as a Nextcloud or AI endpoint on your network. The error reads
+`unable to get local issuer certificate`. Mount the authority's certificate and
+point `NODE_EXTRA_CA_CERTS` at it:
+
+```yaml
+services:
+  norish:
+    environment:
+      NODE_EXTRA_CA_CERTS: /certs/my-ca.pem
+    volumes:
+      - ./my-ca.pem:/certs/my-ca.pem:ro
+```
+
 ## Base path
 
 To serve the app under a path such as `https://example.com/norish`, build it with
