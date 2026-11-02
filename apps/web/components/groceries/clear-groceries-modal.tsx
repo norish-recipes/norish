@@ -1,6 +1,7 @@
 "use client";
 
-import { Button, Modal } from "@heroui/react";
+import { ActionButton, ActionButtonGroup } from "@/components/shared/action-button";
+import { Modal } from "@heroui/react";
 import { useTranslations } from "next-intl";
 
 interface ClearGroceriesModalProps {
@@ -27,8 +28,8 @@ export function ClearGroceriesModal({
   };
 
   return (
-    <Modal.Backdrop isOpen={isOpen} onOpenChange={onClose}>
-      <Modal.Container>
+    <Modal.Backdrop className="z-[1099]" isOpen={isOpen} onOpenChange={onClose}>
+      <Modal.Container className="z-[1100]">
         <Modal.Dialog>
           <Modal.Header>
             {scopeName === null ? t("listTitle") : t("sectionTitle", { name: scopeName })}
@@ -41,12 +42,14 @@ export function ClearGroceriesModal({
             </p>
           </Modal.Body>
           <Modal.Footer>
-            <Button variant="tertiary" onPress={onClose}>
-              {tActions("cancel")}
-            </Button>
-            <Button variant="danger" onPress={handleConfirm}>
-              {t("confirm")}
-            </Button>
+            <ActionButtonGroup>
+              <ActionButton action="cancel" onPress={onClose}>
+                {tActions("cancel")}
+              </ActionButton>
+              <ActionButton action="delete" variant="danger" onPress={handleConfirm}>
+                {t("confirm")}
+              </ActionButton>
+            </ActionButtonGroup>
           </Modal.Footer>
         </Modal.Dialog>
       </Modal.Container>
