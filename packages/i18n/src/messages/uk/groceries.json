@@ -11,7 +11,8 @@
     "groupIngredients": "Групувати інгредієнти",
     "pantry": "Комора",
     "list": "Список",
-    "views": "Перегляди покупок"
+    "views": "Перегляди покупок",
+    "clearList": "Очистити список"
   },
   "empty": {
     "title": "Ваш список покупок чекає",
@@ -30,7 +31,9 @@
     "deleteDone": "Видалити куплене",
     "done": "Куплено: {count}",
     "allDone": "Усе куплено",
-    "total": "Ще купити"
+    "total": "Ще купити",
+    "recipeActions": "Дії з рецептом",
+    "clearAll": "Очистити все"
   },
   "storeManager": {
     "title": "Керувати магазинами",
@@ -186,5 +189,12 @@
     "onePack": "ціна за одну упаковку",
     "sale": "Знижка",
     "regularPrice": "Звичайна ціна {price}"
+  },
+  "clearConfirm": {
+    "listTitle": "Очистити список?",
+    "listDescription": "Це видалить {count, plural, one {# позицію} few {# позиції} many {# позицій} other {# позиції}} з вашого списку покупок. Це не можна скасувати.",
+    "sectionTitle": "Очистити {name}?",
+    "sectionDescription": "Це видалить {count, plural, one {# позицію} few {# позиції} many {# позицій} other {# позиції}} із {name}. Це не можна скасувати.",
+    "confirm": "Очистити"
   }
 }

@@ -7,16 +7,17 @@ import {
   EllipsisVerticalIcon,
   TrashIcon,
 } from "@heroicons/react/16/solid";
-import { Button, Dropdown, Label } from "@heroui/react";
+import { Button, Dropdown, Label, Separator } from "@heroui/react";
 import { motion } from "motion/react";
 import { useLocale, useTranslations } from "next-intl";
 
 import type { StoreTotal } from "./store-total";
 
-/** Mark all done and Delete done: what a section's kebab holds, and all it holds. */
+/** Mark all done, Delete done and Clear all: what a section's kebab can hold. */
 export interface StoreHeadingActions {
   onMarkAllDone?: () => void;
   onDeleteDone?: () => void;
+  onClearAll?: () => void;
 }
 
 interface StoreHeadingProps {
@@ -32,6 +33,8 @@ interface StoreHeadingProps {
   onExpandedChange: (expanded: boolean) => void;
   /** The kebab's actions; absent where the section has no kebab, as a recipe's has not. */
   actions?: StoreHeadingActions;
+  /** The kebab's accessible label; defaults to "Store actions" so a recipe section can say "Recipe actions" instead. */
+  actionsLabel?: string;
   /** What the drag helpers find a Store's heading by; a recipe section is no drop target. */
   dropTarget?: string;
 }
@@ -57,6 +60,7 @@ export function StoreHeading({
   expanded,
   onExpandedChange,
   actions,
+  actionsLabel,
   dropTarget,
 }: StoreHeadingProps) {
   const t = useTranslations("groceries.store");
@@ -128,27 +132,53 @@ export function StoreHeading({
             <EllipsisVerticalIcon className="h-5 w-5" />
           </Button>
           <Dropdown.Popover className="bg-overlay">
-            <Dropdown.Menu aria-label={t("storeActions")}>
-              <Dropdown.Item
-                key="mark-done"
-                id="mark-done"
-                textValue={t("markAllDone")}
-                onPress={() => actions.onMarkAllDone?.()}
-              >
-                {<CheckIcon className="h-4 w-4" />}
-                <Label>{t("markAllDone")}</Label>
-              </Dropdown.Item>
-              <Dropdown.Item
-                key="delete-done"
-                className="text-danger"
-                id="delete-done"
-                textValue={t("deleteDone")}
-                variant="danger"
-                onPress={() => actions.onDeleteDone?.()}
-              >
-                {<TrashIcon className="h-4 w-4" />}
-                <Label>{t("deleteDone")}</Label>
-              </Dropdown.Item>
+            <Dropdown.Menu aria-label={actionsLabel ?? t("storeActions")}>
+              {(actions.onMarkAllDone || actions.onDeleteDone) && (
+                <Dropdown.Section>
+                  {actions.onMarkAllDone && (
+                    <Dropdown.Item
+                      key="mark-done"
+                      id="mark-done"
+                      textValue={t("markAllDone")}
+                      onPress={() => actions.onMarkAllDone?.()}
+                    >
+                      {<CheckIcon className="h-4 w-4" />}
+                      <Label>{t("markAllDone")}</Label>
+                    </Dropdown.Item>
+                  )}
+                  {actions.onDeleteDone && (
+                    <Dropdown.Item
+                      key="delete-done"
+                      className="text-danger"
+                      id="delete-done"
+                      textValue={t("deleteDone")}
+                      variant="danger"
+                      onPress={() => actions.onDeleteDone?.()}
+                    >
+                      {<TrashIcon className="h-4 w-4" />}
+                      <Label>{t("deleteDone")}</Label>
+                    </Dropdown.Item>
+                  )}
+                </Dropdown.Section>
+              )}
+              {actions.onClearAll && (
+                <>
+                  {(actions.onMarkAllDone || actions.onDeleteDone) && <Separator />}
+                  <Dropdown.Section>
+                    <Dropdown.Item
+                      key="clear-all"
+                      className="text-danger"
+                      id="clear-all"
+                      textValue={t("clearAll")}
+                      variant="danger"
+                      onPress={() => actions.onClearAll?.()}
+                    >
+                      {<TrashIcon className="h-4 w-4" />}
+                      <Label>{t("clearAll")}</Label>
+                    </Dropdown.Item>
+                  </Dropdown.Section>
+                </>
+              )}
             </Dropdown.Menu>
           </Dropdown.Popover>
         </Dropdown>
