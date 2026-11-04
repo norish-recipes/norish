@@ -19,7 +19,7 @@ function zipResponse(body: string, fileName?: string) {
  * transferred stream, standing in for the browser's download manager pulling
  * the response through the worker.
  */
-function controllingWorker({ drains = true } = {}) {
+function controllingWorker({ drains = true, acks = true } = {}) {
   const posted: { data: any; transfer: unknown[] }[] = [];
 
   Object.defineProperty(navigator, "serviceWorker", {
@@ -28,6 +28,7 @@ function controllingWorker({ drains = true } = {}) {
       controller: {
         postMessage: (data: any, transfer: unknown[]) => {
           posted.push({ data, transfer });
+          if (acks) (transfer[1] as MessagePort).postMessage(null);
           if (drains) void drain(data.stream);
         },
       },
@@ -94,7 +95,7 @@ describe("startArchiveDownload — streamed through the worker", () => {
     expect(posted).toHaveLength(1);
     expect(posted[0]!.data.type).toBe(ARCHIVE_DOWNLOAD_MESSAGE);
     expect(posted[0]!.data.fileName).toBe("chosen.norishrecipes");
-    expect(posted[0]!.transfer).toHaveLength(1);
+    expect(posted[0]!.transfer[0]).toBe(posted[0]!.data.stream);
 
     // Nothing navigated: the SPA stays where it was.
     expect(assign).not.toHaveBeenCalled();
@@ -108,6 +109,24 @@ describe("startArchiveDownload — streamed through the worker", () => {
 
     // Removed once the transfer settled, so it cannot pile up per export.
     expect(document.querySelectorAll("iframe")).toHaveLength(0);
+  });
+
+  it("claims only once the worker has taken the stream", async () => {
+    const posted = controllingWorker({ acks: false, drains: false });
+
+    vi.stubGlobal("fetch", vi.fn().mockResolvedValue(zipResponse("PK", "a.norishrecipes")));
+
+    const pending = startArchiveDownload(REQUEST);
+
+    await vi.waitFor(() => expect(posted).toHaveLength(1));
+    // A claim sent before the ack can reach the worker first and get its 409.
+    expect(document.querySelector("iframe")).toBeNull();
+
+    (posted[0]!.transfer[1] as MessagePort).postMessage(null);
+    await vi.waitFor(() => expect(document.querySelector("iframe")).not.toBeNull());
+    void drain(posted[0]!.data.stream);
+
+    await expect(pending).resolves.toEqual({ status: "streamed", bytes: 2 });
   });
 
   it("falls back to the given name when the response does not declare one", async () => {
@@ -171,9 +190,8 @@ describe("startArchiveDownload — reporting refusals in place", () => {
 describe("startArchiveDownload — a handoff nobody picks up", () => {
   it("gives up instead of staying busy forever", async () => {
     vi.useFakeTimers();
-    // A worker that takes the message and never reads the stream, as one that
-    // died between the message and the claim would leave things.
-    controllingWorker({ drains: false });
+    // A worker that never takes the message, as one that died before it would.
+    controllingWorker({ acks: false, drains: false });
     vi.stubGlobal("fetch", vi.fn().mockResolvedValue(zipResponse("PK", "a.norishrecipes")));
 
     const pending = startArchiveDownload(REQUEST);
