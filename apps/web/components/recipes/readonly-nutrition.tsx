@@ -13,9 +13,17 @@ import { Card, Separator } from "@heroui/react";
 import { useTranslations } from "next-intl";
 
 import type { ExtraNutrient, ExtraNutrients } from "@norish/shared/contracts/nutrients";
-import type { MacroCalorieShare, MacroKey } from "@norish/shared/lib/nutrition-macros";
+import type {
+  MacroCalorieShare,
+  MacroKey,
+  ReferenceIntakeNutrient,
+} from "@norish/shared/lib/nutrition-macros";
 import { EXTRA_NUTRIENT_UNITS, knownExtras } from "@norish/shared/contracts/nutrients";
-import { macroCalorieShares } from "@norish/shared/lib/nutrition-macros";
+import {
+  ADULT_REFERENCE_INTAKE,
+  macroCalorieShares,
+  percentOfReferenceIntake,
+} from "@norish/shared/lib/nutrition-macros";
 
 import NutritionPortionControl from "./nutrition-portion-control";
 
@@ -77,6 +85,29 @@ function Star({ testId }: { testId?: string }) {
   );
 }
 
+/** Grams to a tenth, as labels give them; milligrams and micrograms whole. */
+function roundedAmount(nutrient: ExtraNutrient, value: number) {
+  return EXTRA_NUTRIENT_UNITS[nutrient] === "g" ? Math.round(value * 10) / 10 : Math.round(value);
+}
+
+/** An amount's share of an adult's reference intake, explained beneath the values. */
+function IntakePercent({
+  nutrient,
+  amount,
+}: {
+  nutrient: ReferenceIntakeNutrient;
+  amount: number;
+}) {
+  return (
+    <span
+      className="text-muted ml-2 min-w-9 text-right text-sm font-normal tabular-nums"
+      data-testid={`nutrition-${nutrient}-percent`}
+    >
+      {percentOfReferenceIntake(nutrient, amount)}%
+    </span>
+  );
+}
+
 /**
  * The macro ring: one arc per stored macro, sized by the calories it
  * contributes rather than by its weight in grams. The recipe's own stored
@@ -132,6 +163,9 @@ function NutritionDonut({
             {marked ? <Star testId="nutrition-calories-mark" /> : null}
           </span>
           <span className="text-muted mt-1 text-xs">{t("calories")}</span>
+          <span className="text-muted text-xs" data-testid="nutrition-calories-percent">
+            {percentOfReferenceIntake("calories", calories)}%
+          </span>
         </div>
       )}
     </div>
@@ -141,7 +175,8 @@ function NutritionDonut({
 /**
  * A recipe's nutrition values: a macro ring with the stored calories in its
  * centre and the macros as its legend, saturates and sugars beneath fat and
- * carbs as labels list them, and fiber and sodium behind "More nutrients".
+ * carbs as labels list them, and fiber and sodium behind "More nutrients",
+ * each with its share of an adult's reference intake.
  * A recipe with calories and no macros has no ring to draw, so its calories
  * are shown as a row of their own. `marked` puts an asterisk after the
  * calories of a worked-out total that left lines out; what it means is said
@@ -164,42 +199,57 @@ export function NutritionBody({
   const { values, extras } = getNutritionData(recipe, portions);
   // A worked-out extra that not every counted line knew may be higher than it says.
   const partial = (key: ExtraNutrient) => (recipe.extrasCoverage?.[key] ?? 1) < 1;
-  const more = MORE_NUTRIENTS.filter((key) => extras[key] !== undefined);
-  const parts = shares.flatMap((macro) => PART_OF[macro.key] ?? []);
+  // A value that may be higher and rounds to nothing says nothing, so it has no row.
+  const hasValue = (key: ExtraNutrient) => {
+    const value = extras[key];
+
+    return value !== undefined && !(partial(key) && roundedAmount(key, value) === 0);
+  };
+  const more = MORE_NUTRIENTS.filter(hasValue);
+  const parts = shares.flatMap((macro) => PART_OF[macro.key] ?? []).filter(hasValue);
   // The card explains the asterisk when lines were left out; otherwise it is said here.
-  const starNote =
-    !marked && [...parts, ...more].some((key) => extras[key] !== undefined && partial(key));
+  const starNote = !marked && [...parts, ...more].some(partial);
+  const intakeNote = (
+    <p className="text-muted text-xs" data-testid="nutrition-intake-note">
+      {t("referenceIntake", { calories: ADULT_REFERENCE_INTAKE.calories })}
+    </p>
+  );
 
   if (shares.length === 0) {
     if (values.calories == null) return null;
 
     return (
-      <div className="flex items-center justify-between py-2">
-        <div className="flex items-center gap-3">
-          <div className="bg-nutrition-calories-soft flex size-8 items-center justify-center rounded-full">
-            <FireIcon className="text-nutrition-calories size-4" />
+      <div className="flex flex-col gap-3">
+        <div className="flex items-center justify-between py-2">
+          <div className="flex items-center gap-3">
+            <div className="bg-nutrition-calories-soft flex size-8 items-center justify-center rounded-full">
+              <FireIcon className="text-nutrition-calories size-4" />
+            </div>
+            <span className="text-base">{t("calories")}</span>
           </div>
-          <span className="text-base">{t("calories")}</span>
+          <span className="text-foreground flex items-baseline text-base font-semibold">
+            <AnimatedNumber value={String(Math.round(values.calories))} />
+            <span className="text-muted ml-1 font-normal">kcal</span>
+            {marked ? <Star testId="nutrition-calories-mark" /> : null}
+            <IntakePercent amount={values.calories} nutrient="calories" />
+          </span>
         </div>
-        <span className="text-foreground flex items-baseline text-base font-semibold">
-          <AnimatedNumber value={String(Math.round(values.calories))} />
-          <span className="text-muted ml-1 font-normal">kcal</span>
-          {marked ? <Star testId="nutrition-calories-mark" /> : null}
-        </span>
+        {intakeNote}
       </div>
     );
   }
 
   return (
-    <div className="flex flex-col gap-3">
-      <div className="flex items-center gap-5">
+    <div className="@container flex flex-col gap-3">
+      {/* A narrow card has no room for labels, amounts and shares beside the ring. */}
+      <div className="flex flex-col items-center gap-3 @md:flex-row @md:gap-5">
         <NutritionDonut calories={values.calories} marked={marked} shares={shares} />
-        <dl className="divide-border min-w-0 flex-1 divide-y">
+        <dl className="divide-border w-full min-w-0 flex-1 divide-y">
           {shares.map((macro) => {
             const style = MACRO_STYLES[macro.key];
             const value = values[macro.key];
             const part = PART_OF[macro.key];
-            const partValue = part ? extras[part] : undefined;
+            const partValue = part && hasValue(part) ? extras[part] : undefined;
             const withPart = part !== undefined && partValue !== undefined;
 
             return (
@@ -212,6 +262,7 @@ export function NutritionBody({
                   <dd className="text-foreground flex items-baseline text-base font-semibold">
                     <AnimatedNumber value={String(Math.round(value ?? macro.grams))} />
                     <span className="text-muted ml-1 font-normal">g</span>
+                    <IntakePercent amount={value ?? macro.grams} nutrient={macro.key} />
                   </dd>
                 </div>
                 {withPart ? (
@@ -245,7 +296,10 @@ export function NutritionBody({
             />
           </button>
           {moreOpen ? (
-            <dl className="grid grid-cols-2 gap-x-6 gap-y-1.5 pb-1" data-testid="nutrition-more">
+            <dl
+              className="grid grid-cols-1 gap-x-6 gap-y-1.5 pb-1 @md:grid-cols-2"
+              data-testid="nutrition-more"
+            >
               {more.map((key) => (
                 <div
                   key={key}
@@ -267,34 +321,27 @@ export function NutritionBody({
           * {t("starredMayBeHigher")}
         </p>
       ) : null}
+      {intakeNote}
     </div>
   );
 }
 
-/**
- * One of the other nutrients in its own unit, starred where it may be higher.
- * A value that may be higher and rounds to nothing says nothing: "—", not "0".
- */
+/** One of the other nutrients in its own unit, starred where it may be higher. */
 function NutrientValue({
   nutrient,
   value,
   partial,
 }: {
-  nutrient: ExtraNutrient;
+  nutrient: ExtraNutrient & ReferenceIntakeNutrient;
   value: number;
   partial: boolean;
 }) {
-  const unit = EXTRA_NUTRIENT_UNITS[nutrient];
-  // Grams to a tenth, as labels give them; milligrams and micrograms whole.
-  const shown = unit === "g" ? Math.round(value * 10) / 10 : Math.round(value);
-
-  if (partial && shown === 0) return <span data-testid="nutrition-unknown">—</span>;
-
   return (
     <>
-      <AnimatedNumber value={String(shown)} />
+      <AnimatedNumber value={String(roundedAmount(nutrient, value))} />
       {partial ? <Star testId="nutrition-partial" /> : null}
-      <span className="text-muted ml-1">{unit}</span>
+      <span className="text-muted ml-1">{EXTRA_NUTRIENT_UNITS[nutrient]}</span>
+      <IntakePercent amount={value} nutrient={nutrient} />
     </>
   );
 }

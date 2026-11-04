@@ -191,21 +191,60 @@ describe("Nutrition donut with the other nutrients", () => {
     expect(screen.queryByTestId("nutrition-star-note")).not.toBeInTheDocument();
   });
 
-  it("shows a dash, not zero, for a partial value that rounds to nothing", () => {
+  it("hides a partial value that rounds to nothing, and keeps a real zero", () => {
     render(
       <NutritionBody
         portions={1}
         recipe={{
           ...recipe,
-          nutritionExtras: { saturatedFat: 0.01, sugars: 0 },
-          extrasCoverage: { saturatedFat: 0.3 },
+          nutritionExtras: { saturatedFat: 0.01, sugars: 0, sodium: 0.2 },
+          extrasCoverage: { saturatedFat: 0.3, sodium: 0.3 },
         }}
       />
     );
 
-    expect(screen.getByTestId("nutrition-saturatedFat")).toHaveTextContent("—");
+    expect(screen.queryByTestId("nutrition-saturatedFat")).not.toBeInTheDocument();
+    expect(screen.queryByTestId("nutrition-more-toggle")).not.toBeInTheDocument();
+    expect(screen.queryByTestId("nutrition-star-note")).not.toBeInTheDocument();
     // A value every line knew is a real zero.
     expect(screen.getByTestId("nutrition-sugars")).toHaveTextContent("0g");
+  });
+
+  it("shows each value's share of an adult's reference intake, and says what it is", () => {
+    render(<NutritionBody portions={1} recipe={recipe} />);
+
+    fireEvent.click(screen.getByTestId("nutrition-more-toggle"));
+
+    expect(screen.getByTestId("nutrition-calories-percent")).toHaveTextContent("23%");
+    expect(screen.getByTestId("nutrition-fat-percent")).toHaveTextContent("14%");
+    expect(screen.getByTestId("nutrition-carbs-percent")).toHaveTextContent("8%");
+    expect(screen.getByTestId("nutrition-protein-percent")).toHaveTextContent("20%");
+    expect(screen.getByTestId("nutrition-saturatedFat-percent")).toHaveTextContent("15%");
+    expect(screen.getByTestId("nutrition-sugars-percent")).toHaveTextContent("11%");
+    expect(screen.getByTestId("nutrition-fiber-percent")).toHaveTextContent("40%");
+    expect(screen.getByTestId("nutrition-sodium-percent")).toHaveTextContent("20%");
+    expect(screen.getByTestId("nutrition-intake-note")).toHaveTextContent(
+      "recipes.nutrition.referenceIntake"
+    );
+  });
+
+  it("scales the shares with the portion control", () => {
+    render(<NutritionBody portions={2} recipe={recipe} />);
+
+    expect(screen.getByTestId("nutrition-calories-percent")).toHaveTextContent("45%");
+    expect(screen.getByTestId("nutrition-protein-percent")).toHaveTextContent("40%");
+  });
+
+  it("gives calories without macros their share too", () => {
+    render(
+      <NutritionBody
+        portions={1}
+        recipe={{ calories: 400, fat: null, carbs: null, protein: null }}
+      />
+    );
+
+    expect(screen.getByTestId("nutrition-calories-percent")).toHaveTextContent("20%");
+    expect(screen.getByTestId("nutrition-intake-note")).toBeInTheDocument();
   });
 
   it("draws no sub-rows or More nutrients for a recipe that knows none of them", () => {

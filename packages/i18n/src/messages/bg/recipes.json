@@ -265,6 +265,7 @@
     "moreNutrients": "Още хранителни вещества",
     "fewerNutrients": "По-малко хранителни вещества",
     "starredMayBeHigher": "Не всяка съставка има тази стойност, затова стойностите с * може да са по-високи",
+    "referenceIntake": "% от дневния референтен прием за възрастен ({calories} kcal)",
     "showingPortions": "Показани стойности за {count} {count, plural, one {порция} other {порции}}",
     "noInfo": "Няма налична информация за хранителните стойности",
     "estimateWithAI": "Изчисли с AI",

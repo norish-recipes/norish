@@ -265,6 +265,7 @@
     "moreNutrients": "Więcej składników odżywczych",
     "fewerNutrients": "Mniej składników odżywczych",
     "starredMayBeHigher": "Nie każdy składnik ma tę wartość, więc wartości z * mogą być wyższe",
+    "referenceIntake": "% referencyjnej dziennej wartości spożycia dla osoby dorosłej ({calories} kcal)",
     "showingPortions": "Wartości dla {count} {count, plural, one {porcji} other {porcji}}",
     "noInfo": "Brak informacji o wartościach odżywczych",
     "estimateWithAI": "Oszacuj z AI",

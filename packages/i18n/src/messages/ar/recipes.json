@@ -265,6 +265,7 @@
     "moreNutrients": "مزيد من العناصر الغذائية",
     "fewerNutrients": "عناصر غذائية أقل",
     "starredMayBeHigher": "ليست كل المكونات لها هذه القيمة، لذا قد تكون القيم المميزة بـ * أعلى",
+    "referenceIntake": "% من الكمية اليومية المرجعية للبالغين ({calories} kcal)",
     "showingPortions": "القيم معروضة لـ {count, plural, one {حصة واحدة} two {حصتين} few {# حصص} many {# حصة} other {# حصة}}",
     "noInfo": "لا تتوفر معلومات غذائية",
     "estimateWithAI": "التقدير بالذكاء الاصطناعي",

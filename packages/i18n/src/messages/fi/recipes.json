@@ -265,6 +265,7 @@
     "moreNutrients": "Lisää ravintoaineita",
     "fewerNutrients": "Vähemmän ravintoaineita",
     "starredMayBeHigher": "Kaikilla ainesosilla ei ole tätä arvoa, joten tähdellä merkityt arvot voivat olla suurempia",
+    "referenceIntake": "% aikuisen päivittäisestä saannin vertailuarvosta ({calories} kcal)",
     "showingPortions": "Näytetään arvot {count} {count, plural, one {annokselle} other {annokselle}}",
     "noInfo": "Ravintosisältötietoja ei ole saatavilla",
     "estimateWithAI": "Arvioi tekoälyllä",

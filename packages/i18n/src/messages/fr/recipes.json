@@ -265,6 +265,7 @@
     "moreNutrients": "Plus de nutriments",
     "fewerNutrients": "Moins de nutriments",
     "starredMayBeHigher": "Tous les ingrédients n’ont pas cette valeur ; les valeurs marquées d’un * peuvent être plus élevées",
+    "referenceIntake": "% de l’apport quotidien de référence pour un adulte ({calories} kcal)",
     "showingPortions": "Affichage des valeurs pour {count} {count, plural, one {portion} other {portions}}",
     "noInfo": "Aucune information nutritionnelle disponible",
     "estimateWithAI": "Estimer avec l’IA",

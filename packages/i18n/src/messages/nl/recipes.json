@@ -265,6 +265,7 @@
     "moreNutrients": "Meer voedingsstoffen",
     "fewerNutrients": "Minder voedingsstoffen",
     "starredMayBeHigher": "Niet elk ingrediënt heeft deze waarde, dus waarden met * kunnen hoger zijn",
+    "referenceIntake": "% van de dagelijkse referentie-inname voor een volwassene ({calories} kcal)",
     "showingPortions": "Waardes voor {count} {count, plural, one {portie} other {porties}}",
     "noInfo": "Geen voedingsinformatie beschikbaar",
     "estimateWithAI": "Schatten met AI",

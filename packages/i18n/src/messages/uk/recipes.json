@@ -265,6 +265,7 @@
     "moreNutrients": "Більше поживних речовин",
     "fewerNutrients": "Менше поживних речовин",
     "starredMayBeHigher": "Не всі інгредієнти мають це значення, тому значення із * можуть бути вищими",
+    "referenceIntake": "% від добової референтної норми для дорослого ({calories} kcal)",
     "showingPortions": "Значення для {count} {count, plural, one {порції} few {порцій} many {порцій} other {порції}}",
     "noInfo": "Даних про поживну цінність немає",
     "estimateWithAI": "Оцінити за допомогою ШІ",

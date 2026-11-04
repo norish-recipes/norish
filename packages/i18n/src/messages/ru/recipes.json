@@ -265,6 +265,7 @@
     "moreNutrients": "Больше нутриентов",
     "fewerNutrients": "Меньше нутриентов",
     "starredMayBeHigher": "Не у всех ингредиентов есть это значение, поэтому значения со * могут быть выше",
+    "referenceIntake": "% от суточной референсной нормы для взрослого ({calories} kcal)",
     "showingPortions": "Показаны значения для {count} {count, plural, one {порции} few {порций} many {порций} other {порции}}",
     "noInfo": "Нет данных о пищевой ценности",
     "estimateWithAI": "Оценить с помощью ИИ",

@@ -265,6 +265,7 @@
     "moreNutrients": "Weitere Nährwerte",
     "fewerNutrients": "Weniger Nährwerte",
     "starredMayBeHigher": "Nicht jede Zutat hat diesen Wert; mit * markierte Werte können höher sein",
+    "referenceIntake": "% der täglichen Referenzmenge für Erwachsene ({calories} kcal)",
     "showingPortions": "Zeige Werte für {count} {count, plural, one {Portion} other {Portionen}}",
     "noInfo": "Keine Nährwertinformationen verfügbar",
     "estimateWithAI": "Mit KI schätzen",

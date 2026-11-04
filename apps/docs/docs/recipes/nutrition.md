@@ -38,8 +38,11 @@ Each one comes from the recipe when its source states it. Otherwise Norish adds
 it up from the ingredients, with the [AI](../configuration/ai-provider.md)
 estimate for the lines it couldn't count. Not every food in the datasets has
 every value, so a total that only some of the counted lines add to is marked
-with **\***: it may be higher. Where that total rounds to 0, the card shows
-**—** instead.
+with **\***: it may be higher. Where that total rounds to 0, the card leaves it
+out.
+
+Beside each value is its share of the daily reference intake for an adult: the
+figures EU food labels use, based on 2000 kcal, with 25 g of fiber.
 
 Norish also keeps mono- and polyunsaturated fat, trans fat, cholesterol,
 potassium, calcium, iron, vitamin C and vitamin A where the datasets have

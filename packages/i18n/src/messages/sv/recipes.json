@@ -265,6 +265,7 @@
     "moreNutrients": "Fler näringsämnen",
     "fewerNutrients": "Färre näringsämnen",
     "starredMayBeHigher": "Alla ingredienser har inte detta värde, så värden med * kan vara högre",
+    "referenceIntake": "% av det dagliga referensintaget för en vuxen ({calories} kcal)",
     "showingPortions": "Visar värden för {count} {count, plural, one {portion} other {portioner}}",
     "noInfo": "Inga näringsvärden tillgängliga",
     "estimateWithAI": "Uppskatta med AI",
