@@ -59,7 +59,7 @@ recipes that have no converted copy yet.
 
 ## Units
 
-Units are written out by default, like `500 grams`. To show `500 g` and
+Units are written out by default, like `500 grams`. To show shortform: `500 g` and
 `2 tbsp` instead, set **Settings => User => Preferences => Units** to
 `Abbreviated`. Units without a short form, like cups and cloves, stay as
 words. This is kept separately for phone and desktop.
