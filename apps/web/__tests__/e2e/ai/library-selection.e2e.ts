@@ -6,6 +6,7 @@ import type { Browser, BrowserContext, Locator, Page } from "@playwright/test";
 
 import type { AIE2EStack, SessionCookies } from "./fixture";
 import { signIn } from "../harness/auth";
+import { settled } from "../harness/settled";
 import { callTrpc } from "../harness/trpc";
 import {
   readCookbookMembers,
@@ -62,8 +63,7 @@ async function search(page: Page, text: string, shows: string) {
 
 /** Hold the mouse on a card until it starts selecting. */
 async function longPress(page: Page, name: string) {
-  await settled(page, card(page, name));
-  const box = (await card(page, name).boundingBox())!;
+  const box = await settled(page, () => card(page, name).boundingBox());
 
   await page.mouse.move(box.x + box.width / 2, box.y + box.height - 20);
   await page.mouse.down();
@@ -76,27 +76,6 @@ function toggle(page: Page, name: string): Locator {
   return page
     .getByTestId("recipe-select-toggle")
     .filter({ has: page.getByRole("checkbox", { name, exact: true }) });
-}
-
-/**
- * Wait until a sliding button has stopped: a click retried on a moving one
- * scrolls it to the top, and a scroll closes the row it sits in.
- */
-async function settled(page: Page, target: Locator) {
-  let last = "";
-  let still = 0;
-
-  await expect
-    .poll(async () => {
-      await page.evaluate(() => new Promise((resolve) => requestAnimationFrame(resolve)));
-      const box = JSON.stringify(await target.boundingBox());
-
-      still = box !== "null" && box === last ? still + 1 : 0;
-      last = box;
-
-      return still;
-    })
-    .toBeGreaterThanOrEqual(3);
 }
 
 /** Seed recipes, open the Library on them and wait for their cards. */

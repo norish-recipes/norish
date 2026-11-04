@@ -13,6 +13,7 @@
 import type { BrowserContext, Page } from "@playwright/test";
 
 import type { AIE2EStack } from "./fixture";
+import { settled } from "../harness/settled";
 import { expect, test } from "./fixture";
 import { submitPasteImport } from "./import-support";
 import { findCuisineIdByName, readStoredProvenance, supplyProvenance } from "./provenance-support";
@@ -417,8 +418,19 @@ test("a manually picked country reaches the dashboard card without a reload", as
 
   await expect(async () => {
     await expect(country).toBeVisible({ timeout: 5_000 });
+    // Any page scroll closes the open popover: typing scrolls an off-screen field into view,
+    // and a click retried on the still-opening option scrolls it to the top.
+    await country.scrollIntoViewIfNeeded();
+    await settled(page, () => country.boundingBox());
     await country.fill("Italy");
+    await expect(page.locator("[data-slot='combo-box-popover']")).not.toHaveAttribute(
+      "data-entering",
+      { timeout: 5_000 }
+    );
     await page.getByRole("option", { name: "Italy", exact: true }).click({ timeout: 5_000 });
+    // A scroll-closed popover swallows the click silently; only the kept text proves the pick.
+    await expect(country).toHaveAttribute("aria-expanded", "false");
+    await expect(country).toHaveValue("Italy", { timeout: 1_000 });
   }).toPass({ timeout: 60_000, intervals: [1_000, 2_000, 5_000] });
 
   await page.getByRole("button", { name: "Save Changes" }).click();

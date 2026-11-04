@@ -11,6 +11,7 @@ import type { Browser, BrowserContext, Page } from "@playwright/test";
 
 import type { AIE2EStack } from "./fixture";
 import { waitForRecipe } from "../harness/recipes";
+import { settled } from "../harness/settled";
 import { callTrpc } from "../harness/trpc";
 import { expect, test } from "./fixture";
 import { createPlainStore } from "./grocery-aisles-support";
@@ -115,26 +116,6 @@ async function rowsShowing(page: Page, values: string[]): Promise<ShownRow[]> {
 
     return rows;
   }, values);
-}
-
-/** Where `read` points once it has held still for three frames. */
-async function settled(page: Page, read: () => Promise<Point | undefined>): Promise<Point> {
-  let last: Point | undefined;
-  let still = 0;
-
-  await expect
-    .poll(async () => {
-      await page.evaluate(() => new Promise((resolve) => requestAnimationFrame(resolve)));
-      const at = await read();
-
-      still = at && last && at.x === last.x && at.y === last.y ? still + 1 : 0;
-      last = at;
-
-      return still;
-    })
-    .toBeGreaterThanOrEqual(3);
-
-  return last!;
 }
 
 /**
@@ -329,7 +310,7 @@ test("a recipe card swipes open to its actions with a finger", async ({ browser,
       .getByRole("button", { name: "Add to calendar" });
 
     // A click retried on a moving button scrolls it to the top, and a scroll closes the row.
-    await settled(page, async () => (await action.boundingBox()) ?? undefined);
+    await settled(page, () => action.boundingBox());
     await action.click();
     await expect(page.getByRole("dialog")).toBeVisible();
   } finally {
