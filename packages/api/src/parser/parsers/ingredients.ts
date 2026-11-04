@@ -37,17 +37,19 @@ function ingredientEntryText(entry: unknown): string {
 }
 
 /**
- * A source's own heading line ("For the sauce:") in Norish's "# " form. A flagged line with a colon
- * or comma before its end still names a food ("For garnish: chopped parsley").
+ * A source's own heading line ("For the sauce:", "## SAUCE") in Norish's "# " form. A flagged line
+ * with a colon or comma before its end still names a food ("For serving: ice cream").
  */
-function headingOrName({
+export function headingOrName({
   description,
   isGroupHeader,
   quantity,
 }: ReturnType<typeof parseIngredientWithDefaults>[number]): string {
-  if (!isGroupHeader || quantity != null || /[:,]./.test(description)) return description;
+  const isHeading =
+    description.startsWith("#") ||
+    (isGroupHeader && quantity == null && !/[:,]./.test(description));
 
-  return `# ${description.replace(/^#\s*/, "").replace(/:$/, "")}`;
+  return isHeading ? `# ${description.replace(/^#+/, "").replace(/:$/, "").trim()}` : description;
 }
 
 /**

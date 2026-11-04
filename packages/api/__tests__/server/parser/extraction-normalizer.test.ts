@@ -298,6 +298,33 @@ describe("normalizeExtractionOutput - HTML Entity Decoding", () => {
     expect(result?.tags).toEqual([{ name: "Dessert" }, { name: "Peanut" }, { name: "Milk" }]);
   });
 
+  it("reads a heading in the US copy as the metric copy reads it", async () => {
+    const output = {
+      ...createValidOutput(),
+      recipeIngredient: {
+        metric: ["# For the sauce", "240 ml milk"],
+        us: ["For the sauce:", "1 cup milk"],
+      },
+    } as RecipeExtractionOutput;
+    const { normalizeRecipeFromJson } = await import("@norish/api/parser/normalize");
+
+    vi.mocked(normalizeRecipeFromJson).mockResolvedValue({
+      name: "Chocolate Cake",
+      recipeIngredients: [],
+      steps: [],
+      systemUsed: "metric",
+      tags: [],
+      images: [],
+      categories: [],
+    } as unknown as FullRecipeInsertDTO);
+
+    const result = await normalizeExtractionOutput(output, { recipeId: "recipe-123" });
+
+    expect(
+      result?.recipeIngredients?.filter((i) => i.systemUsed === "us").map((i) => i.ingredientName)
+    ).toEqual(["# For the sauce", "milk"]);
+  });
+
   it("keeps metric and US systems separated even when base normalizer infers US", async () => {
     const output: RecipeExtractionOutput = {
       name: "Mapo Tofu Udon",

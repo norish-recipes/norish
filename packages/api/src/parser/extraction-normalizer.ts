@@ -10,6 +10,7 @@ import { decode } from "html-entities";
 import type { RecipeExtractionOutput } from "@norish/api/parser/extraction.schema";
 import type { FullRecipeInsertDTO, RecipeCategory } from "@norish/shared/contracts/dto/recipe";
 import { normalizeRecipeFromJson } from "@norish/api/parser/normalize";
+import { headingOrName } from "@norish/api/parser/parsers/ingredients";
 import { matchCategory } from "@norish/shared-server/ai/enrichment/category-matcher";
 import { getUnits } from "@norish/shared-server/config/server-config-loader";
 import { aiLogger } from "@norish/shared-server/logger";
@@ -162,7 +163,7 @@ export async function normalizeExtractionOutput(
     ...metricIngredients,
     ...usIngredients.map((ing, i) => ({
       ingredientId: null,
-      ingredientName: ing.description,
+      ingredientName: headingOrName(ing),
       amount: ing.quantity != null ? ing.quantity : null,
       unit: ing.unitOfMeasureID,
       systemUsed: "us" as const,
