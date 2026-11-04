@@ -183,6 +183,37 @@ describe("parseTimerDurations", () => {
       expect(matches[0].durationSeconds).toBe(45);
     });
 
+    describe("in Arabic", () => {
+      const arabic = {
+        hours: ["ساعة", "ساعات"],
+        minutes: ["دقيقة", "دقائق"],
+        seconds: ["ثانية", "ثوان"],
+      };
+
+      it("ends a keyword at Arabic punctuation as at Latin", () => {
+        expect(parseTimerDurations("اخبز 1 ساعة، ثم أخرجها", arabic)[0]?.durationSeconds).toBe(
+          3600
+        );
+        expect(
+          parseTimerDurations("حرّك 30 ثانية؛ ثم أطفئ النار", arabic)[0]?.durationSeconds
+        ).toBe(30);
+        expect(parseTimerDurations("هل تكفي 10 دقائق؟", arabic)[0]?.durationSeconds).toBe(600);
+      });
+
+      it("never reads a range across an Arabic comma", () => {
+        const matches = parseTimerDurations("انقع 10 دقائق، 5 ساعات", arabic);
+
+        expect(matches.map((match) => match.durationSeconds)).toEqual([10 * 60, 5 * 3600]);
+      });
+
+      it("reads the unit after a clock time", () => {
+        const matches = parseTimerDurations("اخبز 1:30 ساعة", arabic);
+
+        expect(matches[0]?.durationSeconds).toBe(90 * 60);
+        expect(matches[0]?.originalText).toBe("1:30 ساعة");
+      });
+    });
+
     it("correctly maps keywords to multipliers", () => {
       const keywords = {
         hours: ["h", "hr"],
