@@ -89,17 +89,33 @@ async function getPostgresConnection(): Promise<{
   };
 }
 
-async function startPostgresContainer(): Promise<StartedPostgreSqlContainer> {
-  dbLogger.info("Starting PostgreSQL container for tests...");
-
+// Test processes across packages start this at once and the reuse lock is per process,
+// so a stopped container answers all but one with 304; a retry then reuses it.
+async function startReusedContainer(attempt = 1): Promise<StartedPostgreSqlContainer> {
   try {
-    const container = await new PostgreSqlContainer("postgres:15-alpine")
+    return await new PostgreSqlContainer("postgres:15-alpine")
       .withExposedPorts(5432)
       .withUsername("test")
       .withPassword("test")
       .withDatabase("postgres")
       .withReuse() // Reuse container across test runs
       .start();
+  } catch (error) {
+    const alreadyStarted =
+      error instanceof Error && "statusCode" in error && error.statusCode === 304;
+
+    if (!alreadyStarted || attempt >= 5) throw error;
+    await sleep(200 * attempt);
+
+    return startReusedContainer(attempt + 1);
+  }
+}
+
+async function startPostgresContainer(): Promise<StartedPostgreSqlContainer> {
+  dbLogger.info("Starting PostgreSQL container for tests...");
+
+  try {
+    const container = await startReusedContainer();
 
     dbLogger.info(
       {
