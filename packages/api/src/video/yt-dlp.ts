@@ -9,8 +9,8 @@ import { decode } from "html-entities";
 import type { SiteAuthTokenDecryptedDto } from "@norish/shared/contracts/dto/site-auth-tokens";
 import { SERVER_CONFIG } from "@norish/config/env-config-server";
 import { getVideoConfig } from "@norish/shared-server/config/server-config-loader";
-import { getFfmpegPath } from "@norish/shared-server/media/ffmpeg";
 import { videoLogger as log } from "@norish/shared-server/logger";
+import { getFfmpegPath } from "@norish/shared-server/media/ffmpeg";
 
 import type { VideoMetadata, VideoStream } from "./types";
 import { MediaUnavailableError } from "./errors";
