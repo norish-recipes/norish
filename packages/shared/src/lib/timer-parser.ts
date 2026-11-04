@@ -14,6 +14,9 @@ export type TimerKeywords = {
 
 const DECIMAL_NUMBER = "\\d+(?:[.,]\\d+)?";
 
+/** The Arabic comma, semicolon and question mark, which end a word as their Latin forms do. */
+const ARABIC_PUNCTUATION = "،؛؟";
+
 const parseDecimal = (value: string): number => parseFloat(value.replace(",", "."));
 
 /**
@@ -93,7 +96,7 @@ export function parseTimerDurations(text: string, keywords?: TimerKeywords): Tim
 
     // Look ahead for time unit keyword after the colon pattern
     const afterText = text.substring(colonEnd, colonEnd + 20);
-    const unitMatch = afterText.match(/^\s*([a-z]+)/i);
+    const unitMatch = afterText.match(/^\s*(\p{L}+)/iu);
     const unitAfter = unitMatch?.[1]?.toLowerCase() ?? null;
 
     let durationSeconds: number;
@@ -151,7 +154,7 @@ export function parseTimerDurations(text: string, keywords?: TimerKeywords): Tim
   // Keywords should include all forms (singular, plural, abbreviations) directly
   // The decimal separator may be "." or "," ("1,5 uur"); a comma followed by a space stays a list separator
   const TIME_PATTERN = new RegExp(
-    `(${DECIMAL_NUMBER})\\s*(${timeUnits})(?=$|\\s|[.,!?;:()\\[\\]{}\"'])`,
+    `(${DECIMAL_NUMBER})\\s*(${timeUnits})(?=$|\\s|[.,!?;:()\\[\\]{}\"'${ARABIC_PUNCTUATION}])`,
     "gi"
   );
 
@@ -178,8 +181,8 @@ export function parseTimerDurations(text: string, keywords?: TimerKeywords): Tim
 
       // Pattern to find a number before this match (looks for last number in the preceding text)
       // This handles: "12 tot 15", "12-15", "12 to 15", "12 or 15", etc.
-      // Exclude commas from range detection to avoid treating "10 mins, 5 hrs" as a range
-      const priorNumberPattern = new RegExp(`(${DECIMAL_NUMBER})\\s*[^\\s,]*\\s*$`);
+      // Exclude commas (Latin and Arabic) from range detection to avoid treating "10 mins, 5 hrs" as a range
+      const priorNumberPattern = new RegExp(`(${DECIMAL_NUMBER})\\s*[^\\s,،]*\\s*$`);
       const priorMatch = beforeText.match(priorNumberPattern);
 
       let rangeStart: number | null = null;

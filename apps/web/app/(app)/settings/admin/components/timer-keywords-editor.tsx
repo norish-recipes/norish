@@ -29,6 +29,18 @@ interface TimerKeywordsEditorProps {
   }>;
   onDirtyChange?: (isDirty: boolean) => void;
 }
+
+/**
+ * The keywords in a comma-separated list. An Arabic keyboard types its own
+ * comma ("،"), so either one separates.
+ */
+export function splitKeywords(text: string): string[] {
+  return text
+    .split(/[,،]/)
+    .map((keyword) => keyword.trim())
+    .filter(Boolean);
+}
+
 export default function TimerKeywordsEditor({
   enabled,
   hours,
@@ -94,19 +106,9 @@ export default function TimerKeywordsEditor({
   const handleSave = useCallback(async () => {
     if (error) return;
 
-    // Parse comma-separated keywords
-    const parsedHours = hoursText
-      .split(",")
-      .map((k) => k.trim())
-      .filter(Boolean);
-    const parsedMinutes = minutesText
-      .split(",")
-      .map((k) => k.trim())
-      .filter(Boolean);
-    const parsedSeconds = secondsText
-      .split(",")
-      .map((k) => k.trim())
-      .filter(Boolean);
+    const parsedHours = splitKeywords(hoursText);
+    const parsedMinutes = splitKeywords(minutesText);
+    const parsedSeconds = splitKeywords(secondsText);
 
     // Validation: at least one keyword in one category when enabled
     if (
