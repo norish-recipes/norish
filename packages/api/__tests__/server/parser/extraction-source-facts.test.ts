@@ -67,7 +67,16 @@ describe("extraction schema keeps explicit source facts", () => {
     keywords: ["italian"],
     allergyIndications: [],
     categories: ["Dinner"],
-    nutrition: { calories: 500, fat: 10, carbs: 60, protein: 20 },
+    nutrition: {
+      calories: 500,
+      fat: 10,
+      carbs: 60,
+      protein: 20,
+      saturatedFat: 3,
+      sugars: 8,
+      fiber: 6,
+      sodium: 450,
+    },
   };
 
   it("accepts categories, keywords, and nutrition the source stated", () => {
@@ -75,7 +84,16 @@ describe("extraction schema keeps explicit source facts", () => {
 
     expect(parsed.categories).toEqual(["Dinner"]);
     expect(parsed.keywords).toEqual(["italian"]);
-    expect(parsed.nutrition).toEqual({ calories: 500, fat: 10, carbs: 60, protein: 20 });
+    expect(parsed.nutrition).toEqual({
+      calories: 500,
+      fat: 10,
+      carbs: 60,
+      protein: 20,
+      saturatedFat: 3,
+      sugars: 8,
+      fiber: 6,
+      sodium: 450,
+    });
   });
 
   it("accepts allergy indications the source explicitly states", () => {
@@ -96,16 +114,43 @@ describe("extraction schema keeps explicit source facts", () => {
   it("accepts null for every nutrition field the source does not state", () => {
     const parsed = recipeExtractionSchema.parse({
       ...validOutput,
-      nutrition: { calories: null, fat: null, carbs: null, protein: null },
+      nutrition: {
+        calories: null,
+        fat: null,
+        carbs: null,
+        protein: null,
+        saturatedFat: null,
+        sugars: null,
+        fiber: null,
+        sodium: null,
+      },
     });
 
-    expect(parsed.nutrition).toEqual({ calories: null, fat: null, carbs: null, protein: null });
+    expect(parsed.nutrition).toEqual({
+      calories: null,
+      fat: null,
+      carbs: null,
+      protein: null,
+      saturatedFat: null,
+      sugars: null,
+      fiber: null,
+      sodium: null,
+    });
   });
 
   it("accepts partial source nutrition without inventing the rest", () => {
     const parsed = recipeExtractionSchema.parse({
       ...validOutput,
-      nutrition: { calories: 500, fat: null, carbs: null, protein: null },
+      nutrition: {
+        calories: 500,
+        fat: null,
+        carbs: null,
+        protein: null,
+        saturatedFat: null,
+        sugars: null,
+        fiber: null,
+        sodium: null,
+      },
     });
 
     expect(parsed.nutrition.calories).toBe(500);

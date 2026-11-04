@@ -15,6 +15,7 @@ import { useFormatter, useTranslations } from "next-intl";
 
 import type { LeftOutReason, WorkedOutNutrition } from "@norish/shared/lib/recipe-nutrition";
 import { NUTRITION_CREDIT_NAMES } from "@norish/shared/contracts/ingredient-nutrition";
+import { knownExtras } from "@norish/shared/contracts/nutrients";
 import { PANEL_REASONS } from "@norish/shared/lib/recipe-nutrition";
 
 /** Why a line was left out, in the card's words. */
@@ -69,21 +70,32 @@ export default function NutritionCard() {
   const isEstimatingNutrition = enrichment.isBusy("nutrition-estimation");
   const t = useTranslations("recipes.nutrition");
   const isVisible = useNutritionSectionVisible();
-  const workedOut = useWorkedOutNutrition(recipe ?? null);
+  // Worked out even where the recipe states its own four, for the nutrients it lacks.
+  const workedOut = useWorkedOutNutrition(recipe ?? null, { evenIfSupplied: true });
   // Independent portion state - defaults to 1 (per serving)
   const [portions, setPortions] = useState(1);
 
   if (!recipe || !isVisible) return null;
 
   const stored = getNutritionData(recipe, 1).hasData;
+  // Each extra the recipe states wins over the one its lines work out to.
+  const stated = knownExtras(recipe.nutritionExtras);
+  const extras = {
+    nutritionExtras: { ...workedOut?.perServing?.extras, ...stated },
+    extrasCoverage: {
+      ...workedOut?.extrasCoverage,
+      ...Object.fromEntries(Object.keys(stated).map((key) => [key, 1])),
+    },
+  };
   const shown = stored
-    ? recipe
+    ? { ...recipe, ...extras }
     : workedOut?.perServing
       ? {
           calories: workedOut.perServing.calories,
           fat: workedOut.perServing.fat,
           carbs: workedOut.perServing.carbs,
           protein: workedOut.perServing.protein,
+          ...extras,
         }
       : null;
 

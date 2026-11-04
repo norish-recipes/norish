@@ -28,6 +28,26 @@ Each ingredient line is converted to grams using the
 The total is divided by the servings. The nutrition card lists which lines were
 counted and why the others weren't.
 
+## Fiber, sugars, sodium and more
+
+The card lists saturates under fat and sugars under carbs, the way food labels
+do, when Norish knows them. Fiber and sodium are under **More nutrients**. The
+ring stays fat, carbs and protein.
+
+Each one comes from the recipe when its source states it. Otherwise Norish adds
+it up from the ingredients, with the [AI](../configuration/ai-provider.md)
+estimate for the lines it couldn't count. Not every food in the datasets has
+every value, so a total that only some of the counted lines add to is marked
+with **\***: it may be higher. Where that total rounds to 0, the card leaves it
+out.
+
+Beside each value is its share of the daily reference intake for an adult: the
+figures EU food labels use, based on 2000 kcal, with 25 g of fiber.
+
+Norish also keeps mono- and polyunsaturated fat, trans fat, cholesterol,
+potassium, calcium, iron, vitamin C and vitamin A where the datasets have
+them. The API returns them all.
+
 ## Where the numbers come from
 
 Open **Settings => Ingredients** and pick an ingredient to see its values per
@@ -68,3 +88,15 @@ pick one:
 - **From a label**: type the numbers from the pack.
 
 ![Correcting what a teaspoon of cumin weighs, from a label](/img/screenshots/ingredients-nutrition-correction.png)
+
+## Reading nutrition from the API
+
+Apps that read recipes through the [REST API](../reference/api.mdx), like a
+calorie tracker, get the same numbers per serving from
+`GET /api/v1/recipes/{id}/nutrition`. The answer says where the numbers come
+from: `supplied` when the recipe states them, `worked-out` when Norish works
+them out from the ingredients for your household, or `none`. A worked-out
+answer also lists the lines it left out and why, and says when it is
+estimated. The other nutrients are in `perServing.extras`, with
+`extrasCoverage` saying which share of the counted lines, by weight, each one
+covers.

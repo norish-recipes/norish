@@ -4,8 +4,18 @@ Servings: {{servings}}
 Ingredients:
 {{ingredients}}
 
-Estimate nutritional values PER SERVING based on these ingredients.
-- Use typical nutritional values for each ingredient
-- Round to whole numbers
-- Ensure calories match: (fat × 9) + (carbs × 4) + (protein × 4)
-- Always provide all four values; use 0 for a nutrient the recipe genuinely lacks
+Estimate the nutrition of ONE serving of this recipe as written.
+
+Work ingredient by ingredient:
+- Turn each line into grams, using typical weights for pieces, spoons and cups.
+- Use each ingredient as it is listed: dry pasta, rice, grains and legumes by their dry values, meat and fish as raw unless the line says cooked.
+- Count oil, butter and other fat used for cooking or dressing in full; for deep frying, count about a tenth of the oil as absorbed.
+- Leave out water and ice. Count salt only toward sodium.
+- Add the ingredients up and divide by the number of servings.
+
+Values per serving:
+- Calories in kcal; fat, saturated fat, carbohydrates, sugars, fiber and protein in grams; sodium in milligrams.
+- Saturated fat is part of fat and sugars are part of carbohydrates, so neither can be more than its total.
+- Fiber is not part of carbohydrates here.
+- Calories should come close to fat × 9 + carbohydrates × 4 + protein × 4 + fiber × 2. Saturated fat, sugars and sodium add no calories of their own.
+- Give every value; use 0 only for a nutrient the recipe genuinely lacks.

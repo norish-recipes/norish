@@ -95,6 +95,23 @@ describe("building the source table", () => {
     expect(calnut).toMatchObject([{ code: "13050", name: "Apple, pulp, raw", kcal: 49 }]);
   });
 
+  it("fills the nutrients CIQUAL left blank from CALNUT's same code, keeping CIQUAL's own", () => {
+    const onion = { ...food("20034", "Onion, raw", 35), extras: { fiber: 1.7 } };
+    const table = buildSourceTable(
+      sources({
+        ciqual: ciqual([onion, ...sources().ciqual.foods.slice(1)]),
+        calnut: [{ ...food("20034", "Oignon, cru", 35), extras: { fiber: 2.2, sugars: 4.3 } }],
+      }),
+      LISTS,
+      EDITIONS
+    );
+    const stored = table.foods.map(foodOf).find((row) => row.dataset === "ciqual");
+
+    expect(stored?.extras).toEqual({ fiber: 1.7, sugars: 4.3 });
+    // A food that knows nothing more keeps the ten fields it always had.
+    expect(table.foods.find((row) => row[0] === "usda")).toHaveLength(10);
+  });
+
   it("keeps no food under a code its dataset gives two foods", () => {
     const table = buildSourceTable(
       sources({

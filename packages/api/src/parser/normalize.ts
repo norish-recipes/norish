@@ -207,6 +207,7 @@ export async function normalizeRecipeFromJson(
     fat: nutrition.fat,
     carbs: nutrition.carbs,
     protein: nutrition.protein,
+    nutritionExtras: nutrition.extras,
     systemUsed,
     steps,
     recipeIngredients,
