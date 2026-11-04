@@ -534,11 +534,12 @@ export function transcriptionProviderSupportsModelListing(
 export const DEFAULT_YT_DLP_VERSION = "2026.10.26";
 
 /**
- * The audio a generic OpenAI-compatible transcription endpoint is sent.
+ * The audio a generic OpenAI-compatible transcription endpoint is sent first.
  *
- * MP3 keeps uploads small (#439). Some servers decode nothing but WAV -
- * mlx-serve's Qwen3-ASR refuses an MP3 with a 400 - so they are sent 16 kHz
- * mono PCM instead, the rate speech models resample to anyway.
+ * MP3 keeps uploads small (#439), and for every provider a server that rejects
+ * it with HTTP 400 or 415 is retried once with a 16 kHz mono WAV. Choosing WAV
+ * sends the WAV straight away, skipping the rejected attempt - mlx-serve's
+ * Qwen3-ASR refuses an MP3 with a 400. WAV is ignored for other providers.
  */
 export const TranscriptionAudioFormatSchema = z.enum(["mp3", "wav"]);
 
@@ -554,7 +555,7 @@ export const VideoConfigSchema = z.object({
   transcriptionEndpoint: z.url("Endpoint must be a valid URL").optional(),
   transcriptionApiKey: z.string().optional(),
   transcriptionModel: z.string().min(1, "Model is required"),
-  // Generic OpenAI-compatible endpoints only; absent means MP3.
+  // Sent first to a generic OpenAI-compatible endpoint only (ignored for other providers); absent means MP3, with an automatic WAV retry.
   transcriptionAudioFormat: TranscriptionAudioFormatSchema.optional(),
 });
 

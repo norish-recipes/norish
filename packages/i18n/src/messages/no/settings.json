@@ -1042,7 +1042,7 @@
       "transcriptionApiKeyOptionalDescription": "De fleste lokale Whisper-servere krever ikke en API-nøkkel",
       "transcriptionApiKeyOptionalPlaceholder": "La stå tomt for lokale servere",
       "transcriptionAudioFormat": "Opplastingsformat",
-      "transcriptionAudioFormatDescription": "MP3 holder opplastinger små. Velg WAV for servere som bare leser WAV, for eksempel mlx-serve",
+      "transcriptionAudioFormatDescription": "MP3 holder opplastinger små, og Norish prøver på nytt med WAV hvis serveren avviser den. Velg WAV for å sende WAV med en gang til en server som bare leser WAV, for eksempel mlx-serve",
       "transcriptionAudioFormats": {
         "mp3": "MP3 (mindre)",
         "wav": "WAV (16 kHz mono)"

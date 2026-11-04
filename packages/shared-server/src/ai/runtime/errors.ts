@@ -89,6 +89,36 @@ function providerFailure(error: unknown): unknown {
   return RetryError.isInstance(cause) ? cause.lastError : cause;
 }
 
+/** A failed HTTP exchange from a hand-rolled request, carrying the status the server answered. */
+export class HttpStatusError extends Error {
+  constructor(
+    message: string,
+    readonly status: number
+  ) {
+    super(message);
+    this.name = "HttpStatusError";
+  }
+}
+
+/**
+ * The HTTP status a provider answered with, whichever client made the request:
+ * the AI SDK's `statusCode` (read through its RetryError), or the `status` the
+ * OpenAI SDK and {@link HttpStatusError} carry. Undefined for a timeout, a
+ * network failure, or anything that never got an answer. Call it on the raw
+ * error, before {@link toAIError} wraps it.
+ */
+export function httpStatusOf(error: unknown): number | undefined {
+  if (RetryError.isInstance(error)) return httpStatusOf(error.lastError);
+
+  if (APICallError.isInstance(error)) return error.statusCode;
+
+  if (typeof error === "object" && error !== null && "status" in error) {
+    return typeof error.status === "number" ? error.status : undefined;
+  }
+
+  return undefined;
+}
+
 const TIMEOUT_NAMES = new Set(["TimeoutError", "HeadersTimeoutError", "BodyTimeoutError"]);
 
 /** A timeout from `AbortSignal.timeout` or the shared transport, or an aborted request. */

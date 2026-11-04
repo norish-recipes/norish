@@ -1042,7 +1042,7 @@
       "transcriptionApiKeyOptionalDescription": "De meeste lokale Whisper-servers vereisen geen API-sleutel",
       "transcriptionApiKeyOptionalPlaceholder": "Laat leeg voor lokale servers",
       "transcriptionAudioFormat": "Uploadformaat",
-      "transcriptionAudioFormatDescription": "MP3 houdt uploads klein. Kies WAV voor servers die alleen WAV lezen, zoals mlx-serve",
+      "transcriptionAudioFormatDescription": "MP3 houdt uploads klein en Norish probeert het opnieuw met WAV als de server het weigert. Kies WAV om meteen WAV te sturen naar een server die alleen WAV leest, zoals mlx-serve",
       "transcriptionAudioFormats": {
         "mp3": "MP3 (kleiner)",
         "wav": "WAV (16 kHz mono)"

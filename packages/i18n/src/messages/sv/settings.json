@@ -1040,7 +1040,13 @@
       "transcriptionApiKeyPlaceholder": "Lämna tomt för att använda nyckeln från AI-konfigurationen",
       "transcriptionApiKeyOptional": "API-nyckel (valfritt)",
       "transcriptionApiKeyOptionalDescription": "De flesta lokala Whisper-servrar kräver ingen API-nyckel",
-      "transcriptionApiKeyOptionalPlaceholder": "Lämna tomt för lokala servrar"
+      "transcriptionApiKeyOptionalPlaceholder": "Lämna tomt för lokala servrar",
+      "transcriptionAudioFormat": "Uppladdningsformat",
+      "transcriptionAudioFormatDescription": "MP3 håller uppladdningarna små, och Norish försöker igen med WAV om servern avvisar filen. Välj WAV för att skicka WAV direkt till en server som bara läser WAV, till exempel mlx-serve",
+      "transcriptionAudioFormats": {
+        "mp3": "MP3 (mindre)",
+        "wav": "WAV (16 kHz mono)"
+      }
     },
     "pageRenderers": {
       "title": "Sidrenderare",

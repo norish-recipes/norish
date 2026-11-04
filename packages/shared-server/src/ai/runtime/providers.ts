@@ -36,6 +36,7 @@ import {
   normalizeOllamaEndpoint,
   normalizeOpenAICompatibleEndpoint,
 } from "./endpoints";
+import { HttpStatusError } from "./errors";
 import { imageModelKey, withoutRefusedImageParameters } from "./image-parameter-fallback";
 import { requestSignal } from "./model-use-ledger";
 import { withTemperatureFallback } from "./temperature-fallback";
@@ -567,7 +568,10 @@ export async function requestOllamaTranscription({
   if (!response.ok) {
     const errorText = await response.text().catch(() => "Unknown error");
 
-    throw new Error(`Ollama API error: ${response.status} - ${errorText}`);
+    throw new HttpStatusError(
+      `Ollama API error: ${response.status} - ${errorText}`,
+      response.status
+    );
   }
 
   return (await response.json()) as OllamaGenerateResponse;

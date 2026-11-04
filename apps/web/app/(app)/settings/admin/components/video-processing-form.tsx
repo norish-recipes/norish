@@ -450,7 +450,7 @@ export default function VideoProcessingForm({ onDirtyChange }: VideoProcessingFo
             </TextField>
           )}
 
-          {/* Only a generic endpoint may be a server that reads nothing but WAV */}
+          {/* Other providers retry as WAV on their own; a generic endpoint may skip the rejected MP3 */}
           {transcriptionProvider === "generic-openai" && (
             <Select
               variant="secondary"

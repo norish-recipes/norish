@@ -10,7 +10,7 @@
  */
 
 import { execFileSync } from "node:child_process";
-import { existsSync, mkdtempSync, writeFileSync } from "node:fs";
+import { existsSync, mkdtempSync, readFileSync, writeFileSync } from "node:fs";
 import { createServer } from "node:http";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
@@ -54,6 +54,7 @@ vi.mock("@norish/shared-server/logger", () => {
 const { transcribe } = await import("@norish/shared-server/ai/runtime/runtime");
 const { createModelUseLedger, runWithModelUseLedger } =
   await import("@norish/shared-server/ai/runtime/model-use-ledger");
+const { aiLogger } = await import("@norish/shared-server/logger");
 const { AIConfigurationError, AIDisabledError, AIResponseError } =
   await import("@norish/shared-server/ai/runtime/errors");
 
@@ -70,6 +71,8 @@ let baseUrl: string;
 let captured: CapturedRequest[] = [];
 /** JSON body the local server answers with; set per test. */
 let reply: unknown = { text: "local transcript" };
+/** Statuses (and error messages) the server answers the next requests with, then 200. */
+let answers: { status: number; message: string }[] = [];
 /** When set, the server records the request but never answers it. */
 let holdResponses = false;
 /** The WAV upload converts real audio, so its test needs ffmpeg on PATH. */
@@ -113,6 +116,15 @@ beforeAll(async () => {
 
       if (holdResponses) return;
 
+      const answer = answers.shift();
+
+      if (answer) {
+        res.writeHead(answer.status, { "content-type": "application/json" });
+        res.end(JSON.stringify({ error: { message: answer.message } }));
+
+        return;
+      }
+
       res.writeHead(200, { "content-type": "application/json" });
       res.end(JSON.stringify(reply));
     });
@@ -144,6 +156,7 @@ beforeEach(() => {
   captured = [];
   reply = { text: "local transcript" };
   holdResponses = false;
+  answers = [];
   mockGetAIConfig.mockResolvedValue(null);
 });
 
@@ -441,5 +454,191 @@ describe("transcription requests reach the provider correctly", () => {
     expect(Date.now() - started).toBeLessThan(5_000);
     expect(error).toBeInstanceOf(Error);
     expect((error as { retryable?: boolean }).retryable).toBe(true);
+  });
+});
+
+describe("transcription falls back to WAV when the server rejects the MP3", () => {
+  /** The file name a multipart upload (or Ollama's audio format) says was sent. */
+  const sentFile = (request: CapturedRequest) =>
+    /filename="([^"]+)"/.exec(request.body.toString("latin1"))?.[1];
+
+  const useGeneric = (overrides: Partial<VideoConfig> = {}) =>
+    mockGetVideoConfig.mockResolvedValue(
+      videoConfig({
+        transcriptionProvider: "generic-openai",
+        transcriptionEndpoint: baseUrl,
+        transcriptionModel: "qwen3-asr",
+        ...overrides,
+      })
+    );
+
+  const wavName = "tone.mp3.16k.wav";
+
+  it.skipIf(!hasFfmpeg).each([400, 415])(
+    "retries once as WAV after a %i, and returns the retry's transcript",
+    async (status) => {
+      answers = [{ status, message: "mp3 rejected" }];
+      useGeneric();
+
+      const transcript = await transcribe(realMp3Path);
+
+      expect(transcript).toBe("local transcript");
+      expect(captured.map(sentFile)).toEqual(["tone.mp3", wavName]);
+      expect(captured[1]!.body.includes("RIFF")).toBe(true);
+      expect(aiLogger.warn).toHaveBeenCalled();
+      // The temporary WAV copy is removed after the retry.
+      expect(existsSync(`${realMp3Path}.16k.wav`)).toBe(false);
+    }
+  );
+
+  it.skipIf(!hasFfmpeg)("retries a non-generic provider (ollama) as WAV too", async () => {
+    answers = [{ status: 400, message: "mp3 rejected" }];
+    reply = { model: "m", response: "ollama transcript", done: true };
+    mockGetVideoConfig.mockResolvedValue(
+      videoConfig({ transcriptionProvider: "ollama", transcriptionEndpoint: baseUrl })
+    );
+
+    const transcript = await transcribe(realMp3Path);
+
+    expect(transcript).toBe("ollama transcript");
+    expect(captured).toHaveLength(2);
+
+    const formats = captured.map(
+      (request) =>
+        (JSON.parse(request.body.toString()) as { input_audio: { format: string }[] })
+          .input_audio[0]!.format
+    );
+
+    expect(formats).toEqual(["mp3", "wav"]);
+    expect(existsSync(`${realMp3Path}.16k.wav`)).toBe(false);
+  });
+
+  it.skipIf(!hasFfmpeg)("retries an AI SDK provider (openai) as WAV too", async () => {
+    const sent: FormData[] = [];
+    let call = 0;
+
+    transport.stub = vi.fn(async (_url: string | URL | Request, init?: RequestInit) => {
+      sent.push(init?.body as FormData);
+      call += 1;
+
+      return call === 1
+        ? new Response(JSON.stringify({ error: { message: "mp3 rejected" } }), {
+            status: 400,
+            headers: { "content-type": "application/json" },
+          })
+        : new Response(JSON.stringify({ text: "openai transcript" }), {
+            status: 200,
+            headers: { "content-type": "application/json" },
+          });
+    });
+    mockGetVideoConfig.mockResolvedValue(
+      videoConfig({ transcriptionProvider: "openai", transcriptionApiKey: "openai-key" })
+    );
+
+    const transcript = await transcribe(realMp3Path);
+
+    expect(transcript).toBe("openai transcript");
+    // The AI SDK names the upload itself, so tell the two attempts apart by their bytes.
+    const heads = await Promise.all(
+      sent.map(async (form) => Buffer.from(await (form.get("file") as File).arrayBuffer()))
+    );
+
+    expect(heads[0]!.equals(readFileSync(realMp3Path))).toBe(true);
+    expect(heads[1]!.toString("latin1", 0, 4)).toBe("RIFF");
+    expect(heads[1]!.toString("latin1", 8, 12)).toBe("WAVE");
+  });
+
+  it.each([401, 404, 429, 500])("does not retry a %i", async (status) => {
+    // 429 and 5xx are retried by the OpenAI client itself; serve enough of them.
+    answers = Array.from({ length: 5 }, () => ({ status, message: "no retry" }));
+    useGeneric();
+
+    await expect(transcribe(realMp3Path)).rejects.toBeInstanceOf(Error);
+
+    expect(captured.every((request) => sentFile(request) === "tone.mp3")).toBe(true);
+    expect(captured.some((request) => sentFile(request) === wavName)).toBe(false);
+  });
+
+  it("does not retry a timeout", async () => {
+    holdResponses = true;
+    mockGetAIConfig.mockResolvedValue({ timeoutMs: 300 });
+    useGeneric();
+
+    await expect(transcribe(realMp3Path)).rejects.toBeInstanceOf(Error);
+
+    expect(captured.map(sentFile)).toEqual(["tone.mp3"]);
+  });
+
+  it.skipIf(!hasFfmpeg)(
+    "sends WAV straight away when set, and does not retry a rejection",
+    async () => {
+      answers = [{ status: 400, message: "wav rejected" }];
+      useGeneric({ transcriptionAudioFormat: "wav" });
+
+      await expect(transcribe(realMp3Path)).rejects.toThrow(/wav rejected/);
+
+      expect(captured.map(sentFile)).toEqual([wavName]);
+      expect(existsSync(`${realMp3Path}.16k.wav`)).toBe(false);
+    }
+  );
+
+  it("ignores a stale WAV setting under another provider, starting with the MP3", async () => {
+    reply = { model: "m", response: "ollama transcript", done: true };
+    mockGetVideoConfig.mockResolvedValue(
+      videoConfig({
+        transcriptionProvider: "ollama",
+        transcriptionEndpoint: baseUrl,
+        transcriptionAudioFormat: "wav",
+      })
+    );
+
+    await transcribe(audioPath);
+
+    const [audio] = (
+      JSON.parse(captured[0]!.body.toString()) as { input_audio: { format: string }[] }
+    ).input_audio;
+
+    expect(captured).toHaveLength(1);
+    expect(audio!.format).toBe("mp3");
+  });
+
+  it("does not retry when the source is already a .wav", async () => {
+    const wavSource = join(tmpdir(), `norish-source-${process.pid}.wav`);
+
+    writeFileSync(wavSource, Buffer.from("already wav"));
+    answers = [{ status: 400, message: "wav source rejected" }];
+    useGeneric();
+
+    await expect(transcribe(wavSource)).rejects.toThrow(/wav source rejected/);
+
+    expect(captured).toHaveLength(1);
+  });
+
+  it.skipIf(!hasFfmpeg)("throws the original error when the WAV retry fails too", async () => {
+    answers = [
+      { status: 400, message: "mp3 rejected" },
+      { status: 500, message: "retry failed" },
+    ];
+    useGeneric();
+
+    const error = await transcribe(realMp3Path).catch((err: unknown) => err);
+
+    expect((error as Error).message).toContain("mp3 rejected");
+    expect((error as Error).message).not.toContain("retry failed");
+    expect(captured).toHaveLength(2);
+    expect(aiLogger.error).toHaveBeenCalled();
+    expect(existsSync(`${realMp3Path}.16k.wav`)).toBe(false);
+  });
+
+  it("throws the original error when ffmpeg cannot convert the audio", async () => {
+    // audioPath holds text, not audio, so the conversion itself fails.
+    answers = [{ status: 400, message: "mp3 rejected" }];
+    useGeneric();
+
+    const error = await transcribe(audioPath).catch((err: unknown) => err);
+
+    expect((error as Error).message).toContain("mp3 rejected");
+    expect(captured).toHaveLength(1);
+    expect(existsSync(`${audioPath}.16k.wav`)).toBe(false);
   });
 });

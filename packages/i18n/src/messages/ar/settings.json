@@ -1040,7 +1040,13 @@
       "transcriptionApiKeyPlaceholder": "اتركه فارغًا لاستخدام مفتاح إعدادات الذكاء الاصطناعي",
       "transcriptionApiKeyOptional": "مفتاح API (اختياري)",
       "transcriptionApiKeyOptionalDescription": "معظم خوادم Whisper المحلية لا تتطلب مفتاح API",
-      "transcriptionApiKeyOptionalPlaceholder": "اتركه فارغًا للخوادم المحلية"
+      "transcriptionApiKeyOptionalPlaceholder": "اتركه فارغًا للخوادم المحلية",
+      "transcriptionAudioFormat": "صيغة الرفع",
+      "transcriptionAudioFormatDescription": "يُبقي MP3 الملفات المرفوعة صغيرة، ويعيد Norish المحاولة بصيغة WAV إذا رفضها الخادم. اختر WAV لإرسال WAV مباشرة إلى خادم لا يقرأ سوى WAV، مثل mlx-serve",
+      "transcriptionAudioFormats": {
+        "mp3": "MP3 (أصغر)",
+        "wav": "WAV (16 kHz أحادي)"
+      }
     },
     "pageRenderers": {
       "title": "عارضات الصفحات",

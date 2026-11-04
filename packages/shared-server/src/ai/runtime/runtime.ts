@@ -37,7 +37,6 @@ import type {
   AIConfig,
   DecisionConfig,
   DecisionProvider,
-  TranscriptionAudioFormat,
   TranscriptionProvider,
 } from "@norish/config/zod/server-config";
 import {
@@ -65,6 +64,7 @@ import {
   AIDisabledError,
   AIProviderError,
   AIResponseError,
+  httpStatusOf,
   isCredentialRejection,
   isRequestShapeRejection,
   rateLimitWaitMs,
@@ -489,7 +489,8 @@ export async function transcribe(audioPath: string): Promise<string> {
   const apiKey = videoConfig.transcriptionApiKey || aiConfig?.apiKey || "";
   // Transcription follows the existing AI timeout; there is no second knob.
   const timeoutMs = aiConfig?.timeoutMs ?? DEFAULT_AI_TIMEOUT_MS;
-  const audioFormat = videoConfig.transcriptionAudioFormat ?? "mp3";
+  // WAV-first is a generic-endpoint setting; a value left over from another provider is ignored.
+  const wavFirst = provider === "generic-openai" && videoConfig.transcriptionAudioFormat === "wav";
 
   if (!apiKey && isCloudTranscriptionProvider(provider)) {
     throw new AIConfigurationError(
@@ -500,14 +501,11 @@ export async function transcribe(audioPath: string): Promise<string> {
   aiLogger.debug({ audioPath, model, provider, endpoint }, "Starting transcription");
 
   try {
-    const transcript = await transcribeWithProvider(provider, {
-      audioPath,
-      apiKey,
-      model,
-      endpoint,
-      timeoutMs,
-      audioFormat,
-    });
+    const transcript = await transcribeWithWavFallback(
+      provider,
+      { audioPath, apiKey, model, endpoint, timeoutMs },
+      wavFirst
+    );
 
     aiLogger.info(
       { provider, model, transcriptLength: transcript.length },
@@ -533,13 +531,58 @@ interface TranscriptionRequest {
   model: string;
   endpoint?: string;
   timeoutMs: number;
-  /** What a generic endpoint is sent; the other providers all read the MP3. */
-  audioFormat: TranscriptionAudioFormat;
+}
+
+/** A server refusing the upload's content type or encoding answers 400 or 415. */
+const WAV_RETRY_STATUSES: ReadonlySet<number | undefined> = new Set([400, 415]);
+
+/**
+ * Send the audio as extracted - or as WAV straight away when `wavFirst` - and,
+ * if the server rejects it with 400 or 415, once more as a 16 kHz mono WAV, so
+ * a server that reads only WAV works with no configuration. Decided by status
+ * alone, never by message text. Any failure of the retry surfaces the original
+ * rejection.
+ */
+async function transcribeWithWavFallback(
+  provider: Exclude<TranscriptionProvider, "disabled">,
+  request: TranscriptionRequest,
+  wavFirst: boolean
+): Promise<string> {
+  const sendWav = () =>
+    withWavCopy(request.audioPath, (wavPath) =>
+      transcribeWithProvider(provider, { ...request, audioPath: wavPath })
+    );
+
+  if (wavFirst) return sendWav();
+
+  try {
+    return await transcribeWithProvider(provider, request);
+  } catch (error) {
+    const status = httpStatusOf(error);
+
+    // A .wav source (the extraction fallback's last format) has nothing to convert to.
+    if (!WAV_RETRY_STATUSES.has(status) || extname(request.audioPath).toLowerCase() === ".wav") {
+      throw error;
+    }
+
+    aiLogger.warn(
+      { provider, status },
+      "Transcription server rejected the audio; retrying once as WAV"
+    );
+
+    try {
+      return await sendWav();
+    } catch (retryError) {
+      aiLogger.error({ provider, err: retryError }, "Transcription retry as WAV failed");
+
+      throw error;
+    }
+  }
 }
 
 async function transcribeWithProvider(
   provider: Exclude<TranscriptionProvider, "disabled">,
-  { audioPath, apiKey, model, endpoint, timeoutMs, audioFormat }: TranscriptionRequest
+  { audioPath, apiKey, model, endpoint, timeoutMs }: TranscriptionRequest
 ): Promise<string> {
   switch (provider) {
     case "openai":
@@ -567,16 +610,12 @@ async function transcribeWithProvider(
 
     case "generic-openai": {
       const client = createGenericTranscriptionClient({ apiKey, endpoint, timeoutMs });
-      const send = async (path: string) => {
-        const response = await client.audio.transcriptions.create(
-          { file: createReadStream(path), model, response_format: "json" },
-          { signal: requestSignal(timeoutMs) }
-        );
+      const response = await client.audio.transcriptions.create(
+        { file: createReadStream(audioPath), model, response_format: "json" },
+        { signal: requestSignal(timeoutMs) }
+      );
 
-        return requireTranscript(response.text);
-      };
-
-      return audioFormat === "wav" ? withWavCopy(audioPath, send) : send(audioPath);
+      return requireTranscript(response.text);
     }
 
     case "ollama": {
