@@ -32,6 +32,7 @@ import {
 import { readRecipe, waitForRecipe } from "../harness/recipes";
 import { callTrpc, queryTrpc } from "../harness/trpc";
 import { expect, OWNER, test } from "./fixture";
+import { readMarks } from "./recipe-archive-support";
 
 test.describe.configure({ mode: "serial" });
 
@@ -805,6 +806,8 @@ test("a full load of a recipe carries its rating in the server's markup", async 
   const id = await ensureRecipe();
 
   await callApi("ratings.rate", { recipeId: id, rating: 4 });
+  // The rating is written after the mutation answers, and a page without JavaScript never hears it.
+  await expect.poll(async () => (await readMarks(stack, id)).rating).toBe(4);
   const { context, page } = await openStatic(browser, "phone");
 
   try {
@@ -878,7 +881,7 @@ test("the Library arrives under the filters the browser stored, and hydrates wit
     // production build doesn't report, makes React draw new ones.
     await context.addInitScript(() => {
       new MutationObserver((_, observer) => {
-        const card = document.querySelector('[data-recipe-card][role="button"]');
+        const card = document.querySelector("a[data-recipe-card]");
 
         if (!card) return;
         (window as unknown as { __served: Element }).__served = card;
@@ -886,7 +889,7 @@ test("the Library arrives under the filters the browser stored, and hydrates wit
       }).observe(document, { subtree: true, childList: true });
     });
     await page.goto("/");
-    const first = page.locator('[data-recipe-card][role="button"]:visible').first();
+    const first = page.locator("a[data-recipe-card]:visible").first();
 
     await expect(first).toContainText("Aardvark First Paint Stew");
     expect(
@@ -905,7 +908,7 @@ test("a full load of the Library draws its cards in the server's markup", async 
     await storeFiltersCookie(context, {});
     await page.goto("/");
     await expect(
-      page.locator('[data-recipe-card][role="button"]').filter({ hasText: "Served Library Soup" })
+      page.locator("a[data-recipe-card]").filter({ hasText: "Served Library Soup" })
     ).not.toHaveCount(0);
   } finally {
     await context.close();
@@ -928,7 +931,7 @@ test("a reader who scrolls the Library before it hydrates meets no blank rows", 
       (route) => route.abort()
     );
     await page.goto("/", { waitUntil: "commit" });
-    await page.locator('[data-recipe-card][role="button"]').first().waitFor();
+    await page.locator("a[data-recipe-card]").first().waitFor();
     await page.evaluate(() => window.scrollTo(0, document.documentElement.scrollHeight));
     const gap = await page.evaluate(() => {
       const list = document.querySelector('[data-index="0"]')!.parentElement!;
@@ -986,7 +989,7 @@ test("a cookbook opened under stored filters asks for its members once and never
       (window as unknown as { __seen: typeof seen }).__seen = seen;
       // Cards only: the page's data scripts name every member.
       new MutationObserver(() => {
-        const cards = document.querySelectorAll('[data-recipe-card][role="button"]');
+        const cards = document.querySelectorAll("a[data-recipe-card]");
 
         if ([...cards].some((card) => card.textContent?.includes("Filtered Breakfast Member"))) {
           seen.breakfast = true;
@@ -1020,9 +1023,7 @@ test("a full load of a cookbook draws its members in the server's markup", async
     await storeFiltersCookie(context, {});
     await page.goto(`/cookbooks/${cookbook.id}`);
     await expect(
-      page
-        .locator('[data-recipe-card][role="button"]')
-        .filter({ hasText: "Served Cookbook Member" })
+      page.locator("a[data-recipe-card]").filter({ hasText: "Served Cookbook Member" })
     ).not.toHaveCount(0);
   } finally {
     await context.close();
@@ -1094,7 +1095,7 @@ test("a full load of the Library never asks for its first page: the document car
     });
     // Returns once every card has hydrated, after the app's providers above them asked for data.
     await page.goto("/");
-    await expect(page.locator('[data-recipe-card][role="button"]').first()).toBeVisible();
+    await expect(page.locator("a[data-recipe-card]").first()).toBeVisible();
     expect(asked).toEqual([]);
   } finally {
     await context.close();
