@@ -41,6 +41,10 @@ export function createUseRecipesSubscription(
     // A lagged subscription refetches the lists; the detail caches are
     // refetched by the screens that hold them.
     const lag = { onLag: invalidate };
+    // A fresh subscription carries no cursor, so an import that ended between the
+    // pending list's first read and the server taking it reaches nobody: reread it.
+    const rereadPending = () =>
+      void queryClient.invalidateQueries({ queryKey: trpc.recipes.getPending.queryKey() });
 
     const addRecipeToList = (recipe: RecipeDashboardDTO) => {
       setAllRecipesData((prev: InfiniteRecipeData | undefined): InfiniteRecipeData | undefined => {
@@ -102,6 +106,7 @@ export function createUseRecipesSubscription(
 
     useRealtimeSubscription<Payload<"imported">>(trpc.recipes.onImported, {
       ...lag,
+      onStarted: rereadPending,
       onEvent: (payload) => {
         const pendingId = payload.pendingRecipeId ?? payload.recipe.id;
 
@@ -161,6 +166,7 @@ export function createUseRecipesSubscription(
 
     useRealtimeSubscription<Payload<"failed">>(trpc.recipes.onFailed, {
       ...lag,
+      onStarted: rereadPending,
       onEvent: (payload) => {
         if (payload.recipeId) {
           replaceOldestOptimisticPendingRecipe(payload.recipeId);

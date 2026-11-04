@@ -88,14 +88,20 @@ function fullRecipe(overrides: Partial<FullRecipeDTO> = {}): FullRecipeDTO {
   } as FullRecipeDTO;
 }
 
-function emit(name: string, payload: unknown) {
+function subscription(name: string) {
   const options = useSubscriptionMock.mock.calls
-    .map((call) => call[0] as { name: string; onData: (data: unknown) => void })
+    .map(
+      (call) => call[0] as { name: string; onData: (data: unknown) => void; onStarted?: () => void }
+    )
     .find((opts) => opts.name === name);
 
   if (!options) throw new Error(`No subscription named ${name}`);
 
-  act(() => options.onData(trackedEvent(payload)));
+  return options;
+}
+
+function emit(name: string, payload: unknown) {
+  act(() => subscription(name).onData(trackedEvent(payload)));
 }
 
 let queryClient: QueryClient;
@@ -199,4 +205,15 @@ describe("useRecipesSubscription", () => {
 
     expect(list?.pages[0]?.recipes.map((r) => r.id)).toEqual(["recipe-2", "recipe-1"]);
   });
+
+  it.each(["onImported", "onFailed"])(
+    "rereads the pending imports once %s is live, for an import that ended before it",
+    (name) => {
+      act(() => subscription(name).onStarted?.());
+
+      expect(invalidateQueries).toHaveBeenCalledWith({
+        queryKey: [["recipes", "getPending"], { type: "query" }],
+      });
+    }
+  );
 });
