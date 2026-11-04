@@ -19,7 +19,6 @@ from recipe_scrapers._exceptions import NoSchemaFoundInWildMode
 from recipe_scrapers._exceptions import RecipeSchemaNotFound
 from recipe_scrapers._exceptions import RecipeScrapersExceptions
 from recipe_scrapers._exceptions import WebsiteNotImplementedError
-from recipe_scrapers._grouping_utils import group_ingredients
 
 
 FailureCode = Literal[
@@ -346,28 +345,6 @@ def _keep_instruction_sections(scraper: Any, recipe: dict[str, Any]) -> None:
         recipe["recipeInstructions"] = steps
 
 
-def _keep_ingredient_sections(scraper: Any, recipe: dict[str, Any]) -> None:
-    """Read ingredient sections from the structured-ingredients markup Serious Eats uses.
-
-    recipe-scrapers auto-detects only WP Recipe Maker and Tasty Recipes, and JSON-LD is flat.
-    """
-    if len(recipe.get("ingredient_groups") or []) > 1:
-        return
-
-    try:
-        groups = group_ingredients(
-            scraper.ingredients(),
-            scraper.soup,
-            '[class*="structured-ingredients__list-heading"]',
-            '[class*="structured-ingredients__list-item"]',
-        )
-    except Exception:
-        return
-
-    if len(groups) > 1:
-        recipe["ingredient_groups"] = [group.__dict__ for group in groups]
-
-
 def _map_failure_code(error: Exception) -> FailureCode:
     if isinstance(error, WebsiteNotImplementedError):
         return "WebsiteNotImplementedError"
@@ -414,7 +391,6 @@ def parse_recipe(request: ParseRequest) -> ParseResponse:
         recipe = scraper.to_json()
         _fill_missing_instructions(scraper, recipe)
         _keep_instruction_sections(scraper, recipe)
-        _keep_ingredient_sections(scraper, recipe)
 
         logger.info(
             "parser scrape success url=%s scraper=%s mode=%s",
