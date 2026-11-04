@@ -274,6 +274,24 @@ describe("adaptRecipeScrapersResponse", () => {
       ]);
     });
 
+    it("drop the colon a site writes after a heading", async () => {
+      const { collectIngredientStrings } = await import("@norish/api/parser/python/adapter");
+
+      expect(
+        collectIngredientStrings({
+          ingredient_groups: [
+            { purpose: "For the Mashed Potatoes:", ingredients: ["2 lb potatoes"] },
+            { purpose: "For the Meat Sauce:", ingredients: ["1 lb lamb"] },
+          ],
+        })
+      ).toEqual([
+        "# For the Mashed Potatoes",
+        "2 lb potatoes",
+        "# For the Meat Sauce",
+        "1 lb lamb",
+      ]);
+    });
+
     it("are the flat list when the recipe has one group", async () => {
       const { collectIngredientStrings } = await import("@norish/api/parser/python/adapter");
 

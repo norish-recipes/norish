@@ -83,5 +83,69 @@ class ParserInstructionsTests(unittest.TestCase):
 
         self.assertIsNone(recipe.get("recipeInstructions"))
 
+
+def _sectioned_page(sections: list[tuple[str, list[str]]]) -> str:
+    """The JSON-LD stays flat and only the markup names the sections, as on Serious Eats (#685)."""
+    recipe = {
+        "@context": "https://schema.org",
+        "@type": "Recipe",
+        "name": "Shepherd's Pie",
+        "recipeIngredient": [line for _, lines in sections for line in lines],
+    }
+    markup = "".join(
+        f'<p class="mm-recipes-structured-ingredients__list-heading text-title-200">{heading}</p><ul>'
+        + "".join(
+            f'<li class="mm-recipes-structured-ingredients__list-item "><p>{line}</p></li>'
+            for line in lines
+        )
+        + "</ul>"
+        for heading, lines in sections
+    )
+
+    return (
+        '<html><head><script type="application/ld+json">'
+        f"{json.dumps(recipe)}"
+        f"</script></head><body>{markup}</body></html>"
+    )
+
+
+def _parse_serious_eats(html: str) -> dict:
+    response = parse_recipe(ParseRequest(url="https://www.seriouseats.com/pie", html=html))
+
+    assert response.ok, response
+    return response.recipe
+
+
+class ParserIngredientSectionsTests(unittest.TestCase):
+    def test_reads_sections_from_the_structured_ingredients_markup(self) -> None:
+        recipe = _parse_serious_eats(
+            _sectioned_page(
+                [
+                    ("For the Mashed Potatoes:", ["1 kg russet potatoes", "Kosher salt"]),
+                    ("For the Meat Sauce:", ["500 g ground lamb", "Kosher salt"]),
+                ]
+            )
+        )
+
+        self.assertEqual(
+            recipe["ingredient_groups"],
+            [
+                {
+                    "purpose": "For the Mashed Potatoes:",
+                    "ingredients": ["1 kg russet potatoes", "Kosher salt"],
+                },
+                {
+                    "purpose": "For the Meat Sauce:",
+                    "ingredients": ["500 g ground lamb", "Kosher salt"],
+                },
+            ],
+        )
+
+    def test_a_page_without_sections_keeps_one_group(self) -> None:
+        recipe = _parse_serious_eats(_page({"name": "Pie", "recipeIngredient": ["1 egg"]}))
+
+        self.assertEqual(recipe["ingredient_groups"], [{"purpose": None, "ingredients": ["1 egg"]}])
+
+
 if __name__ == "__main__":
     unittest.main()

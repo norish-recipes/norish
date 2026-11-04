@@ -63,7 +63,10 @@ export function collectIngredientStrings(recipe: ScraperRecipe): string[] {
         purpose?: unknown;
       };
 
-      return { heading: normalizeString(purpose), lines: normalizeStringList(ingredients) };
+      return {
+        heading: normalizeString(purpose)?.replace(/:$/, ""),
+        lines: normalizeStringList(ingredients),
+      };
     }
   );
 
