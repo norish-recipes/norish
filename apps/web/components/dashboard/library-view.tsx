@@ -53,16 +53,22 @@ export default function LibraryView({ variant }: { variant: RecipeViewMode }) {
     enabled: isHydrated,
   });
 
+  // A running import is a recipe on its way, so the Cookbooks lens leaves it out.
+  const showsPending = filters.libraryType !== "cookbooks";
+
   const gridItems = useMemo<LibraryGridItem[]>(
     () => [
-      ...Array.from(pendingRecipeIds).map((id) => ({ kind: "pending" as const, id })),
+      ...(showsPending ? Array.from(pendingRecipeIds) : []).map((id) => ({
+        kind: "pending" as const,
+        id,
+      })),
       ...items.map((item) =>
         item.kind === "recipe"
           ? { kind: "recipe" as const, id: item.recipe.id, recipe: item.recipe }
           : { kind: "cookbook" as const, id: item.cookbook.id, cookbook: item.cookbook }
       ),
     ],
-    [pendingRecipeIds, items]
+    [showsPending, pendingRecipeIds, items]
   );
 
   const renderItem = useCallback(
