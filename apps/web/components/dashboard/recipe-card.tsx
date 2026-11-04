@@ -168,9 +168,13 @@ function RecipeCardComponent({
   // A press that began before the overlay appeared, like the long press that
   // started selecting, must not toggle the card again on release.
   const overlayPressArmedRef = useRef(false);
+  // useLongPress cancels only when the finger leaves the card, so a slow swipe would select it.
+  const pressOriginRef = useRef({ x: 0, y: 0 });
+  const pressMovedRef = useRef(false);
   const { longPressProps } = useLongPress({
     isDisabled: !selection || isSelecting,
     onLongPress: () => {
+      if (pressMovedRef.current) return;
       rowRef.current?.closeRow();
       selection?.toggle(recipe);
     },
@@ -613,6 +617,15 @@ function RecipeCardComponent({
         className={`relative select-none [-webkit-touch-callout:none] ${hasLeft ? "invisible" : ""}`}
         onClickCapture={handleShiftClick}
         {...longPressProps}
+        onPointerDownCapture={(event) => {
+          pressOriginRef.current = { x: event.clientX, y: event.clientY };
+          pressMovedRef.current = false;
+        }}
+        onPointerMoveCapture={(event) => {
+          const { x, y } = pressOriginRef.current;
+
+          if (Math.hypot(event.clientX - x, event.clientY - y) > 10) pressMovedRef.current = true;
+        }}
       >
         <div inert={isSelecting}>
           <SwipeableRow
