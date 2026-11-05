@@ -205,10 +205,20 @@ function createHttpTransportLink(
       true: createHttpFormDataMutationLink(getBaseUrl, getHeaders),
       false: createHttpMutationLink(getBaseUrl, getHeaders),
     }),
-    false: httpBatchLink({
-      url: `${getBaseUrl()}/api/trpc`,
-      headers: createBatchRequestHeadersResolver(getHeaders),
-      transformer: superjson,
+    false: splitLink({
+      // These reads can carry a key being typed, which must not reach a URL and access logs.
+      condition: (op) => op.path.startsWith("admin.listAvailable"),
+      true: httpLink({
+        url: `${getBaseUrl()}/api/trpc`,
+        headers: createRequestHeadersResolver(getHeaders),
+        transformer: superjson,
+        methodOverride: "POST",
+      }),
+      false: httpBatchLink({
+        url: `${getBaseUrl()}/api/trpc`,
+        headers: createBatchRequestHeadersResolver(getHeaders),
+        transformer: superjson,
+      }),
     }),
   });
 }
