@@ -1,4 +1,3 @@
-import type { TRPCClient } from "@trpc/client";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 
 import type {
@@ -15,7 +14,6 @@ import type {
   TimerKeywordsInput,
   VideoConfig,
 } from "@norish/config/zod/server-config";
-import type { AppRouter } from "@norish/trpc/client";
 import { ServerConfigKeys } from "@norish/config/zod/server-config";
 
 import type { CreateAdminHooksOptions } from "./types";
@@ -77,20 +75,17 @@ export type AdminMutationsResult = {
 
 type CreateUseAdminMutationsOptions = CreateAdminHooksOptions & {
   useAdminConfigsQuery: () => { invalidate: () => void };
-  useTRPCClient: () => TRPCClient<AppRouter>;
 };
 
 export function createUseAdminMutations({
   useTRPC,
   useAdminConfigsQuery,
-  useTRPCClient,
 }: CreateUseAdminMutationsOptions) {
   return function useAdminMutations(): AdminMutationsResult {
     "use memo";
 
     const trpc = useTRPC();
     const queryClient = useQueryClient();
-    const trpcClient = useTRPCClient();
     const { invalidate } = useAdminConfigsQuery();
 
     const { mutateAsync: mutateUpdateRegistrationAsync } = useMutation(
@@ -295,9 +290,9 @@ export function createUseAdminMutations({
         return mutateRestartServerAsync();
       },
       fetchConfigSecret: async (key, field) => {
-        // Past the query cache, which is written to IndexedDB: a key is never kept in the
-        // browser, and a reveal after a save always reads the stored one.
-        const result = await trpcClient.admin.getSecretField.query({ key, field });
+        const result = await queryClient.query(
+          trpc.admin.getSecretField.queryOptions({ key, field })
+        );
 
         return result.value;
       },

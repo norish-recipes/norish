@@ -105,9 +105,12 @@ const refetchOnMount = (query: Query) =>
     ? false
     : ("always" as const);
 
-/** Persist usable read data even when its latest background refetch failed. */
-const shouldDehydrateQuery = (query: { state: { data: unknown } }) =>
-  query.state.data !== undefined;
+/**
+ * Persist usable read data even when its latest background refetch failed. Admin reads stay out:
+ * they hold other users' details and, in a query's input, a key being typed.
+ */
+const shouldDehydrateQuery = (query: { queryKey: readonly unknown[]; state: { data: unknown } }) =>
+  query.state.data !== undefined && (query.queryKey[0] as string[] | undefined)?.[0] !== "admin";
 
 function createQueryClient(): QueryClient {
   const queryClient = new QueryClient({
@@ -145,6 +148,9 @@ function createQueryClient(): QueryClient {
   for (const pathKey of [keys.recipes.get.pathKey(), keys.cookbooks.get.pathKey()]) {
     queryClient.setQueryDefaults(pathKey, { gcTime: CACHE_MAX_AGE_MS });
   }
+
+  // Settings are read as they are now: a reveal after a save must show the saved key.
+  queryClient.setQueryDefaults(keys.admin.pathKey(), { staleTime: 0, gcTime: 0 });
 
   return queryClient;
 }
