@@ -6,6 +6,7 @@ import {
   invalidateSession,
   subscribeAuthTransport,
 } from "@/lib/auth/auth-session-sync";
+import { getBackendWsUrl } from "@/lib/network/backend-ws-url";
 import { notifyBackendConnect, notifyBackendDisconnect } from "@/lib/network/network-context";
 import {
   createOutboxLink,
@@ -19,7 +20,6 @@ import * as SecureStore from "expo-secure-store";
 
 import type { AppRouter } from "@norish/trpc/client";
 import { createTRPCProviderBundle } from "@norish/shared-react/providers";
-import { withoutTrailingSlashes } from "@norish/shared/lib/helpers";
 import { createClientLogger } from "@norish/shared/lib/logger";
 
 const log = createClientLogger("mobile-trpc");
@@ -43,17 +43,6 @@ type HeaderCapableWebSocket = typeof WebSocket & {
     options?: { headers: Record<string, string> }
   ): WebSocket;
 };
-
-function toWsUrl(baseUrl: string): string {
-  const parsed = new URL(baseUrl);
-
-  parsed.protocol = parsed.protocol === "https:" ? "wss:" : "ws:";
-  parsed.pathname = "/trpc";
-  parsed.search = "";
-  parsed.hash = "";
-
-  return withoutTrailingSlashes(parsed.toString());
-}
 
 let currentBaseUrl = "";
 
@@ -110,7 +99,7 @@ export { persistedQueryClient };
 const trpcBundle = createTRPCProviderBundle<AppRouter>({
   logger: log,
   getBaseUrl: () => currentBaseUrl,
-  getWsUrl: () => toWsUrl(currentBaseUrl),
+  getWsUrl: () => getBackendWsUrl(currentBaseUrl),
   getHeaders: trpcBundleGetHeaders,
   getWebSocketImpl: createMobileWebSocket,
   wsLazyEnabled: true,
