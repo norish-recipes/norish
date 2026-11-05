@@ -12,7 +12,8 @@ export function getAuthClient(baseUrl: string): ReturnType<typeof createAuthClie
   }
 
   _client = createAuthClient({
-    baseURL: baseUrl,
+    // Better Auth takes a URL with a path as the auth root, so a base-path server needs it spelled out.
+    baseURL: `${baseUrl}/api/auth`,
     plugins: [
       expoClient({
         scheme: "norish",

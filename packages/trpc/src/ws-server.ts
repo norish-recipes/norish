@@ -70,9 +70,12 @@ let trpcHandler = globalForWs.trpcHandler ?? null;
 let trpcUpgrade = globalForWs.trpcUpgrade ?? null;
 let stopConnectionInvalidation = globalForWs.stopConnectionInvalidation ?? null;
 
+// A custom scheme, `file:` or `data:` has the opaque origin "null", which never names this instance.
 function originOf(url: string): string | null {
   try {
-    return new URL(url).origin;
+    const { origin } = new URL(url);
+
+    return origin === "null" ? null : origin;
   } catch {
     return null;
   }
@@ -81,10 +84,11 @@ function originOf(url: string): string | null {
 /**
  * Whether a browser's `Origin` may ride its session cookie onto the socket.
  *
- * An absent header is accepted (native clients, `curl`). A present one must be
- * the origin of `AUTH_URL`, an entry of `TRUSTED_ORIGINS`, or the request's own
- * host under either scheme — a TLS-terminating proxy makes the socket `http`
- * while the browser saw `https`, and a page on the same host is this instance.
+ * An absent header is accepted (native clients, `curl`); an opaque `"null"`
+ * never is. A present one must be the origin of `AUTH_URL`, an entry of
+ * `TRUSTED_ORIGINS`, or the request's own host under either scheme — a
+ * TLS-terminating proxy makes the socket `http` while the browser saw `https`,
+ * and a page on the same host is this instance.
  */
 export function isTrustedWebSocketOrigin(
   origin: string | undefined,

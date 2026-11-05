@@ -1,6 +1,7 @@
 import type { BetterAuthOptions, Where } from "better-auth";
 import type { DBAdapter } from "better-auth/adapters";
 import { apiKey } from "@better-auth/api-key";
+import { expo } from "@better-auth/expo";
 import { betterAuth } from "better-auth";
 import { drizzleAdapter } from "better-auth/adapters/drizzle";
 import { APIError, createAuthMiddleware, getSessionFromCtx } from "better-auth/api";
@@ -306,6 +307,8 @@ function createBetterAuth() {
     basePath: addBasePath("/api/auth"),
     trustedOrigins: [
       SERVER_CONFIG.AUTH_URL,
+      // The Norish app's scheme lives here, not in TRUSTED_ORIGINS, which the WebSocket check also reads.
+      "norish://",
       ...SERVER_CONFIG.TRUSTED_ORIGINS,
       ...(process.env.NODE_ENV === "development"
         ? [
@@ -523,6 +526,8 @@ function createBetterAuth() {
         customAPIKeyValidator: ({ key }) => consumeApiKeyRequest(key),
         apiKeyHeaders: [...API_KEY_HEADERS],
       }),
+
+      expo(),
 
       nextCookies(),
     ],

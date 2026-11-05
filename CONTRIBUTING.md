@@ -267,6 +267,23 @@ NEXT_PUBLIC_BASE_PATH=/norish pnpm run build --filter=@norish/web...
 pnpm --filter @norish/web run test:e2e
 ```
 
+### Mobile app flows (Maestro)
+
+The flows in `apps/mobile/maestro/` drive the iOS app against a local dev server. They run on your machine only; CI does not run them. You need [Maestro](https://maestro.dev), Xcode and a booted iPhone simulator.
+
+```bash
+# 1. Start the dev server
+pnpm dev
+
+# 2. Build the app and install it in the booted simulator
+pnpm --filter @norish/mobile ios
+
+# 3. Run every flow
+pnpm --filter @norish/mobile maestro
+```
+
+Step 3 signs up `maestro@norish.test` on the dev server and puts one unchecked grocery on its list. It then runs the flows and checks that the grocery is done on the server. When registration is closed, create that account by hand, or point the flows at another one with `NORISH_EMAIL`, `NORISH_PASSWORD` and `NORISH_SERVER_URL`.
+
 ## Adding Translations
 
 Norish uses a configurable locale system. The bundled locale catalog lives in `packages/i18n/src/locales.ts`, server defaults are derived from that catalog in `packages/config/src/server-config-loader.ts`, and locales can be enabled/disabled at runtime via the Admin UI or environment variables.

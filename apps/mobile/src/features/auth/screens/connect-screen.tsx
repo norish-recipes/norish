@@ -92,6 +92,7 @@ export function ConnectScreen() {
         keyboardType="url"
         placeholder={intl.formatMessage({ id: "auth.connect.backendUrlPlaceholder" })}
         returnKeyType="done"
+        testID="connect-server-url"
         value={baseUrl}
         onChangeText={setBaseUrl}
         onSubmitEditing={() => {
@@ -102,6 +103,7 @@ export function ConnectScreen() {
       <Button
         isDisabled={isConnecting}
         style={styles.connectButton}
+        testID="connect-submit"
         onPress={() => {
           void handleConnect();
         }}

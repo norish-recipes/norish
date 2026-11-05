@@ -1,0 +1,44 @@
+# Signs in through the server-address screen, sees the smoke screen and keeps the session
+# across a relaunch. The values come from `pnpm --filter @norish/mobile maestro` or `-e`.
+appId: dev.norish.app
+env:
+  NORISH_SERVER_URL: http://localhost:3000
+  NORISH_EMAIL: maestro@norish.test
+  NORISH_PASSWORD: maestro-password-1
+---
+# The session lives in the keychain, which outlives the app's own data.
+- launchApp:
+    clearState: true
+    clearKeychain: true
+- tapOn:
+    id: connect-server-url
+- inputText: ${NORISH_SERVER_URL}
+- hideKeyboard
+- tapOn:
+    id: connect-submit
+- tapOn:
+    id: login-email
+- inputText: ${NORISH_EMAIL}
+- tapOn:
+    id: login-password
+- inputText: ${NORISH_PASSWORD}
+- hideKeyboard
+- tapOn:
+    id: login-submit
+- extendedWaitUntil:
+    visible:
+      id: smoke-user
+      text: .*${NORISH_EMAIL}.*
+    timeout: 20000
+- extendedWaitUntil:
+    visible:
+      id: smoke-recipe-count
+      text: "Recipes: \\d+"
+    timeout: 10000
+- stopApp
+- launchApp
+- extendedWaitUntil:
+    visible:
+      id: smoke-user
+      text: .*${NORISH_EMAIL}.*
+    timeout: 20000

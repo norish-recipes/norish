@@ -211,6 +211,8 @@ async function importAuth(): Promise<AuthModule> {
 
 beforeAll(async () => {
   vi.stubEnv("NODE_ENV", "production");
+  // Vitest sets TEST, which turns Better Auth's origin check off.
+  vi.stubEnv("TEST", "false");
   vi.stubEnv("AUTH_URL", AUTH_URL);
   vi.stubEnv("AUTH_RATE_LIMIT_ENABLED", "true");
   vi.stubEnv("TRUSTED_PROXIES", "10.0.0.0/24");
@@ -515,6 +517,57 @@ describe("account deletion", () => {
 
     expect(await sessionFor(first.cookie)).toBeNull();
     expect(await sessionFor(second.cookie)).toBeNull();
+  });
+});
+
+describe("sign-in from the app", () => {
+  // The Expo client sends no Origin, only its scheme in `expo-origin`.
+  const signInFromApp = (expoOrigin: string) =>
+    authModule.auth.handler(
+      new Request(`${AUTH_URL}/api/auth/sign-in/email`, {
+        method: "POST",
+        headers: { "content-type": "application/json", "expo-origin": expoOrigin },
+        body: JSON.stringify({ email: "ada@norish.test", password: "ada-password-1" }),
+      })
+    );
+
+  const expectRefused = async (response: Response) => {
+    expect(response.status).toBe(403);
+    expect(await response.json()).toMatchObject({ code: "INVALID_ORIGIN" });
+  };
+
+  beforeEach(async () => {
+    await signUpWithPassword();
+  });
+
+  it("accepts a sign-in from the Norish app", async () => {
+    const response = await signInFromApp("norish://");
+
+    expect(response.status).toBe(200);
+    expect(await sessionFor(cookiesFrom(response))).not.toBeNull();
+  });
+
+  it.each(["evil://", "norish-evil://"])(
+    "refuses a sign-in from another app's %s",
+    async (origin) => {
+      await expectRefused(await signInFromApp(origin));
+    }
+  );
+
+  it("refuses a sign-in from Expo Go outside development", async () => {
+    await expectRefused(await signInFromApp("exp://"));
+  });
+
+  it("accepts a sign-in from Expo Go on a development server", async () => {
+    vi.stubEnv("NODE_ENV", "development");
+
+    try {
+      authModule = await importAuth();
+      expect((await signInFromApp("exp://192.168.1.20:8081")).status).toBe(200);
+    } finally {
+      vi.stubEnv("NODE_ENV", "production");
+      authModule = await importAuth();
+    }
   });
 });
 

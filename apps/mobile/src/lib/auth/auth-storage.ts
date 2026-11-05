@@ -6,7 +6,7 @@ const log = createClientLogger("auth-storage");
 
 export const AUTH_STORAGE_PREFIX = "norish";
 
-const AUTH_COOKIE_KEY = `${AUTH_STORAGE_PREFIX}_cookie`;
+export const AUTH_COOKIE_KEY = `${AUTH_STORAGE_PREFIX}_cookie`;
 const AUTH_SESSION_DATA_KEY = `${AUTH_STORAGE_PREFIX}_session_data`;
 
 export type PersistedUser = {

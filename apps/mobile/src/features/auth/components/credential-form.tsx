@@ -30,17 +30,20 @@ export function CredentialForm({
         autoCorrect={false}
         keyboardType="email-address"
         placeholder={intl.formatMessage({ id: "auth.emailPassword.email" })}
+        testID="login-email"
         value={email}
         onChangeText={setEmail}
       />
       <Input
         secureTextEntry
         placeholder={intl.formatMessage({ id: "auth.emailPassword.password" })}
+        testID="login-password"
         value={password}
         onChangeText={setPassword}
       />
       <Button
         isDisabled={!email.trim() || !password || isSubmitting}
+        testID="login-submit"
         onPress={() => {
           onSubmit();
         }}

@@ -1,6 +1,6 @@
 import type { OutboxMutationClient } from "@/lib/outbox";
 import React, { useEffect, useMemo, useSyncExternalStore } from "react";
-import { getAuthClient } from "@/lib/auth/auth-client";
+import { AUTH_COOKIE_KEY } from "@/lib/auth/auth-storage";
 import {
   getAuthTransportSnapshot,
   invalidateSession,
@@ -14,6 +14,8 @@ import {
   startOutboxProcessor,
 } from "@/lib/outbox";
 import { createPersistedQueryClient } from "@/lib/query-cache/create-persisted-query-client";
+import { getCookie, storageAdapter } from "@better-auth/expo/client";
+import * as SecureStore from "expo-secure-store";
 
 import type { AppRouter } from "@norish/trpc/client";
 import { createTRPCProviderBundle } from "@norish/shared-react/providers";
@@ -33,10 +35,6 @@ export async function closeMobileTrpcConnections(): Promise<void> {
 
   await Promise.all(clients.map(async (client) => client.close().catch(() => null)));
 }
-
-type CookieCapableAuthClient = ReturnType<typeof getAuthClient> & {
-  getCookie?: () => string | undefined;
-};
 
 type HeaderCapableWebSocket = typeof WebSocket & {
   new (
@@ -89,19 +87,18 @@ function createMobileWebSocket(): typeof WebSocket | undefined {
   } as unknown as typeof WebSocket;
 }
 
+// The auth client's getCookie is async and tRPC asks for headers synchronously, so read the
+// chunked SecureStore entry the auth client writes directly.
+const authStorage = storageAdapter(SecureStore);
+
 function trpcBundleGetHeaders(): Record<string, string> {
   if (!currentBaseUrl) {
     return {};
   }
 
-  const client = getAuthClient(currentBaseUrl) as CookieCapableAuthClient;
-  const cookies = client.getCookie?.();
+  const cookies = getCookie(authStorage.getItem(AUTH_COOKIE_KEY));
 
-  if (!cookies) {
-    return {};
-  }
-
-  return { Cookie: cookies };
+  return cookies ? { Cookie: cookies } : {};
 }
 
 const { queryClient: persistedQueryClient, restorePromise: queryCacheRestorePromise } =

@@ -35,7 +35,8 @@ vi.mock("@norish/config/env-config-server", () => ({
   SERVER_CONFIG: {
     NODE_ENV: "production",
     AUTH_URL: "https://norish.example",
-    TRUSTED_ORIGINS: ["https://alt.example:8443"],
+    // A custom scheme parses to the opaque origin "null", which must not become trusted.
+    TRUSTED_ORIGINS: ["https://alt.example:8443", "norish://"],
   },
 }));
 vi.mock("@norish/shared-server/logger", () => ({ trpcLogger: logger }));
@@ -127,6 +128,12 @@ describe("isTrustedWebSocketOrigin", () => {
     expect(isTrustedWebSocketOrigin("https://norish.example:444", "127.0.0.1:3000")).toBe(false);
     expect(isTrustedWebSocketOrigin("null", "127.0.0.1:3000")).toBe(false);
     expect(isTrustedWebSocketOrigin("not a url", "127.0.0.1:3000")).toBe(false);
+  });
+
+  it("never trusts an opaque origin, even with a custom scheme in TRUSTED_ORIGINS", () => {
+    expect(isTrustedWebSocketOrigin("null", "127.0.0.1:3000")).toBe(false);
+    expect(isTrustedWebSocketOrigin("norish://", "127.0.0.1:3000")).toBe(false);
+    expect(isTrustedWebSocketOrigin("evil://app", "127.0.0.1:3000")).toBe(false);
   });
 });
 

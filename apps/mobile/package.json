@@ -7,6 +7,7 @@
     "start": "expo start",
     "android": "expo run:android",
     "ios": "expo run:ios",
+    "maestro": "node scripts/maestro.mjs",
     "lint": "eslint --flag unstable_native_nodejs_ts_config",
     "typecheck": "pnpm exec tsc --noEmit",
     "test": "vitest run --config ./vitest.config.mts"

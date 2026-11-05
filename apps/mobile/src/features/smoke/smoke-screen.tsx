@@ -33,6 +33,7 @@ export function SmokeScreen() {
         {groceries.map((grocery) => (
           <View key={grocery.id} style={{ flexDirection: "row", alignItems: "center", gap: 8 }}>
             <Checkbox
+              accessibilityLabel={grocery.name ?? undefined}
               isSelected={grocery.isDone}
               testID={`smoke-grocery-${grocery.id}`}
               onSelectedChange={(isDone) =>
