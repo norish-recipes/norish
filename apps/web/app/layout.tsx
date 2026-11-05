@@ -9,6 +9,7 @@ import { getLocaleDirection } from "@norish/i18n/config";
 import { BASE_PATH } from "@norish/shared/lib/base-path";
 
 import { appMetadata, appViewport } from "./metadata";
+import { AriaLocaleProvider } from "./providers/aria-locale-provider";
 import { AppThemeProvider } from "./providers/theme-provider";
 
 // Signing in or up ends in a full page load, a cross-document view transition. This types it
@@ -62,7 +63,7 @@ export default async function RootLayout({ children }: { children: React.ReactNo
       <body className="bg-background text-foreground min-h-dvh font-sans antialiased">
         <AppThemeProvider>
           <NextIntlClientProvider locale={locale} messages={clientMessages}>
-            {children}
+            <AriaLocaleProvider>{children}</AriaLocaleProvider>
           </NextIntlClientProvider>
         </AppThemeProvider>
         <RegisterServiceWorker />
