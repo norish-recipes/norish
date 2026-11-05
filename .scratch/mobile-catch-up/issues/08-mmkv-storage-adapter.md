@@ -4,9 +4,13 @@
 
 **Blocked by:** 02, 07
 
-**Status:** ready-for-agent
+**Status:** done
 
-- [ ] The mobile adapter implements the engine's storage adapter interface on MMKV.
-- [ ] It passes the shared contract suite unchanged: owner scoping, entry ordering, status transitions, blob round-trips, and purge on account switch.
-- [ ] Upload payloads are stored as copies in the app's own storage, and the copies are removed when their entry is replayed, discarded or purged.
-- [ ] A failed write to storage surfaces as an admission failure, never as a silent success.
+- [x] The mobile adapter implements the engine's storage adapter interface on MMKV.
+- [x] It passes the shared contract suite unchanged: owner scoping, entry ordering, status transitions, blob round-trips, and purge on account switch.
+- [x] Upload payloads are stored as copies in the app's own storage, and the copies are removed when their entry is replayed, discarded or purged.
+- [x] A failed write to storage surfaces as an admission failure, never as a silent success.
+
+## Comments
+
+- 2026-11-06 — `createMmkvStorage({ mmkv, files })` in `apps/mobile/src/lib/offline/mmkv-storage.ts`; `uploadFiles` (expo-file-system, `Paths.document/outbox-uploads`) in `upload-files.ts`. Entries store each copy by file name and resolve it to a uri on read, because iOS moves the app's container on update. Every copy goes through `outbox.remove`: Replay, discard and sign-out all remove entries, and an account switch leaves the Outbox dormant, so nothing else can orphan a copy. No `clearPersonalCaches` or `watch` yet; ticket 09 adds an image-cache clear if the app needs one.

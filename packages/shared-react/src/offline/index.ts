@@ -7,6 +7,7 @@ export {
 export type { OfflineStorage } from "./storage";
 export type { NewOutboxEntry, OutboxEntry, OutboxEntryStatus, ParkedReason } from "./outbox-types";
 export { createOutboxStore, type OutboxStore } from "./outbox-store";
+export { isEncodedFormData } from "./input-codec";
 export { discardAllEntries, requeueParkedEntries } from "./status-actions";
 export type { Recovery, RecoveryReason } from "./recovery";
 export type { LockManagerLike } from "./leader";
