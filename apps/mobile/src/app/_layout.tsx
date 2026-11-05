@@ -20,6 +20,13 @@ import {
   useAppearancePreference,
 } from "@/lib/preferences/appearance-preference-context";
 import { TrpcProvider } from "@/lib/trpc/trpc-provider";
+import { FiraCode_400Regular } from "@expo-google-fonts/fira-code/400Regular";
+import { Fraunces_500Medium } from "@expo-google-fonts/fraunces/500Medium";
+import { Inter_400Regular } from "@expo-google-fonts/inter/400Regular";
+import { Inter_500Medium } from "@expo-google-fonts/inter/500Medium";
+import { Inter_600SemiBold } from "@expo-google-fonts/inter/600SemiBold";
+import { Inter_700Bold } from "@expo-google-fonts/inter/700Bold";
+import { useFonts } from "expo-font";
 import { Stack } from "expo-router";
 import { DarkTheme, DefaultTheme, ThemeProvider } from "expo-router/react-navigation";
 import * as SplashScreen from "expo-splash-screen";
@@ -30,6 +37,16 @@ import { PortalHost } from "heroui-native/portal";
 // native splash over that window is what keeps it from showing as a blank
 // screen; every branch of the gate hides it again.
 void SplashScreen.preventAutoHideAsync();
+
+// The faces the font tokens in global.css name.
+const FONTS = {
+  Inter_400Regular,
+  Inter_500Medium,
+  Inter_600SemiBold,
+  Inter_700Bold,
+  Fraunces_500Medium,
+  FiraCode_400Regular,
+};
 
 // ============================================================================
 // Entry point
@@ -57,10 +74,12 @@ function RootLayoutContent() {
 
   const backendBaseUrl = useBackendBaseUrl();
   const cacheReady = useCacheHydration();
+  const [fontsLoaded, fontsError] = useFonts(FONTS);
 
   const boot = resolveBootPhase({
     appearanceHydrated: hydrated,
     cacheReady,
+    fontsReady: fontsLoaded || fontsError !== null,
     backendBaseUrl,
   });
 

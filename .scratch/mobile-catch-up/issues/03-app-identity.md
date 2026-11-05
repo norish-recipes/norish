@@ -6,8 +6,12 @@
 
 **Status:** ready-for-agent
 
-- [ ] The bundle id is `dev.norish.app`, the URL scheme is `norish`, and the slug and display name follow.
-- [ ] `supportsTablet` is off; iPad and foldable support come in their own pass after the iPhone redesign.
-- [ ] The app icon, adaptive colours and splash come from the brand set the web ships, on the paper ground with the green accent. No Expo template colour or asset remains, and the template assets are deleted.
-- [ ] Inter, Fraunces and Fira Code are loaded before first render, so the shared theme's sans, serif and mono font tokens resolve. The smoke screen and sign-in screens draw in Inter.
+- [x] The bundle id is `dev.norish.app`, the URL scheme is `norish`, and the slug and display name follow.
+- [x] `supportsTablet` is off; iPad and foldable support come in their own pass after the iPhone redesign.
+- [x] The app icon, adaptive colours and splash come from the brand set the web ships, on the paper ground with the green accent. No Expo template colour or asset remains, and the template assets are deleted.
+- [x] Inter, Fraunces and Fira Code are loaded before first render, so the shared theme's sans, serif and mono font tokens resolve. The smoke screen and sign-in screens draw in Inter.
 - [ ] The app builds and launches in the iOS simulator on iPhone.
+
+## Comments
+
+- 2026-11-05 — Done apart from the simulator launch, which is blocked on Xcode 27 like ticket 02 (`expo-modules-jsi` 58 does not compile with Xcode 26.3). Checked instead: `expo prebuild -p ios` writes bundle id `dev.norish.app`, display name Norish, URL scheme `norish`, `TARGETED_DEVICE_FAMILY = 1`, the 1024 icon and the light/dark splash (paper `#F8F3E7` / `#14110D` with the wordmark, as the web splash draws it); `expo export -p ios` bundles the six font files and resolves `font-sans`, `font-serif`, `font-mono` and the four weight utilities to Inter, Fraunces and Fira Code faces. The PNGs under `assets/brand/` are rendered from the web's `public/brand/favicon.svg` and `public/logo.svg`. The better-auth Expo client now uses the `norish` scheme too; the server's trusted `norish://` origin is ticket 04's.

@@ -36,7 +36,7 @@ export function StorageUnavailableScreen({ error, onRetry }: StorageUnavailableS
 
   return (
     <AuthShell headingPrefix={intl.formatMessage({ id: "common.storageUnavailable.title" })}>
-      <Text style={[styles.description, { color: foregroundColor }]}>
+      <Text className="font-normal" style={[styles.description, { color: foregroundColor }]}>
         {intl.formatMessage({ id: "common.storageUnavailable.description" })}
       </Text>
 
@@ -45,10 +45,12 @@ export function StorageUnavailableScreen({ error, onRetry }: StorageUnavailableS
       </Button>
 
       <View style={[styles.details, { borderColor: separatorColor }]}>
-        <Text style={[styles.detailsLabel, { color: mutedColor }]}>
+        <Text className="font-semibold" style={[styles.detailsLabel, { color: mutedColor }]}>
           {intl.formatMessage({ id: "common.storageUnavailable.detailsLabel" })}
         </Text>
-        <Text style={[styles.detailsBody, { color: mutedColor }]}>{describeError(error)}</Text>
+        <Text className="font-normal" style={[styles.detailsBody, { color: mutedColor }]}>
+          {describeError(error)}
+        </Text>
       </View>
     </AuthShell>
   );

@@ -18,7 +18,6 @@ export const styles = StyleSheet.create({
   detailsLabel: {
     fontSize: 12,
     lineHeight: 16,
-    fontWeight: "600",
   },
   detailsBody: {
     fontSize: 13,

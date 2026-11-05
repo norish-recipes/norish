@@ -9,7 +9,6 @@ export const styles = StyleSheet.create({
   label: {
     fontSize: 14,
     lineHeight: 18,
-    fontWeight: "600",
   },
   connectButton: {
     marginTop: 6,

@@ -82,7 +82,7 @@ export function ConnectScreen() {
 
   return (
     <AuthShell headingPrefix={intl.formatMessage({ id: "auth.connect.title" })}>
-      <Text style={[styles.label, { color: foregroundColor }]}>
+      <Text className="font-semibold" style={[styles.label, { color: foregroundColor }]}>
         {intl.formatMessage({ id: "auth.connect.backendUrlLabel" })}
       </Text>
 
@@ -114,6 +114,7 @@ export function ConnectScreen() {
       </Button>
 
       <Text
+        className="font-normal"
         style={[
           styles.helpText,
           {

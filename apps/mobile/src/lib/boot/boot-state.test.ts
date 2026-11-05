@@ -19,6 +19,7 @@ describe("resolveBootPhase", () => {
         resolveBootPhase({
           appearanceHydrated: false,
           cacheReady: true,
+          fontsReady: true,
           backendBaseUrl: ready,
         })
       ).toEqual({ phase: "loading" });
@@ -29,6 +30,18 @@ describe("resolveBootPhase", () => {
         resolveBootPhase({
           appearanceHydrated: true,
           cacheReady: false,
+          fontsReady: true,
+          backendBaseUrl: ready,
+        })
+      ).toEqual({ phase: "loading" });
+    });
+
+    it("waits while the fonts are still loading", () => {
+      expect(
+        resolveBootPhase({
+          appearanceHydrated: true,
+          cacheReady: true,
+          fontsReady: false,
           backendBaseUrl: ready,
         })
       ).toEqual({ phase: "loading" });
@@ -39,6 +52,7 @@ describe("resolveBootPhase", () => {
         resolveBootPhase({
           appearanceHydrated: true,
           cacheReady: true,
+          fontsReady: true,
           backendBaseUrl: loading,
         })
       ).toEqual({ phase: "loading" });
@@ -53,6 +67,7 @@ describe("resolveBootPhase", () => {
         resolveBootPhase({
           appearanceHydrated: true,
           cacheReady: true,
+          fontsReady: true,
           backendBaseUrl: { status: "error", error },
         })
       ).toEqual({ phase: "storage-error", error });
@@ -64,6 +79,7 @@ describe("resolveBootPhase", () => {
       const phase = resolveBootPhase({
         appearanceHydrated: true,
         cacheReady: true,
+        fontsReady: true,
         backendBaseUrl: { status: "error", error: new Error("keychain locked") },
       });
 
@@ -77,6 +93,7 @@ describe("resolveBootPhase", () => {
         resolveBootPhase({
           appearanceHydrated: true,
           cacheReady: true,
+          fontsReady: true,
           backendBaseUrl: { status: "error", error },
         }).phase
       ).toBe("storage-error");
@@ -89,6 +106,7 @@ describe("resolveBootPhase", () => {
         resolveBootPhase({
           appearanceHydrated: true,
           cacheReady: true,
+          fontsReady: true,
           backendBaseUrl: unconfigured,
         })
       ).toEqual({ phase: "onboarding" });
@@ -101,6 +119,7 @@ describe("resolveBootPhase", () => {
         resolveBootPhase({
           appearanceHydrated: true,
           cacheReady: true,
+          fontsReady: true,
           backendBaseUrl: ready,
         })
       ).toEqual({ phase: "ready", backendBaseUrl: "https://norish.example" });
@@ -111,6 +130,7 @@ describe("resolveBootPhase", () => {
         resolveBootPhase({
           appearanceHydrated: false,
           cacheReady: false,
+          fontsReady: true,
           backendBaseUrl: ready,
         })
       ).toEqual({ phase: "loading" });

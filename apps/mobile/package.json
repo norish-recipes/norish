@@ -14,6 +14,9 @@
   "dependencies": {
     "@better-auth/core": "catalog:",
     "@better-auth/expo": "catalog:",
+    "@expo-google-fonts/fira-code": "^0.4.1",
+    "@expo-google-fonts/fraunces": "^0.4.1",
+    "@expo-google-fonts/inter": "^0.4.2",
     "@expo/metro-runtime": "~58.0.17",
     "@expo/ui": "~58.0.27",
     "@expo/vector-icons": "^15.1.1",

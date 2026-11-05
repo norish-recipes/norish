@@ -41,7 +41,7 @@ export function AuthErrorScreen() {
             {intl.formatMessage({ id: "auth.errors.default.title" })}
           </Card.Title>
           <Card.Description style={{ color: mutedColor }}>{errorDescription}</Card.Description>
-          <Text style={{ color: mutedColor, fontSize: 12 }}>
+          <Text className="font-normal" style={{ color: mutedColor, fontSize: 12 }}>
             {intl.formatMessage({ id: "auth.errors.errorCode" }, { code: errorCode })}
           </Text>
 
@@ -69,7 +69,7 @@ export function AuthErrorScreen() {
         </Card.Body>
       </Card>
 
-      <Text style={[styles.helpText, { color: foregroundColor }]}>
+      <Text className="font-normal" style={[styles.helpText, { color: foregroundColor }]}>
         {intl.formatMessage({ id: "auth.errors.default.description" })}
       </Text>
     </View>

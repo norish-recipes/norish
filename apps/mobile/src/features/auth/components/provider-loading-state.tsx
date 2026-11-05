@@ -11,7 +11,7 @@ export function ProviderLoadingState() {
   return (
     <View style={styles.centered}>
       <ActivityIndicator />
-      <Text style={{ color: mutedColor }}>
+      <Text className="font-normal" style={{ color: mutedColor }}>
         {intl.formatMessage({ id: "common.status.loading" })}
       </Text>
     </View>

@@ -1,6 +1,6 @@
 import React from "react";
 import { StyleSheet, View } from "react-native";
-import LogoSvg from "@/assets/images/logo.svg";
+import LogoSvg from "@/assets/brand/logo.svg";
 
 // viewBox is 2370 x 639, so aspect ratio = 639/2370
 const LOGO_ASPECT_RATIO = 639 / 2370;

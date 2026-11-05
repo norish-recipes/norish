@@ -23,11 +23,13 @@ export function SmokeScreen() {
   return (
     <SafeAreaView style={{ flex: 1 }}>
       <ScrollView contentContainerStyle={{ padding: 16, gap: 8 }}>
-        <Text testID="smoke-user">{user ? `${user.name} <${user.email}>` : "No user"}</Text>
-        <Text testID="smoke-recipe-count">
+        <Text className="font-normal" testID="smoke-user">
+          {user ? `${user.name} <${user.email}>` : "No user"}
+        </Text>
+        <Text className="font-normal" testID="smoke-recipe-count">
           {recipesLoading ? "Recipes: …" : `Recipes: ${total}`}
         </Text>
-        <Text>Groceries</Text>
+        <Text className="font-normal">Groceries</Text>
         {groceries.map((grocery) => (
           <View key={grocery.id} style={{ flexDirection: "row", alignItems: "center", gap: 8 }}>
             <Checkbox
@@ -39,7 +41,7 @@ export function SmokeScreen() {
                   : toggleGroceries([grocery.id], isDone)
               }
             />
-            <Text>{grocery.name}</Text>
+            <Text className="font-normal">{grocery.name}</Text>
           </View>
         ))}
         <Button variant="secondary" onPress={() => void signOut()}>

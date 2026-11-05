@@ -11,12 +11,10 @@ export const styles = StyleSheet.create({
   errorText: {
     fontSize: 13,
     lineHeight: 18,
-    fontWeight: "500",
   },
   inlineInfo: {
     fontSize: 13,
     lineHeight: 18,
-    fontWeight: "500",
   },
   linkRow: {
     alignItems: "center",

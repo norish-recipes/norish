@@ -30,7 +30,9 @@ export function AuthShell({ headingPrefix, children, footer }: AuthShellProps) {
       <View style={styles.content}>
         <View style={styles.heroCopy}>
           <View style={styles.headingRow}>
-            <Text style={[styles.title, { color: foregroundColor }]}>{headingPrefix} </Text>
+            <Text className="font-bold" style={[styles.title, { color: foregroundColor }]}>
+              {headingPrefix}{" "}
+            </Text>
             <AuthLogo inline width={110} />
           </View>
         </View>
@@ -69,7 +71,6 @@ const styles = StyleSheet.create({
   title: {
     fontSize: 32,
     lineHeight: 38,
-    fontWeight: "700",
   },
   subtitle: {
     fontSize: 15,

@@ -145,7 +145,7 @@ function RegisterForm({
 
   const signInLink = (
     <Pressable style={styles.linkRow} onPress={() => router.replace("/login" as any)}>
-      <Text style={[styles.linkText, { color: mutedColor }]}>
+      <Text className="font-normal" style={[styles.linkText, { color: mutedColor }]}>
         {intl.formatMessage({ id: "auth.signup.hasAccount" })}{" "}
         <Text className="font-semibold" style={{ color: accentColor }}>
           {intl.formatMessage({ id: "auth.signup.signIn" })}
@@ -181,7 +181,9 @@ function RegisterForm({
       footer={
         <>
           {errorMessage && (
-            <Text style={[styles.errorText, { color: dangerColor }]}>{errorMessage}</Text>
+            <Text className="font-medium" style={[styles.errorText, { color: dangerColor }]}>
+              {errorMessage}
+            </Text>
           )}
           {signInLink}
         </>
@@ -228,7 +230,7 @@ function RegisterForm({
             setErrorMessage(null);
           }}
         />
-        <Text style={[styles.hint, { color: mutedColor }]}>
+        <Text className="font-normal" style={[styles.hint, { color: mutedColor }]}>
           Password must be {MIN_PASSWORD_LENGTH}-{MAX_PASSWORD_LENGTH} characters.
         </Text>
         <Button

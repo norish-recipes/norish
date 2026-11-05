@@ -1,21 +1,22 @@
 {
   "expo": {
     "name": "Norish",
-    "slug": "norish-m",
+    "slug": "norish",
     "orientation": "portrait",
-    "icon": "./assets/images/icon.png",
-    "scheme": "mobile",
+    "icon": "./assets/brand/icon.png",
+    "scheme": "norish",
     "userInterfaceStyle": "automatic",
+    "backgroundColor": "#F8F3E7",
     "ios": {
-      "icon": "./assets/expo.icon",
-      "bundleIdentifier": "com.anonymous.norish-m"
+      "bundleIdentifier": "dev.norish.app",
+      "supportsTablet": false
     },
     "android": {
+      "package": "dev.norish.app",
       "adaptiveIcon": {
-        "backgroundColor": "#E6F4FE",
-        "foregroundImage": "./assets/images/android-icon-foreground.png",
-        "backgroundImage": "./assets/images/android-icon-background.png",
-        "monochromeImage": "./assets/images/android-icon-monochrome.png"
+        "backgroundColor": "#F8F3E7",
+        "foregroundImage": "./assets/brand/adaptive-icon.png",
+        "monochromeImage": "./assets/brand/adaptive-icon.png"
       },
       "predictiveBackGestureEnabled": false
     },
@@ -24,22 +25,17 @@
       [
         "expo-splash-screen",
         {
-          "backgroundColor": "#208AEF",
-          "image": "./assets/images/splash-icon.png",
-          "imageWidth": 120,
+          "backgroundColor": "#F8F3E7",
+          "image": "./assets/brand/splash.png",
+          "imageWidth": 175,
           "resizeMode": "contain",
-          "android": {
-            "image": "./assets/images/splash-icon.png",
-            "imageWidth": 76
+          "dark": {
+            "backgroundColor": "#14110D",
+            "image": "./assets/brand/splash-dark.png"
           }
         }
       ],
-      [
-        "expo-system-ui",
-        {
-          "backgroundColor": "#208AEF"
-        }
-      ],
+      "expo-system-ui",
       "expo-secure-store",
       "expo-font",
       "expo-web-browser"

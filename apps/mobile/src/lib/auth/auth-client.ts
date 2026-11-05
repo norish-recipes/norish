@@ -15,7 +15,7 @@ export function getAuthClient(baseUrl: string): ReturnType<typeof createAuthClie
     baseURL: baseUrl,
     plugins: [
       expoClient({
-        scheme: "mobile",
+        scheme: "norish",
         storagePrefix: AUTH_STORAGE_PREFIX,
         storage: SecureStore,
       }),

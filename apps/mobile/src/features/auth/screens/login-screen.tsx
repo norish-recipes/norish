@@ -142,12 +142,14 @@ function LoginForm({ backendBaseUrl, redirectTo }: { backendBaseUrl: string; red
       )}
 
       {errorMessage && (
-        <Text style={[styles.errorText, { color: dangerColor }]}>{errorMessage}</Text>
+        <Text className="font-medium" style={[styles.errorText, { color: dangerColor }]}>
+          {errorMessage}
+        </Text>
       )}
 
       {registrationEnabled && passwordAuthEnabled && (
         <Pressable style={styles.linkRow} onPress={() => router.push("/register" as any)}>
-          <Text style={[styles.linkText, { color: mutedColor }]}>
+          <Text className="font-normal" style={[styles.linkText, { color: mutedColor }]}>
             {intl.formatMessage({ id: "auth.emailPassword.noAccount" })}{" "}
             <Text className="font-semibold" style={{ color: accentColor }}>
               {intl.formatMessage({ id: "auth.emailPassword.signUp" })}
@@ -187,7 +189,7 @@ export function LoginScreen() {
             router.push("/(auth)");
           }}
         >
-          <Text style={[styles.linkText, { color: mutedColor }]}>
+          <Text className="font-normal" style={[styles.linkText, { color: mutedColor }]}>
             {intl.formatMessage({ id: "auth.login.wrongServer" })}{" "}
             <Text className="font-semibold" style={{ color: accentColor }}>
               {intl.formatMessage({ id: "auth.login.changeServer" })}
