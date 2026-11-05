@@ -69,7 +69,10 @@ export function buildRecipeExtractionSections(
   if (jsonLd) {
     sections.push(`JSON-LD (leads; use its values where present):\n${jsonLd}`);
 
-    if (content) sections.push(`PAGE TEXT (only for what the JSON-LD lacks):\n${content}`);
+    if (content)
+      sections.push(
+        `PAGE TEXT (fills what the JSON-LD lacks, including how the recipe is organised):\n${content}`
+      );
   } else {
     sections.push(`WEBPAGE TEXT:\n${content}`);
   }

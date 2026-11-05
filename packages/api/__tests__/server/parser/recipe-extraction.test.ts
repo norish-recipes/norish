@@ -101,7 +101,7 @@ describe("extractRecipeWithAI", () => {
           null,
           2
         )}`,
-        "PAGE TEXT (only for what the JSON-LD lacks):\nPesto\nFor the sauce:\nBlend it all.",
+        "PAGE TEXT (fills what the JSON-LD lacks, including how the recipe is organised):\nPesto\nFor the sauce:\nBlend it all.",
       ]);
       expect(mocked.shadowScore.mock.calls[0]?.[0].state.source).toContain("For the sauce:");
     });
