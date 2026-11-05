@@ -20,6 +20,33 @@ export type InfiniteRecipeData = InfiniteData<{
   nextCursor: number | null;
 }>;
 
+export function removeRecipesFromLists(
+  previousData: InfiniteRecipeData | undefined,
+  recipeIds: ReadonlySet<string>
+): InfiniteRecipeData | undefined {
+  if (!previousData?.pages) {
+    return previousData;
+  }
+
+  const removed = previousData.pages.reduce(
+    (count, page) => count + page.recipes.filter((recipe) => recipeIds.has(recipe.id)).length,
+    0
+  );
+
+  if (removed === 0) {
+    return previousData;
+  }
+
+  return {
+    ...previousData,
+    pages: previousData.pages.map((page) => ({
+      ...page,
+      recipes: page.recipes.filter((recipe) => !recipeIds.has(recipe.id)),
+      total: Math.max(page.total - removed, 0),
+    })),
+  };
+}
+
 export type RecipesCacheHelpers = {
   setAllRecipesData: (
     updater: (prev: InfiniteRecipeData | undefined) => InfiniteRecipeData | undefined

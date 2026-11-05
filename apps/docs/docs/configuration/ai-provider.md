@@ -237,5 +237,8 @@ Transcription turns a video's audio into text.
 
 When the endpoint or API key is empty, transcription uses the AI provider's.
 
+Audio is sent as MP3. A generic endpoint that refuses the MP3, like mlx-serve's
+Qwen3-ASR models, gets the audio again as 16 kHz mono WAV.
+
 Mistral transcribes with Voxtral: set the provider to `mistral`, a Mistral API
 key and a model such as `voxtral-mini-latest`.

@@ -1,6 +1,6 @@
 "use client";
 
-import { useCallback, useRef, useState } from "react";
+import { useRef, useState } from "react";
 import CookbookCover from "@/components/cookbooks/cookbook-cover";
 import { SelectableRow } from "@/components/cookbooks/selectable-row";
 import Panel from "@/components/Panel/Panel";
@@ -13,14 +13,18 @@ import { useTranslations } from "next-intl";
 type MiniCookbooksProps = {
   open: boolean;
   onOpenChange: (open: boolean) => void;
-  recipeId: string;
+  /** One recipe shows its memberships; several can only be added. */
+  recipeIds: string[];
+  /** The cookbook being read, which the recipes are already in. */
+  excludeCookbookId?: string;
+  onSaved?: (filed: Array<{ id: string; title: string }>) => void;
 };
 
 /** A cookbook the reader has asked for but that does not exist yet. */
 type PendingCookbook = { key: number; title: string };
 
-/** The panel opens this tall, so a short list is not a strip at the bottom. */
-const PANEL_HEIGHT = "h-[65dvh]";
+/** Sized to its list, scrolling past this. */
+const PANEL_HEIGHT = "max-h-[75dvh]";
 
 /**
  * The membership panel: every cookbook the reader may edit, with this
@@ -41,10 +45,21 @@ const PANEL_HEIGHT = "h-[65dvh]";
  * derive from state its own action mutates rebuilds mid-exit and steals focus
  * from whatever the action opened.
  */
-export default function MiniCookbooks({ open, onOpenChange, recipeId }: MiniCookbooksProps) {
+export default function MiniCookbooks({
+  open,
+  onOpenChange,
+  recipeIds,
+  excludeCookbookId,
+  onSaved,
+}: MiniCookbooksProps) {
   const t = useTranslations("recipes.cookbooks");
   const tActions = useTranslations("common.actions");
-  const { cookbooks, isLoading } = useEditableCookbooksQuery(open ? recipeId : null);
+  const tSelection = useTranslations("recipes.selection");
+  const singleId = recipeIds.length === 1 ? recipeIds[0]! : null;
+  const query = useEditableCookbooksQuery(open ? singleId : null);
+  const cookbooks = query.cookbooks.filter((cookbook) => cookbook.id !== excludeCookbookId);
+  const { isLoading } = query;
+  const newLabel = singleId ? t("newWithRecipe") : tSelection("newCookbook");
   const { createCookbook, setMembership } = useCookbooksMutations();
   const [newTitle, setNewTitle] = useState("");
   /** Only the cookbooks the reader has actually changed their mind about. */
@@ -63,17 +78,17 @@ export default function MiniCookbooks({ open, onOpenChange, recipeId }: MiniCook
     }
   }
 
-  const stageNew = useCallback(() => {
+  const stageNew = () => {
     const title = newTitle.trim();
 
     if (!title) return;
     setNewTitle("");
     setPending((previous) => [...previous, { key: nextKeyRef.current++, title }]);
-  }, [newTitle]);
+  };
 
-  const toggle = useCallback((cookbookId: string, isMember: boolean) => {
+  const toggle = (cookbookId: string, isMember: boolean) => {
     setStaged((previous) => ({ ...previous, [cookbookId]: isMember }));
-  }, []);
+  };
 
   const isDirty =
     pending.length > 0 ||
@@ -81,23 +96,32 @@ export default function MiniCookbooks({ open, onOpenChange, recipeId }: MiniCook
       (cookbook) => cookbook.id in staged && staged[cookbook.id] !== cookbook.containsRecipe
     );
 
-  const save = useCallback(() => {
+  const save = async () => {
+    const filed: Array<{ id: string; title: string }> = [];
+
     for (const cookbook of cookbooks) {
       const next = staged[cookbook.id];
 
       if (next === undefined || next === cookbook.containsRecipe) continue;
 
-      setMembership({ cookbookId: cookbook.id, recipeId, isMember: next, cookbook });
-    }
-
-    // Only what is on screen as a pending row. Adding it is the moment the
-    // reader confirms a new cookbook, and a half-typed title is not that.
-    for (const entry of pending) {
-      void createCookbook({ title: entry.title, recipeId });
+      setMembership({ cookbookId: cookbook.id, recipeIds, isMember: next, cookbook });
+      if (next) filed.push(cookbook);
     }
 
     onOpenChange(false);
-  }, [cookbooks, staged, pending, setMembership, createCookbook, recipeId, onOpenChange]);
+
+    // Only what is on screen as a pending row. Adding it is the moment the
+    // reader confirms a new cookbook, and a half-typed title is not that.
+    const created = await Promise.all(
+      pending.map((entry) =>
+        createCookbook({ title: entry.title, recipeIds })
+          .then((id) => (id ? { id, title: entry.title } : null))
+          .catch(() => null)
+      )
+    );
+
+    onSaved?.([...filed, ...created.filter((entry) => entry !== null)]);
+  };
 
   return (
     <Panel
@@ -112,7 +136,7 @@ export default function MiniCookbooks({ open, onOpenChange, recipeId }: MiniCook
             <Input
               fullWidth
               data-testid="new-cookbook-title"
-              placeholder={t("newWithRecipe")}
+              placeholder={newLabel}
               style={{ fontSize: "16px" }}
               value={newTitle}
               variant="secondary"
@@ -123,7 +147,7 @@ export default function MiniCookbooks({ open, onOpenChange, recipeId }: MiniCook
             />
             <Button
               isIconOnly
-              aria-label={t("newWithRecipe")}
+              aria-label={newLabel}
               className="shrink-0 rounded-full"
               isDisabled={newTitle.trim().length === 0}
               size="md"
@@ -206,7 +230,7 @@ export default function MiniCookbooks({ open, onOpenChange, recipeId }: MiniCook
               action="save"
               data-testid="save-cookbook-membership"
               isDisabled={!isDirty}
-              onPress={save}
+              onPress={() => void save()}
             >
               {tActions("save")}
             </ActionButton>

@@ -9,6 +9,7 @@ import NoRecipeResults from "@/components/dashboard/no-recipe-results";
 import NoRecipesText from "@/components/dashboard/no-recipes-text";
 import RecipeCard from "@/components/dashboard/recipe-card";
 import RecipeCardSkeleton from "@/components/skeleton/recipe-card-skeleton";
+import { useRecipeSelection } from "@/context/recipe-selection-context";
 import { useRecipesContext } from "@/context/recipes-context";
 import { useRecipesFiltersContext } from "@/context/recipes-filters-context";
 import { useCookbooksMutations } from "@/hooks/cookbooks";
@@ -35,10 +36,11 @@ export default function LibraryView({ variant }: { variant: RecipeViewMode }) {
     filterKey,
     isFavorite,
     toggleFavorite,
-    deleteRecipe,
+    deleteRecipes,
     allergies,
   } = useRecipesContext();
   const { deleteCookbook } = useCookbooksMutations();
+  const isSelecting = useRecipeSelection()?.isSelecting ?? false;
 
   // The same filters the context passes, so both share one cache entry and
   // one request.
@@ -51,32 +53,45 @@ export default function LibraryView({ variant }: { variant: RecipeViewMode }) {
     enabled: isHydrated,
   });
 
+  // A running import is a recipe on its way, so the Cookbooks lens leaves it out.
+  const showsPending = filters.libraryType !== "cookbooks";
+
   const gridItems = useMemo<LibraryGridItem[]>(
     () => [
-      ...Array.from(pendingRecipeIds).map((id) => ({ kind: "pending" as const, id })),
+      ...(showsPending ? Array.from(pendingRecipeIds) : []).map((id) => ({
+        kind: "pending" as const,
+        id,
+      })),
       ...items.map((item) =>
         item.kind === "recipe"
           ? { kind: "recipe" as const, id: item.recipe.id, recipe: item.recipe }
           : { kind: "cookbook" as const, id: item.cookbook.id, cookbook: item.cookbook }
       ),
     ],
-    [pendingRecipeIds, items]
+    [showsPending, pendingRecipeIds, items]
   );
 
   const renderItem = useCallback(
     (item: LibraryGridItem) => {
-      if (item.kind === "pending") {
-        return <RecipeCardSkeleton variant={variant} />;
-      }
-
-      if (item.kind === "cookbook") {
+      // A selection holds recipes only: cookbooks and imports still running
+      // step back while it is open.
+      if (item.kind !== "recipe") {
         return (
-          <CookbookCard
-            allergies={allergies}
-            cookbook={item.cookbook}
-            variant={variant}
-            onDelete={deleteCookbook}
-          />
+          <div
+            className={isSelecting ? "opacity-40 transition-opacity" : "transition-opacity"}
+            inert={isSelecting}
+          >
+            {item.kind === "pending" ? (
+              <RecipeCardSkeleton variant={variant} />
+            ) : (
+              <CookbookCard
+                allergies={allergies}
+                cookbook={item.cookbook}
+                variant={variant}
+                onDelete={deleteCookbook}
+              />
+            )}
+          </div>
         );
       }
 
@@ -86,12 +101,12 @@ export default function LibraryView({ variant }: { variant: RecipeViewMode }) {
           isFavorite={isFavorite(item.recipe.id)}
           recipe={item.recipe}
           variant={variant}
-          onDelete={deleteRecipe}
+          onDelete={deleteRecipes}
           onToggleFavorite={toggleFavorite}
         />
       );
     },
-    [variant, allergies, isFavorite, deleteRecipe, toggleFavorite, deleteCookbook]
+    [variant, allergies, isFavorite, deleteRecipes, toggleFavorite, deleteCookbook, isSelecting]
   );
 
   const emptyState =

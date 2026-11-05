@@ -14,6 +14,7 @@ import { afterAll, beforeAll, beforeEach, describe, expect, it } from "vitest";
 import type { RecipeListContext } from "@norish/db/repositories/recipes";
 import { ServerConfigKeys } from "@norish/config/zod/server-config";
 import {
+  addRecipesToCookbook,
   addRecipeToCookbook,
   createCookbook,
   deleteCookbookById,
@@ -25,6 +26,7 @@ import {
   listCookbookTitlesByRecipeIds,
   listEditableCookbooks,
   removeRecipeFromCookbook,
+  removeRecipesFromCookbook,
   updateCookbook,
 } from "@norish/db/repositories/cookbooks";
 import { setFavorite } from "@norish/db/repositories/favorites";
@@ -281,6 +283,23 @@ describe("cookbook repository", () => {
       const holdingIt = await listCookbooksForRecipe(viewer(strangerId), recipe.id);
 
       expect(holdingIt.map((c) => c.id)).toEqual([holding.id]);
+    });
+
+    it("files many at once, leaving one already in there as it was", async () => {
+      const cookbook = await createCookbook({ userId: ownerId, title: "Weeknights" });
+      const pasta = await createTestRecipe(ownerId, { name: "Pasta" });
+      const pizza = await createTestRecipe(ownerId, { name: "Pizza" });
+
+      await addRecipeToCookbook(cookbook.id, pasta.id);
+      await addRecipesToCookbook(cookbook.id, [pasta.id, pizza.id]);
+
+      expect((await listCookbookMemberIds(cookbook.id)).sort()).toEqual(
+        [pasta.id, pizza.id].sort()
+      );
+
+      await removeRecipesFromCookbook(cookbook.id, [pasta.id, pizza.id]);
+
+      expect(await listCookbookMemberIds(cookbook.id)).toEqual([]);
     });
 
     it("counts only the members the reader can see", async () => {

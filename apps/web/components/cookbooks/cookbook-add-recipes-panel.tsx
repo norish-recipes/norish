@@ -90,9 +90,7 @@ export function CookbookAddRecipesPanel({
   }, []);
 
   const save = useCallback(() => {
-    for (const recipeId of selected) {
-      setMembership({ cookbookId: cookbook.id, recipeId, isMember: true, cookbook });
-    }
+    setMembership({ cookbookId: cookbook.id, recipeIds: selected, isMember: true, cookbook });
 
     onOpenChange(false);
   }, [selected, setMembership, cookbook, onOpenChange]);

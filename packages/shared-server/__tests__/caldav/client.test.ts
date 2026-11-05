@@ -22,6 +22,13 @@ vi.mock("tsdav", () => ({
   },
 }));
 
+const mockReadServerCertificate = vi.fn();
+
+vi.mock("../../src/caldav/trusted-certificate", async (importOriginal) => ({
+  ...(await importOriginal<typeof import("../../src/caldav/trusted-certificate")>()),
+  readServerCertificate: mockReadServerCertificate,
+}));
+
 vi.mock("@norish/shared-server/logger", () => ({
   createLogger: () => ({ info: vi.fn(), debug: vi.fn(), warn: vi.fn(), error: vi.fn() }),
 }));
@@ -117,5 +124,53 @@ describe("updateEvent", () => {
     await expect(client().updateEvent({ ...EVENT, uid: "event-uid" })).rejects.toThrow(
       "CalDAV updateEvent failed 412: Precondition Failed"
     );
+  });
+});
+
+describe("testConnection", () => {
+  it("says why fetch failed, not just that it did", async () => {
+    mockLogin.mockRejectedValue(
+      new TypeError("fetch failed", { cause: new Error("unable to get local issuer certificate") })
+    );
+
+    await expect(client().testConnection()).resolves.toEqual({
+      success: false,
+      message: "fetch failed: unable to get local issuer certificate",
+    });
+  });
+
+  it("offers the server's certificate when nothing vouches for it", async () => {
+    const certificate = { pem: "PEM", name: "nextcloud.internal", fingerprint: "AB:CD" };
+
+    mockReadServerCertificate.mockResolvedValue(certificate);
+    mockLogin.mockRejectedValue(
+      new TypeError("fetch failed", {
+        cause: Object.assign(new Error("unable to get local issuer certificate"), {
+          code: "UNABLE_TO_GET_ISSUER_CERT_LOCALLY",
+        }),
+      })
+    );
+
+    await expect(client().testConnection()).resolves.toMatchObject({
+      success: false,
+      untrustedCertificate: certificate,
+    });
+    expect(mockReadServerCertificate).toHaveBeenCalledWith("https://radicale.example/dav/");
+  });
+
+  it("offers nothing for a certificate issued to another host", async () => {
+    mockReadServerCertificate.mockClear();
+    mockLogin.mockRejectedValue(
+      new TypeError("fetch failed", {
+        cause: Object.assign(new Error("Hostname/IP does not match"), {
+          code: "ERR_TLS_CERT_ALTNAME_INVALID",
+        }),
+      })
+    );
+
+    const result = await client().testConnection();
+
+    expect(result).not.toHaveProperty("untrustedCertificate");
+    expect(mockReadServerCertificate).not.toHaveBeenCalled();
   });
 });

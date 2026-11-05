@@ -37,6 +37,22 @@ function ingredientEntryText(entry: unknown): string {
 }
 
 /**
+ * A source's own heading line ("For the sauce:", "## SAUCE") in Norish's "# " form. A flagged line
+ * with a colon or comma before its end still names a food ("For serving: ice cream").
+ */
+export function headingOrName({
+  description,
+  isGroupHeader,
+  quantity,
+}: ReturnType<typeof parseIngredientWithDefaults>[number]): string {
+  const isHeading =
+    description.startsWith("#") ||
+    (isGroupHeader && quantity == null && !/[:,]./.test(description));
+
+  return isHeading ? `# ${description.replace(/^#+/, "").replace(/:$/, "").trim()}` : description;
+}
+
+/**
  * Normalize raw ingredient source to array of strings.
  *
  * Handles:
@@ -74,7 +90,7 @@ export function parseIngredients(
 
   const ingredients: ParsedIngredient[] = parsed.map((ing, i) => ({
     ingredientId: null,
-    ingredientName: ing.description,
+    ingredientName: headingOrName(ing),
     amount: ing.quantity != null ? ing.quantity : null,
     unit: normalizeUnit(ing.unitOfMeasure ?? "", units),
     systemUsed,

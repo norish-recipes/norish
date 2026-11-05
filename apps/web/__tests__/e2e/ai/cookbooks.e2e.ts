@@ -22,6 +22,7 @@ import {
   seedRecipe,
 } from "./cookbooks-support";
 import { expect, test } from "./fixture";
+import { submitPasteImport } from "./import-support";
 import { pictureFile } from "./ingredient-icons-support";
 
 test.describe.configure({ mode: "serial" });
@@ -181,6 +182,33 @@ test("the three chips change both the list and the heading", async () => {
 
   await selectChip("all");
   await expectHeading("Your library");
+});
+
+test("an import still running shows under Recipes but not under Cookbooks", async () => {
+  // A pending import's card is a skeleton: a recipe card without its title yet.
+  const running = page.locator("[data-recipe-card]").filter({ hasNot: page.getByRole("heading") });
+
+  // Held, the import stays running; failing it on release leaves no recipe behind.
+  stack.ai.control.failPermanently();
+  stack.ai.control.hold();
+
+  try {
+    await page.goto("/");
+    await submitPasteImport(page, "Import Pending Lens Stew — the harness holds it.");
+    await expect(running).toHaveCount(1);
+
+    await selectChip("cookbooks");
+    await expect(running).toHaveCount(0);
+    await expect(page.getByText("No cookbooks yet")).toBeVisible();
+
+    await selectChip("recipes");
+    await expect(running).toHaveCount(1);
+  } finally {
+    stack.ai.control.release();
+  }
+
+  await expect(running).toHaveCount(0);
+  await selectChip("all");
 });
 
 test("creating a cookbook from the Library leaves the reader on the Library", async () => {

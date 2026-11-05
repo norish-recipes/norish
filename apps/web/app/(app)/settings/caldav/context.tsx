@@ -28,6 +28,7 @@ type SaveCaldavConfigInput = {
   calendarUrl?: string | null;
   username: string;
   password: string;
+  trustedCertificate?: string | null;
   enabled: boolean;
   breakfastTime: string;
   lunchTime: string;
@@ -58,7 +59,8 @@ type CalDavSettingsContextType = {
   testConnection: (
     serverUrl: string,
     username: string,
-    password: string
+    password: string,
+    trustedCertificate?: string | null
   ) => Promise<ConnectionTestResult>;
   fetchCalendars: (
     serverUrl: string,
@@ -151,10 +153,11 @@ export function CalDavSettingsProvider({ children }: { children: ReactNode }) {
     async (
       serverUrl: string,
       username: string,
-      password: string
+      password: string,
+      trustedCertificate?: string | null
     ): Promise<ConnectionTestResult> => {
       try {
-        return await testConnectionMutation({ serverUrl, username, password });
+        return await testConnectionMutation({ serverUrl, username, password, trustedCertificate });
       } catch (error) {
         return {
           success: false,

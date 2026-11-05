@@ -164,7 +164,9 @@
   "deleteModal": {
     "title": "Delete Recipe",
     "confirmMessage": "Are you sure you want to delete \"{recipeName}\"?",
-    "warning": "This action cannot be undone."
+    "warning": "This action cannot be undone.",
+    "confirmCount": "Delete {count, plural, one {# recipe} other {# recipes}}?",
+    "keptCount": "{count, plural, one {# recipe stays} other {# recipes stay}}, because you may not delete {count, plural, one {it} other {them}}."
   },
   "form": {
     "createTitle": "Create Recipe",
@@ -327,7 +329,8 @@
     "batchImported": "Recipes imported",
     "batchImportedDescription": "{count} recipes imported from archive",
     "view": "View",
-    "open": "Open"
+    "open": "Open",
+    "deleteKept": "{count, plural, one {# recipe was} other {# recipes were}} changed by someone else and kept."
   },
   "tags": {
     "panel": {
@@ -436,5 +439,15 @@
     "print": "Print / Save PDF",
     "continued": "continued",
     "perServing": "Per serving"
+  },
+  "selection": {
+    "toolbar": "Selected recipes",
+    "count": "{count} selected",
+    "clear": "Clear selection",
+    "addToCookbook": "Add to cookbook",
+    "remove": "Remove",
+    "newCookbook": "New cookbook",
+    "filedInto": "{count, plural, one {# recipe} other {# recipes}} added to {title}",
+    "filedIntoMany": "{count, plural, one {# recipe} other {# recipes}} added to {cookbooks} cookbooks"
   }
 }

@@ -6,7 +6,11 @@
  * for Issue #255: Editing Recipe Discards AI Import Unit Conversion
  */
 
+import { eq } from "drizzle-orm";
 import { afterAll, beforeAll, beforeEach, describe, expect, it } from "vitest";
+
+import { deleteRecipesByIds } from "@norish/db/repositories/recipes";
+import { recipes as recipesTable } from "@norish/db/schema";
 
 import {
   createTestIngredient,
@@ -15,6 +19,7 @@ import {
   createTestRecipeStep,
   getRecipeIngredients,
   getRecipeSteps,
+  getTestDb,
 } from "../../../helpers/db-test-helpers";
 import {
   addStepsAndIngredientsToRecipeByInput,
@@ -603,5 +608,49 @@ describe("Recipe Repository - updateRecipeWithRefs", () => {
       expect(createdSteps.map((step) => Number(step.order)).sort()).toEqual([0, 1]);
       expect(createdSteps.every((step) => step.step === "Stir well")).toBe(true);
     });
+  });
+});
+
+describe("Recipe Repository - deleteRecipesByIds", () => {
+  let userId: string;
+  const testBase = new RepositoryTestBase("test_recipes_bulk_delete");
+
+  beforeAll(async () => {
+    await testBase.setup();
+  });
+
+  beforeEach(async () => {
+    const [user] = await testBase.beforeEachTest();
+
+    userId = user.id;
+  });
+
+  afterAll(async () => {
+    await testBase.teardown();
+  });
+
+  it("deletes what matches its version, keeps what was edited, and counts the missing as deleted", async () => {
+    const unchanged = await createTestRecipe(userId);
+    const edited = await createTestRecipe(userId);
+    const missingId = "44444444-4444-4444-8444-444444444444";
+
+    await getTestDb()
+      .update(recipesTable)
+      .set({ version: edited.version + 1 })
+      .where(eq(recipesTable.id, edited.id));
+
+    const result = await deleteRecipesByIds([
+      { id: unchanged.id, version: unchanged.version },
+      { id: edited.id, version: edited.version },
+      { id: missingId, version: 1 },
+    ]);
+
+    expect(result.deletedIds.sort()).toEqual([unchanged.id, missingId].sort());
+    expect(result.staleIds).toEqual([edited.id]);
+
+    const left = await getTestDb().select({ id: recipesTable.id }).from(recipesTable);
+
+    expect(left.map((row) => row.id)).toContain(edited.id);
+    expect(left.map((row) => row.id)).not.toContain(unchanged.id);
   });
 });

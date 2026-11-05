@@ -199,7 +199,9 @@ export async function removeNutritionScenario(
 
   // The delete lands after the mutation answers.
   if (recipe) {
-    await callTrpc(baseURL, cookiesA, "recipes.delete", { id: recipe.id, version: recipe.version });
+    await callTrpc(baseURL, cookiesA, "recipes.delete", {
+      recipes: [{ id: recipe.id, version: recipe.version }],
+    });
     await expect.poll(() => readRecipe(baseURL, cookiesA, recipe.id)).toBeNull();
   }
   await deleteIngredients([...Object.values(scenario.ingredientIds), scenario.legacyId]);

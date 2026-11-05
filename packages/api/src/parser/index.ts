@@ -116,11 +116,11 @@ function getStructuredFailureMessage(code: string): string {
  * caught here and answered with null.
  */
 async function tryExtractWithAI(
-  input: string,
+  source: string,
   recipeId: string,
   url: string,
   requireAI: boolean,
-  originalHtml?: string
+  jsonLd: Record<string, unknown>[]
 ): Promise<FullRecipeInsertDTO | null> {
   const enabled = await isAIEnabled();
 
@@ -135,7 +135,7 @@ async function tryExtractWithAI(
   log.info({ url }, "Attempting AI extraction");
 
   try {
-    return await extractRecipeWithAI(input, recipeId, url, originalHtml);
+    return await extractRecipeWithAI(source, recipeId, url, jsonLd);
   } catch (error) {
     log.warn({ url, err: error }, "AI extraction failed");
 
@@ -144,10 +144,8 @@ async function tryExtractWithAI(
 }
 
 /**
- * Try AI extraction with smallest/cleanest input first (JSON-LD),
- * then the full HTML, which may hold a method the JSON-LD lacks.
- * `ingredientLines` from the scraper stand in for the JSON-LD's flat list
- * when they hold the recipe's sections.
+ * Extract with AI from the page and its JSON-LD. `ingredientLines` from the scraper stand in for
+ * the JSON-LD's flat list when they hold the recipe's sections.
  */
 async function extractWithAIPreference(
   html: string,
@@ -156,32 +154,23 @@ async function extractWithAIPreference(
   requireAI: boolean,
   ingredientLines: string[] = []
 ): Promise<FullRecipeInsertDTO | null> {
-  const jsonLdNodes = extractRecipeNodesFromJsonLd(html);
+  const jsonLd = extractRecipeNodesFromJsonLd(html);
+  const sectioned = jsonLd.length === 1 && ingredientLines.some(isIngredientHeading);
 
-  if (jsonLdNodes.length > 0) {
-    log.info({ url }, "AI: using extracted JSON-LD as input (fewer tokens)");
-    const sectioned = jsonLdNodes.length === 1 && ingredientLines.some(isIngredientHeading);
-    const jsonLdInput = JSON.stringify(
-      sectioned ? [{ ...jsonLdNodes[0], recipeIngredient: ingredientLines }] : jsonLdNodes,
-      null,
-      2
-    );
+  return tryExtractWithAI(
+    html,
+    recipeId,
+    url,
+    requireAI,
+    sectioned ? [{ ...jsonLd[0], recipeIngredient: ingredientLines }] : jsonLd
+  );
+}
 
-    const fromJsonLd = await tryExtractWithAI(jsonLdInput, recipeId, url, requireAI, html);
+/** The scraper's ingredient lines with their section headings, or none when it fails. */
+async function scrapedIngredientLines(url: string, html: string): Promise<string[]> {
+  const response = await callRecipeScrapersParser({ url, html }).catch(() => null);
 
-    if (fromJsonLd && hasSteps(fromJsonLd)) return fromJsonLd;
-
-    if (fromJsonLd) {
-      log.info({ url }, "AI: JSON-LD held no steps, trying the full HTML");
-      const fromHtml = await tryExtractWithAI(html, recipeId, url, requireAI, html);
-
-      return fromHtml && hasSteps(fromHtml) ? fromHtml : fromJsonLd;
-    }
-  }
-
-  log.info({ url }, "AI: using full HTML as input");
-
-  return tryExtractWithAI(html, recipeId, url, requireAI, html);
+  return response?.ok ? collectIngredientStrings(response.recipe) : [];
 }
 
 async function tryStructuredParser(
@@ -312,7 +301,12 @@ export async function parseRecipeFromUrl(
   const useAIOnly = Boolean(forceAI || (await shouldAlwaysUseAI()));
 
   if (useAIOnly) {
-    const recipe = await extractWithAIPreference(html, recipeId, url, true);
+    // JSON-LD has no room for ingredient sections; the scraper's groups keep their headings (#685).
+    const ingredientLines =
+      extractRecipeNodesFromJsonLd(html).length === 1
+        ? await scrapedIngredientLines(url, html)
+        : [];
+    const recipe = await extractWithAIPreference(html, recipeId, url, true, ingredientLines);
 
     if (!recipe) throw new Error("AI extraction failed");
 

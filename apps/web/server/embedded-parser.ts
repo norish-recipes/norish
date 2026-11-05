@@ -65,22 +65,24 @@ function resolveParserAppDir(): string {
   throw new Error(`Embedded parser runtime was not found. Checked: ${candidates.join(", ")}`);
 }
 
-function streamParserLogs(child: ChildProcess): void {
-  if (child.stdout) {
-    const stdout = createInterface({ input: child.stdout });
+/** Log the parser's output, keeping its last lines for a startup failure to report. */
+function streamParserLogs(child: ChildProcess): () => string[] {
+  const recent: string[] = [];
 
-    stdout.on("line", (line) => {
-      log.info({ stream: "stdout" }, line);
+  for (const [stream, input] of [
+    ["stdout", child.stdout],
+    ["stderr", child.stderr],
+  ] as const) {
+    if (!input) continue;
+
+    createInterface({ input }).on("line", (line) => {
+      log.info({ stream }, line);
+      recent.push(line);
+      if (recent.length > 20) recent.shift();
     });
   }
 
-  if (child.stderr) {
-    const stderr = createInterface({ input: child.stderr });
-
-    stderr.on("line", (line) => {
-      log.info({ stream: "stderr" }, line);
-    });
-  }
+  return () => recent;
 }
 
 function signalParserProcess(child: ChildProcess, signal: NodeJS.Signals): void {
@@ -139,7 +141,7 @@ export async function startEmbeddedParser(
     detached: process.platform !== "win32",
   });
 
-  streamParserLogs(child);
+  const recentOutput = streamParserLogs(child);
 
   let isReady = false;
   let isStopping = false;
@@ -167,7 +169,10 @@ export async function startEmbeddedParser(
     }
 
     if (!isReady) {
-      log.error({ code, signal }, "Embedded parser exited before startup completed");
+      log.error(
+        { code, signal, output: recentOutput() },
+        "Embedded parser exited before startup completed"
+      );
 
       return;
     }

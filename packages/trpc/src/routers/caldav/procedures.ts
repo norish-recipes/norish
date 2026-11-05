@@ -90,6 +90,7 @@ export const caldavRouter = router({
         calendarUrl: input.calendarUrl ?? null,
         username: input.username,
         password,
+        trustedCertificate: input.trustedCertificate ?? null,
         enabled: input.enabled,
         breakfastTime: input.breakfastTime,
         lunchTime: input.lunchTime,
@@ -164,7 +165,12 @@ export const caldavRouter = router({
   testConnection: authedProcedure
     .input(TestCaldavConnectionInputSchema)
     .mutation(async ({ input }): Promise<ConnectionTestResult> => {
-      return testCalDavConnection(input.serverUrl, input.username, input.password);
+      return testCalDavConnection({
+        serverUrl: input.serverUrl,
+        username: input.username,
+        password: input.password,
+        trustedCertificate: input.trustedCertificate ?? undefined,
+      });
     }),
 
   /**
@@ -177,6 +183,7 @@ export const caldavRouter = router({
         serverUrl: input.serverUrl,
         username: input.username,
         password: input.password,
+        trustedCertificate: input.trustedCertificate ?? undefined,
       });
 
       return client.fetchCalendars();
@@ -202,6 +209,7 @@ export const caldavRouter = router({
         calendarUrl: config.calendarUrl ?? undefined,
         username: config.username,
         password: config.password,
+        trustedCertificate: config.trustedCertificate ?? undefined,
       });
 
       return client.testConnection();

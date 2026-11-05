@@ -49,6 +49,7 @@ describe("validateExtractionOutput", () => {
 
     it("returns invalid when metric ingredients are missing", () => {
       const output = createPartialOutput({
+        sourceSystem: "metric",
         recipeIngredient: { metric: [], us: ["1 cup flour"] },
       });
       const result = validateExtractionOutput(output);
@@ -60,6 +61,7 @@ describe("validateExtractionOutput", () => {
 
     it("returns invalid when US ingredients are missing", () => {
       const output = createPartialOutput({
+        sourceSystem: "metric",
         recipeIngredient: { metric: ["100g flour"], us: [] },
       });
       const result = validateExtractionOutput(output);
@@ -101,6 +103,7 @@ describe("validateExtractionOutput", () => {
 
     it("includes correct details for single-item arrays", () => {
       const output = createPartialOutput({
+        sourceSystem: "metric",
         recipeIngredient: { metric: ["100g flour"], us: ["1 cup flour"] },
         recipeInstructions: { metric: ["Mix well"], us: ["Mix well"] },
       });
@@ -229,6 +232,7 @@ function createValidOutput(): RecipeExtractionOutput {
   return {
     name: "Chocolate Cake",
     description: "A delicious chocolate cake",
+    sourceSystem: "metric",
     recipeIngredient: {
       metric: ["100g flour", "50g sugar"],
       us: ["1 cup flour", "1/2 cup sugar"],
@@ -243,6 +247,7 @@ function createValidOutput(): RecipeExtractionOutput {
     totalTime: "PT45M",
     keywords: [],
     allergyIndications: [],
+    videoUrl: null,
     categories: null,
     nutrition: {
       calories: 350,
@@ -265,6 +270,7 @@ describe("normalizeExtractionOutput - HTML Entity Decoding", () => {
     const output = {
       ...createValidOutput(),
       allergyIndications: [" Peanut ", "Milk", "peanut"],
+      videoUrl: null,
     } as RecipeExtractionOutput;
     const { normalizeRecipeFromJson } = await import("@norish/api/parser/normalize");
 
@@ -294,11 +300,58 @@ describe("normalizeExtractionOutput - HTML Entity Decoding", () => {
     expect(result?.tags).toEqual([{ name: "Dessert" }, { name: "Peanut" }, { name: "Milk" }]);
   });
 
+  it("passes on only the videos it is given, never the model's own list", async () => {
+    const video = { "@type": "VideoObject", contentUrl: "https://cdn.test/v.mp4" };
+    const output = { ...createValidOutput(), videoUrl: "http://169.254.169.254/" };
+    const { normalizeRecipeFromJson } = await import("@norish/api/parser/normalize");
+    const normalize = vi.mocked(normalizeRecipeFromJson);
+
+    normalize.mockClear();
+    normalize.mockResolvedValue({
+      recipeIngredients: [],
+      steps: [],
+    } as unknown as FullRecipeInsertDTO);
+
+    await normalizeExtractionOutput(output, { recipeId: "recipe-123", videos: [video] });
+    await normalizeExtractionOutput(output, { recipeId: "recipe-123" });
+
+    expect(normalize.mock.calls[0]?.[0]).toMatchObject({ video: [video] });
+    expect(normalize.mock.calls[1]?.[0]).toMatchObject({ video: undefined });
+  });
+
+  it("reads a heading in the US copy as the metric copy reads it", async () => {
+    const output = {
+      ...createValidOutput(),
+      recipeIngredient: {
+        metric: ["# For the sauce", "240 ml milk"],
+        us: ["For the sauce:", "1 cup milk"],
+      },
+    } as RecipeExtractionOutput;
+    const { normalizeRecipeFromJson } = await import("@norish/api/parser/normalize");
+
+    vi.mocked(normalizeRecipeFromJson).mockResolvedValue({
+      name: "Chocolate Cake",
+      recipeIngredients: [],
+      steps: [],
+      systemUsed: "metric",
+      tags: [],
+      images: [],
+      categories: [],
+    } as unknown as FullRecipeInsertDTO);
+
+    const result = await normalizeExtractionOutput(output, { recipeId: "recipe-123" });
+
+    expect(
+      result?.recipeIngredients?.filter((i) => i.systemUsed === "us").map((i) => i.ingredientName)
+    ).toEqual(["# For the sauce", "milk"]);
+  });
+
   it("keeps metric and US systems separated even when base normalizer infers US", async () => {
     const output: RecipeExtractionOutput = {
       name: "Mapo Tofu Udon",
       description: "Test",
       notes: null,
+      sourceSystem: "metric",
       recipeIngredient: {
         metric: ["300g beef mince"],
         us: ["10.6 oz beef mince"],
@@ -363,11 +416,36 @@ describe("normalizeExtractionOutput - HTML Entity Decoding", () => {
     expect(usSteps).toHaveLength(1);
   });
 
+  it.each(["us", "metric"] as const)(
+    "opens in the system the source is written in: %s (#693)",
+    async (sourceSystem) => {
+      const { normalizeRecipeFromJson } = await import("@norish/api/parser/normalize");
+
+      vi.mocked(normalizeRecipeFromJson).mockResolvedValue({
+        name: "Chocolate Cake",
+        recipeIngredients: [],
+        steps: [],
+        systemUsed: "metric",
+        tags: [],
+        images: [],
+        categories: [],
+      } as unknown as FullRecipeInsertDTO);
+
+      const result = await normalizeExtractionOutput(
+        { ...createValidOutput(), sourceSystem },
+        { recipeId: "recipe-123" }
+      );
+
+      expect(result?.systemUsed).toBe(sourceSystem);
+    }
+  );
+
   it("normalizes categories with matcher", async () => {
     const output: RecipeExtractionOutput = {
       name: "Test Recipe",
       notes: null,
       description: "Test",
+      sourceSystem: "metric",
       recipeIngredient: {
         metric: ["100g flour"],
         us: ["1 cup flour"],
@@ -418,6 +496,7 @@ describe("normalizeExtractionOutput - HTML Entity Decoding", () => {
       name: "Test Recipe",
       description: "Test",
       notes: null,
+      sourceSystem: "metric",
       recipeIngredient: {
         metric: ["100g flour"],
         us: ["1 cup flour &#8211; all-purpose", "2 eggs &#8211; beaten"],
@@ -485,6 +564,7 @@ describe("normalizeExtractionOutput - HTML Entity Decoding", () => {
     const output: RecipeExtractionOutput = {
       name: "Test Recipe",
       description: "Test",
+      sourceSystem: "metric",
       recipeIngredient: {
         metric: ["100g flour"],
         us: ["1 cup flour"],
@@ -547,6 +627,7 @@ describe("normalizeExtractionOutput - HTML Entity Decoding", () => {
     const output: RecipeExtractionOutput = {
       name: "Test Recipe",
       description: "Test",
+      sourceSystem: "metric",
       recipeIngredient: {
         metric: ["100g flour"],
         us: ["1 cup &#8220;baker&#39;s&#8221; flour &#8211; premium grade"],
@@ -609,6 +690,7 @@ describe("normalizeExtractionOutput - HTML Entity Decoding", () => {
     const output: RecipeExtractionOutput = {
       name: "Test Recipe",
       description: "Test",
+      sourceSystem: "metric",
       recipeIngredient: {
         metric: ["100g flour"],
         us: ["1 cup flour", "2 eggs"],
@@ -664,6 +746,7 @@ describe("normalizeExtractionOutput - HTML Entity Decoding", () => {
       name: "Test Recipe",
       description: "Test",
       notes: "Let it rest for 10 minutes &#8211; don&#39;t skip this step.",
+      sourceSystem: "metric",
       recipeIngredient: {
         metric: ["100g flour"],
         us: ["1 cup flour"],

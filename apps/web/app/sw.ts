@@ -213,7 +213,8 @@ self.addEventListener("activate", (event) => {
 // delivered to every listener, so returning false here simply leaves the
 // message to the others.
 self.addEventListener("message", (event) => {
-  acceptArchiveDownload(event.data);
+  // The ack tells the page the stream is stored, so its claim cannot overtake it.
+  if (acceptArchiveDownload(event.data)) event.ports[0]?.postMessage(null);
 });
 
 self.addEventListener("notificationclick", (event) => {

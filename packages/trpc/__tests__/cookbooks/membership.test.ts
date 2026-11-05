@@ -11,13 +11,13 @@ import { TRPCError } from "@trpc/server";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 
 import {
-  addRecipeToCookbook,
+  addRecipesToCookbook,
   createCookbook,
   getCookbookRow,
   listCookbookMemberIds,
   listCookbooksForRecipe,
   listEditableCookbooks,
-  removeRecipeFromCookbook,
+  removeRecipesFromCookbook,
 } from "../mocks/cookbooks-repository";
 import { canAccessResource } from "../mocks/permissions";
 import { cookbooks } from "../mocks/realtime/cookbooks";
@@ -41,6 +41,8 @@ const appRouter = router({ cookbooks: cookbooksRouter });
 
 const COOKBOOK_ID = "11111111-1111-4111-8111-111111111111";
 const RECIPE_ID = "33333333-3333-4333-8333-333333333333";
+const HIDDEN_ID = "44444444-4444-4444-8444-444444444444";
+const GONE_ID = "55555555-5555-4555-8555-555555555555";
 
 function callerFor(user = createMockUser()) {
   const household = createMockHousehold();
@@ -87,7 +89,14 @@ function expectNoRecipeWrites() {
 describe("cookbook membership", () => {
   beforeEach(() => {
     getCookbookRow.mockResolvedValue(cookbookRow());
-    recipesRepository.getRecipeOwnerId.mockResolvedValue("recipe-owner");
+    recipesRepository.getRecipeOwnerIds.mockImplementation(
+      async (ids: string[]) =>
+        new Map(
+          ids
+            .filter((id) => id !== GONE_ID)
+            .map((id) => [id, id === HIDDEN_ID ? "stranger" : "recipe-owner"])
+        )
+    );
   });
 
   it("files a recipe the reader can see but not edit", async () => {
@@ -97,27 +106,30 @@ describe("cookbook membership", () => {
     await expect(
       callerFor().cookbooks.setMembership({
         cookbookId: COOKBOOK_ID,
-        recipeId: RECIPE_ID,
+        recipeIds: [RECIPE_ID],
         isMember: true,
       })
     ).resolves.toMatchObject({ isMember: true });
 
-    expect(addRecipeToCookbook).toHaveBeenCalledWith(COOKBOOK_ID, RECIPE_ID);
+    expect(addRecipesToCookbook).toHaveBeenCalledWith(COOKBOOK_ID, [RECIPE_ID]);
     expect(canAccessResource.mock.calls.map((call) => call[0])).toEqual(["view", "edit"]);
     expectNoRecipeWrites();
   });
 
-  it("refuses a reader who cannot see the recipe", async () => {
-    canAccessResource.mockImplementation(async (action: string) => action !== "view");
+  it("files many in one call, leaving out what the reader cannot see or what is gone", async () => {
+    canAccessResource.mockImplementation(
+      async (action: string, _userId: string, ownerId: string) =>
+        action === "edit" || ownerId !== "stranger"
+    );
 
-    await expect(
-      callerFor().cookbooks.setMembership({
-        cookbookId: COOKBOOK_ID,
-        recipeId: RECIPE_ID,
-        isMember: true,
-      })
-    ).rejects.toThrow(TRPCError);
-    expect(addRecipeToCookbook).not.toHaveBeenCalled();
+    const result = await callerFor().cookbooks.setMembership({
+      cookbookId: COOKBOOK_ID,
+      recipeIds: [RECIPE_ID, HIDDEN_ID, GONE_ID],
+      isMember: true,
+    });
+
+    expect(addRecipesToCookbook).toHaveBeenCalledWith(COOKBOOK_ID, [RECIPE_ID]);
+    expect(result.recipeIds).toEqual([RECIPE_ID]);
   });
 
   it("refuses a reader who cannot edit the cookbook", async () => {
@@ -126,39 +138,40 @@ describe("cookbook membership", () => {
     await expect(
       callerFor().cookbooks.setMembership({
         cookbookId: COOKBOOK_ID,
-        recipeId: RECIPE_ID,
+        recipeIds: [RECIPE_ID],
         isMember: true,
       })
     ).rejects.toThrow(TRPCError);
-    expect(addRecipeToCookbook).not.toHaveBeenCalled();
+    expect(addRecipesToCookbook).not.toHaveBeenCalled();
   });
 
-  it("takes a recipe out again from the same mutation, without writing the recipe", async () => {
+  it("takes recipes out again from the same mutation, without writing them", async () => {
     canAccessResource.mockResolvedValue(true);
 
     await callerFor().cookbooks.setMembership({
       cookbookId: COOKBOOK_ID,
-      recipeId: RECIPE_ID,
+      recipeIds: [RECIPE_ID, HIDDEN_ID],
       isMember: false,
     });
 
-    expect(removeRecipeFromCookbook).toHaveBeenCalledWith(COOKBOOK_ID, RECIPE_ID);
-    expect(addRecipeToCookbook).not.toHaveBeenCalled();
+    expect(removeRecipesFromCookbook).toHaveBeenCalledWith(COOKBOOK_ID, [RECIPE_ID, HIDDEN_ID]);
+    expect(addRecipesToCookbook).not.toHaveBeenCalled();
     expectNoRecipeWrites();
   });
 
-  it("echoes membership on the cookbook, never on the recipe", async () => {
+  it("echoes one membership event on the cookbook, never on the recipes", async () => {
     canAccessResource.mockResolvedValue(true);
 
     await callerFor().cookbooks.setMembership({
       cookbookId: COOKBOOK_ID,
-      recipeId: RECIPE_ID,
+      recipeIds: [RECIPE_ID, HIDDEN_ID],
       isMember: true,
     });
 
+    expect(cookbooks.publish).toHaveBeenCalledTimes(1);
     expect(cookbooks.publish).toHaveBeenCalledWith(
       "membershipChanged",
-      { cookbookId: COOKBOOK_ID, recipeId: RECIPE_ID, isMember: true },
+      { cookbookId: COOKBOOK_ID, recipeIds: [RECIPE_ID, HIDDEN_ID], isMember: true },
       { viewPolicy: "household", userId: "test-user-id", householdKey: "test-household-id" }
     );
   });
@@ -173,12 +186,32 @@ describe("cookbook membership", () => {
 
     const result = await callerFor().cookbooks.create({
       title: "These two",
-      recipeId: RECIPE_ID,
+      recipeIds: [RECIPE_ID],
     });
 
-    expect(addRecipeToCookbook).toHaveBeenCalledWith(COOKBOOK_ID, RECIPE_ID);
+    expect(addRecipesToCookbook).toHaveBeenCalledWith(COOKBOOK_ID, [RECIPE_ID]);
     expect(result.memberCount).toBe(1);
     expectNoRecipeWrites();
+  });
+
+  it("creates the cookbook with what still exists and is visible, leaving out the rest", async () => {
+    canAccessResource.mockImplementation(
+      async (_action: string, _userId: string, ownerId: string) => ownerId !== "stranger"
+    );
+    createCookbook.mockResolvedValue({ ...cookbookRow(), memberCount: 0, coverImages: [] });
+
+    const result = await callerFor().cookbooks.create({
+      title: "Leftovers",
+      recipeIds: [RECIPE_ID, HIDDEN_ID, GONE_ID],
+    });
+
+    expect(addRecipesToCookbook).toHaveBeenCalledWith(COOKBOOK_ID, [RECIPE_ID]);
+    expect(result.memberCount).toBe(1);
+    expect(cookbooks.publish).toHaveBeenCalledWith(
+      "membershipChanged",
+      { cookbookId: COOKBOOK_ID, recipeIds: [RECIPE_ID], isMember: true },
+      expect.anything()
+    );
   });
 
   it("offers the cookbooks the reader may edit, whatever is being filed", async () => {

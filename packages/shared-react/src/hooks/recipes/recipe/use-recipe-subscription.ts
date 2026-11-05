@@ -55,7 +55,7 @@ export function createUseRecipeSubscription(
     useRealtimeSubscription<Payload<"deleted">>(trpc.recipes.onDeleted, {
       ...common,
       onEvent: (payload) => {
-        if (payload.id !== recipeId) return;
+        if (!recipeId || !payload.ids.includes(recipeId)) return;
 
         callbacks.onDeleted?.(payload);
       },

@@ -16,6 +16,7 @@ import { useTranslations } from "next-intl";
 import {
   RECIPE_PAGE_COLORS,
   TODAY_SECTION_VISIBILITIES,
+  UNIT_STYLES,
 } from "@norish/shared/contracts/zod/device-preferences";
 import {
   AFTER_PLANNING_CHOICES,
@@ -41,6 +42,7 @@ export default function PreferencesCard() {
     useDevicePreference("todaySectionVisibility");
   const [hiddenItems, setHiddenItems] = useDevicePreference("hiddenItems");
   const [recipePageColor, setRecipePageColor] = useDevicePreference("recipePageColor");
+  const [unitStyle, setUnitStyle] = useDevicePreference("unitStyle");
   const deviceKind = useDeviceKind();
 
   const currentLocale = getLocalePreference(user) ?? defaultLocale;
@@ -204,6 +206,15 @@ export default function PreferencesCard() {
           options={RECIPE_PAGE_COLORS}
           value={recipePageColor}
           onChange={setRecipePageColor}
+        />
+      </SettingRow>
+      <SettingRow description={t("unitStyle.description")} title={t("unitStyle.title")}>
+        <ChoiceSelect
+          label={t("unitStyle.title")}
+          optionLabel={(option) => t(`unitStyle.options.${option}`)}
+          options={UNIT_STYLES}
+          value={unitStyle}
+          onChange={setUnitStyle}
         />
       </SettingRow>
     </SettingsCard>

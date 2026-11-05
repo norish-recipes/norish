@@ -186,6 +186,14 @@
           "theme": "Cores do tema"
         }
       },
+      "unitStyle": {
+        "title": "Unidades",
+        "description": "Escrever as unidades por extenso ou abreviadas, como g e ml",
+        "options": {
+          "written": "Por extenso",
+          "abbreviated": "Abreviadas"
+        }
+      },
       "afterPlanning": {
         "title": "Depois de planejar uma receita",
         "description": "O que acontece quando você planeja uma receita",
@@ -327,7 +335,13 @@
       "breakfastTime": "Horário do café da manhã",
       "lunchTime": "Horário do almoço",
       "dinnerTime": "Horário do jantar",
-      "snackTime": "Horário do lanche"
+      "snackTime": "Horário do lanche",
+      "untrustedCertificate": {
+        "title": "Certificado não confiável",
+        "description": "Nenhuma autoridade certificadora pública garante {name}. Confie nele apenas se este for o seu próprio servidor.",
+        "fingerprint": "Impressão digital SHA-256",
+        "trust": "Confiar"
+      }
     },
     "config": {
       "title": "Configuração CalDAV",

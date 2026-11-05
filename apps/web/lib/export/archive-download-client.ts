@@ -164,6 +164,29 @@ function claimInHiddenFrame(token: string): () => void {
   return () => frame.remove();
 }
 
+/**
+ * Post the handoff and resolve once the worker acks it: message and fetch events
+ * are separate task sources, so a claim sent without waiting can arrive first.
+ */
+function handOver(worker: ServiceWorker, handoff: ArchiveDownloadHandoff): Promise<void> {
+  const { port1, port2 } = new MessageChannel();
+
+  worker.postMessage(handoff, [handoff.stream as unknown as Transferable, port2]);
+
+  return new Promise<void>((resolve, reject) => {
+    const timer = setTimeout(() => {
+      port1.close();
+      reject(new Error("The service worker never took the archive download"));
+    }, ARCHIVE_DOWNLOAD_HANDOFF_TIMEOUT_MS);
+
+    port1.onmessage = () => {
+      clearTimeout(timer);
+      port1.close();
+      resolve();
+    };
+  });
+}
+
 function newToken(): string {
   return createClientId();
 }
@@ -179,10 +202,6 @@ function newToken(): string {
  */
 async function withHandoffGuard(finished: Promise<number>, sawBytes: () => boolean) {
   let timer: ReturnType<typeof setTimeout> | undefined;
-
-  // If the guard wins the race, `finished` may still reject later with nobody
-  // listening; claim it here so that surfaces as a handled rejection.
-  void finished.catch(() => undefined);
 
   const guard = new Promise<never>((_resolve, reject) => {
     timer = setTimeout(() => {
@@ -230,6 +249,9 @@ export async function startArchiveDownload(
     request.onProgress?.(bytes);
   });
 
+  // A failed handoff or a lost guard race leaves nobody awaiting `finished`; handle it here.
+  void finished.catch(() => undefined);
+
   const handoff: ArchiveDownloadHandoff = {
     type: ARCHIVE_DOWNLOAD_MESSAGE,
     token,
@@ -240,7 +262,7 @@ export async function startArchiveDownload(
   let releaseFrame: (() => void) | undefined;
 
   try {
-    worker.postMessage(handoff, [stream as unknown as Transferable]);
+    await handOver(worker, handoff);
     releaseFrame = claimInHiddenFrame(token);
 
     return {

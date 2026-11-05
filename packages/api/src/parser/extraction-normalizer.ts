@@ -10,6 +10,7 @@ import { decode } from "html-entities";
 import type { RecipeExtractionOutput } from "@norish/api/parser/extraction.schema";
 import type { FullRecipeInsertDTO, RecipeCategory } from "@norish/shared/contracts/dto/recipe";
 import { normalizeRecipeFromJson } from "@norish/api/parser/normalize";
+import { headingOrName } from "@norish/api/parser/parsers/ingredients";
 import { matchCategory } from "@norish/shared-server/ai/enrichment/category-matcher";
 import { getUnits } from "@norish/shared-server/config/server-config-loader";
 import { aiLogger } from "@norish/shared-server/logger";
@@ -34,6 +35,11 @@ export interface NormalizeExtractionOptions {
    * Image candidates from HTML (for HTML-based imports).
    */
   imageCandidates?: string[];
+
+  /**
+   * VideoObjects to save, never the model's raw output: the caller checked them against the page.
+   */
+  videos?: unknown[];
 
   /**
    * Recipe ID (for image storage paths).
@@ -103,13 +109,14 @@ export async function normalizeExtractionOutput(
   output: RecipeExtractionOutput,
   options: NormalizeExtractionOptions
 ): Promise<FullRecipeInsertDTO | null> {
-  const { url, image, imageCandidates, recipeId } = options;
+  const { url, image, imageCandidates, videos, recipeId } = options;
 
   // Build metric version for base normalization
   // The AI schema doesn't include image - it comes from HTML/video metadata
   const metricVersion = {
     ...output,
     image: image ?? imageCandidates,
+    video: videos,
     recipeIngredient: output.recipeIngredient.metric,
     recipeInstructions: output.recipeInstructions.metric,
   };
@@ -141,6 +148,8 @@ export async function normalizeExtractionOutput(
     systemUsed: "us" as const,
   }));
 
+  // Both copies are written by the model; the recipe opens in the one the source used (#693).
+  normalized.systemUsed = output.sourceSystem;
   // Set URL if provided
   normalized.url = url ?? null;
   normalized.notes = typeof output.notes === "string" ? decode(output.notes) : null;
@@ -160,7 +169,7 @@ export async function normalizeExtractionOutput(
     ...metricIngredients,
     ...usIngredients.map((ing, i) => ({
       ingredientId: null,
-      ingredientName: ing.description,
+      ingredientName: headingOrName(ing),
       amount: ing.quantity != null ? ing.quantity : null,
       unit: ing.unitOfMeasureID,
       systemUsed: "us" as const,

@@ -134,7 +134,7 @@ describe("useRecipesMutations", () => {
       expect(result.current).toHaveProperty("importRecipeFromPasteWithAI");
       expect(result.current).toHaveProperty("createRecipe");
       expect(result.current).toHaveProperty("updateRecipe");
-      expect(result.current).toHaveProperty("deleteRecipe");
+      expect(result.current).toHaveProperty("deleteRecipes");
       expect(result.current).toHaveProperty("convertMeasurements");
 
       expect(typeof result.current.importRecipe).toBe("function");
@@ -142,7 +142,7 @@ describe("useRecipesMutations", () => {
       expect(typeof result.current.importRecipeFromPasteWithAI).toBe("function");
       expect(typeof result.current.createRecipe).toBe("function");
       expect(typeof result.current.updateRecipe).toBe("function");
-      expect(typeof result.current.deleteRecipe).toBe("function");
+      expect(typeof result.current.deleteRecipes).toBe("function");
       expect(typeof result.current.convertMeasurements).toBe("function");
     });
   });
@@ -163,7 +163,7 @@ describe("useRecipesMutations", () => {
       expect(result.current.importRecipeFromPasteWithAI.length).toBe(1); // Takes text
       expect(result.current.createRecipe.length).toBe(1); // Takes input
       expect(result.current.updateRecipe.length).toBe(2); // Takes id, input
-      expect(result.current.deleteRecipe.length).toBe(2); // Takes id, version
+      expect(result.current.deleteRecipes.length).toBe(1); // Takes the recipes
       expect(result.current.convertMeasurements.length).toBe(3); // Takes recipeId, system, version
     });
   });
@@ -692,8 +692,8 @@ describe("useRecipesMutations", () => {
     });
   });
 
-  describe("deleteRecipe", () => {
-    it("is a function that accepts a recipe id", async () => {
+  describe("deleteRecipes", () => {
+    it("is a function that accepts recipes", async () => {
       queryClient.setQueryData(["recipes", "list", {}], createMockInfiniteData());
       queryClient.setQueryData(["recipes", "pending"], []);
 
@@ -702,7 +702,7 @@ describe("useRecipesMutations", () => {
         wrapper: createTestWrapper(queryClient),
       });
 
-      expect(() => result.current.deleteRecipe).not.toThrow();
+      expect(() => result.current.deleteRecipes).not.toThrow();
     });
   });
 

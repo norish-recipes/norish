@@ -9,7 +9,8 @@
  * transport, with the AI timeout applied.
  */
 
-import { mkdtempSync, writeFileSync } from "node:fs";
+import { execFileSync } from "node:child_process";
+import { existsSync, mkdtempSync, writeFileSync } from "node:fs";
 import { createServer } from "node:http";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
@@ -51,6 +52,7 @@ vi.mock("@norish/shared-server/logger", () => {
 });
 
 const { transcribe } = await import("@norish/shared-server/ai/runtime/runtime");
+const { getFfmpegPath } = await import("@norish/shared-server/media/ffmpeg");
 const { createModelUseLedger, runWithModelUseLedger } =
   await import("@norish/shared-server/ai/runtime/model-use-ledger");
 const { AIConfigurationError, AIDisabledError, AIResponseError } =
@@ -71,14 +73,31 @@ let captured: CapturedRequest[] = [];
 let reply: unknown = { text: "local transcript" };
 /** When set, the server records the request but never answers it. */
 let holdResponses = false;
+/** When set, the server answers every request with this status. */
+let failStatus: number | null = null;
+/** When set, the server refuses any upload that is not WAV, as mlx-serve does (#690). */
+let wavOnly = false;
 
 let audioPath: string;
+/** A real, decodable MP3, for the uploads ffmpeg converts. */
+let realMp3Path: string;
 
 beforeAll(async () => {
   const dir = mkdtempSync(join(tmpdir(), "norish-transcription-"));
 
   audioPath = join(dir, "sample.mp3");
   writeFileSync(audioPath, Buffer.from("not real audio, providers upload bytes verbatim"));
+
+  realMp3Path = join(dir, "tone.mp3");
+  execFileSync(getFfmpegPath()!, [
+    "-v",
+    "error",
+    "-f",
+    "lavfi",
+    "-i",
+    "sine=duration=1",
+    realMp3Path,
+  ]);
 
   server = createServer((req: IncomingMessage, res) => {
     const chunks: Buffer[] = [];
@@ -94,6 +113,15 @@ beforeAll(async () => {
       });
 
       if (holdResponses) return;
+
+      const refusedAsMp3 = wavOnly && !Buffer.concat(chunks).includes("WAVE");
+
+      if (failStatus || refusedAsMp3) {
+        res.writeHead(failStatus ?? 400, { "content-type": "application/json" });
+        res.end(JSON.stringify({ error: { message: "`file` must be a WAV file" } }));
+
+        return;
+      }
 
       res.writeHead(200, { "content-type": "application/json" });
       res.end(JSON.stringify(reply));
@@ -126,6 +154,8 @@ beforeEach(() => {
   captured = [];
   reply = { text: "local transcript" };
   holdResponses = false;
+  failStatus = null;
+  wavOnly = false;
   mockGetAIConfig.mockResolvedValue(null);
 });
 
@@ -156,8 +186,55 @@ describe("transcription requests reach the provider correctly", () => {
     expect(body).toContain('name="model"');
     expect(body).toContain("faster-whisper");
     expect(body).toContain('name="file"');
+    // MP3 first: the extracted audio goes up untouched.
+    expect(body).toContain("not real audio, providers upload bytes verbatim");
     // No key configured means no Authorization header - not a placeholder one.
     expect(captured[0]!.authorization).toBeUndefined();
+  });
+
+  it("generic-openai sends a 16 kHz mono WAV when the endpoint refuses the MP3 (#690)", async () => {
+    wavOnly = true;
+    mockGetVideoConfig.mockResolvedValue(
+      videoConfig({
+        transcriptionProvider: "generic-openai",
+        transcriptionEndpoint: baseUrl,
+        transcriptionModel: "qwen3-asr",
+      })
+    );
+
+    const transcript = await transcribe(realMp3Path);
+
+    expect(transcript).toBe("local transcript");
+    expect(captured).toHaveLength(2);
+
+    const body = captured[1]!.body;
+    const wav = body.subarray(body.indexOf("RIFF"));
+
+    expect(wav.toString("latin1", 8, 12)).toBe("WAVE");
+    expect(wav.readUInt16LE(22)).toBe(1); // mono
+    expect(wav.readUInt32LE(24)).toBe(16_000); // 16 kHz
+    // The converted copy is removed once the endpoint has answered.
+    expect(existsSync(`${realMp3Path}.16k.wav`)).toBe(false);
+  });
+
+  it("generic-openai reports the MP3's refusal when the WAV is refused too", async () => {
+    failStatus = 400;
+    mockGetVideoConfig.mockResolvedValue(
+      videoConfig({ transcriptionProvider: "generic-openai", transcriptionEndpoint: baseUrl })
+    );
+
+    await expect(transcribe(realMp3Path)).rejects.toThrow("must be a WAV file");
+    expect(captured).toHaveLength(2);
+  });
+
+  it("generic-openai does not retry as WAV on a refusal that is not about the format", async () => {
+    failStatus = 401;
+    mockGetVideoConfig.mockResolvedValue(
+      videoConfig({ transcriptionProvider: "generic-openai", transcriptionEndpoint: baseUrl })
+    );
+
+    await expect(transcribe(realMp3Path)).rejects.toThrow();
+    expect(captured).toHaveLength(1);
   });
 
   it("records the transcription model on the job's ledger", async () => {

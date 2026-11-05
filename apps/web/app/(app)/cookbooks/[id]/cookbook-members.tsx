@@ -1,21 +1,55 @@
 "use client";
 
 import type { LibraryGridItem } from "@/lib/library-items";
+import type { ReactNode } from "react";
 import { useCallback, useMemo } from "react";
 import LibraryGrid from "@/components/dashboard/library-grid";
 import RecipeCard from "@/components/dashboard/recipe-card";
+import RecipeSelectionBar from "@/components/dashboard/recipe-selection-bar";
+import { RecipeSelectionProvider } from "@/context/recipe-selection-context";
 import { useRecipesContext } from "@/context/recipes-context";
 import { useRecipesFiltersContext } from "@/context/recipes-filters-context";
 import { useCookbookRecipesQuery, useCookbooksMutations } from "@/hooks/cookbooks";
 import { Card } from "@heroui/react";
 import { useTranslations } from "next-intl";
 
+import type { CookbookSummaryDTO } from "@norish/shared/contracts";
 import type { RecipeViewMode } from "@norish/shared/contracts/zod/device-preferences";
 import {
   hasAppliedRecipeFilters,
   serializeRecipeFilters,
   toRecipesQueryFilters,
 } from "@norish/shared-react/contexts";
+
+/** Selecting a cookbook's members, above its grid and list so switching view keeps it. */
+export function CookbookSelection({
+  cookbook,
+  children,
+}: {
+  cookbook: CookbookSummaryDTO;
+  children: ReactNode;
+}) {
+  const { filters, isHydrated } = useRecipesFiltersContext();
+  const { recipes, removeMember } = useCookbookRecipesQuery(
+    cookbook.id,
+    toRecipesQueryFilters(filters),
+    {
+      enabled: isHydrated,
+    }
+  );
+
+  return (
+    <RecipeSelectionProvider recipes={recipes}>
+      {children}
+      <RecipeSelectionBar
+        cookbook={cookbook}
+        onLeave={(recipeIds) => {
+          for (const recipeId of recipeIds) removeMember(recipeId);
+        }}
+      />
+    </RecipeSelectionProvider>
+  );
+}
 
 /**
  * A cookbook's members, through the same grid the Library uses.
@@ -33,7 +67,7 @@ export default function CookbookMembers({
 }) {
   const t = useTranslations("recipes.cookbooks");
   const { filters, isHydrated } = useRecipesFiltersContext();
-  const { isFavorite, toggleFavorite, deleteRecipe, allergies } = useRecipesContext();
+  const { isFavorite, toggleFavorite, deleteRecipes, allergies } = useRecipesContext();
   const { setMembership } = useCookbooksMutations();
 
   const queryFilters = useMemo(() => toRecipesQueryFilters(filters), [filters]);
@@ -55,7 +89,7 @@ export default function CookbookMembers({
   // row now rather than waiting for a refetch that Offline never comes.
   const removeFromCookbook = useCallback(
     (recipeId: string) => {
-      setMembership({ cookbookId, recipeId, isMember: false });
+      setMembership({ cookbookId, recipeIds: [recipeId], isMember: false });
       removeMember(recipeId);
     },
     [setMembership, cookbookId, removeMember]
@@ -71,13 +105,13 @@ export default function CookbookMembers({
           isFavorite={isFavorite(item.recipe.id)}
           recipe={item.recipe}
           variant={variant}
-          onDelete={deleteRecipe}
+          onDelete={deleteRecipes}
           onRemoveFromCookbook={removeFromCookbook}
           onToggleFavorite={toggleFavorite}
         />
       );
     },
-    [allergies, isFavorite, deleteRecipe, toggleFavorite, variant, removeFromCookbook]
+    [allergies, isFavorite, deleteRecipes, toggleFavorite, variant, removeFromCookbook]
   );
 
   // The contract's own predicate, so "no matches" here means what it means on

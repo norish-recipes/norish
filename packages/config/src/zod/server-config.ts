@@ -533,10 +533,13 @@ export function transcriptionProviderSupportsModelListing(
  */
 export const DEFAULT_YT_DLP_VERSION = "2026.10.26";
 
+/** Bytes. A default, so the boot backfill can fill a block saved before the field existed. */
+export const DEFAULT_MAX_VIDEO_FILE_SIZE = 100 * 1024 * 1024;
+
 export const VideoConfigSchema = z.object({
   enabled: z.boolean(),
   maxLengthSeconds: z.number().int().positive(),
-  maxVideoFileSize: z.number().int().positive(), // Max video file size in bytes
+  maxVideoFileSize: z.number().int().positive().default(DEFAULT_MAX_VIDEO_FILE_SIZE),
   ytDlpProxy: z.string().optional(),
   // Transcription settings (required for video processing)
   transcriptionProvider: TranscriptionProviderSchema,

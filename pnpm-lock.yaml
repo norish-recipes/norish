@@ -495,9 +495,6 @@ importers:
       '@heroui/styles':
         specifier: 'catalog:'
         version: 3.2.6(tailwind-merge@3.7.0)(tailwindcss@4.3.3)
-      '@iconify/react':
-        specifier: ^6.0.3
-        version: 6.0.3(react@19.3.1)
       '@internationalized/date':
         specifier: ^3.12.4
         version: 3.12.4
@@ -727,9 +724,6 @@ importers:
       eslint:
         specifier: 'catalog:'
         version: 10.13.0(jiti@2.7.0)(supports-color@10.2.2)
-      ffmpeg-static:
-        specifier: ^5.3.0
-        version: 5.3.0(supports-color@10.2.2)
       heic-convert:
         specifier: ^2.1.0
         version: 2.1.0
@@ -1332,6 +1326,9 @@ importers:
       eslint:
         specifier: 'catalog:'
         version: 10.13.0(jiti@2.7.0)(supports-color@10.2.2)
+      ffmpeg-static:
+        specifier: ^5.3.0
+        version: 5.3.0(supports-color@10.2.2)
       prettier:
         specifier: 'catalog:'
         version: 3.9.10
@@ -2738,14 +2735,6 @@ packages:
         optional: true
       prettier-plugin-ember-template-tag:
         optional: true
-
-  '@iconify/react@6.0.3':
-    resolution: {integrity: sha512-2x7gVs+tpUG75aXYo/0c5wPOqrFy75YSGKmuJZyuHyrHMydzXpI/+i9/USIzWXJL9WWc2BCgPVnGY2FhbeiiDQ==}
-    peerDependencies:
-      react: '>=18.0.0'
-
-  '@iconify/types@2.0.0':
-    resolution: {integrity: sha512-+wluvCrRhXrhyOmRDJ3q8mux9JkKy5SJ/v8ol2tu4FVjyYvtEzkc/3pK15ET6RKg4b4w4BmTk1+gsCUhf21Ykg==}
 
   '@img/colour@1.1.0':
     resolution: {integrity: sha512-Td76q7j57o/tLVdgS746cYARfSyxk8iEfRxewL9h4OMzYhbW4TAcppl0mT4eyqXddh6L/jwoM75mo7ixa/pCeQ==}
@@ -8274,13 +8263,6 @@ snapshots:
       semver: 7.8.5
     transitivePeerDependencies:
       - supports-color
-
-  '@iconify/react@6.0.3(react@19.3.1)':
-    dependencies:
-      '@iconify/types': 2.0.0
-      react: 19.3.1
-
-  '@iconify/types@2.0.0': {}
 
   '@img/colour@1.1.0': {}
 

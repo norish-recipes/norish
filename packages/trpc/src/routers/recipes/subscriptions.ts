@@ -9,6 +9,7 @@ export const recipesSubscriptions = router({
   onImported: realtimeSubscription(recipes, "imported"),
   onUpdated: realtimeSubscription(recipes, "updated"),
   onDeleted: realtimeSubscription(recipes, "deleted"),
+  onDeleteKept: realtimeSubscription(recipes, "deleteKept"),
   onConverted: realtimeSubscription(recipes, "converted"),
   onFailed: realtimeSubscription(recipes, "failed"),
   onShareEvent: realtimeSubscription(recipes, "shareEvent"),

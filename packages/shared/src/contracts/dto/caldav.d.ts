@@ -22,6 +22,8 @@ export interface CalDavClientOptions {
   calendarUrl?: string;
   username: string;
   password: string;
+  /** PEM the connection trusts besides the usual certificate authorities. */
+  trustedCertificate?: string;
 }
 
 export interface CalDavCalendarInfo {
@@ -36,4 +38,14 @@ export interface ConnectionTestResult {
   message: string;
   /** Available calendars (only returned on successful connection) */
   calendars?: CalDavCalendarInfo[];
+  /** The server's certificate, when the test failed only because nothing vouches for it. */
+  untrustedCertificate?: UntrustedCertificate;
+}
+
+export interface UntrustedCertificate {
+  pem: string;
+  /** Who the certificate names, e.g. "nextcloud.internal" or "Home CA". */
+  name: string;
+  /** SHA-256, colon-separated hex. */
+  fingerprint: string;
 }

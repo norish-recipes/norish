@@ -7,7 +7,8 @@ name: Publish browser images
 # release is published as `<version>-norish.1` too, so a pin bump finds it built.
 on:
   schedule:
-    - cron: "41 5 * * *"
+    # Around midnight in the Netherlands. GitHub starts schedules late under load, lately by about 8 hours.
+    - cron: "37 23 * * *"
   workflow_dispatch:
     inputs:
       browser:

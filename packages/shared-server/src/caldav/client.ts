@@ -12,6 +12,7 @@ import type {
 import { createLogger } from "@norish/shared-server/logger";
 
 import { buildIcs } from "./ics-helpers";
+import { fetchTrusting, isUntrustedChain, readServerCertificate } from "./trusted-certificate";
 
 export type { CreateEventInput, CreatedEvent, CalDavClientOptions, ConnectionTestResult };
 
@@ -52,6 +53,7 @@ export class CalDavClient {
       },
       authMethod: "Basic",
       defaultAccountType: "caldav",
+      fetch: opts.trustedCertificate ? fetchTrusting(opts.trustedCertificate) : undefined,
     });
   }
 
@@ -146,9 +148,20 @@ export class CalDavClient {
     } catch (error) {
       log.error({ err: error }, "CalDAV connection test failed");
 
+      const untrustedCertificate = isUntrustedChain(error)
+        ? await readServerCertificate(this.serverUrl)
+        : null;
+
       return {
+        ...(untrustedCertificate && { untrustedCertificate }),
         success: false,
-        message: error instanceof Error ? error.message : "Connection failed",
+        // fetch's own message is only "fetch failed"; the cause says why (#703).
+        message:
+          error instanceof Error
+            ? [error.message, error.cause instanceof Error && error.cause.message]
+                .filter(Boolean)
+                .join(": ")
+            : "Connection failed",
       };
     }
   }
@@ -279,12 +292,10 @@ export class CalDavClient {
  * Test CalDAV connection without saving config
  */
 export async function testCalDavConnection(
-  serverUrl: string,
-  username: string,
-  password: string
+  options: CalDavClientOptions
 ): Promise<ConnectionTestResult> {
   try {
-    const client = new CalDavClient({ serverUrl, username, password });
+    const client = new CalDavClient(options);
 
     return client.testConnection();
   } catch (error) {
@@ -293,17 +304,4 @@ export async function testCalDavConnection(
       message: error instanceof Error ? error.message : "Invalid configuration",
     };
   }
-}
-
-/**
- * Fetch available calendars from a CalDAV server
- */
-export async function fetchCalDavCalendars(
-  serverUrl: string,
-  username: string,
-  password: string
-): Promise<CalDavCalendarInfo[]> {
-  const client = new CalDavClient({ serverUrl, username, password });
-
-  return client.fetchCalendars();
 }

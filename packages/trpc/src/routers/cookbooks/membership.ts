@@ -2,11 +2,11 @@ import { z } from "zod";
 
 import type { FilterMode, SortOrder } from "@norish/shared/contracts";
 import {
-  addRecipeToCookbook,
+  addRecipesToCookbook,
   listCookbookMemberIds,
   listCookbooksForRecipe,
   listEditableCookbooks,
-  removeRecipeFromCookbook,
+  removeRecipesFromCookbook,
 } from "@norish/db/repositories/cookbooks";
 import { listRecipes } from "@norish/db/repositories/recipes";
 import { trpcLogger as log } from "@norish/shared-server/logger";
@@ -21,11 +21,11 @@ import {
 
 import { authedProcedure, viewerOf } from "../../middleware";
 import { router } from "../../trpc";
-import { assertRecipeAccess } from "../recipes/helpers";
+import { assertRecipeAccess, recipeAccess } from "../recipes/helpers";
 import { assertCookbookAccess, emitCookbookEvent } from "./helpers";
 
 /**
- * File a recipe into a cookbook, or take it out again.
+ * File recipes into a cookbook, or take them out again, in one call.
  *
  * The rule is view on the recipe and edit on the cookbook, and it looks like
  * a permission bug until you know it was chosen: membership is a fact about
@@ -40,33 +40,40 @@ import { assertCookbookAccess, emitCookbookEvent } from "./helpers";
 const setMembership = authedProcedure
   .input(CookbookMembershipInputSchema)
   .mutation(async ({ ctx, input }) => {
-    await assertRecipeAccess(ctx, input.recipeId, "view");
+    const access = await recipeAccess(ctx, input.recipeIds, "view");
+
     await assertCookbookAccess(ctx, input.cookbookId, "edit");
+
+    // A recipe gone or unseen by the time a queued call replays is left out,
+    // so the rest still land.
+    const recipeIds = input.recipeIds.filter((recipeId) => access.get(recipeId) === true);
 
     if (input.isMember) {
       // Idempotent by the unique pair, so a double tap changes nothing.
-      await addRecipeToCookbook(input.cookbookId, input.recipeId);
+      await addRecipesToCookbook(input.cookbookId, recipeIds);
     } else {
-      await removeRecipeFromCookbook(input.cookbookId, input.recipeId);
+      await removeRecipesFromCookbook(input.cookbookId, recipeIds);
     }
 
     log.info(
       {
         userId: ctx.user.id,
         cookbookId: input.cookbookId,
-        recipeId: input.recipeId,
+        count: recipeIds.length,
         isMember: input.isMember,
       },
-      input.isMember ? "Recipe filed into cookbook" : "Recipe removed from cookbook"
+      input.isMember ? "Recipes filed into cookbook" : "Recipes removed from cookbook"
     );
 
-    await emitCookbookEvent(ctx, "membershipChanged", {
-      cookbookId: input.cookbookId,
-      recipeId: input.recipeId,
-      isMember: input.isMember,
-    });
+    if (recipeIds.length > 0) {
+      await emitCookbookEvent(ctx, "membershipChanged", {
+        cookbookId: input.cookbookId,
+        recipeIds,
+        isMember: input.isMember,
+      });
+    }
 
-    return { ...input };
+    return { cookbookId: input.cookbookId, recipeIds, isMember: input.isMember };
   });
 
 /** The cookbooks a recipe is in, as its own page lists them. */

@@ -14,16 +14,19 @@ export function useConnectionTest(setCalendarUrl: (url: string) => void) {
   const { testConnection, isTestingConnection } = useCalDavSettingsContext();
   const [calendars, setCalendars] = useState<CalDavCalendarInfo[]>([]);
   const [testResult, setTestResult] = useState<ConnectionTestResult | null>(null);
+  // A certificate the user trusted for this server; saved with the config.
+  const [trustedCertificate, setTrustedCertificate] = useState<string | null>(null);
 
   const runTest = async (
     serverUrl: string,
     username: string,
     password: string,
-    calendarUrl: string | null
+    calendarUrl: string | null,
+    certificate = trustedCertificate
   ) => {
     setTestResult(null);
     setCalendars([]);
-    const result = await testConnection(serverUrl, username, password);
+    const result = await testConnection(serverUrl, username, password, certificate);
 
     setTestResult(result);
     const found = result.success ? (result.calendars ?? []) : [];
@@ -34,8 +37,26 @@ export function useConnectionTest(setCalendarUrl: (url: string) => void) {
     if (!found.some((calendar) => calendar.url === calendarUrl)) setCalendarUrl(first.url);
   };
 
+  /** Trust the certificate the last test was refused over and test again with it. */
+  const trustAndRetest = (
+    serverUrl: string,
+    username: string,
+    password: string,
+    calendarUrl: string | null
+  ) => {
+    const pem = testResult?.untrustedCertificate?.pem;
+
+    if (!pem) return;
+    setTrustedCertificate(pem);
+
+    return runTest(serverUrl, username, password, calendarUrl, pem);
+  };
+
   return {
     calendars,
+    trustedCertificate,
+    setTrustedCertificate,
+    trustAndRetest,
     setCalendars,
     testResult,
     setTestResult,

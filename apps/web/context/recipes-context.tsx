@@ -39,7 +39,7 @@ type Ctx = {
   importRecipeWithAI: (url: string) => void;
   createRecipe: (input: FullRecipeInsertDTO) => void;
   updateRecipe: (id: string, input: FullRecipeUpdateDTO) => void;
-  deleteRecipe: (id: string, version: number) => void;
+  deleteRecipes: (recipes: Array<{ id: string; version: number }>) => void;
   invalidate: () => void;
   openRecipe: (id: string) => void;
 };
@@ -75,8 +75,10 @@ const sharedRecipesContext = createRecipesContext({
         toast(title, { description, variant: severity });
       },
       translate: createScopedMessageTranslator({
-        common: (messageKey) => tCommon(messageKey as Parameters<typeof tCommon>[0]),
-        recipes: (messageKey) => tRecipes(messageKey as Parameters<typeof tRecipes>[0]),
+        common: (messageKey, values) =>
+          tCommon(messageKey as Parameters<typeof tCommon>[0], values),
+        recipes: (messageKey, values) =>
+          tRecipes(messageKey as Parameters<typeof tRecipes>[0], values),
       }),
     };
   },

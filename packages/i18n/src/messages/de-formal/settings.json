@@ -185,6 +185,14 @@
           "theme": "Normale Themenfarben"
         }
       },
+      "unitStyle": {
+        "title": "Einheiten",
+        "description": "Einheiten ausschreiben oder abkürzen, z. B. g und EL",
+        "options": {
+          "written": "Ausgeschrieben",
+          "abbreviated": "Abgekürzt"
+        }
+      },
       "applyError": "Einstellung konnte nicht angewendet werden",
       "afterPlanning": {
         "title": "Nach dem Planen eines Rezepts",
@@ -327,7 +335,13 @@
       "breakfastTime": "Frühstückszeit",
       "lunchTime": "Mittagessenszeit",
       "dinnerTime": "Abendessenszeit",
-      "snackTime": "Snack-Zeit"
+      "snackTime": "Snack-Zeit",
+      "untrustedCertificate": {
+        "title": "Nicht vertrauenswürdiges Zertifikat",
+        "description": "Keine öffentliche Zertifizierungsstelle bürgt für {name}. Vertrauen Sie ihm nur, wenn dies Ihr eigener Server ist.",
+        "fingerprint": "SHA-256-Fingerabdruck",
+        "trust": "Vertrauen"
+      }
     },
     "config": {
       "title": "CalDAV-Konfiguration",

@@ -9,6 +9,7 @@
     "manageStores": "Hantera butiker",
     "storeViewOptions": "Alternativ för butiksvy",
     "groupIngredients": "Gruppera ingredienser",
+    "clearList": "Töm listan",
     "pantry": "Skafferi",
     "list": "Lista",
     "views": "Vyer för inköpslistan"
@@ -26,8 +27,10 @@
   "store": {
     "unsorted": "Osorterat",
     "storeActions": "Butiksåtgärder",
+    "recipeActions": "Receptåtgärder",
     "markAllDone": "Markera allt som klart",
     "deleteDone": "Ta bort klara varor",
+    "clearAll": "Töm alla",
     "done": "{count} klara",
     "allDone": "Allt klart",
     "total": "Kvar att köpa"
@@ -177,6 +180,13 @@
     "invalidPrice": "Ange ett pris, till exempel 2,49",
     "invalidCurrency": "En valuta anges med tre bokstäver, till exempel SEK",
     "openPage": "Öppna hos {store}"
+  },
+  "clearConfirm": {
+    "listTitle": "Töm listan?",
+    "listDescription": "Detta tar bort {count, plural, one {# vara} other {# varor}} från din inköpslista. Det går inte att ångra.",
+    "sectionTitle": "Töm {name}?",
+    "sectionDescription": "Detta tar bort {count, plural, one {# vara} other {# varor}} från {name}. Det går inte att ångra.",
+    "confirm": "Töm"
   },
   "price": {
     "pending": "Hämtar priset",

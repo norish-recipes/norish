@@ -185,6 +185,14 @@
           "theme": "Couleurs du thème"
         }
       },
+      "unitStyle": {
+        "title": "Unités",
+        "description": "Écrire les unités en toutes lettres ou en abrégé, comme g et càs",
+        "options": {
+          "written": "En toutes lettres",
+          "abbreviated": "Abrégées"
+        }
+      },
       "applyError": "Échec de l'application du paramètre",
       "afterPlanning": {
         "title": "Après avoir planifié une recette",
@@ -327,7 +335,13 @@
       "breakfastTime": "Heure du petit-déjeuner",
       "lunchTime": "Heure du déjeuner",
       "dinnerTime": "Heure du dîner",
-      "snackTime": "Heure de la collation"
+      "snackTime": "Heure de la collation",
+      "untrustedCertificate": {
+        "title": "Certificat non approuvé",
+        "description": "Aucune autorité de certification publique ne garantit {name}. Ne lui faites confiance que s'il s'agit de votre propre serveur.",
+        "fingerprint": "Empreinte SHA-256",
+        "trust": "Approuver"
+      }
     },
     "config": {
       "title": "Configuration CalDAV",

@@ -5,6 +5,7 @@ import { z } from "zod";
 
 import {
   DEFAULT_AI_TIMEOUT_MS,
+  DEFAULT_MAX_VIDEO_FILE_SIZE,
   DEFAULT_YT_DLP_VERSION,
   TranscriptionProviderSchema,
 } from "./zod/server-config";
@@ -235,7 +236,7 @@ const ServerConfigFields = z.object({
   // File Size Limits (in bytes)
   MAX_AVATAR_FILE_SIZE: z.coerce.number().default(5 * 1024 * 1024), // 5MB
   MAX_IMAGE_FILE_SIZE: z.coerce.number().default(10 * 1024 * 1024), // 10MB
-  MAX_VIDEO_FILE_SIZE: z.coerce.number().default(100 * 1024 * 1024), // 100MB
+  MAX_VIDEO_FILE_SIZE: z.coerce.number().default(DEFAULT_MAX_VIDEO_FILE_SIZE),
 
   // valkey:// or redis:// (valkeys:// or rediss:// for TLS). Required at runtime, like DATABASE_URL
   VALKEY_URL: isBuild ? z.url().default("valkey://localhost:6379") : z.url(),

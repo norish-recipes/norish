@@ -164,7 +164,9 @@
   "deleteModal": {
     "title": "حذف الوصفة",
     "confirmMessage": "هل أنت متأكد من حذف \"{recipeName}\"؟",
-    "warning": "لا يمكن التراجع عن هذا الإجراء."
+    "warning": "لا يمكن التراجع عن هذا الإجراء.",
+    "confirmCount": "حذف {count, plural, one {وصفة واحدة} two {وصفتين} few {# وصفات} many {# وصفة} other {# وصفة}}؟",
+    "keptCount": "ستبقى {count, plural, one {وصفة واحدة} two {وصفتان} few {# وصفات} many {# وصفة} other {# وصفة}} لأنه لا يُسمح لك بحذفها."
   },
   "form": {
     "createTitle": "إنشاء وصفة",
@@ -327,7 +329,8 @@
     "batchImported": "تم استيراد الوصفات",
     "batchImportedDescription": "تم استيراد {count} وصفات من الأرشيف",
     "view": "عرض",
-    "open": "فتح"
+    "open": "فتح",
+    "deleteKept": "عدّل شخص آخر {count, plural, one {وصفة واحدة} two {وصفتين} few {# وصفات} many {# وصفة} other {# وصفة}} فتم الاحتفاظ بها."
   },
   "tags": {
     "panel": {
@@ -436,5 +439,15 @@
     "print": "طباعة / حفظ PDF",
     "continued": "تتمة",
     "perServing": "لكل حصة"
+  },
+  "selection": {
+    "toolbar": "الوصفات المحددة",
+    "count": "تم تحديد {count}",
+    "clear": "مسح التحديد",
+    "addToCookbook": "إضافة إلى كتاب الطبخ",
+    "remove": "إزالة",
+    "newCookbook": "كتاب طبخ جديد",
+    "filedInto": "تمت إضافة {count, plural, one {وصفة واحدة} two {وصفتين} few {# وصفات} many {# وصفة} other {# وصفة}} إلى {title}",
+    "filedIntoMany": "تمت إضافة {count, plural, one {وصفة واحدة} two {وصفتين} few {# وصفات} many {# وصفة} other {# وصفة}} إلى {cookbooks} كتب طبخ"
   }
 }

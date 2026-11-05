@@ -1,0 +1,1 @@
+ALTER TABLE "user_caldav_config" ADD COLUMN "trusted_certificate_enc" text;

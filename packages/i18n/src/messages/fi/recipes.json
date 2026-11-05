@@ -164,7 +164,9 @@
   "deleteModal": {
     "title": "Poista resepti",
     "confirmMessage": "Haluatko varmasti poistaa reseptin \"{recipeName}\"?",
-    "warning": "Tätä toimintoa ei voi kumota."
+    "warning": "Tätä toimintoa ei voi kumota.",
+    "confirmCount": "Poistetaanko {count, plural, one {# resepti} other {# reseptiä}}?",
+    "keptCount": "{count, plural, one {# resepti jää} other {# reseptiä jää}}, koska sinulla ei ole oikeutta poistaa {count, plural, one {sitä} other {niitä}}."
   },
   "form": {
     "createTitle": "Luo resepti",
@@ -327,7 +329,8 @@
     "batchImported": "Reseptit tuotu",
     "batchImportedDescription": "{count} reseptiä tuotu arkistosta",
     "view": "Näytä",
-    "open": "Avaa"
+    "open": "Avaa",
+    "deleteKept": "{count, plural, one {Joku muu muutti # reseptiä, ja se säilytettiin} other {Joku muu muutti # reseptiä, ja ne säilytettiin}}."
   },
   "tags": {
     "panel": {
@@ -436,5 +439,15 @@
     "print": "Tulosta / Tallenna PDF",
     "continued": "jatkuu",
     "perServing": "Annosta kohden"
+  },
+  "selection": {
+    "toolbar": "Valitut reseptit",
+    "count": "{count} valittu",
+    "clear": "Tyhjennä valinta",
+    "addToCookbook": "Lisää keittokirjaan",
+    "remove": "Poista",
+    "newCookbook": "Uusi keittokirja",
+    "filedInto": "{count, plural, one {# resepti lisätty} other {# reseptiä lisätty}} kohteeseen {title}",
+    "filedIntoMany": "{count, plural, one {# resepti lisätty} other {# reseptiä lisätty}} {cookbooks} keittokirjaan"
   }
 }

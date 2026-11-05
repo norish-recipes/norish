@@ -29,7 +29,8 @@ export default function DoubleTapContainer({
 
   const handleClick = useCallback(
     (e: React.MouseEvent) => {
-      if (disabled) return;
+      // A modified click belongs to the browser: it opens the link around this in a new tab.
+      if (disabled || e.metaKey || e.ctrlKey || e.shiftKey || e.altKey) return;
 
       if (!doubleTapEnabled) {
         onSingleTap?.();

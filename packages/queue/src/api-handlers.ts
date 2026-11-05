@@ -42,10 +42,10 @@ export interface QueueApiHandlers {
   parseCategories(recipeCategory: unknown): RecipeCategory[];
   parseTags(keywords: unknown): { name: string }[];
   extractRecipeWithAI(
-    html: string,
+    source: string,
     recipeId: string,
     url?: string,
-    originalHtml?: string
+    jsonLd?: Record<string, unknown>[]
   ): Promise<FullRecipeInsertDTO>;
   parseRecipeFromUrl(
     url: string,

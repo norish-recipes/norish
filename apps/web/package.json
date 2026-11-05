@@ -1,6 +1,6 @@
 {
   "name": "@norish/web",
-  "version": "0.26.0-beta",
+  "version": "0.26.1-beta",
   "private": true,
   "type": "module",
   "scripts": {
@@ -56,7 +56,6 @@
     "@heroicons/react": "catalog:",
     "@heroui/react": "catalog:",
     "@heroui/styles": "catalog:",
-    "@iconify/react": "^6.0.3",
     "@internationalized/date": "^3.12.4",
     "@norish/eslint-config": "workspace:*",
     "@norish/prettier-config": "workspace:*",

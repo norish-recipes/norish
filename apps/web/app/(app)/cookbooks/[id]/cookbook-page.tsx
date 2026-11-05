@@ -34,7 +34,7 @@ import {
   cssHeaderIconControl,
 } from "@norish/web/config/css-tokens";
 
-import CookbookMembers from "./cookbook-members";
+import CookbookMembers, { CookbookSelection } from "./cookbook-members";
 
 const COOKBOOK_HEADING_ID = "cookbook-heading";
 
@@ -157,108 +157,116 @@ export default function CookbookPage({ cookbookId }: { cookbookId: string }) {
 
   return (
     <section aria-labelledby={COOKBOOK_HEADING_ID} className="flex min-h-0 flex-1 flex-col">
-      <RecipeViewModeTabs>
-        <CookbookHeader
-          actions={
-            (canEdit || canDelete) && (
-              <Dropdown isOpen={menuOpen} onOpenChange={setMenuOpen}>
-                <Button
-                  isIconOnly
-                  aria-label={t("options")}
-                  className={`transition active:scale-95 ${cssHeaderIconControl}`}
-                  size="md"
-                  variant="tertiary"
-                >
-                  <EllipsisHorizontalIcon className={cssHeaderIcon} />
-                </Button>
-                <Dropdown.Popover className="bg-overlay z-[500]" placement="bottom end">
-                  <Dropdown.Menu aria-label={t("options")}>
-                    {canEdit ? (
-                      <Dropdown.Item
-                        key="add"
-                        className="py-1 data-[focus=true]:bg-transparent data-[hovered=true]:bg-transparent"
-                        id="add"
-                        textValue={t("addRecipes")}
-                      >
-                        <Button
-                          className={twMerge("w-full justify-start bg-transparent", cssButtonPill)}
-                          size="md"
-                          variant="tertiary"
-                          onPress={() => {
-                            setMenuOpen(false);
-                            setAddOpen(true);
-                          }}
+      <CookbookSelection cookbook={cookbook}>
+        <RecipeViewModeTabs>
+          <CookbookHeader
+            actions={
+              (canEdit || canDelete) && (
+                <Dropdown isOpen={menuOpen} onOpenChange={setMenuOpen}>
+                  <Button
+                    isIconOnly
+                    aria-label={t("options")}
+                    className={`transition active:scale-95 ${cssHeaderIconControl}`}
+                    size="md"
+                    variant="tertiary"
+                  >
+                    <EllipsisHorizontalIcon className={cssHeaderIcon} />
+                  </Button>
+                  <Dropdown.Popover className="bg-overlay z-[500]" placement="bottom end">
+                    <Dropdown.Menu aria-label={t("options")}>
+                      {canEdit ? (
+                        <Dropdown.Item
+                          key="add"
+                          className="py-1 data-[focus=true]:bg-transparent data-[hovered=true]:bg-transparent"
+                          id="add"
+                          textValue={t("addRecipes")}
                         >
-                          <PlusIcon className="text-muted size-4" />
-                          <Label className="text-sm font-medium">{t("addRecipes")}</Label>
-                        </Button>
-                      </Dropdown.Item>
-                    ) : null}
-                    {canEdit ? (
-                      <Dropdown.Item
-                        key="edit"
-                        className="py-1 data-[focus=true]:bg-transparent data-[hovered=true]:bg-transparent"
-                        id="edit"
-                        textValue={t("editTitle")}
-                      >
-                        <Button
-                          className={twMerge("w-full justify-start bg-transparent", cssButtonPill)}
-                          size="md"
-                          variant="tertiary"
-                          // The menu closes before the action runs, so its
-                          // items cannot rebuild mid-exit and steal focus
-                          // from the panel the action opens.
-                          onPress={() => {
-                            setMenuOpen(false);
-                            setEditOpen(true);
-                          }}
+                          <Button
+                            className={twMerge(
+                              "w-full justify-start bg-transparent",
+                              cssButtonPill
+                            )}
+                            size="md"
+                            variant="tertiary"
+                            onPress={() => {
+                              setMenuOpen(false);
+                              setAddOpen(true);
+                            }}
+                          >
+                            <PlusIcon className="text-muted size-4" />
+                            <Label className="text-sm font-medium">{t("addRecipes")}</Label>
+                          </Button>
+                        </Dropdown.Item>
+                      ) : null}
+                      {canEdit ? (
+                        <Dropdown.Item
+                          key="edit"
+                          className="py-1 data-[focus=true]:bg-transparent data-[hovered=true]:bg-transparent"
+                          id="edit"
+                          textValue={t("editTitle")}
                         >
-                          <PencilSquareIcon className="text-muted size-4" />
-                          <Label className="text-sm font-medium">{t("editTitle")}</Label>
-                        </Button>
-                      </Dropdown.Item>
-                    ) : null}
-                    {canDelete ? (
-                      <Dropdown.Item
-                        key="delete"
-                        className="py-1 data-[focus=true]:bg-transparent data-[hovered=true]:bg-transparent"
-                        id="delete"
-                        textValue={t("deleteTitle")}
-                      >
-                        <Button
-                          className={twMerge(
-                            "w-full justify-start bg-transparent",
-                            cssButtonPillDanger
-                          )}
-                          size="md"
-                          variant="tertiary"
-                          onPress={() => {
-                            setMenuOpen(false);
-                            setDeleteOpen(true);
-                          }}
+                          <Button
+                            className={twMerge(
+                              "w-full justify-start bg-transparent",
+                              cssButtonPill
+                            )}
+                            size="md"
+                            variant="tertiary"
+                            // The menu closes before the action runs, so its
+                            // items cannot rebuild mid-exit and steal focus
+                            // from the panel the action opens.
+                            onPress={() => {
+                              setMenuOpen(false);
+                              setEditOpen(true);
+                            }}
+                          >
+                            <PencilSquareIcon className="text-muted size-4" />
+                            <Label className="text-sm font-medium">{t("editTitle")}</Label>
+                          </Button>
+                        </Dropdown.Item>
+                      ) : null}
+                      {canDelete ? (
+                        <Dropdown.Item
+                          key="delete"
+                          className="py-1 data-[focus=true]:bg-transparent data-[hovered=true]:bg-transparent"
+                          id="delete"
+                          textValue={t("deleteTitle")}
                         >
-                          <TrashIcon className="text-danger size-4" />
-                          <Label className="text-danger text-sm font-medium">
-                            {t("deleteTitle")}
-                          </Label>
-                        </Button>
-                      </Dropdown.Item>
-                    ) : null}
-                  </Dropdown.Menu>
-                </Dropdown.Popover>
-              </Dropdown>
-            )
-          }
-          cookbook={cookbook}
-        />
+                          <Button
+                            className={twMerge(
+                              "w-full justify-start bg-transparent",
+                              cssButtonPillDanger
+                            )}
+                            size="md"
+                            variant="tertiary"
+                            onPress={() => {
+                              setMenuOpen(false);
+                              setDeleteOpen(true);
+                            }}
+                          >
+                            <TrashIcon className="text-danger size-4" />
+                            <Label className="text-danger text-sm font-medium">
+                              {t("deleteTitle")}
+                            </Label>
+                          </Button>
+                        </Dropdown.Item>
+                      ) : null}
+                    </Dropdown.Menu>
+                  </Dropdown.Popover>
+                </Dropdown>
+              )
+            }
+            cookbook={cookbook}
+          />
 
-        <Tabs.Panel className="mt-0 min-h-0 flex-1 p-0" id="grid">
-          <CookbookMembers cookbookId={cookbookId} variant="grid" />
-        </Tabs.Panel>
-        <Tabs.Panel className="mt-0 min-h-0 flex-1 p-0" id="list">
-          <CookbookMembers cookbookId={cookbookId} variant="list" />
-        </Tabs.Panel>
-      </RecipeViewModeTabs>
+          <Tabs.Panel className="mt-0 min-h-0 flex-1 p-0" id="grid">
+            <CookbookMembers cookbookId={cookbookId} variant="grid" />
+          </Tabs.Panel>
+          <Tabs.Panel className="mt-0 min-h-0 flex-1 p-0" id="list">
+            <CookbookMembers cookbookId={cookbookId} variant="list" />
+          </Tabs.Panel>
+        </RecipeViewModeTabs>
+      </CookbookSelection>
 
       <CookbookEditPanel cookbook={cookbook} open={editOpen} onOpenChange={setEditOpen} />
 

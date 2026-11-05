@@ -164,7 +164,9 @@
   "deleteModal": {
     "title": "Rezept löschen",
     "confirmMessage": "Sind Sie sicher, dass Sie \"{recipeName}\" löschen möchten?",
-    "warning": "Diese Aktion kann nicht rückgängig gemacht werden."
+    "warning": "Diese Aktion kann nicht rückgängig gemacht werden.",
+    "confirmCount": "{count, plural, one {# Rezept} other {# Rezepte}} löschen?",
+    "keptCount": "{count, plural, one {# Rezept bleibt} other {# Rezepte bleiben}}, weil Sie {count, plural, one {es} other {sie}} nicht löschen dürfen."
   },
   "form": {
     "createTitle": "Rezept erstellen",
@@ -327,7 +329,8 @@
     "batchImported": "Rezepte importiert",
     "batchImportedDescription": "{count} Rezepte aus Archiv importiert",
     "view": "Anzeigen",
-    "open": "Öffnen"
+    "open": "Öffnen",
+    "deleteKept": "{count, plural, one {# Rezept wurde} other {# Rezepte wurden}} von jemand anderem geändert und behalten."
   },
   "tags": {
     "panel": {
@@ -436,5 +439,15 @@
     "print": "Drucken / Als PDF speichern",
     "continued": "Fortsetzung",
     "perServing": "Pro Portion"
+  },
+  "selection": {
+    "toolbar": "Ausgewählte Rezepte",
+    "count": "{count} ausgewählt",
+    "clear": "Auswahl aufheben",
+    "addToCookbook": "Zum Kochbuch hinzufügen",
+    "remove": "Entfernen",
+    "newCookbook": "Neues Kochbuch",
+    "filedInto": "{count, plural, one {# Rezept} other {# Rezepte}} zu {title} hinzugefügt",
+    "filedIntoMany": "{count, plural, one {# Rezept} other {# Rezepte}} zu {cookbooks} Kochbüchern hinzugefügt"
   }
 }

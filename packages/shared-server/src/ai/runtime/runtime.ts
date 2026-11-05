@@ -32,6 +32,7 @@ import {
   Output,
   transcribe as transcribeWithModel,
 } from "ai";
+import { APIError } from "openai";
 
 import type {
   AIConfig,
@@ -90,6 +91,7 @@ import {
   requestOllamaTranscription,
 } from "./providers";
 import { SYSTEM_MESSAGES as SYSTEM_MESSAGE_TEXTS } from "./system-messages";
+import { withWavCopy } from "./wav-copy";
 
 // ============================================================================
 // System messages — code-owned, keyed by the prompt they accompany
@@ -561,13 +563,28 @@ async function transcribeWithProvider(
 
     case "generic-openai": {
       const client = createGenericTranscriptionClient({ apiKey, endpoint, timeoutMs });
+      const send = async (path: string) => {
+        const response = await client.audio.transcriptions.create(
+          { file: createReadStream(path), model, response_format: "json" },
+          { signal: requestSignal(timeoutMs) }
+        );
 
-      const response = await client.audio.transcriptions.create(
-        { file: createReadStream(audioPath), model, response_format: "json" },
-        { signal: requestSignal(timeoutMs) }
-      );
+        return requireTranscript(response.text);
+      };
 
-      return requireTranscript(response.text);
+      try {
+        return await send(audioPath);
+      } catch (error) {
+        // Some servers decode only WAV (#690); their refusal is a 400 or 415, whatever it says.
+        if (!(error instanceof APIError) || (error.status !== 400 && error.status !== 415)) {
+          throw error;
+        }
+
+        aiLogger.info({ provider, model }, "Endpoint refused the MP3, sending WAV instead");
+
+        // When the WAV fails too, the MP3's refusal is the one worth reporting.
+        return withWavCopy(audioPath, send).catch(() => Promise.reject(error));
+      }
     }
 
     case "ollama": {

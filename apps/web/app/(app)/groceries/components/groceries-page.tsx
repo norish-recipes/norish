@@ -1,6 +1,8 @@
 "use client";
 
+import { useState } from "react";
 import { GroceryList, GroceryListByRecipe, StoreManagerPanel } from "@/components/groceries";
+import { ClearGroceriesModal } from "@/components/groceries/clear-groceries-modal";
 import { AddGroceryPanel } from "@/components/Panel/consumers";
 import EditGroceryPanel from "@/components/Panel/consumers/edit-grocery-panel";
 import UiSwitch from "@/components/shared/ui-switch";
@@ -11,6 +13,7 @@ import {
   CheckIcon,
   Cog6ToothIcon,
   PlusIcon,
+  TrashIcon,
 } from "@heroicons/react/16/solid";
 import { Button, Dropdown, Header, Label, Separator } from "@heroui/react";
 import { useTranslations } from "next-intl";
@@ -55,6 +58,18 @@ export function GroceriesPage() {
     viewMode,
     groupSimilarIngredients,
   } = useGroceriesUiContext();
+
+  type ClearScope =
+    | { kind: "store"; storeId: string | null; name: string }
+    | { kind: "recipe"; ids: string[]; name: string };
+  const [clearScope, setClearScope] = useState<ClearScope | null>(null);
+  const clearIds =
+    clearScope?.kind === "store"
+      ? groceries.filter((g) => g.storeId === clearScope.storeId).map((g) => g.id)
+      : (clearScope?.ids ?? []);
+  const handleClearConfirm = () => {
+    if (clearIds.length > 0) deleteGroceries(clearIds);
+  };
   const handleToggle = (id: string, isDone: boolean) => {
     toggleGroceries([id], isDone);
   };
@@ -145,6 +160,7 @@ export function GroceriesPage() {
               groupSimilarIngredients={groupSimilarIngredients}
               recurringGroceries={recurringGroceries}
               stores={stores}
+              onClearAllInStore={(storeId, name) => setClearScope({ kind: "store", storeId, name })}
               onDelete={handleDelete}
               onDeleteDoneInStore={deleteDoneInStore}
               onEdit={handleEdit}
@@ -159,6 +175,7 @@ export function GroceriesPage() {
               recipeMap={recipeMap}
               recurringGroceries={recurringGroceries}
               stores={stores}
+              onClearRecipe={(ids, name) => setClearScope({ kind: "recipe", ids, name })}
               onDelete={handleDelete}
               onEdit={handleEdit}
               onReorder={reorderGroceriesInStore}
@@ -204,6 +221,14 @@ export function GroceriesPage() {
           onSave={handleEditSave}
         />
       )}
+
+      <ClearGroceriesModal
+        isOpen={clearScope !== null}
+        itemCount={clearIds.length}
+        scopeName={clearScope?.name ?? null}
+        onClose={() => setClearScope(null)}
+        onConfirm={handleClearConfirm}
+      />
     </>
   );
 }
@@ -213,7 +238,9 @@ export function GroceriesPage() {
  * desktop add button and the menu with the view mode, grouping and stores.
  */
 export function GroceriesListActions() {
+  const { groceries, deleteGroceries } = useGroceriesContext();
   const { setStoreManagerOpen } = useStoresContext();
+  const [clearListOpen, setClearListOpen] = useState(false);
   const {
     setAddGroceryPanelOpen,
     viewMode,
@@ -302,10 +329,30 @@ export function GroceriesListActions() {
                 {<Cog6ToothIcon className="h-4 w-4" />}
                 <Label>{t("manageStores")}</Label>
               </Dropdown.Item>
+              {groceries.length > 0 && (
+                <Dropdown.Item
+                  key="clear-list"
+                  className="text-danger"
+                  id="clear-list"
+                  textValue={t("clearList")}
+                  variant="danger"
+                  onPress={() => setClearListOpen(true)}
+                >
+                  {<TrashIcon className="h-4 w-4" />}
+                  <Label>{t("clearList")}</Label>
+                </Dropdown.Item>
+              )}
             </Dropdown.Section>
           </Dropdown.Menu>
         </Dropdown.Popover>
       </Dropdown>
+      <ClearGroceriesModal
+        isOpen={clearListOpen}
+        itemCount={groceries.length}
+        scopeName={null}
+        onClose={() => setClearListOpen(false)}
+        onConfirm={() => deleteGroceries(groceries.map((g) => g.id))}
+      />
     </>
   );
 }

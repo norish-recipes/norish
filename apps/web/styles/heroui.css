@@ -57,6 +57,7 @@
 @import "@heroui/styles/components/avatar-group.css" layer(components);
 @import "@heroui/styles/components/modal.css" layer(components);
 @import "@heroui/styles/components/popover.css" layer(components);
+@import "@heroui/styles/components/toolbar.css" layer(components);
 @import "@heroui/styles/components/tooltip.css" layer(components);
 @import "@heroui/styles/components/combo-box.css" layer(components);
 @import "@heroui/styles/components/select.css" layer(components);

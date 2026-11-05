@@ -164,7 +164,9 @@
   "deleteModal": {
     "title": "Slett oppskrift",
     "confirmMessage": "Er du sikker på at du vil slette \"{recipeName}\"?",
-    "warning": "Denne handlingen kan ikke angres."
+    "warning": "Denne handlingen kan ikke angres.",
+    "confirmCount": "Slette {count, plural, one {# oppskrift} other {# oppskrifter}}?",
+    "keptCount": "{count, plural, one {# oppskrift blir} other {# oppskrifter blir}} igjen, fordi du ikke kan slette {count, plural, one {den} other {dem}}."
   },
   "form": {
     "createTitle": "Opprett oppskrift",
@@ -327,7 +329,8 @@
     "batchImported": "Oppskrifter importert",
     "batchImportedDescription": "{count} oppskrifter importert fra arkiv",
     "view": "Se",
-    "open": "Åpne"
+    "open": "Åpne",
+    "deleteKept": "{count, plural, one {# oppskrift ble} other {# oppskrifter ble}} endret av noen andre og beholdt."
   },
   "tags": {
     "panel": {
@@ -436,5 +439,15 @@
     "print": "Skriv ut / Lagre PDF",
     "continued": "fortsetter",
     "perServing": "Per porsjon"
+  },
+  "selection": {
+    "toolbar": "Valgte oppskrifter",
+    "count": "{count} valgt",
+    "clear": "Fjern valg",
+    "addToCookbook": "Legg til i kokebok",
+    "remove": "Fjern",
+    "newCookbook": "Ny kokebok",
+    "filedInto": "{count, plural, one {# oppskrift} other {# oppskrifter}} lagt til i {title}",
+    "filedIntoMany": "{count, plural, one {# oppskrift} other {# oppskrifter}} lagt til i {cookbooks} kokebøker"
   }
 }

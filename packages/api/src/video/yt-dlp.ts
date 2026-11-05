@@ -1,6 +1,5 @@
-import { execFile, execSync } from "node:child_process";
+import { execFile } from "node:child_process";
 import { randomUUID } from "node:crypto";
-import fsSync from "node:fs";
 import fs from "node:fs/promises";
 import os from "node:os";
 import path from "node:path";
@@ -11,6 +10,7 @@ import type { SiteAuthTokenDecryptedDto } from "@norish/shared/contracts/dto/sit
 import { SERVER_CONFIG } from "@norish/config/env-config-server";
 import { getVideoConfig } from "@norish/shared-server/config/server-config-loader";
 import { videoLogger as log } from "@norish/shared-server/logger";
+import { getFfmpegPath } from "@norish/shared-server/media/ffmpeg";
 
 import type { VideoMetadata, VideoStream } from "./types";
 import { MediaUnavailableError } from "./errors";
@@ -20,91 +20,6 @@ const execFileAsync = promisify(execFile);
 /** A file name no other download picks, under `prefix`. */
 function uniqueName(prefix: string): string {
   return `${prefix}-${Date.now()}-${randomUUID()}`;
-}
-
-// Resolve ffmpeg path at runtime
-// In production (Docker), uses system ffmpeg from Alpine packages
-// In development, uses ffmpeg-static npm package
-function getFfmpegPath(): string | null {
-  const binaryName = process.platform === "win32" ? "ffmpeg.exe" : "ffmpeg";
-
-  // Method 1: Check if system ffmpeg is available (production Docker)
-  try {
-    // eslint-disable-next-line sonarjs/no-os-command-from-path -- finding ffmpeg on PATH is the point of this lookup
-    const systemPath = execSync("which ffmpeg", { encoding: "utf8" }).trim();
-
-    if (systemPath && fsSync.existsSync(systemPath)) {
-      log.debug({ ffmpegPath: systemPath }, "Found system ffmpeg");
-
-      return systemPath;
-    }
-  } catch (_err) {
-    // System ffmpeg not found, try npm package
-  }
-
-  // Method 2: Check standard node_modules location (development)
-  const projectRoot = process.cwd();
-  const standardPath = path.join(projectRoot, "node_modules", "ffmpeg-static", binaryName);
-
-  if (fsSync.existsSync(standardPath)) {
-    log.debug({ ffmpegPath: standardPath }, "Found ffmpeg via node_modules");
-
-    return standardPath;
-  }
-
-  // Method 3: Scan pnpm directory for any ffmpeg-static version
-  const pnpmDir = path.join(projectRoot, "node_modules", ".pnpm");
-
-  if (fsSync.existsSync(pnpmDir)) {
-    try {
-      const entries = fsSync.readdirSync(pnpmDir);
-      const ffmpegDir = entries.find((e) => e.startsWith("ffmpeg-static@"));
-
-      if (ffmpegDir) {
-        const pnpmPath = path.join(pnpmDir, ffmpegDir, "node_modules", "ffmpeg-static", binaryName);
-
-        if (fsSync.existsSync(pnpmPath)) {
-          log.debug({ ffmpegPath: pnpmPath }, "Found ffmpeg via pnpm");
-
-          return pnpmPath;
-        }
-      }
-    } catch (err) {
-      log.debug({ err }, "pnpm directory scan failed");
-    }
-  }
-
-  // Method 4: Try the default export from ffmpeg-static
-  try {
-    const ffmpegStatic = require("ffmpeg-static");
-
-    if (typeof ffmpegStatic === "string" && fsSync.existsSync(ffmpegStatic)) {
-      log.debug({ ffmpegPath: ffmpegStatic }, "Found ffmpeg via ffmpeg-static export");
-
-      return ffmpegStatic;
-    }
-  } catch (err) {
-    log.debug({ err }, "ffmpeg-static export failed");
-  }
-
-  // Method 5: Resolve package.json location
-  try {
-    const packageJsonPath = require.resolve("ffmpeg-static/package.json");
-    const packageDir = path.dirname(packageJsonPath);
-    const binaryPath = path.join(packageDir, binaryName);
-
-    if (fsSync.existsSync(binaryPath)) {
-      log.debug({ ffmpegPath: binaryPath }, "Found ffmpeg via package.json resolution");
-
-      return binaryPath;
-    }
-  } catch (err) {
-    log.debug({ err }, "ffmpeg-static package.json resolution failed");
-  }
-
-  log.error("ffmpeg binary not found - video processing will fail");
-
-  return null;
 }
 
 /** What the binary is called on disk — not what the release calls it. */
@@ -678,13 +593,18 @@ export async function downloadVideoAudio(
   }
 }
 
+export async function getMaxVideoLengthSeconds(): Promise<number> {
+  const videoConfig = await getVideoConfig();
+
+  return videoConfig?.maxLengthSeconds ?? SERVER_CONFIG.VIDEO_MAX_LENGTH_SECONDS;
+}
+
 export async function validateVideoLength(
   url: string,
   tokens?: SiteAuthTokenDecryptedDto[]
 ): Promise<void> {
   const metadata = await getVideoMetadata(url, tokens);
-  const videoConfig = await getVideoConfig();
-  const maxLength = videoConfig?.maxLengthSeconds ?? SERVER_CONFIG.VIDEO_MAX_LENGTH_SECONDS;
+  const maxLength = await getMaxVideoLengthSeconds();
 
   if (metadata.duration > maxLength) {
     const actualMinutes = Math.floor(metadata.duration / 60);

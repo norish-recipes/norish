@@ -53,7 +53,7 @@ export function createUseCookbooksMutations({
     const invalidateUnlessQueued = invalidateUnlessPreserved(invalidate, preserve);
 
     const createCookbook = useCallback(
-      ({ title, recipeId }: { title: string; recipeId?: string }) => {
+      ({ title, recipeIds = [] }: { title: string; recipeIds?: string[] }) => {
         // Minted here, so filing queued behind an Offline create still points
         // at the right cookbook once replayed (ADR-0003).
         const id = createClientId();
@@ -68,7 +68,7 @@ export function createUseCookbooksMutations({
           createdAt: now,
           updatedAt: now,
           version: 1,
-          memberCount: recipeId ? 1 : 0,
+          memberCount: recipeIds.length,
           image: null,
           coverImages: [],
           // Everything a card derives from the members is left empty: the
@@ -82,11 +82,11 @@ export function createUseCookbooksMutations({
 
         return new Promise<string>((resolve, reject) => {
           mutateCreate(
-            { id, title, recipeId },
+            { id, title, recipeIds },
             {
               onSuccess: (cookbook) => {
                 invalidate();
-                if (recipeId) invalidateMembership(recipeId);
+                for (const recipeId of recipeIds) invalidateMembership(recipeId);
                 // Seeding the cookbook's own read opens its page straight away,
                 // Offline included; the web client holds that read at the
                 // offline cache's lifetime, so it is in the floor from the
@@ -142,7 +142,7 @@ export function createUseCookbooksMutations({
     );
 
     /**
-     * File a recipe into a cookbook, or take it out. The same call both ways,
+     * File recipes into a cookbook, or take them out. The same call both ways,
      * so undoing a mistake is not a hunt for a different control.
      *
      * The toggle is applied tentatively — including the member count, which is
@@ -161,12 +161,12 @@ export function createUseCookbooksMutations({
     const setMembership = useCallback(
       ({
         cookbookId,
-        recipeId,
+        recipeIds,
         isMember,
         cookbook,
       }: {
         cookbookId: string;
-        recipeId: string;
+        recipeIds: string[];
         isMember: boolean;
         /** The row as the caller has it, for the tentative patch. */
         cookbook?: CookbookSummaryDTO;
@@ -185,7 +185,10 @@ export function createUseCookbooksMutations({
 
                 const next = {
                   ...entry,
-                  memberCount: Math.max(0, entry.memberCount + (isMember ? 1 : -1)),
+                  memberCount: Math.max(
+                    0,
+                    entry.memberCount + (isMember ? recipeIds.length : -recipeIds.length)
+                  ),
                   // Filing keeps them: every member they describe is still in
                   // here, so they are merely incomplete until the echo adds the
                   // newcomer. Unfiling cannot say that.
@@ -209,14 +212,14 @@ export function createUseCookbooksMutations({
         });
 
         if (patched) {
-          patchRecipeMembership(recipeId, patched, isMember);
+          for (const recipeId of recipeIds) patchRecipeMembership(recipeId, patched, isMember);
         }
 
         mutateMembership(
-          { cookbookId, recipeId, isMember },
+          { cookbookId, recipeIds, isMember },
           {
             onSuccess: () => {
-              invalidateMembership(recipeId);
+              for (const recipeId of recipeIds) invalidateMembership(recipeId);
               invalidateCookbook(cookbookId);
               // The lists too, rather than waiting on the echo for them: the
               // derived facts this cleared above are the server's to answer,

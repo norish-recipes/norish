@@ -38,6 +38,7 @@ function bareRecipe(name: string) {
     prepTime: null,
     cookTime: null,
     totalTime: null,
+    sourceSystem: "metric",
     recipeIngredient: {
       metric: ["200 g pinto beans", "1 L vegetable stock"],
       us: ["7 oz pinto beans", "4 cups vegetable stock"],
@@ -48,6 +49,7 @@ function bareRecipe(name: string) {
     },
     keywords: null,
     allergyIndications: [],
+    videoUrl: null,
     categories: [],
     nutrition: { calories: null, fat: null, carbs: null, protein: null },
   };

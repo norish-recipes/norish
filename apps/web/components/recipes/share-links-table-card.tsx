@@ -207,8 +207,12 @@ export default function ShareLinksTableCard({
           </Table>
         )}
       </SettingsCard>
-      <Modal.Backdrop isOpen={!!confirmAction} onOpenChange={() => setConfirmAction(null)}>
-        <Modal.Container>
+      <Modal.Backdrop
+        className="z-[1099]"
+        isOpen={!!confirmAction}
+        onOpenChange={() => setConfirmAction(null)}
+      >
+        <Modal.Container className="z-[1100]">
           <Modal.Dialog>
             {({ close: onClose }) => (
               <>

@@ -66,6 +66,10 @@ function delay(milliseconds: number): Promise<void> {
   return new Promise((resolve) => setTimeout(resolve, milliseconds));
 }
 
+// Below the ephemeral ranges (Linux 32768+, macOS 49152+) that outbound sockets and Docker's
+// auto-mapped ports take from, with a slice per worker, so nothing takes a port before it binds.
+let nextHostPort = 20_000 + Number(process.env.TEST_PARALLEL_INDEX ?? 0) * 1_000;
+
 /**
  * A host port nobody is listening on right now. Valkey gets a fixed binding to
  * it rather than a kernel-assigned one, because Docker re-assigns ephemeral
@@ -74,24 +78,19 @@ function delay(milliseconds: number): Promise<void> {
  * The server and the embedded parser get one too, so stacks running side by
  * side, or beside a dev server, never share (or kill) each other's ports.
  */
-export function freeHostPort(): Promise<number> {
-  return new Promise((resolve, reject) => {
+export async function freeHostPort(): Promise<number> {
+  while (!(await canListen(nextHostPort))) nextHostPort++;
+
+  return nextHostPort++;
+}
+
+function canListen(port: number): Promise<boolean> {
+  return new Promise((resolve) => {
     const probe = net.createServer();
 
     probe.unref();
-    probe.once("error", reject);
-    probe.listen(0, "127.0.0.1", () => {
-      const address = probe.address();
-
-      if (!address || typeof address === "string") {
-        probe.close();
-        reject(new Error("Could not allocate a free host port"));
-
-        return;
-      }
-
-      probe.close(() => resolve(address.port));
-    });
+    probe.once("error", () => resolve(false));
+    probe.listen(port, "127.0.0.1", () => probe.close(() => resolve(true)));
   });
 }
 

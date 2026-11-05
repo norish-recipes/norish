@@ -98,16 +98,32 @@ function parseEntry(index: number, id: string, fields: string[]): Replayed | nul
   return { index, id, envelope: { ...parsed, meta: { ...parsed.meta, eventId: id } } };
 }
 
+function parseEntries(index: number, entries: Array<[string, string[]]>): Replayed[] {
+  return entries
+    .map(([id, fields]) => parseEntry(index, id, fields))
+    .filter((entry): entry is Replayed => entry !== null);
+}
+
 /** Read every channel's buffer after the cursor and merge the entries by id. */
 async function replayBuffer(channels: string[], cursor: RealtimeCursor): Promise<Replayed[]> {
   const valkey = await getPublisherClient();
   const perChannel = await Promise.all(
     channels.map(async (channel, index): Promise<Replayed[]> => {
       const after = cursor.ids[index]!;
-
-      if (after === ZERO_STREAM_ID) return [];
-
       const key = streamKeyFor(channel);
+
+      // Nothing was on this channel when the cursor was minted, so all of it
+      // is new; a full buffer may have trimmed some, which counts as a gap.
+      if (after === ZERO_STREAM_ID) {
+        const entries = await valkey.xrange(key, "-", "+", "COUNT", RESUME_MAXLEN);
+
+        if (entries.length >= RESUME_MAXLEN) {
+          throw new RealtimeLaggedError(channel, "cursor-trimmed", 0);
+        }
+
+        return parseEntries(index, entries);
+      }
+
       const first = await valkey.xrange(key, "-", "+", "COUNT", 1);
 
       // A missing key with a cursor younger than the TTL means nothing was
@@ -122,9 +138,7 @@ async function replayBuffer(channels: string[], cursor: RealtimeCursor): Promise
 
       const entries = await valkey.xrange(key, `(${after}`, "+", "COUNT", RESUME_MAXLEN);
 
-      return entries
-        .map(([id, fields]) => parseEntry(index, id, fields))
-        .filter((entry): entry is Replayed => entry !== null);
+      return parseEntries(index, entries);
     })
   );
 

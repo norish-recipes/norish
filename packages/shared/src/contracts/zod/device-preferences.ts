@@ -25,6 +25,11 @@ export const TODAY_SECTION_VISIBILITIES = ["always", "planned", "hidden"] as con
 
 export type TodaySectionVisibility = (typeof TODAY_SECTION_VISIBILITIES)[number];
 
+/** Units spelled as words ("500 grams") or as their abbreviation where one exists ("500 g"). */
+export const UNIT_STYLES = ["written", "abbreviated"] as const;
+
+export type UnitStyle = (typeof UNIT_STYLES)[number];
+
 export const RECIPE_VIEW_MODES = ["grid", "list"] as const;
 
 export type RecipeViewMode = (typeof RECIPE_VIEW_MODES)[number];
@@ -47,6 +52,7 @@ export const DevicePreferencesSchema = z.object({
   /** Group similar ingredients (store view only). */
   groceryGroupSimilar: z.boolean().catch(true),
   amountDisplay: z.enum(AMOUNT_DISPLAY_MODES).catch("fraction"),
+  unitStyle: z.enum(UNIT_STYLES).catch("written"),
   hiddenItems: HiddenItemsSchema.catch([]),
   recipePageColor: z.enum(RECIPE_PAGE_COLORS).catch("dish"),
   todaySectionVisibility: z.enum(TODAY_SECTION_VISIBILITIES).catch("always"),

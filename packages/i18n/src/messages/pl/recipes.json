@@ -164,7 +164,9 @@
   "deleteModal": {
     "title": "Usuń przepis",
     "confirmMessage": "Czy na pewno chcesz usunąć \"{recipeName}\"?",
-    "warning": "Tej akcji nie można cofnąć."
+    "warning": "Tej akcji nie można cofnąć.",
+    "confirmCount": "Usunąć {count, plural, one {# przepis} few {# przepisy} many {# przepisów} other {# przepisu}}?",
+    "keptCount": "Pozostaje {count, plural, one {# przepis} few {# przepisy} many {# przepisów} other {# przepisu}}, ponieważ nie możesz {count, plural, one {go} few {ich} many {ich} other {ich}} usunąć."
   },
   "form": {
     "createTitle": "Utwórz przepis",
@@ -327,7 +329,8 @@
     "batchImported": "Przepisy zaimportowane",
     "batchImportedDescription": "{count} przepisów zaimportowanych z archiwum",
     "view": "Zobacz",
-    "open": "Otwórz"
+    "open": "Otwórz",
+    "deleteKept": "Ktoś inny zmienił {count, plural, one {# przepis} few {# przepisy} many {# przepisów} other {# przepisu}}, więc {count, plural, one {został zachowany} few {zostały zachowane} many {zostały zachowane} other {zostały zachowane}}."
   },
   "tags": {
     "panel": {
@@ -436,5 +439,15 @@
     "print": "Drukuj / Zapisz PDF",
     "continued": "ciąg dalszy",
     "perServing": "Na porcję"
+  },
+  "selection": {
+    "toolbar": "Zaznaczone przepisy",
+    "count": "Zaznaczono: {count}",
+    "clear": "Wyczyść zaznaczenie",
+    "addToCookbook": "Dodaj do książki kucharskiej",
+    "remove": "Usuń z książki",
+    "newCookbook": "Nowa książka kucharska",
+    "filedInto": "Dodano {count, plural, one {# przepis} few {# przepisy} many {# przepisów} other {# przepisu}} do {title}",
+    "filedIntoMany": "Dodano {count, plural, one {# przepis} few {# przepisy} many {# przepisów} other {# przepisu}} do {cookbooks} książek kucharskich"
   }
 }

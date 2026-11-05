@@ -34,6 +34,7 @@
   "secret": {
     "reveal": "Vis hemmelighed",
     "hide": "Skjul hemmelighed",
+    "clear": "Fjern gemt værdi",
     "keepsCurrent": "Lad feltet stå tomt for at beholde den gemte værdi."
   },
   "status": {

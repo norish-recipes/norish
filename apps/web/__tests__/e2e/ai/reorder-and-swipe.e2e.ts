@@ -11,6 +11,7 @@ import type { Browser, BrowserContext, Page } from "@playwright/test";
 
 import type { AIE2EStack } from "./fixture";
 import { waitForRecipe } from "../harness/recipes";
+import { settled } from "../harness/settled";
 import { callTrpc } from "../harness/trpc";
 import { expect, test } from "./fixture";
 import { createPlainStore } from "./grocery-aisles-support";
@@ -115,26 +116,6 @@ async function rowsShowing(page: Page, values: string[]): Promise<ShownRow[]> {
 
     return rows;
   }, values);
-}
-
-/** Where `read` points once it has held still for three frames. */
-async function settled(page: Page, read: () => Promise<Point | undefined>): Promise<Point> {
-  let last: Point | undefined;
-  let still = 0;
-
-  await expect
-    .poll(async () => {
-      await page.evaluate(() => new Promise((resolve) => requestAnimationFrame(resolve)));
-      const at = await read();
-
-      still = at && last && at.x === last.x && at.y === last.y ? still + 1 : 0;
-      last = at;
-
-      return still;
-    })
-    .toBeGreaterThanOrEqual(3);
-
-  return last!;
 }
 
 /**
@@ -298,6 +279,45 @@ for (const pointer of ["mouse", "touch"] as const) {
   });
 }
 
+test("a slow swipe opens a recipe card's actions and never selects it", async ({
+  browser,
+  aiStack,
+}) => {
+  const name = `Slow Swipe Stew ${Date.now()}`;
+
+  await seedRecipeWithRows(aiStack, name);
+  const { context, page } = await openPage(browser, aiStack, "touch");
+
+  try {
+    await page.setViewportSize({ width: 390, height: 844 });
+    await page.goto("/");
+    const card = page.locator("[data-recipe-card]").filter({ hasText: name });
+
+    await expect(card).toBeVisible();
+    const box = (await card.boundingBox())!;
+    const from = { x: box.x + box.width * 0.75, y: box.y + box.height / 2 };
+    const finger = await fingerFor(page, "touch");
+
+    try {
+      await finger.down(from);
+      await glide(page, finger, from, { x: from.x - 40, y: from.y });
+      // Past the long press's 500 ms, with the finger still on the card.
+      await page.waitForTimeout(700);
+      await glide(page, finger, { x: from.x - 40, y: from.y }, { x: from.x - 160, y: from.y });
+      await finger.up();
+    } finally {
+      await finger.release();
+    }
+
+    await expect(page.getByTestId("recipe-select-toggle")).toHaveCount(0);
+    await expect(
+      page.getByRole("row").filter({ has: card }).getByRole("button", { name: "Add to calendar" })
+    ).toBeVisible();
+  } finally {
+    await context.close();
+  }
+});
+
 test("a recipe card swipes open to its actions with a finger", async ({ browser, aiStack }) => {
   const name = `Swipe Stew ${Date.now()}`;
 
@@ -329,7 +349,7 @@ test("a recipe card swipes open to its actions with a finger", async ({ browser,
       .getByRole("button", { name: "Add to calendar" });
 
     // A click retried on a moving button scrolls it to the top, and a scroll closes the row.
-    await settled(page, async () => (await action.boundingBox()) ?? undefined);
+    await settled(page, () => action.boundingBox());
     await action.click();
     await expect(page.getByRole("dialog")).toBeVisible();
   } finally {

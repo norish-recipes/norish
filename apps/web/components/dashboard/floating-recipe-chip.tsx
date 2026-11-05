@@ -4,6 +4,7 @@ import React, { useState } from "react";
 import { FiltersPanel } from "@/components/Panel/consumers";
 import { useRecipesContext } from "@/context/recipes-context";
 import { useAutoHide } from "@/hooks/auto-hide";
+import { useAppStore } from "@/stores/useAppStore";
 import { Button } from "@heroui/react";
 import { AnimatePresence, motion } from "motion/react";
 import { useTranslations } from "next-intl";
@@ -21,11 +22,14 @@ export default function FloatingRecipeChip() {
   const isVisibleByCount = !isLoading && total > 0;
   const t = useTranslations("recipes.dashboard");
   const { isVisible } = useAutoHide();
+  const actionBarOpen = useAppStore((state) => state.actionBarOpen);
+
   if (!isVisibleByCount) return null;
+
   return (
     <>
       <AnimatePresence>
-        {isVisible && (
+        {isVisible && !actionBarOpen && (
           <motion.div
             key="chip"
             animate={{
@@ -49,8 +53,8 @@ export default function FloatingRecipeChip() {
               <Button
                 className="bg-chrome text-chrome-foreground border-chrome-border hover:bg-chrome-hover data-[hovered=true]:bg-chrome-hover h-8 min-w-16 rounded-full border px-4 py-0 shadow-md transition-colors"
                 size="sm"
-                onPress={() => setIsOpen(true)}
                 variant="tertiary"
+                onPress={() => setIsOpen(true)}
               >
                 <span className="text-sm">
                   {t("libraryCount", {

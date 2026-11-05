@@ -39,6 +39,7 @@ const ARCHIVE_RECIPE = {
   prepTime: null,
   cookTime: null,
   totalTime: null,
+  sourceSystem: "metric",
   recipeIngredient: {
     metric: ["600 g pumpkin", "2 tbsp olive oil"],
     us: ["1.3 lb pumpkin", "2 tbsp olive oil"],
@@ -49,6 +50,7 @@ const ARCHIVE_RECIPE = {
   },
   keywords: null,
   allergyIndications: [],
+  videoUrl: null,
   categories: ["Dinner"],
   nutrition: { calories: null, fat: null, carbs: null, protein: null },
 };

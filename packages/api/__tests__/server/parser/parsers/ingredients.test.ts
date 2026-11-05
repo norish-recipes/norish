@@ -12,6 +12,38 @@ import { parseIngredients } from "@norish/api/parser/parsers/ingredients";
 describe("parseIngredients", () => {
   const emptyUnits = {};
 
+  describe("headings written into the source's list", () => {
+    const names = (recipeIngredient: string[]) =>
+      parseIngredients({ recipeIngredient }, emptyUnits).ingredients.map((i) => i.ingredientName);
+
+    it("reads them as headings", () => {
+      expect(
+        names(["For the sauce:", "FOR THE PASTRY", "DIPPING SAUCE:", "To garnish:", "# Topping:"])
+      ).toEqual([
+        "# For the sauce",
+        "# FOR THE PASTRY",
+        "# DIPPING SAUCE",
+        "# To garnish",
+        "# Topping",
+      ]);
+    });
+
+    it("tidies how the source wrote them", () => {
+      expect(names(["## SAUCE", "Pour la pâte :"])).toEqual(["# SAUCE", "# Pour la pâte"]);
+    });
+
+    it("leaves lines that name a food alone", () => {
+      const lines = [
+        "For serving: vegan vanilla ice cream",
+        "For frying, oil",
+        "Forest mushrooms",
+        "Salt",
+      ];
+
+      expect(names(lines)).toEqual(lines);
+    });
+  });
+
   describe("basic parsing", () => {
     it("parses recipeIngredient array", () => {
       const json = {

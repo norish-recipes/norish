@@ -6,11 +6,19 @@
  */
 
 import fs from "fs/promises";
+import * as cheerio from "cheerio";
 import { decode } from "html-entities";
 
-import { downloadVideo, getFfmpegPath, getVideoMetadata } from "@norish/api/video/yt-dlp";
+import {
+  downloadVideo,
+  getFfmpegPath,
+  getMaxVideoLengthSeconds,
+  getVideoMetadata,
+} from "@norish/api/video/yt-dlp";
+import { getPageRenderersConfig } from "@norish/shared-server/config/server-config-loader";
 import { parserLogger } from "@norish/shared-server/logger";
 import { convertToMp4, saveVideoFile } from "@norish/shared-server/media/storage";
+import { isRefusedHost } from "@norish/shared-server/private-addresses";
 
 const log = parserLogger.child({ module: "videos" });
 
@@ -111,6 +119,56 @@ function normalizeVideoObject(node: unknown): VideoObjectCandidate | null {
   };
 }
 
+const MAX_PAGE_VIDEOS = 10;
+/** A page's first video can be dead, so a few are tried; each failure costs a slow probe. */
+const MAX_VIDEO_ATTEMPTS = 3;
+
+/**
+ * The videos a page embeds, absolute. Cleaning a page for a model drops these, and most iframes are
+ * not recipe videos: the model picks from this list, and the list bounds what it can pick.
+ */
+export function extractPageVideos(html: string, pageUrl: string): string[] {
+  const $ = cheerio.load(html);
+  const urls = new Set<string>();
+
+  const add = (value: string | undefined) => {
+    if (!value) return;
+
+    try {
+      const { href, protocol } = new URL(value, pageUrl);
+
+      if (protocol === "http:" || protocol === "https:") urls.add(href);
+    } catch {
+      // Not a URL.
+    }
+  };
+
+  $('meta[property^="og:video"]').each((_, element) => {
+    const property = $(element).attr("property");
+
+    if (property === "og:video" || property?.endsWith("url")) add($(element).attr("content"));
+  });
+  $("video, video source, iframe").each((_, element) => {
+    add($(element).attr("src") ?? $(element).attr("data-src") ?? $(element).attr("data-lazy-src"));
+  });
+
+  return [...urls].slice(0, MAX_PAGE_VIDEOS);
+}
+
+/** A video URL a page offers is untrusted: only a public web address reaches the download. */
+async function isDownloadable(videoUrl: string, allowPrivateAddresses: boolean): Promise<boolean> {
+  try {
+    const { hostname, protocol } = new URL(videoUrl);
+
+    return (
+      (protocol === "http:" || protocol === "https:") &&
+      !(await isRefusedHost(hostname, allowPrivateAddresses))
+    );
+  } catch {
+    return false;
+  }
+}
+
 /**
  * Extract VideoObject candidates from JSON-LD video field.
  */
@@ -171,17 +229,23 @@ async function downloadAndSaveVideo(
   try {
     log.debug({ videoUrl, recipeId }, "Attempting to download video from JSON-LD");
 
-    // Try to get metadata first (may provide duration if not in JSON-LD)
+    // The probe over the page's own claim: a page can call any video short.
     let duration = durationHint;
 
-    if (!duration) {
-      try {
-        const metadata = await getVideoMetadata(videoUrl);
+    try {
+      const metadata = await getVideoMetadata(videoUrl);
 
-        duration = metadata.duration ?? null;
-      } catch {
-        // Metadata fetch failed, continue without duration
-      }
+      duration = metadata.duration ?? duration;
+    } catch {
+      // Metadata fetch failed, continue with what the page said
+    }
+
+    const maxLength = await getMaxVideoLengthSeconds();
+
+    if (duration && duration > maxLength) {
+      log.warn({ videoUrl, duration, maxLength }, "Video exceeds the maximum length, not saved");
+
+      return null;
     }
 
     // Download the video
@@ -246,24 +310,17 @@ async function downloadAndSaveVideo(
 }
 
 /**
- * Parse and download videos from JSON-LD video field.
+ * Save a recipe's main video: the first candidate that downloads. One per recipe, as videos are large.
  *
- * This function handles:
- * - Single VideoObject
- * - Array of VideoObject
- * - Direct contentUrl or url fields
- *
- * Videos are downloaded using yt-dlp and saved to the recipe directory.
+ * Handles a single VideoObject or an array of them, by contentUrl or url, downloaded with yt-dlp.
  *
  * @param videoField - The video field from JSON-LD
  * @param recipeId - Recipe ID for storage paths
- * @param maxVideos - Maximum number of videos to process (default: 3)
- * @returns Parsed videos with paths and metadata
+ * @returns The saved video, if any
  */
 export async function parseVideos(
   videoField: unknown,
-  recipeId: string,
-  maxVideos: number = 3
+  recipeId: string
 ): Promise<VideoParseResult> {
   const defaultResult: VideoParseResult = { videos: [] };
 
@@ -279,29 +336,24 @@ export async function parseVideos(
 
   log.debug({ count: candidates.length }, "Found VideoObject candidates in JSON-LD");
 
-  const videos: ParsedVideo[] = [];
+  const { allowPrivateAddresses } = await getPageRenderersConfig();
 
-  // Process videos sequentially to avoid overwhelming resources
-  for (let i = 0; i < Math.min(candidates.length, maxVideos); i++) {
-    const candidate = candidates[i];
-
-    if (!candidate) {
-      continue;
-    }
-
+  for (const candidate of candidates.slice(0, MAX_VIDEO_ATTEMPTS)) {
     const videoUrl = candidate.contentUrl || candidate.url;
 
     if (!videoUrl) continue;
 
+    if (!(await isDownloadable(videoUrl, allowPrivateAddresses))) {
+      log.warn({ videoUrl }, "Refused to download a video from this address");
+      continue;
+    }
+
     const thumbnailUrl = extractThumbnailUrl(candidate.thumbnailUrl);
     const duration = parseDuration(candidate.duration);
+    const parsed = await downloadAndSaveVideo(videoUrl, recipeId, 0, thumbnailUrl, duration);
 
-    const parsed = await downloadAndSaveVideo(videoUrl, recipeId, i, thumbnailUrl, duration);
-
-    if (parsed) {
-      videos.push(parsed);
-    }
+    if (parsed) return { videos: [parsed] };
   }
 
-  return { videos };
+  return defaultResult;
 }

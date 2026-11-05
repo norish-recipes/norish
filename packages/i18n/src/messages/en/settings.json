@@ -185,6 +185,14 @@
           "theme": "Plain theme colors"
         }
       },
+      "unitStyle": {
+        "title": "Units",
+        "description": "Spell units out or abbreviate them, like g and tbsp",
+        "options": {
+          "written": "Written out",
+          "abbreviated": "Abbreviated"
+        }
+      },
       "applyError": "Failed to apply preference",
       "afterPlanning": {
         "title": "After planning a recipe",
@@ -327,7 +335,13 @@
       "breakfastTime": "Breakfast time",
       "lunchTime": "Lunch time",
       "dinnerTime": "Dinner time",
-      "snackTime": "Snack time"
+      "snackTime": "Snack time",
+      "untrustedCertificate": {
+        "title": "Untrusted certificate",
+        "description": "No public certificate authority vouches for {name}. Trust it only if this is your own server.",
+        "fingerprint": "SHA-256 fingerprint",
+        "trust": "Trust"
+      }
     },
     "config": {
       "title": "CalDAV configuration",

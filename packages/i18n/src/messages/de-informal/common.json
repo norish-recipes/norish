@@ -34,6 +34,7 @@
   "secret": {
     "reveal": "Geheimnis anzeigen",
     "hide": "Geheimnis verbergen",
+    "clear": "Gespeicherten Wert entfernen",
     "keepsCurrent": "Lass das Feld leer, um den gespeicherten Wert zu behalten."
   },
   "status": {

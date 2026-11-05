@@ -164,7 +164,9 @@
   "deleteModal": {
     "title": "레시피 삭제",
     "confirmMessage": "정말로 \"{recipeName}\"을(를) 삭제하시겠습니까?",
-    "warning": "이 작업은 취소할 수 없습니다."
+    "warning": "이 작업은 취소할 수 없습니다.",
+    "confirmCount": "레시피 {count}개를 삭제할까요?",
+    "keptCount": "삭제 권한이 없어 레시피 {count}개는 남습니다."
   },
   "form": {
     "createTitle": "레시피 만들기",
@@ -327,7 +329,8 @@
     "batchImported": "레시피 가져오기 완료",
     "batchImportedDescription": "아카이브에서 {count}개 레시피를 가져왔습니다.",
     "view": "보기",
-    "open": "열기"
+    "open": "열기",
+    "deleteKept": "다른 사람이 변경한 레시피 {count}개는 유지되었습니다."
   },
   "tags": {
     "panel": {
@@ -436,5 +439,15 @@
     "print": "인쇄 / PDF 저장",
     "continued": "계속",
     "perServing": "1인분당"
+  },
+  "selection": {
+    "toolbar": "선택한 레시피",
+    "count": "{count}개 선택됨",
+    "clear": "선택 해제",
+    "addToCookbook": "요리책에 추가",
+    "remove": "빼기",
+    "newCookbook": "새 요리책",
+    "filedInto": "레시피 {count}개를 {title}에 추가했습니다",
+    "filedIntoMany": "레시피 {count}개를 요리책 {cookbooks}권에 추가했습니다"
   }
 }

@@ -345,19 +345,31 @@ describe("parseRecipeFromUrl import flow", () => {
       mockFetchRenderedPage.mockResolvedValue(withJsonLd);
     });
 
-    it("tries the full HTML for the method", async () => {
-      mockExtractRecipeWithAI.mockResolvedValueOnce(stepless).mockResolvedValueOnce(aiRecipe);
+    it("asks once, with the page and its JSON-LD, even when the result has no steps", async () => {
+      mockExtractRecipeWithAI.mockResolvedValue(stepless);
 
       const { parseRecipeFromUrl } = await import("@norish/api/parser");
       const result = await parseRecipeFromUrl("https://example.com/recipe", "recipe-1", true);
 
-      expect(result).toMatchObject({ recipe: aiRecipe, usedAI: true });
-      expect(mockExtractRecipeWithAI).toHaveBeenLastCalledWith(
+      expect(result).toMatchObject({ recipe: stepless, usedAI: true });
+      expect(mockExtractRecipeWithAI).toHaveBeenCalledTimes(1);
+      expect(mockExtractRecipeWithAI).toHaveBeenCalledWith(
         withJsonLd,
         "recipe-1",
         "https://example.com/recipe",
-        withJsonLd
+        [expect.objectContaining({ name: "Lentil soup" })]
       );
+    });
+
+    it("does not ask again when AI extraction fails", async () => {
+      mockExtractRecipeWithAI.mockRejectedValue(new Error("model down"));
+
+      const { parseRecipeFromUrl } = await import("@norish/api/parser");
+
+      await expect(
+        parseRecipeFromUrl("https://example.com/recipe", "recipe-1", true)
+      ).rejects.toThrow("AI extraction failed");
+      expect(mockExtractRecipeWithAI).toHaveBeenCalledTimes(1);
     });
 
     it("reads the sections the scraper found in place of the JSON-LD's flat list (#685)", async () => {
@@ -370,9 +382,21 @@ describe("parseRecipeFromUrl import flow", () => {
 
       await parseRecipeFromUrl("https://example.com/recipe", "recipe-1");
 
-      const [input] = mockExtractRecipeWithAI.mock.calls[0] as [string];
+      expect(mockExtractRecipeWithAI.mock.calls[0]?.[3]).toMatchObject([
+        { name: "Lentil soup", recipeIngredient: sectioned },
+      ]);
+    });
 
-      expect(JSON.parse(input)).toMatchObject([
+    it("asks the scraper for the sections when AI is forced (#685)", async () => {
+      const sectioned = ["# For the mash", "1 kg potatoes", "# For the sauce", "500 g lentils"];
+
+      mockCollectIngredientStrings.mockReturnValue(sectioned);
+
+      const { parseRecipeFromUrl } = await import("@norish/api/parser");
+
+      await parseRecipeFromUrl("https://example.com/recipe", "recipe-1", true);
+
+      expect(mockExtractRecipeWithAI.mock.calls[0]?.[3]).toMatchObject([
         { name: "Lentil soup", recipeIngredient: sectioned },
       ]);
     });
@@ -384,20 +408,9 @@ describe("parseRecipeFromUrl import flow", () => {
 
       await parseRecipeFromUrl("https://example.com/recipe", "recipe-1");
 
-      const [input] = mockExtractRecipeWithAI.mock.calls[0] as [string];
-
-      expect(JSON.parse(input)[0]).not.toHaveProperty("recipeIngredient");
-    });
-
-    it("keeps the JSON-LD result when the full HTML has no steps either", async () => {
-      mockExtractRecipeWithAI
-        .mockResolvedValueOnce(stepless)
-        .mockResolvedValueOnce({ ...aiRecipe, steps: [] });
-
-      const { parseRecipeFromUrl } = await import("@norish/api/parser");
-      const result = await parseRecipeFromUrl("https://example.com/recipe", "recipe-1", true);
-
-      expect(result).toMatchObject({ recipe: stepless, usedAI: true });
+      expect(mockExtractRecipeWithAI.mock.calls[0]?.[3]?.[0]).not.toHaveProperty(
+        "recipeIngredient"
+      );
     });
   });
 

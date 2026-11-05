@@ -35,19 +35,15 @@ export async function getCaldavConfigByUserId(userId: string): Promise<UserCalda
   return validated.data;
 }
 
-export async function getCaldavConfigDecrypted(
-  userId: string
-): Promise<UserCaldavConfigDecryptedDto | null> {
-  const config = await getCaldavConfigByUserId(userId);
-
-  if (!config) return null;
-
+/** The stored row with its encrypted fields read back. */
+function decryptConfig(config: UserCaldavConfigDto): UserCaldavConfigDecryptedDto {
   return {
     userId: config.userId,
     serverUrl: decrypt(config.serverUrlEnc),
     calendarUrl: config.calendarUrlEnc ? decrypt(config.calendarUrlEnc) : null,
     username: decrypt(config.usernameEnc),
     password: decrypt(config.passwordEnc),
+    trustedCertificate: config.trustedCertificateEnc ? decrypt(config.trustedCertificateEnc) : null,
     enabled: config.enabled,
     breakfastTime: config.breakfastTime,
     lunchTime: config.lunchTime,
@@ -57,6 +53,14 @@ export async function getCaldavConfigDecrypted(
     createdAt: config.createdAt,
     updatedAt: config.updatedAt,
   };
+}
+
+export async function getCaldavConfigDecrypted(
+  userId: string
+): Promise<UserCaldavConfigDecryptedDto | null> {
+  const config = await getCaldavConfigByUserId(userId);
+
+  return config ? decryptConfig(config) : null;
 }
 
 /**
@@ -70,20 +74,9 @@ export async function getCaldavConfigWithoutPassword(
 
   if (!config) return null;
 
-  return {
-    userId: config.userId,
-    serverUrl: decrypt(config.serverUrlEnc),
-    calendarUrl: config.calendarUrlEnc ? decrypt(config.calendarUrlEnc) : null,
-    username: decrypt(config.usernameEnc),
-    enabled: config.enabled,
-    breakfastTime: config.breakfastTime,
-    lunchTime: config.lunchTime,
-    dinnerTime: config.dinnerTime,
-    snackTime: config.snackTime,
-    version: config.version,
-    createdAt: config.createdAt,
-    updatedAt: config.updatedAt,
-  };
+  const { password: _password, ...withoutPassword } = decryptConfig(config);
+
+  return withoutPassword;
 }
 
 export async function saveCaldavConfig(
@@ -100,6 +93,9 @@ export async function saveCaldavConfig(
     calendarUrlEnc: validated.data.calendarUrl ? encrypt(validated.data.calendarUrl) : null,
     usernameEnc: encrypt(validated.data.username),
     passwordEnc: encrypt(validated.data.password),
+    trustedCertificateEnc: validated.data.trustedCertificate
+      ? encrypt(validated.data.trustedCertificate)
+      : null,
     enabled: validated.data.enabled,
     breakfastTime: validated.data.breakfastTime,
     lunchTime: validated.data.lunchTime,
@@ -189,21 +185,7 @@ export async function getHouseholdCaldavConfigs(
   for (const row of rows) {
     if (!userIds.includes(row.userId)) continue;
 
-    const decrypted: UserCaldavConfigDecryptedDto = {
-      userId: row.userId,
-      serverUrl: decrypt(row.serverUrlEnc),
-      calendarUrl: row.calendarUrlEnc ? decrypt(row.calendarUrlEnc) : null,
-      username: decrypt(row.usernameEnc),
-      password: decrypt(row.passwordEnc),
-      enabled: row.enabled,
-      breakfastTime: row.breakfastTime,
-      lunchTime: row.lunchTime,
-      dinnerTime: row.dinnerTime,
-      snackTime: row.snackTime,
-      version: row.version,
-      createdAt: row.createdAt,
-      updatedAt: row.updatedAt,
-    };
+    const decrypted = decryptConfig(row);
 
     // Use serverUrl as key for deduplication
     const existingUserId = configMap.get(decrypted.serverUrl)?.userId;

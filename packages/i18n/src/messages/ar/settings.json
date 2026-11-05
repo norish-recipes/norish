@@ -185,6 +185,14 @@
           "theme": "ألوان المظهر العادية"
         }
       },
+      "unitStyle": {
+        "title": "الوحدات",
+        "description": "اكتب الوحدات كاملة أو مختصرة، مثل غ وم.ك",
+        "options": {
+          "written": "كاملة",
+          "abbreviated": "مختصرة"
+        }
+      },
       "applyError": "تعذّر تطبيق التفضيل",
       "afterPlanning": {
         "title": "بعد تخطيط وصفة",
@@ -327,7 +335,13 @@
       "breakfastTime": "وقت الفطور",
       "lunchTime": "وقت الغداء",
       "dinnerTime": "وقت العشاء",
-      "snackTime": "وقت التصبيرة"
+      "snackTime": "وقت التصبيرة",
+      "untrustedCertificate": {
+        "title": "شهادة غير موثوقة",
+        "description": "لا توجد جهة إصدار شهادات عامة تضمن {name}. لا تثق بها إلا إذا كان هذا خادمك الخاص.",
+        "fingerprint": "بصمة SHA-256",
+        "trust": "ثقة"
+      }
     },
     "config": {
       "title": "إعدادات CalDAV",

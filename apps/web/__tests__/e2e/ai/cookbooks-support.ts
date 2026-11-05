@@ -23,18 +23,8 @@ export async function seedCookbook(
     stack.baseURL,
     stack.ownerCookies,
     "cookbooks.create",
-    {
-      title,
-    }
+    { title, recipeIds }
   );
-
-  for (const recipeId of recipeIds) {
-    await callTrpc(stack.baseURL, stack.ownerCookies, "cookbooks.setMembership", {
-      cookbookId: id,
-      recipeId,
-      isMember: true,
-    });
-  }
 
   return id;
 }

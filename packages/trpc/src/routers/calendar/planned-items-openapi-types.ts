@@ -37,12 +37,19 @@ export const createItemInput: z.ZodType<CreateItemInput, CreateItemInput> = z
     message: "title is required for note items",
   });
 
+/** `include=notes` also lists the notes planned in the range, not only recipes. */
+export const listPlannedRecipesInput = z.object({
+  include: z.enum(["notes"]).optional(),
+});
+
 export const plannedRecipeListItemSchema = z.object({
   id: z.uuid(),
   date: z.string(),
   slot: slotSchema,
   sortOrder: z.number().int(),
-  recipeId: z.uuid(),
+  itemType: itemTypeSchema,
+  recipeId: z.uuid().nullable(),
+  title: z.string().nullable(),
   version: z.number().int(),
   recipeName: z.string().nullable(),
   recipeImage: z.string().nullable(),

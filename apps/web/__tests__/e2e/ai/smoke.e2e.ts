@@ -32,6 +32,7 @@ const SMOKE_RECIPE = {
   prepTime: null,
   cookTime: null,
   totalTime: null,
+  sourceSystem: "metric",
   recipeIngredient: {
     metric: ["200 g pinto beans", "1 L vegetable stock", "2 cloves garlic"],
     us: ["7 oz pinto beans", "4 cups vegetable stock", "2 cloves garlic"],
@@ -42,6 +43,7 @@ const SMOKE_RECIPE = {
   },
   keywords: null,
   allergyIndications: [],
+  videoUrl: null,
   categories: ["Dinner"],
   nutrition: { calories: 320, fat: 6, carbs: 48, protein: 16 },
 };
@@ -80,4 +82,37 @@ test("a browser AI paste import receives the controlled provider response", asyn
   // The rendered name can only have come from the controlled provider, so a real
   // queued worker reached it — no real extraction or cached result is involved.
   expect(ai.control.requestCount).toBeGreaterThanOrEqual(1);
+});
+
+test("an AI import opens in the measurement system the source was written in (#693)", async () => {
+  const name = "Harness US Chili";
+
+  stack.ai.control.succeedWith({
+    ...SMOKE_RECIPE,
+    name,
+    sourceSystem: "us",
+    recipeInstructions: {
+      metric: ["Simmer the beans in 1 L of stock."],
+      us: ["Simmer the beans in 4 cups of stock."],
+    },
+  });
+
+  await page.goto("/");
+  await submitPasteImport(page, "Please infer a recipe from this note — the harness supplies it.");
+
+  await expect(async () => {
+    await page.reload();
+    await expect(page.getByRole("heading", { name, exact: true, level: 3 })).toBeVisible({
+      timeout: 3_000,
+    });
+  }).toPass({ timeout: 60_000, intervals: [1_000, 2_000, 5_000] });
+
+  await page.getByRole("heading", { name, exact: true, level: 3 }).click();
+  await expect(page).toHaveURL(/\/recipes\/[^/]+$/);
+
+  // `.first()`: the recipe renders in both the desktop and mobile layouts.
+  await expect(page.getByText("Simmer the beans in 4 cups of stock.").first()).toBeVisible({
+    timeout: 15_000,
+  });
+  await expect(page.getByText("Simmer the beans in 1 L of stock.")).toHaveCount(0);
 });

@@ -12,6 +12,8 @@ export const userCaldavConfig = pgTable("user_caldav_config", {
   calendarUrlEnc: text("calendar_url_enc"), // Optional: specific calendar URL selected by user
   usernameEnc: text("username_enc").notNull(),
   passwordEnc: text("password_enc").notNull(),
+  // A certificate the user chose to trust for this server (#703), PEM.
+  trustedCertificateEnc: text("trusted_certificate_enc"),
   enabled: boolean("enabled").notNull().default(false),
   breakfastTime: text("breakfast_time").notNull().default("08:00-09:00"),
   lunchTime: text("lunch_time").notNull().default("12:00-13:00"),

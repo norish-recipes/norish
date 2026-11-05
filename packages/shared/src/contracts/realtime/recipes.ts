@@ -59,7 +59,9 @@ export const recipesRealtime = defineRealtimeCatalogue("recipe", {
     scope: "policy",
     payload: z.custom<{ recipe: FullRecipeDTO; source?: "enrichment" }>(),
   },
-  deleted: { scope: "policy", payload: z.object({ id: z.string() }) },
+  deleted: { scope: "policy", payload: z.object({ ids: z.array(z.string()) }) },
+  /** The caller's delete found these recipes edited elsewhere, so they were kept. */
+  deleteKept: { scope: "user", payload: z.object({ ids: z.array(z.string()) }) },
   // z.custom: FullRecipeDTO has no standalone zod schema yet.
   converted: { scope: "policy", payload: z.custom<{ recipe: FullRecipeDTO }>() },
   failed: {

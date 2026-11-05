@@ -222,8 +222,8 @@ export const RecipeGetInputSchema = z.object({
 });
 
 export const RecipeDeleteInputSchema = z.object({
-  id: z.uuid(),
-  version: z.number().int().positive(),
+  /** Each recipe with the version the reader saw; one edited since is kept. */
+  recipes: z.array(z.object({ id: z.uuid(), version: z.number().int().positive() })).min(1),
 });
 
 export const RecipeImportInputSchema = z.object({

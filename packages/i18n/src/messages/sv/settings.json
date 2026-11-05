@@ -185,6 +185,14 @@
           "theme": "Temats vanliga färger"
         }
       },
+      "unitStyle": {
+        "title": "Enheter",
+        "description": "Skriv ut enheter helt eller förkortat, som g och msk",
+        "options": {
+          "written": "Utskrivna",
+          "abbreviated": "Förkortade"
+        }
+      },
       "applyError": "Det gick inte att tillämpa inställningen",
       "afterPlanning": {
         "title": "Efter att ett recept planerats",
@@ -327,7 +335,13 @@
       "breakfastTime": "Frukosttid",
       "lunchTime": "Lunchtid",
       "dinnerTime": "Middagstid",
-      "snackTime": "Tid för mellanmål"
+      "snackTime": "Tid för mellanmål",
+      "untrustedCertificate": {
+        "title": "Ej betrott certifikat",
+        "description": "Ingen offentlig certifikatutfärdare går i god för {name}. Lita bara på det om det är din egen server.",
+        "fingerprint": "SHA-256-fingeravtryck",
+        "trust": "Lita på"
+      }
     },
     "config": {
       "title": "CalDAV-konfiguration",

@@ -185,6 +185,14 @@
           "theme": "Temaets farger"
         }
       },
+      "unitStyle": {
+        "title": "Enheter",
+        "description": "Skriv enheter fullt ut eller forkortet, som g og ss",
+        "options": {
+          "written": "Fullt ut",
+          "abbreviated": "Forkortet"
+        }
+      },
       "applyError": "Kunne ikke bruke preferanse",
       "afterPlanning": {
         "title": "Etter planlegging av en oppskrift",
@@ -327,7 +335,13 @@
       "breakfastTime": "Frokosttidspunkt",
       "lunchTime": "Lunsjtidspunkt",
       "dinnerTime": "Middagstidspunkt",
-      "snackTime": "Snackstidspunkt"
+      "snackTime": "Snackstidspunkt",
+      "untrustedCertificate": {
+        "title": "Ikke-klarert sertifikat",
+        "description": "Ingen offentlig sertifikatutsteder går god for {name}. Stol bare på det hvis dette er din egen server.",
+        "fingerprint": "SHA-256-fingeravtrykk",
+        "trust": "Stol på"
+      }
     },
     "config": {
       "title": "CalDAV-konfigurasjon",

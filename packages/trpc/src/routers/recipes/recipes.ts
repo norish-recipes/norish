@@ -8,7 +8,7 @@ import type { RecipeEnrichmentSkipReason } from "@norish/shared/lib/recipe-enric
 import { canAccessResource, isAIEnabled as checkAIEnabled } from "@norish/auth/permissions";
 import {
   dashboardRecipe,
-  deleteRecipeById,
+  deleteRecipesByIds,
   FullRecipeInsertSchema,
   getRandomRecipeCandidates,
   getRecipeFull,
@@ -60,10 +60,16 @@ import { addBasePath } from "@norish/shared/lib/base-path";
 import { isVideoUrl } from "@norish/shared/lib/helpers";
 import { ENRICHMENT_KINDS } from "@norish/shared/lib/recipe-enrichment";
 
+import type { RecipeUserContext } from "./helpers";
 import { formDataInputSchema, isUploadedFile } from "../../form-data";
 import { authedProcedure, viewerOf } from "../../middleware";
 import { router } from "../../trpc";
-import { assertRecipeAccess, findRecipeForViewer, handleRecipeError } from "./helpers";
+import {
+  assertRecipeAccess,
+  findRecipeForViewer,
+  handleRecipeError,
+  recipeAccess,
+} from "./helpers";
 import {
   randomRecipeInputSchema,
   recipeAutocompleteInputSchema,
@@ -249,47 +255,82 @@ export const createRecipeProcedure = authedProcedure
     return recipeId;
   });
 
-const update = authedProcedure.input(RecipeUpdateInputSchema).mutation(({ ctx, input }) => {
-  const { id, data, version } = input;
-
+/** Apply an edit and announce it; a stale `version` changes nothing and returns no recipe. */
+async function applyRecipeUpdate(
+  ctx: RecipeUserContext,
+  { id, data, version }: z.infer<typeof RecipeUpdateInputSchema>
+) {
   log.info({ userId: ctx.user.id, recipeId: id }, "Updating recipe");
-  log.debug({ recipe: input }, "Full recipe data");
+  log.debug({ recipe: data }, "Full recipe data");
 
-  assertRecipeAccess(ctx, id, "edit")
-    .then(async () => {
-      // An edit that touches the media recomputes the Dish Colour from what
-      // the recipe now shows; one that does not leaves the colour alone.
-      const result = await updateResolvedRecipe(
-        id,
-        ctx.user.id,
-        await withDishColorForUpdate(data),
-        { userId: ctx.user.id },
-        version
-      );
+  await assertRecipeAccess(ctx, id, "edit");
 
-      if (result.stale) {
-        log.info({ userId: ctx.user.id, recipeId: id, version }, "Ignoring stale recipe update");
+  // An edit that touches the media recomputes the Dish Colour from what
+  // the recipe now shows; one that does not leaves the colour alone.
+  const result = await updateResolvedRecipe(
+    id,
+    ctx.user.id,
+    await withDishColorForUpdate(data),
+    { userId: ctx.user.id },
+    version
+  );
 
-        return;
-      }
+  if (result.stale) {
+    log.info({ userId: ctx.user.id, recipeId: id, version }, "Ignoring stale recipe update");
 
-      const updatedRecipe = await getRecipeFull(id);
+    return { recipe: null, stale: true };
+  }
 
-      if (updatedRecipe) {
-        log.info({ userId: ctx.user.id, recipeId: id }, "Recipe updated");
-        const policy = await getRecipePermissionPolicy();
+  const updatedRecipe = await getRecipeFull(id);
 
-        void recipes.publish(
-          "updated",
-          { recipe: updatedRecipe },
-          { viewPolicy: policy.view, userId: ctx.user.id, householdKey: ctx.householdKey }
-        );
-      }
-    })
-    .catch((err) => handleRecipeError(ctx, err, "update recipe", { recipeId: id }));
+  if (updatedRecipe) {
+    log.info({ userId: ctx.user.id, recipeId: id }, "Recipe updated");
+    const policy = await getRecipePermissionPolicy();
+
+    void recipes.publish(
+      "updated",
+      { recipe: updatedRecipe },
+      { viewPolicy: policy.view, userId: ctx.user.id, householdKey: ctx.householdKey }
+    );
+  }
+
+  return { recipe: updatedRecipe, stale: false };
+}
+
+const update = authedProcedure.input(RecipeUpdateInputSchema).mutation(({ ctx, input }) => {
+  applyRecipeUpdate(ctx, input).catch((err) =>
+    handleRecipeError(ctx, err, "update recipe", { recipeId: input.id })
+  );
 
   return { success: true };
 });
+
+export const updateRecipeProcedure = authedProcedure
+  .meta({
+    openapi: {
+      method: "PATCH",
+      path: "/recipes/{id}",
+      protect: true,
+      tags: ["Recipes"],
+      summary: "Edit a recipe",
+      description:
+        "Send only the fields to change in `data`; a list you send (`recipeIngredients`, `steps`, `tags`, `cuisines`, `images`, `videos`) replaces the stored one. Send the recipe's current `version` from Get a recipe. If it no longer matches, nothing changes and the response has `stale: true`: fetch the recipe again and retry.",
+      errorResponses: {
+        401: "Missing or invalid API credentials",
+        403: "No permission to edit this recipe",
+        404: "Recipe not found",
+      },
+    },
+  })
+  .input(RecipeUpdateInputSchema)
+  .output(z.object({ recipe: FullRecipeSchema.nullable(), stale: z.boolean() }))
+  .mutation(async ({ ctx, input }) => {
+    if (!(await findRecipeForViewer(ctx, input.id))) {
+      throw new TRPCError({ code: "NOT_FOUND", message: "Recipe not found" });
+    }
+
+    return applyRecipeUpdate(ctx, input);
+  });
 
 const updateCategories = authedProcedure
   .input(
@@ -332,36 +373,45 @@ const updateCategories = authedProcedure
     return { success: true };
   });
 
+/**
+ * Delete each recipe on its own: skipped if not permitted, kept if edited since, done if gone,
+ * so a Replay after others changed the data still succeeds.
+ */
 const deleteProcedure = authedProcedure
   .input(RecipeDeleteInputSchema)
-  .mutation(({ ctx, input }) => {
-    const { id, version } = input;
+  .mutation(async ({ ctx, input }) => {
+    log.info({ userId: ctx.user.id, count: input.recipes.length }, "Deleting recipes");
 
-    log.info({ userId: ctx.user.id, recipeId: id }, "Deleting recipe");
+    const access = await recipeAccess(
+      ctx,
+      input.recipes.map((recipe) => recipe.id),
+      "delete"
+    );
+    // One already gone is not in the map and counts as deleted.
+    const permitted = input.recipes.filter((recipe) => access.get(recipe.id) !== false);
 
-    assertRecipeAccess(ctx, id, "delete")
-      .then(async () => {
-        await deleteRecipeImagesDir(id);
-        const result = await deleteRecipeById(id, version);
+    const { deletedIds, staleIds } = await deleteRecipesByIds(permitted);
 
-        if (result.stale) {
-          log.info({ userId: ctx.user.id, recipeId: id, version }, "Ignoring stale recipe delete");
+    // Only once the rows are gone: a kept recipe still needs its images.
+    await Promise.all(deletedIds.map((id) => deleteRecipeImagesDir(id)));
 
-          return;
-        }
+    const policy = await getRecipePermissionPolicy();
 
-        log.info({ userId: ctx.user.id, recipeId: id }, "Recipe deleted");
-        const policy = await getRecipePermissionPolicy();
+    if (deletedIds.length > 0) {
+      log.info({ userId: ctx.user.id, count: deletedIds.length }, "Recipes deleted");
+      void recipes.publish(
+        "deleted",
+        { ids: deletedIds },
+        { viewPolicy: policy.view, userId: ctx.user.id, householdKey: ctx.householdKey }
+      );
+    }
 
-        void recipes.publish(
-          "deleted",
-          { id },
-          { viewPolicy: policy.view, userId: ctx.user.id, householdKey: ctx.householdKey }
-        );
-      })
-      .catch((err) => handleRecipeError(ctx, err, "delete recipe", { recipeId: id }));
+    if (staleIds.length > 0) {
+      log.info({ userId: ctx.user.id, recipeIds: staleIds }, "Kept recipes edited elsewhere");
+      void recipes.publish("deleteKept", { ids: staleIds }, { userId: ctx.user.id });
+    }
 
-    return { success: true };
+    return { deletedIds, staleIds };
   });
 
 export const importFromUrlProcedure = authedProcedure

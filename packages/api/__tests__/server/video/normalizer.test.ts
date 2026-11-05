@@ -61,8 +61,10 @@ const EXTRACTED = {
   totalTime: null,
   keywords: null,
   allergyIndications: [],
+  videoUrl: null,
   categories: [],
   nutrition: { calories: null, fat: null, carbs: null, protein: null },
+  sourceSystem: "metric",
   recipeIngredient: { metric: ["200 g spaghetti"], us: ["7 oz spaghetti"] },
   recipeInstructions: { metric: ["Boil the pasta."], us: ["Boil the pasta."] },
 };
@@ -106,6 +108,7 @@ describe("extractRecipeFromVideo", () => {
   it("refuses an empty shell before scoring or normalising anything", async () => {
     mocked.generateStructured.mockResolvedValue({
       ...EXTRACTED,
+      sourceSystem: "metric",
       recipeIngredient: { metric: [], us: [] },
       recipeInstructions: { metric: [], us: [] },
     });

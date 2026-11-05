@@ -5,17 +5,32 @@ import FloatingRecipeChip from "@/components/dashboard/floating-recipe-chip";
 import LibraryHeading from "@/components/dashboard/library-heading";
 import LibraryTypeChips from "@/components/dashboard/library-type-chips";
 import LibraryView from "@/components/dashboard/library-view";
+import RecipeSelectionBar from "@/components/dashboard/recipe-selection-bar";
 import RecipeViewModeToggle, {
   RecipeViewModeTabs,
 } from "@/components/dashboard/recipe-view-mode-toggle";
 import SearchInput from "@/components/dashboard/search-input";
 import TodaysMeals from "@/components/dashboard/today/todays-meals";
 import RecipeGridSkeleton from "@/components/skeleton/recipe-grid-skeleton";
+import { RecipeSelectionProvider } from "@/context/recipe-selection-context";
+import { useRecipesContext } from "@/context/recipes-context";
 import { Tabs } from "@heroui/react";
 
 const LIBRARY_HEADING_ID = "recipe-library-heading";
 
 function RecipeLibrary({ skeleton }: { skeleton: boolean }) {
+  // Above the grid/list tabs, so switching the view keeps the selection.
+  const { recipes } = useRecipesContext();
+
+  return (
+    <RecipeSelectionProvider recipes={recipes}>
+      <RecipeLibraryContent skeleton={skeleton} />
+      <RecipeSelectionBar />
+    </RecipeSelectionProvider>
+  );
+}
+
+function RecipeLibraryContent({ skeleton }: { skeleton: boolean }) {
   return (
     <section aria-labelledby={LIBRARY_HEADING_ID} className="flex min-h-0 flex-1 flex-col">
       <RecipeViewModeTabs>

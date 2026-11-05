@@ -120,6 +120,48 @@ export async function deleteRecipeById(
 }
 
 /**
+ * Delete each recipe whose version still matches. One edited since is kept
+ * (stale); one already gone counts as deleted, so a replayed delete succeeds.
+ */
+export async function deleteRecipesByIds(
+  items: Array<{ id: string; version: number }>
+): Promise<{ deletedIds: string[]; staleIds: string[] }> {
+  if (items.length === 0) return { deletedIds: [], staleIds: [] };
+
+  const deleted = await db
+    .delete(recipes)
+    .where(
+      or(...items.map((item) => and(eq(recipes.id, item.id), eq(recipes.version, item.version))))
+    )
+    .returning({ id: recipes.id });
+  const deletedSet = new Set(deleted.map((row) => row.id));
+  const rest = items.map((item) => item.id).filter((id) => !deletedSet.has(id));
+  const surviving =
+    rest.length > 0
+      ? await db.select({ id: recipes.id }).from(recipes).where(inArray(recipes.id, rest))
+      : [];
+  const staleIds = surviving.map((row) => row.id);
+  const staleSet = new Set(staleIds);
+
+  return {
+    deletedIds: items.map((item) => item.id).filter((id) => !staleSet.has(id)),
+    staleIds,
+  };
+}
+
+/** The owner of each recipe that exists; Orphaned ones map to null. */
+export async function getRecipeOwnerIds(recipeIds: string[]): Promise<Map<string, string | null>> {
+  if (recipeIds.length === 0) return new Map();
+
+  const rows = await db
+    .select({ id: recipes.id, userId: recipes.userId })
+    .from(recipes)
+    .where(inArray(recipes.id, recipeIds));
+
+  return new Map(rows.map((row) => [row.id, row.userId]));
+}
+
+/**
  * Get the owner userId for a recipe (for permission checks)
  */
 export async function getRecipeOwnerId(recipeId: string): Promise<string | null> {

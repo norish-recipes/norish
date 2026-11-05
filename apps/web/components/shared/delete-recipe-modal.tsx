@@ -5,18 +5,25 @@ import { useTranslations } from "next-intl";
 
 interface DeleteRecipeModalProps {
   isOpen: boolean;
-  recipeName: string;
+  /** One recipe is named; several are counted. */
+  recipeName?: string;
+  count?: number;
+  /** Selected recipes the reader may not delete, which stay. */
+  keptCount?: number;
   onClose: () => void;
   onConfirm: () => void;
 }
 export function DeleteRecipeModal({
   isOpen,
   recipeName,
+  count = 1,
+  keptCount = 0,
   onClose,
   onConfirm,
 }: DeleteRecipeModalProps) {
   const t = useTranslations("recipes.deleteModal");
   const tActions = useTranslations("common.actions");
+
   return (
     <Modal.Backdrop className="z-[1099]" isOpen={isOpen} onOpenChange={onClose}>
       <Modal.Container className="z-[1100]">
@@ -27,10 +34,11 @@ export function DeleteRecipeModal({
               <Modal.Body>
                 <p className="text-danger mb-2 font-semibold">{t("warning")}</p>
                 <p>
-                  {t("confirmMessage", {
-                    recipeName,
-                  })}
+                  {recipeName ? t("confirmMessage", { recipeName }) : t("confirmCount", { count })}
                 </p>
+                {keptCount > 0 ? (
+                  <p className="mt-2">{t("keptCount", { count: keptCount })}</p>
+                ) : null}
               </Modal.Body>
               <Modal.Footer>
                 <Button onPress={onCloseCallback} variant="tertiary">

@@ -17,7 +17,7 @@ export type { ParsedIngredient, IngredientParseResult } from "./ingredients";
 export { parseImages, extractImageCandidates } from "./images";
 export type { ParsedImage, ImageParseResult } from "./images";
 
-export { parseVideos } from "./videos";
+export { extractPageVideos, parseVideos } from "./videos";
 export type { ParsedVideo, VideoParseResult } from "./videos";
 
 export { parseMetadata, getName, getServings } from "./metadata";

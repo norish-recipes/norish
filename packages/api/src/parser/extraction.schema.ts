@@ -57,6 +57,9 @@ export const recipeExtractionSchema = z
       .nullable()
       .describe("Cooking time in ISO 8601 duration format (e.g., PT1H)"),
     totalTime: z.string().nullable().describe("Total time in ISO 8601 duration format"),
+    sourceSystem: z
+      .enum(["metric", "us"])
+      .describe("The measurement system the source writes its amounts in"),
     recipeIngredient: z
       .object({
         metric: z
@@ -98,6 +101,12 @@ export const recipeExtractionSchema = z
         "Meal categories the source explicitly states, from: Breakfast, Lunch, Dinner, Snack. Empty when the source states none."
       ),
     nutrition: sourceNutritionSchema,
+    videoUrl: z
+      .string()
+      .nullable()
+      .describe(
+        "The URL from the VIDEOS ON THE PAGE list that shows this recipe, copied exactly. Null when none does."
+      ),
   })
   .strict();
 

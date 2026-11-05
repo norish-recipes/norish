@@ -44,6 +44,7 @@ const useTRPC = (() => ({
     onImported: procedure("onImported"),
     onUpdated: procedure("onUpdated"),
     onDeleted: procedure("onDeleted"),
+    onDeleteKept: procedure("onDeleteKept"),
     onConverted: procedure("onConverted"),
     onFailed: procedure("onFailed"),
     onRecipeBatchCreated: procedure("onRecipeBatchCreated"),
@@ -87,14 +88,20 @@ function fullRecipe(overrides: Partial<FullRecipeDTO> = {}): FullRecipeDTO {
   } as FullRecipeDTO;
 }
 
-function emit(name: string, payload: unknown) {
+function subscription(name: string) {
   const options = useSubscriptionMock.mock.calls
-    .map((call) => call[0] as { name: string; onData: (data: unknown) => void })
+    .map(
+      (call) => call[0] as { name: string; onData: (data: unknown) => void; onStarted?: () => void }
+    )
     .find((opts) => opts.name === name);
 
   if (!options) throw new Error(`No subscription named ${name}`);
 
-  act(() => options.onData(trackedEvent(payload)));
+  return options;
+}
+
+function emit(name: string, payload: unknown) {
+  act(() => subscription(name).onData(trackedEvent(payload)));
 }
 
 let queryClient: QueryClient;
@@ -137,6 +144,7 @@ describe("useRecipesSubscription", () => {
         "onConverted",
         "onCreated",
         "onDeleted",
+        "onDeleteKept",
         "onFailed",
         "onImportStarted",
         "onImported",
@@ -179,7 +187,7 @@ describe("useRecipesSubscription", () => {
   });
 
   it("removes a deleted recipe from the list and invalidates its detail query", () => {
-    emit("onDeleted", { id: "recipe-1" });
+    emit("onDeleted", { ids: ["recipe-1"] });
 
     expect(queryClient.getQueryData(LIST_KEY)).toEqual(
       expect.objectContaining({ pages: [expect.objectContaining({ recipes: [], total: 0 })] })
@@ -197,4 +205,15 @@ describe("useRecipesSubscription", () => {
 
     expect(list?.pages[0]?.recipes.map((r) => r.id)).toEqual(["recipe-2", "recipe-1"]);
   });
+
+  it.each(["onImported", "onFailed"])(
+    "rereads the pending imports once %s is live, for an import that ended before it",
+    (name) => {
+      act(() => subscription(name).onStarted?.());
+
+      expect(invalidateQueries).toHaveBeenCalledWith({
+        queryKey: [["recipes", "getPending"], { type: "query" }],
+      });
+    }
+  );
 });

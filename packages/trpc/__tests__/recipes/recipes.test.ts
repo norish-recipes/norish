@@ -4,6 +4,8 @@ import superjson from "superjson";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 
 import { recipesRouter } from "../../src/routers/recipes";
+import { updateRecipeProcedure } from "../../src/routers/recipes/recipes";
+import { router } from "../../src/trpc";
 import { canAccessResource } from "../mocks/permissions";
 import { recipes } from "../mocks/realtime/recipes";
 // Import mocks for assertions
@@ -631,134 +633,85 @@ describe("recipes procedures", () => {
     });
   });
 
-  describe("delete", () => {
-    it("deletes recipe when user has delete permission", async () => {
-      getRecipeOwnerId.mockResolvedValue("test-user-id");
+  describe("edit via the API", () => {
+    const recipeId = "66666666-6666-4666-8666-666666666666";
+
+    function createCaller() {
+      return router({ updateRecipe: updateRecipeProcedure }).createCaller({
+        ...ctx,
+        connectionId: null,
+        operationId: null,
+      });
+    }
+
+    it("waits for the edit and returns the stored recipe", async () => {
+      const edited = createValidFullRecipe({ id: recipeId, name: "Renamed", version: 2 });
+
+      getRecipeFull.mockResolvedValue(edited);
+      getRecipeOwnerId.mockResolvedValue(ctx.user.id);
       canAccessResource.mockResolvedValue(true);
-      deleteRecipeById.mockResolvedValue(undefined);
+      updateRecipeWithRefs.mockResolvedValue({ stale: false });
 
-      const testRouter = t.router({
-        delete: t.procedure
-          .input((v: any) => v)
-          .mutation(async ({ input }) => {
-            const ownerId = await getRecipeOwnerId(input.id);
-
-            if (ownerId !== null) {
-              const canDelete = await canAccessResource(
-                "delete",
-                ctx.user.id,
-                ownerId,
-                ctx.householdUserIds,
-                ctx.isServerAdmin
-              );
-
-              if (!canDelete) {
-                throw new Error("FORBIDDEN");
-              }
-            }
-
-            await deleteRecipeById(input.id);
-            void recipes.publish("deleted", { id: input.id }, { householdKey: ctx.householdKey });
-
-            return { success: true };
-          }),
+      const result = await createCaller().updateRecipe({
+        id: recipeId,
+        data: { name: "Renamed" },
+        version: 1,
       });
 
-      const caller = t.createCallerFactory(testRouter)(ctx);
-      const result = await caller.delete({ id: "r1" });
-
-      expect(getRecipeOwnerId).toHaveBeenCalledWith("r1");
-      expect(canAccessResource).toHaveBeenCalledWith(
-        "delete",
+      expect(updateRecipeWithRefs).toHaveBeenCalledWith(
+        recipeId,
         ctx.user.id,
-        "test-user-id",
-        ctx.householdUserIds,
-        ctx.isServerAdmin
+        expect.objectContaining({ name: "Renamed" }),
+        1
       );
-      expect(deleteRecipeById).toHaveBeenCalledWith("r1");
+      expect(result).toEqual({ recipe: edited, stale: false });
       expect(recipes.publish).toHaveBeenCalledWith(
-        "deleted",
-        {
-          id: "r1",
-        },
-        { householdKey: ctx.householdKey }
+        "updated",
+        { recipe: edited },
+        expect.anything()
       );
-      expect(result).toEqual({ success: true });
     });
 
-    it("throws FORBIDDEN when user lacks delete permission", async () => {
+    it("reports a stale version without publishing", async () => {
+      getRecipeFull.mockResolvedValue(createValidFullRecipe({ id: recipeId }));
+      getRecipeOwnerId.mockResolvedValue(ctx.user.id);
+      canAccessResource.mockResolvedValue(true);
+      updateRecipeWithRefs.mockResolvedValue({ stale: true });
+
+      const result = await createCaller().updateRecipe({
+        id: recipeId,
+        data: { name: "Renamed" },
+        version: 1,
+      });
+
+      expect(result).toEqual({ recipe: null, stale: true });
+      expect(recipes.publish).not.toHaveBeenCalledWith(
+        "updated",
+        expect.anything(),
+        expect.anything()
+      );
+    });
+
+    it("throws NOT_FOUND for a recipe that does not exist", async () => {
+      getRecipeFull.mockResolvedValue(null);
+
+      await expect(
+        createCaller().updateRecipe({ id: recipeId, data: { name: "x" }, version: 1 })
+      ).rejects.toMatchObject({ code: "NOT_FOUND" });
+      expect(updateRecipeWithRefs).not.toHaveBeenCalled();
+    });
+
+    it("throws FORBIDDEN when the caller may view but not edit", async () => {
+      getRecipeFull.mockResolvedValue(
+        createValidFullRecipe({ id: recipeId, userId: "other-user-id" })
+      );
       getRecipeOwnerId.mockResolvedValue("other-user-id");
-      canAccessResource.mockResolvedValue(false);
+      canAccessResource.mockImplementation(async (action: string) => action === "view");
 
-      const testRouter = t.router({
-        delete: t.procedure
-          .input((v: any) => v)
-          .mutation(async ({ input }) => {
-            const ownerId = await getRecipeOwnerId(input.id);
-
-            if (ownerId !== null) {
-              const canDelete = await canAccessResource(
-                "delete",
-                ctx.user.id,
-                ownerId,
-                ctx.householdUserIds,
-                ctx.isServerAdmin
-              );
-
-              if (!canDelete) {
-                throw new Error("FORBIDDEN");
-              }
-            }
-
-            await deleteRecipeById(input.id);
-
-            return { success: true };
-          }),
-      });
-
-      const caller = t.createCallerFactory(testRouter)(ctx);
-
-      await expect(caller.delete({ id: "r1" })).rejects.toThrow("FORBIDDEN");
-      expect(deleteRecipeById).not.toHaveBeenCalled();
-    });
-
-    it("allows deleting orphaned recipe without permission check", async () => {
-      getRecipeOwnerId.mockResolvedValue(null);
-      deleteRecipeById.mockResolvedValue(undefined);
-
-      const testRouter = t.router({
-        delete: t.procedure
-          .input((v: any) => v)
-          .mutation(async ({ input }) => {
-            const ownerId = await getRecipeOwnerId(input.id);
-
-            if (ownerId !== null) {
-              const canDelete = await canAccessResource(
-                "delete",
-                ctx.user.id,
-                ownerId,
-                ctx.householdUserIds,
-                ctx.isServerAdmin
-              );
-
-              if (!canDelete) {
-                throw new Error("FORBIDDEN");
-              }
-            }
-
-            await deleteRecipeById(input.id);
-            void recipes.publish("deleted", { id: input.id }, { householdKey: ctx.householdKey });
-
-            return { success: true };
-          }),
-      });
-
-      const caller = t.createCallerFactory(testRouter)(ctx);
-      const result = await caller.delete({ id: "orphan-recipe" });
-
-      expect(canAccessResource).not.toHaveBeenCalled();
-      expect(deleteRecipeById).toHaveBeenCalledWith("orphan-recipe");
-      expect(result).toEqual({ success: true });
+      await expect(
+        createCaller().updateRecipe({ id: recipeId, data: { name: "x" }, version: 1 })
+      ).rejects.toMatchObject({ code: "FORBIDDEN" });
+      expect(updateRecipeWithRefs).not.toHaveBeenCalled();
     });
   });
 
