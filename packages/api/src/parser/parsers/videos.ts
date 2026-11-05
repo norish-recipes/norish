@@ -120,6 +120,8 @@ function normalizeVideoObject(node: unknown): VideoObjectCandidate | null {
 }
 
 const MAX_PAGE_VIDEOS = 10;
+/** A page's first video can be dead, so a few are tried; each failure costs a slow probe. */
+const MAX_VIDEO_ATTEMPTS = 3;
 
 /**
  * The videos a page embeds, absolute. Cleaning a page for a model drops these, and most iframes are
@@ -308,24 +310,17 @@ async function downloadAndSaveVideo(
 }
 
 /**
- * Parse and download videos from JSON-LD video field.
+ * Save a recipe's main video: the first candidate that downloads. One per recipe, as videos are large.
  *
- * This function handles:
- * - Single VideoObject
- * - Array of VideoObject
- * - Direct contentUrl or url fields
- *
- * Videos are downloaded using yt-dlp and saved to the recipe directory.
+ * Handles a single VideoObject or an array of them, by contentUrl or url, downloaded with yt-dlp.
  *
  * @param videoField - The video field from JSON-LD
  * @param recipeId - Recipe ID for storage paths
- * @param maxVideos - Maximum number of videos to process (default: 3)
- * @returns Parsed videos with paths and metadata
+ * @returns The saved video, if any
  */
 export async function parseVideos(
   videoField: unknown,
-  recipeId: string,
-  maxVideos: number = 3
+  recipeId: string
 ): Promise<VideoParseResult> {
   const defaultResult: VideoParseResult = { videos: [] };
 
@@ -342,16 +337,8 @@ export async function parseVideos(
   log.debug({ count: candidates.length }, "Found VideoObject candidates in JSON-LD");
 
   const { allowPrivateAddresses } = await getPageRenderersConfig();
-  const videos: ParsedVideo[] = [];
 
-  // Process videos sequentially to avoid overwhelming resources
-  for (let i = 0; i < Math.min(candidates.length, maxVideos); i++) {
-    const candidate = candidates[i];
-
-    if (!candidate) {
-      continue;
-    }
-
+  for (const candidate of candidates.slice(0, MAX_VIDEO_ATTEMPTS)) {
     const videoUrl = candidate.contentUrl || candidate.url;
 
     if (!videoUrl) continue;
@@ -363,13 +350,10 @@ export async function parseVideos(
 
     const thumbnailUrl = extractThumbnailUrl(candidate.thumbnailUrl);
     const duration = parseDuration(candidate.duration);
+    const parsed = await downloadAndSaveVideo(videoUrl, recipeId, 0, thumbnailUrl, duration);
 
-    const parsed = await downloadAndSaveVideo(videoUrl, recipeId, i, thumbnailUrl, duration);
-
-    if (parsed) {
-      videos.push(parsed);
-    }
+    if (parsed) return { videos: [parsed] };
   }
 
-  return { videos };
+  return defaultResult;
 }

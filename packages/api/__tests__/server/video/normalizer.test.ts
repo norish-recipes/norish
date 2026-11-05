@@ -61,7 +61,7 @@ const EXTRACTED = {
   totalTime: null,
   keywords: null,
   allergyIndications: [],
-  videoUrls: [],
+  videoUrl: null,
   categories: [],
   nutrition: { calories: null, fat: null, carbs: null, protein: null },
   sourceSystem: "metric",

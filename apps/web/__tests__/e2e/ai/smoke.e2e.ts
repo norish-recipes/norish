@@ -43,7 +43,7 @@ const SMOKE_RECIPE = {
   },
   keywords: null,
   allergyIndications: [],
-  videoUrls: [],
+  videoUrl: null,
   categories: ["Dinner"],
   nutrition: { calories: 320, fat: 6, carbs: 48, protein: 16 },
 };

@@ -128,7 +128,7 @@ describe("extractRecipeWithAI", () => {
     });
 
     it("lists the page's videos for the model, and saves what it picks", async () => {
-      mocked.generateStructured.mockResolvedValue({ ...EXTRACTED, videoUrls: [LISTED, LISTED] });
+      mocked.generateStructured.mockResolvedValue({ ...EXTRACTED, videoUrl: LISTED });
 
       await extractRecipeWithAI(HTML, "recipe-1", "https://example.com/pesto");
 
@@ -141,7 +141,7 @@ describe("extractRecipeWithAI", () => {
     it("never saves a URL the model picked from outside the page's list", async () => {
       mocked.generateStructured.mockResolvedValue({
         ...EXTRACTED,
-        videoUrls: ["http://169.254.169.254/latest"],
+        videoUrl: "http://169.254.169.254/latest",
       });
 
       await extractRecipeWithAI(HTML, "recipe-1", "https://example.com/pesto");
@@ -149,15 +149,16 @@ describe("extractRecipeWithAI", () => {
       expect(savedVideos()).toEqual([]);
     });
 
-    it("always saves JSON-LD's videos, and a pick of the same one only once", async () => {
-      const video = { "@type": "VideoObject", contentUrl: LISTED, duration: "PT1M" };
+    it("takes JSON-LD's video as the main one, without asking the model", async () => {
+      const video = { "@type": "VideoObject", contentUrl: "https://cdn.test/own.mp4" };
 
-      mocked.generateStructured.mockResolvedValue({ ...EXTRACTED, videoUrls: [LISTED] });
+      mocked.generateStructured.mockResolvedValue({ ...EXTRACTED, videoUrl: LISTED });
 
       await extractRecipeWithAI(HTML, "recipe-1", "https://example.com/pesto", [
         { name: "Pesto", video },
       ]);
 
+      expect(mocked.extractPageVideos).not.toHaveBeenCalled();
       expect(savedVideos()).toEqual([video]);
     });
 

@@ -230,7 +230,7 @@ describe("parseVideos - VideoObject extraction", () => {
       expect(result.videos).toHaveLength(1);
     });
 
-    it("handles array of VideoObjects", async () => {
+    it("saves only the first video of an array", async () => {
       vi.mocked(downloadVideo)
         .mockResolvedValueOnce({ filePath: "/tmp/video1.mp4", extension: "mp4" })
         .mockResolvedValueOnce({ filePath: "/tmp/video2.mp4", extension: "mp4" });
@@ -242,24 +242,23 @@ describe("parseVideos - VideoObject extraction", () => {
 
       const result = await parseVideos(videoField, "test-recipe-id");
 
-      expect(downloadVideo).toHaveBeenCalledTimes(2);
-      expect(result.videos).toHaveLength(2);
+      expect(downloadVideo).toHaveBeenCalledTimes(1);
+      expect(downloadVideo).toHaveBeenCalledWith("https://example.com/video1.mp4");
+      expect(result.videos).toHaveLength(1);
     });
 
-    it("limits videos to maxVideos parameter", async () => {
-      vi.mocked(downloadVideo).mockResolvedValue({ filePath: "/tmp/video.mp4", extension: "mp4" });
+    it("tries the next candidate when one fails, and tries only a few", async () => {
+      vi.mocked(downloadVideo).mockReset();
+      vi.mocked(downloadVideo).mockRejectedValue(new Error("gone"));
 
-      const videoField = [
-        { "@type": "VideoObject", contentUrl: "https://example.com/video1.mp4" },
-        { "@type": "VideoObject", contentUrl: "https://example.com/video2.mp4" },
-        { "@type": "VideoObject", contentUrl: "https://example.com/video3.mp4" },
-        { "@type": "VideoObject", contentUrl: "https://example.com/video4.mp4" },
-      ];
+      const candidates = [1, 2, 3, 4].map((n) => ({
+        "@type": "VideoObject",
+        contentUrl: `https://cdn.test/${n}.mp4`,
+      }));
+      const result = await parseVideos(candidates, "test-recipe-id");
 
-      const result = await parseVideos(videoField, "test-recipe-id", 2);
-
-      expect(downloadVideo).toHaveBeenCalledTimes(2);
-      expect(result.videos).toHaveLength(2);
+      expect(result.videos).toEqual([]);
+      expect(downloadVideo).toHaveBeenCalledTimes(3);
     });
 
     it("continues on download failure and returns successful downloads", async () => {
@@ -467,20 +466,15 @@ describe("parseVideos - VideoObject extraction", () => {
   });
 
   describe("order assignment", () => {
-    it("assigns sequential order to videos", async () => {
+    it("gives the saved video the first place", async () => {
       vi.mocked(downloadVideo).mockResolvedValue({ filePath: "/tmp/video.mp4", extension: "mp4" });
 
-      const videoField = [
+      const result = await parseVideos(
         { "@type": "VideoObject", contentUrl: "https://example.com/video1.mp4" },
-        { "@type": "VideoObject", contentUrl: "https://example.com/video2.mp4" },
-        { "@type": "VideoObject", contentUrl: "https://example.com/video3.mp4" },
-      ];
+        "test-recipe-id"
+      );
 
-      const result = await parseVideos(videoField, "test-recipe-id");
-
-      expect(result.videos[0].order).toBe(0);
-      expect(result.videos[1].order).toBe(1);
-      expect(result.videos[2].order).toBe(2);
+      expect(result.videos[0]?.order).toBe(0);
     });
   });
 });

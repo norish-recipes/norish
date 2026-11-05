@@ -30,14 +30,6 @@ export const EXTRACTION_FAITHFULNESS_LEVELS = [
   "Faithful: every ingredient and step follows the source",
 ] as const;
 
-/**
- * Extract a recipe using AI, in one request holding everything the source has.
- *
- * @param source - The HTML or text to extract the recipe from.
- * @param url - Optional source URL of the recipe.
- * @param jsonLd - The page's JSON-LD Recipe nodes, which lead over its text.
- * @returns The extracted recipe; throws on AI failure or when the page holds no recipe.
- */
 /** What a model has no use for, and on a popular recipe the bulk of its JSON-LD. */
 function withoutReviews(node: Record<string, unknown>): Record<string, unknown> {
   const {
@@ -52,30 +44,27 @@ function withoutReviews(node: Record<string, unknown>): Record<string, unknown> 
 }
 
 /**
- * JSON-LD's videos, then the model's picks. A pick not on the page's own list is dropped:
- * it would otherwise reach the download as a URL only the model vouches for.
+ * JSON-LD's video when it has one, else the model's pick. A pick not on the page's own list is
+ * dropped: it would otherwise reach the download as a URL only the model vouches for.
  */
 function recipeVideos(
   jsonLdVideo: unknown,
-  picks: string[] | undefined,
+  pick: string | null | undefined,
   pageVideos: string[]
 ): unknown[] {
-  const videos = jsonLdVideo ? [jsonLdVideo].flat() : [];
-  const known = new Set(
-    videos.flatMap((video) => {
-      const { contentUrl, url } = (video ?? {}) as { contentUrl?: unknown; url?: unknown };
+  if (jsonLdVideo) return [jsonLdVideo].flat();
 
-      return [contentUrl, url];
-    })
-  );
-  const picked = (picks ?? []).filter((pick) => pageVideos.includes(pick) && !known.has(pick));
-
-  return [
-    ...videos,
-    ...[...new Set(picked)].map((contentUrl) => ({ "@type": "VideoObject", contentUrl })),
-  ];
+  return pick && pageVideos.includes(pick) ? [{ "@type": "VideoObject", contentUrl: pick }] : [];
 }
 
+/**
+ * Extract a recipe using AI, in one request holding everything the source has.
+ *
+ * @param source - The HTML or text to extract the recipe from.
+ * @param url - Optional source URL of the recipe.
+ * @param jsonLd - The page's JSON-LD Recipe nodes, which lead over its text.
+ * @returns The extracted recipe; throws on AI failure or when the page holds no recipe.
+ */
 export async function extractRecipeWithAI(
   source: string,
   recipeId: string,
@@ -92,7 +81,7 @@ export async function extractRecipeWithAI(
     jsonLd.length > 0
       ? JSON.stringify(jsonLd.map(withoutReviews), null, 2).slice(0, AI_SOURCE_LIMIT)
       : undefined;
-  const pageVideos = url ? extractPageVideos(source, url) : [];
+  const pageVideos = url && !onlyRecipe?.video ? extractPageVideos(source, url) : [];
   const sourceText = jsonLdText ? `${jsonLdText}\n\n${pageText}` : pageText;
 
   const extracted = await generateStructured({
@@ -135,7 +124,7 @@ export async function extractRecipeWithAI(
     url,
     imageCandidates,
     recipeId,
-    videos: recipeVideos(onlyRecipe?.video, extracted.videoUrls, pageVideos),
+    videos: recipeVideos(onlyRecipe?.video, extracted.videoUrl, pageVideos),
   });
 
   if (!normalized) {

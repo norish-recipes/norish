@@ -247,7 +247,7 @@ function createValidOutput(): RecipeExtractionOutput {
     totalTime: "PT45M",
     keywords: [],
     allergyIndications: [],
-    videoUrls: [],
+    videoUrl: null,
     categories: null,
     nutrition: {
       calories: 350,
@@ -270,7 +270,7 @@ describe("normalizeExtractionOutput - HTML Entity Decoding", () => {
     const output = {
       ...createValidOutput(),
       allergyIndications: [" Peanut ", "Milk", "peanut"],
-      videoUrls: [],
+      videoUrl: null,
     } as RecipeExtractionOutput;
     const { normalizeRecipeFromJson } = await import("@norish/api/parser/normalize");
 
@@ -302,7 +302,7 @@ describe("normalizeExtractionOutput - HTML Entity Decoding", () => {
 
   it("passes on only the videos it is given, never the model's own list", async () => {
     const video = { "@type": "VideoObject", contentUrl: "https://cdn.test/v.mp4" };
-    const output = { ...createValidOutput(), videoUrls: ["http://169.254.169.254/"] };
+    const output = { ...createValidOutput(), videoUrl: "http://169.254.169.254/" };
     const { normalizeRecipeFromJson } = await import("@norish/api/parser/normalize");
     const normalize = vi.mocked(normalizeRecipeFromJson);
 

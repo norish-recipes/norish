@@ -67,7 +67,7 @@ describe("extraction schema keeps explicit source facts", () => {
     recipeInstructions: { metric: ["Boil"], us: ["Boil"] },
     keywords: ["italian"],
     allergyIndications: [],
-    videoUrls: [],
+    videoUrl: null,
     categories: ["Dinner"],
     nutrition: { calories: 500, fat: 10, carbs: 60, protein: 20 },
   };
@@ -84,7 +84,7 @@ describe("extraction schema keeps explicit source facts", () => {
     const parsed = recipeExtractionSchema.parse({
       ...validOutput,
       allergyIndications: ["Peanut", "Milk"],
-      videoUrls: [],
+      videoUrl: null,
     });
 
     expect(parsed.allergyIndications).toEqual(["Peanut", "Milk"]);

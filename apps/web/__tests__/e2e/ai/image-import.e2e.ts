@@ -44,7 +44,7 @@ const IMAGE_RECIPE = {
   },
   keywords: null,
   allergyIndications: [],
-  videoUrls: [],
+  videoUrl: null,
   categories: ["Dinner"],
   nutrition: { calories: null, fat: null, carbs: null, protein: null },
 };

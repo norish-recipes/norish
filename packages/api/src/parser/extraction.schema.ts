@@ -101,10 +101,11 @@ export const recipeExtractionSchema = z
         "Meal categories the source explicitly states, from: Breakfast, Lunch, Dinner, Snack. Empty when the source states none."
       ),
     nutrition: sourceNutritionSchema,
-    videoUrls: z
-      .array(z.string())
+    videoUrl: z
+      .string()
+      .nullable()
       .describe(
-        "URLs from the VIDEOS ON THE PAGE list that show this recipe, copied exactly. Empty when none does."
+        "The URL from the VIDEOS ON THE PAGE list that shows this recipe, copied exactly. Null when none does."
       ),
   })
   .strict();
