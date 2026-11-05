@@ -30,6 +30,18 @@
 }
 
 @layer base {
+  /* A click beside text in a tab or card leaves a collapsed selection there; only
+     editable fields should paint its caret. caret-color inherits. */
+  body {
+    caret-color: transparent;
+  }
+
+  input,
+  textarea,
+  [contenteditable]:not([contenteditable="false"]) {
+    caret-color: auto;
+  }
+
   /* Fraunces ships a soft, slightly quirky default; dial it toward the
      bookish end so headlines read calm rather than decorative. */
   .font-serif {
