@@ -1,8 +1,8 @@
-import type { ResolvedColorScheme } from "@/lib/color-scheme";
+import type { ResolvedColorScheme } from "@/lib/preferences/color-scheme";
 import { useColorScheme } from "react-native";
-import { useAppearancePreference } from "@/context/appearance-preference-context";
+import { useAppearancePreference } from "@/lib/preferences/appearance-preference-context";
 
-export type { ResolvedColorScheme } from "@/lib/color-scheme";
+export type { ResolvedColorScheme } from "@/lib/preferences/color-scheme";
 
 /**
  * The scheme the app is drawn in right now: the one the user chose, or the

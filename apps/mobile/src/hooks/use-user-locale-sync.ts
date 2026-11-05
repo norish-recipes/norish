@@ -1,6 +1,6 @@
 import { useEffect } from "react";
-import { useMobileLocaleSettings } from "@/context/mobile-i18n-context";
-import { useUserContext } from "@/context/user-context";
+import { useUserContext } from "@/lib/auth/user-context";
+import { useMobileLocaleSettings } from "@/lib/i18n/mobile-i18n-context";
 
 import { getLocalePreference } from "@norish/shared/lib/user-preferences";
 

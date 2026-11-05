@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react";
-import { queryCacheRestorePromise } from "@/providers/trpc-provider";
+import { queryCacheRestorePromise } from "@/lib/trpc/trpc-provider";
 
 import { createClientLogger } from "@norish/shared/lib/logger";
 

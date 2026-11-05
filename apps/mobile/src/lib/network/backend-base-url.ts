@@ -1,5 +1,5 @@
 import { clearQueryCachesOnUrlChange } from "@/hooks/use-cache-lifecycle";
-import { resetAuthClientStorage } from "@/lib/auth-client";
+import { resetAuthClientStorage } from "@/lib/auth/auth-client";
 import * as SecureStore from "expo-secure-store";
 
 import { httpUrlSchema } from "@norish/shared/lib/schema";

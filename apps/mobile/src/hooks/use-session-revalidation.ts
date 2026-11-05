@@ -1,6 +1,6 @@
 import { useEffect, useRef } from "react";
-import { useAuth } from "@/context/auth-context";
-import { useNetworkStatus } from "@/context/network-context";
+import { useAuth } from "@/lib/auth/auth-context";
+import { useNetworkStatus } from "@/lib/network/network-context";
 
 import { createClientLogger } from "@norish/shared/lib/logger";
 

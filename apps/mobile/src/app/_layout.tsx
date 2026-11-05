@@ -3,29 +3,23 @@ import "@/global.css";
 import React, { useEffect } from "react";
 import { StyleSheet } from "react-native";
 import { GestureHandlerRootView } from "react-native-gesture-handler";
-import { StorageUnavailableScreen } from "@/components/shell/storage-unavailable-screen";
-import {
-  AppearancePreferenceProvider,
-  useAppearancePreference,
-} from "@/context/appearance-preference-context";
-import { AuthProvider, useAuth } from "@/context/auth-context";
-import { GroceriesProvider } from "@/context/groceries-context";
-import { HouseholdProvider } from "@/context/household-context";
-import { MobileIntlFallbackProvider, MobileIntlProvider } from "@/context/mobile-i18n-context";
-import { NetworkProvider } from "@/context/network-context";
-import { PermissionsProvider } from "@/context/permissions-context";
-import { RecipeFiltersProvider } from "@/context/recipe-filters-context";
-import { RecipesProvider } from "@/context/recipes-context";
-import { StoresProvider } from "@/context/stores-context";
-import { UserProvider } from "@/context/user-context";
+import { StorageUnavailableScreen } from "@/features/auth/screens/storage-unavailable-screen";
 import { useBackendBaseUrl } from "@/hooks/use-backend-base-url";
 import { useCacheHydration } from "@/hooks/use-cache-hydration";
 import { useCacheInvalidationOnReconnect } from "@/hooks/use-cache-lifecycle";
 import { useResolvedColorScheme } from "@/hooks/use-resolved-color-scheme";
 import { useSessionRevalidation } from "@/hooks/use-session-revalidation";
 import { useUserLocaleSync } from "@/hooks/use-user-locale-sync";
+import { AuthProvider, useAuth } from "@/lib/auth/auth-context";
+import { UserProvider } from "@/lib/auth/user-context";
 import { resolveBootPhase } from "@/lib/boot/boot-state";
-import { TrpcProvider } from "@/providers/trpc-provider";
+import { MobileIntlFallbackProvider, MobileIntlProvider } from "@/lib/i18n/mobile-i18n-context";
+import { NetworkProvider } from "@/lib/network/network-context";
+import {
+  AppearancePreferenceProvider,
+  useAppearancePreference,
+} from "@/lib/preferences/appearance-preference-context";
+import { TrpcProvider } from "@/lib/trpc/trpc-provider";
 import { Stack } from "expo-router";
 import { DarkTheme, DefaultTheme, ThemeProvider } from "expo-router/react-navigation";
 import * as SplashScreen from "expo-splash-screen";
@@ -135,9 +129,8 @@ function RootLayoutContent() {
 // ============================================================================
 
 /**
- * When authenticated, wraps children with domain-specific providers
- * (permissions, user, recipes, filters). When unauthenticated, renders
- * children directly.
+ * When authenticated, wraps children with the user provider. When
+ * unauthenticated, renders children directly.
  */
 function DomainProviders({ children }: { children: React.ReactNode }) {
   const { isAuthenticated } = useAuth();
@@ -154,20 +147,10 @@ function AuthenticatedProviders({ children }: { children: React.ReactNode }) {
   useSessionRevalidation();
 
   return (
-    <RecipeFiltersProvider>
-      <PermissionsProvider>
-        <UserProvider>
-          <AuthenticatedEffects />
-          <HouseholdProvider>
-            <RecipesProvider>
-              <StoresProvider>
-                <GroceriesProvider>{children}</GroceriesProvider>
-              </StoresProvider>
-            </RecipesProvider>
-          </HouseholdProvider>
-        </UserProvider>
-      </PermissionsProvider>
-    </RecipeFiltersProvider>
+    <UserProvider>
+      <AuthenticatedEffects />
+      {children}
+    </UserProvider>
   );
 }
 
@@ -187,7 +170,7 @@ function RootStack() {
   return (
     <Stack screenOptions={{ headerShown: false }}>
       <Stack.Protected guard={isAuthenticated}>
-        <Stack.Screen name="(tabs)" />
+        <Stack.Screen name="smoke" />
       </Stack.Protected>
       <Stack.Protected guard={!isAuthenticated}>
         <Stack.Screen name="(auth)" />

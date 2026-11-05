@@ -1,8 +1,8 @@
 import { useEffect, useRef } from "react";
-import { useNetworkStatus } from "@/context/network-context";
+import { useNetworkStatus } from "@/lib/network/network-context";
 import { drainQueue } from "@/lib/outbox";
 import { queryCacheStorage } from "@/lib/storage/query-cache-mmkv";
-import { persistedQueryClient } from "@/providers/trpc-provider";
+import { persistedQueryClient } from "@/lib/trpc/trpc-provider";
 
 import { createClientLogger } from "@norish/shared/lib/logger";
 
