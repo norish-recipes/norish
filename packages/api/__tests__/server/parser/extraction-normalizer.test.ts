@@ -247,6 +247,7 @@ function createValidOutput(): RecipeExtractionOutput {
     totalTime: "PT45M",
     keywords: [],
     allergyIndications: [],
+    videoUrls: [],
     categories: null,
     nutrition: {
       calories: 350,
@@ -269,6 +270,7 @@ describe("normalizeExtractionOutput - HTML Entity Decoding", () => {
     const output = {
       ...createValidOutput(),
       allergyIndications: [" Peanut ", "Milk", "peanut"],
+      videoUrls: [],
     } as RecipeExtractionOutput;
     const { normalizeRecipeFromJson } = await import("@norish/api/parser/normalize");
 
@@ -296,6 +298,25 @@ describe("normalizeExtractionOutput - HTML Entity Decoding", () => {
     const result = await normalizeExtractionOutput(output, { recipeId: "recipe-123" });
 
     expect(result?.tags).toEqual([{ name: "Dessert" }, { name: "Peanut" }, { name: "Milk" }]);
+  });
+
+  it("passes on only the videos it is given, never the model's own list", async () => {
+    const video = { "@type": "VideoObject", contentUrl: "https://cdn.test/v.mp4" };
+    const output = { ...createValidOutput(), videoUrls: ["http://169.254.169.254/"] };
+    const { normalizeRecipeFromJson } = await import("@norish/api/parser/normalize");
+    const normalize = vi.mocked(normalizeRecipeFromJson);
+
+    normalize.mockClear();
+    normalize.mockResolvedValue({
+      recipeIngredients: [],
+      steps: [],
+    } as unknown as FullRecipeInsertDTO);
+
+    await normalizeExtractionOutput(output, { recipeId: "recipe-123", videos: [video] });
+    await normalizeExtractionOutput(output, { recipeId: "recipe-123" });
+
+    expect(normalize.mock.calls[0]?.[0]).toMatchObject({ video: [video] });
+    expect(normalize.mock.calls[1]?.[0]).toMatchObject({ video: undefined });
   });
 
   it("reads a heading in the US copy as the metric copy reads it", async () => {

@@ -50,6 +50,7 @@ const ARCHIVE_RECIPE = {
   },
   keywords: null,
   allergyIndications: [],
+  videoUrls: [],
   categories: ["Dinner"],
   nutrition: { calories: null, fat: null, carbs: null, protein: null },
 };

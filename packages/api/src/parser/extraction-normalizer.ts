@@ -37,6 +37,11 @@ export interface NormalizeExtractionOptions {
   imageCandidates?: string[];
 
   /**
+   * VideoObjects to save, never the model's raw output: the caller checked them against the page.
+   */
+  videos?: unknown[];
+
+  /**
    * Recipe ID (for image storage paths).
    */
   recipeId: string;
@@ -104,13 +109,14 @@ export async function normalizeExtractionOutput(
   output: RecipeExtractionOutput,
   options: NormalizeExtractionOptions
 ): Promise<FullRecipeInsertDTO | null> {
-  const { url, image, imageCandidates, recipeId } = options;
+  const { url, image, imageCandidates, videos, recipeId } = options;
 
   // Build metric version for base normalization
   // The AI schema doesn't include image - it comes from HTML/video metadata
   const metricVersion = {
     ...output,
     image: image ?? imageCandidates,
+    video: videos,
     recipeIngredient: output.recipeIngredient.metric,
     recipeInstructions: output.recipeInstructions.metric,
   };

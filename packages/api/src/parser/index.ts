@@ -11,7 +11,6 @@ import {
 } from "@norish/api/parser/python/adapter";
 import { callRecipeScrapersParser } from "@norish/api/parser/python/client";
 import { extractRecipeWithAI } from "@norish/api/parser/recipe-extraction";
-import { recipePageText } from "@norish/api/parser/recipe-page-text";
 import {
   getContentIndicators,
   isAIEnabled,
@@ -117,12 +116,11 @@ function getStructuredFailureMessage(code: string): string {
  * caught here and answered with null.
  */
 async function tryExtractWithAI(
-  input: string,
+  source: string,
   recipeId: string,
   url: string,
   requireAI: boolean,
-  originalHtml?: string,
-  pageText?: string
+  jsonLd: Record<string, unknown>[]
 ): Promise<FullRecipeInsertDTO | null> {
   const enabled = await isAIEnabled();
 
@@ -137,9 +135,7 @@ async function tryExtractWithAI(
   log.info({ url }, "Attempting AI extraction");
 
   try {
-    return pageText
-      ? await extractRecipeWithAI(input, recipeId, url, originalHtml, pageText)
-      : await extractRecipeWithAI(input, recipeId, url, originalHtml);
+    return await extractRecipeWithAI(source, recipeId, url, jsonLd);
   } catch (error) {
     log.warn({ url, err: error }, "AI extraction failed");
 
@@ -148,10 +144,8 @@ async function tryExtractWithAI(
 }
 
 /**
- * Try AI extraction with smallest/cleanest input first (JSON-LD),
- * then the full HTML, which may hold a method the JSON-LD lacks.
- * `ingredientLines` from the scraper stand in for the JSON-LD's flat list
- * when they hold the recipe's sections.
+ * Extract with AI from the page and its JSON-LD. `ingredientLines` from the scraper stand in for
+ * the JSON-LD's flat list when they hold the recipe's sections.
  */
 async function extractWithAIPreference(
   html: string,
@@ -160,42 +154,16 @@ async function extractWithAIPreference(
   requireAI: boolean,
   ingredientLines: string[] = []
 ): Promise<FullRecipeInsertDTO | null> {
-  const jsonLdNodes = extractRecipeNodesFromJsonLd(html);
+  const jsonLd = extractRecipeNodesFromJsonLd(html);
+  const sectioned = jsonLd.length === 1 && ingredientLines.some(isIngredientHeading);
 
-  if (jsonLdNodes.length > 0) {
-    log.info({ url }, "AI: using extracted JSON-LD as input (fewer tokens)");
-    const sectioned = jsonLdNodes.length === 1 && ingredientLines.some(isIngredientHeading);
-    const jsonLdInput = JSON.stringify(
-      sectioned ? [{ ...jsonLdNodes[0], recipeIngredient: ingredientLines }] : jsonLdNodes,
-      null,
-      2
-    );
-
-    // A flat list says nothing of its sections, which the page itself may still name (#685).
-    const pageText =
-      jsonLdNodes.length === 1 && !sectioned ? recipePageText(html, jsonLdNodes[0]) : undefined;
-    const fromJsonLd = await tryExtractWithAI(
-      jsonLdInput,
-      recipeId,
-      url,
-      requireAI,
-      html,
-      pageText
-    );
-
-    if (fromJsonLd && hasSteps(fromJsonLd)) return fromJsonLd;
-
-    if (fromJsonLd) {
-      log.info({ url }, "AI: JSON-LD held no steps, trying the full HTML");
-      const fromHtml = await tryExtractWithAI(html, recipeId, url, requireAI, html);
-
-      return fromHtml && hasSteps(fromHtml) ? fromHtml : fromJsonLd;
-    }
-  }
-
-  log.info({ url }, "AI: using full HTML as input");
-
-  return tryExtractWithAI(html, recipeId, url, requireAI, html);
+  return tryExtractWithAI(
+    html,
+    recipeId,
+    url,
+    requireAI,
+    sectioned ? [{ ...jsonLd[0], recipeIngredient: ingredientLines }] : jsonLd
+  );
 }
 
 /** The scraper's ingredient lines with their section headings, or none when it fails. */

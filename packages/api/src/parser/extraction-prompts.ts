@@ -14,9 +14,14 @@ export interface RecipeExtractionSectionOptions {
   url?: string;
 
   /**
-   * The recipe as written on its page, sent along with JSON-LD for what JSON-LD cannot hold.
+   * The page's JSON-LD, which leads: the page's text then only fills what it lacks.
    */
-  pageText?: string;
+  jsonLd?: string;
+
+  /**
+   * The video URLs the page embeds, for the model to pick the recipe's own from.
+   */
+  videos?: string[];
 }
 
 export interface VideoExtractionSectionOptions extends RecipeExtractionSectionOptions {
@@ -51,7 +56,7 @@ export function buildRecipeExtractionSections(
   content: string,
   options: RecipeExtractionSectionOptions = {}
 ): string[] {
-  const { url, pageText } = options;
+  const { url, jsonLd, videos = [] } = options;
 
   // No tagging or allergy instructions: extraction reads source facts, and every
   // inference belongs to the background enrichment workers under their own policy.
@@ -61,12 +66,16 @@ export function buildRecipeExtractionSections(
     sections.push(`URL: ${url}`);
   }
 
-  sections.push(`WEBPAGE TEXT:\n${content}`);
+  if (jsonLd) {
+    sections.push(`JSON-LD (leads; use its values where present):\n${jsonLd}`);
 
-  if (pageText) {
-    sections.push(
-      `THE SAME RECIPE AS WRITTEN ON ITS PAGE (take its ingredient section headings from here):\n${pageText}`
-    );
+    if (content) sections.push(`PAGE TEXT (only for what the JSON-LD lacks):\n${content}`);
+  } else {
+    sections.push(`WEBPAGE TEXT:\n${content}`);
+  }
+
+  if (videos.length > 0) {
+    sections.push(`VIDEOS ON THE PAGE:\n${videos.join("\n")}`);
   }
 
   return sections;

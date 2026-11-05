@@ -6,11 +6,19 @@
  */
 
 import fs from "fs/promises";
+import * as cheerio from "cheerio";
 import { decode } from "html-entities";
 
-import { downloadVideo, getFfmpegPath, getVideoMetadata } from "@norish/api/video/yt-dlp";
+import {
+  downloadVideo,
+  getFfmpegPath,
+  getMaxVideoLengthSeconds,
+  getVideoMetadata,
+} from "@norish/api/video/yt-dlp";
+import { getPageRenderersConfig } from "@norish/shared-server/config/server-config-loader";
 import { parserLogger } from "@norish/shared-server/logger";
 import { convertToMp4, saveVideoFile } from "@norish/shared-server/media/storage";
+import { isRefusedHost } from "@norish/shared-server/private-addresses";
 
 const log = parserLogger.child({ module: "videos" });
 
@@ -111,6 +119,54 @@ function normalizeVideoObject(node: unknown): VideoObjectCandidate | null {
   };
 }
 
+const MAX_PAGE_VIDEOS = 10;
+
+/**
+ * The videos a page embeds, absolute. Cleaning a page for a model drops these, and most iframes are
+ * not recipe videos: the model picks from this list, and the list bounds what it can pick.
+ */
+export function extractPageVideos(html: string, pageUrl: string): string[] {
+  const $ = cheerio.load(html);
+  const urls = new Set<string>();
+
+  const add = (value: string | undefined) => {
+    if (!value) return;
+
+    try {
+      const { href, protocol } = new URL(value, pageUrl);
+
+      if (protocol === "http:" || protocol === "https:") urls.add(href);
+    } catch {
+      // Not a URL.
+    }
+  };
+
+  $('meta[property^="og:video"]').each((_, element) => {
+    const property = $(element).attr("property");
+
+    if (property === "og:video" || property?.endsWith("url")) add($(element).attr("content"));
+  });
+  $("video, video source, iframe").each((_, element) => {
+    add($(element).attr("src") ?? $(element).attr("data-src") ?? $(element).attr("data-lazy-src"));
+  });
+
+  return [...urls].slice(0, MAX_PAGE_VIDEOS);
+}
+
+/** A video URL a page offers is untrusted: only a public web address reaches the download. */
+async function isDownloadable(videoUrl: string, allowPrivateAddresses: boolean): Promise<boolean> {
+  try {
+    const { hostname, protocol } = new URL(videoUrl);
+
+    return (
+      (protocol === "http:" || protocol === "https:") &&
+      !(await isRefusedHost(hostname, allowPrivateAddresses))
+    );
+  } catch {
+    return false;
+  }
+}
+
 /**
  * Extract VideoObject candidates from JSON-LD video field.
  */
@@ -171,17 +227,23 @@ async function downloadAndSaveVideo(
   try {
     log.debug({ videoUrl, recipeId }, "Attempting to download video from JSON-LD");
 
-    // Try to get metadata first (may provide duration if not in JSON-LD)
+    // The probe over the page's own claim: a page can call any video short.
     let duration = durationHint;
 
-    if (!duration) {
-      try {
-        const metadata = await getVideoMetadata(videoUrl);
+    try {
+      const metadata = await getVideoMetadata(videoUrl);
 
-        duration = metadata.duration ?? null;
-      } catch {
-        // Metadata fetch failed, continue without duration
-      }
+      duration = metadata.duration ?? duration;
+    } catch {
+      // Metadata fetch failed, continue with what the page said
+    }
+
+    const maxLength = await getMaxVideoLengthSeconds();
+
+    if (duration && duration > maxLength) {
+      log.warn({ videoUrl, duration, maxLength }, "Video exceeds the maximum length, not saved");
+
+      return null;
     }
 
     // Download the video
@@ -279,6 +341,7 @@ export async function parseVideos(
 
   log.debug({ count: candidates.length }, "Found VideoObject candidates in JSON-LD");
 
+  const { allowPrivateAddresses } = await getPageRenderersConfig();
   const videos: ParsedVideo[] = [];
 
   // Process videos sequentially to avoid overwhelming resources
@@ -292,6 +355,11 @@ export async function parseVideos(
     const videoUrl = candidate.contentUrl || candidate.url;
 
     if (!videoUrl) continue;
+
+    if (!(await isDownloadable(videoUrl, allowPrivateAddresses))) {
+      log.warn({ videoUrl }, "Refused to download a video from this address");
+      continue;
+    }
 
     const thumbnailUrl = extractThumbnailUrl(candidate.thumbnailUrl);
     const duration = parseDuration(candidate.duration);

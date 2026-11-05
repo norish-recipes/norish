@@ -1,15 +1,26 @@
 // @vitest-environment node
-import { describe, expect, it, vi } from "vitest";
+import { beforeEach, describe, expect, it, vi } from "vitest";
 
 // Import after mocks are set up
-import { parseVideos } from "@norish/api/parser/parsers/videos";
+import { extractPageVideos, parseVideos } from "@norish/api/parser/parsers/videos";
 import { downloadVideo, getVideoMetadata } from "@norish/api/video/yt-dlp";
+import { getPageRenderersConfig } from "@norish/shared-server/config/server-config-loader";
+import { isRefusedHost } from "@norish/shared-server/private-addresses";
 
 // Mock the dependencies before importing the module
 vi.mock("@norish/api/video/yt-dlp", () => ({
   downloadVideo: vi.fn(),
   getVideoMetadata: vi.fn(),
+  getMaxVideoLengthSeconds: vi.fn().mockResolvedValue(600),
   getFfmpegPath: vi.fn().mockReturnValue("/usr/bin/ffmpeg"),
+}));
+
+vi.mock("@norish/shared-server/config/server-config-loader", () => ({
+  getPageRenderersConfig: vi.fn().mockResolvedValue({ allowPrivateAddresses: false }),
+}));
+
+vi.mock("@norish/shared-server/private-addresses", () => ({
+  isRefusedHost: vi.fn().mockResolvedValue(false),
 }));
 
 vi.mock("@norish/shared-server/media/storage", () => ({
@@ -31,6 +42,105 @@ vi.mock("@norish/shared-server/logger", () => ({
     }),
   },
 }));
+
+describe("extractPageVideos", () => {
+  const PAGE = "https://example.com/recipes/pesto";
+
+  it("finds embedded videos, absolute and once each", () => {
+    expect(
+      extractPageVideos(
+        `<head>
+           <meta property="og:video" content="https://cdn.test/og.mp4">
+           <meta property="og:video:secure_url" content="https://cdn.test/secure.mp4">
+           <meta property="og:video:type" content="video/mp4">
+         </head>
+         <body>
+           <video src="/media/own.mp4"></video>
+           <video><source src="https://cdn.test/source.webm"></video>
+           <iframe src="https://www.youtube.com/embed/abc"></iframe>
+           <iframe data-src="https://player.vimeo.com/video/1"></iframe>
+           <iframe src="https://www.youtube.com/embed/abc"></iframe>
+         </body>`,
+        PAGE
+      )
+    ).toEqual([
+      "https://cdn.test/og.mp4",
+      "https://cdn.test/secure.mp4",
+      "https://example.com/media/own.mp4",
+      "https://cdn.test/source.webm",
+      "https://www.youtube.com/embed/abc",
+      "https://player.vimeo.com/video/1",
+    ]);
+  });
+
+  it("leaves out what is not a web address", () => {
+    expect(
+      extractPageVideos(
+        `<iframe src="about:blank"></iframe><iframe></iframe><video src="file:///etc/passwd"></video>
+         <iframe src="javascript:alert(1)"></iframe>`,
+        PAGE
+      )
+    ).toEqual([]);
+  });
+
+  it("caps the list a model reads", () => {
+    const frames = Array.from({ length: 30 }, (_, i) => `<iframe src="/f/${i}"></iframe>`).join("");
+
+    expect(extractPageVideos(frames, PAGE)).toHaveLength(10);
+  });
+});
+
+describe("parseVideos - what may be downloaded", () => {
+  const video = (contentUrl: string) => ({ "@type": "VideoObject", contentUrl });
+
+  beforeEach(() => {
+    vi.mocked(downloadVideo).mockReset();
+    vi.mocked(getVideoMetadata).mockResolvedValue({ duration: 10 } as never);
+    vi.mocked(isRefusedHost).mockReset();
+    vi.mocked(isRefusedHost).mockResolvedValue(false);
+  });
+
+  it("never saves a video over the maximum length, whatever the page says", async () => {
+    vi.mocked(getVideoMetadata).mockResolvedValue({ duration: 7200 } as never);
+
+    const { videos } = await parseVideos(
+      { ...video("https://cdn.test/long.mp4"), duration: "PT1M" },
+      "recipe-1"
+    );
+
+    expect(videos).toEqual([]);
+    expect(downloadVideo).not.toHaveBeenCalled();
+  });
+
+  it("never downloads from a private address", async () => {
+    vi.mocked(isRefusedHost).mockResolvedValue(true);
+
+    const { videos } = await parseVideos(video("http://192.168.1.1/admin"), "recipe-1");
+
+    expect(videos).toEqual([]);
+    expect(isRefusedHost).toHaveBeenCalledWith("192.168.1.1", false);
+    expect(downloadVideo).not.toHaveBeenCalled();
+    expect(getVideoMetadata).not.toHaveBeenCalledWith("http://192.168.1.1/admin");
+  });
+
+  it("follows the administrator's Allow private addresses", async () => {
+    vi.mocked(getPageRenderersConfig).mockResolvedValueOnce({
+      allowPrivateAddresses: true,
+    } as never);
+    vi.mocked(downloadVideo).mockRejectedValue(new Error("stop here"));
+
+    await parseVideos(video("http://192.168.1.1/v.mp4"), "recipe-1");
+
+    expect(isRefusedHost).toHaveBeenCalledWith("192.168.1.1", true);
+    expect(downloadVideo).toHaveBeenCalledOnce();
+  });
+
+  it.each(["file:///etc/passwd", "--exec=boom", "not a url"])("refuses %s", async (url) => {
+    await parseVideos(video(url), "recipe-1");
+
+    expect(downloadVideo).not.toHaveBeenCalled();
+  });
+});
 
 describe("parseVideos - VideoObject extraction", () => {
   describe("VideoObject detection", () => {

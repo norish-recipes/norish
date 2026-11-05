@@ -11,6 +11,7 @@ const mocked = vi.hoisted(() => ({
   shadowScore: vi.fn(),
   normalizeExtractionOutput: vi.fn(),
   extractImageCandidates: vi.fn(),
+  extractPageVideos: vi.fn(),
 }));
 
 vi.mock("@norish/shared-server/ai/runtime/runtime", () => ({
@@ -29,6 +30,7 @@ vi.mock("@norish/api/parser/extraction-normalizer", async (importOriginal) => ({
 
 vi.mock("@norish/api/parser/parsers", () => ({
   extractImageCandidates: mocked.extractImageCandidates,
+  extractPageVideos: mocked.extractPageVideos,
 }));
 
 const logger = vi.hoisted(() => {
@@ -63,6 +65,7 @@ beforeEach(() => {
   mocked.generateStructured.mockResolvedValue(EXTRACTED);
   mocked.shadowScore.mockResolvedValue(2);
   mocked.extractImageCandidates.mockReturnValue([]);
+  mocked.extractPageVideos.mockReturnValue([]);
   mocked.normalizeExtractionOutput.mockResolvedValue({ id: "recipe-1", name: "Pesto pasta" });
 });
 
@@ -78,16 +81,91 @@ describe("extractRecipeWithAI", () => {
     );
   });
 
-  it("adds the page's own text after the JSON-LD, and scores against both", async () => {
-    await extractRecipeWithAI('[{"name":"Pesto"}]', "recipe-1", undefined, HTML, "For the sauce:");
+  describe("with JSON-LD", () => {
+    const PAGE = `<html><body><main><h2>Pesto</h2><p>For the sauce:</p><p>Blend it all.</p><p>Comments</p></main></body></html>`;
+    const RECIPE = {
+      name: "Pesto",
+      recipeInstructions: ["Blend it all."],
+      review: [{ reviewBody: "Lovely" }],
+      aggregateRating: { ratingValue: 5 },
+    };
 
-    expect(mocked.generateStructured.mock.calls[0]?.[0].sections).toEqual([
-      'WEBPAGE TEXT:\n[{"name":"Pesto"}]',
-      expect.stringMatching(/ingredient section headings[^\n]*\nFor the sauce:$/),
-    ]);
-    expect(mocked.shadowScore.mock.calls[0]?.[0].state.source).toBe(
-      '[{"name":"Pesto"}]\n\nFor the sauce:'
-    );
+    const sections = () => mocked.generateStructured.mock.calls[0]?.[0].sections as string[];
+
+    it("sends the JSON-LD first and the recipe's stretch of the page after it", async () => {
+      await extractRecipeWithAI(PAGE, "recipe-1", undefined, [RECIPE]);
+
+      expect(sections()).toEqual([
+        `JSON-LD (leads; use its values where present):\n${JSON.stringify(
+          [{ name: "Pesto", recipeInstructions: ["Blend it all."] }],
+          null,
+          2
+        )}`,
+        "PAGE TEXT (only for what the JSON-LD lacks):\nPesto\nFor the sauce:\nBlend it all.",
+      ]);
+      expect(mocked.shadowScore.mock.calls[0]?.[0].state.source).toContain("For the sauce:");
+    });
+
+    it("keeps JSON-LD holding HTML tags, which the page cleaning would have emptied", async () => {
+      await extractRecipeWithAI(PAGE, "recipe-1", undefined, [{ name: "Pesto", note: "<B>x</B>" }]);
+
+      expect(sections()[0]).toContain("<B>x</B>");
+    });
+
+    it("sends the whole cleaned page when the page holds several recipes", async () => {
+      await extractRecipeWithAI(PAGE, "recipe-1", undefined, [RECIPE, { name: "Other" }]);
+
+      expect(sections()[1]).toContain("Comments");
+    });
+  });
+
+  describe("videos", () => {
+    const LISTED = "https://videos.test/pesto.mp4";
+    const savedVideos = () => mocked.normalizeExtractionOutput.mock.calls[0]?.[1].videos;
+
+    beforeEach(() => {
+      mocked.extractPageVideos.mockReturnValue([LISTED, "https://ads.test/frame"]);
+    });
+
+    it("lists the page's videos for the model, and saves what it picks", async () => {
+      mocked.generateStructured.mockResolvedValue({ ...EXTRACTED, videoUrls: [LISTED, LISTED] });
+
+      await extractRecipeWithAI(HTML, "recipe-1", "https://example.com/pesto");
+
+      expect(mocked.generateStructured.mock.calls[0]?.[0].sections).toContain(
+        `VIDEOS ON THE PAGE:\n${LISTED}\nhttps://ads.test/frame`
+      );
+      expect(savedVideos()).toEqual([{ "@type": "VideoObject", contentUrl: LISTED }]);
+    });
+
+    it("never saves a URL the model picked from outside the page's list", async () => {
+      mocked.generateStructured.mockResolvedValue({
+        ...EXTRACTED,
+        videoUrls: ["http://169.254.169.254/latest"],
+      });
+
+      await extractRecipeWithAI(HTML, "recipe-1", "https://example.com/pesto");
+
+      expect(savedVideos()).toEqual([]);
+    });
+
+    it("always saves JSON-LD's videos, and a pick of the same one only once", async () => {
+      const video = { "@type": "VideoObject", contentUrl: LISTED, duration: "PT1M" };
+
+      mocked.generateStructured.mockResolvedValue({ ...EXTRACTED, videoUrls: [LISTED] });
+
+      await extractRecipeWithAI(HTML, "recipe-1", "https://example.com/pesto", [
+        { name: "Pesto", video },
+      ]);
+
+      expect(savedVideos()).toEqual([video]);
+    });
+
+    it("looks for no videos without a page address", async () => {
+      await extractRecipeWithAI("Pasted recipe text", "recipe-1");
+
+      expect(mocked.extractPageVideos).not.toHaveBeenCalled();
+    });
   });
 
   it("scores its own output against the source in shadow, and nothing acts on the score", async () => {

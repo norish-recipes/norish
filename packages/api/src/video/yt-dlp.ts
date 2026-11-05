@@ -593,13 +593,18 @@ export async function downloadVideoAudio(
   }
 }
 
+export async function getMaxVideoLengthSeconds(): Promise<number> {
+  const videoConfig = await getVideoConfig();
+
+  return videoConfig?.maxLengthSeconds ?? SERVER_CONFIG.VIDEO_MAX_LENGTH_SECONDS;
+}
+
 export async function validateVideoLength(
   url: string,
   tokens?: SiteAuthTokenDecryptedDto[]
 ): Promise<void> {
   const metadata = await getVideoMetadata(url, tokens);
-  const videoConfig = await getVideoConfig();
-  const maxLength = videoConfig?.maxLengthSeconds ?? SERVER_CONFIG.VIDEO_MAX_LENGTH_SECONDS;
+  const maxLength = await getMaxVideoLengthSeconds();
 
   if (metadata.duration > maxLength) {
     const actualMinutes = Math.floor(metadata.duration / 60);

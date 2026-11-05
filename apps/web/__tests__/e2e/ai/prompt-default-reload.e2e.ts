@@ -60,6 +60,7 @@ function bareRecipe(name: string) {
     },
     keywords: null,
     allergyIndications: [],
+    videoUrls: [],
     categories: [],
     nutrition: { calories: null, fat: null, carbs: null, protein: null },
   };
