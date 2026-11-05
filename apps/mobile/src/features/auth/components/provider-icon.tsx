@@ -30,9 +30,9 @@ export function ProviderIcon({ icon, size = 20, color }: ProviderIconProps) {
   const ioniconName = ICONIFY_TO_IONICONS[icon];
 
   if (ioniconName) {
-    return <Ionicons name={ioniconName} size={size} color={color} />;
+    return <Ionicons color={color} name={ioniconName} size={size} />;
   }
 
   // Fallback: generic shield-account-outline from MaterialCommunityIcons
-  return <MaterialCommunityIcons name="shield-account-outline" size={size} color={color} />;
+  return <MaterialCommunityIcons color={color} name="shield-account-outline" size={size} />;
 }

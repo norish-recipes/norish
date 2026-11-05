@@ -18,12 +18,12 @@ export function ShellMenu({ label, systemImage, color, children }: ShellMenuProp
     <Host matchContents style={{ justifyContent: "center", alignItems: "center" }}>
       <Menu
         label={label}
-        systemImage={systemImage}
         modifiers={[
           ...(color ? [foregroundStyle(color)] : []),
           labelStyle("iconOnly"),
           buttonStyle("plain"),
         ]}
+        systemImage={systemImage}
       >
         {children}
       </Menu>

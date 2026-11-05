@@ -35,11 +35,13 @@ export function useCacheInvalidationOnReconnect() {
         .then((result) => {
           if (!result.hadPendingItems) {
             log.info("Outbox empty on reconnect");
+
             return;
           }
 
           if (result.drained) {
             log.info("Outbox drained successfully on reconnect");
+
             return;
           }
 

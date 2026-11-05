@@ -29,6 +29,7 @@ export function ConnectScreen() {
 
     if (!normalizedBaseUrl) {
       setErrorMessage(intl.formatMessage({ id: "auth.connect.errors.invalidUrl" }));
+
       return;
     }
 
@@ -65,10 +66,10 @@ export function ConnectScreen() {
       } else {
         setErrorMessage(intl.formatMessage({ id: "auth.connect.errors.unreachable" }));
       }
-    } finally {
-      clearTimeout(timeout);
-      setIsConnecting(false);
     }
+
+    clearTimeout(timeout);
+    setIsConnecting(false);
   }, [baseUrl, intl, router]);
 
   if (!isHydrated) {
@@ -86,24 +87,24 @@ export function ConnectScreen() {
       </Text>
 
       <Input
-        value={baseUrl}
-        onChangeText={setBaseUrl}
-        keyboardType="url"
         autoCapitalize="none"
         autoCorrect={false}
+        keyboardType="url"
         placeholder={intl.formatMessage({ id: "auth.connect.backendUrlPlaceholder" })}
         returnKeyType="done"
+        value={baseUrl}
+        onChangeText={setBaseUrl}
         onSubmitEditing={() => {
           void handleConnect();
         }}
       />
 
       <Button
+        isDisabled={isConnecting}
+        style={styles.connectButton}
         onPress={() => {
           void handleConnect();
         }}
-        isDisabled={isConnecting}
-        style={styles.connectButton}
       >
         <Button.Label>
           {isConnecting

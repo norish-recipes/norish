@@ -14,6 +14,7 @@ const DEFAULT_REACHABILITY_SNAPSHOT: ReachabilitySnapshot = {
 };
 
 let snapshot: ReachabilitySnapshot = { ...DEFAULT_REACHABILITY_SNAPSHOT };
+
 type ReachabilityListener = (
   snapshot: ReachabilitySnapshot,
   previousSnapshot: ReachabilitySnapshot

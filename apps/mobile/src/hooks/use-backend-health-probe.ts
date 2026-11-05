@@ -57,9 +57,9 @@ export function useBackendHealthProbe({
         if (!cancelled) {
           onUnreachable();
         }
-      } finally {
-        clearTimeout(timeout);
       }
+
+      clearTimeout(timeout);
     }
 
     void probeBackend();

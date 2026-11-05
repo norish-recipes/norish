@@ -2,6 +2,7 @@ import { clearQueryCachesOnUrlChange } from "@/hooks/use-cache-lifecycle";
 import { resetAuthClientStorage } from "@/lib/auth/auth-client";
 import * as SecureStore from "expo-secure-store";
 
+import { withoutTrailingSlashes } from "@norish/shared/lib/helpers";
 import { httpUrlSchema } from "@norish/shared/lib/schema";
 
 const BACKEND_BASE_URL_KEY = "norish.backend-base-url";
@@ -52,7 +53,7 @@ export function normalizeBackendBaseUrl(input: string): string | null {
     parsed.hash = "";
     parsed.search = "";
 
-    return parsed.toString().replace(/\/+$/, "");
+    return withoutTrailingSlashes(parsed.toString());
   } catch {
     return null;
   }
@@ -69,6 +70,7 @@ export async function loadBackendBaseUrl(): Promise<string | null> {
 
   if (!normalized) {
     await SecureStore.deleteItemAsync(BACKEND_BASE_URL_KEY);
+
     return null;
   }
 

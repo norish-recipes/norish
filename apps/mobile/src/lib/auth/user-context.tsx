@@ -1,4 +1,4 @@
-import React, { useCallback } from "react";
+import { useCallback } from "react";
 import { useAuth } from "@/lib/auth/auth-context";
 import { useTRPC } from "@/lib/trpc/trpc-provider";
 import { useQuery } from "@tanstack/react-query";

@@ -41,12 +41,12 @@ export function RegisterScreen() {
 
   return (
     <RegisterForm
+      accentColor={accentColor}
       authClient={authClient}
       consumeLogoutFlag={consumeLogoutFlag}
+      dangerColor={dangerColor}
       foregroundColor={foregroundColor}
       mutedColor={mutedColor}
-      accentColor={accentColor}
-      dangerColor={dangerColor}
     />
   );
 }
@@ -87,26 +87,31 @@ function RegisterForm({
 
     if (!trimmedName) {
       setErrorMessage(intl.formatMessage({ id: "common.validation.required" }));
+
       return;
     }
 
     if (!trimmedEmail) {
       setErrorMessage(intl.formatMessage({ id: "common.validation.required" }));
+
       return;
     }
 
     if (password.length < MIN_PASSWORD_LENGTH) {
       setErrorMessage(intl.formatMessage({ id: "auth.signup.errors.passwordTooShort" }));
+
       return;
     }
 
     if (password.length > MAX_PASSWORD_LENGTH) {
       setErrorMessage(intl.formatMessage({ id: "auth.signup.errors.passwordTooLong" }));
+
       return;
     }
 
     if (password !== confirmPassword) {
       setErrorMessage(intl.formatMessage({ id: "auth.signup.errors.passwordMismatch" }));
+
       return;
     }
 
@@ -123,28 +128,26 @@ function RegisterForm({
         setErrorMessage(
           error.message ?? intl.formatMessage({ id: "auth.signup.errors.createFailed" })
         );
-        return;
+      } else {
+        // autoSignIn establishes the session; Stack.Protected redirects to the smoke screen.
+        consumeLogoutFlag();
       }
-
-      consumeLogoutFlag();
-      // BetterAuth autoSignIn is enabled, so the session is established
-      // automatically. Stack.Protected guard handles the redirect to the smoke screen.
     } catch (error) {
       if (error instanceof Error && error.message) {
         setErrorMessage(error.message);
       } else {
         setErrorMessage(intl.formatMessage({ id: "auth.signup.errors.generic" }));
       }
-    } finally {
-      setIsSubmitting(false);
     }
+
+    setIsSubmitting(false);
   }, [authClient, confirmPassword, consumeLogoutFlag, email, intl, name, password]);
 
   const signInLink = (
-    <Pressable onPress={() => router.replace("/login" as any)} style={styles.linkRow}>
+    <Pressable style={styles.linkRow} onPress={() => router.replace("/login" as any)}>
       <Text style={[styles.linkText, { color: mutedColor }]}>
         {intl.formatMessage({ id: "auth.signup.hasAccount" })}{" "}
-        <Text style={{ color: accentColor }} className="font-semibold">
+        <Text className="font-semibold" style={{ color: accentColor }}>
           {intl.formatMessage({ id: "auth.signup.signIn" })}
         </Text>
       </Text>
@@ -155,10 +158,10 @@ function RegisterForm({
   if (hasData && !registrationEnabled) {
     return (
       <AuthShell
+        footer={signInLink}
         headingPrefix={intl.formatMessage({
           id: "auth.errors.registration_is_currently_disabled.title",
         })}
-        footer={signInLink}
       >
         <Card.Title style={{ color: foregroundColor }}>
           {intl.formatMessage({ id: "auth.errors.registration_is_currently_disabled.title" })}
@@ -175,7 +178,6 @@ function RegisterForm({
 
   return (
     <AuthShell
-      headingPrefix={intl.formatMessage({ id: "auth.signup.title" })}
       footer={
         <>
           {errorMessage && (
@@ -184,46 +186,47 @@ function RegisterForm({
           {signInLink}
         </>
       }
+      headingPrefix={intl.formatMessage({ id: "auth.signup.title" })}
     >
       <View style={styles.formSection}>
         <Input
+          autoCapitalize="words"
+          autoCorrect={false}
+          placeholder={intl.formatMessage({ id: "auth.signup.name" })}
           value={name}
           onChangeText={(text) => {
             setName(text);
             setErrorMessage(null);
           }}
-          autoCapitalize="words"
-          autoCorrect={false}
-          placeholder={intl.formatMessage({ id: "auth.signup.name" })}
         />
         <Input
+          autoCapitalize="none"
+          autoCorrect={false}
+          keyboardType="email-address"
+          placeholder={intl.formatMessage({ id: "auth.signup.email" })}
           value={email}
           onChangeText={(text) => {
             setEmail(text);
             setErrorMessage(null);
           }}
-          autoCapitalize="none"
-          autoCorrect={false}
-          keyboardType="email-address"
-          placeholder={intl.formatMessage({ id: "auth.signup.email" })}
         />
         <Input
+          secureTextEntry
+          placeholder={intl.formatMessage({ id: "auth.signup.password" })}
           value={password}
           onChangeText={(text) => {
             setPassword(text);
             setErrorMessage(null);
           }}
-          secureTextEntry
-          placeholder={intl.formatMessage({ id: "auth.signup.password" })}
         />
         <Input
+          secureTextEntry
+          placeholder={intl.formatMessage({ id: "auth.signup.confirmPassword" })}
           value={confirmPassword}
           onChangeText={(text) => {
             setConfirmPassword(text);
             setErrorMessage(null);
           }}
-          secureTextEntry
-          placeholder={intl.formatMessage({ id: "auth.signup.confirmPassword" })}
         />
         <Text style={[styles.hint, { color: mutedColor }]}>
           Password must be {MIN_PASSWORD_LENGTH}-{MAX_PASSWORD_LENGTH} characters.

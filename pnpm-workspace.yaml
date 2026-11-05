@@ -2,13 +2,13 @@ packages:
   - apps/*
   - "!apps/quick-import-extension"
   - "!apps/docs"
-  - "!apps/mobile"
   - packages/*
   - tooling/*
 
 catalog:
   "@better-auth/api-key": 1.7.14
   "@better-auth/core": 1.7.14
+  "@better-auth/expo": 1.7.14
   "@better-auth/utils": 0.5.1
   "@eslint/js": ^10.0.1
   "@heroicons/react": 2.2.0

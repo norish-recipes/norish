@@ -125,19 +125,19 @@ function AuthProviderInner({
       await authClient.signOut();
     } catch (error) {
       log.warn({ error }, "Remote sign out failed, resetting local auth client state");
-    } finally {
-      try {
-        await resetAuthClientStorage();
-      } catch (storageError) {
-        log.warn({ error: storageError }, "Failed to reset auth client storage during sign out");
-      }
-
-      setAuthClientVersion((current) => current + 1);
-      setPersistedUser(null);
-      setPersistedSessionStatus("idle");
-      setJustLoggedOut(true);
-      setHasActiveSession(false);
     }
+
+    try {
+      await resetAuthClientStorage();
+    } catch (storageError) {
+      log.warn({ error: storageError }, "Failed to reset auth client storage during sign out");
+    }
+
+    setAuthClientVersion((current) => current + 1);
+    setPersistedUser(null);
+    setPersistedSessionStatus("idle");
+    setJustLoggedOut(true);
+    setHasActiveSession(false);
   }, [authClient]);
 
   useEffect(() => {

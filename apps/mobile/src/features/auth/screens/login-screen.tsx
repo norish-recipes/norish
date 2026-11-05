@@ -63,9 +63,9 @@ function LoginForm({ backendBaseUrl, redirectTo }: { backendBaseUrl: string; red
         } else {
           setErrorMessage(intl.formatMessage({ id: "auth.errors.default.description" }));
         }
-      } finally {
-        setActiveOAuthProviderId(null);
       }
+
+      setActiveOAuthProviderId(null);
     },
     [authClient, backendBaseUrl, consumeLogoutFlag, intl, redirectTo]
   );
@@ -86,10 +86,9 @@ function LoginForm({ backendBaseUrl, redirectTo }: { backendBaseUrl: string; red
         setErrorMessage(
           signInError.message ?? intl.formatMessage({ id: "auth.emailPassword.errors.generic" })
         );
-        return;
+      } else {
+        consumeLogoutFlag();
       }
-
-      consumeLogoutFlag();
       // Stack.Protected guard handles redirect once session is established
     } catch (signInError) {
       if (signInError instanceof Error && signInError.message) {
@@ -97,9 +96,9 @@ function LoginForm({ backendBaseUrl, redirectTo }: { backendBaseUrl: string; red
       } else {
         setErrorMessage(intl.formatMessage({ id: "auth.emailPassword.errors.generic" }));
       }
-    } finally {
-      setIsSubmittingCredentials(false);
     }
+
+    setIsSubmittingCredentials(false);
   }, [authClient, consumeLogoutFlag, email, intl, password]);
 
   return (
@@ -121,10 +120,10 @@ function LoginForm({ backendBaseUrl, redirectTo }: { backendBaseUrl: string; red
           {credentialProvider && (
             <CredentialForm
               email={email}
-              setEmail={setEmail}
-              password={password}
-              setPassword={setPassword}
               isSubmitting={isSubmittingCredentials}
+              password={password}
+              setEmail={setEmail}
+              setPassword={setPassword}
               onSubmit={() => {
                 void handlePasswordSubmit();
               }}
@@ -132,9 +131,9 @@ function LoginForm({ backendBaseUrl, redirectTo }: { backendBaseUrl: string; red
           )}
 
           <OAuthProviderList
-            providers={oauthProviders}
             activeProviderId={activeOAuthProviderId}
             isDisabled={isSubmittingCredentials || activeOAuthProviderId !== null}
+            providers={oauthProviders}
             onPress={(provider) => {
               void handleOAuthSignIn(provider);
             }}
@@ -147,10 +146,10 @@ function LoginForm({ backendBaseUrl, redirectTo }: { backendBaseUrl: string; red
       )}
 
       {registrationEnabled && passwordAuthEnabled && (
-        <Pressable onPress={() => router.push("/register" as any)} style={styles.linkRow}>
+        <Pressable style={styles.linkRow} onPress={() => router.push("/register" as any)}>
           <Text style={[styles.linkText, { color: mutedColor }]}>
             {intl.formatMessage({ id: "auth.emailPassword.noAccount" })}{" "}
-            <Text style={{ color: accentColor }} className="font-semibold">
+            <Text className="font-semibold" style={{ color: accentColor }}>
               {intl.formatMessage({ id: "auth.emailPassword.signUp" })}
             </Text>
           </Text>
@@ -183,14 +182,14 @@ export function LoginScreen() {
     <>
       {backendBaseUrl !== null && (
         <Pressable
+          style={styles.linkRow}
           onPress={() => {
             router.push("/(auth)");
           }}
-          style={styles.linkRow}
         >
           <Text style={[styles.linkText, { color: mutedColor }]}>
             {intl.formatMessage({ id: "auth.login.wrongServer" })}{" "}
-            <Text style={{ color: accentColor }} className="font-semibold">
+            <Text className="font-semibold" style={{ color: accentColor }}>
               {intl.formatMessage({ id: "auth.login.changeServer" })}
             </Text>
           </Text>
@@ -200,7 +199,7 @@ export function LoginScreen() {
   );
 
   return (
-    <AuthShell headingPrefix={intl.formatMessage({ id: "auth.login.title" })} footer={footer}>
+    <AuthShell footer={footer} headingPrefix={intl.formatMessage({ id: "auth.login.title" })}>
       {backendBaseUrl === null ? (
         <BackendMissingState
           onOpenConnect={() => {

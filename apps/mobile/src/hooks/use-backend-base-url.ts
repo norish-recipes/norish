@@ -39,6 +39,7 @@ export function useBackendBaseUrl(): BackendBaseUrlResult {
     }
 
     const unsubscribe = subscribeBackendBaseUrlChange(() => void load());
+
     void load();
 
     return () => {

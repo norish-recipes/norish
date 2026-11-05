@@ -17,6 +17,7 @@ import { createPersistedQueryClient } from "@/lib/query-cache/create-persisted-q
 
 import type { AppRouter } from "@norish/trpc/client";
 import { createTRPCProviderBundle } from "@norish/shared-react/providers";
+import { withoutTrailingSlashes } from "@norish/shared/lib/helpers";
 import { createClientLogger } from "@norish/shared/lib/logger";
 
 const log = createClientLogger("mobile-trpc");
@@ -53,7 +54,7 @@ function toWsUrl(baseUrl: string): string {
   parsed.search = "";
   parsed.hash = "";
 
-  return parsed.toString().replace(/\/+$/, "");
+  return withoutTrailingSlashes(parsed.toString());
 }
 
 let currentBaseUrl = "";
@@ -75,6 +76,7 @@ function createMobileWebSocket(): typeof WebSocket | undefined {
 
       if (Object.keys(headers).length === 0) {
         super(url, protocols);
+
         return;
       }
 
@@ -104,6 +106,7 @@ function trpcBundleGetHeaders(): Record<string, string> {
 
 const { queryClient: persistedQueryClient, restorePromise: queryCacheRestorePromise } =
   createPersistedQueryClient();
+
 export { queryCacheRestorePromise };
 export { persistedQueryClient };
 
@@ -119,9 +122,6 @@ const trpcBundle = createTRPCProviderBundle<AppRouter>({
   onWebSocketClientCreate: (client) => {
     mobileWebSocketClients.add(client);
   },
-  onWebSocketClientDestroy: (client) => {
-    mobileWebSocketClients.delete(client);
-  },
   onWebSocketClose: notifyBackendDisconnect,
   onWebSocketOpen: notifyBackendConnect,
   onWebSocketUnauthorized: () => {
@@ -133,7 +133,6 @@ const trpcBundle = createTRPCProviderBundle<AppRouter>({
     void invalidateSession("transport-unauthorized");
   },
   mutationLink: createOutboxLink<AppRouter>(),
-  invalidateOnReconnect: false,
 });
 
 export const useTRPC = trpcBundle.useTRPC;

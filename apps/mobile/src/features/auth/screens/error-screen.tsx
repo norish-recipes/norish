@@ -35,7 +35,7 @@ export function AuthErrorScreen() {
 
   return (
     <View style={styles.screen}>
-      <Card variant="secondary" className="border-separator rounded-3xl border">
+      <Card className="border-separator rounded-3xl border" variant="secondary">
         <Card.Body style={styles.cardBody}>
           <Card.Title style={{ color: dangerColor }}>
             {intl.formatMessage({ id: "auth.errors.default.title" })}

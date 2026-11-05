@@ -267,6 +267,7 @@ export function MobileIntlFallbackProvider({ children }: { children: React.React
       isLoading: isLoadingMessages,
       setLocale: (nextLocale: string) => {
         const nextResolved = resolveLocaleSelection(nextLocale, localeOptions, DEFAULT_LOCALE);
+
         publishLocale(nextResolved);
         setPreferredLocale(nextResolved);
         void saveLocalePreference(nextResolved);

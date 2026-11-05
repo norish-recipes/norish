@@ -15,7 +15,7 @@ interface AuthLogoProps {
 export function AuthLogo({ width = 140, inline = false }: AuthLogoProps) {
   const height = Math.round(width * LOGO_ASPECT_RATIO);
 
-  const svg = <LogoSvg width={width} height={height} />;
+  const svg = <LogoSvg height={height} width={width} />;
 
   if (inline) {
     return svg;

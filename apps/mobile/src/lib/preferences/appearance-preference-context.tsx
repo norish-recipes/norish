@@ -33,6 +33,7 @@ function emit() {
 
 function subscribe(listener: () => void) {
   listeners.add(listener);
+
   return () => {
     listeners.delete(listener);
   };
@@ -45,6 +46,7 @@ function getSnapshot(): AppearanceSnapshot {
 function applyAppearanceMode(mode: AppearanceMode) {
   if (mode === "system") {
     Uniwind.setTheme("system");
+
     return;
   }
 

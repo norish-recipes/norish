@@ -26,13 +26,13 @@ export function OAuthProviderList({
       {providers.map((provider) => (
         <Button
           key={provider.id}
-          variant="secondary"
           isDisabled={isDisabled}
+          variant="secondary"
           onPress={() => {
             onPress(provider);
           }}
         >
-          <ProviderIcon icon={provider.icon} size={18} color={foregroundColor} />
+          <ProviderIcon color={foregroundColor} icon={provider.icon} size={18} />
           <Button.Label style={{ color: foregroundColor }}>
             {activeProviderId === provider.id
               ? intl.formatMessage({ id: "common.status.loading" })

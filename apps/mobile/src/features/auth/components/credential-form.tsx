@@ -26,18 +26,18 @@ export function CredentialForm({
   return (
     <View style={styles.formSection}>
       <Input
-        value={email}
-        onChangeText={setEmail}
         autoCapitalize="none"
         autoCorrect={false}
         keyboardType="email-address"
         placeholder={intl.formatMessage({ id: "auth.emailPassword.email" })}
+        value={email}
+        onChangeText={setEmail}
       />
       <Input
-        value={password}
-        onChangeText={setPassword}
         secureTextEntry
         placeholder={intl.formatMessage({ id: "auth.emailPassword.password" })}
+        value={password}
+        onChangeText={setPassword}
       />
       <Button
         isDisabled={!email.trim() || !password || isSubmitting}

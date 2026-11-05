@@ -80,6 +80,7 @@ export async function readPersistedSession(): Promise<PersistedUser | null> {
     ]);
   } catch {
     log.warn("Failed to read persisted auth data from SecureStore");
+
     return null;
   }
 
@@ -97,6 +98,7 @@ export async function readPersistedSession(): Promise<PersistedUser | null> {
     parsed = JSON.parse(raw);
   } catch {
     log.warn("Failed to parse persisted session data from SecureStore");
+
     return null;
   }
 

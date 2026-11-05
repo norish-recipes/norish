@@ -157,6 +157,7 @@ function AuthenticatedProviders({ children }: { children: React.ReactNode }) {
 /** Hooks that require UserProvider + MobileIntlProvider. */
 function AuthenticatedEffects() {
   useUserLocaleSync();
+
   return null;
 }
 

@@ -20,6 +20,7 @@ function emit() {
 
 export function subscribeLocaleStore(listener: () => void): () => void {
   listeners.add(listener);
+
   return () => {
     listeners.delete(listener);
   };

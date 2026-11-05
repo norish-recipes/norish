@@ -18,9 +18,9 @@ export function AuthLocaleMenu() {
 
   return (
     <ShellMenu
+      color={mutedColor}
       label={intl.formatMessage({ id: "common.language.title" })}
       systemImage="gearshape"
-      color={mutedColor}
     >
       {enabledLocales.map((entry) => (
         <UIButton

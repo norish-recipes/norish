@@ -24,8 +24,8 @@ export function AuthShell({ headingPrefix, children, footer }: AuthShellProps) {
 
   return (
     <KeyboardAvoidingView
-      style={styles.screen}
       behavior={Platform.OS === "ios" ? "padding" : "height"}
+      style={styles.screen}
     >
       <View style={styles.content}>
         <View style={styles.heroCopy}>
@@ -35,7 +35,7 @@ export function AuthShell({ headingPrefix, children, footer }: AuthShellProps) {
           </View>
         </View>
 
-        <Card variant="secondary" className="border-separator rounded-3xl border">
+        <Card className="border-separator rounded-3xl border" variant="secondary">
           <Card.Body style={styles.cardBody}>{children}</Card.Body>
         </Card>
 

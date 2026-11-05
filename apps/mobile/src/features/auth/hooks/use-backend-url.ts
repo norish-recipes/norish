@@ -15,7 +15,7 @@ export function useBackendUrl() {
     let isMounted = true;
 
     void (async () => {
-      let existingBaseUrl: string | null = null;
+      let existingBaseUrl: string | null;
 
       try {
         existingBaseUrl = await loadBackendBaseUrl();
@@ -41,12 +41,14 @@ export function useBackendUrl() {
           // Show the form pre-filled with the current URL instead of redirecting.
           setBaseUrl(existingBaseUrl);
           setIsHydrated(true);
+
           return;
         }
 
         // Cold-start: URL already configured - skip straight to login.
         // Stack.Protected guard handles final redirect once authenticated.
         router.replace("/login");
+
         return;
       }
 

@@ -40,7 +40,7 @@ export function StorageUnavailableScreen({ error, onRetry }: StorageUnavailableS
         {intl.formatMessage({ id: "common.storageUnavailable.description" })}
       </Text>
 
-      <Button onPress={onRetry} style={styles.retryButton}>
+      <Button style={styles.retryButton} onPress={onRetry}>
         <Button.Label>{intl.formatMessage({ id: "common.actions.retry" })}</Button.Label>
       </Button>
 

@@ -31,8 +31,8 @@ export function SmokeScreen() {
         {groceries.map((grocery) => (
           <View key={grocery.id} style={{ flexDirection: "row", alignItems: "center", gap: 8 }}>
             <Checkbox
-              testID={`smoke-grocery-${grocery.id}`}
               isSelected={grocery.isDone}
+              testID={`smoke-grocery-${grocery.id}`}
               onSelectedChange={(isDone) =>
                 grocery.recurringGroceryId
                   ? toggleRecurringGrocery(grocery.recurringGroceryId, grocery.id, isDone)
