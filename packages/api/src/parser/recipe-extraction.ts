@@ -40,7 +40,8 @@ export async function extractRecipeWithAI(
   html: string,
   recipeId: string,
   url?: string,
-  originalHtml?: string
+  originalHtml?: string,
+  pageText?: string
 ): Promise<FullRecipeInsertDTO> {
   aiLogger.info({ url }, "Starting AI recipe extraction");
 
@@ -51,7 +52,7 @@ export async function extractRecipeWithAI(
   const jsonLd = await generateStructured({
     prompt: "recipe-extraction",
     schema: recipeExtractionSchema,
-    sections: buildRecipeExtractionSections(truncated, { url }),
+    sections: buildRecipeExtractionSections(truncated, { url, pageText }),
   });
 
   // A page that holds no recipe is a domain outcome the schema cannot state:
@@ -71,7 +72,10 @@ export async function extractRecipeWithAI(
   // source it was read from and the verdict logged; nothing acts on it yet.
   await shadowScore({
     feature: "recipe-extraction",
-    state: { source: truncated, extracted: asDecisionState(jsonLd) },
+    state: {
+      source: pageText ? `${truncated}\n\n${pageText}` : truncated,
+      extracted: asDecisionState(jsonLd),
+    },
     instructions: "How faithful is this extracted recipe to the source text?",
     criteria: EXTRACTION_FAITHFULNESS_LEVELS,
   });

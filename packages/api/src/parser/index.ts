@@ -11,6 +11,7 @@ import {
 } from "@norish/api/parser/python/adapter";
 import { callRecipeScrapersParser } from "@norish/api/parser/python/client";
 import { extractRecipeWithAI } from "@norish/api/parser/recipe-extraction";
+import { recipePageText } from "@norish/api/parser/recipe-page-text";
 import {
   getContentIndicators,
   isAIEnabled,
@@ -120,7 +121,8 @@ async function tryExtractWithAI(
   recipeId: string,
   url: string,
   requireAI: boolean,
-  originalHtml?: string
+  originalHtml?: string,
+  pageText?: string
 ): Promise<FullRecipeInsertDTO | null> {
   const enabled = await isAIEnabled();
 
@@ -135,7 +137,9 @@ async function tryExtractWithAI(
   log.info({ url }, "Attempting AI extraction");
 
   try {
-    return await extractRecipeWithAI(input, recipeId, url, originalHtml);
+    return pageText
+      ? await extractRecipeWithAI(input, recipeId, url, originalHtml, pageText)
+      : await extractRecipeWithAI(input, recipeId, url, originalHtml);
   } catch (error) {
     log.warn({ url, err: error }, "AI extraction failed");
 
@@ -167,7 +171,17 @@ async function extractWithAIPreference(
       2
     );
 
-    const fromJsonLd = await tryExtractWithAI(jsonLdInput, recipeId, url, requireAI, html);
+    // A flat list says nothing of its sections, which the page itself may still name (#685).
+    const pageText =
+      jsonLdNodes.length === 1 && !sectioned ? recipePageText(html, jsonLdNodes[0]) : undefined;
+    const fromJsonLd = await tryExtractWithAI(
+      jsonLdInput,
+      recipeId,
+      url,
+      requireAI,
+      html,
+      pageText
+    );
 
     if (fromJsonLd && hasSteps(fromJsonLd)) return fromJsonLd;
 

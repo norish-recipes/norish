@@ -393,6 +393,31 @@ describe("parseRecipeFromUrl import flow", () => {
       ]);
     });
 
+    it("sends the page's text along with a flat JSON-LD list, for its section headings (#685)", async () => {
+      mockFetchRenderedPage.mockResolvedValue(
+        withJsonLd.replace("the method", "<p>For the mash:</p>")
+      );
+
+      const { parseRecipeFromUrl } = await import("@norish/api/parser");
+
+      await parseRecipeFromUrl("https://example.com/recipe", "recipe-1", true);
+
+      expect(mockExtractRecipeWithAI.mock.calls[0]?.[4]).toBe("For the mash:");
+    });
+
+    it("leaves the page's text out when the scraper found the sections", async () => {
+      mockFetchRenderedPage.mockResolvedValue(
+        withJsonLd.replace("the method", "<p>For the mash:</p>")
+      );
+      mockCollectIngredientStrings.mockReturnValue(["# For the mash", "1 kg potatoes"]);
+
+      const { parseRecipeFromUrl } = await import("@norish/api/parser");
+
+      await parseRecipeFromUrl("https://example.com/recipe", "recipe-1", true);
+
+      expect(mockExtractRecipeWithAI.mock.calls[0]?.[4]).toBeUndefined();
+    });
+
     it("keeps the JSON-LD's own list when the scraper found no sections", async () => {
       mockIsParseComplete.mockResolvedValue(false);
 

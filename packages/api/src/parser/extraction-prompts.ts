@@ -12,6 +12,11 @@ export interface RecipeExtractionSectionOptions {
    * Source URL of the recipe (optional).
    */
   url?: string;
+
+  /**
+   * The recipe as written on its page, sent along with JSON-LD for what JSON-LD cannot hold.
+   */
+  pageText?: string;
 }
 
 export interface VideoExtractionSectionOptions extends RecipeExtractionSectionOptions {
@@ -46,7 +51,7 @@ export function buildRecipeExtractionSections(
   content: string,
   options: RecipeExtractionSectionOptions = {}
 ): string[] {
-  const { url } = options;
+  const { url, pageText } = options;
 
   // No tagging or allergy instructions: extraction reads source facts, and every
   // inference belongs to the background enrichment workers under their own policy.
@@ -57,6 +62,12 @@ export function buildRecipeExtractionSections(
   }
 
   sections.push(`WEBPAGE TEXT:\n${content}`);
+
+  if (pageText) {
+    sections.push(
+      `THE SAME RECIPE AS WRITTEN ON ITS PAGE (take its ingredient section headings from here):\n${pageText}`
+    );
+  }
 
   return sections;
 }

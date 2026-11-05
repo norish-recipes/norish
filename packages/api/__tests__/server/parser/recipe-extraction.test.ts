@@ -78,6 +78,18 @@ describe("extractRecipeWithAI", () => {
     );
   });
 
+  it("adds the page's own text after the JSON-LD, and scores against both", async () => {
+    await extractRecipeWithAI('[{"name":"Pesto"}]', "recipe-1", undefined, HTML, "For the sauce:");
+
+    expect(mocked.generateStructured.mock.calls[0]?.[0].sections).toEqual([
+      'WEBPAGE TEXT:\n[{"name":"Pesto"}]',
+      expect.stringMatching(/ingredient section headings[^\n]*\nFor the sauce:$/),
+    ]);
+    expect(mocked.shadowScore.mock.calls[0]?.[0].state.source).toBe(
+      '[{"name":"Pesto"}]\n\nFor the sauce:'
+    );
+  });
+
   it("scores its own output against the source in shadow, and nothing acts on the score", async () => {
     mocked.shadowScore.mockResolvedValue(0);
 
