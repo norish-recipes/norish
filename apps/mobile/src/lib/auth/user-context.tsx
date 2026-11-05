@@ -34,9 +34,7 @@ const shared = createUserContext({
   useSignOut: () => {
     const { signOut } = useAuth();
 
-    return useCallback(() => {
-      void signOut();
-    }, [signOut]);
+    return useCallback((options?: { discardQueue?: boolean }) => signOut(options), [signOut]);
   },
   useFreshUserQuery: (userId) => {
     const trpc = useTRPC();

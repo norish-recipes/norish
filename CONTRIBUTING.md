@@ -282,7 +282,7 @@ pnpm --filter @norish/mobile ios
 pnpm --filter @norish/mobile maestro
 ```
 
-Step 3 signs up `maestro@norish.test` on the dev server and puts one unchecked grocery on its list. It then runs the flows and checks that the grocery is done on the server. When registration is closed, create that account by hand, or point the flows at another one with `NORISH_EMAIL`, `NORISH_PASSWORD` and `NORISH_SERVER_URL`.
+Step 3 signs up `maestro@norish.test` on the dev server and puts two unchecked groceries on its list. It then runs the flows and checks that both groceries are done on the server. The offline flow reaches the server through a proxy on port 3998 that it cuts and restores through port 3997 (`NORISH_PROXY_PORT`, `NORISH_PROXY_CONTROL_PORT`). When registration is closed, create that account by hand, or point the flows at another one with `NORISH_EMAIL`, `NORISH_PASSWORD` and `NORISH_SERVER_URL`.
 
 The flows in `apps/mobile/maestro/old-server/` run last, against a stub server that reports an old version. It listens on port 3999, or on `NORISH_OLD_SERVER_PORT`.
 

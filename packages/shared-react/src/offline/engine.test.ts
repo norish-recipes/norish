@@ -12,7 +12,7 @@ function engineOver(storage: OfflineStorage = createMemoryStorage()) {
   return createOfflineEngine({
     storage,
     replayHeaderValue: "test-outbox",
-    probeUrl: "/api/v1/health/ready",
+    probeUrl: () => "/api/v1/health/ready",
     buster: "test",
     calendarRanges: () => [],
   });
@@ -94,6 +94,90 @@ describe("createOfflineEngine", () => {
 
     await expect(engine.discardAll("u1")).resolves.toBe(1);
     expect(await engine.outbox.size()).toBe(0);
+  });
+
+  describe("signing out (ADR-0009)", () => {
+    const entry = (id: string, ownerId = "u1") => ({
+      id,
+      ownerId,
+      path: "groceries.create",
+      input: { id },
+      entityId: id,
+      operationId: null,
+      headers: {},
+    });
+
+    it("counts the signed-in owner's unsynced changes, parked included", async () => {
+      const engine = engineOver();
+
+      await engine.cache.reconcileIdentity({ sessionUserId: "u1", isOffline: false });
+      await engine.outbox.enqueue(entry("a"));
+      const parked = await engine.outbox.enqueue(entry("p"));
+
+      await engine.outbox.park(parked.seq, "deterministic");
+      await engine.outbox.enqueue(entry("x", "someone-else"));
+
+      await expect(engine.unsyncedChanges()).resolves.toBe(2);
+    });
+
+    it("counts nothing before anyone signed in", async () => {
+      const engine = engineOver();
+
+      await engine.outbox.enqueue(entry("a"));
+
+      await expect(engine.unsyncedChanges()).resolves.toBe(0);
+    });
+
+    it("drops the read copy but keeps the queue unless the user confirmed discarding it", async () => {
+      const engine = engineOver();
+
+      await engine.cache.reconcileIdentity({ sessionUserId: "u1", isOffline: false });
+      engine.queryClient.setQueryData(["groceries"], ["milk"]);
+      await engine.outbox.enqueue(entry("a"));
+
+      await engine.clearForSignOut({ discardQueue: false });
+
+      expect(engine.queryClient.getQueryData(["groceries"])).toBeUndefined();
+      expect(engine.cache.owner()).toBeNull();
+      expect(await engine.outbox.size("u1")).toBe(1);
+    });
+
+    it("discards only the signed-in owner's queue once confirmed", async () => {
+      const engine = engineOver();
+
+      await engine.cache.reconcileIdentity({ sessionUserId: "u1", isOffline: false });
+      await engine.outbox.enqueue(entry("a"));
+      await engine.outbox.enqueue(entry("dormant", "someone-else"));
+
+      await engine.clearForSignOut({ discardQueue: true });
+
+      expect(await engine.outbox.size("u1")).toBe(0);
+      expect(await engine.outbox.size("someone-else")).toBe(1);
+    });
+
+    it("replays a signed-out owner's queue only once that owner signs back in", async () => {
+      const engine = engineOver();
+      const mutate = vi.fn(async (_input: unknown, _opts: unknown) => ({ success: true }));
+      const recovery = engine.createRecovery({
+        transport: { groceries: { create: { mutate } } },
+        verifySession: async () => "match",
+        refetchActiveQueries: async () => {},
+        topUp: async () => {},
+      });
+
+      await engine.cache.reconcileIdentity({ sessionUserId: "u1", isOffline: false });
+      await engine.outbox.enqueue(entry("a"));
+      await engine.clearForSignOut({ discardQueue: false });
+
+      await engine.cache.reconcileIdentity({ sessionUserId: "u2", isOffline: false });
+      await recovery.recover();
+      expect(mutate).not.toHaveBeenCalled();
+
+      await engine.cache.reconcileIdentity({ sessionUserId: "u1", isOffline: false });
+      await recovery.recover();
+      expect(mutate.mock.calls.map(([input]) => input)).toEqual([{ id: "a" }]);
+      expect(await engine.outbox.size("u1")).toBe(0);
+    });
   });
 
   it("probes the client's readiness URL", async () => {

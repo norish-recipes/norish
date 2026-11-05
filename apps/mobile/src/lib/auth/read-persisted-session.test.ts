@@ -1,4 +1,5 @@
 import { readPersistedSession } from "@/lib/auth/auth-storage";
+import { storageAdapter } from "@better-auth/expo/client";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 
 /**
@@ -8,8 +9,19 @@ import { beforeEach, describe, expect, it, vi } from "vitest";
  * requiring the React Native runtime.
  */
 
-// Mock expo-secure-store
-const mockGetItemAsync = vi.fn<(key: string) => Promise<string | null>>();
+// An in-memory SecureStore, so values the auth client chunks read back the way it wrote them.
+const secureStore = vi.hoisted(() => {
+  const items = new Map<string, string>();
+
+  return {
+    items,
+    getItem: (key: string) => items.get(key) ?? null,
+    getItemAsync: async (key: string) => items.get(key) ?? null,
+    setItem: (key: string, value: string) => void items.set(key, value),
+    setItemAsync: async (key: string, value: string) => void items.set(key, value),
+    deleteItemAsync: async (key: string) => void items.delete(key),
+  };
+});
 const COOKIE_KEY = "norish_cookie";
 const SESSION_DATA_KEY = "norish_session_data";
 
@@ -20,37 +32,36 @@ function setSessionData(value: unknown): void {
   sessionDataValue = typeof value === "string" ? value : JSON.stringify(value);
 }
 
-vi.mock("expo-secure-store", () => ({
-  getItemAsync: (...args: Parameters<typeof mockGetItemAsync>) => mockGetItemAsync(...args),
-  deleteItemAsync: vi.fn(),
-}));
-
-// Mock logger
-vi.mock("@norish/shared/lib/logger", () => ({
-  createClientLogger: () => ({
-    info: vi.fn(),
-    warn: vi.fn(),
-    error: vi.fn(),
-    debug: vi.fn(),
-  }),
-}));
+vi.mock("expo-secure-store", () => secureStore);
+vi.mock("expo-constants", () => ({ default: {} }));
+vi.mock("expo-linking", () => ({}));
+vi.mock("react-native", () => ({ Platform: { OS: "ios" }, AppState: {} }));
 
 describe("readPersistedSession", () => {
   beforeEach(() => {
     vi.clearAllMocks();
+    secureStore.items.clear();
     cookieValue = "session-token=abc";
     sessionDataValue = null;
-    mockGetItemAsync.mockImplementation(async (key) => {
-      if (key === COOKIE_KEY) {
-        return cookieValue;
-      }
+  });
 
-      if (key === SESSION_DATA_KEY) {
-        return sessionDataValue;
-      }
+  async function read() {
+    if (cookieValue !== null) secureStore.items.set(COOKIE_KEY, cookieValue);
+    if (sessionDataValue !== null) secureStore.items.set(SESSION_DATA_KEY, sessionDataValue);
 
-      return null;
-    });
+    return readPersistedSession();
+  }
+
+  it("reads a session the auth client stored in chunks", async () => {
+    const user = { id: "user-123", email: "test@example.com", name: "Test User", image: null };
+
+    await storageAdapter(secureStore).setItemAsync(
+      SESSION_DATA_KEY,
+      JSON.stringify({ user, session: { token: "abc", padding: "x".repeat(5000) } })
+    );
+    cookieValue = "session-token=abc";
+
+    await expect(read()).resolves.toEqual(user);
   });
 
   it("returns user object for a valid persisted session", async () => {
@@ -66,7 +77,7 @@ describe("readPersistedSession", () => {
 
     setSessionData(sessionData);
 
-    const result = await readPersistedSession();
+    const result = await read();
 
     expect(result).toEqual({
       id: "user-123",
@@ -88,7 +99,7 @@ describe("readPersistedSession", () => {
 
     setSessionData(sessionData);
 
-    const result = await readPersistedSession();
+    const result = await read();
 
     expect(result).toEqual({
       id: "user-123",
@@ -109,7 +120,7 @@ describe("readPersistedSession", () => {
 
     setSessionData(sessionData);
 
-    const result = await readPersistedSession();
+    const result = await read();
 
     expect(result).toEqual({
       id: "user-123",
@@ -122,7 +133,7 @@ describe("readPersistedSession", () => {
   it("returns null when key is missing (null)", async () => {
     sessionDataValue = null;
 
-    const result = await readPersistedSession();
+    const result = await read();
 
     expect(result).toBeNull();
   });
@@ -130,7 +141,7 @@ describe("readPersistedSession", () => {
   it("returns null when key is empty string", async () => {
     setSessionData("");
 
-    const result = await readPersistedSession();
+    const result = await read();
 
     expect(result).toBeNull();
   });
@@ -138,7 +149,7 @@ describe("readPersistedSession", () => {
   it("returns null for malformed JSON", async () => {
     setSessionData("not valid json {{{");
 
-    const result = await readPersistedSession();
+    const result = await read();
 
     expect(result).toBeNull();
   });
@@ -146,7 +157,7 @@ describe("readPersistedSession", () => {
   it("returns null when parsed data is not an object", async () => {
     setSessionData('"just a string"');
 
-    const result = await readPersistedSession();
+    const result = await read();
 
     expect(result).toBeNull();
   });
@@ -154,7 +165,7 @@ describe("readPersistedSession", () => {
   it("returns null when parsed data is an array", async () => {
     setSessionData("[1, 2, 3]");
 
-    const result = await readPersistedSession();
+    const result = await read();
 
     expect(result).toBeNull();
   });
@@ -162,7 +173,7 @@ describe("readPersistedSession", () => {
   it("returns null when user object is missing", async () => {
     setSessionData({ session: { token: "abc" } });
 
-    const result = await readPersistedSession();
+    const result = await read();
 
     expect(result).toBeNull();
   });
@@ -170,7 +181,7 @@ describe("readPersistedSession", () => {
   it("returns null when user is null", async () => {
     setSessionData({ user: null });
 
-    const result = await readPersistedSession();
+    const result = await read();
 
     expect(result).toBeNull();
   });
@@ -178,7 +189,7 @@ describe("readPersistedSession", () => {
   it("returns null when user is a string (not an object)", async () => {
     setSessionData({ user: "not-an-object" });
 
-    const result = await readPersistedSession();
+    const result = await read();
 
     expect(result).toBeNull();
   });
@@ -188,7 +199,7 @@ describe("readPersistedSession", () => {
       user: { email: "test@example.com", name: "Test User" },
     });
 
-    const result = await readPersistedSession();
+    const result = await read();
 
     expect(result).toBeNull();
   });
@@ -198,7 +209,7 @@ describe("readPersistedSession", () => {
       user: { id: "user-123", email: "", name: "Test User" },
     });
 
-    const result = await readPersistedSession();
+    const result = await read();
 
     expect(result).toBeNull();
   });
@@ -208,7 +219,7 @@ describe("readPersistedSession", () => {
       user: { id: "user-123", email: "test@example.com", name: "" },
     });
 
-    const result = await readPersistedSession();
+    const result = await read();
 
     expect(result).toBeNull();
   });
@@ -218,7 +229,7 @@ describe("readPersistedSession", () => {
       user: { id: 123, email: "test@example.com", name: "Test" },
     });
 
-    const result = await readPersistedSession();
+    const result = await read();
 
     expect(result).toBeNull();
   });
@@ -228,7 +239,7 @@ describe("readPersistedSession", () => {
       user: { id: "user-123", email: "test@example.com", name: "Test", image: 42 },
     });
 
-    const result = await readPersistedSession();
+    const result = await read();
 
     expect(result).toBeNull();
   });
@@ -243,7 +254,7 @@ describe("readPersistedSession", () => {
       },
     });
 
-    const result = await readPersistedSession();
+    const result = await read();
 
     expect(result).toBeNull();
   });

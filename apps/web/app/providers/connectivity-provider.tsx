@@ -1,21 +1,12 @@
 "use client";
 
 import type { ReactNode } from "react";
-import {
-  createContext,
-  use,
-  useCallback,
-  useEffect,
-  useMemo,
-  useRef,
-  useState,
-  useSyncExternalStore,
-} from "react";
+import { createContext, use, useMemo, useSyncExternalStore } from "react";
 import { useConnectionStatus } from "@/app/providers/trpc-provider";
 import { isOfflineForced, probeBackendReachable, subscribeOfflineForced } from "@/lib/connectivity";
 
-import type { ConnectivitySnapshot, ConnectivityState } from "@norish/shared-react/offline";
-import { INITIAL_CONNECTIVITY, startConnectivityLoop } from "@norish/shared-react/offline";
+import type { ConnectivityState } from "@norish/shared-react/offline";
+import { useConnectivityLoop } from "@norish/shared-react/offline/react";
 
 /**
  * The effective connectivity posture: the pure machine state plus the dev-only
@@ -64,103 +55,44 @@ export function useConnectivity(): ConnectivityValue {
 
 const serverForcedSnapshot = () => false;
 
+// Browser connectivity is only a hint, never the verdict: it just brings the next probe forward.
+function subscribeBrowserHints(probeNow: () => void): () => void {
+  window.addEventListener("online", probeNow);
+  window.addEventListener("offline", probeNow);
+
+  return () => {
+    window.removeEventListener("online", probeNow);
+    window.removeEventListener("offline", probeNow);
+  };
+}
+
 /**
- * Owns the Live/Offline runtime: a self-scheduling health-probe loop whose
- * cadence comes from the pure state machine (slow heartbeat while Live,
- * exponential backoff while Offline). WebSocket status and `navigator.onLine`
- * are treated as *hints* — they only nudge the loop to probe sooner; the probe
- * itself is the sole verdict.
+ * Owns the Live/Offline runtime: the shared probe loop, with WebSocket status and
+ * `navigator.onLine` as hints, plus the dev-only forced-Offline override (ADR-0007).
  */
 export function ConnectivityProvider({ children }: { children: ReactNode }) {
-  const [snapshot, setSnapshot] = useState<ConnectivitySnapshot>(INITIAL_CONNECTIVITY);
   const { status: wsStatus } = useConnectionStatus();
 
-  // The dev-only forced-Offline override (ADR-0007). Always false in production,
-  // where subscribeOfflineForced is a no-op and isOfflineForced folds to false.
+  // Always false in production, where subscribeOfflineForced is a no-op.
   const forced = useSyncExternalStore(
     subscribeOfflineForced,
     isOfflineForced,
     serverForcedSnapshot
   );
 
-  // The loop below is the only writer of snapshot, and it writes this ref first.
-  const snapshotRef = useRef<ConnectivitySnapshot>(snapshot);
-
-  // Imperative handle to force an out-of-band probe; swapped for a no-op on unmount.
-  const probeNowRef = useRef<() => void>(() => {});
-  // Told about every reachable verdict; survives the loop's own restarts.
-  const liveProbeListenersRef = useRef(new Set<() => void>());
-
-  useEffect(() => {
-    // Radio silence while Offline is forced: no probes are scheduled and
-    // probeNowRef stays a no-op, so the WS/onLine hints below can't wake one
-    // either (ADR-0007). Clearing the override re-runs this effect and the
-    // normal loop resumes — the organic reconnect path.
-    if (forced) {
-      return;
-    }
-
-    const loop = startConnectivityLoop({
-      probe: () => probeBackendReachable(),
-      initial: snapshotRef.current,
-      onVerdict: (next, reachable) => {
-        snapshotRef.current = next;
-        setSnapshot(next);
-
-        if (reachable) {
-          for (const listener of liveProbeListenersRef.current) listener();
-        }
-      },
-    });
-    const probeNow = loop.probeNow;
-
-    probeNowRef.current = probeNow;
-
-    // Browser connectivity is only a hint — never the verdict — so an online/offline
-    // event just accelerates the next probe rather than deciding the state itself.
-    window.addEventListener("online", probeNow);
-    window.addEventListener("offline", probeNow);
-
-    return () => {
-      loop.stop();
-      probeNowRef.current = () => {};
-      window.removeEventListener("online", probeNow);
-      window.removeEventListener("offline", probeNow);
-    };
-  }, [forced]);
-
-  // WebSocket transitions are hints too: a drop or a (re)connect means the
-  // backend's reachability likely just changed, so re-probe without waiting.
-  const previousWsStatusRef = useRef(wsStatus);
-
-  useEffect(() => {
-    if (previousWsStatusRef.current === wsStatus) {
-      return;
-    }
-
-    previousWsStatusRef.current = wsStatus;
-
-    if (wsStatus === "disconnected" || wsStatus === "connected") {
-      probeNowRef.current();
-    }
-  }, [wsStatus]);
-
-  const probeNow = useCallback(() => probeNowRef.current(), []);
-  const subscribeLiveProbes = useCallback((listener: () => void) => {
-    const listeners = liveProbeListenersRef.current;
-
-    listeners.add(listener);
-
-    return () => {
-      listeners.delete(listener);
-    };
-  }, []);
+  // Radio silence while Offline is forced: no probes, and no hint can wake one (ADR-0007).
+  const { state, probeNow, subscribeLiveProbes } = useConnectivityLoop({
+    probe: probeBackendReachable,
+    paused: forced,
+    wsStatus,
+    subscribeHints: subscribeBrowserHints,
+  });
 
   const value = useMemo<ConnectivityValue>(() => {
-    const posture: ConnectivityPosture = forced ? "offline-forced" : snapshot.state;
+    const posture: ConnectivityPosture = forced ? "offline-forced" : state;
 
     return {
-      state: snapshot.state,
+      state,
       posture,
       isLive: posture === "live",
       isOffline: posture !== "live",
@@ -168,7 +100,7 @@ export function ConnectivityProvider({ children }: { children: ReactNode }) {
       probeNow,
       subscribeLiveProbes,
     };
-  }, [snapshot.state, forced, probeNow, subscribeLiveProbes]);
+  }, [state, forced, probeNow, subscribeLiveProbes]);
 
   return <ConnectivityContext value={value}>{children}</ConnectivityContext>;
 }

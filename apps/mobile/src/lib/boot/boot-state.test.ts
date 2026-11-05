@@ -18,18 +18,6 @@ describe("resolveBootPhase", () => {
       expect(
         resolveBootPhase({
           appearanceHydrated: false,
-          cacheReady: true,
-          fontsReady: true,
-          backendBaseUrl: ready,
-        })
-      ).toEqual({ phase: "loading" });
-    });
-
-    it("waits while the query cache is still settling", () => {
-      expect(
-        resolveBootPhase({
-          appearanceHydrated: true,
-          cacheReady: false,
           fontsReady: true,
           backendBaseUrl: ready,
         })
@@ -40,7 +28,6 @@ describe("resolveBootPhase", () => {
       expect(
         resolveBootPhase({
           appearanceHydrated: true,
-          cacheReady: true,
           fontsReady: false,
           backendBaseUrl: ready,
         })
@@ -51,7 +38,6 @@ describe("resolveBootPhase", () => {
       expect(
         resolveBootPhase({
           appearanceHydrated: true,
-          cacheReady: true,
           fontsReady: true,
           backendBaseUrl: loading,
         })
@@ -66,7 +52,6 @@ describe("resolveBootPhase", () => {
       expect(
         resolveBootPhase({
           appearanceHydrated: true,
-          cacheReady: true,
           fontsReady: true,
           backendBaseUrl: { status: "error", error },
         })
@@ -78,7 +63,6 @@ describe("resolveBootPhase", () => {
       // would send a user with a working server back through setup.
       const phase = resolveBootPhase({
         appearanceHydrated: true,
-        cacheReady: true,
         fontsReady: true,
         backendBaseUrl: { status: "error", error: new Error("keychain locked") },
       });
@@ -92,7 +76,6 @@ describe("resolveBootPhase", () => {
       expect(
         resolveBootPhase({
           appearanceHydrated: true,
-          cacheReady: true,
           fontsReady: true,
           backendBaseUrl: { status: "error", error },
         }).phase
@@ -105,7 +88,6 @@ describe("resolveBootPhase", () => {
       expect(
         resolveBootPhase({
           appearanceHydrated: true,
-          cacheReady: true,
           fontsReady: true,
           backendBaseUrl: unconfigured,
         })
@@ -118,7 +100,6 @@ describe("resolveBootPhase", () => {
       expect(
         resolveBootPhase({
           appearanceHydrated: true,
-          cacheReady: true,
           fontsReady: true,
           backendBaseUrl: ready,
         })
@@ -129,7 +110,6 @@ describe("resolveBootPhase", () => {
       expect(
         resolveBootPhase({
           appearanceHydrated: false,
-          cacheReady: false,
           fontsReady: true,
           backendBaseUrl: ready,
         })

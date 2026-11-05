@@ -1,22 +1,13 @@
-import type { OutboxMutationClient } from "@/lib/outbox";
-import React, { useEffect, useMemo, useSyncExternalStore } from "react";
-import { AUTH_COOKIE_KEY } from "@/lib/auth/auth-storage";
+import React, { useMemo, useSyncExternalStore } from "react";
 import {
   getAuthTransportSnapshot,
   invalidateSession,
   subscribeAuthTransport,
 } from "@/lib/auth/auth-session-sync";
+import { AUTH_COOKIE_KEY, authStorage } from "@/lib/auth/auth-storage";
 import { getBackendWsUrl } from "@/lib/network/backend-ws-url";
-import { notifyBackendConnect, notifyBackendDisconnect } from "@/lib/network/network-context";
-import {
-  createOutboxLink,
-  replayOutboxItem,
-  setReplayFn,
-  startOutboxProcessor,
-} from "@/lib/outbox";
-import { createPersistedQueryClient } from "@/lib/query-cache/create-persisted-query-client";
-import { getCookie, storageAdapter } from "@better-auth/expo/client";
-import * as SecureStore from "expo-secure-store";
+import { getServerAddress, offlineEngine, setServerAddress } from "@/lib/offline/engine";
+import { getCookie } from "@better-auth/expo/client";
 
 import type { AppRouter } from "@norish/trpc/client";
 import { createTRPCProviderBundle } from "@norish/shared-react/providers";
@@ -43,12 +34,6 @@ type HeaderCapableWebSocket = typeof WebSocket & {
     options?: { headers: Record<string, string> }
   ): WebSocket;
 };
-
-let currentBaseUrl = "";
-
-export function getCurrentBaseUrl(): string {
-  return currentBaseUrl;
-}
 
 function createMobileWebSocket(): typeof WebSocket | undefined {
   const NativeWebSocket = globalThis.WebSocket as HeaderCapableWebSocket | undefined;
@@ -78,10 +63,8 @@ function createMobileWebSocket(): typeof WebSocket | undefined {
 
 // The auth client's getCookie is async and tRPC asks for headers synchronously, so read the
 // chunked SecureStore entry the auth client writes directly.
-const authStorage = storageAdapter(SecureStore);
-
 function trpcBundleGetHeaders(): Record<string, string> {
-  if (!currentBaseUrl) {
+  if (!getServerAddress()) {
     return {};
   }
 
@@ -90,26 +73,18 @@ function trpcBundleGetHeaders(): Record<string, string> {
   return cookies ? { Cookie: cookies } : {};
 }
 
-const { queryClient: persistedQueryClient, restorePromise: queryCacheRestorePromise } =
-  createPersistedQueryClient();
-
-export { queryCacheRestorePromise };
-export { persistedQueryClient };
-
 const trpcBundle = createTRPCProviderBundle<AppRouter>({
   logger: log,
-  getBaseUrl: () => currentBaseUrl,
-  getWsUrl: () => getBackendWsUrl(currentBaseUrl),
+  getBaseUrl: getServerAddress,
+  getWsUrl: () => getBackendWsUrl(getServerAddress()),
   getHeaders: trpcBundleGetHeaders,
   getWebSocketImpl: createMobileWebSocket,
   wsLazyEnabled: true,
   enableLoggerLink: false,
-  getQueryClient: () => persistedQueryClient,
+  getQueryClient: () => offlineEngine.queryClient,
   onWebSocketClientCreate: (client) => {
     mobileWebSocketClients.add(client);
   },
-  onWebSocketClose: notifyBackendDisconnect,
-  onWebSocketOpen: notifyBackendConnect,
   onWebSocketUnauthorized: () => {
     log.info("WebSocket rejected with unauthorized response, signing out");
     void invalidateSession("websocket-unauthorized");
@@ -118,26 +93,12 @@ const trpcBundle = createTRPCProviderBundle<AppRouter>({
     log.info("tRPC request returned unauthorized response, signing out");
     void invalidateSession("transport-unauthorized");
   },
-  mutationLink: createOutboxLink<AppRouter>(),
+  mutationLink: offlineEngine.outboxLink,
 });
 
 export const useTRPC = trpcBundle.useTRPC;
 export const useConnectionStatus = trpcBundle.useConnectionStatus;
 export const useTRPCClient = trpcBundle.useTRPCClient;
-
-function OutboxReplayRegistration() {
-  const trpcClient = useTRPCClient();
-
-  useEffect(() => {
-    if (!trpcClient) {
-      return;
-    }
-
-    setReplayFn((item) => replayOutboxItem(trpcClient as OutboxMutationClient, item));
-  }, [trpcClient]);
-
-  return null;
-}
 
 export function TrpcProvider({
   baseUrl,
@@ -156,18 +117,9 @@ export function TrpcProvider({
     [authTransportSnapshot.version, baseUrl]
   );
 
-  currentBaseUrl = baseUrl;
-
-  useEffect(() => {
-    const unsubscribe = startOutboxProcessor();
-
-    return unsubscribe;
-  }, []);
+  setServerAddress(baseUrl);
 
   return (
-    <trpcBundle.TRPCProviderWrapper key={providerKey}>
-      <OutboxReplayRegistration />
-      {children}
-    </trpcBundle.TRPCProviderWrapper>
+    <trpcBundle.TRPCProviderWrapper key={providerKey}>{children}</trpcBundle.TRPCProviderWrapper>
   );
 }

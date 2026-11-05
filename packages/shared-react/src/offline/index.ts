@@ -9,7 +9,7 @@ export type { NewOutboxEntry, OutboxEntry, OutboxEntryStatus, ParkedReason } fro
 export { createOutboxStore, type OutboxStore } from "./outbox-store";
 export { isEncodedFormData } from "./input-codec";
 export { discardAllEntries, requeueParkedEntries } from "./status-actions";
-export type { Recovery, RecoveryReason } from "./recovery";
+export { type Recovery, type RecoveryReason, sessionVerdict } from "./recovery";
 export type { LockManagerLike } from "./leader";
 export {
   CACHE_MAX_AGE_MS,

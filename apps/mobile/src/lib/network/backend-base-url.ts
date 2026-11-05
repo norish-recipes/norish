@@ -1,4 +1,3 @@
-import { clearQueryCachesOnUrlChange } from "@/hooks/use-cache-lifecycle";
 import { resetAuthClientStorage } from "@/lib/auth/auth-client";
 import * as SecureStore from "expo-secure-store";
 
@@ -86,8 +85,8 @@ export async function saveBackendBaseUrl(input: string): Promise<string> {
 
   const existing = await loadBackendBaseUrl();
 
+  // The Offline Cache and Outbox are per signed-in owner, and sign-out already cleared the reads.
   if (existing !== normalized) {
-    clearQueryCachesOnUrlChange();
     await resetAuthClientStorage();
   }
 

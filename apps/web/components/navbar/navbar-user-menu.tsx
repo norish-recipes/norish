@@ -11,7 +11,7 @@ import UserAvatar from "@/components/shared/user-avatar";
 import { useUserContext } from "@/context/user-context";
 import { useVersionQuery } from "@/hooks/config";
 import { useLanguageSwitch } from "@/hooks/user/use-language-switch";
-import { countUnsyncedChanges } from "@/lib/offline/sign-out";
+import { offlineEngine } from "@/lib/offline/engine";
 import {
   ArrowDownTrayIcon,
   ArrowLeftStartOnRectangleIcon,
@@ -67,7 +67,7 @@ export default function NavbarUserMenu({
   // directly (the sign-out itself clears the personalized caches).
   const handleSignOutPress = useCallback(() => {
     void (async () => {
-      const unsynced = await countUnsyncedChanges();
+      const unsynced = await offlineEngine.unsyncedChanges();
 
       if (unsynced > 0) {
         setSignOutUnsyncedCount(unsynced);

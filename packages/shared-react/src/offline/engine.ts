@@ -31,8 +31,8 @@ export interface OfflineEngineOptions {
   storage: OfflineStorage;
   /** The client's value of the replay header (web: "web-outbox"). */
   replayHeaderValue: string;
-  /** The readiness URL the connectivity probe hits, base path included. */
-  probeUrl: string;
+  /** The readiness URL the connectivity probe hits, base path included; read per probe. */
+  probeUrl: () => string;
   /** The app version: a persisted cache written by another version is dropped. */
   buster: string | undefined;
   /** Cross-context lock for Replay and the Cache Warmer (web: `navigator.locks`). */
@@ -71,6 +71,10 @@ export interface OfflineEngine {
   requeueParked(ownerId: string): Promise<void>;
   /** Discard an owner's whole queue; resolves with how many entries went. */
   discardAll(ownerId: string): Promise<number>;
+  /** The signed-in owner's queued changes, Parked included: what a sign-out would discard. */
+  unsyncedChanges(): Promise<number>;
+  /** Before an explicit sign-out: the read copy always goes, the queue only once confirmed. */
+  clearForSignOut(options: { discardQueue: boolean }): Promise<void>;
 }
 
 export function createOfflineEngine(options: OfflineEngineOptions): OfflineEngine {
@@ -92,7 +96,7 @@ export function createOfflineEngine(options: OfflineEngineOptions): OfflineEngin
       owner: cache.owner,
       replayHeaderValue,
     }),
-    probe: (probeOptions) => probeBackendReachable(probeUrl, probeOptions),
+    probe: (probeOptions) => probeBackendReachable(probeUrl(), probeOptions),
     createRecovery: ({ transport, verifySession, refetchActiveQueries, topUp }) =>
       createRecovery({
         store: outbox,
@@ -115,5 +119,19 @@ export function createOfflineEngine(options: OfflineEngineOptions): OfflineEngin
       }),
     requeueParked: (ownerId) => requeueParkedEntries(ownerId, outbox),
     discardAll: (ownerId) => discardAllEntries(ownerId, outbox),
+    unsyncedChanges: async () => {
+      const owner = cache.owner();
+
+      return owner ? outbox.size(owner) : 0;
+    },
+    clearForSignOut: async ({ discardQueue }) => {
+      const owner = cache.owner();
+
+      if (discardQueue && owner) {
+        await discardAllEntries(owner, outbox);
+      }
+
+      await cache.resetOfflineCopy("sign-out");
+    },
   };
 }

@@ -1,35 +1,21 @@
 "use client";
 
 import type { ReactNode } from "react";
-import { useEffect, useMemo, useRef, useSyncExternalStore } from "react";
+import { useMemo } from "react";
 import { useConnectivity } from "@/app/providers/connectivity-provider";
-import { RecoveryProvider } from "@/app/providers/recovery-provider";
 import { useConnectionStatus, useTRPCClient } from "@/app/providers/trpc-provider";
 import { useUserContext } from "@/context/user-context";
 import { useWarmSet } from "@/hooks/use-warm-set";
 import { cacheManager, offlineEngine, outboxStore } from "@/lib/offline/engine";
 import { useQueryClient } from "@tanstack/react-query";
 
+import { sessionVerdict } from "@norish/shared-react/offline";
+import { RecoveryProvider, useOfflineController } from "@norish/shared-react/offline/react";
 import { getSession } from "@norish/shared/lib/auth/client";
 
 /**
- * Drives the persisted Offline Cache and the Outbox from the two runtime signals
- * they depend on: the authenticated user id (per-user scoping, ADR-0005) and
- * connectivity. It sits below `UserProvider`, `ConnectivityProvider` and
- * `TRPCProviderWrapper` so it can read all three, and renders children unchanged.
- *
- * Responsibilities:
- *  - reconcile the cache owner (restore / switch / purge reads) on identity
- *    change; children stay hidden while an authenticated owner switch is
- *    resolved, and a departed user's queued mutations are retained dormant under
- *    their owner and can only Replay once that owner signs in again — the
- *    owner-scoped resolver below is what enforces it (ADR-0009);
- *  - construct the engine's Recovery over the live tRPC client, active-query
- *    refetch and Warm Set;
- *  - trigger it on startup, Offline→Live, WebSocket reconnection, and every
- *    Live verdict while queued work is pending;
- *  - ask the connectivity loop to probe when a mutation is admitted to the
- *    Outbox while Live.
+ * Runs the shared offline controller (owner scoping, Recovery triggers, ADR-0009) over the
+ * web engine. It sits below `UserProvider`, `ConnectivityProvider` and `TRPCProviderWrapper`.
  */
 export function OfflineCacheController({
   children,
@@ -46,21 +32,14 @@ export function OfflineCacheController({
   const queryClient = useQueryClient();
   const warmSet = useWarmSet();
 
-  // The server's verified id stands in until the browser's own session request
-  // answers, so the cache restores at hydration rather than a round trip later.
-  const sessionUserId = user?.id ?? seededUserId ?? null;
-  const owner = useSyncExternalStore(cacheManager.subscribe, cacheManager.owner, () => null);
   const recovery = useMemo(
     () =>
       offlineEngine.createRecovery({
         transport: trpcClient,
         verifySession: async (ownerId) => {
           const session = await getSession().catch(() => null);
-          const liveUserId = session?.data?.user?.id ?? null;
 
-          if (liveUserId === null) return "unverifiable";
-
-          return liveUserId === ownerId ? "match" : "mismatch";
+          return sessionVerdict(session?.data?.user?.id ?? null, ownerId);
         },
         refetchActiveQueries: () => queryClient.refetchQueries({ type: "active" }),
         topUp: warmSet.topUp,
@@ -68,124 +47,21 @@ export function OfflineCacheController({
     [queryClient, trpcClient, warmSet]
   );
 
-  // Reconcile the persisted cache with the current identity (restore/switch/purge).
-  useEffect(() => {
-    void cacheManager.reconcileIdentity({ sessionUserId, isOffline });
-  }, [sessionUserId, isOffline]);
+  // The server's verified id stands in until the browser's own session request
+  // answers, so the cache restores at hydration rather than a round trip later.
+  const { switching } = useOfflineController({
+    cache: cacheManager,
+    outbox: outboxStore,
+    recovery,
+    sessionUserId: user?.id ?? seededUserId ?? null,
+    isLive,
+    isOffline,
+    probeNow,
+    subscribeLiveProbes,
+    wsStatus,
+  });
 
-  // A bypassed identity transition retains other owners' queued mutations
-  // dormant (ADR-0009 supersedes ADR-0005's unconditional purge): nothing is
-  // purged here, and the owner-scoped Replay resolver below guarantees a
-  // dormant entry never replays under the incoming account. Explicit sign-out
-  // discards the active queue via its own confirmed path instead.
-
-  // Recovery runs for startup, Offline→Live and WebSocket reconnection. Calls
-  // coalesce with manual sync and retry continuation inside the same instance.
-  const wasOfflineRef = useRef(false);
-  const startedForOwnerRef = useRef<string | null>(null);
-  const previousWsStatusRef = useRef(wsStatus);
-  const hasEverConnectedRef = useRef(false);
-
-  useEffect(() => {
-    const socketConnected = previousWsStatusRef.current !== "connected" && wsStatus === "connected";
-    // Only a *re*connection can have missed anything. The first connect of a
-    // page load happens alongside the page's own first fetches, which already
-    // read the live server.
-    const socketReconnected = socketConnected && hasEverConnectedRef.current;
-
-    previousWsStatusRef.current = wsStatus;
-
-    if (wsStatus === "connected") {
-      hasEverConnectedRef.current = true;
-    }
-
-    if (isOffline) {
-      wasOfflineRef.current = true;
-
-      return;
-    }
-
-    if (!isLive || !owner) {
-      return;
-    }
-
-    const returningLive = wasOfflineRef.current;
-    const starting = startedForOwnerRef.current !== owner;
-
-    wasOfflineRef.current = false;
-
-    if (!starting && !returningLive && !socketReconnected) {
-      return;
-    }
-
-    startedForOwnerRef.current = owner;
-    // Startup follows the page's own fetches, so recovery does not refresh the
-    // reads again unless Replay actually sent something. Coming back online or
-    // reconnecting always refreshes — those genuinely may have missed changes.
-    void recovery.recover(returningLive || socketReconnected ? "resync" : "startup");
-  }, [isLive, isOffline, owner, recovery, wsStatus]);
-
-  // A mutation that failed on reachability while Live is the strongest hint
-  // there is that reachability just changed — stronger than a socket drop, and
-  // the loop already probes on those. Only a growing pending count is an
-  // admission; Replay's own removals and parks change the queue too. While
-  // Offline the backoff loop is probing already.
-  const pendingCountRef = useRef<number | null>(null);
-
-  useEffect(() => {
-    if (!owner) return;
-
-    let cancelled = false;
-
-    const check = async () => {
-      const pending = (await outboxStore.forOwner(owner, "pending")).length;
-
-      if (cancelled) return;
-
-      const previous = pendingCountRef.current;
-
-      pendingCountRef.current = pending;
-
-      if (previous !== null && pending > previous && !isOffline) probeNow();
-    };
-
-    pendingCountRef.current = null;
-    void check();
-    const unsubscribe = outboxStore.subscribe(() => void check());
-
-    return () => {
-      cancelled = true;
-      unsubscribe();
-    };
-  }, [owner, isOffline, probeNow]);
-
-  // Every Live verdict drains queued work. A mutation admitted while Live has
-  // no transition to wait for — the machine never left Live and the socket
-  // never dropped — so without this its entry sat in the Outbox until some
-  // unrelated reconnect, while routine refetches erased the optimistic change
-  // it stood for. Recovery is single-flight: a verdict during a run adds
-  // nothing, and the run's own drain loop already re-reads the queue.
-  useEffect(() => {
-    if (!owner) return;
-
-    return subscribeLiveProbes(() => {
-      if (recovery.isSyncing()) return;
-
-      void outboxStore.forOwner(owner, "pending").then((pending) => {
-        if (pending.length > 0) void recovery.recover("queued");
-      });
-    });
-  }, [owner, recovery, subscribeLiveProbes]);
-
-  // CacheManager clears the outgoing QueryClient before activating the
-  // incoming owner, but that work crosses an async boundary. Do not let the
-  // incoming account render against the previous owner's still-live cache in
-  // the render between the session change and reconciliation completing.
-  // Only an actual live-owner mismatch hides children: on a cold start the
-  // applied owner is still null while the session resolves, and nothing
-  // foreign is in memory yet — hiding there would unmount and remount the
-  // entire app on every launch.
-  if (sessionUserId !== null && owner !== null && owner !== sessionUserId) {
+  if (switching) {
     return null;
   }
 

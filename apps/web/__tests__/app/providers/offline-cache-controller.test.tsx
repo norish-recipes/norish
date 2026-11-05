@@ -93,9 +93,6 @@ vi.mock("@/app/providers/trpc-provider", () => ({
   useTRPCClient: () => trpcClient,
   useConnectionStatus: () => ({ status: wsStatus }),
 }));
-vi.mock("@/app/providers/recovery-provider", () => ({
-  RecoveryProvider: ({ children }: { children: React.ReactNode }) => children,
-}));
 vi.mock("@/lib/offline/engine", () => ({
   cacheManager: {
     owner: cache.owner,

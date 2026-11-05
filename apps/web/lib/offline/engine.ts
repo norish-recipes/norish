@@ -86,7 +86,7 @@ export function createWebOfflineEngine(
   return createOfflineEngine({
     storage,
     replayHeaderValue: OUTBOX_REPLAY_HEADER_VALUE,
-    probeUrl: HEALTH_PROBE_URL,
+    probeUrl: () => HEALTH_PROBE_URL,
     buster: CACHE_BUSTER,
     locks: browserLocks,
     calendarRanges,

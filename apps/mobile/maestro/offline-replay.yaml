@@ -1,0 +1,54 @@
+# Cuts the backend, checks off a grocery while Offline, restores it and sees the change replayed.
+# `pnpm --filter @norish/mobile maestro` serves the cuttable proxy and checks the server after.
+appId: dev.norish.app
+env:
+  NORISH_PROXY_URL: http://localhost:3998
+  NORISH_PROXY_CONTROL_URL: http://localhost:3997
+  NORISH_OFFLINE_GROCERY: maestrooffline
+---
+- runFlow:
+    file: sign-in.yaml
+    env:
+      NORISH_SERVER_URL: ${NORISH_PROXY_URL}
+- scrollUntilVisible:
+    element:
+      id: smoke-grocery-.*
+      text: ${NORISH_OFFLINE_GROCERY}
+- assertVisible:
+    id: smoke-grocery-.*
+    text: ${NORISH_OFFLINE_GROCERY}
+    checked: false
+- evalScript: ${http.post(NORISH_PROXY_CONTROL_URL + '/cut', { body: '' })}
+- extendedWaitUntil:
+    visible:
+      id: smoke-connection
+      text: Offline
+    timeout: 20000
+- tapOn:
+    id: smoke-grocery-.*
+    text: ${NORISH_OFFLINE_GROCERY}
+- extendedWaitUntil:
+    visible:
+      id: smoke-grocery-.*
+      text: ${NORISH_OFFLINE_GROCERY}
+      checked: true
+    timeout: 10000
+- assertVisible:
+    id: smoke-outbox-pending
+    text: 1 change waiting
+- evalScript: ${http.post(NORISH_PROXY_CONTROL_URL + '/restore', { body: '' })}
+# The Offline backoff tops out at 30 seconds between probes.
+- extendedWaitUntil:
+    visible:
+      id: smoke-connection
+      text: Live
+    timeout: 45000
+- extendedWaitUntil:
+    visible:
+      id: smoke-outbox-pending
+      text: Nothing queued.*
+    timeout: 20000
+- assertVisible:
+    id: smoke-grocery-.*
+    text: ${NORISH_OFFLINE_GROCERY}
+    checked: true

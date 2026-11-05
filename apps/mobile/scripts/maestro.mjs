@@ -1,8 +1,9 @@
-// Seeds a disposable account with one unchecked grocery, runs the Maestro flows on the booted
-// simulator, then checks the grocery is done on the server, where the web client reads it.
+// Seeds a disposable account with unchecked groceries, runs the Maestro flows on the booted
+// simulator, then checks the groceries are done on the server, where the web client reads it.
 import { spawn } from "node:child_process";
 import { once } from "node:events";
 import { createServer } from "node:http";
+import net from "node:net";
 import path from "node:path";
 
 const env = {
@@ -10,6 +11,9 @@ const env = {
   NORISH_EMAIL: "maestro@norish.test",
   NORISH_PASSWORD: "maestro-password-1",
   NORISH_GROCERY: "maestrocheck",
+  NORISH_OFFLINE_GROCERY: "maestrooffline",
+  NORISH_PROXY_PORT: "3998",
+  NORISH_PROXY_CONTROL_PORT: "3997",
   NORISH_OLD_SERVER_PORT: "3999",
   ...process.env,
 };
@@ -34,8 +38,9 @@ const trpc = async (procedure, input) => {
   return data.result.data.json;
 };
 
+const seeded = [env.NORISH_GROCERY, env.NORISH_OFFLINE_GROCERY];
 const ours = async () =>
-  (await trpc("groceries.list")).groceries.filter((g) => g.name === env.NORISH_GROCERY);
+  (await trpc("groceries.list")).groceries.filter((g) => seeded.includes(g.name));
 
 const credentials = { email: env.NORISH_EMAIL, password: env.NORISH_PASSWORD };
 
@@ -53,7 +58,40 @@ cookie = signIn.response.headers
 const stale = (await ours()).map(({ id, version }) => ({ id, version }));
 
 if (stale.length > 0) await trpc("groceries.delete", { groceries: stale });
-await trpc("groceries.create", [{ name: env.NORISH_GROCERY, unit: null, amount: null }]);
+await trpc(
+  "groceries.create",
+  seeded.map((name) => ({ name, unit: null, amount: null }))
+);
+
+// The offline flow talks to the server through this proxy and cuts it with `POST /cut`, so the
+// backend is unreachable while the simulator's network stays up.
+const backend = new URL(server);
+const sockets = new Set();
+const proxy = net.createServer((client) => {
+  const upstream = net.connect(Number(backend.port || 80), backend.hostname);
+
+  for (const socket of [client, upstream]) {
+    sockets.add(socket);
+    socket.on("close", () => sockets.delete(socket));
+    socket.on("error", () => {
+      client.destroy();
+      upstream.destroy();
+    });
+  }
+  client.pipe(upstream).pipe(client);
+});
+const listenProxy = () => proxy.listen(Number(env.NORISH_PROXY_PORT));
+const control = createServer((request, response) => {
+  if (request.url === "/cut") {
+    proxy.close();
+    for (const socket of sockets) socket.destroy();
+  } else if (request.url === "/restore" && !proxy.listening) {
+    listenProxy();
+  }
+  response.end();
+}).listen(Number(env.NORISH_PROXY_CONTROL_PORT));
+
+listenProxy();
 
 const flows = path.join(import.meta.dirname, "..", "maestro");
 
@@ -73,12 +111,19 @@ await maestro(flows, {
   NORISH_EMAIL: env.NORISH_EMAIL,
   NORISH_PASSWORD: env.NORISH_PASSWORD,
   NORISH_GROCERY: env.NORISH_GROCERY,
+  NORISH_OFFLINE_GROCERY: env.NORISH_OFFLINE_GROCERY,
+  NORISH_PROXY_URL: `http://localhost:${env.NORISH_PROXY_PORT}`,
+  NORISH_PROXY_CONTROL_URL: `http://localhost:${env.NORISH_PROXY_CONTROL_PORT}`,
 });
+proxy.close();
+control.close();
 
 const after = await ours();
 
-if (after.length === 0 || !after.every((grocery) => grocery.isDone)) {
-  throw new Error(`${env.NORISH_GROCERY} is not done on the server`);
+for (const name of seeded) {
+  if (!after.some((grocery) => grocery.name === name && grocery.isDone)) {
+    throw new Error(`${name} is not done on the server`);
+  }
 }
 
 // A server older than the app supports: its readiness probe reports 0.1.0.

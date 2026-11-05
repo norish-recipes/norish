@@ -10,5 +10,7 @@ export default defineConfig({
     environment: "node",
     globals: true,
     include: ["src/**/*.test.{ts,tsx}"],
+    // Inlined so a test's mocks of its native imports (expo-linking, react-native) apply.
+    server: { deps: { inline: ["@better-auth/expo"] } },
   },
 });

@@ -1,3 +1,4 @@
+import { storageAdapter } from "@better-auth/expo/client";
 import * as SecureStore from "expo-secure-store";
 
 import { createClientLogger } from "@norish/shared/lib/logger";
@@ -8,6 +9,9 @@ export const AUTH_STORAGE_PREFIX = "norish";
 
 export const AUTH_COOKIE_KEY = `${AUTH_STORAGE_PREFIX}_cookie`;
 const AUTH_SESSION_DATA_KEY = `${AUTH_STORAGE_PREFIX}_session_data`;
+
+/** SecureStore as the auth client reads it: a large value is stored in chunks. */
+export const authStorage = storageAdapter(SecureStore);
 
 export type PersistedUser = {
   id: string;
@@ -75,8 +79,8 @@ export async function readPersistedSession(): Promise<PersistedUser | null> {
 
   try {
     [authCookie, raw] = await Promise.all([
-      SecureStore.getItemAsync(AUTH_COOKIE_KEY),
-      SecureStore.getItemAsync(AUTH_SESSION_DATA_KEY),
+      authStorage.getItemAsync(AUTH_COOKIE_KEY),
+      authStorage.getItemAsync(AUTH_SESSION_DATA_KEY),
     ]);
   } catch {
     log.warn("Failed to read persisted auth data from SecureStore");

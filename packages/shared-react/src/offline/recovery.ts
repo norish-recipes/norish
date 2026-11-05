@@ -27,6 +27,13 @@ import { runReplayPass } from "./replay";
 
 type SessionVerdict = "match" | "mismatch" | "unverifiable";
 
+/** Whether the live session (its user id, null when it can't be read) still belongs to the owner. */
+export function sessionVerdict(liveUserId: string | null, ownerId: string): SessionVerdict {
+  if (liveUserId === null) return "unverifiable";
+
+  return liveUserId === ownerId ? "match" : "mismatch";
+}
+
 interface RecoveryDependencies {
   store: OutboxStore;
   owner: () => string | null;

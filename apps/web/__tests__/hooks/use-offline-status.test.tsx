@@ -32,7 +32,8 @@ vi.mock("@/app/providers/connectivity-provider", () => ({
   useConnectivity: () => h.connectivity,
 }));
 
-vi.mock("@/app/providers/recovery-provider", () => ({
+vi.mock("@norish/shared-react/offline/react", async (importOriginal) => ({
+  ...(await importOriginal<typeof import("@norish/shared-react/offline/react")>()),
   useRecovery: () => ({
     recover: h.recover,
     isSyncing: () => h.syncing,

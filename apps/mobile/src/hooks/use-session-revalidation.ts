@@ -1,23 +1,23 @@
 import { useEffect, useRef } from "react";
 import { useAuth } from "@/lib/auth/auth-context";
-import { useNetworkStatus } from "@/lib/network/network-context";
+import { useConnectivity } from "@/lib/offline/connectivity";
 
 import { createClientLogger } from "@norish/shared/lib/logger";
 
 const log = createClientLogger("session-revalidation");
 
 /**
- * Listens for `appOnline: false => true` transitions and silently
+ * Listens for Offline → Live transitions and silently
  * re-validates the Better Auth session against the server.
  *
  * - If the session is authoritatively invalid (null/401/revoked), calls `signOut()`.
  * - If the check fails due to a transient network error, does **not** sign out;
- *   retries on the next `appOnline` restore.
+ *   retries on the next return to Live.
  *
  * Must be mounted inside the auth-gated tree where `useAuth()` is available.
  */
 export function useSessionRevalidation() {
-  const { appOnline } = useNetworkStatus();
+  const { isLive: appOnline } = useConnectivity();
   const { authClient, signOut } = useAuth();
   const prevAppOnlineRef = useRef(appOnline);
 

@@ -5,8 +5,6 @@ import { StyleSheet } from "react-native";
 import { GestureHandlerRootView } from "react-native-gesture-handler";
 import { StorageUnavailableScreen } from "@/features/auth/screens/storage-unavailable-screen";
 import { useBackendBaseUrl } from "@/hooks/use-backend-base-url";
-import { useCacheHydration } from "@/hooks/use-cache-hydration";
-import { useCacheInvalidationOnReconnect } from "@/hooks/use-cache-lifecycle";
 import { useResolvedColorScheme } from "@/hooks/use-resolved-color-scheme";
 import { useSessionRevalidation } from "@/hooks/use-session-revalidation";
 import { useUserLocaleSync } from "@/hooks/use-user-locale-sync";
@@ -14,7 +12,8 @@ import { AuthProvider, useAuth } from "@/lib/auth/auth-context";
 import { UserProvider } from "@/lib/auth/user-context";
 import { resolveBootPhase } from "@/lib/boot/boot-state";
 import { MobileIntlFallbackProvider, MobileIntlProvider } from "@/lib/i18n/mobile-i18n-context";
-import { NetworkProvider } from "@/lib/network/network-context";
+import { ConnectivityProvider } from "@/lib/offline/connectivity";
+import { OfflineController } from "@/lib/offline/offline-controller";
 import {
   AppearancePreferenceProvider,
   useAppearancePreference,
@@ -73,12 +72,10 @@ function RootLayoutContent() {
   const effectiveScheme = useResolvedColorScheme();
 
   const backendBaseUrl = useBackendBaseUrl();
-  const cacheReady = useCacheHydration();
   const [fontsLoaded, fontsError] = useFonts(FONTS);
 
   const boot = resolveBootPhase({
     appearanceHydrated: hydrated,
-    cacheReady,
     fontsReady: fontsLoaded || fontsError !== null,
     backendBaseUrl,
   });
@@ -127,8 +124,8 @@ function RootLayoutContent() {
   // Full provider tree — backend available
   return (
     <ThemeProvider value={theme}>
-      <NetworkProvider backendBaseUrl={boot.backendBaseUrl}>
-        <TrpcProvider baseUrl={boot.backendBaseUrl}>
+      <TrpcProvider baseUrl={boot.backendBaseUrl}>
+        <ConnectivityProvider>
           <AuthProvider backendBaseUrl={boot.backendBaseUrl}>
             <MobileIntlProvider>
               <DomainProviders>
@@ -137,8 +134,8 @@ function RootLayoutContent() {
               </DomainProviders>
             </MobileIntlProvider>
           </AuthProvider>
-        </TrpcProvider>
-      </NetworkProvider>
+        </ConnectivityProvider>
+      </TrpcProvider>
     </ThemeProvider>
   );
 }
@@ -162,13 +159,14 @@ function DomainProviders({ children }: { children: React.ReactNode }) {
 }
 
 function AuthenticatedProviders({ children }: { children: React.ReactNode }) {
-  useCacheInvalidationOnReconnect();
   useSessionRevalidation();
 
   return (
     <UserProvider>
-      <AuthenticatedEffects />
-      {children}
+      <OfflineController>
+        <AuthenticatedEffects />
+        {children}
+      </OfflineController>
     </UserProvider>
   );
 }

@@ -1,13 +1,14 @@
 "use client";
 
-import { useCallback, useEffect, useMemo, useState, useSyncExternalStore } from "react";
+import { useCallback, useEffect, useState } from "react";
 import { useConnectivity } from "@/app/providers/connectivity-provider";
-import { useRecovery } from "@/app/providers/recovery-provider";
 import { useWarmSet } from "@/hooks/use-warm-set";
 import { probeBackendReachable, setOfflineForced } from "@/lib/connectivity";
 import { cacheManager, offlineEngine, outboxStore } from "@/lib/offline/engine";
 
-import type { OutboxEntry, WarmSetInventory } from "@norish/shared-react/offline";
+import type { WarmSetInventory } from "@norish/shared-react/offline";
+import type { OutboxSummary } from "@norish/shared-react/offline/react";
+import { useOutboxStatus, useRecovery } from "@norish/shared-react/offline/react";
 
 /** Nothing cached: what the modal shows before a warm, and after a wipe. */
 const EMPTY_INVENTORY: WarmSetInventory = {
@@ -18,24 +19,6 @@ const EMPTY_INVENTORY: WarmSetInventory = {
   plannedThisWeek: 0,
   lastCompletedAt: null,
 };
-
-export interface OutboxSummary {
-  entries: OutboxEntry[];
-  total: number;
-  pending: number;
-  parked: number;
-  conflicted: number;
-}
-
-function summarize(entries: OutboxEntry[]): OutboxSummary {
-  return {
-    entries,
-    total: entries.length,
-    pending: entries.filter((entry) => entry.status === "pending").length,
-    parked: entries.filter((entry) => entry.status === "parked").length,
-    conflicted: entries.filter((entry) => entry.status === "conflicted").length,
-  };
-}
 
 export interface OfflineStatus {
   posture: ReturnType<typeof useConnectivity>["posture"];
@@ -63,47 +46,39 @@ export function useOfflineStatus(): OfflineStatus {
   const { posture, isLive, isOffline, isForced } = useConnectivity();
   const recovery = useRecovery();
   const warmSet = useWarmSet();
-  const owner = useSyncExternalStore(cacheManager.subscribe, cacheManager.owner, () => null);
-
-  const [entries, setEntries] = useState<OutboxEntry[]>([]);
   const [inventory, setInventory] = useState<WarmSetInventory>(EMPTY_INVENTORY);
-  const [prevOwner, setPrevOwner] = useState(owner);
-  const isSyncing = useSyncExternalStore(recovery.subscribe, recovery.isSyncing, () => false);
 
-  // No owner (signed out): nothing cached and no Outbox to show.
+  const refreshInventory = useCallback(async () => {
+    setInventory(await warmSet.inspect());
+  }, [warmSet]);
+
+  const canReachBackend = useCallback(async () => {
+    if (isForced) {
+      return false;
+    }
+
+    return !isOffline || probeBackendReachable();
+  }, [isForced, isOffline]);
+
+  const { owner, outbox, isSyncing, syncNow, retryAll, discardAll } = useOutboxStatus({
+    cache: cacheManager,
+    outbox: outboxStore,
+    recovery,
+    requeueParked: offlineEngine.requeueParked,
+    discardAll: offlineEngine.discardAll,
+    canReachBackend,
+    onSynced: refreshInventory,
+  });
+  const [prevOwner, setPrevOwner] = useState(owner);
+
+  // No owner (signed out): nothing cached to show.
   if (owner !== prevOwner) {
     setPrevOwner(owner);
 
     if (!owner) {
-      setEntries([]);
       setInventory(EMPTY_INVENTORY);
     }
   }
-
-  // Keep the Outbox list live while open (in-tab and cross-tab).
-  useEffect(() => {
-    if (!owner) {
-      return;
-    }
-
-    let cancelled = false;
-
-    const load = () => {
-      void outboxStore.forOwner(owner).then((next) => {
-        if (!cancelled) {
-          setEntries(next);
-        }
-      });
-    };
-
-    load();
-    const unsubscribe = outboxStore.subscribe(load);
-
-    return () => {
-      cancelled = true;
-      unsubscribe();
-    };
-  }, [owner]);
 
   // Read the Warm Set inventory when the modal opens.
   useEffect(() => {
@@ -125,53 +100,8 @@ export function useOfflineStatus(): OfflineStatus {
   }, [owner, warmSet]);
 
   const { lastCompletedAt: lastWarmedAt, ...counts } = inventory;
-  const outbox = useMemo(() => summarize(entries), [entries]);
 
   const warm = useCallback(() => warmSet.topUp(), [warmSet]);
-
-  const refreshInventory = useCallback(async () => {
-    setInventory(await warmSet.inspect());
-  }, [warmSet]);
-
-  const canReachBackend = useCallback(async () => {
-    if (isForced) {
-      return false;
-    }
-
-    return !isOffline || probeBackendReachable();
-  }, [isForced, isOffline]);
-
-  const syncNow = useCallback(async () => {
-    if (!(await canReachBackend())) {
-      return;
-    }
-
-    await recovery.recover();
-    await refreshInventory();
-  }, [canReachBackend, recovery, refreshInventory]);
-
-  const retryAll = useCallback(async () => {
-    if (!owner || !(await canReachBackend())) {
-      return;
-    }
-
-    await offlineEngine.requeueParked(owner);
-    await recovery.recover();
-    await refreshInventory();
-  }, [canReachBackend, owner, recovery, refreshInventory]);
-
-  const discardAll = useCallback(async () => {
-    if (!owner) {
-      return;
-    }
-
-    await offlineEngine.discardAll(owner);
-    // Reconcile the optimistically-applied changes against server truth so no
-    // phantom lingers (best-effort while Offline; converges on reconnect).
-    if (await canReachBackend()) {
-      await recovery.recover();
-    }
-  }, [canReachBackend, owner, recovery]);
 
   const wipeCache = useCallback(async () => {
     await cacheManager.resetOfflineCopy("manual");
