@@ -172,11 +172,12 @@ test.describe("the Chromium browser", () => {
     await page.goto("/settings?tab=admin");
     const card = cardOf(page);
     const result = card.getByRole("status");
+    const chromiumSwitch = card.getByRole("switch", { name: "Chromium browser" });
 
     await card.scrollIntoViewIfNeeded();
-    await submitMutation(page, "admin.testPageRenderer", () =>
-      card.getByRole("switch", { name: "Chromium browser" }).press("Space")
-    );
+    // Disabled until the card's query returns, and press() does not wait for enabled.
+    await expect(chromiumSwitch).toBeEnabled();
+    await submitMutation(page, "admin.testPageRenderer", () => chromiumSwitch.press("Space"));
     // eslint-disable-next-line sonarjs/no-clear-text-protocols -- the example compose file's chromium service, without TLS
     await expect(card.getByLabel("Chromium endpoint")).toHaveValue("http://chromium:9222");
     // The compose service's name does not resolve on the runner.
