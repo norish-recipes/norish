@@ -34,6 +34,7 @@
   "secret": {
     "reveal": "Geheim tonen",
     "hide": "Geheim verbergen",
+    "clear": "Opgeslagen waarde verwijderen",
     "keepsCurrent": "Laat leeg om de opgeslagen waarde te behouden."
   },
   "status": {

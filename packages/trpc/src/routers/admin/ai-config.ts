@@ -150,9 +150,11 @@ const updateVideoConfig = adminProcedure
 
     // VideoConfig contains transcription API key, so mark as sensitive
     await setConfig(ServerConfigKeys.VIDEO_CONFIG, input, ctx.user.id, true, {
-      dropSecrets: providerChangedFrom(stored?.transcriptionProvider, input.transcriptionProvider)
-        ? ["transcriptionApiKey"]
-        : [],
+      dropSecrets:
+        input.transcriptionApiKey === "" ||
+        providerChangedFrom(stored?.transcriptionProvider, input.transcriptionProvider)
+          ? ["transcriptionApiKey"]
+          : [],
     });
     forgetKeyRejection(ServerConfigKeys.VIDEO_CONFIG);
 
@@ -162,7 +164,7 @@ const updateVideoConfig = adminProcedure
 /**
  * Update the Image Generation configuration block (ADR-0024): its own
  * provider, model, endpoint and key. Sensitive because of the key; an omitted
- * key preserves the stored one, exactly as the AI and video blocks do.
+ * key preserves the stored one and an empty one removes it, as in the video block.
  */
 const updateImageGenerationConfig = adminProcedure
   .input(ImageGenerationConfigSchema)
@@ -172,7 +174,10 @@ const updateImageGenerationConfig = adminProcedure
     const stored = await getConfig<ImageGenerationConfig>(ServerConfigKeys.IMAGE_GENERATION_CONFIG);
 
     await setConfig(ServerConfigKeys.IMAGE_GENERATION_CONFIG, input, ctx.user.id, true, {
-      dropSecrets: providerChangedFrom(stored?.provider, input.provider) ? ["apiKey"] : [],
+      dropSecrets:
+        input.apiKey === "" || providerChangedFrom(stored?.provider, input.provider)
+          ? ["apiKey"]
+          : [],
     });
     forgetKeyRejection(ServerConfigKeys.IMAGE_GENERATION_CONFIG);
 

@@ -34,6 +34,7 @@
   "secret": {
     "reveal": "Näytä salaisuus",
     "hide": "Piilota salaisuus",
+    "clear": "Poista tallennettu arvo",
     "keepsCurrent": "Jätä tyhjäksi, niin tallennettu arvo säilyy."
   },
   "status": {

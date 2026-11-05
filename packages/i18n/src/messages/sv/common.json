@@ -34,6 +34,7 @@
   "secret": {
     "reveal": "Visa hemlighet",
     "hide": "Dölj hemlighet",
+    "clear": "Ta bort sparat värde",
     "keepsCurrent": "Lämna tomt för att behålla det sparade värdet."
   },
   "status": {

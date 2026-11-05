@@ -34,6 +34,7 @@
   "secret": {
     "reveal": "시크릿 표시",
     "hide": "시크릿 숨기기",
+    "clear": "저장된 값 삭제",
     "keepsCurrent": "저장된 값을 유지하려면 비워 두세요."
   },
   "status": {

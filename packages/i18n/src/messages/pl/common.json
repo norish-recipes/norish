@@ -34,6 +34,7 @@
   "secret": {
     "reveal": "Pokaż sekret",
     "hide": "Ukryj sekret",
+    "clear": "Usuń zapisaną wartość",
     "keepsCurrent": "Pozostaw puste, aby zachować zapisaną wartość."
   },
   "status": {

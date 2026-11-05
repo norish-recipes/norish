@@ -34,6 +34,7 @@
   "secret": {
     "reveal": "Mostrar secreto",
     "hide": "Ocultar secreto",
+    "clear": "Quitar el valor guardado",
     "keepsCurrent": "Déjalo vacío para conservar el valor guardado."
   },
   "status": {

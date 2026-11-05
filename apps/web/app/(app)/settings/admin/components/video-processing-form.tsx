@@ -71,6 +71,7 @@ export default function VideoProcessingForm({ onDirtyChange }: VideoProcessingFo
     videoConfig?.transcriptionEndpoint ?? ""
   );
   const [transcriptionApiKey, setTranscriptionApiKey] = useState("");
+  const [isTranscriptionKeyCleared, setIsTranscriptionKeyCleared] = useState(false);
   const [transcriptionModel, setTranscriptionModel] = useState(
     videoConfig?.transcriptionModel ?? ""
   );
@@ -103,6 +104,7 @@ export default function VideoProcessingForm({ onDirtyChange }: VideoProcessingFo
   // Only consider it configured if the provider hasn't changed from saved config
   const providerMatchesSaved = transcriptionProvider === videoConfig?.transcriptionProvider;
   const isTranscriptionApiKeyConfigured =
+    !isTranscriptionKeyCleared &&
     providerMatchesSaved &&
     !!videoConfig?.transcriptionApiKey &&
     videoConfig.transcriptionApiKey !== "";
@@ -216,7 +218,8 @@ export default function VideoProcessingForm({ onDirtyChange }: VideoProcessingFo
       transcriptionProvider !== videoConfig.transcriptionProvider ||
       transcriptionEndpoint !== (videoConfig.transcriptionEndpoint ?? "") ||
       transcriptionModel !== videoConfig.transcriptionModel ||
-      transcriptionApiKey.trim() !== ""
+      transcriptionApiKey.trim() !== "" ||
+      isTranscriptionKeyCleared
     );
   }, [
     videoConfig,
@@ -228,6 +231,7 @@ export default function VideoProcessingForm({ onDirtyChange }: VideoProcessingFo
     transcriptionEndpoint,
     transcriptionModel,
     transcriptionApiKey,
+    isTranscriptionKeyCleared,
   ]);
   useEffect(() => {
     onDirtyChange?.(hasChanges);
@@ -246,12 +250,16 @@ export default function VideoProcessingForm({ onDirtyChange }: VideoProcessingFo
         ytDlpProxy: ytDlpProxy || undefined,
         transcriptionProvider,
         transcriptionEndpoint: transcriptionEndpoint || undefined,
-        transcriptionApiKey: transcriptionApiKey || undefined,
+        // Empty removes the stored key, so transcription uses the AI key; omitted keeps it.
+        transcriptionApiKey: transcriptionApiKey || (isTranscriptionKeyCleared ? "" : undefined),
         transcriptionModel,
       })
         // The stored key is what the field now stands for; leaving the typed one
         // behind is what left this form claiming unsaved changes forever.
-        .then(() => setTranscriptionApiKey(""))
+        .then(() => {
+          setTranscriptionApiKey("");
+          setIsTranscriptionKeyCleared(false);
+        })
     );
   };
   return (
@@ -377,6 +385,7 @@ export default function VideoProcessingForm({ onDirtyChange }: VideoProcessingFo
               label={t("transcriptionApiKey")}
               placeholder={t("transcriptionApiKeyPlaceholder")}
               value={transcriptionApiKey}
+              onClear={() => setIsTranscriptionKeyCleared(true)}
               onReveal={handleRevealTranscriptionApiKey}
               onValueChange={setTranscriptionApiKey}
             />
@@ -390,6 +399,7 @@ export default function VideoProcessingForm({ onDirtyChange }: VideoProcessingFo
               label={t("transcriptionApiKeyOptional")}
               placeholder={t("transcriptionApiKeyOptionalPlaceholder")}
               value={transcriptionApiKey}
+              onClear={() => setIsTranscriptionKeyCleared(true)}
               onReveal={handleRevealTranscriptionApiKey}
               onValueChange={setTranscriptionApiKey}
             />
