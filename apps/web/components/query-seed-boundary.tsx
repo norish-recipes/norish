@@ -2,7 +2,7 @@
 
 import type { DehydratedState, QueryClient } from "@tanstack/react-query";
 import type { ReactNode } from "react";
-import { markServerCopies } from "@/lib/query-cache";
+import { markServerCopies } from "@/lib/offline/engine";
 import { hydrate, HydrationBoundary, useQueryClient } from "@tanstack/react-query";
 
 /** Fills, during render, every seeded query without data, including one a provider above already

@@ -7,9 +7,10 @@
  * Identity transitions that bypass explicit sign-out never come through
  * here; they retain the outgoing queue dormant under its owner.
  */
-import type { OutboxStore } from "@/lib/outbox";
-import { discardAllEntries, outboxStore } from "@/lib/outbox";
-import { cacheManager } from "@/lib/query-cache";
+import { cacheManager, outboxStore } from "@/lib/offline/engine";
+
+import type { OutboxStore } from "@norish/shared-react/offline";
+import { discardAllEntries } from "@norish/shared-react/offline";
 
 /** The account whose offline state a sign-out would affect. */
 function signOutOwner(): string | null {

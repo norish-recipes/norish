@@ -6,7 +6,7 @@ import { OfflineUnavailable } from "@/app/~offline/offline-unavailable";
 import { routeParams } from "@/app/~offline/route-params";
 import { useTRPC } from "@/app/providers/trpc-provider";
 import RecipeSkeleton from "@/components/skeleton/recipe-skeleton";
-import { cacheManager } from "@/lib/query-cache";
+import { cacheManager } from "@/lib/offline/engine";
 import { useQueryClient } from "@tanstack/react-query";
 
 /**

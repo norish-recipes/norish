@@ -7,9 +7,7 @@ import { RecoveryProvider } from "@/app/providers/recovery-provider";
 import { useConnectionStatus, useTRPCClient } from "@/app/providers/trpc-provider";
 import { useUserContext } from "@/context/user-context";
 import { useWarmSet } from "@/hooks/use-warm-set";
-import { outboxStore, replayOutboxEntry } from "@/lib/outbox";
-import { createRecovery } from "@/lib/outbox/recovery";
-import { cacheManager } from "@/lib/query-cache";
+import { cacheManager, offlineEngine, outboxStore } from "@/lib/offline/engine";
 import { useQueryClient } from "@tanstack/react-query";
 
 import { getSession } from "@norish/shared/lib/auth/client";
@@ -26,8 +24,8 @@ import { getSession } from "@norish/shared/lib/auth/client";
  *    resolved, and a departed user's queued mutations are retained dormant under
  *    their owner and can only Replay once that owner signs in again — the
  *    owner-scoped resolver below is what enforces it (ADR-0009);
- *  - construct Recovery from the live tRPC client, Outbox, active-query refetch,
- *    and Warm Set;
+ *  - construct the engine's Recovery over the live tRPC client, active-query
+ *    refetch and Warm Set;
  *  - trigger it on startup, Offline→Live, WebSocket reconnection, and every
  *    Live verdict while queued work is pending;
  *  - ask the connectivity loop to probe when a mutation is admitted to the
@@ -54,10 +52,8 @@ export function OfflineCacheController({
   const owner = useSyncExternalStore(cacheManager.subscribe, cacheManager.owner, () => null);
   const recovery = useMemo(
     () =>
-      createRecovery({
-        store: outboxStore,
-        owner: cacheManager.owner,
-        submit: (entry) => replayOutboxEntry(trpcClient, entry),
+      offlineEngine.createRecovery({
+        transport: trpcClient,
         verifySession: async (ownerId) => {
           const session = await getSession().catch(() => null);
           const liveUserId = session?.data?.user?.id ?? null;

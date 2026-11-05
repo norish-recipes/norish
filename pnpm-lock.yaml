@@ -1304,6 +1304,9 @@ importers:
       '@norish/trpc':
         specifier: workspace:*
         version: link:../trpc
+      '@tanstack/query-persist-client-core':
+        specifier: 5.105.0
+        version: 5.105.0
       '@tanstack/react-query':
         specifier: 5.105.0
         version: 5.105.0(@types/react@19.3.0)(react@19.3.1)

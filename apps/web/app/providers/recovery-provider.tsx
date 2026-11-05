@@ -1,8 +1,9 @@
 "use client";
 
-import type { Recovery } from "@/lib/outbox/recovery";
 import type { ReactNode } from "react";
 import { createContext, use } from "react";
+
+import type { Recovery } from "@norish/shared-react/offline";
 
 const RecoveryContext = createContext<Recovery | null>(null);
 

@@ -50,7 +50,6 @@ const outbox = vi.hoisted(() => {
     },
   };
 });
-const replayOutboxEntry = vi.hoisted(() => vi.fn());
 const recover = vi.hoisted(() => vi.fn(() => Promise.resolve()));
 const isSyncing = vi.hoisted(() => vi.fn(() => false));
 const recovery = vi.hoisted(() => ({
@@ -74,7 +73,7 @@ const liveProbes = vi.hoisted(() => {
     },
   };
 });
-const createRecovery = vi.hoisted(() => vi.fn((_deps: { owner: () => string | null }) => recovery));
+const createRecovery = vi.hoisted(() => vi.fn((_deps: object) => recovery));
 
 let user: { id: string } | null = null;
 let connectivity = { isLive: true, isOffline: false };
@@ -88,28 +87,27 @@ vi.mock("@/app/providers/connectivity-provider", () => ({
     subscribeLiveProbes: liveProbes.subscribe,
   }),
 }));
+const trpcClient = vi.hoisted(() => ({}));
+
 vi.mock("@/app/providers/trpc-provider", () => ({
-  useTRPCClient: () => ({}),
+  useTRPCClient: () => trpcClient,
   useConnectionStatus: () => ({ status: wsStatus }),
 }));
 vi.mock("@/app/providers/recovery-provider", () => ({
   RecoveryProvider: ({ children }: { children: React.ReactNode }) => children,
 }));
-vi.mock("@/lib/query-cache", () => ({
+vi.mock("@/lib/offline/engine", () => ({
   cacheManager: {
     owner: cache.owner,
     subscribe: cache.subscribe,
     reconcileIdentity: cache.reconcileIdentity,
   },
+  outboxStore: outbox.store,
+  offlineEngine: { createRecovery },
 }));
 vi.mock("@/hooks/use-warm-set", () => ({
   useWarmSet: () => ({ topUp: warmSetTopUp, inspect: vi.fn() }),
 }));
-vi.mock("@/lib/outbox", () => ({
-  outboxStore: outbox.store,
-  replayOutboxEntry,
-}));
-vi.mock("@/lib/outbox/recovery", () => ({ createRecovery }));
 
 function renderController(seededUserId?: string) {
   const queryClient = new QueryClient();
@@ -254,30 +252,19 @@ describe("OfflineCacheController", () => {
     await screen.findByText("child");
   });
 
-  it("builds Recovery with the current cache, Outbox and reconciliation adapters", async () => {
+  it("builds the engine's Recovery over the live client and reconciliation adapters", async () => {
     user = { id: "u1" };
     renderController();
 
     await waitFor(() => expect(createRecovery).toHaveBeenCalled());
     expect(createRecovery).toHaveBeenCalledWith(
       expect.objectContaining({
-        store: outbox.store,
-        owner: cache.owner,
-        submit: expect.any(Function),
+        transport: trpcClient,
+        verifySession: expect.any(Function),
         refetchActiveQueries: expect.any(Function),
         topUp: warmSetTopUp,
       })
     );
-  });
-
-  it("retains other owners' queued mutations dormant (no purge on identity change)", async () => {
-    user = { id: "u1" };
-    renderController();
-
-    await waitFor(() => expect(createRecovery).toHaveBeenCalled());
-    const resolver = createRecovery.mock.lastCall![0].owner;
-
-    expect(resolver()).toBe("u1");
   });
 
   it("runs Recovery once an owner is settled while Live", async () => {

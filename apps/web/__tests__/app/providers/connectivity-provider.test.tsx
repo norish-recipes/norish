@@ -5,7 +5,8 @@ import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import "@testing-library/jest-dom";
 
 import { ConnectivityProvider, useConnectivity } from "@/app/providers/connectivity-provider";
-import { LIVE_PROBE_INTERVAL_MS } from "@/lib/connectivity";
+
+import { LIVE_PROBE_INTERVAL_MS } from "@norish/shared-react/offline";
 
 const probeMock = vi.hoisted(() => vi.fn<() => Promise<boolean>>());
 let wsStatus: "idle" | "connected" | "disconnected" = "idle";

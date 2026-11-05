@@ -1,14 +1,13 @@
 "use client";
 
-import type { OutboxEntry } from "@/lib/outbox";
-import type { WarmSetInventory } from "@/lib/query-cache";
 import { useCallback, useEffect, useMemo, useState, useSyncExternalStore } from "react";
 import { useConnectivity } from "@/app/providers/connectivity-provider";
 import { useRecovery } from "@/app/providers/recovery-provider";
 import { useWarmSet } from "@/hooks/use-warm-set";
 import { probeBackendReachable, setOfflineForced } from "@/lib/connectivity";
-import { discardAllEntries, outboxStore, requeueParkedEntries } from "@/lib/outbox";
-import { cacheManager } from "@/lib/query-cache";
+import { cacheManager, offlineEngine, outboxStore } from "@/lib/offline/engine";
+
+import type { OutboxEntry, WarmSetInventory } from "@norish/shared-react/offline";
 
 /** Nothing cached: what the modal shows before a warm, and after a wipe. */
 const EMPTY_INVENTORY: WarmSetInventory = {
@@ -156,7 +155,7 @@ export function useOfflineStatus(): OfflineStatus {
       return;
     }
 
-    await requeueParkedEntries(owner);
+    await offlineEngine.requeueParked(owner);
     await recovery.recover();
     await refreshInventory();
   }, [canReachBackend, owner, recovery, refreshInventory]);
@@ -166,7 +165,7 @@ export function useOfflineStatus(): OfflineStatus {
       return;
     }
 
-    await discardAllEntries(owner);
+    await offlineEngine.discardAll(owner);
     // Reconcile the optimistically-applied changes against server truth so no
     // phantom lingers (best-effort while Offline; converges on reconnect).
     if (await canReachBackend()) {

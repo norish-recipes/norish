@@ -1,16 +1,17 @@
-import type { OutboxStore } from "@/lib/outbox/outbox-store";
-import type { NewOutboxEntry } from "@/lib/outbox/outbox-types";
-import { createOfflineIdb } from "@/lib/offline/idb";
+import { createIdbStorage } from "@/lib/offline/idb-storage";
 import { clearOfflineStateForSignOut, countUnsyncedChanges } from "@/lib/offline/sign-out";
-import { createOutboxStore } from "@/lib/outbox/outbox-store";
 import { IDBFactory } from "fake-indexeddb";
 import { beforeEach, describe, expect, it, vi } from "vitest";
+
+import type { NewOutboxEntry, OutboxStore } from "@norish/shared-react/offline";
+import { createOutboxStore } from "@norish/shared-react/offline";
 
 const owner = vi.hoisted(() => vi.fn<() => string | null>(() => "u1"));
 const resetOfflineCopy = vi.hoisted(() => vi.fn(async () => {}));
 
-vi.mock("@/lib/query-cache", () => ({
+vi.mock("@/lib/offline/engine", () => ({
   cacheManager: { owner, resetOfflineCopy },
+  outboxStore: {},
 }));
 
 function entry(overrides: Partial<NewOutboxEntry> = {}): NewOutboxEntry {
@@ -30,7 +31,7 @@ describe("sign-out offline state (ADR-0009)", () => {
   let store: OutboxStore;
 
   beforeEach(() => {
-    store = createOutboxStore(createOfflineIdb(new IDBFactory()));
+    store = createOutboxStore(createIdbStorage(new IDBFactory()).outbox);
     owner.mockReturnValue("u1");
     resetOfflineCopy.mockClear();
   });

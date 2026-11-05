@@ -1,5 +1,4 @@
 import type { PrecacheEntry, SerwistGlobalConfig, StrategyHandler } from "serwist";
-import { REACHABILITY_DEADLINE_MS } from "@/lib/connectivity/reachability";
 import { WORKER_DOCUMENT_HEADER } from "@/lib/document-request";
 import { SW_ARCHIVE_DOWNLOAD_PATH } from "@/lib/export/archive-download-protocol";
 import {
@@ -13,6 +12,8 @@ import {
 } from "@/lib/offline/cache-names";
 import { defaultCache, PAGES_CACHE_NAME } from "@serwist/turbopack/worker";
 import { CacheFirst, ExpirationPlugin, NetworkOnly, Serwist, Strategy } from "serwist";
+
+import { REACHABILITY_DEADLINE_MS } from "@norish/shared-react/offline/reachability";
 
 declare global {
   interface WorkerGlobalScope extends SerwistGlobalConfig {

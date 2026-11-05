@@ -52,18 +52,15 @@ vi.mock("@/lib/connectivity", () => ({
   setOfflineForced: h.setOfflineForced,
 }));
 
-vi.mock("@/lib/outbox", () => {
-  return {
-    requeueParkedEntries: h.requeueParkedEntries,
-    discardAllEntries: h.discardAllEntries,
-    outboxStore: {
-      forOwner: vi.fn(async () => h.outboxEntries),
-      subscribe: vi.fn(() => () => {}),
-    },
-  };
-});
-
-vi.mock("@/lib/query-cache", () => ({
+vi.mock("@/lib/offline/engine", () => ({
+  offlineEngine: {
+    requeueParked: h.requeueParkedEntries,
+    discardAll: h.discardAllEntries,
+  },
+  outboxStore: {
+    forOwner: vi.fn(async () => h.outboxEntries),
+    subscribe: vi.fn(() => () => {}),
+  },
   cacheManager: {
     owner: () => h.owner,
     subscribe: () => () => {},

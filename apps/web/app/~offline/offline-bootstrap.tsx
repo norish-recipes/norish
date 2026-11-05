@@ -8,7 +8,7 @@ import { OfflineCookbook } from "@/app/~offline/offline-cookbook";
 import { OfflineRecipeDetail } from "@/app/~offline/offline-recipe-detail";
 import { OfflineUnavailable } from "@/app/~offline/offline-unavailable";
 import { Dashboard } from "@/components/dashboard/dashboard";
-import { cacheManager } from "@/lib/query-cache";
+import { cacheManager } from "@/lib/offline/engine";
 
 import { addBasePath, stripBasePath } from "@norish/shared/lib/base-path";
 

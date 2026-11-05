@@ -18,7 +18,10 @@
     "./filter-contract": "./src/contexts/recipes/filter-contract.ts",
     "./list-queries": "./src/contexts/recipes/list-queries.ts",
     "./providers": "./src/providers/index.ts",
-    "./realtime": "./src/realtime/index.ts"
+    "./realtime": "./src/realtime/index.ts",
+    "./offline": "./src/offline/index.ts",
+    "./offline/reachability": "./src/offline/reachability.ts",
+    "./offline/testing": "./src/offline/testing/index.ts"
   },
   "scripts": {
     "build": "rm -rf dist && pnpm exec tsc -p tsconfig.json --noCheck",
@@ -33,6 +36,7 @@
     "@norish/i18n": "workspace:*",
     "@norish/shared": "workspace:*",
     "@norish/trpc": "workspace:*",
+    "@tanstack/query-persist-client-core": "5.105.0",
     "@tanstack/react-query": "catalog:",
     "@trpc/client": "catalog:",
     "@trpc/server": "catalog:",

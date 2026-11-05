@@ -1,6 +1,5 @@
 "use client";
 
-import type { ConnectivitySnapshot, ConnectivityState } from "@/lib/connectivity";
 import type { ReactNode } from "react";
 import {
   createContext,
@@ -13,14 +12,10 @@ import {
   useSyncExternalStore,
 } from "react";
 import { useConnectionStatus } from "@/app/providers/trpc-provider";
-import {
-  INITIAL_CONNECTIVITY,
-  isOfflineForced,
-  nextProbeDelayMs,
-  probeBackendReachable,
-  reduceProbeResult,
-  subscribeOfflineForced,
-} from "@/lib/connectivity";
+import { isOfflineForced, probeBackendReachable, subscribeOfflineForced } from "@/lib/connectivity";
+
+import type { ConnectivitySnapshot, ConnectivityState } from "@norish/shared-react/offline";
+import { INITIAL_CONNECTIVITY, startConnectivityLoop } from "@norish/shared-react/offline";
 
 /**
  * The effective connectivity posture: the pure machine state plus the dev-only
@@ -105,67 +100,21 @@ export function ConnectivityProvider({ children }: { children: ReactNode }) {
       return;
     }
 
-    let cancelled = false;
-    let timer: ReturnType<typeof setTimeout> | null = null;
-    let inFlight = false;
-    let rerunRequested = false;
+    const loop = startConnectivityLoop({
+      probe: () => probeBackendReachable(),
+      initial: snapshotRef.current,
+      onVerdict: (next, reachable) => {
+        snapshotRef.current = next;
+        setSnapshot(next);
 
-    const runProbe = async () => {
-      if (cancelled || inFlight) {
-        // A probe already running: remember the request and coalesce it.
-        if (inFlight) {
-          rerunRequested = true;
+        if (reachable) {
+          for (const listener of liveProbeListenersRef.current) listener();
         }
-
-        return;
-      }
-
-      inFlight = true;
-
-      const reachable = await probeBackendReachable();
-
-      inFlight = false;
-
-      if (cancelled) {
-        return;
-      }
-
-      const next = reduceProbeResult(snapshotRef.current, reachable);
-
-      snapshotRef.current = next;
-      setSnapshot(next);
-
-      if (reachable) {
-        for (const listener of liveProbeListenersRef.current) listener();
-      }
-
-      if (rerunRequested) {
-        rerunRequested = false;
-        void runProbe();
-
-        return;
-      }
-
-      timer = setTimeout(() => void runProbe(), nextProbeDelayMs(next));
-    };
-
-    const probeNow = () => {
-      if (cancelled) {
-        return;
-      }
-
-      if (timer) {
-        clearTimeout(timer);
-        timer = null;
-      }
-
-      void runProbe();
-    };
+      },
+    });
+    const probeNow = loop.probeNow;
 
     probeNowRef.current = probeNow;
-
-    // Probe once immediately so the first verdict is established quickly.
-    void runProbe();
 
     // Browser connectivity is only a hint — never the verdict — so an online/offline
     // event just accelerates the next probe rather than deciding the state itself.
@@ -173,12 +122,7 @@ export function ConnectivityProvider({ children }: { children: ReactNode }) {
     window.addEventListener("offline", probeNow);
 
     return () => {
-      cancelled = true;
-
-      if (timer) {
-        clearTimeout(timer);
-      }
-
+      loop.stop();
       probeNowRef.current = () => {};
       window.removeEventListener("online", probeNow);
       window.removeEventListener("offline", probeNow);

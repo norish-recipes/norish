@@ -1,10 +1,10 @@
 import { OfflineBootstrap } from "@/app/~offline/offline-bootstrap";
-import { cacheManager } from "@/lib/query-cache";
+import { cacheManager } from "@/lib/offline/engine";
 import { act, render, screen } from "@testing-library/react";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 
-vi.mock("@/lib/query-cache", async (importOriginal) => ({
-  ...(await importOriginal<typeof import("@/lib/query-cache")>()),
+vi.mock("@/lib/offline/engine", async (importOriginal) => ({
+  ...(await importOriginal<typeof import("@/lib/offline/engine")>()),
   cacheManager: { reconcileIdentity: vi.fn() },
 }));
 
