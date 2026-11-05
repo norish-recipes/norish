@@ -41,6 +41,9 @@ DEFAULT_LOCALE: en
 ENABLED_LOCALES: en,nl,no
 ```
 
+A language written right to left, such as Arabic, turns the whole page right to
+left.
+
 :::tip
 You can also turn languages on or off under **Settings => Admin => General**.
 To add a new language, see
