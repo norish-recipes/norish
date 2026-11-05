@@ -237,7 +237,10 @@ async function checkReady() {
     });
   }
 
-  return { status: "ok" as const, db, valkey, parser };
+  // Next inlines it from the root package.json at build.
+  const version = process.env.NEXT_PUBLIC_APP_VERSION ?? "unavailable";
+
+  return { status: "ok" as const, version, db, valkey, parser };
 }
 
 /**
@@ -253,7 +256,7 @@ export const healthReady = publicProcedure
       tags: ["Health"],
       summary: "Check whether Norish is ready for traffic",
       description:
-        "Answers 503 while the database or Valkey is unreachable, and 200 otherwise. The parser's state is in the response but does not fail the check. Point readiness probes and load balancers here.",
+        "Answers 503 while the database or Valkey is unreachable, and 200 otherwise, reporting the running server version. The parser's state is in the response but does not fail the check. Point readiness probes and load balancers here.",
       successDescription: "The database and Valkey are healthy.",
       errorResponses: { 503: "The database or Valkey is unhealthy or unreachable" },
     },

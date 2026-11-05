@@ -143,10 +143,12 @@ describe("openapi liveness and readiness endpoints", () => {
     getDatabaseHealthMock.mockResolvedValue({ status: "ok" });
     getValkeyHealthMock.mockReset();
     getValkeyHealthMock.mockResolvedValue({ status: "ok" });
+    vi.stubEnv("NEXT_PUBLIC_APP_VERSION", "0.27.0-beta");
   });
 
   afterEach(() => {
     vi.unstubAllGlobals();
+    vi.unstubAllEnvs();
   });
 
   const get = (path: string) => handleOpenApiRequest(new Request(`http://localhost/api/v1${path}`));
@@ -189,6 +191,7 @@ describe("openapi liveness and readiness endpoints", () => {
       expect(response.status).toBe(200);
       await expect(response.json()).resolves.toEqual({
         status: "ok",
+        version: "0.27.0-beta",
         db: { status: "ok" },
         valkey: { status: "ok" },
         parser: { status: "error", statusCode: 503 },
@@ -249,6 +252,17 @@ describe("openapi liveness and readiness endpoints", () => {
   });
 
   describe("/health", () => {
+    it("reports the server version like /health/ready", async () => {
+      parserAnswers(200);
+
+      const response = await get("/health");
+
+      expect(response.status).toBe(200);
+      await expect(response.json()).resolves.toEqual(
+        expect.objectContaining({ version: "0.27.0-beta" })
+      );
+    });
+
     it("still answers as ready, marked deprecated", async () => {
       parserAnswers(503);
       getValkeyHealthMock.mockResolvedValue({ status: "error" });

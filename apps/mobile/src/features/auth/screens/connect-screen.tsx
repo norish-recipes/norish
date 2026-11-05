@@ -3,6 +3,7 @@ import { ActivityIndicator, Text, View } from "react-native";
 import { AuthShell } from "@/features/auth/components/auth-shell";
 import { useBackendUrl } from "@/features/auth/hooks/use-backend-url";
 import { styles } from "@/features/auth/styles/connect.styles";
+import { isServerTooOld } from "@/features/auth/utils/server-version";
 import {
   getBackendHealthUrl,
   normalizeBackendBaseUrl,
@@ -51,8 +52,12 @@ export function ConnectScreen() {
         throw new Error(`Server returned ${response.status}`);
       }
 
-      await saveBackendBaseUrl(normalizedBaseUrl);
-      router.replace("/login");
+      if (isServerTooOld(await response.json().catch(() => null))) {
+        router.push("/update-server");
+      } else {
+        await saveBackendBaseUrl(normalizedBaseUrl);
+        router.replace("/login");
+      }
     } catch (error) {
       if (error instanceof Error && error.name === "AbortError") {
         setErrorMessage(intl.formatMessage({ id: "auth.connect.errors.timeout" }));

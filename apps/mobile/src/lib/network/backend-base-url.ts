@@ -106,7 +106,3 @@ export async function clearBackendBaseUrl(): Promise<void> {
 export function getBackendHealthUrl(baseUrl: string): string {
   return `${baseUrl}/api/v1/health`;
 }
-
-export function getBackendTrpcUrl(baseUrl: string): string {
-  return `${baseUrl}/api/trpc`;
-}
