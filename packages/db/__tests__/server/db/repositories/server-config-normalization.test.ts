@@ -73,6 +73,33 @@ describe("server config normalization", () => {
     expect(persisted?.value).toEqual(result);
   });
 
+  it("fills a video block saved before maxVideoFileSize existed, keeping its key", async () => {
+    const db = getTestDb();
+    const rawValue = {
+      enabled: true,
+      maxLengthSeconds: 300,
+      transcriptionProvider: "openai",
+      transcriptionApiKey: "own-transcription-key",
+      transcriptionModel: "whisper-1",
+    };
+
+    await db.insert(serverConfig).values({
+      key: ServerConfigKeys.VIDEO_CONFIG,
+      value: { ...rawValue, transcriptionApiKey: "••••••••" },
+      valueEnc: encrypt(JSON.stringify(rawValue)),
+      isSensitive: true,
+      updatedBy: null,
+      updatedAt: new Date(),
+      createdAt: new Date(),
+    });
+
+    const changed = await normalizeAndBackfillConfig(ServerConfigKeys.VIDEO_CONFIG);
+    const result = await getConfig<Record<string, unknown>>(ServerConfigKeys.VIDEO_CONFIG, true);
+
+    expect(changed).toBe(true);
+    expect(result).toEqual({ ...rawValue, maxVideoFileSize: 100 * 1024 * 1024 });
+  });
+
   it("normalizes and persists sensitive configs without overwriting secrets", async () => {
     const db = getTestDb();
     const rawValue = {

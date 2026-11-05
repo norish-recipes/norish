@@ -151,7 +151,16 @@ export async function normalizeAndBackfillConfig(key: ServerConfigKey): Promise<
 
   const normalization = normalizeConfigValue(key, raw.value);
 
-  if (!normalization.success || !configsDiffer(raw.value, normalization.data)) {
+  if (!normalization.success) {
+    // Paths only: a sensitive block's values must not reach the log.
+    const fields = normalization.error.issues.map((issue) => issue.path.join("."));
+
+    dbLogger.warn({ key, fields }, "Stored config does not match its schema, left as it is");
+
+    return false;
+  }
+
+  if (!configsDiffer(raw.value, normalization.data)) {
     return false;
   }
 
