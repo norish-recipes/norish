@@ -89,21 +89,24 @@ vi.mock("@/app/providers/connectivity-provider", () => ({
 }));
 const trpcClient = vi.hoisted(() => ({}));
 
+const trpc = vi.hoisted(() => ({}));
+
 vi.mock("@/app/providers/trpc-provider", () => ({
+  useTRPC: () => trpc,
   useTRPCClient: () => trpcClient,
   useConnectionStatus: () => ({ status: wsStatus }),
 }));
 vi.mock("@/lib/offline/engine", () => ({
-  cacheManager: {
-    owner: cache.owner,
-    subscribe: cache.subscribe,
-    reconcileIdentity: cache.reconcileIdentity,
+  offlineEngine: {
+    cache: {
+      owner: cache.owner,
+      subscribe: cache.subscribe,
+      reconcileIdentity: cache.reconcileIdentity,
+    },
+    outbox: outbox.store,
+    createRecovery,
+    createWarmSet: () => ({ topUp: warmSetTopUp, inspect: vi.fn() }),
   },
-  outboxStore: outbox.store,
-  offlineEngine: { createRecovery },
-}));
-vi.mock("@/hooks/use-warm-set", () => ({
-  useWarmSet: () => ({ topUp: warmSetTopUp, inspect: vi.fn() }),
 }));
 
 function renderController(seededUserId?: string) {

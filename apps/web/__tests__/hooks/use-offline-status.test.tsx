@@ -26,6 +26,7 @@ const h = vi.hoisted(() => ({
     lastCompletedAt: null as number | null,
   })),
   resetOfflineCopy: vi.fn(async () => {}),
+  trpc: {},
 }));
 
 vi.mock("@/app/providers/connectivity-provider", () => ({
@@ -41,12 +42,7 @@ vi.mock("@norish/shared-react/offline/react", async (importOriginal) => ({
   }),
 }));
 
-vi.mock("@/hooks/use-warm-set", () => ({
-  useWarmSet: () => ({
-    topUp: h.warmSetTopUp,
-    inspect: h.warmSetInspect,
-  }),
-}));
+vi.mock("@/app/providers/trpc-provider", () => ({ useTRPC: () => h.trpc }));
 
 vi.mock("@/lib/connectivity", () => ({
   probeBackendReachable: h.probeBackendReachable,
@@ -57,15 +53,16 @@ vi.mock("@/lib/offline/engine", () => ({
   offlineEngine: {
     requeueParked: h.requeueParkedEntries,
     discardAll: h.discardAllEntries,
-  },
-  outboxStore: {
-    forOwner: vi.fn(async () => h.outboxEntries),
-    subscribe: vi.fn(() => () => {}),
-  },
-  cacheManager: {
-    owner: () => h.owner,
-    subscribe: () => () => {},
-    resetOfflineCopy: h.resetOfflineCopy,
+    outbox: {
+      forOwner: vi.fn(async () => h.outboxEntries),
+      subscribe: vi.fn(() => () => {}),
+    },
+    cache: {
+      owner: () => h.owner,
+      subscribe: () => () => {},
+      resetOfflineCopy: h.resetOfflineCopy,
+    },
+    createWarmSet: () => ({ topUp: h.warmSetTopUp, inspect: h.warmSetInspect }),
   },
 }));
 

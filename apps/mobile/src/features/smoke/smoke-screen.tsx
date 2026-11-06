@@ -27,11 +27,8 @@ export function SmokeScreen() {
   const recovery = useRecovery();
   const canReachBackend = useCallback(async () => isLive || offlineEngine.probe(), [isLive]);
   const { outbox, isSyncing, syncNow, retryAll, discardAll } = useOutboxStatus({
-    cache: offlineEngine.cache,
-    outbox: offlineEngine.outbox,
+    engine: offlineEngine,
     recovery,
-    requeueParked: offlineEngine.requeueParked,
-    discardAll: offlineEngine.discardAll,
     canReachBackend,
   });
 

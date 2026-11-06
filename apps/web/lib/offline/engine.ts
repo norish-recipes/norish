@@ -93,8 +93,6 @@ export function createWebOfflineEngine(
 }
 
 export const offlineEngine = createWebOfflineEngine();
-export const cacheManager = offlineEngine.cache;
-export const outboxStore = offlineEngine.outbox;
 
 /** The seam handed to the provider bundle's `getQueryClient`. */
 export function getPersistedQueryClient(): QueryClient {

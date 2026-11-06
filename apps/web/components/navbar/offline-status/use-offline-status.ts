@@ -2,13 +2,13 @@
 
 import { useCallback, useEffect, useState } from "react";
 import { useConnectivity } from "@/app/providers/connectivity-provider";
-import { useWarmSet } from "@/hooks/use-warm-set";
+import { useTRPC } from "@/app/providers/trpc-provider";
 import { probeBackendReachable, setOfflineForced } from "@/lib/connectivity";
-import { cacheManager, offlineEngine, outboxStore } from "@/lib/offline/engine";
+import { offlineEngine } from "@/lib/offline/engine";
 
 import type { WarmSetInventory } from "@norish/shared-react/offline";
 import type { OutboxSummary } from "@norish/shared-react/offline/react";
-import { useOutboxStatus, useRecovery } from "@norish/shared-react/offline/react";
+import { useOutboxStatus, useRecovery, useWarmSet } from "@norish/shared-react/offline/react";
 
 /** Nothing cached: what the modal shows before a warm, and after a wipe. */
 const EMPTY_INVENTORY: WarmSetInventory = {
@@ -45,7 +45,7 @@ export interface OfflineStatus {
 export function useOfflineStatus(): OfflineStatus {
   const { posture, isLive, isOffline, isForced } = useConnectivity();
   const recovery = useRecovery();
-  const warmSet = useWarmSet();
+  const warmSet = useWarmSet(offlineEngine, useTRPC());
   const [inventory, setInventory] = useState<WarmSetInventory>(EMPTY_INVENTORY);
 
   const refreshInventory = useCallback(async () => {
@@ -61,11 +61,8 @@ export function useOfflineStatus(): OfflineStatus {
   }, [isForced, isOffline]);
 
   const { owner, outbox, isSyncing, syncNow, retryAll, discardAll } = useOutboxStatus({
-    cache: cacheManager,
-    outbox: outboxStore,
+    engine: offlineEngine,
     recovery,
-    requeueParked: offlineEngine.requeueParked,
-    discardAll: offlineEngine.discardAll,
     canReachBackend,
     onSynced: refreshInventory,
   });
@@ -104,7 +101,7 @@ export function useOfflineStatus(): OfflineStatus {
   const warm = useCallback(() => warmSet.topUp(), [warmSet]);
 
   const wipeCache = useCallback(async () => {
-    await cacheManager.resetOfflineCopy("manual");
+    await offlineEngine.cache.resetOfflineCopy("manual");
     setInventory(EMPTY_INVENTORY);
 
     // Re-warm immediately when Live so the floor self-heals; Offline this simply

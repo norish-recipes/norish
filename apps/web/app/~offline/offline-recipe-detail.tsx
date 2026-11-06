@@ -6,7 +6,7 @@ import { OfflineUnavailable } from "@/app/~offline/offline-unavailable";
 import { routeParams } from "@/app/~offline/route-params";
 import { useTRPC } from "@/app/providers/trpc-provider";
 import RecipeSkeleton from "@/components/skeleton/recipe-skeleton";
-import { cacheManager } from "@/lib/offline/engine";
+import { offlineEngine } from "@/lib/offline/engine";
 import { useQueryClient } from "@tanstack/react-query";
 
 /**
@@ -21,7 +21,11 @@ export function OfflineRecipeDetail({ id }: { id: string }) {
   const trpc = useTRPC();
   const queryClient = useQueryClient();
 
-  const owner = useSyncExternalStore(cacheManager.subscribe, cacheManager.owner, () => null);
+  const owner = useSyncExternalStore(
+    offlineEngine.cache.subscribe,
+    offlineEngine.cache.owner,
+    () => null
+  );
 
   if (!owner) {
     return <RecipeSkeleton />;

@@ -8,8 +8,10 @@ import type { OutboxStore } from "../outbox-store";
 import type { Recovery } from "../recovery";
 
 export interface OfflineControllerInputs {
-  cache: Pick<CacheManager, "owner" | "subscribe" | "reconcileIdentity">;
-  outbox: Pick<OutboxStore, "forOwner" | "subscribe">;
+  engine: {
+    cache: Pick<CacheManager, "owner" | "subscribe" | "reconcileIdentity">;
+    outbox: Pick<OutboxStore, "forOwner" | "subscribe">;
+  };
   recovery: Recovery;
   /** The signed-in user, or null while signed out or still unknown. */
   sessionUserId: string | null;
@@ -22,19 +24,10 @@ export interface OfflineControllerInputs {
 
 const noOwner = () => null;
 
-/**
- * Drives the Offline Cache and the Outbox from identity and connectivity:
- *  - reconciles the cache owner on identity change. A departed user's queue stays dormant
- *    under its owner and replays only once that owner signs in again (ADR-0009);
- *  - runs Recovery on startup, Offline→Live, WebSocket reconnection, and every Live verdict
- *    while queued work is pending;
- *  - asks for a probe when a mutation is admitted to the Outbox while Live.
- * `switching` is true while an authenticated owner switch resolves: render nothing then, so
- * the incoming account never renders against the previous owner's still-live cache.
- */
+// Reconciles the cache owner with the session and runs Recovery on startup, return to Live,
+// socket reconnect and queued work. `switching`: an owner switch is resolving, render nothing.
 export function useOfflineController({
-  cache,
-  outbox,
+  engine: { cache, outbox },
   recovery,
   sessionUserId,
   isLive,

@@ -8,7 +8,7 @@ import { OfflineCookbook } from "@/app/~offline/offline-cookbook";
 import { OfflineRecipeDetail } from "@/app/~offline/offline-recipe-detail";
 import { OfflineUnavailable } from "@/app/~offline/offline-unavailable";
 import { Dashboard } from "@/components/dashboard/dashboard";
-import { cacheManager } from "@/lib/offline/engine";
+import { offlineEngine } from "@/lib/offline/engine";
 
 import { addBasePath, stripBasePath } from "@norish/shared/lib/base-path";
 
@@ -55,7 +55,7 @@ export function OfflineBootstrap() {
   const [pathname, setPathname] = useState<string | null>(null);
 
   useEffect(() => {
-    void cacheManager
+    void offlineEngine.cache
       .reconcileIdentity({ sessionUserId: null, isOffline: true })
       .then(() => setPathname(stripBasePath(window.location.pathname)));
   }, []);

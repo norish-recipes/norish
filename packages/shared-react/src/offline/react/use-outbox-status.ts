@@ -2,8 +2,7 @@
 
 import { useCallback, useEffect, useMemo, useState, useSyncExternalStore } from "react";
 
-import type { CacheManager } from "../cache-manager";
-import type { OutboxStore } from "../outbox-store";
+import type { OfflineEngine } from "../engine";
 import type { OutboxEntry } from "../outbox-types";
 import type { Recovery } from "../recovery";
 
@@ -41,19 +40,13 @@ const notSyncing = () => false;
 
 /** The signed-in owner's live Outbox and the status actions (sync now, retry, discard). */
 export function useOutboxStatus({
-  cache,
-  outbox,
+  engine: { cache, outbox, requeueParked, discardAll: discardQueue },
   recovery,
-  requeueParked,
-  discardAll: discardQueue,
   canReachBackend,
   onSynced,
 }: {
-  cache: Pick<CacheManager, "owner" | "subscribe">;
-  outbox: Pick<OutboxStore, "forOwner" | "subscribe">;
+  engine: Pick<OfflineEngine, "cache" | "outbox" | "requeueParked" | "discardAll">;
   recovery: Recovery;
-  requeueParked: (ownerId: string) => Promise<void>;
-  discardAll: (ownerId: string) => Promise<number>;
   /** Whether a sync is worth attempting now (web: false while Offline is forced). */
   canReachBackend: () => Promise<boolean>;
   /** After a sync or retry ran. */
