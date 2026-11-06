@@ -2,7 +2,6 @@
 
 import React, { useCallback, useState } from "react";
 import { useRouter } from "next/navigation";
-import { useConnectivity } from "@/app/providers/connectivity-provider";
 import { OfflineStatusModal } from "@/components/navbar/offline-status/offline-status-modal";
 import { SignOutConfirmModal } from "@/components/navbar/sign-out-confirm-modal";
 import ImportRecipeModal from "@/components/shared/import-recipe-modal";
@@ -22,6 +21,7 @@ import {
 import { Button, Dropdown, Label } from "@heroui/react";
 import { useTranslations } from "next-intl";
 
+import { useConnectivity } from "@norish/shared-react/offline/react";
 import { cssButtonPill, cssButtonPillDanger } from "@norish/web/config/css-tokens";
 
 import { ThemeSwitchContent, useThemeSwitch } from "./theme-switch";

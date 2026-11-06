@@ -2,7 +2,6 @@
 
 import type { PickedFood } from "@/hooks/pantry";
 import { useRef, useState } from "react";
-import { useConnectivity } from "@/app/providers/connectivity-provider";
 import { useTRPC } from "@/app/providers/trpc-provider";
 import { FIELD_STYLE } from "@/components/groceries/grocery-field";
 import { IngredientIcon, IngredientIconsProvider } from "@/components/ingredients/ingredient-icon";
@@ -19,6 +18,7 @@ import { useLocale, useTranslations } from "next-intl";
 import { useDebounceValue } from "usehooks-ts";
 
 import type { PantryIngredientDto } from "@norish/shared/contracts";
+import { useConnectivity } from "@norish/shared-react/offline/react";
 import { PANTRY_INGREDIENT_NAME_MAX_LENGTH } from "@norish/shared/contracts/zod";
 import { foldName } from "@norish/shared/lib/fold-name";
 import { ingredientDisplayName } from "@norish/shared/lib/ingredient-names";

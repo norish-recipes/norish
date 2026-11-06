@@ -1,7 +1,7 @@
 import { useEffect, useRef } from "react";
 import { useAuth } from "@/lib/auth/auth-context";
-import { useConnectivity } from "@/lib/offline/connectivity";
 
+import { useConnectivity } from "@norish/shared-react/offline/react";
 import { createClientLogger } from "@norish/shared/lib/logger";
 
 const log = createClientLogger("session-revalidation");

@@ -3,7 +3,6 @@
 import type { Mutation } from "@tanstack/react-query";
 import type { ReactNode } from "react";
 import { createContext, use, useCallback, useLayoutEffect, useMemo, useRef, useState } from "react";
-import { useConnectivity } from "@/app/providers/connectivity-provider";
 import { useTRPC } from "@/app/providers/trpc-provider";
 import { useUserCacheHelpers } from "@/hooks/user/use-user-cache";
 import { useMutation, useMutationState, useQuery, useQueryClient } from "@tanstack/react-query";
@@ -13,6 +12,7 @@ import type {
   DevicePreferences,
   DevicePreferencesUpdate,
 } from "@norish/shared/contracts/zod/device-preferences";
+import { useConnectivity } from "@norish/shared-react/offline/react";
 import { DEVICE_PREFERENCE_DEFAULTS } from "@norish/shared/contracts/zod/device-preferences";
 import { deviceKindFromUserAgent } from "@norish/shared/lib/device-kind";
 

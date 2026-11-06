@@ -12,8 +12,7 @@ import { AuthProvider, useAuth } from "@/lib/auth/auth-context";
 import { UserProvider } from "@/lib/auth/user-context";
 import { resolveBootPhase } from "@/lib/boot/boot-state";
 import { MobileIntlFallbackProvider, MobileIntlProvider } from "@/lib/i18n/mobile-i18n-context";
-import { ConnectivityProvider } from "@/lib/offline/connectivity";
-import { OfflineController } from "@/lib/offline/offline-controller";
+import { ConnectivityProvider, OfflineController, offlineEngine } from "@/lib/offline/engine";
 import {
   AppearancePreferenceProvider,
   useAppearancePreference,
@@ -124,7 +123,11 @@ function RootLayoutContent() {
   // Full provider tree — backend available
   return (
     <ThemeProvider value={theme}>
-      <TrpcProvider baseUrl={boot.backendBaseUrl}>
+      <TrpcProvider
+        baseUrl={boot.backendBaseUrl}
+        getQueryClient={getOfflineQueryClient}
+        mutationLink={offlineEngine.outboxLink}
+      >
         <ConnectivityProvider>
           <AuthProvider backendBaseUrl={boot.backendBaseUrl}>
             <MobileIntlProvider>
@@ -144,6 +147,8 @@ function RootLayoutContent() {
 // Domain providers — added only when authenticated
 // ============================================================================
 
+const getOfflineQueryClient = () => offlineEngine.queryClient;
+
 /**
  * When authenticated, wraps children with the user provider. When
  * unauthenticated, renders children directly.
@@ -159,11 +164,13 @@ function DomainProviders({ children }: { children: React.ReactNode }) {
 }
 
 function AuthenticatedProviders({ children }: { children: React.ReactNode }) {
+  const { user } = useAuth();
+
   useSessionRevalidation();
 
   return (
     <UserProvider>
-      <OfflineController>
+      <OfflineController sessionUserId={user?.id ?? null}>
         <AuthenticatedEffects />
         {children}
       </OfflineController>

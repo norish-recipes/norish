@@ -1,11 +1,13 @@
-import type { ConnectivityPosture } from "@/app/providers/connectivity-provider";
 import { OfflineUnavailable } from "@/app/~offline/offline-unavailable";
 import { render, screen } from "@testing-library/react";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 
+import type { ConnectivityPosture } from "@norish/shared-react/offline/react";
+
 const connectivity = { posture: "offline" as ConnectivityPosture };
 
-vi.mock("@/app/providers/connectivity-provider", () => ({
+vi.mock("@norish/shared-react/offline/react", async (importOriginal) => ({
+  ...(await importOriginal<typeof import("@norish/shared-react/offline/react")>()),
   useConnectivity: () => ({
     posture: connectivity.posture,
     isLive: connectivity.posture === "live",

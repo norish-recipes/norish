@@ -6,10 +6,10 @@ import {
   setHasActiveSession,
 } from "@/lib/auth/auth-session-sync";
 import { readPersistedSession } from "@/lib/auth/auth-storage";
-import { useConnectivity } from "@/lib/offline/connectivity";
 import { offlineEngine } from "@/lib/offline/engine";
 import { closeMobileTrpcConnections } from "@/lib/trpc/trpc-provider";
 
+import { useConnectivity } from "@norish/shared-react/offline/react";
 import { createClientLogger } from "@norish/shared/lib/logger";
 
 const log = createClientLogger("auth");

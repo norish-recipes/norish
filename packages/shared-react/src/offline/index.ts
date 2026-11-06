@@ -32,11 +32,6 @@ export {
   reduceProbeResult,
 } from "./connectivity-machine";
 export { type ConnectivityLoop, startConnectivityLoop } from "./connectivity-loop";
-export {
-  HEALTH_PROBE_PATH,
-  HEALTH_PROBE_TIMEOUT_MS,
-  probeBackendReachable,
-  type ProbeOptions,
-} from "./probe";
+export { HEALTH_PROBE_PATH } from "./probe";
 export { REACHABILITY_DEADLINE_MS } from "./reachability";
 export { createForcedOfflineLink, type ForcedOfflineFlag } from "./forced-offline-link";

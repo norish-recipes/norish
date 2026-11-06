@@ -1,3 +1,5 @@
+import type { QueryClient } from "@tanstack/react-query";
+import type { TRPCLink } from "@trpc/client";
 import React, { useMemo, useSyncExternalStore } from "react";
 import {
   getAuthTransportSnapshot,
@@ -7,7 +9,6 @@ import {
 import { AUTH_COOKIE_KEY, authStorage } from "@/lib/auth/auth-storage";
 import { getBackendBaseUrl } from "@/lib/network/backend-base-url";
 import { getBackendWsUrl } from "@/lib/network/backend-ws-url";
-import { offlineEngine } from "@/lib/offline/engine";
 import { getCookie } from "@better-auth/expo/client";
 
 import type { AppRouter } from "@norish/trpc/client";
@@ -82,7 +83,6 @@ const trpcBundle = createTRPCProviderBundle<AppRouter>({
   getWebSocketImpl: createMobileWebSocket,
   wsLazyEnabled: true,
   enableLoggerLink: false,
-  getQueryClient: () => offlineEngine.queryClient,
   onWebSocketClientCreate: (client) => {
     mobileWebSocketClients.add(client);
   },
@@ -94,19 +94,23 @@ const trpcBundle = createTRPCProviderBundle<AppRouter>({
     log.info("tRPC request returned unauthorized response, signing out");
     void invalidateSession("transport-unauthorized");
   },
-  mutationLink: offlineEngine.outboxLink,
 });
 
 export const useTRPC = trpcBundle.useTRPC;
 export const useConnectionStatus = trpcBundle.useConnectionStatus;
 export const useTRPCClient = trpcBundle.useTRPCClient;
 
+/** `getQueryClient` and `mutationLink` come from the offline engine; both are read once. */
 export function TrpcProvider({
   baseUrl,
   children,
+  getQueryClient,
+  mutationLink,
 }: {
   baseUrl: string;
   children: React.ReactNode;
+  getQueryClient: () => QueryClient;
+  mutationLink: TRPCLink<AppRouter>;
 }) {
   const authTransportSnapshot = useSyncExternalStore(
     subscribeAuthTransport,
@@ -119,6 +123,12 @@ export function TrpcProvider({
   );
 
   return (
-    <trpcBundle.TRPCProviderWrapper key={providerKey}>{children}</trpcBundle.TRPCProviderWrapper>
+    <trpcBundle.TRPCProviderWrapper
+      key={providerKey}
+      getQueryClient={getQueryClient}
+      mutationLink={mutationLink}
+    >
+      {children}
+    </trpcBundle.TRPCProviderWrapper>
   );
 }

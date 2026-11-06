@@ -1,4 +1,4 @@
-import React, { useCallback } from "react";
+import React from "react";
 import { Alert, ScrollView, Text, View } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import {
@@ -8,12 +8,12 @@ import {
 } from "@/hooks/groceries";
 import { useRecipesQuery } from "@/hooks/recipes";
 import { useUserContext } from "@/lib/auth/user-context";
-import { useConnectivity } from "@/lib/offline/connectivity";
 import { offlineEngine } from "@/lib/offline/engine";
+import { useTRPC } from "@/lib/trpc/trpc-provider";
 import { Button, Checkbox } from "heroui-native";
 import { useIntl } from "react-intl";
 
-import { useOutboxStatus, useRecovery } from "@norish/shared-react/offline/react";
+import { useOfflineStatus } from "@norish/shared-react/offline/react";
 
 // Throwaway screen that proves sign-in, tRPC, realtime and offline end to end
 // until the redesigned screens replace it.
@@ -23,14 +23,10 @@ export function SmokeScreen() {
   const { total, isLoading: recipesLoading } = useRecipesQuery({ limit: 1 });
   const { groceries } = useGroceriesQuery();
   const { toggleGroceries, toggleRecurringGrocery } = useGroceriesMutations();
-  const { isLive } = useConnectivity();
-  const recovery = useRecovery();
-  const canReachBackend = useCallback(async () => isLive || offlineEngine.probe(), [isLive]);
-  const { outbox, isSyncing, syncNow, retryAll, discardAll } = useOutboxStatus({
-    engine: offlineEngine,
-    recovery,
-    canReachBackend,
-  });
+  const { isLive, outbox, isSyncing, syncNow, retryAll, discardAll } = useOfflineStatus(
+    offlineEngine,
+    useTRPC()
+  );
 
   useGroceriesSubscription();
 

@@ -1,6 +1,6 @@
 "use client";
 
-import type { TRPCClient } from "@trpc/client";
+import type { TRPCClient, TRPCLink } from "@trpc/client";
 import type { AnyTRPCRouter } from "@trpc/server";
 import type { ReactNode } from "react";
 import { createContext, use, useEffect, useRef, useState } from "react";
@@ -40,15 +40,13 @@ export function createTRPCProviderBundle<TRouter extends AnyTRPCRouter>({
   wsLazyCloseMs = 0,
   retryRandom,
   enableLoggerLink = true,
-  getQueryClient: externalGetQueryClient,
   onWebSocketClose,
   onWebSocketOpen,
   onWebSocketUnauthorized,
   onWebSocketClientCreate,
   onUnauthorized,
-  mutationLink,
   extraLinks = [],
-}: CreateTRPCProviderBundleOptions<TRouter>) {
+}: Omit<CreateTRPCProviderBundleOptions<TRouter>, "mutationLink">) {
   const { TRPCProvider, useTRPC } = createTRPCContext<TRouter>();
   const ConnectionContext = createContext<ConnectionContextValue>({
     status: "idle",
@@ -74,7 +72,16 @@ export function createTRPCProviderBundle<TRouter extends AnyTRPCRouter>({
     return client;
   }
 
-  function TRPCProviderWrapper({ children }: { children: ReactNode }) {
+  /** The client's offline engine supplies `getQueryClient` and `mutationLink`; both are read once. */
+  function TRPCProviderWrapper({
+    children,
+    getQueryClient: externalGetQueryClient,
+    mutationLink,
+  }: {
+    children: ReactNode;
+    getQueryClient?: () => QueryClient;
+    mutationLink?: TRPCLink<TRouter>;
+  }) {
     "use memo";
 
     const [status, setStatus] = useState<ConnectionStatus>("idle");

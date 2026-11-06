@@ -1,6 +1,7 @@
-import { useOfflineStatus } from "@/components/navbar/offline-status/use-offline-status";
 import { act, renderHook, waitFor } from "@testing-library/react";
-import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
+import { beforeEach, describe, expect, it, vi } from "vitest";
+
+import { useOfflineStatus } from "./use-offline-status";
 
 const h = vi.hoisted(() => ({
   connectivity: {
@@ -12,8 +13,7 @@ const h = vi.hoisted(() => ({
   owner: "user-1" as string | null,
   outboxEntries: [] as Array<{ seq: number; path: string; status: string }>,
   syncing: false,
-  probeBackendReachable: vi.fn(async () => true),
-  setOfflineForced: vi.fn(),
+  probe: vi.fn(async () => true),
   recover: vi.fn(async () => {}),
   requeueParkedEntries: vi.fn(async () => {}),
   discardAllEntries: vi.fn(async () => 0),
@@ -26,15 +26,11 @@ const h = vi.hoisted(() => ({
     lastCompletedAt: null as number | null,
   })),
   resetOfflineCopy: vi.fn(async () => {}),
-  trpc: {},
 }));
 
-vi.mock("@/app/providers/connectivity-provider", () => ({
-  useConnectivity: () => h.connectivity,
-}));
+vi.mock("./connectivity", () => ({ useConnectivity: () => h.connectivity }));
 
-vi.mock("@norish/shared-react/offline/react", async (importOriginal) => ({
-  ...(await importOriginal<typeof import("@norish/shared-react/offline/react")>()),
+vi.mock("./recovery-context", () => ({
   useRecovery: () => ({
     recover: h.recover,
     isSyncing: () => h.syncing,
@@ -42,32 +38,25 @@ vi.mock("@norish/shared-react/offline/react", async (importOriginal) => ({
   }),
 }));
 
-vi.mock("@/app/providers/trpc-provider", () => ({ useTRPC: () => h.trpc }));
-
-vi.mock("@/lib/connectivity", () => ({
-  probeBackendReachable: h.probeBackendReachable,
-  setOfflineForced: h.setOfflineForced,
-}));
-
-vi.mock("@/lib/offline/engine", () => ({
-  offlineEngine: {
-    requeueParked: h.requeueParkedEntries,
-    discardAll: h.discardAllEntries,
-    outbox: {
-      forOwner: vi.fn(async () => h.outboxEntries),
-      subscribe: vi.fn(() => () => {}),
-    },
-    cache: {
-      owner: () => h.owner,
-      subscribe: () => () => {},
-      resetOfflineCopy: h.resetOfflineCopy,
-    },
-    createWarmSet: () => ({ topUp: h.warmSetTopUp, inspect: h.warmSetInspect }),
+const engine = {
+  requeueParked: h.requeueParkedEntries,
+  discardAll: h.discardAllEntries,
+  probe: h.probe,
+  outbox: {
+    forOwner: vi.fn(async () => h.outboxEntries),
+    subscribe: vi.fn(() => () => {}),
   },
-}));
+  cache: {
+    owner: () => h.owner,
+    subscribe: () => () => {},
+    resetOfflineCopy: h.resetOfflineCopy,
+  },
+  createWarmSet: () => ({ topUp: h.warmSetTopUp, inspect: h.warmSetInspect }),
+};
+const trpc = {};
 
 function renderStatus() {
-  return renderHook(() => useOfflineStatus());
+  return renderHook(() => useOfflineStatus(engine, trpc));
 }
 
 function setConnectivity(posture: "live" | "offline" | "offline-forced") {
@@ -77,14 +66,12 @@ function setConnectivity(posture: "live" | "offline" | "offline-forced") {
   h.connectivity.isForced = posture === "offline-forced";
 }
 
-const originalLocation = window.location;
-
 beforeEach(() => {
   setConnectivity("live");
   h.owner = "user-1";
   h.outboxEntries = [];
   h.syncing = false;
-  h.probeBackendReachable.mockResolvedValue(true);
+  h.probe.mockResolvedValue(true);
   h.warmSetInspect.mockResolvedValue({
     recipes: 2,
     groceries: 3,
@@ -95,15 +82,6 @@ beforeEach(() => {
   h.warmSetTopUp.mockImplementation(async () => {
     return "complete";
   });
-
-  Object.defineProperty(window, "location", {
-    configurable: true,
-    value: { ...originalLocation, reload: vi.fn() },
-  });
-});
-
-afterEach(() => {
-  Object.defineProperty(window, "location", { configurable: true, value: originalLocation });
 });
 
 describe("useOfflineStatus", () => {
@@ -145,18 +123,18 @@ describe("useOfflineStatus", () => {
 
     await act(() => result.current.syncNow());
 
-    expect(h.probeBackendReachable).not.toHaveBeenCalled();
+    expect(h.probe).not.toHaveBeenCalled();
   });
 
   it("syncNow probes first while Offline and stops when unreachable", async () => {
     setConnectivity("offline");
-    h.probeBackendReachable.mockResolvedValue(false);
+    h.probe.mockResolvedValue(false);
 
     const { result } = renderStatus();
 
     await act(() => result.current.syncNow());
 
-    expect(h.probeBackendReachable).toHaveBeenCalled();
+    expect(h.probe).toHaveBeenCalled();
     expect(h.recover).not.toHaveBeenCalled();
     expect(result.current.isSyncing).toBe(false);
   });
@@ -178,7 +156,7 @@ describe("useOfflineStatus", () => {
 
     await act(() => result.current.syncNow());
 
-    expect(h.probeBackendReachable).not.toHaveBeenCalled();
+    expect(h.probe).not.toHaveBeenCalled();
     expect(h.recover).not.toHaveBeenCalled();
   });
 
@@ -229,7 +207,7 @@ describe("useOfflineStatus", () => {
     await act(() => result.current.discardAll());
 
     expect(h.discardAllEntries).toHaveBeenCalledWith("user-1");
-    expect(h.probeBackendReachable).not.toHaveBeenCalled();
+    expect(h.probe).not.toHaveBeenCalled();
     expect(h.recover).not.toHaveBeenCalled();
   });
 
@@ -249,43 +227,21 @@ describe("useOfflineStatus", () => {
 
     await act(() => result.current.retryAll());
 
-    expect(h.probeBackendReachable).not.toHaveBeenCalled();
+    expect(h.probe).not.toHaveBeenCalled();
     expect(h.requeueParkedEntries).not.toHaveBeenCalled();
     expect(h.recover).not.toHaveBeenCalled();
   });
 
   it("retryAll leaves parked work untouched while the backend is unreachable", async () => {
     setConnectivity("offline");
-    h.probeBackendReachable.mockResolvedValue(false);
+    h.probe.mockResolvedValue(false);
 
     const { result } = renderStatus();
 
     await act(() => result.current.retryAll());
 
-    expect(h.probeBackendReachable).toHaveBeenCalled();
+    expect(h.probe).toHaveBeenCalled();
     expect(h.requeueParkedEntries).not.toHaveBeenCalled();
     expect(h.recover).not.toHaveBeenCalled();
-  });
-
-  it("entering the dev override persists the flag and reloads", () => {
-    const { result } = renderStatus();
-
-    act(() => result.current.setForcedOffline(true));
-
-    expect(h.setOfflineForced).toHaveBeenCalledWith(true);
-    expect(window.location.reload).toHaveBeenCalled();
-  });
-
-  it("exiting the dev override clears the flag without a reload (organic reconnect)", () => {
-    setConnectivity("offline-forced");
-
-    const { result } = renderStatus();
-
-    act(() => result.current.setForcedOffline(false));
-
-    expect(h.setOfflineForced).toHaveBeenCalledWith(false);
-    // No reload: the probe loop, held subscriptions and the controller's
-    // Offline→Live effect handle the exit (ADR-0007).
-    expect(window.location.reload).not.toHaveBeenCalled();
   });
 });

@@ -1,11 +1,15 @@
-/**
- * The web client's offline engine (ADR-0001): the shared engine over the IndexedDB adapter,
- * plus what only web has — the server-rendered first frame (QuerySeed) and the image cache.
- */
+"use client";
+
+// The web client's offline wiring (ADR-0001): the shared engine over IndexedDB, its connectivity
+// hints and controller, plus what only web has: the QuerySeed first frame and the image cache.
 
 import type { DehydratedState, Query, QueryClient } from "@tanstack/react-query";
+import type { ReactNode } from "react";
+import { useSyncExternalStore } from "react";
 import { getInitialDateRange } from "@/app/(app)/calendar/context-helpers";
-import { HEALTH_PROBE_URL } from "@/lib/connectivity/probe";
+import { useConnectionStatus, useTRPC, useTRPCClient } from "@/app/providers/trpc-provider";
+import { useUserContext } from "@/context/user-context";
+import { isOfflineForced, subscribeOfflineForced } from "@/lib/connectivity/forced-offline";
 import { createIdbStorage } from "@/lib/offline/idb-storage";
 import { warmPrimaryImages } from "@/lib/offline/warm-images";
 
@@ -18,12 +22,23 @@ import type {
 import {
   createOfflineEngine,
   createOfflineQueryClient,
+  HEALTH_PROBE_PATH,
   QUERY_STALE_TIME_MS,
 } from "@norish/shared-react/offline";
+import {
+  OfflineController,
+  ConnectivityProvider as SharedConnectivityProvider,
+  useConnectivity,
+} from "@norish/shared-react/offline/react";
+import { getSession } from "@norish/shared/lib/auth/client";
+import { addBasePath } from "@norish/shared/lib/base-path";
 import { dateKey } from "@norish/shared/lib/helpers";
 
 /** Marks the web client's replays in server logs. */
 export const OUTBOX_REPLAY_HEADER_VALUE = "web-outbox";
+
+/** The readiness route under the web client's base path. */
+const HEALTH_PROBE_URL = addBasePath(HEALTH_PROBE_PATH);
 
 /** A restored cache from another app version is dropped, never migrated; the Outbox is kept. */
 // NEXT_PUBLIC values are intentionally exposed to the browser by Next.js.
@@ -101,4 +116,75 @@ export function getPersistedQueryClient(): QueryClient {
   return typeof window === "undefined"
     ? createOfflineQueryClient({ refetchOnMount })
     : offlineEngine.queryClient;
+}
+
+const probe = () => offlineEngine.probe();
+const serverForcedSnapshot = () => false;
+
+// Browser connectivity is only a hint, never the verdict: it just brings the next probe forward.
+function subscribeBrowserHints(probeNow: () => void): () => void {
+  window.addEventListener("online", probeNow);
+  window.addEventListener("offline", probeNow);
+
+  return () => {
+    window.removeEventListener("online", probeNow);
+    window.removeEventListener("offline", probeNow);
+  };
+}
+
+/** The shared probe loop with `navigator.onLine` as a hint, plus the dev forced Offline (ADR-0007). */
+export function ConnectivityProvider({ children }: { children: ReactNode }) {
+  const { status: wsStatus } = useConnectionStatus();
+
+  // Always false in production, where subscribeOfflineForced is a no-op.
+  const forced = useSyncExternalStore(
+    subscribeOfflineForced,
+    isOfflineForced,
+    serverForcedSnapshot
+  );
+
+  return (
+    <SharedConnectivityProvider
+      forced={forced}
+      probe={probe}
+      subscribeHints={subscribeBrowserHints}
+      wsStatus={wsStatus}
+    >
+      {children}
+    </SharedConnectivityProvider>
+  );
+}
+
+const getSessionUserId = () => getSession().then((session) => session?.data?.user?.id ?? null);
+
+/** The shared offline controller over the web engine, below `UserProvider`. */
+export function OfflineCacheController({
+  children,
+  seededUserId,
+}: {
+  children: ReactNode;
+  /** The reader the layout's server pass verified; absent offline. */
+  seededUserId?: string;
+}) {
+  const { user } = useUserContext();
+  const connectivity = useConnectivity();
+  const { status: wsStatus } = useConnectionStatus();
+  const trpc = useTRPC();
+  const trpcClient = useTRPCClient();
+
+  // The server's verified id stands in until the browser's own session request
+  // answers, so the cache restores at hydration rather than a round trip later.
+  return (
+    <OfflineController
+      connectivity={connectivity}
+      engine={offlineEngine}
+      getSessionUserId={getSessionUserId}
+      sessionUserId={user?.id ?? seededUserId ?? null}
+      transport={trpcClient}
+      trpc={trpc}
+      wsStatus={wsStatus}
+    >
+      {children}
+    </OfflineController>
+  );
 }

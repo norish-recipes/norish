@@ -1,5 +1,13 @@
-import { subscribeDeviceHints } from "@/lib/offline/device-hints";
+import { subscribeDeviceHints } from "@/lib/offline/engine";
 import { beforeEach, describe, expect, it, vi } from "vitest";
+
+// The wiring builds the engine at import; its native and transport modules stay out of node.
+vi.mock("react-native-mmkv", () => ({ createMMKV: () => ({ getString: () => undefined }) }));
+vi.mock("expo-constants", () => ({ default: { expoConfig: { version: "0.0.0-test" } } }));
+vi.mock("expo-file-system", () => ({}));
+vi.mock("@/lib/auth/auth-client", () => ({}));
+vi.mock("@/lib/network/backend-base-url", () => ({}));
+vi.mock("@/lib/trpc/trpc-provider", () => ({}));
 
 const native = vi.hoisted(() => ({
   network: new Set<(event: { isConnected: boolean }) => void>(),

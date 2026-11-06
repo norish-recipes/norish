@@ -4,22 +4,19 @@ import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 
 import "@testing-library/jest-dom";
 
-import { ConnectivityProvider, useConnectivity } from "@/app/providers/connectivity-provider";
+import { ConnectivityProvider, offlineEngine } from "@/lib/offline/engine";
 
 import { LIVE_PROBE_INTERVAL_MS } from "@norish/shared-react/offline";
+import { useConnectivity } from "@norish/shared-react/offline/react";
 
-const probeMock = vi.hoisted(() => vi.fn<() => Promise<boolean>>());
+const probeMock = vi.spyOn(offlineEngine, "probe");
 let wsStatus: "idle" | "connected" | "disconnected" = "idle";
 
 vi.mock("@/app/providers/trpc-provider", () => ({
   useConnectionStatus: () => ({ status: wsStatus, isConnected: wsStatus === "connected" }),
 }));
 
-vi.mock("@/lib/connectivity", async (importOriginal) => {
-  const actual = await importOriginal<typeof import("@/lib/connectivity")>();
-
-  return { ...actual, probeBackendReachable: probeMock };
-});
+vi.mock("@/context/user-context", () => ({ useUserContext: () => ({ user: null }) }));
 
 function StateProbe() {
   const { state } = useConnectivity();

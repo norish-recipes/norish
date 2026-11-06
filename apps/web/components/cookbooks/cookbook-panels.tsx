@@ -1,7 +1,6 @@
 "use client";
 
 import { useCallback, useEffect, useRef, useState } from "react";
-import { useConnectivity } from "@/app/providers/connectivity-provider";
 import CookbookCover from "@/components/cookbooks/cookbook-cover";
 import { SelectableRow } from "@/components/cookbooks/selectable-row";
 import Panel from "@/components/Panel/Panel";
@@ -12,6 +11,7 @@ import { Button, Input, Label, Modal, Separator, Spinner, toast } from "@heroui/
 import { useTranslations } from "next-intl";
 
 import type { CookbookSummaryDTO } from "@norish/shared/contracts";
+import { useConnectivity } from "@norish/shared-react/offline/react";
 import { ALLOWED_IMAGE_MIME_TYPES } from "@norish/shared/contracts";
 import { addBasePath } from "@norish/shared/lib/base-path";
 

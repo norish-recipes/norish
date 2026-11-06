@@ -4,7 +4,25 @@ import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 
 import "@testing-library/jest-dom";
 
-import { OfflineCacheController } from "@/app/providers/offline-cache-controller";
+import { OfflineCacheController, offlineEngine } from "@/lib/offline/engine";
+
+import type { OutboxEntry } from "@norish/shared-react/offline";
+
+function pendingEntry(seq: number): OutboxEntry {
+  return {
+    seq,
+    id: `entry-${seq}`,
+    ownerId: "u1",
+    path: "groceries.create",
+    input: {},
+    entityId: null,
+    operationId: null,
+    headers: {},
+    createdAt: "2026-01-01T00:00:00.000Z",
+    attempts: 0,
+    status: "pending",
+  };
+}
 
 const cache = vi.hoisted(() => {
   const state = {
@@ -30,10 +48,12 @@ const cache = vi.hoisted(() => {
     },
   };
 });
-const warmSetTopUp = vi.hoisted(() => vi.fn<() => Promise<void>>(() => Promise.resolve()));
+const warmSetTopUp = vi.hoisted(() =>
+  vi.fn<() => Promise<"complete">>(() => Promise.resolve("complete"))
+);
 
 const outbox = vi.hoisted(() => {
-  const state = { pending: [] as Array<{ seq: number }>, listeners: new Set<() => void>() };
+  const state = { pending: [] as OutboxEntry[], listeners: new Set<() => void>() };
 
   return {
     state,
@@ -80,7 +100,8 @@ let connectivity = { isLive: true, isOffline: false };
 let wsStatus: "idle" | "connected" | "disconnected" = "idle";
 
 vi.mock("@/context/user-context", () => ({ useUserContext: () => ({ user }) }));
-vi.mock("@/app/providers/connectivity-provider", () => ({
+vi.mock("@norish/shared-react/offline/react", async (importOriginal) => ({
+  ...(await importOriginal<typeof import("@norish/shared-react/offline/react")>()),
   useConnectivity: () => ({
     ...connectivity,
     probeNow: liveProbes.probeNow,
@@ -96,17 +117,22 @@ vi.mock("@/app/providers/trpc-provider", () => ({
   useTRPCClient: () => trpcClient,
   useConnectionStatus: () => ({ status: wsStatus }),
 }));
-vi.mock("@/lib/offline/engine", () => ({
-  offlineEngine: {
-    cache: {
-      owner: cache.owner,
-      subscribe: cache.subscribe,
-      reconcileIdentity: cache.reconcileIdentity,
-    },
-    outbox: outbox.store,
-    createRecovery,
-    createWarmSet: () => ({ topUp: warmSetTopUp, inspect: vi.fn() }),
-  },
+// The controller reads the real engine, so its seams are swapped for the fakes above.
+vi.spyOn(offlineEngine.cache, "owner").mockImplementation(() => cache.owner());
+vi.spyOn(offlineEngine.cache, "subscribe").mockImplementation((listener) =>
+  cache.subscribe(listener)
+);
+vi.spyOn(offlineEngine.cache, "reconcileIdentity").mockImplementation((options) =>
+  cache.reconcileIdentity(options)
+);
+vi.spyOn(offlineEngine.outbox, "forOwner").mockImplementation(() => outbox.store.forOwner());
+vi.spyOn(offlineEngine.outbox, "subscribe").mockImplementation((listener) =>
+  outbox.store.subscribe(listener)
+);
+vi.spyOn(offlineEngine, "createRecovery").mockImplementation(createRecovery);
+vi.spyOn(offlineEngine, "createWarmSet").mockImplementation(() => ({
+  topUp: warmSetTopUp,
+  inspect: vi.fn(),
 }));
 
 function renderController(seededUserId?: string) {
@@ -342,7 +368,7 @@ describe("OfflineCacheController", () => {
     await settled();
 
     // The Outbox link admitted a mutation that failed on reachability.
-    outbox.state.pending = [{ seq: 1 }];
+    outbox.state.pending = [pendingEntry(1)];
     outbox.notify();
 
     await waitFor(() => expect(liveProbes.probeNow).toHaveBeenCalledTimes(1));
@@ -362,7 +388,7 @@ describe("OfflineCacheController", () => {
     renderController();
     await settled();
 
-    outbox.state.pending = [{ seq: 1 }];
+    outbox.state.pending = [pendingEntry(1)];
     outbox.notify();
 
     await waitFor(() => expect(outbox.store.forOwner).toHaveBeenCalledTimes(2));
@@ -377,7 +403,7 @@ describe("OfflineCacheController", () => {
 
     // The verdict the admission's probe produced: the backend answers, so the
     // queued write goes now rather than at some unrelated reconnect.
-    outbox.state.pending = [{ seq: 1 }];
+    outbox.state.pending = [pendingEntry(1)];
     liveProbes.fire();
 
     await waitFor(() => expect(recover).toHaveBeenCalledTimes(2));
@@ -400,7 +426,7 @@ describe("OfflineCacheController", () => {
     renderController();
     await waitFor(() => expect(recover).toHaveBeenCalledTimes(1));
 
-    outbox.state.pending = [{ seq: 1 }];
+    outbox.state.pending = [pendingEntry(1)];
     isSyncing.mockReturnValue(true);
     liveProbes.fire();
 
