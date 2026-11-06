@@ -103,7 +103,9 @@ export function SmokeScreen() {
         </Text>
         {outbox.entries.map((entry) => (
           <Text key={entry.seq} className="font-normal" testID={`smoke-outbox-${entry.status}`}>
-            {`${entry.path} · ${t(`outbox.status.${entry.status}`)}`}
+            {[entry.path, t(`outbox.status.${entry.status}`), entry.parkedReason]
+              .filter(Boolean)
+              .join(" · ")}
           </Text>
         ))}
         <Button isDisabled={isSyncing} variant="secondary" onPress={() => void syncNow()}>
