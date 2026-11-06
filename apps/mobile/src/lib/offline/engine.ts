@@ -1,9 +1,7 @@
-/**
- * The app's offline engine (ADR-0001): the shared engine over the MMKV adapter. Images are not
- * warmed yet; the Warm Set holds data only until a screen shows recipe images.
- */
+// The shared offline engine over MMKV (ADR-0001); the Warm Set keeps data only, no images yet.
 
 import { createMMKV } from "react-native-mmkv";
+import { getBackendBaseUrl } from "@/lib/network/backend-base-url";
 import Constants from "expo-constants";
 
 import { createOfflineEngine, HEALTH_PROBE_PATH } from "@norish/shared-react/offline";
@@ -15,21 +13,10 @@ import { uploadFiles } from "./upload-files";
 /** Marks the app's replays in server logs. */
 export const OUTBOX_REPLAY_HEADER_VALUE = "mobile-outbox";
 
-let serverAddress = "";
-
-/** The server the app talks to; set by the tRPC provider before any request. */
-export function setServerAddress(baseUrl: string): void {
-  serverAddress = baseUrl;
-}
-
-export function getServerAddress(): string {
-  return serverAddress;
-}
-
 export const offlineEngine = createOfflineEngine({
   storage: createMmkvStorage({ mmkv: createMMKV({ id: "norish-offline" }), files: uploadFiles }),
   replayHeaderValue: OUTBOX_REPLAY_HEADER_VALUE,
-  probeUrl: () => `${serverAddress}${HEALTH_PROBE_PATH}`,
+  probeUrl: () => `${getBackendBaseUrl()}${HEALTH_PROBE_PATH}`,
   buster: Constants.expoConfig?.version,
   // The phone calendar's opening window: two weeks either side of this week.
   calendarRanges: () => {
