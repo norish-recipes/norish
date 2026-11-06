@@ -4,6 +4,7 @@ import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 
 import { apiKeyRateLimited } from "@norish/auth/api-key-rate-limit";
 
+import rootPackage from "../../../../package.json" with { type: "json" };
 import { getOpenApiDocument, handleOpenApiRequest } from "../../src/openapi";
 
 process.env.NODE_ENV = "development";
@@ -143,12 +144,10 @@ describe("openapi liveness and readiness endpoints", () => {
     getDatabaseHealthMock.mockResolvedValue({ status: "ok" });
     getValkeyHealthMock.mockReset();
     getValkeyHealthMock.mockResolvedValue({ status: "ok" });
-    vi.stubEnv("NEXT_PUBLIC_APP_VERSION", "0.27.0-beta");
   });
 
   afterEach(() => {
     vi.unstubAllGlobals();
-    vi.unstubAllEnvs();
   });
 
   const get = (path: string) => handleOpenApiRequest(new Request(`http://localhost/api/v1${path}`));
@@ -191,7 +190,7 @@ describe("openapi liveness and readiness endpoints", () => {
       expect(response.status).toBe(200);
       await expect(response.json()).resolves.toEqual({
         status: "ok",
-        version: "0.27.0-beta",
+        version: rootPackage.version,
         db: { status: "ok" },
         valkey: { status: "ok" },
         parser: { status: "error", statusCode: 503 },
@@ -259,7 +258,7 @@ describe("openapi liveness and readiness endpoints", () => {
 
       expect(response.status).toBe(200);
       await expect(response.json()).resolves.toEqual(
-        expect.objectContaining({ version: "0.27.0-beta" })
+        expect.objectContaining({ version: rootPackage.version })
       );
     });
 

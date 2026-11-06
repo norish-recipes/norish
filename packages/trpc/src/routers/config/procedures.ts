@@ -2,6 +2,7 @@ import { TRPCError } from "@trpc/server";
 
 import { getAvailableProviders, isPasswordAuthEnabled } from "@norish/auth/providers";
 import { buildInternalParserApiUrl, SERVER_CONFIG } from "@norish/config/env-config-server";
+import configPackage from "@norish/config/package.json" with { type: "json" };
 import { getDatabaseHealth } from "@norish/db/drizzle";
 import { listCuisines } from "@norish/db/repositories/cuisines";
 import { listAllTagNames, listTagNamesForUsers } from "@norish/db/repositories/tags";
@@ -237,10 +238,8 @@ async function checkReady() {
     });
   }
 
-  // Next inlines it from the root package.json at build.
-  const version = process.env.NEXT_PUBLIC_APP_VERSION ?? "unavailable";
-
-  return { status: "ok" as const, version, db, valkey, parser };
+  // Every workspace package carries the release version (tooling/monorepo/scripts/sync-version.mjs).
+  return { status: "ok" as const, version: configPackage.version, db, valkey, parser };
 }
 
 /**
