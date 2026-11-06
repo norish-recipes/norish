@@ -3,7 +3,7 @@ import { ActivityIndicator, Text, View } from "react-native";
 import { AuthShell } from "@/features/auth/components/auth-shell";
 import { useBackendUrl } from "@/features/auth/hooks/use-backend-url";
 import { styles } from "@/features/auth/styles/connect.styles";
-import { isServerTooOld } from "@/features/auth/utils/server-version";
+import { classifyServerHealth } from "@/features/auth/utils/server-version";
 import {
   getBackendHealthUrl,
   normalizeBackendBaseUrl,
@@ -13,7 +13,7 @@ import { useRouter } from "expo-router";
 import { Button, Input, useThemeColor } from "heroui-native";
 import { useIntl } from "react-intl";
 
-const HEALTH_CHECK_TIMEOUT_MS = 7000;
+import { REACHABILITY_DEADLINE_MS } from "@norish/shared-react/offline/reachability";
 
 export function ConnectScreen() {
   const router = useRouter();
@@ -40,11 +40,14 @@ export function ConnectScreen() {
     const controller = new AbortController();
     const timeout = setTimeout(() => {
       controller.abort();
-    }, HEALTH_CHECK_TIMEOUT_MS);
+    }, REACHABILITY_DEADLINE_MS);
 
     try {
+      // The deprecated route, since servers before 0.26 have no /health/ready to answer.
       const response = await fetch(getBackendHealthUrl(normalizedBaseUrl), {
         method: "GET",
+        cache: "no-store",
+        credentials: "omit",
         signal: controller.signal,
       });
 
@@ -52,7 +55,11 @@ export function ConnectScreen() {
         throw new Error(`Server returned ${response.status}`);
       }
 
-      if (isServerTooOld(await response.json().catch(() => null))) {
+      const verdict = classifyServerHealth(await response.json().catch(() => null));
+
+      if (verdict === "not-norish") {
+        setErrorMessage(intl.formatMessage({ id: "auth.connect.errors.unreachable" }));
+      } else if (verdict === "too-old") {
         router.push("/update-server");
       } else {
         await saveBackendBaseUrl(normalizedBaseUrl);

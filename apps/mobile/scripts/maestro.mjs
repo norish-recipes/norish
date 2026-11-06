@@ -129,7 +129,7 @@ for (const name of seeded) {
 // A server older than the app supports: its readiness probe reports 0.1.0.
 const oldServer = createServer((_request, response) => {
   response.writeHead(200, { "content-type": "application/json" });
-  response.end(JSON.stringify({ status: "ok", version: "0.1.0" }));
+  response.end(JSON.stringify({ status: "ok", version: "0.1.0", parser: { status: "ok" } }));
 }).listen(Number(env.NORISH_OLD_SERVER_PORT));
 
 await maestro(path.join(flows, "old-server"), {
