@@ -1,8 +1,5 @@
-/**
- * The storage adapter seam: everything the offline engine keeps durably. Each client supplies
- * one (web: IndexedDB and localStorage; mobile: MMKV with upload files copied to app storage).
- * `describeOfflineStorageContract` is the behaviour every adapter must pass.
- */
+// Everything the offline engine keeps durably; each client supplies an adapter that passes
+// `describeOfflineStorageContract` (web: IndexedDB, mobile: MMKV).
 
 import type { OutboxEntry } from "./outbox-types";
 
@@ -24,11 +21,8 @@ export interface OfflineStorage {
   };
   /** The durable Outbox. Entries carry their owner, so every owner's queue shares one FIFO. */
   outbox: {
-    /**
-     * Store a new entry and resolve with its seq: strictly greater than every seq ever assigned,
-     * never reused. Upload blobs in `input` are stored with it. Rejects when anything cannot be
-     * stored, which is what fails the mutation's admission (ADR-0009).
-     */
+    // Resolves with a seq above every one ever assigned, blobs stored with it. A rejection
+    // fails the mutation's admission (ADR-0009).
     add(entry: Omit<OutboxEntry, "seq">): Promise<number>;
     /** Every entry, in ascending seq (FIFO) order, blobs readable again. */
     all(): Promise<OutboxEntry[]>;

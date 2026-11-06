@@ -52,7 +52,7 @@ export function AuthErrorScreen() {
                 params: {
                   redirectTo,
                 },
-              } as never);
+              });
             }}
           >
             <Button.Label>{intl.formatMessage({ id: "common.actions.retry" })}</Button.Label>
@@ -61,7 +61,7 @@ export function AuthErrorScreen() {
           <Button
             variant="secondary"
             onPress={() => {
-              router.replace("/(auth)" as never);
+              router.replace("/(auth)");
             }}
           >
             <Button.Label>{intl.formatMessage({ id: "auth.errors.backToLogin" })}</Button.Label>

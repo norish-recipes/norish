@@ -1,13 +1,5 @@
-/**
- * Persisted Outbox queue (ADR-0001 writes side).
- *
- * Backed by the storage adapter's Outbox, which assigns a strictly increasing
- * seq so entries keep FIFO order. Inputs are stored faithfully, so file uploads
- * survive. Entries are scoped per owner: Replay only ever touches the current
- * user's, and a departed user's stay dormant under their owner until that owner
- * signs in again (ADR-0009); only an explicitly confirmed sign-out discards a
- * queue.
- */
+// The persisted Outbox, FIFO by the adapter's seq. Replay touches only the current owner's
+// entries; a departed owner's wait for their sign-in, unless a sign-out discards them (ADR-0009).
 
 import type { NewOutboxEntry, OutboxEntry, OutboxEntryStatus, ParkedReason } from "./outbox-types";
 import type { OfflineStorage } from "./storage";

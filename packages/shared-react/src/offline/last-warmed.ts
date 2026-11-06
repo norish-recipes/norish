@@ -1,12 +1,5 @@
-/**
- * "Cache last warmed at" timestamp (commit 9 / status modal).
- *
- * The status modal shows an Offline-only "data from X ago" line so a developer
- * or a user reading a stale cache knows how old it is. The timestamp is written
- * when the Warm Set completes and read back
- * while Offline. It lives in the same keyval area as the query cache,
- * keyed per owner, and is dropped by the wipe-cache action.
- */
+// When the Warm Set last completed, per owner in the cache's keyval area; the status UI
+// shows it as the cache's age while Offline, and a wipe drops it.
 
 import type { OfflineStorage } from "./storage";
 import { lastWarmedKey } from "./cache-identity";

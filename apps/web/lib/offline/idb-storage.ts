@@ -1,9 +1,5 @@
-/**
- * The web client's storage adapter for the shared offline engine: the Offline
- * Cache and the Outbox in IndexedDB (uploads kept by structured clone), the
- * last-known owner in localStorage, and cross-tab Outbox change notices over a
- * BroadcastChannel.
- */
+// The offline engine's storage in IndexedDB (uploads by structured clone), the owner in
+// localStorage, and cross-tab Outbox notices over a BroadcastChannel.
 
 import { deletePersonalCaches } from "@/lib/offline/cache-names";
 import { createOfflineIdb, KEYVAL_STORE, OUTBOX_STORE } from "@/lib/offline/idb";

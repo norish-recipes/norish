@@ -25,11 +25,7 @@ import { dateKey } from "@norish/shared/lib/helpers";
 /** Marks the web client's replays in server logs. */
 export const OUTBOX_REPLAY_HEADER_VALUE = "web-outbox";
 
-/**
- * Cache buster — a restored cache from a different app version is dropped
- * wholesale rather than migrated, so a schema change can never surface stale
- * shapes. Human intent in the Outbox is busted separately (never here).
- */
+/** A restored cache from another app version is dropped, never migrated; the Outbox is kept. */
 // NEXT_PUBLIC values are intentionally exposed to the browser by Next.js.
 // eslint-disable-next-line no-restricted-properties
 export const CACHE_BUSTER = process.env.NEXT_PUBLIC_APP_VERSION;

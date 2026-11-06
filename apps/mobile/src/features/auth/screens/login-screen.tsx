@@ -53,7 +53,7 @@ function LoginForm({ backendBaseUrl, redirectTo }: { backendBaseUrl: string; red
 
       try {
         await authClient.signIn.social({
-          provider: provider.id as any,
+          provider: provider.id,
           callbackURL: redirectTo,
         });
         consumeLogoutFlag();
@@ -148,7 +148,7 @@ function LoginForm({ backendBaseUrl, redirectTo }: { backendBaseUrl: string; red
       )}
 
       {registrationEnabled && passwordAuthEnabled && (
-        <Pressable style={styles.linkRow} onPress={() => router.push("/register" as any)}>
+        <Pressable style={styles.linkRow} onPress={() => router.push("/register")}>
           <Text className="font-normal" style={[styles.linkText, { color: mutedColor }]}>
             {intl.formatMessage({ id: "auth.emailPassword.noAccount" })}{" "}
             <Text className="font-semibold" style={{ color: accentColor }}>

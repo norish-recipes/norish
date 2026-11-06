@@ -1,8 +1,5 @@
-/**
- * The offline engine: one per client, run over that client's storage adapter.
- * It owns the Offline Cache, the Outbox and Replay; the client keeps only its
- * platform concerns (service worker, Offline Toggle, device network hints).
- */
+// One offline engine per client over its storage adapter: the Offline Cache, the Outbox and
+// Replay. Platform concerns (service worker, device network hints) stay in the client.
 
 import type { QueryClient } from "@tanstack/react-query";
 import type { TRPCLink } from "@trpc/client";

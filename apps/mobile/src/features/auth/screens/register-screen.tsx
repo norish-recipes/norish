@@ -144,7 +144,7 @@ function RegisterForm({
   }, [authClient, confirmPassword, consumeLogoutFlag, email, intl, name, password]);
 
   const signInLink = (
-    <Pressable style={styles.linkRow} onPress={() => router.replace("/login" as any)}>
+    <Pressable style={styles.linkRow} onPress={() => router.replace("/login")}>
       <Text className="font-normal" style={[styles.linkText, { color: mutedColor }]}>
         {intl.formatMessage({ id: "auth.signup.hasAccount" })}{" "}
         <Text className="font-semibold" style={{ color: accentColor }}>

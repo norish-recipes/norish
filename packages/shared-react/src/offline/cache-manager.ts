@@ -1,13 +1,5 @@
-/**
- * A client's persisted, per-user QueryClient (ADR-0001, ADR-0005).
- *
- * One QueryClient per engine, handed to the shared provider bundle through its
- * `getQueryClient` seam. Persistence is deferred until an owner is confirmed
- * (see {@link ./cache-identity}); restoration then hydrates that owner's cache
- * from storage and a subscription keeps it saved. On an account switch the
- * departed owner's cache is purged, the client is cleared, and the persister
- * re-keyed.
- */
+// The engine's persisted, per-owner QueryClient (ADR-0001, ADR-0005): it persists only once an
+// owner is confirmed, and an account switch purges the departed owner's cache and re-keys.
 
 import type { Query } from "@tanstack/react-query";
 import {

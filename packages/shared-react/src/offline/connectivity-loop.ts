@@ -1,9 +1,5 @@
-/**
- * The self-scheduling probe loop behind the Live/Offline verdict: a slow
- * heartbeat while Live and exponential backoff while Offline, cadence from the
- * pure machine. Hints (a socket drop, the device's network signal) only call
- * `probeNow`; the probe stays the sole verdict.
- */
+// The probe loop: a slow heartbeat while Live, backoff while Offline. Hints (socket drop,
+// device network) only call `probeNow`; the probe stays the sole verdict.
 
 import type { ConnectivitySnapshot } from "./connectivity-machine";
 import { nextProbeDelayMs, reduceProbeResult } from "./connectivity-machine";

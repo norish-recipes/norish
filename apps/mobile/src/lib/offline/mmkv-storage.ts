@@ -1,8 +1,5 @@
-/**
- * The app's storage adapter for the shared offline engine: the Offline Cache, the Outbox and the
- * last-known owner in one MMKV instance (values via superjson, so a Date stays a Date), and each
- * upload copied into the app's own storage and referenced by path until its entry is removed.
- */
+// The offline engine's storage in one MMKV instance (superjson values, so a Date stays a Date);
+// uploads are copied into app storage and referenced by path until their entry goes.
 
 import type { MMKV } from "react-native-mmkv";
 import superjson from "superjson";

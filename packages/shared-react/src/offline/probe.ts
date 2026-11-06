@@ -1,23 +1,9 @@
-/**
- * Backend reachability probe.
- *
- * The single source of truth for the Live/Offline verdict: a short, uncached
- * GET against the public health endpoint. `res.ok` (2xx) means Live; a non-2xx
- * response, a network error, or a timeout all mean Offline.
- *
- * The endpoint is public (`protect: false`) so no session is required, and the
- * request is deliberately uncacheable — `cache: "no-store"` plus a per-call
- * cache-busting query param — so a stale service-worker cache entry can never
- * lie about the backend being up.
- */
+// The Live/Offline verdict: a 2xx from the public readiness route is Live, anything else Offline.
+// `no-store` plus a per-call query param keep a service-worker copy from answering for the server.
 
 import { REACHABILITY_DEADLINE_MS } from "./reachability";
 
-/**
- * The public readiness route (see `packages/trpc` config router): Live means
- * Postgres and Valkey answer. A parser outage stops URL imports, not the app.
- * Each client resolves it against its server address and base path.
- */
+/** The public readiness route: Live means Postgres and Valkey answer, whatever the parser does. */
 export const HEALTH_PROBE_PATH = "/api/v1/health/ready";
 
 /** Give up on a single probe after this long; a hung request counts as Offline. */

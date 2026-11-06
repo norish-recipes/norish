@@ -93,9 +93,8 @@ export function useOfflineController({
     void recovery.recover(returningLive || socketReconnected ? "resync" : "startup");
   }, [isLive, isOffline, owner, recovery, wsStatus]);
 
-  // A mutation that failed on reachability while Live is the strongest hint that
-  // reachability just changed. Only a growing pending count is an admission; Replay's
-  // own removals and parks change the queue too. While Offline the backoff is probing.
+  // A growing pending count while Live means a mutation just failed on reachability: probe now.
+  // Replay's removals and parks shrink the queue; while Offline the backoff probes anyway.
   const pendingCountRef = useRef<number | null>(null);
 
   useEffect(() => {
@@ -125,8 +124,7 @@ export function useOfflineController({
     };
   }, [outbox, owner, isOffline, probeNow]);
 
-  // Every Live verdict drains queued work: a mutation admitted while Live has no
-  // transition to wait for, and routine refetches would erase its optimistic change.
+  // Every Live verdict drains queued work, which has no transition to wait for while Live.
   // Recovery is single-flight, so a verdict during a run adds nothing.
   useEffect(() => {
     if (!owner) return;

@@ -66,10 +66,10 @@ function AuthProviderInner({
   );
   // Until the server answers, the persisted session stands in, so an Offline launch opens on
   // its cached data instead of the sign-in screen.
-  const usePersistedAuth = !liveUser && (isPending || !!sessionError || isOffline);
+  const shouldUsePersistedAuth = !liveUser && (isPending || !!sessionError || isOffline);
 
   useEffect(() => {
-    if (!usePersistedAuth || persistedSessionStatus !== "idle") {
+    if (!shouldUsePersistedAuth || persistedSessionStatus !== "idle") {
       return;
     }
 
@@ -79,14 +79,14 @@ function AuthProviderInner({
       setPersistedUser(user);
       setPersistedSessionStatus("loaded");
     });
-  }, [persistedSessionStatus, usePersistedAuth]);
+  }, [persistedSessionStatus, shouldUsePersistedAuth]);
 
   const { isAuthenticated, isLoading, user } = useMemo(() => {
     if (authOverride === "signed-out") {
       return { isAuthenticated: false, isLoading: false, user: null };
     }
 
-    if (usePersistedAuth) {
+    if (shouldUsePersistedAuth) {
       return {
         isAuthenticated: !!persistedUser,
         isLoading: persistedSessionStatus !== "loaded",
@@ -106,7 +106,7 @@ function AuthProviderInner({
     persistedSessionStatus,
     persistedUser,
     session?.user,
-    usePersistedAuth,
+    shouldUsePersistedAuth,
   ]);
 
   const signOut = useCallback(
