@@ -2,9 +2,13 @@
 # unchecked grocery on the list first and checks it is done on the server afterwards.
 appId: dev.norish.app
 env:
+  NORISH_SERVER_URL: http://localhost:3000
   NORISH_GROCERY: maestrocheck
 ---
-- runFlow: sign-in.yaml
+- runFlow:
+    file: subflows/sign-in.yaml
+    env:
+      NORISH_SIGN_IN_URL: ${NORISH_SERVER_URL}
 - scrollUntilVisible:
     element:
       id: smoke-grocery-.*

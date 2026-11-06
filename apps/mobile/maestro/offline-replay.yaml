@@ -7,9 +7,9 @@ env:
   NORISH_OFFLINE_GROCERY: maestrooffline
 ---
 - runFlow:
-    file: sign-in.yaml
+    file: subflows/sign-in.yaml
     env:
-      NORISH_SERVER_URL: ${NORISH_PROXY_URL}
+      NORISH_SIGN_IN_URL: ${NORISH_PROXY_URL}
 - scrollUntilVisible:
     element:
       id: smoke-grocery-.*

@@ -1,10 +1,6 @@
-# Signs in through the server-address screen, sees the smoke screen and keeps the session
-# across a relaunch. The values come from `pnpm --filter @norish/mobile maestro` or `-e`.
+# Signs in at NORISH_SIGN_IN_URL, which callers pass via runFlow env and nothing via -e, and
+# keeps the session across a relaunch. NORISH_EMAIL/PASSWORD come from the maestro script.
 appId: dev.norish.app
-env:
-  NORISH_SERVER_URL: http://localhost:3000
-  NORISH_EMAIL: maestro@norish.test
-  NORISH_PASSWORD: maestro-password-1
 ---
 # The session lives in the keychain, which outlives the app's own data.
 - launchApp:
@@ -12,7 +8,7 @@ env:
     clearKeychain: true
 - tapOn:
     id: connect-server-url
-- inputText: ${NORISH_SERVER_URL}
+- inputText: ${NORISH_SIGN_IN_URL}
 - hideKeyboard
 - tapOn:
     id: connect-submit
