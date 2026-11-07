@@ -8,10 +8,17 @@ import type { FullRecipeDTO } from "@norish/shared/contracts";
 
 const mocks = vi.hoisted(() => ({ createRecipe: vi.fn() }));
 
+// The English UI: built-ins carry their English labels.
+const LABELS: Record<string, string> = {
+  "category.breakfast": "Breakfast",
+  "category.lunch": "Lunch",
+  "category.dinner": "Dinner",
+  "category.snack": "Snack",
+};
+
 vi.mock("next-intl", () => ({
   useLocale: () => "en",
-  // Breakfast carries a translation, so a typed label can be matched.
-  useTranslations: () => (key: string) => (key === "category.breakfast" ? "Ontbijt" : key),
+  useTranslations: () => (key: string) => LABELS[key] ?? key,
 }));
 vi.mock("@/context/recipes-context", () => ({
   useRecipesContext: () => ({ createRecipe: mocks.createRecipe, updateRecipe: vi.fn() }),
@@ -19,7 +26,14 @@ vi.mock("@/context/recipes-context", () => ({
 vi.mock("@/hooks/config", () => ({
   useUnitsQuery: () => ({ units: {}, isLoading: false }),
   useCategoriesQuery: () => ({
-    categories: ["Breakfast", "Lunch", "Dinner", "Snack", "Puddings"],
+    categories: ["Breakfast", "Lunch", "Dinner", "Snack", "Puddings", "Drinks"],
+    // Every locale's label folds to its built-in, as the server sends them.
+    builtInAliases: {
+      breakfast: "Breakfast",
+      ontbijt: "Breakfast",
+      "petit dejeuner": "Breakfast",
+      snack: "Snack",
+    },
     isLoading: false,
   }),
 }));
@@ -160,7 +174,7 @@ describe("RecipeForm categories", () => {
   it("offers the household's list and the recipe's own, labelling only built-ins", () => {
     render(<RecipeForm initialData={mojito} mode="edit" />);
 
-    expect(screen.getByRole("button", { name: "Ontbijt" })).toBeInTheDocument();
+    expect(screen.getByRole("button", { name: "Breakfast" })).toBeInTheDocument();
     expect(screen.getByRole("button", { name: "Puddings" })).toHaveAttribute(
       "aria-pressed",
       "false"
@@ -198,17 +212,46 @@ describe("RecipeForm categories", () => {
     render(<RecipeForm initialData={mojito} mode="edit" />);
 
     addCategory("puddings");
-    addCategory("ontbijt");
     addCategory("SNACKS");
     addCategory("Desserts");
 
-    expect(pressedChips()).toEqual([
-      "Cocktails",
-      "Desserts",
-      "Ontbijt",
-      "Puddings",
-      "category.snack",
-    ]);
+    expect(pressedChips()).toEqual(["Cocktails", "Desserts", "Puddings", "Snack"]);
     expect(screen.getAllByRole("button", { name: "Puddings" })).toHaveLength(1);
+  });
+
+  it.each(["Ontbijt", "breakfasts", "BREAKFAST", "Petit-déjeuner"])(
+    "selects the Breakfast chip for %s in the English UI",
+    (typed) => {
+      render(<RecipeForm initialData={mojito} mode="edit" />);
+
+      addCategory(typed);
+
+      expect(pressedChips()).toEqual(["Breakfast", "Cocktails"]);
+    }
+  );
+
+  it("selects an existing household chip for another casing", () => {
+    render(<RecipeForm initialData={mojito} mode="edit" />);
+
+    addCategory("drinks");
+
+    expect(pressedChips()).toEqual(["Cocktails", "Drinks"]);
+    expect(screen.getAllByRole("button", { name: "Drinks" })).toHaveLength(1);
+  });
+
+  it("drops Breakfast on save once deselected after typing another locale's name", async () => {
+    render(<RecipeForm mode="create" />);
+    fillRequiredFields();
+
+    fireEvent.click(screen.getByRole("button", { name: "Breakfast" }));
+    addCategory("Ontbijt");
+    expect(pressedChips()).toEqual(["Breakfast"]);
+
+    fireEvent.click(screen.getByRole("button", { name: "Breakfast" }));
+    fireEvent.click(screen.getByRole("button", { name: "createRecipe" }));
+
+    await waitFor(() =>
+      expect(mocks.createRecipe).toHaveBeenCalledWith(expect.objectContaining({ categories: [] }))
+    );
   });
 });

@@ -26,7 +26,7 @@ import { useLocale, useTranslations } from "next-intl";
 
 import type { FullRecipeDTO, MeasurementSystem, RecipeCategory } from "@norish/shared/contracts";
 import { useHydrated } from "@norish/shared-react/hooks";
-import { isBuiltInCategory } from "@norish/shared/lib/categories";
+import { resolveCategoryName } from "@norish/shared/lib/categories";
 import { inferSystemUsedFromParsed } from "@norish/shared/lib/determine-recipe-system";
 import { parseIngredientWithDefaults } from "@norish/shared/lib/helpers";
 import { createClientLogger } from "@norish/shared/lib/logger";
@@ -47,7 +47,7 @@ export default function RecipeForm({ mode, initialData }: RecipeFormProps) {
   const { createRecipe, updateRecipe } = useRecipesContext();
   const locale = useLocale();
   const { units, isLoading: isLoadingUnits } = useUnitsQuery();
-  const { categories: householdCategories } = useCategoriesQuery();
+  const { categories: householdCategories, builtInAliases } = useCategoriesQuery();
   const categoryLabel = useCategoryLabel();
   const [unitStyle] = useDevicePreference("unitStyle");
   const [isSubmitting, setIsSubmitting] = useState(false);
@@ -278,25 +278,12 @@ export default function RecipeForm({ mode, initialData }: RecipeFormProps) {
       prev.includes(category) ? prev.filter((c) => c !== category) : [...prev, category]
     );
   }, []);
-  // A typed name picks the chip it names (any casing, a built-in's label or
-  // plural) before it becomes a Category of its own; the server resolves it again.
+  // Resolved like the server does, so a typed name picks the chip it will save as.
   const addCategory = () => {
-    const name = newCategory.trim().replace(/\s+/g, " ");
-    const lower = name.toLowerCase();
+    const pick = resolveCategoryName(newCategory, builtInAliases, categoryOptions);
 
     setNewCategory("");
-    if (!name) return;
-
-    const existing = categoryOptions.find((option) => {
-      const names = isBuiltInCategory(option) ? [option, categoryLabel(option)] : [option];
-
-      return names.some((n) => {
-        const l = n.toLowerCase();
-
-        return l === lower || (isBuiltInCategory(option) && `${l}s` === lower);
-      });
-    });
-    const pick = existing ?? name;
+    if (!pick) return;
 
     setCategories((prev) => (prev.includes(pick) ? prev : [...prev, pick]));
   };
