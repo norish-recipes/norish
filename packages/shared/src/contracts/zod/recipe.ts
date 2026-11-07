@@ -15,7 +15,12 @@ import { RecipeVideosArraySchema, RecipeVideoSchema } from "./recipe-videos";
 import { StepOutputSchema, StepStepSchema } from "./steps";
 import { TagNameSchema, TagSummarySchema } from "./tag";
 
-export const recipeCategorySchema = z.enum(["Breakfast", "Lunch", "Dinner", "Snack"]);
+/** A Category name: trimmed, inner whitespace collapsed, 1 to 40 characters (ADR-0040). */
+export const recipeCategorySchema = z
+  .string()
+  .overwrite((name) => name.trim().replace(/\s+/g, " "))
+  .min(1)
+  .max(40);
 
 export const RecipeSelectBaseSchema = createSelectSchema(recipes).extend({
   userId: z.string().nullable(),
@@ -162,6 +167,7 @@ export const FullRecipeUpdateSchema = RecipeUpdateBaseSchema.extend({
   // Cuisines are picked from the vocabulary rather than typed, so an editor
   // sends ids. Passing an empty array clears them; omitting leaves them alone.
   cuisines: z.array(z.uuid()).optional(),
+  categories: z.array(recipeCategorySchema).optional(),
   steps: z.array(StepStepSchema).optional(),
   images: z.array(RecipeImageSchema).max(10).optional(),
   videos: z.array(RecipeVideoSchema).optional(),
@@ -190,10 +196,7 @@ export const RecipeListInputSchema = z.object({
     .default(["title", "ingredients"])
     .describe("Fields searched when `search` is provided. Defaults to `title` and `ingredients`."),
   tags: z.array(z.string()).optional().describe("Optional tag filter."),
-  categories: z
-    .array(z.enum(["Breakfast", "Lunch", "Dinner", "Snack"]))
-    .optional()
-    .describe("Optional meal category filter."),
+  categories: z.array(recipeCategorySchema).optional().describe("Optional meal category filter."),
   filterMode: z
     .enum(["AND", "OR"])
     .default("OR")

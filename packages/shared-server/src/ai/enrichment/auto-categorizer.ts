@@ -8,11 +8,13 @@
 import { z } from "zod";
 
 import type { RecipeCategory } from "@norish/shared/contracts";
+import type { BuiltInCategory } from "@norish/shared/lib/categories";
 import { isDecisionUseEnabled } from "@norish/shared-server/config/server-config-loader";
 import { aiLogger } from "@norish/shared-server/logger";
+import { BUILT_IN_CATEGORIES } from "@norish/shared/lib/categories";
+import { matchCategory } from "@norish/shared/lib/category-matcher";
 
 import { decide, generateStructured } from "../runtime/runtime";
-import { matchCategory } from "./category-matcher";
 import { verifyClaims } from "./verification";
 
 /**
@@ -21,7 +23,7 @@ import { verifyClaims } from "./verification";
  */
 export const CATEGORY_THRESHOLD = 0.6;
 
-const CATEGORIES = ["Breakfast", "Lunch", "Dinner", "Snack"] as const satisfies RecipeCategory[];
+const CATEGORIES = BUILT_IN_CATEGORIES;
 
 const autoCategorizationSchema = z
   .object({
@@ -99,7 +101,7 @@ async function categorizeWithLanguageModel(recipe: RecipeSummary): Promise<Recip
     new Set(
       output.categories
         .map((category) => matchCategory(category))
-        .filter((category): category is RecipeCategory => Boolean(category))
+        .filter((category): category is BuiltInCategory => Boolean(category))
     )
   );
 

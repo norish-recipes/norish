@@ -53,6 +53,11 @@ import {
   FullRecipeUpdateSchema,
   RecipeDashboardSchema,
 } from "../zodSchemas";
+import {
+  attachCategoriesToRecipeByInputTx,
+  RECIPE_CATEGORY_NAMES_SQL,
+  recipeInAnyCategorySql,
+} from "./categories";
 import { replaceRecipeCuisinesTx } from "./cuisines";
 import {
   attachIngredientsToRecipeByInputTx,
@@ -489,7 +494,6 @@ const DASHBOARD_COLUMNS = {
   // Only the country: the dashboard flies its flag, and the rest of the
   // provenance group has nothing to show at that size.
   originCountry: true,
-  categories: true,
   createdAt: true,
   updatedAt: true,
   version: true,
@@ -679,9 +683,7 @@ export async function listRecipes(
   }
 
   if (categories?.length) {
-    const categoryArray = `{${categories.join(",")}}`;
-
-    whereConditions.push(sql`${recipes.categories} && ${categoryArray}::recipe_category[]`);
+    whereConditions.push(recipeInAnyCategorySql(categories));
   }
 
   if (maxCookingTime !== undefined) {
@@ -715,6 +717,7 @@ export async function listRecipes(
       extras: {
         // The resolved primary: the first gallery image.
         image: PRIMARY_IMAGE_SQL.as("image"),
+        categories: RECIPE_CATEGORY_NAMES_SQL.as("categories"),
         pantryCoverage: (pantryCoverage ?? sql<null>`NULL::real`).as("pantry_coverage"),
       },
       with: DASHBOARD_WITH,
@@ -770,7 +773,10 @@ export async function listDashboardRecipesByIds(ids: string[]): Promise<RecipeDa
   const rows = await db.query.recipes.findMany({
     where: inArray(recipes.id, ids),
     columns: DASHBOARD_COLUMNS,
-    extras: { image: PRIMARY_IMAGE_SQL.as("image") },
+    extras: {
+      image: PRIMARY_IMAGE_SQL.as("image"),
+      categories: RECIPE_CATEGORY_NAMES_SQL.as("categories"),
+    },
     with: DASHBOARD_WITH,
   });
 
@@ -794,6 +800,7 @@ export async function dashboardRecipe(id: string): Promise<RecipeDashboardDTO | 
     extras: {
       // The resolved primary: the first gallery image.
       image: PRIMARY_IMAGE_SQL.as("image"),
+      categories: RECIPE_CATEGORY_NAMES_SQL.as("categories"),
     },
     with: {
       recipeTags: {
@@ -912,7 +919,6 @@ export async function createRecipeWithRefs(
         : null,
     originRegion: payload.originRegion ? stripHtmlTags(payload.originRegion) : null,
     provenanceNote: payload.provenanceNote ? stripHtmlTags(payload.provenanceNote) : null,
-    categories: payload.categories ?? [],
   };
 
   const result = await db.transaction(async (tx): Promise<CreateRecipeResult> => {
@@ -947,6 +953,10 @@ export async function createRecipeWithRefs(
 
     if (payload.cuisines.length) {
       await replaceRecipeCuisinesTx(tx, rid, payload.cuisines);
+    }
+
+    if (payload.categories.length) {
+      await attachCategoriesToRecipeByInputTx(tx, rid, payload.categories);
     }
 
     if (payload.recipeIngredients.length) {
@@ -1039,17 +1049,21 @@ export async function updateRecipeCategories(
     whereConditions.push(eq(recipes.version, version));
   }
 
-  const updated = await db
-    .update(recipes)
-    .set({ categories, updatedAt: new Date(), version: sql`${recipes.version} + 1` })
-    .where(and(...whereConditions))
-    .returning({ id: recipes.id });
+  return await db.transaction(async (tx) => {
+    const updated = await tx
+      .update(recipes)
+      .set({ updatedAt: new Date(), version: sql`${recipes.version} + 1` })
+      .where(and(...whereConditions))
+      .returning({ id: recipes.id });
 
-  if (updated.length === 0 && version) {
-    return staleOutcome();
-  }
+    if (updated.length === 0) {
+      return version ? staleOutcome() : appliedOutcome(undefined);
+    }
 
-  return appliedOutcome(undefined);
+    await attachCategoriesToRecipeByInputTx(tx, recipeId, categories);
+
+    return appliedOutcome(undefined);
+  });
 }
 
 /**
@@ -1149,11 +1163,11 @@ export async function getRecipeFull(id: string): Promise<FullRecipeDTO | null> {
       originCountryName: true,
       originRegion: true,
       provenanceNote: true,
-      categories: true,
       createdAt: true,
       updatedAt: true,
       version: true,
     },
+    extras: { categories: RECIPE_CATEGORY_NAMES_SQL.as("categories") },
     with: {
       recipeTags: {
         columns: {},
@@ -1687,8 +1701,6 @@ export async function updateRecipeWithRefs(
     if (payload.totalMinutes !== undefined) updateData.totalMinutes = payload.totalMinutes;
     if (payload.systemUsed !== undefined) updateData.systemUsed = payload.systemUsed;
     if (payload.calories !== undefined) updateData.calories = payload.calories;
-    if (payload.categories !== undefined && payload.categories?.length > 0)
-      updateData.categories = payload.categories;
     if (payload.fat !== undefined) updateData.fat = payload.fat;
     if (payload.carbs !== undefined) updateData.carbs = payload.carbs;
     if (payload.protein !== undefined) updateData.protein = payload.protein;
@@ -1730,6 +1742,11 @@ export async function updateRecipeWithRefs(
     // which is deliberately distinct from an enrichment run writing nothing.
     if (payload.cuisines !== undefined) {
       await replaceRecipeCuisinesTx(tx, recipeId, payload.cuisines);
+    }
+
+    // An empty list leaves the Categories alone, as it always has.
+    if (payload.categories?.length) {
+      await attachCategoriesToRecipeByInputTx(tx, recipeId, payload.categories);
     }
 
     // Replace tags if provided
@@ -1839,7 +1856,7 @@ export async function getRandomRecipeCandidates(
   }
 
   if (category) {
-    whereConditions.push(sql`${category} = ANY(${recipes.categories})`);
+    whereConditions.push(recipeInAnyCategorySql([category]));
   }
 
   const whereClause = whereConditions.length ? and(...whereConditions) : undefined;
@@ -1851,7 +1868,7 @@ export async function getRandomRecipeCandidates(
       id: recipes.id,
       name: recipes.name,
       image: PRIMARY_IMAGE_SQL,
-      categories: recipes.categories,
+      categories: RECIPE_CATEGORY_NAMES_SQL,
     })
     .from(recipes)
     .where(whereClause);

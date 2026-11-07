@@ -22,6 +22,7 @@ import {
   recipeTags,
   tags as tagsTable,
 } from "../schema";
+import { recipeInAnyCategorySql } from "./categories";
 import { cookbookTitleMatch, listCookbooksByIds } from "./cookbooks";
 import { pantryCoverageSql } from "./pantry-coverage";
 import { buildOwnerPolicyCondition, listDashboardRecipesByIds, recipeSearchSql } from "./recipes";
@@ -144,9 +145,7 @@ export async function listLibrary(
     if (searchSql) conditions.push(searchSql.match);
 
     if (categories?.length) {
-      conditions.push(
-        sql`"recipes"."categories" && ${`{${categories.join(",")}}`}::recipe_category[]`
-      );
+      conditions.push(recipeInAnyCategorySql(categories));
     }
 
     if (maxCookingTime !== undefined) {

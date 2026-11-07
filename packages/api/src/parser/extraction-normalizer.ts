@@ -8,12 +8,12 @@
 import { decode } from "html-entities";
 
 import type { RecipeExtractionOutput } from "@norish/api/parser/extraction.schema";
-import type { FullRecipeInsertDTO, RecipeCategory } from "@norish/shared/contracts/dto/recipe";
+import type { FullRecipeInsertDTO } from "@norish/shared/contracts/dto/recipe";
 import { normalizeRecipeFromJson } from "@norish/api/parser/normalize";
 import { headingOrName } from "@norish/api/parser/parsers/ingredients";
-import { matchCategory } from "@norish/shared-server/ai/enrichment/category-matcher";
 import { getUnits } from "@norish/shared-server/config/server-config-loader";
 import { aiLogger } from "@norish/shared-server/logger";
+import { matchCategory } from "@norish/shared/lib/category-matcher";
 import { parseIngredientWithDefaults } from "@norish/shared/lib/helpers";
 import { normalizeEnrichmentTagNames } from "@norish/shared/lib/recipe-enrichment";
 
@@ -182,7 +182,7 @@ export async function normalizeExtractionOutput(
   const normalizedCategories = (output.categories ?? [])
     .filter((category): category is string => typeof category === "string" && category.length > 0)
     .map((category) => matchCategory(category))
-    .filter((category): category is RecipeCategory => category !== null)
+    .filter((category) => category !== null)
     .filter((category, index, categories) => categories.indexOf(category) === index);
 
   normalized.categories = normalizedCategories;

@@ -3,6 +3,7 @@ import { TRPCError } from "@trpc/server";
 import { getAvailableProviders, isPasswordAuthEnabled } from "@norish/auth/providers";
 import { buildInternalParserApiUrl, SERVER_CONFIG } from "@norish/config/env-config-server";
 import { getDatabaseHealth } from "@norish/db/drizzle";
+import { listCategoryNamesForUsers } from "@norish/db/repositories/categories";
 import { listCuisines } from "@norish/db/repositories/cuisines";
 import { listAllTagNames, listTagNamesForUsers } from "@norish/db/repositories/tags";
 import {
@@ -98,6 +99,16 @@ const tags = authedProcedure.query(async ({ ctx }) => {
       : await listTagNamesForUsers(ctx.userIds);
 
   return { tags: tagNames };
+});
+
+/**
+ * The household's Categories. Always household-scoped, unlike `tags`: another
+ * household's Categories would fill the chip row (ADR-0040).
+ */
+const categories = authedProcedure.query(async ({ ctx }) => {
+  log.debug({ userId: ctx.user.id }, "Getting categories");
+
+  return { categories: await listCategoryNamesForUsers(ctx.userIds) };
 });
 
 /**
@@ -283,6 +294,7 @@ export const health = publicProcedure
 export const configProcedures = router({
   localeConfig,
   tags,
+  categories,
   cuisines,
   units,
   ingredientWords,

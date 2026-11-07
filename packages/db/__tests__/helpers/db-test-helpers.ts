@@ -7,7 +7,7 @@
  */
 
 import type { NodePgDatabase } from "drizzle-orm/node-postgres";
-import { and, eq, sql } from "drizzle-orm";
+import { and, eq, notInArray, sql } from "drizzle-orm";
 import { drizzle } from "drizzle-orm/node-postgres";
 import pg from "pg";
 
@@ -18,6 +18,7 @@ import { getRecipeFull } from "@norish/db";
 import { mintIngredientWithAliases } from "@norish/db/repositories/ingredient-aliases";
 import { isFirstLineFood, writeRecipeLineFoodsTx } from "@norish/db/repositories/ingredients";
 import * as schema from "@norish/db/schema";
+import { BUILT_IN_CATEGORIES } from "@norish/shared/lib/categories";
 import { ingredientAliasFold } from "@norish/shared/lib/spelling-keys";
 
 const { Pool } = pg;
@@ -88,6 +89,10 @@ export async function cleanDatabase() {
   await db.delete(schema.cookbookRecipes);
   await db.delete(schema.cookbooks);
   await db.delete(schema.recipes);
+  // The built-in Categories are migration-seeded and stay.
+  await db
+    .delete(schema.categories)
+    .where(notInArray(schema.categories.name, [...BUILT_IN_CATEGORIES]));
   // Groceries point at Ingredient Aliases, which go with their Ingredients.
   await db.delete(schema.groceries);
   await db.delete(schema.recurringGroceries);

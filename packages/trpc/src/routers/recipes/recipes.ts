@@ -54,8 +54,12 @@ import { deleteRecipeImagesDir } from "@norish/shared-server/media/storage";
 import { recipes } from "@norish/shared-server/realtime/recipes";
 import { convertRecipeMeasurements } from "@norish/shared-server/recipes/measurement-conversion";
 import { selectWeightedRandomRecipe } from "@norish/shared-server/recipes/randomizer";
-import { FilterMode, RecipeCategory, SortOrder } from "@norish/shared/contracts";
-import { FullRecipeSchema, RecipeListResultSchema } from "@norish/shared/contracts/zod";
+import { FilterMode, SortOrder } from "@norish/shared/contracts";
+import {
+  FullRecipeSchema,
+  recipeCategorySchema,
+  RecipeListResultSchema,
+} from "@norish/shared/contracts/zod";
 import { addBasePath } from "@norish/shared/lib/base-path";
 import { isVideoUrl } from "@norish/shared/lib/helpers";
 import { ENRICHMENT_KINDS } from "@norish/shared/lib/recipe-enrichment";
@@ -337,17 +341,13 @@ const updateCategories = authedProcedure
     z.object({
       recipeId: z.uuid(),
       version: z.number().int().positive(),
-      categories: z.array(z.enum(["Breakfast", "Lunch", "Dinner", "Snack"])),
+      categories: z.array(recipeCategorySchema),
     })
   )
   .mutation(async ({ ctx, input }) => {
     await assertRecipeAccess(ctx, input.recipeId, "edit");
 
-    const result = await updateRecipeCategories(
-      input.recipeId,
-      input.categories as RecipeCategory[],
-      input.version
-    );
+    const result = await updateRecipeCategories(input.recipeId, input.categories, input.version);
 
     if (result.stale) {
       log.info(

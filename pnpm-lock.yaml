@@ -1047,6 +1047,9 @@ importers:
       '@norish/db-schema':
         specifier: workspace:*
         version: link:../db-schema
+      '@norish/i18n':
+        specifier: workspace:*
+        version: link:../i18n
       '@tanstack/react-query':
         specifier: 5.105.0
         version: 5.105.0(@types/react@19.3.0)(react@19.3.1)
@@ -1071,6 +1074,9 @@ importers:
       fraction.js:
         specifier: ^5.3.4
         version: 5.3.4
+      fuse.js:
+        specifier: 'catalog:'
+        version: 7.5.0
       html-entities:
         specifier: 'catalog:'
         version: 2.6.0

@@ -1,7 +1,6 @@
 import type { IFuseOptions } from "fuse.js";
 import Fuse from "fuse.js";
 
-import type { RecipeCategory } from "@norish/shared/contracts";
 import deFormalRecipes from "@norish/i18n/messages/de-formal/recipes.json" with { type: "json" };
 import deInformalRecipes from "@norish/i18n/messages/de-informal/recipes.json" with { type: "json" };
 import enRecipes from "@norish/i18n/messages/en/recipes.json" with { type: "json" };
@@ -10,18 +9,21 @@ import itRecipes from "@norish/i18n/messages/it/recipes.json" with { type: "json
 import koRecipes from "@norish/i18n/messages/ko/recipes.json" with { type: "json" };
 import nlRecipes from "@norish/i18n/messages/nl/recipes.json" with { type: "json" };
 
+import type { BuiltInCategory } from "./categories";
+import { BUILT_IN_CATEGORIES } from "./categories";
+
 const FUZZY_THRESHOLD = 0.25;
 
-type RecipeCategoryKey = "breakfast" | "lunch" | "dinner" | "snack";
+type BuiltInCategoryKey = "breakfast" | "lunch" | "dinner" | "snack";
 
 type RecipesMessageSubset = {
   form?: {
-    category?: Partial<Record<RecipeCategoryKey, string>>;
+    category?: Partial<Record<BuiltInCategoryKey, string>>;
   };
 };
 
 type CategoryEntry = {
-  category: RecipeCategory;
+  category: BuiltInCategory;
   synonyms: string[];
 };
 
@@ -35,14 +37,14 @@ const RECIPES_MESSAGE_BUNDLES: RecipesMessageSubset[] = [
   itRecipes as RecipesMessageSubset,
 ];
 
-const CATEGORY_MESSAGE_KEYS: Record<RecipeCategory, RecipeCategoryKey> = {
+const CATEGORY_MESSAGE_KEYS: Record<BuiltInCategory, BuiltInCategoryKey> = {
   Breakfast: "breakfast",
   Lunch: "lunch",
   Dinner: "dinner",
   Snack: "snack",
 };
 
-const BASE_SYNONYMS: Record<RecipeCategory, string[]> = {
+const BASE_SYNONYMS: Record<BuiltInCategory, string[]> = {
   Breakfast: ["breakfast", "brunch", "morning meal"],
   Lunch: ["lunch", "midday meal"],
   Dinner: ["dinner", "diner", "supper", "main course", "main dish", "entree", "entrée"],
@@ -59,7 +61,7 @@ function normalizeCategoryText(input: string): string {
     .replace(/\s+/g, " ");
 }
 
-function getLocalizedCategorySynonyms(category: RecipeCategory): string[] {
+function getLocalizedCategorySynonyms(category: BuiltInCategory): string[] {
   const categoryKey = CATEGORY_MESSAGE_KEYS[category];
 
   return RECIPES_MESSAGE_BUNDLES.map((bundle) => bundle.form?.category?.[categoryKey] ?? "")
@@ -67,9 +69,7 @@ function getLocalizedCategorySynonyms(category: RecipeCategory): string[] {
     .filter((label): label is string => label.length > 0);
 }
 
-const CATEGORY_DATA: CategoryEntry[] = (
-  ["Breakfast", "Lunch", "Dinner", "Snack"] as RecipeCategory[]
-).map((category) => {
+const CATEGORY_DATA: CategoryEntry[] = BUILT_IN_CATEGORIES.map((category) => {
   const allSynonyms = [...BASE_SYNONYMS[category], ...getLocalizedCategorySynonyms(category)].map(
     normalizeCategoryText
   );
@@ -80,7 +80,7 @@ const CATEGORY_DATA: CategoryEntry[] = (
   };
 });
 
-const EXACT_MATCH_MAP = new Map<string, RecipeCategory>();
+const EXACT_MATCH_MAP = new Map<string, BuiltInCategory>();
 
 for (const entry of CATEGORY_DATA) {
   for (const synonym of entry.synonyms) {
@@ -101,7 +101,7 @@ const FUSE_OPTIONS: IFuseOptions<CategoryEntry> = {
 
 const categoryFuse = new Fuse(CATEGORY_DATA, FUSE_OPTIONS);
 
-function matchCategoryFromContainedPhrase(normalizedInput: string): RecipeCategory | null {
+function matchCategoryFromContainedPhrase(normalizedInput: string): BuiltInCategory | null {
   const paddedInput = ` ${normalizedInput} `;
 
   for (const entry of CATEGORY_DATA) {
@@ -115,7 +115,7 @@ function matchCategoryFromContainedPhrase(normalizedInput: string): RecipeCatego
   return null;
 }
 
-export function matchCategory(input: string): RecipeCategory | null {
+export function matchCategory(input: string): BuiltInCategory | null {
   if (!input || typeof input !== "string") return null;
 
   const normalized = normalizeCategoryText(input);

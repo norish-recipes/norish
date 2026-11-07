@@ -10,7 +10,7 @@ import type {
 } from "@norish/shared/contracts/zod";
 
 export type MeasurementSystem = (typeof measurementSystems)[number];
-export type RecipeCategory = "Breakfast" | "Lunch" | "Dinner" | "Snack";
+export type RecipeCategory = string;
 export type RecipeDashboardDTO = z.output<typeof RecipeDashboardSchema>;
 export type FullRecipeDTO = z.output<typeof FullRecipeSchema>;
 export type AuthorDTO = z.output<typeof AuthorSchema>;

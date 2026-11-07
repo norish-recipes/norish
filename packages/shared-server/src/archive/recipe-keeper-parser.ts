@@ -1,8 +1,8 @@
 import * as cheerio from "cheerio";
 import JSZip from "jszip";
 
-import { matchCategory } from "@norish/shared-server/ai/enrichment/category-matcher";
 import { FullRecipeInsertDTO } from "@norish/shared/contracts";
+import { matchCategory } from "@norish/shared/lib/category-matcher";
 import { parseIsoDuration } from "@norish/shared/lib/helpers";
 
 import {

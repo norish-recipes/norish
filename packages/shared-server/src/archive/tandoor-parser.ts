@@ -2,9 +2,9 @@ import JSZip from "jszip";
 import { z } from "zod";
 
 import { FullRecipeInsertSchema } from "@norish/db";
-import { matchCategory } from "@norish/shared-server/ai/enrichment/category-matcher";
 import { saveImageBytes } from "@norish/shared-server/media/storage";
 import { FullRecipeInsertDTO } from "@norish/shared/contracts";
+import { matchCategory } from "@norish/shared/lib/category-matcher";
 import { inferSystemUsedFromParsed } from "@norish/shared/lib/determine-recipe-system";
 
 import { galleryOf, sumMinutes, withLineFoodTexts } from "./parser-helpers";

@@ -3,9 +3,9 @@ import { gunzip } from "zlib";
 import JSZip from "jszip";
 import { z } from "zod";
 
-import { matchCategory } from "@norish/shared-server/ai/enrichment/category-matcher";
 import { serverLogger as log } from "@norish/shared-server/logger";
 import { FullRecipeInsertDTO } from "@norish/shared/contracts";
+import { matchCategory } from "@norish/shared/lib/category-matcher";
 
 import {
   base64ToBuffer,
