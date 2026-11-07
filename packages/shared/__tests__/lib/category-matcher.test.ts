@@ -24,6 +24,13 @@ describe("matchCategory", () => {
     expect(matchCategory("collation")).toBe("Snack");
   });
 
+  it("matches translations written in Cyrillic, Hangul and Arabic", () => {
+    expect(matchCategory("Ужин")).toBe("Dinner");
+    expect(matchCategory("Сніданок")).toBe("Breakfast");
+    expect(matchCategory("간식")).toBe("Snack");
+    expect(matchCategory("غداء")).toBe("Lunch");
+  });
+
   it("matches category words inside longer keyword phrases", () => {
     expect(matchCategory("quick weeknight dinner ideas")).toBe("Dinner");
   });

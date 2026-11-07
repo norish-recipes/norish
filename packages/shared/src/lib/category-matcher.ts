@@ -38,16 +38,6 @@ type CategoryEntry = {
   synonyms: string[];
 };
 
-const RECIPES_MESSAGE_BUNDLES: RecipesMessageSubset[] = [
-  enRecipes as RecipesMessageSubset,
-  nlRecipes as RecipesMessageSubset,
-  frRecipes as RecipesMessageSubset,
-  deFormalRecipes as RecipesMessageSubset,
-  deInformalRecipes as RecipesMessageSubset,
-  koRecipes as RecipesMessageSubset,
-  itRecipes as RecipesMessageSubset,
-];
-
 const ALL_LOCALE_BUNDLES: RecipesMessageSubset[] = [
   arRecipes,
   bgRecipes,
@@ -83,27 +73,27 @@ const BASE_SYNONYMS: Record<BuiltInCategory, string[]> = {
   Snack: ["snack", "appetizer", "dessert", "starter", "side", "side dish"],
 };
 
-function normalizeCategoryText(input: string): string {
+// Unicode-aware, so Cyrillic, Hangul and Arabic names survive.
+function normalizeName(input: string): string {
   return input
     .toLowerCase()
     .normalize("NFD")
     .replace(/[\u0300-\u036f]/g, "")
-    .replace(/[^a-z0-9]+/g, " ")
-    .trim()
-    .replace(/\s+/g, " ");
+    .replace(/[^\p{L}\p{N}]+/gu, " ")
+    .trim();
 }
 
 function getLocalizedCategorySynonyms(category: BuiltInCategory): string[] {
   const categoryKey = CATEGORY_MESSAGE_KEYS[category];
 
-  return RECIPES_MESSAGE_BUNDLES.map((bundle) => bundle.form?.category?.[categoryKey] ?? "")
+  return ALL_LOCALE_BUNDLES.map((bundle) => bundle.form?.category?.[categoryKey] ?? "")
     .map((label) => label.trim())
     .filter((label): label is string => label.length > 0);
 }
 
 const CATEGORY_DATA: CategoryEntry[] = BUILT_IN_CATEGORIES.map((category) => {
   const allSynonyms = [...BASE_SYNONYMS[category], ...getLocalizedCategorySynonyms(category)].map(
-    normalizeCategoryText
+    normalizeName
   );
 
   return {
@@ -150,7 +140,7 @@ function matchCategoryFromContainedPhrase(normalizedInput: string): BuiltInCateg
 export function matchCategory(input: string): BuiltInCategory | null {
   if (!input || typeof input !== "string") return null;
 
-  const normalized = normalizeCategoryText(input);
+  const normalized = normalizeName(input);
 
   if (!normalized) return null;
 
@@ -171,16 +161,6 @@ export function matchCategory(input: string): BuiltInCategory | null {
   }
 
   return bestMatch.item.category;
-}
-
-// Unicode-aware, unlike normalizeCategoryText, so Cyrillic or Hangul names survive.
-function normalizeName(input: string): string {
-  return input
-    .toLowerCase()
-    .normalize("NFD")
-    .replace(/[\u0300-\u036f]/g, "")
-    .replace(/[^\p{L}\p{N}]+/gu, " ")
-    .trim();
 }
 
 const BUILT_IN_BY_NAME = new Map<string, BuiltInCategory>();
