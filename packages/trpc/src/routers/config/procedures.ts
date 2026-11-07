@@ -18,6 +18,7 @@ import {
 } from "@norish/shared-server/config/server-config-loader";
 import { trpcLogger as log } from "@norish/shared-server/logger";
 import { getValkeyHealth } from "@norish/shared-server/valkey/client";
+import { BUILT_IN_ALIASES } from "@norish/shared/lib/category-matcher";
 
 import { authedProcedure } from "../../middleware";
 import { publicProcedure, router } from "../../trpc";
@@ -108,7 +109,10 @@ const tags = authedProcedure.query(async ({ ctx }) => {
 const categories = authedProcedure.query(async ({ ctx }) => {
   log.debug({ userId: ctx.user.id }, "Getting categories");
 
-  return { categories: await listCategoryNamesForUsers(ctx.userIds) };
+  return {
+    categories: await listCategoryNamesForUsers(ctx.userIds),
+    builtInAliases: BUILT_IN_ALIASES,
+  };
 });
 
 /**

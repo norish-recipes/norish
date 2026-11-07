@@ -39,6 +39,7 @@ describe("config.categories", () => {
     expect(listCategoryNamesForUsers).toHaveBeenCalledWith(ctx.userIds);
     expect(result).toEqual({
       categories: ["Breakfast", "Lunch", "Dinner", "Snack", "Puddings"],
+      builtInAliases: expect.objectContaining({ ontbijt: "Breakfast", snack: "Snack" }),
     });
   });
 });
