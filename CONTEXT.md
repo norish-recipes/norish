@@ -302,6 +302,10 @@ _Avoid_: Aborted (also names the restart interruption, which is not a cancel), K
 
 ### People & Presentation
 
+**Reader**:
+The signed-in person Norish is showing itself to right now, seen through their household: whose allergies count, which recipes they may edit, which Device Preferences apply. A signed-out visitor to a shared recipe is a reader without a household.
+_Avoid_: User (the account record, not the person at the screen), Viewer, Current user
+
 **Avatar**:
 A person's profile picture, shown as a circle at every size wherever the person appears; absent or unloadable, it degrades to their initials. Offline it is best-effort: initials are the accepted rendering, not a defect.
 _Avoid_: User icon (ambiguous with App Icon), profile photo
