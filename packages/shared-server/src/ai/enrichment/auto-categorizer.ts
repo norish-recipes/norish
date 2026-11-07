@@ -1,19 +1,17 @@
 /**
- * Auto-categorization: which of Breakfast, Lunch, Dinner and Snack a recipe
- * is. Two paths, in a fixed order (ADR-0035): a Decision when a Decision Model
- * is configured and this use is on, and otherwise — or when the Decision is
- * unsure, or fails — the language-model request the kind has always made.
+ * Auto-categorization: which of the recipe owner's household Categories a
+ * recipe is (ADR-0040). Two paths, in a fixed order (ADR-0035): a Decision when
+ * a Decision Model is configured and this use is on, and otherwise — or when
+ * the Decision is unsure, or fails — a language-model request. Either path
+ * only ever picks from the list it is given.
  */
 
 import { z } from "zod";
 
-import type { RecipeCategory } from "@norish/shared/contracts";
-import type { BuiltInCategory } from "@norish/shared/lib/categories";
 import { isDecisionUseEnabled } from "@norish/shared-server/config/server-config-loader";
 import { aiLogger } from "@norish/shared-server/logger";
-import { BUILT_IN_CATEGORIES } from "@norish/shared/lib/categories";
-import { matchCategory } from "@norish/shared/lib/category-matcher";
 
+import { householdCategoriesSection } from "../prompts/sections";
 import { decide, generateStructured } from "../runtime/runtime";
 import { verifyClaims } from "./verification";
 
@@ -22,14 +20,6 @@ import { verifyClaims } from "./verification";
  * recipe is the unclear case and goes to the language model as it always has.
  */
 export const CATEGORY_THRESHOLD = 0.6;
-
-const CATEGORIES = BUILT_IN_CATEGORIES;
-
-const autoCategorizationSchema = z
-  .object({
-    categories: z.array(z.enum(CATEGORIES)).describe("Array of meal categories for the recipe."),
-  })
-  .strict();
 
 export interface RecipeSummary {
   title: string;
@@ -46,46 +36,61 @@ function recipeState(recipe: RecipeSummary) {
   };
 }
 
-/**
- * Four Booleans rather than one Choice, because a recipe may be several
- * categories and the product already stores several. The criteria labels are
- * the four categories themselves — the domain's own option set, which is why
- * a Decision has no Prompt.
- */
-const CATEGORY_QUESTIONS = {
-  Breakfast: { type: "boolean", instructions: "Is this recipe a breakfast dish?" },
-  Lunch: { type: "boolean", instructions: "Is this recipe a lunch dish?" },
-  Dinner: { type: "boolean", instructions: "Is this recipe a dinner dish?" },
-  Snack: { type: "boolean", instructions: "Is this recipe a snack?" },
-} as const;
+/** The yes/no question for one Category, keyed by its name in every Decision. */
+function categoryQuestion(category: string): string {
+  return `Does this recipe belong in the category "${category}"?`;
+}
 
 /**
- * Ask the Decision Model and return every category that clears the
- * threshold — possibly none, which is the unclear case rather than an answer.
- * Throws whatever `decide` throws; the caller decides what a failure means.
+ * One Boolean per Category rather than one Choice, because a recipe may be
+ * several. Returns every category that clears the threshold — possibly none,
+ * which is the unclear case rather than an answer. Throws whatever `decide`
+ * throws; the caller decides what a failure means.
  */
-async function decideCategories(recipe: RecipeSummary): Promise<RecipeCategory[]> {
+async function decideCategories(
+  recipe: RecipeSummary,
+  categories: readonly string[]
+): Promise<string[]> {
   const { answers } = await decide({
     feature: "auto-categorization",
     // Structured, since the recipe is structured.
     state: recipeState(recipe),
-    questions: CATEGORY_QUESTIONS,
+    questions: Object.fromEntries(
+      categories.map((category) => [
+        category,
+        { type: "boolean" as const, instructions: categoryQuestion(category) },
+      ])
+    ),
   });
 
-  return CATEGORIES.filter((category) => answers[category].probability >= CATEGORY_THRESHOLD);
+  return categories.filter(
+    (category) => (answers[category]?.probability ?? 0) >= CATEGORY_THRESHOLD
+  );
 }
 
 /**
- * The request this kind has always made: the words, then the matcher, then
- * the run's own claims checked before they are written (Enrichment
- * Validation). A category the Decision Model answers "no" to is not
- * written; when none survives, the worker's empty-list rule makes the run a
- * retryable failure as it always has.
+ * The language model picks from the list, then the run's own claims are
+ * checked before they are written (Enrichment Validation). A category the
+ * Decision Model answers "no" to is not written; when none survives, the
+ * worker's empty-list rule makes the run a retryable failure.
  */
-async function categorizeWithLanguageModel(recipe: RecipeSummary): Promise<RecipeCategory[]> {
+async function categorizeWithLanguageModel(
+  recipe: RecipeSummary,
+  categories: readonly string[]
+): Promise<string[]> {
+  const [first, ...rest] = categories;
+
+  if (!first) return [];
+
   const output = await generateStructured({
     prompt: "auto-categorization",
-    schema: autoCategorizationSchema,
+    schema: z
+      .object({
+        categories: z
+          .array(z.enum([first, ...rest]))
+          .describe("Array of meal categories for the recipe."),
+      })
+      .strict(),
     sections: [
       [
         `Title: ${recipe.title}`,
@@ -93,31 +98,28 @@ async function categorizeWithLanguageModel(recipe: RecipeSummary): Promise<Recip
         "Ingredients:",
         ...recipe.ingredients.map((ingredient) => `- ${ingredient}`),
       ].join("\n"),
+      householdCategoriesSection(categories),
     ],
   });
 
-  // Model answers are matched onto the four categories; anything else drops.
-  const matched = Array.from(
-    new Set(
-      output.categories
-        .map((category) => matchCategory(category))
-        .filter((category): category is BuiltInCategory => Boolean(category))
-    )
+  // The schema already holds the model to the list; this keeps any other name out.
+  const picked = [...new Set(output.categories)].filter((category) =>
+    categories.includes(category)
   );
 
   const { kept } = await verifyClaims({
     feature: "auto-categorization",
     state: recipeState(recipe),
-    claims: matched.map((category) => ({
-      id: category,
-      question: CATEGORY_QUESTIONS[category].instructions,
-    })),
+    claims: picked.map((category) => ({ id: category, question: categoryQuestion(category) })),
   });
 
   return kept.map((claim) => claim.id);
 }
 
-export async function categorizeRecipe(recipe: RecipeSummary): Promise<RecipeCategory[]> {
+export async function categorizeRecipe(
+  recipe: RecipeSummary,
+  categories: readonly string[]
+): Promise<string[]> {
   if (recipe.ingredients.length === 0) {
     throw new Error("No ingredients provided for auto-categorization");
   }
@@ -131,7 +133,7 @@ export async function categorizeRecipe(recipe: RecipeSummary): Promise<RecipeCat
     // A Decision failure of any retryability is a warn log and the fallback,
     // never the reason the job fails; a Decision that clears nothing is the
     // unclear case and goes to the language model too.
-    const decided = await decideCategories(recipe).catch((error: unknown) => {
+    const decided = await decideCategories(recipe, categories).catch((error: unknown) => {
       aiLogger.warn(
         { err: error, feature: "auto-categorization" },
         "Decision failed, falling back to the language model"
@@ -150,12 +152,12 @@ export async function categorizeRecipe(recipe: RecipeSummary): Promise<RecipeCat
     }
   }
 
-  const categories = await categorizeWithLanguageModel(recipe);
+  const picked = await categorizeWithLanguageModel(recipe, categories);
 
   aiLogger.info(
-    { title: recipe.title, categories, path: "language-model" },
+    { title: recipe.title, categories: picked, path: "language-model" },
     "Auto-categorization completed"
   );
 
-  return categories;
+  return picked;
 }
