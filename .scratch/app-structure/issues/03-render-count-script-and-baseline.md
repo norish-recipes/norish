@@ -2,7 +2,7 @@
 
 **What to build:** A committed script next to `apps/web/scripts/measure-page-loads.ts` that counts, per scripted action, mounts and re-renders per component and the prop that changed, through the React DevTools hook on a dev build (so components have names). The groceries scenario runs these actions: check an item, add an item, open the edit panel, switch the view mode, and a realtime echo from a second client changing an item. The baseline is taken on the current code before 04 lands. See `.scratch/app-structure/spec.md`, "Measurement".
 
-**Blocked by:** None (can start immediately)
+**Blocked by:** 01 for the baseline (so it measures groceries alone); the script itself can start immediately
 
 **Status:** ready-for-agent
 
