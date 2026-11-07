@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest";
 
-import { matchCategory } from "@norish/shared/lib/category-matcher";
+import { matchCategory, resolveBuiltInCategory } from "@norish/shared/lib/category-matcher";
 
 describe("matchCategory", () => {
   it("matches exact categories", () => {
@@ -31,5 +31,25 @@ describe("matchCategory", () => {
   it("returns null for no match", () => {
     expect(matchCategory("random")).toBeNull();
     expect(matchCategory("random gibberish")).toBeNull();
+  });
+});
+
+describe("resolveBuiltInCategory", () => {
+  it("resolves a built-in's name, any-locale translation or plural, whatever the case", () => {
+    expect(resolveBuiltInCategory("BREAKFAST")).toBe("Breakfast");
+    expect(resolveBuiltInCategory("Ontbijt")).toBe("Breakfast");
+    expect(resolveBuiltInCategory("Snacks")).toBe("Snack");
+    expect(resolveBuiltInCategory("déjeuner")).toBe("Lunch");
+    expect(resolveBuiltInCategory("Ужин")).toBe("Dinner");
+    expect(resolveBuiltInCategory("간식")).toBe("Snack");
+  });
+
+  it("leaves synonyms, fuzzy spellings and phrases as names of their own", () => {
+    expect(resolveBuiltInCategory("Desserts")).toBeNull();
+    expect(resolveBuiltInCategory("Appetizers")).toBeNull();
+    expect(resolveBuiltInCategory("Side dishes")).toBeNull();
+    expect(resolveBuiltInCategory("brunch")).toBeNull();
+    expect(resolveBuiltInCategory("breakfst")).toBeNull();
+    expect(resolveBuiltInCategory("quick dinner")).toBeNull();
   });
 });

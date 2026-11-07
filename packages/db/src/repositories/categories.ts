@@ -5,7 +5,7 @@ import type { DbTransaction } from "@norish/db/drizzle";
 import { db } from "@norish/db/drizzle";
 import { categories, recipeCategories, recipes } from "@norish/db/schema";
 import { BUILT_IN_CATEGORIES, isBuiltInCategory } from "@norish/shared/lib/categories";
-import { matchCategory } from "@norish/shared/lib/category-matcher";
+import { resolveBuiltInCategory } from "@norish/shared/lib/category-matcher";
 
 /**
  * A recipe's Category names in order, as a correlated subquery. Like
@@ -54,7 +54,7 @@ function cleanCategoryName(name: string): string {
 
 /**
  * Category row ids for `names`, created when missing. A name resolves to a
- * built-in through the category matcher first, then to an existing row by case.
+ * built-in only on an exact match, then to an existing row by case.
  */
 async function getOrCreateCategoryIdsTx(
   tx: DbTransaction,
@@ -64,7 +64,7 @@ async function getOrCreateCategoryIdsTx(
 
   for (const name of names.map(cleanCategoryName)) {
     if (!name) continue;
-    const canonical = matchCategory(name) ?? name;
+    const canonical = resolveBuiltInCategory(name) ?? name;
 
     if (!resolved.has(canonical.toLowerCase())) resolved.set(canonical.toLowerCase(), canonical);
   }

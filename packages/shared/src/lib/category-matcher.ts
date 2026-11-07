@@ -1,13 +1,24 @@
 import type { IFuseOptions } from "fuse.js";
 import Fuse from "fuse.js";
 
+import arRecipes from "@norish/i18n/messages/ar/recipes.json" with { type: "json" };
+import bgRecipes from "@norish/i18n/messages/bg/recipes.json" with { type: "json" };
+import daRecipes from "@norish/i18n/messages/da/recipes.json" with { type: "json" };
 import deFormalRecipes from "@norish/i18n/messages/de-formal/recipes.json" with { type: "json" };
 import deInformalRecipes from "@norish/i18n/messages/de-informal/recipes.json" with { type: "json" };
 import enRecipes from "@norish/i18n/messages/en/recipes.json" with { type: "json" };
+import esRecipes from "@norish/i18n/messages/es/recipes.json" with { type: "json" };
+import fiRecipes from "@norish/i18n/messages/fi/recipes.json" with { type: "json" };
 import frRecipes from "@norish/i18n/messages/fr/recipes.json" with { type: "json" };
 import itRecipes from "@norish/i18n/messages/it/recipes.json" with { type: "json" };
 import koRecipes from "@norish/i18n/messages/ko/recipes.json" with { type: "json" };
 import nlRecipes from "@norish/i18n/messages/nl/recipes.json" with { type: "json" };
+import noRecipes from "@norish/i18n/messages/no/recipes.json" with { type: "json" };
+import plRecipes from "@norish/i18n/messages/pl/recipes.json" with { type: "json" };
+import ptBRRecipes from "@norish/i18n/messages/pt-BR/recipes.json" with { type: "json" };
+import ruRecipes from "@norish/i18n/messages/ru/recipes.json" with { type: "json" };
+import svRecipes from "@norish/i18n/messages/sv/recipes.json" with { type: "json" };
+import ukRecipes from "@norish/i18n/messages/uk/recipes.json" with { type: "json" };
 
 import type { BuiltInCategory } from "./categories";
 import { BUILT_IN_CATEGORIES } from "./categories";
@@ -35,6 +46,27 @@ const RECIPES_MESSAGE_BUNDLES: RecipesMessageSubset[] = [
   deInformalRecipes as RecipesMessageSubset,
   koRecipes as RecipesMessageSubset,
   itRecipes as RecipesMessageSubset,
+];
+
+const ALL_LOCALE_BUNDLES: RecipesMessageSubset[] = [
+  arRecipes,
+  bgRecipes,
+  daRecipes,
+  deFormalRecipes,
+  deInformalRecipes,
+  enRecipes,
+  esRecipes,
+  fiRecipes,
+  frRecipes,
+  itRecipes,
+  koRecipes,
+  nlRecipes,
+  noRecipes,
+  plRecipes,
+  ptBRRecipes,
+  ruRecipes,
+  svRecipes,
+  ukRecipes,
 ];
 
 const CATEGORY_MESSAGE_KEYS: Record<BuiltInCategory, BuiltInCategoryKey> = {
@@ -139,4 +171,35 @@ export function matchCategory(input: string): BuiltInCategory | null {
   }
 
   return bestMatch.item.category;
+}
+
+// Unicode-aware, unlike normalizeCategoryText, so Cyrillic or Hangul names survive.
+function normalizeName(input: string): string {
+  return input
+    .toLowerCase()
+    .normalize("NFD")
+    .replace(/[\u0300-\u036f]/g, "")
+    .replace(/[^\p{L}\p{N}]+/gu, " ")
+    .trim();
+}
+
+const BUILT_IN_BY_NAME = new Map<string, BuiltInCategory>();
+
+for (const category of BUILT_IN_CATEGORIES) {
+  const key = CATEGORY_MESSAGE_KEYS[category];
+  const names = [category, ...ALL_LOCALE_BUNDLES.map((b) => b.form?.category?.[key] ?? "")];
+
+  for (const name of names.map(normalizeName).filter(Boolean)) {
+    for (const spelling of [name, `${name}s`]) {
+      if (!BUILT_IN_BY_NAME.has(spelling)) BUILT_IN_BY_NAME.set(spelling, category);
+    }
+  }
+}
+
+/**
+ * The built-in a person-given name means: its name, its translation in any
+ * locale, or either plus "s", ignoring case and accents. No synonyms or fuzz.
+ */
+export function resolveBuiltInCategory(input: string): BuiltInCategory | null {
+  return BUILT_IN_BY_NAME.get(normalizeName(input)) ?? null;
 }

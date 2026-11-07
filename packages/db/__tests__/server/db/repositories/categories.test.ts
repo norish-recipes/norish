@@ -55,6 +55,15 @@ describe("Categories Repository", () => {
     expect(await allCategoryNames()).toEqual(["Breakfast", "Dinner", "Lunch", "Snack"]);
   });
 
+  it("keeps a synonym the matcher would map to a built-in as a Category of its own", async () => {
+    const user = await createTestUser();
+    const recipe = await createTestRecipe(user.id, { name: "Tiramisu" });
+
+    await attach(recipe.id, ["Desserts", "Snacks"]);
+
+    expect((await getRecipeFull(recipe.id))?.categories).toEqual(["Desserts", "Snack"]);
+  });
+
   it("reuses an existing row whatever the casing, keeping the first spelling", async () => {
     const user = await createTestUser();
     const first = await createTestRecipe(user.id, { name: "Mojito" });
