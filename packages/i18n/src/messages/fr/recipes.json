@@ -194,6 +194,7 @@
     "tagsHelp": "Tapez des tags et cliquez sur les suggestions pour ajouter. Les tags de la recette sont remplis, les nouveaux ont une bordure en pointillé.",
     "tagsAndCategories": "Tags & Catégories",
     "categoriesHelp": "Sélectionnez les catégories de repas pour cette recette.",
+    "addCategory": "Ajouter une catégorie",
     "category": {
       "breakfast": "Petit-déjeuner",
       "lunch": "Déjeuner",

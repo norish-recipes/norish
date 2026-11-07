@@ -194,6 +194,7 @@
     "tagsHelp": "Escribe etiquetas y haz clic en las sugerencias para añadirlas. Las etiquetas de la receta están rellenas; las nuevas tienen un borde discontinuo.",
     "tagsAndCategories": "Etiquetas y categorías",
     "categoriesHelp": "Selecciona categorías de comida para esta receta.",
+    "addCategory": "Añadir categoría",
     "category": {
       "breakfast": "Desayuno",
       "lunch": "Comida",

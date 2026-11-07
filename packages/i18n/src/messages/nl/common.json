@@ -66,12 +66,6 @@
     "cookingTimeUnder60": "<60 min",
     "cookingTimeUnder120": "<120 min",
     "categories": "Categorieën",
-    "category": {
-      "breakfast": "Ontbijt",
-      "lunch": "Lunch",
-      "dinner": "Diner",
-      "snack": "Snack"
-    },
     "sortByTitle": "Titel",
     "sortByDate": "Datum",
     "clearFilters": "Filters wissen"

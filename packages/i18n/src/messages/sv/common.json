@@ -66,12 +66,6 @@
     "cookingTimeUnder60": "<60 min",
     "cookingTimeUnder120": "<120 min",
     "categories": "Kategorier",
-    "category": {
-      "breakfast": "Frukost",
-      "lunch": "Lunch",
-      "dinner": "Middag",
-      "snack": "Mellanmål"
-    },
     "sortByTitle": "Titel",
     "sortByDate": "Datum",
     "clearFilters": "Rensa filter"

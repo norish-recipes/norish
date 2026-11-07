@@ -66,12 +66,6 @@
     "cookingTimeUnder60": "<60 دقيقة",
     "cookingTimeUnder120": "<120 دقيقة",
     "categories": "التصنيفات",
-    "category": {
-      "breakfast": "فطور",
-      "lunch": "غداء",
-      "dinner": "عشاء",
-      "snack": "تصبيرة"
-    },
     "sortByTitle": "الاسم",
     "sortByDate": "التاريخ",
     "clearFilters": "مسح عوامل التصفية"

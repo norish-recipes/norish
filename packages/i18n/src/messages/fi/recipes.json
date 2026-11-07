@@ -194,6 +194,7 @@
     "tagsHelp": "Kirjoita tunnisteita ja lisää niitä napsauttamalla ehdotuksia. Reseptissä jo olevat tunnisteet ovat täytettyjä; uusilla on katkoviivareunus.",
     "tagsAndCategories": "Tunnisteet ja kategoriat",
     "categoriesHelp": "Valitse tämän reseptin ateriakategoriat.",
+    "addCategory": "Lisää kategoria",
     "category": {
       "breakfast": "Aamiainen",
       "lunch": "Lounas",

@@ -26,6 +26,7 @@ import { useLocale, useTranslations } from "next-intl";
 
 import type { FullRecipeDTO, MeasurementSystem, RecipeCategory } from "@norish/shared/contracts";
 import { useHydrated } from "@norish/shared-react/hooks";
+import { isBuiltInCategory } from "@norish/shared/lib/categories";
 import { inferSystemUsedFromParsed } from "@norish/shared/lib/determine-recipe-system";
 import { parseIngredientWithDefaults } from "@norish/shared/lib/helpers";
 import { createClientLogger } from "@norish/shared/lib/logger";
@@ -72,11 +73,15 @@ export default function RecipeForm({ mode, initialData }: RecipeFormProps) {
   );
   const [tags, setTags] = useState<string[]>(initialData?.tags?.map((t) => t.name) ?? []);
   const [categories, setCategories] = useState<RecipeCategory[]>(initialData?.categories ?? []);
-  // The household's list, plus any the recipe already carries from elsewhere.
+  // The household's list, plus any the recipe carries from elsewhere or was just given.
   const categoryOptions = useMemo(
-    () => Array.from(new Set([...householdCategories, ...(initialData?.categories ?? [])])),
-    [householdCategories, initialData?.categories]
+    () =>
+      Array.from(
+        new Set([...householdCategories, ...(initialData?.categories ?? []), ...categories])
+      ),
+    [householdCategories, initialData?.categories, categories]
   );
+  const [newCategory, setNewCategory] = useState("");
   const [ingredients, setIngredients] = useState<ParsedIngredient[]>([]);
   const [steps, setSteps] = useState<Step[]>([]);
   const [systemUsed, setSystemUsed] = useState<MeasurementSystem>(
@@ -273,6 +278,28 @@ export default function RecipeForm({ mode, initialData }: RecipeFormProps) {
       prev.includes(category) ? prev.filter((c) => c !== category) : [...prev, category]
     );
   }, []);
+  // A typed name picks the chip it names (any casing, a built-in's label or
+  // plural) before it becomes a Category of its own; the server resolves it again.
+  const addCategory = () => {
+    const name = newCategory.trim().replace(/\s+/g, " ");
+    const lower = name.toLowerCase();
+
+    setNewCategory("");
+    if (!name) return;
+
+    const existing = categoryOptions.find((option) => {
+      const names = isBuiltInCategory(option) ? [option, categoryLabel(option)] : [option];
+
+      return names.some((n) => {
+        const l = n.toLowerCase();
+
+        return l === lower || (isBuiltInCategory(option) && `${l}s` === lower);
+      });
+    });
+    const pick = existing ?? name;
+
+    setCategories((prev) => (prev.includes(pick) ? prev : [...prev, pick]));
+  };
   const validate = useCallback((): boolean => {
     const newErrors: Record<string, string> = {};
 
@@ -587,6 +614,22 @@ export default function RecipeForm({ mode, initialData }: RecipeFormProps) {
                     </ChipButton>
                   );
                 })}
+                <input
+                  aria-label={t("addCategory")}
+                  className="bg-default text-foreground placeholder:text-muted h-8 w-40 rounded-full border border-(--field-border) px-3 text-sm outline-none"
+                  maxLength={40}
+                  placeholder={t("addCategory")}
+                  style={{ fontSize: "16px" }}
+                  type="text"
+                  value={newCategory}
+                  onBlur={addCategory}
+                  onChange={(e) => setNewCategory(e.target.value)}
+                  onKeyDown={(e) => {
+                    if (e.key !== "Enter") return;
+                    e.preventDefault();
+                    addCategory();
+                  }}
+                />
               </div>
             </div>
           </div>

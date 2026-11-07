@@ -66,12 +66,6 @@
     "cookingTimeUnder60": "60분 미만",
     "cookingTimeUnder120": "120분 미만",
     "categories": "카테고리",
-    "category": {
-      "breakfast": "아침",
-      "lunch": "점심",
-      "dinner": "저녁",
-      "snack": "간식"
-    },
     "sortByTitle": "제목",
     "sortByDate": "날짜",
     "clearFilters": "필터 지우기"

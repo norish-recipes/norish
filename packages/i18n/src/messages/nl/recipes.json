@@ -194,6 +194,7 @@
     "tagsHelp": "Typ tags en klik op suggesties om toe te voegen. Tags op het recept zijn gevuld, nieuwe tags hebben een omstippelde rand.",
     "tagsAndCategories": "Tags & Categorieën",
     "categoriesHelp": "Selecteer maaltijdcategorieën voor dit recept.",
+    "addCategory": "Categorie toevoegen",
     "category": {
       "breakfast": "Ontbijt",
       "lunch": "Lunch",

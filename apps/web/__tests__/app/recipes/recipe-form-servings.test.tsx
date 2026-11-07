@@ -10,7 +10,8 @@ const mocks = vi.hoisted(() => ({ createRecipe: vi.fn() }));
 
 vi.mock("next-intl", () => ({
   useLocale: () => "en",
-  useTranslations: () => (key: string) => key,
+  // Breakfast carries a translation, so a typed label can be matched.
+  useTranslations: () => (key: string) => (key === "category.breakfast" ? "Ontbijt" : key),
 }));
 vi.mock("@/context/recipes-context", () => ({
   useRecipesContext: () => ({ createRecipe: mocks.createRecipe, updateRecipe: vi.fn() }),
@@ -159,7 +160,7 @@ describe("RecipeForm categories", () => {
   it("offers the household's list and the recipe's own, labelling only built-ins", () => {
     render(<RecipeForm initialData={mojito} mode="edit" />);
 
-    expect(screen.getByRole("button", { name: "category.breakfast" })).toBeInTheDocument();
+    expect(screen.getByRole("button", { name: "Ontbijt" })).toBeInTheDocument();
     expect(screen.getByRole("button", { name: "Puddings" })).toHaveAttribute(
       "aria-pressed",
       "false"
@@ -168,5 +169,46 @@ describe("RecipeForm categories", () => {
       "aria-pressed",
       "true"
     );
+  });
+
+  function addCategory(name: string) {
+    const field = screen.getByRole("textbox", { name: "addCategory" });
+
+    fireEvent.change(field, { target: { value: name } });
+    fireEvent.keyDown(field, { key: "Enter" });
+  }
+
+  function pressedChips() {
+    return screen
+      .getAllByRole("button", { pressed: true })
+      .map((chip) => chip.textContent)
+      .sort();
+  }
+
+  it("adds a typed name as a selected chip of its own", () => {
+    render(<RecipeForm initialData={mojito} mode="edit" />);
+
+    addCategory("  Long   drinks ");
+
+    expect(pressedChips()).toEqual(["Cocktails", "Long drinks"]);
+    expect(screen.getByRole("textbox", { name: "addCategory" })).toHaveValue("");
+  });
+
+  it("selects the existing chip for another casing, a translation or a built-in plural", () => {
+    render(<RecipeForm initialData={mojito} mode="edit" />);
+
+    addCategory("puddings");
+    addCategory("ontbijt");
+    addCategory("SNACKS");
+    addCategory("Desserts");
+
+    expect(pressedChips()).toEqual([
+      "Cocktails",
+      "Desserts",
+      "Ontbijt",
+      "Puddings",
+      "category.snack",
+    ]);
+    expect(screen.getAllByRole("button", { name: "Puddings" })).toHaveLength(1);
   });
 });

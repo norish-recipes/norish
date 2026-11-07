@@ -194,6 +194,7 @@
     "tagsHelp": "Digita i tag e clicca i suggerimenti per aggiungerli. I tag della ricetta sono pieni, i nuovi tag hanno un bordo tratteggiato.",
     "tagsAndCategories": "Tag e categorie",
     "categoriesHelp": "Seleziona le categorie di pasto per questa ricetta.",
+    "addCategory": "Aggiungi categoria",
     "category": {
       "breakfast": "Colazione",
       "lunch": "Pranzo",

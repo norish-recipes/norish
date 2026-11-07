@@ -194,6 +194,7 @@
     "tagsHelp": "Geben Sie Tags ein und klicken Sie auf Vorschläge zum Hinzufügen. Tags am Rezept sind ausgefüllt, neue Tags haben einen gestrichelten Rahmen.",
     "tagsAndCategories": "Tags & Kategorien",
     "categoriesHelp": "Wählen Sie Mahlzeitkategorien für dieses Rezept.",
+    "addCategory": "Kategorie hinzufügen",
     "category": {
       "breakfast": "Frühstück",
       "lunch": "Mittagessen",

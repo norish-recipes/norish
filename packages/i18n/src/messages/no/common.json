@@ -66,12 +66,6 @@
     "cookingTimeUnder60": "<60 min",
     "cookingTimeUnder120": "<120 min",
     "categories": "Kategorier",
-    "category": {
-      "breakfast": "Frokost",
-      "lunch": "Lunsj",
-      "dinner": "Middag",
-      "snack": "Snacks"
-    },
     "sortByTitle": "Tittel",
     "sortByDate": "Dato",
     "clearFilters": "Tøm filtre"

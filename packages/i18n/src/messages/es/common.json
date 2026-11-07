@@ -66,12 +66,6 @@
     "cookingTimeUnder60": "<60 min",
     "cookingTimeUnder120": "<120 min",
     "categories": "Categorías",
-    "category": {
-      "breakfast": "Desayuno",
-      "lunch": "Comida",
-      "dinner": "Cena",
-      "snack": "Tentempié"
-    },
     "sortByTitle": "Título",
     "sortByDate": "Fecha",
     "clearFilters": "Borrar filtros"
