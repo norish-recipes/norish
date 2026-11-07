@@ -43,6 +43,7 @@ export async function extractRecipeFromVideo(
       description: metadata.description,
       duration: metadata.duration,
       uploader: metadata.uploader,
+      categories: householdCategories,
     }),
   });
 

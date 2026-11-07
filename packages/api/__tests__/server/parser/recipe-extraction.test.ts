@@ -76,8 +76,25 @@ describe("extractRecipeWithAI", () => {
     expect(mocked.generateStructured).toHaveBeenCalledWith(
       expect.objectContaining({
         prompt: "recipe-extraction",
-        sections: ["URL: https://example.com/pesto", "WEBPAGE TEXT:\nPesto pasta\n200 g spaghetti"],
+        sections: [
+          "URL: https://example.com/pesto",
+          "WEBPAGE TEXT:\nPesto pasta\n200 g spaghetti",
+          "HOUSEHOLD CATEGORIES:\n- Breakfast\n- Lunch\n- Dinner\n- Snack",
+        ],
       })
+    );
+  });
+
+  it("offers the household's Categories as a section and holds the result to them", async () => {
+    const household = ["Breakfast", "Lunch", "Dinner", "Snack", "Drinks"];
+
+    await extractRecipeWithAI(HTML, "recipe-1", "https://example.com/mojito", [], household);
+
+    expect(mocked.generateStructured.mock.calls[0]?.[0].sections).toContain(
+      "HOUSEHOLD CATEGORIES:\n- Breakfast\n- Lunch\n- Dinner\n- Snack\n- Drinks"
+    );
+    expect(mocked.normalizeExtractionOutput.mock.calls[0]?.[1].householdCategories).toEqual(
+      household
     );
   });
 
@@ -102,6 +119,7 @@ describe("extractRecipeWithAI", () => {
           2
         )}`,
         "PAGE TEXT (fills what the JSON-LD lacks, including how the recipe is organised):\nPesto\nFor the sauce:\nBlend it all.",
+        "HOUSEHOLD CATEGORIES:\n- Breakfast\n- Lunch\n- Dinner\n- Snack",
       ]);
       expect(mocked.shadowScore.mock.calls[0]?.[0].state.source).toContain("For the sauce:");
     });

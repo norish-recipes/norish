@@ -1,8 +1,10 @@
 import type { ImageImportFile } from "@norish/queue/contracts/job-types";
 import type { FullRecipeInsertDTO } from "@norish/shared/contracts/dto/recipe";
+import { householdCategoriesSection } from "@norish/shared-server/ai/prompts/sections";
 import { AIResponseError } from "@norish/shared-server/ai/runtime/errors";
 import { generateStructured } from "@norish/shared-server/ai/runtime/runtime";
 import { aiLogger } from "@norish/shared-server/logger";
+import { BUILT_IN_CATEGORIES } from "@norish/shared/lib/categories";
 
 import type { RecipeExtractionOutput } from "./extraction.schema";
 import {
@@ -39,6 +41,7 @@ export async function extractRecipeFromImages(
   const jsonLd = await generateStructured({
     prompt: "image-extraction",
     schema: recipeExtractionSchema,
+    sections: [householdCategoriesSection(householdCategories ?? BUILT_IN_CATEGORIES)],
     // The images themselves select the vision model.
     images: files.map((file) => ({ data: file.data, mimeType: file.mimeType })),
   });

@@ -93,6 +93,7 @@ export async function extractRecipeWithAI(
       url,
       jsonLd: jsonLdText,
       videos: pageVideos,
+      categories: householdCategories,
     }),
   });
 

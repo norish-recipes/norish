@@ -86,6 +86,19 @@ beforeEach(() => {
 });
 
 describe("extractRecipeFromVideo", () => {
+  it("offers the household's Categories as a section and holds the result to them", async () => {
+    const household = ["Breakfast", "Lunch", "Dinner", "Snack", "Drinks"];
+
+    await extractRecipeFromVideo(TRANSCRIPT, METADATA, "recipe-1", "https://v.test/1", household);
+
+    expect(mocked.generateStructured.mock.calls[0]?.[0].sections).toContain(
+      "HOUSEHOLD CATEGORIES:\n- Breakfast\n- Lunch\n- Dinner\n- Snack\n- Drinks"
+    );
+    expect(mocked.normalizeExtractionOutput.mock.calls[0]?.[1].householdCategories).toEqual(
+      household
+    );
+  });
+
   it("scores its own output against the transcript in shadow, and nothing acts on the score", async () => {
     mocked.shadowScore.mockResolvedValue(0);
 

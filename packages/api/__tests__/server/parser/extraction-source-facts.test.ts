@@ -1,6 +1,7 @@
 import { readFileSync } from "node:fs";
 import { join } from "node:path";
 import { describe, expect, it } from "vitest";
+import { z } from "zod";
 
 import {
   buildRecipeExtractionSections,
@@ -37,6 +38,13 @@ describe("extraction inputs request no inference", () => {
     // It reads images, and says so — never a rewritten webpage prompt.
     expect(IMAGE_EXTRACTION_PROMPT).toMatch(/images/i);
     expect(IMAGE_EXTRACTION_PROMPT).toMatch(/combine them into a single complete recipe/i);
+  });
+
+  it("names no Category itself: the household's list arrives as a section", () => {
+    const sections = buildRecipeExtractionSections("WEBPAGE", { categories: ["Lunch", "Drinks"] });
+
+    expect(sections).toContain("HOUSEHOLD CATEGORIES:\n- Lunch\n- Drinks");
+    expect(JSON.stringify(z.toJSONSchema(recipeExtractionSchema))).not.toMatch(/Breakfast/);
   });
 
   it("builds the video sections without tagging or allergy instructions", () => {
