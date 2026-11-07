@@ -864,30 +864,30 @@ export async function importArchive(
 
   // Select generator based on format
   let generator: AsyncGenerator<RecipeImportItemOrError, void, unknown>;
-  // Another app's categories match the importing household's list, read once per import.
-  const household = () => listCategoryNamesForUsers(userIds);
+  // Another app's categories match the importing household's list.
+  const household = format === ArchiveFormat.NORISH ? [] : await listCategoryNamesForUsers(userIds);
 
   switch (format) {
     case ArchiveFormat.NORISH:
       generator = generateNorishRecipes(zip);
       break;
     case ArchiveFormat.MELA:
-      generator = generateMelaRecipes(zip, await household());
+      generator = generateMelaRecipes(zip, household);
       break;
     case ArchiveFormat.MEALIE:
-      generator = generateMealieRecipes(zip, await household());
+      generator = generateMealieRecipes(zip, household);
       break;
     case ArchiveFormat.MEALIE_LEGACY:
-      generator = generateMealieLegacyRecipes(zip, await household());
+      generator = generateMealieLegacyRecipes(zip, household);
       break;
     case ArchiveFormat.PAPRIKA:
-      generator = generatePaprikaRecipes(zip, await household());
+      generator = generatePaprikaRecipes(zip, household);
       break;
     case ArchiveFormat.TANDOOR:
-      generator = generateTandoorRecipes(zip, await household());
+      generator = generateTandoorRecipes(zip, household);
       break;
     case ArchiveFormat.RECIPE_KEEPER:
-      generator = generateRecipeKeeperRecipes(zip, await household());
+      generator = generateRecipeKeeperRecipes(zip, household);
       break;
   }
 

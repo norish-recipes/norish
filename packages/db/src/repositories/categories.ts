@@ -10,6 +10,7 @@ import {
   resolveCategoryName,
 } from "@norish/shared/lib/categories";
 import { BUILT_IN_ALIASES } from "@norish/shared/lib/category-matcher";
+import { viewerAndHouseholdIds } from "@norish/shared/lib/household";
 
 /**
  * A recipe's Category names in order, as a correlated subquery. Like
@@ -50,6 +51,14 @@ export async function listCategoryNamesForUsers(userIds: string[]): Promise<stri
     .orderBy(lowerName);
 
   return [...BUILT_IN_CATEGORIES, ...rows.map((r) => r.name).filter((n) => !isBuiltInCategory(n))];
+}
+
+/** The Categories offered to a viewer's household. */
+export function listCategoryNamesForViewer(viewer: {
+  userId: string;
+  householdUserIds: readonly string[] | null;
+}): Promise<string[]> {
+  return listCategoryNamesForUsers(viewerAndHouseholdIds(viewer));
 }
 
 /**

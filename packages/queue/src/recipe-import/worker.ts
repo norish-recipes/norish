@@ -8,7 +8,7 @@ import type { Job } from "bullmq";
 
 import type { RecipeImportJobData } from "@norish/queue/contracts/job-types";
 import { dashboardRecipe, recipeExistsByUrlForPolicy } from "@norish/db";
-import { listCategoryNamesForUsers } from "@norish/db/repositories/categories";
+import { listCategoryNamesForViewer } from "@norish/db/repositories/categories";
 import { getDecryptedTokensByUserId } from "@norish/db/repositories/site-auth-tokens";
 import { requireQueueApiHandler } from "@norish/queue/api-handlers";
 import { getRecipePermissionPolicy } from "@norish/shared-server/config/server-config-loader";
@@ -22,7 +22,6 @@ import {
   PRIVATE_ADDRESS_REASON,
 } from "@norish/shared/contracts/realtime/recipes";
 import { ErrorWithDetail } from "@norish/shared/lib/error-extensions";
-import { viewerAndHouseholdIds } from "@norish/shared/lib/household";
 import { credentialSetsForUrl, rotateCredentialSet } from "@norish/shared/lib/site-auth-tokens";
 import { withTimeout } from "@norish/shared/lib/with-timeout";
 
@@ -95,9 +94,7 @@ async function processImportJob(job: Job<RecipeImportJobData>): Promise<string> 
 
   // One site login per import, and the job records which: an import that dies
   // on an expired or rate-limited account has to be able to name it.
-  const householdCategories = await listCategoryNamesForUsers(
-    viewerAndHouseholdIds({ userId, householdUserIds })
-  );
+  const householdCategories = await listCategoryNamesForViewer({ userId, householdUserIds });
   const sets = credentialSetsForUrl(await getDecryptedTokensByUserId(userId), url);
   const credentials = rotateCredentialSet(sets);
 

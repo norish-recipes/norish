@@ -45,8 +45,8 @@ vi.mock("@norish/db", () => ({
 }));
 
 vi.mock("@norish/db/repositories/categories", () => ({
-  listCategoryNamesForUsers: vi.fn(async (userIds: string[]) =>
-    userIds.includes("user-2") ? ["Breakfast", "Drinks"] : ["Breakfast"]
+  listCategoryNamesForViewer: vi.fn(async (viewer: { householdUserIds: string[] | null }) =>
+    viewer.householdUserIds?.includes("user-2") ? ["Breakfast", "Drinks"] : ["Breakfast"]
   ),
 }));
 vi.mock("@norish/db/repositories/site-auth-tokens", () => ({

@@ -9,7 +9,7 @@ import type { Job } from "bullmq";
 
 import type { ImageImportJobData } from "@norish/queue/contracts/job-types";
 import { addRecipeImages, dashboardRecipe, updateRecipeDishColor } from "@norish/db";
-import { listCategoryNamesForUsers } from "@norish/db/repositories/categories";
+import { listCategoryNamesForViewer } from "@norish/db/repositories/categories";
 import { requireQueueApiHandler } from "@norish/queue/api-handlers";
 import { getRecipePermissionPolicy } from "@norish/shared-server/config/server-config-loader";
 import { createResolvedRecipe } from "@norish/shared-server/ingredients/recipe-lines";
@@ -17,7 +17,6 @@ import { createLogger } from "@norish/shared-server/logger";
 import { dishColorForImageUrl } from "@norish/shared-server/media/dish-color";
 import { deleteRecipeImagesDir, saveImageBytes } from "@norish/shared-server/media/storage";
 import { recipes } from "@norish/shared-server/realtime/recipes";
-import { viewerAndHouseholdIds } from "@norish/shared/lib/household";
 
 import { createWorker } from "../create-worker";
 import { announceUsableRecipe } from "../enrichment/announce";
@@ -55,7 +54,7 @@ export async function processImageImportJob(job: Job<ImageImportJobData>): Promi
   const parsedRecipe = await extractRecipeFromImages(
     recipeId,
     files,
-    await listCategoryNamesForUsers(viewerAndHouseholdIds({ userId, householdUserIds }))
+    await listCategoryNamesForViewer({ userId, householdUserIds })
   );
 
   // Save the recipe

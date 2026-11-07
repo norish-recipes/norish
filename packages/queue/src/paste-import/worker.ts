@@ -14,7 +14,7 @@ import type {
 } from "@norish/queue/contracts/job-types";
 import type { FullRecipeInsertDTO } from "@norish/shared/contracts";
 import { dashboardRecipe } from "@norish/db";
-import { listCategoryNamesForUsers } from "@norish/db/repositories/categories";
+import { listCategoryNamesForViewer } from "@norish/db/repositories/categories";
 import { getAverageRating, rateRecipe } from "@norish/db/repositories/ratings";
 import { requireQueueApiHandler } from "@norish/queue/api-handlers";
 import {
@@ -29,7 +29,6 @@ import { recipes } from "@norish/shared-server/realtime/recipes";
 import { MAX_RECIPE_PASTE_CHARS } from "@norish/shared/contracts/uploads";
 import { FullRecipeInsertSchema } from "@norish/shared/contracts/zod";
 import { hasRecipeNameIngredientsAndSteps } from "@norish/shared/lib/helpers";
-import { viewerAndHouseholdIds } from "@norish/shared/lib/household";
 
 import { createWorker, isFinalFailure } from "../create-worker";
 import { announceUsableRecipe } from "../enrichment/announce";
@@ -201,7 +200,7 @@ export async function processPasteImportJob(
       text,
       recipeId,
       forceAI,
-      await listCategoryNamesForUsers(viewerAndHouseholdIds({ userId, householdUserIds }))
+      await listCategoryNamesForViewer({ userId, householdUserIds })
     );
 
     await reportStep(job, "saving");

@@ -24,7 +24,7 @@ vi.mock("@norish/db", () => ({
 }));
 
 vi.mock("@norish/db/repositories/categories", () => ({
-  listCategoryNamesForUsers: vi.fn().mockResolvedValue(["Breakfast", "Drinks"]),
+  listCategoryNamesForViewer: vi.fn().mockResolvedValue(["Breakfast", "Drinks"]),
 }));
 vi.mock("@norish/shared-server/media/dish-color", () => ({
   dishColorForImageUrl,
