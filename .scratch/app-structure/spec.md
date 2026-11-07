@@ -56,7 +56,7 @@ Groceries is the pilot, measured before and after. The rest follows in order, an
 - A context remains only to inject a scope, such as which recipe a page shows, or for compound components (`Panel`, `Carousel`, DnD).
 - zustand holds client state shared across components. Stores are global; one that must start fresh per screen resets on unmount instead of being scoped through a context.
 - A store both apps need lives in `shared-react/<feature>`; a store that is purely platform UI (`mobileSearchOpen`) stays in the app. A persisted store persists through the platform adapter's storage.
-- Device Preferences stay server-seeded on the profile (CONTEXT.md), read through a hook, not a store.
+- Device Preferences stay server-seeded on the profile (CONTEXT.md). `useDevicePreference(key)` selects one preference from the profile query, so flipping one re-renders only its readers; setting one is an optimistic mutation. Device Kind is a platform fact and comes from the platform adapter.
 
 ### shared-react
 
@@ -64,7 +64,8 @@ Groceries is the pilot, measured before and after. The rest follows in order, an
 - Cross-cutting folders: `trpc/`, `platform/`, `offline/` (already there), `config/` (reference data: units, tags, categories, cuisines, recurrence, upload limits), and `reader/` (the signed-in Reader: identity, household, active allergies, permissions, Device Preferences).
 - Features never import each other; cross-cutting folders never import features. Lint enforces both.
 - `createTRPCContext<AppRouter>()` runs once at module level in `trpc/`, so every hook imports `useTRPC`. `createTRPCProviderBundle` stays a factory for each app's config only (links, WebSocket implementation, QueryClient, outbox link) and provides that one context.
-- One platform adapter, mounted once per app, carries toasts, navigation, error display and storage. It grows as features migrate; `reader/` is created with the first feature that needs it (library).
+- One platform adapter, mounted once per app, carries toasts, navigation, error display, storage and Device Kind. It grows as features migrate.
+- The pilot is a clean migration: groceries reads nothing from web's old contexts. So `reader/` starts in the groundwork with Device Preferences, which groceries needs; identity, household, allergies and permissions join it with library.
 - The `create*Hooks` and `create*Context` factories, each app's binding files, and the `./hooks` and `./contexts` exports go away feature by feature and are gone with the last one.
 
 ### Migration

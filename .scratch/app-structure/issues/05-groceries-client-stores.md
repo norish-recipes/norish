@@ -1,6 +1,6 @@
 # 05: Groceries client state in a zustand store
 
-**What to build:** The groceries client state that several components share, today in `GroceriesUiContext` (panel open, `editingGrocery` and the rest) and `StoresContext`'s `storeManagerOpen`, moves into a zustand store in `shared-react/groceries/`. View mode and grouping stay Device Preferences read through their hook, not the store. The store resets when the groceries screen unmounts. See `.scratch/app-structure/spec.md`, "State".
+**What to build:** The groceries client state that several components share, today in `GroceriesUiContext` (panel open, `editingGrocery` and the rest) and `StoresContext`'s `storeManagerOpen`, moves into a zustand store in `shared-react/groceries/`. View mode and grouping stay Device Preferences, read through `@norish/shared-react/reader`, not the store. The store resets when the groceries screen unmounts. See `.scratch/app-structure/spec.md`, "State".
 
 **Blocked by:** 04
 

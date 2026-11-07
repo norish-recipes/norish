@@ -9,5 +9,6 @@
 - [ ] `components/groceries/` and `hooks/groceries/` are gone; nothing groceries-only remains in the type folders.
 - [ ] `app/(app)/groceries/` holds only `page.tsx`, `layout.tsx`, `loading.tsx` and the pantry route files, each rendering from `@/features/groceries`.
 - [ ] The feature lint rule passes with no exceptions.
+- [ ] Groceries imports nothing from web's `context/` folder; it reads only `@norish/shared-react/*` and web's shared folders.
 - [ ] Groceries unit tests sit next to their code, not under `__tests__/`.
 - [ ] The groceries, pantry, aisles, prices and versions E2E specs pass unchanged.
