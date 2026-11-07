@@ -9,6 +9,7 @@ import {
   PaprikaRecipeSchema,
   parsePaprikaRecipeToDTO,
 } from "@norish/shared-server/archive/paprika-parser";
+import { BUILT_IN_CATEGORIES } from "@norish/shared/lib/categories";
 
 // @vitest-environment node
 
@@ -180,6 +181,20 @@ describe("Paprika Parser", () => {
       const dto = await parsePaprikaRecipeToDTO(mockRecipe, "123e4567-e89b-42d3-a456-426614174000");
 
       expect(dto.categories).toEqual(["Breakfast", "Dinner"]);
+    });
+
+    it("prefers the household's own Category and keeps an unmatched name a Tag only", async () => {
+      mockRecipe.categories = ["dessert", "Holiday"];
+
+      const dto = await parsePaprikaRecipeToDTO(
+        mockRecipe,
+        "123e4567-e89b-42d3-a456-426614174000",
+        undefined,
+        [...BUILT_IN_CATEGORIES, "Dessert"]
+      );
+
+      expect(dto.categories).toEqual(["Dessert"]);
+      expect(dto.tags!.map((tag) => tag.name)).toEqual(["dessert", "Holiday"]);
     });
 
     it("maps nutritional_info to nutrition fields", async () => {

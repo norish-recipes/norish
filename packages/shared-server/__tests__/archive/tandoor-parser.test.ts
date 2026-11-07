@@ -7,6 +7,7 @@ import {
   parseTandoorRecipeToDTO,
   TandoorRecipeSchema,
 } from "@norish/shared-server/archive/tandoor-parser";
+import { BUILT_IN_CATEGORIES } from "@norish/shared/lib/categories";
 
 // @vitest-environment node
 
@@ -445,6 +446,23 @@ describe("Tandoor Parser", () => {
       expect(dto.categories).toContain("Breakfast");
       expect(dto.categories).toContain("Dinner");
       expect(dto.categories).toContain("Snack");
+    });
+
+    it("prefers the household's own Category and keeps an unmatched keyword a Tag only", async () => {
+      mockRecipe.keywords = [
+        { name: "Dessert", description: "" },
+        { name: "Holiday", description: "" },
+      ];
+
+      const dto = await parseTandoorRecipeToDTO(
+        mockRecipe,
+        "123e4567-e89b-42d3-a456-426614174000",
+        undefined,
+        [...BUILT_IN_CATEGORIES, "Dessert"]
+      );
+
+      expect(dto.categories).toEqual(["Dessert"]);
+      expect(dto.tags!.map((tag) => tag.name)).toEqual(["Dessert", "Holiday"]);
     });
 
     it("derives categories from localized keyword tags", async () => {

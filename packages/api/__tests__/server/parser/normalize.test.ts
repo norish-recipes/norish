@@ -2,6 +2,7 @@
 import { describe, expect, it, vi } from "vitest";
 
 import { normalizeRecipeFromJson } from "@norish/api/parser/normalize";
+import { BUILT_IN_CATEGORIES } from "@norish/shared/lib/categories";
 
 // Mock dependencies
 vi.mock("@norish/shared-server/media/storage", () => ({
@@ -1099,16 +1100,34 @@ describe("recipeCategory extraction", () => {
     expect(result?.categories).toContain("Snack");
   });
 
-  it("ignores unmappable recipeCategory values gracefully", async () => {
+  it("keeps an unmatched recipeCategory as a Tag", async () => {
     const json = {
       name: "Mystery",
       recipeIngredient: ["stuff"],
       recipeInstructions: ["Do things"],
-      recipeCategory: "exotic fusion cuisine",
+      keywords: ["quick"],
+      recipeCategory: "Cocktails",
     };
     const result = await normalizeRecipeFromJson(json, "recipe-123");
 
     expect(result?.categories).toEqual([]);
+    expect(result?.tags).toEqual([{ name: "quick" }, { name: "Cocktails" }]);
+  });
+
+  it("matches the household's own Category before the built-ins", async () => {
+    const json = {
+      name: "Tiramisu",
+      recipeIngredient: ["mascarpone"],
+      recipeInstructions: ["Layer"],
+      recipeCategory: "dessert",
+    };
+    const result = await normalizeRecipeFromJson(json, "recipe-123", [
+      ...BUILT_IN_CATEGORIES,
+      "Dessert",
+    ]);
+
+    expect(result?.categories).toEqual(["Dessert"]);
+    expect(result?.tags).toEqual([]);
   });
 
   it("returns empty categories when recipeCategory missing", async () => {

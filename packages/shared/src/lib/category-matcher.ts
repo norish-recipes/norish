@@ -183,3 +183,25 @@ for (const category of BUILT_IN_CATEGORIES) {
 export function resolveBuiltInCategory(input: string): BuiltInCategory | null {
   return BUILT_IN_BY_NAME.get(normalizeName(input)) ?? null;
 }
+
+/**
+ * The import rule for another app's category names (ADR-0040): a household
+ * Category by exact name, else a built-in through `matchCategory`, else a Tag.
+ */
+export function sortSourceCategories(
+  names: readonly string[],
+  household: readonly string[]
+): { categories: string[]; tags: string[] } {
+  const byLower = new Map(household.map((name) => [name.toLowerCase(), name]));
+  const categories = new Set<string>();
+  const tags = new Map<string, string>();
+
+  for (const name of names.map((n) => n.trim()).filter(Boolean)) {
+    const category = byLower.get(name.toLowerCase()) ?? matchCategory(name);
+
+    if (category) categories.add(category);
+    else if (!tags.has(name.toLowerCase())) tags.set(name.toLowerCase(), name);
+  }
+
+  return { categories: [...categories], tags: [...tags.values()] };
+}

@@ -12,6 +12,7 @@ import {
   parseMealieDatabase,
   parseMealieRecipeToDTO,
 } from "@norish/shared-server/archive/mealie-parser";
+import { BUILT_IN_CATEGORIES } from "@norish/shared/lib/categories";
 
 // @vitest-environment node
 
@@ -521,6 +522,27 @@ describe("Mealie Parser", () => {
       expect(dto).not.toBeNull();
       expect(dto!.tags).toHaveLength(1);
       expect(dto!.tags![0].name).toBe("Italian");
+    });
+
+    it("makes a household Category of a category, keeping every name a Tag", async () => {
+      const lookups = createEmptyLookups();
+
+      lookups.categories.set("cat-1", { id: "cat-1", name: "drinks" });
+      lookups.categories.set("cat-2", { id: "cat-2", name: "Holiday" });
+      lookups.recipeCategories.set("recipe-1", ["cat-1", "cat-2"]);
+
+      const dto = await parseMealieRecipeToDTO(
+        mockRecipe,
+        mockIngredients,
+        mockInstructions,
+        lookups,
+        "123e4567-e89b-42d3-a456-426614174000",
+        undefined,
+        [...BUILT_IN_CATEGORIES, "Drinks"]
+      );
+
+      expect(dto!.categories).toEqual(["Drinks"]);
+      expect(dto!.tags!.map((tag) => tag.name)).toEqual(["drinks", "Holiday"]);
     });
 
     it("deduplicates tags and categories by name (case-insensitive)", async () => {

@@ -11,6 +11,7 @@ const mockAddFavorite = vi.fn();
 const mockCreateCookbook = vi.fn();
 const mockAddRecipeToCookbook = vi.fn();
 const mockSaveImageBytes = vi.fn();
+const mockListCategoryNames = vi.fn();
 
 vi.mock("@norish/config/env-config-server", () => ({
   SERVER_CONFIG: { UPLOADS_DIR: "/tmp/uploads" },
@@ -33,6 +34,9 @@ vi.mock("@norish/db/repositories/ratings", () => ({ rateRecipe: mockRateRecipe }
 vi.mock("@norish/db/repositories/favorites", () => ({ addFavorite: mockAddFavorite }));
 vi.mock("@norish/db/repositories/cuisines", () => ({
   listCuisines: vi.fn().mockResolvedValue([]),
+}));
+vi.mock("@norish/db/repositories/categories", () => ({
+  listCategoryNamesForUsers: mockListCategoryNames,
 }));
 vi.mock("@norish/db/repositories/cookbooks", () => ({
   findOwnCookbookIdByTitle: vi.fn().mockResolvedValue(null),
@@ -140,6 +144,7 @@ async function importBlocks(blocks: string[]) {
 
 describe("Recipe Keeper import", () => {
   beforeEach(() => {
+    mockListCategoryNames.mockReset().mockResolvedValue(["Breakfast", "Lunch", "Dinner", "Snack"]);
     mockFindExistingRecipe.mockResolvedValue(null);
     mockCreateResolvedRecipe.mockImplementation(async (recipeId: string) => ({
       status: "inserted",
@@ -231,6 +236,26 @@ describe("Recipe Keeper import", () => {
       // "Pranzo" would be Lunch, but it is a category.
       categories: ["Dinner"],
     });
+  });
+
+  it("matches a course to the household's Categories once per import, an unmatched one a Tag only", async () => {
+    mockListCategoryNames.mockResolvedValue(["Breakfast", "Lunch", "Dinner", "Snack", "Dessert"]);
+
+    const { dtos } = await importBlocks([
+      recipeBlock({
+        extra: `<div>Portate: <span>Dessert, Natale</span>
+          <meta content="Dessert" itemprop="recipeCourse">
+          <meta content="Natale" itemprop="recipeCourse"></div>`,
+      }),
+      recipeBlock({ id: "a2d1b0c4-6065-4737-9822-5183db1c447f", name: "Second" }),
+    ]);
+
+    expect(dtos[0]).toMatchObject({
+      tags: [{ name: "Dessert" }, { name: "Natale" }],
+      categories: ["Dessert"],
+    });
+    expect(mockListCategoryNames).toHaveBeenCalledTimes(1);
+    expect(mockListCategoryNames).toHaveBeenCalledWith(["user-1"]);
   });
 
   it("files a recipe into its collections as the importer's cookbooks", async () => {

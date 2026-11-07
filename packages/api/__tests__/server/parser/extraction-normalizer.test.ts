@@ -440,7 +440,7 @@ describe("normalizeExtractionOutput - HTML Entity Decoding", () => {
     }
   );
 
-  it("normalizes categories with matcher", async () => {
+  it("sorts categories through the import rule", async () => {
     const output: RecipeExtractionOutput = {
       name: "Test Recipe",
       notes: null,
@@ -459,7 +459,7 @@ describe("normalizeExtractionOutput - HTML Entity Decoding", () => {
       prepTime: null,
       totalTime: null,
       keywords: [],
-      categories: ["Brunch", "gibberish", "dinner", "Breakfast"],
+      categories: ["Brunch", "gibberish", "dinner", "Breakfast", "drinks"],
       nutrition: { calories: 0, fat: 0, carbs: 0, protein: 0 },
     };
 
@@ -486,9 +486,14 @@ describe("normalizeExtractionOutput - HTML Entity Decoding", () => {
       categories: [],
     } as any);
 
-    const result = await normalizeExtractionOutput(output, { recipeId: "recipe-123" });
+    const result = await normalizeExtractionOutput(output, {
+      recipeId: "recipe-123",
+      householdCategories: ["Breakfast", "Lunch", "Dinner", "Snack", "Drinks"],
+    });
 
-    expect(result?.categories).toEqual(["Breakfast", "Dinner"]);
+    // Never a new Category: what matches nothing is kept as a Tag.
+    expect(result?.categories).toEqual(["Breakfast", "Dinner", "Drinks"]);
+    expect(result?.tags).toEqual([{ name: "gibberish" }]);
   });
 
   it("decodes HTML entities in US ingredients and keeps comments", async () => {

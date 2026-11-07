@@ -144,6 +144,39 @@ describe("adaptRecipeScrapersResponse", () => {
     );
   });
 
+  it("matches a source category to the household's list, keeping an unmatched one as a Tag", async () => {
+    const { adaptRecipeScrapersResponse } = await import("@norish/api/parser/python/adapter");
+
+    const result = await adaptRecipeScrapersResponse(
+      {
+        ok: true,
+        canonicalUrl: null,
+        parser: {
+          mode: "supported",
+          scraper: "ExampleScraper",
+          host: "example.com",
+          siteName: "Example",
+          version: "15.10.0",
+        },
+        recipe: {
+          title: "Margarita",
+          ingredients: ["50 ml tequila"],
+          instructions_list: ["Shake"],
+          // Keywords only ever name a Category; they never become Tags here.
+          keywords: ["Brunch", "Quick"],
+          category: ["drinks", "Holiday"],
+        },
+        media: { images: [], videos: [] },
+      },
+      "recipe-1",
+      "https://example.com/margarita",
+      ["Breakfast", "Lunch", "Dinner", "Snack", "Drinks"]
+    );
+
+    expect(result?.categories).toEqual(["Drinks", "Breakfast"]);
+    expect(result?.tags).toEqual([{ name: "Holiday" }]);
+  });
+
   it("falls back to the original URL when canonicalUrl is missing", async () => {
     const { adaptRecipeScrapersResponse } = await import("@norish/api/parser/python/adapter");
 

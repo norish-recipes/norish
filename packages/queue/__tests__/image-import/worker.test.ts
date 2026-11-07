@@ -23,6 +23,9 @@ vi.mock("@norish/db", () => ({
   updateRecipeDishColor,
 }));
 
+vi.mock("@norish/db/repositories/categories", () => ({
+  listCategoryNamesForUsers: vi.fn().mockResolvedValue(["Breakfast", "Drinks"]),
+}));
 vi.mock("@norish/shared-server/media/dish-color", () => ({
   dishColorForImageUrl,
 }));
@@ -131,7 +134,10 @@ describe("processImageImportJob", () => {
       },
     } as any);
 
-    expect(extractRecipeFromImages).toHaveBeenCalledWith("recipe-123", expect.any(Array));
+    expect(extractRecipeFromImages).toHaveBeenCalledWith("recipe-123", expect.any(Array), [
+      "Breakfast",
+      "Drinks",
+    ]);
     expect(createRecipeWithRefs).toHaveBeenCalledWith(
       "recipe-123",
       "user-1",

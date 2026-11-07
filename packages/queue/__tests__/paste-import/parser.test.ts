@@ -2,6 +2,9 @@
 
 import { describe, expect, it, vi } from "vitest";
 
+import { BUILT_IN_CATEGORIES } from "@norish/shared/lib/categories";
+import { sortSourceCategories } from "@norish/shared/lib/category-matcher";
+
 const mockNormalizeRecipeFromJson = vi.fn(
   async (node: Record<string, unknown>, recipeId: string) => ({
     id: recipeId,
@@ -36,8 +39,8 @@ const mockNormalizeRecipeFromJson = vi.fn(
     videos: [],
   })
 );
-const mockParseCategories = vi.fn((value: unknown) =>
-  typeof value === "string" && value.toLowerCase() === "breakfast" ? ["Breakfast"] : []
+const mockParseCategories = vi.fn((value: unknown, household?: readonly string[]) =>
+  sortSourceCategories(typeof value === "string" ? value.split(",") : [], household ?? [])
 );
 const mockParseTags = vi.fn((value: unknown) =>
   Array.isArray(value)
@@ -185,6 +188,52 @@ rating: 3.6
     ]);
     expect(result.structuredRecipes?.[0]?.recipe.url).toBe("https://example.com/fancy-toast");
     expect(result.structuredRecipes?.[0]?.importedRating).toBe(3.6);
+  });
+
+  it("sorts YAML categories through the household's list, an unmatched one a Tag", async () => {
+    const { preparePasteImport } = await import("../../src/paste-import/parser");
+
+    const result = await preparePasteImport(
+      `
+title: Tiramisu
+ingredients:
+  - 250 g mascarpone
+steps:
+  - Layer
+tags: italian
+categories: dessert, Holiday
+`,
+      false,
+      [...BUILT_IN_CATEGORIES, "Dessert"]
+    );
+
+    expect(result.structuredRecipes?.[0]?.recipe.categories).toEqual(["Dessert"]);
+    expect(result.structuredRecipes?.[0]?.recipe.tags).toEqual([
+      { name: "italian" },
+      { name: "holiday" },
+    ]);
+  });
+
+  it("hands the household's list to JSON-LD normalization", async () => {
+    const { preparePasteImport } = await import("../../src/paste-import/parser");
+    const household = [...BUILT_IN_CATEGORIES, "Drinks"];
+
+    await preparePasteImport(
+      JSON.stringify({
+        "@type": "Recipe",
+        name: "Margarita",
+        recipeIngredient: ["tequila"],
+        recipeInstructions: ["Shake"],
+      }),
+      false,
+      household
+    );
+
+    expect(mockNormalizeRecipeFromJson).toHaveBeenLastCalledWith(
+      expect.anything(),
+      expect.any(String),
+      household
+    );
   });
 
   it("rejects structured input when no valid recipes remain", async () => {

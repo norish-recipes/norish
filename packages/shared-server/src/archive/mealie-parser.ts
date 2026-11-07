@@ -4,6 +4,8 @@ import { FullRecipeInsertSchema } from "@norish/db";
 import { getUnits } from "@norish/shared-server/config/server-config-loader";
 import { serverLogger as log } from "@norish/shared-server/logger";
 import { FullRecipeInsertDTO } from "@norish/shared/contracts";
+import { BUILT_IN_CATEGORIES } from "@norish/shared/lib/categories";
+import { sortSourceCategories } from "@norish/shared/lib/category-matcher";
 import { inferSystemUsedFromParsed } from "@norish/shared/lib/determine-recipe-system";
 import { parseIngredientWithDefaults } from "@norish/shared/lib/helpers";
 
@@ -482,7 +484,8 @@ export async function parseMealieRecipeToDTO(
   instructions: MealieInstruction[],
   lookups: MealieLookups,
   recipeId: string,
-  imageBuffer?: Buffer
+  imageBuffer?: Buffer,
+  householdCategories: readonly string[] = BUILT_IN_CATEGORIES
 ): Promise<FullRecipeInsertDTO> {
   const title = recipe.name?.trim();
 
@@ -627,9 +630,10 @@ export async function parseMealieRecipeToDTO(
 
       return name ? [{ name }] : [];
     });
+  const sourceCategories = tagsFrom(lookups.recipeCategories.get(recipe.id), lookups.categories);
   const allTags = [
     ...tagsFrom(lookups.recipeTags.get(recipe.id), lookups.tags),
-    ...tagsFrom(lookups.recipeCategories.get(recipe.id), lookups.categories),
+    ...sourceCategories,
     ...tagsFrom(lookups.recipeTools.get(recipe.id), lookups.tools),
   ];
 
@@ -693,6 +697,10 @@ export async function parseMealieRecipeToDTO(
       })),
     })),
     tags: uniqueTags,
+    categories: sortSourceCategories(
+      sourceCategories.map((tag) => tag.name),
+      householdCategories
+    ).categories,
     systemUsed,
   };
 

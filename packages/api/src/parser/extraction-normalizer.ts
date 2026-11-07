@@ -13,7 +13,8 @@ import { normalizeRecipeFromJson } from "@norish/api/parser/normalize";
 import { headingOrName } from "@norish/api/parser/parsers/ingredients";
 import { getUnits } from "@norish/shared-server/config/server-config-loader";
 import { aiLogger } from "@norish/shared-server/logger";
-import { matchCategory } from "@norish/shared/lib/category-matcher";
+import { BUILT_IN_CATEGORIES } from "@norish/shared/lib/categories";
+import { sortSourceCategories } from "@norish/shared/lib/category-matcher";
 import { parseIngredientWithDefaults } from "@norish/shared/lib/helpers";
 import { normalizeEnrichmentTagNames } from "@norish/shared/lib/recipe-enrichment";
 
@@ -45,6 +46,11 @@ export interface NormalizeExtractionOptions {
    * Recipe ID (for image storage paths).
    */
   recipeId: string;
+
+  /**
+   * The importing household's Categories, the only ones a category may become.
+   */
+  householdCategories?: readonly string[];
 }
 
 /**
@@ -109,7 +115,14 @@ export async function normalizeExtractionOutput(
   output: RecipeExtractionOutput,
   options: NormalizeExtractionOptions
 ): Promise<FullRecipeInsertDTO | null> {
-  const { url, image, imageCandidates, videos, recipeId } = options;
+  const {
+    url,
+    image,
+    imageCandidates,
+    videos,
+    recipeId,
+    householdCategories = BUILT_IN_CATEGORIES,
+  } = options;
 
   // Build metric version for base normalization
   // The AI schema doesn't include image - it comes from HTML/video metadata
@@ -121,7 +134,7 @@ export async function normalizeExtractionOutput(
     recipeInstructions: output.recipeInstructions.metric,
   };
 
-  const normalized = await normalizeRecipeFromJson(metricVersion, recipeId);
+  const normalized = await normalizeRecipeFromJson(metricVersion, recipeId, householdCategories);
 
   if (!normalized) {
     aiLogger.warn(
@@ -179,11 +192,10 @@ export async function normalizeExtractionOutput(
 
   normalized.steps = [...metricSteps, ...usSteps];
 
-  const normalizedCategories = (output.categories ?? [])
-    .filter((category): category is string => typeof category === "string" && category.length > 0)
-    .map((category) => matchCategory(category))
-    .filter((category) => category !== null)
-    .filter((category, index, categories) => categories.indexOf(category) === index);
+  const { categories: normalizedCategories, tags: categoryTags } = sortSourceCategories(
+    (output.categories ?? []).filter((category) => typeof category === "string"),
+    householdCategories
+  );
 
   normalized.categories = normalizedCategories;
 
@@ -193,13 +205,13 @@ export async function normalizeExtractionOutput(
   normalized.tags = normalizeEnrichmentTagNames([
     ...(normalized.tags ?? []).map((tag) => tag.name),
     ...(output.allergyIndications ?? []),
+    ...categoryTags,
   ]).map((name) => ({ name }));
 
-  // Log if no categories were matched (helps debug AI responses)
-  if (normalizedCategories.length === 0 && (output.categories?.length ?? 0) > 0) {
+  if (categoryTags.length > 0) {
     aiLogger.warn(
       { rawCategories: output.categories, recipeName: output.name },
-      "AI returned categories but none matched valid category names"
+      "AI returned categories outside the household's list, kept as tags"
     );
   }
 

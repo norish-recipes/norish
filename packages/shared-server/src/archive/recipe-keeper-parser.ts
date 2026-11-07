@@ -2,7 +2,8 @@ import * as cheerio from "cheerio";
 import JSZip from "jszip";
 
 import { FullRecipeInsertDTO } from "@norish/shared/contracts";
-import { matchCategory } from "@norish/shared/lib/category-matcher";
+import { BUILT_IN_CATEGORIES } from "@norish/shared/lib/categories";
+import { sortSourceCategories } from "@norish/shared/lib/category-matcher";
 import { parseIsoDuration } from "@norish/shared/lib/helpers";
 
 import {
@@ -171,7 +172,8 @@ function distinct<T extends string>(names: T[]): T[] {
 export async function parseRecipeKeeperRecipeToDTO(
   recipe: RecipeKeeperRecipe,
   recipeId: string,
-  zip: JSZip
+  zip: JSZip,
+  householdCategories: readonly string[] = BUILT_IN_CATEGORIES
 ): Promise<ParsedRecipeKeeperRecipe> {
   const prepMinutes = minutesOf(recipe.prepTime);
   const cookMinutes = minutesOf(recipe.cookTime);
@@ -209,14 +211,8 @@ export async function parseRecipeKeeperRecipeToDTO(
       ...dto,
       id: recipeId,
       notes: recipe.notes.join("\n") || undefined,
-      // A course the matcher recognises is also its meal; a category is a label only.
-      categories: distinct(
-        recipe.courses.flatMap((course) => {
-          const category = matchCategory(course);
-
-          return category ? [category] : [];
-        })
-      ),
+      // A course that matches a Category is also one; a category is a label only.
+      categories: sortSourceCategories(recipe.courses, householdCategories).categories,
       calories: calories != null ? Math.round(calories) : null,
       fat: fat != null ? fat.toString() : null,
       carbs: carbs != null ? carbs.toString() : null,

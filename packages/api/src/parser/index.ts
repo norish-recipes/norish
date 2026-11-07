@@ -23,6 +23,7 @@ import {
   NOT_A_RECIPE_REASON,
   PRIVATE_ADDRESS_REASON,
 } from "@norish/shared/contracts/realtime/recipes";
+import { BUILT_IN_CATEGORIES } from "@norish/shared/lib/categories";
 import { ErrorWithDetail } from "@norish/shared/lib/error-extensions";
 import { hasRecipeName, hasSteps, isVideoUrl } from "@norish/shared/lib/helpers";
 import { isIngredientHeading } from "@norish/shared/lib/ingredient-text";
@@ -120,7 +121,8 @@ async function tryExtractWithAI(
   recipeId: string,
   url: string,
   requireAI: boolean,
-  jsonLd: Record<string, unknown>[]
+  jsonLd: Record<string, unknown>[],
+  householdCategories: readonly string[]
 ): Promise<FullRecipeInsertDTO | null> {
   const enabled = await isAIEnabled();
 
@@ -135,7 +137,7 @@ async function tryExtractWithAI(
   log.info({ url }, "Attempting AI extraction");
 
   try {
-    return await extractRecipeWithAI(source, recipeId, url, jsonLd);
+    return await extractRecipeWithAI(source, recipeId, url, jsonLd, householdCategories);
   } catch (error) {
     log.warn({ url, err: error }, "AI extraction failed");
 
@@ -152,6 +154,7 @@ async function extractWithAIPreference(
   recipeId: string,
   url: string,
   requireAI: boolean,
+  householdCategories: readonly string[],
   ingredientLines: string[] = []
 ): Promise<FullRecipeInsertDTO | null> {
   const jsonLd = extractRecipeNodesFromJsonLd(html);
@@ -162,7 +165,8 @@ async function extractWithAIPreference(
     recipeId,
     url,
     requireAI,
-    sectioned ? [{ ...jsonLd[0], recipeIngredient: ingredientLines }] : jsonLd
+    sectioned ? [{ ...jsonLd[0], recipeIngredient: ingredientLines }] : jsonLd,
+    householdCategories
   );
 }
 
@@ -176,7 +180,8 @@ async function scrapedIngredientLines(url: string, html: string): Promise<string
 async function tryStructuredParser(
   url: string,
   html: string,
-  recipeId: string
+  recipeId: string,
+  householdCategories: readonly string[]
 ): Promise<StructuredParseOutcome> {
   try {
     const response = await callRecipeScrapersParser({ url, html });
@@ -192,7 +197,7 @@ async function tryStructuredParser(
       };
     }
 
-    const adapted = await adaptRecipeScrapersResponse(response, recipeId, url);
+    const adapted = await adaptRecipeScrapersResponse(response, recipeId, url, householdCategories);
 
     if (hasRecipeName(adapted)) {
       return {
@@ -235,7 +240,8 @@ async function tryStructuredParser(
 async function tryHandleVideoUrl(
   url: string,
   recipeId: string,
-  tokens?: SiteAuthTokenDecryptedDto[]
+  tokens: SiteAuthTokenDecryptedDto[] | undefined,
+  householdCategories: readonly string[]
 ): Promise<ParseRecipeResult | null> {
   if (!isVideoUrl(url)) return null;
 
@@ -251,7 +257,7 @@ async function tryHandleVideoUrl(
   }
 
   const { processVideoRecipe } = await import("@norish/api/video/processor");
-  const recipe = await processVideoRecipe(url, recipeId, tokens);
+  const recipe = await processVideoRecipe(url, recipeId, tokens, householdCategories);
 
   return { recipe, usedAI: true };
 }
@@ -288,9 +294,10 @@ export async function parseRecipeFromUrl(
   url: string,
   recipeId: string,
   forceAI?: boolean,
-  tokens?: SiteAuthTokenDecryptedDto[]
+  tokens?: SiteAuthTokenDecryptedDto[],
+  householdCategories: readonly string[] = BUILT_IN_CATEGORIES
 ): Promise<ParseRecipeResult> {
-  const videoResult = await tryHandleVideoUrl(url, recipeId, tokens);
+  const videoResult = await tryHandleVideoUrl(url, recipeId, tokens, householdCategories);
 
   if (videoResult) return videoResult;
 
@@ -306,14 +313,21 @@ export async function parseRecipeFromUrl(
       extractRecipeNodesFromJsonLd(html).length === 1
         ? await scrapedIngredientLines(url, html)
         : [];
-    const recipe = await extractWithAIPreference(html, recipeId, url, true, ingredientLines);
+    const recipe = await extractWithAIPreference(
+      html,
+      recipeId,
+      url,
+      true,
+      householdCategories,
+      ingredientLines
+    );
 
     if (!recipe) throw new Error("AI extraction failed");
 
     return { recipe, usedAI: true };
   }
 
-  const structured = await tryStructuredParser(url, html, recipeId);
+  const structured = await tryStructuredParser(url, html, recipeId, householdCategories);
   const aiEnabled = await isAIEnabled();
 
   if (structured.recipe) {
@@ -329,6 +343,7 @@ export async function parseRecipeFromUrl(
         recipeId,
         url,
         false,
+        householdCategories,
         structured.ingredientLines
       );
 
@@ -371,7 +386,7 @@ export async function parseRecipeFromUrl(
         "Structured parsing failed, attempting AI fallback"
       );
 
-      const recipe = await extractWithAIPreference(html, recipeId, url, false);
+      const recipe = await extractWithAIPreference(html, recipeId, url, false, householdCategories);
 
       if (recipe) {
         return {

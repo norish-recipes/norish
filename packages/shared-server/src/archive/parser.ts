@@ -6,6 +6,7 @@ import JSZip from "jszip";
 import type { CreateRecipeResult } from "@norish/db/repositories/recipes";
 import { SERVER_CONFIG } from "@norish/config/env-config-server";
 import { dashboardRecipe, findExistingRecipe } from "@norish/db";
+import { listCategoryNamesForUsers } from "@norish/db/repositories/categories";
 import {
   addRecipeToCookbook,
   createCookbook,
@@ -627,13 +628,14 @@ async function* generateNorishRecipes(
  * Generator for Mela recipes
  */
 async function* generateMelaRecipes(
-  zip: JSZip
+  zip: JSZip,
+  household: readonly string[]
 ): AsyncGenerator<RecipeImportItemOrError, void, unknown> {
   const melaRecipes = await parseMelaArchive(zip);
 
   for (let i = 0; i < melaRecipes.length; i++) {
     const melaRecipe = melaRecipes[i]!;
-    const dto = await parseMelaRecipeToDTO(melaRecipe, createArchiveRecipeId());
+    const dto = await parseMelaRecipeToDTO(melaRecipe, createArchiveRecipeId(), household);
 
     yield {
       dto,
@@ -650,7 +652,8 @@ async function* generateMelaRecipes(
  * Calculates average rating from Mealie's users_to_recipes and saves to importing user.
  */
 async function* generateMealieRecipes(
-  zip: JSZip
+  zip: JSZip,
+  household: readonly string[]
 ): AsyncGenerator<RecipeImportItemOrError, void, unknown> {
   const { recipes, database } = await parseMealieArchive(zip);
 
@@ -677,7 +680,8 @@ async function* generateMealieRecipes(
         instructions,
         lookups,
         createArchiveRecipeId(),
-        imageBuffer
+        imageBuffer,
+        household
       );
 
       // Calculate average rating from Mealie's users_to_recipes
@@ -720,7 +724,8 @@ async function* generateMealieRecipes(
  * Generator for Mealie legacy recipes (folder-per-recipe with inline JSON)
  */
 async function* generateMealieLegacyRecipes(
-  zip: JSZip
+  zip: JSZip,
+  household: readonly string[]
 ): AsyncGenerator<RecipeImportItemOrError, void, unknown> {
   const recipes = await extractMealieLegacyRecipes(zip);
 
@@ -731,7 +736,12 @@ async function* generateMealieLegacyRecipes(
     try {
       const imageBuffer = await extractMealieLegacyImage(zip, folderName);
 
-      const dto = await parseMealieLegacyRecipeToDTO(recipe, createArchiveRecipeId(), imageBuffer);
+      const dto = await parseMealieLegacyRecipeToDTO(
+        recipe,
+        createArchiveRecipeId(),
+        imageBuffer,
+        household
+      );
 
       // Use inline rating if present
       let importedRating: number | undefined;
@@ -759,12 +769,13 @@ async function* generateMealieLegacyRecipes(
  * Generator for Tandoor recipes
  */
 async function* generateTandoorRecipes(
-  zip: JSZip
+  zip: JSZip,
+  household: readonly string[]
 ): AsyncGenerator<RecipeImportItemOrError, void, unknown> {
   const tandoorRecipes = await extractTandoorRecipes(zip);
 
   for (const { recipe, image, fileName } of tandoorRecipes) {
-    const dto = await parseTandoorRecipeToDTO(recipe, createArchiveRecipeId(), image);
+    const dto = await parseTandoorRecipeToDTO(recipe, createArchiveRecipeId(), image, household);
 
     yield { dto, fileName };
   }
@@ -774,12 +785,13 @@ async function* generateTandoorRecipes(
  * Generator for Paprika recipes
  */
 async function* generatePaprikaRecipes(
-  zip: JSZip
+  zip: JSZip,
+  household: readonly string[]
 ): AsyncGenerator<RecipeImportItemOrError, void, unknown> {
   const paprikaRecipes = await extractPaprikaRecipes(zip);
 
   for (const { recipe, image, fileName } of paprikaRecipes) {
-    const dto = await parsePaprikaRecipeToDTO(recipe, createArchiveRecipeId(), image);
+    const dto = await parsePaprikaRecipeToDTO(recipe, createArchiveRecipeId(), image, household);
     const importedRating =
       recipe.rating && Number.isFinite(recipe.rating) && recipe.rating > 0
         ? Math.round(recipe.rating)
@@ -793,7 +805,8 @@ async function* generatePaprikaRecipes(
  * Generator for Recipe Keeper recipes
  */
 async function* generateRecipeKeeperRecipes(
-  zip: JSZip
+  zip: JSZip,
+  household: readonly string[]
 ): AsyncGenerator<RecipeImportItemOrError, void, unknown> {
   const html = await readRecipeKeeperHtml(zip);
 
@@ -802,7 +815,7 @@ async function* generateRecipeKeeperRecipes(
 
     try {
       const { dto, importedRating, importedFavorite, cookbooks, droppedPhotos } =
-        await parseRecipeKeeperRecipeToDTO(recipe, createArchiveRecipeId(), zip);
+        await parseRecipeKeeperRecipeToDTO(recipe, createArchiveRecipeId(), zip, household);
 
       yield {
         dto,
@@ -851,28 +864,30 @@ export async function importArchive(
 
   // Select generator based on format
   let generator: AsyncGenerator<RecipeImportItemOrError, void, unknown>;
+  // Another app's categories match the importing household's list, read once per import.
+  const household = () => listCategoryNamesForUsers(userIds);
 
   switch (format) {
     case ArchiveFormat.NORISH:
       generator = generateNorishRecipes(zip);
       break;
     case ArchiveFormat.MELA:
-      generator = generateMelaRecipes(zip);
+      generator = generateMelaRecipes(zip, await household());
       break;
     case ArchiveFormat.MEALIE:
-      generator = generateMealieRecipes(zip);
+      generator = generateMealieRecipes(zip, await household());
       break;
     case ArchiveFormat.MEALIE_LEGACY:
-      generator = generateMealieLegacyRecipes(zip);
+      generator = generateMealieLegacyRecipes(zip, await household());
       break;
     case ArchiveFormat.PAPRIKA:
-      generator = generatePaprikaRecipes(zip);
+      generator = generatePaprikaRecipes(zip, await household());
       break;
     case ArchiveFormat.TANDOOR:
-      generator = generateTandoorRecipes(zip);
+      generator = generateTandoorRecipes(zip, await household());
       break;
     case ArchiveFormat.RECIPE_KEEPER:
-      generator = generateRecipeKeeperRecipes(zip);
+      generator = generateRecipeKeeperRecipes(zip, await household());
       break;
   }
 

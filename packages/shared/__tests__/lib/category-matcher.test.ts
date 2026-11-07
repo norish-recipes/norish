@@ -1,6 +1,11 @@
 import { describe, expect, it } from "vitest";
 
-import { matchCategory, resolveBuiltInCategory } from "@norish/shared/lib/category-matcher";
+import { BUILT_IN_CATEGORIES } from "@norish/shared/lib/categories";
+import {
+  matchCategory,
+  resolveBuiltInCategory,
+  sortSourceCategories,
+} from "@norish/shared/lib/category-matcher";
 
 describe("matchCategory", () => {
   it("matches exact categories", () => {
@@ -58,5 +63,37 @@ describe("resolveBuiltInCategory", () => {
     expect(resolveBuiltInCategory("brunch")).toBeNull();
     expect(resolveBuiltInCategory("breakfst")).toBeNull();
     expect(resolveBuiltInCategory("quick dinner")).toBeNull();
+  });
+});
+
+describe("sortSourceCategories", () => {
+  const household = [...BUILT_IN_CATEGORIES, "Dessert", "Drinks"];
+
+  it("keeps a household Category in the household's spelling, ahead of the matcher", () => {
+    expect(sortSourceCategories(["drinks", "DESSERT"], household)).toEqual({
+      categories: ["Drinks", "Dessert"],
+      tags: [],
+    });
+  });
+
+  it("then matches a built-in through synonyms and fuzz", () => {
+    expect(sortSourceCategories(["Brunch", "supper", "Desserts"], household)).toEqual({
+      categories: ["Breakfast", "Dinner", "Snack"],
+      tags: [],
+    });
+  });
+
+  it("keeps anything else as a Tag, never a new Category", () => {
+    expect(sortSourceCategories(["Holiday", " Cocktails ", "", "holiday"], household)).toEqual({
+      categories: [],
+      tags: ["Holiday", "Cocktails"],
+    });
+  });
+
+  it("lists each Category once", () => {
+    expect(sortSourceCategories(["Dinner", "supper", "drinks", "Drinks"], household)).toEqual({
+      categories: ["Dinner", "Drinks"],
+      tags: [],
+    });
   });
 });

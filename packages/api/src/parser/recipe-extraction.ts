@@ -63,13 +63,15 @@ function recipeVideos(
  * @param source - The HTML or text to extract the recipe from.
  * @param url - Optional source URL of the recipe.
  * @param jsonLd - The page's JSON-LD Recipe nodes, which lead over its text.
+ * @param householdCategories - The importing household's Categories, the only ones it may pick.
  * @returns The extracted recipe; throws on AI failure or when the page holds no recipe.
  */
 export async function extractRecipeWithAI(
   source: string,
   recipeId: string,
   url?: string,
-  jsonLd: Record<string, unknown>[] = []
+  jsonLd: Record<string, unknown>[] = [],
+  householdCategories?: readonly string[]
 ): Promise<FullRecipeInsertDTO> {
   aiLogger.info({ url }, "Starting AI recipe extraction");
 
@@ -125,6 +127,7 @@ export async function extractRecipeWithAI(
     imageCandidates,
     recipeId,
     videos: recipeVideos(onlyRecipe?.video, extracted.videoUrl, pageVideos),
+    householdCategories,
   });
 
   if (!normalized) {

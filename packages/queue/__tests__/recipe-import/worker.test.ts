@@ -44,6 +44,11 @@ vi.mock("@norish/db", () => ({
   recipeExistsByUrlForPolicy,
 }));
 
+vi.mock("@norish/db/repositories/categories", () => ({
+  listCategoryNamesForUsers: vi.fn(async (userIds: string[]) =>
+    userIds.includes("user-2") ? ["Breakfast", "Drinks"] : ["Breakfast"]
+  ),
+}));
 vi.mock("@norish/db/repositories/site-auth-tokens", () => ({
   getDecryptedTokensByUserId,
 }));
@@ -127,6 +132,25 @@ describe("processImportJob", () => {
       "user-1",
       expect.objectContaining({ name: "Imported Stew", dishColor: "#7c4a1e" })
     );
+  });
+
+  it("parses with the importing household's Categories", async () => {
+    const { processRecipeImportJob } = await import("../../src/recipe-import/worker");
+
+    await processRecipeImportJob({
+      id: "job-1",
+      attemptsMade: 0,
+      opts: {},
+      data: {
+        url: "https://example.com/margarita",
+        recipeId: "recipe-77",
+        userId: "user-1",
+        householdKey: "household-1",
+        householdUserIds: ["user-1", "user-2"],
+      },
+    } as unknown as Job<RecipeImportJobData>);
+
+    expect(parseRecipeFromUrl.mock.calls.at(-1)?.[4]).toEqual(["Breakfast", "Drinks"]);
   });
 
   it("ends on the existing recipe when the URL is already in the library", async () => {

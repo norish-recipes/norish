@@ -166,13 +166,20 @@ describe("parseRecipeFromUrl import flow", () => {
     mockIsVideoParsingEnabled.mockResolvedValue(true);
 
     const { parseRecipeFromUrl } = await import("@norish/api/parser");
-    const result = await parseRecipeFromUrl("https://example.com/video", "recipe-1");
+    const result = await parseRecipeFromUrl(
+      "https://example.com/video",
+      "recipe-1",
+      undefined,
+      undefined,
+      ["Breakfast", "Drinks"]
+    );
 
     expect(result).toEqual({ recipe: structuredRecipe, usedAI: true });
     expect(mockProcessVideoRecipe).toHaveBeenCalledWith(
       "https://example.com/video",
       "recipe-1",
-      undefined
+      undefined,
+      ["Breakfast", "Drinks"]
     );
     expect(mockFetchRenderedPage).not.toHaveBeenCalled();
     expect(mockCallRecipeScrapersParser).not.toHaveBeenCalled();
@@ -357,7 +364,8 @@ describe("parseRecipeFromUrl import flow", () => {
         withJsonLd,
         "recipe-1",
         "https://example.com/recipe",
-        [expect.objectContaining({ name: "Lentil soup" })]
+        [expect.objectContaining({ name: "Lentil soup" })],
+        ["Breakfast", "Lunch", "Dinner", "Snack"]
       );
     });
 

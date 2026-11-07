@@ -5,7 +5,8 @@ import { z } from "zod";
 
 import { serverLogger as log } from "@norish/shared-server/logger";
 import { FullRecipeInsertDTO } from "@norish/shared/contracts";
-import { matchCategory } from "@norish/shared/lib/category-matcher";
+import { BUILT_IN_CATEGORIES } from "@norish/shared/lib/categories";
+import { sortSourceCategories } from "@norish/shared/lib/category-matcher";
 
 import {
   base64ToBuffer,
@@ -72,7 +73,8 @@ function parsePaprikaNutritionValue(
 export async function parsePaprikaRecipeToDTO(
   json: PaprikaRecipe,
   recipeId: string,
-  imageBuffer?: Buffer
+  imageBuffer?: Buffer,
+  householdCategories: readonly string[] = BUILT_IN_CATEGORIES
 ): Promise<FullRecipeInsertDTO> {
   // Validate against schema
   const validated = PaprikaRecipeSchema.parse(json);
@@ -89,13 +91,7 @@ export async function parsePaprikaRecipeToDTO(
   // Get source URL
   const url = validated.source_url || validated.source || undefined;
 
-  const categories = Array.from(
-    new Set(
-      validated.categories
-        .map((value) => matchCategory(value))
-        .filter((value): value is "Breakfast" | "Lunch" | "Dinner" | "Snack" => Boolean(value))
-    )
-  );
+  const { categories } = sortSourceCategories(validated.categories, householdCategories);
 
   const caloriesRaw = parsePaprikaNutritionValue(validated.nutritional_info, ["calories"]);
   const carbsRaw = parsePaprikaNutritionValue(validated.nutritional_info, [

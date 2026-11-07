@@ -1,4 +1,3 @@
-import type { RecipeCategory } from "@norish/shared/contracts";
 import type { FullRecipeInsertDTO } from "@norish/shared/contracts/dto/recipe";
 import { parseImages } from "@norish/api/parser/parsers/images";
 import { parseIngredients } from "@norish/api/parser/parsers/ingredients";
@@ -8,6 +7,8 @@ import { parseSteps } from "@norish/api/parser/parsers/steps";
 import { parseVideos } from "@norish/api/parser/parsers/videos";
 import { getUnits } from "@norish/shared-server/config/server-config-loader";
 import { parserLogger as log } from "@norish/shared-server/logger";
+import { BUILT_IN_CATEGORIES } from "@norish/shared/lib/categories";
+import { sortSourceCategories } from "@norish/shared/lib/category-matcher";
 import { hasRecipeName } from "@norish/shared/lib/helpers";
 
 import type { RecipeScrapersParserSuccess } from "./contract";
@@ -137,33 +138,21 @@ function adaptEmbeddedVideos(videos: EmbeddedVideo[]) {
   }));
 }
 
-function mapCategories(recipe: ScraperRecipe): RecipeCategory[] {
-  const values = [
-    ...normalizeDelimitedStrings(recipe.category),
-    ...normalizeDelimitedStrings(recipe.keywords),
-  ].map((value) => value.trim().toLowerCase());
+/** A category becomes a household or built-in Category, else a Tag; a keyword only ever a Category. */
+function mapCategories(recipe: ScraperRecipe, householdCategories: readonly string[]) {
+  const fromCategory = sortSourceCategories(
+    normalizeDelimitedStrings(recipe.category),
+    householdCategories
+  );
+  const fromKeywords = sortSourceCategories(
+    normalizeDelimitedStrings(recipe.keywords),
+    householdCategories
+  );
 
-  const categoryMap: Record<string, RecipeCategory> = {
-    breakfast: "Breakfast",
-    brunch: "Breakfast",
-    lunch: "Lunch",
-    dinner: "Dinner",
-    supper: "Dinner",
-    snack: "Snack",
-    appetizer: "Snack",
-    dessert: "Snack",
-    "side dish": "Snack",
+  return {
+    categories: [...new Set([...fromCategory.categories, ...fromKeywords.categories])],
+    tags: fromCategory.tags.map((name) => ({ name })),
   };
-
-  const categories = new Set<RecipeCategory>();
-
-  for (const value of values) {
-    const category = categoryMap[value];
-
-    category && categories.add(category);
-  }
-
-  return [...categories];
 }
 
 function buildNutrition(recipe: ScraperRecipe) {
@@ -195,7 +184,8 @@ function hasRequiredRecipeFields(recipe: FullRecipeInsertDTO): boolean {
 export async function adaptRecipeScrapersResponse(
   success: RecipeScrapersParserSuccess,
   recipeId: string,
-  originalUrl: string
+  originalUrl: string,
+  householdCategories: readonly string[] = BUILT_IN_CATEGORIES
 ): Promise<FullRecipeInsertDTO | null> {
   const recipe = success.recipe;
   const title = normalizeString(recipe.title);
@@ -220,6 +210,7 @@ export async function adaptRecipeScrapersResponse(
   const { images } = await parseImages(imageSource, recipeId);
   const { videos } = await parseVideos(adaptEmbeddedVideos(success.media.videos), recipeId);
   const nutrition = buildNutrition(recipe);
+  const { categories, tags } = mapCategories(recipe, householdCategories);
 
   const dto: FullRecipeInsertDTO = {
     id: recipeId,
@@ -242,8 +233,9 @@ export async function adaptRecipeScrapersResponse(
     // This is because the tags are often not very useful when supplied by the parser.
     // Should become a user-configurable setting in admin/user settings.
     // tags: normalizeTags(recipe),
-    tags: [],
-    categories: mapCategories(recipe),
+    // A source category no Category matches is kept as a Tag (ADR-0040).
+    tags,
+    categories,
     images,
     videos,
   };
