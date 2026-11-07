@@ -37,7 +37,6 @@
     "date-fns": "catalog:",
     "drizzle-zod": "0.8.3",
     "fraction.js": "^5.3.4",
-    "fuse.js": "catalog:",
     "html-entities": "catalog:",
     "jsonrepair": "3.15.0",
     "parse-ingredient": "3.0.1",

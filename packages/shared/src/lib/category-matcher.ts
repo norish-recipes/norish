@@ -1,6 +1,3 @@
-import type { IFuseOptions } from "fuse.js";
-import Fuse from "fuse.js";
-
 import arRecipes from "@norish/i18n/messages/ar/recipes.json" with { type: "json" };
 import bgRecipes from "@norish/i18n/messages/bg/recipes.json" with { type: "json" };
 import daRecipes from "@norish/i18n/messages/da/recipes.json" with { type: "json" };
@@ -22,8 +19,7 @@ import ukRecipes from "@norish/i18n/messages/uk/recipes.json" with { type: "json
 
 import type { BuiltInCategory } from "./categories";
 import { BUILT_IN_CATEGORIES } from "./categories";
-
-const FUZZY_THRESHOLD = 0.25;
+import { editDistance } from "./cuisine-resolver";
 
 type BuiltInCategoryKey = "breakfast" | "lunch" | "dinner" | "snack";
 
@@ -112,23 +108,28 @@ for (const entry of CATEGORY_DATA) {
   }
 }
 
-const FUSE_OPTIONS: IFuseOptions<CategoryEntry> = {
-  keys: ["synonyms"],
-  threshold: FUZZY_THRESHOLD,
-  minMatchCharLength: 2,
-  ignoreLocation: true,
-  ignoreFieldNorm: true,
-  includeScore: true,
-};
-
-const categoryFuse = new Fuse(CATEGORY_DATA, FUSE_OPTIONS);
-
 function matchCategoryFromContainedPhrase(normalizedInput: string): BuiltInCategory | null {
   const paddedInput = ` ${normalizedInput} `;
 
   for (const entry of CATEGORY_DATA) {
     for (const synonym of entry.synonyms) {
       if (paddedInput.includes(` ${synonym} `)) {
+        return entry.category;
+      }
+    }
+  }
+
+  return null;
+}
+
+// A typo of a whole term: one edit, four letters or more, same first letter, so
+// "breakfst" matches but "bread", "inner" and "pie" do not.
+function matchCategoryByTypo(normalizedInput: string): BuiltInCategory | null {
+  if (normalizedInput.length < 4) return null;
+
+  for (const entry of CATEGORY_DATA) {
+    for (const synonym of entry.synonyms) {
+      if (synonym[0] === normalizedInput[0] && editDistance(normalizedInput, synonym) <= 1) {
         return entry.category;
       }
     }
@@ -152,15 +153,7 @@ export function matchCategory(input: string): BuiltInCategory | null {
 
   if (containedPhraseMatch) return containedPhraseMatch;
 
-  const [bestMatch] = categoryFuse.search(normalized);
-
-  if (!bestMatch) return null;
-
-  if (bestMatch.score !== undefined && bestMatch.score > FUZZY_THRESHOLD) {
-    return null;
-  }
-
-  return bestMatch.item.category;
+  return matchCategoryByTypo(normalized);
 }
 
 const BUILT_IN_BY_NAME = new Map<string, BuiltInCategory>();
@@ -186,18 +179,19 @@ export function resolveBuiltInCategory(input: string): BuiltInCategory | null {
 
 /**
  * The import rule for another app's category names (ADR-0040): a household
- * Category by exact name, else a built-in through `matchCategory`, else a Tag.
+ * Category by exact name, else a built-in through `match`, else a Tag.
  */
 export function sortSourceCategories(
   names: readonly string[],
-  household: readonly string[]
+  household: readonly string[],
+  match: (name: string) => BuiltInCategory | null = matchCategory
 ): { categories: string[]; tags: string[] } {
   const byLower = new Map(household.map((name) => [name.toLowerCase(), name]));
   const categories = new Set<string>();
   const tags = new Map<string, string>();
 
   for (const name of names.map((n) => n.trim()).filter(Boolean)) {
-    const category = byLower.get(name.toLowerCase()) ?? matchCategory(name);
+    const category = byLower.get(name.toLowerCase()) ?? match(name);
 
     if (category) categories.add(category);
     else if (!tags.has(name.toLowerCase())) tags.set(name.toLowerCase(), name);

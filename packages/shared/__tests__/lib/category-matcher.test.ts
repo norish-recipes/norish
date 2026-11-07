@@ -40,6 +40,18 @@ describe("matchCategory", () => {
     expect(matchCategory("quick weeknight dinner ideas")).toBe("Dinner");
   });
 
+  it("keeps explicit synonyms and a built-in word inside a phrase", () => {
+    expect(matchCategory("dessert")).toBe("Snack");
+    expect(matchCategory("main course")).toBe("Dinner");
+    expect(matchCategory("Quick dinner")).toBe("Dinner");
+  });
+
+  it("does not stretch a dish or a word fragment into a built-in", () => {
+    for (const word of ["Bread", "Soup", "Fish", "Main", "Pie", "Inner"]) {
+      expect(matchCategory(word), word).toBeNull();
+    }
+  });
+
   it("returns null for no match", () => {
     expect(matchCategory("random")).toBeNull();
     expect(matchCategory("random gibberish")).toBeNull();

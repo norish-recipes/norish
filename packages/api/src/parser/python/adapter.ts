@@ -8,7 +8,10 @@ import { parseVideos } from "@norish/api/parser/parsers/videos";
 import { getUnits } from "@norish/shared-server/config/server-config-loader";
 import { parserLogger as log } from "@norish/shared-server/logger";
 import { BUILT_IN_CATEGORIES } from "@norish/shared/lib/categories";
-import { sortSourceCategories } from "@norish/shared/lib/category-matcher";
+import {
+  resolveBuiltInCategory,
+  sortSourceCategories,
+} from "@norish/shared/lib/category-matcher";
 import { hasRecipeName } from "@norish/shared/lib/helpers";
 
 import type { RecipeScrapersParserSuccess } from "./contract";
@@ -138,7 +141,7 @@ function adaptEmbeddedVideos(videos: EmbeddedVideo[]) {
   }));
 }
 
-/** A category becomes a household or built-in Category, else a Tag; a keyword only ever a Category. */
+/** A category becomes a Category, else a Tag; a keyword only an exactly named Category. */
 function mapCategories(recipe: ScraperRecipe, householdCategories: readonly string[]) {
   const fromCategory = sortSourceCategories(
     normalizeDelimitedStrings(recipe.category),
@@ -146,7 +149,8 @@ function mapCategories(recipe: ScraperRecipe, householdCategories: readonly stri
   );
   const fromKeywords = sortSourceCategories(
     normalizeDelimitedStrings(recipe.keywords),
-    householdCategories
+    householdCategories,
+    resolveBuiltInCategory
   );
 
   return {

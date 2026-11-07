@@ -92,7 +92,7 @@ describe("adaptRecipeScrapersResponse", () => {
           title: "Example Recipe",
           ingredients: ["1 egg"],
           instructions_list: ["Cook it"],
-          keywords: ["Brunch", "Quick"],
+          keywords: ["Breakfast", "Quick"],
           category: ["Dessert"],
           cuisine: "Italian",
           dietary_restrictions: ["Vegetarian"],
@@ -162,8 +162,8 @@ describe("adaptRecipeScrapersResponse", () => {
           title: "Margarita",
           ingredients: ["50 ml tequila"],
           instructions_list: ["Shake"],
-          // Keywords only ever name a Category; they never become Tags here.
-          keywords: ["Brunch", "Quick"],
+          // A keyword names a Category only exactly, and never becomes a Tag.
+          keywords: ["Brunch", "Bread", "Soup", "Snacks", "DRINKS", "Quick"],
           category: ["drinks", "Holiday"],
         },
         media: { images: [], videos: [] },
@@ -173,7 +173,7 @@ describe("adaptRecipeScrapersResponse", () => {
       ["Breakfast", "Lunch", "Dinner", "Snack", "Drinks"]
     );
 
-    expect(result?.categories).toEqual(["Drinks", "Breakfast"]);
+    expect(result?.categories).toEqual(["Drinks", "Snack"]);
     expect(result?.tags).toEqual([{ name: "Holiday" }]);
   });
 

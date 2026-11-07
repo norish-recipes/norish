@@ -67,7 +67,7 @@ function normalize(name: string): string {
 }
 
 /** Levenshtein distance, iterative with a single row of state. */
-function editDistance(a: string, b: string): number {
+export function editDistance(a: string, b: string): number {
   if (a === b) return 0;
   if (a.length === 0) return b.length;
   if (b.length === 0) return a.length;
