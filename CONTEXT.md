@@ -42,10 +42,14 @@ _Avoid_: Origin (names only one part), Provenance Inference (names the process, 
 
 **Cuisine**:
 A named culinary style a recipe belongs to, drawn from a controlled vocabulary that an administrator owns — extended by them directly, or by AI only under an explicitly permissive strategy setting. A recipe may carry several, so fusion dishes remain describable. A Cuisine name is a canonical identifier shown verbatim in every locale, never a translated label.
-_Avoid_: Cuisine Tag (a Tag is open, a Cuisine is curated), Category (that is the meal-time taxonomy)
+_Avoid_: Cuisine Tag (a Tag is open, a Cuisine is curated), Category (that is the course taxonomy)
 
 **Tag**:
 A free-form keyword attached to a recipe, mintable by anyone and by AI. Tags are an open folksonomy and deliberately overlap other taxonomies; Cuisines and Categories are the curated lists.
+
+**Category**:
+The course a recipe is served as — when or how it is eaten, such as Breakfast or Drinks — kept as a short list a reader picks from at a glance, never an open folksonomy. Breakfast, Lunch, Dinner and Snack are built in: fixed for everyone, translated, and never renamed or removed. A household extends the list by naming a new Category on one of its recipes; it is offered only to that household, whatever the recipe view policy, and lasts as long as one of its recipes carries it. A recipe seen from another household still shows its own Categories. AI and other apps' imports never add one: AI chooses among the household's list, and an import keeps a name it cannot match as a Tag; a Norish Recipe Archive carries its Categories over as they are. Meal plan slots are a separate, fixed set that happens to share the four built-in names.
+_Avoid_: Meal type, Course (use Category), Tag (a Tag is open, a Category is curated)
 
 **Ingredient**:
 One food, or anything else a household buys with its groceries (toilet paper, floor cleaner, dog food), known by many Ingredient Aliases: "onion", "onions", "onion, diced" and "ui" are one Ingredient once Norish knows they are. Whatever a household teaches Norish about a food is taught about the Ingredient, so it holds for every spelling. An Ingredient has a name of its own, English where known, and belongs to whoever's action minted it, or to no one when the catalogue seed wrote it (ADR-0037). Deleting an Ingredient reads every recipe line and Grocery that named it again from its own text, minting nothing: one whose words name other foods points at them ("zout en peper" under a deleted "kruidenmix"), and the rest keep their text with no food, as a Heading has none: no price, no Aisle, no nutrition; the household no longer keeps it in the Pantry. One that someone's action minted is deleted the same way once no recipe line, Grocery, recurring grocery or Pantry Ingredient has named it for three months and no food is a kind of it any more, so a one-off purchase does not stay in the catalogue; a seeded one never is, by unused-food removal or by AI. The Ingredients page lists the seeded Ingredients and those a recipe line names. An own one that only Groceries, recurring groceries or Pantry Ingredients name, a grocery food, is hidden there, read from the rows rather than stored: it keeps its Aisle and price: AI never asks about it, and no pass without AI files, merges or re-files it, until a recipe line names it.
@@ -253,7 +257,7 @@ The optional second AI provider that answers closed questions and generates noth
 _Avoid_: Decision provider (names the settings block, not the thing), Classifier (it also scores and ranks), Jev (a product name; the glossary names the role)
 
 **Decision**:
-One request to the Decision Model: a state — text or structured JSON, composed by the feature — plus named Choice, Score and Boolean questions, answered together with a probability for every option. The AI Runtime's fourth entry point, `decide`, beside structured generation, transcription and image generation. It has no Prompt: its criteria come from the domain (the four categories, the household's allergens, the administrator's Cuisines) and its instructions are code-owned, exactly as system messages are (ADR-0035).
+One request to the Decision Model: a state — text or structured JSON, composed by the feature — plus named Choice, Score and Boolean questions, answered together with a probability for every option. The AI Runtime's fourth entry point, `decide`, beside structured generation, transcription and image generation. It has no Prompt: its criteria come from the domain (the household's Categories, the household's allergens, the administrator's Cuisines) and its instructions are code-owned, exactly as system messages are (ADR-0035).
 _Avoid_: Evaluation (the SDK's word; it reads as judging quality), Classification (only one of the three question shapes)
 
 **Clear Case**:
