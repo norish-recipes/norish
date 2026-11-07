@@ -45,6 +45,10 @@ export function createUseRecipesSubscription(
     // pending list's first read and the server taking it reaches nobody: reread it.
     const rereadPending = () =>
       void queryClient.invalidateQueries({ queryKey: trpc.recipes.getPending.queryKey() });
+    // The server saves after the mutation answers, so the household's Categories
+    // are reread when the save is announced, not when the mutation succeeds.
+    const rereadCategories = () =>
+      void queryClient.invalidateQueries({ queryKey: trpc.config.categories.queryKey() });
 
     const addRecipeToList = (recipe: RecipeDashboardDTO) => {
       setAllRecipesData((prev: InfiniteRecipeData | undefined): InfiniteRecipeData | undefined => {
@@ -94,6 +98,7 @@ export function createUseRecipesSubscription(
       onEvent: ({ recipe }) => {
         removePendingRecipe(recipe.id);
         addRecipeToList(recipe);
+        rereadCategories();
       },
     });
 
@@ -127,6 +132,7 @@ export function createUseRecipesSubscription(
         // changes neither.
         if (source !== "enrichment") {
           void queryClient.invalidateQueries({ queryKey: trpc.calendar.listItems.queryKey() });
+          rereadCategories();
         }
       },
     });
@@ -135,6 +141,7 @@ export function createUseRecipesSubscription(
       ...lag,
       onEvent: ({ ids }) => {
         setAllRecipesData((prev) => removeRecipesFromLists(prev, new Set(ids)));
+        rereadCategories();
 
         for (const id of ids) {
           void queryClient.invalidateQueries({ queryKey: trpc.recipes.get.queryKey({ id }) });

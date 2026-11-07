@@ -9,7 +9,7 @@ import {
   SearchField,
   SortOrder,
 } from "@norish/shared/contracts";
-import { isBuiltInCategory } from "@norish/shared/lib/categories";
+import { recipeCategorySchema } from "@norish/shared/contracts/zod";
 
 export type CanonicalRecipeFilters = {
   rawInput: string;
@@ -116,10 +116,11 @@ export function normalizePersistedRecipeFilters(data: unknown): PersistedRecipeF
       ? (d.maxCookingTime as number | null)
       : null;
   const categories = Array.isArray(d.categories)
-    ? d.categories.filter(
-        (category): category is RecipeCategory =>
-          typeof category === "string" && isBuiltInCategory(category)
-      )
+    ? d.categories.flatMap((category): RecipeCategory[] => {
+        const parsed = recipeCategorySchema.safeParse(category);
+
+        return parsed.success ? [parsed.data] : [];
+      })
     : null;
 
   // An absent or unrecognised value is All rather than a rejection: the mobile

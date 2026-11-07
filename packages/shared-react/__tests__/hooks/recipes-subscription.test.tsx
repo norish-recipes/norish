@@ -28,6 +28,7 @@ vi.mock("@trpc/tanstack-react-query", async () => {
 const LIST_KEY = [["recipes", "list"], { input: {}, type: "infinite" }];
 const LIBRARY_KEY = [["library", "list"], { input: {}, type: "infinite" }];
 const CALENDAR_KEY = [["calendar", "listItems"]];
+const CATEGORIES_KEY = [["config", "categories"]];
 const detailKey = (id: string) => [["recipes", "get"], { input: { id }, type: "query" }];
 
 function procedure(name: string) {
@@ -54,6 +55,9 @@ const useTRPC = (() => ({
   },
   calendar: {
     listItems: { queryKey: () => CALENDAR_KEY },
+  },
+  config: {
+    categories: { queryKey: () => CATEGORIES_KEY },
   },
 })) as unknown as CreateRecipeHooksOptions["useTRPC"];
 
@@ -179,12 +183,22 @@ describe("useRecipesSubscription", () => {
     expect(invalidateQueries).not.toHaveBeenCalled();
   });
 
-  it("invalidates the calendar for an update that is not an enrichment, by its real key", () => {
+  it("invalidates the calendar and Categories for an update that is not an enrichment", () => {
     emit("onUpdated", { recipe: fullRecipe({ name: "Renamed" }) });
 
-    expect(invalidateQueries).toHaveBeenCalledTimes(1);
+    expect(invalidateQueries).toHaveBeenCalledTimes(2);
     expect(invalidateQueries).toHaveBeenCalledWith({ queryKey: CALENDAR_KEY });
+    expect(invalidateQueries).toHaveBeenCalledWith({ queryKey: CATEGORIES_KEY });
   });
+
+  it.each(["onCreated", "onDeleted"])(
+    "rereads the household's Categories once a saved recipe is announced by %s",
+    (name) => {
+      emit(name, name === "onCreated" ? { recipe: dashboardRecipe({ id: "r2" }) } : { ids: [] });
+
+      expect(invalidateQueries).toHaveBeenCalledWith({ queryKey: CATEGORIES_KEY });
+    }
+  );
 
   it("removes a deleted recipe from the list and invalidates its detail query", () => {
     emit("onDeleted", { ids: ["recipe-1"] });
