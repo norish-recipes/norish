@@ -23,9 +23,9 @@ import { useTranslations } from "next-intl";
 
 import type { FilterMode, RecipeCategory, SearchField, SortOrder } from "@norish/shared/contracts";
 import { DEFAULT_RECIPE_FILTERS } from "@norish/shared-react/contexts";
+import { BUILT_IN_CATEGORIES } from "@norish/shared/lib/categories";
 import StarRating from "@norish/ui/star-rating";
 
-const ALL_CATEGORIES: RecipeCategory[] = ["Breakfast", "Lunch", "Dinner", "Snack"];
 const COOKING_TIME_OPTIONS: Array<{
   value: number;
   labelKey: string;
@@ -411,7 +411,7 @@ export default function FiltersPanel({ open, onOpenChange }: FiltersPanelProps) 
               {t("categories")}
             </h3>
             <div className="flex flex-wrap gap-1">
-              {ALL_CATEGORIES.map((category) => {
+              {BUILT_IN_CATEGORIES.map((category) => {
                 const active = workingCategories.includes(category);
 
                 return (

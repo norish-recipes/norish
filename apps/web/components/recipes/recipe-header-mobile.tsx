@@ -3,6 +3,7 @@
 import { Fragment, useCallback, useEffect, useRef, useState } from "react";
 import OriginFlag from "@/components/recipes/origin-flag";
 import SmartMarkdownRenderer from "@/components/shared/smart-markdown-renderer";
+import { useCategoryLabel } from "@/lib/category-display";
 import { ClockIcon, FireIcon, TagIcon, UserGroupIcon } from "@heroicons/react/16/solid";
 import { Button } from "@heroui/react";
 import { useTranslations } from "next-intl";
@@ -106,11 +107,12 @@ function TagLine({
   allergySet: Set<string>;
 }) {
   const tForm = useTranslations("recipes.form");
+  const categoryLabel = useCategoryLabel();
 
   const sorted = sortTagsWithAllergyPriority(tags, allergies);
   const allergens = sorted.filter((tag) => isAllergenTag(tag.name, allergySet));
   const plain = [
-    ...categories.map((category) => tForm(`category.${category.toLowerCase()}`)),
+    ...categories.map(categoryLabel),
     ...sorted.filter((tag) => !isAllergenTag(tag.name, allergySet)).map((tag) => tag.name),
   ];
 

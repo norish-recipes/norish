@@ -17,9 +17,10 @@ import TagInput from "@/components/shared/tag-input";
 import EditRecipeSkeleton from "@/components/skeleton/edit-recipe-skeleton";
 import { useDevicePreference } from "@/context/device-preferences-context";
 import { useRecipesContext } from "@/context/recipes-context";
-import { useUnitsQuery } from "@/hooks/config";
+import { useCategoriesQuery, useUnitsQuery } from "@/hooks/config";
 import { useRecipeId } from "@/hooks/recipes";
 import { useUnsavedNavigationGuard } from "@/hooks/use-unsaved-navigation-guard";
+import { useCategoryLabel } from "@/lib/category-display";
 import { Button, FieldError, Input, Label, TextField } from "@heroui/react";
 import { useLocale, useTranslations } from "next-intl";
 
@@ -35,7 +36,7 @@ import ProvenanceFields, { EMPTY_PROVENANCE_FORM_VALUE } from "./provenance-fiel
 import { buildInitialMedia, useRecipeFormDirtyState } from "./use-recipe-form-dirty-state";
 
 const log = createClientLogger("RecipeForm");
-const ALL_CATEGORIES: RecipeCategory[] = ["Breakfast", "Lunch", "Dinner", "Snack"];
+
 export interface RecipeFormProps {
   mode: "create" | "edit";
   initialData?: FullRecipeDTO;
@@ -45,6 +46,8 @@ export default function RecipeForm({ mode, initialData }: RecipeFormProps) {
   const { createRecipe, updateRecipe } = useRecipesContext();
   const locale = useLocale();
   const { units, isLoading: isLoadingUnits } = useUnitsQuery();
+  const { categories: householdCategories } = useCategoriesQuery();
+  const categoryLabel = useCategoryLabel();
   const [unitStyle] = useDevicePreference("unitStyle");
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [errors, setErrors] = useState<Record<string, string>>({});
@@ -69,6 +72,11 @@ export default function RecipeForm({ mode, initialData }: RecipeFormProps) {
   );
   const [tags, setTags] = useState<string[]>(initialData?.tags?.map((t) => t.name) ?? []);
   const [categories, setCategories] = useState<RecipeCategory[]>(initialData?.categories ?? []);
+  // The household's list, plus any the recipe already carries from elsewhere.
+  const categoryOptions = useMemo(
+    () => Array.from(new Set([...householdCategories, ...(initialData?.categories ?? [])])),
+    [householdCategories, initialData?.categories]
+  );
   const [ingredients, setIngredients] = useState<ParsedIngredient[]>([]);
   const [steps, setSteps] = useState<Step[]>([]);
   const [systemUsed, setSystemUsed] = useState<MeasurementSystem>(
@@ -203,6 +211,7 @@ export default function RecipeForm({ mode, initialData }: RecipeFormProps) {
       order: ing.order,
       systemUsed: ing.systemUsed,
     }));
+
     setIngredients(initIngredients);
 
     // Filter steps by the recipe's measurement system
@@ -215,6 +224,7 @@ export default function RecipeForm({ mode, initialData }: RecipeFormProps) {
       images: s.images || [],
       stepIngredients: s.stepIngredients || [],
     }));
+
     setSteps(initSteps);
     setInitializedRecipeId(initialData.id);
   }
@@ -265,6 +275,7 @@ export default function RecipeForm({ mode, initialData }: RecipeFormProps) {
   }, []);
   const validate = useCallback((): boolean => {
     const newErrors: Record<string, string> = {};
+
     if (!name.trim()) {
       newErrors.name = tValidation("nameRequired");
     }
@@ -278,6 +289,7 @@ export default function RecipeForm({ mode, initialData }: RecipeFormProps) {
       newErrors.servings = tValidation("servingsMin");
     }
     setErrors(newErrors);
+
     return Object.keys(newErrors).length === 0;
   }, [name, ingredients, steps, servings, tValidation]);
   const handleSubmit = useCallback(() => {
@@ -417,6 +429,7 @@ export default function RecipeForm({ mode, initialData }: RecipeFormProps) {
   if (isLoadingRecipeId) {
     return <EditRecipeSkeleton mode={mode} />;
   }
+
   return (
     <div className="mx-auto w-full max-w-3xl overflow-hidden px-4 py-6 md:py-8">
       {/* Header */}
@@ -558,8 +571,9 @@ export default function RecipeForm({ mode, initialData }: RecipeFormProps) {
             <div>
               <p className="text-muted mb-3 text-base">{t("categoriesHelp")}</p>
               <div className="flex flex-wrap gap-2">
-                {ALL_CATEGORIES.map((category) => {
+                {categoryOptions.map((category) => {
                   const active = categories.includes(category);
+
                   return (
                     <ChipButton
                       key={category}
@@ -569,7 +583,7 @@ export default function RecipeForm({ mode, initialData }: RecipeFormProps) {
                       variant={active ? "primary" : "tertiary"}
                       onClick={() => toggleCategory(category)}
                     >
-                      {t(`category.${category.toLowerCase()}`)}
+                      {categoryLabel(category)}
                     </ChipButton>
                   );
                 })}
@@ -742,21 +756,21 @@ export default function RecipeForm({ mode, initialData }: RecipeFormProps) {
         {/* Submit */}
         <div className="flex justify-end gap-3 border-t pt-6">
           <Button
+            className="min-w-24"
             isDisabled={isSubmitting}
             size="lg"
-            onPress={handleCancel}
             variant="tertiary"
-            className="min-w-24"
+            onPress={handleCancel}
           >
             {tCommon("cancel")}
           </Button>
           <Button
-            isDisabled={isSubmitting}
-            size="lg"
-            onPress={handleSubmit}
-            variant="primary"
-            isPending={isSubmitting}
             className="min-w-24"
+            isDisabled={isSubmitting}
+            isPending={isSubmitting}
+            size="lg"
+            variant="primary"
+            onPress={handleSubmit}
           >
             {mode === "create" ? t("createRecipe") : t("saveChanges")}
           </Button>

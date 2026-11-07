@@ -4,6 +4,8 @@ import RecipeForm from "@/app/(app)/recipes/edit/components/recipe-form";
 import { fireEvent, render, screen, waitFor } from "@testing-library/react";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 
+import type { FullRecipeDTO } from "@norish/shared/contracts";
+
 const mocks = vi.hoisted(() => ({ createRecipe: vi.fn() }));
 
 vi.mock("next-intl", () => ({
@@ -13,7 +15,13 @@ vi.mock("next-intl", () => ({
 vi.mock("@/context/recipes-context", () => ({
   useRecipesContext: () => ({ createRecipe: mocks.createRecipe, updateRecipe: vi.fn() }),
 }));
-vi.mock("@/hooks/config", () => ({ useUnitsQuery: () => ({ units: {}, isLoading: false }) }));
+vi.mock("@/hooks/config", () => ({
+  useUnitsQuery: () => ({ units: {}, isLoading: false }),
+  useCategoriesQuery: () => ({
+    categories: ["Breakfast", "Lunch", "Dinner", "Snack", "Puddings"],
+    isLoading: false,
+  }),
+}));
 vi.mock("@/context/device-preferences-context", async () =>
   (await import("../../helpers/device-preferences-mock")).mockDevicePreferences()
 );
@@ -110,5 +118,55 @@ describe("RecipeForm servings (#684)", () => {
 
     expect(await screen.findByText("servingsMin")).toBeInTheDocument();
     expect(mocks.createRecipe).not.toHaveBeenCalled();
+  });
+});
+
+describe("RecipeForm categories", () => {
+  const mojito: FullRecipeDTO = {
+    id: "11111111-1111-4111-8111-111111111111",
+    userId: "user-1",
+    name: "Mojito",
+    description: null,
+    url: null,
+    servings: 1,
+    prepMinutes: null,
+    cookMinutes: null,
+    totalMinutes: null,
+    notes: null,
+    systemUsed: "metric",
+    originalSystem: null,
+    calories: null,
+    fat: null,
+    carbs: null,
+    protein: null,
+    originCountry: null,
+    originCountryName: null,
+    originRegion: null,
+    provenanceNote: null,
+    dishColor: null,
+    cuisines: [],
+    createdAt: new Date("2026-05-01T10:00:00.000Z"),
+    updatedAt: new Date("2026-05-01T10:00:00.000Z"),
+    categories: ["Cocktails"],
+    version: 1,
+    recipeIngredients: [],
+    steps: [],
+    tags: [],
+    images: [],
+    videos: [],
+  };
+
+  it("offers the household's list and the recipe's own, labelling only built-ins", () => {
+    render(<RecipeForm initialData={mojito} mode="edit" />);
+
+    expect(screen.getByRole("button", { name: "category.breakfast" })).toBeInTheDocument();
+    expect(screen.getByRole("button", { name: "Puddings" })).toHaveAttribute(
+      "aria-pressed",
+      "false"
+    );
+    expect(screen.getByRole("button", { name: "Cocktails" })).toHaveAttribute(
+      "aria-pressed",
+      "true"
+    );
   });
 });
