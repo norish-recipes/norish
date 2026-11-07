@@ -70,10 +70,8 @@ function validateCategories(categories: readonly RecipeCategory[]): RecipeCatego
  * domain rule rather than a caller's choice: a gap-filling run defers to
  * Supplied Recipe Data, and a replacing run is a deliberate refresh.
  *
- * For a gap-filling run the absence check runs after locking the recipe row,
- * which every Category save also updates, so if a person supplied categories
- * while the AI request was in flight this becomes a successful no-op and the
- * newer supplied data wins.
+ * A gap-filling run checks for categories under a lock on the recipe row, so
+ * ones a person saved meanwhile win and the run is a successful no-op.
  *
  * @returns whether the replacement was applied
  */

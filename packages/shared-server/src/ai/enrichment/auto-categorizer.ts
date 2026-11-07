@@ -1,9 +1,6 @@
 /**
- * Auto-categorization: which of the recipe owner's household Categories a
- * recipe is (ADR-0040). Two paths, in a fixed order (ADR-0035): a Decision when
- * a Decision Model is configured and this use is on, and otherwise — or when
- * the Decision is unsure, or fails — a language-model request. Either path
- * only ever picks from the list it is given.
+ * Which of the owner's household Categories a recipe is (ADR-0040): a Decision
+ * first, else the language model (ADR-0035); both pick only from the list.
  */
 
 import { z } from "zod";
@@ -73,10 +70,8 @@ async function decideCategories(
 }
 
 /**
- * The language model picks from the list, then the run's own claims are
- * checked before they are written (Enrichment Validation). A category the
- * Decision Model answers "no" to is not written; when none survives, the
- * worker's empty-list rule makes the run a retryable failure.
+ * The language model picks from the list; Enrichment Validation then drops any
+ * the Decision Model rejects. None left is the worker's retryable failure.
  */
 async function categorizeWithLanguageModel(
   recipe: RecipeSummary,

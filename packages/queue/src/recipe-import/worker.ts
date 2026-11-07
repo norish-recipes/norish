@@ -92,9 +92,9 @@ async function processImportJob(job: Job<RecipeImportJobData>): Promise<string> 
   // No allergy list is fetched here: extraction reads the source, and allergy
   // detection runs afterwards as its own enrichment kind.
 
+  const householdCategories = await listCategoryNamesForViewer({ userId, householdUserIds });
   // One site login per import, and the job records which: an import that dies
   // on an expired or rate-limited account has to be able to name it.
-  const householdCategories = await listCategoryNamesForViewer({ userId, householdUserIds });
   const sets = credentialSetsForUrl(await getDecryptedTokensByUserId(userId), url);
   const credentials = rotateCredentialSet(sets);
 

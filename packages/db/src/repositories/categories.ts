@@ -12,11 +12,8 @@ import {
 import { BUILT_IN_ALIASES } from "@norish/shared/lib/category-matcher";
 import { viewerAndHouseholdIds } from "@norish/shared/lib/household";
 
-/**
- * A recipe's Category names in order, as a correlated subquery. Like
- * PRIMARY_IMAGE_SQL it names the outer table `"recipes"` by hand, so the
- * query using it must not alias the recipes table.
- */
+// A recipe's Category names in order, as a correlated subquery on `"recipes"`:
+// the query using it must not alias the recipes table.
 export const RECIPE_CATEGORY_NAMES_SQL = sql<string[]>`COALESCE((
   SELECT array_agg(category.name ORDER BY link."order") FROM ${recipeCategories} AS link
   INNER JOIN ${categories} AS category ON category.id = link.category_id
