@@ -37,7 +37,6 @@ import ProvenanceFields, { EMPTY_PROVENANCE_FORM_VALUE } from "./provenance-fiel
 import { buildInitialMedia, useRecipeFormDirtyState } from "./use-recipe-form-dirty-state";
 
 const log = createClientLogger("RecipeForm");
-
 export interface RecipeFormProps {
   mode: "create" | "edit";
   initialData?: FullRecipeDTO;
@@ -216,7 +215,6 @@ export default function RecipeForm({ mode, initialData }: RecipeFormProps) {
       order: ing.order,
       systemUsed: ing.systemUsed,
     }));
-
     setIngredients(initIngredients);
 
     // Filter steps by the recipe's measurement system
@@ -229,7 +227,6 @@ export default function RecipeForm({ mode, initialData }: RecipeFormProps) {
       images: s.images || [],
       stepIngredients: s.stepIngredients || [],
     }));
-
     setSteps(initSteps);
     setInitializedRecipeId(initialData.id);
   }
@@ -289,7 +286,6 @@ export default function RecipeForm({ mode, initialData }: RecipeFormProps) {
   };
   const validate = useCallback((): boolean => {
     const newErrors: Record<string, string> = {};
-
     if (!name.trim()) {
       newErrors.name = tValidation("nameRequired");
     }
@@ -303,7 +299,6 @@ export default function RecipeForm({ mode, initialData }: RecipeFormProps) {
       newErrors.servings = tValidation("servingsMin");
     }
     setErrors(newErrors);
-
     return Object.keys(newErrors).length === 0;
   }, [name, ingredients, steps, servings, tValidation]);
   const handleSubmit = useCallback(() => {
@@ -443,7 +438,6 @@ export default function RecipeForm({ mode, initialData }: RecipeFormProps) {
   if (isLoadingRecipeId) {
     return <EditRecipeSkeleton mode={mode} />;
   }
-
   return (
     <div className="mx-auto w-full max-w-3xl overflow-hidden px-4 py-6 md:py-8">
       {/* Header */}
@@ -587,7 +581,6 @@ export default function RecipeForm({ mode, initialData }: RecipeFormProps) {
               <div className="flex flex-wrap gap-2">
                 {categoryOptions.map((category) => {
                   const active = categories.includes(category);
-
                   return (
                     <ChipButton
                       key={category}
@@ -786,21 +779,21 @@ export default function RecipeForm({ mode, initialData }: RecipeFormProps) {
         {/* Submit */}
         <div className="flex justify-end gap-3 border-t pt-6">
           <Button
-            className="min-w-24"
             isDisabled={isSubmitting}
             size="lg"
-            variant="tertiary"
             onPress={handleCancel}
+            variant="tertiary"
+            className="min-w-24"
           >
             {tCommon("cancel")}
           </Button>
           <Button
-            className="min-w-24"
             isDisabled={isSubmitting}
-            isPending={isSubmitting}
             size="lg"
-            variant="primary"
             onPress={handleSubmit}
+            variant="primary"
+            isPending={isSubmitting}
+            className="min-w-24"
           >
             {mode === "create" ? t("createRecipe") : t("saveChanges")}
           </Button>
