@@ -107,7 +107,7 @@ const MATCH_TERMS = termTable([
 ]);
 
 // A term, or a term plus "s"; undefined when the table does not know it.
-function lookupTerm(table: TermTable, term: string): BuiltInCategory | null | undefined {
+function lookupTerm<T>(table: Map<string, T>, term: string): T | undefined {
   if (table.has(term)) return table.get(term);
 
   return term.endsWith("s") ? table.get(term.slice(0, -1)) : undefined;
@@ -160,19 +160,19 @@ export function resolveBuiltInCategory(input: string): BuiltInCategory | null {
 
 /**
  * The import rule for another app's category names (ADR-0040): a household
- * Category by exact name, else a built-in through `match`, else a Tag.
+ * Category by name or plural, else a built-in through `match`, else a Tag.
  */
 export function sortSourceCategories(
   names: readonly string[],
   household: readonly string[],
   match: (name: string) => BuiltInCategory | null = matchCategory
 ): { categories: string[]; tags: string[] } {
-  const byLower = new Map(household.map((name) => [name.toLowerCase(), name]));
+  const byTerm = new Map(household.map((name) => [normalizeName(name), name]));
   const categories = new Set<string>();
   const tags = new Map<string, string>();
 
   for (const name of names.map((n) => n.trim()).filter(Boolean)) {
-    const category = byLower.get(name.toLowerCase()) ?? match(name);
+    const category = lookupTerm(byTerm, normalizeName(name)) ?? match(name);
 
     if (category) categories.add(category);
     else if (!tags.has(name.toLowerCase())) tags.set(name.toLowerCase(), name);

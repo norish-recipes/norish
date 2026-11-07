@@ -95,8 +95,15 @@ describe("sortSourceCategories", () => {
     });
   });
 
+  it("catches a household Category's plural and accented spelling", () => {
+    expect(sortSourceCategories(["Desserts", "dessért", "Drink"], household)).toEqual({
+      categories: ["Dessert"],
+      tags: ["Drink"],
+    });
+  });
+
   it("then matches a built-in through synonyms and fuzz", () => {
-    expect(sortSourceCategories(["Brunch", "supper", "Desserts"], household)).toEqual({
+    expect(sortSourceCategories(["Brunch", "supper", "Appetizers"], household)).toEqual({
       categories: ["Breakfast", "Dinner", "Snack"],
       tags: [],
     });
