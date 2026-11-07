@@ -29,11 +29,6 @@ type RecipesMessageSubset = {
   };
 };
 
-type CategoryEntry = {
-  category: BuiltInCategory;
-  synonyms: string[];
-};
-
 const ALL_LOCALE_BUNDLES: RecipesMessageSubset[] = [
   arRecipes,
   bgRecipes,
@@ -79,44 +74,50 @@ function normalizeName(input: string): string {
     .trim();
 }
 
-function getLocalizedCategorySynonyms(category: BuiltInCategory): string[] {
-  const categoryKey = CATEGORY_MESSAGE_KEYS[category];
+// Each built-in's name and its translation in every locale, in one walk.
+const BUILT_IN_NAMES = BUILT_IN_CATEGORIES.flatMap((category) =>
+  [category, ...ALL_LOCALE_BUNDLES.map((b) => b.form?.category?.[CATEGORY_MESSAGE_KEYS[category]])]
+    .filter((name): name is string => Boolean(name))
+    .map((name) => [name, category] as const)
+);
 
-  return ALL_LOCALE_BUNDLES.map((bundle) => bundle.form?.category?.[categoryKey] ?? "")
-    .map((label) => label.trim())
-    .filter((label): label is string => label.length > 0);
+// Normalised term to built-in; null for a term two sources give to different built-ins.
+type TermTable = Map<string, BuiltInCategory | null>;
+
+function termTable(pairs: readonly (readonly [string, BuiltInCategory])[]): TermTable {
+  const table: TermTable = new Map();
+
+  for (const [name, category] of pairs) {
+    const term = normalizeName(name);
+    const seen = table.get(term);
+
+    if (term) table.set(term, seen === undefined || seen === category ? category : null);
+  }
+
+  return table;
 }
 
-const CATEGORY_DATA: CategoryEntry[] = BUILT_IN_CATEGORIES.map((category) => {
-  const allSynonyms = [...BASE_SYNONYMS[category], ...getLocalizedCategorySynonyms(category)].map(
-    normalizeName
-  );
+const BUILT_IN_BY_NAME = termTable(BUILT_IN_NAMES);
 
-  return {
-    category,
-    synonyms: Array.from(new Set(allSynonyms)).filter((synonym) => synonym.length > 0),
-  };
-});
+const MATCH_TERMS = termTable([
+  ...BUILT_IN_NAMES,
+  ...BUILT_IN_CATEGORIES.flatMap((category) =>
+    BASE_SYNONYMS[category].map((synonym) => [synonym, category] as const)
+  ),
+]);
 
-const EXACT_MATCH_MAP = new Map<string, BuiltInCategory>();
+// A term, or a term plus "s"; undefined when the table does not know it.
+function lookupTerm(table: TermTable, term: string): BuiltInCategory | null | undefined {
+  if (table.has(term)) return table.get(term);
 
-for (const entry of CATEGORY_DATA) {
-  for (const synonym of entry.synonyms) {
-    if (!EXACT_MATCH_MAP.has(synonym)) {
-      EXACT_MATCH_MAP.set(synonym, entry.category);
-    }
-  }
+  return term.endsWith("s") ? table.get(term.slice(0, -1)) : undefined;
 }
 
 function matchCategoryFromContainedPhrase(normalizedInput: string): BuiltInCategory | null {
   const paddedInput = ` ${normalizedInput} `;
 
-  for (const entry of CATEGORY_DATA) {
-    for (const synonym of entry.synonyms) {
-      if (paddedInput.includes(` ${synonym} `)) {
-        return entry.category;
-      }
-    }
+  for (const [term, category] of MATCH_TERMS) {
+    if (category && paddedInput.includes(` ${term} `)) return category;
   }
 
   return null;
@@ -127,46 +128,26 @@ function matchCategoryFromContainedPhrase(normalizedInput: string): BuiltInCateg
 function matchCategoryByTypo(normalizedInput: string): BuiltInCategory | null {
   if (normalizedInput.length < 4) return null;
 
-  for (const entry of CATEGORY_DATA) {
-    for (const synonym of entry.synonyms) {
-      if (synonym[0] === normalizedInput[0] && editDistance(normalizedInput, synonym) <= 1) {
-        return entry.category;
-      }
+  for (const [term, category] of MATCH_TERMS) {
+    if (category && term[0] === normalizedInput[0] && editDistance(normalizedInput, term) <= 1) {
+      return category;
     }
   }
 
   return null;
 }
 
+/** A source's category name to a built-in by name, synonym, contained word or typo. */
 export function matchCategory(input: string): BuiltInCategory | null {
-  if (!input || typeof input !== "string") return null;
-
   const normalized = normalizeName(input);
 
   if (!normalized) return null;
 
-  const exactMatch = EXACT_MATCH_MAP.get(normalized);
+  const exact = lookupTerm(MATCH_TERMS, normalized);
 
-  if (exactMatch) return exactMatch;
+  if (exact !== undefined) return exact;
 
-  const containedPhraseMatch = matchCategoryFromContainedPhrase(normalized);
-
-  if (containedPhraseMatch) return containedPhraseMatch;
-
-  return matchCategoryByTypo(normalized);
-}
-
-const BUILT_IN_BY_NAME = new Map<string, BuiltInCategory>();
-
-for (const category of BUILT_IN_CATEGORIES) {
-  const key = CATEGORY_MESSAGE_KEYS[category];
-  const names = [category, ...ALL_LOCALE_BUNDLES.map((b) => b.form?.category?.[key] ?? "")];
-
-  for (const name of names.map(normalizeName).filter(Boolean)) {
-    for (const spelling of [name, `${name}s`]) {
-      if (!BUILT_IN_BY_NAME.has(spelling)) BUILT_IN_BY_NAME.set(spelling, category);
-    }
-  }
+  return matchCategoryFromContainedPhrase(normalized) ?? matchCategoryByTypo(normalized);
 }
 
 /**
@@ -174,7 +155,7 @@ for (const category of BUILT_IN_CATEGORIES) {
  * locale, or either plus "s", ignoring case and accents. No synonyms or fuzz.
  */
 export function resolveBuiltInCategory(input: string): BuiltInCategory | null {
-  return BUILT_IN_BY_NAME.get(normalizeName(input)) ?? null;
+  return lookupTerm(BUILT_IN_BY_NAME, normalizeName(input)) ?? null;
 }
 
 /**

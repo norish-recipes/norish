@@ -68,6 +68,13 @@ describe("resolveBuiltInCategory", () => {
     expect(resolveBuiltInCategory("간식")).toBe("Snack");
   });
 
+  it("matches nothing for a name two locales give to different built-ins", () => {
+    // Danish "Frokost" is lunch, Norwegian "Frokost" is breakfast.
+    expect(resolveBuiltInCategory("Frokost")).toBeNull();
+    expect(matchCategory("Frokost")).toBeNull();
+    expect(matchCategory("frokost ideas")).toBeNull();
+  });
+
   it("leaves synonyms, fuzzy spellings and phrases as names of their own", () => {
     expect(resolveBuiltInCategory("Desserts")).toBeNull();
     expect(resolveBuiltInCategory("Appetizers")).toBeNull();
