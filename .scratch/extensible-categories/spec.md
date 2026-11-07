@@ -21,7 +21,7 @@ A household names a new Category from the recipe form, just as it types a Tag. F
 - **A household's list** is the built-ins plus every Category on a recipe owned by the user or their household members (`ctx.userIds`), in a `listCategoryNamesForUsers` beside `listTagNamesForUsers`. Unlike `config.tags`, it never switches to the instance-wide list under the "everyone" view policy or for an admin.
 - Added Categories show their name verbatim, untranslated, with one generic icon.
 - Orphan cleanup deletes a non-built-in row that no recipe carries, the same way it deletes unused tags.
-- **Naming**: trim the name, collapse whitespace, and allow 1–40 characters. A name resolves through the existing category matcher's built-in synonyms first, so "breakfast", "Ontbijt" and "Snacks" become the built-in. After that, a case-insensitive match against existing rows reuses the row, and the first spelling wins instance-wide, as it does for tags.
+- **Naming**: trim the name, collapse whitespace, and allow 1–40 characters. A name a person or an archive gives resolves to a built-in only on an exact match: its name, its translation in any locale, or that plus a plural "s", case-insensitive. So "breakfast", "Ontbijt" and "Snacks" become the built-in, but "Desserts", "Appetizers" and "Side dishes" become Categories of their own (amended 2026-11-07: the matcher's fuzzy and synonym rungs map those to Snack, which would defeat the feature). After that, a case-insensitive match against existing rows reuses the row, and the first spelling wins instance-wide, as it does for tags.
 - Meal plan slots (`slot_type`) are untouched. The random recipe picker's `SLOT_TO_CATEGORY` and the quick-filter presets keep using the built-ins only.
 
 ### AI
