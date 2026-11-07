@@ -1,7 +1,8 @@
 import { describe, expect, it } from "vitest";
 
-import { BUILT_IN_CATEGORIES } from "@norish/shared/lib/categories";
+import { BUILT_IN_CATEGORIES, resolveCategoryName } from "@norish/shared/lib/categories";
 import {
+  BUILT_IN_ALIASES,
   matchCategory,
   resolveBuiltInCategory,
   sortSourceCategories,
@@ -82,6 +83,23 @@ describe("resolveBuiltInCategory", () => {
     expect(resolveBuiltInCategory("brunch")).toBeNull();
     expect(resolveBuiltInCategory("breakfst")).toBeNull();
     expect(resolveBuiltInCategory("quick dinner")).toBeNull();
+  });
+});
+
+describe("resolveCategoryName", () => {
+  it("cleans a name, then picks a built-in, then an existing name by case", () => {
+    expect(resolveCategoryName("  ontbijt ", BUILT_IN_ALIASES, [])).toBe("Breakfast");
+    expect(resolveCategoryName("SNACKS", BUILT_IN_ALIASES, [])).toBe("Snack");
+    expect(resolveCategoryName("desserts", BUILT_IN_ALIASES, ["Desserts"])).toBe("Desserts");
+    expect(resolveCategoryName(" Side   dishes ", BUILT_IN_ALIASES, [])).toBe("Side dishes");
+    expect(resolveCategoryName("Frokost", BUILT_IN_ALIASES, [])).toBe("Frokost");
+    expect(resolveCategoryName("   ", BUILT_IN_ALIASES, [])).toBe("");
+  });
+
+  it("is given only names and translations, never synonyms or ambiguous names", () => {
+    expect(BUILT_IN_ALIASES).toMatchObject({ ontbijt: "Breakfast", "petit dejeuner": "Breakfast" });
+    expect(BUILT_IN_ALIASES).not.toHaveProperty("brunch");
+    expect(BUILT_IN_ALIASES).not.toHaveProperty("frokost");
   });
 });
 

@@ -4,8 +4,12 @@ import { and, eq, inArray, isNull, notInArray, sql } from "drizzle-orm";
 import type { DbTransaction } from "@norish/db/drizzle";
 import { db } from "@norish/db/drizzle";
 import { categories, recipeCategories, recipes } from "@norish/db/schema";
-import { BUILT_IN_CATEGORIES, isBuiltInCategory } from "@norish/shared/lib/categories";
-import { resolveBuiltInCategory } from "@norish/shared/lib/category-matcher";
+import {
+  BUILT_IN_CATEGORIES,
+  isBuiltInCategory,
+  resolveCategoryName,
+} from "@norish/shared/lib/categories";
+import { BUILT_IN_ALIASES } from "@norish/shared/lib/category-matcher";
 
 /**
  * A recipe's Category names in order, as a correlated subquery. Like
@@ -48,10 +52,6 @@ export async function listCategoryNamesForUsers(userIds: string[]): Promise<stri
   return [...BUILT_IN_CATEGORIES, ...rows.map((r) => r.name).filter((n) => !isBuiltInCategory(n))];
 }
 
-function cleanCategoryName(name: string): string {
-  return name.trim().replace(/\s+/g, " ");
-}
-
 /**
  * Category row ids for `names`, created when missing. A name resolves to a
  * built-in only on an exact match, then to an existing row by case.
@@ -62,11 +62,11 @@ async function getOrCreateCategoryIdsTx(
 ): Promise<string[]> {
   const resolved = new Map<string, string>();
 
-  for (const name of names.map(cleanCategoryName)) {
-    if (!name) continue;
-    const canonical = resolveBuiltInCategory(name) ?? name;
+  for (const name of names) {
+    const canonical = resolveCategoryName(name, BUILT_IN_ALIASES, []);
 
-    if (!resolved.has(canonical.toLowerCase())) resolved.set(canonical.toLowerCase(), canonical);
+    if (canonical && !resolved.has(canonical.toLowerCase()))
+      resolved.set(canonical.toLowerCase(), canonical);
   }
 
   if (resolved.size === 0) return [];

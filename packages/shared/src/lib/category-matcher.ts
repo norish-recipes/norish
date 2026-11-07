@@ -18,8 +18,15 @@ import svRecipes from "@norish/i18n/messages/sv/recipes.json" with { type: "json
 import ukRecipes from "@norish/i18n/messages/uk/recipes.json" with { type: "json" };
 
 import type { BuiltInCategory } from "./categories";
-import { BUILT_IN_CATEGORIES } from "./categories";
+import {
+  BUILT_IN_CATEGORIES,
+  cleanCategoryName,
+  isBuiltInCategory,
+  lookupFoldedName,
+  resolveCategoryName,
+} from "./categories";
 import { editDistance } from "./cuisine-resolver";
+import { foldName } from "./fold-name";
 
 type BuiltInCategoryKey = "breakfast" | "lunch" | "dinner" | "snack";
 
@@ -64,16 +71,6 @@ const BASE_SYNONYMS: Record<BuiltInCategory, string[]> = {
   Snack: ["snack", "appetizer", "dessert", "starter", "side", "side dish"],
 };
 
-// Unicode-aware, so Cyrillic, Hangul and Arabic names survive.
-function normalizeName(input: string): string {
-  return input
-    .toLowerCase()
-    .normalize("NFD")
-    .replace(/[\u0300-\u036f]/g, "")
-    .replace(/[^\p{L}\p{N}]+/gu, " ")
-    .trim();
-}
-
 // Each built-in's name and its translation in every locale, in one walk.
 const BUILT_IN_NAMES = BUILT_IN_CATEGORIES.flatMap((category) =>
   [category, ...ALL_LOCALE_BUNDLES.map((b) => b.form?.category?.[CATEGORY_MESSAGE_KEYS[category]])]
@@ -81,23 +78,28 @@ const BUILT_IN_NAMES = BUILT_IN_CATEGORIES.flatMap((category) =>
     .map((name) => [name, category] as const)
 );
 
-// Normalised term to built-in; null for a term two sources give to different built-ins.
-type TermTable = Map<string, BuiltInCategory | null>;
+// Folded term to built-in; null for a term two sources give to different built-ins.
+type TermTable = Record<string, BuiltInCategory | null>;
 
 function termTable(pairs: readonly (readonly [string, BuiltInCategory])[]): TermTable {
-  const table: TermTable = new Map();
+  const table: TermTable = {};
 
   for (const [name, category] of pairs) {
-    const term = normalizeName(name);
-    const seen = table.get(term);
+    const term = foldName(name);
+    const seen = Object.hasOwn(table, term) ? table[term] : undefined;
 
-    if (term) table.set(term, seen === undefined || seen === category ? category : null);
+    if (term) table[term] = seen === undefined || seen === category ? category : null;
   }
 
   return table;
 }
 
-const BUILT_IN_BY_NAME = termTable(BUILT_IN_NAMES);
+/** Folded name or translation to its built-in, for `resolveCategoryName` (ambiguous ones left out). */
+export const BUILT_IN_ALIASES: Readonly<Record<string, BuiltInCategory>> = Object.fromEntries(
+  Object.entries(termTable(BUILT_IN_NAMES)).filter(
+    (entry): entry is [string, BuiltInCategory] => entry[1] !== null
+  )
+);
 
 const MATCH_TERMS = termTable([
   ...BUILT_IN_NAMES,
@@ -106,18 +108,11 @@ const MATCH_TERMS = termTable([
   ),
 ]);
 
-// A term, or a term plus "s"; undefined when the table does not know it.
-function lookupTerm<T>(table: Map<string, T>, term: string): T | undefined {
-  if (table.has(term)) return table.get(term);
+function matchCategoryFromContainedPhrase(folded: string): BuiltInCategory | null {
+  const padded = ` ${folded} `;
 
-  return term.endsWith("s") ? table.get(term.slice(0, -1)) : undefined;
-}
-
-function matchCategoryFromContainedPhrase(normalizedInput: string): BuiltInCategory | null {
-  const paddedInput = ` ${normalizedInput} `;
-
-  for (const [term, category] of MATCH_TERMS) {
-    if (category && paddedInput.includes(` ${term} `)) return category;
+  for (const [term, category] of Object.entries(MATCH_TERMS)) {
+    if (category && padded.includes(` ${term} `)) return category;
   }
 
   return null;
@@ -125,13 +120,11 @@ function matchCategoryFromContainedPhrase(normalizedInput: string): BuiltInCateg
 
 // A typo of a whole term: one edit, four letters or more, same first letter, so
 // "breakfst" matches but "bread", "inner" and "pie" do not.
-function matchCategoryByTypo(normalizedInput: string): BuiltInCategory | null {
-  if (normalizedInput.length < 4) return null;
+function matchCategoryByTypo(folded: string): BuiltInCategory | null {
+  if (folded.length < 4) return null;
 
-  for (const [term, category] of MATCH_TERMS) {
-    if (category && term[0] === normalizedInput[0] && editDistance(normalizedInput, term) <= 1) {
-      return category;
-    }
+  for (const [term, category] of Object.entries(MATCH_TERMS)) {
+    if (category && term[0] === folded[0] && editDistance(folded, term) <= 1) return category;
   }
 
   return null;
@@ -139,15 +132,15 @@ function matchCategoryByTypo(normalizedInput: string): BuiltInCategory | null {
 
 /** A source's category name to a built-in by name, synonym, contained word or typo. */
 export function matchCategory(input: string): BuiltInCategory | null {
-  const normalized = normalizeName(input);
+  const folded = foldName(input);
 
-  if (!normalized) return null;
+  if (!folded) return null;
 
-  const exact = lookupTerm(MATCH_TERMS, normalized);
+  const exact = lookupFoldedName(MATCH_TERMS, folded);
 
   if (exact !== undefined) return exact;
 
-  return matchCategoryFromContainedPhrase(normalized) ?? matchCategoryByTypo(normalized);
+  return matchCategoryFromContainedPhrase(folded) ?? matchCategoryByTypo(folded);
 }
 
 /**
@@ -155,7 +148,9 @@ export function matchCategory(input: string): BuiltInCategory | null {
  * locale, or either plus "s", ignoring case and accents. No synonyms or fuzz.
  */
 export function resolveBuiltInCategory(input: string): BuiltInCategory | null {
-  return lookupTerm(BUILT_IN_BY_NAME, normalizeName(input)) ?? null;
+  const name = resolveCategoryName(input, BUILT_IN_ALIASES, []);
+
+  return isBuiltInCategory(name) ? name : null;
 }
 
 /**
@@ -167,12 +162,12 @@ export function sortSourceCategories(
   household: readonly string[],
   match: (name: string) => BuiltInCategory | null = matchCategory
 ): { categories: string[]; tags: string[] } {
-  const byTerm = new Map(household.map((name) => [normalizeName(name), name]));
+  const byTerm = Object.fromEntries(household.map((name) => [foldName(name), name]));
   const categories = new Set<string>();
   const tags = new Map<string, string>();
 
-  for (const name of names.map((n) => n.trim()).filter(Boolean)) {
-    const category = lookupTerm(byTerm, normalizeName(name)) ?? match(name);
+  for (const name of names.map(cleanCategoryName).filter(Boolean)) {
+    const category = lookupFoldedName(byTerm, foldName(name)) ?? match(name);
 
     if (category) categories.add(category);
     else if (!tags.has(name.toLowerCase())) tags.set(name.toLowerCase(), name);

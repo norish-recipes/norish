@@ -3,6 +3,7 @@ import { z } from "zod";
 
 import { measurementSystemEnum, recipes } from "@norish/db-schema/schema";
 
+import { cleanCategoryName } from "../../lib/categories";
 import { primaryRecipeImage } from "../../lib/recipe-media";
 import { CuisineSummarySchema } from "./cuisine";
 import { RecipeImagesArraySchema, RecipeImageSchema } from "./recipe-images";
@@ -16,11 +17,7 @@ import { StepOutputSchema, StepStepSchema } from "./steps";
 import { TagNameSchema, TagSummarySchema } from "./tag";
 
 /** A Category name: trimmed, inner whitespace collapsed, 1 to 40 characters (ADR-0040). */
-export const recipeCategorySchema = z
-  .string()
-  .overwrite((name) => name.trim().replace(/\s+/g, " "))
-  .min(1)
-  .max(40);
+export const recipeCategorySchema = z.string().overwrite(cleanCategoryName).min(1).max(40);
 
 export const RecipeSelectBaseSchema = createSelectSchema(recipes).extend({
   userId: z.string().nullable(),
