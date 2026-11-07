@@ -36,8 +36,8 @@ function getFactory(): VideoProcessorFactory {
 export async function processVideoRecipe(
   url: string,
   recipeId: string,
-  tokens?: SiteAuthTokenDecryptedDto[],
-  householdCategories?: readonly string[]
+  tokens: SiteAuthTokenDecryptedDto[] | undefined,
+  householdCategories: readonly string[]
 ): Promise<FullRecipeInsertDTO> {
   // Checked separately so the error names the setting that is actually off,
   // rather than sending an administrator to the wrong one.

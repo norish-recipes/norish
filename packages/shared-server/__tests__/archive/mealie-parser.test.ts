@@ -214,7 +214,9 @@ describe("Mealie Parser", () => {
         mockIngredients,
         mockInstructions,
         lookups,
-        "123e4567-e89b-42d3-a456-426614174000"
+        "123e4567-e89b-42d3-a456-426614174000",
+        undefined,
+        BUILT_IN_CATEGORIES
       );
 
       expect(dto).not.toBeNull();
@@ -233,7 +235,9 @@ describe("Mealie Parser", () => {
         mockIngredients,
         mockInstructions,
         lookups,
-        "123e4567-e89b-42d3-a456-426614174000"
+        "123e4567-e89b-42d3-a456-426614174000",
+        undefined,
+        BUILT_IN_CATEGORIES
       );
 
       expect(dto).not.toBeNull();
@@ -285,7 +289,9 @@ describe("Mealie Parser", () => {
         parsedIngredients,
         mockInstructions,
         parsedLookups,
-        "123e4567-e89b-42d3-a456-426614174000"
+        "123e4567-e89b-42d3-a456-426614174000",
+        undefined,
+        BUILT_IN_CATEGORIES
       );
 
       expect(dto).not.toBeNull();
@@ -324,7 +330,9 @@ describe("Mealie Parser", () => {
         parsedIngredients,
         mockInstructions,
         parsedLookups,
-        "123e4567-e89b-42d3-a456-426614174000"
+        "123e4567-e89b-42d3-a456-426614174000",
+        undefined,
+        BUILT_IN_CATEGORIES
       );
 
       expect(dto).not.toBeNull();
@@ -358,7 +366,9 @@ describe("Mealie Parser", () => {
         parsedIngredients,
         mockInstructions,
         parsedLookups,
-        "123e4567-e89b-42d3-a456-426614174000"
+        "123e4567-e89b-42d3-a456-426614174000",
+        undefined,
+        BUILT_IN_CATEGORIES
       );
 
       expect(dto).not.toBeNull();
@@ -391,7 +401,9 @@ describe("Mealie Parser", () => {
         ],
         mockInstructions,
         parsedLookups,
-        "123e4567-e89b-42d3-a456-426614174000"
+        "123e4567-e89b-42d3-a456-426614174000",
+        undefined,
+        BUILT_IN_CATEGORIES
       );
 
       expect(dto.recipeIngredients[0]).toMatchObject({
@@ -433,7 +445,9 @@ describe("Mealie Parser", () => {
           emptyIngredients,
           mockInstructions,
           lookups,
-          "123e4567-e89b-42d3-a456-426614174000"
+          "123e4567-e89b-42d3-a456-426614174000",
+          undefined,
+          BUILT_IN_CATEGORIES
         )
       ).rejects.toThrow("has no valid ingredients after filtering empty ones");
     });
@@ -469,7 +483,9 @@ describe("Mealie Parser", () => {
         mixedIngredients,
         mockInstructions,
         lookups,
-        "123e4567-e89b-42d3-a456-426614174000"
+        "123e4567-e89b-42d3-a456-426614174000",
+        undefined,
+        BUILT_IN_CATEGORIES
       );
 
       expect(dto).not.toBeNull();
@@ -496,7 +512,9 @@ describe("Mealie Parser", () => {
         mockIngredients,
         mockInstructions,
         lookupsWithTags,
-        "123e4567-e89b-42d3-a456-426614174000"
+        "123e4567-e89b-42d3-a456-426614174000",
+        undefined,
+        BUILT_IN_CATEGORIES
       );
 
       expect(dto).not.toBeNull();
@@ -516,7 +534,9 @@ describe("Mealie Parser", () => {
         mockIngredients,
         mockInstructions,
         lookupsWithCategories,
-        "123e4567-e89b-42d3-a456-426614174000"
+        "123e4567-e89b-42d3-a456-426614174000",
+        undefined,
+        BUILT_IN_CATEGORIES
       );
 
       expect(dto).not.toBeNull();
@@ -558,7 +578,9 @@ describe("Mealie Parser", () => {
         mockIngredients,
         mockInstructions,
         lookupsWithDuplicates,
-        "123e4567-e89b-42d3-a456-426614174000"
+        "123e4567-e89b-42d3-a456-426614174000",
+        undefined,
+        BUILT_IN_CATEGORIES
       );
 
       expect(dto).not.toBeNull();
@@ -574,7 +596,9 @@ describe("Mealie Parser", () => {
         mockIngredients,
         shuffled,
         lookups,
-        "123e4567-e89b-42d3-a456-426614174000"
+        "123e4567-e89b-42d3-a456-426614174000",
+        undefined,
+        BUILT_IN_CATEGORIES
       );
 
       expect(dto).not.toBeNull();
@@ -592,7 +616,9 @@ describe("Mealie Parser", () => {
         mockIngredients,
         mockInstructions,
         lookups,
-        "123e4567-e89b-42d3-a456-426614174000"
+        "123e4567-e89b-42d3-a456-426614174000",
+        undefined,
+        BUILT_IN_CATEGORIES
       );
 
       expect(dto).not.toBeNull();
@@ -611,7 +637,9 @@ describe("Mealie Parser", () => {
         mockIngredients,
         mockInstructions,
         lookups,
-        "123e4567-e89b-42d3-a456-426614174000"
+        "123e4567-e89b-42d3-a456-426614174000",
+        undefined,
+        BUILT_IN_CATEGORIES
       );
 
       expect(dto).not.toBeNull();
@@ -630,7 +658,9 @@ describe("Mealie Parser", () => {
         mockIngredients,
         mockInstructions,
         lookups,
-        "123e4567-e89b-42d3-a456-426614174000"
+        "123e4567-e89b-42d3-a456-426614174000",
+        undefined,
+        BUILT_IN_CATEGORIES
       );
 
       expect(dto).not.toBeNull();
@@ -650,7 +680,9 @@ describe("Mealie Parser", () => {
         mockIngredients,
         mockInstructions,
         lookups,
-        "123e4567-e89b-42d3-a456-426614174000"
+        "123e4567-e89b-42d3-a456-426614174000",
+        undefined,
+        BUILT_IN_CATEGORIES
       );
 
       expect(dto).not.toBeNull();
@@ -670,7 +702,9 @@ describe("Mealie Parser", () => {
         mockIngredients,
         mockInstructions,
         lookups,
-        "123e4567-e89b-42d3-a456-426614174000"
+        "123e4567-e89b-42d3-a456-426614174000",
+        undefined,
+        BUILT_IN_CATEGORIES
       );
 
       expect(dto).not.toBeNull();
@@ -688,7 +722,9 @@ describe("Mealie Parser", () => {
         mockIngredients,
         mockInstructions,
         lookups,
-        "123e4567-e89b-42d3-a456-426614174000"
+        "123e4567-e89b-42d3-a456-426614174000",
+        undefined,
+        BUILT_IN_CATEGORIES
       );
 
       expect(dto).not.toBeNull();
@@ -705,7 +741,9 @@ describe("Mealie Parser", () => {
         mockIngredients,
         mockInstructions,
         lookups,
-        "123e4567-e89b-42d3-a456-426614174000"
+        "123e4567-e89b-42d3-a456-426614174000",
+        undefined,
+        BUILT_IN_CATEGORIES
       );
 
       expect(dto).not.toBeNull();
@@ -724,7 +762,10 @@ describe("Mealie Parser", () => {
         mockRecipe,
         mockIngredients,
         [...mockInstructions, emptyInstruction],
-        lookups
+        lookups,
+        undefined,
+        undefined,
+        BUILT_IN_CATEGORIES
       );
 
       expect(dto).not.toBeNull();
@@ -740,7 +781,9 @@ describe("Mealie Parser", () => {
           mockIngredients,
           mockInstructions,
           lookups,
-          "123e4567-e89b-42d3-a456-426614174000"
+          "123e4567-e89b-42d3-a456-426614174000",
+          undefined,
+          BUILT_IN_CATEGORIES
         )
       ).rejects.toThrow("Missing recipe name");
     });
@@ -753,7 +796,8 @@ describe("Mealie Parser", () => {
         mockInstructions,
         lookups,
         "123e4567-e89b-42d3-a456-426614174000",
-        imageBuffer
+        imageBuffer,
+        BUILT_IN_CATEGORIES
       );
 
       expect(dto).not.toBeNull();
@@ -775,7 +819,9 @@ describe("Mealie Parser", () => {
         noteOnlyIngredients,
         mockInstructions,
         lookups,
-        "123e4567-e89b-42d3-a456-426614174000"
+        "123e4567-e89b-42d3-a456-426614174000",
+        undefined,
+        BUILT_IN_CATEGORIES
       );
 
       expect(dto).not.toBeNull();
@@ -800,7 +846,9 @@ describe("Mealie Parser", () => {
         zeroQuantityIngredients,
         mockInstructions,
         lookups,
-        "123e4567-e89b-42d3-a456-426614174000"
+        "123e4567-e89b-42d3-a456-426614174000",
+        undefined,
+        BUILT_IN_CATEGORIES
       );
 
       expect(dto).not.toBeNull();

@@ -30,7 +30,7 @@ export async function extractRecipeFromVideo(
   metadata: VideoMetadata,
   recipeId: string,
   url: string,
-  householdCategories?: readonly string[]
+  householdCategories: readonly string[]
 ): Promise<FullRecipeInsertDTO> {
   videoLogger.info({ url, title: metadata.title }, "Starting AI video recipe extraction");
 

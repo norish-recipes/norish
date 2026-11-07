@@ -7,11 +7,7 @@ import { parseSteps } from "@norish/api/parser/parsers/steps";
 import { parseVideos } from "@norish/api/parser/parsers/videos";
 import { getUnits } from "@norish/shared-server/config/server-config-loader";
 import { parserLogger as log } from "@norish/shared-server/logger";
-import { BUILT_IN_CATEGORIES } from "@norish/shared/lib/categories";
-import {
-  resolveBuiltInCategory,
-  sortSourceCategories,
-} from "@norish/shared/lib/category-matcher";
+import { resolveBuiltInCategory, sortSourceCategories } from "@norish/shared/lib/category-matcher";
 import { hasRecipeName } from "@norish/shared/lib/helpers";
 
 import type { RecipeScrapersParserSuccess } from "./contract";
@@ -189,7 +185,7 @@ export async function adaptRecipeScrapersResponse(
   success: RecipeScrapersParserSuccess,
   recipeId: string,
   originalUrl: string,
-  householdCategories: readonly string[] = BUILT_IN_CATEGORIES
+  householdCategories: readonly string[]
 ): Promise<FullRecipeInsertDTO | null> {
   const recipe = success.recipe;
   const title = normalizeString(recipe.title);

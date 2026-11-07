@@ -23,7 +23,6 @@ import {
   NOT_A_RECIPE_REASON,
   PRIVATE_ADDRESS_REASON,
 } from "@norish/shared/contracts/realtime/recipes";
-import { BUILT_IN_CATEGORIES } from "@norish/shared/lib/categories";
 import { ErrorWithDetail } from "@norish/shared/lib/error-extensions";
 import { hasRecipeName, hasSteps, isVideoUrl } from "@norish/shared/lib/helpers";
 import { isIngredientHeading } from "@norish/shared/lib/ingredient-text";
@@ -137,7 +136,7 @@ async function tryExtractWithAI(
   log.info({ url }, "Attempting AI extraction");
 
   try {
-    return await extractRecipeWithAI(source, recipeId, url, jsonLd, householdCategories);
+    return await extractRecipeWithAI(source, recipeId, { url, jsonLd, householdCategories });
   } catch (error) {
     log.warn({ url, err: error }, "AI extraction failed");
 
@@ -290,12 +289,17 @@ async function fetchRecipePage(
   return { html: plain.html, status: plain.status };
 }
 
+export interface ParseRecipeFromUrlOptions {
+  forceAI?: boolean;
+  tokens?: SiteAuthTokenDecryptedDto[];
+  /** The importing household's Categories, the only ones a category may become. */
+  householdCategories: readonly string[];
+}
+
 export async function parseRecipeFromUrl(
   url: string,
   recipeId: string,
-  forceAI?: boolean,
-  tokens?: SiteAuthTokenDecryptedDto[],
-  householdCategories: readonly string[] = BUILT_IN_CATEGORIES
+  { forceAI, tokens, householdCategories }: ParseRecipeFromUrlOptions
 ): Promise<ParseRecipeResult> {
   const videoResult = await tryHandleVideoUrl(url, recipeId, tokens, householdCategories);
 

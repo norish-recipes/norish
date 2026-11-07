@@ -2,7 +2,6 @@ import * as cheerio from "cheerio";
 import JSZip from "jszip";
 
 import { FullRecipeInsertDTO } from "@norish/shared/contracts";
-import { BUILT_IN_CATEGORIES } from "@norish/shared/lib/categories";
 import { sortSourceCategories } from "@norish/shared/lib/category-matcher";
 import { parseIsoDuration } from "@norish/shared/lib/helpers";
 
@@ -173,7 +172,7 @@ export async function parseRecipeKeeperRecipeToDTO(
   recipe: RecipeKeeperRecipe,
   recipeId: string,
   zip: JSZip,
-  householdCategories: readonly string[] = BUILT_IN_CATEGORIES
+  householdCategories: readonly string[]
 ): Promise<ParsedRecipeKeeperRecipe> {
   const prepMinutes = minutesOf(recipe.prepTime);
   const cookMinutes = minutesOf(recipe.cookTime);

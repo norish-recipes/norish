@@ -333,13 +333,10 @@ describe("import triage with a Decision Model", () => {
     expect(result.name).toBe("Pasta");
     // Long enough by the Decision's word: the post is not rendered for more.
     expect(boundary.fetchRenderedPage).not.toHaveBeenCalled();
-    expect(boundary.extractRecipeWithAI).toHaveBeenCalledWith(
-      terse,
-      RECIPE_ID,
-      URL_UNDER_TEST,
-      [],
-      HOUSEHOLD
-    );
+    expect(boundary.extractRecipeWithAI).toHaveBeenCalledWith(terse, RECIPE_ID, {
+      url: URL_UNDER_TEST,
+      householdCategories: HOUSEHOLD,
+    });
   });
 
   it("extracts a video post from a short caption the Decision Model says holds a recipe, before any transcription", async () => {
@@ -420,13 +417,10 @@ describe("import triage with a Decision Model", () => {
 
     expect(result.name).toBe("Pasta");
     expect(boundary.judgeRecipe).toHaveBeenCalledTimes(1);
-    expect(boundary.extractRecipeWithAI).toHaveBeenCalledWith(
-      SHORT_CAPTION,
-      RECIPE_ID,
-      URL_UNDER_TEST,
-      [],
-      HOUSEHOLD
-    );
+    expect(boundary.extractRecipeWithAI).toHaveBeenCalledWith(SHORT_CAPTION, RECIPE_ID, {
+      url: URL_UNDER_TEST,
+      householdCategories: HOUSEHOLD,
+    });
   });
 
   it("keeps the length rules when triage has no opinion", async () => {

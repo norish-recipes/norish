@@ -9,6 +9,7 @@ import {
 } from "@norish/api/parser/extraction-prompts";
 import { recipeExtractionSchema } from "@norish/api/parser/extraction.schema";
 import { resolveExistingWorkspacePath } from "@norish/shared-server/lib/workspace-paths";
+import { BUILT_IN_CATEGORIES } from "@norish/shared/lib/categories";
 
 const IMAGE_EXTRACTION_PROMPT = readFileSync(
   join(
@@ -20,7 +21,10 @@ const IMAGE_EXTRACTION_PROMPT = readFileSync(
 
 describe("extraction inputs request no inference", () => {
   it("builds the HTML sections without tagging or allergy instructions", () => {
-    const sections = buildRecipeExtractionSections("WEBPAGE", { url: "https://example.com" });
+    const sections = buildRecipeExtractionSections("WEBPAGE", {
+      url: "https://example.com",
+      categories: BUILT_IN_CATEGORIES,
+    });
     const composed = sections.join("\n\n");
 
     expect(composed).toContain("WEBPAGE");
@@ -52,6 +56,7 @@ describe("extraction inputs request no inference", () => {
       title: "Pasta",
       duration: 120,
       url: "https://example.com/video",
+      categories: BUILT_IN_CATEGORIES,
     });
     const composed = sections.join("\n\n");
 

@@ -23,7 +23,8 @@ describe("Mela Parser", () => {
         ingredients: "Per la crema:\n3 eggs\nSAVOIARDI\n# Per servire\ncocoa",
         instructions: "Crema:\nWhisk the eggs with the sugar until pale and thick.",
       },
-      RECIPE_ID
+      RECIPE_ID,
+      BUILT_IN_CATEGORIES
     );
 
     expect(dto.recipeIngredients.map((line) => line.ingredientName)).toEqual([
@@ -56,7 +57,8 @@ describe("Mela Parser", () => {
     const step = "Whisk the eggs with the sugar, then fold in the following:";
     const dto = await parseMelaRecipeToDTO(
       { title: "Tiramisù", ingredients: "3 eggs", instructions: step },
-      RECIPE_ID
+      RECIPE_ID,
+      BUILT_IN_CATEGORIES
     );
 
     expect(dto.steps.map((s) => s.step)).toEqual([step]);

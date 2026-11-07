@@ -13,7 +13,6 @@
 import type { FullRecipeInsertDTO } from "@norish/shared/contracts/dto/recipe";
 import { getUnits } from "@norish/shared-server/config/server-config-loader";
 import { parserLogger } from "@norish/shared-server/logger";
-import { BUILT_IN_CATEGORIES } from "@norish/shared/lib/categories";
 import { sortSourceCategories } from "@norish/shared/lib/category-matcher";
 import { isUrl } from "@norish/shared/lib/helpers";
 import { normalizeEnrichmentTagNames } from "@norish/shared/lib/recipe-enrichment";
@@ -70,7 +69,7 @@ function parseAllergyIndications(json: Record<string, unknown>): string[] {
  */
 export function parseCategories(
   recipeCategory: unknown,
-  householdCategories: readonly string[] = BUILT_IN_CATEGORIES
+  householdCategories: readonly string[]
 ): { categories: string[]; tags: string[] } {
   const names =
     typeof recipeCategory === "string"
@@ -126,7 +125,7 @@ function getSourceUrl(json: Record<string, unknown>): string | null {
 export async function normalizeRecipeFromJson(
   json: unknown,
   recipeId: string,
-  householdCategories: readonly string[] = BUILT_IN_CATEGORIES
+  householdCategories: readonly string[]
 ): Promise<FullRecipeInsertDTO | null> {
   if (!json) return null;
 

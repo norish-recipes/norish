@@ -129,7 +129,12 @@ describe("Paprika Parser", () => {
     });
 
     it("converts Paprika recipe to DTO", async () => {
-      const dto = await parsePaprikaRecipeToDTO(mockRecipe, "123e4567-e89b-42d3-a456-426614174000");
+      const dto = await parsePaprikaRecipeToDTO(
+        mockRecipe,
+        "123e4567-e89b-42d3-a456-426614174000",
+        undefined,
+        BUILT_IN_CATEGORIES
+      );
 
       expect(dto.name).toBe("Protein French Toast");
       expect(dto.description).toBe("High protein breakfast");
@@ -141,7 +146,12 @@ describe("Paprika Parser", () => {
     });
 
     it("imports images as supplied: nothing in a foreign archive is a Generated Image", async () => {
-      const dto = await parsePaprikaRecipeToDTO(mockRecipe, "123e4567-e89b-42d3-a456-426614174000");
+      const dto = await parsePaprikaRecipeToDTO(
+        mockRecipe,
+        "123e4567-e89b-42d3-a456-426614174000",
+        undefined,
+        BUILT_IN_CATEGORIES
+      );
 
       // Foreign formats carry no marking field, and none is ever invented:
       // whatever a Paprika archive holds arrives as Supplied Recipe Data.
@@ -149,7 +159,12 @@ describe("Paprika Parser", () => {
     });
 
     it("splits ingredients by newlines", async () => {
-      const dto = await parsePaprikaRecipeToDTO(mockRecipe, "123e4567-e89b-42d3-a456-426614174000");
+      const dto = await parsePaprikaRecipeToDTO(
+        mockRecipe,
+        "123e4567-e89b-42d3-a456-426614174000",
+        undefined,
+        BUILT_IN_CATEGORIES
+      );
 
       expect(dto.recipeIngredients).toHaveLength(4);
       expect(dto.recipeIngredients![0].order).toBe(0);
@@ -157,7 +172,12 @@ describe("Paprika Parser", () => {
     });
 
     it("splits directions into steps", async () => {
-      const dto = await parsePaprikaRecipeToDTO(mockRecipe, "123e4567-e89b-42d3-a456-426614174000");
+      const dto = await parsePaprikaRecipeToDTO(
+        mockRecipe,
+        "123e4567-e89b-42d3-a456-426614174000",
+        undefined,
+        BUILT_IN_CATEGORIES
+      );
 
       expect(dto.steps).toHaveLength(3);
       expect(dto.steps![0].step).toBe("Dehydrate bread slices overnight.");
@@ -167,7 +187,12 @@ describe("Paprika Parser", () => {
     });
 
     it("maps categories to tags", async () => {
-      const dto = await parsePaprikaRecipeToDTO(mockRecipe, "123e4567-e89b-42d3-a456-426614174000");
+      const dto = await parsePaprikaRecipeToDTO(
+        mockRecipe,
+        "123e4567-e89b-42d3-a456-426614174000",
+        undefined,
+        BUILT_IN_CATEGORIES
+      );
 
       expect(dto.tags).toHaveLength(3);
       expect(dto.tags![0].name).toBe("Breakfast");
@@ -178,7 +203,12 @@ describe("Paprika Parser", () => {
     it("maps matched categories into recipe categories", async () => {
       mockRecipe.categories = ["brunch", "quick weeknight dinner ideas", "random"];
 
-      const dto = await parsePaprikaRecipeToDTO(mockRecipe, "123e4567-e89b-42d3-a456-426614174000");
+      const dto = await parsePaprikaRecipeToDTO(
+        mockRecipe,
+        "123e4567-e89b-42d3-a456-426614174000",
+        undefined,
+        BUILT_IN_CATEGORIES
+      );
 
       expect(dto.categories).toEqual(["Breakfast", "Dinner"]);
     });
@@ -201,7 +231,12 @@ describe("Paprika Parser", () => {
       mockRecipe.nutritional_info =
         "Calories: 443kcal | Carbohydrates: 56g | Protein: 15g | Fat: 19g";
 
-      const dto = await parsePaprikaRecipeToDTO(mockRecipe, "123e4567-e89b-42d3-a456-426614174000");
+      const dto = await parsePaprikaRecipeToDTO(
+        mockRecipe,
+        "123e4567-e89b-42d3-a456-426614174000",
+        undefined,
+        BUILT_IN_CATEGORIES
+      );
 
       expect(dto.calories).toBe(443);
       expect(dto.carbs).toBe("56");
@@ -215,7 +250,12 @@ describe("Paprika Parser", () => {
       mockRecipe.cook_time = "2 hours";
       mockRecipe.total_time = "1h30m";
 
-      const dto = await parsePaprikaRecipeToDTO(mockRecipe, "123e4567-e89b-42d3-a456-426614174000");
+      const dto = await parsePaprikaRecipeToDTO(
+        mockRecipe,
+        "123e4567-e89b-42d3-a456-426614174000",
+        undefined,
+        BUILT_IN_CATEGORIES
+      );
 
       expect(dto.prepMinutes).toBe(90);
       expect(dto.cookMinutes).toBe(120);
@@ -227,7 +267,12 @@ describe("Paprika Parser", () => {
       mockRecipe.cook_time = "";
       mockRecipe.total_time = "";
 
-      const dto = await parsePaprikaRecipeToDTO(mockRecipe, "123e4567-e89b-42d3-a456-426614174000");
+      const dto = await parsePaprikaRecipeToDTO(
+        mockRecipe,
+        "123e4567-e89b-42d3-a456-426614174000",
+        undefined,
+        BUILT_IN_CATEGORIES
+      );
 
       expect(dto.prepMinutes).toBeUndefined();
       expect(dto.cookMinutes).toBeUndefined();
@@ -237,7 +282,12 @@ describe("Paprika Parser", () => {
     it("parses servings as number", async () => {
       mockRecipe.servings = "4";
 
-      const dto = await parsePaprikaRecipeToDTO(mockRecipe, "123e4567-e89b-42d3-a456-426614174000");
+      const dto = await parsePaprikaRecipeToDTO(
+        mockRecipe,
+        "123e4567-e89b-42d3-a456-426614174000",
+        undefined,
+        BUILT_IN_CATEGORIES
+      );
 
       expect(dto.servings).toBe(4);
     });
@@ -245,7 +295,12 @@ describe("Paprika Parser", () => {
     it("handles empty servings", async () => {
       mockRecipe.servings = "";
 
-      const dto = await parsePaprikaRecipeToDTO(mockRecipe, "123e4567-e89b-42d3-a456-426614174000");
+      const dto = await parsePaprikaRecipeToDTO(
+        mockRecipe,
+        "123e4567-e89b-42d3-a456-426614174000",
+        undefined,
+        BUILT_IN_CATEGORIES
+      );
 
       expect(dto.servings).toBeUndefined();
     });
@@ -255,7 +310,8 @@ describe("Paprika Parser", () => {
       const dto = await parsePaprikaRecipeToDTO(
         mockRecipe,
         "123e4567-e89b-42d3-a456-426614174000",
-        imageBuffer
+        imageBuffer,
+        BUILT_IN_CATEGORIES
       );
 
       expect(dto.images).toEqual([{ image: "mocked-image-guid", order: 0 }]);
@@ -265,7 +321,12 @@ describe("Paprika Parser", () => {
       mockRecipe.source_url = "https://source-url.com";
       mockRecipe.source = "https://source.com";
 
-      const dto = await parsePaprikaRecipeToDTO(mockRecipe, "123e4567-e89b-42d3-a456-426614174000");
+      const dto = await parsePaprikaRecipeToDTO(
+        mockRecipe,
+        "123e4567-e89b-42d3-a456-426614174000",
+        undefined,
+        BUILT_IN_CATEGORIES
+      );
 
       expect(dto.url).toBe("https://source-url.com");
     });
@@ -274,7 +335,12 @@ describe("Paprika Parser", () => {
       mockRecipe.source_url = undefined;
       mockRecipe.source = "https://source.com";
 
-      const dto = await parsePaprikaRecipeToDTO(mockRecipe, "123e4567-e89b-42d3-a456-426614174000");
+      const dto = await parsePaprikaRecipeToDTO(
+        mockRecipe,
+        "123e4567-e89b-42d3-a456-426614174000",
+        undefined,
+        BUILT_IN_CATEGORIES
+      );
 
       expect(dto.url).toBe("https://source.com");
     });
@@ -283,14 +349,24 @@ describe("Paprika Parser", () => {
       mockRecipe.name = "";
 
       await expect(
-        parsePaprikaRecipeToDTO(mockRecipe, "123e4567-e89b-42d3-a456-426614174000")
+        parsePaprikaRecipeToDTO(
+          mockRecipe,
+          "123e4567-e89b-42d3-a456-426614174000",
+          undefined,
+          BUILT_IN_CATEGORIES
+        )
       ).rejects.toThrow("Missing recipe name");
     });
 
     it("handles empty ingredients", async () => {
       mockRecipe.ingredients = "";
 
-      const dto = await parsePaprikaRecipeToDTO(mockRecipe, "123e4567-e89b-42d3-a456-426614174000");
+      const dto = await parsePaprikaRecipeToDTO(
+        mockRecipe,
+        "123e4567-e89b-42d3-a456-426614174000",
+        undefined,
+        BUILT_IN_CATEGORIES
+      );
 
       expect(dto.recipeIngredients).toHaveLength(0);
     });
@@ -298,7 +374,12 @@ describe("Paprika Parser", () => {
     it("handles empty directions", async () => {
       mockRecipe.directions = "";
 
-      const dto = await parsePaprikaRecipeToDTO(mockRecipe, "123e4567-e89b-42d3-a456-426614174000");
+      const dto = await parsePaprikaRecipeToDTO(
+        mockRecipe,
+        "123e4567-e89b-42d3-a456-426614174000",
+        undefined,
+        BUILT_IN_CATEGORIES
+      );
 
       expect(dto.steps).toHaveLength(0);
     });
@@ -307,7 +388,12 @@ describe("Paprika Parser", () => {
       mockRecipe.ingredients = "Flour\n\nSugar\n\n\nButter";
       mockRecipe.directions = "Step 1\n\nStep 2";
 
-      const dto = await parsePaprikaRecipeToDTO(mockRecipe, "123e4567-e89b-42d3-a456-426614174000");
+      const dto = await parsePaprikaRecipeToDTO(
+        mockRecipe,
+        "123e4567-e89b-42d3-a456-426614174000",
+        undefined,
+        BUILT_IN_CATEGORIES
+      );
 
       expect(dto.recipeIngredients).toHaveLength(3);
       expect(dto.steps).toHaveLength(2);
@@ -317,7 +403,12 @@ describe("Paprika Parser", () => {
       mockRecipe.ingredients =
         "1 cup quinoa\nMarinated Chickpeas\n1 can chickpeas\nOptional mix-ins\n1/2 cup vegan feta";
 
-      const dto = await parsePaprikaRecipeToDTO(mockRecipe, "123e4567-e89b-42d3-a456-426614174000");
+      const dto = await parsePaprikaRecipeToDTO(
+        mockRecipe,
+        "123e4567-e89b-42d3-a456-426614174000",
+        undefined,
+        BUILT_IN_CATEGORIES
+      );
       const ingredientNames = (dto.recipeIngredients || []).map((ingredient) =>
         (ingredient.ingredientName || "").trim()
       );
@@ -330,7 +421,12 @@ describe("Paprika Parser", () => {
       mockRecipe.ingredients = "For the sauce:\n2 cups tomatoes\nFor the topping";
       mockRecipe.directions = "Sauce:\nSimmer the tomatoes.";
 
-      const dto = await parsePaprikaRecipeToDTO(mockRecipe, "123e4567-e89b-42d3-a456-426614174000");
+      const dto = await parsePaprikaRecipeToDTO(
+        mockRecipe,
+        "123e4567-e89b-42d3-a456-426614174000",
+        undefined,
+        BUILT_IN_CATEGORIES
+      );
 
       expect(dto.recipeIngredients!.map((line) => line.ingredientName)).toEqual([
         "# For the sauce",
@@ -344,7 +440,12 @@ describe("Paprika Parser", () => {
     it("filters empty categories", async () => {
       mockRecipe.categories = ["Breakfast", "", "Lunch", ""];
 
-      const dto = await parsePaprikaRecipeToDTO(mockRecipe, "123e4567-e89b-42d3-a456-426614174000");
+      const dto = await parsePaprikaRecipeToDTO(
+        mockRecipe,
+        "123e4567-e89b-42d3-a456-426614174000",
+        undefined,
+        BUILT_IN_CATEGORIES
+      );
 
       expect(dto.tags).toHaveLength(2);
       expect(dto.tags![0].name).toBe("Breakfast");

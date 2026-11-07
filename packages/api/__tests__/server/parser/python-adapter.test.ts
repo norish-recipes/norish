@@ -2,6 +2,8 @@
 
 import { beforeEach, describe, expect, it, vi } from "vitest";
 
+import { BUILT_IN_CATEGORIES } from "@norish/shared/lib/categories";
+
 const mockGetUnits = vi.fn();
 const mockParseIngredients = vi.fn();
 const mockParseSteps = vi.fn();
@@ -112,7 +114,8 @@ describe("adaptRecipeScrapersResponse", () => {
         },
       },
       "recipe-1",
-      "https://example.com/original-recipe"
+      "https://example.com/original-recipe",
+      BUILT_IN_CATEGORIES
     );
 
     expect(mockParseVideos).toHaveBeenCalledWith(
@@ -202,7 +205,8 @@ describe("adaptRecipeScrapersResponse", () => {
         },
       },
       "recipe-1",
-      "https://example.com/original-recipe"
+      "https://example.com/original-recipe",
+      BUILT_IN_CATEGORIES
     );
 
     expect(result?.url).toBe("https://example.com/original-recipe");
@@ -240,7 +244,8 @@ describe("adaptRecipeScrapersResponse", () => {
         },
       },
       "recipe-1",
-      "https://example.com/original-recipe"
+      "https://example.com/original-recipe",
+      BUILT_IN_CATEGORIES
     );
 
     expect(mockParseSteps).toHaveBeenCalledWith(
@@ -281,7 +286,8 @@ describe("adaptRecipeScrapersResponse", () => {
         },
       },
       "recipe-1",
-      "https://example.com/original-recipe"
+      "https://example.com/original-recipe",
+      BUILT_IN_CATEGORIES
     );
 
     expect(mockParseImages).toHaveBeenCalledWith("https://cdn.example.com/primary.jpg", "recipe-1");

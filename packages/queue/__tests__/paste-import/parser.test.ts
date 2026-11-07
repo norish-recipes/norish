@@ -117,7 +117,9 @@ describe("preparePasteImport", () => {
             },
           ],
         },
-      ])
+      ]),
+      false,
+      BUILT_IN_CATEGORIES
     );
 
     expect(result.recipeIds).toHaveLength(2);
@@ -146,7 +148,9 @@ describe("preparePasteImport", () => {
         url: "https://example.com/linked-recipe",
         recipeIngredient: ["1 egg"],
         recipeInstructions: ["Mix"],
-      })
+      }),
+      false,
+      BUILT_IN_CATEGORIES
     );
 
     expect(result.structuredRecipes?.[0]?.recipe.url).toBe("https://example.com/linked-recipe");
@@ -155,7 +159,8 @@ describe("preparePasteImport", () => {
   it("normalizes YAML aliases, tags, and source URL", async () => {
     const { preparePasteImport } = await import("../../src/paste-import/parser");
 
-    const result = await preparePasteImport(`
+    const result = await preparePasteImport(
+      `
 title: Fancy Toast
 ingredients:
   - 2 slices bread
@@ -167,7 +172,10 @@ image: https://example.com/image.jpg
 video: https://example.com/video.mp4
 sourceUrl: https://example.com/fancy-toast
 rating: 3.6
-`);
+`,
+      false,
+      BUILT_IN_CATEGORIES
+    );
 
     expect(result.recipeIds).toHaveLength(1);
     expect(result.structuredRecipes?.[0]?.recipeId).toBe(result.structuredRecipes?.[0]?.recipe.id);
@@ -240,12 +248,16 @@ categories: dessert, Holiday
     const { preparePasteImport } = await import("../../src/paste-import/parser");
 
     await expect(
-      preparePasteImport(`
+      preparePasteImport(
+        `
 title: Broken Recipe
 ingredients: not-an-array
 steps:
   - Step one
-`)
+`,
+        false,
+        BUILT_IN_CATEGORIES
+      )
     ).rejects.toThrow("No valid recipes found in structured paste input.");
   });
 
@@ -254,7 +266,8 @@ steps:
 
     const result = await preparePasteImport(
       '{"@type":"Recipe","name":"Ignored","recipeIngredient":["1 egg"],"recipeInstructions":["Mix"]}',
-      true
+      true,
+      BUILT_IN_CATEGORIES
     );
 
     expect(result.recipeIds).toHaveLength(1);
@@ -269,13 +282,17 @@ steps:
     const oversizedTitle = "a".repeat(MAX_RECIPE_PASTE_CHARS + 1);
 
     await expect(
-      preparePasteImport(`
+      preparePasteImport(
+        `
 - title: ${oversizedTitle}
   ingredients:
     - 1 egg
   steps:
     - Mix
-`)
+`,
+        false,
+        BUILT_IN_CATEGORIES
+      )
     ).rejects.toThrow(`Each pasted recipe must be at most ${MAX_RECIPE_PASTE_CHARS} characters.`);
   });
 });

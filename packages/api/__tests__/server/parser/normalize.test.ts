@@ -25,7 +25,7 @@ describe("normalizeRecipeFromJson - HTML Entity Decoding", () => {
         recipeInstructions: ["Mix well"],
       };
 
-      const result = await normalizeRecipeFromJson(json, "recipe-123");
+      const result = await normalizeRecipeFromJson(json, "recipe-123", BUILT_IN_CATEGORIES);
 
       expect(result).not.toBeNull();
       expect(result?.recipeIngredients).toHaveLength(2);
@@ -47,7 +47,7 @@ describe("normalizeRecipeFromJson - HTML Entity Decoding", () => {
         recipeInstructions: ["Mix"],
       };
 
-      const result = await normalizeRecipeFromJson(json, "recipe-123");
+      const result = await normalizeRecipeFromJson(json, "recipe-123", BUILT_IN_CATEGORIES);
 
       expect(result).not.toBeNull();
       const ingredient = result?.recipeIngredients?.[0];
@@ -63,7 +63,7 @@ describe("normalizeRecipeFromJson - HTML Entity Decoding", () => {
         recipeInstructions: ["Mix"],
       };
 
-      const result = await normalizeRecipeFromJson(json, "recipe-123");
+      const result = await normalizeRecipeFromJson(json, "recipe-123", BUILT_IN_CATEGORIES);
 
       expect(result).not.toBeNull();
       const ingredient = result?.recipeIngredients?.[0];
@@ -80,7 +80,7 @@ describe("normalizeRecipeFromJson - HTML Entity Decoding", () => {
         recipeInstructions: ["Mix"],
       };
 
-      const result = await normalizeRecipeFromJson(json, "recipe-123");
+      const result = await normalizeRecipeFromJson(json, "recipe-123", BUILT_IN_CATEGORIES);
 
       expect(result).not.toBeNull();
       const ingredient = result?.recipeIngredients?.[0];
@@ -98,7 +98,7 @@ describe("normalizeRecipeFromJson - HTML Entity Decoding", () => {
         recipeInstructions: ["Mix"],
       };
 
-      const result = await normalizeRecipeFromJson(json, "recipe-123");
+      const result = await normalizeRecipeFromJson(json, "recipe-123", BUILT_IN_CATEGORIES);
 
       expect(result).not.toBeNull();
       const ingredient = result?.recipeIngredients?.[0];
@@ -114,7 +114,7 @@ describe("normalizeRecipeFromJson - HTML Entity Decoding", () => {
         recipeInstructions: ["Mix"],
       };
 
-      const result = await normalizeRecipeFromJson(json, "recipe-123");
+      const result = await normalizeRecipeFromJson(json, "recipe-123", BUILT_IN_CATEGORIES);
 
       expect(result).not.toBeNull();
       expect(result?.recipeIngredients?.[0]?.ingredientName).toBe("flour");
@@ -128,7 +128,7 @@ describe("normalizeRecipeFromJson - HTML Entity Decoding", () => {
         recipeInstructions: ["Mix"],
       };
 
-      const result = await normalizeRecipeFromJson(json, "recipe-123");
+      const result = await normalizeRecipeFromJson(json, "recipe-123", BUILT_IN_CATEGORIES);
 
       expect(result).not.toBeNull();
       const ingredient = result?.recipeIngredients?.[0];
@@ -146,7 +146,7 @@ describe("normalizeRecipeFromJson - HTML Entity Decoding", () => {
         recipeInstructions: ["Preheat oven to 350&#176;F &#8211; use convection if available"],
       };
 
-      const result = await normalizeRecipeFromJson(json, "recipe-123");
+      const result = await normalizeRecipeFromJson(json, "recipe-123", BUILT_IN_CATEGORIES);
 
       expect(result).not.toBeNull();
       expect(result?.steps).toHaveLength(1);
@@ -171,7 +171,7 @@ describe("normalizeRecipeFromJson - HTML Entity Decoding", () => {
         ],
       };
 
-      const result = await normalizeRecipeFromJson(json, "recipe-123");
+      const result = await normalizeRecipeFromJson(json, "recipe-123", BUILT_IN_CATEGORIES);
 
       expect(result).not.toBeNull();
       const step = result?.steps?.[0];
@@ -194,7 +194,7 @@ describe("normalizeRecipeFromJson - HTML Entity Decoding", () => {
         ],
       };
 
-      const result = await normalizeRecipeFromJson(json, "recipe-123");
+      const result = await normalizeRecipeFromJson(json, "recipe-123", BUILT_IN_CATEGORIES);
 
       expect(result).not.toBeNull();
       const step = result?.steps?.[0];
@@ -219,7 +219,7 @@ describe("normalizeRecipeFromJson - HTML Entity Decoding", () => {
         },
       };
 
-      const result = await normalizeRecipeFromJson(json, "recipe-123");
+      const result = await normalizeRecipeFromJson(json, "recipe-123", BUILT_IN_CATEGORIES);
 
       expect(result).not.toBeNull();
       const step = result?.steps?.[0];
@@ -241,7 +241,7 @@ describe("normalizeRecipeFromJson - HTML Entity Decoding", () => {
         ],
       };
 
-      const result = await normalizeRecipeFromJson(json, "recipe-123");
+      const result = await normalizeRecipeFromJson(json, "recipe-123", BUILT_IN_CATEGORIES);
 
       expect(result).not.toBeNull();
       expect(result?.steps).toHaveLength(2);
@@ -259,7 +259,7 @@ describe("normalizeRecipeFromJson - HTML Entity Decoding", () => {
         recipeInstructions: ["Mix"],
       };
 
-      const result = await normalizeRecipeFromJson(json, "recipe-123");
+      const result = await normalizeRecipeFromJson(json, "recipe-123", BUILT_IN_CATEGORIES);
 
       expect(result).not.toBeNull();
       expect(result?.recipeIngredients).toHaveLength(0);
@@ -271,7 +271,7 @@ describe("normalizeRecipeFromJson - HTML Entity Decoding", () => {
         recipeInstructions: ["Mix"],
       };
 
-      const result = await normalizeRecipeFromJson(json, "recipe-123");
+      const result = await normalizeRecipeFromJson(json, "recipe-123", BUILT_IN_CATEGORIES);
 
       expect(result).not.toBeNull();
       expect(result?.recipeIngredients).toHaveLength(0);
@@ -284,7 +284,7 @@ describe("normalizeRecipeFromJson - HTML Entity Decoding", () => {
         recipeInstructions: ["Mix"],
       };
 
-      const result = await normalizeRecipeFromJson(json, "recipe-123");
+      const result = await normalizeRecipeFromJson(json, "recipe-123", BUILT_IN_CATEGORIES);
 
       expect(result).not.toBeNull();
       expect(result?.recipeIngredients?.length).toBeGreaterThan(0);
@@ -297,7 +297,7 @@ describe("normalizeRecipeFromJson - HTML Entity Decoding", () => {
         recipeInstructions: ["R&#248;r godt"],
       };
 
-      const result = await normalizeRecipeFromJson(json, "recipe-123");
+      const result = await normalizeRecipeFromJson(json, "recipe-123", BUILT_IN_CATEGORIES);
 
       expect(result).not.toBeNull();
       expect(result?.recipeIngredients?.[0]?.ingredientName).toContain("ø");
@@ -311,7 +311,7 @@ describe("normalizeRecipeFromJson - HTML Entity Decoding", () => {
         recipeInstructions: ["Enjoy your caf&#xe9;"],
       };
 
-      const result = await normalizeRecipeFromJson(json, "recipe-123");
+      const result = await normalizeRecipeFromJson(json, "recipe-123", BUILT_IN_CATEGORIES);
 
       expect(result).not.toBeNull();
       expect(result?.recipeIngredients?.[0]?.ingredientName).toContain("é");
@@ -325,7 +325,7 @@ describe("normalizeRecipeFromJson - HTML Entity Decoding", () => {
         recipeInstructions: ["Mix &lt; 5 minutes"],
       };
 
-      const result = await normalizeRecipeFromJson(json, "recipe-123");
+      const result = await normalizeRecipeFromJson(json, "recipe-123", BUILT_IN_CATEGORIES);
 
       expect(result).not.toBeNull();
       expect(result?.recipeIngredients?.[0]?.ingredientName).toContain("&");
@@ -343,7 +343,8 @@ describe("normalizeRecipeFromJson - Source URL", () => {
         recipeIngredient: ["1 egg"],
         recipeInstructions: ["Mix"],
       },
-      "recipe-123"
+      "recipe-123",
+      BUILT_IN_CATEGORIES
     );
 
     expect(result?.url).toBe("https://example.com/linked-recipe");
@@ -359,7 +360,8 @@ describe("normalizeRecipeFromJson - Source URL", () => {
         recipeIngredient: ["1 egg"],
         recipeInstructions: ["Mix"],
       },
-      "recipe-123"
+      "recipe-123",
+      BUILT_IN_CATEGORIES
     );
 
     expect(result?.url).toBe("https://example.com/linked-recipe");
@@ -384,7 +386,7 @@ describe("normalizeRecipeFromJson - HowToSection Heading Extraction", () => {
         ],
       };
 
-      const result = await normalizeRecipeFromJson(json, "recipe-123");
+      const result = await normalizeRecipeFromJson(json, "recipe-123", BUILT_IN_CATEGORIES);
 
       expect(result).not.toBeNull();
       expect(result?.steps).toHaveLength(3);
@@ -416,7 +418,7 @@ describe("normalizeRecipeFromJson - HowToSection Heading Extraction", () => {
         ],
       };
 
-      const result = await normalizeRecipeFromJson(json, "recipe-123");
+      const result = await normalizeRecipeFromJson(json, "recipe-123", BUILT_IN_CATEGORIES);
 
       expect(result).not.toBeNull();
       expect(result?.steps).toHaveLength(6);
@@ -443,7 +445,7 @@ describe("normalizeRecipeFromJson - HowToSection Heading Extraction", () => {
         ],
       };
 
-      const result = await normalizeRecipeFromJson(json, "recipe-123");
+      const result = await normalizeRecipeFromJson(json, "recipe-123", BUILT_IN_CATEGORIES);
 
       expect(result).not.toBeNull();
       expect(result?.steps).toHaveLength(2);
@@ -474,7 +476,7 @@ describe("normalizeRecipeFromJson - HowToSection Heading Extraction", () => {
         ],
       };
 
-      const result = await normalizeRecipeFromJson(json, "recipe-123");
+      const result = await normalizeRecipeFromJson(json, "recipe-123", BUILT_IN_CATEGORIES);
 
       expect(result).not.toBeNull();
       expect(result?.steps).toHaveLength(5);
@@ -498,7 +500,7 @@ describe("normalizeRecipeFromJson - HowToSection Heading Extraction", () => {
         ],
       };
 
-      const result = await normalizeRecipeFromJson(json, "recipe-123");
+      const result = await normalizeRecipeFromJson(json, "recipe-123", BUILT_IN_CATEGORIES);
 
       expect(result).not.toBeNull();
       expect(result?.steps?.[0]?.step).toBe("# For the crème brûlée");
@@ -517,7 +519,7 @@ describe("normalizeRecipeFromJson - HowToSection Heading Extraction", () => {
         ],
       };
 
-      const result = await normalizeRecipeFromJson(json, "recipe-123");
+      const result = await normalizeRecipeFromJson(json, "recipe-123", BUILT_IN_CATEGORIES);
 
       expect(result).not.toBeNull();
       expect(result?.steps?.[0]?.step).toBe("# Step 1: Mix & Combine");
@@ -539,7 +541,7 @@ describe("normalizeRecipeFromJson - HowToSection Heading Extraction", () => {
         },
       };
 
-      const result = await normalizeRecipeFromJson(json, "recipe-123");
+      const result = await normalizeRecipeFromJson(json, "recipe-123", BUILT_IN_CATEGORIES);
 
       expect(result).not.toBeNull();
       expect(result?.steps).toHaveLength(3);
@@ -565,7 +567,7 @@ describe("normalizeRecipeFromJson - HowToSection Heading Extraction", () => {
         ],
       };
 
-      const result = await normalizeRecipeFromJson(json, "recipe-123");
+      const result = await normalizeRecipeFromJson(json, "recipe-123", BUILT_IN_CATEGORIES);
 
       expect(result).not.toBeNull();
       expect(result?.steps).toHaveLength(4);
@@ -593,7 +595,7 @@ describe("normalizeRecipeFromJson - HowToSection Heading Extraction", () => {
         ],
       };
 
-      const result = await normalizeRecipeFromJson(json, "recipe-123");
+      const result = await normalizeRecipeFromJson(json, "recipe-123", BUILT_IN_CATEGORIES);
 
       expect(result).not.toBeNull();
       expect(result?.steps).toHaveLength(4);
@@ -625,7 +627,7 @@ describe("normalizeRecipeFromJson - HowToSection Heading Extraction", () => {
         ],
       };
 
-      const result = await normalizeRecipeFromJson(json, "recipe-123");
+      const result = await normalizeRecipeFromJson(json, "recipe-123", BUILT_IN_CATEGORIES);
 
       expect(result).not.toBeNull();
       // Verify order numbers are sequential
@@ -652,7 +654,7 @@ describe("normalizeRecipeFromJson - HowToSection Heading Extraction", () => {
         ],
       };
 
-      const result = await normalizeRecipeFromJson(json, "recipe-123");
+      const result = await normalizeRecipeFromJson(json, "recipe-123", BUILT_IN_CATEGORIES);
 
       expect(result).not.toBeNull();
       // Empty name should not produce a heading
@@ -673,7 +675,7 @@ describe("normalizeRecipeFromJson - HowToSection Heading Extraction", () => {
         ],
       };
 
-      const result = await normalizeRecipeFromJson(json, "recipe-123");
+      const result = await normalizeRecipeFromJson(json, "recipe-123", BUILT_IN_CATEGORIES);
 
       expect(result).not.toBeNull();
       // Whitespace-only name should not produce a heading
@@ -694,7 +696,7 @@ describe("normalizeRecipeFromJson - HowToSection Heading Extraction", () => {
         ],
       };
 
-      const result = await normalizeRecipeFromJson(json, "recipe-123");
+      const result = await normalizeRecipeFromJson(json, "recipe-123", BUILT_IN_CATEGORIES);
 
       expect(result).not.toBeNull();
       // Should still include the heading even if no steps
@@ -720,7 +722,7 @@ describe("normalizeRecipeFromJson - HowToSection Heading Extraction", () => {
         ],
       };
 
-      const result = await normalizeRecipeFromJson(json, "recipe-123");
+      const result = await normalizeRecipeFromJson(json, "recipe-123", BUILT_IN_CATEGORIES);
 
       expect(result).not.toBeNull();
       // Both headings should be preserved (not deduplicated)
@@ -756,7 +758,7 @@ describe("normalizeRecipeFromJson - HowToStep Bold Name Extraction", () => {
         ],
       };
 
-      const result = await normalizeRecipeFromJson(json, "recipe-123");
+      const result = await normalizeRecipeFromJson(json, "recipe-123", BUILT_IN_CATEGORIES);
 
       expect(result).not.toBeNull();
       expect(result?.steps).toHaveLength(3);
@@ -779,7 +781,7 @@ describe("normalizeRecipeFromJson - HowToStep Bold Name Extraction", () => {
         ],
       };
 
-      const result = await normalizeRecipeFromJson(json, "recipe-123");
+      const result = await normalizeRecipeFromJson(json, "recipe-123", BUILT_IN_CATEGORIES);
 
       expect(result).not.toBeNull();
       expect(result?.steps?.[0]?.step).toBe("Mix the ingredients together.");
@@ -797,7 +799,7 @@ describe("normalizeRecipeFromJson - HowToStep Bold Name Extraction", () => {
         ],
       };
 
-      const result = await normalizeRecipeFromJson(json, "recipe-123");
+      const result = await normalizeRecipeFromJson(json, "recipe-123", BUILT_IN_CATEGORIES);
 
       expect(result).not.toBeNull();
       expect(result?.steps?.[0]?.step).toBe("Mix well until combined");
@@ -825,7 +827,7 @@ describe("normalizeRecipeFromJson - HowToStep Bold Name Extraction", () => {
         ],
       };
 
-      const result = await normalizeRecipeFromJson(json, "recipe-123");
+      const result = await normalizeRecipeFromJson(json, "recipe-123", BUILT_IN_CATEGORIES);
 
       expect(result).not.toBeNull();
       expect(result?.steps).toHaveLength(3);
@@ -847,7 +849,7 @@ describe("normalizeRecipeFromJson - HowToStep Bold Name Extraction", () => {
         ],
       };
 
-      const result = await normalizeRecipeFromJson(json, "recipe-123");
+      const result = await normalizeRecipeFromJson(json, "recipe-123", BUILT_IN_CATEGORIES);
 
       expect(result).not.toBeNull();
       expect(result?.steps?.[0]?.step).toBe(
@@ -868,7 +870,7 @@ describe("normalizeRecipeFromJson - HowToStep Bold Name Extraction", () => {
         ],
       };
 
-      const result = await normalizeRecipeFromJson(json, "recipe-123");
+      const result = await normalizeRecipeFromJson(json, "recipe-123", BUILT_IN_CATEGORIES);
 
       expect(result).not.toBeNull();
       // Note: the & in name doesn't need HTML entity decoding here
@@ -901,7 +903,7 @@ describe("normalizeRecipeFromJson - HowToStep Bold Name Extraction", () => {
         ],
       };
 
-      const result = await normalizeRecipeFromJson(json, "recipe-123");
+      const result = await normalizeRecipeFromJson(json, "recipe-123", BUILT_IN_CATEGORIES);
 
       expect(result).not.toBeNull();
       expect(result?.steps).toHaveLength(3);
@@ -938,7 +940,7 @@ describe("normalizeRecipeFromJson - HowToStep Bold Name Extraction", () => {
         ],
       };
 
-      const result = await normalizeRecipeFromJson(json, "recipe-123");
+      const result = await normalizeRecipeFromJson(json, "recipe-123", BUILT_IN_CATEGORIES);
 
       expect(result).not.toBeNull();
       expect(result?.steps).toHaveLength(4);
@@ -963,7 +965,7 @@ describe("normalizeRecipeFromJson - HowToStep Bold Name Extraction", () => {
         ],
       };
 
-      const result = await normalizeRecipeFromJson(json, "recipe-123");
+      const result = await normalizeRecipeFromJson(json, "recipe-123", BUILT_IN_CATEGORIES);
 
       expect(result).not.toBeNull();
       expect(result?.steps?.[0]?.step).toBe("Mix ingredients.");
@@ -982,7 +984,7 @@ describe("normalizeRecipeFromJson - HowToStep Bold Name Extraction", () => {
         ],
       };
 
-      const result = await normalizeRecipeFromJson(json, "recipe-123");
+      const result = await normalizeRecipeFromJson(json, "recipe-123", BUILT_IN_CATEGORIES);
 
       expect(result).not.toBeNull();
       expect(result?.steps?.[0]?.step).toBe("Mix ingredients.");
@@ -1001,7 +1003,7 @@ describe("normalizeRecipeFromJson - HowToStep Bold Name Extraction", () => {
         ],
       };
 
-      const result = await normalizeRecipeFromJson(json, "recipe-123");
+      const result = await normalizeRecipeFromJson(json, "recipe-123", BUILT_IN_CATEGORIES);
 
       expect(result).not.toBeNull();
       expect(result?.steps?.[0]?.step).toBe("Mix everything");
@@ -1020,7 +1022,7 @@ describe("normalizeRecipeFromJson - HowToStep Bold Name Extraction", () => {
         ],
       };
 
-      const result = await normalizeRecipeFromJson(json, "recipe-123");
+      const result = await normalizeRecipeFromJson(json, "recipe-123", BUILT_IN_CATEGORIES);
 
       expect(result).not.toBeNull();
       expect(result?.steps?.[0]?.step).toBe("**Prep:** Trim the vegetables.");
@@ -1037,7 +1039,7 @@ describe("normalizeRecipeFromJson - Notes", () => {
       recipeInstructions: ["Slice and serve"],
     };
 
-    const result = await normalizeRecipeFromJson(json, "recipe-123");
+    const result = await normalizeRecipeFromJson(json, "recipe-123", BUILT_IN_CATEGORIES);
 
     expect(result).not.toBeNull();
     expect(result?.notes).toBe("Use ripe tomatoes and rest for 10 minutes.");
@@ -1054,7 +1056,8 @@ describe("normalizeRecipeFromJson - explicit allergy facts", () => {
         keywords: ["Quick", "peanut"],
         allergens: ["Peanut", "Milk"],
       },
-      "recipe-123"
+      "recipe-123",
+      BUILT_IN_CATEGORIES
     );
 
     expect(result?.tags).toEqual([{ name: "quick" }, { name: "peanut" }, { name: "milk" }]);
@@ -1069,7 +1072,7 @@ describe("recipeCategory extraction", () => {
       recipeInstructions: ["Mix"],
       recipeCategory: "breakfast",
     };
-    const result = await normalizeRecipeFromJson(json, "recipe-123");
+    const result = await normalizeRecipeFromJson(json, "recipe-123", BUILT_IN_CATEGORIES);
 
     expect(result?.categories).toEqual(["Breakfast"]);
   });
@@ -1081,7 +1084,7 @@ describe("recipeCategory extraction", () => {
       recipeInstructions: ["Cook"],
       recipeCategory: ["breakfast", "dinner"],
     };
-    const result = await normalizeRecipeFromJson(json, "recipe-123");
+    const result = await normalizeRecipeFromJson(json, "recipe-123", BUILT_IN_CATEGORIES);
 
     expect(result?.categories).toContain("Breakfast");
     expect(result?.categories).toContain("Dinner");
@@ -1094,7 +1097,7 @@ describe("recipeCategory extraction", () => {
       recipeInstructions: ["Toast"],
       recipeCategory: "breakfast, snack",
     };
-    const result = await normalizeRecipeFromJson(json, "recipe-123");
+    const result = await normalizeRecipeFromJson(json, "recipe-123", BUILT_IN_CATEGORIES);
 
     expect(result?.categories).toContain("Breakfast");
     expect(result?.categories).toContain("Snack");
@@ -1108,7 +1111,7 @@ describe("recipeCategory extraction", () => {
       keywords: ["quick"],
       recipeCategory: "Cocktails",
     };
-    const result = await normalizeRecipeFromJson(json, "recipe-123");
+    const result = await normalizeRecipeFromJson(json, "recipe-123", BUILT_IN_CATEGORIES);
 
     expect(result?.categories).toEqual([]);
     expect(result?.tags).toEqual([{ name: "quick" }, { name: "Cocktails" }]);
@@ -1136,7 +1139,7 @@ describe("recipeCategory extraction", () => {
       recipeIngredient: ["water"],
       recipeInstructions: ["Boil"],
     };
-    const result = await normalizeRecipeFromJson(json, "recipe-123");
+    const result = await normalizeRecipeFromJson(json, "recipe-123", BUILT_IN_CATEGORIES);
 
     expect(result?.categories).toEqual([]);
   });
@@ -1148,7 +1151,7 @@ describe("recipeCategory extraction", () => {
       recipeInstructions: ["Grill"],
       recipeCategory: "entree",
     };
-    const result = await normalizeRecipeFromJson(json, "recipe-123");
+    const result = await normalizeRecipeFromJson(json, "recipe-123", BUILT_IN_CATEGORIES);
 
     expect(result?.categories).toEqual(["Dinner"]);
   });

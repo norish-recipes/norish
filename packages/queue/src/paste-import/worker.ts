@@ -79,7 +79,7 @@ async function parseFromPastedText(
   const html = `<html><body><main><h1>Pasted recipe</h1><p>${escapeHtml(trimmed)}</p></main></body></html>`;
 
   try {
-    const recipe = await extractRecipeWithAI(html, recipeId, undefined, [], householdCategories);
+    const recipe = await extractRecipeWithAI(html, recipeId, { householdCategories });
 
     if (hasRecipeNameIngredientsAndSteps(recipe)) {
       return { recipe, usedAI: true };

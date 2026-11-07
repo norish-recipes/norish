@@ -4,7 +4,6 @@ import { householdCategoriesSection } from "@norish/shared-server/ai/prompts/sec
 import { AIResponseError } from "@norish/shared-server/ai/runtime/errors";
 import { generateStructured } from "@norish/shared-server/ai/runtime/runtime";
 import { aiLogger } from "@norish/shared-server/logger";
-import { BUILT_IN_CATEGORIES } from "@norish/shared/lib/categories";
 
 import type { RecipeExtractionOutput } from "./extraction.schema";
 import {
@@ -30,7 +29,7 @@ export type { RecipeExtractionOutput };
 export async function extractRecipeFromImages(
   recipeId: string,
   files: ImageImportFile[],
-  householdCategories?: readonly string[]
+  householdCategories: readonly string[]
 ): Promise<FullRecipeInsertDTO> {
   if (files.length === 0) {
     throw new Error("No images provided for recipe extraction");
@@ -41,7 +40,7 @@ export async function extractRecipeFromImages(
   const jsonLd = await generateStructured({
     prompt: "image-extraction",
     schema: recipeExtractionSchema,
-    sections: [householdCategoriesSection(householdCategories ?? BUILT_IN_CATEGORIES)],
+    sections: [householdCategoriesSection(householdCategories)],
     // The images themselves select the vision model.
     images: files.map((file) => ({ data: file.data, mimeType: file.mimeType })),
   });

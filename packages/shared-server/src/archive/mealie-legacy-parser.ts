@@ -395,8 +395,8 @@ function convertLegacyData(legacy: MealieLegacyRecipe): {
 export async function parseMealieLegacyRecipeToDTO(
   legacyRecipe: MealieLegacyRecipe,
   recipeId: string,
-  imageBuffer?: Buffer,
-  householdCategories?: readonly string[]
+  imageBuffer: Buffer | undefined,
+  householdCategories: readonly string[]
 ): Promise<FullRecipeInsertDTO> {
   const recipe = toMealieRecipe(legacyRecipe);
   const { ingredients, instructions, lookups } = convertLegacyData(legacyRecipe);

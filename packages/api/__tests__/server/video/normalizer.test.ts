@@ -7,6 +7,8 @@
  */
 import { beforeEach, describe, expect, it, vi } from "vitest";
 
+import { BUILT_IN_CATEGORIES } from "@norish/shared/lib/categories";
+
 const mocked = vi.hoisted(() => ({
   generateStructured: vi.fn(),
   shadowScore: vi.fn(),
@@ -106,7 +108,8 @@ describe("extractRecipeFromVideo", () => {
       TRANSCRIPT,
       METADATA,
       "recipe-1",
-      "https://www.instagram.com/reel/ABC123/"
+      "https://www.instagram.com/reel/ABC123/",
+      BUILT_IN_CATEGORIES
     );
 
     expect(mocked.shadowScore).toHaveBeenCalledWith({
@@ -127,7 +130,13 @@ describe("extractRecipeFromVideo", () => {
     });
 
     await expect(
-      extractRecipeFromVideo(TRANSCRIPT, METADATA, "recipe-1", "https://example.com/v")
+      extractRecipeFromVideo(
+        TRANSCRIPT,
+        METADATA,
+        "recipe-1",
+        "https://example.com/v",
+        BUILT_IN_CATEGORIES
+      )
     ).rejects.toThrow(/missing required fields/);
     expect(mocked.shadowScore).not.toHaveBeenCalled();
     expect(mocked.normalizeExtractionOutput).not.toHaveBeenCalled();
@@ -139,7 +148,13 @@ describe("extractRecipeFromVideo", () => {
     mocked.generateStructured.mockResolvedValue(stepless);
 
     await expect(
-      extractRecipeFromVideo(TRANSCRIPT, METADATA, "recipe-1", "https://example.com/v")
+      extractRecipeFromVideo(
+        TRANSCRIPT,
+        METADATA,
+        "recipe-1",
+        "https://example.com/v",
+        BUILT_IN_CATEGORIES
+      )
     ).resolves.toMatchObject({ id: "recipe-1" });
     expect(mocked.normalizeExtractionOutput).toHaveBeenCalledWith(stepless, expect.anything());
   });

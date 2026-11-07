@@ -5,7 +5,6 @@ import { z } from "zod";
 
 import { serverLogger as log } from "@norish/shared-server/logger";
 import { FullRecipeInsertDTO } from "@norish/shared/contracts";
-import { BUILT_IN_CATEGORIES } from "@norish/shared/lib/categories";
 import { sortSourceCategories } from "@norish/shared/lib/category-matcher";
 
 import {
@@ -73,8 +72,8 @@ function parsePaprikaNutritionValue(
 export async function parsePaprikaRecipeToDTO(
   json: PaprikaRecipe,
   recipeId: string,
-  imageBuffer?: Buffer,
-  householdCategories: readonly string[] = BUILT_IN_CATEGORIES
+  imageBuffer: Buffer | undefined,
+  householdCategories: readonly string[]
 ): Promise<FullRecipeInsertDTO> {
   // Validate against schema
   const validated = PaprikaRecipeSchema.parse(json);

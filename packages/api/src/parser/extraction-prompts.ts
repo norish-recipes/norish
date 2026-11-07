@@ -1,5 +1,4 @@
 import { householdCategoriesSection } from "@norish/shared-server/ai/prompts/sections";
-import { BUILT_IN_CATEGORIES } from "@norish/shared/lib/categories";
 
 /**
  * Extraction input sections.
@@ -29,7 +28,7 @@ export interface RecipeExtractionSectionOptions {
   /**
    * The importing household's Categories, the only ones the model may name.
    */
-  categories?: readonly string[];
+  categories: readonly string[];
 }
 
 export interface VideoExtractionSectionOptions extends RecipeExtractionSectionOptions {
@@ -62,9 +61,9 @@ export interface VideoExtractionSectionOptions extends RecipeExtractionSectionOp
  */
 export function buildRecipeExtractionSections(
   content: string,
-  options: RecipeExtractionSectionOptions = {}
+  options: RecipeExtractionSectionOptions
 ): string[] {
-  const { url, jsonLd, videos = [], categories = BUILT_IN_CATEGORIES } = options;
+  const { url, jsonLd, videos = [], categories } = options;
 
   // No tagging or allergy instructions: extraction reads source facts, and every
   // inference belongs to the background enrichment workers under their own policy.
@@ -104,7 +103,7 @@ export function buildVideoExtractionSections(
   transcript: string,
   options: VideoExtractionSectionOptions
 ): string[] {
-  const { url, title, description, duration, uploader, categories = BUILT_IN_CATEGORIES } = options;
+  const { url, title, description, duration, uploader, categories } = options;
 
   const durationMinutes = Math.floor(duration / 60);
   const durationSeconds = (duration % 60).toString().padStart(2, "0");

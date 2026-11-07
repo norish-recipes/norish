@@ -110,7 +110,11 @@ async function processImportJob(job: Job<RecipeImportJobData>): Promise<string> 
   );
   const parseResult = await withTimeout(
     () =>
-      parseRecipeFromUrl(url, recipeId, job.data.forceAI, credentials?.tokens, householdCategories),
+      parseRecipeFromUrl(url, recipeId, {
+        forceAI: job.data.forceAI,
+        tokens: credentials?.tokens,
+        householdCategories,
+      }),
     RECIPE_IMPORT_PROCESSING_TIMEOUT_MS,
     "Recipe import parsing"
   ).catch(async (error: unknown) => {

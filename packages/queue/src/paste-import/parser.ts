@@ -6,7 +6,6 @@ import type { MeasurementSystem } from "@norish/shared/contracts/dto/recipe";
 import { requireQueueApiHandler } from "@norish/queue/api-handlers";
 import { getUnits } from "@norish/shared-server/config/server-config-loader";
 import { MAX_RECIPE_PASTE_CHARS } from "@norish/shared/contracts/uploads";
-import { BUILT_IN_CATEGORIES } from "@norish/shared/lib/categories";
 import { inferSystemUsedFromParsed } from "@norish/shared/lib/determine-recipe-system";
 import {
   hasRecipeNameIngredientsAndSteps,
@@ -405,8 +404,8 @@ async function parseStructuredYaml(
 
 export async function preparePasteImport(
   text: string,
-  forceAI?: boolean,
-  householdCategories: readonly string[] = BUILT_IN_CATEGORIES
+  forceAI: boolean | undefined,
+  householdCategories: readonly string[]
 ): Promise<PreparedPasteImport> {
   const trimmed = text.trim();
 

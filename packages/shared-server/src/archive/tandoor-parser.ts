@@ -4,7 +4,6 @@ import { z } from "zod";
 import { FullRecipeInsertSchema } from "@norish/db";
 import { saveImageBytes } from "@norish/shared-server/media/storage";
 import { FullRecipeInsertDTO } from "@norish/shared/contracts";
-import { BUILT_IN_CATEGORIES } from "@norish/shared/lib/categories";
 import { sortSourceCategories } from "@norish/shared/lib/category-matcher";
 import { inferSystemUsedFromParsed } from "@norish/shared/lib/determine-recipe-system";
 
@@ -209,8 +208,8 @@ function renderTandoorTemplate(instruction: string, ingredients: TandoorIngredie
 export async function parseTandoorRecipeToDTO(
   json: TandoorRecipe,
   recipeId: string,
-  imageBuffer?: Buffer,
-  householdCategories: readonly string[] = BUILT_IN_CATEGORIES
+  imageBuffer: Buffer | undefined,
+  householdCategories: readonly string[]
 ): Promise<FullRecipeInsertDTO> {
   // Validate against schema
   const validated = TandoorRecipeSchema.parse(json);

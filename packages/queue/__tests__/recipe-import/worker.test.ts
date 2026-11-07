@@ -150,7 +150,10 @@ describe("processImportJob", () => {
       },
     } as unknown as Job<RecipeImportJobData>);
 
-    expect(parseRecipeFromUrl.mock.calls.at(-1)?.[4]).toEqual(["Breakfast", "Drinks"]);
+    expect(parseRecipeFromUrl.mock.calls.at(-1)?.[2]?.householdCategories).toEqual([
+      "Breakfast",
+      "Drinks",
+    ]);
   });
 
   it("ends on the existing recipe when the URL is already in the library", async () => {
@@ -453,14 +456,14 @@ describe("processImportJob", () => {
     };
 
     const tokensPassedToParser = () =>
-      (parseRecipeFromUrl.mock.calls.at(-1)?.[3] ?? []) as { id: string }[];
+      (parseRecipeFromUrl.mock.calls.at(-1)?.[2]?.tokens ?? []) as { id: string }[];
 
     it("sends no tokens for a site the user has none for", async () => {
       getDecryptedTokensByUserId.mockResolvedValue([token({ id: "ig", domain: "instagram.com" })]);
 
       await runImport("https://example.com/stew");
 
-      expect(parseRecipeFromUrl.mock.calls.at(-1)?.[3]).toBeUndefined();
+      expect(parseRecipeFromUrl.mock.calls.at(-1)?.[2]?.tokens).toBeUndefined();
     });
 
     it("keeps one site's tokens off another site's import", async () => {

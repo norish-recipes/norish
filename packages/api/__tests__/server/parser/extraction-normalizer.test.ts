@@ -10,6 +10,7 @@ import {
   normalizeExtractionOutput,
   validateExtractionOutput,
 } from "@norish/api/parser/extraction-normalizer";
+import { BUILT_IN_CATEGORIES } from "@norish/shared/lib/categories";
 
 // Mock the normalizeExtractionOutput dependencies for isolation
 vi.mock("@norish/api/parser/normalize", () => ({
@@ -295,7 +296,10 @@ describe("normalizeExtractionOutput - HTML Entity Decoding", () => {
       categories: [],
     } as FullRecipeInsertDTO);
 
-    const result = await normalizeExtractionOutput(output, { recipeId: "recipe-123" });
+    const result = await normalizeExtractionOutput(output, {
+      recipeId: "recipe-123",
+      householdCategories: BUILT_IN_CATEGORIES,
+    });
 
     expect(result?.tags).toEqual([{ name: "Dessert" }, { name: "Peanut" }, { name: "Milk" }]);
   });
@@ -312,8 +316,15 @@ describe("normalizeExtractionOutput - HTML Entity Decoding", () => {
       steps: [],
     } as unknown as FullRecipeInsertDTO);
 
-    await normalizeExtractionOutput(output, { recipeId: "recipe-123", videos: [video] });
-    await normalizeExtractionOutput(output, { recipeId: "recipe-123" });
+    await normalizeExtractionOutput(output, {
+      recipeId: "recipe-123",
+      videos: [video],
+      householdCategories: BUILT_IN_CATEGORIES,
+    });
+    await normalizeExtractionOutput(output, {
+      recipeId: "recipe-123",
+      householdCategories: BUILT_IN_CATEGORIES,
+    });
 
     expect(normalize.mock.calls[0]?.[0]).toMatchObject({ video: [video] });
     expect(normalize.mock.calls[1]?.[0]).toMatchObject({ video: undefined });
@@ -339,7 +350,10 @@ describe("normalizeExtractionOutput - HTML Entity Decoding", () => {
       categories: [],
     } as unknown as FullRecipeInsertDTO);
 
-    const result = await normalizeExtractionOutput(output, { recipeId: "recipe-123" });
+    const result = await normalizeExtractionOutput(output, {
+      recipeId: "recipe-123",
+      householdCategories: BUILT_IN_CATEGORIES,
+    });
 
     expect(
       result?.recipeIngredients?.filter((i) => i.systemUsed === "us").map((i) => i.ingredientName)
@@ -401,7 +415,10 @@ describe("normalizeExtractionOutput - HTML Entity Decoding", () => {
       categories: [],
     } as any);
 
-    const result = await normalizeExtractionOutput(output, { recipeId: "recipe-123" });
+    const result = await normalizeExtractionOutput(output, {
+      recipeId: "recipe-123",
+      householdCategories: BUILT_IN_CATEGORIES,
+    });
 
     const metricIngredients = result?.recipeIngredients?.filter(
       (ing) => ing.systemUsed === "metric"
@@ -433,7 +450,7 @@ describe("normalizeExtractionOutput - HTML Entity Decoding", () => {
 
       const result = await normalizeExtractionOutput(
         { ...createValidOutput(), sourceSystem },
-        { recipeId: "recipe-123" }
+        { recipeId: "recipe-123", householdCategories: BUILT_IN_CATEGORIES }
       );
 
       expect(result?.systemUsed).toBe(sourceSystem);
@@ -551,7 +568,10 @@ describe("normalizeExtractionOutput - HTML Entity Decoding", () => {
       images: [],
     } as any);
 
-    const result = await normalizeExtractionOutput(output, { recipeId: "recipe-123" });
+    const result = await normalizeExtractionOutput(output, {
+      recipeId: "recipe-123",
+      householdCategories: BUILT_IN_CATEGORIES,
+    });
 
     expect(result).toBeTruthy();
     // Check US ingredients were decoded (with &#8211;)
@@ -613,7 +633,10 @@ describe("normalizeExtractionOutput - HTML Entity Decoding", () => {
       images: [],
     } as any);
 
-    const result = await normalizeExtractionOutput(output, { recipeId: "recipe-123" });
+    const result = await normalizeExtractionOutput(output, {
+      recipeId: "recipe-123",
+      householdCategories: BUILT_IN_CATEGORIES,
+    });
 
     const usSteps = result?.steps?.filter((s) => s.systemUsed === "us");
 
@@ -673,7 +696,10 @@ describe("normalizeExtractionOutput - HTML Entity Decoding", () => {
       images: [],
     } as any);
 
-    const result = await normalizeExtractionOutput(output, { recipeId: "recipe-123" });
+    const result = await normalizeExtractionOutput(output, {
+      recipeId: "recipe-123",
+      householdCategories: BUILT_IN_CATEGORIES,
+    });
 
     const usIngredient = result?.recipeIngredients?.find((ing) => ing.systemUsed === "us");
 
@@ -736,7 +762,10 @@ describe("normalizeExtractionOutput - HTML Entity Decoding", () => {
       images: [],
     } as any);
 
-    const result = await normalizeExtractionOutput(output, { recipeId: "recipe-123" });
+    const result = await normalizeExtractionOutput(output, {
+      recipeId: "recipe-123",
+      householdCategories: BUILT_IN_CATEGORIES,
+    });
 
     const usIngredients = result?.recipeIngredients?.filter((ing) => ing.systemUsed === "us");
 
@@ -791,7 +820,10 @@ describe("normalizeExtractionOutput - HTML Entity Decoding", () => {
       images: [],
     } as any);
 
-    const result = await normalizeExtractionOutput(output, { recipeId: "recipe-123" });
+    const result = await normalizeExtractionOutput(output, {
+      recipeId: "recipe-123",
+      householdCategories: BUILT_IN_CATEGORIES,
+    });
 
     expect(result?.notes).toBe("Let it rest for 10 minutes – don't skip this step.");
   });

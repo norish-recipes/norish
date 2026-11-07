@@ -13,7 +13,6 @@ import { normalizeRecipeFromJson } from "@norish/api/parser/normalize";
 import { headingOrName } from "@norish/api/parser/parsers/ingredients";
 import { getUnits } from "@norish/shared-server/config/server-config-loader";
 import { aiLogger } from "@norish/shared-server/logger";
-import { BUILT_IN_CATEGORIES } from "@norish/shared/lib/categories";
 import { sortSourceCategories } from "@norish/shared/lib/category-matcher";
 import { parseIngredientWithDefaults } from "@norish/shared/lib/helpers";
 import { normalizeEnrichmentTagNames } from "@norish/shared/lib/recipe-enrichment";
@@ -50,7 +49,7 @@ export interface NormalizeExtractionOptions {
   /**
    * The importing household's Categories, the only ones a category may become.
    */
-  householdCategories?: readonly string[];
+  householdCategories: readonly string[];
 }
 
 /**
@@ -115,14 +114,7 @@ export async function normalizeExtractionOutput(
   output: RecipeExtractionOutput,
   options: NormalizeExtractionOptions
 ): Promise<FullRecipeInsertDTO | null> {
-  const {
-    url,
-    image,
-    imageCandidates,
-    videos,
-    recipeId,
-    householdCategories = BUILT_IN_CATEGORIES,
-  } = options;
+  const { url, image, imageCandidates, videos, recipeId, householdCategories } = options;
 
   // Build metric version for base normalization
   // The AI schema doesn't include image - it comes from HTML/video metadata

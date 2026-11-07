@@ -119,8 +119,8 @@ export class InstagramProcessor extends BaseVideoProcessor {
     url: string,
     recipeId: string,
     metadata: VideoMetadata,
-    tokens?: SiteAuthTokenDecryptedDto[],
-    householdCategories?: readonly string[]
+    tokens: SiteAuthTokenDecryptedDto[] | undefined,
+    householdCategories: readonly string[]
   ): Promise<FullRecipeInsertDTO> {
     log.info({ url }, "Detected Instagram image post");
 
@@ -150,7 +150,7 @@ export class InstagramProcessor extends BaseVideoProcessor {
     let recipe;
 
     try {
-      recipe = await extractRecipeWithAI(description, recipeId, url, [], householdCategories);
+      recipe = await extractRecipeWithAI(description, recipeId, { url, householdCategories });
     } catch (error) {
       log.warn({ url, err: error }, "AI extraction failed for Instagram image post");
       throw new Error("Instagram image posts are only supported if the caption contains a recipe", {
@@ -185,8 +185,8 @@ export class InstagramProcessor extends BaseVideoProcessor {
     url: string,
     recipeId: string,
     metadata: VideoMetadata,
-    tokens?: SiteAuthTokenDecryptedDto[],
-    householdCategories?: readonly string[]
+    tokens: SiteAuthTokenDecryptedDto[] | undefined,
+    householdCategories: readonly string[]
   ): Promise<FullRecipeInsertDTO> {
     let audioPath: string | null = null;
     let videoPath: string | null = null;
@@ -261,13 +261,10 @@ export class InstagramProcessor extends BaseVideoProcessor {
 
           if (!captionRecipe && captionMayHoldRecipe(descriptionText, verdict, 50)) {
             try {
-              return await extractRecipeWithAI(
-                descriptionText,
-                recipeId,
+              return await extractRecipeWithAI(descriptionText, recipeId, {
                 url,
-                [],
-                householdCategories
-              );
+                householdCategories,
+              });
             } catch (descriptionError) {
               log.warn({ url, err: descriptionError }, "Description extraction failed too");
             }
