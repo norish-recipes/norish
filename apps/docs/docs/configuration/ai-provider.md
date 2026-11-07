@@ -63,7 +63,7 @@ for the rules on existing data.
 | ------------------------ | --------------------------------------------------------------------- | ------- |
 | **Auto-tagging**         | Adds tags, never removes any                                          | Off     |
 | **Allergy detection**    | Adds allergy tags for your household's allergies                      | On      |
-| **Auto-categorization**  | Sets meal categories on recipes without any                           | Off     |
+| **Auto-categorization**  | Sets Categories from the household's list on recipes without any      | Off     |
 | **Nutrition estimation** | Fills in calories, fat, carbs and protein when one of them is missing | Off     |
 | **Recipe provenance**    | Works out the country, region, cuisines and a short note              | Off     |
 | **Ingredient linking**   | Links ingredients to steps that have none                             | Off     |
@@ -170,8 +170,8 @@ Set it up under **Settings => Admin => AI & processing => Decision model**:
 
 What each use does:
 
-- **Auto-categorization** decides whether a recipe is breakfast, lunch, dinner
-  or a snack.
+- **Auto-categorization** asks one question per Category in the recipe
+  owner's household.
 - **Auto-tagging** decides each tag under _Predefined tags only_. Under the
   other strategies it checks each new tag.
 - **Allergy detection** asks one question per household allergy.

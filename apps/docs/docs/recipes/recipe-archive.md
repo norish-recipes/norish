@@ -33,6 +33,9 @@ that is the `RecipeKeeper_….zip` file.
   within your household by URL, or by name when either recipe has no URL.
   Importing your own archive again updates your recipes. Two recipes with the
   same name in one archive are both kept.
+- **Categories are kept.** A Category you don't have yet is added to your
+  household's list. From other apps, only a category that matches one of yours
+  becomes a Category. Any other becomes a tag.
 - **Cookbooks are matched by name.** Each recipe joins your cookbook with
   that name, created if needed. Cookbook covers and empty
   cookbooks are not imported.

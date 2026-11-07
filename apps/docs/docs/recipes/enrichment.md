@@ -10,7 +10,9 @@ With AI set up, recipes can be enriched with:
 
 - **Tags**
 - **Allergy tags** for the allergies set in your household
-- **Meal categories**: breakfast, lunch, dinner or snack
+- **Categories**: picked from your household's Categories, the four built in
+  and any you [added](./creating-and-editing.md#categories). AI never adds a
+  new one.
 - **Nutrition**: calories, fat, carbs and protein per serving
 - **[Provenance](./provenance.md)**: country, region, cuisines and a short note
 - **[Step ingredients](./step-ingredients.md)**: which ingredients each step
@@ -25,7 +27,7 @@ Your administrator chooses which of these run on every new recipe, see
 
 Anything you entered, or that the source stated, wins over an automatic run:
 
-- **Categories**: a recipe with any meal category is left alone.
+- **Categories**: a recipe with any Category is left alone.
 - **Nutrition**: a recipe that states all four values is left alone. Otherwise,
   when nutrition data covers more than 80% of the ingredients, values are
   calculated without AI. Below that, the AI estimates what is missing.
