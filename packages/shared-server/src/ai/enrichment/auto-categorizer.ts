@@ -13,7 +13,7 @@ import { aiLogger } from "@norish/shared-server/logger";
 
 import { householdCategoriesSection } from "../prompts/sections";
 import { decide, generateStructured } from "../runtime/runtime";
-import { verifyClaims } from "./verification";
+import { chunk, MAX_QUESTIONS_PER_DECISION, verifyClaims } from "./verification";
 
 /**
  * A category the Decision Model is at least this sure of is set. Below it the
@@ -36,36 +36,40 @@ function recipeState(recipe: RecipeSummary) {
   };
 }
 
-/** The yes/no question for one Category, keyed by its name in every Decision. */
+/** The yes/no question for one Category. */
 function categoryQuestion(category: string): string {
   return `Does this recipe belong in the category "${category}"?`;
 }
 
 /**
- * One Boolean per Category rather than one Choice, because a recipe may be
- * several. Returns every category that clears the threshold — possibly none,
- * which is the unclear case rather than an answer. Throws whatever `decide`
- * throws; the caller decides what a failure means.
+ * One Boolean per Category, since a recipe may be several, asked by position so
+ * any name is a safe id. None clearing the threshold is the unclear case.
  */
 async function decideCategories(
   recipe: RecipeSummary,
   categories: readonly string[]
 ): Promise<string[]> {
-  const { answers } = await decide({
-    feature: "auto-categorization",
-    // Structured, since the recipe is structured.
-    state: recipeState(recipe),
-    questions: Object.fromEntries(
-      categories.map((category) => [
-        category,
-        { type: "boolean" as const, instructions: categoryQuestion(category) },
-      ])
-    ),
-  });
+  const picked: string[] = [];
+  const ids = categories.map((category, index) => [`c${index}`, category] as const);
 
-  return categories.filter(
-    (category) => (answers[category]?.probability ?? 0) >= CATEGORY_THRESHOLD
-  );
+  for (const batch of chunk(ids, MAX_QUESTIONS_PER_DECISION)) {
+    const { answers } = await decide({
+      feature: "auto-categorization",
+      state: recipeState(recipe),
+      questions: Object.fromEntries(
+        batch.map(([id, category]) => [
+          id,
+          { type: "boolean" as const, instructions: categoryQuestion(category) },
+        ])
+      ),
+    });
+
+    for (const [id, category] of batch) {
+      if ((answers[id]?.probability ?? 0) >= CATEGORY_THRESHOLD) picked.push(category);
+    }
+  }
+
+  return picked;
 }
 
 /**

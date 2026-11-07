@@ -42,6 +42,8 @@ vi.mock("@norish/shared-server/logger", () => ({ aiLogger: logger }));
 
 const { categorizeRecipe, CATEGORY_THRESHOLD } =
   await import("@norish/shared-server/ai/enrichment/auto-categorizer");
+const { MAX_QUESTIONS_PER_DECISION } =
+  await import("@norish/shared-server/ai/enrichment/verification");
 
 const BUILT_INS = ["Breakfast", "Lunch", "Dinner", "Snack"];
 
@@ -51,15 +53,13 @@ const recipe = {
   ingredients: ["rolled oats", "milk", "chia seeds", "honey"],
 };
 
-/** A Decision answer with the given probability per category. */
-function decided(
-  probabilities: Partial<Record<"Breakfast" | "Lunch" | "Dinner" | "Snack", number>>
-) {
+/** A Decision answer with the given probability per category, keyed by position. */
+function decided(probabilities: Record<string, number>, categories: readonly string[] = BUILT_INS) {
   return {
     model: "jev-2026-09-01",
     answers: Object.fromEntries(
-      (["Breakfast", "Lunch", "Dinner", "Snack"] as const).map((category) => [
-        category,
+      categories.map((category, index) => [
+        `c${index}`,
         { type: "boolean", probability: probabilities[category] ?? 0.01 },
       ])
     ),
@@ -102,30 +102,53 @@ describe("categorizeRecipe", () => {
           ingredients: ["rolled oats", "milk", "chia seeds", "honey"],
         },
         questions: {
-          Breakfast: { type: "boolean", instructions: expect.stringMatching(/breakfast/i) },
-          Lunch: { type: "boolean", instructions: expect.stringMatching(/lunch/i) },
-          Dinner: { type: "boolean", instructions: expect.stringMatching(/dinner/i) },
-          Snack: { type: "boolean", instructions: expect.stringMatching(/snack/i) },
+          c0: { type: "boolean", instructions: expect.stringMatching(/breakfast/i) },
+          c1: { type: "boolean", instructions: expect.stringMatching(/lunch/i) },
+          c2: { type: "boolean", instructions: expect.stringMatching(/dinner/i) },
+          c3: { type: "boolean", instructions: expect.stringMatching(/snack/i) },
         },
       });
       expect(mocked.generateStructured).not.toHaveBeenCalled();
       expect(vi.mocked(isDecisionUseEnabled)).toHaveBeenCalledWith("autoCategorization");
     });
 
-    it("asks about a household Category too, and can set it", async () => {
-      mocked.decide.mockResolvedValue({
-        model: "jev",
-        answers: {
-          ...decided({}).answers,
-          Drinks: { type: "boolean", probability: 0.9 },
-        },
-      });
+    it("asks about a household Category by position, whatever its name, and can set it", async () => {
+      const household = [...BUILT_INS, 'Kids "fun" food'];
 
-      await expect(categorizeRecipe(recipe, [...BUILT_INS, "Drinks"])).resolves.toEqual(["Drinks"]);
-      expect(mocked.decide.mock.calls[0]?.[0].questions.Drinks).toEqual({
+      mocked.decide.mockResolvedValue(decided({ 'Kids "fun" food': 0.9 }, household));
+
+      await expect(categorizeRecipe(recipe, household)).resolves.toEqual(['Kids "fun" food']);
+      expect(mocked.decide.mock.calls[0]?.[0].questions.c4).toEqual({
         type: "boolean",
-        instructions: expect.stringContaining("Drinks"),
+        instructions: expect.stringContaining('Kids "fun" food'),
       });
+    });
+
+    it("splits a long list across Decisions at the question limit", async () => {
+      const household = Array.from(
+        { length: MAX_QUESTIONS_PER_DECISION + 5 },
+        (_, index) => `Category ${index}`
+      );
+      const last = household.at(-1)!;
+
+      mocked.decide.mockImplementation(({ questions }: { questions: Record<string, unknown> }) =>
+        Promise.resolve({
+          model: "jev",
+          answers: Object.fromEntries(
+            Object.keys(questions).map((id) => [
+              id,
+              { type: "boolean", probability: id === `c${household.length - 1}` ? 0.9 : 0.01 },
+            ])
+          ),
+        })
+      );
+
+      await expect(categorizeRecipe(recipe, household)).resolves.toEqual([last]);
+      expect(mocked.decide).toHaveBeenCalledTimes(2);
+      expect(Object.keys(mocked.decide.mock.calls[0]?.[0].questions)).toHaveLength(
+        MAX_QUESTIONS_PER_DECISION
+      );
+      expect(Object.keys(mocked.decide.mock.calls[1]?.[0].questions)).toHaveLength(5);
     });
 
     it("sets every category that clears the threshold, since a recipe may be several", async () => {
