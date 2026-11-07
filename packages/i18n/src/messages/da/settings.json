@@ -1116,7 +1116,7 @@
       "usesPlaceholder": "Intet",
       "useNames": {
         "autoCategorization": "Automatisk kategorisering",
-        "autoCategorizationDescription": "Afgør om en opskrift er morgenmad, frokost, aftensmad eller snack",
+        "autoCategorizationDescription": "Afgør hvilke af husstandens kategorier en opskrift hører til i",
         "autoTagging": "Automatiske tags",
         "autoTaggingDescription": "Vælg tags fra den foruddefinerede liste, og bekræft hvert tag, AI'en foreslår",
         "allergyDetection": "Allergiregistrering",
@@ -1149,7 +1149,7 @@
       "autoTaggingDescription": "Denne prompt bruges til at generere tags for importerede opskrifter. Definer tagningregler og liste over foruddefinerede tags.",
       "autoTaggingPlaceholder": "Indtast prompt til auto-tagging...",
       "autoCategorization": "Prompt til auto-kategorisering",
-      "autoCategorizationDescription": "Denne prompt bruges til at sortere opskrifter i måltidskategorier (morgenmad, frokost, aftensmad, snack).",
+      "autoCategorizationDescription": "Denne prompt bruges til at sortere opskrifter i husstandens kategorier.",
       "autoCategorizationPlaceholder": "Indtast prompt til auto-kategorisering...",
       "allergyDetection": "Prompt til allergidetektion",
       "allergyDetectionDescription": "Denne prompt bruges til at finde husstandens konfigurerede allergener i en opskrifts ingredienser.",

@@ -1116,7 +1116,7 @@
       "usesPlaceholder": "Nada",
       "useNames": {
         "autoCategorization": "Categorização automática",
-        "autoCategorizationDescription": "Decidir se uma receita é café da manhã, almoço, jantar ou lanche",
+        "autoCategorizationDescription": "Decidir a quais categorias da casa uma receita pertence",
         "autoTagging": "Marcação automática",
         "autoTaggingDescription": "Escolher tags da lista predefinida e confirmar cada tag que a IA propõe",
         "allergyDetection": "Detecção de alergias",
@@ -1149,7 +1149,7 @@
       "autoTaggingDescription": "Este prompt é usado para gerar tags para receitas importadas. Defina regras de marcação e a lista de tags predefinidas.",
       "autoTaggingPlaceholder": "Insira o prompt de marcação automática...",
       "autoCategorization": "Prompt de categorização automática",
-      "autoCategorizationDescription": "Este prompt é usado para classificar receitas em categorias de refeições (café da manhã, almoço, jantar, lanche).",
+      "autoCategorizationDescription": "Este prompt é usado para classificar receitas nas categorias da casa.",
       "autoCategorizationPlaceholder": "Insira o prompt de categorização automática...",
       "allergyDetection": "Prompt de detecção de alérgenos",
       "allergyDetectionDescription": "Este prompt é usado para detectar os alérgenos configurados da casa nos ingredientes de uma receita.",

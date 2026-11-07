@@ -1116,7 +1116,7 @@
       "usesPlaceholder": "Ei mihinkään",
       "useNames": {
         "autoCategorization": "Automaattinen luokittelu",
-        "autoCategorizationDescription": "Päätä, onko resepti aamiainen, lounas, päivällinen vai välipala",
+        "autoCategorizationDescription": "Päätä, mihin kotitalouden kategorioihin resepti kuuluu",
         "autoTagging": "Automaattiset tunnisteet",
         "autoTaggingDescription": "Valitse tunnisteet ennalta määritetystä listasta ja vahvista jokainen tekoälyn ehdottama tunniste",
         "allergyDetection": "Allergeenien tunnistus",
@@ -1149,7 +1149,7 @@
       "autoTaggingDescription": "Tätä kehotetta käytetään tunnisteiden luomiseen tuoduille resepteille. Määritä tunnistesäännöt ja ennalta määriteltyjen tunnisteiden lista.",
       "autoTaggingPlaceholder": "Kirjoita tunnisteiden luonnin kehote...",
       "autoCategorization": "Automaattisen luokittelun kehote",
-      "autoCategorizationDescription": "Tätä kehotetta käytetään reseptien lajitteluun ateriakategorioihin (aamiainen, lounas, päivällinen, välipala).",
+      "autoCategorizationDescription": "Tätä kehotetta käytetään reseptien lajitteluun kotitalouden kategorioihin.",
       "autoCategorizationPlaceholder": "Kirjoita automaattisen luokittelun kehote...",
       "allergyDetection": "Allergeenien tunnistuksen kehote",
       "allergyDetectionDescription": "Tätä kehotetta käytetään kotitalouden määrittämien allergeenien tunnistamiseen reseptin ainesosista.",

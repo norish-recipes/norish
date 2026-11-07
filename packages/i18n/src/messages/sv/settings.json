@@ -1116,7 +1116,7 @@
       "usesPlaceholder": "Ingenting",
       "useNames": {
         "autoCategorization": "Automatisk kategorisering",
-        "autoCategorizationDescription": "Avgör om ett recept är frukost, lunch, middag eller mellanmål",
+        "autoCategorizationDescription": "Avgör vilka av hushållets kategorier ett recept hör till",
         "autoTagging": "Automatisk taggning",
         "autoTaggingDescription": "Välj taggar från den fördefinierade listan och bekräfta varje tagg som AI föreslår",
         "allergyDetection": "Identifiering av allergener",
@@ -1149,7 +1149,7 @@
       "autoTaggingDescription": "Den här prompten används för att skapa taggar för importerade recept. Ange taggningsregler och en lista med fördefinierade taggar.",
       "autoTaggingPlaceholder": "Ange prompten för automatisk taggning...",
       "autoCategorization": "Prompt för automatisk kategorisering",
-      "autoCategorizationDescription": "Den här prompten används för att sortera recept i måltidskategorier (frukost, lunch, middag, mellanmål).",
+      "autoCategorizationDescription": "Den här prompten används för att sortera recept i hushållets kategorier.",
       "autoCategorizationPlaceholder": "Ange prompten för automatisk kategorisering...",
       "allergyDetection": "Prompt för identifiering av allergener",
       "allergyDetectionDescription": "Den här prompten används för att identifiera hushållets angivna allergener bland receptets ingredienser.",

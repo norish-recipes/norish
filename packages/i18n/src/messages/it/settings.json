@@ -1116,7 +1116,7 @@
       "usesPlaceholder": "Niente",
       "useNames": {
         "autoCategorization": "Categorizzazione automatica",
-        "autoCategorizationDescription": "Decidere se una ricetta è colazione, pranzo, cena o spuntino",
+        "autoCategorizationDescription": "Decidere a quali categorie della famiglia appartiene una ricetta",
         "autoTagging": "Tag automatici",
         "autoTaggingDescription": "Scegliere i tag dall'elenco predefinito e confermare ogni tag proposto dall'IA",
         "allergyDetection": "Rilevamento allergie",
@@ -1149,7 +1149,7 @@
       "autoTaggingDescription": "Questo prompt viene utilizzato per generare tag per le ricette importate. Definisci le regole di tagging e la lista dei tag predefiniti.",
       "autoTaggingPlaceholder": "Inserisci il prompt per i tag automatici...",
       "autoCategorization": "Prompt categorizzazione automatica",
-      "autoCategorizationDescription": "Questo prompt viene usato per ordinare le ricette nelle categorie dei pasti (colazione, pranzo, cena, spuntino).",
+      "autoCategorizationDescription": "Questo prompt viene usato per ordinare le ricette nelle categorie della famiglia.",
       "autoCategorizationPlaceholder": "Inserisci il prompt per la categorizzazione automatica...",
       "allergyDetection": "Prompt rilevamento allergeni",
       "allergyDetectionDescription": "Questo prompt viene usato per rilevare gli allergeni configurati della famiglia negli ingredienti di una ricetta.",

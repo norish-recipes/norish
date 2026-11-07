@@ -1116,7 +1116,7 @@
       "usesPlaceholder": "Nic",
       "useNames": {
         "autoCategorization": "Automatyczna kategoryzacja",
-        "autoCategorizationDescription": "Ustalić, czy przepis to śniadanie, obiad, kolacja czy przekąska",
+        "autoCategorizationDescription": "Ustalić, do których kategorii gospodarstwa domowego należy przepis",
         "autoTagging": "Automatyczne tagowanie",
         "autoTaggingDescription": "Wybrać tagi z predefiniowanej listy i potwierdzić każdy tag zaproponowany przez AI",
         "allergyDetection": "Wykrywanie alergenów",
@@ -1149,7 +1149,7 @@
       "autoTaggingDescription": "Ten prompt jest używany do generowania tagów dla importowanych przepisów. Zdefiniuj reguły tagowania i listę predefiniowanych tagów.",
       "autoTaggingPlaceholder": "Wpisz prompt automatycznego tagowania...",
       "autoCategorization": "Prompt automatycznej kategoryzacji",
-      "autoCategorizationDescription": "Ten prompt jest używany do porządkowania przepisów w kategorie posiłków (śniadanie, obiad, kolacja, przekąska).",
+      "autoCategorizationDescription": "Ten prompt jest używany do przydzielania przepisów do kategorii gospodarstwa domowego.",
       "autoCategorizationPlaceholder": "Wpisz prompt automatycznej kategoryzacji...",
       "allergyDetection": "Prompt wykrywania alergenów",
       "allergyDetectionDescription": "Ten prompt jest używany do wykrywania skonfigurowanych alergenów gospodarstwa domowego w składnikach przepisu.",
