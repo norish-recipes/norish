@@ -31,9 +31,10 @@ Groceries is the pilot, measured before and after. The rest follows in order, an
 4. As a contributor, I want to import a shared hook directly, so that I don't have to bind a factory in each app first.
 5. As a contributor, I want lint to stop one feature importing another, so that features stay separable without review catching it.
 6. As a contributor, I want the architecture written down in CONTRIBUTING.md with a line of why per rule, so that I can follow it without reading this spec.
-7. As a household member, I want the groceries page to do no more rendering than what changed on screen, so that checking off items stays quick on a phone.
-8. As a household member, I want groceries to behave exactly as before, so that the restructure is invisible to me.
-9. As a maintainer, I want the pilot measured with a committed script, so that every later feature is measured the same way.
+7. As a new contributor, I want a docs page that shows how the repo is laid out and how data flows from a component to Postgres and back, so that I can find my way before reading code.
+8. As a household member, I want the groceries page to do no more rendering than what changed on screen, so that checking off items stays quick on a phone.
+9. As a household member, I want groceries to behave exactly as before, so that the restructure is invisible to me.
+10. As a maintainer, I want the pilot measured with a committed script, so that every later feature is measured the same way.
 
 ## Implementation Decisions
 
@@ -94,6 +95,7 @@ The render counter is a committed script next to `measure-page-loads.ts`.
 ### Docs
 
 - CONTRIBUTING.md gains an "App architecture" section after "Project Structure" with the rules above and one line of why each; "Project Structure" shows the `features/` folders. AGENTS.md gets a one-line pointer.
+- An "Architecture" page in the docs' Development section explains the whole system at a high level: folder structure, what goes where, the decisions (linking their ADRs) and how a read, a write and a realtime update flow. CONTRIBUTING.md's rules link to it.
 - No ADR: the guide states the rules and their reasons.
 - The 0.27.0-beta release notes get one line saying the app architecture changed.
 
