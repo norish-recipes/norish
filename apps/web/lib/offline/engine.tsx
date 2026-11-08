@@ -6,7 +6,6 @@
 import type { DehydratedState, Query, QueryClient } from "@tanstack/react-query";
 import type { ReactNode } from "react";
 import { useSyncExternalStore } from "react";
-import { getInitialDateRange } from "@/app/(app)/calendar/context-helpers";
 import { useConnectionStatus, useTRPC, useTRPCClient } from "@/app/providers/trpc-provider";
 import { useUserContext } from "@/context/user-context";
 import { isOfflineForced, subscribeOfflineForced } from "@/lib/connectivity/forced-offline";
@@ -32,7 +31,7 @@ import {
 } from "@norish/shared-react/offline/react";
 import { getSession } from "@norish/shared/lib/auth/client";
 import { addBasePath } from "@norish/shared/lib/base-path";
-import { dateKey } from "@norish/shared/lib/helpers";
+import { dateKey, getInitialDateRange } from "@norish/shared/lib/helpers";
 
 /** Marks the web client's replays in server logs. */
 export const OUTBOX_REPLAY_HEADER_VALUE = "web-outbox";

@@ -1,7 +1,6 @@
-import { getInitialDateRange } from "@/app/(app)/calendar/context-helpers";
 import { describe, expect, it } from "vitest";
 
-import { dateKey } from "@norish/shared/lib/helpers";
+import { dateKey, getInitialDateRange } from "@norish/shared/lib/helpers";
 
 const keys = (range: { start: Date; end: Date }) => [dateKey(range.start), dateKey(range.end)];
 

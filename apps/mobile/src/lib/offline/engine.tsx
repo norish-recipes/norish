@@ -16,7 +16,7 @@ import {
   OfflineController as SharedOfflineController,
   useConnectivity,
 } from "@norish/shared-react/offline/react";
-import { addWeeks, dateKey, getWeekEnd, getWeekStart } from "@norish/shared/lib/helpers";
+import { dateKey, getInitialDateRange } from "@norish/shared/lib/helpers";
 
 import { createMmkvStorage } from "./mmkv-storage";
 import { uploadFiles } from "./upload-files";
@@ -29,16 +29,10 @@ export const offlineEngine = createOfflineEngine({
   replayHeaderValue: OUTBOX_REPLAY_HEADER_VALUE,
   probeUrl: () => `${getBackendBaseUrl()}${HEALTH_PROBE_PATH}`,
   buster: Constants.expoConfig?.version,
-  // The phone calendar's opening window: two weeks either side of this week.
   calendarRanges: () => {
-    const now = new Date();
+    const { start, end } = getInitialDateRange("mobile");
 
-    return [
-      {
-        startISO: dateKey(getWeekStart(addWeeks(now, -2))),
-        endISO: dateKey(getWeekEnd(addWeeks(now, 2))),
-      },
-    ];
+    return [{ startISO: dateKey(start), endISO: dateKey(end) }];
   },
 });
 
