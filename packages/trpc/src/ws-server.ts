@@ -254,7 +254,7 @@ export function initTrpcWebSocket(server: Server) {
     trpcLogger.error({ err }, "Failed to start invalidation listener");
   }
 
-  trpcLogger.info("WebSocket server started at /trpc");
+  trpcLogger.info(`WebSocket server started at ${TRPC_WS_PATH}`);
 }
 
 /**
