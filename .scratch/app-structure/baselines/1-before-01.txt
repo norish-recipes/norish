@@ -1,0 +1,383 @@
+### check an item: 0 mounts, 288 updates, 7 commits
+
+| Component | Mounts | Updates | Changed |
+| --------- | -----: | ------: | ------- |
+| SortableGroupItem | 0 | 80 | (context) 80, children 40 |
+| SortableContext | 0 | 20 | (context) 10, children 10, items 10 |
+| bound $7230ffa83bc0c2cf$var$DOMElement | 0 | 13 | children 13, onPointerEnter 10, onPointerLeave 10, onKeyDown 9, onClick 8, onDragStart 8, onMouseDown 8, onPointerDown 8, onPointerUp 8, onKeyUp 5, data-focused 2, data-pressed 2, data-selected 2, data-hovered 1 |
+| motion.div | 0 | 10 | children 10, animate 5, exit 5, initial 5, transition 5 |
+| SortableAisleContainer | 0 | 10 | (context) 10, children 5, header 5, itemIds 5 |
+| $7230ffa83bc0c2cf$export$2881499e37b75b9a | 0 | 8 | children 8, values 8 |
+| Anonymous | 0 | 7 | children 5, onKeyDown 5, onKeyUp 5, onPress 5, onPressStart 5, (context) 2 |
+| bound DOMElement | 0 | 6 | (parent) 3, children 3 |
+| Button | 0 | 6 | (context) 5, children 5, className 5, (state) 1 |
+| $49319ee1285aa241$export$27d2ad3c5815583e | 0 | 5 | children 5 |
+| AisleHeading | 0 | 5 | (parent) 4, count 1 |
+| ButtonRoot | 0 | 5 | children 5 |
+| DropdownPopover | 0 | 5 | children 5 |
+| DropdownRoot | 0 | 5 | children 5 |
+| EllipsisVerticalIcon | 0 | 5 | (parent) 5 |
+| GroupedStoreSectionComponent | 0 | 5 | (context) 5, allGroups 5, groceries 5, onClearAll 5, onDeleteDone 5, onMarkAllDone 5, groups 1 |
+| MeasureLayout | 0 | 5 | animate 5, children 5, exit 5, initial 5, transition 5 |
+| MeasureLayoutWithContext | 0 | 5 | animate 5, children 5, exit 5, initial 5, transition 5 |
+| Popover | 0 | 5 | (context) 5, children 5, className 5 |
+| SortableGroupedStoreContainer | 0 | 5 | (context) 5, children 5, header 5 |
+| StoreHeading | 0 | 5 | actions 5, activeCount 1, doneCount 1, total 1 |
+| $ea3928288112382f$export$439d29a4e110a164 | 0 | 4 | children 4 |
+| CheckboxButton | 0 | 4 | (context) 3, children 3, className 3, (state) 2 |
+| $8b8d26808cb8cb53$var$ModalOverlayWithForwardRef | 0 | 3 | children 3, className 3, onClick 3 |
+| Checkbox | 0 | 3 | (state) 3, children 1, className 1, isSelected 1 |
+| DoneRow | 0 | 3 | children 3, count 1 |
+| HeroUI.Checkbox.Content | 0 | 3 | (context) 3 |
+| HeroUI.Checkbox.Control | 0 | 3 | (context) 3 |
+| HeroUI.Checkbox.Indicator | 0 | 3 | (context) 3 |
+| ModalBackdrop | 0 | 3 | children 3 |
+| Accessibility | 0 | 2 | (parent) 2 |
+| AnimationManager | 0 | 2 | (parent) 2 |
+| ClearGroceriesModal | 0 | 2 | onConfirm 2 |
+| DndContext | 0 | 2 | (state) 1, children 1, collisionDetection 1, onDragEnd 1, onDragOver 1, onDragStart 1 |
+| GroceriesProvider | 0 | 2 | (state) 2 |
+| HiddenText | 0 | 2 | (parent) 2 |
+| LiveRegion | 0 | 2 | (parent) 2 |
+| NullifiedContextProvider | 0 | 2 | children 2 |
+| Presence | 0 | 2 | children 2 |
+| RestoreFocus | 0 | 2 | (parent) 2 |
+| AddGroceryPanel | 0 | 1 | (state) 1 |
+| DeleteStoreModal | 0 | 1 | onConfirm 1 |
+| Dialog | 0 | 1 | children 1, onOpenChange 1 |
+| DialogPortal | 0 | 1 | children 1 |
+| DialogPortalProvider | 0 | 1 | children 1 |
+| DialogProvider | 0 | 1 | children 1 |
+| DndGroupedGroceryProvider | 0 | 1 | (state) 1, children 1, groupedGroceries 1 |
+| GroceriesListActions | 0 | 1 | (context) 1 |
+| GroceriesPage | 0 | 1 | (context) 1 |
+| GroceryCheckbox | 0 | 1 | (state) 1 |
+| GroceryList | 0 | 1 | groceries 1, onClearAllInStore 1 |
+| GroceryListContent | 0 | 1 | (state) 1, groceries 1, onClearAllInStore 1 |
+| HeroUI.Checkbox | 0 | 1 | isSelected 1 |
+| IngredientIconsProvider | 0 | 1 | children 1, ids 1 |
+| PanelRoot | 0 | 1 | children 1 |
+| Portal | 0 | 1 | (context) 1, children 1 |
+| Root | 0 | 1 | children 1 |
+| StoreManagerPanel | 0 | 1 | (state) 1 |
+| StoresContextProvider | 0 | 1 | (state) 1 |
+
+### add an item: 19 mounts, 1689 updates, 12 commits
+
+| Component | Mounts | Updates | Changed |
+| --------- | -----: | ------: | ------- |
+| SortableGroupItem | 1 | 163 | children 122, (context) 81, group 52 |
+| bound $7230ffa83bc0c2cf$var$DOMElement | 2 | 135 | children 130, onKeyDown 78, onPointerEnter 77, onPointerLeave 77, onClick 73, onDragStart 73, onMouseDown 73, onPointerDown 73, onPointerUp 73, onKeyUp 17, style 5, data-focused 4, data-hovered 3, data-pressed 2, data-disabled 1, disabled 1, onBlur 1, onFocus 1, tabIndex 1, value 1 |
+| bound DOMElement | 2 | 106 | (parent) 53, children 53 |
+| $7230ffa83bc0c2cf$export$2881499e37b75b9a | 1 | 69 | children 69, values 69 |
+| GroupedGroceryItemComponent | 1 | 69 | group 52, (state) 17, isFirst 1 |
+| $ea3928288112382f$export$439d29a4e110a164 | 1 | 53 | children 53 |
+| Checkbox | 1 | 53 | children 52, className 52, onChange 52, (state) 1 |
+| CheckboxButton | 1 | 53 | (context) 53, children 53, className 53 |
+| HeroUI.Checkbox.Content | 1 | 53 | (context) 53 |
+| HeroUI.Checkbox.Control | 1 | 53 | (context) 53 |
+| HeroUI.Checkbox.Indicator | 1 | 53 | (context) 53 |
+| GroceryCheckbox | 1 | 52 | onChange 52 |
+| GroceryPrice | 1 | 52 | line 52 |
+| HeroUI.Checkbox | 1 | 52 | onChange 52 |
+| IngredientIcon | 1 | 42 | (context) 41, ingredientId 1 |
+| SortableContext | 0 | 40 | children 30, (context) 10, items 10 |
+| motion.div | 0 | 30 | children 30, animate 15, exit 15, initial 15, transition 15 |
+| Anonymous | 0 | 28 | children 24, onKeyDown 16, onKeyUp 16, onPress 16, onPressStart 16, (context) 4 |
+| Button | 0 | 24 | children 19, className 19, (context) 16, (state) 5, onPress 4, isDisabled 1 |
+| Presence | 0 | 24 | children 24 |
+| Primitive.div | 0 | 20 | children 12, style 8, (parent) 4, onBlurCapture 4, onContextMenu 4, onFocusCapture 4, onMouseUp 4, onPointerDown 4, onPointerDownCapture 4, onPointerMove 4, onPointerOut 4, onPointerUp 4 |
+| SortableAisleContainer | 0 | 20 | children 15, header 15, (context) 10, itemIds 5 |
+| ButtonRoot | 0 | 19 | children 19, onPress 4, isDisabled 1 |
+| $49319ee1285aa241$export$27d2ad3c5815583e | 0 | 16 | children 16 |
+| DropdownPopover | 0 | 16 | children 16 |
+| DropdownRoot | 0 | 16 | children 16 |
+| Popover | 0 | 16 | (context) 16, children 16, className 16 |
+| Portal | 0 | 16 | (context) 8, children 8, (parent) 4 |
+| AisleHeading | 0 | 15 | (parent) 15 |
+| EllipsisVerticalIcon | 0 | 15 | (parent) 15 |
+| GroupedStoreSectionComponent | 0 | 15 | allGroups 15, groceries 15, onClearAll 15, onDeleteDone 15, onMarkAllDone 15, (context) 5, groups 3 |
+| MeasureLayout | 0 | 15 | animate 15, children 15, exit 15, initial 15, transition 15 |
+| MeasureLayoutWithContext | 0 | 15 | animate 15, children 15, exit 15, initial 15, transition 15 |
+| SortableGroupedStoreContainer | 0 | 15 | children 15, header 15, (context) 5 |
+| StoreHeading | 0 | 15 | actions 15, activeCount 1 |
+| Primitive.div.Slot | 0 | 12 | children 8, (parent) 4 |
+| $8b8d26808cb8cb53$var$ModalOverlayWithForwardRef | 0 | 9 | children 9, className 9, onClick 9 |
+| DoneRow | 0 | 9 | children 9 |
+| ModalBackdrop | 0 | 9 | children 9 |
+| Dialog | 0 | 8 | children 8, onOpenChange 8 |
+| DialogPortal | 0 | 8 | (parent) 4, children 4 |
+| DialogPortalProvider | 0 | 8 | children 8 |
+| DialogProvider | 0 | 8 | children 8 |
+| Root | 0 | 8 | children 4, onClose 4, onDrag 4, onOpenChange 4, onRelease 4 |
+| ClearGroceriesModal | 0 | 6 | onConfirm 6, itemCount 1 |
+| Input | 0 | 5 | className 4, onKeyDown 4, (state) 2, value 1 |
+| Accessibility | 0 | 4 | (parent) 4 |
+| ActionButton | 0 | 4 | onPress 4, isDisabled 1 |
+| ActionButtonGroup | 0 | 4 | children 4 |
+| AddGroceryPanel | 0 | 4 | (state) 4 |
+| AnimationManager | 0 | 4 | (parent) 4 |
+| DialogContent | 0 | 4 | children 4, onContextMenu 4, onFocusOutside 4, onOpenAutoFocus 4, onPointerDown 4, onPointerDownOutside 4, onPointerMove 4, onPointerOut 4, onPointerUp 4 |
+| DialogContentImpl | 0 | 4 | children 4, onCloseAutoFocus 4, onContextMenu 4, onFocusOutside 4, onOpenAutoFocus 4, onPointerDown 4, onPointerDownOutside 4, onPointerMove 4, onPointerOut 4, onPointerUp 4 |
+| DialogContentModal | 0 | 4 | children 4, onContextMenu 4, onFocusOutside 4, onOpenAutoFocus 4, onPointerDown 4, onPointerDownOutside 4, onPointerMove 4, onPointerOut 4, onPointerUp 4 |
+| DialogOverlay | 0 | 4 | onMouseUp 4 |
+| DialogOverlay.RemoveScroll.Slot | 0 | 4 | children 4 |
+| DialogOverlayImpl | 0 | 4 | onMouseUp 4 |
+| DismissableLayer | 0 | 4 | children 4, onContextMenu 4, onDismiss 4, onFocusOutside 4, onPointerDown 4, onPointerDownOutside 4, onPointerMove 4, onPointerOut 4, onPointerUp 4, style 4 |
+| DndContext | 0 | 4 | children 3, onDragEnd 3, (state) 1, collisionDetection 1, onDragOver 1, onDragStart 1 |
+| Drawer.Content | 0 | 4 | (context) 4, children 4 |
+| Drawer.Handle | 0 | 4 | (context) 4 |
+| Drawer.Overlay | 0 | 4 | (context) 4 |
+| FocusScope | 0 | 4 | children 4, onMountAutoFocus 4, onUnmountAutoFocus 4 |
+| FocusScopeBranchProvider | 0 | 4 | children 4 |
+| GroceriesProvider | 0 | 4 | (state) 4 |
+| GroceryListContent | 0 | 4 | (state) 4, groceries 3, onClearAllInStore 3 |
+| HiddenText | 0 | 4 | (parent) 4 |
+| IngredientIconsProvider | 0 | 4 | children 3, ids 3, (state) 2 |
+| InputRoot | 0 | 4 | onKeyDown 4, value 1 |
+| LiveRegion | 0 | 4 | (parent) 4 |
+| NestedRoot | 0 | 4 | (context) 4 |
+| NullifiedContextProvider | 0 | 4 | children 4 |
+| PanelRoot | 0 | 4 | children 4 |
+| RemoveScrollBar | 0 | 4 | (parent) 4 |
+| RemoveScrollSideCar | 0 | 4 | (parent) 4 |
+| RestoreFocus | 0 | 4 | (parent) 4 |
+| Sheet | 0 | 4 | (parent) 4 |
+| SideCar | 0 | 4 | (parent) 4 |
+| StoresContextProvider | 0 | 4 | (state) 4 |
+| DeleteStoreModal | 0 | 3 | onConfirm 3 |
+| DndGroupedGroceryProvider | 0 | 3 | (state) 3, children 3, groupedGroceries 3 |
+| GroceriesListActions | 0 | 3 | (context) 3 |
+| GroceriesPage | 0 | 3 | (context) 3 |
+| GroceryList | 0 | 3 | groceries 3, onClearAllInStore 3 |
+| StoreManagerPanel | 0 | 3 | (state) 3 |
+| AnimatePresence | 1 | 0 |  |
+| Bars3Icon | 1 | 0 |  |
+| GroceryRecurrenceControl | 0 | 1 | itemName 1 |
+
+### open the edit panel: 178 mounts, 224 updates, 8 commits
+
+| Component | Mounts | Updates | Changed |
+| --------- | -----: | ------: | ------- |
+| Presence | 6 | 20 | children 20, (state) 4 |
+| bound $7230ffa83bc0c2cf$var$DOMElement | 13 | 12 | children 8, onClick 6, onKeyDown 6, onDragStart 4, onMouseDown 4, onPointerDown 4, onPointerEnter 4, onPointerLeave 4, onPointerUp 4, aria-describedby 2, data-placeholder 2, onBlur 2, onFocus 2, onKeyUp 2, style 2 |
+| Primitive.div | 5 | 16 | children 9, style 7, onBlurCapture 4, onFocusCapture 4, onPointerDownCapture 4, (parent) 3, onContextMenu 3, onMouseUp 3, onPointerDown 3, onPointerMove 3, onPointerOut 3, onPointerUp 3, aria-labelledby 1, onScrollCapture 1, onTouchMoveCapture 1, onWheelCapture 1 |
+| Portal | 4 | 15 | children 8, (context) 7, (parent) 3, (state) 2 |
+| Button | 8 | 4 | children 4, className 4, (context) 2, onKeyDown 2, onPress 2 |
+| Primitive.div.Slot | 3 | 9 | children 6, (parent) 3 |
+| Dialog | 2 | 7 | children 7, onOpenChange 7, (state) 1 |
+| DialogPortal | 2 | 7 | children 4, (parent) 3, (context) 1 |
+| DialogPortalProvider | 2 | 7 | children 7 |
+| DialogProvider | 2 | 7 | children 7, titlePresent 1 |
+| ListBoxItem | 9 | 0 |  |
+| ListBoxItemRoot | 9 | 0 |  |
+| Root | 2 | 7 | children 4, onClose 3, onDrag 3, onOpenChange 3, onRelease 3 |
+| $72abaeab4d80592f$export$78efe591171d7d45 | 4 | 4 | getContainer 4 |
+| Anonymous | 2 | 6 | children 6, (state) 1 |
+| PanelPortal | 4 | 4 | (context) 4 |
+| $42ceafc619f9c3ba$export$bf788dd355e3a401 | 4 | 2 | (state) 2 |
+| Label | 4 | 2 | (context) 2 |
+| PanelRoot | 2 | 4 | children 3, (state) 1 |
+| Popover | 4 | 2 | (context) 2 |
+| SelectTrigger | 4 | 2 | (context) 2 |
+| SelectValue | 4 | 2 | (context) 2 |
+| ActionButton | 3 | 2 | onPress 2 |
+| ButtonRoot | 3 | 2 | children 2, onPress 2 |
+| DismissableLayer | 1 | 4 | children 3, onContextMenu 3, onDismiss 3, onFocusOutside 3, onPointerDown 3, onPointerDownOutside 3, onPointerMove 3, onPointerOut 3, onPointerUp 3, style 3, (state) 2, aria-labelledby 1 |
+| $42ceafc619f9c3ba$var$CollectionInner | 2 | 2 | collection 2 |
+| $7230ffa83bc0c2cf$export$2881499e37b75b9a | 2 | 2 | children 2, values 2 |
+| $b046d185a4525d56$export$cbd84cdb2e668835 | 2 | 2 | state 2 |
+| $c8bb816105474884$var$SelectInner | 2 | 2 | (state) 2, collection 2 |
+| $d7f64c32b702fe2c$export$8dc98ba7eadeaa56 | 2 | 2 | children 2 |
+| DialogContent | 1 | 3 | children 3, onContextMenu 3, onFocusOutside 3, onOpenAutoFocus 3, onPointerDown 3, onPointerDownOutside 3, onPointerMove 3, onPointerOut 3, onPointerUp 3, (context) 1 |
+| DialogContentImpl | 1 | 3 | children 3, onCloseAutoFocus 3, onContextMenu 3, onFocusOutside 3, onOpenAutoFocus 3, onPointerDown 3, onPointerDownOutside 3, onPointerMove 3, onPointerOut 3, onPointerUp 3, (context) 1 |
+| DialogContentModal | 1 | 3 | children 3, onContextMenu 3, onFocusOutside 3, onOpenAutoFocus 3, onPointerDown 3, onPointerDownOutside 3, onPointerMove 3, onPointerOut 3, onPointerUp 3, (context) 1 |
+| DialogOverlay | 1 | 3 | onMouseUp 3, (context) 1 |
+| DialogOverlay.RemoveScroll.Slot | 1 | 3 | children 3, onScrollCapture 1, onTouchMoveCapture 1, onWheelCapture 1 |
+| DialogOverlayImpl | 1 | 3 | onMouseUp 3, (context) 1, (state) 1 |
+| Drawer.Content | 1 | 3 | (context) 3, children 3 |
+| Drawer.Handle | 1 | 3 | (context) 3 |
+| Drawer.Overlay | 1 | 3 | (context) 3 |
+| EditGroceryPanel | 1 | 3 | (state) 3 |
+| FocusScope | 1 | 3 | children 3, onMountAutoFocus 3, onUnmountAutoFocus 3, (state) 1 |
+| FocusScopeBranchProvider | 1 | 3 | children 3 |
+| IconChevronDown | 2 | 2 | (parent) 2 |
+| LabelRoot | 4 | 0 |  |
+| NestedRoot | 1 | 3 | (context) 3 |
+| RemoveScrollBar | 1 | 3 | (parent) 3 |
+| RemoveScrollSideCar | 1 | 3 | (parent) 3 |
+| SelectIndicator | 2 | 2 | (context) 2 |
+| SelectPopover | 4 | 0 |  |
+| Sheet | 1 | 3 | (parent) 3 |
+| SideCar | 1 | 3 | (parent) 3 |
+| ActionButtonGroup | 1 | 2 | children 2 |
+| Input | 1 | 2 | className 2, onKeyDown 2 |
+| InputRoot | 1 | 2 | onKeyDown 2 |
+| $42ceafc619f9c3ba$export$fb8073518f34e6ec | 2 | 0 |  |
+| $42ceafc619f9c3ba$var$CollectionRoot | 2 | 0 |  |
+| bound DOMElement | 2 | 0 |  |
+| DialogTitle | 1 | 1 | (context) 1 |
+| FieldSlotsGate | 2 | 0 |  |
+| ListBox | 2 | 0 |  |
+| ListBoxItemIndicator | 2 | 0 |  |
+| ListBoxRoot | 2 | 0 |  |
+| Primitive.h2 | 1 | 1 | (parent) 1 |
+| Select | 2 | 0 |  |
+| SelectRoot | 2 | 0 |  |
+| AddGroceryButton | 0 | 1 | (context) 1 |
+| AisleSelector | 1 | 0 |  |
+| CheckIcon | 1 | 0 |  |
+| CloseButtonRoot | 1 | 0 |  |
+| CloseIcon | 1 | 0 |  |
+| GroceriesListActions | 0 | 1 | (context) 1 |
+| GroceriesPage | 0 | 1 | (context) 1 |
+| GroceriesUiProvider | 0 | 1 | (state) 1 |
+| GroceryProductField | 1 | 0 |  |
+| GroceryRecurrenceControl | 1 | 0 |  |
+| PlusIcon | 1 | 0 |  |
+| RecurrencePanel | 1 | 0 |  |
+| StoreSelector | 1 | 0 |  |
+| TrashIcon | 1 | 0 |  |
+
+### realtime echo of another browser checking an item: 0 mounts, 247 updates, 2 commits
+
+| Component | Mounts | Updates | Changed |
+| --------- | -----: | ------: | ------- |
+| SortableGroupItem | 0 | 80 | (context) 80, children 40 |
+| SortableContext | 0 | 20 | (context) 10, children 10, items 10 |
+| motion.div | 0 | 10 | children 10, animate 5, exit 5, initial 5, transition 5 |
+| SortableAisleContainer | 0 | 10 | (context) 10, children 5, header 5, itemIds 5 |
+| Anonymous | 0 | 7 | children 5, onKeyDown 5, onKeyUp 5, onPress 5, onPressStart 5, (context) 2 |
+| $49319ee1285aa241$export$27d2ad3c5815583e | 0 | 5 | children 5 |
+| $7230ffa83bc0c2cf$export$2881499e37b75b9a | 0 | 5 | children 5, values 5 |
+| AisleHeading | 0 | 5 | (parent) 4, count 1 |
+| bound $7230ffa83bc0c2cf$var$DOMElement | 0 | 5 | children 5, onClick 5, onDragStart 5, onKeyDown 5, onKeyUp 5, onMouseDown 5, onPointerDown 5, onPointerEnter 5, onPointerLeave 5, onPointerUp 5 |
+| Button | 0 | 5 | (context) 5, children 5, className 5 |
+| ButtonRoot | 0 | 5 | children 5 |
+| DropdownPopover | 0 | 5 | children 5 |
+| DropdownRoot | 0 | 5 | children 5 |
+| EllipsisVerticalIcon | 0 | 5 | (parent) 5 |
+| GroupedStoreSectionComponent | 0 | 5 | (context) 5, allGroups 5, groceries 5, onClearAll 5, onDeleteDone 5, onMarkAllDone 5, groups 1 |
+| MeasureLayout | 0 | 5 | animate 5, children 5, exit 5, initial 5, transition 5 |
+| MeasureLayoutWithContext | 0 | 5 | animate 5, children 5, exit 5, initial 5, transition 5 |
+| Popover | 0 | 5 | (context) 5, children 5, className 5 |
+| SortableGroupedStoreContainer | 0 | 5 | (context) 5, children 5, header 5 |
+| StoreHeading | 0 | 5 | actions 5, activeCount 1, doneCount 1, total 1 |
+| $8b8d26808cb8cb53$var$ModalOverlayWithForwardRef | 0 | 3 | children 3, className 3, onClick 3 |
+| DoneRow | 0 | 3 | children 3, count 1 |
+| ModalBackdrop | 0 | 3 | children 3 |
+| Accessibility | 0 | 2 | (parent) 2 |
+| AnimationManager | 0 | 2 | (parent) 2 |
+| ClearGroceriesModal | 0 | 2 | onConfirm 2 |
+| DndContext | 0 | 2 | (state) 1, children 1, collisionDetection 1, onDragEnd 1, onDragOver 1, onDragStart 1 |
+| HiddenText | 0 | 2 | (parent) 2 |
+| LiveRegion | 0 | 2 | (parent) 2 |
+| NullifiedContextProvider | 0 | 2 | children 2 |
+| Presence | 0 | 2 | children 2 |
+| RestoreFocus | 0 | 2 | (parent) 2 |
+| AddGroceryPanel | 0 | 1 | (state) 1 |
+| DeleteStoreModal | 0 | 1 | onConfirm 1 |
+| Dialog | 0 | 1 | children 1, onOpenChange 1 |
+| DialogPortal | 0 | 1 | children 1 |
+| DialogPortalProvider | 0 | 1 | children 1 |
+| DialogProvider | 0 | 1 | children 1 |
+| DndGroupedGroceryProvider | 0 | 1 | (state) 1, children 1, groupedGroceries 1 |
+| GroceriesListActions | 0 | 1 | (context) 1 |
+| GroceriesPage | 0 | 1 | (context) 1 |
+| GroceriesProvider | 0 | 1 | (state) 1 |
+| GroceryList | 0 | 1 | groceries 1, onClearAllInStore 1 |
+| GroceryListContent | 0 | 1 | (state) 1, groceries 1, onClearAllInStore 1 |
+| IngredientIconsProvider | 0 | 1 | children 1, ids 1 |
+| PanelRoot | 0 | 1 | children 1 |
+| Portal | 0 | 1 | (context) 1, children 1 |
+| Root | 0 | 1 | children 1 |
+| StoreManagerPanel | 0 | 1 | (state) 1 |
+| StoresContextProvider | 0 | 1 | (state) 1 |
+
+### switch the view mode: 853 mounts, 696 updates, 11 commits
+
+| Component | Mounts | Updates | Changed |
+| --------- | -----: | ------: | ------- |
+| bound $7230ffa83bc0c2cf$var$DOMElement | 84 | 122 | children 111, onKeyDown 62, onMouseDown 60, onPointerEnter 58, onPointerLeave 58, onClick 57, onDragStart 57, onPointerDown 57, onPointerUp 57, onKeyUp 21, onFocus 20, onDragStartCapture 16, (parent) 11, onBlur 4, data-pressed 3, onKeyDownCapture 3, data-focused 2, data-hovered 2, tabIndex 2, aria-controls 1, aria-expanded 1, className 1, data-exiting 1, style 1 |
+| bound DOMElement | 80 | 80 | (parent) 40, children 40 |
+| $7230ffa83bc0c2cf$export$2881499e37b75b9a | 44 | 69 | children 69, values 69 |
+| $ea3928288112382f$export$439d29a4e110a164 | 40 | 42 | children 42 |
+| Checkbox | 40 | 40 | (state) 40 |
+| CheckboxButton | 40 | 40 | (context) 40, children 40, className 40 |
+| GroceryItemComponent | 40 | 40 | (context) 40 |
+| HeroUI.Checkbox.Content | 40 | 40 | (context) 40 |
+| HeroUI.Checkbox.Control | 40 | 40 | (context) 40 |
+| HeroUI.Checkbox.Indicator | 40 | 40 | (context) 40 |
+| Bars3Icon | 40 | 0 |  |
+| GroceryCheckbox | 40 | 0 |  |
+| GroceryPrice | 40 | 0 |  |
+| HeroUI.Checkbox | 40 | 0 |  |
+| IngredientIcon | 40 | 0 |  |
+| SortableGroceryItem | 40 | 0 |  |
+| Component | 0 | 36 | (context) 35, node 5, (state) 3 |
+| motion.div | 16 | 0 |  |
+| Anonymous | 8 | 5 | (context) 4, aria-controls 1, aria-expanded 1, children 1, isPressed 1, onKeyDown 1, onKeyUp 1, onPress 1, onPressStart 1 |
+| CollectionBranch | 0 | 9 | (parent) 6, collection 3, parent 3 |
+| Accessibility | 4 | 4 | (state) 4 |
+| AnimationManager | 4 | 4 | (parent) 4 |
+| DndContext | 4 | 4 | (state) 4 |
+| NullifiedContextProvider | 4 | 4 | children 4 |
+| RestoreFocus | 4 | 4 | (parent) 4 |
+| SortableContext | 4 | 4 | (context) 4 |
+| Button | 4 | 2 | (context) 1, (state) 1 |
+| Popover | 4 | 2 | (state) 2, (context) 1, children 1, className 1 |
+| SalePrice | 6 | 0 |  |
+| $49319ee1285aa241$export$27d2ad3c5815583e | 4 | 1 | (state) 1, children 1 |
+| ChevronDownIcon | 5 | 0 |  |
+| DropdownPopover | 4 | 1 | children 1 |
+| DropdownRoot | 4 | 1 | children 1 |
+| $535772f9d2c1f38d$export$20e40289641fbbb6 | 0 | 4 | children 4, contain 1 |
+| ArrowPathIcon | 4 | 0 |  |
+| ButtonRoot | 4 | 0 |  |
+| EllipsisVerticalIcon | 4 | 0 |  |
+| HiddenText | 4 | 0 |  |
+| LiveRegion | 4 | 0 |  |
+| MeasureLayout | 4 | 0 |  |
+| MeasureLayoutWithContext | 4 | 0 |  |
+| OfflineStatusModal | 0 | 4 | (context) 4 |
+| RecipeSectionComponent | 4 | 0 |  |
+| RecurrencePill | 4 | 0 |  |
+| StoreHeading | 4 | 0 |  |
+| $49319ee1285aa241$var$MenuInner | 0 | 3 | (context) 1, (state) 1, collection 1, props 1 |
+| $792f28e438b9ad5f$export$758399f318e6385a | 0 | 3 | children 3 |
+| CollectionRoot | 0 | 3 | (parent) 1, collection 1, persistedKeys 1 |
+| DevicePreferencesProvider | 0 | 3 | (state) 3 |
+| $081058010ef8962e$export$2317d149ed6f78c4 | 0 | 2 | onDismiss 2 |
+| $42ceafc619f9c3ba$export$bf788dd355e3a401 | 0 | 2 | (state) 1, children 1, content 1 |
+| $42ceafc619f9c3ba$var$CollectionInner | 0 | 2 | collection 1, render 1 |
+| $49319ee1285aa241$var$MenuSectionInner | 0 | 2 | children 2, className 1 |
+| $d7f64c32b702fe2c$export$8dc98ba7eadeaa56 | 0 | 2 | children 2 |
+| AddGroceryButton | 0 | 2 | (context) 2 |
+| DropdownItem | 0 | 2 | children 2 |
+| DropdownSection | 0 | 2 | children 2, className 1 |
+| GroceriesUiProvider | 0 | 2 | (context) 2 |
+| IngredientIconsProvider | 1 | 1 | (context) 1 |
+| MenuItem | 0 | 2 | children 2, className 2 |
+| MenuItemRoot | 0 | 2 | children 2 |
+| MenuSectionRoot | 0 | 2 | children 2, className 1 |
+| NavbarUserMenu | 0 | 2 | (context) 2, (state) 2 |
+| TimerDock | 0 | 2 | (context) 2 |
+| $0d47b37c475c5231$export$cf75428e0b9ed1ea | 0 | 1 | children 1 |
+| $42ceafc619f9c3ba$export$fb8073518f34e6ec | 0 | 1 | children 1, className 1, onClose 1 |
+| $42ceafc619f9c3ba$var$CollectionRoot | 0 | 1 | children 1 |
+| $542a13ca2fa5b484$var$PopoverInner | 0 | 1 | children 1, className 1, isExiting 1, state 1 |
+| $d7a937236970dc7f$export$c6fdb837b070b4ff | 0 | 1 | children 1, className 1, isExiting 1 |
+| CheckIcon | 1 | 0 |  |
+| DoneRow | 1 | 0 |  |
+| DropdownMenu | 0 | 1 | children 1 |
+| GroceriesListActions | 0 | 1 | (context) 1 |
+| GroceriesPage | 0 | 1 | (context) 1 |
+| GroceryListByRecipe | 1 | 0 |  |
+| GroceryListByRecipeContent | 1 | 0 |  |
+| Menu | 0 | 1 | (context) 1, children 1, className 1 |
+| motion.span | 1 | 0 |  |
+| OfflineCacheController | 0 | 1 | (context) 1 |
+| PermissionsProvider | 0 | 1 | (context) 1 |
+| UserProvider | 0 | 1 | (state) 1 |
+| WebUserProviderInner | 0 | 1 | (context) 1 |
+

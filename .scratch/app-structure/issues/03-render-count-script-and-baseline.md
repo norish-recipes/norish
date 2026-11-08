@@ -19,30 +19,30 @@
 
 Every baseline, and 07's after numbers, reuse this.
 
-- **Data set**: the one `measure-renders.ts` writes through the API at the start of every run (`resetGroceries`). Four Stores: Albert Heijn (aisles Produce, Dairy, Bakery), Lidl (Produce, Frozen), Butcher, Farmers market. 45 rows: 24 groceries under the Stores and 4 under none, 4 recurring (milk and eggs weekly, coffee beans and bin bags monthly), and all 13 lines of three recipes (Spaghetti bolognese, Green curry, Pancakes) with no Store. 4 rows are done, 6 have a by-hand price, 12 are filed under an aisle. Stores, prices, aisles and recipes are made once and kept; groceries are replaced every run. Each Store's groceries get a sortOrder range of their own (0–99, 100–199, …, no Store last): the server orders the list by sortOrder alone, so equal values across Stores came back in a different order per run and changed the counts.
+- **Data set**: the one `measure-renders.ts` writes through the API at the start of every run (`resetGroceries`). Four Stores: Albert Heijn (aisles Produce, Dairy, Bakery), Lidl (Produce, Frozen), Butcher, Farmers market. 45 rows: 24 groceries under the Stores and 4 under none, 4 recurring (milk and eggs weekly, coffee beans and bin bags monthly), and all 13 lines of three recipes (Spaghetti bolognese, Green curry, Pancakes) with no Store. 4 rows are done, 6 have a by-hand price, 12 are filed under an aisle. Stores, prices, aisles and recipes are made once and kept; groceries are replaced every run. Each Store numbers its groceries from 0, and the server breaks a sortOrder tie no Store first, then by Store and id (11269853c), so the list comes back in one order.
 - **Server**: a fresh `norish_measure` database in `norish-db-local`, migrated and seeded by its first boot, AI off, owner `mike@mike.nl` / `mikemike` signed up first. From `apps/web`, with the root `.env.local` plus `DATABASE_URL=…/norish_measure VALKEY_URL=redis://localhost:6379/4 PARSER_API_PORT=8401 AUTH_RATE_LIMIT_ENABLED=false` and `PORT`, `AUTH_URL` and `TRUSTED_ORIGINS` on the port: the dev server on :3401 (`node --import tsx server/index.ts`) for renders; `next build`, then the same with `NODE_ENV=production UPLOADS_DIR=$PWD/.runtime/uploads` on :3400 for page loads.
 - **Renders**: `pnpm --filter @norish/web run measure:renders groceries --base http://localhost:3401 --email mike@mike.nl --password mikemike`. A Pixel 7, store view, grouped. Actions in this order: check "cucumber" (Albert Heijn), add "paprika" (the press of Add in the open panel), open "tomatoes" for editing, a second signed-in phone checks "carrots" (Lidl), switch to By Recipe.
 - **Page loads**: `pnpm --filter @norish/web run measure:page-loads --base http://localhost:3400 --email mike@mike.nl --password mikemike --only /groceries`, straight after a renders run (the data set plus "paprika", with "cucumber" and "carrots" checked). 15 runs, service worker blocked.
 - **Code shape**: groceries with stores and the Pantry, `.ts`/`.tsx` under git, tests apart. Web: `app/(app)/groceries/`, `components/groceries/`, `hooks/{groceries,stores,pantry}/`, `components/Panel/consumers/{add-grocery-panel,edit-grocery-panel,mini-groceries,recurrence-panel}.tsx`, `components/skeleton/grocery-skeleton.tsx`, `context/pantry-realtime-context.tsx`, `hooks/use-recurrence-detection.ts`. Mobile: `src/hooks/groceries/`. shared-react: `src/{contexts,hooks}/{groceries,stores,pantry}/`, `use-grocery-form-state.ts`, `use-recurrence-detection.ts`. A binding file calls a groceries, stores or Pantry `create*Hooks`/`create*Context` factory (or `createUseRecurrenceDetection`) or re-exports what one built.
 
-### Baseline 1 (before 01, at 24c49fff0)
+### Baseline 1 (before 01, at 591d0aa73)
 
-App code as at d0fa9f86a; 24c49fff0 adds only the scripts. Five runs, two of them at 24c49fff0 after a dev-server restart, printed byte-identical output.
+App code as at d0fa9f86a plus the sortOrder tie-break (11269853c); 02's commits change no runtime code. Re-taken on the fixed script (answers in the order asked, joined timers): nine runs printed byte-identical output, among them one after a dev-server restart, one beside the packages/db suite and one beside `next build`, and eleven more with commit logging added matched them. The full per-component output is [`baselines/1-before-01.txt`](../baselines/1-before-01.txt).
 
 **Renders per action**
 
 | Action                                          | Baseline 1: mounts / updates / commits | Baseline 2 | After the pilot |
 | ----------------------------------------------- | -------------------------------------: | ---------: | --------------: |
-| Check an item                                   |                            0 / 290 / 6 |          — |               — |
-| Add an item                                     |                        19 / 2,114 / 13 |          — |               — |
+| Check an item                                   |                            0 / 288 / 7 |          — |               — |
+| Add an item                                     |                        19 / 1,689 / 12 |          — |               — |
 | Open the edit panel                             |                          178 / 224 / 8 |          — |               — |
 | Realtime echo of another phone checking an item |                            0 / 247 / 2 |          — |               — |
 | Switch the view mode                            |                         853 / 696 / 11 |          — |               — |
 
 | Action               | Baseline 1: top three (mounts + updates, what changed)                                                        |
 | -------------------- | ------------------------------------------------------------------------------------------------------------- |
-| Check an item        | SortableGroupItem 80 ((context) 80, children 40); SortableContext 20; motion.div 13                           |
-| Add an item          | React Aria DOMElement 185; SortableGroupItem 164 (children 122, (context) 81, group 75); bound DOMElement 154 |
+| Check an item        | SortableGroupItem 80 ((context) 80, children 40); SortableContext 20; React Aria DOMElement 13                |
+| Add an item          | SortableGroupItem 164 (children 122, (context) 81, group 52); React Aria DOMElement 137; bound DOMElement 108 |
 | Open the edit panel  | Presence 26; React Aria DOMElement 25; Primitive.div 21                                                       |
 | Realtime echo        | SortableGroupItem 80 ((context) 80, children 40); SortableContext 20; motion.div 10                           |
 | Switch the view mode | React Aria DOMElement 206; bound DOMElement 160; React Aria provider 113                                      |
@@ -50,15 +50,15 @@ App code as at d0fa9f86a; 24c49fff0 adds only the scripts. Five runs, two of the
 Our own components behind those numbers:
 
 - Check and echo: all 40 group rows (`SortableGroupItem`) render twice on a context change, and every Store section once, for one checked row.
-- Add: three commits re-render the whole list: the optimistic row (801 components), the create's socket events (503) and its answer (487). `GroupedGroceryItem` renders 115 times, 75 of them for a new `group` object: `GroceryList`'s `useStructuralSharing([...builtGroups])` matches the groups map's entries by position, and the new row puts the no-Store entry first, so every Store's groups come back as new objects. The page also fetches `config.units`, `ingredients.icons` and `stores.aisleLinks` (twice in one batch) again.
+- Add: the optimistic row (437 components, then 94 in the commit after it), the create's answer (503) and its socket event (487) each re-render the list. `GroupedGroceryItem` renders 69 times, 52 of them for a new `group` object: the create moves every no-Store grocery one sortOrder down, so the 17 no-Store groups (18 with paprika) are new in each of those three commits, while the Stores' groups keep theirs. The Add panel renders twice (58 and 57 components): on the press, and when its two 400 ms lookups settle. The page also fetches `config.units`, `ingredients.icons` and `stores.aisleLinks` (twice in one batch) again.
 - Switch the view mode: By Recipe mounts 40 `GroceryItem`s, and each renders once more on a context change.
 
 **`/groceries` page load** (15 runs, median and spread)
 
 |                       |            Baseline 1 | Baseline 2 | After the pilot |
 | --------------------- | --------------------: | ---------: | --------------: |
-| First paint           |      632 ms (624–640) |          — |               — |
-| Price and aisle drawn |      632 ms (624–640) |          — |               — |
+| First paint           |      632 ms (624–672) |          — |               — |
+| Price and aisle drawn |      632 ms (624–672) |          — |               — |
 | Document              |          42.5 KB gzip |          — |               — |
 | JS downloaded         | 894 KB gzip (894–894) |          — |               — |
 
