@@ -12,7 +12,7 @@ import { primaryRecipeImage } from "@norish/shared/lib/recipe-media";
 
 import type { CreateRecipeHooksOptions } from "../types";
 import type { RecipesCacheHelpers } from "./use-recipes-cache";
-import { shouldPreserveOptimisticUpdate as preserveOptimisticUpdate } from "../../optimistic-updates";
+import { shouldPreserveOptimisticUpdate as preserveOptimisticUpdate } from "../../../offline/optimistic-updates";
 import { OPTIMISTIC_PENDING_RECIPE_PREFIX, removeRecipesFromLists } from "./use-recipes-cache";
 
 type RecipeListPage = {

@@ -11,7 +11,7 @@ import type {
 import {
   invalidateUnlessPreserved,
   shouldPreserveOptimisticUpdate as preserveOptimisticUpdate,
-} from "../optimistic-updates";
+} from "../../offline/optimistic-updates";
 import { mergePantryAdded, mergePantryRemoved } from "./merge";
 
 type CreateUsePantryMutationsOptions = CreatePantryHooksOptions & {

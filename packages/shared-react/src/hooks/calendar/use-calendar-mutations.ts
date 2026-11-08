@@ -11,7 +11,7 @@ import type {
 import {
   invalidateUnlessPreserved,
   shouldPreserveOptimisticUpdate as preserveOptimisticUpdate,
-} from "../optimistic-updates";
+} from "../../offline/optimistic-updates";
 
 type CreateUseCalendarMutationsOptions = CreateCalendarHooksOptions & {
   useCalendarCacheHelpers: (startISO: string, endISO: string) => CalendarCacheHelpers;

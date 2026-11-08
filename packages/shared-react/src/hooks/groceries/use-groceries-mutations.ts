@@ -17,7 +17,7 @@ import type {
   GroceriesQueryResult,
   GroceryCreateData,
 } from "./types";
-import { shouldPreserveOptimisticUpdate as preserveOptimisticUpdate } from "../optimistic-updates";
+import { shouldPreserveOptimisticUpdate as preserveOptimisticUpdate } from "../../offline/optimistic-updates";
 
 const log = createClientLogger("GroceriesMutations");
 

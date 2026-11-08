@@ -9,7 +9,10 @@ import type {
   CookbooksMutationsResult,
   CreateCookbookHooksOptions,
 } from "./types";
-import { invalidateUnlessPreserved, shouldPreserveOptimisticUpdate } from "../optimistic-updates";
+import {
+  invalidateUnlessPreserved,
+  shouldPreserveOptimisticUpdate,
+} from "../../offline/optimistic-updates";
 
 type Dependencies = CreateCookbookHooksOptions & {
   useCookbooksCacheHelpers: () => CookbooksCacheHelpers;

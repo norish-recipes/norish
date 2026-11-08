@@ -4,7 +4,7 @@ import { useMutation, useQueryClient } from "@tanstack/react-query";
 import type { FullRecipeDTO, MeasurementSystem } from "@norish/shared/contracts";
 
 import type { CreateRecipeHooksOptions } from "../types";
-import { shouldPreserveOptimisticUpdate as preserveOptimisticUpdate } from "../../optimistic-updates";
+import { shouldPreserveOptimisticUpdate as preserveOptimisticUpdate } from "../../../offline/optimistic-updates";
 
 type ConvertMutationContext = {
   detailQueryKey: QueryKey;

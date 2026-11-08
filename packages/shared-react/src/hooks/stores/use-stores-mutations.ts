@@ -21,7 +21,7 @@ import type { StoreAislesData } from "./use-store-aisles";
 import {
   invalidateUnlessPreserved,
   shouldPreserveOptimisticUpdate as preserveOptimisticUpdate,
-} from "../optimistic-updates";
+} from "../../offline/optimistic-updates";
 import { mergeAisleFiling } from "./use-store-aisles";
 
 type CreateUseStoresMutationsOptions = CreateStoresHooksOptions & {

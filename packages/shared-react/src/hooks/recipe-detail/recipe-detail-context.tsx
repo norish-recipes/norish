@@ -12,7 +12,7 @@ import type {
 } from "@norish/shared/contracts";
 
 import type { RecipeEnrichmentResult } from "../recipes/recipe";
-import { shouldPreserveOptimisticUpdate } from "../optimistic-updates";
+import { shouldPreserveOptimisticUpdate } from "../../offline/optimistic-updates";
 
 // --- Types ---
 
