@@ -8,7 +8,6 @@ import ImportRecipeModal from "@/components/shared/import-recipe-modal";
 import { LanguageSwitchContent } from "@/components/shared/language-switch";
 import UserAvatar from "@/components/shared/user-avatar";
 import { useUserContext } from "@/context/user-context";
-import { useVersionQuery } from "@/hooks/config";
 import { useLanguageSwitch } from "@/hooks/user/use-language-switch";
 import { offlineEngine } from "@/lib/offline/engine";
 import {
@@ -21,8 +20,10 @@ import {
 import { Button, Dropdown, Label } from "@heroui/react";
 import { useTranslations } from "next-intl";
 
+import { useVersionQuery } from "@norish/shared-react/config";
 import { useConnectivity } from "@norish/shared-react/offline/react";
 import { cssButtonPill, cssButtonPillDanger } from "@norish/web/config/css-tokens";
+import { APP_VERSION } from "@norish/web/config/site";
 
 import { ThemeSwitchContent, useThemeSwitch } from "./theme-switch";
 
@@ -51,7 +52,8 @@ export default function NavbarUserMenu({
   const [signOutUnsyncedCount, setSignOutUnsyncedCount] = useState<number | null>(null);
   const themeSwitch = useThemeSwitch();
   const languageSwitch = useLanguageSwitch();
-  const { currentVersion, latestVersion, updateAvailable, releaseUrl } = useVersionQuery();
+  const { currentVersion, latestVersion, updateAvailable, releaseUrl } =
+    useVersionQuery(APP_VERSION);
   const menuOpen = isOpen ?? localOpen;
 
   const handleOpenChange = useCallback(

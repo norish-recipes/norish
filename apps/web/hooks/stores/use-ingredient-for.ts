@@ -1,9 +1,9 @@
 "use client";
 
-import { useSpellingRules } from "@/hooks/config";
 import { useQuery } from "@tanstack/react-query";
 import { useDebounceValue } from "usehooks-ts";
 
+import { useSpellingRules } from "@norish/shared-react/config";
 import { useTRPC } from "@norish/shared-react/trpc";
 import { sameFood } from "@norish/shared/lib/spelling-keys";
 

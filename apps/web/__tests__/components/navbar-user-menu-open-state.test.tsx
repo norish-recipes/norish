@@ -34,7 +34,7 @@ vi.mock("@/context/user-context", () => ({
   }),
 }));
 
-vi.mock("@/hooks/config", () => ({
+vi.mock("@norish/shared-react/config", () => ({
   useVersionQuery: () => ({
     currentVersion: "1.2.3",
     latestVersion: null,

@@ -28,7 +28,7 @@ let offline = false;
 // The icons the surface read, by Ingredient.
 let icons: Record<string, string | null> = {};
 
-vi.mock("@/hooks/config", async () => {
+vi.mock("@norish/shared-react/config", async () => {
   const { spellingRules } = await import("@norish/shared/lib/spelling-keys");
   const units = (await import("@norish/config/units.default.json")).default;
 

@@ -2,7 +2,6 @@
 
 import React, { useEffect, useRef, useState } from "react";
 import { useRouter } from "next/navigation";
-import { useTimersEnabledQuery } from "@/hooks/config";
 import { useDockedTimers } from "@/hooks/use-docked-timers";
 import { useFloatingDock } from "@/hooks/use-floating-dock";
 import { useNotificationPermission } from "@/hooks/use-notification-permission";
@@ -21,6 +20,7 @@ import { AnimatePresence, motion } from "motion/react";
 import { useTranslations } from "next-intl";
 import useSound from "use-sound";
 
+import { useTimersEnabledQuery } from "@norish/shared-react/config";
 import { addBasePath } from "@norish/shared/lib/base-path";
 import { formatTimerMs } from "@norish/shared/lib/helpers";
 import { createClientLogger } from "@norish/shared/lib/logger";

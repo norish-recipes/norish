@@ -6,7 +6,6 @@ import { FIELD_STYLE } from "@/components/groceries/grocery-field";
 import { IngredientIcon, IngredientIconsProvider } from "@/components/ingredients/ingredient-icon";
 import { IngredientPanel } from "@/components/ingredients/ingredient-panel";
 import { IconActionButton } from "@/components/shared/action-button";
-import { useSpellingRules } from "@/hooks/config";
 import { useGroceriesQuery } from "@/hooks/groceries";
 import { usePantryMutations, usePantryQuery } from "@/hooks/pantry";
 import { useHiddenItemVisibility } from "@/hooks/user/use-hidden-item-visibility";
@@ -17,6 +16,7 @@ import { useLocale, useTranslations } from "next-intl";
 import { useDebounceValue } from "usehooks-ts";
 
 import type { PantryIngredientDto } from "@norish/shared/contracts";
+import { useSpellingRules } from "@norish/shared-react/config";
 import { useConnectivity } from "@norish/shared-react/offline/react";
 import { useTRPC } from "@norish/shared-react/trpc";
 import { PANTRY_INGREDIENT_NAME_MAX_LENGTH } from "@norish/shared/contracts/zod";

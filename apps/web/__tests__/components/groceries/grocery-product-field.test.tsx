@@ -18,7 +18,7 @@ interface SearchCall {
   enabled: boolean;
 }
 
-vi.mock("@/hooks/config/use-units-query", () => ({
+vi.mock("@norish/shared-react/config", () => ({
   useUnitsQuery: () => ({ units: {} }),
 }));
 

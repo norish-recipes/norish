@@ -13,13 +13,14 @@ import "@testing-library/jest-dom";
 
 import type { GroceryDto, StoreDto, StoreProductDto } from "@norish/shared/contracts";
 
-vi.mock("@/hooks/config/use-units-query", () => ({
-  useUnitsQuery: () => ({ units: {} }),
-}));
+vi.mock("@norish/shared-react/config", async () => {
+  const { DEFAULT_INGREDIENT_WORDS, spellingRules } = await import(
+    "@norish/shared/lib/spelling-keys"
+  );
+  const rules = spellingRules({}, DEFAULT_INGREDIENT_WORDS);
 
-vi.mock("@/hooks/config/use-ingredient-words-query", () => ({
-  useIngredientWordsQuery: () => ({ words: undefined }),
-}));
+  return { useUnitsQuery: () => ({ units: {} }), useSpellingRules: () => rules };
+});
 
 const chooseProduct = vi.fn();
 

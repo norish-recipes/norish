@@ -11,7 +11,6 @@ export * from "./archive/index";
 export * from "./caldav/index";
 export * from "./calendar/index";
 export * from "./user/index";
-export * from "./config/index";
 export * from "./cookbooks/index";
 export * from "./library/index";
 export * from "./favorites/index";

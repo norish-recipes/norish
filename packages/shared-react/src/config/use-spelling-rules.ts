@@ -1,5 +1,3 @@
-"use client";
-
 import { useMemo } from "react";
 
 import type { SpellingRules } from "@norish/shared/lib/spelling-keys";

@@ -1,12 +1,11 @@
-import { sharedConfigHooks } from "@/hooks/config/shared-config-hooks";
-
+import { useUnitsQuery } from "@norish/shared-react/config";
 import { createGroceriesHooks } from "@norish/shared-react/hooks";
 import { usePlatform } from "@norish/shared-react/platform";
 import { useTRPC } from "@norish/shared-react/trpc";
 
 export const sharedGroceriesHooks = createGroceriesHooks({
   useTRPC,
-  useUnitsQuery: sharedConfigHooks.useUnitsQuery,
+  useUnitsQuery,
   useErrorAdapter: () => {
     const { showError } = usePlatform();
 

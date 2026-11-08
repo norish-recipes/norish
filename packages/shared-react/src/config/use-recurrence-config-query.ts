@@ -1,0 +1,19 @@
+import { useQuery } from "@tanstack/react-query";
+
+import { useTRPC } from "../trpc";
+
+export function useRecurrenceConfigQuery() {
+  const trpc = useTRPC();
+
+  const { data, error, isLoading } = useQuery({
+    ...trpc.config.recurrenceConfig.queryOptions(),
+    staleTime: 60 * 60 * 1000,
+    gcTime: 60 * 60 * 1000,
+  });
+
+  return {
+    recurrenceConfig: data,
+    isLoading,
+    error,
+  };
+}

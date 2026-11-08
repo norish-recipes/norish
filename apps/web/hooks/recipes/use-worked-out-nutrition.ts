@@ -1,8 +1,6 @@
 "use client";
 
 import { useMemo } from "react";
-import { useSpellingRules } from "@/hooks/config/use-spelling-rules";
-import { useUnitsQuery } from "@/hooks/config/use-units-query";
 import { useQuery } from "@tanstack/react-query";
 
 import type {
@@ -10,6 +8,7 @@ import type {
   RecipeForNutrition,
   WorkedOutNutrition,
 } from "@norish/shared/lib/recipe-nutrition";
+import { useSpellingRules, useUnitsQuery } from "@norish/shared-react/config";
 import { useTRPC } from "@norish/shared-react/trpc";
 import {
   nutritionLinesOf,

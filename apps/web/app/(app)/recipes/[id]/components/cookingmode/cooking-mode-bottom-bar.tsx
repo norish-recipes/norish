@@ -1,7 +1,6 @@
 "use client";
 
 import WakeLockToggle from "@/app/(app)/recipes/[id]/components/wake-lock-toggle";
-import { useTimersEnabledQuery } from "@/hooks/config";
 import { useTimerStore } from "@/stores/timers";
 import {
   BookOpenIcon,
@@ -12,6 +11,8 @@ import {
 } from "@heroicons/react/20/solid";
 import { Button, Meter } from "@heroui/react";
 import { useLocale, useTranslations } from "next-intl";
+
+import { useTimersEnabledQuery } from "@norish/shared-react/config";
 
 import type { CookingModeDialogProps } from "./types";
 import { clampStep } from "./utils";

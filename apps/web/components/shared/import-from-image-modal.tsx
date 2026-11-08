@@ -5,7 +5,6 @@ import { useCallback, useState } from "react";
 import Image from "next/image";
 import { useRouter } from "next/navigation";
 import { DropZone } from "@/components/ui/drop-zone";
-import { useUploadLimitsQuery } from "@/hooks/config";
 import { useRecipesMutations } from "@/hooks/recipes";
 import { useClipboardImagePaste } from "@/hooks/use-clipboard-image-paste";
 import { pdfPagesAsImages } from "@/lib/pdf-pages";
@@ -14,6 +13,7 @@ import { PhotoIcon, SparklesIcon, XMarkIcon } from "@heroicons/react/16/solid";
 import { Button, Kbd, Modal, toast } from "@heroui/react";
 import { useTranslations } from "next-intl";
 
+import { useUploadLimitsQuery } from "@norish/shared-react/config";
 import {
   ALLOWED_OCR_MIME_SET,
   ALLOWED_OCR_MIME_TYPES,

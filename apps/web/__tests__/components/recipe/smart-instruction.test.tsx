@@ -9,7 +9,7 @@ vi.mock("@norish/shared/lib/logger", () => ({
   createClientLogger: () => () => ({ warn: () => {} }),
 }));
 
-vi.mock("@/hooks/config", () => ({
+vi.mock("@norish/shared-react/config", () => ({
   useTimersEnabledQuery: () => ({ timersEnabled: false }),
   useTimerKeywordsQuery: () => ({
     timerKeywords: { enabled: true, hours: [], minutes: [], seconds: [] },

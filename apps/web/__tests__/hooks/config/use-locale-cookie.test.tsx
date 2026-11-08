@@ -3,7 +3,7 @@ import { beforeEach, describe, expect, it, vi } from "vitest";
 
 const useLocaleConfigQueryMock = vi.fn();
 
-vi.mock("@/hooks/config", () => ({
+vi.mock("@norish/shared-react/config", () => ({
   useLocaleConfigQuery: () => useLocaleConfigQueryMock(),
 }));
 

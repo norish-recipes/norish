@@ -7,7 +7,7 @@ import { CookingModeBottomBar } from "@/app/(app)/recipes/[id]/components/cookin
 
 const mocks = vi.hoisted(() => ({ timerCount: 0, timersEnabled: true }));
 
-vi.mock("@/hooks/config", () => ({
+vi.mock("@norish/shared-react/config", () => ({
   useTimersEnabledQuery: () => ({ timersEnabled: mocks.timersEnabled }),
 }));
 

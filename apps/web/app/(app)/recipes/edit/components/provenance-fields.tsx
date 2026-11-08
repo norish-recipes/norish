@@ -1,10 +1,10 @@
 "use client";
 
 import { useMemo } from "react";
-import { useCuisinesQuery } from "@/hooks/config";
 import { ComboBox, Input, Label, ListBox, Select, TextArea, TextField } from "@heroui/react";
 import { useLocale, useTranslations } from "next-intl";
 
+import { useCuisinesQuery } from "@norish/shared-react/config";
 import { listCountryOptions } from "@norish/shared/lib/recipe-provenance";
 
 /** Recipe Provenance as the form holds it: one atomic group. */

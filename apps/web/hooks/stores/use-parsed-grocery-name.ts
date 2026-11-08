@@ -1,8 +1,8 @@
 "use client";
 
 import { useMemo } from "react";
-import { useUnitsQuery } from "@/hooks/config/use-units-query";
 
+import { useUnitsQuery } from "@norish/shared-react/config";
 import { parseIngredientWithDefaults } from "@norish/shared/lib/helpers";
 
 /**

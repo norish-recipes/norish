@@ -3,13 +3,13 @@
 import { useMemo } from "react";
 import { useStoresContext } from "@/app/(app)/groceries/stores-context";
 import { IngredientIconsProvider } from "@/components/ingredients/ingredient-icon";
-import { useUnitsQuery } from "@/hooks/config/use-units-query";
 import { useStructuralSharing } from "@/hooks/use-structural-sharing";
 import { ShoppingCartIcon } from "@heroicons/react/24/outline";
 import { motion } from "motion/react";
 import { useTranslations } from "next-intl";
 
 import type { GroceryDto, RecurringGroceryDto, StoreDto } from "@norish/shared/contracts";
+import { useUnitsQuery } from "@norish/shared-react/config";
 import { groupGroceriesByIngredient } from "@norish/shared/lib/grocery-grouping";
 import { cssEmptyStateGlow } from "@norish/web/config/css-tokens";
 

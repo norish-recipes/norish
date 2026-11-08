@@ -1,5 +1,4 @@
 import React, { createContext, useContext, useEffect, useMemo, useState } from "react";
-import { useLocaleConfigQuery } from "@/hooks/config";
 import { useAuth } from "@/lib/auth/auth-context";
 import { buildLocaleDisplayMap, resolveLocaleSelection } from "@/lib/i18n/locale-state";
 import { publishLocale } from "@/lib/i18n/locale-store";
@@ -10,7 +9,7 @@ import {
 import { useMutation, useQuery } from "@tanstack/react-query";
 import { IntlProvider } from "react-intl";
 
-import type { EnabledLocale } from "@norish/shared-react/hooks";
+import type { EnabledLocale } from "@norish/shared-react/config";
 import { DEFAULT_LOCALE } from "@norish/i18n/config";
 import { getBundledLocales } from "@norish/i18n/locales";
 import { loadLocaleMessages } from "@norish/i18n/messages";
@@ -21,6 +20,7 @@ import enGroceriesMessages from "@norish/i18n/messages/en/groceries.json";
 import enNavbarMessages from "@norish/i18n/messages/en/navbar.json";
 import enRecipesMessages from "@norish/i18n/messages/en/recipes.json";
 import enSettingsMessages from "@norish/i18n/messages/en/settings.json";
+import { useLocaleConfigQuery } from "@norish/shared-react/config";
 import { useTRPC } from "@norish/shared-react/trpc";
 
 type MobileLocaleContextValue = {

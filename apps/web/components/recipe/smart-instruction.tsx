@@ -1,7 +1,8 @@
 "use client";
 
 import SmartMarkdownRenderer from "@/components/shared/smart-markdown-renderer";
-import { useTimerKeywordsQuery, useTimersEnabledQuery } from "@/hooks/config";
+
+import { useTimerKeywordsQuery, useTimersEnabledQuery } from "@norish/shared-react/config";
 
 interface SmartInstructionProps {
   text: string;

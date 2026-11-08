@@ -5,7 +5,7 @@ import "@testing-library/jest-dom";
 
 import IngredientInput from "@/components/recipes/ingredient-input";
 
-vi.mock("@/hooks/config", () => ({
+vi.mock("@norish/shared-react/config", () => ({
   useUnitsQuery: () => ({ units: {} }),
 }));
 

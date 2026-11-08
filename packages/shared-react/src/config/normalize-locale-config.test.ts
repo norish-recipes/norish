@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest";
 
-import { normalizeLocaleConfig } from "@norish/shared-react/hooks";
+import { normalizeLocaleConfig } from "@norish/shared-react/config";
 
 describe("normalizeLocaleConfig", () => {
   it("falls back to default locale when response is invalid", () => {

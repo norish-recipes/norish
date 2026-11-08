@@ -1,8 +1,9 @@
 "use client";
 
-import { useVersionQuery } from "@/hooks/config/use-version-query";
 import { Chip } from "@heroui/react";
 import { useTranslations } from "next-intl";
+
+import { APP_VERSION } from "@norish/web/config/site";
 
 function getMinorVersion(version: string | undefined) {
   if (!version) return null;
@@ -20,8 +21,7 @@ type NewFeatureChipProps = {
 
 export default function NewFeatureChip({ showOnVersion }: NewFeatureChipProps) {
   const tCommon = useTranslations("common");
-  const { currentVersion } = useVersionQuery();
-  const currentMinorVersion = getMinorVersion(currentVersion);
+  const currentMinorVersion = getMinorVersion(APP_VERSION);
   const targetMinorVersion = getMinorVersion(showOnVersion);
 
   if (!currentMinorVersion || currentMinorVersion !== targetMinorVersion) {

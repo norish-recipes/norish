@@ -11,7 +11,7 @@ vi.mock("@/hooks/user/use-locale", () => ({
   useLocale: () => ({ locale: "nl", changeLocale: vi.fn(), isChanging: false }),
 }));
 
-vi.mock("@/hooks/config", () => ({
+vi.mock("@norish/shared-react/config", () => ({
   // A new list on every call, as a hook that rebuilds it each render hands over.
   useLocaleConfigQuery: () => ({
     enabledLocales: [

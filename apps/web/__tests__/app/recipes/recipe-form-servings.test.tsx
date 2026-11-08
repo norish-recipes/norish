@@ -23,7 +23,7 @@ vi.mock("next-intl", () => ({
 vi.mock("@/context/recipes-context", () => ({
   useRecipesContext: () => ({ createRecipe: mocks.createRecipe, updateRecipe: vi.fn() }),
 }));
-vi.mock("@/hooks/config", () => ({
+vi.mock("@norish/shared-react/config", () => ({
   useUnitsQuery: () => ({ units: {}, isLoading: false }),
   useCategoriesQuery: () => ({
     categories: ["Breakfast", "Lunch", "Dinner", "Snack", "Puddings", "Drinks"],

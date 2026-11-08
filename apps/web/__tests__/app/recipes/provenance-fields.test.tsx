@@ -13,7 +13,7 @@ const mocks = vi.hoisted(() => ({
   ],
 }));
 
-vi.mock("@/hooks/config", () => ({
+vi.mock("@norish/shared-react/config", () => ({
   useCuisinesQuery: () => ({ cuisines: mocks.cuisines, isLoading: false }),
 }));
 

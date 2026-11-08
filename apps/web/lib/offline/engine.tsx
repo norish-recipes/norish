@@ -31,6 +31,7 @@ import { useConnectionStatus, useTRPC, useTRPCClient } from "@norish/shared-reac
 import { getSession } from "@norish/shared/lib/auth/client";
 import { addBasePath } from "@norish/shared/lib/base-path";
 import { dateKey, getInitialDateRange } from "@norish/shared/lib/helpers";
+import { APP_VERSION } from "@norish/web/config/site";
 
 /** Marks the web client's replays in server logs. */
 export const OUTBOX_REPLAY_HEADER_VALUE = "web-outbox";
@@ -39,9 +40,7 @@ export const OUTBOX_REPLAY_HEADER_VALUE = "web-outbox";
 const HEALTH_PROBE_URL = addBasePath(HEALTH_PROBE_PATH);
 
 /** A restored cache from another app version is dropped, never migrated; the Outbox is kept. */
-// NEXT_PUBLIC values are intentionally exposed to the browser by Next.js.
-// eslint-disable-next-line no-restricted-properties
-export const CACHE_BUSTER = process.env.NEXT_PUBLIC_APP_VERSION;
+export const CACHE_BUSTER = APP_VERSION;
 
 /** The data each query held as the server sent it with this page load, by query hash. */
 const serverCopies = new Map<string, unknown>();

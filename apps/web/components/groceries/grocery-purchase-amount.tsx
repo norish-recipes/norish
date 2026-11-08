@@ -1,10 +1,10 @@
 "use client";
 
-import { useUnitsQuery } from "@/hooks/config/use-units-query";
 import { Label, NumberField } from "@heroui/react";
 import { useTranslations } from "next-intl";
 
 import type { LineProduct } from "@norish/shared/lib/line-cost";
+import { useUnitsQuery } from "@norish/shared-react/config";
 import { parseIngredientWithDefaults } from "@norish/shared/lib/helpers";
 import { lineCost } from "@norish/shared/lib/line-cost";
 import { unitLabel } from "@norish/shared/lib/units";

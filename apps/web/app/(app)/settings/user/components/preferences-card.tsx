@@ -6,12 +6,12 @@ import { SettingRow } from "@/app/(app)/settings/components/setting-row";
 import { SettingsCard } from "@/app/(app)/settings/components/settings-card";
 import { InfoHint } from "@/components/shared/info-hint";
 import { usePermissionsContext } from "@/context/permissions-context";
-import { useLocaleConfigQuery, useTimersEnabledQuery } from "@/hooks/config";
 import { HIDDEN_ITEMS, partitionHiddenItems } from "@/lib/hidden-items";
 import { AdjustmentsHorizontalIcon } from "@heroicons/react/24/outline";
 import { Label, ListBox, Select } from "@heroui/react";
 import { useTranslations } from "next-intl";
 
+import { useLocaleConfigQuery, useTimersEnabledQuery } from "@norish/shared-react/config";
 import { useDeviceKind, useDevicePreference } from "@norish/shared-react/reader";
 import {
   RECIPE_PAGE_COLORS,

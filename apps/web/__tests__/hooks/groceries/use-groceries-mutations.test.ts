@@ -112,7 +112,7 @@ vi.mock("@/hooks/groceries/error-adapter", () => ({
   useGroceriesErrorAdapter: () => ({ showErrorToast }),
 }));
 
-vi.mock("@/hooks/config", () => ({
+vi.mock("@norish/shared-react/config", () => ({
   useUnitsQuery: () => ({
     units: {
       volumeUnits: [

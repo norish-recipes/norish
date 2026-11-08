@@ -80,7 +80,7 @@ vi.mock("@norish/shared-react/reader", async () =>
   }))
 );
 
-vi.mock("@/hooks/config", () => ({
+vi.mock("@norish/shared-react/config", () => ({
   useCategoriesQuery: () => ({
     categories: ["Breakfast", "Lunch", "Dinner", "Snack", "Drinks"],
     isLoading: false,

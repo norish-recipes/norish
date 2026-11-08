@@ -74,7 +74,7 @@ vi.mock("@/context/permissions-context", () => ({
 
 let timersMock = { timersEnabled: true, globalEnabled: true } as any;
 
-vi.mock("@/hooks/config", () => ({
+vi.mock("@norish/shared-react/config", () => ({
   useTimersEnabledQuery: () => timersMock,
   useLocaleConfigQuery: () => ({
     enabledLocales: [

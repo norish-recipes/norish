@@ -3,13 +3,13 @@
 import type { CSSProperties } from "react";
 import { useState } from "react";
 import RecipePrintCard from "@/components/recipes/recipe-print-card";
-import { useTimerKeywordsQuery, useTimersEnabledQuery } from "@/hooks/config";
 import { useAmountDisplayPreference } from "@/hooks/use-amount-display-preference";
 import { useUnitFormatter } from "@/hooks/use-unit-formatter";
 import { Button, Checkbox, Label, ListBox, Modal, Select } from "@heroui/react";
 import { useTranslations } from "next-intl";
 import { createPortal } from "react-dom";
 
+import { useTimerKeywordsQuery, useTimersEnabledQuery } from "@norish/shared-react/config";
 import { useHydrated } from "@norish/shared-react/hooks";
 import { primaryRecipeImage } from "@norish/shared/lib/recipe-media";
 

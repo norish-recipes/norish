@@ -1,4 +1,4 @@
-import type { EnabledLocale } from "@norish/shared-react/hooks";
+import type { EnabledLocale } from "@norish/shared-react/config";
 import { DEFAULT_LOCALE, getValidLocale, isValidLocale } from "@norish/i18n/config";
 
 type LocaleDisplayMap = Record<string, string>;

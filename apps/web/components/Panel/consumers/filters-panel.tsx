@@ -7,7 +7,6 @@ import { ActionButton, ActionButtonGroup } from "@/components/shared/action-butt
 import { ChipButton } from "@/components/shared/chip-button";
 import ChipSkeleton from "@/components/skeleton/chip-skeleton";
 import { useRecipesFiltersContext } from "@/context/recipes-filters-context";
-import { useCategoriesQuery, useTagsQuery } from "@/hooks/config";
 import { useHiddenItemVisibility } from "@/hooks/user/use-hidden-item-visibility";
 import { useCategoryLabel } from "@/lib/category-display";
 import {
@@ -23,6 +22,7 @@ import { motion } from "motion/react";
 import { useTranslations } from "next-intl";
 
 import type { FilterMode, RecipeCategory, SearchField, SortOrder } from "@norish/shared/contracts";
+import { useCategoriesQuery, useTagsQuery } from "@norish/shared-react/config";
 import { DEFAULT_RECIPE_FILTERS } from "@norish/shared/contracts/filter-contract";
 import StarRating from "@norish/ui/star-rating";
 

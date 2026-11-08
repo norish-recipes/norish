@@ -1,8 +1,8 @@
 "use client";
 
-import { useUnitsQuery } from "@/hooks/config/use-units-query";
 import { useLocale } from "next-intl";
 
+import { useUnitsQuery } from "@norish/shared-react/config";
 import { createUnitFormatter } from "@norish/shared-react/hooks";
 import { useDevicePreference } from "@norish/shared-react/reader";
 

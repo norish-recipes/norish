@@ -1,3 +1,7 @@
+// NEXT_PUBLIC values are intentionally exposed to the browser by Next.js.
+// eslint-disable-next-line no-restricted-properties
+export const APP_VERSION = process.env.NEXT_PUBLIC_APP_VERSION;
+
 export type SiteConfig = typeof siteConfig;
 
 export const siteConfig = {

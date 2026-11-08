@@ -6,9 +6,10 @@ import {
   ActionButtonGroup,
   IconActionButton,
 } from "@/components/shared/action-button";
-import { useCuisinesQuery } from "@/hooks/config";
 import { Input, Modal, ScrollShadow, TextField } from "@heroui/react";
 import { useTranslations } from "next-intl";
+
+import { useCuisinesQuery } from "@norish/shared-react/config";
 
 import { useCuisineAdminMutations } from "../hooks/use-cuisine-admin-mutations";
 
