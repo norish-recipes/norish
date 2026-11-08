@@ -3,29 +3,25 @@ import { connect, createServer } from "node:net";
 import { parseArgs } from "node:util";
 import { gzipSync } from "node:zlib";
 import type { Browser, BrowserContext, Page } from "@playwright/test";
-import { chromium, devices } from "@playwright/test";
+import { chromium } from "@playwright/test";
 
 import { RECIPE_FILTERS_COOKIE } from "../lib/recipe-filters-cookie";
-import { callTrpc, signIn } from "./api";
+import { account, accountOptions, callTrpc, newPhone, PHONE, signIn } from "./api";
 
 const { values: args } = parseArgs({
   options: {
-    base: { type: "string", default: "http://localhost:3400" },
-    email: { type: "string" },
-    password: { type: "string" },
+    ...accountOptions("http://localhost:3400"),
     runs: { type: "string", default: "15" },
     sw: { type: "string", default: "block" },
     share: { type: "string" },
     only: { type: "string" },
   },
 });
-
-if (!args.email || !args.password) throw new Error("--email and --password are required");
+const { email, password } = account(args);
 
 const RUNS = Number(args.runs);
 // "fetch": the worker fetches documents itself, as it does where navigation preload is off.
 const SERVICE_WORKER = args.sw === "allow" || args.sw === "fetch";
-const PHONE = devices["Pixel 7"];
 const DOWN_BYTES_PER_SECOND = 1_600_000 / 8;
 const UP_BYTES_PER_SECOND = 750_000 / 8;
 const MARK_TIMEOUT_MS = 30_000;
@@ -112,7 +108,7 @@ const base = await startProxy(target);
 
 throttled = false;
 // Cookies name a host, not a port, so the proxy's origin carries them too.
-const cookies = (await signIn(args.base, args.email, args.password)).map((cookie) => ({
+const cookies = (await signIn(args.base, email, password)).map((cookie) => ({
   ...cookie,
   url: base,
 }));
@@ -227,18 +223,8 @@ function watchMarks({ marks, tap }: { marks: Marks; tap: boolean }) {
   requestAnimationFrame(tick);
 }
 
-async function newContext(browser: Browser): Promise<BrowserContext> {
-  const context = await browser.newContext({
-    ...PHONE,
-    baseURL: base,
-    serviceWorkers: SERVICE_WORKER ? "allow" : "block",
-  });
-
-  await context.addCookies(cookies);
-  // tsx keeps function names with a helper the functions sent to the page still call.
-  await context.addInitScript({ content: "globalThis.__name = (target) => target;" });
-
-  return context;
+function newContext(browser: Browser): Promise<BrowserContext> {
+  return newPhone(browser, base, cookies, { serviceWorkers: SERVICE_WORKER ? "allow" : "block" });
 }
 
 async function readMarks(page: Page, marks: Marks): Promise<Record<string, number | null>> {

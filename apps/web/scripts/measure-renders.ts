@@ -2,28 +2,16 @@
 import { randomUUID } from "node:crypto";
 import { parseArgs } from "node:util";
 import type { Browser, BrowserContext, Page } from "@playwright/test";
-import { chromium, devices } from "@playwright/test";
+import { chromium } from "@playwright/test";
 
-import { callTrpc, signIn } from "./api";
+import { account, accountOptions, callTrpc, newPhone, signIn } from "./api";
 import { inOrder } from "./delivery";
 
 const {
-  values: args,
+  values: flags,
   positionals: [scenarioName],
-} = parseArgs({
-  allowPositionals: true,
-  options: {
-    base: { type: "string", default: "http://localhost:3000" },
-    email: { type: "string" },
-    password: { type: "string" },
-  },
-});
-
-if (!args.email || !args.password) throw new Error("--email and --password are required");
-
-const BASE = args.base;
-const EMAIL = args.email;
-const PASSWORD = args.password;
+} = parseArgs({ allowPositionals: true, options: accountOptions("http://localhost:3000") });
+const { base: BASE, email: EMAIL, password: PASSWORD } = account(flags);
 /** An action is over once no request is open and React has not committed for this long. */
 const QUIET_MS = 1_500;
 /** How long after its request a tRPC response reaches the page. */
@@ -170,12 +158,12 @@ type Tab = { context: BrowserContext; page: Page; pending: Set<unknown> };
 
 /** A phone signed in with a session of its own, counting renders when `counted`. */
 async function openTab(browser: Browser, counted: boolean): Promise<Tab> {
-  const context = await browser.newContext({ ...devices["Pixel 7"], baseURL: BASE });
   const cookies = await signIn(BASE, EMAIL, PASSWORD);
-
-  await context.addCookies(cookies.map((cookie) => ({ ...cookie, url: BASE })));
-  // tsx keeps function names with a helper the functions sent to the page still call.
-  await context.addInitScript({ content: "globalThis.__name = (target) => target;" });
+  const context = await newPhone(
+    browser,
+    BASE,
+    cookies.map((cookie) => ({ ...cookie, url: BASE }))
+  );
   const pending = new Set<unknown>();
 
   if (counted) {
