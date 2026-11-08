@@ -2,6 +2,7 @@
 # `pnpm --filter @norish/mobile maestro` serves the cuttable proxy and checks the server after.
 appId: dev.norish.app
 ---
+- evalScript: "${http.post(NORISH_PROXY_CONTROL_URL + '/restore', { body: '' })}"
 - runFlow:
     file: subflows/sign-in.yaml
     env:
