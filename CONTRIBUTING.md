@@ -81,9 +81,7 @@ norish/
 │   │   ├── app/      # Routes
 │   │   └── features/ # One folder per feature
 │   └── mobile/       # Expo app (@norish/mobile)
-│       └── src/
-│           ├── app/      # Routes
-│           └── features/ # One folder per feature
+│       └── src/      # Routes and features, as on web
 ├── packages/         # Shared libraries
 │   ├── api/          # Server API logic (routers, AI, parsing)
 │   ├── auth/         # Auth helpers
@@ -108,20 +106,23 @@ norish/
 
 ## App architecture
 
-Web and mobile use the same layout, and logic both apps need is written once in `packages/shared-react`. Web and shared-react move to it one feature at a time. Until a feature has moved, its web code stays in `components/`, `hooks/`, `context/` and `stores/`.
+Web and mobile use the same layout, and logic both apps need is written once in `packages/shared-react`. Web and shared-react move to it one feature at a time, so this is the target: until a feature has moved, its web code stays in `components/`, `hooks/`, `context/` and `stores/`, and its shared code in shared-react's `hooks/` and `contexts/`.
 
-- A feature is a domain: `library`, `recipes`, `cookbooks`, `groceries`, `calendar`, `imports`, `settings`, `auth` or `share`. `features/<feature>/` holds its screens, components and hooks. Route files in `app/` render screens from features, and a page that shows several, such as the dashboard, composes them. One feature's code then sits in one folder per app.
-- A feature never imports from inside another feature, and outside a feature, only route files import its files directly. Lint enforces this, so features stay separable without review catching it.
+- A feature is a domain: `library`, `recipes`, `cookbooks`, `groceries`, `calendar`, `imports`, `settings`, `auth` or `share`. `features/<feature>/` holds its screens, components and hooks. Route files in `app/` render screens from features, and a page that shows several, such as the dashboard, composes them. One feature's code then sits in one folder per app. Mobile's `smoke` isn't a domain: it is a throwaway screen that tests the plumbing until the redesigned screens replace it.
+- A feature never imports from inside another feature. Only route files import a feature's files directly: Next's file conventions (`page`, `layout`, `route` and the rest) on web, every file in `src/app/` on mobile. Other features and other files in `app/` import its `index.ts`. Lint enforces this, so features stay separable without review catching it.
 - A feature's `index.ts` exports only the panels other features open, such as `MiniGroceries`. Opening a panel is the one real dependency between features, and this keeps it visible in the imports.
-- Code two or more features use goes in the app's shared `components/`, `hooks/` or `lib/`, so no feature imports it from another. Imports run one way: shared folders, then features, then routes.
+- Code two or more features use goes in the app's shared `components/`, `hooks/` or `lib/`, so no feature imports it from another. Imports run one way: shared folders, then features, then routes, and lint stops code outside `app/` and `features/` importing a feature.
 - Components read server data through plain hooks over the TanStack Query cache, with `select` for a slice, and never copy it into a context or a store. The cache stays the one source of truth, which offline mode persists ([ADR-0001](docs/adr/offline/0001-web-offline-is-a-persisted-query-cache.md)), and a component re-renders only when its slice changes.
+- A realtime subscription mounts once: in its feature's root, or in the shell when screens outside the feature show the data, such as the Pantry. Its cache then stays current wherever the data shows, and each event is handled once.
+- A context only injects a scope, such as which recipe a page shows, or wires compound components such as `Panel`. Every consumer re-renders when its value changes, so it holds nothing that changes often.
 - Client state several components share goes in a zustand store, and state one component owns stays in `useState`. Each component subscribes to the fields it reads, so a change re-renders only those components.
-- shared-react uses the same feature names. `src/<feature>/` holds a feature's hooks, client stores, realtime subscription and types, exported as `@norish/shared-react/<feature>`, so a mobile screen reuses what web uses and adds only its UI. Its features never import each other, so changing one never breaks another. They import only these cross-cutting folders:
+- Stores are global, so a component reads one without a provider above it; one that must start fresh on each screen resets on unmount. A persisted store persists through the platform adapter's storage, so the same store runs on web and mobile.
+- shared-react groups code by domain, coarser than the app features: `recipes` holds the list, filters, selection, detail and cookbooks that `library`, `recipes` and `cookbooks` use. `src/<domain>/` holds its hooks, client stores, realtime subscription and types, exported as `@norish/shared-react/<domain>`, so a mobile screen reuses what web uses and adds only its UI. Domains never import each other, and the cross-cutting folders they import never import a domain, so changing one domain never breaks the rest:
   - `trpc/` creates the one tRPC context, so every hook imports `useTRPC` directly with no factory to bind in each app.
   - `platform/` is the one adapter each app mounts for toasts, navigation, errors, storage and Device Kind, so shared code holds no web or mobile imports.
-  - `offline/` holds the Outbox and the optimistic updates every feature's mutations use.
-  - `config/` holds reference data such as units, tags and recurrence.
-  - `reader/` holds the signed-in Reader: identity, household, allergies, permissions and Device Preferences.
+  - `offline/` holds the Outbox and the optimistic updates every domain's mutations use, so every write is Queued and replayed the same way while Offline.
+  - `config/` holds reference data such as units, tags and recurrence, which every domain reads and none owns.
+  - `reader/` holds the signed-in Reader: identity, household, allergies, permissions and Device Preferences, which every domain checks without fetching its own copy.
 
 ## Script Ownership
 
