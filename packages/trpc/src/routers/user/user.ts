@@ -2,6 +2,10 @@ import { mkdir, writeFile } from "fs/promises";
 import path from "path";
 import { z } from "zod";
 
+import type {
+  DeviceKind,
+  DevicePreferences,
+} from "@norish/shared/contracts/zod/device-preferences";
 import { deleteUserAccount } from "@norish/auth/account-deletion";
 import { SERVER_CONFIG } from "@norish/config/env-config-server";
 import {
@@ -32,6 +36,7 @@ import {
   UpdateUserNameInputSchema,
   UpdateUserPreferencesInputSchema,
 } from "@norish/shared/contracts/zod";
+import { DEVICE_PREFERENCE_DEFAULTS } from "@norish/shared/contracts/zod/device-preferences";
 import { UpdateUserAllergiesSchema } from "@norish/shared/contracts/zod/user-allergies";
 import { avatarFilenameFromImagePath, buildAvatarFilename } from "@norish/shared/lib/helpers";
 
@@ -133,6 +138,16 @@ const updatePreferences = authedProcedure
       version: updatedUser?.version ?? input.version,
     };
   });
+
+/** The reader's Device Preferences: each Device Kind's block, the defaults where none is stored. */
+const getDevicePreferences = authedProcedure.query(async ({ ctx }) => {
+  const { phone, desktop } = await getUserPreferences(ctx.user.id);
+
+  return {
+    phone: phone ?? DEVICE_PREFERENCE_DEFAULTS,
+    desktop: desktop ?? DEVICE_PREFERENCE_DEFAULTS,
+  } satisfies Record<DeviceKind, DevicePreferences>;
+});
 
 /**
  * Set Device Preferences for the named Device Kind. The kind travels in the
@@ -419,5 +434,6 @@ export const userProcedures = router({
   getAllergies,
   setAllergies,
   updatePreferences,
+  getDevicePreferences,
   setDevicePreferences,
 });
