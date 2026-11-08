@@ -22,7 +22,6 @@ export type { RecipesSubscriptionCallbacks } from "./use-recipes-subscription";
 export type { FavoritesQueryResult } from "./use-favorites-query";
 export type { FavoritesMutationResult } from "./use-favorites-mutation";
 export type { RatingsSubscriptionCallbacks } from "./use-ratings-subscription";
-export type { RecipeFiltersStorageAdapter } from "./recipe-filters-storage-adapter";
 
 export {
   createUsePendingRecipesQuery,

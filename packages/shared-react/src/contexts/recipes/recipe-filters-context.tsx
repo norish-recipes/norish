@@ -13,7 +13,7 @@ import {
   toggleSearchFieldIn,
 } from "@norish/shared/contracts/filter-contract";
 
-import type { RecipeFiltersStorageAdapter } from "../../hooks/recipes/dashboard/recipe-filters-storage-adapter";
+import type { PlatformStorage } from "../../platform";
 
 type RecipeFiltersContextValue = {
   filters: CanonicalRecipeFilters;
@@ -24,7 +24,7 @@ type RecipeFiltersContextValue = {
 };
 
 type CreateRecipeFiltersContextOptions = {
-  storageAdapter?: RecipeFiltersStorageAdapter;
+  storageAdapter?: PlatformStorage;
   storageKey?: string;
 };
 

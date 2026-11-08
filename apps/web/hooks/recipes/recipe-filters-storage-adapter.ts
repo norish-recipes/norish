@@ -1,6 +1,7 @@
+import { browserStorage } from "@/lib/browser-storage";
 import { writeRecipeFiltersCookie } from "@/lib/recipe-filters-cookie";
 
-import type { RecipeFiltersStorageAdapter } from "@norish/shared-react/hooks";
+import type { PlatformStorage } from "@norish/shared-react/platform";
 import {
   DEFAULT_PERSISTED_RECIPE_FILTERS,
   normalizePersistedRecipeFilters,
@@ -10,24 +11,16 @@ export const RECIPE_FILTERS_STORAGE_KEY = "norish:recipe-filters";
 
 // localStorage stays the browser's own copy; the cookie tells the server, so a full load draws the
 // same list.
-export const webRecipeFiltersStorageAdapter: RecipeFiltersStorageAdapter = {
-  getItem: (key) => {
-    if (typeof window === "undefined") return null;
-
-    return window.localStorage.getItem(key);
-  },
+export const webRecipeFiltersStorageAdapter: PlatformStorage = {
+  getItem: browserStorage.getItem,
   setItem: (key, value) => {
-    if (typeof window === "undefined") return;
-
-    window.localStorage.setItem(key, value);
+    void browserStorage.setItem(key, value);
     writeRecipeFiltersCookie(
       normalizePersistedRecipeFilters(JSON.parse(value)) ?? DEFAULT_PERSISTED_RECIPE_FILTERS
     );
   },
   removeItem: (key) => {
-    if (typeof window === "undefined") return;
-
-    window.localStorage.removeItem(key);
+    void browserStorage.removeItem(key);
     writeRecipeFiltersCookie(DEFAULT_PERSISTED_RECIPE_FILTERS);
   },
 };
