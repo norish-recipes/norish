@@ -47,6 +47,7 @@ sections (never passing a finished prompt string — ADR-0016).
 
 - Keep root scripts and config minimal; workspace ownership should stay inside the owning app, package, or tooling workspace.
 - Prefer existing shared abstractions before adding new ones.
+- Placing code or state in `apps/web`, `apps/mobile` or `packages/shared-react` follows "App architecture" in `CONTRIBUTING.md`.
 - Use `@/` imports where the workspace already supports them.
 - Use the existing logger patterns instead of `console.log`.
 - Avoid `as any`, `@ts-ignore`, and `@ts-expect-error`.

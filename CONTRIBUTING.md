@@ -78,7 +78,12 @@ pnpm dev
 norish/
 ├── apps/             # App workspaces
 │   ├── web/          # Next.js app (App Router + server entry)
+│   │   ├── app/      # Routes
+│   │   └── features/ # One folder per feature
 │   └── mobile/       # Expo app (@norish/mobile)
+│       └── src/
+│           ├── app/      # Routes
+│           └── features/ # One folder per feature
 ├── packages/         # Shared libraries
 │   ├── api/          # Server API logic (routers, AI, parsing)
 │   ├── auth/         # Auth helpers
@@ -87,7 +92,7 @@ norish/
 │   ├── i18n/         # Locale tooling and data
 │   ├── queue/        # Background jobs
 │   ├── shared/       # Shared utilities and contracts
-│   ├── shared-react/ # Shared React hooks and contexts
+│   ├── shared-react/ # React logic both apps share, by feature
 │   ├── shared-server/# Shared server utilities
 │   ├── trpc/         # tRPC router definitions
 │   └── ui/           # UI component library
@@ -100,6 +105,23 @@ norish/
 │   └── typescript/    # @norish/tsconfig
 └── docker/           # Local runtime containers
 ```
+
+## App architecture
+
+Web and mobile use the same layout, and logic both apps need is written once in `packages/shared-react`. Web and shared-react move to it one feature at a time. Until a feature has moved, its web code stays in `components/`, `hooks/`, `context/` and `stores/`.
+
+- A feature is a domain: `library`, `recipes`, `cookbooks`, `groceries`, `calendar`, `imports`, `settings`, `auth` or `share`. `features/<feature>/` holds its screens, components and hooks. Route files in `app/` render screens from features, and a page that shows several, such as the dashboard, composes them. One feature's code then sits in one folder per app.
+- A feature never imports from inside another feature, and outside a feature, only route files import its files directly. Lint enforces this, so features stay separable without review catching it.
+- A feature's `index.ts` exports only the panels other features open, such as `MiniGroceries`. Opening a panel is the one real dependency between features, and this keeps it visible in the imports.
+- Code two or more features use goes in the app's shared `components/`, `hooks/` or `lib/`, so no feature imports it from another. Imports run one way: shared folders, then features, then routes.
+- Components read server data through plain hooks over the TanStack Query cache, with `select` for a slice, and never copy it into a context or a store. The cache stays the one source of truth, which offline mode persists ([ADR-0001](docs/adr/offline/0001-web-offline-is-a-persisted-query-cache.md)), and a component re-renders only when its slice changes.
+- Client state several components share goes in a zustand store, and state one component owns stays in `useState`. Each component subscribes to the fields it reads, so a change re-renders only those components.
+- shared-react uses the same feature names. `src/<feature>/` holds a feature's hooks, client stores, realtime subscription and types, exported as `@norish/shared-react/<feature>`, so a mobile screen reuses what web uses and adds only its UI. Its features never import each other, so changing one never breaks another. They import only these cross-cutting folders:
+  - `trpc/` creates the one tRPC context, so every hook imports `useTRPC` directly with no factory to bind in each app.
+  - `platform/` is the one adapter each app mounts for toasts, navigation, errors, storage and Device Kind, so shared code holds no web or mobile imports.
+  - `offline/` holds the Outbox and the optimistic updates every feature's mutations use.
+  - `config/` holds reference data such as units, tags and recurrence.
+  - `reader/` holds the signed-in Reader: identity, household, allergies, permissions and Device Preferences.
 
 ## Script Ownership
 
