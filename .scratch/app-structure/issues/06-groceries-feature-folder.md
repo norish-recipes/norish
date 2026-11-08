@@ -12,5 +12,5 @@
 - [ ] `GroceryCheckbox` is renamed `RoundCheckbox` and lives in `components/` with `isCheckboxEvent`; its callers in groceries, the recipe card, a recipe's ingredients and the cookbook picker follow.
 - [ ] The feature lint rule passes with no exceptions.
 - [ ] Groceries imports nothing from web's `context/` folder; it reads only `@norish/shared-react/*` and web's shared folders.
-- [ ] Groceries unit tests sit next to their code, not under `__tests__/`.
+- [ ] Groceries unit tests sit next to their code, not under `__tests__/`, and pass lint, which skipped them there.
 - [ ] The groceries E2E set (spec, "Testing Decisions") passes unchanged.

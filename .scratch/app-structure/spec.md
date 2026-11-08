@@ -2,7 +2,7 @@
 
 Status: ready-for-agent
 
-Settled in a `/grilling` session on 2026-11-07. Target Version: 0.27.0-beta. Tickets are in `issues/`; only the groundwork and the groceries pilot are ticketed, and each later feature gets its tickets once the one before it has landed. Starts on a branch off `rc/0.27.0-beta` after `feat/mobile-catch-up` has merged into it.
+Settled in a `/grilling` session on 2026-11-07. Target Version: 0.27.0-beta. Tickets are in `issues/`; only the groundwork and the groceries pilot are ticketed, and each later feature gets its tickets once the one before it has landed. Starts on a branch off `rc/0.27.0-beta`, which `feat/mobile-catch-up` has merged into (4589f4f95).
 
 ## Problem Statement
 
@@ -10,14 +10,14 @@ Web and mobile are about to be built side by side again, and they are organised 
 
 The "heavy" contexts are mostly server data in disguise. `RecipesContext` (23 fields, mounted app-wide), `RecipeDetailContext` (~40), `AdminSettingsContext` (~50), `GroceriesContext`, `StoresContext` and `CalendarContext` each bundle TanStack Query data, mutation callbacks and a realtime subscription into one value, so a component that only needs `createRecipe` re-renders whenever the recipe list changes. Two layers (`WebUserContext`, the `RecipesContextAdapter`) only re-provide a value.
 
-shared-react reaches both apps through about 16 `create*Hooks({ useTRPC, … })` factories plus context factories, and each app binds every one in its own files. Infer-mode React Compiler can't see factory-built hooks without a `"use memo"` directive, and aliasing them caused the hook-alias trap on mobile. What the factories inject is almost never another feature: it is `useTRPC`, reference data (units, recurrence config), the signed-in **Reader** (id, name, allergies, household) and platform adapters (toast, navigation, error, storage).
+shared-react reaches both apps through 19 `create*Hooks({ useTRPC, … })` factories plus 10 context factories, and each app binds every one in its own files. Infer-mode React Compiler can't see factory-built hooks without a `"use memo"` directive, and aliasing them caused the hook-alias trap on mobile. What the factories inject is almost never another feature: it is `useTRPC`, reference data (units, recurrence config), the signed-in **Reader** (id, name, allergies, household) and platform adapters (toast, navigation, error, storage).
 
 ## Solution
 
 Both apps are laid out the same way, and logic a feature shares lives once in shared-react under the same domain name.
 
 - An app's `features/<feature>/` holds that feature's screens, components and platform hooks. Route files compose features; a feature never reaches into another and only opens another's panels through that feature's `index.ts`.
-- Server data is read through plain hooks over the Query cache, never copied into a context or a store. Realtime subscriptions mount once in a feature's root.
+- Server data is read through plain hooks over the Query cache, never copied into a context or a store. Realtime subscriptions mount once, in a feature's root or in the shell when screens outside the feature show the data.
 - Client state that several components share lives in a zustand store; state one component owns stays in `useState`.
 - shared-react is organised by feature, creates the tRPC context once, and takes platform differences through one adapter. Its features don't import each other either; they import cross-cutting folders.
 
@@ -45,13 +45,14 @@ Groceries is the pilot, measured before and after. The rest follows in order, an
 - Imports run one way: shared folders, then features, then routes. A `no-restricted-imports` override in each app's ESLint config enforces it, as mobile's already does.
 - A feature's `index.ts` exports only the panels other features open: `MiniGroceries`, `MiniCalendar`, `MiniCookbooks`, `MiniRecipes`. A card in the library opens a grocery panel, so this one dependency is real and lint shows it instead of hiding it in a shared folder. Lint blocks `@/features/<x>/**` everywhere outside feature `<x>` except route files, which import screens directly; `@/features/<x>` itself stays importable, as mobile's rule already allows.
 - Pieces several features render that aren't panels go to the shared folders. `GroceryCheckbox` becomes `RoundCheckbox` in `components/`, with `isCheckboxEvent` beside it: the recipe card, a recipe's ingredients and the cookbook picker use it as much as the groceries list does, and only its Store colour is a groceries concern.
+- Timers are shared code, not a feature: cooking mode and a recipe's timer chips start them, and the dock in the shell shows them on every page. The store moves from `stores/timers.ts` to `lib/`, the dock and the chip to `components/`. Mobile has no timers yet, so the store stays in web until it does.
 
 ### Web layout
 
 - Web does not move into `src/`. `features/` sits next to `app/`; `server/` and `config/` stay where they are.
 - Route files keep their server-only work (cache seeding, metadata, params) and render a screen from a feature.
 - The old `components/`, `hooks/`, `context/` and `stores/` folders stay and empty out feature by feature; whatever is left is deleted with the last feature.
-- A feature's unit tests move next to its code as `*.test.ts(x)` when the feature migrates, which also takes them out of the ESLint `__tests__` blind spot. The E2E suite stays under `__tests__/e2e`.
+- A feature's unit tests move next to its code as `*.test.ts(x)` when the feature migrates, which also takes them out of the ESLint `__tests__` blind spot; the lint errors that surfaces are fixed in the same ticket. The E2E suite stays under `__tests__/e2e`.
 
 ### State
 
@@ -63,11 +64,12 @@ Groceries is the pilot, measured before and after. The rest follows in order, an
 
 ### shared-react
 
-- Organised by feature: `src/<feature>/` holds its hooks, client stores, realtime subscription and types, exported as `@norish/shared-react/<feature>`. Domains are coarser than app features: `shared-react/recipes` holds the list, filters, selection, detail, favourites, ratings and shares, and both `features/library` and `features/recipes` import it.
-- Cross-cutting folders: `trpc/`, `platform/`, `offline/` (already there; it also takes `optimistic-updates.ts`, which keeps an optimistic change whose write was Queued in the Outbox, so every feature's mutations import it from there), `config/` (reference data: units, tags, categories, cuisines, recurrence, upload limits), and `reader/` (the signed-in Reader: identity, household, active allergies, permissions, Device Preferences).
+- Organised by feature: `src/<feature>/` holds its hooks, client stores, realtime subscription and types, exported as `@norish/shared-react/<feature>`. Domains are coarser than app features: `shared-react/recipes` holds the list, filters, selection, detail, favourites, ratings, shares and cookbooks, and `features/library`, `features/recipes` and `features/cookbooks` import it. Cookbooks sit there because a cookbook change also rewrites the cookbook labels in every cached library page.
+- Cross-cutting folders: `trpc/`, `platform/`, `offline/` (already there; it also takes `optimistic-updates.ts`, which keeps an optimistic change whose write was Queued in the Outbox, so every feature's mutations import it from there), `config/` (reference data: units, tags, categories, cuisines, recurrence, upload limits, and the ingredient catalogue's realtime subscription, which marks every read derived from an Ingredient stale after a merge, rename or nutrition correction), and `reader/` (the signed-in Reader: identity, household, active allergies, permissions, Device Preferences).
 - Features never import each other; cross-cutting folders never import features. Lint enforces both.
 - The recipe query inputs (`filter-contract`, `list-queries`) are pure contracts, so they move to `@norish/shared/contracts`. The offline Warm Set and `shared-react/recipes` import them from there, and the server's cache seeding stops importing a React package.
 - `createTRPCContext<AppRouter>()` runs once at module level in `trpc/`, so every hook imports `useTRPC`. `createTRPCProviderBundle` stays a factory for each app's config only (links, WebSocket implementation, QueryClient, outbox link) and provides that one context.
+- The shell mounts the subscriptions whose data shows outside one feature: Pantry, cookbooks and the ingredient catalogue, as today. The pantry stays there because a recipe page or a dashboard card changes the Pantry while the groceries screen isn't mounted.
 - One platform adapter, mounted once per app, carries toasts, navigation, error display, storage and Device Kind. It grows as features migrate.
 - The pilot is a clean migration: groceries reads nothing from web's old contexts. So `reader/` starts in the groundwork with Device Preferences, which groceries needs; identity, household, allergies and permissions join it with library.
 - The `create*Hooks` and `create*Context` factories, each app's binding files, and the `./hooks` and `./contexts` exports go away feature by feature and are gone with the last one.
@@ -75,7 +77,7 @@ Groceries is the pilot, measured before and after. The rest follows in order, an
 ### Migration
 
 1. Groceries (the pilot).
-2. Library and recipes.
+2. Library and recipes (shared-react's cookbooks move here, with `shared-react/recipes`).
 3. Calendar.
 4. Cookbooks.
 5. Settings.
@@ -90,7 +92,7 @@ Measured on groceries before the groundwork, after it, and after the pilot, as a
 - Mounts and re-renders per component for each scripted action: check an item, add an item, open the edit panel, switch view mode, and a realtime echo from a second client. Every remaining re-render is traced to a real change on screen.
 - First paint of `/groceries` through `measure-page-loads.ts`; it must not get worse.
 - JS downloaded for `/groceries`, which `measure-page-loads.ts` adds up from the page's script responses. Next 16 dropped route sizes from `next build`.
-- Code shape: folders one feature spans, lines per app versus shared-react, binding files deleted, and how many lines mobile would write to get groceries.
+- Code shape: folders one feature spans, lines per app versus shared-react and binding files deleted.
 
 The render counter is a committed script next to `measure-page-loads.ts`.
 
