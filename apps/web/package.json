@@ -17,7 +17,8 @@
     "typecheck": "next typegen && pnpm exec tsc --noEmit && pnpm exec tsc -p tsconfig.sw.json",
     "clean": "git clean -xdf .cache .next .turbo node_modules dist",
     "generate:splash": "tsx scripts/generate-splash.tsx",
-    "measure:page-loads": "tsx scripts/measure-page-loads.ts"
+    "measure:page-loads": "tsx scripts/measure-page-loads.ts",
+    "measure:renders": "tsx scripts/measure-renders.ts"
   },
   "dependencies": {
     "@better-auth/api-key": "catalog:",
