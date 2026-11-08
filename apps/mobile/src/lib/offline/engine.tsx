@@ -4,10 +4,10 @@
 import React from "react";
 import { AppState } from "react-native";
 import { createMMKV } from "react-native-mmkv";
+import { APP_VERSION } from "@/lib/app-version";
 import { getAuthClient } from "@/lib/auth/auth-client";
 import { getBackendBaseUrl } from "@/lib/network/backend-base-url";
 import { useConnectionStatus, useTRPC, useTRPCClient } from "@/lib/trpc/trpc-provider";
-import Constants from "expo-constants";
 import { addNetworkStateListener } from "expo-network";
 
 import { createOfflineEngine, HEALTH_PROBE_PATH } from "@norish/shared-react/offline";
@@ -28,7 +28,7 @@ export const offlineEngine = createOfflineEngine({
   storage: createMmkvStorage({ mmkv: createMMKV({ id: "norish-offline" }), files: uploadFiles }),
   replayHeaderValue: OUTBOX_REPLAY_HEADER_VALUE,
   probeUrl: () => `${getBackendBaseUrl()}${HEALTH_PROBE_PATH}`,
-  buster: Constants.expoConfig?.version,
+  buster: APP_VERSION,
   calendarRanges: () => {
     const { start, end } = getInitialDateRange("mobile");
 

@@ -1,9 +1,9 @@
+import { APP_VERSION } from "@/lib/app-version";
+
 import { isUpdateAvailable } from "@norish/shared/lib/version";
 
-import { version as appVersion } from "../../../../package.json";
-
 /** The current release's minor, so it moves with each release: 0.27.0-beta needs 0.27.0. */
-export const MINIMUM_SERVER_VERSION = appVersion.replace(/^(\d+\.\d+)\..*$/, "$1.0");
+export const MINIMUM_SERVER_VERSION = APP_VERSION.replace(/^(\d+\.\d+)\..*$/, "$1.0");
 
 export type ServerHealthVerdict = "ok" | "too-old" | "not-norish";
 
