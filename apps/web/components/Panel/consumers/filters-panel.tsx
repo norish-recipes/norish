@@ -23,7 +23,7 @@ import { motion } from "motion/react";
 import { useTranslations } from "next-intl";
 
 import type { FilterMode, RecipeCategory, SearchField, SortOrder } from "@norish/shared/contracts";
-import { DEFAULT_RECIPE_FILTERS } from "@norish/shared-react/contexts";
+import { DEFAULT_RECIPE_FILTERS } from "@norish/shared/contracts/filter-contract";
 import StarRating from "@norish/ui/star-rating";
 
 const COOKING_TIME_OPTIONS: Array<{

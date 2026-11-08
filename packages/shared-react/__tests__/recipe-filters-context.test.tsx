@@ -3,8 +3,9 @@ import React, { act } from "react";
 import { createRoot } from "react-dom/client";
 import { afterEach, describe, expect, it, vi } from "vitest";
 
-import type { PersistedRecipeFilters } from "../src/contexts/recipes/filter-contract";
-import { DEFAULT_PERSISTED_RECIPE_FILTERS } from "../src/contexts/recipes/filter-contract";
+import type { PersistedRecipeFilters } from "@norish/shared/contracts/filter-contract";
+import { DEFAULT_PERSISTED_RECIPE_FILTERS } from "@norish/shared/contracts/filter-contract";
+
 import { createRecipeFiltersContext } from "../src/contexts/recipes/recipe-filters-context";
 
 const KEY = "filters";

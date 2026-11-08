@@ -2,10 +2,10 @@ import { useCallback, useMemo } from "react";
 import { useInfiniteQuery, useQueryClient } from "@tanstack/react-query";
 
 import type { RecipeDashboardDTO } from "@norish/shared/contracts";
+import { byNextCursor, cookbookRecipesInput } from "@norish/shared/contracts/list-queries";
 
 import type { RecipeFilters } from "../recipes/dashboard";
 import type { CreateCookbookHooksOptions } from "./types";
-import { byNextCursor, cookbookRecipesInput } from "../../contexts/recipes/list-queries";
 
 type InfiniteMemberPages = {
   pages: { recipes: RecipeDashboardDTO[]; total: number; nextCursor: number | null }[];

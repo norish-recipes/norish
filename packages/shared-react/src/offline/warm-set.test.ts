@@ -6,12 +6,15 @@ import { createTRPCOptionsProxy } from "@trpc/tanstack-react-query";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 
 import type { AppRouter } from "@norish/trpc/client";
+import {
+  DEFAULT_RECIPE_FILTERS,
+  toRecipesQueryFilters,
+} from "@norish/shared/contracts/filter-contract";
+import { cookbookRecipesInput } from "@norish/shared/contracts/list-queries";
 
 import type { LockManagerLike } from "./leader";
 import type { OfflineStorage } from "./storage";
 import type { WarmSetDependencies } from "./warm-set";
-import { DEFAULT_RECIPE_FILTERS, toRecipesQueryFilters } from "../contexts/recipes/filter-contract";
-import { cookbookRecipesInput } from "../contexts/recipes/list-queries";
 import { CACHE_MAX_AGE_MS } from "./cache-manager";
 import { readLastWarmedAt, writeLastWarmedAt } from "./last-warmed";
 import { createMemoryStorage } from "./testing/memory-storage";

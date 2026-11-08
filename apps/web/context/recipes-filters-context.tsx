@@ -17,4 +17,4 @@ export const useRecipesFiltersContext = sharedRecipeFiltersContext.useRecipeFilt
 export const useOptionalRecipesFiltersContext =
   sharedRecipeFiltersContext.useOptionalRecipeFiltersContext;
 
-export type { CanonicalRecipeFilters as RecipeFilters } from "@norish/shared-react/contexts";
+export type { CanonicalRecipeFilters as RecipeFilters } from "@norish/shared/contracts/filter-contract";

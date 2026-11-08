@@ -4,7 +4,7 @@ import type { RecipeFiltersStorageAdapter } from "@norish/shared-react/hooks";
 import {
   DEFAULT_PERSISTED_RECIPE_FILTERS,
   normalizePersistedRecipeFilters,
-} from "@norish/shared-react/filter-contract";
+} from "@norish/shared/contracts/filter-contract";
 
 export const RECIPE_FILTERS_STORAGE_KEY = "norish:recipe-filters";
 

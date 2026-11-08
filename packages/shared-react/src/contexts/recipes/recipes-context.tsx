@@ -1,6 +1,11 @@
 import { createContext, use, useCallback, useMemo } from "react";
 
 import type { FullRecipeInsertDTO, FullRecipeUpdateDTO } from "@norish/shared/contracts";
+import {
+  hasAppliedRecipeFilters,
+  serializeRecipeFilters,
+  toRecipesQueryFilters,
+} from "@norish/shared/contracts/filter-contract";
 
 import type {
   FavoritesMutationResult,
@@ -12,11 +17,6 @@ import type {
   RecipesSubscriptionCallbacks,
 } from "../../hooks/recipes/dashboard";
 import type { RecipeToastAdapter } from "./recipe-toast-adapter";
-import {
-  hasAppliedRecipeFilters,
-  serializeRecipeFilters,
-  toRecipesQueryFilters,
-} from "./filter-contract";
 import {
   createRatingsSubscriptionToasts,
   createRecipeImportToasts,

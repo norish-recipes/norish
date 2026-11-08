@@ -9,8 +9,8 @@ import {
 } from "@/lib/recipe-filters-cookie";
 import { afterEach, describe, expect, it } from "vitest";
 
-import type { PersistedRecipeFilters } from "@norish/shared-react/filter-contract";
-import { DEFAULT_PERSISTED_RECIPE_FILTERS } from "@norish/shared-react/filter-contract";
+import type { PersistedRecipeFilters } from "@norish/shared/contracts/filter-contract";
+import { DEFAULT_PERSISTED_RECIPE_FILTERS } from "@norish/shared/contracts/filter-contract";
 
 describe("the Library filters cookie", () => {
   it("round-trips the stored filters, carrying only what differs from the defaults", () => {

@@ -1,9 +1,9 @@
-import type { PersistedRecipeFilters } from "@norish/shared-react/filter-contract";
+import type { PersistedRecipeFilters } from "@norish/shared/contracts/filter-contract";
 import {
   changedRecipeFilters,
   DEFAULT_PERSISTED_RECIPE_FILTERS,
   normalizePersistedRecipeFilters,
-} from "@norish/shared-react/filter-contract";
+} from "@norish/shared/contracts/filter-contract";
 
 /** The Library filters this browser last used, so a full load is drawn under them. */
 export const RECIPE_FILTERS_COOKIE = "norish-recipe-filters";

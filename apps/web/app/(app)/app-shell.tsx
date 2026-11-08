@@ -20,8 +20,8 @@ import { RecipesFiltersProvider } from "@/context/recipes-filters-context";
 import { UserProvider } from "@/context/user-context";
 import { OfflineCacheController } from "@/lib/offline/engine";
 
-import type { PersistedRecipeFilters } from "@norish/shared-react/filter-contract";
 import type { User } from "@norish/shared/contracts";
+import type { PersistedRecipeFilters } from "@norish/shared/contracts/filter-contract";
 import {
   APP_MAIN_BOTTOM_PADDING_CLASS,
   APP_MAIN_HORIZONTAL_PADDING_CLASS,

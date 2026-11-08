@@ -19,7 +19,7 @@ import {
   hasAppliedRecipeFilters,
   serializeRecipeFilters,
   toRecipesQueryFilters,
-} from "@norish/shared-react/contexts";
+} from "@norish/shared/contracts/filter-contract";
 
 /** Selecting a cookbook's members, above its grid and list so switching view keeps it. */
 export function CookbookSelection({

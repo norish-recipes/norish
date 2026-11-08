@@ -4,15 +4,18 @@ import type { QueryClient } from "@tanstack/react-query";
 import type { TRPCOptionsProxy } from "@trpc/tanstack-react-query";
 
 import type { AppRouter } from "@norish/trpc/client";
-
-import type { LockManagerLike } from "./leader";
-import type { OfflineStorage } from "./storage";
-import { DEFAULT_RECIPE_FILTERS, toRecipesQueryFilters } from "../contexts/recipes/filter-contract";
+import {
+  DEFAULT_RECIPE_FILTERS,
+  toRecipesQueryFilters,
+} from "@norish/shared/contracts/filter-contract";
 import {
   byNextCursor,
   cookbookRecipesInput,
   libraryListInput,
-} from "../contexts/recipes/list-queries";
+} from "@norish/shared/contracts/list-queries";
+
+import type { LockManagerLike } from "./leader";
+import type { OfflineStorage } from "./storage";
 import { CACHE_MAX_AGE_MS } from "./cache-manager";
 import { readLastWarmedAt, writeLastWarmedAt } from "./last-warmed";
 import { runIfLeader } from "./leader";

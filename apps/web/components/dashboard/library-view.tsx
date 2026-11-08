@@ -16,7 +16,7 @@ import { useCookbooksMutations } from "@/hooks/cookbooks";
 import { useLibraryQuery } from "@/hooks/library";
 
 import type { RecipeViewMode } from "@norish/shared/contracts/zod/device-preferences";
-import { toRecipesQueryFilters } from "@norish/shared-react/contexts";
+import { toRecipesQueryFilters } from "@norish/shared/contracts/filter-contract";
 
 /**
  * The Library's list: recipes and cookbooks interleaved, ordered by whatever

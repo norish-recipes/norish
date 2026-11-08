@@ -4,8 +4,8 @@ import { ChipButton } from "@/components/shared/chip-button";
 import { useTranslations } from "next-intl";
 
 import type { SearchField } from "@norish/shared/contracts";
-import { toggleSearchFieldIn } from "@norish/shared-react/contexts";
 import { SEARCH_FIELDS } from "@norish/shared/contracts";
+import { toggleSearchFieldIn } from "@norish/shared/contracts/filter-contract";
 
 interface SearchFieldTogglesProps {
   /** The working selection, held by whoever owns the Apply button. */

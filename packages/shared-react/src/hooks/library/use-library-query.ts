@@ -3,10 +3,10 @@ import { useCallback, useMemo } from "react";
 import { useInfiniteQuery, useQueryClient } from "@tanstack/react-query";
 
 import type { LibraryItemDTO, LibraryTypeFilter } from "@norish/shared/contracts";
+import { byNextCursor, libraryListInput } from "@norish/shared/contracts/list-queries";
 
 import type { RecipeFilters } from "../recipes/dashboard";
 import type { CreateRecipeHooksOptions } from "../recipes/types";
-import { byNextCursor, libraryListInput } from "../../contexts/recipes/list-queries";
 
 export type LibraryFilters = RecipeFilters & {
   type?: LibraryTypeFilter;

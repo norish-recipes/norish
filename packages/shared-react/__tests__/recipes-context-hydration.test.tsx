@@ -3,8 +3,9 @@ import React, { act } from "react";
 import { createRoot } from "react-dom/client";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 
+import { DEFAULT_RECIPE_FILTERS } from "@norish/shared/contracts/filter-contract";
+
 import type { SharedRecipesContextValue } from "../src/contexts/recipes/recipes-context";
-import { DEFAULT_RECIPE_FILTERS } from "../src/contexts/recipes/filter-contract";
 import { createRecipesContext } from "../src/contexts/recipes/recipes-context";
 
 const UNFILTERED = [{ id: "unfiltered-1" }, { id: "unfiltered-2" }] as never[];

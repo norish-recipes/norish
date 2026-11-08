@@ -2,7 +2,7 @@ import { QuerySeed } from "@/components/query-seed";
 import { readReaderToday } from "@/lib/reader-today-server";
 import { readRecipeQueryFilters } from "@/lib/recipe-filters-server";
 
-import { byNextCursor, libraryListInput } from "@norish/shared-react/list-queries";
+import { byNextCursor, libraryListInput } from "@norish/shared/contracts/list-queries";
 import { dateKey, getInitialDateRange } from "@norish/shared/lib/helpers";
 
 // A full load carries the week Today's meals reads, in the reader's time zone, and the Library's
