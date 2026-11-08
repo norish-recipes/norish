@@ -19,6 +19,8 @@ const env = {
   ...process.env,
 };
 const server = env.NORISH_SERVER_URL.replace(/\/+$/, "");
+// The simulator shares the host's loopback, so nothing here is opened to the network.
+const LOOPBACK = "127.0.0.1";
 let cookie = "";
 
 async function call(pathname, body) {
@@ -67,9 +69,8 @@ await trpc(
 // The flows find each checkbox by its id, since iOS reports the checked state in its value.
 const idOf = Object.fromEntries((await ours()).map(({ name, id }) => [name, id]));
 
-// The offline flow talks to the server through this proxy and cuts it with `POST /cut`, so the
-// backend is unreachable while the simulator's network stays up. The realtime flow has a grocery
-// checked off as the web does with `POST /check-on-web`.
+// The offline flow cuts this proxy (`POST /cut`) so the backend goes while the simulator's network
+// stays; the realtime flow has the web's check-off done with `POST /check-on-web`.
 const backend = new URL(server);
 const sockets = new Set();
 const proxy = net.createServer((client) => {
@@ -85,7 +86,7 @@ const proxy = net.createServer((client) => {
   }
   client.pipe(upstream).pipe(client);
 });
-const listenProxy = () => proxy.listen(Number(env.NORISH_PROXY_PORT));
+const listenProxy = () => proxy.listen(Number(env.NORISH_PROXY_PORT), LOOPBACK);
 const control = createServer(async (request, response) => {
   if (request.url === "/check-on-web") {
     const { id, version } = (await ours()).find((g) => g.name === env.NORISH_REALTIME_GROCERY);
@@ -98,7 +99,7 @@ const control = createServer(async (request, response) => {
     listenProxy();
   }
   response.end();
-}).listen(Number(env.NORISH_PROXY_CONTROL_PORT));
+}).listen(Number(env.NORISH_PROXY_CONTROL_PORT), LOOPBACK);
 
 listenProxy();
 
@@ -123,7 +124,7 @@ await maestro(flows, {
   NORISH_OFFLINE_GROCERY_ID: idOf[env.NORISH_OFFLINE_GROCERY],
   NORISH_REALTIME_GROCERY_ID: idOf[env.NORISH_REALTIME_GROCERY],
   // The proxy forwards bytes, so a base path stays on the address the app is given.
-  NORISH_PROXY_URL: `http://localhost:${env.NORISH_PROXY_PORT}${backend.pathname.replace(/\/+$/, "")}`,
+  NORISH_PROXY_URL: `http://localhost:${env.NORISH_PROXY_PORT}${server.slice(backend.origin.length)}`,
   NORISH_PROXY_CONTROL_URL: `http://localhost:${env.NORISH_PROXY_CONTROL_PORT}`,
 });
 proxy.close();
@@ -141,7 +142,7 @@ for (const name of seeded) {
 const oldServer = createServer((_request, response) => {
   response.writeHead(200, { "content-type": "application/json" });
   response.end(JSON.stringify({ status: "ok", version: "0.1.0", parser: { status: "ok" } }));
-}).listen(Number(env.NORISH_OLD_SERVER_PORT));
+}).listen(Number(env.NORISH_OLD_SERVER_PORT), LOOPBACK);
 
 await maestro(path.join(flows, "old-server"), {
   NORISH_OLD_SERVER_URL: `http://localhost:${env.NORISH_OLD_SERVER_PORT}`,
