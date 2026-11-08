@@ -1,11 +1,16 @@
 import { readdirSync } from "node:fs";
 import path from "node:path";
-import type { Linter } from "eslint";
+import type { ESLint, Linter } from "eslint";
 import { defineConfig } from "eslint/config";
+import { builtinRules } from "eslint/use-at-your-own-risk";
 
-// typescript-eslint's copy of no-restricted-imports, so the core rule keeps restrictEnvAccess's ban.
+// The core rule registered a second time, so restrictEnvAccess's no-restricted-imports keeps its config.
+const noRestrictedImports = builtinRules.get("no-restricted-imports");
+if (!noRestrictedImports) throw new Error("ESLint no longer ships no-restricted-imports");
+const plugin: ESLint.Plugin = { rules: { "no-restricted-imports": noRestrictedImports } };
+
 const restrict = (group: string[], message: string): Linter.RulesRecord => ({
-  "@typescript-eslint/no-restricted-imports": ["error", { patterns: [{ group, message }] }],
+  "features/no-restricted-imports": ["error", { patterns: [{ group, message }] }],
 });
 
 // Matches every alias and relative path into a feature: @/features/x/y, ../features/x/y.
@@ -23,6 +28,7 @@ export const restrictFeatures = (
     .map((entry) => entry.name);
 
   return defineConfig(
+    { plugins: { features: plugin } },
     {
       files: ["**/*.{js,ts,tsx}"],
       ignores: [`${appDir}/**`, `${featuresDir}/**`],
