@@ -5,6 +5,7 @@ import { useCallback, useEffect, useMemo, useState, useSyncExternalStore } from 
 import type { OfflineEngine } from "../engine";
 import type { OutboxEntry } from "../outbox-types";
 import type { Recovery } from "../recovery";
+import { useCacheOwner } from "./use-cache-owner";
 
 export interface OutboxSummary {
   entries: OutboxEntry[];
@@ -35,7 +36,6 @@ export interface OutboxStatus {
   discardAll: () => Promise<void>;
 }
 
-const noOwner = () => null;
 const notSyncing = () => false;
 
 /** The signed-in owner's live Outbox and the status actions (sync now, retry, discard). */
@@ -52,7 +52,7 @@ export function useOutboxStatus({
   /** After a sync or retry ran. */
   onSynced?: () => Promise<void>;
 }): OutboxStatus {
-  const owner = useSyncExternalStore(cache.subscribe, cache.owner, noOwner);
+  const owner = useCacheOwner(cache);
   const [entries, setEntries] = useState<OutboxEntry[]>([]);
   const [prevOwner, setPrevOwner] = useState(owner);
   const isSyncing = useSyncExternalStore(recovery.subscribe, recovery.isSyncing, notSyncing);

@@ -1,11 +1,12 @@
 "use client";
 
-import { useEffect, useRef, useSyncExternalStore } from "react";
+import { useEffect, useRef } from "react";
 
 import type { ConnectionStatus } from "../../providers/trpc-provider";
 import type { CacheManager } from "../cache-manager";
 import type { OutboxStore } from "../outbox-store";
 import type { Recovery } from "../recovery";
+import { useCacheOwner } from "./use-cache-owner";
 
 export interface OfflineControllerInputs {
   engine: {
@@ -22,8 +23,6 @@ export interface OfflineControllerInputs {
   wsStatus: ConnectionStatus;
 }
 
-const noOwner = () => null;
-
 // Reconciles the cache owner with the session and runs Recovery on startup, return to Live,
 // socket reconnect and queued work. `switching`: an owner switch is resolving, render nothing.
 export function useOfflineController({
@@ -36,7 +35,7 @@ export function useOfflineController({
   subscribeLiveProbes,
   wsStatus,
 }: OfflineControllerInputs): { owner: string | null; switching: boolean } {
-  const owner = useSyncExternalStore(cache.subscribe, cache.owner, noOwner);
+  const owner = useCacheOwner(cache);
 
   useEffect(() => {
     void cache.reconcileIdentity({ sessionUserId, isOffline });
