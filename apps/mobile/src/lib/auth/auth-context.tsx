@@ -65,8 +65,10 @@ function AuthProviderInner({
     [session?.user?.id, session?.user?.email, session?.user?.name, session?.user?.image]
   );
   // Until the server answers, the persisted session stands in, so an Offline launch opens on
-  // its cached data instead of the sign-in screen.
-  const shouldUsePersistedAuth = !liveUser && (isPending || !!sessionError || isOffline);
+  // its cached data instead of the sign-in screen. A 401 is an answer: the session is gone.
+  const sessionRejected = sessionError?.status === 401;
+  const shouldUsePersistedAuth =
+    !liveUser && !sessionRejected && (isPending || !!sessionError || isOffline);
 
   useEffect(() => {
     if (!shouldUsePersistedAuth || persistedSessionStatus !== "idle") {
@@ -138,9 +140,11 @@ function AuthProviderInner({
     [authClient]
   );
 
+  // Publishing re-keys the tRPC provider, which remounts this one; a remount that published its
+  // first "loading, signed out" render would flip the key back and loop.
   useEffect(() => {
-    setHasActiveSession(isAuthenticated);
-  }, [isAuthenticated]);
+    if (!isLoading) setHasActiveSession(isAuthenticated);
+  }, [isAuthenticated, isLoading]);
 
   useEffect(() => {
     return registerSessionInvalidationHandler(async (reason) => {
