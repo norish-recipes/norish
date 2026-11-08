@@ -3,6 +3,7 @@ import { QuerySeed } from "@/components/query-seed";
 import { readRequestProfile } from "@/lib/request-profile";
 
 import { DevicePreferencesForVisit } from "@norish/shared-react/reader";
+import { deviceBlocks } from "@norish/shared/contracts/zod/device-preferences";
 
 /**
  * A signed-in reader gets their own Device Preferences, a signed-out one the defaults; a change
@@ -21,12 +22,13 @@ export default async function SharedRecipeLayout({
           client.query(trpc.recipes.getShared.queryOptions({ token })),
           client.query(trpc.recipes.sharePublicConfig.queryOptions({ token })),
         ];
-        const { userId } = await readRequestProfile();
+        const { userId, preferences } = await readRequestProfile();
 
-        return [
-          ...recipe,
-          userId !== null && client.query(trpc.user.getDevicePreferences.queryOptions()),
-        ];
+        if (userId !== null) {
+          client.setQueryData(trpc.user.getDevicePreferences.queryKey(), deviceBlocks(preferences));
+        }
+
+        return recipe;
       }}
     >
       <DevicePreferencesForVisit>

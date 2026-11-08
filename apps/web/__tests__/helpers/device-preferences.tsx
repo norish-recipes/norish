@@ -10,7 +10,10 @@ import type {
 } from "@norish/shared/contracts/zod/device-preferences";
 import { PlatformProvider } from "@norish/shared-react/platform";
 import { DevicePreferencesForVisit } from "@norish/shared-react/reader";
-import { DEVICE_PREFERENCE_DEFAULTS } from "@norish/shared/contracts/zod/device-preferences";
+import {
+  DEVICE_PREFERENCE_DEFAULTS,
+  deviceBlocks,
+} from "@norish/shared/contracts/zod/device-preferences";
 
 import { createTestQueryClient, createTestWrapper } from "../hooks/user/test-utils";
 import { devicePreferencesQueryKey } from "./device-preferences-trpc";
@@ -47,11 +50,10 @@ export function renderWithDevicePreferences(
 ) {
   const Wrapper = createTestWrapper(queryClient);
 
-  queryClient.setQueryData(devicePreferencesQueryKey, {
-    phone: DEVICE_PREFERENCE_DEFAULTS,
-    desktop: DEVICE_PREFERENCE_DEFAULTS,
-    [kind]: { ...DEVICE_PREFERENCE_DEFAULTS, ...values },
-  });
+  queryClient.setQueryData(
+    devicePreferencesQueryKey,
+    deviceBlocks({ [kind]: { ...DEVICE_PREFERENCE_DEFAULTS, ...values } })
+  );
 
   return render(
     <Wrapper>

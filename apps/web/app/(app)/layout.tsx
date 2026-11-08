@@ -7,13 +7,15 @@ import { readReaderToday } from "@/lib/reader-today-server";
 import { readRecipeFilters } from "@/lib/recipe-filters-server";
 import { readRequestProfile } from "@/lib/request-profile";
 
+import { deviceBlocks } from "@norish/shared/contracts/zod/device-preferences";
+
 /**
  * The page gate of the signed-in app. The proxy only checks that a session
  * cookie is present; here the session is read and its account verified, once
  * per request, and a reader without one is sent to sign in and back.
  */
 export default async function AppLayout({ children }: { children: React.ReactNode }) {
-  const { identity, kind } = await readRequestProfile();
+  const { identity, kind, preferences } = await readRequestProfile();
 
   if (!identity) {
     redirect(loginPath((await headers()).get(DESTINATION_HEADER)));
@@ -24,14 +26,18 @@ export default async function AppLayout({ children }: { children: React.ReactNod
   const [readerToday, recipeFilters, queries] = await Promise.all([
     readReaderToday(),
     readRecipeFilters(),
-    readQuerySeed((trpc, client) => [
-      client.query(trpc.permissions.get.queryOptions()),
-      client.query(trpc.households.get.queryOptions()),
-      client.query(trpc.favorites.list.queryOptions()),
-      client.query(trpc.user.getAllergies.queryOptions()),
-      client.query(trpc.user.getDevicePreferences.queryOptions()),
-      client.query(trpc.recipes.getPending.queryOptions()),
-    ]),
+    readQuerySeed((trpc, client) => {
+      // What user.getDevicePreferences answers, from the preferences the gate already read.
+      client.setQueryData(trpc.user.getDevicePreferences.queryKey(), deviceBlocks(preferences));
+
+      return [
+        client.query(trpc.permissions.get.queryOptions()),
+        client.query(trpc.households.get.queryOptions()),
+        client.query(trpc.favorites.list.queryOptions()),
+        client.query(trpc.user.getAllergies.queryOptions()),
+        client.query(trpc.recipes.getPending.queryOptions()),
+      ];
+    }),
   ]);
   const { id, email, name, image, version } = identity;
 

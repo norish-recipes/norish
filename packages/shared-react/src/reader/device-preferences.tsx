@@ -6,26 +6,24 @@ import { createContext, use } from "react";
 import { useMutation, useMutationState, useQuery, useQueryClient } from "@tanstack/react-query";
 
 import type {
+  DeviceBlocks,
   DeviceKind,
   DevicePreferences,
   DevicePreferencesUpdate,
 } from "@norish/shared/contracts/zod/device-preferences";
-import { DEVICE_PREFERENCE_DEFAULTS } from "@norish/shared/contracts/zod/device-preferences";
+import {
+  DEVICE_PREFERENCE_DEFAULTS,
+  deviceBlocks,
+} from "@norish/shared/contracts/zod/device-preferences";
 
 import { shouldPreserveOptimisticUpdate } from "../offline/optimistic-updates";
 import { usePlatform } from "../platform";
 import { useTRPC } from "../trpc";
 
-type Blocks = Record<DeviceKind, DevicePreferences>;
 type Write = { kind: DeviceKind; preferences: DevicePreferencesUpdate };
 
-const DEFAULT_BLOCKS: Blocks = {
-  phone: DEVICE_PREFERENCE_DEFAULTS,
-  desktop: DEVICE_PREFERENCE_DEFAULTS,
-};
-
-function withWrite(blocks: Blocks | undefined, { kind, preferences }: Write): Blocks {
-  const base = blocks ?? DEFAULT_BLOCKS;
+function withWrite(blocks: DeviceBlocks | undefined, { kind, preferences }: Write): DeviceBlocks {
+  const base = blocks ?? deviceBlocks({});
 
   return { ...base, [kind]: { ...base[kind], ...preferences } };
 }
