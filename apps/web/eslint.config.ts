@@ -1,8 +1,33 @@
+import { readdirSync } from "node:fs";
+import path from "node:path";
 import { defineConfig } from "eslint/config";
 
-import { baseConfig, restrictEnvAccess } from "../../tooling/eslint/base.ts";
+import { baseConfig, processEnvImport, restrictEnvAccess } from "../../tooling/eslint/base.ts";
 import { nextjsConfig } from "../../tooling/eslint/nextjs.ts";
 import { reactConfig } from "../../tooling/eslint/react.ts";
+
+const features = readdirSync(path.join(import.meta.dirname, "features"), { withFileTypes: true })
+  .filter((entry) => entry.isDirectory())
+  .map((entry) => entry.name);
+
+// Imports run one way: shared folders, then features, then app/ routes. Outside app/ and
+// its own folder, a feature is imported only through its index.ts.
+const restrictFeatures = (ownFeature?: string) => ({
+  "no-restricted-imports": [
+    "error",
+    {
+      // These options replace restrictEnvAccess's, so its process ban is repeated here.
+      paths: [processEnvImport],
+      patterns: [
+        {
+          group: ["@/features/*/**", ...(ownFeature ? [`!@/features/${ownFeature}/**`] : [])],
+          message:
+            "Import a feature through its index.ts; only app/ routes import from inside one.",
+        },
+      ],
+    },
+  ],
+});
 
 export default defineConfig(
   {
@@ -68,5 +93,10 @@ export default defineConfig(
     // app anyway. The secure-context restriction is about shipped client code.
     files: ["__tests__/e2e/**/*.ts"],
     rules: { "no-restricted-syntax": "off" },
-  }
+  },
+  { ignores: ["app/**"], rules: restrictFeatures() },
+  ...features.map((feature) => ({
+    files: [`features/${feature}/**`],
+    rules: restrictFeatures(feature),
+  }))
 );
