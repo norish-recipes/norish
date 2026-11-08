@@ -18,7 +18,8 @@ vi.mock("@norish/api/parser/parsers/ingredients", () => ({
   parseIngredients: mockParseIngredients,
 }));
 
-vi.mock("@norish/api/parser/parsers/steps", () => ({
+vi.mock("@norish/api/parser/parsers/steps", async (importOriginal) => ({
+  ...(await importOriginal<typeof import("@norish/api/parser/parsers/steps")>()),
   parseSteps: mockParseSteps,
 }));
 
@@ -258,6 +259,35 @@ describe("adaptRecipeScrapersResponse", () => {
       ],
       "metric"
     );
+  });
+
+  it("drops the step counts from a flattened instruction list", async () => {
+    const { adaptRecipeScrapersResponse } = await import("@norish/api/parser/python/adapter");
+
+    await adaptRecipeScrapersResponse(
+      {
+        ok: true,
+        canonicalUrl: null,
+        parser: {
+          mode: "wild",
+          scraper: "SchemaScraper",
+          host: "example.com",
+          siteName: "Example",
+          version: "15.10.0",
+        },
+        recipe: {
+          title: "Example Recipe",
+          ingredients: ["1 egg"],
+          instructions_list: ["Step 1", "Collect items", "Step 2", "Wash berries"],
+        },
+        media: { images: [], videos: [] },
+      },
+      "recipe-1",
+      "https://example.com/recipe",
+      BUILT_IN_CATEGORIES
+    );
+
+    expect(mockParseSteps).toHaveBeenCalledWith(["Collect items", "Wash berries"], "metric");
   });
 
   it("prefers recipe.image over media image candidates", async () => {
