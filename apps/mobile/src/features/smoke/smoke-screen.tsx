@@ -92,7 +92,7 @@ export function SmokeScreen() {
           </View>
         ))}
         <Text className="font-normal">{t("outbox.heading")}</Text>
-        <Text className="font-normal" testID="smoke-outbox-pending">
+        <Text className="font-normal" testID="smoke-outbox">
           {outbox.total === 0
             ? t("outbox.empty")
             : t(isSyncing ? "outbox.syncing" : "outbox.pending", { count: outbox.pending })}

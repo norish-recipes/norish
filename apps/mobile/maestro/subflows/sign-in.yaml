@@ -21,6 +21,10 @@ appId: dev.norish.app
 - hideKeyboard
 - tapOn:
     id: login-submit
+# iOS sometimes offers to save the password in a sheet that hides the app beneath it.
+- tapOn:
+    text: Not Now
+    optional: true
 - extendedWaitUntil:
     visible:
       id: smoke-user

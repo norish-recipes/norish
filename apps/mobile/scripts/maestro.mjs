@@ -12,6 +12,7 @@ const env = {
   NORISH_PASSWORD: "maestro-password-1",
   NORISH_GROCERY: "maestrocheck",
   NORISH_OFFLINE_GROCERY: "maestrooffline",
+  NORISH_REALTIME_GROCERY: "maestrorealtime",
   NORISH_PROXY_PORT: "3998",
   NORISH_PROXY_CONTROL_PORT: "3997",
   NORISH_OLD_SERVER_PORT: "3999",
@@ -23,7 +24,7 @@ let cookie = "";
 async function call(pathname, body) {
   const response = await fetch(`${server}${pathname}`, {
     method: body === undefined ? "GET" : "POST",
-    headers: { "content-type": "application/json", origin: server, cookie },
+    headers: { "content-type": "application/json", origin: new URL(server).origin, cookie },
     body: body === undefined ? undefined : JSON.stringify(body),
   });
 
@@ -38,7 +39,7 @@ const trpc = async (procedure, input) => {
   return data.result.data.json;
 };
 
-const seeded = [env.NORISH_GROCERY, env.NORISH_OFFLINE_GROCERY];
+const seeded = [env.NORISH_GROCERY, env.NORISH_OFFLINE_GROCERY, env.NORISH_REALTIME_GROCERY];
 const ours = async () =>
   (await trpc("groceries.list")).groceries.filter((g) => seeded.includes(g.name));
 
@@ -63,8 +64,12 @@ await trpc(
   seeded.map((name) => ({ name, unit: null, amount: null }))
 );
 
+// The flows find each checkbox by its id, since iOS reports the checked state in its value.
+const idOf = Object.fromEntries((await ours()).map(({ name, id }) => [name, id]));
+
 // The offline flow talks to the server through this proxy and cuts it with `POST /cut`, so the
-// backend is unreachable while the simulator's network stays up.
+// backend is unreachable while the simulator's network stays up. The realtime flow has a grocery
+// checked off as the web does with `POST /check-on-web`.
 const backend = new URL(server);
 const sockets = new Set();
 const proxy = net.createServer((client) => {
@@ -81,8 +86,12 @@ const proxy = net.createServer((client) => {
   client.pipe(upstream).pipe(client);
 });
 const listenProxy = () => proxy.listen(Number(env.NORISH_PROXY_PORT));
-const control = createServer((request, response) => {
-  if (request.url === "/cut") {
+const control = createServer(async (request, response) => {
+  if (request.url === "/check-on-web") {
+    const { id, version } = (await ours()).find((g) => g.name === env.NORISH_REALTIME_GROCERY);
+
+    await trpc("groceries.toggle", { groceries: [{ id, version }], isDone: true });
+  } else if (request.url === "/cut") {
     proxy.close();
     for (const socket of sockets) socket.destroy();
   } else if (request.url === "/restore" && !proxy.listening) {
@@ -110,9 +119,11 @@ await maestro(flows, {
   NORISH_SERVER_URL: env.NORISH_SERVER_URL,
   NORISH_EMAIL: env.NORISH_EMAIL,
   NORISH_PASSWORD: env.NORISH_PASSWORD,
-  NORISH_GROCERY: env.NORISH_GROCERY,
-  NORISH_OFFLINE_GROCERY: env.NORISH_OFFLINE_GROCERY,
-  NORISH_PROXY_URL: `http://localhost:${env.NORISH_PROXY_PORT}`,
+  NORISH_GROCERY_ID: idOf[env.NORISH_GROCERY],
+  NORISH_OFFLINE_GROCERY_ID: idOf[env.NORISH_OFFLINE_GROCERY],
+  NORISH_REALTIME_GROCERY_ID: idOf[env.NORISH_REALTIME_GROCERY],
+  // The proxy forwards bytes, so a base path stays on the address the app is given.
+  NORISH_PROXY_URL: `http://localhost:${env.NORISH_PROXY_PORT}${backend.pathname.replace(/\/+$/, "")}`,
   NORISH_PROXY_CONTROL_URL: `http://localhost:${env.NORISH_PROXY_CONTROL_PORT}`,
 });
 proxy.close();

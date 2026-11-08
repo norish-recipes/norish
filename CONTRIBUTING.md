@@ -275,14 +275,15 @@ The flows in `apps/mobile/maestro/` drive the iOS app against a local dev server
 # 1. Start the dev server
 pnpm dev
 
-# 2. Build the app and install it in the booted simulator
-pnpm --filter @norish/mobile ios
+# 2. Build the app and install it in the booted simulator. A Release build carries its
+#    own bundle, so the flows need no Metro server.
+pnpm --filter @norish/mobile ios --configuration Release
 
 # 3. Run every flow
 pnpm --filter @norish/mobile maestro
 ```
 
-Step 3 signs up `maestro@norish.test` on the dev server and puts two unchecked groceries on its list. It then runs the flows and checks that both groceries are done on the server. The offline flow reaches the server through a proxy on port 3998 that it cuts and restores through port 3997 (`NORISH_PROXY_PORT`, `NORISH_PROXY_CONTROL_PORT`). When registration is closed, create that account by hand, or point the flows at another one with `NORISH_EMAIL`, `NORISH_PASSWORD` and `NORISH_SERVER_URL`.
+Step 3 signs up `maestro@norish.test` on the dev server and puts three unchecked groceries on its list. It then runs the flows and checks that all three are done on the server. The offline flow reaches the server through a proxy on port 3998 that it cuts and restores through port 3997 (`NORISH_PROXY_PORT`, `NORISH_PROXY_CONTROL_PORT`); the realtime flow asks the same port to check a grocery off as the web would. When registration is closed, create that account by hand, or point the flows at another one with `NORISH_EMAIL`, `NORISH_PASSWORD` and `NORISH_SERVER_URL`.
 
 The flows in `apps/mobile/maestro/old-server/` run last, against a stub server that reports an old version. It listens on port 3999, or on `NORISH_OLD_SERVER_PORT`.
 
