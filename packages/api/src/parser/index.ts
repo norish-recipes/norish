@@ -336,8 +336,10 @@ export async function parseRecipeFromUrl(
 
   if (structured.recipe) {
     // Import triage, question 3: an incomplete parse goes through AI extraction, and stays
-    // flagged when it is kept or replaced by a recipe without steps.
-    const incomplete = (await isParseComplete(structured.recipe)) === false;
+    // flagged when it is kept or replaced by a recipe without steps. A parse with nothing to cook
+    // from needs no Decision Model to call it incomplete.
+    const incomplete =
+      hasNothingToCook(structured.recipe) || (await isParseComplete(structured.recipe)) === false;
 
     if (incomplete && aiEnabled) {
       log.info({ url }, "Structured parse judged incomplete, attempting AI extraction");
@@ -416,6 +418,11 @@ export async function parseRecipeFromUrl(
 
   log.error({ url }, "All extraction methods failed");
   throw new Error("Cannot parse recipe.");
+}
+
+/** A page's markup can tag only its title and times, leaving the recipe itself in the page text. */
+function hasNothingToCook(recipe: FullRecipeInsertDTO): boolean {
+  return (recipe.recipeIngredients?.length ?? 0) === 0 && !hasSteps(recipe);
 }
 
 function diagnose(

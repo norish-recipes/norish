@@ -716,6 +716,49 @@ describe("parseRecipeFromUrl import flow", () => {
     expect(mockExtractRecipeWithAI).not.toHaveBeenCalled();
   });
 
+  describe("a structured parse with nothing to cook from", () => {
+    const titleOnly = { ...structuredRecipe, recipeIngredients: [], steps: [] };
+
+    it("goes through AI extraction without asking the Decision Model", async () => {
+      mockAdaptRecipeScrapersResponse.mockResolvedValue(titleOnly);
+
+      const { parseRecipeFromUrl } = await import("@norish/api/parser");
+      const result = await parseRecipeFromUrl("https://example.com/recipe", "recipe-1", {
+        householdCategories: BUILT_IN_CATEGORIES,
+      });
+
+      expect(result).toEqual({ recipe: aiRecipe, usedAI: true });
+      expect(mockIsParseComplete).not.toHaveBeenCalled();
+    });
+
+    it("is kept, flagged, when AI is off", async () => {
+      mockAdaptRecipeScrapersResponse.mockResolvedValue(titleOnly);
+      mockIsAIEnabled.mockResolvedValue(false);
+
+      const { parseRecipeFromUrl } = await import("@norish/api/parser");
+      const result = await parseRecipeFromUrl("https://example.com/recipe", "recipe-1", {
+        householdCategories: BUILT_IN_CATEGORIES,
+      });
+
+      expect(result).toEqual({ recipe: titleOnly, usedAI: false, incomplete: true });
+      expect(mockExtractRecipeWithAI).not.toHaveBeenCalled();
+    });
+
+    it("does not include a parse that has ingredients but no steps", async () => {
+      const stepless = { ...structuredRecipe, steps: [] };
+
+      mockAdaptRecipeScrapersResponse.mockResolvedValue(stepless);
+
+      const { parseRecipeFromUrl } = await import("@norish/api/parser");
+      const result = await parseRecipeFromUrl("https://example.com/recipe", "recipe-1", {
+        householdCategories: BUILT_IN_CATEGORIES,
+      });
+
+      expect(result).toEqual({ recipe: stepless, usedAI: false });
+      expect(mockExtractRecipeWithAI).not.toHaveBeenCalled();
+    });
+  });
+
   describe("import triage with a Decision Model", () => {
     const notARecipe = {
       ok: false,
