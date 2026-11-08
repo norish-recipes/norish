@@ -716,6 +716,51 @@ describe("parseRecipeFromUrl import flow", () => {
     expect(mockExtractRecipeWithAI).not.toHaveBeenCalled();
   });
 
+  describe("notes from the page's recipe card", () => {
+    const withNotes = `<html><body>
+      <div class="wprm-recipe-notes"><span>Use a sturdy potato.</span></div>
+    </body></html>`;
+
+    beforeEach(() => {
+      mockFetchRenderedPage.mockResolvedValue(withNotes);
+    });
+
+    it("fills them in on a structured parse", async () => {
+      const { parseRecipeFromUrl } = await import("@norish/api/parser");
+      const result = await parseRecipeFromUrl("https://example.com/recipe", "recipe-1", {
+        householdCategories: BUILT_IN_CATEGORIES,
+      });
+
+      expect(result.recipe).toMatchObject({
+        name: "Structured Recipe",
+        notes: "Use a sturdy potato.",
+      });
+    });
+
+    it("fills them in when AI extraction found none", async () => {
+      mockShouldAlwaysUseAI.mockResolvedValue(true);
+
+      const { parseRecipeFromUrl } = await import("@norish/api/parser");
+      const result = await parseRecipeFromUrl("https://example.com/recipe", "recipe-1", {
+        householdCategories: BUILT_IN_CATEGORIES,
+      });
+
+      expect(result.recipe).toMatchObject({ name: "AI Recipe", notes: "Use a sturdy potato." });
+    });
+
+    it("keeps the notes AI extraction found", async () => {
+      mockShouldAlwaysUseAI.mockResolvedValue(true);
+      mockExtractRecipeWithAI.mockResolvedValue({ ...aiRecipe, notes: "From the model." });
+
+      const { parseRecipeFromUrl } = await import("@norish/api/parser");
+      const result = await parseRecipeFromUrl("https://example.com/recipe", "recipe-1", {
+        householdCategories: BUILT_IN_CATEGORIES,
+      });
+
+      expect(result.recipe.notes).toBe("From the model.");
+    });
+  });
+
   describe("import triage with a Decision Model", () => {
     const notARecipe = {
       ok: false,
