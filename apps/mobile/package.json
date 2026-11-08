@@ -64,6 +64,7 @@
     "@types/react": "catalog:",
     "eslint": "catalog:",
     "react-native-svg-transformer": "^1.5.3",
+    "tailwindcss": "catalog:",
     "typescript": "catalog:",
     "vitest": "catalog:"
   },
