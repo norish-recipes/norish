@@ -31,6 +31,10 @@ Set them up under **Settings => Admin => Page renderers**.
   `http://byparr:8191/v1`. Each page it reads starts a new browser, which takes
   a few seconds.
 
+A URL import reads a browser's page once the recipe has arrived, waiting up to
+15 seconds for pages that load it with JavaScript. A page that never shows a
+recipe is read after that wait.
+
 Enabling the Chromium browser or solver tests its endpoint. **Test** repeats
 the check: a connection to the browser, or a request through the solver to
 `https://example.com`.
