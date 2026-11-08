@@ -50,13 +50,8 @@ type SetDevicePreference<V> = (next: V | ((prev: V) => V)) => void;
 export type DevicePreferenceState<V> = readonly [V, SetDevicePreference<V>];
 
 /**
- * One of the reader's Device Preferences for the platform's Device Kind, and its setter, shaped
- * like `useState`. The read selects that one choice, so changing another never re-renders it.
- *
- * A change shows at once, lands on `user.getDevicePreferences` and is written one at a time
- * (`scope`), through the Outbox while Offline. A refused write is put back by reading the query
- * again once the last queued write settles. Many leaf components read a preference, so a mount
- * never refetches: the seed, the Warm Set and the writes keep the query current.
+ * One Device Preference for the platform's Device Kind and its setter, like `useState`. The read
+ * selects that one choice; a change is optimistic and written through the Outbox while Offline.
  */
 export function useDevicePreference<K extends keyof DevicePreferences>(
   key: K
@@ -72,6 +67,7 @@ export function useDevicePreference<K extends keyof DevicePreferences>(
     ...trpc.user.getDevicePreferences.queryOptions(),
     select: (blocks) => blocks[kind][key],
     enabled: !forVisit,
+    // Leaf components read it on every row: the seed, the Warm Set and the writes keep it current.
     refetchOnMount: false,
   });
   // A write still on its way stays over any read that lands before it (the Warm Set's, a focus).
@@ -88,7 +84,7 @@ export function useDevicePreference<K extends keyof DevicePreferences>(
     select: (mutation: Mutation<unknown, unknown, Write>) =>
       mutation.state.variables?.preferences[key] as DevicePreferences[K],
   });
-  const value = unsettled.length > 0 ? unsettled[unsettled.length - 1]! : stored;
+  const value = unsettled.at(-1) ?? stored;
 
   const { mutate } = useMutation({
     ...trpc.user.setDevicePreferences.mutationOptions({
@@ -102,9 +98,9 @@ export function useDevicePreference<K extends keyof DevicePreferences>(
       onSuccess: (_result, write) =>
         queryClient.setQueryData(queryKey, (blocks) => withWrite(blocks, write)),
       onSettled: (_result, error) => {
+        // Queued in the Outbox: keep the change. Otherwise read again once the last write settles,
+        // which also puts a refused one back; this write still counts until it returns.
         if (error && shouldPreserveOptimisticUpdate(error)) return;
-        // This write still counts until it returns: one means no other is queued, and reading
-        // after an earlier one would show the server without the changes still queued.
         if (queryClient.isMutating({ mutationKey }) === 1) {
           void queryClient.invalidateQueries({ queryKey });
         }

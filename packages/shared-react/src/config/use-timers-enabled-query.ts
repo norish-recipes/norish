@@ -3,11 +3,7 @@ import { useQuery } from "@tanstack/react-query";
 import { useDevicePreference } from "../reader";
 import { useTRPC } from "../trpc";
 
-/**
- * Whether recipe timers are on: the deployment allows them and the reader has
- * not hidden them. The reader's layer reads the seeded Hidden Items, so it is
- * right from the first frame.
- */
+/** Recipe timers are on when the deployment allows them and the reader has not hidden them. */
 export function useTimersEnabledQuery() {
   const trpc = useTRPC();
   const [hidden] = useDevicePreference("hiddenItems");

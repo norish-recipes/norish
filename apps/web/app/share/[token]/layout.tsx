@@ -5,11 +5,8 @@ import { readRequestProfile } from "@/lib/request-profile";
 import { DevicePreferencesForVisit } from "@norish/shared-react/reader";
 
 /**
- * A shared recipe is often read signed-out. A signed-in reader gets their own
- * Device Preferences for this kind, so a reader who hid Ingredient Icons is
- * shown none here either; a signed-out reader gets the defaults. A change,
- * such as the fractions or decimals switch, lasts only for the visit. The
- * lines carry their icons' addresses, so the icons' provider here reads nothing.
+ * A signed-in reader gets their own Device Preferences, a signed-out one the defaults; a change
+ * lasts for the visit. The lines carry their icons' addresses, so the icons' provider reads nothing.
  */
 export default async function SharedRecipeLayout({
   children,
