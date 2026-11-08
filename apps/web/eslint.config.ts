@@ -1,5 +1,6 @@
 import { readdirSync } from "node:fs";
 import path from "node:path";
+import type { Linter } from "eslint";
 import { defineConfig } from "eslint/config";
 
 import { baseConfig, processEnvImport, restrictEnvAccess } from "../../tooling/eslint/base.ts";
@@ -12,7 +13,7 @@ const features = readdirSync(path.join(import.meta.dirname, "features"), { withF
 
 // Imports run one way: shared folders, then features, then app/ routes. Outside app/ and
 // its own folder, a feature is imported only through its index.ts.
-const restrictFeatures = (ownFeature?: string) => ({
+const restrictFeatures = (ownFeature?: string): Linter.RulesRecord => ({
   "no-restricted-imports": [
     "error",
     {
