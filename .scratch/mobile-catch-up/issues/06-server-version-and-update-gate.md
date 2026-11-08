@@ -23,3 +23,4 @@
   - The comparison reuses `isUpdateAvailable` from `@norish/shared/lib/version`. Per the spec it has no unit test of its own.
   - The update screen is pushed, not replaced, so the header's back button returns to the server-address step. The address is not saved.
 - 2026-11-08 — `old-server/update-server.yaml` passes in all 13 full runs on Xcode 27.2.
+- 2026-11-08 — Correction to the comment above: `server-version.test.ts` does unit-test the comparison (added in 5fde14401 with the foreign-server check). It stays; the Maestro flow covers the screen. The gate runs only at the server-address step, so an app updated past a saved server's version is not stopped until the address is entered again. The spec's Implementation Decisions ask for exactly this; re-checking a saved server is a follow-up.

@@ -18,3 +18,4 @@
 - [x] The web offline E2E project passes unchanged.
 - [x] CONTEXT.md's Connectivity & Offline terms say "a client" instead of "the web client".
 - [x] ADR-0001 is amended to say the engine is shared and storage is per client. No new ADR.
+- 2026-11-08 — Validation note on box 1: `createOfflineEngine` takes the storage adapter and returns the outbox link, persister and status actions, but the replay transport goes to `createRecovery()` and connectivity comes from `ConnectivityProvider`, not from the engine's return value. Same behaviour, different seams than the box words. The barrel now exports only what a client imports, and `useCacheOwner` replaced four copies of the owner subscription.
