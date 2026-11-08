@@ -19,13 +19,6 @@ const turboRecommendedRules =
     }
   ).configs?.recommended?.rules ?? {};
 
-// Exported so a config that sets its own no-restricted-imports options keeps this ban.
-export const processEnvImport = {
-  name: "process",
-  importNames: ["env"],
-  message: "Use `import { env } from '~/env'` instead to ensure validated types.",
-};
-
 export const restrictEnvAccess = defineConfig(
   { ignores: ["**/env.ts"] },
   {
@@ -39,7 +32,14 @@ export const restrictEnvAccess = defineConfig(
           message: "Use `import { env } from '~/env'` instead to ensure validated types.",
         },
       ],
-      "no-restricted-imports": ["warn", processEnvImport],
+      "no-restricted-imports": [
+        "warn",
+        {
+          name: "process",
+          importNames: ["env"],
+          message: "Use `import { env } from '~/env'` instead to ensure validated types.",
+        },
+      ],
     },
   }
 );

@@ -135,7 +135,7 @@ Web and mobile use the same layout, and logic both apps need is written once in 
 - Shared lint, format, and TypeScript settings are published as workspace packages under `tooling/`.
 - Workspaces should compose from these packages instead of creating root-level config files.
 - Current shared packages:
-  - `@norish/eslint-config` (`tooling/eslint`) with `base`, `react`, and `nextjs` exports
+  - `@norish/eslint-config` (`tooling/eslint`) with `base`, `react`, `nextjs`, and `features` exports
   - `@norish/prettier-config` (`tooling/prettier`)
   - `@norish/tsconfig` (`tooling/typescript`) with `base.json` and `compiled-package.json`
   - `@norish/tailwind-config` (`tooling/tailwind`) with `theme` and `postcss-config` exports

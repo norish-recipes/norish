@@ -1,34 +1,32 @@
-import { readdirSync } from "node:fs";
-import path from "node:path";
-import type { Linter } from "eslint";
 import { defineConfig } from "eslint/config";
 
-import { baseConfig, processEnvImport, restrictEnvAccess } from "../../tooling/eslint/base.ts";
+import { baseConfig, restrictEnvAccess } from "../../tooling/eslint/base.ts";
+import { restrictFeatures } from "../../tooling/eslint/features.ts";
 import { nextjsConfig } from "../../tooling/eslint/nextjs.ts";
 import { reactConfig } from "../../tooling/eslint/react.ts";
 
-const features = readdirSync(path.join(import.meta.dirname, "features"), { withFileTypes: true })
-  .filter((entry) => entry.isDirectory())
-  .map((entry) => entry.name);
-
-// Imports run one way: shared folders, then features, then app/ routes. Outside app/ and
-// its own folder, a feature is imported only through its index.ts.
-const restrictFeatures = (ownFeature?: string): Linter.RulesRecord => ({
-  "no-restricted-imports": [
-    "error",
-    {
-      // These options replace restrictEnvAccess's, so its process ban is repeated here.
-      paths: [processEnvImport],
-      patterns: [
-        {
-          group: ["@/features/*/**", ...(ownFeature ? [`!@/features/${ownFeature}/**`] : [])],
-          message:
-            "Import a feature through its index.ts; only app/ routes import from inside one.",
-        },
-      ],
-    },
-  ],
-});
+// Next's app/ file conventions: the files that render or handle a route.
+const nextRouteFiles = [
+  "page",
+  "layout",
+  "template",
+  "loading",
+  "error",
+  "global-error",
+  "not-found",
+  "global-not-found",
+  "forbidden",
+  "unauthorized",
+  "default",
+  "route",
+  "icon",
+  "apple-icon",
+  "opengraph-image",
+  "twitter-image",
+  "sitemap",
+  "robots",
+  "manifest",
+];
 
 export default defineConfig(
   {
@@ -99,9 +97,9 @@ export default defineConfig(
     files: ["__tests__/e2e/**/*.ts"],
     rules: { "no-restricted-syntax": "off" },
   },
-  { ignores: ["app/**"], rules: restrictFeatures() },
-  ...features.map((feature) => ({
-    files: [`features/${feature}/**`],
-    rules: restrictFeatures(feature),
-  }))
+  restrictFeatures(import.meta.dirname, {
+    featuresDir: "features",
+    appDir: "app",
+    routeFiles: [`app/**/{${nextRouteFiles.join(",")}}.{js,jsx,ts,tsx}`],
+  })
 );
