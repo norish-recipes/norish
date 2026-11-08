@@ -1,17 +1,11 @@
 import type { ReactNode } from "react";
 import { renderHook } from "@testing-library/react";
-import { describe, expect, it, vi } from "vitest";
+import { describe, expect, it } from "vitest";
 
-import type { PlatformAdapter } from "@norish/shared-react/platform";
 import { PlatformProvider, usePlatform } from "@norish/shared-react/platform";
+import { fakePlatformAdapter } from "@norish/shared-react/platform/testing";
 
-const adapter: PlatformAdapter = {
-  toast: { show: vi.fn(), translate: (id) => id },
-  navigation: { toHome: vi.fn(), toRecipe: vi.fn() },
-  showError: vi.fn(),
-  storage: { getItem: () => null, setItem: vi.fn(), removeItem: vi.fn() },
-  deviceKind: "phone",
-};
+const adapter = fakePlatformAdapter();
 
 describe("the platform adapter", () => {
   it("is what the app mounted", () => {

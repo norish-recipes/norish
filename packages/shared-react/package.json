@@ -17,6 +17,7 @@
     "./contexts": "./src/contexts/index.ts",
     "./trpc": "./src/trpc/index.ts",
     "./platform": "./src/platform/index.ts",
+    "./platform/testing": "./src/platform/testing.ts",
     "./config": "./src/config/index.ts",
     "./reader": "./src/reader/index.ts",
     "./realtime": "./src/realtime/index.ts",

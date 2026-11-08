@@ -7,13 +7,13 @@ import { observable } from "@trpc/server/observable";
 import { createTRPCOptionsProxy } from "@trpc/tanstack-react-query";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 
-import type { PlatformAdapter } from "@norish/shared-react/platform";
 import type {
   DeviceKind,
   DevicePreferences,
 } from "@norish/shared/contracts/zod/device-preferences";
 import type { AppRouter } from "@norish/trpc/client";
 import { PlatformProvider } from "@norish/shared-react/platform";
+import { fakePlatformAdapter } from "@norish/shared-react/platform/testing";
 import { DevicePreferencesForVisit, useDevicePreference } from "@norish/shared-react/reader";
 import { DEVICE_PREFERENCE_DEFAULTS } from "@norish/shared/contracts/zod/device-preferences";
 
@@ -75,16 +75,6 @@ function cached(): Blocks | undefined {
   return queryClient.getQueryData(trpc.user.getDevicePreferences.queryKey());
 }
 
-function adapter(deviceKind: DeviceKind): PlatformAdapter {
-  return {
-    toast: { show: vi.fn(), translate: (id) => id },
-    navigation: { toHome: vi.fn(), toRecipe: vi.fn() },
-    showError: vi.fn(),
-    storage: { getItem: () => null, setItem: vi.fn(), removeItem: vi.fn() },
-    deviceKind,
-  };
-}
-
 let setView!: ReturnType<typeof useDevicePreference<"groceryViewMode">>[1];
 let setGrouped!: ReturnType<typeof useDevicePreference<"groceryGroupSimilar">>[1];
 const renders = { amount: 0 };
@@ -113,7 +103,9 @@ function renderProbe({
 }: { kind?: DeviceKind; children?: ReactNode } = {}) {
   return render(
     <QueryClientProvider client={queryClient}>
-      <PlatformProvider adapter={adapter(kind)}>{children ?? <Probe />}</PlatformProvider>
+      <PlatformProvider adapter={fakePlatformAdapter(kind)}>
+        {children ?? <Probe />}
+      </PlatformProvider>
     </QueryClientProvider>
   );
 }

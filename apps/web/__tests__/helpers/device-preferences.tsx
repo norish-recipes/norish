@@ -1,14 +1,13 @@
 import type { QueryClient } from "@tanstack/react-query";
 import type { ReactNode } from "react";
 import { render } from "@testing-library/react";
-import { vi } from "vitest";
 
-import type { PlatformAdapter } from "@norish/shared-react/platform";
 import type {
   DeviceKind,
   DevicePreferences,
 } from "@norish/shared/contracts/zod/device-preferences";
 import { PlatformProvider } from "@norish/shared-react/platform";
+import { fakePlatformAdapter } from "@norish/shared-react/platform/testing";
 import { DevicePreferencesForVisit } from "@norish/shared-react/reader";
 import {
   DEVICE_PREFERENCE_DEFAULTS,
@@ -19,16 +18,6 @@ import { createTestQueryClient, createTestWrapper } from "../hooks/user/test-uti
 import { devicePreferencesQueryKey } from "./device-preferences-trpc";
 
 export { deviceWrite, devicePreferencesQueryKey } from "./device-preferences-trpc";
-
-function testAdapter(deviceKind: DeviceKind): PlatformAdapter {
-  return {
-    toast: { show: vi.fn(), translate: (id) => id },
-    navigation: { toHome: vi.fn(), toRecipe: vi.fn() },
-    showError: vi.fn(),
-    storage: { getItem: () => null, setItem: vi.fn(), removeItem: vi.fn() },
-    deviceKind,
-  };
-}
 
 /**
  * Render with the reader's Device Preferences seeded as a server pass would, `values` on this
@@ -57,7 +46,7 @@ export function renderWithDevicePreferences(
 
   return render(
     <Wrapper>
-      <PlatformProvider adapter={testAdapter(kind)}>
+      <PlatformProvider adapter={fakePlatformAdapter(kind)}>
         {forVisit ? <DevicePreferencesForVisit>{ui}</DevicePreferencesForVisit> : ui}
       </PlatformProvider>
     </Wrapper>
