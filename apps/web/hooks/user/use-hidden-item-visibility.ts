@@ -1,8 +1,9 @@
 "use client";
 
 import type { HiddenItemVisibility } from "@/lib/hidden-items";
-import { useDevicePreference } from "@/context/device-preferences-context";
 import { hiddenItemVisibility } from "@/lib/hidden-items";
+
+import { useDevicePreference } from "@norish/shared-react/reader";
 
 /**
  * The reader's Hidden Item choices as visibility flags, derived in one place

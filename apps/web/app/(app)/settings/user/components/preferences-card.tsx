@@ -5,7 +5,6 @@ import { useRouter } from "next/navigation";
 import { SettingRow } from "@/app/(app)/settings/components/setting-row";
 import { SettingsCard } from "@/app/(app)/settings/components/settings-card";
 import { InfoHint } from "@/components/shared/info-hint";
-import { useDeviceKind, useDevicePreference } from "@/context/device-preferences-context";
 import { usePermissionsContext } from "@/context/permissions-context";
 import { useLocaleConfigQuery, useTimersEnabledQuery } from "@/hooks/config";
 import { HIDDEN_ITEMS, partitionHiddenItems } from "@/lib/hidden-items";
@@ -13,6 +12,7 @@ import { AdjustmentsHorizontalIcon } from "@heroicons/react/24/outline";
 import { Label, ListBox, Select } from "@heroui/react";
 import { useTranslations } from "next-intl";
 
+import { useDeviceKind, useDevicePreference } from "@norish/shared-react/reader";
 import {
   RECIPE_PAGE_COLORS,
   TODAY_SECTION_VISIBILITIES,

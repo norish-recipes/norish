@@ -2,10 +2,10 @@
 
 import type { ReactNode } from "react";
 import { createContext, use, useMemo } from "react";
-import { useDevicePreference } from "@/context/device-preferences-context";
 import { keepPreviousData, useQueries, useQuery } from "@tanstack/react-query";
 import { useDebounceValue } from "usehooks-ts";
 
+import { useDevicePreference } from "@norish/shared-react/reader";
 import { useTRPC } from "@norish/shared-react/trpc";
 import { addBasePath } from "@norish/shared/lib/base-path";
 

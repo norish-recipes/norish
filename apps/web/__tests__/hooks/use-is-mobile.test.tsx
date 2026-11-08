@@ -9,7 +9,7 @@ import type { DeviceKind } from "@norish/shared/contracts/zod/device-preferences
 
 const device = vi.hoisted(() => ({ kind: "phone" as DeviceKind }));
 
-vi.mock("@/context/device-preferences-context", async () =>
+vi.mock("@norish/shared-react/reader", async () =>
   (await import("../helpers/device-preferences-mock")).mockDevicePreferences(undefined, {
     kind: () => device.kind,
   })

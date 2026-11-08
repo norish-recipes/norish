@@ -1,4 +1,4 @@
-import { act, screen } from "@testing-library/react";
+import { act, screen, waitFor } from "@testing-library/react";
 import { describe, expect, it, vi } from "vitest";
 
 import "@testing-library/jest-dom";
@@ -55,12 +55,12 @@ describe("groceries Device Preferences", () => {
     expect(screen.getByTestId("state")).toHaveTextContent("store:true");
   });
 
-  it("switches the view and grouping at once", () => {
+  it("switches the view and grouping at once", async () => {
     renderGroceries();
 
     act(() => latestUi.setViewMode("recipe"));
     act(() => latestUi.setGroupSimilarIngredients(false));
 
-    expect(screen.getByTestId("state")).toHaveTextContent("recipe:false");
+    await waitFor(() => expect(screen.getByTestId("state")).toHaveTextContent("recipe:false"));
   });
 });

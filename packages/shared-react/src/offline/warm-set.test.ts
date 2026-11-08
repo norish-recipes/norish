@@ -52,7 +52,7 @@ function answers(): Record<string, Answer> {
     "stores.list": () => [],
     "stores.aisleLinks": () => [],
     "pantry.list": () => [],
-    "user.get": () => ({ user: { id: "owner-1", preferences: {} }, apiKeys: [] }),
+    "user.getDevicePreferences": () => ({ phone: { groceryViewMode: "recipe" }, desktop: {} }),
     "calendar.listItems": () => [],
   };
 }
@@ -131,10 +131,10 @@ describe("WarmSet", () => {
       groceries: [{ id: "g1" }],
     });
     expect(queryClient.getQueryData([["stores", "list"], { type: "query" }])).toEqual([]);
-    // The profile, so Offline start-up draws the reader's Device Preferences.
-    expect(queryClient.getQueryData([["user", "get"], { type: "query" }])).toMatchObject({
-      user: { id: "owner-1" },
-    });
+    // The reader's Device Preferences, so Offline start-up draws them.
+    expect(
+      queryClient.getQueryData([["user", "getDevicePreferences"], { type: "query" }])
+    ).toMatchObject({ phone: { groceryViewMode: "recipe" } });
     // Everything warmed is held as long as the offline cache itself.
     for (const query of queryClient.getQueryCache().getAll()) {
       expect(query.gcTime, query.queryHash).toBe(CACHE_MAX_AGE_MS);

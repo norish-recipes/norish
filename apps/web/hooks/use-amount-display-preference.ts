@@ -1,9 +1,9 @@
 "use client";
 
 import { useCallback } from "react";
-import { useDevicePreference } from "@/context/device-preferences-context";
 
 import type { AmountDisplayMode } from "@norish/shared/lib/format-amount";
+import { useDevicePreference } from "@norish/shared-react/reader";
 
 /**
  * The shared hook's interface over the web's Device Preference: every consumer

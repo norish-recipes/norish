@@ -1,11 +1,11 @@
 "use client";
 
 import type { ReactNode } from "react";
-import { useDevicePreference } from "@/context/device-preferences-context";
 import { ListBulletIcon, Squares2X2Icon } from "@heroicons/react/20/solid";
 import { Tabs } from "@heroui/react";
 import { useTranslations } from "next-intl";
 
+import { useDevicePreference } from "@norish/shared-react/reader";
 import { RECIPE_VIEW_MODES } from "@norish/shared/contracts/zod/device-preferences";
 import { cssHeaderIcon, cssHeaderTab } from "@norish/web/config/css-tokens";
 

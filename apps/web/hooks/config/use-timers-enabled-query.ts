@@ -1,7 +1,8 @@
 "use client";
 
 import type { HiddenItem } from "@/lib/hidden-items";
-import { useDevicePreference } from "@/context/device-preferences-context";
+
+import { useDevicePreference } from "@norish/shared-react/reader";
 
 import { sharedConfigHooks } from "./shared-config-hooks";
 

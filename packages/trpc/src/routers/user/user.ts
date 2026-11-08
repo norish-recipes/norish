@@ -69,14 +69,19 @@ function emitMemberProfileUpdated(
 }
 
 /**
- * Get current user settings (user profile + API keys)
+ * Get current user settings (user profile + API keys). The Device Preferences
+ * are left to getDevicePreferences, so the client holds one copy.
  */
 const get = authedProcedure.query(async ({ ctx }) => {
   log.debug({ userId: ctx.user.id }, "Getting user settings");
 
   const freshUser = await getUserById(ctx.user.id);
   const apiKeys = await getApiKeysForUser(ctx.user.id);
-  const preferences = await getUserPreferences(ctx.user.id);
+  const {
+    phone: _phone,
+    desktop: _desktop,
+    ...preferences
+  } = await getUserPreferences(ctx.user.id);
 
   // completed DB reads
 

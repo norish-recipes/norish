@@ -1,9 +1,10 @@
 "use client";
 
-import { useDevicePreference } from "@/context/device-preferences-context";
 import { useHiddenItemVisibility } from "@/hooks/user/use-hidden-item-visibility";
 import { Bars3Icon, ChevronDownIcon, EllipsisVerticalIcon } from "@heroicons/react/16/solid";
 import { Skeleton } from "@heroui/react";
+
+import { useDevicePreference } from "@norish/shared-react/reader";
 
 /**
  * The list before it arrives, in the reader's view and grouping: one card per section,

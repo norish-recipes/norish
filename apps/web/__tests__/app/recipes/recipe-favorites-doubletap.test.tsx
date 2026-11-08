@@ -25,7 +25,7 @@ vi.mock("@/context/user-context", () => ({
   }),
 }));
 
-vi.mock("@/context/device-preferences-context", async () =>
+vi.mock("@norish/shared-react/reader", async () =>
   (await import("../../helpers/device-preferences-mock")).mockDevicePreferences(() => ({
     hiddenItems: userPreferencesState.hidden,
   }))

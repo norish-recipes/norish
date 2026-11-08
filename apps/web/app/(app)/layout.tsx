@@ -5,7 +5,7 @@ import { readQuerySeed } from "@/components/query-seed";
 import { DESTINATION_HEADER, loginPath } from "@/lib/auth/login-redirect";
 import { readReaderToday } from "@/lib/reader-today-server";
 import { readRecipeFilters } from "@/lib/recipe-filters-server";
-import { readDevicePreferencesSeed, readRequestProfile } from "@/lib/request-profile";
+import { readRequestProfile } from "@/lib/request-profile";
 
 /**
  * The page gate of the signed-in app. The proxy only checks that a session
@@ -13,7 +13,7 @@ import { readDevicePreferencesSeed, readRequestProfile } from "@/lib/request-pro
  * per request, and a reader without one is sent to sign in and back.
  */
 export default async function AppLayout({ children }: { children: React.ReactNode }) {
-  const { identity } = await readRequestProfile();
+  const { identity, kind } = await readRequestProfile();
 
   if (!identity) {
     redirect(loginPath((await headers()).get(DESTINATION_HEADER)));
@@ -21,8 +21,7 @@ export default async function AppLayout({ children }: { children: React.ReactNod
 
   // What the providers' first render needs, read once. Not `user.get`: its API-key metadata would
   // sit in every document the worker keeps.
-  const [devicePreferences, readerToday, recipeFilters, queries] = await Promise.all([
-    readDevicePreferencesSeed(),
+  const [readerToday, recipeFilters, queries] = await Promise.all([
     readReaderToday(),
     readRecipeFilters(),
     readQuerySeed((trpc, client) => [
@@ -30,6 +29,7 @@ export default async function AppLayout({ children }: { children: React.ReactNod
       client.query(trpc.households.get.queryOptions()),
       client.query(trpc.favorites.list.queryOptions()),
       client.query(trpc.user.getAllergies.queryOptions()),
+      client.query(trpc.user.getDevicePreferences.queryOptions()),
       client.query(trpc.recipes.getPending.queryOptions()),
     ]),
   ]);
@@ -38,7 +38,7 @@ export default async function AppLayout({ children }: { children: React.ReactNod
   return (
     <AppShell
       seed={{
-        devicePreferences,
+        deviceKind: kind,
         reader: { id, email, name, image, version },
         readerToday,
         recipeFilters,

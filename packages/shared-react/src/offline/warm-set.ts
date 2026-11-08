@@ -227,8 +227,8 @@ async function warmLists(
     // What the household has at home; without it an offline recipe adds every
     // staple to the list.
     queryClient.query(withWarmGcTime(trpc.pantry.list.queryOptions())),
-    // The profile; it carries the reader's Device Preferences for Offline start-up.
-    queryClient.query(withWarmGcTime(trpc.user.get.queryOptions())),
+    // The reader's Device Preferences, so Offline start-up draws them.
+    queryClient.query(withWarmGcTime(trpc.user.getDevicePreferences.queryOptions())),
     ...calendarRanges.map((range) =>
       queryClient.query(withWarmGcTime(trpc.calendar.listItems.queryOptions(range)))
     ),

@@ -3,8 +3,9 @@ import { beforeEach, describe, expect, it, vi } from "vitest";
 
 import "@testing-library/jest-dom";
 
-import { useDevicePreference } from "@/context/device-preferences-context";
 import { useHiddenItemVisibility } from "@/hooks/user/use-hidden-item-visibility";
+
+import { useDevicePreference } from "@norish/shared-react/reader";
 
 import { renderWithDevicePreferences, deviceWrite as write } from "../helpers/device-preferences";
 
@@ -56,7 +57,9 @@ describe("Hidden Items", () => {
 
     act(() => screen.getByRole("button", { name: "hide" }).click());
 
-    expect(screen.getByTestId("hidden")).toHaveTextContent('["conversion","fromANewerVersion"]');
+    await waitFor(() =>
+      expect(screen.getByTestId("hidden")).toHaveTextContent('["conversion","fromANewerVersion"]')
+    );
     await waitFor(() =>
       expect(write).toHaveBeenCalledWith(
         { kind: "phone", preferences: { hiddenItems: ["conversion", "fromANewerVersion"] } },

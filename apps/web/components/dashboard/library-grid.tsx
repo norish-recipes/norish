@@ -11,7 +11,6 @@ import {
   useState,
 } from "react";
 import { usePathname } from "next/navigation";
-import { useDeviceKind } from "@/context/device-preferences-context";
 import { useContainerColumns } from "@/hooks/use-container-columns";
 import { DEVICE_KIND_WINDOW, useViewport } from "@/hooks/use-viewport";
 import { lastScrollTop, rememberedListRows, rememberListRows } from "@/lib/scroll-memory";
@@ -21,6 +20,7 @@ import { useWindowSize } from "usehooks-ts";
 
 import type { RecipeViewMode } from "@norish/shared/contracts/zod/device-preferences";
 import { useHydrated } from "@norish/shared-react/hooks";
+import { useDeviceKind } from "@norish/shared-react/reader";
 
 import RecipeGridSkeleton from "../skeleton/recipe-grid-skeleton";
 

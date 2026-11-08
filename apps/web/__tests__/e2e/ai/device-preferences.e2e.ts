@@ -7,7 +7,7 @@
  */
 import type { Route } from "@playwright/test";
 
-import { clearDevicePreferences, readProfilePreferences } from "../harness/device-preferences";
+import { clearDevicePreferences, readDevicePreferences } from "../harness/device-preferences";
 import { expect, test } from "./fixture";
 
 test.beforeEach(async () => {
@@ -47,7 +47,7 @@ test("quick Hidden Items changes all land, and none drops out while the next is 
 
   await expect
     .poll(async () => {
-      const stored = await readProfilePreferences(aiStack.baseURL, aiStack.ownerCookies);
+      const stored = await readDevicePreferences(aiStack.baseURL, aiStack.ownerCookies);
 
       return [...((stored.desktop as { hiddenItems?: string[] })?.hiddenItems ?? [])].sort((a, b) =>
         a.localeCompare(b)

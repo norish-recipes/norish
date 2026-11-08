@@ -221,7 +221,7 @@ vi.mock("@/lib/ui/action-toast", () => ({ showActionToast: vi.fn() }));
 /** Whether the instance can draw icons. */
 const permissions = vi.hoisted(() => ({ isAIEnabled: true, canDrawImages: false }));
 
-vi.mock("@/context/device-preferences-context", async () =>
+vi.mock("@norish/shared-react/reader", async () =>
   (await import("../../helpers/device-preferences-mock")).mockDevicePreferences(() => ({
     hiddenItems: [],
   }))

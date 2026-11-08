@@ -1,4 +1,4 @@
-import { act, screen } from "@testing-library/react";
+import { act, screen, waitFor } from "@testing-library/react";
 import { describe, expect, it, vi } from "vitest";
 
 import "@testing-library/jest-dom";
@@ -24,33 +24,33 @@ describe("useAmountDisplayPreference", () => {
     expect(screen.getByTestId("mode")).toHaveTextContent("decimal");
   });
 
-  it("toggles between the two formats", () => {
+  it("toggles between the two formats", async () => {
     renderWithDevicePreferences(<Probe />);
 
     expect(screen.getByTestId("mode")).toHaveTextContent("fraction");
 
     act(() => latest.toggleMode());
 
-    expect(screen.getByTestId("mode")).toHaveTextContent("decimal");
+    await waitFor(() => expect(screen.getByTestId("mode")).toHaveTextContent("decimal"));
 
     act(() => latest.toggleMode());
 
-    expect(screen.getByTestId("mode")).toHaveTextContent("fraction");
+    await waitFor(() => expect(screen.getByTestId("mode")).toHaveTextContent("fraction"));
   });
 
-  it("sets an explicit mode", () => {
+  it("sets an explicit mode", async () => {
     renderWithDevicePreferences(<Probe />);
 
     act(() => latest.setMode("decimal"));
 
-    expect(screen.getByTestId("mode")).toHaveTextContent("decimal");
+    await waitFor(() => expect(screen.getByTestId("mode")).toHaveTextContent("decimal"));
   });
 
-  it("lets a signed-out reader of a shared recipe switch for the visit", () => {
-    renderWithDevicePreferences(<Probe />, { seed: { signedIn: false } });
+  it("lets a signed-out reader of a shared recipe switch for the visit", async () => {
+    renderWithDevicePreferences(<Probe />, { forVisit: true });
 
     act(() => latest.toggleMode());
 
-    expect(screen.getByTestId("mode")).toHaveTextContent("decimal");
+    await waitFor(() => expect(screen.getByTestId("mode")).toHaveTextContent("decimal"));
   });
 });

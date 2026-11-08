@@ -15,7 +15,6 @@ import SmartInputHelp from "@/components/shared/smart-input-help";
 import SmartTextInput from "@/components/shared/smart-text-input";
 import TagInput from "@/components/shared/tag-input";
 import EditRecipeSkeleton from "@/components/skeleton/edit-recipe-skeleton";
-import { useDevicePreference } from "@/context/device-preferences-context";
 import { useRecipesContext } from "@/context/recipes-context";
 import { useCategoriesQuery, useUnitsQuery } from "@/hooks/config";
 import { useRecipeId } from "@/hooks/recipes";
@@ -26,6 +25,7 @@ import { useLocale, useTranslations } from "next-intl";
 
 import type { FullRecipeDTO, MeasurementSystem, RecipeCategory } from "@norish/shared/contracts";
 import { useHydrated } from "@norish/shared-react/hooks";
+import { useDevicePreference } from "@norish/shared-react/reader";
 import { resolveCategoryName } from "@norish/shared/lib/categories";
 import { inferSystemUsedFromParsed } from "@norish/shared/lib/determine-recipe-system";
 import { parseIngredientWithDefaults } from "@norish/shared/lib/helpers";

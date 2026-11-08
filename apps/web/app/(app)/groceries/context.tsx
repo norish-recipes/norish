@@ -1,7 +1,6 @@
 "use client";
 
 import { createContext, ReactNode, use, useCallback, useMemo, useState } from "react";
-import { useDevicePreference } from "@/context/device-preferences-context";
 import {
   useGroceriesMutations,
   useGroceriesQuery,
@@ -11,6 +10,7 @@ import {
 import type { GroceryDto } from "@norish/shared/contracts";
 import type { GroceryViewMode } from "@norish/shared/contracts/zod/device-preferences";
 import { createGroceriesContext } from "@norish/shared-react/contexts";
+import { useDevicePreference } from "@norish/shared-react/reader";
 
 // =============================================================================
 // Shared Data Context (from factory)

@@ -18,7 +18,7 @@ vi.mock("next/navigation", () => ({
   }),
 }));
 
-vi.mock("@/context/device-preferences-context", async () =>
+vi.mock("@norish/shared-react/reader", async () =>
   (await import("../../helpers/device-preferences-mock")).mockDevicePreferences(
     () => ({ todaySectionVisibility: visibilityMock }),
     { set: (_key, next) => setVisibilityMock(next) }

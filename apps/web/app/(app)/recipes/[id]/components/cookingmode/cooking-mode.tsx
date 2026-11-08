@@ -4,7 +4,6 @@ import type { PointerEvent as ReactPointerEvent } from "react";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { useWakeLockContext } from "@/app/(app)/recipes/[id]/components/wake-lock-context";
 import { TimerDock } from "@/components/timer-dock";
-import { useDevicePreference } from "@/context/device-preferences-context";
 import { useFloatingDock } from "@/hooks/use-floating-dock";
 import { useIsMobile } from "@/hooks/use-is-mobile";
 import { dishTintStyle } from "@/lib/dish-tint";
@@ -13,6 +12,7 @@ import { Button, Modal } from "@heroui/react";
 import { motion } from "motion/react";
 import { useTranslations } from "next-intl";
 
+import { useDevicePreference } from "@norish/shared-react/reader";
 import { primaryRecipeImage } from "@norish/shared/lib/recipe-media";
 import { cssFloatingDockPill } from "@norish/web/config/css-tokens";
 

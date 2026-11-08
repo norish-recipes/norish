@@ -59,7 +59,7 @@ vi.mock("@tanstack/react-query", () => ({
     data: queryKey[0] === "icons" ? icons : undefined,
   }),
 }));
-vi.mock("@/context/device-preferences-context", async () =>
+vi.mock("@norish/shared-react/reader", async () =>
   (await import("../../helpers/device-preferences-mock")).mockDevicePreferences(() => ({
     hiddenItems: [],
   }))

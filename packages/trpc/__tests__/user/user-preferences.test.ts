@@ -14,7 +14,7 @@ const mockDb = vi.hoisted(() => ({
 }));
 
 vi.mock("@norish/db", () => ({
-  getApiKeysForUser: vi.fn(),
+  getApiKeysForUser: vi.fn(async () => []),
   getUserById: mockDb.getUserById,
   getUserPreferences: mockDb.getUserPreferences,
   updateUserPreferences: mockDb.updateUserPreferences,
@@ -78,6 +78,14 @@ describe("user preference procedures", () => {
     mockDb.getUserById.mockResolvedValue({ id: "user-1", version: 4 });
     mockDb.updateUserPreferences.mockResolvedValue({ stale: false });
     mockDb.setUserDevicePreferences.mockResolvedValue(undefined);
+  });
+
+  describe("get", () => {
+    it("carries the person's choices and leaves the Device Preferences to their own query", async () => {
+      const result = await createCaller().get();
+
+      expect(result.user.preferences).toEqual({ locale: "en" });
+    });
   });
 
   describe("getDevicePreferences", () => {

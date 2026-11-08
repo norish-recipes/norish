@@ -7,7 +7,7 @@
 import type { Page } from "@playwright/test";
 
 import type { OfflineHarness } from "./fixture";
-import { readProfilePreferences, setDevicePreferences } from "../harness/device-preferences";
+import { readDevicePreferences, setDevicePreferences } from "../harness/device-preferences";
 import {
   expect,
   SEEDED_COOKBOOK_ID,
@@ -625,13 +625,10 @@ test("a grocery view changed Offline applies at once, and is on the profile once
   await offline.transition("live");
   await expect.poll(() => readOutbox(page), { timeout: 30_000 }).toHaveLength(0);
   // The suite's browser is a desktop.
-  const preferences = await readProfilePreferences(
-    offline.baseURL,
-    await offline.context.cookies()
-  );
+  const preferences = await readDevicePreferences(offline.baseURL, await offline.context.cookies());
 
   expect(preferences.desktop).toMatchObject({ groceryViewMode: "recipe" });
-  expect(preferences.phone).toBeUndefined();
+  expect(preferences.phone).toMatchObject({ groceryViewMode: "store" });
 });
 
 test("a page the service worker cached before the change settles on the profile's view", async () => {

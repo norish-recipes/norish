@@ -1,9 +1,9 @@
 "use client";
 
 import type { ReactNode } from "react";
-import { useDevicePreference } from "@/context/device-preferences-context";
 import { dishTintStyle } from "@/lib/dish-tint";
 
+import { useDevicePreference } from "@norish/shared-react/reader";
 import { APP_PAGE_COLUMN_CLASS } from "@norish/web/config/css-tokens";
 
 /**

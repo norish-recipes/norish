@@ -13,7 +13,7 @@ const mocks = vi.hoisted(() => ({
 
 vi.mock("@/hooks/use-is-mobile", () => ({ useIsMobile: () => true }));
 vi.mock("@/hooks/auto-hide", () => ({ useAutoHide: () => ({ isVisible: true }) }));
-vi.mock("@/context/device-preferences-context", async () =>
+vi.mock("@norish/shared-react/reader", async () =>
   (await import("../../helpers/device-preferences-mock")).mockDevicePreferences(() => ({
     recipePageColor: mocks.recipePageColor,
   }))

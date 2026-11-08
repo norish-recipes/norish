@@ -1,7 +1,8 @@
 "use client";
 
 import { CalendarContextProvider } from "@/app/(app)/calendar/context";
-import { useDevicePreference } from "@/context/device-preferences-context";
+
+import { useDevicePreference } from "@norish/shared-react/reader";
 
 import TodaysMealsContent from "./todays-meals-content";
 

@@ -1,43 +1,63 @@
-import type { DevicePreferencesSeed } from "@/context/device-preferences-context";
 import type { QueryClient } from "@tanstack/react-query";
 import type { ReactNode } from "react";
-import { DevicePreferencesProvider } from "@/context/device-preferences-context";
 import { render } from "@testing-library/react";
+import { vi } from "vitest";
 
-import type { DevicePreferences } from "@norish/shared/contracts/zod/device-preferences";
+import type { PlatformAdapter } from "@norish/shared-react/platform";
+import type {
+  DeviceKind,
+  DevicePreferences,
+} from "@norish/shared/contracts/zod/device-preferences";
+import { PlatformProvider } from "@norish/shared-react/platform";
+import { DevicePreferencesForVisit } from "@norish/shared-react/reader";
 import { DEVICE_PREFERENCE_DEFAULTS } from "@norish/shared/contracts/zod/device-preferences";
 
 import { createTestQueryClient, createTestWrapper } from "../hooks/user/test-utils";
+import { devicePreferencesQueryKey } from "./device-preferences-trpc";
 
-export { deviceWrite, userQueryKey } from "./device-preferences-trpc";
+export { deviceWrite, devicePreferencesQueryKey } from "./device-preferences-trpc";
 
-/** Render under the provider, seeded as a server pass would. */
+function testAdapter(deviceKind: DeviceKind): PlatformAdapter {
+  return {
+    toast: { show: vi.fn(), translate: (id) => id },
+    navigation: { toHome: vi.fn(), toRecipe: vi.fn() },
+    showError: vi.fn(),
+    storage: { getItem: () => null, setItem: vi.fn(), removeItem: vi.fn() },
+    deviceKind,
+  };
+}
+
+/**
+ * Render with the reader's Device Preferences seeded as a server pass would, `values` on this
+ * kind's block; `forVisit` renders a shared recipe's.
+ */
 export function renderWithDevicePreferences(
   ui: ReactNode,
   {
     values = {},
-    seed = {},
+    kind = "phone",
+    forVisit = false,
     queryClient = createTestQueryClient(),
   }: {
     values?: Partial<DevicePreferences>;
-    seed?: Partial<DevicePreferencesSeed> | null;
+    kind?: DeviceKind;
+    forVisit?: boolean;
     queryClient?: QueryClient;
   } = {}
 ) {
   const Wrapper = createTestWrapper(queryClient);
-  const providerSeed: DevicePreferencesSeed | undefined =
-    seed === null
-      ? undefined
-      : {
-          kind: "phone",
-          values: { ...DEVICE_PREFERENCE_DEFAULTS, ...values },
-          signedIn: true,
-          ...seed,
-        };
+
+  queryClient.setQueryData(devicePreferencesQueryKey, {
+    phone: DEVICE_PREFERENCE_DEFAULTS,
+    desktop: DEVICE_PREFERENCE_DEFAULTS,
+    [kind]: { ...DEVICE_PREFERENCE_DEFAULTS, ...values },
+  });
 
   return render(
     <Wrapper>
-      <DevicePreferencesProvider seed={providerSeed}>{ui}</DevicePreferencesProvider>
+      <PlatformProvider adapter={testAdapter(kind)}>
+        {forVisit ? <DevicePreferencesForVisit>{ui}</DevicePreferencesForVisit> : ui}
+      </PlatformProvider>
     </Wrapper>
   );
 }
