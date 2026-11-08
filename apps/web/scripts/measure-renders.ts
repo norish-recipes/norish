@@ -347,6 +347,7 @@ async function resetGroceries(cookies: SessionCookies) {
       : queryTrpc<T>(BASE, cookies, procedure, input);
   const mutate = <T>(procedure: string, input: unknown) =>
     callTrpc<T>(BASE, cookies, procedure, input);
+
   type Listed = {
     groceries: Array<{ id: string; name: string | null; version: number }>;
     recurringGroceries: Array<{ id: string; version: number }>;

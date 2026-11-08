@@ -55,6 +55,10 @@ export default defineConfig(
     ],
   },
   {
+    // baseConfig ignores every workspace's scripts/; the measure scripts here are linted.
+    ignores: ["!scripts/*"],
+  },
+  {
     // The E2E suites are Node/Playwright code that happens to live in a React
     // app, so three rules aimed at the app itself misfire here.
     files: ["__tests__/e2e/**/*.ts"],
