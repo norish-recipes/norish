@@ -7,7 +7,6 @@ import { GestureHandlerRootView } from "react-native-gesture-handler";
 import { StorageUnavailableScreen } from "@/features/auth/screens/storage-unavailable-screen";
 import { useBackendBaseUrl } from "@/hooks/use-backend-base-url";
 import { useResolvedColorScheme } from "@/hooks/use-resolved-color-scheme";
-import { useSessionRevalidation } from "@/hooks/use-session-revalidation";
 import { useUserLocaleSync } from "@/hooks/use-user-locale-sync";
 import { AuthProvider, useAuth } from "@/lib/auth/auth-context";
 import { UserProvider } from "@/lib/auth/user-context";
@@ -166,8 +165,6 @@ function DomainProviders({ children }: { children: React.ReactNode }) {
 
 function AuthenticatedProviders({ children }: { children: React.ReactNode }) {
   const { user } = useAuth();
-
-  useSessionRevalidation();
 
   return (
     <UserProvider>
