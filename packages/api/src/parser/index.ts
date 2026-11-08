@@ -1,4 +1,5 @@
 import type { PageSummary } from "@norish/api/parser/page-summary";
+import type { ContentIndicatorsConfig } from "@norish/config/zod/server-config";
 import type { SiteAuthTokenDecryptedDto } from "@norish/shared/contracts/dto/site-auth-tokens";
 import { extractSanitizedBody } from "@norish/api/parser/extraction-sanitizer";
 import { isBotCheck, plainFetch, renderPage } from "@norish/api/parser/fetch";
@@ -279,7 +280,13 @@ async function fetchRecipePage(
     return { html: plain.html, status: plain.status };
   }
 
-  const rendered = await renderPage(url, tokens);
+  const indicators = await getContentIndicators();
+  // A client-rendered page loads as an empty shell, so read it once the recipe has arrived.
+  const rendered = await renderPage(
+    url,
+    tokens,
+    (html) => !isBotCheck(html) && holdsRecipe(html, extractSanitizedBody(html), indicators)
+  );
   // The solver reports no status, so the plain fetch's refusal stays readable.
   const status = rendered.status ?? plain.status;
 
@@ -432,12 +439,19 @@ function diagnose(
  * opinion. The keyword list keeps its meaning and its admin editor.
  */
 export async function isPageLikelyRecipe(html: string): Promise<boolean> {
-  const lowered = html.toLowerCase();
-  const indicators = await getContentIndicators();
+  return holdsRecipe(html, html, await getContentIndicators());
+}
 
-  const hasSchema = indicators.schemaIndicators.some((i) => lowered.includes(i.toLowerCase()));
+/**
+ * The rule itself: recipe markup in the HTML, or two indicators in `text`. A renderer's wait passes
+ * the sanitized text, because a client-rendered shell's scripts name enough indicators to pass.
+ */
+function holdsRecipe(html: string, text: string, indicators: ContentIndicatorsConfig): boolean {
+  const loweredHtml = html.toLowerCase();
+  const loweredText = text.toLowerCase();
+  const hasSchema = indicators.schemaIndicators.some((i) => loweredHtml.includes(i.toLowerCase()));
   const contentHits = indicators.contentIndicators.filter((i) =>
-    lowered.includes(i.toLowerCase())
+    loweredText.includes(i.toLowerCase())
   ).length;
 
   return hasSchema || contentHits >= 2;
