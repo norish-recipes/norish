@@ -47,18 +47,6 @@ describe("IndexedDB storage adapter", () => {
     expect(await store.size()).toBe(0);
   });
 
-  it("stores inputs by structured clone, not serialization (a Date survives as a Date)", async () => {
-    const store = createOutboxStore(createIdbStorage(new IDBFactory()).outbox);
-    const when = new Date("2026-07-21T08:00:00.000Z");
-
-    await store.enqueue(entry({ input: { when } }));
-    const [reloaded] = await store.forOwner("u1");
-    const restored = (reloaded!.input as { when: Date }).when;
-
-    expect(restored).toBeInstanceOf(Date);
-    expect(restored.toISOString()).toBe(when.toISOString());
-  });
-
   it("keeps the last owner under the key earlier releases wrote", () => {
     const storage = createIdbStorage(new IDBFactory());
 

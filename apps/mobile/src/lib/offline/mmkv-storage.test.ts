@@ -150,18 +150,6 @@ describe("MMKV storage adapter", () => {
     expect(upload.uri.startsWith("file:///new/")).toBe(true);
   });
 
-  it("stores inputs faithfully (a Date survives as a Date)", async () => {
-    const store = createOutboxStore(
-      createMmkvStorage({ mmkv: fakeMmkv(), files: fakeFiles() }).outbox
-    );
-    const when = new Date("2026-07-21T08:00:00.000Z");
-
-    await store.enqueue(entry({ input: { when } }));
-    const [reloaded] = await store.forOwner("u1");
-
-    expect((reloaded!.input as { when: Date }).when).toEqual(when);
-  });
-
   it("rejects the enqueue when MMKV cannot write, leaving no entry or copy", async () => {
     const mmkv = fakeMmkv();
     const failing: MmkvLike = {

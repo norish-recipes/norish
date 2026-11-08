@@ -66,6 +66,26 @@ export function describeOfflineStorageContract(name: string, harness: StorageCon
         expect((await store.loadAll()).map((e) => e.id)).toEqual(["a", "c"]);
       });
 
+      it("keeps call order for enqueues made at once", async () => {
+        const store = await outboxOf();
+
+        await Promise.all(["a", "b", "c"].map((id) => store.enqueue(entry({ id }))));
+
+        expect((await store.loadAll()).map((e) => e.id)).toEqual(["a", "b", "c"]);
+      });
+
+      it("stores an input faithfully (a Date survives as a Date)", async () => {
+        const store = await outboxOf();
+        const when = new Date("2026-07-21T08:00:00.000Z");
+
+        await store.enqueue(entry({ input: { when } }));
+        const [reloaded] = await store.forOwner("u1");
+        const restored = (reloaded!.input as { when: Date }).when;
+
+        expect(restored).toBeInstanceOf(Date);
+        expect(restored.toISOString()).toBe(when.toISOString());
+      });
+
       it("keeps an entry's place when it is updated", async () => {
         const store = await outboxOf();
         const a = await store.enqueue(entry({ id: "a" }));
