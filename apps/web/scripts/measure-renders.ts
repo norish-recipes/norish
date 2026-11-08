@@ -10,6 +10,7 @@ import { signIn } from "../__tests__/e2e/harness/auth";
 import { callTrpc, queryTrpc } from "../__tests__/e2e/harness/trpc";
 import { account, accountOptions, newPhone } from "./api";
 import { inOrder } from "./delivery";
+import { joinTimers } from "./join-timers";
 
 const {
   values: flags,
@@ -24,6 +25,8 @@ const RESPONSE_DELAY_MS = 500;
 const MESSAGE_DELAY_MS = 200;
 /** The least time between two responses or messages reaching the page. */
 const DELIVERY_GAP_MS = 150;
+/** Page timers of one delay set this close together fire in one task. */
+const TIMER_JOIN_MS = 16;
 
 type Counted = { name: string; mounts: number; updates: number; why: Record<string, number> };
 type Taken = { commits: number; components: Counted[] };
@@ -166,6 +169,8 @@ async function openTab(browser: Browser, counted: boolean): Promise<Tab> {
 
   if (counted) {
     await context.addInitScript(countRenders);
+    // Two debounces set a few milliseconds apart otherwise fire in one commit or two, by chance.
+    await context.addInitScript(joinTimers, TIMER_JOIN_MS);
     // tRPC responses and socket messages reach the page one at a time, in the order they were
     // asked for or sent, so every run sees them in the same order.
     const deliver = inOrder(DELIVERY_GAP_MS, pending);
