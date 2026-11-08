@@ -11,4 +11,4 @@
 - [ ] Mobile's `src/hooks/groceries` binding is deleted and the smoke screen imports from `@norish/shared-react/groceries`.
 - [ ] No shared-react groceries file imports another shared-react feature.
 - [ ] The `store-prices-pending`, `store-aisles` and `pantry` suites sit next to the code and run against the plain hooks.
-- [ ] The groceries, pantry, aisles, prices and versions E2E specs pass unchanged, checked with repeated runs.
+- [ ] The groceries E2E set (spec, "Testing Decisions") passes unchanged, checked with repeated runs; `offline` and `realtime` matter most here, since the subscription and the optimistic writes move.

@@ -16,7 +16,7 @@ shared-react reaches both apps through about 16 `create*Hooks({ useTRPC, … })`
 
 Both apps are laid out the same way, and logic a feature shares lives once in shared-react under the same domain name.
 
-- An app's `features/<feature>/` holds that feature's screens, components and platform hooks. Route files compose features; a feature never imports another.
+- An app's `features/<feature>/` holds that feature's screens, components and platform hooks. Route files compose features; a feature never reaches into another and only opens another's panels through that feature's `index.ts`.
 - Server data is read through plain hooks over the Query cache, never copied into a context or a store. Realtime subscriptions mount once in a feature's root.
 - Client state that several components share lives in a zustand store; state one component owns stays in `useState`.
 - shared-react is organised by feature, creates the tRPC context once, and takes platform differences through one adapter. Its features don't import each other either; they import cross-cutting folders.
@@ -29,7 +29,7 @@ Groceries is the pilot, measured before and after. The rest follows in order, an
 2. As a contributor, I want web and mobile to use the same feature names and rules, so that moving between the apps feels the same.
 3. As a contributor building a mobile screen, I want the feature's data, mutations, realtime and client state already in shared-react, so that I only write the UI.
 4. As a contributor, I want to import a shared hook directly, so that I don't have to bind a factory in each app first.
-5. As a contributor, I want lint to stop one feature importing another, so that features stay separable without review catching it.
+5. As a contributor, I want lint to stop one feature reaching into another, so that features stay separable without review catching it.
 6. As a contributor, I want the architecture written down in CONTRIBUTING.md with a line of why per rule, so that I can follow it without reading this spec.
 7. As a new contributor, I want a docs page that shows how the repo is laid out and how data flows from a component to Postgres and back, so that I can find my way before reading code.
 8. As a household member, I want the groceries page to do no more rendering than what changed on screen, so that checking off items stays quick on a phone.
@@ -43,6 +43,8 @@ Groceries is the pilot, measured before and after. The rest follows in order, an
 - Features are named by domain: `library` (dashboard grid, filters, selection), `recipes` (detail, new, edit), `cookbooks`, `groceries` (stores and pantry included), `calendar`, `imports`, `settings`, `auth` and `share`. Most map to one route; a route that shows several, like the dashboard with today's meals, composes them.
 - An app feature holds only the subfolders it needs. Code two or more features use lives in the app's shared `components/`, `hooks/` or `lib/`.
 - Imports run one way: shared folders, then features, then routes. A `no-restricted-imports` override in each app's ESLint config enforces it, as mobile's already does.
+- A feature's `index.ts` exports only the panels other features open: `MiniGroceries`, `MiniCalendar`, `MiniCookbooks`, `MiniRecipes`. A card in the library opens a grocery panel, so this one dependency is real and lint shows it instead of hiding it in a shared folder. Lint blocks `@/features/<x>/**` everywhere outside feature `<x>` except route files, which import screens directly; `@/features/<x>` itself stays importable, as mobile's rule already allows.
+- Pieces several features render that aren't panels go to the shared folders. `GroceryCheckbox` becomes `RoundCheckbox` in `components/`, with `isCheckboxEvent` beside it: the recipe card, a recipe's ingredients and the cookbook picker use it as much as the groceries list does, and only its Store colour is a groceries concern.
 
 ### Web layout
 
@@ -57,7 +59,7 @@ Groceries is the pilot, measured before and after. The rest follows in order, an
 - A context remains only to inject a scope, such as which recipe a page shows, or for compound components (`Panel`, `Carousel`, DnD).
 - zustand holds client state shared across components. Stores are global; one that must start fresh per screen resets on unmount instead of being scoped through a context.
 - A store both apps need lives in `shared-react/<feature>`; a store that is purely platform UI (`mobileSearchOpen`) stays in the app. A persisted store persists through the platform adapter's storage.
-- Device Preferences stay server-seeded on the profile (CONTEXT.md). `useDevicePreference(key)` selects one preference from the profile query, so flipping one re-renders only its readers; setting one is an optimistic mutation. Device Kind is a platform fact and comes from the platform adapter.
+- Device Preferences stay on the profile (CONTEXT.md) and are server data like any other. They get their own `user.getDevicePreferences` query, seeded on a full load next to `user.getAllergies`; `user.get` isn't seeded because its API-key metadata would sit in every document the worker keeps, and it stops carrying preferences so there is one copy. `useDevicePreference(key)` selects one preference, so flipping one re-renders only its readers; setting one is an optimistic mutation, one write at a time, through the Outbox while Offline. Hydration only overwrites with newer data, so a fresh server read beats an older restored copy and a newer local copy wins while Offline, replacing the context's hand-written precedence. Signed out or on a shared recipe there is no server copy, so a change stays in that cache entry for the visit and is never written. Device Kind is a platform fact and comes from the platform adapter.
 
 ### shared-react
 
@@ -83,11 +85,11 @@ The pilot's numbers do not gate the rest: the sharing goal stands on its own. A 
 
 ### Measurement
 
-Measured on groceries before and after the pilot, as absolute numbers:
+Measured on groceries before the groundwork, after it, and after the pilot, as absolute numbers. The first baseline is there because 01 rewrites Device Preferences, which the view-mode action reads, so its effect shows apart from the pilot's:
 
 - Mounts and re-renders per component for each scripted action: check an item, add an item, open the edit panel, switch view mode, and a realtime echo from a second client. Every remaining re-render is traced to a real change on screen.
 - First paint of `/groceries` through `measure-page-loads.ts`; it must not get worse.
-- Route JS of `/groceries` from `next build`.
+- JS downloaded for `/groceries`, which `measure-page-loads.ts` adds up from the page's script responses. Next 16 dropped route sizes from `next build`.
 - Code shape: folders one feature spans, lines per app versus shared-react, binding files deleted, and how many lines mobile would write to get groceries.
 
 The render counter is a committed script next to `measure-page-loads.ts`.
@@ -104,7 +106,7 @@ The render counter is a committed script next to `measure-page-loads.ts`.
 - A good test drives a hook or store through its public interface and asserts what a caller observes: the data returned, what the cache holds after a mutation or a realtime event, what a store holds after an action. Never internal calls.
 - shared-react's existing groceries, stores and pantry suites (`store-prices-pending`, `store-aisles`, `pantry`) move next to the code and run against the plain hooks.
 - Each new zustand store gets a small unit test of its actions.
-- The groceries, pantry, aisles, prices and versions E2E specs run unchanged and must stay green. They are the proof that behaviour didn't move.
+- The groceries E2E set runs unchanged and must stay green, as the proof that behaviour didn't move: `grocery-prices`, `grocery-aisles`, `grocery-versions`, `pantry`, `reorder-and-swipe`, `offline`, `realtime` and `first-paint`, plus `calendar-planning` (it opens Add to Groceries after planning), `pickers-on-phone` (the store-product field), and `library-selection` and `page-transitions`, which navigate to groceries. There is no single groceries spec.
 - Every new test is checked with repeated runs; a test that only passes on re-run is a bug to fix.
 
 ## Out of Scope

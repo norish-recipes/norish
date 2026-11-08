@@ -10,4 +10,4 @@
 - [ ] `storeManagerOpen` lives in the store; toggling it re-renders only what shows it.
 - [ ] Leaving and reopening groceries starts with a closed panel and no grocery being edited.
 - [ ] A unit test next to the store covers its actions and the reset.
-- [ ] The groceries E2E specs pass unchanged.
+- [ ] The groceries E2E set (spec, "Testing Decisions") passes unchanged.
