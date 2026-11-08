@@ -1,4 +1,4 @@
-import { readPersistedSession } from "@/lib/auth/auth-storage";
+import { clearAuthStorage, readPersistedSession } from "@/lib/auth/auth-storage";
 import { storageAdapter } from "@better-auth/expo/client";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 
@@ -257,5 +257,17 @@ describe("readPersistedSession", () => {
     const result = await read();
 
     expect(result).toBeNull();
+  });
+});
+
+describe("clearAuthStorage", () => {
+  it("leaves no session value behind, chunks included", async () => {
+    secureStore.items.clear();
+    await storageAdapter(secureStore).setItemAsync(SESSION_DATA_KEY, "x".repeat(5000));
+    await storageAdapter(secureStore).setItemAsync(COOKIE_KEY, "session-token=abc");
+
+    await clearAuthStorage();
+
+    expect([...secureStore.items.values()].filter(Boolean)).toEqual([]);
   });
 });

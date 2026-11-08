@@ -116,8 +116,11 @@ export async function readPersistedSession(): Promise<PersistedUser | null> {
 }
 
 export async function clearAuthStorage(): Promise<void> {
-  await Promise.all([
-    SecureStore.deleteItemAsync(AUTH_COOKIE_KEY),
-    SecureStore.deleteItemAsync(AUTH_SESSION_DATA_KEY),
-  ]);
+  // The adapter has no delete; writing "" through it empties every chunk, then the key goes.
+  await Promise.all(
+    [AUTH_COOKIE_KEY, AUTH_SESSION_DATA_KEY].map(async (key) => {
+      await authStorage.setItemAsync(key, "");
+      await SecureStore.deleteItemAsync(key);
+    })
+  );
 }
