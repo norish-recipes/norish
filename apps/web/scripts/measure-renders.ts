@@ -4,14 +4,17 @@ import { parseArgs } from "node:util";
 import type { Browser, BrowserContext, Page } from "@playwright/test";
 import { chromium } from "@playwright/test";
 
-import { account, accountOptions, callTrpc, newPhone, signIn } from "./api";
+import type { SessionCookies } from "../__tests__/e2e/harness/auth";
+import { signIn } from "../__tests__/e2e/harness/auth";
+import { callTrpc, queryTrpc } from "../__tests__/e2e/harness/trpc";
+import { account, accountOptions, newPhone } from "./api";
 import { inOrder } from "./delivery";
 
 const {
   values: flags,
   positionals: [scenarioName],
 } = parseArgs({ allowPositionals: true, options: accountOptions("http://localhost:3000") });
-const { base: BASE, email: EMAIL, password: PASSWORD } = account(flags);
+const { base: BASE, ...ACCOUNT } = account(flags);
 /** An action is over once no request is open and React has not committed for this long. */
 const QUIET_MS = 1_500;
 /** How long after its request a tRPC response reaches the page. */
@@ -158,12 +161,7 @@ type Tab = { context: BrowserContext; page: Page; pending: Set<unknown> };
 
 /** A phone signed in with a session of its own, counting renders when `counted`. */
 async function openTab(browser: Browser, counted: boolean): Promise<Tab> {
-  const cookies = await signIn(BASE, EMAIL, PASSWORD);
-  const context = await newPhone(
-    browser,
-    BASE,
-    cookies.map((cookie) => ({ ...cookie, url: BASE }))
-  );
+  const context = await newPhone(browser, BASE, await signIn(BASE, ACCOUNT));
   const pending = new Set<unknown>();
 
   if (counted) {
@@ -350,9 +348,13 @@ async function until<T>(read: () => Promise<T>, done: (value: T) => boolean): Pr
  * Brings the account's list back to the data set through the API: its groceries are replaced,
  * while stores (with their prices and aisles) and recipes are made once and kept.
  */
-async function resetGroceries(cookie: string) {
-  const call = <T>(procedure: string, input?: unknown, mutation = false) =>
-    callTrpc<T>(BASE, cookie, procedure, input, mutation);
+async function resetGroceries(cookies: SessionCookies) {
+  const query = <T>(procedure: string, input?: unknown) =>
+    input === undefined
+      ? callTrpc<T>(BASE, cookies, procedure)
+      : queryTrpc<T>(BASE, cookies, procedure, input);
+  const mutate = <T>(procedure: string, input: unknown) =>
+    callTrpc<T>(BASE, cookies, procedure, input);
   type Listed = {
     groceries: Array<{
       id: string;
@@ -373,29 +375,27 @@ async function resetGroceries(cookie: string) {
       .map((line) => line.name)
       .concat(ADDED)
   );
-  const listed = await call<Listed>("groceries.list");
+  const listed = await query<Listed>("groceries.list");
   const foreign = listed.groceries.find((grocery) => !known.has(grocery.name ?? ""));
 
   if (foreign)
     throw new Error(`"${foreign.name}" is not in the data set: use a measurement account`);
   if (listed.groceries.length > 0) {
-    await call(
-      "groceries.delete",
-      { groceries: listed.groceries.map(({ id, version }) => ({ id, version })) },
-      true
-    );
+    await mutate("groceries.delete", {
+      groceries: listed.groceries.map(({ id, version }) => ({ id, version })),
+    });
   }
   for (const { id, version } of listed.recurringGroceries) {
-    await call("groceries.deleteRecurring", { recurringGroceryId: id, version }, true);
+    await mutate("groceries.deleteRecurring", { recurringGroceryId: id, version });
   }
   // A recurring grocery is deleted after its mutation answers.
   await until(
-    () => call<Listed>("groceries.list"),
+    () => query<Listed>("groceries.list"),
     (left) => left.groceries.length + left.recurringGroceries.length === 0
   );
 
   const stores =
-    await call<Array<{ id: string; name: string; aisles: Array<{ id: string; name: string }> }>>(
+    await query<Array<{ id: string; name: string; aisles: Array<{ id: string; name: string }> }>>(
       "stores.list"
     );
   const made: string[] = [];
@@ -403,11 +403,12 @@ async function resetGroceries(cookie: string) {
   for (const { name, color, aisles } of STORES) {
     if (stores.some((store) => store.name === name)) continue;
     const aisleRows = aisles.map((aisle) => ({ id: randomUUID(), name: aisle }));
-    const id = await call<string>(
-      "stores.create",
-      { id: randomUUID(), name, color, aisles: aisleRows },
-      true
-    );
+    const id = await mutate<string>("stores.create", {
+      id: randomUUID(),
+      name,
+      color,
+      aisles: aisleRows,
+    });
 
     stores.push({ id, name, aisles: aisleRows });
     made.push(name);
@@ -423,31 +424,23 @@ async function resetGroceries(cookie: string) {
     recipeIngredientId,
   });
 
-  await call(
-    "groceries.create",
-    [
-      ...STORES.flatMap((store) => store.lines.map((line) => row(line, store.name))),
-      ...NO_STORE.map((line) => row(line, null)),
-    ],
-    true
-  );
+  await mutate("groceries.create", [
+    ...STORES.flatMap((store) => store.lines.map((line) => row(line, store.name))),
+    ...NO_STORE.map((line) => row(line, null)),
+  ]);
   for (const { store, rule, ...line } of RECURRING) {
-    await call(
-      "groceries.createRecurring",
-      {
-        ...line,
-        id: randomUUID(),
-        recurrenceRule: rule,
-        recurrenceInterval: 1,
-        recurrenceWeekday: null,
-        nextPlannedFor: new Date(Date.now() + 7 * 86_400_000).toISOString().slice(0, 10),
-        storeId: storeId(store),
-      },
-      true
-    );
+    await mutate("groceries.createRecurring", {
+      ...line,
+      id: randomUUID(),
+      recurrenceRule: rule,
+      recurrenceInterval: 1,
+      recurrenceWeekday: null,
+      nextPlannedFor: new Date(Date.now() + 7 * 86_400_000).toISOString().slice(0, 10),
+      storeId: storeId(store),
+    });
   }
 
-  const library = await call<{ items: Array<{ recipe?: { id: string; name: string } }> }>(
+  const library = await query<{ items: Array<{ recipe?: { id: string; name: string } }> }>(
     "library.list",
     { limit: 50 }
   );
@@ -455,38 +448,34 @@ async function resetGroceries(cookie: string) {
   for (const recipe of RECIPES) {
     const id =
       library.items.find((item) => item.recipe?.name === recipe.name)?.recipe?.id ??
-      (await call<string>(
-        "recipes.create",
-        {
-          name: recipe.name,
-          systemUsed: "metric",
-          servings: 2,
-          recipeIngredients: recipe.lines.map((line, order) => ({
-            ingredientName: line.name,
-            ingredientId: null,
-            amount: line.amount ?? null,
-            unit: line.unit ?? null,
-            order,
-          })),
-          steps: [],
-          tags: [],
-          cuisines: [],
-          categories: [],
-          images: [],
-          videos: [],
-        },
-        true
-      ));
+      (await mutate<string>("recipes.create", {
+        name: recipe.name,
+        systemUsed: "metric",
+        servings: 2,
+        recipeIngredients: recipe.lines.map((line, order) => ({
+          ingredientName: line.name,
+          ingredientId: null,
+          amount: line.amount ?? null,
+          unit: line.unit ?? null,
+          order,
+        })),
+        steps: [],
+        tags: [],
+        cuisines: [],
+        categories: [],
+        images: [],
+        videos: [],
+      }));
     // A recipe is written after its create answers.
     const { recipeIngredients } = await until(
       () =>
-        call<{ recipeIngredients: Array<{ id: string; ingredientName: string }> }>("recipes.get", {
+        query<{ recipeIngredients: Array<{ id: string; ingredientName: string }> }>("recipes.get", {
           id,
         }),
       () => true
     );
 
-    await call(
+    await mutate(
       "groceries.create",
       recipe.lines.map((line) =>
         row(
@@ -494,8 +483,7 @@ async function resetGroceries(cookie: string) {
           null,
           recipeIngredients.find((ingredient) => ingredient.ingredientName === line.name)!.id
         )
-      ),
-      true
+      )
     );
   }
 
@@ -505,33 +493,29 @@ async function resetGroceries(cookie: string) {
 
     for (const line of store.lines) {
       if (line.price !== undefined) {
-        await call(
-          "stores.chooseProduct",
-          {
-            storeId: id,
+        await mutate("stores.chooseProduct", {
+          storeId: id,
+          name: line.name,
+          choice: {
+            kind: "manual",
+            id: randomUUID(),
             name: line.name,
-            choice: {
-              kind: "manual",
-              id: randomUUID(),
-              name: line.name,
-              price: line.price,
-              currency: "EUR",
-            },
+            price: line.price,
+            currency: "EUR",
           },
-          true
-        );
+        });
       }
       if (line.aisle) {
         const aisleId = aisles.find(({ name }) => name === line.aisle)!.id;
 
-        await call("stores.fileGroceryName", { storeId: id, name: line.name, aisleId }, true);
+        await mutate("stores.fileGroceryName", { storeId: id, name: line.name, aisleId });
       }
     }
   }
 
   // The server orders the list by sortOrder alone, so Stores' equal ones would come back in any
   // order: each Store's groceries are moved to a range of their own.
-  const { groceries } = await call<Listed>("groceries.list");
+  const { groceries } = await query<Listed>("groceries.list");
   const updates = [...STORES.map(({ name }) => storeId(name)), null].flatMap((id, index) =>
     groceries
       .filter((grocery) => grocery.storeId === id)
@@ -539,9 +523,9 @@ async function resetGroceries(cookie: string) {
       .map(({ id, version }, position) => ({ id, version, sortOrder: index * 100 + position }))
   );
 
-  await call("groceries.reorderInStore", { updates, savePreference: false }, true);
+  await mutate("groceries.reorderInStore", { updates, savePreference: false });
   await until(
-    () => call<Listed>("groceries.list"),
+    () => query<Listed>("groceries.list"),
     (after) =>
       after.groceries.every(
         (grocery) => updates.find(({ id }) => id === grocery.id)?.sortOrder === grocery.sortOrder
@@ -568,9 +552,7 @@ async function chooseView(tab: Tab, view: "By Store" | "By Recipe") {
 }
 
 async function groceries(browser: Browser) {
-  const cookies = await signIn(BASE, EMAIL, PASSWORD);
-
-  await resetGroceries(cookies.map(({ name, value }) => `${name}=${value}`).join("; "));
+  await resetGroceries(await signIn(BASE, ACCOUNT));
   const tab = await openTab(browser, true);
   const other = await openTab(browser, false);
 

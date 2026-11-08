@@ -5,8 +5,10 @@ import { gzipSync } from "node:zlib";
 import type { Browser, BrowserContext, Page } from "@playwright/test";
 import { chromium } from "@playwright/test";
 
+import { signIn } from "../__tests__/e2e/harness/auth";
+import { cookieHeader, queryTrpc } from "../__tests__/e2e/harness/trpc";
 import { RECIPE_FILTERS_COOKIE } from "../lib/recipe-filters-cookie";
-import { account, accountOptions, callTrpc, newPhone, PHONE, signIn } from "./api";
+import { account, accountOptions, newPhone, PHONE } from "./api";
 
 const { values: args } = parseArgs({
   options: {
@@ -107,20 +109,18 @@ const target = new URL(args.base);
 const base = await startProxy(target);
 
 throttled = false;
-// Cookies name a host, not a port, so the proxy's origin carries them too.
-const cookies = (await signIn(args.base, email, password)).map((cookie) => ({
-  ...cookie,
-  url: base,
-}));
-
+// Cookies name a host, not a port, so the session's reach the proxy's origin too.
+const session = await signIn(args.base, { email, password });
 // A returning reader's browser has told the server its Library filters, here the defaults.
-cookies.push({ name: RECIPE_FILTERS_COOKIE, value: encodeURIComponent("{}"), url: base });
-const cookieHeader = cookies.map(({ name, value }) => `${name}=${value}`).join("; ");
+const cookies: Parameters<BrowserContext["addCookies"]>[0] = [
+  ...session,
+  { name: RECIPE_FILTERS_COOKIE, value: encodeURIComponent("{}"), url: base },
+];
 
 // The newest recipe and the first cookbook in the Library's default order.
-const library = await callTrpc<{ items: Array<{ kind: string; recipe?: { id: string } }> }>(
+const library = await queryTrpc<{ items: Array<{ kind: string; recipe?: { id: string } }> }>(
   args.base,
-  cookieHeader,
+  session,
   "library.list",
   { limit: 50 }
 );
@@ -343,7 +343,7 @@ async function tap(browser: Browser): Promise<Sample> {
 async function documentSize(url: string): Promise<number> {
   const response = await fetch(`${args.base}${url}`, {
     headers: {
-      cookie: cookieHeader,
+      cookie: cookieHeader(cookies),
       "user-agent": PHONE.userAgent,
       accept: "text/html",
       "sec-fetch-dest": "document",

@@ -5,7 +5,10 @@ import type { HarnessUser } from "./production-stack";
 
 export type SessionCookies = Awaited<ReturnType<APIRequestContext["storageState"]>>["cookies"];
 
-export async function signIn(baseURL: string, user: HarnessUser): Promise<SessionCookies> {
+export async function signIn(
+  baseURL: string,
+  user: Pick<HarnessUser, "email" | "password">
+): Promise<SessionCookies> {
   // A root-relative path would drop the base path from baseURL, so the request URL is absolute.
   const api = await request.newContext({ extraHTTPHeaders: { origin: new URL(baseURL).origin } });
 

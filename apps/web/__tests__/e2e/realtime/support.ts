@@ -4,15 +4,11 @@ import { WebSocket as RawSocket } from "ws";
 
 import { findNewestGroceryNamed } from "@norish/db/repositories/groceries";
 
-import type { Identity, RealtimeStack, SessionCookies } from "./fixture";
-import { callTrpc } from "../harness/trpc";
+import type { Identity, RealtimeStack } from "./fixture";
+import { callTrpc, cookieHeader } from "../harness/trpc";
 import { waitForSocket } from "./fixture";
 
 const TRPC_JSON = { "content-type": "application/json" };
-
-function cookieHeader(cookies: SessionCookies): string {
-  return cookies.map((cookie) => `${cookie.name}=${cookie.value}`).join("; ");
-}
 
 /** Call one tRPC mutation over HTTP as the context's user, the way the app does. */
 export async function callMutation<T = unknown>(
