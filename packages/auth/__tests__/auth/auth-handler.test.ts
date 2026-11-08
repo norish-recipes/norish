@@ -8,6 +8,7 @@
  */
 import type { StartedValkeyContainer } from "@testcontainers/valkey";
 import { ValkeyContainer } from "@testcontainers/valkey";
+import { splitSetCookieHeader } from "better-auth/cookies";
 import Valkey from "ioredis";
 import { afterAll, beforeAll, beforeEach, describe, expect, it, vi } from "vitest";
 
@@ -553,6 +554,41 @@ describe("sign-in from the app", () => {
       await expectRefused(await signInFromApp(origin));
     }
   );
+
+  // A provider sign-in from the app returns to its callbackURL with the session cookie on it.
+  const startProviderSignInFromApp = (callbackURL: string) =>
+    authModule.auth.handler(
+      new Request(`${AUTH_URL}/api/auth/sign-in/social`, {
+        method: "POST",
+        headers: { "content-type": "application/json", "expo-origin": "norish://" },
+        body: JSON.stringify({ provider: "oidc", callbackURL }),
+      })
+    );
+
+  it("returns a provider sign-in to the app with its session", async () => {
+    const start = await startProviderSignInFromApp("norish://auth/callback");
+    const { url } = (await start.json()) as { url: string };
+    const response = await authModule.auth.handler(
+      new Request(idp.authorize(new URL(url), ADA), { headers: { cookie: cookiesFrom(start) } })
+    );
+    const location = new URL(response.headers.get("location") ?? "");
+
+    expect(`${location.protocol}//${location.host}${location.pathname}`).toBe(
+      "norish://auth/callback"
+    );
+    // The app gets the raw Set-Cookie header and keeps each cookie's name=value.
+    const appCookie = splitSetCookieHeader(location.searchParams.get("cookie") ?? "")
+      .map((cookie) => cookie.split(";")[0])
+      .join("; ");
+
+    expect(await sessionFor(appCookie)).not.toBeNull();
+  });
+
+  it("refuses a provider sign-in that would return to another app", async () => {
+    const response = await startProviderSignInFromApp("evil://auth/callback");
+
+    expect(response.status).toBe(403);
+  });
 
   it("refuses a sign-in from Expo Go outside development", async () => {
     await expectRefused(await signInFromApp("exp://"));
