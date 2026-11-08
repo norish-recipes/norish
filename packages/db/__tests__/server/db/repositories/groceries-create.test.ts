@@ -14,6 +14,7 @@ import {
   createGroceries,
   deleteGroceryByIds,
   findNewestGroceryNamed,
+  listGroceriesByUser,
   listGroceriesByUsers,
   lockGroceryList,
   markAllDoneInStore,
@@ -242,5 +243,67 @@ describe("findNewestGroceryNamed", () => {
 
     expect((await findNewestGroceryNamed("melk"))?.id).toBe(newest);
     expect(await findNewestGroceryNamed("kaas")).toBeNull();
+  });
+});
+
+describe("the order a list comes back in", () => {
+  const testBase = new RepositoryTestBase("test_groceries_list_order");
+  let userId: string;
+
+  beforeAll(async () => {
+    await testBase.setup();
+  });
+
+  beforeEach(async () => {
+    userId = (await testBase.beforeEachTest())[0].id;
+  });
+
+  afterAll(async () => {
+    await testBase.teardown();
+  });
+
+  const uuid = (last: number) => `00000000-0000-4000-8000-${String(last).padStart(12, "0")}`;
+  const add = (id: string, name: string, storeId: string | null, isDone = false) =>
+    createGroceries(
+      [
+        {
+          id,
+          groceries: {
+            userId,
+            name,
+            unit: null,
+            amount: null,
+            isDone,
+            recipeIngredientId: null,
+            recurringGroceryId: null,
+            storeId,
+          },
+        },
+      ],
+      [userId]
+    );
+
+  it("breaks a sortOrder tie by Store, no Store first, then by id", async () => {
+    const [first, second] = [uuid(1), uuid(2)];
+
+    await createStore(second, { userId, name: "Bakker" });
+    await createStore(first, { userId, name: "Markt" });
+    // Every one lands at sortOrder 0, added against the expected order.
+    await add(uuid(14), "brood", second);
+    await add(uuid(13), "kaas", first, true);
+    await add(uuid(12), "appel", first);
+    await add(uuid(11), "melk", null);
+
+    for (const listed of [
+      await listGroceriesByUser(userId),
+      await listGroceriesByUsers([userId]),
+    ]) {
+      expect(listed.map(({ name, sortOrder }) => [name, sortOrder])).toEqual([
+        ["melk", 0],
+        ["appel", 0],
+        ["kaas", 0],
+        ["brood", 0],
+      ]);
+    }
   });
 });

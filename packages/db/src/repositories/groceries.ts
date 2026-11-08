@@ -77,6 +77,14 @@ export async function findGroceryFoods(
   );
 }
 
+// Each Store numbers its groceries from 0, so a tie goes to no Store first, as the page shows
+// them, then to the Store and the id.
+const LIST_ORDER = [
+  asc(groceries.sortOrder),
+  sql`${groceries.storeId} asc nulls first`,
+  asc(groceries.id),
+];
+
 export async function listGroceriesByUser(
   userId: string,
   options?: { includeDone?: boolean }
@@ -91,7 +99,7 @@ export async function listGroceriesByUser(
         ? eq(groceries.userId, userId)
         : and(eq(groceries.userId, userId), eq(groceries.isDone, false))
     )
-    .orderBy(asc(groceries.sortOrder));
+    .orderBy(...LIST_ORDER);
 
   const parsed = z.array(GrocerySelectBaseSchema).safeParse(rows);
 
@@ -115,7 +123,7 @@ export async function listGroceriesByUsers(
         ? inArray(groceries.userId, userIds)
         : and(inArray(groceries.userId, userIds), eq(groceries.isDone, false))
     )
-    .orderBy(asc(groceries.sortOrder));
+    .orderBy(...LIST_ORDER);
 
   const parsed = z.array(GrocerySelectBaseSchema).safeParse(rows);
 
