@@ -6,6 +6,7 @@ import { z } from "zod";
 import { serverLogger as log } from "@norish/shared-server/logger";
 import { FullRecipeInsertDTO } from "@norish/shared/contracts";
 import { sortSourceCategories } from "@norish/shared/lib/category-matcher";
+import { isUrl } from "@norish/shared/lib/helpers";
 
 import {
   base64ToBuffer,
@@ -87,8 +88,11 @@ export async function parsePaprikaRecipeToDTO(
   // Save image if provided
   const image = await saveBufferImage(imageBuffer, recipeId);
 
-  // Get source URL
-  const url = validated.source_url || validated.source || undefined;
+  // `source` is free text in Paprika ("My collection", a cookbook's title). An
+  // import matches recipes by URL, so a shared label would merge them all.
+  const url = [validated.source_url, validated.source]
+    .map((value) => value?.trim())
+    .find((value) => value && isUrl(value));
 
   const { categories } = sortSourceCategories(validated.categories, householdCategories);
 
