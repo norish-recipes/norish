@@ -94,8 +94,61 @@ function collectRawSources($img: cheerio.Cheerio<any>): string[] {
   return collected;
 }
 
+/** Lowercased, punctuation folded to spaces, whitespace collapsed: how a title and an alt compare. */
+function normalizeTitleText(value: string): string {
+  return value
+    .toLowerCase()
+    .replace(/[^\p{L}\p{N}]+/gu, " ")
+    .trim();
+}
+
+/** Below this, a title is too generic ("Recipe", "Home") to recognise an image by. */
+const MIN_TITLE_LENGTH = 8;
+
+const SITE_NAME_SEPARATORS = [" | ", " - ", " – ", " — "];
+
+/** A title without its trailing site name: "Pancakes | Example" is "Pancakes". */
+function stripSiteName(title: string): string {
+  const cut = Math.max(...SITE_NAME_SEPARATORS.map((separator) => title.lastIndexOf(separator)));
+
+  return cut > 0 ? title.slice(0, cut) : title;
+}
+
+/**
+ * The names the page gives its recipe: its first heading, and its document and social titles with
+ * a trailing " | Site" or " - Site" removed. A site-wide social title shared by every page is
+ * harmless here, since no recipe image carries it as its alt text.
+ */
+function pageRecipeTitles($: cheerio.CheerioAPI): string[] {
+  const titles = [
+    $("h1").first().text(),
+    stripSiteName($("title").first().text()),
+    stripSiteName($('meta[property="og:title"]').attr("content") ?? ""),
+  ];
+
+  return [
+    ...new Set(titles.map(normalizeTitleText).filter((title) => title.length >= MIN_TITLE_LENGTH)),
+  ];
+}
+
+/** Whether an image's alt text names the recipe, so the image is the dish rather than decoration. */
+function altNamesRecipe(alt: string, titles: string[]): boolean {
+  const normalized = normalizeTitleText(alt);
+
+  if (normalized.length < MIN_TITLE_LENGTH) return false;
+
+  return titles.some((title) => normalized === title || normalized.includes(title));
+}
+
+/**
+ * The page's image URLs, best first, at most five. An image whose alt text names the recipe leads:
+ * it is the dish, where a page's social image is often a site-wide share card and the largest
+ * images can belong to related-recipe cards. The social image comes next, then the rest by score.
+ */
 export function extractImageCandidates(html: string, pageUrl?: string): string[] {
   const $ = cheerio.load(html);
+  const recipeTitles = pageRecipeTitles($);
+  const titleMatches = new Set<string>();
   const urls = new Set<string>();
 
   const metaSelectors = [
@@ -130,9 +183,15 @@ export function extractImageCandidates(html: string, pageUrl?: string): string[]
     const className = ($img.attr("class") || "").toLowerCase();
     const id = ($img.attr("id") || "").toLowerCase();
     const parentContext = ($img.parents("article, main, figure").attr("class") || "").toLowerCase();
-    const context = `${alt} ${className} ${id} ${parentContext}`;
+    const markup = `${className} ${id} ${parentContext}`;
+    const context = `${alt} ${markup}`;
+    // Only the markup can rule out an image naming the recipe: its alt and its URL slug hold the
+    // title's own words, and "Navy Bean Soup" holds "nav".
+    const namesRecipe =
+      altNamesRecipe($img.attr("alt") || "", recipeTitles) &&
+      !containsKeyword(markup, CONTEXT_BLOCKLIST);
 
-    if (containsKeyword(context, CONTEXT_BLOCKLIST)) return;
+    if (!namesRecipe && containsKeyword(context, CONTEXT_BLOCKLIST)) return;
 
     const width = Number($img.attr("width")) || 0;
     const height = Number($img.attr("height")) || 0;
@@ -142,6 +201,12 @@ export function extractImageCandidates(html: string, pageUrl?: string): string[]
       const source = normalizeImageUrl(rawSource, pageUrl);
 
       if (!source) continue;
+
+      // One URL per matching image: its srcset variants are the same photo at other sizes.
+      if (namesRecipe) {
+        titleMatches.add(source);
+        break;
+      }
 
       const srcContext = `${context} ${source.toLowerCase()}`;
 
@@ -167,7 +232,12 @@ export function extractImageCandidates(html: string, pageUrl?: string): string[]
       urls.add(candidate.src);
     });
 
-  return [...urls].slice(0, 5);
+  // Beside the dish, a social image whose URL marks it as a share card is only another wrong photo.
+  const others = [...urls].filter(
+    (url) => titleMatches.size === 0 || !containsKeyword(url.toLowerCase(), CONTEXT_BLOCKLIST)
+  );
+
+  return [...new Set([...titleMatches, ...others])].slice(0, 5);
 }
 
 /**

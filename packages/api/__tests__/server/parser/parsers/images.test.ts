@@ -67,4 +67,187 @@ describe("extractImageCandidates", () => {
     expect(urls).toContain("https://example.com/images/curry.jpg");
     expect(urls).not.toContain("https://example.com/assets/brand-logo.jpg");
   });
+
+  it("leads with the image whose alt names the recipe, ahead of a site-wide social image and larger related-recipe cards", () => {
+    // The shape of a Wegmans recipe page: one share card for every page, an unsized hero whose alt
+    // is the recipe's name, and "More like this" cards that are larger on paper.
+    const html = `
+      <html>
+        <head>
+          <title>Caprese Ravioli with Balsamic Glaze | Wegmans</title>
+          <meta property="og:title" content="Recipe | Wegmans" />
+          <meta property="og:image" content="https://images.example.com/site-share-card?wid=1200&hei=630" />
+        </head>
+        <body>
+          <img src="https://images.example.com/RECIPE_3019137" alt="Caprese Ravioli with Balsamic Glaze" class="object-cover" />
+          <main>
+            <h1>Caprese Ravioli with Balsamic Glaze</h1>
+          </main>
+          <section>
+            <img src="https://images.example.com/RECIPE_21232" alt="" class="recipe-card-image" width="500" height="500" />
+            <img src="https://images.example.com/RECIPE_3016332" alt="" class="recipe-card-image" width="500" height="500" />
+          </section>
+        </body>
+      </html>
+    `;
+
+    const urls = extractImageCandidates(html, "https://www.example.com/recipes/caprese-ravioli");
+
+    expect(urls[0]).toBe("https://images.example.com/RECIPE_3019137");
+    expect(urls).not.toContain("https://images.example.com/site-share-card?wid=1200&hei=630");
+  });
+
+  it("recognises the recipe's name from the document title when the page has no heading", () => {
+    const html = `
+      <html>
+        <head>
+          <title>Lemon Herb Roast Chicken - Example Kitchen</title>
+          <meta property="og:image" content="https://cdn.example.com/brand-share.jpg" />
+        </head>
+        <body>
+          <main>
+            <img src="/images/sidebar-ad.jpg" alt="Seasonal promotion" width="1200" height="900" />
+            <img src="/images/roast-chicken.jpg" alt="Lemon herb roast chicken on a platter" />
+          </main>
+        </body>
+      </html>
+    `;
+
+    const urls = extractImageCandidates(html, "https://example.com/roast-chicken");
+
+    expect(urls[0]).toBe("https://example.com/images/roast-chicken.jpg");
+  });
+
+  it("takes one URL for a matching image rather than every srcset size of it", () => {
+    const html = `
+      <html>
+        <head><title>Blueberry Buttermilk Pancakes | Example</title></head>
+        <body>
+          <main>
+            <h1>Blueberry Buttermilk Pancakes</h1>
+            <img
+              src="/img/pancakes-800.jpg"
+              srcset="/img/pancakes-400.jpg 400w, /img/pancakes-1200.jpg 1200w"
+              alt="Blueberry Buttermilk Pancakes"
+            />
+          </main>
+        </body>
+      </html>
+    `;
+
+    const urls = extractImageCandidates(html, "https://example.com/pancakes");
+
+    expect(urls[0]).toBe("https://example.com/img/pancakes-800.jpg");
+    expect(urls.filter((url) => url.includes("pancakes"))).toHaveLength(1);
+  });
+
+  it("keeps the social image first when no image is named after the recipe", () => {
+    const html = `
+      <html>
+        <head>
+          <title>Weeknight Vegetable Stir Fry | Example</title>
+          <meta property="og:image" content="https://cdn.example.com/stir-fry-card.jpg" />
+        </head>
+        <body>
+          <main>
+            <h1>Weeknight Vegetable Stir Fry</h1>
+            <img src="/images/wok.jpg" alt="Vegetables in a hot wok" width="900" height="600" />
+          </main>
+        </body>
+      </html>
+    `;
+
+    const urls = extractImageCandidates(html, "https://example.com/stir-fry");
+
+    expect(urls[0]).toBe("https://cdn.example.com/stir-fry-card.jpg");
+    expect(urls).toContain("https://example.com/images/wok.jpg");
+  });
+
+  it("does not treat a generic title as the recipe's name", () => {
+    const html = `
+      <html>
+        <head>
+          <title>Recipe | Example</title>
+          <meta property="og:image" content="https://cdn.example.com/card.jpg" />
+        </head>
+        <body>
+          <main>
+            <img src="/images/badge.jpg" alt="Recipe" width="900" height="600" />
+          </main>
+        </body>
+      </html>
+    `;
+
+    const urls = extractImageCandidates(html, "https://example.com/r");
+
+    expect(urls[0]).toBe("https://cdn.example.com/card.jpg");
+  });
+
+  it("keeps the dish when the recipe's own name holds a blocked word", () => {
+    const html = `
+      <html>
+        <head><title>Navy Bean Soup | Example</title></head>
+        <body>
+          <main>
+            <img src="/images/navy-bean-soup.jpg" alt="Navy Bean Soup" width="900" height="600" />
+          </main>
+        </body>
+      </html>
+    `;
+
+    const urls = extractImageCandidates(html, "https://example.com/navy-bean-soup");
+
+    expect(urls[0]).toBe("https://example.com/images/navy-bean-soup.jpg");
+  });
+
+  it("leaves out an image named after the recipe when its markup says it is a share button", () => {
+    const html = `
+      <html>
+        <head><title>Lemon Roast Chicken | Example</title></head>
+        <body>
+          <main>
+            <img class="social-pin" src="/images/pin.jpg" alt="Lemon Roast Chicken" width="900" height="600" />
+          </main>
+        </body>
+      </html>
+    `;
+
+    expect(extractImageCandidates(html, "https://example.com/chicken")).toEqual([]);
+  });
+
+  it("drops a social share card once an image names the recipe", () => {
+    const html = `
+      <html>
+        <head>
+          <title>Lemon Roast Chicken | Example</title>
+          <meta property="og:image" content="https://cdn.example.com/social-share-default.jpg" />
+        </head>
+        <body>
+          <main>
+            <img src="/images/chicken.jpg" alt="Lemon Roast Chicken" width="900" height="600" />
+          </main>
+        </body>
+      </html>
+    `;
+
+    expect(extractImageCandidates(html, "https://example.com/chicken")).toEqual([
+      "https://example.com/images/chicken.jpg",
+    ]);
+  });
+
+  it("keeps a social share card when no image names the recipe", () => {
+    const html = `
+      <html>
+        <head>
+          <title>Lemon Roast Chicken | Example</title>
+          <meta property="og:image" content="https://cdn.example.com/social-share-default.jpg" />
+        </head>
+        <body><main><p>No photos here.</p></main></body>
+      </html>
+    `;
+
+    expect(extractImageCandidates(html, "https://example.com/chicken")).toEqual([
+      "https://cdn.example.com/social-share-default.jpg",
+    ]);
+  });
 });
