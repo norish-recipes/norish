@@ -16,10 +16,10 @@
   - `exp://` is rejected outside development
 - [x] The WebSocket server suite proves `"null"` is never trusted, even with a custom scheme in the configured trusted list.
 - [x] The app's auth client uses the `norish` scheme and keeps the session in secure storage. Its tRPC HTTP and WebSocket requests are authenticated with it.
-- [ ] A Maestro harness runs locally against the iOS simulator and the dev server, documented in the contributor docs.
-- [ ] A Maestro flow signs in through the server-address screen and sees the user and recipe count on the smoke screen.
-- [ ] A Maestro flow checks off a grocery on the smoke screen, and the item is checked on the web for the same household.
-- [ ] Repeated runs show both flows are stable.
+- [x] A Maestro harness runs locally against the iOS simulator and the dev server, documented in the contributor docs.
+- [x] A Maestro flow signs in through the server-address screen and sees the user and recipe count on the smoke screen.
+- [x] A Maestro flow checks off a grocery on the smoke screen, and the item is checked on the web for the same household.
+- [x] Repeated runs show both flows are stable.
 - [x] The 0.27.0-beta release notes say the server accepts the Norish iOS app's sign-in again.
 
 ## Comments
@@ -30,3 +30,8 @@
   - The WebSocket check now treats any opaque origin as unparseable, on both sides: a `norish://` entry in `TRUSTED_ORIGINS` used to add `"null"` to the trusted set, and any custom-scheme `Origin` then matched it.
   - App fixes found reading the code path: the expo client's `getCookie` is async since the parked era, so tRPC HTTP and WebSocket requests sent `Cookie: [object Promise]`. The provider now reads the client's chunked SecureStore entry synchronously through `storageAdapter` + `getCookie`. The auth client's base URL is now `<server>/api/auth`, since Better Auth treats a URL that has a path as the auth root and base-path servers got requests at `/<base>/sign-in/...`.
   - Left for ticket 09: `readPersistedSession` reads SecureStore keys directly, so a session large enough for the expo client to chunk would read as unparseable while offline.
+- 2026-11-08 — Maestro 2.12.1 runs every flow against a Release build on the iPhone 17 simulator: 9 full runs green on the root dev server and 4 under a `/norish` base path. Fixes the first runs needed:
+  - iOS reports a checkbox's state in its accessibility value (`checkbox, checked`), never in Maestro's `checked`, and the grocery name is its label. The runner passes each seeded grocery's id and the flows assert the value.
+  - iOS's "Save Password?" sheet hides the app after sign-in; the sign-in subflow dismisses it when it shows.
+  - A flow's own `env:` defaults beat the runner's `-e` values in Maestro, so the server, proxy and old-server addresses were ignored whenever they differed from the defaults. The flows have no defaults now; the runner is the only way to run them.
+  - CONTRIBUTING builds the app with `--configuration Release`, which carries its own bundle.

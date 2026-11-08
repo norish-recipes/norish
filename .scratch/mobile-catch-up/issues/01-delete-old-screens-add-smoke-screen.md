@@ -16,4 +16,8 @@
 - [x] Surviving shared code sits in `src/components/`, `src/hooks/` or `src/lib/`, and the old type-based folders that end up empty are gone.
 - [x] Surviving tests sit next to their code as `*.test.ts(x)`, and `__tests__/` is gone.
 - [x] An ESLint `no-restricted-imports` override stops one feature importing another.
-- [ ] The app still type-checks in its separate install (the app is still parked here).
+- [x] The app still type-checks in its separate install (the app is still parked here).
+
+## Comments
+
+- 2026-11-08 — The last box is ticked by ticket 02: the app has no separate install any more, and `pnpm --filter @norish/mobile typecheck` passes inside the workspace.

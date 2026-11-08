@@ -11,7 +11,7 @@
 - [x] The app's minimum server version is the current release's minor, derived from the app version, so it moves with each release and is never edited by hand.
 - [x] The server-address step reads `version` from its existing probe. Below the minimum, or when the field is missing (a server from before this change), it shows the "update your server" screen naming the minimum version and does not offer sign-in.
 - [x] The screen's copy is in the i18n messages, and `pnpm i18n:check` passes.
-- [ ] A Maestro flow against a server reporting an older version reaches the update screen. Repeated runs show it is stable.
+- [x] A Maestro flow against a server reporting an older version reaches the update screen. Repeated runs show it is stable.
 - [x] The 0.27.0-beta release notes say the readiness response now reports the server version.
 
 ## Comments
@@ -22,3 +22,4 @@
   - The runner serves the old server itself, a stub on port 3999 that reports `0.1.0`, and runs the `old-server/` folder after the main flows; `maestro test` does not descend into subfolders. It spawns Maestro asynchronously now so the stub can answer.
   - The comparison reuses `isUpdateAvailable` from `@norish/shared/lib/version`. Per the spec it has no unit test of its own.
   - The update screen is pushed, not replaced, so the header's back button returns to the server-address step. The address is not saved.
+- 2026-11-08 — `old-server/update-server.yaml` passes in all 13 full runs on Xcode 27.2.

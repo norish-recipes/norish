@@ -16,8 +16,9 @@
 - [x] The version-sync tooling stops treating the app as independent, so the app version follows the release version.
 - [x] The cycle check no longer special-cases the app.
 - [x] AGENTS.md and CONTRIBUTING no longer call the app parked or describe a separate install.
-- [ ] The app boots in the iOS simulator to the server-address screen.
+- [x] The app boots in the iOS simulator to the server-address screen.
 
 ## Comments
 
 - 2026-11-05 — Done apart from the simulator boot. React stays one version, the catalog's 19.3.1: React Native 0.88.1 peers `react ^19.3.0` and its renderer has no exact-version check, so `expo.install.exclude` lists `react` and `expo-doctor` passes. The app lints with the shared `@norish/eslint-config` now, which flagged seven `finally` blocks the React Compiler skips; they were flattened. `@norish/trpc` types come from `dist/`, like web and shared-react. The two stale provider options (`onWebSocketClientDestroy`, `invalidateOnReconnect`) had to go for the type check, which ticks ticket 05's third box. The Release simulator build fails on this Mac: Xcode 26.3 (Swift 6.2.4) cannot compile `expo-modules-jsi` 58.0.22 (`JavaScriptObject.swift:946: sending 'slot' risks causing data races`), which SDK 58 builds with Xcode 27. `expo export -p ios` bundles the app, so the boot is unchecked until Xcode 27 is installed.
+- 2026-11-08 — Xcode 27.2 builds it: `expo-modules-jsi` compiles, and a Release build boots on the iPhone 17 simulator (iOS 26.2) to the server-address screen. The first Xcode build failed in bundling: `src/global.css` imports `tailwindcss`, which `uniwind` peers but the app never declared, so it did not resolve from `apps/mobile` once Metro's cache was cold. `expo export -p ios` had passed on a warm cache. The app now declares `tailwindcss` from the catalog.

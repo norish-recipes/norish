@@ -13,7 +13,7 @@
 - [x] Replay requests carry the shared replay marker with a mobile client value.
 - [x] The smoke screen shows Offline and syncing, and lists Parked and Conflicted entries with retry and discard.
 - [x] Signing out with unsynced work asks for confirmation first.
-- [ ] A Maestro flow cuts the backend, checks off a grocery, restores the backend, and sees the change replayed on the web. Repeated runs show it is stable.
+- [x] A Maestro flow cuts the backend, checks off a grocery, restores the backend, and sees the change replayed on the web. Repeated runs show it is stable.
 
 ## Comments
 
@@ -23,3 +23,4 @@
   - The persisted session now stands in while the live session is pending, errored or Offline, so an Offline launch opens on the smoke screen. `readPersistedSession` reads through the auth client's chunk-aware storage adapter; a chunked session read as unparseable before (test added).
   - A session invalidation signs out without discarding the queue, so it stays dormant until that owner signs in again. Changing the server address no longer clears caches: the reads are per owner and sign-out already cleared them.
   - The Warm Set holds data only (no `warmImages`) until a screen shows recipe images, and holds the calendar window two weeks either side of this week.
+- 2026-11-08 — `offline-replay.yaml` passes in all 13 full runs, on the root and under a base path. Its first runs found that every plural message in the app rendered as raw ICU (`{count, plural, …}`, here the Outbox count and the sign-out confirmation): Hermes has no `Intl.PluralRules`, and react-intl falls back to the source string without it. `src/lib/i18n/plural-rules.ts` loads the formatjs polyfill with one locale file per catalog language, and its test fails when the catalog gains a language with no plural data. The `evalScript` lines needed quoting to parse, and the Outbox summary's testID no longer collides with an entry's `smoke-outbox-pending`.
