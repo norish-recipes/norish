@@ -117,12 +117,13 @@ Web and mobile use the same layout, and logic both apps need is written once in 
 - A context only injects a scope, such as which recipe a page shows, or wires compound components such as `Panel`. Every consumer re-renders when its value changes, so it holds nothing that changes often.
 - Client state several components share goes in a zustand store, and state one component owns stays in `useState`. Each component subscribes to the fields it reads, so a change re-renders only those components.
 - Stores are global, so a component reads one without a provider above it; one that must start fresh on each screen resets on unmount. A persisted store persists through the platform adapter's storage, so the same store runs on web and mobile.
-- shared-react groups code by domain, coarser than the app features: `recipes` holds the list, filters, selection, detail and cookbooks that `library`, `recipes` and `cookbooks` use. `src/<domain>/` holds its hooks, client stores, realtime subscription and types, exported as `@norish/shared-react/<domain>`, so a mobile screen reuses what web uses and adds only its UI. Domains never import each other, and the cross-cutting folders they import never import a domain, so changing one domain never breaks the rest:
+- shared-react groups code by domain, coarser than the app features: `recipes` holds the list, filters, selection, detail and cookbooks that `library`, `recipes` and `cookbooks` use. `src/<domain>/` holds its hooks, client stores, realtime subscription and types, exported as `@norish/shared-react/<domain>`, so a mobile screen reuses what web uses and adds only its UI. Domains never import each other, and the cross-cutting folders they import never import a domain, so changing one domain never breaks the rest, and lint enforces both. The cross-cutting folders:
   - `trpc/` creates the one tRPC context, so every hook imports `useTRPC` directly with no factory to bind in each app.
   - `platform/` is the one adapter each app mounts for toasts, navigation, errors, storage and Device Kind, so shared code holds no web or mobile imports.
   - `offline/` holds the Outbox and the optimistic updates every domain's mutations use, so every write is Queued and replayed the same way while Offline.
   - `config/` holds reference data such as units, tags and recurrence, which every domain reads and none owns.
   - `reader/` holds the signed-in Reader: identity, household, allergies, permissions and Device Preferences, which every domain checks without fetching its own copy.
+  - `realtime/` holds the hook every domain's realtime subscription is built on, so each one recovers from a lag the same way.
 
 ## Script Ownership
 

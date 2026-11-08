@@ -56,3 +56,46 @@ export const restrictFeatures = (
     }))
   );
 };
+
+// A shared-react domain as a relative path or the package's own name reaches it.
+const domainPaths = (domain: string) => [
+  `**/../${domain}`,
+  `**/../${domain}/**`,
+  `@norish/shared-react/${domain}`,
+  `@norish/shared-react/${domain}/**`,
+];
+
+// shared-react: a domain never imports another, and a cross-cutting folder never imports a domain.
+// Every folder in srcDir that is neither cross-cutting nor legacy is a domain.
+export const restrictDomains = (
+  root: string,
+  options: { srcDir: string; crossCutting: string[]; legacy: string[] }
+) => {
+  const { srcDir, crossCutting, legacy } = options;
+  const domains = readdirSync(path.join(root, srcDir), { withFileTypes: true })
+    .filter((entry) => entry.isDirectory())
+    .map((entry) => entry.name)
+    .filter((name) => !crossCutting.includes(name) && !legacy.includes(name));
+
+  if (domains.length === 0) return [];
+
+  return defineConfig(
+    { plugins: { features: plugin } },
+    {
+      files: crossCutting.map((folder) => `${srcDir}/${folder}/**/*.{ts,tsx}`),
+      rules: restrict(
+        domains.flatMap(domainPaths),
+        "A cross-cutting folder never imports a domain."
+      ),
+    },
+    ...(domains.length > 1
+      ? domains.map((domain) => ({
+          files: [`${srcDir}/${domain}/**/*.{ts,tsx}`],
+          rules: restrict(
+            domains.filter((other) => other !== domain).flatMap(domainPaths),
+            "A domain never imports another; share code through a cross-cutting folder."
+          ),
+        }))
+      : [])
+  );
+};
