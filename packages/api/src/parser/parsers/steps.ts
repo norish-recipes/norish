@@ -42,6 +42,28 @@ function isSectionType(type: string): boolean {
   return type.includes("howtosection");
 }
 
+/** A step name that only counts, in any language: "Step 1", "Schritt 2:", "3". */
+const STEP_NUMBER = /^(\p{L}*)\.?\s*(\d+)[.:)]?$/u;
+
+/**
+ * The instructions without the "Step 1" lines a flattened list holds before each step. Only a list
+ * that alternates a running count with text is one: a lone "Bake 350" stays a step.
+ */
+export function withoutStepNumbers(lines: string[]): string[] {
+  const names = lines.filter((_, index) => index % 2 === 0);
+  const word = STEP_NUMBER.exec(names[0] ?? "")?.[1];
+  const isCounted =
+    lines.length % 2 === 0 &&
+    word !== undefined &&
+    names.every((name, index) => {
+      const match = STEP_NUMBER.exec(name);
+
+      return match?.[1] === word && Number(match[2]) === index + 1;
+    });
+
+  return isCounted ? lines.filter((_, index) => index % 2 === 1) : lines;
+}
+
 /**
  * Extract text content from a node, checking text and name fields.
  *

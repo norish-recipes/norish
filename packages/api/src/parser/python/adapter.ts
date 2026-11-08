@@ -3,7 +3,7 @@ import { parseImages } from "@norish/api/parser/parsers/images";
 import { parseIngredients } from "@norish/api/parser/parsers/ingredients";
 import { getServings } from "@norish/api/parser/parsers/metadata";
 import { extractNutrition } from "@norish/api/parser/parsers/nutrition";
-import { parseSteps } from "@norish/api/parser/parsers/steps";
+import { parseSteps, withoutStepNumbers } from "@norish/api/parser/parsers/steps";
 import { parseVideos } from "@norish/api/parser/parsers/videos";
 import { getUnits } from "@norish/shared-server/config/server-config-loader";
 import { parserLogger as log } from "@norish/shared-server/logger";
@@ -86,7 +86,7 @@ function collectInstructionSource(recipe: ScraperRecipe): unknown {
     return structuredInstructions;
   }
 
-  const list = normalizeStringList(recipe.instructions_list);
+  const list = withoutStepNumbers(normalizeStringList(recipe.instructions_list));
 
   if (list.length > 0) return list;
 
@@ -94,10 +94,12 @@ function collectInstructionSource(recipe: ScraperRecipe): unknown {
 
   if (!instructions) return [];
 
-  return instructions
-    .split(/\n+/)
-    .map((step) => step.trim())
-    .filter(Boolean);
+  return withoutStepNumbers(
+    instructions
+      .split(/\n+/)
+      .map((step) => step.trim())
+      .filter(Boolean)
+  );
 }
 
 // TODO: This needs to become a setting in admin/user settings as the tags often do not make sense.
