@@ -31,7 +31,7 @@ const UP_BYTES_PER_SECOND = 750_000 / 8;
 const MARK_TIMEOUT_MS = 30_000;
 
 type Marks = Record<string, string>;
-type Sample = { firstPaint: number; marks: Record<string, number | null> };
+type Sample = { firstPaint: number; scriptBytes: number; marks: Record<string, number | null> };
 
 // =============================================================================
 // The link: one shared queue per direction, so parallel requests split the bandwidth
@@ -282,7 +282,14 @@ async function load(browser: Browser, url: string, marks: Marks): Promise<Sample
 
     await context.addInitScript(watchMarks, { marks, tap: false });
     const cdp = await context.newCDPSession(page);
+    // The encoded size of every script the load downloads.
+    const scripts: Array<Promise<number>> = [];
 
+    page.on("requestfinished", (request) => {
+      if (request.resourceType() === "script") {
+        scripts.push(request.sizes().then((sizes) => sizes.responseBodySize));
+      }
+    });
     await cdp.send("Emulation.setCPUThrottlingRate", { rate: 4 });
     throttled = true;
     await page.goto(url);
@@ -297,6 +304,7 @@ async function load(browser: Browser, url: string, marks: Marks): Promise<Sample
 
     return {
       firstPaint,
+      scriptBytes: (await Promise.all(scripts)).reduce((total, bytes) => total + bytes, 0),
       marks: Object.fromEntries(
         Object.entries(found).map(([name, at]) => [
           name,
@@ -335,6 +343,7 @@ async function tap(browser: Browser): Promise<Sample> {
 
     return {
       firstPaint: Number.NaN,
+      scriptBytes: Number.NaN,
       marks: Object.fromEntries(
         Object.entries(found).map(([name, at]) => [name, at === null ? null : at - tappedAt])
       ),
@@ -396,8 +405,8 @@ const only = args.only?.split(",");
 const lines = [
   `Service worker ${args.sw}, ${RUNS} runs, median (spread) in ms.`,
   "",
-  "| Page | First paint | Content | Document (KB gzip) |",
-  "| ---- | ----------: | ------- | -----------------: |",
+  "| Page | First paint | Content | Document (KB gzip) | JS (KB) |",
+  "| ---- | ----------: | ------- | -----------------: | ------: |",
 ];
 
 try {
@@ -406,8 +415,10 @@ try {
     const samples = await sampled(() => load(browser, url, marks));
     const size = ((await documentSize(url)) / 1024).toFixed(1);
 
+    const js = summary(samples.map((sample) => sample.scriptBytes / 1024));
+
     lines.push(
-      `| ${name} | ${summary(samples.map((sample) => sample.firstPaint))} | ${marksSummary(marks, samples)} | ${size} |`
+      `| ${name} | ${summary(samples.map((sample) => sample.firstPaint))} | ${marksSummary(marks, samples)} | ${size} | ${js} |`
     );
     process.stdout.write(`${lines.at(-1)}\n`);
   }
@@ -415,7 +426,7 @@ try {
   if (!only || only.includes("tap")) {
     const samples = await sampled(() => tap(browser));
 
-    lines.push(`| tap to a recipe | — | ${marksSummary(RECIPE_MARKS, samples)} | — |`);
+    lines.push(`| tap to a recipe | — | ${marksSummary(RECIPE_MARKS, samples)} | — | — |`);
   }
 } finally {
   await browser.close();
