@@ -174,7 +174,9 @@ describe("MMKV storage adapter", () => {
         mmkv.set(key, value);
       },
     };
-    const store = createOutboxStore(createMmkvStorage({ mmkv: failing, files: fakeFiles() }).outbox);
+    const store = createOutboxStore(
+      createMmkvStorage({ mmkv: failing, files: fakeFiles() }).outbox
+    );
     const before = disk.size;
 
     await expect(
@@ -202,5 +204,46 @@ describe("MMKV storage adapter", () => {
 
     await expect(store.enqueue(entry({ input }))).rejects.toThrow();
     expect(await store.size()).toBe(0);
+  });
+
+  it("removes the entry when its copy cannot be deleted", async () => {
+    const files = {
+      ...fakeFiles(),
+      delete: () => {
+        throw new Error("file is busy");
+      },
+    };
+    const store = createOutboxStore(createMmkvStorage({ mmkv: fakeMmkv(), files }).outbox);
+    const queued = await store.enqueue(
+      entry({ input: withPhoto(pickPhoto("jpeg-bytes", "photo.jpg", "image/jpeg")) })
+    );
+
+    await store.remove(queued.seq);
+
+    expect(await store.size()).toBe(0);
+  });
+
+  it("shows a later entry only after an earlier upload's copy lands", async () => {
+    let finishCopy = () => {};
+    const slow = fakeFiles();
+    const files = {
+      ...slow,
+      copy: (from: string, name: string) =>
+        new Promise<void>((resolve) => (finishCopy = () => resolve(slow.copy(from, name)))),
+    };
+    const store = createOutboxStore(createMmkvStorage({ mmkv: fakeMmkv(), files }).outbox);
+
+    const first = store.enqueue(
+      entry({ input: withPhoto(pickPhoto("jpeg-bytes", "photo.jpg", "image/jpeg")) })
+    );
+    const second = store.enqueue(entry({ id: "later", input: { id: "g2" } }));
+
+    await Promise.resolve();
+    expect(await store.size()).toBe(0);
+
+    finishCopy();
+    await Promise.all([first, second]);
+
+    expect((await store.loadAll()).map(({ id }) => id)).toEqual(["e", "later"]);
   });
 });

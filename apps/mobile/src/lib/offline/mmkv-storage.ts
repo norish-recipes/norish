@@ -67,8 +67,9 @@ export function createMmkvStorage({
   };
   const write = (key: string, value: unknown) => mmkv.set(key, superjson.stringify(value));
   const keysWith = (prefix: string) => mmkv.getAllKeys().filter((key) => key.startsWith(prefix));
+  // Async, so a delete that throws synchronously settles like one that rejects.
   const deleteCopies = (names: string[]) =>
-    Promise.allSettled(names.map((name) => files.delete(name)));
+    Promise.allSettled(names.map(async (name) => files.delete(name)));
 
   // Stored entries name their copies; the engine sees them with the copies' current uris.
   const readEntry = (key: string): OutboxEntry | undefined => {
@@ -114,6 +115,23 @@ export function createMmkvStorage({
     return { input: { ...input, entries }, names };
   }
 
+  async function store(entry: Omit<OutboxEntry, "seq">, seq: number) {
+    const { input, names } = await copyUploads(entry.input, seq);
+
+    try {
+      write(OUTBOX_PREFIX + seq, { ...entry, input, seq });
+    } catch (error) {
+      await deleteCopies(names);
+      throw error;
+    }
+
+    return seq;
+  }
+
+  // Each add lands after the one before it, so a slow upload copy can't let a later entry replay
+  // first (IndexedDB gets this from its single transaction).
+  let adding: Promise<unknown> = Promise.resolve();
+
   return {
     lastOwner: {
       get: () => mmkv.getString(LAST_OWNER_KEY) || null,
@@ -134,22 +152,17 @@ export function createMmkvStorage({
       keys: async () => keysWith(KEYVAL_PREFIX).map((key) => key.slice(KEYVAL_PREFIX.length)),
     },
     outbox: {
-      async add(entry) {
+      add(entry) {
         // Reserved before any await so concurrent adds never share a seq; a failed add burns it.
         const seq = mmkv.getNumber(NEXT_SEQ_KEY) ?? 1;
 
         mmkv.set(NEXT_SEQ_KEY, seq + 1);
 
-        const { input, names } = await copyUploads(entry.input, seq);
+        const added = adding.then(() => store(entry, seq));
 
-        try {
-          write(OUTBOX_PREFIX + seq, { ...entry, input, seq });
-        } catch (error) {
-          await deleteCopies(names);
-          throw error;
-        }
+        adding = added.catch(() => undefined);
 
-        return seq;
+        return added;
       },
       all: async () =>
         keysWith(OUTBOX_PREFIX)
