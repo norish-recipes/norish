@@ -12,8 +12,11 @@
  * left alone. Warm ground, neutral ink.
  */
 @layer theme {
+  /* Uniwind reads a theme's tokens from `:where(.light)`, and a bare class selector would hide it;
+     `:is(.light)` matches like `.light` on web at the same specificity, and Uniwind skips it. */
   :root,
-  .light,
+  :is(.light),
+  :where(.light),
   [data-theme="light"] {
     color-scheme: light;
 
@@ -74,7 +77,8 @@
     --font-sans: var(--font-inter);
   }
 
-  .dark,
+  :is(.dark),
+  :where(.dark),
   [data-theme="dark"] {
     color-scheme: dark;
 

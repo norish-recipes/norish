@@ -1,0 +1,20 @@
+# Points the app at a server reporting an older version and lands on the update screen,
+# with no sign-in. `pnpm --filter @norish/mobile maestro` serves that old server.
+appId: dev.norish.app
+---
+- launchApp:
+    clearState: true
+    clearKeychain: true
+- tapOn:
+    id: connect-server-url
+- inputText: ${NORISH_OLD_SERVER_URL}
+- hideKeyboard
+- tapOn:
+    id: connect-submit
+- extendedWaitUntil:
+    visible:
+      id: update-server-description
+      text: ".*Norish \\d+\\.\\d+\\.0 or later.*"
+    timeout: 10000
+- assertNotVisible:
+    id: login-submit

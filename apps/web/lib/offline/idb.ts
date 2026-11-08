@@ -1,13 +1,13 @@
 /**
- * Low-level IndexedDB access for the web offline runtime.
+ * Low-level IndexedDB access behind the web storage adapter ({@link ./idb-storage}).
  *
  * One database (`norish-offline`) holds every offline artefact so a single
  * connection and upgrade path govern them all:
  *
  *  - `keyval` — the persisted TanStack Query cache (one dehydrated blob per
- *    cache owner; see {@link ../query-cache/idb-persister}).
+ *    cache owner) and each owner's last-warmed time.
  *  - `outbox` — queued mutations awaiting Replay, an auto-incrementing store so
- *    entries keep strict FIFO order across tabs (see {@link ../outbox}).
+ *    entries keep strict FIFO order across tabs.
  *
  * IndexedDB is chosen over `localStorage` because the Outbox must persist real
  * `File`/`Blob` inputs by structured clone, which string storage cannot do.
@@ -57,8 +57,7 @@ function resolveFactory(factory?: IDBFactory): IDBFactory {
 
 /**
  * A lazily-opened connection to the offline database, exposing the minimal
- * typed operations the persister and Outbox need. Create one per `IDBFactory`;
- * production code shares the default {@link offlineIdb}, tests build their own.
+ * typed operations the storage adapter needs. Create one per `IDBFactory`.
  */
 export interface OfflineIdb {
   get<T>(store: OfflineStoreName, key: IDBValidKey): Promise<T | undefined>;
@@ -137,6 +136,3 @@ export function createOfflineIdb(factory?: IDBFactory): OfflineIdb {
     transaction: run,
   };
 }
-
-/** Shared production connection. Tests pass an injected factory instead. */
-export const offlineIdb: OfflineIdb = createOfflineIdb();

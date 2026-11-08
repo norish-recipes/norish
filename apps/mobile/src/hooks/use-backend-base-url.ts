@@ -18,8 +18,8 @@ export function useBackendBaseUrl(): BackendBaseUrlResult {
   const [state, setState] = useState<BackendBaseUrlState>({ status: "loading" });
   const [attempt, setAttempt] = useState(0);
 
+  // The error screen stays up until the re-read answers; "loading" would blank it, splash gone.
   const retry = useCallback(() => {
-    setState({ status: "loading" });
     setAttempt((current) => current + 1);
   }, []);
 
@@ -39,6 +39,7 @@ export function useBackendBaseUrl(): BackendBaseUrlResult {
     }
 
     const unsubscribe = subscribeBackendBaseUrlChange(() => void load());
+
     void load();
 
     return () => {

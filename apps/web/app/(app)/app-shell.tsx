@@ -1,7 +1,6 @@
 import type { DevicePreferencesSeed } from "@/context/device-preferences-context";
 import type { DehydratedState } from "@tanstack/react-query";
 import { AuthProviders } from "@/app/providers/auth-providers";
-import { OfflineCacheController } from "@/app/providers/offline-cache-controller";
 import { ArrivalScroll } from "@/components/arrival-scroll";
 import { Navbar } from "@/components/navbar/navbar";
 import { QuerySeedBoundary } from "@/components/query-seed-boundary";
@@ -19,6 +18,7 @@ import { PermissionsProvider } from "@/context/permissions-context";
 import { RecipesContextProvider } from "@/context/recipes-context";
 import { RecipesFiltersProvider } from "@/context/recipes-filters-context";
 import { UserProvider } from "@/context/user-context";
+import { OfflineCacheController } from "@/lib/offline/engine";
 
 import type { PersistedRecipeFilters } from "@norish/shared-react/filter-contract";
 import type { User } from "@norish/shared/contracts";

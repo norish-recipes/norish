@@ -1,41 +1,50 @@
 import "@/global.css";
+import "@/lib/i18n/plural-rules";
 
 import React, { useEffect } from "react";
 import { StyleSheet } from "react-native";
 import { GestureHandlerRootView } from "react-native-gesture-handler";
-import { StorageUnavailableScreen } from "@/components/shell/storage-unavailable-screen";
+import { StorageUnavailableScreen } from "@/features/auth/screens/storage-unavailable-screen";
+import { useBackendBaseUrl } from "@/hooks/use-backend-base-url";
+import { useResolvedColorScheme } from "@/hooks/use-resolved-color-scheme";
+import { useUserLocaleSync } from "@/hooks/use-user-locale-sync";
+import { AuthProvider, useAuth } from "@/lib/auth/auth-context";
+import { UserProvider } from "@/lib/auth/user-context";
+import { resolveBootPhase } from "@/lib/boot/boot-state";
+import { MobileIntlFallbackProvider, MobileIntlProvider } from "@/lib/i18n/mobile-i18n-context";
+import { ConnectivityProvider, OfflineController, offlineEngine } from "@/lib/offline/engine";
 import {
   AppearancePreferenceProvider,
   useAppearancePreference,
-} from "@/context/appearance-preference-context";
-import { AuthProvider, useAuth } from "@/context/auth-context";
-import { GroceriesProvider } from "@/context/groceries-context";
-import { HouseholdProvider } from "@/context/household-context";
-import { MobileIntlFallbackProvider, MobileIntlProvider } from "@/context/mobile-i18n-context";
-import { NetworkProvider } from "@/context/network-context";
-import { PermissionsProvider } from "@/context/permissions-context";
-import { RecipeFiltersProvider } from "@/context/recipe-filters-context";
-import { RecipesProvider } from "@/context/recipes-context";
-import { StoresProvider } from "@/context/stores-context";
-import { UserProvider } from "@/context/user-context";
-import { useBackendBaseUrl } from "@/hooks/use-backend-base-url";
-import { useCacheHydration } from "@/hooks/use-cache-hydration";
-import { useCacheInvalidationOnReconnect } from "@/hooks/use-cache-lifecycle";
-import { useResolvedColorScheme } from "@/hooks/use-resolved-color-scheme";
-import { useSessionRevalidation } from "@/hooks/use-session-revalidation";
-import { useUserLocaleSync } from "@/hooks/use-user-locale-sync";
-import { resolveBootPhase } from "@/lib/boot/boot-state";
-import { TrpcProvider } from "@/providers/trpc-provider";
+} from "@/lib/preferences/appearance-preference-context";
+import { TrpcProvider } from "@/lib/trpc/trpc-provider";
+import { FiraCode_400Regular } from "@expo-google-fonts/fira-code/400Regular";
+import { Fraunces_500Medium } from "@expo-google-fonts/fraunces/500Medium";
+import { Inter_400Regular } from "@expo-google-fonts/inter/400Regular";
+import { Inter_500Medium } from "@expo-google-fonts/inter/500Medium";
+import { Inter_600SemiBold } from "@expo-google-fonts/inter/600SemiBold";
+import { Inter_700Bold } from "@expo-google-fonts/inter/700Bold";
+import { useFonts } from "expo-font";
 import { Stack } from "expo-router";
 import { DarkTheme, DefaultTheme, ThemeProvider } from "expo-router/react-navigation";
 import * as SplashScreen from "expo-splash-screen";
-import { HeroUINativeProvider } from "heroui-native";
+import { HeroUINativeProvider, useThemeColor } from "heroui-native";
 import { PortalHost } from "heroui-native/portal";
 
 // The boot gate below renders nothing until hydration settles. Holding the
 // native splash over that window is what keeps it from showing as a blank
 // screen; every branch of the gate hides it again.
 void SplashScreen.preventAutoHideAsync();
+
+// The faces the font tokens in global.css name.
+const FONTS = {
+  Inter_400Regular,
+  Inter_500Medium,
+  Inter_600SemiBold,
+  Inter_700Bold,
+  Fraunces_500Medium,
+  FiraCode_400Regular,
+};
 
 // ============================================================================
 // Entry point
@@ -62,11 +71,18 @@ function RootLayoutContent() {
   const effectiveScheme = useResolvedColorScheme();
 
   const backendBaseUrl = useBackendBaseUrl();
-  const cacheReady = useCacheHydration();
+  const [fontsLoaded, fontsError] = useFonts(FONTS);
+  const [background, foreground, border, accent, danger] = useThemeColor([
+    "background",
+    "foreground",
+    "border",
+    "accent",
+    "danger",
+  ] as const);
 
   const boot = resolveBootPhase({
     appearanceHydrated: hydrated,
-    cacheReady,
+    fontsReady: fontsLoaded || fontsError !== null,
     backendBaseUrl,
   });
 
@@ -82,7 +98,18 @@ function RootLayoutContent() {
     return null;
   }
 
-  const theme = effectiveScheme === "dark" ? DarkTheme : DefaultTheme;
+  // The navigator paints the screens' ground, so it takes the shared theme's colours too.
+  const theme = {
+    ...(effectiveScheme === "dark" ? DarkTheme : DefaultTheme),
+    colors: {
+      primary: accent,
+      background,
+      card: background,
+      text: foreground,
+      border,
+      notification: danger,
+    },
+  };
 
   // Secure storage could not be read, so which backend this install belongs to
   // is unknown. Treating that as "no backend configured" would quietly drop a
@@ -114,8 +141,12 @@ function RootLayoutContent() {
   // Full provider tree — backend available
   return (
     <ThemeProvider value={theme}>
-      <NetworkProvider backendBaseUrl={boot.backendBaseUrl}>
-        <TrpcProvider baseUrl={boot.backendBaseUrl}>
+      <TrpcProvider
+        baseUrl={boot.backendBaseUrl}
+        getQueryClient={getOfflineQueryClient}
+        mutationLink={offlineEngine.outboxLink}
+      >
+        <ConnectivityProvider>
           <AuthProvider backendBaseUrl={boot.backendBaseUrl}>
             <MobileIntlProvider>
               <DomainProviders>
@@ -124,8 +155,8 @@ function RootLayoutContent() {
               </DomainProviders>
             </MobileIntlProvider>
           </AuthProvider>
-        </TrpcProvider>
-      </NetworkProvider>
+        </ConnectivityProvider>
+      </TrpcProvider>
     </ThemeProvider>
   );
 }
@@ -134,10 +165,11 @@ function RootLayoutContent() {
 // Domain providers — added only when authenticated
 // ============================================================================
 
+const getOfflineQueryClient = () => offlineEngine.queryClient;
+
 /**
- * When authenticated, wraps children with domain-specific providers
- * (permissions, user, recipes, filters). When unauthenticated, renders
- * children directly.
+ * When authenticated, wraps children with the user provider. When
+ * unauthenticated, renders children directly.
  */
 function DomainProviders({ children }: { children: React.ReactNode }) {
   const { isAuthenticated } = useAuth();
@@ -150,30 +182,22 @@ function DomainProviders({ children }: { children: React.ReactNode }) {
 }
 
 function AuthenticatedProviders({ children }: { children: React.ReactNode }) {
-  useCacheInvalidationOnReconnect();
-  useSessionRevalidation();
+  const { user } = useAuth();
 
   return (
-    <RecipeFiltersProvider>
-      <PermissionsProvider>
-        <UserProvider>
-          <AuthenticatedEffects />
-          <HouseholdProvider>
-            <RecipesProvider>
-              <StoresProvider>
-                <GroceriesProvider>{children}</GroceriesProvider>
-              </StoresProvider>
-            </RecipesProvider>
-          </HouseholdProvider>
-        </UserProvider>
-      </PermissionsProvider>
-    </RecipeFiltersProvider>
+    <UserProvider>
+      <OfflineController sessionUserId={user?.id ?? null}>
+        <AuthenticatedEffects />
+        {children}
+      </OfflineController>
+    </UserProvider>
   );
 }
 
 /** Hooks that require UserProvider + MobileIntlProvider. */
 function AuthenticatedEffects() {
   useUserLocaleSync();
+
   return null;
 }
 
@@ -187,7 +211,7 @@ function RootStack() {
   return (
     <Stack screenOptions={{ headerShown: false }}>
       <Stack.Protected guard={isAuthenticated}>
-        <Stack.Screen name="(tabs)" />
+        <Stack.Screen name="smoke" />
       </Stack.Protected>
       <Stack.Protected guard={!isAuthenticated}>
         <Stack.Screen name="(auth)" />

@@ -1,0 +1,22 @@
+# Checks off a grocery on the smoke screen. `pnpm --filter @norish/mobile maestro` puts the
+# unchecked grocery on the list first and checks it is done on the server afterwards.
+appId: dev.norish.app
+---
+- runFlow:
+    file: subflows/sign-in.yaml
+    env:
+      NORISH_SIGN_IN_URL: ${NORISH_SERVER_URL}
+- scrollUntilVisible:
+    element:
+      id: smoke-grocery-${NORISH_GROCERY_ID}
+# iOS reports a checkbox's state as its value, which Maestro reads as text.
+- assertVisible:
+    id: smoke-grocery-${NORISH_GROCERY_ID}
+    text: checkbox, unchecked
+- tapOn:
+    id: smoke-grocery-${NORISH_GROCERY_ID}
+- extendedWaitUntil:
+    visible:
+      id: smoke-grocery-${NORISH_GROCERY_ID}
+      text: checkbox, checked
+    timeout: 10000

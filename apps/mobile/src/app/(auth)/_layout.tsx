@@ -1,6 +1,6 @@
 import React from "react";
 import { Platform } from "react-native";
-import { AuthLocaleMenu } from "@/components/shell/auth-locale-menu";
+import { AuthLocaleMenu } from "@/features/auth/components/auth-locale-menu";
 import { Stack } from "expo-router";
 
 export default function AuthLayout() {

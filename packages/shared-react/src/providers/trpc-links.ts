@@ -55,7 +55,6 @@ export type CreateTRPCProviderBundleOptions<TRouter extends AnyTRPCRouter> = {
   retryRandom?: () => number;
 
   enableLoggerLink?: boolean;
-  getQueryClient?: () => import("@tanstack/react-query").QueryClient;
   /** Every close of the socket, a normal one included. */
   onWebSocketClose?: (cause: unknown) => void;
   onWebSocketOpen?: () => void;

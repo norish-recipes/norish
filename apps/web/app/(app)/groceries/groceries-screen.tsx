@@ -1,11 +1,12 @@
 "use client";
 
 import { usePathname } from "next/navigation";
-import { useConnectivity } from "@/app/providers/connectivity-provider";
 import { PantryView } from "@/components/groceries";
 import { usePantryQuery, usePantrySuggestions } from "@/hooks/pantry";
 import { usePrefersReducedMotion } from "@/hooks/use-prefers-reduced-motion";
 import { AnimatePresence, motion } from "motion/react";
+
+import { useConnectivity } from "@norish/shared-react/offline/react";
 
 import type { GroceriesView } from "./components/groceries-header";
 import AddGroceryButton from "./components/add-grocery-button";

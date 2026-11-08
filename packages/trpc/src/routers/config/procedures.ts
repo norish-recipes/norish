@@ -2,6 +2,7 @@ import { TRPCError } from "@trpc/server";
 
 import { getAvailableProviders, isPasswordAuthEnabled } from "@norish/auth/providers";
 import { buildInternalParserApiUrl, SERVER_CONFIG } from "@norish/config/env-config-server";
+import configPackage from "@norish/config/package.json" with { type: "json" };
 import { getDatabaseHealth } from "@norish/db/drizzle";
 import { listCategoryNamesForUsers } from "@norish/db/repositories/categories";
 import { listCuisines } from "@norish/db/repositories/cuisines";
@@ -252,7 +253,8 @@ async function checkReady() {
     });
   }
 
-  return { status: "ok" as const, db, valkey, parser };
+  // Every workspace package carries the release version (tooling/monorepo/scripts/sync-version.mjs).
+  return { status: "ok" as const, version: configPackage.version, db, valkey, parser };
 }
 
 /**
@@ -268,7 +270,7 @@ export const healthReady = publicProcedure
       tags: ["Health"],
       summary: "Check whether Norish is ready for traffic",
       description:
-        "Answers 503 while the database or Valkey is unreachable, and 200 otherwise. The parser's state is in the response but does not fail the check. Point readiness probes and load balancers here.",
+        "Answers 503 while the database or Valkey is unreachable, and 200 otherwise, reporting the running server version. The parser's state is in the response but does not fail the check. Point readiness probes and load balancers here.",
       successDescription: "The database and Valkey are healthy.",
       errorResponses: { 503: "The database or Valkey is unhealthy or unreachable" },
     },

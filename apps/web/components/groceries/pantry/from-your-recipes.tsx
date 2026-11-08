@@ -2,7 +2,6 @@
 
 import type { PickedFood } from "@/hooks/pantry";
 import { useState } from "react";
-import { useConnectivity } from "@/app/providers/connectivity-provider";
 import { IngredientIcon, IngredientIconsProvider } from "@/components/ingredients/ingredient-icon";
 import { IconActionButton } from "@/components/shared/action-button";
 import { useSpellingRules } from "@/hooks/config";
@@ -12,6 +11,7 @@ import { Button } from "@heroui/react";
 import { useLocale, useTranslations } from "next-intl";
 
 import type { PantryIngredientDto } from "@norish/shared/contracts";
+import { useConnectivity } from "@norish/shared-react/offline/react";
 import { ingredientDisplayName } from "@norish/shared/lib/ingredient-names";
 import { pantryIngredientFor } from "@norish/shared/lib/pantry";
 

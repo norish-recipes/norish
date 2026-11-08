@@ -329,22 +329,22 @@ _Avoid_: Loader, Preloader, Spinner (a progress sign, not the page's shape)
 ### Connectivity & Offline
 
 **Offline**:
-The state in which the web client cannot reach the Norish backend — because the client lost its network, the backend is down or unreachable, or it was forced via the (development-only) Offline Toggle. Not synonymous with "no internet".
+The state in which a client cannot reach the Norish backend — because the client lost its network, the backend is down or unreachable, or it was forced via the (development-only) Offline Toggle. Not synonymous with "no internet".
 _Avoid_: disconnected (that is the WebSocket status, a narrower thing)
 
 **Live**:
-The state in which the web client can reach the Norish backend and data exchange is permitted. Live does not require the realtime channel to be up — reaching the backend at all is what counts.
+The state in which a client can reach the Norish backend and data exchange is permitted. Live does not require the realtime channel to be up — reaching the backend at all is what counts.
 _Avoid_: online (ambiguous with general internet connectivity)
 
 **Reachability Deadline**:
-The single bounded wait — five seconds — after which the backend counts as unreachable for the attempt at hand. The connectivity verdict and a launching page navigation observe the same deadline: a launch that outlives it proceeds Offline with what is cached rather than waiting indefinitely.
+The single bounded wait — five seconds — after which the backend counts as unreachable for the attempt at hand. The connectivity verdict and a launch observe the same deadline: a launch that outlives it proceeds Offline with what is cached rather than waiting indefinitely.
 _Avoid_: Network timeout (a mechanism, not the meaning), Launch timeout (the deadline is shared, not launch-specific)
 
 **App Shell**:
-The static assets (HTML, JS, CSS, fonts, icons) required to boot the web app without any backend response.
+The static assets (HTML, JS, CSS, fonts, icons) required to boot the web client without any backend response. Web only: the app's own bundle plays this part on a phone.
 
 **Offline Cache**:
-The personalized persisted copy of previously fetched server data that the web app serves while Offline. It contains at minimum the Warm Set, treats everything else as best-effort, and excludes both the mutation Outbox and the static App Shell.
+The personalized persisted copy of previously fetched server data that a client serves while Offline, kept per signed-in account. It contains at minimum the Warm Set, treats everything else as best-effort, and excludes both the mutation Outbox and the static App Shell.
 
 **Warm Set**:
 The content guaranteed to be in the Offline Cache: the 50 most recent recipes in full (each with its primary image; further gallery images and videos are excluded from the guarantee), all groceries (including recurring) and stores, every cookbook the reader can see together with its membership, and the calendar's initial view window (roughly the current week on desktop, two weeks back/forward on mobile — enough to see the coming week's planned days). The Warm Set is a guaranteed floor — anything else fetched while Live is kept best-effort. A recipe the user creates joins the Warm Set on create (ADR-0008), so it is offline-available immediately rather than only at the next warm. A cookbook's members are guaranteed only insofar as they fall inside the fifty, so an Offline cookbook may list a recipe that cannot be opened.

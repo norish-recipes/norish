@@ -1,0 +1,44 @@
+# Signs in at NORISH_SIGN_IN_URL, which callers pass via runFlow env and nothing via -e, and
+# keeps the session across a relaunch. NORISH_EMAIL/PASSWORD come from the maestro script.
+appId: dev.norish.app
+---
+# The session lives in the keychain, which outlives the app's own data.
+- launchApp:
+    clearState: true
+    clearKeychain: true
+- tapOn:
+    id: connect-server-url
+- inputText: ${NORISH_SIGN_IN_URL}
+- hideKeyboard
+- tapOn:
+    id: connect-submit
+- tapOn:
+    id: login-email
+- inputText: ${NORISH_EMAIL}
+- tapOn:
+    id: login-password
+- inputText: ${NORISH_PASSWORD}
+- hideKeyboard
+- tapOn:
+    id: login-submit
+# iOS sometimes offers to save the password in a sheet that hides the app beneath it.
+- tapOn:
+    text: Not Now
+    optional: true
+- extendedWaitUntil:
+    visible:
+      id: smoke-user
+      text: .*${NORISH_EMAIL}.*
+    timeout: 20000
+- extendedWaitUntil:
+    visible:
+      id: smoke-recipe-count
+      text: "Recipes: \\d+"
+    timeout: 10000
+- stopApp
+- launchApp
+- extendedWaitUntil:
+    visible:
+      id: smoke-user
+      text: .*${NORISH_EMAIL}.*
+    timeout: 20000

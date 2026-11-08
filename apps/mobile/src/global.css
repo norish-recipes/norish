@@ -1,5 +1,17 @@
 @import "tailwindcss";
 @import "uniwind";
 @import "heroui-native/styles";
-@source "../../../node_modules/heroui-native";
+@source "../node_modules/heroui-native/lib";
 @import "@norish/tailwind-config/heroui-theme";
+
+/* Families loaded in src/app/_layout.tsx. React Native picks a weight by family
+   name, so each weight utility names its own static face. */
+@theme {
+  --font-inter: "Inter_400Regular";
+  --font-serif: "Fraunces_500Medium";
+  --font-mono: "FiraCode_400Regular";
+  --font-normal: "Inter_400Regular";
+  --font-medium: "Inter_500Medium";
+  --font-semibold: "Inter_600SemiBold";
+  --font-bold: "Inter_700Bold";
+}

@@ -70,22 +70,19 @@ let trpcHandler = globalForWs.trpcHandler ?? null;
 let trpcUpgrade = globalForWs.trpcUpgrade ?? null;
 let stopConnectionInvalidation = globalForWs.stopConnectionInvalidation ?? null;
 
+// A custom scheme, `file:` or `data:` has the opaque origin "null", which never names this instance.
 function originOf(url: string): string | null {
   try {
-    return new URL(url).origin;
+    const { origin } = new URL(url);
+
+    return origin === "null" ? null : origin;
   } catch {
     return null;
   }
 }
 
-/**
- * Whether a browser's `Origin` may ride its session cookie onto the socket.
- *
- * An absent header is accepted (native clients, `curl`). A present one must be
- * the origin of `AUTH_URL`, an entry of `TRUSTED_ORIGINS`, or the request's own
- * host under either scheme — a TLS-terminating proxy makes the socket `http`
- * while the browser saw `https`, and a page on the same host is this instance.
- */
+// No Origin (native, curl) is trusted, "null" never; otherwise AUTH_URL, TRUSTED_ORIGINS or the
+// request's own host under either scheme, since a TLS-terminating proxy makes the socket http.
 export function isTrustedWebSocketOrigin(
   origin: string | undefined,
   requestHost: string | undefined
@@ -257,7 +254,7 @@ export function initTrpcWebSocket(server: Server) {
     trpcLogger.error({ err }, "Failed to start invalidation listener");
   }
 
-  trpcLogger.info("WebSocket server started at /trpc");
+  trpcLogger.info(`WebSocket server started at ${TRPC_WS_PATH}`);
 }
 
 /**

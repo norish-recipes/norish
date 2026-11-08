@@ -22,20 +22,20 @@ export type BootPhase =
 export type BootInputs = {
   /** Whether the persisted appearance preference has settled. */
   appearanceHydrated: boolean;
-  /** Whether the persisted query cache has settled (restored or given up). */
-  cacheReady: boolean;
+  /** Whether the app fonts have loaded (or failed and fell back to the system font). */
+  fontsReady: boolean;
   backendBaseUrl: BackendBaseUrlState;
 };
 
 /**
- * Decides which shell to render from the three independent hydration inputs.
+ * Decides which shell to render from the independent hydration inputs.
  */
 export function resolveBootPhase({
   appearanceHydrated,
-  cacheReady,
+  fontsReady,
   backendBaseUrl,
 }: BootInputs): BootPhase {
-  if (!appearanceHydrated || !cacheReady || backendBaseUrl.status === "loading") {
+  if (!appearanceHydrated || !fontsReady || backendBaseUrl.status === "loading") {
     return { phase: "loading" };
   }
 

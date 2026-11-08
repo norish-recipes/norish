@@ -6,6 +6,6 @@ We decided that document navigations observe the same five-second Reachability D
 
 ## Consequences
 
-- The deadline constant lives in `lib/connectivity/reachability.ts`, imported by both the probe and the service worker; changing the deadline changes both verdicts at once, by design.
+- The deadline constant lives in `@norish/shared-react/offline/reachability`, imported by both the probe and the service worker; changing the deadline changes both verdicts at once, by design.
 - The custom handler owns writing documents into the `pages` cache (with a manual size cap replacing the strategy's `ExpirationPlugin`); `cacheOnNavigation` and the RSC strategies are untouched, so in-app soft navigations keep today's behavior.
 - The navigation preload request cannot be aborted at the deadline — it is merely no longer awaited; the browser discards it when it lands.

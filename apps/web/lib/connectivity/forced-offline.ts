@@ -65,6 +65,16 @@ export function setOfflineForced(next: boolean): void {
   }
 }
 
+// The Offline Toggle: entering reloads so the probe, dev link and socket re-derive from the flag;
+// exiting resumes the probe loop and Recovery converges (ADR-0007).
+export function switchOfflineForced(next: boolean): void {
+  setOfflineForced(next);
+
+  if (next) {
+    window.location.reload();
+  }
+}
+
 /** Subscribe to forced-Offline changes (same-tab and cross-tab). */
 export function subscribeOfflineForced(listener: () => void): () => void {
   if (!OFFLINE_FORCED_AVAILABLE || typeof window === "undefined") {

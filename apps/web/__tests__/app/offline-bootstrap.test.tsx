@@ -1,12 +1,16 @@
 import { OfflineBootstrap } from "@/app/~offline/offline-bootstrap";
-import { cacheManager } from "@/lib/query-cache";
+import { offlineEngine } from "@/lib/offline/engine";
 import { act, render, screen } from "@testing-library/react";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 
-vi.mock("@/lib/query-cache", async (importOriginal) => ({
-  ...(await importOriginal<typeof import("@/lib/query-cache")>()),
-  cacheManager: { reconcileIdentity: vi.fn() },
-}));
+vi.mock("@/lib/offline/engine", async (importOriginal) => {
+  const actual = await importOriginal<typeof import("@/lib/offline/engine")>();
+
+  return {
+    ...actual,
+    offlineEngine: { ...actual.offlineEngine, cache: { reconcileIdentity: vi.fn() } },
+  };
+});
 
 vi.mock("@/app/(app)/app-shell", () => ({
   AppShell: ({ children }: { children: React.ReactNode }) => <div>{children}</div>,
@@ -40,19 +44,19 @@ function renderPath(pathname: string) {
 describe("OfflineBootstrap", () => {
   beforeEach(() => {
     window.history.replaceState(null, "", "/");
-    vi.mocked(cacheManager.reconcileIdentity).mockReset().mockResolvedValue(undefined);
+    vi.mocked(offlineEngine.cache.reconcileIdentity).mockReset().mockResolvedValue(undefined);
   });
 
   it("restores the last reader's cache before drawing any surface", async () => {
     let restore!: () => void;
 
-    vi.mocked(cacheManager.reconcileIdentity).mockReturnValue(
+    vi.mocked(offlineEngine.cache.reconcileIdentity).mockReturnValue(
       new Promise<void>((resolve) => (restore = resolve))
     );
     renderPath("/groceries");
 
     await act(async () => {});
-    expect(cacheManager.reconcileIdentity).toHaveBeenCalledWith({
+    expect(offlineEngine.cache.reconcileIdentity).toHaveBeenCalledWith({
       sessionUserId: null,
       isOffline: true,
     });

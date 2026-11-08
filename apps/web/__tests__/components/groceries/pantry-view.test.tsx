@@ -64,7 +64,8 @@ vi.mock("@/context/device-preferences-context", async () =>
     hiddenItems: [],
   }))
 );
-vi.mock("@/app/providers/connectivity-provider", () => ({
+vi.mock("@norish/shared-react/offline/react", async (importOriginal) => ({
+  ...(await importOriginal<typeof import("@norish/shared-react/offline/react")>()),
   useConnectivity: () => ({ isOffline: offline }),
 }));
 vi.mock("@/components/ingredients/ingredient-panel", () => ({

@@ -8,6 +8,7 @@
  */
 import type { StartedValkeyContainer } from "@testcontainers/valkey";
 import { ValkeyContainer } from "@testcontainers/valkey";
+import { splitSetCookieHeader } from "better-auth/cookies";
 import Valkey from "ioredis";
 import { afterAll, beforeAll, beforeEach, describe, expect, it, vi } from "vitest";
 
@@ -211,6 +212,8 @@ async function importAuth(): Promise<AuthModule> {
 
 beforeAll(async () => {
   vi.stubEnv("NODE_ENV", "production");
+  // Vitest sets TEST, which turns Better Auth's origin check off.
+  vi.stubEnv("TEST", "false");
   vi.stubEnv("AUTH_URL", AUTH_URL);
   vi.stubEnv("AUTH_RATE_LIMIT_ENABLED", "true");
   vi.stubEnv("TRUSTED_PROXIES", "10.0.0.0/24");
@@ -515,6 +518,92 @@ describe("account deletion", () => {
 
     expect(await sessionFor(first.cookie)).toBeNull();
     expect(await sessionFor(second.cookie)).toBeNull();
+  });
+});
+
+describe("sign-in from the app", () => {
+  // The Expo client sends no Origin, only its scheme in `expo-origin`.
+  const signInFromApp = (expoOrigin: string) =>
+    authModule.auth.handler(
+      new Request(`${AUTH_URL}/api/auth/sign-in/email`, {
+        method: "POST",
+        headers: { "content-type": "application/json", "expo-origin": expoOrigin },
+        body: JSON.stringify({ email: "ada@norish.test", password: "ada-password-1" }),
+      })
+    );
+
+  const expectRefused = async (response: Response) => {
+    expect(response.status).toBe(403);
+    expect(await response.json()).toMatchObject({ code: "INVALID_ORIGIN" });
+  };
+
+  beforeEach(async () => {
+    await signUpWithPassword();
+  });
+
+  it("accepts a sign-in from the Norish app", async () => {
+    const response = await signInFromApp("norish://");
+
+    expect(response.status).toBe(200);
+    expect(await sessionFor(cookiesFrom(response))).not.toBeNull();
+  });
+
+  it.each(["evil://", "norish-evil://"])(
+    "refuses a sign-in from another app's %s",
+    async (origin) => {
+      await expectRefused(await signInFromApp(origin));
+    }
+  );
+
+  // A provider sign-in from the app returns to its callbackURL with the session cookie on it.
+  const startProviderSignInFromApp = (callbackURL: string) =>
+    authModule.auth.handler(
+      new Request(`${AUTH_URL}/api/auth/sign-in/social`, {
+        method: "POST",
+        headers: { "content-type": "application/json", "expo-origin": "norish://" },
+        body: JSON.stringify({ provider: "oidc", callbackURL }),
+      })
+    );
+
+  it("returns a provider sign-in to the app with its session", async () => {
+    const start = await startProviderSignInFromApp("norish://auth/callback");
+    const { url } = (await start.json()) as { url: string };
+    const response = await authModule.auth.handler(
+      new Request(idp.authorize(new URL(url), ADA), { headers: { cookie: cookiesFrom(start) } })
+    );
+    const location = new URL(response.headers.get("location") ?? "");
+
+    expect(`${location.protocol}//${location.host}${location.pathname}`).toBe(
+      "norish://auth/callback"
+    );
+    // The app gets the raw Set-Cookie header and keeps each cookie's name=value.
+    const appCookie = splitSetCookieHeader(location.searchParams.get("cookie") ?? "")
+      .map((cookie) => cookie.split(";")[0])
+      .join("; ");
+
+    expect(await sessionFor(appCookie)).not.toBeNull();
+  });
+
+  it("refuses a provider sign-in that would return to another app", async () => {
+    const response = await startProviderSignInFromApp("evil://auth/callback");
+
+    expect(response.status).toBe(403);
+  });
+
+  it("refuses a sign-in from Expo Go outside development", async () => {
+    await expectRefused(await signInFromApp("exp://"));
+  });
+
+  it("accepts a sign-in from Expo Go on a development server", async () => {
+    vi.stubEnv("NODE_ENV", "development");
+
+    try {
+      authModule = await importAuth();
+      expect((await signInFromApp("exp://192.168.1.20:8081")).status).toBe(200);
+    } finally {
+      vi.stubEnv("NODE_ENV", "production");
+      authModule = await importAuth();
+    }
   });
 });
 

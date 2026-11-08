@@ -22,7 +22,8 @@ vi.mock("@/app/providers/trpc-provider", () => import("../helpers/device-prefere
 
 const connectivity = vi.hoisted(() => ({ isOffline: false }));
 
-vi.mock("@/app/providers/connectivity-provider", () => ({
+vi.mock("@norish/shared-react/offline/react", async (importOriginal) => ({
+  ...(await importOriginal<typeof import("@norish/shared-react/offline/react")>()),
   useConnectivity: () => connectivity,
 }));
 

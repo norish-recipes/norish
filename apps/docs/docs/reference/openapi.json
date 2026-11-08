@@ -102,7 +102,7 @@
       "get": {
         "operationId": "healthReady",
         "summary": "Check whether Norish is ready for traffic",
-        "description": "Answers 503 while the database or Valkey is unreachable, and 200 otherwise. The parser's state is in the response but does not fail the check. Point readiness probes and load balancers here.",
+        "description": "Answers 503 while the database or Valkey is unreachable, and 200 otherwise, reporting the running server version. The parser's state is in the response but does not fail the check. Point readiness probes and load balancers here.",
         "tags": [
           "Health"
         ],
@@ -117,6 +117,10 @@
                     "status": {
                       "type": "string",
                       "const": "ok"
+                    },
+                    "version": {
+                      "type": "string",
+                      "description": "The running Norish version, e.g. 0.27.0-beta."
                     },
                     "db": {
                       "type": "object",
@@ -165,6 +169,7 @@
                   },
                   "required": [
                     "status",
+                    "version",
                     "db",
                     "valkey",
                     "parser"
@@ -208,6 +213,10 @@
                       "type": "string",
                       "const": "ok"
                     },
+                    "version": {
+                      "type": "string",
+                      "description": "The running Norish version, e.g. 0.27.0-beta."
+                    },
                     "db": {
                       "type": "object",
                       "properties": {
@@ -255,6 +264,7 @@
                   },
                   "required": [
                     "status",
+                    "version",
                     "db",
                     "valkey",
                     "parser"

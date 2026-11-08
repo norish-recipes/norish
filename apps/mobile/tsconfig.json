@@ -5,7 +5,7 @@
     "paths": {
       "@/*": ["./src/*"],
       "@/assets/*": ["./assets/*"],
-      "@norish/trpc/*": ["../../packages/trpc/src/*"]
+      "@norish/trpc/*": ["../../packages/trpc/dist/*"]
     }
   },
   "include": ["**/*.ts", "**/*.tsx", ".expo/types/**/*.ts", "expo-env.d.ts", "declarations.d.ts"]

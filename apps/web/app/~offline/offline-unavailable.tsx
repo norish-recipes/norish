@@ -1,11 +1,11 @@
 "use client";
 
 import { useEffect, useRef, useState } from "react";
-import { useConnectivity } from "@/app/providers/connectivity-provider";
 import { NoraCard } from "@/components/shared/nora-card";
 import { Button } from "@heroui/react";
 import { useTranslations } from "next-intl";
 
+import { useConnectivity } from "@norish/shared-react/offline/react";
 import { APP_ROOT } from "@norish/shared/lib/base-path";
 
 const AUTO_RELOAD_GUARD_PREFIX = "norish.offline-unavailable.reloaded:";
