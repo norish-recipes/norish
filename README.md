@@ -51,7 +51,7 @@ services:
 
   # Renders recipe pages for URL imports
   obscura:
-    image: norishapp/obscura:0.2.5-norish.1
+    image: norishapp/obscura:0.2.6-norish.1
     container_name: norish-obscura
     restart: unless-stopped
     environment:

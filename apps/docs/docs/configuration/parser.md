@@ -31,6 +31,10 @@ Set them up under **Settings => Admin => Page renderers**.
   `http://byparr:8191/v1`. Each page it reads starts a new browser, which takes
   a few seconds.
 
+A URL import reads a browser's page once the recipe has arrived, waiting up to
+15 seconds for pages that load it with JavaScript. A page that never shows a
+recipe is read after that wait.
+
 Enabling the Chromium browser or solver tests its endpoint. **Test** repeats
 the check: a connection to the browser, or a request through the solver to
 `https://example.com`.
@@ -58,7 +62,7 @@ Obscura only starts on a network address when its `OBSCURA_CDP_TOKEN` is at
 least 32 characters, and the app must send the same token. Generate one with
 `openssl rand -hex 32`.
 
-The compose files pin an exact Obscura image, like `0.2.5-norish.1`. For a
+The compose files pin an exact Obscura image, like `0.2.6-norish.1`. For a
 rolling release, use `norishapp/obscura:latest` instead.
 
 Page loading waits for images and scripts too. Raise the navigation timeout
