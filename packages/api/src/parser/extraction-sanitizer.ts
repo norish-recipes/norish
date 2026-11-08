@@ -1,5 +1,15 @@
 import * as cheerio from "cheerio";
 
+/**
+ * An <article> holding less of the page's text than this is a card on the page: a customer review
+ * or a related post. Reading only that card would lose the recipe.
+ */
+const MIN_ARTICLE_SHARE = 0.5;
+
+function textLength(text: string): number {
+  return text.replace(/\s+/g, "").length;
+}
+
 export function extractSanitizedBody(html: string): string {
   // Check if input looks like HTML (has tags) or is plain text
   const hasHtmlTags = /<[a-z][\s\S]*>/i.test(html);
@@ -55,12 +65,18 @@ export function extractSanitizedBody(html: string): string {
       blocks.push(t);
     };
 
-    // Prefer main/article if present
-    const $root = $body.find("main").first().length
-      ? $body.find("main").first()
-      : $body.find("article").first().length
-        ? $body.find("article").first()
-        : $body;
+    // Prefer <main>, then the largest <article> if it is the page rather than a card on it
+    const $main = $body.find("main").first();
+    const $article = $(
+      $body
+        .find("article")
+        .toArray()
+        .sort((a, b) => textLength($(b).text()) - textLength($(a).text()))[0]
+    );
+    const articleIsThePage =
+      $article.length > 0 &&
+      textLength($article.text()) >= textLength($body.text()) * MIN_ARTICLE_SHARE;
+    const $root = $main.length ? $main : articleIsThePage ? $article : $body;
 
     // Title
     const title =
