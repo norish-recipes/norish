@@ -21,6 +21,7 @@
     "@expo/metro-runtime": "~58.0.17",
     "@expo/ui": "~58.0.27",
     "@expo/vector-icons": "^15.1.1",
+    "@formatjs/intl-pluralrules": "^7.0.2",
     "@norish/i18n": "workspace:*",
     "@norish/shared": "workspace:*",
     "@norish/shared-react": "workspace:*",

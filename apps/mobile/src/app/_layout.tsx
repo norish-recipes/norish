@@ -1,4 +1,5 @@
 import "@/global.css";
+import "@/lib/i18n/plural-rules";
 
 import React, { useEffect } from "react";
 import { StyleSheet } from "react-native";
