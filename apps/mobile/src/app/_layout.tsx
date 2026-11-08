@@ -28,7 +28,7 @@ import { useFonts } from "expo-font";
 import { Stack } from "expo-router";
 import { DarkTheme, DefaultTheme, ThemeProvider } from "expo-router/react-navigation";
 import * as SplashScreen from "expo-splash-screen";
-import { HeroUINativeProvider } from "heroui-native";
+import { HeroUINativeProvider, useThemeColor } from "heroui-native";
 import { PortalHost } from "heroui-native/portal";
 
 // The boot gate below renders nothing until hydration settles. Holding the
@@ -72,6 +72,13 @@ function RootLayoutContent() {
 
   const backendBaseUrl = useBackendBaseUrl();
   const [fontsLoaded, fontsError] = useFonts(FONTS);
+  const [background, foreground, border, accent, danger] = useThemeColor([
+    "background",
+    "foreground",
+    "border",
+    "accent",
+    "danger",
+  ] as const);
 
   const boot = resolveBootPhase({
     appearanceHydrated: hydrated,
@@ -91,7 +98,18 @@ function RootLayoutContent() {
     return null;
   }
 
-  const theme = effectiveScheme === "dark" ? DarkTheme : DefaultTheme;
+  // The navigator paints the screens' ground, so it takes the shared theme's colours too.
+  const theme = {
+    ...(effectiveScheme === "dark" ? DarkTheme : DefaultTheme),
+    colors: {
+      primary: accent,
+      background,
+      card: background,
+      text: foreground,
+      border,
+      notification: danger,
+    },
+  };
 
   // Secure storage could not be read, so which backend this install belongs to
   // is unknown. Treating that as "no backend configured" would quietly drop a
