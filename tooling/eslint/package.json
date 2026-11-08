@@ -11,7 +11,8 @@
   "scripts": {
     "clean": "git clean -xdf .cache .turbo node_modules",
     "format": "prettier --check . --ignore-path ../../.gitignore",
-    "typecheck": "pnpm exec tsc --noEmit"
+    "typecheck": "pnpm exec tsc --noEmit",
+    "test": "vitest run"
   },
   "dependencies": {
     "@eslint-react/eslint-plugin": "^5.28.8",
@@ -31,7 +32,8 @@
     "@norish/tsconfig": "workspace:*",
     "@types/node": "catalog:",
     "prettier": "catalog:",
-    "typescript": "catalog:"
+    "typescript": "catalog:",
+    "vitest": "catalog:"
   },
   "prettier": "@norish/prettier-config"
 }
