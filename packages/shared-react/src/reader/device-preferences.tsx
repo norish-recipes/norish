@@ -69,8 +69,8 @@ export function useDevicePreference<K extends keyof DevicePreferences>(
     refetchOnMount: false,
   });
 
-  // A copy saved before this page loaded beats the seed only when this device's clock runs fast,
-  // so it is read again; Offline that read fails and the copy stays.
+  // A copy saved before this page loaded is read again: it can beat the seed when this device's
+  // clock runs fast. Offline that read fails and the copy stays.
   useEffect(() => {
     const devicePreferences = trpc.user.getDevicePreferences.queryKey();
     const savedAt = queryClient.getQueryState(devicePreferences)?.dataUpdatedAt ?? 0;

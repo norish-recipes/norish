@@ -57,7 +57,7 @@ export const restrictFeatures = (
   );
 };
 
-// A shared-react domain as a relative path or the package's own name reaches it.
+// A shared-react folder as a relative path or the package's own name reaches it.
 const domainPaths = (domain: string) => [
   `**/../${domain}`,
   `**/../${domain}/**`,
@@ -65,8 +65,8 @@ const domainPaths = (domain: string) => [
   `@norish/shared-react/${domain}/**`,
 ];
 
-// shared-react: a domain never imports another, and a cross-cutting folder imports neither a
-// domain nor a legacy folder. Every folder in srcDir that is neither cross-cutting nor legacy is a domain.
+// shared-react: a domain never imports another, and a cross-cutting folder imports neither a domain
+// nor a legacy folder. Every other folder in srcDir is a domain.
 export const restrictDomains = (
   root: string,
   options: { srcDir: string; crossCutting: string[]; legacy: string[] }

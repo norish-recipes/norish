@@ -3,9 +3,8 @@ import { useQuery } from "@tanstack/react-query";
 import { useTRPC } from "../trpc";
 
 /**
- * The ingredient words names are read by (ADR-0037), as the server has them:
- * the browser matches text nothing has resolved yet by them, as the resolver
- * does. Until they arrive, Norish's own words stand in.
+ * The server's ingredient words (ADR-0037), which the browser matches unresolved text by as the
+ * resolver does; Norish's own words stand in until they arrive.
  */
 export function useIngredientWordsQuery() {
   const trpc = useTRPC();

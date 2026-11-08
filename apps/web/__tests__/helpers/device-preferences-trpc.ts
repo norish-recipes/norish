@@ -1,10 +1,8 @@
 import { vi } from "vitest";
 
 /**
- * The tRPC slice `useDevicePreference` uses. A test installs it with
- * `vi.mock("@norish/shared-react/trpc", () => import("../helpers/device-preferences-trpc"))`
- * (path relative to the test) and reads what was written from `deviceWrite`. Reads are not
- * served, so a re-read after a write leaves the cache as the test seeded and changed it.
+ * The tRPC slice `useDevicePreference` uses, for `vi.mock("@norish/shared-react/trpc")`: writes
+ * reach `deviceWrite`, and reads are refused, so a re-read leaves the cache as the test set it.
  */
 export const devicePreferencesQueryKey = [["user", "getDevicePreferences"], { type: "query" }];
 export const deviceWrite = vi.fn();

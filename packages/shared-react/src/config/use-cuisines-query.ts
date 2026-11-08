@@ -2,13 +2,7 @@ import { useQuery } from "@tanstack/react-query";
 
 import { useTRPC } from "../trpc";
 
-/**
- * The deployment's Cuisine vocabulary.
- *
- * One list for everyone: an editor's picker and the administration screen read
- * the same rows AI is offered, so a manual entry and an inferred one land on the
- * same Cuisine.
- */
+/** The deployment's Cuisine vocabulary: the editor, the admin screen and AI read the same rows. */
 export function useCuisinesQuery() {
   const trpc = useTRPC();
 

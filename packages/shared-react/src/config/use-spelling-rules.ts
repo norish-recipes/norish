@@ -7,9 +7,8 @@ import { useIngredientWordsQuery } from "./use-ingredient-words-query";
 import { useUnitsQuery } from "./use-units-query";
 
 /**
- * How the resolver's first two rungs read a name, from the server's units
- * map and ingredient words: what a screen matches unresolved text on, so
- * "salt to taste" or "uien" typed here is the food the server will say it is.
+ * The resolver's first two rungs from the server's units and ingredient words, so text typed here
+ * matches the food the server will resolve it to.
  */
 export function useSpellingRules(): SpellingRules {
   const { units } = useUnitsQuery();

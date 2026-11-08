@@ -7,12 +7,8 @@ import { DEVICE_PREFERENCE_DEFAULTS } from "@norish/shared/contracts/zod/device-
 type DevicePreferenceKey = keyof DevicePreferences;
 
 /**
- * A stand-in for `@norish/shared-react/reader` over a test's own state, for a
- * test that renders without the query cache. `read` runs on every render, so
- * the test changes the reader's choices through its own mocks; `set` hears
- * every write. Install it with
- * `vi.mock("@norish/shared-react/reader", async () =>
- *   (await import("<path>/helpers/device-preferences-mock")).mockDevicePreferences(() => ({ … })))`.
+ * `@norish/shared-react/reader` over the test's own state, for a `vi.mock` without a query cache:
+ * `read` runs on every render and `set` hears every write.
  */
 export function mockDevicePreferences(
   read: () => Partial<DevicePreferences> = () => ({}),

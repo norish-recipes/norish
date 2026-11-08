@@ -16,18 +16,8 @@ const log = createClientLogger("trpc");
 
 export const { TRPCProviderWrapper } = createTRPCProviderBundle({
   logger: log,
-  // Dev-only: a forced-Offline link sitting below the Outbox link and above
-  // the real transport (ADR-0007). It blocks the transport when Offline is
-  // forced so the offline runtime can be exercised without taking the backend
-  // down. Stripped in production — OFFLINE_FORCED_AVAILABLE folds to false, so
-  // extraLinks is an empty array and the dev link ships nothing.
-  //
-  // Forced-Offline's WebSocket silence relies on the WS staying lazy (the
-  // bundle default, wsLazyEnabled=true): the dev link holds subscriptions
-  // pending, so the lazy socket is never asked to connect, and forwards them
-  // to the transport when the override clears (the socket then connects
-  // organically). Do not pass wsLazyEnabled:false here without revisiting
-  // forced-Offline (an eager socket would connect despite the dev link).
+  // Dev only (ADR-0007): blocks the transport while Offline is forced, and holds subscriptions so
+  // the lazy WebSocket (wsLazyEnabled, the default) never connects. Production gets no link.
   extraLinks: OFFLINE_FORCED_AVAILABLE
     ? [
         createForcedOfflineLink<AppRouter>({

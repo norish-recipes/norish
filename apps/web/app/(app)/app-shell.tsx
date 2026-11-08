@@ -66,12 +66,8 @@ export function AppShell({ children, seed }: { children: React.ReactNode; seed?:
                               data-app-container
                               className="relative flex min-h-dvh flex-col overflow-x-hidden"
                             >
-                              {/* Installed-PWA polish: content scrolls under the translucent
-                          status bar (viewport-fit: cover), so a soft background fade
-                          masks it instead of a hard clip. Mobile-only — desktop has
-                          no status bar — and height collapses to the small tail
-                          where the safe-area inset is zero. Below the nav's z-60,
-                          above content; theme-aware via the background token. */}
+                              {/* The installed app draws under the status bar (viewport-fit:
+                              cover): a background fade masks it, phones only, below the nav. */}
                               <div
                                 aria-hidden
                                 className="from-background via-background/80 dark:via-background/80 pointer-events-none fixed inset-x-0 top-0 z-50 bg-gradient-to-b via-35% to-transparent md:hidden dark:via-40%"
