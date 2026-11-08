@@ -14,6 +14,7 @@
 - [ ] Device Kind comes from the platform adapter: web passes the request's kind as it does today, mobile passes its own.
 - [ ] `apps/web/context/device-preferences-context.tsx` and its provider are deleted and every `useDevicePreference` / `useDeviceKind` caller reads from `reader`; the first frame still draws with the preferences applied, skeletons included.
 - [ ] `providers/` becomes `trpc/`, and `offline/`'s imports of `ConnectionStatus` and `trpc-links` follow it.
+- [ ] `hooks/optimistic-updates.ts` moves to `offline/`, and every mutation hook that imports it (groceries, stores, pantry, calendar, cookbooks, recipes, ratings, recipe detail) imports it from there; the `useDevicePreference` setter uses it too.
 - [ ] `filter-contract.ts` and `list-queries.ts` move to `@norish/shared/contracts`; the `./filter-contract` and `./list-queries` exports are deleted and their importers (`offline/warm-set`, web's server seeding and the rest) import from `@norish/shared`.
 - [ ] ESLint in shared-react blocks one feature folder importing another and a cross-cutting folder (`trpc`, `platform`, `offline`, `config`, `reader`) importing a feature.
 - [ ] Gates are green, mobile included.
