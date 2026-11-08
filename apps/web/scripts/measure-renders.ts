@@ -356,13 +356,7 @@ async function resetGroceries(cookies: SessionCookies) {
   const mutate = <T>(procedure: string, input: unknown) =>
     callTrpc<T>(BASE, cookies, procedure, input);
   type Listed = {
-    groceries: Array<{
-      id: string;
-      name: string | null;
-      version: number;
-      storeId: string | null;
-      sortOrder: number;
-    }>;
+    groceries: Array<{ id: string; name: string | null; version: number }>;
     recurringGroceries: Array<{ id: string; version: number }>;
   };
   const known = new Set(
@@ -512,25 +506,6 @@ async function resetGroceries(cookies: SessionCookies) {
       }
     }
   }
-
-  // The server orders the list by sortOrder alone, so Stores' equal ones would come back in any
-  // order: each Store's groceries are moved to a range of their own.
-  const { groceries } = await query<Listed>("groceries.list");
-  const updates = [...STORES.map(({ name }) => storeId(name)), null].flatMap((id, index) =>
-    groceries
-      .filter((grocery) => grocery.storeId === id)
-      .sort((a, b) => a.sortOrder - b.sortOrder)
-      .map(({ id, version }, position) => ({ id, version, sortOrder: index * 100 + position }))
-  );
-
-  await mutate("groceries.reorderInStore", { updates, savePreference: false });
-  await until(
-    () => query<Listed>("groceries.list"),
-    (after) =>
-      after.groceries.every(
-        (grocery) => updates.find(({ id }) => id === grocery.id)?.sortOrder === grocery.sortOrder
-      )
-  );
 }
 
 function rowFor(page: Page, name: string) {
