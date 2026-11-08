@@ -19,7 +19,7 @@ export function useUserLocaleSync() {
 
   useEffect(() => {
     if (serverLocale) {
-      setLocale(serverLocale);
+      setLocale(serverLocale, { fromServer: true });
     }
   }, [serverLocale, setLocale]);
 }

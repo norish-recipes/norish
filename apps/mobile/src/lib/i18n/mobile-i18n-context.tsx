@@ -28,7 +28,8 @@ type MobileLocaleContextValue = {
   enabledLocales: EnabledLocale[];
   localeNames: Record<string, string>;
   isLoading: boolean;
-  setLocale: (nextLocale: string) => void;
+  /** `fromServer` applies the server's own preference, so it is not written back. */
+  setLocale: (nextLocale: string, options?: { fromServer?: boolean }) => void;
 };
 
 const MobileLocaleContext = createContext<MobileLocaleContextValue | null>(null);
@@ -152,7 +153,7 @@ function MobileLocaleProviderInner({ children }: { children: React.ReactNode }) 
       enabledLocales: localeOptions,
       localeNames,
       isLoading: isMessagesLoading,
-      setLocale: (nextLocale: string) => {
+      setLocale: (nextLocale, options) => {
         const nextResolved = resolveLocaleSelection(
           nextLocale,
           localeOptions,
@@ -171,7 +172,7 @@ function MobileLocaleProviderInner({ children }: { children: React.ReactNode }) 
         setPreferredLocale(nextResolved);
         void saveLocalePreference(nextResolved);
 
-        if (isAuthenticated) {
+        if (isAuthenticated && !options?.fromServer) {
           void updatePreferencesMutation.mutateAsync({
             version: userSettings?.user.version ?? 1,
             preferences: { locale: nextResolved },
