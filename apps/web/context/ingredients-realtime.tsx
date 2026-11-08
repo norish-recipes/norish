@@ -1,8 +1,7 @@
 "use client";
 
-import { useTRPC } from "@/app/providers/trpc-provider";
-
 import { createIngredientsHooks } from "@norish/shared-react/hooks";
+import { useTRPC } from "@norish/shared-react/trpc";
 
 const { useIngredientsSubscription } = createIngredientsHooks({ useTRPC });
 

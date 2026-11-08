@@ -8,7 +8,7 @@ import { useHiddenItemVisibility } from "@/hooks/user/use-hidden-item-visibility
 
 import { renderWithDevicePreferences, deviceWrite as write } from "../helpers/device-preferences";
 
-vi.mock("@/app/providers/trpc-provider", () => import("../helpers/device-preferences-trpc"));
+vi.mock("@norish/shared-react/trpc", () => import("../helpers/device-preferences-trpc"));
 
 function renderWithHidden(hiddenItems: string[], children: React.ReactNode) {
   renderWithDevicePreferences(children, { values: { hiddenItems } });

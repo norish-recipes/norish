@@ -7,7 +7,7 @@ vi.mock("expo-constants", () => ({ default: { expoConfig: { version: "0.0.0-test
 vi.mock("expo-file-system", () => ({}));
 vi.mock("@/lib/auth/auth-client", () => ({}));
 vi.mock("@/lib/network/backend-base-url", () => ({}));
-vi.mock("@/lib/trpc/trpc-provider", () => ({}));
+vi.mock("@norish/shared-react/trpc", () => ({}));
 
 const native = vi.hoisted(() => ({
   network: new Set<(event: { isConnected: boolean }) => void>(),

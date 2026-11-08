@@ -49,7 +49,7 @@ const ingredientOf = (name: string) => `i-${name.trim().toLowerCase()}`;
  * query runs synchronously here; the hook's own debounce is what a test waits
  * out, with fake timers, before a typed name has an Ingredient.
  */
-vi.mock("@/app/providers/trpc-provider", () => ({
+vi.mock("@norish/shared-react/trpc", () => ({
   useTRPC: () => ({
     ingredients: {
       find: {

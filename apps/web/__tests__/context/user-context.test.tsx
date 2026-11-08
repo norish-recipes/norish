@@ -11,7 +11,7 @@ vi.mock("@norish/shared-react/hooks", () => ({
   useUser: mockUseUser,
 }));
 
-vi.mock("@/app/providers/trpc-provider", () => ({
+vi.mock("@norish/shared-react/trpc", () => ({
   useTRPC: mockUseTRPC,
 }));
 

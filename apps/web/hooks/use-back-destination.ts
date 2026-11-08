@@ -1,12 +1,13 @@
 "use client";
 
 import { useSearchParams } from "next/navigation";
-import { useTRPC } from "@/app/providers/trpc-provider";
 import { useOptionalRecipesFiltersContext } from "@/context/recipes-filters-context";
 import { useCookbookQuery } from "@/hooks/cookbooks";
 import { cookbookIdFromPath, recipeIdFromPath, safeOrigin } from "@/lib/back-destination";
 import { useQuery } from "@tanstack/react-query";
 import { useTranslations } from "next-intl";
+
+import { useTRPC } from "@norish/shared-react/trpc";
 
 export type BackDestination = { href: string; label: string };
 

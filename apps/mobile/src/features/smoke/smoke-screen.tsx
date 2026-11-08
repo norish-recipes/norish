@@ -9,11 +9,11 @@ import {
 import { useRecipesQuery } from "@/hooks/recipes";
 import { useUserContext } from "@/lib/auth/user-context";
 import { offlineEngine } from "@/lib/offline/engine";
-import { useTRPC } from "@/lib/trpc/trpc-provider";
 import { Button, Checkbox } from "heroui-native";
 import { useIntl } from "react-intl";
 
 import { useOfflineStatus } from "@norish/shared-react/offline/react";
+import { useTRPC } from "@norish/shared-react/trpc";
 
 // Throwaway screen that proves sign-in, tRPC, realtime and offline end to end
 // until the redesigned screens replace it.

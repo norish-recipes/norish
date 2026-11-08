@@ -8,7 +8,7 @@ import { createMockUserSettingsData, createTestQueryClient, createTestWrapper } 
 const mockUserQueryKey = [["user", "get"], { type: "query" }] as const;
 const mockAllergiesQueryKey = [["user", "getAllergies"], { type: "query" }] as const;
 
-vi.mock("@/app/providers/trpc-provider", () => ({
+vi.mock("@norish/shared-react/trpc", () => ({
   useTRPC: () => ({
     user: {
       get: {

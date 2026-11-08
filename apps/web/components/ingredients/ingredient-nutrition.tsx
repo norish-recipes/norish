@@ -2,7 +2,6 @@
 
 import type { ReactNode } from "react";
 import { useState } from "react";
-import { useTRPC } from "@/app/providers/trpc-provider";
 import Panel from "@/components/Panel/Panel";
 import { ActionButton, ActionButtonGroup } from "@/components/shared/action-button";
 import { PlusIcon } from "@heroicons/react/16/solid";
@@ -13,6 +12,7 @@ import { useFormatter, useTranslations } from "next-intl";
 
 import type { IngredientNutrition } from "@norish/shared/contracts/ingredient-nutrition";
 import type { SpoonMeasure } from "@norish/shared/lib/spoon-measure";
+import { useTRPC } from "@norish/shared-react/trpc";
 import { spoonWeight } from "@norish/shared/lib/spoon-measure";
 
 import { factSource, spoonKey } from "./nutrition-copy";

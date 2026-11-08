@@ -1,12 +1,12 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { useTRPC } from "@/app/providers/trpc-provider";
 import { PanelComboBoxPopover } from "@/components/Panel/Panel";
 import { ComboBox, Input, Label, ListBox } from "@heroui/react";
 import { useQuery } from "@tanstack/react-query";
 import { useLocale, useTranslations } from "next-intl";
 
+import { useTRPC } from "@norish/shared-react/trpc";
 import { ingredientDisplayName } from "@norish/shared/lib/ingredient-names";
 
 /** How long typing pauses before the catalogue is searched. */

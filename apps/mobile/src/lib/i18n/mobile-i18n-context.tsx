@@ -7,7 +7,6 @@ import {
   loadLocalePreference,
   saveLocalePreference,
 } from "@/lib/preferences/locale-preference-store";
-import { useTRPC } from "@/lib/trpc/trpc-provider";
 import { useMutation, useQuery } from "@tanstack/react-query";
 import { IntlProvider } from "react-intl";
 
@@ -22,6 +21,7 @@ import enGroceriesMessages from "@norish/i18n/messages/en/groceries.json";
 import enNavbarMessages from "@norish/i18n/messages/en/navbar.json";
 import enRecipesMessages from "@norish/i18n/messages/en/recipes.json";
 import enSettingsMessages from "@norish/i18n/messages/en/settings.json";
+import { useTRPC } from "@norish/shared-react/trpc";
 
 type MobileLocaleContextValue = {
   locale: string;

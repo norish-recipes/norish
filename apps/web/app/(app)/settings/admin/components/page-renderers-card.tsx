@@ -4,7 +4,6 @@ import { useState } from "react";
 import { SwitchRow } from "@/app/(app)/settings/components/setting-row";
 import { SettingsCard } from "@/app/(app)/settings/components/settings-card";
 import SettingsSwitch from "@/app/(app)/settings/components/settings-switch";
-import { useTRPC } from "@/app/providers/trpc-provider";
 import { ActionButton, ActionButtonGroup } from "@/components/shared/action-button";
 import SecretInput from "@/components/shared/secret-input";
 import { showSafeErrorToast } from "@/lib/ui/safe-error-toast";
@@ -15,6 +14,7 @@ import { useMutation, useQuery } from "@tanstack/react-query";
 import { useTranslations } from "next-intl";
 
 import type { PageRenderersConfig } from "@norish/config/zod/server-config";
+import { useTRPC } from "@norish/shared-react/trpc";
 
 import { ConnectionTestResult } from "./connection-test-result";
 import { UnsavedChangesChip } from "./unsaved-changes-chip";

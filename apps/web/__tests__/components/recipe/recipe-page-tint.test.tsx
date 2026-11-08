@@ -9,7 +9,7 @@ import { APP_PAGE_COLUMN_CLASS } from "@norish/web/config/css-tokens";
 
 import { renderWithDevicePreferences } from "../../helpers/device-preferences";
 
-vi.mock("@/app/providers/trpc-provider", () => import("../../helpers/device-preferences-trpc"));
+vi.mock("@norish/shared-react/trpc", () => import("../../helpers/device-preferences-trpc"));
 
 function renderTint(dishColor: string | null | undefined, colorMode?: RecipePageColorMode) {
   return renderWithDevicePreferences(

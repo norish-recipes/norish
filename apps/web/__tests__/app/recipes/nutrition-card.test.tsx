@@ -29,7 +29,7 @@ vi.mock("@/components/ingredients/ingredient-panel", () => ({
   },
 }));
 
-vi.mock("@/app/providers/trpc-provider", () => ({
+vi.mock("@norish/shared-react/trpc", () => ({
   useTRPC: () => ({
     ingredients: {
       nutritionFor: { pathKey: () => ["ingredients", "nutritionFor"] },

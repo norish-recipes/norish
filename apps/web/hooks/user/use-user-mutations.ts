@@ -1,11 +1,11 @@
 "use client";
 
-import { useTRPC } from "@/app/providers/trpc-provider";
 import { useMutation } from "@tanstack/react-query";
 
 import type { User } from "@norish/shared/contracts";
 import type { UserPreferencesDto } from "@norish/shared/contracts/zod/user";
 import type { ApiKeyMetadataDto } from "@norish/trpc";
+import { useTRPC } from "@norish/shared-react/trpc";
 
 import { useUserCacheHelpers } from "./use-user-cache";
 

@@ -4,7 +4,7 @@ import { beforeEach, describe, expect, it, vi } from "vitest";
 import { createTestQueryClient, createTestWrapper } from "./test-utils";
 
 // Mock tRPC provider
-vi.mock("@/app/providers/trpc-provider", () => ({
+vi.mock("@norish/shared-react/trpc", () => ({
   useTRPC: () => ({
     recipes: {
       uploadImage: {

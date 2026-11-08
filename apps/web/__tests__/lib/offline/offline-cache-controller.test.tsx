@@ -112,7 +112,7 @@ const trpcClient = vi.hoisted(() => ({}));
 
 const trpc = vi.hoisted(() => ({}));
 
-vi.mock("@/app/providers/trpc-provider", () => ({
+vi.mock("@norish/shared-react/trpc", () => ({
   useTRPC: () => trpc,
   useTRPCClient: () => trpcClient,
   useConnectionStatus: () => ({ status: wsStatus }),

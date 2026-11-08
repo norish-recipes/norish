@@ -1,11 +1,11 @@
 "use client";
 
-import { useTRPC } from "@/app/providers/trpc-provider";
 import { showSafeErrorToast } from "@/lib/ui/safe-error-toast";
 import { toast } from "@heroui/react";
 import { useTranslations } from "next-intl";
 
 import { createArchiveHooks } from "@norish/shared-react/hooks";
+import { useTRPC } from "@norish/shared-react/trpc";
 
 export const sharedArchiveHooks = createArchiveHooks({
   useTRPC,

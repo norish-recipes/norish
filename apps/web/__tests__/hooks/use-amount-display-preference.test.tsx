@@ -7,7 +7,7 @@ import { useAmountDisplayPreference } from "@/hooks/use-amount-display-preferenc
 
 import { renderWithDevicePreferences } from "../helpers/device-preferences";
 
-vi.mock("@/app/providers/trpc-provider", () => import("../helpers/device-preferences-trpc"));
+vi.mock("@norish/shared-react/trpc", () => import("../helpers/device-preferences-trpc"));
 
 let latest!: ReturnType<typeof useAmountDisplayPreference>;
 

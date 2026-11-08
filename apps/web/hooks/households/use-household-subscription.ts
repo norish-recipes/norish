@@ -1,12 +1,11 @@
 "use client";
 
-import { useTRPC } from "@/app/providers/trpc-provider";
-
 import {
   createUseHouseholdCache,
   createUseHouseholdQuery,
   createUseHouseholdSubscription,
 } from "@norish/shared-react/hooks/households";
+import { useTRPC } from "@norish/shared-react/trpc";
 
 import { useHouseholdToastAdapter } from "./adapters";
 

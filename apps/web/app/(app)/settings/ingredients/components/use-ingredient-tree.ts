@@ -2,8 +2,9 @@
 
 import type { IngredientItem } from "@/components/ingredients/types";
 import { useCallback, useMemo, useState } from "react";
-import { useTRPC } from "@/app/providers/trpc-provider";
 import { useQueries } from "@tanstack/react-query";
+
+import { useTRPC } from "@norish/shared-react/trpc";
 
 /** One line of the page's tree: a food, how deep it sits, and whether its kinds are folded out. */
 export interface IngredientTreeRow {

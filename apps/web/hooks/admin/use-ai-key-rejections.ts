@@ -1,8 +1,9 @@
 "use client";
 
-import { useTRPC } from "@/app/providers/trpc-provider";
 import { useQuery } from "@tanstack/react-query";
 import { useFormatter, useTranslations } from "next-intl";
+
+import { useTRPC } from "@norish/shared-react/trpc";
 
 /** Each settings block's heading under AI processing, by the config key a rejection names. */
 const BLOCK_TITLES = {

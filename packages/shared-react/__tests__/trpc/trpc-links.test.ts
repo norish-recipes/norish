@@ -36,7 +36,7 @@ const {
   isUnauthorizedTRPCError,
   isUnauthorizedWebSocketClose,
   webSocketRetryDelayMs,
-} = await import("../../src/providers/trpc-links");
+} = await import("../../src/trpc/trpc-links");
 
 const logger = { info: vi.fn(), warn: vi.fn(), debug: vi.fn() };
 

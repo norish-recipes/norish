@@ -2,7 +2,7 @@
 
 import { useEffect, useRef } from "react";
 
-import type { ConnectionStatus } from "../../providers/trpc-provider";
+import type { ConnectionStatus } from "../../trpc/trpc-provider";
 import type { CacheManager } from "../cache-manager";
 import type { OutboxStore } from "../outbox-store";
 import type { Recovery } from "../recovery";

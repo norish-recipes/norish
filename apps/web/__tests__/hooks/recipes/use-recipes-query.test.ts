@@ -8,7 +8,7 @@ import { createMockRecipe, createTestQueryClient, createTestWrapper } from "./te
 // Mock the tRPC provider
 const mockInfiniteQueryOptions = vi.fn();
 
-vi.mock("@/app/providers/trpc-provider", () => ({
+vi.mock("@norish/shared-react/trpc", () => ({
   useTRPC: () => ({
     // The Library holds the same recipes in one interleaved list, so the cache
     // helpers reach it too (ADR-0026).

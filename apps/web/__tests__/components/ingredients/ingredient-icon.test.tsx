@@ -25,7 +25,7 @@ vi.mock("@/context/device-preferences-context", async () =>
   }))
 );
 
-vi.mock("@/app/providers/trpc-provider", () => ({
+vi.mock("@norish/shared-react/trpc", () => ({
   useTRPC: () => ({
     ingredients: {
       icons: {

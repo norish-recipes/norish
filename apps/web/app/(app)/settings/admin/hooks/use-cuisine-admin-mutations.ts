@@ -1,8 +1,9 @@
 "use client";
 
 import { useCallback } from "react";
-import { useTRPC } from "@/app/providers/trpc-provider";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
+
+import { useTRPC } from "@norish/shared-react/trpc";
 
 /**
  * Cuisine vocabulary writes.

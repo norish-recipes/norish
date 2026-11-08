@@ -1,8 +1,7 @@
 "use client";
 
-import { useTRPC } from "@/app/providers/trpc-provider";
-
 import { createUseRecipeImages } from "@norish/shared-react/hooks/recipes/recipe";
+import { useTRPC } from "@norish/shared-react/trpc";
 
 const useSharedRecipeImages = createUseRecipeImages({ useTRPC });
 

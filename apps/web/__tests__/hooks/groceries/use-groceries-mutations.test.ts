@@ -47,7 +47,7 @@ vi.mock("@tanstack/react-query", async () => {
   };
 });
 
-vi.mock("@/app/providers/trpc-provider", () => ({
+vi.mock("@norish/shared-react/trpc", () => ({
   useTRPC: () => ({
     groceries: {
       list: {

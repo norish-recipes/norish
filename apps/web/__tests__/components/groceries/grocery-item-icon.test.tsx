@@ -24,7 +24,7 @@ vi.mock("@/hooks/use-unit-formatter", () => ({
 }));
 vi.mock("@/components/groceries/grocery-price", () => ({ GroceryPrice: () => null }));
 vi.mock("next-intl", () => ({ useTranslations: () => (key: string) => key }));
-vi.mock("@/app/providers/trpc-provider", () => ({
+vi.mock("@norish/shared-react/trpc", () => ({
   useTRPC: () => ({
     ingredients: {
       icons: {

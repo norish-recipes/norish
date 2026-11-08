@@ -12,7 +12,7 @@ import { getBackendWsUrl } from "@/lib/network/backend-ws-url";
 import { getCookie } from "@better-auth/expo/client";
 
 import type { AppRouter } from "@norish/trpc/client";
-import { createTRPCProviderBundle } from "@norish/shared-react/providers";
+import { createTRPCProviderBundle } from "@norish/shared-react/trpc";
 import { createClientLogger } from "@norish/shared/lib/logger";
 
 const log = createClientLogger("mobile-trpc");
@@ -75,7 +75,7 @@ function trpcBundleGetHeaders(): Record<string, string> {
   return cookies ? { Cookie: cookies } : {};
 }
 
-const trpcBundle = createTRPCProviderBundle<AppRouter>({
+const { TRPCProviderWrapper } = createTRPCProviderBundle({
   logger: log,
   getBaseUrl: getBackendBaseUrl,
   getWsUrl: () => getBackendWsUrl(getBackendBaseUrl()),
@@ -95,10 +95,6 @@ const trpcBundle = createTRPCProviderBundle<AppRouter>({
     void invalidateSession("transport-unauthorized");
   },
 });
-
-export const useTRPC = trpcBundle.useTRPC;
-export const useConnectionStatus = trpcBundle.useConnectionStatus;
-export const useTRPCClient = trpcBundle.useTRPCClient;
 
 /** `getQueryClient` and `mutationLink` come from the offline engine; both are read once. */
 export function TrpcProvider({
@@ -123,12 +119,12 @@ export function TrpcProvider({
   );
 
   return (
-    <trpcBundle.TRPCProviderWrapper
+    <TRPCProviderWrapper
       key={providerKey}
       getQueryClient={getQueryClient}
       mutationLink={mutationLink}
     >
       {children}
-    </trpcBundle.TRPCProviderWrapper>
+    </TRPCProviderWrapper>
   );
 }

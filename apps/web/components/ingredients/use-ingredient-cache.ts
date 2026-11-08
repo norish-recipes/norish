@@ -1,8 +1,9 @@
 "use client";
 
 import { useCallback, useMemo } from "react";
-import { useTRPC } from "@/app/providers/trpc-provider";
 import { useQueryClient } from "@tanstack/react-query";
+
+import { useTRPC } from "@norish/shared-react/trpc";
 
 import type { IngredientItem } from "./types";
 

@@ -43,7 +43,7 @@ vi.mock("@/hooks/groceries", () => ({
   useGroceriesQuery: () => ({ groceries }),
   useGroceriesMutations: () => ({ createGroceriesFromData, deleteGroceries: vi.fn() }),
 }));
-vi.mock("@/app/providers/trpc-provider", () => ({
+vi.mock("@norish/shared-react/trpc", () => ({
   useTRPC: () => ({
     ingredients: {
       list: {

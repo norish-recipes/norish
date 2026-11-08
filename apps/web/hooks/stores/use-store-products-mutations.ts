@@ -1,11 +1,11 @@
 "use client";
 
-import { useTRPC } from "@/app/providers/trpc-provider";
 import { showSafeErrorToast } from "@/lib/ui/safe-error-toast";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { useTranslations } from "next-intl";
 
 import type { PackSizeDto, StoreProductChoice } from "@norish/shared/contracts";
+import { useTRPC } from "@norish/shared-react/trpc";
 
 /**
  * Write what the picker decided. Nothing calls this until the grocery panel's

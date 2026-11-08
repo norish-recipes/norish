@@ -7,7 +7,7 @@ import { createMockFavoritesData, createTestQueryClient, createTestWrapper } fro
 const mockQueryKey = [["favorites", "list"], { type: "query" }];
 const mockQueryOptions = vi.fn();
 
-vi.mock("@/app/providers/trpc-provider", () => ({
+vi.mock("@norish/shared-react/trpc", () => ({
   useTRPC: () => ({
     favorites: {
       list: {

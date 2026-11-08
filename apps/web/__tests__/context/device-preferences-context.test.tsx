@@ -18,7 +18,7 @@ import {
 } from "../helpers/device-preferences";
 import { createTestQueryClient } from "../hooks/user/test-utils";
 
-vi.mock("@/app/providers/trpc-provider", () => import("../helpers/device-preferences-trpc"));
+vi.mock("@norish/shared-react/trpc", () => import("../helpers/device-preferences-trpc"));
 
 const connectivity = vi.hoisted(() => ({ isOffline: false }));
 

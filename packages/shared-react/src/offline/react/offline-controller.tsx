@@ -7,7 +7,7 @@ import { useQueryClient } from "@tanstack/react-query";
 
 import type { AppRouter } from "@norish/trpc/client";
 
-import type { ConnectionStatus } from "../../providers/trpc-provider";
+import type { ConnectionStatus } from "../../trpc/trpc-provider";
 import type { OfflineEngine } from "../engine";
 import type { OutboxMutationClient } from "../replay-client";
 import type { ConnectivityValue } from "./connectivity";

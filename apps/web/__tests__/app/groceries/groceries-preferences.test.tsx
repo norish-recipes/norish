@@ -9,7 +9,7 @@ import type { DevicePreferences } from "@norish/shared/contracts/zod/device-pref
 
 import { renderWithDevicePreferences } from "../../helpers/device-preferences";
 
-vi.mock("@/app/providers/trpc-provider", () => import("../../helpers/device-preferences-trpc"));
+vi.mock("@norish/shared-react/trpc", () => import("../../helpers/device-preferences-trpc"));
 
 vi.mock("@/hooks/groceries", () => ({
   useGroceriesQuery: () => ({

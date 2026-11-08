@@ -12,7 +12,7 @@ import {
 const mockAverageQueryOptions = vi.fn();
 const mockUserRatingQueryOptions = vi.fn();
 
-vi.mock("@/app/providers/trpc-provider", () => ({
+vi.mock("@norish/shared-react/trpc", () => ({
   useTRPC: () => ({
     ratings: {
       getAverage: {

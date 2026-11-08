@@ -9,7 +9,7 @@ const mockDeleteItemMutate = vi.fn();
 const mockMoveItemMutate = vi.fn();
 const mockUpdateItemMutate = vi.fn();
 
-vi.mock("@/app/providers/trpc-provider", () => ({
+vi.mock("@norish/shared-react/trpc", () => ({
   useTRPC: () => ({
     calendar: {
       listItems: {

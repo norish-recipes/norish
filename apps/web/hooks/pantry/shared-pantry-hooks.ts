@@ -1,7 +1,6 @@
 "use client";
 
-import { useTRPC } from "@/app/providers/trpc-provider";
-
 import { createPantryHooks } from "@norish/shared-react/hooks";
+import { useTRPC } from "@norish/shared-react/trpc";
 
 export const sharedPantryHooks = createPantryHooks({ useTRPC });

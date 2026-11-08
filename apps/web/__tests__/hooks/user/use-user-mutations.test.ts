@@ -13,7 +13,7 @@ const mockUserQueryKey = [["user", "get"], { type: "query" }] as const;
 const mockAllergiesQueryKey = [["user", "getAllergies"], { type: "query" }] as const;
 
 // Mock tRPC provider
-vi.mock("@/app/providers/trpc-provider", () => ({
+vi.mock("@norish/shared-react/trpc", () => ({
   useTRPC: () => ({
     user: {
       get: {
@@ -160,7 +160,7 @@ describe("useUserMutations", () => {
       });
 
       // Provide a tRPC mock that returns a failing updatePreferences mutation
-      vi.doMock("@/app/providers/trpc-provider", () => ({
+      vi.doMock("@norish/shared-react/trpc", () => ({
         useTRPC: () => ({
           user: {
             get: {
@@ -240,7 +240,7 @@ describe("useUserMutations", () => {
 
       const serverPreferences = { locale: "fr" };
 
-      vi.doMock("@/app/providers/trpc-provider", () => ({
+      vi.doMock("@norish/shared-react/trpc", () => ({
         useTRPC: () => ({
           user: {
             get: {
@@ -306,7 +306,7 @@ describe("useUserMutations", () => {
     it("keeps the cached preferences when a rename answers with the user", async () => {
       vi.resetModules();
 
-      vi.doMock("@/app/providers/trpc-provider", () => ({
+      vi.doMock("@norish/shared-react/trpc", () => ({
         useTRPC: () => ({
           user: {
             get: { queryKey: () => mockUserQueryKey },

@@ -12,7 +12,7 @@ import { useConnectivity } from "@norish/shared-react/offline/react";
 const probeMock = vi.spyOn(offlineEngine, "probe");
 let wsStatus: "idle" | "connected" | "disconnected" = "idle";
 
-vi.mock("@/app/providers/trpc-provider", () => ({
+vi.mock("@norish/shared-react/trpc", () => ({
   useConnectionStatus: () => ({ status: wsStatus, isConnected: wsStatus === "connected" }),
 }));
 

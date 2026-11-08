@@ -45,7 +45,7 @@ const mockSubscriptionEmitter = new SimpleEmitter();
 const mockSyncStatusQueryOptions = vi.fn();
 const mockSummaryQueryOptions = vi.fn();
 
-vi.mock("@/app/providers/trpc-provider", () => ({
+vi.mock("@norish/shared-react/trpc", () => ({
   useTRPC: () => ({
     caldav: {
       getSyncStatus: {

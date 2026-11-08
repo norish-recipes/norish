@@ -1,7 +1,6 @@
 "use client";
 
 import { createContext, ReactNode, use, useCallback } from "react";
-import { useTRPC } from "@/app/providers/trpc-provider";
 import { offlineEngine } from "@/lib/offline/engine";
 import { useQuery } from "@tanstack/react-query";
 
@@ -10,6 +9,7 @@ import type { User } from "@norish/shared/contracts";
 import { createUserContext } from "@norish/shared-react/contexts";
 import { useUser } from "@norish/shared-react/hooks";
 import { ReaderSeedProvider } from "@norish/shared-react/hooks/use-user";
+import { useTRPC } from "@norish/shared-react/trpc";
 import { signOut as betterAuthSignOut } from "@norish/shared/lib/auth/client";
 import { addBasePath } from "@norish/shared/lib/base-path";
 

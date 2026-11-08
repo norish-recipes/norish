@@ -1,7 +1,7 @@
-import { useTRPC } from "@/lib/trpc/trpc-provider";
 import { useQuery } from "@tanstack/react-query";
 
 import type { AuthProvidersResponse } from "@norish/shared/contracts";
+import { useTRPC } from "@norish/shared-react/trpc";
 
 export function useAuthProvidersQuery() {
   const trpc = useTRPC();

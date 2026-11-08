@@ -2,7 +2,6 @@
 
 import { useState } from "react";
 import { SettingsCard } from "@/app/(app)/settings/components/settings-card";
-import { useTRPC } from "@/app/providers/trpc-provider";
 import {
   ActionButton,
   ActionButtonGroup,
@@ -25,6 +24,7 @@ import {
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { useFormatter, useTranslations } from "next-intl";
 
+import { useTRPC } from "@norish/shared-react/trpc";
 import { TokenDomainSchema } from "@norish/shared/contracts/zod/site-auth-tokens";
 
 export default function SiteAuthTokensCard() {

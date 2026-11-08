@@ -1,7 +1,8 @@
 "use client";
 
-import { useTRPC } from "@/app/providers/trpc-provider";
 import { useQuery } from "@tanstack/react-query";
+
+import { useTRPC } from "@norish/shared-react/trpc";
 
 /** A shop is asked once for a term; re-opening the picker is not a second visit. */
 const SEARCH_STALE_MS = 5 * 60 * 1000;

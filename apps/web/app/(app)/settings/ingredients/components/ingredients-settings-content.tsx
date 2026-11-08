@@ -3,7 +3,6 @@
 import { useCallback, useMemo, useState, useTransition } from "react";
 import { useSearchParams } from "next/navigation";
 import { SettingsCard } from "@/app/(app)/settings/components/settings-card";
-import { useTRPC } from "@/app/providers/trpc-provider";
 import { IngredientIconsProvider } from "@/components/ingredients/ingredient-icon";
 import { IngredientPanel } from "@/components/ingredients/ingredient-panel";
 import { isOpenChange, useAIChanges } from "@/components/ingredients/use-ai-changes";
@@ -13,6 +12,8 @@ import { BookOpenIcon } from "@heroicons/react/24/outline";
 import { Button, Skeleton } from "@heroui/react";
 import { keepPreviousData, useInfiniteQuery, useQueryClient } from "@tanstack/react-query";
 import { useLocale, useTranslations } from "next-intl";
+
+import { useTRPC } from "@norish/shared-react/trpc";
 
 import type { IngredientFilters } from "./ingredient-filters-panel";
 import { ChangedByAIPanel } from "./changed-by-ai-panel";

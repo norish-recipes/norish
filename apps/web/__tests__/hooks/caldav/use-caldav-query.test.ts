@@ -31,7 +31,7 @@ const mockSyncStatusQueryOptions = vi.fn();
 const mockSummaryQueryOptions = vi.fn();
 const mockConnectionQueryOptions = vi.fn();
 
-vi.mock("@/app/providers/trpc-provider", () => ({
+vi.mock("@norish/shared-react/trpc", () => ({
   useTRPC: () => ({
     caldav: {
       getConfig: {

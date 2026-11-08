@@ -1,10 +1,10 @@
 "use client";
 
-import { useTRPC } from "@/app/providers/trpc-provider";
 import { useSpellingRules } from "@/hooks/config";
 import { useQuery } from "@tanstack/react-query";
 import { useDebounceValue } from "usehooks-ts";
 
+import { useTRPC } from "@norish/shared-react/trpc";
 import { sameFood } from "@norish/shared/lib/spelling-keys";
 
 /** How long a shopper stops typing a name before its Ingredient is asked for. */

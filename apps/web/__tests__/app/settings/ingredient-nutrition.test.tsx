@@ -20,7 +20,7 @@ const mocks = vi.hoisted(() => ({
   setQueryData: vi.fn(),
 }));
 
-vi.mock("@/app/providers/trpc-provider", () => ({
+vi.mock("@norish/shared-react/trpc", () => ({
   useTRPC: () => ({
     ingredients: {
       nutrition: {

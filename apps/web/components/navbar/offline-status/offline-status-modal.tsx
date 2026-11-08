@@ -1,7 +1,6 @@
 "use client";
 
 import { useState } from "react";
-import { useTRPC } from "@/app/providers/trpc-provider";
 import Panel from "@/components/Panel/Panel";
 import { useIsMobile } from "@/hooks/use-is-mobile";
 import { usePending } from "@/hooks/use-pending";
@@ -21,6 +20,7 @@ import { useFormatter, useNow, useTranslations } from "next-intl";
 
 import type { OfflineStatus } from "@norish/shared-react/offline/react";
 import { useOfflineStatus } from "@norish/shared-react/offline/react";
+import { useTRPC } from "@norish/shared-react/trpc";
 
 interface OfflineStatusModalProps {
   isOpen: boolean;

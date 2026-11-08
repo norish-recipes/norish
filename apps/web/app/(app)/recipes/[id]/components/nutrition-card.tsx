@@ -2,7 +2,6 @@
 
 import { useCallback, useState } from "react";
 import { useRecipeContext } from "@/app/(app)/recipes/[id]/context";
-import { useTRPC } from "@/app/providers/trpc-provider";
 import { IngredientPanel } from "@/components/ingredients/ingredient-panel";
 import NutritionPortionControl from "@/components/recipes/nutrition-portion-control";
 import { getNutritionData, NutritionBody } from "@/components/recipes/readonly-nutrition";
@@ -14,6 +13,7 @@ import { useQueryClient } from "@tanstack/react-query";
 import { useFormatter, useTranslations } from "next-intl";
 
 import type { LeftOutReason, WorkedOutNutrition } from "@norish/shared/lib/recipe-nutrition";
+import { useTRPC } from "@norish/shared-react/trpc";
 import { NUTRITION_CREDIT_NAMES } from "@norish/shared/contracts/ingredient-nutrition";
 import { PANEL_REASONS } from "@norish/shared/lib/recipe-nutrition";
 

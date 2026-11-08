@@ -10,7 +10,7 @@ function emitPayload(payload: unknown) {
   return trackedEvent(payload);
 }
 
-vi.mock("@/app/providers/trpc-provider", () => ({
+vi.mock("@norish/shared-react/trpc", () => ({
   useTRPC: () => ({
     recipes: {
       get: {

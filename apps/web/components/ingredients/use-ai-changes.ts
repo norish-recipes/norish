@@ -1,8 +1,9 @@
 "use client";
 
-import { useTRPC } from "@/app/providers/trpc-provider";
 import { useMutation, useQuery } from "@tanstack/react-query";
 import { useTranslations } from "next-intl";
+
+import { useTRPC } from "@norish/shared-react/trpc";
 
 import type { AIChange } from "./types";
 import { showRefusal } from "./review-copy";

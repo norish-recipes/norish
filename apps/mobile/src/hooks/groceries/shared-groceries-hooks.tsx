@@ -1,10 +1,10 @@
 import { View } from "react-native";
 import { sharedConfigHooks } from "@/hooks/config/shared-config-hooks";
-import { useTRPC } from "@/lib/trpc/trpc-provider";
 import { Toast, useThemeColor, useToast } from "heroui-native";
 import { useIntl } from "react-intl";
 
 import { createGroceriesHooks } from "@norish/shared-react/hooks";
+import { useTRPC } from "@norish/shared-react/trpc";
 
 export const sharedGroceriesHooks = createGroceriesHooks({
   useTRPC,

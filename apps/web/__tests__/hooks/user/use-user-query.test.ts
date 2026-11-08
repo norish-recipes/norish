@@ -17,7 +17,7 @@ const mockAllergiesQueryKey = [["user", "getAllergies"], { type: "query" }] as c
 const mockQueryOptions = vi.fn();
 const mockAllergiesQueryOptions = vi.fn();
 
-vi.mock("@/app/providers/trpc-provider", () => ({
+vi.mock("@norish/shared-react/trpc", () => ({
   useTRPC: () => ({
     user: {
       get: {

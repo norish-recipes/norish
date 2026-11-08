@@ -1,12 +1,13 @@
 "use client";
 
 import type { TRPCClient, TRPCLink } from "@trpc/client";
-import type { AnyTRPCRouter } from "@trpc/server";
 import type { ReactNode } from "react";
 import { createContext, use, useEffect, useRef, useState } from "react";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { createTRPCClient } from "@trpc/client";
 import { createTRPCContext } from "@trpc/tanstack-react-query";
+
+import type { AppRouter } from "@norish/trpc/client";
 
 import type { CreateTRPCProviderBundleOptions } from "./trpc-links";
 import {
@@ -30,7 +31,32 @@ type ConnectionContextValue = {
   isConnected: boolean;
 };
 
-export function createTRPCProviderBundle<TRouter extends AnyTRPCRouter>({
+// One context per app: every hook imports useTRPC, and the app's provider bundle fills it.
+const { TRPCProvider, useTRPC } = createTRPCContext<AppRouter>();
+const ConnectionContext = createContext<ConnectionContextValue>({
+  status: "idle",
+  isConnected: false,
+});
+const TRPCClientContext = createContext<TRPCClient<AppRouter> | null>(null);
+
+export { useTRPC };
+
+export function useConnectionStatus() {
+  return use(ConnectionContext);
+}
+
+export function useTRPCClient(): TRPCClient<AppRouter> {
+  const client = use(TRPCClientContext);
+
+  if (!client) {
+    throw new Error("useTRPCClient must be used within TRPCProviderWrapper");
+  }
+
+  return client;
+}
+
+/** An app's transport for the one context: links, WebSocket implementation and callbacks. */
+export function createTRPCProviderBundle({
   logger,
   getBaseUrl = defaultGetBaseUrl,
   getWsUrl = defaultGetWsUrl,
@@ -46,32 +72,7 @@ export function createTRPCProviderBundle<TRouter extends AnyTRPCRouter>({
   onWebSocketClientCreate,
   onUnauthorized,
   extraLinks = [],
-}: Omit<CreateTRPCProviderBundleOptions<TRouter>, "mutationLink">) {
-  const { TRPCProvider, useTRPC } = createTRPCContext<TRouter>();
-  const ConnectionContext = createContext<ConnectionContextValue>({
-    status: "idle",
-    isConnected: false,
-  });
-  const TRPCClientContext = createContext<TRPCClient<TRouter> | null>(null);
-
-  function useConnectionStatus() {
-    "use memo";
-
-    return use(ConnectionContext);
-  }
-
-  function useTRPCClient(): TRPCClient<TRouter> {
-    "use memo";
-
-    const client = use(TRPCClientContext);
-
-    if (!client) {
-      throw new Error("useTRPCClient must be used within TRPCProviderWrapper");
-    }
-
-    return client;
-  }
-
+}: Omit<CreateTRPCProviderBundleOptions<AppRouter>, "mutationLink">) {
   /** The client's offline engine supplies `getQueryClient` and `mutationLink`; both are read once. */
   function TRPCProviderWrapper({
     children,
@@ -80,7 +81,7 @@ export function createTRPCProviderBundle<TRouter extends AnyTRPCRouter>({
   }: {
     children: ReactNode;
     getQueryClient?: () => QueryClient;
-    mutationLink?: TRPCLink<TRouter>;
+    mutationLink?: TRPCLink<AppRouter>;
   }) {
     "use memo";
 
@@ -102,8 +103,8 @@ export function createTRPCProviderBundle<TRouter extends AnyTRPCRouter>({
             },
           });
 
-      const tc = createTRPCClient<TRouter>({
-        links: createTRPCClientLinks<TRouter>({
+      const tc = createTRPCClient<AppRouter>({
+        links: createTRPCClientLinks<AppRouter>({
           logger,
           getBaseUrl,
           getWsUrl,
@@ -168,11 +169,5 @@ export function createTRPCProviderBundle<TRouter extends AnyTRPCRouter>({
     );
   }
 
-  return {
-    TRPCProvider,
-    TRPCProviderWrapper,
-    useTRPC,
-    useTRPCClient,
-    useConnectionStatus,
-  };
+  return { TRPCProviderWrapper };
 }

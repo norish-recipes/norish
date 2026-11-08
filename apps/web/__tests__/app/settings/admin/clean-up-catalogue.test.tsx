@@ -12,7 +12,7 @@ const mutate = vi.fn();
 const counts = vi.hoisted(() => ({ current: undefined as unknown }));
 const context = vi.hoisted(() => ({ aiConfig: { enabled: true } as unknown }));
 
-vi.mock("@/app/providers/trpc-provider", () => ({
+vi.mock("@norish/shared-react/trpc", () => ({
   useTRPC: () => ({
     admin: {
       ingredientCatalogue: {

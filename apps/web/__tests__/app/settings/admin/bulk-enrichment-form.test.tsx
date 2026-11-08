@@ -16,7 +16,7 @@ const mutate = vi.fn();
 const mockUseTRPC = vi.fn();
 const sweepCounts = vi.hoisted(() => ({ current: undefined as unknown }));
 
-vi.mock("@/app/providers/trpc-provider", () => ({ useTRPC: mockUseTRPC }));
+vi.mock("@norish/shared-react/trpc", () => ({ useTRPC: mockUseTRPC }));
 
 vi.mock("@tanstack/react-query", () => ({
   useMutation: () => ({ mutate, isPending: false, isSuccess: false, data: undefined }),

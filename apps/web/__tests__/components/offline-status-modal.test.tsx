@@ -15,7 +15,7 @@ vi.mock("@norish/shared-react/offline/react", () => ({
   useOfflineStatus: () => h.status,
 }));
 
-vi.mock("@/app/providers/trpc-provider", () => ({ useTRPC: () => ({}) }));
+vi.mock("@norish/shared-react/trpc", () => ({ useTRPC: () => ({}) }));
 
 vi.mock("@/lib/offline/engine", () => ({ offlineEngine: {} }));
 

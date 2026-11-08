@@ -46,7 +46,7 @@ vi.mock("next-intl", () => ({
 // Mock the query key
 const mockQueryKey = ["groceries", "list"];
 
-vi.mock("@/app/providers/trpc-provider", () => ({
+vi.mock("@norish/shared-react/trpc", () => ({
   useTRPC: () => ({
     groceries: {
       list: {

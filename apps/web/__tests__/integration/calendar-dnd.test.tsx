@@ -25,7 +25,7 @@ type PlannedItemFromQuery = {
 
 const mockMoveItemMutate = vi.fn();
 
-vi.mock("@/app/providers/trpc-provider", () => ({
+vi.mock("@norish/shared-react/trpc", () => ({
   useTRPC: () => ({
     calendar: {
       listItems: {

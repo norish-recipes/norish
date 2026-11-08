@@ -1,11 +1,11 @@
 import { useCallback } from "react";
 import { useAuth } from "@/lib/auth/auth-context";
-import { useTRPC } from "@/lib/trpc/trpc-provider";
 import { useQuery } from "@tanstack/react-query";
 
 import type { UserContextValue } from "@norish/shared-react/contexts";
 import type { User } from "@norish/shared/contracts";
 import { createUserContext } from "@norish/shared-react/contexts";
+import { useTRPC } from "@norish/shared-react/trpc";
 
 /**
  * Mobile UserContext — mirrors web's user-context.tsx using the same

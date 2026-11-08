@@ -4,13 +4,13 @@ import { useEffect, useState } from "react";
 import { usePathname, useRouter, useSearchParams } from "next/navigation";
 import { SettingsCard } from "@/app/(app)/settings/components/settings-card";
 import { ProviderIcon } from "@/app/(auth)/login/components/provider-icon";
-import { useTRPC } from "@/app/providers/trpc-provider";
 import { KeyIcon, TrashIcon } from "@heroicons/react/16/solid";
 import { FingerPrintIcon } from "@heroicons/react/24/outline";
 import { Button, toast } from "@heroui/react";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { useFormatter, useTranslations } from "next-intl";
 
+import { useTRPC } from "@norish/shared-react/trpc";
 import {
   keepsOfferedSignInMethod,
   LAST_SIGN_IN_METHOD,

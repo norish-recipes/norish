@@ -101,7 +101,7 @@ const listEnd = vi.hoisted(() => ({
 }));
 const fetchNextPage = vi.fn();
 let hasNextPage = false;
-vi.mock("@/app/providers/trpc-provider", () => ({
+vi.mock("@norish/shared-react/trpc", () => ({
   useTRPC: () => ({
     ingredients: {
       pathKey: () => ["ingredients"],

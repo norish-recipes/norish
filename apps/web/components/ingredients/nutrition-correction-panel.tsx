@@ -2,7 +2,6 @@
 
 import type { ReactNode } from "react";
 import { useEffect, useState } from "react";
-import { useTRPC } from "@/app/providers/trpc-provider";
 import Panel, { PanelComboBoxPopover } from "@/components/Panel/Panel";
 import { ActionButton, ActionButtonGroup } from "@/components/shared/action-button";
 import { showSafeErrorToast } from "@/lib/ui/safe-error-toast";
@@ -26,6 +25,7 @@ import type {
   Per100g,
 } from "@norish/shared/contracts/ingredient-nutrition";
 import type { SpoonMeasure } from "@norish/shared/lib/spoon-measure";
+import { useTRPC } from "@norish/shared-react/trpc";
 import { NUTRITION_CREDIT_NAMES } from "@norish/shared/contracts/ingredient-nutrition";
 import { densityFromSpoon, spoonWeight } from "@norish/shared/lib/spoon-measure";
 

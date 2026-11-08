@@ -18,7 +18,7 @@ const subscriptionCallbacks: Record<string, ((data: unknown) => void) | undefine
 const householdQueryKey = [["households", "get"], { type: "query" }];
 
 // Mock tRPC provider
-vi.mock("@/app/providers/trpc-provider", () => ({
+vi.mock("@norish/shared-react/trpc", () => ({
   useTRPC: () => ({
     households: {
       get: {

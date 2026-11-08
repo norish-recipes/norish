@@ -1,7 +1,6 @@
 "use client";
 
 import { useRouter } from "next/navigation";
-import { useTRPC } from "@/app/providers/trpc-provider";
 import { showActionToast } from "@/lib/ui/action-toast";
 import { isQueuedForReplay, showQueuedOfflineToast } from "@/lib/ui/queued-offline-toast";
 import { showSafeErrorToast } from "@/lib/ui/safe-error-toast";
@@ -12,6 +11,7 @@ import {
   createUseRecipesCacheHelpers,
   createUseRecipesMutations,
 } from "@norish/shared-react/hooks/recipes/dashboard";
+import { useTRPC } from "@norish/shared-react/trpc";
 
 const useRecipesCacheHelpers = createUseRecipesCacheHelpers({ useTRPC });
 const useSharedRecipesMutations = createUseRecipesMutations(

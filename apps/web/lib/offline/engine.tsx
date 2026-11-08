@@ -2,11 +2,9 @@
 
 // The web client's offline wiring (ADR-0001): the shared engine over IndexedDB, its connectivity
 // hints and controller, plus what only web has: the QuerySeed first frame and the image cache.
-
 import type { DehydratedState, Query, QueryClient } from "@tanstack/react-query";
 import type { ReactNode } from "react";
 import { useSyncExternalStore } from "react";
-import { useConnectionStatus, useTRPC, useTRPCClient } from "@/app/providers/trpc-provider";
 import { useUserContext } from "@/context/user-context";
 import { isOfflineForced, subscribeOfflineForced } from "@/lib/connectivity/forced-offline";
 import { createIdbStorage } from "@/lib/offline/idb-storage";
@@ -29,6 +27,7 @@ import {
   ConnectivityProvider as SharedConnectivityProvider,
   useConnectivity,
 } from "@norish/shared-react/offline/react";
+import { useConnectionStatus, useTRPC, useTRPCClient } from "@norish/shared-react/trpc";
 import { getSession } from "@norish/shared/lib/auth/client";
 import { addBasePath } from "@norish/shared/lib/base-path";
 import { dateKey, getInitialDateRange } from "@norish/shared/lib/helpers";

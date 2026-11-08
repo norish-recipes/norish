@@ -3,7 +3,7 @@
 import type { ReactNode } from "react";
 import { createContext, use, useMemo } from "react";
 
-import type { ConnectionStatus } from "../../providers/trpc-provider";
+import type { ConnectionStatus } from "../../trpc/trpc-provider";
 import type { ConnectivityState } from "../connectivity-machine";
 import type { ConnectivityLoopValue } from "./use-connectivity-loop";
 import { useConnectivityLoop } from "./use-connectivity-loop";

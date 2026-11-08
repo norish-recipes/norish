@@ -15,7 +15,7 @@ import {
 const mockQueryKey = ["households", "get"];
 const mockQueryOptions = vi.fn();
 
-vi.mock("@/app/providers/trpc-provider", () => ({
+vi.mock("@norish/shared-react/trpc", () => ({
   useTRPC: () => ({
     households: {
       get: {

@@ -35,7 +35,7 @@ vi.mock("next-intl", () => ({
 }));
 
 // Mock tRPC provider
-vi.mock("@/app/providers/trpc-provider", () => ({
+vi.mock("@norish/shared-react/trpc", () => ({
   useTRPC: () => ({
     // The Library holds the same recipes in one interleaved list, so the cache
     // helpers reach it too (ADR-0026).

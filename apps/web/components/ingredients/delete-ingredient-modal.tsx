@@ -1,11 +1,12 @@
 "use client";
 
-import { useTRPC } from "@/app/providers/trpc-provider";
 import { ActionButton, ActionButtonGroup } from "@/components/shared/action-button";
 import { ExclamationTriangleIcon, EyeIcon } from "@heroicons/react/16/solid";
 import { Button, Modal } from "@heroui/react";
 import { useQuery } from "@tanstack/react-query";
 import { useTranslations } from "next-intl";
+
+import { useTRPC } from "@norish/shared-react/trpc";
 
 const DELETE_TOUCHES = ["recipeLines", "groceries", "pantry"] as const;
 

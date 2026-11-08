@@ -23,7 +23,7 @@ type PlannedItemFromQuery = {
 
 const mockItemsQueryOptions = vi.fn();
 
-vi.mock("@/app/providers/trpc-provider", () => ({
+vi.mock("@norish/shared-react/trpc", () => ({
   useTRPC: () => ({
     calendar: {
       listItems: {

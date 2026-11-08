@@ -1,7 +1,6 @@
 "use client";
 
-import { useTRPC } from "@/app/providers/trpc-provider";
-
 import { createAdminHooks } from "@norish/shared-react/hooks";
+import { useTRPC } from "@norish/shared-react/trpc";
 
 export const sharedAdminHooks = createAdminHooks({ useTRPC });

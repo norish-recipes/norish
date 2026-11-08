@@ -1,9 +1,9 @@
 "use client";
 
-import { useTRPC } from "@/app/providers/trpc-provider";
 import { toast } from "@heroui/react";
 
 import { createCaldavHooks } from "@norish/shared-react/hooks";
+import { useTRPC } from "@norish/shared-react/trpc";
 
 // The hooks call this as a hook, so other platforms can use hooks in theirs; the web's needs none.
 function toastAdapter() {

@@ -2,10 +2,10 @@
 
 import type { ReactNode } from "react";
 import { createContext, use, useEffect, useState } from "react";
-import { useTRPC } from "@/app/providers/trpc-provider";
 
 import type { RecipeDashboardDTO } from "@norish/shared/contracts";
 import { useRealtimeSubscription } from "@norish/shared-react/realtime";
+import { useTRPC } from "@norish/shared-react/trpc";
 
 /** What an action on a selected recipe needs, kept even while a search hides the card. */
 export type SelectedRecipe = Pick<RecipeDashboardDTO, "id" | "version" | "userId">;

@@ -1,11 +1,10 @@
 "use client";
 
-import { useTRPC } from "@/app/providers/trpc-provider";
-
 import {
   createUseHouseholdMutations,
   createUseHouseholdQuery,
 } from "@norish/shared-react/hooks/households";
+import { useTRPC } from "@norish/shared-react/trpc";
 
 import { useCurrentHouseholdUserName } from "./adapters";
 

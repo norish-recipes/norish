@@ -4,11 +4,11 @@ import { CookbookSkeleton } from "@/app/(app)/cookbooks/[id]/cookbook-page";
 import CookbookRoute from "@/app/(app)/cookbooks/[id]/page";
 import { OfflineUnavailable } from "@/app/~offline/offline-unavailable";
 import { routeParams } from "@/app/~offline/route-params";
-import { useTRPC } from "@/app/providers/trpc-provider";
 import { offlineEngine } from "@/lib/offline/engine";
 import { useQueryClient } from "@tanstack/react-query";
 
 import { useCacheOwner } from "@norish/shared-react/offline/react";
+import { useTRPC } from "@norish/shared-react/trpc";
 
 /**
  * Warmed-gated cookbook page for the offline bootstrap (ADR-0009).

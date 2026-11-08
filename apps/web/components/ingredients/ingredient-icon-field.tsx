@@ -1,7 +1,6 @@
 "use client";
 
 import { useRef } from "react";
-import { useTRPC } from "@/app/providers/trpc-provider";
 import { PanelPortal } from "@/components/Panel/Panel";
 import { cssAIIconColor } from "@/config/css-tokens";
 import { usePermissionsContext } from "@/context/permissions-context";
@@ -11,6 +10,7 @@ import { Dropdown, Label, Spinner } from "@heroui/react";
 import { useMutation } from "@tanstack/react-query";
 import { useTranslations } from "next-intl";
 
+import { useTRPC } from "@norish/shared-react/trpc";
 import { ICON_PICTURE_MIME_TYPES } from "@norish/shared/contracts";
 
 import type { IngredientItem } from "./types";

@@ -13,7 +13,7 @@ vi.mock("@norish/shared/lib/logger", () => ({
 
 // The hook now mints recipe ids on the client and no longer touches tRPC
 // (ADR-0003). Stub the provider so the web re-export still imports cleanly.
-vi.mock("@/app/providers/trpc-provider", () => ({
+vi.mock("@norish/shared-react/trpc", () => ({
   useTRPC: () => ({}),
 }));
 

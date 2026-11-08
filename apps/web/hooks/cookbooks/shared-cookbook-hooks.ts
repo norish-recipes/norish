@@ -1,9 +1,9 @@
 "use client";
 
-import { useTRPC } from "@/app/providers/trpc-provider";
 import { useUserContext } from "@/context/user-context";
 
 import { createCookbookHooks } from "@norish/shared-react/hooks";
+import { useTRPC } from "@norish/shared-react/trpc";
 
 export const sharedCookbookHooks = createCookbookHooks({
   useTRPC,

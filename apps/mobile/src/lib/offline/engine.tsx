@@ -7,7 +7,6 @@ import { createMMKV } from "react-native-mmkv";
 import { APP_VERSION } from "@/lib/app-version";
 import { getAuthClient } from "@/lib/auth/auth-client";
 import { getBackendBaseUrl } from "@/lib/network/backend-base-url";
-import { useConnectionStatus, useTRPC, useTRPCClient } from "@/lib/trpc/trpc-provider";
 import { addNetworkStateListener } from "expo-network";
 
 import { createOfflineEngine, HEALTH_PROBE_PATH } from "@norish/shared-react/offline";
@@ -16,6 +15,7 @@ import {
   OfflineController as SharedOfflineController,
   useConnectivity,
 } from "@norish/shared-react/offline/react";
+import { useConnectionStatus, useTRPC, useTRPCClient } from "@norish/shared-react/trpc";
 import { dateKey, getInitialDateRange } from "@norish/shared/lib/helpers";
 
 import { createMmkvStorage } from "./mmkv-storage";

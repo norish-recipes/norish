@@ -3,7 +3,6 @@
 import type { ReactNode } from "react";
 import { useEffect, useRef, useState } from "react";
 import Link from "next/link";
-import { useTRPC } from "@/app/providers/trpc-provider";
 import { OnTheListMark } from "@/components/groceries/pantry/put-on-the-list";
 import Panel from "@/components/Panel/Panel";
 import {
@@ -23,6 +22,7 @@ import { useLocale, useTranslations } from "next-intl";
 
 import type { PantryIngredientDto } from "@norish/shared/contracts";
 import type { LocaleNames } from "@norish/shared/lib/ingredient-names";
+import { useTRPC } from "@norish/shared-react/trpc";
 import { ingredientDisplayName } from "@norish/shared/lib/ingredient-names";
 import { groceryOnTheList } from "@norish/shared/lib/pantry";
 import { cleanSpelling } from "@norish/shared/lib/spelling-keys";

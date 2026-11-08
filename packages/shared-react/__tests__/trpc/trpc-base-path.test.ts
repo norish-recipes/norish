@@ -12,7 +12,7 @@ describe("default transport URLs", () => {
     vi.stubEnv("NEXT_PUBLIC_BASE_PATH", "");
     vi.resetModules();
 
-    const { defaultGetBaseUrl, defaultGetWsUrl } = await import("../../src/providers/trpc-links");
+    const { defaultGetBaseUrl, defaultGetWsUrl } = await import("../../src/trpc/trpc-links");
     const port = process.env.PORT ?? 3000;
 
     expect(defaultGetBaseUrl()).toBe(`http://localhost:${port}`);
@@ -23,7 +23,7 @@ describe("default transport URLs", () => {
     vi.stubEnv("NEXT_PUBLIC_BASE_PATH", "/norish");
     vi.resetModules();
 
-    const { defaultGetBaseUrl, defaultGetWsUrl } = await import("../../src/providers/trpc-links");
+    const { defaultGetBaseUrl, defaultGetWsUrl } = await import("../../src/trpc/trpc-links");
     const port = process.env.PORT ?? 3000;
 
     expect(defaultGetBaseUrl()).toBe(`http://localhost:${port}/norish`);
