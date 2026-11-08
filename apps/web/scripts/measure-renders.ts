@@ -1,5 +1,6 @@
 /** Mounts and re-renders per scripted action on a dev server; see scripts/README.md. */
 import { randomUUID } from "node:crypto";
+import { setTimeout } from "node:timers/promises";
 import { parseArgs } from "node:util";
 import type { Browser, BrowserContext, Page } from "@playwright/test";
 import { chromium } from "@playwright/test";
@@ -21,12 +22,11 @@ const QUIET_MS = 1_500;
 const RESPONSE_DELAY_MS = 500;
 /** How long after the server sent it a socket message reaches the page. */
 const MESSAGE_DELAY_MS = 200;
-/** The least time between two of them reaching the page. */
+/** The least time between two responses or messages reaching the page. */
 const DELIVERY_GAP_MS = 150;
 
 type Counted = { name: string; mounts: number; updates: number; why: Record<string, number> };
 type Taken = { commits: number; components: Counted[] };
-type Renders = { __renders: { idle: () => number; take: () => Taken } };
 
 // =============================================================================
 // The counter, in the page
@@ -196,25 +196,21 @@ async function openTab(browser: Browser, counted: boolean): Promise<Tab> {
 
 /** Waits until no request is open and React has been idle for `QUIET_MS`. */
 async function settle({ page, pending }: Tab) {
-  while (
-    pending.size > 0 ||
-    (await page.evaluate(() => (window as unknown as Renders).__renders.idle())) < QUIET_MS
-  ) {
+  while (pending.size > 0 || (await page.evaluate<number>("__renders.idle()")) < QUIET_MS) {
     await page.waitForTimeout(100);
   }
 }
 
 /** Renders from `act` until the page settles. */
 async function measure(tab: Tab, action: string, act: () => Promise<void>) {
+  const take = () => tab.page.evaluate<Taken>("__renders.take()");
+
   await settle(tab);
-  await tab.page.evaluate(() => (window as unknown as Renders).__renders.take());
+  await take();
   await act();
   await settle(tab);
 
-  return {
-    action,
-    ...(await tab.page.evaluate(() => (window as unknown as Renders).__renders.take())),
-  };
+  return { action, ...(await take()) };
 }
 
 // =============================================================================
@@ -329,17 +325,13 @@ const RECIPES: Array<{ name: string; lines: Line[] }> = [
 ];
 const ADDED = "paprika";
 
-function delay(milliseconds: number) {
-  return new Promise((resolve) => setTimeout(resolve, Math.max(0, milliseconds)));
-}
-
 /** Reads until `done` holds, for the writes that land after their mutation answers. */
 async function until<T>(read: () => Promise<T>, done: (value: T) => boolean): Promise<T> {
   for (const deadline = Date.now() + 30_000; Date.now() < deadline;) {
     const value = await read().catch(() => null);
 
     if (value !== null && done(value)) return value;
-    await delay(200);
+    await setTimeout(200);
   }
   throw new Error("Timed out waiting for a write to land");
 }
@@ -517,13 +509,22 @@ async function openGroceries(tab: Tab) {
   await rowFor(tab.page, "cucumber").waitFor();
 }
 
-async function chooseView(tab: Tab, view: "By Store" | "By Recipe") {
-  await tab.page.getByRole("button", { name: "View Mode" }).click();
-  await tab.page.getByRole("menuitem", { name: view }).click();
-  await tab.page
-    .locator(`[data-grocery-view="${view === "By Store" ? "store" : "recipe"}"]`)
-    .first()
-    .waitFor();
+async function checkRow(page: Page, name: string) {
+  await rowFor(page, name).locator('[data-slot="checkbox"]').first().click();
+}
+
+async function closePanel(page: Page) {
+  await page.getByRole("button", { name: "Close panel" }).click();
+  await page.getByRole("dialog").waitFor({ state: "hidden" });
+}
+
+async function openViewMenu(page: Page) {
+  await page.getByRole("button", { name: "View Mode" }).click();
+}
+
+async function pickView(page: Page, view: "store" | "recipe") {
+  await page.getByRole("menuitem", { name: view === "store" ? "By Store" : "By Recipe" }).click();
+  await page.locator(`[data-grocery-view="${view}"]`).first().waitFor();
 }
 
 async function groceries(browser: Browser) {
@@ -534,19 +535,16 @@ async function groceries(browser: Browser) {
   try {
     await openGroceries(tab);
     await openGroceries(other);
-    await settle(tab);
-    if (
-      (await tab.page.locator("[data-grocery-view]").first().getAttribute("data-grocery-view")) !==
-      "store"
-    ) {
-      await chooseView(tab, "By Store");
-    }
     const { page } = tab;
+
+    await settle(tab);
+    await openViewMenu(page);
+    await pickView(page, "store");
     const results: Array<Taken & { action: string }> = [];
 
     results.push(
       await measure(tab, "check an item", async () => {
-        await rowFor(page, "cucumber").locator('[data-slot="checkbox"]').first().click();
+        await checkRow(page, "cucumber");
         // A checked grocery moves into its Store's folded "done" rows.
         await rowFor(page, "cucumber").waitFor({ state: "detached" });
       })
@@ -560,8 +558,7 @@ async function groceries(browser: Browser) {
         await rowFor(page, ADDED).waitFor();
       })
     );
-    await page.getByRole("button", { name: "Close panel" }).click();
-    await page.getByRole("dialog").waitFor({ state: "hidden" });
+    await closePanel(page);
 
     results.push(
       await measure(tab, "open the edit panel", async () => {
@@ -571,24 +568,19 @@ async function groceries(browser: Browser) {
         await page.getByRole("dialog").waitFor();
       })
     );
-    await page.getByRole("button", { name: "Close panel" }).click();
-    await page.getByRole("dialog").waitFor({ state: "hidden" });
+    await closePanel(page);
 
     results.push(
       await measure(tab, "realtime echo of another browser checking an item", async () => {
-        await rowFor(other.page, "carrots").locator('[data-slot="checkbox"]').first().click();
+        await checkRow(other.page, "carrots");
         await rowFor(page, "carrots").waitFor({ state: "detached" });
       })
     );
 
-    await page.getByRole("button", { name: "View Mode" }).click();
-    results.push(
-      await measure(tab, "switch the view mode", async () => {
-        await page.getByRole("menuitem", { name: "By Recipe" }).click();
-        await page.locator('[data-grocery-view="recipe"]').first().waitFor();
-      })
-    );
-    await chooseView(tab, "By Store");
+    await openViewMenu(page);
+    results.push(await measure(tab, "switch the view mode", () => pickView(page, "recipe")));
+    await openViewMenu(page);
+    await pickView(page, "store");
     await settle(tab);
 
     return results;
