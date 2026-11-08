@@ -6,6 +6,7 @@ import type { Browser, BrowserContext, Page } from "@playwright/test";
 import { chromium, devices } from "@playwright/test";
 
 import { RECIPE_FILTERS_COOKIE } from "../lib/recipe-filters-cookie";
+import { callTrpc, signIn } from "./api";
 
 const { values: args } = parseArgs({
   options: {
@@ -110,36 +111,20 @@ const target = new URL(args.base);
 const base = await startProxy(target);
 
 throttled = false;
-const signIn = await fetch(`${args.base}/api/auth/sign-in/email`, {
-  method: "POST",
-  headers: { "content-type": "application/json", origin: args.base },
-  body: JSON.stringify({ email: args.email, password: args.password }),
-});
-
-if (!signIn.ok) throw new Error(`Sign-in failed: ${signIn.status}`);
 // Cookies name a host, not a port, so the proxy's origin carries them too.
-const cookies = signIn.headers.getSetCookie().map((header) => {
-  const [pair = ""] = header.split(";");
-  const at = pair.indexOf("=");
-
-  return { name: pair.slice(0, at), value: pair.slice(at + 1), url: base };
-});
+const cookies = (await signIn(args.base, args.email, args.password)).map((cookie) => ({
+  ...cookie,
+  url: base,
+}));
 
 // A returning reader's browser has told the server its Library filters, here the defaults.
 cookies.push({ name: RECIPE_FILTERS_COOKIE, value: encodeURIComponent("{}"), url: base });
 const cookieHeader = cookies.map(({ name, value }) => `${name}=${value}`).join("; ");
 
-async function query<T>(procedure: string, input: unknown): Promise<T> {
-  const response = await fetch(
-    `${args.base}/api/trpc/${procedure}?input=${encodeURIComponent(JSON.stringify({ json: input }))}`,
-    { headers: { cookie: cookieHeader } }
-  );
-
-  return ((await response.json()) as { result: { data: { json: T } } }).result.data.json;
-}
-
 // The newest recipe and the first cookbook in the Library's default order.
-const library = await query<{ items: Array<{ kind: string; recipe?: { id: string } }> }>(
+const library = await callTrpc<{ items: Array<{ kind: string; recipe?: { id: string } }> }>(
+  args.base,
+  cookieHeader,
   "library.list",
   { limit: 50 }
 );
