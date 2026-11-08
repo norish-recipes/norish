@@ -1,13 +1,18 @@
 // Seeds a disposable account with unchecked groceries, runs the Maestro flows on the booted
 // simulator, then checks the groceries are done on the server, where the web client reads it.
 import { spawn } from "node:child_process";
+import { randomBytes } from "node:crypto";
 import { once } from "node:events";
+import { existsSync, readFileSync } from "node:fs";
+import { mkdtemp } from "node:fs/promises";
 import { createServer } from "node:http";
 import net from "node:net";
+import os from "node:os";
 import path from "node:path";
+import { PostgreSqlContainer } from "@testcontainers/postgresql";
+import { ValkeyContainer } from "@testcontainers/valkey";
 
 const env = {
-  NORISH_SERVER_URL: "http://localhost:3000",
   NORISH_EMAIL: "maestro@norish.test",
   NORISH_PASSWORD: "maestro-password-1",
   NORISH_GROCERY: "maestrocheck",
@@ -18,9 +23,85 @@ const env = {
   NORISH_OLD_SERVER_PORT: "3999",
   ...process.env,
 };
-const server = env.NORISH_SERVER_URL.replace(/\/+$/, "");
 // The simulator shares the host's loopback, so nothing here is opened to the network.
 const LOOPBACK = "127.0.0.1";
+
+async function freePort() {
+  const probe = net.createServer().listen(0, LOOPBACK);
+
+  await once(probe, "listening");
+  const { port } = probe.address();
+
+  probe.close();
+
+  return port;
+}
+
+// Without NORISH_SERVER_URL the flows get the web build on throwaway Postgres and Valkey
+// containers, which Testcontainers removes even when this run dies.
+async function startServer() {
+  const webDir = path.join(import.meta.dirname, "../../web");
+  const build = path.join(webDir, ".next/required-server-files.json");
+
+  if (!existsSync(build)) throw new Error("No web build: run `pnpm build:web` first");
+
+  const [postgres, valkey] = await Promise.all([
+    new PostgreSqlContainer("postgres:17-alpine").start(),
+    new ValkeyContainer("valkey/valkey:9").start(),
+  ]);
+  const port = await freePort();
+  // A build made under a base path is served under it, as in the browser E2E.
+  const basePath = JSON.parse(readFileSync(build, "utf8")).config.basePath ?? "";
+  const url = `http://localhost:${port}${basePath}`;
+  const child = spawn(process.execPath, ["--import", "tsx", "server/index.ts"], {
+    cwd: webDir,
+    stdio: "inherit",
+    env: {
+      ...process.env,
+      NODE_ENV: "production",
+      PORT: String(port),
+      PARSER_API_PORT: String(await freePort()),
+      DATABASE_URL: postgres.getConnectionUri(),
+      VALKEY_URL: valkey.getConnectionUrl().replace(/^redis:/, "valkey:"),
+      AUTH_URL: url,
+      TRUSTED_ORIGINS: new URL(url).origin,
+      NEXT_PUBLIC_BASE_PATH: basePath,
+      MASTER_KEY: randomBytes(32).toString("base64"),
+      UPLOADS_DIR: await mkdtemp(path.join(os.tmpdir(), "norish-maestro-")),
+      PASSWORD_AUTH_ENABLED: "true",
+      AUTH_RATE_LIMIT_ENABLED: "false",
+      INGREDIENT_CATALOGUE_URL: "",
+      LOG_LEVEL: "error",
+      NEXT_PUBLIC_LOG_LEVEL: "error",
+      TRPC_LOG_LEVEL: "error",
+    },
+  });
+
+  process.once("exit", () => child.kill("SIGKILL"));
+
+  const deadline = Date.now() + 90_000;
+
+  while (!(await fetch(`${url}/api/v1/health/ready`).catch(() => null))?.ok) {
+    if (child.exitCode !== null || Date.now() > deadline) {
+      throw new Error("The server did not start");
+    }
+
+    await new Promise((resolve) => setTimeout(resolve, 500));
+  }
+
+  return {
+    url,
+    stop: async () => {
+      child.kill();
+      await Promise.all([postgres.stop(), valkey.stop()]);
+    },
+  };
+}
+
+const { url: serverUrl, stop: stopServer } = env.NORISH_SERVER_URL
+  ? { url: env.NORISH_SERVER_URL, stop: async () => {} }
+  : await startServer();
+const server = serverUrl.replace(/\/+$/, "");
 let cookie = "";
 
 async function call(pathname, body) {
@@ -117,7 +198,7 @@ async function maestro(folder, vars) {
 }
 
 await maestro(flows, {
-  NORISH_SERVER_URL: env.NORISH_SERVER_URL,
+  NORISH_SERVER_URL: server,
   NORISH_EMAIL: env.NORISH_EMAIL,
   NORISH_PASSWORD: env.NORISH_PASSWORD,
   NORISH_GROCERY_ID: idOf[env.NORISH_GROCERY],
@@ -148,3 +229,4 @@ await maestro(path.join(flows, "old-server"), {
   NORISH_OLD_SERVER_URL: `http://localhost:${env.NORISH_OLD_SERVER_PORT}`,
 });
 oldServer.close();
+await stopServer();

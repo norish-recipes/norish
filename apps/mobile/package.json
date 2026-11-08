@@ -62,6 +62,8 @@
   },
   "devDependencies": {
     "@norish/eslint-config": "workspace:*",
+    "@testcontainers/postgresql": "catalog:",
+    "@testcontainers/valkey": "catalog:",
     "@types/react": "catalog:",
     "eslint": "catalog:",
     "react-native-svg-transformer": "^1.5.3",

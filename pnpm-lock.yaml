@@ -535,6 +535,12 @@ importers:
       '@norish/eslint-config':
         specifier: workspace:*
         version: link:../../tooling/eslint
+      '@testcontainers/postgresql':
+        specifier: 'catalog:'
+        version: 12.2.1(supports-color@10.2.2)
+      '@testcontainers/valkey':
+        specifier: 'catalog:'
+        version: 12.2.1(supports-color@10.2.2)
       '@types/react':
         specifier: 'catalog:'
         version: 19.3.0
