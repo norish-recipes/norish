@@ -183,29 +183,34 @@ export function extractImageCandidates(html: string, pageUrl?: string): string[]
     const className = ($img.attr("class") || "").toLowerCase();
     const id = ($img.attr("id") || "").toLowerCase();
     const parentContext = ($img.parents("article, main, figure").attr("class") || "").toLowerCase();
-    const context = `${alt} ${className} ${id} ${parentContext}`;
+    const markup = `${className} ${id} ${parentContext}`;
+    const context = `${alt} ${markup}`;
+    // Only the markup can rule out an image naming the recipe: its alt and its URL slug hold the
+    // title's own words, and "Navy Bean Soup" holds "nav".
+    const namesRecipe =
+      altNamesRecipe($img.attr("alt") || "", recipeTitles) &&
+      !containsKeyword(markup, CONTEXT_BLOCKLIST);
 
-    if (containsKeyword(context, CONTEXT_BLOCKLIST)) return;
+    if (!namesRecipe && containsKeyword(context, CONTEXT_BLOCKLIST)) return;
 
     const width = Number($img.attr("width")) || 0;
     const height = Number($img.attr("height")) || 0;
     const area = width * height;
-    const namesRecipe = altNamesRecipe($img.attr("alt") || "", recipeTitles);
 
     for (const rawSource of collectRawSources($img)) {
       const source = normalizeImageUrl(rawSource, pageUrl);
 
       if (!source) continue;
 
-      const srcContext = `${context} ${source.toLowerCase()}`;
-
-      if (containsKeyword(srcContext, CONTEXT_BLOCKLIST)) continue;
-
       // One URL per matching image: its srcset variants are the same photo at other sizes.
       if (namesRecipe) {
         titleMatches.add(source);
         break;
       }
+
+      const srcContext = `${context} ${source.toLowerCase()}`;
+
+      if (containsKeyword(srcContext, CONTEXT_BLOCKLIST)) continue;
 
       let score = area > 0 ? area : 1_000;
 
@@ -227,7 +232,12 @@ export function extractImageCandidates(html: string, pageUrl?: string): string[]
       urls.add(candidate.src);
     });
 
-  return [...new Set([...titleMatches, ...urls])].slice(0, 5);
+  // Beside the dish, a social image whose URL marks it as a share card is only another wrong photo.
+  const others = [...urls].filter(
+    (url) => titleMatches.size === 0 || !containsKeyword(url.toLowerCase(), CONTEXT_BLOCKLIST)
+  );
+
+  return [...new Set([...titleMatches, ...others])].slice(0, 5);
 }
 
 /**
