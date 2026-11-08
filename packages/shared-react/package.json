@@ -16,6 +16,7 @@
     "./hooks/use-user": "./src/hooks/use-user.ts",
     "./contexts": "./src/contexts/index.ts",
     "./trpc": "./src/trpc/index.ts",
+    "./platform": "./src/platform/index.ts",
     "./realtime": "./src/realtime/index.ts",
     "./offline": "./src/offline/index.ts",
     "./offline/reachability": "./src/offline/reachability.ts",

@@ -6,8 +6,8 @@ import {
   createMockGroceriesData,
   createMockGrocery,
   createMockRecurringGrocery,
+  createPlatformTestWrapper,
   createTestQueryClient,
-  createTestWrapper,
 } from "./test-utils";
 
 // Track subscription callbacks
@@ -37,6 +37,10 @@ vi.mock("@trpc/tanstack-react-query", () => ({
 
 vi.mock("@heroui/react", () => ({
   toast: vi.fn(),
+}));
+
+vi.mock("next/navigation", () => ({
+  useRouter: () => ({ push: vi.fn() }),
 }));
 
 vi.mock("next-intl", () => ({
@@ -140,7 +144,7 @@ describe("useGroceriesSubscription", () => {
       queryClient.setQueryData(mockQueryKey, initialData);
 
       renderHook(() => useGroceriesSubscription(), {
-        wrapper: createTestWrapper(queryClient),
+        wrapper: createPlatformTestWrapper(queryClient),
       });
 
       // Verify all subscription callbacks were registered
@@ -163,7 +167,7 @@ describe("useGroceriesSubscription", () => {
       queryClient.setQueryData(mockQueryKey, initialData);
 
       renderHook(() => useGroceriesSubscription(), {
-        wrapper: createTestWrapper(queryClient),
+        wrapper: createPlatformTestWrapper(queryClient),
       });
 
       const newGrocery = createMockGrocery({ id: "g2", name: "Bread" });
@@ -187,7 +191,7 @@ describe("useGroceriesSubscription", () => {
       queryClient.setQueryData(mockQueryKey, initialData);
 
       renderHook(() => useGroceriesSubscription(), {
-        wrapper: createTestWrapper(queryClient),
+        wrapper: createPlatformTestWrapper(queryClient),
       });
 
       // Try to add the same grocery
@@ -208,7 +212,7 @@ describe("useGroceriesSubscription", () => {
       );
 
       renderHook(() => useGroceriesSubscription(), {
-        wrapper: createTestWrapper(queryClient),
+        wrapper: createPlatformTestWrapper(queryClient),
       });
 
       const zout = createMockGrocery({ id: "g1", name: "zout" });
@@ -233,7 +237,7 @@ describe("useGroceriesSubscription", () => {
       queryClient.setQueryData(mockQueryKey, createMockGroceriesData([checked], []));
 
       renderHook(() => useGroceriesSubscription(), {
-        wrapper: createTestWrapper(queryClient),
+        wrapper: createPlatformTestWrapper(queryClient),
       });
 
       act(() => {
@@ -266,7 +270,7 @@ describe("useGroceriesSubscription", () => {
       queryClient.setQueryData(mockQueryKey, initialData);
 
       renderHook(() => useGroceriesSubscription(), {
-        wrapper: createTestWrapper(queryClient),
+        wrapper: createPlatformTestWrapper(queryClient),
       });
 
       const newGrocery = createMockGrocery({
@@ -296,7 +300,7 @@ describe("useGroceriesSubscription", () => {
       queryClient.setQueryData(mockQueryKey, initialData);
 
       renderHook(() => useGroceriesSubscription(), {
-        wrapper: createTestWrapper(queryClient),
+        wrapper: createPlatformTestWrapper(queryClient),
       });
 
       const updatedGrocery = { ...existingGrocery, isDone: true };
@@ -319,7 +323,7 @@ describe("useGroceriesSubscription", () => {
       queryClient.setQueryData(mockQueryKey, initialData);
 
       renderHook(() => useGroceriesSubscription(), {
-        wrapper: createTestWrapper(queryClient),
+        wrapper: createPlatformTestWrapper(queryClient),
       });
 
       const updatedGrocery1 = { ...grocery1, name: "Whole Milk" };
@@ -345,7 +349,7 @@ describe("useGroceriesSubscription", () => {
       queryClient.setQueryData(mockQueryKey, initialData);
 
       renderHook(() => useGroceriesSubscription(), {
-        wrapper: createTestWrapper(queryClient),
+        wrapper: createPlatformTestWrapper(queryClient),
       });
 
       act(() => {
@@ -368,7 +372,7 @@ describe("useGroceriesSubscription", () => {
       queryClient.setQueryData(mockQueryKey, initialData);
 
       renderHook(() => useGroceriesSubscription(), {
-        wrapper: createTestWrapper(queryClient),
+        wrapper: createPlatformTestWrapper(queryClient),
       });
 
       act(() => {
@@ -390,7 +394,7 @@ describe("useGroceriesSubscription", () => {
       queryClient.setQueryData(mockQueryKey, initialData);
 
       renderHook(() => useGroceriesSubscription(), {
-        wrapper: createTestWrapper(queryClient),
+        wrapper: createPlatformTestWrapper(queryClient),
       });
 
       const newGrocery = createMockGrocery({ id: "g1", name: "Eggs", recurringGroceryId: "r1" });
@@ -424,7 +428,7 @@ describe("useGroceriesSubscription", () => {
       queryClient.setQueryData(mockQueryKey, initialData);
 
       renderHook(() => useGroceriesSubscription(), {
-        wrapper: createTestWrapper(queryClient),
+        wrapper: createPlatformTestWrapper(queryClient),
       });
 
       const updatedGrocery = { ...grocery, name: "Organic Eggs" };
@@ -457,7 +461,7 @@ describe("useGroceriesSubscription", () => {
       queryClient.setQueryData(mockQueryKey, initialData);
 
       renderHook(() => useGroceriesSubscription(), {
-        wrapper: createTestWrapper(queryClient),
+        wrapper: createPlatformTestWrapper(queryClient),
       });
 
       act(() => {
@@ -483,7 +487,7 @@ describe("useGroceriesSubscription", () => {
       const invalidateSpy = vi.spyOn(queryClient, "invalidateQueries");
 
       renderHook(() => useGroceriesSubscription(), {
-        wrapper: createTestWrapper(queryClient),
+        wrapper: createPlatformTestWrapper(queryClient),
       });
 
       act(() => {
@@ -503,7 +507,7 @@ describe("useGroceriesSubscription", () => {
       queryClient.setQueryData(mockQueryKey, initialData);
 
       renderHook(() => useGroceriesSubscription(), {
-        wrapper: createTestWrapper(queryClient),
+        wrapper: createPlatformTestWrapper(queryClient),
       });
 
       act(() => {

@@ -13,6 +13,7 @@ import { UserProvider } from "@/lib/auth/user-context";
 import { resolveBootPhase } from "@/lib/boot/boot-state";
 import { MobileIntlFallbackProvider, MobileIntlProvider } from "@/lib/i18n/mobile-i18n-context";
 import { ConnectivityProvider, OfflineController, offlineEngine } from "@/lib/offline/engine";
+import { MobilePlatformProvider } from "@/lib/platform/platform-provider";
 import {
   AppearancePreferenceProvider,
   useAppearancePreference,
@@ -149,10 +150,12 @@ function RootLayoutContent() {
         <ConnectivityProvider>
           <AuthProvider backendBaseUrl={boot.backendBaseUrl}>
             <MobileIntlProvider>
-              <DomainProviders>
-                <RootStack />
-                <PortalHost name="app" />
-              </DomainProviders>
+              <MobilePlatformProvider>
+                <DomainProviders>
+                  <RootStack />
+                  <PortalHost name="app" />
+                </DomainProviders>
+              </MobilePlatformProvider>
             </MobileIntlProvider>
           </AuthProvider>
         </ConnectivityProvider>

@@ -1,21 +1,10 @@
-import type { CompatibleMessageTranslator } from "@norish/i18n";
+import type { ToastSeverity } from "../platform/platform";
 
-export type ToastSeverity = "default" | "success" | "warning" | "danger";
+export type { ToastAdapter, ToastSeverity } from "../platform/platform";
 
 export type ProcessingToastPayload = {
   titleKey?: string;
   severity?: ToastSeverity;
-};
-
-export type ToastAdapter = {
-  show: (toast: {
-    severity: ToastSeverity;
-    title: string;
-    description?: string;
-    actionLabel?: string;
-    onActionPress?: () => void;
-  }) => void;
-  translate: CompatibleMessageTranslator;
 };
 
 function isToastSeverity(value: unknown): value is ToastSeverity {

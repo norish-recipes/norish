@@ -1,24 +1,20 @@
 "use client";
 
 import { createContext, use, useMemo } from "react";
-import { useRouter } from "next/navigation";
 import { useRecipesFiltersContext } from "@/context/recipes-filters-context";
 import { useFavoritesMutation, useFavoritesQuery } from "@/hooks/favorites";
 import { useLibraryRecipesQuery } from "@/hooks/library";
 import { useRecipesMutations } from "@/hooks/recipes";
 import { sharedDashboardRecipeHooks } from "@/hooks/recipes/shared-recipe-hooks";
 import { useActiveAllergies, useUserAllergiesQuery } from "@/hooks/user";
-import { showActionToast } from "@/lib/ui/action-toast";
-import { toast } from "@heroui/react";
-import { useTranslations } from "next-intl";
 
 import type {
   FullRecipeInsertDTO,
   FullRecipeUpdateDTO,
   RecipeDashboardDTO,
 } from "@norish/shared/contracts";
-import { createScopedMessageTranslator } from "@norish/i18n";
 import { createRecipesContext } from "@norish/shared-react/contexts";
+import { usePlatform } from "@norish/shared-react/platform";
 
 type Ctx = {
   recipes: RecipeDashboardDTO[];
@@ -56,40 +52,8 @@ const sharedRecipesContext = createRecipesContext({
   useUserAllergiesQuery,
   useRecipesSubscription: sharedDashboardRecipeHooks.useRecipesSubscription,
   useRatingsSubscription: sharedDashboardRecipeHooks.useRatingsSubscription,
-  useToastAdapter: () => {
-    const tCommon = useTranslations("common");
-    const tRecipes = useTranslations("recipes");
-
-    return {
-      show: ({ severity, title, description, actionLabel, onActionPress }) => {
-        if (actionLabel) {
-          showActionToast(title, {
-            description,
-            variant: severity,
-            action: { label: actionLabel, onPress: () => onActionPress?.() },
-          });
-
-          return;
-        }
-
-        toast(title, { description, variant: severity });
-      },
-      translate: createScopedMessageTranslator({
-        common: (messageKey, values) =>
-          tCommon(messageKey as Parameters<typeof tCommon>[0], values),
-        recipes: (messageKey, values) =>
-          tRecipes(messageKey as Parameters<typeof tRecipes>[0], values),
-      }),
-    };
-  },
-  useNavigationAdapter: () => {
-    const router = useRouter();
-
-    return {
-      toHome: () => router.push("/"),
-      toRecipe: (id: string) => router.push(`/recipes/${id}`),
-    };
-  },
+  useToastAdapter: () => usePlatform().toast,
+  useNavigationAdapter: () => usePlatform().navigation,
 });
 
 const RecipesContext = createContext<Ctx | null>(null);

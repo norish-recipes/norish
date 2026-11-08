@@ -2,15 +2,12 @@
 
 import { ConnectivityProvider } from "@/lib/offline/engine";
 
+import type { BaseProvidersProps } from "./base-providers";
 import { BaseProviders } from "./base-providers";
 
-export interface AuthProvidersProps {
-  children: React.ReactNode;
-}
-
-export function AuthProviders({ children }: AuthProvidersProps) {
+export function AuthProviders({ children, deviceKind }: BaseProvidersProps) {
   return (
-    <BaseProviders>
+    <BaseProviders deviceKind={deviceKind}>
       <ConnectivityProvider>{children}</ConnectivityProvider>
     </BaseProviders>
   );

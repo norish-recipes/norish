@@ -1,19 +1,11 @@
 "use client";
 
-import { showSafeErrorToast } from "@/lib/ui/safe-error-toast";
-import { useTranslations } from "next-intl";
+import { usePlatform } from "@norish/shared-react/platform";
 
 export function useGroceriesErrorAdapter() {
-  const tErrors = useTranslations("common.errors");
+  const { showError } = usePlatform();
 
   return {
-    showErrorToast: (reason: string) => {
-      showSafeErrorToast({
-        title: tErrors("operationFailed"),
-        description: tErrors("technicalDetails"),
-        error: reason,
-        context: "groceries-subscription:onFailed",
-      });
-    },
+    showErrorToast: (reason: string) => showError(reason, "groceries-subscription:onFailed"),
   };
 }

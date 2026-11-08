@@ -4,6 +4,7 @@ import type { DevicePreferencesSeed } from "@/context/device-preferences-context
 import { cache } from "react";
 import { headers } from "next/headers";
 
+import type { DeviceKind } from "@norish/shared/contracts/zod/device-preferences";
 import type { UserPreferencesDto } from "@norish/shared/contracts/zod/user";
 import { readSessionPrincipal, verifySessionPrincipal } from "@norish/auth/session";
 import { getUserPreferences } from "@norish/db/repositories/users";
@@ -11,6 +12,11 @@ import { DEVICE_PREFERENCE_DEFAULTS } from "@norish/shared/contracts/zod/device-
 import { deviceKindFromUserAgent } from "@norish/shared/lib/device-kind";
 
 const NO_PREFERENCES: UserPreferencesDto = {};
+
+/** The request's Device Kind, from its user agent. */
+export async function readRequestDeviceKind(): Promise<DeviceKind> {
+  return deviceKindFromUserAgent((await headers()).get("user-agent"));
+}
 
 /**
  * The request's profile, read once: the verified session, the stored
@@ -21,7 +27,7 @@ const NO_PREFERENCES: UserPreferencesDto = {};
  */
 export const readRequestProfile = cache(async () => {
   const requestHeaders = await headers();
-  const kind = deviceKindFromUserAgent(requestHeaders.get("user-agent"));
+  const kind = await readRequestDeviceKind();
   // An unreadable session is a signed-out request.
   const principal = await readSessionPrincipal(requestHeaders).catch(() => null);
   const signedOut = { identity: null, userId: null, kind, preferences: NO_PREFERENCES };

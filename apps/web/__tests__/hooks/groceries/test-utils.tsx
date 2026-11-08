@@ -1,5 +1,6 @@
 import type { GroceriesData } from "@/hooks/groceries/use-groceries-query";
 import type { ReactNode } from "react";
+import { WebPlatformProvider } from "@/app/providers/platform-provider";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { renderHook } from "@testing-library/react";
 import { vi } from "vitest";
@@ -107,6 +108,17 @@ export function createMockTrpcClient() {
 export function createTestWrapper(queryClient: QueryClient) {
   return function TestWrapper({ children }: { children: ReactNode }) {
     return <QueryClientProvider client={queryClient}>{children}</QueryClientProvider>;
+  };
+}
+
+/** With the web's platform adapter too; the test mocks next/navigation and next-intl. */
+export function createPlatformTestWrapper(queryClient: QueryClient) {
+  return function TestWrapper({ children }: { children: ReactNode }) {
+    return (
+      <WebPlatformProvider>
+        <QueryClientProvider client={queryClient}>{children}</QueryClientProvider>
+      </WebPlatformProvider>
+    );
   };
 }
 
