@@ -52,11 +52,19 @@ function LoginForm({ backendBaseUrl, redirectTo }: { backendBaseUrl: string; red
       setActiveOAuthProviderId(provider.id);
 
       try {
-        await authClient.signIn.social({
+        // Like signIn.email, a refused sign-in comes back as `error`; only a network failure throws.
+        const { error: signInError } = await authClient.signIn.social({
           provider: provider.id,
           callbackURL: redirectTo,
         });
-        consumeLogoutFlag();
+
+        if (signInError) {
+          setErrorMessage(
+            signInError.message ?? intl.formatMessage({ id: "auth.errors.default.description" })
+          );
+        } else {
+          consumeLogoutFlag();
+        }
       } catch (oauthError) {
         if (oauthError instanceof Error && oauthError.message) {
           setErrorMessage(oauthError.message);
