@@ -1,4 +1,5 @@
 import type { DehydratedState } from "@tanstack/react-query";
+import { ShellSubscriptions } from "@/app/(app)/shell-subscriptions";
 import { AuthProviders } from "@/app/providers/auth-providers";
 import { ArrivalScroll } from "@/components/arrival-scroll";
 import { Navbar } from "@/components/navbar/navbar";
@@ -10,7 +11,6 @@ import { TimerDock } from "@/components/timer-dock";
 import { ArchiveImportProvider } from "@/context/archive-import-context";
 import { CookbooksRealtimeProvider } from "@/context/cookbooks-realtime-context";
 import { HouseholdProvider } from "@/context/household-context";
-import { IngredientsRealtime } from "@/context/ingredients-realtime";
 import { PantryRealtimeProvider } from "@/context/pantry-realtime-context";
 import { PermissionsProvider } from "@/context/permissions-context";
 import { RecipesContextProvider } from "@/context/recipes-context";
@@ -93,7 +93,7 @@ export function AppShell({ children, seed }: { children: React.ReactNode; seed?:
                             <TimerDock />
                             <ClipboardImportPrompt />
                             <AIKeyRejectionPrompt />
-                            <IngredientsRealtime />
+                            <ShellSubscriptions />
                           </PantryRealtimeProvider>
                         </CookbooksRealtimeProvider>
                       </RecipesContextProvider>
