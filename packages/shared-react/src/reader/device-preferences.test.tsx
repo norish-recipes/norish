@@ -200,15 +200,38 @@ describe("useDevicePreference", () => {
     await settle();
 
     expect(shown()).toBe("recipe:true");
+    expect(server.read).not.toHaveBeenCalled();
+  });
+
+  it("reads again a copy restored over the seed only because this device's clock runs fast", async () => {
+    // The server's clock is an hour behind this device's.
+    hydrate(queryClient, copyOf({}, Date.now() - 60 * 60_000));
+    renderProbe();
+
+    // Saved here a minute before the page loaded, before another browser of this kind changed it.
+    act(() =>
+      hydrate(
+        queryClient,
+        copyOf({ phone: { groceryViewMode: "recipe" } }, performance.timeOrigin - 60_000)
+      )
+    );
+    await settle();
+
+    await waitFor(() => expect(server.read).toHaveBeenCalled());
+    await waitFor(() => expect(shown()).toBe("store:true"));
   });
 
   it("Offline, settles on the saved copy over a page the service worker saved earlier", async () => {
+    server.read.mockRejectedValue(TRPCClientError.from(new TypeError("Failed to fetch")));
     hydrate(queryClient, copyOf({}, TWO_HOURS_AGO));
     renderProbe();
 
     act(() => hydrate(queryClient, copyOf({ phone: { groceryViewMode: "recipe" } }, AN_HOUR_AGO)));
+    await settle();
 
-    await waitFor(() => expect(shown()).toBe("recipe:true"));
+    await waitFor(() => expect(server.read).toHaveBeenCalled());
+    await settle();
+    expect(shown()).toBe("recipe:true");
   });
 
   it("settles on a read after the change, even for a choice changed here", async () => {

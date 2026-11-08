@@ -2,7 +2,7 @@
 
 import type { Mutation } from "@tanstack/react-query";
 import type { ReactNode } from "react";
-import { createContext, use } from "react";
+import { createContext, use, useEffect } from "react";
 import { useMutation, useMutationState, useQuery, useQueryClient } from "@tanstack/react-query";
 
 import type {
@@ -68,6 +68,20 @@ export function useDevicePreference<K extends keyof DevicePreferences>(
     // Leaf components read it on every row: the seed, the Warm Set and the writes keep it current.
     refetchOnMount: false,
   });
+
+  // A copy saved before this page loaded beats the seed only when this device's clock runs fast,
+  // so it is read again; Offline that read fails and the copy stays.
+  useEffect(() => {
+    const devicePreferences = trpc.user.getDevicePreferences.queryKey();
+    const savedAt = queryClient.getQueryState(devicePreferences)?.dataUpdatedAt ?? 0;
+
+    if (savedAt > 0 && savedAt < performance.timeOrigin) {
+      void queryClient.refetchQueries(
+        { queryKey: devicePreferences, exact: true },
+        { cancelRefetch: false }
+      );
+    }
+  }, [queryClient, trpc, stored]);
   // A write still on its way stays over any read that lands before it (the Warm Set's, a focus).
   const unsettled = useMutationState({
     filters: {
