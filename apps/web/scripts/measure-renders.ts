@@ -5,6 +5,7 @@ import type { Browser, BrowserContext, Page } from "@playwright/test";
 import { chromium, devices } from "@playwright/test";
 
 import { callTrpc, signIn } from "./api";
+import { inOrder } from "./delivery";
 
 const {
   values: args,
@@ -179,28 +180,22 @@ async function openTab(browser: Browser, counted: boolean): Promise<Tab> {
 
   if (counted) {
     await context.addInitScript(countRenders);
-    // tRPC responses and socket messages reach the page one at a time, a fixed time after they
-    // were asked for or sent, so every run hears them in the same order and apart.
-    let free = 0;
-    const deliver = async (ready: number, send: () => unknown) => {
-      const token = {};
+    // tRPC responses and socket messages reach the page one at a time, in the order they were
+    // asked for or sent, so every run sees them in the same order.
+    const deliver = inOrder(DELIVERY_GAP_MS, pending);
 
-      free = Math.max(ready, free + DELIVERY_GAP_MS);
-      pending.add(token);
-      await delay(free - Date.now());
-      await send();
-      pending.delete(token);
-    };
-
-    await context.route("**/api/trpc/**", async (route) => {
-      const asked = Date.now();
-      const response = await route.fetch();
-
-      await deliver(asked + RESPONSE_DELAY_MS, () => route.fulfill({ response }));
-    });
+    await context.route("**/api/trpc/**", (route) =>
+      deliver(
+        RESPONSE_DELAY_MS,
+        route.fetch().then((response) => () => route.fulfill({ response }))
+      )
+    );
     await context.routeWebSocket(/\/trpc$/, (socket) => {
       socket.connectToServer().onMessage((message) => {
-        void deliver(Date.now() + MESSAGE_DELAY_MS, () => socket.send(message));
+        void deliver(
+          MESSAGE_DELAY_MS,
+          Promise.resolve(() => socket.send(message))
+        );
       });
     });
   }
