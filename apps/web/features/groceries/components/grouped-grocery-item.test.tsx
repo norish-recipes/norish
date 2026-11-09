@@ -2,12 +2,13 @@
  * A grouped row skips a group that changed only in what it doesn't draw: its
  * lines' sort order and version, which a create bumps for every line below it.
  */
+import type { ComponentProps } from "react";
 import { describe, expect, it } from "vitest";
 
 import type { GroceryDto, RecurringGroceryDto } from "@norish/shared/contracts";
 import { groupGroceriesByIngredient } from "@norish/shared/lib/grocery-grouping";
 
-import { drawsTheSame } from "./grouped-grocery-item";
+import { drawsTheSame, GroupedGroceryItem } from "./grouped-grocery-item";
 
 const MILK: GroceryDto = {
   id: "milk",
@@ -28,7 +29,7 @@ const ON_EDIT = () => undefined;
 const ON_TOGGLE_GROUP = () => undefined;
 
 /** The row's props for milk as the list holds it after `change`. */
-function propsWith(change: Partial<GroceryDto>) {
+function propsWith(change: Partial<GroceryDto>): ComponentProps<typeof GroupedGroceryItem> {
   const [group] = groupGroceriesByIngredient([{ ...MILK, ...change }], () => null).get(null)!;
 
   return {

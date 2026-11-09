@@ -8,6 +8,7 @@ import { Bars3Icon } from "@heroicons/react/16/solid";
 import type { GroceryGroup } from "@norish/shared/lib/grocery-grouping";
 
 import type { GroupRow } from "./types";
+import { drawsTheSame } from "../grouped-grocery-item";
 import { ROW_CLASS_NAME } from "./sortable-grocery-item";
 
 interface SortableGroupItemProps {
@@ -18,7 +19,10 @@ interface SortableGroupItemProps {
   row: GroupRow;
 }
 
-/** Wraps a grouped grocery item with dnd-kit sortable. Shows ghost placeholder while dragging. */
+/**
+ * Wraps a grouped grocery item with dnd-kit sortable. Shows ghost placeholder while dragging.
+ * It skips what its row skips, so a group's new sort order or version renders neither.
+ */
 export const SortableGroupItem = memo(function SortableGroupItem({
   group,
   isFirst,
@@ -69,4 +73,4 @@ export const SortableGroupItem = memo(function SortableGroupItem({
       {row(group, { dragHandle, isFirst, isLast })}
     </div>
   );
-});
+}, drawsTheSame);
