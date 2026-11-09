@@ -15,13 +15,15 @@ vi.mock("next/navigation", () => ({
     return "/groceries";
   },
 }));
-vi.mock("@/features/groceries/components", () => ({ PantryView: () => null }));
-vi.mock("@/features/groceries/components/groceries-page", () => ({ GroceriesPage: () => null }));
-vi.mock("@/features/groceries/components/groceries-header", () => ({
+vi.mock("@/features/groceries/components/pantry", () => ({ PantryView: () => null }));
+vi.mock("@/features/groceries/components/list/groceries-page", () => ({
+  GroceriesPage: () => null,
+}));
+vi.mock("@/features/groceries/components/header/groceries-header", () => ({
   GroceriesHeader: () => null,
   VIEW_TRANSITION: {},
 }));
-vi.mock("@/features/groceries/components/add-grocery-button", () => ({ default: () => null }));
+vi.mock("@/features/groceries/components/list/add-grocery-button", () => ({ default: () => null }));
 vi.mock("@norish/shared-react/groceries", async (importOriginal) => ({
   ...(await importOriginal()),
   useGroceriesSubscription: () => undefined,

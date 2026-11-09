@@ -4,7 +4,7 @@ import { useRef, useState } from "react";
 import { IngredientIcon, IngredientIconsProvider } from "@/components/ingredients/ingredient-icon";
 import { IngredientPanel } from "@/components/ingredients/ingredient-panel";
 import { IconActionButton } from "@/components/shared/action-button";
-import { FIELD_STYLE } from "@/features/groceries/components/grocery-field";
+import { FIELD_STYLE } from "@/features/groceries/lib/grocery-field";
 import { useHiddenItemVisibility } from "@/hooks/user/use-hidden-item-visibility";
 import { MagnifyingGlassIcon, PlusIcon } from "@heroicons/react/16/solid";
 import { Button, InputGroup, Skeleton, TextField, toast } from "@heroui/react";

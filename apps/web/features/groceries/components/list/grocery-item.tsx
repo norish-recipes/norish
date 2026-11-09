@@ -3,7 +3,7 @@
 import { memo } from "react";
 import { IngredientIcon } from "@/components/ingredients/ingredient-icon";
 import { RoundCheckbox } from "@/components/round-checkbox";
-import { RecurrencePill } from "@/features/groceries/components/recurrence-pill";
+import { storeCheckbox, storeColorStyle } from "@/features/groceries/components/stores";
 import { useUnitFormatter } from "@/hooks/use-unit-formatter";
 import { useTranslations } from "next-intl";
 
@@ -11,7 +11,7 @@ import type { GroceryDto, RecurringGroceryDto, StoreDto } from "@norish/shared/c
 import { shownAmount } from "@norish/shared/lib/grocery-grouping";
 
 import { GroceryPrice } from "./grocery-price";
-import { storeCheckbox, storeColorStyle } from "./store-colors";
+import { RecurrencePill } from "./recurrence-pill";
 import { lineOf } from "./store-total";
 
 interface GroceryItemProps {

@@ -6,7 +6,7 @@ import {
   aisleContainerId,
   storeGroupItems,
   storeItems,
-} from "@/features/groceries/components/dnd/utils";
+} from "@/features/groceries/components/list/dnd/utils";
 import { describe, expect, it } from "vitest";
 
 import type { GroceryDto, StoreDto } from "@norish/shared/contracts";

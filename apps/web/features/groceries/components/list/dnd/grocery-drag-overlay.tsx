@@ -1,7 +1,7 @@
 "use client";
 
 import { RoundCheckbox } from "@/components/round-checkbox";
-import { RecurrencePill } from "@/features/groceries/components/recurrence-pill";
+import { storeCheckbox } from "@/features/groceries/components/stores";
 import { useUnitFormatter } from "@/hooks/use-unit-formatter";
 import { Bars3Icon } from "@heroicons/react/16/solid";
 import { useTranslations } from "next-intl";
@@ -9,7 +9,7 @@ import { useTranslations } from "next-intl";
 import type { GroceryDto, RecurringGroceryDto } from "@norish/shared/contracts";
 import { shownAmount } from "@norish/shared/lib/grocery-grouping";
 
-import { storeCheckbox } from "../store-colors";
+import { RecurrencePill } from "../recurrence-pill";
 
 interface GroceryDragOverlayProps {
   grocery: GroceryDto;

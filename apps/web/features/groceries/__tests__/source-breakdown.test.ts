@@ -1,4 +1,4 @@
-import { formatInlineSourceBreakdown } from "@/features/groceries/components/grouped-grocery-item";
+import { formatInlineSourceBreakdown } from "@/features/groceries/components/list/grouped-grocery-item";
 import { describe, expect, it } from "vitest";
 
 import type { GroupedGrocerySource } from "@norish/shared/lib/grocery-grouping";

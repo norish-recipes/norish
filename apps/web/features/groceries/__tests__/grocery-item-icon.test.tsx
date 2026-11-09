@@ -4,7 +4,7 @@
  * added offline waits for the server to resolve it.
  */
 import { IngredientIconsProvider } from "@/components/ingredients/ingredient-icon";
-import { GroceryItem } from "@/features/groceries/components/grocery-item";
+import { GroceryItem } from "@/features/groceries/components/list/grocery-item";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { render, screen } from "@testing-library/react";
 import { describe, expect, it, vi } from "vitest";
@@ -22,7 +22,7 @@ vi.mock("@norish/shared-react/reader", async () =>
 vi.mock("@/hooks/use-unit-formatter", () => ({
   useUnitFormatter: () => ({ formatAmountUnit: () => "" }),
 }));
-vi.mock("@/features/groceries/components/grocery-price", () => ({ GroceryPrice: () => null }));
+vi.mock("@/features/groceries/components/list/grocery-price", () => ({ GroceryPrice: () => null }));
 vi.mock("next-intl", () => ({ useTranslations: () => (key: string) => key }));
 vi.mock("@norish/shared-react/trpc", () => ({
   useTRPC: () => ({

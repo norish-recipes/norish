@@ -1,13 +1,12 @@
 "use client";
 
 import { RoundCheckbox } from "@/components/round-checkbox";
+import { storeCheckbox } from "@/features/groceries/components/stores";
 import { useUnitFormatter } from "@/hooks/use-unit-formatter";
 import { Bars3Icon, Square2StackIcon } from "@heroicons/react/16/solid";
 import { useTranslations } from "next-intl";
 
 import type { GroceryGroup } from "@norish/shared/lib/grocery-grouping";
-
-import { storeCheckbox } from "../store-colors";
 
 interface GroupDragOverlayProps {
   group: GroceryGroup;

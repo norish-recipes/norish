@@ -3,7 +3,7 @@
  * list it was dropped on comes back, and read their own rows otherwise.
  */
 import type { DragEndEvent, DragStartEvent } from "@dnd-kit/core";
-import { useListDnd } from "@/features/groceries/components/dnd/use-list-dnd";
+import { useListDnd } from "@/features/groceries/components/list/dnd/use-list-dnd";
 import { act, renderHook } from "@testing-library/react";
 import { describe, expect, it, vi } from "vitest";
 

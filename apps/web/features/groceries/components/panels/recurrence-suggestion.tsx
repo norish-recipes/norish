@@ -1,11 +1,10 @@
 "use client";
 
+import { RecurrencePill } from "@/features/groceries/components/list";
 import { motion } from "motion/react";
 
 import type { RecurrencePattern } from "@norish/shared/contracts/recurrence";
 import { calculateNextOccurrence, getTodayString } from "@norish/shared/lib/recurrence/calculator";
-
-import { RecurrencePill } from "./recurrence-pill";
 
 type RecurrenceSuggestionProps = {
   pattern: RecurrencePattern;

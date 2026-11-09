@@ -1,11 +1,12 @@
 "use client";
 
 import { ActionButton } from "@/components/shared/action-button";
-import { RecurrenceSuggestion } from "@/features/groceries/components/recurrence-suggestion";
 import { AnimatePresence } from "motion/react";
 import { useTranslations } from "next-intl";
 
 import type { RecurrencePattern } from "@norish/shared/contracts/recurrence";
+
+import { RecurrenceSuggestion } from "./recurrence-suggestion";
 
 /** A rhythm read out of the grocery's name as it is typed. */
 interface DetectedPattern {

@@ -3,13 +3,11 @@
 import type { PackSizeWords } from "@/features/groceries/lib/format-price";
 import { useCallback, useEffect, useEffectEvent, useRef, useState } from "react";
 import { PanelComboBoxPopover } from "@/components/Panel/Panel";
-import { FIELD_CLASS, FIELD_STYLE } from "@/features/groceries/components/grocery-field";
-import { GroceryPurchaseAmount } from "@/features/groceries/components/grocery-purchase-amount";
-import { ProductDetailsPanel } from "@/features/groceries/components/product-details-panel";
-import { SalePrice } from "@/features/groceries/components/sale-price";
+import { SalePrice } from "@/features/groceries/components/list";
 import { useShopSearch, useStoreProducts } from "@/features/groceries/hooks";
 import { usePackSizeWords } from "@/features/groceries/hooks/use-pack-size-words";
 import { formatPackSize, formatShelfPrice } from "@/features/groceries/lib/format-price";
+import { FIELD_CLASS, FIELD_STYLE } from "@/features/groceries/lib/grocery-field";
 import { ArrowTopRightOnSquareIcon, ChevronRightIcon } from "@heroicons/react/16/solid";
 import {
   Button,
@@ -34,6 +32,9 @@ import { packSizeOf } from "@norish/shared/lib/pack-size";
 import { saleRegularPrice } from "@norish/shared/lib/sale";
 import { httpUrlSchema } from "@norish/shared/lib/schema";
 import { isUnitId } from "@norish/shared/lib/units";
+
+import { GroceryPurchaseAmount } from "./grocery-purchase-amount";
+import { ProductDetailsPanel } from "./product-details-panel";
 
 /** How long a shopper stops typing before the shop is asked. */
 const SEARCH_DEBOUNCE_MS = 400;

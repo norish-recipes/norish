@@ -1,55 +1,53 @@
 "use client";
 
-import { useState } from "react";
+import { useRef, useState } from "react";
 import Panel from "@/components/Panel/Panel";
 import { ActionButton, ActionButtonGroup } from "@/components/shared/action-button";
-import { AisleSelector } from "@/features/groceries/components/aisle-selector";
-import { GroceryProductField } from "@/features/groceries/components/grocery-product-field";
-import { GroceryRecurrenceControl } from "@/features/groceries/components/grocery-recurrence-control";
-import { RecurrencePanel } from "@/features/groceries/components/recurrence-panel";
-import { StoreSelector } from "@/features/groceries/components/store-selector";
 import { useAisleChoice, useProductChoice } from "@/features/groceries/hooks";
 import { Input } from "@heroui/react";
 import { useTranslations } from "next-intl";
 
-import type { GroceryDto, RecurringGroceryDto, StoreDto } from "@norish/shared/contracts";
+import type { StoreDto } from "@norish/shared/contracts";
 import type { RecurrencePattern } from "@norish/shared/contracts/recurrence";
 import { useGroceryFormState, useRecurrenceDetection } from "@norish/shared-react/groceries";
-import { recurrencePatternOf } from "@norish/shared/contracts/recurrence";
 
-type EditGroceryPanelProps = {
+import { AisleSelector } from "./aisle-selector";
+import { GroceryProductField } from "./grocery-product-field";
+import { GroceryRecurrenceControl } from "./grocery-recurrence-control";
+import { RecurrencePanel } from "./recurrence-panel";
+import { StoreSelector } from "./store-selector";
+
+type AddGroceryPanelProps = {
   open: boolean;
   onOpenChange: (open: boolean) => void;
-  grocery: GroceryDto;
-  recurringGrocery: RecurringGroceryDto | null;
   stores: StoreDto[];
-  onSave: (
+  onCreate: (itemName: string, storeId?: string | null, purchaseAmount?: number | null) => void;
+  onCreateRecurring: (
     itemName: string,
-    pattern: RecurrencePattern | null,
+    pattern: RecurrencePattern,
     storeId?: string | null,
     purchaseAmount?: number | null
   ) => void;
-  onDelete: () => void;
 };
-export default function EditGroceryPanel({
+export default function AddGroceryPanel({
   open,
   onOpenChange,
-  grocery,
-  recurringGrocery,
   stores,
-  onSave,
-  onDelete,
-}: EditGroceryPanelProps) {
+  onCreate,
+  onCreateRecurring,
+}: AddGroceryPanelProps) {
   const t = useTranslations("groceries.panel");
   const tActions = useTranslations("common.actions");
   const [purchaseAmount, setPurchaseAmount] = useState<number | null>(null);
   const [recurrencePanelOpen, setRecurrencePanelOpen] = useState(false);
   const [selectedStoreId, setSelectedStoreId] = useState<string | null>(null);
-  const [hasStoreChanged, setHasStoreChanged] = useState(false);
   // Whether what is typed in the product field could be saved as it stands.
   const [productValid, setProductValid] = useState(true);
-  const text = [grocery.amount, grocery.unit, grocery.name].filter(Boolean).join(" ");
-  // The form starts on the grocery, so its lookups start on its name rather than catch up to it.
+  // One per grocery added, so the panel that stays open for the next one is
+  // not still showing the last one's product.
+  const [added, setAdded] = useState(0);
+  const [wasOpen, setWasOpen] = useState(open);
+  const nameRef = useRef<HTMLInputElement>(null);
   const {
     itemName,
     setItemName,
@@ -58,80 +56,60 @@ export default function EditGroceryPanel({
     handleConfirmPattern,
     handleRemovePattern,
     reset,
-  } = useGroceryFormState(open ? text : "");
+  } = useGroceryFormState();
   const { detectedPattern } = useRecurrenceDetection({
     itemName,
     enabled: open && !recurrencePanelOpen,
   });
 
-  const [seededFrom, setSeededFrom] = useState<{
-    open: boolean;
-    grocery: GroceryDto;
-    recurringGrocery: RecurringGroceryDto | null;
-  } | null>(null);
-
-  // Initialize form with grocery data when opening
-  if (
-    seededFrom?.open !== open ||
-    seededFrom.grocery !== grocery ||
-    seededFrom.recurringGrocery !== recurringGrocery
-  ) {
-    setSeededFrom({ open, grocery, recurringGrocery });
-    if (open) {
-      setItemName(text);
-      setPurchaseAmount(grocery.purchaseAmount ?? null);
-      setSelectedStoreId(grocery.storeId ?? null);
-      setHasStoreChanged(false);
-      setProductValid(true);
-      if (recurringGrocery) {
-        setConfirmedPattern(recurrencePatternOf(recurringGrocery));
-      } else {
-        setConfirmedPattern(null);
-      }
-    } else {
+  // Reset form when panel closes
+  if (open !== wasOpen) {
+    setWasOpen(open);
+    if (!open) {
       reset();
+      setPurchaseAmount(null);
+      setSelectedStoreId(null);
+      setProductValid(true);
     }
   }
   const price = useProductChoice({
     itemName,
     stores,
     selectedStoreId,
-    resetOn: grocery.id,
-    grocery,
+    resetOn: open,
   });
-  // Where the chosen Store files this name, re-read when the Store is swapped.
+  // Where the chosen Store files this name; a new name can be taught to the
+  // Store the moment it is typed.
   const aisle = useAisleChoice({
     groceryName: price.groceryName,
     ingredientId: price.ingredientId,
     store: price.store,
-    resetOn: grocery.id,
+    resetOn: open,
   });
-  const handleStoreChange = (storeId: string | null) => {
-    setSelectedStoreId(storeId);
-    setHasStoreChanged(storeId !== (grocery.storeId ?? null));
-  };
   const handleSubmit = () => {
     const trimmed = itemName.trim();
 
     if (!trimmed || !productValid) return;
-
-    // Fold the store change into the single save call so both the name/unit
-    // update and the store assignment happen in one atomic mutation (avoiding
-    // a version-conflict race between two separate mutations).
-    onSave(
-      trimmed,
-      confirmedPattern,
-      hasStoreChanged ? selectedStoreId : undefined,
-      purchaseAmount
-    );
+    if (confirmedPattern) {
+      onCreateRecurring(trimmed, confirmedPattern, selectedStoreId, purchaseAmount);
+    } else {
+      onCreate(trimmed, selectedStoreId, purchaseAmount);
+    }
 
     // The picker's choice is written here and nowhere else — and the aisle
-    // after the grocery is updated, only where it differs from what the Store
+    // after the grocery is created, only where it differs from what the Store
     // remembered.
     price.commit();
     aisle.commit();
 
-    onOpenChange(false);
+    // Reset form but keep panel open for batch adding; `commit` has already
+    // put the price stage back.
+    reset();
+    setPurchaseAmount(null);
+    setAdded((count) => count + 1);
+    // The name field is where the next grocery goes, however this one was added.
+    nameRef.current?.focus();
+    // Keep the store selection for batch adding to same store
   };
   const handleRecurrenceSave = (pattern: RecurrencePattern | null) => {
     setConfirmedPattern(pattern);
@@ -144,12 +122,17 @@ export default function EditGroceryPanel({
 
   return (
     <>
-      <Panel open={open} title={t("editTitle")} onOpenChange={handlePanelOpenChange}>
+      <Panel open={open} title={t("addTitle")} onOpenChange={handlePanelOpenChange}>
         <Panel.Body>
           <div className="space-y-3">
             <Input
+              ref={nameRef}
+              // Opening the panel is the ask to type a grocery; the drawer
+              // mounts its content afresh on every open.
+              // eslint-disable-next-line jsx-a11y-x/no-autofocus
+              autoFocus
               className="h-12 text-base font-medium"
-              placeholder={t("editPlaceholder")}
+              placeholder={t("placeholder")}
               style={{
                 fontSize: "16px",
               }}
@@ -176,11 +159,12 @@ export default function EditGroceryPanel({
 
             {/* Store selection */}
             <StoreSelector
-              showWhenEmpty
-              label={t("selectStore")}
+              label={t("storeOptional")}
+              noStoreDescription={t("autoDetectFromHistory")}
+              placeholder={t("autoDetectOrSelect")}
               selectedStoreId={selectedStoreId}
               stores={stores}
-              onSelectionChange={handleStoreChange}
+              onSelectionChange={setSelectedStoreId}
             />
 
             {/* Where in that shop this is found: only for a Store with aisles, once there is a name */}
@@ -195,9 +179,10 @@ export default function EditGroceryPanel({
             {/* Which of that shop's products this is */}
             {price.store && (
               <GroceryProductField
-                // A different Store is a different question: the field starts
-                // over rather than carrying the last shop's answers into it.
-                key={price.store.id}
+                // A different Store is a different question, and so is the
+                // next grocery: the field starts over rather than carrying the
+                // last shop's answers into it.
+                key={`${price.store.id}:${added}`}
                 choice={price.choice}
                 groceryName={price.groceryName}
                 itemName={itemName}
@@ -213,19 +198,13 @@ export default function EditGroceryPanel({
           </div>
         </Panel.Body>
         <Panel.Footer>
-          <ActionButtonGroup
-            start={
-              <ActionButton action="delete" onPress={onDelete}>
-                {tActions("delete")}
-              </ActionButton>
-            }
-          >
+          <ActionButtonGroup>
             <ActionButton
-              action="save"
+              action="add"
               isDisabled={!itemName.trim() || !productValid}
               onPress={handleSubmit}
             >
-              {tActions("save")}
+              {tActions("add")}
             </ActionButton>
           </ActionButtonGroup>
         </Panel.Footer>

@@ -6,7 +6,7 @@ import type { ComponentProps } from "react";
 import {
   drawsTheSame,
   GroupedGroceryItem,
-} from "@/features/groceries/components/grouped-grocery-item";
+} from "@/features/groceries/components/list/grouped-grocery-item";
 import { describe, expect, it } from "vitest";
 
 import type { GroceryDto, RecurringGroceryDto } from "@norish/shared/contracts";

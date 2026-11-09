@@ -9,7 +9,7 @@ import { useTranslations } from "next-intl";
 import { addBasePath } from "@norish/shared/lib/base-path";
 import { cssHeaderIcon, cssHeaderTab } from "@norish/web/config/css-tokens";
 
-import { GroceriesListActions } from "./groceries-page";
+import { GroceriesListActions } from "./list-actions";
 
 export type GroceriesView = "list" | "pantry";
 

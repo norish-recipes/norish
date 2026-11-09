@@ -1,6 +1,7 @@
 "use client";
 
 import { memo, useCallback, useMemo, useState } from "react";
+import { storeColorStyle } from "@/features/groceries/components/stores";
 import { useStructuralSharing } from "@/features/groceries/hooks/use-structural-sharing";
 import { motion } from "motion/react";
 import { useTranslations } from "next-intl";
@@ -20,7 +21,6 @@ import {
 } from "./dnd";
 import { DoneRow } from "./done-row";
 import { GroupedGroceryItem } from "./grouped-grocery-item";
-import { storeColorStyle } from "./store-colors";
 import { StoreHeading } from "./store-heading";
 import { lineOfGroup } from "./store-total";
 import { useAisleBlocks } from "./use-aisle-blocks";

@@ -2,12 +2,7 @@
 
 import Panel from "@/components/Panel/Panel";
 import { ActionButton, ActionButtonGroup } from "@/components/shared/action-button";
-import { FIELD_CLASS, FIELD_STYLE } from "@/features/groceries/components/grocery-field";
-import {
-  STORE_COLOR_KEYS,
-  storeColorStyle,
-  storeHue,
-} from "@/features/groceries/components/store-colors";
+import { FIELD_CLASS, FIELD_STYLE } from "@/features/groceries/lib/grocery-field";
 import { Input, Label, TextField } from "@heroui/react";
 import { useTranslations } from "next-intl";
 
@@ -17,6 +12,7 @@ import { deriveSearchAddress } from "@norish/shared/lib/search-address";
 
 import type { EditingAisle } from "./store-aisles-editor";
 import { AISLE_NAME_MAX, StoreAislesEditor } from "./store-aisles-editor";
+import { STORE_COLOR_KEYS, storeColorStyle, storeHue } from "./store-colors";
 import { StoreSearchAddressField } from "./store-search-address-field";
 
 export type { EditingAisle } from "./store-aisles-editor";

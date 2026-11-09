@@ -4,7 +4,7 @@ import type { ReactNode } from "react";
 import { memo, useCallback, useState } from "react";
 import { IngredientIcon } from "@/components/ingredients/ingredient-icon";
 import { RoundCheckbox } from "@/components/round-checkbox";
-import { RecurrencePill } from "@/features/groceries/components/recurrence-pill";
+import { storeCheckbox } from "@/features/groceries/components/stores";
 import { useUnitFormatter } from "@/hooks/use-unit-formatter";
 import { replaceEqualDeep } from "@tanstack/react-query";
 import { AnimatePresence, motion } from "motion/react";
@@ -15,7 +15,7 @@ import type { GroceryGroup, GroupedGrocerySource } from "@norish/shared/lib/groc
 import { shownAmount } from "@norish/shared/lib/grocery-grouping";
 
 import { GroceryPrice } from "./grocery-price";
-import { storeCheckbox } from "./store-colors";
+import { RecurrencePill } from "./recurrence-pill";
 import { lineOfGroup } from "./store-total";
 
 /**

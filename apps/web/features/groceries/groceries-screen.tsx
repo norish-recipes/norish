@@ -2,7 +2,8 @@
 
 import { useEffect } from "react";
 import { usePathname } from "next/navigation";
-import { PantryView } from "@/features/groceries/components";
+import { AddGroceryButton } from "@/features/groceries/components/list";
+import { PantryView } from "@/features/groceries/components/pantry";
 import { usePrefersReducedMotion } from "@/hooks/use-prefers-reduced-motion";
 import { AnimatePresence, motion } from "motion/react";
 
@@ -16,10 +17,9 @@ import {
   useStoresSubscription,
 } from "@norish/shared-react/groceries";
 
-import type { GroceriesView } from "./components/groceries-header";
-import AddGroceryButton from "./components/add-grocery-button";
-import { GroceriesHeader, VIEW_TRANSITION } from "./components/groceries-header";
-import { GroceriesPage } from "./components/groceries-page";
+import type { GroceriesView } from "./components/header";
+import { GroceriesHeader, VIEW_TRANSITION } from "./components/header";
+import { GroceriesPage } from "./components/list/groceries-page";
 
 /** Holds the Pantry's reads for its first visit; their changes render nothing but this. */
 function PantryReads() {

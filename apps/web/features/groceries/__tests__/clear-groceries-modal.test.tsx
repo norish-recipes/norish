@@ -1,4 +1,4 @@
-import { ClearGroceriesModal } from "@/features/groceries/components/clear-groceries-modal";
+import { ClearGroceriesModal } from "@/features/groceries/components/list/clear-groceries-modal";
 import { fireEvent, render, screen } from "@testing-library/react";
 import { describe, expect, it, vi } from "vitest";
 

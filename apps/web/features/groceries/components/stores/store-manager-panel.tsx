@@ -7,7 +7,6 @@ import {
   ActionButtonGroup,
   IconActionButton,
 } from "@/components/shared/action-button";
-import { storeColorKey, storeColorStyle } from "@/features/groceries/components/store-colors";
 import { showSafeErrorToast } from "@/lib/ui/safe-error-toast";
 import { Bars3Icon } from "@heroicons/react/24/solid";
 import { Reorder, useDragControls } from "motion/react";
@@ -23,6 +22,7 @@ import { sortAisles } from "@norish/shared/lib/aisles";
 
 import type { EditingStore } from "./store-editor-panel";
 import { DeleteStoreModal } from "./delete-store-modal";
+import { storeColorKey, storeColorStyle } from "./store-colors";
 import { canSaveStore, StoreEditorPanel } from "./store-editor-panel";
 import { storeLinkFields } from "./store-search-address-field";
 

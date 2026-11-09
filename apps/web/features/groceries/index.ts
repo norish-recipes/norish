@@ -1,1 +1,1 @@
-export { default as MiniGroceries } from "./components/mini-groceries";
+export { default as MiniGroceries } from "./components/panels/mini-groceries";

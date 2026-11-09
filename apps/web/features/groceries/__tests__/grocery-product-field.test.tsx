@@ -3,7 +3,7 @@
  * says while it is asking.
  */
 import type { ReactNode } from "react";
-import { GroceryProductField } from "@/features/groceries/components/grocery-product-field";
+import { GroceryProductField } from "@/features/groceries/components/panels/grocery-product-field";
 import { act, fireEvent, render, screen } from "@testing-library/react";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 

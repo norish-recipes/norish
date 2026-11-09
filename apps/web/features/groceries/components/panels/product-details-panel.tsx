@@ -3,7 +3,7 @@
 import type { Key } from "react";
 import Panel, { PanelPortal } from "@/components/Panel/Panel";
 import { ActionButton, ActionButtonGroup } from "@/components/shared/action-button";
-import { FIELD_CLASS, FIELD_STYLE } from "@/features/groceries/components/grocery-field";
+import { FIELD_CLASS, FIELD_STYLE } from "@/features/groceries/lib/grocery-field";
 import { FieldError, Input, Label, ListBox, Select, TextField } from "@heroui/react";
 import { useTranslations } from "next-intl";
 
