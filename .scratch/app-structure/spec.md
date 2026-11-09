@@ -21,7 +21,7 @@ Both apps are laid out the same way, and logic a feature shares lives once in sh
 - Client state that several components share lives in a zustand store; state one component owns stays in `useState`.
 - shared-react is organised by feature, creates the tRPC context once, and takes platform differences through one adapter. Its features don't import each other either; they import cross-cutting folders.
 
-Groceries is the pilot, measured before and after. The rest follows in order, and the old type folders are deleted when the last feature has migrated.
+Groceries is the pilot. The rest follows in order, and the old type folders are deleted when the last feature has migrated.
 
 ## User Stories
 
@@ -34,7 +34,6 @@ Groceries is the pilot, measured before and after. The rest follows in order, an
 7. As a new contributor, I want a docs page that shows how the repo is laid out and how data flows from a component to Postgres and back, so that I can find my way before reading code.
 8. As a household member, I want the groceries page to do no more rendering than what changed on screen, so that checking off items stays quick on a phone.
 9. As a household member, I want groceries to behave exactly as before, so that the restructure is invisible to me.
-10. As a maintainer, I want the pilot measured with a committed script, so that a screen that feels slow later can be measured the same way.
 
 ## Implementation Decisions
 
@@ -83,24 +82,13 @@ Groceries is the pilot, measured before and after. The rest follows in order, an
 ### Migration
 
 1. Groceries (the pilot).
-2. Library and recipes (shared-react's cookbooks move here, with `shared-react/recipes`). The ingredient icons move with them: `IngredientIconsProvider` (`components/ingredients/ingredient-icon.tsx`) holds the icons query's answer in a context, which the State rule forbids, so every `IngredientIcon` renders when one food joins a list (all 41 on groceries for an add, measured in 07). Each icon then selects its own icon over the Query cache. Groceries, the Pantry, the recipe form and the ingredient settings all mount the provider, so it moves once, here.
+2. Library and recipes (shared-react's cookbooks move here, with `shared-react/recipes`). The ingredient icons move with them: `IngredientIconsProvider` (`components/ingredients/ingredient-icon.tsx`) holds the icons query's answer in a context, which the State rule forbids, so every `IngredientIcon` renders when one food joins a list (all 41 on groceries for an add). Each icon then selects its own icon over the Query cache. Groceries, the Pantry, the recipe form and the ingredient settings all mount the provider, so it moves once, here.
 3. Calendar.
 4. Cookbooks.
 5. Settings.
 6. Imports, auth and share.
 
-The pilot's numbers do not gate the rest: the sharing goal stands on its own. A problem with the shape itself amends this spec before the second feature starts. The pilot found none (07): groceries sits in `features/groceries` on web and `shared-react/groceries`, mobile's smoke screen reads the same hooks with no binding, and the rules it taught are folded into the sections above. Its one adjustment was letting shared code open a feature's panel through `index.ts`. The mobile rewrite builds each screen once its feature has migrated, and mobile's catch-up spec line "Web keeps its current layout" points here.
-
-### Measurement
-
-Measured on groceries before the groundwork, after it, and after the pilot, as absolute numbers. The first baseline is there because 01 rewrites Device Preferences, which the view-mode action reads, so its effect shows apart from the pilot's:
-
-- Mounts and re-renders per component for each scripted action: check an item, add an item, open the edit panel, switch view mode, and a realtime echo from a second client. Every remaining re-render is traced to a real change on screen.
-- First paint of `/groceries` through `measure-page-loads.ts`; it must not get worse.
-- JS downloaded for `/groceries`, which `measure-page-loads.ts` adds up from the page's script responses. Next 16 dropped route sizes from `next build`.
-- Code shape: folders one feature spans, lines per app versus shared-react and binding files deleted.
-
-The render counter is a committed script next to `measure-page-loads.ts`. Later features aren't measured as part of their tickets: the gain is in the code, and the scripts are there for a screen that feels slow.
+The pilot's numbers are recorded in tickets 03 and 07. A problem with the shape itself amends this spec before the second feature starts. The pilot found none (07): groceries sits in `features/groceries` on web and `shared-react/groceries`, mobile's smoke screen reads the same hooks with no binding, and the rules it taught are folded into the sections above. Its one adjustment was letting shared code open a feature's panel through `index.ts`. The mobile rewrite builds each screen once its feature has migrated, and mobile's catch-up spec line "Web keeps its current layout" points here.
 
 ### Docs
 
