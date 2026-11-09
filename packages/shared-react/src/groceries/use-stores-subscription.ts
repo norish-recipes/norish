@@ -6,7 +6,7 @@ import type { StoresRealtime } from "@norish/shared/contracts/realtime/stores";
 
 import type { StoresData } from "./types";
 import type { StoreAislesData } from "./use-store-aisles";
-import { useRealtimeSubscription } from "../realtime";
+import { useKeepsCurrent, useRealtimeSubscription } from "../realtime";
 import { useTRPC } from "../trpc";
 
 type Payload<E extends EventName<StoresRealtime>> = PayloadOf<StoresRealtime, E>;
@@ -16,6 +16,8 @@ export function useStoresSubscription() {
   const queryClient = useQueryClient();
   const storesKey = trpc.stores.list.queryKey();
   const aisleLinksKey = trpc.stores.aisleLinks.queryKey();
+
+  useKeepsCurrent([storesKey]);
 
   // A lagged subscription refetches the stores and the links that hang off them.
   const lag = { lagQueryKeys: [storesKey, aisleLinksKey] };

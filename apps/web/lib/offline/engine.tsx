@@ -2,7 +2,12 @@
 
 // The web client's offline wiring (ADR-0001): the shared engine over IndexedDB, its connectivity
 // hints and controller, plus what only web has: the QuerySeed first frame and the image cache.
-import type { DehydratedState, Query, QueryClient } from "@tanstack/react-query";
+import type {
+  DehydratedState,
+  Query,
+  QueryCacheNotifyEvent,
+  QueryClient,
+} from "@tanstack/react-query";
 import type { ReactNode } from "react";
 import { useSyncExternalStore } from "react";
 import { useUserContext } from "@/context/user-context";
@@ -27,6 +32,7 @@ import {
   ConnectivityProvider as SharedConnectivityProvider,
   useConnectivity,
 } from "@norish/shared-react/offline/react";
+import { isKeptCurrent } from "@norish/shared-react/realtime";
 import { useConnectionStatus, useTRPC, useTRPCClient } from "@norish/shared-react/trpc";
 import { getSession } from "@norish/shared/lib/auth/client";
 import { addBasePath } from "@norish/shared/lib/base-path";
@@ -57,19 +63,35 @@ export function markServerCopies(state: DehydratedState | undefined): void {
   }
 }
 
+/** The queries the server has answered since this page loaded: a read, or the seed it arrived with. */
+const answered = new WeakSet<Query>();
+
+function noteAnswer({ query, ...event }: QueryCacheNotifyEvent): void {
+  const read = event.type === "updated" && event.action.type === "success" && !event.action.manual;
+  const seeded =
+    query.state.data !== undefined && serverCopies.get(query.queryHash) === query.state.data;
+
+  if (read || seeded) answered.add(query);
+}
+
 /**
- * A server copy, unchanged and under the stale time (a document the worker kept can be old), is
- * current. Every other copy refetches on mount: a restored one may predate a change made elsewhere.
+ * The server's unchanged copy under the stale time is current, and until stale so is one it answered
+ * that a mounted subscription keeps current. Any other may predate a change made elsewhere.
  */
-const refetchOnMount = (query: Query) =>
+const refetchOnMount = (query: Query) => {
   // Never on the server: a seeded query marked as refetching renders a spinner there, which the
   // hydrating render does not.
-  typeof window === "undefined" ||
-  (serverCopies.has(query.queryHash) &&
+  if (typeof window === "undefined") return false;
+  if (
+    serverCopies.has(query.queryHash) &&
     serverCopies.get(query.queryHash) === query.state.data &&
-    !query.isStaleByTime(QUERY_STALE_TIME_MS))
-    ? false
-    : ("always" as const);
+    !query.isStaleByTime(QUERY_STALE_TIME_MS)
+  ) {
+    return false;
+  }
+
+  return answered.has(query) && isKeptCurrent(query.queryHash) ? true : ("always" as const);
+};
 
 function calendarRanges(): CalendarRange[] {
   return (["desktop", "mobile"] as const).map((mode) => {
@@ -91,7 +113,7 @@ function browserLocks(): LockManagerLike | null {
 export function createWebOfflineEngine(
   storage: OfflineStorage = createIdbStorage()
 ): OfflineEngine {
-  return createOfflineEngine({
+  const engine = createOfflineEngine({
     storage,
     replayHeaderValue: OUTBOX_REPLAY_HEADER_VALUE,
     probeUrl: () => HEALTH_PROBE_URL,
@@ -102,6 +124,10 @@ export function createWebOfflineEngine(
     refetchOnMount,
     onClear: () => serverCopies.clear(),
   });
+
+  engine.queryClient.getQueryCache().subscribe(noteAnswer);
+
+  return engine;
 }
 
 export const offlineEngine = createWebOfflineEngine();

@@ -72,7 +72,10 @@ vi.mock("../trpc", () => ({
   }),
 }));
 // A housemate's filing is the merge above; this suite holds no socket open.
-vi.mock("../realtime", () => ({ useRealtimeSubscription: () => undefined }));
+vi.mock("../realtime", () => ({
+  useKeepsCurrent: () => undefined,
+  useRealtimeSubscription: () => undefined,
+}));
 
 function Probe({ ingredientId }: { ingredientId: string | null }) {
   const { aisleFor } = useStoreAisles();

@@ -4,7 +4,7 @@ import type { EventName, PayloadOf } from "@norish/shared/contracts/realtime/cat
 import type { PantryRealtime } from "@norish/shared/contracts/realtime/pantry";
 
 import type { PantryData } from "./types";
-import { useRealtimeSubscription } from "../realtime";
+import { useKeepsCurrent, useRealtimeSubscription } from "../realtime";
 import { useTRPC } from "../trpc";
 import { mergePantryAdded, mergePantryRemoved } from "./pantry-merge";
 
@@ -19,6 +19,8 @@ export function usePantrySubscription() {
   const trpc = useTRPC();
   const queryClient = useQueryClient();
   const queryKey = trpc.pantry.list.queryKey();
+
+  useKeepsCurrent([queryKey]);
   // What the Pantry covers is what "From your recipes" leaves out.
   const suggestionsKey = trpc.pantry.suggestions.queryKey();
   // A lagged subscription reads the Pantry again; the merges cannot close a gap.

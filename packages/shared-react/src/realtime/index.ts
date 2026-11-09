@@ -1,3 +1,4 @@
+export { isKeptCurrent, useKeepsCurrent } from "./kept-current";
 export {
   isRealtimeLagged,
   useRealtimeSubscription,

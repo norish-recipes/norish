@@ -7,7 +7,7 @@ import type { StoresRealtime } from "@norish/shared/contracts/realtime/stores";
 import { aisleLinkKey } from "@norish/shared/lib/store-link-key";
 
 import { invalidateUnlessPreserved } from "../offline/optimistic-updates";
-import { useRealtimeSubscription } from "../realtime";
+import { useKeepsCurrent, useRealtimeSubscription } from "../realtime";
 import { useTRPC } from "../trpc";
 import { useStoresQuery } from "./use-stores-query";
 
@@ -130,6 +130,7 @@ export function useStoreAislesSubscription() {
   const queryClient = useQueryClient();
   const queryKey = trpc.stores.aisleLinks.queryKey();
 
+  useKeepsCurrent([queryKey]);
   useRealtimeSubscription<PayloadOf<StoresRealtime, "aisleFiled">>(trpc.stores.onAisleFiled, {
     onEvent: ({ filing }) => {
       queryClient.setQueryData<StoreAislesData>(queryKey, (prev) =>

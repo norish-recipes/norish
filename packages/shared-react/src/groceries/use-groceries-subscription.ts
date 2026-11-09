@@ -5,7 +5,7 @@ import type { GroceriesRealtime } from "@norish/shared/contracts/realtime/grocer
 
 import type { GroceriesData } from "./types";
 import { usePlatform } from "../platform";
-import { useRealtimeSubscription } from "../realtime";
+import { useKeepsCurrent, useRealtimeSubscription } from "../realtime";
 import { useTRPC } from "../trpc";
 import { applyCreatedGroceriesToCache } from "./use-groceries-mutations";
 
@@ -16,6 +16,8 @@ export function useGroceriesSubscription() {
   const queryClient = useQueryClient();
   const { showError } = usePlatform();
   const listKey = trpc.groceries.list.queryKey();
+
+  useKeepsCurrent([listKey]);
 
   // A lagged subscription refetches the list: the one domain these events touch.
   const lag = { lagQueryKeys: [listKey] };

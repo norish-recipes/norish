@@ -7,7 +7,7 @@ import type { StoresRealtime } from "@norish/shared/contracts/realtime/stores";
 import { isPendingLink } from "@norish/shared/lib/product-link";
 import { productLinkKey } from "@norish/shared/lib/store-link-key";
 
-import { useRealtimeSubscription } from "../realtime";
+import { useKeepsCurrent, useRealtimeSubscription } from "../realtime";
 import { useTRPC } from "../trpc";
 
 type Payload<E extends EventName<StoresRealtime>> = PayloadOf<StoresRealtime, E>;
@@ -129,6 +129,8 @@ export function useStorePricesSubscription() {
   const queryClient = useQueryClient();
   const queryKey = trpc.stores.groceryPrices.queryKey();
   const linkQueriesKey = trpc.stores.linkFor.queryKey();
+
+  useKeepsCurrent([queryKey]);
 
   const setPrices = useCallback(
     (updater: (prev: StorePricesData) => StorePricesData) => {
