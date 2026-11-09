@@ -1,3 +1,4 @@
+import { useRef } from "react";
 import { useQueryClient } from "@tanstack/react-query";
 
 import type { FullRecipeDTO, RecipeDashboardDTO } from "@norish/shared/contracts";
@@ -41,10 +42,17 @@ export function createUseRecipesSubscription(
     // A lagged subscription refetches the lists; the detail caches are
     // refetched by the screens that hold them.
     const lag = { onLag: invalidate };
-    // A fresh subscription carries no cursor, so an import that ended between the
-    // pending list's first read and the server taking it reaches nobody: reread it.
-    const rereadPending = () =>
+    // A fresh subscription carries no cursor, so an import that ended before both outcomes'
+    // subscriptions were live reaches neither: the pending list is reread once both are.
+    const liveOutcomesRef = useRef({ imported: false, failed: false });
+    const outcomeLive = (outcome: "imported" | "failed") => () => {
+      liveOutcomesRef.current[outcome] = true;
+
+      if (!liveOutcomesRef.current.imported || !liveOutcomesRef.current.failed) return;
+
+      liveOutcomesRef.current = { imported: false, failed: false };
       void queryClient.invalidateQueries({ queryKey: trpc.recipes.getPending.queryKey() });
+    };
     // The server saves after the mutation answers, so the household's Categories
     // are reread when the save is announced, not when the mutation succeeds.
     const rereadCategories = () =>
@@ -111,7 +119,7 @@ export function createUseRecipesSubscription(
 
     useRealtimeSubscription<Payload<"imported">>(trpc.recipes.onImported, {
       ...lag,
-      onStarted: rereadPending,
+      onStarted: outcomeLive("imported"),
       onEvent: (payload) => {
         const pendingId = payload.pendingRecipeId ?? payload.recipe.id;
 
@@ -173,7 +181,7 @@ export function createUseRecipesSubscription(
 
     useRealtimeSubscription<Payload<"failed">>(trpc.recipes.onFailed, {
       ...lag,
-      onStarted: rereadPending,
+      onStarted: outcomeLive("failed"),
       onEvent: (payload) => {
         if (payload.recipeId) {
           replaceOldestOptimisticPendingRecipe(payload.recipeId);

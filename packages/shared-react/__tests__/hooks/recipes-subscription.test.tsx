@@ -29,6 +29,7 @@ const LIST_KEY = [["recipes", "list"], { input: {}, type: "infinite" }];
 const LIBRARY_KEY = [["library", "list"], { input: {}, type: "infinite" }];
 const CALENDAR_KEY = [["calendar", "listItems"]];
 const CATEGORIES_KEY = [["config", "categories"]];
+const PENDING_KEY = [["recipes", "getPending"], { type: "query" }];
 const detailKey = (id: string) => [["recipes", "get"], { input: { id }, type: "query" }];
 
 function procedure(name: string) {
@@ -39,7 +40,7 @@ const useTRPC = (() => ({
   recipes: {
     list: { queryKey: () => [["recipes", "list"], { input: {}, type: "query" }] },
     get: { queryKey: ({ id }: { id: string }) => detailKey(id) },
-    getPending: { queryKey: () => [["recipes", "getPending"], { type: "query" }] },
+    getPending: { queryKey: () => PENDING_KEY },
     onCreated: procedure("onCreated"),
     onImportStarted: procedure("onImportStarted"),
     onImported: procedure("onImported"),
@@ -220,14 +221,27 @@ describe("useRecipesSubscription", () => {
     expect(list?.pages[0]?.recipes.map((r) => r.id)).toEqual(["recipe-2", "recipe-1"]);
   });
 
-  it.each(["onImported", "onFailed"])(
-    "rereads the pending imports once %s is live, for an import that ended before it",
-    (name) => {
-      act(() => subscription(name).onStarted?.());
+  it.each([
+    ["onImported", "onFailed"],
+    ["onFailed", "onImported"],
+  ])(
+    "rereads the pending imports once, when %s and then %s are live, for an import that ended before",
+    (first, second) => {
+      const pendingRereads = () =>
+        invalidateQueries.mock.calls.filter(
+          ([filters]) => JSON.stringify(filters) === JSON.stringify({ queryKey: PENDING_KEY })
+        ).length;
 
-      expect(invalidateQueries).toHaveBeenCalledWith({
-        queryKey: [["recipes", "getPending"], { type: "query" }],
-      });
+      act(() => subscription(first).onStarted?.());
+      expect(pendingRereads()).toBe(0);
+
+      act(() => subscription(second).onStarted?.());
+      expect(pendingRereads()).toBe(1);
+
+      // A reconnect starts both again: one more reread, not two.
+      act(() => subscription(first).onStarted?.());
+      act(() => subscription(second).onStarted?.());
+      expect(pendingRereads()).toBe(2);
     }
   );
 });
