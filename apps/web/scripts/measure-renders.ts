@@ -520,14 +520,14 @@ async function pickView(page: Page, view: "store" | "recipe") {
   await page.locator(`[data-grocery-view="${view}"]`).first().waitFor();
 }
 
-async function groceries(browser: Browser) {
+async function groceries(browser: Browser, grouped: boolean) {
   const cookies = await signIn(BASE, ACCOUNT);
 
   await resetGroceries(cookies);
-  // Grouped whatever the account stored; the view mode is picked in the page below.
+  // Grouped or flat whatever the account stored; the view mode is picked in the page below.
   await callTrpc(BASE, cookies, "user.setDevicePreferences", {
     kind: "phone",
-    preferences: { groceryGroupSimilar: true },
+    preferences: { groceryGroupSimilar: grouped },
   });
   const tab = await openTab(browser, true);
   const other = await openTab(browser, false);
@@ -593,7 +593,10 @@ async function groceries(browser: Browser) {
 // The report
 // =============================================================================
 
-const SCENARIOS = { groceries };
+const SCENARIOS = {
+  groceries: (browser: Browser) => groceries(browser, true),
+  "groceries-flat": (browser: Browser) => groceries(browser, false),
+};
 
 function isScenario(name: string | undefined): name is keyof typeof SCENARIOS {
   return name !== undefined && name in SCENARIOS;
