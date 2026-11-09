@@ -100,9 +100,10 @@ describe("restrictFeatures", () => {
   });
   const at = (file: string, from: string) => lint(cwd, config, file, from);
 
-  it("stops shared code importing a feature", () => {
-    expect(at("components/card.tsx", "@/features/groceries")).toEqual([
-      "Shared code never imports a feature.",
+  it("holds shared code to a feature's index.ts", () => {
+    expect(at("components/card.tsx", "@/features/groceries")).toEqual([]);
+    expect(at("components/card.tsx", "@/features/groceries/screens/list")).toEqual([
+      "Import a feature through its index.ts; only route files import from inside one.",
     ]);
     expect(at("components/card.tsx", "../features/recipes/screens/detail")).toHaveLength(1);
   });
