@@ -31,6 +31,10 @@ vi.mock("@norish/shared-react/groceries", () => ({
   }),
 }));
 
+const showSafeErrorToast = vi.hoisted(() => vi.fn());
+
+vi.mock("@/lib/ui/safe-error-toast", () => ({ showSafeErrorToast }));
+
 vi.mock("next-intl", () => ({
   useTranslations: () => (key: string, params?: Record<string, unknown>) =>
     params ? `${key} ${Object.values(params).join(" ")}` : key,
@@ -109,6 +113,7 @@ function nameField(): HTMLElement {
 }
 
 beforeEach(() => {
+  showSafeErrorToast.mockClear();
   createStore.mockClear();
   updateStore.mockClear();
   reorderStores.mockClear();
@@ -235,6 +240,23 @@ describe("StoreManagerPanel", () => {
       aisles: [],
     });
     expect(screen.queryByRole("region", { name: "addStore" })).not.toBeInTheDocument();
+  });
+
+  it("keeps a refused new Store in its editor and says the save failed", async () => {
+    createStore.mockRejectedValueOnce(new Error("Internal server error"));
+    render(<StoreManagerPanel open={true} stores={[DIRK]} onOpenChange={() => undefined} />);
+    fireEvent.click(screen.getByTestId("action-add"));
+    fireEvent.change(nameField(), { target: { value: "Jumbo" } });
+
+    await act(async () => {
+      fireEvent.click(screen.getByTestId("action-create"));
+    });
+
+    expect(showSafeErrorToast).toHaveBeenCalledWith(
+      expect.objectContaining({ title: "operationFailed", context: "stores:create" })
+    );
+    expect(screen.getByRole("region", { name: "addStore" })).toBeInTheDocument();
+    expect(nameField()).toHaveValue("Jumbo");
   });
 });
 

@@ -8,6 +8,7 @@ import {
   IconActionButton,
 } from "@/components/shared/action-button";
 import { storeColorKey, storeColorStyle } from "@/features/groceries/components/store-colors";
+import { showSafeErrorToast } from "@/lib/ui/safe-error-toast";
 import { Bars3Icon } from "@heroicons/react/24/solid";
 import { Reorder, useDragControls } from "motion/react";
 import { useTranslations } from "next-intl";
@@ -44,6 +45,7 @@ export function StoreManagerPanel({ open, onOpenChange, stores }: StoreManagerPa
     useStoresMutations();
   const t = useTranslations("groceries.storeManager");
   const tActions = useTranslations("common.actions");
+  const tErrors = useTranslations("common.errors");
   const [editingStore, setEditingStore] = useState<EditingStore | null>(null);
   const [shopCheck, setShopCheck] = useState<ShopCheck | null>(null);
   const [deleteModalOpen, setDeleteModalOpen] = useState(false);
@@ -103,13 +105,26 @@ export function StoreManagerPanel({ open, onOpenChange, stores }: StoreManagerPa
         aisles,
       });
     } else {
-      savedId = await createStore({
+      // A refused create leaves the editor open on its draft, so Save can try again.
+      const createdId = await createStore({
         name: storeName,
         color: editingStore.color,
         website,
         searchAddress,
         aisles,
+      }).catch((error: unknown) => {
+        showSafeErrorToast({
+          title: tErrors("operationFailed"),
+          description: tErrors("technicalDetails"),
+          error,
+          context: "stores:create",
+        });
+
+        return null;
       });
+
+      if (createdId === null) return;
+      savedId = createdId;
     }
     setEditingStore(null);
     // Verification informs, it never gates: the Store is stored by now, and
