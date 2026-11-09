@@ -166,7 +166,13 @@ export function useStoreAislesSubscription() {
 export function useFileGroceryName() {
   const trpc = useTRPC();
   const queryClient = useQueryClient();
-  const { mutate: mutateFile } = useMutation(trpc.stores.fileGroceryName.mutationOptions());
+  // In useMutation's own options: a `mutate` call's own are dropped once the next filing is sent.
+  const fileOptions = trpc.stores.fileGroceryName.mutationOptions({
+    onError: invalidateUnlessPreserved(
+      () => void queryClient.invalidateQueries({ queryKey: trpc.stores.aisleLinks.queryKey() })
+    ),
+  });
+  const { mutate: mutateFile } = useMutation(fileOptions);
 
   return (
     storeId: string,
@@ -191,13 +197,6 @@ export function useFileGroceryName() {
         mergeAisleFiling(prev ?? [], { storeId, ingredientId, aisleId })
       );
     }
-    mutateFile(
-      { storeId, name, aisleId },
-      {
-        onError: invalidateUnlessPreserved(() =>
-          queryClient.invalidateQueries({ queryKey: aisleLinksKey })
-        ),
-      }
-    );
+    mutateFile({ storeId, name, aisleId });
   };
 }

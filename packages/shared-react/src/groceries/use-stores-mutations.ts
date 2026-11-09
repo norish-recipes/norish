@@ -56,13 +56,53 @@ export function useStoresMutations(): StoresMutationsResult {
   // Keep an optimistic update when its mutation was Queued for Replay.
   const invalidateUnlessQueued = invalidateUnlessPreserved(invalidate);
 
-  const createMutation = useMutation(trpc.stores.create.mutationOptions());
-  const { mutate: mutateCreate } = createMutation;
-  const updateMutation = useMutation(trpc.stores.update.mutationOptions());
+  /** The new Store on the list, once, under the id it is stored with. */
+  const insertCreated = (storeId: string, data: StoreCreateDto) => {
+    const newStore: StoreDto = {
+      id: storeId,
+      userId: "",
+      name: data.name,
+      color: data.color ?? "primary",
+      website: data.website ?? null,
+      searchAddress: data.searchAddress ?? null,
+      sortOrder: heldStores().length,
+      version: 1,
+      aisles: optimisticAisles(storeId, data.aisles ?? [], []),
+    };
+
+    setStoresData((prev) => {
+      if (!prev) return [newStore];
+      if (prev.some((s) => s.id === storeId)) return prev;
+
+      return [...prev, newStore];
+    });
+  };
+
+  // Each answer is handled in useMutation's own options, which run whatever is mounted: a `mutate`
+  // call's own callbacks are dropped once its observer mutates again.
+  const createOptions = trpc.stores.create.mutationOptions({
+    onSuccess: (storeId, data) => insertCreated(storeId, data),
+    onError: (error, data) => {
+      // Queued: the row goes in under the client-minted id the server honours on Replay
+      // (ADR-0003), a tentative success rather than a failure.
+      if (preserveOptimisticUpdate(error)) {
+        if (data.id) insertCreated(data.id, data);
+
+        return;
+      }
+      invalidate();
+    },
+  });
+  const updateOptions = trpc.stores.update.mutationOptions({ onError: invalidateUnlessQueued });
+  const deleteOptions = trpc.stores.delete.mutationOptions({ onError: invalidate });
+  const reorderOptions = trpc.stores.reorder.mutationOptions({ onError: invalidateUnlessQueued });
+  const createMutation = useMutation(createOptions);
+  const { mutateAsync: mutateCreate } = createMutation;
+  const updateMutation = useMutation(updateOptions);
   const { mutate: mutateUpdate } = updateMutation;
-  const deleteMutation = useMutation(trpc.stores.delete.mutationOptions());
+  const deleteMutation = useMutation(deleteOptions);
   const { mutate: mutateDelete } = deleteMutation;
-  const reorderMutation = useMutation(trpc.stores.reorder.mutationOptions());
+  const reorderMutation = useMutation(reorderOptions);
   const { mutate: mutateReorder } = reorderMutation;
   const { mutateAsync: mutateCheckAsync } = useMutation(
     trpc.stores.checkSearchAddress.mutationOptions()
@@ -73,47 +113,9 @@ export function useStoresMutations(): StoresMutationsResult {
     // addressable by later mutations (ADR-0003).
     const payload = { ...data, id: createClientId() };
 
-    const insertOptimistic = (storeId: string) => {
-      const newStore: StoreDto = {
-        id: storeId,
-        userId: "",
-        name: data.name,
-        color: data.color ?? "primary",
-        website: data.website ?? null,
-        searchAddress: data.searchAddress ?? null,
-        sortOrder: heldStores().length,
-        version: 1,
-        aisles: optimisticAisles(storeId, data.aisles ?? [], []),
-      };
-
-      setStoresData((prev) => {
-        if (!prev) return [newStore];
-        if (prev.some((s) => s.id === storeId)) return prev;
-
-        return [...prev, newStore];
-      });
-    };
-
-    return new Promise((resolve, reject) => {
-      mutateCreate(payload, {
-        onSuccess: (storeId) => {
-          insertOptimistic(storeId);
-          resolve(storeId);
-        },
-        onError: (error) => {
-          if (preserveOptimisticUpdate(error)) {
-            // Queued: insert the row with the client-minted id the server will
-            // honour on Replay (ADR-0003); a tentative success, not a failure.
-            insertOptimistic(payload.id);
-            resolve(payload.id);
-
-            return;
-          }
-
-          invalidate();
-          reject(error);
-        },
-      });
+    return mutateCreate(payload).catch((error: unknown) => {
+      if (preserveOptimisticUpdate(error)) return payload.id;
+      throw error;
     });
   };
 
@@ -136,12 +138,7 @@ export function useStoresMutations(): StoresMutationsResult {
       });
     });
 
-    mutateUpdate(
-      { ...data, version },
-      {
-        onError: invalidateUnlessQueued,
-      }
-    );
+    mutateUpdate({ ...data, version });
   };
 
   const deleteStore = (storeId: string, deleteGroceries: boolean) => {
@@ -166,9 +163,7 @@ export function useStoresMutations(): StoresMutationsResult {
       grocerySnapshot,
     };
 
-    mutateDelete(input, {
-      onError: () => invalidate(),
-    });
+    mutateDelete(input);
   };
 
   const reorderStores = (storeIds: string[]) => {
@@ -187,14 +182,7 @@ export function useStoresMutations(): StoresMutationsResult {
         .filter((s): s is StoreDto => s !== null);
     });
 
-    mutateReorder(
-      {
-        stores: storeIds.map((id) => ({ id, version: versionOf(held, id) })),
-      },
-      {
-        onError: invalidateUnlessQueued,
-      }
-    );
+    mutateReorder({ stores: storeIds.map((id) => ({ id, version: versionOf(held, id) })) });
   };
 
   /**

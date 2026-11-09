@@ -16,9 +16,28 @@ export function usePantryMutations(): PantryMutationsResult {
 
   const pantryKey = trpc.pantry.list.queryKey();
 
-  const addMutation = useMutation(trpc.pantry.add.mutationOptions());
-  const { mutate: mutateAdd } = addMutation;
-  const removeMutation = useMutation(trpc.pantry.remove.mutationOptions());
+  const refetch = () => void queryClient.invalidateQueries({ queryKey: pantryKey });
+
+  // Each answer is handled in useMutation's own options, which run whatever is mounted: a `mutate`
+  // call's own callbacks are dropped once its observer mutates again.
+  const addOptions = trpc.pantry.add.mutationOptions({
+    onSuccess: (heldId, { id }) => {
+      // The household already had the food: the server answered with that item's id, and the
+      // tentative row is one too many.
+      if (id && heldId !== id) {
+        queryClient.setQueryData<PantryData>(pantryKey, (prev) =>
+          mergePantryRemoved(prev ?? [], id)
+        );
+      }
+    },
+    onError: invalidateUnlessPreserved(refetch),
+  });
+  const removeOptions = trpc.pantry.remove.mutationOptions({
+    onError: invalidateUnlessPreserved(refetch),
+  });
+  const addMutation = useMutation(addOptions);
+  const { mutateAsync: mutateAdd } = addMutation;
+  const removeMutation = useMutation(removeOptions);
   const { mutate: mutateRemove } = removeMutation;
 
   /**
@@ -51,42 +70,16 @@ export function usePantryMutations(): PantryMutationsResult {
 
     insertOptimistic();
 
-    return new Promise((resolve, reject) => {
-      mutateAdd(payload, {
-        onSuccess: (heldId) => {
-          // The household already had the food: the server answered with
-          // that item's id, and the tentative row is one too many.
-          if (heldId !== id) {
-            queryClient.setQueryData<PantryData>(pantryKey, (prev) =>
-              mergePantryRemoved(prev ?? [], id)
-            );
-          }
-          resolve(heldId);
-        },
-        onError: (error) => {
-          if (preserveOptimisticUpdate(error)) {
-            resolve(id);
-
-            return;
-          }
-
-          void queryClient.invalidateQueries({ queryKey: pantryKey });
-          reject(error);
-        },
-      });
+    // Queued for Replay, the add stands under the id it was sent with.
+    return mutateAdd(payload).catch((error: unknown) => {
+      if (preserveOptimisticUpdate(error)) return id;
+      throw error;
     });
   };
 
   const removePantryIngredient = (id: string) => {
     queryClient.setQueryData<PantryData>(pantryKey, (prev) => mergePantryRemoved(prev ?? [], id));
-    mutateRemove(
-      { id },
-      {
-        onError: invalidateUnlessPreserved(() =>
-          queryClient.invalidateQueries({ queryKey: pantryKey })
-        ),
-      }
-    );
+    mutateRemove({ id });
   };
 
   return {

@@ -4,13 +4,14 @@
  */
 import React from "react";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
-import { render, screen, waitFor } from "@testing-library/react";
+import { act, render, renderHook, screen, waitFor } from "@testing-library/react";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 
 import type { AisleLinkDto, StoreDto } from "@norish/shared/contracts";
 import {
   mergeAisleFiling,
   useAisleFor,
+  useFileGroceryName,
   useStoreAisles,
   useStoreAislesSubscription,
 } from "@norish/shared-react/groceries";
@@ -39,10 +40,11 @@ function storeWith(aisleIds: string[]): StoreDto {
   };
 }
 
-/** What the server answers: the aisle links, and the Stores with their aisles. */
+/** What the server answers: the aisle links, and the Stores with their aisles; and what it is sent. */
 const server = vi.hoisted(() => ({
   links: (): AisleLinkDto[] => [],
   stores: (): StoreDto[] => [],
+  file: vi.fn(),
 }));
 
 // The shape the hooks read off the tRPC binding, and nothing more of it: the
@@ -65,6 +67,9 @@ vi.mock("../trpc", () => ({
         queryKey: () => ["stores", "list"],
       },
       onAisleFiled: {},
+      fileGroceryName: {
+        mutationOptions: (options?: object) => ({ ...options, mutationFn: server.file }),
+      },
     },
     groceries: {
       list: { queryOptions: () => ({ queryKey: ["groceries", "list"] }) },
@@ -263,6 +268,32 @@ describe("useAisleFor", () => {
     await new Promise((resolve) => setTimeout(resolve, 20));
 
     expect(oneProbeRenders).toBe(before);
+    client.clear();
+  });
+});
+
+describe("useFileGroceryName", () => {
+  it("reads the links again when the earlier of two filings that overlap fails", async () => {
+    const client = new QueryClient({ defaultOptions: { mutations: { retry: false } } });
+    const first = Promise.withResolvers<unknown>();
+    const second = Promise.withResolvers<unknown>();
+
+    server.file.mockImplementationOnce(() => first.promise);
+    server.file.mockImplementationOnce(() => second.promise);
+    client.setQueryData<AisleLinkDto[]>(["stores", "aisleLinks"], []);
+    const { result } = renderHook(() => useFileGroceryName(), {
+      wrapper: ({ children }) => (
+        <QueryClientProvider client={client}>{children}</QueryClientProvider>
+      ),
+    });
+
+    act(() => result.current(STORE, { name: "melk", ingredientId: "i-melk" }, ZUIVEL));
+    act(() => result.current(STORE, { name: "brood", ingredientId: "i-brood" }, BROOD));
+    await act(async () => second.resolve(undefined));
+    await act(async () => first.reject(new Error("Aisle gone")));
+    await waitFor(() => expect(client.isMutating()).toBe(0));
+
+    expect(client.getQueryState(["stores", "aisleLinks"])?.isInvalidated).toBe(true);
     client.clear();
   });
 });
