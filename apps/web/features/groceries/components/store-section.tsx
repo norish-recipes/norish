@@ -1,17 +1,20 @@
 "use client";
 
 import { memo, useCallback, useEffect, useMemo, useRef, useState } from "react";
+import { useStructuralSharing } from "@/features/groceries/hooks/use-structural-sharing";
 import { motion } from "motion/react";
 import { useTranslations } from "next-intl";
 
 import type { GroceryDto, RecurringGroceryDto, StoreDto } from "@norish/shared/contracts";
 
+import type { AisleResolver } from "./dnd";
 import { AisleHeading } from "./aisle-heading";
 import {
   aisleContainerId,
   SortableAisleContainer,
   SortableGroceryItem,
   SortableStoreContainer,
+  storeItems,
   UNSORTED_CONTAINER,
   useDndGroceryContext,
 } from "./dnd";
@@ -27,45 +30,57 @@ interface StoreSectionProps {
   store: StoreDto | null; // null = Unsorted
   /** Groceries that belong to this store (for counting, done items, etc.) */
   groceries: GroceryDto[];
-  /** All groceries across all stores - needed to render items dragged from other stores */
-  allGroceries: GroceryDto[];
   recurringGroceries: RecurringGroceryDto[];
+  /** Where each Store files each name, which says the aisle each row sits under. */
+  aisleFor: AisleResolver;
   onToggle: (id: string, isDone: boolean) => void;
   onEdit: (grocery: GroceryDto) => void;
   onDelete: (id: string) => void;
   defaultExpanded?: boolean;
-  onMarkAllDone?: () => void;
-  onDeleteDone?: () => void;
-  onClearAll?: () => void;
+  // Every Store gets the same three, so a Store whose rows did not change does not render.
+  onMarkAllDoneInStore?: (storeId: string | null) => void;
+  onDeleteDoneInStore?: (storeId: string | null) => void;
+  onClearAllInStore?: (storeId: string | null, storeName: string) => void;
   getRecipeNameForGrocery?: (grocery: GroceryDto) => string | null;
 }
 
 // Delay before reordering after toggle (ms)
 const REORDER_DELAY = 600;
 
+const NO_KEYS: string[] = [];
+
 function StoreSectionComponent({
   store,
   groceries,
-  allGroceries,
   recurringGroceries,
+  aisleFor,
   onToggle,
   onEdit,
   onDelete,
   defaultExpanded = true,
-  onMarkAllDone,
-  onDeleteDone,
-  onClearAll,
+  onMarkAllDoneInStore,
+  onDeleteDoneInStore,
+  onClearAllInStore,
   getRecipeNameForGrocery,
 }: StoreSectionProps) {
   const [isExpanded, setIsExpanded] = useState(defaultExpanded);
   const sectionRef = useRef<HTMLDivElement>(null);
   const t = useTranslations("groceries.store");
+  const storeId = store?.id ?? null;
+  const name = store?.name ?? t("unsorted");
 
-  // Get DnD context for ordered items and drag state
-  const { activeId, overContainerId, getItemsForContainer } = useDndGroceryContext();
+  // The drag's arrangement while one is on; otherwise this Store's own rows, in their containers.
+  const { activeId, overContainerId, arrangement } = useDndGroceryContext();
+  const ownItems = useStructuralSharing(
+    storeItems(storeId, groceries, store ? [store] : [], aisleFor)
+  );
+  const ownRows = new Map(groceries.map((grocery) => [grocery.id, grocery]));
+  const items = arrangement?.items ?? ownItems;
+  const groceryMap = arrangement?.byKey ?? ownRows;
+  const keysOf = (container: string) => items[container] ?? NO_KEYS;
 
   // Get container ID for this store
-  const containerId = store?.id ?? UNSORTED_CONTAINER;
+  const containerId = storeId ?? UNSORTED_CONTAINER;
 
   // Track items that are transitioning (just toggled) - delay their reorder
   const [transitioningIds, setTransitioningIds] = useState<Set<string>>(() => new Set());
@@ -118,24 +133,12 @@ function StoreSectionComponent({
   const priceLines = useMemo(() => groceries.map(lineOf), [groceries]);
   const total = useStoreTotal(priceLines, store?.id ?? null);
 
-  // Build a map for quick grocery lookup - uses ALL groceries so we can
-  // render items that are dragged from other stores during drag operations
-  const groceryMap = useMemo(() => {
-    const map = new Map<string, GroceryDto>();
-
-    for (const g of allGroceries) {
-      map.set(g.id, g);
-    }
-
-    return map;
-  }, [allGroceries]);
-
   // Active groceries of one container in DnD-ordered sequence - updates during drag
   const activeIn = useCallback(
     (container: string): GroceryDto[] => {
       const ordered: GroceryDto[] = [];
 
-      for (const id of getItemsForContainer(container)) {
+      for (const id of items[container] ?? NO_KEYS) {
         const grocery = groceryMap.get(id);
 
         // Only include if it's not done and not transitioning
@@ -146,7 +149,7 @@ function StoreSectionComponent({
 
       return ordered;
     },
-    [getItemsForContainer, groceryMap, transitioningIds]
+    [items, groceryMap, transitioningIds]
   );
 
   // Done groceries (including transitioning) - sorted by sortOrder
@@ -190,16 +193,22 @@ function StoreSectionComponent({
     );
   };
 
+  const actions = {
+    onMarkAllDone: onMarkAllDoneInStore && (() => onMarkAllDoneInStore(storeId)),
+    onDeleteDone: onDeleteDoneInStore && (() => onDeleteDoneInStore(storeId)),
+    onClearAll: onClearAllInStore && (() => onClearAllInStore(storeId, name)),
+  };
+
   // The heading, handed to the container so a drop on it lands in the Store
   const headerElement = (
     <StoreHeading
-      actions={groceries.length > 0 ? { onMarkAllDone, onDeleteDone, onClearAll } : undefined}
+      actions={groceries.length > 0 ? actions : undefined}
       activeCount={activeCount}
       doneCount={doneCount}
       dot={store !== null}
-      dropTarget={store?.id ?? "unsorted"}
+      dropTarget={containerId}
       expanded={isExpanded}
-      name={store?.name ?? t("unsorted")}
+      name={name}
       total={total}
       onExpandedChange={setIsExpanded}
     />
@@ -209,11 +218,17 @@ function StoreSectionComponent({
     <motion.div
       ref={sectionRef}
       className="relative"
-      data-store-id={store?.id ?? "unsorted"}
+      data-store-id={containerId}
       style={storeColorStyle(store?.color ?? null)}
     >
       {/* The whole section is the droppable: a drop on the heading lands in the Store */}
-      <SortableStoreContainer header={headerElement} storeId={store?.id ?? null}>
+      <SortableStoreContainer
+        activeId={activeId}
+        header={headerElement}
+        itemIds={keysOf(containerId)}
+        overContainerId={overContainerId}
+        storeId={storeId}
+      >
         {/* The rows, where there is a row, a done tail or an aisle to show; otherwise the heading bar stands alone */}
         {hasRows ? (
           <div className="divide-border divide-y">
@@ -227,7 +242,7 @@ function StoreSectionComponent({
                 activeId={activeId}
                 aisleId={aisle.id}
                 header={<AisleHeading aisleId={aisle.id} count={rows.length} name={aisle.name} />}
-                itemIds={getItemsForContainer(aisleContainerId(aisle.id))}
+                itemIds={keysOf(aisleContainerId(aisle.id))}
                 overContainerId={overContainerId}
               >
                 {rows.map(renderActive)}

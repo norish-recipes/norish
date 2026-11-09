@@ -1,20 +1,14 @@
 "use client";
 
-import { createContext, use, useId, useMemo } from "react";
-import {
-  DndContext,
-  DragOverlay,
-  KeyboardSensor,
-  PointerSensor,
-  TouchSensor,
-  useSensor,
-  useSensors,
-} from "@dnd-kit/core";
-import { sortableKeyboardCoordinates } from "@dnd-kit/sortable";
+import { createContext, use, useId } from "react";
+import { DndContext, DragOverlay } from "@dnd-kit/core";
+
+import type { GroceryDto, RecurringGroceryDto } from "@norish/shared/contracts";
 
 import type { DndGroceryContextValue, DndGroceryProviderProps } from "./types";
 import { GroceryDragOverlay } from "./grocery-drag-overlay";
-import { useGroceryDnd } from "./use-grocery-dnd";
+import { useListDnd } from "./use-list-dnd";
+import { buildItemsState } from "./utils";
 
 const DndGroceryContext = createContext<DndGroceryContextValue | null>(null);
 
@@ -28,7 +22,7 @@ export function useDndGroceryContext(): DndGroceryContextValue {
 
 export function DndGroceryProvider({
   children,
-  groceries,
+  groceriesByStore,
   stores,
   recurringGroceries,
   onReorderInStore,
@@ -37,80 +31,77 @@ export function DndGroceryProvider({
   getRecipeNameForGrocery,
 }: DndGroceryProviderProps) {
   const dndId = useId();
-  const sensors = useSensors(
-    useSensor(PointerSensor, {
-      activationConstraint: {
-        distance: 8,
-      },
-    }),
-    useSensor(TouchSensor, {
-      activationConstraint: {
-        delay: 200,
-        tolerance: 8,
-      },
-    }),
-    useSensor(KeyboardSensor, {
-      coordinateGetter: sortableKeyboardCoordinates,
-    })
+  const rows = new Map(
+    [...groceriesByStore.values()].flat().map((grocery) => [grocery.id, grocery])
   );
+  const dnd = useListDnd({
+    items: buildItemsState(groceriesByStore, stores, aisleFor),
+    source: [groceriesByStore, stores, aisleFor],
+    linesOf: (id) => {
+      const grocery = rows.get(id);
 
-  const {
-    activeId,
-    activeGrocery,
-    activeRecurringGrocery,
-    activeRecipeName,
-    overContainerId,
-    items,
-    collisionDetection,
-    handleDragStart,
-    handleDragOver,
-    handleDragEnd,
-    handleDragCancel,
-    getItemsForContainer,
-  } = useGroceryDnd({
-    groceries,
+      return grocery ? [grocery] : [];
+    },
     stores,
-    recurringGroceries,
-    onReorderInStore,
     aisleFor,
+    onReorder: onReorderInStore,
     onFileGroceryName,
-    getRecipeNameForGrocery,
   });
-
-  const contextValue = useMemo<DndGroceryContextValue>(
-    () => ({
-      activeId,
-      activeGrocery,
-      overContainerId,
-      items,
-      getItemsForContainer,
-    }),
-    [activeId, activeGrocery, overContainerId, items, getItemsForContainer]
-  );
+  const activeGrocery = dnd.activeId ? (rows.get(dnd.activeId) ?? null) : null;
+  // Null while no drag is on, so a list change leaves the context as it was.
+  const arrangement = dnd.arranged ? { items: dnd.arranged, byKey: rows } : null;
+  const contextValue = {
+    activeId: dnd.activeId,
+    overContainerId: dnd.overContainerId,
+    arrangement,
+  };
 
   return (
     <DndGroceryContext value={contextValue}>
       <DndContext
-        collisionDetection={collisionDetection}
+        collisionDetection={dnd.collisionDetection}
         id={dndId}
-        sensors={sensors}
-        onDragCancel={handleDragCancel}
-        onDragEnd={handleDragEnd}
-        onDragOver={handleDragOver}
-        onDragStart={handleDragStart}
+        sensors={dnd.sensors}
+        onDragCancel={dnd.handleDragCancel}
+        onDragEnd={dnd.handleDragEnd}
+        onDragOver={dnd.handleDragOver}
+        onDragStart={dnd.handleDragStart}
       >
         {children}
 
         <DragOverlay dropAnimation={{ duration: 200, easing: "ease" }}>
           {activeGrocery ? (
-            <GroceryDragOverlay
+            <ActiveGroceryOverlay
+              getRecipeNameForGrocery={getRecipeNameForGrocery}
               grocery={activeGrocery}
-              recipeName={activeRecipeName}
-              recurringGrocery={activeRecurringGrocery}
+              recurringGroceries={recurringGroceries}
             />
           ) : null}
         </DragOverlay>
       </DndContext>
     </DndGroceryContext>
+  );
+}
+
+/** The row a drag carries. Its own component, so the provider's values stay memoised apart from it. */
+function ActiveGroceryOverlay({
+  grocery,
+  recurringGroceries,
+  getRecipeNameForGrocery,
+}: {
+  grocery: GroceryDto;
+  recurringGroceries: RecurringGroceryDto[];
+  getRecipeNameForGrocery?: (grocery: GroceryDto) => string | null;
+}) {
+  const recurringGrocery = grocery.recurringGroceryId
+    ? (recurringGroceries.find((r) => r.id === grocery.recurringGroceryId) ?? null)
+    : null;
+
+  return (
+    <GroceryDragOverlay
+      grocery={grocery}
+      recipeName={getRecipeNameForGrocery?.(grocery) ?? null}
+      recurringGrocery={recurringGrocery}
+    />
   );
 }

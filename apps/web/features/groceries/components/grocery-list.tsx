@@ -19,6 +19,7 @@ import { GroupedStoreSection } from "./grouped-store-section";
 import { StoreSection } from "./store-section";
 
 const NO_GROUPS: GroceryGroup[] = [];
+const NO_GROCERIES: GroceryDto[] = [];
 
 interface GroceryListProps {
   groceries: GroceryDto[];
@@ -71,7 +72,6 @@ function GroceryListContent({
   groupSimilarIngredients = false,
 }: GroceryListProps) {
   const t = useTranslations("groceries.empty");
-  const tStore = useTranslations("groceries.store");
   const { units: customUnits } = useUnitsQuery();
   // Where each Store files each name — the one place a grocery's aisle comes
   // from (ADR-0031) — and the one write a drop into an aisle makes.
@@ -109,15 +109,6 @@ function GroceryListContent({
 
   // Get unsorted groceries
   const unsortedGroceries = groupedGroceries.get(null) ?? [];
-
-  // Get stores in order with their groceries
-  const storeWithGroceries = stores
-    .slice()
-    .sort((a, b) => a.sortOrder - b.sortOrder)
-    .map((store) => ({
-      store,
-      groceries: groupedGroceries.get(store.id) ?? [],
-    }));
 
   // Compute grouped groceries by ingredient (for grouped mode)
   const builtGroups = useMemo(() => {
@@ -162,11 +153,10 @@ function GroceryListContent({
     );
   }
 
+  const sortedStores = stores.slice().sort((a, b) => a.sortOrder - b.sortOrder);
+
   // Grouped mode - with group-aware DnD
   if (groupSimilarIngredients && ingredientGroups && onToggleGroup) {
-    // Sort stores by sortOrder for grouped view
-    const sortedStores = stores.slice().sort((a, b) => a.sortOrder - b.sortOrder);
-
     return (
       <DndGroupedGroceryProvider
         aisleFor={aisleFor}
@@ -204,7 +194,7 @@ function GroceryListContent({
 
           {/* Store sections */}
           {sortedStores.map((store) => {
-            const storeGroceries = groupedGroceries.get(store.id) ?? [];
+            const storeGroceries = groupedGroceries.get(store.id) ?? NO_GROCERIES;
             const storeGroups = ingredientGroups.get(store.id) ?? NO_GROUPS;
 
             return (
@@ -242,7 +232,7 @@ function GroceryListContent({
     <DndGroceryProvider
       aisleFor={aisleFor}
       getRecipeNameForGrocery={getRecipeNameForGrocery}
-      groceries={groceries}
+      groceriesByStore={groupedGroceries}
       recurringGroceries={recurringGroceries}
       stores={stores}
       onFileGroceryName={fileGroceryName}
@@ -260,23 +250,23 @@ function GroceryListContent({
             transition={{ type: "spring", stiffness: 500, damping: 35 }}
           >
             <StoreSection
-              allGroceries={groceries}
+              aisleFor={aisleFor}
               getRecipeNameForGrocery={getRecipeNameForGrocery}
               groceries={unsortedGroceries}
               recurringGroceries={recurringGroceries}
               store={null}
-              onClearAll={() => onClearAllInStore?.(null, tStore("unsorted"))}
+              onClearAllInStore={onClearAllInStore}
               onDelete={onDelete}
-              onDeleteDone={() => onDeleteDoneInStore?.(null)}
+              onDeleteDoneInStore={onDeleteDoneInStore}
               onEdit={onEdit}
-              onMarkAllDone={() => onMarkAllDoneInStore?.(null)}
+              onMarkAllDoneInStore={onMarkAllDoneInStore}
               onToggle={onToggle}
             />
           </motion.div>
         )}
 
         {/* Store sections */}
-        {storeWithGroceries.map(({ store, groceries: storeGroceries }) => (
+        {sortedStores.map((store) => (
           <motion.div
             key={store.id}
             layout
@@ -286,16 +276,16 @@ function GroceryListContent({
             transition={{ type: "spring", stiffness: 500, damping: 35 }}
           >
             <StoreSection
-              allGroceries={groceries}
+              aisleFor={aisleFor}
               getRecipeNameForGrocery={getRecipeNameForGrocery}
-              groceries={storeGroceries}
+              groceries={groupedGroceries.get(store.id) ?? NO_GROCERIES}
               recurringGroceries={recurringGroceries}
               store={store}
-              onClearAll={() => onClearAllInStore?.(store.id, store.name)}
+              onClearAllInStore={onClearAllInStore}
               onDelete={onDelete}
-              onDeleteDone={() => onDeleteDoneInStore?.(store.id)}
+              onDeleteDoneInStore={onDeleteDoneInStore}
               onEdit={onEdit}
-              onMarkAllDone={() => onMarkAllDoneInStore?.(store.id)}
+              onMarkAllDoneInStore={onMarkAllDoneInStore}
               onToggle={onToggle}
             />
           </motion.div>

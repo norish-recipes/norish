@@ -10,7 +10,6 @@ import {
 } from "@dnd-kit/sortable";
 
 import type { ContainerId } from "./types";
-import { useDndGroceryContext } from "./dnd-grocery-provider";
 import { UNSORTED_CONTAINER } from "./types";
 
 // Always animate layout changes, including after drag
@@ -19,6 +18,11 @@ const animateLayoutChanges: AnimateLayoutChanges = (args) =>
 
 interface SortableStoreContainerProps {
   storeId: string | null; // null = unsorted
+  /** The keys in the Store's own unfiled area, rows or groups, in the order the drag has them. */
+  itemIds: string[];
+  /** Whether a drag is on, and which container it is over. */
+  activeId: string | null;
+  overContainerId: string | null;
   /** The heading bar at the top of the card; part of the droppable, so a collapsed or empty Store still takes a drop. */
   header: ReactNode;
   /** The rows under the heading, or null where the card is its heading bar alone. */
@@ -32,12 +36,15 @@ interface SortableStoreContainerProps {
  * section the card takes the accent ring, rows or no rows, so a collapsed or
  * empty Store still says it will take the row.
  */
-export function SortableStoreContainer({ storeId, header, children }: SortableStoreContainerProps) {
+export function SortableStoreContainer({
+  storeId,
+  itemIds,
+  activeId,
+  overContainerId,
+  header,
+  children,
+}: SortableStoreContainerProps) {
   const containerId: ContainerId = storeId ?? UNSORTED_CONTAINER;
-
-  // Get items from DnD context - this updates during drag
-  const { getItemsForContainer, overContainerId, activeId } = useDndGroceryContext();
-  const itemIds = getItemsForContainer(containerId);
 
   // The whole section, heading included, is the drop target
   const { active, over, setNodeRef, transition } = useSortable({

@@ -1,20 +1,14 @@
 "use client";
 
-import { createContext, use, useId, useMemo } from "react";
-import { useGroupedGroceryDnd } from "@/features/groceries/hooks/use-grouped-grocery-dnd";
-import {
-  DndContext,
-  DragOverlay,
-  KeyboardSensor,
-  PointerSensor,
-  TouchSensor,
-  useSensor,
-  useSensors,
-} from "@dnd-kit/core";
-import { sortableKeyboardCoordinates } from "@dnd-kit/sortable";
+import { createContext, use, useId } from "react";
+import { DndContext, DragOverlay } from "@dnd-kit/core";
+
+import type { GroceryGroup } from "@norish/shared/lib/grocery-grouping";
 
 import type { DndGroupedGroceryContextValue, DndGroupedGroceryProviderProps } from "./types";
 import { GroupDragOverlay } from "./group-drag-overlay";
+import { useListDnd } from "./use-list-dnd";
+import { buildGroupItemsState } from "./utils";
 
 const DndGroupedGroceryContext = createContext<DndGroupedGroceryContextValue | null>(null);
 
@@ -36,56 +30,40 @@ export function DndGroupedGroceryProvider({
   onFileGroceryName,
 }: DndGroupedGroceryProviderProps) {
   const dndId = useId();
-  const sensors = useSensors(
-    useSensor(PointerSensor, {
-      activationConstraint: {
-        distance: 8,
-      },
-    }),
-    useSensor(TouchSensor, {
-      activationConstraint: {
-        delay: 200,
-        tolerance: 8,
-      },
-    }),
-    useSensor(KeyboardSensor, {
-      coordinateGetter: sortableKeyboardCoordinates,
-    })
-  );
+  const groups = new Map<string, GroceryGroup>();
 
-  const {
-    activeGroupKey,
-    activeGroup,
-    overContainerId,
-    arrangement,
-    collisionDetection,
-    handleDragStart,
-    handleDragOver,
-    handleDragEnd,
-    handleDragCancel,
-  } = useGroupedGroceryDnd({
+  for (const storeGroups of groupedGroceries.values()) {
+    for (const group of storeGroups) groups.set(group.groupKey, group);
+  }
+
+  const dnd = useListDnd({
+    items: buildGroupItemsState(groupedGroceries, stores),
+    source: [groupedGroceries, stores],
+    linesOf: (key) => groups.get(key)?.sources.map((source) => source.grocery) ?? [],
     stores,
-    groupedGroceries,
-    onReorderGroups,
     aisleFor,
+    onReorder: onReorderGroups,
     onFileGroceryName,
   });
-
-  const contextValue = useMemo<DndGroupedGroceryContextValue>(
-    () => ({ activeGroupKey, overContainerId, arrangement }),
-    [activeGroupKey, overContainerId, arrangement]
-  );
+  const activeGroup = dnd.activeId ? (groups.get(dnd.activeId) ?? null) : null;
+  // Null while no drag is on, so a list change leaves the context as it was.
+  const arrangement = dnd.arranged ? { items: dnd.arranged, byKey: groups } : null;
+  const contextValue = {
+    activeId: dnd.activeId,
+    overContainerId: dnd.overContainerId,
+    arrangement,
+  };
 
   return (
     <DndGroupedGroceryContext value={contextValue}>
       <DndContext
-        collisionDetection={collisionDetection}
+        collisionDetection={dnd.collisionDetection}
         id={dndId}
-        sensors={sensors}
-        onDragCancel={handleDragCancel}
-        onDragEnd={handleDragEnd}
-        onDragOver={handleDragOver}
-        onDragStart={handleDragStart}
+        sensors={dnd.sensors}
+        onDragCancel={dnd.handleDragCancel}
+        onDragEnd={dnd.handleDragEnd}
+        onDragOver={dnd.handleDragOver}
+        onDragStart={dnd.handleDragStart}
       >
         {children}
 

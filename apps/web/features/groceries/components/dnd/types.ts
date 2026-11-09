@@ -13,7 +13,7 @@ export const AISLE_CONTAINER_PREFIX = "aisle:" as const;
  */
 export type ContainerId = string;
 
-/** Container ID => grocery IDs mapping (visual order during drag) */
+/** Container ID => the keys in it, a row's id or a group's key, in the order shown. */
 export type ItemsState = Record<ContainerId, string[]>;
 
 /** The aisle a Store files an Ingredient under, or null where it has never been told (ADR-0031). */
@@ -36,19 +36,29 @@ export interface ReorderUpdate {
   storeId?: string | null;
 }
 
-/** Context value provided by DndGroceryProvider */
-export interface DndGroceryContextValue {
-  activeId: string | null;
-  activeGrocery: GroceryDto | null;
-  overContainerId: ContainerId | null;
+/** What a drag arranged, until the list it was dropped on comes back from the cache. */
+export interface Arrangement<T> {
   items: ItemsState;
-  getItemsForContainer: (containerId: ContainerId) => string[];
+  /** Every row or group by key, since one dragged in comes from another Store's. */
+  byKey: Map<string, T>;
 }
+
+/** A list's DnD context; it changes only while a drag is on. */
+interface ListDndContextValue<T> {
+  activeId: string | null;
+  overContainerId: ContainerId | null;
+  /** Null while no drag is on: each Store then reads its containers off its own rows. */
+  arrangement: Arrangement<T> | null;
+}
+
+export type DndGroceryContextValue = ListDndContextValue<GroceryDto>;
+export type DndGroupedGroceryContextValue = ListDndContextValue<GroceryGroup>;
 
 /** Props for the DndGroceryProvider component */
 export interface DndGroceryProviderProps {
   children: React.ReactNode;
-  groceries: GroceryDto[];
+  /** The list's groceries under each Store, null for those under none. */
+  groceriesByStore: Map<string | null, GroceryDto[]>;
   stores: StoreDto[];
   recurringGroceries: RecurringGroceryDto[];
   onReorderInStore: (updates: ReorderUpdate[]) => void;
@@ -58,29 +68,11 @@ export interface DndGroceryProviderProps {
   getRecipeNameForGrocery?: (grocery: GroceryDto) => string | null;
 }
 
-/** Container ID => group keys mapping (visual order during drag) */
-export type GroupItemsState = Record<ContainerId, string[]>;
-
 /** Draws one group's row around the handle that drags it. */
 export type GroupRow = (
   group: GroceryGroup,
   options: { dragHandle: React.ReactNode; isFirst: boolean; isLast: boolean }
 ) => React.ReactNode;
-
-/** What a drag arranged, until the list it was dropped on comes back from the cache. */
-export interface GroupArrangement {
-  items: GroupItemsState;
-  /** Every group by key, since a group dragged in comes from another Store's. */
-  groups: Map<string, GroceryGroup>;
-}
-
-/** Context value provided by DndGroupedGroceryProvider; it changes only while a drag is on. */
-export interface DndGroupedGroceryContextValue {
-  activeGroupKey: string | null;
-  overContainerId: ContainerId | null;
-  /** Null while no drag is on: each Store then reads its containers off its own groups. */
-  arrangement: GroupArrangement | null;
-}
 
 /** Props for the DndGroupedGroceryProvider component */
 export interface DndGroupedGroceryProviderProps {

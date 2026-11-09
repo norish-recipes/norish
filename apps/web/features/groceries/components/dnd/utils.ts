@@ -4,7 +4,7 @@ import type { GroceryDto, StoreDto } from "@norish/shared/contracts";
 import type { GroceryGroup } from "@norish/shared/lib/grocery-grouping";
 import { sortAisles } from "@norish/shared/lib/aisles";
 
-import type { AisleResolver, ContainerId, GroupItemsState, ItemsState } from "./types";
+import type { AisleResolver, ContainerId, ItemsState } from "./types";
 import { AISLE_CONTAINER_PREFIX, UNSORTED_CONTAINER } from "./types";
 
 /** The container of one aisle, inside its Store's block. */
@@ -65,18 +65,6 @@ export function containerFor(
     : storeId;
 }
 
-/**
- * The container a grocery sits in: where its Store files its Ingredient.
- * Nothing on the row says which (ADR-0031, ADR-0037).
- */
-export function getContainerIdForGrocery(
-  grocery: Pick<GroceryDto, "storeId" | "ingredientId">,
-  stores: StoreDto[],
-  aisleFor: AisleResolver
-): ContainerId {
-  return containerFor(grocery.storeId, aisleFor(grocery.storeId, grocery.ingredientId), stores);
-}
-
 /** Converts a Store-level container ID back to storeId (UNSORTED_CONTAINER => null) */
 export function containerIdToStoreId(containerId: ContainerId): string | null {
   return containerId === UNSORTED_CONTAINER ? null : containerId;
@@ -115,28 +103,42 @@ function emptyContainers(stores: StoreDto[]): ItemsState {
   return items;
 }
 
-/** Build initial items state from groceries (active items only, sorted by sortOrder) */
+/**
+ * One Store's containers and its open groceries in each, by sort order: a grocery sits
+ * where its Store files its Ingredient, which nothing on the row says (ADR-0031, ADR-0037).
+ */
+export function storeItems(
+  storeId: string | null,
+  groceries: readonly GroceryDto[],
+  stores: StoreDto[],
+  aisleFor: AisleResolver
+): ItemsState {
+  const items: ItemsState = Object.fromEntries(
+    storeContainers(storeId, stores).map((containerId) => [containerId, []])
+  );
+  const open = groceries
+    .filter((grocery) => !grocery.isDone)
+    .sort((a, b) => (a.sortOrder ?? 0) - (b.sortOrder ?? 0));
+
+  for (const grocery of open) {
+    const containerId = containerFor(storeId, aisleFor(storeId, grocery.ingredientId), stores);
+
+    (items[containerId] ??= []).push(grocery.id);
+  }
+
+  return items;
+}
+
+/** Every container the list has, with each Store's open groceries in theirs. */
 export function buildItemsState(
-  groceries: GroceryDto[],
+  groceriesByStore: Map<string | null, GroceryDto[]>,
   stores: StoreDto[],
   aisleFor: AisleResolver
 ): ItemsState {
   const items = emptyContainers(stores);
 
-  // Group active groceries by container
-  const activeGroceries = groceries.filter((g) => !g.isDone);
-
-  for (const grocery of activeGroceries) {
-    const containerId = getContainerIdForGrocery(grocery, stores, aisleFor);
-
-    (items[containerId] ??= []).push(grocery.id);
-  }
-
-  // Sort each container by sortOrder
-  const order = new Map(groceries.map((g) => [g.id, g.sortOrder ?? 0]));
-
-  for (const ids of Object.values(items)) {
-    ids.sort((aId, bId) => (order.get(aId) ?? 0) - (order.get(bId) ?? 0));
+  for (const [storeId, groceries] of groceriesByStore) {
+    Object.assign(items, storeItems(storeId, groceries, stores, aisleFor));
   }
 
   return items;
@@ -147,8 +149,8 @@ export function storeGroupItems(
   storeId: string | null,
   groups: readonly GroceryGroup[],
   stores: StoreDto[]
-): GroupItemsState {
-  const items: GroupItemsState = Object.fromEntries(
+): ItemsState {
+  const items: ItemsState = Object.fromEntries(
     storeContainers(storeId, stores).map((containerId) => [containerId, []])
   );
 
@@ -160,11 +162,11 @@ export function storeGroupItems(
   return items;
 }
 
-/** Build initial group items state (groups not all done), each group in the aisle it was grouped under */
+/** Every container the list has, with each Store's open groups in theirs. */
 export function buildGroupItemsState(
   groupedGroceries: Map<string | null, GroceryGroup[]>,
   stores: StoreDto[]
-): GroupItemsState {
+): ItemsState {
   const items = emptyContainers(stores);
 
   for (const [storeId, groups] of groupedGroceries) {
@@ -172,18 +174,4 @@ export function buildGroupItemsState(
   }
 
   return items;
-}
-
-/** Find which container a group belongs to */
-export function findContainerForGroup(
-  groupKey: string,
-  groupItems: GroupItemsState
-): ContainerId | null {
-  for (const [containerId, groupKeys] of Object.entries(groupItems)) {
-    if (groupKeys.includes(groupKey)) {
-      return containerId;
-    }
-  }
-
-  return null;
 }

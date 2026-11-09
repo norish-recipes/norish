@@ -13,8 +13,8 @@ import { AisleHeading } from "./aisle-heading";
 import {
   aisleContainerId,
   SortableAisleContainer,
-  SortableGroupedStoreContainer,
   SortableGroupItem,
+  SortableStoreContainer,
   storeGroupItems,
   UNSORTED_CONTAINER,
   useDndGroupedGroceryContext,
@@ -70,11 +70,11 @@ function GroupedStoreSectionComponent({
   const name = store?.name ?? t("unsorted");
 
   // The drag's arrangement while one is on; otherwise this Store's own groups, in their containers.
-  const { activeGroupKey, overContainerId, arrangement } = useDndGroupedGroceryContext();
+  const { activeId, overContainerId, arrangement } = useDndGroupedGroceryContext();
   const ownItems = useStructuralSharing(storeGroupItems(storeId, groups, store ? [store] : []));
   const ownGroups = new Map(groups.map((group) => [group.groupKey, group]));
   const items = arrangement?.items ?? ownItems;
-  const groupMap = arrangement?.groups ?? ownGroups;
+  const groupMap = arrangement?.byKey ?? ownGroups;
   const keysOf = (container: string) => items[container] ?? NO_KEYS;
 
   // Get container ID for this store
@@ -174,8 +174,8 @@ function GroupedStoreSectionComponent({
       style={storeColorStyle(store?.color ?? null)}
     >
       {/* The whole section is the droppable: a drop on the heading lands in the Store */}
-      <SortableGroupedStoreContainer
-        activeId={activeGroupKey}
+      <SortableStoreContainer
+        activeId={activeId}
         header={headerElement}
         itemIds={keysOf(containerId)}
         overContainerId={overContainerId}
@@ -191,7 +191,7 @@ function GroupedStoreSectionComponent({
             {blocks.map(({ aisle, rows }) => (
               <SortableAisleContainer
                 key={aisle.id}
-                activeId={activeGroupKey}
+                activeId={activeId}
                 aisleId={aisle.id}
                 header={<AisleHeading aisleId={aisle.id} count={rows.length} name={aisle.name} />}
                 itemIds={keysOf(aisleContainerId(aisle.id))}
@@ -219,7 +219,7 @@ function GroupedStoreSectionComponent({
             )}
           </div>
         ) : null}
-      </SortableGroupedStoreContainer>
+      </SortableStoreContainer>
     </motion.div>
   );
 }
