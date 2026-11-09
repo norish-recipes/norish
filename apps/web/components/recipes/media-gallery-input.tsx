@@ -1,14 +1,14 @@
 "use client";
 
 import type { DragEndEvent } from "@dnd-kit/core";
-import React, { useCallback, useRef, useState } from "react";
+import React, { useCallback, useId, useRef, useState } from "react";
 import NextImage from "next/image";
-import { DndContext } from "@/components/dnd-context";
 import { useRecipeImages, useRecipeVideos } from "@/hooks/recipes";
 import { useClipboardImagePaste } from "@/hooks/use-clipboard-image-paste";
 import { usePending } from "@/hooks/use-pending";
 import {
   closestCenter,
+  DndContext,
   KeyboardSensor,
   PointerSensor,
   TouchSensor,
@@ -207,6 +207,7 @@ export default function MediaGalleryInput({
   // Find index of first image for primary badge
   const firstImageIndex = media.findIndex((m) => m.type === "image");
 
+  const dndId = useId();
   // Configure sensors
   const sensors = useSensors(
     useSensor(PointerSensor, {
@@ -426,7 +427,12 @@ export default function MediaGalleryInput({
         className="scrollbar-hide w-full min-w-0 overflow-x-auto pb-2"
         style={{ WebkitOverflowScrolling: "touch" }}
       >
-        <DndContext collisionDetection={closestCenter} sensors={sensors} onDragEnd={handleDragEnd}>
+        <DndContext
+          collisionDetection={closestCenter}
+          id={dndId}
+          sensors={sensors}
+          onDragEnd={handleDragEnd}
+        >
           <SortableContext items={itemIds} strategy={horizontalListSortingStrategy}>
             <div className="flex w-max gap-3">
               {media.map((item, index) => (

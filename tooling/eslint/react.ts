@@ -45,6 +45,11 @@ const restrictedSyntax = [
     message:
       'A hook or component built inside a function starts with "use memo", or the React Compiler skips it.',
   })),
+  {
+    selector: "JSXOpeningElement[name.name='DndContext']:not(:has(JSXAttribute[name.name='id']))",
+    message:
+      "dnd-kit numbers DndContext's aria-describedby from a counter the server and client don't share: give it id={useId()}.",
+  },
   // React Compiler 1.0 cannot lower a `finally`, and skips the whole
   // component or hook that has one, event handlers included.
   {

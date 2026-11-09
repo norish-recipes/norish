@@ -1,12 +1,12 @@
 "use client";
 
 import type { DragEndEvent, DragOverEvent, DragStartEvent } from "@dnd-kit/core";
-import { useCallback, useEffect, useLayoutEffect, useMemo, useRef, useState } from "react";
+import { useCallback, useEffect, useId, useLayoutEffect, useMemo, useRef, useState } from "react";
 import { useCalendarContext } from "@/app/(app)/calendar/context";
-import { DndContext } from "@/components/dnd-context";
 import { useReaderToday } from "@/components/reader-today";
 import { CalendarSkeletonMobile } from "@/components/skeleton/calendar-skeleton";
 import {
+  DndContext,
   DragOverlay,
   PointerSensor,
   pointerWithin,
@@ -266,6 +266,7 @@ export function MobileTimeline({ onAddItem, onNoteClick, onRecipeClick }: Mobile
     },
   });
 
+  const dndId = useId();
   const sensors = useSensors(touchSensor, pointerSensor);
 
   const handleDragStart = useCallback(
@@ -370,6 +371,7 @@ export function MobileTimeline({ onAddItem, onNoteClick, onRecipeClick }: Mobile
     <div className="fade-in">
       <DndContext
         collisionDetection={collisionDetection}
+        id={dndId}
         sensors={sensors}
         onDragEnd={handleDragEnd}
         onDragOver={handleDragOver}

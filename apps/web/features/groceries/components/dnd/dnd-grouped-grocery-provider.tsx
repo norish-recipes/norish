@@ -1,9 +1,9 @@
 "use client";
 
-import { createContext, use, useMemo } from "react";
-import { DndContext } from "@/components/dnd-context";
+import { createContext, use, useId, useMemo } from "react";
 import { useGroupedGroceryDnd } from "@/features/groceries/hooks/use-grouped-grocery-dnd";
 import {
+  DndContext,
   DragOverlay,
   KeyboardSensor,
   MeasuringStrategy,
@@ -36,6 +36,7 @@ export function DndGroupedGroceryProvider({
   aisleFor,
   onFileGroceryName,
 }: DndGroupedGroceryProviderProps) {
+  const dndId = useId();
   const sensors = useSensors(
     useSensor(PointerSensor, {
       activationConstraint: {
@@ -87,6 +88,7 @@ export function DndGroupedGroceryProvider({
     <DndGroupedGroceryContext value={contextValue}>
       <DndContext
         collisionDetection={collisionDetection}
+        id={dndId}
         measuring={{
           droppable: {
             strategy: MeasuringStrategy.Always,

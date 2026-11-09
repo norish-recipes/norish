@@ -1,12 +1,31 @@
 import { Linter } from "eslint";
 import { describe, expect, it } from "vitest";
 
-import { compiledReactConfig } from "./react.ts";
+import { compiledReactConfig, reactConfig } from "./react.ts";
 
 /** The rule messages `code` gets under the compiled-code config. */
 function lint(code: string): string[] {
   return new Linter().verify(code, compiledReactConfig, "file.ts").map(({ message }) => message);
 }
+
+/** The restricted-syntax messages JSX `code` gets under the React config. */
+function lintJsx(code: string): string[] {
+  const rules = { "no-restricted-syntax": reactConfig[0]?.rules?.["no-restricted-syntax"] };
+  const jsx = { parserOptions: { ecmaFeatures: { jsx: true } } };
+
+  return new Linter()
+    .verify(code, [{ languageOptions: jsx, rules }], "file.js")
+    .map(({ message }) => message);
+}
+
+describe("reactConfig", () => {
+  it("asks every DndContext for an id", () => {
+    expect(lintJsx("const a = <DndContext sensors={s} />;")).toEqual([
+      "dnd-kit numbers DndContext's aria-describedby from a counter the server and client don't share: give it id={useId()}.",
+    ]);
+    expect(lintJsx("const a = <DndContext id={id} sensors={s} />;")).toEqual([]);
+  });
+});
 
 const skipped =
   "The React Compiler skips a component or hook with `||=`, `&&=` or `??=` in it: write the assignment out.";
