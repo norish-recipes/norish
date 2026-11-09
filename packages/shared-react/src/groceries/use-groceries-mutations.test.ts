@@ -15,7 +15,7 @@ import {
   createTestWrapper,
 } from "./test-utils";
 
-// Track mutation calls - kept for future assertions
+// What each procedure is sent; a test answers or refuses it by its implementation.
 const _mockMutations = {
   create: vi.fn(),
   toggle: vi.fn(),
@@ -32,21 +32,9 @@ const _mockMutations = {
   deleteDone: vi.fn(),
 };
 
-// Mock the dependencies
-vi.mock("@tanstack/react-query", async () => {
-  const actual = await vi.importActual("@tanstack/react-query");
-
-  return {
-    ...actual,
-    useMutation: vi.fn((options: { mutationFn?: (...args: unknown[]) => unknown } | undefined) => {
-      return {
-        mutate: options?.mutationFn ?? vi.fn(),
-        mutateAsync: vi.fn().mockResolvedValue("mock-id"),
-        isLoading: false,
-        error: null,
-      };
-    }),
-  };
+/** A procedure's mutation options as tRPC builds them: the caller's own, and its send. */
+const procedure = (mutationFn: (input: unknown) => unknown) => ({
+  mutationOptions: (options?: object) => ({ ...options, mutationFn }),
 });
 
 vi.mock("../trpc", () => ({
@@ -59,33 +47,19 @@ vi.mock("../trpc", () => ({
           queryFn: async () => createMockGroceriesData(),
         }),
       },
-      create: { mutationOptions: vi.fn(() => ({ mutationFn: _mockMutations.create })) },
-      toggle: { mutationOptions: vi.fn(() => ({ mutationFn: _mockMutations.toggle })) },
-      update: { mutationOptions: vi.fn(() => ({ mutationFn: _mockMutations.update })) },
-      delete: { mutationOptions: vi.fn(() => ({ mutationFn: _mockMutations.delete })) },
-      createRecurring: {
-        mutationOptions: vi.fn(() => ({ mutationFn: _mockMutations.createRecurring })),
-      },
-      updateRecurring: {
-        mutationOptions: vi.fn(() => ({ mutationFn: _mockMutations.updateRecurring })),
-      },
-      deleteRecurring: {
-        mutationOptions: vi.fn(() => ({ mutationFn: _mockMutations.deleteRecurring })),
-      },
-      detachRecurring: {
-        mutationOptions: vi.fn(() => ({ mutationFn: _mockMutations.detachRecurring })),
-      },
-      checkRecurring: {
-        mutationOptions: vi.fn(() => ({ mutationFn: _mockMutations.checkRecurring })),
-      },
-      markAllDone: { mutationOptions: vi.fn(() => ({ mutationFn: _mockMutations.markAllDone })) },
-      deleteDone: { mutationOptions: vi.fn(() => ({ mutationFn: _mockMutations.deleteDone })) },
-      assignToStore: {
-        mutationOptions: vi.fn(() => ({ mutationFn: _mockMutations.assignToStore })),
-      },
-      reorderInStore: {
-        mutationOptions: vi.fn(() => ({ mutationFn: _mockMutations.reorderInStore })),
-      },
+      create: procedure(_mockMutations.create),
+      toggle: procedure(_mockMutations.toggle),
+      update: procedure(_mockMutations.update),
+      delete: procedure(_mockMutations.delete),
+      createRecurring: procedure(_mockMutations.createRecurring),
+      updateRecurring: procedure(_mockMutations.updateRecurring),
+      deleteRecurring: procedure(_mockMutations.deleteRecurring),
+      detachRecurring: procedure(_mockMutations.detachRecurring),
+      checkRecurring: procedure(_mockMutations.checkRecurring),
+      markAllDone: procedure(_mockMutations.markAllDone),
+      deleteDone: procedure(_mockMutations.deleteDone),
+      assignToStore: procedure(_mockMutations.assignToStore),
+      reorderInStore: procedure(_mockMutations.reorderInStore),
     },
     config: {
       units: {
@@ -151,7 +125,28 @@ describe("useGroceriesMutations", () => {
   beforeEach(() => {
     queryClient = createTestQueryClient();
     adapter = fakePlatformAdapter();
+    for (const send of Object.values(_mockMutations)) send.mockReset();
+    // The server keeps what it was sent, under the ids it was sent with.
+    _mockMutations.create.mockImplementation(async (rows: Array<{ id: string }>) => ({
+      ids: rows.map((row) => row.id),
+    }));
   });
+
+  /** Answers the next send of a procedure when the test says, the way a slow server does. */
+  const answerLater = (send: (typeof _mockMutations)[keyof typeof _mockMutations]) => {
+    const answer = Promise.withResolvers<unknown>();
+
+    send.mockImplementationOnce(() => answer.promise);
+
+    return answer;
+  };
+  /** Every send answered and every answer handled. */
+  const settled = () =>
+    act(async () => {
+      await vi.waitFor(() => expect(queryClient.isMutating()).toBe(0));
+    });
+  const list = () =>
+    queryClient.getQueryData<ReturnType<typeof createMockGroceriesData>>(["groceries", "list"]);
 
   describe("module structure", () => {
     it("exports all expected mutation functions", async () => {
@@ -223,7 +218,7 @@ describe("useGroceriesMutations", () => {
       });
     });
 
-    it("puts every grocery a typed name became on the list, in place of the one typed", () => {
+    it("puts every grocery a typed name became on the list, in place of the one typed", async () => {
       queryClient.setQueryData(
         ["groceries", "list"],
         createMockGroceriesData([createMockGrocery({ id: "existing", name: "Milk" })], [])
@@ -233,28 +228,21 @@ describe("useGroceriesMutations", () => {
         wrapper: createTestWrapper(queryClient, adapter),
       });
 
-      act(() => result.current.createGrocery("zout en peper"));
+      _mockMutations.create.mockImplementationOnce(async ([sent]: Array<{ id: string }>) => {
+        const zout = createMockGrocery({ id: sent!.id, name: "zout" });
+        const peper = createMockGrocery({ id: "peper", name: "peper" });
 
-      const [[sent], options] = _mockMutations.create.mock.calls.at(-1) as [
-        [{ id: string }],
-        { onSuccess: (result: unknown) => void },
-      ];
-      const zout = createMockGrocery({ id: sent.id, name: "zout" });
-      const peper = createMockGrocery({ id: "peper", name: "peper" });
-
-      act(() =>
-        options.onSuccess({
+        return {
           ids: [zout.id, peper.id],
           createdGroceries: [zout, peper],
           updatedGroceries: [],
           returnedGroceries: [zout, peper],
-        })
-      );
+        };
+      });
+      act(() => result.current.createGrocery("zout en peper"));
+      await settled();
 
-      const data = queryClient.getQueryData<ReturnType<typeof createMockGroceriesData>>([
-        "groceries",
-        "list",
-      ]);
+      const data = list();
 
       expect(data?.groceries.map((grocery) => grocery.name).sort()).toEqual([
         "Milk",
@@ -263,7 +251,7 @@ describe("useGroceriesMutations", () => {
       ]);
     });
 
-    it("removes an optimistic grocery and reports a failed Outbox admission", () => {
+    it("removes an optimistic grocery and reports a failed Outbox admission", async () => {
       queryClient.setQueryData(
         ["groceries", "list"],
         createMockGroceriesData([createMockGrocery({ id: "existing", name: "Milk" })], [])
@@ -272,32 +260,22 @@ describe("useGroceriesMutations", () => {
       const { result } = renderHook(() => useGroceriesMutations(), {
         wrapper: createTestWrapper(queryClient, adapter),
       });
-
-      act(() => result.current.createGrocery("Apples"));
-
-      const options = _mockMutations.create.mock.calls[0]?.[1] as
-        { onError: (error: unknown) => void } | undefined;
-
       const admissionError = new TypeError("Failed to fetch");
 
       markOutboxAdmissionFailed(admissionError);
       expect(isQueuedOutboxSignal(admissionError)).toBe(false);
-      expect(options?.onError).toEqual(expect.any(Function));
-      act(() => options?.onError(admissionError));
-
-      const data = queryClient.getQueryData<ReturnType<typeof createMockGroceriesData>>([
-        "groceries",
-        "list",
-      ]);
+      _mockMutations.create.mockRejectedValueOnce(admissionError);
+      act(() => result.current.createGrocery("Apples"));
+      await settled();
 
       expect(adapter.showError).toHaveBeenCalledWith(
         "The grocery change was not saved. Please try again.",
         "groceries-mutations"
       );
-      expect(data?.groceries.map((grocery) => grocery.id)).toEqual(["existing"]);
+      expect(list()?.groceries.map((grocery) => grocery.id)).toEqual(["existing"]);
     });
 
-    it("rolls back a grocery check-off and reports a failed Outbox admission", () => {
+    it("rolls back a grocery check-off and reports a failed Outbox admission", async () => {
       queryClient.setQueryData(
         ["groceries", "list"],
         createMockGroceriesData([createMockGrocery({ id: "g1", isDone: false, version: 3 })], [])
@@ -306,29 +284,46 @@ describe("useGroceriesMutations", () => {
       const { result } = renderHook(() => useGroceriesMutations(), {
         wrapper: createTestWrapper(queryClient, adapter),
       });
-
-      act(() => result.current.toggleGroceries(["g1"], true));
-
-      const options = _mockMutations.toggle.mock.calls[0]?.[1] as
-        { onError: (error: unknown) => void } | undefined;
-
       const admissionError = new TypeError("Failed to fetch");
 
       markOutboxAdmissionFailed(admissionError);
-      expect(isQueuedOutboxSignal(admissionError)).toBe(false);
-      expect(options?.onError).toEqual(expect.any(Function));
-      act(() => options?.onError(admissionError));
-
-      const data = queryClient.getQueryData<ReturnType<typeof createMockGroceriesData>>([
-        "groceries",
-        "list",
-      ]);
+      _mockMutations.toggle.mockRejectedValueOnce(admissionError);
+      act(() => result.current.toggleGroceries(["g1"], true));
+      await settled();
 
       expect(adapter.showError).toHaveBeenCalledWith(
         "The grocery change was not saved. Please try again.",
         "groceries-mutations"
       );
-      expect(data?.groceries[0]).toMatchObject({ id: "g1", isDone: false, version: 3 });
+      expect(list()?.groceries[0]).toMatchObject({ id: "g1", isDone: false, version: 3 });
+    });
+
+    it("rolls back two saves that overlap and both fail, in the order they were sent", async () => {
+      const before = createMockGroceriesData(
+        [
+          createMockGrocery({ id: "g1", name: "Milk", version: 3 }),
+          createMockGrocery({ id: "g2", name: "Bread", version: 5 }),
+        ],
+        []
+      );
+
+      queryClient.setQueryData(["groceries", "list"], before);
+      const { result } = renderHook(() => useGroceriesMutations(), {
+        wrapper: createTestWrapper(queryClient, adapter),
+      });
+      const first = answerLater(_mockMutations.update);
+      const second = answerLater(_mockMutations.update);
+
+      act(() => result.current.updateGrocery("g1", "Oat milk"));
+      act(() => result.current.updateGrocery("g2", "Rye bread"));
+      expect(list()?.groceries.map((grocery) => grocery.name)).toEqual(["Oat milk", "Rye bread"]);
+
+      await act(async () => first.reject(new Error("Version conflict")));
+      await act(async () => second.reject(new Error("Version conflict")));
+      await settled();
+
+      expect(list()?.groceries).toEqual(before.groceries);
+      expect(adapter.showError).toHaveBeenCalledTimes(2);
     });
   });
 
@@ -427,7 +422,7 @@ describe("useGroceriesMutations", () => {
 
       expect(renders).toBe(before);
 
-      result.current.deleteGroceries(["g1"]);
+      await act(async () => result.current.deleteGroceries(["g1"]));
 
       expect(_mockMutations.delete).toHaveBeenLastCalledWith(
         { groceries: [{ id: "g1", version: 3 }] },
@@ -446,7 +441,7 @@ describe("useGroceriesMutations", () => {
         wrapper: createTestWrapper(queryClient, adapter),
       });
 
-      result.current.updateGrocery("g1", "Oat milk");
+      await act(async () => result.current.updateGrocery("g1", "Oat milk"));
 
       expect(_mockMutations.update).toHaveBeenCalledWith(
         { groceryId: "g1", raw: "Oat milk", version: 4 },
@@ -466,7 +461,7 @@ describe("useGroceriesMutations", () => {
         wrapper: createTestWrapper(queryClient, adapter),
       });
 
-      result.current.deleteGroceries(["g1", "g2"]);
+      await act(async () => result.current.deleteGroceries(["g1", "g2"]));
 
       expect(_mockMutations.delete).toHaveBeenCalledWith(
         {
@@ -492,7 +487,7 @@ describe("useGroceriesMutations", () => {
         wrapper: createTestWrapper(queryClient, adapter),
       });
 
-      result.current.toggleRecurringGrocery("r1", "g1", true);
+      await act(async () => result.current.toggleRecurringGrocery("r1", "g1", true));
 
       expect(_mockMutations.checkRecurring).toHaveBeenCalledWith(
         {
@@ -519,7 +514,7 @@ describe("useGroceriesMutations", () => {
         wrapper: createTestWrapper(queryClient, adapter),
       });
 
-      result.current.markAllDoneInStore("store-1");
+      await act(async () => result.current.markAllDoneInStore("store-1"));
 
       expect(_mockMutations.markAllDone).toHaveBeenCalledWith(
         {
@@ -546,7 +541,7 @@ describe("useGroceriesMutations", () => {
         wrapper: createTestWrapper(queryClient, adapter),
       });
 
-      result.current.deleteDoneInStore("store-1");
+      await act(async () => result.current.deleteDoneInStore("store-1"));
 
       expect(_mockMutations.deleteDone).toHaveBeenCalledWith(
         {

@@ -181,10 +181,7 @@ function StoreManager({ stores }: { stores: StoreDto[] }) {
   return <StoreManagerPanel open={open} stores={stores} onOpenChange={setOpen} />;
 }
 
-/**
- * The edit panel over the grocery as the list holds it now, closed once it is gone. Always mounted,
- * so a save's answer lands after it closes.
- */
+/** The edit panel over the grocery as the list holds it now, closed once it is gone. */
 export function EditGrocery({ stores }: { stores: StoreDto[] }) {
   const groceryId = useGroceriesUiStore((state) => state.editingGroceryId);
   const setEditingGroceryId = useGroceriesUiStore((state) => state.setEditingGroceryId);
