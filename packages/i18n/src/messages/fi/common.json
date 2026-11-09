@@ -124,6 +124,11 @@
     "clipboard": {
       "title": "Tuodaanko resepti kopioimastasi linkistä?"
     },
+    "link": {
+      "title": "Tuodaanko tämä resepti?",
+      "noLink": "Tuotavaa reseptilinkkiä ei ole",
+      "goToRecipes": "Siirry resepteihin"
+    },
     "paste": {
       "title": "Tuo liittämällä",
       "label": "Reseptin teksti tai JSON-LD",

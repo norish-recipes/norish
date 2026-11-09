@@ -82,3 +82,19 @@ describe("userProcedures.get", () => {
     expect(result.user.image).toBe("/avatars/user-1.png");
   });
 });
+
+describe("userProcedures.importLinkCode", () => {
+  it("gives the signed-in reader their own code", async () => {
+    const { importLinkCode } = await import("@norish/config/crypto");
+    const caller = userProcedures.createCaller({
+      user: { id: "user-1", email: "a@example.com", name: "A", image: null, isServerAdmin: false },
+      household: { id: "house-1", users: [{ id: "user-1" }] },
+      householdKey: "house-1",
+      userIds: ["user-1"],
+      householdUserIds: ["user-1"],
+      isServerAdmin: false,
+    } as any);
+
+    await expect(caller.importLinkCode()).resolves.toBe(importLinkCode("user-1"));
+  });
+});

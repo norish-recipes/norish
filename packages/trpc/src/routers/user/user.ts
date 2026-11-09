@@ -3,6 +3,7 @@ import path from "path";
 import { z } from "zod";
 
 import { deleteUserAccount } from "@norish/auth/account-deletion";
+import { importLinkCode as deriveImportLinkCode } from "@norish/config/crypto";
 import { SERVER_CONFIG } from "@norish/config/env-config-server";
 import {
   clearUserAvatar,
@@ -347,6 +348,8 @@ const deleteAccount = authedProcedure.mutation(async ({ ctx }) => {
  */
 const signInMethods = authedProcedure.query(({ ctx }) => getSignInMethodsForUser(ctx.user.id));
 
+const importLinkCode = authedProcedure.query(({ ctx }) => deriveImportLinkCode(ctx.user.id));
+
 const getAllergies = authedProcedure.query(async ({ ctx }) => {
   log.debug({ userId: ctx.user.id }, "Getting user allergies");
 
@@ -416,6 +419,7 @@ export const userProcedures = router({
   deleteAvatar,
   deleteAccount,
   signInMethods,
+  importLinkCode,
   getAllergies,
   setAllergies,
   updatePreferences,

@@ -124,6 +124,11 @@
     "clipboard": {
       "title": "Importera ett recept från länken du kopierade?"
     },
+    "link": {
+      "title": "Vill du importera det här receptet?",
+      "noLink": "Det finns ingen receptlänk att importera",
+      "goToRecipes": "Gå till recept"
+    },
     "paste": {
       "title": "Importera inklistrad text",
       "label": "Recepttext eller JSON-LD",

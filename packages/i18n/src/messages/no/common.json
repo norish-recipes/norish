@@ -124,6 +124,11 @@
     "clipboard": {
       "title": "Importere en oppskrift fra lenken du kopierte?"
     },
+    "link": {
+      "title": "Vil du importere denne oppskriften?",
+      "noLink": "Det finnes ingen oppskriftslenke å importere",
+      "goToRecipes": "Gå til oppskrifter"
+    },
     "paste": {
       "title": "Importer fra liming",
       "label": "Oppskrifttekst eller JSON-LD",

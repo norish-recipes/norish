@@ -124,6 +124,11 @@
     "clipboard": {
       "title": "복사한 링크에서 레시피를 가져올까요?"
     },
+    "link": {
+      "title": "이 레시피를 가져올까요?",
+      "noLink": "가져올 레시피 링크가 없습니다",
+      "goToRecipes": "레시피로 이동"
+    },
     "paste": {
       "title": "붙여넣기로 가져오기",
       "label": "레시피 텍스트 또는 JSON-LD",

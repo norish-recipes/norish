@@ -19,6 +19,12 @@ export default function manifest(): MetadataRoute.Manifest {
     scope: APP_ROOT,
     display: "standalone",
     background_color: "#F8F3E7",
+    // Lists Norish in the share sheet of an installed app, where the browser supports it.
+    share_target: {
+      action: addBasePath("/import"),
+      method: "GET",
+      params: { title: "title", text: "text", url: "url" },
+    },
     // Shown by the richer install sheet: "wide" on desktop, "narrow" on phones.
     // Each form factor keeps one aspect ratio, or Chrome drops the set.
     screenshots: [

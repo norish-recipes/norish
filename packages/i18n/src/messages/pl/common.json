@@ -124,6 +124,11 @@
     "clipboard": {
       "title": "Zaimportować przepis ze skopiowanego linku?"
     },
+    "link": {
+      "title": "Zaimportować ten przepis?",
+      "noLink": "Brak linku do przepisu do zaimportowania",
+      "goToRecipes": "Przejdź do przepisów"
+    },
     "paste": {
       "title": "Importuj przez wklejenie",
       "label": "Tekst przepisu lub JSON-LD",

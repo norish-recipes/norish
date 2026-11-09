@@ -84,6 +84,15 @@
         "confirmButton": "Poista avain"
       }
     },
+    "bookmarklet": {
+      "title": "Tuo selatessa",
+      "description": "Lisää selaimeesi painike, joka lähettää avoimen sivun Norishiin.",
+      "linkLabel": "Tallenna Norishiin",
+      "dragHint": "Vedä tämä painike suosikki- tai kirjanmerkkipalkkiin.",
+      "manualHint": "Eikö vetäminen onnistu? Kopioi alla oleva koodi, lisää mikä tahansa sivu kirjanmerkkeihin, muokkaa kirjanmerkkiä ja korvaa sen osoite koodilla.",
+      "copy": "Kopioi",
+      "copied": "Kirjanmerkki kopioitu"
+    },
     "archiveImport": {
       "title": "Tuo reseptiarkisto",
       "description": "Tuo reseptejä, jotka on viety Norishista, Melasta, Paprikasta, Mealiesta, Tandoorista tai Recipe Keeperistä."

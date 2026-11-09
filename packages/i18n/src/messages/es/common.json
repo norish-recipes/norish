@@ -119,6 +119,11 @@
     "clipboard": {
       "title": "¿Importar una receta desde el enlace que has copiado?"
     },
+    "link": {
+      "title": "¿Importar esta receta?",
+      "noLink": "No hay ningún enlace de receta para importar",
+      "goToRecipes": "Ir a las recetas"
+    },
     "paste": {
       "title": "Importar pegando el texto",
       "label": "Texto de la receta o JSON-LD",
