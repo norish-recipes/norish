@@ -110,17 +110,12 @@ export default function ImageGenerationForm({ onDirtyChange }: ImageGenerationFo
     return options;
   }, [availableModels, model]);
 
-  const hasChanges = useMemo(() => {
-    const stored = imageGenerationConfig;
-
-    return (
-      provider !== (stored?.provider ?? "disabled") ||
-      model !== (stored?.model ?? "") ||
-      endpoint !== (stored?.endpoint ?? "") ||
-      apiKey.trim() !== "" ||
-      isApiKeyCleared
-    );
-  }, [imageGenerationConfig, provider, model, endpoint, apiKey]);
+  const hasChanges =
+    provider !== (imageGenerationConfig?.provider ?? "disabled") ||
+    model !== (imageGenerationConfig?.model ?? "") ||
+    endpoint !== (imageGenerationConfig?.endpoint ?? "") ||
+    apiKey.trim() !== "" ||
+    isApiKeyCleared;
 
   useEffect(() => {
     onDirtyChange?.(hasChanges);
