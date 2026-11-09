@@ -42,6 +42,8 @@ import {
   cssHeaderIconControl,
 } from "@norish/web/config/css-tokens";
 
+const NO_IDS: string[] = [];
+
 export function GroceriesPage() {
   const { groceries, recurringGroceries, recipeMap, isLoading, getRecipeNameForGrocery } =
     useGroceriesQuery();
@@ -64,10 +66,13 @@ export function GroceriesPage() {
     | { kind: "store"; storeId: string | null; name: string }
     | { kind: "recipe"; ids: string[]; name: string };
   const [clearScope, setClearScope] = useState<ClearScope | null>(null);
+  // The same empty list while the modal is closed, so a list change doesn't re-render it.
   const clearIds =
-    clearScope?.kind === "store"
-      ? groceries.filter((g) => g.storeId === clearScope.storeId).map((g) => g.id)
-      : (clearScope?.ids ?? []);
+    clearScope === null
+      ? NO_IDS
+      : clearScope.kind === "store"
+        ? groceries.filter((g) => g.storeId === clearScope.storeId).map((g) => g.id)
+        : clearScope.ids;
   const handleClearConfirm = () => {
     if (clearIds.length > 0) deleteGroceries(clearIds);
   };
@@ -262,6 +267,8 @@ export function EditGrocery({ stores }: { stores: StoreDto[] }) {
  */
 export function GroceriesListActions() {
   const groceryIds = useGroceryIds();
+  // A boolean, so an add or a removal doesn't re-render the menu.
+  const hasGroceries = groceryIds.length > 0;
   const { deleteGroceries } = useGroceriesMutations();
   const [clearListOpen, setClearListOpen] = useState(false);
   const [viewMode, setViewMode] = useDevicePreference("groceryViewMode");
@@ -350,7 +357,7 @@ export function GroceriesListActions() {
                 {<Cog6ToothIcon className="h-4 w-4" />}
                 <Label>{t("manageStores")}</Label>
               </Dropdown.Item>
-              {groceryIds.length > 0 && (
+              {hasGroceries && (
                 <Dropdown.Item
                   key="clear-list"
                   className="text-danger"
