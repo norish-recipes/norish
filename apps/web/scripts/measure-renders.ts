@@ -7,6 +7,7 @@ import { chromium } from "@playwright/test";
 
 import type { SessionCookies } from "../__tests__/e2e/harness/auth";
 import { signIn } from "../__tests__/e2e/harness/auth";
+import { closePanel, openGroceries, rowFor } from "../__tests__/e2e/harness/groceries";
 import { callTrpc, queryTrpc } from "../__tests__/e2e/harness/trpc";
 import { account, accountOptions, newPhone } from "./api";
 import { inOrder } from "./delivery";
@@ -506,22 +507,8 @@ async function resetGroceries(cookies: SessionCookies) {
   }
 }
 
-function rowFor(page: Page, name: string) {
-  return page.locator(`[data-grocery-name="${name}"]:visible`).first();
-}
-
-async function openGroceries(tab: Tab) {
-  await tab.page.goto("/groceries");
-  await rowFor(tab.page, "cucumber").waitFor();
-}
-
 async function checkRow(page: Page, name: string) {
-  await rowFor(page, name).locator('[data-slot="checkbox"]').first().click();
-}
-
-async function closePanel(page: Page) {
-  await page.getByRole("button", { name: "Close panel" }).click();
-  await page.getByRole("dialog").waitFor({ state: "hidden" });
+  await rowFor(page, name, { visible: true }).locator('[data-slot="checkbox"]').first().click();
 }
 
 async function openViewMenu(page: Page) {
@@ -546,8 +533,8 @@ async function groceries(browser: Browser) {
   const other = await openTab(browser, false);
 
   try {
-    await openGroceries(tab);
-    await openGroceries(other);
+    await openGroceries(tab.page);
+    await openGroceries(other.page);
     const { page } = tab;
 
     await settle(tab);
@@ -559,7 +546,7 @@ async function groceries(browser: Browser) {
       await measure(tab, "check an item", async () => {
         await checkRow(page, "cucumber");
         // A checked grocery moves into its Store's folded "done" rows.
-        await rowFor(page, "cucumber").waitFor({ state: "detached" });
+        await rowFor(page, "cucumber", { visible: true }).waitFor({ state: "detached" });
       })
     );
 
@@ -568,14 +555,14 @@ async function groceries(browser: Browser) {
     results.push(
       await measure(tab, "add an item", async () => {
         await page.getByRole("button", { name: "Add", exact: true }).click();
-        await rowFor(page, ADDED).waitFor();
+        await rowFor(page, ADDED, { visible: true }).waitFor();
       })
     );
     await closePanel(page);
 
     results.push(
       await measure(tab, "open the edit panel", async () => {
-        await rowFor(page, "tomatoes")
+        await rowFor(page, "tomatoes", { visible: true })
           .getByRole("button", { name: /tomatoes/ })
           .click();
         await page.getByRole("dialog").waitFor();
@@ -586,7 +573,7 @@ async function groceries(browser: Browser) {
     results.push(
       await measure(tab, "realtime echo of another browser checking an item", async () => {
         await checkRow(other.page, "carrots");
-        await rowFor(page, "carrots").waitFor({ state: "detached" });
+        await rowFor(page, "carrots", { visible: true }).waitFor({ state: "detached" });
       })
     );
 

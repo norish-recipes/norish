@@ -5,8 +5,8 @@ import { WebSocket as RawSocket } from "ws";
 import { findNewestGroceryNamed } from "@norish/db/repositories/groceries";
 
 import type { Identity, RealtimeStack } from "./fixture";
+import { closePanel, rowFor } from "../harness/groceries";
 import { callTrpc, cookieHeader } from "../harness/trpc";
-import { waitForSocket } from "./fixture";
 
 const TRPC_JSON = { "content-type": "application/json" };
 
@@ -125,25 +125,13 @@ export function recordFrames(page: Page): FrameLog {
   return log;
 }
 
-/** Open `/groceries` and wait until the page's socket is connected. */
-export async function openGroceries(page: Page): Promise<void> {
-  await page.goto("/groceries");
-  await page.getByRole("button", { name: "Add Item" }).waitFor();
-  await waitForSocket(page, 1);
-}
-
 /** Add a grocery through the panel, the way a cook does, and wait for its row. */
 export async function addGrocery(page: Page, name: string): Promise<void> {
   await page.getByRole("button", { name: "Add Item" }).click();
   await page.getByPlaceholder("e.g., 2 lbs chicken breast").fill(name);
   await page.getByRole("button", { name: "Add", exact: true }).click();
   await rowFor(page, name).waitFor();
-  await page.getByRole("button", { name: "Close panel" }).click();
-  await page.getByRole("dialog").waitFor({ state: "hidden" });
-}
-
-export function rowFor(page: Page, name: string) {
-  return page.locator(`[data-grocery-name="${name}"]`).first();
+  await closePanel(page);
 }
 
 /**

@@ -21,18 +21,17 @@ import type { BrowserContext, Page, Response } from "@playwright/test";
 
 import type { RealtimeStack } from "./fixture";
 import type { HouseholdRow } from "./support";
+import { openGroceries, rowFor } from "../harness/groceries";
 import { dropSocket, expect, socketLedger, test, waitForSocket } from "./fixture";
 import {
   addGrocery,
   callMutation,
   callQuery,
-  openGroceries,
   rawSocket,
   readGrocery,
   readHousehold,
   recordFrames,
   revokeSessions,
-  rowFor,
   sessionHeaders,
   valkeyClientCount,
 } from "./support";
@@ -97,9 +96,11 @@ test.beforeAll(async ({ realtimeStack }) => {
   await delay(1_000);
 
   await openGroceries(pageA);
+  await waitForSocket(pageA, 1);
   contextB = await stack.newContext("b");
   pageB = await contextB.newPage();
   await openGroceries(pageB);
+  await waitForSocket(pageB, 1);
 });
 
 test.afterAll(async () => {
@@ -345,9 +346,11 @@ test("the server's Valkey connection count does not depend on how many browsers 
   try {
     for (let index = 0; index < 5; index += 1) {
       const context = await stack.newContext("b");
+      const page = await context.newPage();
 
       extra.push(context);
-      await openGroceries(await context.newPage());
+      await openGroceries(page);
+      await waitForSocket(page, 1);
     }
 
     expect(await settledValkeyClientCount()).toBe(withTwo);
