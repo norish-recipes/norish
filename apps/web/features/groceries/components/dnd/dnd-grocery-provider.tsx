@@ -5,7 +5,6 @@ import {
   DndContext,
   DragOverlay,
   KeyboardSensor,
-  MeasuringStrategy,
   PointerSensor,
   TouchSensor,
   useSensor,
@@ -94,11 +93,6 @@ export function DndGroceryProvider({
       <DndContext
         collisionDetection={collisionDetection}
         id={dndId}
-        measuring={{
-          droppable: {
-            strategy: MeasuringStrategy.Always,
-          },
-        }}
         sensors={sensors}
         onDragCancel={handleDragCancel}
         onDragEnd={handleDragEnd}
