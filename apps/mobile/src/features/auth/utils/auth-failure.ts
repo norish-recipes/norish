@@ -7,8 +7,7 @@ export function authFailure(
   refused: string,
   failed: string = refused
 ): Promise<string | null> {
-  return call.then(
-    ({ error }) => (error ? (error.message ?? refused) : null),
-    (thrown: unknown) => (thrown instanceof Error && thrown.message) || failed
-  );
+  return call
+    .then(({ error }) => (error ? (error.message ?? refused) : null))
+    .catch((thrown: unknown) => (thrown instanceof Error && thrown.message) || failed);
 }

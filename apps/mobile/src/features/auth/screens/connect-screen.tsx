@@ -63,8 +63,9 @@ export function ConnectScreen() {
       controller.abort();
     }, REACHABILITY_DEADLINE_MS);
 
-    await reachServer(normalizedBaseUrl, controller.signal).then(
-      (verdict) => {
+    // A separate catch, so a throw while navigating lands there too and the spinner still stops.
+    await reachServer(normalizedBaseUrl, controller.signal)
+      .then((verdict) => {
         if (verdict === "not-norish") {
           setErrorMessage(intl.formatMessage({ id: "auth.connect.errors.unreachable" }));
         } else if (verdict === "too-old") {
@@ -72,8 +73,8 @@ export function ConnectScreen() {
         } else {
           router.replace("/login");
         }
-      },
-      (error: unknown) => {
+      })
+      .catch((error: unknown) => {
         if (error instanceof Error && error.name === "AbortError") {
           setErrorMessage(intl.formatMessage({ id: "auth.connect.errors.timeout" }));
         } else if (error instanceof Error) {
@@ -86,8 +87,7 @@ export function ConnectScreen() {
         } else {
           setErrorMessage(intl.formatMessage({ id: "auth.connect.errors.unreachable" }));
         }
-      }
-    );
+      });
 
     clearTimeout(timeout);
     setIsConnecting(false);
