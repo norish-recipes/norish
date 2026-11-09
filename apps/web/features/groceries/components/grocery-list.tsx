@@ -10,12 +10,15 @@ import { useTranslations } from "next-intl";
 import type { GroceryDto, RecurringGroceryDto, StoreDto } from "@norish/shared/contracts";
 import { useUnitsQuery } from "@norish/shared-react/config";
 import { useFileGroceryName, useStoreAisles } from "@norish/shared-react/groceries";
+import type { GroceryGroup } from "@norish/shared/lib/grocery-grouping";
 import { groupGroceriesByIngredient } from "@norish/shared/lib/grocery-grouping";
 import { cssEmptyStateGlow } from "@norish/web/config/css-tokens";
 
 import { DndGroceryProvider, DndGroupedGroceryProvider } from "./dnd";
 import { GroupedStoreSection } from "./grouped-store-section";
 import { StoreSection } from "./store-section";
+
+const NO_GROUPS: GroceryGroup[] = [];
 
 interface GroceryListProps {
   groceries: GroceryDto[];
@@ -75,8 +78,8 @@ function GroceryListContent({
   const { aisleFor } = useStoreAisles();
   const fileGroceryName = useFileGroceryName();
 
-  // Group groceries by storeId
-  const groupedGroceries = useMemo(() => {
+  // Group groceries by storeId; a Store whose groceries did not change keeps its array.
+  const builtByStore = useMemo(() => {
     const groups: Map<string | null, GroceryDto[]> = new Map();
 
     // Initialize with null for unsorted
@@ -101,6 +104,8 @@ function GroceryListContent({
 
     return groups;
   }, [groceries, stores]);
+  const sharedByStore = useStructuralSharing([...builtByStore]);
+  const groupedGroceries = useMemo(() => new Map(sharedByStore), [sharedByStore]);
 
   // Get unsorted groceries
   const unsortedGroceries = groupedGroceries.get(null) ?? [];
@@ -131,7 +136,10 @@ function GroceryListContent({
   // A group whose groceries did not change keeps its object, so its row does
   // not re-render for a change to another.
   const sharedGroupEntries = useStructuralSharing(builtGroups ? [...builtGroups] : null);
-  const ingredientGroups = sharedGroupEntries ? new Map(sharedGroupEntries) : null;
+  const ingredientGroups = useMemo(
+    () => (sharedGroupEntries ? new Map(sharedGroupEntries) : null),
+    [sharedGroupEntries]
+  );
 
   // Check if there are any groceries at all
   const hasGroceries = groceries.length > 0;
@@ -184,16 +192,15 @@ function GroceryListContent({
               transition={{ type: "spring", stiffness: 500, damping: 35 }}
             >
               <GroupedStoreSection
-                allGroups={ingredientGroups}
                 groceries={unsortedGroceries}
-                groups={ingredientGroups.get(null) ?? []}
+                groups={ingredientGroups.get(null) ?? NO_GROUPS}
                 recurringGroceries={recurringGroceries}
                 store={null}
-                onClearAll={() => onClearAllInStore?.(null, tStore("unsorted"))}
+                onClearAllInStore={onClearAllInStore}
                 onDelete={onDelete}
-                onDeleteDone={() => onDeleteDoneInStore?.(null)}
+                onDeleteDoneInStore={onDeleteDoneInStore}
                 onEdit={onEdit}
-                onMarkAllDone={() => onMarkAllDoneInStore?.(null)}
+                onMarkAllDoneInStore={onMarkAllDoneInStore}
                 onToggle={onToggle}
                 onToggleGroup={onToggleGroup}
               />
@@ -203,7 +210,7 @@ function GroceryListContent({
           {/* Store sections */}
           {sortedStores.map((store) => {
             const storeGroceries = groupedGroceries.get(store.id) ?? [];
-            const storeGroups = ingredientGroups.get(store.id) ?? [];
+            const storeGroups = ingredientGroups.get(store.id) ?? NO_GROUPS;
 
             return (
               <motion.div
@@ -215,16 +222,15 @@ function GroceryListContent({
                 transition={{ type: "spring", stiffness: 500, damping: 35 }}
               >
                 <GroupedStoreSection
-                  allGroups={ingredientGroups}
                   groceries={storeGroceries}
                   groups={storeGroups}
                   recurringGroceries={recurringGroceries}
                   store={store}
-                  onClearAll={() => onClearAllInStore?.(store.id, store.name)}
+                  onClearAllInStore={onClearAllInStore}
                   onDelete={onDelete}
-                  onDeleteDone={() => onDeleteDoneInStore?.(store.id)}
+                  onDeleteDoneInStore={onDeleteDoneInStore}
                   onEdit={onEdit}
-                  onMarkAllDone={() => onMarkAllDoneInStore?.(store.id)}
+                  onMarkAllDoneInStore={onMarkAllDoneInStore}
                   onToggle={onToggle}
                   onToggleGroup={onToggleGroup}
                 />

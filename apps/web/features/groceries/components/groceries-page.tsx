@@ -83,6 +83,9 @@ export function GroceriesPage() {
   const handleDelete = (id: string) => {
     deleteGroceries([id]);
   };
+  const handleClearAllInStore = (storeId: string | null, name: string) => {
+    setClearScope({ kind: "store", storeId, name });
+  };
   const groceryGrouping = groupSimilarIngredients ? "grouped" : "flat";
 
   if (isLoading) {
@@ -116,7 +119,7 @@ export function GroceriesPage() {
               groupSimilarIngredients={groupSimilarIngredients}
               recurringGroceries={recurringGroceries}
               stores={stores}
-              onClearAllInStore={(storeId, name) => setClearScope({ kind: "store", storeId, name })}
+              onClearAllInStore={handleClearAllInStore}
               onDelete={handleDelete}
               onDeleteDoneInStore={deleteDoneInStore}
               onEdit={handleEdit}

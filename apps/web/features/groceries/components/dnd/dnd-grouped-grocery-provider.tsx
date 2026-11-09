@@ -57,13 +57,12 @@ export function DndGroupedGroceryProvider({
     activeGroupKey,
     activeGroup,
     overContainerId,
-    groupItems,
+    arrangement,
     collisionDetection,
     handleDragStart,
     handleDragOver,
     handleDragEnd,
     handleDragCancel,
-    getGroupKeysForContainer,
   } = useGroupedGroceryDnd({
     stores,
     groupedGroceries,
@@ -73,14 +72,8 @@ export function DndGroupedGroceryProvider({
   });
 
   const contextValue = useMemo<DndGroupedGroceryContextValue>(
-    () => ({
-      activeGroupKey,
-      activeGroup,
-      overContainerId,
-      groupItems,
-      getGroupKeysForContainer,
-    }),
-    [activeGroupKey, activeGroup, overContainerId, groupItems, getGroupKeysForContainer]
+    () => ({ activeGroupKey, overContainerId, arrangement }),
+    [activeGroupKey, overContainerId, arrangement]
   );
 
   return (

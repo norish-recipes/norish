@@ -10,7 +10,6 @@ import {
 } from "@dnd-kit/sortable";
 
 import type { ContainerId } from "./types";
-import { useDndGroupedGroceryContext } from "./dnd-grouped-grocery-provider";
 import { UNSORTED_CONTAINER } from "./types";
 
 // Always animate layout changes, including after drag
@@ -19,6 +18,11 @@ const animateLayoutChanges: AnimateLayoutChanges = (args) =>
 
 interface SortableGroupedStoreContainerProps {
   storeId: string | null; // null = unsorted
+  /** The group keys in the Store's own unfiled area, in the order the drag has them. */
+  itemIds: string[];
+  /** Whether a drag is on, and which container it is over. */
+  activeId: string | null;
+  overContainerId: string | null;
   /** The heading bar at the top of the card; part of the droppable, so a collapsed or empty Store still takes a drop. */
   header: ReactNode;
   /** The groups under the heading, or null where the card is its heading bar alone. */
@@ -32,15 +36,13 @@ interface SortableGroupedStoreContainerProps {
  */
 export function SortableGroupedStoreContainer({
   storeId,
+  itemIds: groupKeys,
+  activeId,
+  overContainerId,
   header,
   children,
 }: SortableGroupedStoreContainerProps) {
   const containerId: ContainerId = storeId ?? UNSORTED_CONTAINER;
-
-  // Get group keys from DnD context - this updates during drag
-  const { getGroupKeysForContainer, overContainerId, activeGroupKey } =
-    useDndGroupedGroceryContext();
-  const groupKeys = getGroupKeysForContainer(containerId);
 
   // The whole section, heading included, is the drop target
   const { active, over, setNodeRef, transition } = useSortable({
@@ -60,7 +62,7 @@ export function SortableGroupedStoreContainer({
 
   // Show visual indicator when dragging over this container
   const showDropIndicator =
-    activeGroupKey !== null && (overContainerId === containerId || isOverContainer);
+    activeId !== null && (overContainerId === containerId || isOverContainer);
   const hasRows = children !== null;
 
   return (

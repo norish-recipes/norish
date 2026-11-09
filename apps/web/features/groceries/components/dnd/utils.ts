@@ -142,6 +142,24 @@ export function buildItemsState(
   return items;
 }
 
+/** One Store's containers and the groups in each (not all done), each in the aisle it was grouped under. */
+export function storeGroupItems(
+  storeId: string | null,
+  groups: readonly GroceryGroup[],
+  stores: StoreDto[]
+): GroupItemsState {
+  const items: GroupItemsState = Object.fromEntries(
+    storeContainers(storeId, stores).map((containerId) => [containerId, []])
+  );
+
+  for (const group of groups) {
+    if (group.allDone) continue;
+    (items[containerFor(storeId, group.aisleId, stores)] ??= []).push(group.groupKey);
+  }
+
+  return items;
+}
+
 /** Build initial group items state (groups not all done), each group in the aisle it was grouped under */
 export function buildGroupItemsState(
   groupedGroceries: Map<string | null, GroceryGroup[]>,
@@ -149,15 +167,8 @@ export function buildGroupItemsState(
 ): GroupItemsState {
   const items = emptyContainers(stores);
 
-  // Add group keys to appropriate containers
   for (const [storeId, groups] of groupedGroceries) {
-    for (const group of groups) {
-      // Only include groups that are not all done
-      if (group.allDone) continue;
-      const containerId = containerFor(storeId, group.aisleId, stores);
-
-      (items[containerId] ??= []).push(group.groupKey);
-    }
+    Object.assign(items, storeGroupItems(storeId, groups, stores));
   }
 
   return items;

@@ -1,6 +1,7 @@
 import type {
   ContainerId,
   DndGroupedGroceryProviderProps,
+  GroupArrangement,
   GroupItemsState,
 } from "@/features/groceries/components/dnd/types";
 import type {
@@ -25,7 +26,7 @@ interface UseGroupedGroceryDndResult {
   activeGroupKey: string | null;
   activeGroup: GroceryGroup | null;
   overContainerId: ContainerId | null;
-  groupItems: GroupItemsState;
+  arrangement: GroupArrangement | null;
 
   // Collision detection
   collisionDetection: CollisionDetection;
@@ -35,9 +36,6 @@ interface UseGroupedGroceryDndResult {
   handleDragOver: (event: DragOverEvent) => void;
   handleDragEnd: (event: DragEndEvent) => void;
   handleDragCancel: () => void;
-
-  // Helpers
-  getGroupKeysForContainer: (containerId: ContainerId) => string[];
 }
 
 export function useGroupedGroceryDnd({
@@ -55,6 +53,10 @@ export function useGroupedGroceryDnd({
   const [groupItems, setGroupItems] = useState<GroupItemsState>(() =>
     buildGroupItemsState(groupedGroceries, stores)
   );
+
+  // From a drag's start until the list it was dropped on comes back, the
+  // Stores show groupItems; otherwise each reads its own groups.
+  const [arranged, setArranged] = useState(false);
 
   // Clone of groupItems at drag start - used for cancel recovery
   const clonedGroupItemsRef = useRef<GroupItemsState | null>(null);
@@ -87,6 +89,7 @@ export function useGroupedGroceryDnd({
     (groupedGroceries !== prevSource.groupedGroceries || stores !== prevSource.stores)
   ) {
     setPrevSource(source);
+    if (arranged) setArranged(false);
     const newGroupItems = buildGroupItemsState(groupedGroceries, stores);
     const itemsChanged =
       JSON.stringify(Object.keys(newGroupItems).sort()) !==
@@ -126,11 +129,9 @@ export function useGroupedGroceryDnd({
     return groupMap.get(activeGroupKey) ?? null;
   }, [activeGroupKey, groupMap]);
 
-  const getGroupKeysForContainer = useCallback(
-    (containerId: ContainerId): string[] => {
-      return groupItems[containerId] ?? [];
-    },
-    [groupItems]
+  const arrangement = useMemo<GroupArrangement | null>(
+    () => (arranged ? { items: groupItems, groups: groupMap } : null),
+    [arranged, groupItems, groupMap]
   );
 
   const findContainer = useCallback(
@@ -151,6 +152,7 @@ export function useGroupedGroceryDnd({
       const groupKey = active.id as string;
 
       setActiveGroupKey(groupKey);
+      setArranged(true);
       // Clone current groupItems for cancel recovery
       clonedGroupItemsRef.current = JSON.parse(JSON.stringify(groupItems));
 
@@ -248,6 +250,7 @@ export function useGroupedGroceryDnd({
 
       if (!currentContainer) {
         setActiveGroupKey(null);
+        setArranged(false);
         setOverContainerId(null);
         clonedGroupItemsRef.current = null;
 
@@ -262,6 +265,7 @@ export function useGroupedGroceryDnd({
           setGroupItems(originalGroupItems);
         }
         setActiveGroupKey(null);
+        setArranged(false);
         setOverContainerId(null);
         clonedGroupItemsRef.current = null;
 
@@ -306,6 +310,7 @@ export function useGroupedGroceryDnd({
       setGroupItems(clonedGroupItemsRef.current);
     }
     setActiveGroupKey(null);
+    setArranged(false);
     setOverContainerId(null);
     clonedGroupItemsRef.current = null;
   }, []);
@@ -314,12 +319,11 @@ export function useGroupedGroceryDnd({
     activeGroupKey,
     activeGroup,
     overContainerId,
-    groupItems,
+    arrangement,
     collisionDetection,
     handleDragStart,
     handleDragOver,
     handleDragEnd,
     handleDragCancel,
-    getGroupKeysForContainer,
   };
 }

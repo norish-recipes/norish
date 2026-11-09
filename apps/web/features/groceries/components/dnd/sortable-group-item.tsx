@@ -1,21 +1,30 @@
 "use client";
 
+import { memo } from "react";
 import { useSortable } from "@dnd-kit/sortable";
 import { CSS } from "@dnd-kit/utilities";
 import { Bars3Icon } from "@heroicons/react/16/solid";
 
 import type { GroceryGroup } from "@norish/shared/lib/grocery-grouping";
 
-import type { GroupDragHandle } from "./types";
+import type { GroupRow } from "./types";
 import { ROW_CLASS_NAME } from "./sortable-grocery-item";
 
 interface SortableGroupItemProps {
   group: GroceryGroup;
-  children: GroupDragHandle;
+  isFirst: boolean;
+  isLast: boolean;
+  /** One function for every row of a Store, so a row whose group is unchanged does not render. */
+  row: GroupRow;
 }
 
 /** Wraps a grouped grocery item with dnd-kit sortable. Shows ghost placeholder while dragging. */
-export function SortableGroupItem({ group, children }: SortableGroupItemProps) {
+export const SortableGroupItem = memo(function SortableGroupItem({
+  group,
+  isFirst,
+  isLast,
+  row,
+}: SortableGroupItemProps) {
   const {
     setNodeRef,
     setActivatorNodeRef,
@@ -57,8 +66,7 @@ export function SortableGroupItem({ group, children }: SortableGroupItemProps) {
       style={style}
       onTouchStart={(event) => listeners?.onTouchStart?.(event)}
     >
-      {/* The actual grouped grocery item content */}
-      {children({ dragHandle })}
+      {row(group, { dragHandle, isFirst, isLast })}
     </div>
   );
-}
+});
