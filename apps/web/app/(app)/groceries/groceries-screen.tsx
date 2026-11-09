@@ -3,17 +3,17 @@
 import { usePathname } from "next/navigation";
 import { PantryView } from "@/components/groceries";
 import { usePrefersReducedMotion } from "@/hooks/use-prefers-reduced-motion";
+import { useQuery } from "@tanstack/react-query";
 import { AnimatePresence, motion } from "motion/react";
 
 import {
   useGroceriesSubscription,
-  usePantryQuery,
-  usePantrySuggestions,
   useStoreAislesSubscription,
   useStorePricesSubscription,
   useStoresSubscription,
 } from "@norish/shared-react/groceries";
 import { useConnectivity } from "@norish/shared-react/offline/react";
+import { useTRPC } from "@norish/shared-react/trpc";
 
 import type { GroceriesView } from "./components/groceries-header";
 import AddGroceryButton from "./components/add-grocery-button";
@@ -32,9 +32,15 @@ export function GroceriesScreen() {
   const view: GroceriesView = usePathname()?.startsWith("/groceries/pantry") ? "pantry" : "list";
   const offset = usePrefersReducedMotion() ? 0 : view === "pantry" ? SLIDE_PX : -SLIDE_PX;
   const { isOffline } = useConnectivity();
+  const trpc = useTRPC();
 
-  usePantryQuery();
-  usePantrySuggestions(!isOffline);
+  // Observed so they stay cached and current, but a change to them never renders the screen.
+  useQuery({ ...trpc.pantry.list.queryOptions(), notifyOnChangeProps: [] });
+  useQuery({
+    ...trpc.pantry.suggestions.queryOptions(),
+    enabled: !isOffline,
+    notifyOnChangeProps: [],
+  });
   // The list's realtime, kept open on both views; the Offline Cache keeps its reads (gcTime).
   useGroceriesSubscription();
   useStoresSubscription();
