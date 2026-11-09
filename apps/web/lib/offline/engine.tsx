@@ -75,9 +75,8 @@ function noteAnswer({ query, ...event }: QueryCacheNotifyEvent): void {
 }
 
 /**
- * The server's unchanged copy under the stale time is current. Until stale, so is one it answered
- * this page load that a mounted subscription keeps current, or that is reference data. Any other
- * may predate a change made elsewhere.
+ * The server's unchanged copy under the stale time is current, and until stale so is one it answered
+ * that a mounted subscription keeps current. Any other may predate a change made elsewhere.
  */
 const refetchOnMount = (query: Query) => {
   // Never on the server: a seeded query marked as refetching renders a spinner there, which the
@@ -91,13 +90,7 @@ const refetchOnMount = (query: Query) => {
     return false;
   }
 
-  // A reader's options land on its query. A stale time longer than the default marks reference data.
-  const staleTime = "staleTime" in query.options ? query.options.staleTime : undefined;
-  const isReference = typeof staleTime === "number" && staleTime > QUERY_STALE_TIME_MS;
-
-  return answered.has(query) && (isReference || isKeptCurrent(query.queryHash))
-    ? true
-    : ("always" as const);
+  return answered.has(query) && isKeptCurrent(query.queryKey) ? true : ("always" as const);
 };
 
 function calendarRanges(): CalendarRange[] {

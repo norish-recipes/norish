@@ -2,6 +2,7 @@ export type { EnabledLocale, LocaleConfigResult, TimerKeywordsConfig, UploadLimi
 
 export { normalizeLocaleConfig } from "./normalize-locale-config";
 export { useCategoriesQuery } from "./use-categories-query";
+export { useConfigSubscription } from "./use-config-subscription";
 export { useCuisinesQuery } from "./use-cuisines-query";
 export { useIngredientsSubscription } from "./use-ingredients-subscription";
 export { useIngredientWordsQuery } from "./use-ingredient-words-query";

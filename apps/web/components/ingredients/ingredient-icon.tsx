@@ -58,8 +58,6 @@ export function useIngredientIcons(
     ...trpc.ingredients.icons.queryOptions({ ids: wanted }),
     enabled: wanted.length > 0,
     placeholderData: keepPreviousData,
-    // Reference data: the catalogue subscription marks it stale on every change.
-    staleTime: 60 * 60 * 1000,
   });
 
   return data ?? NO_ICONS;

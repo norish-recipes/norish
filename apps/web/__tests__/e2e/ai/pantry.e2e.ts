@@ -240,7 +240,7 @@ test("a view switch, and the Pantry and back, read nothing realtime keeps curren
     if (!pathname.includes("/api/trpc/")) return;
     const procedures = pathname.slice(pathname.lastIndexOf("/") + 1).split(",");
 
-    // Reference data, which once answered goes by its own stale time.
+    // Reference data, which the config subscription keeps current too.
     reads.push(
       ...procedures.filter((read) => keptCurrent.includes(read) || read.startsWith("config."))
     );

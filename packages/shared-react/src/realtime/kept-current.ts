@@ -1,9 +1,9 @@
 import type { QueryKey } from "@tanstack/react-query";
 import { useEffect } from "react";
-import { hashKey } from "@tanstack/react-query";
+import { hashKey, partialMatchKey } from "@tanstack/react-query";
 
-/** How many mounted subscriptions keep each read current, by query hash. */
-const keepers = new Map<string, number>();
+/** The keys mounted subscriptions keep current, and how many keep each, by query hash. */
+const keepers = new Map<string, { queryKey: QueryKey; count: number }>();
 
 /**
  * While the caller is mounted, its realtime subscriptions keep these reads current: Resume and
@@ -13,22 +13,29 @@ export function useKeepsCurrent(queryKeys: QueryKey[]): void {
   const hashes = queryKeys.map((queryKey) => hashKey(queryKey)).join("\n");
 
   useEffect(() => {
+    if (hashes === "") return;
     const kept = hashes.split("\n");
 
-    for (const hash of kept) keepers.set(hash, (keepers.get(hash) ?? 0) + 1);
+    for (const hash of kept) {
+      // A query hash is the key as JSON.
+      const keeper = keepers.get(hash) ?? { queryKey: JSON.parse(hash) as QueryKey, count: 0 };
+
+      keeper.count += 1;
+      keepers.set(hash, keeper);
+    }
 
     return () => {
       for (const hash of kept) {
-        const left = (keepers.get(hash) ?? 1) - 1;
+        const keeper = keepers.get(hash);
 
-        if (left > 0) keepers.set(hash, left);
-        else keepers.delete(hash);
+        if (keeper) keeper.count -= 1;
+        if (keeper?.count === 0) keepers.delete(hash);
       }
     };
   }, [hashes]);
 }
 
-/** Whether a mounted subscription keeps this read current right now. */
-export function isKeptCurrent(queryHash: string): boolean {
-  return keepers.has(queryHash);
+/** Whether a mounted subscription keeps this read current, by its own key or one it starts with. */
+export function isKeptCurrent(queryKey: QueryKey): boolean {
+  return [...keepers.values()].some((keeper) => partialMatchKey(queryKey, keeper.queryKey));
 }

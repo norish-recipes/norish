@@ -3,7 +3,7 @@ import { useQueryClient } from "@tanstack/react-query";
 import type { PayloadOf } from "@norish/shared/contracts/realtime/catalogue";
 import type { IngredientsRealtime } from "@norish/shared/contracts/realtime/ingredients";
 
-import { useRealtimeSubscription } from "../realtime";
+import { useKeepsCurrent, useRealtimeSubscription } from "../realtime";
 import { useTRPC } from "../trpc";
 
 /**
@@ -23,6 +23,13 @@ export function useIngredientsSubscription() {
     trpc.stores.linkFor.queryKey(),
   ];
 
+  // Every change to these is announced. Not the whole path: `ingredients.uses` also follows
+  // recipes, groceries and the Pantry, whose edits announce nothing here.
+  useKeepsCurrent([
+    trpc.ingredients.icons.pathKey(),
+    trpc.ingredients.nutrition.pathKey(),
+    trpc.ingredients.nutritionFor.pathKey(),
+  ]);
   useRealtimeSubscription<PayloadOf<IngredientsRealtime, "changed">>(trpc.ingredients.onChanged, {
     lagQueryKeys: derived,
     onEvent: () => {

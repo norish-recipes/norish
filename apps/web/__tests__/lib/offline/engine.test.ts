@@ -106,27 +106,22 @@ describe("the web offline engine", () => {
     expect(await fetchesOnOpen(read)).toBe(1);
   });
 
-  it("lets reference data the server answered wait out its own stale time", async () => {
+  it("lets every read under a key a subscription keeps wait for its stale time, and no other", async () => {
     const { queryClient, trpc, fetchesOnOpen } = openEngine();
-    const hour = 60 * 60 * 1000;
+    const icons = [...trpc.ingredients.icons.queryKey({ ids: ["i1"] })];
+    const uses = [...trpc.ingredients.uses.queryKey({ ingredientId: "i1" })];
     const units = [...trpc.config.units.queryKey()];
-    const tags = [...trpc.config.tags.queryKey()];
-    const admin = [...trpc.admin.getYtDlpVersion.queryKey()];
 
-    // Restored from the Offline Cache: read once this page load, whatever its stale time.
-    queryClient.setQueryData(units, {});
-    expect(await fetchesOnOpen(units, hour)).toBe(1);
-    expect(await fetchesOnOpen(units, hour)).toBe(0);
+    for (const queryKey of [icons, uses, units]) {
+      await queryClient.fetchQuery({ queryKey, queryFn: async () => ({}) });
+    }
+    const shell = renderHook(() => useKeepsCurrent([trpc.ingredients.icons.pathKey()]));
 
-    // Answered too, but no longer-lived than the default: read on every mount, as before.
-    await queryClient.fetchQuery({ queryKey: tags, queryFn: async () => ({ tags: [] }) });
-    await queryClient.fetchQuery({ queryKey: admin, queryFn: async () => ({}) });
-    expect(await fetchesOnOpen(tags)).toBe(1);
-    expect(await fetchesOnOpen(admin, 60_000)).toBe(1);
-
-    // Marked stale, as an admin's edit or a catalogue event marks it.
-    await queryClient.invalidateQueries({ queryKey: units, refetchType: "none" });
-    expect(await fetchesOnOpen(units, hour)).toBe(1);
+    expect(await fetchesOnOpen(icons)).toBe(0);
+    expect(await fetchesOnOpen(uses)).toBe(1);
+    // A long stale time alone keeps nothing current: an administrator's edit would go unseen.
+    expect(await fetchesOnOpen(units, 60 * 60 * 1000)).toBe(1);
+    shell.unmount();
   });
 
   it("resets the service worker's image and page caches with the read copy", async () => {
