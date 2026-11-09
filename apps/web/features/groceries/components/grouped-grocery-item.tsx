@@ -6,6 +6,7 @@ import { IngredientIcon } from "@/components/ingredients/ingredient-icon";
 import { RoundCheckbox } from "@/components/round-checkbox";
 import { RecurrencePill } from "@/features/groceries/components/recurrence-pill";
 import { useUnitFormatter } from "@/hooks/use-unit-formatter";
+import { replaceEqualDeep } from "@tanstack/react-query";
 import { AnimatePresence, motion } from "motion/react";
 import { useTranslations } from "next-intl";
 
@@ -295,4 +296,32 @@ function SourceItem({ source, recurringGroceries, onToggle, onEdit }: SourceItem
   );
 }
 
-export const GroupedGroceryItem = memo(GroupedGroceryItemComponent);
+/** A group as its row draws it: without its lines' sort order and version, which no row shows. */
+function asDrawn(group: GroceryGroup): GroceryGroup {
+  return {
+    ...group,
+    sources: group.sources.map((source) => ({
+      ...source,
+      grocery: { ...source.grocery, sortOrder: 0, version: 0 },
+    })),
+  };
+}
+
+/**
+ * A create moves every open line below it down and the server bumps their versions, so the row
+ * skips a group that differs in nothing else; its actions read versions from the cache.
+ */
+function drawsTheSame(prev: GroupedGroceryItemProps, next: GroupedGroceryItemProps) {
+  const { group: before, ...prevRest } = prev;
+  const { group: after, ...nextRest } = next;
+  const keys = Object.keys(nextRest) as Array<keyof typeof nextRest>;
+  const drawn = asDrawn(before);
+
+  return (
+    keys.length === Object.keys(prevRest).length &&
+    keys.every((key) => Object.is(prevRest[key], nextRest[key])) &&
+    (before === after || replaceEqualDeep(drawn, asDrawn(after)) === drawn)
+  );
+}
+
+export const GroupedGroceryItem = memo(GroupedGroceryItemComponent, drawsTheSame);
