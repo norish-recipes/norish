@@ -2,14 +2,14 @@
 
 import type { PlannedItemDisplay } from "@/components/calendar/mobile/types";
 import type { DragEndEvent, DragOverEvent, DragStartEvent } from "@dnd-kit/core";
-import { useCallback, useEffect, useId, useLayoutEffect, useMemo, useRef, useState } from "react";
+import { useCallback, useEffect, useLayoutEffect, useMemo, useRef, useState } from "react";
 import { useCalendarContext } from "@/app/(app)/calendar/context";
 import { SLOT_ORDER } from "@/components/calendar/mobile/types";
+import { DndContext } from "@/components/dnd-context";
 import { useReaderToday } from "@/components/reader-today";
 import { CalendarSkeletonDesktop } from "@/components/skeleton/calendar-skeleton";
 import { useViewport } from "@/hooks/use-viewport";
 import {
-  DndContext,
   DragOverlay,
   PointerSensor,
   pointerWithin,
@@ -277,8 +277,6 @@ export function DesktopTimeline({ onAddItem, onNoteClick, onRecipeClick }: Deskt
     },
   });
 
-  // dnd-kit numbers its aria-describedby from a counter the server and client don't share.
-  const dndId = useId();
   const sensors = useSensors(pointerSensor);
 
   const _slotLabels: Record<Slot, string> = useMemo(
@@ -393,7 +391,6 @@ export function DesktopTimeline({ onAddItem, onNoteClick, onRecipeClick }: Deskt
     <div className="fade-in">
       <DndContext
         collisionDetection={collisionDetection}
-        id={dndId}
         sensors={sensors}
         onDragEnd={handleDragEnd}
         onDragOver={handleDragOver}

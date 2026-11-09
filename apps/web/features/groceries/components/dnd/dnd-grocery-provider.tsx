@@ -1,8 +1,8 @@
 "use client";
 
-import { createContext, use, useId, useMemo } from "react";
+import { createContext, use, useMemo } from "react";
+import { DndContext } from "@/components/dnd-context";
 import {
-  DndContext,
   DragOverlay,
   KeyboardSensor,
   MeasuringStrategy,
@@ -37,8 +37,6 @@ export function DndGroceryProvider({
   onFileGroceryName,
   getRecipeNameForGrocery,
 }: DndGroceryProviderProps) {
-  // dnd-kit numbers its aria-describedby from a counter the server and client don't share.
-  const dndId = useId();
   const sensors = useSensors(
     useSensor(PointerSensor, {
       activationConstraint: {
@@ -94,7 +92,6 @@ export function DndGroceryProvider({
     <DndGroceryContext value={contextValue}>
       <DndContext
         collisionDetection={collisionDetection}
-        id={dndId}
         measuring={{
           droppable: {
             strategy: MeasuringStrategy.Always,
