@@ -105,7 +105,7 @@ Code shape: 01 moved or deleted none of the counted files (its moves are config,
 
 ### After the pilot
 
-Taken by 07 at e4724ee83, as measured, and again after 07's fixes at 37504a285 (5c74a46a9 only reformats). Each record printed byte-identical output twice. [`baselines/3-after-pilot.txt`](../baselines/3-after-pilot.txt) holds the final one; 3b6cf0947 holds the as-measured one. The page loads are the second of two 15-run sets on a fresh production build each, started at a load average of 3.2 and 2.7.
+Taken by 07 at e4724ee83, as measured, and again after 07's fixes at 37504a285 (5c74a46a9 only reformats). The fixes after 07's review (1a2b161f2 to 33f085b09) weren't re-measured. Each record printed byte-identical output twice. [`baselines/3-after-pilot.txt`](../baselines/3-after-pilot.txt) holds the final one; 3b6cf0947 holds the as-measured one. The page loads are the second of two 15-run sets on a fresh production build each, started at a load average of 3.2 and 2.7.
 
 The setup's paths, moved to where groceries lives now. Web: `features/groceries/` and the route files in `app/(app)/groceries/`. It leaves out what other features render, `components/round-checkbox.tsx` (112 lines) and `components/ingredients/on-the-list-mark.tsx` (17), and `app/(app)/shell-subscriptions.tsx`, which mounts the Pantry's subscription with the shell's others. Mobile has no groceries files: the smoke screen imports `@norish/shared-react/groceries` itself. shared-react: `src/groceries/`. Tests: the `*.test.*` files and `test-utils.tsx` in those folders, 19 in web and 12 in shared-react. No binding file is left: nothing calls a groceries, stores or Pantry factory, or `createUseRecurrenceDetection`.
 

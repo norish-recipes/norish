@@ -10,8 +10,10 @@ Done at a06b3a4ec. Measured as-is first (3b6cf0947), then fixed what rendered wi
 
 Left open: the icons context renders all 41 icons when one food joins the list (the recipes migration shares the component); a changed Store renders its unchanged aisles' containers and headings; the ungrouped list and By Recipe keep the old prop shape, and weren't measured; the 41 KB less JS since Baseline 2 isn't traced. The Add panel's link lookup now waits for typing to stop from the first name typed, like every later one. The groceries E2E set, `reorder-and-swipe` and `grocery-aisles` above all, runs after the whole ticket set.
 
+The fixes after the review (1a2b161f2 to 33f085b09) weren't re-measured, so 03's after numbers and remaining-render list describe 37504a285; they close two of the open items above, the unchanged aisles' renders and the flat list's prop shape.
+
 - [x] The after numbers sit next to both baselines under `## Comments` in 03: per-action renders, first paint, downloaded JS, code shape.
-- [x] Each remaining re-render per action is listed with the on-screen change that causes it.
+- [ ] Each remaining re-render per action is listed with the on-screen change that causes it.
 - [x] First paint of `/groceries` is no worse than the baseline.
 - [x] The spec is amended with anything the pilot taught, or says it held.
 - [x] `apps/docs/docs/release-notes/0.27.0-beta.md` has the one line.
