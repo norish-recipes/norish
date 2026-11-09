@@ -4,7 +4,8 @@ import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 
 import "@testing-library/jest-dom";
 
-import { OfflineCacheController, offlineEngine } from "@/lib/offline/engine";
+import { offlineEngine } from "@/lib/offline/engine";
+import { OfflineCacheController } from "@/lib/offline/offline-cache-controller";
 
 import type { OutboxEntry } from "@norish/shared-react/offline";
 

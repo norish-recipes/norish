@@ -15,7 +15,7 @@ import { PermissionsProvider } from "@/context/permissions-context";
 import { RecipesContextProvider } from "@/context/recipes-context";
 import { RecipesFiltersProvider } from "@/context/recipes-filters-context";
 import { UserProvider } from "@/context/user-context";
-import { OfflineCacheController } from "@/lib/offline/engine";
+import { OfflineCacheController } from "@/lib/offline/offline-cache-controller";
 
 import type { User } from "@norish/shared/contracts";
 import type { PersistedRecipeFilters } from "@norish/shared/contracts/filter-contract";

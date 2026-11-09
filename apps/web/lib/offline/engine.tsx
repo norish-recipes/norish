@@ -1,7 +1,7 @@
 "use client";
 
-// The web client's offline wiring (ADR-0001): the shared engine over IndexedDB, its connectivity
-// hints and controller, plus what only web has: the QuerySeed first frame and the image cache.
+// The web client's offline wiring (ADR-0001): the shared engine over IndexedDB and its connectivity
+// hints, plus what only web has: the QuerySeed first frame and the image cache.
 import type {
   DehydratedState,
   Query,
@@ -10,7 +10,6 @@ import type {
 } from "@tanstack/react-query";
 import type { ReactNode } from "react";
 import { useSyncExternalStore } from "react";
-import { useUserContext } from "@/context/user-context";
 import { isOfflineForced, subscribeOfflineForced } from "@/lib/connectivity/forced-offline";
 import { createIdbStorage } from "@/lib/offline/idb-storage";
 import { warmPrimaryImages } from "@/lib/offline/warm-images";
@@ -27,14 +26,9 @@ import {
   HEALTH_PROBE_PATH,
   QUERY_STALE_TIME_MS,
 } from "@norish/shared-react/offline";
-import {
-  OfflineController,
-  ConnectivityProvider as SharedConnectivityProvider,
-  useConnectivity,
-} from "@norish/shared-react/offline/react";
+import { ConnectivityProvider as SharedConnectivityProvider } from "@norish/shared-react/offline/react";
 import { isKeptCurrent } from "@norish/shared-react/realtime";
-import { useConnectionStatus, useTRPC, useTRPCClient } from "@norish/shared-react/trpc";
-import { getSession } from "@norish/shared/lib/auth/client";
+import { useConnectionStatus } from "@norish/shared-react/trpc";
 import { addBasePath } from "@norish/shared/lib/base-path";
 import { dateKey, getInitialDateRange } from "@norish/shared/lib/helpers";
 import { APP_VERSION } from "@norish/web/config/site";
@@ -175,39 +169,5 @@ export function ConnectivityProvider({ children }: { children: ReactNode }) {
     >
       {children}
     </SharedConnectivityProvider>
-  );
-}
-
-const getSessionUserId = () => getSession().then((session) => session?.data?.user?.id ?? null);
-
-/** The shared offline controller over the web engine, below `UserProvider`. */
-export function OfflineCacheController({
-  children,
-  seededUserId,
-}: {
-  children: ReactNode;
-  /** The reader the layout's server pass verified; absent offline. */
-  seededUserId?: string;
-}) {
-  const { user } = useUserContext();
-  const connectivity = useConnectivity();
-  const { status: wsStatus } = useConnectionStatus();
-  const trpc = useTRPC();
-  const trpcClient = useTRPCClient();
-
-  // The server's verified id stands in until the browser's own session request
-  // answers, so the cache restores at hydration rather than a round trip later.
-  return (
-    <OfflineController
-      connectivity={connectivity}
-      engine={offlineEngine}
-      getSessionUserId={getSessionUserId}
-      sessionUserId={user?.id ?? seededUserId ?? null}
-      transport={trpcClient}
-      trpc={trpc}
-      wsStatus={wsStatus}
-    >
-      {children}
-    </OfflineController>
   );
 }
