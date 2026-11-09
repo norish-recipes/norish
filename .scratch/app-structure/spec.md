@@ -34,7 +34,7 @@ Groceries is the pilot, measured before and after. The rest follows in order, an
 7. As a new contributor, I want a docs page that shows how the repo is laid out and how data flows from a component to Postgres and back, so that I can find my way before reading code.
 8. As a household member, I want the groceries page to do no more rendering than what changed on screen, so that checking off items stays quick on a phone.
 9. As a household member, I want groceries to behave exactly as before, so that the restructure is invisible to me.
-10. As a maintainer, I want the pilot measured with a committed script, so that every later feature is measured the same way.
+10. As a maintainer, I want the pilot measured with a committed script, so that a screen that feels slow later can be measured the same way.
 
 ## Implementation Decisions
 
@@ -99,7 +99,7 @@ Measured on groceries before the groundwork, after it, and after the pilot, as a
 - JS downloaded for `/groceries`, which `measure-page-loads.ts` adds up from the page's script responses. Next 16 dropped route sizes from `next build`.
 - Code shape: folders one feature spans, lines per app versus shared-react and binding files deleted.
 
-The render counter is a committed script next to `measure-page-loads.ts`.
+The render counter is a committed script next to `measure-page-loads.ts`. Later features aren't measured as part of their tickets: the gain is in the code, and the scripts are there for a screen that feels slow.
 
 ### Docs
 

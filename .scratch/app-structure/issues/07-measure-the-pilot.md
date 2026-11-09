@@ -13,7 +13,7 @@ Left open: the icons context renders all 41 icons when one food joins the list (
 The fixes after the review (1a2b161f2 to 33f085b09) weren't re-measured, so 03's after numbers and remaining-render list describe 37504a285; they close two of the open items above, the unchanged aisles' renders and the flat list's prop shape.
 
 - [x] The after numbers sit next to both baselines under `## Comments` in 03: per-action renders, first paint, downloaded JS, code shape.
-- [ ] Each remaining re-render per action is listed with the on-screen change that causes it.
+- [x] Each remaining re-render per action is listed with the on-screen change that causes it. The list in 03 is from before the review fixes, which only removed renders and weren't re-measured.
 - [x] First paint of `/groceries` is no worse than the baseline.
 - [x] The spec is amended with anything the pilot taught, or says it held.
 - [x] `apps/docs/docs/release-notes/0.27.0-beta.md` has the one line.
