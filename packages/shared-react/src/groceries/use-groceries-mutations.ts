@@ -245,6 +245,16 @@ type Undo = {
 /** The undos of the list writes still on their way, oldest first. */
 const unsettled = new Set<Undo>();
 
+/** Putting back the lists from before this write took back every write begun after it too. */
+function undoneWith(was: Undo) {
+  let later = false;
+
+  for (const other of unsettled) {
+    if (later) other.undone = true;
+    if (other === was) later = true;
+  }
+}
+
 export function useGroceriesMutations(): GroceriesMutationsResult {
   const trpc = useTRPC();
   const queryClient = useQueryClient();
@@ -308,13 +318,8 @@ export function useGroceriesMutations(): GroceriesMutationsResult {
       (prev) =>
         prev && { ...prev, groceries: was.groceries, recurringGroceries: was.recurringGroceries }
     );
-    // The writes begun after this one were in what it took back, so their undo would restore it.
-    let later = false;
-
-    for (const other of unsettled) {
-      if (later) other.undone = true;
-      later ||= other === was;
-    }
+    // The writes begun after this one: their own undo would put this one's change back.
+    undoneWith(was);
   };
   const rejected = (
     error: unknown,
