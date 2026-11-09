@@ -4,7 +4,7 @@
 
 **Blocked by:** 02, 05
 
-**Status:** done (E2E pending)
+**Status:** done
 
 Done at 8f21cc608. `features/groceries/` holds `groceries-screen.tsx`, `components/` (with `dnd/`, `pantry/`, `stores/`, the add, edit and recurrence panels, `MiniGroceries` and the skeleton, all groceries-only), `hooks/` (what was `hooks/stores/`, the grouped drag hook and `use-structural-sharing`, which only the list used), `lib/format-price.ts` and `index.ts`, whose one export is `MiniGroceries` (e27d51414). The tests sat beside their code (557bf3f8d) until a later round moved each workspace's groceries tests into one flat `__tests__/` folder, `features/groceries/__tests__/` and shared-react's `src/groceries/__tests__/`; web's typecheck reads them wherever they sit, since its tsconfig takes the whole app, and they pass it. The layout seeds what it did and renders the screen; the pages and `loading.tsx` stay `null`, since the layout draws both views. The offline page hands its bootstrap the screen, because only a route file imports one. `RoundCheckbox` takes the Store colour as `storeCheckbox`, two class strings `store-colors.ts` keeps for the rows and drag ghosts (0003fda2c). `OnTheListMark` moved to `components/ingredients/`, since the ingredient panel shows it on a recipe and in Settings too (bbbf05f79).
 
@@ -19,7 +19,7 @@ Before it, three follow-ups from 05's review: the Pantry's add and removal, `use
 - [x] The feature lint rule passes with no exceptions.
 - [x] Groceries imports nothing from web's `context/` folder; it reads only `@norish/shared-react/*` and web's shared folders.
 - [x] Groceries unit tests sit in the feature's own `__tests__/` folder, on web and in shared-react. Lint skips them, since the base ESLint config ignores `__tests__/` and `*.test.*`; web's typecheck covers them, since its tsconfig takes the whole app, and they pass it.
-- [ ] The groceries E2E set (spec, "Testing Decisions") passes. It is unchanged but for `pantry`, which expects a first switch to the Pantry to read it, as Mike agreed, since a full load seeds only the view it opens on. Not run yet: the E2E set runs once, after the whole ticket set.
+- [x] The groceries E2E set (spec, "Testing Decisions") passes. It is unchanged but for `pantry`, which expects a first switch to the Pantry to read it, as Mike agreed, since a full load seeds only the view it opens on. Marked done at Mike's call (2026-11-10): the final full E2E run was stopped before it finished, so this box rests on 04's and 05's passing runs, not on a run of the finished set.
 
 Review fixes (9d527e050..24016394c): the cycle check runs madge in each workspace so `@/` imports count, and the one cycle it found (`user-context` and the offline engine) is broken by moving `OfflineCacheController` to its own file; one `DndContext` in `components/` gives every drag area its `useId` id; the compiled-code lint rule covers `packages/ui` and `memo`/`forwardRef` components, with a rule test; a refused Store create shows the generic error toast and keeps its editor; Queued Pantry and Store writes have tests. Renders after them: check 0 / 269 / 7, add 19 / 1,532 / 13, edit panel 178 / 221 / 8, echo 0 / 228 / 2, view mode 857 / 700 / 10, the differences all the `DndContext` wrapper rendering for new props.
 
