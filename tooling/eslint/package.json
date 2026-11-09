@@ -21,6 +21,7 @@
     "@stylistic/eslint-plugin": "^5.10.0",
     "eslint": "catalog:",
     "eslint-plugin-jsx-a11y-x": "^0.2.0",
+    "eslint-plugin-react-hooks": "catalog:",
     "eslint-plugin-sonarjs": "^4.2.2",
     "eslint-plugin-turbo": "^2.11.10",
     "eslint-plugin-unused-imports": "^4.4.1",

@@ -32,6 +32,8 @@ catalog:
   date-fns: ^4.4.0
   drizzle-orm: 0.45.4
   eslint: 10.13.0
+  # Bundles the React Compiler that babel-plugin-react-compiler 1.0.0 is; 7.1 bundles a newer one.
+  eslint-plugin-react-hooks: 7.0.1
   fuse.js: ^7.5.0
   html-entities: ^2.6.0
   ioredis: ^6.0.0
@@ -87,6 +89,11 @@ overrides:
   # a second copy breaks declaration emit with TS2742 errors naming
   # @norish/shared/node_modules/zod.
   zod: "catalog:"
+
+peerDependencyRules:
+  allowedVersions:
+    # 7.0.1's peer range stops at ESLint 9, but it feature-detects the context API ESLint 10 dropped.
+    eslint-plugin-react-hooks>eslint: "10"
 
 auditConfig:
   ignoreGhsas:
