@@ -53,7 +53,16 @@ export async function listFoodsWithGaps(
   const gaps = await findNutritionGaps(listed);
   const names = await findCatalogueIngredientNames(listed);
 
-  return [...new Set(ingredientIds)].flatMap((id) => {
+  return foodsWithGap([...new Set(ingredientIds)], gaps, names, asked);
+}
+
+function foodsWithGap(
+  ids: readonly string[],
+  gaps: ReadonlyMap<string, NutritionGaps>,
+  names: ReadonlyMap<string, string>,
+  asked: FillAsked
+): IconFood[] {
+  return ids.flatMap((id) => {
     const found = gaps.get(id);
     const name = names.get(id);
 
@@ -66,13 +75,18 @@ export async function listFillGapsFoods(
   set: IconSet = shippedIconSet()
 ): Promise<Record<"nutrition" | "conversions" | "icons", IconFood[]>> {
   const listed = await listListedIngredientIds();
-  const [nutrition, conversions, icons] = await Promise.all([
-    listFoodsWithGaps(listed, { nutrition: true, conversions: false }),
-    listFoodsWithGaps(listed, { nutrition: false, conversions: true }),
+  // Over the whole catalogue these are heavy, so both boxes share one read of them.
+  const [gaps, names, icons] = await Promise.all([
+    findNutritionGaps(listed),
+    findCatalogueIngredientNames(listed),
     listFoodsShowingNoIcon(listed, set),
   ]);
 
-  return { nutrition, conversions, icons };
+  return {
+    nutrition: foodsWithGap(listed, gaps, names, { nutrition: true, conversions: false }),
+    conversions: foodsWithGap(listed, gaps, names, { nutrition: false, conversions: true }),
+    icons,
+  };
 }
 
 /** Ask AI for one food's gaps `asked` covers and store its answer. Throws what the runtime throws. */

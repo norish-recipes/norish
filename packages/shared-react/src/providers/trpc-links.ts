@@ -214,9 +214,10 @@ function createHttpTransportLink(
         methodOverride: "POST",
       }),
       false: splitLink({
-        // A batch answers when its slowest read does, and these read the job queues: left in
-        // one, every setting that loads beside the job monitor waits for it.
-        condition: (op) => op.path.startsWith("admin.jobs."),
+        // A batch answers when its slowest read does, and these read the job queues or walk the
+        // ingredient catalogue: left in one, every setting that loads beside them waits for them.
+        condition: (op) =>
+          op.path.startsWith("admin.jobs.") || op.path.startsWith("admin.ingredientCatalogue."),
         true: createPlainHttpLink(getBaseUrl, getHeaders),
         false: httpBatchLink({
           url: `${getBaseUrl()}/api/trpc`,

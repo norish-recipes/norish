@@ -10,12 +10,14 @@ import "@testing-library/jest-dom";
 
 const mutate = vi.fn();
 const counts = vi.hoisted(() => ({ current: undefined as unknown }));
+const queries = vi.hoisted(() => [] as Array<{ enabled?: boolean }>);
 const context = vi.hoisted(() => ({ aiConfig: { enabled: true } as unknown }));
 
 vi.mock("@/app/providers/trpc-provider", () => ({
   useTRPC: () => ({
     admin: {
       ingredientCatalogue: {
+        cleanUpRunning: { queryOptions: (_input: unknown, options: unknown) => options },
         cleanUpCounts: { queryOptions: (_input: unknown, options: unknown) => options },
         cleanUp: { mutationOptions: (options: unknown) => options },
       },
@@ -24,7 +26,11 @@ vi.mock("@/app/providers/trpc-provider", () => ({
 }));
 vi.mock("@tanstack/react-query", () => ({
   useMutation: () => ({ mutate, isPending: false }),
-  useQuery: () => ({ data: counts.current, refetch: vi.fn() }),
+  useQuery: (options: { enabled?: boolean }) => {
+    queries.push(options);
+
+    return { data: counts.current, refetch: vi.fn() };
+  },
 }));
 vi.mock("@/app/(app)/settings/admin/context", () => ({ useAdminSettingsContext: () => context }));
 vi.mock("@/lib/ui/safe-error-toast", () => ({ showSafeErrorToast: vi.fn() }));
@@ -38,11 +44,24 @@ const { default: CleanUpCatalogue } =
 
 beforeEach(() => {
   mutate.mockReset();
+  queries.length = 0;
   counts.current = { recipeFoods: 2, wholeCatalogue: 40, running: false };
   context.aiConfig = { enabled: true };
 });
 
 describe("CleanUpCatalogue", () => {
+  it("does not count the catalogue until its dialog opens", () => {
+    render(<CleanUpCatalogue />);
+
+    expect(queries.filter((query) => query.enabled === false)).toHaveLength(1);
+    expect(queries.some((query) => query.enabled === true)).toBe(false);
+
+    queries.length = 0;
+    fireEvent.click(screen.getByTestId("clean-up-catalogue"));
+
+    expect(queries.filter((query) => query.enabled === true)).toHaveLength(1);
+  });
+
   it("names each scope's count and starts the run over the one picked", () => {
     render(<CleanUpCatalogue />);
     fireEvent.click(screen.getByTestId("clean-up-catalogue"));
