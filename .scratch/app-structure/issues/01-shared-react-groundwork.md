@@ -21,5 +21,5 @@ Part A done at 1256ea977, part B at bbef6a1f9, review fixes through 9feeb9e8f. `
 - [x] `providers/` becomes `trpc/`, and `offline/`'s imports of `ConnectionStatus` and `trpc-links` follow it.
 - [x] `hooks/optimistic-updates.ts` moves to `offline/`, and every mutation hook that imports it (groceries, stores, pantry, calendar, cookbooks, recipes, ratings, recipe detail) imports it from there; the `useDevicePreference` setter uses it too.
 - [x] `filter-contract.ts` and `list-queries.ts` move to `@norish/shared/contracts`; the `./filter-contract` and `./list-queries` exports are deleted and their importers (`offline/warm-set`, web's server seeding and the rest) import from `@norish/shared`.
-- [x] ESLint in shared-react blocks one feature folder importing another and a cross-cutting folder (`trpc`, `platform`, `offline`, `config`, `reader`) importing a feature or a legacy folder (`hooks`, `contexts`); `tooling/eslint/features.test.ts` proves both rule builders.
+- [x] ESLint in shared-react blocks one feature folder importing another and a cross-cutting folder (`trpc`, `platform`, `offline`, `config`, `reader`, `realtime`) importing a feature or a legacy folder (`hooks`, `contexts`); `tooling/eslint/features.test.ts` proves both rule builders.
 - [x] Gates are green, mobile included.
