@@ -20,12 +20,13 @@ export function readImportLink({ url, text }: { url: SearchParam; text: SearchPa
 }
 
 /**
- * The bookmarklet that sends the current page to `importPageUrl`. It opens a
- * new tab so the recipe stays open, and takes over the current tab when the
- * browser's pop-up blocker refuses one.
+ * The bookmarklet that sends the current page to `importPageUrl`, with the
+ * reader's private code so the import starts at once. It opens a new tab so
+ * the recipe stays open, and takes over the current tab when the browser's
+ * pop-up blocker refuses one.
  */
-export function buildBookmarklet(importPageUrl: string): string {
-  const target = JSON.stringify(`${importPageUrl}?url=`);
+export function buildBookmarklet(importPageUrl: string, code: string): string {
+  const target = JSON.stringify(`${importPageUrl}?code=${encodeURIComponent(code)}&url=`);
 
   // A bookmarklet is a javascript: address by definition, and nothing here comes from a visitor.
   // eslint-disable-next-line sonarjs/code-eval

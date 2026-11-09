@@ -1,9 +1,9 @@
 /**
- * The import page a bookmarklet or share sheet lands on: opening it imports
- * nothing, and a press does. A signed-out reader signs in and comes back to the
- * same link.
+ * The import page a bookmarklet or share sheet lands on: a link alone imports
+ * nothing until a press, the reader's own bookmarklet code imports at once, and
+ * a signed-out reader signs in and comes back to the same link.
  */
-import { submitMutation } from "../harness/trpc";
+import { callTrpc, submitMutation } from "../harness/trpc";
 import { expect, OWNER, test } from "./fixture";
 
 const LINK = "https://norish-test.invalid/recipes/bookmarklet-soup";
@@ -22,6 +22,24 @@ test("a link sent to the import page waits for a press, then queues", async ({ p
 
   await expect(page).toHaveURL(/\/$/);
   await expect(page.getByText("Importing recipe...")).toBeVisible();
+});
+
+test("the reader's own code imports at once", async ({ page, aiStack }) => {
+  const code = await callTrpc<string>(aiStack.baseURL, aiStack.ownerCookies, "user.importLinkCode");
+
+  await submitMutation(page, "recipes.importFromUrl", async () => {
+    await page.goto(`${IMPORT_PAGE}&code=${encodeURIComponent(code)}`);
+  });
+
+  await expect(page).toHaveURL(/\/$/);
+  await expect(page.getByText("Importing recipe...")).toBeVisible();
+});
+
+test("a wrong code still waits for a press", async ({ page }) => {
+  await page.goto(`${IMPORT_PAGE}&code=not-the-code`);
+
+  await expect(page.getByRole("heading", { name: ASK })).toBeVisible();
+  await expect(page).toHaveURL(/\/import\?/);
 });
 
 test("the import page has nothing to offer without a link", async ({ page }) => {

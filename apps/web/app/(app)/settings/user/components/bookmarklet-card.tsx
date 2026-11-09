@@ -2,25 +2,31 @@
 
 import { useRef, useSyncExternalStore } from "react";
 import { SettingsCard } from "@/app/(app)/settings/components/settings-card";
+import { useTRPC } from "@/app/providers/trpc-provider";
 import { buildBookmarklet } from "@/lib/import-link";
 import { ClipboardDocumentIcon } from "@heroicons/react/16/solid";
 import { BookmarkIcon } from "@heroicons/react/24/outline";
 import { Button, Input, TextField, toast } from "@heroui/react";
+import { useQuery } from "@tanstack/react-query";
 import { useTranslations } from "next-intl";
 
 import { addBasePath } from "@norish/shared/lib/base-path";
 
 const subscribeToNothing = () => () => {};
 
-function readBookmarklet(): string {
-  return buildBookmarklet(`${window.location.origin}${addBasePath("/import")}`);
-}
-
 export default function BookmarkletCard() {
   const t = useTranslations("settings.user.bookmarklet");
   const inputRef = useRef<HTMLInputElement>(null);
+  const trpc = useTRPC();
+  const { data: code } = useQuery(trpc.user.importLinkCode.queryOptions());
   // Only the browser knows the address this Norish is reached at.
-  const bookmarklet = useSyncExternalStore(subscribeToNothing, readBookmarklet, () => "");
+  const origin = useSyncExternalStore(
+    subscribeToNothing,
+    () => window.location.origin,
+    () => ""
+  );
+  const bookmarklet =
+    origin && code ? buildBookmarklet(`${origin}${addBasePath("/import")}`, code) : "";
 
   // A plain-HTTP Norish has no clipboard API, so the code is selected for
   // Cmd+C instead.
@@ -43,7 +49,7 @@ export default function BookmarkletCard() {
               if (bookmarklet) element?.setAttribute("href", bookmarklet);
             }}
             className="bg-accent text-accent-foreground inline-flex cursor-grab rounded-full px-4 py-2 text-sm font-medium"
-            draggable
+            draggable={!!bookmarklet}
             href={addBasePath("/import")}
             onClick={(event) => event.preventDefault()}
           >
@@ -53,10 +59,15 @@ export default function BookmarkletCard() {
         </div>
         <p className="text-muted text-sm">{t("manualHint")}</p>
         <div className="flex items-center gap-2">
-          <TextField fullWidth aria-label={t("linkLabel")} isReadOnly value={bookmarklet}>
+          <TextField fullWidth isReadOnly aria-label={t("linkLabel")} value={bookmarklet}>
             <Input ref={inputRef} fullWidth className="font-mono text-xs" variant="secondary" />
           </TextField>
-          <Button className="shrink-0" variant="secondary" onPress={handleCopy}>
+          <Button
+            className="shrink-0"
+            isDisabled={!bookmarklet}
+            variant="secondary"
+            onPress={handleCopy}
+          >
             <ClipboardDocumentIcon className="h-4 w-4" />
             {t("copy")}
           </Button>

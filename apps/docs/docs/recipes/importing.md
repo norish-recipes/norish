@@ -32,12 +32,13 @@ browser, including Safari.
 1. Drag **Save to Norish** to your Favorites or bookmarks bar. If your browser
    won't let you, press **Copy**, bookmark any page, edit that bookmark and
    replace its address with what you copied.
-2. On a recipe page, click the bookmark. Norish opens in a new tab and shows the
-   link.
-3. Press **Import**, or Return.
+2. On a recipe page, click the bookmark. Norish opens in a new tab and starts the
+   import.
 
-Norish always asks first, so another website can't add recipes to your library
-by sending you to the import page.
+The bookmarklet holds a private code tied to your account, so treat it like a
+bookmark only you use. A link to the import page without that code shows the
+recipe and waits for you to press **Import**, so another website can't add
+recipes to your library by sending you there.
 
 On Android, install Norish as an app to see it in the share sheet. Chromium and
 Firefox can also use the community

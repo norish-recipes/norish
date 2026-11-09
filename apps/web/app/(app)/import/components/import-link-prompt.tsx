@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useEffectEvent, useRef, useState } from "react";
 import { useRouter } from "next/navigation";
 import { usePermissionsContext } from "@/context/permissions-context";
 import { useRecipesMutations } from "@/hooks/recipes";
@@ -11,14 +11,17 @@ import { useTranslations } from "next-intl";
 interface ImportLinkPromptProps {
   /** The recipe link that was sent here, or null when there was no usable one. */
   link: string | null;
+  /** The reader's own bookmarklet sent this, so pressing it was the decision. */
+  startAtOnce: boolean;
 }
 
 /**
- * Where a bookmarklet or share sheet lands. Opening a link never imports by
- * itself: any website can send a signed-in reader to this address, so the
- * import waits for a press here. The button takes focus, so Return is enough.
+ * Where a bookmarklet or share sheet lands. A link without the reader's private
+ * code never imports by itself: any website can send a signed-in reader to this
+ * address, so the import waits for a press here. The button takes focus, so
+ * Return is enough.
  */
-export default function ImportLinkPrompt({ link }: ImportLinkPromptProps) {
+export default function ImportLinkPrompt({ link, startAtOnce }: ImportLinkPromptProps) {
   const t = useTranslations("common.import.link");
   const tActions = useTranslations("common.actions");
   const tPaste = useTranslations("common.import.paste");
@@ -37,6 +40,20 @@ export default function ImportLinkPrompt({ link }: ImportLinkPromptProps) {
       variant: "default",
     });
     goToRecipes();
+  }
+
+  const shouldStartAtOnce = startAtOnce && link !== null;
+  const startedAtOnceRef = useRef(false);
+  const startLinkImport = useEffectEvent((url: string) => startImport(url, false));
+
+  useEffect(() => {
+    if (!shouldStartAtOnce || startedAtOnceRef.current) return;
+    startedAtOnceRef.current = true;
+    startLinkImport(link);
+  }, [link, shouldStartAtOnce]);
+
+  if (shouldStartAtOnce) {
+    return <p className="text-muted mt-8 text-center text-sm">{tPaste("importing")}</p>;
   }
 
   return (

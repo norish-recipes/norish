@@ -5,6 +5,7 @@ import { SERVER_CONFIG } from "@norish/config/env-config-server";
 export const AUTH_SECRET = deriveKey("auth").toString("base64url");
 export const ENCRYPTION_KEY = deriveKey("encryption");
 export const HMAC_KEY = deriveKey("hmac");
+const IMPORT_LINK_KEY = deriveKey("import-link");
 
 function deriveKey(label: string, length = 32): Buffer {
   const masterKey = Buffer.from(SERVER_CONFIG.MASTER_KEY, "base64"); // TODO: Generate this when the server is first set up
@@ -43,6 +44,18 @@ export function hmacIndex(value: string): string {
 
 export function hashToken(token: string): string {
   return crypto.createHmac("sha256", HMAC_KEY).update(token).digest("hex");
+}
+
+/** The private code in a reader's bookmarklet, which lets it import without asking first. */
+export function importLinkCode(userId: string): string {
+  return crypto.createHmac("sha256", IMPORT_LINK_KEY).update(userId).digest("base64url");
+}
+
+export function isImportLinkCode(userId: string, code: string): boolean {
+  const expected = Buffer.from(importLinkCode(userId));
+  const given = Buffer.from(code);
+
+  return given.length === expected.length && crypto.timingSafeEqual(given, expected);
 }
 
 export function safeDecrypt(value: string | null | undefined): string | null {

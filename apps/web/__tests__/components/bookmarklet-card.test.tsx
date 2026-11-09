@@ -2,7 +2,10 @@ import BookmarkletCard from "@/app/(app)/settings/user/components/bookmarklet-ca
 import { createEvent, fireEvent, render, screen, waitFor } from "@testing-library/react";
 import { afterEach, describe, expect, it, vi } from "vitest";
 
-const { toastMock } = vi.hoisted(() => ({ toastMock: vi.fn() }));
+const { toastMock, query } = vi.hoisted(() => ({
+  toastMock: vi.fn(),
+  query: { code: "my-code" as string | undefined },
+}));
 
 vi.mock("next-intl", () => ({
   useTranslations: () => (key: string) => key,
@@ -15,6 +18,14 @@ vi.mock("@/app/(app)/settings/components/settings-card", () => ({
       {children}
     </section>
   ),
+}));
+
+vi.mock("@/app/providers/trpc-provider", () => ({
+  useTRPC: () => ({ user: { importLinkCode: { queryOptions: () => ({}) } } }),
+}));
+
+vi.mock("@tanstack/react-query", () => ({
+  useQuery: () => ({ data: query.code }),
 }));
 
 vi.mock("@heroui/react", async () => {
@@ -50,7 +61,17 @@ describe("BookmarkletCard", () => {
     const href = screen.getByText("linkLabel").getAttribute("href") ?? "";
 
     expect(href.startsWith("javascript:")).toBe(true);
-    expect(href).toContain(`${window.location.origin}/import?url=`);
+    expect(href).toContain(`${window.location.origin}/import?code=my-code&url=`);
+  });
+
+  it("offers no bookmarklet until the code has loaded", () => {
+    query.code = undefined;
+    render(<BookmarkletCard />);
+
+    const href = screen.getByText("linkLabel").getAttribute("href") ?? "";
+
+    expect(href.startsWith("javascript:")).toBe(false);
+    query.code = "my-code";
   });
 
   it("does not run the bookmarklet when it is clicked in settings", () => {

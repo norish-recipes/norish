@@ -1,3 +1,4 @@
+import { StrictMode } from "react";
 import ImportLinkPrompt from "@/app/(app)/import/components/import-link-prompt";
 import { fireEvent, render, screen } from "@testing-library/react";
 import { beforeEach, describe, expect, it, vi } from "vitest";
@@ -53,7 +54,7 @@ describe("ImportLinkPrompt", () => {
   });
 
   it("shows the link and imports nothing until asked", () => {
-    render(<ImportLinkPrompt link={LINK} />);
+    render(<ImportLinkPrompt link={LINK} startAtOnce={false} />);
 
     expect(screen.getByText(LINK)).toBeTruthy();
     expect(importRecipeMock).not.toHaveBeenCalled();
@@ -61,7 +62,7 @@ describe("ImportLinkPrompt", () => {
   });
 
   it("imports on press and goes to the recipes", () => {
-    render(<ImportLinkPrompt link={LINK} />);
+    render(<ImportLinkPrompt link={LINK} startAtOnce={false} />);
 
     fireEvent.click(screen.getByRole("button", { name: "import" }));
 
@@ -71,7 +72,7 @@ describe("ImportLinkPrompt", () => {
   });
 
   it("does not import twice on a second press", () => {
-    render(<ImportLinkPrompt link={LINK} />);
+    render(<ImportLinkPrompt link={LINK} startAtOnce={false} />);
 
     const button = screen.getByRole("button", { name: "import" });
 
@@ -82,13 +83,13 @@ describe("ImportLinkPrompt", () => {
   });
 
   it("offers AI import only when AI is on", () => {
-    const { unmount } = render(<ImportLinkPrompt link={LINK} />);
+    const { unmount } = render(<ImportLinkPrompt link={LINK} startAtOnce={false} />);
 
     expect(screen.queryByRole("button", { name: "aiImport" })).toBeNull();
     unmount();
 
     permissions.isAIEnabled = true;
-    render(<ImportLinkPrompt link={LINK} />);
+    render(<ImportLinkPrompt link={LINK} startAtOnce={false} />);
     fireEvent.click(screen.getByRole("button", { name: "aiImport" }));
 
     expect(importRecipeWithAIMock).toHaveBeenCalledExactlyOnceWith(LINK);
@@ -96,7 +97,7 @@ describe("ImportLinkPrompt", () => {
   });
 
   it("cancels without importing", () => {
-    render(<ImportLinkPrompt link={LINK} />);
+    render(<ImportLinkPrompt link={LINK} startAtOnce={false} />);
 
     fireEvent.click(screen.getByRole("button", { name: "cancel" }));
 
@@ -104,8 +105,27 @@ describe("ImportLinkPrompt", () => {
     expect(replaceMock).toHaveBeenCalledWith("/");
   });
 
+  it("imports at once, and only once, for the reader's own bookmarklet", () => {
+    render(
+      <StrictMode>
+        <ImportLinkPrompt link={LINK} startAtOnce />
+      </StrictMode>
+    );
+
+    expect(importRecipeMock).toHaveBeenCalledExactlyOnceWith(LINK);
+    expect(replaceMock).toHaveBeenCalledWith("/");
+    expect(screen.queryByRole("button", { name: "import" })).toBeNull();
+  });
+
+  it("has nothing to start without a link, even with the code", () => {
+    render(<ImportLinkPrompt link={null} startAtOnce />);
+
+    expect(screen.getByText("noLink")).toBeTruthy();
+    expect(importRecipeMock).not.toHaveBeenCalled();
+  });
+
   it("says so when there is no link, with no way to import", () => {
-    render(<ImportLinkPrompt link={null} />);
+    render(<ImportLinkPrompt link={null} startAtOnce={false} />);
 
     expect(screen.getByText("noLink")).toBeTruthy();
     expect(screen.queryByRole("button", { name: "import" })).toBeNull();

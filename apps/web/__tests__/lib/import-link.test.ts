@@ -29,7 +29,7 @@ describe("readImportLink", () => {
 });
 
 describe("buildBookmarklet", () => {
-  const code = buildBookmarklet("https://norish.example/base/import");
+  const code = buildBookmarklet("https://norish.example/base/import", "a+code");
 
   /** Runs the bookmarklet against a stand-in for the page's window. */
   function run(openResult: object | null, href = "https://blog.example/soup?a=1&b=2") {
@@ -50,7 +50,7 @@ describe("buildBookmarklet", () => {
   }
 
   const EXPECTED =
-    "https://norish.example/base/import?url=https%3A%2F%2Fblog.example%2Fsoup%3Fa%3D1%26b%3D2";
+    "https://norish.example/base/import?code=a%2Bcode&url=https%3A%2F%2Fblog.example%2Fsoup%3Fa%3D1%26b%3D2";
 
   it("is a javascript: address", () => {
     expect(code.startsWith("javascript:")).toBe(true);
