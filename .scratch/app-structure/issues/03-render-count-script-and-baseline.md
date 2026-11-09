@@ -4,14 +4,14 @@
 
 **Blocked by:** None for the script and the first baseline; 01 for the second baseline
 
-**Status:** ready-for-agent (script and baseline 1 done; baseline 2 follows 01)
+**Status:** done
 
 - [x] The script takes a scenario and prints, per action, mounts and updates per component, sorted by count, with the changed props behind each update.
 - [x] The groceries scenario covers the five actions, the echo coming from a second signed-in browser context.
 - [x] Two runs on unchanged code give the same counts.
 - [x] `scripts/README.md` says how to run it in a few lines.
 - [x] `measure-page-loads.ts` reports the JS bytes each page downloads, added up from its script responses.
-- [ ] Both baselines are recorded under `## Comments` here: per-action renders, `/groceries` first paint and downloaded JS from `measure-page-loads.ts`, and the code shape (folders groceries spans, lines in web, mobile and shared-react, binding files).
+- [x] Both baselines are recorded under `## Comments` here: per-action renders, `/groceries` first paint and downloaded JS from `measure-page-loads.ts`, and the code shape (folders groceries spans, lines in web, mobile and shared-react, binding files).
 
 ## Comments
 
@@ -31,13 +31,13 @@ App code as at d0fa9f86a plus the sortOrder tie-break (11269853c); 02's commits 
 
 **Renders per action**
 
-| Action                                          | Baseline 1: mounts / updates / commits | Baseline 2 | After the pilot |
-| ----------------------------------------------- | -------------------------------------: | ---------: | --------------: |
-| Check an item                                   |                            0 / 288 / 7 |          — |               — |
-| Add an item                                     |                        19 / 1,689 / 12 |          — |               — |
-| Open the edit panel                             |                          178 / 224 / 8 |          — |               — |
-| Realtime echo of another phone checking an item |                            0 / 247 / 2 |          — |               — |
-| Switch the view mode                            |                         853 / 696 / 11 |          — |               — |
+| Action                                          | Baseline 1: mounts / updates / commits |      Baseline 2 | After the pilot |
+| ----------------------------------------------- | -------------------------------------: | --------------: | --------------: |
+| Check an item                                   |                            0 / 288 / 7 |     0 / 288 / 7 |               — |
+| Add an item                                     |                        19 / 1,689 / 12 | 19 / 1,689 / 12 |               — |
+| Open the edit panel                             |                          178 / 224 / 8 |   178 / 232 / 8 |               — |
+| Realtime echo of another phone checking an item |                            0 / 247 / 2 |     0 / 247 / 2 |               — |
+| Switch the view mode                            |                         853 / 696 / 11 |  853 / 728 / 10 |               — |
 
 | Action               | Baseline 1: top three (mounts + updates, what changed)                                                        |
 | -------------------- | ------------------------------------------------------------------------------------------------------------- |
@@ -55,23 +55,23 @@ Our own components behind those numbers:
 
 **`/groceries` page load** (15 runs, median and spread)
 
-|                       |            Baseline 1 | Baseline 2 | After the pilot |
-| --------------------- | --------------------: | ---------: | --------------: |
-| First paint           |      632 ms (624–672) |          — |               — |
-| Price and aisle drawn |      632 ms (624–672) |          — |               — |
-| Document              |          42.5 KB gzip |          — |               — |
-| JS downloaded         | 894 KB gzip (894–894) |          — |               — |
+|                       |            Baseline 1 |            Baseline 2 | After the pilot |
+| --------------------- | --------------------: | --------------------: | --------------: |
+| First paint           |      632 ms (624–672) |      624 ms (624–632) |               — |
+| Price and aisle drawn |      632 ms (624–672) |      624 ms (624–632) |               — |
+| Document              |          42.5 KB gzip |          42.6 KB gzip |               — |
+| JS downloaded         | 894 KB gzip (894–894) | 900 KB gzip (900–900) |               — |
 
 **Code shape**
 
-|                           |                              Baseline 1 | Baseline 2 | After the pilot |
-| ------------------------- | --------------------------------------: | ---------: | --------------: |
-| Web                       |                  99 files, 10,317 lines |          — |               — |
-| Mobile                    |                       2 files, 47 lines |          — |               — |
-| shared-react              |                   27 files, 2,911 lines |          — |               — |
-| Folders (with subfolders) |    web 9 (14), mobile 1, shared-react 6 |          — |               — |
-| Binding files             | web 20 (303 lines), mobile 2 (47 lines) |          — |               — |
-| Unit tests                |                   25 files, 6,974 lines |          — |               — |
+|                           |                              Baseline 1 |                              Baseline 2 | After the pilot |
+| ------------------------- | --------------------------------------: | --------------------------------------: | --------------: |
+| Web                       |                  99 files, 10,317 lines |                  99 files, 10,308 lines |               — |
+| Mobile                    |                       2 files, 47 lines |                       2 files, 26 lines |               — |
+| shared-react              |                   27 files, 2,911 lines |                   27 files, 2,911 lines |               — |
+| Folders (with subfolders) |    web 9 (14), mobile 1, shared-react 6 |    web 9 (14), mobile 1, shared-react 6 |               — |
+| Binding files             | web 20 (303 lines), mobile 2 (47 lines) | web 20 (299 lines), mobile 2 (26 lines) |               — |
+| Unit tests                |                   25 files, 6,974 lines |                   25 files, 6,991 lines |               — |
 
 Web's folders: `app/(app)/groceries` (+`components`, `pantry`), `components/groceries` (+`dnd`, `pantry`, `stores`), `hooks/groceries`, `hooks/stores`, `hooks/pantry`, `components/Panel/consumers`, `components/skeleton`, `context`, `hooks`. shared-react's: `contexts/groceries`, `contexts/stores`, `hooks/groceries`, `hooks/stores`, `hooks/pantry`, `hooks`.
 
@@ -79,4 +79,26 @@ Also seen: every dev load of `/groceries` logs a hydration attribute mismatch, d
 
 ### Baseline 2 (after 01, before 04)
 
-Follows 01.
+At 2696c4a86, with the setup above. Two renders runs printed byte-identical output, [`baselines/2-after-01.txt`](../baselines/2-after-01.txt). A third with each `(state)` labelled by the hook behind it, and one against the production build, gave the same counts. The page loads are the second of two 15-run sets on the production server, at a load average near 2; the first, on the just-started server, had one cold load of 3,180 ms and a 628 ms median.
+
+| Action               | Baseline 2: top three (mounts + updates, what changed)                                                        |
+| -------------------- | ------------------------------------------------------------------------------------------------------------- |
+| Check an item        | SortableGroupItem 80 ((context) 80, children 40); SortableContext 20; React Aria DOMElement 13                |
+| Add an item          | SortableGroupItem 164 (children 122, (context) 81, group 52); React Aria DOMElement 137; bound DOMElement 108 |
+| Open the edit panel  | React Aria DOMElement 26; Presence 26; Primitive.div 21                                                       |
+| Realtime echo        | SortableGroupItem 80 ((context) 80, children 40); SortableContext 20; motion.div 10                           |
+| Switch the view mode | React Aria DOMElement 224; bound DOMElement 162; React Aria provider 125                                      |
+
+What changed against Baseline 1, component by component:
+
+- Check, add and echo render the same components the same number of times; only reasons moved. `useUnitFormatter` (every row with an amount) and `IngredientIconsProvider` now each hold a `user.getDevicePreferences` query, whose snapshot moves without a render while the choice stays the same. The "By Store" pick before the actions writes the choice and reads it again (`dataUpdatedAt`), so the next render records `(state)`: `IngredientIconsProvider`'s one update in check, and the first of the three passes of the 17 no-Store `GroupedGroceryItem`s in add. Their other two passes see the `config.units` re-fetch start and answer, where Baseline 1 marked one pass: `(state)` 17 becomes 51 of the same 69 updates.
+- Open the edit panel, 8 more updates: the closed View Mode menu in `GroceriesListActions` renders once more (DropdownRoot, DropdownPopover, Popover, its Button and four React Aria parts). `GroceriesUiProvider` renders for `setEditingGrocery` as before, but `useDevicePreference` now returns a new setter on every render, so the items' `onPress={() => setViewMode("store")}` change and the compiled menu no longer bails out.
+- Switch the view mode, 32 more updates (56 gone, 88 added) and one commit fewer.
+  - Gone: the 40 `GroceryItem` updates after mounting, and 16 elsewhere. `useUnitFormatter` and `IngredientIconsProvider` read the old provider's context, which changed again when the write settled; each now selects its one choice, which did not change. The old provider (3 updates) also wrote the change onto `user.get` and read `user.get` again, which rendered the profile's readers: `OfflineStatusModal` 4, `NavbarUserMenu` 2, `TimerDock` 2, and `UserProvider`, `WebUserProviderInner`, `PermissionsProvider` and `OfflineCacheController` 1 each. The write and the read again now go to `user.getDevicePreferences`, which only `useDevicePreference` readers hold. The commit gone is the old provider's third render, for that read's answer (it read `dataUpdatedAt`); an equal answer now renders nothing.
+  - Added: `GroceriesUiProvider` renders twice in both, at the pick and when the write settles. Its second render now hands out new setters for the same choices, so `GroceriesPage` and `GroceriesListActions` render twice instead of once, and the open View Mode menu renders again: items, collection, popover and the "Group similar" switch (`DropdownItem onPress 3`, `UiSwitch onValueChange 1`).
+
+The 8 and the 88 have one cause: `useDevicePreference` builds `trpc.user.getDevicePreferences.queryKey()`, a new array, on every render, and the React Compiler keys the setter on it. A stable setter would remove both; that is a change to `reader/device-preferences.tsx`, not made here.
+
+Page loads: first paint 8 ms faster at the median, inside Baseline 1's spread. Document +0.1 KB: the seed is now the `user.getDevicePreferences` query with both Device Kinds' blocks, where it was this kind's values. JS +6 KB gzip, not traced.
+
+Code shape: 01 moved or deleted none of the counted files (its moves are config, tRPC, the platform adapter and Device Preferences), so every path is Baseline 1's. Binding files are the six factory callers (`shared-{groceries,stores,pantry}-hooks.ts`, `use-recurrence-detection.ts`, the groceries and stores contexts) and the 14 per-hook files re-exporting what they built, not the `index.ts` barrels, plus mobile's two. Unit tests are web's `__tests__/{app/groceries,components/groceries,hooks/groceries,hooks/stores}/` and shared-react's `pantry`, `store-aisles` and `store-prices-pending` suites. Web loses 9 lines and mobile 21: the groceries error toast moved into the platform adapter's `showError`, and the bindings import `useTRPC` and `useUnitsQuery` from shared-react. Tests gain 17 lines, mostly a test wrapper that mounts the web's platform adapter.
