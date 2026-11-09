@@ -1,5 +1,3 @@
-import { useMemo } from "react";
-
 import type { RecurrenceConfig as StoredRecurrenceConfig } from "@norish/config/zod/server-config";
 import type {
   RecurrenceConfig,
@@ -34,6 +32,19 @@ function withKnownRules({ locales }: StoredRecurrenceConfig): RecurrenceConfig {
   return { locales: Object.fromEntries(known) };
 }
 
+/** The pattern a name states, or null. The `try` sits outside the hook, which the React Compiler would skip. */
+function detect(itemName: string, config: StoredRecurrenceConfig): DetectedPattern | null {
+  try {
+    const result = parseRecurrence(itemName, withKnownRules(config));
+
+    return result.recurrence ? { pattern: result.recurrence, cleanText: result.cleanText } : null;
+  } catch (error) {
+    log.error({ err: error }, "Error parsing recurrence");
+
+    return null;
+  }
+}
+
 type UseRecurrenceDetectionOptions = {
   itemName: string;
   enabled?: boolean;
@@ -44,22 +55,9 @@ export function useRecurrenceDetection({
   enabled = true,
 }: UseRecurrenceDetectionOptions): { detectedPattern: DetectedPattern | null } {
   const { recurrenceConfig } = useRecurrenceConfigQuery();
-  const canDetect = Boolean(enabled && itemName.trim() && recurrenceConfig);
-
   // Parsed while rendering: a transition would render the panel twice per name for nothing on screen.
-  const detectedPattern = useMemo(() => {
-    if (!canDetect || !recurrenceConfig) return null;
-
-    try {
-      const result = parseRecurrence(itemName, withKnownRules(recurrenceConfig));
-
-      return result.recurrence ? { pattern: result.recurrence, cleanText: result.cleanText } : null;
-    } catch (error) {
-      log.error({ err: error }, "Error parsing recurrence");
-
-      return null;
-    }
-  }, [itemName, recurrenceConfig, canDetect]);
+  const detectedPattern =
+    enabled && itemName.trim() && recurrenceConfig ? detect(itemName, recurrenceConfig) : null;
 
   return { detectedPattern };
 }
