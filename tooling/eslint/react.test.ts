@@ -5,10 +5,11 @@ import { compiledReactConfig, reactConfig } from "./react.ts";
 
 const jsx = { parserOptions: { ecmaFeatures: { jsx: true } } };
 
-/** The rules JSX `code` breaks under the compiled-code config. */
+/** The errors JSX `code` gets in a compiled workspace, under both React configs. */
 function lint(code: string): (string | null)[] {
   return new Linter()
-    .verify(code, [...compiledReactConfig, { languageOptions: jsx }], "file.tsx")
+    .verify(code, [...reactConfig, ...compiledReactConfig, { languageOptions: jsx }], "file.tsx")
+    .filter(({ severity }) => severity === 2)
     .map(({ ruleId }) => ruleId);
 }
 
@@ -63,7 +64,7 @@ describe("compiledReactConfig", () => {
   it("reports a finally the compiler skips, in an event handler too", () => {
     expect(
       lint(
-        "function Row({ a }) { const go = () => { try { a(); } catch {} finally { a(); } }; return <b onClick={go} />; }"
+        "function Row({ a }) { const go = () => { try { a(); } catch {} finally { a(); } }; return <button onClick={go} />; }"
       )
     ).toEqual(["react-hooks/todo"]);
   });
@@ -74,6 +75,15 @@ describe("compiledReactConfig", () => {
         "function createHooks({ useTRPC }) { function useX() { 'use memo'; const t = useTRPC(); try { t.a(); } catch {} finally { t.b(); } return t; } return { useX }; }"
       )
     ).toEqual(["react-hooks/todo"]);
+  });
+
+  it("reports a broken rule of React once, though both plugins check it", () => {
+    expect(lint("function Row() { const r = useRef(0); return <b>{r.current}</b>; }")).toEqual([
+      "react-hooks/refs",
+    ]);
+    expect(lint("function Row() { const now = Date.now(); return <b>{now}</b>; }")).toEqual([
+      "@eslint-react/purity",
+    ]);
   });
 
   it("leaves a function the compiler doesn't compile alone", () => {

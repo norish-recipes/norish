@@ -63,9 +63,8 @@ export default defineConfig(
     // app, so three rules aimed at the app itself misfire here.
     files: ["__tests__/e2e/**/*.ts"],
     rules: {
-      // Playwright names its fixture callback `use`, and both Rules of Hooks
-      // rules read every call of it as the `use` hook. Nothing here is a component.
-      "@eslint-react/rules-of-hooks": "off",
+      // Playwright names its fixture callback `use`, and the Rules of Hooks
+      // read every call of it as the `use` hook. Nothing here is a component.
       "react-hooks/rules-of-hooks": "off",
       // `async ({}, use) => {}` is how a fixture declares it takes no fixtures.
       "no-empty-pattern": "off",

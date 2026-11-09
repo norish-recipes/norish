@@ -104,8 +104,22 @@ export const compiledReactConfig = defineConfig({
     "react-hooks/unsupported-syntax": "error",
     // The compiler skips these callers on purpose, and the rule reports them under "use no memo" too.
     "react-hooks/incompatible-library": "off",
-    // @eslint-react's exhaustive-deps and set-state-in-effect already run, and neither is a skip.
+    // @eslint-react's copies run instead, and neither is a skip; mobile switches its
+    // set-state-in-effect off for now.
     "react-hooks/exhaustive-deps": "off",
     "react-hooks/set-state-in-effect": "off",
+    // The compiler plugin reports each of these as @eslint-react does, so its copy alone runs.
+    "@eslint-react/error-boundaries": "off",
+    "@eslint-react/immutability": "off",
+    "@eslint-react/refs": "off",
+    "@eslint-react/rules-of-hooks": "off",
+    "@eslint-react/set-state-in-render": "off",
+    "@eslint-react/static-components": "off",
+    "@eslint-react/unsupported-syntax": "off",
+    "@eslint-react/use-memo": "off",
+    // @eslint-react's purity also catches `new Date()` and impure hooks, and the build never
+    // checks purity, so the compiler plugin's copy reports no skip.
+    "@eslint-react/purity": "error",
+    "react-hooks/purity": "off",
   },
 });
