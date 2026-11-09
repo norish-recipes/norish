@@ -1,9 +1,9 @@
 "use client";
 
+import { OnTheListMark } from "@/components/ingredients/on-the-list-mark";
 import { IconActionButton } from "@/components/shared/action-button";
 import { showActionToast } from "@/lib/ui/action-toast";
-import { CheckIcon, ShoppingCartIcon } from "@heroicons/react/16/solid";
-import { Chip } from "@heroui/react";
+import { ShoppingCartIcon } from "@heroicons/react/16/solid";
 import { useLocale, useTranslations } from "next-intl";
 
 import type { LocaleNames } from "@norish/shared/lib/ingredient-names";
@@ -60,17 +60,5 @@ export function PutOnTheList({ onTheList, onPut }: { onTheList: boolean; onPut: 
       variant="tertiary"
       onPress={onPut}
     />
-  );
-}
-
-/** A kept food whose grocery is still to buy: handled, so nobody adds it twice. */
-export function OnTheListMark() {
-  const t = useTranslations("groceries.pantry");
-
-  return (
-    <Chip className="shrink-0" color="accent" data-testid="on-the-list" size="sm" variant="soft">
-      <CheckIcon className="size-3" />
-      {t("onTheList")}
-    </Chip>
   );
 }

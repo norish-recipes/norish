@@ -290,10 +290,6 @@ vi.mock("@norish/shared-react/groceries", () => ({
   usePantryMutations: () => ({ addPantryIngredient: vi.fn(), removePantryIngredient: vi.fn() }),
   useOnTheList: () => [],
 }));
-vi.mock("@/components/groceries/pantry/put-on-the-list", () => ({
-  PutOnTheList: () => null,
-  usePutOnTheList: () => vi.fn(),
-}));
 vi.mock("@/components/ingredients/ingredient-nutrition", () => ({
   IngredientNutritionSection: () => <section data-testid="ingredient-nutrition" />,
 }));

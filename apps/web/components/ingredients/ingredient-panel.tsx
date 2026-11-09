@@ -3,7 +3,7 @@
 import type { ReactNode } from "react";
 import { useEffect, useRef, useState } from "react";
 import Link from "next/link";
-import { OnTheListMark } from "@/components/groceries/pantry/put-on-the-list";
+import { OnTheListMark } from "@/components/ingredients/on-the-list-mark";
 import Panel from "@/components/Panel/Panel";
 import {
   ActionButton,

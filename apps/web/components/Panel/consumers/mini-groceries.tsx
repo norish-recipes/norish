@@ -1,8 +1,8 @@
 "use client";
 
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
-import { OnTheListMark } from "@/components/groceries/pantry/put-on-the-list";
 import { IngredientIcon, IngredientIconsProvider } from "@/components/ingredients/ingredient-icon";
+import { OnTheListMark } from "@/components/ingredients/on-the-list-mark";
 import Panel from "@/components/Panel/Panel";
 import { isCheckboxEvent, RoundCheckbox } from "@/components/round-checkbox";
 import {
