@@ -2,7 +2,7 @@
 
 import type { TRPCClient, TRPCLink } from "@trpc/client";
 import type { ReactNode } from "react";
-import { createContext, use, useEffect, useRef, useState } from "react";
+import { createContext, use, useEffect, useState } from "react";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { createTRPCClient } from "@trpc/client";
 import { createTRPCContext } from "@trpc/tanstack-react-query";
@@ -86,9 +86,9 @@ export function createTRPCProviderBundle({
     "use memo";
 
     const [status, setStatus] = useState<ConnectionStatus>("idle");
-    const webSocketClientRef = useRef<{ close: () => Promise<void> } | null>(null);
-
-    const [{ queryClient, trpcClient }] = useState(() => {
+    const [{ queryClient, trpcClient, closeWebSocket }] = useState(() => {
+      // The links' WebSocket client, closed when the provider unmounts.
+      let webSocketClient: { close: () => Promise<void> } | null = null;
       const qc = externalGetQueryClient
         ? externalGetQueryClient()
         : new QueryClient({
@@ -115,7 +115,7 @@ export function createTRPCProviderBundle({
           retryRandom,
           enableLoggerLink,
           onWebSocketClientCreate: (client) => {
-            webSocketClientRef.current = client;
+            webSocketClient = client;
             onWebSocketClientCreate?.(client);
           },
           onWebSocketOpen: () => {
@@ -134,14 +134,10 @@ export function createTRPCProviderBundle({
         }),
       });
 
-      return { queryClient: qc, trpcClient: tc };
-    });
+      const closeWebSocket = () => {
+        const client = webSocketClient;
 
-    useEffect(() => {
-      return () => {
-        const client = webSocketClientRef.current;
-
-        webSocketClientRef.current = null;
+        webSocketClient = null;
 
         if (!client) {
           return;
@@ -149,7 +145,11 @@ export function createTRPCProviderBundle({
 
         void client.close().catch(() => null);
       };
-    }, []);
+
+      return { queryClient: qc, trpcClient: tc, closeWebSocket };
+    });
+
+    useEffect(() => closeWebSocket, [closeWebSocket]);
 
     const connectionValue: ConnectionContextValue = {
       status,

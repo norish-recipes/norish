@@ -18,7 +18,7 @@
  */
 
 import type { QueryKey } from "@tanstack/react-query";
-import { useRef } from "react";
+import { useState } from "react";
 import { useQueryClient } from "@tanstack/react-query";
 import { TRPCClientError } from "@trpc/client";
 import { useSubscription } from "@trpc/tanstack-react-query";
@@ -80,13 +80,33 @@ function isTrackedItem(data: unknown): data is TrackedItem {
   );
 }
 
+/**
+ * A lag the fresh subscription has yet to catch up on: armed by the lag, taken by its Cursor Mark.
+ * Not a ref: the React Compiler skips a hook that reads one in callbacks `subscriptionOptions` gets.
+ */
+function createCatchUpLatch() {
+  let pending = false;
+
+  return {
+    arm: () => {
+      pending = true;
+    },
+    take: () => {
+      const wasPending = pending;
+
+      pending = false;
+
+      return wasPending;
+    },
+  };
+}
+
 export function useRealtimeSubscription<P>(
   procedure: RealtimeSubscriptionProcedure,
   handlers: RealtimeSubscriptionHandlers<P>
 ) {
   const queryClient = useQueryClient();
-  // A lag the fresh subscription has yet to catch up on.
-  const catchUpPending = useRef(false);
+  const [catchUpLatch] = useState(createCatchUpLatch);
 
   const catchUp = () => {
     if (handlers.onLag) {
@@ -115,10 +135,7 @@ export function useRealtimeSubscription<P>(
       // A Cursor Mark carries no event: the transport tracks it, handlers never
       // see it. It does say the subscription is live, which a lag waits for.
       if (isCursorMark(item)) {
-        if (catchUpPending.current) {
-          catchUpPending.current = false;
-          catchUp();
-        }
+        if (catchUpLatch.take()) catchUp();
 
         return;
       }
@@ -130,7 +147,7 @@ export function useRealtimeSubscription<P>(
       if (!isRealtimeLagged(err)) return;
 
       // A fresh subscription, no cursor; the refetch follows its Cursor Mark.
-      catchUpPending.current = true;
+      catchUpLatch.arm();
       subscription.reset();
     },
   });

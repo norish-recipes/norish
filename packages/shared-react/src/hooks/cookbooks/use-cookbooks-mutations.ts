@@ -135,7 +135,7 @@ export function createUseCookbooksMutations({
         });
       },
       [
-        createMutation,
+        mutateCreate,
         currentUserId,
         invalidate,
         invalidateMembership,
@@ -238,7 +238,7 @@ export function createUseCookbooksMutations({
         );
       },
       [
-        membershipMutation,
+        mutateMembership,
         setAllCookbooksData,
         patchRecipeMembership,
         invalidate,
@@ -284,7 +284,7 @@ export function createUseCookbooksMutations({
           }
         );
       },
-      [updateMutation, setAllCookbooksData, invalidateCookbook, invalidateUnlessQueued]
+      [mutateUpdate, setAllCookbooksData, invalidateCookbook, invalidateUnlessQueued]
     );
 
     const deleteCookbook = useCallback(
@@ -308,7 +308,7 @@ export function createUseCookbooksMutations({
 
         mutateDelete({ id, version }, { onError: invalidateUnlessQueued });
       },
-      [deleteMutation, setAllCookbooksData, invalidateUnlessQueued]
+      [mutateDelete, setAllCookbooksData, invalidateUnlessQueued]
     );
 
     /** Store a cover and resolve with the URL an `updateCookbook` can save. */
@@ -325,7 +325,7 @@ export function createUseCookbooksMutations({
 
         return result.url;
       },
-      [uploadImageMutation]
+      [mutateUploadImageAsync]
     );
 
     return {

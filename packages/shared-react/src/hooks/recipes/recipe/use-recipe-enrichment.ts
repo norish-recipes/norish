@@ -325,7 +325,7 @@ export function createUseRecipeEnrichment({ useTRPC }: CreateRecipeHooksOptions)
         );
         mutateMutation({ recipeId, kind });
       },
-      [recipeId, mutation, applyLifecycle]
+      [recipeId, mutateMutation, applyLifecycle]
     );
 
     const isBusy = useCallback(
