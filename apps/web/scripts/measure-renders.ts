@@ -534,7 +534,14 @@ async function pickView(page: Page, view: "store" | "recipe") {
 }
 
 async function groceries(browser: Browser) {
-  await resetGroceries(await signIn(BASE, ACCOUNT));
+  const cookies = await signIn(BASE, ACCOUNT);
+
+  await resetGroceries(cookies);
+  // Grouped whatever the account stored; the view mode is picked in the page below.
+  await callTrpc(BASE, cookies, "user.setDevicePreferences", {
+    kind: "phone",
+    preferences: { groceryGroupSimilar: true },
+  });
   const tab = await openTab(browser, true);
   const other = await openTab(browser, false);
 
