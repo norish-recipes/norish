@@ -5,9 +5,11 @@
 
 import { act } from "react";
 import { QueryClient } from "@tanstack/react-query";
+import { TRPCClientError } from "@trpc/client";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 
 import type { FullRecipeDTO, RecipeDashboardDTO } from "@norish/shared/contracts";
+import { CURSOR_MARK, REALTIME_LAGGED } from "@norish/shared/contracts/realtime/envelope";
 
 import type { CreateRecipeHooksOptions } from "../../src/hooks/recipes/types";
 import { createUseRecipesCacheHelpers } from "../../src/hooks/recipes/dashboard/use-recipes-cache";
@@ -15,7 +17,10 @@ import { createUseRecipesSubscription } from "../../src/hooks/recipes/dashboard/
 import { trackedEvent } from "../realtime/tracked-event";
 import { renderHookWithClient } from "./render-hook";
 
-const useSubscriptionMock = vi.hoisted(() => vi.fn());
+// A lag resets the subscription it lagged on.
+const useSubscriptionMock = vi.hoisted(() =>
+  vi.fn((_options: unknown) => ({ reset: () => undefined }))
+);
 
 vi.mock("@trpc/tanstack-react-query", async () => {
   const actual = await vi.importActual<typeof import("@trpc/tanstack-react-query")>(
@@ -93,11 +98,16 @@ function fullRecipe(overrides: Partial<FullRecipeDTO> = {}): FullRecipeDTO {
   } as FullRecipeDTO;
 }
 
+type SubscriptionOptions = {
+  name: string;
+  onData: (data: unknown) => void;
+  onError: (err: unknown) => void;
+  onStarted?: () => void;
+};
+
 function subscription(name: string) {
   const options = useSubscriptionMock.mock.calls
-    .map(
-      (call) => call[0] as { name: string; onData: (data: unknown) => void; onStarted?: () => void }
-    )
+    .map(([options]) => options as SubscriptionOptions)
     .find((opts) => opts.name === name);
 
   if (!options) throw new Error(`No subscription named ${name}`);
@@ -107,6 +117,13 @@ function subscription(name: string) {
 
 function emit(name: string, payload: unknown) {
   act(() => subscription(name).onData(trackedEvent(payload)));
+}
+
+/** How often the pending imports were reread. */
+function pendingRereads() {
+  return invalidateQueries.mock.calls.filter(
+    ([filters]) => JSON.stringify(filters) === JSON.stringify({ queryKey: PENDING_KEY })
+  ).length;
 }
 
 let queryClient: QueryClient;
@@ -227,11 +244,6 @@ describe("useRecipesSubscription", () => {
   ])(
     "rereads the pending imports once, when %s and then %s are live, for an import that ended before",
     (first, second) => {
-      const pendingRereads = () =>
-        invalidateQueries.mock.calls.filter(
-          ([filters]) => JSON.stringify(filters) === JSON.stringify({ queryKey: PENDING_KEY })
-        ).length;
-
       act(() => subscription(first).onStarted?.());
       expect(pendingRereads()).toBe(0);
 
@@ -242,6 +254,24 @@ describe("useRecipesSubscription", () => {
       act(() => subscription(first).onStarted?.());
       act(() => subscription(second).onStarted?.());
       expect(pendingRereads()).toBe(2);
+    }
+  );
+
+  it.each(["onImported", "onFailed"])(
+    "rereads the pending imports and the lists when %s alone lags, once it is live again",
+    (name) => {
+      act(() => subscription("onImported").onStarted?.());
+      act(() => subscription("onFailed").onStarted?.());
+      expect(pendingRereads()).toBe(1);
+
+      // The lag restarts this subscription alone, and catches up once its Cursor Mark arrives.
+      act(() => subscription(name).onError(new TRPCClientError(REALTIME_LAGGED)));
+      act(() => subscription(name).onStarted?.());
+      expect(pendingRereads()).toBe(1);
+
+      act(() => subscription(name).onData({ id: "1.abcdef01.1700000000000-0", data: CURSOR_MARK }));
+      expect(pendingRereads()).toBe(2);
+      expect(invalidateQueries).toHaveBeenCalledWith({ queryKey: [["recipes", "list"]] });
     }
   );
 });

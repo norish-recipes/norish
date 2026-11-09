@@ -42,6 +42,8 @@ export function createUseRecipesSubscription(
     // A lagged subscription refetches the lists; the detail caches are
     // refetched by the screens that hold them.
     const lag = { onLag: invalidate };
+    const rereadPending = () =>
+      void queryClient.invalidateQueries({ queryKey: trpc.recipes.getPending.queryKey() });
     // A fresh subscription carries no cursor, so an import that ended before both outcomes'
     // subscriptions were live reaches neither: the pending list is reread once both are.
     const liveOutcomesRef = useRef({ imported: false, failed: false });
@@ -51,7 +53,15 @@ export function createUseRecipesSubscription(
       if (!liveOutcomesRef.current.imported || !liveOutcomesRef.current.failed) return;
 
       liveOutcomesRef.current = { imported: false, failed: false };
-      void queryClient.invalidateQueries({ queryKey: trpc.recipes.getPending.queryKey() });
+      rereadPending();
+    };
+    // A lag restarts one outcome alone, which never completes the pair, so its catch-up rereads
+    // the pending list as well as the lists.
+    const outcomeLag = {
+      onLag: () => {
+        invalidate();
+        rereadPending();
+      },
     };
     // The server saves after the mutation answers, so the household's Categories
     // are reread when the save is announced, not when the mutation succeeds.
@@ -118,7 +128,7 @@ export function createUseRecipesSubscription(
     });
 
     useRealtimeSubscription<Payload<"imported">>(trpc.recipes.onImported, {
-      ...lag,
+      ...outcomeLag,
       onStarted: outcomeLive("imported"),
       onEvent: (payload) => {
         const pendingId = payload.pendingRecipeId ?? payload.recipe.id;
@@ -180,7 +190,7 @@ export function createUseRecipesSubscription(
     });
 
     useRealtimeSubscription<Payload<"failed">>(trpc.recipes.onFailed, {
-      ...lag,
+      ...outcomeLag,
       onStarted: outcomeLive("failed"),
       onEvent: (payload) => {
         if (payload.recipeId) {
