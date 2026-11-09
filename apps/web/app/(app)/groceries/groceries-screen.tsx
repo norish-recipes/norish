@@ -30,11 +30,11 @@ const SLIDE_PX = 24;
 /**
  * Groceries as a whole screen, on both of its views: the list's reads and
  * realtime (the Pantry reads the household's groceries and creates them), the
- * header, and the view the address names. The switch only rewrites the address, so
- * changing views asks the server for nothing: the view slides out towards its
- * own side of the switch while the other slides in from its side, and nothing
- * above them moves. The Pantry is read while the list shows, so its first
- * visit lands whole rather than as a skeleton.
+ * header, and the view the address names. The switch only rewrites the
+ * address, so changing views asks the server for nothing: the view slides out
+ * towards its own side of the switch while the other slides in from its side,
+ * and nothing above them moves. The Pantry is read while the list shows, so
+ * its first visit lands whole rather than as a skeleton.
  */
 export function GroceriesScreen() {
   const view: GroceriesView = usePathname()?.startsWith("/groceries/pantry") ? "pantry" : "list";
@@ -71,8 +71,8 @@ export function GroceriesScreen() {
           </AnimatePresence>
         </div>
         {/* The list's floating add pill lives out here: a sliding view is
-              transformed, which would pin a fixed pill to the view instead of
-              the screen until the slide ends. */}
+            transformed, which would pin a fixed pill to the view instead of
+            the screen until the slide ends. */}
         <AnimatePresence initial={false}>
           {view === "list" ? (
             <motion.div
