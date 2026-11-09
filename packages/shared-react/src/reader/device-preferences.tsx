@@ -58,7 +58,6 @@ export function useDevicePreference<K extends keyof DevicePreferences>(
   const queryClient = useQueryClient();
   const kind = useDeviceKind();
   const forVisit = use(ForVisitContext);
-  const queryKey = trpc.user.getDevicePreferences.queryKey();
   const mutationKey = trpc.user.setDevicePreferences.mutationKey();
 
   const { data: stored = DEVICE_PREFERENCE_DEFAULTS[key] } = useQuery({
@@ -101,6 +100,8 @@ export function useDevicePreference<K extends keyof DevicePreferences>(
   const { mutate } = useMutation({
     ...trpc.user.setDevicePreferences.mutationOptions({
       onMutate: (write) => {
+        const queryKey = trpc.user.getDevicePreferences.queryKey();
+
         queryClient.setQueryData(queryKey, (blocks) => withWrite(blocks, write));
         // After the write: a cancelled read reverts to the last value set by hand, which a copy
         // restored from the Offline Cache mid-read is not.
@@ -108,13 +109,17 @@ export function useDevicePreference<K extends keyof DevicePreferences>(
       },
       // Again, over any read that landed while it was on its way.
       onSuccess: (_result, write) =>
-        queryClient.setQueryData(queryKey, (blocks) => withWrite(blocks, write)),
+        queryClient.setQueryData(trpc.user.getDevicePreferences.queryKey(), (blocks) =>
+          withWrite(blocks, write)
+        ),
       onSettled: (_result, error) => {
         // Queued in the Outbox: keep the change. Otherwise read again once the last write settles,
         // which also puts a refused one back; this write still counts until it returns.
         if (error && shouldPreserveOptimisticUpdate(error)) return;
         if (queryClient.isMutating({ mutationKey }) === 1) {
-          void queryClient.invalidateQueries({ queryKey });
+          void queryClient.invalidateQueries({
+            queryKey: trpc.user.getDevicePreferences.queryKey(),
+          });
         }
       },
     }),
@@ -130,8 +135,11 @@ export function useDevicePreference<K extends keyof DevicePreferences>(
         : next;
     const write: Write = { kind, preferences: { [key]: resolved } };
 
-    if (forVisit) queryClient.setQueryData(queryKey, (blocks) => withWrite(blocks, write));
-    else mutate(write);
+    if (forVisit) {
+      queryClient.setQueryData(trpc.user.getDevicePreferences.queryKey(), (blocks) =>
+        withWrite(blocks, write)
+      );
+    } else mutate(write);
   };
 
   return [value, setValue] as const;
