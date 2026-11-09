@@ -1,7 +1,7 @@
 "use client";
 
 import type { DragEndEvent, DragStartEvent } from "@dnd-kit/core";
-import { memo, useCallback, useEffect, useMemo, useRef, useState } from "react";
+import { memo, useCallback, useEffect, useId, useMemo, useRef, useState } from "react";
 import {
   closestCenter,
   DndContext,
@@ -178,6 +178,8 @@ function RecipeSectionComponent({
   // DnD Setup
   // =============================================================================
 
+  // dnd-kit numbers its aria-describedby from a counter the server and client don't share.
+  const dndId = useId();
   const sensors = useSensors(
     useSensor(PointerSensor, {
       activationConstraint: { distance: 8 },
@@ -271,6 +273,7 @@ function RecipeSectionComponent({
         <div className="border-border border-t" data-testid="store-rows">
           <DndContext
             collisionDetection={closestCenter}
+            id={dndId}
             sensors={sensors}
             onDragCancel={handleDragCancel}
             onDragEnd={handleDragEnd}
