@@ -2,6 +2,7 @@
 
 import type { ReactNode } from "react";
 import { createContext, use, useMemo } from "react";
+import { iconIds } from "@/lib/ingredient-icon-ids";
 import { keepPreviousData, useQueries, useQuery } from "@tanstack/react-query";
 import { useDebounceValue } from "usehooks-ts";
 
@@ -17,9 +18,6 @@ import { addBasePath } from "@norish/shared/lib/base-path";
 const SIZES = { chip: "size-5", line: "size-6 md:size-8", panel: "size-16" } as const;
 
 export type IngredientIconSize = keyof typeof SIZES;
-
-/** How many foods one read asks about: the procedure's own limit. */
-const MAX_IDS = 500;
 
 /** How long typing pauses before a typed name is looked up. */
 const FIND_DELAY_MS = 400;
@@ -48,12 +46,7 @@ export function useIngredientIcons(
 ): Readonly<Record<string, string | null>> {
   const trpc = useTRPC();
   const key = ids.filter(Boolean).join(",");
-  const wanted = useMemo(
-    // ponytail: a surface past 500 foods shows no icons beyond them; page the read if one ever does.
-    () =>
-      [...new Set(key ? key.split(",") : [])].sort((a, b) => a.localeCompare(b)).slice(0, MAX_IDS),
-    [key]
-  );
+  const wanted = useMemo(() => iconIds(key ? key.split(",") : []), [key]);
   const { data } = useQuery({
     ...trpc.ingredients.icons.queryOptions({ ids: wanted }),
     enabled: wanted.length > 0,
