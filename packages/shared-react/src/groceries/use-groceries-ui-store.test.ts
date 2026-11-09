@@ -8,7 +8,8 @@ describe("useGroceriesUiStore", () => {
   beforeEach(() => ui().reset());
 
   it("starts with every panel closed", () => {
-    expect(ui()).toMatchObject({
+    // As created, before any test's reset.
+    expect(useGroceriesUiStore.getInitialState()).toMatchObject({
       addGroceryPanelOpen: false,
       editingGroceryId: null,
       storeManagerOpen: false,
