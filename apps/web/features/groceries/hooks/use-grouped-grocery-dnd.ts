@@ -279,24 +279,26 @@ export function useGroupedGroceryDnd({
         ? findContainerForGroup(active.id as string, originalGroupItems)
         : null;
       const movedGroup = groupMap.get(active.id as string);
+      const { updates, filings } =
+        originalContainer && movedGroup
+          ? planDrop({
+              items: groupItems,
+              originContainer: originalContainer,
+              targetContainer: currentContainer,
+              stores,
+              aisleFor,
+              movedIds: movedGroup.sources.map((source) => source.grocery.id),
+              movedGroceries: movedGroup.sources.map((source) => source.grocery),
+              idsOf: (groupKey) =>
+                groupMap.get(groupKey)?.sources.map((source) => source.grocery.id) ?? [],
+            })
+          : { updates: [], filings: [] };
 
-      if (originalContainer && movedGroup) {
-        const { updates, filings } = planDrop({
-          items: groupItems,
-          originContainer: originalContainer,
-          targetContainer: currentContainer,
-          stores,
-          aisleFor,
-          movedIds: movedGroup.sources.map((source) => source.grocery.id),
-          movedGroceries: movedGroup.sources.map((source) => source.grocery),
-          idsOf: (groupKey) =>
-            groupMap.get(groupKey)?.sources.map((source) => source.grocery.id) ?? [],
-        });
-
-        if (updates.length > 0) onReorderGroups(updates);
-        for (const filing of filings)
-          onFileGroceryName(filing.storeId, filing.grocery, filing.aisleId);
-      }
+      if (updates.length > 0) onReorderGroups(updates);
+      for (const filing of filings)
+        onFileGroceryName(filing.storeId, filing.grocery, filing.aisleId);
+      // A drop that writes nothing brings no list back, so the Stores read their own groups now.
+      if (updates.length === 0 && filings.length === 0) setArranged(false);
 
       setActiveGroupKey(null);
       setOverContainerId(null);
