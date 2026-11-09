@@ -53,9 +53,7 @@ export function useRecurrenceDetection({
     try {
       const result = parseRecurrence(itemName, withKnownRules(recurrenceConfig));
 
-      return result.recurrence
-        ? { pattern: result.recurrence, cleanText: result.cleanText }
-        : null;
+      return result.recurrence ? { pattern: result.recurrence, cleanText: result.cleanText } : null;
     } catch (error) {
       log.error({ err: error }, "Error parsing recurrence");
 

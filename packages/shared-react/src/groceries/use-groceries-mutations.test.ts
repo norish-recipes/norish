@@ -233,7 +233,12 @@ describe("useGroceriesMutations", () => {
 
       _mockMutations.create.mockImplementationOnce(async ([sent]: Array<{ id: string }>) => {
         const apples = createMockGrocery({ id: sent!.id, storeId: "store-1", sortOrder: 0 });
-        const milk = createMockGrocery({ id: "milk", storeId: "store-1", sortOrder: 1, version: 2 });
+        const milk = createMockGrocery({
+          id: "milk",
+          storeId: "store-1",
+          sortOrder: 1,
+          version: 2,
+        });
 
         return {
           ids: [apples.id],

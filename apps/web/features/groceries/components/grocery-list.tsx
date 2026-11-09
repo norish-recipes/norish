@@ -8,9 +8,9 @@ import { motion } from "motion/react";
 import { useTranslations } from "next-intl";
 
 import type { GroceryDto, RecurringGroceryDto, StoreDto } from "@norish/shared/contracts";
+import type { GroceryGroup } from "@norish/shared/lib/grocery-grouping";
 import { useUnitsQuery } from "@norish/shared-react/config";
 import { useFileGroceryName, useStoreAisles } from "@norish/shared-react/groceries";
-import type { GroceryGroup } from "@norish/shared/lib/grocery-grouping";
 import { groupGroceriesByIngredient } from "@norish/shared/lib/grocery-grouping";
 import { cssEmptyStateGlow } from "@norish/web/config/css-tokens";
 
