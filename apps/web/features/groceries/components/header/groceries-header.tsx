@@ -2,6 +2,7 @@
 
 import type { GroceriesView } from "@/features/groceries/lib/groceries-view";
 import { RollingText } from "@/components/shared/rolling-text";
+import { VIEW_HREF } from "@/features/groceries/lib/groceries-view";
 import { ArchiveBoxIcon, ClipboardDocumentListIcon } from "@heroicons/react/20/solid";
 import { Tabs } from "@heroui/react";
 import { AnimatePresence, motion } from "motion/react";
@@ -17,8 +18,6 @@ import { GroceriesListActions } from "./list-actions";
 function longestTitle(titles: Record<GroceriesView, string>) {
   return Math.max(...Object.values(titles).map((title) => [...title].length));
 }
-
-const HREF: Record<GroceriesView, string> = { list: "/groceries", pantry: "/groceries/pantry" };
 
 /** How long the views, and what only one of them has, take to come and go. */
 export const VIEW_TRANSITION = { duration: 0.2, ease: "easeOut" } as const;
@@ -75,7 +74,7 @@ export function GroceriesHeader({ view }: { view: GroceriesView }) {
         <Tabs
           selectedKey={view}
           onSelectionChange={(key) =>
-            window.history.pushState(null, "", addBasePath(HREF[key as GroceriesView]))
+            window.history.pushState(null, "", addBasePath(VIEW_HREF[key as GroceriesView]))
           }
         >
           <Tabs.ListContainer className="shrink-0">

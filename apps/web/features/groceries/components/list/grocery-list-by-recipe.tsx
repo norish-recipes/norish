@@ -2,6 +2,7 @@
 
 import { useMemo } from "react";
 import { IngredientIconsProvider } from "@/components/ingredients/ingredient-icon";
+import { listFoodIds } from "@/features/groceries/lib/list-food-ids";
 import { ShoppingCartIcon } from "@heroicons/react/24/outline";
 import { motion } from "motion/react";
 import { useTranslations } from "next-intl";
@@ -38,13 +39,8 @@ interface RecipeGroup {
 
 /** The list by recipe, under one read of the icons of every food on it. */
 export function GroceryListByRecipe(props: GroceryListByRecipeProps) {
-  const foods = [
-    ...props.groceries.map((grocery) => grocery.ingredientId),
-    ...props.recurringGroceries.map((recurring) => recurring.ingredientId),
-  ];
-
   return (
-    <IngredientIconsProvider ids={foods}>
+    <IngredientIconsProvider ids={listFoodIds(props)}>
       <GroceryListByRecipeContent {...props} />
     </IngredientIconsProvider>
   );

@@ -3,6 +3,7 @@
 import { useMemo } from "react";
 import { IngredientIconsProvider } from "@/components/ingredients/ingredient-icon";
 import { useStructuralSharing } from "@/features/groceries/hooks/use-structural-sharing";
+import { listFoodIds } from "@/features/groceries/lib/list-food-ids";
 import { ShoppingCartIcon } from "@heroicons/react/24/outline";
 import { motion } from "motion/react";
 import { useTranslations } from "next-intl";
@@ -44,13 +45,8 @@ interface GroceryListProps {
 
 /** The list, under one read of the icons of every food on it. */
 export function GroceryList(props: GroceryListProps) {
-  const foods = [
-    ...props.groceries.map((grocery) => grocery.ingredientId),
-    ...props.recurringGroceries.map((recurring) => recurring.ingredientId),
-  ];
-
   return (
-    <IngredientIconsProvider ids={foods}>
+    <IngredientIconsProvider ids={listFoodIds(props)}>
       <GroceryListContent {...props} />
     </IngredientIconsProvider>
   );

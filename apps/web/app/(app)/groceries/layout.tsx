@@ -2,6 +2,7 @@ import { headers } from "next/headers";
 import { QuerySeed } from "@/components/query-seed";
 import { GroceriesRoot } from "@/features/groceries/groceries-root";
 import { groceriesView } from "@/features/groceries/lib/groceries-view";
+import { listFoodIds } from "@/features/groceries/lib/list-food-ids";
 import { DESTINATION_HEADER } from "@/lib/auth/login-redirect";
 import { iconIds } from "@/lib/ingredient-icon-ids";
 
@@ -38,13 +39,7 @@ export default async function GroceriesLayout() {
             ]
           : [
               // The list and its foods' icons, its stores, prices and aisles.
-              withIcons(
-                client
-                  .query(trpc.groceries.list.queryOptions())
-                  .then((list) =>
-                    [...list.groceries, ...list.recurringGroceries].map((item) => item.ingredientId)
-                  )
-              ),
+              withIcons(client.query(trpc.groceries.list.queryOptions()).then(listFoodIds)),
               client.query(trpc.stores.list.queryOptions()),
               client.query(trpc.stores.groceryPrices.queryOptions()),
               client.query(trpc.stores.aisleLinks.queryOptions()),
