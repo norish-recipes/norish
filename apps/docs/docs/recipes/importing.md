@@ -35,6 +35,8 @@ browser, including Safari.
 2. On a recipe page, click the bookmark. Norish opens in a new tab and starts the
    import.
 
+![The Import while browsing card in Settings](/img/screenshots/import-bookmarklet-settings.png)
+
 The bookmarklet holds a private code tied to your account, so treat it like a
 bookmark only you use. A link to the import page without that code shows the
 recipe and waits for you to press **Import**, so another website can't add
