@@ -3,6 +3,16 @@ import stylistic from "@stylistic/eslint-plugin";
 import jsxA11y from "eslint-plugin-jsx-a11y-x";
 import { defineConfig } from "eslint/config";
 
+// `target` inside what the compiler compiles: a hook or component, found by its name or as the
+// function `memo` or `forwardRef` wraps.
+const inCompiled = (target: string) =>
+  `:matches(${[
+    ":function[id.name=/^(use[A-Z0-9]|[A-Z])/]",
+    "VariableDeclarator[id.name=/^(use[A-Z0-9]|[A-Z])/] > :function",
+    "CallExpression[callee.name=/^(memo|forwardRef)$/] > :function",
+    "CallExpression[callee.object.name='React'][callee.property.name=/^(memo|forwardRef)$/] > :function",
+  ].join(", ")}) ${target}`;
+
 const restrictedSyntax = [
   // `crypto.randomUUID` exists only in a secure context. A self-hosted
   // Norish is routinely reached over plain HTTP on a LAN name, where it is
@@ -37,25 +47,21 @@ const restrictedSyntax = [
   })),
   // React Compiler 1.0 cannot lower a `finally`, and skips the whole
   // component or hook that has one, event handlers included.
-  ...[
-    ":function[id.name=/^(use[A-Z0-9]|[A-Z])/] TryStatement[finalizer]",
-    "VariableDeclarator[id.name=/^(use[A-Z0-9]|[A-Z])/] > :function TryStatement[finalizer]",
-  ].map((selector) => ({
-    selector,
+  {
+    selector: inCompiled("TryStatement[finalizer]"),
     message:
       "The React Compiler skips a component or hook with a `finally` in it: chain `.finally()` on the promise instead.",
-  })),
+  },
 ];
 
 // React Compiler 1.0 cannot lower a logical assignment either, and skips the whole component or hook.
-const logicalAssignment = [
-  ":function[id.name=/^(use[A-Z0-9]|[A-Z])/] AssignmentExpression:matches([operator='||='], [operator='&&='], [operator='??='])",
-  "VariableDeclarator[id.name=/^(use[A-Z0-9]|[A-Z])/] > :function AssignmentExpression:matches([operator='||='], [operator='&&='], [operator='??='])",
-].map((selector) => ({
-  selector,
+const logicalAssignment = {
+  selector: inCompiled(
+    "AssignmentExpression:matches([operator='||='], [operator='&&='], [operator='??='])"
+  ),
   message:
     "The React Compiler skips a component or hook with `||=`, `&&=` or `??=` in it: write the assignment out.",
-}));
+};
 
 export const reactConfig = defineConfig(
   {
@@ -96,8 +102,8 @@ export const reactConfig = defineConfig(
   }
 );
 
-// For the workspaces the React Compiler builds: web, mobile and shared-react.
+// For the workspaces the React Compiler builds: web, mobile, shared-react and ui.
 export const compiledReactConfig = defineConfig({
   files: ["**/*.ts", "**/*.tsx"],
-  rules: { "no-restricted-syntax": ["error", ...restrictedSyntax, ...logicalAssignment] },
+  rules: { "no-restricted-syntax": ["error", ...restrictedSyntax, logicalAssignment] },
 });
