@@ -9,7 +9,6 @@ import type { GroceryDto, RecurringGroceryDto, StoreDto } from "@norish/shared/c
 import type { GroceryGroup } from "@norish/shared/lib/grocery-grouping";
 
 import type { GroupRow } from "./dnd";
-import { AisleHeading } from "./aisle-heading";
 import {
   aisleContainerId,
   SortableAisleContainer,
@@ -192,13 +191,12 @@ function GroupedStoreSectionComponent({
               <SortableAisleContainer
                 key={aisle.id}
                 activeId={activeId}
-                aisleId={aisle.id}
-                header={<AisleHeading aisleId={aisle.id} count={rows.length} name={aisle.name} />}
+                aisle={aisle}
                 itemIds={keysOf(aisleContainerId(aisle.id))}
                 overContainerId={overContainerId}
-              >
-                {rows.map(renderActive)}
-              </SortableAisleContainer>
+                renderRow={renderActive}
+                rows={rows}
+              />
             ))}
 
             {/* The done tail, folded into one row that opens on tap; not sortable */}

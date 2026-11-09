@@ -1,4 +1,4 @@
-import { useMemo } from "react";
+import { useStructuralSharing } from "@/features/groceries/hooks/use-structural-sharing";
 
 import type { AisleDto } from "@norish/shared/contracts";
 
@@ -29,13 +29,16 @@ export function useAisleBlocks<T>(
   aisles: readonly AisleDto[] | undefined,
   activeIn: (containerId: string) => T[]
 ): AisleBlocks<T> {
-  return useMemo(() => {
-    const unfiled = activeIn(containerId);
-    const blocks = (aisles ?? []).map((aisle) => ({
-      aisle,
-      rows: activeIn(aisleContainerId(aisle.id)),
-    }));
+  const unfiled = activeIn(containerId);
+  const blocks = (aisles ?? []).map((aisle) => ({
+    aisle,
+    rows: activeIn(aisleContainerId(aisle.id)),
+  }));
 
-    return { unfiled, blocks, active: [...unfiled, ...blocks.flatMap((block) => block.rows)] };
-  }, [activeIn, containerId, aisles]);
+  // An aisle whose rows did not change keeps its array, so its memoised container skips the render.
+  return useStructuralSharing({
+    unfiled,
+    blocks,
+    active: [...unfiled, ...blocks.flatMap((block) => block.rows)],
+  });
 }

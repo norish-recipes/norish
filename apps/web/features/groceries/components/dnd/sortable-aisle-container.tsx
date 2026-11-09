@@ -2,6 +2,7 @@
 
 import type { AnimateLayoutChanges } from "@dnd-kit/sortable";
 import type { ReactNode } from "react";
+import { memo } from "react";
 import {
   defaultAnimateLayoutChanges,
   SortableContext,
@@ -9,22 +10,26 @@ import {
   verticalListSortingStrategy,
 } from "@dnd-kit/sortable";
 
+import type { AisleDto } from "@norish/shared/contracts";
+
+import { AisleHeading } from "../aisle-heading";
 import { aisleContainerId } from "./utils";
 
 // Always animate layout changes, including after drag
 const animateLayoutChanges: AnimateLayoutChanges = (args) =>
   defaultAnimateLayoutChanges({ ...args, wasDragging: true });
 
-interface SortableAisleContainerProps {
-  aisleId: string;
-  /** The keys under this aisle now — rows or groups — in the order the drag has them. */
+interface SortableAisleContainerProps<T> {
+  aisle: AisleDto;
+  /** What is filed under it now, rows or groups, in the order the drag has them. */
+  rows: readonly T[];
+  /** The keys of `rows`. */
   itemIds: string[];
   /** Whether a drag is on, and which container it is over. */
   activeId: string | null;
   overContainerId: string | null;
-  /** The aisle's heading: part of the droppable, so an empty aisle can still be dropped into. */
-  header: ReactNode;
-  children: ReactNode;
+  /** One function for every aisle of a Store, so an aisle whose rows are unchanged does not render. */
+  renderRow: (row: T) => ReactNode;
 }
 
 /**
@@ -32,15 +37,15 @@ interface SortableAisleContainerProps {
  * its heading and whatever is filed under it. It is always rendered, so an
  * empty aisle is a place to drag a row without any drag-time layout change.
  */
-export function SortableAisleContainer({
-  aisleId,
+function SortableAisleContainerComponent<T>({
+  aisle,
+  rows,
   itemIds,
   activeId,
   overContainerId,
-  header,
-  children,
-}: SortableAisleContainerProps) {
-  const containerId = aisleContainerId(aisleId);
+  renderRow,
+}: SortableAisleContainerProps<T>) {
+  const containerId = aisleContainerId(aisle.id);
   const { active, over, setNodeRef, transition } = useSortable({
     id: containerId,
     data: { type: "container", children: itemIds },
@@ -59,14 +64,20 @@ export function SortableAisleContainer({
       className={`divide-border divide-y transition-shadow duration-200 ${
         showDropIndicator ? "ring-accent rounded-lg ring-2 ring-inset" : ""
       }`}
-      data-aisle-id={aisleId}
+      data-aisle-id={aisle.id}
       data-is-over={isOverContainer}
       style={{ transition }}
     >
-      {header}
+      {/* The heading is part of the droppable, so an empty aisle can still be dropped into */}
+      <AisleHeading aisleId={aisle.id} count={rows.length} name={aisle.name} />
       <SortableContext items={itemIds} strategy={verticalListSortingStrategy}>
-        {children}
+        {rows.map(renderRow)}
       </SortableContext>
     </div>
   );
 }
+
+// memo drops the type parameter, so the export puts it back.
+export const SortableAisleContainer = memo(
+  SortableAisleContainerComponent
+) as typeof SortableAisleContainerComponent;
