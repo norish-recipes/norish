@@ -12,5 +12,5 @@ Done at e7d81d0d0, in four steps: Pantry (344435606), stores, prices and aisles 
 - [x] The groceries, stores and pantry hook factories and context factories are deleted, with web's `hooks/groceries`, `hooks/stores`, `hooks/pantry` bindings, `app/(app)/groceries/context.tsx`'s data context and `stores-context.tsx`'s data part.
 - [x] Mobile's `src/hooks/groceries` binding is deleted and the smoke screen imports from `@norish/shared-react/groceries`.
 - [x] No shared-react groceries file imports another shared-react feature.
-- [x] The `store-prices-pending`, `store-aisles` and `pantry` suites sit next to the code and run against the plain hooks. Lint and typecheck skip test files wherever they sit.
+- [x] The `store-prices-pending`, `store-aisles` and `pantry` suites sit next to the code and run against the plain hooks. Lint skips them, since the base ESLint config ignores `*.test.*`, and so does typecheck, since shared-react's tsconfig excludes `src/**/*.test.*`.
 - [x] The groceries E2E set (spec, "Testing Decisions") passes unchanged, checked with repeated runs; `offline` and `realtime` matter most here, since the subscription and the optimistic writes move.

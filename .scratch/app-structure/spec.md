@@ -52,7 +52,7 @@ Groceries is the pilot, measured before and after. The rest follows in order, an
 - Web does not move into `src/`. `features/` sits next to `app/`; `server/` and `config/` stay where they are.
 - Route files keep their server-only work (cache seeding, metadata, params) and render a screen from a feature.
 - The old `components/`, `hooks/`, `context/` and `stores/` folders stay and empty out feature by feature; whatever is left is deleted with the last feature.
-- A feature's unit tests move next to its code as `*.test.ts(x)` when the feature migrates. Test files stay outside lint and typecheck wherever they sit: the base ESLint config ignores `*.test.*` and the package tsconfigs exclude them. The E2E suite stays under `__tests__/e2e`.
+- A feature's unit tests move next to its code as `*.test.ts(x)` when the feature migrates. Lint skips test files wherever they sit, since the base ESLint config ignores `*.test.*`. Typecheck covers web's and mobile's tests, since their tsconfigs take the whole app; of the packages, `shared`, `shared-react` and `shared-server` exclude `src/**/*.test.*`, and the rest keep their tests outside the `src/` their tsconfigs include. The E2E suite stays under `__tests__/e2e`.
 
 ### State
 

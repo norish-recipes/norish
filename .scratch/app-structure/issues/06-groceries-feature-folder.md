@@ -18,5 +18,5 @@ Before it, three follow-ups from 05's review: the Pantry's add and removal, `use
 - [x] `GroceryCheckbox` is renamed `RoundCheckbox` and lives in `components/` with `isCheckboxEvent`; its callers in groceries, the recipe card, a recipe's ingredients and the cookbook picker follow.
 - [x] The feature lint rule passes with no exceptions.
 - [x] Groceries imports nothing from web's `context/` folder; it reads only `@norish/shared-react/*` and web's shared folders.
-- [x] Groceries unit tests sit next to their code, not under `__tests__/`. Lint and typecheck skip test files wherever they sit.
+- [x] Groceries unit tests sit next to their code, not under `__tests__/`. Lint skips them, since the base ESLint config ignores `*.test.*`; web's typecheck covers them, since its tsconfig takes the whole app, and they pass it.
 - [ ] The groceries E2E set (spec, "Testing Decisions") passes unchanged. Not run yet: the E2E set runs once, after the whole ticket set.
