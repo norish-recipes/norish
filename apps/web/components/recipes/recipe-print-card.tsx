@@ -72,12 +72,13 @@ export default function RecipePrintCard({
   const lines = ingredients
     .filter((line) => line.systemUsed === recipe.systemUsed)
     .sort((a, b) => a.order - b.order);
-  const steps = recipe.steps
-    .filter((step) => step.systemUsed === recipe.systemUsed)
-    .sort((a, b) => a.order - b.order);
+  const steps = numberSteps(
+    recipe.steps
+      .filter((step) => step.systemUsed === recipe.systemUsed)
+      .sort((a, b) => a.order - b.order)
+  );
   const nutrition = getNutritionData(recipe, 1);
   const cookingTime = reconcileCookingTime(recipe);
-  let stepNumber = 0;
 
   const ingredientLabel = (name: string, amount: number | null, unit: string | null) => (
     <>
@@ -178,16 +179,13 @@ export default function RecipePrintCard({
         <section aria-label={t("instructions")}>
           <h2>{t("instructions")}</h2>
           <ol className="recipe-print-steps">
-            {steps.map((step) => {
-              const heading = headingOf(step.step);
-
+            {steps.map(({ step, heading, stepNumber }) => {
               if (heading)
                 return (
                   <li key={step.order} className="recipe-print-heading">
                     <h3>{heading}</h3>
                   </li>
                 );
-              stepNumber += 1;
               const refs = resolveStepIngredients(
                 step.stepIngredients,
                 ingredients,
@@ -233,6 +231,19 @@ export default function RecipePrintCard({
       )}
     </article>
   );
+}
+
+/** Each step with its heading, or with its number among the steps that are no heading. */
+function numberSteps<Step extends { step: string }>(steps: Step[]) {
+  let stepNumber = 0;
+
+  return steps.map((step) => {
+    const heading = headingOf(step.step);
+
+    if (!heading) stepNumber += 1;
+
+    return { step, heading, stepNumber };
+  });
 }
 
 /** A "# For the sauce" line's title, or null for a line that is no heading. */

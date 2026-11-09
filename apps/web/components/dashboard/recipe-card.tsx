@@ -211,8 +211,8 @@ function RecipeCardComponent({
     }
   }, [router, recipe.id, open, mobileSearchOpen, recipeHref]);
 
-  const totalMinutes =
-    recipe.totalMinutes ?? ((recipe.prepMinutes ?? 0) + (recipe.cookMinutes ?? 0) || undefined);
+  const summedMinutes = (recipe.prepMinutes ?? 0) + (recipe.cookMinutes ?? 0);
+  const totalMinutes = recipe.totalMinutes ?? (summedMinutes || undefined);
   const timeLabel = formatMinutesHM(totalMinutes);
 
   const servings = recipe.servings;

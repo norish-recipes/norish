@@ -37,6 +37,22 @@ describe("Nutrition donut", () => {
     expect(protein).toBeCloseTo((40 / 170) * 100);
   });
 
+  it("starts each arc where the arcs before it end", () => {
+    const { container } = render(
+      <NutritionBody portions={1} recipe={{ calories: 400, fat: 10, carbs: 10, protein: 10 }} />
+    );
+
+    const [fat = 0, carbs = 0] = arcLengths(container);
+    const offsets = arcs(container).map((arc) =>
+      Number.parseFloat(arc.getAttribute("stroke-dashoffset") ?? "")
+    );
+
+    expect(offsets).toHaveLength(3);
+    expect(offsets[0]).toBeCloseTo(0);
+    expect(offsets[1]).toBeCloseTo(-fat);
+    expect(offsets[2]).toBeCloseTo(-(fat + carbs));
+  });
+
   it("puts the stored calories in the centre, not a computed figure", () => {
     render(
       <NutritionBody portions={1} recipe={{ calories: 400, fat: 10, carbs: 10, protein: 10 }} />

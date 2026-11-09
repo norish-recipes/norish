@@ -42,6 +42,20 @@ interface DataTableProps<Row> {
 
 const ALIGNMENT = { start: null, center: "text-center", end: "text-right" } as const;
 
+// Hidden by media query rather than by dropping the column, so the table
+// does not rebuild itself around a breakpoint the server cannot know.
+function sharedClass<Row>(column: DataTableColumn<Row>) {
+  return (
+    [ALIGNMENT[column.align ?? "start"], column.hideOnNarrow ? "hidden sm:table-cell" : null]
+      .filter(Boolean)
+      .join(" ") || undefined
+  );
+}
+
+function columnClass<Row>(column: DataTableColumn<Row>) {
+  return [column.className, sharedClass(column)].filter(Boolean).join(" ") || undefined;
+}
+
 /**
  * Shared table look for settings/admin cards (API tokens, site auth
  * tokens, job queues, ...). Wraps the HeroUI Table boilerplate so all
@@ -56,16 +70,6 @@ export default function DataTable<Row>({
   emptyState,
   rowProps,
 }: DataTableProps<Row>) {
-  // Hidden by media query rather than by dropping the column, so the table
-  // does not rebuild itself around a breakpoint the server cannot know.
-  const sharedClass = (column: DataTableColumn<Row>) =>
-    [ALIGNMENT[column.align ?? "start"], column.hideOnNarrow ? "hidden sm:table-cell" : null]
-      .filter(Boolean)
-      .join(" ") || undefined;
-
-  const columnClass = (column: DataTableColumn<Row>) =>
-    [column.className, sharedClass(column)].filter(Boolean).join(" ") || undefined;
-
   return (
     <Table>
       <Table.ScrollContainer>

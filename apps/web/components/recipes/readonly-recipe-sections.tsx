@@ -189,11 +189,14 @@ export function ReadonlyRecipeMedia({
   );
 }
 
+// The default for a reader without allergies; only ever read.
+const NO_ALLERGIES = new Set<string>();
+
 export function ReadonlyRecipeSummary({
   recipe,
   actions,
   allergies = [],
-  allergySet = new Set<string>(),
+  allergySet = NO_ALLERGIES,
   timeVariant = "desktop",
 }: ReadonlyRecipeSummaryProps) {
   const t = useTranslations("recipes.detail");

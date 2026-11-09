@@ -1,6 +1,6 @@
 "use client";
 
-import { useCallback, useEffect, useRef, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { useRecipeAutocomplete } from "@/hooks/recipes";
 import { Avatar, ListBox, Spinner, TextArea } from "@heroui/react";
 import { useTranslations } from "next-intl";
@@ -98,102 +98,93 @@ export default function SmartTextInput({
     }
   }, [showAutocomplete]);
 
-  const handleChange = useCallback(
-    (newValue: string) => {
-      onValueChange(newValue);
+  const handleChange = (newValue: string) => {
+    onValueChange(newValue);
 
-      const cursorPos = textareaRef.current?.selectionStart ?? newValue.length;
+    const cursorPos = textareaRef.current?.selectionStart ?? newValue.length;
 
-      const recipeMatch = getRecipeTriggerMatch(newValue, cursorPos);
-      const ingredientMatch = getIngredientTriggerMatch(newValue, cursorPos);
+    const recipeMatch = getRecipeTriggerMatch(newValue, cursorPos);
+    const ingredientMatch = getIngredientTriggerMatch(newValue, cursorPos);
 
-      if (
-        ingredientMatch &&
-        ingredientSuggestions.length > 0 &&
-        (!recipeMatch || ingredientMatch.triggerStart > recipeMatch.triggerStart)
-      ) {
-        setAutocomplete({
-          type: "ingredient",
-          ...ingredientMatch,
-        });
+    if (
+      ingredientMatch &&
+      ingredientSuggestions.length > 0 &&
+      (!recipeMatch || ingredientMatch.triggerStart > recipeMatch.triggerStart)
+    ) {
+      setAutocomplete({
+        type: "ingredient",
+        ...ingredientMatch,
+      });
 
-        return;
-      }
+      return;
+    }
 
-      if (recipeMatch) {
-        setAutocomplete({
-          type: "recipe",
-          ...recipeMatch,
-        });
+    if (recipeMatch) {
+      setAutocomplete({
+        type: "recipe",
+        ...recipeMatch,
+      });
 
-        return;
-      }
+      return;
+    }
 
-      setAutocomplete(null);
-    },
-    [ingredientSuggestions.length, onValueChange]
-  );
+    setAutocomplete(null);
+  };
 
-  const handleSelect = useCallback(
-    (recipeId: string, recipeName: string) => {
-      if (autocomplete?.type !== "recipe") return;
+  const handleSelect = (recipeId: string, recipeName: string) => {
+    if (autocomplete?.type !== "recipe") return;
 
-      const before = value.slice(0, autocomplete.triggerStart);
-      const after = value.slice(autocomplete.cursorPosition);
-      const newValue = `${before}[${recipeName}](id:${recipeId})${after}`;
+    const before = value.slice(0, autocomplete.triggerStart);
+    const after = value.slice(autocomplete.cursorPosition);
+    const newValue = `${before}[${recipeName}](id:${recipeId})${after}`;
 
-      onValueChange(newValue);
-      setAutocomplete(null);
+    onValueChange(newValue);
+    setAutocomplete(null);
 
-      setTimeout(() => {
-        if (textareaRef.current) {
-          textareaRef.current.focus();
-          const newCursorPos = autocomplete.triggerStart + recipeName.length + recipeId.length + 7;
+    setTimeout(() => {
+      if (textareaRef.current) {
+        textareaRef.current.focus();
+        const newCursorPos = autocomplete.triggerStart + recipeName.length + recipeId.length + 7;
 
-          textareaRef.current.setSelectionRange(newCursorPos, newCursorPos);
-        }
-      }, 0);
-    },
-    [autocomplete, value, onValueChange]
-  );
-  const handleIngredientSelect = useCallback(
-    (suggestion: SmartTextInputIngredientSuggestion) => {
-      if (autocomplete?.type !== "ingredient") return;
-
-      // The mention gesture: the plain word goes into the sentence — the `@`
-      // and the query it swallowed are replaced, never stored.
-      const before = value.slice(0, autocomplete.triggerStart);
-      const after = value.slice(autocomplete.cursorPosition);
-      const newValue = `${before}${suggestion.label}${after}`;
-      const newCursorPos = before.length + suggestion.label.length;
-
-      // A handler returning true is taking focus — it opens the amount ask
-      // for the attached line. The caret still lands after the inserted
-      // word, ready for when focus comes back; it is just not fought over.
-      let callerTakesFocus = false;
-
-      if (onIngredientMention) {
-        callerTakesFocus = onIngredientMention(suggestion, newValue) === true;
-      } else {
-        onValueChange(newValue);
-      }
-
-      setAutocomplete(null);
-
-      setTimeout(() => {
-        if (!textareaRef.current) return;
-
-        if (!callerTakesFocus) textareaRef.current.focus();
         textareaRef.current.setSelectionRange(newCursorPos, newCursorPos);
-      }, 0);
-    },
-    [autocomplete, onIngredientMention, onValueChange, value]
-  );
+      }
+    }, 0);
+  };
+  const handleIngredientSelect = (suggestion: SmartTextInputIngredientSuggestion) => {
+    if (autocomplete?.type !== "ingredient") return;
 
-  const handleBlur = useCallback(() => {
+    // The mention gesture: the plain word goes into the sentence — the `@`
+    // and the query it swallowed are replaced, never stored.
+    const before = value.slice(0, autocomplete.triggerStart);
+    const after = value.slice(autocomplete.cursorPosition);
+    const newValue = `${before}${suggestion.label}${after}`;
+    const newCursorPos = before.length + suggestion.label.length;
+
+    // A handler returning true is taking focus — it opens the amount ask
+    // for the attached line. The caret still lands after the inserted
+    // word, ready for when focus comes back; it is just not fought over.
+    let callerTakesFocus = false;
+
+    if (onIngredientMention) {
+      callerTakesFocus = onIngredientMention(suggestion, newValue) === true;
+    } else {
+      onValueChange(newValue);
+    }
+
+    setAutocomplete(null);
+
+    setTimeout(() => {
+      if (!textareaRef.current) return;
+
+      if (!callerTakesFocus) textareaRef.current.focus();
+      textareaRef.current.setSelectionRange(newCursorPos, newCursorPos);
+    }, 0);
+  };
+
+  const handleBlur = () => {
     setTimeout(() => setAutocomplete(null), 200);
     onBlur?.();
-  }, [onBlur]);
+  };
 
   useEffect(() => {
     const handleClickOutside = (e: MouseEvent) => {

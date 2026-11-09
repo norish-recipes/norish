@@ -68,14 +68,16 @@ function NutritionDonut({
   marked: boolean;
 }) {
   const t = useTranslations("recipes.nutrition");
-  let drawn = 0;
 
   return (
     <div className="relative size-32 shrink-0">
       <svg aria-hidden className="size-full -rotate-90" viewBox="0 0 36 36">
-        {shares.map((macro) => {
+        {shares.map((macro, index) => {
           const length = macro.share * 100;
-          const arc = (
+          // An arc starts where the arcs before it end.
+          const drawn = shares.slice(0, index).reduce((sum, before) => sum + before.share * 100, 0);
+
+          return (
             <circle
               key={macro.key}
               className={MACRO_STYLES[macro.key].color}
@@ -90,10 +92,6 @@ function NutritionDonut({
               strokeWidth="3.6"
             />
           );
-
-          drawn += length;
-
-          return arc;
         })}
       </svg>
       {calories != null && (

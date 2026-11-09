@@ -10,9 +10,10 @@ type SmartInputHelpProps = {
   showIngredientMention?: boolean;
 };
 
+const strong = (chunks: ReactNode) => <strong>{chunks}</strong>;
+
 export default function SmartInputHelp({ showIngredientMention = false }: SmartInputHelpProps) {
   const t = useTranslations("common.formatting");
-  const strong = (chunks: ReactNode) => <strong>{chunks}</strong>;
 
   return (
     <Popover>

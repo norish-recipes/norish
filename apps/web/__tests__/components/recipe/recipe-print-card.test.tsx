@@ -93,6 +93,22 @@ describe("RecipePrintCard", () => {
     expect(screen.queryByRole("region", { name: "Nutrition" })).not.toBeInTheDocument();
   });
 
+  it("numbers the steps past a heading, which takes no number", () => {
+    const step = (text: string, order: number) => ({
+      step: text,
+      order,
+      systemUsed: "metric" as const,
+      stepIngredients: [],
+    });
+    const { container } = renderCard({
+      recipe: { ...props.recipe, steps: [step("Mix.", 0), step("# Bake", 1), step("Bake.", 2)] },
+    });
+
+    const numbers = container.querySelectorAll(".recipe-print-step-number");
+
+    expect(Array.from(numbers, (number) => number.textContent)).toEqual(["1", "2"]);
+  });
+
   it("does not highlight durations when timer detection is disabled", () => {
     renderCard({ timerConfig: { ...props.timerConfig, enabled: false } });
     expect(screen.getByText(/for 10 minutes/).querySelector("[data-timer-duration]")).toBeNull();

@@ -48,6 +48,9 @@ type GlanceEntry = {
   label: string;
 };
 
+// The default for a reader without allergies; only ever read.
+const NO_ALLERGIES = new Set<string>();
+
 /**
  * The Glance Bar: total time, servings and calories, so the whole answer to
  * "can I cook this tonight?" arrives before any scrolling. It restates facts
@@ -219,7 +222,7 @@ function RecipeDescription({ text }: { text: string }) {
 export default function RecipeHeaderMobile({
   recipe,
   allergies = [],
-  allergySet = new Set<string>(),
+  allergySet = NO_ALLERGIES,
   showCalories = true,
 }: RecipeHeaderMobileProps) {
   const t = useTranslations("recipes.glanceBar");
