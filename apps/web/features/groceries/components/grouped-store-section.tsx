@@ -72,10 +72,7 @@ function GroupedStoreSectionComponent({
   // The drag's arrangement while one is on; otherwise this Store's own groups, in their containers.
   const { activeGroupKey, overContainerId, arrangement } = useDndGroupedGroceryContext();
   const ownItems = useStructuralSharing(storeGroupItems(storeId, groups, store ? [store] : []));
-  const ownGroups = useMemo(
-    () => new Map(groups.map((group) => [group.groupKey, group])),
-    [groups]
-  );
+  const ownGroups = new Map(groups.map((group) => [group.groupKey, group]));
   const items = arrangement?.items ?? ownItems;
   const groupMap = arrangement?.groups ?? ownGroups;
   const keysOf = (container: string) => items[container] ?? NO_KEYS;
@@ -128,20 +125,17 @@ function GroupedStoreSectionComponent({
   // an aisle's heading to drag into — or the card is its heading bar alone.
   const hasRows =
     isExpanded && (activeGroups.length > 0 || doneGroups.length > 0 || blocks.length > 0);
-  const row = useCallback<GroupRow>(
-    (group, { dragHandle, isFirst, isLast }) => (
-      <GroupedGroceryItem
-        dragHandle={dragHandle}
-        group={group}
-        isFirst={isFirst}
-        isLast={isLast}
-        recurringGroceries={recurringGroceries}
-        onEdit={onEdit}
-        onToggle={onToggle}
-        onToggleGroup={onToggleGroup}
-      />
-    ),
-    [recurringGroceries, onEdit, onToggle, onToggleGroup]
+  const row: GroupRow = (group, { dragHandle, isFirst, isLast }) => (
+    <GroupedGroceryItem
+      dragHandle={dragHandle}
+      group={group}
+      isFirst={isFirst}
+      isLast={isLast}
+      recurringGroceries={recurringGroceries}
+      onEdit={onEdit}
+      onToggle={onToggle}
+      onToggleGroup={onToggleGroup}
+    />
   );
   const renderActive = (group: GroceryGroup) => (
     <SortableGroupItem
@@ -152,14 +146,11 @@ function GroupedStoreSectionComponent({
       row={row}
     />
   );
-  const actions = useMemo(
-    () => ({
-      onMarkAllDone: onMarkAllDoneInStore && (() => onMarkAllDoneInStore(storeId)),
-      onDeleteDone: onDeleteDoneInStore && (() => onDeleteDoneInStore(storeId)),
-      onClearAll: onClearAllInStore && (() => onClearAllInStore(storeId, name)),
-    }),
-    [onMarkAllDoneInStore, onDeleteDoneInStore, onClearAllInStore, storeId, name]
-  );
+  const actions = {
+    onMarkAllDone: onMarkAllDoneInStore && (() => onMarkAllDoneInStore(storeId)),
+    onDeleteDone: onDeleteDoneInStore && (() => onDeleteDoneInStore(storeId)),
+    onClearAll: onClearAllInStore && (() => onClearAllInStore(storeId, name)),
+  };
 
   // The heading, handed to the container so a drop on it lands in the Store
   const headerElement = (

@@ -129,10 +129,9 @@ export function useGroupedGroceryDnd({
     return groupMap.get(activeGroupKey) ?? null;
   }, [activeGroupKey, groupMap]);
 
-  const arrangement = useMemo<GroupArrangement | null>(
-    () => (arranged ? { items: groupItems, groups: groupMap } : null),
-    [arranged, groupItems, groupMap]
-  );
+  const arrangement: GroupArrangement | null = arranged
+    ? { items: groupItems, groups: groupMap }
+    : null;
 
   const findContainer = useCallback(
     (id: string): ContainerId | undefined => {

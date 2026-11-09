@@ -105,21 +105,19 @@ function GroceryListContent({
     return groups;
   }, [groceries, stores]);
   const sharedByStore = useStructuralSharing([...builtByStore]);
-  const groupedGroceries = useMemo(() => new Map(sharedByStore), [sharedByStore]);
+  const groupedGroceries = new Map(sharedByStore);
 
   // Get unsorted groceries
   const unsortedGroceries = groupedGroceries.get(null) ?? [];
 
   // Get stores in order with their groceries
-  const storeWithGroceries = useMemo(() => {
-    return stores
-      .slice()
-      .sort((a, b) => a.sortOrder - b.sortOrder)
-      .map((store) => ({
-        store,
-        groceries: groupedGroceries.get(store.id) ?? [],
-      }));
-  }, [stores, groupedGroceries]);
+  const storeWithGroceries = stores
+    .slice()
+    .sort((a, b) => a.sortOrder - b.sortOrder)
+    .map((store) => ({
+      store,
+      groceries: groupedGroceries.get(store.id) ?? [],
+    }));
 
   // Compute grouped groceries by ingredient (for grouped mode)
   const builtGroups = useMemo(() => {
@@ -136,10 +134,7 @@ function GroceryListContent({
   // A group whose groceries did not change keeps its object, so its row does
   // not re-render for a change to another.
   const sharedGroupEntries = useStructuralSharing(builtGroups ? [...builtGroups] : null);
-  const ingredientGroups = useMemo(
-    () => (sharedGroupEntries ? new Map(sharedGroupEntries) : null),
-    [sharedGroupEntries]
-  );
+  const ingredientGroups = sharedGroupEntries ? new Map(sharedGroupEntries) : null;
 
   // Check if there are any groceries at all
   const hasGroceries = groceries.length > 0;
