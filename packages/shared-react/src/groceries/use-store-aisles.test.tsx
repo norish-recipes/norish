@@ -92,8 +92,11 @@ function OneProbe({ ingredientId }: { ingredientId: string | null }) {
   return <span data-testid="aisle">{useAisleFor(STORE, ingredientId) ?? "unfiled"}</span>;
 }
 
+let screenRenders = 0;
+
 /** The groceries screen: the aisles read under the subscription its root mounts. */
 function Screen({ ingredientId }: { ingredientId: string | null }) {
+  screenRenders += 1;
   useStoreAislesSubscription();
 
   return <Probe ingredientId={ingredientId} />;
@@ -205,7 +208,7 @@ describe("the aisles subscription", () => {
     client.clear();
   });
 
-  it("asks the server again when a food new to the list appears, and not when a line is ticked", async () => {
+  it("asks again when a food new to the list appears, not when a line is ticked, rendering no screen", async () => {
     let asked = 0;
 
     server.links = () => {
@@ -224,6 +227,7 @@ describe("the aisles subscription", () => {
       </QueryClientProvider>
     );
     await waitFor(() => expect(asked).toBe(1));
+    const mounted = screenRenders;
 
     list([{ id: "g1", ingredientId: "i-melk", isDone: true }]);
     await new Promise((resolve) => setTimeout(resolve, 20));
@@ -235,6 +239,7 @@ describe("the aisles subscription", () => {
     ]);
     await waitFor(() => expect(screen.getByTestId("aisle").textContent).toBe(ZUIVEL));
     expect(asked).toBe(2);
+    expect(screenRenders).toBe(mounted);
   });
 });
 

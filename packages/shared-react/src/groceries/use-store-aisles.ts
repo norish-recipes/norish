@@ -1,5 +1,5 @@
-import { useCallback, useEffect, useMemo, useRef } from "react";
-import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
+import { useCallback, useEffect, useMemo } from "react";
+import { QueryObserver, useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 
 import type { AisleFiled, AisleLinkDto } from "@norish/shared/contracts";
 import type { PayloadOf } from "@norish/shared/contracts/realtime/catalogue";
@@ -141,19 +141,22 @@ export function useStoreAislesSubscription() {
   // The server answers where each food on the list is filed, a kind of a
   // food under its parent's aisle included (ADR-0037), for the foods on the
   // list when it was asked. A food new to the list is asked about again;
-  // ticking or reordering changes no food and asks nothing.
-  const { data: listFoods = "" } = useQuery({
-    ...trpc.groceries.list.queryOptions(),
-    enabled: false,
-    select: (list) => foodsOnTheList(list.groceries),
-  });
-  const askedFoodsRef = useRef(listFoods);
-
+  // ticking or reordering changes no food and asks nothing. Watched outside
+  // React, so a change to the list never renders the screen that mounts this.
   useEffect(() => {
-    if (askedFoodsRef.current === listFoods) return;
-    askedFoodsRef.current = listFoods;
-    void queryClient.invalidateQueries({ queryKey: trpc.stores.aisleLinks.queryKey() });
-  }, [listFoods, queryClient, trpc]);
+    const foods = new QueryObserver(queryClient, {
+      ...trpc.groceries.list.queryOptions(),
+      enabled: false,
+      select: (list) => foodsOnTheList(list.groceries),
+    });
+    let asked = foods.getCurrentResult().data ?? "";
+
+    return foods.subscribe(({ data = "" }) => {
+      if (data === asked) return;
+      asked = data;
+      void queryClient.invalidateQueries({ queryKey: trpc.stores.aisleLinks.queryKey() });
+    });
+  }, [queryClient, trpc]);
 }
 
 /**
