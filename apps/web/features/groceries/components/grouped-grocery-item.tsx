@@ -315,13 +315,13 @@ function drawsTheSame(prev: GroupedGroceryItemProps, next: GroupedGroceryItemPro
   const { group: before, ...prevRest } = prev;
   const { group: after, ...nextRest } = next;
   const keys = Object.keys(nextRest) as Array<keyof typeof nextRest>;
+
+  if (keys.length !== Object.keys(prevRest).length) return false;
+  if (!keys.every((key) => Object.is(prevRest[key], nextRest[key]))) return false;
+  if (before === after) return true;
   const drawn = asDrawn(before);
 
-  return (
-    keys.length === Object.keys(prevRest).length &&
-    keys.every((key) => Object.is(prevRest[key], nextRest[key])) &&
-    (before === after || replaceEqualDeep(drawn, asDrawn(after)) === drawn)
-  );
+  return replaceEqualDeep(drawn, asDrawn(after)) === drawn;
 }
 
 export const GroupedGroceryItem = memo(GroupedGroceryItemComponent, drawsTheSame);
