@@ -3,15 +3,18 @@ import { describe, expect, it } from "vitest";
 
 import { compiledReactConfig, reactConfig } from "./react.ts";
 
-/** The rule messages `code` gets under the compiled-code config. */
-function lint(code: string): string[] {
-  return new Linter().verify(code, compiledReactConfig, "file.ts").map(({ message }) => message);
+const jsx = { parserOptions: { ecmaFeatures: { jsx: true } } };
+
+/** The rules JSX `code` breaks under the compiled-code config. */
+function lint(code: string): (string | null)[] {
+  return new Linter()
+    .verify(code, [...compiledReactConfig, { languageOptions: jsx }], "file.tsx")
+    .map(({ ruleId }) => ruleId);
 }
 
 /** The restricted-syntax messages JSX `code` gets under the React config. */
 function lintJsx(code: string): string[] {
   const rules = { "no-restricted-syntax": reactConfig[0]?.rules?.["no-restricted-syntax"] };
-  const jsx = { parserOptions: { ecmaFeatures: { jsx: true } } };
 
   return new Linter()
     .verify(code, [{ languageOptions: jsx, rules }], "file.js")
@@ -27,22 +30,46 @@ describe("reactConfig", () => {
   });
 });
 
-const skipped =
-  "The React Compiler skips a component or hook with `||=`, `&&=` or `??=` in it: write the assignment out.";
-
 describe("compiledReactConfig", () => {
-  it("flags a logical assignment in a hook, a component and a memo-wrapped arrow", () => {
-    expect(lint("function useCount(a) { a.n ||= 1; return a; }")).toEqual([skipped]);
-    expect(lint("const Row = (props) => { props.n ??= 1; return null; };")).toEqual([skipped]);
-    expect(lint("const Row = memo((props) => { props.n &&= 1; return null; });")).toEqual([
-      skipped,
+  it("reports a logical assignment the compiler skips, in a hook, a component and a forwardRef", () => {
+    expect(
+      lint("function useCount(a) { const [n] = useState(a.n); a.n ||= n; return a; }")
+    ).toEqual(["react-hooks/todo"]);
+    expect(lint("const Row = (p) => { let n = p.n; n ??= 1; return <b>{n}</b>; };")).toEqual([
+      "react-hooks/todo",
     ]);
-    expect(lint("const Row = React.forwardRef((p, ref) => { p.n ||= 1; return null; });")).toEqual([
-      skipped,
-    ]);
+    expect(
+      lint(
+        "const Row = React.forwardRef((p, r) => { let n = p.n; n &&= 1; return <b ref={r}>{n}</b>; });"
+      )
+    ).toEqual(["react-hooks/todo"]);
   });
 
-  it("leaves a plain function alone", () => {
+  it("reports a finally the compiler skips, in an event handler too", () => {
+    expect(
+      lint(
+        "function Row({ a }) { const go = () => { try { a(); } catch {} finally { a(); } }; return <b onClick={go} />; }"
+      )
+    ).toEqual(["react-hooks/todo"]);
+  });
+
+  it('reports a finally in a hook a factory builds with "use memo"', () => {
+    expect(
+      lint(
+        "function createHooks({ useTRPC }) { function useX() { 'use memo'; const t = useTRPC(); try { t.a(); } catch {} finally { t.b(); } return t; } return { useX }; }"
+      )
+    ).toEqual(["react-hooks/todo"]);
+  });
+
+  it("leaves a function the compiler doesn't compile alone", () => {
     expect(lint("function count(a) { a.n ||= 1; return a; }")).toEqual([]);
+  });
+
+  it('passes a TanStack Virtual component that opts out with "use no memo"', () => {
+    expect(
+      lint(
+        "import { useVirtualizer } from '@tanstack/react-virtual'; function Rows({ n }) { 'use no memo'; const v = useVirtualizer({ count: n }); return <b>{v.getTotalSize()}</b>; }"
+      )
+    ).toEqual([]);
   });
 });

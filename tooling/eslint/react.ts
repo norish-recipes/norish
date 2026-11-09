@@ -1,17 +1,8 @@
 import eslintReact from "@eslint-react/eslint-plugin";
 import stylistic from "@stylistic/eslint-plugin";
 import jsxA11y from "eslint-plugin-jsx-a11y-x";
+import reactHooks from "eslint-plugin-react-hooks";
 import { defineConfig } from "eslint/config";
-
-// `target` inside what the compiler compiles: a hook or component, found by its name or as the
-// function `memo` or `forwardRef` wraps.
-const inCompiled = (target: string) =>
-  `:matches(${[
-    ":function[id.name=/^(use[A-Z0-9]|[A-Z])/]",
-    "VariableDeclarator[id.name=/^(use[A-Z0-9]|[A-Z])/] > :function",
-    "CallExpression[callee.name=/^(memo|forwardRef)$/] > :function",
-    "CallExpression[callee.object.name='React'][callee.property.name=/^(memo|forwardRef)$/] > :function",
-  ].join(", ")}) ${target}`;
 
 const restrictedSyntax = [
   // `crypto.randomUUID` exists only in a secure context. A self-hosted
@@ -50,23 +41,7 @@ const restrictedSyntax = [
     message:
       "dnd-kit numbers DndContext's aria-describedby from a counter the server and client don't share: give it id={useId()}.",
   },
-  // React Compiler 1.0 cannot lower a `finally`, and skips the whole
-  // component or hook that has one, event handlers included.
-  {
-    selector: inCompiled("TryStatement[finalizer]"),
-    message:
-      "The React Compiler skips a component or hook with a `finally` in it: chain `.finally()` on the promise instead.",
-  },
 ];
-
-// React Compiler 1.0 cannot lower a logical assignment either, and skips the whole component or hook.
-const logicalAssignment = {
-  selector: inCompiled(
-    "AssignmentExpression:matches([operator='||='], [operator='&&='], [operator='??='])"
-  ),
-  message:
-    "The React Compiler skips a component or hook with `||=`, `&&=` or `??=` in it: write the assignment out.",
-};
 
 export const reactConfig = defineConfig(
   {
@@ -107,8 +82,22 @@ export const reactConfig = defineConfig(
   }
 );
 
-// For the workspaces the React Compiler builds: web, mobile, shared-react and ui.
+// For the workspaces the React Compiler builds: web, mobile, shared-react and ui. Each diagnostic
+// that makes the compiler skip a function is an error, including those the preset leaves off.
 export const compiledReactConfig = defineConfig({
   files: ["**/*.ts", "**/*.tsx"],
-  rules: { "no-restricted-syntax": ["error", ...restrictedSyntax, logicalAssignment] },
+  extends: [reactHooks.configs.flat["recommended-latest"]],
+  rules: {
+    "react-hooks/hooks": "error",
+    "react-hooks/invariant": "error",
+    "react-hooks/rule-suppression": "error",
+    "react-hooks/syntax": "error",
+    "react-hooks/todo": "error",
+    "react-hooks/unsupported-syntax": "error",
+    // The compiler skips these callers on purpose, and the rule reports them under "use no memo" too.
+    "react-hooks/incompatible-library": "off",
+    // @eslint-react's exhaustive-deps and set-state-in-effect already run, and neither is a skip.
+    "react-hooks/exhaustive-deps": "off",
+    "react-hooks/set-state-in-effect": "off",
+  },
 });
