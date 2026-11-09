@@ -10,6 +10,7 @@ import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import type { AisleLinkDto, StoreDto } from "@norish/shared/contracts";
 import {
   mergeAisleFiling,
+  useAisleFor,
   useStoreAisles,
   useStoreAislesSubscription,
 } from "@norish/shared-react/groceries";
@@ -79,6 +80,15 @@ function Probe({ ingredientId }: { ingredientId: string | null }) {
   return <span data-testid="aisle">{aisleFor(STORE, ingredientId) ?? "unfiled"}</span>;
 }
 
+let oneProbeRenders = 0;
+
+/** One grocery's answer, as a grocery panel reads it. */
+function OneProbe({ ingredientId }: { ingredientId: string | null }) {
+  oneProbeRenders += 1;
+
+  return <span data-testid="aisle">{useAisleFor(STORE, ingredientId) ?? "unfiled"}</span>;
+}
+
 /** The groceries screen: the aisles read under the subscription its root mounts. */
 function Screen({ ingredientId }: { ingredientId: string | null }) {
   useStoreAislesSubscription();
@@ -127,7 +137,10 @@ describe("mergeAisleFiling", () => {
   });
 });
 
-describe("aisleFor", () => {
+describe.each([
+  ["aisleFor", Probe],
+  ["useAisleFor", OneProbe],
+])("%s", (_name, Reader) => {
   let client: QueryClient;
 
   beforeEach(() => {
@@ -144,9 +157,9 @@ describe("aisleFor", () => {
 
     render(
       <QueryClientProvider client={client}>
-        <Probe ingredientId="i-melk" />
-        <Probe ingredientId="i-boter" />
-        <Probe ingredientId={null} />
+        <Reader ingredientId="i-melk" />
+        <Reader ingredientId="i-boter" />
+        <Reader ingredientId={null} />
       </QueryClientProvider>
     );
 
@@ -167,13 +180,26 @@ describe("aisleFor", () => {
 
     render(
       <QueryClientProvider client={client}>
-        <Probe ingredientId="i-melk" />
-        <Probe ingredientId="i-brood" />
+        <Reader ingredientId="i-melk" />
+        <Reader ingredientId="i-brood" />
       </QueryClientProvider>
     );
 
     await waitFor(() => expect(screen.getAllByTestId("aisle")[1]?.textContent).toBe(BROOD));
     expect(screen.getAllByTestId("aisle")[0]?.textContent).toBe("unfiled");
+  });
+});
+
+describe("the aisles subscription", () => {
+  let client: QueryClient;
+
+  beforeEach(() => {
+    client = new QueryClient({ defaultOptions: { queries: { retry: false } } });
+    server.stores = () => [storeWith([ZUIVEL, BROOD])];
+  });
+
+  afterEach(() => {
+    client.clear();
   });
 
   it("asks the server again when a food new to the list appears, and not when a line is ticked", async () => {
@@ -206,5 +232,29 @@ describe("aisleFor", () => {
     ]);
     await waitFor(() => expect(screen.getByTestId("aisle").textContent).toBe(ZUIVEL));
     expect(asked).toBe(2);
+  });
+});
+
+describe("useAisleFor", () => {
+  it("does not re-render for a filing of another Ingredient", async () => {
+    const client = new QueryClient({ defaultOptions: { queries: { retry: false } } });
+
+    server.stores = () => [storeWith([ZUIVEL, BROOD])];
+    server.links = () => [{ storeId: STORE, ingredientId: "i-melk", aisleId: ZUIVEL }];
+    render(
+      <QueryClientProvider client={client}>
+        <OneProbe ingredientId="i-melk" />
+      </QueryClientProvider>
+    );
+    await waitFor(() => expect(screen.getByTestId("aisle").textContent).toBe(ZUIVEL));
+    const before = oneProbeRenders;
+
+    client.setQueryData<AisleLinkDto[]>(["stores", "aisleLinks"], (prev) =>
+      mergeAisleFiling(prev ?? [], { storeId: STORE, ingredientId: "i-brood", aisleId: BROOD })
+    );
+    await new Promise((resolve) => setTimeout(resolve, 20));
+
+    expect(oneProbeRenders).toBe(before);
+    client.clear();
   });
 });

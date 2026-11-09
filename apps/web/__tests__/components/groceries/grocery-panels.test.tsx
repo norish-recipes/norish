@@ -123,11 +123,8 @@ vi.mock("@norish/shared-react/groceries", async (importOriginal) => ({
   ...(await importOriginal<object>()),
   useRecurrenceDetection: () => ({ detectedPattern: null }),
   useLinkFor: linkOnTheList,
-  useStoreAisles: () => ({
-    aisleFor: (storeId: string | null, ingredientId: string | null | undefined) =>
-      AISLE_LINKS[`${storeId}|${ingredientId}`] ?? null,
-    isLoading: false,
-  }),
+  useAisleFor: (storeId: string | null, ingredientId: string | null | undefined) =>
+    AISLE_LINKS[`${storeId}|${ingredientId}`] ?? null,
   useFileGroceryName: () => fileGroceryName,
 }));
 
@@ -176,7 +173,6 @@ vi.mock("@/hooks/stores/use-store-products-query", () => ({
     };
   },
 }));
-
 
 vi.mock("next-intl", () => ({
   useTranslations: () => (key: string, params?: Record<string, unknown>) =>

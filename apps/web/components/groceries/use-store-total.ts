@@ -10,7 +10,5 @@ import { storeTotal } from "./store-total";
  * always the sum of the prices under it.
  */
 export function useStoreTotal(lines: PricedLine[], storeId: string | null): StoreTotal | null {
-  const { priceFor } = useStorePrices();
-
-  return storeTotal(lines, priceFor, storeId);
+  return useStorePrices((priceFor) => storeTotal(lines, priceFor, storeId)) ?? null;
 }

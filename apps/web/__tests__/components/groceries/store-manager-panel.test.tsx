@@ -29,7 +29,6 @@ vi.mock("@norish/shared-react/groceries", () => ({
     reorderStores,
     checkSearchAddress: vi.fn(async () => ({ outcome: "answered", count: null })),
   }),
-  useGroceriesQuery: () => ({ groceries: [] }),
 }));
 
 vi.mock("next-intl", () => ({

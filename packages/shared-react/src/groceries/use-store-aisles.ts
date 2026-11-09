@@ -85,6 +85,32 @@ export function useStoreAisles(): StoreAislesResult {
   return { aisleFor, isLoading };
 }
 
+/**
+ * Where a Store files one Ingredient, as `aisleFor` answers it. Its reader re-renders only when
+ * that answer changes, not for every filing in the household.
+ */
+export function useAisleFor(
+  storeId: string | null,
+  ingredientId: string | null | undefined
+): string | null {
+  const trpc = useTRPC();
+  const key = aisleKey(storeId, ingredientId);
+  const { data: aisleId = null } = useQuery({
+    ...trpc.stores.aisleLinks.queryOptions(),
+    select: (links) =>
+      links.filter((link) => aisleLinkKey(link.storeId, link.ingredientId) === key).at(-1)
+        ?.aisleId ?? null,
+  });
+  const { data: storeHasIt = false } = useQuery({
+    ...trpc.stores.list.queryOptions(),
+    select: (stores) =>
+      stores.find((store) => store.id === storeId)?.aisles.some((aisle) => aisle.id === aisleId) ??
+      false,
+  });
+
+  return storeHasIt ? aisleId : null;
+}
+
 /** The foods on the list as one key: ticking or reordering a line leaves it as it was. */
 function foodsOnTheList(groceries: Array<{ ingredientId?: string | null }>): string {
   return [...new Set(groceries.flatMap((grocery) => grocery.ingredientId ?? []))]

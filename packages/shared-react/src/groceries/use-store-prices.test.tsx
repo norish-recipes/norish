@@ -5,11 +5,15 @@
  */
 import React from "react";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
-import { act, render, screen } from "@testing-library/react";
+import { act, render, screen, waitFor } from "@testing-library/react";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 
 import type { ResolvedProductLink } from "@norish/shared/contracts";
-import { PENDING_LINK_MAX_AGE_MS, useLinkFor } from "@norish/shared-react/groceries";
+import {
+  PENDING_LINK_MAX_AGE_MS,
+  useLinkFor,
+  useStorePrices,
+} from "@norish/shared-react/groceries";
 
 const STORE = "store-a";
 
@@ -140,5 +144,39 @@ describe("a Pending Link on the screen", () => {
       await vi.advanceTimersByTimeAsync(0);
     });
     expect(screen.getByTestId("state").textContent).toBe("miss");
+  });
+});
+
+describe("useStorePrices", () => {
+  it("re-renders a reading only when the reading changes", async () => {
+    const client = new QueryClient({ defaultOptions: { queries: { retry: false } } });
+    const kaas = { ...pending("kaas"), triedAt: new Date(), product: { id: "p-kaas" } };
+    let renders = 0;
+
+    function Reading() {
+      renders += 1;
+      const product = useStorePrices((priceFor) => priceFor(STORE, "kaas")?.id ?? "none");
+
+      return <span data-testid="reading">{product}</span>;
+    }
+
+    server.links = () => [kaas] as ResolvedProductLink[];
+    render(
+      <QueryClientProvider client={client}>
+        <Reading />
+      </QueryClientProvider>
+    );
+    await waitFor(() => expect(screen.getByTestId("reading").textContent).toBe("p-kaas"));
+    const before = renders;
+
+    // A question about another Ingredient: no change to this reading.
+    client.setQueryData<ResolvedProductLink[]>(["stores", "groceryPrices"], (prev) => [
+      ...(prev ?? []),
+      pending("brood"),
+    ]);
+    await new Promise((resolve) => setTimeout(resolve, 20));
+
+    expect(renders).toBe(before);
+    client.clear();
   });
 });

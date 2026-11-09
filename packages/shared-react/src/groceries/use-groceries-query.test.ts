@@ -1,8 +1,10 @@
 import { act, renderHook, waitFor } from "@testing-library/react";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 
-import { useGroceriesQuery } from "@norish/shared-react/groceries";
+import { useGroceriesQuery, useGroceryIds, useOnTheList } from "@norish/shared-react/groceries";
+import { BASE_SPELLING_RULES } from "@norish/shared/lib/spelling-keys";
 
+import type { GroceriesData } from "./types";
 import {
   createMockGroceriesData,
   createMockGrocery,
@@ -13,6 +15,8 @@ import {
 
 const mockQueryKey = ["groceries", "list"];
 const mockQueryOptions = vi.fn();
+
+vi.mock("../config", () => ({ useSpellingRules: () => BASE_SPELLING_RULES }));
 
 vi.mock("../trpc", () => ({
   useTRPC: () => ({
@@ -45,7 +49,6 @@ describe("useGroceriesQuery", () => {
 
       expect(result.current.groceries).toEqual([]);
       expect(result.current.recurringGroceries).toEqual([]);
-      expect(result.current.queryKey).toEqual(mockQueryKey);
     });
 
     it("returns loading state initially", () => {
@@ -116,119 +119,117 @@ describe("useGroceriesQuery", () => {
     });
   });
 
-  describe("setGroceriesData", () => {
-    it("updates query cache with new data", async () => {
-      const initialGroceries = [createMockGrocery({ id: "g1", name: "Milk" })];
-      const initialData = createMockGroceriesData(initialGroceries, []);
+  describe("getRecurringGroceryForGrocery", () => {
+    it("finds a grocery's recurring row, and null for a plain or unknown grocery", () => {
+      const recurring = createMockRecurringGrocery({ id: "r1", name: "Weekly Eggs" });
 
-      mockQueryOptions.mockReturnValue({
-        queryKey: mockQueryKey,
-        queryFn: async () => initialData,
-      });
-
-      // Pre-seed the cache with initial data
-      queryClient.setQueryData(mockQueryKey, initialData);
-
-      const { result } = renderHook(() => useGroceriesQuery(), {
-        wrapper: createTestWrapper(queryClient),
-      });
-
-      // Wait for initial data
-      await waitFor(() => {
-        expect(result.current.groceries).toHaveLength(1);
-      });
-
-      const newGrocery = createMockGrocery({ id: "g2", name: "Bread" });
-
-      act(() => {
-        result.current.setGroceriesData(
-          (prev: ReturnType<typeof createMockGroceriesData> | undefined) => ({
-            ...prev!,
-            groceries: [...prev!.groceries, newGrocery],
-          })
-        );
-      });
-
-      // Query cache should be updated
-      const cachedData = queryClient.getQueryData(mockQueryKey) as ReturnType<
-        typeof createMockGroceriesData
-      >;
-
-      expect(cachedData?.groceries).toHaveLength(2);
-      expect(cachedData?.groceries[1]).toEqual(newGrocery);
-    });
-
-    it("handles undefined previous data safely", async () => {
-      mockQueryOptions.mockReturnValue({
-        queryKey: mockQueryKey,
-        queryFn: async () => undefined,
-      });
+      queryClient.setQueryData(
+        mockQueryKey,
+        createMockGroceriesData(
+          [
+            createMockGrocery({ id: "g1", recurringGroceryId: "r1" }),
+            createMockGrocery({ id: "g2", recurringGroceryId: null }),
+          ],
+          [recurring]
+        )
+      );
+      mockQueryOptions.mockReturnValue({ queryKey: mockQueryKey, staleTime: Infinity });
 
       const { result } = renderHook(() => useGroceriesQuery(), {
         wrapper: createTestWrapper(queryClient),
       });
 
-      // Should not throw when previous data is undefined
-      act(() => {
-        result.current.setGroceriesData(
-          (prev: ReturnType<typeof createMockGroceriesData> | undefined) => {
-            if (!prev) return prev;
-
-            return { ...prev, groceries: [] };
-          }
-        );
-      });
-
-      expect(result.current.groceries).toEqual([]);
+      expect(result.current.getRecurringGroceryForGrocery("g1")).toEqual(recurring);
+      expect(result.current.getRecurringGroceryForGrocery("g2")).toBeNull();
+      expect(result.current.getRecurringGroceryForGrocery("unknown")).toBeNull();
     });
   });
+});
 
-  describe("invalidate", () => {
-    it("triggers refetch when invalidate is called", async () => {
-      let fetchCount = 0;
-      const mockGroceries = [createMockGrocery({ id: "g1", name: "Milk" })];
+/** Renders a hook and counts its renders, so a test sees what re-rendered it. */
+function renderCounted<T>(hook: () => T, queryClient: ReturnType<typeof createTestQueryClient>) {
+  let renders = 0;
+  const view = renderHook(
+    () => {
+      renders += 1;
 
-      mockQueryOptions.mockReturnValue({
-        queryKey: mockQueryKey,
-        queryFn: async () => {
-          fetchCount++;
+      return hook();
+    },
+    { wrapper: createTestWrapper(queryClient) }
+  );
 
-          return createMockGroceriesData(mockGroceries, []);
-        },
-      });
+  return { ...view, renders: () => renders };
+}
 
-      const { result } = renderHook(() => useGroceriesQuery(), {
-        wrapper: createTestWrapper(queryClient),
-      });
-
-      await waitFor(() => {
-        expect(result.current.isLoading).toBe(false);
-      });
-
-      const initialFetchCount = fetchCount;
-
-      act(() => {
-        result.current.invalidate();
-      });
-
-      await waitFor(() => {
-        expect(fetchCount).toBeGreaterThan(initialFetchCount);
-      });
+describe("the list's selects", () => {
+  let queryClient: ReturnType<typeof createTestQueryClient>;
+  const milk = createMockGrocery({ id: "g1", name: "milk", ingredientId: "i-milk" });
+  const bread = createMockGrocery({ id: "g2", name: "bread", ingredientId: "i-bread" });
+  // A write, and the observers told of it: the cache notifies on the next tick.
+  const write = (data: (prev?: GroceriesData) => GroceriesData | undefined) =>
+    act(async () => {
+      queryClient.setQueryData<GroceriesData>(mockQueryKey, data);
+      await new Promise((resolve) => setTimeout(resolve, 0));
     });
+  const tick = (id: string) =>
+    write(
+      (prev) =>
+        prev && {
+          ...prev,
+          groceries: prev.groceries.map((g) => (g.id === id ? { ...g, isDone: !g.isDone } : g)),
+        }
+    );
+
+  beforeEach(() => {
+    queryClient = createTestQueryClient();
+    queryClient.setQueryData(mockQueryKey, createMockGroceriesData([milk, bread]));
+    mockQueryOptions.mockReturnValue({ queryKey: mockQueryKey, staleTime: Infinity });
   });
 
-  describe("queryKey", () => {
-    it("returns the correct query key for cache operations", () => {
-      mockQueryOptions.mockReturnValue({
-        queryKey: mockQueryKey,
-        queryFn: async () => createMockGroceriesData(),
-      });
+  it("re-renders an ids reader when a grocery comes or goes, not when one is ticked", async () => {
+    const { result, renders } = renderCounted(() => useGroceryIds(), queryClient);
+    const before = renders();
 
-      const { result } = renderHook(() => useGroceriesQuery(), {
-        wrapper: createTestWrapper(queryClient),
-      });
+    expect(result.current).toEqual(["g1", "g2"]);
+    await tick("g1");
+    expect(renders()).toBe(before);
 
-      expect(result.current.queryKey).toEqual(["groceries", "list"]);
-    });
+    await write(() => createMockGroceriesData([bread]));
+    expect(result.current).toEqual(["g2"]);
+  });
+
+  it("re-renders an on-the-list reader only when its answer changes", async () => {
+    const kept = [
+      {
+        id: "p-milk",
+        userId: "u",
+        ingredientId: "i-milk",
+        name: "milk",
+        ancestorIds: [],
+        localeNames: {},
+        version: 1,
+      },
+      {
+        id: "p-salt",
+        userId: "u",
+        ingredientId: "i-salt",
+        name: "salt",
+        ancestorIds: [],
+        localeNames: {},
+        version: 1,
+      },
+    ];
+    const { result, renders } = renderCounted(() => useOnTheList(kept), queryClient);
+
+    expect(result.current).toEqual(["p-milk"]);
+    const before = renders();
+
+    // Bread is no Pantry food: ticking it changes no answer here.
+    await tick("g2");
+    expect(renders()).toBe(before);
+
+    // Milk bought: no longer still to buy.
+    await tick("g1");
+    expect(result.current).toEqual([]);
   });
 });

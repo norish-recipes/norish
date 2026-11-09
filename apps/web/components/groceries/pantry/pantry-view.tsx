@@ -15,21 +15,13 @@ import { useDebounceValue } from "usehooks-ts";
 import type { PickedFood } from "@norish/shared-react/groceries";
 import type { PantryIngredientDto } from "@norish/shared/contracts";
 import { useSpellingRules } from "@norish/shared-react/config";
-import {
-  useGroceriesQuery,
-  usePantryMutations,
-  usePantryQuery,
-} from "@norish/shared-react/groceries";
+import { useOnTheList, usePantryMutations, usePantryQuery } from "@norish/shared-react/groceries";
 import { useConnectivity } from "@norish/shared-react/offline/react";
 import { useTRPC } from "@norish/shared-react/trpc";
 import { PANTRY_INGREDIENT_NAME_MAX_LENGTH } from "@norish/shared/contracts/zod";
 import { foldName } from "@norish/shared/lib/fold-name";
 import { ingredientDisplayName } from "@norish/shared/lib/ingredient-names";
-import {
-  groceryOnTheList,
-  pantryIngredientFor,
-  sortPantryIngredients,
-} from "@norish/shared/lib/pantry";
+import { pantryIngredientFor, sortPantryIngredients } from "@norish/shared/lib/pantry";
 import { foodKey } from "@norish/shared/lib/spelling-keys";
 
 import { FromYourRecipes } from "./from-your-recipes";
@@ -68,7 +60,7 @@ export function PantryView() {
   const { items, isLoading, isUnavailable } = usePantryQuery();
   const { showIngredientIcons } = useHiddenItemVisibility();
   const { addPantryIngredient } = usePantryMutations();
-  const { groceries } = useGroceriesQuery();
+  const onTheList = useOnTheList(items);
   const putOnTheList = usePutOnTheList();
   const [draft, setDraft] = useState("");
   const [openId, setOpenId] = useState<string | null>(null);
@@ -222,7 +214,7 @@ export function PantryView() {
                   )}
                   <PutOnTheList
                     onPut={() => putOnTheList(item)}
-                    onTheList={groceryOnTheList(groceries, item, rules) !== null}
+                    onTheList={onTheList.includes(item.id)}
                   />
                 </li>
               );

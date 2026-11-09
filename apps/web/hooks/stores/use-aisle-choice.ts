@@ -3,7 +3,7 @@
 import { useCallback, useState } from "react";
 
 import type { StoreDto } from "@norish/shared/contracts";
-import { useFileGroceryName, useStoreAisles } from "@norish/shared-react/groceries";
+import { useAisleFor, useFileGroceryName } from "@norish/shared-react/groceries";
 
 /**
  * Which aisle a grocery's name is filed under, as the grocery panel holds it.
@@ -26,7 +26,6 @@ export function useAisleChoice(options: {
 }) {
   const { groceryName, ingredientId, store, resetOn } = options;
   const storeId = store?.id ?? null;
-  const { aisleFor } = useStoreAisles();
   const fileGroceryName = useFileGroceryName();
   // Held for one Store and one opening of the panel. It is read back through
   // that key, so a field mounted for another Store never sees the last
@@ -46,14 +45,8 @@ export function useAisleChoice(options: {
 
   // What the Store remembers — an aisle it still has; one removed in the
   // editor is no answer — unless the shopper has chosen otherwise here.
-  const remembered = useCallback(() => {
-    const filedUnder = aisleFor(storeId, ingredientId);
-
-    return filedUnder !== null && store?.aisles.some((aisle) => aisle.id === filedUnder)
-      ? filedUnder
-      : null;
-  }, [aisleFor, storeId, ingredientId, store]);
-  const aisleId = current ? current.aisleId : remembered();
+  const remembered = useAisleFor(storeId, ingredientId);
+  const aisleId = current ? current.aisleId : remembered;
   const setAisleId = useCallback(
     (next: string | null) => setHeld({ storeId, resetToken: resetOn, aisleId: next }),
     [storeId, resetOn]
@@ -67,7 +60,7 @@ export function useAisleChoice(options: {
     setHeld(null);
     if (!chosen || !storeId || !groceryName) return;
     // Only a choice that differs from what the Store remembered is written.
-    if (chosen.aisleId === remembered()) return;
+    if (chosen.aisleId === remembered) return;
     fileGroceryName(storeId, { name: groceryName, ingredientId }, chosen.aisleId);
   }, [current, storeId, groceryName, ingredientId, remembered, fileGroceryName]);
 

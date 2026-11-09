@@ -1,4 +1,4 @@
-import { useMutation } from "@tanstack/react-query";
+import { useMutation, useQueryClient } from "@tanstack/react-query";
 
 import type {
   AisleDto,
@@ -10,13 +10,12 @@ import type {
 } from "@norish/shared/contracts";
 import { createClientId } from "@norish/shared/lib/operation-helpers";
 
-import type { StoreGrocerySnapshot, StoresMutationsResult, StoreUpdateDraft } from "./types";
+import type { GroceriesData, StoresData, StoresMutationsResult, StoreUpdateDraft } from "./types";
 import {
   invalidateUnlessPreserved,
   shouldPreserveOptimisticUpdate as preserveOptimisticUpdate,
 } from "../offline/optimistic-updates";
 import { useTRPC } from "../trpc";
-import { useStoresQuery } from "./use-stores-query";
 
 /**
  * The aisles as the Store will carry them once the save lands, for the
@@ -43,10 +42,16 @@ function optimisticAisles(storeId: string, input: AisleInput[], before: AisleDto
 
 export function useStoresMutations(): StoresMutationsResult {
   const trpc = useTRPC();
-  const { setStoresData, invalidate, stores } = useStoresQuery();
-
-  const getStoreVersion = (storeId: string): number =>
+  const queryClient = useQueryClient();
+  const storesKey = trpc.stores.list.queryKey();
+  // Read when an action runs, before its optimistic write, never by subscribing: the store
+  // manager doesn't re-render for the stores it is handed.
+  const heldStores = () => queryClient.getQueryData<StoresData>(storesKey) ?? [];
+  const versionOf = (stores: StoresData, storeId: string): number =>
     stores.find((store) => store.id === storeId)?.version ?? 1;
+  const setStoresData = (updater: (prev: StoresData | undefined) => StoresData | undefined) =>
+    queryClient.setQueryData<StoresData>(storesKey, updater);
+  const invalidate = () => void queryClient.invalidateQueries({ queryKey: storesKey });
 
   // Keep an optimistic update when its mutation was Queued for Replay.
   const invalidateUnlessQueued = invalidateUnlessPreserved(invalidate);
@@ -76,7 +81,7 @@ export function useStoresMutations(): StoresMutationsResult {
         color: data.color ?? "primary",
         website: data.website ?? null,
         searchAddress: data.searchAddress ?? null,
-        sortOrder: stores.length,
+        sortOrder: heldStores().length,
         version: 1,
         aisles: optimisticAisles(storeId, data.aisles ?? [], []),
       };
@@ -113,6 +118,8 @@ export function useStoresMutations(): StoresMutationsResult {
   };
 
   const updateStore = (data: StoreUpdateDraft) => {
+    const version = versionOf(heldStores(), data.id);
+
     setStoresData((prev) => {
       if (!prev) return prev;
 
@@ -130,18 +137,22 @@ export function useStoresMutations(): StoresMutationsResult {
     });
 
     mutateUpdate(
-      { ...data, version: getStoreVersion(data.id) },
+      { ...data, version },
       {
         onError: invalidateUnlessQueued,
       }
     );
   };
 
-  const deleteStore = (
-    storeId: string,
-    deleteGroceries: boolean,
-    grocerySnapshot: StoreGrocerySnapshot
-  ) => {
+  const deleteStore = (storeId: string, deleteGroceries: boolean) => {
+    const version = versionOf(heldStores(), storeId);
+    // The Store's groceries at the versions this screen holds: the server deletes or moves only those.
+    const grocerySnapshot = (
+      queryClient.getQueryData<GroceriesData>(trpc.groceries.list.queryKey())?.groceries ?? []
+    )
+      .filter((grocery) => grocery.storeId === storeId)
+      .map(({ id, version: groceryVersion }) => ({ id, version: groceryVersion }));
+
     setStoresData((prev) => {
       if (!prev) return prev;
 
@@ -150,7 +161,7 @@ export function useStoresMutations(): StoresMutationsResult {
 
     const input: StoreDeleteInput = {
       storeId,
-      version: getStoreVersion(storeId),
+      version,
       deleteGroceries,
       grocerySnapshot,
     };
@@ -161,6 +172,8 @@ export function useStoresMutations(): StoresMutationsResult {
   };
 
   const reorderStores = (storeIds: string[]) => {
+    const held = heldStores();
+
     setStoresData((prev) => {
       if (!prev) return prev;
       const storeMap = new Map(prev.map((s) => [s.id, s]));
@@ -176,7 +189,7 @@ export function useStoresMutations(): StoresMutationsResult {
 
     mutateReorder(
       {
-        stores: storeIds.map((id) => ({ id, version: getStoreVersion(id) })),
+        stores: storeIds.map((id) => ({ id, version: versionOf(held, id) })),
       },
       {
         onError: invalidateUnlessQueued,

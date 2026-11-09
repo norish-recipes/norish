@@ -17,7 +17,7 @@ import type {
   StoreDto,
   StoreSearchAddressResult,
 } from "@norish/shared/contracts";
-import { useGroceriesQuery, useStoresMutations } from "@norish/shared-react/groceries";
+import { useStoresMutations } from "@norish/shared-react/groceries";
 import { sortAisles } from "@norish/shared/lib/aisles";
 
 import type { EditingStore } from "./store-editor-panel";
@@ -42,7 +42,6 @@ type ShopCheck = { storeName: string; result: StoreSearchAddressResult | null };
 export function StoreManagerPanel({ open, onOpenChange, stores }: StoreManagerPanelProps) {
   const { createStore, updateStore, deleteStore, reorderStores, checkSearchAddress } =
     useStoresMutations();
-  const { groceries } = useGroceriesQuery();
   const t = useTranslations("groceries.storeManager");
   const tActions = useTranslations("common.actions");
   const [editingStore, setEditingStore] = useState<EditingStore | null>(null);
@@ -133,14 +132,7 @@ export function StoreManagerPanel({ open, onOpenChange, stores }: StoreManagerPa
     setDeleteModalOpen(true);
   };
   const handleDeleteConfirm = (storeId: string, deleteGroceries: boolean) => {
-    const grocerySnapshot = groceries
-      .filter((grocery) => grocery.storeId === storeId)
-      .map((grocery) => ({
-        id: grocery.id,
-        version: grocery.version,
-      }));
-
-    deleteStore(storeId, deleteGroceries, grocerySnapshot);
+    deleteStore(storeId, deleteGroceries);
     setStoreToDelete(null);
   };
   // The order while a Store is dragged, saved once it is let go: a write per

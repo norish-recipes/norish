@@ -23,6 +23,7 @@ import type { RecurrencePattern } from "@norish/shared/contracts/recurrence";
 import {
   useGroceriesMutations,
   useGroceriesQuery,
+  useGroceryIds,
   useStoresQuery,
 } from "@norish/shared-react/groceries";
 import {
@@ -35,8 +36,14 @@ import {
 import { useGroceriesUiContext } from "../context";
 
 export function GroceriesPage() {
-  const { groceries, recurringGroceries, recipeMap, isLoading, getRecipeNameForGrocery } =
-    useGroceriesQuery();
+  const {
+    groceries,
+    recurringGroceries,
+    recipeMap,
+    isLoading,
+    getRecipeNameForGrocery,
+    getRecurringGroceryForGrocery,
+  } = useGroceriesQuery();
   const {
     toggleGroceries,
     deleteGroceries,
@@ -46,7 +53,6 @@ export function GroceriesPage() {
     updateRecurringGrocery,
     deleteRecurringGrocery,
     reorderGroceriesInStore,
-    getRecurringGroceryForGrocery,
     markAllDoneInStore,
     deleteDoneInStore,
   } = useGroceriesMutations();
@@ -241,7 +247,7 @@ export function GroceriesPage() {
  * desktop add button and the menu with the view mode, grouping and stores.
  */
 export function GroceriesListActions() {
-  const { groceries } = useGroceriesQuery();
+  const groceryIds = useGroceryIds();
   const { deleteGroceries } = useGroceriesMutations();
   const [clearListOpen, setClearListOpen] = useState(false);
   const {
@@ -333,7 +339,7 @@ export function GroceriesListActions() {
                 {<Cog6ToothIcon className="h-4 w-4" />}
                 <Label>{t("manageStores")}</Label>
               </Dropdown.Item>
-              {groceries.length > 0 && (
+              {groceryIds.length > 0 && (
                 <Dropdown.Item
                   key="clear-list"
                   className="text-danger"
@@ -352,10 +358,10 @@ export function GroceriesListActions() {
       </Dropdown>
       <ClearGroceriesModal
         isOpen={clearListOpen}
-        itemCount={groceries.length}
+        itemCount={groceryIds.length}
         scopeName={null}
         onClose={() => setClearListOpen(false)}
-        onConfirm={() => deleteGroceries(groceries.map((g) => g.id))}
+        onConfirm={() => deleteGroceries(groceryIds)}
       />
     </>
   );

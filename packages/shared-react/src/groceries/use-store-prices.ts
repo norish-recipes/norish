@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useMemo, useState } from "react";
+import { useCallback, useEffect, useState } from "react";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 
 import type { ResolvedProductLink, StoreProductDto } from "@norish/shared/contracts";
@@ -41,33 +41,31 @@ function linkKey(link: Pick<ResolvedProductLink, "storeId" | "ingredientId">): s
 /** An Ingredient a lookup is keyed by; a grocery's, or none yet. */
 type IngredientKey = string | null | undefined;
 
-export interface StorePricesResult {
-  /** The Store Product a grocery's Ingredient resolves to, or null where the Store knows it as a Miss or not at all. */
-  priceFor: (storeId: string | null, ingredientId: IngredientKey) => StoreProductDto | null;
-  isLoading: boolean;
+/** The Store Product a grocery's Ingredient resolves to, or null where the Store knows it as a Miss or not at all. */
+export type PriceFor = (
+  storeId: string | null,
+  ingredientId: IngredientKey
+) => StoreProductDto | null;
+
+function priceForIn(links: StorePricesData): PriceFor {
+  const byKey = new Map(links.map((link) => [linkKey(link), link.product ?? null]));
+
+  return (storeId, ingredientId) => {
+    const key = priceKey(storeId, ingredientId);
+
+    return (key ? byKey.get(key) : null) ?? null;
+  };
 }
 
-export function useStorePrices(): StorePricesResult {
+/** A reading of the prices, such as one Store's total: its reader re-renders only when it changes. */
+export function useStorePrices<T>(read: (priceFor: PriceFor) => T): T | undefined {
   const trpc = useTRPC();
-  const { data, isLoading } = useQuery(trpc.stores.groceryPrices.queryOptions());
-  const byKey = useMemo(() => {
-    const map = new Map<string, ResolvedProductLink>();
+  const { data } = useQuery({
+    ...trpc.stores.groceryPrices.queryOptions(),
+    select: (links) => read(priceForIn(links)),
+  });
 
-    for (const link of data ?? []) map.set(linkKey(link), link);
-
-    return map;
-  }, [data]);
-
-  const priceFor = useCallback(
-    (storeId: string | null, ingredientId: IngredientKey) => {
-      const key = priceKey(storeId, ingredientId);
-
-      return (key ? byKey.get(key)?.product : null) ?? null;
-    },
-    [byKey]
-  );
-
-  return { priceFor, isLoading };
+  return data;
 }
 
 /**

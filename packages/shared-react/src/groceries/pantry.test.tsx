@@ -11,6 +11,7 @@ import type { PantryIngredientDto } from "@norish/shared/contracts";
 import {
   mergePantryAdded,
   mergePantryRemoved,
+  usePantryItem,
   usePantryQuery,
 } from "@norish/shared-react/groceries";
 import { pantryIngredientFor } from "@norish/shared/lib/pantry";
@@ -153,5 +154,39 @@ describe("usePantryQuery", () => {
     await client.refetchQueries({ queryKey: ["pantry", "list"] });
 
     expect(screen.getByTestId("pantry-status").textContent).toBe("known");
+  });
+});
+
+describe("usePantryItem", () => {
+  it("answers one food's item and re-renders only when that item changes", async () => {
+    const client = new QueryClient({ defaultOptions: { queries: { retry: false } } });
+    let renders = 0;
+
+    function OneProbe() {
+      renders += 1;
+
+      return <span data-testid="item">{usePantryItem("i-olive")?.name ?? "not kept"}</span>;
+    }
+
+    server.items = () => [OLIVE];
+    render(
+      <QueryClientProvider client={client}>
+        <OneProbe />
+      </QueryClientProvider>
+    );
+    await waitFor(() => expect(screen.getByTestId("item").textContent).toBe("Olive Oil"));
+    const before = renders;
+
+    client.setQueryData<PantryIngredientDto[]>(["pantry", "list"], (prev) =>
+      mergePantryAdded(prev ?? [], SALT)
+    );
+    await new Promise((resolve) => setTimeout(resolve, 20));
+    expect(renders).toBe(before);
+
+    client.setQueryData<PantryIngredientDto[]>(["pantry", "list"], (prev) =>
+      mergePantryRemoved(prev ?? [], "olive")
+    );
+    await waitFor(() => expect(screen.getByTestId("item").textContent).toBe("not kept"));
+    client.clear();
   });
 });

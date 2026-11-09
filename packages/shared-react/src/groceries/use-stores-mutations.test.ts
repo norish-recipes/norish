@@ -14,23 +14,6 @@ vi.mock("@tanstack/react-query", async () => {
 
   return {
     ...actual,
-    useQuery: vi.fn(() => ({
-      data: [
-        {
-          id: "store-1",
-          version: 6,
-          name: "Pantry",
-          color: "primary",
-          website: null,
-          searchAddress: null,
-          sortOrder: 0,
-          userId: "user-1",
-          aisles: [],
-        },
-      ],
-      error: null,
-      isLoading: false,
-    })),
     useMutation: vi.fn((options?: { mutationFn?: (...args: unknown[]) => unknown }) => ({
       mutate: options?.mutationFn ?? vi.fn(),
       isPending: false,
@@ -40,6 +23,7 @@ vi.mock("@tanstack/react-query", async () => {
 
 vi.mock("../trpc", () => ({
   useTRPC: () => ({
+    groceries: { list: { queryKey: () => ["groceries", "list"] } },
     stores: {
       list: {
         queryKey: vi.fn(() => ["stores", "list"]),
@@ -65,24 +49,45 @@ function createWrapper() {
     },
   });
 
+  queryClient.setQueryData(
+    ["stores", "list"],
+    [
+      {
+        id: "store-1",
+        version: 6,
+        name: "Pantry",
+        color: "primary",
+        website: null,
+        searchAddress: null,
+        sortOrder: 0,
+        userId: "user-1",
+        aisles: [],
+      },
+    ]
+  );
+  queryClient.setQueryData(["groceries", "list"], {
+    groceries: [
+      { id: "g1", version: 2, storeId: "store-1" },
+      { id: "g2", version: 5, storeId: "store-1" },
+      { id: "g3", version: 1, storeId: "store-2" },
+    ],
+    recurringGroceries: [],
+    recipeMap: {},
+  });
+
   return function Wrapper({ children }: { children: ReactNode }) {
     return createElement(QueryClientProvider, { client: queryClient }, children);
   };
 }
 
 describe("useStoresMutations", () => {
-  it("sends the store version with the grocery snapshot on delete", () => {
+  it("sends the store version with its groceries as held on delete", () => {
     const { result } = renderHook(() => useStoresMutations(), {
       wrapper: createWrapper(),
     });
 
-    const grocerySnapshot = [
-      { id: "g1", version: 2 },
-      { id: "g2", version: 5 },
-    ];
-
     act(() => {
-      result.current.deleteStore("store-1", true, grocerySnapshot);
+      result.current.deleteStore("store-1", true);
     });
 
     expect(mockDeleteMutation).toHaveBeenCalledWith(
@@ -90,7 +95,10 @@ describe("useStoresMutations", () => {
         storeId: "store-1",
         version: 6,
         deleteGroceries: true,
-        grocerySnapshot,
+        grocerySnapshot: [
+          { id: "g1", version: 2 },
+          { id: "g2", version: 5 },
+        ],
       },
       expect.any(Object)
     );

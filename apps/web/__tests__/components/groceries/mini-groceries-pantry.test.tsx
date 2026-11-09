@@ -66,16 +66,22 @@ vi.mock("@norish/shared-react/config", async () => {
 
   return { useSpellingRules: () => spellingRules(units as UnitsMap) };
 });
-vi.mock("@norish/shared-react/groceries", () => ({
-  useGroceriesMutations: () => ({ createGroceriesFromData }),
-  useGroceriesQuery: () => ({ groceries }),
-  usePantryMutations: () => ({ addPantryIngredient }),
-  usePantryQuery: () => ({
-    items: pantry,
-    isLoading: pantryLoading,
-    isUnavailable: pantryUnavailable,
-  }),
-}));
+vi.mock("@norish/shared-react/groceries", async () => {
+  const { groceryOnTheList } = await import("@norish/shared/lib/pantry");
+
+  return {
+    useGroceriesMutations: () => ({ createGroceriesFromData }),
+    // What the hook's select answers over the list these tests hold.
+    useOnTheList: (kept: PantryIngredientDto[]) =>
+      kept.filter((item) => groceryOnTheList(groceries, item) !== null).map((item) => item.id),
+    usePantryMutations: () => ({ addPantryIngredient }),
+    usePantryQuery: () => ({
+      items: pantry,
+      isLoading: pantryLoading,
+      isUnavailable: pantryUnavailable,
+    }),
+  };
+});
 vi.mock("@/hooks/use-unit-formatter", () => ({
   useUnitFormatter: () => ({
     formatAmountUnit: (amount: number | null, unit: string | null) =>

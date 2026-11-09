@@ -19,15 +19,9 @@ import { useLocale, useTranslations } from "next-intl";
 
 import type { PantryIngredientDto } from "@norish/shared/contracts";
 import type { LocaleNames } from "@norish/shared/lib/ingredient-names";
-import { useSpellingRules } from "@norish/shared-react/config";
-import {
-  useGroceriesQuery,
-  usePantryMutations,
-  usePantryQuery,
-} from "@norish/shared-react/groceries";
+import { useOnTheList, usePantryItem, usePantryMutations } from "@norish/shared-react/groceries";
 import { useTRPC } from "@norish/shared-react/trpc";
 import { ingredientDisplayName } from "@norish/shared/lib/ingredient-names";
-import { groceryOnTheList } from "@norish/shared/lib/pantry";
 import { cleanSpelling } from "@norish/shared/lib/spelling-keys";
 
 import type { IconDraft } from "./ingredient-icon-field";
@@ -172,9 +166,8 @@ function IngredientPanelContent({
   // Whether the household keeps the food, and the draft's say on it (null: untouched).
   const tPantry = useTranslations("groceries.pantry");
   const tGroceries = useTranslations("groceries.page");
-  const { items: pantry } = usePantryQuery();
+  const kept = usePantryItem(item.id);
   const { addPantryIngredient, removePantryIngredient } = usePantryMutations();
-  const kept = pantry.find((held) => held.ingredientId === item.id) ?? null;
   const [keeps, setKeeps] = useState<boolean | null>(null);
 
   // A refused save is read back from the server, which would overwrite the
@@ -733,8 +726,7 @@ function PantryRow({
   onKeepingChange: (keeping: boolean) => void;
 }) {
   const t = useTranslations("groceries.pantry");
-  const rules = useSpellingRules();
-  const { groceries } = useGroceriesQuery();
+  const onTheList = useOnTheList(kept ? [kept] : []).length > 0;
 
   return (
     <div
@@ -744,7 +736,7 @@ function PantryRow({
       <UiSwitch isSelected={keeping} onValueChange={onKeepingChange}>
         <span className="text-sm">{t("inYourPantry")}</span>
       </UiSwitch>
-      {kept && keeping && groceryOnTheList(groceries, kept, rules) ? <OnTheListMark /> : null}
+      {kept && keeping && onTheList ? <OnTheListMark /> : null}
     </div>
   );
 }

@@ -23,13 +23,13 @@ import type { FoodToBuy, LineWithFoods } from "@norish/shared/lib/line-foods";
 import { useSpellingRules } from "@norish/shared-react/config";
 import {
   useGroceriesMutations,
-  useGroceriesQuery,
+  useOnTheList,
   usePantryMutations,
   usePantryQuery,
 } from "@norish/shared-react/groceries";
 import { formatServings, useServingsScaler } from "@norish/shared-react/hooks";
 import { foodsToBuy } from "@norish/shared/lib/line-foods";
-import { groceryOnTheList, pantryIngredientFor } from "@norish/shared/lib/pantry";
+import { pantryIngredientFor } from "@norish/shared/lib/pantry";
 
 type MiniGroceriesProps = {
   open: boolean;
@@ -186,7 +186,7 @@ export default function MiniGroceries({
   } = usePantryQuery();
   const rules = useSpellingRules();
   const { addPantryIngredient } = usePantryMutations();
-  const { groceries } = useGroceriesQuery();
+  const onTheList = useOnTheList(pantryIngredients);
 
   /** The Pantry Ingredient that covers a line, as edited here if it was. */
   const keptFor = useCallback(
@@ -477,7 +477,7 @@ export default function MiniGroceries({
             variant="tertiary"
             onPress={() => keepLine(item)}
           />
-        ) : groceryOnTheList(groceries, kept, rules) ? (
+        ) : onTheList.includes(kept.id) ? (
           <OnTheListMark />
         ) : null}
       </div>

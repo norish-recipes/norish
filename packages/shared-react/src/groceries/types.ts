@@ -1,5 +1,3 @@
-import type { QueryKey } from "@tanstack/react-query";
-
 import type {
   GroceryDto,
   PantryIngredientDto,
@@ -32,12 +30,8 @@ export type GroceriesQueryResult = {
   recipeMap: RecipeMap;
   error: unknown;
   isLoading: boolean;
-  queryKey: QueryKey;
-  setGroceriesData: (
-    updater: (prev: GroceriesData | undefined) => GroceriesData | undefined
-  ) => void;
-  invalidate: () => void;
   getRecipeNameForGrocery: (grocery: GroceryDto) => string | null;
+  getRecurringGroceryForGrocery: (groceryId: string) => RecurringGroceryDto | null;
 };
 
 export type GroceryCreateData = {
@@ -75,7 +69,6 @@ export type GroceriesMutationsResult = {
   ) => void;
   deleteGroceries: (ids: string[]) => void;
   deleteRecurringGrocery: (recurringGroceryId: string) => void;
-  getRecurringGroceryForGrocery: (groceryId: string) => RecurringGroceryDto | null;
   assignGroceryToStore: (
     groceryId: string,
     storeId: string | null,
@@ -94,22 +87,14 @@ export type StoresQueryResult = {
   stores: StoreDto[];
   error: unknown;
   isLoading: boolean;
-  queryKey: QueryKey;
-  setStoresData: (updater: (prev: StoresData | undefined) => StoresData | undefined) => void;
-  invalidate: () => void;
 };
 
 export type StoreUpdateDraft = Omit<StoreUpdateInput, "version">;
-export type StoreGrocerySnapshot = Array<{ id: string; version: number }>;
 
 export type StoresMutationsResult = {
   createStore: (data: StoreCreateDto) => Promise<string>;
   updateStore: (data: StoreUpdateDraft) => void;
-  deleteStore: (
-    storeId: string,
-    deleteGroceries: boolean,
-    grocerySnapshot: StoreGrocerySnapshot
-  ) => void;
+  deleteStore: (storeId: string, deleteGroceries: boolean) => void;
   reorderStores: (storeIds: string[]) => void;
   checkSearchAddress: (
     storeId: string,

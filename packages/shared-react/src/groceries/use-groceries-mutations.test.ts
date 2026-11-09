@@ -176,7 +176,6 @@ describe("useGroceriesMutations", () => {
       expect(result.current).toHaveProperty("updateRecurringGrocery");
       expect(result.current).toHaveProperty("deleteGroceries");
       expect(result.current).toHaveProperty("deleteRecurringGrocery");
-      expect(result.current).toHaveProperty("getRecurringGroceryForGrocery");
 
       // Verify they are functions
       expect(typeof result.current.createGrocery).toBe("function");
@@ -187,7 +186,6 @@ describe("useGroceriesMutations", () => {
       expect(typeof result.current.updateRecurringGrocery).toBe("function");
       expect(typeof result.current.deleteGroceries).toBe("function");
       expect(typeof result.current.deleteRecurringGrocery).toBe("function");
-      expect(typeof result.current.getRecurringGroceryForGrocery).toBe("function");
     });
 
     it("adds created groceries to the cache optimistically", async () => {
@@ -401,52 +399,40 @@ describe("useGroceriesMutations", () => {
     });
   });
 
-  describe("getRecurringGroceryForGrocery", () => {
-    it("returns recurring grocery when grocery has recurringGroceryId", async () => {
-      const recurringGrocery = createMockRecurringGrocery({ id: "r1", name: "Weekly Eggs" });
-      const grocery = createMockGrocery({ id: "g1", name: "Eggs", recurringGroceryId: "r1" });
+  describe("a component that only acts", () => {
+    it("does not re-render when the list changes, and acts on the list as it is then", async () => {
+      queryClient.setQueryData(
+        ["groceries", "list"],
+        createMockGroceriesData([createMockGrocery({ id: "g1", version: 2 })], [])
+      );
+      let renders = 0;
+      const { result } = renderHook(
+        () => {
+          renders += 1;
 
-      const initialData = createMockGroceriesData([grocery], [recurringGrocery]);
+          return useGroceriesMutations();
+        },
+        { wrapper: createTestWrapper(queryClient, adapter) }
+      );
+      const before = renders;
 
-      queryClient.setQueryData(["groceries", "list"], initialData);
-
-      const { result } = renderHook(() => useGroceriesMutations(), {
-        wrapper: createTestWrapper(queryClient, adapter),
+      // A housemate's change lands; the cache tells its observers on the next tick.
+      await act(async () => {
+        queryClient.setQueryData(
+          ["groceries", "list"],
+          createMockGroceriesData([createMockGrocery({ id: "g1", version: 3 })], [])
+        );
+        await new Promise((resolve) => setTimeout(resolve, 0));
       });
 
-      const found = result.current.getRecurringGroceryForGrocery("g1");
+      expect(renders).toBe(before);
 
-      expect(found).toEqual(recurringGrocery);
-    });
+      result.current.deleteGroceries(["g1"]);
 
-    it("returns null when grocery has no recurringGroceryId", async () => {
-      const grocery = createMockGrocery({ id: "g1", name: "Milk", recurringGroceryId: null });
-
-      const initialData = createMockGroceriesData([grocery], []);
-
-      queryClient.setQueryData(["groceries", "list"], initialData);
-
-      const { result } = renderHook(() => useGroceriesMutations(), {
-        wrapper: createTestWrapper(queryClient, adapter),
-      });
-
-      const found = result.current.getRecurringGroceryForGrocery("g1");
-
-      expect(found).toBeNull();
-    });
-
-    it("returns null when grocery not found", async () => {
-      const initialData = createMockGroceriesData([], []);
-
-      queryClient.setQueryData(["groceries", "list"], initialData);
-
-      const { result } = renderHook(() => useGroceriesMutations(), {
-        wrapper: createTestWrapper(queryClient, adapter),
-      });
-
-      const found = result.current.getRecurringGroceryForGrocery("non-existent");
-
-      expect(found).toBeNull();
+      expect(_mockMutations.delete).toHaveBeenLastCalledWith(
+        { groceries: [{ id: "g1", version: 3 }] },
+        expect.any(Object)
+      );
     });
   });
 

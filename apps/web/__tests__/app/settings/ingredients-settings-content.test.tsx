@@ -286,9 +286,9 @@ vi.mock("@norish/shared-react/config", async (importOriginal) => ({
   useSpellingRules: () => undefined,
 }));
 vi.mock("@norish/shared-react/groceries", () => ({
-  usePantryQuery: () => ({ items: [] }),
+  usePantryItem: () => null,
   usePantryMutations: () => ({ addPantryIngredient: vi.fn(), removePantryIngredient: vi.fn() }),
-  useGroceriesQuery: () => ({ groceries: [] }),
+  useOnTheList: () => [],
 }));
 vi.mock("@/components/groceries/pantry/put-on-the-list", () => ({
   PutOnTheList: () => null,

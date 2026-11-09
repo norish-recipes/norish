@@ -1,22 +1,11 @@
-import { useQuery, useQueryClient } from "@tanstack/react-query";
+import { useQuery } from "@tanstack/react-query";
 
-import type { StoresData, StoresQueryResult } from "./types";
+import type { StoresQueryResult } from "./types";
 import { useTRPC } from "../trpc";
 
 export function useStoresQuery(): StoresQueryResult {
   const trpc = useTRPC();
-  const queryClient = useQueryClient();
-  const queryKey = trpc.stores.list.queryKey();
   const { data, error, isLoading } = useQuery(trpc.stores.list.queryOptions());
-  const stores = data ?? [];
 
-  const setStoresData = (updater: (prev: StoresData | undefined) => StoresData | undefined) => {
-    queryClient.setQueryData<StoresData>(queryKey, updater);
-  };
-
-  const invalidate = () => {
-    queryClient.invalidateQueries({ queryKey });
-  };
-
-  return { stores, error, isLoading, queryKey, setStoresData, invalidate };
+  return { stores: data ?? [], error, isLoading };
 }
