@@ -8,6 +8,7 @@ import {
 import { readPersistedSession } from "@/lib/auth/auth-storage";
 import { offlineEngine } from "@/lib/offline/engine";
 import { closeMobileTrpcConnections } from "@/lib/trpc/trpc-provider";
+import { useStore } from "better-auth/react";
 
 import { useConnectivity } from "@norish/shared-react/offline/react";
 import { createClientLogger } from "@norish/shared/lib/logger";
@@ -40,7 +41,12 @@ function AuthProviderInner({
     () => getAuthClient(backendBaseUrl),
     [authClientVersion, backendBaseUrl]
   );
-  const { data: session, isPending, error: sessionError } = authClient.useSession();
+  // What authClient.useSession() runs, called directly so it is one hook whichever client is current.
+  const {
+    data: session,
+    isPending,
+    error: sessionError,
+  }: ReturnType<typeof authClient.useSession> = useStore(authClient.$store.atoms.session);
   const [justLoggedOut, setJustLoggedOut] = useState(false);
   const [authOverride, setAuthOverride] = useState<"none" | "signed-out">("none");
 
@@ -52,17 +58,17 @@ function AuthProviderInner({
     "idle" | "loading" | "loaded"
   >("idle");
 
+  // Kept by field, so a refetched session of the same user keeps the same liveUser.
+  const userId = session?.user.id;
+  const userEmail = session?.user.email;
+  const userName = session?.user.name;
+  const userImage = session?.user.image;
   const liveUser = useMemo(
     () =>
-      session?.user
-        ? {
-            id: session.user.id,
-            email: session.user.email,
-            name: session.user.name,
-            image: session.user.image,
-          }
+      userId !== undefined && userEmail !== undefined && userName !== undefined
+        ? { id: userId, email: userEmail, name: userName, image: userImage }
         : null,
-    [session?.user?.id, session?.user?.email, session?.user?.name, session?.user?.image]
+    [userId, userEmail, userName, userImage]
   );
   // Until the server answers, the persisted session stands in, so an Offline launch opens on
   // its cached data instead of the sign-in screen. A 401 is an answer: the session is gone.

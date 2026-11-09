@@ -9,6 +9,7 @@ import { ProviderErrorState } from "@/features/auth/components/provider-error-st
 import { ProviderLoadingState } from "@/features/auth/components/provider-loading-state";
 import { useAuthProvidersQuery } from "@/features/auth/hooks/use-auth-providers-query";
 import { styles } from "@/features/auth/styles/login.styles";
+import { authFailure } from "@/features/auth/utils/auth-failure";
 import {
   DEFAULT_PROTECTED_ROUTE,
   firstParam,
@@ -51,27 +52,13 @@ function LoginForm({ backendBaseUrl, redirectTo }: { backendBaseUrl: string; red
       setErrorMessage(null);
       setActiveOAuthProviderId(provider.id);
 
-      try {
-        // Like signIn.email, a refused sign-in comes back as `error`; only a network failure throws.
-        const { error: signInError } = await authClient.signIn.social({
-          provider: provider.id,
-          callbackURL: redirectTo,
-        });
+      const failure = await authFailure(
+        authClient.signIn.social({ provider: provider.id, callbackURL: redirectTo }),
+        intl.formatMessage({ id: "auth.errors.default.description" })
+      );
 
-        if (signInError) {
-          setErrorMessage(
-            signInError.message ?? intl.formatMessage({ id: "auth.errors.default.description" })
-          );
-        } else {
-          consumeLogoutFlag();
-        }
-      } catch (oauthError) {
-        if (oauthError instanceof Error && oauthError.message) {
-          setErrorMessage(oauthError.message);
-        } else {
-          setErrorMessage(intl.formatMessage({ id: "auth.errors.default.description" }));
-        }
-      }
+      if (failure === null) consumeLogoutFlag();
+      else setErrorMessage(failure);
 
       setActiveOAuthProviderId(null);
     },
@@ -84,27 +71,14 @@ function LoginForm({ backendBaseUrl, redirectTo }: { backendBaseUrl: string; red
     setIsSubmittingCredentials(true);
     setErrorMessage(null);
 
-    try {
-      const { error: signInError } = await authClient.signIn.email({
-        email: email.trim(),
-        password,
-      });
+    const failure = await authFailure(
+      authClient.signIn.email({ email: email.trim(), password }),
+      intl.formatMessage({ id: "auth.emailPassword.errors.generic" })
+    );
 
-      if (signInError) {
-        setErrorMessage(
-          signInError.message ?? intl.formatMessage({ id: "auth.emailPassword.errors.generic" })
-        );
-      } else {
-        consumeLogoutFlag();
-      }
-      // Stack.Protected guard handles redirect once session is established
-    } catch (signInError) {
-      if (signInError instanceof Error && signInError.message) {
-        setErrorMessage(signInError.message);
-      } else {
-        setErrorMessage(intl.formatMessage({ id: "auth.emailPassword.errors.generic" }));
-      }
-    }
+    // Stack.Protected guard handles redirect once session is established
+    if (failure === null) consumeLogoutFlag();
+    else setErrorMessage(failure);
 
     setIsSubmittingCredentials(false);
   }, [authClient, consumeLogoutFlag, email, intl, password]);

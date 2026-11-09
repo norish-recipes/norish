@@ -15,6 +15,27 @@ import { useIntl } from "react-intl";
 
 import { REACHABILITY_DEADLINE_MS } from "@norish/shared-react/offline/reachability";
 
+/** Asks the server at `baseUrl` what it is, and saves the address once it's a Norish new enough. */
+async function reachServer(baseUrl: string, signal: AbortSignal) {
+  // The deprecated route, since servers before 0.26 have no /health/ready to answer.
+  const response = await fetch(getBackendHealthUrl(baseUrl), {
+    method: "GET",
+    cache: "no-store",
+    credentials: "omit",
+    signal,
+  });
+
+  if (!response.ok) {
+    throw new Error(`Server returned ${response.status}`);
+  }
+
+  const verdict = classifyServerHealth(await response.json().catch(() => null));
+
+  if (verdict === "ok") await saveBackendBaseUrl(baseUrl);
+
+  return verdict;
+}
+
 export function ConnectScreen() {
   const router = useRouter();
   const intl = useIntl();
@@ -42,43 +63,31 @@ export function ConnectScreen() {
       controller.abort();
     }, REACHABILITY_DEADLINE_MS);
 
-    try {
-      // The deprecated route, since servers before 0.26 have no /health/ready to answer.
-      const response = await fetch(getBackendHealthUrl(normalizedBaseUrl), {
-        method: "GET",
-        cache: "no-store",
-        credentials: "omit",
-        signal: controller.signal,
-      });
-
-      if (!response.ok) {
-        throw new Error(`Server returned ${response.status}`);
+    await reachServer(normalizedBaseUrl, controller.signal).then(
+      (verdict) => {
+        if (verdict === "not-norish") {
+          setErrorMessage(intl.formatMessage({ id: "auth.connect.errors.unreachable" }));
+        } else if (verdict === "too-old") {
+          router.push("/update-server");
+        } else {
+          router.replace("/login");
+        }
+      },
+      (error: unknown) => {
+        if (error instanceof Error && error.name === "AbortError") {
+          setErrorMessage(intl.formatMessage({ id: "auth.connect.errors.timeout" }));
+        } else if (error instanceof Error) {
+          setErrorMessage(
+            intl.formatMessage(
+              { id: "auth.connect.errors.unreachableWithReason" },
+              { reason: error.message }
+            )
+          );
+        } else {
+          setErrorMessage(intl.formatMessage({ id: "auth.connect.errors.unreachable" }));
+        }
       }
-
-      const verdict = classifyServerHealth(await response.json().catch(() => null));
-
-      if (verdict === "not-norish") {
-        setErrorMessage(intl.formatMessage({ id: "auth.connect.errors.unreachable" }));
-      } else if (verdict === "too-old") {
-        router.push("/update-server");
-      } else {
-        await saveBackendBaseUrl(normalizedBaseUrl);
-        router.replace("/login");
-      }
-    } catch (error) {
-      if (error instanceof Error && error.name === "AbortError") {
-        setErrorMessage(intl.formatMessage({ id: "auth.connect.errors.timeout" }));
-      } else if (error instanceof Error) {
-        setErrorMessage(
-          intl.formatMessage(
-            { id: "auth.connect.errors.unreachableWithReason" },
-            { reason: error.message }
-          )
-        );
-      } else {
-        setErrorMessage(intl.formatMessage({ id: "auth.connect.errors.unreachable" }));
-      }
-    }
+    );
 
     clearTimeout(timeout);
     setIsConnecting(false);

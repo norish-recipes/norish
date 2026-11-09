@@ -3,6 +3,7 @@ import { Pressable, Text, View } from "react-native";
 import { AuthShell } from "@/features/auth/components/auth-shell";
 import { useAuthProvidersQuery } from "@/features/auth/hooks/use-auth-providers-query";
 import { styles } from "@/features/auth/styles/register.styles";
+import { authFailure } from "@/features/auth/utils/auth-failure";
 import { useAuth } from "@/lib/auth/auth-context";
 import { useRouter } from "expo-router";
 import { Button, Card, Input, useThemeColor } from "heroui-native";
@@ -117,28 +118,15 @@ function RegisterForm({
 
     setIsSubmitting(true);
 
-    try {
-      const { error } = await authClient.signUp.email({
-        name: trimmedName,
-        email: trimmedEmail,
-        password,
-      });
+    const failure = await authFailure(
+      authClient.signUp.email({ name: trimmedName, email: trimmedEmail, password }),
+      intl.formatMessage({ id: "auth.signup.errors.createFailed" }),
+      intl.formatMessage({ id: "auth.signup.errors.generic" })
+    );
 
-      if (error) {
-        setErrorMessage(
-          error.message ?? intl.formatMessage({ id: "auth.signup.errors.createFailed" })
-        );
-      } else {
-        // autoSignIn establishes the session; Stack.Protected redirects to the smoke screen.
-        consumeLogoutFlag();
-      }
-    } catch (error) {
-      if (error instanceof Error && error.message) {
-        setErrorMessage(error.message);
-      } else {
-        setErrorMessage(intl.formatMessage({ id: "auth.signup.errors.generic" }));
-      }
-    }
+    // autoSignIn establishes the session; Stack.Protected redirects to the smoke screen.
+    if (failure === null) consumeLogoutFlag();
+    else setErrorMessage(failure);
 
     setIsSubmitting(false);
   }, [authClient, confirmPassword, consumeLogoutFlag, email, intl, name, password]);
