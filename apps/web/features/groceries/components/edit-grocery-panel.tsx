@@ -48,6 +48,8 @@ export default function EditGroceryPanel({
   const [hasStoreChanged, setHasStoreChanged] = useState(false);
   // Whether what is typed in the product field could be saved as it stands.
   const [productValid, setProductValid] = useState(true);
+  const text = [grocery.amount, grocery.unit, grocery.name].filter(Boolean).join(" ");
+  // The form starts on the grocery, so its lookups start on its name rather than catch up to it.
   const {
     itemName,
     setItemName,
@@ -56,7 +58,7 @@ export default function EditGroceryPanel({
     handleConfirmPattern,
     handleRemovePattern,
     reset,
-  } = useGroceryFormState();
+  } = useGroceryFormState(open ? text : "");
   const { detectedPattern } = useRecurrenceDetection({
     itemName,
     enabled: open && !recurrencePanelOpen,
@@ -76,8 +78,6 @@ export default function EditGroceryPanel({
   ) {
     setSeededFrom({ open, grocery, recurringGrocery });
     if (open) {
-      const text = [grocery.amount, grocery.unit, grocery.name].filter(Boolean).join(" ");
-
       setItemName(text);
       setPurchaseAmount(grocery.purchaseAmount ?? null);
       setSelectedStoreId(grocery.storeId ?? null);

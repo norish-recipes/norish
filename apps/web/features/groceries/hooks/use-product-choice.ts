@@ -11,7 +11,7 @@ import { useParsedGroceryName } from "./use-parsed-grocery-name";
 import { useChooseProduct } from "./use-store-products-mutations";
 import { useProductLink } from "./use-store-products-query";
 
-/** How long a shopper stops typing a grocery's name before its link is read. */
+/** How long a shopper stops typing a grocery's name before its food and link are read. */
 const LOOKUP_DEBOUNCE_MS = 400;
 
 /**
@@ -58,19 +58,11 @@ export function useProductChoice(options: {
   );
   const chooseProduct = useChooseProduct();
   const groceryName = useParsedGroceryName(itemName);
-  const ingredientId = useIngredientFor(groceryName, options.grocery);
-  const store = stores.find((candidate) => candidate.id === selectedStoreId) ?? null;
-  const listLink = useLinkFor(selectedStoreId, ingredientId);
-  const onTheList = listLink?.product ?? null;
-  // The Store has been asked about this very name and has not answered: the
-  // field waits for that answer rather than asking the shop a second time.
-  const askedOnTheList = isPendingLink(listLink);
   const [settledName, setSettledName] = useState(groceryName);
 
-  // The name a panel opens on is what it is about, so it is adopted at once;
-  // only what is typed after that waits for the typing to stop, because a link
-  // is not looked up once per keystroke.
-  if (settledName === "" && groceryName !== "") setSettledName(groceryName);
+  // A name is not looked up once per keystroke, so what is typed waits for the
+  // typing to stop; an emptied field asks nothing and settles at once.
+  if (groceryName === "" && settledName !== "") setSettledName("");
 
   useEffect(() => {
     if (groceryName === settledName) return;
@@ -78,6 +70,14 @@ export function useProductChoice(options: {
 
     return () => clearTimeout(timer);
   }, [groceryName, settledName]);
+
+  const ingredientId = useIngredientFor(groceryName, settledName, options.grocery);
+  const store = stores.find((candidate) => candidate.id === selectedStoreId) ?? null;
+  const listLink = useLinkFor(selectedStoreId, ingredientId);
+  const onTheList = listLink?.product ?? null;
+  // The Store has been asked about this very name and has not answered: the
+  // field waits for that answer rather than asking the shop a second time.
+  const askedOnTheList = isPendingLink(listLink);
 
   // The list's own prices answer for the Store each grocery sits under and no
   // other, so a Store the shopper has just selected is read on its own.

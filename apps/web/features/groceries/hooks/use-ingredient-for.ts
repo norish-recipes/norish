@@ -1,14 +1,11 @@
 "use client";
 
 import { useQuery } from "@tanstack/react-query";
-import { useDebounceValue } from "usehooks-ts";
 
 import { useSpellingRules } from "@norish/shared-react/config";
 import { useTRPC } from "@norish/shared-react/trpc";
 import { sameFood } from "@norish/shared/lib/spelling-keys";
 
-/** How long a shopper stops typing a name before its Ingredient is asked for. */
-const LOOKUP_DEBOUNCE_MS = 400;
 /** An Ingredient a name resolves to changes only when the catalogue does. */
 const LOOKUP_STALE_MS = 5 * 60 * 1000;
 
@@ -17,19 +14,19 @@ const LOOKUP_STALE_MS = 5 * 60 * 1000;
  * price and aisle for it are keyed by (ADR-0037). A grocery already on the
  * list carries its own, and that is the answer while the name is still the
  * grocery's; a name typed or changed here is asked of the server once the
- * typing stops. Null while unknown — offline, a name Norish has never seen,
- * or still being typed — which reads as "the Store remembers nothing yet".
+ * typing stops: `settled`, which the caller debounces. Null while unknown —
+ * offline, a name Norish has never seen, or still being typed — which reads
+ * as "the Store remembers nothing yet".
  */
 export function useIngredientFor(
   name: string,
+  settled: string,
   grocery?: { name: string | null; ingredientId?: string | null } | null
 ): string | null {
   const trpc = useTRPC();
   const rules = useSpellingRules();
   const own =
     grocery?.ingredientId && sameFood(grocery.name, name, rules) ? grocery.ingredientId : null;
-  const [settled] = useDebounceValue(name, LOOKUP_DEBOUNCE_MS);
-
   const term = settled.trim();
   const { data } = useQuery(
     trpc.ingredients.find.queryOptions(
