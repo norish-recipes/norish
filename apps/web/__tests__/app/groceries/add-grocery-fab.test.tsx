@@ -16,7 +16,6 @@ const mocks = vi.hoisted(() => ({
   isMobile: true,
   isNavVisible: true,
   dockedTimers: [] as unknown[],
-  setAddGroceryPanelOpen: vi.fn(),
 }));
 
 vi.mock("@/hooks/use-is-mobile", () => ({
@@ -27,12 +26,6 @@ vi.mock("@/hooks/auto-hide", () => ({
 }));
 vi.mock("@/hooks/use-docked-timers", () => ({
   useDockedTimers: () => mocks.dockedTimers,
-}));
-vi.mock("@/app/(app)/groceries/context", () => ({
-  useGroceriesUiContext: () => ({
-    addGroceryPanelOpen: false,
-    setAddGroceryPanelOpen: mocks.setAddGroceryPanelOpen,
-  }),
 }));
 
 vi.mock("@heroui/react", () => ({

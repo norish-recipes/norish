@@ -1,7 +1,11 @@
 import { useCallback, useMemo } from "react";
 import { useQuery } from "@tanstack/react-query";
 
-import type { GroceryDto, PantryIngredientDto } from "@norish/shared/contracts";
+import type {
+  GroceryDto,
+  PantryIngredientDto,
+  RecurringGroceryDto,
+} from "@norish/shared/contracts";
 import { groceryOnTheList } from "@norish/shared/lib/pantry";
 
 import type { GroceriesQueryResult } from "./types";
@@ -28,12 +32,6 @@ export function useGroceriesQuery(): GroceriesQueryResult {
     [recipeMap]
   );
 
-  const getRecurringGroceryForGrocery = (groceryId: string) => {
-    const recurringId = groceries.find((grocery) => grocery.id === groceryId)?.recurringGroceryId;
-
-    return recurringGroceries.find((recurring) => recurring.id === recurringId) ?? null;
-  };
-
   return {
     groceries,
     recurringGroceries,
@@ -41,7 +39,6 @@ export function useGroceriesQuery(): GroceriesQueryResult {
     error,
     isLoading,
     getRecipeNameForGrocery,
-    getRecurringGroceryForGrocery,
   };
 }
 
@@ -51,6 +48,21 @@ export function useGroceryIds(): string[] {
   const { data = [] } = useQuery({
     ...trpc.groceries.list.queryOptions(),
     select: (list) => list.groceries.map((grocery) => grocery.id),
+  });
+
+  return data;
+}
+
+/** A grocery's recurring row, or null: its reader re-renders only when that row changes. */
+export function useRecurringGroceryFor(groceryId: string | null): RecurringGroceryDto | null {
+  const trpc = useTRPC();
+  const { data = null } = useQuery({
+    ...trpc.groceries.list.queryOptions(),
+    select: (list) => {
+      const recurringId = list.groceries.find((g) => g.id === groceryId)?.recurringGroceryId;
+
+      return list.recurringGroceries.find((recurring) => recurring.id === recurringId) ?? null;
+    },
   });
 
   return data;

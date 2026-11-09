@@ -3,31 +3,28 @@ import { describe, expect, it, vi } from "vitest";
 
 import "@testing-library/jest-dom";
 
-import { GroceriesUiProvider, useGroceriesUiContext } from "@/app/(app)/groceries/context";
-
 import type { DevicePreferences } from "@norish/shared/contracts/zod/device-preferences";
+import { useDevicePreference } from "@norish/shared-react/reader";
 
 import { renderWithDevicePreferences } from "../../helpers/device-preferences";
 
 vi.mock("@norish/shared-react/trpc", () => import("../../helpers/device-preferences-trpc"));
 
-let latestUi!: ReturnType<typeof useGroceriesUiContext>;
+let setViewMode!: (mode: DevicePreferences["groceryViewMode"]) => void;
+let setGroupSimilar!: (grouped: boolean) => void;
 
 function Probe() {
-  latestUi = useGroceriesUiContext();
+  const [viewMode, setView] = useDevicePreference("groceryViewMode");
+  const [groupSimilar, setGroup] = useDevicePreference("groceryGroupSimilar");
 
-  return (
-    <span data-testid="state">{`${latestUi.viewMode}:${latestUi.groupSimilarIngredients}`}</span>
-  );
+  setViewMode = setView;
+  setGroupSimilar = setGroup;
+
+  return <span data-testid="state">{`${viewMode}:${groupSimilar}`}</span>;
 }
 
 function renderGroceries(values: Partial<DevicePreferences> = {}) {
-  renderWithDevicePreferences(
-    <GroceriesUiProvider>
-      <Probe />
-    </GroceriesUiProvider>,
-    { values }
-  );
+  renderWithDevicePreferences(<Probe />, { values });
 }
 
 describe("groceries Device Preferences", () => {
@@ -46,8 +43,8 @@ describe("groceries Device Preferences", () => {
   it("switches the view and grouping at once", async () => {
     renderGroceries();
 
-    act(() => latestUi.setViewMode("recipe"));
-    act(() => latestUi.setGroupSimilarIngredients(false));
+    act(() => setViewMode("recipe"));
+    act(() => setGroupSimilar(false));
 
     await waitFor(() => expect(screen.getByTestId("state")).toHaveTextContent("recipe:false"));
   });

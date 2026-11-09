@@ -1,7 +1,12 @@
 import { act, renderHook, waitFor } from "@testing-library/react";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 
-import { useGroceriesQuery, useGroceryIds, useOnTheList } from "@norish/shared-react/groceries";
+import {
+  useGroceriesQuery,
+  useGroceryIds,
+  useOnTheList,
+  useRecurringGroceryFor,
+} from "@norish/shared-react/groceries";
 import { BASE_SPELLING_RULES } from "@norish/shared/lib/spelling-keys";
 
 import type { GroceriesData } from "./types";
@@ -118,32 +123,6 @@ describe("useGroceriesQuery", () => {
       expect(result.current.recurringGroceries).toEqual([]);
     });
   });
-
-  describe("getRecurringGroceryForGrocery", () => {
-    it("finds a grocery's recurring row, and null for a plain or unknown grocery", () => {
-      const recurring = createMockRecurringGrocery({ id: "r1", name: "Weekly Eggs" });
-
-      queryClient.setQueryData(
-        mockQueryKey,
-        createMockGroceriesData(
-          [
-            createMockGrocery({ id: "g1", recurringGroceryId: "r1" }),
-            createMockGrocery({ id: "g2", recurringGroceryId: null }),
-          ],
-          [recurring]
-        )
-      );
-      mockQueryOptions.mockReturnValue({ queryKey: mockQueryKey, staleTime: Infinity });
-
-      const { result } = renderHook(() => useGroceriesQuery(), {
-        wrapper: createTestWrapper(queryClient),
-      });
-
-      expect(result.current.getRecurringGroceryForGrocery("g1")).toEqual(recurring);
-      expect(result.current.getRecurringGroceryForGrocery("g2")).toBeNull();
-      expect(result.current.getRecurringGroceryForGrocery("unknown")).toBeNull();
-    });
-  });
 });
 
 /** Renders a hook and counts its renders, so a test sees what re-rendered it. */
@@ -231,5 +210,29 @@ describe("the list's selects", () => {
     // Milk bought: no longer still to buy.
     await tick("g1");
     expect(result.current).toEqual([]);
+  });
+
+  it("finds a grocery's recurring row, re-rendering its reader only when that row changes", async () => {
+    const eggs = createMockRecurringGrocery({ id: "r1", name: "Weekly Eggs" });
+    const recurringMilk = { ...milk, recurringGroceryId: "r1" };
+
+    await write(() => createMockGroceriesData([recurringMilk, bread], [eggs]));
+    const { result, renders } = renderCounted(() => useRecurringGroceryFor("g1"), queryClient);
+
+    expect(result.current).toEqual(eggs);
+    const before = renders();
+
+    await tick("g2");
+    expect(renders()).toBe(before);
+
+    await write((prev) => prev && { ...prev, recurringGroceries: [{ ...eggs, name: "Eggs" }] });
+    expect(result.current?.name).toBe("Eggs");
+
+    expect(
+      renderCounted(() => useRecurringGroceryFor("g2"), queryClient).result.current
+    ).toBeNull();
+    expect(
+      renderCounted(() => useRecurringGroceryFor(null), queryClient).result.current
+    ).toBeNull();
   });
 });

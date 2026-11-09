@@ -7,9 +7,8 @@ import { Button } from "@heroui/react";
 import { motion } from "motion/react";
 import { useTranslations } from "next-intl";
 
+import { useGroceriesUiStore } from "@norish/shared-react/groceries";
 import { cssFloatingDockPill } from "@norish/web/config/css-tokens";
-
-import { useGroceriesUiContext } from "../context";
 
 /**
  * The phone's way into the add panel: the same pill the cook button and the
@@ -24,7 +23,8 @@ import { useGroceriesUiContext } from "../context";
  * desktop header has its own add button, so this is mobile only.
  */
 export default function AddGroceryButton() {
-  const { addGroceryPanelOpen, setAddGroceryPanelOpen } = useGroceriesUiContext();
+  const addGroceryPanelOpen = useGroceriesUiStore((state) => state.addGroceryPanelOpen);
+  const setAddGroceryPanelOpen = useGroceriesUiStore((state) => state.setAddGroceryPanelOpen);
   const hasDockedTimers = useDockedTimers().length > 0;
   // Held at full size while the panel is open, so the control the reader just
   // pressed does not shrink out from under the panel it opened.

@@ -1,5 +1,6 @@
 "use client";
 
+import type { ComponentProps } from "react";
 import { useState } from "react";
 import { GroceryList, GroceryListByRecipe, StoreManagerPanel } from "@/components/groceries";
 import { ClearGroceriesModal } from "@/components/groceries/clear-groceries-modal";
@@ -18,14 +19,17 @@ import {
 import { Button, Dropdown, Header, Label, Separator } from "@heroui/react";
 import { useTranslations } from "next-intl";
 
-import type { GroceryDto } from "@norish/shared/contracts";
+import type { GroceryDto, StoreDto } from "@norish/shared/contracts";
 import type { RecurrencePattern } from "@norish/shared/contracts/recurrence";
 import {
   useGroceriesMutations,
   useGroceriesQuery,
+  useGroceriesUiStore,
   useGroceryIds,
+  useRecurringGroceryFor,
   useStoresQuery,
 } from "@norish/shared-react/groceries";
+import { useDevicePreference } from "@norish/shared-react/reader";
 import {
   cssFloatingDockContentClearance,
   cssHeaderControl,
@@ -33,40 +37,23 @@ import {
   cssHeaderIconControl,
 } from "@norish/web/config/css-tokens";
 
-import { useGroceriesUiContext } from "../context";
-
 export function GroceriesPage() {
-  const {
-    groceries,
-    recurringGroceries,
-    recipeMap,
-    isLoading,
-    getRecipeNameForGrocery,
-    getRecurringGroceryForGrocery,
-  } = useGroceriesQuery();
+  const { groceries, recurringGroceries, recipeMap, isLoading, getRecipeNameForGrocery } =
+    useGroceriesQuery();
   const {
     toggleGroceries,
     deleteGroceries,
     createGrocery,
     createRecurringGrocery,
-    updateGrocery,
-    updateRecurringGrocery,
-    deleteRecurringGrocery,
     reorderGroceriesInStore,
     markAllDoneInStore,
     deleteDoneInStore,
   } = useGroceriesMutations();
   const { stores } = useStoresQuery();
-  const {
-    addGroceryPanelOpen,
-    setAddGroceryPanelOpen,
-    editingGrocery,
-    setEditingGrocery,
-    viewMode,
-    groupSimilarIngredients,
-    storeManagerOpen,
-    setStoreManagerOpen,
-  } = useGroceriesUiContext();
+  // Device Preferences: the server renders the page the way the reader left it.
+  const [viewMode] = useDevicePreference("groceryViewMode");
+  const [groupSimilarIngredients] = useDevicePreference("groceryGroupSimilar");
+  const setEditingGrocery = useGroceriesUiStore((state) => state.setEditingGrocery);
 
   type ClearScope =
     | { kind: "store"; storeId: string | null; name: string }
@@ -90,51 +77,6 @@ export function GroceriesPage() {
   };
   const handleDelete = (id: string) => {
     deleteGroceries([id]);
-  };
-
-  // Edit panel handlers
-  const editingRecurringGrocery = editingGrocery
-    ? getRecurringGroceryForGrocery(editingGrocery.id)
-    : null;
-  const handleEditSave = (
-    itemName: string,
-    pattern: RecurrencePattern | null,
-    storeId?: string | null,
-    purchaseAmount?: number | null
-  ) => {
-    if (!editingGrocery) return;
-    if (editingRecurringGrocery) {
-      // Already recurring - update the recurring grocery (store change included)
-      updateRecurringGrocery(
-        editingRecurringGrocery.id,
-        editingGrocery.id,
-        itemName,
-        pattern,
-        storeId,
-        purchaseAmount
-      );
-    } else if (pattern) {
-      // Convert regular grocery to recurring without racing an update against the delete.
-      createRecurringGrocery(
-        itemName,
-        pattern,
-        storeId !== undefined ? storeId : editingGrocery.storeId,
-        purchaseAmount
-      );
-      deleteGroceries([editingGrocery.id]);
-    } else {
-      // Simple update
-      updateGrocery(editingGrocery.id, itemName, storeId, purchaseAmount);
-    }
-  };
-  const handleEditDelete = () => {
-    if (!editingGrocery) return;
-    if (editingRecurringGrocery) {
-      deleteRecurringGrocery(editingRecurringGrocery.id);
-    } else {
-      deleteGroceries([editingGrocery.id]);
-    }
-    setEditingGrocery(null);
   };
   const groceryGrouping = groupSimilarIngredients ? "grouped" : "flat";
 
@@ -204,32 +146,14 @@ export function GroceriesPage() {
         />
       </div>
 
-      {/* Panels */}
-      <AddGroceryPanel
-        open={addGroceryPanelOpen}
+      {/* Panels, each reading whether it is open, so opening one renders only that panel */}
+      <AddGrocery
         stores={stores}
         onCreate={createGrocery}
         onCreateRecurring={createRecurringGrocery}
-        onOpenChange={setAddGroceryPanelOpen}
       />
-
-      <StoreManagerPanel
-        open={storeManagerOpen}
-        stores={stores}
-        onOpenChange={setStoreManagerOpen}
-      />
-
-      {editingGrocery && (
-        <EditGroceryPanel
-          grocery={editingGrocery}
-          open={!!editingGrocery}
-          recurringGrocery={editingRecurringGrocery}
-          stores={stores}
-          onDelete={handleEditDelete}
-          onOpenChange={(open) => !open && setEditingGrocery(null)}
-          onSave={handleEditSave}
-        />
-      )}
+      <StoreManager stores={stores} />
+      <EditGrocery stores={stores} />
 
       <ClearGroceriesModal
         isOpen={clearScope !== null}
@@ -242,6 +166,87 @@ export function GroceriesPage() {
   );
 }
 
+function AddGrocery(props: Omit<ComponentProps<typeof AddGroceryPanel>, "open" | "onOpenChange">) {
+  const open = useGroceriesUiStore((state) => state.addGroceryPanelOpen);
+  const setOpen = useGroceriesUiStore((state) => state.setAddGroceryPanelOpen);
+
+  return <AddGroceryPanel {...props} open={open} onOpenChange={setOpen} />;
+}
+
+function StoreManager({ stores }: { stores: StoreDto[] }) {
+  const open = useGroceriesUiStore((state) => state.storeManagerOpen);
+  const setOpen = useGroceriesUiStore((state) => state.setStoreManagerOpen);
+
+  return <StoreManagerPanel open={open} stores={stores} onOpenChange={setOpen} />;
+}
+
+/** The edit panel, with its own saves: always mounted, so a save's answer lands after it closes. */
+function EditGrocery({ stores }: { stores: StoreDto[] }) {
+  const grocery = useGroceriesUiStore((state) => state.editingGrocery);
+  const setEditingGrocery = useGroceriesUiStore((state) => state.setEditingGrocery);
+  const recurringGrocery = useRecurringGroceryFor(grocery?.id ?? null);
+  const {
+    deleteGroceries,
+    createRecurringGrocery,
+    updateGrocery,
+    updateRecurringGrocery,
+    deleteRecurringGrocery,
+  } = useGroceriesMutations();
+
+  if (!grocery) return null;
+
+  const handleSave = (
+    itemName: string,
+    pattern: RecurrencePattern | null,
+    storeId?: string | null,
+    purchaseAmount?: number | null
+  ) => {
+    if (recurringGrocery) {
+      // Already recurring - update the recurring grocery (store change included)
+      updateRecurringGrocery(
+        recurringGrocery.id,
+        grocery.id,
+        itemName,
+        pattern,
+        storeId,
+        purchaseAmount
+      );
+    } else if (pattern) {
+      // Convert regular grocery to recurring without racing an update against the delete.
+      createRecurringGrocery(
+        itemName,
+        pattern,
+        storeId !== undefined ? storeId : grocery.storeId,
+        purchaseAmount
+      );
+      deleteGroceries([grocery.id]);
+    } else {
+      // Simple update
+      updateGrocery(grocery.id, itemName, storeId, purchaseAmount);
+    }
+  };
+  const handleDelete = () => {
+    if (recurringGrocery) {
+      deleteRecurringGrocery(recurringGrocery.id);
+    } else {
+      deleteGroceries([grocery.id]);
+    }
+    setEditingGrocery(null);
+  };
+
+  return (
+    <EditGroceryPanel
+      open
+      grocery={grocery}
+      recurringGrocery={recurringGrocery}
+      stores={stores}
+      onDelete={handleDelete}
+      onOpenChange={(open) => !open && setEditingGrocery(null)}
+      onSave={handleSave}
+    />
+  );
+}
+
 /**
  * The list view's own controls, on the right of the Groceries header: the
  * desktop add button and the menu with the view mode, grouping and stores.
@@ -250,14 +255,11 @@ export function GroceriesListActions() {
   const groceryIds = useGroceryIds();
   const { deleteGroceries } = useGroceriesMutations();
   const [clearListOpen, setClearListOpen] = useState(false);
-  const {
-    setAddGroceryPanelOpen,
-    viewMode,
-    setViewMode,
-    groupSimilarIngredients,
-    setGroupSimilarIngredients,
-    setStoreManagerOpen,
-  } = useGroceriesUiContext();
+  const [viewMode, setViewMode] = useDevicePreference("groceryViewMode");
+  const [groupSimilarIngredients, setGroupSimilarIngredients] =
+    useDevicePreference("groceryGroupSimilar");
+  const setAddGroceryPanelOpen = useGroceriesUiStore((state) => state.setAddGroceryPanelOpen);
+  const setStoreManagerOpen = useGroceriesUiStore((state) => state.setStoreManagerOpen);
   const t = useTranslations("groceries.page");
 
   return (

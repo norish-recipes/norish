@@ -31,7 +31,6 @@ export type GroceriesQueryResult = {
   error: unknown;
   isLoading: boolean;
   getRecipeNameForGrocery: (grocery: GroceryDto) => string | null;
-  getRecurringGroceryForGrocery: (groceryId: string) => RecurringGroceryDto | null;
 };
 
 export type GroceryCreateData = {
