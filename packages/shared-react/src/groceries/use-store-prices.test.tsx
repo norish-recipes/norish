@@ -5,7 +5,7 @@
  */
 import React from "react";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
-import { act, render, screen, waitFor } from "@testing-library/react";
+import { act, cleanup, render, screen, waitFor } from "@testing-library/react";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 
 import type { ResolvedProductLink } from "@norish/shared/contracts";
@@ -39,14 +39,17 @@ vi.mock("../trpc", () => ({
   }),
 }));
 
+/** Every state a row has drawn, in order, so a spinner shown for one frame is seen too. */
+let drawn: string[] = [];
+
 function Probe({ ingredientId }: { ingredientId: string }) {
   const link = useLinkFor(STORE, ingredientId);
+  const state =
+    link === null ? "unknown" : link.product ? "linked" : link.triedAt ? "miss" : "pending";
 
-  return (
-    <span data-testid="state">
-      {link === null ? "unknown" : link.product ? "linked" : link.triedAt ? "miss" : "pending"}
-    </span>
-  );
+  drawn.push(state);
+
+  return <span data-testid="state">{state}</span>;
 }
 
 describe("a Pending Link on the screen", () => {
@@ -121,6 +124,37 @@ describe("a Pending Link on the screen", () => {
       await vi.advanceTimersByTimeAsync(0);
     });
     expect(screen.getByTestId("state").textContent).toBe("miss");
+  });
+
+  it("shows no spinner to a row that mounts again after the wait ran out", async () => {
+    await mount("melk", () => [pending("melk")]);
+    await act(async () => {
+      await vi.advanceTimersByTimeAsync(PENDING_LINK_MAX_AGE_MS + 1000);
+    });
+    expect(screen.getByTestId("state").textContent).toBe("unknown");
+
+    // A view switch, or a return from the Pantry: the row mounts again over the held link.
+    cleanup();
+    drawn = [];
+    await mount("melk", () => [pending("melk")]);
+
+    expect(drawn).not.toContain("pending");
+    expect(screen.getByTestId("state").textContent).toBe("unknown");
+  });
+
+  it("waits only the rest of the time for a row that mounts again mid-wait", async () => {
+    await mount("boter", () => [pending("boter")]);
+    await act(async () => {
+      await vi.advanceTimersByTimeAsync(PENDING_LINK_MAX_AGE_MS - 60_000);
+    });
+    cleanup();
+    await mount("boter", () => [pending("boter")]);
+
+    expect(screen.getByTestId("state").textContent).toBe("pending");
+    await act(async () => {
+      await vi.advanceTimersByTimeAsync(61_000);
+    });
+    expect(screen.getByTestId("state").textContent).toBe("unknown");
   });
 
   it("is the answer itself once one lands", async () => {

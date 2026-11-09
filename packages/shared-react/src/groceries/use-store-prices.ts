@@ -69,17 +69,22 @@ export function useStorePrices<T>(read: (priceFor: PriceFor) => T): T | undefine
 }
 
 /**
- * What the Store knows about one Ingredient — a link, a Miss, or a Pending
- * Link — or null where it knows nothing. Its reader re-renders only when that
- * link changes.
- *
- * The valve on a Pending Link: one this screen has watched for longer than the
- * queue could take reads as null too, measured from the moment it was first
- * seen here, so a page that loads mid-question waits the full allowance rather
- * than none. The question asked again lands as a row identical to the one that
- * expired, which the query cache hands back as the same object, so a screen
- * that gave up on a name stays quiet until the answer lands. Any other row is
- * waited on afresh.
+ * When each Pending Link was first seen on this page, by store and Ingredient. A reader that
+ * mounts later counts from then, so a remount never restarts the wait.
+ */
+const pendingSince = new Map<string, number>();
+
+function outlivedQueue(key: string | null, link: ResolvedProductLink | null): boolean {
+  const since = key === null ? undefined : pendingSince.get(key);
+
+  return (
+    isPendingLink(link) && since !== undefined && Date.now() - since >= PENDING_LINK_MAX_AGE_MS
+  );
+}
+
+/**
+ * What the Store knows about one Ingredient (a link, a Miss or a Pending Link), or null. A Pending
+ * Link first seen longer ago than the queue could take reads as null too, until the row changes.
  */
 export function useLinkFor(
   storeId: string | null,
@@ -87,18 +92,28 @@ export function useLinkFor(
 ): ResolvedProductLink | null {
   const trpc = useTRPC();
   const key = priceKey(storeId, ingredientId);
-  const { data: link = null } = useQuery({
+  const { data: link = null, isSuccess } = useQuery({
     ...trpc.stores.groceryPrices.queryOptions(),
     select: (links) => links.filter((candidate) => linkKey(candidate) === key).at(-1) ?? null,
   });
-  const [expired, setExpired] = useState<ResolvedProductLink | null>(null);
+  // A reader that mounts after the wait ran out starts given up, never showing the spinner.
+  const [expired, setExpired] = useState(() => (outlivedQueue(key, link) ? link : null));
 
   useEffect(() => {
-    if (!isPendingLink(link)) return;
-    const timer = setTimeout(() => setExpired(link), PENDING_LINK_MAX_AGE_MS);
+    if (key === null || !isSuccess) return;
+    // An answer, or no row: the next question about this food is waited on afresh.
+    if (!isPendingLink(link)) {
+      pendingSince.delete(key);
+
+      return;
+    }
+    const since = pendingSince.get(key) ?? Date.now();
+
+    pendingSince.set(key, since);
+    const timer = setTimeout(() => setExpired(link), since + PENDING_LINK_MAX_AGE_MS - Date.now());
 
     return () => clearTimeout(timer);
-  }, [link]);
+  }, [key, link, isSuccess]);
 
   return link !== null && link === expired ? null : link;
 }
@@ -135,6 +150,8 @@ export function useStorePricesSubscription() {
 
   useRealtimeSubscription<Payload<"linkUpdated">>(trpc.stores.onLinkUpdated, {
     onEvent: ({ link: updated }) => {
+      // An answer that lands while no row shows it still ends that wait.
+      if (!isPendingLink(updated)) pendingSince.delete(linkKey(updated));
       setPrices((prev) => {
         const key = linkKey(updated);
         const without = prev.filter((link) => linkKey(link) !== key);
