@@ -102,12 +102,12 @@ The pilot's numbers are recorded in tickets 03 and 07. A problem with the shape 
 - A good test drives a hook or store through its public interface and asserts what a caller observes: the data returned, what the cache holds after a mutation or a realtime event, what a store holds after an action. Never internal calls.
 - shared-react's existing groceries, stores and pantry suites (`store-prices-pending`, `store-aisles`, `pantry`) move next to the code and run against the plain hooks.
 - Each new zustand store gets a small unit test of its actions.
-- The groceries E2E set runs unchanged and must stay green, as the proof that behaviour didn't move: `grocery-prices`, `grocery-aisles`, `grocery-versions`, `pantry`, `reorder-and-swipe`, `offline`, `realtime` and `first-paint`, plus `calendar-planning` (it opens Add to Groceries after planning), `pickers-on-phone` (the store-product field), and `library-selection` and `page-transitions`, which navigate to groceries. There is no single groceries spec.
+- The groceries E2E set runs unchanged but for `pantry` and must stay green, as the proof that behaviour didn't move: `grocery-prices`, `grocery-aisles`, `grocery-versions`, `pantry`, `reorder-and-swipe`, `offline`, `realtime` and `first-paint`, plus `calendar-planning` (it opens Add to Groceries after planning), `pickers-on-phone` (the store-product field), and `library-selection` and `page-transitions`, which navigate to groceries. There is no single groceries spec. `pantry` expects a first switch to the Pantry to read it, since a full load seeds only the view it opens on, as Mike agreed (ticket 06).
 - Every new test is checked with repeated runs; a test that only passes on re-run is a bug to fix.
 
 ## Out of Scope
 
 - Migrating any feature after groceries in this ticket set.
 - Moving web into `src/`.
-- Visual or behavioural changes to groceries.
+- Visual or behavioural changes to groceries, but for what seeding only the opening view brings (ticket 06): a first switch to the other view reads it, and the Pantry's suggestions are read on every visit.
 - New mobile screens; the mobile rewrite follows its own design track.
