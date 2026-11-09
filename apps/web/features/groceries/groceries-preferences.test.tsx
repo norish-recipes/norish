@@ -3,12 +3,12 @@ import { describe, expect, it, vi } from "vitest";
 
 import "@testing-library/jest-dom";
 
+import { renderWithDevicePreferences } from "@/__tests__/helpers/device-preferences";
+
 import type { DevicePreferences } from "@norish/shared/contracts/zod/device-preferences";
 import { useDevicePreference } from "@norish/shared-react/reader";
 
-import { renderWithDevicePreferences } from "../../helpers/device-preferences";
-
-vi.mock("@norish/shared-react/trpc", () => import("../../helpers/device-preferences-trpc"));
+vi.mock("@norish/shared-react/trpc", () => import("@/__tests__/helpers/device-preferences-trpc"));
 
 let setViewMode!: (mode: DevicePreferences["groceryViewMode"]) => void;
 let setGroupSimilar!: (grouped: boolean) => void;
