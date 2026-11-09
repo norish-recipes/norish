@@ -13,6 +13,12 @@ import { GroceriesListActions } from "./groceries-page";
 
 export type GroceriesView = "list" | "pantry";
 
+/** As many slots as the longer title, so no letter is a slot created mid-roll. A plain function:
+ * the React Compiler fails on this spread inside the component and skips it. */
+function longestTitle(titles: Record<GroceriesView, string>) {
+  return Math.max(...Object.values(titles).map((title) => [...title].length));
+}
+
 const HREF: Record<GroceriesView, string> = { list: "/groceries", pantry: "/groceries/pantry" };
 
 /** How long the views, and what only one of them has, take to come and go. */
@@ -34,8 +40,7 @@ export const VIEW_TRANSITION = { duration: 0.2, ease: "easeOut" } as const;
 export function GroceriesHeader({ view }: { view: GroceriesView }) {
   const t = useTranslations("groceries.page");
   const titles: Record<GroceriesView, string> = { list: t("title"), pantry: t("pantry") };
-  // As many slots as the longer title, so no letter is a slot created mid-roll.
-  const slots = Math.max(...Object.values(titles).map((title) => [...title].length));
+  const slots = longestTitle(titles);
 
   return (
     <div className="mb-6 flex min-h-10 shrink-0 flex-wrap items-center justify-between gap-3">

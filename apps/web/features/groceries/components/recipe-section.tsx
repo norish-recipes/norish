@@ -168,11 +168,10 @@ function RecipeSectionComponent({
   }, [propsActiveGroceries, activeId]);
 
   // Build ordered active groceries from orderedIds
-  const orderedActiveGroceries = useMemo(() => {
-    const groceryMap = new Map(propsActiveGroceries.map((g) => [g.id, g]));
-
-    return orderedIds.map((id) => groceryMap.get(id)).filter(Boolean) as GroceryDto[];
-  }, [orderedIds, propsActiveGroceries]);
+  const groceryMap = new Map(propsActiveGroceries.map((g) => [g.id, g]));
+  const orderedActiveGroceries = orderedIds
+    .map((id) => groceryMap.get(id))
+    .filter(Boolean) as GroceryDto[];
 
   // =============================================================================
   // DnD Setup
