@@ -224,7 +224,7 @@ test("adding a recipe teaches the Pantry a staple, and a kept line on the list s
     .toEqual(["chicken breast", "garlic", "olive oil"]);
 });
 
-test("a view switch, and the Pantry and back, read nothing realtime keeps current nor config", async () => {
+test("a first switch to the Pantry reads it once; the views and switches after it read nothing realtime keeps current nor config", async () => {
   // The list's reads, and the Pantry's, which the subscriptions keep current while mounted.
   const keptCurrent = [
     "groceries.list",
@@ -265,6 +265,11 @@ test("a view switch, and the Pantry and back, read nothing realtime keeps curren
   await page.getByRole("button", { name: "View Mode" }).click();
   await page.getByRole("menuitem", { name: "By Store" }).click();
   await showsView("store");
+  // The list's page seeds only the list, so the Pantry is read on its first visit.
+  await page.getByRole("tab", { name: "Pantry" }).click();
+  await expect(keptRow("olive oil")).toBeVisible();
+  await page.getByRole("tab", { name: "List" }).click();
+  await showsView("store");
   await page.getByRole("tab", { name: "Pantry" }).click();
   await expect(keptRow("olive oil")).toBeVisible();
   await page.getByRole("tab", { name: "List" }).click();
@@ -273,5 +278,5 @@ test("a view switch, and the Pantry and back, read nothing realtime keeps curren
   await page.waitForTimeout(1_000);
   page.off("request", noteRead);
 
-  expect(reads).toEqual([]);
+  expect(reads).toEqual(["pantry.list"]);
 });

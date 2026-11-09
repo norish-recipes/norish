@@ -24,8 +24,7 @@ import { ingredientDisplayName } from "@norish/shared/lib/ingredient-names";
 import { pantryIngredientFor, sortPantryIngredients } from "@norish/shared/lib/pantry";
 import { foodKey } from "@norish/shared/lib/spelling-keys";
 
-import { FromYourRecipes } from "./from-your-recipes";
-import { PutOnTheList, usePutOnTheList } from "./put-on-the-list";
+import { FromYourRecipes, PutOnTheList, usePutOnTheList } from "./components/pantry";
 
 /** How long typing pauses before the catalogue is searched, as in the ingredient picker. */
 const SEARCH_DELAY_MS = 250;
@@ -42,7 +41,7 @@ function goesBy(item: PantryIngredientDto, needle: string): boolean {
 }
 
 /**
- * The Pantry page's body: the foods the household keeps, by the name the
+ * The Pantry's page: the foods the household keeps, by the name the
  * reader reads them in, and one field that both narrows them and finds
  * catalogue foods to add. A row opens the food's Ingredient panel and ends
  * in _Put on the list_, or _On the list_ while a grocery of that same food
@@ -50,7 +49,7 @@ function goesBy(item: PantryIngredientDto, needle: string): boolean {
  * a typed name always was; picking a catalogue food adds that exact food.
  * Below, "From your recipes" offers what the household's recipes use most.
  */
-export function PantryView() {
+export function PantryScreen() {
   const t = useTranslations("groceries.pantry");
   const tStatus = useTranslations("common.status");
   const locale = useLocale();

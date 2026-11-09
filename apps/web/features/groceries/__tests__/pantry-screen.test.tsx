@@ -4,7 +4,7 @@
  * opens "From your recipes", and the one field narrows, adds and refuses.
  */
 import type { ReactNode } from "react";
-import { PantryView } from "@/features/groceries/components/pantry/pantry-view";
+import { PantryScreen } from "@/features/groceries/pantry-screen";
 import { act, fireEvent, render, screen } from "@testing-library/react";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 
@@ -114,7 +114,7 @@ function kept(name: string, localeNames: Record<string, string> = {}): PantryIng
 const rowNames = () =>
   screen.queryAllByRole("listitem").map((row) => row.getAttribute("data-pantry-ingredient"));
 
-describe("PantryView", () => {
+describe("PantryScreen", () => {
   beforeEach(() => {
     viewerLocale = "en";
     offline = false;
@@ -130,7 +130,7 @@ describe("PantryView", () => {
       "i-salt": "/ingredient-icons/0123456789abcdef0123456789abcdef.webp",
       "i-olive oil": null,
     };
-    render(<PantryView />);
+    render(<PantryScreen />);
 
     const row = (name: string) =>
       screen
@@ -146,7 +146,7 @@ describe("PantryView", () => {
   it("shows a loading state, never an empty Pantry, while it loads", () => {
     pantry = { isLoading: true, isUnavailable: false };
     items = [];
-    render(<PantryView />);
+    render(<PantryScreen />);
 
     expect(screen.getByTestId("pantry-loading")).toBeInTheDocument();
     expect(screen.queryByTestId("pantry-empty")).not.toBeInTheDocument();
@@ -155,7 +155,7 @@ describe("PantryView", () => {
   it("says so when the Pantry cannot be read, rather than calling it empty", () => {
     pantry = { isLoading: false, isUnavailable: true };
     items = [];
-    render(<PantryView />);
+    render(<PantryScreen />);
 
     expect(screen.getByTestId("pantry-unavailable")).toBeInTheDocument();
     expect(screen.queryByTestId("pantry-empty")).not.toBeInTheDocument();
@@ -164,7 +164,7 @@ describe("PantryView", () => {
   it("opens From your recipes on an empty Pantry, each food with its count", () => {
     items = [];
     suggestions = [{ ingredientId: "i-garlic", name: "garlic", localeNames: {}, recipeCount: 3 }];
-    render(<PantryView />);
+    render(<PantryScreen />);
 
     expect(screen.getByTestId("pantry-empty")).toBeInTheDocument();
     expect(screen.getByText("inRecipes 3")).toBeInTheDocument();
@@ -176,7 +176,7 @@ describe("PantryView", () => {
 
   it("folds From your recipes away when the Pantry already holds something", () => {
     suggestions = [{ ingredientId: "i-garlic", name: "garlic", localeNames: {}, recipeCount: 3 }];
-    render(<PantryView />);
+    render(<PantryScreen />);
 
     expect(screen.queryByText("inRecipes 3")).not.toBeInTheDocument();
     fireEvent.click(screen.getByRole("button", { name: "fromYourRecipes" }));
@@ -185,7 +185,7 @@ describe("PantryView", () => {
 
   it("lists the kept foods in the reader's language and narrows them by any name", async () => {
     viewerLocale = "nl";
-    render(<PantryView />);
+    render(<PantryScreen />);
 
     expect(screen.getAllByRole("listitem").map((row) => row.textContent)).toEqual([
       "olijfolie",
@@ -198,7 +198,7 @@ describe("PantryView", () => {
   });
 
   it("adds typed text on Enter, clears the field, and adds nothing for a food already kept", async () => {
-    render(<PantryView />);
+    render(<PantryScreen />);
     const field = screen.getByTestId("pantry-name");
 
     await act(async () => {
@@ -223,7 +223,7 @@ describe("PantryView", () => {
 
   it("puts a kept food on the list, and marks one whose grocery is still to buy", () => {
     groceries = [{ id: "g1", name: "salt", ingredientId: "i-salt", isDone: false }];
-    render(<PantryView />);
+    render(<PantryScreen />);
 
     expect(screen.getAllByTestId("on-the-list")).toHaveLength(1);
     fireEvent.click(screen.getByRole("button", { name: "putOnTheList" }));
@@ -233,7 +233,7 @@ describe("PantryView", () => {
   });
 
   it("opens a kept food's Ingredient panel", () => {
-    render(<PantryView />);
+    render(<PantryScreen />);
     fireEvent.click(screen.getByRole("button", { name: "salt" }));
 
     expect(screen.getByTestId("ingredient-panel")).toHaveTextContent("i-salt");
@@ -241,7 +241,7 @@ describe("PantryView", () => {
 
   it("offline, says a food's details wait for the connection and opens nothing", () => {
     offline = true;
-    render(<PantryView />);
+    render(<PantryScreen />);
 
     expect(screen.getByTestId("pantry-offline-details")).toBeInTheDocument();
     expect(screen.queryByRole("button", { name: "salt" })).not.toBeInTheDocument();

@@ -2,8 +2,6 @@
 
 import type { ComponentProps } from "react";
 import { useState } from "react";
-import { AddGroceryPanel, EditGroceryPanel } from "@/features/groceries/components/panels";
-import { StoreManagerPanel } from "@/features/groceries/components/stores";
 
 import type { GroceryDto, StoreDto } from "@norish/shared/contracts";
 import type { RecurrencePattern } from "@norish/shared/contracts/recurrence";
@@ -18,14 +16,19 @@ import {
 import { useDevicePreference } from "@norish/shared-react/reader";
 import { cssFloatingDockContentClearance } from "@norish/web/config/css-tokens";
 
-import { ClearGroceriesModal } from "./clear-groceries-modal";
-import { GroceryList } from "./grocery-list";
-import { GroceryListByRecipe } from "./grocery-list-by-recipe";
-import GrocerySkeleton from "./grocery-skeleton";
+import {
+  ClearGroceriesModal,
+  GroceryList,
+  GroceryListByRecipe,
+  GrocerySkeleton,
+} from "./components/list";
+import { AddGroceryPanel, EditGroceryPanel } from "./components/panels";
+import { StoreManagerPanel } from "./components/stores";
 
 const NO_IDS: string[] = [];
 
-export function GroceriesPage() {
+/** The grocery list's page: the list in the reader's view, and the panels it opens. */
+export function GroceriesListScreen() {
   const { groceries, recurringGroceries, recipeMap, isLoading, getRecipeNameForGrocery } =
     useGroceriesQuery();
   const {

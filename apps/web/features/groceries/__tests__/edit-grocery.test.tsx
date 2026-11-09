@@ -1,4 +1,4 @@
-import { EditGrocery } from "@/features/groceries/components/list/groceries-page";
+import { EditGrocery } from "@/features/groceries/groceries-list-screen";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { act, render, screen, waitFor } from "@testing-library/react";
 import { afterEach, describe, expect, it, vi } from "vitest";
