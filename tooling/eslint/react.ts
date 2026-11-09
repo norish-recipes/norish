@@ -36,6 +36,14 @@ const restrictedSyntax = [
     message:
       'A hook or component built inside a function starts with "use memo", or the React Compiler skips it.',
   })),
+  // TanStack Virtual mutates one virtualizer object, so the compiler's memos keep the first rows.
+  // It skips `useVirtualizer` but compiles `useWindowVirtualizer`; both opt out explicitly.
+  {
+    selector:
+      ":function:not([body.body.0.directive='use no memo']) > BlockStatement > VariableDeclaration > VariableDeclarator > CallExpression[callee.name=/^use(Window)?Virtualizer$/]",
+    message:
+      'A TanStack Virtual component opens with "use no memo": the React Compiler would memoise its rows on a virtualizer that never changes.',
+  },
   {
     selector: "JSXOpeningElement[name.name='DndContext']:not(:has(JSXAttribute[name.name='id']))",
     message:

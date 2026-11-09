@@ -28,6 +28,21 @@ describe("reactConfig", () => {
     ]);
     expect(lintJsx("const a = <DndContext id={id} sensors={s} />;")).toEqual([]);
   });
+
+  it('asks a TanStack Virtual component to opt out of the compiler with "use no memo"', () => {
+    expect(
+      lintJsx(
+        "function Rows({ n }) { const v = useWindowVirtualizer({ count: n }); return <b>{v.getTotalSize()}</b>; }"
+      )
+    ).toEqual([
+      'A TanStack Virtual component opens with "use no memo": the React Compiler would memoise its rows on a virtualizer that never changes.',
+    ]);
+    expect(
+      lintJsx(
+        "function Rows({ n }) { 'use no memo'; const v = useWindowVirtualizer({ count: n }); return <b>{v.getTotalSize()}</b>; }"
+      )
+    ).toEqual([]);
+  });
 });
 
 describe("compiledReactConfig", () => {
