@@ -2,10 +2,10 @@
 
 import { usePathname } from "next/navigation";
 import { PantryView } from "@/components/groceries";
-import { usePantryQuery, usePantrySuggestions } from "@/hooks/pantry";
 import { usePrefersReducedMotion } from "@/hooks/use-prefers-reduced-motion";
 import { AnimatePresence, motion } from "motion/react";
 
+import { usePantryQuery, usePantrySuggestions } from "@norish/shared-react/groceries";
 import { useConnectivity } from "@norish/shared-react/offline/react";
 
 import type { GroceriesView } from "./components/groceries-header";

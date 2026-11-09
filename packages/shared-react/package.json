@@ -19,6 +19,7 @@
     "./platform": "./src/platform/index.ts",
     "./platform/testing": "./src/platform/testing.ts",
     "./config": "./src/config/index.ts",
+    "./groceries": "./src/groceries/index.ts",
     "./reader": "./src/reader/index.ts",
     "./realtime": "./src/realtime/index.ts",
     "./offline": "./src/offline/index.ts",

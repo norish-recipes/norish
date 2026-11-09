@@ -34,7 +34,7 @@ vi.mock("@norish/shared-react/config", async () => {
 
   return { useSpellingRules: () => spellingRules(units as UnitsMap) };
 });
-vi.mock("@/hooks/pantry", () => ({
+vi.mock("@norish/shared-react/groceries", () => ({
   usePantryQuery: () => ({ items, ...pantry }),
   usePantryMutations: () => ({ addPantryIngredient }),
   usePantrySuggestions: () => ({ suggestions }),

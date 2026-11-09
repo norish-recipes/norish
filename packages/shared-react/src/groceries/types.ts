@@ -1,12 +1,5 @@
-import type { QueryKey } from "@tanstack/react-query";
-import type { createTRPCContext } from "@trpc/tanstack-react-query";
-
 import type { PantryIngredientDto, PantrySuggestionDto } from "@norish/shared/contracts";
 import type { LocaleNames } from "@norish/shared/lib/ingredient-names";
-import type { AppRouter } from "@norish/trpc/client";
-
-type TrpcContext = ReturnType<typeof createTRPCContext<AppRouter>>;
-export type TrpcHookBinding = ReturnType<TrpcContext["useTRPC"]>;
 
 export type PantryData = PantryIngredientDto[];
 
@@ -19,9 +12,6 @@ export type PantryQueryResult = {
    * known, which an empty `items` alone would misreport as nothing at home.
    */
   isUnavailable: boolean;
-  queryKey: QueryKey;
-  setPantryData: (updater: (prev: PantryData | undefined) => PantryData | undefined) => void;
-  invalidate: () => void;
 };
 
 /** A food picked rather than typed: kept as picked, shown by its names until the server answers. */
@@ -44,7 +34,3 @@ export type PantryMutationsResult = {
   isAdding: boolean;
   isRemoving: boolean;
 };
-
-export interface CreatePantryHooksOptions {
-  useTRPC: () => TrpcHookBinding;
-}

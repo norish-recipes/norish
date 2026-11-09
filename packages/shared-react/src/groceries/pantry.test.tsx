@@ -5,14 +5,14 @@
 import React from "react";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { render, screen, waitFor } from "@testing-library/react";
-import { afterEach, beforeEach, describe, expect, it } from "vitest";
+import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 
 import type { PantryIngredientDto } from "@norish/shared/contracts";
 import {
-  createUsePantryQuery,
   mergePantryAdded,
   mergePantryRemoved,
-} from "@norish/shared-react/hooks";
+  usePantryQuery,
+} from "@norish/shared-react/groceries";
 import { pantryIngredientFor } from "@norish/shared/lib/pantry";
 
 const OLIVE: PantryIngredientDto = {
@@ -34,27 +34,22 @@ const SALT: PantryIngredientDto = {
   localeNames: {},
 };
 
-type UseTRPC = Parameters<typeof createUsePantryQuery>[0]["useTRPC"];
+/** What the server answers for the Pantry. */
+const server = vi.hoisted(() => ({ items: (): PantryIngredientDto[] => [] }));
 
-/** The shape the hook reads off the tRPC binding, and nothing more of it. */
-function fakeTrpc(items: () => PantryIngredientDto[]): ReturnType<UseTRPC> {
-  return {
+// The shape the hook reads off the tRPC binding, and nothing more of it.
+vi.mock("../trpc", () => ({
+  useTRPC: () => ({
     pantry: {
       list: {
-        queryOptions: () => ({ queryKey: ["pantry", "list"], queryFn: async () => items() }),
+        queryOptions: () => ({ queryKey: ["pantry", "list"], queryFn: async () => server.items() }),
         queryKey: () => ["pantry", "list"],
       },
     },
-  } as unknown as ReturnType<UseTRPC>;
-}
+  }),
+}));
 
-function Probe({
-  usePantryQuery,
-  name,
-}: {
-  usePantryQuery: ReturnType<typeof createUsePantryQuery>;
-  name: string;
-}) {
+function Probe({ name }: { name: string }) {
   const { items } = usePantryQuery();
 
   return (
@@ -65,11 +60,7 @@ function Probe({
 }
 
 /** Whether the hook says nothing is known, as the add-to-groceries panel asks. */
-function StatusProbe({
-  usePantryQuery,
-}: {
-  usePantryQuery: ReturnType<typeof createUsePantryQuery>;
-}) {
+function StatusProbe() {
   const { isUnavailable } = usePantryQuery();
 
   return <span data-testid="pantry-status">{isUnavailable ? "unavailable" : "known"}</span>;
@@ -112,12 +103,12 @@ describe("usePantryQuery", () => {
   });
 
   it("hands the Pantry to whoever asks whether a name is in it", async () => {
-    const usePantryQuery = createUsePantryQuery({ useTRPC: () => fakeTrpc(() => [OLIVE]) });
+    server.items = () => [OLIVE];
 
     render(
       <QueryClientProvider client={client}>
-        <Probe name=" OLIVE oil! " usePantryQuery={usePantryQuery} />
-        <Probe name="extra virgin olive oil" usePantryQuery={usePantryQuery} />
+        <Probe name=" OLIVE oil! " />
+        <Probe name="extra virgin olive oil" />
       </QueryClientProvider>
     );
 
@@ -126,16 +117,13 @@ describe("usePantryQuery", () => {
   });
 
   it("says nothing is known when the Pantry cannot be read and nothing is cached", async () => {
-    const usePantryQuery = createUsePantryQuery({
-      useTRPC: () =>
-        fakeTrpc(() => {
-          throw new Error("pantry down");
-        }),
-    });
+    server.items = () => {
+      throw new Error("pantry down");
+    };
 
     render(
       <QueryClientProvider client={client}>
-        <StatusProbe usePantryQuery={usePantryQuery} />
+        <StatusProbe />
       </QueryClientProvider>
     );
 
@@ -146,18 +134,16 @@ describe("usePantryQuery", () => {
 
   it("knows a Pantry it has read, and still knows it when a later read fails", async () => {
     let down = false;
-    const usePantryQuery = createUsePantryQuery({
-      useTRPC: () =>
-        fakeTrpc(() => {
-          if (down) throw new Error("pantry down");
 
-          return [OLIVE];
-        }),
-    });
+    server.items = () => {
+      if (down) throw new Error("pantry down");
+
+      return [OLIVE];
+    };
 
     render(
       <QueryClientProvider client={client}>
-        <StatusProbe usePantryQuery={usePantryQuery} />
+        <StatusProbe />
       </QueryClientProvider>
     );
 
