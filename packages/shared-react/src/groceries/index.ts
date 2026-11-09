@@ -21,10 +21,12 @@ export { mergePantryAdded, mergePantryRemoved } from "./pantry-merge";
 export { useGroceriesMutations } from "./use-groceries-mutations";
 export { useGroceriesQuery } from "./use-groceries-query";
 export { useGroceriesSubscription } from "./use-groceries-subscription";
+export { useGroceryFormState } from "./use-grocery-form-state";
 export { usePantryMutations } from "./use-pantry-mutations";
 export { usePantryQuery } from "./use-pantry-query";
 export { usePantrySubscription } from "./use-pantry-subscription";
 export { usePantrySuggestions } from "./use-pantry-suggestions";
+export { useRecurrenceDetection } from "./use-recurrence-detection";
 export {
   aisleKey,
   mergeAisleFiling,

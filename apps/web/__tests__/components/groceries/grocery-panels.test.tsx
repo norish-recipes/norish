@@ -119,7 +119,9 @@ vi.mock("@/hooks/stores/use-parsed-grocery-name", () => ({
 const AISLE_LINKS: Record<string, string> = { "store-c|i-cola": "aisle-frisdrank" };
 const fileGroceryName = vi.fn();
 
-vi.mock("@norish/shared-react/groceries", () => ({
+vi.mock("@norish/shared-react/groceries", async (importOriginal) => ({
+  ...(await importOriginal<object>()),
+  useRecurrenceDetection: () => ({ detectedPattern: null }),
   useLinkFor: linkOnTheList,
   useStoreAisles: () => ({
     aisleFor: (storeId: string | null, ingredientId: string | null | undefined) =>
@@ -175,9 +177,6 @@ vi.mock("@/hooks/stores/use-store-products-query", () => ({
   },
 }));
 
-vi.mock("@/hooks/use-recurrence-detection", () => ({
-  useRecurrenceDetection: () => ({ detectedPattern: null }),
-}));
 
 vi.mock("next-intl", () => ({
   useTranslations: () => (key: string, params?: Record<string, unknown>) =>

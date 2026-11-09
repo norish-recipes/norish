@@ -9,13 +9,12 @@ import { RecurrencePanel } from "@/components/Panel/consumers/recurrence-panel";
 import Panel from "@/components/Panel/Panel";
 import { ActionButton, ActionButtonGroup } from "@/components/shared/action-button";
 import { useAisleChoice, useProductChoice } from "@/hooks/stores";
-import { useRecurrenceDetection } from "@/hooks/use-recurrence-detection";
 import { Input } from "@heroui/react";
 import { useTranslations } from "next-intl";
 
 import type { StoreDto } from "@norish/shared/contracts";
 import type { RecurrencePattern } from "@norish/shared/contracts/recurrence";
-import { useGroceryFormState } from "@norish/shared-react/hooks";
+import { useGroceryFormState, useRecurrenceDetection } from "@norish/shared-react/groceries";
 
 type AddGroceryPanelProps = {
   open: boolean;
