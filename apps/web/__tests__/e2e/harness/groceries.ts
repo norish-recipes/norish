@@ -11,8 +11,8 @@ export async function openGroceries(page: Page): Promise<void> {
   await page.getByRole("button", { name: "Add Item" }).waitFor();
 }
 
-/** Close the open panel and wait until it is gone. */
+/** Close the open panel and wait until no dialog is left, a Select's leaving popover included. */
 export async function closePanel(page: Page): Promise<void> {
   await page.getByRole("button", { name: "Close panel" }).click();
-  await page.getByRole("dialog").waitFor({ state: "hidden" });
+  await page.getByRole("dialog").first().waitFor({ state: "detached" });
 }
