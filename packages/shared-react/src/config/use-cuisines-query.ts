@@ -8,7 +8,7 @@ export function useCuisinesQuery() {
 
   const { data, error, isLoading } = useQuery({
     ...trpc.config.cuisines.queryOptions(),
-    staleTime: 5 * 60 * 1000,
+    staleTime: 60 * 60 * 1000,
   });
 
   return {

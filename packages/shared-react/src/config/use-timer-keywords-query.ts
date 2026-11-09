@@ -15,7 +15,7 @@ export function useTimerKeywordsQuery() {
 
   const { data, error, isLoading } = useQuery({
     ...trpc.config.timerKeywords.queryOptions(),
-    staleTime: 5 * 60 * 1000,
+    staleTime: 60 * 60 * 1000,
     gcTime: 60 * 60 * 1000,
   });
 

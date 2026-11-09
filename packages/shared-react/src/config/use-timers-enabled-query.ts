@@ -10,7 +10,7 @@ export function useTimersEnabledQuery() {
 
   const { data, error, isLoading } = useQuery({
     ...trpc.config.timersEnabled.queryOptions(),
-    staleTime: 5 * 60 * 1000,
+    staleTime: 60 * 60 * 1000,
     gcTime: 60 * 60 * 1000,
   });
   const globalEnabled = data ?? true;

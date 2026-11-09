@@ -224,7 +224,7 @@ test("adding a recipe teaches the Pantry a staple, and a kept line on the list s
     .toEqual(["chicken breast", "garlic", "olive oil"]);
 });
 
-test("a view switch, and the Pantry and back, read nothing realtime keeps current", async () => {
+test("a view switch, and the Pantry and back, read nothing realtime keeps current nor config", async () => {
   // The list's reads, and the Pantry's, which the subscriptions keep current while mounted.
   const keptCurrent = [
     "groceries.list",
@@ -235,9 +235,15 @@ test("a view switch, and the Pantry and back, read nothing realtime keeps curren
   ];
   const reads: string[] = [];
   const noteRead = (request: Request) => {
-    const path = new URL(request.url()).pathname;
+    const { pathname } = new URL(request.url());
 
-    reads.push(...keptCurrent.filter((read) => path.includes(read)));
+    if (!pathname.includes("/api/trpc/")) return;
+    const procedures = pathname.slice(pathname.lastIndexOf("/") + 1).split(",");
+
+    // Reference data, which once answered goes by its own stale time.
+    reads.push(
+      ...procedures.filter((read) => keptCurrent.includes(read) || read.startsWith("config."))
+    );
   };
   const showsView = (view: string) =>
     expect(page.locator(`[data-grocery-view="${view}"]`).first()).toBeAttached();

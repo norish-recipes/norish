@@ -10,6 +10,7 @@ import { IDBFactory } from "fake-indexeddb";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 
 import type { AppRouter } from "@norish/trpc/client";
+import { QUERY_STALE_TIME_MS } from "@norish/shared-react/offline";
 import { useKeepsCurrent } from "@norish/shared-react/realtime";
 
 /** A fresh engine, its key builder, and how many reads a reader mounting on a key sends. */
@@ -19,9 +20,11 @@ function openEngine() {
     client: createTRPCClient<AppRouter>({ links: [] }),
     queryClient,
   });
-  const fetchesOnOpen = async (queryKey: readonly unknown[]) => {
+  const fetchesOnOpen = async (queryKey: readonly unknown[], staleTime = QUERY_STALE_TIME_MS) => {
     const queryFn = vi.fn(async () => ({ fetched: true }));
-    const leave = new QueryObserver(queryClient, { queryKey, queryFn }).subscribe(() => {});
+    const leave = new QueryObserver(queryClient, { queryKey, queryFn, staleTime }).subscribe(
+      () => {}
+    );
 
     await new Promise((resolve) => setTimeout(resolve, 0));
     leave();
@@ -101,6 +104,29 @@ describe("the web offline engine", () => {
 
     expect(await fetchesOnOpen(seeded)).toBe(1);
     expect(await fetchesOnOpen(read)).toBe(1);
+  });
+
+  it("lets reference data the server answered wait out its own stale time", async () => {
+    const { queryClient, trpc, fetchesOnOpen } = openEngine();
+    const hour = 60 * 60 * 1000;
+    const units = [...trpc.config.units.queryKey()];
+    const tags = [...trpc.config.tags.queryKey()];
+    const admin = [...trpc.admin.getYtDlpVersion.queryKey()];
+
+    // Restored from the Offline Cache: read once this page load, whatever its stale time.
+    queryClient.setQueryData(units, {});
+    expect(await fetchesOnOpen(units, hour)).toBe(1);
+    expect(await fetchesOnOpen(units, hour)).toBe(0);
+
+    // Answered too, but no longer-lived than the default: read on every mount, as before.
+    await queryClient.fetchQuery({ queryKey: tags, queryFn: async () => ({ tags: [] }) });
+    await queryClient.fetchQuery({ queryKey: admin, queryFn: async () => ({}) });
+    expect(await fetchesOnOpen(tags)).toBe(1);
+    expect(await fetchesOnOpen(admin, 60_000)).toBe(1);
+
+    // Marked stale, as an admin's edit or a catalogue event marks it.
+    await queryClient.invalidateQueries({ queryKey: units, refetchType: "none" });
+    expect(await fetchesOnOpen(units, hour)).toBe(1);
   });
 
   it("resets the service worker's image and page caches with the read copy", async () => {
