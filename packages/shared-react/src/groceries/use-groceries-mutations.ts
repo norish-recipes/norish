@@ -136,6 +136,17 @@ export function applyCreatedGroceriesToCache(
   return [...createdGroceries, ...shifted.filter((grocery) => !createdIds.has(grocery.id))];
 }
 
+/** Each row the server sent, merged over the row the list holds; the rest stay as they are. */
+export function mergeGroceries(groceries: GroceryDto[], changed: readonly GroceryDto[]) {
+  const byId = new Map(changed.map((grocery) => [grocery.id, grocery]));
+
+  return groceries.map((grocery) => {
+    const next = byId.get(grocery.id);
+
+    return next ? { ...grocery, ...next } : grocery;
+  });
+}
+
 function reconcileCreatedGroceries(
   prev: GroceriesData,
   optimisticIds: string[],
@@ -177,11 +188,10 @@ function reconcileCreatedGroceries(
   // The rows the new ones moved down come back as the server left them, over the shift guessed here.
   return {
     ...prev,
-    groceries: applyCreatedGroceriesToCache(groceries, createdToInsert).map((grocery) => {
-      const updated = updatedById.get(grocery.id);
-
-      return updated ? { ...grocery, ...updated } : grocery;
-    }),
+    groceries: mergeGroceries(
+      applyCreatedGroceriesToCache(groceries, createdToInsert),
+      updatedGroceries
+    ),
   };
 }
 
@@ -191,22 +201,16 @@ function applyRecurringCreatedToCache(prev: GroceriesData, result: CreateRecurri
   const existingRecurring = prev.recurringGroceries.some(
     (existing) => existing.id === recurringGrocery.id
   );
-  // The siblings the new line shifted down carry new versions: what the
-  // server says they are now replaces the shift guessed here (ADR-0004).
-  const shiftedById = new Map((result.shifted ?? []).map((row) => [row.id, row]));
-  const withShifted = (rows: GroceryDto[]) =>
-    rows.map((row) => {
-      const shifted = shiftedById.get(row.id);
-
-      return shifted ? { ...row, ...shifted } : row;
-    });
 
   return {
     ...prev,
-    groceries: withShifted(
+    // The siblings the new line shifted down carry new versions: what the
+    // server says they are now replaces the shift guessed here (ADR-0004).
+    groceries: mergeGroceries(
       existingGrocery
         ? prev.groceries.map((existing) => (existing.id === grocery.id ? grocery : existing))
-        : applyCreatedGroceriesToCache(prev.groceries, [grocery])
+        : applyCreatedGroceriesToCache(prev.groceries, [grocery]),
+      result.shifted ?? []
     ),
     recurringGroceries: existingRecurring
       ? prev.recurringGroceries.map((existing) =>

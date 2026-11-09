@@ -7,7 +7,7 @@ import type { GroceriesData } from "./types";
 import { usePlatform } from "../platform";
 import { useKeepsCurrent, useRealtimeSubscription } from "../realtime";
 import { useTRPC } from "../trpc";
-import { applyCreatedGroceriesToCache } from "./use-groceries-mutations";
+import { applyCreatedGroceriesToCache, mergeGroceries } from "./use-groceries-mutations";
 
 type Payload<E extends EventName<GroceriesRealtime>> = PayloadOf<GroceriesRealtime, E>;
 
@@ -58,14 +58,7 @@ export function useGroceriesSubscription() {
       queryClient.setQueryData<GroceriesData>(listKey, (prev) => {
         if (!prev) return prev;
 
-        const updated = payload.changedGroceries;
-        const updatedList = prev.groceries.map((e) => {
-          const match = updated.find((i) => i.id === e.id);
-
-          return match ? { ...e, ...match } : e;
-        });
-
-        return { ...prev, groceries: updatedList };
+        return { ...prev, groceries: mergeGroceries(prev.groceries, payload.changedGroceries) };
       });
     },
   });
