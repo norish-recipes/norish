@@ -5,6 +5,7 @@ import AllergiesCard from "./allergies-card";
 import ApiTokenCard from "./api-token-card";
 import ArchiveExportCard from "./archive-export-card";
 import ArchiveImportCard from "./archive-import-card";
+import BookmarkletCard from "./bookmarklet-card";
 import DangerZoneCard from "./danger-zone-card";
 import PreferencesCard from "./preferences-card";
 import ProfileCard from "./profile-card";
@@ -19,6 +20,7 @@ function UserSettingsContent() {
       <SignInMethodsCard />
       <PreferencesCard />
       <AllergiesCard />
+      <BookmarkletCard />
       <ApiTokenCard />
       <ShareLinksCard />
       <SiteAuthTokensCard />

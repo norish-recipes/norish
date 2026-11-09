@@ -23,6 +23,27 @@ paste the link there instead.
 Video links from YouTube, Instagram, TikTok and other sites import too when
 [video import](../configuration/ai-provider.md#video-import) is set up.
 
+## While browsing
+
+**Settings => User => Import while browsing** gives you a bookmarklet, a
+bookmark that sends the page you're on to Norish. It works in any desktop
+browser, including Safari.
+
+1. Drag **Save to Norish** to your Favorites or bookmarks bar. If your browser
+   won't let you, press **Copy**, bookmark any page, edit that bookmark and
+   replace its address with what you copied.
+2. On a recipe page, click the bookmark. Norish opens in a new tab and shows the
+   link.
+3. Press **Import**, or Return.
+
+Norish always asks first, so another website can't add recipes to your library
+by sending you to the import page.
+
+On Android, install Norish as an app to see it in the share sheet. Chromium and
+Firefox can also use the community
+[Norish Quick Import](https://github.com/AfoxDesignz/Norish-Quick-Import-Extension)
+extension.
+
 ## From pasted text or photos
 
 - **Add Recipe => Paste** takes a recipe as plain text or as

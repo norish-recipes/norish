@@ -84,6 +84,15 @@
         "confirmButton": "Supprimer la clé"
       }
     },
+    "bookmarklet": {
+      "title": "Importer en naviguant",
+      "description": "Ajoutez à votre navigateur un bouton qui envoie la page en cours à Norish.",
+      "linkLabel": "Enregistrer dans Norish",
+      "dragHint": "Faites glisser ce bouton vers votre barre de favoris.",
+      "manualHint": "Impossible de le faire glisser ? Copiez le code ci-dessous, ajoutez n'importe quelle page aux favoris, puis modifiez ce favori et remplacez son adresse par le code.",
+      "copy": "Copier",
+      "copied": "Bookmarklet copié"
+    },
     "archiveImport": {
       "title": "Importer une archive de recettes",
       "description": "Importez des recettes exportées depuis Norish, Mela, Paprika, Mealie, Tandoor ou Recipe Keeper."

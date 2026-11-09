@@ -124,6 +124,11 @@
     "clipboard": {
       "title": "Recept importeren van de link die je hebt gekopieerd?"
     },
+    "link": {
+      "title": "Dit recept importeren?",
+      "noLink": "Er is geen receptlink om te importeren",
+      "goToRecipes": "Naar recepten"
+    },
     "paste": {
       "title": "Importeren vanuit klembord",
       "label": "Recepttekst of JSON-LD",

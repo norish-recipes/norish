@@ -84,6 +84,15 @@
         "confirmButton": "Slett nøkkel"
       }
     },
+    "bookmarklet": {
+      "title": "Importer mens du surfer",
+      "description": "Legg til en knapp i nettleseren som sender siden du er på til Norish.",
+      "linkLabel": "Lagre i Norish",
+      "dragHint": "Dra denne knappen til favoritt- eller bokmerkelinjen.",
+      "manualHint": "Får du ikke dratt den? Kopier koden nedenfor, lag et bokmerke for en hvilken som helst side, rediger bokmerket og erstatt adressen med koden.",
+      "copy": "Kopier",
+      "copied": "Bokmerke kopiert"
+    },
     "archiveImport": {
       "title": "Importer oppskriftarkiv",
       "description": "Importer oppskrifter eksportert fra Norish, Mela, Paprika, Mealie, Tandoor eller Recipe Keeper."

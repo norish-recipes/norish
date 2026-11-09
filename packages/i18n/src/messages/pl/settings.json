@@ -84,6 +84,15 @@
         "confirmButton": "Usuń klucz"
       }
     },
+    "bookmarklet": {
+      "title": "Importuj podczas przeglądania",
+      "description": "Dodaj do przeglądarki przycisk, który wysyła bieżącą stronę do Norish.",
+      "linkLabel": "Zapisz w Norish",
+      "dragHint": "Przeciągnij ten przycisk na pasek ulubionych lub zakładek.",
+      "manualHint": "Nie możesz go przeciągnąć? Skopiuj poniższy kod, dodaj zakładkę do dowolnej strony, a następnie edytuj ją i zastąp jej adres kodem.",
+      "copy": "Kopiuj",
+      "copied": "Skopiowano bookmarklet"
+    },
     "archiveImport": {
       "title": "Import archiwum przepisów",
       "description": "Importuj przepisy wyeksportowane z Norish, Mela, Paprika, Mealie, Tandoor lub Recipe Keeper."

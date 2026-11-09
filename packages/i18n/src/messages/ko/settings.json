@@ -84,6 +84,15 @@
         "confirmButton": "키 삭제"
       }
     },
+    "bookmarklet": {
+      "title": "탐색 중 가져오기",
+      "description": "보고 있는 페이지를 Norish로 보내는 버튼을 브라우저에 추가합니다.",
+      "linkLabel": "Norish에 저장",
+      "dragHint": "이 버튼을 즐겨찾기 또는 북마크 막대로 끌어다 놓으세요.",
+      "manualHint": "끌어다 놓을 수 없나요? 아래 코드를 복사하고 아무 페이지나 북마크한 다음, 해당 북마크를 편집해 주소를 코드로 바꾸세요.",
+      "copy": "복사",
+      "copied": "북마클릿이 복사되었습니다"
+    },
     "archiveImport": {
       "title": "레시피 아카이브 가져오기",
       "description": "Norish, Mela, Paprika, Mealie, Tandoor 또는 Recipe Keeper에서 내보낸 레시피를 가져옵니다."

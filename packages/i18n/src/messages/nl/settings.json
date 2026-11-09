@@ -84,6 +84,15 @@
         "confirmButton": "Sleutel verwijderen"
       }
     },
+    "bookmarklet": {
+      "title": "Importeren tijdens het surfen",
+      "description": "Voeg een knop toe aan je browser die de huidige pagina naar Norish stuurt.",
+      "linkLabel": "Opslaan in Norish",
+      "dragHint": "Sleep deze knop naar je favorieten- of bladwijzerbalk.",
+      "manualHint": "Lukt slepen niet? Kopieer de onderstaande code, maak een bladwijzer van een willekeurige pagina, bewerk die en vervang het adres door de code.",
+      "copy": "Kopiëren",
+      "copied": "Bookmarklet gekopieerd"
+    },
     "archiveImport": {
       "title": "Archief importeren",
       "description": "Importeer recepten die zijn geëxporteerd uit Norish, Mela, Paprika, Mealie, Tandoor of Recipe Keeper."

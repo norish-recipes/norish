@@ -124,6 +124,11 @@
     "clipboard": {
       "title": "Import a recipe from the link you copied?"
     },
+    "link": {
+      "title": "Import this recipe?",
+      "noLink": "There's no recipe link to import",
+      "goToRecipes": "Go to recipes"
+    },
     "paste": {
       "title": "Import from paste",
       "label": "Recipe text or JSON-LD",

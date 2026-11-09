@@ -84,6 +84,15 @@
         "confirmButton": "حذف المفتاح"
       }
     },
+    "bookmarklet": {
+      "title": "الاستيراد أثناء التصفح",
+      "description": "أضف زرًا إلى متصفحك يرسل الصفحة الحالية إلى Norish.",
+      "linkLabel": "حفظ في Norish",
+      "dragHint": "اسحب هذا الزر إلى شريط المفضلة أو الإشارات المرجعية.",
+      "manualHint": "لا يمكنك سحبه؟ انسخ الرمز أدناه، وأضف إشارة مرجعية لأي صفحة، ثم عدّلها واستبدل عنوانها بالرمز.",
+      "copy": "نسخ",
+      "copied": "تم نسخ الإشارة المرجعية"
+    },
     "archiveImport": {
       "title": "استيراد أرشيف وصفات",
       "description": "استورد وصفات مصدّرة من Norish أو Mela أو Paprika أو Mealie أو Tandoor أو Recipe Keeper."

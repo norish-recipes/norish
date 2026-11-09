@@ -124,6 +124,11 @@
     "clipboard": {
       "title": "Importér en opskrift fra det link, du har kopieret?"
     },
+    "link": {
+      "title": "Vil du importere denne opskrift?",
+      "noLink": "Der er intet opskriftslink at importere",
+      "goToRecipes": "Gå til opskrifter"
+    },
     "paste": {
       "title": "Importer fra indsætning",
       "label": "Opskrifttekst eller JSON-LD",
