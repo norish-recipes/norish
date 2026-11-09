@@ -12,7 +12,9 @@ The scan found 20 functions before, web 12, mobile 4, shared-react 4, ui 0; thre
 
 Left open: the plugin and `babel-plugin-react-compiler` have to move together, or lint drifts from the build again. Nothing makes a TanStack Virtual component say `"use no memo"`: `useWindowVirtualizer` isn't on the compiler's incompatible list, so one without it compiles.
 
-- [x] `eslint-plugin-react-hooks` 7.x is a dev dependency of `tooling/eslint`, through the pnpm catalog, and its compiler rules and `rules-of-hooks` are on for web, mobile, shared-react and ui; landing stays off.
+Review fixes: mobile's auth context rereads the client a sign-out resets through `useSyncExternalStore`, since compiled it kept the old one while the offline engine built a second (88e748f05). `babel-plugin-react-compiler` joined the catalog beside the lint plugin, with an override for Expo's preset (dda89453f), and lint asks a TanStack Virtual component for `"use no memo"` (167c4fc47), which closes both items left open. `compiledReactConfig` switches off @eslint-react's copies of the compiler plugin's rules and keeps @eslint-react's broader `purity` (3bcaae4b4). The connect screen and `authFailure` catch a throw in their success branch (10c27aef8), and `NO_ALLERGIES` is one read-only set (416a3b9c6).
+
+- [x] `eslint-plugin-react-hooks` 7.x is a dependency of `tooling/eslint`, beside the other plugins, through the pnpm catalog, and its compiler rules and `rules-of-hooks` are on for web, mobile, shared-react and ui; landing stays off.
 - [x] The hand-written selectors for compiler triggers in `tooling/eslint/react.ts` are gone where the plugin reports the same thing, and their rule tests follow.
 - [x] Every skip the rules report is fixed in the code; none is silenced. A deliberate opt-out (`"use no memo"` for TanStack Virtual) stays explicit and passes.
 - [x] A scan with the compiler finds no skipped function in the four workspaces.

@@ -197,7 +197,7 @@ const log = createClientLogger("MyComponent");
 
 ### React
 
-The web app compiles with the React Compiler, which memoises components and hooks itself:
+Web, mobile, `packages/shared-react` and `packages/ui` compile with the React Compiler, which memoises components and hooks itself:
 
 - New code doesn't add `useMemo` or `useCallback`. Existing ones stay.
 - Keep a hook's `use` prefix when you alias it (`const useX = hooks.useX`). The compiler knows a hook only by its name.
