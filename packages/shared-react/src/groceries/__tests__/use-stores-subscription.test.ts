@@ -10,7 +10,7 @@ import { beforeEach, describe, expect, it, vi } from "vitest";
 
 import { useStoresSubscription } from "@norish/shared-react/groceries";
 
-import { trackedEvent } from "../../__tests__/realtime/tracked-event";
+import { trackedEvent } from "../../../__tests__/realtime/tracked-event";
 
 type Callback = (data: unknown) => void;
 
@@ -33,7 +33,7 @@ function subscription(name: string) {
   };
 }
 
-vi.mock("../trpc", () => ({
+vi.mock("../../trpc", () => ({
   useTRPC: () => ({
     stores: {
       list: { queryKey: () => STORES_KEY },

@@ -14,7 +14,7 @@ const sent = vi.hoisted(() => ({
   reorder: vi.fn(),
 }));
 
-vi.mock("../trpc", () => {
+vi.mock("../../trpc", () => {
   /** A procedure's mutation options as tRPC builds them: the caller's own, and its send. */
   const procedure = (mutationFn: (input: unknown) => unknown) => ({
     mutationOptions: (options?: object) => ({ ...options, mutationFn }),

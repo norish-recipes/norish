@@ -4,7 +4,7 @@ import { beforeEach, describe, expect, it, vi } from "vitest";
 import { useGroceriesSubscription } from "@norish/shared-react/groceries";
 import { fakePlatformAdapter } from "@norish/shared-react/platform/testing";
 
-import { trackedEvent } from "../../__tests__/realtime/tracked-event";
+import { trackedEvent } from "../../../__tests__/realtime/tracked-event";
 import {
   createMockGroceriesData,
   createMockGrocery,
@@ -41,7 +41,7 @@ vi.mock("@trpc/tanstack-react-query", () => ({
 // Mock the query key
 const mockQueryKey = ["groceries", "list"];
 
-vi.mock("../trpc", () => ({
+vi.mock("../../trpc", () => ({
   useTRPC: () => ({
     groceries: {
       list: {

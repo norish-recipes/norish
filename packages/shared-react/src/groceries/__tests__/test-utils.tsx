@@ -3,10 +3,10 @@ import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 
 import type { GroceryDto, RecurringGroceryDto } from "@norish/shared/contracts";
 
-import type { PlatformAdapter } from "../platform";
-import type { GroceriesData } from "./types";
-import { PlatformProvider } from "../platform";
-import { fakePlatformAdapter } from "../platform/testing";
+import type { PlatformAdapter } from "../../platform";
+import type { GroceriesData } from "../types";
+import { PlatformProvider } from "../../platform";
+import { fakePlatformAdapter } from "../../platform/testing";
 
 /** A QueryClient that never retries and keeps what it holds for the whole test. */
 export function createTestQueryClient() {

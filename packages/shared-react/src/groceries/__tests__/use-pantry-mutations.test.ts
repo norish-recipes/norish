@@ -9,7 +9,7 @@ import { createTestQueryClient, createTestWrapper } from "./test-utils";
 /** What each procedure is sent; a test answers or refuses it by its implementation. */
 const sent = vi.hoisted(() => ({ add: vi.fn(), remove: vi.fn() }));
 
-vi.mock("../trpc", () => {
+vi.mock("../../trpc", () => {
   /** A procedure's mutation options as tRPC builds them: the caller's own, and its send. */
   const procedure = (mutationFn: (input: unknown) => unknown) => ({
     mutationOptions: (options?: object) => ({ ...options, mutationFn }),

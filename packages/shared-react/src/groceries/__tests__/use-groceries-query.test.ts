@@ -10,7 +10,7 @@ import {
 } from "@norish/shared-react/groceries";
 import { BASE_SPELLING_RULES } from "@norish/shared/lib/spelling-keys";
 
-import type { GroceriesData } from "./types";
+import type { GroceriesData } from "../types";
 import {
   createMockGroceriesData,
   createMockGrocery,
@@ -22,9 +22,9 @@ import {
 const mockQueryKey = ["groceries", "list"];
 const mockQueryOptions = vi.fn();
 
-vi.mock("../config", () => ({ useSpellingRules: () => BASE_SPELLING_RULES }));
+vi.mock("../../config", () => ({ useSpellingRules: () => BASE_SPELLING_RULES }));
 
-vi.mock("../trpc", () => ({
+vi.mock("../../trpc", () => ({
   useTRPC: () => ({
     groceries: {
       list: {

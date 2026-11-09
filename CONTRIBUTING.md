@@ -266,7 +266,7 @@ An unavailable or environmentally blocked browser run is reported as blocked, no
 
 ## Testing
 
-Tests are colocated in workspace `__tests__/` directories (e.g., `apps/web/__tests__/...`, `packages/shared/__tests__/...`). We use Vitest with React Testing Library.
+Tests live in `__tests__/` directories: a workspace's own (e.g., `apps/web/__tests__/...`, `packages/shared/__tests__/...`), or a migrated feature's (`apps/web/features/groceries/__tests__/`, `packages/shared-react/src/groceries/__tests__/`), one flat folder per feature. We use Vitest with React Testing Library.
 
 User-visible workflows whose acceptance criteria depend on browser behavior require production-like browser E2E coverage. Keep third-party dependencies deterministic at their narrow external boundary while exercising the real Norish application path. Backend-only changes do not require browser E2E unless their acceptance criteria explicitly cross that boundary.
 

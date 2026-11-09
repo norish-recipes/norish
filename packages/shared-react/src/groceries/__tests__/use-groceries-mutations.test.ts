@@ -37,7 +37,7 @@ const procedure = (mutationFn: (input: unknown) => unknown) => ({
   mutationOptions: (options?: object) => ({ ...options, mutationFn }),
 });
 
-vi.mock("../trpc", () => ({
+vi.mock("../../trpc", () => ({
   useTRPC: () => ({
     groceries: {
       list: {
@@ -84,7 +84,7 @@ vi.mock("../trpc", () => ({
   }),
 }));
 
-vi.mock("../config", () => ({
+vi.mock("../../config", () => ({
   useUnitsQuery: () => ({
     units: {
       volumeUnits: [

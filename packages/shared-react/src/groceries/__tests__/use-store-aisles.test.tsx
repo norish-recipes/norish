@@ -49,7 +49,7 @@ const server = vi.hoisted(() => ({
 
 // The shape the hooks read off the tRPC binding, and nothing more of it: the
 // aisle links, the Stores, and the household's list as some screen already holds it.
-vi.mock("../trpc", () => ({
+vi.mock("../../trpc", () => ({
   useTRPC: () => ({
     stores: {
       aisleLinks: {
@@ -77,7 +77,7 @@ vi.mock("../trpc", () => ({
   }),
 }));
 // A housemate's filing is the merge above; this suite holds no socket open.
-vi.mock("../realtime", () => ({
+vi.mock("../../realtime", () => ({
   useKeepsCurrent: () => undefined,
   useRealtimeSubscription: () => undefined,
 }));

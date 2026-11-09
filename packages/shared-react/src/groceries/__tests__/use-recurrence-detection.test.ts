@@ -20,7 +20,7 @@ const words = {
 // One object, as the query cache hands back the same answer on every render.
 const recurrenceConfig = { locales: { en: words }, isOverridden: true };
 
-vi.mock("../config", () => ({ useRecurrenceConfigQuery: () => ({ recurrenceConfig }) }));
+vi.mock("../../config", () => ({ useRecurrenceConfigQuery: () => ({ recurrenceConfig }) }));
 
 describe("useRecurrenceDetection", () => {
   it("reads a hint with one of the four rules and skips any other", async () => {

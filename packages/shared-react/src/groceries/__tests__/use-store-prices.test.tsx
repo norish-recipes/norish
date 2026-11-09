@@ -25,7 +25,7 @@ function pending(ingredientId: string): ResolvedProductLink {
 const server = vi.hoisted(() => ({ links: (): ResolvedProductLink[] => [] }));
 
 // The shape the hook reads off the tRPC binding, and nothing more of it.
-vi.mock("../trpc", () => ({
+vi.mock("../../trpc", () => ({
   useTRPC: () => ({
     stores: {
       groceryPrices: {

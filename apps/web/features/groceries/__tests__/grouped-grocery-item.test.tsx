@@ -3,12 +3,14 @@
  * lines' sort order and version, which a create bumps for every line below it.
  */
 import type { ComponentProps } from "react";
+import {
+  drawsTheSame,
+  GroupedGroceryItem,
+} from "@/features/groceries/components/grouped-grocery-item";
 import { describe, expect, it } from "vitest";
 
 import type { GroceryDto, RecurringGroceryDto } from "@norish/shared/contracts";
 import { groupGroceriesByIngredient } from "@norish/shared/lib/grocery-grouping";
-
-import { drawsTheSame, GroupedGroceryItem } from "./grouped-grocery-item";
 
 const MILK: GroceryDto = {
   id: "milk",

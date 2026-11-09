@@ -2,12 +2,15 @@
  * Where a Store's rows sit: its own unfiled area first, then each aisle in
  * the Store's order, with what is done left out.
  */
+import {
+  aisleContainerId,
+  storeGroupItems,
+  storeItems,
+} from "@/features/groceries/components/dnd/utils";
 import { describe, expect, it } from "vitest";
 
 import type { GroceryDto, StoreDto } from "@norish/shared/contracts";
 import type { GroceryGroup } from "@norish/shared/lib/grocery-grouping";
-
-import { aisleContainerId, storeGroupItems, storeItems } from "./utils";
 
 const MARKT = "store-markt";
 const ZUIVEL = "aisle-zuivel";

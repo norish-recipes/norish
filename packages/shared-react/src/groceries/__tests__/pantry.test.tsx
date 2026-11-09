@@ -39,7 +39,7 @@ const SALT: PantryIngredientDto = {
 const server = vi.hoisted(() => ({ items: (): PantryIngredientDto[] => [] }));
 
 // The shape the hook reads off the tRPC binding, and nothing more of it.
-vi.mock("../trpc", () => ({
+vi.mock("../../trpc", () => ({
   useTRPC: () => ({
     pantry: {
       list: {
