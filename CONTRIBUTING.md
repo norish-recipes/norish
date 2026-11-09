@@ -76,32 +76,39 @@ pnpm dev
 
 ```
 norish/
-├── apps/             # App workspaces
-│   ├── web/          # Next.js app (App Router + server entry)
-│   │   ├── app/      # Routes
-│   │   └── features/ # One folder per feature
-│   └── mobile/       # Expo app (@norish/mobile)
-│       └── src/      # Routes and features, as on web
-├── packages/         # Shared libraries
-│   ├── api/          # Server process, import parser, CalDAV sync
-│   ├── auth/         # Auth helpers
-│   ├── config/       # Shared config
-│   ├── db/           # Drizzle schema + repositories
-│   ├── i18n/         # Locale tooling and data
-│   ├── queue/        # Background jobs
-│   ├── shared/       # Shared utilities and contracts
-│   ├── shared-react/ # React logic both apps share, by feature
-│   ├── shared-server/# Shared server utilities
-│   ├── trpc/         # tRPC router definitions
-│   └── ui/           # UI component library
-├── tooling/          # Repo tooling
-│   ├── eslint/        # @norish/eslint-config
-│   ├── github/        # Shared GitHub Actions composite actions
-│   ├── monorepo/      # Circular dependency checks
-│   ├── prettier/      # @norish/prettier-config
-│   ├── tailwind/      # @norish/tailwind-config
-│   └── typescript/    # @norish/tsconfig
-└── docker/           # Local runtime containers
+├── apps/                 # App workspaces
+│   ├── web/              # Next.js app (App Router + server entry)
+│   │   ├── app/          # Routes
+│   │   └── features/     # One folder per feature
+│   ├── mobile/           # Expo app (@norish/mobile)
+│   │   └── src/          # Routes and features, as on web
+│   ├── parser-api/       # Python service around recipe-scrapers
+│   ├── docs/             # Docs site (docs.norish.dev)
+│   ├── landing/          # Landing page (norish.dev)
+│   └── quick-import-extension/ # Browser extension, a git submodule
+├── packages/             # Shared libraries
+│   ├── api/              # Server startup, import parser, CalDAV sync, video
+│   ├── auth/             # Auth helpers
+│   ├── config/           # Shared config
+│   ├── db/               # Repositories, migrations, Drizzle client
+│   ├── db-schema/        # Drizzle table definitions
+│   ├── i18n/             # Locale tooling and data
+│   ├── queue/            # Background jobs
+│   ├── shared/           # Shared utilities and contracts
+│   ├── shared-react/     # React logic both apps share, by domain
+│   ├── shared-server/    # Shared server utilities
+│   ├── trpc/             # tRPC router definitions
+│   └── ui/               # UI component library
+├── tooling/              # Repo tooling
+│   ├── eslint/           # @norish/eslint-config
+│   ├── github/           # Shared GitHub Actions composite actions
+│   ├── ingredient-icons/ # Draws the Ingredient Icons Norish ships
+│   ├── monorepo/         # Circular dependency checks
+│   ├── nutrition/        # Builds the nutrition source table
+│   ├── prettier/         # @norish/prettier-config
+│   ├── tailwind/         # @norish/tailwind-config
+│   └── typescript/       # @norish/tsconfig
+└── docker/               # Local runtime containers
 ```
 
 ## App architecture
