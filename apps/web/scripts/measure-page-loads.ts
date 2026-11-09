@@ -17,6 +17,7 @@ const { values: args } = parseArgs({
     sw: { type: "string", default: "block" },
     share: { type: "string" },
     only: { type: "string" },
+    scripts: { type: "boolean", default: false },
   },
 });
 const { email, password } = account(args);
@@ -29,7 +30,11 @@ const UP_BYTES_PER_SECOND = 750_000 / 8;
 const MARK_TIMEOUT_MS = 30_000;
 
 type Marks = Record<string, string>;
-type Sample = { firstPaint: number; scriptBytes: number; marks: Record<string, number | null> };
+type Sample = {
+  firstPaint: number;
+  scripts: Array<[url: string, bytes: number]>;
+  marks: Record<string, number | null>;
+};
 
 // =============================================================================
 // The link: one shared queue per direction, so parallel requests split the bandwidth
@@ -269,11 +274,11 @@ async function load(browser: Browser, url: string, marks: Marks): Promise<Sample
     await context.addInitScript(watchMarks, { marks, tap: false });
     const cdp = await context.newCDPSession(page);
     // The encoded size of every script the load downloads.
-    const scripts: Array<Promise<number>> = [];
+    const scripts: Array<Promise<[string, number]>> = [];
 
     page.on("requestfinished", (request) => {
       if (request.resourceType() === "script") {
-        scripts.push(request.sizes().then((sizes) => sizes.responseBodySize));
+        scripts.push(request.sizes().then((sizes) => [request.url(), sizes.responseBodySize]));
       }
     });
     await cdp.send("Emulation.setCPUThrottlingRate", { rate: 4 });
@@ -290,7 +295,7 @@ async function load(browser: Browser, url: string, marks: Marks): Promise<Sample
 
     return {
       firstPaint,
-      scriptBytes: (await Promise.all(scripts)).reduce((total, bytes) => total + bytes, 0),
+      scripts: await Promise.all(scripts),
       marks: Object.fromEntries(
         Object.entries(found).map(([name, at]) => [
           name,
@@ -329,7 +334,7 @@ async function tap(browser: Browser): Promise<Sample> {
 
     return {
       firstPaint: Number.NaN,
-      scriptBytes: Number.NaN,
+      scripts: [],
       marks: Object.fromEntries(
         Object.entries(found).map(([name, at]) => [name, at === null ? null : at - tappedAt])
       ),
@@ -401,12 +406,20 @@ try {
     const samples = await sampled(() => load(browser, url, marks));
     const size = ((await documentSize(url)) / 1024).toFixed(1);
 
-    const js = summary(samples.map((sample) => sample.scriptBytes / 1024));
+    const js = summary(
+      samples.map((sample) => sample.scripts.reduce((total, [, bytes]) => total + bytes, 0) / 1024)
+    );
 
     lines.push(
       `| ${name} | ${summary(samples.map((sample) => sample.firstPaint))} | ${marksSummary(marks, samples)} | ${size} | ${js} |`
     );
     process.stdout.write(`${lines.at(-1)}\n`);
+    if (args.scripts) {
+      // The last load's scripts, largest first.
+      for (const [url, bytes] of samples.at(-1)!.scripts.sort(([, a], [, b]) => b - a)) {
+        process.stdout.write(`  ${(bytes / 1024).toFixed(1)} KB ${new URL(url).pathname}\n`);
+      }
+    }
   }
 
   if (!only || only.includes("tap")) {
