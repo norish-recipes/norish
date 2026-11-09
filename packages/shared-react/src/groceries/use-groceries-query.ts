@@ -53,6 +53,17 @@ export function useGroceryIds(): string[] {
   return data;
 }
 
+/** One grocery, or null once it is gone: its reader re-renders only when that row changes. */
+export function useGroceryFor(groceryId: string | null): GroceryDto | null {
+  const trpc = useTRPC();
+  const { data = null } = useQuery({
+    ...trpc.groceries.list.queryOptions(),
+    select: (list) => list.groceries.find((g) => g.id === groceryId) ?? null,
+  });
+
+  return data;
+}
+
 /** A grocery's recurring row, or null: its reader re-renders only when that row changes. */
 export function useRecurringGroceryFor(groceryId: string | null): RecurringGroceryDto | null {
   const trpc = useTRPC();

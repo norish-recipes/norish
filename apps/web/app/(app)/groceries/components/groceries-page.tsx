@@ -25,6 +25,7 @@ import {
   useGroceriesMutations,
   useGroceriesQuery,
   useGroceriesUiStore,
+  useGroceryFor,
   useGroceryIds,
   useRecurringGroceryFor,
   useStoresQuery,
@@ -53,7 +54,7 @@ export function GroceriesPage() {
   // Device Preferences: the server renders the page the way the reader left it.
   const [viewMode] = useDevicePreference("groceryViewMode");
   const [groupSimilarIngredients] = useDevicePreference("groceryGroupSimilar");
-  const setEditingGrocery = useGroceriesUiStore((state) => state.setEditingGrocery);
+  const setEditingGroceryId = useGroceriesUiStore((state) => state.setEditingGroceryId);
 
   type ClearScope =
     | { kind: "store"; storeId: string | null; name: string }
@@ -73,7 +74,7 @@ export function GroceriesPage() {
     toggleGroceries(ids, isDone);
   };
   const handleEdit = (grocery: GroceryDto) => {
-    setEditingGrocery(grocery);
+    setEditingGroceryId(grocery.id);
   };
   const handleDelete = (id: string) => {
     deleteGroceries([id]);
@@ -180,11 +181,15 @@ function StoreManager({ stores }: { stores: StoreDto[] }) {
   return <StoreManagerPanel open={open} stores={stores} onOpenChange={setOpen} />;
 }
 
-/** The edit panel, with its own saves: always mounted, so a save's answer lands after it closes. */
-function EditGrocery({ stores }: { stores: StoreDto[] }) {
-  const grocery = useGroceriesUiStore((state) => state.editingGrocery);
-  const setEditingGrocery = useGroceriesUiStore((state) => state.setEditingGrocery);
-  const recurringGrocery = useRecurringGroceryFor(grocery?.id ?? null);
+/**
+ * The edit panel over the grocery as the list holds it now, closed once it is gone. Always mounted,
+ * so a save's answer lands after it closes.
+ */
+export function EditGrocery({ stores }: { stores: StoreDto[] }) {
+  const groceryId = useGroceriesUiStore((state) => state.editingGroceryId);
+  const setEditingGroceryId = useGroceriesUiStore((state) => state.setEditingGroceryId);
+  const grocery = useGroceryFor(groceryId);
+  const recurringGrocery = useRecurringGroceryFor(groceryId);
   const {
     deleteGroceries,
     createRecurringGrocery,
@@ -231,7 +236,7 @@ function EditGrocery({ stores }: { stores: StoreDto[] }) {
     } else {
       deleteGroceries([grocery.id]);
     }
-    setEditingGrocery(null);
+    setEditingGroceryId(null);
   };
 
   return (
@@ -241,7 +246,7 @@ function EditGrocery({ stores }: { stores: StoreDto[] }) {
       recurringGrocery={recurringGrocery}
       stores={stores}
       onDelete={handleDelete}
-      onOpenChange={(open) => !open && setEditingGrocery(null)}
+      onOpenChange={(open) => !open && setEditingGroceryId(null)}
       onSave={handleSave}
     />
   );

@@ -1,20 +1,6 @@
 import { beforeEach, describe, expect, it } from "vitest";
 
-import type { GroceryDto } from "@norish/shared/contracts";
 import { useGroceriesUiStore } from "@norish/shared-react/groceries";
-
-const MILK: GroceryDto = {
-  id: "g1",
-  version: 1,
-  name: "milk",
-  amount: null,
-  unit: null,
-  isDone: false,
-  recipeIngredientId: null,
-  recurringGroceryId: null,
-  storeId: null,
-  sortOrder: 0,
-};
 
 const ui = () => useGroceriesUiStore.getState();
 
@@ -24,7 +10,7 @@ describe("useGroceriesUiStore", () => {
   it("starts with every panel closed", () => {
     expect(ui()).toMatchObject({
       addGroceryPanelOpen: false,
-      editingGrocery: null,
+      editingGroceryId: null,
       storeManagerOpen: false,
     });
   });
@@ -32,20 +18,20 @@ describe("useGroceriesUiStore", () => {
   it("opens and closes each panel on its own", () => {
     ui().setAddGroceryPanelOpen(true);
     ui().setStoreManagerOpen(true);
-    ui().setEditingGrocery(MILK);
+    ui().setEditingGroceryId("g1");
 
     expect(ui()).toMatchObject({
       addGroceryPanelOpen: true,
-      editingGrocery: MILK,
+      editingGroceryId: "g1",
       storeManagerOpen: true,
     });
 
     ui().setStoreManagerOpen(false);
-    ui().setEditingGrocery(null);
+    ui().setEditingGroceryId(null);
 
     expect(ui()).toMatchObject({
       addGroceryPanelOpen: true,
-      editingGrocery: null,
+      editingGroceryId: null,
       storeManagerOpen: false,
     });
   });
@@ -53,13 +39,13 @@ describe("useGroceriesUiStore", () => {
   it("closes every panel on reset, as the screen leaves", () => {
     ui().setAddGroceryPanelOpen(true);
     ui().setStoreManagerOpen(true);
-    ui().setEditingGrocery(MILK);
+    ui().setEditingGroceryId("g1");
 
     ui().reset();
 
     expect(ui()).toMatchObject({
       addGroceryPanelOpen: false,
-      editingGrocery: null,
+      editingGroceryId: null,
       storeManagerOpen: false,
     });
   });
