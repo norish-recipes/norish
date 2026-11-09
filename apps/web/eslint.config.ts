@@ -3,7 +3,7 @@ import { defineConfig } from "eslint/config";
 import { baseConfig, restrictEnvAccess } from "../../tooling/eslint/base.ts";
 import { restrictFeatures } from "../../tooling/eslint/features.ts";
 import { nextjsConfig } from "../../tooling/eslint/nextjs.ts";
-import { reactConfig } from "../../tooling/eslint/react.ts";
+import { compiledReactConfig, reactConfig } from "../../tooling/eslint/react.ts";
 
 // Next's app/ file conventions: the files that render or handle a route.
 const nextRouteFiles = [
@@ -34,6 +34,7 @@ export default defineConfig(
   },
   baseConfig,
   reactConfig,
+  compiledReactConfig,
   nextjsConfig,
   restrictEnvAccess,
   {

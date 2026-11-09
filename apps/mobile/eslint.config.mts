@@ -2,7 +2,7 @@ import { defineConfig } from "eslint/config";
 
 import { baseConfig } from "../../tooling/eslint/base.ts";
 import { restrictFeatures } from "../../tooling/eslint/features.ts";
-import { reactConfig } from "../../tooling/eslint/react.ts";
+import { compiledReactConfig, reactConfig } from "../../tooling/eslint/react.ts";
 
 export default defineConfig(
   {
@@ -10,6 +10,7 @@ export default defineConfig(
   },
   baseConfig,
   reactConfig,
+  compiledReactConfig,
   {
     // Kept off from the app's old Expo config: the boot, auth and network providers
     // still sync state in effects. Turn it on when the redesign rewrites them.

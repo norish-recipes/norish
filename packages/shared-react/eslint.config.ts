@@ -2,7 +2,7 @@ import { defineConfig } from "eslint/config";
 
 import { baseConfig } from "../../tooling/eslint/base.ts";
 import { restrictDomains } from "../../tooling/eslint/features.ts";
-import { reactConfig } from "../../tooling/eslint/react.ts";
+import { compiledReactConfig, reactConfig } from "../../tooling/eslint/react.ts";
 
 export default defineConfig(
   {
@@ -10,6 +10,7 @@ export default defineConfig(
   },
   baseConfig,
   reactConfig,
+  compiledReactConfig,
   restrictDomains(import.meta.dirname, {
     srcDir: "src",
     crossCutting: ["trpc", "platform", "offline", "config", "reader", "realtime"],
