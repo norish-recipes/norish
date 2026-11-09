@@ -42,12 +42,27 @@ export function useGroceriesQuery(): GroceriesQueryResult {
   };
 }
 
-/** The ids on the list: its reader re-renders when a grocery comes or goes, not when one changes. */
-export function useGroceryIds(): string[] {
+/**
+ * The ids on the list: its reader re-renders when a grocery comes or goes, not when one changes.
+ * While `live` is false it isn't told of changes at all, and reads the list only when it renders.
+ */
+export function useGroceryIds(live = true): string[] {
   const trpc = useTRPC();
   const { data = [] } = useQuery({
     ...trpc.groceries.list.queryOptions(),
     select: (list) => list.groceries.map((grocery) => grocery.id),
+    subscribed: live,
+  });
+
+  return data;
+}
+
+/** Whether the list holds any grocery: its reader re-renders only when that flips. */
+export function useHasGroceries(): boolean {
+  const trpc = useTRPC();
+  const { data = false } = useQuery({
+    ...trpc.groceries.list.queryOptions(),
+    select: (list) => list.groceries.length > 0,
   });
 
   return data;

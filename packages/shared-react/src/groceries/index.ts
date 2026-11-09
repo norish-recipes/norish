@@ -22,6 +22,7 @@ export {
   useGroceriesQuery,
   useGroceryFor,
   useGroceryIds,
+  useHasGroceries,
   useOnTheList,
   useRecurringGroceryFor,
 } from "./use-groceries-query";

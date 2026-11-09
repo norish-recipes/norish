@@ -31,6 +31,7 @@ import {
   useGroceriesUiStore,
   useGroceryFor,
   useGroceryIds,
+  useHasGroceries,
   useRecurringGroceryFor,
   useStoresQuery,
 } from "@norish/shared-react/groceries";
@@ -266,10 +267,8 @@ export function EditGrocery({ stores }: { stores: StoreDto[] }) {
  * desktop add button and the menu with the view mode, grouping and stores.
  */
 export function GroceriesListActions() {
-  const groceryIds = useGroceryIds();
   // A boolean, so an add or a removal doesn't re-render the menu.
-  const hasGroceries = groceryIds.length > 0;
-  const { deleteGroceries } = useGroceriesMutations();
+  const hasGroceries = useHasGroceries();
   const [clearListOpen, setClearListOpen] = useState(false);
   const [viewMode, setViewMode] = useDevicePreference("groceryViewMode");
   const [groupSimilarIngredients, setGroupSimilarIngredients] =
@@ -374,13 +373,23 @@ export function GroceriesListActions() {
           </Dropdown.Menu>
         </Dropdown.Popover>
       </Dropdown>
-      <ClearGroceriesModal
-        isOpen={clearListOpen}
-        itemCount={groceryIds.length}
-        scopeName={null}
-        onClose={() => setClearListOpen(false)}
-        onConfirm={() => deleteGroceries(groceryIds)}
-      />
+      <ClearList isOpen={clearListOpen} onClose={() => setClearListOpen(false)} />
     </>
+  );
+}
+
+/** The whole list's clear modal, which reads the list's ids only while it is open. */
+function ClearList({ isOpen, onClose }: { isOpen: boolean; onClose: () => void }) {
+  const groceryIds = useGroceryIds(isOpen);
+  const { deleteGroceries } = useGroceriesMutations();
+
+  return (
+    <ClearGroceriesModal
+      isOpen={isOpen}
+      itemCount={groceryIds.length}
+      scopeName={null}
+      onClose={onClose}
+      onConfirm={() => deleteGroceries(groceryIds)}
+    />
   );
 }

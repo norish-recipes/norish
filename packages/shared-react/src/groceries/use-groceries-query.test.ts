@@ -4,6 +4,7 @@ import { beforeEach, describe, expect, it, vi } from "vitest";
 import {
   useGroceriesQuery,
   useGroceryIds,
+  useHasGroceries,
   useOnTheList,
   useRecurringGroceryFor,
 } from "@norish/shared-react/groceries";
@@ -175,6 +176,29 @@ describe("the list's selects", () => {
 
     await write(() => createMockGroceriesData([bread]));
     expect(result.current).toEqual(["g2"]);
+  });
+
+  it("leaves an ids reader that isn't live alone, and reads the list again when it renders", async () => {
+    const { result, renders, rerender } = renderCounted(() => useGroceryIds(false), queryClient);
+    const before = renders();
+
+    await write(() => createMockGroceriesData([bread]));
+    expect(renders()).toBe(before);
+
+    rerender();
+    expect(result.current).toEqual(["g2"]);
+  });
+
+  it("re-renders a has-groceries reader only when the list empties or fills", async () => {
+    const { result, renders } = renderCounted(() => useHasGroceries(), queryClient);
+    const before = renders();
+
+    expect(result.current).toBe(true);
+    await write(() => createMockGroceriesData([bread]));
+    expect(renders()).toBe(before);
+
+    await write(() => createMockGroceriesData([]));
+    expect(result.current).toBe(false);
   });
 
   it("re-renders an on-the-list reader only when its answer changes", async () => {
