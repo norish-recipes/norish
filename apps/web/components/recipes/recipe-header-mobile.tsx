@@ -12,6 +12,7 @@ import type { RecipeCategory } from "@norish/shared/contracts";
 import {
   formatMinutesHM,
   isAllergenTag,
+  NO_ALLERGIES,
   sortTagsWithAllergyPriority,
 } from "@norish/shared/lib/helpers";
 
@@ -32,7 +33,7 @@ export type RecipeHeaderRecipeLike = {
 type RecipeHeaderMobileProps = {
   recipe: RecipeHeaderRecipeLike;
   allergies?: string[];
-  allergySet?: Set<string>;
+  allergySet?: ReadonlySet<string>;
   /**
    * Calories are Nutrition Information, which is a Hidden Item — a reader who
    * has hidden it loses the entry here too, because a bar that restates a
@@ -47,9 +48,6 @@ type GlanceEntry = {
   value: string;
   label: string;
 };
-
-// The default for a reader without allergies; only ever read.
-const NO_ALLERGIES = new Set<string>();
 
 /**
  * The Glance Bar: total time, servings and calories, so the whole answer to
@@ -107,7 +105,7 @@ function TagLine({
   categories: RecipeCategory[];
   tags: RecipeTagLike[];
   allergies: string[];
-  allergySet: Set<string>;
+  allergySet: ReadonlySet<string>;
 }) {
   const tForm = useTranslations("recipes.form");
   const categoryLabel = useCategoryLabel();

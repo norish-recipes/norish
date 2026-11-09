@@ -21,6 +21,7 @@ import type { RecipeCategory } from "@norish/shared/contracts";
 import {
   formatMinutesHM,
   isAllergenTag,
+  NO_ALLERGIES,
   sortTagsWithAllergyPriority,
 } from "@norish/shared/lib/helpers";
 
@@ -55,7 +56,7 @@ type ReadonlyRecipeSummaryProps = {
   recipe: RecipeSummaryLike;
   actions?: React.ReactNode;
   allergies?: string[];
-  allergySet?: Set<string>;
+  allergySet?: ReadonlySet<string>;
   timeVariant?: "desktop" | "mobile";
 };
 
@@ -188,9 +189,6 @@ export function ReadonlyRecipeMedia({
     </div>
   );
 }
-
-// The default for a reader without allergies; only ever read.
-const NO_ALLERGIES = new Set<string>();
 
 export function ReadonlyRecipeSummary({
   recipe,

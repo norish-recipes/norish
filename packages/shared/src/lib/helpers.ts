@@ -543,9 +543,12 @@ export function sortTagsWithAllergyPriority<T extends { name: string }>(
  * @param allergySet - Pre-computed Set of lowercase allergy names for O(1) lookup
  * @returns True if the tag is an allergen
  */
-export function isAllergenTag(tagName: string, allergySet: Set<string>): boolean {
+export function isAllergenTag(tagName: string, allergySet: ReadonlySet<string>): boolean {
   return allergySet.has(tagName.toLowerCase());
 }
+
+/** The allergy set of a reader without allergies, one shared instance so it never changes. */
+export const NO_ALLERGIES: ReadonlySet<string> = new Set();
 
 /**
  * Get the Monday (ISO week start) of the week containing the provided date.
