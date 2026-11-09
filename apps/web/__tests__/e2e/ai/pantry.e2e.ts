@@ -9,9 +9,10 @@
  * We keep this. The real Norish server, database, Valkey, tRPC and realtime
  * are all in the path; nothing outbound is.
  */
-import type { Locator, Page } from "@playwright/test";
+import type { Locator, Page, Request } from "@playwright/test";
 
 import type { AIE2EStack } from "./fixture";
+import { rowFor } from "../harness/groceries";
 import { seedRecipe } from "./cookbooks-support";
 import { expect, test } from "./fixture";
 import { resetCatalogueScenario } from "./ingredient-catalogue-support";
@@ -221,4 +222,50 @@ test("adding a recipe teaches the Pantry a staple, and a kept line on the list s
   await expect
     .poll(() => readPantryNames(stack))
     .toEqual(["chicken breast", "garlic", "olive oil"]);
+});
+
+test("a view switch, and the Pantry and back, read nothing realtime keeps current", async () => {
+  // The list's reads, and the Pantry's, which the subscriptions keep current while mounted.
+  const keptCurrent = [
+    "groceries.list",
+    "stores.list",
+    "stores.groceryPrices",
+    "stores.aisleLinks",
+    "pantry.list",
+  ];
+  const reads: string[] = [];
+  const noteRead = (request: Request) => {
+    const path = new URL(request.url()).pathname;
+
+    reads.push(...keptCurrent.filter((read) => path.includes(read)));
+  };
+  const showsView = (view: string) =>
+    expect(page.locator(`[data-grocery-view="${view}"]`).first()).toBeAttached();
+
+  await page.goto("/groceries");
+  // A tick, so the list is no longer the copy the server sent with the page.
+  await rowFor(page, "olive oil", { visible: true })
+    .locator('[data-slot="checkbox"]')
+    .first()
+    .click();
+  await expect
+    .poll(() => readGroceries(stack))
+    .not.toContainEqual(expect.objectContaining({ name: "olive oil", isDone: false }));
+
+  page.on("request", noteRead);
+  await page.getByRole("button", { name: "View Mode" }).click();
+  await page.getByRole("menuitem", { name: "By Recipe" }).click();
+  await showsView("recipe");
+  await page.getByRole("button", { name: "View Mode" }).click();
+  await page.getByRole("menuitem", { name: "By Store" }).click();
+  await showsView("store");
+  await page.getByRole("tab", { name: "Pantry" }).click();
+  await expect(keptRow("olive oil")).toBeVisible();
+  await page.getByRole("tab", { name: "List" }).click();
+  await showsView("store");
+  // Long enough for a read on mount, were there one, to have gone out.
+  await page.waitForTimeout(1_000);
+  page.off("request", noteRead);
+
+  expect(reads).toEqual([]);
 });
