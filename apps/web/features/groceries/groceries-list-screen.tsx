@@ -2,6 +2,7 @@
 
 import type { ComponentProps } from "react";
 import { useState } from "react";
+import { useQuery } from "@tanstack/react-query";
 
 import type { GroceryDto, StoreDto } from "@norish/shared/contracts";
 import type { RecurrencePattern } from "@norish/shared/contracts/recurrence";
@@ -14,6 +15,7 @@ import {
   useStoresQuery,
 } from "@norish/shared-react/groceries";
 import { useDevicePreference } from "@norish/shared-react/reader";
+import { useTRPC } from "@norish/shared-react/trpc";
 import { cssFloatingDockContentClearance } from "@norish/web/config/css-tokens";
 
 import {
@@ -29,6 +31,7 @@ const NO_IDS: string[] = [];
 
 /** The grocery list's screen: the list in the reader's view, and the panels it opens. */
 export function GroceriesListScreen() {
+  const trpc = useTRPC();
   const { groceries, recurringGroceries, recipeMap, isLoading, getRecipeNameForGrocery } =
     useGroceriesQuery();
   const {
@@ -40,7 +43,9 @@ export function GroceriesListScreen() {
     markAllDoneInStore,
     deleteDoneInStore,
   } = useGroceriesMutations();
-  const { stores } = useStoresQuery();
+  const { stores, isLoading: storesLoading } = useStoresQuery();
+  // Only whether the aisles are on their way, so a filing doesn't render the screen.
+  const aislesLoading = useQuery(trpc.stores.aisleLinks.queryOptions()).isLoading;
   // Device Preferences: the server renders the page the way the reader left it.
   const [viewMode] = useDevicePreference("groceryViewMode");
   const [groupSimilarIngredients] = useDevicePreference("groceryGroupSimilar");
@@ -77,7 +82,9 @@ export function GroceriesListScreen() {
   };
   const groceryGrouping = groupSimilarIngredients ? "grouped" : "flat";
 
-  if (isLoading) {
+  // The list groups by Store and aisle, so it waits for them too: a switch from the Pantry finds
+  // the list cached but not them. Offline, a paused read isn't loading.
+  if (isLoading || storesLoading || aislesLoading) {
     // The markers ride the skeleton too: the server response carries the
     // stored view and grouping even while the list itself is still on its
     // way.
