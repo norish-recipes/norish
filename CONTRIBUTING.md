@@ -202,6 +202,7 @@ The web app compiles with the React Compiler, which memoises components and hook
 - New code doesn't add `useMemo` or `useCallback`. Existing ones stay.
 - Keep a hook's `use` prefix when you alias it (`const useX = hooks.useX`). The compiler knows a hook only by its name.
 - Derive values during render instead of copying them into state from an effect. The lint flags state set in an effect, refs read during render, and mutated props.
+- Lint reports every component or hook the compiler skips, through `eslint-plugin-react-hooks`. Fix the code rather than silence it; one that must stay uncompiled, such as a TanStack Virtual list, opens with `"use no memo"`.
 
 ### Database Access
 

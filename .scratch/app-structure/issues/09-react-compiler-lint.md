@@ -4,11 +4,17 @@
 
 **Blocked by:** None. Runs after the groceries restructure, which fixes the two skips in groceries.
 
-**Status:** ready-for-agent
+**Status:** done
 
-- [ ] `eslint-plugin-react-hooks` 7.x is a dev dependency of `tooling/eslint`, through the pnpm catalog, and its compiler rules and `rules-of-hooks` are on for web, mobile, shared-react and ui; landing stays off.
-- [ ] The hand-written selectors for compiler triggers in `tooling/eslint/react.ts` are gone where the plugin reports the same thing, and their rule tests follow.
-- [ ] Every skip the rules report is fixed in the code; none is silenced. A deliberate opt-out (`"use no memo"` for TanStack Virtual) stays explicit and passes.
-- [ ] A scan with the compiler finds no skipped function in the four workspaces.
-- [ ] CONTRIBUTING's compiler lines say lint reports every skip; the spec's compiler line says the same.
-- [ ] Gates are green, mobile included.
+Done at e16cd4e54, docs after. `eslint-plugin-react-hooks` is pinned to 7.0.1 (de0378eff), not 7.1.1: 7.1 bundles a newer compiler than the build's `babel-plugin-react-compiler` 1.0.0 (still the latest stable) and missed 8 of the 17 skips, while 7.0.1 reported all 17. It sits in `dependencies` beside the other plugins, and a `peerDependencyRules` entry admits ESLint 10, whose dropped context API it feature-detects. `compiledReactConfig` extends `recommended-latest` and makes every bailout an error, adding `todo`, `hooks`, `syntax`, `invariant`, `rule-suppression` and `unsupported-syntax`. `incompatible-library` is off: the compiler skips those callers on purpose and the rule reports them under `"use no memo"` too. `exhaustive-deps` and `set-state-in-effect` are off because @eslint-react runs both, and neither is a skip. The `finally` and logical-assignment selectors went, since `react-hooks/todo` reports both, in factory-built `"use memo"` hooks too; the hook-alias and factory `"use memo"` selectors stay, the plugin misses both (e16cd4e54).
+
+The scan found 20 functions before, web 12, mobile 4, shared-react 4, ui 0; three of web's were `useVirtualizer` components under `"use no memo"`, which the compiler still logs. After: none, past the seven `"use no memo"` opt-outs. Web (910c08d4a, 68489f05d): manual memos whose deps the compiler couldn't match, a `let` counter bumped in `.map`, `new Set()` defaults, `??` around `||` and a ternary inside `||`, and a JSX renderer defined in the component. The image generation form's stale `hasChanges` memo kept Save disabled after removing the stored key; fixed with a test and a release-notes line (ba68f8019). Mobile (77c7082bf): `throw` and branches inside `try` on the three auth screens, now `authFailure` and a module-level `reachServer`, and `authClient.useSession()` on a client that changes, now the `useStore` it wraps. Shared-react (b0316ed46): `useCallback` deps naming the mutation instead of its `mutate`, and refs read in callbacks handed to a plain call during render, now a latch and a closure. Gates green: lint, typecheck, test:run, i18n:check, build, deps:cycles, and mobile's lint, typecheck, test and `expo export --platform ios`.
+
+Left open: the plugin and `babel-plugin-react-compiler` have to move together, or lint drifts from the build again. Nothing makes a TanStack Virtual component say `"use no memo"`: `useWindowVirtualizer` isn't on the compiler's incompatible list, so one without it compiles.
+
+- [x] `eslint-plugin-react-hooks` 7.x is a dev dependency of `tooling/eslint`, through the pnpm catalog, and its compiler rules and `rules-of-hooks` are on for web, mobile, shared-react and ui; landing stays off.
+- [x] The hand-written selectors for compiler triggers in `tooling/eslint/react.ts` are gone where the plugin reports the same thing, and their rule tests follow.
+- [x] Every skip the rules report is fixed in the code; none is silenced. A deliberate opt-out (`"use no memo"` for TanStack Virtual) stays explicit and passes.
+- [x] A scan with the compiler finds no skipped function in the four workspaces.
+- [x] CONTRIBUTING's compiler lines say lint reports every skip; the spec's compiler line says the same.
+- [x] Gates are green, mobile included.
