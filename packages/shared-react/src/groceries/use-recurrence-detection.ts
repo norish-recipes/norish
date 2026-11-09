@@ -1,4 +1,4 @@
-import { useEffect, useState, useTransition } from "react";
+import { useMemo } from "react";
 
 import type { RecurrenceConfig as StoredRecurrenceConfig } from "@norish/config/zod/server-config";
 import type {
@@ -42,41 +42,26 @@ type UseRecurrenceDetectionOptions = {
 export function useRecurrenceDetection({
   itemName,
   enabled = true,
-}: UseRecurrenceDetectionOptions) {
+}: UseRecurrenceDetectionOptions): { detectedPattern: DetectedPattern | null } {
   const { recurrenceConfig } = useRecurrenceConfigQuery();
-
-  const [detectedPattern, setDetectedPattern] = useState<DetectedPattern | null>(null);
-  const [isParsing, startTransition] = useTransition();
   const canDetect = Boolean(enabled && itemName.trim() && recurrenceConfig);
 
-  if (!canDetect && detectedPattern) {
-    setDetectedPattern(null);
-  }
+  // Parsed while rendering: a transition would render the panel twice per name for nothing on screen.
+  const detectedPattern = useMemo(() => {
+    if (!canDetect || !recurrenceConfig) return null;
 
-  useEffect(() => {
-    if (!canDetect || !recurrenceConfig) return;
+    try {
+      const result = parseRecurrence(itemName, withKnownRules(recurrenceConfig));
 
-    startTransition(() => {
-      try {
-        const result = parseRecurrence(itemName, withKnownRules(recurrenceConfig));
+      return result.recurrence
+        ? { pattern: result.recurrence, cleanText: result.cleanText }
+        : null;
+    } catch (error) {
+      log.error({ err: error }, "Error parsing recurrence");
 
-        if (result.recurrence) {
-          setDetectedPattern({
-            pattern: result.recurrence,
-            cleanText: result.cleanText,
-          });
-        } else {
-          setDetectedPattern(null);
-        }
-      } catch (error) {
-        log.error({ err: error }, "Error parsing recurrence");
-        setDetectedPattern(null);
-      }
-    });
+      return null;
+    }
   }, [itemName, recurrenceConfig, canDetect]);
 
-  return {
-    detectedPattern,
-    isParsing,
-  };
+  return { detectedPattern };
 }
