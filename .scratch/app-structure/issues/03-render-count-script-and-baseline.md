@@ -33,13 +33,13 @@ App code as at d0fa9f86a plus the sortOrder tie-break (11269853c); 02's commits 
 
 **Renders per action**
 
-| Action                                          | Baseline 1: mounts / updates / commits |      Baseline 2 | After the pilot |
-| ----------------------------------------------- | -------------------------------------: | --------------: | --------------: |
-| Check an item                                   |                            0 / 288 / 7 |     0 / 288 / 7 |               — |
-| Add an item                                     |                        19 / 1,689 / 12 | 19 / 1,689 / 12 |               — |
-| Open the edit panel                             |                          178 / 224 / 8 |   178 / 224 / 8 |               — |
-| Realtime echo of another phone checking an item |                            0 / 247 / 2 |     0 / 247 / 2 |               — |
-| Switch the view mode                            |                         853 / 696 / 11 |  853 / 701 / 10 |               — |
+| Action                                          | Baseline 1: mounts / updates / commits |      Baseline 2 | After the pilot | After 07's fixes |
+| ----------------------------------------------- | -------------------------------------: | --------------: | --------------: | ---------------: |
+| Check an item                                   |                            0 / 288 / 7 |     0 / 288 / 7 |     0 / 269 / 7 |      0 / 106 / 7 |
+| Add an item                                     |                        19 / 1,689 / 12 | 19 / 1,689 / 12 | 19 / 1,532 / 13 |    19 / 292 / 11 |
+| Open the edit panel                             |                          178 / 224 / 8 |   178 / 224 / 8 |   178 / 221 / 8 |    178 / 107 / 5 |
+| Realtime echo of another phone checking an item |                            0 / 247 / 2 |     0 / 247 / 2 |     0 / 228 / 2 |       0 / 60 / 2 |
+| Switch the view mode                            |                         853 / 696 / 11 |  853 / 701 / 10 |  857 / 700 / 10 |   853 / 700 / 10 |
 
 | Action               | Baseline 1: top three (mounts + updates, what changed)                                                        |
 | -------------------- | ------------------------------------------------------------------------------------------------------------- |
@@ -57,23 +57,23 @@ Our own components behind those numbers:
 
 **`/groceries` page load** (15 runs, median and spread)
 
-|                       |            Baseline 1 |            Baseline 2 | After the pilot |
-| --------------------- | --------------------: | --------------------: | --------------: |
-| First paint           |      632 ms (624–672) |      632 ms (628–636) |               — |
-| Price and aisle drawn |      632 ms (624–672) |      632 ms (628–636) |               — |
-| Document              |          42.5 KB gzip |          42.6 KB gzip |               — |
-| JS downloaded         | 894 KB gzip (894–894) | 900 KB gzip (900–900) |               — |
+|                       |            Baseline 1 |            Baseline 2 |       After the pilot |      After 07's fixes |
+| --------------------- | --------------------: | --------------------: | --------------------: | --------------------: |
+| First paint           |      632 ms (624–672) |      632 ms (628–636) |      628 ms (624–640) |      628 ms (624–648) |
+| Price and aisle drawn |      632 ms (624–672) |      632 ms (628–636) |      628 ms (624–640) |      628 ms (624–648) |
+| Document              |          42.5 KB gzip |          42.6 KB gzip |          42.6 KB gzip |          42.6 KB gzip |
+| JS downloaded         | 894 KB gzip (894–894) | 900 KB gzip (900–900) | 859 KB gzip (859–859) | 860 KB gzip (860–860) |
 
 **Code shape**
 
-|                           |                              Baseline 1 |                              Baseline 2 | After the pilot |
-| ------------------------- | --------------------------------------: | --------------------------------------: | --------------: |
-| Web                       |                  99 files, 10,317 lines |                  99 files, 10,308 lines |               — |
-| Mobile                    |                       2 files, 47 lines |                       2 files, 26 lines |               — |
-| shared-react              |                   27 files, 2,911 lines |                   27 files, 2,911 lines |               — |
-| Folders (with subfolders) |    web 9 (14), mobile 1, shared-react 6 |    web 9 (14), mobile 1, shared-react 6 |               — |
-| Binding files             | web 20 (303 lines), mobile 2 (47 lines) | web 20 (299 lines), mobile 2 (26 lines) |               — |
-| Unit tests                |                   25 files, 6,974 lines |                   25 files, 6,991 lines |               — |
+|                           |                              Baseline 1 |                              Baseline 2 |                     After the pilot |                    After 07's fixes |
+| ------------------------- | --------------------------------------: | --------------------------------------: | ----------------------------------: | ----------------------------------: |
+| Web                       |                  99 files, 10,317 lines |                  99 files, 10,308 lines |               77 files, 9,894 lines |               77 files, 9,980 lines |
+| Mobile                    |                       2 files, 47 lines |                       2 files, 26 lines |                    0 files, 0 lines |                    0 files, 0 lines |
+| shared-react              |                   27 files, 2,911 lines |                   27 files, 2,911 lines |               18 files, 2,290 lines |               18 files, 2,274 lines |
+| Folders (with subfolders) |    web 9 (14), mobile 1, shared-react 6 |    web 9 (14), mobile 1, shared-react 6 | web 2 (9), mobile 0, shared-react 1 | web 2 (9), mobile 0, shared-react 1 |
+| Binding files             | web 20 (303 lines), mobile 2 (47 lines) | web 20 (299 lines), mobile 2 (26 lines) |                                none |                                none |
+| Unit tests                |                   25 files, 6,974 lines |                   25 files, 6,991 lines |               31 files, 7,538 lines |               31 files, 7,571 lines |
 
 Web's folders: `app/(app)/groceries` (+`components`, `pantry`), `components/groceries` (+`dnd`, `pantry`, `stores`), `hooks/groceries`, `hooks/stores`, `hooks/pantry`, `components/Panel/consumers`, `components/skeleton`, `context`, `hooks`. shared-react's: `contexts/groceries`, `contexts/stores`, `hooks/groceries`, `hooks/stores`, `hooks/pantry`, `hooks`.
 
@@ -102,3 +102,71 @@ What changed against Baseline 1, component by component:
 Page loads: first paint the same at the median, inside Baseline 1's spread. Document +0.1 KB: the seed is now the `user.getDevicePreferences` query with both Device Kinds' blocks, where it was this kind's values. JS +6 KB gzip, not traced: 01's new modules on the page weigh about 5.7 KB gzip (Device Preferences reader 1.6, plain config hooks 3.1, tRPC provider 0.8, platform adapter 0.3), but most replace code the page had before, so the cause needs a Baseline 1 build to diff against (`measure-page-loads --scripts` lists the chunks).
 
 Code shape: 01 moved or deleted none of the counted files (its moves are config, tRPC, the platform adapter and Device Preferences), so every path is Baseline 1's. Binding files, by the rule above: web's six factory callers (`shared-{groceries,stores,pantry}-hooks.ts`, `use-recurrence-detection.ts`, the groceries and stores contexts) and the 14 per-hook files that import a `shared-*-hooks` file; mobile's `shared-groceries-hooks.tsx` and the `index.ts` barrel that imports it. Web loses 9 lines and mobile 21: the groceries error toast moved into the platform adapter's `showError`, and the bindings import `useTRPC` and `useUnitsQuery` from shared-react. Tests gain 17 lines, mostly a test wrapper that mounts the web's platform adapter.
+
+### After the pilot
+
+Taken by 07 at e4724ee83, as measured, and again after 07's fixes at 37504a285 (5c74a46a9 only reformats). Each record printed byte-identical output twice. [`baselines/3-after-pilot.txt`](../baselines/3-after-pilot.txt) holds the final one; 3b6cf0947 holds the as-measured one. The page loads are the second of two 15-run sets on a fresh production build each, started at a load average of 3.2 and 2.7.
+
+The setup's paths, moved to where groceries lives now. Web: `features/groceries/` and the route files in `app/(app)/groceries/`. It leaves out what other features render, `components/round-checkbox.tsx` (112 lines) and `components/ingredients/on-the-list-mark.tsx` (17), and `app/(app)/shell-subscriptions.tsx`, which mounts the Pantry's subscription with the shell's others. Mobile has no groceries files: the smoke screen imports `@norish/shared-react/groceries` itself. shared-react: `src/groceries/`. Tests: the `*.test.*` files and `test-utils.tsx` in those folders, 19 in web and 12 in shared-react. No binding file is left: nothing calls a groceries, stores or Pantry factory, or `createUseRecurrenceDetection`.
+
+| Action               | After the pilot: top three (mounts + updates, what changed)                                                   | After 07's fixes: top three                                                                               |
+| -------------------- | ------------------------------------------------------------------------------------------------------------- | --------------------------------------------------------------------------------------------------------- |
+| Check an item        | SortableGroupItem 80 ((context) 80, children 40); SortableContext 20; React Aria DOMElement 13                | SortableContext 14 ((context) 10, children 4); React Aria DOMElement 8; bound DOMElement 6                |
+| Add an item          | SortableGroupItem 164 (children 122, (context) 81, group 52); React Aria DOMElement 133; bound DOMElement 108 | SortableGroupItem 54 ((context) 35, group 35); IngredientIcon 43 ((context) 41); React Aria DOMElement 15 |
+| Open the edit panel  | Presence 26; React Aria DOMElement 25; Primitive.div 21                                                       | React Aria DOMElement 21; Presence 14; Portal 11                                                          |
+| Realtime echo        | SortableGroupItem 80 ((context) 80, children 40); SortableContext 20; motion.div 10                           | SortableContext 13 ((context) 10, children 3); motion.div 6; MeasureLayout 5                              |
+| Switch the view mode | React Aria DOMElement 221; bound DOMElement 160; React Aria provider 123                                      | React Aria DOMElement 221; bound DOMElement 160; React Aria provider 123                                  |
+
+What the pilot changed against Baseline 2, as measured:
+
+- Check and echo, 19 fewer. `GroceriesProvider` and `StoresContextProvider` are gone, and the closed panels (Add, Store manager, Delete Store) and the header menu no longer render for a list change, since each panel reads only whether it is open. Added: one render of 06's `DndContext` wrapper, and `GroceriesPage` once when the toggle settles, which `GroceriesProvider` did before.
+- Add, 157 fewer: the same, plus the 17 no-Store rows' `(state)` pass, gone since reference data stopped refetching on mount (a652068c2, 8f244aa7a), and the Add panel's four renders down to two. Three more `DndContext` renders.
+- Edit panel, 3 fewer: opening it renders `EditGrocery`, which reads the id from the store, where it rendered the page, the header menu and the add button.
+- View mode: `GroceriesUiProvider` and the add button are gone; the wrapper adds four `DndContext` mounts.
+- First paint 4 ms faster at the median, inside both baselines' spread. JS 41 KB gzip less, not traced: the pilot's commits are the only change since Baseline 2 besides zustand joining; tracing needs a Baseline 2 build to diff `--scripts` against.
+
+What 07 fixed:
+
+- `DndContext` (579f2020b): the wrapper rendered with every new prop. Each of the seven uses passes `id={dndId}` again, and lint asks for the id and says why, so the reason is written once.
+- dnd-kit's measuring (d4430808e): both lists asked for `MeasuringStrategy.Always`, which measures every drop target whenever one registers or leaves and hands every sortable a new rects map. Measured only while a drag is on (the default), a row leaving renders the `SortableContext`s but not their rows.
+- Store sections (f2ff3c9f3): each section got the whole list's groups, its own handler closures and a DnD context that changed with any container, so all five rendered for one row. Now a section reads its containers off its own groups, the context changes only while a drag is on, and the Store actions take the Store's id. `SortableGroupItem` is memoised with one row function per section. A drop shows its arrangement until the list comes back from the cache, as before.
+- The create's answer (cee6cb551): it merged the rows the server moved down and then moved them down again, which left the cache one place off the server until the `updated` event; the recurring create already applied the server's rows last. A test covers it, and the event now changes nothing.
+- Grouped rows (ee967e523): a create moves every open line below it and the server bumps their versions. A row now skips a group that differs only there; its actions read versions from the cache.
+- The closed clear modal (837425e3f): `GroceriesPage` gave it a new empty id list on every list change; the header menu now reads whether there is anything to clear as a boolean.
+- Recurrence hints (4a620743f): parsed in a transition, which rendered the panel twice per name for an `isParsing` nobody read.
+- The panels' lookups (37504a285): the edit panel opened empty and then seeded its name, so the food lookup's 400 ms debounce caught up a render later; the form now starts on the grocery. The link and food lookups share one settled name, and an emptied field settles at once, so the Add panel no longer renders 400 ms after Add. Typing still waits 400 ms, now from the first name typed too.
+
+Two drags by hand on the measuring server, a reorder within an aisle and a move into another Store, landed and survived a reload; the E2E set runs after the ticket set.
+
+What remains after 07, per action, in updates; each line says what is on screen or why it renders without a change:
+
+- Check an item (106):
+  - 40: the pressed checkbox's hover, press, tick and release. React Aria keeps them as state, and HeroUI's checkbox hands them to its parts through context.
+  - 5: the page, the list, the icons provider, the list's content and the DnD provider, which carry the new list down.
+  - 8: Albert Heijn's section, card, heading (one open less), done row (one done more) and the Produce aisle (one row less).
+  - 2: bananas and tomatoes, the rows left in Produce: dnd-kit's `SortableContext` hands its items to every sortable in it.
+  - 7: Dairy, Bakery and the Store's unfiled area: the section hands each aisle new heading and row elements, so its container, heading and `SortableContext` render. Their rows don't. Not on screen; memoising an aisle block needs its rows structurally shared too.
+  - 15: the five Store boxes. Motion measures a `layout` box only when it renders, and the three below Albert Heijn move up.
+  - 8: dnd-kit's `DndContext` with its six own children, which it doesn't memoise; its drag handlers close over the list's containers, which changed.
+  - 20: dnd-kit's commit for the checked row's drop target leaving. Its registry is `DndContext` state (8 with its children), every `SortableContext` reads it (10), and the Produce rows render once more as `SortableContext` turns transforms back on the render after its items changed (2).
+  - 1: `GroceriesPage` when the toggle settles: TanStack's `useMutation` renders the component that holds it on each status change.
+- Add an item (292, and paprika's row mounting):
+  - 10: the Add button's hover and press states, and the name field losing focus to it.
+  - 58: the panel clearing its name, product and recurrence fields; it stays open on the same Store.
+  - 65: the optimistic row. The data path (5); the unsorted section, card, open count, box and `SortableContext` (5); the 17 rows below moved one place, whose `SortableGroupItem`s render while the rows skip it (17); flour, the former first row, whole for its corners (15); the Store boxes (15) and `DndContext` (8) as above.
+  - 47: dnd-kit's commit for paprika's drop target: `DndContext` (8), every `SortableContext` (10), the transform flip for the unsorted area's 18 rows (18), and paprika's checkbox (11), whose React Aria description and error-message slots settle to absent after mount.
+  - 4: the header menu and the closed clear-list modal, which hold the list's ids and count.
+  - 66: the create's answer. The 17 rows' new versions reach their `SortableGroupItem`s (17), paprika's row renders whole as its food and icon arrive (17 with its own `SortableGroupItem`), plus the data path, the unsorted section (3), the Store boxes and `DndContext`.
+  - 0: the server's `updated` event, which now matches the cache.
+  - 42: the icons read again for the new set of foods. The icons context hands every `IngredientIcon` the whole answer, so all 41 render for paprika's one. Per-icon selection needs a store outside context; left for the recipes migration, which shares the component.
+- Open the edit panel (107, and 178 mounts):
+  - 1: `EditGrocery` reads the id from the store and mounts the panel.
+  - 12: the panel's content mounting, with the link and food answers from the cache.
+  - 92: the drawer opening: vaul and Radix set their open and presence state after mount, and the panel's portal container is known once the drawer body has mounted, which renders the selects' popovers.
+  - 2: Radix's dismissable layer registering.
+- Realtime echo (60): commit one is check's commit five for Lidl (41: carrots leaves Produce, apples gets the new items, Frozen and the unfiled area render as above); commit two is dnd-kit's registry commit (19).
+- Switch the view mode (700, and 853 mounts):
+  - 106: the menu item's press and the menu closing.
+  - 79: By Recipe mounting, the tick moving in the menu and the Store-only section hiding.
+  - 510: after mount. About 440 are the 40 new checkboxes rendering once more with their parts: React Aria's `useToggle` asks for a description and an error-message slot (`useSlotId2`, both starting true), and a layout effect sets both false when neither is rendered. The rest: the four recipe sections' `DndContext`s filling their registries and mounting their live regions (28), and the closing menu's collection.
+  - 5: the popover's exit, the button's release, and the Device Preference write settling: `GroceriesPage` and the header menu hold `useDevicePreference`, whose `useMutation` renders them.
