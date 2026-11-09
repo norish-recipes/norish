@@ -7,7 +7,6 @@ const MAX_IDS = 500;
  */
 export function iconIds(ids: readonly (string | null | undefined)[]): string[] {
   // ponytail: a surface past 500 foods shows no icons beyond them; page the read if one ever does.
-  return [...new Set(ids.filter((id): id is string => !!id))]
-    .sort((a, b) => a.localeCompare(b))
-    .slice(0, MAX_IDS);
+  // Code-unit order, not localeCompare: the server's and a browser's locales collate differently.
+  return [...new Set(ids.filter((id): id is string => !!id))].sort().slice(0, MAX_IDS);
 }
