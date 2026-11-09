@@ -1,9 +1,15 @@
 export type {
+  GroceriesData,
+  GroceriesMutationsResult,
+  GroceriesQueryResult,
+  GroceryCreateData,
   PantryData,
   PantryMutationsResult,
   PantryQueryResult,
   PantrySuggestionsResult,
   PickedFood,
+  RecipeInfo,
+  RecipeMap,
   StoreGrocerySnapshot,
   StoresData,
   StoresMutationsResult,
@@ -12,6 +18,9 @@ export type {
 } from "./types";
 
 export { mergePantryAdded, mergePantryRemoved } from "./pantry-merge";
+export { useGroceriesMutations } from "./use-groceries-mutations";
+export { useGroceriesQuery } from "./use-groceries-query";
+export { useGroceriesSubscription } from "./use-groceries-subscription";
 export { usePantryMutations } from "./use-pantry-mutations";
 export { usePantryQuery } from "./use-pantry-query";
 export { usePantrySubscription } from "./use-pantry-subscription";

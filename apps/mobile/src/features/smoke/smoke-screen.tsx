@@ -1,17 +1,17 @@
 import React from "react";
 import { Alert, ScrollView, Text, View } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
-import {
-  useGroceriesMutations,
-  useGroceriesQuery,
-  useGroceriesSubscription,
-} from "@/hooks/groceries";
 import { useRecipesQuery } from "@/hooks/recipes";
 import { useUserContext } from "@/lib/auth/user-context";
 import { offlineEngine } from "@/lib/offline/engine";
 import { Button, Checkbox } from "heroui-native";
 import { useIntl } from "react-intl";
 
+import {
+  useGroceriesMutations,
+  useGroceriesQuery,
+  useGroceriesSubscription,
+} from "@norish/shared-react/groceries";
 import { useOfflineStatus } from "@norish/shared-react/offline/react";
 import { useTRPC } from "@norish/shared-react/trpc";
 

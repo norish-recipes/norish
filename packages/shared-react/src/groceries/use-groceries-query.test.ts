@@ -1,7 +1,7 @@
-// Import after mocking
-import { useGroceriesQuery } from "@/hooks/groceries/use-groceries-query";
-import { waitFor } from "@testing-library/react";
+import { act, renderHook, waitFor } from "@testing-library/react";
 import { beforeEach, describe, expect, it, vi } from "vitest";
+
+import { useGroceriesQuery } from "@norish/shared-react/groceries";
 
 import {
   createMockGroceriesData,
@@ -11,11 +11,10 @@ import {
   createTestWrapper,
 } from "./test-utils";
 
-// Mock the tRPC provider
 const mockQueryKey = ["groceries", "list"];
 const mockQueryOptions = vi.fn();
 
-vi.mock("@norish/shared-react/trpc", () => ({
+vi.mock("../trpc", () => ({
   useTRPC: () => ({
     groceries: {
       list: {
@@ -40,7 +39,6 @@ describe("useGroceriesQuery", () => {
         queryFn: async () => createMockGroceriesData(),
       });
 
-      const { renderHook } = require("@testing-library/react");
       const { result } = renderHook(() => useGroceriesQuery(), {
         wrapper: createTestWrapper(queryClient),
       });
@@ -56,7 +54,6 @@ describe("useGroceriesQuery", () => {
         queryFn: () => new Promise(() => {}), // Never resolves
       });
 
-      const { renderHook } = require("@testing-library/react");
       const { result } = renderHook(() => useGroceriesQuery(), {
         wrapper: createTestWrapper(queryClient),
       });
@@ -78,7 +75,6 @@ describe("useGroceriesQuery", () => {
         queryFn: async () => createMockGroceriesData(mockGroceries, mockRecurring),
       });
 
-      const { renderHook } = require("@testing-library/react");
       const { result } = renderHook(() => useGroceriesQuery(), {
         wrapper: createTestWrapper(queryClient),
       });
@@ -101,7 +97,6 @@ describe("useGroceriesQuery", () => {
         },
       });
 
-      const { renderHook } = require("@testing-library/react");
       const { result } = renderHook(() => useGroceriesQuery(), {
         wrapper: createTestWrapper(queryClient),
       });
@@ -134,7 +129,6 @@ describe("useGroceriesQuery", () => {
       // Pre-seed the cache with initial data
       queryClient.setQueryData(mockQueryKey, initialData);
 
-      const { renderHook, act } = require("@testing-library/react");
       const { result } = renderHook(() => useGroceriesQuery(), {
         wrapper: createTestWrapper(queryClient),
       });
@@ -170,7 +164,6 @@ describe("useGroceriesQuery", () => {
         queryFn: async () => undefined,
       });
 
-      const { renderHook, act } = require("@testing-library/react");
       const { result } = renderHook(() => useGroceriesQuery(), {
         wrapper: createTestWrapper(queryClient),
       });
@@ -204,7 +197,6 @@ describe("useGroceriesQuery", () => {
         },
       });
 
-      const { renderHook, act } = require("@testing-library/react");
       const { result } = renderHook(() => useGroceriesQuery(), {
         wrapper: createTestWrapper(queryClient),
       });
@@ -232,7 +224,6 @@ describe("useGroceriesQuery", () => {
         queryFn: async () => createMockGroceriesData(),
       });
 
-      const { renderHook } = require("@testing-library/react");
       const { result } = renderHook(() => useGroceriesQuery(), {
         wrapper: createTestWrapper(queryClient),
       });

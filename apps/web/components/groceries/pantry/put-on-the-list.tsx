@@ -1,13 +1,13 @@
 "use client";
 
 import { IconActionButton } from "@/components/shared/action-button";
-import { useGroceriesMutations } from "@/hooks/groceries";
 import { showActionToast } from "@/lib/ui/action-toast";
 import { CheckIcon, ShoppingCartIcon } from "@heroicons/react/16/solid";
 import { Chip } from "@heroui/react";
 import { useLocale, useTranslations } from "next-intl";
 
 import type { LocaleNames } from "@norish/shared/lib/ingredient-names";
+import { useGroceriesMutations } from "@norish/shared-react/groceries";
 import { ingredientDisplayName } from "@norish/shared/lib/ingredient-names";
 
 /** A kept food, as much of it as putting it on the list needs. */

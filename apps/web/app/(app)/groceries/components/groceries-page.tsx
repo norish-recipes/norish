@@ -20,7 +20,11 @@ import { useTranslations } from "next-intl";
 
 import type { GroceryDto } from "@norish/shared/contracts";
 import type { RecurrencePattern } from "@norish/shared/contracts/recurrence";
-import { useStoresQuery } from "@norish/shared-react/groceries";
+import {
+  useGroceriesMutations,
+  useGroceriesQuery,
+  useStoresQuery,
+} from "@norish/shared-react/groceries";
 import {
   cssFloatingDockContentClearance,
   cssHeaderControl,
@@ -28,14 +32,12 @@ import {
   cssHeaderIconControl,
 } from "@norish/web/config/css-tokens";
 
-import { useGroceriesContext, useGroceriesUiContext } from "../context";
+import { useGroceriesUiContext } from "../context";
 
 export function GroceriesPage() {
+  const { groceries, recurringGroceries, recipeMap, isLoading, getRecipeNameForGrocery } =
+    useGroceriesQuery();
   const {
-    groceries,
-    recurringGroceries,
-    recipeMap,
-    isLoading,
     toggleGroceries,
     deleteGroceries,
     createGrocery,
@@ -47,8 +49,7 @@ export function GroceriesPage() {
     getRecurringGroceryForGrocery,
     markAllDoneInStore,
     deleteDoneInStore,
-    getRecipeNameForGrocery,
-  } = useGroceriesContext();
+  } = useGroceriesMutations();
   const { stores } = useStoresQuery();
   const {
     addGroceryPanelOpen,
@@ -240,7 +241,8 @@ export function GroceriesPage() {
  * desktop add button and the menu with the view mode, grouping and stores.
  */
 export function GroceriesListActions() {
-  const { groceries, deleteGroceries } = useGroceriesContext();
+  const { groceries } = useGroceriesQuery();
+  const { deleteGroceries } = useGroceriesMutations();
   const [clearListOpen, setClearListOpen] = useState(false);
   const {
     setAddGroceryPanelOpen,

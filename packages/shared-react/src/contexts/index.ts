@@ -1,4 +1,3 @@
-export * from "./groceries";
 export * from "./households";
 export * from "./permissions";
 export * from "./recipes";

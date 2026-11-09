@@ -14,7 +14,6 @@ export * from "./user/index";
 export * from "./cookbooks/index";
 export * from "./library/index";
 export * from "./favorites/index";
-export * from "./groceries/index";
 export * from "./households/index";
 export * from "./permissions/index";
 export * from "./ratings/index";

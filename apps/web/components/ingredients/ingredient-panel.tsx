@@ -11,7 +11,6 @@ import {
   IconActionButton,
 } from "@/components/shared/action-button";
 import UiSwitch from "@/components/shared/ui-switch";
-import { useGroceriesQuery } from "@/hooks/groceries";
 import { ArrowsRightLeftIcon, PencilSquareIcon } from "@heroicons/react/16/solid";
 import { ArrowUturnLeftIcon, ChevronRightIcon, XMarkIcon } from "@heroicons/react/24/outline";
 import { Button, Chip, Input, Skeleton, TextField, toast } from "@heroui/react";
@@ -21,7 +20,11 @@ import { useLocale, useTranslations } from "next-intl";
 import type { PantryIngredientDto } from "@norish/shared/contracts";
 import type { LocaleNames } from "@norish/shared/lib/ingredient-names";
 import { useSpellingRules } from "@norish/shared-react/config";
-import { usePantryMutations, usePantryQuery } from "@norish/shared-react/groceries";
+import {
+  useGroceriesQuery,
+  usePantryMutations,
+  usePantryQuery,
+} from "@norish/shared-react/groceries";
 import { useTRPC } from "@norish/shared-react/trpc";
 import { ingredientDisplayName } from "@norish/shared/lib/ingredient-names";
 import { groceryOnTheList } from "@norish/shared/lib/pantry";

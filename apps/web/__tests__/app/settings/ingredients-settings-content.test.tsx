@@ -288,8 +288,8 @@ vi.mock("@norish/shared-react/config", async (importOriginal) => ({
 vi.mock("@norish/shared-react/groceries", () => ({
   usePantryQuery: () => ({ items: [] }),
   usePantryMutations: () => ({ addPantryIngredient: vi.fn(), removePantryIngredient: vi.fn() }),
+  useGroceriesQuery: () => ({ groceries: [] }),
 }));
-vi.mock("@/hooks/groceries", () => ({ useGroceriesQuery: () => ({ groceries: [] }) }));
 vi.mock("@/components/groceries/pantry/put-on-the-list", () => ({
   PutOnTheList: () => null,
   usePutOnTheList: () => vi.fn(),

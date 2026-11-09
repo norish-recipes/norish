@@ -60,10 +60,6 @@ const INGREDIENTS = [
   },
 ];
 
-vi.mock("@/hooks/groceries", () => ({
-  useGroceriesMutations: () => ({ createGroceriesFromData }),
-  useGroceriesQuery: () => ({ groceries }),
-}));
 vi.mock("@norish/shared-react/config", async () => {
   const { spellingRules } = await import("@norish/shared/lib/spelling-keys");
   const units = (await import("@norish/config/units.default.json")).default;
@@ -71,6 +67,8 @@ vi.mock("@norish/shared-react/config", async () => {
   return { useSpellingRules: () => spellingRules(units as UnitsMap) };
 });
 vi.mock("@norish/shared-react/groceries", () => ({
+  useGroceriesMutations: () => ({ createGroceriesFromData }),
+  useGroceriesQuery: () => ({ groceries }),
   usePantryMutations: () => ({ addPantryIngredient }),
   usePantryQuery: () => ({
     items: pantry,

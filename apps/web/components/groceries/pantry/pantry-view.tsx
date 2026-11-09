@@ -5,7 +5,6 @@ import { FIELD_STYLE } from "@/components/groceries/grocery-field";
 import { IngredientIcon, IngredientIconsProvider } from "@/components/ingredients/ingredient-icon";
 import { IngredientPanel } from "@/components/ingredients/ingredient-panel";
 import { IconActionButton } from "@/components/shared/action-button";
-import { useGroceriesQuery } from "@/hooks/groceries";
 import { useHiddenItemVisibility } from "@/hooks/user/use-hidden-item-visibility";
 import { MagnifyingGlassIcon, PlusIcon } from "@heroicons/react/16/solid";
 import { Button, InputGroup, Skeleton, TextField, toast } from "@heroui/react";
@@ -16,7 +15,11 @@ import { useDebounceValue } from "usehooks-ts";
 import type { PickedFood } from "@norish/shared-react/groceries";
 import type { PantryIngredientDto } from "@norish/shared/contracts";
 import { useSpellingRules } from "@norish/shared-react/config";
-import { usePantryMutations, usePantryQuery } from "@norish/shared-react/groceries";
+import {
+  useGroceriesQuery,
+  usePantryMutations,
+  usePantryQuery,
+} from "@norish/shared-react/groceries";
 import { useConnectivity } from "@norish/shared-react/offline/react";
 import { useTRPC } from "@norish/shared-react/trpc";
 import { PANTRY_INGREDIENT_NAME_MAX_LENGTH } from "@norish/shared/contracts/zod";

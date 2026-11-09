@@ -1,35 +1,12 @@
 "use client";
 
 import { createContext, ReactNode, use, useCallback, useMemo, useState } from "react";
-import {
-  useGroceriesMutations,
-  useGroceriesQuery,
-  useGroceriesSubscription,
-} from "@/hooks/groceries";
 
 import type { GroceryDto } from "@norish/shared/contracts";
 import type { GroceryViewMode } from "@norish/shared/contracts/zod/device-preferences";
-import { createGroceriesContext } from "@norish/shared-react/contexts";
 import { useDevicePreference } from "@norish/shared-react/reader";
 
-// =============================================================================
-// Shared Data Context (from factory)
-// =============================================================================
-
-const sharedGroceriesContext = createGroceriesContext({
-  useGroceriesQuery,
-  useGroceriesMutations,
-  useGroceriesSubscription,
-});
-
-export const GroceriesProvider = sharedGroceriesContext.GroceriesProvider;
-export const useGroceriesContext = sharedGroceriesContext.useGroceriesContext;
-
 export type { GroceryViewMode } from "@norish/shared/contracts/zod/device-preferences";
-
-// =============================================================================
-// Web-only UI Context
-// =============================================================================
 
 type GroceriesUiContextValue = {
   recurrencePanelOpen: boolean;
@@ -56,7 +33,8 @@ type GroceriesUiProviderProps = {
   children: ReactNode;
 };
 
-function GroceriesUiProvider({ children }: GroceriesUiProviderProps) {
+/** The groceries screen's UI state; its server data is read through `@norish/shared-react/groceries`. */
+export function GroceriesUiProvider({ children }: GroceriesUiProviderProps) {
   // UI State
   const [recurrencePanelOpen, setRecurrencePanelOpen] = useState(false);
   const [recurrencePanelGroceryId, setRecurrencePanelGroceryId] = useState<string | null>(null);
@@ -119,19 +97,7 @@ function GroceriesUiProvider({ children }: GroceriesUiProviderProps) {
 export function useGroceriesUiContext() {
   const ctx = use(GroceriesUiContext);
 
-  if (!ctx) throw new Error("useGroceriesUiContext must be used within GroceriesContextProvider");
+  if (!ctx) throw new Error("useGroceriesUiContext must be used within GroceriesUiProvider");
 
   return ctx;
-}
-
-// =============================================================================
-// Combined Provider
-// =============================================================================
-
-export function GroceriesContextProvider({ children }: GroceriesUiProviderProps) {
-  return (
-    <GroceriesProvider>
-      <GroceriesUiProvider>{children}</GroceriesUiProvider>
-    </GroceriesProvider>
-  );
 }

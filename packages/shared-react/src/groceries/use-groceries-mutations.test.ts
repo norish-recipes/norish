@@ -1,7 +1,10 @@
 import { dehydrate, hydrate } from "@tanstack/react-query";
 import { act, renderHook } from "@testing-library/react";
-import { beforeAll, beforeEach, describe, expect, it, vi } from "vitest";
+import { beforeEach, describe, expect, it, vi } from "vitest";
 
+import type { PlatformAdapter } from "@norish/shared-react/platform";
+import { useGroceriesMutations } from "@norish/shared-react/groceries";
+import { fakePlatformAdapter } from "@norish/shared-react/platform/testing";
 import { isQueuedOutboxSignal, markOutboxAdmissionFailed } from "@norish/shared/lib/trpc-errors";
 
 import {
@@ -28,7 +31,6 @@ const _mockMutations = {
   markAllDone: vi.fn(),
   deleteDone: vi.fn(),
 };
-const showErrorToast = vi.hoisted(() => vi.fn());
 
 // Mock the dependencies
 vi.mock("@tanstack/react-query", async () => {
@@ -47,7 +49,7 @@ vi.mock("@tanstack/react-query", async () => {
   };
 });
 
-vi.mock("@norish/shared-react/trpc", () => ({
+vi.mock("../trpc", () => ({
   useTRPC: () => ({
     groceries: {
       list: {
@@ -108,11 +110,7 @@ vi.mock("@norish/shared-react/trpc", () => ({
   }),
 }));
 
-vi.mock("@/hooks/groceries/error-adapter", () => ({
-  useGroceriesErrorAdapter: () => ({ showErrorToast }),
-}));
-
-vi.mock("@norish/shared-react/config", () => ({
+vi.mock("../config", () => ({
   useUnitsQuery: () => ({
     units: {
       volumeUnits: [
@@ -146,17 +144,13 @@ vi.mock("@norish/shared/lib/recurrence/calculator", () => ({
   getTodayString: vi.fn(() => "2025-01-15"),
 }));
 
-let useGroceriesMutations: (typeof import("@/hooks/groceries/use-groceries-mutations"))["useGroceriesMutations"];
-
 describe("useGroceriesMutations", () => {
   let queryClient: ReturnType<typeof createTestQueryClient>;
-
-  beforeAll(async () => {
-    ({ useGroceriesMutations } = await import("@/hooks/groceries/use-groceries-mutations"));
-  });
+  let adapter: PlatformAdapter;
 
   beforeEach(() => {
     queryClient = createTestQueryClient();
+    adapter = fakePlatformAdapter();
   });
 
   describe("module structure", () => {
@@ -170,7 +164,7 @@ describe("useGroceriesMutations", () => {
       queryClient.setQueryData(["groceries", "list"], initialData);
 
       const { result } = renderHook(() => useGroceriesMutations(), {
-        wrapper: createTestWrapper(queryClient),
+        wrapper: createTestWrapper(queryClient, adapter),
       });
 
       // Verify all expected functions are exported
@@ -205,7 +199,7 @@ describe("useGroceriesMutations", () => {
       queryClient.setQueryData(["groceries", "list"], initialData);
 
       const { result } = renderHook(() => useGroceriesMutations(), {
-        wrapper: createTestWrapper(queryClient),
+        wrapper: createTestWrapper(queryClient, adapter),
       });
 
       act(() => {
@@ -238,7 +232,7 @@ describe("useGroceriesMutations", () => {
       );
 
       const { result } = renderHook(() => useGroceriesMutations(), {
-        wrapper: createTestWrapper(queryClient),
+        wrapper: createTestWrapper(queryClient, adapter),
       });
 
       act(() => result.current.createGrocery("zout en peper"));
@@ -278,7 +272,7 @@ describe("useGroceriesMutations", () => {
       );
 
       const { result } = renderHook(() => useGroceriesMutations(), {
-        wrapper: createTestWrapper(queryClient),
+        wrapper: createTestWrapper(queryClient, adapter),
       });
 
       act(() => result.current.createGrocery("Apples"));
@@ -298,8 +292,9 @@ describe("useGroceriesMutations", () => {
         "list",
       ]);
 
-      expect(showErrorToast).toHaveBeenCalledWith(
-        "The grocery change was not saved. Please try again."
+      expect(adapter.showError).toHaveBeenCalledWith(
+        "The grocery change was not saved. Please try again.",
+        "groceries-mutations"
       );
       expect(data?.groceries.map((grocery) => grocery.id)).toEqual(["existing"]);
     });
@@ -311,7 +306,7 @@ describe("useGroceriesMutations", () => {
       );
 
       const { result } = renderHook(() => useGroceriesMutations(), {
-        wrapper: createTestWrapper(queryClient),
+        wrapper: createTestWrapper(queryClient, adapter),
       });
 
       act(() => result.current.toggleGroceries(["g1"], true));
@@ -331,8 +326,9 @@ describe("useGroceriesMutations", () => {
         "list",
       ]);
 
-      expect(showErrorToast).toHaveBeenCalledWith(
-        "The grocery change was not saved. Please try again."
+      expect(adapter.showError).toHaveBeenCalledWith(
+        "The grocery change was not saved. Please try again.",
+        "groceries-mutations"
       );
       expect(data?.groceries[0]).toMatchObject({ id: "g1", isDone: false, version: 3 });
     });
@@ -351,7 +347,7 @@ describe("useGroceriesMutations", () => {
       queryClient.setQueryData(["groceries", "list"], before);
 
       const { result } = renderHook(() => useGroceriesMutations(), {
-        wrapper: createTestWrapper(queryClient),
+        wrapper: createTestWrapper(queryClient, adapter),
       });
       // The page's own read, answered with the list as it was before the tick.
       const read = queryClient
@@ -394,7 +390,7 @@ describe("useGroceriesMutations", () => {
       expect(queryClient.getQueryData(["groceries", "list"])).toEqual(restored);
 
       const { result } = renderHook(() => useGroceriesMutations(), {
-        wrapper: createTestWrapper(queryClient),
+        wrapper: createTestWrapper(queryClient, adapter),
       });
 
       act(() => result.current.toggleGroceries(["g1"], true));
@@ -415,7 +411,7 @@ describe("useGroceriesMutations", () => {
       queryClient.setQueryData(["groceries", "list"], initialData);
 
       const { result } = renderHook(() => useGroceriesMutations(), {
-        wrapper: createTestWrapper(queryClient),
+        wrapper: createTestWrapper(queryClient, adapter),
       });
 
       const found = result.current.getRecurringGroceryForGrocery("g1");
@@ -431,7 +427,7 @@ describe("useGroceriesMutations", () => {
       queryClient.setQueryData(["groceries", "list"], initialData);
 
       const { result } = renderHook(() => useGroceriesMutations(), {
-        wrapper: createTestWrapper(queryClient),
+        wrapper: createTestWrapper(queryClient, adapter),
       });
 
       const found = result.current.getRecurringGroceryForGrocery("g1");
@@ -445,7 +441,7 @@ describe("useGroceriesMutations", () => {
       queryClient.setQueryData(["groceries", "list"], initialData);
 
       const { result } = renderHook(() => useGroceriesMutations(), {
-        wrapper: createTestWrapper(queryClient),
+        wrapper: createTestWrapper(queryClient, adapter),
       });
 
       const found = result.current.getRecurringGroceryForGrocery("non-existent");
@@ -461,7 +457,7 @@ describe("useGroceriesMutations", () => {
       queryClient.setQueryData(["groceries", "list"], createMockGroceriesData([grocery], []));
 
       const { result } = renderHook(() => useGroceriesMutations(), {
-        wrapper: createTestWrapper(queryClient),
+        wrapper: createTestWrapper(queryClient, adapter),
       });
 
       result.current.updateGrocery("g1", "Oat milk");
@@ -481,7 +477,7 @@ describe("useGroceriesMutations", () => {
       queryClient.setQueryData(["groceries", "list"], createMockGroceriesData(groceries, []));
 
       const { result } = renderHook(() => useGroceriesMutations(), {
-        wrapper: createTestWrapper(queryClient),
+        wrapper: createTestWrapper(queryClient, adapter),
       });
 
       result.current.deleteGroceries(["g1", "g2"]);
@@ -507,7 +503,7 @@ describe("useGroceriesMutations", () => {
       );
 
       const { result } = renderHook(() => useGroceriesMutations(), {
-        wrapper: createTestWrapper(queryClient),
+        wrapper: createTestWrapper(queryClient, adapter),
       });
 
       result.current.toggleRecurringGrocery("r1", "g1", true);
@@ -534,7 +530,7 @@ describe("useGroceriesMutations", () => {
       queryClient.setQueryData(["groceries", "list"], createMockGroceriesData(groceries, []));
 
       const { result } = renderHook(() => useGroceriesMutations(), {
-        wrapper: createTestWrapper(queryClient),
+        wrapper: createTestWrapper(queryClient, adapter),
       });
 
       result.current.markAllDoneInStore("store-1");
@@ -561,7 +557,7 @@ describe("useGroceriesMutations", () => {
       queryClient.setQueryData(["groceries", "list"], createMockGroceriesData(groceries, []));
 
       const { result } = renderHook(() => useGroceriesMutations(), {
-        wrapper: createTestWrapper(queryClient),
+        wrapper: createTestWrapper(queryClient, adapter),
       });
 
       result.current.deleteDoneInStore("store-1");

@@ -38,8 +38,6 @@ vi.mock("@norish/shared-react/groceries", () => ({
   usePantryQuery: () => ({ items, ...pantry }),
   usePantryMutations: () => ({ addPantryIngredient }),
   usePantrySuggestions: () => ({ suggestions }),
-}));
-vi.mock("@/hooks/groceries", () => ({
   useGroceriesQuery: () => ({ groceries }),
   useGroceriesMutations: () => ({ createGroceriesFromData, deleteGroceries: vi.fn() }),
 }));

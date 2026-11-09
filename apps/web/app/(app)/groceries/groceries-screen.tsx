@@ -6,6 +6,8 @@ import { usePrefersReducedMotion } from "@/hooks/use-prefers-reduced-motion";
 import { AnimatePresence, motion } from "motion/react";
 
 import {
+  useGroceriesQuery,
+  useGroceriesSubscription,
   usePantryQuery,
   usePantrySuggestions,
   useStoreAisles,
@@ -20,15 +22,15 @@ import type { GroceriesView } from "./components/groceries-header";
 import AddGroceryButton from "./components/add-grocery-button";
 import { GroceriesHeader, VIEW_TRANSITION } from "./components/groceries-header";
 import { GroceriesPage } from "./components/groceries-page";
-import { GroceriesContextProvider } from "./context";
+import { GroceriesUiProvider } from "./context";
 
 /** How far a view slides as it comes and goes, from its own side of the switch. */
 const SLIDE_PX = 24;
 
 /**
- * Groceries as a whole screen, on both of its views: the list's providers
- * (the Pantry reads the household's groceries and creates them), the header,
- * and the view the address names. The switch only rewrites the address, so
+ * Groceries as a whole screen, on both of its views: the list's reads and
+ * realtime (the Pantry reads the household's groceries and creates them), the
+ * header, and the view the address names. The switch only rewrites the address, so
  * changing views asks the server for nothing: the view slides out towards its
  * own side of the switch while the other slides in from its side, and nothing
  * above them moves. The Pantry is read while the list shows, so its first
@@ -42,14 +44,16 @@ export function GroceriesScreen() {
   usePantryQuery();
   usePantrySuggestions(!isOffline);
   // The list's reads and realtime, held for both views so neither returns to an evicted cache.
+  useGroceriesQuery();
   useStorePrices();
   useStoreAisles();
+  useGroceriesSubscription();
   useStoresSubscription();
   useStorePricesSubscription();
   useStoreAislesSubscription();
 
   return (
-    <GroceriesContextProvider>
+    <GroceriesUiProvider>
       <div className="flex min-h-0 w-full flex-1 flex-col">
         <GroceriesHeader view={view} />
         <div className="relative flex min-h-0 w-full flex-1 flex-col">
@@ -83,6 +87,6 @@ export function GroceriesScreen() {
           ) : null}
         </AnimatePresence>
       </div>
-    </GroceriesContextProvider>
+    </GroceriesUiProvider>
   );
 }

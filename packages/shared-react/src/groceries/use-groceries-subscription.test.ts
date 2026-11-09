@@ -1,13 +1,16 @@
 import { act, renderHook } from "@testing-library/react";
-import { beforeAll, beforeEach, describe, expect, it, vi } from "vitest";
+import { beforeEach, describe, expect, it, vi } from "vitest";
 
-import { trackedEvent } from "../realtime-test-utils";
+import { useGroceriesSubscription } from "@norish/shared-react/groceries";
+import { fakePlatformAdapter } from "@norish/shared-react/platform/testing";
+
+import { trackedEvent } from "../../__tests__/realtime/tracked-event";
 import {
   createMockGroceriesData,
   createMockGrocery,
   createMockRecurringGrocery,
-  createPlatformTestWrapper,
   createTestQueryClient,
+  createTestWrapper,
 } from "./test-utils";
 
 // Track subscription callbacks
@@ -35,22 +38,10 @@ vi.mock("@trpc/tanstack-react-query", () => ({
   }),
 }));
 
-vi.mock("@heroui/react", () => ({
-  toast: vi.fn(),
-}));
-
-vi.mock("next/navigation", () => ({
-  useRouter: () => ({ push: vi.fn() }),
-}));
-
-vi.mock("next-intl", () => ({
-  useTranslations: () => (key: string) => key,
-}));
-
 // Mock the query key
 const mockQueryKey = ["groceries", "list"];
 
-vi.mock("@norish/shared-react/trpc", () => ({
+vi.mock("../trpc", () => ({
   useTRPC: () => ({
     groceries: {
       list: {
@@ -120,14 +111,8 @@ vi.mock("@norish/shared-react/trpc", () => ({
   }),
 }));
 
-let useGroceriesSubscription: (typeof import("@/hooks/groceries/use-groceries-subscription"))["useGroceriesSubscription"];
-
 describe("useGroceriesSubscription", () => {
   let queryClient: ReturnType<typeof createTestQueryClient>;
-
-  beforeAll(async () => {
-    ({ useGroceriesSubscription } = await import("@/hooks/groceries/use-groceries-subscription"));
-  });
 
   beforeEach(() => {
     // Clear subscription callbacks
@@ -144,7 +129,7 @@ describe("useGroceriesSubscription", () => {
       queryClient.setQueryData(mockQueryKey, initialData);
 
       renderHook(() => useGroceriesSubscription(), {
-        wrapper: createPlatformTestWrapper(queryClient),
+        wrapper: createTestWrapper(queryClient),
       });
 
       // Verify all subscription callbacks were registered
@@ -167,7 +152,7 @@ describe("useGroceriesSubscription", () => {
       queryClient.setQueryData(mockQueryKey, initialData);
 
       renderHook(() => useGroceriesSubscription(), {
-        wrapper: createPlatformTestWrapper(queryClient),
+        wrapper: createTestWrapper(queryClient),
       });
 
       const newGrocery = createMockGrocery({ id: "g2", name: "Bread" });
@@ -191,7 +176,7 @@ describe("useGroceriesSubscription", () => {
       queryClient.setQueryData(mockQueryKey, initialData);
 
       renderHook(() => useGroceriesSubscription(), {
-        wrapper: createPlatformTestWrapper(queryClient),
+        wrapper: createTestWrapper(queryClient),
       });
 
       // Try to add the same grocery
@@ -212,7 +197,7 @@ describe("useGroceriesSubscription", () => {
       );
 
       renderHook(() => useGroceriesSubscription(), {
-        wrapper: createPlatformTestWrapper(queryClient),
+        wrapper: createTestWrapper(queryClient),
       });
 
       const zout = createMockGrocery({ id: "g1", name: "zout" });
@@ -237,7 +222,7 @@ describe("useGroceriesSubscription", () => {
       queryClient.setQueryData(mockQueryKey, createMockGroceriesData([checked], []));
 
       renderHook(() => useGroceriesSubscription(), {
-        wrapper: createPlatformTestWrapper(queryClient),
+        wrapper: createTestWrapper(queryClient),
       });
 
       act(() => {
@@ -270,7 +255,7 @@ describe("useGroceriesSubscription", () => {
       queryClient.setQueryData(mockQueryKey, initialData);
 
       renderHook(() => useGroceriesSubscription(), {
-        wrapper: createPlatformTestWrapper(queryClient),
+        wrapper: createTestWrapper(queryClient),
       });
 
       const newGrocery = createMockGrocery({
@@ -300,7 +285,7 @@ describe("useGroceriesSubscription", () => {
       queryClient.setQueryData(mockQueryKey, initialData);
 
       renderHook(() => useGroceriesSubscription(), {
-        wrapper: createPlatformTestWrapper(queryClient),
+        wrapper: createTestWrapper(queryClient),
       });
 
       const updatedGrocery = { ...existingGrocery, isDone: true };
@@ -323,7 +308,7 @@ describe("useGroceriesSubscription", () => {
       queryClient.setQueryData(mockQueryKey, initialData);
 
       renderHook(() => useGroceriesSubscription(), {
-        wrapper: createPlatformTestWrapper(queryClient),
+        wrapper: createTestWrapper(queryClient),
       });
 
       const updatedGrocery1 = { ...grocery1, name: "Whole Milk" };
@@ -349,7 +334,7 @@ describe("useGroceriesSubscription", () => {
       queryClient.setQueryData(mockQueryKey, initialData);
 
       renderHook(() => useGroceriesSubscription(), {
-        wrapper: createPlatformTestWrapper(queryClient),
+        wrapper: createTestWrapper(queryClient),
       });
 
       act(() => {
@@ -372,7 +357,7 @@ describe("useGroceriesSubscription", () => {
       queryClient.setQueryData(mockQueryKey, initialData);
 
       renderHook(() => useGroceriesSubscription(), {
-        wrapper: createPlatformTestWrapper(queryClient),
+        wrapper: createTestWrapper(queryClient),
       });
 
       act(() => {
@@ -394,7 +379,7 @@ describe("useGroceriesSubscription", () => {
       queryClient.setQueryData(mockQueryKey, initialData);
 
       renderHook(() => useGroceriesSubscription(), {
-        wrapper: createPlatformTestWrapper(queryClient),
+        wrapper: createTestWrapper(queryClient),
       });
 
       const newGrocery = createMockGrocery({ id: "g1", name: "Eggs", recurringGroceryId: "r1" });
@@ -428,7 +413,7 @@ describe("useGroceriesSubscription", () => {
       queryClient.setQueryData(mockQueryKey, initialData);
 
       renderHook(() => useGroceriesSubscription(), {
-        wrapper: createPlatformTestWrapper(queryClient),
+        wrapper: createTestWrapper(queryClient),
       });
 
       const updatedGrocery = { ...grocery, name: "Organic Eggs" };
@@ -461,7 +446,7 @@ describe("useGroceriesSubscription", () => {
       queryClient.setQueryData(mockQueryKey, initialData);
 
       renderHook(() => useGroceriesSubscription(), {
-        wrapper: createPlatformTestWrapper(queryClient),
+        wrapper: createTestWrapper(queryClient),
       });
 
       act(() => {
@@ -480,14 +465,14 @@ describe("useGroceriesSubscription", () => {
 
   describe("onStale handler", () => {
     it("silently refetches without showing a toast", async () => {
-      const { toast } = await import("@heroui/react");
+      const adapter = fakePlatformAdapter();
       const initialData = createMockGroceriesData();
 
       queryClient.setQueryData(mockQueryKey, initialData);
       const invalidateSpy = vi.spyOn(queryClient, "invalidateQueries");
 
       renderHook(() => useGroceriesSubscription(), {
-        wrapper: createPlatformTestWrapper(queryClient),
+        wrapper: createTestWrapper(queryClient, adapter),
       });
 
       act(() => {
@@ -495,31 +480,28 @@ describe("useGroceriesSubscription", () => {
       });
 
       expect(invalidateSpy).toHaveBeenCalled();
-      expect(toast).not.toHaveBeenCalled();
+      expect(adapter.showError).not.toHaveBeenCalled();
     });
   });
 
   describe("onFailed handler", () => {
     it("shows toast notification on failure", async () => {
-      const { toast } = await import("@heroui/react");
+      const adapter = fakePlatformAdapter();
       const initialData = createMockGroceriesData();
 
       queryClient.setQueryData(mockQueryKey, initialData);
 
       renderHook(() => useGroceriesSubscription(), {
-        wrapper: createPlatformTestWrapper(queryClient),
+        wrapper: createTestWrapper(queryClient, adapter),
       });
 
       act(() => {
         subscriptionCallbacks.onFailed!(emitPayload({ reason: "Failed to save grocery" }));
       });
 
-      expect(toast).toHaveBeenCalledWith(
-        "operationFailed",
-        expect.objectContaining({
-          description: "technicalDetails",
-          variant: "danger",
-        })
+      expect(adapter.showError).toHaveBeenCalledWith(
+        "Failed to save grocery",
+        "groceries-subscription:onFailed"
       );
     });
   });

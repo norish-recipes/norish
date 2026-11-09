@@ -3,25 +3,13 @@ import { describe, expect, it, vi } from "vitest";
 
 import "@testing-library/jest-dom";
 
-import { GroceriesContextProvider, useGroceriesUiContext } from "@/app/(app)/groceries/context";
+import { GroceriesUiProvider, useGroceriesUiContext } from "@/app/(app)/groceries/context";
 
 import type { DevicePreferences } from "@norish/shared/contracts/zod/device-preferences";
 
 import { renderWithDevicePreferences } from "../../helpers/device-preferences";
 
 vi.mock("@norish/shared-react/trpc", () => import("../../helpers/device-preferences-trpc"));
-
-vi.mock("@/hooks/groceries", () => ({
-  useGroceriesQuery: () => ({
-    groceries: [],
-    recurringGroceries: [],
-    recipeMap: {},
-    isLoading: false,
-    getRecipeNameForGrocery: () => null,
-  }),
-  useGroceriesMutations: () => ({}),
-  useGroceriesSubscription: () => {},
-}));
 
 let latestUi!: ReturnType<typeof useGroceriesUiContext>;
 
@@ -35,9 +23,9 @@ function Probe() {
 
 function renderGroceries(values: Partial<DevicePreferences> = {}) {
   renderWithDevicePreferences(
-    <GroceriesContextProvider>
+    <GroceriesUiProvider>
       <Probe />
-    </GroceriesContextProvider>,
+    </GroceriesUiProvider>,
     { values }
   );
 }
