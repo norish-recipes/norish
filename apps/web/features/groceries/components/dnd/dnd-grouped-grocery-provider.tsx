@@ -1,7 +1,7 @@
 "use client";
 
 import { createContext, use, useId, useMemo } from "react";
-import { useGroupedGroceryDnd } from "@/hooks/groceries/use-grouped-grocery-dnd";
+import { useGroupedGroceryDnd } from "@/features/groceries/hooks/use-grouped-grocery-dnd";
 import {
   DndContext,
   DragOverlay,

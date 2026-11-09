@@ -1,4 +1,5 @@
 import { OfflineBootstrap } from "@/app/~offline/offline-bootstrap";
+import { GroceriesScreen } from "@/features/groceries/groceries-screen";
 
 /**
  * The offline navigation fallback (ADR-0006, reworked by ADR-0009): served by
@@ -14,5 +15,5 @@ import { OfflineBootstrap } from "@/app/~offline/offline-bootstrap";
  * explicit Offline-unavailable state.
  */
 export default function OfflineFallbackPage() {
-  return <OfflineBootstrap />;
+  return <OfflineBootstrap groceries={<GroceriesScreen />} />;
 }

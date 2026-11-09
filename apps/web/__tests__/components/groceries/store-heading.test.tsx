@@ -1,4 +1,4 @@
-import { StoreHeading } from "@/components/groceries/store-heading";
+import { StoreHeading } from "@/features/groceries/components/store-heading";
 import { fireEvent, render, screen } from "@testing-library/react";
 import { describe, expect, it, vi } from "vitest";
 

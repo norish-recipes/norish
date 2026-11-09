@@ -3,7 +3,7 @@ import { beforeEach, describe, expect, it, vi } from "vitest";
 
 import "@testing-library/jest-dom";
 
-import AddGroceryButton from "@/app/(app)/groceries/components/add-grocery-button";
+import AddGroceryButton from "@/features/groceries/components/add-grocery-button";
 
 import {
   cssFloatingDockBottomWithNav,

@@ -1,5 +1,5 @@
 /** What is still to buy at one Store, added up for its heading. */
-import { lineOf, lineOfGroup, storeTotal } from "@/components/groceries/store-total";
+import { lineOf, lineOfGroup, storeTotal } from "@/features/groceries/components/store-total";
 import { describe, expect, it } from "vitest";
 
 import type { GroceryDto, StoreProductDto } from "@norish/shared/contracts";

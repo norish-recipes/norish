@@ -3,10 +3,11 @@
 import React, { useMemo } from "react";
 import { useRouter } from "next/navigation";
 import { CookbookIconSolid } from "@/components/cookbooks/cookbook-icon";
-import { MiniCalendar, MiniCookbooks, MiniGroceries } from "@/components/Panel/consumers";
+import { MiniCalendar, MiniCookbooks } from "@/components/Panel/consumers";
 import { DeleteRecipeModal } from "@/components/shared/delete-recipe-modal";
 import { usePermissionsContext } from "@/context/permissions-context";
 import { useRecipesContext } from "@/context/recipes-context";
+import { MiniGroceries } from "@/features/groceries";
 import { useActiveAllergies } from "@/hooks/user";
 import {
   CalendarDaysIcon,

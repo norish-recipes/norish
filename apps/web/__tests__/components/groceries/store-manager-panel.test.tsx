@@ -4,7 +4,7 @@
  * the app is.
  */
 import type { ReactNode } from "react";
-import { StoreManagerPanel } from "@/components/groceries/stores/store-manager-panel";
+import { StoreManagerPanel } from "@/features/groceries/components/stores/store-manager-panel";
 import { act, fireEvent, render, screen } from "@testing-library/react";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 
@@ -90,7 +90,7 @@ vi.mock("motion/react", () => ({
   useDragControls: () => ({ start: () => undefined }),
 }));
 
-vi.mock("@/components/groceries/stores/delete-store-modal", () => ({
+vi.mock("@/features/groceries/components/stores/delete-store-modal", () => ({
   DeleteStoreModal: () => null,
 }));
 

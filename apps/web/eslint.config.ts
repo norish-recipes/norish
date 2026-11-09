@@ -88,7 +88,7 @@ export default defineConfig(
   {
     // A skeleton's rows are placeholders: they have no identity and never
     // reorder, so their position is the only key they have.
-    files: ["components/skeleton/**/*.tsx"],
+    files: ["components/skeleton/**/*.tsx", "features/*/components/*-skeleton.tsx"],
     rules: { "@eslint-react/no-array-index-key": "off" },
   },
   {

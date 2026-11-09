@@ -1,15 +1,15 @@
 "use client";
 
-import type { PackSizeWords } from "@/lib/format-price";
+import type { PackSizeWords } from "@/features/groceries/lib/format-price";
 import { useCallback, useEffect, useEffectEvent, useRef, useState } from "react";
-import { FIELD_CLASS, FIELD_STYLE } from "@/components/groceries/grocery-field";
-import { GroceryPurchaseAmount } from "@/components/groceries/grocery-purchase-amount";
-import { ProductDetailsPanel } from "@/components/groceries/product-details-panel";
-import { SalePrice } from "@/components/groceries/sale-price";
 import { PanelComboBoxPopover } from "@/components/Panel/Panel";
-import { useShopSearch, useStoreProducts } from "@/hooks/stores";
-import { usePackSizeWords } from "@/hooks/stores/use-pack-size-words";
-import { formatPackSize, formatShelfPrice } from "@/lib/format-price";
+import { FIELD_CLASS, FIELD_STYLE } from "@/features/groceries/components/grocery-field";
+import { GroceryPurchaseAmount } from "@/features/groceries/components/grocery-purchase-amount";
+import { ProductDetailsPanel } from "@/features/groceries/components/product-details-panel";
+import { SalePrice } from "@/features/groceries/components/sale-price";
+import { useShopSearch, useStoreProducts } from "@/features/groceries/hooks";
+import { usePackSizeWords } from "@/features/groceries/hooks/use-pack-size-words";
+import { formatPackSize, formatShelfPrice } from "@/features/groceries/lib/format-price";
 import { ArrowTopRightOnSquareIcon, ChevronRightIcon } from "@heroicons/react/16/solid";
 import {
   Button,

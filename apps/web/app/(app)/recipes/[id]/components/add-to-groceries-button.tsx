@@ -1,8 +1,8 @@
 "use client";
 
 import React, { useState } from "react";
-import { MiniGroceries } from "@/components/Panel/consumers";
 import { ActionButton } from "@/components/shared/action-button";
+import { MiniGroceries } from "@/features/groceries";
 import { useTranslations } from "next-intl";
 
 import { useRecipeContextRequired } from "../context";

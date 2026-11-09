@@ -1,7 +1,7 @@
 "use client";
 
 import { useState } from "react";
-import { FIELD_CLASS, FIELD_STYLE } from "@/components/groceries/grocery-field";
+import { FIELD_CLASS, FIELD_STYLE } from "@/features/groceries/components/grocery-field";
 import { Bars3Icon, PlusIcon, XMarkIcon } from "@heroicons/react/16/solid";
 import { Button, FieldError, Input, TextField } from "@heroui/react";
 import { Reorder, useDragControls } from "motion/react";

@@ -3,7 +3,7 @@
  * shown apart and left off the list, and a tick is what puts it on anyway.
  */
 import type { ReactNode } from "react";
-import MiniGroceries from "@/components/Panel/consumers/mini-groceries";
+import MiniGroceries from "@/features/groceries/components/mini-groceries";
 import { act, fireEvent, render, screen, within } from "@testing-library/react";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 

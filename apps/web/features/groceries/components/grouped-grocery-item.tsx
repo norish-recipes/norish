@@ -2,9 +2,9 @@
 
 import type { ReactNode } from "react";
 import { memo, useCallback, useState } from "react";
-import { RecurrencePill } from "@/app/(app)/groceries/components/recurrence-pill";
 import { IngredientIcon } from "@/components/ingredients/ingredient-icon";
 import { RoundCheckbox } from "@/components/round-checkbox";
+import { RecurrencePill } from "@/features/groceries/components/recurrence-pill";
 import { useUnitFormatter } from "@/hooks/use-unit-formatter";
 import { AnimatePresence, motion } from "motion/react";
 import { useTranslations } from "next-intl";

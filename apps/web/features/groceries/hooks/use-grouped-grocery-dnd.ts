@@ -2,7 +2,7 @@ import type {
   ContainerId,
   DndGroupedGroceryProviderProps,
   GroupItemsState,
-} from "@/components/groceries/dnd/types";
+} from "@/features/groceries/components/dnd/types";
 import type {
   CollisionDetection,
   DragEndEvent,
@@ -10,9 +10,12 @@ import type {
   DragStartEvent,
 } from "@dnd-kit/core";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
-import { createMultiContainerCollisionDetection } from "@/components/groceries/dnd/collision-detection";
-import { planDrop } from "@/components/groceries/dnd/drop-plan";
-import { buildGroupItemsState, findContainerForGroup } from "@/components/groceries/dnd/utils";
+import { createMultiContainerCollisionDetection } from "@/features/groceries/components/dnd/collision-detection";
+import { planDrop } from "@/features/groceries/components/dnd/drop-plan";
+import {
+  buildGroupItemsState,
+  findContainerForGroup,
+} from "@/features/groceries/components/dnd/utils";
 import { arrayMove } from "@dnd-kit/sortable";
 
 import type { GroceryGroup } from "@norish/shared/lib/grocery-grouping";

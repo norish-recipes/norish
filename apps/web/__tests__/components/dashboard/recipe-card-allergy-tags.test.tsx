@@ -34,6 +34,8 @@ vi.mock("@/stores/useAppStore", () => ({
 
 vi.mock("@/components/Panel/consumers", () => ({
   MiniCalendar: () => null,
+}));
+vi.mock("@/features/groceries", () => ({
   MiniGroceries: () => null,
 }));
 

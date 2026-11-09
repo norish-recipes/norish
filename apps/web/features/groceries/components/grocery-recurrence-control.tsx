@@ -1,7 +1,7 @@
 "use client";
 
-import { RecurrenceSuggestion } from "@/app/(app)/groceries/components/recurrence-suggestion";
 import { ActionButton } from "@/components/shared/action-button";
+import { RecurrenceSuggestion } from "@/features/groceries/components/recurrence-suggestion";
 import { AnimatePresence } from "motion/react";
 import { useTranslations } from "next-intl";
 

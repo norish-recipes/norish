@@ -4,7 +4,7 @@
  * opens "From your recipes", and the one field narrows, adds and refuses.
  */
 import type { ReactNode } from "react";
-import { PantryView } from "@/components/groceries/pantry/pantry-view";
+import { PantryView } from "@/features/groceries/components/pantry/pantry-view";
 import { act, fireEvent, render, screen } from "@testing-library/react";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 

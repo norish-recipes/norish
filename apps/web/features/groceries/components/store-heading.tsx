@@ -1,6 +1,6 @@
 "use client";
 
-import { formatShelfPrice } from "@/lib/format-price";
+import { formatShelfPrice } from "@/features/groceries/lib/format-price";
 import {
   CheckIcon,
   ChevronDownIcon,

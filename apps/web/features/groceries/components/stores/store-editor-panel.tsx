@@ -1,9 +1,13 @@
 "use client";
 
-import { FIELD_CLASS, FIELD_STYLE } from "@/components/groceries/grocery-field";
-import { STORE_COLOR_KEYS, storeColorStyle, storeHue } from "@/components/groceries/store-colors";
 import Panel from "@/components/Panel/Panel";
 import { ActionButton, ActionButtonGroup } from "@/components/shared/action-button";
+import { FIELD_CLASS, FIELD_STYLE } from "@/features/groceries/components/grocery-field";
+import {
+  STORE_COLOR_KEYS,
+  storeColorStyle,
+  storeHue,
+} from "@/features/groceries/components/store-colors";
 import { Input, Label, TextField } from "@heroui/react";
 import { useTranslations } from "next-intl";
 

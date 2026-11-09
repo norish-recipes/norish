@@ -1,14 +1,14 @@
 "use client";
 
 import { useState } from "react";
-import { AisleSelector } from "@/components/groceries/aisle-selector";
-import { GroceryProductField } from "@/components/groceries/grocery-product-field";
-import { GroceryRecurrenceControl } from "@/components/groceries/grocery-recurrence-control";
-import { StoreSelector } from "@/components/groceries/store-selector";
-import { RecurrencePanel } from "@/components/Panel/consumers/recurrence-panel";
 import Panel from "@/components/Panel/Panel";
 import { ActionButton, ActionButtonGroup } from "@/components/shared/action-button";
-import { useAisleChoice, useProductChoice } from "@/hooks/stores";
+import { AisleSelector } from "@/features/groceries/components/aisle-selector";
+import { GroceryProductField } from "@/features/groceries/components/grocery-product-field";
+import { GroceryRecurrenceControl } from "@/features/groceries/components/grocery-recurrence-control";
+import { RecurrencePanel } from "@/features/groceries/components/recurrence-panel";
+import { StoreSelector } from "@/features/groceries/components/store-selector";
+import { useAisleChoice, useProductChoice } from "@/features/groceries/hooks";
 import { Input } from "@heroui/react";
 import { useTranslations } from "next-intl";
 

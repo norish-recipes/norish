@@ -1,7 +1,7 @@
 "use client";
 
-import { RecurrencePill } from "@/app/(app)/groceries/components/recurrence-pill";
 import { RoundCheckbox } from "@/components/round-checkbox";
+import { RecurrencePill } from "@/features/groceries/components/recurrence-pill";
 import { useUnitFormatter } from "@/hooks/use-unit-formatter";
 import { Bars3Icon } from "@heroicons/react/16/solid";
 import { useTranslations } from "next-intl";

@@ -3,7 +3,7 @@
  * says while it is asking.
  */
 import type { ReactNode } from "react";
-import { GroceryProductField } from "@/components/groceries/grocery-product-field";
+import { GroceryProductField } from "@/features/groceries/components/grocery-product-field";
 import { act, fireEvent, render, screen } from "@testing-library/react";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 
@@ -72,7 +72,7 @@ function answer(storeId: string | null, term: string) {
 const KNOWN: Record<string, StoreProductDto[]> = { "store-a": [], "store-b": [] };
 
 // react-query's own semantics: a disabled query never leaves `pending`.
-vi.mock("@/hooks/stores", () => ({
+vi.mock("@/features/groceries/hooks", () => ({
   useShopSearch: (storeId: string | null, term: string, enabled: boolean) => {
     searchCalls.push({ storeId, term, enabled });
     const on = enabled && Boolean(storeId) && term.trim().length > 0;

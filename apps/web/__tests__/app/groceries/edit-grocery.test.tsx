@@ -1,11 +1,11 @@
-import { EditGrocery } from "@/app/(app)/groceries/components/groceries-page";
+import { EditGrocery } from "@/features/groceries/components/groceries-page";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { act, render, screen, waitFor } from "@testing-library/react";
 import { afterEach, describe, expect, it, vi } from "vitest";
 
 import { useGroceriesUiStore } from "@norish/shared-react/groceries";
 
-vi.mock("@/components/Panel/consumers/edit-grocery-panel", () => ({
+vi.mock("@/features/groceries/components/edit-grocery-panel", () => ({
   default: ({ grocery }: { grocery: { name: string } }) => (
     <p data-testid="edit-panel">{grocery.name}</p>
   ),

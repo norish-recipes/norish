@@ -4,8 +4,8 @@
  * still being asked, and nothing at all for a Miss or a name nobody has
  * asked about.
  */
-import { GroceryPrice } from "@/components/groceries/grocery-price";
-import { lineOf } from "@/components/groceries/store-total";
+import { GroceryPrice } from "@/features/groceries/components/grocery-price";
+import { lineOf } from "@/features/groceries/components/store-total";
 import { render, screen, within } from "@testing-library/react";
 import { describe, expect, it, vi } from "vitest";
 

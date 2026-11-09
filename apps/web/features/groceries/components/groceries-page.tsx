@@ -2,12 +2,16 @@
 
 import type { ComponentProps } from "react";
 import { useState } from "react";
-import { GroceryList, GroceryListByRecipe, StoreManagerPanel } from "@/components/groceries";
-import { ClearGroceriesModal } from "@/components/groceries/clear-groceries-modal";
-import { AddGroceryPanel } from "@/components/Panel/consumers";
-import EditGroceryPanel from "@/components/Panel/consumers/edit-grocery-panel";
 import UiSwitch from "@/components/shared/ui-switch";
-import GrocerySkeleton from "@/components/skeleton/grocery-skeleton";
+import {
+  GroceryList,
+  GroceryListByRecipe,
+  StoreManagerPanel,
+} from "@/features/groceries/components";
+import AddGroceryPanel from "@/features/groceries/components/add-grocery-panel";
+import { ClearGroceriesModal } from "@/features/groceries/components/clear-groceries-modal";
+import EditGroceryPanel from "@/features/groceries/components/edit-grocery-panel";
+import GrocerySkeleton from "@/features/groceries/components/grocery-skeleton";
 import {
   BookOpenIcon,
   BuildingStorefrontIcon,

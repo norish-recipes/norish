@@ -4,8 +4,8 @@
  * last one may survive into it.
  */
 import type { ReactNode } from "react";
-import AddGroceryPanel from "@/components/Panel/consumers/add-grocery-panel";
-import EditGroceryPanel from "@/components/Panel/consumers/edit-grocery-panel";
+import AddGroceryPanel from "@/features/groceries/components/add-grocery-panel";
+import EditGroceryPanel from "@/features/groceries/components/edit-grocery-panel";
 import { act, fireEvent, render, screen } from "@testing-library/react";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 
@@ -111,7 +111,7 @@ function linkOnTheList(storeId: string | null, ingredientId: string | null | und
     : null;
 }
 
-vi.mock("@/hooks/stores/use-parsed-grocery-name", () => ({
+vi.mock("@/features/groceries/hooks/use-parsed-grocery-name", () => ({
   useParsedGroceryName: (raw: string) => raw.trim(),
 }));
 
@@ -130,7 +130,7 @@ vi.mock("@norish/shared-react/groceries", async (importOriginal) => ({
 
 // The Aisle field itself is not what these are about; a plain select drives
 // exactly the callback the real one does.
-vi.mock("@/components/groceries/aisle-selector", () => ({
+vi.mock("@/features/groceries/components/aisle-selector", () => ({
   AisleSelector: ({ aisles, selectedAisleId, onSelectionChange }: any) => (
     <select
       data-testid="aisle-selector"
@@ -149,11 +149,11 @@ vi.mock("@/components/groceries/aisle-selector", () => ({
   ),
 }));
 
-vi.mock("@/hooks/stores/use-store-products-mutations", () => ({
+vi.mock("@/features/groceries/hooks/use-store-products-mutations", () => ({
   useChooseProduct: () => chooseProduct,
 }));
 
-vi.mock("@/hooks/stores/use-store-products-query", () => ({
+vi.mock("@/features/groceries/hooks/use-store-products-query", () => ({
   useShopSearch: () => ({ data: undefined, isPending: true, isFetching: false }),
   useStoreProducts: (storeId: string | null, enabled: boolean) => ({
     data: enabled
@@ -198,11 +198,11 @@ vi.mock("@/components/Panel/Panel", async () => {
   };
 });
 
-vi.mock("@/components/Panel/consumers/recurrence-panel", () => ({
+vi.mock("@/features/groceries/components/recurrence-panel", () => ({
   RecurrencePanel: () => null,
 }));
 
-vi.mock("@/app/(app)/groceries/components/recurrence-suggestion", () => ({
+vi.mock("@/features/groceries/components/recurrence-suggestion", () => ({
   RecurrenceSuggestion: () => null,
 }));
 
@@ -222,7 +222,7 @@ vi.mock("@/components/shared/action-button", () => ({
 
 // The Store picker itself is not what these are about; a plain select drives
 // exactly the callback the real one does.
-vi.mock("@/components/groceries/store-selector", () => ({
+vi.mock("@/features/groceries/components/store-selector", () => ({
   StoreSelector: ({ selectedStoreId, stores, onSelectionChange }: any) => (
     <select
       data-testid="store-selector"

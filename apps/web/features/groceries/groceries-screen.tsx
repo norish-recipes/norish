@@ -2,7 +2,7 @@
 
 import { useEffect } from "react";
 import { usePathname } from "next/navigation";
-import { PantryView } from "@/components/groceries";
+import { PantryView } from "@/features/groceries/components";
 import { usePrefersReducedMotion } from "@/hooks/use-prefers-reduced-motion";
 import { AnimatePresence, motion } from "motion/react";
 

@@ -2,12 +2,11 @@
 
 import type { ReactNode } from "react";
 import { useCallback, useState } from "react";
+import { MiniGroceries } from "@/features/groceries";
 import { useRecipeQuery } from "@/hooks/recipes";
 import { useUserSettingsQuery } from "@/hooks/user/use-user-query";
 
 import { getAfterPlanningPreference } from "@norish/shared/lib/user-preferences";
-
-import MiniGroceries from "./mini-groceries";
 
 type Planned = { key: number; recipeId: string; addAtOnce: boolean; open: boolean };
 

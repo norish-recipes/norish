@@ -1,9 +1,9 @@
 "use client";
 
+import type { ReactNode } from "react";
 import { useEffect, useState } from "react";
 import { AppShell } from "@/app/(app)/app-shell";
 import CalendarPage from "@/app/(app)/calendar/page";
-import { GroceriesScreen } from "@/app/(app)/groceries/groceries-screen";
 import { OfflineCookbook } from "@/app/~offline/offline-cookbook";
 import { OfflineRecipeDetail } from "@/app/~offline/offline-recipe-detail";
 import { OfflineUnavailable } from "@/app/~offline/offline-unavailable";
@@ -14,11 +14,11 @@ import { addBasePath, stripBasePath } from "@norish/shared/lib/base-path";
 
 const UUID_RE = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
 
-function offlineSurface(pathname: string) {
+function offlineSurface(pathname: string, groceries: ReactNode) {
   const path = pathname.replace(/(?<!\/)\/+$/, "") || "/";
 
   if (path === "/") return <Dashboard />;
-  if (path === "/groceries" || path === "/groceries/pantry") return <GroceriesScreen />;
+  if (path === "/groceries" || path === "/groceries/pantry") return groceries;
   if (path === "/calendar") return <CalendarPage />;
 
   const recipeId = /^\/recipes\/([^/]+)$/.exec(path)?.[1];
@@ -50,8 +50,9 @@ function offlineSurface(pathname: string) {
  * The worker serves this document only when a navigation failed, so the
  * reader is Offline: the last reader's cache is restored before anything
  * renders, and the first frame already carries their Device Preferences.
+ * `groceries` is the groceries screen, handed in by the page: only a route file imports a screen.
  */
-export function OfflineBootstrap() {
+export function OfflineBootstrap({ groceries }: { groceries: ReactNode }) {
   const [pathname, setPathname] = useState<string | null>(null);
 
   useEffect(() => {
@@ -75,5 +76,5 @@ export function OfflineBootstrap() {
     );
   }
 
-  return <AppShell>{offlineSurface(pathname)}</AppShell>;
+  return <AppShell>{offlineSurface(pathname, groceries)}</AppShell>;
 }

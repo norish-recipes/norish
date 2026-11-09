@@ -1,13 +1,13 @@
 "use client";
 
 import { useRef, useState } from "react";
-import { storeColorKey, storeColorStyle } from "@/components/groceries/store-colors";
 import Panel from "@/components/Panel/Panel";
 import {
   ActionButton,
   ActionButtonGroup,
   IconActionButton,
 } from "@/components/shared/action-button";
+import { storeColorKey, storeColorStyle } from "@/features/groceries/components/store-colors";
 import { Bars3Icon } from "@heroicons/react/24/solid";
 import { Reorder, useDragControls } from "motion/react";
 import { useTranslations } from "next-intl";

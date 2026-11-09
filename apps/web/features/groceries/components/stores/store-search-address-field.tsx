@@ -1,6 +1,6 @@
 "use client";
 
-import { FIELD_CLASS, FIELD_STYLE } from "@/components/groceries/grocery-field";
+import { FIELD_CLASS, FIELD_STYLE } from "@/features/groceries/components/grocery-field";
 import { Input, Label, TextField } from "@heroui/react";
 import { useTranslations } from "next-intl";
 

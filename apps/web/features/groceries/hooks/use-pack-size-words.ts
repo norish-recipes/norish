@@ -1,6 +1,6 @@
 "use client";
 
-import type { PackSizeWords } from "@/lib/format-price";
+import type { PackSizeWords } from "@/features/groceries/lib/format-price";
 import { useMemo } from "react";
 import { useTranslations } from "next-intl";
 

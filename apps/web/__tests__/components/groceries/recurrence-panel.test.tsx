@@ -2,7 +2,7 @@
  * The repeat panel: picking a frequency is what a recurring grocery saves.
  */
 import type { ReactNode } from "react";
-import { RecurrencePanel } from "@/components/Panel/consumers/recurrence-panel";
+import { RecurrencePanel } from "@/features/groceries/components/recurrence-panel";
 import { act, fireEvent, render, screen } from "@testing-library/react";
 import { describe, expect, it, vi } from "vitest";
 

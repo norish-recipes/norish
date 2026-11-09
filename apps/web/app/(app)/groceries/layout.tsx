@@ -1,6 +1,5 @@
 import { QuerySeed } from "@/components/query-seed";
-
-import { GroceriesScreen } from "./groceries-screen";
+import { GroceriesScreen } from "@/features/groceries/groceries-screen";
 
 /**
  * Both views of Groceries under one layout, which renders the view itself:

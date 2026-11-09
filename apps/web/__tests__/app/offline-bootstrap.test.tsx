@@ -20,10 +20,6 @@ vi.mock("@/components/dashboard/dashboard", () => ({
   Dashboard: () => <div>dashboard-surface</div>,
 }));
 
-vi.mock("@/app/(app)/groceries/groceries-screen", () => ({
-  GroceriesScreen: () => <div>groceries-surface</div>,
-}));
-
 vi.mock("@/app/(app)/calendar/page", () => ({
   default: () => <div>calendar-surface</div>,
 }));
@@ -38,7 +34,7 @@ vi.mock("@/app/~offline/offline-unavailable", () => ({
 
 function renderPath(pathname: string) {
   window.history.replaceState(null, "", pathname);
-  render(<OfflineBootstrap />);
+  render(<OfflineBootstrap groceries={<div>groceries-surface</div>} />);
 }
 
 describe("OfflineBootstrap", () => {

@@ -1,4 +1,4 @@
-import { GroceriesScreen } from "@/app/(app)/groceries/groceries-screen";
+import { GroceriesScreen } from "@/features/groceries/groceries-screen";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { act, render, waitFor } from "@testing-library/react";
 import { describe, expect, it, vi } from "vitest";
@@ -15,13 +15,13 @@ vi.mock("next/navigation", () => ({
     return "/groceries";
   },
 }));
-vi.mock("@/components/groceries", () => ({ PantryView: () => null }));
-vi.mock("@/app/(app)/groceries/components/groceries-page", () => ({ GroceriesPage: () => null }));
-vi.mock("@/app/(app)/groceries/components/groceries-header", () => ({
+vi.mock("@/features/groceries/components", () => ({ PantryView: () => null }));
+vi.mock("@/features/groceries/components/groceries-page", () => ({ GroceriesPage: () => null }));
+vi.mock("@/features/groceries/components/groceries-header", () => ({
   GroceriesHeader: () => null,
   VIEW_TRANSITION: {},
 }));
-vi.mock("@/app/(app)/groceries/components/add-grocery-button", () => ({ default: () => null }));
+vi.mock("@/features/groceries/components/add-grocery-button", () => ({ default: () => null }));
 vi.mock("@norish/shared-react/groceries", async (importOriginal) => ({
   ...(await importOriginal()),
   useGroceriesSubscription: () => undefined,
