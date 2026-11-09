@@ -83,7 +83,7 @@ norish/
 │   └── mobile/       # Expo app (@norish/mobile)
 │       └── src/      # Routes and features, as on web
 ├── packages/         # Shared libraries
-│   ├── api/          # Server API logic (routers, AI, parsing)
+│   ├── api/          # Server process, import parser, CalDAV sync
 │   ├── auth/         # Auth helpers
 │   ├── config/       # Shared config
 │   ├── db/           # Drizzle schema + repositories
@@ -106,7 +106,7 @@ norish/
 
 ## App architecture
 
-Web and mobile use the same layout, and logic both apps need is written once in `packages/shared-react`. Web and shared-react move to it one feature at a time, so this is the target: until a feature has moved, its web code stays in `components/`, `hooks/`, `context/` and `stores/`, and its shared code in shared-react's `hooks/` and `contexts/`.
+Web and mobile use the same layout, and logic both apps need is written once in `packages/shared-react`. Web and shared-react move to it one feature at a time, so this is the target: until a feature has moved, its web code stays in `components/`, `hooks/`, `context/` and `stores/`, and its shared code in shared-react's `hooks/` and `contexts/`. [Architecture](https://docs.norish.dev/development/architecture) in the docs shows where each piece lives and traces a read, a write and a realtime update through it.
 
 - A feature is a domain: `library`, `recipes`, `cookbooks`, `groceries`, `calendar`, `imports`, `settings`, `auth` or `share`. `features/<feature>/` holds its screens, components and hooks. Route files in `app/` render screens from features, and a page that shows several, such as the dashboard, composes them. One feature's code then sits in one folder per app. Mobile's `smoke` isn't a domain: it is a throwaway screen that tests the plumbing until the redesigned screens replace it.
 - A feature never imports from inside another feature. Only route files import a feature's files directly: Next's file conventions (`page`, `layout`, `route` and the rest) on web, every file in `src/app/` on mobile. Every other file imports its `index.ts`. Lint enforces this, so features stay separable without review catching it.

@@ -47,7 +47,7 @@ sections (never passing a finished prompt string — ADR-0016).
 
 - Keep root scripts and config minimal; workspace ownership should stay inside the owning app, package, or tooling workspace.
 - Prefer existing shared abstractions before adding new ones.
-- Placing code or state in `apps/web`, `apps/mobile` or `packages/shared-react` follows "App architecture" in `CONTRIBUTING.md`.
+- Placing code or state in `apps/web`, `apps/mobile` or `packages/shared-react` follows "App architecture" in `CONTRIBUTING.md`. The [architecture page](https://docs.norish.dev/development/architecture) (`apps/docs/docs/development/architecture.md`) maps every workspace and traces a read, a write and a realtime update.
 - Use `@/` imports where the workspace already supports them.
 - Use the existing logger patterns instead of `console.log`.
 - Avoid `as any`, `@ts-ignore`, and `@ts-expect-error`.
