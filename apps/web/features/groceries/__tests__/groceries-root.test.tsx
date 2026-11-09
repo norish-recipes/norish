@@ -1,6 +1,6 @@
 import { GroceriesRoot } from "@/features/groceries/groceries-root";
 import { render, screen, waitFor } from "@testing-library/react";
-import { describe, expect, it, vi } from "vitest";
+import { afterEach, describe, expect, it, vi } from "vitest";
 
 import "@testing-library/jest-dom";
 
@@ -29,6 +29,10 @@ vi.mock("@norish/shared-react/groceries", async (importOriginal) => ({
 }));
 
 describe("GroceriesRoot", () => {
+  afterEach(() => {
+    path.current = "/groceries";
+  });
+
   it("draws the view its address names under the header, and the add pill on the list only", async () => {
     const view = render(<GroceriesRoot />);
 
@@ -44,7 +48,6 @@ describe("GroceriesRoot", () => {
     // The list slides out and the pill fades out first.
     await waitFor(() => expect(screen.queryByText("list screen")).toBeNull());
     await waitFor(() => expect(screen.queryByRole("button", { name: "add" })).toBeNull());
-    path.current = "/groceries";
   });
 
   it("leaves with every panel closed, so the next visit opens on the list alone", () => {

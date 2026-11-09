@@ -7,9 +7,8 @@ import { DESTINATION_HEADER } from "@/lib/auth/login-redirect";
 import { iconIds } from "@/lib/ingredient-icon-ids";
 
 /**
- * Both views of Groceries under one layout, which renders the root: the pages only give each view
- * an address, so switching between the list and the Pantry stays on the client. The stored view
- * and grouping come from the App Shell's Device Preferences, already in the server's first frame.
+ * Both Groceries views under one layout that renders the root, so a switch stays on the client;
+ * the stored view and grouping come from the App Shell's Device Preferences in the first frame.
  */
 export default async function GroceriesLayout() {
   // A layout isn't told its path, so the proxy's copy of it says which view a full load opens on.

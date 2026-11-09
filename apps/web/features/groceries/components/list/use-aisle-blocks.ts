@@ -1,4 +1,4 @@
-import { useStructuralSharing } from "@/features/groceries/hooks/use-structural-sharing";
+import { useStructuralSharing } from "@/features/groceries/hooks";
 
 import type { AisleDto } from "@norish/shared/contracts";
 

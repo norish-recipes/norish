@@ -2,7 +2,7 @@
 
 import { memo, useCallback, useMemo, useState } from "react";
 import { storeColorStyle } from "@/features/groceries/components/stores";
-import { useStructuralSharing } from "@/features/groceries/hooks/use-structural-sharing";
+import { useStructuralSharing } from "@/features/groceries/hooks";
 import { motion } from "motion/react";
 import { useTranslations } from "next-intl";
 

@@ -2,7 +2,7 @@
 
 import { useMemo } from "react";
 import { IngredientIconsProvider } from "@/components/ingredients/ingredient-icon";
-import { useStructuralSharing } from "@/features/groceries/hooks/use-structural-sharing";
+import { useStructuralSharing } from "@/features/groceries/hooks";
 import { listFoodIds } from "@/features/groceries/lib/list-food-ids";
 import { ShoppingCartIcon } from "@heroicons/react/24/outline";
 import { motion } from "motion/react";
