@@ -42,12 +42,8 @@ export function mergeAisleFiling(prev: StoreAislesData, filing: AisleFiled): Sto
 
 export interface StoreAislesResult {
   /**
-   * The aisle a Store files an Ingredient under, as the server answers it (its
-   * own, else its nearest Parent Ingredient's), or null where the Store has
-   * never been told. The
-   * only place a grocery's aisle comes from: the grocery row carries none,
-   * and nothing is ever guessed from words (ADR-0031). An aisle the Store no
-   * longer has is no answer either, until the links are read again.
+   * The aisle a Store files an Ingredient under, its own or its nearest Parent's (ADR-0031), or
+   * null where it was never told or no longer has that aisle. Nothing is guessed from words.
    */
   aisleFor: (storeId: string | null, ingredientId: string | null | undefined) => string | null;
   isLoading: boolean;
@@ -161,14 +157,8 @@ export function useStoreAislesSubscription() {
 }
 
 /**
- * File a grocery's Ingredient at a Store, or under no aisle, which forgets it:
- * the one write behind the panel's Aisle field and a drop into an aisle. What
- * the Store remembers changes on this screen at once, by the same merge every
- * housemate's screen will run when the event lands, and the write goes the way
- * every grocery mutation goes — optimistic here, through the Outbox when the
- * backend is out of reach (ADR-0004), last writer winning. Nothing lives on the
- * grocery row, so there is no row to roll back: a refusal simply re-reads what
- * is filed.
+ * File a grocery's Ingredient at a Store, or under no aisle to forget it: optimistic by the merge
+ * the echo runs, through the Outbox while Offline (ADR-0004); a refusal reads the links again.
  */
 export function useFileGroceryName() {
   const trpc = useTRPC();

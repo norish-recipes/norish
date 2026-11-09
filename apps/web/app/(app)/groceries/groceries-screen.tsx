@@ -25,13 +25,8 @@ import { GroceriesUiProvider } from "./context";
 const SLIDE_PX = 24;
 
 /**
- * Groceries as a whole screen, on both of its views: the list's reads and
- * realtime (the Pantry reads the household's groceries and creates them), the
- * header, and the view the address names. The switch only rewrites the
- * address, so changing views asks the server for nothing: the view slides out
- * towards its own side of the switch while the other slides in from its side,
- * and nothing above them moves. The Pantry is read while the list shows, so
- * its first visit lands whole rather than as a skeleton.
+ * Both views under one header and the list's subscriptions: a switch only rewrites the address, and
+ * what they keep current isn't read again. The Pantry is read here so its first visit lands whole.
  */
 export function GroceriesScreen() {
   const view: GroceriesView = usePathname()?.startsWith("/groceries/pantry") ? "pantry" : "list";
