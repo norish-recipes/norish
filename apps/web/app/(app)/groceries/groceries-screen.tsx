@@ -6,13 +6,10 @@ import { usePrefersReducedMotion } from "@/hooks/use-prefers-reduced-motion";
 import { AnimatePresence, motion } from "motion/react";
 
 import {
-  useGroceriesQuery,
   useGroceriesSubscription,
   usePantryQuery,
   usePantrySuggestions,
-  useStoreAisles,
   useStoreAislesSubscription,
-  useStorePrices,
   useStorePricesSubscription,
   useStoresSubscription,
 } from "@norish/shared-react/groceries";
@@ -43,10 +40,7 @@ export function GroceriesScreen() {
 
   usePantryQuery();
   usePantrySuggestions(!isOffline);
-  // The list's reads and realtime, held for both views so neither returns to an evicted cache.
-  useGroceriesQuery();
-  useStorePrices();
-  useStoreAisles();
+  // The list's realtime, kept open on both views; the Offline Cache keeps its reads (gcTime).
   useGroceriesSubscription();
   useStoresSubscription();
   useStorePricesSubscription();

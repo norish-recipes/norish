@@ -70,7 +70,15 @@ export function createOfflineQueryClient({
     queryClient,
   });
 
-  for (const pathKey of [keys.recipes.get.pathKey(), keys.cookbooks.get.pathKey()]) {
+  for (const pathKey of [
+    keys.recipes.get.pathKey(),
+    keys.cookbooks.get.pathKey(),
+    // And the groceries list's reads, which no observer holds while the Pantry view shows.
+    keys.groceries.list.pathKey(),
+    keys.stores.list.pathKey(),
+    keys.stores.groceryPrices.pathKey(),
+    keys.stores.aisleLinks.pathKey(),
+  ]) {
     queryClient.setQueryDefaults(pathKey, { gcTime: CACHE_MAX_AGE_MS });
   }
 

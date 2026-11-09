@@ -199,7 +199,7 @@ describe("createCacheManager", () => {
     expect(query?.gcTime).toBe(CACHE_MAX_AGE_MS);
   });
 
-  it("holds a recipe and a cookbook the reader opened past the default gcTime (ADR-0008)", async () => {
+  it("holds a recipe, a cookbook and the groceries list's reads past the default gcTime (ADR-0008)", async () => {
     vi.useFakeTimers();
 
     const { queryClient } = createManager();
@@ -211,8 +211,13 @@ describe("createCacheManager", () => {
     const opened = [
       trpc.recipes.get.queryKey({ id: "r1" }),
       trpc.cookbooks.get.queryKey({ id: "c1" }),
+      // Unobserved while the Pantry view shows.
+      trpc.groceries.list.queryKey(),
+      trpc.stores.list.queryKey(),
+      trpc.stores.groceryPrices.queryKey(),
+      trpc.stores.aisleLinks.queryKey(),
     ];
-    const elsewhere = trpc.groceries.list.queryKey();
+    const elsewhere = trpc.pantry.suggestions.queryKey();
 
     for (const queryKey of [...opened, elsewhere]) {
       // The page reads it while it is open, then the reader leaves.
