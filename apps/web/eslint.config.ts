@@ -54,7 +54,7 @@ export default defineConfig(
     ],
   },
   {
-    // baseConfig ignores every workspace's scripts/; the measure scripts here are linted.
+    // baseConfig ignores every workspace's scripts/; this one's top-level scripts are linted.
     ignores: ["!scripts/*"],
   },
   {
