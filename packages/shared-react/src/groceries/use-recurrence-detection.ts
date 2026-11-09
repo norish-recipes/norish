@@ -1,6 +1,12 @@
 import { useEffect, useState, useTransition } from "react";
 
-import type { RecurrenceConfig, RecurrencePattern } from "@norish/shared/contracts/recurrence";
+import type { RecurrenceConfig as StoredRecurrenceConfig } from "@norish/config/zod/server-config";
+import type {
+  RecurrenceConfig,
+  RecurrenceLocaleConfig,
+  RecurrencePattern,
+} from "@norish/shared/contracts/recurrence";
+import { isRecurrenceRule } from "@norish/shared/contracts/recurrence";
 import { createClientLogger } from "@norish/shared/lib/logger";
 import { parseRecurrence } from "@norish/shared/lib/recurrence/parser";
 
@@ -12,6 +18,21 @@ type DetectedPattern = {
   pattern: RecurrencePattern;
   cleanText: string;
 };
+
+/** The parser reads the four rules; a hint an administrator stored with any other rule is skipped. */
+function withKnownRules({ locales }: StoredRecurrenceConfig): RecurrenceConfig {
+  const known = Object.entries(locales).map(([locale, words]): [string, RecurrenceLocaleConfig] => [
+    locale,
+    {
+      ...words,
+      intervalHints: words.intervalHints.flatMap((hint) =>
+        isRecurrenceRule(hint.rule) ? [{ ...hint, rule: hint.rule }] : []
+      ),
+    },
+  ]);
+
+  return { locales: Object.fromEntries(known) };
+}
 
 type UseRecurrenceDetectionOptions = {
   itemName: string;
@@ -33,12 +54,11 @@ export function useRecurrenceDetection({
   }
 
   useEffect(() => {
-    if (!canDetect) return;
+    if (!canDetect || !recurrenceConfig) return;
 
     startTransition(() => {
       try {
-        // The server's schema keeps a hint's rule as any string; the parser reads the four rules.
-        const result = parseRecurrence(itemName, recurrenceConfig as RecurrenceConfig);
+        const result = parseRecurrence(itemName, withKnownRules(recurrenceConfig));
 
         if (result.recurrence) {
           setDetectedPattern({
