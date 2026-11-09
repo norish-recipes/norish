@@ -42,9 +42,6 @@ export function createUseJobQueue({ useTRPC }: CreateAdminHooksOptions) {
       enabled: enabled && !!queue && !!jobId,
       refetchInterval: LIST_REFETCH_INTERVAL_MS,
       retry: false,
-      // Keep the last detail on screen while re-fetching so the modal
-      // doesn't blank/flicker after a retry re-runs the job.
-      placeholderData: keepPreviousData,
     });
 
     return { job: data ?? null, error, isLoading };

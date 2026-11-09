@@ -3,7 +3,8 @@
  * `createWSClient` replaced by a recorder of the options it was given.
  */
 
-import { beforeEach, describe, expect, it, vi } from "vitest";
+import { createTRPCUntypedClient } from "@trpc/client";
+import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 
 type RecordedWsClient = {
   options: {
@@ -157,5 +158,40 @@ describe("isUnauthorizedTRPCError", () => {
     expect(isUnauthorizedTRPCError({ data: { code: "FORBIDDEN", httpStatus: 403 } })).toBe(false);
     expect(isUnauthorizedTRPCError({ message: "401 unauthorized" })).toBe(false);
     expect(isUnauthorizedTRPCError(null)).toBe(false);
+  });
+});
+
+describe("the HTTP read transport", () => {
+  afterEach(() => vi.unstubAllGlobals());
+
+  it("keeps the job monitor's reads out of the batch the other reads share", async () => {
+    const fetchMock = vi.fn(async (_url: string) => new Response("{}"));
+
+    vi.stubGlobal("fetch", fetchMock);
+
+    const client = createTRPCUntypedClient({
+      links: createTRPCClientLinks({
+        logger,
+        includeSubscriptions: false,
+        enableLoggerLink: false,
+        getBaseUrl: () => "http://localhost:3000",
+      }),
+    });
+
+    await Promise.allSettled([
+      client.query("admin.jobs.list"),
+      client.query("admin.getPageRenderers"),
+      client.query("admin.getAllConfigs"),
+    ]);
+
+    const urls = fetchMock.mock.calls.map(([url]) => String(url));
+    const jobs = urls.filter((url) => url.includes("admin.jobs.list"));
+    const settings = urls.filter((url) => url.includes("admin.getPageRenderers"));
+
+    expect(urls).toHaveLength(2);
+    expect(jobs).toHaveLength(1);
+    expect(jobs[0]).not.toContain("batch=1");
+    expect(settings[0]).toContain("batch=1");
+    expect(settings[0]).toContain("admin.getAllConfigs");
   });
 });

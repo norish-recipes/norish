@@ -4,6 +4,7 @@ import { useState } from "react";
 import { SettingsCard } from "@/app/(app)/settings/components/settings-card";
 import { ActionButton, ActionButtonGroup } from "@/components/shared/action-button";
 import { ChipButton } from "@/components/shared/chip-button";
+import { SettingsRowsSkeleton } from "@/components/skeleton/settings-skeleton";
 import DataTable from "@/components/ui/data-table";
 import {
   useAdminConfigsQuery,
@@ -20,6 +21,7 @@ import {
   Pagination,
   Select,
   Separator,
+  Skeleton,
   TextField,
 } from "@heroui/react";
 import { useFormatter, useNow, useTranslations } from "next-intl";
@@ -67,8 +69,8 @@ export default function JobQueueCard() {
   const [page, setPage] = useState(1);
   const [selectedJob, setSelectedJob] = useState<{ queue: string; jobId: string } | null>(null);
 
-  const { summaries } = useQueueSummaryQuery();
-  const { jobs } = useJobListQuery({
+  const { summaries, isLoading: isLoadingSummaries } = useQueueSummaryQuery();
+  const { jobs, isLoading: isLoadingJobs } = useJobListQuery({
     queue: queueFilter === ALL ? undefined : queueFilter,
     states: stateFilter ? STATE_FILTER_STATES[stateFilter] : undefined,
   });
@@ -157,7 +159,12 @@ export default function JobQueueCard() {
       variant={stateFilter === state ? "primary" : "soft"}
       onClick={() => handleStateFilter(state)}
     >
-      {t(`status.${state}`)}: {totals[state]}
+      {t(`status.${state}`)}:{" "}
+      {isLoadingSummaries ? (
+        <Skeleton className="inline-block h-3 w-4 rounded align-middle" />
+      ) : (
+        totals[state]
+      )}
     </ChipButton>
   );
 
@@ -247,69 +254,77 @@ export default function JobQueueCard() {
           </Select>
         </div>
 
-        <DataTable
-          aria-label={t("title")}
-          columns={[
-            {
-              key: "job",
-              label: t("table.job"),
-              isRowHeader: true,
-              render: (job: AdminJobRowDTO) => (
-                <div className="flex min-w-0 flex-col">
-                  <span className="font-medium">
-                    {t.has(`queues.${job.queue}`) ? t(`queues.${job.queue}`) : job.queue}
-                  </span>
-                  {job.target ? (
-                    <span
-                      className="text-muted max-w-28 truncate text-xs min-[400px]:max-w-40 sm:max-w-64"
-                      title={job.target}
-                    >
-                      {job.target}
+        {isLoadingJobs ? (
+          <div className="flex flex-col gap-2" data-testid="job-table-skeleton">
+            <SettingsRowsSkeleton rows={5} />
+          </div>
+        ) : (
+          <DataTable
+            aria-label={t("title")}
+            columns={[
+              {
+                key: "job",
+                label: t("table.job"),
+                isRowHeader: true,
+                render: (job: AdminJobRowDTO) => (
+                  <div className="flex min-w-0 flex-col">
+                    <span className="font-medium">
+                      {t.has(`queues.${job.queue}`) ? t(`queues.${job.queue}`) : job.queue}
                     </span>
-                  ) : null}
-                </div>
-              ),
-            },
-            {
-              key: "status",
-              label: t("table.status"),
-              render: (job: AdminJobRowDTO) => (
-                <JobStatusChip isHanging={job.isHanging} state={job.state} />
-              ),
-            },
-            {
-              key: "step",
-              hideOnNarrow: true,
-              label: t("table.step"),
-              className: "text-sm",
-              render: (job: AdminJobRowDTO) =>
-                job.state === "active" && job.step ? formatStep(job.step, t) : "-",
-            },
-            {
-              key: "duration",
-              hideOnNarrow: true,
-              label: t("table.duration"),
-              className: "text-sm",
-              render: (job: AdminJobRowDTO) =>
-                job.state === "delayed" && job.runAt !== null
-                  ? t("table.runsAt", {
-                      time: format.relativeTime(new Date(job.runAt), now),
-                    })
-                  : formatDuration(job.durationMs),
-            },
-            {
-              key: "created",
-              hideOnNarrow: true,
-              label: t("table.created"),
-              className: "text-muted text-xs",
-              render: (job: AdminJobRowDTO) => format.relativeTime(new Date(job.createdAt), now),
-            },
-          ]}
-          emptyState={t("empty")}
-          rowKey={(job: AdminJobRowDTO) => `${job.queue}:${job.id}`}
-          rows={pageJobs}
-          onRowAction={(job: AdminJobRowDTO) => setSelectedJob({ queue: job.queue, jobId: job.id })}
-        />
+                    {job.target ? (
+                      <span
+                        className="text-muted max-w-28 truncate text-xs min-[400px]:max-w-40 sm:max-w-64"
+                        title={job.target}
+                      >
+                        {job.target}
+                      </span>
+                    ) : null}
+                  </div>
+                ),
+              },
+              {
+                key: "status",
+                label: t("table.status"),
+                render: (job: AdminJobRowDTO) => (
+                  <JobStatusChip isHanging={job.isHanging} state={job.state} />
+                ),
+              },
+              {
+                key: "step",
+                hideOnNarrow: true,
+                label: t("table.step"),
+                className: "text-sm",
+                render: (job: AdminJobRowDTO) =>
+                  job.state === "active" && job.step ? formatStep(job.step, t) : "-",
+              },
+              {
+                key: "duration",
+                hideOnNarrow: true,
+                label: t("table.duration"),
+                className: "text-sm",
+                render: (job: AdminJobRowDTO) =>
+                  job.state === "delayed" && job.runAt !== null
+                    ? t("table.runsAt", {
+                        time: format.relativeTime(new Date(job.runAt), now),
+                      })
+                    : formatDuration(job.durationMs),
+              },
+              {
+                key: "created",
+                hideOnNarrow: true,
+                label: t("table.created"),
+                className: "text-muted text-xs",
+                render: (job: AdminJobRowDTO) => format.relativeTime(new Date(job.createdAt), now),
+              },
+            ]}
+            emptyState={t("empty")}
+            rowKey={(job: AdminJobRowDTO) => `${job.queue}:${job.id}`}
+            rows={pageJobs}
+            onRowAction={(job: AdminJobRowDTO) =>
+              setSelectedJob({ queue: job.queue, jobId: job.id })
+            }
+          />
+        )}
 
         {totalPages > 1 ? (
           <div className="flex justify-center">
