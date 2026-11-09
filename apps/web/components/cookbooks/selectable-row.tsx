@@ -15,11 +15,7 @@ type SelectableRowProps = Omit<ComponentProps<"div">, "children" | "onClick" | "
 /**
  * One thing in a cookbook panel, in or out.
  *
- * Every list in this feature asks the same question — is this in the cookbook
- * or not — so they all ask it the same way, with the app's `RoundCheckbox`, the
- * control the groceries panel ticks its items with. A second one drawn by hand
- * here was the reason ticking a cookbook and ticking a grocery animated
- * differently.
+ * Ticks with `RoundCheckbox`, the control groceries use, so both animate alike.
  *
  * The whole row is the target, so the checkbox has to be told apart from it or
  * a tap on the control would toggle twice — once from the control, once from
