@@ -15,21 +15,10 @@ export function useStoresSubscription() {
   const trpc = useTRPC();
   const queryClient = useQueryClient();
   const storesKey = trpc.stores.list.queryKey();
-  const setStoresData = (updater: (prev: StoresData | undefined) => StoresData | undefined) => {
-    queryClient.setQueryData<StoresData>(storesKey, updater);
-  };
-  const invalidate = () => {
-    queryClient.invalidateQueries({ queryKey: storesKey });
-  };
   const aisleLinksKey = trpc.stores.aisleLinks.queryKey();
 
   // A lagged subscription refetches the stores and the links that hang off them.
-  const lag = {
-    onLag: () => {
-      invalidate();
-      void queryClient.invalidateQueries({ queryKey: aisleLinksKey });
-    },
-  };
+  const lag = { lagQueryKeys: [storesKey, aisleLinksKey] };
 
   /**
    * A Store's aisles changed: the links of an aisle it no longer has went
@@ -50,7 +39,7 @@ export function useStoresSubscription() {
   useRealtimeSubscription<Payload<"created">>(trpc.stores.onCreated, {
     ...lag,
     onEvent: ({ store }) => {
-      setStoresData((prev) => {
+      queryClient.setQueryData<StoresData>(storesKey, (prev) => {
         if (!prev) return [store];
         const exists = prev.some((s) => s.id === store.id);
 
@@ -66,7 +55,7 @@ export function useStoresSubscription() {
   useRealtimeSubscription<Payload<"updated">>(trpc.stores.onUpdated, {
     ...lag,
     onEvent: ({ store }) => {
-      setStoresData((prev) => {
+      queryClient.setQueryData<StoresData>(storesKey, (prev) => {
         if (!prev) return prev;
 
         return prev.map((s) => (s.id === store.id ? { ...s, ...store } : s));
@@ -78,7 +67,7 @@ export function useStoresSubscription() {
   useRealtimeSubscription<Payload<"deleted">>(trpc.stores.onDeleted, {
     ...lag,
     onEvent: ({ storeId }) => {
-      setStoresData((prev) => {
+      queryClient.setQueryData<StoresData>(storesKey, (prev) => {
         if (!prev) return prev;
 
         return prev.filter((s) => s.id !== storeId);
@@ -90,7 +79,7 @@ export function useStoresSubscription() {
   useRealtimeSubscription<Payload<"reordered">>(trpc.stores.onReordered, {
     ...lag,
     onEvent: ({ stores }) => {
-      setStoresData((prev) => {
+      queryClient.setQueryData<StoresData>(storesKey, (prev) => {
         if (!prev) return stores;
         const storeMap = new Map(prev.map((s) => [s.id, s]));
         const updatedStores = stores.map((incoming) => {

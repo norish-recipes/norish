@@ -14,13 +14,7 @@ export function usePantryMutations(): PantryMutationsResult {
   const trpc = useTRPC();
   const queryClient = useQueryClient();
 
-  const setPantryData = (updater: (prev: PantryData | undefined) => PantryData | undefined) => {
-    queryClient.setQueryData<PantryData>(trpc.pantry.list.queryKey(), updater);
-  };
-
-  const invalidate = () => {
-    queryClient.invalidateQueries({ queryKey: trpc.pantry.list.queryKey() });
-  };
+  const pantryKey = trpc.pantry.list.queryKey();
 
   const addMutation = useMutation(trpc.pantry.add.mutationOptions());
   const { mutate: mutateAdd } = addMutation;
@@ -41,7 +35,7 @@ export function usePantryMutations(): PantryMutationsResult {
     const name = typeof food === "string" ? food.trim() : food.name;
     const payload = picked ? { id, ingredientId: picked.ingredientId } : { id, name };
     const insertOptimistic = () =>
-      setPantryData((prev) =>
+      queryClient.setQueryData<PantryData>(pantryKey, (prev) =>
         mergePantryAdded(prev ?? [], {
           id,
           // The member is not known here, any more than a typed name's
@@ -62,7 +56,11 @@ export function usePantryMutations(): PantryMutationsResult {
         onSuccess: (heldId) => {
           // The household already had the food: the server answered with
           // that item's id, and the tentative row is one too many.
-          if (heldId !== id) setPantryData((prev) => mergePantryRemoved(prev ?? [], id));
+          if (heldId !== id) {
+            queryClient.setQueryData<PantryData>(pantryKey, (prev) =>
+              mergePantryRemoved(prev ?? [], id)
+            );
+          }
           resolve(heldId);
         },
         onError: (error) => {
@@ -72,7 +70,7 @@ export function usePantryMutations(): PantryMutationsResult {
             return;
           }
 
-          invalidate();
+          void queryClient.invalidateQueries({ queryKey: pantryKey });
           reject(error);
         },
       });
@@ -80,8 +78,15 @@ export function usePantryMutations(): PantryMutationsResult {
   };
 
   const removePantryIngredient = (id: string) => {
-    setPantryData((prev) => mergePantryRemoved(prev ?? [], id));
-    mutateRemove({ id }, { onError: invalidateUnlessPreserved(invalidate) });
+    queryClient.setQueryData<PantryData>(pantryKey, (prev) => mergePantryRemoved(prev ?? [], id));
+    mutateRemove(
+      { id },
+      {
+        onError: invalidateUnlessPreserved(() =>
+          queryClient.invalidateQueries({ queryKey: pantryKey })
+        ),
+      }
+    );
   };
 
   return {

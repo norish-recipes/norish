@@ -28,7 +28,6 @@ export { usePantrySubscription } from "./use-pantry-subscription";
 export { usePantrySuggestions } from "./use-pantry-suggestions";
 export { useRecurrenceDetection } from "./use-recurrence-detection";
 export {
-  aisleKey,
   mergeAisleFiling,
   useFileGroceryName,
   useStoreAisles,
@@ -38,7 +37,6 @@ export {
 } from "./use-store-aisles";
 export {
   PENDING_LINK_MAX_AGE_MS,
-  priceKey,
   useLinkFor,
   useStorePrices,
   useStorePricesSubscription,

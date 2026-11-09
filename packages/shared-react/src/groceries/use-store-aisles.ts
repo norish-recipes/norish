@@ -18,10 +18,7 @@ export type StoreAislesData = AisleLinkDto[];
  * added offline has no Ingredient until the server has resolved it, and is
  * unfiled until then.
  */
-export function aisleKey(
-  storeId: string | null,
-  ingredientId: string | null | undefined
-): string | null {
+function aisleKey(storeId: string | null, ingredientId: string | null | undefined): string | null {
   return storeId && ingredientId ? aisleLinkKey(storeId, ingredientId) : null;
 }
 

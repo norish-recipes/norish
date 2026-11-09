@@ -29,10 +29,7 @@ export const PENDING_LINK_MAX_AGE_MS = 5 * 60 * 1000;
  * grocery added offline has no Ingredient until the server has resolved it,
  * and has no price until then either.
  */
-export function priceKey(
-  storeId: string | null,
-  ingredientId: string | null | undefined
-): string | null {
+function priceKey(storeId: string | null, ingredientId: string | null | undefined): string | null {
   return storeId && ingredientId ? productLinkKey(storeId, ingredientId) : null;
 }
 
