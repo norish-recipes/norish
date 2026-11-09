@@ -352,256 +352,245 @@ export function useGroceriesMutations(): GroceriesMutationsResult {
         )
     );
 
-  const { mutate: mutateCreate } = useMutation(
-    trpc.groceries.create.mutationOptions({
-      ...settles,
-      onMutate: (rows) => {
-        const groceries = held()?.groceries ?? [];
-        // The id the row was sent with; a server-side duplicate merge may still answer another.
-        const optimistic = rows.map((row) =>
-          createOptimisticGrocery({
-            id: row.id ?? createClientId(),
-            name: row.name,
-            amount: typeof row.amount === "number" ? row.amount : null,
-            purchaseAmount: row.purchaseAmount,
-            unit: row.unit,
-            isDone: row.isDone ?? false,
-            storeId: row.storeId ?? findCachedStoreIdForName(row.name, groceries),
-          })
-        );
+  // Built before the first useMutation: options passed to trpc between hooks would keep the React
+  // Compiler from memoising anything they capture, and every action would be new each render.
+  const createOptions = trpc.groceries.create.mutationOptions({
+    ...settles,
+    onMutate: (rows) => {
+      const groceries = held()?.groceries ?? [];
+      // The id the row was sent with; a server-side duplicate merge may still answer another.
+      const optimistic = rows.map((row) =>
+        createOptimisticGrocery({
+          id: row.id ?? createClientId(),
+          name: row.name,
+          amount: typeof row.amount === "number" ? row.amount : null,
+          purchaseAmount: row.purchaseAmount,
+          unit: row.unit,
+          isDone: row.isDone ?? false,
+          storeId: row.storeId ?? findCachedStoreIdForName(row.name, groceries),
+        })
+      );
 
-        return writeOver(
-          (prev) => ({
-            ...prev,
-            groceries: applyCreatedGroceriesToCache(prev.groceries, optimistic),
-          }),
-          optimistic
-        );
-      },
-      onSuccess: (result: CreateGroceriesResult, _rows, was) => reconcileCreated(result, was),
-    })
-  );
-  // The same create, from rows already worked out: they go on top as they are.
-  const { mutateAsync: mutateCreateMany } = useMutation(
-    trpc.groceries.create.mutationOptions({
-      onSettled: settles.onSettled,
-      onMutate: (rows) => {
-        const optimistic = rows.map((row) =>
-          createOptimisticGrocery({
-            id: row.id ?? createClientId(),
-            name: row.name,
-            amount: typeof row.amount === "number" ? row.amount : null,
-            unit: row.unit,
-            isDone: row.isDone ?? false,
-            storeId: null,
-            recipeIngredientId: row.recipeIngredientId ?? null,
-          })
-        );
-
-        return writeOver(
-          (prev) => ({ ...prev, groceries: [...optimistic, ...prev.groceries] }),
-          optimistic
-        );
-      },
-      onSuccess: (result: CreateGroceriesResult, _rows, was) => reconcileCreated(result, was),
-      onError: (error, _rows, was) =>
-        rejected(error, was, "The groceries were not saved. Please try again."),
-    })
-  );
-  const { mutate: mutateCreateRecurring } = useMutation(
-    trpc.groceries.createRecurring.mutationOptions({
-      ...settles,
-      // Nothing is written before the answer, which says where the new line goes.
-      onMutate: () => hold(),
-      onSuccess: (result: CreateRecurringResult) =>
-        setGroceriesData((prev) => prev && applyRecurringCreatedToCache(prev, result)),
-    })
-  );
-  const { mutate: mutateToggle } = useMutation(
-    trpc.groceries.toggle.mutationOptions({
-      ...settles,
-      // The version is bumped, so a follow-up write to the row sends the one this write leaves.
-      onMutate: ({ groceries: rows, isDone }) => {
-        const ids = new Set(rows.map((row) => row.id));
-
-        return writeOver((prev) => ({
+      return writeOver(
+        (prev) => ({
           ...prev,
-          groceries: prev.groceries.map((g) =>
-            ids.has(g.id) ? { ...g, isDone, version: g.version + 1 } : g
-          ),
-        }));
-      },
-    })
-  );
-  const { mutate: mutateCheckRecurring } = useMutation(
-    trpc.groceries.checkRecurring.mutationOptions({
-      ...settles,
-      onMutate: ({ recurringGroceryId, groceryId, isDone }) =>
-        writeOver((prev) => {
-          const groceries = prev.groceries.map((g) =>
-            g.id === groceryId ? { ...g, isDone, version: g.version + 1 } : g
-          );
-          const recurring = prev.recurringGroceries.find((r) => r.id === recurringGroceryId);
-
-          if (!isDone || !recurring) return { ...prev, groceries };
-
-          const nextPlannedFor = calculateNextOccurrence(
-            recurrencePatternOf(recurring),
-            recurring.nextPlannedFor,
-            recurring.nextPlannedFor
-          );
-
-          return {
-            ...prev,
-            groceries,
-            recurringGroceries: prev.recurringGroceries.map((r) =>
-              r.id === recurringGroceryId
-                ? {
-                    ...r,
-                    nextPlannedFor,
-                    lastCheckedDate: getTodayString(),
-                    version: r.version + 1,
-                  }
-                : r
-            ),
-          };
+          groceries: applyCreatedGroceriesToCache(prev.groceries, optimistic),
         }),
-    })
-  );
-  const { mutate: mutateUpdate } = useMutation(
-    trpc.groceries.update.mutationOptions({
-      ...settles,
-      onMutate: ({ groceryId, raw, storeId, purchaseAmount }) => {
-        const edit = parse(raw);
+        optimistic
+      );
+    },
+    onSuccess: (result: CreateGroceriesResult, _rows, was) => reconcileCreated(result, was),
+  });
+  // The same create, from rows already worked out: they go on top as they are.
+  const createManyOptions = trpc.groceries.create.mutationOptions({
+    onSettled: settles.onSettled,
+    onMutate: (rows) => {
+      const optimistic = rows.map((row) =>
+        createOptimisticGrocery({
+          id: row.id ?? createClientId(),
+          name: row.name,
+          amount: typeof row.amount === "number" ? row.amount : null,
+          unit: row.unit,
+          isDone: row.isDone ?? false,
+          storeId: null,
+          recipeIngredientId: row.recipeIngredientId ?? null,
+        })
+      );
 
-        return writeOver((prev) => ({
+      return writeOver(
+        (prev) => ({ ...prev, groceries: [...optimistic, ...prev.groceries] }),
+        optimistic
+      );
+    },
+    onSuccess: (result: CreateGroceriesResult, _rows, was) => reconcileCreated(result, was),
+    onError: (error, _rows, was) =>
+      rejected(error, was, "The groceries were not saved. Please try again."),
+  });
+  const createRecurringOptions = trpc.groceries.createRecurring.mutationOptions({
+    ...settles,
+    // Nothing is written before the answer, which says where the new line goes.
+    onMutate: () => hold(),
+    onSuccess: (result: CreateRecurringResult) =>
+      setGroceriesData((prev) => prev && applyRecurringCreatedToCache(prev, result)),
+  });
+  const toggleOptions = trpc.groceries.toggle.mutationOptions({
+    ...settles,
+    // The version is bumped, so a follow-up write to the row sends the one this write leaves.
+    onMutate: ({ groceries: rows, isDone }) => {
+      const ids = new Set(rows.map((row) => row.id));
+
+      return writeOver((prev) => ({
+        ...prev,
+        groceries: prev.groceries.map((g) =>
+          ids.has(g.id) ? { ...g, isDone, version: g.version + 1 } : g
+        ),
+      }));
+    },
+  });
+  const checkRecurringOptions = trpc.groceries.checkRecurring.mutationOptions({
+    ...settles,
+    onMutate: ({ recurringGroceryId, groceryId, isDone }) =>
+      writeOver((prev) => {
+        const groceries = prev.groceries.map((g) =>
+          g.id === groceryId ? { ...g, isDone, version: g.version + 1 } : g
+        );
+        const recurring = prev.recurringGroceries.find((r) => r.id === recurringGroceryId);
+
+        if (!isDone || !recurring) return { ...prev, groceries };
+
+        const nextPlannedFor = calculateNextOccurrence(
+          recurrencePatternOf(recurring),
+          recurring.nextPlannedFor,
+          recurring.nextPlannedFor
+        );
+
+        return {
           ...prev,
-          groceries: prev.groceries.map((g) =>
-            g.id === groceryId ? withEdit(g, edit, storeId, purchaseAmount) : g
-          ),
-        }));
-      },
-    })
-  );
-  const { mutate: mutateUpdateRecurring } = useMutation(
-    trpc.groceries.updateRecurring.mutationOptions({
-      ...settles,
-      onMutate: ({ recurringGroceryId, groceryId, storeId, purchaseAmount, data }) =>
-        writeOver((prev) => ({
-          ...prev,
-          groceries: prev.groceries.map((g) =>
-            g.id === groceryId ? withEdit(g, data, storeId, purchaseAmount) : g
-          ),
+          groceries,
           recurringGroceries: prev.recurringGroceries.map((r) =>
-            r.id === recurringGroceryId ? { ...r, ...data, version: r.version + 1 } : r
+            r.id === recurringGroceryId
+              ? {
+                  ...r,
+                  nextPlannedFor,
+                  lastCheckedDate: getTodayString(),
+                  version: r.version + 1,
+                }
+              : r
           ),
-        })),
-    })
-  );
+        };
+      }),
+  });
+  const updateOptions = trpc.groceries.update.mutationOptions({
+    ...settles,
+    onMutate: ({ groceryId, raw, storeId, purchaseAmount }) => {
+      const edit = parse(raw);
+
+      return writeOver((prev) => ({
+        ...prev,
+        groceries: prev.groceries.map((g) =>
+          g.id === groceryId ? withEdit(g, edit, storeId, purchaseAmount) : g
+        ),
+      }));
+    },
+  });
+  const updateRecurringOptions = trpc.groceries.updateRecurring.mutationOptions({
+    ...settles,
+    onMutate: ({ recurringGroceryId, groceryId, storeId, purchaseAmount, data }) =>
+      writeOver((prev) => ({
+        ...prev,
+        groceries: prev.groceries.map((g) =>
+          g.id === groceryId ? withEdit(g, data, storeId, purchaseAmount) : g
+        ),
+        recurringGroceries: prev.recurringGroceries.map((r) =>
+          r.id === recurringGroceryId ? { ...r, ...data, version: r.version + 1 } : r
+        ),
+      })),
+  });
   // One atomic write: deleting the recurring row and the grocery's edit commit together, instead
   // of racing two version-guarded writes against the same rows.
-  const { mutate: mutateDetachRecurring } = useMutation(
-    trpc.groceries.detachRecurring.mutationOptions({
-      ...settles,
-      onMutate: ({ recurringGroceryId, groceryId, raw, storeId, purchaseAmount }) => {
-        const edit = parse(raw);
+  const detachRecurringOptions = trpc.groceries.detachRecurring.mutationOptions({
+    ...settles,
+    onMutate: ({ recurringGroceryId, groceryId, raw, storeId, purchaseAmount }) => {
+      const edit = parse(raw);
 
-        return writeOver((prev) => ({
-          ...prev,
-          recurringGroceries: prev.recurringGroceries.filter((r) => r.id !== recurringGroceryId),
-          groceries: prev.groceries.map((g) =>
-            g.id === groceryId
-              ? { ...withEdit(g, edit, storeId, purchaseAmount), recurringGroceryId: null }
-              : g
-          ),
-        }));
-      },
-    })
-  );
-  const { mutate: mutateDelete } = useMutation(
-    trpc.groceries.delete.mutationOptions({
-      ...settles,
-      onMutate: ({ groceries: rows }) => {
-        const ids = new Set(rows.map((row) => row.id));
+      return writeOver((prev) => ({
+        ...prev,
+        recurringGroceries: prev.recurringGroceries.filter((r) => r.id !== recurringGroceryId),
+        groceries: prev.groceries.map((g) =>
+          g.id === groceryId
+            ? { ...withEdit(g, edit, storeId, purchaseAmount), recurringGroceryId: null }
+            : g
+        ),
+      }));
+    },
+  });
+  const deleteOptions = trpc.groceries.delete.mutationOptions({
+    ...settles,
+    onMutate: ({ groceries: rows }) => {
+      const ids = new Set(rows.map((row) => row.id));
 
-        return writeOver((prev) => ({
-          ...prev,
-          groceries: prev.groceries.filter((g) => !ids.has(g.id)),
-        }));
-      },
-    })
-  );
-  const { mutate: mutateDeleteRecurring } = useMutation(
-    trpc.groceries.deleteRecurring.mutationOptions({
-      ...settles,
-      onMutate: ({ recurringGroceryId }) =>
-        writeOver((prev) => ({
-          ...prev,
-          recurringGroceries: prev.recurringGroceries.filter((r) => r.id !== recurringGroceryId),
-          groceries: prev.groceries.filter((g) => g.recurringGroceryId !== recurringGroceryId),
-        })),
-    })
-  );
-  const { mutate: mutateAssignToStore } = useMutation(
-    trpc.groceries.assignToStore.mutationOptions({
-      ...settles,
-      onMutate: ({ groceryId, storeId }) =>
-        writeOver((prev) => ({
-          ...prev,
-          groceries: prev.groceries.map((g) =>
-            g.id === groceryId ? { ...g, storeId, version: g.version + 1 } : g
-          ),
-        })),
-    })
-  );
-  const { mutate: mutateReorder } = useMutation(
-    trpc.groceries.reorderInStore.mutationOptions({
-      ...settles,
-      onMutate: ({ updates }) => {
-        const byId = new Map(updates.map((update) => [update.id, update]));
+      return writeOver((prev) => ({
+        ...prev,
+        groceries: prev.groceries.filter((g) => !ids.has(g.id)),
+      }));
+    },
+  });
+  const deleteRecurringOptions = trpc.groceries.deleteRecurring.mutationOptions({
+    ...settles,
+    onMutate: ({ recurringGroceryId }) =>
+      writeOver((prev) => ({
+        ...prev,
+        recurringGroceries: prev.recurringGroceries.filter((r) => r.id !== recurringGroceryId),
+        groceries: prev.groceries.filter((g) => g.recurringGroceryId !== recurringGroceryId),
+      })),
+  });
+  const assignToStoreOptions = trpc.groceries.assignToStore.mutationOptions({
+    ...settles,
+    onMutate: ({ groceryId, storeId }) =>
+      writeOver((prev) => ({
+        ...prev,
+        groceries: prev.groceries.map((g) =>
+          g.id === groceryId ? { ...g, storeId, version: g.version + 1 } : g
+        ),
+      })),
+  });
+  const reorderOptions = trpc.groceries.reorderInStore.mutationOptions({
+    ...settles,
+    onMutate: ({ updates }) => {
+      const byId = new Map(updates.map((update) => [update.id, update]));
 
-        return writeOver((prev) => ({
-          ...prev,
-          groceries: prev.groceries
-            .map((g) => {
-              const update = byId.get(g.id);
+      return writeOver((prev) => ({
+        ...prev,
+        groceries: prev.groceries
+          .map((g) => {
+            const update = byId.get(g.id);
 
-              if (!update) return g;
+            if (!update) return g;
 
-              return {
-                ...g,
-                sortOrder: update.sortOrder,
-                version: g.version + 1,
-                ...(update.storeId !== undefined ? { storeId: update.storeId } : {}),
-              };
-            })
-            .sort((a, b) => (a.sortOrder ?? 0) - (b.sortOrder ?? 0)),
-        }));
-      },
-    })
-  );
-  const { mutate: mutateMarkAllDone } = useMutation(
-    trpc.groceries.markAllDone.mutationOptions({
-      ...settles,
-      onMutate: ({ storeId }) =>
-        writeOver((prev) => ({
-          ...prev,
-          groceries: prev.groceries.map((g) =>
-            g.storeId === storeId && !g.isDone ? { ...g, isDone: true, version: g.version + 1 } : g
-          ),
-        })),
-    })
-  );
-  const { mutate: mutateDeleteDone } = useMutation(
-    trpc.groceries.deleteDone.mutationOptions({
-      ...settles,
-      onMutate: ({ storeId }) =>
-        writeOver((prev) => ({
-          ...prev,
-          groceries: prev.groceries.filter((g) => !(g.storeId === storeId && g.isDone)),
-        })),
-    })
-  );
+            return {
+              ...g,
+              sortOrder: update.sortOrder,
+              version: g.version + 1,
+              ...(update.storeId !== undefined ? { storeId: update.storeId } : {}),
+            };
+          })
+          .sort((a, b) => (a.sortOrder ?? 0) - (b.sortOrder ?? 0)),
+      }));
+    },
+  });
+  const markAllDoneOptions = trpc.groceries.markAllDone.mutationOptions({
+    ...settles,
+    onMutate: ({ storeId }) =>
+      writeOver((prev) => ({
+        ...prev,
+        groceries: prev.groceries.map((g) =>
+          g.storeId === storeId && !g.isDone ? { ...g, isDone: true, version: g.version + 1 } : g
+        ),
+      })),
+  });
+  const deleteDoneOptions = trpc.groceries.deleteDone.mutationOptions({
+    ...settles,
+    onMutate: ({ storeId }) =>
+      writeOver((prev) => ({
+        ...prev,
+        groceries: prev.groceries.filter((g) => !(g.storeId === storeId && g.isDone)),
+      })),
+  });
+
+  const { mutate: mutateCreate } = useMutation(createOptions);
+  const { mutateAsync: mutateCreateMany } = useMutation(createManyOptions);
+  const { mutate: mutateCreateRecurring } = useMutation(createRecurringOptions);
+  const { mutate: mutateToggle } = useMutation(toggleOptions);
+  const { mutate: mutateCheckRecurring } = useMutation(checkRecurringOptions);
+  const { mutate: mutateUpdate } = useMutation(updateOptions);
+  const { mutate: mutateUpdateRecurring } = useMutation(updateRecurringOptions);
+  const { mutate: mutateDetachRecurring } = useMutation(detachRecurringOptions);
+  const { mutate: mutateDelete } = useMutation(deleteOptions);
+  const { mutate: mutateDeleteRecurring } = useMutation(deleteRecurringOptions);
+  const { mutate: mutateAssignToStore } = useMutation(assignToStoreOptions);
+  const { mutate: mutateReorder } = useMutation(reorderOptions);
+  const { mutate: mutateMarkAllDone } = useMutation(markAllDoneOptions);
+  const { mutate: mutateDeleteDone } = useMutation(deleteDoneOptions);
 
   const createGrocery = (raw: string, storeId?: string | null, purchaseAmount?: number | null) => {
     const { name, amount, unit } = parse(raw);
