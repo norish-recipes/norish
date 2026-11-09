@@ -168,7 +168,7 @@ function createUnauthorizedLink<TRouter extends AnyTRPCRouter>(
  * conditional never resolves. A link over `AnyTRPCRouter` is a `TRPCLink` of
  * the concrete router too, so `createTRPCClientLinks` returns them typed.
  */
-function createHttpMutationLink(
+function createPlainHttpLink(
   getBaseUrl: () => string,
   getHeaders: () => HTTPHeaders
 ): TRPCLink<AnyTRPCRouter> {
@@ -202,7 +202,7 @@ function createHttpTransportLink(
     true: splitLink({
       condition: (op) => isNonJsonSerializable(op.input),
       true: createHttpFormDataMutationLink(getBaseUrl, getHeaders),
-      false: createHttpMutationLink(getBaseUrl, getHeaders),
+      false: createPlainHttpLink(getBaseUrl, getHeaders),
     }),
     false: splitLink({
       // These reads can carry a key being typed, which must not reach a URL and access logs.
@@ -213,10 +213,17 @@ function createHttpTransportLink(
         transformer: superjson,
         methodOverride: "POST",
       }),
-      false: httpBatchLink({
-        url: `${getBaseUrl()}/api/trpc`,
-        headers: createBatchRequestHeadersResolver(getHeaders),
-        transformer: superjson,
+      false: splitLink({
+        // A batch answers when its slowest read does, and these read the job queues or walk the
+        // ingredient catalogue: left in one, every setting that loads beside them waits for them.
+        condition: (op) =>
+          op.path.startsWith("admin.jobs.") || op.path.startsWith("admin.ingredientCatalogue."),
+        true: createPlainHttpLink(getBaseUrl, getHeaders),
+        false: httpBatchLink({
+          url: `${getBaseUrl()}/api/trpc`,
+          headers: createBatchRequestHeadersResolver(getHeaders),
+          transformer: superjson,
+        }),
       }),
     }),
   });

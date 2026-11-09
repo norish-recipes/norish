@@ -7,7 +7,7 @@ import { Description, Label, Radio, RadioGroup, toast } from "@heroui/react";
 import { useMutation, useQuery } from "@tanstack/react-query";
 import { useTranslations } from "next-intl";
 
-import { CatalogueAIRun, watchRun } from "./catalogue-ai-run";
+import { CatalogueAIRun, countsWhileOpen, watchRun } from "./catalogue-ai-run";
 
 const SCOPES = ["recipe-foods", "whole-catalogue"] as const;
 
@@ -22,8 +22,11 @@ export default function CleanUpCatalogue() {
   const trpc = useTRPC();
   const [isOpen, setIsOpen] = useState(false);
   const [scope, setScope] = useState<Scope>("recipe-foods");
+  const status = useQuery(
+    trpc.admin.ingredientCatalogue.cleanUpRunning.queryOptions(undefined, watchRun)
+  );
   const counts = useQuery(
-    trpc.admin.ingredientCatalogue.cleanUpCounts.queryOptions(undefined, watchRun)
+    trpc.admin.ingredientCatalogue.cleanUpCounts.queryOptions(undefined, countsWhileOpen(isOpen))
   );
   const cleanUp = useMutation(
     trpc.admin.ingredientCatalogue.cleanUp.mutationOptions({
@@ -39,11 +42,11 @@ export default function CleanUpCatalogue() {
           error,
           context: "admin-ai:clean-up-catalogue",
         }),
-      onSettled: () => void counts.refetch(),
+      onSettled: () => void status.refetch(),
     })
   );
   const count = counts.data?.[COUNT_OF[scope]] ?? 0;
-  const running = counts.data?.running ?? false;
+  const running = status.data?.running ?? false;
 
   return (
     <CatalogueAIRun

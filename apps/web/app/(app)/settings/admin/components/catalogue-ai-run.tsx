@@ -12,12 +12,18 @@ import { twMerge } from "tailwind-merge";
 
 import { useAdminSettingsContext } from "../context";
 
-/** A run's counts, read again on every open and watched while it runs, so the button comes back. */
+/** Whether a run is on, read on every visit and watched while it runs, so the button comes back. */
 export const watchRun = {
   refetchOnMount: "always" as const,
   refetchInterval: (query: { state: { data?: { running: boolean } } }) =>
     query.state.data?.running ? 5_000 : false,
 };
+
+/**
+ * A dialog's counts walk the whole catalogue, which takes a large one many seconds, and only the
+ * dialog shows them: read while it is open, and afresh on each open.
+ */
+export const countsWhileOpen = (isOpen: boolean) => ({ enabled: isOpen, staleTime: 0 });
 
 /**
  * An administrator's AI run over the catalogue (Clean up catalogue, Fill gaps): a setting row's
@@ -63,7 +69,7 @@ export function CatalogueAIRun({
       <AIButton
         fullWidth
         data-testid={testId}
-        isDisabled={!aiConfig?.enabled || !counted || running}
+        isDisabled={!aiConfig?.enabled || running}
         variant="tertiary"
         onPress={() => onOpenChange(true)}
       >

@@ -10,11 +10,13 @@ import "@testing-library/jest-dom";
 
 const mutate = vi.fn();
 const counts = vi.hoisted(() => ({ current: undefined as unknown }));
+const queries = vi.hoisted(() => [] as Array<{ enabled?: boolean }>);
 
 vi.mock("@/app/providers/trpc-provider", () => ({
   useTRPC: () => ({
     admin: {
       ingredientCatalogue: {
+        fillGapsRunning: { queryOptions: (_input: unknown, options: unknown) => options },
         fillGapsCounts: { queryOptions: (_input: unknown, options: unknown) => options },
         fillGaps: { mutationOptions: (options: unknown) => options },
       },
@@ -23,7 +25,11 @@ vi.mock("@/app/providers/trpc-provider", () => ({
 }));
 vi.mock("@tanstack/react-query", () => ({
   useMutation: () => ({ mutate, isPending: false }),
-  useQuery: () => ({ data: counts.current, refetch: vi.fn() }),
+  useQuery: (options: { enabled?: boolean }) => {
+    queries.push(options);
+
+    return { data: counts.current, refetch: vi.fn() };
+  },
 }));
 vi.mock("@/app/(app)/settings/admin/context", () => ({
   useAdminSettingsContext: () => ({ aiConfig: { enabled: true } }),
@@ -38,12 +44,25 @@ const { default: FillGaps } = await import("@/app/(app)/settings/admin/component
 
 beforeEach(() => {
   mutate.mockReset();
+  queries.length = 0;
   counts.current = { nutrition: 4, conversions: 0, icons: 2, running: false };
 });
 
 const box = (kind: string) => screen.getByRole("checkbox", { name: `kinds.${kind}` });
 
 describe("FillGaps", () => {
+  it("does not count the catalogue until its dialog opens", () => {
+    render(<FillGaps />);
+
+    expect(queries.filter((query) => query.enabled === false)).toHaveLength(1);
+    expect(queries.some((query) => query.enabled === true)).toBe(false);
+
+    queries.length = 0;
+    fireEvent.click(screen.getByTestId("fill-gaps"));
+
+    expect(queries.filter((query) => query.enabled === true)).toHaveLength(1);
+  });
+
   it("names each box's count and starts the run over the boxes picked", () => {
     render(<FillGaps />);
     fireEvent.click(screen.getByTestId("fill-gaps"));

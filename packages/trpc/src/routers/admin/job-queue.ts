@@ -28,13 +28,17 @@ import { router } from "../../trpc";
 
 const QueueNameSchema = z.enum(Object.values(QUEUE_NAMES) as [QueueName, ...QueueName[]]);
 
+/**
+ * Latest in a job's life first: the states are read one at a time, so a job that moves between
+ * two reads turns up in both, and it is listed under the first, where it ended up.
+ */
 const LISTABLE_STATES = [
-  "waiting",
-  "active",
-  "delayed",
   "completed",
   "failed",
+  "active",
+  "delayed",
   "prioritized",
+  "waiting",
 ] as const;
 
 const JobStateSchema = z.enum(LISTABLE_STATES);
@@ -46,6 +50,12 @@ const FAILED_REASON_DETAIL_LENGTH = 10_000;
 const MAX_JSON_STRING_LENGTH = 2048;
 const MAX_STACKTRACE_ENTRY_LENGTH = 5000;
 const MAX_LOG_LINES = 200;
+/**
+ * How far back each state of each queue is read when listing every queue. There are many queues
+ * and the monitor polls, so reading all of them to the full limit is most of the server's work on
+ * the admin page; picking one queue reads it to the full limit.
+ */
+const ALL_QUEUES_PER_STATE_LIMIT = 25;
 
 /**
  * Pretty-print a value as JSON, truncating long strings (e.g. base64
@@ -338,15 +348,7 @@ function toRowDTO(queueName: QueueName, job: Job, bullState: AdminJobState): Adm
   };
 }
 
-async function resolveState(
-  job: Job,
-  requestedStates?: ListableJobState[]
-): Promise<AdminJobState> {
-  // Fast path: a single-state filter already tells us the state
-  if (requestedStates?.length === 1) {
-    return requestedStates[0] as AdminJobState;
-  }
-
+async function resolveState(job: Job): Promise<AdminJobState> {
   try {
     return (await job.getState()) as AdminJobState;
   } catch {
@@ -368,6 +370,31 @@ async function getJobOrThrow(
   return { queue, job };
 }
 
+/** One queue's jobs in the given states, each read by state so none has to be asked its own. */
+async function listQueueRows(
+  name: QueueName,
+  queue: Queue,
+  states: ListableJobState[],
+  perState: number
+): Promise<AdminJobRowDTO[]> {
+  const byState = await Promise.all(
+    states.map(async (state) => ({ state, jobs: await queue.getJobs([state], 0, perState - 1) }))
+  );
+  const seen = new Set<string>();
+  const rows: AdminJobRowDTO[] = [];
+
+  for (const { state, jobs } of byState) {
+    for (const job of jobs) {
+      if (!job?.id || seen.has(job.id)) continue;
+
+      seen.add(job.id);
+      rows.push(toRowDTO(name, job, state));
+    }
+  }
+
+  return rows;
+}
+
 /**
  * List jobs across queues, newest first.
  */
@@ -386,18 +413,11 @@ const list = adminProcedure
       ? [{ name: input.queue, queue: getQueueByName(input.queue) }]
       : getAllQueueEntries();
 
-    const states = input.states ?? [...LISTABLE_STATES];
+    const states = LISTABLE_STATES.filter((state) => input.states?.includes(state) ?? true);
+    const perState = input.queue ? input.limit : Math.min(input.limit, ALL_QUEUES_PER_STATE_LIMIT);
 
     const perQueue = await Promise.all(
-      entries.map(async ({ name, queue }) => {
-        const jobs = await queue.getJobs(states, 0, input.limit - 1);
-
-        return Promise.all(
-          jobs
-            .filter((job): job is Job => Boolean(job?.id))
-            .map(async (job) => toRowDTO(name, job, await resolveState(job, input.states)))
-        );
-      })
+      entries.map(({ name, queue }) => listQueueRows(name, queue, states, perState))
     );
 
     return perQueue

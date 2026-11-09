@@ -17,6 +17,7 @@ import {
   DocumentMagnifyingGlassIcon,
   ExclamationCircleIcon,
   ExclamationTriangleIcon,
+  GlobeAltIcon,
   HomeIcon,
   KeyIcon,
   LinkIcon,
@@ -99,11 +100,19 @@ const tabCards = (shape: SettingsShape): Record<SettingsTab, CardPlaceholder[]> 
       description: true,
       rows: 2,
     },
+    { icon: GlobeAltIcon, section: "admin.pageRenderers", description: true, rows: 4 },
     { icon: SparklesIcon, section: "admin.aiProcessing", description: true, rows: 3 },
     { icon: QueueListIcon, section: "admin.jobQueue", rows: 3 },
     { icon: WrenchScrewdriverIcon, section: "admin.system", rows: 2 },
   ],
 });
+
+/** Grey rows standing in for what a settings card has not loaded yet. */
+export function SettingsRowsSkeleton({ rows }: { rows: number }) {
+  return Array.from({ length: rows }, (_, row) => (
+    <Skeleton key={row} className="h-12 w-full rounded-lg" />
+  ));
+}
 
 /**
  * A settings tab while it loads: its cards' real headers over grey rows. The route, the
@@ -129,9 +138,7 @@ export function SettingsTabSkeleton({ tab }: { tab: SettingsTab }) {
           icon={icon}
           title={section ? t(`${section}.title`) : <Skeleton className="h-6 w-48 rounded-lg" />}
         >
-          {Array.from({ length: rows }, (_, row) => (
-            <Skeleton key={row} className="h-12 w-full rounded-lg" />
-          ))}
+          <SettingsRowsSkeleton rows={rows} />
         </SettingsCard>
       ))}
     </div>

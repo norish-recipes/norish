@@ -7,7 +7,7 @@ import { Checkbox, CheckboxGroup, Description, Label, toast } from "@heroui/reac
 import { useMutation, useQuery } from "@tanstack/react-query";
 import { useTranslations } from "next-intl";
 
-import { CatalogueAIRun, watchRun } from "./catalogue-ai-run";
+import { CatalogueAIRun, countsWhileOpen, watchRun } from "./catalogue-ai-run";
 
 const KINDS = ["nutrition", "conversions", "icons"] as const;
 
@@ -20,8 +20,11 @@ export default function FillGaps() {
   const trpc = useTRPC();
   const [isOpen, setIsOpen] = useState(false);
   const [picked, setPicked] = useState<Kind[]>([]);
+  const status = useQuery(
+    trpc.admin.ingredientCatalogue.fillGapsRunning.queryOptions(undefined, watchRun)
+  );
   const counts = useQuery(
-    trpc.admin.ingredientCatalogue.fillGapsCounts.queryOptions(undefined, watchRun)
+    trpc.admin.ingredientCatalogue.fillGapsCounts.queryOptions(undefined, countsWhileOpen(isOpen))
   );
   const fillGaps = useMutation(
     trpc.admin.ingredientCatalogue.fillGaps.mutationOptions({
@@ -38,7 +41,7 @@ export default function FillGaps() {
           error,
           context: "admin-ai:fill-gaps",
         }),
-      onSettled: () => void counts.refetch(),
+      onSettled: () => void status.refetch(),
     })
   );
   const data = counts.data;
@@ -46,7 +49,7 @@ export default function FillGaps() {
   // Icons are null where the image provider cannot draw: not offered.
   const offered = KINDS.filter((kind) => data?.[kind] !== null);
   const chosen = picked.filter((kind) => offered.includes(kind) && countOf(kind) > 0);
-  const running = data?.running ?? false;
+  const running = status.data?.running ?? false;
 
   return (
     <CatalogueAIRun
