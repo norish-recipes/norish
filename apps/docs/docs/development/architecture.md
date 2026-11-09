@@ -22,7 +22,7 @@ norish/
 │   ├── landing/           # norish.dev
 │   └── quick-import-extension/  # Browser extension, a git submodule kept in its own repository
 ├── packages/
-│   ├── api/               # The server process, the import parser, CalDAV sync and video processing
+│   ├── api/               # Server startup, the import parser, CalDAV sync and video processing
 │   ├── auth/              # Better Auth, sessions and permission checks
 │   ├── config/            # Environment config and default reference data
 │   ├── db/                # Repositories, migrations and the Drizzle client
@@ -75,12 +75,13 @@ Web and mobile use the same layout. Web keeps its folders at the root of
 - Code two or more features use goes in the app's shared folders: `components/`,
   `hooks/` and `lib/` on web, `hooks/` and `lib/` on mobile.
 
-Imports run one way: shared folders, then features, then routes.
+Imports run one way: shared folders, then features, then routes. The one way
+back is shared code opening a panel through a feature's `index.ts`.
 
-On web and in shared-react only groceries has moved so far. Library and recipes,
-calendar, cookbooks, settings, imports, auth and share still live in web's
-`components/`, `hooks/`, `context/` and `stores/`, and in shared-react's `hooks/`
-and `contexts/`.
+On web and in shared-react only `groceries` has moved so far. `library`,
+`recipes`, `cookbooks`, `calendar`, `settings`, `imports`, `auth` and `share`
+still live in web's `components/`, `hooks/`, `context/` and `stores/`, and in
+shared-react's `hooks/` and `contexts/`.
 
 ### In shared-react
 
@@ -109,9 +110,9 @@ a domain. Lint enforces both.
 ### Contracts
 
 Clients and server both import `@norish/shared`. Its `src/contracts/` holds the
-DTO types, the zod schemas, the Realtime Catalogues (`contracts/realtime/`) and
-the recipe list's query inputs (`filter-contract.ts`, `list-queries.ts`). Its `src/lib/` holds helpers both sides run, such as the
-recurrence calculator. A type or schema both sides need goes here.
+DTO types, the zod schemas and the Realtime Catalogues (`contracts/realtime/`).
+Its `src/lib/` holds helpers both sides run, such as the recurrence calculator.
+A type or schema both sides need goes here.
 
 ### On the server
 
@@ -122,13 +123,12 @@ recurrence calculator. A type or schema both sides need goes here.
   `packages/shared-server`.
 - `packages/db/src/repositories/` holds every database query. Routers read and
   write through repositories, never with queries of their own.
-- `packages/shared-server` holds server logic several packages use: AI,
-  realtime, ingredients, the server config loader and the Valkey clients.
-- `packages/api` is the server process and the work that runs beside requests:
-  the HTTP and WebSocket server and the boot tasks (`startup/`), the import
-  parser (`parser/`), CalDAV sync (`caldav/`) and video processing (`video/`).
-- `packages/queue` runs background jobs. Jobs reach the parser through handlers
-  `packages/api` registers at boot.
+- `packages/api` holds what the server entry in `apps/web/server/` runs: the
+  HTTP server, which serves Next and attaches the tRPC WebSocket from
+  `packages/trpc`, and the boot tasks (`startup/`), the import parser
+  (`parser/`), CalDAV sync (`caldav/`) and video processing (`video/`).
+- `packages/queue` runs background jobs. Jobs reach the parser, CalDAV sync and
+  media cleanup through handlers `packages/api` registers at boot.
 
 ### The AI boundary
 
@@ -140,6 +140,7 @@ Everything under `packages/shared-server/src/ai/` is AI:
 - `enrichment/` holds the features that read a stored recipe and claim something
   about it, such as its allergens or its nutrition.
 - `resolution/` holds the features that decide which catalogue entry a name is.
+- `providers/` lists the models a provider offers, for admin settings.
 
 Recipe extraction uses AI but belongs to the import pipeline, so it lives with
 the parser in `packages/api/src/parser/`. A feature calls
@@ -149,9 +150,8 @@ it. It never builds a provider client or passes a finished prompt
 
 ## Decisions
 
-Each decision links its ADR where one exists.
 [CONTRIBUTING.md](https://github.com/norish-recipes/Norish/blob/main/CONTRIBUTING.md#app-architecture)
-gives the reasons for the rest.
+gives the reasons for decisions without an ADR.
 
 - Components read server data through hooks over the TanStack Query cache, the
   one copy on a client, which offline mode persists
@@ -190,9 +190,9 @@ The examples follow a grocery on the list. Other domains work the same way.
 ### A read
 
 A component asks a hook for what it draws. `useGroceryFor(id)` in
-`@norish/shared-react/groceries` calls `useQuery` with
-`trpc.groceries.list.queryOptions()` and a `select` that picks one row, so the
-component re-renders only when that row changes.
+`@norish/shared-react/groceries` takes `trpc` from `useTRPC()` and calls
+`useQuery` with `trpc.groceries.list.queryOptions()` and a `select` that picks
+one row, so the component re-renders only when that row changes.
 
 When the Query cache holds a fresh list, nothing leaves the client. Otherwise
 the tRPC links batch the read into an HTTP request to `/api/trpc`, which
@@ -262,13 +262,15 @@ sequenceDiagram
   else Offline
     L->>O: store the mutation
     L-->>M: Queued, onError keeps the change
-    O->>R: Recovery replays it once Live
+    O->>L: Recovery replays it once Live
+    L->>R: HTTP, the same operation id
   end
 ```
 
 ### A realtime update
 
-After the write, the procedure calls `groceries.publish("updated", payload)`.
+After the write, `toggleGroceriesData` in `groceries-helpers.ts` calls
+`groceries.publish("updated", { changedGroceries }, { householdKey })`.
 `groceries` is the server side of the groceries Realtime Catalogue, in
 `packages/shared-server/src/realtime/groceries.ts`. `publish` checks the payload
 against the catalogue, stamps the operation id, and runs one Valkey script that
@@ -281,7 +283,7 @@ channel. Each subscription procedure is one
 `packages/trpc/src/realtime-subscription.ts`, and sends the event as an Envelope
 over the WebSocket.
 
-On the client, `GroceriesRoot` mounts `useGroceriesSubscription`, which builds
+On web, `GroceriesRoot` mounts `useGroceriesSubscription`, which builds
 each subscription on `useRealtimeSubscription`. Its `updated` handler merges the
 changed rows into the cached list by id with `setQueryData`, and the components
 whose slice changed re-render. The client that made the change gets the event
@@ -301,6 +303,3 @@ sequenceDiagram
   U->>Q: merge the changed rows by id
   Q-->>C: re-render if its slice changed
 ```
-
-A subscription that falls behind ends Lagged. The client starts a fresh one and
-reads the list again once it is live.
