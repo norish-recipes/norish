@@ -4,23 +4,30 @@ import { useEffect } from "react";
 import { usePathname } from "next/navigation";
 import { PantryView } from "@/components/groceries";
 import { usePrefersReducedMotion } from "@/hooks/use-prefers-reduced-motion";
-import { useQuery } from "@tanstack/react-query";
 import { AnimatePresence, motion } from "motion/react";
 
 import {
   useGroceriesSubscription,
   useGroceriesUiStore,
+  usePantryQuery,
+  usePantrySuggestions,
   useStoreAislesSubscription,
   useStorePricesSubscription,
   useStoresSubscription,
 } from "@norish/shared-react/groceries";
-import { useConnectivity } from "@norish/shared-react/offline/react";
-import { useTRPC } from "@norish/shared-react/trpc";
 
 import type { GroceriesView } from "./components/groceries-header";
 import AddGroceryButton from "./components/add-grocery-button";
 import { GroceriesHeader, VIEW_TRANSITION } from "./components/groceries-header";
 import { GroceriesPage } from "./components/groceries-page";
+
+/** Holds the Pantry's reads for its first visit; their changes render nothing but this. */
+function PantryReads() {
+  usePantryQuery();
+  usePantrySuggestions();
+
+  return null;
+}
 
 /** How far a view slides as it comes and goes, from its own side of the switch. */
 const SLIDE_PX = 24;
@@ -32,16 +39,7 @@ const SLIDE_PX = 24;
 export function GroceriesScreen() {
   const view: GroceriesView = usePathname()?.startsWith("/groceries/pantry") ? "pantry" : "list";
   const offset = usePrefersReducedMotion() ? 0 : view === "pantry" ? SLIDE_PX : -SLIDE_PX;
-  const { isOffline } = useConnectivity();
-  const trpc = useTRPC();
 
-  // Observed so they stay cached and current, but a change to them never renders the screen.
-  useQuery({ ...trpc.pantry.list.queryOptions(), notifyOnChangeProps: [] });
-  useQuery({
-    ...trpc.pantry.suggestions.queryOptions(),
-    enabled: !isOffline,
-    notifyOnChangeProps: [],
-  });
   // The list's realtime, kept open on both views; the Offline Cache keeps its reads (gcTime).
   useGroceriesSubscription();
   useStoresSubscription();
@@ -55,6 +53,7 @@ export function GroceriesScreen() {
 
   return (
     <div className="flex min-h-0 w-full flex-1 flex-col">
+      <PantryReads />
       <GroceriesHeader view={view} />
       <div className="relative flex min-h-0 w-full flex-1 flex-col">
         <AnimatePresence initial={false} mode="popLayout">

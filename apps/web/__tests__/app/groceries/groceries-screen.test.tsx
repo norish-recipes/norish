@@ -1,4 +1,3 @@
-import { Profiler } from "react";
 import { GroceriesScreen } from "@/app/(app)/groceries/groceries-screen";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { act, render, waitFor } from "@testing-library/react";
@@ -6,7 +5,16 @@ import { describe, expect, it, vi } from "vitest";
 
 import { useGroceriesUiStore } from "@norish/shared-react/groceries";
 
-vi.mock("next/navigation", () => ({ usePathname: () => "/groceries" }));
+const screen = vi.hoisted(() => ({ renders: 0 }));
+
+// The screen reads its path once a render, and nothing under it does: this counts its renders.
+vi.mock("next/navigation", () => ({
+  usePathname: () => {
+    screen.renders += 1;
+
+    return "/groceries";
+  },
+}));
 vi.mock("@/components/groceries", () => ({ PantryView: () => null }));
 vi.mock("@/app/(app)/groceries/components/groceries-page", () => ({ GroceriesPage: () => null }));
 vi.mock("@/app/(app)/groceries/components/groceries-header", () => ({
@@ -38,20 +46,17 @@ vi.mock("@norish/shared-react/trpc", () => {
 describe("GroceriesScreen", () => {
   it("holds the Pantry's reads for its first visit without rendering again when they change", async () => {
     const queryClient = new QueryClient();
-    let renders = 0;
+    const read = (key: string) => queryClient.getQueryCache().find({ queryKey: ["pantry", key] });
 
     render(
       <QueryClientProvider client={queryClient}>
-        <Profiler id="screen" onRender={() => renders++}>
-          <GroceriesScreen />
-        </Profiler>
+        <GroceriesScreen />
       </QueryClientProvider>
     );
 
-    const pantry = () => queryClient.getQueryCache().find({ queryKey: ["pantry", "list"] });
-
-    await waitFor(() => expect(pantry()?.state.status).toBe("success"));
-    const settled = renders;
+    await waitFor(() => expect(read("list")?.state.status).toBe("success"));
+    await waitFor(() => expect(read("suggestions")?.state.status).toBe("success"));
+    const settled = screen.renders;
 
     act(() => {
       queryClient.setQueryData(["pantry", "list"], [{ id: "p1" }]);
@@ -59,12 +64,13 @@ describe("GroceriesScreen", () => {
     });
     await new Promise((resolve) => setTimeout(resolve, 10));
 
-    expect(renders).toBe(settled);
-    expect(pantry()?.getObserversCount()).toBe(1);
+    expect(screen.renders).toBe(settled);
+    expect(read("list")?.getObserversCount()).toBe(1);
+    expect(read("suggestions")?.getObserversCount()).toBe(1);
   });
 
   it("leaves with every panel closed, so the next visit opens on the list alone", () => {
-    const screen = render(
+    const view = render(
       <QueryClientProvider client={new QueryClient()}>
         <GroceriesScreen />
       </QueryClientProvider>
@@ -72,7 +78,7 @@ describe("GroceriesScreen", () => {
 
     useGroceriesUiStore.getState().setStoreManagerOpen(true);
     useGroceriesUiStore.getState().setEditingGroceryId("g1");
-    screen.unmount();
+    view.unmount();
 
     expect(useGroceriesUiStore.getState()).toMatchObject({
       storeManagerOpen: false,

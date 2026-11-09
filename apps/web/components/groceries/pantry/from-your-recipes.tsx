@@ -11,7 +11,6 @@ import type { PickedFood } from "@norish/shared-react/groceries";
 import type { PantryIngredientDto } from "@norish/shared/contracts";
 import { useSpellingRules } from "@norish/shared-react/config";
 import { usePantrySuggestions } from "@norish/shared-react/groceries";
-import { useConnectivity } from "@norish/shared-react/offline/react";
 import { ingredientDisplayName } from "@norish/shared/lib/ingredient-names";
 import { pantryIngredientFor } from "@norish/shared/lib/pantry";
 
@@ -36,8 +35,7 @@ export function FromYourRecipes({
   const t = useTranslations("groceries.pantry");
   const locale = useLocale();
   const rules = useSpellingRules();
-  const { isOffline } = useConnectivity();
-  const { suggestions } = usePantrySuggestions(!isOffline);
+  const { suggestions } = usePantrySuggestions();
   // Mounted once the Pantry has answered, so this is the Pantry on load.
   const [open, setOpen] = useState(items.length === 0);
   const [showAll, setShowAll] = useState(false);

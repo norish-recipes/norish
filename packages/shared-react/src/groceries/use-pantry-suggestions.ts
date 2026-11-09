@@ -1,16 +1,18 @@
 import { useQuery } from "@tanstack/react-query";
 
 import type { PantrySuggestionsResult } from "./types";
+import { useConnectivity } from "../offline/react";
 import { useTRPC } from "../trpc";
 
 /**
  * "From your recipes": the foods the household's own recipes use that its
- * Pantry does not cover. Best-effort: `enabled` is false where it cannot be
- * asked (offline), and a failed read is simply no suggestions.
+ * Pantry does not cover. Best-effort: never asked while Offline, and a failed
+ * read is simply no suggestions.
  */
-export function usePantrySuggestions(enabled = true): PantrySuggestionsResult {
+export function usePantrySuggestions(): PantrySuggestionsResult {
   const trpc = useTRPC();
-  const { data } = useQuery({ ...trpc.pantry.suggestions.queryOptions(), enabled });
+  const { isOffline } = useConnectivity();
+  const { data } = useQuery({ ...trpc.pantry.suggestions.queryOptions(), enabled: !isOffline });
 
-  return { suggestions: enabled ? (data ?? []) : [] };
+  return { suggestions: isOffline ? [] : (data ?? []) };
 }
