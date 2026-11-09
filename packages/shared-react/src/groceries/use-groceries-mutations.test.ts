@@ -218,6 +218,39 @@ describe("useGroceriesMutations", () => {
       });
     });
 
+    it("keeps the sort order and version the answer gives a row the new one moved down", async () => {
+      queryClient.setQueryData(
+        ["groceries", "list"],
+        createMockGroceriesData(
+          [createMockGrocery({ id: "milk", storeId: "store-1", sortOrder: 0, version: 1 })],
+          []
+        )
+      );
+
+      const { result } = renderHook(() => useGroceriesMutations(), {
+        wrapper: createTestWrapper(queryClient, adapter),
+      });
+
+      _mockMutations.create.mockImplementationOnce(async ([sent]: Array<{ id: string }>) => {
+        const apples = createMockGrocery({ id: sent!.id, storeId: "store-1", sortOrder: 0 });
+        const milk = createMockGrocery({ id: "milk", storeId: "store-1", sortOrder: 1, version: 2 });
+
+        return {
+          ids: [apples.id],
+          createdGroceries: [apples],
+          updatedGroceries: [milk],
+          returnedGroceries: [apples],
+        };
+      });
+      act(() => result.current.createGrocery("1 piece Apples", "store-1"));
+      await settled();
+
+      expect(list()?.groceries.find((grocery) => grocery.id === "milk")).toMatchObject({
+        sortOrder: 1,
+        version: 2,
+      });
+    });
+
     it("puts every grocery a typed name became on the list, in place of the one typed", async () => {
       queryClient.setQueryData(
         ["groceries", "list"],

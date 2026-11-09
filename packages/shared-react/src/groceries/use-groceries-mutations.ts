@@ -147,13 +147,7 @@ function reconcileCreatedGroceries(
   const returnedById = new Map(returnedGroceries.map((grocery) => [grocery.id, grocery]));
   const createdById = new Map(createdGroceries.map((grocery) => [grocery.id, grocery]));
   const updatedById = new Map(updatedGroceries.map((grocery) => [grocery.id, grocery]));
-  let groceries = prev.groceries
-    .filter((grocery) => !optimisticIds.includes(grocery.id))
-    .map((grocery) => {
-      const updated = updatedById.get(grocery.id);
-
-      return updated ? { ...grocery, ...updated } : grocery;
-    });
+  let groceries = prev.groceries.filter((grocery) => !optimisticIds.includes(grocery.id));
 
   const createdToInsert: GroceryDto[] = [];
 
@@ -180,9 +174,14 @@ function reconcileCreatedGroceries(
     }
   });
 
+  // The rows the new ones moved down come back as the server left them, over the shift guessed here.
   return {
     ...prev,
-    groceries: applyCreatedGroceriesToCache(groceries, createdToInsert),
+    groceries: applyCreatedGroceriesToCache(groceries, createdToInsert).map((grocery) => {
+      const updated = updatedById.get(grocery.id);
+
+      return updated ? { ...grocery, ...updated } : grocery;
+    }),
   };
 }
 
