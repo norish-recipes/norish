@@ -3,8 +3,7 @@
 import { useCallback, useState } from "react";
 
 import type { StoreDto } from "@norish/shared/contracts";
-
-import { useFileGroceryName, useStoreAisles } from "./use-store-aisles";
+import { useFileGroceryName, useStoreAisles } from "@norish/shared-react/groceries";
 
 /**
  * Which aisle a grocery's name is filed under, as the grocery panel holds it.

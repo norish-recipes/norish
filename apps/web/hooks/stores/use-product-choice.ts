@@ -3,11 +3,11 @@
 import { useCallback, useEffect, useState } from "react";
 
 import type { StoreDto, StoreProductChoice } from "@norish/shared/contracts";
+import { useLinkFor } from "@norish/shared-react/groceries";
 import { isPendingLink } from "@norish/shared/lib/product-link";
 
 import { useIngredientFor } from "./use-ingredient-for";
 import { useParsedGroceryName } from "./use-parsed-grocery-name";
-import { useStorePrices } from "./use-store-prices";
 import { useChooseProduct } from "./use-store-products-mutations";
 import { useProductLink } from "./use-store-products-query";
 
@@ -57,11 +57,10 @@ export function useProductChoice(options: {
     [selectedStoreId, resetOn]
   );
   const chooseProduct = useChooseProduct();
-  const { linkFor } = useStorePrices();
   const groceryName = useParsedGroceryName(itemName);
   const ingredientId = useIngredientFor(groceryName, options.grocery);
   const store = stores.find((candidate) => candidate.id === selectedStoreId) ?? null;
-  const listLink = linkFor(selectedStoreId, ingredientId);
+  const listLink = useLinkFor(selectedStoreId, ingredientId);
   const onTheList = listLink?.product ?? null;
   // The Store has been asked about this very name and has not answered: the
   // field waits for that answer rather than asking the shop a second time.

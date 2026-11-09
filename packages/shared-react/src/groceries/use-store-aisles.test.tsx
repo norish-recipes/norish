@@ -5,48 +5,85 @@
 import React from "react";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { render, screen, waitFor } from "@testing-library/react";
-import { afterEach, beforeEach, describe, expect, it } from "vitest";
+import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 
-import type { AisleLinkDto } from "@norish/shared/contracts";
-import { createUseStoreAisles, mergeAisleFiling } from "@norish/shared-react/hooks";
+import type { AisleLinkDto, StoreDto } from "@norish/shared/contracts";
+import {
+  mergeAisleFiling,
+  useStoreAisles,
+  useStoreAislesSubscription,
+} from "@norish/shared-react/groceries";
 
 const STORE = "store-a";
 const ZUIVEL = "aisle-zuivel";
 const BROOD = "aisle-brood";
 
-type UseTRPC = Parameters<typeof createUseStoreAisles>[0]["useTRPC"];
-
-/**
- * The shape the hook reads off the tRPC binding, and nothing more of it: the
- * aisle links, and the household's list as some screen already holds it.
- */
-function fakeTrpc(links: () => AisleLinkDto[]): ReturnType<UseTRPC> {
+function storeWith(aisleIds: string[]): StoreDto {
   return {
+    id: STORE,
+    userId: "u1",
+    name: "Albert Heijn",
+    color: "primary",
+    website: null,
+    searchAddress: null,
+    sortOrder: 0,
+    version: 1,
+    aisles: aisleIds.map((id, sortOrder) => ({
+      id,
+      storeId: STORE,
+      name: id,
+      sortOrder,
+      version: 1,
+    })),
+  };
+}
+
+/** What the server answers: the aisle links, and the Stores with their aisles. */
+const server = vi.hoisted(() => ({
+  links: (): AisleLinkDto[] => [],
+  stores: (): StoreDto[] => [],
+}));
+
+// The shape the hooks read off the tRPC binding, and nothing more of it: the
+// aisle links, the Stores, and the household's list as some screen already holds it.
+vi.mock("../trpc", () => ({
+  useTRPC: () => ({
     stores: {
       aisleLinks: {
         queryOptions: () => ({
           queryKey: ["stores", "aisleLinks"],
-          queryFn: async () => links(),
+          queryFn: async () => server.links(),
         }),
         queryKey: () => ["stores", "aisleLinks"],
       },
+      list: {
+        queryOptions: () => ({
+          queryKey: ["stores", "list"],
+          queryFn: async () => server.stores(),
+        }),
+        queryKey: () => ["stores", "list"],
+      },
+      onAisleFiled: {},
     },
     groceries: {
       list: { queryOptions: () => ({ queryKey: ["groceries", "list"] }) },
     },
-  } as unknown as ReturnType<UseTRPC>;
-}
+  }),
+}));
+// A housemate's filing is the merge above; this suite holds no socket open.
+vi.mock("../realtime", () => ({ useRealtimeSubscription: () => undefined }));
 
-function Probe({
-  useStoreAisles,
-  ingredientId,
-}: {
-  useStoreAisles: ReturnType<typeof createUseStoreAisles>;
-  ingredientId: string | null;
-}) {
+function Probe({ ingredientId }: { ingredientId: string | null }) {
   const { aisleFor } = useStoreAisles();
 
   return <span data-testid="aisle">{aisleFor(STORE, ingredientId) ?? "unfiled"}</span>;
+}
+
+/** The groceries screen: the aisles read under the subscription its root mounts. */
+function Screen({ ingredientId }: { ingredientId: string | null }) {
+  useStoreAislesSubscription();
+
+  return <Probe ingredientId={ingredientId} />;
 }
 
 describe("mergeAisleFiling", () => {
@@ -95,6 +132,7 @@ describe("aisleFor", () => {
 
   beforeEach(() => {
     client = new QueryClient({ defaultOptions: { queries: { retry: false } } });
+    server.stores = () => [storeWith([ZUIVEL, BROOD])];
   });
 
   afterEach(() => {
@@ -102,15 +140,13 @@ describe("aisleFor", () => {
   });
 
   it("answers with what the Store files the Ingredient under, and null where it never has, or where there is no Ingredient yet", async () => {
-    const useStoreAisles = createUseStoreAisles({
-      useTRPC: () => fakeTrpc(() => [{ storeId: STORE, ingredientId: "i-melk", aisleId: ZUIVEL }]),
-    });
+    server.links = () => [{ storeId: STORE, ingredientId: "i-melk", aisleId: ZUIVEL }];
 
     render(
       <QueryClientProvider client={client}>
-        <Probe ingredientId="i-melk" useStoreAisles={useStoreAisles} />
-        <Probe ingredientId="i-boter" useStoreAisles={useStoreAisles} />
-        <Probe ingredientId={null} useStoreAisles={useStoreAisles} />
+        <Probe ingredientId="i-melk" />
+        <Probe ingredientId="i-boter" />
+        <Probe ingredientId={null} />
       </QueryClientProvider>
     );
 
@@ -121,24 +157,41 @@ describe("aisleFor", () => {
     expect(screen.getAllByTestId("aisle")[2]?.textContent).toBe("unfiled");
   });
 
+  it("is no answer where the Store no longer has the aisle", async () => {
+    server.links = () => [
+      { storeId: STORE, ingredientId: "i-melk", aisleId: ZUIVEL },
+      { storeId: STORE, ingredientId: "i-brood", aisleId: BROOD },
+    ];
+    // Removed in the editor: its links went with it on the server, and are read again later.
+    server.stores = () => [storeWith([BROOD])];
+
+    render(
+      <QueryClientProvider client={client}>
+        <Probe ingredientId="i-melk" />
+        <Probe ingredientId="i-brood" />
+      </QueryClientProvider>
+    );
+
+    await waitFor(() => expect(screen.getAllByTestId("aisle")[1]?.textContent).toBe(BROOD));
+    expect(screen.getAllByTestId("aisle")[0]?.textContent).toBe("unfiled");
+  });
+
   it("asks the server again when a food new to the list appears, and not when a line is ticked", async () => {
     let asked = 0;
-    const useStoreAisles = createUseStoreAisles({
-      useTRPC: () =>
-        fakeTrpc(() => {
-          asked += 1;
 
-          // The server files a kind of onion under onion's aisle once it is on the list.
-          return asked > 1 ? [{ storeId: STORE, ingredientId: "i-red", aisleId: ZUIVEL }] : [];
-        }),
-    });
+    server.links = () => {
+      asked += 1;
+
+      // The server files a kind of onion under onion's aisle once it is on the list.
+      return asked > 1 ? [{ storeId: STORE, ingredientId: "i-red", aisleId: ZUIVEL }] : [];
+    };
     const list = (groceries: Array<{ id: string; ingredientId: string; isDone: boolean }>) =>
       client.setQueryData(["groceries", "list"], { groceries, recurringGroceries: [] });
 
     list([{ id: "g1", ingredientId: "i-melk", isDone: false }]);
     render(
       <QueryClientProvider client={client}>
-        <Probe ingredientId="i-red" useStoreAisles={useStoreAisles} />
+        <Screen ingredientId="i-red" />
       </QueryClientProvider>
     );
     await waitFor(() => expect(asked).toBe(1));

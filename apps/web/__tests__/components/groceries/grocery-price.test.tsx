@@ -15,10 +15,10 @@ import type { GroceryDto, ResolvedProductLink, StoreProductDto } from "@norish/s
 
 const links = new Map<string, ResolvedProductLink>();
 
-vi.mock("@/app/(app)/groceries/stores-context", () => ({
-  useStoresContext: () => ({
-    linkFor: (storeId: string | null, ingredientId: string | null | undefined) =>
-      links.get(`${storeId}|${ingredientId}`) ?? null,
+vi.mock("@norish/shared-react/groceries", () => ({
+  useLinkFor: (storeId: string | null, ingredientId: string | null | undefined) =>
+    links.get(`${storeId}|${ingredientId}`) ?? null,
+  useStorePrices: () => ({
     priceFor: (storeId: string | null, ingredientId: string | null | undefined) =>
       links.get(`${storeId}|${ingredientId}`)?.product ?? null,
   }),

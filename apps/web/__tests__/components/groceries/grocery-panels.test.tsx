@@ -14,9 +14,8 @@ import "@testing-library/jest-dom";
 import type { GroceryDto, StoreDto, StoreProductDto } from "@norish/shared/contracts";
 
 vi.mock("@norish/shared-react/config", async () => {
-  const { DEFAULT_INGREDIENT_WORDS, spellingRules } = await import(
-    "@norish/shared/lib/spelling-keys"
-  );
+  const { DEFAULT_INGREDIENT_WORDS, spellingRules } =
+    await import("@norish/shared/lib/spelling-keys");
   const rules = spellingRules({}, DEFAULT_INGREDIENT_WORDS);
 
   return { useUnitsQuery: () => ({ units: {} }), useSpellingRules: () => rules };
@@ -92,35 +91,25 @@ const ON_THE_LIST = new Set(["store-a|i-cola"]);
 /** Ingredients the list's Store has been asked about and has not answered: a Pending Link. */
 const ASKED_ON_THE_LIST = new Set<string>();
 
-vi.mock("@/hooks/stores/use-store-prices", () => ({
-  useStorePrices: () => {
-    const linkFor = (storeId: string | null, ingredientId: string | null | undefined) => {
-      const key = `${storeId}|${ingredientId}`;
+/** What the list's prices say a Store knows about an Ingredient, as the database holds it. */
+function linkOnTheList(storeId: string | null, ingredientId: string | null | undefined) {
+  const key = `${storeId}|${ingredientId}`;
 
-      if (!ingredientId) return null;
-      if (ASKED_ON_THE_LIST.has(key)) {
-        return { storeId, ingredientId, triedAt: null, product: null, suggestion: null };
+  if (!ingredientId) return null;
+  if (ASKED_ON_THE_LIST.has(key)) {
+    return { storeId, ingredientId, triedAt: null, product: null, suggestion: null };
+  }
+
+  return ON_THE_LIST.has(key)
+    ? {
+        storeId,
+        ingredientId,
+        triedAt: new Date(),
+        product: LINKS[key] ?? null,
+        suggestion: null,
       }
-
-      return ON_THE_LIST.has(key)
-        ? {
-            storeId,
-            ingredientId,
-            triedAt: new Date(),
-            product: LINKS[key] ?? null,
-            suggestion: null,
-          }
-        : null;
-    };
-
-    return {
-      priceFor: (storeId: string | null, ingredientId: string | null | undefined) =>
-        linkFor(storeId, ingredientId)?.product ?? null,
-      linkFor,
-      isLoading: false,
-    };
-  },
-}));
+    : null;
+}
 
 vi.mock("@/hooks/stores/use-parsed-grocery-name", () => ({
   useParsedGroceryName: (raw: string) => raw.trim(),
@@ -130,7 +119,8 @@ vi.mock("@/hooks/stores/use-parsed-grocery-name", () => ({
 const AISLE_LINKS: Record<string, string> = { "store-c|i-cola": "aisle-frisdrank" };
 const fileGroceryName = vi.fn();
 
-vi.mock("@/hooks/stores/use-store-aisles", () => ({
+vi.mock("@norish/shared-react/groceries", () => ({
+  useLinkFor: linkOnTheList,
   useStoreAisles: () => ({
     aisleFor: (storeId: string | null, ingredientId: string | null | undefined) =>
       AISLE_LINKS[`${storeId}|${ingredientId}`] ?? null,

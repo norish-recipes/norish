@@ -4,12 +4,13 @@
  */
 import type { ReactNode } from "react";
 import { createElement } from "react";
-import { useStoresSubscription } from "@/hooks/stores/use-stores-subscription";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { act, renderHook } from "@testing-library/react";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 
-import { trackedEvent } from "../realtime-test-utils";
+import { useStoresSubscription } from "@norish/shared-react/groceries";
+
+import { trackedEvent } from "../../__tests__/realtime/tracked-event";
 
 type Callback = (data: unknown) => void;
 
@@ -32,7 +33,7 @@ function subscription(name: string) {
   };
 }
 
-vi.mock("@norish/shared-react/trpc", () => ({
+vi.mock("../trpc", () => ({
   useTRPC: () => ({
     stores: {
       list: { queryKey: () => STORES_KEY },

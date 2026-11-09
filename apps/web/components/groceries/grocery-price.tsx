@@ -1,10 +1,10 @@
 "use client";
 
-import { useStoresContext } from "@/app/(app)/groceries/stores-context";
 import { formatShelfPrice } from "@/lib/format-price";
 import { Spinner } from "@heroui/react";
 import { useLocale, useTranslations } from "next-intl";
 
+import { useLinkFor } from "@norish/shared-react/groceries";
 import { groupLineCost } from "@norish/shared/lib/line-cost";
 import { packSizeOf } from "@norish/shared/lib/pack-size";
 import { isPendingLink } from "@norish/shared/lib/product-link";
@@ -27,10 +27,9 @@ import { SalePrice } from "./sale-price";
  * and no words: waiting must read as waiting and not as failure.
  */
 export function GroceryPrice({ line }: { line: PricedLine }) {
-  const { linkFor } = useStoresContext();
+  const link = useLinkFor(line.storeId, line.ingredientId);
   const locale = useLocale();
   const t = useTranslations("groceries.price");
-  const link = linkFor(line.storeId, line.ingredientId);
 
   if (!link) return null;
   if (isPendingLink(link)) {

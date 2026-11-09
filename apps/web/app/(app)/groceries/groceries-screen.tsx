@@ -5,7 +5,15 @@ import { PantryView } from "@/components/groceries";
 import { usePrefersReducedMotion } from "@/hooks/use-prefers-reduced-motion";
 import { AnimatePresence, motion } from "motion/react";
 
-import { usePantryQuery, usePantrySuggestions } from "@norish/shared-react/groceries";
+import {
+  usePantryQuery,
+  usePantrySuggestions,
+  useStoreAisles,
+  useStoreAislesSubscription,
+  useStorePrices,
+  useStorePricesSubscription,
+  useStoresSubscription,
+} from "@norish/shared-react/groceries";
 import { useConnectivity } from "@norish/shared-react/offline/react";
 
 import type { GroceriesView } from "./components/groceries-header";
@@ -13,7 +21,6 @@ import AddGroceryButton from "./components/add-grocery-button";
 import { GroceriesHeader, VIEW_TRANSITION } from "./components/groceries-header";
 import { GroceriesPage } from "./components/groceries-page";
 import { GroceriesContextProvider } from "./context";
-import { StoresContextProvider } from "./stores-context";
 
 /** How far a view slides as it comes and goes, from its own side of the switch. */
 const SLIDE_PX = 24;
@@ -34,44 +41,48 @@ export function GroceriesScreen() {
 
   usePantryQuery();
   usePantrySuggestions(!isOffline);
+  // The list's reads and realtime, held for both views so neither returns to an evicted cache.
+  useStorePrices();
+  useStoreAisles();
+  useStoresSubscription();
+  useStorePricesSubscription();
+  useStoreAislesSubscription();
 
   return (
-    <StoresContextProvider>
-      <GroceriesContextProvider>
-        <div className="flex min-h-0 w-full flex-1 flex-col">
-          <GroceriesHeader view={view} />
-          <div className="relative flex min-h-0 w-full flex-1 flex-col">
-            <AnimatePresence initial={false} mode="popLayout">
-              <motion.div
-                key={view}
-                animate={{ opacity: 1, x: 0 }}
-                className="flex min-h-0 w-full flex-1 flex-col"
-                exit={{ opacity: 0, x: offset }}
-                initial={{ opacity: 0, x: offset }}
-                transition={VIEW_TRANSITION}
-              >
-                {view === "pantry" ? <PantryView /> : <GroceriesPage />}
-              </motion.div>
-            </AnimatePresence>
-          </div>
-          {/* The list's floating add pill lives out here: a sliding view is
-              transformed, which would pin a fixed pill to the view instead of
-              the screen until the slide ends. */}
-          <AnimatePresence initial={false}>
-            {view === "list" ? (
-              <motion.div
-                key="add"
-                animate={{ opacity: 1 }}
-                exit={{ opacity: 0 }}
-                initial={{ opacity: 0 }}
-                transition={VIEW_TRANSITION}
-              >
-                <AddGroceryButton />
-              </motion.div>
-            ) : null}
+    <GroceriesContextProvider>
+      <div className="flex min-h-0 w-full flex-1 flex-col">
+        <GroceriesHeader view={view} />
+        <div className="relative flex min-h-0 w-full flex-1 flex-col">
+          <AnimatePresence initial={false} mode="popLayout">
+            <motion.div
+              key={view}
+              animate={{ opacity: 1, x: 0 }}
+              className="flex min-h-0 w-full flex-1 flex-col"
+              exit={{ opacity: 0, x: offset }}
+              initial={{ opacity: 0, x: offset }}
+              transition={VIEW_TRANSITION}
+            >
+              {view === "pantry" ? <PantryView /> : <GroceriesPage />}
+            </motion.div>
           </AnimatePresence>
         </div>
-      </GroceriesContextProvider>
-    </StoresContextProvider>
+        {/* The list's floating add pill lives out here: a sliding view is
+              transformed, which would pin a fixed pill to the view instead of
+              the screen until the slide ends. */}
+        <AnimatePresence initial={false}>
+          {view === "list" ? (
+            <motion.div
+              key="add"
+              animate={{ opacity: 1 }}
+              exit={{ opacity: 0 }}
+              initial={{ opacity: 0 }}
+              transition={VIEW_TRANSITION}
+            >
+              <AddGroceryButton />
+            </motion.div>
+          ) : null}
+        </AnimatePresence>
+      </div>
+    </GroceriesContextProvider>
   );
 }

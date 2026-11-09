@@ -1,7 +1,6 @@
 "use client";
 
 import { useMemo } from "react";
-import { useStoresContext } from "@/app/(app)/groceries/stores-context";
 import { IngredientIconsProvider } from "@/components/ingredients/ingredient-icon";
 import { useStructuralSharing } from "@/hooks/use-structural-sharing";
 import { ShoppingCartIcon } from "@heroicons/react/24/outline";
@@ -10,6 +9,7 @@ import { useTranslations } from "next-intl";
 
 import type { GroceryDto, RecurringGroceryDto, StoreDto } from "@norish/shared/contracts";
 import { useUnitsQuery } from "@norish/shared-react/config";
+import { useFileGroceryName, useStoreAisles } from "@norish/shared-react/groceries";
 import { groupGroceriesByIngredient } from "@norish/shared/lib/grocery-grouping";
 import { cssEmptyStateGlow } from "@norish/web/config/css-tokens";
 
@@ -72,7 +72,8 @@ function GroceryListContent({
   const { units: customUnits } = useUnitsQuery();
   // Where each Store files each name — the one place a grocery's aisle comes
   // from (ADR-0031) — and the one write a drop into an aisle makes.
-  const { aisleFor, fileGroceryName } = useStoresContext();
+  const { aisleFor } = useStoreAisles();
+  const fileGroceryName = useFileGroceryName();
 
   // Group groceries by storeId
   const groupedGroceries = useMemo(() => {

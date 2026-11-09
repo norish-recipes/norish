@@ -1,5 +1,49 @@
-import type { PantryIngredientDto, PantrySuggestionDto } from "@norish/shared/contracts";
+import type { QueryKey } from "@tanstack/react-query";
+
+import type {
+  PantryIngredientDto,
+  PantrySuggestionDto,
+  StoreCreateDto,
+  StoreDto,
+  StoreSearchAddressResult,
+  StoreUpdateInput,
+} from "@norish/shared/contracts";
 import type { LocaleNames } from "@norish/shared/lib/ingredient-names";
+
+export type StoresData = StoreDto[];
+
+export type StoresQueryResult = {
+  stores: StoreDto[];
+  error: unknown;
+  isLoading: boolean;
+  queryKey: QueryKey;
+  setStoresData: (updater: (prev: StoresData | undefined) => StoresData | undefined) => void;
+  invalidate: () => void;
+};
+
+export type StoreUpdateDraft = Omit<StoreUpdateInput, "version">;
+export type StoreGrocerySnapshot = Array<{ id: string; version: number }>;
+
+export type StoresMutationsResult = {
+  createStore: (data: StoreCreateDto) => Promise<string>;
+  updateStore: (data: StoreUpdateDraft) => void;
+  deleteStore: (
+    storeId: string,
+    deleteGroceries: boolean,
+    grocerySnapshot: StoreGrocerySnapshot
+  ) => void;
+  reorderStores: (storeIds: string[]) => void;
+  checkSearchAddress: (
+    storeId: string,
+    term: string | null,
+    searchAddress: string | null,
+    website: string | null
+  ) => Promise<StoreSearchAddressResult>;
+  isCreating: boolean;
+  isUpdating: boolean;
+  isDeleting: boolean;
+  isReordering: boolean;
+};
 
 export type PantryData = PantryIngredientDto[];
 

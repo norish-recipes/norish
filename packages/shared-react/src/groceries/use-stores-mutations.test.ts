@@ -1,9 +1,10 @@
 import type { ReactNode } from "react";
 import { createElement } from "react";
-import { useStoresMutations } from "@/hooks/stores/use-stores-mutations";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { act, renderHook } from "@testing-library/react";
 import { describe, expect, it, vi } from "vitest";
+
+import { useStoresMutations } from "@norish/shared-react/groceries";
 
 const mockDeleteMutation = vi.fn();
 
@@ -37,7 +38,7 @@ vi.mock("@tanstack/react-query", async () => {
   };
 });
 
-vi.mock("@norish/shared-react/trpc", () => ({
+vi.mock("../trpc", () => ({
   useTRPC: () => ({
     stores: {
       list: {
@@ -52,8 +53,6 @@ vi.mock("@norish/shared-react/trpc", () => ({
       delete: { mutationOptions: vi.fn(() => ({ mutationFn: mockDeleteMutation })) },
       reorder: { mutationOptions: vi.fn() },
       checkSearchAddress: { mutationOptions: vi.fn() },
-      fileGroceryName: { mutationOptions: vi.fn() },
-      aisleLinks: { queryKey: vi.fn(() => ["stores", "aisleLinks"]) },
     },
   }),
 }));

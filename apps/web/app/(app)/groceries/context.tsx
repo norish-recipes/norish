@@ -46,6 +46,8 @@ type GroceriesUiContextValue = {
   // Group similar ingredients (only applicable in store view)
   groupSimilarIngredients: boolean;
   setGroupSimilarIngredients: (enabled: boolean) => void;
+  storeManagerOpen: boolean;
+  setStoreManagerOpen: (open: boolean) => void;
 };
 
 const GroceriesUiContext = createContext<GroceriesUiContextValue | null>(null);
@@ -60,6 +62,7 @@ function GroceriesUiProvider({ children }: GroceriesUiProviderProps) {
   const [recurrencePanelGroceryId, setRecurrencePanelGroceryId] = useState<string | null>(null);
   const [addGroceryPanelOpen, setAddGroceryPanelOpen] = useState(false);
   const [editingGrocery, setEditingGrocery] = useState<GroceryDto | null>(null);
+  const [storeManagerOpen, setStoreManagerOpen] = useState(false);
 
   // Device Preferences: the server renders the page the way the reader left it.
   const [viewMode, setViewMode] = useDevicePreference("groceryViewMode");
@@ -91,6 +94,8 @@ function GroceriesUiProvider({ children }: GroceriesUiProviderProps) {
       setViewMode,
       groupSimilarIngredients,
       setGroupSimilarIngredients,
+      storeManagerOpen,
+      setStoreManagerOpen,
     }),
     [
       recurrencePanelOpen,
@@ -104,6 +109,7 @@ function GroceriesUiProvider({ children }: GroceriesUiProviderProps) {
       setViewMode,
       groupSimilarIngredients,
       setGroupSimilarIngredients,
+      storeManagerOpen,
     ]
   );
 

@@ -9,7 +9,7 @@ import { act, render, screen } from "@testing-library/react";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 
 import type { ResolvedProductLink } from "@norish/shared/contracts";
-import { createUseStorePrices, PENDING_LINK_MAX_AGE_MS } from "@norish/shared-react/hooks";
+import { PENDING_LINK_MAX_AGE_MS, useLinkFor } from "@norish/shared-react/groceries";
 
 const STORE = "store-a";
 
@@ -17,33 +17,26 @@ function pending(ingredientId: string): ResolvedProductLink {
   return { storeId: STORE, ingredientId, triedAt: null, product: null, suggestion: null };
 }
 
-type UseTRPC = Parameters<typeof createUseStorePrices>[0]["useTRPC"];
+/** What the server answers for the household's prices. */
+const server = vi.hoisted(() => ({ links: (): ResolvedProductLink[] => [] }));
 
-/** The shape the hook reads off the tRPC binding, and nothing more of it. */
-function fakeTrpc(links: () => ResolvedProductLink[]): ReturnType<UseTRPC> {
-  return {
+// The shape the hook reads off the tRPC binding, and nothing more of it.
+vi.mock("../trpc", () => ({
+  useTRPC: () => ({
     stores: {
       groceryPrices: {
         queryOptions: () => ({
           queryKey: ["stores", "groceryPrices"],
-          queryFn: async () => links(),
+          queryFn: async () => server.links(),
         }),
         queryKey: () => ["stores", "groceryPrices"],
       },
-      linkFor: { queryKey: () => ["stores", "linkFor"] },
     },
-  } as unknown as ReturnType<UseTRPC>;
-}
+  }),
+}));
 
-function Probe({
-  useStorePrices,
-  ingredientId,
-}: {
-  useStorePrices: ReturnType<typeof createUseStorePrices>;
-  ingredientId: string;
-}) {
-  const { linkFor } = useStorePrices();
-  const link = linkFor(STORE, ingredientId);
+function Probe({ ingredientId }: { ingredientId: string }) {
+  const link = useLinkFor(STORE, ingredientId);
 
   return (
     <span data-testid="state">
@@ -66,11 +59,11 @@ describe("a Pending Link on the screen", () => {
   });
 
   async function mount(ingredientId: string, links: () => ResolvedProductLink[]) {
-    const useStorePrices = createUseStorePrices({ useTRPC: () => fakeTrpc(links) });
+    server.links = links;
 
     render(
       <QueryClientProvider client={client}>
-        <Probe ingredientId={ingredientId} useStorePrices={useStorePrices} />
+        <Probe ingredientId={ingredientId} />
       </QueryClientProvider>
     );
     // The first render has nothing yet; the query answers on the next tick.
@@ -97,6 +90,33 @@ describe("a Pending Link on the screen", () => {
       await vi.advanceTimersByTimeAsync(PENDING_LINK_MAX_AGE_MS + 1000);
     });
     expect(screen.getByTestId("state").textContent).toBe("unknown");
+  });
+
+  it("stays unanswered when the same question is asked again, until its answer lands", async () => {
+    await mount("kaas", () => [pending("kaas")]);
+    await act(async () => {
+      await vi.advanceTimersByTimeAsync(PENDING_LINK_MAX_AGE_MS + 1000);
+    });
+
+    // The prices read again: the row is still pending, as the queue holds it.
+    act(() => {
+      client.setQueryData(["stores", "groceryPrices"], [pending("kaas")]);
+    });
+    await act(async () => {
+      await vi.advanceTimersByTimeAsync(0);
+    });
+    expect(screen.getByTestId("state").textContent).toBe("unknown");
+
+    act(() => {
+      client.setQueryData(
+        ["stores", "groceryPrices"],
+        [{ ...pending("kaas"), triedAt: new Date() }]
+      );
+    });
+    await act(async () => {
+      await vi.advanceTimersByTimeAsync(0);
+    });
+    expect(screen.getByTestId("state").textContent).toBe("miss");
   });
 
   it("is the answer itself once one lands", async () => {

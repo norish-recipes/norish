@@ -1,4 +1,4 @@
-import { useStoresContext } from "@/app/(app)/groceries/stores-context";
+import { useStorePrices } from "@norish/shared-react/groceries";
 
 import type { PricedLine, StoreTotal } from "./store-total";
 import { storeTotal } from "./store-total";
@@ -10,7 +10,7 @@ import { storeTotal } from "./store-total";
  * always the sum of the prices under it.
  */
 export function useStoreTotal(lines: PricedLine[], storeId: string | null): StoreTotal | null {
-  const { priceFor } = useStoresContext();
+  const { priceFor } = useStorePrices();
 
   return storeTotal(lines, priceFor, storeId);
 }

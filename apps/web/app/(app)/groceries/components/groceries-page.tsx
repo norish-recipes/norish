@@ -20,6 +20,7 @@ import { useTranslations } from "next-intl";
 
 import type { GroceryDto } from "@norish/shared/contracts";
 import type { RecurrencePattern } from "@norish/shared/contracts/recurrence";
+import { useStoresQuery } from "@norish/shared-react/groceries";
 import {
   cssFloatingDockContentClearance,
   cssHeaderControl,
@@ -28,7 +29,6 @@ import {
 } from "@norish/web/config/css-tokens";
 
 import { useGroceriesContext, useGroceriesUiContext } from "../context";
-import { useStoresContext } from "../stores-context";
 
 export function GroceriesPage() {
   const {
@@ -49,7 +49,7 @@ export function GroceriesPage() {
     deleteDoneInStore,
     getRecipeNameForGrocery,
   } = useGroceriesContext();
-  const { stores, storeManagerOpen, setStoreManagerOpen } = useStoresContext();
+  const { stores } = useStoresQuery();
   const {
     addGroceryPanelOpen,
     setAddGroceryPanelOpen,
@@ -57,6 +57,8 @@ export function GroceriesPage() {
     setEditingGrocery,
     viewMode,
     groupSimilarIngredients,
+    storeManagerOpen,
+    setStoreManagerOpen,
   } = useGroceriesUiContext();
 
   type ClearScope =
@@ -239,7 +241,6 @@ export function GroceriesPage() {
  */
 export function GroceriesListActions() {
   const { groceries, deleteGroceries } = useGroceriesContext();
-  const { setStoreManagerOpen } = useStoresContext();
   const [clearListOpen, setClearListOpen] = useState(false);
   const {
     setAddGroceryPanelOpen,
@@ -247,6 +248,7 @@ export function GroceriesListActions() {
     setViewMode,
     groupSimilarIngredients,
     setGroupSimilarIngredients,
+    setStoreManagerOpen,
   } = useGroceriesUiContext();
   const t = useTranslations("groceries.page");
 

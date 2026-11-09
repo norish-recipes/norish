@@ -9,7 +9,6 @@ import {
   IconActionButton,
 } from "@/components/shared/action-button";
 import { useGroceriesQuery } from "@/hooks/groceries";
-import { useStoresMutations } from "@/hooks/stores";
 import { Bars3Icon } from "@heroicons/react/24/solid";
 import { Reorder, useDragControls } from "motion/react";
 import { useTranslations } from "next-intl";
@@ -19,6 +18,7 @@ import type {
   StoreDto,
   StoreSearchAddressResult,
 } from "@norish/shared/contracts";
+import { useStoresMutations } from "@norish/shared-react/groceries";
 import { sortAisles } from "@norish/shared/lib/aisles";
 
 import type { EditingStore } from "./store-editor-panel";

@@ -21,7 +21,7 @@ const reorderList = vi.hoisted(() => ({
   onDragEnd: undefined as (() => void) | undefined,
 }));
 
-vi.mock("@/hooks/stores", () => ({
+vi.mock("@norish/shared-react/groceries", () => ({
   useStoresMutations: () => ({
     createStore,
     updateStore,
