@@ -224,7 +224,7 @@ test("adding a recipe teaches the Pantry a staple, and a kept line on the list s
     .toEqual(["chicken breast", "garlic", "olive oil"]);
 });
 
-test("a first switch to the Pantry reads it once; the views and switches after it read nothing realtime keeps current nor config", async () => {
+test("a switch loads no page; a first switch to the Pantry reads it once; the views and switches after it read nothing realtime keeps current nor config", async () => {
   // The list's reads, and the Pantry's, which the subscriptions keep current while mounted.
   const keptCurrent = [
     "groceries.list",
@@ -234,8 +234,18 @@ test("a first switch to the Pantry reads it once; the views and switches after i
     "pantry.list",
   ];
   const reads: string[] = [];
+  const pageLoads: string[] = [];
   const noteRead = (request: Request) => {
     const { pathname } = new URL(request.url());
+    const headers = request.headers();
+
+    // The switch only rewrites the address: no document, and no RSC beyond a link's prefetch.
+    if (
+      request.isNavigationRequest() ||
+      (headers.rsc === "1" && !headers["next-router-prefetch"])
+    ) {
+      pageLoads.push(pathname);
+    }
 
     if (!pathname.includes("/api/trpc/")) return;
     const procedures = pathname.slice(pathname.lastIndexOf("/") + 1).split(",");
@@ -265,7 +275,7 @@ test("a first switch to the Pantry reads it once; the views and switches after i
   await page.getByRole("button", { name: "View Mode" }).click();
   await page.getByRole("menuitem", { name: "By Store" }).click();
   await showsView("store");
-  // The list's page seeds only the list, so the Pantry is read on its first visit.
+  // A full load of the list seeds only the list, so the Pantry is read on its first visit.
   await page.getByRole("tab", { name: "Pantry" }).click();
   await expect(keptRow("olive oil")).toBeVisible();
   await page.getByRole("tab", { name: "List" }).click();
@@ -279,4 +289,5 @@ test("a first switch to the Pantry reads it once; the views and switches after i
   page.off("request", noteRead);
 
   expect(reads).toEqual(["pantry.list"]);
+  expect(pageLoads).toEqual([]);
 });

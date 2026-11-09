@@ -1,17 +1,16 @@
 "use client";
 
-import { useRouter } from "next/navigation";
+import type { GroceriesView } from "@/features/groceries/lib/groceries-view";
 import { RollingText } from "@/components/shared/rolling-text";
 import { ArchiveBoxIcon, ClipboardDocumentListIcon } from "@heroicons/react/20/solid";
 import { Tabs } from "@heroui/react";
 import { AnimatePresence, motion } from "motion/react";
 import { useTranslations } from "next-intl";
 
+import { addBasePath } from "@norish/shared/lib/base-path";
 import { cssHeaderIcon, cssHeaderTab } from "@norish/web/config/css-tokens";
 
 import { GroceriesListActions } from "./list-actions";
-
-export type GroceriesView = "list" | "pantry";
 
 /** As many slots as the longer title, so no letter is a slot created mid-roll. A plain function:
  * the React Compiler fails on this spread inside the component and skips it. */
@@ -28,8 +27,9 @@ export const VIEW_TRANSITION = { duration: 0.2, ease: "easeOut" } as const;
  * The top of Groceries on both of its views: the view's title, and on the
  * right the _List · Pantry_ switch with the list's own controls to its left.
  * The switch is the same segmented toggle the Library and a cookbook use;
- * each view is a page of its own to bookmark and land on, and the switch
- * navigates between them where the reader is scrolled.
+ * each view has an address of its own to bookmark and land on, and the switch
+ * only rewrites the address, so its indicator slides at once rather than
+ * waiting on a navigation.
  *
  * The switch is the row's last item so it never moves under the reader's
  * finger: the list's controls fade out beside it rather than pulling it
@@ -40,7 +40,6 @@ export function GroceriesHeader({ view }: { view: GroceriesView }) {
   const t = useTranslations("groceries.page");
   const titles: Record<GroceriesView, string> = { list: t("title"), pantry: t("pantry") };
   const slots = longestTitle(titles);
-  const router = useRouter();
 
   return (
     <div className="mb-6 flex min-h-10 shrink-0 flex-wrap items-center justify-between gap-3">
@@ -75,7 +74,9 @@ export function GroceriesHeader({ view }: { view: GroceriesView }) {
         </div>
         <Tabs
           selectedKey={view}
-          onSelectionChange={(key) => router.push(HREF[key as GroceriesView], { scroll: false })}
+          onSelectionChange={(key) =>
+            window.history.pushState(null, "", addBasePath(HREF[key as GroceriesView]))
+          }
         >
           <Tabs.ListContainer className="shrink-0">
             <Tabs.List aria-label={t("views")} className="p-0.5">

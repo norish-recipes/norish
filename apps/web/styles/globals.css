@@ -339,35 +339,6 @@
   }
 }
 
-/* Groceries' list and Pantry (groceries-root.tsx) each come and go from their own side of the
-   switch, the list's on the left, while the header holds still. */
-::view-transition-old(.groceries-list),
-::view-transition-old(.groceries-pantry) {
-  animation: 200ms ease-out both vt-out;
-}
-
-::view-transition-new(.groceries-list),
-::view-transition-new(.groceries-pantry) {
-  animation: 200ms ease-out both vt-in;
-}
-
-::view-transition-old(.groceries-list),
-::view-transition-new(.groceries-list) {
-  --vt-from: -24px 0;
-}
-
-::view-transition-old(.groceries-pantry),
-::view-transition-new(.groceries-pantry) {
-  --vt-from: 24px 0;
-}
-
-@keyframes vt-out {
-  to {
-    opacity: 0;
-    translate: var(--vt-from);
-  }
-}
-
 /* The recipe tint is a fixed underlay, named so it fades in place under the pages. The old tint
    fades out here; the new one runs its own fade-in (recipe-page-tint.tsx), so it fades once. */
 ::view-transition-group(root) {

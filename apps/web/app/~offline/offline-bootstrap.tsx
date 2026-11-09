@@ -12,16 +12,13 @@ import { offlineEngine } from "@/lib/offline/engine";
 
 import { addBasePath, stripBasePath } from "@norish/shared/lib/base-path";
 
-type GroceriesPages = { groceries: ReactNode; pantry: ReactNode };
-
 const UUID_RE = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
 
-function offlineSurface(pathname: string, { groceries, pantry }: GroceriesPages) {
+function offlineSurface(pathname: string, groceries: ReactNode) {
   const path = pathname.replace(/(?<!\/)\/+$/, "") || "/";
 
   if (path === "/") return <Dashboard />;
-  if (path === "/groceries") return groceries;
-  if (path === "/groceries/pantry") return pantry;
+  if (path === "/groceries" || path === "/groceries/pantry") return groceries;
   if (path === "/calendar") return <CalendarPage />;
 
   const recipeId = /^\/recipes\/([^/]+)$/.exec(path)?.[1];
@@ -53,10 +50,9 @@ function offlineSurface(pathname: string, { groceries, pantry }: GroceriesPages)
  * The worker serves this document only when a navigation failed, so the
  * reader is Offline: the last reader's cache is restored before anything
  * renders, and the first frame already carries their Device Preferences.
- * `groceries` and `pantry` are the two groceries pages, handed in by the page: only a route file
- * imports a screen.
+ * `groceries` is the groceries root, handed in by the page: only a route file imports a screen.
  */
-export function OfflineBootstrap(pages: GroceriesPages) {
+export function OfflineBootstrap({ groceries }: { groceries: ReactNode }) {
   const [pathname, setPathname] = useState<string | null>(null);
 
   useEffect(() => {
@@ -80,5 +76,5 @@ export function OfflineBootstrap(pages: GroceriesPages) {
     );
   }
 
-  return <AppShell>{offlineSurface(pathname, pages)}</AppShell>;
+  return <AppShell>{offlineSurface(pathname, groceries)}</AppShell>;
 }

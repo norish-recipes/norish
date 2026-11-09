@@ -34,9 +34,7 @@ vi.mock("@/app/~offline/offline-unavailable", () => ({
 
 function renderPath(pathname: string) {
   window.history.replaceState(null, "", pathname);
-  render(
-    <OfflineBootstrap groceries={<div>groceries-surface</div>} pantry={<div>pantry-surface</div>} />
-  );
+  render(<OfflineBootstrap groceries={<div>groceries-surface</div>} />);
 }
 
 describe("OfflineBootstrap", () => {
@@ -67,7 +65,6 @@ describe("OfflineBootstrap", () => {
   it.each([
     ["/", "dashboard-surface"],
     ["/groceries/", "groceries-surface"],
-    ["/groceries/pantry", "pantry-surface"],
     ["/calendar", "calendar-surface"],
     [
       "/recipes/11111111-1111-4111-8111-111111111111/",

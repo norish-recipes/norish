@@ -41,7 +41,7 @@ function goesBy(item: PantryIngredientDto, needle: string): boolean {
 }
 
 /**
- * The Pantry's page: the foods the household keeps, by the name the
+ * The Pantry's screen: the foods the household keeps, by the name the
  * reader reads them in, and one field that both narrows them and finds
  * catalogue foods to add. A row opens the food's Ingredient panel and ends
  * in _Put on the list_, or _On the list_ while a grocery of that same food

@@ -27,7 +27,7 @@ import { StoreManagerPanel } from "./components/stores";
 
 const NO_IDS: string[] = [];
 
-/** The grocery list's page: the list in the reader's view, and the panels it opens. */
+/** The grocery list's screen: the list in the reader's view, and the panels it opens. */
 export function GroceriesListScreen() {
   const { groceries, recurringGroceries, recipeMap, isLoading, getRecipeNameForGrocery } =
     useGroceriesQuery();

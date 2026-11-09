@@ -1,8 +1,8 @@
 "use client";
 
-import type { ReactNode } from "react";
-import { useEffect, ViewTransition } from "react";
+import { useEffect } from "react";
 import { usePathname } from "next/navigation";
+import { usePrefersReducedMotion } from "@/hooks/use-prefers-reduced-motion";
 import { AnimatePresence, motion } from "motion/react";
 
 import {
@@ -13,17 +13,22 @@ import {
   useStoresSubscription,
 } from "@norish/shared-react/groceries";
 
-import type { GroceriesView } from "./components/header";
 import { GroceriesHeader, VIEW_TRANSITION } from "./components/header";
 import { AddGroceryButton } from "./components/list";
+import { GroceriesListScreen } from "./groceries-list-screen";
+import { groceriesView } from "./lib/groceries-view";
+import { PantryScreen } from "./pantry-screen";
+
+/** How far a view slides as it comes and goes, from its own side of the switch. */
+const SLIDE_PX = 24;
 
 /**
- * What the list and the Pantry share: the header with its switch, and the list's subscriptions.
- * Each view is a page of its own, rendered as `children`.
+ * What the list and the Pantry share: the header with its switch, the list's subscriptions and the
+ * add pill. The switch only rewrites the address, so the view changes here, with no navigation.
  */
-export function GroceriesRoot({ children }: { children: ReactNode }) {
-  const view: GroceriesView = usePathname()?.startsWith("/groceries/pantry") ? "pantry" : "list";
-  const slide = `groceries-${view}`;
+export function GroceriesRoot() {
+  const view = groceriesView(usePathname());
+  const offset = usePrefersReducedMotion() ? 0 : view === "pantry" ? SLIDE_PX : -SLIDE_PX;
 
   // The list's realtime, kept open on both views; the Offline Cache keeps its reads (gcTime).
   useGroceriesSubscription();
@@ -39,13 +44,22 @@ export function GroceriesRoot({ children }: { children: ReactNode }) {
   return (
     <div className="flex min-h-0 w-full flex-1 flex-col">
       <GroceriesHeader view={view} />
-      {/* Keyed by the view, so a switch's navigation exits one page and enters the other, each
-          from its own side of the switch (styles/globals.css). */}
-      <ViewTransition key={view} default="none" enter={slide} exit={slide}>
-        <div className="flex min-h-0 w-full flex-1 flex-col">{children}</div>
-      </ViewTransition>
-      {/* The list's floating add pill lives out here: inside the page, the slide would capture it
-          with the page and move it too. */}
+      <div className="relative flex min-h-0 w-full flex-1 flex-col">
+        <AnimatePresence initial={false} mode="popLayout">
+          <motion.div
+            key={view}
+            animate={{ opacity: 1, x: 0 }}
+            className="flex min-h-0 w-full flex-1 flex-col"
+            exit={{ opacity: 0, x: offset }}
+            initial={{ opacity: 0, x: offset }}
+            transition={VIEW_TRANSITION}
+          >
+            {view === "pantry" ? <PantryScreen /> : <GroceriesListScreen />}
+          </motion.div>
+        </AnimatePresence>
+      </div>
+      {/* The add pill lives out here: a sliding view is transformed, which would pin the fixed
+          pill to the view instead of the screen until the slide ends. */}
       <AnimatePresence initial={false}>
         {view === "list" ? (
           <motion.div
