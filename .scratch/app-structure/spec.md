@@ -82,7 +82,7 @@ Groceries is the pilot, measured before and after. The rest follows in order, an
 ### Migration
 
 1. Groceries (the pilot).
-2. Library and recipes (shared-react's cookbooks move here, with `shared-react/recipes`).
+2. Library and recipes (shared-react's cookbooks move here, with `shared-react/recipes`). The ingredient icons move with them: `IngredientIconsProvider` (`components/ingredients/ingredient-icon.tsx`) holds the icons query's answer in a context, which the State rule forbids, so every `IngredientIcon` renders when one food joins a list (all 41 on groceries for an add, measured in 07). Each icon then selects its own icon over the Query cache. Groceries, the Pantry, the recipe form and the ingredient settings all mount the provider, so it moves once, here.
 3. Calendar.
 4. Cookbooks.
 5. Settings.
