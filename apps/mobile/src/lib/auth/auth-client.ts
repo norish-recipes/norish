@@ -5,6 +5,7 @@ import * as SecureStore from "expo-secure-store";
 
 let _client: ReturnType<typeof createAuthClient> | null = null;
 let _currentBaseUrl: string | null = null;
+const resetListeners = new Set<() => void>();
 
 export function getAuthClient(baseUrl: string): ReturnType<typeof createAuthClient> {
   if (_client && _currentBaseUrl === baseUrl) {
@@ -27,8 +28,19 @@ export function getAuthClient(baseUrl: string): ReturnType<typeof createAuthClie
   return _client;
 }
 
+/** Calls `listener` after each reset, when the next getAuthClient builds a new client. */
+export function subscribeAuthClientReset(listener: () => void): () => void {
+  resetListeners.add(listener);
+
+  return () => {
+    resetListeners.delete(listener);
+  };
+}
+
 export async function resetAuthClientStorage(): Promise<void> {
   await clearAuthStorage();
   _client = null;
   _currentBaseUrl = null;
+
+  for (const listener of resetListeners) listener();
 }

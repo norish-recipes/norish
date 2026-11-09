@@ -1,6 +1,18 @@
 import type { PersistedUser } from "@/lib/auth/auth-storage";
-import React, { createContext, useCallback, useContext, useEffect, useMemo, useState } from "react";
-import { getAuthClient, resetAuthClientStorage } from "@/lib/auth/auth-client";
+import React, {
+  createContext,
+  useCallback,
+  useContext,
+  useEffect,
+  useMemo,
+  useState,
+  useSyncExternalStore,
+} from "react";
+import {
+  getAuthClient,
+  resetAuthClientStorage,
+  subscribeAuthClientReset,
+} from "@/lib/auth/auth-client";
 import {
   registerSessionInvalidationHandler,
   setHasActiveSession,
@@ -36,10 +48,10 @@ function AuthProviderInner({
   backendBaseUrl: string;
   children: React.ReactNode;
 }) {
-  const [authClientVersion, setAuthClientVersion] = useState(0);
-  const authClient = useMemo(
-    () => getAuthClient(backendBaseUrl),
-    [authClientVersion, backendBaseUrl]
+  // Reread after each reset, so this and the offline engine hold one client, even when
+  // signing out remounts this provider before the reset.
+  const authClient = useSyncExternalStore(subscribeAuthClientReset, () =>
+    getAuthClient(backendBaseUrl)
   );
   // What authClient.useSession() runs, called directly so it is one hook whichever client is current.
   const {
@@ -137,7 +149,6 @@ function AuthProviderInner({
         log.warn({ error: storageError }, "Failed to reset auth client storage during sign out");
       }
 
-      setAuthClientVersion((current) => current + 1);
       setPersistedUser(null);
       setPersistedSessionStatus("idle");
       setJustLoggedOut(true);

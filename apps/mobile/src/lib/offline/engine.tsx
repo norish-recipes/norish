@@ -67,7 +67,8 @@ export function ConnectivityProvider({ children }: { children: React.ReactNode }
   );
 }
 
-// The auth client is one per server address, so this reads the current session without the context.
+// The auth client is one per server address until a sign-out resets it, and the context rereads
+// it then, so this reads the current session without the context.
 const getSessionUserId = async () =>
   (await getAuthClient(getBackendBaseUrl()).getSession()).data?.user?.id ?? null;
 
