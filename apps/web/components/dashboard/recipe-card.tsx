@@ -4,9 +4,9 @@ import type { MouseEvent } from "react";
 import { memo, useCallback, useEffect, useMemo, useRef, useState } from "react";
 import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
-import { GroceryCheckbox, isCheckboxEvent } from "@/components/groceries/grocery-checkbox";
 import { MiniCalendar, MiniGroceries } from "@/components/Panel/consumers";
 import OriginFlag from "@/components/recipes/origin-flag";
+import { isCheckboxEvent, RoundCheckbox } from "@/components/round-checkbox";
 import HeartButton from "@/components/shared/heart-button";
 import SmartMarkdownRenderer from "@/components/shared/smart-markdown-renderer";
 import { usePermissionsContext } from "@/context/permissions-context";
@@ -655,7 +655,7 @@ function RecipeCardComponent({
             }}
           >
             <span className="absolute top-4 right-4 drop-shadow-md">
-              <GroceryCheckbox
+              <RoundCheckbox
                 aria-label={recipe.name}
                 className="[--border-width-field:2px] [--default:rgb(0_0_0/0.3)] [--field-border-hover:white] [--field-border:white]"
                 isSelected={isSelected}

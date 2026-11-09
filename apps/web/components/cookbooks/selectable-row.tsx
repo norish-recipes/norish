@@ -1,7 +1,7 @@
 "use client";
 
 import type { ComponentProps, ReactNode } from "react";
-import { GroceryCheckbox, isCheckboxEvent } from "@/components/groceries/grocery-checkbox";
+import { isCheckboxEvent, RoundCheckbox } from "@/components/round-checkbox";
 
 type SelectableRowProps = Omit<ComponentProps<"div">, "children" | "onClick" | "role"> & {
   isSelected: boolean;
@@ -63,7 +63,7 @@ export function SelectableRow({
         {subtitle && <span className="text-muted truncate text-xs">{subtitle}</span>}
       </span>
 
-      <GroceryCheckbox
+      <RoundCheckbox
         aria-label={title}
         className="shrink-0"
         isSelected={isSelected}

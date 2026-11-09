@@ -1,9 +1,9 @@
 "use client";
 
 import { useState } from "react";
-import { GroceryCheckbox } from "@/components/groceries/grocery-checkbox";
 import { IngredientIcon } from "@/components/ingredients/ingredient-icon";
 import { AnimatedNumber } from "@/components/recipes/animated-number";
+import { RoundCheckbox } from "@/components/round-checkbox";
 import SmartMarkdownRenderer from "@/components/shared/smart-markdown-renderer";
 import { useAmountDisplayPreference } from "@/hooks/use-amount-display-preference";
 import { useUnitFormatter } from "@/hooks/use-unit-formatter";
@@ -175,7 +175,7 @@ function IngredientLine({
       >
         {interactive ? (
           <span data-ingredient-checkbox className="shrink-0">
-            <GroceryCheckbox
+            <RoundCheckbox
               aria-label={ingredientName}
               isSelected={isChecked}
               size="md"

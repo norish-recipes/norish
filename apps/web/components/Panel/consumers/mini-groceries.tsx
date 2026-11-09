@@ -1,10 +1,10 @@
 "use client";
 
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
-import { GroceryCheckbox, isCheckboxEvent } from "@/components/groceries/grocery-checkbox";
 import { OnTheListMark } from "@/components/groceries/pantry/put-on-the-list";
 import { IngredientIcon, IngredientIconsProvider } from "@/components/ingredients/ingredient-icon";
 import Panel from "@/components/Panel/Panel";
+import { isCheckboxEvent, RoundCheckbox } from "@/components/round-checkbox";
 import {
   ActionButton,
   ActionButtonGroup,
@@ -430,7 +430,7 @@ export default function MiniGroceries({
           }
         }}
       >
-        <GroceryCheckbox
+        <RoundCheckbox
           aria-label={item.ingredientName}
           isSelected={selectedIds.includes(item.id)}
           size="lg"

@@ -1,12 +1,13 @@
 "use client";
 
+import { RoundCheckbox } from "@/components/round-checkbox";
 import { useUnitFormatter } from "@/hooks/use-unit-formatter";
 import { Bars3Icon, Square2StackIcon } from "@heroicons/react/16/solid";
 import { useTranslations } from "next-intl";
 
 import type { GroceryGroup } from "@norish/shared/lib/grocery-grouping";
 
-import { GroceryCheckbox } from "../grocery-checkbox";
+import { storeCheckbox } from "../store-colors";
 
 interface GroupDragOverlayProps {
   group: GroceryGroup;
@@ -30,9 +31,9 @@ export function GroupDragOverlay({ group }: GroupDragOverlayProps) {
         <Bars3Icon className="h-4 w-4" />
       </div>
 
-      <GroceryCheckbox
+      <RoundCheckbox
+        {...storeCheckbox}
         isDisabled
-        storeColored
         aria-label={group.displayName || t("unnamedItem")}
         isIndeterminate={group.anyDone && !group.allDone}
         isSelected={group.allDone}

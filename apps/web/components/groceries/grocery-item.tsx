@@ -3,15 +3,15 @@
 import { memo } from "react";
 import { RecurrencePill } from "@/app/(app)/groceries/components/recurrence-pill";
 import { IngredientIcon } from "@/components/ingredients/ingredient-icon";
+import { RoundCheckbox } from "@/components/round-checkbox";
 import { useUnitFormatter } from "@/hooks/use-unit-formatter";
 import { useTranslations } from "next-intl";
 
 import type { GroceryDto, RecurringGroceryDto, StoreDto } from "@norish/shared/contracts";
 import { shownAmount } from "@norish/shared/lib/grocery-grouping";
 
-import { GroceryCheckbox } from "./grocery-checkbox";
 import { GroceryPrice } from "./grocery-price";
-import { storeColorStyle } from "./store-colors";
+import { storeCheckbox, storeColorStyle } from "./store-colors";
 import { lineOf } from "./store-total";
 
 interface GroceryItemProps {
@@ -53,9 +53,9 @@ function GroceryItemComponent({
       // own heading this says what the section already says.
       style={store ? storeColorStyle(store.color) : undefined}
     >
-      <GroceryCheckbox
+      <RoundCheckbox
+        {...storeCheckbox}
         delayChangeOnSelect
-        storeColored
         aria-label={grocery.name || t("unnamedItem")}
         isSelected={grocery.isDone}
         size="lg"

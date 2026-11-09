@@ -17,35 +17,31 @@ export function isCheckboxEvent(event: { target: EventTarget | null }) {
   return event.target instanceof Element && event.target.closest('[data-slot="checkbox"]') !== null;
 }
 
-type GroceryCheckboxProps = {
+type RoundCheckboxProps = {
   "aria-label": string;
   isSelected: boolean;
   isIndeterminate?: boolean;
   isDisabled?: boolean;
   delayChangeOnSelect?: boolean;
   size?: "md" | "lg";
-  /**
-   * Whether the ring and fill take the Store's colour, as a row of the
-   * groceries list does. Off, the checkbox looks as HeroUI draws it, which is
-   * what the dashboard's panel, a recipe's ingredients and a cookbook picker
-   * want.
-   */
-  storeColored?: boolean;
+  /** On the root, where remapping HeroUI's colour tokens recolours the ring and fill. */
   className?: string;
+  indicatorClassName?: string;
   onChange?: (isSelected: boolean) => void;
 };
 
-export function GroceryCheckbox({
+/** A round checkbox, as HeroUI draws it unless `className` remaps its colours. */
+export function RoundCheckbox({
   "aria-label": ariaLabel,
   isSelected,
   isIndeterminate = false,
   isDisabled = false,
   delayChangeOnSelect = false,
   size = "lg",
-  storeColored = false,
   className = "",
+  indicatorClassName = "text-accent-foreground",
   onChange,
-}: GroceryCheckboxProps) {
+}: RoundCheckboxProps) {
   const [visualSelected, setVisualSelected] = useState(isSelected);
   const commitTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const controlSize = size === "lg" ? "size-6" : "size-5";
@@ -93,20 +89,10 @@ export function GroceryCheckbox({
     [delayChangeOnSelect, isDisabled, isSelected, onChange]
   );
 
-  // HeroUI paints the control's rest fill from `--default`, its ring from
-  // `--field-border` and the ticked fill from `--accent`; remapping those on
-  // the root is what turns the ring and fill into the Store's colour. A
-  // Store's section declares `--store-color`; the page ground declares the
-  // accent as its default, so a row under Unsorted or a recipe keeps the
-  // accent.
-  const storeColourTokens = storeColored
-    ? "[--accent:var(--store-color)] [--border-width-field:2px] [--default:transparent] [--field-border:var(--store-color)] [--field-border-hover:var(--store-color)]"
-    : "";
-
   return (
     <Checkbox
       aria-label={ariaLabel}
-      className={`${storeColourTokens} ${indicatorSize} ${className}`}
+      className={`${indicatorSize} ${className}`}
       isDisabled={isDisabled}
       isIndeterminate={visualSelected ? false : isIndeterminate}
       isSelected={visualSelected}
@@ -114,11 +100,11 @@ export function GroceryCheckbox({
       onChange={handleChange}
     >
       <Checkbox.Content>
-        {/* The ring in the Store's colour at rest, filled with it when ticked or indeterminate */}
+        {/* The ring at rest, filled when ticked or indeterminate */}
         <Checkbox.Control
           className={`${controlSize} data-[indeterminate=true]:border-accent data-[indeterminate=true]:bg-accent data-[selected=true]:border-accent data-[selected=true]:bg-accent rounded-full before:rounded-full`}
         >
-          <Checkbox.Indicator className={storeColored ? "text-white" : "text-accent-foreground"} />
+          <Checkbox.Indicator className={indicatorClassName} />
         </Checkbox.Control>
       </Checkbox.Content>
     </Checkbox>

@@ -4,6 +4,7 @@ import type { ReactNode } from "react";
 import { memo, useCallback, useState } from "react";
 import { RecurrencePill } from "@/app/(app)/groceries/components/recurrence-pill";
 import { IngredientIcon } from "@/components/ingredients/ingredient-icon";
+import { RoundCheckbox } from "@/components/round-checkbox";
 import { useUnitFormatter } from "@/hooks/use-unit-formatter";
 import { AnimatePresence, motion } from "motion/react";
 import { useTranslations } from "next-intl";
@@ -12,8 +13,8 @@ import type { GroceryDto, RecurringGroceryDto } from "@norish/shared/contracts";
 import type { GroceryGroup, GroupedGrocerySource } from "@norish/shared/lib/grocery-grouping";
 import { shownAmount } from "@norish/shared/lib/grocery-grouping";
 
-import { GroceryCheckbox } from "./grocery-checkbox";
 import { GroceryPrice } from "./grocery-price";
+import { storeCheckbox } from "./store-colors";
 import { lineOfGroup } from "./store-total";
 
 /**
@@ -128,9 +129,9 @@ function GroupedGroceryItemComponent({
         <div className="flex h-8 w-8 items-center justify-center max-sm:hidden">{dragHandle}</div>
 
         {/* Group checkbox - toggles all items */}
-        <GroceryCheckbox
+        <RoundCheckbox
+          {...storeCheckbox}
           delayChangeOnSelect
-          storeColored
           aria-label={group.displayName || t("unnamedItem")}
           isIndeterminate={group.anyDone && !group.allDone}
           isSelected={group.allDone}
@@ -248,9 +249,9 @@ function SourceItem({ source, recurringGroceries, onToggle, onEdit }: SourceItem
 
   return (
     <div className="flex min-h-11 items-center gap-3 px-4 py-2.5">
-      <GroceryCheckbox
+      <RoundCheckbox
+        {...storeCheckbox}
         delayChangeOnSelect
-        storeColored
         aria-label={grocery.name || "Grocery item"}
         isSelected={grocery.isDone}
         size="md"

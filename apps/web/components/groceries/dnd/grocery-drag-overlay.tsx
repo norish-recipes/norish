@@ -1,6 +1,7 @@
 "use client";
 
 import { RecurrencePill } from "@/app/(app)/groceries/components/recurrence-pill";
+import { RoundCheckbox } from "@/components/round-checkbox";
 import { useUnitFormatter } from "@/hooks/use-unit-formatter";
 import { Bars3Icon } from "@heroicons/react/16/solid";
 import { useTranslations } from "next-intl";
@@ -8,7 +9,7 @@ import { useTranslations } from "next-intl";
 import type { GroceryDto, RecurringGroceryDto } from "@norish/shared/contracts";
 import { shownAmount } from "@norish/shared/lib/grocery-grouping";
 
-import { GroceryCheckbox } from "../grocery-checkbox";
+import { storeCheckbox } from "../store-colors";
 
 interface GroceryDragOverlayProps {
   grocery: GroceryDto;
@@ -37,9 +38,9 @@ export function GroceryDragOverlay({
         <Bars3Icon className="h-4 w-4" />
       </div>
 
-      <GroceryCheckbox
+      <RoundCheckbox
+        {...storeCheckbox}
         isDisabled
-        storeColored
         aria-label={grocery.name || t("unnamedItem")}
         isSelected={grocery.isDone}
         size="lg"

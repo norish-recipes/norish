@@ -136,8 +136,8 @@ vi.mock("@/components/shared/action-button", () => ({
     <button aria-label={label} data-testid={`icon-${action}`} type="button" onClick={onPress} />
   ),
 }));
-vi.mock("@/components/groceries/grocery-checkbox", () => ({
-  GroceryCheckbox: ({ isSelected, onChange, ...props }: any) => (
+vi.mock("@/components/round-checkbox", () => ({
+  RoundCheckbox: ({ isSelected, onChange, ...props }: any) => (
     <input
       aria-label={props["aria-label"]}
       checked={isSelected}

@@ -25,3 +25,13 @@ export function storeColorStyle(color: string | null): CSSProperties | undefined
 
   return { "--store-color": `light-dark(${hue.light}, ${hue.dark})` } as CSSProperties;
 }
+
+/**
+ * A grocery row's checkbox in its Store's colour: HeroUI paints the rest fill from `--default`, the
+ * ring from `--field-border` and the tick from `--accent`, so these point them at `--store-color`.
+ */
+export const storeCheckbox = {
+  className:
+    "[--accent:var(--store-color)] [--border-width-field:2px] [--default:transparent] [--field-border:var(--store-color)] [--field-border-hover:var(--store-color)]",
+  indicatorClassName: "text-white",
+};
