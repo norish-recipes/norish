@@ -37,9 +37,9 @@ App code as at d0fa9f86a plus the sortOrder tie-break (11269853c); 02's commits 
 | ----------------------------------------------- | -------------------------------------: | --------------: | --------------: |
 | Check an item                                   |                            0 / 288 / 7 |     0 / 288 / 7 |               — |
 | Add an item                                     |                        19 / 1,689 / 12 | 19 / 1,689 / 12 |               — |
-| Open the edit panel                             |                          178 / 224 / 8 |   178 / 232 / 8 |               — |
+| Open the edit panel                             |                          178 / 224 / 8 |   178 / 224 / 8 |               — |
 | Realtime echo of another phone checking an item |                            0 / 247 / 2 |     0 / 247 / 2 |               — |
-| Switch the view mode                            |                         853 / 696 / 11 |  853 / 728 / 10 |               — |
+| Switch the view mode                            |                         853 / 696 / 11 |  853 / 701 / 10 |               — |
 
 | Action               | Baseline 1: top three (mounts + updates, what changed)                                                        |
 | -------------------- | ------------------------------------------------------------------------------------------------------------- |
@@ -59,8 +59,8 @@ Our own components behind those numbers:
 
 |                       |            Baseline 1 |            Baseline 2 | After the pilot |
 | --------------------- | --------------------: | --------------------: | --------------: |
-| First paint           |      632 ms (624–672) |      624 ms (624–632) |               — |
-| Price and aisle drawn |      632 ms (624–672) |      624 ms (624–632) |               — |
+| First paint           |      632 ms (624–672) |      632 ms (628–636) |               — |
+| Price and aisle drawn |      632 ms (624–672) |      632 ms (628–636) |               — |
 | Document              |          42.5 KB gzip |          42.6 KB gzip |               — |
 | JS downloaded         | 894 KB gzip (894–894) | 900 KB gzip (900–900) |               — |
 
@@ -81,26 +81,24 @@ Also seen: every dev load of `/groceries` logs a hydration attribute mismatch, d
 
 ### Baseline 2 (after 01, before 04)
 
-At 2696c4a86, with the setup above. Two renders runs printed byte-identical output, [`baselines/2-after-01.txt`](../baselines/2-after-01.txt). A third with each `(state)` labelled by the hook behind it, and one against the production build, gave the same counts. The page loads are the second of two 15-run sets on the production server, at a load average near 2; the first, on the just-started server, had one cold load of 3,180 ms and a 628 ms median.
+At 2696c4a86 plus the setter fix 935985ceb, re-taken at ade41b0a2 with the setup above. The first record, at 2696c4a86 alone, caught 01 handing out a new Device Preference setter on every render: `useDevicePreference` built `trpc.user.getDevicePreferences.queryKey()`, a new array, each render and the React Compiler keyed the setter on it. That cost 8 updates opening the edit panel and 27 switching the view mode. It is 01's defect, so it is fixed here rather than credited to the pilot. Two renders runs printed byte-identical output, [`baselines/2-after-01.txt`](../baselines/2-after-01.txt), and a third after 0b588ae0d's `closePanel` change matched them. The page loads are the second of two 15-run sets on a fresh production build, at a load average near 3.
 
 | Action               | Baseline 2: top three (mounts + updates, what changed)                                                        |
 | -------------------- | ------------------------------------------------------------------------------------------------------------- |
 | Check an item        | SortableGroupItem 80 ((context) 80, children 40); SortableContext 20; React Aria DOMElement 13                |
 | Add an item          | SortableGroupItem 164 (children 122, (context) 81, group 52); React Aria DOMElement 137; bound DOMElement 108 |
-| Open the edit panel  | React Aria DOMElement 26; Presence 26; Primitive.div 21                                                       |
+| Open the edit panel  | Presence 26; React Aria DOMElement 25; Primitive.div 21                                                       |
 | Realtime echo        | SortableGroupItem 80 ((context) 80, children 40); SortableContext 20; motion.div 10                           |
-| Switch the view mode | React Aria DOMElement 224; bound DOMElement 162; React Aria provider 125                                      |
+| Switch the view mode | React Aria DOMElement 221; bound DOMElement 160; React Aria provider 123                                      |
 
 What changed against Baseline 1, component by component:
 
 - Check, add and echo render the same components the same number of times; only reasons moved. `useUnitFormatter` (every row with an amount) and `IngredientIconsProvider` now each hold a `user.getDevicePreferences` query, whose snapshot moves without a render while the choice stays the same. The "By Store" pick before the actions writes the choice and reads it again (`dataUpdatedAt`), so the next render records `(state)`: `IngredientIconsProvider`'s one update in check, and the first of the three passes of the 17 no-Store `GroupedGroceryItem`s in add. Their other two passes see the `config.units` re-fetch start and answer, where Baseline 1 marked one pass: `(state)` 17 becomes 51 of the same 69 updates.
-- Open the edit panel, 8 more updates: the closed View Mode menu in `GroceriesListActions` renders once more (DropdownRoot, DropdownPopover, Popover, its Button and four React Aria parts). `GroceriesUiProvider` renders for `setEditingGrocery` as before, but `useDevicePreference` now returns a new setter on every render, so the items' `onPress={() => setViewMode("store")}` change and the compiled menu no longer bails out.
-- Switch the view mode, 32 more updates (56 gone, 88 added) and one commit fewer.
-  - Gone: the 40 `GroceryItem` updates after mounting, and 16 elsewhere. `useUnitFormatter` and `IngredientIconsProvider` read the old provider's context, which changed again when the write settled; each now selects its one choice, which did not change. The old provider (3 updates) also wrote the change onto `user.get` and read `user.get` again, which rendered the profile's readers: `OfflineStatusModal` 4, `NavbarUserMenu` 2, `TimerDock` 2, and `UserProvider`, `WebUserProviderInner`, `PermissionsProvider` and `OfflineCacheController` 1 each. The write and the read again now go to `user.getDevicePreferences`, which only `useDevicePreference` readers hold. The commit gone is the old provider's third render, for that read's answer (it read `dataUpdatedAt`); an equal answer now renders nothing.
-  - Added: `GroceriesUiProvider` renders twice in both, at the pick and when the write settles. Its second render now hands out new setters for the same choices, so `GroceriesPage` and `GroceriesListActions` render twice instead of once, and the open View Mode menu renders again: items, collection, popover and the "Group similar" switch (`DropdownItem onPress 3`, `UiSwitch onValueChange 1`).
+- Open the edit panel renders the same components the same number of times, for the same reasons.
+- Switch the view mode, 5 more updates (57 gone, 62 added) and one commit fewer.
+  - Gone: the 40 `GroceryItem` updates after mounting, and 17 elsewhere. `useUnitFormatter`, `IngredientIconsProvider` and `AddGroceryButton` (whose docked-timers check reads the hidden items) read the old provider's context, which changed again when the write settled; each now selects its one choice, which did not change. The old provider (3 updates) also wrote the change onto `user.get` and read `user.get` again, which rendered the profile's readers: `OfflineStatusModal` 4, `NavbarUserMenu` 2, `TimerDock` 2, and `UserProvider`, `WebUserProviderInner`, `PermissionsProvider` and `OfflineCacheController` 1 each. The write and the read again now go to `user.getDevicePreferences`, which only `useDevicePreference` readers hold. The commit gone is the old provider's third render, for that read's answer (it read `dataUpdatedAt`); an equal answer now renders nothing.
+  - Added: the open View Mode menu renders once more, all of it (`Component` 12, React Aria DOMElement 15, React Aria provider 10, `CollectionBranch` 3, one or two each of its other parts). The old provider set React state in the click, so the new view and the menu's close rendered in one commit. `useDevicePreference` writes through the mutation, whose optimistic value reaches the page in a later commit (a per-commit log, taken once), so the closing menu renders for its close and again for the new view.
 
-The 8 and the 88 have one cause: `useDevicePreference` builds `trpc.user.getDevicePreferences.queryKey()`, a new array, on every render, and the React Compiler keys the setter on it. A stable setter would remove both; that is a change to `reader/device-preferences.tsx`, not made here.
+Page loads: first paint the same at the median, inside Baseline 1's spread. Document +0.1 KB: the seed is now the `user.getDevicePreferences` query with both Device Kinds' blocks, where it was this kind's values. JS +6 KB gzip, not traced: 01's new modules on the page weigh about 5.7 KB gzip (Device Preferences reader 1.6, plain config hooks 3.1, tRPC provider 0.8, platform adapter 0.3), but most replace code the page had before, so the cause needs a Baseline 1 build to diff against (`measure-page-loads --scripts` lists the chunks).
 
-Page loads: first paint 8 ms faster at the median, inside Baseline 1's spread. Document +0.1 KB: the seed is now the `user.getDevicePreferences` query with both Device Kinds' blocks, where it was this kind's values. JS +6 KB gzip, not traced.
-
-Code shape: 01 moved or deleted none of the counted files (its moves are config, tRPC, the platform adapter and Device Preferences), so every path is Baseline 1's. Binding files are the six factory callers (`shared-{groceries,stores,pantry}-hooks.ts`, `use-recurrence-detection.ts`, the groceries and stores contexts) and the 14 per-hook files re-exporting what they built, not the `index.ts` barrels, plus mobile's two. Unit tests are web's `__tests__/{app/groceries,components/groceries,hooks/groceries,hooks/stores}/` and shared-react's `pantry`, `store-aisles` and `store-prices-pending` suites. Web loses 9 lines and mobile 21: the groceries error toast moved into the platform adapter's `showError`, and the bindings import `useTRPC` and `useUnitsQuery` from shared-react. Tests gain 17 lines, mostly a test wrapper that mounts the web's platform adapter.
+Code shape: 01 moved or deleted none of the counted files (its moves are config, tRPC, the platform adapter and Device Preferences), so every path is Baseline 1's. Binding files, by the rule above: web's six factory callers (`shared-{groceries,stores,pantry}-hooks.ts`, `use-recurrence-detection.ts`, the groceries and stores contexts) and the 14 per-hook files that import a `shared-*-hooks` file; mobile's `shared-groceries-hooks.tsx` and the `index.ts` barrel that imports it. Web loses 9 lines and mobile 21: the groceries error toast moved into the platform adapter's `showError`, and the bindings import `useTRPC` and `useUnitsQuery` from shared-react. Tests gain 17 lines, mostly a test wrapper that mounts the web's platform adapter.
