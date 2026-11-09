@@ -86,6 +86,25 @@ describe("usePantryMutations", () => {
     ).toEqual(["Pepper"]);
   });
 
+  it("keeps an add Queued in the Outbox on the list, under the id it was sent with", async () => {
+    queryClient.setQueryData(["pantry", "list"], []);
+    const { result } = render();
+
+    // Unreachable and admitted to the Outbox: the Queued signal.
+    sent.add.mockRejectedValueOnce(new TypeError("Failed to fetch"));
+    let answer: string | undefined;
+
+    await act(async () => {
+      answer = await result.current.addPantryIngredient("Salt");
+    });
+    await settled();
+
+    const rows = queryClient.getQueryData<PantryIngredientDto[]>(["pantry", "list"]);
+
+    expect(rows?.map(({ id, name }) => ({ id, name }))).toEqual([{ id: answer, name: "Salt" }]);
+    expect(queryClient.getQueryState(["pantry", "list"])?.isInvalidated).toBe(false);
+  });
+
   it("reads the Pantry again when the earlier of two removals that overlap fails", async () => {
     queryClient.setQueryData(["pantry", "list"], [SALT]);
     const { result } = render();

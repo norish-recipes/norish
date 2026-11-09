@@ -125,6 +125,25 @@ describe("useStoresMutations", () => {
     expect(names()).toEqual(["store-1", "store-2", "Lidl", "Butcher"]);
   });
 
+  it("keeps a create Queued in the Outbox on the list, under the id it was sent with", async () => {
+    const { result } = render();
+
+    // Unreachable and admitted to the Outbox: the Queued signal.
+    sent.create.mockRejectedValueOnce(new TypeError("Failed to fetch"));
+    let answer: string | undefined;
+
+    await act(async () => {
+      answer = await result.current.createStore({ name: "Lidl", color: "primary" });
+    });
+    await settled();
+
+    const held = queryClient.getQueryData<StoreDto[]>(["stores", "list"]);
+
+    expect(held?.at(-1)).toMatchObject({ id: answer, name: "Lidl" });
+    expect(answer).toBe((sent.create.mock.calls[0]![0] as { id: string }).id);
+    expect(queryClient.getQueryState(["stores", "list"])?.isInvalidated).toBe(false);
+  });
+
   it.each([
     ["update", (m: ReturnType<typeof useStoresMutations>) => m.updateStore({ id: "store-1" })],
     ["delete", (m: ReturnType<typeof useStoresMutations>) => m.deleteStore("store-1", false)],
