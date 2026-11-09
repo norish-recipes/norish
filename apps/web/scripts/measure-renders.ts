@@ -571,7 +571,7 @@ async function groceries(browser: Browser) {
     await closePanel(page);
 
     results.push(
-      await measure(tab, "realtime echo of another browser checking an item", async () => {
+      await measure(tab, "realtime echo of another phone checking an item", async () => {
         await checkRow(other.page, "carrots");
         await rowFor(page, "carrots", { visible: true }).waitFor({ state: "detached" });
       })
