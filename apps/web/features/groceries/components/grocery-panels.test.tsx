@@ -528,6 +528,26 @@ describe("the Aisle field, in both panels", () => {
   });
 });
 
+describe("EditGroceryPanel, opening", () => {
+  it("starts on its grocery's name, so its food's aisle shows without waiting for typing to stop", () => {
+    render(
+      <EditGroceryPanel
+        grocery={{ ...GROCERY, storeId: "store-c", ingredientId: null } as GroceryDto}
+        open={true}
+        recurringGrocery={null}
+        stores={STORES}
+        onDelete={() => undefined}
+        onOpenChange={() => undefined}
+        onSave={() => undefined}
+      />
+    );
+
+    // No timer has run: the lookup asked for "cola" on the first render.
+    expect(screen.getByPlaceholderText("editPlaceholder")).toHaveValue("cola");
+    expect(screen.getByTestId("aisle-selector")).toHaveValue("aisle-frisdrank");
+  });
+});
+
 describe("EditGroceryPanel, on a grocery the Store is still being asked about", () => {
   it("waits on the Pending Link rather than asking the shop itself", () => {
     ASKED_ON_THE_LIST.add("store-a|i-beleg");

@@ -311,7 +311,7 @@ function asDrawn(group: GroceryGroup): GroceryGroup {
  * A create moves every open line below it down and the server bumps their versions, so the row
  * skips a group that differs in nothing else; its actions read versions from the cache.
  */
-function drawsTheSame(prev: GroupedGroceryItemProps, next: GroupedGroceryItemProps) {
+export function drawsTheSame(prev: GroupedGroceryItemProps, next: GroupedGroceryItemProps) {
   const { group: before, ...prevRest } = prev;
   const { group: after, ...nextRest } = next;
   const keys = Object.keys(nextRest) as Array<keyof typeof nextRest>;
