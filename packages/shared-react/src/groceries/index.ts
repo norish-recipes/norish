@@ -20,6 +20,7 @@ export { mergePantryAdded, mergePantryRemoved } from "./pantry-merge";
 export { useGroceriesMutations } from "./use-groceries-mutations";
 export { useGroceriesQuery, useGroceryIds, useOnTheList } from "./use-groceries-query";
 export { useGroceriesSubscription } from "./use-groceries-subscription";
+export { useGroceriesUiStore } from "./use-groceries-ui-store";
 export { useGroceryFormState } from "./use-grocery-form-state";
 export { usePantryMutations } from "./use-pantry-mutations";
 export { usePantryItem, usePantryQuery } from "./use-pantry-query";

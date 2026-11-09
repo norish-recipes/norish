@@ -108,7 +108,7 @@
     "vite": "catalog:",
     "vitest": "catalog:",
     "zod": "catalog:",
-    "zustand": "5.0.16"
+    "zustand": "catalog:"
   },
   "prettier": "@norish/prettier-config"
 }

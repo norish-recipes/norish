@@ -45,7 +45,8 @@
     "@trpc/server": "catalog:",
     "@trpc/tanstack-react-query": "catalog:",
     "react": "catalog:",
-    "superjson": "catalog:"
+    "superjson": "catalog:",
+    "zustand": "catalog:"
   },
   "devDependencies": {
     "@norish/eslint-config": "workspace:*",
