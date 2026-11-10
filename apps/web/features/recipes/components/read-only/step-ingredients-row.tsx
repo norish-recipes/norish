@@ -1,7 +1,7 @@
 "use client";
 
 import { IngredientIcon } from "@/components/ingredients/ingredient-icon";
-import { useAmountDisplayPreference } from "@/features/recipes/hooks";
+import { useAmountDisplayPreference } from "@/features/recipes/hooks/use-amount-display-preference";
 import { useUnitFormatter } from "@/hooks/use-unit-formatter";
 import { Chip } from "@heroui/react";
 import { useLocale } from "next-intl";

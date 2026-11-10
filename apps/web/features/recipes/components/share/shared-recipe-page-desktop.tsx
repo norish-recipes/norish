@@ -1,11 +1,11 @@
 "use client";
 
+import { ReadonlyNutritionCard } from "@/features/recipes/components/read-only/readonly-nutrition";
 import {
-  ReadonlyNutritionCard,
   ReadonlyRecipeMedia,
   ReadonlyRecipeNotes,
   ReadonlyRecipeSummary,
-} from "@/features/recipes/components/read-only";
+} from "@/features/recipes/components/read-only/readonly-recipe-sections";
 import { useSharedRecipe } from "@/features/recipes/stores/share-page-store";
 import { Card } from "@heroui/react";
 import { useTranslations } from "next-intl";

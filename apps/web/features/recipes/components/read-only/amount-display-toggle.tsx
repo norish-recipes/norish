@@ -1,6 +1,6 @@
 "use client";
 
-import { useAmountDisplayPreference } from "@/features/recipes/hooks";
+import { useAmountDisplayPreference } from "@/features/recipes/hooks/use-amount-display-preference";
 import { Button, Tooltip } from "@heroui/react";
 import { useTranslations } from "next-intl";
 

@@ -19,7 +19,7 @@ import { describe, expect, it, vi } from "vitest";
 import "@testing-library/jest-dom";
 
 import { ReadonlyRecipeMedia } from "@/features/recipes/components/read-only/readonly-recipe-sections";
-import { RECIPE_HERO_CHROME_BUTTON_CLASS } from "@/features/recipes/components/read-only/recipe-layout-constants";
+import { RECIPE_HERO_CHROME_BUTTON_CLASS } from "@/features/recipes/lib/recipe-layout-constants";
 
 vi.mock("next-intl", () => ({
   useTranslations: () => (key: string) => key,

@@ -1,6 +1,6 @@
 "use client";
 
-import { AmountDisplayToggle } from "@/features/recipes/components/read-only";
+import AmountDisplayToggle from "@/features/recipes/components/read-only/amount-display-toggle";
 import {
   useSharePageStore,
   useShareServings,

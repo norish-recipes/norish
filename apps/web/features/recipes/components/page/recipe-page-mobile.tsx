@@ -3,14 +3,16 @@ import DoubleTapContainer from "@/components/shared/double-tap-container";
 import HeartButton from "@/components/shared/heart-button";
 import {
   CookingTimeCard,
-  MOBILE_RECIPE_MEDIA_HEIGHT_STYLE,
   ReadonlyRecipeMedia,
-  RECIPE_HERO_CHROME_BUTTON_CLASS,
-  RECIPE_HERO_CHROME_OFFSET_CLASS,
   RecipeHeaderMobile,
   SourceCard,
 } from "@/features/recipes/components/read-only";
 import { useWorkedOutNutrition } from "@/features/recipes/hooks";
+import {
+  MOBILE_RECIPE_MEDIA_HEIGHT_STYLE,
+  RECIPE_HERO_CHROME_BUTTON_CLASS,
+  RECIPE_HERO_CHROME_OFFSET_CLASS,
+} from "@/features/recipes/lib/recipe-layout-constants";
 import { useBackDestination } from "@/hooks/use-back-destination";
 import { useHiddenItemVisibility } from "@/hooks/user/use-hidden-item-visibility";
 import { ArrowLeftIcon } from "@heroicons/react/16/solid";

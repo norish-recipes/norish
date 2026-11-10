@@ -1,15 +1,15 @@
 "use client";
 
 import AuthLanguageSelector from "@/components/shared/auth-language-selector";
+import CookingTimeCard from "@/features/recipes/components/read-only/cooking-time-card";
+import { ReadonlyNutritionCard } from "@/features/recipes/components/read-only/readonly-nutrition";
 import {
-  CookingTimeCard,
-  MOBILE_RECIPE_MEDIA_HEIGHT_STYLE,
-  ReadonlyNutritionCard,
   ReadonlyRecipeMedia,
   ReadonlyRecipeNotes,
-  RecipeHeaderMobile,
-  SourceCard,
-} from "@/features/recipes/components/read-only";
+} from "@/features/recipes/components/read-only/readonly-recipe-sections";
+import RecipeHeaderMobile from "@/features/recipes/components/read-only/recipe-header-mobile";
+import SourceCard from "@/features/recipes/components/read-only/source-card";
+import { MOBILE_RECIPE_MEDIA_HEIGHT_STYLE } from "@/features/recipes/lib/recipe-layout-constants";
 import { useSharedRecipe, useShareServings } from "@/features/recipes/stores/share-page-store";
 import { Card } from "@heroui/react";
 import { useTranslations } from "next-intl";

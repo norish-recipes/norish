@@ -1,6 +1,7 @@
 "use client";
 
-import { PublicSmartInstruction, ReadonlyStepsList } from "@/features/recipes/components/read-only";
+import { PublicSmartInstruction } from "@/features/recipes/components/read-only/public-smart-instruction";
+import { ReadonlyStepsList } from "@/features/recipes/components/read-only/readonly-steps-list";
 import {
   useSharedRecipe,
   useShareIngredients,

@@ -13,11 +13,6 @@ export {
 } from "./readonly-recipe-sections";
 export { ReadonlyStepsList } from "./readonly-steps-list";
 export { default as RecipeHeaderMobile } from "./recipe-header-mobile";
-export {
-  MOBILE_RECIPE_MEDIA_HEIGHT_STYLE,
-  RECIPE_HERO_CHROME_BUTTON_CLASS,
-  RECIPE_HERO_CHROME_OFFSET_CLASS,
-} from "./recipe-layout-constants";
 export { default as RecipePageTint } from "./recipe-page-tint";
 export { SmartInstruction } from "./smart-instruction";
 export { default as SourceCard } from "./source-card";

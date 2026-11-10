@@ -4,7 +4,7 @@ import { useState } from "react";
 import { IngredientIcon } from "@/components/ingredients/ingredient-icon";
 import { RoundCheckbox } from "@/components/round-checkbox";
 import SmartMarkdownRenderer from "@/components/shared/smart-markdown-renderer";
-import { useAmountDisplayPreference } from "@/features/recipes/hooks";
+import { useAmountDisplayPreference } from "@/features/recipes/hooks/use-amount-display-preference";
 import { useUnitFormatter } from "@/hooks/use-unit-formatter";
 import { useLocale } from "next-intl";
 

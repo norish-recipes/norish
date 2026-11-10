@@ -2,7 +2,7 @@ import {
   MOBILE_RECIPE_MEDIA_HEIGHT_STYLE,
   RECIPE_HERO_CHROME_BUTTON_CLASS,
   RECIPE_HERO_CHROME_OFFSET_CLASS,
-} from "@/features/recipes/components/read-only";
+} from "@/features/recipes/lib/recipe-layout-constants";
 import { useFloatingDock } from "@/hooks/use-floating-dock";
 import { ArrowLeftIcon, HeartIcon } from "@heroicons/react/16/solid";
 import { AdjustmentsHorizontalIcon, EllipsisHorizontalIcon } from "@heroicons/react/24/outline";

@@ -3,7 +3,8 @@
 import { useCallback, useState } from "react";
 import OriginFlag from "@/components/recipes/origin-flag";
 import SmartMarkdownRenderer from "@/components/shared/smart-markdown-renderer";
-import { buildMediaItems, MediaCarousel } from "@/features/recipes/components/media";
+import MediaCarousel, { buildMediaItems } from "@/features/recipes/components/media/media-carousel";
+import { RECIPE_HERO_CHROME_BUTTON_CLASS } from "@/features/recipes/lib/recipe-layout-constants";
 import { CategoryIcon, useCategoryLabel } from "@/lib/category-display";
 import {
   ArrowsPointingOutIcon,
@@ -24,7 +25,6 @@ import {
 } from "@norish/shared/lib/helpers";
 
 import AuthorChip from "./author-chip";
-import { RECIPE_HERO_CHROME_BUTTON_CLASS } from "./recipe-layout-constants";
 
 type RecipeTagLike = { name: string };
 

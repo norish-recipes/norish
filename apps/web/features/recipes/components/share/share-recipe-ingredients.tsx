@@ -1,6 +1,6 @@
 "use client";
 
-import { ReadonlyIngredientsList } from "@/features/recipes/components/read-only";
+import { ReadonlyIngredientsList } from "@/features/recipes/components/read-only/readonly-ingredients-list";
 import {
   useShareIngredients,
   useShareSystem,

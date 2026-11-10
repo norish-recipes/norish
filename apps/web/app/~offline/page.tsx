@@ -1,6 +1,6 @@
 import { OfflineBootstrap } from "@/app/~offline/offline-bootstrap";
 import { GroceriesRoot } from "@/features/groceries/groceries-root";
-import { RecipeSkeleton } from "@/features/recipes/components/skeleton";
+import RecipeSkeleton from "@/features/recipes/components/skeleton/recipe-skeleton";
 import { RecipeScreen } from "@/features/recipes/recipe-screen";
 
 /**

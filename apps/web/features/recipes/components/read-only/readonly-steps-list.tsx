@@ -3,7 +3,7 @@
 import React, { useState } from "react";
 import Image from "next/image";
 import SmartMarkdownRenderer from "@/components/shared/smart-markdown-renderer";
-import { ImageLightbox } from "@/features/recipes/components/media";
+import ImageLightbox from "@/features/recipes/components/media/image-lightbox";
 import { CheckIcon } from "@heroicons/react/16/solid";
 
 import type { UnitsMap } from "@norish/config/zod/server-config";

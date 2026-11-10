@@ -4,12 +4,10 @@ import { useEffect } from "react";
 import AuthLanguageSelector from "@/components/shared/auth-language-selector";
 import { NotFoundView } from "@/components/shared/not-found-view";
 import { TimerTicker } from "@/components/timer-dock";
-import { RecipePageTint } from "@/features/recipes/components/read-only";
-import {
-  SharedRecipePageDesktop,
-  SharedRecipePageMobile,
-} from "@/features/recipes/components/share";
-import { RecipeSkeleton } from "@/features/recipes/components/skeleton";
+import RecipePageTint from "@/features/recipes/components/read-only/recipe-page-tint";
+import { SharedRecipePageDesktop } from "@/features/recipes/components/share/shared-recipe-page-desktop";
+import { SharedRecipePageMobile } from "@/features/recipes/components/share/shared-recipe-page-mobile";
+import RecipeSkeleton from "@/features/recipes/components/skeleton/recipe-skeleton";
 import { SharePageProvider } from "@/features/recipes/stores/share-page-store";
 import { TRPCClientError } from "@trpc/client";
 import { useTranslations } from "next-intl";

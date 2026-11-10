@@ -8,7 +8,7 @@
  * recipe context.
  */
 import SmartMarkdownRenderer from "@/components/shared/smart-markdown-renderer";
-import { useSharePublicConfigQuery } from "@/features/recipes/hooks";
+import { useSharePublicConfigQuery } from "@/features/recipes/hooks/use-share-public-config-query";
 
 interface PublicSmartInstructionProps {
   text: string;
