@@ -8,6 +8,11 @@ import { DEFAULT_PERSISTED_RECIPE_FILTERS } from "@norish/shared/contracts/filte
 vi.mock("@norish/shared-react/recipes", async (importOriginal) => ({
   ...(await importOriginal<typeof import("@norish/shared-react/recipes")>()),
   useLibrarySubscriptions: () => {},
+  useCookbooksSubscription: () => {},
+}));
+vi.mock("@norish/shared-react/groceries", async (importOriginal) => ({
+  ...(await importOriginal()),
+  usePantrySubscription: () => {},
 }));
 
 const cookie = () =>

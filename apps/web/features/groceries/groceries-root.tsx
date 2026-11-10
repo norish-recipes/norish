@@ -5,9 +5,11 @@ import { usePathname } from "next/navigation";
 import { usePrefersReducedMotion } from "@/hooks/use-prefers-reduced-motion";
 import { AnimatePresence, motion } from "motion/react";
 
+import { useIngredientsSubscription } from "@norish/shared-react/config";
 import {
   useGroceriesSubscription,
   useGroceriesUiStore,
+  usePantrySubscription,
   useStoreAislesSubscription,
   useStorePricesSubscription,
   useStoresSubscription,
@@ -35,6 +37,8 @@ export function GroceriesRoot() {
   useStoresSubscription();
   useStorePricesSubscription();
   useStoreAislesSubscription();
+  usePantrySubscription();
+  useIngredientsSubscription();
 
   const resetUi = useGroceriesUiStore((state) => state.reset);
 

@@ -36,7 +36,6 @@ export default defineConfig({
       "@": __dirname,
       "@/app": path.resolve(__dirname, "app"),
       "@/components": path.resolve(__dirname, "components"),
-      "@/context": path.resolve(__dirname, "context"),
       "@/hooks": path.resolve(__dirname, "hooks"),
       "@/stores": path.resolve(__dirname, "stores"),
       "@/styles": path.resolve(__dirname, "styles"),

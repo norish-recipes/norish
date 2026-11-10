@@ -1,5 +1,7 @@
 "use client";
 
+import { useArchiveImportSubscription } from "@/hooks/archive";
+
 import { UserSettingsProvider } from "../context";
 import AllergiesCard from "./allergies-card";
 import ApiTokenCard from "./api-token-card";
@@ -30,6 +32,9 @@ function UserSettingsContent() {
 }
 
 export default function UserSettingsContentWrapper() {
+  // The archive import's progress, drawn by its card.
+  useArchiveImportSubscription();
+
   return (
     <UserSettingsProvider>
       <UserSettingsContent />

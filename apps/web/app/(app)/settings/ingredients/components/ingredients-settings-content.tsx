@@ -12,6 +12,7 @@ import { Button, Skeleton } from "@heroui/react";
 import { keepPreviousData, useInfiniteQuery, useQueryClient } from "@tanstack/react-query";
 import { useLocale, useTranslations } from "next-intl";
 
+import { useIngredientsSubscription } from "@norish/shared-react/config";
 import { useTRPC } from "@norish/shared-react/trpc";
 
 import type { IngredientFilters } from "./ingredient-filters-panel";
@@ -53,6 +54,8 @@ export default function IngredientsSettingsContent() {
   const [isPending, startTransition] = useTransition();
   // A new search re-renders the rows at background priority, as the toggle does.
   const onSearch = useCallback((next: string) => startTransition(() => setSearch(next)), []);
+
+  useIngredientsSubscription();
 
   // With nothing typed and no other filter on, the list is the tree of kinds:
   // the foods filed under none, each folding its kinds out. A search or a

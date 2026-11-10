@@ -1,16 +1,13 @@
 "use client";
 
-import { useConfigSubscription, useIngredientsSubscription } from "@norish/shared-react/config";
-import { usePantrySubscription } from "@norish/shared-react/groceries";
+import { useConfigSubscription } from "@norish/shared-react/config";
 import { useHouseholdSubscription, usePermissionsSubscription } from "@norish/shared-react/reader";
 import { useRecipeOutcomes } from "@norish/shared-react/recipes";
 
-/** Holds open the realtime subscriptions whose data shows outside one feature; renders nothing. */
+/** What the shell draws itself, and the Reader's; screens and panels mount their own. */
 export function ShellSubscriptions() {
-  useIngredientsSubscription();
+  // The timer dock and the language list read config on every page.
   useConfigSubscription();
-  // A recipe page or a dashboard card changes the Pantry while the groceries screen is not mounted.
-  usePantrySubscription();
   // The Reader's: their household and what the recipe policy lets them see.
   useHouseholdSubscription();
   usePermissionsSubscription();

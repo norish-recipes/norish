@@ -31,7 +31,11 @@ import { Button, FieldError, Input, Label, TextField } from "@heroui/react";
 import { useLocale, useTranslations } from "next-intl";
 
 import type { FullRecipeDTO, MeasurementSystem, RecipeCategory } from "@norish/shared/contracts";
-import { useCategoriesQuery, useUnitsQuery } from "@norish/shared-react/config";
+import {
+  useCategoriesQuery,
+  useIngredientsSubscription,
+  useUnitsQuery,
+} from "@norish/shared-react/config";
 import { useHydrated } from "@norish/shared-react/platform";
 import { useDevicePreference } from "@norish/shared-react/reader";
 import { useRecipeId } from "@norish/shared-react/recipes";
@@ -53,6 +57,10 @@ export function RecipeEditorScreen({ mode, initialData }: RecipeEditorScreenProp
   const locale = useLocale();
   const { units, isLoading: isLoadingUnits } = useUnitsQuery();
   const { categories: householdCategories, builtInAliases } = useCategoriesQuery();
+
+  // The ingredient rows draw each food's icon.
+  useIngredientsSubscription();
+
   const categoryLabel = useCategoryLabel();
   const [unitStyle] = useDevicePreference("unitStyle");
   const [isSubmitting, setIsSubmitting] = useState(false);

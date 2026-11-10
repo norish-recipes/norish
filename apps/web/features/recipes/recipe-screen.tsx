@@ -20,19 +20,23 @@ import { TRPCClientError } from "@trpc/client";
 import { useTranslations } from "next-intl";
 
 import type { LibraryTypeFilter } from "@norish/shared/contracts";
+import { useIngredientsSubscription } from "@norish/shared-react/config";
 import {
   RecipePageProvider,
+  useCookbooksSubscription,
   useRatingsSubscription,
   useRecipeQuery,
   useRecipeShareSubscription,
 } from "@norish/shared-react/recipes";
 
-/** The recipe's, its shares', its enrichment's and its ratings' events, mounted once for the page. */
+/** What the page draws kept current, cooking mode included; mounted once for the page. */
 function RecipeSubscriptions({ recipeId }: { recipeId: string }) {
   useRecipeSubscription(recipeId);
   useRecipeShareSubscription(recipeId);
   useRecipeEnrichmentSubscription(recipeId);
   useRatingsSubscription();
+  useCookbooksSubscription();
+  useIngredientsSubscription();
 
   return null;
 }

@@ -26,6 +26,11 @@ vi.mock("@norish/shared-react/groceries", async (importOriginal) => ({
   useStoresSubscription: () => undefined,
   useStorePricesSubscription: () => undefined,
   useStoreAislesSubscription: () => undefined,
+  usePantrySubscription: () => undefined,
+}));
+vi.mock("@norish/shared-react/config", async (importOriginal) => ({
+  ...(await importOriginal()),
+  useIngredientsSubscription: () => undefined,
 }));
 
 describe("GroceriesRoot", () => {

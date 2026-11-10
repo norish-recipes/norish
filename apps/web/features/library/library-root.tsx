@@ -8,8 +8,10 @@ import type {
   CanonicalRecipeFilters,
   PersistedRecipeFilters,
 } from "@norish/shared/contracts/filter-contract";
+import { usePantrySubscription } from "@norish/shared-react/groceries";
 import {
   LibraryFiltersProvider,
+  useCookbooksSubscription,
   useLibraryFiltersStoreApi,
   useLibrarySubscriptions,
 } from "@norish/shared-react/recipes";
@@ -23,11 +25,14 @@ function keep(filters: CanonicalRecipeFilters) {
   persistRecipeFilters(filters);
 }
 
-/** The list's and the ratings' events, and the filters kept in the browser and the cookie. */
+/** What the Library draws kept current, and the filters kept in the browser and the cookie. */
 function LibraryEffects({ resumed }: { resumed: boolean }) {
   const store = useLibraryFiltersStoreApi();
 
   useLibrarySubscriptions();
+  useCookbooksSubscription();
+  // The Library can be ordered by how much of a recipe the Pantry covers.
+  usePantrySubscription();
 
   // Storage is read after mount, as the server can't, unless the store resumed this document's own;
   // then every change is written back, so the next full load renders under it.

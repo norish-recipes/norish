@@ -25,6 +25,7 @@ vi.mock("next-intl", () => ({
   useTranslations: () => (key: string) => LABELS[key] ?? key,
 }));
 vi.mock("@norish/shared-react/config", () => ({
+  useIngredientsSubscription: () => undefined,
   useUnitsQuery: () => ({ units: {}, isLoading: false }),
   useCategoriesQuery: () => ({
     categories: ["Breakfast", "Lunch", "Dinner", "Snack", "Puddings", "Drinks"],

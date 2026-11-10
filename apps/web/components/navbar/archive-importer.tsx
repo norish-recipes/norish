@@ -1,15 +1,13 @@
 "use client";
 
 import React, { useCallback, useEffect, useRef, useState } from "react";
-import { useArchiveImportContext } from "@/context/archive-import-context";
-import { useArchiveImportMutation } from "@/hooks/archive";
+import { useArchiveImportMutation, useArchiveImportQuery } from "@/hooks/archive";
 import { DocumentArrowUpIcon } from "@heroicons/react/24/outline";
 import { ProgressBar } from "@heroui/react";
 import { useTranslations } from "next-intl";
 
 export default function ArchiveImporter() {
   const t = useTranslations("navbar.archiveImporter");
-  // Use archive context for state
   const {
     current,
     imported,
@@ -18,7 +16,7 @@ export default function ArchiveImporter() {
     errors: progressErrors,
     isImporting,
     clearImport,
-  } = useArchiveImportContext();
+  } = useArchiveImportQuery();
   const { startImport, isStarting } = useArchiveImportMutation();
   const [dragActive, setDragActive] = useState(false);
   const [localErrors, setLocalErrors] = useState<{ file: string; error: string }[]>([]);
