@@ -6,6 +6,7 @@ import { useRatingQuery, useRatingsMutation } from "@/hooks/ratings";
 import {
   useConvertMutation,
   useRecipeEnrichment,
+  useRecipeEnrichmentSubscription,
   useRecipeQuery,
   useRecipeSubscription,
 } from "@/hooks/recipes";
@@ -25,7 +26,11 @@ const {
   useRecipeSharesQuery: sharedRecipeShareHooks.useRecipeSharesQuery,
   useRecipeShareSubscription: sharedRecipeShareHooks.useRecipeShareSubscription,
   useRecipeShareMutations: sharedRecipeShareHooks.useRecipeShareMutations,
-  useRecipeEnrichment,
+  useRecipeEnrichment: (recipeId: string) => {
+    useRecipeEnrichmentSubscription(recipeId);
+
+    return useRecipeEnrichment(recipeId);
+  },
   useActiveAllergies,
   useConvertMutation,
   useRatingQuery,

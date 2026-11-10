@@ -2,6 +2,7 @@ export { useConvertMutation, type ConvertMutationResult } from "./use-convert-mu
 export { useLinkedRecipeIngredients } from "./use-linked-recipe-ingredients";
 export {
   useRecipeEnrichment,
+  useRecipeEnrichmentSubscription,
   type RecipeEnrichmentCallbacks,
   type RecipeEnrichmentResult,
   type RecipeEnrichmentStateMap,

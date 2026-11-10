@@ -6,7 +6,7 @@ import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import type { RecipeEnrichmentStatusDto } from "@norish/shared/lib/recipe-enrichment";
 
 import { trackedEvent } from "../../../__tests__/realtime/tracked-event";
-import { useRecipeEnrichment } from "../use-recipe-enrichment";
+import { useRecipeEnrichment, useRecipeEnrichmentSubscription } from "../use-recipe-enrichment";
 
 const useSubscriptionMock = vi.hoisted(() => vi.fn());
 
@@ -41,6 +41,7 @@ vi.mock("../../trpc", () => ({
   useTRPC: () => ({
     recipes: {
       enrichmentStatus: {
+        queryKey: () => STATUS_KEY,
         queryOptions: () => ({ queryKey: STATUS_KEY, queryFn: statusFetch }),
       },
       onEnrichment: {
@@ -85,21 +86,28 @@ let queryClient: QueryClient;
 let latest: ReturnType<typeof useRecipeEnrichment> | null = null;
 let manualErrors: string[] = [];
 
-function render(currentUserId: string | null = "user-1") {
+const callbacks = { onManualError: (kind: string) => manualErrors.push(kind) };
+
+function Probe() {
+  latest = useRecipeEnrichment("recipe-1", callbacks);
+
+  return null;
+}
+
+/** The page: one subscription, and as many readers as it draws. */
+function Page({ readers = 1 }: { readers?: number }) {
+  useRecipeEnrichmentSubscription("recipe-1", callbacks);
+
+  return Array.from({ length: readers }, (_, index) => <Probe key={index} />);
+}
+
+function render(currentUserId: string | null = "user-1", readers = 1) {
   readerId = currentUserId;
-
-  function Probe() {
-    latest = useRecipeEnrichment("recipe-1", {
-      onManualError: (kind) => manualErrors.push(kind),
-    });
-
-    return null;
-  }
 
   act(() => {
     root.render(
       <QueryClientProvider client={queryClient}>
-        <Probe />
+        <Page readers={readers} />
       </QueryClientProvider>
     );
   });
@@ -482,6 +490,23 @@ describe("useRecipeEnrichment", () => {
       requestedByUserId: "user-1",
     });
     expect(manualErrors).toEqual(["auto-categorization"]);
+  });
+
+  it("reports a manual failure once however many readers the page draws", async () => {
+    queryClient.setQueryData(STATUS_KEY, idleStatus());
+    render("user-1", 3);
+
+    expect(useSubscriptionMock.mock.calls.at(-1)?.[0]).toBeDefined();
+
+    await emitLifecycle({
+      recipeId: "recipe-1",
+      kind: "auto-tagging",
+      state: "failed",
+      origin: "manual",
+      requestedByUserId: "user-1",
+    });
+
+    expect(manualErrors).toEqual(["auto-tagging"]);
   });
 
   it("does not report a successful run", async () => {

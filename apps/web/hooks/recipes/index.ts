@@ -15,7 +15,7 @@ export { useRecipeImages } from "./use-recipe-images";
 export { useRecipeVideos } from "./use-recipe-videos";
 export { useConvertMutation, type ConvertMutationResult } from "./use-convert-mutation";
 
-export { useRecipeEnrichment } from "./use-recipe-enrichment";
+export { useRecipeEnrichment, useRecipeEnrichmentSubscription } from "./use-recipe-enrichment";
 
 export {
   useServingsScaler,
