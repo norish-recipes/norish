@@ -12,21 +12,21 @@ import RecipeViewModeToggle, {
 import SearchInput from "@/components/dashboard/search-input";
 import TodaysMeals from "@/components/dashboard/today/todays-meals";
 import RecipeGridSkeleton from "@/components/skeleton/recipe-grid-skeleton";
-import { RecipeSelectionProvider } from "@/context/recipe-selection-context";
-import { useRecipesContext } from "@/context/recipes-context";
+import { useLibraryList } from "@/hooks/use-library";
 import { Tabs } from "@heroui/react";
+
+import { useLibrarySubscriptions } from "@norish/shared-react/recipes";
 
 const LIBRARY_HEADING_ID = "recipe-library-heading";
 
 function RecipeLibrary({ skeleton }: { skeleton: boolean }) {
-  // Above the grid/list tabs, so switching the view keeps the selection.
-  const { recipes } = useRecipesContext();
+  const { recipes } = useLibraryList();
 
   return (
-    <RecipeSelectionProvider recipes={recipes}>
+    <>
       <RecipeLibraryContent skeleton={skeleton} />
-      <RecipeSelectionBar />
-    </RecipeSelectionProvider>
+      <RecipeSelectionBar recipes={recipes} />
+    </>
   );
 }
 
@@ -65,6 +65,8 @@ function RecipeLibraryContent({ skeleton }: { skeleton: boolean }) {
  * loading state: grey cards stand in for the Library, so its grid and scroll memory mount once.
  */
 export function Dashboard({ skeleton = false }: { skeleton?: boolean }) {
+  useLibrarySubscriptions();
+
   return (
     <div className="flex min-h-0 w-full flex-1 flex-col gap-8">
       <TodaysMeals />

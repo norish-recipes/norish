@@ -21,15 +21,17 @@ import { useTranslations } from "next-intl";
 
 import {
   RecipePageProvider,
+  useRatingsSubscription,
   useRecipeQuery,
   useRecipeShareSubscription,
 } from "@norish/shared-react/recipes";
 
-/** The recipe's, its shares' and its enrichment's events, mounted once for the page. */
+/** The recipe's, its shares', its enrichment's and its ratings' events, mounted once for the page. */
 function RecipeSubscriptions({ recipeId }: { recipeId: string }) {
   useRecipeSubscription(recipeId);
   useRecipeShareSubscription(recipeId);
   useRecipeEnrichmentSubscription(recipeId);
+  useRatingsSubscription();
 
   return null;
 }

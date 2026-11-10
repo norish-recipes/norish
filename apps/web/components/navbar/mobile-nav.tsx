@@ -11,7 +11,7 @@ import {
 } from "@/components/navbar/nav-tabs";
 import NavbarUserMenu from "@/components/navbar/navbar-user-menu";
 import { useAutoHide } from "@/hooks/auto-hide";
-import { useAppStore } from "@/stores/useAppStore";
+import { useActionBarStore } from "@/lib/action-bar";
 import {
   CalendarDaysIcon,
   ClipboardDocumentListIcon,
@@ -47,7 +47,7 @@ export const MobileNav = () => {
   const activeTab = navTabPosition(pathname);
   const [userMenuOpen, setUserMenuOpen] = useState(false);
   // An action bar stands in the nav's place while it is up.
-  const actionBarOpen = useAppStore((state) => state.actionBarOpen);
+  const actionBarOpen = useActionBarStore((state) => state.actionBarOpen);
 
   const { isVisible, show } = useAutoHide({
     disabled: userMenuOpen,

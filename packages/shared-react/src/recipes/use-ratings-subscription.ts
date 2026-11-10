@@ -7,21 +7,19 @@ import type { EventName, PayloadOf } from "@norish/shared/contracts/realtime/cat
 import type { RatingsRealtime } from "@norish/shared/contracts/realtime/ratings";
 
 import type { InfiniteRecipeData } from "./library-cache";
+import { usePlatform } from "../platform/platform";
 import { useRealtimeSubscription } from "../realtime/use-realtime-subscription";
 import { useTRPC } from "../trpc";
 
 type Payload<E extends EventName<RatingsRealtime>> = PayloadOf<RatingsRealtime, E>;
 
-export type RatingsSubscriptionCallbacks = {
-  onRatingFailed?: (payload: Payload<"ratingFailed">) => void;
-};
-
 /**
  * Ratings land where they are shown: the average and the dashboard rows are
  * patched in place, by recipe id, and nothing is refetched for an event the
- * cache already reflects. Only a lag refetches.
+ * cache already reflects. Only a lag refetches. A rating the server refused is toasted.
  */
-export function useRatingsSubscription(callbacks: RatingsSubscriptionCallbacks = {}) {
+export function useRatingsSubscription() {
+  const { toast } = usePlatform();
   const trpc = useTRPC();
   const queryClient = useQueryClient();
 
@@ -80,14 +78,16 @@ export function useRatingsSubscription(callbacks: RatingsSubscriptionCallbacks =
 
   useRealtimeSubscription<Payload<"ratingFailed">>(trpc.ratings.onRatingFailed, {
     lagQueryKeys,
-    onEvent: (payload) => {
-      const userRatingQueryKey = trpc.ratings.getUserRating.queryKey({
-        recipeId: payload.recipeId,
-      });
+    onEvent: ({ recipeId }) => {
+      const userRatingQueryKey = trpc.ratings.getUserRating.queryKey({ recipeId });
 
       void queryClient.invalidateQueries({ queryKey: userRatingQueryKey });
 
-      callbacks.onRatingFailed?.(payload);
+      toast.show({
+        severity: "danger",
+        title: toast.translate("common.errors.operationFailed"),
+        description: toast.translate("common.errors.technicalDetails"),
+      });
     },
   });
 }

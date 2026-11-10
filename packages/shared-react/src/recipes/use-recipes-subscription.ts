@@ -11,21 +11,61 @@ import { patchDashboardRecipeFromFull } from "@norish/shared/contracts/zod";
 import type { InfiniteRecipeData } from "./library-cache";
 import { useRealtimeSubscription } from "../realtime/use-realtime-subscription";
 import { useTRPC } from "../trpc";
+import { useRecipeSelection } from "./selection-store";
 import { removeRecipesFromLists, useRecipesCacheHelpers } from "./use-recipes-cache";
 
 type Payload<E extends EventName<RecipesRealtime>> = PayloadOf<RecipesRealtime, E>;
 
-export type RecipesSubscriptionCallbacks = {
+export type RecipeImportsSubscriptionCallbacks = {
   onImported?: (payload: Payload<"imported">) => void;
   onFailed?: (payload: Payload<"failed">) => void;
+};
+
+export type RecipeListSubscriptionCallbacks = {
   /** The reader's delete found these recipes edited elsewhere and kept them. */
   onDeleteKept?: (payload: Payload<"deleteKept">) => void;
 };
 
-export function useRecipesSubscription(callbacks: RecipesSubscriptionCallbacks = {}) {
+/** Put new recipes at the top of a cached list, each once. */
+function prependRecipes(recipes: RecipeDashboardDTO[]) {
+  return (prev: InfiniteRecipeData | undefined): InfiniteRecipeData | undefined => {
+    if (!prev?.pages?.length) {
+      return {
+        pages: [{ recipes, total: recipes.length, nextCursor: null }],
+        pageParams: [0],
+      };
+    }
+
+    const firstPage = prev.pages[0];
+
+    if (!firstPage) return prev;
+
+    const existingIds = new Set(firstPage.recipes.map((r) => r.id));
+    const newRecipes = recipes.filter((r) => !existingIds.has(r.id));
+
+    if (newRecipes.length === 0) return prev;
+
+    return {
+      ...prev,
+      pages: [
+        {
+          ...firstPage,
+          recipes: [...newRecipes, ...firstPage.recipes],
+          total: firstPage.total + newRecipes.length,
+        },
+        ...prev.pages.slice(1),
+      ],
+    };
+  };
+}
+
+/**
+ * The import outcomes: a started import takes its pending card, and the import
+ * ends in a recipe or a failure. Mounted once in the shell, since an import starts on any page.
+ */
+export function useRecipeImportsSubscription(callbacks: RecipeImportsSubscriptionCallbacks = {}) {
   const trpc = useTRPC();
   const queryClient = useQueryClient();
-
   const {
     setAllRecipesData,
     invalidate,
@@ -33,9 +73,6 @@ export function useRecipesSubscription(callbacks: RecipesSubscriptionCallbacks =
     removePendingRecipe,
   } = useRecipesCacheHelpers();
 
-  // A lagged subscription refetches the lists; the detail caches are
-  // refetched by the screens that hold them.
-  const lag = { onLag: invalidate };
   const rereadPending = () =>
     void queryClient.invalidateQueries({ queryKey: trpc.recipes.getPending.queryKey() });
   // A fresh subscription carries no cursor, so an import that ended before both outcomes'
@@ -57,37 +94,56 @@ export function useRecipesSubscription(callbacks: RecipesSubscriptionCallbacks =
       rereadPending();
     },
   };
+
+  useRealtimeSubscription<Payload<"importStarted">>(trpc.recipes.onImportStarted, {
+    onLag: invalidate,
+    onEvent: ({ recipeId }) => {
+      replaceOldestOptimisticPendingRecipe(recipeId);
+    },
+  });
+
+  useRealtimeSubscription<Payload<"imported">>(trpc.recipes.onImported, {
+    ...outcomeLag,
+    onStarted: outcomeLive("imported"),
+    onEvent: (payload) => {
+      const pendingId = payload.pendingRecipeId ?? payload.recipe.id;
+
+      replaceOldestOptimisticPendingRecipe(pendingId);
+      removePendingRecipe(pendingId);
+      setAllRecipesData(prependRecipes([payload.recipe]));
+      callbacks.onImported?.(payload);
+    },
+  });
+
+  useRealtimeSubscription<Payload<"failed">>(trpc.recipes.onFailed, {
+    ...outcomeLag,
+    onStarted: outcomeLive("failed"),
+    onEvent: (payload) => {
+      if (payload.recipeId) {
+        replaceOldestOptimisticPendingRecipe(payload.recipeId);
+        removePendingRecipe(payload.recipeId);
+      }
+
+      invalidate();
+      callbacks.onFailed?.(payload);
+    },
+  });
+}
+
+/** The Library's list events: recipes created, edited, converted and deleted anywhere. */
+export function useRecipeListSubscription(callbacks: RecipeListSubscriptionCallbacks = {}) {
+  const trpc = useTRPC();
+  const queryClient = useQueryClient();
+  const { setAllRecipesData, invalidate, removePendingRecipe } = useRecipesCacheHelpers();
+  const dropFromSelection = useRecipeSelection((state) => state.drop);
+
+  // A lagged subscription refetches the lists; the detail caches are
+  // refetched by the screens that hold them.
+  const lag = { onLag: invalidate };
   // The server saves after the mutation answers, so the household's Categories
   // are reread when the save is announced, not when the mutation succeeds.
   const rereadCategories = () =>
     void queryClient.invalidateQueries({ queryKey: trpc.config.categories.queryKey() });
-
-  const addRecipeToList = (recipe: RecipeDashboardDTO) => {
-    setAllRecipesData((prev: InfiniteRecipeData | undefined): InfiniteRecipeData | undefined => {
-      if (!prev?.pages?.length) {
-        return {
-          pages: [{ recipes: [recipe], total: 1, nextCursor: null }],
-          pageParams: [0],
-        };
-      }
-
-      const firstPage = prev.pages[0];
-
-      if (!firstPage) return prev;
-
-      const exists = firstPage.recipes.some((r) => r.id === recipe.id);
-
-      if (exists) return prev;
-
-      return {
-        ...prev,
-        pages: [
-          { ...firstPage, recipes: [recipe, ...firstPage.recipes], total: firstPage.total + 1 },
-          ...prev.pages.slice(1),
-        ],
-      };
-    });
-  };
 
   const updateRecipeInList = (updatedRecipe: FullRecipeDTO) => {
     setAllRecipesData((prev: InfiniteRecipeData | undefined): InfiniteRecipeData | undefined => {
@@ -109,28 +165,8 @@ export function useRecipesSubscription(callbacks: RecipesSubscriptionCallbacks =
     ...lag,
     onEvent: ({ recipe }) => {
       removePendingRecipe(recipe.id);
-      addRecipeToList(recipe);
+      setAllRecipesData(prependRecipes([recipe]));
       rereadCategories();
-    },
-  });
-
-  useRealtimeSubscription<Payload<"importStarted">>(trpc.recipes.onImportStarted, {
-    ...lag,
-    onEvent: ({ recipeId }) => {
-      replaceOldestOptimisticPendingRecipe(recipeId);
-    },
-  });
-
-  useRealtimeSubscription<Payload<"imported">>(trpc.recipes.onImported, {
-    ...outcomeLag,
-    onStarted: outcomeLive("imported"),
-    onEvent: (payload) => {
-      const pendingId = payload.pendingRecipeId ?? payload.recipe.id;
-
-      replaceOldestOptimisticPendingRecipe(pendingId);
-      removePendingRecipe(pendingId);
-      addRecipeToList(payload.recipe);
-      callbacks.onImported?.(payload);
     },
   });
 
@@ -140,12 +176,8 @@ export function useRecipesSubscription(callbacks: RecipesSubscriptionCallbacks =
       updateRecipeInList(recipe);
       queryClient.setQueryData(trpc.recipes.get.queryKey({ id: recipe.id }), recipe);
 
-      // The calendar shows the recipe's name and image; an enrichment
-      // changes neither.
-      if (source !== "enrichment") {
-        void queryClient.invalidateQueries({ queryKey: trpc.calendar.listItems.queryKey() });
-        rereadCategories();
-      }
+      // An enrichment changes no Category.
+      if (source !== "enrichment") rereadCategories();
     },
   });
 
@@ -153,6 +185,7 @@ export function useRecipesSubscription(callbacks: RecipesSubscriptionCallbacks =
     ...lag,
     onEvent: ({ ids }) => {
       setAllRecipesData((prev) => removeRecipesFromLists(prev, new Set(ids)));
+      dropFromSelection(ids);
       rereadCategories();
 
       for (const id of ids) {
@@ -183,52 +216,8 @@ export function useRecipesSubscription(callbacks: RecipesSubscriptionCallbacks =
     },
   });
 
-  useRealtimeSubscription<Payload<"failed">>(trpc.recipes.onFailed, {
-    ...outcomeLag,
-    onStarted: outcomeLive("failed"),
-    onEvent: (payload) => {
-      if (payload.recipeId) {
-        replaceOldestOptimisticPendingRecipe(payload.recipeId);
-        removePendingRecipe(payload.recipeId);
-      }
-
-      invalidate();
-      callbacks.onFailed?.(payload);
-    },
-  });
-
   useRealtimeSubscription<Payload<"recipeBatchCreated">>(trpc.recipes.onRecipeBatchCreated, {
     ...lag,
-    onEvent: ({ recipes }) => {
-      setAllRecipesData((prev: InfiniteRecipeData | undefined): InfiniteRecipeData | undefined => {
-        if (!prev?.pages?.length) {
-          return {
-            pages: [{ recipes, total: recipes.length, nextCursor: null }],
-            pageParams: [0],
-          };
-        }
-
-        const firstPage = prev.pages[0];
-
-        if (!firstPage) return prev;
-
-        const existingIds = new Set(firstPage.recipes.map((r) => r.id));
-        const newRecipes = recipes.filter((r) => !existingIds.has(r.id));
-
-        if (newRecipes.length === 0) return prev;
-
-        return {
-          ...prev,
-          pages: [
-            {
-              ...firstPage,
-              recipes: [...newRecipes, ...firstPage.recipes],
-              total: firstPage.total + newRecipes.length,
-            },
-            ...prev.pages.slice(1),
-          ],
-        };
-      });
-    },
+    onEvent: ({ recipes }) => setAllRecipesData(prependRecipes(recipes)),
   });
 }

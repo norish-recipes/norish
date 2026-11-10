@@ -2,9 +2,9 @@
 
 import React, { useState } from "react";
 import { FiltersPanel } from "@/components/Panel/consumers";
-import { useRecipesContext } from "@/context/recipes-context";
 import { useAutoHide } from "@/hooks/auto-hide";
-import { useAppStore } from "@/stores/useAppStore";
+import { useLibraryList } from "@/hooks/use-library";
+import { useActionBarStore } from "@/lib/action-bar";
 import { Button } from "@heroui/react";
 import { AnimatePresence, motion } from "motion/react";
 import { useTranslations } from "next-intl";
@@ -17,12 +17,12 @@ import { useTranslations } from "next-intl";
  * rather than recipes (ADR-0026).
  */
 export default function FloatingRecipeChip() {
-  const { total, isLoading } = useRecipesContext();
+  const { total, isLoading } = useLibraryList();
   const [isOpen, setIsOpen] = useState(false);
   const isVisibleByCount = !isLoading && total > 0;
   const t = useTranslations("recipes.dashboard");
   const { isVisible } = useAutoHide();
-  const actionBarOpen = useAppStore((state) => state.actionBarOpen);
+  const actionBarOpen = useActionBarStore((state) => state.actionBarOpen);
 
   if (!isVisibleByCount) return null;
 

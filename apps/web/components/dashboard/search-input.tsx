@@ -1,8 +1,8 @@
 "use client";
 
 import { useEffect, useEffectEvent, useState } from "react";
-import { useRecipesContext } from "@/context/recipes-context";
 import { useRecipesFiltersContext } from "@/context/recipes-filters-context";
+import { useImportRecipe } from "@/hooks/use-import-recipe";
 import { MagnifyingGlassIcon, XMarkIcon } from "@heroicons/react/16/solid";
 import { Input } from "@heroui/react";
 import { useTranslations } from "next-intl";
@@ -15,7 +15,7 @@ import Filters from "../shared/filters";
 export default function SearchInput() {
   const t = useTranslations("recipes.dashboard");
   const { filters, setFilters } = useRecipesFiltersContext();
-  const { importRecipe } = useRecipesContext();
+  const { importRecipe } = useImportRecipe();
   const [inputValue, setInputValue] = useState(filters.rawInput);
   const [debouncedValue] = useDebounceValue(inputValue, 300);
   const [syncedRawInput, setSyncedRawInput] = useState(filters.rawInput);
@@ -51,7 +51,7 @@ export default function SearchInput() {
     if (isUrl(trimmedValue)) {
       setInputValue("");
       setFilters({ rawInput: "" });
-      void importRecipe(trimmedValue);
+      importRecipe(trimmedValue);
     } else {
       // Regular text - just update input, debounce handles filter sync
       setInputValue(rawValue);

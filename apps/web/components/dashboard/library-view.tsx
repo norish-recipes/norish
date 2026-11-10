@@ -1,7 +1,7 @@
 "use client";
 
 import type { LibraryGridItem } from "@/lib/library-items";
-import { useCallback, useMemo } from "react";
+import { useMemo } from "react";
 import CookbookCard from "@/components/cookbooks/cookbook-card";
 import LibraryGrid from "@/components/dashboard/library-grid";
 import NoCookbooksText from "@/components/dashboard/no-cookbooks-text";
@@ -9,13 +9,20 @@ import NoRecipeResults from "@/components/dashboard/no-recipe-results";
 import NoRecipesText from "@/components/dashboard/no-recipes-text";
 import RecipeCard from "@/components/dashboard/recipe-card";
 import RecipeCardSkeleton from "@/components/skeleton/recipe-card-skeleton";
-import { useRecipeSelection } from "@/context/recipe-selection-context";
-import { useRecipesContext } from "@/context/recipes-context";
 import { useRecipesFiltersContext } from "@/context/recipes-filters-context";
+import { useLibraryCards, useLibraryList } from "@/hooks/use-library";
 
+import type { SelectedRecipe } from "@norish/shared-react/recipes";
 import type { RecipeViewMode } from "@norish/shared/contracts/zod/device-preferences";
-import { useCookbooksMutations, useLibraryQuery } from "@norish/shared-react/recipes";
-import { toRecipesQueryFilters } from "@norish/shared/contracts/filter-contract";
+import {
+  useCookbooksMutations,
+  usePendingRecipesQuery,
+  useRecipeSelection,
+} from "@norish/shared-react/recipes";
+import {
+  hasAppliedRecipeFilters,
+  serializeRecipeFilters,
+} from "@norish/shared/contracts/filter-contract";
 
 /**
  * The Library's list: recipes and cookbooks interleaved, ordered by whatever
@@ -27,30 +34,15 @@ import { toRecipesQueryFilters } from "@norish/shared/contracts/filter-contract"
  * recipe count.
  */
 export default function LibraryView({ variant }: { variant: RecipeViewMode }) {
-  const { filters, isHydrated } = useRecipesFiltersContext();
-  const {
-    pendingRecipeIds,
-    hasAppliedFilters,
-    clearFilters,
-    filterKey,
-    isFavorite,
-    toggleFavorite,
-    deleteRecipes,
-    allergies,
-  } = useRecipesContext();
+  const { filters, clearFilters } = useRecipesFiltersContext();
+  const { isFavorite, toggleFavorite, deleteRecipes, allergies } = useLibraryCards();
+  const { pendingRecipeIds } = usePendingRecipesQuery();
   const { deleteCookbook } = useCookbooksMutations();
-  const isSelecting = useRecipeSelection()?.isSelecting ?? false;
-
-  // The same filters the context passes, so both share one cache entry and
-  // one request.
-  const queryFilters = useMemo(() => toRecipesQueryFilters(filters), [filters]);
-
-  // Until the persisted filters are applied, the default filters are a guess,
-  // so hold the loading presentation rather than painting a list the reader
-  // had filtered away.
-  const { items, isLoading, isValidating, loadMore } = useLibraryQuery(queryFilters, {
-    enabled: isHydrated,
-  });
+  const isSelecting = useRecipeSelection((state) => state.selected.size > 0);
+  const selectRange = useRecipeSelection((state) => state.selectRange);
+  const { items, recipes, isLoading, isValidating, loadMore } = useLibraryList();
+  const hasAppliedFilters = hasAppliedRecipeFilters(filters);
+  const selectRangeTo = (recipe: SelectedRecipe) => selectRange(recipe, recipes);
 
   // A running import is a recipe on its way, so the Cookbooks lens leaves it out.
   const showsPending = filters.libraryType !== "cookbooks";
@@ -70,43 +62,41 @@ export default function LibraryView({ variant }: { variant: RecipeViewMode }) {
     [showsPending, pendingRecipeIds, items]
   );
 
-  const renderItem = useCallback(
-    (item: LibraryGridItem) => {
-      // A selection holds recipes only: cookbooks and imports still running
-      // step back while it is open.
-      if (item.kind !== "recipe") {
-        return (
-          <div
-            className={isSelecting ? "opacity-40 transition-opacity" : "transition-opacity"}
-            inert={isSelecting}
-          >
-            {item.kind === "pending" ? (
-              <RecipeCardSkeleton variant={variant} />
-            ) : (
-              <CookbookCard
-                allergies={allergies}
-                cookbook={item.cookbook}
-                variant={variant}
-                onDelete={deleteCookbook}
-              />
-            )}
-          </div>
-        );
-      }
-
+  const renderItem = (item: LibraryGridItem) => {
+    // A selection holds recipes only: cookbooks and imports still running
+    // step back while it is open.
+    if (item.kind !== "recipe") {
       return (
-        <RecipeCard
-          allergies={allergies}
-          isFavorite={isFavorite(item.recipe.id)}
-          recipe={item.recipe}
-          variant={variant}
-          onDelete={deleteRecipes}
-          onToggleFavorite={toggleFavorite}
-        />
+        <div
+          className={isSelecting ? "opacity-40 transition-opacity" : "transition-opacity"}
+          inert={isSelecting}
+        >
+          {item.kind === "pending" ? (
+            <RecipeCardSkeleton variant={variant} />
+          ) : (
+            <CookbookCard
+              allergies={allergies}
+              cookbook={item.cookbook}
+              variant={variant}
+              onDelete={deleteCookbook}
+            />
+          )}
+        </div>
       );
-    },
-    [variant, allergies, isFavorite, deleteRecipes, toggleFavorite, deleteCookbook, isSelecting]
-  );
+    }
+
+    return (
+      <RecipeCard
+        allergies={allergies}
+        isFavorite={isFavorite(item.recipe.id)}
+        recipe={item.recipe}
+        variant={variant}
+        onDelete={deleteRecipes}
+        onSelectRange={selectRangeTo}
+        onToggleFavorite={toggleFavorite}
+      />
+    );
+  };
 
   const emptyState =
     filters.libraryType === "cookbooks" && !hasAppliedFilters ? (
@@ -121,11 +111,11 @@ export default function LibraryView({ variant }: { variant: RecipeViewMode }) {
     <LibraryGrid
       emptyState={emptyState}
       isFetchingMore={isValidating && !isLoading}
-      isLoading={isLoading || !isHydrated}
+      isLoading={isLoading}
       items={gridItems}
       loadMore={loadMore}
       renderItem={renderItem}
-      scrollKey={filterKey}
+      scrollKey={serializeRecipeFilters(filters)}
       variant={variant}
     />
   );

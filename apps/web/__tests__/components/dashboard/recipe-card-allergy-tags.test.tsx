@@ -27,11 +27,6 @@ vi.mock("@/hooks/user/use-hidden-item-visibility", () => ({
   useHiddenItemVisibility: () => ({ showRatings: true, showFavorites: true }),
 }));
 
-vi.mock("@/stores/useAppStore", () => ({
-  useAppStore: (selector: (state: { mobileSearchOpen: boolean }) => unknown) =>
-    selector({ mobileSearchOpen: false }),
-}));
-
 vi.mock("@/components/Panel/consumers", () => ({
   MiniCalendar: () => null,
 }));
@@ -136,6 +131,7 @@ function renderListCard(tagNames: string[], allergies: string[]) {
       recipe={makeRecipe(tagNames)}
       variant="list"
       onDelete={vi.fn()}
+      onSelectRange={vi.fn()}
       onToggleFavorite={vi.fn()}
     />
   );
@@ -216,6 +212,7 @@ describe("RecipeCard list view allergy tags", () => {
         recipe={recipe}
         variant="list"
         onDelete={vi.fn()}
+        onSelectRange={vi.fn()}
         onToggleFavorite={vi.fn()}
       />
     );

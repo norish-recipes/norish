@@ -6,7 +6,7 @@ import {
   PRIVATE_ADDRESS_REASON,
 } from "@norish/shared/contracts/realtime/recipes";
 
-import { createRecipeSubscriptionToasts } from "../src/contexts/recipes/recipe-toast-adapter";
+import { createRecipeSubscriptionToasts } from "../use-recipe-events";
 
 function toasts() {
   const show = vi.fn();

@@ -3,7 +3,7 @@
 import type { ComponentPropsWithoutRef, ReactNode } from "react";
 import { useEffect } from "react";
 import { usePrefersReducedMotion } from "@/hooks/use-prefers-reduced-motion";
-import { useAppStore } from "@/stores/useAppStore";
+import { useActionBarStore } from "@/lib/action-bar";
 import { Separator, Toolbar } from "@heroui/react";
 import { AnimatePresence, motion } from "motion/react";
 import { twMerge } from "tailwind-merge";
@@ -24,7 +24,7 @@ function ActionBarRoot({
   className?: string;
 }) {
   const reduceMotion = usePrefersReducedMotion();
-  const setActionBarOpen = useAppStore((state) => state.setActionBarOpen);
+  const setActionBarOpen = useActionBarStore((state) => state.setActionBarOpen);
 
   useEffect(() => {
     if (!isOpen) return;

@@ -1,53 +1,79 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import { MiniCookbooks } from "@/components/Panel/consumers";
 import { DeleteRecipeModal } from "@/components/shared/delete-recipe-modal";
 import { ActionBar, actionBarButtonClassName } from "@/components/ui/action-bar";
-import { useRecipeSelection } from "@/context/recipe-selection-context";
-import { useRecipesContext } from "@/context/recipes-context";
+import { useRecipesMutations } from "@/hooks/use-recipes-mutations";
 import { showActionToast } from "@/lib/ui/action-toast";
 import { BookOpenIcon, MinusCircleIcon, TrashIcon, XMarkIcon } from "@heroicons/react/16/solid";
 import { Button } from "@heroui/react";
 import { useTranslations } from "next-intl";
 import { twMerge } from "tailwind-merge";
 
+import type { SelectedRecipe } from "@norish/shared-react/recipes";
 import type { CookbookSummaryDTO } from "@norish/shared/contracts";
 import { useRecipePermissions } from "@norish/shared-react/reader";
-import { useCookbooksMutations } from "@norish/shared-react/recipes";
+import { useCookbooksMutations, useRecipeSelection } from "@norish/shared-react/recipes";
+
+import { useRecipeLeaving } from "./recipe-leaving";
 
 /**
- * The action bar over a page's recipe selection. On a cookbook page it can also take the
- * selection out of that cookbook; `onLeave` drops rows from the member list.
+ * The action bar over a Library page's recipe selection; `recipes` is the page's loaded list,
+ * whose versions the actions send. On a cookbook page it can also take the selection out of
+ * that cookbook; `onLeave` drops rows from the member list.
  */
 export default function RecipeSelectionBar({
   cookbook,
+  recipes,
   onLeave,
 }: {
   cookbook?: CookbookSummaryDTO;
+  recipes: SelectedRecipe[];
   onLeave?: (recipeIds: string[]) => void;
 }) {
-  const selection = useRecipeSelection();
+  const selectedById = useRecipeSelection((state) => state.selected);
+  const clear = useRecipeSelection((state) => state.clear);
+  const playLeaving = useRecipeLeaving((state) => state.playLeaving);
   const t = useTranslations("recipes.selection");
   const tActions = useTranslations("common.actions");
   const tToasts = useTranslations("recipes.toasts");
   const router = useRouter();
   const { canDeleteRecipe, canEditRecipe } = useRecipePermissions();
-  const { deleteRecipes } = useRecipesContext();
+  const { deleteRecipes } = useRecipesMutations();
   const { setMembership } = useCookbooksMutations();
   const [deleteOpen, setDeleteOpen] = useState(false);
   const [cookbooksOpen, setCookbooksOpen] = useState(false);
-  const selected = selection?.selectedRecipes ?? [];
+  // Each selected recipe at the newest version this page has seen.
+  const loaded = new Map(recipes.map((recipe) => [recipe.id, recipe]));
+  const selected = [...selectedById.values()].map((recipe) => {
+    const { id, version, userId } = loaded.get(recipe.id) ?? recipe;
+
+    return { id, version, userId };
+  });
   const count = selected.length;
+  const isSelecting = count > 0;
   // The bar fades out after the last card leaves, still naming what it held.
   const [shownCount, setShownCount] = useState(count);
 
   if (count > 0 && count !== shownCount) setShownCount(count);
 
-  if (!selection) return null;
+  // The selection is the page's: it doesn't follow the reader into a cookbook.
+  useEffect(() => clear, [clear]);
 
-  const { clear, playLeaving, isSelecting } = selection;
+  useEffect(() => {
+    if (!isSelecting) return;
+
+    // An overlay that closed on this Escape has already claimed it.
+    const onKeyDown = (event: KeyboardEvent) => {
+      if (event.key === "Escape" && !event.defaultPrevented) clear();
+    };
+
+    document.addEventListener("keydown", onKeyDown);
+
+    return () => document.removeEventListener("keydown", onKeyDown);
+  }, [isSelecting, clear]);
 
   // Orphaned recipes are anyone's to delete, as a single delete has it.
   const deletable = selected.filter((recipe) => !recipe.userId || canDeleteRecipe(recipe.userId));

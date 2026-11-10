@@ -11,16 +11,6 @@ function isToastSeverity(value: unknown): value is ToastSeverity {
   return value === "default" || value === "success" || value === "warning" || value === "danger";
 }
 
-export function readToastMessage(payload: unknown): string | undefined {
-  if (!payload || typeof payload !== "object") return undefined;
-  const candidate = payload as Record<string, unknown>;
-
-  if (typeof candidate.message === "string") return candidate.message;
-  if (typeof candidate.description === "string") return candidate.description;
-
-  return undefined;
-}
-
 export function readProcessingToastPayload(payload: unknown): ProcessingToastPayload | null {
   if (!payload || typeof payload !== "object") {
     return null;

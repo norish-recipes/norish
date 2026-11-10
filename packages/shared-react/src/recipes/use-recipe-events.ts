@@ -1,13 +1,21 @@
+"use client";
+
 import {
   NOT_A_RECIPE_REASON,
   PRIVATE_ADDRESS_REASON,
 } from "@norish/shared/contracts/realtime/recipes";
 
-import type { RatingsSubscriptionCallbacks, RecipesSubscriptionCallbacks } from "../../recipes";
-import type { ToastAdapter, ToastSeverity } from "../toast-adapter";
-import { readToastMessage } from "../toast-adapter";
-
-export type RecipeToastSeverity = ToastSeverity;
+import type { ToastAdapter } from "../platform/platform";
+import type {
+  RecipeImportsSubscriptionCallbacks,
+  RecipeListSubscriptionCallbacks,
+} from "./use-recipes-subscription";
+import { usePlatform } from "../platform/platform";
+import { useRatingsSubscription } from "./use-ratings-subscription";
+import {
+  useRecipeImportsSubscription,
+  useRecipeListSubscription,
+} from "./use-recipes-subscription";
 
 /** The server reasons a person can act on, each with its translation. */
 const TRANSLATED_REASONS: Record<string, string> = {
@@ -15,31 +23,20 @@ const TRANSLATED_REASONS: Record<string, string> = {
   [PRIVATE_ADDRESS_REASON]: "recipes.toasts.privateAddress",
 };
 
-export type RecipeToastAdapter = ToastAdapter;
+function readToastMessage(payload: unknown): string | undefined {
+  if (!payload || typeof payload !== "object") return undefined;
+  const candidate = payload as Record<string, unknown>;
 
-export function createRecipeImportToasts(adapter: RecipeToastAdapter) {
-  return {
-    showImportRecipePending() {
-      adapter.show({
-        severity: "default",
-        title: adapter.translate("common.import.paste.importing"),
-        description: adapter.translate("common.import.paste.inProgress"),
-      });
-    },
-    showImportRecipeWithAIPending() {
-      adapter.show({
-        severity: "default",
-        title: adapter.translate("common.import.paste.importingWithAI"),
-        description: adapter.translate("common.import.paste.inProgress"),
-      });
-    },
-  };
+  if (typeof candidate.message === "string") return candidate.message;
+  if (typeof candidate.description === "string") return candidate.description;
+
+  return undefined;
 }
 
 export function createRecipeSubscriptionToasts(
-  adapter: RecipeToastAdapter,
+  adapter: ToastAdapter,
   options?: { onOpenRecipe?: (recipeId: string) => void }
-): RecipesSubscriptionCallbacks {
+): RecipeImportsSubscriptionCallbacks & RecipeListSubscriptionCallbacks {
   return {
     onImported: (payload) => {
       const recipeId =
@@ -83,16 +80,19 @@ export function createRecipeSubscriptionToasts(
   };
 }
 
-export function createRatingsSubscriptionToasts(
-  adapter: RecipeToastAdapter
-): RatingsSubscriptionCallbacks {
-  return {
-    onRatingFailed: () => {
-      adapter.show({
-        severity: "danger",
-        title: adapter.translate("common.errors.operationFailed"),
-        description: adapter.translate("common.errors.technicalDetails"),
-      });
-    },
-  };
+/** The import outcomes and their toasts. The shell mounts them: an import starts on any page. */
+export function useRecipeImportOutcomes() {
+  const { toast, navigation } = usePlatform();
+
+  useRecipeImportsSubscription(
+    createRecipeSubscriptionToasts(toast, { onOpenRecipe: navigation.toRecipe })
+  );
+}
+
+/** What a Library page draws and keeps current: the recipe list events and ratings. */
+export function useLibrarySubscriptions() {
+  const { toast } = usePlatform();
+
+  useRecipeListSubscription(createRecipeSubscriptionToasts(toast));
+  useRatingsSubscription();
 }

@@ -9,13 +9,11 @@ import OriginFlag from "@/components/recipes/origin-flag";
 import { isCheckboxEvent, RoundCheckbox } from "@/components/round-checkbox";
 import HeartButton from "@/components/shared/heart-button";
 import SmartMarkdownRenderer from "@/components/shared/smart-markdown-renderer";
-import { useRecipeSelection } from "@/context/recipe-selection-context";
 import { MiniGroceries } from "@/features/groceries";
 import { useMountedOnceOpened } from "@/hooks/use-mounted-once-opened";
 import { useRecipePrefetch } from "@/hooks/use-recipe-prefetch";
 import { useHiddenItemVisibility } from "@/hooks/user/use-hidden-item-visibility";
 import { withOrigin } from "@/lib/back-destination";
-import { useAppStore } from "@/stores/useAppStore";
 import {
   ArchiveBoxIcon,
   CalendarDaysIcon,
@@ -33,6 +31,7 @@ import { useFormatter, useTranslations } from "next-intl";
 import { useLongPress } from "react-aria";
 
 import { useRecipePermissions } from "@norish/shared-react/reader";
+import { useRecipeSelection } from "@norish/shared-react/recipes";
 import { RecipeDashboardDTO } from "@norish/shared/contracts";
 import { RECIPE_DASHBOARD_KEYS } from "@norish/shared/contracts/zod";
 import { addBasePath } from "@norish/shared/lib/base-path";
@@ -46,6 +45,7 @@ import { DeleteRecipeModal } from "../shared/delete-recipe-modal";
 import DoubleTapContainer from "../shared/double-tap-container";
 import SwipeableRow, { SwipeableRowRef, SwipeAction } from "../shared/swipable-row";
 import { CardFact, CardFacts } from "./card-facts";
+import { useRecipeLeaving } from "./recipe-leaving";
 import RecipeMetadata from "./recipe-metadata";
 import RecipeTags from "./recipe-tags";
 
@@ -58,6 +58,8 @@ type RecipeCardProps = {
   onDelete: (recipes: Array<{ id: string; version: number }>) => void;
   /** Inside a cookbook, the card's last action takes the recipe out of it instead of deleting it. */
   onRemoveFromCookbook?: (recipeId: string) => void;
+  /** Shift-click: select the page's recipes from the selection's anchor to this one. */
+  onSelectRange: (recipe: RecipeDashboardDTO) => void;
 };
 
 type ClickModifiers = Pick<MouseEvent, "button" | "metaKey" | "ctrlKey" | "shiftKey" | "altKey">;
@@ -136,13 +138,13 @@ function RecipeCardComponent({
   onToggleFavorite,
   onDelete,
   onRemoveFromCookbook,
+  onSelectRange,
 }: RecipeCardProps) {
   const router = useRouter();
   // This card stands on the Library and inside a cookbook, so where the reader
   // is standing is what the recipe's back link should offer.
   const pathname = usePathname();
   const rowRef = useRef<SwipeableRowRef>(null);
-  const mobileSearchOpen = useAppStore((s) => s.mobileSearchOpen);
   const { canDeleteRecipe } = useRecipePermissions();
   const [open, setOpen] = useState(false);
   const [calendarOpen, setCalendarOpen] = useState(false);
@@ -163,9 +165,9 @@ function RecipeCardComponent({
   // Automatically prefetch recipe when card enters viewport
   const cardRef = useRecipePrefetch<HTMLAnchorElement>(recipe.id);
 
-  const selection = useRecipeSelection();
-  const isSelecting = selection?.isSelecting ?? false;
-  const isSelected = selection?.isSelected(recipe.id) ?? false;
+  const isSelecting = useRecipeSelection((state) => state.selected.size > 0);
+  const isSelected = useRecipeSelection((state) => state.selected.has(recipe.id));
+  const toggleSelected = useRecipeSelection((state) => state.toggle);
   // A press that began before the overlay appeared, like the long press that
   // started selecting, must not toggle the card again on release.
   const overlayPressArmedRef = useRef(false);
@@ -173,17 +175,17 @@ function RecipeCardComponent({
   const pressOriginRef = useRef({ x: 0, y: 0 });
   const pressMovedRef = useRef(false);
   const { longPressProps } = useLongPress({
-    isDisabled: !selection || isSelecting,
+    isDisabled: isSelecting,
     onLongPress: () => {
       if (pressMovedRef.current) return;
       rowRef.current?.closeRow();
-      selection?.toggle(recipe);
+      toggleSelected(recipe);
     },
   });
 
   // A bulk delete plays the single delete's animation, and the card stays
   // hidden from its end until the list drops it.
-  const isLeaving = selection?.isLeaving(recipe.id) ?? false;
+  const isLeaving = useRecipeLeaving((state) => state.leaving.has(recipe.id));
   const [hasLeft, setHasLeft] = useState(false);
 
   useEffect(() => {
@@ -193,10 +195,10 @@ function RecipeCardComponent({
   // Shift-click selects a range from the last card, or starts with this one;
   // Cmd/Ctrl-click stays the link's, opening a new tab (#555).
   const handleShiftClick = (event: MouseEvent) => {
-    if (!selection || !event.shiftKey) return;
+    if (!event.shiftKey) return;
     event.preventDefault();
     event.stopPropagation();
-    selection.selectRange(recipe);
+    onSelectRange(recipe);
   };
 
   const averageRating = recipe.averageRating ?? null;
@@ -204,12 +206,12 @@ function RecipeCardComponent({
   const recipeHref = withOrigin(`/recipes/${recipe.id}`, pathname);
 
   const handleNavigate = useCallback(() => {
-    if (recipe.id && !open && !mobileSearchOpen) {
+    if (recipe.id && !open) {
       // Navigate immediately - skeleton shows while data loads
       // Prefetch is already happening via useRecipePrefetch hook
       router.push(recipeHref);
     }
-  }, [router, recipe.id, open, mobileSearchOpen, recipeHref]);
+  }, [router, recipe.id, open, recipeHref]);
 
   const summedMinutes = (recipe.prepMinutes ?? 0) + (recipe.cookMinutes ?? 0);
   const totalMinutes = recipe.totalMinutes ?? (summedMinutes || undefined);
@@ -242,10 +244,6 @@ function RecipeCardComponent({
   // image.
   const thumbnailImage = recipe.image;
   const showImage = thumbnailImage && failedImage !== thumbnailImage;
-
-  function _canClick() {
-    return !open && !mobileSearchOpen;
-  }
 
   const handleToggleFavorite = useCallback(() => {
     onToggleFavorite(recipe.id);
@@ -478,7 +476,7 @@ function RecipeCardComponent({
               >
                 <DoubleTapContainer
                   className="bg-surface-secondary relative h-full w-[112px] shrink-0 cursor-pointer overflow-hidden"
-                  disabled={open || mobileSearchOpen}
+                  disabled={open}
                   doubleTapEnabled={showFavorites}
                   onDoubleTap={() => {
                     if (showFavorites) handleToggleFavorite();
@@ -553,7 +551,7 @@ function RecipeCardComponent({
           >
             <DoubleTapContainer
               className="relative h-40 w-full shrink-0 cursor-pointer overflow-hidden sm:h-[236px]"
-              disabled={open || mobileSearchOpen}
+              disabled={open}
               doubleTapEnabled={showFavorites}
               onDoubleTap={() => {
                 if (showFavorites) handleToggleFavorite();
@@ -649,7 +647,7 @@ function RecipeCardComponent({
             onClick={(event) => {
               if (isCheckboxEvent(event) || !overlayPressArmedRef.current) return;
               overlayPressArmedRef.current = false;
-              selection?.toggle(recipe);
+              toggleSelected(recipe);
             }}
             onPointerDown={(event) => {
               overlayPressArmedRef.current = !isCheckboxEvent(event);
@@ -660,7 +658,7 @@ function RecipeCardComponent({
                 aria-label={recipe.name}
                 className="[--border-width-field:2px] [--default:rgb(0_0_0/0.3)] [--field-border-hover:white] [--field-border:white]"
                 isSelected={isSelected}
-                onChange={() => selection?.toggle(recipe)}
+                onChange={() => toggleSelected(recipe)}
               />
             </span>
           </div>
@@ -704,6 +702,7 @@ const RecipeCard = memo(RecipeCardComponent, (prevProps, nextProps) => {
   if (prevProps.onToggleFavorite !== nextProps.onToggleFavorite) return false;
   if (prevProps.onDelete !== nextProps.onDelete) return false;
   if (prevProps.onRemoveFromCookbook !== nextProps.onRemoveFromCookbook) return false;
+  if (prevProps.onSelectRange !== nextProps.onSelectRange) return false;
 
   const prev = prevProps.recipe;
   const next = nextProps.recipe;

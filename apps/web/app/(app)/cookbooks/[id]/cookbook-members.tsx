@@ -1,34 +1,31 @@
 "use client";
 
 import type { LibraryGridItem } from "@/lib/library-items";
-import type { ReactNode } from "react";
 import { useCallback, useMemo } from "react";
 import LibraryGrid from "@/components/dashboard/library-grid";
 import RecipeCard from "@/components/dashboard/recipe-card";
 import RecipeSelectionBar from "@/components/dashboard/recipe-selection-bar";
-import { RecipeSelectionProvider } from "@/context/recipe-selection-context";
-import { useRecipesContext } from "@/context/recipes-context";
 import { useRecipesFiltersContext } from "@/context/recipes-filters-context";
+import { useLibraryCards } from "@/hooks/use-library";
 import { Card } from "@heroui/react";
 import { useTranslations } from "next-intl";
 
+import type { SelectedRecipe } from "@norish/shared-react/recipes";
 import type { CookbookSummaryDTO } from "@norish/shared/contracts";
 import type { RecipeViewMode } from "@norish/shared/contracts/zod/device-preferences";
-import { useCookbookRecipesQuery, useCookbooksMutations } from "@norish/shared-react/recipes";
+import {
+  useCookbookRecipesQuery,
+  useCookbooksMutations,
+  useRecipeSelection,
+} from "@norish/shared-react/recipes";
 import {
   hasAppliedRecipeFilters,
   serializeRecipeFilters,
   toRecipesQueryFilters,
 } from "@norish/shared/contracts/filter-contract";
 
-/** Selecting a cookbook's members, above its grid and list so switching view keeps it. */
-export function CookbookSelection({
-  cookbook,
-  children,
-}: {
-  cookbook: CookbookSummaryDTO;
-  children: ReactNode;
-}) {
+/** The selection bar over a cookbook's members, whose versions it acts on. */
+export function CookbookSelectionBar({ cookbook }: { cookbook: CookbookSummaryDTO }) {
   const { filters, isHydrated } = useRecipesFiltersContext();
   const { recipes, removeMember } = useCookbookRecipesQuery(
     cookbook.id,
@@ -39,15 +36,13 @@ export function CookbookSelection({
   );
 
   return (
-    <RecipeSelectionProvider recipes={recipes}>
-      {children}
-      <RecipeSelectionBar
-        cookbook={cookbook}
-        onLeave={(recipeIds) => {
-          for (const recipeId of recipeIds) removeMember(recipeId);
-        }}
-      />
-    </RecipeSelectionProvider>
+    <RecipeSelectionBar
+      cookbook={cookbook}
+      recipes={recipes}
+      onLeave={(recipeIds) => {
+        for (const recipeId of recipeIds) removeMember(recipeId);
+      }}
+    />
   );
 }
 
@@ -67,8 +62,9 @@ export default function CookbookMembers({
 }) {
   const t = useTranslations("recipes.cookbooks");
   const { filters, isHydrated } = useRecipesFiltersContext();
-  const { isFavorite, toggleFavorite, deleteRecipes, allergies } = useRecipesContext();
+  const { isFavorite, toggleFavorite, deleteRecipes, allergies } = useLibraryCards();
   const { setMembership } = useCookbooksMutations();
+  const selectRange = useRecipeSelection((state) => state.selectRange);
 
   const queryFilters = useMemo(() => toRecipesQueryFilters(filters), [filters]);
   // Wait for the stored filters, as the Library does: asking under the defaults first shows members
@@ -78,6 +74,8 @@ export default function CookbookMembers({
     queryFilters,
     { enabled: isHydrated }
   );
+
+  const selectRangeTo = (recipe: SelectedRecipe) => selectRange(recipe, recipes);
 
   const items = useMemo<LibraryGridItem[]>(
     () => recipes.map((recipe) => ({ kind: "recipe" as const, id: recipe.id, recipe })),
@@ -95,24 +93,22 @@ export default function CookbookMembers({
     [setMembership, cookbookId, removeMember]
   );
 
-  const renderItem = useCallback(
-    (item: LibraryGridItem) => {
-      if (item.kind !== "recipe") return null;
+  const renderItem = (item: LibraryGridItem) => {
+    if (item.kind !== "recipe") return null;
 
-      return (
-        <RecipeCard
-          allergies={allergies}
-          isFavorite={isFavorite(item.recipe.id)}
-          recipe={item.recipe}
-          variant={variant}
-          onDelete={deleteRecipes}
-          onRemoveFromCookbook={removeFromCookbook}
-          onToggleFavorite={toggleFavorite}
-        />
-      );
-    },
-    [allergies, isFavorite, deleteRecipes, toggleFavorite, variant, removeFromCookbook]
-  );
+    return (
+      <RecipeCard
+        allergies={allergies}
+        isFavorite={isFavorite(item.recipe.id)}
+        recipe={item.recipe}
+        variant={variant}
+        onDelete={deleteRecipes}
+        onRemoveFromCookbook={removeFromCookbook}
+        onSelectRange={selectRangeTo}
+        onToggleFavorite={toggleFavorite}
+      />
+    );
+  };
 
   // The contract's own predicate, so "no matches" here means what it means on
   // the Library rather than a second opinion that drifts from it.

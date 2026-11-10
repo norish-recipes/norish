@@ -1,19 +1,24 @@
 import ImportRecipeModal from "@/components/shared/import-recipe-modal";
+import { toast } from "@heroui/react";
 import { fireEvent, render, screen, waitFor } from "@testing-library/react";
 import { describe, expect, it, vi } from "vitest";
 
 const modalMock = vi.hoisted(() => vi.fn());
+const importRecipe = vi.hoisted(() => vi.fn());
+const push = vi.hoisted(() => vi.fn());
 
 vi.mock("next-intl", () => ({
   useTranslations: () => (key: string) => key,
 }));
 
-vi.mock("@/context/recipes-context", () => ({
-  useRecipesContext: () => ({
-    importRecipe: vi.fn(),
+vi.mock("@/hooks/use-recipes-mutations", () => ({
+  useRecipesMutations: () => ({
+    importRecipe,
     importRecipeWithAI: vi.fn(),
   }),
 }));
+
+vi.mock("next/navigation", () => ({ useRouter: () => ({ push }) }));
 
 vi.mock("@norish/shared-react/reader", async () =>
   (await import("../helpers/reader-mock")).mockReader()
@@ -69,6 +74,24 @@ vi.mock("@heroui/react", () => ({
 }));
 
 describe("ImportRecipeModal", () => {
+  it("says the import is under way, starts it and goes to the Library", async () => {
+    const onOpenChange = vi.fn();
+
+    render(<ImportRecipeModal isOpen onOpenChange={onOpenChange} />);
+    fireEvent.change(screen.getByRole("textbox"), {
+      target: { value: "https://example.com/soup" },
+    });
+    fireEvent.click(screen.getByRole("button", { name: "import" }));
+
+    expect(toast).toHaveBeenCalledWith("importing", {
+      description: "inProgress",
+      variant: "default",
+    });
+    expect(importRecipe).toHaveBeenCalledWith("https://example.com/soup");
+    expect(push).toHaveBeenCalledWith("/");
+    await waitFor(() => expect(onOpenChange).toHaveBeenCalledWith(false));
+  });
+
   it("renders above desktop menu and overlay stacks", () => {
     render(<ImportRecipeModal isOpen onOpenChange={vi.fn()} />);
 

@@ -1,5 +1,5 @@
 /**
- * The dashboard recipes subscription: what each event does to the caches.
+ * The recipe list events and import outcomes: what each event does to the caches.
  * Ported from the web wrapper's test when the wrapper went (ticket 07).
  */
 
@@ -13,7 +13,11 @@ import { CURSOR_MARK, REALTIME_LAGGED } from "@norish/shared/contracts/realtime/
 
 import { renderHookWithClient } from "../../../__tests__/hooks/render-hook";
 import { trackedEvent } from "../../../__tests__/realtime/tracked-event";
-import { useRecipesSubscription } from "../use-recipes-subscription";
+import { useRecipeSelection } from "../selection-store";
+import {
+  useRecipeImportsSubscription,
+  useRecipeListSubscription,
+} from "../use-recipes-subscription";
 
 // A lag resets the subscription it lagged on.
 const useSubscriptionMock = vi.hoisted(() =>
@@ -30,7 +34,6 @@ vi.mock("@trpc/tanstack-react-query", async () => {
 
 const LIST_KEY = [["recipes", "list"], { input: {}, type: "infinite" }];
 const LIBRARY_KEY = [["library", "list"], { input: {}, type: "infinite" }];
-const CALENDAR_KEY = [["calendar", "listItems"]];
 const CATEGORIES_KEY = [["config", "categories"]];
 const PENDING_KEY = [["recipes", "getPending"], { type: "query" }];
 const detailKey = (id: string) => [["recipes", "get"], { input: { id }, type: "query" }];
@@ -57,9 +60,6 @@ vi.mock("../../trpc", () => ({
     },
     library: {
       list: { queryKey: () => [["library", "list"], { input: {}, type: "query" }] },
-    },
-    calendar: {
-      listItems: { queryKey: () => CALENDAR_KEY },
     },
     config: {
       categories: { queryKey: () => CATEGORIES_KEY },
@@ -143,7 +143,10 @@ beforeEach(() => {
   queryClient.setQueryData(detailKey("recipe-1"), fullRecipe());
   invalidateQueries = vi.spyOn(queryClient, "invalidateQueries");
 
-  rendered = renderHookWithClient(queryClient, () => useRecipesSubscription());
+  rendered = renderHookWithClient(queryClient, () => {
+    useRecipeListSubscription();
+    useRecipeImportsSubscription();
+  });
 });
 
 afterEach(() => {
@@ -151,7 +154,7 @@ afterEach(() => {
   queryClient.clear();
 });
 
-describe("useRecipesSubscription", () => {
+describe("the recipe list events and import outcomes", () => {
   it("subscribes to every dashboard event once", () => {
     const names = useSubscriptionMock.mock.calls.map((call) => (call[0] as { name: string }).name);
 
@@ -195,11 +198,11 @@ describe("useRecipesSubscription", () => {
     expect(invalidateQueries).not.toHaveBeenCalled();
   });
 
-  it("invalidates the calendar and Categories for an update that is not an enrichment", () => {
+  it("rereads only the Categories for an update that is not an enrichment", () => {
     emit("onUpdated", { recipe: fullRecipe({ name: "Renamed" }) });
 
-    expect(invalidateQueries).toHaveBeenCalledTimes(2);
-    expect(invalidateQueries).toHaveBeenCalledWith({ queryKey: CALENDAR_KEY });
+    // The calendar listens for renames itself.
+    expect(invalidateQueries).toHaveBeenCalledTimes(1);
     expect(invalidateQueries).toHaveBeenCalledWith({ queryKey: CATEGORIES_KEY });
   });
 
@@ -219,6 +222,19 @@ describe("useRecipesSubscription", () => {
       expect.objectContaining({ pages: [expect.objectContaining({ recipes: [], total: 0 })] })
     );
     expect(invalidateQueries).toHaveBeenCalledWith({ queryKey: detailKey("recipe-1") });
+  });
+
+  it("drops a deleted recipe from the selection and keeps the rest", () => {
+    const selection = useRecipeSelection.getState();
+
+    selection.clear();
+    selection.toggle({ id: "recipe-1", version: 1, userId: "user-1" });
+    selection.toggle({ id: "recipe-2", version: 1, userId: "user-1" });
+
+    emit("onDeleted", { ids: ["recipe-1"] });
+
+    expect([...useRecipeSelection.getState().selected.keys()]).toEqual(["recipe-2"]);
+    selection.clear();
   });
 
   it("prepends a created recipe once, however often it is announced", () => {

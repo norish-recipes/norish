@@ -5,9 +5,11 @@
 
 import { act } from "react";
 import { QueryClient } from "@tanstack/react-query";
+import { renderHook } from "@testing-library/react";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 
-import { renderHookWithClient } from "../../../__tests__/hooks/render-hook";
+import { createTestWrapper, fakePlatformAdapter } from "@norish/shared-react/platform/testing";
+
 import { trackedEvent } from "../../../__tests__/realtime/tracked-event";
 import { useRatingsSubscription } from "../use-ratings-subscription";
 
@@ -60,9 +62,9 @@ function emit(name: string, payload: unknown) {
 }
 
 let queryClient: QueryClient;
-let rendered: ReturnType<typeof renderHookWithClient>;
+let rendered: ReturnType<typeof renderHook>;
 let invalidateQueries: ReturnType<typeof vi.spyOn>;
-const onRatingFailed = vi.fn();
+let platform: ReturnType<typeof fakePlatformAdapter>;
 
 beforeEach(() => {
   queryClient = new QueryClient({ defaultOptions: { queries: { retry: false } } });
@@ -81,7 +83,10 @@ beforeEach(() => {
   });
   invalidateQueries = vi.spyOn(queryClient, "invalidateQueries");
 
-  rendered = renderHookWithClient(queryClient, () => useRatingsSubscription({ onRatingFailed }));
+  platform = fakePlatformAdapter();
+  rendered = renderHook(() => useRatingsSubscription(), {
+    wrapper: createTestWrapper(queryClient, platform),
+  });
 });
 
 afterEach(() => {
@@ -114,10 +119,14 @@ describe("useRatingsSubscription", () => {
     expect(invalidateQueries).toHaveBeenCalledWith({ queryKey: userRatingKey("recipe-1") });
   });
 
-  it("hands a failed rating to the callback and refetches the user's rating", () => {
+  it("toasts a failed rating and refetches the user's rating", () => {
     emit("onRatingFailed", { recipeId: "recipe-2", reason: "stale" });
 
-    expect(onRatingFailed).toHaveBeenCalledWith({ recipeId: "recipe-2", reason: "stale" });
+    expect(platform.toast.show).toHaveBeenCalledWith({
+      severity: "danger",
+      title: "common.errors.operationFailed",
+      description: "common.errors.technicalDetails",
+    });
     expect(invalidateQueries).toHaveBeenCalledTimes(1);
     expect(invalidateQueries).toHaveBeenCalledWith({ queryKey: userRatingKey("recipe-2") });
   });

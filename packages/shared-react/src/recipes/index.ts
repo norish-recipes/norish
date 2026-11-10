@@ -19,10 +19,7 @@ export { usePendingRecipesQuery } from "./use-pending-recipes-query";
 export { useRandomRecipe, type RandomRecipeResult } from "./use-random-recipe";
 export { useRatingQuery } from "./use-rating-query";
 export { useRatingsMutation } from "./use-ratings-mutation";
-export {
-  useRatingsSubscription,
-  type RatingsSubscriptionCallbacks,
-} from "./use-ratings-subscription";
+export { useRatingsSubscription } from "./use-ratings-subscription";
 export { useRecipeAutocomplete } from "./use-recipe-autocomplete";
 export type { InfiniteRecipeData } from "./library-cache";
 export { useRecipesCacheHelpers, type RecipesCacheHelpers } from "./use-recipes-cache";
@@ -32,10 +29,7 @@ export {
   type RecipesMutationsResult,
 } from "./use-recipes-mutations";
 export { useRecipesQuery, type RecipeFilters, type RecipesQueryResult } from "./use-recipes-query";
-export {
-  useRecipesSubscription,
-  type RecipesSubscriptionCallbacks,
-} from "./use-recipes-subscription";
+export { useLibrarySubscriptions, useRecipeImportOutcomes } from "./use-recipe-events";
 export { useRecipeShareCacheHelpers, type RecipeShareCacheHelpers } from "./use-recipe-share-cache";
 export {
   useRecipeShareMutations,

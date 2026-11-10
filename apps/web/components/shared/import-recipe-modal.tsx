@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { useRecipesContext } from "@/context/recipes-context";
+import { useImportRecipe } from "@/hooks/use-import-recipe";
 import { readClipboardUrl } from "@/lib/clipboard-url";
 import { showSafeErrorToast } from "@/lib/ui/safe-error-toast";
 import { ArrowDownTrayIcon, SparklesIcon } from "@heroicons/react/16/solid";
@@ -18,7 +18,7 @@ export default function ImportRecipeModal({ isOpen, onOpenChange }: ImportRecipe
   const t = useTranslations("common.import.url");
   const tErrors = useTranslations("common.errors");
   const tActions = useTranslations("common.actions");
-  const { importRecipe, importRecipeWithAI } = useRecipesContext();
+  const { importRecipe, importRecipeWithAI } = useImportRecipe();
   const isAIEnabled = usePermissions((p) => p.isAIEnabled);
   const [importUrl, setImportUrl] = useState("");
 
