@@ -13,8 +13,11 @@ const restrict = (group: string[], message: string): Linter.RulesRecord => ({
   "features/no-restricted-imports": ["error", { patterns: [{ group, message }] }],
 });
 
+// A path and everything under it.
+const andBelow = (pattern: string) => [pattern, `${pattern}/**`];
+
 // Matches every alias and relative path to a feature or into one: @/features/x, ../features/x/y.
-const anyFeature = ["**/features/*", "**/features/*/**"];
+const anyFeature = andBelow("**/features/*");
 
 // Imports run one way: shared code, then features, then routes. Only route files import a feature,
 // and a feature imports no other: a panel several features open lives in the shared folders.
@@ -39,12 +42,11 @@ export const restrictFeatures = (
       rules: restrict(
         [
           ...anyFeature,
-          `!**/features/${feature}`,
-          `!**/features/${feature}/**`,
+          ...andBelow(`!**/features/${feature}`),
           // A relative path from one feature into a sibling never names features/.
           ...features
             .filter((other) => other !== feature)
-            .flatMap((other) => [`**/../${other}`, `**/../${other}/**`]),
+            .flatMap((other) => andBelow(`**/../${other}`)),
         ],
         "A feature never imports another; code two features use goes in the shared folders."
       ),
@@ -54,10 +56,8 @@ export const restrictFeatures = (
 
 // A shared-react folder as a relative path or the package's own name reaches it.
 const domainPaths = (domain: string) => [
-  `**/../${domain}`,
-  `**/../${domain}/**`,
-  `@norish/shared-react/${domain}`,
-  `@norish/shared-react/${domain}/**`,
+  ...andBelow(`**/../${domain}`),
+  ...andBelow(`@norish/shared-react/${domain}`),
 ];
 
 // shared-react: a domain imports neither another domain nor a legacy folder, and a cross-cutting
