@@ -13,11 +13,11 @@ const restrict = (group: string[], message: string): Linter.RulesRecord => ({
   "features/no-restricted-imports": ["error", { patterns: [{ group, message }] }],
 });
 
-// Matches every alias and relative path into a feature: @/features/x/y, ../features/x/y.
-const insideFeature = "**/features/*/**";
+// Matches every alias and relative path to a feature or into one: @/features/x, ../features/x/y.
+const anyFeature = ["**/features/*", "**/features/*/**"];
 
-// Imports run one way: shared code, then features, then routes. Route files import anything from a
-// feature; every other file outside it only its index.ts, which exports the panels others open.
+// Imports run one way: shared code, then features, then routes. Only route files import a feature,
+// and a feature imports no other: a panel several features open lives in the shared folders.
 export const restrictFeatures = (
   root: string,
   options: { featuresDir: string; appDir: string; routeFiles: string[] }
@@ -32,21 +32,21 @@ export const restrictFeatures = (
     {
       files: ["**/*.{js,ts,tsx}"],
       ignores: [...routeFiles, `${featuresDir}/**`],
-      rules: restrict(
-        [insideFeature],
-        "Import a feature through its index.ts; only route files import from inside one."
-      ),
+      rules: restrict(anyFeature, "Only route files import from a feature."),
     },
     ...features.map((feature) => ({
       files: [`${featuresDir}/${feature}/**/*.{js,ts,tsx}`],
       rules: restrict(
         [
-          insideFeature,
+          ...anyFeature,
+          `!**/features/${feature}`,
           `!**/features/${feature}/**`,
           // A relative path from one feature into a sibling never names features/.
-          ...features.filter((other) => other !== feature).map((other) => `**/../${other}/**`),
+          ...features
+            .filter((other) => other !== feature)
+            .flatMap((other) => [`**/../${other}`, `**/../${other}/**`]),
         ],
-        "Import another feature through its index.ts."
+        "A feature never imports another; code two features use goes in the shared folders."
       ),
     }))
   );

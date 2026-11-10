@@ -105,11 +105,13 @@ describe("restrictFeatures", () => {
   });
   const at = (file: string, from: string) => lint(cwd, config, file, from);
 
-  it("holds shared code to a feature's index.ts", () => {
-    expect(at("components/card.tsx", "@/features/groceries")).toEqual([]);
-    expect(at("components/card.tsx", "@/features/groceries/screens/list")).toEqual([
-      "Import a feature through its index.ts; only route files import from inside one.",
-    ]);
+  const shared = "Only route files import from a feature.";
+  const sibling =
+    "A feature never imports another; code two features use goes in the shared folders.";
+
+  it("keeps shared code out of every feature", () => {
+    expect(at("components/card.tsx", "@/features/groceries")).toEqual([shared]);
+    expect(at("components/card.tsx", "@/features/groceries/screens/list")).toEqual([shared]);
     expect(at("components/card.tsx", "../features/recipes/screens/detail")).toHaveLength(1);
   });
 
@@ -117,23 +119,23 @@ describe("restrictFeatures", () => {
     expect(at("app/groceries/page.tsx", "@/features/groceries/screens/list")).toEqual([]);
   });
 
-  it("holds other app files to a feature's index.ts", () => {
-    expect(at("app/groceries/client.tsx", "@/features/groceries")).toEqual([]);
-    expect(at("app/groceries/client.tsx", "@/features/groceries/screens/list")).toEqual([
-      "Import a feature through its index.ts; only route files import from inside one.",
-    ]);
+  it("keeps other app files out of every feature", () => {
+    expect(at("app/groceries/client.tsx", "@/features/groceries")).toEqual([shared]);
+    expect(at("app/groceries/client.tsx", "@/features/groceries/screens/list")).toEqual([shared]);
   });
 
-  it("holds a feature to another's index.ts, by alias or relative path", () => {
-    expect(at("features/groceries/list.tsx", "@/features/recipes")).toEqual([]);
+  it("keeps a feature out of another, by alias or relative path", () => {
+    expect(at("features/groceries/list.tsx", "@/features/recipes")).toEqual([sibling]);
     expect(at("features/groceries/list.tsx", "@/features/recipes/panels/detail")).toEqual([
-      "Import another feature through its index.ts.",
+      sibling,
     ]);
+    expect(at("features/groceries/list.tsx", "../recipes")).toHaveLength(1);
     expect(at("features/groceries/list.tsx", "../recipes/panels/detail")).toHaveLength(1);
   });
 
   it("lets a feature import inside itself", () => {
     expect(at("features/groceries/list.tsx", "./row")).toEqual([]);
+    expect(at("features/groceries/list.tsx", "@/features/groceries")).toEqual([]);
     expect(at("features/groceries/list.tsx", "@/features/groceries/row")).toEqual([]);
   });
 });
