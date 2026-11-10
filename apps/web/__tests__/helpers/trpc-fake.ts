@@ -48,7 +48,10 @@ function node(path: string[]): unknown {
 }
 
 /** A tRPC client with no server: reach any procedure by its path, as the real one does. */
-export const fakeTRPC = node([]) as Record<string, Record<string, ReturnType<typeof procedure>>>;
+const fakeTRPC = node([]);
+
+/** One procedure of the fake client by its dotted path, for its keys. */
+export const fakeProcedure = (path: string) => procedure(path.split("."));
 
 /** `@norish/shared-react/trpc` over {@link fakeTRPC}, for a `vi.mock` factory. */
 export async function mockTRPC() {

@@ -8,7 +8,7 @@ import RecipePageMobile from "@/app/(app)/recipes/[id]/recipe-page-mobile";
 import type { RecipeEnrichmentKind } from "@norish/shared/lib/recipe-enrichment";
 
 import { onRecipePage } from "../../helpers/recipe-page";
-import { fakeTRPC } from "../../helpers/trpc-fake";
+import { fakeProcedure } from "../../helpers/trpc-fake";
 
 type MockRecipe = {
   id: string;
@@ -103,7 +103,7 @@ function renderPage() {
   });
 
   queryClient.setQueryData(
-    fakeTRPC.cookbooks.forRecipe.queryKey({ recipeId: recipe.id }),
+    fakeProcedure("cookbooks.forRecipe").queryKey({ recipeId: recipe.id }),
     recipeCookbooks.current
   );
   const rendered = render(<RecipePageMobile onPrint={() => {}} />, { wrapper });

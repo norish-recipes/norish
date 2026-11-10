@@ -6,7 +6,7 @@ import "@testing-library/jest-dom";
 import ProvenanceCard from "@/app/(app)/recipes/[id]/components/provenance-card";
 
 import { onRecipePage } from "../../helpers/recipe-page";
-import { fakeTRPC } from "../../helpers/trpc-fake";
+import { fakeProcedure } from "../../helpers/trpc-fake";
 
 type LifecycleState = "idle" | "queued" | "processing" | "succeeded" | "failed";
 
@@ -178,7 +178,7 @@ describe("Recipe Provenance section", () => {
     expect(screen.queryByText("Region")).not.toBeInTheDocument();
 
     act(() =>
-      queryClient.setQueryData(fakeTRPC.recipes.get.queryKey({ id: "recipe-1" }), {
+      queryClient.setQueryData(fakeProcedure("recipes.get").queryKey({ id: "recipe-1" }), {
         ...mocks.recipe,
         originRegion: "Lazio",
       })

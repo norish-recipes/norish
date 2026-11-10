@@ -3,7 +3,7 @@ import { act, renderHook } from "@testing-library/react";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 
 import { onRecipePage } from "../../helpers/recipe-page";
-import { fakeTRPC } from "../../helpers/trpc-fake";
+import { fakeProcedure } from "../../helpers/trpc-fake";
 
 const mocks = vi.hoisted(() => ({
   measurementSystem: undefined as string | undefined,
@@ -74,7 +74,7 @@ describe("useAutoConversion", () => {
     // Someone switches it back while it is open: it stays switched.
     act(() =>
       queryClient.setQueryData(
-        fakeTRPC.recipes.get.queryKey({ id: "r1" }),
+        fakeProcedure("recipes.get").queryKey({ id: "r1" }),
         metricRecipe(["metric", "us"])
       )
     );
@@ -89,7 +89,7 @@ describe("useAutoConversion", () => {
     let answer: (recipe: unknown) => void = () => {};
     const answered = new Promise((resolve) => (answer = resolve));
     const read = onPage.queryClient.fetchQuery({
-      queryKey: fakeTRPC.recipes.get.queryKey({ id: "r1" }),
+      queryKey: fakeProcedure("recipes.get").queryKey({ id: "r1" }),
       queryFn: () => answered,
       staleTime: 0,
     });
