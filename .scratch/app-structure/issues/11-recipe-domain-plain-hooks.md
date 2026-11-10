@@ -4,13 +4,13 @@
 
 **Blocked by:** 10 (the cookbook hooks read the Reader's id)
 
-**Status:** ready-for-agent
+**Status:** done
 
-- [ ] `@norish/shared-react/recipes` exports the plain hooks above, each importing `useTRPC`, the Reader and the platform adapter instead of taking them as options. `shouldPreserveOptimisticUpdate`, which no app passes, goes.
-- [ ] The domain's helpers stay inside it: the library cache that the recipe and cookbook caches update, and the `RecipeFilters` type the library and cookbook reads take.
-- [ ] `createRecipeHooks`, `createRecipeFamilyHooks`, `createRecipeShareHooks`, `createUseLibraryQuery`, `createFavoritesHooks`, `createRatingsHooks` and `createCookbookHooks` hand back the plain hooks and hold no logic of their own, and `createRecipeDetailContext` and `createRecipesContext` are fed them. Every web caller compiles and runs unchanged.
-- [ ] Mobile's recipe binding is deleted, and its smoke screen reads the recipe total through the plain list hook.
-- [ ] The dead hooks go: web's `useRecipeFilters`, `useCookbooksQuery` and `useCookbooksCacheHelpers`, and shared-react's unused `createUseAmountDisplayPreference`.
-- [ ] shared-react's enrichment, shares, recipes subscription, ratings subscription, cookbook list cache and servings suites move into `src/recipes/__tests__/` and run against the plain hooks.
-- [ ] Lint stops `recipes/` importing another domain, and `deps:cycles` stays clean.
-- [ ] Gates green: `pnpm lint`, `pnpm typecheck`, `pnpm test:run`, `pnpm i18n:check`, `pnpm build`, `pnpm deps:cycles`, and mobile's lint, typecheck, test and `expo export --platform ios`.
+- [x] `@norish/shared-react/recipes` exports the plain hooks above, each importing `useTRPC`, the Reader and the platform adapter instead of taking them as options. `shouldPreserveOptimisticUpdate`, which no app passes, goes.
+- [x] The domain's helpers stay inside it: the library cache that the recipe and cookbook caches update, and the `RecipeFilters` type the library and cookbook reads take.
+- [x] `createRecipeHooks`, `createRecipeFamilyHooks`, `createRecipeShareHooks`, `createUseLibraryQuery`, `createFavoritesHooks`, `createRatingsHooks` and `createCookbookHooks` hand back the plain hooks and hold no logic of their own, and `createRecipeDetailContext` and `createRecipesContext` are fed them. Every web caller compiles and runs unchanged.
+- [x] Mobile's recipe binding is deleted, and its smoke screen reads the recipe total through the plain list hook.
+- [x] The dead hooks go: web's `useRecipeFilters`, `useCookbooksQuery` and `useCookbooksCacheHelpers`, and shared-react's unused `createUseAmountDisplayPreference`.
+- [x] shared-react's enrichment, shares, recipes subscription, ratings subscription, cookbook list cache and servings suites move into `src/recipes/__tests__/` and run against the plain hooks.
+- [x] Lint stops `recipes/` importing another domain, and `deps:cycles` stays clean.
+- [x] Gates green: `pnpm lint`, `pnpm typecheck`, `pnpm test:run`, `pnpm i18n:check`, `pnpm build`, `pnpm deps:cycles`, and mobile's lint, typecheck, test and `expo export --platform ios`.
