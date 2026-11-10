@@ -3,11 +3,11 @@
 import { useRef } from "react";
 import { PanelPortal } from "@/components/Panel/Panel";
 import { cssAIIconColor } from "@/config/css-tokens";
+import { useHiddenItemVisibility } from "@/hooks/user/use-hidden-item-visibility";
 import { showSafeErrorToast } from "@/lib/ui/safe-error-toast";
 import { ArrowUpTrayIcon, SparklesIcon, TrashIcon } from "@heroicons/react/16/solid";
 import { Dropdown, Label, Spinner } from "@heroui/react";
 import { useMutation } from "@tanstack/react-query";
-import { useHiddenItemVisibility } from "@/hooks/user/use-hidden-item-visibility";
 import { useTranslations } from "next-intl";
 
 import { usePermissions } from "@norish/shared-react/reader";

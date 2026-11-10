@@ -66,11 +66,7 @@ function Surface({ ids, children }: { ids: (string | null)[]; children: ReactNod
   return children;
 }
 
-function onSurface(
-  ids: (string | null)[],
-  children: ReactNode,
-  client = createTestQueryClient()
-) {
+function onSurface(ids: (string | null)[], children: ReactNode, client = createTestQueryClient()) {
   const view = render(
     <QueryClientProvider client={client}>
       <Surface ids={ids}>{children}</Surface>
