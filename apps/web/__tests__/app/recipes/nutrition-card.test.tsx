@@ -48,25 +48,20 @@ vi.mock("@norish/shared-react/reader", async () =>
 
 /** The card on a page showing a recipe with no nutrition of its own. */
 function renderCard() {
-  const { wrapper } = onRecipePage({
-    id: "recipe-1",
-    userId: "owner-1",
-    calories: null,
-    fat: null,
-    carbs: null,
-    protein: null,
-  });
+  const { wrapper } = onRecipePage(
+    {
+      id: "recipe-1",
+      userId: "owner-1",
+      calories: null,
+      fat: null,
+      carbs: null,
+      protein: null,
+    },
+    { enrichment: { "nutrition-estimation": mocks.state } }
+  );
 
   return render(<NutritionCard />, { wrapper });
 }
-
-vi.mock("@/hooks/recipes/use-recipe-enrichment", () => ({
-  useRecipeEnrichment: () => ({
-    states: { "nutrition-estimation": mocks.state },
-    isBusy: () => mocks.state === "queued" || mocks.state === "processing",
-    request: vi.fn(),
-  }),
-}));
 
 vi.mock("@/components/recipes/readonly-nutrition", () => ({
   getNutritionData: () => ({ hasData: mocks.hasData, values: {} }),

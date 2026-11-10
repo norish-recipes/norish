@@ -5,6 +5,8 @@ import "@testing-library/jest-dom";
 
 import RecipePageMobile from "@/app/(app)/recipes/[id]/recipe-page-mobile";
 
+import type { RecipeEnrichmentKind } from "@norish/shared/lib/recipe-enrichment";
+
 import { onRecipePage } from "../../helpers/recipe-page";
 import { fakeTRPC } from "../../helpers/trpc-fake";
 
@@ -78,7 +80,8 @@ const bareRecipe = (): MockRecipe => ({
 
 const mocks = vi.hoisted(() => ({
   recipe: {} as Record<string, unknown>,
-  busyKinds: new Set<string>(),
+  /** The enrichment kinds with a run in flight. */
+  busyKinds: new Set<RecipeEnrichmentKind>(),
   hidden: [] as string[],
   currentServings: 2,
 }));
@@ -95,7 +98,9 @@ vi.mock("@norish/shared-react/trpc", async () =>
 /** The page showing the test's recipe, filed into its cookbooks, at its servings. */
 function renderPage() {
   const recipe = mocks.recipe as MockRecipe;
-  const { wrapper, queryClient, page } = onRecipePage(recipe);
+  const { wrapper, queryClient, page } = onRecipePage(recipe, {
+    enrichment: Object.fromEntries([...mocks.busyKinds].map((kind) => [kind, "processing"])),
+  });
 
   queryClient.setQueryData(
     fakeTRPC.cookbooks.forRecipe.queryKey({ recipeId: recipe.id }),
@@ -107,12 +112,6 @@ function renderPage() {
 
   return rendered;
 }
-
-vi.mock("@/hooks/recipes/use-recipe-enrichment", () => ({
-  useRecipeEnrichment: () => ({
-    isBusy: (kind: string) => mocks.busyKinds.has(kind),
-  }),
-}));
 
 vi.mock("@/app/(app)/recipes/[id]/components/actions-menu", () => ({
   default: () => <div data-testid="actions-menu" />,

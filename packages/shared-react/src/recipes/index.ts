@@ -88,6 +88,7 @@ export {
 } from "./recipe-page-store";
 export {
   useLoadedPageRecipe,
+  usePageEnrichment,
   usePageIngredients,
   usePageRecipe,
   usePageServings,

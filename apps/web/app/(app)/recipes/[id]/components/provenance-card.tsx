@@ -1,12 +1,11 @@
 "use client";
 
 import OriginFlag from "@/components/recipes/origin-flag";
-import { useRecipeEnrichment } from "@/hooks/recipes/use-recipe-enrichment";
 import { useHiddenItemVisibility } from "@/hooks/user/use-hidden-item-visibility";
 import { Card, Chip, Skeleton } from "@heroui/react";
 import { useLocale, useTranslations } from "next-intl";
 
-import { usePageRecipe, useRecipePageStore } from "@norish/shared-react/recipes";
+import { usePageEnrichment, usePageRecipe } from "@norish/shared-react/recipes";
 import { hasSubstantiveProvenance } from "@norish/shared/lib/recipe-enrichment";
 import { countryEndonym } from "@norish/shared/lib/recipe-provenance";
 
@@ -20,8 +19,7 @@ import { countryEndonym } from "@norish/shared/lib/recipe-provenance";
  */
 export function useProvenanceSectionVisible(): boolean {
   const recipe = usePageRecipe();
-  const recipeId = useRecipePageStore((state) => state.recipeId);
-  const enrichment = useRecipeEnrichment(recipeId);
+  const enrichment = usePageEnrichment();
   const { showProvenance } = useHiddenItemVisibility();
 
   if (!recipe || !showProvenance) return false;
@@ -49,8 +47,7 @@ export function useProvenanceSectionVisible(): boolean {
  */
 export default function ProvenanceCard() {
   const recipe = usePageRecipe();
-  const recipeId = useRecipePageStore((state) => state.recipeId);
-  const enrichment = useRecipeEnrichment(recipeId);
+  const enrichment = usePageEnrichment();
   const locale = useLocale();
   const t = useTranslations("recipes.provenance");
   const isVisible = useProvenanceSectionVisible();

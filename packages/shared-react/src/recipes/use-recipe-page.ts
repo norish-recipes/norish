@@ -12,7 +12,9 @@ import type {
 import { useTRPC } from "../trpc";
 import { useRecipePageStore, useRecipePageStoreApi } from "./recipe-page-store";
 import { scaleIngredients } from "./scale-ingredients";
+import type { RecipeEnrichmentResult } from "./use-recipe-enrichment";
 import { useConvertMutation } from "./use-convert-mutation";
+import { useRecipeEnrichment } from "./use-recipe-enrichment";
 
 /** The page's recipe from the Query cache; renders on its data only. */
 export function usePageRecipe(): FullRecipeDTO | null {
@@ -48,6 +50,13 @@ export function usePageIngredients(): RecipeIngredientsDto[] {
   if (!recipe) return [];
 
   return scaleIngredients(recipe.recipeIngredients, recipe.servings, picked ?? recipe.servings);
+}
+
+/** The page's enrichment states, for showing them; requests go through `useRecipeEnrichment`. */
+export function usePageEnrichment(): RecipeEnrichmentResult {
+  const recipeId = useRecipePageStore((state) => state.recipeId);
+
+  return useRecipeEnrichment(recipeId);
 }
 
 export type RecipeConversionResult = {

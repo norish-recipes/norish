@@ -4,7 +4,6 @@ import { useCallback, useState } from "react";
 import { IngredientPanel } from "@/components/ingredients/ingredient-panel";
 import NutritionPortionControl from "@/components/recipes/nutrition-portion-control";
 import { getNutritionData, NutritionBody } from "@/components/recipes/readonly-nutrition";
-import { useRecipeEnrichment } from "@/hooks/recipes/use-recipe-enrichment";
 import { useWorkedOutNutrition } from "@/hooks/recipes/use-worked-out-nutrition";
 import { useHiddenItemVisibility } from "@/hooks/user/use-hidden-item-visibility";
 import { ChevronRightIcon } from "@heroicons/react/16/solid";
@@ -13,7 +12,7 @@ import { useQueryClient } from "@tanstack/react-query";
 import { useFormatter, useTranslations } from "next-intl";
 
 import type { LeftOutReason, WorkedOutNutrition } from "@norish/shared/lib/recipe-nutrition";
-import { usePageRecipe, useRecipePageStore } from "@norish/shared-react/recipes";
+import { usePageEnrichment, usePageRecipe } from "@norish/shared-react/recipes";
 import { useTRPC } from "@norish/shared-react/trpc";
 import { NUTRITION_CREDIT_NAMES } from "@norish/shared/contracts/ingredient-nutrition";
 import { PANEL_REASONS } from "@norish/shared/lib/recipe-nutrition";
@@ -38,8 +37,7 @@ const REASON_KEYS = {
  */
 export function useNutritionSectionVisible(): boolean {
   const recipe = usePageRecipe();
-  const recipeId = useRecipePageStore((state) => state.recipeId);
-  const enrichment = useRecipeEnrichment(recipeId);
+  const enrichment = usePageEnrichment();
   const { showNutrition } = useHiddenItemVisibility();
   const workedOut = useWorkedOutNutrition(recipe ?? null);
 
@@ -69,8 +67,7 @@ export function useNutritionSectionVisible(): boolean {
  */
 export default function NutritionCard() {
   const recipe = usePageRecipe();
-  const recipeId = useRecipePageStore((state) => state.recipeId);
-  const enrichment = useRecipeEnrichment(recipeId);
+  const enrichment = usePageEnrichment();
   const isEstimatingNutrition = enrichment.isBusy("nutrition-estimation");
   const t = useTranslations("recipes.nutrition");
   const isVisible = useNutritionSectionVisible();

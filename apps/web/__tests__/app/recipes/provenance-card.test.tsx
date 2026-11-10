@@ -41,17 +41,12 @@ vi.mock("@norish/shared-react/trpc", async () =>
 
 /** The card on a page showing the test's recipe. */
 function renderCard() {
-  const onPage = onRecipePage(mocks.recipe);
+  const onPage = onRecipePage(mocks.recipe, {
+    enrichment: { "recipe-provenance": mocks.state },
+  });
 
   return { ...onPage, ...render(<ProvenanceCard />, { wrapper: onPage.wrapper }) };
 }
-
-vi.mock("@/hooks/recipes/use-recipe-enrichment", () => ({
-  useRecipeEnrichment: () => ({
-    states: { "recipe-provenance": mocks.state },
-    isBusy: () => mocks.state === "queued" || mocks.state === "processing",
-  }),
-}));
 
 vi.mock("@heroui/react", () => ({
   Card: Object.assign(({ children }: { children: React.ReactNode }) => <div>{children}</div>, {
