@@ -19,6 +19,8 @@
 import { randomUUID } from "node:crypto";
 import type { BrowserContext, BrowserContextOptions, Page, Response } from "@playwright/test";
 
+import { dateKey } from "@norish/shared/lib/helpers";
+
 import type { RealtimeStack } from "./fixture";
 import type { HouseholdRow } from "./support";
 import { openGroceries, rowFor } from "../harness/groceries";
@@ -315,14 +317,6 @@ async function openAs(
   return { context, page };
 }
 
-/** The reader's local date, as the calendar keys a day. */
-function localToday(): string {
-  const now = new Date();
-  const pad = (value: number) => String(value).padStart(2, "0");
-
-  return `${now.getFullYear()}-${pad(now.getMonth() + 1)}-${pad(now.getDate())}`;
-}
-
 test("a housemate filing the open recipe into a cookbook shows on its cookbooks card", async () => {
   const recipeId = await seedRecipe(stack.userIds.a, "realtime-ingelegd-recept");
   const created = await callMutation<{ id: string }>(pageB, stack.baseURL, "cookbooks.create", {
@@ -394,7 +388,7 @@ test("a housemate's Pantry change reorders a Library sorted by pantry share", as
 test("a housemate renaming a planned recipe shows the new name on an open calendar", async () => {
   const recipeId = await seedRecipe(stack.userIds.a, "realtime-gepland-recept");
   const planned = await callMutation(pageA, stack.baseURL, "calendar.createItem", {
-    date: localToday(),
+    date: dateKey(new Date()),
     slot: "Dinner",
     itemType: "recipe",
     recipeId,
