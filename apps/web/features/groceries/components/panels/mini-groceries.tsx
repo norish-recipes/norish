@@ -154,9 +154,8 @@ function useLinesToBuy(
     ].filter(isGroceryIngredient)
   );
   const scaler = useServingsScaler(ingredients, originalServings, initialServings);
-  // What the household already has: a line whose Ingredient is in the Pantry
-  // is shown apart and left off the list unless it is ticked. A line edited
-  // here is only text until it is a grocery, so it is matched by its name.
+  // A line whose food the Pantry holds is shown apart and left off the list unless ticked; a line
+  // edited here is only text, so it is matched by its name.
   const pantry = usePantryQuery();
   const rules = useSpellingRules();
 
@@ -216,11 +215,8 @@ type LinesProps = {
   onOpenChange: (open: boolean) => void;
 };
 
-/* Adding at once takes what the panel would have ticked — every line to
-   buy, none the Pantry holds — once the recipe has answered and the Pantry
-   has been read in this mount, so a cached copy nothing kept current never
-   decides. A Pantry that cannot be read ticks nothing, so the panel opens
-   instead, to say so and let the person tick. */
+/* Adds what the panel would have ticked once the recipe has answered and the Pantry was read in
+   this mount, never from a cached copy; a Pantry that cannot be read opens the panel instead. */
 function AddAtOnce({
   recipeId,
   initialServings,
