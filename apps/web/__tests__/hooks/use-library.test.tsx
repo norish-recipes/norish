@@ -15,7 +15,7 @@ import { DEFAULT_PERSISTED_RECIPE_FILTERS } from "@norish/shared/contracts/filte
 function renderList(cookie: PersistedRecipeFilters | undefined) {
   return renderHook(() => ({ list: useLibraryList(), store: useLibraryFiltersStoreApi() }), {
     wrapper: ({ children }: { children: ReactNode }) => (
-      <LibraryFiltersProvider cookie={cookie}>{children}</LibraryFiltersProvider>
+      <LibraryFiltersProvider initial={cookie}>{children}</LibraryFiltersProvider>
     ),
   });
 }

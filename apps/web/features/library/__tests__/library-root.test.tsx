@@ -1,10 +1,8 @@
-import { LibraryRoot } from "@/features/library/library-root";
 import { RECIPE_FILTERS_COOKIE, recipeFiltersFromCookie } from "@/lib/recipe-filters-cookie";
 import { readStoredRecipeFilters } from "@/lib/recipe-filters-storage";
 import { act, render, screen } from "@testing-library/react";
-import { afterEach, describe, expect, it, vi } from "vitest";
+import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 
-import { useLibraryFilters } from "@norish/shared-react/recipes";
 import { DEFAULT_PERSISTED_RECIPE_FILTERS } from "@norish/shared/contracts/filter-contract";
 
 vi.mock("@norish/shared-react/recipes", async (importOriginal) => ({
@@ -20,18 +18,36 @@ const cookie = () =>
       .slice(RECIPE_FILTERS_COOKIE.length + 1)
   );
 
+// The root keeps the document's last filters in module state: each test starts a fresh document.
+let LibraryRoot: typeof import("@/features/library/library-root").LibraryRoot;
+let useLibraryFilters: typeof import("@norish/shared-react/recipes").useLibraryFilters;
+
+beforeEach(async () => {
+  vi.resetModules();
+  ({ LibraryRoot } = await import("@/features/library/library-root"));
+  ({ useLibraryFilters } = await import("@norish/shared-react/recipes"));
+});
+
 let sortByTitle: () => void = () => {};
+let searchSoup: () => void = () => {};
+/** What every render drew: sort, search text, and whether the loading gate is released. */
+let frames: string[] = [];
 
 function Probe() {
   const sortMode = useLibraryFilters((state) => state.filters.sortMode);
+  const rawInput = useLibraryFilters((state) => state.filters.rawInput);
+  const hydrated = useLibraryFilters((state) => state.hydrated);
   const setFilters = useLibraryFilters((state) => state.setFilters);
 
   sortByTitle = () => setFilters({ sortMode: "titleAsc" });
+  searchSoup = () => setFilters({ rawInput: "soup" });
+  frames.push(`${sortMode} ${rawInput || "-"} ${hydrated ? "ready" : "waiting"}`);
 
   return <p>{sortMode}</p>;
 }
 
 afterEach(() => {
+  frames = [];
   localStorage.clear();
   document.cookie = `${RECIPE_FILTERS_COOKIE}=; max-age=0; path=/`;
 });
@@ -64,5 +80,28 @@ describe("LibraryRoot", () => {
     expect(screen.getByText("titleAsc")).toBeInTheDocument();
     expect(readStoredRecipeFilters()?.sortMode).toBe("titleAsc");
     expect(cookie().sortMode).toBe("titleAsc");
+  });
+
+  it("keeps the search text and filters when it unmounts and mounts again", () => {
+    const { unmount } = render(
+      <LibraryRoot filters={undefined}>
+        <Probe />
+      </LibraryRoot>
+    );
+
+    act(() => {
+      sortByTitle();
+      searchSoup();
+    });
+    unmount();
+    frames = [];
+    // The router's cached layout still carries the cookie from the first render.
+    render(
+      <LibraryRoot filters={DEFAULT_PERSISTED_RECIPE_FILTERS}>
+        <Probe />
+      </LibraryRoot>
+    );
+
+    expect(new Set(frames)).toEqual(new Set(["titleAsc soup ready"]));
   });
 });

@@ -1,39 +1,52 @@
 "use client";
 
 import type { ReactNode } from "react";
-import { useEffect } from "react";
+import { useEffect, useState } from "react";
 import { persistRecipeFilters, readStoredRecipeFilters } from "@/lib/recipe-filters-storage";
 
-import type { PersistedRecipeFilters } from "@norish/shared/contracts/filter-contract";
+import type {
+  CanonicalRecipeFilters,
+  PersistedRecipeFilters,
+} from "@norish/shared/contracts/filter-contract";
 import {
   LibraryFiltersProvider,
   useLibraryFiltersStoreApi,
   useLibrarySubscriptions,
 } from "@norish/shared-react/recipes";
 
+// The filters the store last held in this document, search text included, so a root remounted on
+// return to the Library starts from them. Written only from effects, so the server never holds any.
+let lastFilters: CanonicalRecipeFilters | undefined;
+
+function keep(filters: CanonicalRecipeFilters) {
+  lastFilters = filters;
+  persistRecipeFilters(filters);
+}
+
 /** The list's and the ratings' events, and the filters kept in the browser and the cookie. */
-function LibraryEffects() {
+function LibraryEffects({ resumed }: { resumed: boolean }) {
   const store = useLibraryFiltersStoreApi();
 
   useLibrarySubscriptions();
 
-  // Storage is read after mount, as the server can't; then every change is written back, so the
-  // next full load renders under it.
+  // Storage is read after mount, as the server can't, unless the store resumed this document's own;
+  // then every change is written back, so the next full load renders under it.
   useEffect(() => {
-    store.getState().applyStored(readStoredRecipeFilters());
-    persistRecipeFilters(store.getState().filters);
+    if (!resumed) store.getState().applyStored(readStoredRecipeFilters());
+    keep(store.getState().filters);
 
     return store.subscribe((state, previous) => {
-      if (state.filters !== previous.filters) persistRecipeFilters(state.filters);
+      if (state.filters !== previous.filters) keep(state.filters);
     });
-  }, [store]);
+  }, [store, resumed]);
 
   return null;
 }
 
 /**
  * What the dashboard and a cookbook page share: the filters, made once from the cookie (`undefined`
- * without one, and in the offline bootstrap), and the list's subscriptions.
+ * without one, and in the offline bootstrap) or this document's last ones, and the list's
+ * subscriptions.
  */
 export function LibraryRoot({
   filters,
@@ -42,9 +55,11 @@ export function LibraryRoot({
   filters: PersistedRecipeFilters | undefined;
   children: ReactNode;
 }) {
+  const [resumed] = useState(() => lastFilters);
+
   return (
-    <LibraryFiltersProvider cookie={filters}>
-      <LibraryEffects />
+    <LibraryFiltersProvider initial={resumed ?? filters}>
+      <LibraryEffects resumed={resumed !== undefined} />
       {children}
     </LibraryFiltersProvider>
   );

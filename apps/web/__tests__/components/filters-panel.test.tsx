@@ -12,7 +12,7 @@ import { DEFAULT_PERSISTED_RECIPE_FILTERS } from "@norish/shared/contracts/filte
 
 /** The panel under a Library filters store made from these filters. */
 function render(ui: ReactNode, filters: PersistedRecipeFilters = DEFAULT_PERSISTED_RECIPE_FILTERS) {
-  return renderBare(<LibraryFiltersProvider cookie={filters}>{ui}</LibraryFiltersProvider>);
+  return renderBare(<LibraryFiltersProvider initial={filters}>{ui}</LibraryFiltersProvider>);
 }
 
 const userPreferencesState = {

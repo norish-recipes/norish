@@ -10,7 +10,6 @@ import type {
   PersistedRecipeFilters,
 } from "@norish/shared/contracts/filter-contract";
 import {
-  canonicalRecipeFilters,
   changedRecipeFilters,
   DEFAULT_RECIPE_FILTERS,
   toggleSearchFieldIn,
@@ -30,11 +29,16 @@ export type LibraryFiltersState = {
   applyStored: (stored: PersistedRecipeFilters | null) => void;
 };
 
-/** The Library's filters, starting on the cookie's; `undefined` without one. */
-export function createLibraryFiltersStore(cookie: PersistedRecipeFilters | undefined) {
+/**
+ * The Library's filters, starting on `initial` as already applied: the cookie's, or the last ones
+ * this document held with their search text. `undefined` without either.
+ */
+export function createLibraryFiltersStore(
+  initial: PersistedRecipeFilters | CanonicalRecipeFilters | undefined
+) {
   return createStore<LibraryFiltersState>()((set) => ({
-    filters: cookie ? canonicalRecipeFilters(cookie) : DEFAULT_RECIPE_FILTERS,
-    hydrated: cookie !== undefined,
+    filters: { ...DEFAULT_RECIPE_FILTERS, ...initial },
+    hydrated: initial !== undefined,
     setFilters: (next) => set((state) => ({ filters: { ...state.filters, ...next } })),
     clearFilters: () =>
       set((state) => ({
@@ -60,15 +64,15 @@ export function createLibraryFiltersStore(cookie: PersistedRecipeFilters | undef
 
 const libraryFilters = createPageStoreContext("LibraryFiltersProvider", createLibraryFiltersStore);
 
-/** Makes the Library's filters once from the cookie's; a later render's cookie is the store's own. */
+/** Makes the Library's filters once from `initial`; a later render's value is the store's own. */
 export function LibraryFiltersProvider({
-  cookie,
+  initial,
   children,
 }: {
-  cookie: PersistedRecipeFilters | undefined;
+  initial: PersistedRecipeFilters | CanonicalRecipeFilters | undefined;
   children: ReactNode;
 }) {
-  const [first] = useState(cookie);
+  const [first] = useState(initial);
 
   return <libraryFilters.Provider pageKey={first}>{children}</libraryFilters.Provider>;
 }
