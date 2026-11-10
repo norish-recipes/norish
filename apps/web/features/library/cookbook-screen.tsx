@@ -136,7 +136,7 @@ export function CookbookSkeleton() {
  * Rename and Delete the card carries, so a name can be fixed without leaving
  * the thing being renamed.
  */
-export default function CookbookPage({ cookbookId }: { cookbookId: string }) {
+export function CookbookScreen({ cookbookId }: { cookbookId: string }) {
   const router = useRouter();
   const t = useTranslations("recipes.cookbooks");
   const { cookbook, isNotFound } = useCookbookQuery(cookbookId);
