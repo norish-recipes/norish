@@ -7,7 +7,7 @@ import type {
 } from "@norish/shared/contracts/dto/household";
 import { createTestWrapper, fakePlatformAdapter } from "@norish/shared-react/platform/testing";
 
-import type { HouseholdData } from "../household";
+import type { HouseholdData } from "../use-household";
 
 /** The signed-in Reader the hooks' platform adapter names. */
 export const READER: User = {

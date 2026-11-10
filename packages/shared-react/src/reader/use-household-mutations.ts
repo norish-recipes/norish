@@ -5,8 +5,8 @@ import { useMutation } from "@tanstack/react-query";
 import type { HouseholdSettingsDto } from "@norish/shared/contracts/dto/household";
 
 import { useTRPC } from "../trpc";
-import { useHousehold, useHouseholdCacheHelpers } from "./household";
-import { useReader } from "./identity";
+import { useHousehold, useHouseholdCacheHelpers } from "./use-household";
+import { useReader } from "./use-reader";
 
 export type HouseholdMutationsResult = {
   createHousehold: (name: string) => void;

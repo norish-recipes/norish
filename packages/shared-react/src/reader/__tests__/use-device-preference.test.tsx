@@ -23,7 +23,7 @@ type Write = { kind: DeviceKind; preferences: Partial<DevicePreferences> };
 
 const current = vi.hoisted(() => ({ trpc: null as unknown }));
 
-vi.mock("../trpc", () => ({ useTRPC: () => current.trpc }));
+vi.mock("../../trpc", () => ({ useTRPC: () => current.trpc }));
 
 const AN_HOUR_AGO = Date.now() - 60 * 60_000;
 const TWO_HOURS_AGO = Date.now() - 2 * 60 * 60_000;

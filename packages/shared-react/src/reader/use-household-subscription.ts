@@ -7,8 +7,8 @@ import type { HouseholdsRealtime } from "@norish/shared/contracts/realtime/house
 import { usePlatform } from "../platform";
 import { useRealtimeSubscription } from "../realtime";
 import { useTRPC } from "../trpc";
-import { useHouseholdCacheHelpers } from "./household";
-import { useReader } from "./identity";
+import { useHouseholdCacheHelpers } from "./use-household";
+import { useReader } from "./use-reader";
 
 type Payload<E extends EventName<HouseholdsRealtime>> = PayloadOf<HouseholdsRealtime, E>;
 

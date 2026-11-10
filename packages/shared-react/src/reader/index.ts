@@ -1,20 +1,20 @@
-export { useActiveAllergies, type ActiveAllergies } from "./allergies";
+export { useActiveAllergies, type ActiveAllergies } from "./use-active-allergies";
 export {
   DevicePreferencesForVisit,
   useDeviceKind,
   useDevicePreference,
   type DevicePreferenceState,
-} from "./device-preferences";
+} from "./use-device-preference";
 export {
   useHousehold,
   useHouseholdCacheHelpers,
   type HouseholdCacheHelpers,
   type HouseholdData,
   type HouseholdResult,
-} from "./household";
-export { useHouseholdMutations, type HouseholdMutationsResult } from "./household-mutations";
-export { useHouseholdSubscription } from "./household-subscription";
-export { useReader, useSeededSession, type ReaderIdentity } from "./identity";
+} from "./use-household";
+export { useHouseholdMutations, type HouseholdMutationsResult } from "./use-household-mutations";
+export { useHouseholdSubscription } from "./use-household-subscription";
+export { useReader, useSeededSession, type ReaderIdentity } from "./use-reader";
 export {
   normalizePermissionsData,
   selectCanDeleteRecipe,
@@ -29,4 +29,4 @@ export {
   usePermissionsSubscription,
   useRecipePermissions,
   type RecipePermissions,
-} from "./permissions";
+} from "./use-permissions";

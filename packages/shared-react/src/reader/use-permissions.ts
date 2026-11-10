@@ -8,13 +8,13 @@ import type { PermissionsRealtime } from "@norish/shared/contracts/realtime/perm
 import type { ReaderPermissions } from "./permission-selectors";
 import { useRealtimeSubscription } from "../realtime";
 import { useTRPC } from "../trpc";
-import { useReader } from "./identity";
 import {
   normalizePermissionsData,
   selectCanDeleteRecipe,
   selectCanEditRecipe,
   selectCanViewRecipe,
 } from "./permission-selectors";
+import { useReader } from "./use-reader";
 
 const DEFAULTS = normalizePermissionsData(undefined);
 
