@@ -42,8 +42,8 @@ export function useIngredientIcons(ids: readonly (string | null | undefined)[]):
 }
 
 /**
- * One food's icon address from the newest icons read that answered it, so an icon keeps the
- * previous read's while a changed set is read; undefined until one answers it.
+ * One food's icon address from a surface's own read, else the newest earlier one that answered it,
+ * so an icon keeps the previous read's while a changed set is read; undefined until one answers it.
  */
 function useCachedIconAddress(ingredientId: string): string | null | undefined {
   const trpc = useTRPC();
@@ -54,14 +54,23 @@ function useCachedIconAddress(ingredientId: string): string | null | undefined {
     });
   const read = () => {
     let address: string | null | undefined;
+    let answeredWatched = false;
     let answeredAt = -1;
 
     for (const query of queryCache.findAll({ queryKey: trpc.ingredients.icons.pathKey() })) {
       const answer = query.state.data as IconAnswer | undefined;
+      // A read a surface watches outranks an earlier one, as a seed carries the server's clock.
+      const watched = query.getObserversCount() > 0;
+      const at = query.state.dataUpdatedAt;
 
-      if (answer && Object.hasOwn(answer, ingredientId) && query.state.dataUpdatedAt > answeredAt) {
+      if (
+        answer &&
+        Object.hasOwn(answer, ingredientId) &&
+        (watched !== answeredWatched ? watched : at > answeredAt)
+      ) {
         address = answer[ingredientId];
-        answeredAt = query.state.dataUpdatedAt;
+        answeredWatched = watched;
+        answeredAt = at;
       }
     }
 

@@ -145,6 +145,24 @@ describe("IngredientIcon", () => {
     expect(renders.onion).toBe(onionRenders);
   });
 
+  it("prefers the surface's own read to an older one, whatever clock stamped that", async () => {
+    const client = createTestQueryClient();
+    const keys = (await import("@norish/shared-react/trpc")).useTRPC().ingredients.icons;
+
+    // A seed from a server whose clock runs an hour ahead, for a set the surface no longer shows.
+    client.setQueryData(
+      keys.queryOptions({ ids: [ONION] }).queryKey,
+      { [ONION]: KOHLRABI_ICON },
+      { updatedAt: Date.now() + 60 * 60 * 1000 }
+    );
+    onSurface([ONION, KOHLRABI], <IngredientIcon ingredientId={ONION} />, client);
+
+    await waitFor(() => expect(mocks.asked).toHaveLength(1));
+    await waitFor(() =>
+      expect(screen.getByTestId("ingredient-icon").getAttribute("src")).toBe(ONION_ICON)
+    );
+  });
+
   it("keeps the previous read's icons past the default gcTime while a changed set stays unread", async () => {
     mocks.icons[KOHLRABI] = KOHLRABI_ICON;
     const { rerenderSurface } = onSurface(
