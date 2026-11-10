@@ -1,9 +1,23 @@
 import { vi } from "vitest";
 
+import { trackedEvent } from "../hooks/realtime-test-utils";
+
 /** Every write the fake tRPC was sent, as (procedure path, input); a write never answers. */
 export const sentWrites = vi.fn<(path: string, input: unknown) => void>();
 
 const never = () => new Promise<never>(() => {});
+
+/** Each subscription mounted now, by procedure path: its `onData`. */
+const subscribers = new Map<string, Set<(data: unknown) => void>>();
+
+/** The procedures subscribed to now, by dotted path. */
+export const liveSubscriptions = () =>
+  [...subscribers].filter(([, mounted]) => mounted.size > 0).map(([path]) => path);
+
+/** Hands every mounted subscription to `path` one event, as the server sends it. */
+export function deliver(path: string, payload: unknown) {
+  for (const onData of subscribers.get(path) ?? []) onData(trackedEvent(payload));
+}
 
 /** One procedure: keys shaped like the real client's, a query that never answers, a recorded write. */
 function procedure(path: string[]) {
@@ -12,6 +26,7 @@ function procedure(path: string[]) {
 
   return {
     pathKey: () => [path],
+    pathFilter: () => ({ queryKey: [path] }),
     queryKey: (input?: unknown) => key(input, "query"),
     infiniteQueryKey: (input?: unknown) => key(input, "infinite"),
     queryOptions: (input?: unknown, options?: object) => ({
@@ -34,7 +49,19 @@ function procedure(path: string[]) {
         return never();
       },
     }),
-    subscriptionOptions: (input?: unknown, options?: object) => ({ ...options, enabled: false }),
+    subscriptionOptions: (input: unknown, options: { enabled?: boolean } = {}) => ({
+      ...options,
+      enabled: options.enabled ?? true,
+      queryKey: key(input, "subscription"),
+      subscribe: ({ onData }: { onData: (data: unknown) => void }) => {
+        const mounted = subscribers.get(path.join(".")) ?? new Set();
+
+        mounted.add(onData);
+        subscribers.set(path.join("."), mounted);
+
+        return { unsubscribe: () => mounted.delete(onData) };
+      },
+    }),
   };
 }
 
