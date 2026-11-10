@@ -4,10 +4,10 @@
 
 **Blocked by:** 12
 
-**Status:** ready-for-agent
+**Status:** done
 
-- [ ] No app file imports a recipe-domain binding or factory, and web's recipes, library, favourites, ratings and cookbooks binding folders are gone.
-- [ ] The recipe-domain factories and shared-react's `./hooks/recipes`, `./hooks/recipes/dashboard`, `./hooks/recipes/recipe`, `./hooks/cookbooks` and `./hooks/ratings` exports are deleted. `./hooks` and `./contexts` keep only what calendar, settings, imports and library still bind.
-- [ ] `RecipesContext` and the cookbooks realtime provider read the plain hooks, and both stay in the shell until library.
-- [ ] Web's hook tests for recipes, favourites and ratings, which test shared-react code, move into `src/recipes/__tests__/` and run against the plain hooks. The exports test follows the new subpaths.
-- [ ] Gates green: `pnpm lint`, `pnpm typecheck`, `pnpm test:run`, `pnpm i18n:check`, `pnpm build`, `pnpm deps:cycles`, and mobile's lint, typecheck, test and `expo export --platform ios`.
+- [x] No app file imports a recipe-domain binding or factory, and web's recipes, library, favourites, ratings and cookbooks binding folders are gone.
+- [x] The recipe-domain factories and shared-react's `./hooks/recipes`, `./hooks/recipes/dashboard`, `./hooks/recipes/recipe`, `./hooks/cookbooks` and `./hooks/ratings` exports are deleted. `./hooks` and `./contexts` keep only what calendar, settings, imports and library still bind.
+- [x] `RecipesContext` and the cookbooks realtime provider read the plain hooks, and both stay in the shell until library.
+- [x] Web's hook tests for recipes, favourites and ratings, which test shared-react code, move into `src/recipes/__tests__/` and run against the plain hooks. The exports test follows the new subpaths.
+- [x] Gates green: `pnpm lint`, `pnpm typecheck`, `pnpm test:run`, `pnpm i18n:check`, `pnpm build`, `pnpm deps:cycles`, and mobile's lint, typecheck, test and `expo export --platform ios`.
