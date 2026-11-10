@@ -5,18 +5,12 @@ import { createRoot } from "react-dom/client";
 import { afterEach, describe, expect, it, vi } from "vitest";
 
 import type { RecipeShareCreatedDto, RecipeShareSummaryDto } from "@norish/shared/contracts";
-import {
-  createRecipeDetailContext,
-  createRecipeHooks,
-  createUseRecipeShareCacheHelpers,
-  createUseRecipeSharesQuery,
-  createUseRecipeShareSubscription,
-  createUseSharedRecipeQuery,
-} from "@norish/shared-react/hooks";
+import { createRecipeDetailContext, createRecipeHooks } from "@norish/shared-react/hooks";
+import * as recipes from "@norish/shared-react/recipes";
 
-import type { RecipeDetailContextValue } from "../src/hooks/recipe-detail/recipe-detail-context";
-import type { CreateRecipeHooksOptions } from "../src/hooks/recipes/types";
-import { trackedEvent } from "./realtime/tracked-event";
+import type { RecipeDetailContextValue } from "../../hooks/recipe-detail/recipe-detail-context";
+import type { CreateRecipeHooksOptions } from "../../hooks/recipes/types";
+import { trackedEvent } from "../../../__tests__/realtime/tracked-event";
 
 const useSubscriptionMock = vi.hoisted(() => vi.fn());
 
@@ -107,33 +101,31 @@ function createSubscriptionOptionsFactory(event: string) {
   });
 }
 
-function createMockUseTRPC() {
-  const trpc = {
-    recipes: {
-      shareList: {
-        queryKey: ({ recipeId }: { recipeId: string }) => [
-          ["recipes", "shareList"],
-          { input: { recipeId }, type: "query" },
-        ],
-      },
-      shareListMine: {
-        queryKey: () => [["recipes", "shareListMine"], { type: "query" }],
-      },
-      shareListAdmin: {
-        queryKey: () => [["recipes", "shareListAdmin"], { type: "query" }],
-      },
-      shareGet: {
-        queryKey: ({ id }: { id: string }) => [
-          ["recipes", "shareGet"],
-          { input: { id }, type: "query" },
-        ],
-      },
-      onShareEvent: { subscriptionOptions: createSubscriptionOptionsFactory("onShareEvent") },
-    },
-  };
+vi.mock("../../trpc", () => ({ useTRPC: () => trpc }));
 
-  return (() => trpc) as CreateRecipeHooksOptions["useTRPC"];
-}
+const trpc = {
+  recipes: {
+    shareList: {
+      queryKey: ({ recipeId }: { recipeId: string }) => [
+        ["recipes", "shareList"],
+        { input: { recipeId }, type: "query" },
+      ],
+    },
+    shareListMine: {
+      queryKey: () => [["recipes", "shareListMine"], { type: "query" }],
+    },
+    shareListAdmin: {
+      queryKey: () => [["recipes", "shareListAdmin"], { type: "query" }],
+    },
+    shareGet: {
+      queryKey: ({ id }: { id: string }) => [
+        ["recipes", "shareGet"],
+        { input: { id }, type: "query" },
+      ],
+    },
+    onShareEvent: { subscriptionOptions: createSubscriptionOptionsFactory("onShareEvent") },
+  },
+};
 
 const mountedRoots: Array<{ root: ReturnType<typeof createRoot>; container: HTMLDivElement }> = [];
 
@@ -150,17 +142,16 @@ afterEach(() => {
 });
 
 describe("recipe share hooks", () => {
-  it("exports the recipe share hook creators through shared-react and the recipe hook factory", () => {
-    expect(typeof createUseRecipeSharesQuery).toBe("function");
-    expect(typeof createUseSharedRecipeQuery).toBe("function");
+  it("the recipe hook factory hands back the plain share hooks", () => {
+    const hooks = createRecipeHooks({
+      useTRPC: () => trpc as unknown as ReturnType<CreateRecipeHooksOptions["useTRPC"]>,
+    });
 
-    const hooks = createRecipeHooks({ useTRPC: createMockUseTRPC() });
-
-    expect(typeof hooks.shares.useRecipeSharesQuery).toBe("function");
-    expect(typeof hooks.shares.useRecipeShareQuery).toBe("function");
-    expect(typeof hooks.shares.useRecipeShareMutations).toBe("function");
-    expect(typeof hooks.shares.useRecipeShareSubscription).toBe("function");
-    expect(typeof hooks.shares.useSharedRecipeQuery).toBe("function");
+    expect(hooks.shares.useRecipeSharesQuery).toBe(recipes.useRecipeSharesQuery);
+    expect(hooks.shares.useRecipeShareQuery).toBe(recipes.useRecipeShareQuery);
+    expect(hooks.shares.useRecipeShareMutations).toBe(recipes.useRecipeShareMutations);
+    expect(hooks.shares.useRecipeShareSubscription).toBe(recipes.useRecipeShareSubscription);
+    expect(hooks.shares.useSharedRecipeQuery).toBe(recipes.useSharedRecipeQuery);
   });
 
   it("surfaces share state and actions through the recipe detail context", () => {
@@ -281,19 +272,12 @@ describe("recipe share hooks", () => {
   });
 
   it("invalidates recipe share queries when share lifecycle events arrive", () => {
-    const useTRPC = createMockUseTRPC();
     const queryClient = new QueryClient();
     const invalidateQueries = vi.spyOn(queryClient, "invalidateQueries");
     const removeQueries = vi.spyOn(queryClient, "removeQueries");
 
-    const useRecipeShareCacheHelpers = createUseRecipeShareCacheHelpers({ useTRPC });
-    const useRecipeShareSubscription = createUseRecipeShareSubscription(
-      { useTRPC },
-      { useRecipeShareCacheHelpers }
-    );
-
     function TestComponent() {
-      useRecipeShareSubscription("recipe-1");
+      recipes.useRecipeShareSubscription("recipe-1");
       return null;
     }
 
