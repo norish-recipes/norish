@@ -5,8 +5,8 @@ import SettingsPageContent from "./components/settings-page-content";
 import { readSettingsShape } from "./read-settings-shape";
 import { openSettingsTab } from "./settings-tab";
 
-// A full load carries what the open tab draws (household's comes with the app layout). Not CalDAV's
-// password (the worker caches documents) nor its connection check (a request to the CalDAV server).
+// A full load carries what the open tab draws. Not CalDAV's password (the worker caches documents)
+// nor its connection check (a request to the CalDAV server).
 export default async function SettingsPage({ searchParams }: PageProps<"/settings">) {
   const [{ tab }, shape] = await Promise.all([searchParams, readSettingsShape()]);
   const open = openSettingsTab(Array.isArray(tab) ? tab[0] : tab, shape);
@@ -19,6 +19,7 @@ export default async function SettingsPage({ searchParams }: PageProps<"/setting
             // `user.get` carries API-key metadata, which this tab draws anyway.
             return [
               client.query(trpc.user.get.queryOptions()),
+              client.query(trpc.user.getAllergies.queryOptions()),
               client.query(trpc.recipes.shareListMine.queryOptions()),
               client.query(trpc.siteAuthTokens.list.queryOptions()),
               client.query(trpc.config.localeConfig.queryOptions()),
@@ -26,6 +27,8 @@ export default async function SettingsPage({ searchParams }: PageProps<"/setting
               client.query(trpc.config.authProviders.queryOptions()),
               client.query(trpc.user.signInMethods.queryOptions()),
             ];
+          case "household":
+            return [client.query(trpc.households.get.queryOptions())];
           case "caldav":
             return [
               client.query(trpc.caldav.getConfig.queryOptions()),

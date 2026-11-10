@@ -20,21 +20,15 @@ export default async function AppLayout({ children }: { children: React.ReactNod
     redirect(loginPath((await headers()).get(DESTINATION_HEADER)));
   }
 
-  // What the providers' first render needs, read once. Not `user.get`: its API-key metadata would
-  // sit in every document the worker keeps.
+  // The shell's own reads: permissions (the AI-key prompt, the import modal) and Device Preferences.
+  // Not `user.get`: its API-key metadata would sit in every document the worker keeps.
   const [readerToday, queries] = await Promise.all([
     readReaderToday(),
     readQuerySeed((trpc, client) => {
       // What user.getDevicePreferences answers, from the preferences the gate already read.
       client.setQueryData(trpc.user.getDevicePreferences.queryKey(), deviceBlocks(preferences));
 
-      return [
-        client.query(trpc.permissions.get.queryOptions()),
-        client.query(trpc.households.get.queryOptions()),
-        client.query(trpc.favorites.list.queryOptions()),
-        client.query(trpc.user.getAllergies.queryOptions()),
-        client.query(trpc.recipes.getPending.queryOptions()),
-      ];
+      return [client.query(trpc.permissions.get.queryOptions())];
     }),
   ]);
   const { id, email, name, image, version } = identity;
