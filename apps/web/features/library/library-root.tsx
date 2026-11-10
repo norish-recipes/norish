@@ -13,7 +13,8 @@ import {
   LibraryFiltersProvider,
   useCookbooksSubscription,
   useLibraryFiltersStoreApi,
-  useLibrarySubscriptions,
+  useRatingsSubscription,
+  useRecipeListSubscription,
 } from "@norish/shared-react/recipes";
 
 // The filters the store last held in this document, search text included, so a root remounted on
@@ -29,7 +30,8 @@ function keep(filters: CanonicalRecipeFilters) {
 function LibraryEffects({ resumed }: { resumed: boolean }) {
   const store = useLibraryFiltersStoreApi();
 
-  useLibrarySubscriptions();
+  useRecipeListSubscription();
+  useRatingsSubscription();
   useCookbooksSubscription();
   // The Library can be ordered by how much of a recipe the Pantry covers.
   usePantrySubscription();
