@@ -2,7 +2,7 @@
 
 Status: ready-for-agent
 
-Settled in a `/grilling` session on 2026-11-07. Target Version: 0.27.0-beta. Tickets are in `issues/`; only the groundwork and the groceries pilot are ticketed, and each later feature gets its tickets once the one before it has landed. Starts on a branch off `rc/0.27.0-beta`, which `feat/mobile-catch-up` has merged into (4589f4f95).
+Settled in `/grilling` sessions on 2026-11-07 (the architecture and the groceries pilot) and 2026-11-09 (recipes, the second feature, and the decisions library takes with it). Target Version: 0.27.0-beta. Tickets are in `issues/`: 01–09 are the groundwork and the groceries pilot, 10–15 are recipes. Each later feature gets its tickets once the one before it has landed. Starts on a branch off `rc/0.27.0-beta`, which `feat/mobile-catch-up` has merged into (4589f4f95); every feature stays on `refactor/app-structure`, since it is one refactor.
 
 ## Problem Statement
 
@@ -12,16 +12,18 @@ The "heavy" contexts are mostly server data in disguise. `RecipesContext` (23 fi
 
 shared-react reaches both apps through 19 `create*Hooks({ useTRPC, … })` factories plus 10 context factories, and each app binds every one in its own files. Infer-mode React Compiler can't see factory-built hooks without a `"use memo"` directive, and aliasing them caused the hook-alias trap on mobile. What the factories inject is almost never another feature: it is `useTRPC`, reference data (units, recurrence config), the signed-in **Reader** (id, name, allergies, household) and platform adapters (toast, navigation, error, storage).
 
+After the pilot, the recipe surfaces still carry all of it. The recipe page's context holds the recipe, its shares, ratings, favourites, enrichment, conversion and servings in one value, eight of its fields have no reader, and the page's pieces are spread over `app/(app)/recipes/[id]`, `components/recipes`, `components/recipe` and `components/shared`. The shared recipe page renders ten of those pieces from a route folder of its own with a second provider. The icons context renders every ingredient icon on a screen when one food joins it. And the shell keeps the Library's list, its subscriptions and the Pantry's mounted on every page, though only one screen draws each.
+
 ## Solution
 
 Both apps are laid out the same way, and logic a feature shares lives once in shared-react under the same domain name.
 
 - An app's `features/<feature>/` holds that feature's screens, components and platform hooks. Route files compose features; a feature never reaches into another and only opens another's panels through that feature's `index.ts`.
-- Server data is read through plain hooks over the Query cache, never copied into a context or a store. Realtime subscriptions mount once, in a feature's root or in the shell when screens outside the feature show the data.
-- Client state that several components share lives in a zustand store; state one component owns stays in `useState`.
+- Server data is read through plain hooks over the Query cache, never copied into a context or a store. Realtime subscriptions mount once, in the root of the feature that draws the data; the shell mounts only what it draws itself, plus the Reader.
+- Client state that several components share lives in a zustand store; state one component owns stays in `useState`. A store whose first value comes from the request or the page is made per page and handed down through a context that holds only the store.
 - shared-react is organised by feature, creates the tRPC context once, and takes platform differences through one adapter. Its features don't import each other either; they import cross-cutting folders.
 
-Groceries is the pilot. The rest follows in order, and the old type folders are deleted when the last feature has migrated.
+Groceries is the pilot, recipes the second feature and library the third. The rest follows in order, and the old type folders are deleted when the last feature has migrated.
 
 ## User Stories
 
@@ -34,12 +36,30 @@ Groceries is the pilot. The rest follows in order, and the old type folders are 
 7. As a new contributor, I want a docs page that shows how the repo is laid out and how data flows from a component to Postgres and back, so that I can find my way before reading code.
 8. As a household member, I want the groceries page to do no more rendering than what changed on screen, so that checking off items stays quick on a phone.
 9. As a household member, I want groceries to behave exactly as before, so that the restructure is invisible to me.
+10. As a contributor, I want the recipe page, the recipe editor and the shared recipe page in one `features/recipes` folder, so that I can find every recipe surface in one place.
+11. As a contributor, I want the read-only recipe pieces (ingredients, steps, sections, nutrition, header) to belong to the recipes feature, so that a change to how a recipe reads lands on the recipe page and a shared recipe together.
+12. As a contributor, I want the recipe page's server data read through hooks by recipe id, so that a component showing the servings doesn't render when the shares change.
+13. As a contributor, I want the recipe page's client state (the servings picked, the conversion choice, the wake lock) in one store the page makes, so that its components agree without a forty-field context.
+14. As a contributor, I want the recipe page's store made per page, so that the server's render of one reader's recipe never leaks into another's.
+15. As a contributor, I want the signed-in Reader (identity, household, active allergies, permissions) as plain hooks in shared-react, so that any feature reads who is reading without each app re-providing a context.
+16. As a contributor, I want each app to hand the Reader its own session and sign-out through the platform adapter, so that web's better-auth session and mobile's auth client both feed the same hooks.
+17. As a contributor, I want the whole recipe domain (list, library, favourites, ratings, shares, cookbooks, a recipe, enrichment, images) as plain hooks in `shared-react/recipes`, so that no app binds a recipe factory.
+18. As a contributor building mobile's recipe screen, I want the recipe hooks and the page store already in shared-react, so that I only write the UI.
+19. As a household member, I want adding a food to a list to render that food's icon only, so that the groceries list and a recipe stay quick.
+20. As a household member, I want changing the servings on a recipe to render only what shows amounts, so that the page stays responsive while I cook.
+21. As a household member, I want the recipe page, the editor and creating a recipe to behave exactly as before, so that the restructure is invisible to me.
+22. As someone holding a share link, I want the shared recipe to look and work as before, so that the link I was sent reads the same.
+23. As a household member who is Offline, I want a recipe in the Warm Set to open as before, so that cooking doesn't depend on the connection.
+24. As a contributor, I want the shell to mount only what it draws plus the Reader, so that a settings page doesn't keep the Library's list and subscriptions alive.
+25. As a household member, I want the Library to render on the server under my stored filters, so that the first paint already shows what I filtered to.
+26. As a contributor, I want the cookbook page in `features/library`, since it is the Library scoped to one cookbook, so that the grid, card and selection it shares with the dashboard aren't spread over the shared folders.
 
 ## Implementation Decisions
 
 ### Features
 
-- Features are named by domain: `library` (dashboard grid, filters, selection), `recipes` (detail, new, edit), `cookbooks`, `groceries` (stores and pantry included), `calendar`, `imports`, `settings`, `auth` and `share`. Most map to one route; a route that shows several, like the dashboard with today's meals, composes them.
+- Features are named by domain: `library` (the dashboard's grid, filters and selection, and the cookbook page), `recipes` (detail, new, edit, and the shared recipe page), `groceries` (stores and pantry included), `calendar`, `imports`, `settings` and `auth`. Most map to one route; a route that shows several, like the dashboard with today's meals, composes them.
+- The cookbook page is the **Library** scoped to one cookbook: it renders the same grid, card, selection, search, view toggle and filters panel as the dashboard, so it and `MiniCookbooks` belong to `library` rather than a feature of their own. A shared recipe is the recipe page for someone holding the link, and it renders the recipe page's read-only pieces, so it belongs to `recipes`.
 - An app feature holds only the subfolders it needs. Code two or more features use lives in the app's shared `components/`, `hooks/` or `lib/`.
 - Imports run one way: shared folders, then features, then routes. A `no-restricted-imports` override in each app's ESLint config enforces it, as mobile's already does.
 - A feature's `index.ts` exports only the panels other features open: `MiniGroceries`, `MiniCalendar`, `MiniCookbooks`, `MiniRecipes`. A card in the library opens a grocery panel, so this one dependency is real and lint shows it instead of hiding it in a shared folder. Lint blocks `@/features/<x>/**` everywhere outside feature `<x>` except route files, which import screens directly; `@/features/<x>` itself stays importable, as mobile's rule already allows, from shared code too: the recipe card opens `MiniGroceries` before library moves. The cycle check runs madge in each workspace, so `@/` imports count.
@@ -61,53 +81,84 @@ Groceries is the pilot. The rest follows in order, and the old type folders are 
 - A read refetches on mount only when it may be behind. Web skips the server's seeded copy under the stale time and, until stale, a copy a mounted subscription keeps current (`useKeepsCurrent` in `realtime/`); config reads stay current through the admin's broadcast edits. A key a screen must keep while none of its observers is mounted, as the list's reads are while the Pantry view shows, gets a `gcTime` default in the Offline Cache.
 - A write's rollback and settle go in `useMutation`'s own options, never in a `mutate` call's, which run for the last call only and would skip an overlapped one. The component that holds a `useMutation` renders on each of its status changes; its memoised children don't.
 - A list keeps an unchanged item's object (`useStructuralSharing`, or a `select` the cache shares) and memoises its rows, so a change renders the rows it touches. A row skips what it doesn't draw: a grouped grocery row ignores its lines' sort order and version, which a create changes for every open line below it.
-- A context remains only to inject a scope, such as which recipe a page shows, or for compound components (`Panel`, `Carousel`, DnD). Every reader renders when its value changes, so a compound component's context changes only while it is in use: the flat and the grouped list's DnD contexts hold a drag's arrangement and are otherwise constant, and each Store reads its containers off its own rows or groups. Both lists drag through one hook. dnd-kit itself measures drop targets only while a drag is on, and every `DndContext` takes a `useId` id.
-- zustand holds client state shared across components. Stores are global; one that must start fresh per screen resets on unmount instead of being scoped through a context. A store holds ids, never a copy of server data: the edit panel holds its grocery's id and reads the grocery live.
-- A store both apps need lives in `shared-react/<feature>`; a store that is purely platform UI (`mobileSearchOpen`) stays in the app. A persisted store persists through the platform adapter's storage.
+- A context remains only to hand down a per-page store (below) or for compound components (`Panel`, `Carousel`, DnD). Every reader renders when its value changes, so a compound component's context changes only while it is in use: the flat and the grouped list's DnD contexts hold a drag's arrangement and are otherwise constant, and each Store reads its containers off its own rows or groups. Both lists drag through one hook. dnd-kit itself measures drop targets only while a drag is on, and every `DndContext` takes a `useId` id.
+- zustand holds client state shared across components. A store is global unless its first value comes from the request or the page; a global one that must start fresh per screen resets on unmount. A store holds ids, never a copy of server data: the edit panel holds its grocery's id and reads the grocery live.
+- A store whose first value comes from the request or the page (the Library's filters from the reader's cookie, the recipe page's recipe id) is made per page: the page's provider creates it once with zustand's `createStore` and hands it down through a context that holds only the store, and components read it with a selector. A module-level store is one object on the server, shared by every request, so it can't carry one reader's filters or one page's recipe while the server renders. The context's value is the same store for the page's life, so the context renders nothing; a changed slice renders only the components that select it, and the store goes when the page unmounts, with nothing to reset.
+- A store both apps need lives in `shared-react/<feature>`; a store that is purely platform UI (web's `actionBarOpen`) stays in the app. A persisted store persists through the platform adapter's storage.
 - Device Preferences stay on the profile (CONTEXT.md) and are server data like any other. They get their own `user.getDevicePreferences` query, seeded on a full load next to `user.getAllergies`; `user.get` isn't seeded because its API-key metadata would sit in every document the worker keeps, and it stops carrying preferences so there is one copy. `useDevicePreference(key)` selects one preference, so flipping one re-renders only its readers; setting one is an optimistic mutation, one write at a time, through the Outbox while Offline. Hydration only overwrites with newer data, so a fresh server read beats an older restored copy and a newer local copy wins while Offline, replacing the context's hand-written precedence. Signed out or on a shared recipe there is no server copy, so a change stays in that cache entry for the visit and is never written. Device Kind is a platform fact and comes from the platform adapter.
 
 ### shared-react
 
-- Organised by feature: `src/<feature>/` holds its hooks, client stores, realtime subscription and types, exported as `@norish/shared-react/<feature>`. Domains are coarser than app features: `shared-react/recipes` holds the list, filters, selection, detail, favourites, ratings, shares and cookbooks, and `features/library`, `features/recipes` and `features/cookbooks` import it. Cookbooks sit there because a cookbook change also rewrites the cookbook labels in every cached library page.
+- Organised by feature: `src/<feature>/` holds its hooks, client stores, realtime subscription and types, exported as `@norish/shared-react/<feature>`. Domains are coarser than app features: `shared-react/recipes` holds the list, filters, selection, a recipe, the recipe page's store, favourites, ratings, shares and cookbooks, and `features/library` and `features/recipes` import it. Cookbooks sit there because a cookbook change also rewrites the cookbook labels in every cached library page, and a recipe change rewrites the cached library pages, so library and recipes can't be separate shared-react features without importing each other.
 - Cross-cutting folders: `trpc/`, `platform/`, `offline/` (already there; it also takes `optimistic-updates.ts`, which keeps an optimistic change whose write was Queued in the Outbox, so every feature's mutations import it from there), `config/` (reference data: units, tags, categories, cuisines, recurrence, upload limits, and the ingredient catalogue's realtime subscription, which marks every read derived from an Ingredient stale after a merge, rename or nutrition correction), `reader/` (the signed-in Reader: identity, household, active allergies, permissions, Device Preferences), and `realtime/` (the hook every feature's realtime subscription is built on, so each one recovers from a lag the same way).
 - Features never import each other; cross-cutting folders never import features. Lint enforces both.
 - The recipe query inputs (`filter-contract`, `list-queries`) are pure contracts, so they move to `@norish/shared/contracts`. The offline Warm Set and `shared-react/recipes` import them from there, and the server's cache seeding stops importing a React package.
 - `createTRPCContext<AppRouter>()` runs once at module level in `trpc/`, so every hook imports `useTRPC`. `createTRPCProviderBundle` stays a factory for each app's config only (links, WebSocket implementation, QueryClient, outbox link) and provides that one context.
-- The shell mounts the subscriptions whose data shows outside one feature: Pantry, cookbooks, the ingredient catalogue and admin config edits. The pantry stays there because a recipe page or a dashboard card changes the Pantry while the groceries screen isn't mounted.
-- One platform adapter, mounted once per app, carries toasts, navigation, error display, storage and Device Kind. It grows as features migrate.
+- The shell mounts only what it draws itself, plus the Reader: the Reader's reads and subscriptions (identity, household, permissions, Device Preferences), the recipe import events and their toasts (an import starts from the navbar on any page), admin config edits and the ingredient catalogue. Every other subscription mounts in the root of the feature that draws its data: the Library's list, its recipe events, ratings and cookbooks in library's root; the recipe, its shares, its enrichment and its ratings on the recipe page; groceries, Stores and the Pantry in groceries' root. Outside groceries only the ingredient panel shows the Pantry, and it reads it when it opens. The archive import's progress shows only on the user settings page, which mounts its subscription. Away from a screen nothing keeps its reads current, so coming back refetches them while the cached copy shows; `library.list` gets a `gcTime` default so the grid outlives a long cooking session. The rule lands with library; until then the shell keeps what it mounts today.
+- One platform adapter, mounted once per app, carries toasts, navigation, error display, storage, Device Kind and, from recipes on, the session and sign-out. It grows as features migrate.
 - shared-react compiles under each app's React Compiler. The compiler skips a whole hook or component it can't compile, for a logical assignment (`||=`, `&&=`, `??=`), a `finally` or a conditional, logical or optional-chaining expression inside a `try` among others, and lint reports every skip through `eslint-plugin-react-hooks`, pinned to the release that bundles the build's compiler. A `try` with branches sits in a plain function the hook calls, as in 07's `useRecurrenceDetection`. It also memoises nothing an options object passed to a hook captures when the object is built between hooks, so options are built before the first hook that takes them. Likewise a value made before a hook isn't memoised when a call after the hook could mutate it, such as one of its rows handed to a callback prop, so the flat list's drag overlay calls `getRecipeNameForGrocery` in a component of its own.
-- The pilot is a clean migration: groceries reads nothing from web's old contexts. So `reader/` starts in the groundwork with Device Preferences, which groceries needs; identity, household, allergies and permissions join it with library.
+- The pilot is a clean migration: groceries reads nothing from web's old contexts. So `reader/` starts in the groundwork with Device Preferences, which groceries needs; identity, household, active allergies and permissions join it with recipes, whose page reads allergies and permissions. Each app hands the Reader its session and sign-out through the platform adapter: web its better-auth session with the server's seed, mobile its auth context, which stays because it owns the client. Both apps' `UserContext`s and `createUserContext` go, and so do the household and permissions contexts.
 - The `create*Hooks` and `create*Context` factories, each app's binding files, and the `./hooks` and `./contexts` exports go away feature by feature and are gone with the last one.
+
+### Recipes (the second feature)
+
+- `features/recipes` holds the recipe page, the editor (new and edit), cooking mode, and the shared recipe page. The read-only pieces both recipe pages render (ingredients, steps, sections, nutrition, the mobile header, cooking time, source, the amount toggle, the page tint) are recipes' own. Pieces the Library also renders (the heart, the delete modal, the double-tap container, the origin flag, the cookbook icon, the swipeable row) go to the shared folders. `MiniCookbooks` and `MiniCalendar`, which the recipe page opens, stay where they are until library and calendar move.
+- `shared-react/recipes` takes the whole recipe domain at once, since it is one domain: the list and library reads, the pending imports, the recipe mutations, favourites, ratings, shares, cookbooks, a recipe and its subscription, enrichment, conversion, images, videos, autocomplete and the random pick, as plain hooks exported as `@norish/shared-react/recipes`. Web's and mobile's recipe bindings go. `RecipesContext` stays in the shell until library, fed the plain hooks, and the recipe page and the editor stop reading it: favourites, deletes and the editor's create and update come from the plain hooks.
+- The recipe page's context becomes the per-page store: the page's provider makes it from the page's recipe id and it holds the id, the servings the reader picked, the conversion choice and the wake lock. The live route hands the provider its params, and the offline bootstrap hands the same page the same params for a Warm Set recipe. The recipe, its shares, ratings, the reader's favourites, enrichment and the recipe's cookbooks are read through hooks by id; the page mounts the recipe's, its shares' and its enrichment's subscriptions. The wake-lock context folds into the store. The detail context's unread fields go: `liked`, `toggleLiked`, its own `userRating` and `rateRecipe`, `createShare`, `updateShare`, `refreshShares`, `shareError` and `reset`.
+- The shared recipe page's provider becomes the same kind of per-page store, holding the share token, the servings and the measurement system; the shared recipe is read through a hook by token. Signed out there is no Reader, as today.
+- The ingredient icons leave their context: each `IngredientIcon` selects its own icon from the icons query over the Query cache, so a food joining a list renders that food's icon only. `IngredientIconsProvider` goes from every place that mounts it: the recipe page, the editor, the shared recipe page, the ingredient settings and the groceries screens.
+- Mobile's smoke screen reads the Reader's identity and the recipe total through the same hooks, with no binding.
+- Dead code goes with it: `useRecipeFilters`, `useCookbooksQuery`, `useCookbooksCacheHelpers`, `useServerSettingsQuery` and the unused `createUseAmountDisplayPreference`.
+- Nothing visible changes, but for what seeding only the first frame brings, as in the pilot.
+
+### Library (the third feature)
+
+Decided now, ticketed once recipes has landed.
+
+- `RecipesContext` goes. The filters become a per-page store made from the reader's cookie, since the server renders the Library under them and seeds `library.list` for that key. Selection becomes a store. `mobileSearchOpen` goes, since nothing sets it, with the context's unread fields (`isFetchingMore`, `hasMore`, `loadMore`, `invalidate`, `openRecipe`).
+- The shell takes the rule above: the Library's list and subscriptions leave it for library's root, the Pantry's for groceries' root, the archive import's for the user settings page, and the `(app)` layout stops seeding what only the Library draws.
+- The dashboard's route composes today's meals and the Library: it renders today's meals, calendar's, above the library screen, since `features/library` can't render calendar's code. Today's meals and the calendar panels (`MiniCalendar`, `MiniRecipes`, the after-planning panel) stay where they are until calendar.
+- `features/library` holds the dashboard's Library, the cookbook page, the filters panel and `MiniCookbooks`.
 
 ### Migration
 
 1. Groceries (the pilot).
-2. Library and recipes (shared-react's cookbooks move here, with `shared-react/recipes`). The ingredient icons move with them: `IngredientIconsProvider` (`components/ingredients/ingredient-icon.tsx`) holds the icons query's answer in a context, which the State rule forbids, so every `IngredientIcon` renders when one food joins a list (all 41 on groceries for an add). Each icon then selects its own icon over the Query cache. Groceries, the Pantry, the recipe form and the ingredient settings all mount the provider, so it moves once, here.
-3. Calendar.
-4. Cookbooks.
+2. Recipes, with the shared recipe page. The Reader's identity, household, allergies and permissions and the whole `shared-react/recipes` domain move first, and the ingredient icons move here: the recipe page, the editor and the shared recipe page all draw them.
+3. Library, with the cookbook page and the shell's rule.
+4. Calendar.
 5. Settings.
-6. Imports, auth and share.
+6. Imports and auth.
 
-The pilot's numbers are recorded in tickets 03 and 07. A problem with the shape itself amends this spec before the second feature starts. The pilot found none (07): groceries sits in `features/groceries` on web and `shared-react/groceries`, mobile's smoke screen reads the same hooks with no binding, and the rules it taught are folded into the sections above. Its one adjustment was letting shared code open a feature's panel through `index.ts`. The mobile rewrite builds each screen once its feature has migrated, and mobile's catch-up spec line "Web keeps its current layout" points here.
+The pilot's numbers are recorded in tickets 03 and 07. A problem with the shape itself amends this spec before the next feature starts. The pilot found none (07): groceries sits in `features/groceries` on web and `shared-react/groceries`, mobile's smoke screen reads the same hooks with no binding, and the rules it taught are folded into the sections above. Its one adjustment was letting shared code open a feature's panel through `index.ts`. Recipes' grilling added two rules: a per-page store handed down through a context, and a shell that mounts only what it draws. Later features aren't measured. The mobile rewrite builds each screen once its feature has migrated, and mobile's catch-up spec line "Web keeps its current layout" points here.
 
 ### Docs
 
 - CONTRIBUTING.md gains an "App architecture" section after "Project Structure" with the rules above and one line of why each; "Project Structure" shows the `features/` folders. AGENTS.md gets a one-line pointer.
 - An "Architecture" page in the docs' Development section explains the whole system at a high level: folder structure, what goes where, the decisions (linking their ADRs) and how a read, a write and a realtime update flow. CONTRIBUTING.md's rules link to it.
+- A feature that changes a rule updates CONTRIBUTING.md and the Architecture page with it: recipes adds the per-page store, library the shell's rule.
 - No ADR: the guide states the rules and their reasons.
-- The 0.27.0-beta release notes get one line saying the app architecture changed.
+- The 0.27.0-beta release notes get one line saying the app architecture changed; no feature adds another.
 
 ## Testing Decisions
 
 - A good test drives a hook or store through its public interface and asserts what a caller observes: the data returned, what the cache holds after a mutation or a realtime event, what a store holds after an action. Never internal calls.
 - shared-react's existing groceries, stores and pantry suites (`store-prices-pending`, `store-aisles`, `pantry`) move next to the code and run against the plain hooks.
-- Each new zustand store gets a small unit test of its actions.
+- Recipes' suites do the same: shared-react's enrichment, shares, recipes subscription, ratings subscription, permissions, Reader hydration and servings suites move into `src/recipes/__tests__/` and `src/reader/__tests__/`, and web's hook tests for recipes, favourites, ratings, households and the user, which test shared-react code, move with it. The detail context's test becomes a test of the recipe page's store.
+- Each new zustand store gets a small unit test of its actions, a per-page store included: made from its first value, it holds what its actions set.
+- No new seams: the plain hooks and stores through their public interface, with the existing tRPC and Query test helpers, and the E2E suite as the proof that behaviour didn't move.
 - The groceries E2E set runs unchanged but for `pantry` and must stay green, as the proof that behaviour didn't move: `grocery-prices`, `grocery-aisles`, `grocery-versions`, `pantry`, `reorder-and-swipe`, `offline`, `realtime` and `first-paint`, plus `calendar-planning` (it opens Add to Groceries after planning), `pickers-on-phone` (the store-product field), and `library-selection` and `page-transitions`, which navigate to groceries. There is no single groceries spec. `pantry` expects a first switch to the Pantry to read it, since a full load seeds only the view it opens on, as Mike agreed (ticket 06).
+- Recipes rewires the Reader, every recipe surface, the shared recipe page and the icons on groceries, so its proof is the whole E2E suite (`ai`, `offline`, `realtime`), run once after its last ticket. It is green today, so no spec is added ahead of the move.
 - Every new test is checked with repeated runs; a test that only passes on re-run is a bug to fix.
 
 ## Out of Scope
 
-- Migrating any feature after groceries in this ticket set.
+- Tickets for library or any feature after it; library's decisions are recorded above and ticketed once recipes has landed.
 - Moving web into `src/`.
-- Visual or behavioural changes to groceries, but for what seeding only the opening view brings (ticket 06): a first switch to the other view reads it, and the Pantry's suggestions are read on every visit.
+- Visual or behavioural changes, but for what seeding only the first frame brings: on groceries, a first switch to the other view reads it, and the Pantry's suggestions are read on every visit (ticket 06).
+- 07's remaining groceries renders (a changed Store renders its unchanged aisles' containers and headings; the ungrouped list and By Recipe keep the old prop shape) stay as recorded there.
 - New mobile screens; the mobile rewrite follows its own design track.
+
+## Further Notes
+
+- Groceries has landed: 06 was marked done at Mike's call (2026-11-10) without its final E2E run, and 08 is done.
+- Recipes is tickets 10–15, one subagent each, in order: the Reader; the recipe domain as plain hooks, a wide refactor run as expand (11) and contract (13) around the recipe pages' stores (12); the ingredient icons (14); `features/recipes` (15), after which the whole E2E suite runs.
