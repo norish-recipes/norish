@@ -199,7 +199,7 @@ describe("createCacheManager", () => {
     expect(query?.gcTime).toBe(CACHE_MAX_AGE_MS);
   });
 
-  it("holds a recipe, a cookbook and the groceries list's reads past the default gcTime (ADR-0008)", async () => {
+  it("holds a recipe, a cookbook, the groceries list's reads and the Library past the default gcTime (ADR-0008)", async () => {
     vi.useFakeTimers();
 
     const { queryClient } = createManager();
@@ -218,6 +218,8 @@ describe("createCacheManager", () => {
       trpc.stores.aisleLinks.queryKey(),
       // Unobserved once a surface's set changes, while its icons still show it.
       trpc.ingredients.icons.queryKey({ ids: ["i1"] }),
+      // Unobserved while the reader cooks from a recipe.
+      trpc.library.list.infiniteQueryKey({ search: "soup" }),
     ];
     const elsewhere = trpc.pantry.suggestions.queryKey();
 

@@ -80,6 +80,8 @@ export function createOfflineQueryClient({
     keys.stores.aisleLinks.pathKey(),
     // And a surface's previous icons read, which its icons show while a changed set is read.
     keys.ingredients.icons.pathKey(),
+    // And the Library's grid, which no observer holds through a long cooking session.
+    keys.library.list.pathKey(),
   ]) {
     queryClient.setQueryDefaults(pathKey, { gcTime: CACHE_MAX_AGE_MS });
   }
