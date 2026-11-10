@@ -5,14 +5,15 @@ import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { CookbookAddRecipesPanel } from "@/components/cookbooks/cookbook-add-recipes-panel";
 import { CookbookEditPanel, DeleteCookbookModal } from "@/components/cookbooks/cookbook-panels";
-import RecipeViewModeToggle, {
-  RecipeViewModeTabs,
-} from "@/components/dashboard/recipe-view-mode-toggle";
-import SearchInput from "@/components/dashboard/search-input";
 import { BackLink } from "@/components/page-transition";
 import { NotFoundView } from "@/components/shared/not-found-view";
 import RecipeGridSkeleton from "@/components/skeleton/recipe-grid-skeleton";
 import { CookbookMembers, CookbookSelectionBar } from "@/features/library/components/grid";
+import {
+  RecipeViewModeTabs,
+  RecipeViewModeToggle,
+  SearchInput,
+} from "@/features/library/components/header";
 import { useBackDestination } from "@/hooks/use-back-destination";
 import {
   ArrowLeftIcon,

@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useEffectEvent, useState } from "react";
+import Filters from "@/components/shared/filters";
 import { useImportRecipe } from "@/hooks/use-import-recipe";
 import { MagnifyingGlassIcon, XMarkIcon } from "@heroicons/react/16/solid";
 import { Input } from "@heroui/react";
@@ -9,8 +10,6 @@ import { useDebounceValue } from "usehooks-ts";
 
 import { useLibraryFilters } from "@norish/shared-react/recipes";
 import { isUrl } from "@norish/shared/lib/helpers";
-
-import Filters from "../shared/filters";
 
 export default function SearchInput() {
   const t = useTranslations("recipes.dashboard");

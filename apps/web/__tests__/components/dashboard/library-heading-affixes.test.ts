@@ -5,8 +5,8 @@
  * they stay three complete strings for the translator's sake — so this is the
  * seam that decides whether "Your" stands still in a given language.
  */
-import { sharedAffixes } from "@/components/dashboard/library-heading";
 import { toSlots } from "@/components/shared/rolling-text";
+import { sharedAffixes } from "@/features/library/components/header/library-heading";
 import { describe, expect, it } from "vitest";
 
 describe("sharedAffixes", () => {
