@@ -3,9 +3,8 @@ export { AnimatedNumber } from "./animated-number";
 export { default as AuthorChip } from "./author-chip";
 export { default as CookingTimeCard } from "./cooking-time-card";
 export { default as NutritionPortionControl } from "./nutrition-portion-control";
-export { PublicSmartInstruction } from "./public-smart-instruction";
 export { ReadonlyIngredientsList } from "./readonly-ingredients-list";
-export { NutritionBody, ReadonlyNutritionCard, getNutritionData } from "./readonly-nutrition";
+export { NutritionBody, getNutritionData } from "./readonly-nutrition";
 export {
   ReadonlyRecipeMedia,
   ReadonlyRecipeNotes,
