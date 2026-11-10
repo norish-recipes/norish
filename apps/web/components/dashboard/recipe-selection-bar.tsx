@@ -20,9 +20,8 @@ import { useCookbooksMutations, useRecipeSelection } from "@norish/shared-react/
 import { useLeavingEndsOnUnmount, useRecipeLeaving } from "./recipe-leaving";
 
 /**
- * The action bar over a Library page's recipe selection; `recipes` is the page's loaded list,
- * whose versions the actions send. On a cookbook page it can also take the selection out of
- * that cookbook; `onLeave` drops rows from the member list.
+ * The action bar over a Library page's selection, sending the versions in `recipes`. On a cookbook
+ * page it can also remove the selection from the cookbook; `onLeave` drops those member rows.
  */
 export default function RecipeSelectionBar({
   cookbook,

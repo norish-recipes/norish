@@ -211,9 +211,8 @@ export default function CookbookPage({ cookbookId }: { cookbookId: string }) {
                           className={twMerge("w-full justify-start bg-transparent", cssButtonPill)}
                           size="md"
                           variant="tertiary"
-                          // The menu closes before the action runs, so its
-                          // items cannot rebuild mid-exit and steal focus
-                          // from the panel the action opens.
+                          // The menu closes before the action runs, so its items cannot rebuild
+                          // mid-exit and steal focus from the panel the action opens.
                           onPress={() => {
                             setMenuOpen(false);
                             setEditOpen(true);
