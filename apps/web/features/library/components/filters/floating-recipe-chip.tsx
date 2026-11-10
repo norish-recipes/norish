@@ -3,7 +3,7 @@
 import React, { useState } from "react";
 import { useLibraryList } from "@/features/library/hooks";
 import { useAutoHide } from "@/hooks/auto-hide";
-import { useActionBarStore } from "@/lib/action-bar";
+import { useActionBarStore } from "@/lib/action-bar-store";
 import { Button } from "@heroui/react";
 import { AnimatePresence, motion } from "motion/react";
 import { useTranslations } from "next-intl";

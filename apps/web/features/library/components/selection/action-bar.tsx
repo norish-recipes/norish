@@ -3,7 +3,7 @@
 import type { ComponentPropsWithoutRef, ReactNode } from "react";
 import { useEffect } from "react";
 import { usePrefersReducedMotion } from "@/hooks/use-prefers-reduced-motion";
-import { useActionBarStore } from "@/lib/action-bar";
+import { useActionBarStore } from "@/lib/action-bar-store";
 import { Separator, Toolbar } from "@heroui/react";
 import { AnimatePresence, motion } from "motion/react";
 import { twMerge } from "tailwind-merge";

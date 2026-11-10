@@ -11,7 +11,7 @@ import {
 } from "@/components/navbar/nav-tabs";
 import NavbarUserMenu from "@/components/navbar/navbar-user-menu";
 import { useAutoHide } from "@/hooks/auto-hide";
-import { useActionBarStore } from "@/lib/action-bar";
+import { useActionBarStore } from "@/lib/action-bar-store";
 import {
   CalendarDaysIcon,
   ClipboardDocumentListIcon,

@@ -17,7 +17,7 @@ import { useRecipePermissions } from "@norish/shared-react/reader";
 import { useCookbooksMutations, useRecipeSelection } from "@norish/shared-react/recipes";
 
 import { ActionBar, actionBarButtonClassName } from "./action-bar";
-import { useLeavingEndsOnUnmount, useRecipeLeaving } from "./recipe-leaving";
+import { useLeavingEndsOnUnmount, useRecipeLeaving } from "./recipe-leaving-store";
 
 /**
  * The action bar over a Library page's selection, sending the versions in `recipes`. On a cookbook

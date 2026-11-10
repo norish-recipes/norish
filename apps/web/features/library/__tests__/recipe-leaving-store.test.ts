@@ -1,7 +1,7 @@
 import {
   useLeavingEndsOnUnmount,
   useRecipeLeaving,
-} from "@/features/library/components/selection/recipe-leaving";
+} from "@/features/library/components/selection/recipe-leaving-store";
 import { renderHook } from "@testing-library/react";
 import { afterEach, describe, expect, it, vi } from "vitest";
 
