@@ -49,9 +49,14 @@ describe("restrictDomains", () => {
 
   it("stops a domain importing another, by path or package name", () => {
     expect(at("groceries/list.ts", "../recipes/detail")).toEqual([
-      "A domain never imports another; share code through a cross-cutting folder.",
+      "A domain imports only itself and cross-cutting folders.",
     ]);
     expect(at("groceries/list.ts", "@norish/shared-react/recipes")).toHaveLength(1);
+  });
+
+  it("stops a domain importing a legacy folder", () => {
+    expect(at("recipes/detail.ts", "../hooks/recipes/types")).toHaveLength(1);
+    expect(at("groceries/list.ts", "@norish/shared-react/contexts")).toHaveLength(1);
   });
 
   it("lets a domain import itself and cross-cutting folders", () => {
