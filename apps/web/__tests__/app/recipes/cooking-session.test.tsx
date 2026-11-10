@@ -5,6 +5,8 @@ import "@testing-library/jest-dom";
 
 import CookingMode from "@/app/(app)/recipes/[id]/components/cookingmode/cooking-mode";
 
+import { onRecipePage } from "../../helpers/recipe-page";
+
 const mocks = vi.hoisted(() => ({
   totalMinutes: 90 as number | null,
   dishColor: null as string | null,
@@ -27,26 +29,31 @@ vi.mock("@/app/(app)/recipes/[id]/components/page-wake-lock", () => ({
     disable: vi.fn(),
   }),
 }));
-vi.mock("@norish/shared-react/recipes", async () =>
-  (await import("../../helpers/recipe-page-mock")).mockRecipePage(() => ({
-    recipe: {
-      id: "recipe-1",
-      name: "Cacio e Pepe",
-      categories: ["Dinner"],
-      totalMinutes: mocks.totalMinutes,
-      dishColor: mocks.dishColor,
-      images: [],
-      image: null,
-      steps: [
-        { step: "Boil the water.", systemUsed: "metric", order: 0 },
-        { step: "Serve.", systemUsed: "metric", order: 1 },
-      ],
-      recipeIngredients: [],
-      servings: 2,
-      systemUsed: "metric",
-    },
-  }))
+vi.mock("@norish/shared-react/trpc", async () =>
+  (await import("../../helpers/trpc-fake")).mockTRPC()
 );
+
+/** Cooking mode on a page showing the recipe the test set up. */
+function renderMode(ui: React.ReactElement) {
+  const { wrapper } = onRecipePage({
+    id: "recipe-1",
+    name: "Cacio e Pepe",
+    categories: ["Dinner"],
+    totalMinutes: mocks.totalMinutes,
+    dishColor: mocks.dishColor,
+    images: [],
+    image: null,
+    steps: [
+      { step: "Boil the water.", systemUsed: "metric", order: 0 },
+      { step: "Serve.", systemUsed: "metric", order: 1 },
+    ],
+    recipeIngredients: [],
+    servings: 2,
+    systemUsed: "metric",
+  });
+
+  return render(ui, { wrapper });
+}
 
 // The dialog reports the session facts the page cannot see for itself, offers
 // the close the header would, and wires the swipe handlers onto two regions:
@@ -153,7 +160,7 @@ function openCooking() {
  */
 describe("Cooking Session", () => {
   it("anchors Ready At to when cooking mode opened, not to page load", () => {
-    render(<CookingMode floating />);
+    renderMode(<CookingMode floating />);
 
     // An hour passes on the recipe page before the cook actually starts.
     vi.setSystemTime(new Date("2026-08-21T17:00:00.000Z"));
@@ -163,7 +170,7 @@ describe("Cooking Session", () => {
   });
 
   it("starts a fresh session at the first step when reopened", () => {
-    render(<CookingMode floating />);
+    renderMode(<CookingMode floating />);
 
     openCooking();
 
@@ -190,7 +197,7 @@ describe("Cooking Session", () => {
   it("has no Ready At for a recipe with no total time", () => {
     mocks.totalMinutes = null;
 
-    render(<CookingMode floating />);
+    renderMode(<CookingMode floating />);
 
     openCooking();
 
@@ -214,7 +221,7 @@ function swipe(target: HTMLElement, deltaX: number, deltaY: number) {
  */
 describe("Cooking mode swipes on a long step", () => {
   it("still reaches the ingredients sideways from inside the scroll region", () => {
-    render(<CookingMode floating />);
+    renderMode(<CookingMode floating />);
 
     openCooking();
     swipe(screen.getByTestId("step-scroll"), -120, 0);
@@ -233,7 +240,7 @@ describe("Cooking mode dish tint", () => {
     mocks.dishColor = "#cc7733";
     mocks.recipePageColor = "dish";
 
-    render(<CookingMode floating />);
+    renderMode(<CookingMode floating />);
     openCooking();
 
     const backdrop = screen.getByTestId("cooking-backdrop");
@@ -247,7 +254,7 @@ describe("Cooking mode dish tint", () => {
     mocks.dishColor = "#cc7733";
     mocks.recipePageColor = "theme";
 
-    render(<CookingMode floating />);
+    renderMode(<CookingMode floating />);
     openCooking();
 
     const backdrop = screen.getByTestId("cooking-backdrop");
@@ -260,7 +267,7 @@ describe("Cooking mode dish tint", () => {
     mocks.dishColor = null;
     mocks.recipePageColor = "dish";
 
-    render(<CookingMode floating />);
+    renderMode(<CookingMode floating />);
     openCooking();
 
     expect(screen.getByTestId("cooking-backdrop")).not.toHaveAttribute("data-dish-tint");

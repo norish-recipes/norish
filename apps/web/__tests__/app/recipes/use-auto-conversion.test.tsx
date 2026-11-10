@@ -1,27 +1,18 @@
 import { useAutoConversion } from "@/app/(app)/recipes/[id]/components/use-system-conversion";
-import { renderHook } from "@testing-library/react";
+import { act, renderHook } from "@testing-library/react";
 import { beforeEach, describe, expect, it, vi } from "vitest";
+
+import { onRecipePage } from "../../helpers/recipe-page";
+import { fakeTRPC } from "../../helpers/trpc-fake";
 
 const mocks = vi.hoisted(() => ({
   measurementSystem: undefined as string | undefined,
   isAIEnabled: false,
   canEdit: true,
-  isFetching: false,
-  recipe: null as null | {
-    id: string;
-    userId: string;
-    systemUsed: "metric" | "us";
-    recipeIngredients: { systemUsed: "metric" | "us" }[];
-  },
-  startConversion: vi.fn(),
 }));
 
-vi.mock("@norish/shared-react/recipes", async () =>
-  (await import("../../helpers/recipe-page-mock")).mockRecipePage(() => ({
-    recipe: mocks.recipe,
-    isFetching: mocks.isFetching,
-    startConversion: mocks.startConversion,
-  }))
+vi.mock("@norish/shared-react/trpc", async () =>
+  (await import("../../helpers/trpc-fake")).mockTRPC()
 );
 
 vi.mock("@/hooks/user/use-user-query", () => ({
@@ -46,83 +37,100 @@ vi.mock("next-intl", () => ({ useTranslations: () => (key: string) => key }));
 const metricRecipe = (copies: ("metric" | "us")[] = ["metric"]) => ({
   id: "r1",
   userId: "owner",
+  version: 1,
   systemUsed: "metric" as const,
   recipeIngredients: copies.map((systemUsed) => ({ systemUsed })),
+  steps: [],
 });
+
+/** The hook on a page showing `recipe`; `page().conversion` is the convert it pressed. */
+function renderOn(recipe = metricRecipe()) {
+  const onPage = onRecipePage(recipe);
+
+  return { ...onPage, ...renderHook(() => useAutoConversion(), { wrapper: onPage.wrapper }) };
+}
 
 beforeEach(() => {
   mocks.measurementSystem = undefined;
   mocks.isAIEnabled = false;
   mocks.canEdit = true;
-  mocks.isFetching = false;
-  mocks.recipe = metricRecipe();
-  mocks.startConversion.mockClear();
 });
 
 describe("useAutoConversion", () => {
   it("leaves the recipe alone without a chosen system", () => {
-    renderHook(() => useAutoConversion());
+    const { page } = renderOn();
 
-    expect(mocks.startConversion).not.toHaveBeenCalled();
+    expect(page().conversion).toBeNull();
   });
 
   it("presses convert for the chosen system, and only once per recipe", () => {
     mocks.measurementSystem = "us";
 
-    const { rerender } = renderHook(() => useAutoConversion());
+    const { page, queryClient } = renderOn();
+    const pressed = page().conversion;
 
-    expect(mocks.startConversion).toHaveBeenCalledWith("us", false);
+    expect(pressed).toMatchObject({ target: "us", withAI: false });
 
     // Someone switches it back while it is open: it stays switched.
-    mocks.recipe = { ...metricRecipe(["metric", "us"]) };
-    rerender();
+    act(() =>
+      queryClient.setQueryData(
+        fakeTRPC.recipes.get.queryKey({ id: "r1" }),
+        metricRecipe(["metric", "us"])
+      )
+    );
 
-    expect(mocks.startConversion).toHaveBeenCalledTimes(1);
+    expect(page().conversion).toBe(pressed);
   });
 
-  it("waits for the server's copy, since the saved one may be behind", () => {
+  it("waits for the server's copy, since the saved one may be behind", async () => {
     mocks.measurementSystem = "us";
-    mocks.isFetching = true;
 
-    const { rerender } = renderHook(() => useAutoConversion());
+    const onPage = onRecipePage(metricRecipe());
+    let answer: (recipe: unknown) => void = () => {};
+    const answered = new Promise((resolve) => (answer = resolve));
+    const read = onPage.queryClient.fetchQuery({
+      queryKey: fakeTRPC.recipes.get.queryKey({ id: "r1" }),
+      queryFn: () => answered,
+      staleTime: 0,
+    });
 
-    expect(mocks.startConversion).not.toHaveBeenCalled();
+    renderHook(() => useAutoConversion(), { wrapper: onPage.wrapper });
 
-    mocks.isFetching = false;
-    rerender();
+    expect(onPage.page().conversion).toBeNull();
 
-    expect(mocks.startConversion).toHaveBeenCalledWith("us", false);
+    await act(async () => {
+      answer(metricRecipe());
+      await read;
+    });
+
+    await vi.waitFor(() =>
+      expect(onPage.page().conversion).toMatchObject({ target: "us", withAI: false })
+    );
   });
 
   it("writes a missing copy with AI, and switches to one already there", () => {
     mocks.measurementSystem = "usWithAI";
     mocks.isAIEnabled = true;
 
-    renderHook(() => useAutoConversion());
-    expect(mocks.startConversion).toHaveBeenLastCalledWith("us", true);
-
-    mocks.recipe = metricRecipe(["metric", "us"]);
-    mocks.startConversion.mockClear();
-    renderHook(() => useAutoConversion());
-    expect(mocks.startConversion).toHaveBeenLastCalledWith("us", false);
+    expect(renderOn().page().conversion).toMatchObject({ target: "us", withAI: true });
+    expect(renderOn(metricRecipe(["metric", "us"])).page().conversion).toMatchObject({
+      target: "us",
+      withAI: false,
+    });
   });
 
   it("converts without AI where an administrator has AI off", () => {
     mocks.measurementSystem = "usWithAI";
 
-    renderHook(() => useAutoConversion());
-
-    expect(mocks.startConversion).toHaveBeenCalledWith("us", false);
+    expect(renderOn().page().conversion).toMatchObject({ target: "us", withAI: false });
   });
 
   it("does nothing for a recipe already in the system, or one the reader may not convert", () => {
     mocks.measurementSystem = "metric";
-    renderHook(() => useAutoConversion());
+    expect(renderOn().page().conversion).toBeNull();
 
     mocks.measurementSystem = "us";
     mocks.canEdit = false;
-    renderHook(() => useAutoConversion());
-
-    expect(mocks.startConversion).not.toHaveBeenCalled();
+    expect(renderOn().page().conversion).toBeNull();
   });
 });

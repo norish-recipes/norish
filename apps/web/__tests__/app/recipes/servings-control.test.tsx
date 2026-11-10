@@ -1,27 +1,20 @@
 import type { ReactNode } from "react";
 import { act, fireEvent, render, screen } from "@testing-library/react";
-import { beforeEach, describe, expect, it, vi } from "vitest";
+import { describe, expect, it, vi } from "vitest";
 
 import "@testing-library/jest-dom";
 
 import ServingsControl from "@/app/(app)/recipes/[id]/components/servings-control";
+
+import { onRecipePage } from "../../helpers/recipe-page";
 
 vi.mock("next-intl", () => ({
   useTranslations: (namespace: string) => (key: string, values?: { count?: number }) =>
     values?.count === undefined ? `${namespace}.${key}` : `${values.count} servings`,
 }));
 
-const recipeState = vi.hoisted(() => ({
-  currentServings: null as number | null,
-  setIngredientAmounts: vi.fn(),
-}));
-
-vi.mock("@norish/shared-react/recipes", async () =>
-  (await import("../../helpers/recipe-page-mock")).mockRecipePage(() => ({
-    recipe: { servings: 4 },
-    servings: recipeState.currentServings ?? undefined,
-    setServings: recipeState.setIngredientAmounts,
-  }))
+vi.mock("@norish/shared-react/trpc", async () =>
+  (await import("../../helpers/trpc-fake")).mockTRPC()
 );
 
 vi.mock("@/components/Panel/Panel", () => {
@@ -34,26 +27,29 @@ vi.mock("@/components/Panel/Panel", () => {
   return { default: Panel };
 });
 
-describe("ServingsControl's panel (#682)", () => {
-  beforeEach(() => {
-    recipeState.currentServings = null;
-    recipeState.setIngredientAmounts.mockClear();
-  });
+/** The control on a recipe for 4, at `servings` when given. */
+function renderControl(ui: ReactNode, servings?: number) {
+  const { wrapper, page } = onRecipePage({ id: "recipe-1", servings: 4 });
 
+  render(ui, { wrapper });
+  if (servings !== undefined) act(() => page().setServings(servings));
+
+  return page;
+}
+
+describe("ServingsControl's panel (#682)", () => {
   it("opens from the figure and multiplies the recipe's own servings in one tap", () => {
-    recipeState.currentServings = 5;
-    render(<ServingsControl />);
+    const page = renderControl(<ServingsControl />, 5);
 
     fireEvent.click(screen.getByRole("button", { name: "5 servings" }));
     fireEvent.click(screen.getByRole("button", { name: "2×" }));
 
-    expect(recipeState.setIngredientAmounts).toHaveBeenCalledWith(8);
+    expect(page().servings).toBe(8);
     expect(screen.queryByTestId("servings-panel")).toBeNull();
   });
 
   it("marks the multiple the servings are at", () => {
-    recipeState.currentServings = 2;
-    render(<ServingsControl />);
+    renderControl(<ServingsControl />, 2);
 
     fireEvent.click(screen.getByRole("button", { name: "2 servings" }));
 
@@ -62,25 +58,25 @@ describe("ServingsControl's panel (#682)", () => {
   });
 
   it("takes any number of servings as it is typed, decimal commas too", () => {
-    render(<ServingsControl />);
+    const page = renderControl(<ServingsControl />);
 
     fireEvent.click(screen.getByRole("button", { name: "4 servings" }));
     const field = screen.getByRole("textbox", { name: "recipes.form.servings" });
 
     expect(field).toHaveValue("4");
     fireEvent.change(field, { target: { value: "1,5" } });
-    expect(recipeState.setIngredientAmounts).toHaveBeenLastCalledWith(1.5);
+    expect(page().servings).toBe(1.5);
 
     fireEvent.change(field, { target: { value: "" } });
     fireEvent.change(field, { target: { value: "0" } });
-    expect(recipeState.setIngredientAmounts).toHaveBeenCalledTimes(1);
+    expect(page().servings).toBe(1.5);
 
     fireEvent.keyDown(field, { key: "Enter" });
     expect(screen.queryByTestId("servings-panel")).toBeNull();
   });
 
   it("takes any multiplier, and each field follows the other", () => {
-    render(<ServingsControl />);
+    const page = renderControl(<ServingsControl />);
 
     fireEvent.click(screen.getByRole("button", { name: "4 servings" }));
     const servings = screen.getByRole("textbox", { name: "recipes.form.servings" });
@@ -88,7 +84,7 @@ describe("ServingsControl's panel (#682)", () => {
 
     expect(multiplier).toHaveValue("1");
     fireEvent.change(multiplier, { target: { value: "1,5" } });
-    expect(recipeState.setIngredientAmounts).toHaveBeenLastCalledWith(6);
+    expect(page().servings).toBe(6);
     expect(servings).toHaveValue("6");
     expect(multiplier).toHaveValue("1,5");
 
@@ -100,7 +96,7 @@ describe("ServingsControl's panel (#682)", () => {
   });
 
   it("is a plain figure where no panel can open", () => {
-    render(<ServingsControl withPanel={false} />);
+    renderControl(<ServingsControl withPanel={false} />);
 
     expect(screen.queryByRole("button", { name: "4 servings" })).toBeNull();
     expect(screen.getByText("4 servings")).toHaveClass("sr-only");

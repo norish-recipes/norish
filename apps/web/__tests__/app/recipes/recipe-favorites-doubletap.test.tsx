@@ -6,6 +6,8 @@ import "@testing-library/jest-dom";
 import RecipePageDesktop from "@/app/(app)/recipes/[id]/recipe-page-desktop";
 import RecipePageMobile from "@/app/(app)/recipes/[id]/recipe-page-mobile";
 
+import { onRecipePage } from "../../helpers/recipe-page";
+
 const userPreferencesState = {
   hidden: ["favorites"] as string[],
 };
@@ -55,11 +57,8 @@ vi.mock("@/hooks/recipes/use-worked-out-nutrition", () => ({
   useWorkedOutNutrition: () => null,
 }));
 
-vi.mock("@norish/shared-react/recipes", async () =>
-  (await import("../../helpers/recipe-page-mock")).mockRecipePage(() => ({
-    recipe: stubRecipe,
-    servings: 2,
-  }))
+vi.mock("@norish/shared-react/trpc", async () =>
+  (await import("../../helpers/trpc-fake")).mockTRPC()
 );
 
 // The way back reads the reader's lens and the page they came from, neither
@@ -142,11 +141,15 @@ vi.mock("@/components/recipes/author-chip", () => ({
   default: () => <div>author-chip</div>,
 }));
 
+function renderOnPage(ui: React.ReactElement, recipe: object = stubRecipe) {
+  return render(ui, { wrapper: onRecipePage({ ...recipe, id: "r1" }).wrapper });
+}
+
 describe("recipe pages favorite visibility", () => {
   it("keeps tap interactions enabled on desktop when favorites are hidden", () => {
     userPreferencesState.hidden = ["favorites"];
 
-    render(<RecipePageDesktop onPrint={() => {}} />);
+    renderOnPage(<RecipePageDesktop onPrint={() => {}} />);
 
     expect(screen.getByTestId("double-tap-container")).toHaveAttribute("data-disabled", "false");
     expect(screen.getByTestId("double-tap-container")).toHaveAttribute(
@@ -158,7 +161,7 @@ describe("recipe pages favorite visibility", () => {
   it("keeps tap interactions enabled on mobile when favorites are hidden", () => {
     userPreferencesState.hidden = ["favorites"];
 
-    render(<RecipePageMobile onPrint={() => {}} />);
+    renderOnPage(<RecipePageMobile onPrint={() => {}} />);
 
     expect(screen.getByTestId("double-tap-container")).toHaveAttribute("data-disabled", "false");
     expect(screen.getByTestId("double-tap-container")).toHaveAttribute(
@@ -170,15 +173,9 @@ describe("recipe pages favorite visibility", () => {
 
 describe("recipe page servings", () => {
   it("leaves a recipe without servings out of the ingredients header on desktop", () => {
-    stubRecipe.servings = 0;
+    renderOnPage(<RecipePageDesktop onPrint={() => {}} />, { ...stubRecipe, servings: 0 });
 
-    try {
-      render(<RecipePageDesktop onPrint={() => {}} />);
-
-      expect(screen.queryByText("servings-control")).not.toBeInTheDocument();
-      expect(screen.queryByText("0")).not.toBeInTheDocument();
-    } finally {
-      stubRecipe.servings = 2;
-    }
+    expect(screen.queryByText("servings-control")).not.toBeInTheDocument();
+    expect(screen.queryByText("0")).not.toBeInTheDocument();
   });
 });

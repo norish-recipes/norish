@@ -1,22 +1,18 @@
 import { render, screen } from "@testing-library/react";
-import { beforeEach, describe, expect, it, vi } from "vitest";
+import { describe, expect, it, vi } from "vitest";
 
 import "@testing-library/jest-dom";
 
 import SystemConvertMenu from "@/app/(app)/recipes/[id]/components/system-convert-menu";
 
+import { onRecipePage } from "../../helpers/recipe-page";
+
 vi.mock("next-intl", () => ({
   useTranslations: (namespace: string) => (key: string) => `${namespace}.${key}`,
 }));
 
-const recipeState = vi.hoisted(() => ({
-  recipe: { id: "r1", systemUsed: "metric", recipeIngredients: [] as unknown[] },
-}));
-
-vi.mock("@norish/shared-react/recipes", async () =>
-  (await import("../../helpers/recipe-page-mock")).mockRecipePage(() => ({
-    recipe: recipeState.recipe,
-  }))
+vi.mock("@norish/shared-react/trpc", async () =>
+  (await import("../../helpers/trpc-fake")).mockTRPC()
 );
 
 // Permissions context: AI disabled -> conversion options should be empty when no data
@@ -48,20 +44,22 @@ vi.mock("@heroicons/react/20/solid", () => ({
 }));
 
 describe("SystemConvertMenu", () => {
-  beforeEach(() => {
-    recipeState.recipe = { id: "r1", systemUsed: "metric", recipeIngredients: [] };
-  });
-
   it("does not render when no conversion options available", () => {
-    render(<SystemConvertMenu />);
+    const { wrapper } = onRecipePage({ id: "r1", systemUsed: "metric", recipeIngredients: [] });
+
+    render(<SystemConvertMenu />, { wrapper });
 
     expect(screen.queryByRole("button")).toBeNull();
   });
 
   it("names the recipe's system in the reader's language, not by its stored value", () => {
-    recipeState.recipe = { id: "r1", systemUsed: "us", recipeIngredients: [{ id: "i1" }] };
+    const { wrapper } = onRecipePage({
+      id: "r1",
+      systemUsed: "us",
+      recipeIngredients: [{ id: "i1" }],
+    });
 
-    render(<SystemConvertMenu />);
+    render(<SystemConvertMenu />, { wrapper });
 
     expect(screen.getAllByRole("button")[0]).toHaveTextContent("recipes.measurementSystem.us");
   });

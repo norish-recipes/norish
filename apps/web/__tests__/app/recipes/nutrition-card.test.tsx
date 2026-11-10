@@ -7,6 +7,8 @@ import NutritionCard from "@/app/(app)/recipes/[id]/components/nutrition-card";
 
 import type { LeftOutLine, WorkedOutNutrition } from "@norish/shared/lib/recipe-nutrition";
 
+import { onRecipePage } from "../../helpers/recipe-page";
+
 const mocks = vi.hoisted(() => ({
   hasData: false,
   state: "idle" as "idle" | "queued" | "processing" | "succeeded" | "failed",
@@ -29,18 +31,9 @@ vi.mock("@/components/ingredients/ingredient-panel", () => ({
   },
 }));
 
-vi.mock("@norish/shared-react/trpc", () => ({
-  useTRPC: () => ({
-    ingredients: {
-      nutritionFor: { pathKey: () => ["ingredients", "nutritionFor"] },
-      list: { pathKey: () => ["ingredients", "list"] },
-    },
-  }),
-}));
-
-vi.mock("@tanstack/react-query", () => ({
-  useQueryClient: () => ({ invalidateQueries: vi.fn() }),
-}));
+vi.mock("@norish/shared-react/trpc", async () =>
+  (await import("../../helpers/trpc-fake")).mockTRPC()
+);
 
 vi.mock("@norish/shared-react/reader", async () =>
   (await import("../../helpers/reader-mock")).mockDevicePreferences(
@@ -53,18 +46,19 @@ vi.mock("@norish/shared-react/reader", async () =>
   )
 );
 
-vi.mock("@norish/shared-react/recipes", async () =>
-  (await import("../../helpers/recipe-page-mock")).mockRecipePage(() => ({
-    recipe: {
-      id: "recipe-1",
-      userId: "owner-1",
-      calories: null,
-      fat: null,
-      carbs: null,
-      protein: null,
-    },
-  }))
-);
+/** The card on a page showing a recipe with no nutrition of its own. */
+function renderCard() {
+  const { wrapper } = onRecipePage({
+    id: "recipe-1",
+    userId: "owner-1",
+    calories: null,
+    fat: null,
+    carbs: null,
+    protein: null,
+  });
+
+  return render(<NutritionCard />, { wrapper });
+}
 
 vi.mock("@/hooks/recipes/use-recipe-enrichment", () => ({
   useRecipeEnrichment: () => ({
@@ -130,7 +124,7 @@ describe("NutritionCard", () => {
   });
 
   it("is absent when nothing is stored and nothing is running", () => {
-    const { container } = render(<NutritionCard />);
+    const { container } = renderCard();
 
     expect(container).toBeEmptyDOMElement();
   });
@@ -138,7 +132,7 @@ describe("NutritionCard", () => {
   it("stays absent after a quiet automatic failure left nothing stored", () => {
     mocks.state = "failed";
 
-    const { container } = render(<NutritionCard />);
+    const { container } = renderCard();
 
     expect(container).toBeEmptyDOMElement();
     expect(screen.queryByText("Last run failed")).not.toBeInTheDocument();
@@ -149,7 +143,7 @@ describe("NutritionCard", () => {
     (state) => {
       mocks.state = state;
 
-      render(<NutritionCard />);
+      renderCard();
 
       expect(screen.getByRole("heading", { name: "title" })).toBeInTheDocument();
       expect(screen.getAllByTestId("skeleton").length).toBeGreaterThan(0);
@@ -162,7 +156,7 @@ describe("NutritionCard", () => {
     mocks.hasData = true;
     mocks.state = "failed";
 
-    render(<NutritionCard />);
+    renderCard();
 
     expect(screen.getByRole("heading", { name: "title" })).toBeInTheDocument();
     expect(screen.queryByText("Last run failed")).not.toBeInTheDocument();
@@ -173,7 +167,7 @@ describe("NutritionCard", () => {
     mocks.hasData = true;
     mocks.hidden = ["nutrition"];
 
-    const { container } = render(<NutritionCard />);
+    const { container } = renderCard();
 
     expect(container).toBeEmptyDOMElement();
   });
@@ -182,7 +176,7 @@ describe("NutritionCard", () => {
     mocks.hidden = ["nutrition"];
     mocks.state = "processing";
 
-    const { container } = render(<NutritionCard />);
+    const { container } = renderCard();
 
     expect(container).toBeEmptyDOMElement();
   });
@@ -215,7 +209,7 @@ describe("NutritionCard", () => {
     it("shows the worked-out numbers where the recipe stores none", () => {
       mocks.workedOut = workedOut;
 
-      render(<NutritionCard />);
+      renderCard();
 
       expect(screen.getByTestId("nutrition-body")).toBeInTheDocument();
       expect(mocks.shown).toEqual({ calories: 420, fat: 12, carbs: 50, protein: 20 });
@@ -224,7 +218,7 @@ describe("NutritionCard", () => {
     it("says it is estimated, and credits what it used", () => {
       mocks.workedOut = workedOut;
 
-      render(<NutritionCard />);
+      renderCard();
 
       expect(screen.getByTestId("nutrition-estimated")).toHaveTextContent("estimated");
       expect(screen.getByTestId("nutrition-credit")).toHaveTextContent(
@@ -235,7 +229,7 @@ describe("NutritionCard", () => {
     it("marks the calories and says how many lines it left out, the list closed until asked", () => {
       mocks.workedOut = workedOut;
 
-      render(<NutritionCard />);
+      renderCard();
 
       expect(mocks.marked).toBe(true);
       expect(screen.getByTestId("nutrition-left-out-toggle")).toHaveTextContent("leftOut: 4");
@@ -249,7 +243,7 @@ describe("NutritionCard", () => {
     it("opens the list in place, each line with why it was left out", () => {
       mocks.workedOut = workedOut;
 
-      render(<NutritionCard />);
+      renderCard();
       openList();
 
       expect(screen.getByTestId("nutrition-left-out-toggle")).toHaveAttribute(
@@ -267,7 +261,7 @@ describe("NutritionCard", () => {
     it("links only the lines whose fix is a fact in the food's panel, and opens it in place", () => {
       mocks.workedOut = workedOut;
 
-      render(<NutritionCard />);
+      renderCard();
       openList();
 
       expect(screen.getByText("1 tl komijn").tagName).toBe("BUTTON");
@@ -289,7 +283,7 @@ describe("NutritionCard", () => {
         ],
       };
 
-      render(<NutritionCard />);
+      renderCard();
       openList();
 
       expect(listed()).toEqual([
@@ -301,7 +295,7 @@ describe("NutritionCard", () => {
     it("shows no mark and no list where every line counted", () => {
       mocks.workedOut = { ...workedOut, estimated: false, leftOut: [] };
 
-      render(<NutritionCard />);
+      renderCard();
 
       expect(mocks.marked).toBe(false);
       expect(screen.queryByTestId("nutrition-estimated")).not.toBeInTheDocument();
@@ -312,7 +306,7 @@ describe("NutritionCard", () => {
       mocks.hasData = true;
       mocks.workedOut = workedOut;
 
-      render(<NutritionCard />);
+      renderCard();
 
       expect(mocks.shown).toMatchObject({ id: "recipe-1" });
       expect(screen.queryByTestId("nutrition-credit")).not.toBeInTheDocument();
@@ -321,7 +315,7 @@ describe("NutritionCard", () => {
     it("is absent where no line counted", () => {
       mocks.workedOut = { ...workedOut, perServing: null };
 
-      const { container } = render(<NutritionCard />);
+      const { container } = renderCard();
 
       expect(container).toBeEmptyDOMElement();
     });

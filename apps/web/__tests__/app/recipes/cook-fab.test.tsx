@@ -7,6 +7,8 @@ import CookingMode from "@/app/(app)/recipes/[id]/components/cookingmode/cooking
 
 import { cssFloatingDockBottomWithNav } from "@norish/web/config/css-tokens";
 
+import { onRecipePage } from "../../helpers/recipe-page";
+
 const mocks = vi.hoisted(() => ({
   isMobile: true,
   isNavVisible: true,
@@ -34,17 +36,8 @@ vi.mock("@/app/(app)/recipes/[id]/components/page-wake-lock", () => ({
     disable: vi.fn(),
   }),
 }));
-vi.mock("@norish/shared-react/recipes", async () =>
-  (await import("../../helpers/recipe-page-mock")).mockRecipePage(() => ({
-    recipe: {
-      id: "recipe-1",
-      name: "Cacio e Pepe",
-      steps: [],
-      recipeIngredients: [],
-      servings: 2,
-      systemUsed: "metric",
-    },
-  }))
+vi.mock("@norish/shared-react/trpc", async () =>
+  (await import("../../helpers/trpc-fake")).mockTRPC()
 );
 vi.mock("@/app/(app)/recipes/[id]/components/cookingmode/mobile-cooking-mode-dialog", () => ({
   MobileCookingModeDialog: () => <div data-testid="cooking-dialog" />,
@@ -110,6 +103,19 @@ beforeEach(() => {
   mocks.isNavVisible = true;
 });
 
+function renderOnPage(ui: React.ReactElement) {
+  const { wrapper } = onRecipePage({
+    id: "recipe-1",
+    name: "Cacio e Pepe",
+    steps: [],
+    recipeIngredients: [],
+    servings: 2,
+    systemUsed: "metric",
+  });
+
+  return render(ui, { wrapper });
+}
+
 function pill(): HTMLElement {
   return screen.getByText("recipes.detail.cook").closest("[data-style-bottom]")!;
 }
@@ -121,7 +127,7 @@ function pill(): HTMLElement {
  */
 describe("Floating cook pill", () => {
   it("sits above the nav while the nav is showing", () => {
-    render(<CookingMode floating />);
+    renderOnPage(<CookingMode floating />);
 
     expect(pill().dataset.styleBottom).toBe(cssFloatingDockBottomWithNav);
     expect(pill().dataset.animateBottom).toBe(cssFloatingDockBottomWithNav);
@@ -130,7 +136,7 @@ describe("Floating cook pill", () => {
   it("leaves with the nav rather than riding along shrunken", () => {
     mocks.isNavVisible = false;
 
-    render(<CookingMode floating />);
+    renderOnPage(<CookingMode floating />);
 
     // A reader scrolling the recipe is reading. The timer dock has something
     // to say while it is scrolled past; a cook button does not, and it is one
@@ -141,7 +147,7 @@ describe("Floating cook pill", () => {
   it("takes no taps once it has left", () => {
     mocks.isNavVisible = false;
 
-    render(<CookingMode floating />);
+    renderOnPage(<CookingMode floating />);
 
     expect(screen.getByText("recipes.detail.cook").closest("button")!.className).toContain(
       "pointer-events-none"
@@ -149,21 +155,21 @@ describe("Floating cook pill", () => {
   });
 
   it("is there at full size while the nav is showing", () => {
-    render(<CookingMode floating />);
+    renderOnPage(<CookingMode floating />);
 
     expect(pill().dataset.animateScale).toBe("1");
     expect(pill().dataset.animateOpacity).toBe("1");
   });
 
   it("always reads Cook, because a Cooking Session is never resumed", () => {
-    render(<CookingMode floating />);
+    renderOnPage(<CookingMode floating />);
 
     expect(screen.getByText("recipes.detail.cook")).toBeInTheDocument();
     expect(screen.queryByText(/continue/i)).not.toBeInTheDocument();
   });
 
   it("stays in the content flow when it is not floating", () => {
-    render(<CookingMode fullWidth />);
+    renderOnPage(<CookingMode fullWidth />);
 
     expect(screen.getByText("recipes.detail.cook").closest("[data-style-bottom]")).toBeNull();
   });
