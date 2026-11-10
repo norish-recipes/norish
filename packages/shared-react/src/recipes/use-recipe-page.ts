@@ -11,6 +11,7 @@ import type {
 
 import { useTRPC } from "../trpc";
 import { useRecipePageStore, useRecipePageStoreApi } from "./recipe-page-store";
+import { scaleIngredients } from "./scale-ingredients";
 import { useConvertMutation } from "./use-convert-mutation";
 
 /** The page's recipe from the Query cache; renders on its data only. */
@@ -39,28 +40,14 @@ export function usePageServings(): number {
   return picked ?? recipe?.servings ?? 1;
 }
 
-/**
- * The ingredients at the servings the page shows: each amount scaled from the
- * recipe's own servings, and the recipe's lines as they are when nothing was picked.
- */
+/** The ingredients at the servings the page shows. */
 export function usePageIngredients(): RecipeIngredientsDto[] {
   const picked = useRecipePageStore((state) => state.servings);
   const recipe = usePageRecipe();
-  const ingredients = recipe?.recipeIngredients;
-  const recipeServings = recipe?.servings;
 
-  if (!ingredients) return [];
-  if (picked === null || !recipeServings || picked === recipeServings) return ingredients;
+  if (!recipe) return [];
 
-  return ingredients.map((ing) => {
-    if (ing.amount == null) return ing;
-
-    const amount = Number(ing.amount);
-
-    if (isNaN(amount) || amount <= 0) return ing;
-
-    return { ...ing, amount: Math.round((amount / recipeServings) * picked * 10000) / 10000 };
-  });
+  return scaleIngredients(recipe.recipeIngredients, recipe.servings, picked ?? recipe.servings);
 }
 
 export type RecipeConversionResult = {

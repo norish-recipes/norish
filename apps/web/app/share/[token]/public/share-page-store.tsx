@@ -6,7 +6,7 @@ import { useSharePublicConfigQuery } from "@/hooks/recipes/use-share-public-conf
 import { createStore, useStore } from "zustand";
 
 import type { MeasurementSystem, PublicRecipeViewDTO } from "@norish/shared/contracts";
-import { useSharedRecipeQuery } from "@norish/shared-react/recipes";
+import { scaleIngredients, useSharedRecipeQuery } from "@norish/shared-react/recipes";
 
 export type SharePageState = {
   token: string;
@@ -96,10 +96,6 @@ export function useShareSystems(): MeasurementSystem[] {
 export function useShareIngredients() {
   const recipe = useSharedRecipe();
   const servings = useShareServings();
-  const ratio = servings / recipe.servings;
 
-  return recipe.recipeIngredients.map((line) => ({
-    ...line,
-    amount: line.amount != null ? line.amount * ratio : null,
-  }));
+  return scaleIngredients(recipe.recipeIngredients, recipe.servings, servings);
 }

@@ -4,6 +4,8 @@ import { useCallback, useMemo, useState } from "react";
 
 import { formatAmountAsDecimal } from "@norish/shared/lib/format-amount";
 
+import { scaleIngredients } from "./scale-ingredients";
+
 type IngredientWithAmount = { amount?: number | string | null };
 
 /** The ingredient at the chosen servings, its amount always a number. */
@@ -30,21 +32,14 @@ export function useServingsScaler<T extends IngredientWithAmount>(
   );
 
   const scaledIngredients = useMemo<ScaledIngredient<T>[]>(() => {
-    if (ingredients.length === 0) {
-      return [];
-    }
-
-    return ingredients.map((ing) => {
+    // Amounts as numbers even unscaled: the groceries panel formats them with toFixed.
+    const lines = ingredients.map((ing) => {
       const base = ing.amount === null || ing.amount === undefined ? NaN : Number(ing.amount);
-      const amount = Number.isFinite(base) ? base : null;
-      const scale =
-        amount !== null && amount > 0 && originalServings > 0 && servings !== originalServings;
 
-      return {
-        ...ing,
-        amount: scale ? Math.round((amount / originalServings) * servings * 10000) / 10000 : amount,
-      };
+      return { ...ing, amount: Number.isFinite(base) ? base : null };
     });
+
+    return scaleIngredients(lines, originalServings, servings);
   }, [ingredients, servings, originalServings]);
 
   const setClampedServings = useCallback((newServings: number) => {
