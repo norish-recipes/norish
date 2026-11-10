@@ -3,7 +3,7 @@ import { useState } from "react";
 import { createClientLogger } from "@norish/shared/lib/logger";
 import { createClientId } from "@norish/shared/lib/operation-helpers";
 
-import { useHydrated } from "../../use-hydrated";
+import { useHydrated } from "../../../platform/use-hydrated";
 
 const log = createClientLogger("useRecipeId");
 

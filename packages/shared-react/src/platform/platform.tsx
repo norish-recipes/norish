@@ -4,6 +4,7 @@ import type { ReactNode } from "react";
 import { createContext, use } from "react";
 
 import type { CompatibleMessageTranslator } from "@norish/i18n";
+import type { User } from "@norish/shared/contracts";
 import type { DeviceKind } from "@norish/shared/contracts/zod/device-preferences";
 
 export type ToastSeverity = "default" | "success" | "warning" | "danger";
@@ -26,6 +27,12 @@ export type PlatformStorage = {
   removeItem: (key: string) => void | Promise<void>;
 };
 
+/** Who the app's auth client says is signed in; `isPending` until it answers. */
+export type PlatformSession = { user: User | null; isPending: boolean };
+
+/** `discardQueue` only once the reader agreed to lose their unsynced changes (ADR-0009). */
+export type SignOut = (options?: { discardQueue?: boolean }) => void | Promise<void>;
+
 /** What shared code needs from the app it runs in. Each app mounts one. */
 export type PlatformAdapter = {
   toast: ToastAdapter;
@@ -37,6 +44,8 @@ export type PlatformAdapter = {
   showError: (error: unknown, context: string) => void;
   storage: PlatformStorage;
   deviceKind: DeviceKind;
+  session: PlatformSession;
+  signOut: SignOut;
 };
 
 const PlatformContext = createContext<PlatformAdapter | null>(null);

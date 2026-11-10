@@ -1,5 +1,6 @@
 import type { ReactNode } from "react";
 import { Platform, View } from "react-native";
+import { useAuth } from "@/lib/auth/auth-context";
 import { storage } from "@/lib/storage/mmkv";
 import { useRouter } from "expo-router";
 import { Toast, useThemeColor, useToast } from "heroui-native";
@@ -8,6 +9,7 @@ import { useIntl } from "react-intl";
 import type { PlatformAdapter, PlatformStorage } from "@norish/shared-react/platform";
 import { createIntlMessageTranslator } from "@norish/i18n";
 import { PlatformProvider } from "@norish/shared-react/platform";
+import { sessionReader } from "@norish/shared-react/reader";
 import { createClientLogger } from "@norish/shared/lib/logger";
 
 const log = createClientLogger("mobile-platform");
@@ -23,9 +25,10 @@ const mmkvStorage: PlatformStorage = {
   },
 };
 
-/** The mobile app's platform adapter: heroui-native toasts, Expo Router, MMKV. */
+/** The mobile app's platform adapter: heroui-native toasts, Expo Router, MMKV, the auth context. */
 export function MobilePlatformProvider({ children }: { children: ReactNode }) {
   const intl = useIntl();
+  const { user, isLoading, signOut } = useAuth();
   const { toast } = useToast();
   const router = useRouter();
   const [dangerColor] = useThemeColor(["danger"] as const);
@@ -72,6 +75,8 @@ export function MobilePlatformProvider({ children }: { children: ReactNode }) {
     },
     storage: mmkvStorage,
     deviceKind,
+    session: { user: user ? sessionReader(user) : null, isPending: isLoading },
+    signOut,
   };
 
   return <PlatformProvider adapter={adapter}>{children}</PlatformProvider>;

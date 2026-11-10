@@ -49,7 +49,7 @@ export type AppSeed = {
 export function AppShell({ children, seed }: { children: React.ReactNode; seed?: AppSeed }) {
   return (
     <ReaderTodayProvider value={seed?.readerToday}>
-      <AuthProviders deviceKind={seed?.deviceKind}>
+      <AuthProviders deviceKind={seed?.deviceKind} reader={seed?.reader}>
         {/* Above the providers reading these queries, so their first render has them. */}
         <QuerySeedBoundary state={seed?.queries}>
           <ArchiveImportProvider>

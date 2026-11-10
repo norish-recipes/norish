@@ -4,7 +4,7 @@ import { createContext, createElement, use, useState } from "react";
 import type { User } from "@norish/shared/contracts";
 import { useSession } from "@norish/shared/lib/auth/client";
 
-import { useHydrated } from "./use-hydrated";
+import { useHydrated } from "../platform/use-hydrated";
 
 /** The reader the server verified for this document, where a server rendered it (web). */
 const ReaderSeedContext = createContext<User | null>(null);
