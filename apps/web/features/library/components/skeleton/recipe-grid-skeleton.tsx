@@ -1,5 +1,7 @@
 "use client";
 
+import { Tabs } from "@heroui/react";
+
 import RecipeCardSkeleton from "./recipe-card-skeleton";
 
 type RecipeGridSkeletonProps = {
@@ -24,4 +26,13 @@ export default function RecipeGridSkeleton({ variant = "grid" }: RecipeGridSkele
       ))}
     </div>
   );
+}
+
+/** Grey cards in the grid and list panels of the view mode tabs, as both Library skeletons draw. */
+export function RecipeGridSkeletonPanels() {
+  return (["grid", "list"] as const).map((variant) => (
+    <Tabs.Panel key={variant} className="mt-0 min-h-0 flex-1 p-0" id={variant}>
+      <RecipeGridSkeleton variant={variant} />
+    </Tabs.Panel>
+  ));
 }
