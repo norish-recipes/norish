@@ -14,6 +14,7 @@ const TRANSLATED_REASONS: Record<string, string> = {
   [NOT_A_RECIPE_REASON]: "recipes.toasts.notARecipe",
   [PRIVATE_ADDRESS_REASON]: "recipes.toasts.privateAddress",
 };
+
 export type RecipeToastAdapter = ToastAdapter;
 
 export function createRecipeImportToasts(adapter: RecipeToastAdapter) {
