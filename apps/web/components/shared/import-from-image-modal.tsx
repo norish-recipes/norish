@@ -3,10 +3,9 @@
 import type { DropZoneAreaProps } from "@/components/ui/drop-zone";
 import { useCallback, useState } from "react";
 import Image from "next/image";
-import { useRouter } from "next/navigation";
 import { DropZone } from "@/components/ui/drop-zone";
 import { useClipboardImagePaste } from "@/hooks/use-clipboard-image-paste";
-import { useRecipesMutations } from "@/hooks/use-recipes-mutations";
+import { useImportRecipe } from "@/hooks/use-import-recipe";
 import { pdfPagesAsImages } from "@/lib/pdf-pages";
 import { showSafeErrorToast } from "@/lib/ui/safe-error-toast";
 import { PhotoIcon, SparklesIcon, XMarkIcon } from "@heroicons/react/16/solid";
@@ -37,8 +36,7 @@ export default function ImportFromImageModal({ isOpen, onOpenChange }: ImportFro
   const t = useTranslations("common.import.image");
   const tErrors = useTranslations("common.errors");
   const tActions = useTranslations("common.actions");
-  const router = useRouter();
-  const { importRecipeFromImages } = useRecipesMutations();
+  const { importFromImages } = useImportRecipe();
   const { limits } = useUploadLimitsQuery();
   const [files, setFiles] = useState<FilePreview[]>([]);
   const [isSubmitting, setIsSubmitting] = useState(false);
@@ -175,16 +173,12 @@ export default function ImportFromImageModal({ isOpen, onOpenChange }: ImportFro
     (types) => (OCR_ACCEPTED_TYPES.some((type) => types.has(type)) ? "copy" : "cancel"),
     []
   );
-  const handleImport = useCallback(() => {
+  const handleImport = () => {
     if (files.length === 0) return;
     setIsSubmitting(true);
     try {
       // Pass raw File objects - FormData conversion happens in mutation
-      importRecipeFromImages(files.map((f) => f.file));
-      toast(t("importing"), {
-        description: t("analyzing"),
-        variant: "default",
-      });
+      importFromImages(files.map((f) => f.file));
 
       // Clean up and close
       files.forEach((f) => {
@@ -192,7 +186,6 @@ export default function ImportFromImageModal({ isOpen, onOpenChange }: ImportFro
       });
       setFiles([]);
       onOpenChange(false);
-      router.push("/");
     } catch (error) {
       showSafeErrorToast({
         title: t("failed"),
@@ -203,7 +196,7 @@ export default function ImportFromImageModal({ isOpen, onOpenChange }: ImportFro
       });
     }
     setIsSubmitting(false);
-  }, [files, importRecipeFromImages, onOpenChange, router, t, tErrors]);
+  };
   const handleOpenChange = useCallback(
     (open: boolean) => {
       if (!open) {

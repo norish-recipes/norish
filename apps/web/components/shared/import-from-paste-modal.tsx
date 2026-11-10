@@ -1,8 +1,7 @@
 "use client";
 
 import { useCallback, useState } from "react";
-import { useRouter } from "next/navigation";
-import { useRecipesMutations } from "@/hooks/use-recipes-mutations";
+import { useImportRecipe } from "@/hooks/use-import-recipe";
 import { showSafeErrorToast } from "@/lib/ui/safe-error-toast";
 import { ArrowDownTrayIcon, SparklesIcon } from "@heroicons/react/16/solid";
 import { Button, Label, Modal, TextArea, TextField, toast } from "@heroui/react";
@@ -19,41 +18,33 @@ export default function ImportFromPasteModal({ isOpen, onOpenChange }: ImportFro
   const t = useTranslations("common.import.paste");
   const tErrors = useTranslations("common.errors");
   const tActions = useTranslations("common.actions");
-  const router = useRouter();
   const isAIEnabled = usePermissions((p) => p.isAIEnabled);
-  const { importRecipeFromPaste, importRecipeFromPasteWithAI } = useRecipesMutations();
+  const { importFromPaste, importFromPasteWithAI } = useImportRecipe();
   const [text, setText] = useState("");
   const [isSubmitting, setIsSubmitting] = useState(false);
-  const handleImport = useCallback(() => {
+  const submit = (run: (text: string) => void, context: string) => {
     const trimmed = text.trim();
 
     if (!trimmed) return;
     setIsSubmitting(true);
     try {
-      importRecipeFromPaste(trimmed);
-      toast(t("importing"), {
-        description: t("inProgress"),
-        variant: "default",
-      });
+      run(trimmed);
       onOpenChange(false);
       setText("");
-      router.push("/");
     } catch (error) {
       showSafeErrorToast({
         title: t("failed"),
         description: tErrors("technicalDetails"),
         color: "danger",
         error,
-        context: "import-from-paste-modal:import",
+        context,
       });
     }
     setIsSubmitting(false);
-  }, [importRecipeFromPaste, onOpenChange, router, t, tErrors, text]);
-  const handleAIImport = useCallback(() => {
-    const trimmed = text.trim();
-
-    if (!trimmed) return;
-    if (trimmed.length > MAX_RECIPE_PASTE_CHARS) {
+  };
+  const handleImport = () => submit(importFromPaste, "import-from-paste-modal:import");
+  const handleAIImport = () => {
+    if (text.trim().length > MAX_RECIPE_PASTE_CHARS) {
       toast(t("tooLarge"), {
         description: t("maxCharacters", {
           max: MAX_RECIPE_PASTE_CHARS.toLocaleString(),
@@ -63,27 +54,8 @@ export default function ImportFromPasteModal({ isOpen, onOpenChange }: ImportFro
 
       return;
     }
-    setIsSubmitting(true);
-    try {
-      importRecipeFromPasteWithAI(trimmed);
-      toast(t("importingWithAI"), {
-        description: t("inProgress"),
-        variant: "default",
-      });
-      onOpenChange(false);
-      setText("");
-      router.push("/");
-    } catch (error) {
-      showSafeErrorToast({
-        title: t("failed"),
-        description: tErrors("technicalDetails"),
-        color: "danger",
-        error,
-        context: "import-from-paste-modal:import-ai",
-      });
-    }
-    setIsSubmitting(false);
-  }, [importRecipeFromPasteWithAI, onOpenChange, router, t, tErrors, text]);
+    submit(importFromPasteWithAI, "import-from-paste-modal:import-ai");
+  };
   const handleOpenChange = useCallback(
     (open: boolean) => {
       if (!open) {
