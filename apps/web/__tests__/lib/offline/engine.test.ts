@@ -106,6 +106,37 @@ describe("the web offline engine", () => {
     expect(await fetchesOnOpen(read)).toBe(1);
   });
 
+  it("forgets what kept a read current once its last reader leaves, but not across a remount", async () => {
+    const { queryClient, trpc, fetchesOnOpen } = openEngine();
+    const seeded = [...trpc.library.list.queryKey({})];
+    const read = [...trpc.groceries.list.queryKey()];
+    const server = new QueryClient();
+    const tick = () => new Promise((resolve) => setTimeout(resolve, 0));
+
+    server.setQueryData(seeded, { recipes: [] });
+    const state = dehydrate(server);
+
+    markServerCopies(state);
+    hydrate(queryClient, state);
+    await queryClient.fetchQuery({ queryKey: read, queryFn: async () => [] });
+    const screen = renderHook(() => useKeepsCurrent([read]));
+
+    // Each reopens before the tick after the last reader left: a remount in one commit.
+    expect(await fetchesOnOpen(seeded)).toBe(0);
+    expect(await fetchesOnOpen(seeded)).toBe(0);
+    expect(await fetchesOnOpen(read)).toBe(0);
+
+    // The reader leaves its screen, with the subscription that kept its read current.
+    screen.unmount();
+    await tick();
+    const back = renderHook(() => useKeepsCurrent([read]));
+
+    expect(await fetchesOnOpen(seeded)).toBe(1);
+    // The subscription is back, but it missed what changed while it was away.
+    expect(await fetchesOnOpen(read)).toBe(1);
+    back.unmount();
+  });
+
   it("lets every read under a key a subscription keeps wait for its stale time, and no other", async () => {
     const { queryClient, trpc, fetchesOnOpen } = openEngine();
     const icons = [...trpc.ingredients.icons.queryKey({ ids: ["i1"] })];

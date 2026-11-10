@@ -42,7 +42,10 @@ const HEALTH_PROBE_URL = addBasePath(HEALTH_PROBE_PATH);
 /** A restored cache from another app version is dropped, never migrated; the Outbox is kept. */
 export const CACHE_BUSTER = APP_VERSION;
 
-/** The data each query held as the server sent it with this page load, by query hash. */
+/**
+ * The data each query held as the server sent it with this page load, by query hash, until its
+ * last reader unmounts.
+ */
 const serverCopies = new Map<string, unknown>();
 
 /**
@@ -66,6 +69,17 @@ function noteAnswer({ query, ...event }: QueryCacheNotifyEvent): void {
     query.state.data !== undefined && serverCopies.get(query.queryHash) === query.state.data;
 
   if (read || seeded) answered.add(query);
+  // A tick later, so a remount in the same commit (StrictMode, a view switch) keeps them.
+  if (event.type === "observerRemoved" && query.getObserversCount() === 0) {
+    setTimeout(() => forgetUnwatched(query), 0);
+  }
+}
+
+/** Away from its screen nothing keeps a read current, so coming back refetches it. */
+function forgetUnwatched(query: Query): void {
+  if (query.getObserversCount() > 0) return;
+  serverCopies.delete(query.queryHash);
+  if (!isKeptCurrent(query.queryKey)) answered.delete(query);
 }
 
 /**

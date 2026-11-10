@@ -1102,6 +1102,40 @@ test("a full load of the Library never asks for its first page: the document car
   }
 });
 
+test("a fully loaded Library rereads its cards when the reader comes back from renaming one", async ({
+  browser,
+}) => {
+  const id = await createRecipe("Library Before Rename");
+  const { context, page } = await openLive(browser, "desktop");
+
+  try {
+    await storeFiltersCookie(context, {});
+    await page.goto("/");
+    await page.locator("a[data-recipe-card]").filter({ hasText: "Library Before Rename" }).click();
+    await page.waitForURL(new RegExp(`/recipes/${id}`));
+    await expect(page.getByRole("heading", { name: "Library Before Rename" })).toBeVisible();
+
+    const recipe = (await readRecipe(stack.baseURL, stack.ownerCookies, id))!;
+
+    await callApi("recipes.update", {
+      id,
+      version: recipe.version,
+      data: { name: "Library After Rename" },
+    });
+    await expect(page.getByRole("heading", { name: "Library After Rename" })).toBeVisible();
+    // Back within the stale time: the seeded first page is no longer the server's current copy.
+    await page.goBack();
+    await expect(
+      page.locator("a[data-recipe-card]").filter({ hasText: "Library After Rename" })
+    ).toBeVisible();
+    await expect(
+      page.locator("a[data-recipe-card]").filter({ hasText: "Library Before Rename" })
+    ).toHaveCount(0);
+  } finally {
+    await context.close();
+  }
+});
+
 test("a page the installed app's worker fetches itself still carries its recipe", async ({
   browser,
 }) => {
