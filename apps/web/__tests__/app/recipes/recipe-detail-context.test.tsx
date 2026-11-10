@@ -148,14 +148,10 @@ describe("RecipeDetailContext", () => {
       isLoading: false,
     }),
     useActiveAllergies: () => ({ allergies: [], allergySet: new Set<string>() }),
-    useConvertMutation: (recipeId: string) => {
+    useConvertMutation: (recipeId: string, callbacks: { onError?: (error: unknown) => void }) => {
+      const { onError } = callbacks;
       const convert = React.useCallback(
-        (
-          targetSystem: "metric" | "us",
-          version: number,
-          _withAI?: boolean,
-          options?: { onError?: (error: unknown) => void }
-        ) => {
+        (targetSystem: "metric" | "us", version: number, _withAI?: boolean) => {
           const canSwitchLocally = hasLocalMeasurementSystem(recipeFixture, targetSystem);
           const previousSystem = recipeFixture.systemUsed;
 
@@ -176,7 +172,10 @@ describe("RecipeDetailContext", () => {
             return;
           }
 
-          if (!(convertError instanceof TRPCClientError) && canSwitchLocally && setRecipeData) {
+          // Unreachable keeps the switch, as a queued conversion does.
+          if (convertError instanceof TRPCClientError) return;
+
+          if (canSwitchLocally && setRecipeData) {
             setRecipeData((previousRecipe) =>
               previousRecipe
                 ? {
@@ -187,9 +186,9 @@ describe("RecipeDetailContext", () => {
             );
           }
 
-          options?.onError?.(convertError);
+          onError?.(convertError);
         },
-        [recipeId]
+        [recipeId, onError]
       );
 
       return { convertMeasurements: convert };

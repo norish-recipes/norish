@@ -15,12 +15,7 @@ type ConvertMutationContext = {
 };
 
 export type ConvertMutationResult = {
-  convertMeasurements: (
-    targetSystem: MeasurementSystem,
-    version: number,
-    withAI?: boolean,
-    options?: { onError?: (error: unknown) => void }
-  ) => void;
+  convertMeasurements: (targetSystem: MeasurementSystem, version: number, withAI?: boolean) => void;
   error: unknown;
   reset: () => void;
   isConverting: boolean;
@@ -36,7 +31,15 @@ function hasLocalMeasurementSystem(recipe: FullRecipeDTO, target: MeasurementSys
   return hasTargetIngredients && hasTargetSteps;
 }
 
-export function useConvertMutation(recipeId: string): ConvertMutationResult {
+export type ConvertMutationCallbacks = {
+  /** A conversion failed and was rolled back; a queued one keeps its switch and is not reported. */
+  onError?: (error: unknown) => void;
+};
+
+export function useConvertMutation(
+  recipeId: string,
+  callbacks: ConvertMutationCallbacks = {}
+): ConvertMutationResult {
   const trpc = useTRPC();
   const queryClient = useQueryClient();
   const detailQueryKey = trpc.recipes.get.queryKey({ id: recipeId });
@@ -85,14 +88,15 @@ export function useConvertMutation(recipeId: string): ConvertMutationResult {
         }
 
         queryClient.invalidateQueries({ queryKey: context?.detailQueryKey ?? detailQueryKey });
+        callbacks.onError?.(error);
       },
     })
   );
   const { mutate: mutateMutation } = mutation;
 
   return {
-    convertMeasurements: (targetSystem, version, withAI = false, options) => {
-      mutateMutation({ recipeId, targetSystem, version, withAI }, options);
+    convertMeasurements: (targetSystem, version, withAI = false) => {
+      mutateMutation({ recipeId, targetSystem, version, withAI });
     },
     error: mutation.error,
     reset: mutation.reset,

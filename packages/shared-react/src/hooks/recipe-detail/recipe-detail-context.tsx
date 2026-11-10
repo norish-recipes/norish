@@ -12,7 +12,6 @@ import type {
 } from "@norish/shared/contracts";
 
 import type { RecipeEnrichmentResult } from "../recipes/recipe";
-import { shouldPreserveOptimisticUpdate } from "../../offline/optimistic-updates";
 
 // --- Types ---
 
@@ -91,12 +90,14 @@ export type RecipeDetailAdapters = {
   };
   useRecipeEnrichment: (recipeId: string) => RecipeEnrichmentResult;
   useActiveAllergies: () => { allergies: string[]; allergySet: Set<string> };
-  useConvertMutation: (recipeId: string) => {
+  useConvertMutation: (
+    recipeId: string,
+    callbacks: { onError?: (error: unknown) => void }
+  ) => {
     convertMeasurements: (
       targetSystem: MeasurementSystem,
       version: number,
-      withAI?: boolean,
-      options?: { onError?: (error: unknown) => void }
+      withAI?: boolean
     ) => void;
   };
   useRatingQuery: (recipeId: string) => { userRating: number | null };
@@ -258,8 +259,13 @@ export function createRecipeDetailContext(adapters: RecipeDetailAdapters) {
     // Get allergies
     const { allergies, allergySet } = adapters.useActiveAllergies();
 
-    // Mutation for converting measurements
-    const { convertMeasurements } = adapters.useConvertMutation(recipeId);
+    const reset = useCallback(() => {
+      setConversion(null);
+      setPickedServings(null);
+    }, []);
+
+    // A failed conversion that was rolled back drops the choice with it.
+    const { convertMeasurements } = adapters.useConvertMutation(recipeId, { onError: reset });
 
     // --- Ratings ---
     const { userRating } = adapters.useRatingQuery(recipeId);
@@ -281,11 +287,6 @@ export function createRecipeDetailContext(adapters: RecipeDetailAdapters) {
     // Check if error is a 404
     const isNotFound = adapters.isNotFoundError(error);
 
-    const reset = useCallback(() => {
-      setConversion(null);
-      setPickedServings(null);
-    }, []);
-
     const startConversion = useCallback(
       (target: MeasurementSystem, withAI = false) => {
         if (!recipe) {
@@ -294,13 +295,9 @@ export function createRecipeDetailContext(adapters: RecipeDetailAdapters) {
 
         setConversion({ target, withAI, version: recipe.version });
 
-        convertMeasurements(target, recipe.version, withAI, {
-          onError: (error) => {
-            if (!shouldPreserveOptimisticUpdate(error)) reset();
-          },
-        });
+        convertMeasurements(target, recipe.version, withAI);
       },
-      [convertMeasurements, recipe, reset]
+      [convertMeasurements, recipe]
     );
 
     const recipeIdShown = recipe?.id;
