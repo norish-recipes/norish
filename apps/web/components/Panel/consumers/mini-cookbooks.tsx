@@ -9,7 +9,11 @@ import { PlusIcon, XMarkIcon } from "@heroicons/react/16/solid";
 import { Button, Input, Separator } from "@heroui/react";
 import { useTranslations } from "next-intl";
 
-import { useCookbooksMutations, useEditableCookbooksQuery } from "@norish/shared-react/recipes";
+import {
+  useCookbooksMutations,
+  useCookbooksSubscription,
+  useEditableCookbooksQuery,
+} from "@norish/shared-react/recipes";
 
 type MiniCookbooksProps = {
   open: boolean;
@@ -23,6 +27,13 @@ type MiniCookbooksProps = {
 
 /** A cookbook the reader has asked for but that does not exist yet. */
 type PendingCookbook = { key: number; title: string };
+
+/** The cookbooks' events, mounted while the panel is open. */
+function CookbooksSubscription() {
+  useCookbooksSubscription();
+
+  return null;
+}
 
 /** Sized to its list, scrolling past this. */
 const PANEL_HEIGHT = "max-h-[75dvh]";
@@ -57,7 +68,7 @@ export default function MiniCookbooks({
   const tActions = useTranslations("common.actions");
   const tSelection = useTranslations("recipes.selection");
   const singleId = recipeIds.length === 1 ? recipeIds[0]! : null;
-  const query = useEditableCookbooksQuery(open ? singleId : null);
+  const query = useEditableCookbooksQuery(singleId, { enabled: open });
   const cookbooks = query.cookbooks.filter((cookbook) => cookbook.id !== excludeCookbookId);
   const { isLoading } = query;
   const newLabel = singleId ? t("newWithRecipe") : tSelection("newCookbook");
@@ -133,6 +144,7 @@ export default function MiniCookbooks({
     >
       {open ? (
         <Panel.Body className="flex min-h-0 flex-1 flex-col">
+          <CookbooksSubscription />
           <div className="flex items-center gap-2">
             <Input
               fullWidth

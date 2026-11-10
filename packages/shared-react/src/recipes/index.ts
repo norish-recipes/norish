@@ -30,6 +30,7 @@ export {
 } from "./use-recipes-mutations";
 export { useRecipesQuery, type RecipeFilters, type RecipesQueryResult } from "./use-recipes-query";
 export { useLibrarySubscriptions, useRecipeOutcomes } from "./use-recipe-events";
+export { useRecipeListSubscription } from "./use-recipes-subscription";
 export { useRecipeShareCacheHelpers, type RecipeShareCacheHelpers } from "./use-recipe-share-cache";
 export {
   useRecipeShareMutations,

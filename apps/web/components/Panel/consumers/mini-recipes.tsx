@@ -13,7 +13,11 @@ import { useVirtualizer } from "@tanstack/react-virtual";
 import { AnimatePresence, motion } from "motion/react";
 import { useLocale, useTranslations } from "next-intl";
 
-import { useRandomRecipe, useRecipesQuery } from "@norish/shared-react/recipes";
+import {
+  useRandomRecipe,
+  useRecipeListSubscription,
+  useRecipesQuery,
+} from "@norish/shared-react/recipes";
 import { RecipeCategory, RecipeDashboardDTO, Slot } from "@norish/shared/contracts";
 import { addBasePath } from "@norish/shared/lib/base-path";
 import { dateKey } from "@norish/shared/lib/helpers";
@@ -207,6 +211,8 @@ function MiniRecipesContent({
   } = useRecipesQuery({
     search: search || undefined,
   });
+
+  useRecipeListSubscription();
   const dateString = dateKey(date);
   const handleInputChange = (e: ChangeEvent<HTMLInputElement>) => {
     const value = e.target.value;
@@ -395,7 +401,7 @@ export default function MiniRecipes({ open, onOpenChange, date, slot }: MiniReci
         day: "numeric",
       }).format(date)}`
     : t("addRecipe");
-  const { afterPlanning, afterPlanningPanel } = useAfterPlanning();
+  const { afterPlanning, afterPlanningPanel } = useAfterPlanning(open);
 
   return (
     <>

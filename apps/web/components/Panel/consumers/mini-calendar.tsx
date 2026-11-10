@@ -166,7 +166,7 @@ function MiniCalendarContent({
 }
 export default function MiniCalendar({ open, onOpenChange, recipeId }: MiniCalendarProps) {
   const t = useTranslations("calendar.panel");
-  const { afterPlanning, afterPlanningPanel } = useAfterPlanning();
+  const { afterPlanning, afterPlanningPanel } = useAfterPlanning(open);
 
   return (
     <>
