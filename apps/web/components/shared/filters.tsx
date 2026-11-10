@@ -6,16 +6,11 @@ import { FunnelIcon } from "@heroicons/react/16/solid";
 import { Button } from "@heroui/react";
 
 import { useLibraryFilters } from "@norish/shared-react/recipes";
+import { hasAppliedRecipeFilters } from "@norish/shared/contracts/filter-contract";
 
 export default function Filters() {
   const hasActiveFilters = useLibraryFilters(
-    ({ filters }) =>
-      filters.rawInput.trim().length > 0 ||
-      filters.searchTags.length > 0 ||
-      filters.categories.length > 0 ||
-      filters.minRating !== null ||
-      filters.maxCookingTime !== null ||
-      filters.showPantryOnly
+    ({ filters }) => hasAppliedRecipeFilters(filters) || filters.minRating !== null
   );
   const [isOpen, setIsOpen] = useState(false);
 
