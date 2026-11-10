@@ -37,7 +37,7 @@ function variantsUsedBy(file: string, seen = new Set<string>()): string[] {
 
 describe("styles/heroui.css", () => {
   it("imports the styles of every HeroUI component the app draws, and what those draw", () => {
-    const appImports = ["app", "components", "hooks", "lib"]
+    const appImports = ["app", "components", "features", "hooks", "lib"]
       .flatMap((dir) =>
         fs
           .readdirSync(path.join(webRoot, dir), { recursive: true, encoding: "utf8" })

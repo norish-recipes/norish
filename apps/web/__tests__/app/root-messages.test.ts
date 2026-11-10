@@ -18,7 +18,7 @@ const SETTINGS_ROUTE = [
 
 describe("the root layout's client messages", () => {
   it("hold every settings namespace read outside the settings route", () => {
-    const reads = ["app", "components", "hooks", "lib"]
+    const reads = ["app", "components", "features", "hooks", "lib"]
       .flatMap((dir) =>
         fs
           .readdirSync(path.join(webRoot, dir), { recursive: true, encoding: "utf8" })
