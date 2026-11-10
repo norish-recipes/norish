@@ -95,5 +95,4 @@ export {
   LibraryFiltersProvider,
   useLibraryFilters,
   useLibraryFiltersStoreApi,
-  type LibraryFiltersState,
 } from "./library-filters-store";
