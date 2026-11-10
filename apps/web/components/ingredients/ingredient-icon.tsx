@@ -1,5 +1,6 @@
 "use client";
 
+import type { inferRouterOutputs } from "@trpc/server";
 import { useSyncExternalStore } from "react";
 import { useHiddenItemVisibility } from "@/hooks/user/use-hidden-item-visibility";
 import { iconIds } from "@/lib/ingredient-icon-ids";
@@ -12,6 +13,7 @@ import {
 } from "@tanstack/react-query";
 import { useDebounceValue } from "usehooks-ts";
 
+import type { AppRouter } from "@norish/trpc/client";
 import { useTRPC } from "@norish/shared-react/trpc";
 import { addBasePath } from "@norish/shared/lib/base-path";
 
@@ -28,7 +30,7 @@ export type IngredientIconSize = keyof typeof SIZES;
 const FIND_DELAY_MS = 400;
 
 /** Each food's icon by its Ingredient's id, null where it has none: one read's answer. */
-type IconAnswer = Readonly<Record<string, string | null>>;
+type IconAnswer = inferRouterOutputs<AppRouter>["ingredients"]["icons"];
 
 /**
  * Reads the icons of the foods a surface shows, once for them all: a recipe's lines, a grocery
