@@ -50,11 +50,8 @@ function LibraryEffects({ resumed }: { resumed: boolean }) {
   return null;
 }
 
-/**
- * What the dashboard and a cookbook page share: the filters, made once from the cookie (`undefined`
- * without one, and in the offline bootstrap) or this document's last ones, and the list's
- * subscriptions.
- */
+// The dashboard's and a cookbook's filters, from the cookie or this document's last ones, and the
+// subscriptions of what they draw (LibraryEffects): recipes, ratings, cookbooks and the Pantry.
 export function LibraryRoot({
   filters,
   children,
