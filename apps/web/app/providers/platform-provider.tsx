@@ -10,12 +10,10 @@ import { showSafeErrorToast } from "@/lib/ui/safe-error-toast";
 import { toast } from "@heroui/react";
 import { useTranslations } from "next-intl";
 
-import type { PlatformAdapter, SignOut } from "@norish/shared-react/platform";
-import type { User } from "@norish/shared/contracts";
+import type { PlatformAdapter, PlatformSession, SignOut } from "@norish/shared-react/platform";
 import type { DeviceKind } from "@norish/shared/contracts/zod/device-preferences";
 import { PlatformProvider } from "@norish/shared-react/platform";
-import { useSeededSession } from "@norish/shared-react/reader";
-import { signOut as betterAuthSignOut, useSession } from "@norish/shared/lib/auth/client";
+import { signOut as betterAuthSignOut } from "@norish/shared/lib/auth/client";
 import { addBasePath } from "@norish/shared/lib/base-path";
 import { deviceKindFromUserAgent } from "@norish/shared/lib/device-kind";
 
@@ -38,22 +36,22 @@ const signOut: SignOut = async (options) => {
   window.location.href = addBasePath("/login?logout=true");
 };
 
+const SIGNED_OUT: PlatformSession = { user: null, isPending: false };
+
 /**
- * The web's platform adapter. `deviceKind` is the request's and `reader` who the server verified
- * for this document, answering until the session does; an Offline start-up has neither.
+ * The web's platform adapter. `deviceKind` is the request's; an Offline start-up has none.
+ * `session` comes from the signed-in shell; login and share pages read no session.
  */
 export function WebPlatformProvider({
   deviceKind,
-  reader,
+  session = SIGNED_OUT,
   children,
 }: {
   deviceKind?: DeviceKind;
-  reader?: User;
+  session?: PlatformSession;
   children: ReactNode;
 }) {
   const router = useRouter();
-  const { data, isPending } = useSession();
-  const session = useSeededSession({ user: data?.user ?? null, isPending }, reader ?? null);
   const t = useTranslations();
   const tErrors = useTranslations("common.errors");
   const [kind] = useState<DeviceKind>(
