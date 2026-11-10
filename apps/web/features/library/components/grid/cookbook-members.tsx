@@ -1,6 +1,5 @@
 "use client";
 
-import type { LibraryGridItem } from "@/features/library/lib/library-items";
 import { RecipeSelectionBar } from "@/features/library/components/selection";
 import { useLibraryCards, useLibraryQueryFilters } from "@/features/library/hooks";
 import { Card } from "@heroui/react";
@@ -19,6 +18,7 @@ import {
   serializeRecipeFilters,
 } from "@norish/shared/contracts/filter-contract";
 
+import type { LibraryGridItem } from "./library-items";
 import LibraryGrid from "./library-grid";
 import RecipeCard from "./recipe-card";
 

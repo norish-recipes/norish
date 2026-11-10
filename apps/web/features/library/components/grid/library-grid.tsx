@@ -1,6 +1,5 @@
 "use client";
 
-import type { LibraryGridItem } from "@/features/library/lib/library-items";
 import {
   startTransition,
   useCallback,
@@ -22,6 +21,8 @@ import { useWindowSize } from "usehooks-ts";
 import type { RecipeViewMode } from "@norish/shared/contracts/zod/device-preferences";
 import { useHydrated } from "@norish/shared-react/platform";
 import { useDeviceKind } from "@norish/shared-react/reader";
+
+import type { LibraryGridItem } from "./library-items";
 
 // Estimated row height (card height + gap). Both kinds of card match these,
 // or the estimate degrades for every row on a mixed page (ADR-0026).

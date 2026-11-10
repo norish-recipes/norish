@@ -1,6 +1,5 @@
 "use client";
 
-import type { LibraryGridItem } from "@/features/library/lib/library-items";
 import { useMemo } from "react";
 import { RecipeCardSkeleton } from "@/features/library/components/skeleton";
 import { useLibraryCards, useLibraryList } from "@/features/library/hooks";
@@ -18,6 +17,7 @@ import {
   serializeRecipeFilters,
 } from "@norish/shared/contracts/filter-contract";
 
+import type { LibraryGridItem } from "./library-items";
 import CookbookCard from "./cookbook-card";
 import LibraryGrid from "./library-grid";
 import NoCookbooksText from "./no-cookbooks-text";
