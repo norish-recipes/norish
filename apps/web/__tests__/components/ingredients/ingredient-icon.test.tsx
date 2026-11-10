@@ -8,9 +8,11 @@ import type { ReactNode } from "react";
 import { Profiler } from "react";
 import { IngredientIcon, useIngredientIcons } from "@/components/ingredients/ingredient-icon";
 import { QueryClientProvider } from "@tanstack/react-query";
-import { render, screen, waitFor } from "@testing-library/react";
+import { act, render, screen, waitFor } from "@testing-library/react";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 
+import type { AppRouter } from "@norish/trpc/client";
+import { createOfflineQueryClient } from "@norish/shared-react/offline";
 import { createTestQueryClient } from "@norish/shared-react/platform/testing";
 
 const ONION = "11111111-1111-4111-8111-111111111111";
@@ -22,6 +24,8 @@ const mocks = vi.hoisted(() => ({
   hidden: [] as string[],
   asked: [] as unknown[],
   icons: {} as Record<string, string | null>,
+  // A read that never answers, as one does Offline.
+  stalled: false,
 }));
 
 vi.mock("@norish/shared-react/reader", async () =>
@@ -30,23 +34,30 @@ vi.mock("@norish/shared-react/reader", async () =>
   }))
 );
 
-vi.mock("@norish/shared-react/trpc", () => ({
-  useTRPC: () => ({
-    ingredients: {
-      icons: {
-        pathKey: () => ["ingredients.icons"],
-        queryOptions: (input: { ids: string[] }) => ({
-          queryKey: ["ingredients.icons", input],
-          queryFn: async () => {
-            mocks.asked.push(input);
+vi.mock("@norish/shared-react/trpc", async () => {
+  const { QueryClient } = await import("@tanstack/react-query");
+  const { createTRPCClient } = await import("@trpc/client");
+  const { createTRPCOptionsProxy } = await import("@trpc/tanstack-react-query");
+  // The app's own keys, so the offline cache's defaults match them.
+  const keys = createTRPCOptionsProxy<AppRouter>({
+    client: createTRPCClient<AppRouter>({ links: [] }),
+    queryClient: new QueryClient(),
+  }).ingredients.icons;
+  const icons = {
+    pathKey: () => keys.pathKey(),
+    queryOptions: (input: { ids: string[] }) => ({
+      queryKey: keys.queryKey(input),
+      queryFn: async () => {
+        mocks.asked.push(input);
+        if (mocks.stalled) await new Promise(() => {});
 
-            return Object.fromEntries(input.ids.map((id) => [id, mocks.icons[id] ?? null]));
-          },
-        }),
+        return Object.fromEntries(input.ids.map((id) => [id, mocks.icons[id] ?? null]));
       },
-    },
-  }),
-}));
+    }),
+  };
+
+  return { useTRPC: () => ({ ingredients: { icons } }) };
+});
 
 /** A surface: one read of its foods' icons, and whatever it draws. */
 function Surface({ ids, children }: { ids: (string | null)[]; children: ReactNode }) {
@@ -55,8 +66,11 @@ function Surface({ ids, children }: { ids: (string | null)[]; children: ReactNod
   return children;
 }
 
-function onSurface(ids: (string | null)[], children: ReactNode) {
-  const client = createTestQueryClient();
+function onSurface(
+  ids: (string | null)[],
+  children: ReactNode,
+  client = createTestQueryClient()
+) {
   const view = render(
     <QueryClientProvider client={client}>
       <Surface ids={ids}>{children}</Surface>
@@ -77,11 +91,13 @@ function onSurface(ids: (string | null)[], children: ReactNode) {
 beforeEach(() => {
   mocks.hidden = [];
   mocks.asked = [];
+  mocks.stalled = false;
   mocks.icons = { [ONION]: ONION_ICON };
 });
 
 afterEach(() => {
   vi.unstubAllEnvs();
+  vi.useRealTimers();
 });
 
 describe("IngredientIcon", () => {
@@ -127,6 +143,25 @@ describe("IngredientIcon", () => {
     await waitFor(() => expect(screen.getAllByTestId("ingredient-icon")).toHaveLength(2));
     expect(screen.getAllByTestId("ingredient-icon")[1]).toHaveAttribute("src", KOHLRABI_ICON);
     expect(renders.onion).toBe(onionRenders);
+  });
+
+  it("keeps the previous read's icons past the default gcTime while a changed set stays unread", async () => {
+    mocks.icons[KOHLRABI] = KOHLRABI_ICON;
+    const { rerenderSurface } = onSurface(
+      [ONION, KOHLRABI],
+      <IngredientIcon ingredientId={ONION} />,
+      createOfflineQueryClient()
+    );
+
+    expect((await screen.findByTestId("ingredient-icon")).getAttribute("src")).toBe(ONION_ICON);
+
+    // Offline, a grocery is deleted: the surface's new read never answers.
+    vi.useFakeTimers();
+    mocks.stalled = true;
+    rerenderSurface([ONION], <IngredientIcon ingredientId={ONION} />);
+    await act(() => vi.advanceTimersByTimeAsync(10 * 60 * 1000 + 1));
+
+    expect(screen.getByTestId("ingredient-icon").getAttribute("src")).toBe(ONION_ICON);
   });
 
   it("prefixes its address when the app is served under a base path", async () => {

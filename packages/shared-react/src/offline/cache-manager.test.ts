@@ -216,6 +216,8 @@ describe("createCacheManager", () => {
       trpc.stores.list.queryKey(),
       trpc.stores.groceryPrices.queryKey(),
       trpc.stores.aisleLinks.queryKey(),
+      // Unobserved once a surface's set changes, while its icons still show it.
+      trpc.ingredients.icons.queryKey({ ids: ["i1"] }),
     ];
     const elsewhere = trpc.pantry.suggestions.queryKey();
 
