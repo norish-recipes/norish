@@ -87,7 +87,6 @@ export {
   useRecipePageStoreApi,
   type RecipeConversion,
   type RecipePageState,
-  type RecipePageStore,
 } from "./recipe-page-store";
 export {
   useLoadedPageRecipe,

@@ -1,11 +1,11 @@
 "use client";
 
 import type { ReactNode } from "react";
-import { createContext, use, useState } from "react";
 import { useSharePublicConfigQuery } from "@/hooks/recipes/use-share-public-config-query";
-import { createStore, useStore } from "zustand";
+import { createStore } from "zustand";
 
 import type { MeasurementSystem, PublicRecipeViewDTO } from "@norish/shared/contracts";
+import { createPageStoreContext } from "@norish/shared-react/platform";
 import { scaleIngredients, useSharedRecipeQuery } from "@norish/shared-react/recipes";
 
 export type SharePageState = {
@@ -28,30 +28,15 @@ export function createSharePageStore(token: string) {
   }));
 }
 
-type SharePageStore = ReturnType<typeof createSharePageStore>;
+const sharePage = createPageStoreContext("SharePageProvider", createSharePageStore);
 
-const SharePageContext = createContext<SharePageStore | null>(null);
-
-/**
- * Makes the shared recipe page's store. Per page, not module-level: on the server
- * a module-level store is one object every request shares.
- */
+/** Makes the shared recipe page's store; another token starts afresh. */
 export function SharePageProvider({ token, children }: { token: string; children: ReactNode }) {
-  const [store, setStore] = useState(() => createSharePageStore(token));
-
-  if (store.getState().token !== token) setStore(createSharePageStore(token));
-
-  return <SharePageContext value={store}>{children}</SharePageContext>;
+  return <sharePage.Provider pageKey={token}>{children}</sharePage.Provider>;
 }
 
 /** One slice of the shared recipe page's store; renders when that slice changes. */
-export function useSharePageStore<T>(selector: (state: SharePageState) => T): T {
-  const store = use(SharePageContext);
-
-  if (!store) throw new Error("useSharePageStore must be used within SharePageProvider");
-
-  return useStore(store, selector);
-}
+export const useSharePageStore = sharePage.usePageStore;
 
 /** The shared recipe, for the pieces drawn once it has loaded. */
 export function useSharedRecipe(): PublicRecipeViewDTO {
