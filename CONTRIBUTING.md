@@ -208,7 +208,8 @@ const log = createClientLogger("MyComponent");
 
 Web, mobile, `packages/shared-react` and `packages/ui` compile with the React Compiler, which memoises components and hooks itself:
 
-- New code doesn't add `useMemo` or `useCallback`. Existing ones stay.
+- Don't write `useMemo` or `useCallback`; the compiler memoises. The one exception is a value an effect depends on that must keep its identity, with a one-line comment saying so. A component marked `"use no memo"`, such as a TanStack Virtual list, keeps its own, since the compiler skips it.
+- Existing ones go as each feature migrates, together with that feature's tests.
 - Keep a hook's `use` prefix when you alias it (`const useX = hooks.useX`). The compiler knows a hook only by its name.
 - Derive values during render instead of copying them into state from an effect. The lint flags state set in an effect, refs read during render, and mutated props.
 - Lint reports every component or hook the compiler skips, through `eslint-plugin-react-hooks`. Fix the code rather than silence it; one that must stay uncompiled, such as a TanStack Virtual list, opens with `"use no memo"`.
