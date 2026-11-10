@@ -50,11 +50,11 @@ export default function NavbarUserMenu({
   const [showUrlModal, setShowUrlModal] = useState(false);
   const [showStatusModal, setShowStatusModal] = useState(false);
   const [signOutUnsyncedCount, setSignOutUnsyncedCount] = useState<number | null>(null);
+  const menuOpen = isOpen ?? localOpen;
   const themeSwitch = useThemeSwitch();
-  const languageSwitch = useLanguageSwitch();
+  const languageSwitch = useLanguageSwitch(menuOpen);
   const { currentVersion, latestVersion, updateAvailable, releaseUrl } =
     useVersionQuery(APP_VERSION);
-  const menuOpen = isOpen ?? localOpen;
 
   const handleOpenChange = useCallback(
     (open: boolean) => {

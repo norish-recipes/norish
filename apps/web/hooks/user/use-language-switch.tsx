@@ -12,10 +12,10 @@ import { useLocaleConfigQuery } from "@norish/shared-react/config";
  * Hook to get locale state and cycle function for language switching UI
  *
  * Used by authenticated users only - saves preference to database.
- * Fetches enabled locales from the API.
+ * Fetches enabled locales from the API; reads the saved locale only while `open`, as a menu is.
  */
-export function useLanguageSwitch() {
-  const { locale, changeLocale, isChanging } = useLocale();
+export function useLanguageSwitch(open: boolean) {
+  const { locale, changeLocale, isChanging } = useLocale(open);
   const { enabledLocales, isLoading: isLoadingConfig } = useLocaleConfigQuery();
 
   // Get enabled locale codes as Locale[]

@@ -61,7 +61,7 @@ export const LanguageSwitchContent: FC<LanguageSwitchContentProps> = (props) => 
  * Used by authenticated users only - saves preference to database.
  */
 export const LanguageSwitch: FC = () => {
-  const languageSwitch = useLanguageSwitch();
+  const languageSwitch = useLanguageSwitch(true);
 
   return (
     <button
