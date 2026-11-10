@@ -1,14 +1,6 @@
 "use client";
 
-import React, {
-  createContext,
-  ReactElement,
-  ReactNode,
-  use,
-  useCallback,
-  useMemo,
-  useState,
-} from "react";
+import React, { createContext, ReactNode, use, useCallback, useState } from "react";
 import { useIsMobile } from "@/hooks/use-is-mobile";
 import { CloseButton, ComboBox } from "@heroui/react";
 import { UNSAFE_PortalProvider } from "react-aria";
@@ -107,16 +99,29 @@ const BACKDROP_VARIANT_CLASSES: Record<NonNullable<PanelProps["backdropVariant"]
   transparent: "bg-transparent",
 };
 
-function getClassName(element: ReactElement<PanelSectionProps>) {
-  return element.props.className ?? "";
+export function PanelBody({ children, className }: PanelSectionProps) {
+  return (
+    <div
+      className={twMerge(
+        "flex min-h-0 flex-1 flex-col overflow-y-auto overscroll-contain px-5 py-2",
+        className
+      )}
+      data-slot="panel-body"
+    >
+      {children}
+    </div>
+  );
 }
 
-export function PanelBody({ children }: PanelSectionProps) {
-  return <>{children}</>;
-}
-
-export function PanelFooter({ children }: PanelSectionProps) {
-  return <>{children}</>;
+export function PanelFooter({ children, className }: PanelSectionProps) {
+  return (
+    <footer
+      className={twMerge("flex shrink-0 items-center justify-end gap-2 px-5 pt-2 pb-4", className)}
+      data-slot="panel-footer"
+    >
+      {children}
+    </footer>
+  );
 }
 
 type PanelComponent = React.FC<PanelProps> & {
@@ -124,6 +129,10 @@ type PanelComponent = React.FC<PanelProps> & {
   Footer: typeof PanelFooter;
 };
 
+/**
+ * A bottom sheet. Its children mount only while it is open and through its exit animation (the
+ * drawer's content unmounts after it), so a component inside reads and listens only then.
+ */
 const PanelRoot: React.FC<PanelProps> = ({
   className = "",
   contentClassName = "",
@@ -152,55 +161,20 @@ const PanelRoot: React.FC<PanelProps> = ({
 
   const close = useCallback(() => setOpen(false), [setOpen]);
   const toggle = useCallback(() => setOpen(!open), [open, setOpen]);
-  const { bodyChildren, bodyClassName, footerChildren, footerClassName } = useMemo(() => {
-    const body: ReactNode[] = [];
-    const bodyClasses: string[] = [];
-    const footer: ReactNode[] = [];
-    const footerClasses: string[] = [];
-
-    // The slot API: Panel.Body and Panel.Footer are placed by type into fixed
-    // regions of the drawer, so the panel has to read its own children.
-    // eslint-disable-next-line @eslint-react/no-children-for-each
-    React.Children.forEach(children, (child) => {
-      if (React.isValidElement(child) && child.type === PanelFooter) {
-        const element = child as ReactElement<PanelSectionProps>;
-
-        footer.push(element.props.children);
-        footerClasses.push(getClassName(element));
-      } else if (React.isValidElement(child) && child.type === PanelBody) {
-        const element = child as ReactElement<PanelSectionProps>;
-
-        body.push(element.props.children);
-        bodyClasses.push(getClassName(element));
-      } else {
-        body.push(child);
-      }
-    });
-
-    return {
-      bodyChildren: body,
-      bodyClassName: bodyClasses.filter(Boolean).join(" "),
-      footerChildren: footer,
-      footerClassName: footerClasses.filter(Boolean).join(" "),
-    };
-  }, [children]);
-  const hasFooter = footerChildren.length > 0;
   const contentClasses = twMerge(
     "mx-auto w-full max-w-[420px]",
     PANEL_MAX_HEIGHT_CLASS,
     contentClassName
   );
   const dialogClasses = twMerge("min-h-0", PANEL_MAX_HEIGHT_CLASS, panelClassName);
-  const bodyClasses = twMerge("flex min-h-0 flex-1 flex-col", bodyClassName);
-  const footerClasses = twMerge("shrink-0", footerClassName);
 
   const Root = nested ? Drawer.NestedRoot : Drawer.Root;
 
   return (
     // Its drawer portals out, so the wrapper takes no space: an empty box in a flex row adds a gap.
     <div data-panel className={twMerge("contents", className)}>
-      {/* vaul keeps the content mounted after close, so gate on `open` — a
-          closed panel must not capture overlays. */}
+      {/* The content stays mounted through the exit animation, so gate on `open`: a
+          closing panel must not capture overlays. */}
       <PanelContext value={{ open, close, toggle, portalContainer: open ? contentElement : null }}>
         {/* repositionInputs resizes the sheet and force-scrolls the focused field to
             the top of its scroll container on iOS, which throws a scrolled panel body
@@ -256,23 +230,7 @@ const PanelRoot: React.FC<PanelProps> = ({
                   </div>
                 </header>
 
-                <div
-                  className={twMerge("overflow-y-auto overscroll-contain px-5 py-2", bodyClasses)}
-                  data-slot="panel-body"
-                >
-                  {bodyChildren}
-                </div>
-                {hasFooter && (
-                  <footer
-                    className={twMerge(
-                      "flex items-center justify-end gap-2 px-5 pt-2 pb-4",
-                      footerClasses
-                    )}
-                    data-slot="panel-footer"
-                  >
-                    {footerChildren}
-                  </footer>
-                )}
+                {children}
               </div>
             </Drawer.Content>
           </Drawer.Portal>

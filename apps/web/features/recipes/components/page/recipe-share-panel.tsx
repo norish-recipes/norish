@@ -113,145 +113,152 @@ export default function RecipeSharePanel({ open, onOpenChange }: Props) {
   };
   return (
     <Panel open={open} title={t("title")} onOpenChange={onOpenChange}>
-      <div className="flex flex-col gap-4">
-        <p className="text-muted text-sm">
-          {t("description", {
-            recipeName: recipe.name,
-          })}
-        </p>
+      <Panel.Body>
+        <div className="flex flex-col gap-4">
+          <p className="text-muted text-sm">
+            {t("description", {
+              recipeName: recipe.name,
+            })}
+          </p>
 
-        <Card className="bg-surface-secondary/40 border-border border">
-          <Card.Content className="gap-3">
-            <div className="flex flex-col gap-3 sm:flex-row sm:items-end">
-              <ExpirySelect expiresIn={expiresIn} onSelectExpiry={setExpiresIn} />
-              <Button
-                onPress={() =>
-                  createShareMutation.mutate({
-                    recipeId: recipe.id,
-                    expiresIn,
-                  })
-                }
-                variant="primary"
-                isPending={createShareMutation.isPending}
-              >
-                {<LinkIcon className="h-4 w-4" />}
-                {t("createLink")}
-              </Button>
-            </div>
-
-            {latestCreatedUrl && (
-              <div className="border-success/30 bg-success/10 rounded-2xl border p-3">
-                <div className="mb-2 flex items-center justify-between gap-2">
-                  <p className="text-sm font-medium">{t("latestLink")}</p>
-                  <div className="flex gap-2">
-                    <Button size="sm" onPress={handleCopy} variant="tertiary" className="min-w-16">
-                      {<ClipboardDocumentIcon className="h-4 w-4" />}
-                      {t("copyLink")}
-                    </Button>
-                    <a
-                      className={buttonVariants({
-                        size: "sm",
-                        variant: "tertiary",
-                        className: "min-w-16",
-                      })}
-                      href={latestCreatedUrl}
-                      rel="noopener noreferrer"
-                      target="_blank"
-                    >
-                      {<ArrowTopRightOnSquareIcon className="h-4 w-4" />}
-                      {t("openLink")}
-                    </a>
-                  </div>
-                </div>
-                <Input readOnly value={latestCreatedUrl} />
+          <Card className="bg-surface-secondary/40 border-border border">
+            <Card.Content className="gap-3">
+              <div className="flex flex-col gap-3 sm:flex-row sm:items-end">
+                <ExpirySelect expiresIn={expiresIn} onSelectExpiry={setExpiresIn} />
+                <Button
+                  onPress={() =>
+                    createShareMutation.mutate({
+                      recipeId: recipe.id,
+                      expiresIn,
+                    })
+                  }
+                  variant="primary"
+                  isPending={createShareMutation.isPending}
+                >
+                  {<LinkIcon className="h-4 w-4" />}
+                  {t("createLink")}
+                </Button>
               </div>
-            )}
-          </Card.Content>
-        </Card>
 
-        <div className="flex min-h-0 flex-1 flex-col gap-3">
-          <h3 className="text-sm font-semibold tracking-wide uppercase">{t("currentLinks")}</h3>
+              {latestCreatedUrl && (
+                <div className="border-success/30 bg-success/10 rounded-2xl border p-3">
+                  <div className="mb-2 flex items-center justify-between gap-2">
+                    <p className="text-sm font-medium">{t("latestLink")}</p>
+                    <div className="flex gap-2">
+                      <Button
+                        size="sm"
+                        onPress={handleCopy}
+                        variant="tertiary"
+                        className="min-w-16"
+                      >
+                        {<ClipboardDocumentIcon className="h-4 w-4" />}
+                        {t("copyLink")}
+                      </Button>
+                      <a
+                        className={buttonVariants({
+                          size: "sm",
+                          variant: "tertiary",
+                          className: "min-w-16",
+                        })}
+                        href={latestCreatedUrl}
+                        rel="noopener noreferrer"
+                        target="_blank"
+                      >
+                        {<ArrowTopRightOnSquareIcon className="h-4 w-4" />}
+                        {t("openLink")}
+                      </a>
+                    </div>
+                  </div>
+                  <Input readOnly value={latestCreatedUrl} />
+                </div>
+              )}
+            </Card.Content>
+          </Card>
 
-          {isLoadingShares ? (
-            <div className="flex flex-1 items-center justify-center py-6">
-              <Spinner size="sm" />
-            </div>
-          ) : shareRows.length === 0 ? (
-            <div className="text-muted rounded-2xl border border-dashed px-4 py-6 text-sm">
-              {t("empty")}
-            </div>
-          ) : (
-            <div className="flex flex-col gap-3">
-              {shareRows.map((share) => (
-                <Card key={share.id} className="bg-surface border-border border">
-                  <Card.Content className="gap-3">
-                    <div className="flex items-start justify-between gap-3">
-                      <div className="min-w-0 flex-1">
-                        <div className="flex items-center gap-2">
-                          <RecipeShareStatusChip status={share.status} />
-                          <span className="text-muted truncate text-xs">{share.id}</span>
-                        </div>
-                        <div className="text-muted mt-2 space-y-1 text-xs">
-                          <p>
-                            {t("createdAt", {
-                              value: formatDate(share.createdAt) ?? t("never"),
-                            })}
-                          </p>
-                          <p>
-                            {t("expiresAt", {
-                              value: formatDate(share.expiresAt) ?? t("never"),
-                            })}
-                          </p>
-                          {share.lastAccessedAt && (
+          <div className="flex min-h-0 flex-1 flex-col gap-3">
+            <h3 className="text-sm font-semibold tracking-wide uppercase">{t("currentLinks")}</h3>
+
+            {isLoadingShares ? (
+              <div className="flex flex-1 items-center justify-center py-6">
+                <Spinner size="sm" />
+              </div>
+            ) : shareRows.length === 0 ? (
+              <div className="text-muted rounded-2xl border border-dashed px-4 py-6 text-sm">
+                {t("empty")}
+              </div>
+            ) : (
+              <div className="flex flex-col gap-3">
+                {shareRows.map((share) => (
+                  <Card key={share.id} className="bg-surface border-border border">
+                    <Card.Content className="gap-3">
+                      <div className="flex items-start justify-between gap-3">
+                        <div className="min-w-0 flex-1">
+                          <div className="flex items-center gap-2">
+                            <RecipeShareStatusChip status={share.status} />
+                            <span className="text-muted truncate text-xs">{share.id}</span>
+                          </div>
+                          <div className="text-muted mt-2 space-y-1 text-xs">
                             <p>
-                              {t("lastAccessedAt", {
-                                value: formatDate(share.lastAccessedAt) ?? t("never"),
+                              {t("createdAt", {
+                                value: formatDate(share.createdAt) ?? t("never"),
                               })}
                             </p>
+                            <p>
+                              {t("expiresAt", {
+                                value: formatDate(share.expiresAt) ?? t("never"),
+                              })}
+                            </p>
+                            {share.lastAccessedAt && (
+                              <p>
+                                {t("lastAccessedAt", {
+                                  value: formatDate(share.lastAccessedAt) ?? t("never"),
+                                })}
+                              </p>
+                            )}
+                          </div>
+                        </div>
+                        <div className="flex gap-1">
+                          {share.status === "active" && (
+                            <Button
+                              isIconOnly
+                              size="sm"
+                              onPress={() => revokeShare(share.id, share.version)}
+                              variant="tertiary"
+                              isPending={isRevokingShare}
+                            >
+                              <PauseIcon className="h-4 w-4" />
+                            </Button>
                           )}
+                          {share.status === "revoked" && (
+                            <Button
+                              isIconOnly
+                              size="sm"
+                              onPress={() => reactivateShare(share.id, share.version)}
+                              variant="tertiary"
+                              isPending={isReactivatingShare}
+                            >
+                              <PlayIcon className="h-4 w-4" />
+                            </Button>
+                          )}
+                          <Button
+                            isIconOnly
+                            size="sm"
+                            onPress={() => deleteShare(share.id, share.version)}
+                            variant="danger-soft"
+                            isPending={isDeletingShare}
+                          >
+                            <TrashIcon className="h-4 w-4" />
+                          </Button>
                         </div>
                       </div>
-                      <div className="flex gap-1">
-                        {share.status === "active" && (
-                          <Button
-                            isIconOnly
-                            size="sm"
-                            onPress={() => revokeShare(share.id, share.version)}
-                            variant="tertiary"
-                            isPending={isRevokingShare}
-                          >
-                            <PauseIcon className="h-4 w-4" />
-                          </Button>
-                        )}
-                        {share.status === "revoked" && (
-                          <Button
-                            isIconOnly
-                            size="sm"
-                            onPress={() => reactivateShare(share.id, share.version)}
-                            variant="tertiary"
-                            isPending={isReactivatingShare}
-                          >
-                            <PlayIcon className="h-4 w-4" />
-                          </Button>
-                        )}
-                        <Button
-                          isIconOnly
-                          size="sm"
-                          onPress={() => deleteShare(share.id, share.version)}
-                          variant="danger-soft"
-                          isPending={isDeletingShare}
-                        >
-                          <TrashIcon className="h-4 w-4" />
-                        </Button>
-                      </div>
-                    </div>
-                  </Card.Content>
-                </Card>
-              ))}
-            </div>
-          )}
+                    </Card.Content>
+                  </Card>
+                ))}
+              </div>
+            )}
+          </div>
         </div>
-      </div>
+      </Panel.Body>
     </Panel>
   );
 }
