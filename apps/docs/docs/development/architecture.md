@@ -84,8 +84,8 @@ Imports run one way: shared folders, then features, then routes. The one way
 back is shared code opening a panel through a feature's `index.ts`.
 
 On web `groceries` and `recipes` have moved so far. `library`, `calendar`,
-`settings`, `imports` and `auth` still live in web's `components/`, `hooks/`
-and `context/`. In shared-react the recipe domain is in
+`settings`, `imports` and `auth` still live in web's `components/` and
+`hooks/`. In shared-react the recipe domain is in
 `src/recipes/` and the Reader in `src/reader/`, next to `groceries`. What
 calendar, settings, imports and the Library still use stays in shared-react's
 `hooks/` and `contexts/`.
@@ -188,9 +188,15 @@ gives the reasons for decisions without an ADR.
 - A write's rollback and settle go in `useMutation`'s own options. A `mutate`
   call's callbacks run only for the last call, so an overlapped failure would
   keep its change.
+- Whatever draws data mounts the subscriptions that keep it current: a
+  feature's root for its screens, a panel for itself while it is open, and the
+  shell for what it draws itself plus the Reader. Nothing then stays subscribed
+  for a page that doesn't draw it.
 - A realtime subscription names the reads it keeps current with
   `useKeepsCurrent`, so web doesn't read them again on mount until they go
   stale.
+- Each layout seeds only what its screens draw, the `(app)` layout included,
+  so a full load carries no read its page doesn't draw.
 - Web, mobile, shared-react and `packages/ui` compile with the React Compiler,
   and lint reports every component or hook it skips.
 
