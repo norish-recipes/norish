@@ -7,7 +7,6 @@ import { SignOutConfirmModal } from "@/components/navbar/sign-out-confirm-modal"
 import ImportRecipeModal from "@/components/shared/import-recipe-modal";
 import { LanguageSwitchContent } from "@/components/shared/language-switch";
 import UserAvatar from "@/components/shared/user-avatar";
-import { useUserContext } from "@/context/user-context";
 import { useLanguageSwitch } from "@/hooks/user/use-language-switch";
 import { offlineEngine } from "@/lib/offline/engine";
 import {
@@ -22,6 +21,7 @@ import { useTranslations } from "next-intl";
 
 import { useVersionQuery } from "@norish/shared-react/config";
 import { useConnectivity } from "@norish/shared-react/offline/react";
+import { useReader } from "@norish/shared-react/reader";
 import { cssButtonPill, cssButtonPillDanger } from "@norish/web/config/css-tokens";
 import { APP_VERSION } from "@norish/web/config/site";
 
@@ -43,7 +43,7 @@ export default function NavbarUserMenu({
 }: NavbarUserMenuProps) {
   const t = useTranslations("navbar.userMenu");
   const tc = useTranslations("common.connection");
-  const { user, signOut } = useUserContext();
+  const { user, signOut } = useReader();
   const { isOffline } = useConnectivity();
   const router = useRouter();
   const [localOpen, setLocalOpen] = useState(false);

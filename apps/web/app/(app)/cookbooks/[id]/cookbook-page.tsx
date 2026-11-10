@@ -13,7 +13,6 @@ import SearchInput from "@/components/dashboard/search-input";
 import { BackLink } from "@/components/page-transition";
 import { NotFoundView } from "@/components/shared/not-found-view";
 import RecipeGridSkeleton from "@/components/skeleton/recipe-grid-skeleton";
-import { usePermissionsContext } from "@/context/permissions-context";
 import { useCookbookQuery, useCookbooksMutations } from "@/hooks/cookbooks";
 import { useBackDestination } from "@/hooks/use-back-destination";
 import {
@@ -27,6 +26,7 @@ import { Button, Dropdown, Label, Skeleton, Tabs } from "@heroui/react";
 import { useTranslations } from "next-intl";
 import { twMerge } from "tailwind-merge";
 
+import { useRecipePermissions } from "@norish/shared-react/reader";
 import {
   cssButtonPill,
   cssButtonPillDanger,
@@ -132,7 +132,7 @@ export default function CookbookPage({ cookbookId }: { cookbookId: string }) {
   const t = useTranslations("recipes.cookbooks");
   const { cookbook, isNotFound } = useCookbookQuery(cookbookId);
   const { deleteCookbook } = useCookbooksMutations();
-  const { canEditRecipe, canDeleteRecipe } = usePermissionsContext();
+  const { canEditRecipe, canDeleteRecipe } = useRecipePermissions();
   const [menuOpen, setMenuOpen] = useState(false);
   const [editOpen, setEditOpen] = useState(false);
   const [addOpen, setAddOpen] = useState(false);

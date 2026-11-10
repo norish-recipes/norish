@@ -22,17 +22,12 @@ vi.mock("next-themes", () => ({
   }),
 }));
 
-vi.mock("@/context/user-context", () => ({
-  useUserContext: () => ({
+vi.mock("@norish/shared-react/reader", async () =>
+  (await import("../helpers/device-preferences-mock")).mockReader(() => ({
     signOut: mockSignOut,
-    user: {
-      email: "alice@example.com",
-      id: "user-1",
-      image: null,
-      name: "Alice",
-    },
-  }),
-}));
+    user: { email: "alice@example.com", id: "user-1", image: null, name: "Alice" },
+  }))
+);
 
 vi.mock("@norish/shared-react/config", () => ({
   useVersionQuery: () => ({

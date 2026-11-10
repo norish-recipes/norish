@@ -222,17 +222,15 @@ vi.mock("@/lib/ui/action-toast", () => ({ showActionToast: vi.fn() }));
 const permissions = vi.hoisted(() => ({ isAIEnabled: true, canDrawImages: false }));
 
 vi.mock("@norish/shared-react/reader", async () =>
-  (await import("../../helpers/device-preferences-mock")).mockDevicePreferences(() => ({
-    hiddenItems: [],
-  }))
+  (await import("../../helpers/device-preferences-mock")).mockDevicePreferences(
+    () => ({
+      hiddenItems: [],
+    }),
+    {
+      reader: () => ({ permissions }),
+    }
+  )
 );
-
-vi.mock("@/context/permissions-context", () => ({
-  usePermissionsContext: () => ({
-    isAIEnabled: permissions.isAIEnabled,
-    canDrawImages: permissions.canDrawImages,
-  }),
-}));
 
 vi.mock("@heroui/react", async (importOriginal) => ({
   ...(await importOriginal<typeof import("@heroui/react")>()),

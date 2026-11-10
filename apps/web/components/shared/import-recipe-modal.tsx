@@ -1,13 +1,14 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { usePermissionsContext } from "@/context/permissions-context";
 import { useRecipesContext } from "@/context/recipes-context";
 import { readClipboardUrl } from "@/lib/clipboard-url";
 import { showSafeErrorToast } from "@/lib/ui/safe-error-toast";
 import { ArrowDownTrayIcon, SparklesIcon } from "@heroicons/react/16/solid";
 import { Button, Input, Label, Modal, TextField } from "@heroui/react";
 import { useTranslations } from "next-intl";
+
+import { usePermissions } from "@norish/shared-react/reader";
 
 interface ImportRecipeModalProps {
   isOpen: boolean;
@@ -18,7 +19,7 @@ export default function ImportRecipeModal({ isOpen, onOpenChange }: ImportRecipe
   const tErrors = useTranslations("common.errors");
   const tActions = useTranslations("common.actions");
   const { importRecipe, importRecipeWithAI } = useRecipesContext();
-  const { isAIEnabled } = usePermissionsContext();
+  const isAIEnabled = usePermissions((p) => p.isAIEnabled);
   const [importUrl, setImportUrl] = useState("");
 
   function handleOpenChange(open: boolean) {

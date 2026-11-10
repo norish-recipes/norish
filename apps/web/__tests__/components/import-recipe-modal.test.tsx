@@ -15,11 +15,9 @@ vi.mock("@/context/recipes-context", () => ({
   }),
 }));
 
-vi.mock("@/context/permissions-context", () => ({
-  usePermissionsContext: () => ({
-    isAIEnabled: false,
-  }),
-}));
+vi.mock("@norish/shared-react/reader", async () =>
+  (await import("../helpers/device-preferences-mock")).mockReader()
+);
 
 vi.mock("@heroui/react", () => ({
   Modal: Object.assign(({ children }: any) => <>{children}</>, {

@@ -5,7 +5,6 @@ import { SettingsCard } from "@/app/(app)/settings/components/settings-card";
 import { IconActionButton } from "@/components/shared/action-button";
 import UserAvatar from "@/components/shared/user-avatar";
 import DataTable from "@/components/ui/data-table";
-import { useUserContext } from "@/context/user-context";
 import { useUserMutations, useUsersListQuery } from "@/hooks/admin";
 import { showSafeErrorToast } from "@/lib/ui/safe-error-toast";
 import {
@@ -17,6 +16,7 @@ import { toast } from "@heroui/react";
 import { useTranslations } from "next-intl";
 
 import type { AdminUserRowDTO } from "@norish/shared/contracts";
+import { useReader } from "@norish/shared-react/reader";
 
 import { DeleteUserModal } from "./users/delete-user-modal";
 import { ShieldMinusIcon } from "./users/shield-minus-icon";
@@ -25,7 +25,7 @@ import { UserRoleChips } from "./users/user-role-chips";
 export default function UsersCard() {
   const t = useTranslations("settings.admin.users");
   const tErrors = useTranslations("common.errors");
-  const { user: currentUser } = useUserContext();
+  const { user: currentUser } = useReader();
   const { users, isLoading, error } = useUsersListQuery();
   const { setAdminStatus, deleteUser, isUpdatingAdminStatus, isDeleting } = useUserMutations();
 

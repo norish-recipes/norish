@@ -16,8 +16,6 @@ vi.mock("@norish/shared-react/trpc", () => ({
   useConnectionStatus: () => ({ status: wsStatus, isConnected: wsStatus === "connected" }),
 }));
 
-vi.mock("@/context/user-context", () => ({ useUserContext: () => ({ user: null }) }));
-
 function StateProbe() {
   const { state } = useConnectivity();
 

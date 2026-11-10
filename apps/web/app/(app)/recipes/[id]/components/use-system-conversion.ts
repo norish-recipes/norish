@@ -1,12 +1,12 @@
 "use client";
 
 import { useEffect, useMemo, useRef } from "react";
-import { usePermissionsContext } from "@/context/permissions-context";
 import { useHiddenItemVisibility } from "@/hooks/user/use-hidden-item-visibility";
 import { useUserSettingsQuery } from "@/hooks/user/use-user-query";
 import { useTranslations } from "next-intl";
 
 import type { MeasurementSystem } from "@norish/shared/contracts";
+import { usePermissions, useRecipePermissions } from "@norish/shared-react/reader";
 import {
   getMeasurementSystemPreference,
   measurementSystemTarget,
@@ -45,7 +45,7 @@ export type SystemConversion = {
 export function useSystemConversion(): SystemConversion {
   const { recipe, convertingTo, startConversion } = useRecipeContextRequired();
   const { showConversion } = useHiddenItemVisibility();
-  const { isAIEnabled } = usePermissionsContext();
+  const isAIEnabled = usePermissions((p) => p.isAIEnabled);
   const t = useTranslations("recipes.convert");
 
   const original = recipe.originalSystem ?? recipe.systemUsed;
@@ -99,7 +99,8 @@ export function useSystemConversion(): SystemConversion {
 export function useAutoConversion() {
   const { recipe, isFetching, convertingTo, startConversion } = useRecipeContext();
   const { user } = useUserSettingsQuery();
-  const { canEditRecipe, isAIEnabled, isLoading } = usePermissionsContext();
+  const { canEditRecipe, isLoading } = useRecipePermissions();
+  const isAIEnabled = usePermissions((p) => p.isAIEnabled);
   const choice = getMeasurementSystemPreference(user);
   const doneForRef = useRef<string | null>(null);
 

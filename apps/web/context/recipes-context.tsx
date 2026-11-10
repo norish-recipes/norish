@@ -6,7 +6,6 @@ import { useFavoritesMutation, useFavoritesQuery } from "@/hooks/favorites";
 import { useLibraryRecipesQuery } from "@/hooks/library";
 import { useRecipesMutations } from "@/hooks/recipes";
 import { sharedDashboardRecipeHooks } from "@/hooks/recipes/shared-recipe-hooks";
-import { useActiveAllergies, useUserAllergiesQuery } from "@/hooks/user";
 
 import type {
   FullRecipeInsertDTO,
@@ -15,6 +14,7 @@ import type {
 } from "@norish/shared/contracts";
 import { createRecipesContext } from "@norish/shared-react/contexts";
 import { usePlatform } from "@norish/shared-react/platform";
+import { useActiveAllergies } from "@norish/shared-react/reader";
 
 type Ctx = {
   recipes: RecipeDashboardDTO[];
@@ -49,7 +49,7 @@ const sharedRecipesContext = createRecipesContext({
   useRecipesMutations,
   useFavoritesQuery,
   useFavoritesMutation,
-  useUserAllergiesQuery,
+  useUserAllergiesQuery: useActiveAllergies,
   useRecipesSubscription: sharedDashboardRecipeHooks.useRecipesSubscription,
   useRatingsSubscription: sharedDashboardRecipeHooks.useRatingsSubscription,
   useToastAdapter: () => usePlatform().toast,

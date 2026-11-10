@@ -2,13 +2,13 @@
 
 import { useCallback, useState } from "react";
 import { useRouter } from "next/navigation";
-import { usePermissionsContext } from "@/context/permissions-context";
 import { useRecipesMutations } from "@/hooks/recipes";
 import { showSafeErrorToast } from "@/lib/ui/safe-error-toast";
 import { ArrowDownTrayIcon, SparklesIcon } from "@heroicons/react/16/solid";
 import { Button, Label, Modal, TextArea, TextField, toast } from "@heroui/react";
 import { useTranslations } from "next-intl";
 
+import { usePermissions } from "@norish/shared-react/reader";
 import { MAX_RECIPE_PASTE_CHARS } from "@norish/shared/contracts/uploads";
 
 interface ImportFromPasteModalProps {
@@ -20,7 +20,7 @@ export default function ImportFromPasteModal({ isOpen, onOpenChange }: ImportFro
   const tErrors = useTranslations("common.errors");
   const tActions = useTranslations("common.actions");
   const router = useRouter();
-  const { isAIEnabled } = usePermissionsContext();
+  const isAIEnabled = usePermissions((p) => p.isAIEnabled);
   const { importRecipeFromPaste, importRecipeFromPasteWithAI } = useRecipesMutations();
   const [text, setText] = useState("");
   const [isSubmitting, setIsSubmitting] = useState(false);

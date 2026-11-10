@@ -9,7 +9,6 @@ import { useBackendBaseUrl } from "@/hooks/use-backend-base-url";
 import { useResolvedColorScheme } from "@/hooks/use-resolved-color-scheme";
 import { useUserLocaleSync } from "@/hooks/use-user-locale-sync";
 import { AuthProvider, useAuth } from "@/lib/auth/auth-context";
-import { UserProvider } from "@/lib/auth/user-context";
 import { resolveBootPhase } from "@/lib/boot/boot-state";
 import { MobileIntlFallbackProvider, MobileIntlProvider } from "@/lib/i18n/mobile-i18n-context";
 import { ConnectivityProvider, OfflineController, offlineEngine } from "@/lib/offline/engine";
@@ -31,6 +30,8 @@ import { DarkTheme, DefaultTheme, ThemeProvider } from "expo-router/react-naviga
 import * as SplashScreen from "expo-splash-screen";
 import { HeroUINativeProvider, useThemeColor } from "heroui-native";
 import { PortalHost } from "heroui-native/portal";
+
+import { useHouseholdSubscription, usePermissionsSubscription } from "@norish/shared-react/reader";
 
 // The boot gate below renders nothing until hydration settles. Holding the
 // native splash over that window is what keeps it from showing as a blank
@@ -170,10 +171,7 @@ function RootLayoutContent() {
 
 const getOfflineQueryClient = () => offlineEngine.queryClient;
 
-/**
- * When authenticated, wraps children with the user provider. When
- * unauthenticated, renders children directly.
- */
+/** When authenticated, wraps children with the offline controller; otherwise renders them. */
 function DomainProviders({ children }: { children: React.ReactNode }) {
   const { isAuthenticated } = useAuth();
 
@@ -188,18 +186,18 @@ function AuthenticatedProviders({ children }: { children: React.ReactNode }) {
   const { user } = useAuth();
 
   return (
-    <UserProvider>
-      <OfflineController sessionUserId={user?.id ?? null}>
-        <AuthenticatedEffects />
-        {children}
-      </OfflineController>
-    </UserProvider>
+    <OfflineController sessionUserId={user?.id ?? null}>
+      <AuthenticatedEffects />
+      {children}
+    </OfflineController>
   );
 }
 
-/** Hooks that require UserProvider + MobileIntlProvider. */
+/** The signed-in shell's effects: the Reader's locale and subscriptions. */
 function AuthenticatedEffects() {
   useUserLocaleSync();
+  useHouseholdSubscription();
+  usePermissionsSubscription();
 
   return null;
 }

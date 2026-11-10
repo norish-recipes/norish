@@ -2,10 +2,11 @@
 
 import { useEffect } from "react";
 import { useRouter } from "next/navigation";
-import { usePermissionsContext } from "@/context/permissions-context";
 import { useAIKeyRejections } from "@/hooks/admin/use-ai-key-rejections";
 import { showActionToast } from "@/lib/ui/action-toast";
 import { useTranslations } from "next-intl";
+
+import { usePermissions } from "@norish/shared-react/reader";
 
 /** The rejections this tab last told the admin about, so a closed toast is not repeated. */
 const SHOWN_STORAGE_KEY = "norish.ai-key-rejection.shown";
@@ -31,7 +32,7 @@ function rememberShown(id: string): void {
  * revoked key shows. It stays up until closed, once per tab for each refusal.
  */
 export default function AIKeyRejectionPrompt() {
-  const { isServerAdmin } = usePermissionsContext();
+  const isServerAdmin = usePermissions((p) => p.isServerAdmin);
   const rejections = useAIKeyRejections(isServerAdmin);
   const router = useRouter();
   const t = useTranslations("common.aiKeyRejected");

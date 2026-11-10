@@ -5,10 +5,8 @@ import { useRouter } from "next/navigation";
 import { CookbookIconSolid } from "@/components/cookbooks/cookbook-icon";
 import { MiniCalendar, MiniCookbooks } from "@/components/Panel/consumers";
 import { DeleteRecipeModal } from "@/components/shared/delete-recipe-modal";
-import { usePermissionsContext } from "@/context/permissions-context";
 import { useRecipesContext } from "@/context/recipes-context";
 import { MiniGroceries } from "@/features/groceries";
-import { useActiveAllergies } from "@/hooks/user";
 import {
   CalendarDaysIcon,
   DevicePhoneMobileIcon,
@@ -25,6 +23,11 @@ import { useTranslations } from "next-intl";
 import { twMerge } from "tailwind-merge";
 
 import type { RecipeEnrichmentKind } from "@norish/shared/lib/recipe-enrichment";
+import {
+  useActiveAllergies,
+  usePermissions,
+  useRecipePermissions,
+} from "@norish/shared-react/reader";
 import {
   cssAIGradientText,
   cssAIIconColor,
@@ -69,7 +72,8 @@ export default function ActionsMenu({ id, buttonClassName, onPrint }: Props) {
   } = useOverlayState();
   const router = useRouter();
 
-  const { canEditRecipe, canDeleteRecipe, isAIEnabled } = usePermissionsContext();
+  const { canEditRecipe, canDeleteRecipe } = useRecipePermissions();
+  const isAIEnabled = usePermissions((p) => p.isAIEnabled);
   const { deleteRecipes } = useRecipesContext();
   const { recipe, enrichment } = useRecipeContextRequired();
 

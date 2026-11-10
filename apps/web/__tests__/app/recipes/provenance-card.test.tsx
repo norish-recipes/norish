@@ -21,14 +21,15 @@ const mocks = vi.hoisted(() => ({
   },
 }));
 
-vi.mock("@/context/user-context", () => ({
-  useUserContext: () => ({ user: { id: "owner-1" } }),
-}));
-
 vi.mock("@norish/shared-react/reader", async () =>
-  (await import("../../helpers/device-preferences-mock")).mockDevicePreferences(() => ({
-    hiddenItems: mocks.hidden,
-  }))
+  (await import("../../helpers/device-preferences-mock")).mockDevicePreferences(
+    () => ({
+      hiddenItems: mocks.hidden,
+    }),
+    {
+      reader: () => ({ user: { id: "owner-1" } }),
+    }
+  )
 );
 
 vi.mock("@/app/(app)/recipes/[id]/context", () => ({

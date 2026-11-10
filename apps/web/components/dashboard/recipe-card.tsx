@@ -9,7 +9,6 @@ import OriginFlag from "@/components/recipes/origin-flag";
 import { isCheckboxEvent, RoundCheckbox } from "@/components/round-checkbox";
 import HeartButton from "@/components/shared/heart-button";
 import SmartMarkdownRenderer from "@/components/shared/smart-markdown-renderer";
-import { usePermissionsContext } from "@/context/permissions-context";
 import { useRecipeSelection } from "@/context/recipe-selection-context";
 import { MiniGroceries } from "@/features/groceries";
 import { useRecipePrefetch } from "@/hooks/recipes/use-recipe-prefetch";
@@ -33,6 +32,7 @@ import { Button, Card, Chip, Tooltip, useOverlayState } from "@heroui/react";
 import { useFormatter, useTranslations } from "next-intl";
 import { useLongPress } from "react-aria";
 
+import { useRecipePermissions } from "@norish/shared-react/reader";
 import { RecipeDashboardDTO } from "@norish/shared/contracts";
 import { RECIPE_DASHBOARD_KEYS } from "@norish/shared/contracts/zod";
 import { addBasePath } from "@norish/shared/lib/base-path";
@@ -143,7 +143,7 @@ function RecipeCardComponent({
   const pathname = usePathname();
   const rowRef = useRef<SwipeableRowRef>(null);
   const mobileSearchOpen = useAppStore((s) => s.mobileSearchOpen);
-  const { canDeleteRecipe } = usePermissionsContext();
+  const { canDeleteRecipe } = useRecipePermissions();
   const [open, setOpen] = useState(false);
   const [calendarOpen, setCalendarOpen] = useState(false);
   const [groceriesOpen, setGroceriesOpen] = useState(false);

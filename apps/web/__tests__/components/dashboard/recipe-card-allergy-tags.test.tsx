@@ -15,9 +15,9 @@ vi.mock("next-intl", () => ({
   useFormatter: () => ({ number: String }),
 }));
 
-vi.mock("@/context/permissions-context", () => ({
-  usePermissionsContext: () => ({ canDeleteRecipe: () => true }),
-}));
+vi.mock("@norish/shared-react/reader", async () =>
+  (await import("../../helpers/device-preferences-mock")).mockReader()
+);
 
 vi.mock("@/hooks/recipes/use-recipe-prefetch", () => ({
   useRecipePrefetch: () => ({ current: null }),

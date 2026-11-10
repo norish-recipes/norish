@@ -53,6 +53,7 @@ vi.mock("@norish/shared-react/reader", async () =>
     }),
     {
       kind: () => deviceKindMock.kind,
+      reader: () => ({ permissions: permissionsMock }),
       set: (key, next) => {
         const setters: Record<string, (next: unknown) => void> = {
           todaySectionVisibility: todaysMealsMock.setVisibility,
@@ -67,10 +68,6 @@ vi.mock("@norish/shared-react/reader", async () =>
 );
 
 const permissionsMock = vi.hoisted(() => ({ isAIEnabled: false }));
-
-vi.mock("@/context/permissions-context", () => ({
-  usePermissionsContext: () => permissionsMock,
-}));
 
 let timersMock = { timersEnabled: true, globalEnabled: true } as any;
 

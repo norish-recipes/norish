@@ -10,10 +10,10 @@ import {
   useRecipeSubscription,
 } from "@/hooks/recipes";
 import { sharedRecipeShareHooks } from "@/hooks/recipes/shared-recipe-hooks";
-import { useActiveAllergies } from "@/hooks/user";
 import { TRPCClientError } from "@trpc/client";
 
 import { createRecipeDetailContext } from "@norish/shared-react/hooks";
+import { useActiveAllergies } from "@norish/shared-react/reader";
 
 const {
   RecipeDetailProvider: RecipeContextProvider,

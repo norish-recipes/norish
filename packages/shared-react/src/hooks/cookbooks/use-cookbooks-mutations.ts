@@ -13,6 +13,7 @@ import {
   invalidateUnlessPreserved,
   shouldPreserveOptimisticUpdate,
 } from "../../offline/optimistic-updates";
+import { useReader } from "../../reader";
 
 type Dependencies = CreateCookbookHooksOptions & {
   useCookbooksCacheHelpers: () => CookbooksCacheHelpers;
@@ -21,13 +22,8 @@ type Dependencies = CreateCookbookHooksOptions & {
 export function createUseCookbooksMutations({
   useTRPC,
   shouldPreserveOptimisticUpdate: preserve,
-  useCurrentUserId,
   useCookbooksCacheHelpers,
 }: Dependencies) {
-  // Settled once here rather than called with `?.()`: the compiler only
-  // compiles a hook whose hooks it sees called unconditionally.
-  const useCurrentUserIdOrNone = useCurrentUserId ?? (() => undefined);
-
   return function useCookbooksMutations(): CookbooksMutationsResult {
     "use memo";
 
@@ -40,7 +36,8 @@ export function createUseCookbooksMutations({
       patchRecipeMembership,
       seedCookbook,
     } = useCookbooksCacheHelpers();
-    const currentUserId = useCurrentUserIdOrNone();
+    // So a cookbook created Offline is the Reader's own rather than Orphaned (ADR-0027).
+    const currentUserId = useReader().user?.id;
 
     const createMutation = useMutation(trpc.cookbooks.create.mutationOptions());
     const { mutate: mutateCreate } = createMutation;

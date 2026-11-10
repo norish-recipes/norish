@@ -68,16 +68,15 @@ vi.mock("@/context/recipes-filters-context", () => ({
   }),
 }));
 
-vi.mock("@/context/user-context", () => ({
-  useUserContext: () => ({
-    user: { preferences: userPreferencesState },
-  }),
-}));
-
 vi.mock("@norish/shared-react/reader", async () =>
-  (await import("../helpers/device-preferences-mock")).mockDevicePreferences(() => ({
-    hiddenItems: userPreferencesState.hidden,
-  }))
+  (await import("../helpers/device-preferences-mock")).mockDevicePreferences(
+    () => ({
+      hiddenItems: userPreferencesState.hidden,
+    }),
+    {
+      reader: () => ({}),
+    }
+  )
 );
 
 vi.mock("@norish/shared-react/config", () => ({

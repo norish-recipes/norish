@@ -21,9 +21,9 @@ vi.mock("next-intl", () => ({
   useTranslations: () => (key: string, values?: Record<string, unknown>) =>
     values ? `${key}:${JSON.stringify(values)}` : key,
 }));
-vi.mock("@/context/permissions-context", () => ({
-  usePermissionsContext: () => ({ canEditRecipe: () => true, canDeleteRecipe: () => true }),
-}));
+vi.mock("@norish/shared-react/reader", async () =>
+  (await import("../../helpers/device-preferences-mock")).mockReader()
+);
 vi.mock("@/components/cookbooks/cookbook-cover", () => ({ default: () => null }));
 vi.mock("@/components/cookbooks/cookbook-panels", () => ({
   CookbookEditPanel: () => null,

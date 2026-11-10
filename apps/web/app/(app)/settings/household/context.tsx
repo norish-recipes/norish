@@ -1,14 +1,12 @@
 "use client";
 
-import { useHouseholdContext } from "@/context/household-context";
-import { useHouseholdMutations } from "@/hooks/households";
-
 import { createHouseholdSettingsContext } from "@norish/shared-react/contexts";
+import { useHousehold, useHouseholdMutations } from "@norish/shared-react/reader";
 
 export type { HouseholdSettingsContextValue } from "@norish/shared-react/contexts";
 
 const { HouseholdSettingsProvider, useHouseholdSettingsContext } = createHouseholdSettingsContext({
-  useHouseholdContext,
+  useHouseholdContext: useHousehold,
   useHouseholdMutations,
 });
 

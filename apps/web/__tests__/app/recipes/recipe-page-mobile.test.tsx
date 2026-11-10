@@ -167,9 +167,6 @@ vi.mock("@/components/recipes/readonly-recipe-sections", () => ({
   ),
   ReadonlyRecipeNotes: () => <div data-testid="recipe-notes" />,
 }));
-vi.mock("@/context/permissions-context", () => ({
-  usePermissionsContext: () => ({ isAIEnabled: false }),
-}));
 vi.mock("@/components/shared/double-tap-container", () => ({
   default: ({ children }: { children: React.ReactNode }) => <div>{children}</div>,
 }));
@@ -180,14 +177,15 @@ vi.mock("@norish/ui/star-rating", () => ({
   default: () => <div data-testid="star-rating" />,
 }));
 
-vi.mock("@/context/user-context", () => ({
-  useUserContext: () => ({ user: { id: "owner-1" } }),
-}));
-
 vi.mock("@norish/shared-react/reader", async () =>
-  (await import("../../helpers/device-preferences-mock")).mockDevicePreferences(() => ({
-    hiddenItems: mocks.hidden,
-  }))
+  (await import("../../helpers/device-preferences-mock")).mockDevicePreferences(
+    () => ({
+      hiddenItems: mocks.hidden,
+    }),
+    {
+      reader: () => ({ user: { id: "owner-1" } }),
+    }
+  )
 );
 // The way back reads the reader's lens and the page they came from, neither
 // of which these tests set up — the cards under test are what they are about.

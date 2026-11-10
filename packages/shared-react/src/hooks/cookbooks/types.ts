@@ -83,11 +83,4 @@ export type EditableCookbooksQueryResult = {
   isLoading: boolean;
 };
 
-export type CreateCookbookHooksOptions = CreateRecipeHooksOptions & {
-  /**
-   * The signed-in reader's id, so a cookbook created while Offline is shown
-   * as theirs rather than as Orphaned (ADR-0027). Absent where no user
-   * context is available.
-   */
-  useCurrentUserId?: () => string | undefined;
-};
+export type CreateCookbookHooksOptions = CreateRecipeHooksOptions;

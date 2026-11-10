@@ -17,14 +17,15 @@ const mocks = vi.hoisted(() => ({
   toggleAmountMode: vi.fn(),
 }));
 
-vi.mock("@/context/permissions-context", () => ({
-  usePermissionsContext: () => ({ isAIEnabled: mocks.isAIEnabled }),
-}));
-
 vi.mock("@norish/shared-react/reader", async () =>
-  (await import("../../helpers/device-preferences-mock")).mockDevicePreferences(() => ({
-    hiddenItems: mocks.hidden,
-  }))
+  (await import("../../helpers/device-preferences-mock")).mockDevicePreferences(
+    () => ({
+      hiddenItems: mocks.hidden,
+    }),
+    {
+      reader: () => ({ permissions: { isAIEnabled: mocks.isAIEnabled } }),
+    }
+  )
 );
 
 vi.mock("@/hooks/use-amount-display-preference", () => ({

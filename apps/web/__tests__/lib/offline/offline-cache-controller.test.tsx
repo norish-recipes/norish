@@ -100,7 +100,9 @@ let user: { id: string } | null = null;
 let connectivity = { isLive: true, isOffline: false };
 let wsStatus: "idle" | "connected" | "disconnected" = "idle";
 
-vi.mock("@/context/user-context", () => ({ useUserContext: () => ({ user }) }));
+vi.mock("@norish/shared-react/reader", async () =>
+  (await import("../../helpers/device-preferences-mock")).mockReader(() => ({ user }))
+);
 vi.mock("@norish/shared-react/offline/react", async (importOriginal) => ({
   ...(await importOriginal<typeof import("@norish/shared-react/offline/react")>()),
   useConnectivity: () => ({

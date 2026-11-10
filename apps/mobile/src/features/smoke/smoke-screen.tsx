@@ -2,7 +2,6 @@ import React from "react";
 import { Alert, ScrollView, Text, View } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { useRecipesQuery } from "@/hooks/recipes";
-import { useUserContext } from "@/lib/auth/user-context";
 import { offlineEngine } from "@/lib/offline/engine";
 import { Button, Checkbox } from "heroui-native";
 import { useIntl } from "react-intl";
@@ -13,13 +12,14 @@ import {
   useGroceriesSubscription,
 } from "@norish/shared-react/groceries";
 import { useOfflineStatus } from "@norish/shared-react/offline/react";
+import { useReader } from "@norish/shared-react/reader";
 import { useTRPC } from "@norish/shared-react/trpc";
 
 // Throwaway screen that proves sign-in, tRPC, realtime and offline end to end
 // until the redesigned screens replace it.
 export function SmokeScreen() {
   const intl = useIntl();
-  const { user, signOut } = useUserContext();
+  const { user, signOut } = useReader();
   const { total, isLoading: recipesLoading } = useRecipesQuery({ limit: 1 });
   const { groceries } = useGroceriesQuery();
   const { toggleGroceries, toggleRecurringGrocery } = useGroceriesMutations();

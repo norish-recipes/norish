@@ -13,7 +13,6 @@ import {
 } from "@/components/cookbooks/cookbook-metadata";
 import { CookbookEditPanel, DeleteCookbookModal } from "@/components/cookbooks/cookbook-panels";
 import { CardFacts } from "@/components/dashboard/card-facts";
-import { usePermissionsContext } from "@/context/permissions-context";
 import { useMountedOnceOpened } from "@/hooks/use-mounted-once-opened";
 import { withOrigin } from "@/lib/back-destination";
 import {
@@ -26,6 +25,7 @@ import { Button, Card, Tooltip } from "@heroui/react";
 import { useTranslations } from "next-intl";
 
 import type { CookbookSummaryDTO } from "@norish/shared/contracts";
+import { useRecipePermissions } from "@norish/shared-react/reader";
 import { formatMinutesHM, isAllergenTag } from "@norish/shared/lib/helpers";
 
 import SwipeableRow, { SwipeableRowRef, SwipeAction } from "../shared/swipable-row";
@@ -64,7 +64,7 @@ function CookbookCardComponent({
   const pathname = usePathname();
   const rowRef = useRef<SwipeableRowRef>(null);
   const t = useTranslations("recipes.cookbooks");
-  const { canEditRecipe, canDeleteRecipe } = usePermissionsContext();
+  const { canEditRecipe, canDeleteRecipe } = useRecipePermissions();
   const [rowOpen, setRowOpen] = useState(false);
   const [editOpen, setEditOpen] = useState(false);
   // The edit panel reads this cookbook's members, and cards are virtualized:

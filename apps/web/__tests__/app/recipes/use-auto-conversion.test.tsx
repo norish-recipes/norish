@@ -34,13 +34,12 @@ vi.mock("@/hooks/user/use-user-query", () => ({
   }),
 }));
 
-vi.mock("@/context/permissions-context", () => ({
-  usePermissionsContext: () => ({
-    isAIEnabled: mocks.isAIEnabled,
-    isLoading: false,
+vi.mock("@norish/shared-react/reader", async () =>
+  (await import("../../helpers/device-preferences-mock")).mockReader(() => ({
+    permissions: { isAIEnabled: mocks.isAIEnabled },
     canEditRecipe: () => mocks.canEdit,
-  }),
-}));
+  }))
+);
 
 vi.mock("@/hooks/user/use-hidden-item-visibility", () => ({
   useHiddenItemVisibility: () => ({ showConversion: true }),

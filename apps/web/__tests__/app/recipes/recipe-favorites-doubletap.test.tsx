@@ -19,16 +19,15 @@ vi.mock("next/link", () => ({
   default: ({ children, href }: any) => <a href={href}>{children}</a>,
 }));
 
-vi.mock("@/context/user-context", () => ({
-  useUserContext: () => ({
-    user: { preferences: userPreferencesState },
-  }),
-}));
-
 vi.mock("@norish/shared-react/reader", async () =>
-  (await import("../../helpers/device-preferences-mock")).mockDevicePreferences(() => ({
-    hiddenItems: userPreferencesState.hidden,
-  }))
+  (await import("../../helpers/device-preferences-mock")).mockDevicePreferences(
+    () => ({
+      hiddenItems: userPreferencesState.hidden,
+    }),
+    {
+      reader: () => ({ user: { id: "owner-1" } }),
+    }
+  )
 );
 
 const stubRecipe = {

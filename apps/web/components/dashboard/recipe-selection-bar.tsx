@@ -5,7 +5,6 @@ import { useRouter } from "next/navigation";
 import { MiniCookbooks } from "@/components/Panel/consumers";
 import { DeleteRecipeModal } from "@/components/shared/delete-recipe-modal";
 import { ActionBar, actionBarButtonClassName } from "@/components/ui/action-bar";
-import { usePermissionsContext } from "@/context/permissions-context";
 import { useRecipeSelection } from "@/context/recipe-selection-context";
 import { useRecipesContext } from "@/context/recipes-context";
 import { useCookbooksMutations } from "@/hooks/cookbooks";
@@ -16,6 +15,7 @@ import { useTranslations } from "next-intl";
 import { twMerge } from "tailwind-merge";
 
 import type { CookbookSummaryDTO } from "@norish/shared/contracts";
+import { useRecipePermissions } from "@norish/shared-react/reader";
 
 /**
  * The action bar over a page's recipe selection. On a cookbook page it can also take the
@@ -33,7 +33,7 @@ export default function RecipeSelectionBar({
   const tActions = useTranslations("common.actions");
   const tToasts = useTranslations("recipes.toasts");
   const router = useRouter();
-  const { canDeleteRecipe, canEditRecipe } = usePermissionsContext();
+  const { canDeleteRecipe, canEditRecipe } = useRecipePermissions();
   const { deleteRecipes } = useRecipesContext();
   const { setMembership } = useCookbooksMutations();
   const [deleteOpen, setDeleteOpen] = useState(false);
