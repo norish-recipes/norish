@@ -408,6 +408,41 @@ test("a housemate renaming a planned recipe shows the new name on an open calend
   }
 });
 
+test("a housemate's grocery marks a kept line on the list in Add to Groceries on a recipe", async () => {
+  const recipeId = await seedRecipe(stack.userIds.a, "realtime-boodschappen-recept", [
+    "realtime-azijn",
+  ]);
+
+  expect(
+    (await callMutation(pageA, stack.baseURL, "pantry.add", { name: "realtime-azijn" })).ok
+  ).toBe(true);
+  const context = await stack.newContext("a");
+  const page = await context.newPage();
+  const frames = recordFrames(page);
+
+  try {
+    await page.goto(`/recipes/${recipeId}`);
+    await page.getByRole("button", { name: "Add", exact: true }).first().click();
+    const held = page
+      .getByRole("dialog", { name: "Add to Groceries" })
+      .getByTestId("pantry-section");
+
+    await expect(held.getByRole("checkbox", { name: "realtime-azijn" })).toBeVisible();
+    await waitForLive(frames, ["groceries.onCreated"]);
+    frames.stop();
+    await expect(held.getByTestId("on-the-list")).toHaveCount(0);
+
+    const created = await callMutation(pageB, stack.baseURL, "groceries.create", [
+      { name: "realtime-azijn", amount: null, unit: null, isDone: false },
+    ]);
+
+    expect(created.ok).toBe(true);
+    await expect(held.getByTestId("on-the-list")).toHaveCount(1);
+  } finally {
+    await context.close();
+  }
+});
+
 test("a browser back from a network gap gets what it missed through Resume, before Recovery's refetch answers", async () => {
   const frames = recordFrames(pageB);
   const before = await socketLedger(pageB);
