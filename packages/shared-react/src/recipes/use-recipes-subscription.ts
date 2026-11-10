@@ -6,9 +6,14 @@ import { useQueryClient } from "@tanstack/react-query";
 import type { FullRecipeDTO, RecipeDashboardDTO } from "@norish/shared/contracts";
 import type { EventName, PayloadOf } from "@norish/shared/contracts/realtime/catalogue";
 import type { RecipesRealtime } from "@norish/shared/contracts/realtime/recipes";
+import {
+  NOT_A_RECIPE_REASON,
+  PRIVATE_ADDRESS_REASON,
+} from "@norish/shared/contracts/realtime/recipes";
 import { patchDashboardRecipeFromFull } from "@norish/shared/contracts/zod";
 
 import type { InfiniteRecipeData } from "./library-cache";
+import { usePlatform } from "../platform/platform";
 import { useRealtimeSubscription } from "../realtime/use-realtime-subscription";
 import { useTRPC } from "../trpc";
 import { useRecipeSelection } from "./selection-store";
@@ -16,12 +21,21 @@ import { removeRecipesFromLists, useRecipesCacheHelpers } from "./use-recipes-ca
 
 type Payload<E extends EventName<RecipesRealtime>> = PayloadOf<RecipesRealtime, E>;
 
-export type RecipeOutcomesSubscriptionCallbacks = {
-  onImported?: (payload: Payload<"imported">) => void;
-  onFailed?: (payload: Payload<"failed">) => void;
-  /** The reader's delete found these recipes edited elsewhere and kept them. */
-  onDeleteKept?: (payload: Payload<"deleteKept">) => void;
+/** The server reasons a person can act on, each with its translation. */
+const TRANSLATED_REASONS: Record<string, string> = {
+  [NOT_A_RECIPE_REASON]: "recipes.toasts.notARecipe",
+  [PRIVATE_ADDRESS_REASON]: "recipes.toasts.privateAddress",
 };
+
+function readToastMessage(payload: unknown): string | undefined {
+  if (!payload || typeof payload !== "object") return undefined;
+  const candidate = payload as Record<string, unknown>;
+
+  if (typeof candidate.message === "string") return candidate.message;
+  if (typeof candidate.description === "string") return candidate.description;
+
+  return undefined;
+}
 
 /** Put new recipes at the top of a cached list, each once. */
 function prependRecipes(recipes: RecipeDashboardDTO[]) {
@@ -57,12 +71,13 @@ function prependRecipes(recipes: RecipeDashboardDTO[]) {
 }
 
 /**
- * The outcomes of imports and deletes, which the reader starts on any page: mounted once in
- * the shell. An import takes its pending card and ends in a recipe or a failure.
+ * The outcomes of imports and deletes, which the reader starts on any page, with their toasts:
+ * mounted once in the shell. An import takes its pending card and ends in a recipe or a failure.
  */
-export function useRecipeOutcomesSubscription(callbacks: RecipeOutcomesSubscriptionCallbacks = {}) {
+export function useRecipeOutcomesSubscription() {
   const trpc = useTRPC();
   const queryClient = useQueryClient();
+  const { toast, navigation } = usePlatform();
   const {
     setAllRecipesData,
     invalidate,
@@ -108,7 +123,13 @@ export function useRecipeOutcomesSubscription(callbacks: RecipeOutcomesSubscript
       replaceOldestOptimisticPendingRecipe(pendingId);
       removePendingRecipe(pendingId);
       setAllRecipesData(prependRecipes([payload.recipe]));
-      callbacks.onImported?.(payload);
+      toast.show({
+        severity: payload.incomplete ? "warning" : "success",
+        title: toast.translate("recipes.toasts.imported"),
+        description: payload.incomplete ? toast.translate("recipes.toasts.incomplete") : undefined,
+        actionLabel: toast.translate("recipes.toasts.view"),
+        onActionPress: () => navigation.toRecipe(payload.recipe.id),
+      });
     },
   });
 
@@ -122,7 +143,16 @@ export function useRecipeOutcomesSubscription(callbacks: RecipeOutcomesSubscript
       }
 
       invalidate();
-      callbacks.onFailed?.(payload);
+      const reasonKey = payload.reason ? TRANSLATED_REASONS[payload.reason] : undefined;
+
+      toast.show({
+        severity: "danger",
+        title: toast.translate("recipes.toasts.failed"),
+        // Server reasons stay in the job monitor; the ones a person can act on are translated.
+        description: reasonKey
+          ? toast.translate(reasonKey)
+          : (readToastMessage(payload) ?? toast.translate("recipes.toasts.failedDescription")),
+      });
     },
   });
 
@@ -134,7 +164,10 @@ export function useRecipeOutcomesSubscription(callbacks: RecipeOutcomesSubscript
       for (const id of payload.ids) {
         void queryClient.invalidateQueries({ queryKey: trpc.recipes.get.queryKey({ id }) });
       }
-      callbacks.onDeleteKept?.(payload);
+      toast.show({
+        severity: "warning",
+        title: toast.translate("recipes.toasts.deleteKept", { count: payload.ids.length }),
+      });
     },
   });
 }

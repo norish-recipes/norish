@@ -5,13 +5,18 @@
 
 import { act } from "react";
 import { QueryClient } from "@tanstack/react-query";
+import { renderHook } from "@testing-library/react";
 import { TRPCClientError } from "@trpc/client";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 
 import type { FullRecipeDTO, RecipeDashboardDTO } from "@norish/shared/contracts";
+import { createTestWrapper, fakePlatformAdapter } from "@norish/shared-react/platform/testing";
 import { CURSOR_MARK, REALTIME_LAGGED } from "@norish/shared/contracts/realtime/envelope";
+import {
+  NOT_A_RECIPE_REASON,
+  PRIVATE_ADDRESS_REASON,
+} from "@norish/shared/contracts/realtime/recipes";
 
-import { renderHookWithClient } from "../../../__tests__/hooks/render-hook";
 import { trackedEvent } from "../../../__tests__/realtime/tracked-event";
 import { useRecipeSelection } from "../selection-store";
 import {
@@ -127,9 +132,9 @@ function pendingRereads() {
 }
 
 let queryClient: QueryClient;
-let rendered: ReturnType<typeof renderHookWithClient>;
+let rendered: ReturnType<typeof renderHook>;
 let invalidateQueries: ReturnType<typeof vi.spyOn>;
-const onDeleteKept = vi.fn();
+let platform: ReturnType<typeof fakePlatformAdapter>;
 
 beforeEach(() => {
   queryClient = new QueryClient({ defaultOptions: { queries: { retry: false } } });
@@ -144,16 +149,19 @@ beforeEach(() => {
   queryClient.setQueryData(detailKey("recipe-1"), fullRecipe());
   invalidateQueries = vi.spyOn(queryClient, "invalidateQueries");
 
-  rendered = renderHookWithClient(queryClient, () => {
-    useRecipeListSubscription();
-    useRecipeOutcomesSubscription({ onDeleteKept });
-  });
+  platform = fakePlatformAdapter();
+  rendered = renderHook(
+    () => {
+      useRecipeListSubscription();
+      useRecipeOutcomesSubscription();
+    },
+    { wrapper: createTestWrapper(queryClient, platform) }
+  );
 });
 
 afterEach(() => {
   rendered.unmount();
   queryClient.clear();
-  onDeleteKept.mockClear();
 });
 
 describe("the recipe list events and recipe outcomes", () => {
@@ -238,7 +246,10 @@ describe("the recipe list events and recipe outcomes", () => {
 
     expect(queryClient.getQueryState(detailKey("recipe-1"))?.isInvalidated).toBe(true);
     expect(queryClient.getQueryState(LIBRARY_KEY)?.isInvalidated).toBe(true);
-    expect(onDeleteKept).toHaveBeenCalledTimes(1);
+    expect(platform.toast.show).toHaveBeenCalledTimes(1);
+    expect(platform.toast.show).toHaveBeenCalledWith(
+      expect.objectContaining({ severity: "warning", title: "recipes.toasts.deleteKept" })
+    );
   });
 
   it("drops a deleted recipe from the selection and keeps the rest", () => {
@@ -301,4 +312,43 @@ describe("the recipe list events and recipe outcomes", () => {
       expect(invalidateQueries).toHaveBeenCalledWith({ queryKey: [["recipes", "list"]] });
     }
   );
+
+  it("warns that an import may be incomplete, and offers to open it", () => {
+    emit("onImported", { recipe: dashboardRecipe({ id: "recipe-2" }), incomplete: true });
+
+    expect(platform.toast.show).toHaveBeenCalledWith(
+      expect.objectContaining({
+        severity: "warning",
+        title: "recipes.toasts.imported",
+        description: "recipes.toasts.incomplete",
+        actionLabel: "recipes.toasts.view",
+      })
+    );
+    vi.mocked(platform.toast.show).mock.calls[0]![0].onActionPress?.();
+    expect(platform.navigation.toRecipe).toHaveBeenCalledWith("recipe-2");
+  });
+
+  it("confirms a complete import without a warning", () => {
+    emit("onImported", { recipe: dashboardRecipe({ id: "recipe-2" }) });
+
+    expect(platform.toast.show).toHaveBeenCalledWith(
+      expect.objectContaining({ severity: "success", description: undefined })
+    );
+  });
+
+  it("names a page that is not a recipe, and keeps other reasons out of the toast", () => {
+    emit("onFailed", { reason: NOT_A_RECIPE_REASON });
+    emit("onFailed", { reason: PRIVATE_ADDRESS_REASON });
+    emit("onFailed", { reason: "Python parser failed: WebsiteNotImplementedError" });
+
+    expect(
+      vi
+        .mocked(platform.toast.show)
+        .mock.calls.map(([toast]) => [toast.severity, toast.description])
+    ).toEqual([
+      ["danger", "recipes.toasts.notARecipe"],
+      ["danger", "recipes.toasts.privateAddress"],
+      ["danger", "recipes.toasts.failedDescription"],
+    ]);
+  });
 });
