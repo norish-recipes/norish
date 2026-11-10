@@ -38,7 +38,7 @@ import {
 } from "@norish/shared-react/config";
 import { useHydrated } from "@norish/shared-react/platform";
 import { useDevicePreference } from "@norish/shared-react/reader";
-import { useRecipeId } from "@norish/shared-react/recipes";
+import { useRecipeId, useRecipeListSubscription } from "@norish/shared-react/recipes";
 import { resolveCategoryName } from "@norish/shared/lib/categories";
 import { inferSystemUsedFromParsed } from "@norish/shared/lib/determine-recipe-system";
 import { parseIngredientWithDefaults } from "@norish/shared/lib/helpers";
@@ -58,8 +58,9 @@ export function RecipeEditorScreen({ mode, initialData }: RecipeEditorScreenProp
   const { units, isLoading: isLoadingUnits } = useUnitsQuery();
   const { categories: householdCategories, builtInAliases } = useCategoriesQuery();
 
-  // The ingredient rows draw each food's icon.
+  // The ingredient rows draw each food's icon; the list events reread the Categories offered.
   useIngredientsSubscription();
+  useRecipeListSubscription();
 
   const categoryLabel = useCategoryLabel();
   const [unitStyle] = useDevicePreference("unitStyle");

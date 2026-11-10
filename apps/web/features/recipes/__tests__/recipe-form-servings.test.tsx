@@ -1,13 +1,19 @@
 import type { ParsedIngredient } from "@/features/recipes/components/editor/ingredient-input";
 import type { Step } from "@/features/recipes/components/editor/step-input";
+import type { ReactElement } from "react";
+import { deliver, fakeProcedure } from "@/__tests__/helpers/trpc-fake";
 import { RecipeEditorScreen } from "@/features/recipes/recipe-editor-screen";
-import { fireEvent, render, screen, waitFor } from "@testing-library/react";
+import { act, fireEvent, render, screen, waitFor } from "@testing-library/react";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 
 import type { FullRecipeDTO } from "@norish/shared/contracts";
+import { createTestQueryClient, createTestWrapper } from "@norish/shared-react/platform/testing";
 
 const mocks = vi.hoisted(() => ({ createRecipe: vi.fn(), push: vi.fn() }));
 
+vi.mock("@norish/shared-react/trpc", async () =>
+  (await import("@/__tests__/helpers/trpc-fake")).mockTRPC()
+);
 vi.mock("next/navigation", () => ({
   useRouter: () => ({ push: mocks.push, back: vi.fn() }),
 }));
@@ -96,6 +102,15 @@ vi.mock("@/features/recipes/components/editor/provenance-fields", async (importO
   default: () => null,
 }));
 
+/** The editor over the fake tRPC client, in a fresh cache it answers. */
+function renderEditor(ui: ReactElement) {
+  const queryClient = createTestQueryClient();
+
+  render(ui, { wrapper: createTestWrapper(queryClient) });
+
+  return queryClient;
+}
+
 function fillRequiredFields() {
   fireEvent.change(screen.getByPlaceholderText("recipeNamePlaceholder"), {
     target: { value: "Bread" },
@@ -111,7 +126,7 @@ beforeEach(() => {
 
 describe("RecipeForm servings (#684)", () => {
   it("stays empty when cleared, so a new count can be typed", () => {
-    render(<RecipeEditorScreen mode="create" />);
+    renderEditor(<RecipeEditorScreen mode="create" />);
     const servings = screen.getByLabelText("servings");
 
     fireEvent.change(servings, { target: { value: "" } });
@@ -122,7 +137,7 @@ describe("RecipeForm servings (#684)", () => {
   });
 
   it("saves the count typed after clearing", async () => {
-    render(<RecipeEditorScreen mode="create" />);
+    renderEditor(<RecipeEditorScreen mode="create" />);
     fillRequiredFields();
     const servings = screen.getByLabelText("servings");
 
@@ -136,7 +151,7 @@ describe("RecipeForm servings (#684)", () => {
   });
 
   it("opens the recipe it created", async () => {
-    render(<RecipeEditorScreen mode="create" />);
+    renderEditor(<RecipeEditorScreen mode="create" />);
     fillRequiredFields();
     fireEvent.click(screen.getByRole("button", { name: "createRecipe" }));
 
@@ -144,7 +159,7 @@ describe("RecipeForm servings (#684)", () => {
   });
 
   it("refuses to save while empty", async () => {
-    render(<RecipeEditorScreen mode="create" />);
+    renderEditor(<RecipeEditorScreen mode="create" />);
     fillRequiredFields();
 
     fireEvent.change(screen.getByLabelText("servings"), { target: { value: "" } });
@@ -191,7 +206,7 @@ describe("RecipeForm categories", () => {
   };
 
   it("offers the household's list and the recipe's own, labelling only built-ins", () => {
-    render(<RecipeEditorScreen initialData={mojito} mode="edit" />);
+    renderEditor(<RecipeEditorScreen initialData={mojito} mode="edit" />);
 
     expect(screen.getByRole("button", { name: "Breakfast" })).toBeInTheDocument();
     expect(screen.getByRole("button", { name: "Puddings" })).toHaveAttribute(
@@ -219,7 +234,7 @@ describe("RecipeForm categories", () => {
   }
 
   it("adds a typed name as a selected chip of its own", () => {
-    render(<RecipeEditorScreen initialData={mojito} mode="edit" />);
+    renderEditor(<RecipeEditorScreen initialData={mojito} mode="edit" />);
 
     addCategory("  Long   drinks ");
 
@@ -228,7 +243,7 @@ describe("RecipeForm categories", () => {
   });
 
   it("selects the existing chip for another casing, a translation or a built-in plural", () => {
-    render(<RecipeEditorScreen initialData={mojito} mode="edit" />);
+    renderEditor(<RecipeEditorScreen initialData={mojito} mode="edit" />);
 
     addCategory("puddings");
     addCategory("SNACKS");
@@ -241,7 +256,7 @@ describe("RecipeForm categories", () => {
   it.each(["Ontbijt", "breakfasts", "BREAKFAST", "Petit-déjeuner"])(
     "selects the Breakfast chip for %s in the English UI",
     (typed) => {
-      render(<RecipeEditorScreen initialData={mojito} mode="edit" />);
+      renderEditor(<RecipeEditorScreen initialData={mojito} mode="edit" />);
 
       addCategory(typed);
 
@@ -250,7 +265,7 @@ describe("RecipeForm categories", () => {
   );
 
   it("selects an existing household chip for another casing", () => {
-    render(<RecipeEditorScreen initialData={mojito} mode="edit" />);
+    renderEditor(<RecipeEditorScreen initialData={mojito} mode="edit" />);
 
     addCategory("drinks");
 
@@ -259,7 +274,7 @@ describe("RecipeForm categories", () => {
   });
 
   it("drops Breakfast on save once deselected after typing another locale's name", async () => {
-    render(<RecipeEditorScreen mode="create" />);
+    renderEditor(<RecipeEditorScreen mode="create" />);
     fillRequiredFields();
 
     fireEvent.click(screen.getByRole("button", { name: "Breakfast" }));
@@ -272,5 +287,17 @@ describe("RecipeForm categories", () => {
     await waitFor(() =>
       expect(mocks.createRecipe).toHaveBeenCalledWith(expect.objectContaining({ categories: [] }))
     );
+  });
+});
+
+describe("RecipeEditorScreen while open", () => {
+  it("rereads the household's Categories when a housemate saves a recipe", () => {
+    const queryClient = renderEditor(<RecipeEditorScreen mode="create" />);
+    const categories = fakeProcedure("config.categories").queryKey();
+
+    queryClient.setQueryData(categories, { categories: [], builtInAliases: {} });
+    act(() => deliver("recipes.onCreated", { recipe: { id: "r-new", name: "Soup" } }));
+
+    expect(queryClient.getQueryState(categories)?.isInvalidated).toBe(true);
   });
 });
