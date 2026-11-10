@@ -10,7 +10,7 @@ import { describe, expect, it } from "vitest";
 
 import type { CookbookSummaryDTO } from "@norish/shared/contracts";
 
-import { applyCookbookUpdateToList } from "../src/hooks/library/library-cache";
+import { applyCookbookUpdateToList } from "../library-cache";
 
 function cookbook(id: string, title: string): CookbookSummaryDTO {
   return {

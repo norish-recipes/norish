@@ -18,6 +18,7 @@
     "./config": "./src/config/index.ts",
     "./groceries": "./src/groceries/index.ts",
     "./reader": "./src/reader/index.ts",
+    "./recipes": "./src/recipes/index.ts",
     "./realtime": "./src/realtime/index.ts",
     "./offline": "./src/offline/index.ts",
     "./offline/reachability": "./src/offline/reachability.ts",

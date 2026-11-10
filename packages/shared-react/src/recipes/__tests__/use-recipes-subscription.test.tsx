@@ -11,11 +11,9 @@ import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import type { FullRecipeDTO, RecipeDashboardDTO } from "@norish/shared/contracts";
 import { CURSOR_MARK, REALTIME_LAGGED } from "@norish/shared/contracts/realtime/envelope";
 
-import type { CreateRecipeHooksOptions } from "../../src/hooks/recipes/types";
-import { createUseRecipesCacheHelpers } from "../../src/hooks/recipes/dashboard/use-recipes-cache";
-import { createUseRecipesSubscription } from "../../src/hooks/recipes/dashboard/use-recipes-subscription";
-import { trackedEvent } from "../realtime/tracked-event";
-import { renderHookWithClient } from "./render-hook";
+import { renderHookWithClient } from "../../../__tests__/hooks/render-hook";
+import { trackedEvent } from "../../../__tests__/realtime/tracked-event";
+import { useRecipesSubscription } from "../use-recipes-subscription";
 
 // A lag resets the subscription it lagged on.
 const useSubscriptionMock = vi.hoisted(() =>
@@ -41,31 +39,33 @@ function procedure(name: string) {
   return { subscriptionOptions: (_input: undefined, opts: object) => ({ name, ...opts }) };
 }
 
-const useTRPC = (() => ({
-  recipes: {
-    list: { queryKey: () => [["recipes", "list"], { input: {}, type: "query" }] },
-    get: { queryKey: ({ id }: { id: string }) => detailKey(id) },
-    getPending: { queryKey: () => PENDING_KEY },
-    onCreated: procedure("onCreated"),
-    onImportStarted: procedure("onImportStarted"),
-    onImported: procedure("onImported"),
-    onUpdated: procedure("onUpdated"),
-    onDeleted: procedure("onDeleted"),
-    onDeleteKept: procedure("onDeleteKept"),
-    onConverted: procedure("onConverted"),
-    onFailed: procedure("onFailed"),
-    onRecipeBatchCreated: procedure("onRecipeBatchCreated"),
-  },
-  library: {
-    list: { queryKey: () => [["library", "list"], { input: {}, type: "query" }] },
-  },
-  calendar: {
-    listItems: { queryKey: () => CALENDAR_KEY },
-  },
-  config: {
-    categories: { queryKey: () => CATEGORIES_KEY },
-  },
-})) as unknown as CreateRecipeHooksOptions["useTRPC"];
+vi.mock("../../trpc", () => ({
+  useTRPC: () => ({
+    recipes: {
+      list: { queryKey: () => [["recipes", "list"], { input: {}, type: "query" }] },
+      get: { queryKey: ({ id }: { id: string }) => detailKey(id) },
+      getPending: { queryKey: () => PENDING_KEY },
+      onCreated: procedure("onCreated"),
+      onImportStarted: procedure("onImportStarted"),
+      onImported: procedure("onImported"),
+      onUpdated: procedure("onUpdated"),
+      onDeleted: procedure("onDeleted"),
+      onDeleteKept: procedure("onDeleteKept"),
+      onConverted: procedure("onConverted"),
+      onFailed: procedure("onFailed"),
+      onRecipeBatchCreated: procedure("onRecipeBatchCreated"),
+    },
+    library: {
+      list: { queryKey: () => [["library", "list"], { input: {}, type: "query" }] },
+    },
+    calendar: {
+      listItems: { queryKey: () => CALENDAR_KEY },
+    },
+    config: {
+      categories: { queryKey: () => CATEGORIES_KEY },
+    },
+  }),
+}));
 
 function dashboardRecipe(overrides: Partial<RecipeDashboardDTO> = {}): RecipeDashboardDTO {
   return {
@@ -142,12 +142,6 @@ beforeEach(() => {
   });
   queryClient.setQueryData(detailKey("recipe-1"), fullRecipe());
   invalidateQueries = vi.spyOn(queryClient, "invalidateQueries");
-
-  const useRecipesCacheHelpers = createUseRecipesCacheHelpers({ useTRPC });
-  const useRecipesSubscription = createUseRecipesSubscription(
-    { useTRPC },
-    { useRecipesCacheHelpers }
-  );
 
   rendered = renderHookWithClient(queryClient, () => useRecipesSubscription());
 });

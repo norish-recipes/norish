@@ -3,10 +3,7 @@ import {
   PRIVATE_ADDRESS_REASON,
 } from "@norish/shared/contracts/realtime/recipes";
 
-import type {
-  RatingsSubscriptionCallbacks,
-  RecipesSubscriptionCallbacks,
-} from "../../hooks/recipes/dashboard";
+import type { RatingsSubscriptionCallbacks, RecipesSubscriptionCallbacks } from "../../recipes";
 import type { ToastAdapter, ToastSeverity } from "../toast-adapter";
 import { readToastMessage } from "../toast-adapter";
 

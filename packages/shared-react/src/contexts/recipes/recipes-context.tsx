@@ -15,7 +15,7 @@ import type {
   RecipesMutationsResult,
   RecipesQueryResult,
   RecipesSubscriptionCallbacks,
-} from "../../hooks/recipes/dashboard";
+} from "../../recipes";
 import type { RecipeToastAdapter } from "./recipe-toast-adapter";
 import {
   createRatingsSubscriptionToasts,

@@ -4,7 +4,7 @@ import { useInfiniteQuery, useQueryClient } from "@tanstack/react-query";
 import type { RecipeDashboardDTO } from "@norish/shared/contracts";
 import { byNextCursor, cookbookRecipesInput } from "@norish/shared/contracts/list-queries";
 
-import type { RecipeFilters } from "../recipes/dashboard";
+import type { RecipeFilters } from "../../recipes";
 import type { CreateRecipeHooksOptions } from "../recipes/types";
 
 type InfiniteMemberPages = {

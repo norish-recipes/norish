@@ -6,18 +6,8 @@ import { isQueuedForReplay, showQueuedOfflineToast } from "@/lib/ui/queued-offli
 import { showSafeErrorToast } from "@/lib/ui/safe-error-toast";
 import { useTranslations } from "next-intl";
 
-import type { RecipesMutationsResult } from "@norish/shared-react/hooks";
-import {
-  createUseRecipesCacheHelpers,
-  createUseRecipesMutations,
-} from "@norish/shared-react/hooks/recipes/dashboard";
-import { useTRPC } from "@norish/shared-react/trpc";
-
-const useRecipesCacheHelpers = createUseRecipesCacheHelpers({ useTRPC });
-const useSharedRecipesMutations = createUseRecipesMutations(
-  { useTRPC },
-  { useRecipesCacheHelpers }
-);
+import type { RecipesMutationsResult } from "@norish/shared-react/recipes";
+import { useRecipesMutations as useSharedRecipesMutations } from "@norish/shared-react/recipes";
 
 export type { RecipesMutationsResult };
 
