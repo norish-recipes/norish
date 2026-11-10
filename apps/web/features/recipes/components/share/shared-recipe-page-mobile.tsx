@@ -10,7 +10,7 @@ import {
 import RecipeHeaderMobile from "@/features/recipes/components/read-only/recipe-header-mobile";
 import SourceCard from "@/features/recipes/components/read-only/source-card";
 import { MOBILE_RECIPE_MEDIA_HEIGHT_STYLE } from "@/features/recipes/lib/recipe-layout-constants";
-import { useSharedRecipe, useShareServings } from "@/features/recipes/stores/share-page-store";
+import { useSharedRecipe, useShareServings } from "@/features/recipes/lib/share-page-store";
 import { Card } from "@heroui/react";
 import { useTranslations } from "next-intl";
 

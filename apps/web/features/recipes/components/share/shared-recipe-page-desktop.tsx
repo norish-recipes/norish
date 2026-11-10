@@ -6,7 +6,7 @@ import {
   ReadonlyRecipeNotes,
   ReadonlyRecipeSummary,
 } from "@/features/recipes/components/read-only/readonly-recipe-sections";
-import { useSharedRecipe } from "@/features/recipes/stores/share-page-store";
+import { useSharedRecipe } from "@/features/recipes/lib/share-page-store";
 import { Card } from "@heroui/react";
 import { useTranslations } from "next-intl";
 

@@ -8,7 +8,7 @@ import RecipePageTint from "@/features/recipes/components/read-only/recipe-page-
 import { SharedRecipePageDesktop } from "@/features/recipes/components/share/shared-recipe-page-desktop";
 import { SharedRecipePageMobile } from "@/features/recipes/components/share/shared-recipe-page-mobile";
 import RecipeSkeleton from "@/features/recipes/components/skeleton/recipe-skeleton";
-import { SharePageProvider } from "@/features/recipes/stores/share-page-store";
+import { SharePageProvider } from "@/features/recipes/lib/share-page-store";
 import { TRPCClientError } from "@trpc/client";
 import { useTranslations } from "next-intl";
 

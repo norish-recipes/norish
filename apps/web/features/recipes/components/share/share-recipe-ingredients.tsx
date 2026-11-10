@@ -5,7 +5,7 @@ import {
   useShareIngredients,
   useShareSystem,
   useShareUnits,
-} from "@/features/recipes/stores/share-page-store";
+} from "@/features/recipes/lib/share-page-store";
 
 export function ShareRecipeIngredients() {
   const ingredients = useShareIngredients();

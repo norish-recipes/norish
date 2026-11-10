@@ -1,4 +1,4 @@
-import { createSharePageStore } from "@/features/recipes/stores/share-page-store";
+import { createSharePageStore } from "@/features/recipes/lib/share-page-store";
 import { describe, expect, it } from "vitest";
 
 describe("createSharePageStore", () => {

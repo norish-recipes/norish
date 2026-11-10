@@ -6,7 +6,7 @@ import {
   useShareServings,
   useShareSystem,
   useShareSystems,
-} from "@/features/recipes/stores/share-page-store";
+} from "@/features/recipes/lib/share-page-store";
 
 import { ShareServingsControl } from "./share-servings-control";
 import { ShareSystemSwitcher } from "./share-system-switcher";

@@ -8,7 +8,7 @@ import {
   useSharePageStore,
   useShareSystem,
   useShareUnits,
-} from "@/features/recipes/stores/share-page-store";
+} from "@/features/recipes/lib/share-page-store";
 
 export function ShareRecipeSteps() {
   const recipe = useSharedRecipe();
