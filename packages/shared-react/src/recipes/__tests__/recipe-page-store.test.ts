@@ -8,7 +8,7 @@ describe("createRecipePageStore", () => {
       recipeId: "recipe-1",
       servings: null,
       conversion: null,
-      wakeLock: false,
+      wakeLock: "off",
     });
   });
 
@@ -16,13 +16,13 @@ describe("createRecipePageStore", () => {
     const page = createRecipePageStore("recipe-1");
 
     page.getState().setServings(6);
-    page.getState().setWakeLock(true);
+    page.getState().setWakeLock("asked");
 
-    expect(page.getState()).toMatchObject({ servings: 6, wakeLock: true });
+    expect(page.getState()).toMatchObject({ servings: 6, wakeLock: "asked" });
 
-    page.getState().setWakeLock(false);
+    page.getState().setWakeLock("off");
 
-    expect(page.getState().wakeLock).toBe(false);
+    expect(page.getState().wakeLock).toBe("off");
   });
 
   it("holds a conversion until that conversion ends", () => {

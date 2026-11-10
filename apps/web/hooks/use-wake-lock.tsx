@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useSyncExternalStore } from "react";
+import { useEffect, useEffectEvent, useSyncExternalStore } from "react";
 
 import { createClientLogger } from "@norish/shared/lib/logger";
 
@@ -18,10 +18,12 @@ export function useWakeLockSupported(): boolean {
 }
 
 /**
- * Holds a screen wake lock while `active`. A lock the browser takes back, or one
- * it refuses, calls `setActive(false)`, so the toggle shows the screen can sleep.
+ * Holds a screen wake lock while `active`. Calls `setHeld(true)` once the browser
+ * grants it, and `setHeld(false)` when the browser refuses it or takes it back.
  */
-export function useHoldWakeLock(active: boolean, setActive: (active: boolean) => void): void {
+export function useHoldWakeLock(active: boolean, setHeld: (held: boolean) => void): void {
+  const onHeld = useEffectEvent(setHeld);
+
   useEffect(() => {
     if (!active || !("wakeLock" in navigator)) return;
 
@@ -29,7 +31,7 @@ export function useHoldWakeLock(active: boolean, setActive: (active: boolean) =>
     let released = false;
     const handleRelease = () => {
       logger.info("Wake lock released");
-      setActive(false);
+      onHeld(false);
     };
 
     navigator.wakeLock.request("screen").then(
@@ -43,11 +45,12 @@ export function useHoldWakeLock(active: boolean, setActive: (active: boolean) =>
 
         sentinel = granted;
         sentinel.addEventListener("release", handleRelease);
+        onHeld(true);
         logger.info("Wake lock activated");
       },
       (err: unknown) => {
         logger.error(err, "Failed to activate wake lock");
-        setActive(false);
+        if (!released) onHeld(false);
       }
     );
 
@@ -60,5 +63,5 @@ export function useHoldWakeLock(active: boolean, setActive: (active: boolean) =>
       void sentinel.release();
       logger.info("Wake lock manually disabled");
     };
-  }, [active, setActive]);
+  }, [active]);
 }
