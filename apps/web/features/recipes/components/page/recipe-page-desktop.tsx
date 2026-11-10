@@ -15,6 +15,7 @@ import { ArrowLeftIcon } from "@heroicons/react/16/solid";
 import { Card } from "@heroui/react";
 import { useTranslations } from "next-intl";
 
+import type { LibraryTypeFilter } from "@norish/shared/contracts";
 import { useActiveAllergies } from "@norish/shared-react/reader";
 import {
   useFavoritesMutation,
@@ -37,7 +38,13 @@ import ServingsControl from "./servings-control";
 import StepsList from "./steps-list";
 import SystemConvertMenu from "./system-convert-menu";
 
-export default function RecipePageDesktop({ onPrint }: { onPrint: () => void }) {
+export default function RecipePageDesktop({
+  libraryType,
+  onPrint,
+}: {
+  libraryType: LibraryTypeFilter;
+  onPrint: () => void;
+}) {
   const recipe = useLoadedPageRecipe();
   const { allergies, allergySet } = useActiveAllergies();
   const { isFavorite: checkFavorite } = useFavoritesQuery();
@@ -45,7 +52,7 @@ export default function RecipePageDesktop({ onPrint }: { onPrint: () => void }) 
   const { userRating, averageRating, isLoading: isRatingLoading } = useRatingQuery(recipe.id);
   const { rateRecipe, isRating } = useRatingsMutation();
   const t = useTranslations("recipes.detail");
-  const back = useBackDestination();
+  const back = useBackDestination(libraryType);
   const { showRatings, showFavorites } = useHiddenItemVisibility();
 
   const isFavorite = checkFavorite(recipe.id);

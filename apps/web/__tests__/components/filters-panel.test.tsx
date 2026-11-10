@@ -1,21 +1,19 @@
-import { render, screen } from "@testing-library/react";
+import type { ReactNode } from "react";
+import { render as renderBare, screen } from "@testing-library/react";
 import { describe, expect, it, vi } from "vitest";
 
 import "@testing-library/jest-dom";
 
 import FiltersPanel from "@/components/Panel/consumers/filters-panel";
 
-const filtersState = {
-  searchTags: [] as string[],
-  categories: [] as string[],
-  filterMode: "AND" as const,
-  sortMode: "dateDesc" as "dateDesc" | undefined,
-  rawInput: "",
-  showFavoritesOnly: false,
-  minRating: null as number | null,
-  maxCookingTime: null as number | null,
-  searchFields: ["title", "ingredients"] as string[],
-};
+import type { PersistedRecipeFilters } from "@norish/shared/contracts/filter-contract";
+import { LibraryFiltersProvider } from "@norish/shared-react/recipes";
+import { DEFAULT_PERSISTED_RECIPE_FILTERS } from "@norish/shared/contracts/filter-contract";
+
+/** The panel under a Library filters store made from these filters. */
+function render(ui: ReactNode, filters: PersistedRecipeFilters = DEFAULT_PERSISTED_RECIPE_FILTERS) {
+  return renderBare(<LibraryFiltersProvider cookie={filters}>{ui}</LibraryFiltersProvider>);
+}
 
 const userPreferencesState = {
   hidden: [] as string[],
@@ -60,14 +58,6 @@ vi.mock("@norish/ui/star-rating", () => ({
   default: () => <div>rating-stars</div>,
 }));
 
-vi.mock("@/context/recipes-filters-context", () => ({
-  useRecipesFiltersContext: () => ({
-    filters: filtersState,
-    setFilters: vi.fn(),
-    clearFilters: vi.fn(),
-  }),
-}));
-
 vi.mock("@norish/shared-react/reader", async () =>
   (await import("../helpers/reader-mock")).mockDevicePreferences(() => ({
     hiddenItems: userPreferencesState.hidden,
@@ -109,19 +99,15 @@ vi.mock("@heroui/react", () => ({
 
 describe("FiltersPanel", () => {
   it("does not crash when sort mode is missing", () => {
-    filtersState.sortMode = undefined;
+    const noSort = { ...DEFAULT_PERSISTED_RECIPE_FILTERS, ...JSON.parse('{"sortMode":null}') };
 
-    expect(() => render(<FiltersPanel open onOpenChange={vi.fn()} />)).not.toThrow();
+    expect(() => render(<FiltersPanel open onOpenChange={vi.fn()} />, noSort)).not.toThrow();
 
     expect(screen.getByText("sortByDate")).toHaveAttribute("variant", "tertiary");
     expect(screen.getByText("sortByTitle")).toHaveAttribute("variant", "tertiary");
-
-    filtersState.sortMode = "dateDesc";
   });
 
   it("limits tag container height and enables vertical scrolling", () => {
-    filtersState.sortMode = "dateDesc";
-
     const { container } = render(<FiltersPanel open onOpenChange={vi.fn()} />);
 
     const tagContainer = container.querySelector(".overflow-y-auto");

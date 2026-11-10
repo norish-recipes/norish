@@ -1,32 +1,34 @@
 "use client";
 
 import { useEffect, useEffectEvent, useState } from "react";
-import { useRecipesFiltersContext } from "@/context/recipes-filters-context";
 import { useImportRecipe } from "@/hooks/use-import-recipe";
 import { MagnifyingGlassIcon, XMarkIcon } from "@heroicons/react/16/solid";
 import { Input } from "@heroui/react";
 import { useTranslations } from "next-intl";
 import { useDebounceValue } from "usehooks-ts";
 
+import { useLibraryFilters } from "@norish/shared-react/recipes";
 import { isUrl } from "@norish/shared/lib/helpers";
 
 import Filters from "../shared/filters";
 
 export default function SearchInput() {
   const t = useTranslations("recipes.dashboard");
-  const { filters, setFilters } = useRecipesFiltersContext();
+  const rawInput = useLibraryFilters((state) => state.filters.rawInput);
+  const hasTags = useLibraryFilters((state) => state.filters.searchTags.length > 0);
+  const setFilters = useLibraryFilters((state) => state.setFilters);
   const { importRecipe } = useImportRecipe();
-  const [inputValue, setInputValue] = useState(filters.rawInput);
+  const [inputValue, setInputValue] = useState(rawInput);
   const [debouncedValue] = useDebounceValue(inputValue, 300);
-  const [syncedRawInput, setSyncedRawInput] = useState(filters.rawInput);
+  const [syncedRawInput, setSyncedRawInput] = useState(rawInput);
 
   // Sync external filter changes to input (e.g., from clear button elsewhere).
   // Only a change to the filter from elsewhere syncs in; typing must not.
-  if (filters.rawInput !== syncedRawInput) {
-    setSyncedRawInput(filters.rawInput);
+  if (rawInput !== syncedRawInput) {
+    setSyncedRawInput(rawInput);
 
-    if (filters.rawInput !== inputValue.trim()) {
-      setInputValue(filters.rawInput);
+    if (rawInput !== inputValue.trim()) {
+      setInputValue(rawInput);
     }
   }
 
@@ -34,7 +36,7 @@ export default function SearchInput() {
   // already holds (such as one just synced in from elsewhere)
   const applyDebouncedValue = useEffectEvent((value: string) => {
     // Don't trigger if it's a URL (handled immediately in handleChange)
-    if (value !== filters.rawInput && !isUrl(value)) {
+    if (value !== rawInput && !isUrl(value)) {
       setFilters({ rawInput: value });
     }
   });
@@ -58,7 +60,7 @@ export default function SearchInput() {
     }
   };
 
-  const hasFilters = filters.rawInput.trim().length > 0 || filters.searchTags.length > 0;
+  const hasFilters = rawInput.trim().length > 0 || hasTags;
 
   return (
     <div className="flex w-full items-center gap-2">

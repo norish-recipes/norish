@@ -1,31 +1,24 @@
 "use client";
 
-import { useMemo, useState } from "react";
+import { useState } from "react";
 import { FiltersPanel } from "@/components/Panel/consumers";
-import { useRecipesFiltersContext } from "@/context/recipes-filters-context";
 import { FunnelIcon } from "@heroicons/react/16/solid";
 import { Button } from "@heroui/react";
 
+import { useLibraryFilters } from "@norish/shared-react/recipes";
+
 export default function Filters() {
-  const { filters } = useRecipesFiltersContext();
+  const hasActiveFilters = useLibraryFilters(
+    ({ filters }) =>
+      filters.rawInput.trim().length > 0 ||
+      filters.searchTags.length > 0 ||
+      filters.categories.length > 0 ||
+      filters.minRating !== null ||
+      filters.maxCookingTime !== null ||
+      filters.showPantryOnly
+  );
   const [isOpen, setIsOpen] = useState(false);
-  const hasActiveFilters = useMemo(() => {
-    const hasSearch = filters.rawInput.trim().length > 0;
-    const hasTags = filters.searchTags.length > 0;
-    const hasCategories = filters.categories.length > 0;
-    const hasRating = filters.minRating !== null;
-    const hasCookingTime = filters.maxCookingTime !== null;
-    return (
-      hasSearch || hasTags || hasCategories || hasRating || hasCookingTime || filters.showPantryOnly
-    );
-  }, [
-    filters.rawInput,
-    filters.searchTags,
-    filters.categories,
-    filters.minRating,
-    filters.maxCookingTime,
-    filters.showPantryOnly,
-  ]);
+
   return (
     <>
       <Button

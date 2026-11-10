@@ -6,8 +6,8 @@ import { byNextCursor, libraryListInput } from "@norish/shared/contracts/list-qu
 import { dateKey, getInitialDateRange } from "@norish/shared/lib/helpers";
 
 // A full load carries the week Today's meals reads, in the reader's time zone, and the Library's
-// first page. Here above the loading boundary, so the app's providers find it in their first render.
-export default async function LibraryLayout({ children }: LayoutProps<"/">) {
+// first page. Here above the loading boundary, so the skeleton's first render already has them.
+export default async function DashboardLayout({ children }: LayoutProps<"/">) {
   const [today, filters] = await Promise.all([readReaderToday(), readRecipeQueryFilters()]);
   const { start, end } = getInitialDateRange("desktop", today);
 

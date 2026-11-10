@@ -5,6 +5,7 @@ import { OfflineUnavailable } from "@/app/~offline/offline-unavailable";
 import { offlineEngine } from "@/lib/offline/engine";
 import { useQueryClient } from "@tanstack/react-query";
 
+import type { LibraryTypeFilter } from "@norish/shared/contracts";
 import { useCacheOwner } from "@norish/shared-react/offline/react";
 import { useTRPC } from "@norish/shared-react/trpc";
 
@@ -18,11 +19,13 @@ import { useTRPC } from "@norish/shared-react/trpc";
  */
 export function OfflineRecipeDetail({
   id,
+  libraryType,
   Screen,
   skeleton,
 }: {
   id: string;
-  Screen: ComponentType<{ recipeId: string }>;
+  libraryType: LibraryTypeFilter;
+  Screen: ComponentType<{ recipeId: string; libraryType: LibraryTypeFilter }>;
   skeleton: ReactNode;
 }) {
   const trpc = useTRPC();
@@ -40,5 +43,5 @@ export function OfflineRecipeDetail({
     return <OfflineUnavailable />;
   }
 
-  return <Screen recipeId={id} />;
+  return <Screen libraryType={libraryType} recipeId={id} />;
 }

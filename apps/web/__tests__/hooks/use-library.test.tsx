@@ -1,15 +1,24 @@
+import type { ReactNode } from "react";
 import { useLibraryList } from "@/hooks/use-library";
-import { renderHook } from "@testing-library/react";
+import { act, renderHook } from "@testing-library/react";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 
-import { useLibraryQuery } from "@norish/shared-react/recipes";
-import { DEFAULT_RECIPE_FILTERS } from "@norish/shared/contracts/filter-contract";
+import type { PersistedRecipeFilters } from "@norish/shared/contracts/filter-contract";
+import {
+  LibraryFiltersProvider,
+  useLibraryFiltersStoreApi,
+  useLibraryQuery,
+} from "@norish/shared-react/recipes";
+import { DEFAULT_PERSISTED_RECIPE_FILTERS } from "@norish/shared/contracts/filter-contract";
 
-const filtersState = vi.hoisted(() => ({ filters: {} as object, isHydrated: true }));
-
-vi.mock("@/context/recipes-filters-context", () => ({
-  useRecipesFiltersContext: () => filtersState,
-}));
+/** The list and its filters store, made from the cookie's filters (`undefined`: no cookie). */
+function renderList(cookie: PersistedRecipeFilters | undefined) {
+  return renderHook(() => ({ list: useLibraryList(), store: useLibraryFiltersStoreApi() }), {
+    wrapper: ({ children }: { children: ReactNode }) => (
+      <LibraryFiltersProvider cookie={cookie}>{children}</LibraryFiltersProvider>
+    ),
+  });
+}
 
 vi.mock("@norish/shared-react/recipes", async (importOriginal) => ({
   ...(await importOriginal<typeof import("@norish/shared-react/recipes")>()),
@@ -24,8 +33,6 @@ const UNFILTERED = [
 
 describe("the library never paints unfiltered", () => {
   beforeEach(() => {
-    filtersState.filters = DEFAULT_RECIPE_FILTERS;
-    filtersState.isHydrated = true;
     // The persisted query cache can answer the default-filters key instantly,
     // so the fake reports loaded unfiltered data even while disabled.
     vi.mocked(useLibraryQuery)
@@ -38,29 +45,28 @@ describe("the library never paints unfiltered", () => {
   });
 
   it("holds the loading presentation until the stored filters are applied", () => {
-    filtersState.isHydrated = false;
+    const { result } = renderList(undefined);
 
-    const { result } = renderHook(() => useLibraryList());
-
-    expect(result.current.isLoading).toBe(true);
+    expect(result.current.list.isLoading).toBe(true);
   });
 
   it("releases the gate once hydration applies the stored filters", () => {
-    filtersState.isHydrated = false;
-    const { result, rerender } = renderHook(() => useLibraryList());
+    const { result } = renderList(undefined);
 
-    filtersState.filters = { ...DEFAULT_RECIPE_FILTERS, rawInput: "soup" };
-    filtersState.isHydrated = true;
-    rerender();
+    act(() =>
+      result.current.store
+        .getState()
+        .applyStored({ ...DEFAULT_PERSISTED_RECIPE_FILTERS, sortMode: "titleAsc" })
+    );
 
-    expect(result.current.isLoading).toBe(false);
+    expect(result.current.list.isLoading).toBe(false);
   });
 
-  it("renders straight through when nothing was stored, its recipes in grid order", () => {
-    const { result } = renderHook(() => useLibraryList());
+  it("renders straight through under the cookie's filters, its recipes in grid order", () => {
+    const { result } = renderList(DEFAULT_PERSISTED_RECIPE_FILTERS);
 
-    expect(result.current.isLoading).toBe(false);
-    expect(result.current.recipes.map((recipe) => recipe.id)).toEqual([
+    expect(result.current.list.isLoading).toBe(false);
+    expect(result.current.list.recipes.map((recipe) => recipe.id)).toEqual([
       "unfiltered-1",
       "unfiltered-2",
     ]);

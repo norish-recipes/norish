@@ -1,11 +1,9 @@
 "use client";
 
 import type { LibraryGridItem } from "@/lib/library-items";
-import { useCallback, useMemo } from "react";
 import LibraryGrid from "@/components/dashboard/library-grid";
 import RecipeCard from "@/components/dashboard/recipe-card";
 import RecipeSelectionBar from "@/components/dashboard/recipe-selection-bar";
-import { useRecipesFiltersContext } from "@/context/recipes-filters-context";
 import { useLibraryCards } from "@/hooks/use-library";
 import { Card } from "@heroui/react";
 import { useTranslations } from "next-intl";
@@ -16,6 +14,7 @@ import type { RecipeViewMode } from "@norish/shared/contracts/zod/device-prefere
 import {
   useCookbookRecipesQuery,
   useCookbooksMutations,
+  useLibraryFilters,
   useRecipeSelection,
 } from "@norish/shared-react/recipes";
 import {
@@ -26,7 +25,8 @@ import {
 
 /** The selection bar over a cookbook's members, whose versions it acts on. */
 export function CookbookSelectionBar({ cookbook }: { cookbook: CookbookSummaryDTO }) {
-  const { filters, isHydrated } = useRecipesFiltersContext();
+  const filters = useLibraryFilters((state) => state.filters);
+  const isHydrated = useLibraryFilters((state) => state.hydrated);
   const { recipes, removeMember } = useCookbookRecipesQuery(
     cookbook.id,
     toRecipesQueryFilters(filters),
@@ -61,12 +61,13 @@ export default function CookbookMembers({
   variant: RecipeViewMode;
 }) {
   const t = useTranslations("recipes.cookbooks");
-  const { filters, isHydrated } = useRecipesFiltersContext();
+  const filters = useLibraryFilters((state) => state.filters);
+  const isHydrated = useLibraryFilters((state) => state.hydrated);
   const { isFavorite, toggleFavorite, deleteRecipes, allergies } = useLibraryCards();
   const { setMembership } = useCookbooksMutations();
   const selectRange = useRecipeSelection((state) => state.selectRange);
 
-  const queryFilters = useMemo(() => toRecipesQueryFilters(filters), [filters]);
+  const queryFilters = toRecipesQueryFilters(filters);
   // Wait for the stored filters, as the Library does: asking under the defaults first shows members
   // the reader filters out, then asks again.
   const { recipes, isLoading, isValidating, loadMore, removeMember } = useCookbookRecipesQuery(
@@ -77,21 +78,19 @@ export default function CookbookMembers({
 
   const selectRangeTo = (recipe: SelectedRecipe) => selectRange(recipe, recipes);
 
-  const items = useMemo<LibraryGridItem[]>(
-    () => recipes.map((recipe) => ({ kind: "recipe" as const, id: recipe.id, recipe })),
-    [recipes]
-  );
+  const items: LibraryGridItem[] = recipes.map((recipe) => ({
+    kind: "recipe" as const,
+    id: recipe.id,
+    recipe,
+  }));
 
   // Taking a recipe out of the cookbook it is being read in, from the card's
   // swipe actions. The member list is this cookbook's own read, so drop the
   // row now rather than waiting for a refetch that Offline never comes.
-  const removeFromCookbook = useCallback(
-    (recipeId: string) => {
-      setMembership({ cookbookId, recipeIds: [recipeId], isMember: false });
-      removeMember(recipeId);
-    },
-    [setMembership, cookbookId, removeMember]
-  );
+  const removeFromCookbook = (recipeId: string) => {
+    setMembership({ cookbookId, recipeIds: [recipeId], isMember: false });
+    removeMember(recipeId);
+  };
 
   const renderItem = (item: LibraryGridItem) => {
     if (item.kind !== "recipe") return null;

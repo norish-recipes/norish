@@ -2,11 +2,11 @@
 
 import { useState } from "react";
 import { RollingText } from "@/components/shared/rolling-text";
-import { useRecipesFiltersContext } from "@/context/recipes-filters-context";
 import { usePrefersReducedMotion } from "@/hooks/use-prefers-reduced-motion";
 import { useTranslations } from "next-intl";
 
 import type { LibraryTypeFilter } from "@norish/shared/contracts";
+import { useLibraryFilters } from "@norish/shared-react/recipes";
 import { LIBRARY_TYPE_FILTERS } from "@norish/shared/contracts";
 
 /** One complete string per lens, so a language decides its own word order. */
@@ -90,13 +90,13 @@ export function sharedAffixes(labels: string[]): { prefix: string; suffix: strin
  */
 export default function LibraryHeading({ id }: { id: string }) {
   const t = useTranslations("recipes.dashboard");
-  const { filters } = useRecipesFiltersContext();
+  const libraryType = useLibraryFilters((state) => state.filters.libraryType);
   const prefersReducedMotion = usePrefersReducedMotion();
-  const label = t(HEADING_KEYS[filters.libraryType]);
+  const label = t(HEADING_KEYS[libraryType]);
 
   // Which way the word travels: forward along the chips rolls up, back rolls
   // down, so the heading moves with the control the reader just used.
-  const position = LIBRARY_TYPE_FILTERS.indexOf(filters.libraryType);
+  const position = LIBRARY_TYPE_FILTERS.indexOf(libraryType);
   const [roll, setRoll] = useState({ position, isRising: true });
 
   if (position !== roll.position) {

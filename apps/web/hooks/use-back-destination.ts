@@ -1,11 +1,11 @@
 "use client";
 
 import { useSearchParams } from "next/navigation";
-import { useOptionalRecipesFiltersContext } from "@/context/recipes-filters-context";
 import { cookbookIdFromPath, recipeIdFromPath, safeOrigin } from "@/lib/back-destination";
 import { useQuery } from "@tanstack/react-query";
 import { useTranslations } from "next-intl";
 
+import type { LibraryTypeFilter } from "@norish/shared/contracts";
 import { useCookbookQuery } from "@norish/shared-react/recipes";
 import { useTRPC } from "@norish/shared-react/trpc";
 
@@ -19,14 +19,11 @@ export type BackDestination = { href: string; label: string };
  * take the reader somewhere they had not been. The origin travels in the URL,
  * so this resolves it to a real destination and names it.
  *
- * With no origin the answer is the Library, named by the lens the reader left
- * lit: that is genuinely where "/" lands them, so the label is not a guess.
+ * With no origin the answer is the Library, named by `libraryType`, the lens the
+ * reader left lit: that is genuinely where "/" lands them, so the label is not a guess.
  */
-export function useBackDestination(): BackDestination {
+export function useBackDestination(libraryType: LibraryTypeFilter): BackDestination {
   const t = useTranslations("recipes.back");
-  // Optional: a recipe page is not a filtered list, and naming the Library
-  // is not a reason to require being inside it.
-  const filters = useOptionalRecipesFiltersContext()?.filters;
   const trpc = useTRPC();
   const from = safeOrigin(useSearchParams().get("from"));
 
@@ -63,5 +60,5 @@ export function useBackDestination(): BackDestination {
   }
 
   // Named by the lens rather than by the page, because that is what "/" shows.
-  return { href: "/", label: t(filters?.libraryType ?? "all") };
+  return { href: "/", label: t(libraryType) };
 }

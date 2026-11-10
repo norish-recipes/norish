@@ -1,5 +1,6 @@
 import { OfflineBootstrap } from "@/app/~offline/offline-bootstrap";
 import { GroceriesRoot } from "@/features/groceries/groceries-root";
+import { LibraryRoot } from "@/features/library/library-root";
 import RecipeSkeleton from "@/features/recipes/components/skeleton/recipe-skeleton";
 import { RecipeScreen } from "@/features/recipes/recipe-screen";
 
@@ -20,6 +21,7 @@ export default function OfflineFallbackPage() {
   return (
     <OfflineBootstrap
       groceries={<GroceriesRoot />}
+      library={LibraryRoot}
       recipe={RecipeScreen}
       recipeSkeleton={<RecipeSkeleton />}
     />

@@ -4,7 +4,6 @@ import { AppShell } from "@/app/(app)/app-shell";
 import { readQuerySeed } from "@/components/query-seed";
 import { DESTINATION_HEADER, loginPath } from "@/lib/auth/login-redirect";
 import { readReaderToday } from "@/lib/reader-today-server";
-import { readRecipeFilters } from "@/lib/recipe-filters-server";
 import { readRequestProfile } from "@/lib/request-profile";
 
 import { deviceBlocks } from "@norish/shared/contracts/zod/device-preferences";
@@ -23,9 +22,8 @@ export default async function AppLayout({ children }: { children: React.ReactNod
 
   // What the providers' first render needs, read once. Not `user.get`: its API-key metadata would
   // sit in every document the worker keeps.
-  const [readerToday, recipeFilters, queries] = await Promise.all([
+  const [readerToday, queries] = await Promise.all([
     readReaderToday(),
-    readRecipeFilters(),
     readQuerySeed((trpc, client) => {
       // What user.getDevicePreferences answers, from the preferences the gate already read.
       client.setQueryData(trpc.user.getDevicePreferences.queryKey(), deviceBlocks(preferences));
@@ -47,7 +45,6 @@ export default async function AppLayout({ children }: { children: React.ReactNod
         deviceKind: kind,
         reader: { id, email, name, image, version },
         readerToday,
-        recipeFilters,
         queries,
       }}
     >

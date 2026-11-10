@@ -15,8 +15,6 @@ import RecipeGridSkeleton from "@/components/skeleton/recipe-grid-skeleton";
 import { useLibraryList } from "@/hooks/use-library";
 import { Tabs } from "@heroui/react";
 
-import { useLibrarySubscriptions } from "@norish/shared-react/recipes";
-
 const LIBRARY_HEADING_ID = "recipe-library-heading";
 
 function RecipeLibrary({ skeleton }: { skeleton: boolean }) {
@@ -65,8 +63,6 @@ function RecipeLibraryContent({ skeleton }: { skeleton: boolean }) {
  * loading state: grey cards stand in for the Library, so its grid and scroll memory mount once.
  */
 export function Dashboard({ skeleton = false }: { skeleton?: boolean }) {
-  useLibrarySubscriptions();
-
   return (
     <div className="flex min-h-0 w-full flex-1 flex-col gap-8">
       <TodaysMeals />

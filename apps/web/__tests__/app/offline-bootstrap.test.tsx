@@ -20,6 +20,21 @@ vi.mock("@/components/dashboard/dashboard", () => ({
   Dashboard: () => <div>dashboard-surface</div>,
 }));
 
+// The Library's root, showing the filters it is made from.
+function LibraryRoot({
+  filters,
+  children,
+}: {
+  filters?: { sortMode: string };
+  children: React.ReactNode;
+}) {
+  return (
+    <div>
+      library-root:{filters?.sortMode ?? "none"} {children}
+    </div>
+  );
+}
+
 vi.mock("@/app/(app)/calendar/page", () => ({
   default: () => <div>calendar-surface</div>,
 }));
@@ -27,11 +42,13 @@ vi.mock("@/app/(app)/calendar/page", () => ({
 vi.mock("@/app/~offline/offline-recipe-detail", () => ({
   OfflineRecipeDetail: ({
     id,
+    libraryType,
     Screen,
   }: {
     id: string;
-    Screen: (props: { recipeId: string }) => React.ReactNode;
-  }) => <Screen recipeId={id} />,
+    libraryType: "all" | "recipes" | "cookbooks";
+    Screen: (props: { recipeId: string; libraryType: string }) => React.ReactNode;
+  }) => <Screen libraryType={libraryType} recipeId={id} />,
 }));
 
 vi.mock("@/app/~offline/offline-unavailable", () => ({
@@ -43,7 +60,12 @@ function renderPath(pathname: string) {
   render(
     <OfflineBootstrap
       groceries={<div>groceries-surface</div>}
-      recipe={({ recipeId }) => <div>recipe-surface:{recipeId}</div>}
+      library={LibraryRoot}
+      recipe={({ recipeId, libraryType }) => (
+        <div>
+          recipe-surface:{recipeId}:{libraryType}
+        </div>
+      )}
       recipeSkeleton={null}
     />
   );
@@ -51,6 +73,7 @@ function renderPath(pathname: string) {
 
 describe("OfflineBootstrap", () => {
   beforeEach(() => {
+    localStorage.clear();
     window.history.replaceState(null, "", "/");
     vi.mocked(offlineEngine.cache.reconcileIdentity).mockReset().mockResolvedValue(undefined);
   });
@@ -80,12 +103,29 @@ describe("OfflineBootstrap", () => {
     ["/calendar", "calendar-surface"],
     [
       "/recipes/11111111-1111-4111-8111-111111111111/",
-      "recipe-surface:11111111-1111-4111-8111-111111111111",
+      "recipe-surface:11111111-1111-4111-8111-111111111111:all",
     ],
   ])("renders the warmed Offline surface for %s", async (pathname, expected) => {
     renderPath(pathname);
 
     expect(await screen.findByText(expected)).toBeInTheDocument();
+  });
+
+  it("draws the Library and names it on a recipe's way back from the browser's stored filters", async () => {
+    localStorage.setItem(
+      "norish:recipe-filters",
+      JSON.stringify({ sortMode: "titleAsc", filterMode: "AND", libraryType: "cookbooks" })
+    );
+    renderPath("/");
+
+    expect(await screen.findByText(/library-root:titleAsc/)).toBeInTheDocument();
+    expect(screen.getByText("dashboard-surface")).toBeInTheDocument();
+
+    renderPath("/recipes/11111111-1111-4111-8111-111111111111");
+
+    expect(
+      await screen.findByText("recipe-surface:11111111-1111-4111-8111-111111111111:cookbooks")
+    ).toBeInTheDocument();
   });
 
   it.each([

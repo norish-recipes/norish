@@ -9,21 +9,36 @@ import { OfflineRecipeDetail } from "@/app/~offline/offline-recipe-detail";
 import { OfflineUnavailable } from "@/app/~offline/offline-unavailable";
 import { Dashboard } from "@/components/dashboard/dashboard";
 import { offlineEngine } from "@/lib/offline/engine";
+import { readStoredRecipeFilters } from "@/lib/recipe-filters-storage";
 
+import type { LibraryTypeFilter } from "@norish/shared/contracts";
+import type { PersistedRecipeFilters } from "@norish/shared/contracts/filter-contract";
+import { DEFAULT_LIBRARY_TYPE_FILTER } from "@norish/shared/contracts";
 import { addBasePath, stripBasePath } from "@norish/shared/lib/base-path";
 
 const UUID_RE = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
 
 interface OfflineScreens {
   groceries: ReactNode;
-  recipe: ComponentType<{ recipeId: string }>;
+  library: ComponentType<{ filters: PersistedRecipeFilters | undefined; children: ReactNode }>;
+  recipe: ComponentType<{ recipeId: string; libraryType: LibraryTypeFilter }>;
   recipeSkeleton: ReactNode;
 }
 
-function offlineSurface(pathname: string, { groceries, recipe, recipeSkeleton }: OfflineScreens) {
+function offlineSurface(
+  pathname: string,
+  filters: PersistedRecipeFilters | null,
+  { groceries, library: LibraryRoot, recipe, recipeSkeleton }: OfflineScreens
+) {
   const path = pathname.replace(/(?<!\/)\/+$/, "") || "/";
 
-  if (path === "/") return <Dashboard />;
+  if (path === "/") {
+    return (
+      <LibraryRoot filters={filters ?? undefined}>
+        <Dashboard />
+      </LibraryRoot>
+    );
+  }
   if (path === "/groceries" || path === "/groceries/pantry") return groceries;
   if (path === "/calendar") return <CalendarPage />;
 
@@ -31,14 +46,23 @@ function offlineSurface(pathname: string, { groceries, recipe, recipeSkeleton }:
 
   if (recipeId && UUID_RE.test(recipeId)) {
     return (
-      <OfflineRecipeDetail Screen={recipe} id={recipeId.toLowerCase()} skeleton={recipeSkeleton} />
+      <OfflineRecipeDetail
+        Screen={recipe}
+        id={recipeId.toLowerCase()}
+        libraryType={filters?.libraryType ?? DEFAULT_LIBRARY_TYPE_FILTER}
+        skeleton={recipeSkeleton}
+      />
     );
   }
 
   const cookbookId = /^\/cookbooks\/([^/]+)$/.exec(path)?.[1];
 
   if (cookbookId && UUID_RE.test(cookbookId)) {
-    return <OfflineCookbook id={cookbookId.toLowerCase()} />;
+    return (
+      <LibraryRoot filters={filters ?? undefined}>
+        <OfflineCookbook id={cookbookId.toLowerCase()} />
+      </LibraryRoot>
+    );
   }
 
   return <OfflineUnavailable />;
@@ -58,19 +82,26 @@ function offlineSurface(pathname: string, { groceries, recipe, recipeSkeleton }:
  * The worker serves this document only when a navigation failed, so the
  * reader is Offline: the last reader's cache is restored before anything
  * renders, and the first frame already carries their Device Preferences.
- * The page hands in the groceries root, the recipe screen and its skeleton: only a route file
- * imports a screen.
+ * The page hands in the groceries and library roots, the recipe screen and its skeleton: only a
+ * route file imports a screen.
  */
 export function OfflineBootstrap(screens: OfflineScreens) {
-  const [pathname, setPathname] = useState<string | null>(null);
+  const [surface, setSurface] = useState<{
+    pathname: string;
+    filters: PersistedRecipeFilters | null;
+  } | null>(null);
 
+  // With no server, the Library's filters come from the browser's storage.
   useEffect(() => {
-    void offlineEngine.cache
-      .reconcileIdentity({ sessionUserId: null, isOffline: true })
-      .then(() => setPathname(stripBasePath(window.location.pathname)));
+    void offlineEngine.cache.reconcileIdentity({ sessionUserId: null, isOffline: true }).then(() =>
+      setSurface({
+        pathname: stripBasePath(window.location.pathname),
+        filters: readStoredRecipeFilters(),
+      })
+    );
   }, []);
 
-  if (pathname === null) {
+  if (surface === null) {
     // The precached shell: exactly what the static prerender emitted.
     return (
       <main className="flex min-h-dvh flex-col items-center justify-center p-6">
@@ -85,5 +116,5 @@ export function OfflineBootstrap(screens: OfflineScreens) {
     );
   }
 
-  return <AppShell>{offlineSurface(pathname, screens)}</AppShell>;
+  return <AppShell>{offlineSurface(surface.pathname, surface.filters, screens)}</AppShell>;
 }

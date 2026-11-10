@@ -1,7 +1,7 @@
 "use client";
 
 import type { ReactNode } from "react";
-import { useCallback, useState } from "react";
+import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { CookbookAddRecipesPanel } from "@/components/cookbooks/cookbook-add-recipes-panel";
 import { CookbookEditPanel, DeleteCookbookModal } from "@/components/cookbooks/cookbook-panels";
@@ -29,7 +29,7 @@ import { useRecipePermissions } from "@norish/shared-react/reader";
 import {
   useCookbookQuery,
   useCookbooksMutations,
-  useLibrarySubscriptions,
+  useLibraryFilters,
 } from "@norish/shared-react/recipes";
 import {
   cssButtonPill,
@@ -54,7 +54,8 @@ function CookbookHeader({
   actions?: ReactNode;
 }) {
   const t = useTranslations("recipes.cookbooks");
-  const back = useBackDestination();
+  const libraryType = useLibraryFilters((state) => state.filters.libraryType);
+  const back = useBackDestination(libraryType);
 
   return (
     <div className="flex shrink-0 flex-col gap-4">
@@ -142,14 +143,12 @@ export default function CookbookPage({ cookbookId }: { cookbookId: string }) {
   const [addOpen, setAddOpen] = useState(false);
   const [deleteOpen, setDeleteOpen] = useState(false);
 
-  useLibrarySubscriptions();
-
-  const handleDelete = useCallback(() => {
+  const handleDelete = () => {
     if (!cookbook) return;
     setDeleteOpen(false);
     deleteCookbook({ id: cookbook.id, version: cookbook.version });
     router.push("/");
-  }, [cookbook, deleteCookbook, router]);
+  };
 
   if (isNotFound) {
     return <NotFoundView message={t("notFoundHint")} title={t("notFound")} />;

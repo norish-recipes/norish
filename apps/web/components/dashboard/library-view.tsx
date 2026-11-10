@@ -9,13 +9,13 @@ import NoRecipeResults from "@/components/dashboard/no-recipe-results";
 import NoRecipesText from "@/components/dashboard/no-recipes-text";
 import RecipeCard from "@/components/dashboard/recipe-card";
 import RecipeCardSkeleton from "@/components/skeleton/recipe-card-skeleton";
-import { useRecipesFiltersContext } from "@/context/recipes-filters-context";
 import { useLibraryCards, useLibraryList } from "@/hooks/use-library";
 
 import type { SelectedRecipe } from "@norish/shared-react/recipes";
 import type { RecipeViewMode } from "@norish/shared/contracts/zod/device-preferences";
 import {
   useCookbooksMutations,
+  useLibraryFilters,
   usePendingRecipesQuery,
   useRecipeSelection,
 } from "@norish/shared-react/recipes";
@@ -34,7 +34,8 @@ import {
  * recipe count.
  */
 export default function LibraryView({ variant }: { variant: RecipeViewMode }) {
-  const { filters, clearFilters } = useRecipesFiltersContext();
+  const filters = useLibraryFilters((state) => state.filters);
+  const clearFilters = useLibraryFilters((state) => state.clearFilters);
   const { isFavorite, toggleFavorite, deleteRecipes, allergies } = useLibraryCards();
   const { pendingRecipeIds } = usePendingRecipesQuery();
   const { deleteCookbook } = useCookbooksMutations();

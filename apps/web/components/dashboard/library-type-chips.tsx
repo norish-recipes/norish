@@ -2,9 +2,9 @@
 
 import { useTransition } from "react";
 import { ChipButton } from "@/components/shared/chip-button";
-import { useRecipesFiltersContext } from "@/context/recipes-filters-context";
 import { useTranslations } from "next-intl";
 
+import { useLibraryFilters } from "@norish/shared-react/recipes";
 import { LIBRARY_TYPE_FILTERS } from "@norish/shared/contracts";
 
 /**
@@ -24,7 +24,8 @@ import { LIBRARY_TYPE_FILTERS } from "@norish/shared/contracts";
  */
 export default function LibraryTypeChips() {
   const t = useTranslations("recipes.dashboard");
-  const { filters, setFilters } = useRecipesFiltersContext();
+  const libraryType = useLibraryFilters((state) => state.filters.libraryType);
+  const setFilters = useLibraryFilters((state) => state.setFilters);
   const [, startTransition] = useTransition();
 
   return (
@@ -34,7 +35,7 @@ export default function LibraryTypeChips() {
       role="group"
     >
       {LIBRARY_TYPE_FILTERS.map((type) => {
-        const isSelected = filters.libraryType === type;
+        const isSelected = libraryType === type;
 
         return (
           <ChipButton

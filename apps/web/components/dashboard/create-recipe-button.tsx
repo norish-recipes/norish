@@ -7,7 +7,6 @@ import { CookbookTitlePanel } from "@/components/cookbooks/cookbook-panels";
 import ImportFromImageModal from "@/components/shared/import-from-image-modal";
 import ImportFromPasteModal from "@/components/shared/import-from-paste-modal";
 import ImportRecipeModal from "@/components/shared/import-recipe-modal";
-import { useRecipesFiltersContext } from "@/context/recipes-filters-context";
 import {
   ArrowDownTrayIcon,
   ClipboardDocumentIcon,
@@ -18,7 +17,7 @@ import { Button, Dropdown, Label } from "@heroui/react";
 import { useTranslations } from "next-intl";
 
 import { usePermissions } from "@norish/shared-react/reader";
-import { useCookbooksMutations } from "@norish/shared-react/recipes";
+import { useCookbooksMutations, useLibraryFilters } from "@norish/shared-react/recipes";
 import { cssHeaderControl, cssHeaderIcon } from "@norish/web/config/css-tokens";
 
 /**
@@ -39,7 +38,7 @@ import { cssHeaderControl, cssHeaderIcon } from "@norish/web/config/css-tokens";
 export default function CreateRecipeButton() {
   const router = useRouter();
   const isAIEnabled = usePermissions((p) => p.isAIEnabled);
-  const { filters } = useRecipesFiltersContext();
+  const libraryType = useLibraryFilters((state) => state.filters.libraryType);
   const { createCookbook } = useCookbooksMutations();
   const [isMenuOpen, setIsMenuOpen] = useState(false);
   const [showImportModal, setShowImportModal] = useState(false);
@@ -49,9 +48,9 @@ export default function CreateRecipeButton() {
   const t = useTranslations("recipes.dashboard");
   const tCookbooks = useTranslations("recipes.cookbooks");
   const tCommon = useTranslations("common.actions");
-  const addsCookbook = filters.libraryType === "cookbooks";
+  const addsCookbook = libraryType === "cookbooks";
   // Under All the list holds both kinds, so the menu offers both.
-  const addsEither = filters.libraryType === "all";
+  const addsEither = libraryType === "all";
 
   const handleCreateCookbook = useCallback(
     (title: string) => {

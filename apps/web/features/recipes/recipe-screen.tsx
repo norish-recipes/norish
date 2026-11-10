@@ -19,6 +19,7 @@ import {
 import { TRPCClientError } from "@trpc/client";
 import { useTranslations } from "next-intl";
 
+import type { LibraryTypeFilter } from "@norish/shared/contracts";
 import {
   RecipePageProvider,
   useRatingsSubscription,
@@ -36,7 +37,7 @@ function RecipeSubscriptions({ recipeId }: { recipeId: string }) {
   return null;
 }
 
-function RecipePageContent({ recipeId }: { recipeId: string }) {
+function RecipePageContent({ recipeId, libraryType }: RecipeScreenProps) {
   const { recipe, isLoading, error } = useRecipeQuery(recipeId);
   const t = useTranslations("recipes.detail");
   const [printOpen, setPrintOpen] = useState(false);
@@ -63,7 +64,7 @@ function RecipePageContent({ recipeId }: { recipeId: string }) {
     <RecipePageTint dishColor={recipe.dishColor}>
       {/* Desktop layout - smooth fade in */}
       <div key={`${recipe?.id}-desktop`} className="fade-in hidden md:block">
-        <RecipePageDesktop onPrint={() => setPrintOpen(true)} />
+        <RecipePageDesktop libraryType={libraryType} onPrint={() => setPrintOpen(true)} />
       </div>
 
       {/* Mobile layout - full width, smooth fade in */}
@@ -71,20 +72,26 @@ function RecipePageContent({ recipeId }: { recipeId: string }) {
         key={`${recipe?.id}-mobile`}
         className="fade-in -mx-4 -mt-10 flex w-[calc(100%+2rem)] flex-col md:hidden"
       >
-        <RecipePageMobile onPrint={() => setPrintOpen(true)} />
+        <RecipePageMobile libraryType={libraryType} onPrint={() => setPrintOpen(true)} />
       </div>
       <RecipePrint open={printOpen} onOpenChange={setPrintOpen} />
     </RecipePageTint>
   );
 }
 
+type RecipeScreenProps = {
+  recipeId: string;
+  /** The Library's lens, which names the way back to it. */
+  libraryType: LibraryTypeFilter;
+};
+
 /** The recipe page, from the live route or the offline bootstrap for a Warm Set recipe. */
-export function RecipeScreen({ recipeId }: { recipeId: string }) {
+export function RecipeScreen({ recipeId, libraryType }: RecipeScreenProps) {
   return (
     <RecipePageProvider recipeId={recipeId}>
       <RecipeSubscriptions recipeId={recipeId} />
       <ScreenWakeLock />
-      <RecipePageContent recipeId={recipeId} />
+      <RecipePageContent libraryType={libraryType} recipeId={recipeId} />
     </RecipePageProvider>
   );
 }

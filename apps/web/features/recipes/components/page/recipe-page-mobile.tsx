@@ -19,6 +19,7 @@ import { ArrowLeftIcon } from "@heroicons/react/16/solid";
 import { Card } from "@heroui/react";
 import { useTranslations } from "next-intl";
 
+import type { LibraryTypeFilter } from "@norish/shared/contracts";
 import { useActiveAllergies } from "@norish/shared-react/reader";
 import {
   useFavoritesMutation,
@@ -56,14 +57,20 @@ import StepsList from "./steps-list";
  * frames the recipe. On a phone the page follows the job instead, and
  * reference material comes after the cooking.
  */
-export default function RecipePageMobile({ onPrint }: { onPrint: () => void }) {
+export default function RecipePageMobile({
+  libraryType,
+  onPrint,
+}: {
+  libraryType: LibraryTypeFilter;
+  onPrint: () => void;
+}) {
   const recipe = useLoadedPageRecipe();
   const { isFavorite: checkFavorite } = useFavoritesQuery();
   const { toggleFavorite } = useFavoritesMutation();
   const { userRating, averageRating, isLoading: isRatingLoading } = useRatingQuery(recipe.id);
   const { rateRecipe, isRating } = useRatingsMutation();
   const t = useTranslations("recipes.detail");
-  const back = useBackDestination();
+  const back = useBackDestination(libraryType);
   const { showRatings, showFavorites, showNutrition } = useHiddenItemVisibility();
 
   const isFavorite = checkFavorite(recipe.id);

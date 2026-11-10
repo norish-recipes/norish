@@ -6,7 +6,6 @@ import Panel from "@/components/Panel/Panel";
 import { ActionButton, ActionButtonGroup } from "@/components/shared/action-button";
 import { ChipButton } from "@/components/shared/chip-button";
 import ChipSkeleton from "@/components/skeleton/chip-skeleton";
-import { useRecipesFiltersContext } from "@/context/recipes-filters-context";
 import { useHiddenItemVisibility } from "@/hooks/user/use-hidden-item-visibility";
 import { useCategoryLabel } from "@/lib/category-display";
 import {
@@ -23,6 +22,7 @@ import { useTranslations } from "next-intl";
 
 import type { FilterMode, RecipeCategory, SearchField, SortOrder } from "@norish/shared/contracts";
 import { useCategoriesQuery, useTagsQuery } from "@norish/shared-react/config";
+import { useLibraryFilters } from "@norish/shared-react/recipes";
 import { DEFAULT_RECIPE_FILTERS } from "@norish/shared/contracts/filter-contract";
 import StarRating from "@norish/ui/star-rating";
 
@@ -107,7 +107,9 @@ type FiltersPanelProps = {
   onOpenChange: (open: boolean) => void;
 };
 export default function FiltersPanel({ open, onOpenChange }: FiltersPanelProps) {
-  const { filters, setFilters, clearFilters } = useRecipesFiltersContext();
+  const filters = useLibraryFilters((state) => state.filters);
+  const setFilters = useLibraryFilters((state) => state.setFilters);
+  const clearFilters = useLibraryFilters((state) => state.clearFilters);
   const t = useTranslations("common.filters");
   const tActions = useTranslations("common.actions");
   const tRecipes = useTranslations("recipes.dashboard");

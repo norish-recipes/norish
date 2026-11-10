@@ -106,7 +106,7 @@ function renderPage() {
     fakeProcedure("cookbooks.forRecipe").queryKey({ recipeId: recipe.id }),
     recipeCookbooks.current
   );
-  const rendered = render(<RecipePageMobile onPrint={() => {}} />, { wrapper });
+  const rendered = render(<RecipePageMobile libraryType="all" onPrint={() => {}} />, { wrapper });
 
   act(() => page().setServings(mocks.currentServings));
 

@@ -1,12 +1,12 @@
 "use client";
 
-import { useRecipesFiltersContext } from "@/context/recipes-filters-context";
 import { useRecipesMutations } from "@/hooks/use-recipes-mutations";
 
 import { useActiveAllergies } from "@norish/shared-react/reader";
 import {
   useFavoritesMutation,
   useFavoritesQuery,
+  useLibraryFilters,
   useLibraryQuery,
 } from "@norish/shared-react/recipes";
 import { toRecipesQueryFilters } from "@norish/shared/contracts/filter-contract";
@@ -16,7 +16,8 @@ import { toRecipesQueryFilters } from "@norish/shared/contracts/filter-contract"
  * filters are applied it stays loading: the defaults would show recipes the reader filters away.
  */
 export function useLibraryList() {
-  const { filters, isHydrated } = useRecipesFiltersContext();
+  const filters = useLibraryFilters((state) => state.filters);
+  const isHydrated = useLibraryFilters((state) => state.hydrated);
   const library = useLibraryQuery(toRecipesQueryFilters(filters), { enabled: isHydrated });
 
   return {

@@ -149,7 +149,7 @@ describe("recipe pages favorite visibility", () => {
   it("keeps tap interactions enabled on desktop when favorites are hidden", () => {
     userPreferencesState.hidden = ["favorites"];
 
-    renderOnPage(<RecipePageDesktop onPrint={() => {}} />);
+    renderOnPage(<RecipePageDesktop libraryType="all" onPrint={() => {}} />);
 
     expect(screen.getByTestId("double-tap-container")).toHaveAttribute("data-disabled", "false");
     expect(screen.getByTestId("double-tap-container")).toHaveAttribute(
@@ -161,7 +161,7 @@ describe("recipe pages favorite visibility", () => {
   it("keeps tap interactions enabled on mobile when favorites are hidden", () => {
     userPreferencesState.hidden = ["favorites"];
 
-    renderOnPage(<RecipePageMobile onPrint={() => {}} />);
+    renderOnPage(<RecipePageMobile libraryType="all" onPrint={() => {}} />);
 
     expect(screen.getByTestId("double-tap-container")).toHaveAttribute("data-disabled", "false");
     expect(screen.getByTestId("double-tap-container")).toHaveAttribute(
@@ -173,7 +173,10 @@ describe("recipe pages favorite visibility", () => {
 
 describe("recipe page servings", () => {
   it("leaves a recipe without servings out of the ingredients header on desktop", () => {
-    renderOnPage(<RecipePageDesktop onPrint={() => {}} />, { ...stubRecipe, servings: 0 });
+    renderOnPage(<RecipePageDesktop libraryType="all" onPrint={() => {}} />, {
+      ...stubRecipe,
+      servings: 0,
+    });
 
     expect(screen.queryByText("servings-control")).not.toBeInTheDocument();
     expect(screen.queryByText("0")).not.toBeInTheDocument();

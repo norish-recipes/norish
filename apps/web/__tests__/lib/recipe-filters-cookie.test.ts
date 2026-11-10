@@ -3,14 +3,14 @@ import {
   recipeFiltersCookieValue,
   recipeFiltersFromCookie,
 } from "@/lib/recipe-filters-cookie";
-import {
-  RECIPE_FILTERS_STORAGE_KEY,
-  webRecipeFiltersStorageAdapter,
-} from "@/lib/recipe-filters-storage-adapter";
+import { persistRecipeFilters, readStoredRecipeFilters } from "@/lib/recipe-filters-storage";
 import { afterEach, describe, expect, it } from "vitest";
 
 import type { PersistedRecipeFilters } from "@norish/shared/contracts/filter-contract";
-import { DEFAULT_PERSISTED_RECIPE_FILTERS } from "@norish/shared/contracts/filter-contract";
+import {
+  canonicalRecipeFilters,
+  DEFAULT_PERSISTED_RECIPE_FILTERS,
+} from "@norish/shared/contracts/filter-contract";
 
 describe("the Library filters cookie", () => {
   it("round-trips the stored filters, carrying only what differs from the defaults", () => {
@@ -62,22 +62,20 @@ describe("the browser's filters storage", () => {
     document.cookie = `${RECIPE_FILTERS_COOKIE}=; max-age=0; path=/`;
   });
 
-  it("tells the server every filter it stores, through the cookie", () => {
+  it("tells the server every filter it stores, through the cookie, and reads them back", () => {
     const filters = { ...DEFAULT_PERSISTED_RECIPE_FILTERS, sortMode: "titleAsc" as const };
 
-    webRecipeFiltersStorageAdapter.setItem(RECIPE_FILTERS_STORAGE_KEY, JSON.stringify(filters));
+    persistRecipeFilters({ ...canonicalRecipeFilters(filters), rawInput: "soup" });
 
-    expect(localStorage.getItem(RECIPE_FILTERS_STORAGE_KEY)).toBe(JSON.stringify(filters));
+    expect(readStoredRecipeFilters()).toEqual(filters);
     expect(recipeFiltersFromCookie(cookie()!)).toEqual(filters);
   });
 
-  it("sets the cookie back to the defaults when the filters are cleared", () => {
-    webRecipeFiltersStorageAdapter.setItem(
-      RECIPE_FILTERS_STORAGE_KEY,
-      JSON.stringify({ ...DEFAULT_PERSISTED_RECIPE_FILTERS, sortMode: "titleAsc" })
-    );
-    webRecipeFiltersStorageAdapter.removeItem(RECIPE_FILTERS_STORAGE_KEY);
+  it("reads nothing stored, or what doesn't parse, as nothing", () => {
+    expect(readStoredRecipeFilters()).toBeNull();
 
-    expect(decodeURIComponent(cookie()!)).toBe("{}");
+    localStorage.setItem("norish:recipe-filters", "{not");
+
+    expect(readStoredRecipeFilters()).toBeNull();
   });
 });
