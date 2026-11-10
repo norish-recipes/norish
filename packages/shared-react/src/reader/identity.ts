@@ -1,6 +1,6 @@
 "use client";
 
-import { useMemo, useState } from "react";
+import { useState } from "react";
 import { useQuery } from "@tanstack/react-query";
 
 import type { User } from "@norish/shared/contracts";
@@ -38,13 +38,10 @@ export function useSeededSession(
   const email = live?.email;
   const name = live?.name;
   const image = live?.image;
-  const user = useMemo(
-    () =>
-      id && email !== undefined && name !== undefined
-        ? sessionReader({ id, email, name, image })
-        : null,
-    [id, email, name, image]
-  );
+  const user =
+    id && email !== undefined && name !== undefined
+      ? sessionReader({ id, email, name, image })
+      : null;
 
   return { user: user ?? (answered ? null : seed), isPending: session.isPending || !hydrated };
 }

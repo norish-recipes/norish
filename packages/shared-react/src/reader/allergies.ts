@@ -1,6 +1,5 @@
 "use client";
 
-import { useMemo } from "react";
 import { useQuery } from "@tanstack/react-query";
 
 import { useTRPC } from "../trpc";
@@ -26,7 +25,7 @@ export function useActiveAllergies(): ActiveAllergies {
   });
 
   const allergies = household && household.length > 0 ? household : (own ?? NONE);
-  const allergySet = useMemo(() => new Set(allergies.map((a) => a.toLowerCase())), [allergies]);
+  const allergySet = new Set(allergies.map((a) => a.toLowerCase()));
 
   return { allergies, allergySet };
 }
