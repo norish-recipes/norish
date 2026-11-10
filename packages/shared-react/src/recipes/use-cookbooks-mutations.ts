@@ -47,10 +47,7 @@ export function useCookbooksMutations(): CookbooksMutationsResult {
       onSuccess: (_data, { cookbookId, recipeIds }) => {
         for (const recipeId of recipeIds) invalidateMembership(recipeId);
         invalidateCookbook(cookbookId);
-        // The lists too, rather than waiting on the echo for them: the
-        // derived facts the tentative patch cleared are the server's to answer,
-        // and the reader who made the change should not need realtime to
-        // be up to see their own cookbook settle.
+        // Refetch the lists too: the patch cleared derived fields only the server can answer.
         invalidate();
       },
       onError: invalidateUnlessQueued,
