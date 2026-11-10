@@ -6,11 +6,10 @@ import { useQuery } from "@tanstack/react-query";
 import type { User } from "@norish/shared/contracts";
 
 import type { PlatformSession, SignOut } from "../platform";
+import type { SessionUser } from "./session";
 import { useHydrated, usePlatform } from "../platform";
 import { useTRPC } from "../trpc";
-
-/** The user an auth client's session carries. */
-export type SessionUser = { id: string; email: string; name: string; image?: string | null };
+import { sessionReader } from "./session";
 
 export type ReaderIdentity = {
   /** The signed-in Reader, or null signed out or while the session is unknown. */
@@ -18,11 +17,6 @@ export type ReaderIdentity = {
   isLoading: boolean;
   signOut: SignOut;
 };
-
-/** The Reader a session names, until `user.get` brings their profile. */
-export function sessionReader(user: SessionUser): User {
-  return { id: user.id, email: user.email, name: user.name, image: user.image ?? null, version: 1 };
-}
 
 /**
  * A server-rendered app's session: `seed`, the reader the server verified, answers until the

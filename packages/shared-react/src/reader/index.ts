@@ -14,13 +14,7 @@ export {
 } from "./household";
 export { useHouseholdMutations, type HouseholdMutationsResult } from "./household-mutations";
 export { useHouseholdSubscription } from "./household-subscription";
-export {
-  sessionReader,
-  useReader,
-  useSeededSession,
-  type ReaderIdentity,
-  type SessionUser,
-} from "./identity";
+export { useReader, useSeededSession, type ReaderIdentity } from "./identity";
 export {
   normalizePermissionsData,
   selectCanDeleteRecipe,
@@ -29,6 +23,7 @@ export {
   type PermissionsData,
   type ReaderPermissions,
 } from "./permission-selectors";
+export { sessionReader, type SessionUser } from "./session";
 export {
   usePermissions,
   usePermissionsSubscription,
