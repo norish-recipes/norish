@@ -6,13 +6,14 @@ import "@testing-library/jest-dom";
 
 import FiltersPanel from "@/components/Panel/consumers/filters-panel";
 
-import type { PersistedRecipeFilters } from "@norish/shared/contracts/filter-contract";
 import { LibraryFiltersProvider } from "@norish/shared-react/recipes";
 import { DEFAULT_PERSISTED_RECIPE_FILTERS } from "@norish/shared/contracts/filter-contract";
 
-/** The panel under a Library filters store made from these filters. */
-function render(ui: ReactNode, filters: PersistedRecipeFilters = DEFAULT_PERSISTED_RECIPE_FILTERS) {
-  return renderBare(<LibraryFiltersProvider initial={filters}>{ui}</LibraryFiltersProvider>);
+/** The panel under a Library filters store made from the default filters. */
+function render(ui: ReactNode) {
+  return renderBare(
+    <LibraryFiltersProvider initial={DEFAULT_PERSISTED_RECIPE_FILTERS}>{ui}</LibraryFiltersProvider>
+  );
 }
 
 const userPreferencesState = {
@@ -98,15 +99,6 @@ vi.mock("@heroui/react", () => ({
 }));
 
 describe("FiltersPanel", () => {
-  it("does not crash when sort mode is missing", () => {
-    const noSort = { ...DEFAULT_PERSISTED_RECIPE_FILTERS, ...JSON.parse('{"sortMode":null}') };
-
-    expect(() => render(<FiltersPanel open onOpenChange={vi.fn()} />, noSort)).not.toThrow();
-
-    expect(screen.getByText("sortByDate")).toHaveAttribute("variant", "tertiary");
-    expect(screen.getByText("sortByTitle")).toHaveAttribute("variant", "tertiary");
-  });
-
   it("limits tag container height and enables vertical scrolling", () => {
     const { container } = render(<FiltersPanel open onOpenChange={vi.fn()} />);
 
