@@ -13,13 +13,11 @@ const recipeState = vi.hoisted(() => ({
   recipe: { id: "r1", systemUsed: "metric", recipeIngredients: [] as unknown[] },
 }));
 
-vi.mock("@/app/(app)/recipes/[id]/context", () => ({
-  useRecipeContextRequired: () => ({
-    recipe: recipeState.recipe as any,
-    convertingTo: null,
-    startConversion: () => {},
-  }),
-}));
+vi.mock("@norish/shared-react/recipes", async () =>
+  (await import("../../helpers/recipe-page-mock")).mockRecipePage(() => ({
+    recipe: recipeState.recipe,
+  }))
+);
 
 // Permissions context: AI disabled -> conversion options should be empty when no data
 vi.mock("@norish/shared-react/reader", async () =>

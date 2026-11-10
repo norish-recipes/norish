@@ -19,17 +19,16 @@ vi.mock("@norish/shared-react/reader", async () =>
   }))
 );
 vi.mock("@/components/timer-dock", () => ({ TimerDock: () => <div /> }));
-vi.mock("@/app/(app)/recipes/[id]/components/wake-lock-context", () => ({
-  useWakeLockContext: () => ({
+vi.mock("@/app/(app)/recipes/[id]/components/page-wake-lock", () => ({
+  usePageWakeLock: () => ({
     isSupported: false,
     isActive: false,
     enable: vi.fn(),
     disable: vi.fn(),
   }),
 }));
-vi.mock("@/app/(app)/recipes/[id]/context", () => ({
-  useRecipeContextRequired: () => ({
-    adjustedIngredients: [],
+vi.mock("@norish/shared-react/recipes", async () =>
+  (await import("../../helpers/recipe-page-mock")).mockRecipePage(() => ({
     recipe: {
       id: "recipe-1",
       name: "Cacio e Pepe",
@@ -46,8 +45,8 @@ vi.mock("@/app/(app)/recipes/[id]/context", () => ({
       servings: 2,
       systemUsed: "metric",
     },
-  }),
-}));
+  }))
+);
 
 // The dialog reports the session facts the page cannot see for itself, offers
 // the close the header would, and wires the swipe handlers onto two regions:

@@ -46,8 +46,8 @@ vi.mock("@heroui/react", () => {
   return { Tooltip, ToggleButton };
 });
 
-vi.mock("@/app/(app)/recipes/[id]/components/wake-lock-context", () => ({
-  useWakeLockContext: () => ({
+vi.mock("@/app/(app)/recipes/[id]/components/page-wake-lock", () => ({
+  usePageWakeLock: () => ({
     isSupported,
     isActive,
     toggle,

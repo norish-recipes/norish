@@ -3,7 +3,6 @@
 import { useMemo, useState } from "react";
 import Panel, { PanelPortal } from "@/components/Panel/Panel";
 import RecipeShareStatusChip from "@/components/recipes/recipe-share-status-chip";
-import { sharedRecipeShareHooks } from "@/hooks/recipes/shared-recipe-hooks";
 import { showSafeErrorToast } from "@/lib/ui/safe-error-toast";
 import {
   ArrowTopRightOnSquareIcon,
@@ -28,10 +27,14 @@ import { useMutation } from "@tanstack/react-query";
 import { useTranslations } from "next-intl";
 
 import type { CreateRecipeShareInputDto } from "@norish/shared/contracts";
+import {
+  useLoadedPageRecipe,
+  useRecipeShareCacheHelpers,
+  useRecipeShareMutations,
+  useRecipeSharesQuery,
+} from "@norish/shared-react/recipes";
 import { useTRPC } from "@norish/shared-react/trpc";
 import { addBasePath } from "@norish/shared/lib/base-path";
-
-import { useRecipeContextRequired } from "../context";
 
 type Props = {
   open: boolean;
@@ -54,23 +57,22 @@ export default function RecipeSharePanel({ open, onOpenChange }: Props) {
   const t = useTranslations("recipes.sharePanel");
   const tErrors = useTranslations("common.errors");
   const trpc = useTRPC();
+  const recipe = useLoadedPageRecipe();
+  const { shares, isLoading: isLoadingShares } = useRecipeSharesQuery(recipe.id);
   const {
-    recipe,
-    shares,
-    isLoadingShares,
     revokeShare,
     reactivateShare,
     deleteShare,
-    isRevokingShare,
-    isReactivatingShare,
-    isDeletingShare,
-  } = useRecipeContextRequired();
+    isRevoking: isRevokingShare,
+    isReactivating: isReactivatingShare,
+    isDeleting: isDeletingShare,
+  } = useRecipeShareMutations(recipe.id);
   const {
     invalidateRecipeShares,
     invalidateMyRecipeShares,
     invalidateAdminRecipeShares,
     invalidateRecipeShare,
-  } = sharedRecipeShareHooks.useRecipeShareCacheHelpers();
+  } = useRecipeShareCacheHelpers();
   const [expiresIn, setExpiresIn] = useState<CreateRecipeShareInputDto["expiresIn"]>("forever");
   const [latestCreatedUrl, setLatestCreatedUrl] = useState<string | null>(null);
   const createShareMutation = useMutation(

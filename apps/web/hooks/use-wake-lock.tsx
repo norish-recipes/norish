@@ -1,127 +1,64 @@
 "use client";
 
-import { useCallback, useEffect, useRef, useState, useSyncExternalStore } from "react";
+import { useEffect, useSyncExternalStore } from "react";
 
 import { createClientLogger } from "@norish/shared/lib/logger";
 
 const logger = createClientLogger("wake-lock");
 
-interface UseWakeLockReturn {
-  isSupported: boolean;
-  isActive: boolean;
-  enable: () => Promise<void>;
-  disable: () => void;
-  toggle: () => Promise<void>;
-}
-
 const noSubscription = () => () => {};
 
-export function useWakeLock(): UseWakeLockReturn {
-  // False on the server and while hydrating, like the markup the server sent.
-  const isSupported = useSyncExternalStore(
+/** Whether the browser can keep the screen awake; false on the server and while hydrating. */
+export function useWakeLockSupported(): boolean {
+  return useSyncExternalStore(
     noSubscription,
     () => "wakeLock" in navigator,
     () => false
   );
-  const [isActive, setIsActive] = useState(false);
-  const wakeLockRef = useRef<WakeLockSentinel | null>(null);
-  const releaseHandlerRef = useRef<(() => void) | null>(null);
+}
 
-  const enable = useCallback(async () => {
-    if (!isSupported) {
-      logger.warn("Wake Lock API is not supported in this browser");
-
-      return;
-    }
-
-    try {
-      const sentinel = await navigator.wakeLock.request("screen");
-
-      // A second tap while the first request was on its way: keep one lock,
-      // or turning it off would leave the other holding the screen awake.
-      if (wakeLockRef.current) {
-        void sentinel.release();
-
-        return;
-      }
-
-      wakeLockRef.current = sentinel;
-      setIsActive(true);
-      logger.info("Wake lock activated");
-
-      // Create handler and store reference for cleanup
-      const handleRelease = () => {
-        logger.info("Wake lock released");
-        setIsActive(false);
-      };
-
-      releaseHandlerRef.current = handleRelease;
-
-      // Listen for wake lock release
-      wakeLockRef.current.addEventListener("release", handleRelease);
-    } catch (err) {
-      logger.error(err, "Failed to activate wake lock");
-      setIsActive(false);
-    }
-  }, [isSupported]);
-
-  const disable = useCallback(() => {
-    if (wakeLockRef.current) {
-      // Remove event listener before release
-      if (releaseHandlerRef.current) {
-        wakeLockRef.current.removeEventListener("release", releaseHandlerRef.current);
-        releaseHandlerRef.current = null;
-      }
-      wakeLockRef.current.release();
-      wakeLockRef.current = null;
-      setIsActive(false);
-      logger.info("Wake lock manually disabled");
-    }
-  }, []);
-
-  const toggle = useCallback(async () => {
-    if (isActive) {
-      disable();
-    } else {
-      await enable();
-    }
-  }, [isActive, enable, disable]);
-
+/**
+ * Holds a screen wake lock while `active`. A lock the browser takes back, or one
+ * it refuses, calls `setActive(false)`, so the toggle shows the screen can sleep.
+ */
+export function useHoldWakeLock(active: boolean, setActive: (active: boolean) => void): void {
   useEffect(() => {
-    const handleVisibilityChange = () => {
-      if (document.visibilityState === "visible" && isActive && !wakeLockRef.current) {
-        logger.info("Page visible again, re-acquiring wake lock");
-        enable();
-      }
+    if (!active || !("wakeLock" in navigator)) return;
+
+    let sentinel: WakeLockSentinel | null = null;
+    let released = false;
+    const handleRelease = () => {
+      logger.info("Wake lock released");
+      setActive(false);
     };
 
-    document.addEventListener("visibilitychange", handleVisibilityChange);
+    navigator.wakeLock.request("screen").then(
+      (granted) => {
+        // Turned off while the request was on its way.
+        if (released) {
+          void granted.release();
 
-    return () => {
-      document.removeEventListener("visibilitychange", handleVisibilityChange);
-    };
-  }, [isActive, enable]);
-
-  // Cleanup on unmount
-  useEffect(() => {
-    return () => {
-      if (wakeLockRef.current) {
-        // Remove event listener before release
-        if (releaseHandlerRef.current) {
-          wakeLockRef.current.removeEventListener("release", releaseHandlerRef.current);
-          releaseHandlerRef.current = null;
+          return;
         }
-        wakeLockRef.current.release();
-        wakeLockRef.current = null;
-      }
-    };
-  }, []);
 
-  return {
-    isSupported,
-    isActive,
-    enable,
-    disable,
-    toggle,
-  };
+        sentinel = granted;
+        sentinel.addEventListener("release", handleRelease);
+        logger.info("Wake lock activated");
+      },
+      (err: unknown) => {
+        logger.error(err, "Failed to activate wake lock");
+        setActive(false);
+      }
+    );
+
+    return () => {
+      released = true;
+
+      if (!sentinel) return;
+
+      sentinel.removeEventListener("release", handleRelease);
+      void sentinel.release();
+      logger.info("Wake lock manually disabled");
+    };
+  }, [active, setActive]);
 }

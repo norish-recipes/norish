@@ -2,7 +2,6 @@
 
 import type { PointerEvent as ReactPointerEvent } from "react";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
-import { useWakeLockContext } from "@/app/(app)/recipes/[id]/components/wake-lock-context";
 import { TimerDock } from "@/components/timer-dock";
 import { useFloatingDock } from "@/hooks/use-floating-dock";
 import { useIsMobile } from "@/hooks/use-is-mobile";
@@ -13,11 +12,12 @@ import { motion } from "motion/react";
 import { useTranslations } from "next-intl";
 
 import { useDevicePreference } from "@norish/shared-react/reader";
+import { useLoadedPageRecipe, usePageIngredients } from "@norish/shared-react/recipes";
 import { primaryRecipeImage } from "@norish/shared/lib/recipe-media";
 import { cssFloatingDockPill } from "@norish/web/config/css-tokens";
 
 import type { CookingModeView } from "./types";
-import { useRecipeContextRequired } from "../../context";
+import { usePageWakeLock } from "../page-wake-lock";
 import { resolveCookingModeSteps } from "./cooking-mode-steps";
 import { DesktopCookingModeDialog } from "./desktop-cooking-mode-dialog";
 import { MobileCookingModeDialog } from "./mobile-cooking-mode-dialog";
@@ -47,8 +47,9 @@ export default function CookingMode({
   fullWidth = false,
   floating = false,
 }: CookingModeProps) {
-  const { adjustedIngredients, recipe } = useRecipeContextRequired();
-  const { disable, enable, isActive, isSupported } = useWakeLockContext();
+  const recipe = useLoadedPageRecipe();
+  const displayIngredients = usePageIngredients();
+  const { disable, enable, isActive, isSupported } = usePageWakeLock();
   // The modal portals out of the recipe page's dish-tint scope (ADR-0023),
   // so the backdrop re-establishes it: the wash and every tinted token
   // inside cooking mode - the bottom bar's ground, the ingredient chips -
@@ -75,8 +76,6 @@ export default function CookingMode({
     () => resolveCookingModeSteps(recipe.steps ?? [], recipe.systemUsed ?? "metric"),
     [recipe.steps, recipe.systemUsed]
   );
-  const displayIngredients =
-    adjustedIngredients?.length > 0 ? adjustedIngredients : recipe.recipeIngredients;
   const currentStep = clampStep(activeStep, steps.length);
 
   if (activeStep !== currentStep) {
@@ -89,7 +88,7 @@ export default function CookingMode({
     }
 
     wakeLockOwnedRef.current = true;
-    void enable();
+    enable();
   }, [enable, isActive, isOpen, isSupported]);
 
   useEffect(() => {

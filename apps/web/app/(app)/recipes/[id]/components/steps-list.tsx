@@ -2,25 +2,21 @@
 
 import { ReadonlyStepsList } from "@/components/recipes/readonly-steps-list";
 
-import { useRecipeContext } from "../context";
+import { useLoadedPageRecipe, usePageIngredients } from "@norish/shared-react/recipes";
 
 export default function StepsList() {
-  const context = useRecipeContext();
-  const recipe = context?.recipe;
-  const ingredients =
-    context?.adjustedIngredients && context.adjustedIngredients.length > 0
-      ? context.adjustedIngredients
-      : (recipe?.recipeIngredients ?? []);
+  const recipe = useLoadedPageRecipe();
+  const ingredients = usePageIngredients();
 
   return (
     <ReadonlyStepsList
       enableTimers
       interactive
       ingredients={ingredients}
-      recipeId={recipe?.id}
-      recipeName={recipe?.name}
-      steps={recipe?.steps ?? []}
-      systemUsed={recipe?.systemUsed ?? "metric"}
+      recipeId={recipe.id}
+      recipeName={recipe.name}
+      steps={recipe.steps ?? []}
+      systemUsed={recipe.systemUsed ?? "metric"}
     />
   );
 }

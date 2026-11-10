@@ -19,26 +19,27 @@ import {
 } from "@/components/recipes/readonly-recipe-sections";
 import DoubleTapContainer from "@/components/shared/double-tap-container";
 import HeartButton from "@/components/shared/heart-button";
-import { useFavoritesMutation, useFavoritesQuery } from "@/hooks/favorites";
-import { useRatingQuery, useRatingsMutation } from "@/hooks/ratings";
 import { useBackDestination } from "@/hooks/use-back-destination";
 import { useHiddenItemVisibility } from "@/hooks/user/use-hidden-item-visibility";
 import { ArrowLeftIcon } from "@heroicons/react/16/solid";
 import { Card } from "@heroui/react";
 import { useTranslations } from "next-intl";
 
+import { useActiveAllergies } from "@norish/shared-react/reader";
+import {
+  useFavoritesMutation,
+  useFavoritesQuery,
+  useLoadedPageRecipe,
+  useRatingQuery,
+  useRatingsMutation,
+} from "@norish/shared-react/recipes";
 import StarRating from "@norish/ui/star-rating";
 
 import ServingsControl from "./components/servings-control";
-import { useRecipeContextRequired } from "./context";
 
 export default function RecipePageDesktop({ onPrint }: { onPrint: () => void }) {
-  const {
-    recipe,
-    currentServings: _currentServings,
-    allergies,
-    allergySet,
-  } = useRecipeContextRequired();
+  const recipe = useLoadedPageRecipe();
+  const { allergies, allergySet } = useActiveAllergies();
   const { isFavorite: checkFavorite } = useFavoritesQuery();
   const { toggleFavorite } = useFavoritesMutation();
   const { userRating, averageRating, isLoading: isRatingLoading } = useRatingQuery(recipe.id);

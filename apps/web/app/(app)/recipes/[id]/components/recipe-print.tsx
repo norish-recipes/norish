@@ -11,9 +11,12 @@ import { createPortal } from "react-dom";
 
 import { useTimerKeywordsQuery, useTimersEnabledQuery } from "@norish/shared-react/config";
 import { useHydrated } from "@norish/shared-react/platform";
+import {
+  useLoadedPageRecipe,
+  usePageIngredients,
+  usePageServings,
+} from "@norish/shared-react/recipes";
 import { primaryRecipeImage } from "@norish/shared/lib/recipe-media";
-
-import { useRecipeContextRequired } from "../context";
 
 import "@/styles/recipe-print.css";
 
@@ -23,7 +26,9 @@ type Props = {
 };
 
 export default function RecipePrint({ open, onOpenChange }: Props) {
-  const { recipe, adjustedIngredients, currentServings } = useRecipeContextRequired();
+  const recipe = useLoadedPageRecipe();
+  const adjustedIngredients = usePageIngredients();
+  const currentServings = usePageServings();
   const { mode } = useAmountDisplayPreference();
   const { formatUnitOnly } = useUnitFormatter();
   const { timersEnabled } = useTimersEnabledQuery();

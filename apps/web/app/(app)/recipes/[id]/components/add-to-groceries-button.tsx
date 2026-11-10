@@ -5,14 +5,15 @@ import { ActionButton } from "@/components/shared/action-button";
 import { MiniGroceries } from "@/features/groceries";
 import { useTranslations } from "next-intl";
 
-import { useRecipeContextRequired } from "../context";
+import { useLoadedPageRecipe, usePageServings } from "@norish/shared-react/recipes";
 
 type Props = {
   recipeId: string;
 };
 export default function AddToGroceries({ recipeId }: Props) {
   const [open, setOpen] = useState(false);
-  const { currentServings, recipe } = useRecipeContextRequired();
+  const recipe = useLoadedPageRecipe();
+  const currentServings = usePageServings();
   const tActions = useTranslations("common.actions");
   return (
     <>

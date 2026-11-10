@@ -2,14 +2,14 @@
 
 import { useState } from "react";
 import Link from "next/link";
-import { useRecipeContext } from "@/app/(app)/recipes/[id]/context";
 import { CookbookIconSolid } from "@/components/cookbooks/cookbook-icon";
 import { MiniCookbooks } from "@/components/Panel/consumers";
-import { useRecipeCookbooksQuery } from "@/hooks/cookbooks";
 import { useHiddenItemVisibility } from "@/hooks/user/use-hidden-item-visibility";
 import { withOrigin } from "@/lib/back-destination";
 import { Button, Card, Chip } from "@heroui/react";
 import { useTranslations } from "next-intl";
+
+import { usePageRecipe, useRecipeCookbooksQuery } from "@norish/shared-react/recipes";
 
 /**
  * The cookbooks a recipe is in, at the end of the recipe page.
@@ -25,7 +25,7 @@ import { useTranslations } from "next-intl";
  * with Nutrition Information or the rating.
  */
 export default function CookbooksCard() {
-  const { recipe } = useRecipeContext();
+  const recipe = usePageRecipe();
   const t = useTranslations("recipes.cookbooks");
   const { showCookbooks } = useHiddenItemVisibility();
   const [panelOpen, setPanelOpen] = useState(false);

@@ -5,8 +5,8 @@ import { useRouter } from "next/navigation";
 import { CookbookIconSolid } from "@/components/cookbooks/cookbook-icon";
 import { MiniCalendar, MiniCookbooks } from "@/components/Panel/consumers";
 import { DeleteRecipeModal } from "@/components/shared/delete-recipe-modal";
-import { useRecipesContext } from "@/context/recipes-context";
 import { MiniGroceries } from "@/features/groceries";
+import { useRecipeEnrichment, useRecipesMutations } from "@/hooks/recipes";
 import {
   CalendarDaysIcon,
   DevicePhoneMobileIcon,
@@ -28,6 +28,7 @@ import {
   usePermissions,
   useRecipePermissions,
 } from "@norish/shared-react/reader";
+import { useLoadedPageRecipe } from "@norish/shared-react/recipes";
 import {
   cssAIGradientText,
   cssAIIconColor,
@@ -35,9 +36,8 @@ import {
   cssButtonPillDanger,
 } from "@norish/web/config/css-tokens";
 
-import { useRecipeContextRequired } from "../context";
+import { usePageWakeLock } from "./page-wake-lock";
 import RecipeSharePanel from "./recipe-share-panel";
-import { useWakeLockContext } from "./wake-lock-context";
 
 type Props = {
   id: string;
@@ -74,11 +74,12 @@ export default function ActionsMenu({ id, buttonClassName, onPrint }: Props) {
 
   const { canEditRecipe, canDeleteRecipe } = useRecipePermissions();
   const isAIEnabled = usePermissions((p) => p.isAIEnabled);
-  const { deleteRecipes } = useRecipesContext();
-  const { recipe, enrichment } = useRecipeContextRequired();
+  const { deleteRecipes } = useRecipesMutations();
+  const recipe = useLoadedPageRecipe();
+  const enrichment = useRecipeEnrichment(id);
 
   const { allergies } = useActiveAllergies();
-  const { isSupported, isActive, toggle } = useWakeLockContext();
+  const { isSupported, isActive, toggle } = usePageWakeLock();
 
   const t = useTranslations("recipes.actions");
   const tPrint = useTranslations("recipes.print");

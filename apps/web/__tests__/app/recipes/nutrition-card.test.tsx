@@ -53,8 +53,8 @@ vi.mock("@norish/shared-react/reader", async () =>
   )
 );
 
-vi.mock("@/app/(app)/recipes/[id]/context", () => ({
-  useRecipeContext: () => ({
+vi.mock("@norish/shared-react/recipes", async () =>
+  (await import("../../helpers/recipe-page-mock")).mockRecipePage(() => ({
     recipe: {
       id: "recipe-1",
       userId: "owner-1",
@@ -63,11 +63,14 @@ vi.mock("@/app/(app)/recipes/[id]/context", () => ({
       carbs: null,
       protein: null,
     },
-    enrichment: {
-      states: { "nutrition-estimation": mocks.state },
-      isBusy: () => mocks.state === "queued" || mocks.state === "processing",
-      request: vi.fn(),
-    },
+  }))
+);
+
+vi.mock("@/hooks/recipes/use-recipe-enrichment", () => ({
+  useRecipeEnrichment: () => ({
+    states: { "nutrition-estimation": mocks.state },
+    isBusy: () => mocks.state === "queued" || mocks.state === "processing",
+    request: vi.fn(),
   }),
 }));
 

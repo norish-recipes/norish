@@ -32,13 +32,16 @@ vi.mock("@norish/shared-react/reader", async () =>
   )
 );
 
-vi.mock("@/app/(app)/recipes/[id]/context", () => ({
-  useRecipeContext: () => ({
+vi.mock("@norish/shared-react/recipes", async () =>
+  (await import("../../helpers/recipe-page-mock")).mockRecipePage(() => ({
     recipe: mocks.recipe,
-    enrichment: {
-      states: { "recipe-provenance": mocks.state },
-      isBusy: () => mocks.state === "queued" || mocks.state === "processing",
-    },
+  }))
+);
+
+vi.mock("@/hooks/recipes/use-recipe-enrichment", () => ({
+  useRecipeEnrichment: () => ({
+    states: { "recipe-provenance": mocks.state },
+    isBusy: () => mocks.state === "queued" || mocks.state === "processing",
   }),
 }));
 

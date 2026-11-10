@@ -50,39 +50,22 @@ vi.mock("@/components/Panel/consumers", () => ({
   MiniCookbooks: () => null,
 }));
 
-vi.mock("@/hooks/cookbooks", () => ({
-  useRecipeCookbooksQuery: () => ({ cookbooks: [], isLoading: false }),
-}));
-
 // The worked-out total reads the server; these pages are about their layout.
 vi.mock("@/hooks/recipes/use-worked-out-nutrition", () => ({
   useWorkedOutNutrition: () => null,
 }));
 
-vi.mock("@/app/(app)/recipes/[id]/context", () => ({
-  useRecipeContext: () => ({ recipe: stubRecipe }),
-  useRecipeContextRequired: () => ({
+vi.mock("@norish/shared-react/recipes", async () =>
+  (await import("../../helpers/recipe-page-mock")).mockRecipePage(() => ({
     recipe: stubRecipe,
-    currentServings: 2,
-    allergies: [],
-    allergySet: new Set<string>(),
-  }),
-}));
+    servings: 2,
+  }))
+);
 
 // The way back reads the reader's lens and the page they came from, neither
 // of which these tests set up — the cards under test are what they are about.
 vi.mock("@/hooks/use-back-destination", () => ({
   useBackDestination: () => ({ href: "/", label: "Back to library" }),
-}));
-
-vi.mock("@/hooks/favorites", () => ({
-  useFavoritesQuery: () => ({ isFavorite: () => false }),
-  useFavoritesMutation: () => ({ toggleFavorite: vi.fn() }),
-}));
-
-vi.mock("@/hooks/ratings", () => ({
-  useRatingQuery: () => ({ userRating: null, averageRating: null, isLoading: false }),
-  useRatingsMutation: () => ({ rateRecipe: vi.fn(), isRating: false }),
 }));
 
 vi.mock("@/components/shared/double-tap-container", () => ({

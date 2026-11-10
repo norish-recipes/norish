@@ -5,17 +5,33 @@ import { IngredientIconsProvider } from "@/components/ingredients/ingredient-ico
 import RecipePageTint from "@/components/recipes/recipe-page-tint";
 import { NotFoundView } from "@/components/shared/not-found-view";
 import RecipeSkeleton from "@/components/skeleton/recipe-skeleton";
+import { useRecipeEnrichmentSubscription, useRecipeSubscription } from "@/hooks/recipes";
+import { TRPCClientError } from "@trpc/client";
 import { useTranslations } from "next-intl";
 
+import {
+  RecipePageProvider,
+  useRecipeQuery,
+  useRecipeShareSubscription,
+} from "@norish/shared-react/recipes";
+
+import { ScreenWakeLock } from "./components/page-wake-lock";
 import RecipePrint from "./components/recipe-print";
 import { useAutoConversion } from "./components/use-system-conversion";
-import { WakeLockProvider } from "./components/wake-lock-context";
-import { RecipeContextProvider, useRecipeContext } from "./context";
 import RecipePageDesktop from "./recipe-page-desktop";
 import RecipePageMobile from "./recipe-page-mobile";
 
-function RecipePageContent() {
-  const { recipe, isNotFound, isLoading } = useRecipeContext();
+/** The recipe's, its shares' and its enrichment's events, mounted once for the page. */
+function RecipeSubscriptions({ recipeId }: { recipeId: string }) {
+  useRecipeSubscription(recipeId);
+  useRecipeShareSubscription(recipeId);
+  useRecipeEnrichmentSubscription(recipeId);
+
+  return null;
+}
+
+function RecipePageContent({ recipeId }: { recipeId: string }) {
+  const { recipe, isLoading, error } = useRecipeQuery(recipeId);
   const t = useTranslations("recipes.detail");
   const [printOpen, setPrintOpen] = useState(false);
 
@@ -27,7 +43,7 @@ function RecipePageContent() {
   }
 
   // Recipe not found or no access - show 404
-  if (!recipe && isNotFound) {
+  if (!recipe && error instanceof TRPCClientError && error.data?.code === "NOT_FOUND") {
     return <NotFoundView message={t("notFoundMessage")} title={t("notFound")} />;
   }
 
@@ -62,10 +78,10 @@ export default function RecipeDetailPage({ params }: Pick<PageProps<"/recipes/[i
   const { id } = use(params);
 
   return (
-    <RecipeContextProvider recipeId={id}>
-      <WakeLockProvider>
-        <RecipePageContent />
-      </WakeLockProvider>
-    </RecipeContextProvider>
+    <RecipePageProvider recipeId={id}>
+      <RecipeSubscriptions recipeId={id} />
+      <ScreenWakeLock />
+      <RecipePageContent recipeId={id} />
+    </RecipePageProvider>
   );
 }

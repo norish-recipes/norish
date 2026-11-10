@@ -21,8 +21,6 @@ import {
 import SourceCard from "@/components/recipes/source-card";
 import DoubleTapContainer from "@/components/shared/double-tap-container";
 import HeartButton from "@/components/shared/heart-button";
-import { useFavoritesMutation, useFavoritesQuery } from "@/hooks/favorites";
-import { useRatingQuery, useRatingsMutation } from "@/hooks/ratings";
 import { useWorkedOutNutrition } from "@/hooks/recipes/use-worked-out-nutrition";
 import { useBackDestination } from "@/hooks/use-back-destination";
 import { useHiddenItemVisibility } from "@/hooks/user/use-hidden-item-visibility";
@@ -30,10 +28,17 @@ import { ArrowLeftIcon } from "@heroicons/react/16/solid";
 import { Card } from "@heroui/react";
 import { useTranslations } from "next-intl";
 
+import { useActiveAllergies } from "@norish/shared-react/reader";
+import {
+  useFavoritesMutation,
+  useFavoritesQuery,
+  useLoadedPageRecipe,
+  usePageServings,
+  useRatingQuery,
+  useRatingsMutation,
+} from "@norish/shared-react/recipes";
 import StarRating from "@norish/ui/star-rating";
 import { cssFloatingDockContentClearance } from "@norish/web/config/css-tokens";
-
-import { useRecipeContextRequired } from "./context";
 
 /**
  * The phone's recipe page: a header on the page background, then one card
@@ -49,7 +54,7 @@ import { useRecipeContextRequired } from "./context";
  * reference material comes after the cooking.
  */
 export default function RecipePageMobile({ onPrint }: { onPrint: () => void }) {
-  const { recipe, currentServings, allergies, allergySet } = useRecipeContextRequired();
+  const recipe = useLoadedPageRecipe();
   const { isFavorite: checkFavorite } = useFavoritesQuery();
   const { toggleFavorite } = useFavoritesMutation();
   const { userRating, averageRating, isLoading: isRatingLoading } = useRatingQuery(recipe.id);
@@ -57,7 +62,6 @@ export default function RecipePageMobile({ onPrint }: { onPrint: () => void }) {
   const t = useTranslations("recipes.detail");
   const back = useBackDestination();
   const { showRatings, showFavorites, showNutrition } = useHiddenItemVisibility();
-  const workedOut = useWorkedOutNutrition(recipe);
 
   const isFavorite = checkFavorite(recipe.id);
   const handleToggleFavorite = () => toggleFavorite(recipe.id);
@@ -145,17 +149,7 @@ export default function RecipePageMobile({ onPrint }: { onPrint: () => void }) {
             the servings the ingredients are actually scaled to rather than the
             stored figure — a bar disagreeing with the row under it is exactly
             the bug a restating bar invites. */}
-        <RecipeHeaderMobile
-          allergies={allergies}
-          allergySet={allergySet}
-          recipe={{
-            ...recipe,
-            servings: currentServings ?? recipe.servings,
-            // A total worked out from the lines is restated too, as the card shows it.
-            calories: recipe.calories ?? workedOut?.perServing?.calories ?? null,
-          }}
-          showCalories={showNutrition}
-        />
+        <PageRecipeHeader showCalories={showNutrition} />
 
         <Card className="rounded-2xl">
           <Card.Content className="space-y-4 p-5">
@@ -223,5 +217,27 @@ export default function RecipePageMobile({ onPrint }: { onPrint: () => void }) {
       {/* Out of the content flow entirely, so it never scrolls away. */}
       <CookingMode floating />
     </div>
+  );
+}
+
+/** The Glance Bar, apart from the page, so a change of servings renders only it. */
+function PageRecipeHeader({ showCalories }: { showCalories: boolean }) {
+  const recipe = useLoadedPageRecipe();
+  const servings = usePageServings();
+  const { allergies, allergySet } = useActiveAllergies();
+  const workedOut = useWorkedOutNutrition(recipe);
+
+  return (
+    <RecipeHeaderMobile
+      allergies={allergies}
+      allergySet={allergySet}
+      recipe={{
+        ...recipe,
+        servings,
+        // A total worked out from the lines is restated too, as the card shows it.
+        calories: recipe.calories ?? workedOut?.perServing?.calories ?? null,
+      }}
+      showCalories={showCalories}
+    />
   );
 }

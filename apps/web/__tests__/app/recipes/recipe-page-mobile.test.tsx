@@ -85,22 +85,19 @@ vi.mock("@/hooks/recipes/use-worked-out-nutrition", () => ({
   useWorkedOutNutrition: () => null,
 }));
 
-vi.mock("@/app/(app)/recipes/[id]/context", () => {
-  const context = () => ({
+vi.mock("@norish/shared-react/recipes", async () =>
+  (await import("../../helpers/recipe-page-mock")).mockRecipePage(() => ({
     recipe: mocks.recipe,
-    currentServings: mocks.currentServings,
-    allergies: [],
-    allergySet: new Set<string>(),
-    convertingTo: null,
-    startConversion: vi.fn(),
-    setIngredientAmounts: vi.fn(),
-    enrichment: {
-      isBusy: (kind: string) => mocks.busyKinds.has(kind),
-    },
-  });
+    servings: mocks.currentServings,
+    cookbooks: recipeCookbooks.current,
+  }))
+);
 
-  return { useRecipeContext: context, useRecipeContextRequired: context };
-});
+vi.mock("@/hooks/recipes/use-recipe-enrichment", () => ({
+  useRecipeEnrichment: () => ({
+    isBusy: (kind: string) => mocks.busyKinds.has(kind),
+  }),
+}));
 
 vi.mock("@/app/(app)/recipes/[id]/components/actions-menu", () => ({
   default: () => <div data-testid="actions-menu" />,
@@ -131,10 +128,6 @@ vi.mock("@/components/Panel/consumers", () => ({
 
 const recipeCookbooks = vi.hoisted(() => ({
   current: [{ id: "cookbook-1", title: "Weeknights" }] as { id: string; title: string }[],
-}));
-
-vi.mock("@/hooks/cookbooks", () => ({
-  useRecipeCookbooksQuery: () => ({ cookbooks: recipeCookbooks.current, isLoading: false }),
 }));
 
 vi.mock("@/components/recipes/author-chip", () => ({
@@ -193,14 +186,6 @@ vi.mock("@/hooks/use-back-destination", () => ({
   useBackDestination: () => ({ href: "/", label: "Back to library" }),
 }));
 
-vi.mock("@/hooks/favorites", () => ({
-  useFavoritesQuery: () => ({ isFavorite: () => false }),
-  useFavoritesMutation: () => ({ toggleFavorite: vi.fn() }),
-}));
-vi.mock("@/hooks/ratings", () => ({
-  useRatingQuery: () => ({ userRating: null, averageRating: null, isLoading: false }),
-  useRatingsMutation: () => ({ rateRecipe: vi.fn(), isRating: false }),
-}));
 vi.mock("@heroui/react", () => ({
   Button: ({ children }: { children: React.ReactNode }) => <button>{children}</button>,
   Card: Object.assign(

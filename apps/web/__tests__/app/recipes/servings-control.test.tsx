@@ -16,13 +16,13 @@ const recipeState = vi.hoisted(() => ({
   setIngredientAmounts: vi.fn(),
 }));
 
-vi.mock("@/app/(app)/recipes/[id]/context", () => ({
-  useRecipeContextRequired: () => ({
+vi.mock("@norish/shared-react/recipes", async () =>
+  (await import("../../helpers/recipe-page-mock")).mockRecipePage(() => ({
     recipe: { servings: 4 },
-    currentServings: recipeState.currentServings,
-    setIngredientAmounts: recipeState.setIngredientAmounts,
-  }),
-}));
+    servings: recipeState.currentServings ?? undefined,
+    setServings: recipeState.setIngredientAmounts,
+  }))
+);
 
 vi.mock("@/components/Panel/Panel", () => {
   const Panel = ({ children, open }: { children: ReactNode; open: boolean }) =>

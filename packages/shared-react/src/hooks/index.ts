@@ -14,5 +14,4 @@ export * from "./cookbooks/index";
 export * from "./library/index";
 export * from "./favorites/index";
 export * from "./ratings/index";
-export * from "./recipe-detail/index";
 export * from "./recipes/index";

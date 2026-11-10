@@ -9,9 +9,12 @@ import { MinusIcon, PlusIcon } from "@heroicons/react/16/solid";
 import { Button, InputGroup } from "@heroui/react";
 import { useTranslations } from "next-intl";
 
+import {
+  useLoadedPageRecipe,
+  usePageServings,
+  useRecipePageStore,
+} from "@norish/shared-react/recipes";
 import { formatAmountAsDecimal } from "@norish/shared/lib/format-amount";
-
-import { useRecipeContextRequired } from "../context";
 
 type ServingsControlProps = {
   compact?: boolean;
@@ -33,7 +36,9 @@ export default function ServingsControl({
   compact = false,
   withPanel = true,
 }: ServingsControlProps) {
-  const { currentServings, recipe, setIngredientAmounts } = useRecipeContextRequired();
+  const recipe = useLoadedPageRecipe();
+  const currentServings = usePageServings();
+  const setIngredientAmounts = useRecipePageStore((state) => state.setServings);
   const t = useTranslations("recipes.detail");
   const [panelOpen, setPanelOpen] = useState(false);
   const servings = Math.max(MIN_SERVINGS, currentServings ?? recipe.servings ?? 1);

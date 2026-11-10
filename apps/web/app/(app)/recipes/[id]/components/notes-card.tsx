@@ -1,10 +1,11 @@
 "use client";
 
-import { useRecipeContext } from "@/app/(app)/recipes/[id]/context";
 import { ReadonlyRecipeNotes } from "@/components/recipes/readonly-recipe-sections";
 import { useHiddenItemVisibility } from "@/hooks/user/use-hidden-item-visibility";
 import { Card } from "@heroui/react";
 import { useTranslations } from "next-intl";
+
+import { usePageRecipe } from "@norish/shared-react/recipes";
 
 /**
  * Whether the notes section has anything to show: a stored note, for a
@@ -14,7 +15,7 @@ import { useTranslations } from "next-intl";
  * Information already follow.
  */
 export function useNotesSectionVisible(): boolean {
-  const { recipe } = useRecipeContext();
+  const recipe = usePageRecipe();
   const { showNotes } = useHiddenItemVisibility();
 
   return Boolean(recipe?.notes) && showNotes;
@@ -22,7 +23,7 @@ export function useNotesSectionVisible(): boolean {
 
 /** The notes card, on both recipe pages. */
 export default function NotesCard() {
-  const { recipe } = useRecipeContext();
+  const recipe = usePageRecipe();
   const t = useTranslations("recipes.detail");
   const isVisible = useNotesSectionVisible();
 

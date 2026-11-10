@@ -8,11 +8,15 @@ import { useTranslations } from "next-intl";
 import type { MeasurementSystem } from "@norish/shared/contracts";
 import { usePermissions, useRecipePermissions } from "@norish/shared-react/reader";
 import {
+  useLoadedPageRecipe,
+  useRecipeConversion,
+  useRecipePageStore,
+  useRecipeQuery,
+} from "@norish/shared-react/recipes";
+import {
   getMeasurementSystemPreference,
   measurementSystemTarget,
 } from "@norish/shared/lib/user-preferences";
-
-import { useRecipeContext, useRecipeContextRequired } from "../context";
 
 export type SystemConversionOption = {
   key: string;
@@ -43,7 +47,8 @@ export type SystemConversion = {
  * than each deciding for themselves.
  */
 export function useSystemConversion(): SystemConversion {
-  const { recipe, convertingTo, startConversion } = useRecipeContextRequired();
+  const recipe = useLoadedPageRecipe();
+  const { convertingTo, startConversion } = useRecipeConversion();
   const { showConversion } = useHiddenItemVisibility();
   const isAIEnabled = usePermissions((p) => p.isAIEnabled);
   const t = useTranslations("recipes.convert");
@@ -97,7 +102,9 @@ export function useSystemConversion(): SystemConversion {
  * from it is ignored as stale.
  */
 export function useAutoConversion() {
-  const { recipe, isFetching, convertingTo, startConversion } = useRecipeContext();
+  const recipeId = useRecipePageStore((state) => state.recipeId);
+  const { recipe, isFetching } = useRecipeQuery(recipeId);
+  const { convertingTo, startConversion } = useRecipeConversion();
   const { user } = useUserSettingsQuery();
   const { canEditRecipe, isLoading } = useRecipePermissions();
   const isAIEnabled = usePermissions((p) => p.isAIEnabled);

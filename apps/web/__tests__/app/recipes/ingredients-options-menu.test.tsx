@@ -36,8 +36,8 @@ vi.mock("@/hooks/use-amount-display-preference", () => ({
   }),
 }));
 
-vi.mock("@/app/(app)/recipes/[id]/context", () => ({
-  useRecipeContextRequired: () => ({
+vi.mock("@norish/shared-react/recipes", async () =>
+  (await import("../../helpers/recipe-page-mock")).mockRecipePage(() => ({
     recipe: {
       id: "recipe-1",
       name: "Cacio e Pepe",
@@ -47,8 +47,8 @@ vi.mock("@/app/(app)/recipes/[id]/context", () => ({
     },
     convertingTo: mocks.convertingTo,
     startConversion: mocks.startConversion,
-  }),
-}));
+  }))
+);
 
 vi.mock("@heroui/react", () => ({
   Button: ({

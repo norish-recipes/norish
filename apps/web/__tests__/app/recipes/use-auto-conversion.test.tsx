@@ -16,17 +16,13 @@ const mocks = vi.hoisted(() => ({
   startConversion: vi.fn(),
 }));
 
-vi.mock("@/app/(app)/recipes/[id]/context", () => ({
-  useRecipeContext: () => ({
+vi.mock("@norish/shared-react/recipes", async () =>
+  (await import("../../helpers/recipe-page-mock")).mockRecipePage(() => ({
     recipe: mocks.recipe,
     isFetching: mocks.isFetching,
-    convertingTo: null,
     startConversion: mocks.startConversion,
-  }),
-  useRecipeContextRequired: () => {
-    throw new Error("not used");
-  },
-}));
+  }))
+);
 
 vi.mock("@/hooks/user/use-user-query", () => ({
   useUserSettingsQuery: () => ({

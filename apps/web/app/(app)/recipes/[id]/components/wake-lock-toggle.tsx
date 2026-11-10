@@ -5,7 +5,7 @@ import { DevicePhoneMobileIcon } from "@heroicons/react/20/solid";
 import { ToggleButton, Tooltip } from "@heroui/react";
 import { useTranslations } from "next-intl";
 
-import { useWakeLockContext } from "./wake-lock-context";
+import { usePageWakeLock } from "./page-wake-lock";
 
 type WakeLockToggleProps = {
   /**
@@ -17,7 +17,7 @@ type WakeLockToggleProps = {
 };
 
 export default function WakeLockToggle({ autoEnable = true }: WakeLockToggleProps) {
-  const { isSupported, isActive, toggle } = useWakeLockContext();
+  const { isSupported, isActive, toggle } = usePageWakeLock();
   const t = useTranslations("recipes.wakeLock");
   const hasAttemptedAutoEnableRef = useRef(false);
 
@@ -45,7 +45,7 @@ export default function WakeLockToggle({ autoEnable = true }: WakeLockToggleProp
         className={`size-10 min-w-10 rounded-full ${isSupported ? "" : "opacity-50"}`}
         isSelected={isActive}
         onChange={() => {
-          if (isSupported) void toggle();
+          if (isSupported) toggle();
         }}
       >
         <DevicePhoneMobileIcon className="size-5" />

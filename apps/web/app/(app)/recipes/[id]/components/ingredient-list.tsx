@@ -2,11 +2,11 @@
 
 import { ReadonlyIngredientsList } from "@/components/recipes/readonly-ingredients-list";
 
-import { useRecipeContextRequired } from "../context";
+import { useLoadedPageRecipe, usePageIngredients } from "@norish/shared-react/recipes";
 
 export default function IngredientsList() {
-  const { adjustedIngredients, recipe } = useRecipeContextRequired();
-  const display = adjustedIngredients?.length > 0 ? adjustedIngredients : recipe.recipeIngredients;
+  const recipe = useLoadedPageRecipe();
+  const display = usePageIngredients();
 
   return (
     <ReadonlyIngredientsList interactive ingredients={display} systemUsed={recipe.systemUsed} />
