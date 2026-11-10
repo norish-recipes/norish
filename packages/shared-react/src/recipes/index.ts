@@ -29,7 +29,7 @@ export {
   type RecipesMutationsResult,
 } from "./use-recipes-mutations";
 export { useRecipesQuery, type RecipeFilters, type RecipesQueryResult } from "./use-recipes-query";
-export { useLibrarySubscriptions, useRecipeImportOutcomes } from "./use-recipe-events";
+export { useLibrarySubscriptions, useRecipeOutcomes } from "./use-recipe-events";
 export { useRecipeShareCacheHelpers, type RecipeShareCacheHelpers } from "./use-recipe-share-cache";
 export {
   useRecipeShareMutations,

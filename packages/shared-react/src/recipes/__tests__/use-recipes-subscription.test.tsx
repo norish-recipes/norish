@@ -1,5 +1,5 @@
 /**
- * The recipe list events and import outcomes: what each event does to the caches.
+ * The recipe list events and the import and delete outcomes: what each event does to the caches.
  * Ported from the web wrapper's test when the wrapper went (ticket 07).
  */
 
@@ -15,8 +15,8 @@ import { renderHookWithClient } from "../../../__tests__/hooks/render-hook";
 import { trackedEvent } from "../../../__tests__/realtime/tracked-event";
 import { useRecipeSelection } from "../selection-store";
 import {
-  useRecipeImportsSubscription,
   useRecipeListSubscription,
+  useRecipeOutcomesSubscription,
 } from "../use-recipes-subscription";
 
 // A lag resets the subscription it lagged on.
@@ -129,6 +129,7 @@ function pendingRereads() {
 let queryClient: QueryClient;
 let rendered: ReturnType<typeof renderHookWithClient>;
 let invalidateQueries: ReturnType<typeof vi.spyOn>;
+const onDeleteKept = vi.fn();
 
 beforeEach(() => {
   queryClient = new QueryClient({ defaultOptions: { queries: { retry: false } } });
@@ -145,16 +146,17 @@ beforeEach(() => {
 
   rendered = renderHookWithClient(queryClient, () => {
     useRecipeListSubscription();
-    useRecipeImportsSubscription();
+    useRecipeOutcomesSubscription({ onDeleteKept });
   });
 });
 
 afterEach(() => {
   rendered.unmount();
   queryClient.clear();
+  onDeleteKept.mockClear();
 });
 
-describe("the recipe list events and import outcomes", () => {
+describe("the recipe list events and recipe outcomes", () => {
   it("subscribes to every dashboard event once", () => {
     const names = useSubscriptionMock.mock.calls.map((call) => (call[0] as { name: string }).name);
 
@@ -222,6 +224,14 @@ describe("the recipe list events and import outcomes", () => {
       expect.objectContaining({ pages: [expect.objectContaining({ recipes: [], total: 0 })] })
     );
     expect(invalidateQueries).toHaveBeenCalledWith({ queryKey: detailKey("recipe-1") });
+  });
+
+  it("rereads the recipes a delete kept and announces them once, from the outcomes", () => {
+    emit("onDeleteKept", { ids: ["recipe-1"] });
+
+    expect(queryClient.getQueryState(detailKey("recipe-1"))?.isInvalidated).toBe(true);
+    expect(queryClient.getQueryState(LIBRARY_KEY)?.isInvalidated).toBe(true);
+    expect(onDeleteKept).toHaveBeenCalledTimes(1);
   });
 
   it("drops a deleted recipe from the selection and keeps the rest", () => {

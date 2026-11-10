@@ -16,12 +16,9 @@ import { removeRecipesFromLists, useRecipesCacheHelpers } from "./use-recipes-ca
 
 type Payload<E extends EventName<RecipesRealtime>> = PayloadOf<RecipesRealtime, E>;
 
-export type RecipeImportsSubscriptionCallbacks = {
+export type RecipeOutcomesSubscriptionCallbacks = {
   onImported?: (payload: Payload<"imported">) => void;
   onFailed?: (payload: Payload<"failed">) => void;
-};
-
-export type RecipeListSubscriptionCallbacks = {
   /** The reader's delete found these recipes edited elsewhere and kept them. */
   onDeleteKept?: (payload: Payload<"deleteKept">) => void;
 };
@@ -60,10 +57,10 @@ function prependRecipes(recipes: RecipeDashboardDTO[]) {
 }
 
 /**
- * The import outcomes: a started import takes its pending card, and the import
- * ends in a recipe or a failure. Mounted once in the shell, since an import starts on any page.
+ * The outcomes of imports and deletes, which the reader starts on any page: mounted once in
+ * the shell. An import takes its pending card and ends in a recipe or a failure.
  */
-export function useRecipeImportsSubscription(callbacks: RecipeImportsSubscriptionCallbacks = {}) {
+export function useRecipeOutcomesSubscription(callbacks: RecipeOutcomesSubscriptionCallbacks = {}) {
   const trpc = useTRPC();
   const queryClient = useQueryClient();
   const {
@@ -128,10 +125,22 @@ export function useRecipeImportsSubscription(callbacks: RecipeImportsSubscriptio
       callbacks.onFailed?.(payload);
     },
   });
+
+  useRealtimeSubscription<Payload<"deleteKept">>(trpc.recipes.onDeleteKept, {
+    onLag: invalidate,
+    // The kept recipes left the lists tentatively; refetching brings them back.
+    onEvent: (payload) => {
+      invalidate();
+      for (const id of payload.ids) {
+        void queryClient.invalidateQueries({ queryKey: trpc.recipes.get.queryKey({ id }) });
+      }
+      callbacks.onDeleteKept?.(payload);
+    },
+  });
 }
 
 /** The Library's list events: recipes created, edited, converted and deleted anywhere. */
-export function useRecipeListSubscription(callbacks: RecipeListSubscriptionCallbacks = {}) {
+export function useRecipeListSubscription() {
   const trpc = useTRPC();
   const queryClient = useQueryClient();
   const { setAllRecipesData, invalidate, removePendingRecipe } = useRecipesCacheHelpers();
@@ -191,18 +200,6 @@ export function useRecipeListSubscription(callbacks: RecipeListSubscriptionCallb
       for (const id of ids) {
         void queryClient.invalidateQueries({ queryKey: trpc.recipes.get.queryKey({ id }) });
       }
-    },
-  });
-
-  useRealtimeSubscription<Payload<"deleteKept">>(trpc.recipes.onDeleteKept, {
-    ...lag,
-    // The kept recipes left the lists tentatively; refetching brings them back.
-    onEvent: (payload) => {
-      invalidate();
-      for (const id of payload.ids) {
-        void queryClient.invalidateQueries({ queryKey: trpc.recipes.get.queryKey({ id }) });
-      }
-      callbacks.onDeleteKept?.(payload);
     },
   });
 

@@ -6,18 +6,18 @@ import {
   PRIVATE_ADDRESS_REASON,
 } from "@norish/shared/contracts/realtime/recipes";
 
-import { createRecipeSubscriptionToasts } from "../use-recipe-events";
+import { createRecipeOutcomeToasts } from "../use-recipe-events";
 
 function toasts() {
   const show = vi.fn();
-  const callbacks = createRecipeSubscriptionToasts({ show, translate: (key: string) => key });
+  const callbacks = createRecipeOutcomeToasts({ show, translate: (key: string) => key });
 
   return { show, callbacks };
 }
 
 const recipe = { id: "recipe-1" } as RecipeDashboardDTO;
 
-describe("recipe import toasts", () => {
+describe("recipe outcome toasts", () => {
   it("warns that an import may be incomplete", () => {
     const { show, callbacks } = toasts();
 
@@ -56,5 +56,16 @@ describe("recipe import toasts", () => {
       "recipes.toasts.privateAddress",
       "recipes.toasts.failedDescription",
     ]);
+  });
+
+  it("warns once that a delete kept recipes edited elsewhere", () => {
+    const { show, callbacks } = toasts();
+
+    callbacks.onDeleteKept?.({ ids: ["recipe-1", "recipe-2"] });
+
+    expect(show).toHaveBeenCalledTimes(1);
+    expect(show).toHaveBeenCalledWith(
+      expect.objectContaining({ severity: "warning", title: "recipes.toasts.deleteKept" })
+    );
   });
 });
