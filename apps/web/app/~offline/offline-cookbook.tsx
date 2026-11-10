@@ -1,6 +1,6 @@
 "use client";
 
-import { CookbookSkeleton } from "@/app/(app)/(library)/cookbooks/[id]/cookbook-page";
+import CookbookLoading from "@/app/(app)/(library)/cookbooks/[id]/loading";
 import CookbookRoute from "@/app/(app)/(library)/cookbooks/[id]/page";
 import { OfflineUnavailable } from "@/app/~offline/offline-unavailable";
 import { routeParams } from "@/app/~offline/route-params";
@@ -25,7 +25,7 @@ export function OfflineCookbook({ id }: { id: string }) {
 
   const owner = useCacheOwner(offlineEngine.cache);
 
-  if (!owner) return <CookbookSkeleton />;
+  if (!owner) return <CookbookLoading />;
 
   const warmed = queryClient.getQueryData(trpc.cookbooks.get.queryOptions({ id }).queryKey);
 
