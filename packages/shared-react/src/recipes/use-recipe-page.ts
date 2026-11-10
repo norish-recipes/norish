@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useMemo } from "react";
+import { useEffect } from "react";
 import { useQuery } from "@tanstack/react-query";
 
 import type {
@@ -49,20 +49,18 @@ export function usePageIngredients(): RecipeIngredientsDto[] {
   const ingredients = recipe?.recipeIngredients;
   const recipeServings = recipe?.servings;
 
-  return useMemo(() => {
-    if (!ingredients) return [];
-    if (picked === null || !recipeServings || picked === recipeServings) return ingredients;
+  if (!ingredients) return [];
+  if (picked === null || !recipeServings || picked === recipeServings) return ingredients;
 
-    return ingredients.map((ing) => {
-      if (ing.amount == null) return ing;
+  return ingredients.map((ing) => {
+    if (ing.amount == null) return ing;
 
-      const amount = Number(ing.amount);
+    const amount = Number(ing.amount);
 
-      if (isNaN(amount) || amount <= 0) return ing;
+    if (isNaN(amount) || amount <= 0) return ing;
 
-      return { ...ing, amount: Math.round((amount / recipeServings) * picked * 10000) / 10000 };
-    });
-  }, [ingredients, recipeServings, picked]);
+    return { ...ing, amount: Math.round((amount / recipeServings) * picked * 10000) / 10000 };
+  });
 }
 
 export type RecipeConversionResult = {
