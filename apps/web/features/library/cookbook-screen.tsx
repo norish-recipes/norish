@@ -12,6 +12,7 @@ import SearchInput from "@/components/dashboard/search-input";
 import { BackLink } from "@/components/page-transition";
 import { NotFoundView } from "@/components/shared/not-found-view";
 import RecipeGridSkeleton from "@/components/skeleton/recipe-grid-skeleton";
+import { CookbookMembers, CookbookSelectionBar } from "@/features/library/components/grid";
 import { useBackDestination } from "@/hooks/use-back-destination";
 import {
   ArrowLeftIcon,
@@ -37,8 +38,6 @@ import {
   cssHeaderIcon,
   cssHeaderIconControl,
 } from "@norish/web/config/css-tokens";
-
-import CookbookMembers, { CookbookSelectionBar } from "./cookbook-members";
 
 const COOKBOOK_HEADING_ID = "cookbook-heading";
 
