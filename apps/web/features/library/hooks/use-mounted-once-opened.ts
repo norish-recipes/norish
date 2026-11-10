@@ -2,15 +2,8 @@
 
 import { useState } from "react";
 
-/**
- * Whether an overlay should be in the tree at all.
- *
- * Library cards are virtualized, so one scrolls out and back in constantly —
- * and a panel mounted before it is ever opened subscribes to its queries on
- * every one of those mounts, refetching them each time. Nothing renders until
- * the reader actually opens it; after that it stays, so closing still
- * animates.
- */
+// Library cards are virtualised and remount on every scroll; a closed panel per card would still be
+// a vaul root with its state and effects each time. Mount it on first open, then keep it to animate out.
 export function useMountedOnceOpened(open: boolean) {
   const [mounted, setMounted] = useState(open);
 
