@@ -4,6 +4,7 @@ import type { ReactNode } from "react";
 import { useEffect, useRef, useState } from "react";
 import Link from "next/link";
 import { OnTheListMark } from "@/components/ingredients/on-the-list-mark";
+import { KeptFoodsSubscriptions } from "@/components/Panel/kept-foods-subscriptions";
 import Panel from "@/components/Panel/Panel";
 import {
   ActionButton,
@@ -157,7 +158,8 @@ function IngredientPanelContent({
   const [relocation, setRelocation] = useState<Relocation | null>(null);
   const [deleting, setDeleting] = useState(false);
   const [showingUses, setShowingUses] = useState(false);
-  const aiChanges = useAIChanges();
+  // Closed, the panel still shows its food while it slides away, but reads nothing.
+  const aiChanges = useAIChanges(open);
   // What AI changed about this food without being sure: what its flag is for.
   const unsure = aiChanges.changes.filter(
     (change) => change.ingredient?.id === item.id && isOpenChange(change)
@@ -166,7 +168,7 @@ function IngredientPanelContent({
   // Whether the household keeps the food, and the draft's say on it (null: untouched).
   const tPantry = useTranslations("groceries.pantry");
   const tGroceries = useTranslations("groceries.page");
-  const kept = usePantryItem(item.id);
+  const kept = usePantryItem(item.id, open);
   const { addPantryIngredient, removePantryIngredient } = usePantryMutations();
   const [keeps, setKeeps] = useState<boolean | null>(null);
 
@@ -425,6 +427,7 @@ function IngredientPanelContent({
       }}
     >
       <Panel.Body>
+        {open ? <KeptFoodsSubscriptions /> : null}
         <div className="flex flex-col gap-5 pb-2" data-testid="ingredient-details">
           {unsure.length > 0 ? (
             <Section title={t("changedByAI.unsure")}>
@@ -511,6 +514,7 @@ function IngredientPanelContent({
             <PantryRow
               keeping={keeps ?? kept !== null}
               kept={kept}
+              open={open}
               onKeepingChange={(on) => setKeeps(on === (kept !== null) ? null : on)}
             />
           </Section>
@@ -561,7 +565,7 @@ function IngredientPanelContent({
             </Button>
           </Section>
 
-          <IngredientNutritionSection ingredientId={item.id} name={displayName} />
+          <IngredientNutritionSection enabled={open} ingredientId={item.id} name={displayName} />
         </div>
       </Panel.Body>
 
@@ -719,14 +723,16 @@ function IngredientPanelContent({
 function PantryRow({
   kept,
   keeping,
+  open,
   onKeepingChange,
 }: {
   kept: PantryIngredientDto | null;
   keeping: boolean;
+  open: boolean;
   onKeepingChange: (keeping: boolean) => void;
 }) {
   const t = useTranslations("groceries.pantry");
-  const onTheList = useOnTheList(kept ? [kept] : []).length > 0;
+  const onTheList = useOnTheList(kept ? [kept] : [], open).length > 0;
 
   return (
     <div

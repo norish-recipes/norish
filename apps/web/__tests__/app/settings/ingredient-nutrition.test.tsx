@@ -122,7 +122,7 @@ describe("an Ingredient's nutrition in its panel", () => {
   });
 
   it("sums the food up in one row, which opens the nutrition panel", () => {
-    render(<IngredientNutritionSection ingredientId="onion" name="onion" />);
+    render(<IngredientNutritionSection enabled ingredientId="onion" name="onion" />);
 
     expect(screen.getByTestId("ingredient-nutrition-summary")).toHaveTextContent(
       'summary {"value":"35"}'
@@ -133,7 +133,7 @@ describe("an Ingredient's nutrition in its panel", () => {
   });
 
   it("shows the four numbers per 100 g and the dataset food they came from", () => {
-    render(<IngredientNutritionSection ingredientId="onion" name="onion" />);
+    render(<IngredientNutritionSection enabled ingredientId="onion" name="onion" />);
     openNutrition();
 
     const numbers = screen.getByTestId("ingredient-nutrition-numbers");
@@ -156,7 +156,7 @@ describe("an Ingredient's nutrition in its panel", () => {
       density: null,
     };
 
-    render(<IngredientNutritionSection ingredientId="red-onion" name="red onion" />);
+    render(<IngredientNutritionSection enabled ingredientId="red-onion" name="red onion" />);
     openNutrition();
 
     expect(screen.getByTestId("ingredient-nutrition-source")).toHaveTextContent(
@@ -170,7 +170,7 @@ describe("an Ingredient's nutrition in its panel", () => {
       numbers: { ...mocks.nutrition!.numbers!, source: { kind: "ai" } },
     };
 
-    render(<IngredientNutritionSection ingredientId="onion" name="onion" />);
+    render(<IngredientNutritionSection enabled ingredientId="onion" name="onion" />);
     openNutrition();
 
     expect(screen.getByTestId("ingredient-nutrition-source")).toHaveTextContent("source.ai");
@@ -179,7 +179,7 @@ describe("an Ingredient's nutrition in its panel", () => {
   it("says it knows nothing where it does not", () => {
     mocks.nutrition = { numbers: null, pieceWeight: null, density: null };
 
-    render(<IngredientNutritionSection ingredientId="brandy" name="brandy" />);
+    render(<IngredientNutritionSection enabled ingredientId="brandy" name="brandy" />);
 
     expect(screen.getByTestId("ingredient-nutrition-summary")).toHaveTextContent("summaryNone");
     openNutrition();
@@ -197,7 +197,7 @@ describe("an Ingredient's nutrition in its panel", () => {
     it("shows no spoon row where no recipe the household can open measures the food by volume", () => {
       mocks.nutrition = { ...mocks.nutrition!, density: density(0.67, { kind: "taxonomy" }) };
 
-      render(<IngredientNutritionSection ingredientId="onion" name="onion" />);
+      render(<IngredientNutritionSection enabled ingredientId="onion" name="onion" />);
       openNutrition();
 
       expect(screen.queryByTestId("ingredient-nutrition-density")).toBeNull();
@@ -210,7 +210,7 @@ describe("an Ingredient's nutrition in its panel", () => {
         density: density(0.4, { kind: "fix", food: CUMIN_SEED }),
       };
 
-      render(<IngredientNutritionSection ingredientId="cumin" name="cumin" />);
+      render(<IngredientNutritionSection enabled ingredientId="cumin" name="cumin" />);
       openNutrition();
 
       const row = screen.getByTestId("ingredient-nutrition-density");
@@ -225,7 +225,7 @@ describe("an Ingredient's nutrition in its panel", () => {
       mocks.measure = "100ml";
       mocks.nutrition = { ...mocks.nutrition!, density: density(1.03, { kind: "taxonomy" }) };
 
-      render(<IngredientNutritionSection ingredientId="milk" name="milk" />);
+      render(<IngredientNutritionSection enabled ingredientId="milk" name="milk" />);
       openNutrition();
 
       expect(screen.getByTestId("ingredient-nutrition-density")).toHaveTextContent(
@@ -236,7 +236,7 @@ describe("an Ingredient's nutrition in its panel", () => {
     it("asks for the weight in that measure where none is known, and keeps it as a density", async () => {
       mocks.measure = "teaspoon";
 
-      render(<IngredientNutritionSection ingredientId="cumin" name="cumin" />);
+      render(<IngredientNutritionSection enabled ingredientId="cumin" name="cumin" />);
       openNutrition();
       fireEvent.click(screen.getByTestId("ingredient-nutrition-density-ask"));
 
@@ -265,7 +265,7 @@ describe("an Ingredient's nutrition in its panel", () => {
       // Typed before as a cup weighing 125 g.
       mocks.nutrition = { ...mocks.nutrition!, density: density(125 / 240, { kind: "household" }) };
 
-      render(<IngredientNutritionSection ingredientId="flour" name="flour" />);
+      render(<IngredientNutritionSection enabled ingredientId="flour" name="flour" />);
       openCorrection();
 
       const panel = correction();
@@ -283,7 +283,7 @@ describe("an Ingredient's nutrition in its panel", () => {
 
   it("corrects the numbers from a label, and a cup's weight as a density", async () => {
     mocks.measure = "cup";
-    render(<IngredientNutritionSection ingredientId="milk" name="milk" />);
+    render(<IngredientNutritionSection enabled ingredientId="milk" name="milk" />);
     openCorrection();
 
     const panel = correction();
@@ -335,7 +335,7 @@ describe("an Ingredient's nutrition in its panel", () => {
   });
 
   it("holds Save until every number of a label is there", () => {
-    render(<IngredientNutritionSection ingredientId="milk" name="milk" />);
+    render(<IngredientNutritionSection enabled ingredientId="milk" name="milk" />);
     openCorrection();
 
     const panel = correction();
@@ -359,7 +359,7 @@ describe("an Ingredient's nutrition in its panel", () => {
       density: null,
     };
 
-    render(<IngredientNutritionSection ingredientId="milk" name="milk" />);
+    render(<IngredientNutritionSection enabled ingredientId="milk" name="milk" />);
     openCorrection();
 
     const panel = correction();

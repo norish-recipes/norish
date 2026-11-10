@@ -281,7 +281,11 @@ vi.mock("@/components/Panel/Panel", () => {
 // browser spec walks it, so here it is a household that keeps nothing.
 vi.mock("@norish/shared-react/config", async (importOriginal) => ({
   ...(await importOriginal<object>()),
+  useIngredientsSubscription: () => undefined,
   useSpellingRules: () => undefined,
+}));
+vi.mock("@/components/Panel/kept-foods-subscriptions", () => ({
+  KeptFoodsSubscriptions: () => null,
 }));
 vi.mock("@norish/shared-react/groceries", () => ({
   usePantryItem: () => null,
