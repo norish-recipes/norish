@@ -9,9 +9,12 @@ import { IngredientPanel } from "@/components/ingredients/ingredient-panel";
 import MiniCookbooks from "@/components/Panel/consumers/mini-cookbooks";
 import MiniGroceries from "@/components/Panel/consumers/mini-groceries";
 import MiniRecipes from "@/components/Panel/consumers/mini-recipes";
+import { CookbookAddRecipesPanel } from "@/features/library/components/panels/cookbook-add-recipes-panel";
+import { CookbookEditPanel } from "@/features/library/components/panels/cookbook-panels";
 import { act, render, screen } from "@testing-library/react";
 import { describe, expect, it, vi } from "vitest";
 
+import type { CookbookSummaryDTO } from "@norish/shared/contracts";
 import { createTestQueryClient, createTestWrapper } from "@norish/shared-react/platform/testing";
 
 vi.mock("@norish/shared-react/trpc", async () =>
@@ -216,5 +219,48 @@ describe("MiniGroceries, open on a recipe", () => {
 
     expect(await screen.findAllByText(/milk/)).not.toEqual([]);
     expect(screen.queryAllByText(/butter/)).toEqual([]);
+  });
+});
+
+const COOKBOOK: CookbookSummaryDTO = {
+  id: "11111111-1111-4111-8111-111111111111",
+  userId: "reader",
+  title: "Weeknights",
+  createdAt: new Date("2026-01-01T00:00:00Z"),
+  updatedAt: new Date("2026-01-01T00:00:00Z"),
+  version: 1,
+  image: null,
+  memberCount: 0,
+  coverImages: [],
+  memberTitles: [],
+  memberTags: [],
+  totalMinutes: null,
+  minServings: null,
+};
+
+describe.each([
+  {
+    name: "CookbookAddRecipesPanel",
+    panel: (open: boolean) => (
+      <CookbookAddRecipesPanel cookbook={COOKBOOK} open={open} onOpenChange={() => {}} />
+    ),
+    reads: ["recipes.list", "cookbooks.memberIds"],
+  },
+  {
+    name: "CookbookEditPanel",
+    panel: (open: boolean) => (
+      <CookbookEditPanel cookbook={COOKBOOK} open={open} onOpenChange={() => {}} />
+    ),
+    reads: ["cookbooks.recipes"],
+  },
+])("$name", ({ panel, reads }) => {
+  it("reads nothing while closed, and what it draws once open", () => {
+    const { fetched, rerender } = renderPanel(panel, false);
+
+    expect([...fetched]).toEqual([]);
+
+    rerender(true);
+
+    expect([...fetched]).toEqual(expect.arrayContaining(reads));
   });
 });
