@@ -19,7 +19,7 @@ vi.mock("@norish/shared-react/reader", async () =>
   (await import("../../helpers/reader-mock")).mockReader()
 );
 
-vi.mock("@/hooks/recipes/use-recipe-prefetch", () => ({
+vi.mock("@/hooks/use-recipe-prefetch", () => ({
   useRecipePrefetch: () => ({ current: null }),
 }));
 

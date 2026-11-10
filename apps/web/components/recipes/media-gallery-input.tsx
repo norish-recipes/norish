@@ -3,9 +3,10 @@
 import type { DragEndEvent } from "@dnd-kit/core";
 import React, { useCallback, useId, useRef, useState } from "react";
 import NextImage from "next/image";
-import { useRecipeImages, useRecipeVideos } from "@/hooks/recipes";
 import { useClipboardImagePaste } from "@/hooks/use-clipboard-image-paste";
 import { usePending } from "@/hooks/use-pending";
+import { useRecipeImages } from "@/hooks/use-recipe-images";
+import { useRecipeVideos } from "@/hooks/use-recipe-videos";
 import {
   closestCenter,
   DndContext,

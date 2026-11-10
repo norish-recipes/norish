@@ -4,7 +4,6 @@ import { useCallback, useState } from "react";
 import { IngredientPanel } from "@/components/ingredients/ingredient-panel";
 import NutritionPortionControl from "@/components/recipes/nutrition-portion-control";
 import { getNutritionData, NutritionBody } from "@/components/recipes/readonly-nutrition";
-import { useWorkedOutNutrition } from "@/hooks/recipes/use-worked-out-nutrition";
 import { useHiddenItemVisibility } from "@/hooks/user/use-hidden-item-visibility";
 import { ChevronRightIcon } from "@heroicons/react/16/solid";
 import { Card, Chip, Skeleton } from "@heroui/react";
@@ -16,6 +15,8 @@ import { usePageEnrichment, usePageRecipe } from "@norish/shared-react/recipes";
 import { useTRPC } from "@norish/shared-react/trpc";
 import { NUTRITION_CREDIT_NAMES } from "@norish/shared/contracts/ingredient-nutrition";
 import { PANEL_REASONS } from "@norish/shared/lib/recipe-nutrition";
+
+import { useWorkedOutNutrition } from "./use-worked-out-nutrition";
 
 /** Why a line was left out, in the card's words. */
 const REASON_KEYS = {

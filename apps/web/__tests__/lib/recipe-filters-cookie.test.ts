@@ -1,12 +1,12 @@
 import {
-  RECIPE_FILTERS_STORAGE_KEY,
-  webRecipeFiltersStorageAdapter,
-} from "@/hooks/recipes/recipe-filters-storage-adapter";
-import {
   RECIPE_FILTERS_COOKIE,
   recipeFiltersCookieValue,
   recipeFiltersFromCookie,
 } from "@/lib/recipe-filters-cookie";
+import {
+  RECIPE_FILTERS_STORAGE_KEY,
+  webRecipeFiltersStorageAdapter,
+} from "@/lib/recipe-filters-storage-adapter";
 import { afterEach, describe, expect, it } from "vitest";
 
 import type { PersistedRecipeFilters } from "@norish/shared/contracts/filter-contract";

@@ -15,7 +15,7 @@ vi.mock("motion/react", () => ({
   useDragControls: () => ({ start: vi.fn() }),
 }));
 
-vi.mock("@/hooks/recipes", () => ({
+vi.mock("@/hooks/use-recipe-images", () => ({
   useRecipeImages: () => ({
     uploadStepImage: vi.fn(),
     deleteStepImage: vi.fn().mockResolvedValue(undefined),

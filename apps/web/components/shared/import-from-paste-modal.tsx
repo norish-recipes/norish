@@ -2,7 +2,7 @@
 
 import { useCallback, useState } from "react";
 import { useRouter } from "next/navigation";
-import { useRecipesMutations } from "@/hooks/recipes";
+import { useRecipesMutations } from "@/hooks/use-recipes-mutations";
 import { showSafeErrorToast } from "@/lib/ui/safe-error-toast";
 import { ArrowDownTrayIcon, SparklesIcon } from "@heroicons/react/16/solid";
 import { Button, Label, Modal, TextArea, TextField, toast } from "@heroui/react";

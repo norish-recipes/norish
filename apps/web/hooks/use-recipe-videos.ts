@@ -1,6 +1,6 @@
 "use client";
 
-import { sharedRecipeFamilyHooks } from "./shared-recipe-hooks";
+import { useRecipeVideos as useSharedRecipeVideos } from "@norish/shared-react/recipes";
 
 export type RecipeVideosResult = {
   uploadGalleryVideo: (
@@ -32,7 +32,7 @@ export function useRecipeVideos(): RecipeVideosResult {
     deleteGalleryVideo,
     isUploadingGalleryVideo,
     isDeletingGalleryVideo,
-  } = sharedRecipeFamilyHooks.useRecipeVideos();
+  } = useSharedRecipeVideos();
 
   const uploadGalleryVideo = async (
     file: File,

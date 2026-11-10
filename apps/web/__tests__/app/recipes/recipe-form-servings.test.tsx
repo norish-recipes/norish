@@ -41,8 +41,11 @@ vi.mock("@norish/shared-react/config", () => ({
 vi.mock("@norish/shared-react/reader", async () =>
   (await import("../../helpers/reader-mock")).mockDevicePreferences()
 );
-vi.mock("@/hooks/recipes", () => ({
+vi.mock("@norish/shared-react/recipes", async (importOriginal) => ({
+  ...(await importOriginal<typeof import("@norish/shared-react/recipes")>()),
   useRecipeId: () => ({ recipeId: "recipe-1", isLoading: false, error: null }),
+}));
+vi.mock("@/hooks/use-recipes-mutations", () => ({
   useRecipesMutations: () => ({ createRecipe: mocks.createRecipe, updateRecipe: vi.fn() }),
 }));
 vi.mock("@/hooks/use-unsaved-navigation-guard", () => ({

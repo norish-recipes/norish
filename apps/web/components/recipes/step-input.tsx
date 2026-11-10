@@ -5,7 +5,7 @@ import type { SmartTextInputIngredientSuggestion } from "@/components/shared/sma
 import { useCallback, useMemo, useRef, useState } from "react";
 import { StepIngredientChips } from "@/components/recipes/step-ingredient-chips";
 import SmartTextInput from "@/components/shared/smart-text-input";
-import { useRecipeImages } from "@/hooks/recipes";
+import { useRecipeImages } from "@/hooks/use-recipe-images";
 import { Bars3Icon, PhotoIcon, XMarkIcon } from "@heroicons/react/16/solid";
 import { Button } from "@heroui/react";
 import { Reorder, useDragControls } from "motion/react";

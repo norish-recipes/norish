@@ -5,7 +5,6 @@ import { IngredientIconsProvider } from "@/components/ingredients/ingredient-ico
 import RecipePageTint from "@/components/recipes/recipe-page-tint";
 import { NotFoundView } from "@/components/shared/not-found-view";
 import RecipeSkeleton from "@/components/skeleton/recipe-skeleton";
-import { useRecipeEnrichmentSubscription, useRecipeSubscription } from "@/hooks/recipes";
 import { TRPCClientError } from "@trpc/client";
 import { useTranslations } from "next-intl";
 
@@ -17,6 +16,8 @@ import {
 
 import { ScreenWakeLock } from "./components/page-wake-lock";
 import RecipePrint from "./components/recipe-print";
+import { useRecipeEnrichmentSubscription } from "./components/use-recipe-enrichment";
+import { useRecipeSubscription } from "./components/use-recipe-subscription";
 import { useAutoConversion } from "./components/use-system-conversion";
 import RecipePageDesktop from "./recipe-page-desktop";
 import RecipePageMobile from "./recipe-page-mobile";

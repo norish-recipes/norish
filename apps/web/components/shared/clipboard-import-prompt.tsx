@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useRef } from "react";
-import { useRecipesMutations } from "@/hooks/recipes";
+import { useRecipesMutations } from "@/hooks/use-recipes-mutations";
 import { readClipboardUrl } from "@/lib/clipboard-url";
 import { showActionToast } from "@/lib/ui/action-toast";
 import { toast } from "@heroui/react";

@@ -19,7 +19,7 @@ const mocks = vi.hoisted(() => ({
   panel: null as { id: string | null; open: boolean } | null,
 }));
 
-vi.mock("@/hooks/recipes/use-worked-out-nutrition", () => ({
+vi.mock("@/app/(app)/recipes/[id]/components/use-worked-out-nutrition", () => ({
   useWorkedOutNutrition: () => mocks.workedOut,
 }));
 

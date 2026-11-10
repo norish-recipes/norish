@@ -6,7 +6,7 @@ import { CookbookIconSolid } from "@/components/cookbooks/cookbook-icon";
 import { MiniCalendar, MiniCookbooks } from "@/components/Panel/consumers";
 import { DeleteRecipeModal } from "@/components/shared/delete-recipe-modal";
 import { MiniGroceries } from "@/features/groceries";
-import { useRecipeEnrichment, useRecipesMutations } from "@/hooks/recipes";
+import { useRecipesMutations } from "@/hooks/use-recipes-mutations";
 import {
   CalendarDaysIcon,
   DevicePhoneMobileIcon,
@@ -38,6 +38,7 @@ import {
 
 import { usePageWakeLock } from "./page-wake-lock";
 import RecipeSharePanel from "./recipe-share-panel";
+import { useRecipeEnrichment } from "./use-recipe-enrichment";
 
 type Props = {
   id: string;

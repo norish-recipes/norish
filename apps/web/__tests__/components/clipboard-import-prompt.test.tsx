@@ -12,7 +12,7 @@ vi.mock("next-intl", () => ({
   useTranslations: (namespace: string) => (key: string) => `${namespace}.${key}`,
 }));
 
-vi.mock("@/hooks/recipes", () => ({
+vi.mock("@/hooks/use-recipes-mutations", () => ({
   useRecipesMutations: () => ({ importRecipe: importRecipeMock }),
 }));
 

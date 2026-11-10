@@ -15,7 +15,7 @@ import SmartInputHelp from "@/components/shared/smart-input-help";
 import SmartTextInput from "@/components/shared/smart-text-input";
 import TagInput from "@/components/shared/tag-input";
 import EditRecipeSkeleton from "@/components/skeleton/edit-recipe-skeleton";
-import { useRecipeId, useRecipesMutations } from "@/hooks/recipes";
+import { useRecipesMutations } from "@/hooks/use-recipes-mutations";
 import { useUnsavedNavigationGuard } from "@/hooks/use-unsaved-navigation-guard";
 import { useCategoryLabel } from "@/lib/category-display";
 import { Button, FieldError, Input, Label, TextField } from "@heroui/react";
@@ -25,6 +25,7 @@ import type { FullRecipeDTO, MeasurementSystem, RecipeCategory } from "@norish/s
 import { useCategoriesQuery, useUnitsQuery } from "@norish/shared-react/config";
 import { useHydrated } from "@norish/shared-react/platform";
 import { useDevicePreference } from "@norish/shared-react/reader";
+import { useRecipeId } from "@norish/shared-react/recipes";
 import { resolveCategoryName } from "@norish/shared/lib/categories";
 import { inferSystemUsedFromParsed } from "@norish/shared/lib/determine-recipe-system";
 import { parseIngredientWithDefaults } from "@norish/shared/lib/helpers";

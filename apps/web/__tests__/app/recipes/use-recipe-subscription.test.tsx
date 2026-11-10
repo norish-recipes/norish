@@ -1,8 +1,16 @@
+import type { ReactNode } from "react";
+import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { act, renderHook } from "@testing-library/react";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 
-import { trackedEvent } from "../realtime-test-utils";
-import { createTestQueryClient, createTestWrapper } from "./test-utils";
+import { trackedEvent } from "../../hooks/realtime-test-utils";
+
+const createTestQueryClient = () =>
+  new QueryClient({ defaultOptions: { queries: { retry: false }, mutations: { retry: false } } });
+const createTestWrapper = (queryClient: QueryClient) =>
+  function TestWrapper({ children }: { children: ReactNode }) {
+    return <QueryClientProvider client={queryClient}>{children}</QueryClientProvider>;
+  };
 
 const subscriptionCallbacks: Record<string, ((data: unknown) => void) | undefined> = {};
 
@@ -68,13 +76,6 @@ vi.mock("next-intl", () => ({
   useTranslations: () => (key: string) => key,
 }));
 
-vi.mock("@/hooks/recipes/use-recipe-query", () => ({
-  useRecipeQuery: () => ({
-    setRecipeData: vi.fn(),
-    invalidate: vi.fn(),
-  }),
-}));
-
 vi.mock("next/navigation", () => ({
   useRouter: () => ({
     push: vi.fn(),
@@ -92,7 +93,8 @@ describe("useRecipeSubscription", () => {
   });
 
   it("shows a generic failure toast instead of backend details", async () => {
-    const { useRecipeSubscription } = await import("@/hooks/recipes/use-recipe-subscription");
+    const { useRecipeSubscription } =
+      await import("@/app/(app)/recipes/[id]/components/use-recipe-subscription");
     const { toast } = await import("@heroui/react");
 
     renderHook(() => useRecipeSubscription("recipe-1"), {

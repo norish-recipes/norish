@@ -9,6 +9,7 @@ import NutritionCard from "@/app/(app)/recipes/[id]/components/nutrition-card";
 import ProvenanceCard from "@/app/(app)/recipes/[id]/components/provenance-card";
 import ServingsControl from "@/app/(app)/recipes/[id]/components/servings-control";
 import StepsList from "@/app/(app)/recipes/[id]/components/steps-list";
+import { useWorkedOutNutrition } from "@/app/(app)/recipes/[id]/components/use-worked-out-nutrition";
 import { BackLink } from "@/components/page-transition";
 import CookingTimeCard from "@/components/recipes/cooking-time-card";
 import { ReadonlyRecipeMedia } from "@/components/recipes/readonly-recipe-sections";
@@ -21,7 +22,6 @@ import {
 import SourceCard from "@/components/recipes/source-card";
 import DoubleTapContainer from "@/components/shared/double-tap-container";
 import HeartButton from "@/components/shared/heart-button";
-import { useWorkedOutNutrition } from "@/hooks/recipes/use-worked-out-nutrition";
 import { useBackDestination } from "@/hooks/use-back-destination";
 import { useHiddenItemVisibility } from "@/hooks/user/use-hidden-item-visibility";
 import { ArrowLeftIcon } from "@heroicons/react/16/solid";

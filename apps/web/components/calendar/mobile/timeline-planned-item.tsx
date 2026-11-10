@@ -2,7 +2,7 @@
 
 import { memo, useCallback } from "react";
 import { useRouter } from "next/navigation";
-import { useRecipePrefetch } from "@/hooks/recipes/use-recipe-prefetch";
+import { useRecipePrefetch } from "@/hooks/use-recipe-prefetch";
 import { useDraggable } from "@dnd-kit/core";
 
 import type { PlannedItemDisplay } from "./types";

@@ -6,7 +6,7 @@ vi.mock("next/navigation", () => ({
   useRouter: () => ({ push: vi.fn() }),
 }));
 
-vi.mock("@/hooks/recipes/use-recipe-prefetch", () => ({
+vi.mock("@/hooks/use-recipe-prefetch", () => ({
   useRecipePrefetch: () => vi.fn(),
 }));
 
