@@ -407,5 +407,32 @@ describe("useHouseholdSubscription", () => {
         expect(data?.household.users.find((user) => user.id === "user-2")?.isAdmin).toBe(true);
       });
     });
+
+    it("refetches the household when the Reader becomes admin, for its join code", () => {
+      const initialHousehold = createMockHouseholdSettings({
+        users: [
+          createMockHouseholdUser({ id: "user-1", isAdmin: true }),
+          createMockHouseholdUser({ id: READER.id, isAdmin: false }),
+        ],
+      });
+
+      queryClient.setQueryData(
+        householdQueryKey,
+        createMockHouseholdData(initialHousehold, READER.id)
+      );
+      const invalidateSpy = vi.spyOn(queryClient, "invalidateQueries");
+
+      renderHook(() => useHouseholdSubscription(), {
+        wrapper: createTestWrapper(queryClient),
+      });
+
+      act(() => {
+        subscriptionCallbacks.onAdminTransferred?.(
+          trackedEvent({ oldAdminId: "user-1", newAdminId: READER.id, version: 2 })
+        );
+      });
+
+      expect(invalidateSpy).toHaveBeenCalledWith({ queryKey: householdQueryKey });
+    });
   });
 });

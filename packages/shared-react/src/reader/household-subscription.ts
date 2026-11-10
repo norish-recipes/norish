@@ -97,40 +97,30 @@ export function useHouseholdSubscription() {
     },
   });
 
+  const removeMember = (payload: { userId: string }) => {
+    setHouseholdData((prev) => {
+      if (!prev?.household) return prev;
+
+      return {
+        ...prev,
+        household: {
+          ...prev.household,
+          users: prev.household.users.filter((u) => u.id !== payload.userId),
+        },
+      };
+    });
+  };
+
   // onUserLeft user-scoped: when another user leaves
   useRealtimeSubscription<Payload<"userLeft">>(trpc.households.onUserLeft, {
     ...lag,
-    onEvent: (payload) => {
-      setHouseholdData((prev) => {
-        if (!prev?.household) return prev;
-
-        return {
-          ...prev,
-          household: {
-            ...prev.household,
-            users: prev.household.users.filter((u) => u.id !== payload.userId),
-          },
-        };
-      });
-    },
+    onEvent: removeMember,
   });
 
   // onMemberRemoved household-scoped: when a member is kicked (for remaining members)
   useRealtimeSubscription<Payload<"memberRemoved">>(trpc.households.onMemberRemoved, {
     ...lag,
-    onEvent: (payload) => {
-      setHouseholdData((prev) => {
-        if (!prev?.household) return prev;
-
-        return {
-          ...prev,
-          household: {
-            ...prev.household,
-            users: prev.household.users.filter((u) => u.id !== payload.userId),
-          },
-        };
-      });
-    },
+    onEvent: removeMember,
   });
 
   // onAdminTransferred household-scoped: when admin is transferred
@@ -140,38 +130,21 @@ export function useHouseholdSubscription() {
       setHouseholdData((prev) => {
         if (!prev?.household) return prev;
 
-        const isCurrentUserNewAdmin = payload.newAdminId === prev.currentUserId;
-
-        // If current user became admin, we need to refetch to get joinCode
-        const updatedUsers = prev.household.users.map((u) => ({
-          ...u,
-          isAdmin: u.id === payload.newAdminId,
-        }));
-
-        if (isCurrentUserNewAdmin) {
-          invalidate();
-
-          return {
-            ...prev,
-            household: {
-              ...prev.household,
-              version: payload.version,
-              users: updatedUsers,
-            },
-          };
-        }
-
-        // If current user was admin and lost it, update to non-admin view
-        // (remove joinCode fields if they exist)
         return {
           ...prev,
           household: {
             ...prev.household,
             version: payload.version,
-            users: updatedUsers,
+            users: prev.household.users.map((u) => ({
+              ...u,
+              isAdmin: u.id === payload.newAdminId,
+            })),
           },
         };
       });
+
+      // A new admin refetches to get the join code.
+      if (payload.newAdminId === currentUserId) invalidate();
     },
   });
 
