@@ -15,7 +15,7 @@ const ONION = "11111111-1111-4111-8111-111111111111";
 const ONION_ICON = "/ingredient-icons/0123456789abcdef0123456789abcdef.webp";
 
 vi.mock("@norish/shared-react/reader", async () =>
-  (await import("@/__tests__/helpers/device-preferences-mock")).mockDevicePreferences(() => ({
+  (await import("@/__tests__/helpers/reader-mock")).mockDevicePreferences(() => ({
     hiddenItems: [],
   }))
 );

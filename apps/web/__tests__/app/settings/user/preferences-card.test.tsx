@@ -45,7 +45,7 @@ const recipePageColorMock = vi.hoisted(() => ({
 const deviceKindMock = vi.hoisted(() => ({ kind: "phone" as DeviceKind }));
 
 vi.mock("@norish/shared-react/reader", async () =>
-  (await import("../../../helpers/device-preferences-mock")).mockDevicePreferences(
+  (await import("../../../helpers/reader-mock")).mockDevicePreferences(
     () => ({
       todaySectionVisibility: todaysMealsMock.visibility,
       hiddenItems: hiddenItemsMock.hidden,

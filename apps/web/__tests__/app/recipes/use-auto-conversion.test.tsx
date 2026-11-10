@@ -35,7 +35,7 @@ vi.mock("@/hooks/user/use-user-query", () => ({
 }));
 
 vi.mock("@norish/shared-react/reader", async () =>
-  (await import("../../helpers/device-preferences-mock")).mockReader(() => ({
+  (await import("../../helpers/reader-mock")).mockReader(() => ({
     permissions: { isAIEnabled: mocks.isAIEnabled },
     canEditRecipe: () => mocks.canEdit,
   }))

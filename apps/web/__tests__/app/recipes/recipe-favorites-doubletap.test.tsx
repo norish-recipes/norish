@@ -20,7 +20,7 @@ vi.mock("next/link", () => ({
 }));
 
 vi.mock("@norish/shared-react/reader", async () =>
-  (await import("../../helpers/device-preferences-mock")).mockDevicePreferences(
+  (await import("../../helpers/reader-mock")).mockDevicePreferences(
     () => ({
       hiddenItems: userPreferencesState.hidden,
     }),

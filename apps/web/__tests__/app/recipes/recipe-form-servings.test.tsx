@@ -38,7 +38,7 @@ vi.mock("@norish/shared-react/config", () => ({
   }),
 }));
 vi.mock("@norish/shared-react/reader", async () =>
-  (await import("../../helpers/device-preferences-mock")).mockDevicePreferences()
+  (await import("../../helpers/reader-mock")).mockDevicePreferences()
 );
 vi.mock("@/hooks/recipes", () => ({
   useRecipeId: () => ({ recipeId: "recipe-1", isLoading: false, error: null }),

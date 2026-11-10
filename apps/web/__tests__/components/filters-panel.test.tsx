@@ -69,14 +69,9 @@ vi.mock("@/context/recipes-filters-context", () => ({
 }));
 
 vi.mock("@norish/shared-react/reader", async () =>
-  (await import("../helpers/device-preferences-mock")).mockDevicePreferences(
-    () => ({
-      hiddenItems: userPreferencesState.hidden,
-    }),
-    {
-      reader: () => ({}),
-    }
-  )
+  (await import("../helpers/reader-mock")).mockDevicePreferences(() => ({
+    hiddenItems: userPreferencesState.hidden,
+  }))
 );
 
 vi.mock("@norish/shared-react/config", () => ({

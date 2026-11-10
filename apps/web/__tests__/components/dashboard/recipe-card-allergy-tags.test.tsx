@@ -16,7 +16,7 @@ vi.mock("next-intl", () => ({
 }));
 
 vi.mock("@norish/shared-react/reader", async () =>
-  (await import("../../helpers/device-preferences-mock")).mockReader()
+  (await import("../../helpers/reader-mock")).mockReader()
 );
 
 vi.mock("@/hooks/recipes/use-recipe-prefetch", () => ({

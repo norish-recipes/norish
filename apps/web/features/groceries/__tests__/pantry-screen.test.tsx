@@ -72,7 +72,7 @@ vi.mock("@tanstack/react-query", () => ({
   }),
 }));
 vi.mock("@norish/shared-react/reader", async () =>
-  (await import("@/__tests__/helpers/device-preferences-mock")).mockDevicePreferences(() => ({
+  (await import("@/__tests__/helpers/reader-mock")).mockDevicePreferences(() => ({
     hiddenItems: [],
   }))
 );

@@ -19,7 +19,7 @@ vi.mock("@/hooks/auto-hide", () => ({
   useAutoHide: () => ({ isVisible: mocks.isNavVisible }),
 }));
 vi.mock("@norish/shared-react/reader", async () =>
-  (await import("../../helpers/device-preferences-mock")).mockDevicePreferences(() => ({
+  (await import("../../helpers/reader-mock")).mockDevicePreferences(() => ({
     recipePageColor: "theme",
   }))
 );

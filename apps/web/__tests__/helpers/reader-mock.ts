@@ -1,3 +1,5 @@
+import { vi } from "vitest";
+
 import type { ReaderPermissions } from "@norish/shared-react/reader";
 import type { User } from "@norish/shared/contracts";
 import type {
@@ -12,7 +14,7 @@ type DevicePreferenceKey = keyof DevicePreferences;
  * `@norish/shared-react/reader` over the test's own state, for a `vi.mock` without a query cache:
  * `read` runs on every render and `set` hears every write.
  */
-export function mockDevicePreferences(
+export async function mockDevicePreferences(
   read: () => Partial<DevicePreferences> = () => ({}),
   {
     kind = () => "phone",
@@ -25,7 +27,7 @@ export function mockDevicePreferences(
   } = {}
 ) {
   return {
-    ...mockReader(reader),
+    ...(await mockReader(reader)),
     useDeviceKind: kind,
     useDevicePreference: <K extends DevicePreferenceKey>(key: K) =>
       [
@@ -47,14 +49,12 @@ export type MockReader = {
 };
 
 /** The Reader's identity, permissions and allergies over the test's own state, read on every render. */
-export function mockReader(read: () => MockReader = () => ({})) {
-  // The hooks' conservative defaults; this module stands in for the one that exports them.
+export async function mockReader(read: () => MockReader = () => ({})) {
+  const { normalizePermissionsData } = await vi.importActual<
+    typeof import("@norish/shared-react/reader")
+  >("@norish/shared-react/reader");
   const permissions = (): ReaderPermissions => ({
-    recipePolicy: { view: "owner", edit: "owner", delete: "owner" },
-    isAIEnabled: false,
-    canDrawImages: false,
-    householdUserIds: null,
-    isServerAdmin: false,
+    ...normalizePermissionsData(null),
     ...read().permissions,
   });
 

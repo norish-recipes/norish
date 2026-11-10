@@ -222,7 +222,7 @@ vi.mock("@/lib/ui/action-toast", () => ({ showActionToast: vi.fn() }));
 const permissions = vi.hoisted(() => ({ isAIEnabled: true, canDrawImages: false }));
 
 vi.mock("@norish/shared-react/reader", async () =>
-  (await import("../../helpers/device-preferences-mock")).mockDevicePreferences(
+  (await import("../../helpers/reader-mock")).mockDevicePreferences(
     () => ({
       hiddenItems: [],
     }),

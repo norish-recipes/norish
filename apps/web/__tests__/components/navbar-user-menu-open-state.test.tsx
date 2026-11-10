@@ -23,7 +23,7 @@ vi.mock("next-themes", () => ({
 }));
 
 vi.mock("@norish/shared-react/reader", async () =>
-  (await import("../helpers/device-preferences-mock")).mockReader(() => ({
+  (await import("../helpers/reader-mock")).mockReader(() => ({
     signOut: mockSignOut,
     user: { email: "alice@example.com", id: "user-1", image: null, name: "Alice" },
   }))
