@@ -169,7 +169,7 @@ export default function MiniGroceries({
   const { servings, scaledIngredients, setServings, incrementServings, decrementServings } =
     useServingsScaler(ingredients, originalServings, initialServings);
 
-  useIngredientIcons(ingredients.map((item) => item.ingredientId));
+  useIngredientIcons(open ? ingredients.map((item) => item.ingredientId) : []);
 
   const [selectedIds, setSelectedIds] = useState<string[]>([]);
   const [editingId, setEditingId] = useState<string | null>(null);

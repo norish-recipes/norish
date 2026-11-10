@@ -21,6 +21,8 @@ let pantryLoading = false;
 let pantryUnavailable = false;
 
 let linkedAskedFor: string[][] = [];
+/** The foods each render asked the icons of. */
+let iconsAskedFor: unknown[][] = [];
 /** More lines of the recipe, after `INGREDIENTS`. */
 let linkedLines: Array<
   Omit<(typeof INGREDIENTS)[number], "ingredientId"> & {
@@ -90,7 +92,7 @@ vi.mock("@/hooks/use-unit-formatter", () => ({
 }));
 vi.mock("@/components/ingredients/ingredient-icon", () => ({
   IngredientIcon: () => null,
-  useIngredientIcons: () => {},
+  useIngredientIcons: (ids: unknown[]) => iconsAskedFor.push(ids),
 }));
 vi.mock("@norish/shared-react/recipes", async (importOriginal) => ({
   ...(await importOriginal<typeof import("@norish/shared-react/recipes")>()),
@@ -168,6 +170,7 @@ const addedNames = () =>
 describe("MiniGroceries with a Pantry", () => {
   beforeEach(() => {
     linkedAskedFor = [];
+    iconsAskedFor = [];
     linkedLines = [];
     pantry = [pantryIngredient("Olive oil", "olive oil"), pantryIngredient("salt", "salt")];
     pantryLoading = false;
@@ -388,6 +391,8 @@ describe("MiniGroceries with a Pantry", () => {
       expect(addedNames()).toEqual(["chicken breast"]);
       expect(onOpenChange).toHaveBeenCalledWith(false);
       expect(onOpenChange).not.toHaveBeenCalledWith(true);
+      // Unseen, so its icons are never read.
+      expect(iconsAskedFor.flat()).toEqual([]);
     });
 
     it("waits for the Pantry before deciding what to buy", async () => {
