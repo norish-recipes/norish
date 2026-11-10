@@ -1,3 +1,5 @@
+"use client";
+
 import type { HouseholdAdminSettingsDto } from "@norish/shared/contracts/dto/household";
 import type { EventName, PayloadOf } from "@norish/shared/contracts/realtime/catalogue";
 import type { HouseholdsRealtime } from "@norish/shared/contracts/realtime/households";
