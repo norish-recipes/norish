@@ -16,14 +16,11 @@ export type CookbookMemberIdsQueryResult = {
  * is the panel that fills a cookbook in bulk, and it needs to leave out what
  * is already in there however large the cookbook is.
  */
-export function useCookbookMemberIdsQuery(
-  cookbookId: string,
-  { enabled = true }: { enabled?: boolean } = {}
-): CookbookMemberIdsQueryResult {
+export function useCookbookMemberIdsQuery(cookbookId: string): CookbookMemberIdsQueryResult {
   const trpc = useTRPC();
   const { data, isLoading } = useQuery({
     ...trpc.cookbooks.memberIds.queryOptions({ cookbookId }),
-    enabled: enabled && Boolean(cookbookId),
+    enabled: Boolean(cookbookId),
   });
 
   return { memberIds: data ?? [], isLoading };
