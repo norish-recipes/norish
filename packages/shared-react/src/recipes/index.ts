@@ -41,7 +41,6 @@ export {
   useRecipeShareMutations,
   type RecipeShareMutationsResult,
 } from "./use-recipe-share-mutations";
-export { useRecipeShareQuery, type RecipeShareQueryResult } from "./use-recipe-share-query";
 export {
   useRecipeShareSubscription,
   type RecipeShareSubscriptionCallbacks,

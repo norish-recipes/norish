@@ -148,7 +148,6 @@ describe("recipe share hooks", () => {
     });
 
     expect(hooks.shares.useRecipeSharesQuery).toBe(recipes.useRecipeSharesQuery);
-    expect(hooks.shares.useRecipeShareQuery).toBe(recipes.useRecipeShareQuery);
     expect(hooks.shares.useRecipeShareMutations).toBe(recipes.useRecipeShareMutations);
     expect(hooks.shares.useRecipeShareSubscription).toBe(recipes.useRecipeShareSubscription);
     expect(hooks.shares.useSharedRecipeQuery).toBe(recipes.useSharedRecipeQuery);
