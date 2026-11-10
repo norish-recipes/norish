@@ -1,5 +1,8 @@
 import type { ReactNode } from "react";
-import { ScreenWakeLock, usePageWakeLock } from "@/app/(app)/recipes/[id]/components/page-wake-lock";
+import {
+  ScreenWakeLock,
+  usePageWakeLock,
+} from "@/app/(app)/recipes/[id]/components/page-wake-lock";
 import { act, renderHook } from "@testing-library/react";
 import { afterEach, describe, expect, it, vi } from "vitest";
 

@@ -5,9 +5,9 @@
 
 import { afterEach, describe, expect, it, vi } from "vitest";
 
-import { isKeptCurrent } from "../../realtime/kept-current";
-import { createTestQueryClient } from "../../groceries/__tests__/test-utils";
 import { renderHookWithClient } from "../../../__tests__/hooks/render-hook";
+import { createTestQueryClient } from "../../groceries/__tests__/test-utils";
+import { isKeptCurrent } from "../../realtime/kept-current";
 import { useRecipeEnrichmentSubscription } from "../use-recipe-enrichment";
 import { useRecipeShareSubscription } from "../use-recipe-share-subscription";
 import { useRecipeSubscription } from "../use-recipe-subscription";
