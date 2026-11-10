@@ -1,9 +1,10 @@
 import type { ReactNode } from "react";
 import { fakeProcedure } from "@/__tests__/helpers/trpc-fake";
-import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
+import { QueryClientProvider } from "@tanstack/react-query";
 
 import type { RecipePageState } from "@norish/shared-react/recipes";
 import type { RecipeEnrichmentKind } from "@norish/shared/lib/recipe-enrichment";
+import { createTestQueryClient } from "@norish/shared-react/platform/testing";
 import { RecipePageProvider, useRecipePageStore } from "@norish/shared-react/recipes";
 
 /**
@@ -16,12 +17,9 @@ export function onRecipePage(
   { enrichment = {} }: { enrichment?: Partial<Record<RecipeEnrichmentKind, string>> } = {}
 ) {
   // Seeded reads stay as seeded; a test that wants a read on its way starts one.
-  const queryClient = new QueryClient({
-    defaultOptions: {
-      queries: { retry: false, gcTime: Infinity, staleTime: Infinity },
-      mutations: { retry: false },
-    },
-  });
+  const queryClient = createTestQueryClient();
+
+  queryClient.setQueryDefaults([], { staleTime: Infinity });
   let state: RecipePageState | undefined;
 
   queryClient.setQueryData(fakeProcedure("recipes.get").queryKey({ id: recipe.id }), recipe);
