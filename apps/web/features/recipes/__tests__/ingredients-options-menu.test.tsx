@@ -5,7 +5,7 @@ import "@testing-library/jest-dom";
 
 import IngredientsOptionsMenu from "@/app/(app)/recipes/[id]/components/ingredients-options-menu";
 
-import { onRecipePage } from "../../helpers/recipe-page";
+import { onRecipePage } from "./recipe-page";
 
 const mocks = vi.hoisted(() => ({
   hidden: [] as string[],
@@ -18,7 +18,7 @@ const mocks = vi.hoisted(() => ({
 }));
 
 vi.mock("@norish/shared-react/reader", async () =>
-  (await import("../../helpers/reader-mock")).mockDevicePreferences(
+  (await import("@/__tests__/helpers/reader-mock")).mockDevicePreferences(
     () => ({
       hiddenItems: mocks.hidden,
     }),
@@ -37,7 +37,7 @@ vi.mock("@/hooks/use-amount-display-preference", () => ({
 }));
 
 vi.mock("@norish/shared-react/trpc", async () =>
-  (await import("../../helpers/trpc-fake")).mockTRPC()
+  (await import("@/__tests__/helpers/trpc-fake")).mockTRPC()
 );
 
 vi.mock("@heroui/react", () => ({

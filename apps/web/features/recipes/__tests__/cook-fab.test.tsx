@@ -7,7 +7,7 @@ import CookingMode from "@/app/(app)/recipes/[id]/components/cookingmode/cooking
 
 import { cssFloatingDockBottomWithNav } from "@norish/web/config/css-tokens";
 
-import { onRecipePage } from "../../helpers/recipe-page";
+import { onRecipePage } from "./recipe-page";
 
 const mocks = vi.hoisted(() => ({
   isMobile: true,
@@ -21,7 +21,7 @@ vi.mock("@/hooks/auto-hide", () => ({
   useAutoHide: () => ({ isVisible: mocks.isNavVisible }),
 }));
 vi.mock("@norish/shared-react/reader", async () =>
-  (await import("../../helpers/reader-mock")).mockDevicePreferences(() => ({
+  (await import("@/__tests__/helpers/reader-mock")).mockDevicePreferences(() => ({
     recipePageColor: "theme",
   }))
 );
@@ -37,7 +37,7 @@ vi.mock("@/app/(app)/recipes/[id]/components/page-wake-lock", () => ({
   }),
 }));
 vi.mock("@norish/shared-react/trpc", async () =>
-  (await import("../../helpers/trpc-fake")).mockTRPC()
+  (await import("@/__tests__/helpers/trpc-fake")).mockTRPC()
 );
 vi.mock("@/app/(app)/recipes/[id]/components/cookingmode/mobile-cooking-mode-dialog", () => ({
   MobileCookingModeDialog: () => <div data-testid="cooking-dialog" />,

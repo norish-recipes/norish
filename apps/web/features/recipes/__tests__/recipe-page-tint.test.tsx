@@ -2,14 +2,13 @@ import { describe, expect, it, vi } from "vitest";
 
 import "@testing-library/jest-dom";
 
+import { renderWithDevicePreferences } from "@/__tests__/helpers/device-preferences";
 import RecipePageTint from "@/components/recipes/recipe-page-tint";
 
 import type { RecipePageColorMode } from "@norish/shared/contracts/zod/device-preferences";
 import { APP_PAGE_COLUMN_CLASS } from "@norish/web/config/css-tokens";
 
-import { renderWithDevicePreferences } from "../../helpers/device-preferences";
-
-vi.mock("@norish/shared-react/trpc", () => import("../../helpers/device-preferences-trpc"));
+vi.mock("@norish/shared-react/trpc", () => import("@/__tests__/helpers/device-preferences-trpc"));
 
 function renderTint(dishColor: string | null | undefined, colorMode?: RecipePageColorMode) {
   return renderWithDevicePreferences(

@@ -1,11 +1,10 @@
 import type { ReactNode } from "react";
+import { fakeProcedure } from "@/__tests__/helpers/trpc-fake";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 
 import type { RecipePageState } from "@norish/shared-react/recipes";
 import type { RecipeEnrichmentKind } from "@norish/shared/lib/recipe-enrichment";
 import { RecipePageProvider, useRecipePageStore } from "@norish/shared-react/recipes";
-
-import { fakeProcedure } from "./trpc-fake";
 
 /**
  * The recipe page's real store and reads over a Query cache seeded with `recipe` and its

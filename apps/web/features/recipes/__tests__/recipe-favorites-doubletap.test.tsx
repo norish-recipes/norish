@@ -6,7 +6,7 @@ import "@testing-library/jest-dom";
 import RecipePageDesktop from "@/app/(app)/recipes/[id]/recipe-page-desktop";
 import RecipePageMobile from "@/app/(app)/recipes/[id]/recipe-page-mobile";
 
-import { onRecipePage } from "../../helpers/recipe-page";
+import { onRecipePage } from "./recipe-page";
 
 const userPreferencesState = {
   hidden: ["favorites"] as string[],
@@ -22,7 +22,7 @@ vi.mock("next/link", () => ({
 }));
 
 vi.mock("@norish/shared-react/reader", async () =>
-  (await import("../../helpers/reader-mock")).mockDevicePreferences(
+  (await import("@/__tests__/helpers/reader-mock")).mockDevicePreferences(
     () => ({
       hiddenItems: userPreferencesState.hidden,
     }),
@@ -58,7 +58,7 @@ vi.mock("@/app/(app)/recipes/[id]/components/use-worked-out-nutrition", () => ({
 }));
 
 vi.mock("@norish/shared-react/trpc", async () =>
-  (await import("../../helpers/trpc-fake")).mockTRPC()
+  (await import("@/__tests__/helpers/trpc-fake")).mockTRPC()
 );
 
 // The way back reads the reader's lens and the page they came from, neither

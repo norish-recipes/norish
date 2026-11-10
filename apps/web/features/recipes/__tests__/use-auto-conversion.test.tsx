@@ -1,9 +1,9 @@
+import { fakeProcedure } from "@/__tests__/helpers/trpc-fake";
 import { useAutoConversion } from "@/app/(app)/recipes/[id]/components/use-system-conversion";
 import { act, renderHook } from "@testing-library/react";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 
-import { onRecipePage } from "../../helpers/recipe-page";
-import { fakeProcedure } from "../../helpers/trpc-fake";
+import { onRecipePage } from "./recipe-page";
 
 const mocks = vi.hoisted(() => ({
   measurementSystem: undefined as string | undefined,
@@ -12,7 +12,7 @@ const mocks = vi.hoisted(() => ({
 }));
 
 vi.mock("@norish/shared-react/trpc", async () =>
-  (await import("../../helpers/trpc-fake")).mockTRPC()
+  (await import("@/__tests__/helpers/trpc-fake")).mockTRPC()
 );
 
 vi.mock("@/hooks/user/use-user-query", () => ({
@@ -22,7 +22,7 @@ vi.mock("@/hooks/user/use-user-query", () => ({
 }));
 
 vi.mock("@norish/shared-react/reader", async () =>
-  (await import("../../helpers/reader-mock")).mockReader(() => ({
+  (await import("@/__tests__/helpers/reader-mock")).mockReader(() => ({
     permissions: { isAIEnabled: mocks.isAIEnabled },
     canEditRecipe: () => mocks.canEdit,
   }))

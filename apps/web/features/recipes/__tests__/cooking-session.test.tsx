@@ -5,7 +5,7 @@ import "@testing-library/jest-dom";
 
 import CookingMode from "@/app/(app)/recipes/[id]/components/cookingmode/cooking-mode";
 
-import { onRecipePage } from "../../helpers/recipe-page";
+import { onRecipePage } from "./recipe-page";
 
 const mocks = vi.hoisted(() => ({
   totalMinutes: 90 as number | null,
@@ -16,7 +16,7 @@ const mocks = vi.hoisted(() => ({
 vi.mock("@/hooks/use-is-mobile", () => ({ useIsMobile: () => true }));
 vi.mock("@/hooks/auto-hide", () => ({ useAutoHide: () => ({ isVisible: true }) }));
 vi.mock("@norish/shared-react/reader", async () =>
-  (await import("../../helpers/reader-mock")).mockDevicePreferences(() => ({
+  (await import("@/__tests__/helpers/reader-mock")).mockDevicePreferences(() => ({
     recipePageColor: mocks.recipePageColor,
   }))
 );
@@ -30,7 +30,7 @@ vi.mock("@/app/(app)/recipes/[id]/components/page-wake-lock", () => ({
   }),
 }));
 vi.mock("@norish/shared-react/trpc", async () =>
-  (await import("../../helpers/trpc-fake")).mockTRPC()
+  (await import("@/__tests__/helpers/trpc-fake")).mockTRPC()
 );
 
 /** Cooking mode on a page showing the recipe the test set up. */

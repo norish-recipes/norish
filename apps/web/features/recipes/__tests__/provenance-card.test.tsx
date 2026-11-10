@@ -3,10 +3,10 @@ import { beforeEach, describe, expect, it, vi } from "vitest";
 
 import "@testing-library/jest-dom";
 
+import { fakeProcedure } from "@/__tests__/helpers/trpc-fake";
 import ProvenanceCard from "@/app/(app)/recipes/[id]/components/provenance-card";
 
-import { onRecipePage } from "../../helpers/recipe-page";
-import { fakeProcedure } from "../../helpers/trpc-fake";
+import { onRecipePage } from "./recipe-page";
 
 type LifecycleState = "idle" | "queued" | "processing" | "succeeded" | "failed";
 
@@ -25,7 +25,7 @@ const mocks = vi.hoisted(() => ({
 }));
 
 vi.mock("@norish/shared-react/reader", async () =>
-  (await import("../../helpers/reader-mock")).mockDevicePreferences(
+  (await import("@/__tests__/helpers/reader-mock")).mockDevicePreferences(
     () => ({
       hiddenItems: mocks.hidden,
     }),
@@ -36,7 +36,7 @@ vi.mock("@norish/shared-react/reader", async () =>
 );
 
 vi.mock("@norish/shared-react/trpc", async () =>
-  (await import("../../helpers/trpc-fake")).mockTRPC()
+  (await import("@/__tests__/helpers/trpc-fake")).mockTRPC()
 );
 
 /** The card on a page showing the test's recipe. */

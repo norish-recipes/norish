@@ -3,12 +3,12 @@ import { beforeEach, describe, expect, it, vi } from "vitest";
 
 import "@testing-library/jest-dom";
 
+import { fakeProcedure } from "@/__tests__/helpers/trpc-fake";
 import RecipePageMobile from "@/app/(app)/recipes/[id]/recipe-page-mobile";
 
 import type { RecipeEnrichmentKind } from "@norish/shared/lib/recipe-enrichment";
 
-import { onRecipePage } from "../../helpers/recipe-page";
-import { fakeProcedure } from "../../helpers/trpc-fake";
+import { onRecipePage } from "./recipe-page";
 
 type MockRecipe = {
   id: string;
@@ -92,7 +92,7 @@ vi.mock("@/app/(app)/recipes/[id]/components/use-worked-out-nutrition", () => ({
 }));
 
 vi.mock("@norish/shared-react/trpc", async () =>
-  (await import("../../helpers/trpc-fake")).mockTRPC()
+  (await import("@/__tests__/helpers/trpc-fake")).mockTRPC()
 );
 
 /** The page showing the test's recipe, filed into its cookbooks, at its servings. */
@@ -185,7 +185,7 @@ vi.mock("@norish/ui/star-rating", () => ({
 }));
 
 vi.mock("@norish/shared-react/reader", async () =>
-  (await import("../../helpers/reader-mock")).mockDevicePreferences(
+  (await import("@/__tests__/helpers/reader-mock")).mockDevicePreferences(
     () => ({
       hiddenItems: mocks.hidden,
     }),

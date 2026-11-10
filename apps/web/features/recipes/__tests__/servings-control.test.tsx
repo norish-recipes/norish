@@ -6,7 +6,7 @@ import "@testing-library/jest-dom";
 
 import ServingsControl from "@/app/(app)/recipes/[id]/components/servings-control";
 
-import { onRecipePage } from "../../helpers/recipe-page";
+import { onRecipePage } from "./recipe-page";
 
 vi.mock("next-intl", () => ({
   useTranslations: (namespace: string) => (key: string, values?: { count?: number }) =>
@@ -14,7 +14,7 @@ vi.mock("next-intl", () => ({
 }));
 
 vi.mock("@norish/shared-react/trpc", async () =>
-  (await import("../../helpers/trpc-fake")).mockTRPC()
+  (await import("@/__tests__/helpers/trpc-fake")).mockTRPC()
 );
 
 vi.mock("@/components/Panel/Panel", () => {

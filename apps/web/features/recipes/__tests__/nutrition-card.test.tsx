@@ -7,7 +7,7 @@ import NutritionCard from "@/app/(app)/recipes/[id]/components/nutrition-card";
 
 import type { LeftOutLine, WorkedOutNutrition } from "@norish/shared/lib/recipe-nutrition";
 
-import { onRecipePage } from "../../helpers/recipe-page";
+import { onRecipePage } from "./recipe-page";
 
 const mocks = vi.hoisted(() => ({
   hasData: false,
@@ -32,11 +32,11 @@ vi.mock("@/components/ingredients/ingredient-panel", () => ({
 }));
 
 vi.mock("@norish/shared-react/trpc", async () =>
-  (await import("../../helpers/trpc-fake")).mockTRPC()
+  (await import("@/__tests__/helpers/trpc-fake")).mockTRPC()
 );
 
 vi.mock("@norish/shared-react/reader", async () =>
-  (await import("../../helpers/reader-mock")).mockDevicePreferences(
+  (await import("@/__tests__/helpers/reader-mock")).mockDevicePreferences(
     () => ({
       hiddenItems: mocks.hidden,
     }),

@@ -1,9 +1,8 @@
+import { trackedEvent } from "@/__tests__/hooks/realtime-test-utils";
 import { act, renderHook } from "@testing-library/react";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 
 import { createTestQueryClient, createTestWrapper } from "@norish/shared-react/platform/testing";
-
-import { trackedEvent } from "../../hooks/realtime-test-utils";
 
 const subscriptionCallbacks: Record<string, ((data: unknown) => void) | undefined> = {};
 

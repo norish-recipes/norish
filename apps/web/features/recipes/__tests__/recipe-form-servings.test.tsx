@@ -39,7 +39,7 @@ vi.mock("@norish/shared-react/config", () => ({
   }),
 }));
 vi.mock("@norish/shared-react/reader", async () =>
-  (await import("../../helpers/reader-mock")).mockDevicePreferences()
+  (await import("@/__tests__/helpers/reader-mock")).mockDevicePreferences()
 );
 vi.mock("@norish/shared-react/recipes", async (importOriginal) => ({
   ...(await importOriginal<typeof import("@norish/shared-react/recipes")>()),
