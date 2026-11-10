@@ -16,8 +16,8 @@ vi.mock("@/app/(app)/app-shell", () => ({
   AppShell: ({ children }: { children: React.ReactNode }) => <div>{children}</div>,
 }));
 
-vi.mock("@/components/dashboard/dashboard", () => ({
-  Dashboard: () => <div>dashboard-surface</div>,
+vi.mock("@/app/(app)/(library)/(dashboard)/page", () => ({
+  default: () => <div>dashboard-surface</div>,
 }));
 
 // The Library's root, showing the filters it is made from.

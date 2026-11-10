@@ -2,12 +2,12 @@
 
 import type { ComponentType, ReactNode } from "react";
 import { useEffect, useState } from "react";
+import DashboardPage from "@/app/(app)/(library)/(dashboard)/page";
 import { AppShell } from "@/app/(app)/app-shell";
 import CalendarPage from "@/app/(app)/calendar/page";
 import { OfflineCookbook } from "@/app/~offline/offline-cookbook";
 import { OfflineRecipeDetail } from "@/app/~offline/offline-recipe-detail";
 import { OfflineUnavailable } from "@/app/~offline/offline-unavailable";
-import { Dashboard } from "@/components/dashboard/dashboard";
 import { offlineEngine } from "@/lib/offline/engine";
 import { readStoredRecipeFilters } from "@/lib/recipe-filters-storage";
 
@@ -35,7 +35,7 @@ function offlineSurface(
   if (path === "/") {
     return (
       <LibraryRoot filters={filters ?? undefined}>
-        <Dashboard />
+        <DashboardPage />
       </LibraryRoot>
     );
   }

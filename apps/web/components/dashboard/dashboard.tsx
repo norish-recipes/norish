@@ -10,23 +10,11 @@ import RecipeViewModeToggle, {
   RecipeViewModeTabs,
 } from "@/components/dashboard/recipe-view-mode-toggle";
 import SearchInput from "@/components/dashboard/search-input";
-import TodaysMeals from "@/components/dashboard/today/todays-meals";
 import RecipeGridSkeleton from "@/components/skeleton/recipe-grid-skeleton";
 import { useLibraryList } from "@/hooks/use-library";
 import { Tabs } from "@heroui/react";
 
 const LIBRARY_HEADING_ID = "recipe-library-heading";
-
-function RecipeLibrary({ skeleton }: { skeleton: boolean }) {
-  const { recipes } = useLibraryList();
-
-  return (
-    <>
-      <RecipeLibraryContent skeleton={skeleton} />
-      <RecipeSelectionBar recipes={recipes} />
-    </>
-  );
-}
 
 function RecipeLibraryContent({ skeleton }: { skeleton: boolean }) {
   return (
@@ -59,15 +47,17 @@ function RecipeLibraryContent({ skeleton }: { skeleton: boolean }) {
 }
 
 /**
- * The dashboard surface shared by the Live route and Offline bootstrap. `skeleton` is the route's
+ * The Library's screen, which the dashboard draws under Today's meals. `skeleton` is the route's
  * loading state: grey cards stand in for the Library, so its grid and scroll memory mount once.
  */
-export function Dashboard({ skeleton = false }: { skeleton?: boolean }) {
+export function LibraryScreen({ skeleton = false }: { skeleton?: boolean }) {
+  const { recipes } = useLibraryList();
+
   return (
-    <div className="flex min-h-0 w-full flex-1 flex-col gap-8">
-      <TodaysMeals />
-      <RecipeLibrary skeleton={skeleton} />
+    <>
+      <RecipeLibraryContent skeleton={skeleton} />
+      <RecipeSelectionBar recipes={recipes} />
       {skeleton ? null : <FloatingRecipeChip />}
-    </div>
+    </>
   );
 }
