@@ -1,10 +1,10 @@
 "use client";
 
 import { useEffect, useRef, useState } from "react";
-import { useRecipeAutocomplete } from "@/hooks/recipes";
 import { Avatar, ListBox, Spinner, TextArea } from "@heroui/react";
 import { useTranslations } from "next-intl";
 
+import { useRecipeAutocomplete } from "@norish/shared-react/recipes";
 import { addBasePath } from "@norish/shared/lib/base-path";
 
 export interface SmartTextInputIngredientSuggestion {

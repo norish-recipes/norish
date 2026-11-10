@@ -20,7 +20,8 @@ vi.mock("@/components/ingredients/ingredient-icon", () => ({
   useFoodsByName: () => foods,
 }));
 
-vi.mock("@/hooks/recipes", () => ({
+vi.mock("@norish/shared-react/recipes", async (importOriginal) => ({
+  ...(await importOriginal<typeof import("@norish/shared-react/recipes")>()),
   useRecipeAutocomplete: () => ({ suggestions: [], isLoading: false }),
 }));
 

@@ -8,7 +8,6 @@ import ImportFromImageModal from "@/components/shared/import-from-image-modal";
 import ImportFromPasteModal from "@/components/shared/import-from-paste-modal";
 import ImportRecipeModal from "@/components/shared/import-recipe-modal";
 import { useRecipesFiltersContext } from "@/context/recipes-filters-context";
-import { useCookbooksMutations } from "@/hooks/cookbooks";
 import {
   ArrowDownTrayIcon,
   ClipboardDocumentIcon,
@@ -19,6 +18,7 @@ import { Button, Dropdown, Label } from "@heroui/react";
 import { useTranslations } from "next-intl";
 
 import { usePermissions } from "@norish/shared-react/reader";
+import { useCookbooksMutations } from "@norish/shared-react/recipes";
 import { cssHeaderControl, cssHeaderIcon } from "@norish/web/config/css-tokens";
 
 /**

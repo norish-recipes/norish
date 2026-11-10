@@ -9,7 +9,6 @@ import {
   ActionButtonGroup,
   IconActionButton,
 } from "@/components/shared/action-button";
-import { sharedRecipeShareHooks } from "@/hooks/recipes/shared-recipe-hooks";
 import { PauseIcon, PlayIcon } from "@heroicons/react/16/solid";
 import { LinkIcon } from "@heroicons/react/24/outline";
 import { Modal, Skeleton, Table } from "@heroui/react";
@@ -19,6 +18,7 @@ import type {
   AdminRecipeShareInventoryDto,
   RecipeShareInventoryDto,
 } from "@norish/shared/contracts/dto/recipe-shares";
+import { useRecipeShareMutations } from "@norish/shared-react/recipes";
 
 type ShareRow = RecipeShareInventoryDto | AdminRecipeShareInventoryDto;
 type ConfirmAction = {
@@ -62,7 +62,7 @@ export default function ShareLinksTableCard({
   const formatDate = (date: Date | null) =>
     date ? format.dateTime(new Date(date), DATE_AND_TIME) : "-";
   const { revokeShare, reactivateShare, deleteShare, isRevoking, isReactivating, isDeleting } =
-    sharedRecipeShareHooks.useRecipeShareMutations(null);
+    useRecipeShareMutations(null);
   const [confirmAction, setConfirmAction] = useState<ConfirmAction>(null);
   const handleConfirm = () => {
     if (!confirmAction) return;

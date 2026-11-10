@@ -3,9 +3,9 @@
 import type { ReactNode } from "react";
 import { useCallback, useState } from "react";
 import { MiniGroceries } from "@/features/groceries";
-import { useRecipeQuery } from "@/hooks/recipes";
 import { useUserSettingsQuery } from "@/hooks/user/use-user-query";
 
+import { useRecipeQuery } from "@norish/shared-react/recipes";
 import { getAfterPlanningPreference } from "@norish/shared/lib/user-preferences";
 
 type Planned = { key: number; recipeId: string; addAtOnce: boolean; open: boolean };

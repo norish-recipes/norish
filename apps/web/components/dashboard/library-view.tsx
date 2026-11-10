@@ -12,10 +12,9 @@ import RecipeCardSkeleton from "@/components/skeleton/recipe-card-skeleton";
 import { useRecipeSelection } from "@/context/recipe-selection-context";
 import { useRecipesContext } from "@/context/recipes-context";
 import { useRecipesFiltersContext } from "@/context/recipes-filters-context";
-import { useCookbooksMutations } from "@/hooks/cookbooks";
-import { useLibraryQuery } from "@/hooks/library";
 
 import type { RecipeViewMode } from "@norish/shared/contracts/zod/device-preferences";
+import { useCookbooksMutations, useLibraryQuery } from "@norish/shared-react/recipes";
 import { toRecipesQueryFilters } from "@norish/shared/contracts/filter-contract";
 
 /**

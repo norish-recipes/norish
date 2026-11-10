@@ -27,17 +27,16 @@ vi.mock("next-intl", () => ({
   },
 }));
 
-vi.mock("@/hooks/recipes/shared-recipe-hooks", () => ({
-  sharedRecipeShareHooks: {
-    useRecipeShareMutations: () => ({
-      revokeShare: vi.fn(),
-      reactivateShare: vi.fn(),
-      deleteShare: vi.fn(),
-      isRevoking: false,
-      isReactivating: false,
-      isDeleting: false,
-    }),
-  },
+vi.mock("@norish/shared-react/recipes", async (importOriginal) => ({
+  ...(await importOriginal<typeof import("@norish/shared-react/recipes")>()),
+  useRecipeShareMutations: () => ({
+    revokeShare: vi.fn(),
+    reactivateShare: vi.fn(),
+    deleteShare: vi.fn(),
+    isRevoking: false,
+    isReactivating: false,
+    isDeleting: false,
+  }),
 }));
 
 vi.mock("@/app/(app)/settings/components/new-feature-chip", () => ({

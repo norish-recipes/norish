@@ -1,7 +1,8 @@
 "use client";
 
 import type { ReactNode } from "react";
-import { useCookbooksSubscription } from "@/hooks/cookbooks";
+
+import { useCookbooksSubscription } from "@norish/shared-react/recipes";
 
 /**
  * Mounts the cookbook realtime subscription for the whole app.

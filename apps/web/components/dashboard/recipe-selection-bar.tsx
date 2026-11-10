@@ -7,7 +7,6 @@ import { DeleteRecipeModal } from "@/components/shared/delete-recipe-modal";
 import { ActionBar, actionBarButtonClassName } from "@/components/ui/action-bar";
 import { useRecipeSelection } from "@/context/recipe-selection-context";
 import { useRecipesContext } from "@/context/recipes-context";
-import { useCookbooksMutations } from "@/hooks/cookbooks";
 import { showActionToast } from "@/lib/ui/action-toast";
 import { BookOpenIcon, MinusCircleIcon, TrashIcon, XMarkIcon } from "@heroicons/react/16/solid";
 import { Button } from "@heroui/react";
@@ -16,6 +15,7 @@ import { twMerge } from "tailwind-merge";
 
 import type { CookbookSummaryDTO } from "@norish/shared/contracts";
 import { useRecipePermissions } from "@norish/shared-react/reader";
+import { useCookbooksMutations } from "@norish/shared-react/recipes";
 
 /**
  * The action bar over a page's recipe selection. On a cookbook page it can also take the

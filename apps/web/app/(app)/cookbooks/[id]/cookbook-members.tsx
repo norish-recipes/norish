@@ -9,12 +9,12 @@ import RecipeSelectionBar from "@/components/dashboard/recipe-selection-bar";
 import { RecipeSelectionProvider } from "@/context/recipe-selection-context";
 import { useRecipesContext } from "@/context/recipes-context";
 import { useRecipesFiltersContext } from "@/context/recipes-filters-context";
-import { useCookbookRecipesQuery, useCookbooksMutations } from "@/hooks/cookbooks";
 import { Card } from "@heroui/react";
 import { useTranslations } from "next-intl";
 
 import type { CookbookSummaryDTO } from "@norish/shared/contracts";
 import type { RecipeViewMode } from "@norish/shared/contracts/zod/device-preferences";
+import { useCookbookRecipesQuery, useCookbooksMutations } from "@norish/shared-react/recipes";
 import {
   hasAppliedRecipeFilters,
   serializeRecipeFilters,

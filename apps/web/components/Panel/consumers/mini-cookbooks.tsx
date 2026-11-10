@@ -5,10 +5,11 @@ import CookbookCover from "@/components/cookbooks/cookbook-cover";
 import { SelectableRow } from "@/components/cookbooks/selectable-row";
 import Panel from "@/components/Panel/Panel";
 import { ActionButton, ActionButtonGroup } from "@/components/shared/action-button";
-import { useCookbooksMutations, useEditableCookbooksQuery } from "@/hooks/cookbooks";
 import { PlusIcon, XMarkIcon } from "@heroicons/react/16/solid";
 import { Button, Input, Separator } from "@heroui/react";
 import { useTranslations } from "next-intl";
+
+import { useCookbooksMutations, useEditableCookbooksQuery } from "@norish/shared-react/recipes";
 
 type MiniCookbooksProps = {
   open: boolean;

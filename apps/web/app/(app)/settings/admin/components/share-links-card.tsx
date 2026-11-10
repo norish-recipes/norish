@@ -1,10 +1,11 @@
 "use client";
 
 import ShareLinksTableCard from "@/components/recipes/share-links-table-card";
-import { sharedRecipeShareHooks } from "@/hooks/recipes/shared-recipe-hooks";
+
+import { useAdminRecipeSharesQuery } from "@norish/shared-react/recipes";
 
 export default function AdminShareLinksCard() {
-  const { shares, isLoading } = sharedRecipeShareHooks.useAdminRecipeSharesQuery();
+  const { shares, isLoading } = useAdminRecipeSharesQuery();
 
   return (
     <ShareLinksTableCard

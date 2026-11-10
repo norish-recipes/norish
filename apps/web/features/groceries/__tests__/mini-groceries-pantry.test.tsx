@@ -92,7 +92,8 @@ vi.mock("@/components/ingredients/ingredient-icon", () => ({
   IngredientIcon: () => null,
   IngredientIconsProvider: ({ children }: { children: ReactNode }) => children,
 }));
-vi.mock("@/hooks/recipes/use-recipe-ingredients", () => ({
+vi.mock("@norish/shared-react/recipes", async (importOriginal) => ({
+  ...(await importOriginal<typeof import("@norish/shared-react/recipes")>()),
   useRecipeIngredients: () => ({
     ingredients: [...INGREDIENTS, ...linkedLines],
     systemUsed: "metric",

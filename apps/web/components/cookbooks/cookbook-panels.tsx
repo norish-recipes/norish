@@ -5,13 +5,13 @@ import CookbookCover from "@/components/cookbooks/cookbook-cover";
 import { SelectableRow } from "@/components/cookbooks/selectable-row";
 import Panel from "@/components/Panel/Panel";
 import { ActionButton, ActionButtonGroup } from "@/components/shared/action-button";
-import { useCookbookRecipesQuery, useCookbooksMutations } from "@/hooks/cookbooks";
 import { PhotoIcon, TrashIcon } from "@heroicons/react/24/outline";
 import { Button, Input, Label, Modal, Separator, Spinner, toast } from "@heroui/react";
 import { useTranslations } from "next-intl";
 
 import type { CookbookSummaryDTO } from "@norish/shared/contracts";
 import { useConnectivity } from "@norish/shared-react/offline/react";
+import { useCookbookRecipesQuery, useCookbooksMutations } from "@norish/shared-react/recipes";
 import { ALLOWED_IMAGE_MIME_TYPES } from "@norish/shared/contracts";
 import { addBasePath } from "@norish/shared/lib/base-path";
 

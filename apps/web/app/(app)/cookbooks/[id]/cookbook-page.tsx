@@ -1,6 +1,5 @@
 "use client";
 
-import type { CookbookQueryResult } from "@/hooks/cookbooks";
 import type { ReactNode } from "react";
 import { useCallback, useState } from "react";
 import { useRouter } from "next/navigation";
@@ -13,7 +12,6 @@ import SearchInput from "@/components/dashboard/search-input";
 import { BackLink } from "@/components/page-transition";
 import { NotFoundView } from "@/components/shared/not-found-view";
 import RecipeGridSkeleton from "@/components/skeleton/recipe-grid-skeleton";
-import { useCookbookQuery, useCookbooksMutations } from "@/hooks/cookbooks";
 import { useBackDestination } from "@/hooks/use-back-destination";
 import {
   ArrowLeftIcon,
@@ -26,7 +24,9 @@ import { Button, Dropdown, Label, Skeleton, Tabs } from "@heroui/react";
 import { useTranslations } from "next-intl";
 import { twMerge } from "tailwind-merge";
 
+import type { CookbookQueryResult } from "@norish/shared-react/recipes";
 import { useRecipePermissions } from "@norish/shared-react/reader";
+import { useCookbookQuery, useCookbooksMutations } from "@norish/shared-react/recipes";
 import {
   cssButtonPill,
   cssButtonPillDanger,

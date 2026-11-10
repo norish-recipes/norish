@@ -10,10 +10,6 @@ import {
   ActionButtonGroup,
   IconActionButton,
 } from "@/components/shared/action-button";
-import {
-  useLinkedRecipeIngredients,
-  useRecipeIngredients,
-} from "@/hooks/recipes/use-recipe-ingredients";
 import { useUnitFormatter } from "@/hooks/use-unit-formatter";
 import { ArchiveBoxArrowDownIcon } from "@heroicons/react/16/solid";
 import { Button, Input, toast } from "@heroui/react";
@@ -27,7 +23,12 @@ import {
   usePantryMutations,
   usePantryQuery,
 } from "@norish/shared-react/groceries";
-import { formatServings, useServingsScaler } from "@norish/shared-react/hooks";
+import {
+  formatServings,
+  useLinkedRecipeIngredients,
+  useRecipeIngredients,
+  useServingsScaler,
+} from "@norish/shared-react/recipes";
 import { foodsToBuy } from "@norish/shared/lib/line-foods";
 import { pantryIngredientFor } from "@norish/shared/lib/pantry";
 

@@ -6,10 +6,10 @@ import { landOnDay, settleLanding } from "@/components/calendar/land-on-day";
 import { TimelineDaySection } from "@/components/calendar/mobile";
 import Panel from "@/components/Panel/Panel";
 import { useCalendarMutations, useCalendarQuery, useCalendarSubscription } from "@/hooks/calendar";
-import { useRecipeQuery } from "@/hooks/recipes";
 import { useVirtualizer } from "@tanstack/react-virtual";
 import { useLocale, useTranslations } from "next-intl";
 
+import { useRecipeQuery } from "@norish/shared-react/recipes";
 import { Slot } from "@norish/shared/contracts";
 import {
   addMonths,

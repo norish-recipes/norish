@@ -36,7 +36,8 @@ vi.mock("next-intl", () => ({
   useTranslations: () => (key: string) => key,
 }));
 
-vi.mock("@/hooks/cookbooks", () => ({
+vi.mock("@norish/shared-react/recipes", async (importOriginal) => ({
+  ...(await importOriginal<typeof import("@norish/shared-react/recipes")>()),
   useEditableCookbooksQuery: () => ({ cookbooks: EDITABLE, isLoading: false }),
   useCookbooksMutations: () => ({ setMembership, createCookbook }),
 }));

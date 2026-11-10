@@ -7,7 +7,8 @@ import "@testing-library/jest-dom";
 import type { SmartTextInputIngredientSuggestion } from "@/components/shared/smart-text-input";
 import SmartTextInput from "@/components/shared/smart-text-input";
 
-vi.mock("@/hooks/recipes", () => ({
+vi.mock("@norish/shared-react/recipes", async (importOriginal) => ({
+  ...(await importOriginal<typeof import("@norish/shared-react/recipes")>()),
   useRecipeAutocomplete: () => ({ suggestions: [], isLoading: false }),
 }));
 

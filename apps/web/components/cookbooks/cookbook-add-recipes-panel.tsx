@@ -5,13 +5,16 @@ import { useCallback, useMemo, useState, useTransition } from "react";
 import { SelectableRow } from "@/components/cookbooks/selectable-row";
 import Panel from "@/components/Panel/Panel";
 import { ActionButton, ActionButtonGroup } from "@/components/shared/action-button";
-import { useCookbookMemberIdsQuery, useCookbooksMutations } from "@/hooks/cookbooks";
-import { useRecipesQuery } from "@/hooks/recipes";
 import { PhotoIcon } from "@heroicons/react/24/outline";
 import { Button, Input, Spinner } from "@heroui/react";
 import { useTranslations } from "next-intl";
 
 import type { CookbookSummaryDTO } from "@norish/shared/contracts";
+import {
+  useCookbookMemberIdsQuery,
+  useCookbooksMutations,
+  useRecipesQuery,
+} from "@norish/shared-react/recipes";
 import { addBasePath } from "@norish/shared/lib/base-path";
 
 /** Tall enough that the list is the panel rather than a strip under a field. */

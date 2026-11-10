@@ -7,13 +7,13 @@ import Panel from "@/components/Panel/Panel";
 import { ActionButton } from "@/components/shared/action-button";
 import { SlotDropdown } from "@/components/shared/slot-dropdown";
 import MiniRecipeSkeleton from "@/components/skeleton/mini-recipe-skeleton";
-import { useRandomRecipe, useRecipesQuery } from "@/hooks/recipes";
 import { usePending } from "@/hooks/use-pending";
 import { Input } from "@heroui/react";
 import { useVirtualizer } from "@tanstack/react-virtual";
 import { AnimatePresence, motion } from "motion/react";
 import { useLocale, useTranslations } from "next-intl";
 
+import { useRandomRecipe, useRecipesQuery } from "@norish/shared-react/recipes";
 import { RecipeCategory, RecipeDashboardDTO, Slot } from "@norish/shared/contracts";
 import { addBasePath } from "@norish/shared/lib/base-path";
 import { dateKey } from "@norish/shared/lib/helpers";
