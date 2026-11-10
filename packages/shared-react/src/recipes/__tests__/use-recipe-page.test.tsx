@@ -7,7 +7,12 @@ import type { FullRecipeDTO } from "@norish/shared/contracts";
 import { createTestQueryClient } from "@norish/shared-react/platform/testing";
 
 import { RecipePageProvider, useRecipePageStore } from "../recipe-page-store";
-import { usePageIngredients, usePageServings, useRecipeConversion } from "../use-recipe-page";
+import {
+  usePageIngredients,
+  usePageRecipe,
+  usePageServings,
+  useRecipeConversion,
+} from "../use-recipe-page";
 
 const sendConvert = vi.hoisted(() => vi.fn());
 
@@ -113,6 +118,26 @@ describe("the recipe page's reads", () => {
     act(() => queryClient.setQueryData(RECIPE_KEY, { ...recipe, systemUsed: "us", version: 2 }));
 
     await vi.waitFor(() => expect(result.current.conversion).toBeNull());
+    expect(result.current.convertingTo).toBeNull();
+  });
+
+  it("stays done when the recipe's system later changes back", async () => {
+    sendConvert.mockReturnValue(new Promise(() => {}));
+    const { result, queryClient } = renderOnPage(() => ({
+      ...useRecipeConversion(),
+      version: usePageRecipe()?.version,
+    }));
+
+    act(() => result.current.startConversion("us"));
+    act(() => queryClient.setQueryData(RECIPE_KEY, { ...recipe, systemUsed: "us", version: 2 }));
+    await vi.waitFor(() => expect(result.current.convertingTo).toBeNull());
+
+    // Someone else in the household converts it back.
+    act(() =>
+      queryClient.setQueryData(RECIPE_KEY, { ...recipe, systemUsed: "metric", version: 3 })
+    );
+
+    await vi.waitFor(() => expect(result.current.version).toBe(3));
     expect(result.current.convertingTo).toBeNull();
   });
 

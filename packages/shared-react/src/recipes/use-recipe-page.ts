@@ -84,6 +84,7 @@ export function useRecipeConversion(): RecipeConversionResult {
     recipe.systemUsed === conversion.target &&
     (!conversion.withAI || recipe.version !== conversion.version);
 
+  // Cleared once over, so a later change of the recipe's system doesn't revive it.
   useEffect(() => {
     if (isOver && conversion) endConversion(conversion);
   }, [isOver, conversion, endConversion]);
