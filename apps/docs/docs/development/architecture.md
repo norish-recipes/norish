@@ -84,8 +84,8 @@ Imports run one way: shared folders, then features, then routes. The one way
 back is shared code opening a panel through a feature's `index.ts`.
 
 On web `groceries` and `recipes` have moved so far. `library`, `calendar`,
-`settings`, `imports` and `auth` still live in web's `components/`, `hooks/`,
-`context/` and `stores/`. In shared-react the recipe domain is in
+`settings`, `imports` and `auth` still live in web's `components/`, `hooks/`
+and `context/`. In shared-react the recipe domain is in
 `src/recipes/` and the Reader in `src/reader/`, next to `groceries`. What
 calendar, settings, imports and the Library still use stays in shared-react's
 `hooks/` and `contexts/`.
