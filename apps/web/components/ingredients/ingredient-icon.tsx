@@ -32,12 +32,7 @@ const FIND_DELAY_MS = 400;
 /** Each food's icon by its Ingredient's id, null where it has none: one read's answer. */
 type IconAnswer = inferRouterOutputs<AppRouter>["ingredients"]["icons"];
 
-/**
- * Reads the icons of the foods a surface shows, once for them all: a recipe's lines, a grocery
- * list, the Pantry. The answer is kept with the rest of the query cache, so a list opened offline
- * shows the icons it showed before, and any change to the catalogue reads it again. Each
- * `IngredientIcon` picks its own food's from the cache, so the surface itself never re-renders.
- */
+/** One read of a surface's foods' icons; each `IngredientIcon` selects its own from the cache. */
 export function useIngredientIcons(ids: readonly (string | null | undefined)[]): void {
   const trpc = useTRPC();
   const wanted = iconIds(ids);
