@@ -3,21 +3,21 @@ import { describe, expect, it, vi } from "vitest";
 
 import "@testing-library/jest-dom";
 
-import { ReadonlyStepsList } from "@/components/recipes/readonly-steps-list";
+import { ReadonlyStepsList } from "@/features/recipes/components/read-only/readonly-steps-list";
 
 vi.mock("@norish/shared-react/reader", async () =>
   (await import("@/__tests__/helpers/reader-mock")).mockDevicePreferences()
 );
-vi.mock("@/components/recipe/smart-instruction", () => ({
+vi.mock("@/features/recipes/components/read-only/smart-instruction", () => ({
   SmartInstruction: ({ text }: { text: string }) => <span>{text}</span>,
 }));
 vi.mock("@/components/shared/smart-markdown-renderer", () => ({
   default: ({ text }: { text: string }) => <span>{text}</span>,
 }));
-vi.mock("@/components/shared/image-lightbox", () => ({
+vi.mock("@/features/recipes/components/media/image-lightbox", () => ({
   default: () => null,
 }));
-vi.mock("@/hooks/use-amount-display-preference", () => ({
+vi.mock("@/features/recipes/hooks/use-amount-display-preference", () => ({
   useAmountDisplayPreference: () => ({ mode: "decimal" }),
 }));
 vi.mock("@/hooks/use-unit-formatter", () => ({

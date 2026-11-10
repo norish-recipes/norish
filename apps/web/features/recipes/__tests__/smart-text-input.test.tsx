@@ -4,8 +4,8 @@ import { describe, expect, it, vi } from "vitest";
 
 import "@testing-library/jest-dom";
 
-import type { SmartTextInputIngredientSuggestion } from "@/components/shared/smart-text-input";
-import SmartTextInput from "@/components/shared/smart-text-input";
+import type { SmartTextInputIngredientSuggestion } from "@/features/recipes/components/editor/smart-text-input";
+import SmartTextInput from "@/features/recipes/components/editor/smart-text-input";
 
 vi.mock("@norish/shared-react/recipes", async (importOriginal) => ({
   ...(await importOriginal<typeof import("@norish/shared-react/recipes")>()),

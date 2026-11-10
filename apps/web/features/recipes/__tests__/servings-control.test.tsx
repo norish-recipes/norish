@@ -4,7 +4,7 @@ import { describe, expect, it, vi } from "vitest";
 
 import "@testing-library/jest-dom";
 
-import ServingsControl from "@/app/(app)/recipes/[id]/components/servings-control";
+import ServingsControl from "@/features/recipes/components/page/servings-control";
 
 import { onRecipePage } from "./recipe-page";
 

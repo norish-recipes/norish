@@ -3,7 +3,7 @@ import { describe, expect, it, vi } from "vitest";
 
 import "@testing-library/jest-dom";
 
-import { SmartInstruction } from "@/components/recipe/smart-instruction";
+import { SmartInstruction } from "@/features/recipes/components/read-only/smart-instruction";
 
 vi.mock("@norish/shared/lib/logger", () => ({
   createClientLogger: () => () => ({ warn: () => {} }),

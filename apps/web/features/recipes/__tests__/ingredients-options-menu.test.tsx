@@ -3,7 +3,7 @@ import { beforeEach, describe, expect, it, vi } from "vitest";
 
 import "@testing-library/jest-dom";
 
-import IngredientsOptionsMenu from "@/app/(app)/recipes/[id]/components/ingredients-options-menu";
+import IngredientsOptionsMenu from "@/features/recipes/components/page/ingredients-options-menu";
 
 import { onRecipePage } from "./recipe-page";
 
@@ -28,7 +28,7 @@ vi.mock("@norish/shared-react/reader", async () =>
   )
 );
 
-vi.mock("@/hooks/use-amount-display-preference", () => ({
+vi.mock("@/features/recipes/hooks/use-amount-display-preference", () => ({
   useAmountDisplayPreference: () => ({
     mode: mocks.amountMode,
     setMode: vi.fn(),

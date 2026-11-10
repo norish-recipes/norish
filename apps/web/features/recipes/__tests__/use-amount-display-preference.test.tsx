@@ -4,7 +4,7 @@ import { describe, expect, it, vi } from "vitest";
 import "@testing-library/jest-dom";
 
 import { renderWithDevicePreferences } from "@/__tests__/helpers/device-preferences";
-import { useAmountDisplayPreference } from "@/hooks/use-amount-display-preference";
+import { useAmountDisplayPreference } from "@/features/recipes/hooks/use-amount-display-preference";
 
 vi.mock("@norish/shared-react/trpc", () => import("@/__tests__/helpers/device-preferences-trpc"));
 

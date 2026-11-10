@@ -3,7 +3,7 @@ import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 
 import "@testing-library/jest-dom";
 
-import CookingMode from "@/app/(app)/recipes/[id]/components/cookingmode/cooking-mode";
+import CookingMode from "@/features/recipes/components/page/cooking-mode/cooking-mode";
 
 import { onRecipePage } from "./recipe-page";
 
@@ -21,7 +21,7 @@ vi.mock("@norish/shared-react/reader", async () =>
   }))
 );
 vi.mock("@/components/timer-dock", () => ({ TimerDock: () => <div /> }));
-vi.mock("@/app/(app)/recipes/[id]/components/page-wake-lock", () => ({
+vi.mock("@/features/recipes/components/page/page-wake-lock", () => ({
   usePageWakeLock: () => ({
     isSupported: false,
     isActive: false,
@@ -93,10 +93,10 @@ function dialog({
   );
 }
 
-vi.mock("@/app/(app)/recipes/[id]/components/cookingmode/mobile-cooking-mode-dialog", () => ({
+vi.mock("@/features/recipes/components/page/cooking-mode/mobile-cooking-mode-dialog", () => ({
   MobileCookingModeDialog: (props: DialogProps) => dialog(props),
 }));
-vi.mock("@/app/(app)/recipes/[id]/components/cookingmode/desktop-cooking-mode-dialog", () => ({
+vi.mock("@/features/recipes/components/page/cooking-mode/desktop-cooking-mode-dialog", () => ({
   DesktopCookingModeDialog: (props: DialogProps) => dialog(props),
 }));
 

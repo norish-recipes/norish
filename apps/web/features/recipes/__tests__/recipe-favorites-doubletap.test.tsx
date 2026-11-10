@@ -3,8 +3,8 @@ import { describe, expect, it, vi } from "vitest";
 
 import "@testing-library/jest-dom";
 
-import RecipePageDesktop from "@/app/(app)/recipes/[id]/recipe-page-desktop";
-import RecipePageMobile from "@/app/(app)/recipes/[id]/recipe-page-mobile";
+import RecipePageDesktop from "@/features/recipes/components/page/recipe-page-desktop";
+import RecipePageMobile from "@/features/recipes/components/page/recipe-page-mobile";
 
 import { onRecipePage } from "./recipe-page";
 
@@ -53,7 +53,7 @@ vi.mock("@/components/Panel/consumers", () => ({
 }));
 
 // The worked-out total reads the server; these pages are about their layout.
-vi.mock("@/app/(app)/recipes/[id]/components/use-worked-out-nutrition", () => ({
+vi.mock("@/features/recipes/hooks/use-worked-out-nutrition", () => ({
   useWorkedOutNutrition: () => null,
 }));
 
@@ -87,57 +87,57 @@ vi.mock("@norish/ui/star-rating", () => ({
   default: () => <div>star-rating</div>,
 }));
 
-vi.mock("@/components/shared/media-carousel", () => ({
+vi.mock("@/features/recipes/components/media/media-carousel", () => ({
   default: () => <div>media-carousel</div>,
   buildMediaItems: () => [],
 }));
 
-vi.mock("@/app/(app)/recipes/[id]/components/provenance-card", () => ({
+vi.mock("@/features/recipes/components/page/provenance-card", () => ({
   default: () => <div>provenance-card</div>,
   useProvenanceSectionVisible: () => true,
 }));
 
-vi.mock("@/app/(app)/recipes/[id]/components/nutrition-card", () => ({
+vi.mock("@/features/recipes/components/page/nutrition-card", () => ({
   default: () => <div>nutrition-card</div>,
   useNutritionSectionVisible: () => true,
 }));
 
-vi.mock("@/app/(app)/recipes/[id]/components/notes-card", () => ({
+vi.mock("@/features/recipes/components/page/notes-card", () => ({
   default: () => <div>notes-card</div>,
   useNotesSectionVisible: () => false,
 }));
 
-vi.mock("@/app/(app)/recipes/[id]/components/actions-menu", () => ({
+vi.mock("@/features/recipes/components/page/actions-menu", () => ({
   default: () => <div>actions-menu</div>,
 }));
-vi.mock("@/app/(app)/recipes/[id]/components/add-to-groceries-button", () => ({
+vi.mock("@/features/recipes/components/page/add-to-groceries-button", () => ({
   default: () => <div>add-groceries</div>,
 }));
-vi.mock("@/app/(app)/recipes/[id]/components/ingredient-list", () => ({
+vi.mock("@/features/recipes/components/page/ingredient-list", () => ({
   default: () => <div>ingredients-list</div>,
 }));
-vi.mock("@/app/(app)/recipes/[id]/components/ingredients-options-menu", () => ({
+vi.mock("@/features/recipes/components/page/ingredients-options-menu", () => ({
   default: () => <div data-testid="ingredients-options" />,
 }));
-vi.mock("@/app/(app)/recipes/[id]/components/servings-control", () => ({
+vi.mock("@/features/recipes/components/page/servings-control", () => ({
   default: () => <div>servings-control</div>,
 }));
-vi.mock("@/components/recipes/amount-display-toggle", () => ({
+vi.mock("@/features/recipes/components/read-only/amount-display-toggle", () => ({
   default: () => <div>amount-toggle</div>,
 }));
-vi.mock("@/app/(app)/recipes/[id]/components/cookingmode", () => ({
+vi.mock("@/features/recipes/components/page/cooking-mode", () => ({
   default: () => <div>cooking-mode</div>,
 }));
-vi.mock("@/app/(app)/recipes/[id]/components/steps-list", () => ({
+vi.mock("@/features/recipes/components/page/steps-list", () => ({
   default: () => <div>steps-list</div>,
 }));
-vi.mock("@/app/(app)/recipes/[id]/components/system-convert-menu", () => ({
+vi.mock("@/features/recipes/components/page/system-convert-menu", () => ({
   default: () => <div>system-convert-menu</div>,
 }));
-vi.mock("@/app/(app)/recipes/[id]/components/wake-lock-toggle", () => ({
+vi.mock("@/features/recipes/components/page/wake-lock-toggle", () => ({
   default: () => <div>wake-lock-toggle</div>,
 }));
-vi.mock("@/components/recipes/author-chip", () => ({
+vi.mock("@/features/recipes/components/read-only/author-chip", () => ({
   default: () => <div>author-chip</div>,
 }));
 

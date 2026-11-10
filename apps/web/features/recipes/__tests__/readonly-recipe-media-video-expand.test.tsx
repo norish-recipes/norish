@@ -18,13 +18,13 @@ import { describe, expect, it, vi } from "vitest";
 
 import "@testing-library/jest-dom";
 
-import { ReadonlyRecipeMedia } from "@/components/recipes/readonly-recipe-sections";
-import { RECIPE_HERO_CHROME_BUTTON_CLASS } from "@/components/recipes/recipe-layout-constants";
+import { ReadonlyRecipeMedia } from "@/features/recipes/components/read-only/readonly-recipe-sections";
+import { RECIPE_HERO_CHROME_BUTTON_CLASS } from "@/features/recipes/components/read-only/recipe-layout-constants";
 
 vi.mock("next-intl", () => ({
   useTranslations: () => (key: string) => key,
 }));
-vi.mock("@/components/recipes/author-chip", () => ({
+vi.mock("@/features/recipes/components/read-only/author-chip", () => ({
   default: () => <div data-testid="author-chip" />,
 }));
 vi.mock("@/components/recipes/origin-flag", () => ({
@@ -40,7 +40,7 @@ vi.mock("@/components/shared/smart-markdown-renderer", () => ({
  */
 let reportFullscreen: ((enter: (() => void) | null) => void) | null = null;
 
-vi.mock("@/components/shared/media-carousel", () => ({
+vi.mock("@/features/recipes/components/media/media-carousel", () => ({
   default: ({
     onActiveVideoFullscreenChange,
   }: {

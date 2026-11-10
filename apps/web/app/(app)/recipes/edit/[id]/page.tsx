@@ -1,9 +1,8 @@
 import { headers } from "next/headers";
 import { notFound } from "next/navigation";
+import { RecipeForm } from "@/features/recipes/components/editor";
 
 import { appRouter, createHttpContextFromHeaders } from "@norish/trpc/server";
-
-import RecipeForm from "../components/recipe-form";
 
 function shouldRenderNotFound(error: unknown): boolean {
   if (!error || typeof error !== "object" || !("code" in error)) {

@@ -4,8 +4,8 @@ import { beforeEach, describe, expect, it, vi } from "vitest";
 
 import "@testing-library/jest-dom";
 
-import type { Step } from "@/components/recipes/step-input";
-import StepInput from "@/components/recipes/step-input";
+import type { Step } from "@/features/recipes/components/editor/step-input";
+import StepInput from "@/features/recipes/components/editor/step-input";
 
 vi.mock("motion/react", () => ({
   Reorder: {
@@ -15,14 +15,14 @@ vi.mock("motion/react", () => ({
   useDragControls: () => ({ start: vi.fn() }),
 }));
 
-vi.mock("@/hooks/use-recipe-images", () => ({
+vi.mock("@/features/recipes/hooks/use-recipe-images", () => ({
   useRecipeImages: () => ({
     uploadStepImage: vi.fn(),
     deleteStepImage: vi.fn().mockResolvedValue(undefined),
   }),
 }));
 
-vi.mock("@/components/shared/smart-text-input", () => ({
+vi.mock("@/features/recipes/components/editor/smart-text-input", () => ({
   // The mock keeps the real contract's two halves that matter here: the ref
   // reaches the textarea, and a mention hands (suggestion, newValue) up and
   // returns whether the caller took focus.

@@ -101,7 +101,7 @@ describe("useRecipeImages", () => {
 
   describe("module structure", () => {
     it("exports all expected functions and states", async () => {
-      const { useRecipeImages } = await import("@/hooks/use-recipe-images");
+      const { useRecipeImages } = await import("@/features/recipes/hooks/use-recipe-images");
       const { result } = renderHook(() => useRecipeImages(), {
         wrapper: createTestWrapper(queryClient),
       });
@@ -136,7 +136,7 @@ describe("useRecipeImages", () => {
 
   describe("uploadImage", () => {
     it("returns success with URL when upload succeeds", async () => {
-      const { useRecipeImages } = await import("@/hooks/use-recipe-images");
+      const { useRecipeImages } = await import("@/features/recipes/hooks/use-recipe-images");
       const { result } = renderHook(() => useRecipeImages(), {
         wrapper: createTestWrapper(queryClient),
       });
@@ -149,7 +149,7 @@ describe("useRecipeImages", () => {
     });
 
     it("returns error when no file provided", async () => {
-      const { useRecipeImages } = await import("@/hooks/use-recipe-images");
+      const { useRecipeImages } = await import("@/features/recipes/hooks/use-recipe-images");
       const { result } = renderHook(() => useRecipeImages(), {
         wrapper: createTestWrapper(queryClient),
       });
@@ -165,7 +165,7 @@ describe("useRecipeImages", () => {
     });
 
     it("sets isUploadingImage to true during upload", async () => {
-      const { useRecipeImages } = await import("@/hooks/use-recipe-images");
+      const { useRecipeImages } = await import("@/features/recipes/hooks/use-recipe-images");
       const { result } = renderHook(() => useRecipeImages(), {
         wrapper: createTestWrapper(queryClient),
       });
@@ -187,7 +187,7 @@ describe("useRecipeImages", () => {
 
   describe("deleteImage", () => {
     it("returns success when deletion succeeds", async () => {
-      const { useRecipeImages } = await import("@/hooks/use-recipe-images");
+      const { useRecipeImages } = await import("@/features/recipes/hooks/use-recipe-images");
       const { result } = renderHook(() => useRecipeImages(), {
         wrapper: createTestWrapper(queryClient),
       });
@@ -198,7 +198,7 @@ describe("useRecipeImages", () => {
     });
 
     it("returns error for invalid URL", async () => {
-      const { useRecipeImages } = await import("@/hooks/use-recipe-images");
+      const { useRecipeImages } = await import("@/features/recipes/hooks/use-recipe-images");
       const { result } = renderHook(() => useRecipeImages(), {
         wrapper: createTestWrapper(queryClient),
       });
@@ -210,7 +210,7 @@ describe("useRecipeImages", () => {
     });
 
     it("sets isDeletingImage to true during deletion", async () => {
-      const { useRecipeImages } = await import("@/hooks/use-recipe-images");
+      const { useRecipeImages } = await import("@/features/recipes/hooks/use-recipe-images");
       const { result } = renderHook(() => useRecipeImages(), {
         wrapper: createTestWrapper(queryClient),
       });
@@ -227,7 +227,7 @@ describe("useRecipeImages", () => {
 
   describe("uploadStepImage", () => {
     it("returns success with URL when upload succeeds", async () => {
-      const { useRecipeImages } = await import("@/hooks/use-recipe-images");
+      const { useRecipeImages } = await import("@/features/recipes/hooks/use-recipe-images");
       const { result } = renderHook(() => useRecipeImages(), {
         wrapper: createTestWrapper(queryClient),
       });
@@ -241,7 +241,7 @@ describe("useRecipeImages", () => {
     });
 
     it("creates FormData with both file and recipeId", async () => {
-      const { useRecipeImages } = await import("@/hooks/use-recipe-images");
+      const { useRecipeImages } = await import("@/features/recipes/hooks/use-recipe-images");
       const { result } = renderHook(() => useRecipeImages(), {
         wrapper: createTestWrapper(queryClient),
       });
@@ -255,7 +255,7 @@ describe("useRecipeImages", () => {
     });
 
     it("sets isUploadingStepImage to true during upload", async () => {
-      const { useRecipeImages } = await import("@/hooks/use-recipe-images");
+      const { useRecipeImages } = await import("@/features/recipes/hooks/use-recipe-images");
       const { result } = renderHook(() => useRecipeImages(), {
         wrapper: createTestWrapper(queryClient),
       });
@@ -273,7 +273,7 @@ describe("useRecipeImages", () => {
 
   describe("deleteStepImage", () => {
     it("returns success when deletion succeeds", async () => {
-      const { useRecipeImages } = await import("@/hooks/use-recipe-images");
+      const { useRecipeImages } = await import("@/features/recipes/hooks/use-recipe-images");
       const { result } = renderHook(() => useRecipeImages(), {
         wrapper: createTestWrapper(queryClient),
       });
@@ -284,7 +284,7 @@ describe("useRecipeImages", () => {
     });
 
     it("returns error for invalid step image URL", async () => {
-      const { useRecipeImages } = await import("@/hooks/use-recipe-images");
+      const { useRecipeImages } = await import("@/features/recipes/hooks/use-recipe-images");
       const { result } = renderHook(() => useRecipeImages(), {
         wrapper: createTestWrapper(queryClient),
       });
@@ -296,7 +296,7 @@ describe("useRecipeImages", () => {
     });
 
     it("sets isDeletingStepImage to true during deletion", async () => {
-      const { useRecipeImages } = await import("@/hooks/use-recipe-images");
+      const { useRecipeImages } = await import("@/features/recipes/hooks/use-recipe-images");
       const { result } = renderHook(() => useRecipeImages(), {
         wrapper: createTestWrapper(queryClient),
       });
@@ -313,7 +313,7 @@ describe("useRecipeImages", () => {
 
   describe("uploadGalleryImage", () => {
     it("returns success with URL, id, and order when upload succeeds", async () => {
-      const { useRecipeImages } = await import("@/hooks/use-recipe-images");
+      const { useRecipeImages } = await import("@/features/recipes/hooks/use-recipe-images");
       const { result } = renderHook(() => useRecipeImages(), {
         wrapper: createTestWrapper(queryClient),
       });
@@ -331,7 +331,7 @@ describe("useRecipeImages", () => {
     });
 
     it("creates FormData with file, recipeId, and optional order", async () => {
-      const { useRecipeImages } = await import("@/hooks/use-recipe-images");
+      const { useRecipeImages } = await import("@/features/recipes/hooks/use-recipe-images");
       const { result } = renderHook(() => useRecipeImages(), {
         wrapper: createTestWrapper(queryClient),
       });
@@ -345,7 +345,7 @@ describe("useRecipeImages", () => {
     });
 
     it("sets isUploadingGalleryImage to true during upload", async () => {
-      const { useRecipeImages } = await import("@/hooks/use-recipe-images");
+      const { useRecipeImages } = await import("@/features/recipes/hooks/use-recipe-images");
       const { result } = renderHook(() => useRecipeImages(), {
         wrapper: createTestWrapper(queryClient),
       });
@@ -363,7 +363,7 @@ describe("useRecipeImages", () => {
 
   describe("deleteGalleryImage", () => {
     it("returns success when deletion succeeds", async () => {
-      const { useRecipeImages } = await import("@/hooks/use-recipe-images");
+      const { useRecipeImages } = await import("@/features/recipes/hooks/use-recipe-images");
       const { result } = renderHook(() => useRecipeImages(), {
         wrapper: createTestWrapper(queryClient),
       });
@@ -374,7 +374,7 @@ describe("useRecipeImages", () => {
     });
 
     it("sets isDeletingGalleryImage to true during deletion", async () => {
-      const { useRecipeImages } = await import("@/hooks/use-recipe-images");
+      const { useRecipeImages } = await import("@/features/recipes/hooks/use-recipe-images");
       const { result } = renderHook(() => useRecipeImages(), {
         wrapper: createTestWrapper(queryClient),
       });
@@ -391,7 +391,7 @@ describe("useRecipeImages", () => {
 
   describe("loading states", () => {
     it("all loading states are initially false", async () => {
-      const { useRecipeImages } = await import("@/hooks/use-recipe-images");
+      const { useRecipeImages } = await import("@/features/recipes/hooks/use-recipe-images");
       const { result } = renderHook(() => useRecipeImages(), {
         wrapper: createTestWrapper(queryClient),
       });

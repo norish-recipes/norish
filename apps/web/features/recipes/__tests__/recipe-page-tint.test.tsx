@@ -3,7 +3,7 @@ import { describe, expect, it, vi } from "vitest";
 import "@testing-library/jest-dom";
 
 import { renderWithDevicePreferences } from "@/__tests__/helpers/device-preferences";
-import RecipePageTint from "@/components/recipes/recipe-page-tint";
+import RecipePageTint from "@/features/recipes/components/read-only/recipe-page-tint";
 
 import type { RecipePageColorMode } from "@norish/shared/contracts/zod/device-preferences";
 import { APP_PAGE_COLUMN_CLASS } from "@norish/web/config/css-tokens";

@@ -3,7 +3,7 @@ import { describe, expect, it } from "vitest";
 
 import "@testing-library/jest-dom";
 
-import AuthorChip from "@/components/recipes/author-chip";
+import AuthorChip from "@/features/recipes/components/read-only/author-chip";
 
 describe("AuthorChip avatar src", () => {
   it("uses plain avatar URL without cache-busting query params", () => {

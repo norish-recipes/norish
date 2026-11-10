@@ -1,4 +1,4 @@
-import { resolveCookingModeSteps } from "@/app/(app)/recipes/[id]/components/cookingmode/cooking-mode-steps";
+import { resolveCookingModeSteps } from "@/features/recipes/components/page/cooking-mode/cooking-mode-steps";
 import { describe, expect, it } from "vitest";
 
 describe("resolveCookingModeSteps", () => {

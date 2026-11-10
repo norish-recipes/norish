@@ -3,7 +3,7 @@ import { beforeEach, describe, expect, it, vi } from "vitest";
 
 import "@testing-library/jest-dom";
 
-import CookingMode from "@/app/(app)/recipes/[id]/components/cookingmode/cooking-mode";
+import CookingMode from "@/features/recipes/components/page/cooking-mode/cooking-mode";
 
 import { cssFloatingDockBottomWithNav } from "@norish/web/config/css-tokens";
 
@@ -28,7 +28,7 @@ vi.mock("@norish/shared-react/reader", async () =>
 vi.mock("@/components/timer-dock", () => ({
   TimerDock: () => <div data-testid="timer-dock" />,
 }));
-vi.mock("@/app/(app)/recipes/[id]/components/page-wake-lock", () => ({
+vi.mock("@/features/recipes/components/page/page-wake-lock", () => ({
   usePageWakeLock: () => ({
     isSupported: false,
     isActive: false,
@@ -39,10 +39,10 @@ vi.mock("@/app/(app)/recipes/[id]/components/page-wake-lock", () => ({
 vi.mock("@norish/shared-react/trpc", async () =>
   (await import("@/__tests__/helpers/trpc-fake")).mockTRPC()
 );
-vi.mock("@/app/(app)/recipes/[id]/components/cookingmode/mobile-cooking-mode-dialog", () => ({
+vi.mock("@/features/recipes/components/page/cooking-mode/mobile-cooking-mode-dialog", () => ({
   MobileCookingModeDialog: () => <div data-testid="cooking-dialog" />,
 }));
-vi.mock("@/app/(app)/recipes/[id]/components/cookingmode/desktop-cooking-mode-dialog", () => ({
+vi.mock("@/features/recipes/components/page/cooking-mode/desktop-cooking-mode-dialog", () => ({
   DesktopCookingModeDialog: () => <div data-testid="cooking-dialog" />,
 }));
 

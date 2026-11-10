@@ -3,18 +3,18 @@ import { describe, expect, it, vi } from "vitest";
 
 import "@testing-library/jest-dom";
 
-import { CookingStepView } from "@/app/(app)/recipes/[id]/components/cookingmode/cooking-step-view";
+import { CookingStepView } from "@/features/recipes/components/page/cooking-mode/cooking-step-view";
 
 vi.mock("@norish/shared-react/reader", async () =>
   (await import("@/__tests__/helpers/reader-mock")).mockDevicePreferences()
 );
-vi.mock("@/components/recipe/smart-instruction", () => ({
+vi.mock("@/features/recipes/components/read-only/smart-instruction", () => ({
   SmartInstruction: ({ text }: { text: string }) => <span>{text}</span>,
 }));
-vi.mock("@/app/(app)/recipes/[id]/components/cookingmode/step-images", () => ({
+vi.mock("@/features/recipes/components/page/cooking-mode/step-images", () => ({
   StepImages: () => null,
 }));
-vi.mock("@/hooks/use-amount-display-preference", () => ({
+vi.mock("@/features/recipes/hooks/use-amount-display-preference", () => ({
   useAmountDisplayPreference: () => ({ mode: "decimal" }),
 }));
 vi.mock("@/hooks/use-unit-formatter", () => ({

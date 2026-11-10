@@ -3,8 +3,8 @@ import { beforeEach, describe, expect, it, vi } from "vitest";
 
 import "@testing-library/jest-dom";
 
-import type { ProvenanceFormValue } from "@/app/(app)/recipes/edit/components/provenance-fields";
-import ProvenanceFields from "@/app/(app)/recipes/edit/components/provenance-fields";
+import type { ProvenanceFormValue } from "@/features/recipes/components/editor/provenance-fields";
+import ProvenanceFields from "@/features/recipes/components/editor/provenance-fields";
 
 const mocks = vi.hoisted(() => ({
   cuisines: [

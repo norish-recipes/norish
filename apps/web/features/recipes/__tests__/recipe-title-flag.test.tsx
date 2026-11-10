@@ -3,10 +3,10 @@ import { describe, expect, it, vi } from "vitest";
 
 import "@testing-library/jest-dom";
 
-import { ReadonlyRecipeSummary } from "@/components/recipes/readonly-recipe-sections";
+import { ReadonlyRecipeSummary } from "@/features/recipes/components/read-only/readonly-recipe-sections";
 
-vi.mock("@/components/recipes/author-chip", () => ({ default: () => null }));
-vi.mock("@/components/shared/media-carousel", () => ({
+vi.mock("@/features/recipes/components/read-only/author-chip", () => ({ default: () => null }));
+vi.mock("@/features/recipes/components/media/media-carousel", () => ({
   default: () => null,
   buildMediaItems: () => [],
 }));

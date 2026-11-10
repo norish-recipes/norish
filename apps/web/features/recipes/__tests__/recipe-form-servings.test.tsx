@@ -1,6 +1,6 @@
-import type { ParsedIngredient } from "@/components/recipes/ingredient-input";
-import type { Step } from "@/components/recipes/step-input";
-import RecipeForm from "@/app/(app)/recipes/edit/components/recipe-form";
+import type { ParsedIngredient } from "@/features/recipes/components/editor/ingredient-input";
+import type { Step } from "@/features/recipes/components/editor/step-input";
+import RecipeForm from "@/features/recipes/components/editor/recipe-form";
 import { fireEvent, render, screen, waitFor } from "@testing-library/react";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 
@@ -48,7 +48,7 @@ vi.mock("@norish/shared-react/recipes", async (importOriginal) => ({
 vi.mock("@/hooks/use-recipes-mutations", () => ({
   useRecipesMutations: () => ({ createRecipe: mocks.createRecipe, updateRecipe: vi.fn() }),
 }));
-vi.mock("@/hooks/use-unsaved-navigation-guard", () => ({
+vi.mock("@/features/recipes/hooks/use-unsaved-navigation-guard", () => ({
   useUnsavedNavigationGuard: () => ({
     allowNavigation: vi.fn(),
     confirmNavigation: () => true,
@@ -66,27 +66,31 @@ const FLOUR: ParsedIngredient = {
 };
 const MIX: Step = { step: "Mix", order: 0, systemUsed: "metric" };
 
-vi.mock("@/components/recipes/ingredient-input", () => ({
+vi.mock("@/features/recipes/components/editor/ingredient-input", () => ({
   default: ({ onChange }: { onChange: (items: ParsedIngredient[]) => void }) => (
     <button type="button" onClick={() => onChange([FLOUR])}>
       add-ingredient
     </button>
   ),
 }));
-vi.mock("@/components/recipes/step-input", () => ({
+vi.mock("@/features/recipes/components/editor/step-input", () => ({
   default: ({ onChange }: { onChange: (items: Step[]) => void }) => (
     <button type="button" onClick={() => onChange([MIX])}>
       add-step
     </button>
   ),
 }));
-vi.mock("@/components/recipes/media-gallery-input", () => ({ default: () => null }));
-vi.mock("@/components/recipes/measurement-system-selector", () => ({ default: () => null }));
-vi.mock("@/components/recipes/time-inputs", () => ({ default: () => null }));
-vi.mock("@/components/shared/smart-input-help", () => ({ default: () => null }));
-vi.mock("@/components/shared/smart-text-input", () => ({ default: () => null }));
+vi.mock("@/features/recipes/components/editor/media-gallery-input", () => ({
+  default: () => null,
+}));
+vi.mock("@/features/recipes/components/editor/measurement-system-selector", () => ({
+  default: () => null,
+}));
+vi.mock("@/features/recipes/components/editor/time-inputs", () => ({ default: () => null }));
+vi.mock("@/features/recipes/components/editor/smart-input-help", () => ({ default: () => null }));
+vi.mock("@/features/recipes/components/editor/smart-text-input", () => ({ default: () => null }));
 vi.mock("@/components/shared/tag-input", () => ({ default: () => null }));
-vi.mock("@/app/(app)/recipes/edit/components/provenance-fields", async (importOriginal) => ({
+vi.mock("@/features/recipes/components/editor/provenance-fields", async (importOriginal) => ({
   ...(await importOriginal<object>()),
   default: () => null,
 }));

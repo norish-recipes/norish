@@ -2,9 +2,20 @@
 
 import { use, useState } from "react";
 import { useIngredientIcons } from "@/components/ingredients/ingredient-icon";
-import RecipePageTint from "@/components/recipes/recipe-page-tint";
 import { NotFoundView } from "@/components/shared/not-found-view";
-import RecipeSkeleton from "@/components/skeleton/recipe-skeleton";
+import {
+  RecipePageDesktop,
+  RecipePageMobile,
+  RecipePrint,
+  ScreenWakeLock,
+} from "@/features/recipes/components/page";
+import { RecipePageTint } from "@/features/recipes/components/read-only";
+import { RecipeSkeleton } from "@/features/recipes/components/skeleton";
+import {
+  useAutoConversion,
+  useRecipeEnrichmentSubscription,
+  useRecipeSubscription,
+} from "@/features/recipes/hooks";
 import { TRPCClientError } from "@trpc/client";
 import { useTranslations } from "next-intl";
 
@@ -13,14 +24,6 @@ import {
   useRecipeQuery,
   useRecipeShareSubscription,
 } from "@norish/shared-react/recipes";
-
-import { ScreenWakeLock } from "./components/page-wake-lock";
-import RecipePrint from "./components/recipe-print";
-import { useRecipeEnrichmentSubscription } from "./components/use-recipe-enrichment";
-import { useRecipeSubscription } from "./components/use-recipe-subscription";
-import { useAutoConversion } from "./components/use-system-conversion";
-import RecipePageDesktop from "./recipe-page-desktop";
-import RecipePageMobile from "./recipe-page-mobile";
 
 /** The recipe's, its shares' and its enrichment's events, mounted once for the page. */
 function RecipeSubscriptions({ recipeId }: { recipeId: string }) {

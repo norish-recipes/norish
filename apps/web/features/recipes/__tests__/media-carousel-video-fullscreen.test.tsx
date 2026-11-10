@@ -9,18 +9,18 @@ import { describe, expect, it, vi } from "vitest";
 
 import "@testing-library/jest-dom";
 
-import type { MediaItem } from "@/components/shared/media-carousel";
-import MediaCarousel from "@/components/shared/media-carousel";
+import type { MediaItem } from "@/features/recipes/components/media/media-carousel";
+import MediaCarousel from "@/features/recipes/components/media/media-carousel";
 
 vi.mock("next-intl", () => ({
   useTranslations: () => (key: string) => key,
 }));
-vi.mock("@/components/shared/image-lightbox", () => ({
+vi.mock("@/features/recipes/components/media/image-lightbox", () => ({
   default: () => null,
 }));
 
 /** The player, reduced to the one thing the carousel asks it to report. */
-vi.mock("@/components/shared/video-player", () => ({
+vi.mock("@/features/recipes/components/media/video-player", () => ({
   default: ({
     onFullscreenAvailabilityChange,
   }: {

@@ -1,4 +1,4 @@
-import RecipeForm from "../edit/components/recipe-form";
+import { RecipeForm } from "@/features/recipes/components/editor";
 
 export default function NewRecipePage() {
   return <RecipeForm mode="create" />;

@@ -4,8 +4,8 @@ import { beforeEach, describe, expect, it, vi } from "vitest";
 
 import "@testing-library/jest-dom";
 
-import type { StepIngredientDraft } from "@/components/recipes/step-ingredient-chips";
-import { StepIngredientChips } from "@/components/recipes/step-ingredient-chips";
+import type { StepIngredientDraft } from "@/features/recipes/components/editor/step-ingredient-chips";
+import { StepIngredientChips } from "@/features/recipes/components/editor/step-ingredient-chips";
 
 /**
  * The pickers are stubbed down to their contract — the rows they offer and

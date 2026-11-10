@@ -1,5 +1,5 @@
-import type { RecipePrintCardProps } from "@/components/recipes/recipe-print-card";
-import RecipePrintCard from "@/components/recipes/recipe-print-card";
+import type { RecipePrintCardProps } from "@/features/recipes/components/page/recipe-print-card";
+import RecipePrintCard from "@/features/recipes/components/page/recipe-print-card";
 import { render, screen, within } from "@testing-library/react";
 import { NextIntlClientProvider } from "next-intl";
 import { describe, expect, it } from "vitest";

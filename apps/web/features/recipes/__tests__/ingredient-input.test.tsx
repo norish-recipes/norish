@@ -3,7 +3,7 @@ import { afterEach, describe, expect, it, vi } from "vitest";
 
 import "@testing-library/jest-dom";
 
-import IngredientInput from "@/components/recipes/ingredient-input";
+import IngredientInput from "@/features/recipes/components/editor/ingredient-input";
 
 vi.mock("@norish/shared-react/config", () => ({
   useUnitsQuery: () => ({ units: {} }),

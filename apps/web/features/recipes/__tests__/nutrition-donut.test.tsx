@@ -3,7 +3,7 @@ import { describe, expect, it, vi } from "vitest";
 
 import "@testing-library/jest-dom";
 
-import { NutritionBody } from "@/components/recipes/readonly-nutrition";
+import { NutritionBody } from "@/features/recipes/components/read-only/readonly-nutrition";
 
 vi.mock("next-intl", () => ({
   useTranslations: (namespace: string) => (key: string) => `${namespace}.${key}`,

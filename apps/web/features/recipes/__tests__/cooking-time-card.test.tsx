@@ -3,7 +3,7 @@ import { describe, expect, it, vi } from "vitest";
 
 import "@testing-library/jest-dom";
 
-import CookingTimeCard from "@/components/recipes/cooking-time-card";
+import CookingTimeCard from "@/features/recipes/components/read-only/cooking-time-card";
 
 vi.mock("@heroui/react", () => ({
   Card: Object.assign(({ children }: { children: React.ReactNode }) => <div>{children}</div>, {

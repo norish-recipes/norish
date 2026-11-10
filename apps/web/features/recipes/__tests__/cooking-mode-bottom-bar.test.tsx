@@ -3,7 +3,7 @@ import { beforeEach, describe, expect, it, vi } from "vitest";
 
 import "@testing-library/jest-dom";
 
-import { CookingModeBottomBar } from "@/app/(app)/recipes/[id]/components/cookingmode/cooking-mode-bottom-bar";
+import { CookingModeBottomBar } from "@/features/recipes/components/page/cooking-mode/cooking-mode-bottom-bar";
 
 const mocks = vi.hoisted(() => ({ timerCount: 0, timersEnabled: true }));
 
@@ -16,7 +16,7 @@ vi.mock("@/stores/timers", () => ({
     selector({ timers: Array.from({ length: mocks.timerCount }, () => ({})) }),
 }));
 
-vi.mock("@/app/(app)/recipes/[id]/components/wake-lock-toggle", () => ({
+vi.mock("@/features/recipes/components/page/wake-lock-toggle", () => ({
   default: ({ autoEnable }: { autoEnable?: boolean }) => (
     <div data-auto-enable={String(autoEnable)} data-testid="wake-lock-toggle" />
   ),

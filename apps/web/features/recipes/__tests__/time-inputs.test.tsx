@@ -2,7 +2,7 @@
  * The time fields take digits only: a key that would type anything else is
  * stopped, while editing, navigation and the clipboard shortcuts pass.
  */
-import TimeInputs from "@/components/recipes/time-inputs";
+import TimeInputs from "@/features/recipes/components/editor/time-inputs";
 import { fireEvent, render, screen } from "@testing-library/react";
 import { describe, expect, it, vi } from "vitest";
 

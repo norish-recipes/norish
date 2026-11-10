@@ -14,7 +14,7 @@ import { beforeEach, describe, expect, it, vi } from "vitest";
 
 import "@testing-library/jest-dom";
 
-import VideoPlayer from "@/components/shared/video-player";
+import VideoPlayer from "@/features/recipes/components/media/video-player";
 
 vi.mock("next-intl", () => ({
   useTranslations: () => (key: string) => key,
@@ -25,7 +25,7 @@ vi.mock("motion/react", () => ({
     div: ({ children, ...rest }: { children?: ReactNode }) => <div {...rest}>{children}</div>,
   },
 }));
-vi.mock("@/components/skeleton/video-player-skeleton", () => ({
+vi.mock("@/features/recipes/components/media/video-player-skeleton", () => ({
   default: () => <div data-testid="video-skeleton" />,
 }));
 

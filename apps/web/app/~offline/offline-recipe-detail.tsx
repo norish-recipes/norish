@@ -3,7 +3,7 @@
 import RecipeDetailPage from "@/app/(app)/recipes/[id]/page";
 import { OfflineUnavailable } from "@/app/~offline/offline-unavailable";
 import { routeParams } from "@/app/~offline/route-params";
-import RecipeSkeleton from "@/components/skeleton/recipe-skeleton";
+import { RecipeSkeleton } from "@/features/recipes/components/skeleton";
 import { offlineEngine } from "@/lib/offline/engine";
 import { useQueryClient } from "@tanstack/react-query";
 

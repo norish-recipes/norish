@@ -3,7 +3,7 @@ import { describe, expect, it, vi } from "vitest";
 
 import "@testing-library/jest-dom";
 
-import RecipeHeaderMobile from "@/components/recipes/recipe-header-mobile";
+import RecipeHeaderMobile from "@/features/recipes/components/read-only/recipe-header-mobile";
 
 vi.mock("@/components/recipes/origin-flag", () => ({
   default: () => <span data-testid="origin-flag" />,

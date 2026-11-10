@@ -3,7 +3,7 @@ import { describe, expect, it, vi } from "vitest";
 
 import "@testing-library/jest-dom";
 
-import SystemConvertMenu from "@/app/(app)/recipes/[id]/components/system-convert-menu";
+import SystemConvertMenu from "@/features/recipes/components/page/system-convert-menu";
 
 import { onRecipePage } from "./recipe-page";
 

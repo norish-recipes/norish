@@ -247,7 +247,7 @@
    Recipe pages take their hue from the dish (ADR-0023).
 
    A recipe page container carries `data-dish-tint` plus two OKLCH channel
-   variables (--dish-h, --dish-c) derived in lib/dish-tint.ts from the stored
+   variables (--dish-h, --dish-c) derived in features/recipes/lib/dish-tint.ts from the stored
    Dish Colour. Inside that scope the page background and the card surfaces
    are rebuilt from the dish's hue and clamped chroma at the THEME's own
    lightness — captured below into --untinted-* before the scope overrides

@@ -7,7 +7,10 @@ import { describe, expect, it } from "vitest";
 describe("PublicSmartInstruction boundary", () => {
   it("does not import authenticated hooks or private recipe context", () => {
     const file = readFileSync(
-      path.resolve(process.cwd(), "components/recipe/public-smart-instruction.tsx"),
+      path.resolve(
+        process.cwd(),
+        "features/recipes/components/read-only/public-smart-instruction.tsx"
+      ),
       "utf8"
     );
 

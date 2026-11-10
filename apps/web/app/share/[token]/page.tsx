@@ -1,19 +1,20 @@
 "use client";
 
 import { use, useEffect } from "react";
-import RecipePageTint from "@/components/recipes/recipe-page-tint";
 import AuthLanguageSelector from "@/components/shared/auth-language-selector";
 import { NotFoundView } from "@/components/shared/not-found-view";
-import RecipeSkeleton from "@/components/skeleton/recipe-skeleton";
 import { TimerTicker } from "@/components/timer-dock";
+import { RecipePageTint } from "@/features/recipes/components/read-only";
+import {
+  SharedRecipePageDesktop,
+  SharedRecipePageMobile,
+} from "@/features/recipes/components/share";
+import { RecipeSkeleton } from "@/features/recipes/components/skeleton";
+import { SharePageProvider } from "@/features/recipes/stores/share-page-store";
 import { TRPCClientError } from "@trpc/client";
 import { useTranslations } from "next-intl";
 
 import { useSharedRecipeQuery } from "@norish/shared-react/recipes";
-
-import { SharedRecipePageDesktop } from "./components/shared-recipe-page-desktop";
-import { SharedRecipePageMobile } from "./components/shared-recipe-page-mobile";
-import { SharePageProvider } from "./public/share-page-store";
 
 function SharedRecipePageContent({ token }: { token: string }) {
   const { recipe, isLoading, error } = useSharedRecipeQuery(token);

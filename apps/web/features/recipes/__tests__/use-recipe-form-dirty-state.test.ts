@@ -1,7 +1,7 @@
-import type { ParsedIngredient } from "@/components/recipes/ingredient-input";
-import type { RecipeGalleryMedia } from "@/components/recipes/media-gallery-input";
-import type { Step } from "@/components/recipes/step-input";
-import { useRecipeFormDirtyState } from "@/app/(app)/recipes/edit/components/use-recipe-form-dirty-state";
+import type { ParsedIngredient } from "@/features/recipes/components/editor/ingredient-input";
+import type { RecipeGalleryMedia } from "@/features/recipes/components/editor/media-gallery-input";
+import type { Step } from "@/features/recipes/components/editor/step-input";
+import { useRecipeFormDirtyState } from "@/features/recipes/components/editor/use-recipe-form-dirty-state";
 import { renderHook } from "@testing-library/react";
 import { describe, expect, it } from "vitest";
 

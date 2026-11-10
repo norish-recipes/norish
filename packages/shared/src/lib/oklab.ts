@@ -2,7 +2,7 @@
  * OKLab / OKLCH conversions, per Björn Ottosson's reference implementation.
  * One copy of the matrices for the whole product: the server extracts the
  * Dish Colour with them (media/dish-color.ts) and the web client derives
- * the page tint's channels from the stored hex (lib/dish-tint.ts) — two
+ * the page tint's channels from the stored hex (features/recipes/lib/dish-tint.ts) — two
  * sides of ADR-0023 that must agree digit for digit.
  */
 

@@ -86,7 +86,7 @@ describe("useRecipeSubscription", () => {
 
   it("shows a generic failure toast instead of backend details", async () => {
     const { useRecipeSubscription } =
-      await import("@/app/(app)/recipes/[id]/components/use-recipe-subscription");
+      await import("@/features/recipes/hooks/use-recipe-subscription");
     const { toast } = await import("@heroui/react");
 
     renderHook(() => useRecipeSubscription("recipe-1"), {

@@ -3,7 +3,7 @@ import { beforeEach, describe, expect, it, vi } from "vitest";
 
 import "@testing-library/jest-dom";
 
-import NutritionCard from "@/app/(app)/recipes/[id]/components/nutrition-card";
+import NutritionCard from "@/features/recipes/components/page/nutrition-card";
 
 import type { LeftOutLine, WorkedOutNutrition } from "@norish/shared/lib/recipe-nutrition";
 
@@ -19,7 +19,7 @@ const mocks = vi.hoisted(() => ({
   panel: null as { id: string | null; open: boolean } | null,
 }));
 
-vi.mock("@/app/(app)/recipes/[id]/components/use-worked-out-nutrition", () => ({
+vi.mock("@/features/recipes/hooks/use-worked-out-nutrition", () => ({
   useWorkedOutNutrition: () => mocks.workedOut,
 }));
 
@@ -63,7 +63,7 @@ function renderCard() {
   return render(<NutritionCard />, { wrapper });
 }
 
-vi.mock("@/components/recipes/readonly-nutrition", () => ({
+vi.mock("@/features/recipes/components/read-only/readonly-nutrition", () => ({
   getNutritionData: () => ({ hasData: mocks.hasData, values: {} }),
   NutritionBody: ({ recipe, marked }: { recipe: unknown; marked?: boolean }) => {
     mocks.shown = recipe;
@@ -73,7 +73,7 @@ vi.mock("@/components/recipes/readonly-nutrition", () => ({
   },
 }));
 
-vi.mock("@/components/recipes/nutrition-portion-control", () => ({
+vi.mock("@/features/recipes/components/read-only/nutrition-portion-control", () => ({
   default: () => null,
 }));
 

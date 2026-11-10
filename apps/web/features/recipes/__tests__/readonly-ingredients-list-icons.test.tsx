@@ -3,14 +3,14 @@
  * a food shows its icon; a food with none, a heading and a line that names
  * no food ("200 g" alone) show nothing.
  */
-import { ReadonlyIngredientsList } from "@/components/recipes/readonly-ingredients-list";
+import { ReadonlyIngredientsList } from "@/features/recipes/components/read-only/readonly-ingredients-list";
 import { render, screen } from "@testing-library/react";
 import { describe, expect, it, vi } from "vitest";
 
 vi.mock("@norish/shared-react/reader", async () =>
   (await import("@/__tests__/helpers/reader-mock")).mockDevicePreferences()
 );
-vi.mock("@/hooks/use-amount-display-preference", () => ({
+vi.mock("@/features/recipes/hooks/use-amount-display-preference", () => ({
   useAmountDisplayPreference: () => ({ mode: "decimal" }),
 }));
 vi.mock("@/hooks/use-unit-formatter", () => ({

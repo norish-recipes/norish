@@ -1,4 +1,4 @@
-import { useUnsavedNavigationGuard } from "@/hooks/use-unsaved-navigation-guard";
+import { useUnsavedNavigationGuard } from "@/features/recipes/hooks/use-unsaved-navigation-guard";
 import { act, renderHook } from "@testing-library/react";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 

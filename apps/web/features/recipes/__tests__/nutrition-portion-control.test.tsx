@@ -3,7 +3,7 @@ import { beforeEach, describe, expect, it, vi } from "vitest";
 
 import "@testing-library/jest-dom";
 
-import NutritionPortionControl from "@/components/recipes/nutrition-portion-control";
+import NutritionPortionControl from "@/features/recipes/components/read-only/nutrition-portion-control";
 
 // Mock HeroUI components
 vi.mock("@heroui/react", () => ({

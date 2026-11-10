@@ -1,4 +1,4 @@
-import WakeLockToggle from "@/app/(app)/recipes/[id]/components/wake-lock-toggle";
+import WakeLockToggle from "@/features/recipes/components/page/wake-lock-toggle";
 import { render } from "@testing-library/react";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 
@@ -46,7 +46,7 @@ vi.mock("@heroui/react", () => {
   return { Tooltip, ToggleButton };
 });
 
-vi.mock("@/app/(app)/recipes/[id]/components/page-wake-lock", () => ({
+vi.mock("@/features/recipes/components/page/page-wake-lock", () => ({
   usePageWakeLock: () => ({
     isSupported,
     isActive,

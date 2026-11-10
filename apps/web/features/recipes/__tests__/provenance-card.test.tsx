@@ -4,7 +4,7 @@ import { beforeEach, describe, expect, it, vi } from "vitest";
 import "@testing-library/jest-dom";
 
 import { fakeProcedure } from "@/__tests__/helpers/trpc-fake";
-import ProvenanceCard from "@/app/(app)/recipes/[id]/components/provenance-card";
+import ProvenanceCard from "@/features/recipes/components/page/provenance-card";
 
 import { onRecipePage } from "./recipe-page";
 

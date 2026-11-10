@@ -4,7 +4,7 @@ import { beforeEach, describe, expect, it, vi } from "vitest";
 import "@testing-library/jest-dom";
 
 import { fakeProcedure } from "@/__tests__/helpers/trpc-fake";
-import RecipePageMobile from "@/app/(app)/recipes/[id]/recipe-page-mobile";
+import RecipePageMobile from "@/features/recipes/components/page/recipe-page-mobile";
 
 import type { RecipeEnrichmentKind } from "@norish/shared/lib/recipe-enrichment";
 
@@ -87,7 +87,7 @@ const mocks = vi.hoisted(() => ({
 }));
 
 // The worked-out total reads the server; these pages are about their layout.
-vi.mock("@/app/(app)/recipes/[id]/components/use-worked-out-nutrition", () => ({
+vi.mock("@/features/recipes/hooks/use-worked-out-nutrition", () => ({
   useWorkedOutNutrition: () => null,
 }));
 
@@ -113,27 +113,27 @@ function renderPage() {
   return rendered;
 }
 
-vi.mock("@/app/(app)/recipes/[id]/components/actions-menu", () => ({
+vi.mock("@/features/recipes/components/page/actions-menu", () => ({
   default: () => <div data-testid="actions-menu" />,
 }));
-vi.mock("@/app/(app)/recipes/[id]/components/add-to-groceries-button", () => ({
+vi.mock("@/features/recipes/components/page/add-to-groceries-button", () => ({
   default: () => <div data-testid="add-to-groceries" />,
 }));
-vi.mock("@/app/(app)/recipes/[id]/components/cookingmode", () => ({
+vi.mock("@/features/recipes/components/page/cooking-mode", () => ({
   default: ({ floating }: { floating?: boolean }) => (
     <div data-floating={String(Boolean(floating))} data-testid="cooking-mode" />
   ),
 }));
-vi.mock("@/app/(app)/recipes/[id]/components/ingredient-list", () => ({
+vi.mock("@/features/recipes/components/page/ingredient-list", () => ({
   default: () => <div data-testid="ingredients-list" />,
 }));
-vi.mock("@/app/(app)/recipes/[id]/components/ingredients-options-menu", () => ({
+vi.mock("@/features/recipes/components/page/ingredients-options-menu", () => ({
   default: () => <div data-testid="ingredients-options" />,
 }));
-vi.mock("@/app/(app)/recipes/[id]/components/servings-control", () => ({
+vi.mock("@/features/recipes/components/page/servings-control", () => ({
   default: () => <div data-testid="servings-control" />,
 }));
-vi.mock("@/app/(app)/recipes/[id]/components/steps-list", () => ({
+vi.mock("@/features/recipes/components/page/steps-list", () => ({
   default: () => <div data-testid="steps-list" />,
 }));
 vi.mock("@/components/Panel/consumers", () => ({
@@ -144,20 +144,20 @@ const recipeCookbooks = vi.hoisted(() => ({
   current: [{ id: "cookbook-1", title: "Weeknights" }] as { id: string; title: string }[],
 }));
 
-vi.mock("@/components/recipes/author-chip", () => ({
+vi.mock("@/features/recipes/components/read-only/author-chip", () => ({
   default: () => <div data-testid="author-chip" />,
 }));
-vi.mock("@/components/recipes/nutrition-portion-control", () => ({
+vi.mock("@/features/recipes/components/read-only/nutrition-portion-control", () => ({
   default: () => <div data-testid="nutrition-portion-control" />,
 }));
-vi.mock("@/components/shared/media-carousel", () => ({
+vi.mock("@/features/recipes/components/media/media-carousel", () => ({
   default: () => <div data-testid="media-carousel" />,
   buildMediaItems: () => [],
 }));
 vi.mock("@/components/shared/smart-markdown-renderer", () => ({
   default: ({ text }: { text: string }) => <div>{text}</div>,
 }));
-vi.mock("@/components/recipes/readonly-recipe-sections", () => ({
+vi.mock("@/features/recipes/components/read-only/readonly-recipe-sections", () => ({
   // The page decides what floats on the media, so the mock renders the
   // overlay slots it was handed.
   ReadonlyRecipeMedia: ({

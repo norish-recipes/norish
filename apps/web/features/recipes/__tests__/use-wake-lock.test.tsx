@@ -1,4 +1,4 @@
-import { useHoldWakeLock } from "@/hooks/use-wake-lock";
+import { useHoldWakeLock } from "@/features/recipes/hooks/use-wake-lock";
 import { act, renderHook } from "@testing-library/react";
 import { afterEach, describe, expect, it, vi } from "vitest";
 

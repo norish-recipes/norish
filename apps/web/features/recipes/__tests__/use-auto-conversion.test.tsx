@@ -1,5 +1,5 @@
 import { fakeProcedure } from "@/__tests__/helpers/trpc-fake";
-import { useAutoConversion } from "@/app/(app)/recipes/[id]/components/use-system-conversion";
+import { useAutoConversion } from "@/features/recipes/hooks/use-system-conversion";
 import { act, renderHook } from "@testing-library/react";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 
