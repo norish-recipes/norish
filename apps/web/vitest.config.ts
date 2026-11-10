@@ -37,7 +37,6 @@ export default defineConfig({
       "@/app": path.resolve(__dirname, "app"),
       "@/components": path.resolve(__dirname, "components"),
       "@/hooks": path.resolve(__dirname, "hooks"),
-      "@/stores": path.resolve(__dirname, "stores"),
       "@/styles": path.resolve(__dirname, "styles"),
       "@/public": path.resolve(__dirname, "public"),
       "@norish/web": __dirname,
