@@ -1,5 +1,7 @@
 "use client";
 
+import { uploadForm } from "@/features/recipes/lib/upload-form";
+
 import { useRecipeImages as useSharedRecipeImages } from "@norish/shared-react/recipes";
 
 export type RecipeImagesResult = {
@@ -50,34 +52,13 @@ export function useRecipeImages(): RecipeImagesResult {
     isDeletingGalleryImage,
   } = useSharedRecipeImages();
 
-  const uploadImage = async (file: File) => {
-    const formData = new FormData();
+  const uploadImage = (file: File) => uploadImageData(uploadForm({ image: file }));
 
-    formData.append("image", file);
+  const uploadStepImage = (file: File, recipeId: string) =>
+    uploadStepImageData(uploadForm({ image: file, recipeId }));
 
-    return await uploadImageData(formData as Parameters<typeof uploadImageData>[0]);
-  };
-
-  const uploadStepImage = async (file: File, recipeId: string) => {
-    const formData = new FormData();
-
-    formData.append("image", file);
-    formData.append("recipeId", recipeId);
-
-    return await uploadStepImageData(formData as Parameters<typeof uploadStepImageData>[0]);
-  };
-
-  const uploadGalleryImage = async (file: File, recipeId: string, order?: number) => {
-    const formData = new FormData();
-
-    formData.append("image", file);
-    formData.append("recipeId", recipeId);
-    if (order !== undefined) {
-      formData.append("order", String(order));
-    }
-
-    return await uploadGalleryImageData(formData as Parameters<typeof uploadGalleryImageData>[0]);
-  };
+  const uploadGalleryImage = (file: File, recipeId: string, order?: number) =>
+    uploadGalleryImageData(uploadForm({ image: file, recipeId, order }));
 
   return {
     uploadImage,

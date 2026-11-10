@@ -1,5 +1,7 @@
 "use client";
 
+import { uploadForm } from "@/features/recipes/lib/upload-form";
+
 import { useRecipeVideos as useSharedRecipeVideos } from "@norish/shared-react/recipes";
 
 export type RecipeVideosResult = {
@@ -34,25 +36,8 @@ export function useRecipeVideos(): RecipeVideosResult {
     isDeletingGalleryVideo,
   } = useSharedRecipeVideos();
 
-  const uploadGalleryVideo = async (
-    file: File,
-    recipeId: string,
-    order?: number,
-    duration?: number
-  ) => {
-    const formData = new FormData();
-
-    formData.append("video", file);
-    formData.append("recipeId", recipeId);
-    if (order !== undefined) {
-      formData.append("order", String(order));
-    }
-    if (duration !== undefined) {
-      formData.append("duration", String(duration));
-    }
-
-    return await uploadGalleryVideoData(formData as Parameters<typeof uploadGalleryVideoData>[0]);
-  };
+  const uploadGalleryVideo = (file: File, recipeId: string, order?: number, duration?: number) =>
+    uploadGalleryVideoData(uploadForm({ video: file, recipeId, order, duration }));
 
   return {
     uploadGalleryVideo,
