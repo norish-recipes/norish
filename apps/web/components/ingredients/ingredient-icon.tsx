@@ -1,12 +1,11 @@
 "use client";
 
-import type { ReactNode } from "react";
-import { createContext, use, useMemo } from "react";
+import { useSyncExternalStore } from "react";
+import { useHiddenItemVisibility } from "@/hooks/user/use-hidden-item-visibility";
 import { iconIds } from "@/lib/ingredient-icon-ids";
-import { keepPreviousData, useQueries, useQuery } from "@tanstack/react-query";
+import { matchQuery, useQueries, useQuery, useQueryClient } from "@tanstack/react-query";
 import { useDebounceValue } from "usehooks-ts";
 
-import { useDevicePreference } from "@norish/shared-react/reader";
 import { useTRPC } from "@norish/shared-react/trpc";
 import { addBasePath } from "@norish/shared/lib/base-path";
 
@@ -22,38 +21,55 @@ export type IngredientIconSize = keyof typeof SIZES;
 /** How long typing pauses before a typed name is looked up. */
 const FIND_DELAY_MS = 400;
 
-interface IconsOnSurface {
-  /** Each food's icon by its Ingredient's id; null where it has none. */
-  addresses: Readonly<Record<string, string | null>>;
-  /** The reader hid Ingredient Icons on this device. */
-  hidden: boolean;
-}
-
-const IconsContext = createContext<IconsOnSurface>({ addresses: {}, hidden: false });
-
-const NO_ICONS: Readonly<Record<string, string | null>> = {};
+/** Each food's icon by its Ingredient's id, null where it has none: one read's answer. */
+type IconAnswer = Readonly<Record<string, string | null>>;
 
 /**
- * The icons of the foods a surface shows, read once for them all: a recipe's
- * lines, a grocery list, the Pantry. The answer is kept with the rest of the
- * query cache, so a list opened offline shows the icons it showed before, and
- * any change to the catalogue reads it again. The previous answer stays on
- * screen while a changed set of foods is read, so adding a row never blanks
- * the others.
+ * Reads the icons of the foods a surface shows, once for them all: a recipe's lines, a grocery
+ * list, the Pantry. The answer is kept with the rest of the query cache, so a list opened offline
+ * shows the icons it showed before, and any change to the catalogue reads it again. Each
+ * `IngredientIcon` picks its own food's from the cache, so the surface itself never re-renders.
  */
-export function useIngredientIcons(
-  ids: readonly (string | null | undefined)[]
-): Readonly<Record<string, string | null>> {
+export function useIngredientIcons(ids: readonly (string | null | undefined)[]): void {
   const trpc = useTRPC();
-  const key = ids.filter(Boolean).join(",");
-  const wanted = useMemo(() => iconIds(key ? key.split(",") : []), [key]);
-  const { data } = useQuery({
+  const wanted = iconIds(ids);
+
+  useQuery({
     ...trpc.ingredients.icons.queryOptions({ ids: wanted }),
     enabled: wanted.length > 0,
-    placeholderData: keepPreviousData,
+    notifyOnChangeProps: [],
   });
+}
 
-  return data ?? NO_ICONS;
+/**
+ * One food's icon address from the newest icons read that answered it, so an icon keeps the
+ * previous read's while a changed set is read; undefined until one answers it.
+ */
+function useCachedIconAddress(ingredientId: string): string | null | undefined {
+  const trpc = useTRPC();
+  const queryCache = useQueryClient().getQueryCache();
+  const subscribe = (onChange: () => void) =>
+    queryCache.subscribe(({ query }) => {
+      if (matchQuery({ queryKey: trpc.ingredients.icons.pathKey() }, query)) onChange();
+    });
+  const read = () => {
+    let address: string | null | undefined;
+    let answeredAt = -1;
+
+    for (const query of queryCache.findAll({ queryKey: trpc.ingredients.icons.pathKey() })) {
+      const answer = query.state.data as IconAnswer | undefined;
+
+      if (answer && Object.hasOwn(answer, ingredientId) && query.state.dataUpdatedAt > answeredAt) {
+        address = answer[ingredientId];
+        answeredAt = query.state.dataUpdatedAt;
+      }
+    }
+
+    return address;
+  };
+
+  // A string or null, so an unchanged address renders nothing.
+  return useSyncExternalStore(subscribe, read, read);
 }
 
 /**
@@ -80,30 +96,6 @@ export function useFoodsByName(names: readonly string[]): ReadonlyMap<string, st
 }
 
 /**
- * Where a surface's icons come from: the foods it shows (`ids`), read in one
- * go, and whether the reader hid Ingredient Icons. Every `IngredientIcon`
- * below reads it; one given its address outright needs only the latter.
- */
-export function IngredientIconsProvider({
-  ids = [],
-  children,
-}: {
-  ids?: readonly (string | null | undefined)[];
-  children: ReactNode;
-}) {
-  const addresses = useIngredientIcons(ids);
-  const hidden = useDevicePreference("hiddenItems")[0].includes("ingredientIcons");
-  const value = useMemo(() => ({ addresses, hidden }), [addresses, hidden]);
-
-  return <IconsContext value={value}>{children}</IconsContext>;
-}
-
-/** Whether the reader hid Ingredient Icons, as the surface's provider read it; false outside one. */
-export function useIngredientIconsHidden(): boolean {
-  return use(IconsContext).hidden;
-}
-
-/**
  * An Ingredient Icon: a small picture of the food standing on nothing,
  * decoration beside its name and never in place of it. A food with no icon
  * anywhere shows nothing, nor does a line whose food the server has not
@@ -119,23 +111,38 @@ export function useIngredientIconsHidden(): boolean {
 export function IngredientIcon({
   ingredientId,
   src,
-  size = "line",
-  placeholder = false,
-  className = "",
+  ...shown
 }: {
   ingredientId?: string | null;
   src?: string | null;
-  size?: IngredientIconSize;
-  placeholder?: boolean;
-  className?: string;
-}) {
-  const { addresses, hidden } = use(IconsContext);
+} & Shown) {
+  const { showIngredientIcons } = useHiddenItemVisibility();
 
-  if (hidden) return null;
+  if (!showIngredientIcons) return null;
+  // A line whose food the server has not resolved yet reads nothing and shows nothing.
+  if (src !== undefined || !ingredientId) {
+    return <IconPicture address={src ?? null} reading={false} {...shown} />;
+  }
 
-  const address = src !== undefined ? src : ingredientId ? (addresses[ingredientId] ?? null) : null;
-  const reading = src === undefined && ingredientId != null && !(ingredientId in addresses);
+  return <CachedIngredientIcon ingredientId={ingredientId} {...shown} />;
+}
 
+type Shown = { size?: IngredientIconSize; placeholder?: boolean; className?: string };
+
+/** An icon looked up by its food in the surface's read, holding its slot until that answers. */
+function CachedIngredientIcon({ ingredientId, ...shown }: { ingredientId: string } & Shown) {
+  const address = useCachedIconAddress(ingredientId);
+
+  return <IconPicture address={address ?? null} reading={address === undefined} {...shown} />;
+}
+
+function IconPicture({
+  address,
+  reading,
+  size = "line",
+  placeholder = false,
+  className = "",
+}: { address: string | null; reading: boolean } & Shown) {
   if (!address) {
     if (placeholder) {
       return (

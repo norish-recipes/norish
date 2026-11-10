@@ -7,6 +7,9 @@ import { ReadonlyIngredientsList } from "@/components/recipes/readonly-ingredien
 import { render, screen } from "@testing-library/react";
 import { describe, expect, it, vi } from "vitest";
 
+vi.mock("@norish/shared-react/reader", async () =>
+  (await import("@/__tests__/helpers/reader-mock")).mockDevicePreferences()
+);
 vi.mock("@/hooks/use-amount-display-preference", () => ({
   useAmountDisplayPreference: () => ({ mode: "decimal" }),
 }));

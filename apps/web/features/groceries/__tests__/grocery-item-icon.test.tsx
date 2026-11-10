@@ -3,7 +3,7 @@
  * a typed one too, once Norish knows its food, and nothing while a grocery
  * added offline waits for the server to resolve it.
  */
-import { IngredientIconsProvider } from "@/components/ingredients/ingredient-icon";
+import { useIngredientIcons } from "@/components/ingredients/ingredient-icon";
 import { GroceryItem } from "@/features/groceries/components/list/grocery-item";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { render, screen } from "@testing-library/react";
@@ -28,6 +28,7 @@ vi.mock("@norish/shared-react/trpc", () => ({
   useTRPC: () => ({
     ingredients: {
       icons: {
+        pathKey: () => ["ingredients.icons"],
         queryOptions: (input: { ids: string[] }) => ({
           queryKey: ["ingredients.icons", input],
           queryFn: async () => Object.fromEntries(input.ids.map((id) => [id, ONION_ICON])),
@@ -53,22 +54,20 @@ function grocery(values: Partial<GroceryDto>): GroceryDto {
   } as GroceryDto;
 }
 
+function List({ groceries }: { groceries: GroceryDto[] }) {
+  useIngredientIcons(groceries.map((it) => it.ingredientId));
+
+  return groceries.map((it) => (
+    <GroceryItem key={it.id} grocery={it} onDelete={vi.fn()} onEdit={vi.fn()} onToggle={vi.fn()} />
+  ));
+}
+
 function onList(groceries: GroceryDto[]) {
   const client = new QueryClient({ defaultOptions: { queries: { retry: false } } });
 
   return render(
     <QueryClientProvider client={client}>
-      <IngredientIconsProvider ids={groceries.map((it) => it.ingredientId)}>
-        {groceries.map((it) => (
-          <GroceryItem
-            key={it.id}
-            grocery={it}
-            onDelete={vi.fn()}
-            onEdit={vi.fn()}
-            onToggle={vi.fn()}
-          />
-        ))}
-      </IngredientIconsProvider>
+      <List groceries={groceries} />
     </QueryClientProvider>
   );
 }

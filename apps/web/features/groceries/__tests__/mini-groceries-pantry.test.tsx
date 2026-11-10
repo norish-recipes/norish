@@ -90,7 +90,7 @@ vi.mock("@/hooks/use-unit-formatter", () => ({
 }));
 vi.mock("@/components/ingredients/ingredient-icon", () => ({
   IngredientIcon: () => null,
-  IngredientIconsProvider: ({ children }: { children: ReactNode }) => children,
+  useIngredientIcons: () => {},
 }));
 vi.mock("@norish/shared-react/recipes", async (importOriginal) => ({
   ...(await importOriginal<typeof import("@norish/shared-react/recipes")>()),

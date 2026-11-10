@@ -5,7 +5,8 @@
  */
 import type { ReactNode } from "react";
 import { PantryScreen } from "@/features/groceries/pantry-screen";
-import { act, fireEvent, render, screen } from "@testing-library/react";
+import { QueryClientProvider } from "@tanstack/react-query";
+import { act, fireEvent, render as renderUi, screen } from "@testing-library/react";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 
 import "@testing-library/jest-dom";
@@ -16,6 +17,7 @@ import type {
   PantryIngredientDto,
   PantrySuggestionDto,
 } from "@norish/shared/contracts";
+import { createTestQueryClient } from "@norish/shared-react/platform/testing";
 
 const addPantryIngredient = vi.fn(async () => "new");
 const createGroceriesFromData = vi.fn(async () => ["g-new"]);
@@ -61,14 +63,14 @@ vi.mock("@norish/shared-react/trpc", () => ({
       list: {
         queryOptions: () => ({ queryKey: ["catalogue"], queryFn: async () => ({ items: [] }) }),
       },
-      icons: { queryOptions: (input: unknown) => ({ queryKey: ["icons", input] }) },
+      icons: {
+        pathKey: () => ["icons"],
+        queryOptions: (input: unknown) => ({
+          queryKey: ["icons", input],
+          queryFn: async () => icons,
+        }),
+      },
     },
-  }),
-}));
-vi.mock("@tanstack/react-query", () => ({
-  keepPreviousData: (data: unknown) => data,
-  useQuery: ({ queryKey }: { queryKey: unknown[] }) => ({
-    data: queryKey[0] === "icons" ? icons : undefined,
   }),
 }));
 vi.mock("@norish/shared-react/reader", async () =>
@@ -109,6 +111,19 @@ function kept(name: string, localeNames: Record<string, string> = {}): PantryIng
     ancestorIds: [],
     localeNames,
   };
+}
+
+/** The screen over a cache that already holds the icons, as a seeded full load does. */
+function render(ui: ReactNode) {
+  const client = createTestQueryClient();
+
+  client.setQueryData(["icons", "seeded"], icons);
+
+  return renderUi(ui, {
+    wrapper: ({ children }) => (
+      <QueryClientProvider client={client}>{children}</QueryClientProvider>
+    ),
+  });
 }
 
 const rowNames = () =>

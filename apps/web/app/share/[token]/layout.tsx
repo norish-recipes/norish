@@ -1,4 +1,3 @@
-import { IngredientIconsProvider } from "@/components/ingredients/ingredient-icon";
 import { QuerySeed } from "@/components/query-seed";
 import { readRequestProfile } from "@/lib/request-profile";
 
@@ -7,7 +6,7 @@ import { deviceBlocks } from "@norish/shared/contracts/zod/device-preferences";
 
 /**
  * A signed-in reader gets their own Device Preferences, a signed-out one the defaults; a change
- * lasts for the visit. The lines carry their icons' addresses, so the icons' provider reads nothing.
+ * lasts for the visit.
  */
 export default async function SharedRecipeLayout({
   children,
@@ -31,9 +30,7 @@ export default async function SharedRecipeLayout({
         return recipe;
       }}
     >
-      <DevicePreferencesForVisit>
-        <IngredientIconsProvider>{children}</IngredientIconsProvider>
-      </DevicePreferencesForVisit>
+      <DevicePreferencesForVisit>{children}</DevicePreferencesForVisit>
     </QuerySeed>
   );
 }

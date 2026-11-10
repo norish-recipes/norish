@@ -1,7 +1,7 @@
 "use client";
 
 import { useMemo } from "react";
-import { IngredientIconsProvider } from "@/components/ingredients/ingredient-icon";
+import { useIngredientIcons } from "@/components/ingredients/ingredient-icon";
 import { listFoodIds } from "@/features/groceries/lib/list-food-ids";
 import { ShoppingCartIcon } from "@heroicons/react/24/outline";
 import { motion } from "motion/react";
@@ -39,11 +39,9 @@ interface RecipeGroup {
 
 /** The list by recipe, under one read of the icons of every food on it. */
 export function GroceryListByRecipe(props: GroceryListByRecipeProps) {
-  return (
-    <IngredientIconsProvider ids={listFoodIds(props)}>
-      <GroceryListByRecipeContent {...props} />
-    </IngredientIconsProvider>
-  );
+  useIngredientIcons(listFoodIds(props));
+
+  return <GroceryListByRecipeContent {...props} />;
 }
 
 function GroceryListByRecipeContent({

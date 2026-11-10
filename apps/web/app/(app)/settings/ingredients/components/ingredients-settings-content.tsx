@@ -3,7 +3,6 @@
 import { useCallback, useMemo, useState, useTransition } from "react";
 import { useSearchParams } from "next/navigation";
 import { SettingsCard } from "@/app/(app)/settings/components/settings-card";
-import { IngredientIconsProvider } from "@/components/ingredients/ingredient-icon";
 import { IngredientPanel } from "@/components/ingredients/ingredient-panel";
 import { isOpenChange, useAIChanges } from "@/components/ingredients/use-ai-changes";
 import { ActionButton } from "@/components/shared/action-button";
@@ -103,93 +102,90 @@ export default function IngredientsSettingsContent() {
   const unsure = changes.filter(isOpenChange).length;
 
   return (
-    // The rows carry their icons; the provider says whether the reader hid them.
-    <IngredientIconsProvider>
-      <div className="flex flex-col gap-6">
-        <SettingsCard
-          actions={
-            changes.length > 0 ? (
-              <ActionButton
-                action="edit"
-                data-testid="ingredients-ai-changes-open"
-                icon={SparklesIcon}
-                size="sm"
-                onPress={() => setChangesOpen(true)}
-              >
-                {t("changedByAI.open", { count: unsure })}
-              </ActionButton>
-            ) : null
+    <div className="flex flex-col gap-6">
+      <SettingsCard
+        actions={
+          changes.length > 0 ? (
+            <ActionButton
+              action="edit"
+              data-testid="ingredients-ai-changes-open"
+              icon={SparklesIcon}
+              size="sm"
+              onPress={() => setChangesOpen(true)}
+            >
+              {t("changedByAI.open", { count: unsure })}
+            </ActionButton>
+          ) : null
+        }
+        description={t("description")}
+        icon={BookOpenIcon}
+        title={t("title")}
+      >
+        <IngredientSearch
+          busy={settling}
+          suffix={
+            <Button
+              isIconOnly
+              aria-label={tFilters("title")}
+              // The dot alone says a filter is on.
+              className="relative"
+              data-testid="ingredients-filters"
+              size="sm"
+              variant="ghost"
+              onPress={() => setFiltersOpen(true)}
+            >
+              <FunnelIcon className="size-4" />
+              {hasIngredientFilters(filters) ? (
+                <span className="bg-accent absolute top-1 right-1 inline-flex size-2 rounded-full" />
+              ) : null}
+            </Button>
           }
-          description={t("description")}
-          icon={BookOpenIcon}
-          title={t("title")}
-        >
-          <IngredientSearch
-            busy={settling}
-            suffix={
-              <Button
-                isIconOnly
-                aria-label={tFilters("title")}
-                // The dot alone says a filter is on.
-                className="relative"
-                data-testid="ingredients-filters"
-                size="sm"
-                variant="ghost"
-                onPress={() => setFiltersOpen(true)}
-              >
-                <FunnelIcon className="size-4" />
-                {hasIngredientFilters(filters) ? (
-                  <span className="bg-accent absolute top-1 right-1 inline-flex size-2 rounded-full" />
-                ) : null}
-              </Button>
-            }
-            onSearch={onSearch}
+          onSearch={onSearch}
+        />
+
+        {isLoading ? (
+          // The same rows the tab's skeleton draws, until the first page arrives.
+          <div className="flex flex-col gap-4">
+            {Array.from({ length: 5 }, (_, i) => (
+              <Skeleton key={i} className="h-12 w-full rounded-lg" />
+            ))}
+          </div>
+        ) : items.length === 0 ? (
+          <p className="text-muted py-6 text-center" data-testid="ingredients-empty">
+            {filters.flaggedOnly ? t("emptyFlagged") : t("empty")}
+          </p>
+        ) : (
+          <IngredientList
+            hasMore={hasNextPage}
+            isFetchingMore={isFetchingNextPage}
+            loadMore={loadMore}
+            rows={tree.rows}
+            settling={settling}
+            onOpen={setOpenId}
+            onToggleKinds={treeMode ? tree.toggle : undefined}
           />
+        )}
+      </SettingsCard>
+      <DataSourcesCard />
 
-          {isLoading ? (
-            // The same rows the tab's skeleton draws, until the first page arrives.
-            <div className="flex flex-col gap-4">
-              {Array.from({ length: 5 }, (_, i) => (
-                <Skeleton key={i} className="h-12 w-full rounded-lg" />
-              ))}
-            </div>
-          ) : items.length === 0 ? (
-            <p className="text-muted py-6 text-center" data-testid="ingredients-empty">
-              {filters.flaggedOnly ? t("emptyFlagged") : t("empty")}
-            </p>
-          ) : (
-            <IngredientList
-              hasMore={hasNextPage}
-              isFetchingMore={isFetchingNextPage}
-              loadMore={loadMore}
-              rows={tree.rows}
-              settling={settling}
-              onOpen={setOpenId}
-              onToggleKinds={treeMode ? tree.toggle : undefined}
-            />
-          )}
-        </SettingsCard>
-        <DataSourcesCard />
-
-        <IngredientFiltersPanel
-          open={filtersOpen}
-          value={filters}
-          onApply={(next) => startTransition(() => setFilters(next))}
-          onOpenChange={setFiltersOpen}
-        />
-        <IngredientPanel
-          id={openId}
-          item={openItem}
-          open={openId !== null}
-          onChanged={refresh}
-          onClose={() => setOpenId(null)}
-        />
-        <ChangedByAIPanel
-          open={changesOpen}
-          onChanged={refresh}
-          onClose={() => setChangesOpen(false)}
-        />
-      </div>
-    </IngredientIconsProvider>
+      <IngredientFiltersPanel
+        open={filtersOpen}
+        value={filters}
+        onApply={(next) => startTransition(() => setFilters(next))}
+        onOpenChange={setFiltersOpen}
+      />
+      <IngredientPanel
+        id={openId}
+        item={openItem}
+        open={openId !== null}
+        onChanged={refresh}
+        onClose={() => setOpenId(null)}
+      />
+      <ChangedByAIPanel
+        open={changesOpen}
+        onChanged={refresh}
+        onClose={() => setChangesOpen(false)}
+      />
+    </div>
   );
 }

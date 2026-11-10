@@ -5,6 +5,9 @@ import "@testing-library/jest-dom";
 
 import { ReadonlyStepsList } from "@/components/recipes/readonly-steps-list";
 
+vi.mock("@norish/shared-react/reader", async () =>
+  (await import("@/__tests__/helpers/reader-mock")).mockDevicePreferences()
+);
 vi.mock("@/components/recipe/smart-instruction", () => ({
   SmartInstruction: ({ text }: { text: string }) => <span>{text}</span>,
 }));

@@ -1,7 +1,7 @@
 "use client";
 
 import { useRef, useState } from "react";
-import { IngredientIcon, IngredientIconsProvider } from "@/components/ingredients/ingredient-icon";
+import { IngredientIcon, useIngredientIcons } from "@/components/ingredients/ingredient-icon";
 import { IngredientPanel } from "@/components/ingredients/ingredient-panel";
 import { IconActionButton } from "@/components/shared/action-button";
 import { FIELD_STYLE } from "@/features/groceries/lib/grocery-field";
@@ -60,6 +60,8 @@ export function PantryScreen() {
   const { showIngredientIcons } = useHiddenItemVisibility();
   const { addPantryIngredient } = usePantryMutations();
   const onTheList = useOnTheList(items);
+
+  useIngredientIcons(items.map((item) => item.ingredientId));
   const putOnTheList = usePutOnTheList();
   const [draft, setDraft] = useState("");
   const [openId, setOpenId] = useState<string | null>(null);
@@ -115,159 +117,157 @@ export function PantryScreen() {
   };
 
   return (
-    <IngredientIconsProvider ids={items.map((item) => item.ingredientId)}>
-      <div className="flex flex-col gap-6">
-        {/* While the Pantry loads, the field is drawn but takes nothing: a food added then could double one already kept. */}
-        <div className="flex flex-col gap-2" inert={isLoading}>
-          <TextField aria-label={t("fieldLabel")} value={draft} onChange={setDraft}>
-            {/* Shaped as the dashboard's search field is. */}
-            <InputGroup className="h-12">
-              <InputGroup.Prefix className="pl-4">
-                <MagnifyingGlassIcon aria-hidden className="text-muted size-5" />
-              </InputGroup.Prefix>
-              <InputGroup.Input
-                ref={fieldRef}
-                data-testid="pantry-name"
-                maxLength={PANTRY_INGREDIENT_NAME_MAX_LENGTH}
-                placeholder={t("fieldPlaceholder")}
-                style={FIELD_STYLE}
-                onKeyDown={(event) => {
-                  if (event.key === "Enter") {
-                    event.preventDefault();
-                    addTyped();
-                  }
-                }}
-              />
-              <InputGroup.Suffix className="pr-2">
-                <Button
-                  isIconOnly
-                  aria-label={t("add")}
-                  data-testid="add-pantry-ingredient"
-                  isDisabled={!canAdd}
-                  size="sm"
-                  variant="ghost"
-                  onPress={addTyped}
-                >
-                  <PlusIcon className="size-4" />
-                </Button>
-              </InputGroup.Suffix>
-            </InputGroup>
-          </TextField>
-          <p className="text-muted text-sm">{t("hint")}</p>
-          {/* A food's details are read from the server, so offline its row opens nothing. */}
-          {isOffline ? (
-            <p className="text-muted text-sm" data-testid="pantry-offline-details">
-              {t("offlineDetails")}
-            </p>
-          ) : null}
-        </div>
+    <div className="flex flex-col gap-6">
+      {/* While the Pantry loads, the field is drawn but takes nothing: a food added then could double one already kept. */}
+      <div className="flex flex-col gap-2" inert={isLoading}>
+        <TextField aria-label={t("fieldLabel")} value={draft} onChange={setDraft}>
+          {/* Shaped as the dashboard's search field is. */}
+          <InputGroup className="h-12">
+            <InputGroup.Prefix className="pl-4">
+              <MagnifyingGlassIcon aria-hidden className="text-muted size-5" />
+            </InputGroup.Prefix>
+            <InputGroup.Input
+              ref={fieldRef}
+              data-testid="pantry-name"
+              maxLength={PANTRY_INGREDIENT_NAME_MAX_LENGTH}
+              placeholder={t("fieldPlaceholder")}
+              style={FIELD_STYLE}
+              onKeyDown={(event) => {
+                if (event.key === "Enter") {
+                  event.preventDefault();
+                  addTyped();
+                }
+              }}
+            />
+            <InputGroup.Suffix className="pr-2">
+              <Button
+                isIconOnly
+                aria-label={t("add")}
+                data-testid="add-pantry-ingredient"
+                isDisabled={!canAdd}
+                size="sm"
+                variant="ghost"
+                onPress={addTyped}
+              >
+                <PlusIcon className="size-4" />
+              </Button>
+            </InputGroup.Suffix>
+          </InputGroup>
+        </TextField>
+        <p className="text-muted text-sm">{t("hint")}</p>
+        {/* A food's details are read from the server, so offline its row opens nothing. */}
+        {isOffline ? (
+          <p className="text-muted text-sm" data-testid="pantry-offline-details">
+            {t("offlineDetails")}
+          </p>
+        ) : null}
+      </div>
 
-        {isLoading ? (
-          <div
-            className="divide-border divide-y overflow-hidden rounded-lg"
-            data-testid="pantry-loading"
-          >
-            {Array.from({ length: 5 }, (_, index) => (
-              <div key={index} className="bg-surface flex min-h-12 items-center gap-3 px-4 py-2">
-                {showIngredientIcons && (
-                  <Skeleton className="size-6 shrink-0 rounded-full md:size-8" />
+      {isLoading ? (
+        <div
+          className="divide-border divide-y overflow-hidden rounded-lg"
+          data-testid="pantry-loading"
+        >
+          {Array.from({ length: 5 }, (_, index) => (
+            <div key={index} className="bg-surface flex min-h-12 items-center gap-3 px-4 py-2">
+              {showIngredientIcons && (
+                <Skeleton className="size-6 shrink-0 rounded-full md:size-8" />
+              )}
+              <Skeleton className="h-4 w-32 rounded-md" />
+            </div>
+          ))}
+        </div>
+      ) : items.length === 0 ? (
+        <p className="text-muted py-2 text-center" data-testid="pantry-empty">
+          {t("empty")}
+        </p>
+      ) : kept.length === 0 ? (
+        <p className="text-muted py-2 text-center" data-testid="pantry-no-match">
+          {tStatus("noResults")}
+        </p>
+      ) : (
+        <ul
+          className="divide-border divide-y overflow-hidden rounded-lg"
+          data-testid="pantry-ingredients"
+        >
+          {kept.map((item) => {
+            const name = ingredientDisplayName(item, locale);
+
+            return (
+              <li
+                key={item.id}
+                className="bg-surface flex min-h-12 items-center gap-3 px-4 py-2"
+                data-pantry-ingredient={foldName(item.name)}
+              >
+                <IngredientIcon ingredientId={item.ingredientId} />
+                {/* Added offline, a food has no Ingredient to open until it syncs. */}
+                {item.ingredientId && !isOffline ? (
+                  <button
+                    className="min-w-0 flex-1 cursor-[var(--cursor-interactive)] truncate text-left font-medium hover:underline"
+                    type="button"
+                    onClick={() => setOpenId(item.ingredientId)}
+                  >
+                    {name}
+                  </button>
+                ) : (
+                  <span className="min-w-0 flex-1 truncate font-medium">{name}</span>
                 )}
-                <Skeleton className="h-4 w-32 rounded-md" />
-              </div>
-            ))}
-          </div>
-        ) : items.length === 0 ? (
-          <p className="text-muted py-2 text-center" data-testid="pantry-empty">
-            {t("empty")}
-          </p>
-        ) : kept.length === 0 ? (
-          <p className="text-muted py-2 text-center" data-testid="pantry-no-match">
-            {tStatus("noResults")}
-          </p>
-        ) : (
-          <ul
-            className="divide-border divide-y overflow-hidden rounded-lg"
-            data-testid="pantry-ingredients"
-          >
-            {kept.map((item) => {
-              const name = ingredientDisplayName(item, locale);
+                <PutOnTheList
+                  onPut={() => putOnTheList(item)}
+                  onTheList={onTheList.includes(item.id)}
+                />
+              </li>
+            );
+          })}
+        </ul>
+      )}
+
+      {matches.length > 0 ? (
+        <section className="flex flex-col gap-2" data-testid="pantry-catalogue-matches">
+          <h2 className="text-muted text-xs font-semibold tracking-wide uppercase">
+            {t("fromCatalogue")}
+          </h2>
+          <ul className="divide-border divide-y overflow-hidden rounded-lg">
+            {matches.map((food) => {
+              const name = ingredientDisplayName(food, locale);
 
               return (
                 <li
-                  key={item.id}
+                  key={food.id}
                   className="bg-surface flex min-h-12 items-center gap-3 px-4 py-2"
-                  data-pantry-ingredient={foldName(item.name)}
+                  data-catalogue-food={food.name}
                 >
-                  <IngredientIcon ingredientId={item.ingredientId} />
-                  {/* Added offline, a food has no Ingredient to open until it syncs. */}
-                  {item.ingredientId && !isOffline ? (
-                    <button
-                      className="min-w-0 flex-1 cursor-[var(--cursor-interactive)] truncate text-left font-medium hover:underline"
-                      type="button"
-                      onClick={() => setOpenId(item.ingredientId)}
-                    >
-                      {name}
-                    </button>
-                  ) : (
-                    <span className="min-w-0 flex-1 truncate font-medium">{name}</span>
-                  )}
-                  <PutOnTheList
-                    onPut={() => putOnTheList(item)}
-                    onTheList={onTheList.includes(item.id)}
+                  <IngredientIcon src={food.icon ?? null} />
+                  <span className="min-w-0 flex-1 truncate">{name}</span>
+                  <IconActionButton
+                    action="add"
+                    className="shrink-0"
+                    label={t("addFood", { name })}
+                    size="sm"
+                    variant="tertiary"
+                    onPress={() =>
+                      keep({
+                        ingredientId: food.id,
+                        name: food.name,
+                        localeNames: food.localeNames,
+                      })
+                    }
                   />
                 </li>
               );
             })}
           </ul>
-        )}
+        </section>
+      ) : null}
 
-        {matches.length > 0 ? (
-          <section className="flex flex-col gap-2" data-testid="pantry-catalogue-matches">
-            <h2 className="text-muted text-xs font-semibold tracking-wide uppercase">
-              {t("fromCatalogue")}
-            </h2>
-            <ul className="divide-border divide-y overflow-hidden rounded-lg">
-              {matches.map((food) => {
-                const name = ingredientDisplayName(food, locale);
+      <FromYourRecipes items={items} onKeep={keep} />
 
-                return (
-                  <li
-                    key={food.id}
-                    className="bg-surface flex min-h-12 items-center gap-3 px-4 py-2"
-                    data-catalogue-food={food.name}
-                  >
-                    <IngredientIcon src={food.icon ?? null} />
-                    <span className="min-w-0 flex-1 truncate">{name}</span>
-                    <IconActionButton
-                      action="add"
-                      className="shrink-0"
-                      label={t("addFood", { name })}
-                      size="sm"
-                      variant="tertiary"
-                      onPress={() =>
-                        keep({
-                          ingredientId: food.id,
-                          name: food.name,
-                          localeNames: food.localeNames,
-                        })
-                      }
-                    />
-                  </li>
-                );
-              })}
-            </ul>
-          </section>
-        ) : null}
-
-        <FromYourRecipes items={items} onKeep={keep} />
-
-        <IngredientPanel
-          id={openId}
-          item={null}
-          open={openId !== null}
-          onClose={() => setOpenId(null)}
-        />
-      </div>
-    </IngredientIconsProvider>
+      <IngredientPanel
+        id={openId}
+        item={null}
+        open={openId !== null}
+        onClose={() => setOpenId(null)}
+      />
+    </div>
   );
 }

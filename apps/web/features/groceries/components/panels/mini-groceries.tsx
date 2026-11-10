@@ -1,7 +1,7 @@
 "use client";
 
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
-import { IngredientIcon, IngredientIconsProvider } from "@/components/ingredients/ingredient-icon";
+import { IngredientIcon, useIngredientIcons } from "@/components/ingredients/ingredient-icon";
 import { OnTheListMark } from "@/components/ingredients/on-the-list-mark";
 import Panel from "@/components/Panel/Panel";
 import { isCheckboxEvent, RoundCheckbox } from "@/components/round-checkbox";
@@ -168,6 +168,9 @@ export default function MiniGroceries({
   );
   const { servings, scaledIngredients, setServings, incrementServings, decrementServings } =
     useServingsScaler(ingredients, originalServings, initialServings);
+
+  useIngredientIcons(ingredients.map((item) => item.ingredientId));
+
   const [selectedIds, setSelectedIds] = useState<string[]>([]);
   const [editingId, setEditingId] = useState<string | null>(null);
   const [editValue, setEditValue] = useState<string>("");
@@ -526,68 +529,66 @@ export default function MiniGroceries({
   return (
     <Panel open={open} title={t("addToGroceries")} onOpenChange={onOpenChange}>
       <Panel.Body className="flex min-h-0 flex-1 flex-col">
-        <IngredientIconsProvider ids={ingredients.map((item) => item.ingredientId)}>
-          {open && isLoading ? (
-            <div className="text-muted p-4 text-base">{t("loadingIngredients")}</div>
-          ) : open ? (
-            <div className="flex min-h-0 flex-1 flex-col">
-              {/* Servings Control */}
-              <div className="mb-3 flex items-center justify-between px-1">
-                <span className="text-foreground text-sm font-medium">{t("servings")}</span>
-                <div className="inline-flex items-center gap-2">
-                  <IconActionButton
-                    action="decrease"
-                    className="bg-surface-secondary"
-                    label="Decrease servings"
-                    size="sm"
-                    tooltipPlacement="bottom"
-                    onPress={decrementServings}
-                  />
-                  <span className="min-w-8 text-center text-sm font-semibold">
-                    {formatServings(servings)}
-                  </span>
-                  <IconActionButton
-                    action="increase"
-                    className="bg-surface-secondary"
-                    label="Increase servings"
-                    size="sm"
-                    tooltipPlacement="bottom"
-                    onPress={incrementServings}
-                  />
-                </div>
+        {open && isLoading ? (
+          <div className="text-muted p-4 text-base">{t("loadingIngredients")}</div>
+        ) : open ? (
+          <div className="flex min-h-0 flex-1 flex-col">
+            {/* Servings Control */}
+            <div className="mb-3 flex items-center justify-between px-1">
+              <span className="text-foreground text-sm font-medium">{t("servings")}</span>
+              <div className="inline-flex items-center gap-2">
+                <IconActionButton
+                  action="decrease"
+                  className="bg-surface-secondary"
+                  label="Decrease servings"
+                  size="sm"
+                  tooltipPlacement="bottom"
+                  onPress={decrementServings}
+                />
+                <span className="min-w-8 text-center text-sm font-semibold">
+                  {formatServings(servings)}
+                </span>
+                <IconActionButton
+                  action="increase"
+                  className="bg-surface-secondary"
+                  label="Increase servings"
+                  size="sm"
+                  tooltipPlacement="bottom"
+                  onPress={incrementServings}
+                />
               </div>
-
-              {pantryUnavailable && (
-                <p className="text-muted mb-2 px-1 text-xs" data-testid="pantry-unavailable">
-                  {t("pantryUnavailable")}
-                </p>
-              )}
-
-              {scaledIngredients.length === 0 ? (
-                <div className="text-muted flex flex-1 items-center justify-center text-base">
-                  {t("noIngredients")}
-                </div>
-              ) : (
-                <div className="flex min-h-0 flex-1 flex-col gap-3 overflow-y-auto pb-1">
-                  {toBuy.length > 0 &&
-                    renderSection(toBuy, inPantry, {
-                      name: t("toBuy"),
-                      selected: selectedCount,
-                      testId: "to-buy-section",
-                      toggleTestId: "toggle-all",
-                    })}
-                  {inPantry.length > 0 &&
-                    renderSection(inPantry, toBuy, {
-                      name: t("inPantry"),
-                      selected: inPantrySelectedCount,
-                      testId: "pantry-section",
-                      toggleTestId: "toggle-all-pantry",
-                    })}
-                </div>
-              )}
             </div>
-          ) : null}
-        </IngredientIconsProvider>
+
+            {pantryUnavailable && (
+              <p className="text-muted mb-2 px-1 text-xs" data-testid="pantry-unavailable">
+                {t("pantryUnavailable")}
+              </p>
+            )}
+
+            {scaledIngredients.length === 0 ? (
+              <div className="text-muted flex flex-1 items-center justify-center text-base">
+                {t("noIngredients")}
+              </div>
+            ) : (
+              <div className="flex min-h-0 flex-1 flex-col gap-3 overflow-y-auto pb-1">
+                {toBuy.length > 0 &&
+                  renderSection(toBuy, inPantry, {
+                    name: t("toBuy"),
+                    selected: selectedCount,
+                    testId: "to-buy-section",
+                    toggleTestId: "toggle-all",
+                  })}
+                {inPantry.length > 0 &&
+                  renderSection(inPantry, toBuy, {
+                    name: t("inPantry"),
+                    selected: inPantrySelectedCount,
+                    testId: "pantry-section",
+                    toggleTestId: "toggle-all-pantry",
+                  })}
+              </div>
+            )}
+          </div>
+        ) : null}
       </Panel.Body>
 
       {open && !isLoading && scaledIngredients.length > 0 && (

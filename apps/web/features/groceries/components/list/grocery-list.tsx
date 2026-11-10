@@ -1,7 +1,7 @@
 "use client";
 
 import { useMemo } from "react";
-import { IngredientIconsProvider } from "@/components/ingredients/ingredient-icon";
+import { useIngredientIcons } from "@/components/ingredients/ingredient-icon";
 import { useStructuralSharing } from "@/features/groceries/hooks";
 import { listFoodIds } from "@/features/groceries/lib/list-food-ids";
 import { ShoppingCartIcon } from "@heroicons/react/24/outline";
@@ -45,11 +45,9 @@ interface GroceryListProps {
 
 /** The list, under one read of the icons of every food on it. */
 export function GroceryList(props: GroceryListProps) {
-  return (
-    <IngredientIconsProvider ids={listFoodIds(props)}>
-      <GroceryListContent {...props} />
-    </IngredientIconsProvider>
-  );
+  useIngredientIcons(listFoodIds(props));
+
+  return <GroceryListContent {...props} />;
 }
 
 function GroceryListContent({

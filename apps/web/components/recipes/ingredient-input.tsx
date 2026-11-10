@@ -3,8 +3,8 @@
 import React, { useCallback, useRef, useState } from "react";
 import {
   IngredientIcon,
-  IngredientIconsProvider,
   useFoodsByName,
+  useIngredientIcons,
 } from "@/components/ingredients/ingredient-icon";
 import SmartTextInput from "@/components/shared/smart-text-input";
 import { Bars3Icon, XMarkIcon } from "@heroicons/react/16/solid";
@@ -223,6 +223,8 @@ export default function IngredientInput({
   });
   const foods = useFoodsByName(foodNames);
 
+  useIngredientIcons([...foods.values()]);
+
   // Calculate ingredient numbers (excluding headings)
   const getIngredientNumber = (index: number): number | null => {
     const isHeading = (item: IngredientItem) => item.text.trim().startsWith("#");
@@ -233,35 +235,33 @@ export default function IngredientInput({
     return items.slice(0, index + 1).filter((it) => !isHeading(it)).length;
   };
   return (
-    <IngredientIconsProvider ids={[...foods.values()]}>
-      <Reorder.Group
-        ref={dragConstraintsRef}
-        axis="y"
-        className="flex flex-col gap-2"
-        values={items}
-        onReorder={handleReorder}
-      >
-        {items.map((item, index) => (
-          <IngredientRow
-            key={item.id}
-            dragConstraintsRef={dragConstraintsRef}
-            foodId={foods.get(foodNames[index] ?? "") ?? null}
-            index={index}
-            ingredientNumber={getIngredientNumber(index)}
-            ingredientPlaceholder={t("placeholder")}
-            isLast={index === items.length - 1}
-            item={item}
-            showRemove={items.length > 1 && !!item.text}
-            onBlur={() => handleBlur(index)}
-            onKeyDown={(e) =>
-              handleKeyDown(index, e as unknown as React.KeyboardEvent<HTMLInputElement>)
-            }
-            onRemove={() => handleRemove(index)}
-            onValueChange={(v) => handleInputChange(index, v)}
-          />
-        ))}
-      </Reorder.Group>
-    </IngredientIconsProvider>
+    <Reorder.Group
+      ref={dragConstraintsRef}
+      axis="y"
+      className="flex flex-col gap-2"
+      values={items}
+      onReorder={handleReorder}
+    >
+      {items.map((item, index) => (
+        <IngredientRow
+          key={item.id}
+          dragConstraintsRef={dragConstraintsRef}
+          foodId={foods.get(foodNames[index] ?? "") ?? null}
+          index={index}
+          ingredientNumber={getIngredientNumber(index)}
+          ingredientPlaceholder={t("placeholder")}
+          isLast={index === items.length - 1}
+          item={item}
+          showRemove={items.length > 1 && !!item.text}
+          onBlur={() => handleBlur(index)}
+          onKeyDown={(e) =>
+            handleKeyDown(index, e as unknown as React.KeyboardEvent<HTMLInputElement>)
+          }
+          onRemove={() => handleRemove(index)}
+          onValueChange={(v) => handleInputChange(index, v)}
+        />
+      ))}
+    </Reorder.Group>
   );
 }
 function normalizeIngredientItems(next: IngredientItem[]): IngredientItem[] {

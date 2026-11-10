@@ -5,6 +5,9 @@ import "@testing-library/jest-dom";
 
 import { CookingStepView } from "@/app/(app)/recipes/[id]/components/cookingmode/cooking-step-view";
 
+vi.mock("@norish/shared-react/reader", async () =>
+  (await import("@/__tests__/helpers/reader-mock")).mockDevicePreferences()
+);
 vi.mock("@/components/recipe/smart-instruction", () => ({
   SmartInstruction: ({ text }: { text: string }) => <span>{text}</span>,
 }));

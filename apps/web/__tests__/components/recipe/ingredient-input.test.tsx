@@ -16,7 +16,7 @@ vi.mock("@/components/ingredients/ingredient-icon", () => ({
   IngredientIcon: ({ ingredientId }: { ingredientId: string | null }) => (
     <span data-food={ingredientId ?? ""} data-testid="row-icon" />
   ),
-  IngredientIconsProvider: ({ children }: { children?: React.ReactNode }) => children,
+  useIngredientIcons: () => {},
   useFoodsByName: () => foods,
 }));
 

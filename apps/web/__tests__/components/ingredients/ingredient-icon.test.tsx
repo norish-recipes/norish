@@ -5,18 +5,23 @@
  * at all, slot included, for a reader who hid Ingredient Icons.
  */
 import type { ReactNode } from "react";
-import { IngredientIcon, IngredientIconsProvider } from "@/components/ingredients/ingredient-icon";
-import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
+import { Profiler } from "react";
+import { IngredientIcon, useIngredientIcons } from "@/components/ingredients/ingredient-icon";
+import { QueryClientProvider } from "@tanstack/react-query";
 import { render, screen, waitFor } from "@testing-library/react";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
+
+import { createTestQueryClient } from "@norish/shared-react/platform/testing";
 
 const ONION = "11111111-1111-4111-8111-111111111111";
 const KOHLRABI = "22222222-2222-4222-8222-222222222222";
 const ONION_ICON = "/ingredient-icons/0123456789abcdef0123456789abcdef.webp";
+const KOHLRABI_ICON = "/ingredient-icons/fedcba9876543210fedcba9876543210.webp";
 
 const mocks = vi.hoisted(() => ({
   hidden: [] as string[],
   asked: [] as unknown[],
+  icons: {} as Record<string, string | null>,
 }));
 
 vi.mock("@norish/shared-react/reader", async () =>
@@ -29,14 +34,13 @@ vi.mock("@norish/shared-react/trpc", () => ({
   useTRPC: () => ({
     ingredients: {
       icons: {
+        pathKey: () => ["ingredients.icons"],
         queryOptions: (input: { ids: string[] }) => ({
           queryKey: ["ingredients.icons", input],
           queryFn: async () => {
             mocks.asked.push(input);
 
-            return Object.fromEntries(
-              input.ids.map((id) => [id, id === ONION ? ONION_ICON : null])
-            );
+            return Object.fromEntries(input.ids.map((id) => [id, mocks.icons[id] ?? null]));
           },
         }),
       },
@@ -44,19 +48,36 @@ vi.mock("@norish/shared-react/trpc", () => ({
   }),
 }));
 
-function onSurface(ids: (string | null)[], children: ReactNode) {
-  const client = new QueryClient({ defaultOptions: { queries: { retry: false } } });
+/** A surface: one read of its foods' icons, and whatever it draws. */
+function Surface({ ids, children }: { ids: (string | null)[]; children: ReactNode }) {
+  useIngredientIcons(ids);
 
-  return render(
+  return children;
+}
+
+function onSurface(ids: (string | null)[], children: ReactNode) {
+  const client = createTestQueryClient();
+  const view = render(
     <QueryClientProvider client={client}>
-      <IngredientIconsProvider ids={ids}>{children}</IngredientIconsProvider>
+      <Surface ids={ids}>{children}</Surface>
     </QueryClientProvider>
   );
+
+  return {
+    ...view,
+    rerenderSurface: (next: (string | null)[], nextChildren: ReactNode) =>
+      view.rerender(
+        <QueryClientProvider client={client}>
+          <Surface ids={next}>{nextChildren}</Surface>
+        </QueryClientProvider>
+      ),
+  };
 }
 
 beforeEach(() => {
   mocks.hidden = [];
   mocks.asked = [];
+  mocks.icons = { [ONION]: ONION_ICON };
 });
 
 afterEach(() => {
@@ -78,6 +99,34 @@ describe("IngredientIcon", () => {
     expect((await screen.findByTestId("ingredient-icon")).getAttribute("src")).toBe(ONION_ICON);
     await waitFor(() => expect(container.childElementCount).toBe(1));
     expect(mocks.asked).toEqual([{ ids: [ONION, KOHLRABI].sort() }]);
+  });
+
+  it("draws the icon of a food joining the surface, and the icons already shown not again", async () => {
+    mocks.icons[KOHLRABI] = KOHLRABI_ICON;
+    const renders: Record<string, number> = { onion: 0, kohlrabi: 0 };
+    const counted = (id: string, icon: ReactNode) => (
+      <Profiler id={id} onRender={() => (renders[id] = (renders[id] ?? 0) + 1)}>
+        {icon}
+      </Profiler>
+    );
+    // The same element on every render, as the compiler keeps an unchanged row's.
+    const onion = counted("onion", <IngredientIcon ingredientId={ONION} />);
+    const { rerenderSurface } = onSurface([ONION], onion);
+
+    expect((await screen.findByTestId("ingredient-icon")).getAttribute("src")).toBe(ONION_ICON);
+    const onionRenders = renders.onion;
+
+    rerenderSurface(
+      [ONION, KOHLRABI],
+      <>
+        {onion}
+        {counted("kohlrabi", <IngredientIcon ingredientId={KOHLRABI} />)}
+      </>
+    );
+
+    await waitFor(() => expect(screen.getAllByTestId("ingredient-icon")).toHaveLength(2));
+    expect(screen.getAllByTestId("ingredient-icon")[1]).toHaveAttribute("src", KOHLRABI_ICON);
+    expect(renders.onion).toBe(onionRenders);
   });
 
   it("prefixes its address when the app is served under a base path", async () => {
