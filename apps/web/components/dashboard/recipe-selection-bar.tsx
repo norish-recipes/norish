@@ -17,7 +17,7 @@ import type { CookbookSummaryDTO } from "@norish/shared/contracts";
 import { useRecipePermissions } from "@norish/shared-react/reader";
 import { useCookbooksMutations, useRecipeSelection } from "@norish/shared-react/recipes";
 
-import { useRecipeLeaving } from "./recipe-leaving";
+import { useLeavingEndsOnUnmount, useRecipeLeaving } from "./recipe-leaving";
 
 /**
  * The action bar over a Library page's recipe selection; `recipes` is the page's loaded list,
@@ -61,6 +61,7 @@ export default function RecipeSelectionBar({
 
   // The selection is the page's: it doesn't follow the reader into a cookbook.
   useEffect(() => clear, [clear]);
+  useLeavingEndsOnUnmount();
 
   useEffect(() => {
     if (!isSelecting) return;
