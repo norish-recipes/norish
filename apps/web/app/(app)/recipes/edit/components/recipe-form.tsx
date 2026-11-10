@@ -15,8 +15,7 @@ import SmartInputHelp from "@/components/shared/smart-input-help";
 import SmartTextInput from "@/components/shared/smart-text-input";
 import TagInput from "@/components/shared/tag-input";
 import EditRecipeSkeleton from "@/components/skeleton/edit-recipe-skeleton";
-import { useRecipesContext } from "@/context/recipes-context";
-import { useRecipeId } from "@/hooks/recipes";
+import { useRecipeId, useRecipesMutations } from "@/hooks/recipes";
 import { useUnsavedNavigationGuard } from "@/hooks/use-unsaved-navigation-guard";
 import { useCategoryLabel } from "@/lib/category-display";
 import { Button, FieldError, Input, Label, TextField } from "@heroui/react";
@@ -44,7 +43,7 @@ export interface RecipeFormProps {
 }
 export default function RecipeForm({ mode, initialData }: RecipeFormProps) {
   const router = useRouter();
-  const { createRecipe, updateRecipe } = useRecipesContext();
+  const { createRecipe, updateRecipe } = useRecipesMutations();
   const locale = useLocale();
   const { units, isLoading: isLoadingUnits } = useUnitsQuery();
   const { categories: householdCategories, builtInAliases } = useCategoriesQuery();
@@ -386,12 +385,14 @@ export default function RecipeForm({ mode, initialData }: RecipeFormProps) {
           ...recipeData,
           id: recipeId!,
         });
+        router.push(`/recipes/${recipeId!}`);
       } else if (editing) {
         allowNavigation();
         updateRecipe(editing.id, {
           ...recipeData,
           version: editing.version,
         });
+        router.push(`/recipes/${editing.id}`);
       }
     } catch (err) {
       log.error({ err }, "Failed to save recipe");
@@ -429,6 +430,7 @@ export default function RecipeForm({ mode, initialData }: RecipeFormProps) {
     notes,
     allowNavigation,
     disallowNavigation,
+    router,
   ]);
   const handleTimeChange = useCallback(
     (field: "prepMinutes" | "cookMinutes" | "totalMinutes", value: number | null) => {

@@ -6,7 +6,11 @@ import { beforeEach, describe, expect, it, vi } from "vitest";
 
 import type { FullRecipeDTO } from "@norish/shared/contracts";
 
-const mocks = vi.hoisted(() => ({ createRecipe: vi.fn() }));
+const mocks = vi.hoisted(() => ({ createRecipe: vi.fn(), push: vi.fn() }));
+
+vi.mock("next/navigation", () => ({
+  useRouter: () => ({ push: mocks.push, back: vi.fn() }),
+}));
 
 // The English UI: built-ins carry their English labels.
 const LABELS: Record<string, string> = {
@@ -19,9 +23,6 @@ const LABELS: Record<string, string> = {
 vi.mock("next-intl", () => ({
   useLocale: () => "en",
   useTranslations: () => (key: string) => LABELS[key] ?? key,
-}));
-vi.mock("@/context/recipes-context", () => ({
-  useRecipesContext: () => ({ createRecipe: mocks.createRecipe, updateRecipe: vi.fn() }),
 }));
 vi.mock("@norish/shared-react/config", () => ({
   useUnitsQuery: () => ({ units: {}, isLoading: false }),
@@ -42,6 +43,7 @@ vi.mock("@norish/shared-react/reader", async () =>
 );
 vi.mock("@/hooks/recipes", () => ({
   useRecipeId: () => ({ recipeId: "recipe-1", isLoading: false, error: null }),
+  useRecipesMutations: () => ({ createRecipe: mocks.createRecipe, updateRecipe: vi.fn() }),
 }));
 vi.mock("@/hooks/use-unsaved-navigation-guard", () => ({
   useUnsavedNavigationGuard: () => ({
@@ -96,6 +98,7 @@ function fillRequiredFields() {
 
 beforeEach(() => {
   mocks.createRecipe.mockReset();
+  mocks.push.mockReset();
 });
 
 describe("RecipeForm servings (#684)", () => {
@@ -122,6 +125,14 @@ describe("RecipeForm servings (#684)", () => {
     await waitFor(() =>
       expect(mocks.createRecipe).toHaveBeenCalledWith(expect.objectContaining({ servings: 2 }))
     );
+  });
+
+  it("opens the recipe it created", async () => {
+    render(<RecipeForm mode="create" />);
+    fillRequiredFields();
+    fireEvent.click(screen.getByRole("button", { name: "createRecipe" }));
+
+    await waitFor(() => expect(mocks.push).toHaveBeenCalledWith("/recipes/recipe-1"));
   });
 
   it("refuses to save while empty", async () => {
