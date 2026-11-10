@@ -32,12 +32,9 @@ import { NutritionCorrectionPanel } from "./nutrition-correction-panel";
 export function IngredientNutritionSection({
   ingredientId,
   name,
-  enabled,
 }: {
   ingredientId: string;
   name: string;
-  /** False while the panel holding it is closed: it shows what is cached and reads nothing. */
-  enabled: boolean;
 }) {
   const t = useTranslations("settings.ingredients.nutrition");
   const tActions = useTranslations("common.actions");
@@ -48,14 +45,8 @@ export function IngredientNutritionSection({
   // Each opening of the correction panel is a fresh draft, ready to type the
   // spoon's weight when the spoon row asked for it.
   const [opening, setOpening] = useState({ count: 0, askSpoon: false });
-  const { data, isPending } = useQuery({
-    ...trpc.ingredients.nutrition.queryOptions({ ingredientId }),
-    enabled,
-  });
-  const { data: measure } = useQuery({
-    ...trpc.ingredients.spoonMeasure.queryOptions({ ingredientId }),
-    enabled,
-  });
+  const { data, isPending } = useQuery(trpc.ingredients.nutrition.queryOptions({ ingredientId }));
+  const { data: measure } = useQuery(trpc.ingredients.spoonMeasure.queryOptions({ ingredientId }));
   const number = (value: number) => format.number(value, { maximumFractionDigits: 1 });
   const facts = data ?? null;
   const correct = (askSpoon: boolean) => {

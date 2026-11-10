@@ -18,13 +18,13 @@ export function isOpenChange(change: AIChange): boolean {
 
 /**
  * What AI changed, with Keep and Undo, one or all, and Clear; an answer shows at once, then
- * Ingredients are read again. While `enabled` is false it reads only what is cached.
+ * Ingredients are read again.
  */
-export function useAIChanges(enabled = true) {
+export function useAIChanges() {
   const t = useTranslations("settings.ingredients");
   const trpc = useTRPC();
   const cache = useIngredientCache();
-  const query = useQuery({ ...trpc.ingredients.aiChanges.queryOptions(), enabled });
+  const query = useQuery(trpc.ingredients.aiChanges.queryOptions());
   const keep = useMutation(trpc.ingredients.keepAIChange.mutationOptions());
   const undo = useMutation(trpc.ingredients.undoAIChange.mutationOptions());
   const settle = useMutation(trpc.ingredients.settleAIChanges.mutationOptions());

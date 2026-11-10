@@ -18,6 +18,7 @@ let groceries: Array<{ id: string; name: string; ingredientId: string | null; is
   [];
 const addPantryIngredient = vi.fn(async () => "kept");
 let pantryLoading = false;
+let pantryFetching = false;
 let pantryUnavailable = false;
 
 let linkedAskedFor: string[][] = [];
@@ -80,12 +81,13 @@ vi.mock("@norish/shared-react/groceries", async () => {
     usePantryQuery: () => ({
       items: pantry,
       isLoading: pantryLoading,
+      isFetching: pantryFetching,
       isUnavailable: pantryUnavailable,
     }),
   };
 });
-vi.mock("@/components/Panel/kept-foods-subscriptions", () => ({
-  KeptFoodsSubscriptions: () => null,
+vi.mock("@/components/Panel/use-groceries-pantry-and-catalogue-subscriptions", () => ({
+  useGroceriesPantryAndCatalogueSubscriptions: () => undefined,
 }));
 vi.mock("@/hooks/use-unit-formatter", () => ({
   useUnitFormatter: () => ({
@@ -177,6 +179,7 @@ describe("MiniGroceries with a Pantry", () => {
     linkedLines = [];
     pantry = [pantryIngredient("Olive oil", "olive oil"), pantryIngredient("salt", "salt")];
     pantryLoading = false;
+    pantryFetching = false;
     pantryUnavailable = false;
     groceries = [];
   });
@@ -414,6 +417,45 @@ describe("MiniGroceries with a Pantry", () => {
 
       expect(createGroceriesFromData).toHaveBeenCalledTimes(1);
       expect(addedNames()).toEqual(["chicken breast"]);
+    });
+
+    it("decides from the Pantry read again, not from a cached copy", async () => {
+      // The cached copy predates a housemate keeping the chicken breast.
+      pantryFetching = true;
+      const onOpenChange = vi.fn();
+      const { rerender } = addAtOnce(onOpenChange);
+
+      await act(async () => {});
+      expect(createGroceriesFromData).not.toHaveBeenCalled();
+
+      pantry = [...pantry, pantryIngredient("chicken breast", "chicken breast")];
+      pantryFetching = false;
+      await act(async () => {
+        rerender(
+          <MiniGroceries addAtOnce open={false} recipeId="r1" onOpenChange={onOpenChange} />
+        );
+      });
+
+      expect(createGroceriesFromData).not.toHaveBeenCalled();
+      expect(onOpenChange).toHaveBeenCalledWith(false);
+    });
+
+    it("adds once, even when the panel it opened is closed again", async () => {
+      pantryUnavailable = true;
+      const onOpenChange = vi.fn();
+      const { rerender } = addAtOnce(onOpenChange);
+
+      await act(async () => {});
+      pantryUnavailable = false;
+      for (const open of [true, false]) {
+        await act(async () => {
+          rerender(
+            <MiniGroceries addAtOnce open={open} recipeId="r1" onOpenChange={onOpenChange} />
+          );
+        });
+      }
+
+      expect(createGroceriesFromData).not.toHaveBeenCalled();
     });
 
     it("opens the panel instead when the Pantry cannot be read", async () => {

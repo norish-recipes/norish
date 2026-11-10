@@ -29,18 +29,12 @@ export function useRecipeCookbooksQuery(
  * (ADR-0009). The membership half is the recipe's own read, so the toggles
  * and the recipe page's card always agree.
  */
-export function useEditableCookbooksQuery(
-  recipeId: string | null,
-  { enabled = true }: { enabled?: boolean } = {}
-): EditableCookbooksQueryResult {
+export function useEditableCookbooksQuery(recipeId: string | null): EditableCookbooksQueryResult {
   const trpc = useTRPC();
-  const editable = useQuery({
-    ...trpc.cookbooks.editable.queryOptions(),
-    enabled,
-  });
+  const editable = useQuery(trpc.cookbooks.editable.queryOptions());
   const membership = useQuery({
     ...trpc.cookbooks.forRecipe.queryOptions({ recipeId: recipeId ?? "" }),
-    enabled: enabled && Boolean(recipeId),
+    enabled: Boolean(recipeId),
   });
 
   const memberOf = new Set((membership.data ?? []).map((cookbook) => cookbook.id));

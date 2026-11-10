@@ -4,8 +4,8 @@ import type { ReactNode } from "react";
 import { useEffect, useRef, useState } from "react";
 import Link from "next/link";
 import { OnTheListMark } from "@/components/ingredients/on-the-list-mark";
-import { KeptFoodsSubscriptions } from "@/components/Panel/kept-foods-subscriptions";
 import Panel from "@/components/Panel/Panel";
+import { useGroceriesPantryAndCatalogueSubscriptions } from "@/components/Panel/use-groceries-pantry-and-catalogue-subscriptions";
 import {
   ActionButton,
   ActionButtonGroup,
@@ -100,28 +100,29 @@ export function IngredientPanel({
   if (!shown || (open && id !== null && shown.id !== id && !current)) return null;
 
   return (
-    <IngredientPanelContent
+    <Panel
       // Another food is another panel: its fields start from that food.
       key={shown.id}
-      item={shown}
       nested={nested}
       open={open}
-      onChanged={onChanged}
-      onClose={onClose}
-    />
+      title={ingredientDisplayName(shown, locale)}
+      titleAddon={<IngredientStatusChip flagged={shown.flagged} />}
+      onOpenChange={(isOpen) => {
+        if (!isOpen) onClose();
+      }}
+    >
+      <IngredientPanelContent item={shown} onChanged={onChanged} onClose={onClose} />
+    </Panel>
   );
 }
 
+/** The panel's content, mounted while it is open: each opening is a fresh draft. */
 function IngredientPanelContent({
   item,
-  open,
-  nested,
   onClose,
   onChanged,
 }: {
   item: IngredientItem;
-  open: boolean;
-  nested: boolean;
   onClose: () => void;
   onChanged?: () => void;
 }) {
@@ -132,6 +133,8 @@ function IngredientPanelContent({
   const queryClient = useQueryClient();
   const cache = useIngredientCache();
   const displayName = ingredientDisplayName(item, locale);
+
+  useGroceriesPantryAndCatalogueSubscriptions();
   const [allSpellings, setAllSpellings] = useState(false);
   // The catalogue knows a food in dozens of languages; the server sends the
   // viewer's spellings and a person's own, and the rest are fetched when the
@@ -158,8 +161,7 @@ function IngredientPanelContent({
   const [relocation, setRelocation] = useState<Relocation | null>(null);
   const [deleting, setDeleting] = useState(false);
   const [showingUses, setShowingUses] = useState(false);
-  // Closed, the panel still shows its food while it slides away, but reads nothing.
-  const aiChanges = useAIChanges(open);
+  const aiChanges = useAIChanges();
   // What AI changed about this food without being sure: what its flag is for.
   const unsure = aiChanges.changes.filter(
     (change) => change.ingredient?.id === item.id && isOpenChange(change)
@@ -168,7 +170,7 @@ function IngredientPanelContent({
   // Whether the household keeps the food, and the draft's say on it (null: untouched).
   const tPantry = useTranslations("groceries.pantry");
   const tGroceries = useTranslations("groceries.page");
-  const kept = usePantryItem(item.id, open);
+  const kept = usePantryItem(item.id);
   const { addPantryIngredient, removePantryIngredient } = usePantryMutations();
   const [keeps, setKeeps] = useState<boolean | null>(null);
 
@@ -417,17 +419,8 @@ function IngredientPanelContent({
   };
 
   return (
-    <Panel
-      nested={nested}
-      open={open}
-      title={displayName}
-      titleAddon={<IngredientStatusChip flagged={item.flagged} />}
-      onOpenChange={(isOpen) => {
-        if (!isOpen) onClose();
-      }}
-    >
+    <>
       <Panel.Body>
-        {open ? <KeptFoodsSubscriptions /> : null}
         <div className="flex flex-col gap-5 pb-2" data-testid="ingredient-details">
           {unsure.length > 0 ? (
             <Section title={t("changedByAI.unsure")}>
@@ -514,7 +507,6 @@ function IngredientPanelContent({
             <PantryRow
               keeping={keeps ?? kept !== null}
               kept={kept}
-              open={open}
               onKeepingChange={(on) => setKeeps(on === (kept !== null) ? null : on)}
             />
           </Section>
@@ -565,7 +557,7 @@ function IngredientPanelContent({
             </Button>
           </Section>
 
-          <IngredientNutritionSection enabled={open} ingredientId={item.id} name={displayName} />
+          <IngredientNutritionSection ingredientId={item.id} name={displayName} />
         </div>
       </Panel.Body>
 
@@ -709,7 +701,7 @@ function IngredientPanelContent({
         open={showingUses}
         onClose={() => setShowingUses(false)}
       />
-    </Panel>
+    </>
   );
 }
 
@@ -723,16 +715,14 @@ function IngredientPanelContent({
 function PantryRow({
   kept,
   keeping,
-  open,
   onKeepingChange,
 }: {
   kept: PantryIngredientDto | null;
   keeping: boolean;
-  open: boolean;
   onKeepingChange: (keeping: boolean) => void;
 }) {
   const t = useTranslations("groceries.pantry");
-  const onTheList = useOnTheList(kept ? [kept] : [], open).length > 0;
+  const onTheList = useOnTheList(kept ? [kept] : []).length > 0;
 
   return (
     <div

@@ -98,12 +98,11 @@ export function useRecurringGroceryFor(groceryId: string | null): RecurringGroce
  * The ids of these Pantry foods that have a grocery still to buy. Its reader re-renders only
  * when that answer changes, not for every change to the list.
  */
-export function useOnTheList(items: readonly PantryIngredientDto[], enabled = true): string[] {
+export function useOnTheList(items: readonly PantryIngredientDto[]): string[] {
   const trpc = useTRPC();
   const rules = useSpellingRules();
   const { data = [] } = useQuery({
     ...trpc.groceries.list.queryOptions(),
-    enabled,
     select: (list) =>
       items
         .filter((item) => groceryOnTheList(list.groceries, item, rules) !== null)

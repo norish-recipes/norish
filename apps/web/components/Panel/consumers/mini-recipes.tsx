@@ -407,14 +407,12 @@ export default function MiniRecipes({ open, onOpenChange, date, slot }: MiniReci
     <>
       <Panel open={open} panelClassName="h-[80dvh]" title={title} onOpenChange={onOpenChange}>
         <Panel.Body className="flex min-h-0 flex-1 flex-col overflow-hidden">
-          {open && (
-            <MiniRecipesContent
-              date={date}
-              slot={slot}
-              onOpenChange={onOpenChange}
-              onPlanned={afterPlanning}
-            />
-          )}
+          <MiniRecipesContent
+            date={date}
+            slot={slot}
+            onOpenChange={onOpenChange}
+            onPlanned={afterPlanning}
+          />
         </Panel.Body>
       </Panel>
       {afterPlanningPanel}

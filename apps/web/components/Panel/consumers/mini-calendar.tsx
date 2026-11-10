@@ -177,13 +177,11 @@ export default function MiniCalendar({ open, onOpenChange, recipeId }: MiniCalen
         onOpenChange={onOpenChange}
       >
         <Panel.Body className="flex min-h-0 flex-1 flex-col overflow-hidden">
-          {open && (
-            <MiniCalendarContent
-              recipeId={recipeId}
-              onOpenChange={onOpenChange}
-              onPlanned={afterPlanning}
-            />
-          )}
+          <MiniCalendarContent
+            recipeId={recipeId}
+            onOpenChange={onOpenChange}
+            onPlanned={afterPlanning}
+          />
         </Panel.Body>
       </Panel>
       {afterPlanningPanel}

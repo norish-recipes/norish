@@ -113,6 +113,8 @@ export type PantryQueryResult = {
   items: PantryIngredientDto[];
   error: unknown;
   isLoading: boolean;
+  /** A read is on its way, as on a mount that rereads a copy nothing kept current. */
+  isFetching: boolean;
   /**
    * The Pantry could not be read and no earlier answer is cached: nothing is
    * known, which an empty `items` alone would misreport as nothing at home.

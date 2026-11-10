@@ -1,10 +1,10 @@
 /**
- * A panel reads and listens only while it is open: closed, it fetches nothing and mounts no
- * subscription, however many of it a page renders; open, it reads what it draws and mounts the
- * subscriptions that keep that current.
+ * A panel's content mounts only while it is open: closed, it reads and listens to nothing; open,
+ * it reads what it draws and its subscriptions keep that current, and each opening reads afresh.
  */
+import type { QueryClient } from "@tanstack/react-query";
 import type { ReactNode } from "react";
-import { useEffect } from "react";
+import { deliver, liveSubscriptions } from "@/__tests__/helpers/trpc-fake";
 import { IngredientPanel } from "@/components/ingredients/ingredient-panel";
 import MiniCookbooks from "@/components/Panel/consumers/mini-cookbooks";
 import MiniRecipes from "@/components/Panel/consumers/mini-recipes";
@@ -14,28 +14,9 @@ import { describe, expect, it, vi } from "vitest";
 
 import { createTestQueryClient, createTestWrapper } from "@norish/shared-react/platform/testing";
 
-/** The subscriptions mounted now, by procedure path, with how many mounts of each. */
-const live = vi.hoisted(() => new Map<string, number>());
-
 vi.mock("@norish/shared-react/trpc", async () =>
   (await import("@/__tests__/helpers/trpc-fake")).mockTRPC()
 );
-// Every realtime subscription is built on this one hook; here it records what is mounted.
-vi.mock("../../../../../packages/shared-react/src/realtime/use-realtime-subscription", () => ({
-  isRealtimeLagged: () => false,
-  useRealtimeSubscription: (procedure: { pathKey: () => string[][] }) => {
-    const path = procedure.pathKey()[0]!.join(".");
-
-    useEffect(() => {
-      live.set(path, (live.get(path) ?? 0) + 1);
-
-      return () => {
-        live.set(path, live.get(path)! - 1);
-        if (live.get(path) === 0) live.delete(path);
-      };
-    }, [path]);
-  },
-}));
 vi.mock("@norish/shared-react/reader", async () =>
   (await import("@/__tests__/helpers/reader-mock")).mockDevicePreferences(() => ({}), {
     reader: () => ({ user: { id: "reader" } }),
@@ -49,15 +30,6 @@ vi.mock("next-intl", () => ({
   useLocale: () => "en",
   useFormatter: () => ({ number: String, list: (items: string[]) => items.join(", ") }),
 }));
-// Drawn whatever `open` says, so what a closed panel reads is the panel's own doing.
-vi.mock("@/components/Panel/Panel", () => {
-  const Panel = ({ children }: { children: ReactNode }) => <div>{children}</div>;
-
-  Panel.Body = ({ children }: { children: ReactNode }) => <div>{children}</div>;
-  Panel.Footer = ({ children }: { children: ReactNode }) => <div>{children}</div>;
-
-  return { default: Panel, PanelPortal: ({ children }: { children: ReactNode }) => children };
-});
 
 /** A food the Ingredient panel is opened for. */
 const ONION = {
@@ -70,42 +42,63 @@ const ONION = {
   aliases: [{ id: "a-onion", text: "onion", canRemove: true }],
 };
 
+const RICE = { id: "p-rice", ingredientId: "rice", name: "rice", userId: "u2", version: 1 };
+
+const key = (path: string) => [path.split("."), { type: "query" }];
+
+/** Whether any read under `path` holds `marker` or was marked stale. */
+const touched = (queryClient: QueryClient, path: string, marker: string) =>
+  queryClient
+    .getQueryCache()
+    .findAll({ queryKey: [path.split(".")] })
+    .some(
+      (query) => query.state.isInvalidated || JSON.stringify(query.state.data).includes(marker)
+    );
+
 const PANELS: Array<{
   name: string;
   panel: (open: boolean) => ReactNode;
   reads: string[];
   subscriptions: string[];
+  /** One event of its subscriptions, and the read it lands in. */
+  event: { path: string; payload: unknown; read: string; marker: string };
 }> = [
   {
     name: "MiniGroceries",
     panel: (open) => <MiniGroceries open={open} recipeId="r1" onOpenChange={() => {}} />,
     reads: ["groceries.list", "pantry.list", "recipes.get"],
     subscriptions: ["groceries.onCreated", "pantry.onAdded", "ingredients.onChanged"],
+    event: { path: "pantry.onAdded", payload: { item: RICE }, read: "pantry.list", marker: "rice" },
   },
   {
     name: "MiniCookbooks",
     panel: (open) => <MiniCookbooks open={open} recipeIds={["r1"]} onOpenChange={() => {}} />,
     reads: ["cookbooks.editable", "cookbooks.forRecipe"],
     subscriptions: ["cookbooks.onMembershipChanged"],
+    event: { path: "cookbooks.onCreated", payload: {}, read: "cookbooks.editable", marker: "-" },
   },
   {
     name: "MiniRecipes",
     panel: (open) => <MiniRecipes date={new Date()} open={open} onOpenChange={() => {}} />,
     reads: ["recipes.getPending"],
     subscriptions: ["recipes.onCreated", "recipes.onDeleted"],
+    event: {
+      path: "recipes.onCreated",
+      payload: { recipe: { id: "r-new", name: "soup" } },
+      read: "recipes.list",
+      marker: "r-new",
+    },
   },
   {
     name: "IngredientPanel",
     panel: (open) => <IngredientPanel id="onion" item={ONION} open={open} onClose={() => {}} />,
     reads: ["groceries.list", "ingredients.aiChanges", "ingredients.nutrition", "pantry.list"],
     subscriptions: ["groceries.onCreated", "pantry.onAdded", "ingredients.onChanged"],
+    event: { path: "pantry.onAdded", payload: { item: RICE }, read: "pantry.list", marker: "rice" },
   },
 ];
 
-/**
- * The panel in a fresh cache, with every fetch it starts recorded by procedure path. Reference
- * data (`config`) is left out: the shell keeps it current on every page.
- */
+/** The panel in a fresh cache, with every fetch it starts recorded by procedure path. */
 function renderPanel(panel: (open: boolean) => ReactNode, open: boolean) {
   const queryClient = createTestQueryClient();
   const fetched = new Set<string>();
@@ -113,6 +106,7 @@ function renderPanel(panel: (open: boolean) => ReactNode, open: boolean) {
   queryClient.getQueryCache().subscribe((event) => {
     const path = (event.query.queryKey[0] as string[]).join(".");
 
+    // Reference data (`config`) is left out: the shell keeps it current on every page.
     if (event.type === "updated" && event.action.type === "fetch" && !path.startsWith("config.")) {
       fetched.add(path);
     }
@@ -122,19 +116,19 @@ function renderPanel(panel: (open: boolean) => ReactNode, open: boolean) {
   return { queryClient, fetched, rerender: (next: boolean) => view.rerender(panel(next)) };
 }
 
-describe.each(PANELS)("$name", ({ panel, reads, subscriptions }) => {
+describe.each(PANELS)("$name", ({ panel, reads, subscriptions, event }) => {
   it("reads nothing and listens to nothing while closed", () => {
     const { fetched } = renderPanel(panel, false);
 
     expect([...fetched]).toEqual([]);
-    expect([...live.keys()]).toEqual([]);
+    expect(liveSubscriptions()).toEqual([]);
   });
 
   it("reads what it draws and listens for it while open, and stops once closed again", () => {
     const { queryClient, fetched, rerender } = renderPanel(panel, true);
 
     expect([...fetched]).toEqual(expect.arrayContaining(reads));
-    expect([...live.keys()]).toEqual(expect.arrayContaining(subscriptions));
+    expect(liveSubscriptions()).toEqual(expect.arrayContaining(subscriptions));
 
     rerender(false);
     fetched.clear();
@@ -142,6 +136,43 @@ describe.each(PANELS)("$name", ({ panel, reads, subscriptions }) => {
     act(() => void queryClient.invalidateQueries());
 
     expect([...fetched]).toEqual([]);
-    expect([...live.keys()]).toEqual([]);
+    expect(liveSubscriptions()).toEqual([]);
+  });
+
+  it("applies a housemate's change while open", () => {
+    const { queryClient } = renderPanel(panel, true);
+
+    act(() => deliver(event.path, event.payload));
+
+    expect(touched(queryClient, event.read, event.marker)).toBe(true);
   });
 });
+
+/** Reads a component mounts are fetched again unless something kept them current. */
+function withMountRule(queryClient: QueryClient) {
+  queryClient.setDefaultOptions({
+    queries: { ...queryClient.getDefaultOptions().queries, staleTime: 5 * 60_000 },
+  });
+  queryClient.setQueryDefaults([], { refetchOnMount: "always" });
+}
+
+describe.each(PANELS.filter(({ name }) => name === "MiniGroceries" || name === "IngredientPanel"))(
+  "$name, opened again",
+  ({ panel }) => {
+    it("reopening refetches a read nothing kept current", async () => {
+      const { queryClient, fetched, rerender } = renderPanel(panel, true);
+
+      withMountRule(queryClient);
+      // The fake never answers: the reads end here, then are answered while open.
+      await act(() => queryClient.cancelQueries());
+      queryClient.setQueryData(key("pantry.list"), []);
+      queryClient.setQueryData(key("groceries.list"), { groceries: [], recurringGroceries: [] });
+      // A housemate's change after it closes reaches nothing.
+      rerender(false);
+      fetched.clear();
+      rerender(true);
+
+      expect([...fetched]).toEqual(expect.arrayContaining(["pantry.list", "groceries.list"]));
+    });
+  }
+);
