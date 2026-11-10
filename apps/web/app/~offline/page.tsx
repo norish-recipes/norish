@@ -1,5 +1,7 @@
 import { OfflineBootstrap } from "@/app/~offline/offline-bootstrap";
 import { GroceriesRoot } from "@/features/groceries/groceries-root";
+import { RecipeSkeleton } from "@/features/recipes/components/skeleton";
+import { RecipeScreen } from "@/features/recipes/recipe-screen";
 
 /**
  * The offline navigation fallback (ADR-0006, reworked by ADR-0009): served by
@@ -15,5 +17,11 @@ import { GroceriesRoot } from "@/features/groceries/groceries-root";
  * explicit Offline-unavailable state.
  */
 export default function OfflineFallbackPage() {
-  return <OfflineBootstrap groceries={<GroceriesRoot />} />;
+  return (
+    <OfflineBootstrap
+      groceries={<GroceriesRoot />}
+      recipe={RecipeScreen}
+      recipeSkeleton={<RecipeSkeleton />}
+    />
+  );
 }

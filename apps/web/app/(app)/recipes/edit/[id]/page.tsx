@@ -1,6 +1,6 @@
 import { headers } from "next/headers";
 import { notFound } from "next/navigation";
-import { RecipeForm } from "@/features/recipes/components/editor";
+import { RecipeEditorScreen } from "@/features/recipes/recipe-editor-screen";
 
 import { appRouter, createHttpContextFromHeaders } from "@norish/trpc/server";
 
@@ -33,5 +33,5 @@ export default async function EditRecipePage({ params }: PageProps<"/recipes/edi
     throw error;
   }
 
-  return <RecipeForm initialData={recipe} mode="edit" />;
+  return <RecipeEditorScreen initialData={recipe} mode="edit" />;
 }

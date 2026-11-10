@@ -1,5 +1,5 @@
-import { RecipeForm } from "@/features/recipes/components/editor";
+import { RecipeEditorScreen } from "@/features/recipes/recipe-editor-screen";
 
 export default function NewRecipePage() {
-  return <RecipeForm mode="create" />;
+  return <RecipeEditorScreen mode="create" />;
 }

@@ -1,6 +1,6 @@
 import type { ParsedIngredient } from "@/features/recipes/components/editor/ingredient-input";
 import type { Step } from "@/features/recipes/components/editor/step-input";
-import RecipeForm from "@/features/recipes/components/editor/recipe-form";
+import { RecipeEditorScreen } from "@/features/recipes/recipe-editor-screen";
 import { fireEvent, render, screen, waitFor } from "@testing-library/react";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 
@@ -110,7 +110,7 @@ beforeEach(() => {
 
 describe("RecipeForm servings (#684)", () => {
   it("stays empty when cleared, so a new count can be typed", () => {
-    render(<RecipeForm mode="create" />);
+    render(<RecipeEditorScreen mode="create" />);
     const servings = screen.getByLabelText("servings");
 
     fireEvent.change(servings, { target: { value: "" } });
@@ -121,7 +121,7 @@ describe("RecipeForm servings (#684)", () => {
   });
 
   it("saves the count typed after clearing", async () => {
-    render(<RecipeForm mode="create" />);
+    render(<RecipeEditorScreen mode="create" />);
     fillRequiredFields();
     const servings = screen.getByLabelText("servings");
 
@@ -135,7 +135,7 @@ describe("RecipeForm servings (#684)", () => {
   });
 
   it("opens the recipe it created", async () => {
-    render(<RecipeForm mode="create" />);
+    render(<RecipeEditorScreen mode="create" />);
     fillRequiredFields();
     fireEvent.click(screen.getByRole("button", { name: "createRecipe" }));
 
@@ -143,7 +143,7 @@ describe("RecipeForm servings (#684)", () => {
   });
 
   it("refuses to save while empty", async () => {
-    render(<RecipeForm mode="create" />);
+    render(<RecipeEditorScreen mode="create" />);
     fillRequiredFields();
 
     fireEvent.change(screen.getByLabelText("servings"), { target: { value: "" } });
@@ -190,7 +190,7 @@ describe("RecipeForm categories", () => {
   };
 
   it("offers the household's list and the recipe's own, labelling only built-ins", () => {
-    render(<RecipeForm initialData={mojito} mode="edit" />);
+    render(<RecipeEditorScreen initialData={mojito} mode="edit" />);
 
     expect(screen.getByRole("button", { name: "Breakfast" })).toBeInTheDocument();
     expect(screen.getByRole("button", { name: "Puddings" })).toHaveAttribute(
@@ -218,7 +218,7 @@ describe("RecipeForm categories", () => {
   }
 
   it("adds a typed name as a selected chip of its own", () => {
-    render(<RecipeForm initialData={mojito} mode="edit" />);
+    render(<RecipeEditorScreen initialData={mojito} mode="edit" />);
 
     addCategory("  Long   drinks ");
 
@@ -227,7 +227,7 @@ describe("RecipeForm categories", () => {
   });
 
   it("selects the existing chip for another casing, a translation or a built-in plural", () => {
-    render(<RecipeForm initialData={mojito} mode="edit" />);
+    render(<RecipeEditorScreen initialData={mojito} mode="edit" />);
 
     addCategory("puddings");
     addCategory("SNACKS");
@@ -240,7 +240,7 @@ describe("RecipeForm categories", () => {
   it.each(["Ontbijt", "breakfasts", "BREAKFAST", "Petit-déjeuner"])(
     "selects the Breakfast chip for %s in the English UI",
     (typed) => {
-      render(<RecipeForm initialData={mojito} mode="edit" />);
+      render(<RecipeEditorScreen initialData={mojito} mode="edit" />);
 
       addCategory(typed);
 
@@ -249,7 +249,7 @@ describe("RecipeForm categories", () => {
   );
 
   it("selects an existing household chip for another casing", () => {
-    render(<RecipeForm initialData={mojito} mode="edit" />);
+    render(<RecipeEditorScreen initialData={mojito} mode="edit" />);
 
     addCategory("drinks");
 
@@ -258,7 +258,7 @@ describe("RecipeForm categories", () => {
   });
 
   it("drops Breakfast on save once deselected after typing another locale's name", async () => {
-    render(<RecipeForm mode="create" />);
+    render(<RecipeEditorScreen mode="create" />);
     fillRequiredFields();
 
     fireEvent.click(screen.getByRole("button", { name: "Breakfast" }));

@@ -1,9 +1,28 @@
 "use client";
 
+import type {
+  ParsedIngredient,
+  ProvenanceFormValue,
+  RecipeGalleryMedia,
+  Step,
+} from "@/features/recipes/components/editor";
 import React, { useCallback, useMemo, useState } from "react";
 import { useRouter } from "next/navigation";
 import { ChipButton } from "@/components/shared/chip-button";
 import TagInput from "@/components/shared/tag-input";
+import {
+  buildInitialMedia,
+  EMPTY_PROVENANCE_FORM_VALUE,
+  IngredientInput,
+  MeasurementSystemSelector,
+  MediaGalleryInput,
+  ProvenanceFields,
+  SmartInputHelp,
+  SmartTextInput,
+  StepInput,
+  TimeInputs,
+  useRecipeFormDirtyState,
+} from "@/features/recipes/components/editor";
 import { EditRecipeSkeleton } from "@/features/recipes/components/skeleton";
 import { useUnsavedNavigationGuard } from "@/features/recipes/hooks";
 import { useRecipesMutations } from "@/hooks/use-recipes-mutations";
@@ -22,27 +41,13 @@ import { parseIngredientWithDefaults } from "@norish/shared/lib/helpers";
 import { createClientLogger } from "@norish/shared/lib/logger";
 import { formatUnit } from "@norish/shared/lib/unit-localization";
 
-import type { ParsedIngredient } from "./ingredient-input";
-import type { RecipeGalleryMedia } from "./media-gallery-input";
-import type { ProvenanceFormValue } from "./provenance-fields";
-import type { Step } from "./step-input";
-import IngredientInput from "./ingredient-input";
-import MeasurementSystemSelector from "./measurement-system-selector";
-import MediaGalleryInput from "./media-gallery-input";
-import ProvenanceFields, { EMPTY_PROVENANCE_FORM_VALUE } from "./provenance-fields";
-import SmartInputHelp from "./smart-input-help";
-import SmartTextInput from "./smart-text-input";
-import StepInput from "./step-input";
-import TimeInputs from "./time-inputs";
-import { buildInitialMedia, useRecipeFormDirtyState } from "./use-recipe-form-dirty-state";
-
 const log = createClientLogger("RecipeForm");
 
-export interface RecipeFormProps {
+export interface RecipeEditorScreenProps {
   mode: "create" | "edit";
   initialData?: FullRecipeDTO;
 }
-export default function RecipeForm({ mode, initialData }: RecipeFormProps) {
+export function RecipeEditorScreen({ mode, initialData }: RecipeEditorScreenProps) {
   const router = useRouter();
   const { createRecipe, updateRecipe } = useRecipesMutations();
   const locale = useLocale();

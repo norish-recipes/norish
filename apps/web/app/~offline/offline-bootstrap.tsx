@@ -1,6 +1,6 @@
 "use client";
 
-import type { ReactNode } from "react";
+import type { ComponentType, ReactNode } from "react";
 import { useEffect, useState } from "react";
 import { AppShell } from "@/app/(app)/app-shell";
 import CalendarPage from "@/app/(app)/calendar/page";
@@ -14,7 +14,13 @@ import { addBasePath, stripBasePath } from "@norish/shared/lib/base-path";
 
 const UUID_RE = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
 
-function offlineSurface(pathname: string, groceries: ReactNode) {
+interface OfflineScreens {
+  groceries: ReactNode;
+  recipe: ComponentType<{ recipeId: string }>;
+  recipeSkeleton: ReactNode;
+}
+
+function offlineSurface(pathname: string, { groceries, recipe, recipeSkeleton }: OfflineScreens) {
   const path = pathname.replace(/(?<!\/)\/+$/, "") || "/";
 
   if (path === "/") return <Dashboard />;
@@ -24,7 +30,9 @@ function offlineSurface(pathname: string, groceries: ReactNode) {
   const recipeId = /^\/recipes\/([^/]+)$/.exec(path)?.[1];
 
   if (recipeId && UUID_RE.test(recipeId)) {
-    return <OfflineRecipeDetail id={recipeId.toLowerCase()} />;
+    return (
+      <OfflineRecipeDetail Screen={recipe} id={recipeId.toLowerCase()} skeleton={recipeSkeleton} />
+    );
   }
 
   const cookbookId = /^\/cookbooks\/([^/]+)$/.exec(path)?.[1];
@@ -50,9 +58,10 @@ function offlineSurface(pathname: string, groceries: ReactNode) {
  * The worker serves this document only when a navigation failed, so the
  * reader is Offline: the last reader's cache is restored before anything
  * renders, and the first frame already carries their Device Preferences.
- * `groceries` is the groceries root, handed in by the page: only a route file imports a screen.
+ * The page hands in the groceries root, the recipe screen and its skeleton: only a route file
+ * imports a screen.
  */
-export function OfflineBootstrap({ groceries }: { groceries: ReactNode }) {
+export function OfflineBootstrap(screens: OfflineScreens) {
   const [pathname, setPathname] = useState<string | null>(null);
 
   useEffect(() => {
@@ -76,5 +85,5 @@ export function OfflineBootstrap({ groceries }: { groceries: ReactNode }) {
     );
   }
 
-  return <AppShell>{offlineSurface(pathname, groceries)}</AppShell>;
+  return <AppShell>{offlineSurface(pathname, screens)}</AppShell>;
 }

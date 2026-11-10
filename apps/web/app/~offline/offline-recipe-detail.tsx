@@ -1,9 +1,7 @@
 "use client";
 
-import RecipeDetailPage from "@/app/(app)/recipes/[id]/page";
+import type { ComponentType, ReactNode } from "react";
 import { OfflineUnavailable } from "@/app/~offline/offline-unavailable";
-import { routeParams } from "@/app/~offline/route-params";
-import { RecipeSkeleton } from "@/features/recipes/components/skeleton";
 import { offlineEngine } from "@/lib/offline/engine";
 import { useQueryClient } from "@tanstack/react-query";
 
@@ -12,20 +10,28 @@ import { useTRPC } from "@norish/shared-react/trpc";
 
 /**
  * Warmed-gated recipe detail for the offline bootstrap (ADR-0009): a recipe
- * inside the Warm Set renders through the normal detail page (its queries
+ * inside the Warm Set renders through the recipe screen (its queries
  * read the restored cache); an id outside it gets the explicit
  * Offline-unavailable state instead of an endless skeleton. The verdict
  * waits for the persisted cache restore — before that, absence only means
  * "not hydrated yet".
  */
-export function OfflineRecipeDetail({ id }: { id: string }) {
+export function OfflineRecipeDetail({
+  id,
+  Screen,
+  skeleton,
+}: {
+  id: string;
+  Screen: ComponentType<{ recipeId: string }>;
+  skeleton: ReactNode;
+}) {
   const trpc = useTRPC();
   const queryClient = useQueryClient();
 
   const owner = useCacheOwner(offlineEngine.cache);
 
   if (!owner) {
-    return <RecipeSkeleton />;
+    return skeleton;
   }
 
   const warmed = queryClient.getQueryData(trpc.recipes.get.queryOptions({ id }).queryKey);
@@ -34,5 +40,5 @@ export function OfflineRecipeDetail({ id }: { id: string }) {
     return <OfflineUnavailable />;
   }
 
-  return <RecipeDetailPage params={routeParams(id)} />;
+  return <Screen recipeId={id} />;
 }

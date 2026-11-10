@@ -25,7 +25,13 @@ vi.mock("@/app/(app)/calendar/page", () => ({
 }));
 
 vi.mock("@/app/~offline/offline-recipe-detail", () => ({
-  OfflineRecipeDetail: ({ id }: { id: string }) => <div>recipe-surface:{id}</div>,
+  OfflineRecipeDetail: ({
+    id,
+    Screen,
+  }: {
+    id: string;
+    Screen: (props: { recipeId: string }) => React.ReactNode;
+  }) => <Screen recipeId={id} />,
 }));
 
 vi.mock("@/app/~offline/offline-unavailable", () => ({
@@ -34,7 +40,13 @@ vi.mock("@/app/~offline/offline-unavailable", () => ({
 
 function renderPath(pathname: string) {
   window.history.replaceState(null, "", pathname);
-  render(<OfflineBootstrap groceries={<div>groceries-surface</div>} />);
+  render(
+    <OfflineBootstrap
+      groceries={<div>groceries-surface</div>}
+      recipe={({ recipeId }) => <div>recipe-surface:{recipeId}</div>}
+      recipeSkeleton={null}
+    />
+  );
 }
 
 describe("OfflineBootstrap", () => {
