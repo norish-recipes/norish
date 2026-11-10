@@ -5,7 +5,7 @@ import { createStore } from "zustand";
 
 import type { MeasurementSystem } from "@norish/shared/contracts";
 
-import { createPageStoreContext } from "../platform/page-store";
+import { createPageStoreContext } from "./page-store";
 
 /** A conversion the reader asked for, and the recipe version it was asked on. */
 export type RecipeConversion = { target: MeasurementSystem; withAI: boolean; version: number };
