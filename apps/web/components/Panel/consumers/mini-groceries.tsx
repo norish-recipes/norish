@@ -28,6 +28,7 @@ import {
   formatServings,
   useLinkedRecipeIngredients,
   useRecipeIngredients,
+  useRecipeSubscription,
   useServingsScaler,
 } from "@norish/shared-react/recipes";
 import { foodsToBuy } from "@norish/shared/lib/line-foods";
@@ -274,6 +275,7 @@ function MiniGroceriesContent({
   } = useLinesToBuy(recipeId, originalServings, initialServings, editedIngredients);
 
   useGroceriesPantryAndCatalogueSubscriptions();
+  useRecipeSubscription(recipeId);
   useIngredientIcons(scaledIngredients.map((item) => item.ingredientId));
 
   const hasInitializedRef = useRef(false);

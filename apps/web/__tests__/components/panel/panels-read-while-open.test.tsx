@@ -4,12 +4,12 @@
  */
 import type { QueryClient } from "@tanstack/react-query";
 import type { ReactNode } from "react";
-import { deliver, liveSubscriptions } from "@/__tests__/helpers/trpc-fake";
+import { deliver, fakeProcedure, liveSubscriptions } from "@/__tests__/helpers/trpc-fake";
 import { IngredientPanel } from "@/components/ingredients/ingredient-panel";
 import MiniCookbooks from "@/components/Panel/consumers/mini-cookbooks";
 import MiniGroceries from "@/components/Panel/consumers/mini-groceries";
 import MiniRecipes from "@/components/Panel/consumers/mini-recipes";
-import { act, render } from "@testing-library/react";
+import { act, render, screen } from "@testing-library/react";
 import { describe, expect, it, vi } from "vitest";
 
 import { createTestQueryClient, createTestWrapper } from "@norish/shared-react/platform/testing";
@@ -67,7 +67,12 @@ const PANELS: Array<{
     name: "MiniGroceries",
     panel: (open) => <MiniGroceries open={open} recipeId="r1" onOpenChange={() => {}} />,
     reads: ["groceries.list", "pantry.list", "recipes.get"],
-    subscriptions: ["groceries.onCreated", "pantry.onAdded", "ingredients.onChanged"],
+    subscriptions: [
+      "groceries.onCreated",
+      "pantry.onAdded",
+      "ingredients.onChanged",
+      "recipes.onUpdated",
+    ],
     event: { path: "pantry.onAdded", payload: { item: RICE }, read: "pantry.list", marker: "rice" },
   },
   {
@@ -176,3 +181,40 @@ describe.each(PANELS.filter(({ name }) => name === "MiniGroceries" || name === "
     });
   }
 );
+
+describe("MiniGroceries, open on a recipe", () => {
+  const line = (name: string) => ({
+    id: `l-${name}`,
+    ingredientId: `i-${name}`,
+    ingredientName: name,
+    amount: 1,
+    unit: null,
+    systemUsed: "metric",
+    order: 0,
+  });
+  const recipe = (name: string) => ({
+    id: "r1",
+    name: "stew",
+    version: 1,
+    systemUsed: "metric",
+    recipeIngredients: [line(name)],
+  });
+
+  it("shows a housemate's change to the recipe's lines", async () => {
+    const queryClient = createTestQueryClient();
+
+    queryClient.setQueryData(fakeProcedure("recipes.get").queryKey({ id: "r1" }), recipe("butter"));
+    queryClient.setQueryData(key("pantry.list"), []);
+    queryClient.setQueryData(key("groceries.list"), { groceries: [], recurringGroceries: [] });
+    render(<MiniGroceries open recipeId="r1" onOpenChange={() => {}} />, {
+      wrapper: createTestWrapper(queryClient),
+    });
+
+    expect(screen.getAllByText(/butter/).length).toBeGreaterThan(0);
+
+    act(() => deliver("recipes.onUpdated", { recipe: { ...recipe("milk"), version: 2 } }));
+
+    expect(await screen.findAllByText(/milk/)).not.toEqual([]);
+    expect(screen.queryAllByText(/butter/)).toEqual([]);
+  });
+});

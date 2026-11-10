@@ -101,6 +101,7 @@ vi.mock("@/components/ingredients/ingredient-icon", () => ({
 }));
 vi.mock("@norish/shared-react/recipes", async (importOriginal) => ({
   ...(await importOriginal<typeof import("@norish/shared-react/recipes")>()),
+  useRecipeSubscription: () => undefined,
   useRecipeIngredients: () => ({
     ingredients: [...INGREDIENTS, ...linkedLines],
     systemUsed: "metric",
