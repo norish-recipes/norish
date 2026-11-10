@@ -78,10 +78,12 @@ Web and mobile use the same layout. Web keeps its folders at the root of
 Imports run one way: shared folders, then features, then routes. The one way
 back is shared code opening a panel through a feature's `index.ts`.
 
-On web and in shared-react only `groceries` has moved so far. `library`,
-`recipes`, `cookbooks`, `calendar`, `settings`, `imports`, `auth` and `share`
-still live in web's `components/`, `hooks/`, `context/` and `stores/`, and in
-shared-react's `hooks/` and `contexts/`.
+On web only `groceries` has moved so far. `library`, `recipes`, `cookbooks`,
+`calendar`, `settings`, `imports`, `auth` and `share` still live in web's
+`components/`, `hooks/`, `context/` and `stores/`. In shared-react the recipe
+domain is in `src/recipes/` and the Reader in `src/reader/`, next to
+`groceries`. What calendar, settings, imports and the Library still use stays
+in shared-react's `hooks/` and `contexts/`.
 
 ### In shared-react
 
