@@ -1,4 +1,4 @@
-import { useContainerColumns } from "@/hooks/use-container-columns";
+import { useContainerColumns } from "@/features/library/hooks/use-container-columns";
 import { useIsMobile } from "@/hooks/use-is-mobile";
 import { act, renderHook } from "@testing-library/react";
 import { hydrateRoot } from "react-dom/client";

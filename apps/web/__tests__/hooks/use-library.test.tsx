@@ -1,5 +1,5 @@
 import type { ReactNode } from "react";
-import { useLibraryList } from "@/hooks/use-library";
+import { useLibraryList } from "@/features/library/hooks/use-library";
 import { act, renderHook } from "@testing-library/react";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 

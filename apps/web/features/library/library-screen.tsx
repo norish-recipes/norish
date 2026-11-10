@@ -12,7 +12,7 @@ import {
 } from "@/features/library/components/header";
 import { RecipeSelectionBar } from "@/features/library/components/selection";
 import { RecipeGridSkeleton } from "@/features/library/components/skeleton";
-import { useLibraryList } from "@/hooks/use-library";
+import { useLibraryList } from "@/features/library/hooks";
 import { Tabs } from "@heroui/react";
 
 const LIBRARY_HEADING_ID = "recipe-library-heading";

@@ -1,9 +1,9 @@
 "use client";
 
-import type { LibraryGridItem } from "@/lib/library-items";
+import type { LibraryGridItem } from "@/features/library/lib/library-items";
 import { useMemo } from "react";
 import { RecipeCardSkeleton } from "@/features/library/components/skeleton";
-import { useLibraryCards, useLibraryList } from "@/hooks/use-library";
+import { useLibraryCards, useLibraryList } from "@/features/library/hooks";
 
 import type { SelectedRecipe } from "@norish/shared-react/recipes";
 import type { RecipeViewMode } from "@norish/shared/contracts/zod/device-preferences";

@@ -1,8 +1,8 @@
 "use client";
 
 import React, { useState } from "react";
+import { useLibraryList } from "@/features/library/hooks";
 import { useAutoHide } from "@/hooks/auto-hide";
-import { useLibraryList } from "@/hooks/use-library";
 import { useActionBarStore } from "@/lib/action-bar";
 import { Button } from "@heroui/react";
 import { AnimatePresence, motion } from "motion/react";

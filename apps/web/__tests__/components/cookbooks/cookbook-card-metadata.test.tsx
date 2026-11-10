@@ -29,7 +29,9 @@ vi.mock("@/features/library/components/cookbooks/cookbook-panels", () => ({
   CookbookEditPanel: () => null,
   DeleteCookbookModal: () => null,
 }));
-vi.mock("@/hooks/use-mounted-once-opened", () => ({ useMountedOnceOpened: () => false }));
+vi.mock("@/features/library/hooks/use-mounted-once-opened", () => ({
+  useMountedOnceOpened: () => false,
+}));
 vi.mock("@/features/library/components/grid/swipable-row", () => ({
   default: forwardRef(function SwipeableRowMock(
     { children }: { children?: ReactNode },

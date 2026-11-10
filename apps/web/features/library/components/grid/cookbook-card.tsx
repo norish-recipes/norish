@@ -10,7 +10,7 @@ import {
   CookbookEditPanel,
   DeleteCookbookModal,
 } from "@/features/library/components/cookbooks";
-import { useMountedOnceOpened } from "@/hooks/use-mounted-once-opened";
+import { useMountedOnceOpened } from "@/features/library/hooks";
 import { withOrigin } from "@/lib/back-destination";
 import {
   EllipsisHorizontalIcon,

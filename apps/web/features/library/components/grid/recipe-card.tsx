@@ -13,7 +13,7 @@ import DoubleTapContainer from "@/components/shared/double-tap-container";
 import HeartButton from "@/components/shared/heart-button";
 import SmartMarkdownRenderer from "@/components/shared/smart-markdown-renderer";
 import { useRecipeLeaving } from "@/features/library/components/selection";
-import { useMountedOnceOpened } from "@/hooks/use-mounted-once-opened";
+import { useMountedOnceOpened } from "@/features/library/hooks";
 import { useRecipePrefetch } from "@/hooks/use-recipe-prefetch";
 import { useHiddenItemVisibility } from "@/hooks/user/use-hidden-item-visibility";
 import { withOrigin } from "@/lib/back-destination";
