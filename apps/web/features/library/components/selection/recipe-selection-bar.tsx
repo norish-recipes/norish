@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
-import { MiniCookbooks } from "@/components/Panel/consumers";
+import MiniCookbooks from "@/components/Panel/consumers/mini-cookbooks";
 import { DeleteRecipeModal } from "@/components/shared/delete-recipe-modal";
 import { useRecipesMutations } from "@/hooks/use-recipes-mutations";
 import { showActionToast } from "@/lib/ui/action-toast";

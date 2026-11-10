@@ -136,8 +136,8 @@ vi.mock("@/features/recipes/components/page/servings-control", () => ({
 vi.mock("@/features/recipes/components/page/steps-list", () => ({
   default: () => <div data-testid="steps-list" />,
 }));
-vi.mock("@/components/Panel/consumers", () => ({
-  MiniCookbooks: () => null,
+vi.mock("@/components/Panel/consumers/mini-cookbooks", () => ({
+  default: () => null,
 }));
 
 const recipeCookbooks = vi.hoisted(() => ({

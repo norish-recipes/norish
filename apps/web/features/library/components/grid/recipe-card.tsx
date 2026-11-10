@@ -4,7 +4,7 @@ import type { MouseEvent } from "react";
 import { memo, useCallback, useEffect, useMemo, useRef, useState } from "react";
 import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
-import { MiniCalendar } from "@/components/Panel/consumers";
+import MiniCalendar from "@/components/Panel/consumers/mini-calendar";
 import MiniGroceries from "@/components/Panel/consumers/mini-groceries";
 import OriginFlag from "@/components/recipes/origin-flag";
 import { isCheckboxEvent, RoundCheckbox } from "@/components/round-checkbox";

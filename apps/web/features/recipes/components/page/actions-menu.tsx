@@ -3,7 +3,8 @@
 import React, { useMemo } from "react";
 import { useRouter } from "next/navigation";
 import { CookbookIconSolid } from "@/components/cookbooks/cookbook-icon";
-import { MiniCalendar, MiniCookbooks } from "@/components/Panel/consumers";
+import MiniCalendar from "@/components/Panel/consumers/mini-calendar";
+import MiniCookbooks from "@/components/Panel/consumers/mini-cookbooks";
 import MiniGroceries from "@/components/Panel/consumers/mini-groceries";
 import { DeleteRecipeModal } from "@/components/shared/delete-recipe-modal";
 import { useRecipeEnrichment } from "@/features/recipes/hooks";

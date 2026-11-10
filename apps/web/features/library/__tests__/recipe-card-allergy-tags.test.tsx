@@ -27,8 +27,8 @@ vi.mock("@/hooks/user/use-hidden-item-visibility", () => ({
   useHiddenItemVisibility: () => ({ showRatings: true, showFavorites: true }),
 }));
 
-vi.mock("@/components/Panel/consumers", () => ({
-  MiniCalendar: () => null,
+vi.mock("@/components/Panel/consumers/mini-calendar", () => ({
+  default: () => null,
 }));
 vi.mock("@/components/Panel/consumers/mini-groceries", () => ({
   default: () => null,

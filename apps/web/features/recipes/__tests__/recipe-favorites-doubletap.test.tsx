@@ -48,8 +48,8 @@ const stubRecipe = {
   systemUsed: null,
 };
 
-vi.mock("@/components/Panel/consumers", () => ({
-  MiniCookbooks: () => null,
+vi.mock("@/components/Panel/consumers/mini-cookbooks", () => ({
+  default: () => null,
 }));
 
 // The worked-out total reads the server; these pages are about their layout.
