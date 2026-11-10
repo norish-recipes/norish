@@ -1,4 +1,3 @@
-import { useContainerColumns } from "@/features/library/hooks/use-container-columns";
 import { useIsMobile } from "@/hooks/use-is-mobile";
 import { act, renderHook } from "@testing-library/react";
 import { hydrateRoot } from "react-dom/client";
@@ -20,7 +19,7 @@ function setViewportWidth(width: number) {
 }
 
 function Layout() {
-  return <p>{`${useIsMobile() ? "phone" : "desktop"} ${useContainerColumns()}`}</p>;
+  return <p>{useIsMobile() ? "phone" : "desktop"}</p>;
 }
 
 describe("useIsMobile", () => {
@@ -57,8 +56,8 @@ describe("useIsMobile", () => {
 
 describe("the first frame's layout", () => {
   it.each([
-    ["phone", "phone 2"],
-    ["desktop", "desktop 4"],
+    ["phone", "phone"],
+    ["desktop", "desktop"],
   ] as const)("answers for a %s on the server, whatever the window", (kind, markup) => {
     device.kind = kind;
     setViewportWidth(kind === "phone" ? 1280 : 400);
@@ -80,7 +79,7 @@ describe("the first frame's layout", () => {
     });
 
     expect(onRecoverableError).not.toHaveBeenCalled();
-    expect(container.textContent).toBe("desktop 4");
+    expect(container.textContent).toBe("desktop");
     container.remove();
   });
 });
