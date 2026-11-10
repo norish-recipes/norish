@@ -57,14 +57,17 @@ Web and mobile use the same layout. Web keeps its folders at the root of
   route file also does the server-only work: seeding the cache, metadata and
   params.
 - `features/<feature>/` holds one domain's screens, components, hooks and
-  helpers. Each feature is a domain: `library`, `recipes`, `cookbooks`,
-  `groceries`, `calendar`, `imports`, `settings`, `auth` and `share`.
+  helpers. Each feature is a domain: `library` (with the cookbook page),
+  `recipes` (with the shared recipe page), `groceries`, `calendar`, `imports`,
+  `settings` and `auth`.
 - A feature groups its `components/` by area, and each area has an `index.ts`
   that screens and other areas import. Groceries has `header/`, `list/`,
-  `panels/`, `pantry/` and `stores/`.
+  `panels/`, `pantry/` and `stores/`. Recipes has `page/`, `share/`, `editor/`,
+  `read-only/`, `media/` and `skeleton/`.
 - A feature's `index.ts` exports only the panels other features open, such as
   `MiniGroceries`. Shared code may import that `index.ts` and nothing deeper.
   Only route files import a feature's other files. Lint enforces this.
+  `recipes` opens no panel for another feature, so it has no `index.ts`.
 - A feature's tests sit in one flat `features/<feature>/__tests__/` folder.
 - One root draws the views that share a layout.
   `app/(app)/groceries/layout.tsx` renders `GroceriesRoot`, which holds the
@@ -78,12 +81,12 @@ Web and mobile use the same layout. Web keeps its folders at the root of
 Imports run one way: shared folders, then features, then routes. The one way
 back is shared code opening a panel through a feature's `index.ts`.
 
-On web only `groceries` has moved so far. `library`, `recipes`, `cookbooks`,
-`calendar`, `settings`, `imports`, `auth` and `share` still live in web's
-`components/`, `hooks/`, `context/` and `stores/`. In shared-react the recipe
-domain is in `src/recipes/` and the Reader in `src/reader/`, next to
-`groceries`. What calendar, settings, imports and the Library still use stays
-in shared-react's `hooks/` and `contexts/`.
+On web `groceries` and `recipes` have moved so far. `library`, `calendar`,
+`settings`, `imports` and `auth` still live in web's `components/`, `hooks/`,
+`context/` and `stores/`. In shared-react the recipe domain is in
+`src/recipes/` and the Reader in `src/reader/`, next to `groceries`. What
+calendar, settings, imports and the Library still use stays in shared-react's
+`hooks/` and `contexts/`.
 
 ### In shared-react
 
