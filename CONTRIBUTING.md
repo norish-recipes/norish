@@ -170,10 +170,10 @@ Always use the `@/` path alias for imports:
 
 ```typescript
 // Good
-import { useRecipesContext } from "@/context/recipes-context";
+import { useLibraryList } from "@/hooks/use-library";
 
 // Bad
-import { useRecipesContext } from "../../../context/recipes-context";
+import { useLibraryList } from "../../../hooks/use-library";
 ```
 
 ### Type Safety
