@@ -51,7 +51,7 @@ const context = createRecipesContext({
   }),
   useFavoritesQuery: () => ({ favoriteIds: [], isFavorite: () => false, isLoading: false }),
   useFavoritesMutation: () => ({ toggleFavorite: vi.fn() }),
-  useUserAllergiesQuery: () => ({ allergies: [] }),
+  useActiveAllergies: () => ({ allergies: [] }),
   useRecipesSubscription: () => {},
   useToastAdapter: () => ({ show: vi.fn(), translate: () => "" }),
   useNavigationAdapter: () => ({ toHome: vi.fn(), toRecipe: vi.fn() }),

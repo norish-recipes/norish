@@ -69,7 +69,7 @@ type CreateRecipesContextOptions = {
   >;
   useFavoritesQuery: () => Pick<FavoritesQueryResult, "favoriteIds" | "isFavorite" | "isLoading">;
   useFavoritesMutation: () => Pick<FavoritesMutationResult, "toggleFavorite">;
-  useUserAllergiesQuery: () => { allergies: string[] };
+  useActiveAllergies: () => { allergies: string[] };
   useRecipesSubscription: (callbacks?: RecipesSubscriptionCallbacks) => void;
   useRatingsSubscription?: (callbacks?: RatingsSubscriptionCallbacks) => void;
   useToastAdapter: () => RecipeToastAdapter;
@@ -83,7 +83,7 @@ export function createRecipesContext({
   useRecipesMutations,
   useFavoritesQuery,
   useFavoritesMutation,
-  useUserAllergiesQuery,
+  useActiveAllergies,
   useRecipesSubscription,
   useRatingsSubscription,
   useToastAdapter,
@@ -134,7 +134,7 @@ export function createRecipesContext({
     } = useRecipesMutations();
     const { favoriteIds, isFavorite, isLoading: isFavoritesLoading } = useFavoritesQuery();
     const { toggleFavorite } = useFavoritesMutation();
-    const { allergies } = useUserAllergiesQuery();
+    const { allergies } = useActiveAllergies();
 
     const importToasts = useMemo(() => createRecipeImportToasts(toastAdapter), [toastAdapter]);
     const subscriptionToasts = useMemo(
