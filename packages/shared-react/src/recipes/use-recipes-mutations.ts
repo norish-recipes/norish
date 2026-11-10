@@ -33,9 +33,9 @@ type ImportMutationContext = {
 };
 
 type CreateMutationContext = {
+  recipeId?: string;
   detailQueryKey?: QueryKey;
   previousDetail?: FullRecipeDTO | null | undefined;
-  previousRecipeLists?: [QueryKey, InfiniteRecipeData | undefined][];
 };
 
 type DeleteMutationContext = {
@@ -430,16 +430,13 @@ export function useRecipesMutations(
         ]);
 
         const previousDetail = queryClient.getQueryData<FullRecipeDTO | null>(detailQueryKey);
-        const previousRecipeLists = queryClient.getQueriesData<InfiniteRecipeData>({
-          queryKey: recipesPath,
-        });
 
         queryClient.setQueryData<FullRecipeDTO | null>(detailQueryKey, optimisticRecipe);
         setAllRecipesData((previousData) =>
           addRecipeToLists(previousData, createOptimisticDashboardRecipe(optimisticRecipe))
         );
 
-        return { detailQueryKey, previousDetail, previousRecipeLists };
+        return { recipeId: optimisticRecipe.id, detailQueryKey, previousDetail };
       },
       onError: (error, _variables, context) => {
         onError?.(error, "create");
@@ -447,13 +444,23 @@ export function useRecipesMutations(
         if (!shouldPreserveOptimisticUpdate(error)) {
           const createContext = context as CreateMutationContext | undefined;
 
-          if (createContext?.detailQueryKey) {
-            queryClient.setQueryData(createContext.detailQueryKey, createContext.previousDetail);
-            queryClient.invalidateQueries({ queryKey: createContext.detailQueryKey });
+          const { detailQueryKey, previousDetail } = createContext ?? {};
+
+          // Setting undefined is a no-op, so a detail that was not there is removed.
+          if (detailQueryKey && previousDetail === undefined) {
+            queryClient.removeQueries({ queryKey: detailQueryKey, exact: true });
+          } else if (detailQueryKey) {
+            queryClient.setQueryData(detailQueryKey, previousDetail);
+            queryClient.invalidateQueries({ queryKey: detailQueryKey });
           }
 
-          if (createContext?.previousRecipeLists) {
-            restoreRecipeLists(queryClient, createContext.previousRecipeLists);
+          // Its own row only: a snapshot would bring back an overlapping create's row.
+          const { recipeId } = createContext ?? {};
+
+          if (recipeId) {
+            setAllRecipesData((previousData) =>
+              removeRecipesFromLists(previousData, new Set([recipeId]))
+            );
           }
 
           invalidate();
