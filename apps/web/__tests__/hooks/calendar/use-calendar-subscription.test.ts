@@ -60,6 +60,15 @@ vi.mock("@norish/shared-react/trpc", () => ({
         },
       },
     },
+    recipes: {
+      onUpdated: {
+        subscriptionOptions: (_input: unknown, options: { onData: SubscriptionCallback }) => {
+          subscriptionCallbacks["recipes.onUpdated"] = options?.onData;
+
+          return { enabled: true };
+        },
+      },
+    },
   }),
 }));
 
@@ -650,6 +659,30 @@ describe("useCalendarSubscription", () => {
       expect(invalidateSpy).toHaveBeenCalledWith({
         queryKey: getQueryKey(),
       });
+    });
+  });
+
+  describe("recipes.onUpdated subscription", () => {
+    it("rereads every cached range when a planned recipe is renamed", () => {
+      const invalidateSpy = vi.spyOn(queryClient, "invalidateQueries");
+
+      renderSubscriptionHook();
+      subscriptionCallbacks["recipes.onUpdated"]!(
+        trackedEvent({ recipe: { id: "recipe-123", name: "Renamed" } })
+      );
+
+      expect(invalidateSpy).toHaveBeenCalledWith({ queryKey: [["calendar", "listItems"]] });
+    });
+
+    it("leaves the calendar alone for an enrichment", () => {
+      const invalidateSpy = vi.spyOn(queryClient, "invalidateQueries");
+
+      renderSubscriptionHook();
+      subscriptionCallbacks["recipes.onUpdated"]!(
+        trackedEvent({ recipe: { id: "recipe-123" }, source: "enrichment" })
+      );
+
+      expect(invalidateSpy).not.toHaveBeenCalled();
     });
   });
 });

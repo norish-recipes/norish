@@ -1,6 +1,9 @@
+import { useQueryClient } from "@tanstack/react-query";
+
 import type { PlannedItemFromQuery } from "@norish/shared/contracts";
 import type { CalendarRealtime } from "@norish/shared/contracts/realtime/calendar";
 import type { EventName, PayloadOf } from "@norish/shared/contracts/realtime/catalogue";
+import type { RecipesRealtime } from "@norish/shared/contracts/realtime/recipes";
 
 import type { CalendarCacheHelpers, CreateCalendarHooksOptions } from "./types";
 import { useRealtimeSubscription } from "../../realtime/use-realtime-subscription";
@@ -20,6 +23,7 @@ export function createUseCalendarSubscription({
     "use memo";
 
     const trpc = useTRPC();
+    const queryClient = useQueryClient();
     const { setCalendarData, invalidate, upsertItemAcrossRanges, removeItemAcrossRanges } =
       useCalendarCacheHelpers(startISO, endISO);
 
@@ -106,6 +110,16 @@ export function createUseCalendarSubscription({
       ...lag,
       onEvent: () => {
         invalidate();
+      },
+    });
+
+    // A planned recipe shows its recipe's name and image in every cached range; an
+    // enrichment changes neither.
+    useRealtimeSubscription<PayloadOf<RecipesRealtime, "updated">>(trpc.recipes.onUpdated, {
+      ...lag,
+      onEvent: ({ source }) => {
+        if (source === "enrichment") return;
+        void queryClient.invalidateQueries({ queryKey: trpc.calendar.listItems.queryKey() });
       },
     });
   };
