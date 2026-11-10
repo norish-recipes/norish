@@ -1,6 +1,7 @@
 import { describe, expect, it } from "vitest";
 
-import { createUnitFormatter, useServingsScaler } from "@norish/shared-react/hooks";
+import { createUnitFormatter } from "@norish/shared-react/hooks";
+import { useServingsScaler } from "@norish/shared-react/recipes";
 
 describe("hooks exports", () => {
   it("exports moved shared hooks", () => {

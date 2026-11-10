@@ -6,10 +6,8 @@ import { createRoot } from "react-dom/client";
 import { afterEach, describe, expect, it, vi } from "vitest";
 
 import type { RecipeShareSummaryDto } from "@norish/shared/contracts";
-import { createRecipeHooks } from "@norish/shared-react/hooks";
 import * as recipes from "@norish/shared-react/recipes";
 
-import type { CreateRecipeHooksOptions } from "../../hooks/recipes/types";
 import { trackedEvent } from "../../../__tests__/realtime/tracked-event";
 
 const useSubscriptionMock = vi.hoisted(() => vi.fn());
@@ -125,17 +123,6 @@ afterEach(() => {
 });
 
 describe("recipe share hooks", () => {
-  it("the recipe hook factory hands back the plain share hooks", () => {
-    const hooks = createRecipeHooks({
-      useTRPC: () => trpc as unknown as ReturnType<CreateRecipeHooksOptions["useTRPC"]>,
-    });
-
-    expect(hooks.shares.useRecipeSharesQuery).toBe(recipes.useRecipeSharesQuery);
-    expect(hooks.shares.useRecipeShareMutations).toBe(recipes.useRecipeShareMutations);
-    expect(hooks.shares.useRecipeShareSubscription).toBe(recipes.useRecipeShareSubscription);
-    expect(hooks.shares.useSharedRecipeQuery).toBe(recipes.useSharedRecipeQuery);
-  });
-
   it("reads a recipe's shares from the cache", () => {
     const queryClient = new QueryClient();
     const shares = [createMockShare({ recipeId: "recipe-1" })];
