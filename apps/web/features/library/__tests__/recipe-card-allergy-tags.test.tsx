@@ -43,7 +43,6 @@ vi.mock("@/features/library/components/grid/recipe-metadata", () => ({ default: 
 vi.mock("@/features/library/components/grid/recipe-tags", () => ({ default: () => null }));
 
 vi.mock("@/components/shared/delete-recipe-modal", () => ({ DeleteRecipeModal: () => null }));
-vi.mock("@/components/shared/delete-recipe-modal", () => ({ DeleteRecipeModal: () => null }));
 vi.mock("@/components/shared/double-tap-container", () => ({
   default: ({ children }: { children?: React.ReactNode }) => <div>{children}</div>,
 }));
