@@ -201,11 +201,18 @@ describe("the recipe list events and recipe outcomes", () => {
   });
 
   it("rereads only the Categories for an update that is not an enrichment", () => {
+    const calendarKey = [
+      ["calendar", "listItems"],
+      { input: { startISO: "2026-01-01", endISO: "2026-01-07" }, type: "query" },
+    ];
+
+    queryClient.setQueryData(CATEGORIES_KEY, { categories: [], builtInAliases: {} });
+    queryClient.setQueryData(calendarKey, []);
     emit("onUpdated", { recipe: fullRecipe({ name: "Renamed" }) });
 
+    expect(queryClient.getQueryState(CATEGORIES_KEY)?.isInvalidated).toBe(true);
     // The calendar listens for renames itself.
-    expect(invalidateQueries).toHaveBeenCalledTimes(1);
-    expect(invalidateQueries).toHaveBeenCalledWith({ queryKey: CATEGORIES_KEY });
+    expect(queryClient.getQueryState(calendarKey)?.isInvalidated).toBe(false);
   });
 
   it.each(["onCreated", "onDeleted"])(
