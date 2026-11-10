@@ -208,12 +208,8 @@ function kindsChangedSince(
 }
 
 /**
- * One hook for every Recipe Enrichment kind: its states and its requests.
- *
- * The combined status query is the authoritative initial and recovery read;
- * `useRecipeEnrichmentSubscription`, mounted once by the page, writes lifecycle
- * events into that cache, so a success needs no refetch and there is no polling.
- * `onManualError` here hears a rejected request.
+ * Every enrichment kind's state from the status query, which the page's subscription
+ * keeps current, and its requests; `onManualError` hears a rejected request.
  */
 export function useRecipeEnrichment(
   recipeId: string | null,
@@ -314,9 +310,8 @@ export function useRecipeEnrichment(
 }
 
 /**
- * A recipe's enrichment lifecycle events, written into its status cache. Mounted
- * once per page, so each event is applied and each failure reported once;
- * `onManualError` hears the reader's own manual runs that failed.
+ * Writes a recipe's enrichment events into its status cache; mounted once per page, so
+ * `onManualError` hears each of the reader's failed manual runs once.
  */
 export function useRecipeEnrichmentSubscription(
   recipeId: string | null,
