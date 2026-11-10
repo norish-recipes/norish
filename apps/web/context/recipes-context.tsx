@@ -1,6 +1,5 @@
 "use client";
 
-import { useCallback, useMemo } from "react";
 import { useRecipesFiltersContext } from "@/context/recipes-filters-context";
 import { useRecipesMutations } from "@/hooks/use-recipes-mutations";
 
@@ -18,11 +17,8 @@ import {
   useRecipesSubscription,
 } from "@norish/shared-react/recipes";
 
-/**
- * The context's list, read from the Library union: the dashboard reads one
- * list for both kinds (ADR-0026), and both callers pass the same filters, so
- * they share one cache entry and one request. `total` counts both kinds.
- */
+// The recipes out of the Library union (ADR-0026); both callers pass the same filters,
+// so they share one cache entry. `total` counts both kinds.
 function useLibraryRecipesQuery(
   filters: RecipeFilters & { favoritesOnly?: boolean } = {},
   options: { enabled?: boolean } = {}
@@ -32,10 +28,7 @@ function useLibraryRecipesQuery(
   const { addPendingRecipe, removePendingRecipe, setAllRecipesData, invalidate } =
     useRecipesCacheHelpers();
 
-  const recipes = useMemo(
-    () => library.items.flatMap((item) => (item.kind === "recipe" ? [item.recipe] : [])),
-    [library.items]
-  );
+  const recipes = library.items.flatMap((item) => (item.kind === "recipe" ? [item.recipe] : []));
 
   return {
     recipes,
@@ -51,9 +44,9 @@ function useLibraryRecipesQuery(
     removePendingRecipe,
     setRecipesData: setAllRecipesData,
     setAllRecipesData,
-    invalidate: useCallback(async () => {
+    invalidate: async () => {
       invalidate();
-    }, [invalidate]),
+    },
   };
 }
 
