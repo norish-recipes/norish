@@ -3,7 +3,13 @@
 import { useSyncExternalStore } from "react";
 import { useHiddenItemVisibility } from "@/hooks/user/use-hidden-item-visibility";
 import { iconIds } from "@/lib/ingredient-icon-ids";
-import { matchQuery, useQueries, useQuery, useQueryClient } from "@tanstack/react-query";
+import {
+  matchQuery,
+  notifyManager,
+  useQueries,
+  useQuery,
+  useQueryClient,
+} from "@tanstack/react-query";
 import { useDebounceValue } from "usehooks-ts";
 
 import { useTRPC } from "@norish/shared-react/trpc";
@@ -49,9 +55,12 @@ function useCachedIconAddress(ingredientId: string): string | null | undefined {
   const trpc = useTRPC();
   const queryCache = useQueryClient().getQueryCache();
   const subscribe = (onChange: () => void) =>
-    queryCache.subscribe(({ query }) => {
-      if (matchQuery({ queryKey: trpc.ingredients.icons.pathKey() }, query)) onChange();
-    });
+    // Batched as TanStack's observers are, so a change made during a render notifies after it.
+    queryCache.subscribe(
+      notifyManager.batchCalls(({ query }) => {
+        if (matchQuery({ queryKey: trpc.ingredients.icons.pathKey() }, query)) onChange();
+      })
+    );
   const read = () => {
     let address: string | null | undefined;
     let answeredWatched = false;
