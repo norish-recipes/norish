@@ -6,13 +6,7 @@ import { usePathname, useRouter } from "next/navigation";
 import { CookbookAddRecipesPanel } from "@/components/cookbooks/cookbook-add-recipes-panel";
 import CookbookCover from "@/components/cookbooks/cookbook-cover";
 import { CookbookIconSolid } from "@/components/cookbooks/cookbook-icon";
-import {
-  CookbookAllergenChips,
-  CookbookMetadata,
-  VISIBLE_ALLERGENS_IN_ROW,
-} from "@/components/cookbooks/cookbook-metadata";
 import { CookbookEditPanel, DeleteCookbookModal } from "@/components/cookbooks/cookbook-panels";
-import { CardFacts } from "@/components/dashboard/card-facts";
 import { useMountedOnceOpened } from "@/hooks/use-mounted-once-opened";
 import { withOrigin } from "@/lib/back-destination";
 import {
@@ -28,7 +22,13 @@ import type { CookbookSummaryDTO } from "@norish/shared/contracts";
 import { useRecipePermissions } from "@norish/shared-react/reader";
 import { formatMinutesHM, isAllergenTag } from "@norish/shared/lib/helpers";
 
-import SwipeableRow, { SwipeableRowRef, SwipeAction } from "../shared/swipable-row";
+import { CardFacts } from "./card-facts";
+import {
+  CookbookAllergenChips,
+  CookbookMetadata,
+  VISIBLE_ALLERGENS_IN_ROW,
+} from "./cookbook-metadata";
+import SwipeableRow, { SwipeableRowRef, SwipeAction } from "./swipable-row";
 
 type CookbookCardProps = {
   cookbook: CookbookSummaryDTO;

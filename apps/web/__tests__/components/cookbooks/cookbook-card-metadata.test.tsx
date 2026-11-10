@@ -7,7 +7,7 @@
  */
 import type { ReactNode } from "react";
 import { forwardRef } from "react";
-import CookbookCard from "@/components/cookbooks/cookbook-card";
+import CookbookCard from "@/features/library/components/grid/cookbook-card";
 import { render, screen } from "@testing-library/react";
 import { describe, expect, it, vi } from "vitest";
 
@@ -30,7 +30,7 @@ vi.mock("@/components/cookbooks/cookbook-panels", () => ({
   DeleteCookbookModal: () => null,
 }));
 vi.mock("@/hooks/use-mounted-once-opened", () => ({ useMountedOnceOpened: () => false }));
-vi.mock("@/components/shared/swipable-row", () => ({
+vi.mock("@/features/library/components/grid/swipable-row", () => ({
   default: forwardRef(function SwipeableRowMock(
     { children }: { children?: ReactNode },
     _ref: React.Ref<unknown>

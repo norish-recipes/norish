@@ -11,6 +11,7 @@ import {
   useState,
 } from "react";
 import { usePathname } from "next/navigation";
+import RecipeGridSkeleton from "@/components/skeleton/recipe-grid-skeleton";
 import { useContainerColumns } from "@/hooks/use-container-columns";
 import { DEVICE_KIND_WINDOW, useViewport } from "@/hooks/use-viewport";
 import { lastScrollTop, rememberedListRows, rememberListRows } from "@/lib/scroll-memory";
@@ -21,8 +22,6 @@ import { useWindowSize } from "usehooks-ts";
 import type { RecipeViewMode } from "@norish/shared/contracts/zod/device-preferences";
 import { useHydrated } from "@norish/shared-react/platform";
 import { useDeviceKind } from "@norish/shared-react/reader";
-
-import RecipeGridSkeleton from "../skeleton/recipe-grid-skeleton";
 
 // Estimated row height (card height + gap). Both kinds of card match these,
 // or the estimate degrades for every row on a mixed page (ADR-0026).

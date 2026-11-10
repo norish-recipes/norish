@@ -4,10 +4,13 @@ import type { MouseEvent } from "react";
 import { memo, useCallback, useEffect, useMemo, useRef, useState } from "react";
 import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
+import { useRecipeLeaving } from "@/components/dashboard/recipe-leaving";
 import { MiniCalendar } from "@/components/Panel/consumers";
 import MiniGroceries from "@/components/Panel/consumers/mini-groceries";
 import OriginFlag from "@/components/recipes/origin-flag";
 import { isCheckboxEvent, RoundCheckbox } from "@/components/round-checkbox";
+import { DeleteRecipeModal } from "@/components/shared/delete-recipe-modal";
+import DoubleTapContainer from "@/components/shared/double-tap-container";
 import HeartButton from "@/components/shared/heart-button";
 import SmartMarkdownRenderer from "@/components/shared/smart-markdown-renderer";
 import { useMountedOnceOpened } from "@/hooks/use-mounted-once-opened";
@@ -41,13 +44,10 @@ import {
   sortTagsWithAllergyPriority,
 } from "@norish/shared/lib/helpers";
 
-import { DeleteRecipeModal } from "../shared/delete-recipe-modal";
-import DoubleTapContainer from "../shared/double-tap-container";
-import SwipeableRow, { SwipeableRowRef, SwipeAction } from "../shared/swipable-row";
 import { CardFact, CardFacts } from "./card-facts";
-import { useRecipeLeaving } from "./recipe-leaving";
 import RecipeMetadata from "./recipe-metadata";
 import RecipeTags from "./recipe-tags";
+import SwipeableRow, { SwipeableRowRef, SwipeAction } from "./swipable-row";
 
 type RecipeCardProps = {
   recipe: RecipeDashboardDTO;

@@ -1,8 +1,6 @@
 "use client";
 
 import type { LibraryGridItem } from "@/lib/library-items";
-import LibraryGrid from "@/components/dashboard/library-grid";
-import RecipeCard from "@/components/dashboard/recipe-card";
 import RecipeSelectionBar from "@/components/dashboard/recipe-selection-bar";
 import { useLibraryCards, useLibraryQueryFilters } from "@/hooks/use-library";
 import { Card } from "@heroui/react";
@@ -20,6 +18,9 @@ import {
   hasAppliedRecipeFilters,
   serializeRecipeFilters,
 } from "@norish/shared/contracts/filter-contract";
+
+import LibraryGrid from "./library-grid";
+import RecipeCard from "./recipe-card";
 
 /** The selection bar over a cookbook's members, whose versions it acts on. */
 export function CookbookSelectionBar({ cookbook }: { cookbook: CookbookSummaryDTO }) {

@@ -2,12 +2,6 @@
 
 import type { LibraryGridItem } from "@/lib/library-items";
 import { useMemo } from "react";
-import CookbookCard from "@/components/cookbooks/cookbook-card";
-import LibraryGrid from "@/components/dashboard/library-grid";
-import NoCookbooksText from "@/components/dashboard/no-cookbooks-text";
-import NoRecipeResults from "@/components/dashboard/no-recipe-results";
-import NoRecipesText from "@/components/dashboard/no-recipes-text";
-import RecipeCard from "@/components/dashboard/recipe-card";
 import RecipeCardSkeleton from "@/components/skeleton/recipe-card-skeleton";
 import { useLibraryCards, useLibraryList } from "@/hooks/use-library";
 
@@ -23,6 +17,13 @@ import {
   hasAppliedRecipeFilters,
   serializeRecipeFilters,
 } from "@norish/shared/contracts/filter-contract";
+
+import CookbookCard from "./cookbook-card";
+import LibraryGrid from "./library-grid";
+import NoCookbooksText from "./no-cookbooks-text";
+import NoRecipeResults from "./no-recipe-results";
+import NoRecipesText from "./no-recipes-text";
+import RecipeCard from "./recipe-card";
 
 /**
  * The Library's list: recipes and cookbooks interleaved, ordered by whatever

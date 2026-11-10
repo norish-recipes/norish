@@ -1,5 +1,5 @@
 import { forwardRef } from "react";
-import RecipeCard from "@/components/dashboard/recipe-card";
+import RecipeCard from "@/features/library/components/grid/recipe-card";
 import { render, screen, within } from "@testing-library/react";
 import { afterEach, describe, expect, it, vi } from "vitest";
 
@@ -39,15 +39,15 @@ vi.mock("@/components/shared/heart-button", () => ({ default: () => null }));
 vi.mock("@/components/shared/smart-markdown-renderer", () => ({
   default: ({ text }: { text: string }) => <span>{text}</span>,
 }));
-vi.mock("@/components/dashboard/recipe-metadata", () => ({ default: () => null }));
-vi.mock("@/components/dashboard/recipe-tags", () => ({ default: () => null }));
+vi.mock("@/features/library/components/grid/recipe-metadata", () => ({ default: () => null }));
+vi.mock("@/features/library/components/grid/recipe-tags", () => ({ default: () => null }));
 
 vi.mock("../shared/delete-recipe-modal", () => ({ DeleteRecipeModal: () => null }));
 vi.mock("@/components/shared/delete-recipe-modal", () => ({ DeleteRecipeModal: () => null }));
 vi.mock("@/components/shared/double-tap-container", () => ({
   default: ({ children }: { children?: React.ReactNode }) => <div>{children}</div>,
 }));
-vi.mock("@/components/shared/swipable-row", () => ({
+vi.mock("@/features/library/components/grid/swipable-row", () => ({
   default: forwardRef(function SwipeableRowMock(
     { children }: { children?: React.ReactNode },
     _ref: React.Ref<unknown>
@@ -202,7 +202,8 @@ describe("RecipeCard list view allergy tags", () => {
   it("prefixes the recipe image when the app is served under a base path", async () => {
     vi.stubEnv("NEXT_PUBLIC_BASE_PATH", "/norish");
     vi.resetModules();
-    const { default: BasedRecipeCard } = await import("@/components/dashboard/recipe-card");
+    const { default: BasedRecipeCard } =
+      await import("@/features/library/components/grid/recipe-card");
     const recipe = { ...makeRecipe([]), image: "/recipes/recipe-1/image.jpg" };
 
     render(

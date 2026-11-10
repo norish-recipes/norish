@@ -1,9 +1,10 @@
 "use client";
 
-import { CardFact } from "@/components/dashboard/card-facts";
 import { ClockIcon, UserGroupIcon } from "@heroicons/react/20/solid";
 import { Chip } from "@heroui/react";
 import { useTranslations } from "next-intl";
+
+import { CardFact } from "./card-facts";
 
 /**
  * How many allergens a card names before folding the rest into a count.

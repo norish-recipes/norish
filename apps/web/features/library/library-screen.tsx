@@ -4,13 +4,13 @@ import CreateRecipeButton from "@/components/dashboard/create-recipe-button";
 import FloatingRecipeChip from "@/components/dashboard/floating-recipe-chip";
 import LibraryHeading from "@/components/dashboard/library-heading";
 import LibraryTypeChips from "@/components/dashboard/library-type-chips";
-import LibraryView from "@/components/dashboard/library-view";
 import RecipeSelectionBar from "@/components/dashboard/recipe-selection-bar";
 import RecipeViewModeToggle, {
   RecipeViewModeTabs,
 } from "@/components/dashboard/recipe-view-mode-toggle";
 import SearchInput from "@/components/dashboard/search-input";
 import RecipeGridSkeleton from "@/components/skeleton/recipe-grid-skeleton";
+import { LibraryView } from "@/features/library/components/grid";
 import { useLibraryList } from "@/hooks/use-library";
 import { Tabs } from "@heroui/react";
 
