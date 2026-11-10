@@ -30,18 +30,4 @@ export const sharedArchiveHooks = createArchiveHooks({
       },
     };
   },
-  useSubscriptionToastAdapter: () => {
-    const t = useTranslations("navbar.archiveImporter.toasts");
-
-    return {
-      showCompletionToast: (imported: number, notes: number, errors: number) => {
-        // One message covers all four outcomes: the note and error clauses
-        // drop out at zero rather than being assembled here.
-        toast(t("completeTitle"), {
-          description: t("completeDescription", { imported, notes, errors }),
-          variant: errors > 0 ? "warning" : "success",
-        });
-      },
-    };
-  },
 });

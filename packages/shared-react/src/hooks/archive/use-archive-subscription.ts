@@ -3,19 +3,15 @@ import type { EventName, PayloadOf } from "@norish/shared/contracts/realtime/cat
 import { createClientLogger } from "@norish/shared/lib/logger";
 
 import type { ArchiveImportCacheHelpers, CreateArchiveHooksOptions } from "./types";
+import { usePlatform } from "../../platform/platform";
 import { useRealtimeSubscription } from "../../realtime/use-realtime-subscription";
 
 type Payload<E extends EventName<ArchiveRealtime>> = PayloadOf<ArchiveRealtime, E>;
 
 const log = createClientLogger("ArchiveImportSubscription");
 
-export type ArchiveSubscriptionToastAdapter = {
-  showCompletionToast: (imported: number, notes: number, errors: number) => void;
-};
-
 type CreateUseArchiveSubscriptionOptions = CreateArchiveHooksOptions & {
   useArchiveImportCacheHelpers: () => ArchiveImportCacheHelpers;
-  useToastAdapter: () => ArchiveSubscriptionToastAdapter;
 };
 
 // An import's progress is not a query: a lag has nothing to refetch, and
@@ -31,7 +27,6 @@ const lag = {
 export function createUseArchiveSubscriptions({
   useTRPC,
   useArchiveImportCacheHelpers,
-  useToastAdapter,
 }: CreateUseArchiveSubscriptionOptions) {
   function useArchiveImportProgress(): void {
     "use memo";
@@ -73,7 +68,7 @@ export function createUseArchiveSubscriptions({
 
     const trpc = useTRPC();
     const { setImportState } = useArchiveImportCacheHelpers();
-    const toastAdapter = useToastAdapter();
+    const { toast } = usePlatform();
 
     useRealtimeSubscription<Payload<"archiveCompleted">>(trpc.archive.onArchiveCompleted, {
       ...lag,
@@ -92,11 +87,18 @@ export function createUseArchiveSubscriptions({
           };
         });
 
-        toastAdapter.showCompletionToast(
-          payload.imported,
-          payload.notes.length,
-          payload.errors.length
-        );
+        const errors = payload.errors.length;
+
+        // One message covers all four outcomes: the note and error clauses drop out at zero.
+        toast.show({
+          severity: errors > 0 ? "warning" : "success",
+          title: toast.translate("navbar.archiveImporter.toasts.completeTitle"),
+          description: toast.translate("navbar.archiveImporter.toasts.completeDescription", {
+            imported: payload.imported,
+            notes: payload.notes.length,
+            errors,
+          }),
+        });
       },
     });
   }

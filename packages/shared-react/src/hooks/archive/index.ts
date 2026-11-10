@@ -1,6 +1,5 @@
 import type { CreateArchiveHooksOptions } from "./types";
 import type { ArchiveMutationToastAdapter } from "./use-archive-mutation";
-import type { ArchiveSubscriptionToastAdapter } from "./use-archive-subscription";
 import { createUseArchiveCache } from "./use-archive-cache";
 import { createUseArchiveMutation } from "./use-archive-mutation";
 import { createUseArchiveQuery } from "./use-archive-query";
@@ -17,20 +16,15 @@ export type {
 export { createUseArchiveCache, ARCHIVE_IMPORT_KEY } from "./use-archive-cache";
 export { createUseArchiveQuery } from "./use-archive-query";
 export { createUseArchiveMutation, type ArchiveMutationToastAdapter } from "./use-archive-mutation";
-export {
-  createUseArchiveSubscriptions,
-  type ArchiveSubscriptionToastAdapter,
-} from "./use-archive-subscription";
+export { createUseArchiveSubscriptions } from "./use-archive-subscription";
 
 type CreateArchiveHooksFullOptions = CreateArchiveHooksOptions & {
   useMutationToastAdapter: () => ArchiveMutationToastAdapter;
-  useSubscriptionToastAdapter: () => ArchiveSubscriptionToastAdapter;
 };
 
 export function createArchiveHooks({
   useTRPC,
   useMutationToastAdapter,
-  useSubscriptionToastAdapter,
 }: CreateArchiveHooksFullOptions) {
   const useArchiveImportCacheHelpers = createUseArchiveCache();
   const useArchiveImportQuery = createUseArchiveQuery();
@@ -42,7 +36,6 @@ export function createArchiveHooks({
   const { useArchiveImportProgress, useArchiveImportOutcome } = createUseArchiveSubscriptions({
     useTRPC,
     useArchiveImportCacheHelpers,
-    useToastAdapter: useSubscriptionToastAdapter,
   });
 
   return {
