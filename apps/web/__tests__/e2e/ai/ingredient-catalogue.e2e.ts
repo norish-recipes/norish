@@ -138,6 +138,8 @@ async function rowsIn(aisleName: string): Promise<string[]> {
 test("a Dutch 'ui' in the Pantry leaves an English recipe's 'onion' off the list", async () => {
   const pantry = await openPantry();
 
+  // The field takes nothing while the Pantry loads, so a fill then is silently lost.
+  await expect(pantry.getByTestId("pantry-empty")).toBeVisible();
   await pantry.getByTestId("pantry-name").fill("ui");
   await pantry.getByTestId("pantry-name").press("Enter");
   // "ui" is a spelling of onion: the Pantry holds the Ingredient, shown by its name.
