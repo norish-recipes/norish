@@ -3,7 +3,7 @@
 import type { EventName, PayloadOf } from "@norish/shared/contracts/realtime/catalogue";
 import type { RecipesRealtime } from "@norish/shared/contracts/realtime/recipes";
 
-import { useRealtimeSubscription } from "../realtime/use-realtime-subscription";
+import { useKeepsCurrent, useRealtimeSubscription } from "../realtime";
 import { useTRPC } from "../trpc";
 import { useRecipeQuery } from "./use-recipe-query";
 
@@ -24,7 +24,9 @@ export function useRecipeSubscription(
   callbacks: RecipeSubscriptionCallbacks = {}
 ) {
   const trpc = useTRPC();
-  const { setRecipeData, invalidate } = useRecipeQuery(recipeId);
+  const { queryKey, setRecipeData, invalidate } = useRecipeQuery(recipeId);
+
+  useKeepsCurrent(recipeId ? [queryKey] : []);
 
   const common = { enabled: !!recipeId, onLag: invalidate };
 

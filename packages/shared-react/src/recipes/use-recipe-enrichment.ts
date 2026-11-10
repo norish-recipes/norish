@@ -18,7 +18,7 @@ import {
 } from "@norish/shared/lib/recipe-enrichment";
 
 import { useReader } from "../reader";
-import { useRealtimeSubscription } from "../realtime/use-realtime-subscription";
+import { useKeepsCurrent, useRealtimeSubscription } from "../realtime";
 import { useTRPC } from "../trpc";
 
 export type RecipeEnrichmentStateMap = Record<RecipeEnrichmentKind, RecipeEnrichmentLifecycleState>;
@@ -326,6 +326,8 @@ export function useRecipeEnrichmentSubscription(
   const currentUserId = useReader().user?.id;
   const queryClient = useQueryClient();
   const statusKey = trpc.recipes.enrichmentStatus.queryKey({ recipeId: recipeId ?? "" });
+
+  useKeepsCurrent(recipeId ? [statusKey] : []);
 
   useRealtimeSubscription<PayloadOf<RecipesRealtime, "enrichment">>(trpc.recipes.onEnrichment, {
     enabled: !!recipeId,

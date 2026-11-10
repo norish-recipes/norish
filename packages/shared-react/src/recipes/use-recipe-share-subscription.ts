@@ -4,7 +4,7 @@ import type { RecipeShareLifecycleEventDto } from "@norish/shared/contracts";
 import type { PayloadOf } from "@norish/shared/contracts/realtime/catalogue";
 import type { RecipesRealtime } from "@norish/shared/contracts/realtime/recipes";
 
-import { useRealtimeSubscription } from "../realtime/use-realtime-subscription";
+import { useKeepsCurrent, useRealtimeSubscription } from "../realtime";
 import { useTRPC } from "../trpc";
 import { useRecipeShareCacheHelpers } from "./use-recipe-share-cache";
 
@@ -24,6 +24,8 @@ export function useRecipeShareSubscription(
     invalidateRecipeShare,
     removeRecipeShare,
   } = useRecipeShareCacheHelpers();
+
+  useKeepsCurrent(recipeId ? [trpc.recipes.shareList.queryKey({ recipeId })] : []);
 
   const handleEvent = (payload: RecipeShareLifecycleEventDto) => {
     // Always invalidate inventory queries so settings pages stay fresh.
