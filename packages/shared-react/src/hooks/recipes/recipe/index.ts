@@ -1,50 +1,36 @@
 import type { CreateRecipeHooksOptions } from "../types";
-import { createUseConvertMutation } from "./use-convert-mutation";
-import { createUseLinkedRecipeIngredients } from "./use-linked-recipe-ingredients";
-import { createUseRecipeEnrichment } from "./use-recipe-enrichment";
-import { createUseRecipeId } from "./use-recipe-id";
-import { createUseRecipeImages } from "./use-recipe-images";
-import { createUseRecipeIngredients } from "./use-recipe-ingredients";
-import { createUseRecipeQuery } from "./use-recipe-query";
-import { createUseRecipeSubscription } from "./use-recipe-subscription";
-import { createUseRecipeVideos } from "./use-recipe-videos";
+import {
+  useConvertMutation,
+  useLinkedRecipeIngredients,
+  useRecipeEnrichment,
+  useRecipeId,
+  useRecipeImages,
+  useRecipeIngredients,
+  useRecipeQuery,
+  useRecipeSubscription,
+  useRecipeVideos,
+} from "../../../recipes";
 
-export type { RecipeIdResult } from "./use-recipe-id";
-export type { RecipeQueryResult } from "./use-recipe-query";
-export type { RecipeSubscriptionCallbacks } from "./use-recipe-subscription";
-export type { ConvertMutationResult } from "./use-convert-mutation";
 export type {
+  ConvertMutationResult,
   RecipeEnrichmentCallbacks,
   RecipeEnrichmentResult,
   RecipeEnrichmentStateMap,
-} from "./use-recipe-enrichment";
+  RecipeIdResult,
+  RecipeQueryResult,
+  RecipeSubscriptionCallbacks,
+} from "../../../recipes";
 
-export {
-  createUseRecipeId,
-  createUseRecipeQuery,
-  createUseConvertMutation,
-  createUseRecipeEnrichment,
-  createUseRecipeSubscription,
-  createUseRecipeImages,
-  createUseRecipeVideos,
-  createUseRecipeIngredients,
-  createUseLinkedRecipeIngredients,
-};
-
-export function createRecipeFamilyHooks(options: CreateRecipeHooksOptions) {
-  const useRecipeId = createUseRecipeId();
-  const useRecipeQuery = createUseRecipeQuery(options);
-  const useRecipeSubscription = createUseRecipeSubscription(options, { useRecipeQuery });
-
+export function createRecipeFamilyHooks(_options: CreateRecipeHooksOptions) {
   return {
     useRecipeId,
     useRecipeQuery,
     useRecipeSubscription,
-    useRecipeImages: createUseRecipeImages(options),
-    useRecipeVideos: createUseRecipeVideos(options),
-    useRecipeEnrichment: createUseRecipeEnrichment(options),
-    useConvertMutation: createUseConvertMutation(options),
-    useRecipeIngredients: createUseRecipeIngredients(useRecipeQuery),
-    useLinkedRecipeIngredients: createUseLinkedRecipeIngredients(options),
+    useRecipeImages,
+    useRecipeVideos,
+    useRecipeEnrichment,
+    useConvertMutation,
+    useRecipeIngredients,
+    useLinkedRecipeIngredients,
   };
 }

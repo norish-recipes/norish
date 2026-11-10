@@ -5,9 +5,8 @@ import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 
 import type { RecipeEnrichmentStatusDto } from "@norish/shared/lib/recipe-enrichment";
 
-import type { CreateRecipeHooksOptions } from "../src/hooks/recipes/types";
-import { createUseRecipeEnrichment } from "../src/hooks/recipes/recipe/use-recipe-enrichment";
-import { trackedEvent } from "./realtime/tracked-event";
+import { trackedEvent } from "../../../__tests__/realtime/tracked-event";
+import { useRecipeEnrichment } from "../use-recipe-enrichment";
 
 const useSubscriptionMock = vi.hoisted(() => vi.fn());
 
@@ -38,24 +37,33 @@ function idleStatus(): RecipeEnrichmentStatusDto {
   };
 }
 
-const useTRPC = (() => ({
-  recipes: {
-    enrichmentStatus: {
-      queryOptions: () => ({ queryKey: STATUS_KEY, queryFn: statusFetch }),
+vi.mock("../../trpc", () => ({
+  useTRPC: () => ({
+    recipes: {
+      enrichmentStatus: {
+        queryOptions: () => ({ queryKey: STATUS_KEY, queryFn: statusFetch }),
+      },
+      onEnrichment: {
+        subscriptionOptions: (_input: undefined, options: unknown) => options,
+      },
+      requestEnrichment: {
+        mutationOptions: (options: { onError?: (e: unknown, v: unknown) => void }) => ({
+          mutationFn: async (input: unknown) => {
+            requestMutate(input);
+          },
+          onError: options?.onError,
+        }),
+      },
     },
-    onEnrichment: {
-      subscriptionOptions: (_input: undefined, options: unknown) => options,
-    },
-    requestEnrichment: {
-      mutationOptions: (options: { onError?: (e: unknown, v: unknown) => void }) => ({
-        mutationFn: async (input: unknown) => {
-          requestMutate(input);
-        },
-        onError: options?.onError,
-      }),
-    },
-  },
-})) as unknown as CreateRecipeHooksOptions["useTRPC"];
+  }),
+}));
+
+// The Reader whose manual runs report their failures.
+let readerId: string | null = "user-1";
+
+vi.mock("../../reader", () => ({
+  useReader: () => ({ user: readerId ? { id: readerId } : null }),
+}));
 
 /**
  * Deliver a lifecycle event the way the subscription would, then let React Query
@@ -74,14 +82,14 @@ async function emitLifecycle(payload: Record<string, unknown>) {
 let container: HTMLDivElement;
 let root: ReturnType<typeof createRoot>;
 let queryClient: QueryClient;
-let latest: ReturnType<ReturnType<typeof createUseRecipeEnrichment>> | null = null;
+let latest: ReturnType<typeof useRecipeEnrichment> | null = null;
 let manualErrors: string[] = [];
 
 function render(currentUserId: string | null = "user-1") {
-  const useRecipeEnrichment = createUseRecipeEnrichment({ useTRPC });
+  readerId = currentUserId;
 
   function Probe() {
-    latest = useRecipeEnrichment("recipe-1", currentUserId, {
+    latest = useRecipeEnrichment("recipe-1", {
       onManualError: (kind) => manualErrors.push(kind),
     });
 

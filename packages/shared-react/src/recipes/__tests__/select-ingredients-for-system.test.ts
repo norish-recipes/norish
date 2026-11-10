@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest";
 
-import { selectIngredientsForSystem } from "../src/hooks/recipes/recipe/use-recipe-ingredients";
+import { selectIngredientsForSystem } from "../use-recipe-ingredients";
 
 const metricButter = { id: "1", ingredientName: "butter", systemUsed: "metric" };
 const usButter = { id: "2", ingredientName: "butter", systemUsed: "us" };

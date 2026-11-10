@@ -1,6 +1,8 @@
+"use client";
+
 import type { RecipeIngredientsDto } from "@norish/shared/contracts";
 
-import type { RecipeQueryResult } from "./use-recipe-query";
+import { useRecipeQuery } from "./use-recipe-query";
 
 /* The zod-derived DTO collapses to `unknown` in TS setups that mix zod v3/v4
    types, and `unknown[]` fails the selector's constraint; intersecting keeps
@@ -27,25 +29,19 @@ export function selectIngredientsForSystem<T extends { systemUsed: string }>(
   return [];
 }
 
-export function createUseRecipeIngredients(
-  useRecipeQuery: (id: string | null) => RecipeQueryResult
-) {
-  return function useRecipeIngredients(id: string | null) {
-    "use memo";
+export function useRecipeIngredients(id: string | null) {
+  const { recipe, isLoading, error } = useRecipeQuery(id);
 
-    const { recipe, isLoading, error } = useRecipeQuery(id);
-
-    return {
-      ingredients: recipe
-        ? selectIngredientsForSystem(
-            recipe.recipeIngredients as SystemScopedIngredientDto[],
-            recipe.systemUsed,
-            recipe.systemUsed
-          )
-        : ([] as SystemScopedIngredientDto[]),
-      systemUsed: recipe?.systemUsed ?? null,
-      isLoading,
-      error,
-    };
+  return {
+    ingredients: recipe
+      ? selectIngredientsForSystem(
+          recipe.recipeIngredients as SystemScopedIngredientDto[],
+          recipe.systemUsed,
+          recipe.systemUsed
+        )
+      : ([] as SystemScopedIngredientDto[]),
+    systemUsed: recipe?.systemUsed ?? null,
+    isLoading,
+    error,
   };
 }

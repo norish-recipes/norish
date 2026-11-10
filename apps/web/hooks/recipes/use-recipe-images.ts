@@ -1,9 +1,6 @@
 "use client";
 
-import { createUseRecipeImages } from "@norish/shared-react/hooks/recipes/recipe";
-import { useTRPC } from "@norish/shared-react/trpc";
-
-const useSharedRecipeImages = createUseRecipeImages({ useTRPC });
+import { useRecipeImages as useSharedRecipeImages } from "@norish/shared-react/recipes";
 
 export type RecipeImagesResult = {
   uploadImage: (file: File) => Promise<{ success: boolean; url?: string; error?: string }>;
