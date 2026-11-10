@@ -5,6 +5,7 @@ import { useCallback, useMemo, useState } from "react";
 import { formatAmountAsDecimal } from "@norish/shared/lib/format-amount";
 
 import { scaleIngredients } from "./scale-ingredients";
+import { MIN_SERVINGS, servingsDown, servingsUp } from "./servings";
 
 type IngredientWithAmount = { amount?: number | string | null };
 
@@ -28,7 +29,7 @@ export function useServingsScaler<T extends IngredientWithAmount>(
   initialServings?: number
 ): ServingsScalerResult<T> {
   const [servings, setServings] = useState<number>(
-    Math.max(0.125, initialServings ?? originalServings)
+    Math.max(MIN_SERVINGS, initialServings ?? originalServings)
   );
 
   const scaledIngredients = useMemo<ScaledIngredient<T>[]>(() => {
@@ -43,28 +44,15 @@ export function useServingsScaler<T extends IngredientWithAmount>(
   }, [ingredients, servings, originalServings]);
 
   const setClampedServings = useCallback((newServings: number) => {
-    setServings(Math.max(0.125, newServings));
+    setServings(Math.max(MIN_SERVINGS, newServings));
   }, []);
 
-  const decrementServings = useCallback(() => {
-    setServings((s) => {
-      if (s <= 1) return Math.max(0.125, s / 2);
-      if (s <= 2) return 1;
+  const decrementServings = useCallback(() => setServings(servingsDown), []);
 
-      return s - 1;
-    });
-  }, []);
-
-  const incrementServings = useCallback(() => {
-    setServings((s) => {
-      if (s < 1) return Math.min(1, s * 2);
-
-      return s + 1;
-    });
-  }, []);
+  const incrementServings = useCallback(() => setServings(servingsUp), []);
 
   const resetToOriginal = useCallback(() => {
-    setServings(Math.max(0.125, originalServings));
+    setServings(Math.max(MIN_SERVINGS, originalServings));
   }, [originalServings]);
 
   return {

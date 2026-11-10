@@ -10,6 +10,9 @@ import { Button, InputGroup } from "@heroui/react";
 import { useTranslations } from "next-intl";
 
 import {
+  MIN_SERVINGS,
+  servingsDown,
+  servingsUp,
   useLoadedPageRecipe,
   usePageServings,
   useRecipePageStore,
@@ -22,7 +25,6 @@ type ServingsControlProps = {
   withPanel?: boolean;
 };
 
-const MIN_SERVINGS = 0.125;
 /** The quick picks, as multiples of the servings the recipe was written for. */
 const MULTIPLIERS = [0.5, 1, 2, 3, 4];
 
@@ -41,7 +43,7 @@ export default function ServingsControl({
   const setIngredientAmounts = useRecipePageStore((state) => state.setServings);
   const t = useTranslations("recipes.detail");
   const [panelOpen, setPanelOpen] = useState(false);
-  const servings = Math.max(MIN_SERVINGS, currentServings ?? recipe.servings ?? 1);
+  const servings = Math.max(MIN_SERVINGS, currentServings);
   const buttonClassName = compact
     ? "bg-surface-secondary size-8 min-w-8 px-0"
     : "bg-surface-secondary";
@@ -49,30 +51,8 @@ export default function ServingsControl({
     ? "min-w-6 justify-center text-xs"
     : "min-w-8 justify-center text-sm";
 
-  const dec = () => {
-    if (servings <= 1) {
-      setIngredientAmounts(Math.max(MIN_SERVINGS, servings / 2));
-
-      return;
-    }
-
-    if (servings <= 2) {
-      setIngredientAmounts(1);
-
-      return;
-    }
-
-    setIngredientAmounts(servings - 1);
-  };
-  const inc = () => {
-    if (servings < 1) {
-      setIngredientAmounts(Math.min(1, servings * 2));
-
-      return;
-    }
-
-    setIngredientAmounts(servings + 1);
-  };
+  const dec = () => setIngredientAmounts(servingsDown(servings));
+  const inc = () => setIngredientAmounts(servingsUp(servings));
 
   // Only the figure rolls. Rolling the word beside it would animate something
   // that did not change.

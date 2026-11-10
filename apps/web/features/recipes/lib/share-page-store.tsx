@@ -6,7 +6,11 @@ import { createStore } from "zustand";
 
 import type { MeasurementSystem, PublicRecipeViewDTO } from "@norish/shared/contracts";
 import { createPageStoreContext } from "@norish/shared-react/platform";
-import { scaleIngredients, useSharedRecipeQuery } from "@norish/shared-react/recipes";
+import {
+  scaleIngredients,
+  servingsShown,
+  useSharedRecipeQuery,
+} from "@norish/shared-react/recipes";
 
 export type SharePageState = {
   token: string;
@@ -59,7 +63,7 @@ export function useShareServings(): number {
   const picked = useSharePageStore((state) => state.servings);
   const recipe = useSharedRecipe();
 
-  return picked ?? recipe.servings;
+  return servingsShown(picked, recipe.servings);
 }
 
 /** The measurement system the page shows: the reader's pick, else the recipe's. */

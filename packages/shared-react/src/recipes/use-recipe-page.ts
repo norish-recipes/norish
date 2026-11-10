@@ -13,6 +13,7 @@ import type { RecipeEnrichmentResult } from "./use-recipe-enrichment";
 import { useTRPC } from "../trpc";
 import { useRecipePageStore, useRecipePageStoreApi } from "./recipe-page-store";
 import { scaleIngredients } from "./scale-ingredients";
+import { servingsShown } from "./servings";
 import { useConvertMutation } from "./use-convert-mutation";
 import { useRecipeEnrichment } from "./use-recipe-enrichment";
 
@@ -39,17 +40,17 @@ export function usePageServings(): number {
   const picked = useRecipePageStore((state) => state.servings);
   const recipe = usePageRecipe();
 
-  return picked ?? recipe?.servings ?? 1;
+  return servingsShown(picked, recipe?.servings);
 }
 
 /** The ingredients at the servings the page shows. */
 export function usePageIngredients(): RecipeIngredientsDto[] {
-  const picked = useRecipePageStore((state) => state.servings);
   const recipe = usePageRecipe();
+  const servings = usePageServings();
 
   if (!recipe) return [];
 
-  return scaleIngredients(recipe.recipeIngredients, recipe.servings, picked ?? recipe.servings);
+  return scaleIngredients(recipe.recipeIngredients, recipe.servings, servings);
 }
 
 /** The page's enrichment states, for showing them; requests go through `useRecipeEnrichment`. */

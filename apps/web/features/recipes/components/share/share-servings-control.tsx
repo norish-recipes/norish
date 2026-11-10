@@ -3,6 +3,7 @@
 import { MinusIcon, PlusIcon } from "@heroicons/react/16/solid";
 import { Button } from "@heroui/react";
 
+import { servingsDown, servingsUp } from "@norish/shared-react/recipes";
 import { formatAmountAsDecimal } from "@norish/shared/lib/format-amount";
 
 export function ShareServingsControl({
@@ -12,15 +13,8 @@ export function ShareServingsControl({
   servings: number;
   onChange: (servings: number) => void;
 }) {
-  const decrease = () => {
-    if (servings <= 1) onChange(Math.max(0.125, servings / 2));
-    else if (servings <= 2) onChange(1);
-    else onChange(servings - 1);
-  };
-  const increase = () => {
-    if (servings < 1) onChange(Math.min(1, servings * 2));
-    else onChange(servings + 1);
-  };
+  const decrease = () => onChange(servingsDown(servings));
+  const increase = () => onChange(servingsUp(servings));
 
   return (
     <div className="inline-flex items-center gap-2">
