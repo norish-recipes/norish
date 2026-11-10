@@ -1,12 +1,10 @@
 "use client";
 
-import { RecipeSelectionBar } from "@/features/library/components/selection";
 import { useLibraryCards, useLibraryQueryFilters } from "@/features/library/hooks";
 import { Card } from "@heroui/react";
 import { useTranslations } from "next-intl";
 
 import type { SelectedRecipe } from "@norish/shared-react/recipes";
-import type { CookbookSummaryDTO } from "@norish/shared/contracts";
 import type { RecipeViewMode } from "@norish/shared/contracts/zod/device-preferences";
 import {
   useCookbookRecipesQuery,
@@ -21,24 +19,6 @@ import {
 import type { LibraryGridItem } from "./library-items";
 import LibraryGrid from "./library-grid";
 import RecipeCard from "./recipe-card";
-
-/** The selection bar over a cookbook's members, whose versions it acts on. */
-export function CookbookSelectionBar({ cookbook }: { cookbook: CookbookSummaryDTO }) {
-  const { queryFilters, isHydrated } = useLibraryQueryFilters();
-  const { recipes, removeMember } = useCookbookRecipesQuery(cookbook.id, queryFilters, {
-    enabled: isHydrated,
-  });
-
-  return (
-    <RecipeSelectionBar
-      cookbook={cookbook}
-      recipes={recipes}
-      onLeave={(recipeIds) => {
-        for (const recipeId of recipeIds) removeMember(recipeId);
-      }}
-    />
-  );
-}
 
 /**
  * A cookbook's members, through the same grid the Library uses.

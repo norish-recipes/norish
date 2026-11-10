@@ -5,17 +5,18 @@ import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { BackLink } from "@/components/page-transition";
 import { NotFoundView } from "@/components/shared/not-found-view";
-import {
-  CookbookAddRecipesPanel,
-  CookbookEditPanel,
-  DeleteCookbookModal,
-} from "@/features/library/components/panels";
-import { CookbookMembers, CookbookSelectionBar } from "@/features/library/components/grid";
+import { CookbookMembers } from "@/features/library/components/grid";
 import {
   RecipeViewModeTabs,
   RecipeViewModeToggle,
   SearchInput,
 } from "@/features/library/components/header";
+import {
+  CookbookAddRecipesPanel,
+  CookbookEditPanel,
+  DeleteCookbookModal,
+} from "@/features/library/components/panels";
+import { CookbookSelectionBar } from "@/features/library/components/selection/cookbook-selection-bar";
 import { RecipeGridSkeleton } from "@/features/library/components/skeleton";
 import { useBackDestination } from "@/hooks/use-back-destination";
 import {
