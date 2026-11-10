@@ -80,6 +80,9 @@ norish/
 │   ├── web/              # Next.js app (App Router + server entry)
 │   │   ├── app/          # Routes
 │   │   └── features/     # One folder per feature
+│   │       ├── groceries/
+│   │       ├── library/
+│   │       └── recipes/
 │   ├── mobile/           # Expo app (@norish/mobile)
 │   │   └── src/          # Routes and features, as on web
 │   ├── parser-api/       # Python service around recipe-scrapers
@@ -113,20 +116,19 @@ norish/
 
 ## App architecture
 
-Web and mobile use the same layout, and logic both apps need is written once in `packages/shared-react`. Web and shared-react move to it one feature at a time, so this is the target: until a feature has moved, its web code stays in `components/` and `hooks/`, and its shared code in shared-react's `hooks/` and `contexts/`. [Architecture](https://docs.norish.dev/development/architecture) in the docs shows where each piece lives and traces a read, a write and a realtime update through it.
+Web and mobile use the same layout and share logic in `packages/shared-react`. Features move to this layout one at a time. Until a feature moves, its web code stays in `components/` and `hooks/`, and its shared code in shared-react's `hooks/` and `contexts/`. [Architecture](https://docs.norish.dev/development/architecture) in the docs shows where each piece lives and traces a read, a write and a realtime update through it.
 
 - A feature is a domain: `library` (with the cookbook page), `recipes` (with the shared recipe page), `groceries`, `calendar`, `imports`, `settings` or `auth`. `features/<feature>/` holds its screens, components and hooks. Route files in `app/` render screens from features, and a page that shows several, such as the dashboard, composes them. One feature's code then sits in one folder per app. Mobile's `smoke` isn't a domain: it is a throwaway screen that tests the plumbing until the redesigned screens replace it.
-- A feature never imports from inside another feature. Only route files import a feature's files directly: Next's file conventions (`page`, `layout`, `route` and the rest) on web, every file in `src/app/` on mobile. Every other file imports its `index.ts`. Lint enforces this, so features stay separable without review catching it.
-- A feature's `index.ts` exports only the panels other features open, such as `MiniGroceries`. Opening a panel is the one real dependency between features, and this keeps it visible in the imports. A feature with no such panel, like `recipes`, has no `index.ts`.
+- Features never import each other. Lint blocks `@/features/<x>` and `@/features/<x>/**` outside feature `<x>`, except in route files. A panel several features open lives in the shared `components/Panel/consumers/` folder.
 - A feature's components are grouped by area (`list/`, `panels/`, `stores/`), each with its own `index.ts` that the screens and other areas import, so an area's files can change without touching its importers.
 - Skeletons, `loading.tsx` files and the shared recipe page import files directly, never through an area's `index.ts`. Turbopack ships every file an `index.ts` re-exports, and importing directly cut the recipe skeleton's own code from 324 KB to 38 KB.
-- Each layout seeds only what its screens draw, the `(app)` layout included: it seeds the permissions and Device Preferences the shell reads on every page. A full load then carries no read its page doesn't draw.
+- Each layout seeds only what its screens draw in the first frame, so a full load carries no unnecessary reads. `(app)` seeds permissions and Device Preferences; `(library)` and the recipe layout seed favourites, the household and the reader's allergies through `lib/reader-recipe-seeds.ts`; `(dashboard)` seeds pending imports. The shell reads the Reader's profile (`user.get`) itself.
 - Views that share a layout, as the grocery list and the Pantry do, are drawn by one root the layout renders, which picks the view from the address, so a switch stays on the client. The layout seeds only the view a full load opens on; each page just gives its view an address.
-- Code two or more features use goes in the app's shared `components/`, `hooks/` or `lib/`, so no feature imports it from another. Imports run one way: shared folders, then features, then routes. Opening a panel is the one way back: shared code may import a feature's `index.ts` to open one, and lint stops it reaching further in.
+- Code two or more features use goes in the app's shared `components/`, `hooks/` or `lib/`, so no feature imports it from another. Imports run one way: shared folders, then features, then routes.
 - Components read server data through plain hooks over the TanStack Query cache, with `select` for a slice, and never copy it into a context or a store. The cache stays the one source of truth, which offline mode persists ([ADR-0001](docs/adr/offline/0001-web-offline-is-a-persisted-query-cache.md)), and a component re-renders only when its slice changes.
 - A list rebuilt from changed data keeps each unchanged item's object, as the Query cache does, and memoises its rows, so a change renders only the rows it touches.
 - A write's rollback and settle go in `useMutation`'s own options, never in a `mutate` call, whose callbacks run for the last call only, so an overlapped failure would keep its optimistic change.
-- Whatever draws data mounts the realtime subscriptions that keep it current: a feature's root for its screens, a panel for itself while it is open, and the shell for what it draws itself plus the Reader. A screen that draws another domain's data mounts that domain's subscription too. Nothing then stays subscribed for a page that doesn't draw it, and each root lists what it depends on. Two mounts of one subscription handle an event twice, which idempotent merges make harmless. A subscription names its reads with `useKeepsCurrent`, so web doesn't read them again on mount until they go stale.
+- The component that draws data mounts its subscriptions: a feature root for its screens, a panel while open, and the shell for its own data and the Reader. A screen also mounts subscriptions for other domains it draws, so unused pages don't stay subscribed. The shell mounts the Reader's household and permissions, admin config, recipe import outcomes, the kept-delete notice and archive import completion, with their toasts. The user settings page mounts archive import progress for its bar. A component inside `Panel` mounts its reads and subscriptions while open and through the exit animation. Each opening rereads data nothing kept current; hooks need no `enabled` or `open` flag. A subscription names its reads with `useKeepsCurrent`, so web doesn't read them again on mount until they go stale.
 - A context only hands down a per-page store or wires compound components such as `Panel`. Every consumer re-renders when its value changes, so it holds nothing that changes often.
 - Client state several components share goes in a zustand store, and state one component owns stays in `useState`. Each component subscribes to the fields it reads, so a change re-renders only those components. A store holds ids, never a copy of server data, which would go stale.
 - A store is global unless its first value comes from the request or the page. A component reads a global store without a provider above it, and one that must start fresh on each screen resets on unmount. A persisted store persists through the platform adapter's storage, so the same store runs on web and mobile.
@@ -171,10 +173,10 @@ Always use the `@/` path alias for imports:
 
 ```typescript
 // Good
-import { useLibraryList } from "@/hooks/use-library";
+import { useLibraryList } from "@/features/library/hooks/use-library";
 
 // Bad
-import { useLibraryList } from "../../../hooks/use-library";
+import { useLibraryList } from "../../../features/library/hooks/use-library";
 ```
 
 ### Type Safety

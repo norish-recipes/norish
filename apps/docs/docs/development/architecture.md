@@ -66,10 +66,9 @@ Web and mobile use the same layout. Web keeps its folders at the root of
   `read-only/`, `media/` and `skeleton/`. Skeletons, `loading.tsx` files and
   the shared recipe page import files directly instead, since Turbopack ships
   every file an `index.ts` re-exports.
-- A feature's `index.ts` exports only the panels other features open, such as
-  `MiniGroceries`. Shared code may import that `index.ts` and nothing deeper.
-  Only route files import a feature's other files. Lint enforces this.
-  `recipes` opens no panel for another feature, so it has no `index.ts`.
+- Features never import each other. Lint blocks `@/features/<x>` and
+  `@/features/<x>/**` outside feature `<x>`, except in route files. Panels
+  several features open live in `components/Panel/consumers/`.
 - A feature's tests sit in one flat `features/<feature>/__tests__/` folder.
 - One root draws the views that share a layout.
   `app/(app)/groceries/layout.tsx` renders `GroceriesRoot`, which holds the
@@ -80,15 +79,12 @@ Web and mobile use the same layout. Web keeps its folders at the root of
 - Code two or more features use goes in the app's shared folders: `components/`,
   `hooks/` and `lib/` on web, `hooks/` and `lib/` on mobile.
 
-Imports run one way: shared folders, then features, then routes. The one way
-back is shared code opening a panel through a feature's `index.ts`.
+Imports run one way: shared folders, then features, then routes.
 
-On web `groceries` and `recipes` have moved so far. `library`, `calendar`,
-`settings`, `imports` and `auth` still live in web's `components/` and
-`hooks/`. In shared-react the recipe domain is in
-`src/recipes/` and the Reader in `src/reader/`, next to `groceries`. What
-calendar, settings, imports and the Library still use stays in shared-react's
-`hooks/` and `contexts/`.
+On web `groceries`, `recipes` and `library` have moved. The remaining features
+still live in web's `components/` and `hooks/`. In shared-react, `src/recipes/`
+and `src/reader/` sit next to `groceries/`; code still used by unmigrated
+features remains in `hooks/` and `contexts/`.
 
 ### In shared-react
 
@@ -106,8 +102,8 @@ The cross-cutting folders serve every domain:
 - `offline/` is the offline engine: the Offline Cache, the Outbox, Replay,
   Recovery, and the optimistic-update helpers every domain's mutations use.
 - `config/` reads reference data such as units, tags and recurrence words.
-- `reader/` holds the signed-in Reader. Today that is their Device Preferences
-  and Device Kind.
+- `reader/` holds the signed-in Reader: identity, household, allergies,
+  permissions and Device Preferences.
 - `realtime/` holds `useRealtimeSubscription`, which every subscription is built
   on, and `useKeepsCurrent`.
 
@@ -183,20 +179,27 @@ gives the reasons for decisions without an ADR.
   such as the recipe page's recipe id, and hands it down through a context that
   holds only the store. A module-level store is one object on the server, shared
   by every request.
-- No feature imports from inside another. A feature opens another's panels
-  through that feature's `index.ts`.
 - A write's rollback and settle go in `useMutation`'s own options. A `mutate`
   call's callbacks run only for the last call, so an overlapped failure would
   keep its change.
-- Whatever draws data mounts the subscriptions that keep it current: a
-  feature's root for its screens, a panel for itself while it is open, and the
-  shell for what it draws itself plus the Reader. Nothing then stays subscribed
-  for a page that doesn't draw it.
+- The component that draws data mounts its subscriptions: a feature root for
+  its screens, a panel while open, and the shell for its own data and the
+  Reader. A screen also mounts subscriptions for other domains it draws, so
+  unused pages don't stay subscribed. The shell mounts the Reader's household
+  and permissions, admin config, recipe import outcomes, the kept-delete
+  notice and archive import completion, with their toasts. User settings mounts
+  archive import progress for its bar. A component inside `Panel` mounts its
+  reads and subscriptions while open and through the exit animation. Each
+  opening rereads data nothing kept current; hooks need no `enabled` or `open`
+  flag.
 - A realtime subscription names the reads it keeps current with
   `useKeepsCurrent`, so web doesn't read them again on mount until they go
   stale.
-- Each layout seeds only what its screens draw, the `(app)` layout included,
-  so a full load carries no read its page doesn't draw.
+- Each layout seeds only what its screens draw in the first frame, so a full
+  load carries no unnecessary reads. `(app)` seeds permissions and Device
+  Preferences; `(library)` and the recipe layout seed favourites, the household
+  and the reader's allergies through `lib/reader-recipe-seeds.ts`; `(dashboard)`
+  seeds pending imports. The shell reads the Reader's profile (`user.get`) itself.
 - Web, mobile, shared-react and `packages/ui` compile with the React Compiler,
   and lint reports every component or hook it skips.
 
