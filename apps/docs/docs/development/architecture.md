@@ -172,6 +172,10 @@ gives the reasons for decisions without an ADR.
   ([ADR-0003](https://github.com/norish-recipes/Norish/blob/main/docs/adr/offline/0003-client-minted-entity-ids-on-create.md)).
 - zustand holds client state several components share, and state one component
   owns stays in `useState`. A store holds ids, never a copy of server data.
+- The page's provider creates a store whose first value comes from the page,
+  such as the recipe page's recipe id, and hands it down through a context that
+  holds only the store. A module-level store is one object on the server, shared
+  by every request.
 - No feature imports from inside another. A feature opens another's panels
   through that feature's `index.ts`.
 - A write's rollback and settle go in `useMutation`'s own options. A `mutate`
