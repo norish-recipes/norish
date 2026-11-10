@@ -10,7 +10,7 @@ import type {
 } from "./types";
 import {
   invalidateUnlessPreserved,
-  shouldPreserveOptimisticUpdate as preserveOptimisticUpdate,
+  shouldPreserveOptimisticUpdate,
 } from "../../offline/optimistic-updates";
 
 type CreateUseCalendarMutationsOptions = CreateCalendarHooksOptions & {
@@ -73,7 +73,7 @@ export function createUseCalendarMutations({
         },
         onError: (error, _vars, context) => {
           // Queued: keep the optimistic move/edit; the Outbox will Replay it.
-          if (preserveOptimisticUpdate(error)) return;
+          if (shouldPreserveOptimisticUpdate(error)) return;
 
           if (context?.previousItems) {
             setCalendarData(() => context.previousItems);
@@ -150,7 +150,7 @@ export function createUseCalendarMutations({
         },
         onError: (error, _vars, context) => {
           // Queued: keep the optimistic move/edit; the Outbox will Replay it.
-          if (preserveOptimisticUpdate(error)) return;
+          if (shouldPreserveOptimisticUpdate(error)) return;
 
           if (context?.previousItems) {
             setCalendarData(() => context.previousItems);
@@ -181,7 +181,7 @@ export function createUseCalendarMutations({
         },
         onError: (error, _vars, context) => {
           // Queued: keep the optimistic move/edit; the Outbox will Replay it.
-          if (preserveOptimisticUpdate(error)) return;
+          if (shouldPreserveOptimisticUpdate(error)) return;
 
           if (context?.previousItems) {
             setCalendarData(() => context.previousItems);

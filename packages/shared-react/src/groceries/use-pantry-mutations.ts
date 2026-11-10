@@ -5,7 +5,7 @@ import { createClientId } from "@norish/shared/lib/operation-helpers";
 import type { PantryData, PantryMutationsResult, PickedFood } from "./types";
 import {
   invalidateUnlessPreserved,
-  shouldPreserveOptimisticUpdate as preserveOptimisticUpdate,
+  shouldPreserveOptimisticUpdate,
 } from "../offline/optimistic-updates";
 import { useTRPC } from "../trpc";
 import { mergePantryAdded, mergePantryRemoved } from "./pantry-merge";
@@ -72,7 +72,7 @@ export function usePantryMutations(): PantryMutationsResult {
 
     // Queued for Replay, the add stands under the id it was sent with.
     return mutateAdd(payload).catch((error: unknown) => {
-      if (preserveOptimisticUpdate(error)) return id;
+      if (shouldPreserveOptimisticUpdate(error)) return id;
       throw error;
     });
   };

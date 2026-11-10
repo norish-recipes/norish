@@ -13,7 +13,7 @@ import { createClientId } from "@norish/shared/lib/operation-helpers";
 import type { GroceriesData, StoresData, StoresMutationsResult, StoreUpdateDraft } from "./types";
 import {
   invalidateUnlessPreserved,
-  shouldPreserveOptimisticUpdate as preserveOptimisticUpdate,
+  shouldPreserveOptimisticUpdate,
 } from "../offline/optimistic-updates";
 import { useTRPC } from "../trpc";
 
@@ -85,7 +85,7 @@ export function useStoresMutations(): StoresMutationsResult {
     onError: (error, data) => {
       // Queued: the row goes in under the client-minted id the server honours on Replay
       // (ADR-0003), a tentative success rather than a failure.
-      if (preserveOptimisticUpdate(error)) {
+      if (shouldPreserveOptimisticUpdate(error)) {
         if (data.id) insertCreated(data.id, data);
 
         return;
@@ -114,7 +114,7 @@ export function useStoresMutations(): StoresMutationsResult {
     const payload = { ...data, id: createClientId() };
 
     return mutateCreate(payload).catch((error: unknown) => {
-      if (preserveOptimisticUpdate(error)) return payload.id;
+      if (shouldPreserveOptimisticUpdate(error)) return payload.id;
       throw error;
     });
   };

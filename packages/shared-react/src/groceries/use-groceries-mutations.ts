@@ -10,7 +10,7 @@ import { calculateNextOccurrence, getTodayString } from "@norish/shared/lib/recu
 
 import type { GroceriesData, GroceriesMutationsResult, GroceryCreateData } from "./types";
 import { useUnitsQuery } from "../config";
-import { shouldPreserveOptimisticUpdate as preserveOptimisticUpdate } from "../offline/optimistic-updates";
+import { shouldPreserveOptimisticUpdate } from "../offline/optimistic-updates";
 import { usePlatform } from "../platform";
 import { useTRPC } from "../trpc";
 
@@ -329,7 +329,7 @@ export function useGroceriesMutations(): GroceriesMutationsResult {
     was: Undo | undefined,
     reason = "The grocery change was not saved. Please try again."
   ) => {
-    if (preserveOptimisticUpdate(error)) return;
+    if (shouldPreserveOptimisticUpdate(error)) return;
 
     if (was) undo(was);
     log.error({ error }, "Failed to save grocery change");
@@ -627,7 +627,7 @@ export function useGroceriesMutations(): GroceriesMutationsResult {
       (error: unknown) => {
         // Queued: the optimistic rows hold and their ids are the ones Replay inserts (ADR-0003),
         // so this is a tentative success.
-        if (preserveOptimisticUpdate(error)) return rows.map((row) => row.id);
+        if (shouldPreserveOptimisticUpdate(error)) return rows.map((row) => row.id);
         throw error;
       }
     );
