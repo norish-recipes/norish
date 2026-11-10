@@ -4,7 +4,7 @@ import type { LibraryGridItem } from "@/lib/library-items";
 import LibraryGrid from "@/components/dashboard/library-grid";
 import RecipeCard from "@/components/dashboard/recipe-card";
 import RecipeSelectionBar from "@/components/dashboard/recipe-selection-bar";
-import { useLibraryCards } from "@/hooks/use-library";
+import { useLibraryCards, useLibraryQueryFilters } from "@/hooks/use-library";
 import { Card } from "@heroui/react";
 import { useTranslations } from "next-intl";
 
@@ -14,26 +14,19 @@ import type { RecipeViewMode } from "@norish/shared/contracts/zod/device-prefere
 import {
   useCookbookRecipesQuery,
   useCookbooksMutations,
-  useLibraryFilters,
   useRecipeSelection,
 } from "@norish/shared-react/recipes";
 import {
   hasAppliedRecipeFilters,
   serializeRecipeFilters,
-  toRecipesQueryFilters,
 } from "@norish/shared/contracts/filter-contract";
 
 /** The selection bar over a cookbook's members, whose versions it acts on. */
 export function CookbookSelectionBar({ cookbook }: { cookbook: CookbookSummaryDTO }) {
-  const filters = useLibraryFilters((state) => state.filters);
-  const isHydrated = useLibraryFilters((state) => state.hydrated);
-  const { recipes, removeMember } = useCookbookRecipesQuery(
-    cookbook.id,
-    toRecipesQueryFilters(filters),
-    {
-      enabled: isHydrated,
-    }
-  );
+  const { queryFilters, isHydrated } = useLibraryQueryFilters();
+  const { recipes, removeMember } = useCookbookRecipesQuery(cookbook.id, queryFilters, {
+    enabled: isHydrated,
+  });
 
   return (
     <RecipeSelectionBar
@@ -61,13 +54,11 @@ export default function CookbookMembers({
   variant: RecipeViewMode;
 }) {
   const t = useTranslations("recipes.cookbooks");
-  const filters = useLibraryFilters((state) => state.filters);
-  const isHydrated = useLibraryFilters((state) => state.hydrated);
+  const { filters, queryFilters, isHydrated } = useLibraryQueryFilters();
   const { isFavorite, toggleFavorite, deleteRecipes, allergies } = useLibraryCards();
   const { setMembership } = useCookbooksMutations();
   const selectRange = useRecipeSelection((state) => state.selectRange);
 
-  const queryFilters = toRecipesQueryFilters(filters);
   // Wait for the stored filters, as the Library does: asking under the defaults first shows members
   // the reader filters out, then asks again.
   const { recipes, isLoading, isValidating, loadMore, removeMember } = useCookbookRecipesQuery(
