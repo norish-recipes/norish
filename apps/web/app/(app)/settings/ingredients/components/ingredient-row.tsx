@@ -2,7 +2,7 @@
 
 import type { IngredientItem } from "@/components/ingredients/types";
 import { memo } from "react";
-import { IngredientIcon, useIngredientIconsHidden } from "@/components/ingredients/ingredient-icon";
+import { IngredientIcon } from "@/components/ingredients/ingredient-icon";
 import { IngredientStatusChip } from "@/components/ingredients/ingredient-status-chip";
 import { ChevronRightIcon } from "@heroicons/react/24/outline";
 import { Spinner } from "@heroui/react";
@@ -43,7 +43,6 @@ export const IngredientRow = memo(function IngredientRow({
   const displayName = ingredientDisplayName(item, locale);
   const hiddenSpellings = item.hiddenSpellings ?? 0;
   const foldable = onToggleKinds !== undefined && item.kinds > 0;
-  const iconsHidden = useIngredientIconsHidden();
 
   return (
     <div
@@ -91,7 +90,7 @@ export const IngredientRow = memo(function IngredientRow({
         type="button"
         onClick={() => onOpen(item.id)}
       >
-        {iconsHidden ? null : <IngredientIcon placeholder src={item.icon ?? null} />}
+        <IngredientIcon placeholder src={item.icon ?? null} />
         <div className="flex min-w-0 flex-1 flex-col gap-1">
           <div className="flex min-w-0 flex-wrap items-center gap-2">
             <span className="min-w-0 truncate font-medium">{displayName}</span>

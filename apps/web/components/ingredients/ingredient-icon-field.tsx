@@ -7,6 +7,7 @@ import { showSafeErrorToast } from "@/lib/ui/safe-error-toast";
 import { ArrowUpTrayIcon, SparklesIcon, TrashIcon } from "@heroicons/react/16/solid";
 import { Dropdown, Label, Spinner } from "@heroui/react";
 import { useMutation } from "@tanstack/react-query";
+import { useHiddenItemVisibility } from "@/hooks/user/use-hidden-item-visibility";
 import { useTranslations } from "next-intl";
 
 import { usePermissions } from "@norish/shared-react/reader";
@@ -14,7 +15,7 @@ import { useTRPC } from "@norish/shared-react/trpc";
 import { ICON_PICTURE_MIME_TYPES } from "@norish/shared/contracts";
 
 import type { IngredientItem } from "./types";
-import { IngredientIcon, useIngredientIconsHidden } from "./ingredient-icon";
+import { IngredientIcon } from "./ingredient-icon";
 
 /**
  * The icon as the panel's draft holds it: unchanged (undefined), a stored
@@ -46,9 +47,9 @@ export function IngredientIconField({
   const upload = useMutation(trpc.ingredients.uploadIcon.mutationOptions());
   const generate = useMutation(trpc.ingredients.generateIcon.mutationOptions());
   const canDrawImages = usePermissions((p) => p.canDrawImages);
-  const hidden = useIngredientIconsHidden();
+  const { showIngredientIcons } = useHiddenItemVisibility();
 
-  if (hidden) return null;
+  if (!showIngredientIcons) return null;
 
   // A removed own icon shows the placeholder until Save brings back what it falls back to.
   const shown = draft === undefined ? (item.icon ?? null) : (draft?.address ?? null);
