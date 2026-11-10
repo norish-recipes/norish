@@ -1,13 +1,14 @@
 "use client";
 
 import React, { useState } from "react";
-import { FiltersPanel } from "@/components/Panel/consumers";
 import { useAutoHide } from "@/hooks/auto-hide";
 import { useLibraryList } from "@/hooks/use-library";
 import { useActionBarStore } from "@/lib/action-bar";
 import { Button } from "@heroui/react";
 import { AnimatePresence, motion } from "motion/react";
 import { useTranslations } from "next-intl";
+
+import FiltersPanel from "./filters-panel";
 
 /**
  * The floating Library pill: how much is on screen, and a shortcut to the

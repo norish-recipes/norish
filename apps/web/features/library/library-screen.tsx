@@ -1,7 +1,7 @@
 "use client";
 
-import FloatingRecipeChip from "@/components/dashboard/floating-recipe-chip";
 import RecipeGridSkeleton from "@/components/skeleton/recipe-grid-skeleton";
+import { FloatingRecipeChip } from "@/features/library/components/filters";
 import { LibraryView } from "@/features/library/components/grid";
 import {
   CreateRecipeButton,

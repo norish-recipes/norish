@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useEffectEvent, useState } from "react";
-import Filters from "@/components/shared/filters";
+import { Filters } from "@/features/library/components/filters";
 import { useImportRecipe } from "@/hooks/use-import-recipe";
 import { MagnifyingGlassIcon, XMarkIcon } from "@heroicons/react/16/solid";
 import { Input } from "@heroui/react";

@@ -1,7 +1,6 @@
 "use client";
 
 import { useCallback, useState } from "react";
-import SearchFieldToggles from "@/components/dashboard/search-field-toggles";
 import Panel from "@/components/Panel/Panel";
 import { ActionButton, ActionButtonGroup } from "@/components/shared/action-button";
 import { ChipButton } from "@/components/shared/chip-button";
@@ -25,6 +24,8 @@ import { useCategoriesQuery, useTagsQuery } from "@norish/shared-react/config";
 import { useLibraryFilters } from "@norish/shared-react/recipes";
 import { DEFAULT_RECIPE_FILTERS } from "@norish/shared/contracts/filter-contract";
 import StarRating from "@norish/ui/star-rating";
+
+import SearchFieldToggles from "./search-field-toggles";
 
 const COOKING_TIME_OPTIONS: Array<{
   value: number;

@@ -4,7 +4,7 @@ import { describe, expect, it, vi } from "vitest";
 
 import "@testing-library/jest-dom";
 
-import FiltersPanel from "@/components/Panel/consumers/filters-panel";
+import FiltersPanel from "@/features/library/components/filters/filters-panel";
 
 import { LibraryFiltersProvider } from "@norish/shared-react/recipes";
 import { DEFAULT_PERSISTED_RECIPE_FILTERS } from "@norish/shared/contracts/filter-contract";
@@ -47,7 +47,7 @@ vi.mock("@/components/Panel/Panel", () => {
   };
 });
 
-vi.mock("@/components/dashboard/search-field-toggles", () => ({
+vi.mock("@/features/library/components/filters/search-field-toggles", () => ({
   default: () => <div>search-field-toggles</div>,
 }));
 
