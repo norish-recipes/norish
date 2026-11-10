@@ -86,7 +86,7 @@ vi.mock("@norish/shared-react/groceries", async () => {
     }),
   };
 });
-vi.mock("@/components/Panel/use-groceries-pantry-and-catalogue-subscriptions", () => ({
+vi.mock("@/hooks/use-groceries-pantry-and-catalogue-subscriptions", () => ({
   useGroceriesPantryAndCatalogueSubscriptions: () => undefined,
 }));
 vi.mock("@/hooks/use-unit-formatter", () => ({

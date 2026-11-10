@@ -5,13 +5,13 @@ import { useEffect, useRef, useState } from "react";
 import Link from "next/link";
 import { OnTheListMark } from "@/components/ingredients/on-the-list-mark";
 import Panel from "@/components/Panel/Panel";
-import { useGroceriesPantryAndCatalogueSubscriptions } from "@/components/Panel/use-groceries-pantry-and-catalogue-subscriptions";
 import {
   ActionButton,
   ActionButtonGroup,
   IconActionButton,
 } from "@/components/shared/action-button";
 import UiSwitch from "@/components/shared/ui-switch";
+import { useGroceriesPantryAndCatalogueSubscriptions } from "@/hooks/use-groceries-pantry-and-catalogue-subscriptions";
 import { ArrowsRightLeftIcon, PencilSquareIcon } from "@heroicons/react/16/solid";
 import { ArrowUturnLeftIcon, ChevronRightIcon, XMarkIcon } from "@heroicons/react/24/outline";
 import { Button, Chip, Input, Skeleton, TextField, toast } from "@heroui/react";

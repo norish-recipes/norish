@@ -4,13 +4,13 @@ import { useEffect, useRef, useState } from "react";
 import { IngredientIcon, useIngredientIcons } from "@/components/ingredients/ingredient-icon";
 import { OnTheListMark } from "@/components/ingredients/on-the-list-mark";
 import Panel from "@/components/Panel/Panel";
-import { useGroceriesPantryAndCatalogueSubscriptions } from "@/components/Panel/use-groceries-pantry-and-catalogue-subscriptions";
 import { isCheckboxEvent, RoundCheckbox } from "@/components/round-checkbox";
 import {
   ActionButton,
   ActionButtonGroup,
   IconActionButton,
 } from "@/components/shared/action-button";
+import { useGroceriesPantryAndCatalogueSubscriptions } from "@/hooks/use-groceries-pantry-and-catalogue-subscriptions";
 import { useUnitFormatter } from "@/hooks/use-unit-formatter";
 import { ArchiveBoxArrowDownIcon } from "@heroicons/react/16/solid";
 import { Button, Input, toast } from "@heroui/react";

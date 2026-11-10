@@ -284,7 +284,7 @@ vi.mock("@norish/shared-react/config", async (importOriginal) => ({
   useIngredientsSubscription: () => undefined,
   useSpellingRules: () => undefined,
 }));
-vi.mock("@/components/Panel/use-groceries-pantry-and-catalogue-subscriptions", () => ({
+vi.mock("@/hooks/use-groceries-pantry-and-catalogue-subscriptions", () => ({
   useGroceriesPantryAndCatalogueSubscriptions: () => undefined,
 }));
 vi.mock("@norish/shared-react/groceries", () => ({
