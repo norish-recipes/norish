@@ -4,15 +4,12 @@ import { useQueryClient } from "@tanstack/react-query";
 import type { CookbookSummaryDTO } from "@norish/shared/contracts";
 
 import type { InfiniteLibraryData } from "../library/library-cache";
-import type {
-  CookbooksCacheHelpers,
-  CreateCookbookHooksOptions,
-  InfiniteCookbookData,
-} from "./types";
+import type { CreateRecipeHooksOptions } from "../recipes/types";
+import type { CookbooksCacheHelpers, InfiniteCookbookData } from "./types";
 import { applyCookbookUpdateToLibrary, applyCookbookUpdateToList } from "../library/library-cache";
 import { cookbookIdOf } from "./use-cookbook-recipes-query";
 
-export function createUseCookbooksCache({ useTRPC }: CreateCookbookHooksOptions) {
+export function createUseCookbooksCache({ useTRPC }: CreateRecipeHooksOptions) {
   return function useCookbooksCacheHelpers(): CookbooksCacheHelpers {
     "use memo";
 

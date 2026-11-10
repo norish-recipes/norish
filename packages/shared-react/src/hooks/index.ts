@@ -1,7 +1,6 @@
 export * from "./use-dirty-state";
 export * from "./use-servings-scaler";
 export * from "./unit-formatter";
-export { useHydrated } from "../platform/use-hydrated";
 export * from "./use-amount-display-preference";
 export * from "./admin/index";
 export * from "./archive/index";

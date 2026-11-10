@@ -19,7 +19,7 @@ import { useWindowVirtualizer } from "@tanstack/react-virtual";
 import { useWindowSize } from "usehooks-ts";
 
 import type { RecipeViewMode } from "@norish/shared/contracts/zod/device-preferences";
-import { useHydrated } from "@norish/shared-react/hooks";
+import { useHydrated } from "@norish/shared-react/platform";
 import { useDeviceKind } from "@norish/shared-react/reader";
 
 import RecipeGridSkeleton from "../skeleton/recipe-grid-skeleton";

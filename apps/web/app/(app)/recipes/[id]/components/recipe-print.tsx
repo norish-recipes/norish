@@ -10,7 +10,7 @@ import { useTranslations } from "next-intl";
 import { createPortal } from "react-dom";
 
 import { useTimerKeywordsQuery, useTimersEnabledQuery } from "@norish/shared-react/config";
-import { useHydrated } from "@norish/shared-react/hooks";
+import { useHydrated } from "@norish/shared-react/platform";
 import { primaryRecipeImage } from "@norish/shared/lib/recipe-media";
 
 import { useRecipeContextRequired } from "../context";

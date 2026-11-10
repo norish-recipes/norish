@@ -2,7 +2,7 @@ import { useQuery } from "@tanstack/react-query";
 
 import type { CookbookSummaryDTO } from "@norish/shared/contracts";
 
-import type { CreateCookbookHooksOptions } from "./types";
+import type { CreateRecipeHooksOptions } from "../recipes/types";
 
 export type CookbookQueryResult = {
   cookbook: CookbookSummaryDTO | undefined;
@@ -12,7 +12,7 @@ export type CookbookQueryResult = {
   error: unknown;
 };
 
-export function createUseCookbookQuery({ useTRPC }: CreateCookbookHooksOptions) {
+export function createUseCookbookQuery({ useTRPC }: CreateRecipeHooksOptions) {
   return function useCookbookQuery(
     cookbookId: string,
     { enabled = true }: { enabled?: boolean } = {}

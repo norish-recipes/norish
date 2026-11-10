@@ -1,6 +1,6 @@
 import { useQuery } from "@tanstack/react-query";
 
-import type { CreateCookbookHooksOptions } from "./types";
+import type { CreateRecipeHooksOptions } from "../recipes/types";
 
 export type CookbookMemberIdsQueryResult = {
   memberIds: string[];
@@ -14,7 +14,7 @@ export type CookbookMemberIdsQueryResult = {
  * is the panel that fills a cookbook in bulk, and it needs to leave out what
  * is already in there however large the cookbook is.
  */
-export function createUseCookbookMemberIdsQuery({ useTRPC }: CreateCookbookHooksOptions) {
+export function createUseCookbookMemberIdsQuery({ useTRPC }: CreateRecipeHooksOptions) {
   return function useCookbookMemberIdsQuery(
     cookbookId: string,
     { enabled = true }: { enabled?: boolean } = {}

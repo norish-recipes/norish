@@ -5,7 +5,7 @@ import type { RecipeDashboardDTO } from "@norish/shared/contracts";
 import { byNextCursor, cookbookRecipesInput } from "@norish/shared/contracts/list-queries";
 
 import type { RecipeFilters } from "../recipes/dashboard";
-import type { CreateCookbookHooksOptions } from "./types";
+import type { CreateRecipeHooksOptions } from "../recipes/types";
 
 type InfiniteMemberPages = {
   pages: { recipes: RecipeDashboardDTO[]; total: number; nextCursor: number | null }[];
@@ -46,7 +46,7 @@ export type CookbookRecipesQueryResult = {
  * honours the reader's stored sort, search and filters and pages the same way
  * the Library does.
  */
-export function createUseCookbookRecipesQuery({ useTRPC }: CreateCookbookHooksOptions) {
+export function createUseCookbookRecipesQuery({ useTRPC }: CreateRecipeHooksOptions) {
   return function useCookbookRecipesQuery(
     cookbookId: string,
     filters: RecipeFilters & { favoritesOnly?: boolean } = {},

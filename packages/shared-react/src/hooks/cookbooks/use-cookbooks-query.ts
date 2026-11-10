@@ -1,9 +1,10 @@
 import { useCallback, useMemo } from "react";
 import { useInfiniteQuery, useQueryClient } from "@tanstack/react-query";
 
-import type { CookbookFilters, CookbooksQueryResult, CreateCookbookHooksOptions } from "./types";
+import type { CreateRecipeHooksOptions } from "../recipes/types";
+import type { CookbookFilters, CookbooksQueryResult } from "./types";
 
-export function createUseCookbooksQuery({ useTRPC }: CreateCookbookHooksOptions) {
+export function createUseCookbooksQuery({ useTRPC }: CreateRecipeHooksOptions) {
   return function useCookbooksQuery(
     filters: CookbookFilters = {},
     { enabled = true }: { enabled?: boolean } = {}

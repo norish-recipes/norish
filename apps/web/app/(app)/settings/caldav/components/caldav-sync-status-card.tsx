@@ -14,7 +14,7 @@ import {
 import { Button, Chip, Pagination, Popover, Table } from "@heroui/react";
 import { useFormatter, useNow, useTranslations } from "next-intl";
 
-import { useHydrated } from "@norish/shared-react/hooks";
+import { useHydrated } from "@norish/shared-react/platform";
 
 import { useCalDavSettingsContext } from "../context";
 import { FIRST_SYNC_STATUS_PAGE } from "../first-sync-status-page";

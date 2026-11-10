@@ -2,8 +2,6 @@ import type { InfiniteData, QueryKey } from "@tanstack/react-query";
 
 import type { CookbookSummaryDTO, SortOrder } from "@norish/shared/contracts";
 
-import type { CreateRecipeHooksOptions } from "../recipes/types";
-
 export type CookbookFilters = {
   limit?: number;
   search?: string;
@@ -82,5 +80,3 @@ export type EditableCookbooksQueryResult = {
   cookbooks: EditableCookbook[];
   isLoading: boolean;
 };
-
-export type CreateCookbookHooksOptions = CreateRecipeHooksOptions;

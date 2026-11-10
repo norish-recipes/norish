@@ -1,4 +1,4 @@
-import type { CreateCookbookHooksOptions } from "./types";
+import type { CreateRecipeHooksOptions } from "../recipes/types";
 import { createUseCookbookMemberIdsQuery } from "./use-cookbook-member-ids-query";
 import { createUseCookbookQuery } from "./use-cookbook-query";
 import { createUseCookbookRecipesQuery } from "./use-cookbook-recipes-query";
@@ -19,7 +19,6 @@ export type {
   CookbooksCacheHelpers,
   CookbooksMutationsResult,
   CookbooksQueryResult,
-  CreateCookbookHooksOptions,
   InfiniteCookbookData,
 } from "./types";
 
@@ -39,7 +38,7 @@ export {
   createUseCookbooksSubscription,
 };
 
-export function createCookbookHooks(options: CreateCookbookHooksOptions) {
+export function createCookbookHooks(options: CreateRecipeHooksOptions) {
   const useCookbooksCacheHelpers = createUseCookbooksCache(options);
 
   return {

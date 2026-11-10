@@ -4,18 +4,15 @@ import { useMutation } from "@tanstack/react-query";
 import type { CookbookSummaryDTO } from "@norish/shared/contracts";
 import { createClientId } from "@norish/shared/lib/operation-helpers";
 
-import type {
-  CookbooksCacheHelpers,
-  CookbooksMutationsResult,
-  CreateCookbookHooksOptions,
-} from "./types";
+import type { CreateRecipeHooksOptions } from "../recipes/types";
+import type { CookbooksCacheHelpers, CookbooksMutationsResult } from "./types";
 import {
   invalidateUnlessPreserved,
   shouldPreserveOptimisticUpdate,
 } from "../../offline/optimistic-updates";
 import { useReader } from "../../reader";
 
-type Dependencies = CreateCookbookHooksOptions & {
+type Dependencies = CreateRecipeHooksOptions & {
   useCookbooksCacheHelpers: () => CookbooksCacheHelpers;
 };
 

@@ -1,12 +1,13 @@
 import type { EventName, PayloadOf } from "@norish/shared/contracts/realtime/catalogue";
 import type { CookbooksRealtime } from "@norish/shared/contracts/realtime/cookbooks";
 
-import type { CookbooksCacheHelpers, CreateCookbookHooksOptions } from "./types";
+import type { CreateRecipeHooksOptions } from "../recipes/types";
+import type { CookbooksCacheHelpers } from "./types";
 import { useRealtimeSubscription } from "../../realtime/use-realtime-subscription";
 
 type Payload<E extends EventName<CookbooksRealtime>> = PayloadOf<CookbooksRealtime, E>;
 
-type Dependencies = CreateCookbookHooksOptions & {
+type Dependencies = CreateRecipeHooksOptions & {
   useCookbooksCacheHelpers: () => CookbooksCacheHelpers;
 };
 

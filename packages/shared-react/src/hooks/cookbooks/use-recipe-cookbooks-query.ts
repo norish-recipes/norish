@@ -1,13 +1,10 @@
 import { useQuery } from "@tanstack/react-query";
 
-import type {
-  CreateCookbookHooksOptions,
-  EditableCookbooksQueryResult,
-  RecipeCookbooksQueryResult,
-} from "./types";
+import type { CreateRecipeHooksOptions } from "../recipes/types";
+import type { EditableCookbooksQueryResult, RecipeCookbooksQueryResult } from "./types";
 
 /** The cookbooks a recipe is in, as the recipe page's card lists them. */
-export function createUseRecipeCookbooksQuery({ useTRPC }: CreateCookbookHooksOptions) {
+export function createUseRecipeCookbooksQuery({ useTRPC }: CreateRecipeHooksOptions) {
   return function useRecipeCookbooksQuery(
     recipeId: string | null,
     { enabled = true }: { enabled?: boolean } = {}
@@ -34,7 +31,7 @@ export function createUseRecipeCookbooksQuery({ useTRPC }: CreateCookbookHooksOp
  * (ADR-0009). The membership half is the recipe's own read, so the toggles
  * and the recipe page's card always agree.
  */
-export function createUseEditableCookbooksQuery({ useTRPC }: CreateCookbookHooksOptions) {
+export function createUseEditableCookbooksQuery({ useTRPC }: CreateRecipeHooksOptions) {
   return function useEditableCookbooksQuery(
     recipeId: string | null,
     { enabled = true }: { enabled?: boolean } = {}
