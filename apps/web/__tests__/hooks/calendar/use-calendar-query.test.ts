@@ -2,7 +2,7 @@ import { useCalendarQuery } from "@/hooks/calendar/use-calendar-query";
 import { renderHook, waitFor } from "@testing-library/react";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 
-import { createTestQueryClient, createTestWrapper } from "./test-utils";
+import { createTestQueryClient, createTestWrapper } from "@norish/shared-react/platform/testing";
 
 type PlannedItemFromQuery = {
   id: string;

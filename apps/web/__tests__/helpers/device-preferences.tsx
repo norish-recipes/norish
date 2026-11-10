@@ -6,15 +6,17 @@ import type {
   DeviceKind,
   DevicePreferences,
 } from "@norish/shared/contracts/zod/device-preferences";
-import { PlatformProvider } from "@norish/shared-react/platform";
-import { fakePlatformAdapter } from "@norish/shared-react/platform/testing";
+import {
+  createTestQueryClient,
+  createTestWrapper,
+  fakePlatformAdapter,
+} from "@norish/shared-react/platform/testing";
 import { DevicePreferencesForVisit } from "@norish/shared-react/reader";
 import {
   DEVICE_PREFERENCE_DEFAULTS,
   deviceBlocks,
 } from "@norish/shared/contracts/zod/device-preferences";
 
-import { createTestQueryClient, createTestWrapper } from "../hooks/user/test-utils";
 import { devicePreferencesQueryKey } from "./device-preferences-trpc";
 
 export { deviceWrite, devicePreferencesQueryKey } from "./device-preferences-trpc";
@@ -37,7 +39,7 @@ export function renderWithDevicePreferences(
     queryClient?: QueryClient;
   } = {}
 ) {
-  const Wrapper = createTestWrapper(queryClient);
+  const Wrapper = createTestWrapper(queryClient, fakePlatformAdapter(kind));
 
   queryClient.setQueryData(
     devicePreferencesQueryKey,
@@ -45,10 +47,6 @@ export function renderWithDevicePreferences(
   );
 
   return render(
-    <Wrapper>
-      <PlatformProvider adapter={fakePlatformAdapter(kind)}>
-        {forVisit ? <DevicePreferencesForVisit>{ui}</DevicePreferencesForVisit> : ui}
-      </PlatformProvider>
-    </Wrapper>
+    <Wrapper>{forVisit ? <DevicePreferencesForVisit>{ui}</DevicePreferencesForVisit> : ui}</Wrapper>
   );
 }

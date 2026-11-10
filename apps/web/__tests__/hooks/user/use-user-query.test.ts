@@ -3,13 +3,9 @@ import { useUserSettingsQuery } from "@/hooks/user/use-user-query";
 import { waitFor } from "@testing-library/react";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 
-import {
-  createMockApiKey,
-  createMockUser,
-  createMockUserSettingsData,
-  createTestQueryClient,
-  createTestWrapper,
-} from "./test-utils";
+import { createTestQueryClient, createTestWrapper } from "@norish/shared-react/platform/testing";
+
+import { createMockApiKey, createMockUser, createMockUserSettingsData } from "./test-utils";
 
 // Mock the tRPC provider
 const mockQueryKey = [["user", "get"], { type: "query" }] as const;

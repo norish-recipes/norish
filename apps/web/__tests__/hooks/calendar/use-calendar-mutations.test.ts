@@ -2,7 +2,7 @@ import { useCalendarMutations } from "@/hooks/calendar/use-calendar-mutations";
 import { act, renderHook, waitFor } from "@testing-library/react";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 
-import { createTestQueryClient, createTestWrapper } from "./test-utils";
+import { createTestQueryClient, createTestWrapper } from "@norish/shared-react/platform/testing";
 
 const mockCreateItemMutate = vi.fn();
 const mockDeleteItemMutate = vi.fn();

@@ -2,8 +2,9 @@ import { useCalendarSubscription } from "@/hooks/calendar/use-calendar-subscript
 import { renderHook } from "@testing-library/react";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 
+import { createTestQueryClient, createTestWrapper } from "@norish/shared-react/platform/testing";
+
 import { trackedEvent } from "../realtime-test-utils";
-import { createTestQueryClient, createTestWrapper } from "./test-utils";
 
 type SubscriptionCallback = (data: unknown) => void;
 let subscriptionCallbacks: Record<string, SubscriptionCallback> = {};

@@ -1,35 +1,7 @@
 import type { UserSettingsData } from "@/hooks/user/use-user-query";
-import type { ReactNode } from "react";
-import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 
 import type { User } from "@norish/shared/contracts";
 import type { ApiKeyMetadataDto } from "@norish/trpc";
-
-/**
- * Create a test QueryClient with optimized settings for tests
- */
-export function createTestQueryClient() {
-  return new QueryClient({
-    defaultOptions: {
-      queries: {
-        retry: false,
-        gcTime: Infinity,
-      },
-      mutations: {
-        retry: false,
-      },
-    },
-  });
-}
-
-/**
- * Create a wrapper component for testing hooks
- */
-export function createTestWrapper(queryClient: QueryClient) {
-  return function Wrapper({ children }: { children: ReactNode }) {
-    return <QueryClientProvider client={queryClient}>{children}</QueryClientProvider>;
-  };
-}
 
 /**
  * Create a mock user for testing

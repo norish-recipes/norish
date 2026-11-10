@@ -3,7 +3,9 @@ import { useCaldavMutations } from "@/hooks/caldav/use-caldav-mutations";
 import { act, renderHook, waitFor } from "@testing-library/react";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 
-import { createMockCaldavConfig, createTestQueryClient, createTestWrapper } from "./test-utils";
+import { createTestQueryClient, createTestWrapper } from "@norish/shared-react/platform/testing";
+
+import { createMockCaldavConfig } from "./test-utils";
 
 // Mock query keys
 const mockConfigQueryKey = ["caldav", "getConfig"];

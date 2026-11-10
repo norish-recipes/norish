@@ -1,14 +1,7 @@
-import type { ReactNode } from "react";
-import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { renderHook, waitFor } from "@testing-library/react";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 
-const createTestQueryClient = () =>
-  new QueryClient({ defaultOptions: { queries: { retry: false }, mutations: { retry: false } } });
-const createTestWrapper = (queryClient: QueryClient) =>
-  function TestWrapper({ children }: { children: ReactNode }) {
-    return <QueryClientProvider client={queryClient}>{children}</QueryClientProvider>;
-  };
+import { createTestQueryClient, createTestWrapper } from "@norish/shared-react/platform/testing";
 
 // Mock tRPC provider
 vi.mock("@norish/shared-react/trpc", () => ({

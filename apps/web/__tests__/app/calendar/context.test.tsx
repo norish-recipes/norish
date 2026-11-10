@@ -4,6 +4,8 @@ import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { act, renderHook } from "@testing-library/react";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 
+import { createTestQueryClient } from "@norish/shared-react/platform/testing";
+
 // Mock the calendar hooks
 const mockCalendarData = {};
 const mockIsLoading = false;
@@ -27,15 +29,6 @@ vi.mock("@/hooks/calendar/use-calendar-mutations", () => ({
 vi.mock("@/hooks/calendar/use-calendar-subscription", () => ({
   useCalendarSubscription: vi.fn(),
 }));
-
-function createTestQueryClient() {
-  return new QueryClient({
-    defaultOptions: {
-      queries: { retry: false },
-      mutations: { retry: false },
-    },
-  });
-}
 
 function createTestWrapper(queryClient: QueryClient) {
   return function Wrapper({ children }: { children: ReactNode }) {

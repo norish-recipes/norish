@@ -2,8 +2,9 @@ import { renderHook } from "@testing-library/react";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 
 import type { UserSettingsDto } from "@norish/trpc";
+import { createTestQueryClient, createTestWrapper } from "@norish/shared-react/platform/testing";
 
-import { createMockUserSettingsData, createTestQueryClient, createTestWrapper } from "./test-utils";
+import { createMockUserSettingsData } from "./test-utils";
 
 const mockUserQueryKey = [["user", "get"], { type: "query" }] as const;
 const mockAllergiesQueryKey = [["user", "getAllergies"], { type: "query" }] as const;

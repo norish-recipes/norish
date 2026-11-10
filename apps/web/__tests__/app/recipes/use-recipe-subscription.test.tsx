@@ -1,16 +1,9 @@
-import type { ReactNode } from "react";
-import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { act, renderHook } from "@testing-library/react";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 
-import { trackedEvent } from "../../hooks/realtime-test-utils";
+import { createTestQueryClient, createTestWrapper } from "@norish/shared-react/platform/testing";
 
-const createTestQueryClient = () =>
-  new QueryClient({ defaultOptions: { queries: { retry: false }, mutations: { retry: false } } });
-const createTestWrapper = (queryClient: QueryClient) =>
-  function TestWrapper({ children }: { children: ReactNode }) {
-    return <QueryClientProvider client={queryClient}>{children}</QueryClientProvider>;
-  };
+import { trackedEvent } from "../../hooks/realtime-test-utils";
 
 const subscriptionCallbacks: Record<string, ((data: unknown) => void) | undefined> = {};
 

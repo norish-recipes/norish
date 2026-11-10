@@ -9,13 +9,13 @@ import {
 import { act, renderHook, waitFor } from "@testing-library/react";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 
+import { createTestQueryClient, createTestWrapper } from "@norish/shared-react/platform/testing";
+
 import {
   createMockCaldavConfig,
   createMockSyncStatusData,
   createMockSyncStatusView,
   createMockSyncSummary,
-  createTestQueryClient,
-  createTestWrapper,
 } from "./test-utils";
 
 // Mock the tRPC provider

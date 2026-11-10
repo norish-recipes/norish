@@ -1,8 +1,8 @@
-import { ReactNode } from "react";
 import { parseContainerId, useCalendarDnd } from "@/hooks/calendar/use-calendar-dnd";
-import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { act, renderHook } from "@testing-library/react";
 import { beforeEach, describe, expect, it, vi } from "vitest";
+
+import { createTestQueryClient, createTestWrapper } from "@norish/shared-react/platform/testing";
 
 type Slot = "Breakfast" | "Lunch" | "Dinner" | "Snack";
 
@@ -100,21 +100,6 @@ function createMockItem(overrides: Partial<PlannedItemFromQuery> = {}): PlannedI
     createdAt: new Date(),
     updatedAt: new Date(),
     ...overrides,
-  };
-}
-
-function createTestQueryClient() {
-  return new QueryClient({
-    defaultOptions: {
-      queries: { retry: false, gcTime: Infinity },
-      mutations: { retry: false },
-    },
-  });
-}
-
-function createTestWrapper(queryClient: QueryClient) {
-  return function TestWrapper({ children }: { children: ReactNode }) {
-    return <QueryClientProvider client={queryClient}>{children}</QueryClientProvider>;
   };
 }
 
