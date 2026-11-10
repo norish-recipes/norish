@@ -9,10 +9,10 @@ import type {
   RecipeIngredientsDto,
 } from "@norish/shared/contracts";
 
+import type { RecipeEnrichmentResult } from "./use-recipe-enrichment";
 import { useTRPC } from "../trpc";
 import { useRecipePageStore, useRecipePageStoreApi } from "./recipe-page-store";
 import { scaleIngredients } from "./scale-ingredients";
-import type { RecipeEnrichmentResult } from "./use-recipe-enrichment";
 import { useConvertMutation } from "./use-convert-mutation";
 import { useRecipeEnrichment } from "./use-recipe-enrichment";
 
