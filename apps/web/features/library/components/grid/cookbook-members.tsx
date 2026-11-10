@@ -1,16 +1,12 @@
 "use client";
 
-import { useLibraryCards, useLibraryQueryFilters } from "@/features/library/hooks";
+import { useCookbookList, useLibraryCards, useLibraryQueryFilters } from "@/features/library/hooks";
 import { Card } from "@heroui/react";
 import { useTranslations } from "next-intl";
 
 import type { SelectedRecipe } from "@norish/shared-react/recipes";
 import type { RecipeViewMode } from "@norish/shared/contracts/zod/device-preferences";
-import {
-  useCookbookRecipesQuery,
-  useCookbooksMutations,
-  useRecipeSelection,
-} from "@norish/shared-react/recipes";
+import { useCookbooksMutations, useRecipeSelection } from "@norish/shared-react/recipes";
 import {
   hasAppliedRecipeFilters,
   serializeRecipeFilters,
@@ -35,18 +31,12 @@ export default function CookbookMembers({
   variant: RecipeViewMode;
 }) {
   const t = useTranslations("recipes.cookbooks");
-  const { filters, queryFilters, isHydrated } = useLibraryQueryFilters();
+  const { filters } = useLibraryQueryFilters();
   const { isFavorite, toggleFavorite, deleteRecipes, allergies } = useLibraryCards();
   const { setMembership } = useCookbooksMutations();
   const selectRange = useRecipeSelection((state) => state.selectRange);
 
-  // Wait for the stored filters, as the Library does: asking under the defaults first shows members
-  // the reader filters out, then asks again.
-  const { recipes, isLoading, isValidating, loadMore, removeMember } = useCookbookRecipesQuery(
-    cookbookId,
-    queryFilters,
-    { enabled: isHydrated }
-  );
+  const { recipes, isLoading, isValidating, loadMore, removeMember } = useCookbookList(cookbookId);
 
   const selectRangeTo = (recipe: SelectedRecipe) => selectRange(recipe, recipes);
 
@@ -102,7 +92,7 @@ export default function CookbookMembers({
     <LibraryGrid
       emptyState={emptyState}
       isFetchingMore={isValidating && !isLoading}
-      isLoading={isLoading || !isHydrated}
+      isLoading={isLoading}
       items={items}
       loadMore={loadMore}
       renderItem={renderItem}

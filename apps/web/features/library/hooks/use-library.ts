@@ -4,6 +4,7 @@ import { useRecipesMutations } from "@/hooks/use-recipes-mutations";
 
 import { useActiveAllergies } from "@norish/shared-react/reader";
 import {
+  useCookbookRecipesQuery,
   useFavoritesMutation,
   useFavoritesQuery,
   useLibraryFilters,
@@ -32,6 +33,14 @@ export function useLibraryList() {
     isLoading: library.isLoading || !isHydrated,
     recipes: library.items.flatMap((item) => (item.kind === "recipe" ? [item.recipe] : [])),
   };
+}
+
+/** A cookbook's members under the reader's filters, loading until the stored filters apply. */
+export function useCookbookList(cookbookId: string) {
+  const { queryFilters, isHydrated } = useLibraryQueryFilters();
+  const members = useCookbookRecipesQuery(cookbookId, queryFilters, { enabled: isHydrated });
+
+  return { ...members, isLoading: members.isLoading || !isHydrated };
 }
 
 /** What a Library card is drawn and acted on with: favourites, the reader's allergies, delete. */
