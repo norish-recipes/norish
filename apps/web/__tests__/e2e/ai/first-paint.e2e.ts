@@ -1173,8 +1173,12 @@ test("a page the installed app's worker fetches itself still carries its recipe"
 test("the Library keeps its search and order when the reader comes back to it, painting no other list first", async ({
   browser,
 }) => {
-  await createRecipe("Aardvark Kept Soup");
-  await createRecipe("Zebra Kept Soup");
+  // A word only this run's recipes carry, so the search finds nothing another test left.
+  const word = `kept${Date.now().toString(36)}`;
+  const [aardvark, zebra] = [`Aardvark ${word} Soup`, `Zebra ${word} Soup`];
+
+  await createRecipe(aardvark);
+  await createRecipe(zebra);
   await createRecipe("Elsewhere Pie");
   const { context, page } = await openLive(browser, "desktop");
   const firstCard = page.locator("a[data-recipe-card]:visible h3").first();
@@ -1197,44 +1201,38 @@ test("the Library keeps its search and order when the reader comes back to it, p
     });
     await page.goto("/");
     await page.waitForLoadState("networkidle");
-    await page.locator("#search-input").fill("Kept Soup");
-    await expect(firstCard).toHaveText("Zebra Kept Soup");
+    await page.locator("#search-input").fill(word);
+    await expect(firstCard).toHaveText(zebra);
     await page.getByRole("button", { name: "Filters" }).click();
     const filters = page.getByRole("dialog", { name: "Filters" });
 
     // "Title" is also a search-in chip, above the sort buttons.
     await filters.getByRole("button", { name: "Title", exact: true }).last().click();
     await filters.getByRole("button", { name: "Apply" }).click();
-    await expect(page.locator("a[data-recipe-card]:visible h3")).toHaveText([
-      "Aardvark Kept Soup",
-      "Zebra Kept Soup",
-    ]);
+    await expect(page.locator("a[data-recipe-card]:visible h3")).toHaveText([aardvark, zebra]);
     await page.evaluate(() => {
       (window as unknown as { __firsts: string[] }).__firsts.length = 0;
     });
 
     const backInTheLibrary = async () => {
       await expect(page).toHaveURL(/\/$/);
-      await expect(page.locator("#search-input")).toHaveValue("Kept Soup");
-      await expect(page.locator("a[data-recipe-card]:visible h3")).toHaveText([
-        "Aardvark Kept Soup",
-        "Zebra Kept Soup",
-      ]);
+      await expect(page.locator("#search-input")).toHaveValue(word);
+      await expect(page.locator("a[data-recipe-card]:visible h3")).toHaveText([aardvark, zebra]);
     };
 
     await firstCard.click();
-    await expect(page.getByRole("heading", { name: "Aardvark Kept Soup", level: 1 })).toBeVisible();
+    await expect(page.getByRole("heading", { name: aardvark, level: 1 })).toBeVisible();
     await page.getByRole("link", { name: "Back to library" }).first().click();
     await backInTheLibrary();
 
     await firstCard.click();
-    await expect(page.getByRole("heading", { name: "Aardvark Kept Soup", level: 1 })).toBeVisible();
+    await expect(page.getByRole("heading", { name: aardvark, level: 1 })).toBeVisible();
     await page.goBack();
     await backInTheLibrary();
 
     expect(
       await page.evaluate(() => (window as unknown as { __firsts: string[] }).__firsts)
-    ).toEqual(["Aardvark Kept Soup"]);
+    ).toEqual([aardvark]);
   } finally {
     await context.close();
   }
