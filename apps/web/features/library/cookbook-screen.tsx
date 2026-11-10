@@ -9,7 +9,7 @@ import {
   CookbookAddRecipesPanel,
   CookbookEditPanel,
   DeleteCookbookModal,
-} from "@/features/library/components/cookbooks";
+} from "@/features/library/components/panels";
 import { CookbookMembers, CookbookSelectionBar } from "@/features/library/components/grid";
 import {
   RecipeViewModeTabs,

@@ -6,7 +6,7 @@ import { CookbookIconSolid } from "@/components/cookbooks/cookbook-icon";
 import ImportFromImageModal from "@/components/shared/import-from-image-modal";
 import ImportFromPasteModal from "@/components/shared/import-from-paste-modal";
 import ImportRecipeModal from "@/components/shared/import-recipe-modal";
-import { CookbookTitlePanel } from "@/features/library/components/cookbooks";
+import { CookbookTitlePanel } from "@/features/library/components/panels";
 import {
   ArrowDownTrayIcon,
   ClipboardDocumentIcon,

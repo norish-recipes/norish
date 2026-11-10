@@ -9,7 +9,7 @@ import {
   CookbookAddRecipesPanel,
   CookbookEditPanel,
   DeleteCookbookModal,
-} from "@/features/library/components/cookbooks";
+} from "@/features/library/components/panels";
 import { useMountedOnceOpened } from "@/features/library/hooks";
 import { withOrigin } from "@/lib/back-destination";
 import {
