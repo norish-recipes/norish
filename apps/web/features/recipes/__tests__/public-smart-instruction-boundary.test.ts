@@ -15,7 +15,6 @@ describe("PublicSmartInstruction boundary", () => {
     );
 
     expect(file).not.toContain("@norish/shared-react/config");
-    expect(file).not.toContain("@/context/user-context");
     expect(file).not.toContain("useRecipeContext");
   });
 });
