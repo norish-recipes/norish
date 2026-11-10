@@ -4,7 +4,6 @@ import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import { MiniCookbooks } from "@/components/Panel/consumers";
 import { DeleteRecipeModal } from "@/components/shared/delete-recipe-modal";
-import { ActionBar, actionBarButtonClassName } from "@/components/ui/action-bar";
 import { useRecipesMutations } from "@/hooks/use-recipes-mutations";
 import { showActionToast } from "@/lib/ui/action-toast";
 import { BookOpenIcon, MinusCircleIcon, TrashIcon, XMarkIcon } from "@heroicons/react/16/solid";
@@ -17,6 +16,7 @@ import type { CookbookSummaryDTO } from "@norish/shared/contracts";
 import { useRecipePermissions } from "@norish/shared-react/reader";
 import { useCookbooksMutations, useRecipeSelection } from "@norish/shared-react/recipes";
 
+import { ActionBar, actionBarButtonClassName } from "./action-bar";
 import { useLeavingEndsOnUnmount, useRecipeLeaving } from "./recipe-leaving";
 
 /**

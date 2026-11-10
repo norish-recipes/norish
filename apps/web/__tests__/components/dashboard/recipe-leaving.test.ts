@@ -1,4 +1,7 @@
-import { useLeavingEndsOnUnmount, useRecipeLeaving } from "@/components/dashboard/recipe-leaving";
+import {
+  useLeavingEndsOnUnmount,
+  useRecipeLeaving,
+} from "@/features/library/components/selection/recipe-leaving";
 import { renderHook } from "@testing-library/react";
 import { afterEach, describe, expect, it, vi } from "vitest";
 
