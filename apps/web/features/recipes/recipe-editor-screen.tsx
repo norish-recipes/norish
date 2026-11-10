@@ -41,7 +41,7 @@ import { parseIngredientWithDefaults } from "@norish/shared/lib/helpers";
 import { createClientLogger } from "@norish/shared/lib/logger";
 import { formatUnit } from "@norish/shared/lib/unit-localization";
 
-const log = createClientLogger("RecipeForm");
+const log = createClientLogger("RecipeEditorScreen");
 
 export interface RecipeEditorScreenProps {
   mode: "create" | "edit";
