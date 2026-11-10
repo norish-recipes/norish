@@ -1,7 +1,7 @@
 "use client";
 
-import { CookbookSkeleton } from "@/app/(app)/cookbooks/[id]/cookbook-page";
-import CookbookRoute from "@/app/(app)/cookbooks/[id]/page";
+import { CookbookSkeleton } from "@/app/(app)/(library)/cookbooks/[id]/cookbook-page";
+import CookbookRoute from "@/app/(app)/(library)/cookbooks/[id]/page";
 import { OfflineUnavailable } from "@/app/~offline/offline-unavailable";
 import { routeParams } from "@/app/~offline/route-params";
 import { offlineEngine } from "@/lib/offline/engine";
