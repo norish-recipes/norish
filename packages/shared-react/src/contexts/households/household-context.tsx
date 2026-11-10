@@ -5,60 +5,14 @@ import type {
   HouseholdSettingsDto,
 } from "@norish/shared/contracts/dto/household";
 
-import type { HouseholdMutationsResult, HouseholdQueryResult } from "../../hooks/households/types";
+import type { HouseholdMutationsResult } from "../../reader";
 
+/** The household as the settings page reads it. */
 export type HouseholdContextValue = {
   household: HouseholdSettingsDto | HouseholdAdminSettingsDto | null;
   currentUserId: string | undefined;
   isLoading: boolean;
 };
-
-type CreateHouseholdContextOptions = {
-  useHouseholdQuery: () => Pick<HouseholdQueryResult, "household" | "currentUserId" | "isLoading">;
-  useHouseholdSubscription: () => void;
-};
-
-export function createHouseholdContext({
-  useHouseholdQuery,
-  useHouseholdSubscription,
-}: CreateHouseholdContextOptions) {
-  const HouseholdContext = createContext<HouseholdContextValue | null>(null);
-
-  function HouseholdProvider({ children }: { children: React.ReactNode }) {
-    "use memo";
-
-    const { household, currentUserId, isLoading } = useHouseholdQuery();
-
-    // Subscribe to WebSocket events
-    useHouseholdSubscription();
-
-    const value = useMemo(
-      () => ({ household, currentUserId, isLoading }),
-      [household, currentUserId, isLoading]
-    );
-
-    return <HouseholdContext value={value}>{children}</HouseholdContext>;
-  }
-
-  function useHouseholdContext(): HouseholdContextValue {
-    "use memo";
-
-    const context = use(HouseholdContext);
-
-    if (!context) {
-      throw new Error("useHouseholdContext must be used within HouseholdProvider");
-    }
-
-    return context;
-  }
-
-  return {
-    HouseholdProvider,
-    useHouseholdContext,
-  };
-}
-
-// --- Household Settings Context ---
 
 export type HouseholdSettingsContextValue = HouseholdContextValue & {
   createHousehold: (name: string) => void;
