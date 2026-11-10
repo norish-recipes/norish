@@ -3,29 +3,23 @@
 import { useCallback, useTransition } from "react";
 import { useRouter } from "next/navigation";
 import { useUserMutations } from "@/hooks/user/use-user-mutations";
-import { useQuery } from "@tanstack/react-query";
 
 import type { Locale } from "@norish/i18n/config";
 import { isValidLocale } from "@norish/i18n/config";
-import { useTRPC } from "@norish/shared-react/trpc";
+import { useReader } from "@norish/shared-react/reader";
 import { getLocalePreference } from "@norish/shared/lib/user-preferences";
 
 /**
  * Hook for managing user locale preference
  *
- * Reads locale from the user's preferences in `user.get`, only while `enabled`; else what is cached.
+ * Reads locale from the Reader's preferences, the profile the shell already reads.
  * Writes locale via useUserMutations.updatePreferences (with optimistic update/rollback).
  * After changing locale, refreshes the page to apply the new locale.
  */
-export function useLocale(enabled: boolean) {
+export function useLocale() {
   const router = useRouter();
-  const trpc = useTRPC();
   const [isPending, startTransition] = useTransition();
-  const { data: user = null } = useQuery({
-    ...trpc.user.get.queryOptions(),
-    enabled,
-    select: (data) => data.user,
-  });
+  const { user } = useReader();
   const { updatePreferences, isUpdatingPreferences } = useUserMutations();
 
   const locale = getLocalePreference(user);

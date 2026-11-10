@@ -24,7 +24,7 @@ vi.mock("@norish/shared-react/config", () => ({
 
 describe("useLanguageSwitch", () => {
   it("settles on the current locale when the enabled list is rebuilt every render", () => {
-    const { result, rerender } = renderHook(() => useLanguageSwitch(true));
+    const { result, rerender } = renderHook(() => useLanguageSwitch());
 
     rerender();
     act(() => rerender());

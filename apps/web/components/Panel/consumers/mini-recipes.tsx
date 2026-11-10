@@ -401,7 +401,7 @@ export default function MiniRecipes({ open, onOpenChange, date, slot }: MiniReci
         day: "numeric",
       }).format(date)}`
     : t("addRecipe");
-  const { afterPlanning, afterPlanningPanel } = useAfterPlanning(open);
+  const { afterPlanning, afterPlanningPanel } = useAfterPlanning();
 
   return (
     <>

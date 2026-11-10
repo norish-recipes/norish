@@ -91,7 +91,7 @@ const PANELS: Array<{
   {
     name: "MiniRecipes",
     panel: (open) => <MiniRecipes date={new Date()} open={open} onOpenChange={() => {}} />,
-    reads: ["recipes.getPending", "user.get"],
+    reads: ["recipes.getPending"],
     subscriptions: ["recipes.onCreated", "recipes.onDeleted"],
   },
   {

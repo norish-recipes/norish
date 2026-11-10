@@ -3,10 +3,9 @@
 import type { ReactNode } from "react";
 import { useCallback, useState } from "react";
 import { MiniGroceries } from "@/features/groceries";
-import { useQuery } from "@tanstack/react-query";
 
+import { useReader } from "@norish/shared-react/reader";
 import { useRecipeQuery } from "@norish/shared-react/recipes";
-import { useTRPC } from "@norish/shared-react/trpc";
 import { getAfterPlanningPreference } from "@norish/shared/lib/user-preferences";
 
 type Planned = { key: number; recipeId: string; addAtOnce: boolean; open: boolean };
@@ -43,19 +42,13 @@ function PlannedGroceries({
  * What happens once a recipe is planned, as the user chose in Preferences:
  * nothing, the groceries panel for it (the default), or its lines to buy
  * straight onto the list. A planning panel closes as it plans, so whoever
- * hosts it renders `afterPlanningPanel`, which outlives it. The choice is read while the planning
- * panel is `open`, the only time it plans.
+ * hosts it renders `afterPlanningPanel`, which outlives it.
  */
-export function useAfterPlanning(open: boolean): {
+export function useAfterPlanning(): {
   afterPlanning: (recipeId: string) => void;
   afterPlanningPanel: ReactNode;
 } {
-  const trpc = useTRPC();
-  const { data: choice = getAfterPlanningPreference(null) } = useQuery({
-    ...trpc.user.get.queryOptions(),
-    enabled: open,
-    select: (data) => getAfterPlanningPreference(data.user),
-  });
+  const choice = getAfterPlanningPreference(useReader().user);
   const [planned, setPlanned] = useState<Planned | null>(null);
 
   const afterPlanning = useCallback(
