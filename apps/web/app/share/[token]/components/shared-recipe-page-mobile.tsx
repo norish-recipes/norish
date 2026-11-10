@@ -13,7 +13,7 @@ import AuthLanguageSelector from "@/components/shared/auth-language-selector";
 import { Card } from "@heroui/react";
 import { useTranslations } from "next-intl";
 
-import { usePublicRecipeContext } from "../public/public-recipe-context";
+import { useSharedRecipe, useShareServings } from "../public/share-page-store";
 import { ShareRecipeControls } from "./share-recipe-controls";
 import { ShareRecipeIngredients } from "./share-recipe-ingredients";
 import { ShareRecipeSteps } from "./share-recipe-steps";
@@ -29,7 +29,7 @@ import { ShareRecipeSteps } from "./share-recipe-steps";
  */
 export function SharedRecipePageMobile() {
   const t = useTranslations("recipes.detail");
-  const { recipe, state } = usePublicRecipeContext();
+  const recipe = useSharedRecipe();
 
   return (
     <div className="-mx-4 -mt-4 flex w-[calc(100%+2rem)] flex-col md:hidden">
@@ -59,7 +59,7 @@ export function SharedRecipePageMobile() {
       <div className="relative z-10 -mt-24 flex flex-col gap-4 px-4 pb-6">
         {/* The Glance Bar restates what the sections render, so it reads the
             servings the ingredients are actually scaled to. */}
-        <RecipeHeaderMobile recipe={{ ...recipe, servings: state.servings }} />
+        <ShareRecipeHeader />
 
         <Card className="rounded-2xl">
           <Card.Content className="space-y-4 p-5">
@@ -98,4 +98,12 @@ export function SharedRecipePageMobile() {
       </div>
     </div>
   );
+}
+
+/** The Glance Bar, apart from the page, so a change of servings renders only it. */
+function ShareRecipeHeader() {
+  const recipe = useSharedRecipe();
+  const servings = useShareServings();
+
+  return <RecipeHeaderMobile recipe={{ ...recipe, servings }} />;
 }

@@ -6,16 +6,17 @@ import AuthLanguageSelector from "@/components/shared/auth-language-selector";
 import { NotFoundView } from "@/components/shared/not-found-view";
 import RecipeSkeleton from "@/components/skeleton/recipe-skeleton";
 import { TimerTicker } from "@/components/timer-dock";
-import { sharedRecipeShareHooks } from "@/hooks/recipes/shared-recipe-hooks";
 import { TRPCClientError } from "@trpc/client";
 import { useTranslations } from "next-intl";
 
+import { useSharedRecipeQuery } from "@norish/shared-react/recipes";
+
 import { SharedRecipePageDesktop } from "./components/shared-recipe-page-desktop";
 import { SharedRecipePageMobile } from "./components/shared-recipe-page-mobile";
-import { PublicRecipeProvider } from "./public/public-recipe-context";
+import { SharePageProvider } from "./public/share-page-store";
 
 function SharedRecipePageContent({ token }: { token: string }) {
-  const { recipe, isLoading, error } = sharedRecipeShareHooks.useSharedRecipeQuery(token);
+  const { recipe, isLoading, error } = useSharedRecipeQuery(token);
   const t = useTranslations("recipes.detail");
 
   useEffect(() => {
@@ -29,7 +30,7 @@ function SharedRecipePageContent({ token }: { token: string }) {
   }
 
   return (
-    <PublicRecipeProvider recipe={recipe} token={token}>
+    <>
       <TimerTicker />
       <div className="hidden justify-end pt-4 md:flex md:px-6">
         <AuthLanguageSelector />
@@ -38,11 +39,15 @@ function SharedRecipePageContent({ token }: { token: string }) {
         <SharedRecipePageDesktop />
         <SharedRecipePageMobile />
       </RecipePageTint>
-    </PublicRecipeProvider>
+    </>
   );
 }
 export default function SharedRecipePage({ params }: PageProps<"/share/[token]">) {
   const { token } = use(params);
 
-  return <SharedRecipePageContent token={token} />;
+  return (
+    <SharePageProvider token={token}>
+      <SharedRecipePageContent token={token} />
+    </SharePageProvider>
+  );
 }

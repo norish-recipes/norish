@@ -2,16 +2,18 @@
 
 import { ReadonlyIngredientsList } from "@/components/recipes/readonly-ingredients-list";
 
-import { usePublicRecipeContext } from "../public/public-recipe-context";
+import { useShareIngredients, useShareSystem, useShareUnits } from "../public/share-page-store";
 
 export function ShareRecipeIngredients() {
-  const { state, units } = usePublicRecipeContext();
+  const ingredients = useShareIngredients();
+  const system = useShareSystem();
+  const units = useShareUnits();
 
   return (
     <ReadonlyIngredientsList
       interactive
-      ingredients={state.adjustedIngredients}
-      systemUsed={state.activeSystem}
+      ingredients={ingredients}
+      systemUsed={system}
       units={units}
     />
   );

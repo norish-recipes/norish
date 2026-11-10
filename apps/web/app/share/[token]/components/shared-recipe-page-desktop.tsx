@@ -9,14 +9,14 @@ import {
 import { Card } from "@heroui/react";
 import { useTranslations } from "next-intl";
 
-import { usePublicRecipeContext } from "../public/public-recipe-context";
+import { useSharedRecipe } from "../public/share-page-store";
 import { ShareRecipeControls } from "./share-recipe-controls";
 import { ShareRecipeIngredients } from "./share-recipe-ingredients";
 import { ShareRecipeSteps } from "./share-recipe-steps";
 
 export function SharedRecipePageDesktop() {
   const t = useTranslations("recipes.detail");
-  const { recipe } = usePublicRecipeContext();
+  const recipe = useSharedRecipe();
 
   return (
     <div className="hidden flex-col space-y-6 px-6 pt-6 pb-10 md:flex">

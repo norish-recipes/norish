@@ -3,21 +3,31 @@
 import { PublicSmartInstruction } from "@/components/recipe/public-smart-instruction";
 import { ReadonlyStepsList } from "@/components/recipes/readonly-steps-list";
 
-import { usePublicRecipeContext } from "../public/public-recipe-context";
+import {
+  useSharedRecipe,
+  useShareIngredients,
+  useSharePageStore,
+  useShareSystem,
+  useShareUnits,
+} from "../public/share-page-store";
 
 export function ShareRecipeSteps() {
-  const { recipe, state, token, units } = usePublicRecipeContext();
+  const recipe = useSharedRecipe();
+  const token = useSharePageStore((state) => state.token);
+  const ingredients = useShareIngredients();
+  const system = useShareSystem();
+  const units = useShareUnits();
 
   return (
     <ReadonlyStepsList
       enableTimers
       interactive
       InstructionComponent={PublicSmartInstruction}
-      ingredients={state.adjustedIngredients}
+      ingredients={ingredients}
       recipeId={token}
       recipeName={recipe.name}
       steps={recipe.steps}
-      systemUsed={state.activeSystem}
+      systemUsed={system}
       token={token}
       units={units}
     />
