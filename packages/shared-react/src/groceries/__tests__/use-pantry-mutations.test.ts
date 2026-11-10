@@ -3,8 +3,7 @@ import { beforeEach, describe, expect, it, vi } from "vitest";
 
 import type { PantryIngredientDto } from "@norish/shared/contracts";
 import { usePantryMutations } from "@norish/shared-react/groceries";
-
-import { createTestQueryClient, createTestWrapper } from "./test-utils";
+import { createTestQueryClient, createTestWrapper } from "@norish/shared-react/platform/testing";
 
 /** What each procedure is sent; a test answers or refuses it by its implementation. */
 const sent = vi.hoisted(() => ({ add: vi.fn(), remove: vi.fn() }));

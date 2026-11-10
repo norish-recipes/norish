@@ -2,14 +2,14 @@ import { act, renderHook, waitFor } from "@testing-library/react";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 
 import type { HouseholdData } from "@norish/shared-react/reader";
+import { createTestQueryClient } from "@norish/shared-react/platform/testing";
 import { useHouseholdMutations } from "@norish/shared-react/reader";
 
 import {
   createMockHouseholdData,
   createMockHouseholdSettings,
   createMockHouseholdUser,
-  createTestQueryClient,
-  createTestWrapper,
+  readerWrapper,
 } from "./test-utils";
 
 type Deferred = { resolve: (value: unknown) => void; reject: (error: unknown) => void };
@@ -64,7 +64,7 @@ describe("useHouseholdMutations", () => {
     queryClient.setQueryData(KEY, data);
 
     return renderHook(() => useHouseholdMutations(), {
-      wrapper: createTestWrapper(queryClient),
+      wrapper: readerWrapper(queryClient),
     }).result;
   };
   const cached = () => queryClient.getQueryData<HouseholdData>(KEY);

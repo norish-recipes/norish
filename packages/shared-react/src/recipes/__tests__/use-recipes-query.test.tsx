@@ -2,8 +2,8 @@ import { act, renderHook, waitFor } from "@testing-library/react";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 
 import type { PendingRecipeDTO, RecipeDashboardDTO } from "@norish/shared/contracts";
+import { createTestQueryClient, createTestWrapper } from "@norish/shared-react/platform/testing";
 
-import { createTestQueryClient, createTestWrapper } from "../../groceries/__tests__/test-utils";
 import { useRecipesQuery } from "../use-recipes-query";
 
 type Page = { recipes: RecipeDashboardDTO[]; total: number; nextCursor: number | null };

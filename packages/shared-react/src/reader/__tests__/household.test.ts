@@ -2,14 +2,10 @@ import { act, renderHook, waitFor } from "@testing-library/react";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 
 import type { HouseholdData } from "@norish/shared-react/reader";
+import { createTestQueryClient } from "@norish/shared-react/platform/testing";
 import { useHousehold, useHouseholdCacheHelpers } from "@norish/shared-react/reader";
 
-import {
-  createMockHouseholdData,
-  createMockHouseholdSettings,
-  createTestQueryClient,
-  createTestWrapper,
-} from "./test-utils";
+import { createMockHouseholdData, createMockHouseholdSettings, readerWrapper } from "./test-utils";
 
 // Mock the tRPC provider
 const mockQueryKey = ["households", "get"];
@@ -41,7 +37,7 @@ describe("useHousehold", () => {
       });
 
       const { result } = renderHook(() => useHousehold(), {
-        wrapper: createTestWrapper(queryClient),
+        wrapper: readerWrapper(queryClient),
       });
 
       expect(result.current.household).toBeNull();
@@ -54,7 +50,7 @@ describe("useHousehold", () => {
       });
 
       const { result } = renderHook(() => useHousehold(), {
-        wrapper: createTestWrapper(queryClient),
+        wrapper: readerWrapper(queryClient),
       });
 
       expect(result.current.isLoading).toBe(true);
@@ -74,7 +70,7 @@ describe("useHousehold", () => {
       });
 
       const { result } = renderHook(() => useHousehold(), {
-        wrapper: createTestWrapper(queryClient),
+        wrapper: readerWrapper(queryClient),
       });
 
       await waitFor(() => {
@@ -96,7 +92,7 @@ describe("useHousehold", () => {
       });
 
       const { result } = renderHook(() => useHousehold(), {
-        wrapper: createTestWrapper(queryClient),
+        wrapper: readerWrapper(queryClient),
       });
 
       await waitFor(
@@ -123,7 +119,7 @@ describe("useHousehold", () => {
       queryClient.setQueryData(mockQueryKey, initialData);
 
       const { result } = renderHook(() => ({ ...useHousehold(), ...useHouseholdCacheHelpers() }), {
-        wrapper: createTestWrapper(queryClient),
+        wrapper: readerWrapper(queryClient),
       });
 
       await waitFor(() => {
@@ -157,7 +153,7 @@ describe("useHousehold", () => {
       queryClient.setQueryData(mockQueryKey, initialData);
 
       const { result } = renderHook(() => ({ ...useHousehold(), ...useHouseholdCacheHelpers() }), {
-        wrapper: createTestWrapper(queryClient),
+        wrapper: readerWrapper(queryClient),
       });
 
       await waitFor(() => {
@@ -193,7 +189,7 @@ describe("useHousehold", () => {
       const invalidateSpy = vi.spyOn(queryClient, "invalidateQueries");
 
       const { result } = renderHook(() => useHouseholdCacheHelpers(), {
-        wrapper: createTestWrapper(queryClient),
+        wrapper: readerWrapper(queryClient),
       });
 
       act(() => {

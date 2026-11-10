@@ -1,7 +1,8 @@
 import { act, renderHook } from "@testing-library/react";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 
-import { createTestQueryClient, createTestWrapper } from "../../groceries/__tests__/test-utils";
+import { createTestQueryClient, createTestWrapper } from "@norish/shared-react/platform/testing";
+
 import { useConvertMutation } from "../use-convert-mutation";
 
 const sendConvert = vi.hoisted(() => vi.fn());

@@ -1,7 +1,11 @@
 import { act, renderHook, waitFor } from "@testing-library/react";
 import { beforeAll, beforeEach, describe, expect, it, vi } from "vitest";
 
-import { fakePlatformAdapter } from "@norish/shared-react/platform/testing";
+import {
+  createTestQueryClient,
+  createTestWrapper,
+  fakePlatformAdapter,
+} from "@norish/shared-react/platform/testing";
 import { useHousehold, useHouseholdSubscription } from "@norish/shared-react/reader";
 
 import { trackedEvent } from "../../../__tests__/realtime/tracked-event";
@@ -10,9 +14,8 @@ import {
   createMockHouseholdData,
   createMockHouseholdSettings,
   createMockHouseholdUser,
-  createTestQueryClient,
-  createTestWrapper,
   READER,
+  readerWrapper,
 } from "./test-utils";
 
 // Track subscription callbacks
@@ -155,7 +158,7 @@ describe("useHouseholdSubscription", () => {
       queryClient.setQueryData(householdQueryKey, initialData);
 
       renderHook(() => useHouseholdSubscription(), {
-        wrapper: createTestWrapper(queryClient),
+        wrapper: readerWrapper(queryClient),
       });
 
       // The hook should call useSubscription for each event type
@@ -171,12 +174,12 @@ describe("useHouseholdSubscription", () => {
 
       // Render subscription hook to set up handlers
       renderHook(() => useHouseholdSubscription(), {
-        wrapper: createTestWrapper(queryClient),
+        wrapper: readerWrapper(queryClient),
       });
 
       // Render query hook to get current state
       const { result } = renderHook(() => useHousehold(), {
-        wrapper: createTestWrapper(queryClient),
+        wrapper: readerWrapper(queryClient),
       });
 
       // Initially no household
@@ -196,11 +199,11 @@ describe("useHouseholdSubscription", () => {
       queryClient.setQueryData(householdQueryKey, initialData);
 
       renderHook(() => useHouseholdSubscription(), {
-        wrapper: createTestWrapper(queryClient),
+        wrapper: readerWrapper(queryClient),
       });
 
       const { result } = renderHook(() => useHousehold(), {
-        wrapper: createTestWrapper(queryClient),
+        wrapper: readerWrapper(queryClient),
       });
 
       // Verify initial state
@@ -221,11 +224,11 @@ describe("useHouseholdSubscription", () => {
       queryClient.setQueryData(householdQueryKey, initialData);
 
       renderHook(() => useHouseholdSubscription(), {
-        wrapper: createTestWrapper(queryClient),
+        wrapper: readerWrapper(queryClient),
       });
 
       const { result } = renderHook(() => useHousehold(), {
-        wrapper: createTestWrapper(queryClient),
+        wrapper: readerWrapper(queryClient),
       });
 
       // Verify initial state has 2 users
@@ -247,7 +250,7 @@ describe("useHouseholdSubscription", () => {
       });
 
       const { result } = renderHook(() => useHousehold(), {
-        wrapper: createTestWrapper(queryClient),
+        wrapper: readerWrapper(queryClient),
       });
 
       expect(result.current.household).not.toBeNull();
@@ -302,7 +305,7 @@ describe("useHouseholdSubscription", () => {
       const invalidateSpy = vi.spyOn(queryClient, "invalidateQueries");
 
       renderHook(() => useHouseholdSubscription(), {
-        wrapper: createTestWrapper(queryClient),
+        wrapper: readerWrapper(queryClient),
       });
 
       act(() => {
@@ -326,7 +329,7 @@ describe("useHouseholdSubscription", () => {
       const invalidateSpy = vi.spyOn(queryClient, "invalidateQueries");
 
       renderHook(() => useHouseholdSubscription(), {
-        wrapper: createTestWrapper(queryClient),
+        wrapper: readerWrapper(queryClient),
       });
 
       act(() => {
@@ -350,7 +353,7 @@ describe("useHouseholdSubscription", () => {
       queryClient.setQueryData(householdQueryKey, initialData);
 
       renderHook(() => useHouseholdSubscription(), {
-        wrapper: createTestWrapper(queryClient),
+        wrapper: readerWrapper(queryClient),
       });
 
       act(() => {
@@ -385,7 +388,7 @@ describe("useHouseholdSubscription", () => {
       queryClient.setQueryData(householdQueryKey, initialData);
 
       renderHook(() => useHouseholdSubscription(), {
-        wrapper: createTestWrapper(queryClient),
+        wrapper: readerWrapper(queryClient),
       });
 
       act(() => {
@@ -423,7 +426,7 @@ describe("useHouseholdSubscription", () => {
       const invalidateSpy = vi.spyOn(queryClient, "invalidateQueries");
 
       renderHook(() => useHouseholdSubscription(), {
-        wrapper: createTestWrapper(queryClient),
+        wrapper: readerWrapper(queryClient),
       });
 
       act(() => {

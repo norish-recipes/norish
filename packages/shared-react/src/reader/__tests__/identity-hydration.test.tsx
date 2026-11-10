@@ -9,10 +9,8 @@ import { afterEach, describe, expect, it, vi } from "vitest";
 import type { SessionUser } from "@norish/shared-react/reader";
 import type { User } from "@norish/shared/contracts";
 import { PlatformProvider } from "@norish/shared-react/platform";
-import { fakePlatformAdapter } from "@norish/shared-react/platform/testing";
+import { createTestQueryClient, fakePlatformAdapter } from "@norish/shared-react/platform/testing";
 import { useReader, useSeededSession } from "@norish/shared-react/reader";
-
-import { createTestQueryClient } from "./test-utils";
 
 vi.mock("../../trpc", () => ({
   useTRPC: () => ({

@@ -4,8 +4,8 @@ import { act, renderHook } from "@testing-library/react";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 
 import type { FullRecipeDTO } from "@norish/shared/contracts";
+import { createTestQueryClient } from "@norish/shared-react/platform/testing";
 
-import { createTestQueryClient } from "../../groceries/__tests__/test-utils";
 import { RecipePageProvider, useRecipePageStore } from "../recipe-page-store";
 import { usePageIngredients, usePageServings, useRecipeConversion } from "../use-recipe-page";
 

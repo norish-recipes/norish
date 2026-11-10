@@ -8,6 +8,7 @@ import {
   useOnTheList,
   useRecurringGroceryFor,
 } from "@norish/shared-react/groceries";
+import { createTestQueryClient, createTestWrapper } from "@norish/shared-react/platform/testing";
 import { BASE_SPELLING_RULES } from "@norish/shared/lib/spelling-keys";
 
 import type { GroceriesData } from "../types";
@@ -15,8 +16,6 @@ import {
   createMockGroceriesData,
   createMockGrocery,
   createMockRecurringGrocery,
-  createTestQueryClient,
-  createTestWrapper,
 } from "./test-utils";
 
 const mockQueryKey = ["groceries", "list"];

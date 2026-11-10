@@ -3,9 +3,9 @@ import { TRPCClientError } from "@trpc/client";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 
 import type { FullRecipeDTO, PendingRecipeDTO } from "@norish/shared/contracts";
+import { createTestQueryClient, createTestWrapper } from "@norish/shared-react/platform/testing";
 
 import type { InfiniteRecipeData } from "../library-cache";
-import { createTestQueryClient, createTestWrapper } from "../../groceries/__tests__/test-utils";
 import { useRecipesMutations } from "../use-recipes-mutations";
 
 const server = vi.hoisted(() => ({

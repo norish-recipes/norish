@@ -2,15 +2,17 @@ import { act, renderHook } from "@testing-library/react";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 
 import { useGroceriesSubscription } from "@norish/shared-react/groceries";
-import { fakePlatformAdapter } from "@norish/shared-react/platform/testing";
+import {
+  createTestQueryClient,
+  createTestWrapper,
+  fakePlatformAdapter,
+} from "@norish/shared-react/platform/testing";
 
 import { trackedEvent } from "../../../__tests__/realtime/tracked-event";
 import {
   createMockGroceriesData,
   createMockGrocery,
   createMockRecurringGrocery,
-  createTestQueryClient,
-  createTestWrapper,
 } from "./test-utils";
 
 // Track subscription callbacks

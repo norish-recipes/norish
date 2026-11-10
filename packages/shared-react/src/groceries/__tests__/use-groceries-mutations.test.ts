@@ -4,15 +4,17 @@ import { beforeEach, describe, expect, it, vi } from "vitest";
 
 import type { PlatformAdapter } from "@norish/shared-react/platform";
 import { useGroceriesMutations } from "@norish/shared-react/groceries";
-import { fakePlatformAdapter } from "@norish/shared-react/platform/testing";
+import {
+  createTestQueryClient,
+  createTestWrapper,
+  fakePlatformAdapter,
+} from "@norish/shared-react/platform/testing";
 import { isQueuedOutboxSignal, markOutboxAdmissionFailed } from "@norish/shared/lib/trpc-errors";
 
 import {
   createMockGroceriesData,
   createMockGrocery,
   createMockRecurringGrocery,
-  createTestQueryClient,
-  createTestWrapper,
 } from "./test-utils";
 
 // What each procedure is sent; a test answers or refuses it by its implementation.

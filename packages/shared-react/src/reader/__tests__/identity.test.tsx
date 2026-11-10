@@ -1,10 +1,12 @@
 import { renderHook, waitFor } from "@testing-library/react";
 import { describe, expect, it, vi } from "vitest";
 
-import { fakePlatformAdapter } from "@norish/shared-react/platform/testing";
+import {
+  createTestQueryClient,
+  createTestWrapper,
+  fakePlatformAdapter,
+} from "@norish/shared-react/platform/testing";
 import { useReader } from "@norish/shared-react/reader";
-
-import { createTestQueryClient, createTestWrapper } from "./test-utils";
 
 const profile = vi.hoisted(() => ({
   id: "user-1",

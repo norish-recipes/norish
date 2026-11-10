@@ -2,8 +2,8 @@ import { act, renderHook } from "@testing-library/react";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 
 import type { CookbookSummaryDTO } from "@norish/shared/contracts";
+import { createTestQueryClient, createTestWrapper } from "@norish/shared-react/platform/testing";
 
-import { createTestQueryClient, createTestWrapper } from "../../groceries/__tests__/test-utils";
 import { useCookbooksMutations } from "../use-cookbooks-mutations";
 
 const sendCreate = vi.hoisted(() => vi.fn());

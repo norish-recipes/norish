@@ -9,7 +9,7 @@
     "./contexts": "./src/contexts/index.ts",
     "./trpc": "./src/trpc/index.ts",
     "./platform": "./src/platform/index.ts",
-    "./platform/testing": "./src/platform/testing.ts",
+    "./platform/testing": "./src/platform/testing.tsx",
     "./config": "./src/config/index.ts",
     "./groceries": "./src/groceries/index.ts",
     "./reader": "./src/reader/index.ts",

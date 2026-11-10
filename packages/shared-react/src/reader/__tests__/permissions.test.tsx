@@ -2,6 +2,7 @@ import { act, renderHook, waitFor } from "@testing-library/react";
 import { describe, expect, it, vi } from "vitest";
 
 import type { PermissionsData } from "@norish/shared-react/reader";
+import { createTestQueryClient } from "@norish/shared-react/platform/testing";
 import {
   normalizePermissionsData,
   selectCanDeleteRecipe,
@@ -9,7 +10,7 @@ import {
   useRecipePermissions,
 } from "@norish/shared-react/reader";
 
-import { createTestQueryClient, createTestWrapper, READER } from "./test-utils";
+import { READER, readerWrapper } from "./test-utils";
 
 const PERMISSIONS_KEY = ["permissions", "get"];
 
@@ -68,7 +69,7 @@ describe("usePermissions", () => {
   it("answers with the defaults until the server has, then with the server's", async () => {
     served.current = HOUSEHOLD_POLICY;
     const { result } = renderHook(() => usePermissions((p) => p.isAIEnabled), {
-      wrapper: createTestWrapper(createTestQueryClient()),
+      wrapper: readerWrapper(createTestQueryClient()),
     });
 
     expect(result.current).toBe(false);
@@ -87,7 +88,7 @@ describe("usePermissions", () => {
 
         return usePermissions((p) => p.isServerAdmin);
       },
-      { wrapper: createTestWrapper(queryClient) }
+      { wrapper: readerWrapper(queryClient) }
     );
     const before = renders;
 
@@ -106,7 +107,7 @@ describe("useRecipePermissions", () => {
   it("decides by the policy, the household and who the Reader is", async () => {
     served.current = HOUSEHOLD_POLICY;
     const { result } = renderHook(() => useRecipePermissions(), {
-      wrapper: createTestWrapper(createTestQueryClient()),
+      wrapper: readerWrapper(createTestQueryClient()),
     });
 
     expect(result.current.isLoading).toBe(true);

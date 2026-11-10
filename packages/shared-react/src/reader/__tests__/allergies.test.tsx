@@ -1,13 +1,10 @@
 import { renderHook } from "@testing-library/react";
 import { describe, expect, it, vi } from "vitest";
 
+import { createTestQueryClient } from "@norish/shared-react/platform/testing";
 import { useActiveAllergies } from "@norish/shared-react/reader";
 
-import {
-  createMockHouseholdSettings,
-  createTestQueryClient,
-  createTestWrapper,
-} from "./test-utils";
+import { createMockHouseholdSettings, readerWrapper } from "./test-utils";
 
 vi.mock("../../trpc", () => ({
   useTRPC: () => ({
@@ -39,7 +36,7 @@ function render(household: string[] | null, own: string[]) {
   });
   queryClient.setQueryData(["user", "getAllergies"], { allergies: own, version: 1 });
 
-  return renderHook(() => useActiveAllergies(), { wrapper: createTestWrapper(queryClient) }).result
+  return renderHook(() => useActiveAllergies(), { wrapper: readerWrapper(queryClient) }).result
     .current;
 }
 
