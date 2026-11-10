@@ -3,10 +3,10 @@
 import React, { useCallback, useMemo, useState } from "react";
 import { useRouter } from "next/navigation";
 import { CookbookIconSolid } from "@/components/cookbooks/cookbook-icon";
-import { CookbookTitlePanel } from "@/components/cookbooks/cookbook-panels";
 import ImportFromImageModal from "@/components/shared/import-from-image-modal";
 import ImportFromPasteModal from "@/components/shared/import-from-paste-modal";
 import ImportRecipeModal from "@/components/shared/import-recipe-modal";
+import { CookbookTitlePanel } from "@/features/library/components/cookbooks";
 import {
   ArrowDownTrayIcon,
   ClipboardDocumentIcon,

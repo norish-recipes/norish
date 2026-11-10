@@ -3,11 +3,14 @@
 import type { ReactNode } from "react";
 import { useState } from "react";
 import { useRouter } from "next/navigation";
-import { CookbookAddRecipesPanel } from "@/components/cookbooks/cookbook-add-recipes-panel";
-import { CookbookEditPanel, DeleteCookbookModal } from "@/components/cookbooks/cookbook-panels";
 import { BackLink } from "@/components/page-transition";
 import { NotFoundView } from "@/components/shared/not-found-view";
 import RecipeGridSkeleton from "@/components/skeleton/recipe-grid-skeleton";
+import {
+  CookbookAddRecipesPanel,
+  CookbookEditPanel,
+  DeleteCookbookModal,
+} from "@/features/library/components/cookbooks";
 import { CookbookMembers, CookbookSelectionBar } from "@/features/library/components/grid";
 import {
   RecipeViewModeTabs,

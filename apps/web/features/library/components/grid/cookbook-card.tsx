@@ -3,10 +3,13 @@
 import type { MouseEvent } from "react";
 import { memo, useCallback, useMemo, useRef, useState } from "react";
 import { usePathname, useRouter } from "next/navigation";
-import { CookbookAddRecipesPanel } from "@/components/cookbooks/cookbook-add-recipes-panel";
 import CookbookCover from "@/components/cookbooks/cookbook-cover";
 import { CookbookIconSolid } from "@/components/cookbooks/cookbook-icon";
-import { CookbookEditPanel, DeleteCookbookModal } from "@/components/cookbooks/cookbook-panels";
+import {
+  CookbookAddRecipesPanel,
+  CookbookEditPanel,
+  DeleteCookbookModal,
+} from "@/features/library/components/cookbooks";
 import { useMountedOnceOpened } from "@/hooks/use-mounted-once-opened";
 import { withOrigin } from "@/lib/back-destination";
 import {

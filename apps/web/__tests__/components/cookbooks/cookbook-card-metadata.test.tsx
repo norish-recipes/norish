@@ -25,7 +25,7 @@ vi.mock("@norish/shared-react/reader", async () =>
   (await import("../../helpers/reader-mock")).mockReader()
 );
 vi.mock("@/components/cookbooks/cookbook-cover", () => ({ default: () => null }));
-vi.mock("@/components/cookbooks/cookbook-panels", () => ({
+vi.mock("@/features/library/components/cookbooks/cookbook-panels", () => ({
   CookbookEditPanel: () => null,
   DeleteCookbookModal: () => null,
 }));
