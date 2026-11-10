@@ -22,6 +22,7 @@ import type { BrowserContext, Page, Response } from "@playwright/test";
 import type { RealtimeStack } from "./fixture";
 import type { HouseholdRow } from "./support";
 import { openGroceries, rowFor } from "../harness/groceries";
+import { readRecipe, seedRecipe } from "../harness/recipes";
 import { dropSocket, expect, socketLedger, test, waitForSocket } from "./fixture";
 import {
   addGrocery,
@@ -34,6 +35,7 @@ import {
   revokeSessions,
   sessionHeaders,
   valkeyClientCount,
+  waitForLive,
 } from "./support";
 
 test.describe.configure({ mode: "serial" });
@@ -279,6 +281,131 @@ test("a validation failure toasts only the browser that caused it", async () => 
   // Long enough for a household-scoped event to have reached A, were it one.
   await pageA.waitForTimeout(2_000);
   await expect(pageA.getByText("Operation failed")).toHaveCount(0);
+});
+
+/** A fresh browser of A's on `path`, once `live` subscriptions listen; closed with `context.close()`. */
+async function openAs(
+  path: string,
+  live: string[],
+  cookies: Array<{ name: string; value: string }> = []
+) {
+  const context = await stack.newContext("a");
+
+  await context.addCookies(cookies.map((cookie) => ({ ...cookie, url: stack.baseURL })));
+  const page = await context.newPage();
+  const frames = recordFrames(page);
+
+  await page.goto(path);
+  await waitForLive(frames, live);
+  frames.stop();
+
+  return { context, page };
+}
+
+/** The reader's local date, as the calendar keys a day. */
+function localToday(): string {
+  const now = new Date();
+  const pad = (value: number) => String(value).padStart(2, "0");
+
+  return `${now.getFullYear()}-${pad(now.getMonth() + 1)}-${pad(now.getDate())}`;
+}
+
+test("a housemate filing the open recipe into a cookbook shows on its cookbooks card", async () => {
+  const recipeId = await seedRecipe(stack.userIds.a, "realtime-ingelegd-recept");
+  const created = await callMutation<{ id: string }>(pageB, stack.baseURL, "cookbooks.create", {
+    title: "realtime-kookboek",
+    recipeIds: [],
+  });
+
+  expect(created.ok).toBe(true);
+  const { context, page } = await openAs(`/recipes/${recipeId}`, ["cookbooks.onMembershipChanged"]);
+
+  try {
+    await expect(page.getByRole("heading", { name: "realtime-ingelegd-recept" })).toBeVisible();
+    await expect(page.getByTestId("cookbooks-card")).toHaveCount(0);
+
+    const filed = await callMutation(pageB, stack.baseURL, "cookbooks.setMembership", {
+      cookbookId: created.data!.id,
+      recipeIds: [recipeId],
+      isMember: true,
+    });
+
+    expect(filed.ok).toBe(true);
+    await expect(
+      page.locator('[data-cookbook-chip="realtime-kookboek"]').filter({ visible: true })
+    ).toBeVisible();
+  } finally {
+    await context.close();
+  }
+});
+
+test("a housemate's Pantry change reorders a Library sorted by pantry share", async () => {
+  // Half of the first is in the Pantry and a third of the second; B's add makes it two thirds.
+  await seedRecipe(stack.userIds.a, "realtime-voorraad-eerst", [
+    "realtime-rijst",
+    "realtime-bonen",
+  ]);
+  await seedRecipe(stack.userIds.a, "realtime-voorraad-tweede", [
+    "realtime-linzen",
+    "realtime-kikkererwten",
+    "realtime-gerst",
+  ]);
+  for (const name of ["realtime-rijst", "realtime-linzen"]) {
+    expect((await callMutation(pageA, stack.baseURL, "pantry.add", { name })).ok).toBe(true);
+  }
+
+  const { context, page } = await openAs(
+    "/",
+    ["pantry.onAdded"],
+    [{ name: "norish-recipe-filters", value: encodeURIComponent('{"showPantryOnly":true}') }]
+  );
+  const order = async () =>
+    (await page.locator("[data-recipe-card]").allTextContents()).flatMap((text) =>
+      ["realtime-voorraad-eerst", "realtime-voorraad-tweede"].filter((name) => text.includes(name))
+    );
+
+  try {
+    await expect.poll(order).toEqual(["realtime-voorraad-eerst", "realtime-voorraad-tweede"]);
+
+    const added = await callMutation(pageB, stack.baseURL, "pantry.add", {
+      name: "realtime-kikkererwten",
+    });
+
+    expect(added.ok).toBe(true);
+    await expect.poll(order).toEqual(["realtime-voorraad-tweede", "realtime-voorraad-eerst"]);
+  } finally {
+    await context.close();
+  }
+});
+
+test("a housemate renaming a planned recipe shows the new name on an open calendar", async () => {
+  const recipeId = await seedRecipe(stack.userIds.a, "realtime-gepland-recept");
+  const planned = await callMutation(pageA, stack.baseURL, "calendar.createItem", {
+    date: localToday(),
+    slot: "Dinner",
+    itemType: "recipe",
+    recipeId,
+  });
+
+  expect(planned.ok).toBe(true);
+  const { context, page } = await openAs("/calendar", ["recipes.onUpdated"]);
+
+  try {
+    await expect(page.getByText("realtime-gepland-recept").first()).toBeVisible();
+
+    const recipe = (await readRecipe(stack.baseURL, stack.cookies.b, recipeId))!;
+    const renamed = await callMutation(pageB, stack.baseURL, "recipes.update", {
+      id: recipeId,
+      version: recipe.version,
+      data: { name: "realtime-hernoemd-recept" },
+    });
+
+    expect(renamed.ok).toBe(true);
+    await expect(page.getByText("realtime-hernoemd-recept").first()).toBeVisible();
+    await expect(page.getByText("realtime-gepland-recept")).toHaveCount(0);
+  } finally {
+    await context.close();
+  }
 });
 
 test("a browser back from a network gap gets what it missed through Resume, before Recovery's refetch answers", async () => {

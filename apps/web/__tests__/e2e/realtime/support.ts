@@ -1,5 +1,5 @@
 import type { Page, WebSocket as PageSocket } from "@playwright/test";
-import { request } from "@playwright/test";
+import { expect, request } from "@playwright/test";
 import { WebSocket as RawSocket } from "ws";
 
 import { findNewestGroceryNamed } from "@norish/db/repositories/groceries";
@@ -123,6 +123,46 @@ export function recordFrames(page: Page): FrameLog {
   page.on("websocket", onSocket);
 
   return log;
+}
+
+/**
+ * Until the server has sent each named subscription its first item, the Cursor Mark: it
+ * listens before it sends one, so an event published after it reaches the page.
+ */
+export async function waitForLive(log: FrameLog, paths: string[]): Promise<void> {
+  const notLive = () => {
+    const pathOf = new Map<string, string>();
+    const live = new Set<string>();
+
+    for (const frame of log.frames) {
+      let messages: unknown;
+
+      try {
+        messages = JSON.parse(frame.payload);
+      } catch {
+        continue;
+      }
+
+      for (const message of [messages].flat() as Array<{
+        id?: number | string;
+        method?: string;
+        params?: { path?: string };
+        result?: { type?: string };
+      }>) {
+        const key = `${frame.socket}:${message.id}`;
+
+        if (frame.direction === "sent" && message.method === "subscription") {
+          pathOf.set(key, message.params?.path ?? "");
+        } else if (frame.direction === "received" && message.result?.type === "data") {
+          live.add(pathOf.get(key) ?? "");
+        }
+      }
+    }
+
+    return paths.filter((path) => !live.has(path));
+  };
+
+  await expect.poll(notLive, { timeout: 30_000 }).toEqual([]);
 }
 
 /** Add a grocery through the panel, the way a cook does, and wait for its row. */
