@@ -63,7 +63,9 @@ Web and mobile use the same layout. Web keeps its folders at the root of
 - A feature groups its `components/` by area, and each area has an `index.ts`
   that screens and other areas import. Groceries has `header/`, `list/`,
   `panels/`, `pantry/` and `stores/`. Recipes has `page/`, `share/`, `editor/`,
-  `read-only/`, `media/` and `skeleton/`.
+  `read-only/`, `media/` and `skeleton/`. Skeletons, `loading.tsx` files and
+  the shared recipe page import files directly instead, since Turbopack ships
+  every file an `index.ts` re-exports.
 - A feature's `index.ts` exports only the panels other features open, such as
   `MiniGroceries`. Shared code may import that `index.ts` and nothing deeper.
   Only route files import a feature's other files. Lint enforces this.

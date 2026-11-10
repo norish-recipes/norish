@@ -6,7 +6,7 @@
 
 **Status:** done
 
-- [x] `features/recipes/` holds the recipe page, cooking mode, the editor and the shared recipe page as screens. Their components are grouped by area, each area with an `index.ts`, and the feature holds the hooks and the store only it uses, the shared recipe page's store among them. The feature has no `index.ts`, since no other feature opens a recipes panel.
+- [x] `features/recipes/` holds the recipe page, the editor and the shared recipe page as screens, with cooking mode inside the recipe page. Their components are grouped by area, each area with an `index.ts`, and the feature holds the hooks and the store only it uses, the shared recipe page's store among them. The feature has no `index.ts`, since no other feature opens a recipes panel.
 - [x] The read-only pieces move in: ingredients, steps, sections, nutrition, the mobile header, cooking time, source, the amount toggle, the page tint, both smart instructions and the recipe skeleton.
 - [x] What the Library or settings also render goes to the shared folders, the origin flag and the share status chip among them. The heart, the delete modal, the double-tap container and the swipeable row stay in the shared folders. `MiniCookbooks` and `MiniCalendar` stay where they are until library and calendar move.
 - [x] The recipe, editor and share routes render a screen from the feature, and the offline page hands its bootstrap the recipe screen, as it does groceries'.
