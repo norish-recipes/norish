@@ -1,12 +1,11 @@
 "use client";
 
-import type { InfiniteData } from "@tanstack/react-query";
 import { useCallback, useMemo } from "react";
 import { useQueryClient } from "@tanstack/react-query";
 
-import type { PendingRecipeDTO, RecipeDashboardDTO } from "@norish/shared/contracts";
+import type { PendingRecipeDTO } from "@norish/shared/contracts";
 
-import type { InfiniteLibraryData } from "./library-cache";
+import type { InfiniteLibraryData, InfiniteRecipeData } from "./library-cache";
 import { useTRPC } from "../trpc";
 import { applyRecipeUpdateToLibrary } from "./library-cache";
 
@@ -15,12 +14,6 @@ export const OPTIMISTIC_PENDING_RECIPE_PREFIX = "optimistic-pending-recipe:";
 function isOptimisticPendingRecipeId(recipeId: string): boolean {
   return recipeId.startsWith(OPTIMISTIC_PENDING_RECIPE_PREFIX);
 }
-
-export type InfiniteRecipeData = InfiniteData<{
-  recipes: RecipeDashboardDTO[];
-  total: number;
-  nextCursor: number | null;
-}>;
 
 export function removeRecipesFromLists(
   previousData: InfiniteRecipeData | undefined,

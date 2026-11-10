@@ -8,7 +8,7 @@ import type { EventName, PayloadOf } from "@norish/shared/contracts/realtime/cat
 import type { RecipesRealtime } from "@norish/shared/contracts/realtime/recipes";
 import { patchDashboardRecipeFromFull } from "@norish/shared/contracts/zod";
 
-import type { InfiniteRecipeData } from "./use-recipes-cache";
+import type { InfiniteRecipeData } from "./library-cache";
 import { useRealtimeSubscription } from "../realtime/use-realtime-subscription";
 import { useTRPC } from "../trpc";
 import { removeRecipesFromLists, useRecipesCacheHelpers } from "./use-recipes-cache";

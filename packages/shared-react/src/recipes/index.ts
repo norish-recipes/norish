@@ -24,11 +24,8 @@ export {
   type RatingsSubscriptionCallbacks,
 } from "./use-ratings-subscription";
 export { useRecipeAutocomplete } from "./use-recipe-autocomplete";
-export {
-  useRecipesCacheHelpers,
-  type InfiniteRecipeData,
-  type RecipesCacheHelpers,
-} from "./use-recipes-cache";
+export type { InfiniteRecipeData } from "./library-cache";
+export { useRecipesCacheHelpers, type RecipesCacheHelpers } from "./use-recipes-cache";
 export {
   useRecipesMutations,
   type RecipesMutationErrorHandler,

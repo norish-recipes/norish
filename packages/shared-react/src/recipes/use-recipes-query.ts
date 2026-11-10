@@ -1,11 +1,17 @@
 "use client";
 
-import type { InfiniteData, QueryKey } from "@tanstack/react-query";
+import type { QueryKey } from "@tanstack/react-query";
 import { useCallback, useMemo } from "react";
 import { useInfiniteQuery, useQueryClient } from "@tanstack/react-query";
 
-import type { RecipeCategory, RecipeDashboardDTO, SearchField } from "@norish/shared/contracts";
+import type {
+  RecipeCategory,
+  RecipeDashboardDTO,
+  SearchField,
+  SortOrder,
+} from "@norish/shared/contracts";
 
+import type { InfiniteRecipeData } from "./library-cache";
 import { useTRPC } from "../trpc";
 import { usePendingRecipesQuery } from "./use-pending-recipes-query";
 import { useRecipesCacheHelpers } from "./use-recipes-cache";
@@ -17,16 +23,10 @@ export type RecipeFilters = {
   tags?: string[];
   categories?: RecipeCategory[];
   filterMode?: "AND" | "OR";
-  sortMode?: "titleAsc" | "titleDesc" | "dateAsc" | "dateDesc" | "none";
+  sortMode?: SortOrder;
   minRating?: number;
   maxCookingTime?: number;
 };
-
-type InfiniteRecipeData = InfiniteData<{
-  recipes: RecipeDashboardDTO[];
-  total: number;
-  nextCursor: number | null;
-}>;
 
 export type RecipesQueryResult = {
   recipes: RecipeDashboardDTO[];

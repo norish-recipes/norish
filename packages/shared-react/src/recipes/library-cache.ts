@@ -6,6 +6,8 @@ import type {
   RecipeDashboardDTO,
 } from "@norish/shared/contracts";
 
+import type { InfiniteCookbookData } from "./cookbook-types";
+
 export type LibraryPage = {
   items: LibraryItemDTO[];
   total: number;
@@ -14,14 +16,8 @@ export type LibraryPage = {
 
 export type InfiniteLibraryData = InfiniteData<LibraryPage>;
 
-type InfiniteRecipePages = InfiniteData<{
+export type InfiniteRecipeData = InfiniteData<{
   recipes: RecipeDashboardDTO[];
-  total: number;
-  nextCursor: number | null;
-}>;
-
-type InfiniteCookbookPages = InfiniteData<{
-  cookbooks: CookbookSummaryDTO[];
   total: number;
   nextCursor: number | null;
 }>;
@@ -86,7 +82,7 @@ function reconcile<T extends { id: string }>(
  */
 export function applyRecipeUpdateToLibrary(
   previous: InfiniteLibraryData | undefined,
-  updater: (previous: InfiniteRecipePages | undefined) => InfiniteRecipePages | undefined
+  updater: (previous: InfiniteRecipeData | undefined) => InfiniteRecipeData | undefined
 ): InfiniteLibraryData | undefined {
   if (!previous?.pages?.length) return previous;
 
@@ -121,7 +117,7 @@ export function applyRecipeUpdateToLibrary(
  */
 export function applyCookbookUpdateToList(
   previous: CookbookSummaryDTO[] | undefined,
-  updater: (previous: InfiniteCookbookPages | undefined) => InfiniteCookbookPages | undefined
+  updater: (previous: InfiniteCookbookData | undefined) => InfiniteCookbookData | undefined
 ): CookbookSummaryDTO[] | undefined {
   if (!previous) return previous;
 
@@ -136,7 +132,7 @@ export function applyCookbookUpdateToList(
 /** The same, for a cookbook-list update. */
 export function applyCookbookUpdateToLibrary(
   previous: InfiniteLibraryData | undefined,
-  updater: (previous: InfiniteCookbookPages | undefined) => InfiniteCookbookPages | undefined
+  updater: (previous: InfiniteCookbookData | undefined) => InfiniteCookbookData | undefined
 ): InfiniteLibraryData | undefined {
   if (!previous?.pages?.length) return previous;
 

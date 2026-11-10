@@ -1,7 +1,7 @@
 import { act, renderHook } from "@testing-library/react";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 
-import type { InfiniteRecipeData } from "../use-recipes-cache";
+import type { InfiniteRecipeData } from "../library-cache";
 import { createTestQueryClient, createTestWrapper } from "../../groceries/__tests__/test-utils";
 import { useRecipesMutations } from "../use-recipes-mutations";
 

@@ -1,6 +1,6 @@
 "use client";
 
-import type { InfiniteData, QueryClient, QueryKey } from "@tanstack/react-query";
+import type { QueryClient, QueryKey } from "@tanstack/react-query";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 
 import type {
@@ -12,6 +12,7 @@ import type {
 } from "@norish/shared/contracts";
 import { primaryRecipeImage } from "@norish/shared/lib/recipe-media";
 
+import type { InfiniteRecipeData } from "./library-cache";
 import { shouldPreserveOptimisticUpdate } from "../offline/optimistic-updates";
 import { useTRPC } from "../trpc";
 import {
@@ -19,14 +20,6 @@ import {
   removeRecipesFromLists,
   useRecipesCacheHelpers,
 } from "./use-recipes-cache";
-
-type RecipeListPage = {
-  recipes: RecipeDashboardDTO[];
-  total: number;
-  nextCursor: number | null;
-};
-
-type InfiniteRecipeData = InfiniteData<RecipeListPage>;
 
 type ImportMutationContext = {
   optimisticPendingId: string;

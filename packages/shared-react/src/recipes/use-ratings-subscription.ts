@@ -1,23 +1,16 @@
 "use client";
 
-import type { InfiniteData } from "@tanstack/react-query";
 import { useMemo } from "react";
 import { useQueryClient } from "@tanstack/react-query";
 
-import type { RecipeDashboardDTO } from "@norish/shared/contracts";
 import type { EventName, PayloadOf } from "@norish/shared/contracts/realtime/catalogue";
 import type { RatingsRealtime } from "@norish/shared/contracts/realtime/ratings";
 
+import type { InfiniteRecipeData } from "./library-cache";
 import { useRealtimeSubscription } from "../realtime/use-realtime-subscription";
 import { useTRPC } from "../trpc";
 
 type Payload<E extends EventName<RatingsRealtime>> = PayloadOf<RatingsRealtime, E>;
-
-type InfiniteRecipeData = InfiniteData<{
-  recipes: RecipeDashboardDTO[];
-  total: number;
-  nextCursor: number | null;
-}>;
 
 export type RatingsSubscriptionCallbacks = {
   onRatingFailed?: (payload: Payload<"ratingFailed">) => void;
