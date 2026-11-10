@@ -1,7 +1,10 @@
 import { act, renderHook, waitFor } from "@testing-library/react";
 import { beforeAll, beforeEach, describe, expect, it, vi } from "vitest";
 
-import { trackedEvent } from "../realtime-test-utils";
+import { fakePlatformAdapter } from "@norish/shared-react/platform/testing";
+import { useHousehold, useHouseholdSubscription } from "@norish/shared-react/reader";
+
+import { trackedEvent } from "../../../__tests__/realtime/tracked-event";
 import {
   createMockHouseholdAdminSettings,
   createMockHouseholdData,
@@ -9,6 +12,7 @@ import {
   createMockHouseholdUser,
   createTestQueryClient,
   createTestWrapper,
+  READER,
 } from "./test-utils";
 
 // Track subscription callbacks
@@ -17,8 +21,7 @@ const subscriptionCallbacks: Record<string, ((data: unknown) => void) | undefine
 // Define query keys to match mock format
 const householdQueryKey = [["households", "get"], { type: "query" }];
 
-// Mock tRPC provider
-vi.mock("@norish/shared-react/trpc", () => ({
+vi.mock("../../trpc", () => ({
   useTRPC: () => ({
     households: {
       get: {
@@ -107,6 +110,11 @@ vi.mock("@norish/shared-react/trpc", () => ({
     user: {
       get: {
         queryKey: () => [["user", "get"], { type: "query" }],
+        // The Reader's profile never answers: the session's Reader stands.
+        queryOptions: () => ({
+          queryKey: [["user", "get"], { type: "query" }],
+          queryFn: () => new Promise(() => {}),
+        }),
       },
     },
   }),
@@ -123,25 +131,12 @@ vi.mock("@trpc/tanstack-react-query", async (importOriginal) => ({
   }),
 }));
 
-// Mock HeroUI toast
-vi.mock("@heroui/react", () => ({
-  toast: vi.fn(),
-}));
-
-vi.mock("next-intl", () => ({
-  useTranslations: () => (key: string) => key,
-}));
-
-let useHouseholdSubscription: (typeof import("@/hooks/households/use-household-subscription"))["useHouseholdSubscription"];
-let useHouseholdQuery: (typeof import("@/hooks/households/use-household-query"))["useHouseholdQuery"];
 let useSubscription: (typeof import("@trpc/tanstack-react-query"))["useSubscription"];
 
 describe("useHouseholdSubscription", () => {
   let queryClient: ReturnType<typeof createTestQueryClient>;
 
   beforeAll(async () => {
-    ({ useHouseholdSubscription } = await import("@/hooks/households/use-household-subscription"));
-    ({ useHouseholdQuery } = await import("@/hooks/households/use-household-query"));
     ({ useSubscription } = await import("@trpc/tanstack-react-query"));
   });
 
@@ -180,7 +175,7 @@ describe("useHouseholdSubscription", () => {
       });
 
       // Render query hook to get current state
-      const { result } = renderHook(() => useHouseholdQuery(), {
+      const { result } = renderHook(() => useHousehold(), {
         wrapper: createTestWrapper(queryClient),
       });
 
@@ -204,7 +199,7 @@ describe("useHouseholdSubscription", () => {
         wrapper: createTestWrapper(queryClient),
       });
 
-      const { result } = renderHook(() => useHouseholdQuery(), {
+      const { result } = renderHook(() => useHousehold(), {
         wrapper: createTestWrapper(queryClient),
       });
 
@@ -229,7 +224,7 @@ describe("useHouseholdSubscription", () => {
         wrapper: createTestWrapper(queryClient),
       });
 
-      const { result } = renderHook(() => useHouseholdQuery(), {
+      const { result } = renderHook(() => useHousehold(), {
         wrapper: createTestWrapper(queryClient),
       });
 
@@ -245,30 +240,40 @@ describe("useHouseholdSubscription", () => {
 
       queryClient.setQueryData(householdQueryKey, initialData);
 
+      const adapter = fakePlatformAdapter("phone", READER);
+
       renderHook(() => useHouseholdSubscription(), {
+        wrapper: createTestWrapper(queryClient, adapter),
+      });
+
+      const { result } = renderHook(() => useHousehold(), {
         wrapper: createTestWrapper(queryClient),
       });
 
-      const { result } = renderHook(() => useHouseholdQuery(), {
-        wrapper: createTestWrapper(queryClient),
-      });
-
-      // Verify initial state has household
       expect(result.current.household).not.toBeNull();
+
+      act(() => {
+        subscriptionCallbacks.onKicked?.(trackedEvent({}));
+      });
+
+      await waitFor(() => expect(result.current.household).toBeNull());
+      expect(adapter.toast.show).toHaveBeenCalledWith(
+        expect.objectContaining({ severity: "warning", title: "Removed from household" })
+      );
     });
   });
 
   describe("onFailed handler", () => {
-    it("shows a generic error toast instead of raw backend errors", async () => {
+    it("hands the reason to the platform's error display", async () => {
       const initialHousehold = createMockHouseholdSettings({ id: "h1" });
       const initialData = createMockHouseholdData(initialHousehold, "current-user");
 
       queryClient.setQueryData(householdQueryKey, initialData);
 
-      const { toast } = await import("@heroui/react");
+      const adapter = fakePlatformAdapter("phone", READER);
 
       renderHook(() => useHouseholdSubscription(), {
-        wrapper: createTestWrapper(queryClient),
+        wrapper: createTestWrapper(queryClient, adapter),
       });
 
       act(() => {
@@ -279,12 +284,10 @@ describe("useHouseholdSubscription", () => {
         );
       });
 
-      expect(toast).toHaveBeenCalledWith(
-        "operationFailed",
-        expect.objectContaining({
-          description: "technicalDetails",
-          variant: "danger",
-        })
+      // The platform's error display shows its generic copy and only logs the reason.
+      expect(adapter.showError).toHaveBeenCalledWith(
+        "Very long backend stack trace that should not be shown in toast",
+        "household-subscription:onFailed"
       );
     });
   });
@@ -304,7 +307,7 @@ describe("useHouseholdSubscription", () => {
 
       act(() => {
         subscriptionCallbacks.onMemberProfileUpdated?.(
-          trackedEvent({ userId: "user-1", image: "/avatars/user-1-1755000000000.png" })
+          trackedEvent({ userId: READER.id, image: "/avatars/current-user-1755000000000.png" })
         );
       });
 

@@ -1,6 +1,8 @@
 import { renderHook } from "@testing-library/react";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 
+import { useHouseholdMutations } from "@norish/shared-react/reader";
+
 import {
   createMockHouseholdData,
   createMockHouseholdSettings,
@@ -26,8 +28,7 @@ vi.mock("@tanstack/react-query", async () => {
   };
 });
 
-// Mock tRPC provider
-vi.mock("@norish/shared-react/trpc", () => ({
+vi.mock("../../trpc", () => ({
   useTRPC: () => ({
     households: {
       get: {
@@ -44,13 +45,12 @@ vi.mock("@norish/shared-react/trpc", () => ({
       regenerateCode: { mutationOptions: vi.fn(() => ({ mutationFn: mockRegenerateMutate })) },
       transferAdmin: { mutationOptions: vi.fn(() => ({ mutationFn: mockTransferMutate })) },
     },
-  }),
-}));
-
-// Mock user context
-vi.mock("@/context/user-context", () => ({
-  useUserContext: () => ({
-    user: { id: "current-user", name: "Test User" },
+    // The Reader's profile never answers: the session's name stands.
+    user: {
+      get: {
+        queryOptions: () => ({ queryKey: ["user", "get"], queryFn: () => new Promise(() => {}) }),
+      },
+    },
   }),
 }));
 
@@ -71,7 +71,6 @@ describe("useHouseholdMutations", () => {
 
       queryClient.setQueryData(["households", "get"], initialData);
 
-      const { useHouseholdMutations } = await import("@/hooks/households/use-household-mutations");
       const { result } = renderHook(() => useHouseholdMutations(), {
         wrapper: createTestWrapper(queryClient),
       });
@@ -98,7 +97,6 @@ describe("useHouseholdMutations", () => {
 
       queryClient.setQueryData(["households", "get"], initialData);
 
-      const { useHouseholdMutations } = await import("@/hooks/households/use-household-mutations");
       const { result } = renderHook(() => useHouseholdMutations(), {
         wrapper: createTestWrapper(queryClient),
       });
@@ -114,7 +112,6 @@ describe("useHouseholdMutations", () => {
         currentUserId: undefined,
       });
 
-      const { useHouseholdMutations } = await import("@/hooks/households/use-household-mutations");
       const { result } = renderHook(() => useHouseholdMutations(), {
         wrapper: createTestWrapper(queryClient),
       });
@@ -131,7 +128,6 @@ describe("useHouseholdMutations", () => {
 
       queryClient.setQueryData(["households", "get"], initialData);
 
-      const { useHouseholdMutations } = await import("@/hooks/households/use-household-mutations");
       const { result } = renderHook(() => useHouseholdMutations(), {
         wrapper: createTestWrapper(queryClient),
       });
@@ -146,7 +142,6 @@ describe("useHouseholdMutations", () => {
         currentUserId: undefined,
       });
 
-      const { useHouseholdMutations } = await import("@/hooks/households/use-household-mutations");
       const { result } = renderHook(() => useHouseholdMutations(), {
         wrapper: createTestWrapper(queryClient),
       });
@@ -170,7 +165,6 @@ describe("useHouseholdMutations", () => {
 
       queryClient.setQueryData(["households", "get"], initialData);
 
-      const { useHouseholdMutations } = await import("@/hooks/households/use-household-mutations");
       const { result } = renderHook(() => useHouseholdMutations(), {
         wrapper: createTestWrapper(queryClient),
       });
@@ -196,7 +190,6 @@ describe("useHouseholdMutations", () => {
 
       queryClient.setQueryData(["households", "get"], initialData);
 
-      const { useHouseholdMutations } = await import("@/hooks/households/use-household-mutations");
       const { result } = renderHook(() => useHouseholdMutations(), {
         wrapper: createTestWrapper(queryClient),
       });
@@ -217,7 +210,6 @@ describe("useHouseholdMutations", () => {
 
       queryClient.setQueryData(["households", "get"], initialData);
 
-      const { useHouseholdMutations } = await import("@/hooks/households/use-household-mutations");
       const { result } = renderHook(() => useHouseholdMutations(), {
         wrapper: createTestWrapper(queryClient),
       });

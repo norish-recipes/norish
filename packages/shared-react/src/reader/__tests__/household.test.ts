@@ -1,8 +1,8 @@
-import type { HouseholdData } from "@/hooks/households/use-household-query";
-// Import after mocking
-import { useHouseholdQuery } from "@/hooks/households/use-household-query";
-import { waitFor } from "@testing-library/react";
+import { act, renderHook, waitFor } from "@testing-library/react";
 import { beforeEach, describe, expect, it, vi } from "vitest";
+
+import type { HouseholdData } from "@norish/shared-react/reader";
+import { useHousehold, useHouseholdCacheHelpers } from "@norish/shared-react/reader";
 
 import {
   createMockHouseholdData,
@@ -15,7 +15,7 @@ import {
 const mockQueryKey = ["households", "get"];
 const mockQueryOptions = vi.fn();
 
-vi.mock("@norish/shared-react/trpc", () => ({
+vi.mock("../../trpc", () => ({
   useTRPC: () => ({
     households: {
       get: {
@@ -26,7 +26,7 @@ vi.mock("@norish/shared-react/trpc", () => ({
   }),
 }));
 
-describe("useHouseholdQuery", () => {
+describe("useHousehold", () => {
   let queryClient: ReturnType<typeof createTestQueryClient>;
 
   beforeEach(() => {
@@ -40,13 +40,11 @@ describe("useHouseholdQuery", () => {
         queryFn: async () => createMockHouseholdData(null),
       });
 
-      const { renderHook } = require("@testing-library/react");
-      const { result } = renderHook(() => useHouseholdQuery(), {
+      const { result } = renderHook(() => useHousehold(), {
         wrapper: createTestWrapper(queryClient),
       });
 
       expect(result.current.household).toBeNull();
-      expect(result.current.queryKey).toEqual(mockQueryKey);
     });
 
     it("returns loading state initially", () => {
@@ -55,8 +53,7 @@ describe("useHouseholdQuery", () => {
         queryFn: () => new Promise(() => {}), // Never resolves
       });
 
-      const { renderHook } = require("@testing-library/react");
-      const { result } = renderHook(() => useHouseholdQuery(), {
+      const { result } = renderHook(() => useHousehold(), {
         wrapper: createTestWrapper(queryClient),
       });
 
@@ -76,8 +73,7 @@ describe("useHouseholdQuery", () => {
         queryFn: async () => createMockHouseholdData(mockHousehold, "user-1"),
       });
 
-      const { renderHook } = require("@testing-library/react");
-      const { result } = renderHook(() => useHouseholdQuery(), {
+      const { result } = renderHook(() => useHousehold(), {
         wrapper: createTestWrapper(queryClient),
       });
 
@@ -99,8 +95,7 @@ describe("useHouseholdQuery", () => {
         },
       });
 
-      const { renderHook } = require("@testing-library/react");
-      const { result } = renderHook(() => useHouseholdQuery(), {
+      const { result } = renderHook(() => useHousehold(), {
         wrapper: createTestWrapper(queryClient),
       });
 
@@ -115,7 +110,7 @@ describe("useHouseholdQuery", () => {
     });
   });
 
-  describe("setHouseholdData", () => {
+  describe("useHouseholdCacheHelpers().setHouseholdData", () => {
     it("updates query cache with new data", async () => {
       const initialHousehold = createMockHouseholdSettings({ id: "h1", name: "Initial" });
       const initialData = createMockHouseholdData(initialHousehold, "user-1");
@@ -127,8 +122,7 @@ describe("useHouseholdQuery", () => {
 
       queryClient.setQueryData(mockQueryKey, initialData);
 
-      const { renderHook, act } = require("@testing-library/react");
-      const { result } = renderHook(() => useHouseholdQuery(), {
+      const { result } = renderHook(() => ({ ...useHousehold(), ...useHouseholdCacheHelpers() }), {
         wrapper: createTestWrapper(queryClient),
       });
 
@@ -162,8 +156,7 @@ describe("useHouseholdQuery", () => {
 
       queryClient.setQueryData(mockQueryKey, initialData);
 
-      const { renderHook, act } = require("@testing-library/react");
-      const { result } = renderHook(() => useHouseholdQuery(), {
+      const { result } = renderHook(() => ({ ...useHousehold(), ...useHouseholdCacheHelpers() }), {
         wrapper: createTestWrapper(queryClient),
       });
 
@@ -185,7 +178,7 @@ describe("useHouseholdQuery", () => {
     });
   });
 
-  describe("invalidate", () => {
+  describe("useHouseholdCacheHelpers().invalidate", () => {
     it("invalidates queries correctly", async () => {
       const initialHousehold = createMockHouseholdSettings({ id: "h1", name: "Test" });
       const initialData = createMockHouseholdData(initialHousehold, "user-1");
@@ -199,8 +192,7 @@ describe("useHouseholdQuery", () => {
 
       const invalidateSpy = vi.spyOn(queryClient, "invalidateQueries");
 
-      const { renderHook, act } = require("@testing-library/react");
-      const { result } = renderHook(() => useHouseholdQuery(), {
+      const { result } = renderHook(() => useHouseholdCacheHelpers(), {
         wrapper: createTestWrapper(queryClient),
       });
 

@@ -1,3 +1,4 @@
+export { useActiveAllergies, type ActiveAllergies } from "./allergies";
 export {
   DevicePreferencesForVisit,
   useDeviceKind,
@@ -5,9 +6,35 @@ export {
   type DevicePreferenceState,
 } from "./device-preferences";
 export {
+  useHousehold,
+  useHouseholdCacheHelpers,
+  type HouseholdCacheHelpers,
+  type HouseholdData,
+  type HouseholdResult,
+} from "./household";
+export { useHouseholdMutations, type HouseholdMutationsResult } from "./household-mutations";
+export { useHouseholdSubscription } from "./household-subscription";
+export {
   sessionReader,
   useReader,
   useSeededSession,
   type ReaderIdentity,
   type SessionUser,
 } from "./identity";
+export {
+  checkPermissionAccess,
+  normalizePermissionsData,
+  selectCanDeleteRecipe,
+  selectCanEditRecipe,
+  selectCanViewRecipe,
+  type PermissionAccessInput,
+  type PermissionsData,
+  type ReaderPermissions,
+  type RecipeAccess,
+} from "./permission-selectors";
+export {
+  usePermissions,
+  usePermissionsSubscription,
+  useRecipePermissions,
+  type RecipePermissions,
+} from "./permissions";
