@@ -283,11 +283,17 @@ test("a validation failure toasts only the browser that caused it", async () => 
   await expect(pageA.getByText("Operation failed")).toHaveCount(0);
 });
 
-/** A fresh browser of A's on `path`, once `live` subscriptions listen; closed with `context.close()`. */
+/**
+ * A fresh browser of A's on `path`, once `live` subscriptions listen, after `then` (opening a panel,
+ * say) if given; closed with `context.close()`.
+ */
 async function openAs(
   path: string,
   live: string[],
-  cookies: Array<{ name: string; value: string }> = []
+  {
+    cookies = [],
+    then,
+  }: { cookies?: Array<{ name: string; value: string }>; then?: (page: Page) => Promise<void> } = {}
 ) {
   const context = await stack.newContext("a");
 
@@ -296,6 +302,7 @@ async function openAs(
   const frames = recordFrames(page);
 
   await page.goto(path);
+  await then?.(page);
   await waitForLive(frames, live);
   frames.stop();
 
@@ -354,11 +361,11 @@ test("a housemate's Pantry change reorders a Library sorted by pantry share", as
     expect((await callMutation(pageA, stack.baseURL, "pantry.add", { name })).ok).toBe(true);
   }
 
-  const { context, page } = await openAs(
-    "/",
-    ["pantry.onAdded"],
-    [{ name: "norish-recipe-filters", value: encodeURIComponent('{"showPantryOnly":true}') }]
-  );
+  const { context, page } = await openAs("/", ["pantry.onAdded"], {
+    cookies: [
+      { name: "norish-recipe-filters", value: encodeURIComponent('{"showPantryOnly":true}') },
+    ],
+  });
   const order = async () =>
     (await page.locator("[data-recipe-card]").allTextContents()).flatMap((text) =>
       ["realtime-voorraad-eerst", "realtime-voorraad-tweede"].filter((name) => text.includes(name))
@@ -408,6 +415,14 @@ test("a housemate renaming a planned recipe shows the new name on an open calend
   }
 });
 
+/** The recipe page's Add to Groceries panel. */
+const addToGroceries = (page: Page) => page.getByRole("dialog", { name: "Add to Groceries" });
+
+async function openAddToGroceries(page: Page) {
+  await page.getByRole("button", { name: "Add", exact: true }).first().click();
+  await expect(addToGroceries(page)).toBeVisible();
+}
+
 test("a housemate's grocery marks a kept line on the list in Add to Groceries on a recipe", async () => {
   const recipeId = await seedRecipe(stack.userIds.a, "realtime-boodschappen-recept", [
     "realtime-azijn",
@@ -416,20 +431,14 @@ test("a housemate's grocery marks a kept line on the list in Add to Groceries on
   expect(
     (await callMutation(pageA, stack.baseURL, "pantry.add", { name: "realtime-azijn" })).ok
   ).toBe(true);
-  const context = await stack.newContext("a");
-  const page = await context.newPage();
-  const frames = recordFrames(page);
+  const { context, page } = await openAs(`/recipes/${recipeId}`, ["groceries.onCreated"], {
+    then: openAddToGroceries,
+  });
 
   try {
-    await page.goto(`/recipes/${recipeId}`);
-    await page.getByRole("button", { name: "Add", exact: true }).first().click();
-    const held = page
-      .getByRole("dialog", { name: "Add to Groceries" })
-      .getByTestId("pantry-section");
+    const held = addToGroceries(page).getByTestId("pantry-section");
 
     await expect(held.getByRole("checkbox", { name: "realtime-azijn" })).toBeVisible();
-    await waitForLive(frames, ["groceries.onCreated"]);
-    frames.stop();
     await expect(held.getByTestId("on-the-list")).toHaveCount(0);
 
     const created = await callMutation(pageB, stack.baseURL, "groceries.create", [
@@ -438,6 +447,35 @@ test("a housemate's grocery marks a kept line on the list in Add to Groceries on
 
     expect(created.ok).toBe(true);
     await expect(held.getByTestId("on-the-list")).toHaveCount(1);
+  } finally {
+    await context.close();
+  }
+});
+
+test("a housemate's Pantry add while Add to Groceries is closed shows when it opens again", async () => {
+  const recipeId = await seedRecipe(stack.userIds.a, "realtime-olijfolie-recept", [
+    "realtime-olijfolie",
+  ]);
+  const { context, page } = await openAs(`/recipes/${recipeId}`, ["pantry.onAdded"], {
+    then: openAddToGroceries,
+  });
+  const line = (section: string) =>
+    addToGroceries(page).getByTestId(section).getByRole("checkbox", { name: "realtime-olijfolie" });
+
+  try {
+    await expect(line("to-buy-section")).toBeChecked();
+    await page.keyboard.press("Escape");
+    await expect(addToGroceries(page)).toHaveCount(0);
+
+    const kept = await callMutation(pageB, stack.baseURL, "pantry.add", {
+      name: "realtime-olijfolie",
+    });
+
+    expect(kept.ok).toBe(true);
+    await openAddToGroceries(page);
+    await expect(line("pantry-section")).toBeVisible();
+    await expect(line("pantry-section")).not.toBeChecked();
+    await expect(line("to-buy-section")).toHaveCount(0);
   } finally {
     await context.close();
   }
