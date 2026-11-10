@@ -56,9 +56,9 @@ describe("the recipe page's subscriptions", () => {
       useRecipeEnrichmentSubscription("recipe-1");
     }));
 
-    expect(isKeptCurrent(key("get", { id: "recipe-1" }))).toBe(true);
-    expect(isKeptCurrent(key("enrichmentStatus", { recipeId: "recipe-1" }))).toBe(true);
-    expect(isKeptCurrent(key("shareList", { recipeId: "recipe-1" }))).toBe(true);
-    expect(isKeptCurrent(key("get", { id: "recipe-2" }))).toBe(false);
+    expect(isKeptCurrent(key("get", { id: "recipe-1" }), Date.now())).toBe(true);
+    expect(isKeptCurrent(key("enrichmentStatus", { recipeId: "recipe-1" }), Date.now())).toBe(true);
+    expect(isKeptCurrent(key("shareList", { recipeId: "recipe-1" }), Date.now())).toBe(true);
+    expect(isKeptCurrent(key("get", { id: "recipe-2" }), Date.now())).toBe(false);
   });
 });

@@ -37,10 +37,13 @@ function openEngine() {
 
 describe("the web offline engine", () => {
   beforeEach(() => {
+    // A frozen clock: a read and its keeper share a millisecond unless a test moves it on.
+    vi.useFakeTimers({ toFake: ["Date"] });
     window.localStorage.clear();
   });
 
   afterEach(() => {
+    vi.useRealTimers();
     vi.unstubAllGlobals();
   });
 
@@ -126,9 +129,11 @@ describe("the web offline engine", () => {
     expect(await fetchesOnOpen(seeded)).toBe(0);
     expect(await fetchesOnOpen(read)).toBe(0);
 
-    // The reader leaves its screen, with the subscription that kept its read current.
-    screen.unmount();
+    // The reader's forget runs while the subscription still keeps its read current.
     await tick();
+    // Then the subscription leaves, and comes back later than the read it kept.
+    screen.unmount();
+    vi.setSystemTime(Date.now() + 1000);
     const back = renderHook(() => useKeepsCurrent([read]));
 
     expect(await fetchesOnOpen(seeded)).toBe(1);

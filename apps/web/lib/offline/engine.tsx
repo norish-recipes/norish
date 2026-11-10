@@ -79,7 +79,7 @@ function noteAnswer({ query, ...event }: QueryCacheNotifyEvent): void {
 function forgetUnwatched(query: Query): void {
   if (query.getObserversCount() > 0) return;
   serverCopies.delete(query.queryHash);
-  if (!isKeptCurrent(query.queryKey)) answered.delete(query);
+  if (!isKeptCurrent(query.queryKey, query.state.dataUpdatedAt)) answered.delete(query);
 }
 
 /**
@@ -98,7 +98,9 @@ const refetchOnMount = (query: Query) => {
     return false;
   }
 
-  return answered.has(query) && isKeptCurrent(query.queryKey) ? true : ("always" as const);
+  return answered.has(query) && isKeptCurrent(query.queryKey, query.state.dataUpdatedAt)
+    ? true
+    : ("always" as const);
 };
 
 function calendarRanges(): CalendarRange[] {

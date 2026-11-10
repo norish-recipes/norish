@@ -17,11 +17,12 @@
  * expired session) come last, in the order their damage allows.
  */
 import { randomUUID } from "node:crypto";
-import type { BrowserContext, Page, Response } from "@playwright/test";
+import type { BrowserContext, BrowserContextOptions, Page, Response } from "@playwright/test";
 
 import type { RealtimeStack } from "./fixture";
 import type { HouseholdRow } from "./support";
 import { openGroceries, rowFor } from "../harness/groceries";
+import { swipeOpenTo } from "../harness/pointer";
 import { readRecipe, seedRecipe } from "../harness/recipes";
 import { dropSocket, expect, socketLedger, test, waitForSocket } from "./fixture";
 import {
@@ -293,9 +294,14 @@ async function openAs(
   {
     cookies = [],
     then,
-  }: { cookies?: Array<{ name: string; value: string }>; then?: (page: Page) => Promise<void> } = {}
+    options,
+  }: {
+    cookies?: Array<{ name: string; value: string }>;
+    then?: (page: Page) => Promise<void>;
+    options?: BrowserContextOptions;
+  } = {}
 ) {
-  const context = await stack.newContext("a");
+  const context = await stack.newContext("a", options);
 
   await context.addCookies(cookies.map((cookie) => ({ ...cookie, url: stack.baseURL })));
   const page = await context.newPage();
@@ -473,6 +479,57 @@ test("a housemate's Pantry add while Add to Groceries is closed shows when it op
 
     expect(kept.ok).toBe(true);
     await openAddToGroceries(page);
+    await expect(line("pantry-section")).toBeVisible();
+    await expect(line("pantry-section")).not.toBeChecked();
+    await expect(line("to-buy-section")).toHaveCount(0);
+  } finally {
+    await context.close();
+  }
+});
+
+test("a housemate's Pantry add while the Library's Add to Groceries is away shows on return", async () => {
+  const name = "realtime-roomboter-recept";
+  const recipeId = await seedRecipe(stack.userIds.a, name, ["realtime-roomboter"]);
+  // A phone: a card's actions open with a swipe.
+  const { context, page } = await openAs("/", ["pantry.onAdded"], {
+    options: { hasTouch: true, viewport: { width: 390, height: 1600 } },
+  });
+  const card = page.locator("[data-recipe-card]").filter({ hasText: name });
+  const line = (section: string) =>
+    addToGroceries(page).getByTestId(section).getByRole("checkbox", { name: "realtime-roomboter" });
+  const openFromCard = async () => {
+    await swipeOpenTo(page, card, "View groceries");
+    await expect(addToGroceries(page)).toBeVisible();
+  };
+
+  try {
+    await openFromCard();
+    await expect(line("to-buy-section")).toBeChecked();
+    await page.keyboard.press("Escape");
+    await expect(addToGroceries(page)).toHaveCount(0);
+    // Past the tick in which a read forgets what kept it current, with the Library still mounted.
+    await delay(500);
+
+    await card.getByText(name).first().click();
+    await expect(page).toHaveURL(new RegExp(`/recipes/${recipeId}`));
+    await expect(page.getByRole("heading", { name })).toBeVisible();
+
+    const kept = await callMutation(pageB, stack.baseURL, "pantry.add", {
+      name: "realtime-roomboter",
+    });
+
+    expect(kept.ok).toBe(true);
+    await expect
+      .poll(async () =>
+        (await callQuery<Array<{ name: string }>>(pageB, stack.baseURL, "pantry.list")).map(
+          (food) => food.name
+        )
+      )
+      .toContain("realtime-roomboter");
+
+    await page.goBack();
+    await expect(card).toBeVisible();
+    await openFromCard();
     await expect(line("pantry-section")).toBeVisible();
     await expect(line("pantry-section")).not.toBeChecked();
     await expect(line("to-buy-section")).toHaveCount(0);
