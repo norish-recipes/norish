@@ -82,6 +82,16 @@ describe("LibraryRoot", () => {
     expect(cookie().sortMode).toBe("titleAsc");
   });
 
+  it("releases the loading gate with no cookie and nothing stored", () => {
+    render(
+      <LibraryRoot filters={undefined}>
+        <Probe />
+      </LibraryRoot>
+    );
+
+    expect(frames.at(-1)).toBe("dateDesc - ready");
+  });
+
   it("keeps the search text and filters when it unmounts and mounts again", () => {
     const { unmount } = render(
       <LibraryRoot filters={undefined}>
