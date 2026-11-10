@@ -1,5 +1,10 @@
 export * from "./use-dirty-state";
-export * from "./use-servings-scaler";
+export {
+  formatServings,
+  useServingsScaler,
+  type ScaledIngredient,
+  type ServingsScalerResult,
+} from "../recipes";
 export * from "./unit-formatter";
 export * from "./use-amount-display-preference";
 export * from "./admin/index";

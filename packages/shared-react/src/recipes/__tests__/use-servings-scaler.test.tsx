@@ -7,9 +7,9 @@
 import { QueryClient } from "@tanstack/react-query";
 import { describe, expect, it } from "vitest";
 
-import type { ScaledIngredient } from "../../src/hooks/use-servings-scaler";
-import { useServingsScaler } from "../../src/hooks/use-servings-scaler";
-import { renderHookWithClient } from "./render-hook";
+import type { ScaledIngredient } from "../use-servings-scaler";
+import { renderHookWithClient } from "../../../__tests__/hooks/render-hook";
+import { useServingsScaler } from "../use-servings-scaler";
 
 type Line = { id: string; amount: number | string | null };
 

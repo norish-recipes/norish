@@ -82,3 +82,9 @@ export { useCookbooksMutations } from "./use-cookbooks-mutations";
 export { useCookbooksQuery } from "./use-cookbooks-query";
 export { useCookbooksSubscription } from "./use-cookbooks-subscription";
 export { useEditableCookbooksQuery, useRecipeCookbooksQuery } from "./use-recipe-cookbooks-query";
+export {
+  formatServings,
+  useServingsScaler,
+  type ScaledIngredient,
+  type ServingsScalerResult,
+} from "./use-servings-scaler";
