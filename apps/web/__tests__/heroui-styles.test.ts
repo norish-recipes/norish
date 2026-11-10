@@ -5,7 +5,8 @@ import { createRequire } from "node:module";
 import path from "node:path";
 import { describe, expect, it } from "vitest";
 
-const webRoot = path.resolve(import.meta.dirname, "..");
+import { webRoot, webSourceFiles } from "./helpers/web-source-files";
+
 const require = createRequire(path.join(webRoot, "package.json"));
 const reactDist = path.dirname(require.resolve("@heroui/react"));
 const stylesDist = path.join(path.dirname(require.resolve("@heroui/styles/package.json")), "dist");
@@ -37,13 +38,8 @@ function variantsUsedBy(file: string, seen = new Set<string>()): string[] {
 
 describe("styles/heroui.css", () => {
   it("imports the styles of every HeroUI component the app draws, and what those draw", () => {
-    const appImports = ["app", "components", "features", "hooks", "lib"]
-      .flatMap((dir) =>
-        fs
-          .readdirSync(path.join(webRoot, dir), { recursive: true, encoding: "utf8" })
-          .filter((file) => /\.tsx?$/.test(file))
-          .map((file) => fs.readFileSync(path.join(webRoot, dir, file), "utf8"))
-      )
+    const appImports = webSourceFiles()
+      .map((file) => fs.readFileSync(path.join(webRoot, file), "utf8"))
       .flatMap((source) => [...source.matchAll(/import \{([^}]*)\} from "@heroui\/react"/g)])
       .flatMap(([, names = ""]) =>
         names.split(",").map((name) => name.replace(/^type /, "").trim())

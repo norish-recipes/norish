@@ -4,7 +4,7 @@ import fs from "node:fs";
 import path from "node:path";
 import { describe, expect, it } from "vitest";
 
-const webRoot = path.resolve(import.meta.dirname, "../..");
+import { webRoot, webSourceFiles } from "../helpers/web-source-files";
 
 // The settings messages app/layout.tsx ships outside the settings route.
 const SHIPPED = ["settings.ingredients", "settings.admin.aiProcessing"];
@@ -18,13 +18,7 @@ const SETTINGS_ROUTE = [
 
 describe("the root layout's client messages", () => {
   it("hold every settings namespace read outside the settings route", () => {
-    const reads = ["app", "components", "features", "hooks", "lib"]
-      .flatMap((dir) =>
-        fs
-          .readdirSync(path.join(webRoot, dir), { recursive: true, encoding: "utf8" })
-          .filter((file) => /\.tsx?$/.test(file))
-          .map((file) => path.join(dir, file))
-      )
+    const reads = webSourceFiles()
       .filter((file) => !SETTINGS_ROUTE.some((prefix) => file.startsWith(prefix)))
       .flatMap((file) =>
         [
