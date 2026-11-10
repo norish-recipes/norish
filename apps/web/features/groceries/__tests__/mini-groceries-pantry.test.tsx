@@ -84,6 +84,9 @@ vi.mock("@norish/shared-react/groceries", async () => {
     }),
   };
 });
+vi.mock("@/components/Panel/kept-foods-subscriptions", () => ({
+  KeptFoodsSubscriptions: () => null,
+}));
 vi.mock("@/hooks/use-unit-formatter", () => ({
   useUnitFormatter: () => ({
     formatAmountUnit: (amount: number | null, unit: string | null) =>

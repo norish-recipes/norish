@@ -3,6 +3,7 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { IngredientIcon, useIngredientIcons } from "@/components/ingredients/ingredient-icon";
 import { OnTheListMark } from "@/components/ingredients/on-the-list-mark";
+import { KeptFoodsSubscriptions } from "@/components/Panel/kept-foods-subscriptions";
 import Panel from "@/components/Panel/Panel";
 import { isCheckboxEvent, RoundCheckbox } from "@/components/round-checkbox";
 import {
@@ -188,10 +189,10 @@ export default function MiniGroceries({
     items: pantryIngredients,
     isLoading: pantryLoading,
     isUnavailable: pantryUnavailable,
-  } = usePantryQuery();
+  } = usePantryQuery(open || addAtOnce);
   const rules = useSpellingRules();
   const { addPantryIngredient } = usePantryMutations();
-  const onTheList = useOnTheList(pantryIngredients);
+  const onTheList = useOnTheList(pantryIngredients, open);
 
   /** The Pantry Ingredient that covers a line, as edited here if it was. */
   const keptFor = useCallback(
@@ -530,6 +531,7 @@ export default function MiniGroceries({
   return (
     <Panel open={open} title={t("addToGroceries")} onOpenChange={onOpenChange}>
       <Panel.Body className="flex min-h-0 flex-1 flex-col">
+        {open ? <KeptFoodsSubscriptions /> : null}
         {open && isLoading ? (
           <div className="text-muted p-4 text-base">{t("loadingIngredients")}</div>
         ) : open ? (

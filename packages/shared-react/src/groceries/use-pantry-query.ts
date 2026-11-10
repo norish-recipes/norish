@@ -5,9 +5,10 @@ import type { PantryIngredientDto } from "@norish/shared/contracts";
 import type { PantryQueryResult } from "./types";
 import { useTRPC } from "../trpc";
 
-export function usePantryQuery(): PantryQueryResult {
+/** The Pantry; while `enabled` is false it reads only what is cached, as a closed panel does. */
+export function usePantryQuery(enabled = true): PantryQueryResult {
   const trpc = useTRPC();
-  const { data, error, isLoading } = useQuery(trpc.pantry.list.queryOptions());
+  const { data, error, isLoading } = useQuery({ ...trpc.pantry.list.queryOptions(), enabled });
   const items = data ?? [];
   // A failed read with nothing cached is the one state a screen cannot tell
   // from an empty Pantry by the items alone.
@@ -17,10 +18,11 @@ export function usePantryQuery(): PantryQueryResult {
 }
 
 /** The Pantry's item for one Ingredient, or null: its reader re-renders only when that item changes. */
-export function usePantryItem(ingredientId: string): PantryIngredientDto | null {
+export function usePantryItem(ingredientId: string, enabled = true): PantryIngredientDto | null {
   const trpc = useTRPC();
   const { data = null } = useQuery({
     ...trpc.pantry.list.queryOptions(),
+    enabled,
     select: (items) => items.find((item) => item.ingredientId === ingredientId) ?? null,
   });
 
