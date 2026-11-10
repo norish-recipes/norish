@@ -7,5 +7,4 @@ type TrpcHookBinding = ReturnType<TrpcContext["useTRPC"]>;
 
 export interface CreateRatingsHooksOptions {
   useTRPC: () => TrpcHookBinding;
-  shouldPreserveOptimisticUpdate?: (error: unknown) => boolean;
 }

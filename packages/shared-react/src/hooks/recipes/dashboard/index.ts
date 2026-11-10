@@ -1,9 +1,7 @@
 import type { CreateRecipeHooksOptions } from "../types";
-import { createUseFavoritesMutation } from "./use-favorites-mutation";
-import { createUseFavoritesQuery } from "./use-favorites-query";
+import { useFavoritesMutation, useFavoritesQuery, useRatingsSubscription } from "../../../recipes";
 import { createUsePendingRecipesQuery } from "./use-pending-recipes-query";
 import { createUseRandomRecipe } from "./use-random-recipe";
-import { createUseRatingsSubscription } from "./use-ratings-subscription";
 import { createUseRecipeAutocomplete } from "./use-recipe-autocomplete";
 import { createUseRecipesCacheHelpers } from "./use-recipes-cache";
 import { createUseRecipesMutations } from "./use-recipes-mutations";
@@ -19,9 +17,11 @@ export type {
 export type { RandomRecipeResult } from "./use-random-recipe";
 export type { RecipesMutationsResult, RecipesMutationErrorHandler } from "./use-recipes-mutations";
 export type { RecipesSubscriptionCallbacks } from "./use-recipes-subscription";
-export type { FavoritesQueryResult } from "./use-favorites-query";
-export type { FavoritesMutationResult } from "./use-favorites-mutation";
-export type { RatingsSubscriptionCallbacks } from "./use-ratings-subscription";
+export type {
+  FavoritesMutationResult,
+  FavoritesQueryResult,
+  RatingsSubscriptionCallbacks,
+} from "../../../recipes";
 
 export {
   createUsePendingRecipesQuery,
@@ -30,9 +30,6 @@ export {
   createUseRecipesMutations,
   createUseRecipesSubscription,
   createUseRecipeAutocomplete,
-  createUseFavoritesQuery,
-  createUseFavoritesMutation,
-  createUseRatingsSubscription,
   createUseRandomRecipe,
 };
 
@@ -56,9 +53,9 @@ export function createDashboardRecipeHooks(options: CreateRecipeHooksOptions) {
     useRecipesQuery,
     useRecipesMutations,
     useRecipesSubscription,
-    useFavoritesQuery: createUseFavoritesQuery(options),
-    useFavoritesMutation: createUseFavoritesMutation(options),
-    useRatingsSubscription: createUseRatingsSubscription(options),
+    useFavoritesQuery,
+    useFavoritesMutation,
+    useRatingsSubscription,
     useRecipeAutocomplete: createUseRecipeAutocomplete(options),
     useRandomRecipe: createUseRandomRecipe(options),
   };

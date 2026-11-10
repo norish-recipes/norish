@@ -1,14 +1,9 @@
 import type { CreateFavoritesHooksOptions } from "./types";
-import { createUseFavoritesMutation } from "../recipes/dashboard/use-favorites-mutation";
-import { createUseFavoritesQuery } from "../recipes/dashboard/use-favorites-query";
+import { useFavoritesMutation, useFavoritesQuery } from "../../recipes";
 
 export type { CreateFavoritesHooksOptions } from "./types";
-export type { FavoritesQueryResult } from "../recipes/dashboard/use-favorites-query";
-export type { FavoritesMutationResult } from "../recipes/dashboard/use-favorites-mutation";
+export type { FavoritesMutationResult, FavoritesQueryResult } from "../../recipes";
 
-export function createFavoritesHooks({ useTRPC }: CreateFavoritesHooksOptions) {
-  return {
-    useFavoritesQuery: createUseFavoritesQuery({ useTRPC }),
-    useFavoritesMutation: createUseFavoritesMutation({ useTRPC }),
-  };
+export function createFavoritesHooks(_options: CreateFavoritesHooksOptions) {
+  return { useFavoritesQuery, useFavoritesMutation };
 }

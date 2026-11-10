@@ -7,10 +7,9 @@ import { act } from "react";
 import { QueryClient } from "@tanstack/react-query";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 
-import type { CreateRecipeHooksOptions } from "../../src/hooks/recipes/types";
-import { createUseRatingsSubscription } from "../../src/hooks/recipes/dashboard/use-ratings-subscription";
-import { trackedEvent } from "../realtime/tracked-event";
-import { renderHookWithClient } from "./render-hook";
+import { renderHookWithClient } from "../../../__tests__/hooks/render-hook";
+import { trackedEvent } from "../../../__tests__/realtime/tracked-event";
+import { useRatingsSubscription } from "../use-ratings-subscription";
 
 const useSubscriptionMock = vi.hoisted(() => vi.fn());
 
@@ -36,17 +35,19 @@ function procedure(name: string) {
   return { subscriptionOptions: (_input: undefined, opts: object) => ({ name, ...opts }) };
 }
 
-const useTRPC = (() => ({
-  recipes: {
-    list: { queryKey: () => [["recipes", "list"], { input: {}, type: "query" }] },
-  },
-  ratings: {
-    getAverage: { queryKey: (input?: { recipeId: string }) => averageKey(input?.recipeId) },
-    getUserRating: { queryKey: (input?: { recipeId: string }) => userRatingKey(input?.recipeId) },
-    onRatingUpdated: procedure("onRatingUpdated"),
-    onRatingFailed: procedure("onRatingFailed"),
-  },
-})) as unknown as CreateRecipeHooksOptions["useTRPC"];
+vi.mock("../../trpc", () => ({
+  useTRPC: () => ({
+    recipes: {
+      list: { queryKey: () => [["recipes", "list"], { input: {}, type: "query" }] },
+    },
+    ratings: {
+      getAverage: { queryKey: (input?: { recipeId: string }) => averageKey(input?.recipeId) },
+      getUserRating: { queryKey: (input?: { recipeId: string }) => userRatingKey(input?.recipeId) },
+      onRatingUpdated: procedure("onRatingUpdated"),
+      onRatingFailed: procedure("onRatingFailed"),
+    },
+  }),
+}));
 
 function emit(name: string, payload: unknown) {
   const options = useSubscriptionMock.mock.calls
@@ -79,8 +80,6 @@ beforeEach(() => {
     pageParams: [0],
   });
   invalidateQueries = vi.spyOn(queryClient, "invalidateQueries");
-
-  const useRatingsSubscription = createUseRatingsSubscription({ useTRPC });
 
   rendered = renderHookWithClient(queryClient, () => useRatingsSubscription({ onRatingFailed }));
 });
