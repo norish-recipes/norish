@@ -246,8 +246,11 @@
       "mute": "Вимкнути звук",
       "unmute": "Увімкнути звук",
       "fullscreen": "На весь екран",
-      "exitFullscreen": "Вийти з повноекранного режиму"
-    }
+      "exitFullscreen": "Вийти з повноекранного режиму",
+      "progress": "Прогрес відео"
+    },
+    "recipeImage": "Зображення рецепта",
+    "closeViewer": "Закрити перегляд зображення"
   },
   "validation": {
     "nameRequired": "Вкажіть назву рецепта",
@@ -276,7 +279,9 @@
       "noPieceWeight": "ваги штуки ще немає"
     },
     "workedOutFrom": "Розраховано за інгредієнтами; використано: {sources}.",
-    "householdNumbers": "дані вашого домогосподарства"
+    "householdNumbers": "дані вашого домогосподарства",
+    "decreasePortions": "Менше порцій",
+    "increasePortions": "Більше порцій"
   },
   "measurementSystem": {
     "label": "Система мір",
@@ -291,7 +296,9 @@
   },
   "stepInput": {
     "stepPlaceholder": "Крок {number}: опишіть крок...",
-    "stepPlaceholderShort": "Крок {number}"
+    "stepPlaceholderShort": "Крок {number}",
+    "recipeSuggestions": "Пропозиції рецептів",
+    "ingredientSuggestions": "Пропозиції інгредієнтів"
   },
   "stepIngredients": {
     "rowLabel": "Пов’язані інгредієнти",
@@ -331,7 +338,9 @@
     "batchImportedDescription": "Імпортовано рецептів з архіву: {count}",
     "view": "Переглянути",
     "open": "Відкрити",
-    "deleteKept": "{count, plural, one {# рецепт змінено} few {# рецепти змінено} many {# рецептів змінено} other {# рецепта змінено}} іншим користувачем і збережено."
+    "deleteKept": "{count, plural, one {# рецепт змінено} few {# рецепти змінено} many {# рецептів змінено} other {# рецепта змінено}} іншим користувачем і збережено.",
+    "deleted": "Рецепт видалено",
+    "deletedDescription": "Цей рецепт було видалено."
   },
   "tags": {
     "panel": {

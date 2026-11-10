@@ -246,8 +246,11 @@
       "mute": "Dempen",
       "unmute": "Geluid aan",
       "fullscreen": "Volledig scherm",
-      "exitFullscreen": "Volledig scherm sluiten"
-    }
+      "exitFullscreen": "Volledig scherm sluiten",
+      "progress": "Videovoortgang"
+    },
+    "recipeImage": "Receptafbeelding",
+    "closeViewer": "Afbeeldingsweergave sluiten"
   },
   "validation": {
     "nameRequired": "Receptnaam is verplicht",
@@ -276,7 +279,9 @@
       "noPieceWeight": "nog geen stukgewicht"
     },
     "workedOutFrom": "Berekend uit de ingrediënten, met {sources}.",
-    "householdNumbers": "de waarden van je huishouden"
+    "householdNumbers": "de waarden van je huishouden",
+    "decreasePortions": "Minder porties",
+    "increasePortions": "Meer porties"
   },
   "measurementSystem": {
     "label": "Meetsysteem",
@@ -291,7 +296,9 @@
   },
   "stepInput": {
     "stepPlaceholder": "Stap {number}: Beschrijf de stap...",
-    "stepPlaceholderShort": "Stap {number}"
+    "stepPlaceholderShort": "Stap {number}",
+    "recipeSuggestions": "Receptsuggesties",
+    "ingredientSuggestions": "Ingrediëntsuggesties"
   },
   "stepIngredients": {
     "rowLabel": "Gekoppelde ingrediënten",
@@ -331,7 +338,9 @@
     "batchImportedDescription": "{count} recepten geïmporteerd uit archief",
     "view": "Bekijk",
     "open": "Openen",
-    "deleteKept": "{count, plural, one {# recept is} other {# recepten zijn}} door iemand anders gewijzigd en bewaard."
+    "deleteKept": "{count, plural, one {# recept is} other {# recepten zijn}} door iemand anders gewijzigd en bewaard.",
+    "deleted": "Recept verwijderd",
+    "deletedDescription": "Dit recept is verwijderd."
   },
   "tags": {
     "panel": {

@@ -246,8 +246,11 @@
       "mute": "Выключить звук",
       "unmute": "Включить звук",
       "fullscreen": "Во весь экран",
-      "exitFullscreen": "Выйти из полноэкранного режима"
-    }
+      "exitFullscreen": "Выйти из полноэкранного режима",
+      "progress": "Прогресс видео"
+    },
+    "recipeImage": "Изображение рецепта",
+    "closeViewer": "Закрыть просмотр изображения"
   },
   "validation": {
     "nameRequired": "Название рецепта обязательно",
@@ -276,7 +279,9 @@
       "noPieceWeight": "пока нет веса штуки"
     },
     "workedOutFrom": "Рассчитано по ингредиентам, по данным {sources}.",
-    "householdNumbers": "значений вашей семьи"
+    "householdNumbers": "значений вашей семьи",
+    "decreasePortions": "Меньше порций",
+    "increasePortions": "Больше порций"
   },
   "measurementSystem": {
     "label": "Система мер",
@@ -291,7 +296,9 @@
   },
   "stepInput": {
     "stepPlaceholder": "Шаг {number}: Опишите действие...",
-    "stepPlaceholderShort": "Шаг {number}"
+    "stepPlaceholderShort": "Шаг {number}",
+    "recipeSuggestions": "Предложения рецептов",
+    "ingredientSuggestions": "Предложения ингредиентов"
   },
   "stepIngredients": {
     "rowLabel": "Связанные ингредиенты",
@@ -331,7 +338,9 @@
     "batchImportedDescription": "{count} {count, plural, one {рецепт} few {рецепта} many {рецептов} other {рецепта}} импортировано из архива",
     "view": "Просмотр",
     "open": "Открыть",
-    "deleteKept": "{count, plural, one {# рецепт изменён} few {# рецепта изменены} many {# рецептов изменено} other {# рецепта изменено}} другим пользователем и сохранён."
+    "deleteKept": "{count, plural, one {# рецепт изменён} few {# рецепта изменены} many {# рецептов изменено} other {# рецепта изменено}} другим пользователем и сохранён.",
+    "deleted": "Рецепт удалён",
+    "deletedDescription": "Этот рецепт был удалён."
   },
   "tags": {
     "panel": {

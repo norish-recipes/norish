@@ -246,8 +246,11 @@
       "mute": "Stäng av ljud",
       "unmute": "Slå på ljud",
       "fullscreen": "Visa helskärm",
-      "exitFullscreen": "Lämna helskärm"
-    }
+      "exitFullscreen": "Lämna helskärm",
+      "progress": "Videoförlopp"
+    },
+    "recipeImage": "Receptbild",
+    "closeViewer": "Stäng bildvisaren"
   },
   "validation": {
     "nameRequired": "Receptnamn krävs",
@@ -276,7 +279,9 @@
       "noPieceWeight": "ingen styckvikt ännu"
     },
     "workedOutFrom": "Beräknat utifrån ingredienserna med {sources}.",
-    "householdNumbers": "ditt hushålls värden"
+    "householdNumbers": "ditt hushålls värden",
+    "decreasePortions": "Färre portioner",
+    "increasePortions": "Fler portioner"
   },
   "measurementSystem": {
     "label": "Måttsystem",
@@ -291,7 +296,9 @@
   },
   "stepInput": {
     "stepPlaceholder": "Steg {number}: Beskriv steget...",
-    "stepPlaceholderShort": "Steg {number}"
+    "stepPlaceholderShort": "Steg {number}",
+    "recipeSuggestions": "Receptförslag",
+    "ingredientSuggestions": "Ingrediensförslag"
   },
   "stepIngredients": {
     "rowLabel": "Kopplade ingredienser",
@@ -331,7 +338,9 @@
     "batchImportedDescription": "{count} recept importerade från arkivet",
     "view": "Visa",
     "open": "Öppna",
-    "deleteKept": "{count, plural, one {# recept ändrades} other {# recept ändrades}} av någon annan och behölls."
+    "deleteKept": "{count, plural, one {# recept ändrades} other {# recept ändrades}} av någon annan och behölls.",
+    "deleted": "Recept borttaget",
+    "deletedDescription": "Det här receptet har tagits bort."
   },
   "tags": {
     "panel": {

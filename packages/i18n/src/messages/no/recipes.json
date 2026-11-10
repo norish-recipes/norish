@@ -246,8 +246,11 @@
       "mute": "Slå av lyd",
       "unmute": "Slå på lyd",
       "fullscreen": "Gå til fullskjerm",
-      "exitFullscreen": "Forlat fullskjerm"
-    }
+      "exitFullscreen": "Forlat fullskjerm",
+      "progress": "Videofremdrift"
+    },
+    "recipeImage": "Oppskriftsbilde",
+    "closeViewer": "Lukk bildevisning"
   },
   "validation": {
     "nameRequired": "Oppskriftnavn er påkrevd",
@@ -276,7 +279,9 @@
       "noPieceWeight": "ingen stykkvekt ennå"
     },
     "workedOutFrom": "Beregnet fra ingrediensene, med {sources}.",
-    "householdNumbers": "husstandens verdier"
+    "householdNumbers": "husstandens verdier",
+    "decreasePortions": "Færre porsjoner",
+    "increasePortions": "Flere porsjoner"
   },
   "measurementSystem": {
     "label": "Målesystem",
@@ -291,7 +296,9 @@
   },
   "stepInput": {
     "stepPlaceholder": "Trinn {number}: Beskriv trinnet...",
-    "stepPlaceholderShort": "Trinn {number}"
+    "stepPlaceholderShort": "Trinn {number}",
+    "recipeSuggestions": "Oppskriftsforslag",
+    "ingredientSuggestions": "Ingrediensforslag"
   },
   "stepIngredients": {
     "rowLabel": "Koblede ingredienser",
@@ -331,7 +338,9 @@
     "batchImportedDescription": "{count} oppskrifter importert fra arkiv",
     "view": "Se",
     "open": "Åpne",
-    "deleteKept": "{count, plural, one {# oppskrift ble} other {# oppskrifter ble}} endret av noen andre og beholdt."
+    "deleteKept": "{count, plural, one {# oppskrift ble} other {# oppskrifter ble}} endret av noen andre og beholdt.",
+    "deleted": "Oppskrift slettet",
+    "deletedDescription": "Denne oppskriften er fjernet."
   },
   "tags": {
     "panel": {

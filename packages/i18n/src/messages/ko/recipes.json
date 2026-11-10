@@ -246,8 +246,11 @@
       "mute": "무음",
       "unmute": "음소거 해제",
       "fullscreen": "전체 화면으로 전환",
-      "exitFullscreen": "전체 화면 종료"
-    }
+      "exitFullscreen": "전체 화면 종료",
+      "progress": "동영상 진행률"
+    },
+    "recipeImage": "레시피 이미지",
+    "closeViewer": "이미지 뷰어 닫기"
   },
   "validation": {
     "nameRequired": "레시피 이름은 필수 항목입니다.",
@@ -276,7 +279,9 @@
       "noPieceWeight": "개당 무게 아직 없음"
     },
     "workedOutFrom": "재료로 계산했습니다. 출처: {sources}.",
-    "householdNumbers": "우리 가구의 값"
+    "householdNumbers": "우리 가구의 값",
+    "decreasePortions": "인분 줄이기",
+    "increasePortions": "인분 늘리기"
   },
   "measurementSystem": {
     "label": "측정 시스템",
@@ -291,7 +296,9 @@
   },
   "stepInput": {
     "stepPlaceholder": "{number} 단계: 단계를 설명하세요...",
-    "stepPlaceholderShort": "{number} 단계"
+    "stepPlaceholderShort": "{number} 단계",
+    "recipeSuggestions": "레시피 추천",
+    "ingredientSuggestions": "재료 추천"
   },
   "stepIngredients": {
     "rowLabel": "연결된 재료",
@@ -331,7 +338,9 @@
     "batchImportedDescription": "아카이브에서 {count}개 레시피를 가져왔습니다.",
     "view": "보기",
     "open": "열기",
-    "deleteKept": "다른 사람이 변경한 레시피 {count}개는 유지되었습니다."
+    "deleteKept": "다른 사람이 변경한 레시피 {count}개는 유지되었습니다.",
+    "deleted": "레시피 삭제됨",
+    "deletedDescription": "이 레시피가 삭제되었습니다."
   },
   "tags": {
     "panel": {

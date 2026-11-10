@@ -2,6 +2,7 @@
 
 import { MinusIcon, PlusIcon } from "@heroicons/react/16/solid";
 import { Button } from "@heroui/react";
+import { useTranslations } from "next-intl";
 
 import { servingsDown, servingsUp } from "@norish/shared-react/recipes";
 import { formatAmountAsDecimal } from "@norish/shared/lib/format-amount";
@@ -16,6 +17,7 @@ export default function NutritionPortionControl({
   portions,
   onChange,
 }: NutritionPortionControlProps) {
+  const t = useTranslations("recipes.nutrition");
   const dec = () => onChange(servingsDown(portions));
   const inc = () => onChange(servingsUp(portions));
 
@@ -23,7 +25,7 @@ export default function NutritionPortionControl({
     <div className="inline-flex items-center gap-2">
       <Button
         isIconOnly
-        aria-label="Decrease portions"
+        aria-label={t("decreasePortions")}
         className="bg-surface-secondary"
         size="sm"
         onPress={dec}
@@ -37,7 +39,7 @@ export default function NutritionPortionControl({
       />
       <Button
         isIconOnly
-        aria-label="Increase portions"
+        aria-label={t("increasePortions")}
         className="bg-surface-secondary"
         size="sm"
         onPress={inc}

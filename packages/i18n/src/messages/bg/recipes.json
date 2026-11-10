@@ -246,8 +246,11 @@
       "mute": "Заглуши",
       "unmute": "Включи звука",
       "fullscreen": "Цял екран",
-      "exitFullscreen": "Изход от цял екран"
-    }
+      "exitFullscreen": "Изход от цял екран",
+      "progress": "Напредък на видеото"
+    },
+    "recipeImage": "Изображение на рецептата",
+    "closeViewer": "Затваряне на прегледа на изображението"
   },
   "validation": {
     "nameRequired": "Името на рецептата е задължително",
@@ -276,7 +279,9 @@
       "noPieceWeight": "все още няма тегло на брой"
     },
     "workedOutFrom": "Изчислено от съставките, по данни от {sources}.",
-    "householdNumbers": "стойностите на вашето домакинство"
+    "householdNumbers": "стойностите на вашето домакинство",
+    "decreasePortions": "По-малко порции",
+    "increasePortions": "Повече порции"
   },
   "measurementSystem": {
     "label": "Мерна система",
@@ -291,7 +296,9 @@
   },
   "stepInput": {
     "stepPlaceholder": "Стъпка {number}: Опиши стъпката...",
-    "stepPlaceholderShort": "Стъпка {number}"
+    "stepPlaceholderShort": "Стъпка {number}",
+    "recipeSuggestions": "Предложения за рецепти",
+    "ingredientSuggestions": "Предложения за съставки"
   },
   "stepIngredients": {
     "rowLabel": "Свързани съставки",
@@ -331,7 +338,9 @@
     "batchImportedDescription": "{count} рецепти импортирани от архив",
     "view": "Виж",
     "open": "Отвори",
-    "deleteKept": "{count, plural, one {# рецепта е променена} other {# рецепти са променени}} от някой друг и {count, plural, one {запазена} other {запазени}}."
+    "deleteKept": "{count, plural, one {# рецепта е променена} other {# рецепти са променени}} от някой друг и {count, plural, one {запазена} other {запазени}}.",
+    "deleted": "Рецептата е изтрита",
+    "deletedDescription": "Тази рецепта беше премахната."
   },
   "tags": {
     "panel": {

@@ -246,8 +246,11 @@
       "mute": "Wycisz",
       "unmute": "Włącz dźwięk",
       "fullscreen": "Pełny ekran",
-      "exitFullscreen": "Wyjdź z pełnego ekranu"
-    }
+      "exitFullscreen": "Wyjdź z pełnego ekranu",
+      "progress": "Postęp wideo"
+    },
+    "recipeImage": "Zdjęcie przepisu",
+    "closeViewer": "Zamknij podgląd zdjęcia"
   },
   "validation": {
     "nameRequired": "Nazwa przepisu jest wymagana",
@@ -276,7 +279,9 @@
       "noPieceWeight": "jeszcze brak wagi sztuki"
     },
     "workedOutFrom": "Obliczone ze składników, na podstawie {sources}.",
-    "householdNumbers": "wartości twojego gospodarstwa"
+    "householdNumbers": "wartości twojego gospodarstwa",
+    "decreasePortions": "Mniej porcji",
+    "increasePortions": "Więcej porcji"
   },
   "measurementSystem": {
     "label": "System miar",
@@ -291,7 +296,9 @@
   },
   "stepInput": {
     "stepPlaceholder": "Krok {number}: Opisz krok...",
-    "stepPlaceholderShort": "Krok {number}"
+    "stepPlaceholderShort": "Krok {number}",
+    "recipeSuggestions": "Sugestie przepisów",
+    "ingredientSuggestions": "Sugestie składników"
   },
   "stepIngredients": {
     "rowLabel": "Powiązane składniki",
@@ -331,7 +338,9 @@
     "batchImportedDescription": "{count} przepisów zaimportowanych z archiwum",
     "view": "Zobacz",
     "open": "Otwórz",
-    "deleteKept": "Ktoś inny zmienił {count, plural, one {# przepis} few {# przepisy} many {# przepisów} other {# przepisu}}, więc {count, plural, one {został zachowany} few {zostały zachowane} many {zostały zachowane} other {zostały zachowane}}."
+    "deleteKept": "Ktoś inny zmienił {count, plural, one {# przepis} few {# przepisy} many {# przepisów} other {# przepisu}}, więc {count, plural, one {został zachowany} few {zostały zachowane} many {zostały zachowane} other {zostały zachowane}}.",
+    "deleted": "Przepis usunięty",
+    "deletedDescription": "Ten przepis został usunięty."
   },
   "tags": {
     "panel": {

@@ -2,6 +2,7 @@
 
 import { MinusIcon, PlusIcon } from "@heroicons/react/16/solid";
 import { Button } from "@heroui/react";
+import { useTranslations } from "next-intl";
 
 import { servingsDown, servingsUp } from "@norish/shared-react/recipes";
 import { formatAmountAsDecimal } from "@norish/shared/lib/format-amount";
@@ -13,6 +14,7 @@ export function ShareServingsControl({
   servings: number;
   onChange: (servings: number) => void;
 }) {
+  const t = useTranslations("recipes.detail");
   const decrease = () => onChange(servingsDown(servings));
   const increase = () => onChange(servingsUp(servings));
 
@@ -20,7 +22,7 @@ export function ShareServingsControl({
     <div className="inline-flex items-center gap-2">
       <Button
         isIconOnly
-        aria-label="Decrease servings"
+        aria-label={t("decreaseServings")}
         className="bg-surface-secondary"
         size="sm"
         variant="tertiary"
@@ -31,7 +33,7 @@ export function ShareServingsControl({
       <span className="min-w-8 text-center text-sm">{formatAmountAsDecimal(servings)}</span>
       <Button
         isIconOnly
-        aria-label="Increase servings"
+        aria-label={t("increaseServings")}
         className="bg-surface-secondary"
         size="sm"
         variant="tertiary"

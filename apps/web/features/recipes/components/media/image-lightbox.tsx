@@ -7,6 +7,7 @@ import { FallbackPlaceholder, useImageErrors } from "@/components/shared/fallbac
 import { Carousel } from "@/components/ui/carousel";
 import { XMarkIcon } from "@heroicons/react/16/solid";
 import { Button, Modal, Tooltip } from "@heroui/react";
+import { useTranslations } from "next-intl";
 
 import { addBasePath } from "@norish/shared/lib/base-path";
 import { cssMediaControl } from "@norish/web/config/css-tokens";
@@ -43,6 +44,7 @@ export default function ImageLightbox({
   const [currentIndex, setCurrentIndex] = useState(() => getSafeIndex(initialIndex, images.length));
   const pointerStartRef = useRef<{ x: number; y: number } | null>(null);
   const { handleImageError, hasError } = useImageErrors();
+  const t = useTranslations("recipes.carousel");
 
   const safeInitialIndex = useMemo(
     () => getSafeIndex(initialIndex, images.length),
@@ -153,7 +155,7 @@ export default function ImageLightbox({
             <Tooltip delay={0}>
               <Button
                 isIconOnly
-                aria-label="Close image viewer"
+                aria-label={t("closeViewer")}
                 className={`size-10 min-w-10 rounded-full ${cssMediaControl}`}
                 variant="tertiary"
                 onPress={onClose}

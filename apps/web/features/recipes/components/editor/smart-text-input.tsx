@@ -69,6 +69,7 @@ export default function SmartTextInput({
   const containerRef = useRef<HTMLDivElement>(null);
   const textareaRef = useRef<HTMLTextAreaElement>(null);
   const t = useTranslations("recipes.empty");
+  const tInput = useTranslations("recipes.stepInput");
 
   const recipeAutocompleteOpen = autocomplete?.type === "recipe";
   const autocompleteQuery = autocomplete?.query ?? "";
@@ -233,7 +234,7 @@ export default function SmartTextInput({
             </div>
           ) : autocomplete?.type === "recipe" && suggestions.length > 0 ? (
             <ListBox
-              aria-label="Recipe suggestions"
+              aria-label={tInput("recipeSuggestions")}
               items={suggestions}
               onAction={(key) => {
                 const recipe = suggestions.find((r) => r.id === key);
@@ -261,7 +262,7 @@ export default function SmartTextInput({
             </ListBox>
           ) : autocomplete?.type === "ingredient" && ingredientMatches.length > 0 ? (
             <ListBox
-              aria-label="Ingredient suggestions"
+              aria-label={tInput("ingredientSuggestions")}
               items={ingredientMatches}
               onAction={(key) => {
                 const suggestion = ingredientMatches.find((item) => item.key === key);

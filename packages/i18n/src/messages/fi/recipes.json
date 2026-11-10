@@ -246,8 +246,11 @@
       "mute": "Mykistä",
       "unmute": "Poista mykistys",
       "fullscreen": "Siirry koko näyttöön",
-      "exitFullscreen": "Poistu koko näytöstä"
-    }
+      "exitFullscreen": "Poistu koko näytöstä",
+      "progress": "Videon edistyminen"
+    },
+    "recipeImage": "Reseptin kuva",
+    "closeViewer": "Sulje kuvanäkymä"
   },
   "validation": {
     "nameRequired": "Reseptin nimi on pakollinen",
@@ -276,7 +279,9 @@
       "noPieceWeight": "ei vielä kappaleen painoa"
     },
     "workedOutFrom": "Laskettu aineksista, lähteinä {sources}.",
-    "householdNumbers": "kotitaloutesi arvot"
+    "householdNumbers": "kotitaloutesi arvot",
+    "decreasePortions": "Vähemmän annoksia",
+    "increasePortions": "Enemmän annoksia"
   },
   "measurementSystem": {
     "label": "Mittajärjestelmä",
@@ -291,7 +296,9 @@
   },
   "stepInput": {
     "stepPlaceholder": "Vaihe {number}: Kuvaile vaihe...",
-    "stepPlaceholderShort": "Vaihe {number}"
+    "stepPlaceholderShort": "Vaihe {number}",
+    "recipeSuggestions": "Reseptiehdotukset",
+    "ingredientSuggestions": "Ainesosaehdotukset"
   },
   "stepIngredients": {
     "rowLabel": "Linkitetyt ainesosat",
@@ -331,7 +338,9 @@
     "batchImportedDescription": "{count} reseptiä tuotu arkistosta",
     "view": "Näytä",
     "open": "Avaa",
-    "deleteKept": "{count, plural, one {Joku muu muutti # reseptiä, ja se säilytettiin} other {Joku muu muutti # reseptiä, ja ne säilytettiin}}."
+    "deleteKept": "{count, plural, one {Joku muu muutti # reseptiä, ja se säilytettiin} other {Joku muu muutti # reseptiä, ja ne säilytettiin}}.",
+    "deleted": "Resepti poistettu",
+    "deletedDescription": "Tämä resepti on poistettu."
   },
   "tags": {
     "panel": {

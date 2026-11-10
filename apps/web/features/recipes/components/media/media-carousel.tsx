@@ -323,7 +323,7 @@ export default function MediaCarousel({
             >
               <NextImage
                 fill
-                alt="Recipe image"
+                alt={t("recipeImage")}
                 className="object-cover transition-transform duration-500 group-hover:scale-105"
                 sizes="(min-width: 1024px) 60vw, (min-width: 768px) 50vw, 100vw"
                 src={addBasePath(item.src)}

@@ -246,8 +246,11 @@
       "mute": "كتم الصوت",
       "unmute": "تشغيل الصوت",
       "fullscreen": "ملء الشاشة",
-      "exitFullscreen": "الخروج من ملء الشاشة"
-    }
+      "exitFullscreen": "الخروج من ملء الشاشة",
+      "progress": "تقدم الفيديو"
+    },
+    "recipeImage": "صورة الوصفة",
+    "closeViewer": "إغلاق عارض الصور"
   },
   "validation": {
     "nameRequired": "اسم الوصفة مطلوب",
@@ -276,7 +279,9 @@
       "noPieceWeight": "لا يوجد وزن للحبة بعد"
     },
     "workedOutFrom": "محسوبة من المكوّنات، باستخدام {sources}.",
-    "householdNumbers": "أرقام منزلك"
+    "householdNumbers": "أرقام منزلك",
+    "decreasePortions": "حصص أقل",
+    "increasePortions": "حصص أكثر"
   },
   "measurementSystem": {
     "label": "نظام القياس",
@@ -291,7 +296,9 @@
   },
   "stepInput": {
     "stepPlaceholder": "الخطوة {number}: اشرح الخطوة...",
-    "stepPlaceholderShort": "الخطوة {number}"
+    "stepPlaceholderShort": "الخطوة {number}",
+    "recipeSuggestions": "اقتراحات الوصفات",
+    "ingredientSuggestions": "اقتراحات المكونات"
   },
   "stepIngredients": {
     "rowLabel": "المكوّنات المرتبطة",
@@ -331,7 +338,9 @@
     "batchImportedDescription": "تم استيراد {count} وصفات من الأرشيف",
     "view": "عرض",
     "open": "فتح",
-    "deleteKept": "عدّل شخص آخر {count, plural, one {وصفة واحدة} two {وصفتين} few {# وصفات} many {# وصفة} other {# وصفة}} فتم الاحتفاظ بها."
+    "deleteKept": "عدّل شخص آخر {count, plural, one {وصفة واحدة} two {وصفتين} few {# وصفات} many {# وصفة} other {# وصفة}} فتم الاحتفاظ بها.",
+    "deleted": "تم حذف الوصفة",
+    "deletedDescription": "تمت إزالة هذه الوصفة."
   },
   "tags": {
     "panel": {

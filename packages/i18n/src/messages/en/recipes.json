@@ -246,8 +246,11 @@
       "mute": "Mute",
       "unmute": "Unmute",
       "fullscreen": "Enter fullscreen",
-      "exitFullscreen": "Exit fullscreen"
-    }
+      "exitFullscreen": "Exit fullscreen",
+      "progress": "Video progress"
+    },
+    "recipeImage": "Recipe image",
+    "closeViewer": "Close image viewer"
   },
   "validation": {
     "nameRequired": "Recipe name is required",
@@ -276,7 +279,9 @@
       "noPieceWeight": "no piece weight yet"
     },
     "workedOutFrom": "Worked out from the ingredients, with {sources}.",
-    "householdNumbers": "your household's numbers"
+    "householdNumbers": "your household's numbers",
+    "decreasePortions": "Decrease portions",
+    "increasePortions": "Increase portions"
   },
   "measurementSystem": {
     "label": "Measurement System",
@@ -291,7 +296,9 @@
   },
   "stepInput": {
     "stepPlaceholder": "Step {number}: Describe the step...",
-    "stepPlaceholderShort": "Step {number}"
+    "stepPlaceholderShort": "Step {number}",
+    "recipeSuggestions": "Recipe suggestions",
+    "ingredientSuggestions": "Ingredient suggestions"
   },
   "stepIngredients": {
     "rowLabel": "Linked ingredients",
@@ -331,7 +338,9 @@
     "batchImportedDescription": "{count} recipes imported from archive",
     "view": "View",
     "open": "Open",
-    "deleteKept": "{count, plural, one {# recipe was} other {# recipes were}} changed by someone else and kept."
+    "deleteKept": "{count, plural, one {# recipe was} other {# recipes were}} changed by someone else and kept.",
+    "deleted": "Recipe deleted",
+    "deletedDescription": "This recipe has been removed."
   },
   "tags": {
     "panel": {

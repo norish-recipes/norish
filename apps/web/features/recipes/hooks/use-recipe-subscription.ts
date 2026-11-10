@@ -9,11 +9,12 @@ import { useRecipeSubscription as useSharedRecipeSubscription } from "@norish/sh
 
 export function useRecipeSubscription(recipeId: string | null) {
   const tErrors = useTranslations("common.errors");
+  const tToasts = useTranslations("recipes.toasts");
   const router = useRouter();
 
   useSharedRecipeSubscription(recipeId, {
     onDeleted: () => {
-      toast("Recipe deleted", { description: "This recipe has been removed.", variant: "warning" });
+      toast(tToasts("deleted"), { description: tToasts("deletedDescription"), variant: "warning" });
 
       router.push("/");
     },

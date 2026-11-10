@@ -138,6 +138,7 @@ export default function MiniGroceries({
 }: MiniGroceriesProps) {
   const t = useTranslations("groceries.panel");
   const tActions = useTranslations("common.actions");
+  const tDetail = useTranslations("recipes.detail");
   const { createGroceriesFromData } = useGroceriesMutations();
   const { formatAmountUnit } = useUnitFormatter();
   const {
@@ -540,7 +541,7 @@ export default function MiniGroceries({
                 <IconActionButton
                   action="decrease"
                   className="bg-surface-secondary"
-                  label="Decrease servings"
+                  label={tDetail("decreaseServings")}
                   size="sm"
                   tooltipPlacement="bottom"
                   onPress={decrementServings}
@@ -551,7 +552,7 @@ export default function MiniGroceries({
                 <IconActionButton
                   action="increase"
                   className="bg-surface-secondary"
-                  label="Increase servings"
+                  label={tDetail("increaseServings")}
                   size="sm"
                   tooltipPlacement="bottom"
                   onPress={incrementServings}

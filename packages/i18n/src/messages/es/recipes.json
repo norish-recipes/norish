@@ -246,8 +246,11 @@
       "mute": "Silenciar",
       "unmute": "Activar sonido",
       "fullscreen": "Pantalla completa",
-      "exitFullscreen": "Salir de pantalla completa"
-    }
+      "exitFullscreen": "Salir de pantalla completa",
+      "progress": "Progreso del vídeo"
+    },
+    "recipeImage": "Imagen de la receta",
+    "closeViewer": "Cerrar el visor de imágenes"
   },
   "validation": {
     "nameRequired": "El nombre de la receta es obligatorio",
@@ -276,7 +279,9 @@
       "noPieceWeight": "aún sin peso por pieza"
     },
     "workedOutFrom": "Calculado a partir de los ingredientes, con {sources}.",
-    "householdNumbers": "los valores de tu hogar"
+    "householdNumbers": "los valores de tu hogar",
+    "decreasePortions": "Menos raciones",
+    "increasePortions": "Más raciones"
   },
   "measurementSystem": {
     "label": "Sistema de medidas",
@@ -291,7 +296,9 @@
   },
   "stepInput": {
     "stepPlaceholder": "Paso {number}: Describe el paso...",
-    "stepPlaceholderShort": "Paso {number}"
+    "stepPlaceholderShort": "Paso {number}",
+    "recipeSuggestions": "Sugerencias de recetas",
+    "ingredientSuggestions": "Sugerencias de ingredientes"
   },
   "stepIngredients": {
     "rowLabel": "Ingredientes vinculados",
@@ -331,7 +338,9 @@
     "batchImportedDescription": "{count} recetas importadas desde el archivo",
     "view": "Ver",
     "open": "Abrir",
-    "deleteKept": "{count, plural, one {# receta fue modificada} other {# recetas fueron modificadas}} por otra persona y se {count, plural, one {conservó} other {conservaron}}."
+    "deleteKept": "{count, plural, one {# receta fue modificada} other {# recetas fueron modificadas}} por otra persona y se {count, plural, one {conservó} other {conservaron}}.",
+    "deleted": "Receta eliminada",
+    "deletedDescription": "Esta receta se ha eliminado."
   },
   "tags": {
     "panel": {
