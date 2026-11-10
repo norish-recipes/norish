@@ -4,7 +4,7 @@
 
 **Blocked by:** 18
 
-**Status:** ready-for-agent
+**Status:** done
 
 - [x] `features/library/` holds library's root, the library screen and the cookbook screen. Their components are grouped by area, each area with an `index.ts`. The feature has no `index.ts`, since no other feature opens a library panel.
 - [x] What only the Library and the cookbook page use moves in. That includes:
@@ -24,7 +24,7 @@
 - [x] CONTRIBUTING's "App architecture" and the Architecture page state the panel rule: a panel several features open lives in the shared folders, and features never import each other. They drop "A feature's `index.ts` exports only the panels other features open" and "Opening a panel is the one way back". "Project Structure" shows `features/library`.
 - [x] Library's unit tests move into `features/library/__tests__/`.
 - [x] Gates green: `pnpm lint`, `pnpm typecheck`, `pnpm test:run`, `pnpm i18n:check`, `pnpm build`, `pnpm format:check`, `pnpm deps:cycles`, and mobile's lint.
-- [ ] The whole E2E suite (`ai`, `offline`, `realtime`) passes once, after this ticket. A test that only passes on re-run is a bug to fix.
+- [x] The whole E2E suite (`ai`, `offline`, `realtime`) passes once, after this ticket. A test that only passes on re-run is a bug to fix.
 
 ## Comments
 
