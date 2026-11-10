@@ -1,3 +1,4 @@
+import { skipToken } from "@tanstack/react-query";
 import { vi } from "vitest";
 
 import { trackedEvent } from "../hooks/realtime-test-utils";
@@ -51,7 +52,8 @@ function procedure(path: string[]) {
     }),
     subscriptionOptions: (input: unknown, options: { enabled?: boolean } = {}) => ({
       ...options,
-      enabled: options.enabled ?? true,
+      // As @trpc/tanstack-react-query reads it: a present but undefined `enabled` disables.
+      enabled: "enabled" in options ? !!options.enabled : input !== skipToken,
       queryKey: key(input, "subscription"),
       subscribe: ({ onData }: { onData: (data: unknown) => void }) => {
         const mounted = subscribers.get(path.join(".")) ?? new Set();
