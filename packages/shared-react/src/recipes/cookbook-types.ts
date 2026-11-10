@@ -1,30 +1,12 @@
-import type { InfiniteData, QueryKey } from "@tanstack/react-query";
+import type { InfiniteData } from "@tanstack/react-query";
 
-import type { CookbookSummaryDTO, SortOrder } from "@norish/shared/contracts";
-
-export type CookbookFilters = {
-  limit?: number;
-  search?: string;
-  sortMode?: SortOrder;
-};
+import type { CookbookSummaryDTO } from "@norish/shared/contracts";
 
 export type InfiniteCookbookData = InfiniteData<{
   cookbooks: CookbookSummaryDTO[];
   total: number;
   nextCursor: number | null;
 }>;
-
-export type CookbooksQueryResult = {
-  cookbooks: CookbookSummaryDTO[];
-  total: number;
-  isLoading: boolean;
-  isValidating: boolean;
-  hasMore: boolean;
-  error: unknown;
-  queryKey: QueryKey;
-  loadMore: () => void;
-  invalidate: () => Promise<void>;
-};
 
 export type CookbooksCacheHelpers = {
   /** Patch every cached cookbook list, whatever filters keyed it. */

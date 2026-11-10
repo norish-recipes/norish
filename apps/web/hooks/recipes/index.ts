@@ -5,11 +5,6 @@ export { useRecipeSubscription } from "./use-recipe-subscription";
 
 export { usePendingRecipesQuery } from "./use-pending-recipes-query";
 
-export {
-  useRecipeFilters,
-  type UseRecipeFiltersResult,
-  type RecipeFilters,
-} from "./use-recipe-filters";
 export { useRecipesCacheHelpers, type RecipesCacheHelpers } from "./use-recipes-cache";
 
 export { useRecipeId } from "./use-recipe-id";

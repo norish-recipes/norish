@@ -6,7 +6,6 @@ export {
   type ServingsScalerResult,
 } from "../recipes";
 export * from "./unit-formatter";
-export * from "./use-amount-display-preference";
 export * from "./admin/index";
 export * from "./archive/index";
 export * from "./caldav/index";
