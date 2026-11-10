@@ -5,6 +5,7 @@
  */
 import type { ReactNode } from "react";
 import { PantryScreen } from "@/features/groceries/pantry-screen";
+import { iconIds } from "@/lib/ingredient-icon-ids";
 import { QueryClientProvider } from "@tanstack/react-query";
 import { act, fireEvent, render as renderUi, screen } from "@testing-library/react";
 import { beforeEach, describe, expect, it, vi } from "vitest";
@@ -18,6 +19,7 @@ import type {
   PantrySuggestionDto,
 } from "@norish/shared/contracts";
 import { createTestQueryClient } from "@norish/shared-react/platform/testing";
+import { useTRPC } from "@norish/shared-react/trpc";
 
 const addPantryIngredient = vi.fn(async () => "new");
 const createGroceriesFromData = vi.fn(async () => ["g-new"]);
@@ -117,7 +119,12 @@ function kept(name: string, localeNames: Record<string, string> = {}): PantryIng
 function render(ui: ReactNode) {
   const client = createTestQueryClient();
 
-  client.setQueryData(["icons", "seeded"], icons);
+  // The screen's own read, keyed as useIngredientIcons keys it.
+  const { queryKey } = useTRPC().ingredients.icons.queryOptions({
+    ids: iconIds(items.map((item) => item.ingredientId)),
+  });
+
+  client.setQueryData(queryKey, icons);
 
   return renderUi(ui, {
     wrapper: ({ children }) => (
