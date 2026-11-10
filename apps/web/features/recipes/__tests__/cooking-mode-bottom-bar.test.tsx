@@ -11,7 +11,7 @@ vi.mock("@norish/shared-react/config", () => ({
   useTimersEnabledQuery: () => ({ timersEnabled: mocks.timersEnabled }),
 }));
 
-vi.mock("@/stores/timers", () => ({
+vi.mock("@/lib/timers", () => ({
   useTimerStore: (selector: (state: { timers: unknown[] }) => unknown) =>
     selector({ timers: Array.from({ length: mocks.timerCount }, () => ({})) }),
 }));

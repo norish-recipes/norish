@@ -1,7 +1,7 @@
 "use client";
 
-import type { Timer } from "@/stores/timers";
-import { useTimerStore } from "@/stores/timers";
+import type { Timer } from "@/lib/timers";
+import { useTimerStore } from "@/lib/timers";
 
 import { useTimersEnabledQuery } from "@norish/shared-react/config";
 import { useHydrated } from "@norish/shared-react/platform";

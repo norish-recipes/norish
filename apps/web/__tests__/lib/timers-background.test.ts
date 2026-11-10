@@ -1,4 +1,4 @@
-import { useTimerStore } from "@/stores/timers";
+import { useTimerStore } from "@/lib/timers";
 import { afterEach, describe, expect, it, vi } from "vitest";
 
 const warn = vi.hoisted(() => vi.fn());

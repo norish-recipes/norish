@@ -1,6 +1,6 @@
 "use client";
 
-import { useTimerStore } from "@/stores/timers";
+import { useTimerStore } from "@/lib/timers";
 import {
   BookOpenIcon,
   ChevronDownIcon,

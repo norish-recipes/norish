@@ -1,6 +1,5 @@
+import { useTimerStore } from "@/lib/timers";
 import { beforeEach, describe, expect, it, vi } from "vitest";
-
-import { useTimerStore } from "./timers";
 
 describe("useTimerStore", () => {
   beforeEach(() => {

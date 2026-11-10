@@ -1,7 +1,7 @@
 // @vitest-environment jsdom
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 
-type TimerStore = typeof import("./timers");
+type TimerStore = typeof import("@/lib/timers");
 
 let useTimerStore: TimerStore["useTimerStore"];
 
@@ -9,7 +9,7 @@ beforeEach(async () => {
   vi.resetModules();
   vi.stubEnv("NEXT_PUBLIC_BASE_PATH", "/norish");
 
-  const module = await import("./timers");
+  const module = await import("@/lib/timers");
 
   useTimerStore = module.useTimerStore;
 

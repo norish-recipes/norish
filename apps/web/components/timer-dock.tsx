@@ -5,7 +5,7 @@ import { useRouter } from "next/navigation";
 import { useDockedTimers } from "@/hooks/use-docked-timers";
 import { useFloatingDock } from "@/hooks/use-floating-dock";
 import { useNotificationPermission } from "@/hooks/use-notification-permission";
-import { useTimerStore } from "@/stores/timers";
+import { useTimerStore } from "@/lib/timers";
 import {
   ChevronDownIcon,
   ChevronUpIcon,
@@ -301,7 +301,7 @@ function TimerRow({
   t,
   isLast,
 }: {
-  timer: import("@/stores/timers").Timer;
+  timer: import("@/lib/timers").Timer;
   t: (key: string) => string;
   isLast: boolean;
 }) {
