@@ -30,16 +30,37 @@ export function useCookbooksMutations(): CookbooksMutationsResult {
 
   const createMutation = useMutation(trpc.cookbooks.create.mutationOptions());
   const { mutate: mutateCreate } = createMutation;
-  const updateMutation = useMutation(trpc.cookbooks.update.mutationOptions());
+  // A queued write keeps its tentative state: there is nothing to refetch Offline, and refetching
+  // would erase the change the reader can see (ADR-0009).
+  const invalidateUnlessQueued = invalidateUnlessPreserved(invalidate);
+  const updateMutation = useMutation(
+    trpc.cookbooks.update.mutationOptions({
+      onSuccess: (_data, { id }) => invalidateCookbook(id),
+      onError: invalidateUnlessQueued,
+    })
+  );
   const { mutate: mutateUpdate } = updateMutation;
-  const deleteMutation = useMutation(trpc.cookbooks.remove.mutationOptions());
+  const deleteMutation = useMutation(
+    trpc.cookbooks.remove.mutationOptions({ onError: invalidateUnlessQueued })
+  );
   const { mutate: mutateDelete } = deleteMutation;
-  const membershipMutation = useMutation(trpc.cookbooks.setMembership.mutationOptions());
+  const membershipMutation = useMutation(
+    trpc.cookbooks.setMembership.mutationOptions({
+      onSuccess: (_data, { cookbookId, recipeIds }) => {
+        for (const recipeId of recipeIds) invalidateMembership(recipeId);
+        invalidateCookbook(cookbookId);
+        // The lists too, rather than waiting on the echo for them: the
+        // derived facts the tentative patch cleared are the server's to answer,
+        // and the reader who made the change should not need realtime to
+        // be up to see their own cookbook settle.
+        invalidate();
+      },
+      onError: invalidateUnlessQueued,
+    })
+  );
   const { mutate: mutateMembership } = membershipMutation;
   const uploadImageMutation = useMutation(trpc.cookbooks.uploadImage.mutationOptions());
   const { mutateAsync: mutateUploadImageAsync } = uploadImageMutation;
-
-  const invalidateUnlessQueued = invalidateUnlessPreserved(invalidate);
 
   const createCookbook = useCallback(
     ({ title, recipeIds = [] }: { title: string; recipeIds?: string[] }) => {
@@ -204,34 +225,9 @@ export function useCookbooksMutations(): CookbooksMutationsResult {
         for (const recipeId of recipeIds) patchRecipeMembership(recipeId, patched, isMember);
       }
 
-      mutateMembership(
-        { cookbookId, recipeIds, isMember },
-        {
-          onSuccess: () => {
-            for (const recipeId of recipeIds) invalidateMembership(recipeId);
-            invalidateCookbook(cookbookId);
-            // The lists too, rather than waiting on the echo for them: the
-            // derived facts this cleared above are the server's to answer,
-            // and the reader who made the change should not need realtime to
-            // be up to see their own cookbook settle.
-            invalidate();
-          },
-          // A queued filing keeps its tentative state: there is nothing to
-          // refetch Offline, and refetching would erase the change the
-          // reader can see (ADR-0009).
-          onError: invalidateUnlessQueued,
-        }
-      );
+      mutateMembership({ cookbookId, recipeIds, isMember });
     },
-    [
-      mutateMembership,
-      setAllCookbooksData,
-      patchRecipeMembership,
-      invalidate,
-      invalidateMembership,
-      invalidateCookbook,
-      invalidateUnlessQueued,
-    ]
+    [mutateMembership, setAllCookbooksData, patchRecipeMembership]
   );
 
   const updateCookbook = useCallback(
@@ -262,15 +258,9 @@ export function useCookbooksMutations(): CookbooksMutationsResult {
         };
       });
 
-      mutateUpdate(
-        { id, title, image, version },
-        {
-          onSuccess: () => invalidateCookbook(id),
-          onError: invalidateUnlessQueued,
-        }
-      );
+      mutateUpdate({ id, title, image, version });
     },
-    [mutateUpdate, setAllCookbooksData, invalidateCookbook, invalidateUnlessQueued]
+    [mutateUpdate, setAllCookbooksData]
   );
 
   const deleteCookbook = useCallback(
@@ -292,9 +282,9 @@ export function useCookbooksMutations(): CookbooksMutationsResult {
         };
       });
 
-      mutateDelete({ id, version }, { onError: invalidateUnlessQueued });
+      mutateDelete({ id, version });
     },
-    [mutateDelete, setAllCookbooksData, invalidateUnlessQueued]
+    [mutateDelete, setAllCookbooksData]
   );
 
   /** Store a cover and resolve with the URL an `updateCookbook` can save. */

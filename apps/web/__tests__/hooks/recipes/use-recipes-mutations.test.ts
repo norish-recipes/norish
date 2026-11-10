@@ -316,9 +316,48 @@ describe("useRecipesMutations", () => {
       });
 
       expect(mockMutate).toHaveBeenCalledWith(
-        expect.objectContaining({ name: "Metric recipe", systemUsed: "metric" }),
-        expect.objectContaining({ onError: expect.any(Function) })
+        expect.objectContaining({ name: "Metric recipe", systemUsed: "metric" })
       );
+    });
+
+    it("rolls a failed create back from the mutation's own options", async () => {
+      const listQueryKey = [["recipes", "list"], { input: {}, type: "infinite" }];
+      const before = createMockInfiniteData();
+
+      queryClient.setQueryData(listQueryKey, before);
+
+      const { useRecipesMutations } = await import("@/hooks/recipes/use-recipes-mutations");
+
+      renderHook(() => useRecipesMutations(), { wrapper: createTestWrapper(queryClient) });
+
+      const mutationOpts = mockCreateMutationOptions.mock.calls[0]![0] as {
+        onMutate: (input: unknown) => Promise<unknown>;
+        onError: (error: unknown, variables: unknown, context: unknown) => void;
+      };
+      const input = {
+        id: "33333333-3333-4333-8333-333333333333",
+        name: "Doomed recipe",
+        systemUsed: "metric",
+        recipeIngredients: [],
+        steps: [],
+        tags: [],
+      };
+      let context: unknown;
+
+      await act(async () => {
+        context = await mutationOpts.onMutate(input);
+      });
+      act(() => {
+        mutationOpts.onError(
+          new TRPCClientError("Bad recipe", {
+            result: { error: { data: { httpStatus: 500 } } },
+          } as never),
+          input,
+          context
+        );
+      });
+
+      expect(queryClient.getQueryData(listQueryKey)).toEqual(before);
     });
 
     it("optimistically seeds the new recipe detail cache when an id is reserved", async () => {

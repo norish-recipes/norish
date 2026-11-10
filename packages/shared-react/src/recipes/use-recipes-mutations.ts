@@ -441,6 +441,24 @@ export function useRecipesMutations(
 
         return { detailQueryKey, previousDetail, previousRecipeLists };
       },
+      onError: (error, _variables, context) => {
+        onError?.(error, "create");
+
+        if (!shouldPreserveOptimisticUpdate(error)) {
+          const createContext = context as CreateMutationContext | undefined;
+
+          if (createContext?.detailQueryKey) {
+            queryClient.setQueryData(createContext.detailQueryKey, createContext.previousDetail);
+            queryClient.invalidateQueries({ queryKey: createContext.detailQueryKey });
+          }
+
+          if (createContext?.previousRecipeLists) {
+            restoreRecipeLists(queryClient, createContext.previousRecipeLists);
+          }
+
+          invalidate();
+        }
+      },
     })
   );
   const { mutate: mutateCreate } = createMutation;
@@ -480,6 +498,22 @@ export function useRecipesMutations(
         });
 
         return { detailQueryKey, previousDetail };
+      },
+      onError: (error, _variables, context) => {
+        onError?.(error, "update");
+
+        if (shouldPreserveOptimisticUpdate(error)) {
+          return;
+        }
+
+        const updateContext = context as UpdateMutationContext | undefined;
+
+        if (updateContext?.detailQueryKey) {
+          queryClient.setQueryData(updateContext.detailQueryKey, updateContext.previousDetail);
+          queryClient.invalidateQueries({ queryKey: updateContext.detailQueryKey });
+        }
+
+        invalidate();
       },
     })
   );
@@ -542,7 +576,17 @@ export function useRecipesMutations(
     })
   );
   const { mutate: mutateDelete } = deleteMutation;
-  const { mutate: mutateConvert } = useMutation(trpc.recipes.convertMeasurements.mutationOptions());
+  const { mutate: mutateConvert } = useMutation(
+    trpc.recipes.convertMeasurements.mutationOptions({
+      onError: (error) => {
+        onError?.(error, "convertMeasurements");
+
+        if (!shouldPreserveOptimisticUpdate(error)) {
+          invalidate();
+        }
+      },
+    })
+  );
 
   const restoreDeletedRecipes = (context: DeleteMutationContext | undefined): void => {
     if (!context) {
@@ -583,50 +627,11 @@ export function useRecipesMutations(
   };
 
   const createRecipe = (input: FullRecipeInsertDTO): void => {
-    mutateCreate(input, {
-      onError: (error, _variables, context) => {
-        onError?.(error, "create");
-
-        if (!shouldPreserveOptimisticUpdate(error)) {
-          const createContext = context as CreateMutationContext | undefined;
-
-          if (createContext?.detailQueryKey) {
-            queryClient.setQueryData(createContext.detailQueryKey, createContext.previousDetail);
-            queryClient.invalidateQueries({ queryKey: createContext.detailQueryKey });
-          }
-
-          if (createContext?.previousRecipeLists) {
-            restoreRecipeLists(queryClient, createContext.previousRecipeLists);
-          }
-
-          invalidate();
-        }
-      },
-    });
+    mutateCreate(input);
   };
 
   const updateRecipe = (id: string, input: FullRecipeUpdateDTO): void => {
-    mutateUpdate(
-      { id, version: input.version ?? 1, data: input },
-      {
-        onError: (error, _variables, context) => {
-          onError?.(error, "update");
-
-          if (shouldPreserveOptimisticUpdate(error)) {
-            return;
-          }
-
-          const updateContext = context as UpdateMutationContext | undefined;
-
-          if (updateContext?.detailQueryKey) {
-            queryClient.setQueryData(updateContext.detailQueryKey, updateContext.previousDetail);
-            queryClient.invalidateQueries({ queryKey: updateContext.detailQueryKey });
-          }
-
-          invalidate();
-        },
-      }
-    );
+    mutateUpdate({ id, version: input.version ?? 1, data: input });
   };
 
   const deleteRecipes = (recipes: Array<{ id: string; version: number }>): void => {
@@ -638,18 +643,7 @@ export function useRecipesMutations(
     targetSystem: MeasurementSystem,
     version: number
   ): void => {
-    mutateConvert(
-      { recipeId, targetSystem, version },
-      {
-        onError: (error) => {
-          onError?.(error, "convertMeasurements");
-
-          if (!shouldPreserveOptimisticUpdate(error)) {
-            invalidate();
-          }
-        },
-      }
-    );
+    mutateConvert({ recipeId, targetSystem, version });
   };
 
   const importRecipeFromImages = (files: File[]): void => {
