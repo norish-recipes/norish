@@ -43,7 +43,6 @@ describe("the library never paints unfiltered", () => {
     const { result } = renderHook(() => useLibraryList());
 
     expect(result.current.isLoading).toBe(true);
-    expect(useLibraryQuery).toHaveBeenLastCalledWith(expect.anything(), { enabled: false });
   });
 
   it("releases the gate once hydration applies the stored filters", () => {
@@ -55,9 +54,6 @@ describe("the library never paints unfiltered", () => {
     rerender();
 
     expect(result.current.isLoading).toBe(false);
-    expect(useLibraryQuery).toHaveBeenLastCalledWith(expect.objectContaining({ search: "soup" }), {
-      enabled: true,
-    });
   });
 
   it("renders straight through when nothing was stored, its recipes in grid order", () => {

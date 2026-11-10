@@ -663,26 +663,33 @@ describe("useCalendarSubscription", () => {
   });
 
   describe("recipes.onUpdated subscription", () => {
+    const otherRange = [
+      ["calendar", "listItems"],
+      { input: { startISO: "2020-01-01", endISO: "2020-01-07" }, type: "query" },
+    ];
+
     it("rereads every cached range when a planned recipe is renamed", () => {
-      const invalidateSpy = vi.spyOn(queryClient, "invalidateQueries");
+      queryClient.setQueryData(getQueryKey(), []);
+      queryClient.setQueryData(otherRange, []);
 
       renderSubscriptionHook();
       subscriptionCallbacks["recipes.onUpdated"]!(
         trackedEvent({ recipe: { id: "recipe-123", name: "Renamed" } })
       );
 
-      expect(invalidateSpy).toHaveBeenCalledWith({ queryKey: [["calendar", "listItems"]] });
+      expect(queryClient.getQueryState(getQueryKey())?.isInvalidated).toBe(true);
+      expect(queryClient.getQueryState(otherRange)?.isInvalidated).toBe(true);
     });
 
     it("leaves the calendar alone for an enrichment", () => {
-      const invalidateSpy = vi.spyOn(queryClient, "invalidateQueries");
+      queryClient.setQueryData(getQueryKey(), []);
 
       renderSubscriptionHook();
       subscriptionCallbacks["recipes.onUpdated"]!(
         trackedEvent({ recipe: { id: "recipe-123" }, source: "enrichment" })
       );
 
-      expect(invalidateSpy).not.toHaveBeenCalled();
+      expect(queryClient.getQueryState(getQueryKey())?.isInvalidated).toBe(false);
     });
   });
 });
