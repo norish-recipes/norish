@@ -8,11 +8,7 @@ import {
 import type { ToastAdapter } from "../platform/platform";
 import type { RecipeOutcomesSubscriptionCallbacks } from "./use-recipes-subscription";
 import { usePlatform } from "../platform/platform";
-import { useRatingsSubscription } from "./use-ratings-subscription";
-import {
-  useRecipeListSubscription,
-  useRecipeOutcomesSubscription,
-} from "./use-recipes-subscription";
+import { useRecipeOutcomesSubscription } from "./use-recipes-subscription";
 
 /** The server reasons a person can act on, each with its translation. */
 const TRANSLATED_REASONS: Record<string, string> = {
@@ -84,10 +80,4 @@ export function useRecipeOutcomes() {
   useRecipeOutcomesSubscription(
     createRecipeOutcomeToasts(toast, { onOpenRecipe: navigation.toRecipe })
   );
-}
-
-/** What a Library page draws and keeps current: the recipe list events and ratings. */
-export function useLibrarySubscriptions() {
-  useRecipeListSubscription();
-  useRatingsSubscription();
 }
