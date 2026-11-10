@@ -2,7 +2,7 @@
 
 import type { ReactNode } from "react";
 import { useCallback, useState } from "react";
-import { MiniGroceries } from "@/features/groceries";
+import MiniGroceries from "@/components/Panel/consumers/mini-groceries";
 
 import { useReader } from "@norish/shared-react/reader";
 import { useRecipeQuery } from "@norish/shared-react/recipes";

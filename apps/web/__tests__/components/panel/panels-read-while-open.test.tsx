@@ -7,8 +7,8 @@ import type { ReactNode } from "react";
 import { deliver, liveSubscriptions } from "@/__tests__/helpers/trpc-fake";
 import { IngredientPanel } from "@/components/ingredients/ingredient-panel";
 import MiniCookbooks from "@/components/Panel/consumers/mini-cookbooks";
+import MiniGroceries from "@/components/Panel/consumers/mini-groceries";
 import MiniRecipes from "@/components/Panel/consumers/mini-recipes";
-import MiniGroceries from "@/features/groceries/components/panels/mini-groceries";
 import { act, render } from "@testing-library/react";
 import { describe, expect, it, vi } from "vitest";
 

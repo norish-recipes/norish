@@ -30,8 +30,8 @@ vi.mock("@/hooks/user/use-hidden-item-visibility", () => ({
 vi.mock("@/components/Panel/consumers", () => ({
   MiniCalendar: () => null,
 }));
-vi.mock("@/features/groceries", () => ({
-  MiniGroceries: () => null,
+vi.mock("@/components/Panel/consumers/mini-groceries", () => ({
+  default: () => null,
 }));
 
 vi.mock("@/components/recipes/origin-flag", () => ({ default: () => null }));
