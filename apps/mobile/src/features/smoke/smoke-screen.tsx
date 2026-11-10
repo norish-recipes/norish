@@ -1,7 +1,6 @@
 import React from "react";
 import { Alert, ScrollView, Text, View } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
-import { useRecipesQuery } from "@/hooks/recipes";
 import { offlineEngine } from "@/lib/offline/engine";
 import { Button, Checkbox } from "heroui-native";
 import { useIntl } from "react-intl";
@@ -13,6 +12,7 @@ import {
 } from "@norish/shared-react/groceries";
 import { useOfflineStatus } from "@norish/shared-react/offline/react";
 import { useReader } from "@norish/shared-react/reader";
+import { useRecipesQuery } from "@norish/shared-react/recipes";
 import { useTRPC } from "@norish/shared-react/trpc";
 
 // Throwaway screen that proves sign-in, tRPC, realtime and offline end to end
