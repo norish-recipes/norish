@@ -1,7 +1,7 @@
 "use client";
 
 import Link from "next/link";
-import { TimerChip } from "@/components/recipe/timer-chip";
+import { TimerChip } from "@/components/timer-chip";
 import ReactMarkdown from "react-markdown";
 
 import type { TimerKeywords, TimerMatch } from "@norish/shared/lib/timer-parser";

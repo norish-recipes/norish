@@ -17,7 +17,7 @@ vi.mock("@norish/shared-react/config", () => ({
 }));
 
 // Replace the TimerChip with a simple marker to detect it if rendered
-vi.mock("@/components/recipe/timer-chip", () => ({
+vi.mock("@/components/timer-chip", () => ({
   TimerChip: ({ _children }: any) => <span>TIMER_CHIP</span>,
 }));
 
