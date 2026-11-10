@@ -1,5 +1,7 @@
 "use client";
 
+import { useArchiveImportOutcome } from "@/hooks/archive";
+
 import { useConfigSubscription } from "@norish/shared-react/config";
 import { useHouseholdSubscription, usePermissionsSubscription } from "@norish/shared-react/reader";
 import { useRecipeOutcomes } from "@norish/shared-react/recipes";
@@ -13,6 +15,8 @@ export function ShellSubscriptions() {
   usePermissionsSubscription();
   // An import or a delete starts on any page, and the recipe page leaves when it deletes.
   useRecipeOutcomes();
+  // An archive import runs on elsewhere: the shell applies its completion and toasts once.
+  useArchiveImportOutcome();
 
   return null;
 }

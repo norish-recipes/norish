@@ -18,23 +18,26 @@ type CreateUseArchiveSubscriptionOptions = CreateArchiveHooksOptions & {
   useToastAdapter: () => ArchiveSubscriptionToastAdapter;
 };
 
-export function createUseArchiveSubscription({
+// An import's progress is not a query: a lag has nothing to refetch, and
+// the next progress event carries the whole count again.
+const lag = {
+  onLag: () => log.warn("Archive import subscription lagged; awaiting next event"),
+};
+
+/**
+ * An archive import's two halves: its progress, for the screen that draws the bar, and its
+ * outcome, applied and toasted once wherever the reader is while it runs on.
+ */
+export function createUseArchiveSubscriptions({
   useTRPC,
   useArchiveImportCacheHelpers,
   useToastAdapter,
 }: CreateUseArchiveSubscriptionOptions) {
-  return function useArchiveImportSubscription(): void {
+  function useArchiveImportProgress(): void {
     "use memo";
 
     const trpc = useTRPC();
     const { setImportState } = useArchiveImportCacheHelpers();
-    const toastAdapter = useToastAdapter();
-
-    // An import's progress is not a query: a lag has nothing to refetch, and
-    // the next progress event carries the whole count again.
-    const lag = {
-      onLag: () => log.warn("Archive import subscription lagged; awaiting next event"),
-    };
 
     useRealtimeSubscription<Payload<"archiveProgress">>(trpc.archive.onArchiveProgress, {
       ...lag,
@@ -63,6 +66,14 @@ export function createUseArchiveSubscription({
         });
       },
     });
+  }
+
+  function useArchiveImportOutcome(): void {
+    "use memo";
+
+    const trpc = useTRPC();
+    const { setImportState } = useArchiveImportCacheHelpers();
+    const toastAdapter = useToastAdapter();
 
     useRealtimeSubscription<Payload<"archiveCompleted">>(trpc.archive.onArchiveCompleted, {
       ...lag,
@@ -88,5 +99,7 @@ export function createUseArchiveSubscription({
         );
       },
     });
-  };
+  }
+
+  return { useArchiveImportProgress, useArchiveImportOutcome };
 }

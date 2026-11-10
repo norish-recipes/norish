@@ -1,6 +1,6 @@
 "use client";
 
-import { useArchiveImportSubscription } from "@/hooks/archive";
+import { useArchiveImportProgress } from "@/hooks/archive";
 
 import { UserSettingsProvider } from "../context";
 import AllergiesCard from "./allergies-card";
@@ -32,8 +32,8 @@ function UserSettingsContent() {
 }
 
 export default function UserSettingsContentWrapper() {
-  // The archive import's progress, drawn by its card.
-  useArchiveImportSubscription();
+  // The archive import's progress, drawn by its card; the shell applies its outcome.
+  useArchiveImportProgress();
 
   return (
     <UserSettingsProvider>
