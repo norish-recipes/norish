@@ -1,18 +1,34 @@
 import type { ReactNode } from "react";
-import { render as renderBare, screen } from "@testing-library/react";
+import { fireEvent, render as renderBare, screen } from "@testing-library/react";
 import { describe, expect, it, vi } from "vitest";
 
 import "@testing-library/jest-dom";
 
 import FiltersPanel from "@/features/library/components/filters/filters-panel";
 
-import { LibraryFiltersProvider } from "@norish/shared-react/recipes";
+import { LibraryFiltersProvider, useLibraryFilters } from "@norish/shared-react/recipes";
 import { DEFAULT_PERSISTED_RECIPE_FILTERS } from "@norish/shared/contracts/filter-contract";
+
+const reads = vi.hoisted(() => ({ tags: vi.fn(), categories: vi.fn() }));
 
 /** The panel under a Library filters store made from the default filters. */
 function render(ui: ReactNode) {
   return renderBare(
     <LibraryFiltersProvider initial={DEFAULT_PERSISTED_RECIPE_FILTERS}>{ui}</LibraryFiltersProvider>
+  );
+}
+
+/** The panel, opened and closed by the test, beside a button that applies Pantry only directly. */
+function Harness({ open }: { open: boolean }) {
+  const setFilters = useLibraryFilters((state) => state.setFilters);
+
+  return (
+    <>
+      <button type="button" onClick={() => setFilters({ showPantryOnly: true })}>
+        store-pantry
+      </button>
+      <FiltersPanel open={open} onOpenChange={vi.fn()} />
+    </>
   );
 }
 
@@ -37,7 +53,8 @@ vi.mock("motion/react", () => ({
 }));
 
 vi.mock("@/components/Panel/Panel", () => {
-  const Panel = ({ children }: any) => <div>{children}</div>;
+  // The real panel mounts its content only while open.
+  const Panel = ({ children, open }: any) => (open ? <div>{children}</div> : null);
 
   Panel.Body = ({ children }: any) => <div>{children}</div>;
   Panel.Footer = ({ children }: any) => <div>{children}</div>;
@@ -66,14 +83,16 @@ vi.mock("@norish/shared-react/reader", async () =>
 );
 
 vi.mock("@norish/shared-react/config", () => ({
-  useCategoriesQuery: () => ({
-    categories: ["Breakfast", "Lunch", "Dinner", "Snack", "Drinks"],
-    isLoading: false,
-  }),
-  useTagsQuery: () => ({
-    tags: ["Dinner", "Quick", "Vegetarian", "Soup", "Pasta", "Spicy"],
-    isLoading: false,
-  }),
+  useCategoriesQuery: () => {
+    reads.categories();
+
+    return { categories: ["Breakfast", "Lunch", "Dinner", "Snack", "Drinks"], isLoading: false };
+  },
+  useTagsQuery: () => {
+    reads.tags();
+
+    return { tags: ["Dinner", "Quick", "Vegetarian", "Soup", "Pasta", "Spicy"], isLoading: false };
+  },
 }));
 
 vi.mock("@heroui/react", () => ({
@@ -149,5 +168,50 @@ describe("FiltersPanel", () => {
 
     expect(screen.getByRole("button", { name: "category.breakfast" })).toBeInTheDocument();
     expect(screen.getByRole("button", { name: "Drinks" })).toHaveAttribute("aria-pressed", "false");
+  });
+
+  it("reads no tags or Categories while closed", () => {
+    reads.tags.mockClear();
+    reads.categories.mockClear();
+
+    render(<FiltersPanel open={false} onOpenChange={vi.fn()} />);
+
+    expect(reads.tags).not.toHaveBeenCalled();
+    expect(reads.categories).not.toHaveBeenCalled();
+  });
+
+  it("starts each opening from the applied filters, dropping what was not applied", () => {
+    const view = render(<Harness open />);
+    const pantryOnly = () => screen.getByRole("button", { name: "pantryOnly" });
+
+    fireEvent.click(pantryOnly());
+    expect(pantryOnly()).toHaveAttribute("aria-pressed", "true");
+
+    // Closed without Apply: the next opening shows the filters as they are.
+    view.rerender(
+      <LibraryFiltersProvider initial={DEFAULT_PERSISTED_RECIPE_FILTERS}>
+        <Harness open={false} />
+      </LibraryFiltersProvider>
+    );
+    fireEvent.click(screen.getByRole("button", { name: "store-pantry" }));
+    view.rerender(
+      <LibraryFiltersProvider initial={DEFAULT_PERSISTED_RECIPE_FILTERS}>
+        <Harness open />
+      </LibraryFiltersProvider>
+    );
+    expect(pantryOnly()).toHaveAttribute("aria-pressed", "true");
+
+    fireEvent.click(pantryOnly());
+    view.rerender(
+      <LibraryFiltersProvider initial={DEFAULT_PERSISTED_RECIPE_FILTERS}>
+        <Harness open={false} />
+      </LibraryFiltersProvider>
+    );
+    view.rerender(
+      <LibraryFiltersProvider initial={DEFAULT_PERSISTED_RECIPE_FILTERS}>
+        <Harness open />
+      </LibraryFiltersProvider>
+    );
+    expect(pantryOnly()).toHaveAttribute("aria-pressed", "true");
   });
 });
