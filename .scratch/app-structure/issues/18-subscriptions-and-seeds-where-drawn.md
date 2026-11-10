@@ -17,3 +17,10 @@
 - [x] CONTRIBUTING's "App architecture" and the Architecture page state the subscription rule and the seeding rule, each with its line of why. They drop "in the shell when screens outside the feature show the data, such as the Pantry".
 - [x] 16's three realtime tests still pass, each with `--repeat-each`.
 - [x] Gates green: `pnpm lint`, `pnpm typecheck`, `pnpm test:run`, `pnpm i18n:check`, `pnpm build`, `pnpm format:check`, `pnpm deps:cycles`, and mobile's lint, typecheck, test and `expo export --platform ios`.
+
+## Comments
+
+- A panel's content is a component inside `Panel`, which mounts it only while open and through its exit animation (the drawer unmounts its content after it). Each opening mounts its reads fresh, so the engine's mount rule refetches a read nothing kept current, and its subscriptions mount with it; the `enabled`/`open` flags threaded through the hooks are gone. `Panel.Body` and `Panel.Footer` draw their own regions so one content component can fill both.
+- `MiniGroceries`' "add at once" is its own mount beside the panel, and waits for the Pantry's fresh read before deciding.
+- The archive import's outcome (completion and its toast) stays in the shell beside the recipe import outcomes; only its progress mounts on the user settings page.
+- The navbar keeps reading `user.get` through the Reader, which the shell owns; the language switch and the after-planning choice read it from there.
