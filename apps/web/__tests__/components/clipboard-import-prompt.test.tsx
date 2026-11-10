@@ -2,18 +2,21 @@ import ClipboardImportPrompt from "@/components/shared/clipboard-import-prompt";
 import { act, render, waitFor } from "@testing-library/react";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 
-const { toastMock, toastCloseMock, importRecipeMock } = vi.hoisted(() => ({
+const { toastMock, toastCloseMock, importRecipeMock, pushMock } = vi.hoisted(() => ({
   toastMock: vi.fn(),
   toastCloseMock: vi.fn(),
   importRecipeMock: vi.fn(),
+  pushMock: vi.fn(),
 }));
+
+vi.mock("next/navigation", () => ({ useRouter: () => ({ push: pushMock }) }));
 
 vi.mock("next-intl", () => ({
   useTranslations: (namespace: string) => (key: string) => `${namespace}.${key}`,
 }));
 
 vi.mock("@/hooks/use-recipes-mutations", () => ({
-  useRecipesMutations: () => ({ importRecipe: importRecipeMock }),
+  useRecipesMutations: () => ({ importRecipe: importRecipeMock, importRecipeWithAI: vi.fn() }),
 }));
 
 // The action toast closes itself; here it is the toast it asks for, with its action.
@@ -104,6 +107,7 @@ describe("ClipboardImportPrompt", () => {
       "common.import.paste.importing",
       expect.objectContaining({ description: "common.import.paste.inProgress" })
     );
+    expect(pushMock).not.toHaveBeenCalled();
   });
 
   it("asks nothing when the clipboard holds no link", async () => {

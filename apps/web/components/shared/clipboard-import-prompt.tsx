@@ -1,10 +1,9 @@
 "use client";
 
 import { useEffect, useRef } from "react";
-import { useRecipesMutations } from "@/hooks/use-recipes-mutations";
+import { useImportRecipe } from "@/hooks/use-import-recipe";
 import { readClipboardUrl } from "@/lib/clipboard-url";
 import { showActionToast } from "@/lib/ui/action-toast";
-import { toast } from "@heroui/react";
 import { useTranslations } from "next-intl";
 
 /** How long the ask stays up, unless it is being hovered or focused. */
@@ -56,16 +55,15 @@ function isOwnLink(url: string): boolean {
 export default function ClipboardImportPrompt() {
   const t = useTranslations("common.import.clipboard");
   const tActions = useTranslations("common.actions");
-  const tPaste = useTranslations("common.import.paste");
-  const { importRecipe } = useRecipesMutations();
+  const { importRecipe } = useImportRecipe({ stay: true });
   const isReadingRef = useRef(false);
   // The import and the strings are read through a ref so the clipboard is
   // read on mount and on focus only, never again because a render handed the
   // effect a fresh function.
-  const latestRef = useRef({ importRecipe, t, tActions, tPaste });
+  const latestRef = useRef({ importRecipe, t, tActions });
 
   useEffect(() => {
-    latestRef.current = { importRecipe, t, tActions, tPaste };
+    latestRef.current = { importRecipe, t, tActions };
   });
 
   useEffect(() => {
@@ -87,15 +85,7 @@ export default function ClipboardImportPrompt() {
             timeout: PROMPT_TIMEOUT_MS,
             action: {
               label: tActions("import"),
-              onPress: () => {
-                const { importRecipe, tPaste } = latestRef.current;
-
-                importRecipe(url);
-                toast(tPaste("importing"), {
-                  description: tPaste("inProgress"),
-                  variant: "default",
-                });
-              },
+              onPress: () => latestRef.current.importRecipe(url),
             },
           });
         })

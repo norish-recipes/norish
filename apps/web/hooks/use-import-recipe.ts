@@ -5,8 +5,8 @@ import { useRecipesMutations } from "@/hooks/use-recipes-mutations";
 import { toast } from "@heroui/react";
 import { useTranslations } from "next-intl";
 
-/** Import a link, say so, and go to the Library, where its pending card shows. */
-export function useImportRecipe() {
+/** Import a link and say so; unless `stay`, go to the Library, where its pending card shows. */
+export function useImportRecipe({ stay = false }: { stay?: boolean } = {}) {
   const router = useRouter();
   const t = useTranslations("common.import.paste");
   const mutations = useRecipesMutations();
@@ -14,7 +14,7 @@ export function useImportRecipe() {
   const start = (title: string, importUrl: (url: string) => void) => (url: string) => {
     toast(title, { description: t("inProgress"), variant: "default" });
     importUrl(url);
-    router.push("/");
+    if (!stay) router.push("/");
   };
 
   return {
