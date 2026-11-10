@@ -1,6 +1,5 @@
 "use client";
 
-import RecipeGridSkeleton from "@/components/skeleton/recipe-grid-skeleton";
 import { FloatingRecipeChip } from "@/features/library/components/filters";
 import { LibraryView } from "@/features/library/components/grid";
 import {
@@ -12,6 +11,7 @@ import {
   SearchInput,
 } from "@/features/library/components/header";
 import { RecipeSelectionBar } from "@/features/library/components/selection";
+import { RecipeGridSkeleton } from "@/features/library/components/skeleton";
 import { useLibraryList } from "@/hooks/use-library";
 import { Tabs } from "@heroui/react";
 

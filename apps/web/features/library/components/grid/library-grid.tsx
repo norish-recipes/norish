@@ -11,7 +11,7 @@ import {
   useState,
 } from "react";
 import { usePathname } from "next/navigation";
-import RecipeGridSkeleton from "@/components/skeleton/recipe-grid-skeleton";
+import { RecipeGridSkeleton } from "@/features/library/components/skeleton";
 import { useContainerColumns } from "@/hooks/use-container-columns";
 import { DEVICE_KIND_WINDOW, useViewport } from "@/hooks/use-viewport";
 import { lastScrollTop, rememberedListRows, rememberListRows } from "@/lib/scroll-memory";

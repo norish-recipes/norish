@@ -4,7 +4,7 @@ import { useCallback, useState } from "react";
 import Panel from "@/components/Panel/Panel";
 import { ActionButton, ActionButtonGroup } from "@/components/shared/action-button";
 import { ChipButton } from "@/components/shared/chip-button";
-import ChipSkeleton from "@/components/skeleton/chip-skeleton";
+import { ChipSkeleton } from "@/features/library/components/skeleton";
 import { useHiddenItemVisibility } from "@/hooks/user/use-hidden-item-visibility";
 import { useCategoryLabel } from "@/lib/category-display";
 import {

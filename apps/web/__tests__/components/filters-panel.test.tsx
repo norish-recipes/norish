@@ -51,7 +51,7 @@ vi.mock("@/features/library/components/filters/search-field-toggles", () => ({
   default: () => <div>search-field-toggles</div>,
 }));
 
-vi.mock("@/components/skeleton/chip-skeleton", () => ({
+vi.mock("@/features/library/components/skeleton/chip-skeleton", () => ({
   default: () => <div>loading</div>,
 }));
 

@@ -5,7 +5,6 @@ import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { BackLink } from "@/components/page-transition";
 import { NotFoundView } from "@/components/shared/not-found-view";
-import RecipeGridSkeleton from "@/components/skeleton/recipe-grid-skeleton";
 import {
   CookbookAddRecipesPanel,
   CookbookEditPanel,
@@ -17,6 +16,7 @@ import {
   RecipeViewModeToggle,
   SearchInput,
 } from "@/features/library/components/header";
+import { RecipeGridSkeleton } from "@/features/library/components/skeleton";
 import { useBackDestination } from "@/hooks/use-back-destination";
 import {
   ArrowLeftIcon,

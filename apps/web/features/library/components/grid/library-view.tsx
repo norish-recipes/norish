@@ -2,7 +2,7 @@
 
 import type { LibraryGridItem } from "@/lib/library-items";
 import { useMemo } from "react";
-import RecipeCardSkeleton from "@/components/skeleton/recipe-card-skeleton";
+import { RecipeCardSkeleton } from "@/features/library/components/skeleton";
 import { useLibraryCards, useLibraryList } from "@/hooks/use-library";
 
 import type { SelectedRecipe } from "@norish/shared-react/recipes";
