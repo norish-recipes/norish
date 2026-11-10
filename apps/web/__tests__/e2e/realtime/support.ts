@@ -132,7 +132,7 @@ export function recordFrames(page: Page): FrameLog {
 export async function waitForLive(log: FrameLog, paths: string[]): Promise<void> {
   const notLive = () => {
     const pathOf = new Map<string, string>();
-    const live = new Set<string>();
+    const liveIds = new Set<string>();
 
     for (const frame of log.frames) {
       let messages: unknown;
@@ -153,11 +153,14 @@ export async function waitForLive(log: FrameLog, paths: string[]): Promise<void>
 
         if (frame.direction === "sent" && message.method === "subscription") {
           pathOf.set(key, message.params?.path ?? "");
+        } else if (frame.direction === "sent" && message.method === "subscription.stop") {
+          liveIds.delete(key);
         } else if (frame.direction === "received" && message.result?.type === "data") {
-          live.add(pathOf.get(key) ?? "");
+          liveIds.add(key);
         }
       }
     }
+    const live = new Set([...liveIds].map((key) => pathOf.get(key) ?? ""));
 
     return paths.filter((path) => !live.has(path));
   };
