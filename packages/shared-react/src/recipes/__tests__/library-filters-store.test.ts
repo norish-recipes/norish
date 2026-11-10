@@ -1,93 +1,75 @@
-import type { Root } from "react-dom/client";
-import React, { act } from "react";
-import { createRoot } from "react-dom/client";
-import { afterEach, describe, expect, it, vi } from "vitest";
+import { describe, expect, it } from "vitest";
 
-import type { PersistedRecipeFilters } from "@norish/shared/contracts/filter-contract";
-import { DEFAULT_PERSISTED_RECIPE_FILTERS } from "@norish/shared/contracts/filter-contract";
+import { createLibraryFiltersStore } from "@norish/shared-react/recipes";
+import {
+  DEFAULT_PERSISTED_RECIPE_FILTERS,
+  DEFAULT_RECIPE_FILTERS,
+} from "@norish/shared/contracts/filter-contract";
 
-import { createRecipeFiltersContext } from "../src/contexts/recipes/recipe-filters-context";
+const TITLE_SORTED = { ...DEFAULT_PERSISTED_RECIPE_FILTERS, sortMode: "titleAsc" as const };
 
-const KEY = "filters";
+describe("createLibraryFiltersStore", () => {
+  it("starts on the cookie's filters, applied", () => {
+    const { filters, hydrated } = createLibraryFiltersStore(TITLE_SORTED).getState();
 
-function storageHolding(filters: PersistedRecipeFilters | null) {
-  const stored = new Map(filters ? [[KEY, JSON.stringify(filters)]] : []);
-
-  return {
-    stored,
-    getItem: (key: string) => stored.get(key) ?? null,
-    setItem: vi.fn((key: string, value: string) => void stored.set(key, value)),
-    removeItem: (key: string) => void stored.delete(key),
-  };
-}
-
-let root: Root | undefined;
-
-afterEach(() => {
-  act(() => root?.unmount());
-  root = undefined;
-});
-
-/** Every render's sort and readiness, from the first. */
-async function renderProvider(
-  storage: ReturnType<typeof storageHolding>,
-  initialFilters?: PersistedRecipeFilters
-) {
-  const { RecipeFiltersProvider, useRecipeFiltersContext } = createRecipeFiltersContext({
-    storageAdapter: storage,
-    storageKey: KEY,
+    expect(filters).toEqual({ ...TITLE_SORTED, rawInput: "" });
+    expect(hydrated).toBe(true);
   });
-  const renders: { sortMode: string; isHydrated: boolean }[] = [];
 
-  function Probe() {
-    const { filters, isHydrated } = useRecipeFiltersContext();
+  it("starts on the defaults without a cookie, waiting for the stored filters", () => {
+    const { filters, hydrated } = createLibraryFiltersStore(undefined).getState();
 
-    renders.push({ sortMode: filters.sortMode, isHydrated });
+    expect(filters).toEqual(DEFAULT_RECIPE_FILTERS);
+    expect(hydrated).toBe(false);
+  });
 
-    return null;
-  }
+  it("holds what its actions set", () => {
+    const store = createLibraryFiltersStore(undefined);
 
-  root = createRoot(document.createElement("div"));
-  await act(async () =>
-    root?.render(
-      <RecipeFiltersProvider initialFilters={initialFilters}>
-        <Probe />
-      </RecipeFiltersProvider>
-    )
-  );
+    store.getState().setFilters({ rawInput: "soup", libraryType: "cookbooks" });
+    store.getState().toggleSearchField("tags");
 
-  return renders;
-}
-
-describe("RecipeFiltersProvider", () => {
-  it("asks under the server's filters from the first render, without waiting for storage", async () => {
-    const storage = storageHolding({ ...DEFAULT_PERSISTED_RECIPE_FILTERS, sortMode: "titleAsc" });
-    const renders = await renderProvider(storage, {
-      ...DEFAULT_PERSISTED_RECIPE_FILTERS,
-      sortMode: "titleAsc",
+    expect(store.getState().filters).toMatchObject({
+      rawInput: "soup",
+      libraryType: "cookbooks",
+      searchFields: [...DEFAULT_RECIPE_FILTERS.searchFields, "tags"],
     });
-
-    expect(renders[0]).toEqual({ sortMode: "titleAsc", isHydrated: true });
-    expect(renders.at(-1)).toEqual({ sortMode: "titleAsc", isHydrated: true });
   });
 
-  it("waits for storage without the server's filters", async () => {
-    const storage = storageHolding({ ...DEFAULT_PERSISTED_RECIPE_FILTERS, sortMode: "titleAsc" });
-    const renders = await renderProvider(storage);
+  it("clears every filter but the Library's type", () => {
+    const store = createLibraryFiltersStore({ ...TITLE_SORTED, libraryType: "recipes" });
 
-    expect(renders[0]).toEqual({ sortMode: "dateDesc", isHydrated: false });
-    expect(renders.at(-1)).toEqual({ sortMode: "titleAsc", isHydrated: true });
+    store.getState().setFilters({ rawInput: "soup", searchTags: ["Quick"] });
+    store.getState().clearFilters();
+
+    expect(store.getState().filters).toEqual({ ...DEFAULT_RECIPE_FILTERS, libraryType: "recipes" });
   });
 
-  it("takes newer filters from storage over a kept document's, and never writes the old ones back", async () => {
-    const storage = storageHolding({ ...DEFAULT_PERSISTED_RECIPE_FILTERS, sortMode: "titleAsc" });
-    const renders = await renderProvider(storage, {
+  it("takes the stored filters over a kept document's", () => {
+    const store = createLibraryFiltersStore({
       ...DEFAULT_PERSISTED_RECIPE_FILTERS,
       sortMode: "dateAsc",
     });
 
-    expect(renders.at(-1)).toEqual({ sortMode: "titleAsc", isHydrated: true });
-    expect(JSON.parse(storage.stored.get(KEY)!)).toMatchObject({ sortMode: "titleAsc" });
-    expect(storage.setItem.mock.calls.some(([, value]) => value.includes("dateAsc"))).toBe(false);
+    store.getState().applyStored(TITLE_SORTED);
+
+    expect(store.getState().filters.sortMode).toBe("titleAsc");
+  });
+
+  it("is applied once storage is read, even with nothing stored", () => {
+    const store = createLibraryFiltersStore(undefined);
+
+    store.getState().applyStored(null);
+
+    expect(store.getState()).toMatchObject({ filters: DEFAULT_RECIPE_FILTERS, hydrated: true });
+  });
+
+  it("keeps its filters object when storage holds the same filters", () => {
+    const store = createLibraryFiltersStore(TITLE_SORTED);
+    const before = store.getState().filters;
+
+    store.getState().applyStored(TITLE_SORTED);
+
+    expect(store.getState().filters).toBe(before);
   });
 });
