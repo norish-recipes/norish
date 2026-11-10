@@ -60,7 +60,7 @@ vi.mock("@norish/ui/star-rating", () => ({
 }));
 
 vi.mock("@norish/shared-react/reader", async () =>
-  (await import("../helpers/reader-mock")).mockDevicePreferences(() => ({
+  (await import("@/__tests__/helpers/reader-mock")).mockDevicePreferences(() => ({
     hiddenItems: userPreferencesState.hidden,
   }))
 );

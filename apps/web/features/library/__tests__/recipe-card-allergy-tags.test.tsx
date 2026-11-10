@@ -16,7 +16,7 @@ vi.mock("next-intl", () => ({
 }));
 
 vi.mock("@norish/shared-react/reader", async () =>
-  (await import("../../helpers/reader-mock")).mockReader()
+  (await import("@/__tests__/helpers/reader-mock")).mockReader()
 );
 
 vi.mock("@/hooks/use-recipe-prefetch", () => ({
@@ -42,7 +42,7 @@ vi.mock("@/components/shared/smart-markdown-renderer", () => ({
 vi.mock("@/features/library/components/grid/recipe-metadata", () => ({ default: () => null }));
 vi.mock("@/features/library/components/grid/recipe-tags", () => ({ default: () => null }));
 
-vi.mock("../shared/delete-recipe-modal", () => ({ DeleteRecipeModal: () => null }));
+vi.mock("@/components/shared/delete-recipe-modal", () => ({ DeleteRecipeModal: () => null }));
 vi.mock("@/components/shared/delete-recipe-modal", () => ({ DeleteRecipeModal: () => null }));
 vi.mock("@/components/shared/double-tap-container", () => ({
   default: ({ children }: { children?: React.ReactNode }) => <div>{children}</div>,

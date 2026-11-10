@@ -22,7 +22,7 @@ vi.mock("next-intl", () => ({
     values ? `${key}:${JSON.stringify(values)}` : key,
 }));
 vi.mock("@norish/shared-react/reader", async () =>
-  (await import("../../helpers/reader-mock")).mockReader()
+  (await import("@/__tests__/helpers/reader-mock")).mockReader()
 );
 vi.mock("@/components/cookbooks/cookbook-cover", () => ({ default: () => null }));
 vi.mock("@/features/library/components/cookbooks/cookbook-panels", () => ({
