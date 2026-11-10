@@ -68,6 +68,7 @@ const useTRPC = (() => ({
     onItemUpdated: procedure("onItemUpdated"),
     onFailed: procedure("onFailed"),
   },
+  recipes: { onUpdated: procedure("recipes.onUpdated") },
 })) as unknown as CreateCalendarHooksOptions["useTRPC"];
 
 function payload(
