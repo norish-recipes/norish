@@ -1,5 +1,5 @@
-import { LibraryScreen } from "@/components/dashboard/dashboard";
 import TodaysMeals from "@/components/dashboard/today/todays-meals";
+import { LibraryScreen } from "@/features/library/library-screen";
 
 export default function Loading() {
   return (

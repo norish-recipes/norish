@@ -1,5 +1,5 @@
-import { LibraryScreen } from "@/components/dashboard/dashboard";
 import TodaysMeals from "@/components/dashboard/today/todays-meals";
+import { LibraryScreen } from "@/features/library/library-screen";
 
 // The Live route and the offline bootstrap draw this: Today's meals above the Library.
 export default function Home() {
