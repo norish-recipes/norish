@@ -60,12 +60,15 @@ Web and mobile use the same layout. Web keeps its folders at the root of
   helpers. Each feature is a domain: `library` (with the cookbook page),
   `recipes` (with the shared recipe page), `groceries`, `calendar`, `imports`,
   `settings` and `auth`.
-- A feature groups its `components/` by area, and each area has an `index.ts`
-  that screens and other areas import. Groceries has `header/`, `list/`,
-  `panels/`, `pantry/` and `stores/`. Recipes has `page/`, `share/`, `editor/`,
-  `read-only/`, `media/` and `skeleton/`. Skeletons, `loading.tsx` files and
-  the shared recipe page import files directly instead, since Turbopack ships
-  every file an `index.ts` re-exports.
+- A feature groups its `components/` by area. An area's `index.ts` re-exports
+  only pieces more than one screen draws; import a piece one screen draws by
+  file, and omit the index when nothing is shared. The bundler ships every file
+  an index re-exports, so mixing pieces puts one screen's code in another's
+  chunk. Groceries has `header/`, `list/`, `panels/`, `pantry/` and `stores/`.
+  Recipes has `page/`, `share/`, `editor/`, `read-only/`, `media/` and
+  `skeleton/`. Library has `grid/`, `header/`, `filters/`, `selection/`,
+  `panels/` and `skeleton/`. Skeletons, `loading.tsx` files and the shared
+  recipe page import files directly.
 - Features never import each other. Lint blocks `@/features/<x>` and
   `@/features/<x>/**` outside feature `<x>`, except in route files. Panels
   several features open live in `components/Panel/consumers/`.
@@ -186,15 +189,19 @@ gives the reasons for decisions without an ADR.
   its screens, a panel while open, and the shell for its own data and the
   Reader. A screen also mounts subscriptions for other domains it draws, so
   unused pages don't stay subscribed. The shell mounts the Reader's household
-  and permissions, admin config, recipe import outcomes, the kept-delete
-  notice and archive import completion, with their toasts. User settings mounts
+  and permissions, admin config, `useRecipeOutcomesSubscription` and the archive
+  import outcome, each showing its own toasts through the platform adapter.
+  Library's root mounts recipe list events, ratings, cookbooks and the Pantry.
+  The editor also mounts recipe list events, which reread its category choices,
+  and Add to Groceries mounts the subscription of the recipe it draws. User settings mounts
   archive import progress for its bar. A component inside `Panel` mounts its
   reads and subscriptions while open and through the exit animation. Each
   opening rereads data nothing kept current; hooks need no `enabled` or `open`
   flag.
 - A realtime subscription names the reads it keeps current with
   `useKeepsCurrent`, so web doesn't read them again on mount until they go
-  stale.
+  stale. A mounted subscription vouches only for a read that arrived after it
+  mounted, so a read from before a gap in its subscription is fetched again.
 - Each layout seeds only what its screens draw in the first frame, so a full
   load carries no unnecessary reads. `(app)` seeds permissions and Device
   Preferences; `(library)` and the recipe layout seed favourites, the household
