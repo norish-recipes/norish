@@ -8,5 +8,4 @@ export type TrpcHookBinding = ReturnType<TrpcContext["useTRPC"]>;
 
 export interface CreateRecipeHooksOptions {
   useTRPC: () => TrpcHookBinding;
-  shouldPreserveOptimisticUpdate?: (error: unknown) => boolean;
 }

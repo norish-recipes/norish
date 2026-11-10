@@ -1,14 +1,9 @@
 import { isQueuedOutboxSignal } from "@norish/shared/lib/trpc-errors";
 
-export type OptimisticUpdatePreserver = (error: unknown) => boolean;
-
-export function shouldPreserveOptimisticUpdate(
-  error: unknown,
-  preserve?: OptimisticUpdatePreserver
-): boolean {
+export function shouldPreserveOptimisticUpdate(error: unknown): boolean {
   // Preserve only on the Queued signal: backend unreachable AND the Outbox
   // write actually persisted (a marked admission failure rolls back, ADR-0009).
-  return preserve?.(error) ?? isQueuedOutboxSignal(error);
+  return isQueuedOutboxSignal(error);
 }
 
 /**
@@ -18,12 +13,9 @@ export function shouldPreserveOptimisticUpdate(
  * optimistic update is kept — the mutation is safely in the Outbox, so
  * refetching would just erase the tentatively applied change.
  */
-export function invalidateUnlessPreserved(
-  invalidate: () => void,
-  preserve?: OptimisticUpdatePreserver
-): (error: unknown) => void {
+export function invalidateUnlessPreserved(invalidate: () => void): (error: unknown) => void {
   return (error: unknown) => {
-    if (!shouldPreserveOptimisticUpdate(error, preserve)) {
+    if (!shouldPreserveOptimisticUpdate(error)) {
       invalidate();
     }
   };
