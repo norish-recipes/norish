@@ -14,7 +14,7 @@ import { appRouter, createHttpContextFromHeaders } from "@norish/trpc/server";
 
 /** Each read a page seeds; `false` or `undefined` for one it leaves out. */
 type Seeds = (Promise<unknown> | false | undefined)[];
-type Reads = (
+export type Reads = (
   trpc: TRPCOptionsProxy<AppRouter>,
   queryClient: QueryClient
 ) => Seeds | Promise<Seeds>;
