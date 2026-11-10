@@ -3,6 +3,7 @@
 import { MinusIcon, PlusIcon } from "@heroicons/react/16/solid";
 import { Button } from "@heroui/react";
 
+import { servingsDown, servingsUp } from "@norish/shared-react/recipes";
 import { formatAmountAsDecimal } from "@norish/shared/lib/format-amount";
 
 import { AnimatedNumber } from "./animated-number";
@@ -15,22 +16,9 @@ export default function NutritionPortionControl({
   portions,
   onChange,
 }: NutritionPortionControlProps) {
-  const dec = () => {
-    if (portions <= 1) {
-      onChange(Math.max(0.125, portions / 2));
-    } else if (portions <= 2) {
-      onChange(1);
-    } else {
-      onChange(portions - 1);
-    }
-  };
-  const inc = () => {
-    if (portions < 1) {
-      onChange(Math.min(1, portions * 2));
-    } else {
-      onChange(portions + 1);
-    }
-  };
+  const dec = () => onChange(servingsDown(portions));
+  const inc = () => onChange(servingsUp(portions));
+
   return (
     <div className="inline-flex items-center gap-2">
       <Button
