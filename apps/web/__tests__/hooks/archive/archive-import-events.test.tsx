@@ -4,23 +4,21 @@
  */
 import { deliver } from "@/__tests__/helpers/trpc-fake";
 import { ShellSubscriptions } from "@/app/(app)/shell-subscriptions";
-import { useArchiveImportProgress } from "@/hooks/archive";
 import { act, render } from "@testing-library/react";
 import { describe, expect, it, vi } from "vitest";
 
-import { ARCHIVE_IMPORT_KEY } from "@norish/shared-react/hooks";
 import {
   createTestQueryClient,
   createTestWrapper,
   fakePlatformAdapter,
 } from "@norish/shared-react/platform/testing";
+import { useArchiveImport, useArchiveImportProgress } from "@norish/shared-react/recipes";
 
 vi.mock("@norish/shared-react/trpc", async () =>
   (await import("@/__tests__/helpers/trpc-fake")).mockTRPC()
 );
 vi.mock("next-intl", () => ({ useTranslations: () => (key: string) => key }));
 
-const IMPORTING = { current: 2, total: 5, imported: 2, notes: [], isImporting: true, errors: [] };
 const COMPLETED = { imported: 5, notes: [], errors: [] };
 
 function ProgressBar() {
@@ -33,7 +31,8 @@ function renderWith(page: boolean) {
   const queryClient = createTestQueryClient();
   const platform = fakePlatformAdapter();
 
-  queryClient.setQueryData(ARCHIVE_IMPORT_KEY, IMPORTING);
+  useArchiveImport.getState().started(5);
+  useArchiveImport.getState().progressed({ current: 2, total: 5, imported: 2, errors: [] });
   render(
     <>
       <ShellSubscriptions />
@@ -43,7 +42,7 @@ function renderWith(page: boolean) {
   );
 
   return {
-    state: () => queryClient.getQueryData<typeof IMPORTING>(ARCHIVE_IMPORT_KEY),
+    state: () => useArchiveImport.getState(),
     toasts: () => vi.mocked(platform.toast.show).mock.calls.map(([toast]) => toast),
   };
 }

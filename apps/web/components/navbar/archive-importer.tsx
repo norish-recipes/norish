@@ -1,10 +1,11 @@
 "use client";
 
-import React, { useCallback, useEffect, useRef, useState } from "react";
-import { useArchiveImportMutation, useArchiveImportQuery } from "@/hooks/archive";
+import React, { useEffect, useRef, useState } from "react";
 import { DocumentArrowUpIcon } from "@heroicons/react/24/outline";
 import { ProgressBar } from "@heroui/react";
 import { useTranslations } from "next-intl";
+
+import { useArchiveImport, useArchiveImportMutation } from "@norish/shared-react/recipes";
 
 export default function ArchiveImporter() {
   const t = useTranslations("navbar.archiveImporter");
@@ -15,22 +16,19 @@ export default function ArchiveImporter() {
     total,
     errors: progressErrors,
     isImporting,
-    clearImport,
-  } = useArchiveImportQuery();
+    clear: clearImport,
+  } = useArchiveImport();
   const { startImport, isStarting } = useArchiveImportMutation();
   const [dragActive, setDragActive] = useState(false);
   const [localErrors, setLocalErrors] = useState<{ file: string; error: string }[]>([]);
   const [showNotes, setShowNotes] = useState(false);
   const inputRef = useRef<HTMLInputElement>(null);
 
-  const uploadFile = useCallback(
-    (file: File) => {
-      setLocalErrors([]);
-      clearImport();
-      startImport(file);
-    },
-    [startImport, clearImport]
-  );
+  const uploadFile = (file: File) => {
+    setLocalErrors([]);
+    clearImport();
+    startImport(file);
+  };
 
   const onInputChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const f = e.target.files?.[0];

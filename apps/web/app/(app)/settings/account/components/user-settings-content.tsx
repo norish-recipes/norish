@@ -1,6 +1,6 @@
 "use client";
 
-import { useArchiveImportProgress } from "@/hooks/archive";
+import { useArchiveImportProgress } from "@norish/shared-react/recipes";
 
 import { UserSettingsProvider } from "../context";
 import AllergiesCard from "./allergies-card";

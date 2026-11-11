@@ -1,10 +1,11 @@
 "use client";
 
-import { useArchiveImportOutcome } from "@/hooks/archive";
-
 import { useConfigSubscription } from "@norish/shared-react/config";
 import { useHouseholdSubscription, usePermissionsSubscription } from "@norish/shared-react/reader";
-import { useRecipeOutcomesSubscription } from "@norish/shared-react/recipes";
+import {
+  useArchiveImportOutcome,
+  useRecipeOutcomesSubscription,
+} from "@norish/shared-react/recipes";
 
 /** What the shell draws itself, and the Reader's; screens and panels mount their own. */
 export function ShellSubscriptions() {
