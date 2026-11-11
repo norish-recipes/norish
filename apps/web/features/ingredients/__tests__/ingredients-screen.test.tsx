@@ -4,7 +4,7 @@
  * the server says the viewer may take.
  */
 import { useSyncExternalStore } from "react";
-import IngredientsSettingsContent from "@/app/(app)/settings/ingredients/components/ingredients-settings-content";
+import { IngredientsScreen } from "@/features/ingredients/ingredients-screen";
 import { showSafeErrorToast } from "@/lib/ui/safe-error-toast";
 import { toast } from "@heroui/react";
 import { act, fireEvent, render, screen, waitFor, within } from "@testing-library/react";
@@ -223,7 +223,7 @@ vi.mock("@/lib/ui/action-toast", () => ({ showActionToast: vi.fn() }));
 const permissions = vi.hoisted(() => ({ isAIEnabled: true, canDrawImages: false }));
 
 vi.mock("@norish/shared-react/reader", async () =>
-  (await import("../../helpers/reader-mock")).mockDevicePreferences(
+  (await import("@/__tests__/helpers/reader-mock")).mockDevicePreferences(
     () => ({
       hiddenItems: [],
     }),
@@ -395,7 +395,7 @@ async function showSpellings(opened: HTMLElement) {
   });
 }
 
-describe("IngredientsSettingsContent", () => {
+describe("IngredientsScreen", () => {
   beforeEach(() => {
     linkedIngredient = null;
     // The end of the list watches for itself scrolling into view; jsdom has no observer.
@@ -427,7 +427,7 @@ describe("IngredientsSettingsContent", () => {
 
   it("asks for the next page once the end of the list comes into view, and again while it stays", () => {
     hasNextPage = true;
-    render(<IngredientsSettingsContent />);
+    render(<IngredientsScreen />);
 
     expect(fetchNextPage).not.toHaveBeenCalled();
     act(() => {
@@ -437,7 +437,7 @@ describe("IngredientsSettingsContent", () => {
 
     // The next page lands and the end is still in reach: asked again.
     items = [...items, { ...salt, id: "pepper", name: "pepper" }];
-    render(<IngredientsSettingsContent />);
+    render(<IngredientsScreen />);
     act(() => {
       listEnd.onIntersect?.([{ isIntersecting: true }]);
     });
@@ -448,13 +448,13 @@ describe("IngredientsSettingsContent", () => {
     const busy = () => screen.getByTestId("ingredients-searching").getAttribute("data-fetching");
 
     listFetch = { isFetching: true, isFetchingNextPage: false, isPlaceholderData: false };
-    const { unmount } = render(<IngredientsSettingsContent />);
+    const { unmount } = render(<IngredientsScreen />);
 
     expect(busy()).toBe("false");
     unmount();
 
     listFetch = { isFetching: true, isFetchingNextPage: false, isPlaceholderData: true };
-    render(<IngredientsSettingsContent />);
+    render(<IngredientsScreen />);
     expect(busy()).toBe("true");
   });
 
@@ -462,7 +462,7 @@ describe("IngredientsSettingsContent", () => {
     const icon = "/ingredient-icons/0123456789abcdef0123456789abcdef.webp";
 
     items = [{ ...onion, icon, ownIcon: true }, salt];
-    render(<IngredientsSettingsContent />);
+    render(<IngredientsScreen />);
 
     expect(within(row("onion")).getByTestId("ingredient-icon").getAttribute("src")).toBe(icon);
     expect(within(row("salt")).queryByTestId("ingredient-icon")).toBeNull();
@@ -470,7 +470,7 @@ describe("IngredientsSettingsContent", () => {
   });
 
   it("lists each food on a line, marks the flagged ones, and opens one to its spellings", async () => {
-    render(<IngredientsSettingsContent />);
+    render(<IngredientsScreen />);
 
     expect(within(row("onion")).getByTestId("ingredient-flagged")).toBeInTheDocument();
     expect(within(row("salt")).queryByTestId("ingredient-flagged")).toBeNull();
@@ -490,13 +490,13 @@ describe("IngredientsSettingsContent", () => {
   it("opens the panel of the food a link names, such as a recipe's Not counted line", async () => {
     linkedIngredient = "onion";
 
-    render(<IngredientsSettingsContent />);
+    render(<IngredientsScreen />);
 
     expect(await screen.findByRole("dialog", { name: "onion" })).toBeInTheDocument();
   });
 
   it("offers only what the viewer may do", async () => {
-    render(<IngredientsSettingsContent />);
+    render(<IngredientsScreen />);
     const mine = await open("onion");
     await showSpellings(mine);
 
@@ -524,7 +524,7 @@ describe("IngredientsSettingsContent", () => {
 
   it("offers the cross on a spelling the viewer may remove, whatever uses it", async () => {
     items = [{ ...onion, aliases: [{ id: "a-onion", text: "onion", canRemove: true }] }];
-    render(<IngredientsSettingsContent />);
+    render(<IngredientsScreen />);
     const opened = await open("onion");
 
     await showSpellings(opened);
@@ -534,7 +534,7 @@ describe("IngredientsSettingsContent", () => {
   });
 
   it("marks a flagged food distinct", async () => {
-    render(<IngredientsSettingsContent />);
+    render(<IngredientsScreen />);
     const opened = await open("onion");
 
     await act(async () => {
@@ -546,7 +546,7 @@ describe("IngredientsSettingsContent", () => {
   });
 
   it("renames a food from its name field, saved with the panel's Save", async () => {
-    render(<IngredientsSettingsContent />);
+    render(<IngredientsScreen />);
     const opened = await open("onion");
     const field = within(opened).getByTestId("ingredient-name-input");
 
@@ -575,7 +575,7 @@ describe("IngredientsSettingsContent", () => {
   });
 
   it("deletes a food once the viewer confirms", async () => {
-    render(<IngredientsSettingsContent />);
+    render(<IngredientsScreen />);
     const opened = await open("onion");
 
     await act(async () => {
@@ -596,7 +596,7 @@ describe("IngredientsSettingsContent", () => {
 
   it("shows a refused edit undone, and says why", async () => {
     mutations.remove.mockRejectedValueOnce(new Error("forbidden"));
-    render(<IngredientsSettingsContent />);
+    render(<IngredientsScreen />);
     const opened = await open("onion");
 
     await act(async () => {
@@ -624,7 +624,7 @@ describe("IngredientsSettingsContent", () => {
       elsewhere: 2,
       counts: { recipeLines: 3, groceries: 0, pantry: 1 },
     };
-    render(<IngredientsSettingsContent />);
+    render(<IngredientsScreen />);
     const opened = await open("onion");
 
     await act(async () => {
@@ -664,7 +664,7 @@ describe("IngredientsSettingsContent", () => {
       counts: { recipeLines: 2, groceries: 0, pantry: 1 },
     };
     items = [{ ...onion, name: "melted", flagReason: "ai-junk" }, salt];
-    render(<IngredientsSettingsContent />);
+    render(<IngredientsScreen />);
     const opened = await open("melted");
 
     expect(within(opened).getByTestId("ingredient-flag-notice")).toHaveTextContent(
@@ -690,7 +690,7 @@ describe("IngredientsSettingsContent", () => {
       change("c1", "spelling", "chicken breast", { from: "boneless" }),
       change("c2", "spelling", "chicken breast", { from: "kippendijen", target: "chicken thigh" }),
     ];
-    render(<IngredientsSettingsContent />);
+    render(<IngredientsScreen />);
     await act(async () => {
       fireEvent.click(screen.getByTestId("ingredients-ai-changes-open"));
     });
@@ -704,7 +704,7 @@ describe("IngredientsSettingsContent", () => {
 
   it("lists a food AI deleted as not a food by its name on Changed by AI, with Undo", async () => {
     changes = [{ ...change("c1", "not-a-food", "melted"), ingredient: null, from: "melted" }];
-    render(<IngredientsSettingsContent />);
+    render(<IngredientsScreen />);
     await act(async () => {
       fireEvent.click(screen.getByTestId("ingredients-ai-changes-open"));
     });
@@ -723,7 +723,7 @@ describe("IngredientsSettingsContent", () => {
 
   it("holds Delete until it has read what the delete touches", async () => {
     usesPending = true;
-    render(<IngredientsSettingsContent />);
+    render(<IngredientsScreen />);
     const opened = await open("onion");
 
     await act(async () => {
@@ -747,7 +747,7 @@ describe("IngredientsSettingsContent", () => {
   });
 
   it("adds a household's own spelling clean, staged until Save", async () => {
-    render(<IngredientsSettingsContent />);
+    render(<IngredientsScreen />);
     const opened = await open("salt");
     await showSpellings(opened);
     const field = within(opened).getByTestId("ingredient-alias-input");
@@ -781,7 +781,7 @@ describe("IngredientsSettingsContent", () => {
   });
 
   it("removes a spelling on Save, and keeps one un-removed before it", async () => {
-    render(<IngredientsSettingsContent />);
+    render(<IngredientsScreen />);
     const opened = await open("onion");
     await showSpellings(opened);
     const remove = async () => {
@@ -815,7 +815,7 @@ describe("IngredientsSettingsContent", () => {
   });
 
   it("asks whether a spelling removed by hand names no food: yes marks it for the junk pile, closing stages nothing", async () => {
-    render(<IngredientsSettingsContent />);
+    render(<IngredientsScreen />);
     const opened = await open("onion");
     await showSpellings(opened);
     const cross = () => within(opened).getByRole("button", { name: "removeAlias" });
@@ -847,7 +847,7 @@ describe("IngredientsSettingsContent", () => {
   });
 
   it("merges a food into one the viewer may edit, picked in a panel of its own", async () => {
-    render(<IngredientsSettingsContent />);
+    render(<IngredientsScreen />);
     const opened = await open("onion");
 
     expect(screen.queryByRole("dialog", { name: "mergeInto" })).toBeNull();
@@ -874,7 +874,7 @@ describe("IngredientsSettingsContent", () => {
   });
 
   it("moves a spelling out to a new food", async () => {
-    render(<IngredientsSettingsContent />);
+    render(<IngredientsScreen />);
     const opened = await open("onion");
     await showSpellings(opened);
 
@@ -892,7 +892,7 @@ describe("IngredientsSettingsContent", () => {
   });
 
   it("sets the food a food is a kind of, from any Ingredient", async () => {
-    render(<IngredientsSettingsContent />);
+    render(<IngredientsScreen />);
     const opened = await open("onion");
 
     expect(within(opened).queryByTestId("ingredient-clear-parent")).toBeNull();
@@ -929,7 +929,7 @@ describe("IngredientsSettingsContent", () => {
   it("folds a food's kinds out beneath it, and asks for them only then", async () => {
     items = [{ ...onion, kinds: 1 }, salt];
     kinds = { onion: [{ ...onion, id: "red", name: "red onion", kinds: 1, flagged: false }] };
-    render(<IngredientsSettingsContent />);
+    render(<IngredientsScreen />);
 
     // With nothing typed and no filter on, the list is the roots.
     expect(listInputs.at(-1)).toMatchObject({ rootsOnly: true });
@@ -960,7 +960,7 @@ describe("IngredientsSettingsContent", () => {
 
   it("lists flat when the filters panel says so", async () => {
     items = [{ ...onion, kinds: 1 }];
-    render(<IngredientsSettingsContent />);
+    render(<IngredientsScreen />);
 
     fireEvent.click(screen.getByTestId("ingredients-filters"));
     const filters = screen.getByRole("dialog", { name: "title" });
@@ -977,7 +977,7 @@ describe("IngredientsSettingsContent", () => {
 
   it("lists the foods with neither parent nor kinds on request", async () => {
     items = [{ ...onion, flagged: false, kinds: 0 }, salt];
-    render(<IngredientsSettingsContent />);
+    render(<IngredientsScreen />);
 
     fireEvent.click(screen.getByTestId("ingredients-filters"));
     const filters = screen.getByRole("dialog", { name: "title" });
@@ -993,7 +993,7 @@ describe("IngredientsSettingsContent", () => {
 
   it("lists flat under a search, where a match may sit at any depth", () => {
     items = [{ ...onion, kinds: 1 }];
-    render(<IngredientsSettingsContent />);
+    render(<IngredientsScreen />);
     // No chevron column at all when flat.
     act(() => {
       fireEvent.change(screen.getByTestId("ingredients-search"), { target: { value: "oni" } });
@@ -1010,7 +1010,7 @@ describe("IngredientsSettingsContent", () => {
       salt,
       { ...onion, id: "red", name: "red onion", parent: { id: "onion", name: "onion" } },
     ];
-    render(<IngredientsSettingsContent />);
+    render(<IngredientsScreen />);
 
     // Folded, the parent is in the summary; opened, it is a line of its own.
     expect(within(row("salt")).getByTestId("ingredient-toggle")).toHaveTextContent("summary");
@@ -1039,7 +1039,7 @@ describe("IngredientsSettingsContent", () => {
   });
 
   it("asks for the flagged ones alone when filtered", async () => {
-    render(<IngredientsSettingsContent />);
+    render(<IngredientsScreen />);
 
     // The filters live in a panel and land with Apply, as the dashboard's do.
     await act(async () => {
@@ -1083,7 +1083,7 @@ describe("IngredientsSettingsContent", () => {
       { id: "a-zwiebel", text: "Zwiebel", locale: "de", seeded: true, canRemove: false },
       { id: "a-ajuin", text: "ajuin", locale: null, seeded: false, canRemove: true },
     ];
-    render(<IngredientsSettingsContent />);
+    render(<IngredientsScreen />);
 
     expect(row("onion")).toHaveTextContent("ui");
     // The panel is named in the viewer's language too.
@@ -1119,7 +1119,7 @@ describe("IngredientsSettingsContent", () => {
         hiddenSpellings: 0,
       },
     ];
-    render(<IngredientsSettingsContent />);
+    render(<IngredientsScreen />);
     const opened = await open("salt");
 
     await showSpellings(opened);
@@ -1129,7 +1129,7 @@ describe("IngredientsSettingsContent", () => {
 
   it("says why a food is flagged, on the fold and in the panel, and asks no AI from either", async () => {
     items = [{ ...onion, flagReason: "ai-unsure" }, salt];
-    render(<IngredientsSettingsContent />);
+    render(<IngredientsScreen />);
 
     expect(within(row("onion")).getByTestId("ingredient-flag-reason")).toHaveTextContent(
       "flagReasons.ai-unsure"
@@ -1153,7 +1153,7 @@ describe("IngredientsSettingsContent", () => {
       change("c1", "merge", "onion", { sure: false, from: "uitjes" }),
       change("c2", "parent", "onion", { target: "vegetable" }),
     ];
-    render(<IngredientsSettingsContent />);
+    render(<IngredientsScreen />);
     const opened = await open("onion");
     const [unsure, ...rest] = within(opened).getAllByTestId("ingredient-ai-change");
 
@@ -1176,7 +1176,7 @@ describe("IngredientsSettingsContent", () => {
         ingredientId: "onion",
       }),
     ];
-    render(<IngredientsSettingsContent />);
+    render(<IngredientsScreen />);
     const opened = await open("peanut butter");
     const unsure = within(opened).getByTestId("ingredient-ai-change");
 
@@ -1189,7 +1189,7 @@ describe("IngredientsSettingsContent", () => {
   });
 
   it("offers Changed by AI only while AI changed something, saying how many to check", async () => {
-    const { rerender } = render(<IngredientsSettingsContent />);
+    const { rerender } = render(<IngredientsScreen />);
 
     expect(screen.queryByTestId("ingredients-ai-changes-open")).toBeNull();
 
@@ -1197,7 +1197,7 @@ describe("IngredientsSettingsContent", () => {
       change("c1", "merge", "onion", { from: "uitjes" }),
       { ...change("c2", "parent", "red onion", { target: "onion" }), canAct: false },
     ];
-    rerender(<IngredientsSettingsContent />);
+    rerender(<IngredientsScreen />);
     await act(async () => {
       fireEvent.click(screen.getByTestId("ingredients-ai-changes-open"));
     });
@@ -1219,7 +1219,7 @@ describe("IngredientsSettingsContent", () => {
     ];
 
     changes = open();
-    const { rerender } = render(<IngredientsSettingsContent />);
+    const { rerender } = render(<IngredientsScreen />);
 
     await act(async () => {
       fireEvent.click(screen.getByTestId("ingredients-ai-changes-open"));
@@ -1235,7 +1235,7 @@ describe("IngredientsSettingsContent", () => {
     expect(screen.queryByTestId("ingredient-ai-changes-keep-all")).toBeNull();
 
     changes = open();
-    rerender(<IngredientsSettingsContent />);
+    rerender(<IngredientsScreen />);
     await act(async () => {
       fireEvent.click(screen.getByTestId("ingredient-ai-changes-undo-all"));
     });
@@ -1251,7 +1251,7 @@ describe("IngredientsSettingsContent", () => {
       change("c1", "merge", "onion", { sure: false }),
       change("c2", "parent", "red onion", { target: "onion" }),
     ];
-    render(<IngredientsSettingsContent />);
+    render(<IngredientsScreen />);
     await act(async () => {
       fireEvent.click(screen.getByTestId("ingredients-ai-changes-open"));
     });
@@ -1272,7 +1272,7 @@ describe("IngredientsSettingsContent", () => {
     changes = [change("c1", "merge", "uitjes", { sure: false, from: "onions" })];
     // The list does not list uitjes, so its panel reads the food on its own.
     ownItem = { ...onion, id: "uitjes", name: "uitjes" };
-    render(<IngredientsSettingsContent />);
+    render(<IngredientsScreen />);
     await act(async () => {
       fireEvent.click(screen.getByTestId("ingredients-ai-changes-open"));
     });
@@ -1296,12 +1296,12 @@ describe("IngredientsSettingsContent", () => {
   });
 
   it("keeps the panel of a food a filter no longer lists, and closes it once merged away", async () => {
-    const { rerender } = render(<IngredientsSettingsContent />);
+    const { rerender } = render(<IngredientsScreen />);
     const opened = await open("onion");
 
     // Marked distinct under the flagged filter, the row goes; the panel stays.
     items = [salt];
-    rerender(<IngredientsSettingsContent />);
+    rerender(<IngredientsScreen />);
     expect(screen.getByRole("dialog", { name: "onion" })).toBeInTheDocument();
 
     await act(async () => {
@@ -1320,7 +1320,7 @@ describe("IngredientsSettingsContent", () => {
   });
 
   it("keeps the panel current once a filter no longer lists the food", async () => {
-    const { rerender } = render(<IngredientsSettingsContent />);
+    const { rerender } = render(<IngredientsScreen />);
     const opened = await open("onion");
 
     expect(within(opened).getByTestId("ingredient-flag-notice")).toBeInTheDocument();
@@ -1330,7 +1330,7 @@ describe("IngredientsSettingsContent", () => {
     // the panel reads the food on its own and shows it as it now is.
     items = [salt];
     ownItem = { ...onion, flagged: false, parent: { id: "vegetable", name: "vegetable" } };
-    rerender(<IngredientsSettingsContent />);
+    rerender(<IngredientsScreen />);
 
     const current = screen.getByRole("dialog", { name: "onion" });
 
@@ -1339,7 +1339,7 @@ describe("IngredientsSettingsContent", () => {
   });
 
   it("closes the panel of a food once it is deleted", async () => {
-    render(<IngredientsSettingsContent />);
+    render(<IngredientsScreen />);
     const opened = await open("onion");
 
     await act(async () => {
@@ -1353,7 +1353,7 @@ describe("IngredientsSettingsContent", () => {
   });
 
   it("credits the catalogue's source and offers it as a download", () => {
-    render(<IngredientsSettingsContent />);
+    render(<IngredientsScreen />);
 
     expect(screen.getByTestId("data-sources")).toHaveTextContent("notice");
     expect(screen.getByTestId("catalogue-export")).toHaveAttribute("href", "/export/ingredients");
@@ -1361,7 +1361,7 @@ describe("IngredientsSettingsContent", () => {
 
   it("says when nothing is flagged", () => {
     items = [];
-    render(<IngredientsSettingsContent />);
+    render(<IngredientsScreen />);
 
     expect(screen.getByTestId("ingredients-empty")).toHaveTextContent("empty");
   });

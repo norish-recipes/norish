@@ -17,17 +17,17 @@ import {
   useIngredientListQuery,
 } from "@norish/shared-react/ingredients";
 
-import type { IngredientFilters } from "./ingredient-filters-panel";
-import { ChangedByAIPanel } from "./changed-by-ai-panel";
-import DataSourcesCard from "./data-sources-card";
+import type { IngredientFilters } from "./components/ingredient-filters-panel";
+import { ChangedByAIPanel } from "./components/changed-by-ai-panel";
+import DataSourcesCard from "./components/data-sources-card";
 import {
   DEFAULT_INGREDIENT_FILTERS,
   hasIngredientFilters,
   IngredientFiltersPanel,
-} from "./ingredient-filters-panel";
-import { IngredientList } from "./ingredient-list";
-import { IngredientSearch } from "./ingredient-search";
-import { useIngredientTree } from "./use-ingredient-tree";
+} from "./components/ingredient-filters-panel";
+import { IngredientList } from "./components/ingredient-list";
+import { IngredientSearch } from "./components/ingredient-search";
+import { useIngredientTree } from "./hooks/use-ingredient-tree";
 
 /**
  * The catalogue of Ingredients (ADR-0037): every food Norish knows, folded to
@@ -41,7 +41,7 @@ import { useIngredientTree } from "./use-ingredient-tree";
  * waits on it, and it is virtualised with the next page fetched as the end
  * comes into view.
  */
-export default function IngredientsSettingsContent() {
+export function IngredientsScreen() {
   const t = useTranslations("settings.ingredients");
   const tFilters = useTranslations("common.filters");
   const locale = useLocale();

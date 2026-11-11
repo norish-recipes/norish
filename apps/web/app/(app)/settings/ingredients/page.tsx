@@ -1,5 +1,5 @@
-import IngredientsSettingsContent from "./components/ingredients-settings-content";
+import { IngredientsScreen } from "@/features/ingredients/ingredients-screen";
 
 export default function IngredientsSettingsPage() {
-  return <IngredientsSettingsContent />;
+  return <IngredientsScreen />;
 }

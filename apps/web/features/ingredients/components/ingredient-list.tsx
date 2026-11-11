@@ -5,7 +5,7 @@ import { Spinner } from "@heroui/react";
 import { useWindowVirtualizer } from "@tanstack/react-virtual";
 import { useWindowSize } from "usehooks-ts";
 
-import type { IngredientTreeRow } from "./use-ingredient-tree";
+import type { IngredientTreeRow } from "../hooks/use-ingredient-tree";
 import { IngredientRow } from "./ingredient-row";
 
 /** A row is two lines of text and its padding; the virtualizer measures the real height. */
