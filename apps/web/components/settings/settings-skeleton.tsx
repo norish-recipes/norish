@@ -5,7 +5,7 @@ import { SettingsCard } from "@/components/settings/settings-card";
 import { Skeleton } from "@heroui/react";
 import { useTranslations } from "next-intl";
 
-export type CardPlaceholder = {
+type CardPlaceholder = {
   icon: ComponentType<SVGProps<SVGSVGElement>>;
   /** The card's messages under `settings`; absent where its title depends on the reader's data. */
   section?: string;
