@@ -325,6 +325,24 @@ describe("calendar cache convergence across ranges", () => {
     view.unmount();
   });
 
+  it("rereads a range whose read was in flight when a recipe was renamed", async () => {
+    const first = deferred<PlannedItemFromQuery[]>();
+
+    readRange.mockReturnValueOnce(first.promise).mockResolvedValue([cachedItem()]);
+    mountSubscription();
+    void queryClient.invalidateQueries({ queryKey: rangeKeyOf(THIS_WEEK), exact: true });
+    const view = renderHookWithClient(queryClient, () => useCalendarQuery(THIS_WEEK));
+
+    expect(readRange).toHaveBeenCalledTimes(1);
+    act(() => handler("recipes.onUpdated")(trackedEvent({ recipe: { id: "recipe-0" } })));
+    await act(async () => first.resolve([cachedItem({ recipeName: "Old" })]));
+
+    await act(async () => {
+      await vi.waitFor(() => expect(readRange).toHaveBeenCalledTimes(2));
+    });
+    view.unmount();
+  });
+
   it("drops a deleted item from every cached range", () => {
     mountSubscription();
 

@@ -26,6 +26,7 @@ import {
 import type { RealtimeSubscriptionHandlers } from "../../src/realtime/use-realtime-subscription";
 import {
   isRealtimeLagged,
+  rereadOnceWritesSettle,
   useRealtimeSubscription,
 } from "../../src/realtime/use-realtime-subscription";
 
@@ -404,6 +405,15 @@ describe("useRealtimeSubscription", () => {
       expect(read.queryFn).toHaveBeenCalledTimes(1);
 
       // That fetch may predate go-live, and its success would clear an invalidation made now.
+      await act(async () => read.answers[0]!.resolve(["before"]));
+
+      expect(read.queryFn).toHaveBeenCalledTimes(2);
+    });
+
+    it("rereads a read in flight when asked, once it lands", async () => {
+      const read = observe(GROCERIES);
+
+      act(() => rereadOnceWritesSettle(queryClient, (query) => query.queryKey === GROCERIES));
       await act(async () => read.answers[0]!.resolve(["before"]));
 
       expect(read.queryFn).toHaveBeenCalledTimes(2);

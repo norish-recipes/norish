@@ -100,21 +100,7 @@ function rereadInWindow(queryClient: QueryClient, queryKeys: QueryKey[]): void {
     dueByClient.delete(queryClient);
     const isDue = (query: Query) => flushed.some((key) => partialMatchKey(query.queryKey, key));
 
-    const inFlight = queryClient
-      .getQueryCache()
-      .findAll({ predicate: isDue, fetchStatus: "fetching" });
-
-    // A fetch in flight may predate go-live, and its success clears an invalidation made now:
-    // each waits for its own, so one that never settles (paused offline) holds back no other.
-    for (const query of inFlight) {
-      const again = () => rereadOnceWritesSettle(queryClient, (held) => held === query);
-
-      void query.promise?.then(again, again);
-    }
-    rereadOnceWritesSettle(
-      queryClient,
-      (query) => isDue(query) && query.state.fetchStatus !== "fetching"
-    );
+    rereadOnceWritesSettle(queryClient, isDue);
   }, LIVE_WINDOW_MS);
 }
 
@@ -127,7 +113,20 @@ export function rereadOnceWritesSettle(
   predicate: (query: Query) => boolean
 ): void {
   afterWrites(queryClient, () => {
-    const due = queryClient.getQueryCache().findAll({ predicate });
+    const matching = queryClient.getQueryCache().findAll({ predicate });
+    const inFlight = matching.filter(
+      (query) => query.state.fetchStatus === "fetching" && !query.state.fetchMeta?.fetchMore
+    );
+
+    // A read in flight may predate the reason, and its success clears an invalidation made now:
+    // each waits for its own, so one that never settles (paused offline) holds back no other.
+    for (const query of inFlight) {
+      const again = () => rereadOnceWritesSettle(queryClient, (held) => held === query);
+
+      void query.promise?.then(again, again);
+    }
+    const due = matching.filter((query) => !inFlight.includes(query));
+
     // A next-page fetch keeps the other pages as they were: replace it, never join it.
     const cancelRefetch = due.some((query) => query.state.fetchMeta?.fetchMore);
     const watch = (query: Query, promise = query.promise) =>
@@ -138,7 +137,10 @@ export function rereadOnceWritesSettle(
         else if (query.promise !== promise) watch(query);
       });
 
-    void queryClient.invalidateQueries({ predicate }, { cancelRefetch });
+    void queryClient.invalidateQueries(
+      { predicate: (query) => predicate(query) && !inFlight.includes(query) },
+      { cancelRefetch }
+    );
     due.forEach((query) => watch(query));
   });
 }
