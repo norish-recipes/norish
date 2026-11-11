@@ -1,6 +1,5 @@
 import { QuerySeed } from "@/components/query-seed";
-
-import UserSettingsContent from "./components/user-settings-content";
+import { AccountScreen } from "@/features/account/account-screen";
 
 // `user.get` carries API-key metadata, which this tab draws anyway.
 export default function AccountSettingsPage() {
@@ -17,7 +16,7 @@ export default function AccountSettingsPage() {
         client.query(trpc.user.signInMethods.queryOptions()),
       ]}
     >
-      <UserSettingsContent />
+      <AccountScreen />
     </QuerySeed>
   );
 }

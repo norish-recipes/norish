@@ -1,4 +1,4 @@
-import AccountSkeleton from "./components/account-skeleton";
+import AccountSkeleton from "@/features/account/components/account-skeleton";
 
 export default function Loading() {
   return <AccountSkeleton />;

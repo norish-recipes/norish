@@ -20,12 +20,10 @@ export default function ArchiveImporter() {
   } = useArchiveImport();
   const { startImport, isStarting } = useArchiveImportMutation();
   const [dragActive, setDragActive] = useState(false);
-  const [localErrors, setLocalErrors] = useState<{ file: string; error: string }[]>([]);
   const [showNotes, setShowNotes] = useState(false);
   const inputRef = useRef<HTMLInputElement>(null);
 
   const uploadFile = (file: File) => {
-    setLocalErrors([]);
     clearImport();
     startImport(file);
   };
@@ -60,10 +58,9 @@ export default function ArchiveImporter() {
 
   const isUploading = isStarting || isImporting;
 
-  // Detect completion: import was active, now finished, and we have results
   const isComplete = !isImporting && current > 0 && current === total;
 
-  // Auto-clear import state after completion
+  // A finished import's result clears after a minute.
   useEffect(() => {
     if (isComplete) {
       const timeout = 60000;
@@ -74,12 +71,6 @@ export default function ArchiveImporter() {
       return () => clearTimeout(timer);
     }
   }, [isComplete, notes.length, clearImport]);
-
-  // Combine local errors with progress errors
-  const allErrors = [
-    ...localErrors,
-    ...progressErrors.map((e) => ({ file: e.file, error: e.error })),
-  ];
 
   // Status message. The counts are phrased as their own messages and joined
   // into the `{details}` slot the `processing`/`complete` strings expose.
@@ -152,7 +143,6 @@ export default function ArchiveImporter() {
       </div>
 
       <div className="mt-3 space-y-2">
-        {/* ProgressBar bar when importing or just completed */}
         {(isImporting || isComplete) && total > 0 && (
           <ProgressBar
             aria-label={t("progressLabel")}
@@ -191,9 +181,9 @@ export default function ArchiveImporter() {
           </div>
         )}
 
-        {allErrors.length > 0 && (
+        {progressErrors.length > 0 && (
           <ul className="text-danger list-disc pl-4 text-base">
-            {allErrors.map((e, i) => (
+            {progressErrors.map((e, i) => (
               // An import log: it only appends, and a file can fail the same way twice.
               // eslint-disable-next-line @eslint-react/no-array-index-key
               <li key={i}>

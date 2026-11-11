@@ -70,7 +70,6 @@ export default function SiteAuthTokensCard() {
   return (
     <>
       <SettingsCard description={t("description")} icon={ShieldCheckIcon} title={t("title")}>
-        {/* Create form */}
         <div className="flex flex-col gap-3">
           <div className="grid gap-3 md:grid-cols-2 xl:grid-cols-[minmax(0,1fr)_minmax(0,1fr)_minmax(0,1fr)_minmax(0,1fr)_9rem] xl:items-end">
             <TextField
@@ -138,7 +137,6 @@ export default function SiteAuthTokensCard() {
           </ActionButtonGroup>
         </div>
 
-        {/* Token list */}
         {tokens.length > 0 && (
           <div className="mt-4">
             <Table>
@@ -201,7 +199,6 @@ export default function SiteAuthTokensCard() {
         {tokens.length === 0 && <p className="text-muted py-4 text-base">{t("noTokens")}</p>}
       </SettingsCard>
 
-      {/* Delete Confirmation Modal */}
       <Modal.Backdrop
         className="z-[1099]"
         isOpen={showDeleteModal}

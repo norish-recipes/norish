@@ -10,7 +10,12 @@ import { webRoot, webSourceFiles } from "../helpers/web-source-files";
 const SHIPPED = ["settings.ingredients", "settings.admin.aiProcessing"];
 
 // Drawn only inside the settings route, under its own full provider.
-const SETTINGS_ROUTE = ["app/(app)/settings/", "components/settings/", "features/household/"];
+const SETTINGS_ROUTE = [
+  "app/(app)/settings/",
+  "components/settings/",
+  "features/household/",
+  "features/account/",
+];
 
 describe("the root layout's client messages", () => {
   it("hold every settings namespace read outside the settings route", () => {

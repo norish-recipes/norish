@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from "react";
 import { usePathname, useRouter, useSearchParams } from "next/navigation";
-import { ProviderIcon } from "@/app/(auth)/login/components/provider-icon";
+import { ProviderIcon } from "@/components/auth/provider-icon";
 import { SettingsCard } from "@/components/settings/settings-card";
 import { KeyIcon, TrashIcon } from "@heroicons/react/16/solid";
 import { FingerPrintIcon } from "@heroicons/react/24/outline";

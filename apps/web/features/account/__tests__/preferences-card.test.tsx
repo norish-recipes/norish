@@ -3,7 +3,7 @@ import { beforeEach, describe, expect, it, vi } from "vitest";
 
 import "@testing-library/jest-dom";
 
-import PreferencesCard from "@/app/(app)/settings/account/components/preferences-card";
+import PreferencesCard from "@/features/account/components/preferences-card";
 
 import type { DeviceKind } from "@norish/shared/contracts/zod/device-preferences";
 
@@ -43,7 +43,7 @@ const deviceKindMock = vi.hoisted(() => ({ kind: "phone" as DeviceKind }));
 vi.mock("@norish/shared-react/reader", async () => ({
   usePreferencesMutation: () => mockAccount,
   ...(await (
-    await import("../../../helpers/reader-mock")
+    await import("@/__tests__/helpers/reader-mock")
   ).mockDevicePreferences(
     () => ({
       todaySectionVisibility: todaysMealsMock.visibility,

@@ -3,7 +3,7 @@ import { beforeEach, describe, expect, it, vi } from "vitest";
 
 import "@testing-library/jest-dom";
 
-import ProfileCard from "@/app/(app)/settings/account/components/profile-card";
+import ProfileCard from "@/features/account/components/profile-card";
 
 const mockAccount = vi.hoisted(() => ({
   user: { name: "Alice", email: "alice@example.com", image: null },

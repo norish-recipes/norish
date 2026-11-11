@@ -1,12 +1,11 @@
 "use client";
 
+import { ProviderIcon } from "@/components/auth/provider-icon";
 import { Button } from "@heroui/react";
 import { useTranslations } from "next-intl";
 
 import { signIn } from "@norish/shared/lib/auth/client";
 import { addBasePath, APP_ROOT } from "@norish/shared/lib/base-path";
-
-import { ProviderIcon } from "./provider-icon";
 
 interface ProviderButtonProps {
   providerId: string;

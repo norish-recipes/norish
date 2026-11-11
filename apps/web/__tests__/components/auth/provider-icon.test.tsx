@@ -3,7 +3,7 @@ import { afterEach, describe, expect, it, vi } from "vitest";
 
 import "@testing-library/jest-dom";
 
-import { ProviderIcon } from "@/app/(auth)/login/components/provider-icon";
+import { ProviderIcon } from "@/components/auth/provider-icon";
 
 import { SIGN_IN_METHODS } from "@norish/shared/contracts/dto/auth";
 

@@ -1,14 +1,13 @@
 "use client";
 
 import { useEffect, useRef } from "react";
+import { ProviderIcon } from "@/components/auth/provider-icon";
 import { BrandLogo } from "@/components/brand/brand-logo";
 import { Card, Spinner } from "@heroui/react";
 
 import type { ProviderInfo } from "@norish/shared/contracts";
 import { signIn } from "@norish/shared/lib/auth/client";
 import { addBasePath } from "@norish/shared/lib/base-path";
-
-import { ProviderIcon } from "./provider-icon";
 
 interface AutoSignInProps {
   provider: ProviderInfo;

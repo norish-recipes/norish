@@ -67,7 +67,6 @@ export default function ApiKeyCard() {
           {t("docsLink")}
         </a>
 
-        {/* Create new key section */}
         <div className="flex flex-col gap-3">
           <TextField value={newKeyName} onChange={setNewKeyName}>
             <Label>{t("keyNameLabel")}</Label>
@@ -80,7 +79,6 @@ export default function ApiKeyCard() {
           </ActionButtonGroup>
         </div>
 
-        {/* Existing keys list */}
         {apiKeys.length > 0 && (
           <div className="mt-4">
             <h3 className="mb-2 text-base font-medium">{t("yourKeys")}</h3>
@@ -143,7 +141,6 @@ export default function ApiKeyCard() {
         {apiKeys.length === 0 && <p className="text-muted py-4 text-base">{t("noKeys")}</p>}
       </SettingsCard>
 
-      {/* Key Generation Modal */}
       <Modal.Backdrop
         className="z-[1099]"
         isDismissable={false}
@@ -198,7 +195,6 @@ export default function ApiKeyCard() {
           </Modal.Dialog>
         </Modal.Container>
       </Modal.Backdrop>
-      {/* Delete Key Confirmation */}
       <Modal.Backdrop
         className="z-[1099]"
         isOpen={showDeleteModal}
