@@ -16,13 +16,6 @@ export type PlannedItemDisplay = {
 
 export const SLOTS: Slot[] = ["Breakfast", "Lunch", "Dinner", "Snack"];
 
-export const SLOT_ORDER: Record<Slot, number> = {
-  Breakfast: 0,
-  Lunch: 1,
-  Dinner: 2,
-  Snack: 3,
-};
-
 /**
  * Build subtitle string for a planned item
  */

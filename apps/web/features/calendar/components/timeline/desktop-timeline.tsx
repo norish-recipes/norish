@@ -4,7 +4,6 @@ import type { PlannedItemDisplay } from "@/components/calendar/types";
 import { useCallback, useEffect, useId, useLayoutEffect, useMemo, useRef, useState } from "react";
 import { landOnDay, settleLanding } from "@/components/calendar/land-on-day";
 import { PlannedItemContent } from "@/components/calendar/planned-item-content";
-import { SLOT_ORDER } from "@/components/calendar/types";
 import { useReaderToday } from "@/components/reader-today";
 import { CalendarSkeletonDesktop } from "@/features/calendar/components/skeleton/calendar-skeleton";
 import { useCalendarDnd } from "@/features/calendar/hooks/use-calendar-dnd";
@@ -281,9 +280,7 @@ export function DesktopTimeline({ onAddItem, onNoteClick, onRecipeClick }: Deskt
                   >
                     {rowDays.map((d) => {
                       const key = dateKey(d);
-                      const items = (calendarData[key] ?? [])
-                        .sort((a, b) => (SLOT_ORDER[a.slot] ?? 0) - (SLOT_ORDER[b.slot] ?? 0))
-                        .map((it) => it as PlannedItemDisplay);
+                      const items = calendarData[key] ?? [];
                       const isToday = key === todayKey;
 
                       return (

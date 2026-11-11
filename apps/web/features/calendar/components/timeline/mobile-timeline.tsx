@@ -5,7 +5,6 @@ import { useCallback, useEffect, useId, useLayoutEffect, useMemo, useRef, useSta
 import { landOnDay, settleLanding } from "@/components/calendar/land-on-day";
 import { PlannedItemContent } from "@/components/calendar/planned-item-content";
 import { TimelineDaySection } from "@/components/calendar/timeline-day-section";
-import { SLOT_ORDER } from "@/components/calendar/types";
 import { useReaderToday } from "@/components/reader-today";
 import { CalendarSkeletonMobile } from "@/features/calendar/components/skeleton/calendar-skeleton";
 import { useCalendarDnd } from "@/features/calendar/hooks/use-calendar-dnd";
@@ -248,9 +247,7 @@ export function MobileTimeline({ onAddItem, onNoteClick, onRecipeClick }: Mobile
               }
 
               const key = dateKey(d);
-              const items = (calendarData[key] ?? [])
-                .sort((a, b) => (SLOT_ORDER[a.slot] ?? 0) - (SLOT_ORDER[b.slot] ?? 0))
-                .map((it) => it as PlannedItemDisplay);
+              const items = calendarData[key] ?? [];
               const isToday = key === todayKey;
 
               return (
