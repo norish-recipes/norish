@@ -11,14 +11,13 @@
  * `REALTIME_LAGGED`) carries no cursor, so a change made before the server
  * registered it reaches neither the subscription nor a read taken earlier.
  * The server registers the listener before it sends the first Cursor Mark, so
- * the hook rereads `liveQueryKeys` then, except a key that a live copy of the
- * same procedure already kept current. Anything that is neither a Cursor Mark
+ * the hook rereads `liveQueryKeys` then. Anything that is neither a Cursor Mark
  * nor an envelope is a programming error.
  */
 
 import type { QueryClient, QueryKey } from "@tanstack/react-query";
 import { useState } from "react";
-import { hashKey, partialMatchKey, useQueryClient } from "@tanstack/react-query";
+import { partialMatchKey, useQueryClient } from "@tanstack/react-query";
 import { TRPCClientError } from "@trpc/client";
 import { useSubscription } from "@trpc/tanstack-react-query";
 
@@ -75,44 +74,8 @@ function isTrackedItem(data: unknown): data is TrackedItem {
   );
 }
 
-/** One subscribe, from its call until it unsubscribes or fails; `live` from its first Cursor Mark. */
-interface Subscribed {
-  procedure: string;
-  order: number;
-  afterLag: boolean;
-  live?: { order: number; queryKeys: QueryKey[] };
-}
-
-/** Per QueryClient: the open subscribes, and the reads due in the current window. */
-interface ClientRealtime {
-  order: number;
-  open: Set<Subscribed>;
-  due: QueryKey[];
-}
-
-const realtimeByClient = new WeakMap<QueryClient, ClientRealtime>();
-
-function realtimeOf(queryClient: QueryClient): ClientRealtime {
-  let realtime = realtimeByClient.get(queryClient);
-
-  if (!realtime) {
-    realtime = { order: 0, open: new Set(), due: [] };
-    realtimeByClient.set(queryClient, realtime);
-  }
-
-  return realtime;
-}
-
-/** Whether a subscribe of the same procedure, live before `own` subscribed, keeps `queryKey` current. */
-function isKeptByLiveCopy(realtime: ClientRealtime, own: Subscribed, queryKey: QueryKey): boolean {
-  return [...realtime.open].some(
-    ({ procedure, live }) =>
-      procedure === own.procedure &&
-      live !== undefined &&
-      live.order < own.order &&
-      live.queryKeys.some((kept) => partialMatchKey(queryKey, kept))
-  );
-}
+/** Per QueryClient: the reads due in the current window. */
+const dueByClient = new WeakMap<QueryClient, QueryKey[]>();
 
 /**
  * Reads due within one window are invalidated together, so each matching query refetches once.
@@ -122,53 +85,42 @@ function isKeptByLiveCopy(realtime: ClientRealtime, own: Subscribed, queryKey: Q
 const LIVE_WINDOW_MS = 50;
 
 function rereadInWindow(queryClient: QueryClient, queryKeys: QueryKey[]): void {
-  const realtime = realtimeOf(queryClient);
+  const due = dueByClient.get(queryClient);
 
   if (queryKeys.length === 0) return;
-  if (realtime.due.length === 0) {
-    setTimeout(() => {
-      const due = realtime.due;
+  if (due) {
+    due.push(...queryKeys);
 
-      realtime.due = [];
-      void queryClient.invalidateQueries({
-        predicate: (query) => due.some((queryKey) => partialMatchKey(query.queryKey, queryKey)),
-      });
-    }, LIVE_WINDOW_MS);
+    return;
   }
-  realtime.due.push(...queryKeys);
+  dueByClient.set(queryClient, [...queryKeys]);
+  setTimeout(() => {
+    const flushed = dueByClient.get(queryClient) ?? [];
+
+    dueByClient.delete(queryClient);
+    void queryClient.invalidateQueries({
+      predicate: (query) => flushed.some((queryKey) => partialMatchKey(query.queryKey, queryKey)),
+    });
+  }, LIVE_WINDOW_MS);
 }
 
 /**
- * The hook's current subscribe. Not a ref: the React Compiler skips a hook that reads one in
- * callbacks `subscriptionOptions` gets.
+ * A fresh subscription's reread: armed by its subscribe, taken by its first Cursor Mark.
+ * Not a ref: the React Compiler skips a hook that reads one in callbacks `subscriptionOptions` gets.
  */
-function createSubscribes() {
-  let current: Subscribed | undefined;
-  let lagged = false;
+function createLiveLatch() {
+  let pending = false;
 
   return {
-    open: (realtime: ClientRealtime, procedure: string): Subscribed => {
-      current = { procedure, order: ++realtime.order, afterLag: lagged };
-      lagged = false;
-      realtime.open.add(current);
-
-      return current;
+    arm: () => {
+      pending = true;
     },
-    /** On the first Cursor Mark only: the keys to reread, less any a live copy kept current. */
-    goLive: (realtime: ClientRealtime, queryKeys: QueryKey[]): QueryKey[] => {
-      const own = current;
+    take: () => {
+      const wasPending = pending;
 
-      if (!own || own.live) return [];
-      own.live = { order: ++realtime.order, queryKeys };
+      pending = false;
 
-      // A lag may have dropped events on every copy, so it vouches for nothing.
-      return own.afterLag
-        ? queryKeys
-        : queryKeys.filter((queryKey) => !isKeptByLiveCopy(realtime, own, queryKey));
-    },
-    fail: (realtime: ClientRealtime, lag: boolean) => {
-      if (current) realtime.open.delete(current);
-      lagged = lag;
+      return wasPending;
     },
   };
 }
@@ -178,7 +130,7 @@ export function useRealtimeSubscription<P>(
   handlers: RealtimeSubscriptionHandlers<P>
 ) {
   const queryClient = useQueryClient();
-  const [subscribes] = useState(createSubscribes);
+  const [liveLatch] = useState(createLiveLatch);
 
   // tRPC reads `"enabled" in opts`, not its value: a key that is present but
   // undefined disables the subscription. Only a stated choice is passed on.
@@ -194,9 +146,7 @@ export function useRealtimeSubscription<P>(
       // A Cursor Mark carries no event: the transport tracks it, handlers never
       // see it. It does say the subscription is live, which the reread waits for.
       if (isCursorMark(item)) {
-        const realtime = realtimeOf(queryClient);
-
-        rereadInWindow(queryClient, subscribes.goLive(realtime, handlers.liveQueryKeys ?? []));
+        if (liveLatch.take()) rereadInWindow(queryClient, handlers.liveQueryKeys ?? []);
 
         return;
       }
@@ -205,11 +155,7 @@ export function useRealtimeSubscription<P>(
       handlers.onEvent(item.payload, item.meta);
     },
     onError: (err) => {
-      const lag = isRealtimeLagged(err);
-
-      // A failed subscription keeps nothing current.
-      subscribes.fail(realtimeOf(queryClient), lag);
-      if (!lag) return;
+      if (!isRealtimeLagged(err)) return;
 
       // A fresh subscription, no cursor; the reread follows its Cursor Mark.
       subscription.reset();
@@ -222,16 +168,9 @@ export function useRealtimeSubscription<P>(
     ...options,
     // A reconnect resends on the same subscribe; only a new subscribe is fresh.
     subscribe: (observer) => {
-      const realtime = realtimeOf(queryClient);
-      const own = subscribes.open(realtime, hashKey(options.queryKey));
-      const inner = options.subscribe(observer);
+      liveLatch.arm();
 
-      return {
-        unsubscribe: () => {
-          realtime.open.delete(own);
-          inner.unsubscribe();
-        },
-      };
+      return options.subscribe(observer);
     },
   });
 
