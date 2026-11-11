@@ -8,11 +8,18 @@ import { assertHouseholdAccess } from "../mocks/permissions";
 import {
   deletePlannedItem,
   getPlannedItemById,
+  getPlannedItemWithRecipeById,
+  listPlannedItemsWithRecipeBySlot,
   moveItem,
   updatePlannedItem,
 } from "../mocks/planned-items";
 import { calendar } from "../mocks/realtime/calendar";
-import { createMockAuthedContext, createMockHousehold, createMockUser } from "./test-utils";
+import {
+  createMockAuthedContext,
+  createMockCallerContext,
+  createMockHousehold,
+  createMockUser,
+} from "./test-utils";
 
 vi.mock("@norish/db/repositories/planned-items", () => import("../mocks/planned-items"));
 vi.mock("@norish/auth/permissions", () => import("../mocks/permissions"));
@@ -43,6 +50,7 @@ describe("calendar planned items stale handling", () => {
   const ctx = createMockAuthedContext(createMockUser(), createMockHousehold());
 
   beforeEach(() => {
+    vi.clearAllMocks();
     getPlannedItemById.mockResolvedValue(createPlannedItem());
     assertHouseholdAccess.mockResolvedValue(undefined);
   });
@@ -63,6 +71,7 @@ describe("calendar planned items stale handling", () => {
     });
 
     expect(result).toEqual({ success: true, moved: false, stale: true });
+    expect(result).not.toHaveProperty("item");
     expect(trpcLogger.info).toHaveBeenCalledWith(
       { userId: ctx.user.id, itemId: item.id, version: item.version },
       "Ignoring stale calendar move mutation"
@@ -101,10 +110,69 @@ describe("calendar planned items stale handling", () => {
     });
 
     expect(result).toEqual({ success: true, stale: true });
+    expect(result).not.toHaveProperty("item");
     expect(trpcLogger.info).toHaveBeenCalledWith(
       { userId: ctx.user.id, itemId: item.id, version: item.version },
       "Ignoring stale calendar update mutation"
     );
     expect(calendar.publish).not.toHaveBeenCalled();
+  });
+
+  // The client places the answer's item in its cache, so it must be the item the echo carries.
+  function publishedItem(event: string) {
+    const call = calendar.publish.mock.calls.find(([name]) => name === event);
+
+    return (call?.[1] as { item?: unknown } | undefined)?.item;
+  }
+
+  function withRecipe(item: ReturnType<typeof createPlannedItem>) {
+    return { ...item, recipeName: null, recipeImage: null, servings: null, calories: null };
+  }
+
+  it("answers an applied moveItem with the item it published", async () => {
+    const item = createPlannedItem();
+    const moved = createPlannedItem({ ...item, date: "2025-01-20", slot: "Lunch", version: 5 });
+
+    getPlannedItemById.mockResolvedValue(item);
+    moveItem.mockResolvedValue({ stale: false, value: moved });
+    getPlannedItemWithRecipeById.mockResolvedValue(withRecipe(moved));
+    listPlannedItemsWithRecipeBySlot.mockResolvedValue([withRecipe(moved)]);
+
+    const caller = plannedItemsProcedures.createCaller(createMockCallerContext(ctx));
+    const result = await caller.moveItem({
+      itemId: item.id,
+      version: item.version,
+      targetDate: "2025-01-20",
+      targetSlot: "Lunch",
+      targetIndex: 0,
+    });
+
+    expect(publishedItem("itemMoved")).toEqual(expect.objectContaining({ version: 5 }));
+    expect(result).toEqual(
+      expect.objectContaining({ moved: true, item: publishedItem("itemMoved") })
+    );
+  });
+
+  it("answers an applied updateItem with the item it published", async () => {
+    const item = createPlannedItem();
+    const updated = createPlannedItem({ ...item, title: "Updated note", version: 5 });
+
+    getPlannedItemById.mockResolvedValue(item);
+    updatePlannedItem.mockResolvedValue({ stale: false, value: updated });
+    getPlannedItemWithRecipeById.mockResolvedValue(withRecipe(updated));
+
+    const caller = plannedItemsProcedures.createCaller(createMockCallerContext(ctx));
+    const result = await caller.updateItem({
+      itemId: item.id,
+      version: item.version,
+      title: "Updated note",
+    });
+
+    expect(publishedItem("itemUpdated")).toEqual(
+      expect.objectContaining({ title: "Updated note", version: 5 })
+    );
+    expect(result).toEqual(
+      expect.objectContaining({ success: true, item: publishedItem("itemUpdated") })
+    );
   });
 });
