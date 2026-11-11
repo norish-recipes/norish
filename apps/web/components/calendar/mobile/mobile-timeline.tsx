@@ -54,8 +54,8 @@ export function MobileTimeline({ onAddItem, onNoteClick, onRecipeClick }: Mobile
   const locale = useLocale();
 
   const { range, calendarData, isLoading } = useCalendarRangeQuery();
-  const isLoadingMore = useCalendarRange((state) => state.isGrowing);
-  const expandRange = useCalendarRange((state) => state.grow);
+  const isGrowing = useCalendarRange((state) => state.isGrowing);
+  const grow = useCalendarRange((state) => state.grow);
   const { moveItem } = useCalendarMutations();
 
   const allDays = useMemo(
@@ -193,7 +193,7 @@ export function MobileTimeline({ onAddItem, onNoteClick, onRecipeClick }: Mobile
     );
   }, [virtualizer, restoreAnchor]);
 
-  // Infinite scroll: trigger expandRange when near the edges
+  // Infinite scroll: trigger grow when near the edges
   useEffect(() => {
     if (virtualItems.length === 0 || !hasScrolledRef.current) return;
     if (!hasLandedRef.current) {
@@ -209,7 +209,7 @@ export function MobileTimeline({ onAddItem, onNoteClick, onRecipeClick }: Mobile
     const isNearStart = firstItem.index <= 2;
     const isNearEnd = lastItem.index >= allDays.length - 2;
 
-    if (isNearStart && !isLoadingMore && !hasTriggeredExpandPastRef.current) {
+    if (isNearStart && !isGrowing && !hasTriggeredExpandPastRef.current) {
       const scrollOffset = virtualizer.scrollOffset ?? 0;
 
       captureAnchor({
@@ -219,28 +219,20 @@ export function MobileTimeline({ onAddItem, onNoteClick, onRecipeClick }: Mobile
       });
 
       hasTriggeredExpandPastRef.current = true;
-      expandRange("past");
+      grow("past");
     }
     if (!isNearStart) {
       hasTriggeredExpandPastRef.current = false;
     }
 
-    if (isNearEnd && !isLoadingMore && !hasTriggeredExpandFutureRef.current) {
+    if (isNearEnd && !isGrowing && !hasTriggeredExpandFutureRef.current) {
       hasTriggeredExpandFutureRef.current = true;
-      expandRange("future");
+      grow("future");
     }
     if (!isNearEnd) {
       hasTriggeredExpandFutureRef.current = false;
     }
-  }, [
-    virtualItems,
-    allDays.length,
-    isLoadingMore,
-    expandRange,
-    virtualizer,
-    captureAnchor,
-    todayIndex,
-  ]);
+  }, [virtualItems, allDays.length, isGrowing, grow, virtualizer, captureAnchor, todayIndex]);
 
   const handleScrollToToday = useCallback(() => {
     virtualizer.scrollToIndex(todayIndex, { align: "start", behavior: "smooth" });

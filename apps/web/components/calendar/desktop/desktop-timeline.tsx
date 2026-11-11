@@ -51,8 +51,8 @@ export function DesktopTimeline({ onAddItem, onNoteClick, onRecipeClick }: Deskt
   const tSlots = useTranslations("common.slots");
 
   const { range, calendarData, isLoading } = useCalendarRangeQuery();
-  const isLoadingMore = useCalendarRange((state) => state.isGrowing);
-  const expandRange = useCalendarRange((state) => state.grow);
+  const isGrowing = useCalendarRange((state) => state.isGrowing);
+  const grow = useCalendarRange((state) => state.grow);
   const { moveItem } = useCalendarMutations();
 
   // Responsive column count: 3 for lg+, 2 for md
@@ -213,7 +213,7 @@ export function DesktopTimeline({ onAddItem, onNoteClick, onRecipeClick }: Deskt
     );
   }, [virtualizer, restoreAnchor]);
 
-  // Infinite scroll: trigger expandRange when near the edges
+  // Infinite scroll: trigger grow when near the edges
   useEffect(() => {
     if (virtualItems.length === 0 || !hasScrolledRef.current) return;
     if (!hasLandedRef.current) {
@@ -229,7 +229,7 @@ export function DesktopTimeline({ onAddItem, onNoteClick, onRecipeClick }: Deskt
     const isNearStart = firstItem.index <= 1;
     const isNearEnd = lastItem.index >= rows.length - 2;
 
-    if (isNearStart && !isLoadingMore && !hasTriggeredExpandPastRef.current) {
+    if (isNearStart && !isGrowing && !hasTriggeredExpandPastRef.current) {
       const scrollOffset = virtualizer.scrollOffset ?? 0;
 
       captureAnchor({
@@ -239,28 +239,20 @@ export function DesktopTimeline({ onAddItem, onNoteClick, onRecipeClick }: Deskt
       });
 
       hasTriggeredExpandPastRef.current = true;
-      expandRange("past");
+      grow("past");
     }
     if (!isNearStart) {
       hasTriggeredExpandPastRef.current = false;
     }
 
-    if (isNearEnd && !isLoadingMore && !hasTriggeredExpandFutureRef.current) {
+    if (isNearEnd && !isGrowing && !hasTriggeredExpandFutureRef.current) {
       hasTriggeredExpandFutureRef.current = true;
-      expandRange("future");
+      grow("future");
     }
     if (!isNearEnd) {
       hasTriggeredExpandFutureRef.current = false;
     }
-  }, [
-    virtualItems,
-    rows.length,
-    isLoadingMore,
-    expandRange,
-    virtualizer,
-    captureAnchor,
-    todayRowIndex,
-  ]);
+  }, [virtualItems, rows.length, isGrowing, grow, virtualizer, captureAnchor, todayRowIndex]);
 
   const handleScrollToToday = useCallback(() => {
     virtualizer.scrollToIndex(todayRowIndex, { align: "start", behavior: "smooth" });
