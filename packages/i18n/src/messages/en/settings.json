@@ -353,8 +353,7 @@
       "connectionStatus": {
         "connected": "Connected",
         "checking": "Checking...",
-        "disconnected": "Disconnected",
-        "unknown": "Unknown"
+        "disconnected": "Disconnected"
       }
     },
     "deleteModal": {

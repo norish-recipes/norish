@@ -353,8 +353,7 @@
       "connectionStatus": {
         "connected": "Ansluten",
         "checking": "Kontrollerar...",
-        "disconnected": "Frånkopplad",
-        "unknown": "Okänd"
+        "disconnected": "Frånkopplad"
       }
     },
     "deleteModal": {

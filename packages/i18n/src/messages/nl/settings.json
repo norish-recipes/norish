@@ -353,8 +353,7 @@
       "connectionStatus": {
         "connected": "Verbonden",
         "checking": "Controleren...",
-        "disconnected": "Niet verbonden",
-        "unknown": "Onbekend"
+        "disconnected": "Niet verbonden"
       }
     },
     "deleteModal": {

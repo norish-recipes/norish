@@ -353,8 +353,7 @@
       "connectionStatus": {
         "connected": "Tilkoblet",
         "checking": "Sjekker...",
-        "disconnected": "Ikke tilkoblet",
-        "unknown": "Ukjent"
+        "disconnected": "Ikke tilkoblet"
       }
     },
     "deleteModal": {

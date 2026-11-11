@@ -353,8 +353,7 @@
       "connectionStatus": {
         "connected": "متصل",
         "checking": "جارٍ الفحص...",
-        "disconnected": "غير متصل",
-        "unknown": "غير معروف"
+        "disconnected": "غير متصل"
       }
     },
     "deleteModal": {

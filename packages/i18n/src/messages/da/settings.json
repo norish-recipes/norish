@@ -353,8 +353,7 @@
       "connectionStatus": {
         "connected": "Forbundet",
         "checking": "Tjekker...",
-        "disconnected": "Ikke forbundet",
-        "unknown": "Ukendt"
+        "disconnected": "Ikke forbundet"
       }
     },
     "deleteModal": {

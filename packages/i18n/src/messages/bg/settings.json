@@ -353,8 +353,7 @@
       "connectionStatus": {
         "connected": "Свързан",
         "checking": "Проверка...",
-        "disconnected": "Няма връзка",
-        "unknown": "Неизвестно"
+        "disconnected": "Няма връзка"
       }
     },
     "deleteModal": {

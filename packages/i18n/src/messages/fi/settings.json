@@ -353,8 +353,7 @@
       "connectionStatus": {
         "connected": "Yhdistetty",
         "checking": "Tarkistetaan...",
-        "disconnected": "Ei yhteyttä",
-        "unknown": "Tuntematon"
+        "disconnected": "Ei yhteyttä"
       }
     },
     "deleteModal": {

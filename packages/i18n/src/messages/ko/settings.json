@@ -353,8 +353,7 @@
       "connectionStatus": {
         "connected": "연결됨",
         "checking": "확인 중...",
-        "disconnected": "연결이 끊김",
-        "unknown": "알 수 없음"
+        "disconnected": "연결이 끊김"
       }
     },
     "deleteModal": {
