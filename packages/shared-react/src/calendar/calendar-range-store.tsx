@@ -15,7 +15,7 @@ const GROW_DAYS = 12;
 
 export type CalendarRangeState = {
   range: CalendarRange;
-  /** Briefly true after a grow, so a scroll resting near an edge grows once. */
+  /** Briefly true after a grow either way, so a scroll resting near an edge grows once. */
   isGrowing: boolean;
   grow: (direction: "past" | "future") => void;
   isDateInRange: (date: string) => boolean;
@@ -31,13 +31,18 @@ function shiftDays(iso: string, days: number) {
 
 /** The calendar's range, opening two weeks either side of `today` (`YYYY-MM-DD`). */
 export function createCalendarRangeStore(today: string) {
+  // Per direction, so a tall screen at both edges grows both ways in one tick.
+  const settling = new Set<"past" | "future">();
+
   return createStore<CalendarRangeState>()((set, get) => ({
     range: getInitialCalendarRange("mobile", today),
     isGrowing: false,
     grow: (direction) => {
-      const { range, isGrowing } = get();
+      if (settling.has(direction)) return;
+      settling.add(direction);
 
-      if (isGrowing) return;
+      const { range } = get();
+
       set({
         isGrowing: true,
         range:
@@ -45,8 +50,11 @@ export function createCalendarRangeStore(today: string) {
             ? { ...range, startISO: shiftDays(range.startISO, -GROW_DAYS) }
             : { ...range, endISO: shiftDays(range.endISO, GROW_DAYS) },
       });
-      // Long enough for the wider read to start before an edge can grow it again.
-      setTimeout(() => set({ isGrowing: false }), 100);
+      // Long enough for the wider read to start before that edge can grow it again.
+      setTimeout(() => {
+        settling.delete(direction);
+        set({ isGrowing: settling.size > 0 });
+      }, 100);
     },
     isDateInRange: (date) => isDateInRange(date, get().range),
   }));

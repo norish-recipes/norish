@@ -37,13 +37,28 @@ describe("createCalendarRangeStore", () => {
     expect(calendar.getState().range).toEqual({ startISO: "2026-10-14", endISO: "2026-12-11" });
   });
 
-  it("ignores a grow while one is settling", () => {
+  it("ignores a grow in the direction that is settling", () => {
     const calendar = createCalendarRangeStore(TODAY);
 
     calendar.getState().grow("future");
     calendar.getState().grow("future");
 
     expect(calendar.getState().range.endISO).toBe("2026-12-11");
+  });
+
+  it("grows the other way while one grow settles, growing until both settle", () => {
+    const calendar = createCalendarRangeStore(TODAY);
+
+    calendar.getState().grow("past");
+    vi.advanceTimersByTime(50);
+    calendar.getState().grow("future");
+
+    expect(calendar.getState().range).toEqual({ startISO: "2026-10-14", endISO: "2026-12-11" });
+
+    vi.advanceTimersByTime(50);
+    expect(calendar.getState().isGrowing).toBe(true);
+    vi.advanceTimersByTime(50);
+    expect(calendar.getState().isGrowing).toBe(false);
   });
 
   it("answers whether a date is in range, its first and last days included", () => {
