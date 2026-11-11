@@ -99,6 +99,7 @@ describe("CaldavSyncStatusCard", () => {
         act(async () =>
           container.querySelector<HTMLElement>('[data-slot="pagination-next"]')?.click()
         ),
+      rerender: () => act(async () => root.render(<CaldavSyncStatusCard />)),
     };
   };
 
@@ -115,5 +116,23 @@ describe("CaldavSyncStatusCard", () => {
     expect(syncStatusQuery).toHaveBeenLastCalledWith(expect.objectContaining({ page: 2 }));
     expect(card.text()).toContain('showingItems {"start":1,"end":20,"total":45}');
     expect(card.text()).toContain('pagination {"current":1,"total":3}');
+  });
+
+  it("moves to the last page when the total shrinks below the page shown", async () => {
+    let total = 45;
+
+    syncStatusQuery.mockImplementation((input: PageInput) => answer(input, total));
+    const card = await renderCard();
+
+    await card.next();
+    await card.next();
+    expect(card.text()).toContain('pagination {"current":3,"total":3}');
+
+    total = 35;
+    await card.rerender();
+
+    expect(syncStatusQuery).toHaveBeenLastCalledWith(expect.objectContaining({ page: 2 }));
+    expect(card.text()).toContain('showingItems {"start":21,"end":35,"total":35}');
+    expect(card.text()).toContain('pagination {"current":2,"total":2}');
   });
 });

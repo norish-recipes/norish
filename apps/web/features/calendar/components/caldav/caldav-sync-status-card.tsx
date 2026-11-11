@@ -82,6 +82,10 @@ export default function CaldavSyncStatusCard() {
   };
   const totalPages = Math.ceil(syncStatusTotal / pageSize);
 
+  // An answer whose total no longer reaches this page moves the card to its last page.
+  if (!isLoading && !isPlaceholderData && syncStatusPage > Math.max(1, totalPages)) {
+    setSyncStatusPage(Math.max(1, totalPages));
+  }
   // The labels follow the rows drawn: a placeholder's are the previous page's.
   const startIndex = (shownPage - 1) * pageSize + 1;
   const endIndex = Math.min(shownPage * pageSize, syncStatusTotal);
