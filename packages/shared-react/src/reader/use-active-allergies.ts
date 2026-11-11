@@ -3,14 +3,13 @@
 import { useQuery } from "@tanstack/react-query";
 
 import { useTRPC } from "../trpc";
+import { useAllergiesQuery } from "./use-allergies";
 
 export type ActiveAllergies = {
   allergies: string[];
   /** Lower-cased, for a case-insensitive lookup. */
   allergySet: Set<string>;
 };
-
-const NONE: string[] = [];
 
 /** The allergies the Reader's recipes warn about: the household's, else their own. */
 export function useActiveAllergies(): ActiveAllergies {
@@ -19,12 +18,9 @@ export function useActiveAllergies(): ActiveAllergies {
     ...trpc.households.get.queryOptions(),
     select: (data) => data.household?.allergies,
   });
-  const { data: own } = useQuery({
-    ...trpc.user.getAllergies.queryOptions(),
-    select: (data) => data.allergies,
-  });
+  const own = useAllergiesQuery();
 
-  const allergies = household && household.length > 0 ? household : (own ?? NONE);
+  const allergies = household && household.length > 0 ? household : own;
   const allergySet = new Set(allergies.map((a) => a.toLowerCase()));
 
   return { allergies, allergySet };
