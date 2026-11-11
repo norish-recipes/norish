@@ -59,5 +59,5 @@ export function useSignInMethodsQuery() {
   const trpc = useTRPC();
   const { data, refetch } = useQuery(trpc.user.signInMethods.queryOptions());
 
-  return { accounts: data ?? [], refetch };
+  return { signInMethods: data ?? [], refetch };
 }

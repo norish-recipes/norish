@@ -48,7 +48,7 @@ export default function SignInMethodsCard() {
   const searchParams = useSearchParams();
   const [changingPassword, setChangingPassword] = useState(false);
   const { providers: offered } = useAuthProvidersQuery();
-  const { accounts, refetch } = useSignInMethodsQuery();
+  const { signInMethods, refetch } = useSignInMethodsQuery();
 
   const showError = (code: string | undefined, fallback: ErrorMessage) =>
     toast(t(`errors.${ERROR_MESSAGES[code ?? ""] ?? fallback}`), { variant: "danger" });
@@ -96,11 +96,13 @@ export default function SignInMethodsCard() {
     providerId === "credential" ? t("password") : methodOf(providerId).name;
   const addable = offered.filter(
     (provider) =>
-      provider.type === "oauth" && !accounts.some((account) => account.providerId === provider.id)
+      provider.type === "oauth" &&
+      !signInMethods.some((signInMethod) => signInMethod.providerId === provider.id)
   );
 
   const hasPassword =
-    offeredIds.has("credential") && accounts.some((account) => account.providerId === "credential");
+    offeredIds.has("credential") &&
+    signInMethods.some((signInMethod) => signInMethod.providerId === "credential");
 
   // With one method on the server there is nothing to add or remove, only a password to change.
   if (offered.length < 2 && !hasPassword) return null;
@@ -112,39 +114,39 @@ export default function SignInMethodsCard() {
       title={t("title")}
     >
       <ul className="border-border divide-border divide-y overflow-hidden rounded-xl border">
-        {accounts.map((account) => {
-          const name = nameOf(account.providerId);
-          const offeredNow = offeredIds.has(account.providerId);
+        {signInMethods.map((signInMethod) => {
+          const name = nameOf(signInMethod.providerId);
+          const offeredNow = offeredIds.has(signInMethod.providerId);
 
           return (
-            <li key={account.id} className="flex items-center gap-3 px-4 py-3">
+            <li key={signInMethod.id} className="flex items-center gap-3 px-4 py-3">
               <span className="bg-surface-secondary flex size-10 shrink-0 items-center justify-center rounded-lg">
-                <ProviderIcon icon={methodOf(account.providerId).icon} providerName={name} />
+                <ProviderIcon icon={methodOf(signInMethod.providerId).icon} providerName={name} />
               </span>
               <div className="min-w-0 flex-1">
                 <p className="truncate font-medium">{name}</p>
                 <p className={`truncate text-sm ${offeredNow ? "text-muted" : "text-warning"}`}>
                   {!offeredNow
                     ? t("unavailable")
-                    : account.providerId === "credential"
+                    : signInMethod.providerId === "credential"
                       ? user?.email
                       : t("added", {
-                          date: format.dateTime(account.createdAt, { dateStyle: "medium" }),
+                          date: format.dateTime(signInMethod.createdAt, { dateStyle: "medium" }),
                         })}
                 </p>
               </div>
-              {offeredNow && account.providerId === "credential" && (
+              {offeredNow && signInMethod.providerId === "credential" && (
                 <Button size="sm" variant="tertiary" onPress={() => setChangingPassword(true)}>
                   <KeyIcon className="size-4" />
                   <span className="max-sm:sr-only">{t("changePassword")}</span>
                 </Button>
               )}
-              {keepsOfferedSignInMethod(accounts, account.id, offeredIds) && (
+              {keepsOfferedSignInMethod(signInMethods, signInMethod.id, offeredIds) && (
                 <Button
-                  isPending={remove.isPending && remove.variables === account.id}
+                  isPending={remove.isPending && remove.variables === signInMethod.id}
                   size="sm"
                   variant="tertiary"
-                  onPress={() => remove.mutate(account.id)}
+                  onPress={() => remove.mutate(signInMethod.id)}
                 >
                   <TrashIcon className="size-4" />
                   {/* A phone keeps the row's email; the word stays its accessible name. */}
