@@ -1,4 +1,4 @@
-import { describe, expect, it } from "vitest";
+import { afterEach, describe, expect, it, vi } from "vitest";
 
 import { getInitialCalendarRange, parseDateKey } from "@norish/shared/lib/helpers";
 
@@ -24,7 +24,11 @@ describe("getInitialCalendarRange", () => {
 });
 
 describe("parseDateKey", () => {
+  afterEach(() => vi.unstubAllEnvs());
+
   it("reads a date key as local midnight on that day", () => {
+    // West of UTC, where a UTC parse lands on the evening before.
+    vi.stubEnv("TZ", "America/New_York");
     const date = parseDateKey("2026-03-29");
 
     expect([date.getFullYear(), date.getMonth(), date.getDate(), date.getHours()]).toEqual([
