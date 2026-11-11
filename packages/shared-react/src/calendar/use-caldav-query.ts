@@ -1,4 +1,4 @@
-import { useQuery, useQueryClient } from "@tanstack/react-query";
+import { keepPreviousData, useQuery, useQueryClient } from "@tanstack/react-query";
 
 import type {
   CaldavConfigQueryResult,
@@ -37,7 +37,11 @@ export function useCaldavSyncStatusQuery(
 ): CaldavSyncStatusQueryResult {
   const trpc = useTRPC();
   const { data, error, isLoading } = useQuery(
-    trpc.caldav.getSyncStatus.queryOptions({ page, pageSize, statusFilter })
+    // The page on screen stays while the next page or filter loads.
+    trpc.caldav.getSyncStatus.queryOptions(
+      { page, pageSize, statusFilter },
+      { placeholderData: keepPreviousData }
+    )
   );
 
   return {
