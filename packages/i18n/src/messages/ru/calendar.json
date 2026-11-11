@@ -51,5 +51,10 @@
     "randomRecipe": "Случайный рецепт",
     "noRecipesFound": "Рецепты не найдены.",
     "failedToLoadRecipes": "Не удалось загрузить рецепты."
+  },
+  "caldav": {
+    "syncStarted": "Синхронизация CalDAV запущена",
+    "syncStartedDescription": "Элементов к синхронизации: {queued}",
+    "syncStartedWithFailures": "Элементов к синхронизации: {queued}. Не удалось поставить в очередь: {failed}"
   }
 }

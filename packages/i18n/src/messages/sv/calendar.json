@@ -51,5 +51,10 @@
     "randomRecipe": "Slumpa recept",
     "noRecipesFound": "Inga recept hittades.",
     "failedToLoadRecipes": "Det gick inte att hämta recepten."
+  },
+  "caldav": {
+    "syncStarted": "CalDAV-synkronisering startad",
+    "syncStartedDescription": "Objekt att synkronisera: {queued}",
+    "syncStartedWithFailures": "Objekt att synkronisera: {queued}. Kunde inte köas: {failed}"
   }
 }

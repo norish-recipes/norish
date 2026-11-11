@@ -51,5 +51,10 @@
     "randomRecipe": "Willekeurig recept",
     "noRecipesFound": "Geen recepten gevonden.",
     "failedToLoadRecipes": "Kan recepten niet laden."
+  },
+  "caldav": {
+    "syncStarted": "CalDAV-synchronisatie gestart",
+    "syncStartedDescription": "Te synchroniseren items: {queued}",
+    "syncStartedWithFailures": "Te synchroniseren items: {queued}. Niet in de wachtrij gezet: {failed}"
   }
 }

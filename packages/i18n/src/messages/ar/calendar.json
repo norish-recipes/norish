@@ -51,5 +51,10 @@
     "randomRecipe": "وصفة عشوائية",
     "noRecipesFound": "لم يُعثر على وصفات.",
     "failedToLoadRecipes": "تعذّر تحميل الوصفات."
+  },
+  "caldav": {
+    "syncStarted": "بدأت مزامنة CalDAV",
+    "syncStartedDescription": "العناصر المراد مزامنتها: {queued}",
+    "syncStartedWithFailures": "العناصر المراد مزامنتها: {queued}. تعذّر وضعها في قائمة الانتظار: {failed}"
   }
 }

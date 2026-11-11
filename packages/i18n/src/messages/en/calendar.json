@@ -51,5 +51,10 @@
     "randomRecipe": "Random Recipe",
     "noRecipesFound": "No recipes found.",
     "failedToLoadRecipes": "Failed to load recipes."
+  },
+  "caldav": {
+    "syncStarted": "CalDAV sync started",
+    "syncStartedDescription": "Items to sync: {queued}",
+    "syncStartedWithFailures": "Items to sync: {queued}. Could not be queued: {failed}"
   }
 }

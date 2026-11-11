@@ -51,5 +51,10 @@
     "randomRecipe": "무작위 레시피",
     "noRecipesFound": "레시피를 찾을 수 없습니다.",
     "failedToLoadRecipes": "레시피를 불러오지 못했습니다."
+  },
+  "caldav": {
+    "syncStarted": "CalDAV 동기화 시작됨",
+    "syncStartedDescription": "동기화할 항목: {queued}",
+    "syncStartedWithFailures": "동기화할 항목: {queued}. 대기열에 추가하지 못함: {failed}"
   }
 }

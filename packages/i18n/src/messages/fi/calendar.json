@@ -51,5 +51,10 @@
     "randomRecipe": "Satunnainen resepti",
     "noRecipesFound": "Reseptejä ei löytynyt.",
     "failedToLoadRecipes": "Reseptien lataaminen epäonnistui."
+  },
+  "caldav": {
+    "syncStarted": "CalDAV-synkronointi aloitettu",
+    "syncStartedDescription": "Synkronoitavat kohteet: {queued}",
+    "syncStartedWithFailures": "Synkronoitavat kohteet: {queued}. Jonoon lisääminen epäonnistui: {failed}"
   }
 }

@@ -51,5 +51,10 @@
     "randomRecipe": "Ricetta casuale",
     "noRecipesFound": "Nessuna ricetta trovata.",
     "failedToLoadRecipes": "Caricamento ricette non riuscito."
+  },
+  "caldav": {
+    "syncStarted": "Sincronizzazione CalDAV avviata",
+    "syncStartedDescription": "Elementi da sincronizzare: {queued}",
+    "syncStartedWithFailures": "Elementi da sincronizzare: {queued}. Non accodati: {failed}"
   }
 }

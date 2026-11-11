@@ -51,5 +51,10 @@
     "randomRecipe": "Tilfældig opskrift",
     "noRecipesFound": "Ingen opskrifter fundet.",
     "failedToLoadRecipes": "Kunne ikke indlæse opskrifter."
+  },
+  "caldav": {
+    "syncStarted": "CalDAV-synkronisering startet",
+    "syncStartedDescription": "Elementer der skal synkroniseres: {queued}",
+    "syncStartedWithFailures": "Elementer der skal synkroniseres: {queued}. Kunne ikke sættes i kø: {failed}"
   }
 }
