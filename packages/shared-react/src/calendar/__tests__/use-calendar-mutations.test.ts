@@ -436,9 +436,9 @@ describe("useCalendarMutations", () => {
 
     it("an answer then its echo leaves the cache as either alone would", async () => {
       const { answer, echo } = setup();
-      let answerMove!: (result: object) => void;
+      const move = Promise.withResolvers<object>();
 
-      mockMoveItemMutate.mockReturnValue(new Promise((resolve) => (answerMove = resolve)));
+      mockMoveItemMutate.mockReturnValue(move.promise);
       const { result } = renderHook(() => useCalendarMutations(), {
         wrapper: createTestWrapper(queryClient),
       });
@@ -448,7 +448,7 @@ describe("useCalendarMutations", () => {
       const optimistic = queryClient.getQueryData<PlannedItemFromQuery[]>(getQueryKey())!;
       const echoOnly = applyMoveEchoInRange(optimistic, echo, range);
 
-      await act(async () => answerMove({ success: true, moved: true, item: answer }));
+      await act(async () => move.resolve({ success: true, moved: true, item: answer }));
       await waitFor(() => expect(queryClient.isMutating()).toBe(0));
       const answerOnly = queryClient.getQueryData<PlannedItemFromQuery[]>(getQueryKey())!;
       const answerThenEcho = applyMoveEchoInRange(answerOnly, echo, range);
@@ -462,13 +462,6 @@ describe("useCalendarMutations", () => {
 
   describe("overlapping writes to one plan", () => {
     const range = { startISO, endISO };
-
-    function answerLater() {
-      let answer!: (result: object) => void;
-      const promise = new Promise<object>((resolve) => (answer = resolve));
-
-      return { promise, answer };
-    }
 
     function setup() {
       const a = createMockItem({ id: "a", title: "a", version: 3 });
@@ -484,7 +477,7 @@ describe("useCalendarMutations", () => {
 
     it("a rename then a move in one tick send v then v+1, the move once the rename answered", async () => {
       const { a } = setup();
-      const rename = answerLater();
+      const rename = Promise.withResolvers<object>();
 
       mockUpdateItemMutate.mockReturnValue(rename.promise);
       mockMoveItemMutate.mockResolvedValue({
@@ -506,7 +499,11 @@ describe("useCalendarMutations", () => {
       expect(cachedA()).toMatchObject({ title: "renamed", date: "2025-01-20", version: 5 });
 
       await act(async () =>
-        rename.answer({ success: true, stale: false, item: { ...a, title: "renamed", version: 4 } })
+        rename.resolve({
+          success: true,
+          stale: false,
+          item: { ...a, title: "renamed", version: 4 },
+        })
       );
       await waitFor(() => expect(queryClient.isMutating()).toBe(0));
 
@@ -517,7 +514,7 @@ describe("useCalendarMutations", () => {
 
     it("two moves in one tick send v then v+1, the second once the first answered", async () => {
       const { a } = setup();
-      const first = answerLater();
+      const first = Promise.withResolvers<object>();
 
       mockMoveItemMutate.mockReturnValueOnce(first.promise).mockResolvedValueOnce({
         success: true,
@@ -537,7 +534,11 @@ describe("useCalendarMutations", () => {
       expect(mockMoveItemMutate).toHaveBeenCalledTimes(1);
 
       await act(async () =>
-        first.answer({ success: true, moved: true, item: { ...a, date: "2025-01-20", version: 4 } })
+        first.resolve({
+          success: true,
+          moved: true,
+          item: { ...a, date: "2025-01-20", version: 4 },
+        })
       );
       await waitFor(() => expect(queryClient.isMutating()).toBe(0));
 
