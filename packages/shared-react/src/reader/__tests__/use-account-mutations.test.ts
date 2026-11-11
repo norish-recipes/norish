@@ -216,13 +216,13 @@ describe("the Account's writes", () => {
   });
 
   describe("deleting the Account", () => {
-    it("leaves for sign-in", async () => {
+    it("signs out without the auth server, whose session is gone", async () => {
       const result = render(() => useDeleteAccountMutation());
 
       act(() => result.current.deleteAccount());
       await answer("user.deleteAccount", { success: true });
 
-      expect(adapter.navigation.toSignIn).toHaveBeenCalledOnce();
+      expect(adapter.signOut).toHaveBeenCalledExactlyOnceWith({ accountDeleted: true });
     });
 
     it("stays and says why when the server refuses", async () => {
@@ -231,11 +231,21 @@ describe("the Account's writes", () => {
       act(() => result.current.deleteAccount());
       await answer("user.deleteAccount", { success: false, error: "Transfer admin first" });
 
-      expect(adapter.navigation.toSignIn).not.toHaveBeenCalled();
+      expect(adapter.signOut).not.toHaveBeenCalled();
       expect(adapter.showError).toHaveBeenCalledWith(
         "Transfer admin first",
         "user-settings:delete-account"
       );
+    });
+
+    it("stays signed in when the write fails", async () => {
+      const result = render(() => useDeleteAccountMutation());
+
+      act(() => result.current.deleteAccount());
+      await fail("user.deleteAccount");
+
+      expect(adapter.signOut).not.toHaveBeenCalled();
+      expect(adapter.showError).toHaveBeenCalledOnce();
     });
   });
 

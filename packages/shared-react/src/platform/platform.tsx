@@ -30,8 +30,12 @@ export type PlatformStorage = {
 /** Who the app's auth client says is signed in; `isPending` until it answers. */
 export type PlatformSession = { user: User | null; isPending: boolean };
 
-/** `discardQueue` only once the reader agreed to lose their unsynced changes (ADR-0009). */
-export type SignOut = (options?: { discardQueue?: boolean }) => void | Promise<void>;
+/**
+ * `discardQueue` only once the reader agreed to lose their unsynced changes (ADR-0009).
+ * `accountDeleted`: the server already ended the session, so only the local state is cleared, Outbox included.
+ */
+export type SignOutOptions = { discardQueue?: boolean; accountDeleted?: boolean };
+export type SignOut = (options?: SignOutOptions) => void | Promise<void>;
 
 /** What shared code needs from the app it runs in. Each app mounts one. */
 export type PlatformAdapter = {
@@ -39,8 +43,6 @@ export type PlatformAdapter = {
   navigation: {
     toHome: () => void;
     toRecipe: (id: string) => void;
-    /** Leaves the app for sign-in, as after the Reader's account is deleted. */
-    toSignIn: () => void;
   };
   /** Tells the reader an operation failed; `context` names where, for the log. */
   showError: (error: unknown, context: string) => void;

@@ -8,20 +8,16 @@ import React, {
   useState,
   useSyncExternalStore,
 } from "react";
-import {
-  getAuthClient,
-  resetAuthClientStorage,
-  subscribeAuthClientReset,
-} from "@/lib/auth/auth-client";
+import { getAuthClient, subscribeAuthClientReset } from "@/lib/auth/auth-client";
 import {
   registerSessionInvalidationHandler,
   setHasActiveSession,
 } from "@/lib/auth/auth-session-sync";
 import { readPersistedSession } from "@/lib/auth/auth-storage";
-import { offlineEngine } from "@/lib/offline/engine";
-import { closeMobileTrpcConnections } from "@/lib/trpc/trpc-provider";
+import { clearSession } from "@/lib/auth/sign-out";
 import { useStore } from "better-auth/react";
 
+import type { SignOutOptions } from "@norish/shared-react/platform";
 import { useConnectivity } from "@norish/shared-react/offline/react";
 import { createClientLogger } from "@norish/shared/lib/logger";
 
@@ -34,8 +30,7 @@ type AuthContextValue = {
   isLoading: boolean;
   justLoggedOut: boolean;
   user: { id: string; email: string; name: string; image?: string | null } | null;
-  /** `discardQueue` only after the user confirmed losing their unsynced changes. */
-  signOut: (options?: { discardQueue?: boolean }) => Promise<void>;
+  signOut: (options?: SignOutOptions) => Promise<void>;
   consumeLogoutFlag: () => void;
 };
 
@@ -130,24 +125,10 @@ function AuthProviderInner({
   ]);
 
   const signOut = useCallback(
-    async (options?: { discardQueue?: boolean }) => {
+    async (options?: SignOutOptions) => {
       setAuthOverride("signed-out");
       setHasActiveSession(false);
-      await closeMobileTrpcConnections();
-      // The read copy always goes; queued work stays dormant for this owner unless discarded.
-      await offlineEngine.clearForSignOut({ discardQueue: options?.discardQueue ?? false });
-
-      try {
-        await authClient.signOut();
-      } catch (error) {
-        log.warn({ error }, "Remote sign out failed, resetting local auth client state");
-      }
-
-      try {
-        await resetAuthClientStorage();
-      } catch (storageError) {
-        log.warn({ error: storageError }, "Failed to reset auth client storage during sign out");
-      }
+      await clearSession(authClient, options);
 
       setPersistedUser(null);
       setPersistedSessionStatus("idle");

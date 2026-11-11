@@ -167,16 +167,16 @@ export function useApiKeyMutations() {
   };
 }
 
-/** Deletes the Reader's account and leaves for sign-in. */
+/** Deletes the Reader's account and signs out on this device. */
 export function useDeleteAccountMutation() {
   const trpc = useTRPC();
-  const { navigation, showError } = usePlatform();
+  const { signOut, showError } = usePlatform();
   const context = "user-settings:delete-account";
 
   const { mutate } = useMutation(
     trpc.user.deleteAccount.mutationOptions({
       onSuccess: (answer) => {
-        if (answer.success) navigation.toSignIn();
+        if (answer.success) void signOut({ accountDeleted: true });
         else showError(answer.error ?? "Unknown error", context);
       },
       onError: (error) => showError(error, context),

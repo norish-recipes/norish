@@ -15,7 +15,7 @@ export function fakePlatformAdapter(
 ): PlatformAdapter {
   return {
     toast: { show: vi.fn(), translate: (id) => id },
-    navigation: { toHome: vi.fn(), toRecipe: vi.fn(), toSignIn: vi.fn() },
+    navigation: { toHome: vi.fn(), toRecipe: vi.fn() },
     showError: vi.fn(),
     storage: { getItem: () => null, setItem: vi.fn(), removeItem: vi.fn() },
     deviceKind,
