@@ -4,8 +4,8 @@ import { readCaldavShape } from "../read-settings-shape";
 import CalDavSettingsContent from "./components/caldav-settings-content";
 import { FIRST_SYNC_STATUS_PAGE } from "./first-sync-status-page";
 
-// Not the password (the worker caches documents) nor the connection check (a request to the
-// CalDAV server).
+// A full load seeds the config, sync status and summary; not the password (the worker caches
+// documents) nor the connection check (a request to the CalDAV server).
 export default async function CalDavSettingsPage() {
   return (
     <QuerySeed
