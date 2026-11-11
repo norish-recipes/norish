@@ -225,7 +225,7 @@ describe("CalDAV Mutation Hooks", () => {
 
       expect(queryClient.getQueryData(mockConfigQueryKey)).toEqual(saved);
       expectStatusAndSummaryInvalidated();
-      expect(queryClient.getQueryState(mockConnectionQueryKey)?.isInvalidated).toBe(true);
+      expect(queryClient.getQueryState(mockConnectionQueryKey)?.data).toBeUndefined();
     });
 
     it("keeps a save's answer over a config read begun before it", async () => {

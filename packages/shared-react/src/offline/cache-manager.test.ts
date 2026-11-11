@@ -184,7 +184,7 @@ describe("createCacheManager", () => {
     first.resolve();
   });
 
-  it("never persists the stored CalDAV password", async () => {
+  it("never persists the stored CalDAV password or the live connection check", async () => {
     const manager = createManager();
     const trpc = createTRPCOptionsProxy<AppRouter>({
       client: createTRPCClient<AppRouter>({ links: [] }),
@@ -194,6 +194,10 @@ describe("createCacheManager", () => {
 
     await manager.reconcileIdentity({ sessionUserId: "u1", isOffline: false });
     manager.queryClient.setQueryData(trpc.caldav.getPassword.queryKey(), "secret");
+    manager.queryClient.setQueryData(trpc.caldav.checkConnection.queryKey(), {
+      success: true,
+      message: "checked",
+    });
     manager.queryClient.setQueryData(kept, null);
     await new Promise((resolve) => setTimeout(resolve, 0));
 
@@ -202,6 +206,7 @@ describe("createCacheManager", () => {
 
     expect(persistedKeys).toContainEqual(kept);
     expect(JSON.stringify(persisted)).not.toContain("secret");
+    expect(JSON.stringify(persisted)).not.toContain("checked");
   });
 
   it("does not restore a query whose initial request failed without data", async () => {

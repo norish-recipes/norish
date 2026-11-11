@@ -35,9 +35,13 @@ const keys = createTRPCOptionsProxy<AppRouter>({
 
 /**
  * Reads never written to storage: admin reads hold other users' details and, in a query's input, a
- * key being typed; the CalDAV password is a decrypted secret.
+ * key being typed; the CalDAV password is a decrypted secret and its connection check a live probe.
  */
-const NEVER_PERSISTED = [keys.admin.pathKey(), keys.caldav.getPassword.pathKey()];
+const NEVER_PERSISTED = [
+  keys.admin.pathKey(),
+  keys.caldav.getPassword.pathKey(),
+  keys.caldav.checkConnection.pathKey(),
+];
 
 /** Persist usable read data even when its latest background refetch failed. */
 const shouldDehydrateQuery = (query: { queryKey: readonly unknown[]; state: { data: unknown } }) =>

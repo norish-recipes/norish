@@ -34,8 +34,9 @@ export function useCaldavCacheHelpers(): CaldavCacheHelpers {
     invalidateSummary: () => {
       void queryClient.invalidateQueries({ queryKey: trpc.caldav.getSummary.queryKey() });
     },
-    invalidateConnection: () => {
-      void queryClient.invalidateQueries({ queryKey: trpc.caldav.checkConnection.queryKey() });
+    // Back to pending, so the badge shows the check a changed config needs until it answers.
+    resetConnection: () => {
+      void queryClient.resetQueries({ queryKey: trpc.caldav.checkConnection.queryKey() });
     },
   };
 }

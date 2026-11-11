@@ -21,7 +21,7 @@ export function useCaldavMutations(): CaldavMutationsResult {
     invalidateConfig,
     invalidateSyncStatus,
     invalidateSummary,
-    invalidateConnection,
+    resetConnection,
   } = useCaldavCacheHelpers();
 
   const saveConfigMutation = useMutation(
@@ -31,7 +31,7 @@ export function useCaldavMutations(): CaldavMutationsResult {
         dropPassword();
         invalidateSyncStatus();
         invalidateSummary();
-        invalidateConnection();
+        resetConnection();
         toast.show({
           severity: "success",
           title: toast.translate("calendar.caldav.configSaved"),
@@ -52,6 +52,7 @@ export function useCaldavMutations(): CaldavMutationsResult {
         invalidateConfig();
         invalidateSyncStatus();
         invalidateSummary();
+        resetConnection();
         toast.show({
           severity: "success",
           title: toast.translate("calendar.caldav.configDeleted"),
