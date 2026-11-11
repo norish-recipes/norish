@@ -1,5 +1,6 @@
 "use client";
 
+import type { ComponentProps } from "react";
 import { useState } from "react";
 import { slotTranslationKeys } from "@/components/dashboard/today/todays-meals-constants";
 import { SettingsCard } from "@/components/settings/settings-card";
@@ -24,8 +25,16 @@ import {
   useCaldavSyncStatusQuery,
 } from "@norish/shared-react/calendar";
 import { useHydrated } from "@norish/shared-react/platform";
+import { caldavSyncStatuses } from "@norish/shared/contracts";
 
 import { FIRST_SYNC_STATUS_PAGE } from "./first-sync-status-page";
+
+const SYNC_STATUS_COLOR = {
+  synced: "success",
+  pending: "warning",
+  failed: "danger",
+  removed: "default",
+} as const satisfies Record<CaldavSyncStatus, ComponentProps<typeof Chip>["color"]>;
 
 const isSlot = (slot: string): slot is Slot => Object.hasOwn(slotTranslationKeys, slot);
 
@@ -53,20 +62,6 @@ export default function CaldavSyncStatusCard() {
   const handleFilterClick = (status: CaldavSyncStatus) => {
     setSyncStatusFilter(syncStatusFilter === status ? undefined : status);
     setSyncStatusPage(1);
-  };
-  const getStatusColor = (status: string) => {
-    switch (status) {
-      case "synced":
-        return "success";
-      case "pending":
-        return "warning";
-      case "failed":
-        return "danger";
-      case "removed":
-        return "default";
-      default:
-        return "default";
-    }
   };
   const formatDate = (dateString: Date | string | null | undefined) => {
     if (!dateString) return "—";
@@ -101,46 +96,19 @@ export default function CaldavSyncStatusCard() {
     >
       <div className="flex flex-col gap-3">
         <div className="flex flex-wrap gap-2">
-          <ChipButton
-            aria-pressed={syncStatusFilter === "synced"}
-            className="cursor-pointer transition-all"
-            color="success"
-            size="sm"
-            variant={syncStatusFilter === "synced" ? "primary" : "soft"}
-            onClick={() => handleFilterClick("synced")}
-          >
-            {t("statuses.synced")}: {syncStatusSummary.synced}
-          </ChipButton>
-          <ChipButton
-            aria-pressed={syncStatusFilter === "pending"}
-            className="cursor-pointer transition-all"
-            color="warning"
-            size="sm"
-            variant={syncStatusFilter === "pending" ? "primary" : "soft"}
-            onClick={() => handleFilterClick("pending")}
-          >
-            {t("statuses.pending")}: {syncStatusSummary.pending}
-          </ChipButton>
-          <ChipButton
-            aria-pressed={syncStatusFilter === "failed"}
-            className="cursor-pointer transition-all"
-            color="danger"
-            size="sm"
-            variant={syncStatusFilter === "failed" ? "primary" : "soft"}
-            onClick={() => handleFilterClick("failed")}
-          >
-            {t("statuses.failed")}: {syncStatusSummary.failed}
-          </ChipButton>
-          <ChipButton
-            aria-pressed={syncStatusFilter === "removed"}
-            className="cursor-pointer transition-all"
-            color="default"
-            size="sm"
-            variant={syncStatusFilter === "removed" ? "primary" : "soft"}
-            onClick={() => handleFilterClick("removed")}
-          >
-            {t("statuses.removed")}: {syncStatusSummary.removed}
-          </ChipButton>
+          {caldavSyncStatuses.map((status) => (
+            <ChipButton
+              key={status}
+              aria-pressed={syncStatusFilter === status}
+              className="cursor-pointer transition-all"
+              color={SYNC_STATUS_COLOR[status]}
+              size="sm"
+              variant={syncStatusFilter === status ? "primary" : "soft"}
+              onClick={() => handleFilterClick(status)}
+            >
+              {t(`statuses.${status}`)}: {syncStatusSummary[status]}
+            </ChipButton>
+          ))}
         </div>
 
         <div className="flex items-center justify-between">
@@ -212,7 +180,7 @@ export default function CaldavSyncStatusCard() {
                       : "—"}
                   </Table.Cell>
                   <Table.Cell>
-                    <Chip color={getStatusColor(status.syncStatus)} size="sm" variant="soft">
+                    <Chip color={SYNC_STATUS_COLOR[status.syncStatus]} size="sm" variant="soft">
                       {t(`statuses.${status.syncStatus}`)}
                     </Chip>
                   </Table.Cell>
