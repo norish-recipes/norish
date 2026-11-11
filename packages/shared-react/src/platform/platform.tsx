@@ -39,6 +39,8 @@ export type PlatformAdapter = {
   navigation: {
     toHome: () => void;
     toRecipe: (id: string) => void;
+    /** Leaves the app for sign-in, as after the Reader's account is deleted. */
+    toSignIn: () => void;
   };
   /** Tells the reader an operation failed; `context` names where, for the log. */
   showError: (error: unknown, context: string) => void;

@@ -2,11 +2,10 @@
 
 import { useEffect, useMemo, useRef } from "react";
 import { useHiddenItemVisibility } from "@/hooks/user/use-hidden-item-visibility";
-import { useUserSettingsQuery } from "@/hooks/user/use-user-query";
 import { useTranslations } from "next-intl";
 
 import type { MeasurementSystem } from "@norish/shared/contracts";
-import { usePermissions, useRecipePermissions } from "@norish/shared-react/reader";
+import { usePermissions, useProfileQuery, useRecipePermissions } from "@norish/shared-react/reader";
 import {
   useLoadedPageRecipe,
   useRecipeConversion,
@@ -105,7 +104,7 @@ export function useAutoConversion() {
   const recipeId = useRecipePageStore((state) => state.recipeId);
   const { recipe, isFetching } = useRecipeQuery(recipeId);
   const { convertingTo, startConversion } = useRecipeConversion();
-  const { user } = useUserSettingsQuery();
+  const { user } = useProfileQuery();
   const { canEditRecipe, isLoading } = useRecipePermissions();
   const isAIEnabled = usePermissions((p) => p.isAIEnabled);
   const choice = getMeasurementSystemPreference(user);

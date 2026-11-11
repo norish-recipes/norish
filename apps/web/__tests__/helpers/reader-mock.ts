@@ -64,6 +64,7 @@ export async function mockReader(read: () => MockReader = () => ({})) {
       isLoading: false,
       signOut: read().signOut ?? (() => {}),
     }),
+    useProfileQuery: () => ({ user: read().user ?? null, apiKeys: [] }),
     usePermissions: <T>(select: (p: ReaderPermissions) => T) => select(permissions()),
     useRecipePermissions: () => ({
       isLoading: false,

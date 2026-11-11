@@ -2,25 +2,24 @@
 
 import { useCallback, useTransition } from "react";
 import { useRouter } from "next/navigation";
-import { useUserMutations } from "@/hooks/user/use-user-mutations";
 
 import type { Locale } from "@norish/i18n/config";
 import { isValidLocale } from "@norish/i18n/config";
-import { useReader } from "@norish/shared-react/reader";
+import { usePreferencesMutation, useReader } from "@norish/shared-react/reader";
 import { getLocalePreference } from "@norish/shared/lib/user-preferences";
 
 /**
  * Hook for managing user locale preference
  *
  * Reads locale from the Reader's preferences, the profile the shell already reads.
- * Writes locale via useUserMutations.updatePreferences (with optimistic update/rollback).
+ * Writes locale via usePreferencesMutation (with optimistic update/rollback).
  * After changing locale, refreshes the page to apply the new locale.
  */
 export function useLocale() {
   const router = useRouter();
   const [isPending, startTransition] = useTransition();
   const { user } = useReader();
-  const { updatePreferences, isUpdatingPreferences } = useUserMutations();
+  const { updatePreferences, isUpdatingPreferences } = usePreferencesMutation();
 
   const locale = getLocalePreference(user);
 

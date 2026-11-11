@@ -52,6 +52,7 @@ export function MobilePlatformProvider({ children }: { children: ReactNode }) {
       toHome: () => router.replace("/"),
       // No recipe screen yet; the library's migration adds one.
       toRecipe: (id) => log.warn({ id }, "No recipe screen to open"),
+      toSignIn: () => router.replace("/login"),
     },
     showError: (error, context) => {
       log.error({ error }, context);

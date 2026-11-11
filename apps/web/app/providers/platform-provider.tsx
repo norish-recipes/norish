@@ -80,6 +80,9 @@ export function WebPlatformProvider({
     navigation: {
       toHome: () => router.push("/"),
       toRecipe: (id) => router.push(`/recipes/${id}`),
+      toSignIn: () => {
+        window.location.href = addBasePath("/login");
+      },
     },
     showError: (error, context) =>
       showSafeErrorToast({

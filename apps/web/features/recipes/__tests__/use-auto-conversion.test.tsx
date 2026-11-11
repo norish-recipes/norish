@@ -3,10 +3,12 @@ import { useAutoConversion } from "@/features/recipes/hooks/use-system-conversio
 import { act, renderHook } from "@testing-library/react";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 
+import type { MEASUREMENT_SYSTEM_CHOICES } from "@norish/shared/contracts/zod/user";
+
 import { onRecipePage } from "./recipe-page";
 
 const mocks = vi.hoisted(() => ({
-  measurementSystem: undefined as string | undefined,
+  measurementSystem: undefined as (typeof MEASUREMENT_SYSTEM_CHOICES)[number] | undefined,
   isAIEnabled: false,
   canEdit: true,
 }));
@@ -15,14 +17,9 @@ vi.mock("@norish/shared-react/trpc", async () =>
   (await import("@/__tests__/helpers/trpc-fake")).mockTRPC()
 );
 
-vi.mock("@/hooks/user/use-user-query", () => ({
-  useUserSettingsQuery: () => ({
-    user: { preferences: { measurementSystem: mocks.measurementSystem } },
-  }),
-}));
-
 vi.mock("@norish/shared-react/reader", async () =>
   (await import("@/__tests__/helpers/reader-mock")).mockReader(() => ({
+    user: { preferences: { measurementSystem: mocks.measurementSystem } },
     permissions: { isAIEnabled: mocks.isAIEnabled },
     canEditRecipe: () => mocks.canEdit,
   }))
