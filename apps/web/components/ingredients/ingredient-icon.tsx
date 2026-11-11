@@ -3,7 +3,6 @@
 import type { inferRouterOutputs } from "@trpc/server";
 import { useSyncExternalStore } from "react";
 import { useHiddenItemVisibility } from "@/hooks/user/use-hidden-item-visibility";
-import { iconIds } from "@/lib/ingredient-icon-ids";
 import {
   matchQuery,
   notifyManager,
@@ -16,6 +15,7 @@ import { useDebounceValue } from "usehooks-ts";
 import type { AppRouter } from "@norish/trpc/client";
 import { useTRPC } from "@norish/shared-react/trpc";
 import { addBasePath } from "@norish/shared/lib/base-path";
+import { iconIds } from "@norish/shared/lib/ingredient-icon-ids";
 
 /**
  * The sizes an Ingredient Icon is shown at: beside a step's chip, a line or

@@ -1,5 +1,6 @@
-import { iconIds } from "@/lib/ingredient-icon-ids";
 import { afterEach, describe, expect, it, vi } from "vitest";
+
+import { iconIds } from "@norish/shared/lib/ingredient-icon-ids";
 
 describe("iconIds", () => {
   afterEach(() => {

@@ -4,7 +4,8 @@ import { GroceriesRoot } from "@/features/groceries/groceries-root";
 import { groceriesView } from "@/features/groceries/lib/groceries-view";
 import { listFoodIds } from "@/features/groceries/lib/list-food-ids";
 import { DESTINATION_HEADER } from "@/lib/auth/login-redirect";
-import { iconIds } from "@/lib/ingredient-icon-ids";
+
+import { iconIds } from "@norish/shared/lib/ingredient-icon-ids";
 
 /**
  * Both Groceries views under one layout that renders the root, so a switch stays on the client;

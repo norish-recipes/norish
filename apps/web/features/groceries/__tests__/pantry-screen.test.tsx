@@ -5,10 +5,11 @@
  */
 import type { ReactNode } from "react";
 import { PantryScreen } from "@/features/groceries/pantry-screen";
-import { iconIds } from "@/lib/ingredient-icon-ids";
 import { QueryClientProvider } from "@tanstack/react-query";
 import { act, fireEvent, render as renderUi, screen } from "@testing-library/react";
 import { beforeEach, describe, expect, it, vi } from "vitest";
+
+import { iconIds } from "@norish/shared/lib/ingredient-icon-ids";
 
 import "@testing-library/jest-dom";
 
