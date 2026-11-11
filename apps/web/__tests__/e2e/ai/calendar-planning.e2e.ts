@@ -13,6 +13,8 @@
  */
 import type { Page } from "@playwright/test";
 
+import { fingerFor, glide } from "../harness/pointer";
+import { callTrpc, queryTrpc } from "../harness/trpc";
 import { seedRecipe } from "./cookbooks-support";
 import { expect, test } from "./fixture";
 
@@ -139,4 +141,77 @@ test("a recipe planned on the dashboard shows on the calendar page from the cach
   await expect(page.getByText(NAME).first()).toBeVisible();
 
   await context.close();
+});
+
+/** A date as the calendar keys it, in the browser's own calendar. */
+const isoDay = (date: Date) =>
+  `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, "0")}-${String(date.getDate()).padStart(2, "0")}`;
+
+test("a recipe dragged onto another day moves there and stays after a reload", async ({
+  browser,
+  aiStack,
+}) => {
+  const name = `Dragged Stew ${Date.now()}`;
+  const recipeId = await seedRecipe(name);
+  const today = new Date();
+  const tomorrow = new Date(today.getFullYear(), today.getMonth(), today.getDate() + 1);
+
+  await callTrpc(aiStack.baseURL, aiStack.ownerCookies, "calendar.createItem", {
+    date: isoDay(today),
+    slot: "Dinner",
+    itemType: "recipe",
+    recipeId,
+  });
+
+  const context = await browser.newContext({
+    baseURL: aiStack.baseURL,
+    storageState: { cookies: aiStack.ownerCookies, origins: [] },
+    viewport: { width: 1280, height: 900 },
+  });
+  const page = await context.newPage();
+  // Desktop day cards sit in the grid of a virtual row; a card's header names its day.
+  const card = (header: string) =>
+    page.locator("[data-index] .grid > *").filter({ has: page.getByText(header, { exact: true }) });
+  const todayCard = card("Today");
+  const tomorrowCard = card(
+    `${new Intl.DateTimeFormat("en", { month: "long" }).format(tomorrow)} ${tomorrow.getDate()}`
+  );
+  const plannedDate = async () => {
+    const items = await queryTrpc<Array<{ date: string; recipeId: string | null }>>(
+      aiStack.baseURL,
+      aiStack.ownerCookies,
+      "calendar.listItems",
+      { startISO: "2000-01-01", endISO: "2999-12-31" }
+    );
+
+    return items.find((item) => item.recipeId === recipeId)?.date;
+  };
+
+  try {
+    await page.goto("/calendar");
+    const item = todayCard.getByText(name);
+
+    await expect(item).toBeVisible();
+    await expect(tomorrowCard).toBeVisible();
+
+    // The desktop pointer sensor starts a drag only after 8 px of movement.
+    const from = (await item.boundingBox())!;
+    const to = (await tomorrowCard.boundingBox())!;
+    const start = { x: from.x + from.width / 2, y: from.y + from.height / 2 };
+    const mouse = await fingerFor(page, "mouse");
+
+    await mouse.down(start);
+    await glide(page, mouse, start, { x: to.x + to.width / 2, y: to.y + to.height / 2 });
+    await mouse.up();
+
+    await expect(tomorrowCard.getByText(name)).toBeVisible();
+    await expect(todayCard.getByText(name)).toHaveCount(0);
+    await expect.poll(plannedDate).toBe(isoDay(tomorrow));
+
+    await page.reload();
+    await expect(tomorrowCard.getByText(name)).toBeVisible();
+    await expect(todayCard.getByText(name)).toHaveCount(0);
+  } finally {
+    await context.close();
+  }
 });
