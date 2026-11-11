@@ -9,11 +9,8 @@ type Timeline<TScroll extends Element | Window> = Pick<
 >;
 
 /**
- * Scrolls a day to the top of the window, holding off TanStack's correction
- * for the days above it while they are measured on the way. The scroll
- * already follows the day to its place, so correcting as well counts their
- * growth twice: iOS applies its deferred correction once the landing has
- * settled, which left today under the status bar.
+ * Scrolls a day to the top with TanStack's size correction off: the scroll already follows the days
+ * above as they are measured, and correcting too (deferred on iOS) hid today under the status bar.
  */
 export function landOnDay<TScroll extends Element | Window>(
   timeline: Timeline<TScroll>,

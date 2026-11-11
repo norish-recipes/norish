@@ -98,11 +98,8 @@ function row(): HTMLElement {
   return button().closest("[data-style-bottom]")!;
 }
 
-/**
- * The way back to today stacks on the end of the nav pill rather than floating
- * free of it: the same disc as the user-menu circle, on the nav's own centre
- * line, closer in than the pill row the timer dock stands in.
- */
+// The way back to today stacks on the nav pill's end, on the user-menu disc's centre line,
+// closer in than the pill row the timer dock stands in.
 describe("Back-to-today button", () => {
   it("stands on the nav's end cap rather than up in the pill row", () => {
     renderButton();

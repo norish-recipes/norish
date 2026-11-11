@@ -21,7 +21,7 @@ type TimelineScrollArgs = {
   isLoading: boolean;
   isGrowing: boolean;
   grow: (direction: GrowDirection) => void;
-  /** Items from the first (past) or last (future) at or within which a resting scroll grows that edge. */
+  /** Items from the first (past) or last (future) within which a resting scroll grows that edge. */
   growEdge: Record<GrowDirection, number>;
   /** Items today must sit inside the window's first and last before it counts as visible. */
   todayBuffer: { past: number; future: number };
@@ -30,19 +30,16 @@ type TimelineScrollArgs = {
 };
 
 /**
- * Whether the window has reached the day a landing was for. A timeline loads
- * more at its edges only after that: right after the landing is asked for, the
- * window still shows the top rows, and widening the range there pins the
- * window at the top instead of today. A day outside the range is not waited for.
+ * Whether the window shows the landing's day yet; a day outside the range counts as shown.
+ * Growing an edge before then widens the range under the top rows and pins the window there.
  */
 export function hasReachedDay(items: readonly { index: number }[], index: number): boolean {
   return index < 0 || items.some((item) => item.index === index);
 }
 
 /**
- * A calendar timeline's scrolling: it lands on today once, keeps the window on
- * its item when the past grows, grows the range at a resting edge, and tracks
- * whether today is in view for the way back to it.
+ * Lands a timeline on today once, holds its place as the past grows, grows a resting edge,
+ * and tracks whether today is in view for the way back to it.
  */
 export function useTimelineScroll({
   virtualizer,

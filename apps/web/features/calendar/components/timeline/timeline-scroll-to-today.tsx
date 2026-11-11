@@ -16,13 +16,8 @@ type TimelineScrollToTodayProps = {
 };
 
 /**
- * The way back to today, stacked on the end of the nav pill: the same disc as
- * the user-menu circle directly below it, on the same centre line, so the two
- * read as one column rather than as a button that happens to be near the bar.
- *
- * It takes the nav's own shrink about the nav's own anchor rather than holding
- * still while the bar moves under it, because a bar that hides by shrinking in
- * place never vacates the corner a fixed button would be left stranded over.
+ * The way back to today: a disc on the nav pill's end, over the user-menu disc, as one column.
+ * It shrinks with the nav about the nav's anchor, so it never strands over a corner the bar leaves.
  */
 export function TimelineScrollToToday({
   isVisible,

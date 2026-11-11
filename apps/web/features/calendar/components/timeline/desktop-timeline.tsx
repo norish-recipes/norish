@@ -104,9 +104,8 @@ export function DesktopTimeline({ onAddItem, onNoteClick, onRecipeClick }: Deskt
   // Container ref for scroll margin calculation
   const containerRef = useRef<HTMLDivElement>(null);
 
-  // Calculate scroll margin from container position. The container's offset is
-  // read, not tracked: a resize is what moves it, so it is measured on one and
-  // the timeline counts from the top of the page until then.
+  // The container's offset is measured on a resize, the one thing that moves it;
+  // until then the timeline counts from the top of the page.
   const [scrollMargin, setScrollMargin] = useState(0);
   const measuredHeightRef = useRef(windowHeight);
 
