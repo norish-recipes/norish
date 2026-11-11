@@ -66,8 +66,10 @@ test("a household is created, joined by code, a member removed, and left", async
     await expect(codeField).toHaveValue(/^\d{6}$/);
     const code = await codeField.inputValue();
 
-    // The member joins with it, and each sees the other in the members card.
-    await memberPage.goto(HOUSEHOLD_SETTINGS);
+    // The member opens the tab from the bar and joins with it; each sees the other.
+    await memberPage.goto("/settings/account");
+    await memberPage.getByRole("tab", { name: "Household" }).click();
+    await expect(memberPage).toHaveURL(new RegExp(`${HOUSEHOLD_SETTINGS}$`));
     await joinWithCode(memberPage, code);
     await expect(memberRow(memberPage, admin.name)).toBeVisible();
     await expect(memberRow(memberPage, member.name)).toBeVisible();
