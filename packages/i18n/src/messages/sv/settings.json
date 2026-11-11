@@ -4,7 +4,7 @@
     "ariaLabel": "Inställningsflikar"
   },
   "tabs": {
-    "user": "Användare",
+    "account": "Konto",
     "household": "Hushåll",
     "caldav": "CalDAV",
     "admin": "Administration",

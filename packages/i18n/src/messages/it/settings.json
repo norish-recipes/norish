@@ -4,7 +4,7 @@
     "ariaLabel": "Schede impostazioni"
   },
   "tabs": {
-    "user": "Utente",
+    "account": "Account",
     "household": "Nucleo familiare",
     "caldav": "CalDAV",
     "admin": "Amministrazione",

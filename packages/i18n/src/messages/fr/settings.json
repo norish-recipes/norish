@@ -4,7 +4,7 @@
     "ariaLabel": "Onglets des paramètres"
   },
   "tabs": {
-    "user": "Utilisateur",
+    "account": "Compte",
     "household": "Foyer",
     "caldav": "CalDAV",
     "admin": "Admin",

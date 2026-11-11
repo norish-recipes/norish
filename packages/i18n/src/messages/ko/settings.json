@@ -4,7 +4,7 @@
     "ariaLabel": "설정 탭"
   },
   "tabs": {
-    "user": "사용자",
+    "account": "계정",
     "household": "가구",
     "caldav": "CalDAV",
     "admin": "관리자",

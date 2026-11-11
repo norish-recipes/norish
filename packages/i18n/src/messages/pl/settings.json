@@ -4,7 +4,7 @@
     "ariaLabel": "Karty ustawień"
   },
   "tabs": {
-    "user": "Użytkownik",
+    "account": "Konto",
     "household": "Gospodarstwo domowe",
     "caldav": "CalDAV",
     "admin": "Administrator",

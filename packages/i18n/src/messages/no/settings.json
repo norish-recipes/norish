@@ -4,7 +4,7 @@
     "ariaLabel": "Innstillingsfaner"
   },
   "tabs": {
-    "user": "Bruker",
+    "account": "Konto",
     "household": "Husstand",
     "caldav": "CalDAV",
     "admin": "Admin",

@@ -4,7 +4,7 @@
     "ariaLabel": "Einstellungen-Reiter"
   },
   "tabs": {
-    "user": "Benutzer",
+    "account": "Konto",
     "household": "Haushalt",
     "caldav": "CalDAV",
     "admin": "Admin",

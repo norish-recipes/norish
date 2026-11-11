@@ -4,7 +4,7 @@
     "ariaLabel": "تبويبات الإعدادات"
   },
   "tabs": {
-    "user": "المستخدم",
+    "account": "الحساب",
     "household": "المنزل",
     "caldav": "CalDAV",
     "admin": "الإدارة",

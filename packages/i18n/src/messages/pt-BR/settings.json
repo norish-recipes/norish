@@ -4,7 +4,7 @@
     "ariaLabel": "Abas de configurações"
   },
   "tabs": {
-    "user": "Usuário",
+    "account": "Conta",
     "household": "Casa",
     "caldav": "CalDAV",
     "admin": "Admin",

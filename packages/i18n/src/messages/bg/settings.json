@@ -4,7 +4,7 @@
     "ariaLabel": "Раздели с настройки"
   },
   "tabs": {
-    "user": "Потребител",
+    "account": "Акаунт",
     "household": "Домакинство",
     "caldav": "CalDAV",
     "admin": "Администратор",
