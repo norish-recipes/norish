@@ -1,12 +1,11 @@
 "use client";
 
 import { memo } from "react";
-import { dayDropId } from "@/components/calendar/day-drop-id";
-import { SLOTS } from "@/components/calendar/slots";
 import { TimelineSlotContainer } from "@/components/calendar/timeline-slot-container";
-import { useDroppable } from "@dnd-kit/core";
+import { useDaySlots } from "@/components/calendar/use-day-slots";
+import { SlotDropdown } from "@/components/shared/slot-dropdown";
 import { PlusIcon } from "@heroicons/react/16/solid";
-import { Button, Card, Dropdown, Label, Separator } from "@heroui/react";
+import { Button, Card, Separator } from "@heroui/react";
 import { useTranslations } from "next-intl";
 
 import type { PlannedItemFromQuery, Slot } from "@norish/shared/contracts";
@@ -24,6 +23,7 @@ type DesktopDayCardProps = {
   onRecipeClick?: (item: PlannedItemFromQuery) => void;
 };
 const CARD_HEIGHT = 400;
+
 export const DesktopDayCard = memo(function DesktopDayCard({
   date,
   dateKey,
@@ -38,46 +38,10 @@ export const DesktopDayCard = memo(function DesktopDayCard({
 }: DesktopDayCardProps) {
   const t = useTranslations("calendar.timeline");
   const tMobile = useTranslations("calendar.mobile");
-  const tSlots = useTranslations("common.slots");
-
-  // Make the entire day section a drop target
-  const { setNodeRef, isOver } = useDroppable({
-    id: dayDropId(dateKey),
-    data: {
-      type: "day",
-      dateKey,
-    },
-  });
-  const slotLabels: Record<Slot, string> = {
-    Breakfast: tSlots("breakfast"),
-    Lunch: tSlots("lunch"),
-    Dinner: tSlots("dinner"),
-    Snack: tSlots("snack"),
-  };
-
-  // Group items by slot
-  const itemsBySlot = (() => {
-    const grouped: Record<Slot, PlannedItemFromQuery[]> = {
-      Breakfast: [],
-      Lunch: [],
-      Dinner: [],
-      Snack: [],
-    };
-    for (const item of items) {
-      const slotItems = grouped[item.slot as Slot];
-      if (slotItems) {
-        slotItems.push(item);
-      }
-    }
-
-    // Sort by sortOrder within each slot
-    for (const slot of SLOTS) {
-      grouped[slot]?.sort((a, b) => a.sortOrder - b.sortOrder);
-    }
-    return grouped;
-  })();
+  const { setNodeRef, isOver, slots } = useDaySlots(dateKey, items);
   const hasItems = items.length > 0;
   const showDragHighlight = isDragOver || isOver;
+
   return (
     <Card
       ref={setNodeRef}
@@ -107,7 +71,7 @@ export const DesktopDayCard = memo(function DesktopDayCard({
             )}
           </div>
 
-          <Dropdown>
+          <SlotDropdown onSelectSlot={(slot) => onAddItem(dateKey, slot)}>
             <Button
               isIconOnly
               aria-label={t("addItem")}
@@ -117,26 +81,7 @@ export const DesktopDayCard = memo(function DesktopDayCard({
             >
               <PlusIcon className="h-4 w-4" />
             </Button>
-            <Dropdown.Popover className="bg-overlay">
-              <Dropdown.Menu
-                aria-label={tSlots("chooseSlot")}
-                onAction={(slot) => onAddItem(dateKey, slot as Slot)}
-              >
-                <Dropdown.Item key="Breakfast" id="Breakfast" textValue="Breakfast">
-                  <Label>{slotLabels.Breakfast}</Label>
-                </Dropdown.Item>
-                <Dropdown.Item key="Lunch" id="Lunch" textValue="Lunch">
-                  <Label>{slotLabels.Lunch}</Label>
-                </Dropdown.Item>
-                <Dropdown.Item key="Dinner" id="Dinner" textValue="Dinner">
-                  <Label>{slotLabels.Dinner}</Label>
-                </Dropdown.Item>
-                <Dropdown.Item key="Snack" id="Snack" textValue="Snack">
-                  <Label>{slotLabels.Snack}</Label>
-                </Dropdown.Item>
-              </Dropdown.Menu>
-            </Dropdown.Popover>
-          </Dropdown>
+          </SlotDropdown>
         </div>
 
         <Separator className="shrink-0" />
@@ -145,21 +90,15 @@ export const DesktopDayCard = memo(function DesktopDayCard({
         <div className="min-h-0 flex-1 overflow-y-auto">
           {hasItems ? (
             <div className="flex flex-col">
-              {SLOTS.map((slot) => {
-                const slotItems = itemsBySlot[slot];
-                if (!slotItems || slotItems.length === 0) return null;
-                return (
-                  <TimelineSlotContainer
-                    key={slot}
-                    dateKey={dateKey}
-                    items={slotItems}
-                    slot={slot}
-                    slotLabel={slotLabels[slot] ?? slot}
-                    onNoteClick={onNoteClick}
-                    onRecipeClick={onRecipeClick}
-                  />
-                );
-              })}
+              {slots.map(({ slot, label, items: slotItems }) => (
+                <TimelineSlotContainer
+                  key={slot}
+                  items={slotItems}
+                  slotLabel={label}
+                  onNoteClick={onNoteClick}
+                  onRecipeClick={onRecipeClick}
+                />
+              ))}
             </div>
           ) : (
             <span className="text-muted py-1 text-xs italic">{t("noItems")}</span>

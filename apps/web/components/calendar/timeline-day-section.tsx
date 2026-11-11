@@ -1,10 +1,8 @@
 "use client";
 
 import { memo } from "react";
-import { dayDropId } from "@/components/calendar/day-drop-id";
-import { SLOTS } from "@/components/calendar/slots";
+import { useDaySlots } from "@/components/calendar/use-day-slots";
 import { SlotDropdown } from "@/components/shared/slot-dropdown";
-import { useDroppable } from "@dnd-kit/core";
 import { PlusIcon } from "@heroicons/react/16/solid";
 import { Button, Card, Separator } from "@heroui/react";
 import { useTranslations } from "next-intl";
@@ -40,46 +38,10 @@ export const TimelineDaySection = memo(function TimelineDaySection({
 }: TimelineDaySectionProps) {
   const t = useTranslations("calendar.timeline");
   const tMobile = useTranslations("calendar.mobile");
-  const tSlots = useTranslations("common.slots");
-
-  // Make the entire day section a drop target
-  const { setNodeRef, isOver } = useDroppable({
-    id: dayDropId(dateKey),
-    data: {
-      type: "day",
-      dateKey,
-    },
-  });
-  const slotLabels: Record<Slot, string> = {
-    Breakfast: tSlots("breakfast"),
-    Lunch: tSlots("lunch"),
-    Dinner: tSlots("dinner"),
-    Snack: tSlots("snack"),
-  };
-
-  // Group items by slot
-  const itemsBySlot = (() => {
-    const grouped: Record<Slot, PlannedItemFromQuery[]> = {
-      Breakfast: [],
-      Lunch: [],
-      Dinner: [],
-      Snack: [],
-    };
-    for (const item of items) {
-      const slotItems = grouped[item.slot as Slot];
-      if (slotItems) {
-        slotItems.push(item);
-      }
-    }
-
-    // Sort by sortOrder within each slot
-    for (const slot of SLOTS) {
-      grouped[slot]?.sort((a, b) => a.sortOrder - b.sortOrder);
-    }
-    return grouped;
-  })();
+  const { setNodeRef, isOver, slots } = useDaySlots(dateKey, items);
   const hasItems = items.length > 0;
   const showDragHighlight = isDragOver || isOver;
+
   return (
     <Card
       ref={setNodeRef}
@@ -121,21 +83,15 @@ export const TimelineDaySection = memo(function TimelineDaySection({
           <>
             <Separator className={inPanel ? "bg-surface-tertiary" : undefined} />
             <div className="flex flex-col">
-              {SLOTS.map((slot) => {
-                const slotItems = itemsBySlot[slot];
-                if (!slotItems || slotItems.length === 0) return null;
-                return (
-                  <TimelineSlotContainer
-                    key={slot}
-                    dateKey={dateKey}
-                    items={slotItems}
-                    slot={slot}
-                    slotLabel={slotLabels[slot] ?? slot}
-                    onNoteClick={onNoteClick}
-                    onRecipeClick={onRecipeClick}
-                  />
-                );
-              })}
+              {slots.map(({ slot, label, items: slotItems }) => (
+                <TimelineSlotContainer
+                  key={slot}
+                  items={slotItems}
+                  slotLabel={label}
+                  onNoteClick={onNoteClick}
+                  onRecipeClick={onRecipeClick}
+                />
+              ))}
             </div>
           </>
         )}
