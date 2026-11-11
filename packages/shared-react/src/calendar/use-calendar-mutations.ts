@@ -45,7 +45,11 @@ export function useCalendarMutations(): CalendarMutationsResult {
     return { held };
   };
 
-  const rollBack = (error: unknown, context: { held: CachedCalendarRange[] } | undefined) => {
+  const rollBack = (
+    error: unknown,
+    _variables: unknown,
+    context: { held: CachedCalendarRange[] } | undefined
+  ) => {
     // Queued: keep the optimistic write; the Outbox will Replay it.
     if (shouldPreserveOptimisticUpdate(error)) return;
 
@@ -87,7 +91,7 @@ export function useCalendarMutations(): CalendarMutationsResult {
       onMutate: ({ itemId }) =>
         writeAcrossRanges((items) => items.filter((item) => item.id !== itemId)),
       onSuccess: rereadIfStale,
-      onError: (error, _vars, context) => rollBack(error, context),
+      onError: rollBack,
     })
   );
   const { mutate: mutateDelete } = deleteMutation;
@@ -103,7 +107,7 @@ export function useCalendarMutations(): CalendarMutationsResult {
         );
       },
       onSuccess: rereadIfStale,
-      onError: (error, _vars, context) => rollBack(error, context),
+      onError: rollBack,
     })
   );
   const { mutate: mutateMove } = moveMutation;
@@ -117,7 +121,7 @@ export function useCalendarMutations(): CalendarMutationsResult {
           )
         ),
       onSuccess: rereadIfStale,
-      onError: (error, _vars, context) => rollBack(error, context),
+      onError: rollBack,
     })
   );
   const { mutate: mutateUpdate } = updateMutation;
