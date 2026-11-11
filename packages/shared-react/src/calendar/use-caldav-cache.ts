@@ -3,6 +3,7 @@ import { useQueryClient } from "@tanstack/react-query";
 import type { UserCaldavConfigWithoutPasswordDto } from "@norish/shared/contracts";
 
 import type { CaldavCacheHelpers } from "./types";
+import { writeOverRead } from "../offline/write-over-read";
 import { useTRPC } from "../trpc";
 
 export function useCaldavCacheHelpers(): CaldavCacheHelpers {
@@ -15,9 +16,7 @@ export function useCaldavCacheHelpers(): CaldavCacheHelpers {
     // Read when a write runs, so the caller needn't subscribe to the config.
     cachedConfigVersion: () =>
       queryClient.getQueryData<UserCaldavConfigWithoutPasswordDto | null>(configKey)?.version,
-    setConfig: (updater) => {
-      queryClient.setQueryData(configKey, updater);
-    },
+    setConfig: (updater) => writeOverRead(queryClient, configKey, updater),
     invalidateConfig: () => {
       void queryClient.invalidateQueries({ queryKey: configKey });
     },

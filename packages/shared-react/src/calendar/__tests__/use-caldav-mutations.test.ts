@@ -225,6 +225,26 @@ describe("CalDAV Mutation Hooks", () => {
       expect(queryClient.getQueryState(mockConnectionQueryKey)?.isInvalidated).toBe(true);
     });
 
+    it("keeps a save's answer over a config read begun before it", async () => {
+      const saved = createMockCaldavConfig({ username: "saved", version: 2 });
+      let answerRead: (config: unknown) => void = () => {};
+
+      queryClient.setQueryData(mockConfigQueryKey, createMockCaldavConfig({ version: 1 }));
+      mockGetConfigQueryFn.mockReturnValueOnce(new Promise((resolve) => (answerRead = resolve)));
+      void queryClient.fetchQuery({ queryKey: mockConfigQueryKey, queryFn: mockGetConfigQueryFn });
+      mockSaveConfigMutate.mockResolvedValueOnce(saved);
+      const { result } = renderHook(() => useCaldavMutations(), {
+        wrapper: createTestWrapper(queryClient),
+      });
+
+      await act(async () => {
+        await result.current.saveConfig(configInput);
+      });
+      await act(async () => answerRead(createMockCaldavConfig({ version: 1 })));
+
+      expect(queryClient.getQueryData(mockConfigQueryKey)).toEqual(saved);
+    });
+
     it("clears the cached config on delete and rereads status and summary", async () => {
       mockDeleteConfigMutate.mockResolvedValueOnce({ success: true });
       queryClient.setQueryData(mockConfigQueryKey, createMockCaldavConfig());
