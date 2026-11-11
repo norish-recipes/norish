@@ -1,11 +1,11 @@
 import { act } from "react";
 import CaldavSyncStatusCard from "@/features/calendar/components/caldav/caldav-sync-status-card";
-import { hydrateRoot } from "react-dom/client";
+import { createRoot, hydrateRoot } from "react-dom/client";
 import { renderToString } from "react-dom/server";
 import { afterEach, describe, expect, it, vi } from "vitest";
 
 vi.mock("next-intl", () => ({
-  useTranslations: () => (key: string) => key,
+  useTranslations: (namespace: string) => (key: string) => `${namespace}.${key}`,
   useFormatter: () => ({
     dateTime: (date: Date) => date.toISOString(),
     relativeTime: (date: Date, now: Date) =>
@@ -22,7 +22,7 @@ vi.mock("@norish/shared-react/calendar", () => ({
         recipeName: "Synced Soup",
         itemType: "recipe",
         date: "2026-10-17",
-        slot: "dinner",
+        slot: "Dinner",
         syncStatus: "synced",
         lastSyncAt: "2026-10-17T10:00:00.000Z",
         errorMessage: null,
@@ -58,5 +58,18 @@ describe("CaldavSyncStatusCard", () => {
 
     expect(onRecoverableError).not.toHaveBeenCalled();
     expect(container.textContent).toContain("2 minutes ago");
+  });
+
+  it("names each row's type, meal and status in the reader's language", async () => {
+    const container = document.createElement("div");
+
+    document.body.append(container);
+    await act(async () => createRoot(container).render(<CaldavSyncStatusCard />));
+
+    const row = [...container.querySelectorAll('[role="row"]')].at(-1)?.textContent;
+
+    expect(row).toContain("calendar.timeline.recipe");
+    expect(row).toContain("common.slots.dinner");
+    expect(row).toContain("settings.caldav.syncStatus.statuses.synced");
   });
 });

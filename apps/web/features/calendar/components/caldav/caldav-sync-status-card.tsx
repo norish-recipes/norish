@@ -1,6 +1,7 @@
 "use client";
 
 import { useState } from "react";
+import { slotTranslationKeys } from "@/components/dashboard/today/todays-meals-constants";
 import { SettingsCard } from "@/components/settings/settings-card";
 import { ActionButton } from "@/components/shared/action-button";
 import { ChipButton } from "@/components/shared/chip-button";
@@ -15,6 +16,7 @@ import {
 import { Button, Chip, Pagination, Popover, Table } from "@heroui/react";
 import { useFormatter, useNow, useTranslations } from "next-intl";
 
+import type { Slot } from "@norish/shared/contracts";
 import type { CaldavSyncStatus } from "@norish/shared/contracts/dto/caldav-sync-status";
 import {
   useCaldavMutations,
@@ -25,8 +27,12 @@ import { useHydrated } from "@norish/shared-react/platform";
 
 import { FIRST_SYNC_STATUS_PAGE } from "./first-sync-status-page";
 
+const isSlot = (slot: string): slot is Slot => Object.hasOwn(slotTranslationKeys, slot);
+
 export default function CaldavSyncStatusCard() {
   const t = useTranslations("settings.caldav.syncStatus");
+  const tSlots = useTranslations("common.slots");
+  const tItemTypes = useTranslations("calendar.timeline");
   const { pageSize } = FIRST_SYNC_STATUS_PAGE;
   const [syncStatusPage, setSyncStatusPage] = useState<number>(FIRST_SYNC_STATUS_PAGE.page);
   const [syncStatusFilter, setSyncStatusFilter] = useState<CaldavSyncStatus | undefined>(
@@ -183,7 +189,7 @@ export default function CaldavSyncStatusCard() {
                 <div className="text-muted px-4 py-8 text-center text-sm">
                   {syncStatusFilter
                     ? t("emptyFiltered", {
-                        status: syncStatusFilter,
+                        status: t(`statuses.${syncStatusFilter}`),
                       })
                     : t("emptyDefault")}
                 </div>
@@ -195,20 +201,19 @@ export default function CaldavSyncStatusCard() {
                     {status.recipeName || status.noteName || status.eventTitle || "—"}
                   </Table.Cell>
                   <Table.Cell>
-                    <Chip className="capitalize" size="sm" variant="soft">
-                      {status.itemType}
+                    <Chip size="sm" variant="soft">
+                      {tItemTypes(status.itemType)}
                     </Chip>
                   </Table.Cell>
                   <Table.Cell className="text-sm">{status.date || "—"}</Table.Cell>
-                  <Table.Cell className="text-sm capitalize">{status.slot || "—"}</Table.Cell>
+                  <Table.Cell className="text-sm">
+                    {status.slot && isSlot(status.slot)
+                      ? tSlots(slotTranslationKeys[status.slot])
+                      : "—"}
+                  </Table.Cell>
                   <Table.Cell>
-                    <Chip
-                      className="capitalize"
-                      color={getStatusColor(status.syncStatus)}
-                      size="sm"
-                      variant="soft"
-                    >
-                      {status.syncStatus}
+                    <Chip color={getStatusColor(status.syncStatus)} size="sm" variant="soft">
+                      {t(`statuses.${status.syncStatus}`)}
                     </Chip>
                   </Table.Cell>
                   <Table.Cell className="text-muted text-xs">
