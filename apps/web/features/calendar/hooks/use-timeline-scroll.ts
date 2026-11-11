@@ -1,5 +1,5 @@
 import type { VirtualItem, Virtualizer } from "@tanstack/react-virtual";
-import { useEffect, useLayoutEffect, useRef, useState } from "react";
+import { useCallback, useEffect, useLayoutEffect, useRef, useState } from "react";
 import { landOnDay } from "@/components/calendar/land-on-day";
 import { usePrependAnchorRestore } from "@/features/calendar/hooks/use-prepend-anchor-restore";
 
@@ -176,10 +176,10 @@ export function useTimelineScroll({
     todayIndex,
   ]);
 
-  return {
-    showScrollButton,
-    scrollDirection,
-    scrollToToday: () =>
-      virtualizer.scrollToIndex(todayIndex, { align: "start", behavior: "smooth" }),
-  };
+  const scrollToToday = useCallback(
+    () => virtualizer.scrollToIndex(todayIndex, { align: "start", behavior: "smooth" }),
+    [virtualizer, todayIndex]
+  );
+
+  return { showScrollButton, scrollDirection, scrollToToday };
 }
