@@ -7,11 +7,12 @@ import {
   fakePlatformAdapter,
 } from "@norish/shared-react/platform/testing";
 
+import { emitTrackedEvent } from "../../../__tests__/realtime/tracked-event";
 import { resetTRPCFake, serveTRPC } from "../../trpc/testing";
 import { useCaldavMutations } from "../use-caldav-mutations";
 import { useCaldavConnectionQuery, useCaldavPasswordQuery } from "../use-caldav-query";
 import { useCaldavSubscription } from "../use-caldav-subscription";
-import { createMockCaldavConfig, emitSyncEvent } from "./test-utils";
+import { createMockCaldavConfig } from "./test-utils";
 
 const useSubscriptionMock = vi.hoisted(() => vi.fn());
 
@@ -138,7 +139,7 @@ describe("CalDAV reads after a save", () => {
 
     await waitFor(() => expect(result.current.password.password).toBe("old"));
     stored = "elsewhere";
-    emitSyncEvent(useSubscriptionMock, configSaved(2));
+    emitTrackedEvent(useSubscriptionMock, configSaved(2));
     await settle();
 
     expect(sent("caldav.getPassword")).toBe(1);
@@ -150,7 +151,7 @@ describe("CalDAV reads after a save", () => {
 
     await waitFor(() => expect(result.current.password.password).toBe("old"));
     stored = "second";
-    emitSyncEvent(useSubscriptionMock, configSaved(2));
+    emitTrackedEvent(useSubscriptionMock, configSaved(2));
     const gate = Promise.withResolvers<void>();
 
     passwordGate = gate.promise;
@@ -158,7 +159,7 @@ describe("CalDAV reads after a save", () => {
 
     await vi.waitFor(() => expect(sent("caldav.getPassword")).toBe(2));
     stored = "third";
-    emitSyncEvent(useSubscriptionMock, configSaved(3));
+    emitTrackedEvent(useSubscriptionMock, configSaved(3));
     gate.resolve();
     await act(() => early);
 
@@ -194,7 +195,7 @@ describe("CalDAV reads after a save", () => {
     await answerCheck(true);
     await waitFor(() => expect(result.current.connection.isConnected).toBe(true));
 
-    emitSyncEvent(useSubscriptionMock, configSaved(2));
+    emitTrackedEvent(useSubscriptionMock, configSaved(2));
     await waitFor(() => expect(result.current.connection.isChecking).toBe(true));
     await answerCheck(false, 2);
     await settle();

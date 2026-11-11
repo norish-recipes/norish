@@ -1,6 +1,3 @@
-import type { Mock } from "vitest";
-import { act } from "react";
-
 import type {
   CaldavSyncStatusSummaryDto,
   UserCaldavConfigWithoutPasswordDto,
@@ -9,17 +6,6 @@ import type {
   CaldavSyncStatus,
   CaldavSyncStatusViewDto,
 } from "@norish/shared/contracts/dto/caldav-sync-status";
-
-import { trackedEvent } from "../../../__tests__/realtime/tracked-event";
-
-/** Delivers a CalDAV sync event through the subscription the mocked `useSubscription` saw last. */
-export function emitSyncEvent(useSubscriptionMock: Mock, event: unknown) {
-  const { onData } = useSubscriptionMock.mock.calls.at(-1)?.[0] as {
-    onData: (data: unknown) => void;
-  };
-
-  act(() => onData(trackedEvent(event)));
-}
 
 /**
  * Create a mock CalDAV config without password

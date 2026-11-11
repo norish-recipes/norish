@@ -3,6 +3,9 @@
  * the tracked item tRPC hands `onData` — a cursor beside the envelope.
  */
 
+import type { Mock } from "vitest";
+import { act } from "react";
+
 import type { RealtimeEventEnvelope } from "@norish/shared/contracts/realtime/envelope";
 import { CURSOR_MARK, ENVELOPE_VERSION } from "@norish/shared/contracts/realtime/envelope";
 
@@ -28,4 +31,13 @@ export function trackedEvent<P>(payload: P, eventName?: string) {
 /** The Cursor Mark that opens every subscription, as tRPC hands it `onData`. */
 export function trackedCursorMark() {
   return { id: "1.abcdef01.1700000000000-0", data: CURSOR_MARK };
+}
+
+/** Delivers one event through the subscription the mocked `useSubscription` saw last. */
+export function emitTrackedEvent(useSubscriptionMock: Mock, payload: unknown) {
+  const { onData } = useSubscriptionMock.mock.calls.at(-1)?.[0] as {
+    onData: (data: unknown) => void;
+  };
+
+  act(() => onData(trackedEvent(payload)));
 }

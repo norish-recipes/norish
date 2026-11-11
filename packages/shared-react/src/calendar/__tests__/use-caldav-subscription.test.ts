@@ -9,8 +9,9 @@ import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 
 import { createTestWrapper, fakePlatformAdapter } from "@norish/shared-react/platform/testing";
 
+import { emitTrackedEvent } from "../../../__tests__/realtime/tracked-event";
 import { useCaldavSubscription } from "../use-caldav-subscription";
-import { createMockCaldavConfig, emitSyncEvent } from "./test-utils";
+import { createMockCaldavConfig } from "./test-utils";
 
 const useSubscriptionMock = vi.hoisted(() => vi.fn());
 
@@ -66,7 +67,7 @@ afterEach(() => {
 
 describe("useCaldavSubscription", () => {
   it("toasts the initial sync's start through the platform, translated", () => {
-    emitSyncEvent(useSubscriptionMock, {
+    emitTrackedEvent(useSubscriptionMock, {
       type: "initialSyncComplete",
       data: { totalSynced: 4, totalFailed: 0 },
     });
@@ -79,7 +80,7 @@ describe("useCaldavSubscription", () => {
   });
 
   it("warns when some items could not be queued", () => {
-    emitSyncEvent(useSubscriptionMock, {
+    emitTrackedEvent(useSubscriptionMock, {
       type: "initialSyncComplete",
       data: { totalSynced: 3, totalFailed: 2 },
     });
@@ -94,7 +95,7 @@ describe("useCaldavSubscription", () => {
   it("writes a saved config into the cache and toasts nothing", () => {
     const config = createMockCaldavConfig({ version: 3 });
 
-    emitSyncEvent(useSubscriptionMock, { type: "configSaved", data: { config } });
+    emitTrackedEvent(useSubscriptionMock, { type: "configSaved", data: { config } });
 
     expect(queryClient.getQueryData(CONFIG_KEY)).toEqual(config);
     expect(platform.toast.show).not.toHaveBeenCalled();
@@ -104,7 +105,7 @@ describe("useCaldavSubscription", () => {
     const newer = createMockCaldavConfig({ version: 4, username: "newer" });
 
     queryClient.setQueryData(CONFIG_KEY, newer);
-    emitSyncEvent(useSubscriptionMock, {
+    emitTrackedEvent(useSubscriptionMock, {
       type: "configSaved",
       data: { config: createMockCaldavConfig({ version: 3, username: "older" }) },
     });
@@ -115,7 +116,7 @@ describe("useCaldavSubscription", () => {
   it("rereads the summary when a sync completes", () => {
     queryClient.setQueryData(SUMMARY_KEY, { pending: 1, synced: 0, failed: 0, removed: 0 });
 
-    emitSyncEvent(useSubscriptionMock, { type: "syncCompleted", data: {} });
+    emitTrackedEvent(useSubscriptionMock, { type: "syncCompleted", data: {} });
 
     expect(queryClient.getQueryState(SUMMARY_KEY)?.isInvalidated).toBe(true);
   });
