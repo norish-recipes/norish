@@ -21,6 +21,8 @@ export function useProfileQuery(): Profile {
 
 export type ProfileCache = {
   held: () => UserSettingsDto | undefined;
+  /** The held user's version, for a write to send. */
+  version: () => number;
   /** Writes `update(held)`; a read begun before it would land over it, so it is cancelled. */
   write: (update: (held: UserSettingsDto) => UserSettingsDto) => void;
   /** Puts back what `held` returned before an optimistic write. */
@@ -47,6 +49,7 @@ export function useProfileCache(): ProfileCache {
 
   return {
     held,
+    version: () => held()?.user.version ?? 1,
     write,
     restore: (previous) => queryClient.setQueryData<UserSettingsDto>(queryKey, previous),
     mergeUser: (patch) => write((data) => ({ ...data, user: { ...data.user, ...patch } })),

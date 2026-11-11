@@ -26,12 +26,13 @@ export function useAllergiesMutation() {
   const { showError } = usePlatform();
   const { mergeUser } = useProfileCache();
   const queryKey = trpc.user.getAllergies.queryKey();
+  const heldVersion = () => queryClient.getQueryData(queryKey)?.version ?? 0;
 
   const { mutate, isPending } = useMutation(
     trpc.user.setAllergies.mutationOptions({
       onSuccess: (answer) => {
         if (!answer.success) return;
-        const version = answer.version ?? queryClient.getQueryData(queryKey)?.version ?? 0;
+        const version = answer.version ?? heldVersion();
 
         queryClient.setQueryData(queryKey, { allergies: answer.allergies ?? [], version });
         if (answer.version) mergeUser({ version: answer.version });
@@ -41,8 +42,7 @@ export function useAllergiesMutation() {
   );
 
   return {
-    setAllergies: (allergies: string[]) =>
-      mutate({ allergies, version: queryClient.getQueryData(queryKey)?.version ?? 0 }),
+    setAllergies: (allergies: string[]) => mutate({ allergies, version: heldVersion() }),
     isUpdatingAllergies: isPending,
   };
 }

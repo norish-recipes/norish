@@ -52,6 +52,15 @@ export type PlatformAdapter = {
   signOut: SignOut;
 };
 
+/** Tells the reader the server refused a write, with its reason when it named one. */
+export function showRefusal(
+  showError: PlatformAdapter["showError"],
+  answer: { error?: string },
+  context: string
+): void {
+  showError(answer.error ?? "Unknown error", context);
+}
+
 const PlatformContext = createContext<PlatformAdapter | null>(null);
 
 export function PlatformProvider({

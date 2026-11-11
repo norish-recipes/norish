@@ -4,6 +4,7 @@ import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 
 import { usePlatform } from "../platform";
 import { useTRPC } from "../trpc";
+import { settled } from "./settled";
 
 /** The tokens the Reader's imports send to sites that need a sign-in. */
 export function useSiteAuthTokensQuery() {
@@ -41,14 +42,11 @@ export function useSiteAuthTokenMutations() {
         () => true,
         () => false
       ),
-    /** Resolves once settled, whatever the outcome. */
+    /** Resolves once settled, whatever the outcome: the delete dialog closes then. */
     removeToken: (id: string): Promise<void> => {
       const version = queryClient.getQueryData(queryKey)?.find((token) => token.id === id)?.version;
 
-      return mutateRemove({ id, version: version ?? 1 }).then(
-        () => undefined,
-        () => undefined
-      );
+      return settled(mutateRemove({ id, version: version ?? 1 }));
     },
     isCreating,
     isRemoving,

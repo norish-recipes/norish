@@ -4,27 +4,37 @@ import { useMutation } from "@tanstack/react-query";
 
 import type { UserPreferencesDto } from "@norish/shared/contracts/zod/user";
 
-import { usePlatform } from "../platform";
+import { showRefusal, usePlatform } from "../platform";
 import { useTRPC } from "../trpc";
+import { settled } from "./settled";
 import { useProfileCache } from "./use-profile";
 
 type Answer = { success: boolean; error?: string };
+
+/** A failed write's `onError`: reread the profile and tell the reader. */
+function useFailedWrite() {
+  const { showError } = usePlatform();
+  const { invalidate } = useProfileCache();
+
+  return (context: string) => (error: unknown) => {
+    invalidate();
+    showError(error, context);
+  };
+}
 
 /** The Reader's name and Avatar; each answers with the user as it now is. */
 export function useProfileMutations() {
   const trpc = useTRPC();
   const { toast, showError } = usePlatform();
-  const { held, mergeUser, invalidate } = useProfileCache();
+  const { version, mergeUser } = useProfileCache();
+  const failed = useFailedWrite();
 
   const settle = (context: string) => ({
     onSuccess: (answer: Answer & { user?: Parameters<typeof mergeUser>[0] }) => {
       if (answer.success && answer.user) mergeUser(answer.user);
-      else if (!answer.success) showError(answer.error ?? "Unknown error", context);
+      else if (!answer.success) showRefusal(showError, answer, context);
     },
-    onError: (error: unknown) => {
-      invalidate();
-      showError(error, context);
-    },
+    onError: failed(context),
   });
   const settleName = settle("user-settings:update-name");
   const settleUpload = settle("user-settings:upload-avatar");
@@ -37,10 +47,9 @@ export function useProfileMutations() {
   const { mutateAsync: mutateDelete, isPending: isDeletingAvatar } = useMutation(
     trpc.user.deleteAvatar.mutationOptions(settleDelete)
   );
-  const version = () => held()?.user.version ?? 1;
 
   return {
-    /** Resolves once settled; an empty name is refused here. */
+    /** Resolves once settled, so the save goes on to the Avatar; an empty name is refused here. */
     updateName: async (name: string): Promise<void> => {
       if (!name.trim()) {
         toast.show({
@@ -51,7 +60,7 @@ export function useProfileMutations() {
         return;
       }
 
-      await mutateName({ name, version: version() }).catch(() => undefined);
+      await settled(mutateName({ name, version: version() }));
     },
     /** Rejects when the upload fails, which the reader is shown. */
     uploadAvatar: async (file: File): Promise<void> => {
@@ -76,8 +85,8 @@ export function useProfileMutations() {
 /** The Reader's account-wide Preferences, changed optimistically. */
 export function usePreferencesMutation() {
   const trpc = useTRPC();
-  const { showError } = usePlatform();
-  const { held, write, restore, mergeUser, invalidate } = useProfileCache();
+  const { held, version, write, restore, mergeUser, invalidate } = useProfileCache();
+  const failed = useFailedWrite();
 
   const merge = (patch: Partial<UserPreferencesDto>) =>
     write((data) => ({
@@ -106,19 +115,15 @@ export function usePreferencesMutation() {
       },
       onError: (error, _input, context) => {
         restore(context?.previous);
-        invalidate();
-        showError(error, "user-settings:update-preferences");
+        failed("user-settings:update-preferences")(error);
       },
     })
   );
 
   return {
-    /** Resolves once settled, whatever the outcome. */
+    /** Resolves once settled, whatever the outcome, so a language change refreshes after it. */
     updatePreferences: (preferences: Partial<UserPreferencesDto>): Promise<void> =>
-      mutateAsync({ preferences, version: held()?.user.version ?? 1 }).then(
-        () => undefined,
-        () => undefined
-      ),
+      settled(mutateAsync({ preferences, version: version() })),
     isUpdatingPreferences: isPending,
   };
 }
@@ -126,13 +131,8 @@ export function usePreferencesMutation() {
 /** The Reader's API keys, kept in the cached profile. */
 export function useApiKeyMutations() {
   const trpc = useTRPC();
-  const { showError } = usePlatform();
-  const { write, invalidate } = useProfileCache();
-
-  const failed = (context: string) => (error: unknown) => {
-    invalidate();
-    showError(error, context);
-  };
+  const { write } = useProfileCache();
+  const failed = useFailedWrite();
 
   const { mutateAsync: mutateCreate } = useMutation(
     trpc.user.apiKeys.create.mutationOptions({
@@ -177,7 +177,7 @@ export function useDeleteAccountMutation() {
     trpc.user.deleteAccount.mutationOptions({
       onSuccess: (answer) => {
         if (answer.success) void signOut({ accountDeleted: true });
-        else showError(answer.error ?? "Unknown error", context);
+        else showRefusal(showError, answer, context);
       },
       onError: (error) => showError(error, context),
     })

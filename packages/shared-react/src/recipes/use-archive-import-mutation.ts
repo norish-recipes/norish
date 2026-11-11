@@ -2,7 +2,7 @@
 
 import { useMutation } from "@tanstack/react-query";
 
-import { usePlatform } from "../platform";
+import { showRefusal, usePlatform } from "../platform";
 import { useTRPC } from "../trpc";
 import { useArchiveImport } from "./archive-import-store";
 
@@ -17,7 +17,7 @@ export function useArchiveImportMutation() {
     trpc.archive.importArchive.mutationOptions({
       onSuccess: (answer) => {
         if (!answer.success || answer.total === undefined) {
-          showError(answer.error ?? "Unknown error", context);
+          showRefusal(showError, answer, context);
 
           return;
         }
