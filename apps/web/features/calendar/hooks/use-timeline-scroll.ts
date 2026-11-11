@@ -1,6 +1,6 @@
 import type { VirtualItem, Virtualizer } from "@tanstack/react-virtual";
 import { useEffect, useLayoutEffect, useRef, useState } from "react";
-import { hasReachedDay, landOnDay } from "@/components/calendar/land-on-day";
+import { landOnDay } from "@/components/calendar/land-on-day";
 import { usePrependAnchorRestore } from "@/features/calendar/hooks/use-prepend-anchor-restore";
 
 type TimelineScrollArgs = {
@@ -28,6 +28,16 @@ type TimelineScrollArgs = {
   /** Checks today's visibility a frame after each scroll and first after 100 ms. */
   deferVisibilityCheck?: boolean;
 };
+
+/**
+ * Whether the window has reached the day a landing was for. A timeline loads
+ * more at its edges only after that: right after the landing is asked for, the
+ * window still shows the top rows, and widening the range there pins the
+ * window at the top instead of today. A day outside the range is not waited for.
+ */
+export function hasReachedDay(items: readonly { index: number }[], index: number): boolean {
+  return index < 0 || items.some((item) => item.index === index);
+}
 
 /**
  * A calendar timeline's scrolling: it lands on today once, keeps the window on

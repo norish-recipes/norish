@@ -25,13 +25,3 @@ export function landOnDay<TScroll extends Element | Window>(
 export function settleLanding<TScroll extends Element | Window>(timeline: Timeline<TScroll>): void {
   if (!timeline.isScrolling) timeline.shouldAdjustScrollPositionOnItemSizeChange = undefined;
 }
-
-/**
- * Whether the window has reached the day a landing was for. A timeline loads
- * more at its edges only after that: right after the landing is asked for, the
- * window still shows the top rows, and widening the range there pins the
- * window at the top instead of today. A day outside the range is not waited for.
- */
-export function hasReachedDay(items: readonly { index: number }[], index: number): boolean {
-  return index < 0 || items.some((item) => item.index === index);
-}

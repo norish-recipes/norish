@@ -1,5 +1,5 @@
 /** A timeline lands on today once, grows a side once per resting approach, and scrolls back to today. */
-import { useTimelineScroll } from "@/features/calendar/hooks/use-timeline-scroll";
+import { hasReachedDay, useTimelineScroll } from "@/features/calendar/hooks/use-timeline-scroll";
 import { act, renderHook, waitFor } from "@testing-library/react";
 import { describe, expect, it, vi } from "vitest";
 
@@ -111,5 +111,17 @@ describe("useTimelineScroll", () => {
       align: "start",
       behavior: "smooth",
     });
+  });
+});
+
+describe("hasReachedDay", () => {
+  it("waits until the window holds the day the landing was for", () => {
+    // Right after the landing is asked for, the window still shows the top.
+    expect(hasReachedDay([{ index: 0 }, { index: 1 }, { index: 2 }], 4)).toBe(false);
+    expect(hasReachedDay([{ index: 3 }, { index: 4 }, { index: 5 }], 4)).toBe(true);
+  });
+
+  it("does not wait for a day outside the range", () => {
+    expect(hasReachedDay([{ index: 0 }], -1)).toBe(true);
   });
 });
