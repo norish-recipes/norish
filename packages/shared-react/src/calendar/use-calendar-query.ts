@@ -1,10 +1,11 @@
-import { useQuery, useQueryClient } from "@tanstack/react-query";
+import { useQuery } from "@tanstack/react-query";
 
 import type { PlannedItemFromQuery } from "@norish/shared/contracts";
 
 import type { CalendarData, CalendarQueryResult } from "./types";
 import { useTRPC } from "../trpc";
-import { calendarRangeOfQueryKey, knownItemsInRange } from "./calendar-cache-merge";
+import { knownItemsInRange } from "./calendar-cache-merge";
+import { useCalendarCacheHelpers } from "./use-calendar-cache";
 
 function groupItemsByDate(items: PlannedItemFromQuery[]): CalendarData {
   const grouped: CalendarData = {};
@@ -18,7 +19,7 @@ function groupItemsByDate(items: PlannedItemFromQuery[]): CalendarData {
 
 export function useCalendarQuery(startISO: string, endISO: string): CalendarQueryResult {
   const trpc = useTRPC();
-  const queryClient = useQueryClient();
+  const { cachedRanges } = useCalendarCacheHelpers();
 
   const { data, error, isLoading } = useQuery({
     ...trpc.calendar.listItems.queryOptions(
@@ -28,24 +29,9 @@ export function useCalendarQuery(startISO: string, endISO: string): CalendarQuer
         refetchOnWindowFocus: false,
       }
     ),
-    // A range not read yet (the calendar page widening as it scrolls) starts
-    // from what the cached ranges know of its days, so widening never blanks
-    // the plans shown while its read is on the way, or when Offline it fails.
-    // Stale from the start, so it is read all the same.
-    initialData: () =>
-      knownItemsInRange(
-        queryClient
-          .getQueriesData<PlannedItemFromQuery[]>({
-            queryKey: trpc.calendar.listItems.queryKey(),
-          })
-          .flatMap(([key, items]) => {
-            const range = calendarRangeOfQueryKey(key);
-
-            return range && items ? [{ range, items }] : [];
-          }),
-        startISO,
-        endISO
-      ),
+    // A range not read yet starts from what the cached ranges know of its days, so
+    // widening never blanks the plans; stale from the start, so it is read all the same.
+    initialData: () => knownItemsInRange(cachedRanges(), { startISO, endISO }),
     initialDataUpdatedAt: 0,
   });
 
