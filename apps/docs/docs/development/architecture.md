@@ -167,8 +167,8 @@ gives the reasons for decisions without an ADR.
   changes nothing and no client needs to skip its own
   ([ADR-0032](https://github.com/norish-recipes/Norish/blob/main/docs/adr/realtime/0032-realtime-is-one-hub-one-catalogue-one-idiom.md)).
 - A fresh subscription rereads its `liveQueryKeys` once its Cursor Mark says it
-  is live, except reads an already live copy keeps current. Rereads due within
-  50 ms are combined. A subscription that falls behind ends Lagged, starts
+  is live. Rereads due within 50 ms are combined. A read still in flight when
+  the subscription goes live is reread after it lands. A subscription that falls behind ends Lagged, starts
   fresh and rereads the same keys once live
   ([ADR-0032](https://github.com/norish-recipes/Norish/blob/main/docs/adr/realtime/0032-realtime-is-one-hub-one-catalogue-one-idiom.md)).
   A reconnect resumes missed events from a bounded buffer without a reread
@@ -204,8 +204,7 @@ gives the reasons for decisions without an ADR.
   `useKeepsCurrent`, so web doesn't read them again on mount until they go
   stale. A mounted subscription vouches only for a read that arrived after it
   mounted, so a read from before a gap in its subscription is fetched again. A
-  subscription mounting with the screen rereads its `liveQueryKeys` once live,
-  except reads an already live copy keeps current.
+  subscription mounting with the screen rereads its `liveQueryKeys` once live.
 - Each layout seeds only what its screens draw in the first frame, and some
   seeded reads are reread once their subscriptions are live to cover changes
   made before registration. `(app)` seeds permissions and Device
