@@ -19,7 +19,7 @@ function lintJsx(code: string, parser?: Linter.Parser): string[] {
   const rules = { "no-restricted-syntax": reactConfig[0]?.rules?.["no-restricted-syntax"] };
 
   return new Linter()
-    .verify(code, [{ languageOptions: { ...jsx, parser }, rules }], "file.js")
+    .verify(code, [{ files: ["**/*.tsx"], languageOptions: { ...jsx, parser }, rules }], "file.tsx")
     .map(({ message }) => message);
 }
 
@@ -33,16 +33,18 @@ describe("reactConfig", () => {
 
   it("asks for the generated key wherever a hand-written tRPC-shaped key is passed", () => {
     const generated =
-      "A query key comes from its generated builder (trpc.x.y.queryKey(), .pathKey(), .pathFilter(), .queryFilter()), never a hand-written array.";
+      "A tRPC read's key comes from its generated builder (trpc.x.y.queryKey(), .pathKey(), .pathFilter(), .queryFilter(), .mutationKey()); a read that is not tRPC names its key in a constant.";
 
     for (const code of [
       'useQuery({ queryKey: ["calendar", "combined"], queryFn });',
       'queryClient.invalidateQueries({ queryKey: [["recipes"]] });',
       'queryClient.getQueryData(["groceries", "list"]);',
       'client.setQueryData([["stores", "list"], { type: "query" }], []);',
-      'queryClient.cancelQueries([["recipes"]]);',
+      'queryClient.getQueryData<Recipe[]>([["recipes", "list"]]);',
+      'queryClient.getQueryState([["recipes"]]);',
       'useQuery({ queryKey: ["version", "latest"] as const, queryFn });',
-      'queryClient.removeQueries([["recipes", "get"]] as const);',
+      'queryClient.setQueryDefaults([["recipes", "get"]] as const, { gcTime });',
+      'useMutation({ mutationKey: [["recipes", "create"]], mutationFn });',
     ]) {
       expect(lintJsx(code, tseslint.parser), code).toEqual([generated]);
     }
@@ -54,6 +56,8 @@ describe("reactConfig", () => {
       'list.push(["groceries", "list"]);',
       'queryClient.setQueryData(key, ["a", "b"]);',
       "useQuery({ queryKey: key as QueryKey, queryFn });",
+      'store.isFetching(["groceries", "list"]);',
+      "useMutation({ mutationKey: trpc.recipes.create.mutationKey(), mutationFn });",
     ]) {
       expect(lintJsx(code, tseslint.parser), code).toEqual([]);
     }

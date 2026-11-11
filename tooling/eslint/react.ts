@@ -47,12 +47,13 @@ const restrictedSyntax = [
   // A hand-written key drifts from the router unnoticed: a dead ["calendar", "combined"] hid for months.
   // The array's first element is a string or the path array, as written or `as const`.
   ...[
-    "Property[key.name='queryKey'] > *",
-    "CallExpression[callee.property.name=/^(invalidateQueries|cancelQueries|refetchQueries|removeQueries|resetQueries|getQueryData|setQueryData|getQueriesData|setQueriesData|getQueryState|isFetching|fetchQuery|prefetchQuery|ensureQueryData)$/] > *:first-child",
+    "Property[key.name=/^(queryKey|mutationKey)$/] > *",
+    // The client methods that take a key itself; the rest take filters, which carry `queryKey:`.
+    "CallExpression[callee.property.name=/^(getQueryData|setQueryData|getQueryState|setQueryDefaults|getQueryDefaults)$/] > *:first-child",
   ].map((selector) => ({
     selector: `${selector}:matches(${["elements.0", "expression.elements.0"].flatMap((first) => [`[${first}.value=type(string)]`, `[${first}.type='ArrayExpression']`]).join(", ")})`,
     message:
-      "A query key comes from its generated builder (trpc.x.y.queryKey(), .pathKey(), .pathFilter(), .queryFilter()), never a hand-written array.",
+      "A tRPC read's key comes from its generated builder (trpc.x.y.queryKey(), .pathKey(), .pathFilter(), .queryFilter(), .mutationKey()); a read that is not tRPC names its key in a constant.",
   })),
   {
     selector: "JSXOpeningElement[name.name='DndContext']:not(:has(JSXAttribute[name.name='id']))",
