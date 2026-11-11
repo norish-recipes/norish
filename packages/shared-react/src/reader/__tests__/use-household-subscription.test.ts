@@ -106,7 +106,7 @@ vi.mock("../../trpc", () => ({
       },
     },
     recipes: {
-      pathKey: () => [["recipes"]],
+      get: { pathKey: () => [["recipes", "get"]] },
     },
     calendar: {
       listRecipes: {
@@ -171,7 +171,7 @@ describe("useHouseholdSubscription", () => {
 
   describe("once live", () => {
     it.each(["onAllergiesUpdated", "onMemberProfileUpdated", "onKicked"])(
-      "%s rereads the household, the Reader's settings and the recipes",
+      "%s rereads the household, the Reader's settings and the recipe pages",
       async (name) => {
         queryClient.setQueryData(householdQueryKey, createMockHouseholdData(null, "user-1"));
         const invalidateSpy = vi.spyOn(queryClient, "invalidateQueries");
@@ -194,12 +194,16 @@ describe("useHouseholdSubscription", () => {
 
         await waitFor(() => expect(invalidateSpy).toHaveBeenCalledTimes(1));
         const { predicate } = invalidateSpy.mock.calls[0]![0] as {
-          predicate: (query: { queryKey: unknown[] }) => boolean;
+          predicate: (query: { queryKey: unknown[]; state: { fetchStatus: string } }) => boolean;
         };
+        const due = (queryKey: unknown[]) =>
+          predicate({ queryKey, state: { fetchStatus: "idle" } });
 
-        expect(predicate({ queryKey: householdQueryKey })).toBe(true);
-        expect(predicate({ queryKey: [["user", "get"], { type: "query" }] })).toBe(true);
-        expect(predicate({ queryKey: [["recipes", "list"], { type: "infinite" }] })).toBe(true);
+        expect(due(householdQueryKey)).toBe(true);
+        expect(due([["user", "get"], { type: "query" }])).toBe(true);
+        expect(due([["recipes", "get"], { input: { id: "r1" }, type: "query" }])).toBe(true);
+        // Only the recipe page draws the author: the paged lists are not reread on every start.
+        expect(due([["recipes", "list"], { type: "infinite" }])).toBe(false);
       }
     );
   });
@@ -355,10 +359,10 @@ describe("useHouseholdSubscription", () => {
       expect(invalidateSpy).toHaveBeenCalledWith({
         queryKey: [["user", "get"], { type: "query" }],
       });
-      expect(invalidateSpy).toHaveBeenCalledWith({ queryKey: [["recipes"]] });
+      expect(invalidateSpy).toHaveBeenCalledWith({ queryKey: [["recipes", "get"]] });
     });
 
-    it("refetches only recipes when another member's profile changed", async () => {
+    it("refetches only recipe pages when another member's profile changed", async () => {
       const initialHousehold = createMockHouseholdSettings({ id: "h1" });
       const initialData = createMockHouseholdData(initialHousehold, "user-1");
 
@@ -376,7 +380,7 @@ describe("useHouseholdSubscription", () => {
         );
       });
 
-      expect(invalidateSpy).toHaveBeenCalledWith({ queryKey: [["recipes"]] });
+      expect(invalidateSpy).toHaveBeenCalledWith({ queryKey: [["recipes", "get"]] });
       expect(invalidateSpy).not.toHaveBeenCalledWith({
         queryKey: [["user", "get"], { type: "query" }],
       });

@@ -16,21 +16,17 @@ type Payload<E extends EventName<HouseholdsRealtime>> = PayloadOf<HouseholdsReal
 export function useHouseholdSubscription() {
   const trpc = useTRPC();
   const currentUserId = useReader().user?.id;
-  const {
-    setHouseholdData,
-    invalidate,
-    invalidateCalendar,
-    invalidateUserSettings,
-    invalidateRecipes,
-  } = useHouseholdCacheHelpers();
+  const { setHouseholdData, invalidate, invalidateUserSettings, invalidateRecipes } =
+    useHouseholdCacheHelpers();
   const { toast, showError } = usePlatform();
 
-  // What these events patch or invalidate: the household, the reader's settings, recipe authors.
+  // What these events patch or invalidate: the household, the reader's settings, and the recipe
+  // pages, the one place an author is drawn.
   const live = {
     liveQueryKeys: [
       trpc.households.get.queryKey(),
       trpc.user.get.queryKey(),
-      trpc.recipes.pathKey(),
+      trpc.recipes.get.pathKey(),
     ],
   };
 
@@ -201,9 +197,6 @@ export function useHouseholdSubscription() {
           },
         };
       });
-
-      // Invalidate calendar to recompute allergy warnings
-      invalidateCalendar();
     },
   });
 
@@ -217,7 +210,7 @@ export function useHouseholdSubscription() {
         invalidateUserSettings();
       }
 
-      // Recipe payloads carry the author's profile picture
+      // The recipe page draws the author's profile picture.
       invalidateRecipes();
     },
   });

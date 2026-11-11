@@ -26,7 +26,6 @@ type HouseholdUpdater = (prev: HouseholdData | undefined) => HouseholdData | und
 export type HouseholdCacheHelpers = {
   setHouseholdData: (updater: HouseholdUpdater) => void;
   invalidate: () => void;
-  invalidateCalendar: () => void;
   invalidateUserSettings: () => void;
   invalidateRecipes: () => void;
 };
@@ -57,15 +56,12 @@ export function useHouseholdCacheHelpers(): HouseholdCacheHelpers {
     invalidate: () => {
       void queryClient.invalidateQueries({ queryKey });
     },
-    invalidateCalendar: () => {
-      void queryClient.invalidateQueries({ queryKey: ["calendar", "combined"] });
-    },
     invalidateUserSettings: () => {
       void queryClient.invalidateQueries({ queryKey: trpc.user.get.queryKey() });
     },
-    // Path-level prefix: catches list and detail queries, whose payloads carry the author's profile.
+    // Every recipe page: only it draws the author's profile.
     invalidateRecipes: () => {
-      void queryClient.invalidateQueries({ queryKey: [["recipes"]] });
+      void queryClient.invalidateQueries({ queryKey: trpc.recipes.get.pathKey() });
     },
   };
 }
