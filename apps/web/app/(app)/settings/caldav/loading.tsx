@@ -3,5 +3,5 @@ import CaldavSkeleton from "./components/caldav-skeleton";
 
 export default async function Loading() {
   // The page reads the same shape; this is the same cached read.
-  return <CaldavSkeleton caldav={await readCaldavShape()} />;
+  return <CaldavSkeleton shape={await readCaldavShape()} />;
 }

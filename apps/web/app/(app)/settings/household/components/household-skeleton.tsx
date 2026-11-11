@@ -1,12 +1,13 @@
 "use client";
 
-import type { HouseholdShape } from "@/components/settings/settings-tab";
 import { SettingsCardsSkeleton } from "@/components/settings/settings-skeleton";
 import { ClipboardDocumentIcon, HomeIcon, UserGroupIcon } from "@heroicons/react/24/outline";
 
-export default function HouseholdSkeleton({ household }: { household: HouseholdShape }) {
+import type { HouseholdShape } from "./household-shape";
+
+export default function HouseholdSkeleton({ shape }: { shape: HouseholdShape }) {
   // Without a household, its two cards sit side by side.
-  if (household === "none") {
+  if (shape === "none") {
     return (
       <SettingsCardsSkeleton
         sideBySide
@@ -24,7 +25,7 @@ export default function HouseholdSkeleton({ household }: { household: HouseholdS
         // The household's name is its title.
         { icon: HomeIcon, rows: 3 },
         { icon: UserGroupIcon, section: "household.members", rows: 2 },
-        ...(household === "admin"
+        ...(shape === "admin"
           ? [{ icon: ClipboardDocumentIcon, section: "household.joinCode", rows: 2 }]
           : []),
       ]}

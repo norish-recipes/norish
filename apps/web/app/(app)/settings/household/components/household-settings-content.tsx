@@ -1,7 +1,6 @@
 "use client";
 
-import type { HouseholdShape } from "@/components/settings/settings-tab";
-
+import type { HouseholdShape } from "./household-shape";
 import { HouseholdSettingsProvider, useHouseholdSettingsContext } from "../context";
 import HouseholdSkeleton from "./household-skeleton";
 import HouseholdView from "./household-view";
@@ -11,7 +10,7 @@ function HouseholdSettingsContent({ shape }: { shape: HouseholdShape }) {
   const { household, isLoading } = useHouseholdSettingsContext();
 
   if (isLoading) {
-    return <HouseholdSkeleton household={shape} />;
+    return <HouseholdSkeleton shape={shape} />;
   }
 
   return household ? <HouseholdView /> : <NoHouseholdView />;

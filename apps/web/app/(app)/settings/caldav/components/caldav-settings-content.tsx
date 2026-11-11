@@ -1,7 +1,6 @@
 "use client";
 
-import type { CaldavShape } from "@/components/settings/settings-tab";
-
+import type { CaldavShape } from "./caldav-shape";
 import { CalDavSettingsProvider, useCalDavSettingsContext } from "../context";
 import CalDavConfigCard from "./caldav-config-card";
 import CaldavSkeleton from "./caldav-skeleton";
@@ -11,7 +10,7 @@ function CalDavSettingsContent({ shape }: { shape: CaldavShape }) {
   const { config, isLoading } = useCalDavSettingsContext();
 
   if (isLoading) {
-    return <CaldavSkeleton caldav={shape} />;
+    return <CaldavSkeleton shape={shape} />;
   }
 
   return (
