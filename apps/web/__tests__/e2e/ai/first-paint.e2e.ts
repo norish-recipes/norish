@@ -260,7 +260,7 @@ test("a full load of the dashboard draws Today's meals for the reader's day, fro
   }
 });
 
-test("a full load of the calendar carries its opening range, so its days draw without asking", async ({
+test("a full load of the calendar carries its opening range, so its days draw unanswered", async ({
   browser,
 }) => {
   await callApi("calendar.createItem", {
@@ -271,16 +271,14 @@ test("a full load of the calendar carries its opening range, so its days draw wi
     title: "Served calendar note",
   });
   const { context, page } = await openLive(browser, "phone");
-  const asked: string[] = [];
 
-  page.on("request", (request) => {
-    if (request.url().includes("calendar.listItems")) asked.push(request.url());
-  });
+  // Its subscriptions read the range again once live (the go-live catch-up): left unanswered here,
+  // so the days can only draw from the document.
+  await page.route(/calendar\.listItems/, () => undefined);
 
   try {
     await page.goto("/calendar");
     await expect(page.getByText("Served calendar note").first()).toBeVisible();
-    expect(asked).toEqual([]);
   } finally {
     await context.close();
   }
@@ -1076,27 +1074,20 @@ test("the user settings tab draws a date the way the server sent it, in any brow
   }
 });
 
-test("a full load of the Library never asks for its first page: the document carries it", async ({
+test("a full load of the Library draws its first page unanswered: the document carries it", async ({
   browser,
 }) => {
   await ensureRecipe();
   const { context, page } = await openLive(browser, "phone");
-  const asked: string[] = [];
 
-  page.on("request", (request) => {
-    if (request.url().includes("library.list")) asked.push(request.url());
-  });
+  // The Cache Warmer and the go-live catch-up read the Library again: left unanswered here, so
+  // the cards can only draw from the document.
+  await page.route(/library\.list/, () => undefined);
 
   try {
     await storeFiltersCookie(context, {});
-    // The Cache Warmer reads the Library too; held off here, every request left is the page's own.
-    await context.addInitScript(() => {
-      void navigator.locks.request("norish-outbox-replay", () => new Promise(() => {}));
-    });
-    // Returns once every card has hydrated, after the app's providers above them asked for data.
     await page.goto("/");
     await expect(page.locator("a[data-recipe-card]").first()).toBeVisible();
-    expect(asked).toEqual([]);
   } finally {
     await context.close();
   }
