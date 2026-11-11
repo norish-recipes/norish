@@ -166,10 +166,12 @@ gives the reasons for decisions without an ADR.
 - A realtime handler merges an event into the cache by id, so a repeated event
   changes nothing and no client needs to skip its own
   ([ADR-0032](https://github.com/norish-recipes/Norish/blob/main/docs/adr/realtime/0032-realtime-is-one-hub-one-catalogue-one-idiom.md)).
-- A subscription that falls behind ends Lagged, and the client reads that domain
-  again
+- A fresh subscription rereads its `liveQueryKeys` once its Cursor Mark says it
+  is live, except reads an already live copy keeps current. Rereads due within
+  50 ms are combined. A subscription that falls behind ends Lagged, starts
+  fresh and rereads the same keys once live
   ([ADR-0032](https://github.com/norish-recipes/Norish/blob/main/docs/adr/realtime/0032-realtime-is-one-hub-one-catalogue-one-idiom.md)).
-  A reconnect first resumes the missed events from a bounded buffer
+  A reconnect resumes missed events from a bounded buffer without a reread
   ([ADR-0034](https://github.com/norish-recipes/Norish/blob/main/docs/adr/realtime/0034-resume-is-a-bounded-buffer-not-a-guarantee.md)).
 - Every mutation carries an operation id, so one the Outbox replays runs once
   ([ADR-0002](https://github.com/norish-recipes/Norish/blob/main/docs/adr/offline/0002-replay-idempotency-via-operation-id-middleware.md)).
@@ -201,9 +203,12 @@ gives the reasons for decisions without an ADR.
 - A realtime subscription names the reads it keeps current with
   `useKeepsCurrent`, so web doesn't read them again on mount until they go
   stale. A mounted subscription vouches only for a read that arrived after it
-  mounted, so a read from before a gap in its subscription is fetched again.
-- Each layout seeds only what its screens draw in the first frame, so a full
-  load carries no unnecessary reads. `(app)` seeds permissions and Device
+  mounted, so a read from before a gap in its subscription is fetched again. A
+  subscription mounting with the screen rereads its `liveQueryKeys` once live,
+  except reads an already live copy keeps current.
+- Each layout seeds only what its screens draw in the first frame, and some
+  seeded reads are reread once their subscriptions are live to cover changes
+  made before registration. `(app)` seeds permissions and Device
   Preferences; `(library)` and the recipe layout seed favourites, the household
   and the reader's allergies through `lib/reader-recipe-seeds.ts`; `(dashboard)`
   seeds pending imports. The shell reads the Reader's profile (`user.get`) itself.
