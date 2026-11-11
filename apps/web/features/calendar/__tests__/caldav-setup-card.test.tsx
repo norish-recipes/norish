@@ -18,7 +18,7 @@ const testConnection = vi.fn(async (..._args: unknown[]): Promise<Record<string,
 }));
 
 vi.mock("@norish/shared-react/calendar", () => ({
-  useCaldavConfigQuery: () => ({ config: null }),
+  useCaldavConfigSlice: (select: (config: null) => unknown) => ({ slice: select(null) }),
   useCaldavMutations: () => ({
     saveConfig: vi.fn(),
     testConnection,

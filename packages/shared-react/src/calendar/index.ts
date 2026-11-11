@@ -7,6 +7,7 @@ export { useCalendarSubscription } from "./use-calendar-subscription";
 export { useCaldavMutations } from "./use-caldav-mutations";
 export {
   useCaldavConfigQuery,
+  useCaldavConfigSlice,
   useCaldavConnectionQuery,
   useCaldavPasswordQuery,
   useCaldavSummaryQuery,

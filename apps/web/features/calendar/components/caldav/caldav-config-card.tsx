@@ -19,7 +19,7 @@ import {
 } from "@heroui/react";
 import { useTranslations } from "next-intl";
 
-import { useCaldavConfigQuery, useCaldavMutations } from "@norish/shared-react/calendar";
+import { useCaldavConfigSlice, useCaldavMutations } from "@norish/shared-react/calendar";
 
 import CaldavConfigEditModal from "./caldav-config-edit-modal";
 import CaldavConfigSummary from "./caldav-config-summary";
@@ -30,7 +30,7 @@ export default function CaldavConfigCard() {
   const t = useTranslations("settings.caldav.setup");
   const tActions = useTranslations("common.actions");
   const tSecret = useTranslations("common.secret");
-  const { config } = useCaldavConfigQuery();
+  const { slice: configured } = useCaldavConfigSlice((config) => config !== null);
   const { saveConfig, isSavingConfig: saving } = useCaldavMutations();
   const {
     isOpen: isEditModalOpen,
@@ -76,7 +76,7 @@ export default function CaldavConfigCard() {
     if (saved) setPassword("");
   };
 
-  if (config) {
+  if (configured) {
     return (
       <>
         <CaldavConfigSummary onEditClick={onEditModalOpen} />

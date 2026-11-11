@@ -1,6 +1,9 @@
 import { keepPreviousData, useQuery, useQueryClient } from "@tanstack/react-query";
 
-import type { CaldavSyncStatus } from "@norish/shared/contracts";
+import type {
+  CaldavSyncStatus,
+  UserCaldavConfigWithoutPasswordDto,
+} from "@norish/shared/contracts";
 
 import type {
   CaldavConfigQueryResult,
@@ -14,6 +17,16 @@ export function useCaldavConfigQuery(): CaldavConfigQueryResult {
   const { data, error, isLoading } = useQuery(trpc.caldav.getConfig.queryOptions());
 
   return { config: data ?? null, error, isLoading };
+}
+
+/** A slice of the config, so a reader re-renders only when that slice changes. */
+export function useCaldavConfigSlice<T>(
+  select: (config: UserCaldavConfigWithoutPasswordDto | null) => T
+) {
+  const trpc = useTRPC();
+  const { data, isLoading } = useQuery({ ...trpc.caldav.getConfig.queryOptions(), select });
+
+  return { slice: data, isLoading };
 }
 
 /** The stored password, read while the edit form that shows it is mounted and dropped after. */

@@ -5,6 +5,7 @@ import { createTestQueryClient, createTestWrapper } from "@norish/shared-react/p
 
 import {
   useCaldavConfigQuery,
+  useCaldavConfigSlice,
   useCaldavConnectionQuery,
   useCaldavPasswordQuery,
   useCaldavSummaryQuery,
@@ -105,6 +106,24 @@ describe("CalDAV Query Hooks", () => {
       });
 
       expect(result.current.config).toEqual(mockConfig);
+    });
+  });
+
+  describe("useCaldavConfigSlice", () => {
+    it("answers the slice it selects, null config included", async () => {
+      mockConfigQueryOptions.mockReturnValue({
+        queryKey: mockConfigQueryKey,
+        queryFn: async () => createMockCaldavConfig({ enabled: true }),
+      });
+
+      const { result } = renderHook(() => useCaldavConfigSlice((config) => config?.enabled), {
+        wrapper: createTestWrapper(queryClient),
+      });
+
+      await waitFor(() => expect(result.current.slice).toBe(true));
+
+      queryClient.setQueryData(mockConfigQueryKey, null);
+      await waitFor(() => expect(result.current.slice).toBeUndefined());
     });
   });
 
