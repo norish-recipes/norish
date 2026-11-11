@@ -43,13 +43,13 @@ vi.mock("next-intl", () => ({
 
 describe("the settings tab bar", () => {
   it("shows the Admin tab to an administrator", () => {
-    render(<SettingsTabs showAdminTab />);
+    render(<SettingsTabs showAdminTab>content</SettingsTabs>);
 
     expect(screen.getByRole("tab", { name: /tabs\.admin/ })).toBeInTheDocument();
   });
 
   it("never shows an Admin tab to a regular member", () => {
-    render(<SettingsTabs showAdminTab={false} />);
+    render(<SettingsTabs showAdminTab={false}>content</SettingsTabs>);
 
     expect(screen.queryByRole("tab", { name: /tabs\.admin/ })).not.toBeInTheDocument();
     // Account, Household, CalDAV and Ingredients.
@@ -59,7 +59,7 @@ describe("the settings tab bar", () => {
   it("links each tab to its route and marks the one the address names", () => {
     navigation.pathname = "/settings/household";
 
-    render(<SettingsTabs showAdminTab />);
+    render(<SettingsTabs showAdminTab>content</SettingsTabs>);
 
     expect(screen.getByRole("tab", { name: /tabs\.account/ })).toHaveAttribute(
       "href",
@@ -71,11 +71,25 @@ describe("the settings tab bar", () => {
     );
   });
 
+  it("draws the open tab's content in the panel the tab controls", () => {
+    navigation.pathname = "/settings/caldav";
+
+    render(<SettingsTabs showAdminTab>caldav content</SettingsTabs>);
+
+    const panel = screen.getByRole("tabpanel");
+
+    expect(panel).toHaveTextContent("caldav content");
+    expect(screen.getByRole("tab", { name: /tabs\.caldav/ })).toHaveAttribute(
+      "aria-controls",
+      panel.id
+    );
+  });
+
   it("stays put when the open tab is clicked again", () => {
     navigation.pathname = "/settings/household";
     push.mockClear();
 
-    render(<SettingsTabs showAdminTab />);
+    render(<SettingsTabs showAdminTab>content</SettingsTabs>);
     fireEvent.click(screen.getByRole("tab", { name: /tabs\.household/ }));
 
     expect(push).not.toHaveBeenCalled();
@@ -85,7 +99,7 @@ describe("the settings tab bar", () => {
     navigation.pathname = "/settings/household";
     push.mockClear();
 
-    render(<SettingsTabs showAdminTab />);
+    render(<SettingsTabs showAdminTab>content</SettingsTabs>);
     fireEvent.click(screen.getByRole("tab", { name: /tabs\.caldav/ }));
 
     expect(push).toHaveBeenCalledWith("/settings/caldav", undefined);

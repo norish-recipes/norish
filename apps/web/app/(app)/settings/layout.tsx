@@ -17,10 +17,7 @@ export default async function SettingsLayout({ children }: { children: React.Rea
     <NextIntlClientProvider messages={messages}>
       <div className="mx-auto flex w-full max-w-6xl flex-col gap-6 pb-4">
         <h1 className="text-2xl font-bold">{t("title")}</h1>
-        <div className="flex flex-col gap-2">
-          <SettingsTabs showAdminTab={identity?.isServerAdmin ?? false} />
-          <div className="py-4">{children}</div>
-        </div>
+        <SettingsTabs showAdminTab={identity?.isServerAdmin ?? false}>{children}</SettingsTabs>
       </div>
     </NextIntlClientProvider>
   );

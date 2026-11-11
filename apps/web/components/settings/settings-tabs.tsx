@@ -1,6 +1,7 @@
 "use client";
 
 import type { SettingsTab } from "@/components/settings/settings-tab";
+import type { ReactNode } from "react";
 import { usePathname, useRouter } from "next/navigation";
 import { SETTINGS_TABS, settingsHref, settingsTabOf } from "@/components/settings/settings-tab";
 import {
@@ -33,8 +34,14 @@ const TAB_ICONS: Record<SettingsTab, { active: TabIcon; inactive: TabIcon }> = {
   admin: { active: ShieldCheckIconSolid, inactive: ShieldCheckIconOutline },
 };
 
-/** The settings tab bar: one link per tab, the current one taken from the address. */
-export function SettingsTabs({ showAdminTab }: { showAdminTab: boolean }) {
+/** The settings tab bar, the current tab taken from the address, over that tab's panel. */
+export function SettingsTabs({
+  showAdminTab,
+  children,
+}: {
+  showAdminTab: boolean;
+  children: ReactNode;
+}) {
   const t = useTranslations("settings");
   const router = useRouter();
   const pathname = usePathname();
@@ -78,6 +85,9 @@ export function SettingsTabs({ showAdminTab }: { showAdminTab: boolean }) {
             })}
           </Tabs.List>
         </Tabs.ListContainer>
+        <Tabs.Panel className="px-0 py-4" id={currentTab}>
+          {children}
+        </Tabs.Panel>
       </Tabs>
     </RouterProvider>
   );
