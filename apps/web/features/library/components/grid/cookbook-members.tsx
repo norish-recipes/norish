@@ -36,7 +36,7 @@ export default function CookbookMembers({
   const { setMembership } = useCookbooksMutations();
   const selectRange = useRecipeSelection((state) => state.selectRange);
 
-  const { recipes, isLoading, isFetchingNextPage, loadMore, removeMember } =
+  const { recipes, isLoading, isFetching, isFetchingNextPage, loadMore, removeMember } =
     useCookbookList(cookbookId);
 
   const selectRangeTo = (recipe: SelectedRecipe) => selectRange(recipe, recipes);
@@ -92,6 +92,7 @@ export default function CookbookMembers({
   return (
     <LibraryGrid
       emptyState={emptyState}
+      isFetching={isFetching}
       isFetchingMore={isFetchingNextPage}
       isLoading={isLoading}
       items={items}

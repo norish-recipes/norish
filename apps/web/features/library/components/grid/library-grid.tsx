@@ -38,6 +38,9 @@ type LibraryGridProps = {
   variant: RecipeViewMode;
   items: LibraryGridItem[];
   isLoading: boolean;
+  /** Any read of the list: the next page is asked for only once none runs. */
+  isFetching: boolean;
+  /** The next page only, which draws the spinner. */
   isFetchingMore: boolean;
   loadMore: () => void;
   /** Scroll position is remembered per set of filters. */
@@ -59,6 +62,7 @@ export default function LibraryGrid({
   variant,
   items,
   isLoading,
+  isFetching,
   isFetchingMore,
   loadMore,
   scrollKey,
@@ -153,7 +157,7 @@ export default function LibraryGrid({
 
     const isNearEnd = lastRow.index >= rowCount - loadMoreRowThreshold;
 
-    if (isNearEnd && !isFetchingMore && !hasTriggeredLoadMoreRef.current) {
+    if (isNearEnd && !isFetching && !hasTriggeredLoadMoreRef.current) {
       hasTriggeredLoadMoreRef.current = true;
       loadMore();
     }
@@ -162,7 +166,7 @@ export default function LibraryGrid({
     if (!isNearEnd) {
       hasTriggeredLoadMoreRef.current = false;
     }
-  }, [virtualRows, rowCount, loadMoreRowThreshold, isFetchingMore, loadMore]);
+  }, [virtualRows, rowCount, loadMoreRowThreshold, isFetching, loadMore]);
 
   // Show skeleton loading state logic: the first load shows it from the start
   // (seeded above), a finished load hides it at once, a reload only after a beat.

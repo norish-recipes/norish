@@ -21,6 +21,8 @@ export type LibraryQueryResult = {
   /** Counts both kinds. Nothing may read this as a recipe count. */
   total: number;
   isLoading: boolean;
+  /** Any read of the list, the next page or a reread of the pages showing. */
+  isFetching: boolean;
   /** Only the next page: a reread of pages already showing draws no indicator. */
   isFetchingNextPage: boolean;
   hasMore: boolean;
@@ -61,6 +63,7 @@ export function useLibraryQuery(
     queryKey,
     total: data?.pages?.[0]?.total ?? 0,
     isLoading,
+    isFetching,
     isFetchingNextPage,
     hasMore,
     error,
