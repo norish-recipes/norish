@@ -1,28 +1,27 @@
 "use client";
 
-import type { PlannedItemDisplay } from "@/components/calendar/types";
 import { memo } from "react";
 import { dayDropId } from "@/components/calendar/day-drop-id";
+import { SLOTS } from "@/components/calendar/slots";
 import { TimelineSlotContainer } from "@/components/calendar/timeline-slot-container";
-import { SLOTS } from "@/components/calendar/types";
 import { useDroppable } from "@dnd-kit/core";
 import { PlusIcon } from "@heroicons/react/16/solid";
 import { Button, Card, Dropdown, Label, Separator } from "@heroui/react";
 import { useTranslations } from "next-intl";
 
-import type { Slot } from "@norish/shared/contracts";
+import type { PlannedItemFromQuery, Slot } from "@norish/shared/contracts";
 
 type DesktopDayCardProps = {
   date: Date;
   dateKey: string;
   isDragOver?: boolean;
   isToday: boolean;
-  items: PlannedItemDisplay[];
+  items: PlannedItemFromQuery[];
   weekdayFormatter: Intl.DateTimeFormat;
   monthFormatter: Intl.DateTimeFormat;
   onAddItem: (dateKey: string, slot: Slot) => void;
-  onNoteClick?: (item: PlannedItemDisplay) => void;
-  onRecipeClick?: (item: PlannedItemDisplay) => void;
+  onNoteClick?: (item: PlannedItemFromQuery) => void;
+  onRecipeClick?: (item: PlannedItemFromQuery) => void;
 };
 const CARD_HEIGHT = 400;
 export const DesktopDayCard = memo(function DesktopDayCard({
@@ -58,7 +57,7 @@ export const DesktopDayCard = memo(function DesktopDayCard({
 
   // Group items by slot
   const itemsBySlot = (() => {
-    const grouped: Record<Slot, PlannedItemDisplay[]> = {
+    const grouped: Record<Slot, PlannedItemFromQuery[]> = {
       Breakfast: [],
       Lunch: [],
       Dinner: [],

@@ -1,6 +1,5 @@
 "use client";
 
-import type { PlannedItemDisplay } from "@/components/calendar/types";
 import { useCallback, useEffect, useMemo, useRef } from "react";
 import { landOnDay, settleLanding } from "@/components/calendar/land-on-day";
 import { TimelineDaySection } from "@/components/calendar/timeline-day-section";
@@ -135,7 +134,7 @@ function MiniCalendarContent({
               return null;
             }
             const key = dateKey(d);
-            const items = (calendarData[key] ?? []) as PlannedItemDisplay[];
+            const items = calendarData[key] ?? [];
             const isToday = key === todayKey;
             return (
               <div

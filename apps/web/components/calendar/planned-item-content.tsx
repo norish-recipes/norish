@@ -4,11 +4,31 @@ import { memo } from "react";
 import { PlannedItemThumbnail } from "@/components/calendar/planned-item-thumbnail";
 import { useTranslations } from "next-intl";
 
-import type { PlannedItemDisplay } from "./types";
-import { buildItemSubtitle } from "./types";
+import type { PlannedItemFromQuery } from "@norish/shared/contracts";
+
+/** Calories and servings, for a recipe only. */
+function buildItemSubtitle(
+  item: PlannedItemFromQuery,
+  translations: { serving: string; servings: string }
+): string {
+  const parts: string[] = [];
+
+  if (item.itemType === "recipe") {
+    if (item.calories && item.calories > 0) {
+      parts.push(`${item.calories} kcal`);
+    }
+    if (item.servings && item.servings > 0) {
+      parts.push(
+        `${item.servings} ${item.servings === 1 ? translations.serving : translations.servings}`
+      );
+    }
+  }
+
+  return parts.join(" · ");
+}
 
 type PlannedItemContentProps = {
-  item: PlannedItemDisplay;
+  item: PlannedItemFromQuery;
   /** Additional container classes */
   className?: string;
 };

@@ -1,6 +1,5 @@
 "use client";
 
-import type { PlannedItemDisplay } from "@/components/calendar/types";
 import { useEffect, useRef, useState } from "react";
 import MiniRecipes from "@/components/Panel/consumers/mini-recipes";
 import { useReaderToday } from "@/components/reader-today";
@@ -10,7 +9,7 @@ import { DesktopTimeline } from "@/features/calendar/components/timeline/desktop
 import { MobileTimeline } from "@/features/calendar/components/timeline/mobile-timeline";
 import { useIsMobile } from "@/hooks/use-is-mobile";
 
-import type { Slot } from "@norish/shared/contracts";
+import type { PlannedItemFromQuery, Slot } from "@norish/shared/contracts";
 import { CalendarRangeProvider, useCalendarSubscription } from "@norish/shared-react/calendar";
 import { parseDateKey } from "@norish/shared/lib/helpers";
 
@@ -22,10 +21,10 @@ function CalendarPageContent() {
   const restoreMiniRecipesScrollTimerRef = useRef<number | null>(null);
 
   // Note editing state
-  const [editingNote, setEditingNote] = useState<PlannedItemDisplay | null>(null);
+  const [editingNote, setEditingNote] = useState<PlannedItemFromQuery | null>(null);
 
   // Recipe editing state
-  const [editingRecipe, setEditingRecipe] = useState<PlannedItemDisplay | null>(null);
+  const [editingRecipe, setEditingRecipe] = useState<PlannedItemFromQuery | null>(null);
 
   const isDesktop = !useIsMobile();
 
@@ -87,11 +86,11 @@ function CalendarPageContent() {
     setMiniRecipesOpen(true);
   };
 
-  const handleNoteClick = (item: PlannedItemDisplay) => {
+  const handleNoteClick = (item: PlannedItemFromQuery) => {
     setEditingNote(item);
   };
 
-  const handleRecipeClick = (item: PlannedItemDisplay) => {
+  const handleRecipeClick = (item: PlannedItemFromQuery) => {
     setEditingRecipe(item);
   };
 

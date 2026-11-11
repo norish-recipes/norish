@@ -5,13 +5,14 @@ import { useRouter } from "next/navigation";
 import { useRecipePrefetch } from "@/hooks/use-recipe-prefetch";
 import { useDraggable } from "@dnd-kit/core";
 
-import type { PlannedItemDisplay } from "./types";
+import type { PlannedItemFromQuery } from "@norish/shared/contracts";
+
 import { PlannedItemContent } from "./planned-item-content";
 
 type TimelinePlannedItemProps = {
-  item: PlannedItemDisplay;
-  onNoteClick?: (item: PlannedItemDisplay) => void;
-  onRecipeClick?: (item: PlannedItemDisplay) => void;
+  item: PlannedItemFromQuery;
+  onNoteClick?: (item: PlannedItemFromQuery) => void;
+  onRecipeClick?: (item: PlannedItemFromQuery) => void;
 };
 
 export const TimelinePlannedItem = memo(function TimelinePlannedItem({

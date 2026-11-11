@@ -2,18 +2,17 @@
 
 import { memo } from "react";
 
-import type { Slot } from "@norish/shared/contracts";
+import type { PlannedItemFromQuery, Slot } from "@norish/shared/contracts";
 
-import type { PlannedItemDisplay } from "./types";
 import { TimelinePlannedItem } from "./timeline-planned-item";
 
 type TimelineSlotContainerProps = {
   dateKey: string;
   slot: Slot;
   slotLabel: string;
-  items: PlannedItemDisplay[];
-  onNoteClick?: (item: PlannedItemDisplay) => void;
-  onRecipeClick?: (item: PlannedItemDisplay) => void;
+  items: PlannedItemFromQuery[];
+  onNoteClick?: (item: PlannedItemFromQuery) => void;
+  onRecipeClick?: (item: PlannedItemFromQuery) => void;
 };
 
 export const TimelineSlotContainer = memo(function TimelineSlotContainer({

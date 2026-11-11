@@ -36,6 +36,13 @@ describe("TimelinePlannedItem", () => {
           recipeId: "recipe-1",
           recipeName: "Pasta",
           title: null,
+          userId: "user-1",
+          recipeImage: null,
+          servings: null,
+          calories: null,
+          version: 1,
+          createdAt: new Date(0),
+          updatedAt: new Date(0),
         }}
       />
     );

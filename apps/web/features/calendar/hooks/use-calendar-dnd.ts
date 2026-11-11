@@ -1,4 +1,3 @@
-import type { PlannedItemDisplay } from "@/components/calendar/types";
 import type {
   CollisionDetection,
   DragEndEvent,
@@ -21,7 +20,7 @@ const collisionDetection: CollisionDetection = (args) => {
 /** A planned item dragged onto another day, keeping its slot and landing last in it. */
 export function useCalendarDnd(calendarData: Record<string, PlannedItemFromQuery[]>) {
   const { moveItem } = useCalendarMutations();
-  const [activeItem, setActiveItem] = useState<PlannedItemDisplay | null>(null);
+  const [activeItem, setActiveItem] = useState<PlannedItemFromQuery | null>(null);
   const [dragOverDateKey, setDragOverDateKey] = useState<string | null>(null);
 
   const onDragStart = ({ active }: DragStartEvent) => {

@@ -1,6 +1,5 @@
 "use client";
 
-import type { PlannedItemDisplay } from "@/components/calendar/types";
 import { useEffect, useId, useMemo, useRef, useState } from "react";
 import { settleLanding } from "@/components/calendar/land-on-day";
 import { PlannedItemContent } from "@/components/calendar/planned-item-content";
@@ -21,7 +20,7 @@ import { useWindowVirtualizer } from "@tanstack/react-virtual";
 import { useLocale } from "next-intl";
 import { useWindowSize } from "usehooks-ts";
 
-import type { Slot } from "@norish/shared/contracts";
+import type { PlannedItemFromQuery, Slot } from "@norish/shared/contracts";
 import { useCalendarRangeQuery } from "@norish/shared-react/calendar";
 import { dateKey, eachDayOfInterval, parseDateKey } from "@norish/shared/lib/helpers";
 
@@ -33,12 +32,12 @@ const mobileDragTolerancePx = 10;
 // An empty day, which most days are
 const ESTIMATED_DAY_HEIGHT = 64;
 // One array for every empty day, so its memoised card skips the re-render.
-const NO_ITEMS: PlannedItemDisplay[] = [];
+const NO_ITEMS: PlannedItemFromQuery[] = [];
 
 type MobileTimelineProps = {
   onAddItem: (dateKey: string, slot: Slot) => void;
-  onNoteClick?: (item: PlannedItemDisplay) => void;
-  onRecipeClick?: (item: PlannedItemDisplay) => void;
+  onNoteClick?: (item: PlannedItemFromQuery) => void;
+  onRecipeClick?: (item: PlannedItemFromQuery) => void;
 };
 
 export function MobileTimeline({ onAddItem, onNoteClick, onRecipeClick }: MobileTimelineProps) {

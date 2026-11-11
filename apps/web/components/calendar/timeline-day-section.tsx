@@ -2,28 +2,27 @@
 
 import { memo } from "react";
 import { dayDropId } from "@/components/calendar/day-drop-id";
+import { SLOTS } from "@/components/calendar/slots";
 import { SlotDropdown } from "@/components/shared/slot-dropdown";
 import { useDroppable } from "@dnd-kit/core";
 import { PlusIcon } from "@heroicons/react/16/solid";
 import { Button, Card, Separator } from "@heroui/react";
 import { useTranslations } from "next-intl";
 
-import type { Slot } from "@norish/shared/contracts";
+import type { PlannedItemFromQuery, Slot } from "@norish/shared/contracts";
 
-import type { PlannedItemDisplay } from "./types";
 import { TimelineSlotContainer } from "./timeline-slot-container";
-import { SLOTS } from "./types";
 
 type TimelineDaySectionProps = {
   date: Date;
   dateKey: string;
   isDragOver?: boolean;
   isToday: boolean;
-  items: PlannedItemDisplay[];
+  items: PlannedItemFromQuery[];
   dateFormatter: Intl.DateTimeFormat;
   onAddItem: (dateKey: string, slot: Slot) => void;
-  onNoteClick?: (item: PlannedItemDisplay) => void;
-  onRecipeClick?: (item: PlannedItemDisplay) => void;
+  onNoteClick?: (item: PlannedItemFromQuery) => void;
+  onRecipeClick?: (item: PlannedItemFromQuery) => void;
   /** On a panel the card takes the panel's secondary surface, flat, instead of the page's. */
   inPanel?: boolean;
 };
@@ -60,7 +59,7 @@ export const TimelineDaySection = memo(function TimelineDaySection({
 
   // Group items by slot
   const itemsBySlot = (() => {
-    const grouped: Record<Slot, PlannedItemDisplay[]> = {
+    const grouped: Record<Slot, PlannedItemFromQuery[]> = {
       Breakfast: [],
       Lunch: [],
       Dinner: [],
