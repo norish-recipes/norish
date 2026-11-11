@@ -21,8 +21,8 @@ import { useWindowSize } from "usehooks-ts";
 import type { Slot } from "@norish/shared/contracts";
 import {
   useCalendarMutations,
-  useCalendarQuery,
   useCalendarRange,
+  useCalendarRangeQuery,
 } from "@norish/shared-react/calendar";
 import { dateKey, eachDayOfInterval, parseDateKey } from "@norish/shared/lib/helpers";
 
@@ -53,11 +53,9 @@ export function MobileTimeline({ onAddItem, onNoteClick, onRecipeClick }: Mobile
 
   const locale = useLocale();
 
-  const range = useCalendarRange((state) => state.range);
+  const { range, calendarData, isLoading } = useCalendarRangeQuery();
   const isLoadingMore = useCalendarRange((state) => state.isGrowing);
   const expandRange = useCalendarRange((state) => state.grow);
-  // A grown range starts from the days already read, so only the first read shows the skeleton.
-  const { calendarData, isLoading } = useCalendarQuery(range);
   const { moveItem } = useCalendarMutations();
 
   const allDays = useMemo(

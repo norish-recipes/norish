@@ -23,8 +23,8 @@ import { useWindowSize } from "usehooks-ts";
 import type { Slot } from "@norish/shared/contracts";
 import {
   useCalendarMutations,
-  useCalendarQuery,
   useCalendarRange,
+  useCalendarRangeQuery,
 } from "@norish/shared-react/calendar";
 import { dateKey, eachDayOfInterval, parseDateKey } from "@norish/shared/lib/helpers";
 
@@ -50,11 +50,9 @@ export function DesktopTimeline({ onAddItem, onNoteClick, onRecipeClick }: Deskt
   const locale = useLocale();
   const tSlots = useTranslations("common.slots");
 
-  const range = useCalendarRange((state) => state.range);
+  const { range, calendarData, isLoading } = useCalendarRangeQuery();
   const isLoadingMore = useCalendarRange((state) => state.isGrowing);
   const expandRange = useCalendarRange((state) => state.grow);
-  // A grown range starts from the days already read, so only the first read shows the skeleton.
-  const { calendarData, isLoading } = useCalendarQuery(range);
   const { moveItem } = useCalendarMutations();
 
   // Responsive column count: 3 for lg+, 2 for md
