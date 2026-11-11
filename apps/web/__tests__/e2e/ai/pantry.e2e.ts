@@ -258,6 +258,11 @@ test("a switch loads no page; a first switch to the Pantry reads it once; the vi
   const showsView = (view: string) =>
     expect(page.locator(`[data-grocery-view="${view}"]`).first()).toBeAttached();
 
+  // The Cache Warmer reads the Pantry too, before or after this listens, by when it tops up:
+  // it runs only in the tab holding the leader lock, so held here every read is the page's.
+  await page.addInitScript(() => {
+    void navigator.locks.request("norish-outbox-replay", () => new Promise(() => {}));
+  });
   await page.goto("/groceries");
   // A tick, so the list is no longer the copy the server sent with the page.
   await rowFor(page, "olive oil", { visible: true })
