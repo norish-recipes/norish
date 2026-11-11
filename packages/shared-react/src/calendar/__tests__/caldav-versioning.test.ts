@@ -2,18 +2,9 @@ import { describe, expect, it } from "vitest";
 
 import type { CaldavSyncStatusViewDto } from "@norish/shared/contracts";
 
-import { resolveCaldavConfigVersion } from "../use-caldav-mutations";
 import { applyCaldavStatusUpdate } from "../use-caldav-subscription";
 
 describe("CalDAV version helpers", () => {
-  it("prefers an explicit config version over the cached one", () => {
-    expect(resolveCaldavConfigVersion(7, 3)).toBe(7);
-  });
-
-  it("falls back to the cached config version", () => {
-    expect(resolveCaldavConfigVersion(undefined, 3)).toBe(3);
-  });
-
   it("updates cached sync status versions from realtime payloads", () => {
     const before = [
       {

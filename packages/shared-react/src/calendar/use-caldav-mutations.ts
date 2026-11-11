@@ -4,13 +4,6 @@ import type { CaldavMutationsResult, SaveCaldavConfigInput } from "./types";
 import { useTRPC } from "../trpc";
 import { useCaldavCacheHelpers } from "./use-caldav-cache";
 
-export function resolveCaldavConfigVersion(
-  inputVersion?: number,
-  currentVersion?: number
-): number | undefined {
-  return inputVersion ?? currentVersion;
-}
-
 export function useCaldavMutations(): CaldavMutationsResult {
   const trpc = useTRPC();
   const {
@@ -36,7 +29,7 @@ export function useCaldavMutations(): CaldavMutationsResult {
     saveConfig: async (input: SaveCaldavConfigInput) => {
       const result = await mutateSaveConfigAsync({
         ...input,
-        version: resolveCaldavConfigVersion(input.version, cachedConfigVersion()),
+        version: input.version ?? cachedConfigVersion(),
       });
 
       setConfig(() => result);
