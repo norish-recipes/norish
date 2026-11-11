@@ -26,7 +26,7 @@ vi.mock("next-intl", () => ({
 
 const CONFIG = {
   serverUrl: "https://cal.example.com",
-  calendarUrl: null,
+  calendarUrl: null as string | null,
   username: "chef",
   enabled: true,
   breakfastTime: "07:00-08:00",
