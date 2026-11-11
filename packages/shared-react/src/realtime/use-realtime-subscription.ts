@@ -105,42 +105,48 @@ function rereadInWindow(queryClient: QueryClient, queryKeys: QueryKey[]): void {
 }
 
 /**
- * Invalidates the matching reads once no write is pending. A write's `cancelQueries` reverts a
- * read to its fetch-start state and nothing refetches it, so a reverted one goes again.
+ * Rereads the matching reads once no write is pending, after any matching read in flight settles.
  */
 export function rereadOnceWritesSettle(
   queryClient: QueryClient,
   predicate: (query: Query) => boolean
 ): void {
+  const inFlight = queryClient.getQueryCache().findAll({ predicate, fetchStatus: "fetching" });
+
+  // A fetch in flight may predate the reason, and its success clears an invalidation made now:
+  // each waits for its own, so one that never settles (paused offline) holds back no other.
+  for (const query of inFlight) {
+    const again = () => invalidateOnceWritesSettle(queryClient, (held) => held === query);
+
+    void query.promise?.then(again, again);
+  }
+  invalidateOnceWritesSettle(
+    queryClient,
+    (query) => predicate(query) && query.state.fetchStatus !== "fetching"
+  );
+}
+
+/**
+ * Invalidates the matching reads once no write is pending. A write's `cancelQueries` reverts a
+ * read to its fetch-start state and nothing refetches it, so a reverted one goes again.
+ */
+function invalidateOnceWritesSettle(
+  queryClient: QueryClient,
+  predicate: (query: Query) => boolean
+): void {
   afterWrites(queryClient, () => {
-    const matching = queryClient.getQueryCache().findAll({ predicate });
-    const inFlight = matching.filter(
-      (query) => query.state.fetchStatus === "fetching" && !query.state.fetchMeta?.fetchMore
-    );
-
-    // A read in flight may predate the reason, and its success clears an invalidation made now:
-    // each waits for its own, so one that never settles (paused offline) holds back no other.
-    for (const query of inFlight) {
-      const again = () => rereadOnceWritesSettle(queryClient, (held) => held === query);
-
-      void query.promise?.then(again, again);
-    }
-    const due = matching.filter((query) => !inFlight.includes(query));
-
+    const due = queryClient.getQueryCache().findAll({ predicate });
     // A next-page fetch keeps the other pages as they were: replace it, never join it.
     const cancelRefetch = due.some((query) => query.state.fetchMeta?.fetchMore);
     const watch = (query: Query, promise = query.promise) =>
       void promise?.catch((error: unknown) => {
         if (!(error instanceof CancelledError)) return;
-        if (error.revert) rereadOnceWritesSettle(queryClient, (held) => held === query);
+        if (error.revert) invalidateOnceWritesSettle(queryClient, (held) => held === query);
         // A silent cancel hands the read to a newer fetch, whose outcome counts instead.
         else if (query.promise !== promise) watch(query);
       });
 
-    void queryClient.invalidateQueries(
-      { predicate: (query) => predicate(query) && !inFlight.includes(query) },
-      { cancelRefetch }
-    );
+    void queryClient.invalidateQueries({ predicate }, { cancelRefetch });
     due.forEach((query) => watch(query));
   });
 }

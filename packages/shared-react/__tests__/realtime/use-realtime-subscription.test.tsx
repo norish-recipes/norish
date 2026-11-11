@@ -433,6 +433,55 @@ describe("useRealtimeSubscription", () => {
       expect(idle.queryFn).toHaveBeenCalledTimes(2);
     });
 
+    it("joins rereads asked during one read in flight into a single read after it", async () => {
+      const read = observe(GROCERIES);
+      const isGroceries = (query: { queryKey: unknown }) => query.queryKey === GROCERIES;
+
+      act(() => {
+        for (let ask = 0; ask < 3; ask++) rereadOnceWritesSettle(queryClient, isGroceries);
+      });
+      // Answer every read that starts, so a reread queued behind another would show.
+      for (let answered = 0; answered < read.answers.length; answered++) {
+        await act(async () => read.answers[answered]!.resolve([`v${answered}`]));
+      }
+
+      expect(read.queryFn).toHaveBeenCalledTimes(2);
+    });
+
+    it("lets a next-page fetch in flight land before the reread, keeping its page", async () => {
+      const RECIPES = [["recipes", "list"], { type: "infinite" }];
+      const pageParams: number[] = [];
+      const answers: Array<(page: string) => void> = [];
+      const infinite = new InfiniteQueryObserver(queryClient, {
+        queryKey: RECIPES,
+        queryFn: ({ pageParam }: { pageParam: number }) => {
+          pageParams.push(pageParam);
+
+          return new Promise<string>((resolve) => answers.push(resolve));
+        },
+        initialPageParam: 0,
+        getNextPageParam: (_last: string, pages: string[]) => pages.length,
+      });
+
+      observers.push(infinite.subscribe(() => undefined));
+      await act(async () => answers[0]!("p0"));
+      void infinite.fetchNextPage();
+      act(() => rereadOnceWritesSettle(queryClient, (query) => query.queryKey === RECIPES));
+      await act(async () => answers[1]!("p1"));
+
+      expect(queryClient.getQueryData(RECIPES)).toEqual({
+        pages: ["p0", "p1"],
+        pageParams: [0, 1],
+      });
+      await act(async () => answers[2]!("p0 again"));
+      await act(async () => answers[3]!("p1 again"));
+      expect(pageParams).toEqual([0, 1, 0, 1]);
+      expect(queryClient.getQueryData(RECIPES)).toEqual({
+        pages: ["p0 again", "p1 again"],
+        pageParams: [0, 1],
+      });
+    });
+
     describe("a write that cancels the reread", () => {
       /** A write as shared-react's mutations make one: cancel the read, then write over it. */
       async function write(queryKey: unknown[], optimistic: unknown = ["optimistic"]) {
