@@ -422,7 +422,11 @@ describe("a delete, move or update with no range", () => {
       page: [item({ id: "item-2", sortOrder: 1 }), item({ id: "item-3", sortOrder: 0 })],
     },
     move: {
-      week: [item({ id: "item-2", sortOrder: 0 })],
+      // The week held item-0, so it keeps it past its edge until its own read.
+      week: [
+        item({ id: "item-2", sortOrder: 0 }),
+        item({ id: "item-0", date: "2026-10-05", slot: "Lunch", sortOrder: 0 }),
+      ],
       page: [
         item({ id: "item-2", sortOrder: 0 }),
         item({ id: "item-0", date: "2026-10-05", slot: "Lunch", sortOrder: 0 }),
@@ -487,6 +491,24 @@ describe("a delete, move or update with no range", () => {
     await settle();
 
     expectLanded(write);
+  });
+
+  it("keeps a Queued move past every range, so growing to its day starts with it", async () => {
+    const GROWN = { startISO: CALENDAR_PAGE.startISO, endISO: "2026-10-23" };
+    let calendarData: Record<string, PlannedItemFromQuery[]> = {};
+
+    mount(new TypeError("Failed to fetch"));
+    act(() => mutations.moveItem("item-0", "2026-10-20", "Lunch", 0));
+    await settle();
+
+    const view = renderHookWithClient(queryClient, () => {
+      calendarData = useCalendarQuery(GROWN).calendarData;
+    });
+
+    expect(calendarData["2026-10-20"]).toEqual([
+      expect.objectContaining({ id: "item-0", date: "2026-10-20", slot: "Lunch" }),
+    ]);
+    view.unmount();
   });
 
   it.each(WRITES)("sends the newest cached copy's version with a %s", async (write) => {

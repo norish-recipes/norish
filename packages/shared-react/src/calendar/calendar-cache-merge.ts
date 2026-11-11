@@ -108,8 +108,8 @@ export function calendarRangeOfQueryKey(queryKey: readonly unknown[]): CalendarR
 }
 
 /**
- * A move as one range sees it: `moved` leaves its source slot and lands at
- * `target.sortOrder` in the target slot when the target date is in the range.
+ * A move as one range sees it: `moved` leaves its source slot and lands at `target.sortOrder`.
+ * A range that held it keeps it past its edge, so a grown range can seed from it (its read drops it).
  */
 export function moveItemInRange(
   prev: PlannedItemFromQuery[],
@@ -117,9 +117,9 @@ export function moveItemInRange(
   target: Pick<PlannedItemFromQuery, "date" | "slot" | "sortOrder">,
   range: CalendarRange
 ) {
-  const targetInRange = isDateInRange(target.date, range);
+  const keepsItem = isDateInRange(target.date, range) || prev.some((item) => item.id === moved.id);
 
-  if (!targetInRange && !isDateInRange(moved.date, range)) return prev;
+  if (!keepsItem && !isDateInRange(moved.date, range)) return prev;
 
   const isSameSlot = moved.date === target.date && moved.slot === target.slot;
   const shifted = prev.flatMap((item) => {
@@ -151,7 +151,7 @@ export function moveItemInRange(
   });
 
   return sortCalendarItems(
-    targetInRange ? [...shifted, { ...moved, ...target, updatedAt: new Date() }] : shifted
+    keepsItem ? [...shifted, { ...moved, ...target, updatedAt: new Date() }] : shifted
   );
 }
 
