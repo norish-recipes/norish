@@ -53,7 +53,7 @@ function MiniCalendarContent({
   const startISO = dateKey(rangeStart);
   const endISO = dateKey(rangeEnd);
   const { recipe } = useRecipeQuery(recipeId);
-  const { calendarData, isLoading } = useCalendarQuery(startISO, endISO);
+  const { calendarData, isLoading } = useCalendarQuery({ startISO, endISO });
   const { createItem } = useCalendarMutations();
   useCalendarSubscription();
   const allDays = useMemo(() => eachDayOfInterval(rangeStart, rangeEnd), [rangeStart, rangeEnd]);

@@ -33,7 +33,7 @@ export function CalendarContextProvider({
   const startISO = dateKey(dateRange.start);
   const endISO = dateKey(dateRange.end);
 
-  const { calendarData, isLoading: isQueryLoading } = useCalendarQuery(startISO, endISO);
+  const { calendarData, isLoading: isQueryLoading } = useCalendarQuery({ startISO, endISO });
   const { createItem, deleteItem, moveItem, updateItem } = useCalendarMutations();
 
   // Track if initial load has completed (only show skeleton on first load)

@@ -1,3 +1,4 @@
+export type { CalendarRange } from "./calendar-cache-merge";
 export type { CalendarData } from "./types";
 
 export { useCalendarMutations } from "./use-calendar-mutations";

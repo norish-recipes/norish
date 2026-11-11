@@ -316,7 +316,7 @@ describe("calendar cache convergence across ranges", () => {
 
     readRange.mockResolvedValue(server);
     const view = renderHookWithClient(queryClient, () => {
-      items = useCalendarQuery(THIS_WEEK.startISO, THIS_WEEK.endISO).items;
+      items = useCalendarQuery(THIS_WEEK).items;
     });
 
     await act(async () => {
@@ -567,7 +567,7 @@ describe("a delete, move or update with no range", () => {
     readRange.mockResolvedValue(server);
     mount({ success: true });
     const view = renderHookWithClient(queryClient, () => {
-      items = useCalendarQuery(WIDER.startISO, WIDER.endISO).items;
+      items = useCalendarQuery(WIDER).items;
     });
 
     expect(queryClient.getQueryState(rangeKeyOf(WIDER))?.fetchStatus).toBe("fetching");
@@ -595,7 +595,7 @@ describe("a delete, move or update with no range", () => {
     readRange.mockImplementation(async () => server);
     ({ unmount } = renderHookWithClient(queryClient, () => {
       mutations = useCalendarMutations();
-      items = useCalendarQuery(CALENDAR_PAGE.startISO, CALENDAR_PAGE.endISO).items;
+      items = useCalendarQuery(CALENDAR_PAGE).items;
     }));
     await act(async () => {
       await vi.waitFor(() =>
@@ -675,7 +675,7 @@ describe("a range the cache has not read yet", () => {
     ]);
 
     const { unmount } = renderHookWithClient(queryClient, () => {
-      items = useCalendarQuery(WIDER.startISO, WIDER.endISO).items;
+      items = useCalendarQuery(WIDER).items;
     });
 
     expect(items.map((item) => item.id)).toEqual(["item-0"]);

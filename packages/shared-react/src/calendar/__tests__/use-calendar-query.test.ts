@@ -75,7 +75,7 @@ describe("useCalendarQuery", () => {
         queryFn: async () => [],
       });
 
-      const { result } = renderHook(() => useCalendarQuery(startISO, endISO), {
+      const { result } = renderHook(() => useCalendarQuery({ startISO, endISO }), {
         wrapper: createTestWrapper(queryClient),
       });
 
@@ -89,7 +89,7 @@ describe("useCalendarQuery", () => {
         queryFn: () => new Promise(() => {}),
       });
 
-      const { result } = renderHook(() => useCalendarQuery(startISO, endISO), {
+      const { result } = renderHook(() => useCalendarQuery({ startISO, endISO }), {
         wrapper: createTestWrapper(queryClient),
       });
 
@@ -116,7 +116,7 @@ describe("useCalendarQuery", () => {
         queryFn: async () => mockItems,
       });
 
-      const { result } = renderHook(() => useCalendarQuery(startISO, endISO), {
+      const { result } = renderHook(() => useCalendarQuery({ startISO, endISO }), {
         wrapper: createTestWrapper(queryClient),
       });
 
@@ -142,7 +142,7 @@ describe("useCalendarQuery", () => {
         queryFn: async () => [],
       });
 
-      const { result } = renderHook(() => useCalendarQuery(startISO, endISO), {
+      const { result } = renderHook(() => useCalendarQuery({ startISO, endISO }), {
         wrapper: createTestWrapper(queryClient),
       });
 
@@ -162,7 +162,7 @@ describe("useCalendarQuery", () => {
         queryFn: async () => mockItems,
       });
 
-      const { result } = renderHook(() => useCalendarQuery(startISO, endISO), {
+      const { result } = renderHook(() => useCalendarQuery({ startISO, endISO }), {
         wrapper: createTestWrapper(queryClient),
       });
 

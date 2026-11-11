@@ -2,6 +2,7 @@ import { useQuery } from "@tanstack/react-query";
 
 import type { PlannedItemFromQuery } from "@norish/shared/contracts";
 
+import type { CalendarRange } from "./calendar-cache-merge";
 import type { CalendarData, CalendarQueryResult } from "./types";
 import { useTRPC } from "../trpc";
 import { knownItemsInRange } from "./calendar-cache-merge";
@@ -17,7 +18,8 @@ function groupItemsByDate(items: PlannedItemFromQuery[]): CalendarData {
   return grouped;
 }
 
-export function useCalendarQuery(startISO: string, endISO: string): CalendarQueryResult {
+export function useCalendarQuery(range: CalendarRange): CalendarQueryResult {
+  const { startISO, endISO } = range;
   const trpc = useTRPC();
   const { cachedRanges } = useCalendarCacheHelpers();
 
