@@ -15,7 +15,7 @@ import {
   toggleSearchFieldIn,
 } from "@norish/shared/contracts/filter-contract";
 
-import { createPageStoreContext } from "./page-store";
+import { createPageStoreContext } from "../page-store";
 
 export type LibraryFiltersState = {
   filters: CanonicalRecipeFilters;

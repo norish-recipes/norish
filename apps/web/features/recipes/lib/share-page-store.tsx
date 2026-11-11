@@ -5,8 +5,8 @@ import { useSharePublicConfigQuery } from "@/features/recipes/hooks/use-share-pu
 import { createStore } from "zustand";
 
 import type { MeasurementSystem, PublicRecipeViewDTO } from "@norish/shared/contracts";
+import { createPageStoreContext } from "@norish/shared-react/page-store";
 import {
-  createPageStoreContext,
   scaleIngredients,
   servingsShown,
   useSharedRecipeQuery,
