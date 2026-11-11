@@ -1,4 +1,4 @@
-import { useCallback, useRef } from "react";
+import { useRef } from "react";
 
 type VirtualAnchorItem = {
   index: number;
@@ -23,44 +23,41 @@ type CaptureAnchorArgs = {
 export function usePrependAnchorRestore({ keys }: UsePrependAnchorRestoreArgs) {
   const pendingPrependAnchorRef = useRef<PendingPrependAnchor | null>(null);
 
-  const captureAnchor = useCallback(
-    ({ index, itemStart, scrollOffset }: CaptureAnchorArgs) => {
-      const key = keys[index];
+  const captureAnchor = ({ index, itemStart, scrollOffset }: CaptureAnchorArgs) => {
+    const key = keys[index];
 
-      if (!key) return;
+    if (!key) return;
 
-      pendingPrependAnchorRef.current = {
-        key,
-        offsetWithinItem: scrollOffset - itemStart,
-      };
-    },
-    [keys]
-  );
+    pendingPrependAnchorRef.current = {
+      key,
+      offsetWithinItem: scrollOffset - itemStart,
+    };
+  };
 
-  const restoreAnchor = useCallback(
-    (getVirtualItems: () => VirtualAnchorItem[], scrollToOffset: (offset: number) => void) => {
-      const anchor = pendingPrependAnchorRef.current;
+  const restoreAnchor = (
+    getVirtualItems: () => VirtualAnchorItem[],
+    scrollToOffset: (offset: number) => void
+  ) => {
+    const anchor = pendingPrependAnchorRef.current;
 
-      if (!anchor) return;
+    if (!anchor) return;
 
-      const targetIndex = keys.indexOf(anchor.key);
+    const targetIndex = keys.indexOf(anchor.key);
 
-      if (targetIndex < 0) {
-        pendingPrependAnchorRef.current = null;
-
-        return;
-      }
-
-      const targetItem = getVirtualItems().find((item) => item.index === targetIndex);
-
-      if (targetItem) {
-        scrollToOffset(targetItem.start + anchor.offsetWithinItem);
-      }
-
+    if (targetIndex < 0) {
       pendingPrependAnchorRef.current = null;
-    },
-    [keys]
-  );
+
+      return;
+    }
+
+    const targetItem = getVirtualItems().find((item) => item.index === targetIndex);
+
+    if (targetItem) {
+      scrollToOffset(targetItem.start + anchor.offsetWithinItem);
+    }
+
+    pendingPrependAnchorRef.current = null;
+  };
 
   return {
     captureAnchor,

@@ -1,6 +1,6 @@
 "use client";
 
-import { memo, useMemo } from "react";
+import { memo } from "react";
 import { dayDropId } from "@/components/calendar/day-drop-id";
 import { SlotDropdown } from "@/components/shared/slot-dropdown";
 import { useDroppable } from "@dnd-kit/core";
@@ -51,18 +51,15 @@ export const TimelineDaySection = memo(function TimelineDaySection({
       dateKey,
     },
   });
-  const slotLabels: Record<Slot, string> = useMemo(
-    () => ({
-      Breakfast: tSlots("breakfast"),
-      Lunch: tSlots("lunch"),
-      Dinner: tSlots("dinner"),
-      Snack: tSlots("snack"),
-    }),
-    [tSlots]
-  );
+  const slotLabels: Record<Slot, string> = {
+    Breakfast: tSlots("breakfast"),
+    Lunch: tSlots("lunch"),
+    Dinner: tSlots("dinner"),
+    Snack: tSlots("snack"),
+  };
 
   // Group items by slot
-  const itemsBySlot = useMemo(() => {
+  const itemsBySlot = (() => {
     const grouped: Record<Slot, PlannedItemDisplay[]> = {
       Breakfast: [],
       Lunch: [],
@@ -81,7 +78,7 @@ export const TimelineDaySection = memo(function TimelineDaySection({
       grouped[slot]?.sort((a, b) => a.sortOrder - b.sortOrder);
     }
     return grouped;
-  }, [items]);
+  })();
   const hasItems = items.length > 0;
   const showDragHighlight = isDragOver || isOver;
   return (

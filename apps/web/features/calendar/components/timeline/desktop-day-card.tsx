@@ -1,7 +1,7 @@
 "use client";
 
 import type { PlannedItemDisplay } from "@/components/calendar/types";
-import { memo, useMemo } from "react";
+import { memo } from "react";
 import { dayDropId } from "@/components/calendar/day-drop-id";
 import { TimelineSlotContainer } from "@/components/calendar/timeline-slot-container";
 import { SLOTS } from "@/components/calendar/types";
@@ -49,18 +49,15 @@ export const DesktopDayCard = memo(function DesktopDayCard({
       dateKey,
     },
   });
-  const slotLabels: Record<Slot, string> = useMemo(
-    () => ({
-      Breakfast: tSlots("breakfast"),
-      Lunch: tSlots("lunch"),
-      Dinner: tSlots("dinner"),
-      Snack: tSlots("snack"),
-    }),
-    [tSlots]
-  );
+  const slotLabels: Record<Slot, string> = {
+    Breakfast: tSlots("breakfast"),
+    Lunch: tSlots("lunch"),
+    Dinner: tSlots("dinner"),
+    Snack: tSlots("snack"),
+  };
 
   // Group items by slot
-  const itemsBySlot = useMemo(() => {
+  const itemsBySlot = (() => {
     const grouped: Record<Slot, PlannedItemDisplay[]> = {
       Breakfast: [],
       Lunch: [],
@@ -79,7 +76,7 @@ export const DesktopDayCard = memo(function DesktopDayCard({
       grouped[slot]?.sort((a, b) => a.sortOrder - b.sortOrder);
     }
     return grouped;
-  }, [items]);
+  })();
   const hasItems = items.length > 0;
   const showDragHighlight = isDragOver || isOver;
   return (

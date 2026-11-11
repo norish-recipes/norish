@@ -1,6 +1,6 @@
 "use client";
 
-import { memo, useMemo } from "react";
+import { memo } from "react";
 import { PlannedItemThumbnail } from "@/components/calendar/planned-item-thumbnail";
 import { useTranslations } from "next-intl";
 
@@ -22,14 +22,10 @@ export const PlannedItemContent = memo(function PlannedItemContent({
 
   const title = item.itemType === "recipe" ? item.recipeName : item.title;
 
-  const subtitle = useMemo(
-    () =>
-      buildItemSubtitle(item, {
-        serving: t("serving"),
-        servings: t("servings"),
-      }),
-    [item, t]
-  );
+  const subtitle = buildItemSubtitle(item, {
+    serving: t("serving"),
+    servings: t("servings"),
+  });
 
   return (
     <div className={`flex items-center gap-3 ${className}`}>

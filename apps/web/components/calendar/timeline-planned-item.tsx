@@ -1,6 +1,6 @@
 "use client";
 
-import { memo, useCallback } from "react";
+import { memo } from "react";
 import { useRouter } from "next/navigation";
 import { useRecipePrefetch } from "@/hooks/use-recipe-prefetch";
 import { useDraggable } from "@dnd-kit/core";
@@ -34,19 +34,19 @@ export const TimelinePlannedItem = memo(function TimelinePlannedItem({
   // Prefetch recipe data when item enters viewport
   const prefetchRef = useRecipePrefetch(item.recipeId ?? "", isRecipe && !!item.recipeId);
 
-  const handleClick = useCallback(() => {
+  const handleClick = () => {
     if (isRecipe && onRecipeClick) {
       onRecipeClick(item);
     } else if (!isRecipe && onNoteClick) {
       onNoteClick(item);
     }
-  }, [isRecipe, item, onRecipeClick, onNoteClick]);
+  };
 
-  const handleDoubleClick = useCallback(() => {
+  const handleDoubleClick = () => {
     if (isRecipe && item.recipeId) {
       router.push(`/recipes/${item.recipeId}`);
     }
-  }, [isRecipe, item.recipeId, router]);
+  };
 
   const content = (
     <div
