@@ -9,14 +9,15 @@ import { UserGroupIcon } from "@heroicons/react/24/outline";
 import { Chip, Modal, Table, toast } from "@heroui/react";
 import { useTranslations } from "next-intl";
 
-import { useHouseholdSettingsContext } from "../context";
+import { useHousehold, useHouseholdMutations } from "@norish/shared-react/reader";
 
 export default function MembersCard() {
   const t = useTranslations("settings.household.members");
   const tErrors = useTranslations("common.errors");
   const ti = useTranslations("settings.household.info");
   const tActions = useTranslations("common.actions");
-  const { household, currentUserId, kickUser, transferAdmin } = useHouseholdSettingsContext();
+  const { household, currentUserId } = useHousehold();
+  const { kickUser, transferAdmin } = useHouseholdMutations();
   const [showKickModal, setShowKickModal] = useState(false);
   const [showTransferModal, setShowTransferModal] = useState(false);
   const [userToKick, setUserToKick] = useState<{

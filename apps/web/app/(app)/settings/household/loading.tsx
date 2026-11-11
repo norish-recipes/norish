@@ -1,5 +1,5 @@
-import { readHouseholdShape } from "../read-settings-shape";
-import HouseholdSkeleton from "./components/household-skeleton";
+import HouseholdSkeleton from "@/features/household/components/household-skeleton";
+import { readHouseholdShape } from "@/features/household/read-household-shape";
 
 export default async function Loading() {
   // The page reads the same shape; this is the same cached read.

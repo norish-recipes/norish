@@ -3,7 +3,7 @@
 import { SettingsCardsSkeleton } from "@/components/settings/settings-skeleton";
 import { ClipboardDocumentIcon, HomeIcon, UserGroupIcon } from "@heroicons/react/24/outline";
 
-import type { HouseholdShape } from "./household-shape";
+import type { HouseholdShape } from "../household-shape";
 
 export default function HouseholdSkeleton({ shape }: { shape: HouseholdShape }) {
   // Without a household, its two cards sit side by side.

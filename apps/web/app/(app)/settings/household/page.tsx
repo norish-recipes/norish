@@ -1,12 +1,11 @@
 import { QuerySeed } from "@/components/query-seed";
-
-import { readHouseholdShape } from "../read-settings-shape";
-import HouseholdSettingsContent from "./components/household-settings-content";
+import { HouseholdScreen } from "@/features/household/household-screen";
+import { readHouseholdShape } from "@/features/household/read-household-shape";
 
 export default async function HouseholdSettingsPage() {
   return (
     <QuerySeed reads={(trpc, client) => [client.query(trpc.households.get.queryOptions())]}>
-      <HouseholdSettingsContent shape={await readHouseholdShape()} />
+      <HouseholdScreen shape={await readHouseholdShape()} />
     </QuerySeed>
   );
 }

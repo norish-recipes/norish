@@ -8,11 +8,11 @@ import { HomeIcon, UserGroupIcon } from "@heroicons/react/24/outline";
 import { Input, InputOTP, Label, REGEXP_ONLY_DIGITS, TextField } from "@heroui/react";
 import { useTranslations } from "next-intl";
 
-import { useHouseholdSettingsContext } from "../context";
+import { useHouseholdMutations } from "@norish/shared-react/reader";
 
 export default function NoHouseholdView() {
   const t = useTranslations("settings.household");
-  const { createHousehold, joinHousehold } = useHouseholdSettingsContext();
+  const { createHousehold, joinHousehold } = useHouseholdMutations();
   const [householdName, setHouseholdName] = useState("");
   const [joinCode, setJoinCode] = useState("");
   const [isCreating, setIsCreating] = useState(false);

@@ -8,12 +8,13 @@ import { HomeIcon } from "@heroicons/react/24/outline";
 import { Chip, Modal, Separator } from "@heroui/react";
 import { useTranslations } from "next-intl";
 
-import { useHouseholdSettingsContext } from "../context";
+import { useHousehold, useHouseholdMutations } from "@norish/shared-react/reader";
 
 export default function HouseholdInfoCard() {
   const t = useTranslations("settings.household.info");
   const tActions = useTranslations("common.actions");
-  const { household, currentUserId, leaveHousehold } = useHouseholdSettingsContext();
+  const { household, currentUserId } = useHousehold();
+  const { leaveHousehold } = useHouseholdMutations();
   const [showLeaveModal, setShowLeaveModal] = useState(false);
   if (!household) return null;
 

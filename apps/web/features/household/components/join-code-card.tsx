@@ -17,8 +17,7 @@ import { Button, Input, toast } from "@heroui/react";
 import { useTranslations } from "next-intl";
 
 import type { HouseholdAdminSettingsDto } from "@norish/shared/contracts/dto/household";
-
-import { useHouseholdSettingsContext } from "../context";
+import { useHousehold, useHouseholdMutations } from "@norish/shared-react/reader";
 
 const noSubscription = () => () => {};
 const nowToTheSecond = () => Math.floor(Date.now() / 1000) * 1000;
@@ -32,7 +31,8 @@ function subscribeToSeconds(onTick: () => void) {
 export default function JoinCodeCard() {
   const t = useTranslations("settings.household.joinCode");
   const tErrors = useTranslations("common.errors");
-  const { household, currentUserId, regenerateJoinCode } = useHouseholdSettingsContext();
+  const { household, currentUserId } = useHousehold();
+  const { regenerateJoinCode } = useHouseholdMutations();
   const joinCodeExpiresAt =
     household && "joinCode" in household && household.joinCode ? household.joinCodeExpiresAt : null;
   // The clock the countdown reads, to the second, ticking while a code counts down.
