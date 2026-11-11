@@ -1,4 +1,4 @@
-import { useQuery } from "@tanstack/react-query";
+import { useQuery, useQueryClient } from "@tanstack/react-query";
 
 import type {
   CaldavConfigQueryResult,
@@ -17,14 +17,14 @@ export function useCaldavConfigQuery(): CaldavConfigQueryResult {
 /** The stored password, read while the edit form that shows it is mounted and dropped after. */
 export function useCaldavPasswordQuery() {
   const trpc = useTRPC();
-  const { data, error, isLoading, refetch } = useQuery(
-    trpc.caldav.getPassword.queryOptions(undefined, { staleTime: 0, gcTime: 0 })
-  );
+  const queryClient = useQueryClient();
+  const options = trpc.caldav.getPassword.queryOptions(undefined, { staleTime: 0, gcTime: 0 });
+  const { data, error, isLoading } = useQuery(options);
 
   return {
     password: data ?? null,
-    /** The password, waiting for a read when none has answered yet. */
-    read: async () => data ?? (await refetch()).data ?? null,
+    /** The cached password, which a save drops, else the answer of a read. */
+    read: async () => (await queryClient.ensureQueryData(options)) ?? null,
     error,
     isLoading,
   };

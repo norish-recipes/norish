@@ -17,6 +17,7 @@ export function useCaldavMutations(): CaldavMutationsResult {
   const {
     cachedConfigVersion,
     setConfig,
+    dropPassword,
     invalidateConfig,
     invalidateSyncStatus,
     invalidateSummary,
@@ -27,6 +28,7 @@ export function useCaldavMutations(): CaldavMutationsResult {
     trpc.caldav.saveConfig.mutationOptions({
       onSuccess: (result) => {
         setConfig(() => result);
+        dropPassword();
         invalidateSyncStatus();
         invalidateSummary();
         invalidateConnection();
@@ -46,6 +48,7 @@ export function useCaldavMutations(): CaldavMutationsResult {
     trpc.caldav.deleteConfig.mutationOptions({
       onSuccess: () => {
         setConfig(() => null);
+        dropPassword();
         invalidateConfig();
         invalidateSyncStatus();
         invalidateSummary();

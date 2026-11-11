@@ -37,6 +37,7 @@ function procedure(path: string[]) {
     input === undefined ? [path, { type: "query" }] : [path, { input, type: "query" }];
 
   return {
+    pathKey: () => [path],
     queryKey,
     queryOptions: (input?: unknown, options?: object) => ({
       ...options,

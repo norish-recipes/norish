@@ -50,6 +50,9 @@ vi.mock("../../trpc", () => ({
           queryFn: mockGetSummaryQueryFn,
         }),
       },
+      getPassword: {
+        queryKey: () => ["caldav", "getPassword"],
+      },
       checkConnection: {
         queryKey: () => mockConnectionQueryKey,
       },

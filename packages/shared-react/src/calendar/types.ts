@@ -87,6 +87,7 @@ export type CaldavCacheHelpers = {
   setStatuses: (
     updater: (prev: CaldavSyncStatusPage | undefined) => CaldavSyncStatusPage | undefined
   ) => void;
+  dropPassword: () => void;
   invalidateConfig: () => void;
   invalidateSyncStatus: () => void;
   invalidateSummary: () => void;

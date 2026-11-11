@@ -17,6 +17,8 @@ export function useCaldavCacheHelpers(): CaldavCacheHelpers {
     cachedConfigVersion: () =>
       queryClient.getQueryData<UserCaldavConfigWithoutPasswordDto | null>(configKey)?.version,
     setConfig: (updater) => writeOverRead(queryClient, configKey, updater),
+    // The stored password a save or delete replaced; the next read asks the server.
+    dropPassword: () => queryClient.removeQueries({ queryKey: trpc.caldav.getPassword.queryKey() }),
     invalidateConfig: () => {
       void queryClient.invalidateQueries({ queryKey: configKey });
     },
