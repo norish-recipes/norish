@@ -51,6 +51,9 @@ export function upsertItemInRange(
 ) {
   const existing = prev.find((current) => current.id === item.id);
 
+  // A plan's version only rises on its own write, so a higher cached one is newer (a late answer).
+  if (existing && existing.version > item.version) return prev;
+
   if (!isDateInRange(item.date, range)) {
     return prev.filter((current) => current.id !== item.id);
   }

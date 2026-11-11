@@ -10,7 +10,7 @@ import type { PlannedItemWithRecipePayload } from "@norish/shared/contracts/zod"
 
 import { renderHookWithClient } from "../../../__tests__/hooks/render-hook";
 import { trackedEvent } from "../../../__tests__/realtime/tracked-event";
-import { calendarRangeOfQueryKey } from "../calendar-cache-merge";
+import { calendarRangeOfQueryKey, upsertItemInRange } from "../calendar-cache-merge";
 import { useCalendarMutations } from "../use-calendar-mutations";
 import { useCalendarQuery } from "../use-calendar-query";
 import { useCalendarSubscription } from "../use-calendar-subscription";
@@ -693,6 +693,51 @@ describe("a delete, move or update with no range", () => {
         true
       );
     }
+  });
+  // Mutations ride a non-streaming batch link, so an answer can land after a newer echo.
+  it.each(["move", "update"] as const)(
+    "keeps a newer echo in every range when a %s's answer lands after it",
+    async (write) => {
+      const answer = deferred<object>();
+      const answered = {
+        move: payload({ id: "item-0", date: "2026-10-05", slot: "Lunch", version: 2 }),
+        update: payload({ id: "item-0", date: "2026-09-22", title: "Leftovers", version: 2 }),
+      };
+
+      queryClient.setMutationDefaults([["calendar", `${write}Item`]], {
+        mutationFn: () => answer.promise,
+      });
+      useSubscriptionMock.mockReset();
+      ({ unmount } = renderHookWithClient(queryClient, () => {
+        mutations = useCalendarMutations();
+        useCalendarSubscription();
+      }));
+      const onUpdated = useSubscriptionMock.mock.calls.find(
+        ([options]) => (options as { name: string }).name === "onItemUpdated"
+      )![0] as { onData: (data: unknown) => void };
+      const newest = payload({ id: "item-0", date: "2026-09-22", title: "Newest", version: 3 });
+
+      act(() => writes[write]());
+      act(() => onUpdated.onData(trackedEvent({ item: newest })));
+      await act(async () => answer.resolve({ success: true, item: answered[write] }));
+      await settle();
+
+      for (const range of [THIS_WEEK, CALENDAR_PAGE]) {
+        expect(itemsIn(range)?.find((item) => item.id === "item-0")).toEqual(
+          expect.objectContaining({ title: "Newest", version: 3 })
+        );
+      }
+    }
+  );
+
+  it("takes the incoming item when the cached copy has the same version", () => {
+    const placed = upsertItemInRange(
+      [cachedItem({ id: "item-0", title: "Cached", version: 2 })],
+      payload({ id: "item-0", date: "2026-09-22", title: "Incoming", version: 2 }),
+      THIS_WEEK
+    );
+
+    expect(placed).toEqual([expect.objectContaining({ title: "Incoming", version: 2 })]);
   });
 });
 
