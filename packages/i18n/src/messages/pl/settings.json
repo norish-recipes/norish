@@ -384,7 +384,7 @@
         "failed": "Nieudane",
         "removed": "Usunięto"
       },
-      "emptyFiltered": "Brak elementów o statusie: {status}",
+      "emptyFiltered": "Brak elementów o tym statusie",
       "emptyDefault": "Brak rekordów synchronizacji",
       "errorDetails": "Szczegóły błędu",
       "pagination": "Strona {current} z {total}",

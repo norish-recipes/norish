@@ -384,7 +384,7 @@
         "failed": "Misslyckades",
         "removed": "Borttagen"
       },
-      "emptyFiltered": "Inga poster med status {status} hittades",
+      "emptyFiltered": "Inga poster med denna status",
       "emptyDefault": "Ingen synkroniseringshistorik hittades",
       "errorDetails": "Felinformation",
       "pagination": "Sida {current} av {total}",

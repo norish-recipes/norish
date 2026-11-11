@@ -384,7 +384,7 @@
         "failed": "Fehlgeschlagen",
         "removed": "Entfernt"
       },
-      "emptyFiltered": "Keine {status}-Einträge gefunden",
+      "emptyFiltered": "Keine Einträge mit diesem Status",
       "emptyDefault": "Keine Synchronisierungsdatensätze gefunden",
       "errorDetails": "Fehlerdetails",
       "pagination": "Seite {current} von {total}",

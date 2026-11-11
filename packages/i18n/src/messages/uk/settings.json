@@ -384,7 +384,7 @@
         "failed": "Помилка",
         "removed": "Прибрано"
       },
-      "emptyFiltered": "Записів зі статусом «{status}» не знайдено",
+      "emptyFiltered": "Немає записів із цим статусом",
       "emptyDefault": "Записів синхронізації не знайдено",
       "errorDetails": "Подробиці помилки",
       "pagination": "Сторінка {current} з {total}",

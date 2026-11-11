@@ -384,7 +384,7 @@
         "failed": "فشل",
         "removed": "أُزيل"
       },
-      "emptyFiltered": "لا توجد عناصر بحالة {status}",
+      "emptyFiltered": "لا توجد عناصر بهذه الحالة",
       "emptyDefault": "لا توجد سجلات مزامنة",
       "errorDetails": "تفاصيل الخطأ",
       "pagination": "الصفحة {current} من {total}",

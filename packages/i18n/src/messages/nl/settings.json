@@ -384,7 +384,7 @@
         "failed": "Mislukt",
         "removed": "Verwijderd"
       },
-      "emptyFiltered": "Geen {status} items gevonden",
+      "emptyFiltered": "Geen items met deze status",
       "emptyDefault": "Geen synchronisatiegegevens gevonden",
       "errorDetails": "Foutdetails",
       "pagination": "Pagina {current} van {total}",

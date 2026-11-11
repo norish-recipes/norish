@@ -384,7 +384,7 @@
         "failed": "Échoué",
         "removed": "Supprimé"
       },
-      "emptyFiltered": "Aucun élément {status} trouvé",
+      "emptyFiltered": "Aucun élément avec ce statut",
       "emptyDefault": "Aucun enregistrement de synchronisation",
       "errorDetails": "Détails de l’erreur",
       "pagination": "Page {current} sur {total}",

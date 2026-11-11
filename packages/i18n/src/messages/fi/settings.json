@@ -384,7 +384,7 @@
         "failed": "Epäonnistui",
         "removed": "Poistettu"
       },
-      "emptyFiltered": "Kohteita tilassa {status} ei löytynyt",
+      "emptyFiltered": "Ei kohteita tässä tilassa",
       "emptyDefault": "Synkronointimerkintöjä ei löytynyt",
       "errorDetails": "Virheen tiedot",
       "pagination": "Sivu {current} / {total}",

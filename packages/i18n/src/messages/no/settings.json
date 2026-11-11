@@ -384,7 +384,7 @@
         "failed": "Mislyktes",
         "removed": "Fjernet"
       },
-      "emptyFiltered": "Ingen {status}-elementer funnet",
+      "emptyFiltered": "Ingen elementer med denne statusen",
       "emptyDefault": "Ingen synkroniseringsposter funnet",
       "errorDetails": "Feildetaljer",
       "pagination": "Side {current} av {total}",

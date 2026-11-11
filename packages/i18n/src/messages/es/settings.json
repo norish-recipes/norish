@@ -384,7 +384,7 @@
         "failed": "Error",
         "removed": "Eliminado"
       },
-      "emptyFiltered": "No se han encontrado elementos {status}",
+      "emptyFiltered": "No hay elementos con este estado",
       "emptyDefault": "No hay registros de sincronización",
       "errorDetails": "Detalles del error",
       "pagination": "Página {current} de {total}",

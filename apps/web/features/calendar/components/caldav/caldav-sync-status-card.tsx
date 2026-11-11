@@ -166,9 +166,7 @@ export default function CaldavSyncStatusCard() {
                   {isLoading
                     ? tStatus("loading")
                     : syncStatusFilter
-                      ? t("emptyFiltered", {
-                          status: t(`statuses.${syncStatusFilter}`),
-                        })
+                      ? t("emptyFiltered")
                       : t("emptyDefault")}
                 </div>
               )}

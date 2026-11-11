@@ -384,7 +384,7 @@
         "failed": "Failed",
         "removed": "Removed"
       },
-      "emptyFiltered": "No {status} items found",
+      "emptyFiltered": "No items with this status",
       "emptyDefault": "No sync records found",
       "errorDetails": "Error details",
       "pagination": "Page {current} of {total}",

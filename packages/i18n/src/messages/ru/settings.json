@@ -384,7 +384,7 @@
         "failed": "Ошибка",
         "removed": "Удалено"
       },
-      "emptyFiltered": "Элементы со статусом «{status}» не найдены",
+      "emptyFiltered": "Нет элементов с этим статусом",
       "emptyDefault": "Записи синхронизации не найдены",
       "errorDetails": "Подробности ошибки",
       "pagination": "Страница {current} из {total}",
