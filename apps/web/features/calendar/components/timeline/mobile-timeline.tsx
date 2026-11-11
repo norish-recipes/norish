@@ -1,9 +1,14 @@
 "use client";
 
+import type { PlannedItemDisplay } from "@/components/calendar/mobile/types";
 import type { DragEndEvent, DragOverEvent, DragStartEvent } from "@dnd-kit/core";
 import { useCallback, useEffect, useId, useLayoutEffect, useMemo, useRef, useState } from "react";
+import { hasReachedDay, landOnDay, settleLanding } from "@/components/calendar/land-on-day";
+import { TimelineDaySection } from "@/components/calendar/mobile/timeline-day-section";
+import { SLOT_ORDER } from "@/components/calendar/mobile/types";
 import { useReaderToday } from "@/components/reader-today";
-import { CalendarSkeletonMobile } from "@/components/skeleton/calendar-skeleton";
+import { CalendarSkeletonMobile } from "@/features/calendar/components/skeleton/calendar-skeleton";
+import { usePrependAnchorRestore } from "@/features/calendar/hooks/use-prepend-anchor-restore";
 import {
   DndContext,
   DragOverlay,
@@ -22,13 +27,8 @@ import type { Slot } from "@norish/shared/contracts";
 import { useCalendarMutations, useCalendarRangeQuery } from "@norish/shared-react/calendar";
 import { dateKey, eachDayOfInterval, parseDateKey } from "@norish/shared/lib/helpers";
 
-import type { PlannedItemDisplay } from "./types";
-import { hasReachedDay, landOnDay, settleLanding } from "../land-on-day";
-import { usePrependAnchorRestore } from "../use-prepend-anchor-restore";
-import { TimelineDaySection } from "./timeline-day-section";
 import { TimelineDragOverlay } from "./timeline-drag-overlay";
 import { TimelineScrollToToday } from "./timeline-scroll-to-today";
-import { SLOT_ORDER } from "./types";
 
 const mobileDragActivationDelayMs = 300;
 const mobileDragTolerancePx = 10;

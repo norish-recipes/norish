@@ -1,7 +1,7 @@
 "use client";
 
-import type { PlannedItemDisplay } from "./types";
-import { PlannedItemContent } from "./planned-item-content";
+import type { PlannedItemDisplay } from "@/components/calendar/mobile/types";
+import { PlannedItemContent } from "@/components/calendar/mobile/planned-item-content";
 
 type TimelineDragOverlayProps = {
   item: PlannedItemDisplay;

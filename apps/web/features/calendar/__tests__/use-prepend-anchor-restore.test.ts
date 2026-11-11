@@ -1,4 +1,4 @@
-import { usePrependAnchorRestore } from "@/components/calendar/use-prepend-anchor-restore";
+import { usePrependAnchorRestore } from "@/features/calendar/hooks/use-prepend-anchor-restore";
 import { act, renderHook } from "@testing-library/react";
 import { describe, expect, it, vi } from "vitest";
 

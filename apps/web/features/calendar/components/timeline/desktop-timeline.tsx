@@ -3,9 +3,11 @@
 import type { PlannedItemDisplay } from "@/components/calendar/mobile/types";
 import type { DragEndEvent, DragOverEvent, DragStartEvent } from "@dnd-kit/core";
 import { useCallback, useEffect, useId, useLayoutEffect, useMemo, useRef, useState } from "react";
+import { hasReachedDay, landOnDay, settleLanding } from "@/components/calendar/land-on-day";
 import { SLOT_ORDER } from "@/components/calendar/mobile/types";
 import { useReaderToday } from "@/components/reader-today";
-import { CalendarSkeletonDesktop } from "@/components/skeleton/calendar-skeleton";
+import { CalendarSkeletonDesktop } from "@/features/calendar/components/skeleton/calendar-skeleton";
+import { usePrependAnchorRestore } from "@/features/calendar/hooks/use-prepend-anchor-restore";
 import { useViewport } from "@/hooks/use-viewport";
 import {
   DndContext,
@@ -24,8 +26,6 @@ import type { Slot } from "@norish/shared/contracts";
 import { useCalendarMutations, useCalendarRangeQuery } from "@norish/shared-react/calendar";
 import { dateKey, eachDayOfInterval, parseDateKey } from "@norish/shared/lib/helpers";
 
-import { hasReachedDay, landOnDay, settleLanding } from "../land-on-day";
-import { usePrependAnchorRestore } from "../use-prepend-anchor-restore";
 import { DesktopDayCard } from "./desktop-day-card";
 import { DesktopDragOverlay } from "./desktop-drag-overlay";
 import { DesktopScrollToToday } from "./desktop-scroll-to-today";

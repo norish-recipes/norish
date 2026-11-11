@@ -3,7 +3,7 @@ import { beforeEach, describe, expect, it, vi } from "vitest";
 
 import "@testing-library/jest-dom";
 
-import { TimelineScrollToToday } from "@/components/calendar/mobile/timeline-scroll-to-today";
+import { TimelineScrollToToday } from "@/features/calendar/components/timeline/timeline-scroll-to-today";
 
 import {
   cssFloatingDockBottomWithNav,

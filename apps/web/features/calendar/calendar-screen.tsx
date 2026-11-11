@@ -1,0 +1,163 @@
+"use client";
+
+import type { PlannedItemDisplay } from "@/components/calendar/mobile";
+import { useCallback, useEffect, useRef, useState } from "react";
+import MiniRecipes from "@/components/Panel/consumers/mini-recipes";
+import { useReaderToday } from "@/components/reader-today";
+import { EditNotePanel } from "@/features/calendar/components/panels/edit-note-panel";
+import { EditPlannedRecipePanel } from "@/features/calendar/components/panels/edit-planned-recipe-panel";
+import { DesktopTimeline } from "@/features/calendar/components/timeline/desktop-timeline";
+import { MobileTimeline } from "@/features/calendar/components/timeline/mobile-timeline";
+import { useIsMobile } from "@/hooks/use-is-mobile";
+
+import type { Slot } from "@norish/shared/contracts";
+import { CalendarRangeProvider, useCalendarSubscription } from "@norish/shared-react/calendar";
+import { parseDateKey } from "@norish/shared/lib/helpers";
+
+function CalendarPageContent() {
+  const [miniRecipesOpen, setMiniRecipesOpen] = useState(false);
+  const [selectedDate, setSelectedDate] = useState<Date>(() => new Date());
+  const [selectedSlot, setSelectedSlot] = useState<Slot | undefined>(undefined);
+  const pendingMiniRecipesScrollYRef = useRef<number | null>(null);
+  const restoreMiniRecipesScrollTimerRef = useRef<number | null>(null);
+
+  // Note editing state
+  const [editingNote, setEditingNote] = useState<PlannedItemDisplay | null>(null);
+
+  // Recipe editing state
+  const [editingRecipe, setEditingRecipe] = useState<PlannedItemDisplay | null>(null);
+
+  const isDesktop = !useIsMobile();
+
+  useEffect(() => {
+    return () => {
+      if (typeof window !== "undefined" && restoreMiniRecipesScrollTimerRef.current !== null) {
+        window.clearTimeout(restoreMiniRecipesScrollTimerRef.current);
+      }
+    };
+  }, []);
+
+  const restoreMiniRecipesScroll = useCallback(() => {
+    if (typeof window === "undefined") return;
+
+    const scrollY = pendingMiniRecipesScrollYRef.current;
+
+    if (scrollY === null) return;
+
+    pendingMiniRecipesScrollYRef.current = null;
+
+    const restore = () => {
+      window.scrollTo({
+        top: scrollY,
+        behavior: "auto",
+      });
+    };
+
+    if (restoreMiniRecipesScrollTimerRef.current !== null) {
+      window.clearTimeout(restoreMiniRecipesScrollTimerRef.current);
+    }
+
+    requestAnimationFrame(restore);
+    restoreMiniRecipesScrollTimerRef.current = window.setTimeout(() => {
+      restore();
+      restoreMiniRecipesScrollTimerRef.current = null;
+    }, 550);
+  }, []);
+
+  const handleMiniRecipesOpenChange = useCallback(
+    (open: boolean) => {
+      setMiniRecipesOpen(open);
+
+      if (!open) {
+        restoreMiniRecipesScroll();
+      }
+    },
+    [restoreMiniRecipesScroll]
+  );
+
+  const handleAddItem = useCallback((dateKey: string, slot: Slot) => {
+    if (typeof window !== "undefined") {
+      if (restoreMiniRecipesScrollTimerRef.current !== null) {
+        window.clearTimeout(restoreMiniRecipesScrollTimerRef.current);
+        restoreMiniRecipesScrollTimerRef.current = null;
+      }
+
+      pendingMiniRecipesScrollYRef.current = window.scrollY;
+    }
+
+    setSelectedDate(parseDateKey(dateKey));
+    setSelectedSlot(slot);
+    setMiniRecipesOpen(true);
+  }, []);
+
+  const handleNoteClick = (item: PlannedItemDisplay) => {
+    setEditingNote(item);
+  };
+
+  const handleRecipeClick = (item: PlannedItemDisplay) => {
+    setEditingRecipe(item);
+  };
+
+  const TimelineComponent = isDesktop ? DesktopTimeline : MobileTimeline;
+
+  return (
+    <>
+      <TimelineComponent
+        onAddItem={handleAddItem}
+        onNoteClick={handleNoteClick}
+        onRecipeClick={handleRecipeClick}
+      />
+
+      {/* Mini recipes panel for adding items */}
+      <MiniRecipes
+        date={selectedDate}
+        open={miniRecipesOpen}
+        slot={selectedSlot}
+        onOpenChange={handleMiniRecipesOpenChange}
+      />
+
+      {/* Edit note panel */}
+      {editingNote && (
+        <EditNotePanel
+          date={editingNote.date}
+          initialTitle={editingNote.title ?? ""}
+          noteId={editingNote.id}
+          open={!!editingNote}
+          slot={editingNote.slot}
+          onOpenChange={(open) => {
+            if (!open) setEditingNote(null);
+          }}
+        />
+      )}
+
+      {/* Edit planned recipe panel */}
+      {editingRecipe && (
+        <EditPlannedRecipePanel
+          date={editingRecipe.date}
+          itemId={editingRecipe.id}
+          open={!!editingRecipe}
+          recipeId={editingRecipe.recipeId ?? ""}
+          recipeImage={editingRecipe.recipeImage ?? null}
+          recipeName={editingRecipe.recipeName ?? ""}
+          slot={editingRecipe.slot}
+          onOpenChange={(open) => {
+            if (!open) setEditingRecipe(null);
+          }}
+        />
+      )}
+    </>
+  );
+}
+
+export function CalendarScreen() {
+  // The server's reading of today while hydrating, so the range asked for is the seeded one.
+  const today = useReaderToday();
+
+  useCalendarSubscription();
+
+  return (
+    <CalendarRangeProvider today={today}>
+      <CalendarPageContent />
+    </CalendarRangeProvider>
+  );
+}

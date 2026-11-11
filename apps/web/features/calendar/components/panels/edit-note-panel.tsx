@@ -3,9 +3,9 @@
 import type { DateValue } from "@internationalized/date";
 import type { Key } from "react";
 import { useState } from "react";
-import { DateAndSlotFields } from "@/components/Panel/consumers/edit-planned-recipe-panel";
 import { Panel } from "@/components/Panel/Panel";
 import { ActionButton, ActionButtonGroup } from "@/components/shared/action-button";
+import { DateAndSlotFields } from "@/features/calendar/components/panels/edit-planned-recipe-panel";
 import { Input, Label, TextField } from "@heroui/react";
 import { parseDate } from "@internationalized/date";
 import { useTranslations } from "next-intl";
