@@ -1,14 +1,13 @@
 "use client";
 
 import type { PlannedItemDisplay } from "@/components/calendar/types";
-import { useCallback, useEffect, useId, useLayoutEffect, useMemo, useRef, useState } from "react";
-import { landOnDay, settleLanding } from "@/components/calendar/land-on-day";
+import { useId, useLayoutEffect, useMemo, useRef, useState } from "react";
+import { settleLanding } from "@/components/calendar/land-on-day";
 import { PlannedItemContent } from "@/components/calendar/planned-item-content";
 import { useReaderToday } from "@/components/reader-today";
 import { CalendarSkeletonDesktop } from "@/features/calendar/components/skeleton/calendar-skeleton";
 import { useCalendarDnd } from "@/features/calendar/hooks/use-calendar-dnd";
-import { useGrowAtEdges } from "@/features/calendar/hooks/use-grow-at-edges";
-import { usePrependAnchorRestore } from "@/features/calendar/hooks/use-prepend-anchor-restore";
+import { useTimelineScroll } from "@/features/calendar/hooks/use-timeline-scroll";
 import { useViewport } from "@/hooks/use-viewport";
 import { DndContext, DragOverlay, PointerSensor, useSensor, useSensors } from "@dnd-kit/core";
 import { useWindowVirtualizer } from "@tanstack/react-virtual";
@@ -82,7 +81,6 @@ export function DesktopTimeline({ onAddItem, onNoteClick, onRecipeClick }: Deskt
     () => rows.map((row, index) => (row[0] ? dateKey(row[0]) : `row-${index}`)),
     [rows]
   );
-  const { captureAnchor, restoreAnchor } = usePrependAnchorRestore({ keys: rowKeys });
 
   // Date formatters
   const weekdayFormatter = useMemo(
@@ -129,86 +127,19 @@ export function DesktopTimeline({ onAddItem, onNoteClick, onRecipeClick }: Deskt
     onChange: settleLanding,
   });
 
-  // Track if we've scrolled to today
-  const hasScrolledRef = useRef(false);
-
-  // Scroll to today after initial data loads
-  useEffect(() => {
-    if (hasScrolledRef.current || isLoading || todayRowIndex < 0) return;
-
-    requestAnimationFrame(() => {
-      landOnDay(virtualizer, todayRowIndex);
-      hasScrolledRef.current = true;
-    });
-  }, [isLoading, todayRowIndex, virtualizer]);
-
-  // Scroll-to-today button state
-  const [showScrollButton, setShowScrollButton] = useState(false);
-  const [scrollDirection, setScrollDirection] = useState<"up" | "down">("down");
-
-  // Check if today is visible
-  useEffect(() => {
-    if (todayRowIndex < 0) return;
-
-    const checkVisibility = () => {
-      if (!hasScrolledRef.current) return;
-
-      const items = virtualizer.getVirtualItems();
-
-      if (items.length === 0) return;
-
-      const firstItem = items[0];
-      const lastItem = items[items.length - 1];
-
-      if (!firstItem || !lastItem) return;
-
-      const firstIndex = firstItem.index;
-      const lastIndex = lastItem.index;
-
-      // Use tighter bounds - show FAB sooner when scrolling away from today
-      const buffer = 1;
-      const isTodayVisible =
-        todayRowIndex >= firstIndex + buffer && todayRowIndex <= lastIndex - buffer;
-
-      setShowScrollButton(!isTodayVisible);
-      setScrollDirection(todayRowIndex < firstIndex + buffer ? "up" : "down");
-    };
-
-    window.addEventListener("scroll", checkVisibility, { passive: true });
-    checkVisibility();
-
-    return () => {
-      window.removeEventListener("scroll", checkVisibility);
-    };
-  }, [virtualizer, todayRowIndex]);
-
-  const virtualItems = virtualizer.getVirtualItems();
-
-  useLayoutEffect(() => {
-    restoreAnchor(
-      () => virtualizer.getVirtualItems(),
-      (offset) => {
-        virtualizer.scrollToOffset(offset, { behavior: "auto" });
-      }
-    );
-  }, [virtualizer, restoreAnchor]);
-
-  // Infinite scroll: grow the range when a scroll rests near an edge
-  useGrowAtEdges({
+  const { showScrollButton, scrollDirection, scrollToToday } = useTimelineScroll({
     virtualizer,
-    virtualItems,
-    count: rows.length,
+    keys: rowKeys,
     todayIndex: todayRowIndex,
-    startEdge: 1,
-    hasScrolledRef,
-    captureAnchor,
+    isLoading,
     isGrowing,
     grow,
+    pastGrowEdge: 1,
+    futureGrowEdge: 2,
+    todayBuffer: { past: 1, future: 1 },
   });
 
-  const handleScrollToToday = useCallback(() => {
-    virtualizer.scrollToIndex(todayRowIndex, { align: "start", behavior: "smooth" });
-  }, [virtualizer, todayRowIndex]);
+  const virtualItems = virtualizer.getVirtualItems();
 
   // Drag and drop
   const pointerSensor = useSensor(PointerSensor, {
@@ -297,7 +228,7 @@ export function DesktopTimeline({ onAddItem, onNoteClick, onRecipeClick }: Deskt
         <DesktopScrollToToday
           direction={scrollDirection}
           isVisible={showScrollButton}
-          onClick={handleScrollToToday}
+          onClick={scrollToToday}
         />
 
         <DragOverlay dropAnimation={null}>
