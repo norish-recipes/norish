@@ -106,15 +106,60 @@ function rereadInWindow(queryClient: QueryClient, queryKeys: QueryKey[]): void {
     // A fetch in flight may predate go-live, and its success clears an invalidation made now:
     // each waits for its own, so one that never settles (paused offline) holds back no other.
     for (const query of inFlight) {
-      const reread = () =>
-        void queryClient.invalidateQueries({ queryKey: query.queryKey, exact: true });
+      const again = () => reread(queryClient, (held) => held === query);
 
-      void query.promise?.then(reread, reread);
+      void query.promise?.then(again, again);
     }
-    void queryClient.invalidateQueries({
-      predicate: (query) => isDue(query) && query.state.fetchStatus !== "fetching",
-    });
+    reread(queryClient, (query) => isDue(query) && query.state.fetchStatus !== "fetching");
   }, LIVE_WINDOW_MS);
+}
+
+/**
+ * Invalidates the matching reads. A write's `cancelQueries` reverts a reread to its fetch-start
+ * state and nothing refetches it, so one that ends neither answered nor failed goes again once no
+ * write is pending (a paused Outbox write counts).
+ */
+function reread(queryClient: QueryClient, predicate: (query: Query) => boolean): void {
+  const cache = queryClient.getQueryCache();
+  // Matched before the invalidation starts their fetches, which a predicate may exclude.
+  const due = cache.findAll({ predicate });
+
+  void queryClient.invalidateQueries({ predicate }, { cancelRefetch: false });
+  const unanswered = new Set(due.filter((query) => query.state.fetchStatus !== "idle"));
+  let open = unanswered.size;
+
+  if (open === 0) return;
+  // An optimistic `setQueryData` is a manual success: only the server's answer or failure counts.
+  const stop = cache.subscribe(({ query, ...event }) => {
+    const { action } = event.type === "updated" ? event : { action: undefined };
+
+    if (
+      event.type === "removed" ||
+      action?.type === "error" ||
+      (action?.type === "success" && !action.manual)
+    ) {
+      unanswered.delete(query);
+    }
+  });
+
+  for (const query of unanswered) {
+    const settled = () => {
+      if (--open === 0) stop();
+      if (unanswered.has(query))
+        afterWrites(queryClient, () => reread(queryClient, (held) => held === query));
+    };
+
+    void Promise.resolve(query.promise).then(settled, settled);
+  }
+}
+
+function afterWrites(queryClient: QueryClient, run: () => void): void {
+  if (queryClient.isMutating() === 0) return run();
+  const stop = queryClient.getMutationCache().subscribe(() => {
+    if (queryClient.isMutating() > 0) return;
+    stop();
+    run();
+  });
 }
 
 /**

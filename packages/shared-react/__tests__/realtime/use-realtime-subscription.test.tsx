@@ -5,7 +5,12 @@
  */
 
 import React, { act } from "react";
-import { QueryClient, QueryClientProvider, QueryObserver } from "@tanstack/react-query";
+import {
+  MutationObserver,
+  QueryClient,
+  QueryClientProvider,
+  QueryObserver,
+} from "@tanstack/react-query";
 import { TRPCClientError } from "@trpc/client";
 import { createRoot } from "react-dom/client";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
@@ -415,6 +420,108 @@ describe("useRealtimeSubscription", () => {
 
       expect(hung.queryFn).toHaveBeenCalledTimes(1);
       expect(idle.queryFn).toHaveBeenCalledTimes(2);
+    });
+
+    describe("a write that cancels the reread", () => {
+      /** A write as shared-react's mutations make one: cancel the read, then write over it. */
+      async function write(queryKey: unknown[]) {
+        const settle: Array<(failed?: Error) => void> = [];
+        let sent = () => undefined as void;
+        const running = new Promise<void>((resolve) => (sent = resolve));
+        const observer = new MutationObserver(queryClient, {
+          mutationFn: () => {
+            sent();
+
+            return new Promise<void>((resolve, reject) =>
+              settle.push((failed) => (failed ? reject(failed) : resolve()))
+            );
+          },
+          onMutate: async () => {
+            await queryClient.cancelQueries({ queryKey });
+            queryClient.setQueryData(queryKey, ["optimistic"]);
+          },
+        });
+
+        void observer.mutate().catch(() => undefined);
+        // Pending from here, its optimistic write made.
+        await act(async () => running);
+
+        return { settle: (failed?: Error) => act(async () => settle[0]!(failed)) };
+      }
+
+      /** A read that has answered, mounted and live, with its reread in flight. */
+      async function liveWithRereadInFlight() {
+        const read = observe(GROCERIES);
+
+        await act(async () => read.answers[0]!.resolve(["before"]));
+        render({ onEvent: vi.fn(), liveQueryKeys: [GROCERIES] });
+        markLive(current().observer);
+        expect(read.queryFn).toHaveBeenCalledTimes(2);
+
+        return read;
+      }
+
+      /** Listeners on the client's caches, so a test can see what the reread left behind. */
+      function listeners() {
+        const count = (subscribable: object) =>
+          (subscribable as { listeners: Set<unknown> }).listeners.size;
+
+        return count(queryClient.getQueryCache()) + count(queryClient.getMutationCache());
+      }
+
+      it("rereads once the write settles, and not while it is pending", async () => {
+        const read = await liveWithRereadInFlight();
+        const { settle } = await write(GROCERIES);
+
+        // The cancel reverted the reread; the write's own value shows meanwhile.
+        expect(queryClient.getQueryData(GROCERIES)).toEqual(["optimistic"]);
+        expect(read.queryFn).toHaveBeenCalledTimes(2);
+
+        await settle();
+        expect(read.queryFn).toHaveBeenCalledTimes(3);
+      });
+
+      it("waits again when a second write cancels the retried reread", async () => {
+        const read = await liveWithRereadInFlight();
+
+        await (await write(GROCERIES)).settle();
+        expect(read.queryFn).toHaveBeenCalledTimes(3);
+
+        const second = await write(GROCERIES);
+
+        expect(read.queryFn).toHaveBeenCalledTimes(3);
+        await second.settle(new Error("rejected"));
+        expect(read.queryFn).toHaveBeenCalledTimes(4);
+      });
+
+      it("does not retry a reread that failed", async () => {
+        const read = await liveWithRereadInFlight();
+
+        await act(async () => read.answers[1]!.reject(new Error("offline")));
+        await (await write(GROCERIES)).settle();
+
+        expect(read.queryFn).toHaveBeenCalledTimes(2);
+      });
+
+      it("leaves nothing subscribed once the retry lands, or once the client is cleared", async () => {
+        const before = listeners();
+        const read = await liveWithRereadInFlight();
+
+        await (await write(GROCERIES)).settle();
+        await act(async () => read.answers[2]!.resolve(["after"]));
+        expect(listeners()).toBe(before);
+
+        // Another fresh subscription's reread, cancelled by a write that never settles.
+        markLive(mountCopy({ onEvent: vi.fn(), liveQueryKeys: [GROCERIES] }).observer);
+        expect(read.queryFn).toHaveBeenCalledTimes(4);
+        await write(GROCERIES);
+        expect(listeners()).toBeGreaterThan(before);
+
+        act(() => queryClient.clear());
+        await act(async () => undefined);
+        expect(listeners()).toBe(before);
+        expect(read.queryFn).toHaveBeenCalledTimes(4);
+      });
     });
   });
 
