@@ -59,7 +59,7 @@ export function useTimelineScroll({
   "use no memo";
 
   const { captureAnchor, restoreAnchor } = usePrependAnchorRestore({ keys });
-  const hasLandedRef = useRef(false);
+  const hasReachedTodayRef = useRef(false);
   const hasGrownPastRef = useRef(false);
   const hasGrownFutureRef = useRef(false);
   const [showScrollButton, setShowScrollButton] = useState(false);
@@ -122,9 +122,9 @@ export function useTimelineScroll({
   // Grows once per approach to an edge, after the landing on today has arrived.
   useEffect(() => {
     if (virtualItems.length === 0 || !landingAskedRef.current) return;
-    if (!hasLandedRef.current) {
+    if (!hasReachedTodayRef.current) {
       if (!hasReachedDay(virtualItems, todayIndex)) return;
-      hasLandedRef.current = true;
+      hasReachedTodayRef.current = true;
     }
 
     const firstItem = virtualItems[0];

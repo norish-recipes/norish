@@ -37,7 +37,7 @@ export function useCalendarDnd(calendarData: Record<string, PlannedItemFromQuery
     setDragOverDateKey(target !== activeItem?.date ? target : null);
   };
 
-  const onDragCancel = () => {
+  const resetDrag = () => {
     setActiveItem(null);
     setDragOverDateKey(null);
   };
@@ -46,7 +46,7 @@ export function useCalendarDnd(calendarData: Record<string, PlannedItemFromQuery
     const draggedItem = activeItem;
     const targetDate = dateKeyOfDrop(over?.id);
 
-    onDragCancel();
+    resetDrag();
 
     if (!draggedItem || !targetDate || targetDate === draggedItem.date) return;
 
@@ -65,7 +65,7 @@ export function useCalendarDnd(calendarData: Record<string, PlannedItemFromQuery
       onDragStart,
       onDragOver,
       onDragEnd,
-      onDragCancel,
+      onDragCancel: resetDrag,
     },
   };
 }

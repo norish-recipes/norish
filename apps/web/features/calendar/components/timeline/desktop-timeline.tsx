@@ -41,7 +41,7 @@ export function DesktopTimeline({ onAddItem, onNoteClick, onRecipeClick }: Deskt
 
   // Responsive column count: 3 for lg+, 2 for md
   const columnCount = useViewport((width) => (width >= 1024 ? 3 : 2));
-  const { height: _windowHeight } = useWindowSize();
+  const { height: windowHeight } = useWindowSize();
 
   // Every day in the range, padded to fill complete rows
   const allDays = useMemo(() => {
@@ -108,15 +108,15 @@ export function DesktopTimeline({ onAddItem, onNoteClick, onRecipeClick }: Deskt
   // read, not tracked: a resize is what moves it, so it is measured on one and
   // the timeline counts from the top of the page until then.
   const [scrollMargin, setScrollMargin] = useState(0);
-  const measuredHeightRef = useRef(_windowHeight);
+  const measuredHeightRef = useRef(windowHeight);
 
   useLayoutEffect(() => {
-    if (_windowHeight === measuredHeightRef.current) return;
-    measuredHeightRef.current = _windowHeight;
+    if (windowHeight === measuredHeightRef.current) return;
+    measuredHeightRef.current = windowHeight;
     setScrollMargin(
       containerRef.current ? containerRef.current.getBoundingClientRect().top + window.scrollY : 0
     );
-  }, [_windowHeight]);
+  }, [windowHeight]);
 
   // Window virtualizer (like mobile/recipe grid)
   const virtualizer = useWindowVirtualizer({

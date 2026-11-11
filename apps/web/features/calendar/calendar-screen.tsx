@@ -13,7 +13,7 @@ import type { PlannedItemFromQuery, Slot } from "@norish/shared/contracts";
 import { CalendarRangeProvider, useCalendarSubscription } from "@norish/shared-react/calendar";
 import { parseDateKey } from "@norish/shared/lib/helpers";
 
-function CalendarPageContent() {
+function CalendarScreenContent() {
   const [miniRecipesOpen, setMiniRecipesOpen] = useState(false);
   const [selectedDate, setSelectedDate] = useState<Date>(() => new Date());
   const [selectedSlot, setSelectedSlot] = useState<Slot | undefined>(undefined);
@@ -145,7 +145,7 @@ export function CalendarScreen() {
 
   return (
     <CalendarRangeProvider today={today}>
-      <CalendarPageContent />
+      <CalendarScreenContent />
     </CalendarRangeProvider>
   );
 }
