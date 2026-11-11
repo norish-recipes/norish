@@ -1,6 +1,7 @@
 import { QuerySeed } from "@/components/query-seed";
 import { HouseholdScreen } from "@/features/household/household-screen";
-import { readHouseholdShape } from "@/features/household/read-household-shape";
+
+import { readHouseholdShape } from "./read-household-shape";
 
 export default async function HouseholdSettingsPage() {
   return (

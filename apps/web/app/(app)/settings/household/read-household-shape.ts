@@ -5,13 +5,11 @@ import { readRequestProfile } from "@/lib/request-profile";
 
 import { getHouseholdForUser } from "@norish/db/repositories/households";
 
-import type { HouseholdShape } from "./household-shape";
-
 /**
  * Whether the reader has a household and administers it. `cache` shares the read between the
  * tab's skeleton and its page.
  */
-export const readHouseholdShape = cache(async (): Promise<HouseholdShape> => {
+export const readHouseholdShape = cache(async () => {
   const { identity } = await readRequestProfile();
   const household = identity ? await getHouseholdForUser(identity.id) : null;
 
