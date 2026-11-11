@@ -40,7 +40,9 @@ export default function PreferencesCard() {
   const { globalEnabled } = useTimersEnabledQuery();
   const isAIEnabled = usePermissions((p) => p.isAIEnabled);
   const { enabledLocales, defaultLocale } = useLocaleConfigQuery();
-  const { changeLocale } = useLocale();
+  const { changeLocale, isChanging } = useLocale();
+  // A language save is its own mutation; a second write meanwhile would send the same held version.
+  const isSaving = isUpdatingPreferences || isChanging;
   const [todaySectionVisibility, setTodaySectionVisibility] =
     useDevicePreference("todaySectionVisibility");
   const [hiddenItems, setHiddenItems] = useDevicePreference("hiddenItems");
@@ -96,7 +98,7 @@ export default function PreferencesCard() {
         <Select
           aria-label={t("language.title")}
           className="w-full"
-          isDisabled={isUpdatingPreferences || enabledLocales.length === 0}
+          isDisabled={isSaving || enabledLocales.length === 0}
           placeholder={t("language.title")}
           value={selectedLocale ?? null}
           variant="secondary"
@@ -124,7 +126,7 @@ export default function PreferencesCard() {
       {/* Stored with the user, on every device: it is about how they plan. */}
       <SettingRow description={t("afterPlanning.description")} title={t("afterPlanning.title")}>
         <ChoiceSelect
-          isDisabled={isUpdatingPreferences}
+          isDisabled={isSaving}
           label={t("afterPlanning.title")}
           optionLabel={(option) => t(`afterPlanning.options.${option}`)}
           options={AFTER_PLANNING_CHOICES}
@@ -134,7 +136,7 @@ export default function PreferencesCard() {
       </SettingRow>
       <SettingRow description={t("measurements.description")} title={t("measurements.title")}>
         <ChoiceSelect
-          isDisabled={isUpdatingPreferences}
+          isDisabled={isSaving}
           label={t("measurements.title")}
           optionLabel={(option) => t(`measurements.options.${option}`)}
           options={measurementChoices}

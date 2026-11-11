@@ -33,6 +33,21 @@ vi.mock("next/navigation", () => ({
   useRouter: () => ({ refresh: mockRouterRefresh }),
 }));
 
+// A language save is its own mutation, so the card's preferences mutation is idle meanwhile.
+const localeMock = vi.hoisted(() => ({ isChanging: false }));
+
+vi.mock("@/hooks/user/use-locale", async (importOriginal) => {
+  const actual = await importOriginal<typeof import("@/hooks/user/use-locale")>();
+
+  return {
+    useLocale: () => {
+      const locale = actual.useLocale();
+
+      return { ...locale, isChanging: locale.isChanging || localeMock.isChanging };
+    },
+  };
+});
+
 const todaysMealsMock = vi.hoisted(() => ({
   visibility: "always" as "always" | "planned" | "hidden",
   setVisibility: vi.fn(),
@@ -195,6 +210,7 @@ describe("PreferencesCard", () => {
     permissionsMock.isAIEnabled = false;
     hiddenItemsMock.hidden = [];
     mockAccount.user = withPreferences({});
+    localeMock.isChanging = false;
   });
 
   const hiddenControl = () => screen.getByRole("listbox", { name: /hidden\.title/i });
@@ -330,6 +346,16 @@ describe("PreferencesCard", () => {
     await waitFor(() => {
       expect(mockAccount.updatePreferences).toHaveBeenCalledWith({ locale: "de-informal" });
     });
+  });
+
+  it("holds the account's choices while a language save is under way", () => {
+    localeMock.isChanging = true;
+
+    render(<PreferencesCard />);
+
+    for (const name of [/language\.title/i, /afterPlanning\.title/i, /measurements\.title/i]) {
+      expect(screen.getByRole("combobox", { name })).toBeDisabled();
+    }
   });
 
   it("offers the recipe page colour as a choice between the dish and the theme", () => {
