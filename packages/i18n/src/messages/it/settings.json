@@ -283,7 +283,8 @@
         "kickFailed": "Espulsione dell'utente non riuscita",
         "transferSuccess": "Privilegi di amministratore trasferiti a {name}",
         "transferFailed": "Trasferimento dei privilegi di amministratore non riuscito"
-      }
+      },
+      "unknown": "Sconosciuto"
     },
     "joinCode": {
       "title": "Codice di accesso",
@@ -291,6 +292,7 @@
       "expiresIn": "Scade tra:",
       "regenerateButton": "Rigenera",
       "expired": "Scaduto",
+      "countdown": "{minutes} min {seconds} s",
       "noCodeDescription": "Nessun codice di accesso attivo. Generane uno per invitare nuovi membri.",
       "generateButton": "Genera codice di accesso",
       "copySuccess": "Codice di accesso copiato",

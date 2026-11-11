@@ -283,7 +283,8 @@
         "kickFailed": "사용자를 내보내지 못했습니다.",
         "transferSuccess": "관리자를 {name}(으)로 이전했습니다.",
         "transferFailed": "관리자를 이전하지 못했습니다."
-      }
+      },
+      "unknown": "알 수 없음"
     },
     "joinCode": {
       "title": "참여 코드",
@@ -291,6 +292,7 @@
       "expiresIn": "만료까지:",
       "regenerateButton": "재생성",
       "expired": "만료됨",
+      "countdown": "{minutes}분 {seconds}초",
       "noCodeDescription": "활성 참여 코드가 없습니다. 새 구성원을 초대하려면 코드를 생성하세요.",
       "generateButton": "참여 코드 만들기",
       "copySuccess": "참여 코드가 복사되었습니다",

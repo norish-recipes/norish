@@ -283,7 +283,8 @@
         "kickFailed": "Kunne ikke fjerne brugeren",
         "transferSuccess": "Overførte administrator til {name}",
         "transferFailed": "Kunne ikke overføre administrator"
-      }
+      },
+      "unknown": "Ukendt"
     },
     "joinCode": {
       "title": "Tilmeldingskode",
@@ -291,6 +292,7 @@
       "expiresIn": "Udløber om:",
       "regenerateButton": "Generer ny",
       "expired": "Udløbet",
+      "countdown": "{minutes} min. {seconds} sek.",
       "noCodeDescription": "Ingen aktiv tilmeldingskode. Generer én for at invitere nye medlemmer.",
       "generateButton": "Generer tilmeldingskode",
       "copySuccess": "Tilmeldingskode kopieret",

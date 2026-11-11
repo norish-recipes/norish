@@ -283,7 +283,8 @@
         "kickFailed": "Échec de l’expulsion de l’utilisateur",
         "transferSuccess": "Privilèges admin transférés à {name}",
         "transferFailed": "Échec du transfert admin"
-      }
+      },
+      "unknown": "Inconnu"
     },
     "joinCode": {
       "title": "Code d’invitation",
@@ -291,6 +292,7 @@
       "expiresIn": "Expire dans :",
       "regenerateButton": "Régénérer",
       "expired": "Expiré",
+      "countdown": "{minutes} min {seconds} s",
       "noCodeDescription": "Aucun code actif. Générez-en un pour inviter de nouveaux membres.",
       "generateButton": "Générer un code",
       "copySuccess": "Code copié",

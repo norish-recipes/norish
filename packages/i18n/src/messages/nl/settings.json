@@ -283,7 +283,8 @@
         "kickFailed": "Gebruiker verwijderen mislukt",
         "transferSuccess": "Adminrechten overgedragen aan {name}",
         "transferFailed": "Adminrechten overdracht mislukt"
-      }
+      },
+      "unknown": "Onbekend"
     },
     "joinCode": {
       "title": "Join code",
@@ -291,6 +292,7 @@
       "expiresIn": "Verloopt over:",
       "regenerateButton": "Opnieuw genereren",
       "expired": "Verlopen",
+      "countdown": "{minutes}m {seconds}s",
       "noCodeDescription": "Geen actieve join code. Genereer er een om nieuwe leden uit te nodigen.",
       "generateButton": "Genereer join Code",
       "copySuccess": "Join-code gekopieerd",

@@ -283,7 +283,8 @@
         "kickFailed": "Fehler beim Entfernen des Benutzers",
         "transferSuccess": "Admin übertragen an {name}",
         "transferFailed": "Fehler beim Übertragen des Admin"
-      }
+      },
+      "unknown": "Unbekannt"
     },
     "joinCode": {
       "title": "Join-Code",
@@ -291,6 +292,7 @@
       "expiresIn": "Gültig bis:",
       "regenerateButton": "Neu generieren",
       "expired": "Abgelaufen",
+      "countdown": "{minutes} Min. {seconds} Sek.",
       "noCodeDescription": "Kein aktiver Join-Code. Generieren Sie einen, um neue Mitglieder einzuladen.",
       "generateButton": "Join-Code generieren",
       "copySuccess": "Join-Code kopiert",

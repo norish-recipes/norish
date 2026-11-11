@@ -283,7 +283,8 @@
         "kickFailed": "Käyttäjän poistaminen epäonnistui",
         "transferSuccess": "Ylläpito siirrettiin käyttäjälle {name}",
         "transferFailed": "Ylläpidon siirto epäonnistui"
-      }
+      },
+      "unknown": "Tuntematon"
     },
     "joinCode": {
       "title": "Liittymiskoodi",
@@ -291,6 +292,7 @@
       "expiresIn": "Vanhenee:",
       "regenerateButton": "Luo uudelleen",
       "expired": "Vanhentunut",
+      "countdown": "{minutes} min {seconds} s",
       "noCodeDescription": "Ei aktiivista liittymiskoodia. Luo koodi kutsuaksesi uusia jäseniä.",
       "generateButton": "Luo liittymiskoodi",
       "copySuccess": "Liittymiskoodi kopioitu",

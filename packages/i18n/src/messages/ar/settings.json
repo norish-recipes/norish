@@ -283,7 +283,8 @@
         "kickFailed": "تعذّرت إزالة المستخدم",
         "transferSuccess": "نُقلت صلاحيات المسؤول إلى {name}",
         "transferFailed": "تعذّر نقل صلاحيات المسؤول"
-      }
+      },
+      "unknown": "غير معروف"
     },
     "joinCode": {
       "title": "رمز الانضمام",
@@ -291,6 +292,7 @@
       "expiresIn": "ينتهي بعد:",
       "regenerateButton": "إنشاء رمز جديد",
       "expired": "منتهي",
+      "countdown": "{minutes} د {seconds} ث",
       "noCodeDescription": "لا يوجد رمز انضمام فعّال. أنشئ رمزًا لدعوة أعضاء جدد.",
       "generateButton": "إنشاء رمز انضمام",
       "copySuccess": "تم نسخ رمز الانضمام",

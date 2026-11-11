@@ -283,7 +283,8 @@
         "kickFailed": "No se pudo expulsar al usuario",
         "transferSuccess": "Admin transferido a {name}",
         "transferFailed": "No se pudo transferir el admin"
-      }
+      },
+      "unknown": "Desconocido"
     },
     "joinCode": {
       "title": "Código de unión",
@@ -291,6 +292,7 @@
       "expiresIn": "Caduca en:",
       "regenerateButton": "Regenerar",
       "expired": "Caducado",
+      "countdown": "{minutes} min {seconds} s",
       "noCodeDescription": "No hay código de unión activo. Genera uno para invitar nuevos miembros.",
       "generateButton": "Generar código",
       "copySuccess": "Código copiado",

@@ -283,7 +283,8 @@
         "kickFailed": "Falha ao remover usuário",
         "transferSuccess": "Admin transferido para {name}",
         "transferFailed": "Falha ao transferir admin"
-      }
+      },
+      "unknown": "Desconhecido"
     },
     "joinCode": {
       "title": "Código de entrada",
@@ -291,6 +292,7 @@
       "expiresIn": "Expira em:",
       "regenerateButton": "Gerar novamente",
       "expired": "Expirado",
+      "countdown": "{minutes} min {seconds} s",
       "noCodeDescription": "Nenhum código de entrada ativo. Gere um para convidar novos membros.",
       "generateButton": "Gerar código de entrada",
       "copySuccess": "Código de entrada copiado",

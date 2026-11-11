@@ -283,7 +283,8 @@
         "kickFailed": "Kunne ikke fjerne brukeren",
         "transferSuccess": "Overførte administrator til {name}",
         "transferFailed": "Kunne ikke overføre administrator"
-      }
+      },
+      "unknown": "Ukjent"
     },
     "joinCode": {
       "title": "Invitasjonskode",
@@ -291,6 +292,7 @@
       "expiresIn": "Utløper om:",
       "regenerateButton": "Generer ny",
       "expired": "Utløpt",
+      "countdown": "{minutes} min {seconds} s",
       "noCodeDescription": "Ingen aktiv invitasjonskode. Generer én for å invitere nye medlemmer.",
       "generateButton": "Generer invitasjonskode",
       "copySuccess": "Invitasjonskode kopiert",

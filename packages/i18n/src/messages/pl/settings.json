@@ -283,7 +283,8 @@
         "kickFailed": "Nie udało się usunąć użytkownika",
         "transferSuccess": "Przekazano administratora użytkownikowi {name}",
         "transferFailed": "Nie udało się przekazać administratora"
-      }
+      },
+      "unknown": "Nieznany"
     },
     "joinCode": {
       "title": "Kod dołączenia",
@@ -291,6 +292,7 @@
       "expiresIn": "Wygasa za:",
       "regenerateButton": "Wygeneruj ponownie",
       "expired": "Wygasł",
+      "countdown": "{minutes} min {seconds} s",
       "noCodeDescription": "Brak aktywnego kodu dołączenia. Wygeneruj go, aby zaprosić nowych członków.",
       "generateButton": "Wygeneruj kod dołączenia",
       "copySuccess": "Skopiowano kod dołączenia",

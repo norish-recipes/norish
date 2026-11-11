@@ -283,7 +283,8 @@
         "kickFailed": "Det gick inte att ta bort användaren",
         "transferSuccess": "Administratörsbehörigheten har överförts till {name}",
         "transferFailed": "Det gick inte att överföra administratörsbehörigheten"
-      }
+      },
+      "unknown": "Okänd"
     },
     "joinCode": {
       "title": "Inbjudningskod",
@@ -291,6 +292,7 @@
       "expiresIn": "Upphör om:",
       "regenerateButton": "Skapa ny kod",
       "expired": "Utgången",
+      "countdown": "{minutes} min {seconds} s",
       "noCodeDescription": "Ingen aktiv inbjudningskod. Skapa en för att bjuda in nya medlemmar.",
       "generateButton": "Skapa inbjudningskod",
       "copySuccess": "Inbjudningskoden har kopierats",

@@ -283,7 +283,8 @@
         "kickFailed": "Failed to kick user",
         "transferSuccess": "Transferred admin to {name}",
         "transferFailed": "Failed to transfer admin"
-      }
+      },
+      "unknown": "Unknown"
     },
     "joinCode": {
       "title": "Join code",
@@ -291,6 +292,7 @@
       "expiresIn": "Expires in:",
       "regenerateButton": "Regenerate",
       "expired": "Expired",
+      "countdown": "{minutes}m {seconds}s",
       "noCodeDescription": "No active join code. Generate one to invite new members.",
       "generateButton": "Generate join code",
       "copySuccess": "Join code copied",
