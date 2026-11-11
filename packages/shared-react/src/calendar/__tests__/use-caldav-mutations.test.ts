@@ -121,6 +121,33 @@ describe("CalDAV Mutation Hooks", () => {
       expect(mockSaveConfigMutate.mock.calls[0]?.[0]).toEqual({ ...configInput, version: 4 });
     });
 
+    it("sends a version passed to saveConfig over the cached config's version", async () => {
+      const configInput = {
+        serverUrl: "https://caldav.example.com",
+        username: "testuser",
+        password: "testpass",
+        enabled: true,
+        breakfastTime: "08:00-09:00",
+        lunchTime: "12:00-13:00",
+        dinnerTime: "18:00-19:00",
+        snackTime: "15:00-15:30",
+        version: 6,
+      };
+
+      mockSaveConfigMutate.mockResolvedValueOnce(createMockCaldavConfig({ version: 7 }));
+      queryClient.setQueryData(mockConfigQueryKey, createMockCaldavConfig({ version: 4 }));
+
+      const { result } = renderHook(() => useCaldavMutations(), {
+        wrapper: createTestWrapper(queryClient),
+      });
+
+      await act(async () => {
+        await result.current.saveConfig(configInput);
+      });
+
+      expect(mockSaveConfigMutate.mock.calls[0]?.[0]).toEqual(configInput);
+    });
+
     it("returns saved config on success", async () => {
       const configInput = {
         serverUrl: "https://caldav.example.com",
