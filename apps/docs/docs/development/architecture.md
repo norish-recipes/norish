@@ -84,10 +84,11 @@ Web and mobile use the same layout. Web keeps its folders at the root of
 
 Imports run one way: shared folders, then features, then routes.
 
-On web `groceries`, `recipes` and `library` have moved. The remaining features
-still live in web's `components/` and `hooks/`. In shared-react, `src/recipes/`
-and `src/reader/` sit next to `groceries/`; code still used by unmigrated
-features remains in `hooks/` and `contexts/`.
+On web `groceries`, `recipes`, `library` and `calendar` have moved. The remaining
+features still live in web's `components/` and `hooks/`. In shared-react,
+`src/recipes/`, `src/calendar/` and `src/reader/` sit next to `groceries/`;
+`calendar/` holds planned items and their CalDAV mirror. Code still used by
+unmigrated features remains in `hooks/` and `contexts/`.
 
 ### In shared-react
 
@@ -109,6 +110,8 @@ The cross-cutting folders serve every domain:
   permissions and Device Preferences.
 - `realtime/` holds `useRealtimeSubscription`, which every subscription is built
   on, and `useKeepsCurrent`.
+- `page-store/` creates per-page store providers from a page key and selector
+  hooks, so components can read a store made for their page.
 
 A domain never imports another domain, and a cross-cutting folder never imports
 a domain. Lint enforces both.
@@ -199,6 +202,8 @@ gives the reasons for decisions without an ADR.
   and permissions, admin config, `useRecipeOutcomesSubscription` and the archive
   import outcome, each showing its own toasts through the platform adapter.
   Library's root mounts recipe list events, ratings, cookbooks and the Pantry.
+  Calendar's root and today's meals on the dashboard mount calendar events and
+  recipe updates, which change a planned recipe's name and image.
   The editor also mounts recipe list events, which reread its category choices,
   and Add to Groceries mounts the subscription of the recipe it draws. User settings mounts
   archive import progress for its bar. A component inside `Panel` mounts its

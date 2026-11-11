@@ -80,6 +80,7 @@ norish/
 │   ├── web/              # Next.js app (App Router + server entry)
 │   │   ├── app/          # Routes
 │   │   └── features/     # One folder per feature
+│   │       ├── calendar/
 │   │       ├── groceries/
 │   │       ├── library/
 │   │       └── recipes/
@@ -141,6 +142,7 @@ Web and mobile use the same layout and share logic in `packages/shared-react`. F
   - `config/` holds reference data such as units, tags and recurrence, which every domain reads and none owns.
   - `reader/` holds the signed-in Reader: identity, household, allergies, permissions and Device Preferences, which every domain checks without fetching its own copy.
   - `realtime/` holds the hook every domain's realtime subscription is built on, so each one rereads once live and recovers from a lag the same way.
+  - `page-store/` creates per-page store providers from a page key and selector hooks, so components can read a store made for their page.
 
 ## Script Ownership
 
