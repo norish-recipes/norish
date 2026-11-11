@@ -163,12 +163,19 @@ gives the reasons for decisions without an ADR.
   one copy on a client, which offline mode persists
   ([ADR-0001](https://github.com/norish-recipes/Norish/blob/main/docs/adr/offline/0001-web-offline-is-a-persisted-query-cache.md)).
   Nothing copies it into a context or a store.
+- Use generated builders (`queryKey()`, `pathKey()`, `pathFilter()`,
+  `queryFilter()`, `infiniteQueryKey()`) for tRPC query keys and a named constant
+  for a non-tRPC query key; lint reports hand-written keys, and a key that matches
+  no query fails silently. Match a list read as an infinite query with `pathKey()`,
+  not `queryKey()` with no input.
 - A realtime handler merges an event into the cache by id, so a repeated event
   changes nothing and no client needs to skip its own
   ([ADR-0032](https://github.com/norish-recipes/Norish/blob/main/docs/adr/realtime/0032-realtime-is-one-hub-one-catalogue-one-idiom.md)).
 - A fresh subscription rereads its `liveQueryKeys` once its Cursor Mark says it
   is live. Rereads due within 50 ms are combined. A read still in flight when
-  the subscription goes live is reread after it lands. A subscription that falls behind ends Lagged, starts
+  the subscription goes live is reread after it lands. A reread cancelled by an
+  optimistic write runs again once no write is pending, including writes waiting
+  in the Outbox. A subscription that falls behind ends Lagged, starts
   fresh and rereads the same keys once live
   ([ADR-0032](https://github.com/norish-recipes/Norish/blob/main/docs/adr/realtime/0032-realtime-is-one-hub-one-catalogue-one-idiom.md)).
   A reconnect resumes missed events from a bounded buffer without a reread
