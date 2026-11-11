@@ -387,7 +387,8 @@
       "emptyFiltered": "Записів зі статусом «{status}» не знайдено",
       "emptyDefault": "Записів синхронізації не знайдено",
       "errorDetails": "Подробиці помилки",
-      "pagination": "Сторінка {current} з {total}"
+      "pagination": "Сторінка {current} з {total}",
+      "paginationLabel": "Сторінки стану синхронізації"
     }
   },
   "ingredients": {

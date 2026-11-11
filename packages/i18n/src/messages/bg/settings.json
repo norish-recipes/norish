@@ -387,7 +387,8 @@
       "emptyFiltered": "Няма намерени елементи със статус {status}",
       "emptyDefault": "Не са намерени записи от синхронизация",
       "errorDetails": "Подробности за грешката",
-      "pagination": "Страница {current} от {total}"
+      "pagination": "Страница {current} от {total}",
+      "paginationLabel": "Страници на статуса на синхронизация"
     }
   },
   "ingredients": {

@@ -222,7 +222,7 @@ export default function CaldavSyncStatusCard() {
       {totalPages > 1 && (
         <div className="mt-4 flex justify-center">
           {/* Pagination holds no page state: this card's page drives Previous, Summary and Next. */}
-          <Pagination aria-label={t("title")} size="sm">
+          <Pagination aria-label={t("paginationLabel")} size="sm">
             <Pagination.Content>
               <Pagination.Item>
                 <Pagination.Previous

@@ -387,7 +387,8 @@
       "emptyFiltered": "لا توجد عناصر بحالة {status}",
       "emptyDefault": "لا توجد سجلات مزامنة",
       "errorDetails": "تفاصيل الخطأ",
-      "pagination": "الصفحة {current} من {total}"
+      "pagination": "الصفحة {current} من {total}",
+      "paginationLabel": "صفحات حالة المزامنة"
     }
   },
   "ingredients": {

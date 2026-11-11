@@ -387,7 +387,8 @@
       "emptyFiltered": "Inga poster med status {status} hittades",
       "emptyDefault": "Ingen synkroniseringshistorik hittades",
       "errorDetails": "Felinformation",
-      "pagination": "Sida {current} av {total}"
+      "pagination": "Sida {current} av {total}",
+      "paginationLabel": "Sidor för synkroniseringsstatus"
     }
   },
   "ingredients": {

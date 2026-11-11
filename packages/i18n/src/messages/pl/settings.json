@@ -387,7 +387,8 @@
       "emptyFiltered": "Brak elementów o statusie: {status}",
       "emptyDefault": "Brak rekordów synchronizacji",
       "errorDetails": "Szczegóły błędu",
-      "pagination": "Strona {current} z {total}"
+      "pagination": "Strona {current} z {total}",
+      "paginationLabel": "Strony statusu synchronizacji"
     }
   },
   "ingredients": {

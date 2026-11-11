@@ -387,7 +387,8 @@
       "emptyFiltered": "Aucun élément {status} trouvé",
       "emptyDefault": "Aucun enregistrement de synchronisation",
       "errorDetails": "Détails de l’erreur",
-      "pagination": "Page {current} sur {total}"
+      "pagination": "Page {current} sur {total}",
+      "paginationLabel": "Pages de l'état de la synchronisation"
     }
   },
   "ingredients": {

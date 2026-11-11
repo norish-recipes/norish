@@ -387,7 +387,8 @@
       "emptyFiltered": "Элементы со статусом «{status}» не найдены",
       "emptyDefault": "Записи синхронизации не найдены",
       "errorDetails": "Подробности ошибки",
-      "pagination": "Страница {current} из {total}"
+      "pagination": "Страница {current} из {total}",
+      "paginationLabel": "Страницы статуса синхронизации"
     }
   },
   "ingredients": {

@@ -387,7 +387,8 @@
       "emptyFiltered": "Kohteita tilassa {status} ei löytynyt",
       "emptyDefault": "Synkronointimerkintöjä ei löytynyt",
       "errorDetails": "Virheen tiedot",
-      "pagination": "Sivu {current} / {total}"
+      "pagination": "Sivu {current} / {total}",
+      "paginationLabel": "Synkronoinnin tilan sivut"
     }
   },
   "ingredients": {

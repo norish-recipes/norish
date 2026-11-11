@@ -387,7 +387,8 @@
       "emptyFiltered": "Nenhum item com status {status} encontrado",
       "emptyDefault": "Nenhum registro de sincronização encontrado",
       "errorDetails": "Detalhes do erro",
-      "pagination": "Página {current} de {total}"
+      "pagination": "Página {current} de {total}",
+      "paginationLabel": "Páginas do status da sincronização"
     }
   },
   "ingredients": {

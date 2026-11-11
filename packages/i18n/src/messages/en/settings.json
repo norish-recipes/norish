@@ -387,7 +387,8 @@
       "emptyFiltered": "No {status} items found",
       "emptyDefault": "No sync records found",
       "errorDetails": "Error details",
-      "pagination": "Page {current} of {total}"
+      "pagination": "Page {current} of {total}",
+      "paginationLabel": "Sync status pages"
     }
   },
   "ingredients": {

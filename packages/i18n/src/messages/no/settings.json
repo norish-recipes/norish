@@ -387,7 +387,8 @@
       "emptyFiltered": "Ingen {status}-elementer funnet",
       "emptyDefault": "Ingen synkroniseringsposter funnet",
       "errorDetails": "Feildetaljer",
-      "pagination": "Side {current} av {total}"
+      "pagination": "Side {current} av {total}",
+      "paginationLabel": "Sider med synkroniseringsstatus"
     }
   },
   "ingredients": {

@@ -387,7 +387,8 @@
       "emptyFiltered": "{status} 항목을 찾을 수 없습니다.",
       "emptyDefault": "동기화 기록을 찾을 수 없습니다.",
       "errorDetails": "오류 세부정보",
-      "pagination": "{total}페이지 중 {current}페이지"
+      "pagination": "{total}페이지 중 {current}페이지",
+      "paginationLabel": "동기화 상태 페이지"
     }
   },
   "ingredients": {

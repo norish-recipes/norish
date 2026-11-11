@@ -387,7 +387,8 @@
       "emptyFiltered": "Geen {status} items gevonden",
       "emptyDefault": "Geen synchronisatiegegevens gevonden",
       "errorDetails": "Foutdetails",
-      "pagination": "Pagina {current} van {total}"
+      "pagination": "Pagina {current} van {total}",
+      "paginationLabel": "Pagina's van de synchronisatiestatus"
     }
   },
   "ingredients": {
