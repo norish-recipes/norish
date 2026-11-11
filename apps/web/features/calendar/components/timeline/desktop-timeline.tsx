@@ -22,6 +22,8 @@ import { DesktopDayCard } from "./desktop-day-card";
 import { DesktopScrollToToday } from "./desktop-scroll-to-today";
 
 const ESTIMATED_ROW_HEIGHT = 420; // Card height (400) + gap (20)
+// One array for every empty day, so its memoised card skips the re-render.
+const NO_ITEMS: PlannedItemDisplay[] = [];
 
 type DesktopTimelineProps = {
   onAddItem: (dateKey: string, slot: Slot) => void;
@@ -199,7 +201,7 @@ export function DesktopTimeline({ onAddItem, onNoteClick, onRecipeClick }: Deskt
                   >
                     {rowDays.map((d) => {
                       const key = dateKey(d);
-                      const items = calendarData[key] ?? [];
+                      const items = calendarData[key] ?? NO_ITEMS;
                       const isToday = key === todayKey;
 
                       return (

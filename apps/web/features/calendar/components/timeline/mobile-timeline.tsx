@@ -32,6 +32,8 @@ const mobileDragTolerancePx = 10;
 
 // An empty day, which most days are
 const ESTIMATED_DAY_HEIGHT = 64;
+// One array for every empty day, so its memoised card skips the re-render.
+const NO_ITEMS: PlannedItemDisplay[] = [];
 
 type MobileTimelineProps = {
   onAddItem: (dateKey: string, slot: Slot) => void;
@@ -165,7 +167,7 @@ export function MobileTimeline({ onAddItem, onNoteClick, onRecipeClick }: Mobile
               }
 
               const key = dateKey(d);
-              const items = calendarData[key] ?? [];
+              const items = calendarData[key] ?? NO_ITEMS;
               const isToday = key === todayKey;
 
               return (
