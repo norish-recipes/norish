@@ -9,13 +9,13 @@ import {
 } from "@norish/shared-react/platform/testing";
 import { useHouseholdMutations } from "@norish/shared-react/reader";
 
+import { keyOf, resetTRPCFake, trpcCalls } from "../../trpc/testing";
 import {
   createMockHouseholdData,
   createMockHouseholdSettings,
   createMockHouseholdUser,
   READER,
 } from "./test-utils";
-import { keyOf, resetTRPCFake, trpcCalls } from "../../trpc/testing";
 
 vi.mock("../../trpc", async () => (await import("../../trpc/testing")).mockTRPC());
 
@@ -170,7 +170,10 @@ describe("useHouseholdMutations", () => {
       const result = render(household());
 
       await act(async () => result.current.regenerateJoinCode("h1"));
-      expect(trpcCalls["households.regenerateCode"]?.[0]?.input).toEqual({ householdId: "h1", version: 6 });
+      expect(trpcCalls["households.regenerateCode"]?.[0]?.input).toEqual({
+        householdId: "h1",
+        version: 6,
+      });
       await settle("regenerateCode", 0, "reject");
 
       await waitFor(() => expect(isInvalidated()).toBe(true));

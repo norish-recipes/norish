@@ -1,3 +1,5 @@
+import { act, waitFor } from "@testing-library/react";
+
 type Deferred = { resolve: (value: unknown) => void; reject: (error: unknown) => void };
 
 /** Each write the fake was sent, by procedure path; each waits until the test settles it. */
@@ -56,3 +58,28 @@ export function mockTRPC() {
 
 /** The key the real client gives a procedure's query with no input. */
 export const keyOf = (path: string) => [path.split("."), { type: "query" }];
+
+/** Waits until write `index` to `path` was sent, and hands it back. */
+export async function sentCall(path: string, index = 0) {
+  return waitFor(() => {
+    const call = trpcCalls[path]?.[index];
+
+    if (!call) throw new Error(`no call ${index} to ${path}`);
+
+    return call;
+  });
+}
+
+/** Answers write `index` to `path` once it is sent. */
+export async function answerCall(path: string, value: unknown, index = 0) {
+  const call = await sentCall(path, index);
+
+  await act(async () => call.deferred.resolve(value));
+}
+
+/** Fails write `index` to `path` once it is sent. */
+export async function failCall(path: string, index = 0) {
+  const call = await sentCall(path, index);
+
+  await act(async () => call.deferred.reject(new Error("offline")));
+}
