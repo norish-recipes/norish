@@ -2,12 +2,7 @@
 
 import { useCallback, useEffect, useState } from "react";
 import { usePathname } from "next/navigation";
-import {
-  NAV_LABEL_KEYS,
-  NAV_TABS,
-  NavTabLink,
-  navTabPosition,
-} from "@/components/navbar/nav-tabs";
+import { NAV_LABEL_KEYS, NAV_TABS, NavTabLink, navTabPosition } from "@/components/navbar/nav-tabs";
 import NavbarUserMenu from "@/components/navbar/navbar-user-menu";
 import { SETTINGS_HREF } from "@/components/settings/settings-tab";
 import { useAutoHide } from "@/hooks/auto-hide";
