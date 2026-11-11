@@ -3,6 +3,7 @@
 import type { PlannedItemDisplay } from "@/components/calendar/types";
 import { useCallback, useEffect, useId, useLayoutEffect, useMemo, useRef, useState } from "react";
 import { landOnDay, settleLanding } from "@/components/calendar/land-on-day";
+import { PlannedItemContent } from "@/components/calendar/planned-item-content";
 import { SLOT_ORDER } from "@/components/calendar/types";
 import { useReaderToday } from "@/components/reader-today";
 import { CalendarSkeletonDesktop } from "@/features/calendar/components/skeleton/calendar-skeleton";
@@ -20,7 +21,6 @@ import { useCalendarRangeQuery } from "@norish/shared-react/calendar";
 import { dateKey, eachDayOfInterval, parseDateKey } from "@norish/shared/lib/helpers";
 
 import { DesktopDayCard } from "./desktop-day-card";
-import { DesktopDragOverlay } from "./desktop-drag-overlay";
 import { DesktopScrollToToday } from "./desktop-scroll-to-today";
 
 const ESTIMATED_ROW_HEIGHT = 420; // Card height (400) + gap (20)
@@ -316,7 +316,12 @@ export function DesktopTimeline({ onAddItem, onNoteClick, onRecipeClick }: Deskt
         />
 
         <DragOverlay dropAnimation={null}>
-          {activeItem ? <DesktopDragOverlay item={activeItem} /> : null}
+          {activeItem ? (
+            <PlannedItemContent
+              className="bg-surface ring-accent/30 w-80 rounded-xl px-3 py-2.5 shadow-xl ring-2"
+              item={activeItem}
+            />
+          ) : null}
         </DragOverlay>
       </DndContext>
     </div>

@@ -13,10 +13,7 @@ type PlannedItemContentProps = {
   className?: string;
 };
 
-/**
- * Shared content layout for planned items - used by both
- * TimelinePlannedItem and TimelineDragOverlay
- */
+/** A planned item's thumbnail, title and subtitle, in its day and under the dragging pointer. */
 export const PlannedItemContent = memo(function PlannedItemContent({
   item,
   className = "",

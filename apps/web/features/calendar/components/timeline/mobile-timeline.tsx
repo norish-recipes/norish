@@ -3,6 +3,7 @@
 import type { PlannedItemDisplay } from "@/components/calendar/types";
 import { useCallback, useEffect, useId, useLayoutEffect, useMemo, useRef, useState } from "react";
 import { landOnDay, settleLanding } from "@/components/calendar/land-on-day";
+import { PlannedItemContent } from "@/components/calendar/planned-item-content";
 import { TimelineDaySection } from "@/components/calendar/timeline-day-section";
 import { SLOT_ORDER } from "@/components/calendar/types";
 import { useReaderToday } from "@/components/reader-today";
@@ -26,7 +27,6 @@ import type { Slot } from "@norish/shared/contracts";
 import { useCalendarRangeQuery } from "@norish/shared-react/calendar";
 import { dateKey, eachDayOfInterval, parseDateKey } from "@norish/shared/lib/helpers";
 
-import { TimelineDragOverlay } from "./timeline-drag-overlay";
 import { TimelineScrollToToday } from "./timeline-scroll-to-today";
 
 const mobileDragActivationDelayMs = 300;
@@ -293,7 +293,12 @@ export function MobileTimeline({ onAddItem, onNoteClick, onRecipeClick }: Mobile
         />
 
         <DragOverlay dropAnimation={null}>
-          {activeItem ? <TimelineDragOverlay item={activeItem} /> : null}
+          {activeItem ? (
+            <PlannedItemContent
+              className="bg-surface ring-accent/30 w-[calc(100vw-48px)] rounded-xl px-3 py-2.5 shadow-xl ring-2"
+              item={activeItem}
+            />
+          ) : null}
         </DragOverlay>
       </DndContext>
     </div>
