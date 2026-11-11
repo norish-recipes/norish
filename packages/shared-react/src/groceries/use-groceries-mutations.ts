@@ -11,6 +11,7 @@ import { calculateNextOccurrence, getTodayString } from "@norish/shared/lib/recu
 import type { GroceriesData, GroceriesMutationsResult, GroceryCreateData } from "./types";
 import { useUnitsQuery } from "../config";
 import { shouldPreserveOptimisticUpdate } from "../offline/optimistic-updates";
+import { writeOverRead } from "../offline/write-over-read";
 import { usePlatform } from "../platform";
 import { useTRPC } from "../trpc";
 
@@ -270,20 +271,10 @@ export function useGroceriesMutations(): GroceriesMutationsResult {
     return { name: parsed.description, amount: parsed.quantity, unit: parsed.unitOfMeasure };
   };
 
+  // The list stays stale after a cancelled read, so the next mount or focus reads it again.
   const setGroceriesData = (
     updater: (prev: GroceriesData | undefined) => GroceriesData | undefined
-  ) => {
-    // A read already under way answers for the list as it was: it must not
-    // land over this write. The list stays stale, so the next mount or focus
-    // reads it again. Stopping a read puts back what was held when it began,
-    // which misses a list restored since (an offline load), so the write
-    // applies to the list as held now. With nothing held there is nothing
-    // to write over, and stopping the first read would leave it loading.
-    const held = queryClient.getQueryData<GroceriesData>(listKey);
-
-    if (held) void queryClient.cancelQueries({ queryKey: listKey });
-    queryClient.setQueryData<GroceriesData>(listKey, updater(held));
-  };
+  ) => writeOverRead(queryClient, listKey, updater);
 
   // An action reads the list from the cache when it runs, never by subscribing, so a component
   // that only acts doesn't re-render when the list changes.

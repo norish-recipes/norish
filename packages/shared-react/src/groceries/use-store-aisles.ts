@@ -7,6 +7,7 @@ import type { StoresRealtime } from "@norish/shared/contracts/realtime/stores";
 import { aisleLinkKey } from "@norish/shared/lib/store-link-key";
 
 import { invalidateUnlessPreserved } from "../offline/optimistic-updates";
+import { writeOverRead } from "../offline/write-over-read";
 import { useKeepsCurrent, useRealtimeSubscription } from "../realtime";
 import { useTRPC } from "../trpc";
 import { useStoresQuery } from "./use-stores-query";
@@ -190,10 +191,8 @@ export function useFileGroceryName() {
     if (grocery.ingredientId) {
       const ingredientId = grocery.ingredientId;
 
-      // A read already under way answers for the Store as it was; it must
-      // not land over this filing. The echo reads the links again.
-      void queryClient.cancelQueries({ queryKey: aisleLinksKey });
-      queryClient.setQueryData<StoreAislesData>(aisleLinksKey, (prev) =>
+      // The echo reads the links again.
+      writeOverRead(queryClient, aisleLinksKey, (prev) =>
         mergeAisleFiling(prev ?? [], { storeId, ingredientId, aisleId })
       );
     }

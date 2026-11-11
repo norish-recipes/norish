@@ -1,10 +1,13 @@
 "use client";
 
+import type { inferRouterOutputs } from "@trpc/server";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 
 import type { User } from "@norish/shared/contracts";
-import type { ApiKeyMetadataDto, UserSettingsDto } from "@norish/trpc";
+import type { ApiKeyMetadataDto } from "@norish/trpc";
+import type { AppRouter } from "@norish/trpc/client";
 
+import { writeOverRead } from "../offline/write-over-read";
 import { useTRPC } from "../trpc";
 
 export type Profile = { user: User | null; apiKeys: ApiKeyMetadataDto[] };
@@ -19,14 +22,17 @@ export function useProfileQuery(): Profile {
   return { user: data?.user ?? null, apiKeys: data?.apiKeys ?? NO_KEYS };
 }
 
+/** The profile as `user.get` answers it, which the cache holds. */
+type HeldProfile = inferRouterOutputs<AppRouter>["user"]["get"];
+
 export type ProfileCache = {
-  held: () => UserSettingsDto | undefined;
+  held: () => HeldProfile | undefined;
   /** The held user's version, for a write to send. */
   version: () => number;
-  /** Writes `update(held)`; a read begun before it would land over it, so it is cancelled. */
-  write: (update: (held: UserSettingsDto) => UserSettingsDto) => void;
+  /** Writes `update(held)` over any read under way. */
+  write: (update: (held: HeldProfile) => HeldProfile) => void;
   /** Puts back what `held` returned before an optimistic write. */
-  restore: (previous: UserSettingsDto | undefined) => void;
+  restore: (previous: HeldProfile | undefined) => void;
   mergeUser: (patch: Partial<User>) => void;
   invalidate: () => void;
 };
@@ -37,21 +43,15 @@ export function useProfileCache(): ProfileCache {
   const queryClient = useQueryClient();
   const queryKey = trpc.user.get.queryKey();
 
-  const held = () => queryClient.getQueryData<UserSettingsDto>(queryKey);
-  // The cancel reverts to the read's start state, so the write applies to what was held before.
-  const write = (update: (held: UserSettingsDto) => UserSettingsDto) => {
-    const current = held();
-
-    if (!current) return;
-    void queryClient.cancelQueries({ queryKey });
-    queryClient.setQueryData<UserSettingsDto>(queryKey, update(current));
-  };
+  const held = () => queryClient.getQueryData(queryKey);
+  const write = (update: (held: HeldProfile) => HeldProfile) =>
+    writeOverRead(queryClient, queryKey, (current) => current && update(current));
 
   return {
     held,
     version: () => held()?.user.version ?? 1,
     write,
-    restore: (previous) => queryClient.setQueryData<UserSettingsDto>(queryKey, previous),
+    restore: (previous) => queryClient.setQueryData(queryKey, previous),
     mergeUser: (patch) => write((data) => ({ ...data, user: { ...data.user, ...patch } })),
     invalidate: () => void queryClient.invalidateQueries({ queryKey }),
   };
