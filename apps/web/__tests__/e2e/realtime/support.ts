@@ -125,47 +125,48 @@ export function recordFrames(page: Page): FrameLog {
   return log;
 }
 
+/** Which of the named subscriptions the server has yet to send their first item, the Cursor Mark. */
+export function pathsNotLive(log: FrameLog, paths: string[]): string[] {
+  const pathOf = new Map<string, string>();
+  const liveIds = new Set<string>();
+
+  for (const frame of log.frames) {
+    let messages: unknown;
+
+    try {
+      messages = JSON.parse(frame.payload);
+    } catch {
+      continue;
+    }
+
+    for (const message of [messages].flat() as Array<{
+      id?: number | string;
+      method?: string;
+      params?: { path?: string };
+      result?: { type?: string };
+    }>) {
+      const key = `${frame.socket}:${message.id}`;
+
+      if (frame.direction === "sent" && message.method === "subscription") {
+        pathOf.set(key, message.params?.path ?? "");
+      } else if (frame.direction === "sent" && message.method === "subscription.stop") {
+        liveIds.delete(key);
+      } else if (frame.direction === "received" && message.result?.type === "data") {
+        liveIds.add(key);
+      }
+    }
+  }
+  const live = new Set([...liveIds].map((key) => pathOf.get(key) ?? ""));
+
+  return paths.filter((path) => !live.has(path));
+}
+
 /**
  * Until the server has sent each named subscription its first item, the Cursor Mark: it
  * listens before it sends one, so an event published after it reaches the page.
  */
 export async function waitForLive(log: FrameLog, paths: string[]): Promise<void> {
-  const notLive = () => {
-    const pathOf = new Map<string, string>();
-    const liveIds = new Set<string>();
-
-    for (const frame of log.frames) {
-      let messages: unknown;
-
-      try {
-        messages = JSON.parse(frame.payload);
-      } catch {
-        continue;
-      }
-
-      for (const message of [messages].flat() as Array<{
-        id?: number | string;
-        method?: string;
-        params?: { path?: string };
-        result?: { type?: string };
-      }>) {
-        const key = `${frame.socket}:${message.id}`;
-
-        if (frame.direction === "sent" && message.method === "subscription") {
-          pathOf.set(key, message.params?.path ?? "");
-        } else if (frame.direction === "sent" && message.method === "subscription.stop") {
-          liveIds.delete(key);
-        } else if (frame.direction === "received" && message.result?.type === "data") {
-          liveIds.add(key);
-        }
-      }
-    }
-    const live = new Set([...liveIds].map((key) => pathOf.get(key) ?? ""));
-
-    return paths.filter((path) => !live.has(path));
-  };
-
-  await expect.poll(notLive, { timeout: 30_000 }).toEqual([]);
+  await expect.poll(() => pathsNotLive(log, paths), { timeout: 30_000 }).toEqual([]);
 }
 
 /** Add a grocery through the panel, the way a cook does, and wait for its row. */

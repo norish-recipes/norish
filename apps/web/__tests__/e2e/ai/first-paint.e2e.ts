@@ -21,6 +21,7 @@ import type { Browser, BrowserContext, Page } from "@playwright/test";
 import { updateRecipeDishColor } from "@norish/db/repositories/recipes";
 
 import type { DeviceKind } from "../harness/device-preferences";
+import type { FrameLog } from "../realtime/support";
 import type { AIE2EStack } from "./fixture";
 import { RECIPE_FILTERS_COOKIE } from "../../../lib/recipe-filters-cookie";
 import {
@@ -31,6 +32,7 @@ import {
 } from "../harness/device-preferences";
 import { readRecipe, waitForRecipe } from "../harness/recipes";
 import { callTrpc, queryTrpc } from "../harness/trpc";
+import { pathsNotLive, recordFrames, waitForLive } from "../realtime/support";
 import { expect, OWNER, test } from "./fixture";
 import { readMarks } from "./recipe-archive-support";
 
@@ -77,6 +79,54 @@ async function openStatic(
  * frame, every distinct value `selector`'s `attribute` takes (`present` when
  * no attribute is named), read back with {@link seen}.
  */
+/**
+ * Every request a page sends for `path`, left unanswered so what draws can only come from the
+ * document, each with the named subscriptions that were not live yet when it was sent.
+ */
+async function holdReads(page: Page, frames: FrameLog, path: RegExp, subscriptions: string[]) {
+  const notLiveAtRead: string[][] = [];
+
+  // The Cache Warmer runs only in the tab holding the leader lock; held here, every read is the page's.
+  await page.addInitScript(() => {
+    void navigator.locks.request("norish-outbox-replay", () => new Promise(() => {}));
+  });
+  await page.route(path, () => {
+    notLiveAtRead.push(pathsNotLive(frames, subscriptions));
+  });
+
+  return notLiveAtRead;
+}
+
+/** The calendar screen's subscriptions, each of which rereads every cached range once live. */
+const CALENDAR_SUBSCRIPTIONS = [
+  "calendar.onItemCreated",
+  "calendar.onItemDeleted",
+  "calendar.onItemMoved",
+  "calendar.onItemUpdated",
+  "calendar.onFailed",
+  "recipes.onUpdated",
+];
+
+/** The Library screen's and the shell's subscriptions whose reread once live covers the Library. */
+const LIBRARY_SUBSCRIPTIONS = [
+  "recipes.onCreated",
+  "recipes.onUpdated",
+  "recipes.onDeleted",
+  "recipes.onConverted",
+  "recipes.onRecipeBatchCreated",
+  "recipes.onImportStarted",
+  "recipes.onImported",
+  "recipes.onFailed",
+  "recipes.onDeleteKept",
+  "cookbooks.onCreated",
+  "cookbooks.onUpdated",
+  "cookbooks.onMembershipChanged",
+  "cookbooks.onDeleted",
+  "pantry.onAdded",
+  "pantry.onRemoved",
+  "permissions.onPolicyUpdated",
+];
+
 async function openLive(
   browser: Browser,
   kind: DeviceKind,
@@ -260,7 +310,7 @@ test("a full load of the dashboard draws Today's meals for the reader's day, fro
   }
 });
 
-test("a full load of the calendar carries its opening range, so its days draw unanswered", async ({
+test("a full load of the calendar draws its opening range from the document, read again once live", async ({
   browser,
 }) => {
   await callApi("calendar.createItem", {
@@ -271,14 +321,16 @@ test("a full load of the calendar carries its opening range, so its days draw un
     title: "Served calendar note",
   });
   const { context, page } = await openLive(browser, "phone");
-
-  // Its subscriptions read the range again once live (the go-live catch-up): left unanswered here,
-  // so the days can only draw from the document.
-  await page.route(/calendar\.listItems/, () => undefined);
+  const frames = recordFrames(page);
+  const reads = await holdReads(page, frames, /calendar\.listItems/, CALENDAR_SUBSCRIPTIONS);
 
   try {
     await page.goto("/calendar");
     await expect(page.getByText("Served calendar note").first()).toBeVisible();
+    await waitForLive(frames, CALENDAR_SUBSCRIPTIONS);
+    // One reread for every subscription that went live together, and none before.
+    await expect.poll(() => reads.length).toBe(1);
+    expect(reads).toEqual([[]]);
   } finally {
     await context.close();
   }
@@ -1074,20 +1126,22 @@ test("the user settings tab draws a date the way the server sent it, in any brow
   }
 });
 
-test("a full load of the Library draws its first page unanswered: the document carries it", async ({
+test("a full load of the Library draws its first page from the document, read again once live", async ({
   browser,
 }) => {
   await ensureRecipe();
   const { context, page } = await openLive(browser, "phone");
-
-  // The Cache Warmer and the go-live catch-up read the Library again: left unanswered here, so
-  // the cards can only draw from the document.
-  await page.route(/library\.list/, () => undefined);
+  const frames = recordFrames(page);
+  const reads = await holdReads(page, frames, /library\.list/, LIBRARY_SUBSCRIPTIONS);
 
   try {
     await storeFiltersCookie(context, {});
     await page.goto("/");
     await expect(page.locator("a[data-recipe-card]").first()).toBeVisible();
+    await waitForLive(frames, LIBRARY_SUBSCRIPTIONS);
+    // Every read of the Library waited for the subscriptions that keep it current.
+    await expect.poll(() => reads.length).toBeGreaterThan(0);
+    for (const notLive of reads) expect(notLive).toEqual([]);
   } finally {
     await context.close();
   }

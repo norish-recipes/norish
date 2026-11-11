@@ -170,13 +170,13 @@ test("grocery create, update and delete reach the other browser without a reload
 });
 
 test("a change made before a fresh screen's subscriptions are live shows once they are", async () => {
-  const name = `in-de-kloof-${randomUUID().slice(0, 8)}`;
+  const name = "realtime-in-de-kloof";
   const context = await stack.newContext("a");
   const page = await context.newPage();
   // Hold what the page sends on its socket: the server takes no subscription until released.
-  let release!: () => void;
-  const released = new Promise<void>((resolve) => (release = resolve));
+  const { promise: released, resolve: release } = Promise.withResolvers<void>();
   const held: string[] = [];
+  const listReads: string[] = [];
 
   await page.routeWebSocket(/\/trpc$/, (socket) => {
     const server = socket.connectToServer();
@@ -192,6 +192,9 @@ test("a change made before a fresh screen's subscriptions are live shows once th
     // The list arrives with the document and hydrates; its subscriptions wait on the socket.
     await openGroceries(page);
     await expect.poll(() => held.some((m) => m.includes("groceries.onCreated"))).toBe(true);
+    page.on("request", (request) => {
+      if (request.url().includes("groceries.list")) listReads.push(request.url());
+    });
 
     // A's live browser hears a grocery added inside the gap: after the read, before the listener.
     const created = await callMutation(pageA, stack.baseURL, "groceries.create", [
@@ -201,12 +204,20 @@ test("a change made before a fresh screen's subscriptions are live shows once th
     expect(created.ok).toBe(true);
     await expect(rowFor(pageA, name)).toBeVisible();
     await expect(rowFor(page, name)).toHaveCount(0);
+    // Nothing else read the list in the gap: only the go-live can bring the row.
+    expect(listReads).toEqual([]);
 
-    // Released, nothing else asks: the subscriptions' go-live alone has to bring it.
     release();
     await expect(rowFor(page, name)).toBeVisible();
   } finally {
     await context.close();
+    const row = await readGrocery(name);
+
+    if (row) {
+      await callMutation(pageA, stack.baseURL, "groceries.delete", {
+        groceries: [{ id: row.id, version: row.version }],
+      });
+    }
   }
 });
 
