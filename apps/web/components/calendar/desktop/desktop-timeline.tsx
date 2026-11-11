@@ -60,29 +60,17 @@ export function DesktopTimeline({ onAddItem, onNoteClick, onRecipeClick }: Deskt
   const { height: _windowHeight } = useWindowSize();
 
   // Every day in the range, padded to fill complete rows
-  const allDays = useMemo(() => {
-    const days = eachDayOfInterval(parseDateKey(range.startISO), parseDateKey(range.endISO));
-    // Pad to complete rows to prevent grid shifting
-    const remainder = days.length % columnCount;
+  const allDays = eachDayOfInterval(parseDateKey(range.startISO), parseDateKey(range.endISO));
+  // Pad to complete rows to prevent grid shifting
+  const lastDay = allDays[allDays.length - 1];
+  const padding = (columnCount - (allDays.length % columnCount)) % columnCount;
 
-    if (remainder !== 0) {
-      const lastDay = days[days.length - 1];
-      const padding = columnCount - remainder;
+  for (let i = 1; lastDay && i <= padding; i++) {
+    const nextDay = new Date(lastDay);
 
-      if (!lastDay) {
-        return days;
-      }
-
-      for (let i = 1; i <= padding; i++) {
-        const nextDay = new Date(lastDay);
-
-        nextDay.setDate(lastDay.getDate() + i);
-        days.push(nextDay);
-      }
-    }
-
-    return days;
-  }, [range.startISO, range.endISO, columnCount]);
+    nextDay.setDate(lastDay.getDate() + i);
+    allDays.push(nextDay);
+  }
 
   // Group days into rows based on column count
   const rows = useMemo(() => {
