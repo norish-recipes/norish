@@ -24,6 +24,7 @@ import { dateKey } from "@norish/shared/lib/helpers";
 import type { RealtimeStack } from "./fixture";
 import type { HouseholdRow } from "./support";
 import { openGroceries, rowFor } from "../harness/groceries";
+import { removePlans } from "../harness/plans";
 import { swipeOpenTo } from "../harness/pointer";
 import { readRecipe, seedRecipe } from "../harness/recipes";
 import { dropSocket, expect, socketLedger, test, waitForSocket } from "./fixture";
@@ -466,6 +467,7 @@ test("a housemate renaming a planned recipe shows the new name on an open calend
     await expect(page.getByText("realtime-gepland-recept")).toHaveCount(0);
   } finally {
     await context.close();
+    await removePlans(stack.baseURL, stack.cookies.a, (plan) => plan.recipeId === recipeId);
   }
 });
 

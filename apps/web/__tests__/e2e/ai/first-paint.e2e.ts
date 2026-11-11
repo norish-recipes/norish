@@ -30,6 +30,7 @@ import {
   IPHONE_USER_AGENT,
   setDevicePreferences,
 } from "../harness/device-preferences";
+import { removePlans } from "../harness/plans";
 import { readRecipe, waitForRecipe } from "../harness/recipes";
 import { callTrpc, queryTrpc } from "../harness/trpc";
 import { pathsNotLive, recordFrames, waitForLive } from "../realtime/support";
@@ -44,6 +45,11 @@ test.beforeEach(async ({ aiStack }) => {
   stack = aiStack;
   await clearDevicePreferences();
 });
+
+// The notes planned here are titled "Served …"; the worker's later specs share this database.
+test.afterEach(() =>
+  removePlans(stack.baseURL, stack.ownerCookies, (plan) => !!plan.title?.startsWith("Served "))
+);
 
 const USER_AGENTS: Record<DeviceKind, string> = {
   phone: IPHONE_USER_AGENT,
@@ -302,6 +308,12 @@ test("a full load of the dashboard draws Today's meals for the reader's day, fro
   const today = todayIn(timeZone);
 
   await seed("desktop", { todaySectionVisibility: "planned" });
+  // The card draws a slot's first plan only, so the slot starts empty whatever ran before.
+  await removePlans(
+    stack.baseURL,
+    stack.ownerCookies,
+    (plan) => plan.date === today && plan.slot === "Dinner"
+  );
   await callApi("calendar.createItem", {
     id: crypto.randomUUID(),
     date: today,

@@ -4,8 +4,7 @@
  */
 import type { BrowserContext, Locator, Page } from "@playwright/test";
 
-import type { AIE2EStack } from "./fixture";
-import { callTrpc } from "../harness/trpc";
+import { planForTonight, removePlans } from "../harness/plans";
 import { seedRecipe } from "./cookbooks-support";
 import { expect, test } from "./fixture";
 
@@ -20,16 +19,6 @@ async function expectNewTab(
 
   await expect(tab).toHaveURL(url);
   await tab.close();
-}
-
-/** Plans the recipe as the owner's dinner today, in the browser's own calendar. */
-async function planForTonight(stack: AIE2EStack, recipeId: string): Promise<void> {
-  await callTrpc(stack.baseURL, stack.ownerCookies, "calendar.createItem", {
-    date: new Date().toLocaleDateString("en-CA"),
-    slot: "Dinner",
-    itemType: "recipe",
-    recipeId,
-  });
 }
 
 function libraryCard(page: Page, name: string): Locator {
@@ -73,13 +62,17 @@ test("a planned recipe in Today is a link to it", async ({ aiStack, context, pag
   const id = await seedRecipe(name);
   const recipeUrl = new RegExp(`/recipes/${id}`);
 
-  await planForTonight(aiStack, id);
-  await page.goto("/");
-  const slot = page.locator('[data-slot-card="Dinner"]').getByRole("link", { name });
+  try {
+    await planForTonight(aiStack.baseURL, aiStack.ownerCookies, id);
+    await page.goto("/");
+    const slot = page.locator('[data-slot-card="Dinner"]').getByRole("link", { name });
 
-  await expect(slot).toHaveAttribute("href", recipeUrl);
-  await expectNewTab(context, slot, { button: "middle" }, recipeUrl);
+    await expect(slot).toHaveAttribute("href", recipeUrl);
+    await expectNewTab(context, slot, { button: "middle" }, recipeUrl);
 
-  await slot.click();
-  await expect(page).toHaveURL(recipeUrl);
+    await slot.click();
+    await expect(page).toHaveURL(recipeUrl);
+  } finally {
+    await removePlans(aiStack.baseURL, aiStack.ownerCookies, (plan) => plan.recipeId === id);
+  }
 });

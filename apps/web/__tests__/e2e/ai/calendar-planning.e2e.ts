@@ -15,6 +15,7 @@ import type { Locator, Page } from "@playwright/test";
 
 import { dateKey, parseDateKey } from "@norish/shared/lib/helpers";
 
+import { removePlans } from "../harness/plans";
 import { fingerFor, glide } from "../harness/pointer";
 import { settled } from "../harness/settled";
 import { callTrpc, queryTrpc } from "../harness/trpc";
@@ -88,62 +89,71 @@ test("a recipe planned on the dashboard shows on the calendar page from the cach
     serviceWorkers: "block",
   });
   const page = await context.newPage();
+  const recipeId = await seedRecipe(NAME);
+  const today = new Date().toLocaleDateString("en-CA");
 
-  await seedRecipe(NAME);
+  try {
+    // Today's Dinner offers Add Recipe only while nothing is planned there.
+    await removePlans(
+      aiStack.baseURL,
+      aiStack.ownerCookies,
+      (plan) => plan.date === today && plan.slot === "Dinner"
+    );
+    await page.goto("/");
+    await expect(page.locator("[data-recipe-card]").filter({ hasText: NAME })).toBeVisible();
 
-  await page.goto("/");
-  await expect(page.locator("[data-recipe-card]").filter({ hasText: NAME })).toBeVisible();
+    // The calendar page's range enters the cache on a first visit.
+    await visitCalendar(page);
+    await expect(
+      page.getByRole("heading", { name: /calendar/i }).or(page.locator("main"))
+    ).toBeVisible();
+    await expect(page.getByText(NAME)).toHaveCount(0);
 
-  // The calendar page's range enters the cache on a first visit.
-  await visitCalendar(page);
-  await expect(
-    page.getByRole("heading", { name: /calendar/i }).or(page.locator("main"))
-  ).toBeVisible();
-  await expect(page.getByText(NAME)).toHaveCount(0);
+    // Back on the dashboard, today's dinner is planned through the Today section.
+    await page.getByRole("link", { name: "Home" }).click();
+    await page.waitForURL((url) => url.pathname === "/");
+    await page.getByRole("button", { name: "Add Recipe Dinner" }).click();
 
-  // Back on the dashboard, today's dinner is planned through the Today section.
-  await page.getByRole("link", { name: "Home" }).click();
-  await page.waitForURL((url) => url.pathname === "/");
-  await page.getByRole("button", { name: "Add Recipe Dinner" }).click();
+    const dialog = page.getByRole("dialog");
 
-  const dialog = page.getByRole("dialog");
+    await expect(dialog).toBeVisible();
+    await dialog.getByRole("button").filter({ hasText: NAME }).first().click();
 
-  await expect(dialog).toBeVisible();
-  await dialog.getByRole("button").filter({ hasText: NAME }).first().click();
+    // Planning opens Add to Groceries for the recipe: After planning a recipe's
+    // default. Closing it leaves the plan in place.
+    const groceries = page.getByRole("dialog", { name: "Add to Groceries" });
 
-  // Planning opens Add to Groceries for the recipe: After planning a recipe's
-  // default. Closing it leaves the plan in place.
-  const groceries = page.getByRole("dialog", { name: "Add to Groceries" });
+    await expect(groceries).toBeVisible();
+    await groceries.getByRole("button", { name: "Close panel" }).click();
+    await expect(page.getByRole("dialog")).toHaveCount(0);
+    await expect(page.getByText(NAME).first()).toBeVisible();
 
-  await expect(groceries).toBeVisible();
-  await groceries.getByRole("button", { name: "Close panel" }).click();
-  await expect(page.getByRole("dialog")).toHaveCount(0);
-  await expect(page.getByText(NAME).first()).toBeVisible();
+    // From here on the calendar range cannot be refetched: what the page shows
+    // is what the cache holds.
+    let refetches = 0;
 
-  // From here on the calendar range cannot be refetched: what the page shows
-  // is what the cache holds.
-  let refetches = 0;
+    await page.route(
+      (url) => url.pathname.includes("/api/trpc/") && url.pathname.includes("calendar.listItems"),
+      (route) => {
+        refetches += 1;
+        void route.abort("failed");
+      }
+    );
 
-  await page.route(
-    (url) => url.pathname.includes("/api/trpc/") && url.pathname.includes("calendar.listItems"),
-    (route) => {
-      refetches += 1;
-      void route.abort("failed");
-    }
-  );
+    await visitCalendar(page);
+    await expect(page.getByText(NAME).first()).toBeVisible();
+    expect(refetches).toBeGreaterThan(0);
 
-  await visitCalendar(page);
-  await expect(page.getByText(NAME).first()).toBeVisible();
-  expect(refetches).toBeGreaterThan(0);
-
-  // A reload restores the persisted cache: the plan is still there. The copy
-  // in IndexedDB is written after the cache changes, and by this point in the
-  // project it is large, so the reload waits until a range there holds the plan.
-  await expect.poll(() => persistedCalendarHolds(page, NAME)).toBe(true);
-  await page.reload();
-  await expect(page.getByText(NAME).first()).toBeVisible();
-
-  await context.close();
+    // A reload restores the persisted cache: the plan is still there. The copy
+    // in IndexedDB is written after the cache changes, and by this point in the
+    // project it is large, so the reload waits until a range there holds the plan.
+    await expect.poll(() => persistedCalendarHolds(page, NAME)).toBe(true);
+    await page.reload();
+    await expect(page.getByText(NAME).first()).toBeVisible();
+  } finally {
+    await context.close();
+    await removePlans(aiStack.baseURL, aiStack.ownerCookies, (plan) => plan.recipeId === recipeId);
+  }
 });
 
 function shiftDay(day: string, days: number): string {
@@ -299,5 +309,9 @@ test("plans dragged out of one slot after a slot-mate's delete move there and st
     await expect(page.getByText(gone)).toHaveCount(0);
   } finally {
     await context.close();
+    // The drags leave the plans on other days, where a later spec's Today could draw them.
+    await removePlans(aiStack.baseURL, aiStack.ownerCookies, (plan) =>
+      Object.values(ids).includes(plan.recipeId ?? "")
+    );
   }
 });
