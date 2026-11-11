@@ -43,7 +43,6 @@ export default function JoinCodeCard() {
   );
   if (!household) return null;
 
-
   // Type guard: only admins get joinCode fields
   const hasJoinCode = "joinCode" in household;
   if (!isAdmin || !hasJoinCode) return null;

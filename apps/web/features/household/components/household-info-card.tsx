@@ -5,14 +5,15 @@ import { SettingsCard } from "@/components/settings/settings-card";
 import { ActionButton, ActionButtonGroup } from "@/components/shared/action-button";
 import { ArrowLeftStartOnRectangleIcon } from "@heroicons/react/16/solid";
 import { HomeIcon } from "@heroicons/react/24/outline";
-import { Chip, Modal, Separator } from "@heroui/react";
+import { Chip, Separator } from "@heroui/react";
 import { useTranslations } from "next-intl";
 
 import { useHousehold, useHouseholdMutations } from "@norish/shared-react/reader";
 
+import ConfirmModal from "./confirm-modal";
+
 export default function HouseholdInfoCard() {
   const t = useTranslations("settings.household.info");
-  const tActions = useTranslations("common.actions");
   const { household, currentUserId, isAdmin } = useHousehold();
   const { leaveHousehold } = useHouseholdMutations();
   const [showLeaveModal, setShowLeaveModal] = useState(false);
@@ -48,43 +49,26 @@ export default function HouseholdInfoCard() {
         </ActionButtonGroup>
       </SettingsCard>
 
-      {/* Leave Household Modal */}
-      <Modal.Backdrop className="z-[1099]" isOpen={showLeaveModal} onOpenChange={setShowLeaveModal}>
-        <Modal.Container className="z-[1100]">
-          <Modal.Dialog>
-            {({ close: onClose }) => (
-              <>
-                <Modal.Header>{t("leaveModal.title")}</Modal.Header>
-                <Modal.Body>
-                  <p>
-                    {t("leaveModal.confirmMessage", {
-                      name: household.name,
-                    })}
-                  </p>
-                  {isAdmin && otherMembers.length > 0 && (
-                    <p className="text-warning mt-2">{t("leaveModal.adminWarning")}</p>
-                  )}
-                </Modal.Body>
-                <Modal.Footer>
-                  <ActionButtonGroup>
-                    <ActionButton action="cancel" onPress={onClose}>
-                      {tActions("cancel")}
-                    </ActionButton>
-                    <ActionButton
-                      action="remove"
-                      icon={ArrowLeftStartOnRectangleIcon}
-                      variant="danger"
-                      onPress={handleLeaveHousehold}
-                    >
-                      {t("leaveModal.confirmButton")}
-                    </ActionButton>
-                  </ActionButtonGroup>
-                </Modal.Footer>
-              </>
-            )}
-          </Modal.Dialog>
-        </Modal.Container>
-      </Modal.Backdrop>
+      <ConfirmModal
+        confirm={
+          <ActionButton
+            action="remove"
+            icon={ArrowLeftStartOnRectangleIcon}
+            variant="danger"
+            onPress={handleLeaveHousehold}
+          >
+            {t("leaveModal.confirmButton")}
+          </ActionButton>
+        }
+        isOpen={showLeaveModal}
+        title={t("leaveModal.title")}
+        onOpenChange={setShowLeaveModal}
+      >
+        <p>{t("leaveModal.confirmMessage", { name: household.name })}</p>
+        {isAdmin && otherMembers.length > 0 && (
+          <p className="text-warning mt-2">{t("leaveModal.adminWarning")}</p>
+        )}
+      </ConfirmModal>
     </>
   );
 }

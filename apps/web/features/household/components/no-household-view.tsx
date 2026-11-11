@@ -81,11 +81,7 @@ export default function NoHouseholdView() {
               </InputOTP>
             </div>
             <ActionButtonGroup className="mt-auto">
-              <ActionButton
-                action="apply"
-                icon={ArrowRightEndOnRectangleIcon}
-                type="submit"
-              >
+              <ActionButton action="apply" icon={ArrowRightEndOnRectangleIcon} type="submit">
                 {t("join.submitButton")}
               </ActionButton>
             </ActionButtonGroup>
