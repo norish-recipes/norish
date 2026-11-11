@@ -1,8 +1,5 @@
-/**
- * A planned item reaches every cached calendar range — from the actor's own
- * create result and from the realtime echo alike — so a range cached for
- * another screen shows it without waiting for a refetch (issue #583).
- */
+// A planned item reaches every cached range from the actor's own result and the echo
+// alike, so a range cached for another screen shows it without a refetch (#583).
 
 import { act } from "react";
 import { QueryClient } from "@tanstack/react-query";

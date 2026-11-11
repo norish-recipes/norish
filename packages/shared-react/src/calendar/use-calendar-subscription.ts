@@ -20,12 +20,8 @@ export function useCalendarSubscription() {
   // Every cached range: the item events merge into each, an edited recipe rereads each.
   const live = { liveQueryKeys: [trpc.calendar.listItems.pathKey()] };
 
-  // A created, edited or deleted item converges every cached range, not only
-  // the one this screen shows: the calendar page's own range sits in the
-  // cache while the dashboard is open, and a later visit or a range switch
-  // may serve it without a refetch. The merge is by id, so the same event
-  // reaching several mounted ranges — or the actor's own mutation result
-  // arriving first — is a no-op the second time.
+  // Each event merges by id into every cached range, mounted or not, so a range served
+  // later without a refetch is current and a repeat (or the actor's own result) is a no-op.
   useRealtimeSubscription<Payload<"itemCreated">>(trpc.calendar.onItemCreated, {
     ...live,
     onEvent: (payload) => {

@@ -1,9 +1,5 @@
-/**
- * How a planned item lands in a cached calendar range: the same merge for
- * the realtime echo and for the actor's own mutation result, so whichever
- * arrives first places the item and the other is a no-op (a range is keyed by
- * its `startISO`/`endISO`, and an item belongs to it by date alone).
- */
+// One merge per cached range for the realtime echo and the actor's own result, keyed by
+// item id and placed by date alone, so whichever lands second is a no-op.
 
 import type { PlannedItemFromQuery } from "@norish/shared/contracts";
 import type { CalendarRealtime } from "@norish/shared/contracts/realtime/calendar";
