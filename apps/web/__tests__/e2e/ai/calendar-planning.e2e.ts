@@ -225,7 +225,13 @@ test("plans dragged out of one slot after a slot-mate's delete move there and st
     await mouse.down(start);
     await glide(page, mouse, start, lifted);
     await glide(page, mouse, lifted, end);
+    // The answer carries the plan's new version, which its next drag sends.
+    const answered = page.waitForResponse((response) =>
+      response.url().includes("calendar.moveItem")
+    );
+
     await mouse.up();
+    await answered;
   }
 
   try {
@@ -256,6 +262,8 @@ test("plans dragged out of one slot after a slot-mate's delete move there and st
     const editor = page.getByRole("dialog", { name: "Edit Planned Recipe" });
 
     await editor.getByRole("button", { name: "Delete" }).click();
+    // The closing drawer holds body at pointer-events: none until it has left.
+    await expect(editor).toBeHidden();
     await expect(card(todayKey).getByText(gone)).toHaveCount(0);
     await expect.poll(() => plannedDate(ids[gone]!)).toBeUndefined();
 
@@ -264,7 +272,8 @@ test("plans dragged out of one slot after a slot-mate's delete move there and st
     const after = shiftDay(todayKey, 1);
     const beside =
       (await rowOf(after).getAttribute("data-index")) === todayRow ? after : shiftDay(todayKey, -1);
-    const below = shiftDay(todayKey, await rowOf(todayKey).locator("[data-day-key]").count());
+    const rowLength = await rowOf(todayKey).locator("[data-day-key]").count();
+    const below = shiftDay(todayKey, rowLength);
     const targets = { [across]: beside, [down]: below };
 
     for (const [name, day] of Object.entries(targets)) {
@@ -273,6 +282,13 @@ test("plans dragged out of one slot after a slot-mate's delete move there and st
       await expect(card(todayKey).getByText(name)).toHaveCount(0);
       await expect.poll(() => plannedDate(ids[name]!)).toBe(day);
     }
+
+    // The same plan again at once: its second write sends the version its first answered with.
+    targets[across] = shiftDay(beside, rowLength);
+    await drag(across, targets[across]);
+    await expect(card(targets[across]).getByText(across)).toBeVisible();
+    await expect(card(beside).getByText(across)).toHaveCount(0);
+    await expect.poll(() => plannedDate(ids[across]!)).toBe(targets[across]);
 
     await page.reload();
     for (const [name, day] of Object.entries(targets)) {
