@@ -47,6 +47,11 @@ function procedure(path: string[]) {
           ? server(name, input)
           : new Promise((resolve, reject) => (pendingReads[name] ??= []).push({ resolve, reject })),
     }),
+    // Subscribes to nothing: a test mocks `useSubscription` and delivers through its `onData`.
+    subscriptionOptions: (_input: unknown, options: object = {}) => ({
+      ...options,
+      subscribe: () => ({ unsubscribe: () => undefined }),
+    }),
     mutationKey: () => [path],
     mutationOptions: (options: object = {}) => ({
       ...options,

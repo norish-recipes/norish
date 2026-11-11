@@ -12,13 +12,30 @@ export function useCaldavCacheHelpers(): CaldavCacheHelpers {
   const syncStatusPath = trpc.caldav.getSyncStatus.pathKey();
   const configKey = trpc.caldav.getConfig.queryKey();
 
+  const invalidateSyncStatus = () => {
+    void queryClient.invalidateQueries({ queryKey: syncStatusPath });
+  };
+  const invalidateSummary = () => {
+    void queryClient.invalidateQueries({ queryKey: trpc.caldav.getSummary.queryKey() });
+  };
+
   return {
     // Read when a write runs, so the caller needn't subscribe to the config.
     cachedConfigVersion: () =>
       queryClient.getQueryData<UserCaldavConfigWithoutPasswordDto | null>(configKey)?.version,
-    setConfig: (updater) => writeOverRead(queryClient, configKey, updater),
-    // The stored password a save or delete replaced; the next read asks the server.
-    dropPassword: () => queryClient.removeQueries({ queryKey: trpc.caldav.getPassword.queryKey() }),
+    // Cache writes only, so the configSaved event that also lands here can't emit another.
+    applySavedConfig: (config) => {
+      writeOverRead(queryClient, configKey, () => config);
+      // Stale without a refetch: a mounted form asks for nothing, the next read() asks the server.
+      void queryClient.invalidateQueries({
+        queryKey: trpc.caldav.getPassword.queryKey(),
+        refetchType: "none",
+      });
+      invalidateSyncStatus();
+      invalidateSummary();
+      // Back to pending, so the badge shows the check a changed config needs until it answers.
+      void queryClient.resetQueries({ queryKey: trpc.caldav.checkConnection.queryKey() });
+    },
     invalidateConfig: () => {
       void queryClient.invalidateQueries({ queryKey: configKey });
     },
@@ -28,15 +45,7 @@ export function useCaldavCacheHelpers(): CaldavCacheHelpers {
         queryClient.setQueryData(key, updater);
       }
     },
-    invalidateSyncStatus: () => {
-      void queryClient.invalidateQueries({ queryKey: syncStatusPath });
-    },
-    invalidateSummary: () => {
-      void queryClient.invalidateQueries({ queryKey: trpc.caldav.getSummary.queryKey() });
-    },
-    // Back to pending, so the badge shows the check a changed config needs until it answers.
-    resetConnection: () => {
-      void queryClient.resetQueries({ queryKey: trpc.caldav.checkConnection.queryKey() });
-    },
+    invalidateSyncStatus,
+    invalidateSummary,
   };
 }

@@ -33,6 +33,8 @@ vi.mock("../../trpc", () => ({
       getConfig: { queryKey: () => CONFIG_KEY },
       getSyncStatus: { pathKey: () => [["caldav", "getSyncStatus"]] },
       getSummary: { queryKey: () => SUMMARY_KEY },
+      getPassword: { queryKey: () => [["caldav", "getPassword"], { type: "query" }] },
+      checkConnection: { queryKey: () => [["caldav", "checkConnection"], { type: "query" }] },
     },
     caldavSubscriptions: {
       onSyncEvent: {

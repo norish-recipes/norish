@@ -9,24 +9,12 @@ import { useCaldavCacheHelpers } from "./use-caldav-cache";
 export function useCaldavMutations(): CaldavMutationsResult {
   const trpc = useTRPC();
   const { toast, showError } = usePlatform();
-  const {
-    cachedConfigVersion,
-    setConfig,
-    dropPassword,
-    invalidateConfig,
-    invalidateSyncStatus,
-    invalidateSummary,
-    resetConnection,
-  } = useCaldavCacheHelpers();
+  const { cachedConfigVersion, applySavedConfig, invalidateConfig } = useCaldavCacheHelpers();
 
   const saveConfigMutation = useMutation(
     trpc.caldav.saveConfig.mutationOptions({
       onSuccess: (result) => {
-        setConfig(() => result);
-        dropPassword();
-        invalidateSyncStatus();
-        invalidateSummary();
-        resetConnection();
+        applySavedConfig(result);
         toast.show({
           severity: "success",
           title: toast.translate("calendar.caldav.configSaved"),
@@ -42,12 +30,9 @@ export function useCaldavMutations(): CaldavMutationsResult {
   const { mutateAsync: mutateDeleteConfigAsync } = useMutation(
     trpc.caldav.deleteConfig.mutationOptions({
       onSuccess: () => {
-        setConfig(() => null);
-        dropPassword();
+        applySavedConfig(null);
+        // A stale delete removes nothing, so the config is read back.
         invalidateConfig();
-        invalidateSyncStatus();
-        invalidateSummary();
-        resetConnection();
         toast.show({
           severity: "success",
           title: toast.translate("calendar.caldav.configDeleted"),

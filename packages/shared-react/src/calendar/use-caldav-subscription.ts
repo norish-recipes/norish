@@ -38,7 +38,7 @@ export function applyCaldavStatusUpdate(
  */
 export function useCaldavSubscription() {
   const trpc = useTRPC();
-  const { setConfig, setStatuses, invalidateSyncStatus, invalidateSummary } =
+  const { applySavedConfig, setStatuses, invalidateSyncStatus, invalidateSummary } =
     useCaldavCacheHelpers();
   const { toast } = usePlatform();
 
@@ -59,7 +59,7 @@ export function useCaldavSubscription() {
       onEvent: (event) => {
         switch (event.type) {
           case "configSaved":
-            setConfig(() => event.data.config);
+            applySavedConfig(event.data.config);
             break;
           case "syncCompleted":
           case "syncFailed":

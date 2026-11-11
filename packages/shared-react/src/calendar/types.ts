@@ -56,10 +56,6 @@ type CaldavSyncStatusPage = {
   pageSize: number;
 };
 
-type CaldavConfigUpdater = (
-  prev: UserCaldavConfigWithoutPasswordDto | null | undefined
-) => UserCaldavConfigWithoutPasswordDto | null | undefined;
-
 export type CaldavConfigQueryResult = {
   config: UserCaldavConfigWithoutPasswordDto | null;
   error: unknown;
@@ -83,15 +79,14 @@ export type CaldavSummaryQueryResult = {
 
 export type CaldavCacheHelpers = {
   cachedConfigVersion: () => number | undefined;
-  setConfig: (updater: CaldavConfigUpdater) => void;
+  /** What a config saved or deleted, here or on another device, changes in every read. */
+  applySavedConfig: (config: UserCaldavConfigWithoutPasswordDto | null) => void;
   setStatuses: (
     updater: (prev: CaldavSyncStatusPage | undefined) => CaldavSyncStatusPage | undefined
   ) => void;
-  dropPassword: () => void;
   invalidateConfig: () => void;
   invalidateSyncStatus: () => void;
   invalidateSummary: () => void;
-  resetConnection: () => void;
 };
 
 export type SaveCaldavConfigInput = {
