@@ -49,6 +49,7 @@ describe("CalDAV reads after a save", () => {
   let config: ReturnType<typeof createMockCaldavConfig> | null;
   let checks: PromiseWithResolvers<unknown>[];
   let requests: string[];
+  let passwordGate: Promise<void>;
   const sent = (path: string) => requests.filter((request) => request === path).length;
 
   beforeEach(() => {
@@ -59,10 +60,17 @@ describe("CalDAV reads after a save", () => {
     config = createMockCaldavConfig();
     checks = [];
     requests = [];
+    passwordGate = Promise.resolve();
     serveTRPC(async (path) => {
       requests.push(path);
       if (path === "caldav.getConfig") return config;
-      if (path === "caldav.getPassword") return stored;
+      if (path === "caldav.getPassword") {
+        const answer = stored;
+
+        await passwordGate;
+
+        return answer;
+      }
       if (path === "caldav.checkConnection") {
         const check = Promise.withResolvers();
 
@@ -135,6 +143,27 @@ describe("CalDAV reads after a save", () => {
 
     expect(sent("caldav.getPassword")).toBe(1);
     await expect(result.current.password.read()).resolves.toBe("elsewhere");
+  });
+
+  it("never keeps a password read begun before a save as the fresh one", async () => {
+    const result = render();
+
+    await waitFor(() => expect(result.current.password.password).toBe("old"));
+    stored = "second";
+    emitSyncEvent(useSubscriptionMock, configSaved(2));
+    const gate = Promise.withResolvers<void>();
+
+    passwordGate = gate.promise;
+    const early = result.current.password.read();
+
+    await vi.waitFor(() => expect(sent("caldav.getPassword")).toBe(2));
+    stored = "third";
+    emitSyncEvent(useSubscriptionMock, configSaved(3));
+    gate.resolve();
+    await act(() => early);
+
+    await expect(result.current.password.read()).resolves.toBe("third");
+    expect(sent("caldav.getPassword")).toBe(3);
   });
 
   /** Answers the latest connection check once it was sent. */

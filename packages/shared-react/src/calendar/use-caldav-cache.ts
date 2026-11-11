@@ -27,10 +27,11 @@ export function useCaldavCacheHelpers(): CaldavCacheHelpers {
     applySavedConfig: (config) => {
       writeOverRead(queryClient, configKey, () => config);
       // Stale without a refetch: a mounted form asks for nothing, the next read() asks the server.
-      void queryClient.invalidateQueries({
-        queryKey: trpc.caldav.getPassword.queryKey(),
-        refetchType: "none",
-      });
+      // A read under way is cancelled first, else its pre-save answer lands as fresh.
+      const password = { queryKey: trpc.caldav.getPassword.queryKey() };
+
+      void queryClient.cancelQueries(password);
+      void queryClient.invalidateQueries({ ...password, refetchType: "none" });
       invalidateSyncStatus();
       invalidateSummary();
       // Back to pending, so the badge shows the check a changed config needs until it answers.
