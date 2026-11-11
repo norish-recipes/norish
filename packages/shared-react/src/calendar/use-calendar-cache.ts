@@ -1,4 +1,4 @@
-import { useQueryClient } from "@tanstack/react-query";
+import { partialMatchKey, useQueryClient } from "@tanstack/react-query";
 
 import type { PlannedItemFromQuery } from "@norish/shared/contracts";
 import type { CalendarRealtime } from "@norish/shared/contracts/realtime/calendar";
@@ -6,6 +6,7 @@ import type { PayloadOf } from "@norish/shared/contracts/realtime/catalogue";
 import type { PlannedItemWithRecipePayload } from "@norish/shared/contracts/zod";
 
 import type { CachedCalendarRange, CalendarCacheHelpers } from "./types";
+import { rereadOnceWritesSettle } from "../realtime/use-realtime-subscription";
 import { useTRPC } from "../trpc";
 import {
   applyMoveEchoInRange,
@@ -52,8 +53,8 @@ export function useCalendarCacheHelpers(): CalendarCacheHelpers {
     }
   };
 
-  const invalidateAllRanges = () => {
-    void queryClient.invalidateQueries({ queryKey: listKey });
+  const rereadAllRanges = () => {
+    rereadOnceWritesSettle(queryClient, (query) => partialMatchKey(query.queryKey, listKey));
   };
 
   return {
@@ -61,6 +62,6 @@ export function useCalendarCacheHelpers(): CalendarCacheHelpers {
     upsertItemAcrossRanges,
     removeItemAcrossRanges,
     applyMoveEchoAcrossRanges,
-    invalidateAllRanges,
+    rereadAllRanges,
   };
 }

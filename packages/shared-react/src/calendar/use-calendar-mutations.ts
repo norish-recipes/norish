@@ -19,7 +19,7 @@ type RangeUpdate = (items: PlannedItemFromQuery[], range: CalendarRange) => Plan
 export function useCalendarMutations(): CalendarMutationsResult {
   const trpc = useTRPC();
   const queryClient = useQueryClient();
-  const { cachedRanges, upsertItemAcrossRanges, invalidateAllRanges } = useCalendarCacheHelpers();
+  const { cachedRanges, upsertItemAcrossRanges, rereadAllRanges } = useCalendarCacheHelpers();
 
   // Synchronous, so a second write in the same tick reads this one; a manual write
   // during a cancelled read becomes the state that read reverts to.
@@ -42,12 +42,12 @@ export function useCalendarMutations(): CalendarMutationsResult {
       queryClient.setQueryData<PlannedItemFromQuery[]>(key, items);
     }
     // The snapshots can predate a later write or event; reread so each range converges.
-    invalidateAllRanges();
+    rereadAllRanges();
   };
 
   // The server drops version-stale writes; reread so the optimistic write converges.
   const rereadIfStale = (result: object) => {
-    if ("stale" in result && result.stale) invalidateAllRanges();
+    if ("stale" in result && result.stale) rereadAllRanges();
   };
 
   // The newest copy: a range left behind (narrower, or after a reconnect) can hold an older one.
@@ -68,7 +68,7 @@ export function useCalendarMutations(): CalendarMutationsResult {
         if (result.item) upsertItemAcrossRanges(result.item);
       },
       // Queued for Replay when the backend is unreachable — nothing to refetch.
-      onError: invalidateUnlessPreserved(invalidateAllRanges),
+      onError: invalidateUnlessPreserved(rereadAllRanges),
     })
   );
   const { mutate: mutateCreate } = createMutation;

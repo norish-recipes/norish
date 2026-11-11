@@ -14,7 +14,7 @@ export function useCalendarSubscription() {
     upsertItemAcrossRanges,
     removeItemAcrossRanges,
     applyMoveEchoAcrossRanges,
-    invalidateAllRanges,
+    rereadAllRanges,
   } = useCalendarCacheHelpers();
 
   // Every cached range: the item events merge into each, an edited recipe rereads each.
@@ -53,7 +53,7 @@ export function useCalendarSubscription() {
   useRealtimeSubscription<Payload<"failed">>(trpc.calendar.onFailed, {
     ...live,
     onEvent: () => {
-      invalidateAllRanges();
+      rereadAllRanges();
     },
   });
 
@@ -63,7 +63,7 @@ export function useCalendarSubscription() {
     ...live,
     onEvent: ({ source }) => {
       if (source === "enrichment") return;
-      invalidateAllRanges();
+      rereadAllRanges();
     },
   });
 }

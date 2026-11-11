@@ -17,6 +17,8 @@ import { useCalendarSubscription } from "../use-calendar-subscription";
 
 const useSubscriptionMock = vi.hoisted(() => vi.fn());
 const createItemMutate = vi.hoisted(() => vi.fn());
+// What the server answers for a range; every read fails by default, as it does Offline.
+const readRange = vi.hoisted(() => vi.fn());
 
 vi.mock("@trpc/tanstack-react-query", async () => {
   const actual = await vi.importActual<typeof import("@trpc/tanstack-react-query")>(
@@ -45,10 +47,9 @@ const trpc = {
       pathKey: () => [PATH],
       queryKey: (input?: { startISO: string; endISO: string }) =>
         input ? rangeKey(input.startISO, input.endISO) : [PATH],
-      // Every read fails, as it does Offline.
       queryOptions: (input: { startISO: string; endISO: string }, opts: object) => ({
         queryKey: rangeKey(input.startISO, input.endISO),
-        queryFn: () => Promise.reject(new Error("Offline")),
+        queryFn: () => readRange(input),
         ...opts,
       }),
     },
@@ -74,6 +75,25 @@ const trpc = {
 };
 
 vi.mock("../../trpc", () => ({ useTRPC: () => trpc }));
+
+beforeEach(() => {
+  readRange.mockReset();
+  readRange.mockRejectedValue(new Error("Offline"));
+});
+
+const rangeKeyOf = (range: { startISO: string; endISO: string }) =>
+  rangeKey(range.startISO, range.endISO);
+
+function deferred<T>() {
+  let resolve!: (value: T) => void;
+  let reject!: (error: unknown) => void;
+  const promise = new Promise<T>((res, rej) => {
+    resolve = res;
+    reject = rej;
+  });
+
+  return { promise, resolve, reject };
+}
 
 function payload(
   overrides: Partial<PlannedItemWithRecipePayload> = {}
@@ -421,6 +441,52 @@ describe("a delete, move or update with no range", () => {
         true
       );
     }
+  });
+
+  it("rereads every range once two overlapping writes settle, the first failing", async () => {
+    const failing = deferred<never>();
+    const landing = deferred<{ success: true }>();
+    let server = PAGE_ITEMS;
+    let items: PlannedItemFromQuery[] = [];
+
+    queryClient.setMutationDefaults([["calendar", "deleteItem"]], {
+      mutationFn: () => failing.promise,
+    });
+    queryClient.setMutationDefaults([["calendar", "updateItem"]], {
+      mutationFn: () => landing.promise,
+    });
+    readRange.mockImplementation(async () => server);
+    ({ unmount } = renderHookWithClient(queryClient, () => {
+      mutations = useCalendarMutations();
+      items = useCalendarQuery(CALENDAR_PAGE.startISO, CALENDAR_PAGE.endISO).items;
+    }));
+    await act(async () => {
+      await vi.waitFor(() =>
+        expect(queryClient.getQueryState(rangeKeyOf(CALENDAR_PAGE))?.fetchStatus).toBe("idle")
+      );
+    });
+
+    act(() => {
+      mutations.deleteItem("item-0");
+      mutations.updateItem("item-2", "Leftovers");
+    });
+    await act(async () => {
+      failing.reject(new Error("refused"));
+      await vi.waitFor(() => expect(queryClient.isMutating()).toBe(1));
+    });
+    // The server applies the update only now, after the delete failed.
+    server = PAGE_ITEMS.map((item) =>
+      item.id === "item-2" ? { ...item, title: "Leftovers" } : item
+    );
+    await act(async () => {
+      landing.resolve({ success: true });
+    });
+    await settle();
+
+    await act(async () => {
+      await vi.waitFor(() => expect(items).toEqual(server));
+    });
+    expect(queryClient.getQueryState(rangeKeyOf(THIS_WEEK))?.isInvalidated).toBe(true);
   });
 
   it("keeps both writes started in one tick", async () => {
