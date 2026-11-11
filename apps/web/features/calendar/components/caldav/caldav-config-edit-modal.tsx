@@ -6,6 +6,7 @@ import { ServerIcon } from "@heroicons/react/24/outline";
 import { Modal } from "@heroui/react";
 import { useTranslations } from "next-intl";
 
+import type { UserCaldavConfigWithoutPasswordDto } from "@norish/shared/contracts";
 import {
   useCaldavConfigQuery,
   useCaldavMutations,
@@ -30,12 +31,36 @@ export default function CaldavConfigEditModal({ isOpen, onClose }: CaldavConfigE
   );
 }
 
-/** Mounted only while open: the form starts from the config; the password read ends on close. */
+/** Mounted only while open, so the password read ends on close. */
 function CaldavConfigEditForm({ onClose }: { onClose: () => void }) {
+  const { config } = useCaldavConfigQuery();
+  // Above the key, so a new version starts the fields over without reading the password again.
+  const { read } = useCaldavPasswordQuery();
+
+  return (
+    <CaldavConfigEditFields
+      key={config?.version}
+      config={config}
+      readStoredPassword={read}
+      onClose={onClose}
+    />
+  );
+}
+
+interface CaldavConfigEditFieldsProps {
+  config: UserCaldavConfigWithoutPasswordDto | null;
+  readStoredPassword: () => Promise<string | null>;
+  onClose: () => void;
+}
+
+/** The fields, seeded from one version of the config. */
+function CaldavConfigEditFields({
+  config,
+  readStoredPassword,
+  onClose,
+}: CaldavConfigEditFieldsProps) {
   const tConfig = useTranslations("settings.caldav.config");
   const tActions = useTranslations("common.actions");
-  const { config } = useCaldavConfigQuery();
-  const { read: readStoredPassword } = useCaldavPasswordQuery();
   const { saveConfig, isSavingConfig: saving } = useCaldavMutations();
   const form = useCaldavForm(config);
   const { serverUrl, username, password, calendarUrl, connection } = form;

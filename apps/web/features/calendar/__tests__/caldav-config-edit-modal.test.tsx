@@ -10,7 +10,7 @@ import {
   writeAnswers,
 } from "@/__tests__/helpers/trpc-fake";
 import CaldavConfigEditModal from "@/features/calendar/components/caldav/caldav-config-edit-modal";
-import { fireEvent, render, screen, waitFor } from "@testing-library/react";
+import { act, fireEvent, render, screen, waitFor } from "@testing-library/react";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 
 import { createTestQueryClient, createTestWrapper } from "@norish/shared-react/platform/testing";
@@ -48,10 +48,11 @@ describe("CaldavConfigEditModal", () => {
     writeAnswers.clear();
   });
 
-  const renderOpen = () => {
+  const configKey = fakeProcedure("caldav.getConfig").queryKey();
+  const renderOpen = (config = CONFIG) => {
     const queryClient = createTestQueryClient();
 
-    queryClient.setQueryData(fakeProcedure("caldav.getConfig").queryKey(), CONFIG);
+    queryClient.setQueryData(configKey, config);
     render(<CaldavConfigEditModal isOpen onClose={() => {}} />, {
       wrapper: createTestWrapper(queryClient),
     });
@@ -73,6 +74,22 @@ describe("CaldavConfigEditModal", () => {
     expect(sentWrites).toHaveBeenCalledWith(
       "caldav.testConnection",
       expect.objectContaining({ password: "" })
+    );
+  });
+
+  it("shows a config changed elsewhere while open, and saves that", async () => {
+    const config = { ...CONFIG, calendarUrl: "https://cal.example.com/home/" };
+    const queryClient = renderOpen(config);
+
+    act(() => queryClient.setQueryData(configKey, { ...config, username: "sous", version: 2 }));
+
+    expect(await screen.findByDisplayValue("sous")).toBeInTheDocument();
+    fireEvent.click(screen.getByRole("button", { name: "save" }));
+    await waitFor(() =>
+      expect(sentWrites).toHaveBeenCalledWith(
+        "caldav.saveConfig",
+        expect.objectContaining({ username: "sous", version: 2 })
+      )
     );
   });
 
