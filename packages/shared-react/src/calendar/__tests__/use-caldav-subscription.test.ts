@@ -3,16 +3,14 @@
  * start is toasted, translated, through the platform adapter.
  */
 
-import { act } from "react";
 import { QueryClient } from "@tanstack/react-query";
 import { renderHook } from "@testing-library/react";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 
 import { createTestWrapper, fakePlatformAdapter } from "@norish/shared-react/platform/testing";
 
-import { trackedEvent } from "../../../__tests__/realtime/tracked-event";
 import { useCaldavSubscription } from "../use-caldav-subscription";
-import { createMockCaldavConfig } from "./test-utils";
+import { createMockCaldavConfig, emitSyncEvent } from "./test-utils";
 
 const useSubscriptionMock = vi.hoisted(() => vi.fn());
 
@@ -47,14 +45,6 @@ vi.mock("../../trpc", () => ({
   }),
 }));
 
-function emit(event: unknown) {
-  const options = useSubscriptionMock.mock.calls.at(-1)?.[0] as {
-    onData: (data: unknown) => void;
-  };
-
-  act(() => options.onData(trackedEvent(event)));
-}
-
 let queryClient: QueryClient;
 let platform: ReturnType<typeof fakePlatformAdapter>;
 let rendered: ReturnType<typeof renderHook>;
@@ -76,7 +66,10 @@ afterEach(() => {
 
 describe("useCaldavSubscription", () => {
   it("toasts the initial sync's start through the platform, translated", () => {
-    emit({ type: "initialSyncComplete", data: { totalSynced: 4, totalFailed: 0 } });
+    emitSyncEvent(useSubscriptionMock, {
+      type: "initialSyncComplete",
+      data: { totalSynced: 4, totalFailed: 0 },
+    });
 
     expect(platform.toast.show).toHaveBeenCalledWith({
       severity: "success",
@@ -86,7 +79,10 @@ describe("useCaldavSubscription", () => {
   });
 
   it("warns when some items could not be queued", () => {
-    emit({ type: "initialSyncComplete", data: { totalSynced: 3, totalFailed: 2 } });
+    emitSyncEvent(useSubscriptionMock, {
+      type: "initialSyncComplete",
+      data: { totalSynced: 3, totalFailed: 2 },
+    });
 
     expect(platform.toast.show).toHaveBeenCalledWith({
       severity: "warning",
@@ -98,7 +94,7 @@ describe("useCaldavSubscription", () => {
   it("writes a saved config into the cache and toasts nothing", () => {
     const config = createMockCaldavConfig({ version: 3 });
 
-    emit({ type: "configSaved", data: { config } });
+    emitSyncEvent(useSubscriptionMock, { type: "configSaved", data: { config } });
 
     expect(queryClient.getQueryData(CONFIG_KEY)).toEqual(config);
     expect(platform.toast.show).not.toHaveBeenCalled();
@@ -107,7 +103,7 @@ describe("useCaldavSubscription", () => {
   it("rereads the summary when a sync completes", () => {
     queryClient.setQueryData(SUMMARY_KEY, { pending: 1, synced: 0, failed: 0, removed: 0 });
 
-    emit({ type: "syncCompleted", data: {} });
+    emitSyncEvent(useSubscriptionMock, { type: "syncCompleted", data: {} });
 
     expect(queryClient.getQueryState(SUMMARY_KEY)?.isInvalidated).toBe(true);
   });

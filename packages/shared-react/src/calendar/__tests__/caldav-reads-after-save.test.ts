@@ -7,12 +7,11 @@ import {
   fakePlatformAdapter,
 } from "@norish/shared-react/platform/testing";
 
-import { trackedEvent } from "../../../__tests__/realtime/tracked-event";
 import { resetTRPCFake, serveTRPC } from "../../trpc/testing";
 import { useCaldavMutations } from "../use-caldav-mutations";
 import { useCaldavConnectionQuery, useCaldavPasswordQuery } from "../use-caldav-query";
 import { useCaldavSubscription } from "../use-caldav-subscription";
-import { createMockCaldavConfig } from "./test-utils";
+import { createMockCaldavConfig, emitSyncEvent } from "./test-utils";
 
 const useSubscriptionMock = vi.hoisted(() => vi.fn());
 
@@ -36,17 +35,10 @@ const SAVE = {
 };
 
 /** A config saved on another device, as the subscription delivers it. */
-function emitConfigSaved(version: number) {
-  const { onData } = useSubscriptionMock.mock.calls.at(-1)?.[0] as {
-    onData: (data: unknown) => void;
-  };
-
-  act(() =>
-    onData(
-      trackedEvent({ type: "configSaved", data: { config: createMockCaldavConfig({ version }) } })
-    )
-  );
-}
+const configSaved = (version: number) => ({
+  type: "configSaved",
+  data: { config: createMockCaldavConfig({ version }) },
+});
 
 /** Lets every request a render or a write starts go out. */
 const settle = () => act(() => new Promise((resolve) => setTimeout(resolve, 20)));
@@ -138,7 +130,7 @@ describe("CalDAV reads after a save", () => {
 
     await waitFor(() => expect(result.current.password.password).toBe("old"));
     stored = "elsewhere";
-    emitConfigSaved(2);
+    emitSyncEvent(useSubscriptionMock, configSaved(2));
     await settle();
 
     expect(sent("caldav.getPassword")).toBe(1);
@@ -173,7 +165,7 @@ describe("CalDAV reads after a save", () => {
     await answerCheck(true);
     await waitFor(() => expect(result.current.connection.isConnected).toBe(true));
 
-    emitConfigSaved(2);
+    emitSyncEvent(useSubscriptionMock, configSaved(2));
     await waitFor(() => expect(result.current.connection.isChecking).toBe(true));
     await answerCheck(false, 2);
     await settle();
