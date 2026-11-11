@@ -162,6 +162,28 @@ describe("createCacheManager", () => {
     }
   });
 
+  it("never persists a mutation waiting behind another in its scope (the Outbox is the queue)", async () => {
+    const manager = createManager();
+    const scope = { id: "plan-writes" };
+    const first = Promise.withResolvers<void>();
+    const mutate = (mutationFn: () => Promise<void>) =>
+      manager.queryClient.getMutationCache().build(manager.queryClient, { mutationFn, scope });
+
+    await manager.reconcileIdentity({ sessionUserId: "u1", isOffline: false });
+    void mutate(() => first.promise).execute(undefined);
+    const waiting = mutate(() => Promise.resolve());
+
+    void waiting.execute(undefined);
+    manager.queryClient.setQueryData(["k"], "v");
+    await new Promise((resolve) => setTimeout(resolve, 0));
+
+    expect(waiting.state.isPaused).toBe(true);
+    const persisted = await storage.keyval.get<PersistedClient>(queryCacheKey("u1"));
+
+    expect(persisted?.clientState.mutations).toEqual([]);
+    first.resolve();
+  });
+
   it("does not restore a query whose initial request failed without data", async () => {
     const manager = createManager();
     const failedKey = [["groceries", "list"], { type: "query" }] as const;

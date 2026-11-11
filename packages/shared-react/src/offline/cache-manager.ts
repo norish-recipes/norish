@@ -139,7 +139,9 @@ export function createCacheManager({
       queryClient,
       persister,
       buster,
-      dehydrateOptions: { shouldDehydrateQuery },
+      // The Outbox is the durable write queue (ADR-0009); a restored paused mutation has no
+      // mutationFn and would block its scope.
+      dehydrateOptions: { shouldDehydrateQuery, shouldDehydrateMutation: () => false },
     });
   }
 
