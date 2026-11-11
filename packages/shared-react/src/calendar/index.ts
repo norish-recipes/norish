@@ -1,15 +1,4 @@
-export type {
-  CalendarData,
-  CalendarMutationsResult,
-  CalendarQueryResult,
-  CaldavConfigQueryResult,
-  CaldavMutationsResult,
-  CaldavSummaryQueryResult,
-  CaldavSyncStatusQueryResult,
-  FetchCalendarsInput,
-  SaveCaldavConfigInput,
-  TestConnectionInput,
-} from "./types";
+export type { CalendarData } from "./types";
 
 export { useCalendarMutations } from "./use-calendar-mutations";
 export { useCalendarQuery } from "./use-calendar-query";
