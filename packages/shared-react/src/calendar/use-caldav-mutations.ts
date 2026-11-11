@@ -1,17 +1,8 @@
 import { useMutation } from "@tanstack/react-query";
 
-import type {
-  CaldavMutationsResult,
-  FetchCalendarsInput,
-  SaveCaldavConfigInput,
-  TestConnectionInput,
-} from "./types";
+import type { CaldavMutationsResult, SaveCaldavConfigInput } from "./types";
 import { useTRPC } from "../trpc";
-import {
-  useCaldavConfigQuery,
-  useCaldavSummaryQuery,
-  useCaldavSyncStatusQuery,
-} from "./use-caldav-query";
+import { useCaldavCacheHelpers } from "./use-caldav-cache";
 
 export function resolveCaldavConfigVersion(
   inputVersion?: number,
@@ -22,17 +13,18 @@ export function resolveCaldavConfigVersion(
 
 export function useCaldavMutations(): CaldavMutationsResult {
   const trpc = useTRPC();
-  const { config, setConfig, invalidate: invalidateConfig } = useCaldavConfigQuery();
-  const { invalidate: invalidateSyncStatus } = useCaldavSyncStatusQuery();
-  const { invalidate: invalidateSummary } = useCaldavSummaryQuery();
-  const currentConfigVersion = config?.version;
+  const {
+    cachedConfigVersion,
+    setConfig,
+    invalidateConfig,
+    invalidateSyncStatus,
+    invalidateSummary,
+  } = useCaldavCacheHelpers();
 
   const saveConfigMutation = useMutation(trpc.caldav.saveConfig.mutationOptions());
   const { mutateAsync: mutateSaveConfigAsync } = saveConfigMutation;
   const testConnectionMutation = useMutation(trpc.caldav.testConnection.mutationOptions());
-  const { mutateAsync: mutateTestConnectionAsync } = testConnectionMutation;
   const fetchCalendarsMutation = useMutation(trpc.caldav.fetchCalendars.mutationOptions());
-  const { mutateAsync: mutateFetchCalendarsAsync } = fetchCalendarsMutation;
   const deleteConfigMutation = useMutation(trpc.caldav.deleteConfig.mutationOptions());
   const { mutateAsync: mutateDeleteConfigAsync } = deleteConfigMutation;
   const triggerSyncMutation = useMutation(trpc.caldav.triggerSync.mutationOptions());
@@ -44,7 +36,7 @@ export function useCaldavMutations(): CaldavMutationsResult {
     saveConfig: async (input: SaveCaldavConfigInput) => {
       const result = await mutateSaveConfigAsync({
         ...input,
-        version: resolveCaldavConfigVersion(input.version, currentConfigVersion),
+        version: resolveCaldavConfigVersion(input.version, cachedConfigVersion()),
       });
 
       setConfig(() => result);
@@ -53,19 +45,16 @@ export function useCaldavMutations(): CaldavMutationsResult {
 
       return result;
     },
-    testConnection: async (input: TestConnectionInput) => {
-      return mutateTestConnectionAsync(input);
-    },
-    fetchCalendars: async (input: FetchCalendarsInput) => {
-      return mutateFetchCalendarsAsync(input);
-    },
+    testConnection: testConnectionMutation.mutateAsync,
+    fetchCalendars: fetchCalendarsMutation.mutateAsync,
     deleteConfig: async (deleteEvents: boolean = false) => {
-      await mutateDeleteConfigAsync({ deleteEvents, version: currentConfigVersion });
+      await mutateDeleteConfigAsync({ deleteEvents, version: cachedConfigVersion() });
       setConfig(() => null);
       invalidateConfig();
       invalidateSyncStatus();
       invalidateSummary();
     },
+    // Drop the server's answer: callers only await the sync's start.
     triggerSync: async () => {
       await mutateTriggerSyncAsync();
     },

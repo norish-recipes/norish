@@ -9,18 +9,9 @@ import { useTRPC } from "../trpc";
 
 export function useCaldavConfigQuery(): CaldavConfigQueryResult {
   const trpc = useTRPC();
-  const queryClient = useQueryClient();
-  const queryKey = trpc.caldav.getConfig.queryKey();
   const { data, error, isLoading } = useQuery(trpc.caldav.getConfig.queryOptions());
 
-  return {
-    config: data ?? null,
-    error,
-    isLoading,
-    queryKey,
-    setConfig: (updater) => queryClient.setQueryData(queryKey, updater),
-    invalidate: () => queryClient.invalidateQueries({ queryKey }),
-  };
+  return { config: data ?? null, error, isLoading };
 }
 
 export function useCaldavPasswordQuery() {
@@ -41,8 +32,6 @@ export function useCaldavSyncStatusQuery(
   statusFilter?: "pending" | "synced" | "failed" | "removed"
 ): CaldavSyncStatusQueryResult {
   const trpc = useTRPC();
-  const queryClient = useQueryClient();
-  const queryKey = trpc.caldav.getSyncStatus.queryKey({ page, pageSize, statusFilter });
   const { data, error, isLoading } = useQuery(
     trpc.caldav.getSyncStatus.queryOptions({ page, pageSize, statusFilter })
   );
@@ -54,24 +43,17 @@ export function useCaldavSyncStatusQuery(
     pageSize: data?.pageSize ?? pageSize,
     error,
     isLoading,
-    queryKey,
-    setStatuses: (updater) => queryClient.setQueryData(queryKey, updater),
-    invalidate: () => queryClient.invalidateQueries({ queryKey }),
   };
 }
 
 export function useCaldavSummaryQuery(): CaldavSummaryQueryResult {
   const trpc = useTRPC();
-  const queryClient = useQueryClient();
-  const queryKey = trpc.caldav.getSummary.queryKey();
   const { data, error, isLoading } = useQuery(trpc.caldav.getSummary.queryOptions());
 
   return {
     summary: data ?? { pending: 0, synced: 0, failed: 0, removed: 0 },
     error,
     isLoading,
-    queryKey,
-    invalidate: () => queryClient.invalidateQueries({ queryKey }),
   };
 }
 

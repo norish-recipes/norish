@@ -86,7 +86,7 @@ const CalDavSettingsContext = createContext<CalDavSettingsContextType | null>(nu
 export function CalDavSettingsProvider({ children }: { children: ReactNode }) {
   const tErrors = useTranslations("common.errors");
   // Queries
-  const { config, isLoading: isLoadingConfig, setConfig: _setConfig } = useCaldavConfigQuery();
+  const { config, isLoading: isLoadingConfig } = useCaldavConfigQuery();
   const { password: storedPassword, isLoading: _isLoadingPassword } = useCaldavPasswordQuery();
   const [syncStatusPage, setSyncStatusPage] = useState<number>(FIRST_SYNC_STATUS_PAGE.page);
   const [syncStatusFilter, setSyncStatusFilter] = useState<CaldavSyncStatus | undefined>(

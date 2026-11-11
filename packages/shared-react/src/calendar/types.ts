@@ -74,9 +74,6 @@ export type CaldavConfigQueryResult = {
   config: UserCaldavConfigWithoutPasswordDto | null;
   error: unknown;
   isLoading: boolean;
-  queryKey: QueryKey;
-  setConfig: (updater: CaldavConfigUpdater) => void;
-  invalidate: () => void;
 };
 
 export type CaldavSyncStatusQueryResult = {
@@ -86,26 +83,21 @@ export type CaldavSyncStatusQueryResult = {
   pageSize: number;
   error: unknown;
   isLoading: boolean;
-  queryKey: QueryKey;
-  setStatuses: (
-    updater: (prev: CaldavSyncStatusPage | undefined) => CaldavSyncStatusPage | undefined
-  ) => void;
-  invalidate: () => void;
 };
 
 export type CaldavSummaryQueryResult = {
   summary: CaldavSyncStatusSummaryDto;
   error: unknown;
   isLoading: boolean;
-  queryKey: QueryKey;
-  invalidate: () => void;
 };
 
 export type CaldavCacheHelpers = {
+  cachedConfigVersion: () => number | undefined;
   setConfig: (updater: CaldavConfigUpdater) => void;
   setStatuses: (
     updater: (prev: CaldavSyncStatusPage | undefined) => CaldavSyncStatusPage | undefined
   ) => void;
+  invalidateConfig: () => void;
   invalidateSyncStatus: () => void;
   invalidateSummary: () => void;
 };

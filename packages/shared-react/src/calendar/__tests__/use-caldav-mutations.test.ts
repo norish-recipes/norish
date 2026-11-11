@@ -33,6 +33,7 @@ vi.mock("../../trpc", () => ({
         }),
       },
       getSyncStatus: {
+        pathKey: () => mockSyncStatusQueryKey,
         queryKey: (input: any) => [...mockSyncStatusQueryKey, input],
         queryOptions: (input: any) => ({
           queryKey: [...mockSyncStatusQueryKey, input],
