@@ -1,8 +1,8 @@
 import { useQuery } from "@tanstack/react-query";
 
 import type { PlannedItemFromQuery } from "@norish/shared/contracts";
+import type { CalendarRange } from "@norish/shared/lib/helpers";
 
-import type { CalendarRange } from "./calendar-cache-merge";
 import type { CalendarData, CalendarQueryResult } from "./types";
 import { useTRPC } from "../trpc";
 import { knownItemsInRange } from "./calendar-cache-merge";

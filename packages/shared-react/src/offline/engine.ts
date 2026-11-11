@@ -5,6 +5,7 @@ import type { QueryClient } from "@tanstack/react-query";
 import type { TRPCLink } from "@trpc/client";
 import type { TRPCOptionsProxy } from "@trpc/tanstack-react-query";
 
+import type { CalendarRange } from "@norish/shared/lib/helpers";
 import type { AppRouter } from "@norish/trpc/client";
 
 import type { CacheManager, RefetchOnMount } from "./cache-manager";
@@ -14,7 +15,7 @@ import type { ProbeOptions } from "./probe";
 import type { Recovery } from "./recovery";
 import type { OutboxMutationClient } from "./replay-client";
 import type { OfflineStorage } from "./storage";
-import type { CalendarRange, WarmedRecipe, WarmSet } from "./warm-set";
+import type { WarmedRecipe, WarmSet } from "./warm-set";
 import { createCacheManager } from "./cache-manager";
 import { createOutboxLink } from "./outbox-link";
 import { createOutboxStore } from "./outbox-store";

@@ -5,8 +5,7 @@ import type { PlannedItemFromQuery } from "@norish/shared/contracts";
 import type { CalendarRealtime } from "@norish/shared/contracts/realtime/calendar";
 import type { PayloadOf } from "@norish/shared/contracts/realtime/catalogue";
 import type { PlannedItemWithRecipePayload } from "@norish/shared/contracts/zod";
-
-export type CalendarRange = { startISO: string; endISO: string };
+import type { CalendarRange } from "@norish/shared/lib/helpers";
 
 export function isDateInRange(date: string, { startISO, endISO }: CalendarRange) {
   return date >= startISO && date <= endISO;

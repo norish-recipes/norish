@@ -2,9 +2,9 @@ import type { Query } from "@tanstack/react-query";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 
 import type { PlannedItemFromQuery, Slot } from "@norish/shared/contracts";
+import type { CalendarRange } from "@norish/shared/lib/helpers";
 import { createClientId } from "@norish/shared/lib/operation-helpers";
 
-import type { CalendarRange } from "./calendar-cache-merge";
 import type { CachedCalendarRange, CalendarMutationsResult } from "./types";
 import {
   invalidateUnlessPreserved,

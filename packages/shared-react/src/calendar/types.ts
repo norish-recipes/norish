@@ -12,8 +12,7 @@ import type {
 import type { CalendarRealtime } from "@norish/shared/contracts/realtime/calendar";
 import type { PayloadOf } from "@norish/shared/contracts/realtime/catalogue";
 import type { PlannedItemWithRecipePayload } from "@norish/shared/contracts/zod";
-
-import type { CalendarRange } from "./calendar-cache-merge";
+import type { CalendarRange } from "@norish/shared/lib/helpers";
 
 export type CalendarData = Record<string, PlannedItemFromQuery[]>;
 

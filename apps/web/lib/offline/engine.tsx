@@ -14,12 +14,7 @@ import { isOfflineForced, subscribeOfflineForced } from "@/lib/connectivity/forc
 import { createIdbStorage } from "@/lib/offline/idb-storage";
 import { warmPrimaryImages } from "@/lib/offline/warm-images";
 
-import type {
-  CalendarRange,
-  LockManagerLike,
-  OfflineEngine,
-  OfflineStorage,
-} from "@norish/shared-react/offline";
+import type { LockManagerLike, OfflineEngine, OfflineStorage } from "@norish/shared-react/offline";
 import {
   createOfflineEngine,
   createOfflineQueryClient,
@@ -103,7 +98,7 @@ const refetchOnMount = (query: Query) => {
     : ("always" as const);
 };
 
-function calendarRanges(): CalendarRange[] {
+function calendarRanges() {
   return (["desktop", "mobile"] as const).map((mode) => getInitialCalendarRange(mode));
 }
 

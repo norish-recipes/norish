@@ -4,9 +4,9 @@ import type { ReactNode } from "react";
 import { useState } from "react";
 import { createStore } from "zustand";
 
+import type { CalendarRange } from "@norish/shared/lib/helpers";
 import { dateKey, getInitialCalendarRange, parseDateKey } from "@norish/shared/lib/helpers";
 
-import type { CalendarRange } from "./calendar-cache-merge";
 import { createPageStoreContext } from "../page-store";
 import { isDateInRange } from "./calendar-cache-merge";
 

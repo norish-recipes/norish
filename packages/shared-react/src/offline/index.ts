@@ -6,7 +6,7 @@ export { isEncodedFormData } from "./input-codec";
 export type { Recovery } from "./recovery";
 export type { LockManagerLike } from "./leader";
 export { createOfflineQueryClient, QUERY_STALE_TIME_MS } from "./cache-manager";
-export type { CalendarRange, WarmedRecipe } from "./warm-set";
+export type { WarmedRecipe } from "./warm-set";
 export { LIVE_PROBE_INTERVAL_MS } from "./connectivity-machine";
 export { HEALTH_PROBE_PATH } from "./probe";
 export { REACHABILITY_DEADLINE_MS } from "./reachability";

@@ -3,6 +3,7 @@
 import type { QueryClient } from "@tanstack/react-query";
 import type { TRPCOptionsProxy } from "@trpc/tanstack-react-query";
 
+import type { CalendarRange } from "@norish/shared/lib/helpers";
 import type { AppRouter } from "@norish/trpc/client";
 import {
   DEFAULT_RECIPE_FILTERS,
@@ -29,7 +30,6 @@ const WARM_FULL_RECIPE_COUNT = 50;
 const WARM_COOKBOOK_LIST_LIMIT = 200;
 
 type WarmSetTRPC = TRPCOptionsProxy<AppRouter>;
-export type CalendarRange = { startISO: string; endISO: string };
 export type WarmedRecipe = { id: string; image?: string | null };
 
 export type WarmSetTopUpResult = "complete" | "partial" | "not-leader";

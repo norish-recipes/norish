@@ -618,11 +618,11 @@ export function getInitialDateRange(
   return { start: getWeekStart(addWeeks(now, -2)), end: getWeekEnd(addWeeks(now, 2)) };
 }
 
+/** The first and last day of a calendar read, as date keys. */
+export type CalendarRange = { startISO: string; endISO: string };
+
 /** {@link getInitialDateRange} as date keys, the shape a calendar read asks for. */
-export function getInitialCalendarRange(
-  mode: "desktop" | "mobile",
-  today?: string
-): { startISO: string; endISO: string } {
+export function getInitialCalendarRange(mode: "desktop" | "mobile", today?: string): CalendarRange {
   const { start, end } = getInitialDateRange(mode, today);
 
   return { startISO: dateKey(start), endISO: dateKey(end) };
