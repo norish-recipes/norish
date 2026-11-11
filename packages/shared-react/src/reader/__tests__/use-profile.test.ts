@@ -5,9 +5,9 @@ import type { UserSettingsDto } from "@norish/trpc";
 import { createTestQueryClient, createTestWrapper } from "@norish/shared-react/platform/testing";
 
 import { useProfileMutations, useProfileQuery } from "..";
-import { accountCalls, answerRead, keyOf, resetAccountFake } from "./test-utils";
+import { answerRead, keyOf, resetTRPCFake, trpcCalls } from "../../trpc/testing";
 
-vi.mock("../../trpc", async () => (await import("./test-utils")).mockAccountTRPC());
+vi.mock("../../trpc", async () => (await import("../../trpc/testing")).mockTRPC());
 
 const PROFILE: UserSettingsDto = {
   user: { id: "u1", email: "u1@example.com", name: "Ada", image: "/avatars/old.png", version: 3 },
@@ -28,7 +28,7 @@ describe("the Reader's profile", () => {
   let queryClient: ReturnType<typeof createTestQueryClient>;
 
   beforeEach(() => {
-    resetAccountFake();
+    resetTRPCFake();
     queryClient = createTestQueryClient();
   });
 
@@ -67,7 +67,7 @@ describe("the Reader's profile", () => {
       deleted = result.current.deleteAvatar();
     });
     await act(async () => {
-      accountCalls["user.deleteAvatar"]?.[0]?.deferred.resolve({
+      trpcCalls["user.deleteAvatar"]?.[0]?.deferred.resolve({
         success: true,
         user: { ...PROFILE.user, image: null, version: 4 },
       });

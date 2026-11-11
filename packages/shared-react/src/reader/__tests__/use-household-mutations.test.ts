@@ -15,51 +15,11 @@ import {
   createMockHouseholdUser,
   READER,
 } from "./test-utils";
+import { keyOf, resetTRPCFake, trpcCalls } from "../../trpc/testing";
 
-type Deferred = { resolve: (value: unknown) => void; reject: (error: unknown) => void };
+vi.mock("../../trpc", async () => (await import("../../trpc/testing")).mockTRPC());
 
-// Each call to a stubbed procedure waits until the test settles it.
-const calls: Record<string, { input: unknown; deferred: Deferred }[]> = {};
-
-function stubProcedure(name: string) {
-  return {
-    mutationOptions: (options: object = {}) => ({
-      ...options,
-      mutationFn: (input: unknown) =>
-        new Promise((resolve, reject) => {
-          (calls[name] ??= []).push({ input, deferred: { resolve, reject } });
-        }),
-    }),
-  };
-}
-
-vi.mock("../../trpc", () => ({
-  useTRPC: () => ({
-    households: {
-      get: {
-        queryKey: () => ["households", "get"],
-        queryOptions: () => ({
-          queryKey: ["households", "get"],
-          queryFn: () => new Promise(() => {}),
-        }),
-      },
-      create: stubProcedure("create"),
-      join: stubProcedure("join"),
-      leave: stubProcedure("leave"),
-      kick: stubProcedure("kick"),
-      regenerateCode: stubProcedure("regenerateCode"),
-      transferAdmin: stubProcedure("transferAdmin"),
-    },
-    // The Reader's profile never answers: the session's name stands.
-    user: {
-      get: {
-        queryOptions: () => ({ queryKey: ["user", "get"], queryFn: () => new Promise(() => {}) }),
-      },
-    },
-  }),
-}));
-
-const KEY = ["households", "get"];
+const KEY = keyOf("households.get");
 
 describe("useHouseholdMutations", () => {
   let queryClient: ReturnType<typeof createTestQueryClient>;
@@ -81,7 +41,7 @@ describe("useHouseholdMutations", () => {
     value?: unknown
   ) => {
     await act(async () => {
-      const call = calls[name]?.[index];
+      const call = trpcCalls[`households.${name}`]?.[index];
 
       if (!call) throw new Error(`no call ${index} to ${name}`);
       if (outcome === "resolve") call.deferred.resolve(value);
@@ -104,7 +64,7 @@ describe("useHouseholdMutations", () => {
     );
 
   beforeEach(() => {
-    for (const name of Object.keys(calls)) delete calls[name];
+    resetTRPCFake();
     queryClient = createTestQueryClient();
     adapter = fakePlatformAdapter("phone", READER);
   });
@@ -124,7 +84,7 @@ describe("useHouseholdMutations", () => {
       const result = render(createMockHouseholdData(null, "current-user"));
 
       await act(async () => result.current.createHousehold("  Home  "));
-      expect(calls.create?.[0]?.input).toEqual({ name: "Home" });
+      expect(trpcCalls["households.create"]?.[0]?.input).toEqual({ name: "Home" });
       await settle("create", 0, "resolve", { id: "h9" });
 
       expect(cached()?.household).toMatchObject({
@@ -155,7 +115,7 @@ describe("useHouseholdMutations", () => {
       const result = render(createMockHouseholdData(null, "current-user"));
 
       await act(async () => result.current.joinHousehold(" 123456 "));
-      expect(calls.join?.[0]?.input).toEqual({ code: "123456" });
+      expect(trpcCalls["households.join"]?.[0]?.input).toEqual({ code: "123456" });
       await settle("join", 0, "reject");
 
       await waitFor(() => expect(isInvalidated()).toBe(true));
@@ -167,7 +127,7 @@ describe("useHouseholdMutations", () => {
       const result = render(household());
 
       await act(async () => result.current.leaveHousehold("h1"));
-      expect(calls.leave?.[0]?.input).toEqual({ householdId: "h1", version: 4 });
+      expect(trpcCalls["households.leave"]?.[0]?.input).toEqual({ householdId: "h1", version: 4 });
       await settle("leave", 0, "resolve", { success: true });
 
       expect(cached()).toEqual({ household: null, currentUserId: "current-user" });
@@ -182,7 +142,7 @@ describe("useHouseholdMutations", () => {
         result.current.kickUser("h1", "a");
         result.current.kickUser("h1", "b");
       });
-      expect(calls.kick?.map((call) => call.input)).toEqual([
+      expect(trpcCalls["households.kick"]?.map((call) => call.input)).toEqual([
         { householdId: "h1", userId: "a", version: 2 },
         { householdId: "h1", userId: "b", version: 3 },
       ]);
@@ -210,7 +170,7 @@ describe("useHouseholdMutations", () => {
       const result = render(household());
 
       await act(async () => result.current.regenerateJoinCode("h1"));
-      expect(calls.regenerateCode?.[0]?.input).toEqual({ householdId: "h1", version: 6 });
+      expect(trpcCalls["households.regenerateCode"]?.[0]?.input).toEqual({ householdId: "h1", version: 6 });
       await settle("regenerateCode", 0, "reject");
 
       await waitFor(() => expect(isInvalidated()).toBe(true));
@@ -222,7 +182,7 @@ describe("useHouseholdMutations", () => {
       const result = render(household());
 
       await act(async () => result.current.transferAdmin("h1", "a"));
-      expect(calls.transferAdmin?.[0]?.input).toEqual({
+      expect(trpcCalls["households.transferAdmin"]?.[0]?.input).toEqual({
         householdId: "h1",
         newAdminId: "a",
         version: 6,

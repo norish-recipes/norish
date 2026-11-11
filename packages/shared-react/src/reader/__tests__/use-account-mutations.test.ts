@@ -16,9 +16,9 @@ import {
   useProfileMutations,
   useSiteAuthTokenMutations,
 } from "..";
-import { accountCalls, keyOf, resetAccountFake } from "./test-utils";
+import { keyOf, resetTRPCFake, trpcCalls } from "../../trpc/testing";
 
-vi.mock("../../trpc", async () => (await import("./test-utils")).mockAccountTRPC());
+vi.mock("../../trpc", async () => (await import("../../trpc/testing")).mockTRPC());
 
 const PROFILE: UserSettingsDto = {
   user: {
@@ -45,14 +45,14 @@ describe("the Account's writes", () => {
     renderHook(hook, { wrapper: createTestWrapper(queryClient, adapter) }).result;
   const profile = () => queryClient.getQueryData<UserSettingsDto>(USER_KEY);
   const call = (path: string, index = 0) => {
-    const sent = accountCalls[path]?.[index];
+    const sent = trpcCalls[path]?.[index];
 
     if (!sent) throw new Error(`no call ${index} to ${path}`);
 
     return sent;
   };
   const sent = (path: string, index: number) =>
-    waitFor(() => expect(accountCalls[path]?.[index]).toBeDefined());
+    waitFor(() => expect(trpcCalls[path]?.[index]).toBeDefined());
   const answer = async (path: string, value: unknown, index = 0) => {
     await sent(path, index);
     await act(async () => call(path, index).deferred.resolve(value));
@@ -63,7 +63,7 @@ describe("the Account's writes", () => {
   };
 
   beforeEach(() => {
-    resetAccountFake();
+    resetTRPCFake();
     queryClient = createTestQueryClient();
     adapter = fakePlatformAdapter();
     queryClient.setQueryData(USER_KEY, PROFILE);
@@ -136,7 +136,7 @@ describe("the Account's writes", () => {
 
       await act(() => result.current.updateName("   "));
 
-      expect(accountCalls["user.updateName"]).toBeUndefined();
+      expect(trpcCalls["user.updateName"]).toBeUndefined();
       expect(adapter.toast.show).toHaveBeenCalledWith({
         severity: "danger",
         title: "common.errors.nameCannotBeEmpty",
