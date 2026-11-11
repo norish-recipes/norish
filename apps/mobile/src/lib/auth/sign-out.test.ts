@@ -35,4 +35,15 @@ describe("clearSession", () => {
     expect(clearForSignOut).toHaveBeenCalledWith({ discardQueue: true });
     expect(order).toEqual(["closed", "cleared", "stored session reset"]);
   });
+
+  it.each([{}, { accountDeleted: true }])(
+    "still resets the stored session when clearing fails (%o)",
+    async (options) => {
+      clearForSignOut.mockRejectedValue(new Error("disk full"));
+
+      await clearSession(authClient, options);
+
+      expect(order.at(-1)).toBe("stored session reset");
+    }
+  );
 });

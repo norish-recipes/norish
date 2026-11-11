@@ -14,9 +14,13 @@ export async function clearSession(
 ): Promise<void> {
   await closeMobileTrpcConnections();
   // The read copy always goes; queued work stays dormant for this owner unless discarded.
-  await offlineEngine.clearForSignOut({
-    discardQueue: (options?.accountDeleted || options?.discardQueue) ?? false,
-  });
+  try {
+    await offlineEngine.clearForSignOut({
+      discardQueue: (options?.accountDeleted || options?.discardQueue) ?? false,
+    });
+  } catch (error) {
+    log.warn({ error }, "Failed to clear offline data during sign out");
+  }
 
   if (!options?.accountDeleted) {
     try {
