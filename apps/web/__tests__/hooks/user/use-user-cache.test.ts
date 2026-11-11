@@ -56,6 +56,30 @@ describe("useUserCacheHelpers", () => {
     expect(after.user.name).toBe("Updated Name");
   });
 
+  it("keeps a write over a read that began before it", async () => {
+    const initialData = createMockUserSettingsData();
+    let answer: (data: UserSettingsDto) => void = () => {};
+
+    queryClient.setQueryData(mockUserQueryKey, initialData);
+    const read = queryClient.fetchQuery({
+      queryKey: mockUserQueryKey,
+      queryFn: () => new Promise<UserSettingsDto>((resolve) => (answer = resolve)),
+    });
+
+    const { useUserCacheHelpers } = await import("@/hooks/user/use-user-cache");
+    const { result } = renderHook(() => useUserCacheHelpers(), {
+      wrapper: createTestWrapper(queryClient),
+    });
+
+    result.current.mergeUser({ name: "Updated Name" });
+    answer(initialData);
+    await read;
+
+    const after = queryClient.getQueryData(mockUserQueryKey) as typeof initialData;
+
+    expect(after.user.name).toBe("Updated Name");
+  });
+
   it("invalidates using canonical tRPC user query key", async () => {
     const invalidateSpy = vi.spyOn(queryClient, "invalidateQueries");
 

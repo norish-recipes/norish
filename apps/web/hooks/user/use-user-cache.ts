@@ -51,9 +51,14 @@ export function useUserCacheHelpers(): UserCacheHelpers {
     [queryClient, userQueryKey]
   );
 
+  // A read begun before this write would land over it, so it is cancelled; the cancel reverts to
+  // the read's start state, so the update applies to the data held before it.
   const setUserSettingsData = useCallback(
     (updater: (prev: UserSettingsDto | undefined) => UserSettingsDto | undefined) => {
-      queryClient.setQueryData<UserSettingsDto>(userQueryKey, updater);
+      const held = queryClient.getQueryData<UserSettingsDto>(userQueryKey);
+
+      if (held) void queryClient.cancelQueries({ queryKey: userQueryKey });
+      queryClient.setQueryData<UserSettingsDto>(userQueryKey, updater(held));
     },
     [queryClient, userQueryKey]
   );
