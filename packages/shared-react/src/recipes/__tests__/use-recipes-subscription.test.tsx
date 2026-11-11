@@ -44,7 +44,13 @@ const PENDING_KEY = [["recipes", "getPending"], { type: "query" }];
 const detailKey = (id: string) => [["recipes", "get"], { input: { id }, type: "query" }];
 
 function procedure(name: string) {
-  return { subscriptionOptions: (_input: undefined, opts: object) => ({ name, ...opts }) };
+  return {
+    subscriptionOptions: (_input: undefined, opts: object) => ({
+      name,
+      ...opts,
+      subscribe: () => ({ unsubscribe: () => undefined }),
+    }),
+  };
 }
 
 vi.mock("../../trpc", () => ({
@@ -107,7 +113,7 @@ type SubscriptionOptions = {
   name: string;
   onData: (data: unknown) => void;
   onError: (err: unknown) => void;
-  onStarted?: () => void;
+  subscribe: (observer: object) => unknown;
 };
 
 function subscription(name: string) {
@@ -118,6 +124,23 @@ function subscription(name: string) {
   if (!options) throw new Error(`No subscription named ${name}`);
 
   return options;
+}
+
+/** A fresh subscribe, then its Cursor Mark: what `useSubscription` and the server do. */
+function goLive(name: string) {
+  vi.useFakeTimers();
+  try {
+    act(() => {
+      subscription(name).subscribe({});
+      subscription(name).onData({ id: "1.abcdef01.1700000000000-0", data: CURSOR_MARK });
+    });
+    // The catch-up waits out a short window for marks arriving with it.
+    act(() => {
+      vi.runOnlyPendingTimers();
+    });
+  } finally {
+    vi.useRealTimers();
+  }
 }
 
 function emit(name: string, payload: unknown) {
@@ -276,40 +299,37 @@ describe("the recipe list events and recipe outcomes", () => {
     expect(list?.pages[0]?.recipes.map((r) => r.id)).toEqual(["recipe-2", "recipe-1"]);
   });
 
-  it.each([
-    ["onImported", "onFailed"],
-    ["onFailed", "onImported"],
-  ])(
-    "rereads the pending imports once, when %s and then %s are live, for an import that ended before",
-    (first, second) => {
-      act(() => subscription(first).onStarted?.());
-      expect(pendingRereads()).toBe(0);
-
-      act(() => subscription(second).onStarted?.());
+  it.each(["onImported", "onFailed"])(
+    "rereads the pending imports and the lists once %s is live, for an import that ended before",
+    (name) => {
+      goLive(name);
       expect(pendingRereads()).toBe(1);
+      expect(invalidateQueries).toHaveBeenCalledWith({ queryKey: [["recipes", "list"]] });
 
-      // A reconnect starts both again: one more reread, not two.
-      act(() => subscription(first).onStarted?.());
-      act(() => subscription(second).onStarted?.());
-      expect(pendingRereads()).toBe(2);
+      // A reconnect's mark resumes the same subscribe: nothing to reread.
+      vi.useFakeTimers();
+      act(() => subscription(name).onData({ id: "1.abcdef01.1700000000000-0", data: CURSOR_MARK }));
+      act(() => {
+        vi.runOnlyPendingTimers();
+      });
+      vi.useRealTimers();
+      expect(pendingRereads()).toBe(1);
     }
   );
 
   it.each(["onImported", "onFailed"])(
-    "rereads the pending imports and the lists when %s alone lags, once it is live again",
+    "rereads the pending imports and the lists when %s lags, once it is live again",
     (name) => {
-      act(() => subscription("onImported").onStarted?.());
-      act(() => subscription("onFailed").onStarted?.());
-      expect(pendingRereads()).toBe(1);
+      goLive("onImported");
+      goLive("onFailed");
+      expect(pendingRereads()).toBe(2);
 
       // The lag restarts this subscription alone, and catches up once its Cursor Mark arrives.
       act(() => subscription(name).onError(new TRPCClientError(REALTIME_LAGGED)));
-      act(() => subscription(name).onStarted?.());
-      expect(pendingRereads()).toBe(1);
-
-      act(() => subscription(name).onData({ id: "1.abcdef01.1700000000000-0", data: CURSOR_MARK }));
       expect(pendingRereads()).toBe(2);
-      expect(invalidateQueries).toHaveBeenCalledWith({ queryKey: [["recipes", "list"]] });
+
+      goLive(name);
+      expect(pendingRereads()).toBe(3);
     }
   );
 

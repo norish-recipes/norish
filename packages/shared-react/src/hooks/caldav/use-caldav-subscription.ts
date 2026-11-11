@@ -89,7 +89,7 @@ export function createUseCaldavSubscription({
               break;
           }
         },
-        onLag: () => {
+        onCatchUp: () => {
           invalidateSyncStatus();
           invalidateSummary();
         },

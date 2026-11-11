@@ -16,7 +16,7 @@ type Payload<E extends EventName<RatingsRealtime>> = PayloadOf<RatingsRealtime, 
 /**
  * Ratings land where they are shown: the average and the dashboard rows are
  * patched in place, by recipe id, and nothing is refetched for an event the
- * cache already reflects. Only a lag refetches. A rating the server refused is toasted.
+ * cache already reflects. Only a catch-up refetches. A rating the server refused is toasted.
  */
 export function useRatingsSubscription() {
   const { toast } = usePlatform();
@@ -26,14 +26,14 @@ export function useRatingsSubscription() {
   const recipesBaseKey = trpc.recipes.list.queryKey({});
   const recipesPath = useMemo(() => [recipesBaseKey[0]], [recipesBaseKey]);
 
-  const lagQueryKeys = [
+  const catchUpQueryKeys = [
     trpc.ratings.getAverage.queryKey(),
     trpc.ratings.getUserRating.queryKey(),
     recipesPath,
   ];
 
   useRealtimeSubscription<Payload<"ratingUpdated">>(trpc.ratings.onRatingUpdated, {
-    lagQueryKeys,
+    catchUpQueryKeys,
     onEvent: ({ recipeId, averageRating, ratingCount }) => {
       const averageQueryKey = trpc.ratings.getAverage.queryKey({ recipeId });
 
@@ -77,7 +77,7 @@ export function useRatingsSubscription() {
   });
 
   useRealtimeSubscription<Payload<"ratingFailed">>(trpc.ratings.onRatingFailed, {
-    lagQueryKeys,
+    catchUpQueryKeys,
     onEvent: ({ recipeId }) => {
       const userRatingQueryKey = trpc.ratings.getUserRating.queryKey({ recipeId });
 

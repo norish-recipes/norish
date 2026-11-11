@@ -19,11 +19,11 @@ export function useGroceriesSubscription() {
 
   useKeepsCurrent([listKey]);
 
-  // A lagged subscription refetches the list: the one domain these events touch.
-  const lag = { lagQueryKeys: [listKey] };
+  // A fresh or lagged subscription refetches the list: the one domain these events touch.
+  const catchUp = { catchUpQueryKeys: [listKey] };
 
   useRealtimeSubscription<Payload<"created">>(trpc.groceries.onCreated, {
-    ...lag,
+    ...catchUp,
     onEvent: (payload) => {
       queryClient.setQueryData<GroceriesData>(listKey, (prev) => {
         if (!prev) return prev;
@@ -53,7 +53,7 @@ export function useGroceriesSubscription() {
   });
 
   useRealtimeSubscription<Payload<"updated">>(trpc.groceries.onUpdated, {
-    ...lag,
+    ...catchUp,
     onEvent: (payload) => {
       queryClient.setQueryData<GroceriesData>(listKey, (prev) => {
         if (!prev) return prev;
@@ -64,7 +64,7 @@ export function useGroceriesSubscription() {
   });
 
   useRealtimeSubscription<Payload<"deleted">>(trpc.groceries.onDeleted, {
-    ...lag,
+    ...catchUp,
     onEvent: (payload) => {
       queryClient.setQueryData<GroceriesData>(listKey, (prev) => {
         if (!prev) return prev;
@@ -79,7 +79,7 @@ export function useGroceriesSubscription() {
   });
 
   useRealtimeSubscription<Payload<"recurringCreated">>(trpc.groceries.onRecurringCreated, {
-    ...lag,
+    ...catchUp,
     onEvent: (payload) => {
       queryClient.setQueryData<GroceriesData>(listKey, (prev) => {
         if (!prev) return prev;
@@ -100,7 +100,7 @@ export function useGroceriesSubscription() {
   });
 
   useRealtimeSubscription<Payload<"recurringUpdated">>(trpc.groceries.onRecurringUpdated, {
-    ...lag,
+    ...catchUp,
     onEvent: (payload) => {
       queryClient.setQueryData<GroceriesData>(listKey, (prev) => {
         if (!prev) return prev;
@@ -123,7 +123,7 @@ export function useGroceriesSubscription() {
   // the recurring is merely detached, the groceries live on and arrive via
   // "updated" with recurringGroceryId cleared.
   useRealtimeSubscription<Payload<"recurringDeleted">>(trpc.groceries.onRecurringDeleted, {
-    ...lag,
+    ...catchUp,
     onEvent: (payload) => {
       queryClient.setQueryData<GroceriesData>(listKey, (prev) => {
         if (!prev) return prev;
@@ -140,7 +140,7 @@ export function useGroceriesSubscription() {
 
   // The failing member alone hears about a validation failure (scope `user`).
   useRealtimeSubscription<Payload<"failed">>(trpc.groceries.onFailed, {
-    ...lag,
+    ...catchUp,
     onEvent: (payload) => {
       showError(payload.reason, "groceries-subscription:onFailed");
       void queryClient.invalidateQueries({ queryKey: listKey });
@@ -150,7 +150,7 @@ export function useGroceriesSubscription() {
   // A version-guarded write lost a race and was dropped. Silently refetch so
   // any optimistic state converges to the DB — no error toast.
   useRealtimeSubscription<Payload<"stale">>(trpc.groceries.onStale, {
-    ...lag,
+    ...catchUp,
     onEvent: () => {
       void queryClient.invalidateQueries({ queryKey: listKey });
     },

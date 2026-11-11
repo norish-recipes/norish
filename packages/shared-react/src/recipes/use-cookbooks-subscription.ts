@@ -21,17 +21,17 @@ export function useCookbooksSubscription() {
   const { setAllCookbooksData, invalidate, invalidateCookbook, invalidateMembership } =
     useCookbooksCacheHelpers();
 
-  const lag = { onLag: invalidate };
+  const catchUp = { onCatchUp: invalidate };
 
   useRealtimeSubscription<Payload<"created">>(trpc.cookbooks.onCreated, {
-    ...lag,
+    ...catchUp,
     // A new cookbook belongs wherever the reader's sort puts it, which is
     // not something a client can decide — refetch rather than guess.
     onEvent: () => invalidate(),
   });
 
   useRealtimeSubscription<Payload<"updated">>(trpc.cookbooks.onUpdated, {
-    ...lag,
+    ...catchUp,
     onEvent: ({ cookbook }) => {
       setAllCookbooksData((prev) => {
         if (!prev) return prev;
@@ -51,7 +51,7 @@ export function useCookbooksSubscription() {
   });
 
   useRealtimeSubscription<Payload<"membershipChanged">>(trpc.cookbooks.onMembershipChanged, {
-    ...lag,
+    ...catchUp,
     onEvent: ({ recipeIds, cookbookId }) => {
       // The member count and the derived cover are computed per reader on
       // the server, so a membership change is a refetch rather than a
@@ -63,7 +63,7 @@ export function useCookbooksSubscription() {
   });
 
   useRealtimeSubscription<Payload<"deleted">>(trpc.cookbooks.onDeleted, {
-    ...lag,
+    ...catchUp,
     onEvent: ({ id }) => {
       setAllCookbooksData((prev) => {
         if (!prev) return prev;

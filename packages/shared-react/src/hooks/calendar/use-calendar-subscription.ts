@@ -31,8 +31,8 @@ export function createUseCalendarSubscription({
       setCalendarData((prev) => updater(prev ?? []));
     };
 
-    // A lagged subscription refetches the range this screen shows.
-    const lag = { onLag: invalidate };
+    // A fresh or lagged subscription refetches the range this screen shows.
+    const catchUp = { onCatchUp: invalidate };
 
     // A created, edited or deleted item converges every cached range, not only
     // the one this screen shows: the calendar page's own range sits in the
@@ -41,21 +41,21 @@ export function createUseCalendarSubscription({
     // reaching several mounted ranges — or the actor's own mutation result
     // arriving first — is a no-op the second time.
     useRealtimeSubscription<Payload<"itemCreated">>(trpc.calendar.onItemCreated, {
-      ...lag,
+      ...catchUp,
       onEvent: (payload) => {
         upsertItemAcrossRanges(payload.item);
       },
     });
 
     useRealtimeSubscription<Payload<"itemDeleted">>(trpc.calendar.onItemDeleted, {
-      ...lag,
+      ...catchUp,
       onEvent: (payload) => {
         removeItemAcrossRanges(payload.itemId);
       },
     });
 
     useRealtimeSubscription<Payload<"itemMoved">>(trpc.calendar.onItemMoved, {
-      ...lag,
+      ...catchUp,
       onEvent: (payload) => {
         setItems((prev) => {
           const itemIsInRange = isDateInRange(payload.item.date, startISO, endISO);
@@ -100,14 +100,14 @@ export function createUseCalendarSubscription({
     });
 
     useRealtimeSubscription<Payload<"itemUpdated">>(trpc.calendar.onItemUpdated, {
-      ...lag,
+      ...catchUp,
       onEvent: (payload) => {
         upsertItemAcrossRanges(payload.item);
       },
     });
 
     useRealtimeSubscription<Payload<"failed">>(trpc.calendar.onFailed, {
-      ...lag,
+      ...catchUp,
       onEvent: () => {
         invalidate();
       },
@@ -116,7 +116,7 @@ export function createUseCalendarSubscription({
     // A planned recipe shows its recipe's name and image in every cached range; an
     // enrichment changes neither.
     useRealtimeSubscription<PayloadOf<RecipesRealtime, "updated">>(trpc.recipes.onUpdated, {
-      ...lag,
+      ...catchUp,
       onEvent: ({ source }) => {
         if (source === "enrichment") return;
         void queryClient.invalidateQueries({ queryKey: trpc.calendar.listItems.queryKey() });

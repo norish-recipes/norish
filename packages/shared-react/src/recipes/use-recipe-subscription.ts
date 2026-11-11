@@ -28,7 +28,7 @@ export function useRecipeSubscription(
 
   useKeepsCurrent(recipeId ? [queryKey] : []);
 
-  const common = { enabled: !!recipeId, onLag: invalidate };
+  const common = { enabled: !!recipeId, onCatchUp: invalidate };
 
   useRealtimeSubscription<Payload<"updated">>(trpc.recipes.onUpdated, {
     ...common,

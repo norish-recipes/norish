@@ -25,7 +25,7 @@ export function useConfigSubscription() {
 
   useKeepsCurrent(edited);
   useRealtimeSubscription<PayloadOf<ConfigRealtime, "changed">>(trpc.config.onChanged, {
-    lagQueryKeys: edited,
+    catchUpQueryKeys: edited,
     onEvent: () => {
       for (const queryKey of edited) void queryClient.invalidateQueries({ queryKey });
     },

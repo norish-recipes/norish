@@ -14,12 +14,6 @@ type CreateUseArchiveSubscriptionOptions = CreateArchiveHooksOptions & {
   useArchiveImportCacheHelpers: () => ArchiveImportCacheHelpers;
 };
 
-// An import's progress is not a query: a lag has nothing to refetch, and
-// the next progress event carries the whole count again.
-const lag = {
-  onLag: () => log.warn("Archive import subscription lagged; awaiting next event"),
-};
-
 /**
  * An archive import's two halves: its progress, for the screen that draws the bar, and its
  * outcome, applied and toasted once wherever the reader is while it runs on.
@@ -35,7 +29,6 @@ export function createUseArchiveSubscriptions({
     const { setImportState } = useArchiveImportCacheHelpers();
 
     useRealtimeSubscription<Payload<"archiveProgress">>(trpc.archive.onArchiveProgress, {
-      ...lag,
       onEvent: (payload) => {
         log.debug({ payload }, "Progress event received");
         setImportState((prev) => {
@@ -71,7 +64,6 @@ export function createUseArchiveSubscriptions({
     const { toast } = usePlatform();
 
     useRealtimeSubscription<Payload<"archiveCompleted">>(trpc.archive.onArchiveCompleted, {
-      ...lag,
       onEvent: (payload) => {
         log.debug({ payload }, "Completion event received");
         setImportState((prev) => {

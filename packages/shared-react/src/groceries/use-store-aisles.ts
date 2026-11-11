@@ -135,7 +135,7 @@ export function useStoreAislesSubscription() {
       // The foods that are a kind of the one filed follow it, as the server says.
       void queryClient.invalidateQueries({ queryKey });
     },
-    lagQueryKeys: [queryKey],
+    catchUpQueryKeys: [queryKey],
   });
 
   // The server answers where each food on the list is filed, a kind of a

@@ -82,7 +82,7 @@ export function usePermissionsSubscription() {
       onEvent: () => {
         for (const key of affectedKeys) void queryClient.invalidateQueries({ queryKey: key });
       },
-      lagQueryKeys: affectedKeys,
+      catchUpQueryKeys: affectedKeys,
     }
   );
 }

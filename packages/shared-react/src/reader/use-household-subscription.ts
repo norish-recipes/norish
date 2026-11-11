@@ -25,12 +25,12 @@ export function useHouseholdSubscription() {
   } = useHouseholdCacheHelpers();
   const { toast, showError } = usePlatform();
 
-  // A lagged subscription refetches the household: the one thing these events describe.
-  const lag = { onLag: invalidate };
+  // A fresh or lagged subscription refetches the household: the one thing these events describe.
+  const catchUp = { onCatchUp: invalidate };
 
   // onCreated user-scoped: when current user creates or joins a household
   useRealtimeSubscription<Payload<"created">>(trpc.households.onCreated, {
-    ...lag,
+    ...catchUp,
     onEvent: (payload) => {
       setHouseholdData((prev) => ({
         household: payload.household,
@@ -41,7 +41,7 @@ export function useHouseholdSubscription() {
 
   // onKicked user-scoped: when current user is kicked
   useRealtimeSubscription<Payload<"userKicked">>(trpc.households.onKicked, {
-    ...lag,
+    ...catchUp,
     onEvent: () => {
       toast.show({
         severity: "warning",
@@ -59,7 +59,7 @@ export function useHouseholdSubscription() {
 
   // onFailed user-scoped: error notifications
   useRealtimeSubscription<Payload<"failed">>(trpc.households.onFailed, {
-    ...lag,
+    ...catchUp,
     onEvent: (payload) => {
       showError(payload.reason, "household-subscription:onFailed");
       invalidate();
@@ -68,7 +68,7 @@ export function useHouseholdSubscription() {
 
   // onUserJoined household-scoped: when another user joins
   useRealtimeSubscription<Payload<"userJoined">>(trpc.households.onUserJoined, {
-    ...lag,
+    ...catchUp,
     onEvent: (payload) => {
       setHouseholdData((prev) => {
         if (!prev?.household) return prev;
@@ -113,19 +113,19 @@ export function useHouseholdSubscription() {
 
   // onUserLeft user-scoped: when another user leaves
   useRealtimeSubscription<Payload<"userLeft">>(trpc.households.onUserLeft, {
-    ...lag,
+    ...catchUp,
     onEvent: removeMember,
   });
 
   // onMemberRemoved household-scoped: when a member is kicked (for remaining members)
   useRealtimeSubscription<Payload<"memberRemoved">>(trpc.households.onMemberRemoved, {
-    ...lag,
+    ...catchUp,
     onEvent: removeMember,
   });
 
   // onAdminTransferred household-scoped: when admin is transferred
   useRealtimeSubscription<Payload<"adminTransferred">>(trpc.households.onAdminTransferred, {
-    ...lag,
+    ...catchUp,
     onEvent: (payload) => {
       setHouseholdData((prev) => {
         if (!prev?.household) return prev;
@@ -150,7 +150,7 @@ export function useHouseholdSubscription() {
 
   // onJoinCodeRegenerated household-scoped: when join code is regenerated
   useRealtimeSubscription<Payload<"joinCodeRegenerated">>(trpc.households.onJoinCodeRegenerated, {
-    ...lag,
+    ...catchUp,
     onEvent: (payload) => {
       setHouseholdData((prev) => {
         if (!prev?.household) return prev;
@@ -182,7 +182,7 @@ export function useHouseholdSubscription() {
   });
 
   useRealtimeSubscription<Payload<"allergiesUpdated">>(trpc.households.onAllergiesUpdated, {
-    ...lag,
+    ...catchUp,
     onEvent: (payload) => {
       setHouseholdData((prev) => {
         if (!prev?.household) return prev;
@@ -205,7 +205,7 @@ export function useHouseholdSubscription() {
   // (ADR-0021). No echo suppression — the actor's other tabs converge
   // through this too.
   useRealtimeSubscription<Payload<"memberProfileUpdated">>(trpc.households.onMemberProfileUpdated, {
-    ...lag,
+    ...catchUp,
     onEvent: (payload) => {
       if (payload.userId === currentUserId) {
         invalidateUserSettings();

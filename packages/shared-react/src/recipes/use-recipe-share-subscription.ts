@@ -51,7 +51,7 @@ export function useRecipeShareSubscription(
   useRealtimeSubscription<PayloadOf<RecipesRealtime, "shareEvent">>(trpc.recipes.onShareEvent, {
     enabled: !!recipeId,
     onEvent: (payload) => handleEvent(payload.share),
-    onLag: () => {
+    onCatchUp: () => {
       invalidateMyRecipeShares();
       invalidateAdminRecipeShares();
       if (recipeId) invalidateRecipeShares(recipeId);

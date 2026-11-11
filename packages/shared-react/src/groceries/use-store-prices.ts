@@ -139,7 +139,7 @@ export function useStorePricesSubscription() {
     [queryClient, queryKey]
   );
 
-  const lagQueryKeys = [queryKey, linkQueriesKey];
+  const catchUpQueryKeys = [queryKey, linkQueriesKey];
 
   useRealtimeSubscription<Payload<"productUpdated">>(trpc.stores.onProductUpdated, {
     onEvent: ({ product }) => {
@@ -147,7 +147,7 @@ export function useStorePricesSubscription() {
         prev.map((link) => (link.product?.id === product.id ? { ...link, product } : link))
       );
     },
-    lagQueryKeys,
+    catchUpQueryKeys,
   });
 
   useRealtimeSubscription<Payload<"linkUpdated">>(trpc.stores.onLinkUpdated, {
@@ -164,6 +164,6 @@ export function useStorePricesSubscription() {
       // its link on its own; the answer that just landed is its answer too.
       void queryClient.invalidateQueries({ queryKey: linkQueriesKey });
     },
-    lagQueryKeys,
+    catchUpQueryKeys,
   });
 }

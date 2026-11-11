@@ -4,6 +4,7 @@ import { createRoot } from "react-dom/client";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 
 import type { RecipeEnrichmentStatusDto } from "@norish/shared/lib/recipe-enrichment";
+import { CURSOR_MARK } from "@norish/shared/contracts/realtime/envelope";
 
 import { trackedEvent } from "../../../__tests__/realtime/tracked-event";
 import { useRecipeEnrichment, useRecipeEnrichmentSubscription } from "../use-recipe-enrichment";
@@ -45,7 +46,10 @@ vi.mock("../../trpc", () => ({
         queryOptions: () => ({ queryKey: STATUS_KEY, queryFn: statusFetch }),
       },
       onEnrichment: {
-        subscriptionOptions: (_input: undefined, options: unknown) => options,
+        subscriptionOptions: (_input: undefined, options: object) => ({
+          ...options,
+          subscribe: () => ({ unsubscribe: () => undefined }),
+        }),
       },
       requestEnrichment: {
         mutationOptions: (options: { onError?: (e: unknown, v: unknown) => void }) => ({
@@ -156,19 +160,23 @@ function statusWith(state: "processing" | "succeeded"): RecipeEnrichmentStatusDt
 }
 
 describe("useRecipeEnrichment", () => {
-  it("reads the status again once its subscription has started", async () => {
+  it("reads the status again once its subscription is live", async () => {
     // A run that finished between the first read and the subscription
-    // starting sends its event to nobody; only a second read can see it.
+    // going live sends its event to nobody; only a second read can see it.
     statusFetch
       .mockResolvedValueOnce(statusWith("processing"))
       .mockResolvedValueOnce(statusWith("succeeded"));
     render();
     await vi.waitFor(() => expect(cachedState("auto-tagging")).toBe("processing"));
 
-    const options = useSubscriptionMock.mock.calls.at(-1)?.[0] as { onStarted?: () => void };
+    const options = useSubscriptionMock.mock.calls.at(-1)?.[0] as {
+      subscribe: (observer: object) => unknown;
+      onData: (data: unknown) => void;
+    };
 
     await act(async () => {
-      options.onStarted?.();
+      options.subscribe({});
+      options.onData({ id: "1.abcdef01.1700000000000-0", data: CURSOR_MARK });
     });
 
     await vi.waitFor(() => expect(cachedState("auto-tagging")).toBe("succeeded"));

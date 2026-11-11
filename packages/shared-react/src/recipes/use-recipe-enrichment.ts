@@ -326,12 +326,8 @@ export function useRecipeEnrichmentSubscription(
 
   useRealtimeSubscription<PayloadOf<RecipesRealtime, "enrichment">>(trpc.recipes.onEnrichment, {
     enabled: !!recipeId,
-    // The status query is the recovery read: a lagged subscription refetches it.
-    lagQueryKeys: [statusKey],
-    // A fresh subscription carries no cursor, so a transition between the
-    // first read and the server taking the subscription reaches nobody: a run
-    // that finished then would show as in progress until the next refocus.
-    onStarted: () => void queryClient.invalidateQueries({ queryKey: statusKey }),
+    // The status query is the recovery read: a fresh or lagged subscription refetches it.
+    catchUpQueryKeys: [statusKey],
     onEvent: (payload) => {
       // The catalogue declares this payload with `z.custom`, which validates
       // nothing at runtime yet, so the shape is still checked here.

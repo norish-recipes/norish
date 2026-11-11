@@ -7,19 +7,20 @@
  * subscription is skipped, and `lastEventId` is resent by tRPC's WebSocket
  * link on reconnect without this hook knowing.
  *
- * One reaction to a subscription that fell out of order (`REALTIME_LAGGED`):
- * start a fresh subscription with no cursor, and refetch the domain —
- * `onLag`, or invalidate `lagQueryKeys` — once its Cursor Mark says it is
- * live. The server registers the subscription before it sends that mark, so
- * every event from then on reaches the subscription and every one before it
- * is in the refetch; refetching at the lag instead left a gap between the
- * two, in which an event reached neither. Anything that is neither a Cursor
- * Mark nor an envelope is a programming error, not a case to tolerate.
+ * Every fresh subscription (a mount, `enabled` turning true, the reset after
+ * `REALTIME_LAGGED`) carries no cursor, so a change made before the server
+ * registered it reaches neither the subscription nor a read taken earlier.
+ * Its first Cursor Mark closes that gap: the server registers the listener
+ * before it sends the mark, so the hook refetches the domain then (`onCatchUp`,
+ * or invalidate `catchUpQueryKeys`) and every event after it reaches the
+ * subscription. A reconnect resends the cursor on the same subscribe and
+ * Resume replays what it missed, so its mark refetches nothing. Anything that
+ * is neither a Cursor Mark nor an envelope is a programming error.
  */
 
 import type { QueryKey } from "@tanstack/react-query";
 import { useState } from "react";
-import { useQueryClient } from "@tanstack/react-query";
+import { hashKey, useQueryClient } from "@tanstack/react-query";
 import { TRPCClientError } from "@trpc/client";
 import { useSubscription } from "@trpc/tanstack-react-query";
 
@@ -44,7 +45,6 @@ export interface RealtimeSubscriptionProcedure {
     input: undefined,
     opts: {
       enabled?: boolean;
-      onStarted?: () => void;
       onData: (data: unknown) => void;
       onError: (err: unknown) => void;
     }
@@ -54,11 +54,9 @@ export interface RealtimeSubscriptionProcedure {
 export interface RealtimeSubscriptionHandlers<P> {
   /** Every event of the procedure, validated server-side against its catalogue schema. */
   onEvent: (payload: P, meta: RealtimeEventMeta) => void;
-  /** Invalidated when the subscription lags, unless `onLag` takes over. */
-  lagQueryKeys?: QueryKey[];
-  onLag?: () => void;
-  /** Once the server has the subscription: events from here on reach it. */
-  onStarted?: () => void;
+  /** Invalidated once each fresh subscription is live, unless `onCatchUp` takes over. */
+  catchUpQueryKeys?: QueryKey[];
+  onCatchUp?: () => void;
   enabled?: boolean;
 }
 
@@ -81,7 +79,7 @@ function isTrackedItem(data: unknown): data is TrackedItem {
 }
 
 /**
- * A lag the fresh subscription has yet to catch up on: armed by the lag, taken by its Cursor Mark.
+ * A fresh subscription's catch-up: armed by its subscribe, taken by its first Cursor Mark.
  * Not a ref: the React Compiler skips a hook that reads one in callbacks `subscriptionOptions` gets.
  */
 function createCatchUpLatch() {
@@ -101,6 +99,25 @@ function createCatchUpLatch() {
   };
 }
 
+/**
+ * Catch-ups due, by what they refetch: subscriptions that go live together share one refetch.
+ * ponytail: a fixed window; marks spread wider refetch once per window, never before their mark.
+ */
+const dueCatchUps = new Map<unknown, () => void>();
+const CATCH_UP_WINDOW_MS = 50;
+
+function runDueCatchUps(): void {
+  const due = [...dueCatchUps.values()];
+
+  dueCatchUps.clear();
+  for (const run of due) run();
+}
+
+function scheduleCatchUp(key: unknown, run: () => void): void {
+  if (dueCatchUps.size === 0) setTimeout(runDueCatchUps, CATCH_UP_WINDOW_MS);
+  dueCatchUps.set(key, run);
+}
+
 export function useRealtimeSubscription<P>(
   procedure: RealtimeSubscriptionProcedure,
   handlers: RealtimeSubscriptionHandlers<P>
@@ -109,14 +126,16 @@ export function useRealtimeSubscription<P>(
   const [catchUpLatch] = useState(createCatchUpLatch);
 
   const catchUp = () => {
-    if (handlers.onLag) {
-      handlers.onLag();
+    const { onCatchUp } = handlers;
+
+    if (onCatchUp) {
+      scheduleCatchUp(onCatchUp, onCatchUp);
 
       return;
     }
 
-    for (const queryKey of handlers.lagQueryKeys ?? []) {
-      void queryClient.invalidateQueries({ queryKey });
+    for (const queryKey of handlers.catchUpQueryKeys ?? []) {
+      scheduleCatchUp(hashKey(queryKey), () => void queryClient.invalidateQueries({ queryKey }));
     }
   };
 
@@ -124,7 +143,6 @@ export function useRealtimeSubscription<P>(
   // undefined disables the subscription. Only a stated choice is passed on.
   const options = procedure.subscriptionOptions(undefined, {
     ...(handlers.enabled === undefined ? {} : { enabled: handlers.enabled }),
-    ...(handlers.onStarted ? { onStarted: handlers.onStarted } : {}),
     onData: (data) => {
       if (!isTrackedItem(data)) {
         throw new TypeError("Expected a tracked realtime item");
@@ -133,7 +151,7 @@ export function useRealtimeSubscription<P>(
       const item = data.data;
 
       // A Cursor Mark carries no event: the transport tracks it, handlers never
-      // see it. It does say the subscription is live, which a lag waits for.
+      // see it. It does say the subscription is live, which a catch-up waits for.
       if (isCursorMark(item)) {
         if (catchUpLatch.take()) catchUp();
 
@@ -147,14 +165,22 @@ export function useRealtimeSubscription<P>(
       if (!isRealtimeLagged(err)) return;
 
       // A fresh subscription, no cursor; the refetch follows its Cursor Mark.
-      catchUpLatch.arm();
       subscription.reset();
     },
   });
 
   // The one cast of the idiom: `subscriptionOptions` is typed by the router's
   // output, which the structural procedure type above deliberately leaves open.
-  const subscription = useSubscription(options as Parameters<typeof useSubscription>[0]);
+  const tracked = options as Parameters<typeof useSubscription>[0];
+  const subscription = useSubscription({
+    ...tracked,
+    // A reconnect resends on the same subscribe; only a new subscribe is fresh.
+    subscribe: (observer) => {
+      catchUpLatch.arm();
+
+      return tracked.subscribe(observer);
+    },
+  });
 
   return subscription;
 }
