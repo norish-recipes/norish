@@ -11,6 +11,11 @@ const useCalendarQueryMock = vi.fn();
 const setVisibilityMock = vi.fn();
 
 let visibilityMock: TodaySectionVisibility = "always";
+let readerTodayMock: string | undefined;
+
+vi.mock("@/components/reader-today", () => ({
+  useReaderToday: () => readerTodayMock ?? dateKey(new Date()),
+}));
 
 vi.mock("next/navigation", () => ({
   useRouter: () => ({
@@ -104,6 +109,7 @@ describe("TodaysMeals", () => {
     pushMock.mockReset();
     useCalendarQueryMock.mockReset();
     visibilityMock = "always";
+    readerTodayMock = undefined;
   });
 
   it("renders all meal slots and today's planned recipe", () => {
@@ -128,6 +134,22 @@ describe("TodaysMeals", () => {
 
     // The week the dashboard layout seeds, so hydration reads the seeded copy.
     expect(useCalendarQueryMock).toHaveBeenCalledWith(getInitialCalendarRange("desktop", todayKey));
+  });
+
+  it("keeps the week it mounted with when the reader's today moves into the next week", () => {
+    // A Sunday, then the Monday after: the server's week, then the browser's.
+    readerTodayMock = "2026-11-15";
+    useCalendarQueryMock.mockReturnValue({ calendarData: {}, isLoading: false });
+
+    const { rerender } = render(<TodaysMeals />);
+
+    readerTodayMock = "2026-11-16";
+    rerender(<TodaysMeals />);
+
+    expect(useCalendarQueryMock).toHaveBeenLastCalledWith({
+      startISO: "2026-11-09",
+      endISO: "2026-11-15",
+    });
   });
 
   it("opens planned recipes directly and empty slots in mini recipes", () => {
