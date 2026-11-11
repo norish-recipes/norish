@@ -436,26 +436,27 @@ describe("useCalendarMutations", () => {
 
     it("an answer then its echo leaves the cache as either alone would", async () => {
       const { answer, echo } = setup();
+      let answerMove!: (result: object) => void;
 
-      mockMoveItemMutate.mockResolvedValue({ success: true, moved: true, item: answer });
+      mockMoveItemMutate.mockReturnValue(new Promise((resolve) => (answerMove = resolve)));
       const { result } = renderHook(() => useCalendarMutations(), {
         wrapper: createTestWrapper(queryClient),
       });
 
       act(() => result.current.moveItem("a", "2025-01-15", "Lunch", 0));
-      await waitFor(() => expect(queryClient.isMutating()).toBe(0));
-      const answered = queryClient.getQueryData<PlannedItemFromQuery[]>(getQueryKey())!;
-      const echoOnly = applyMoveEchoInRange(
-        answered.map((item) => (item.id === "a" ? { ...item, version: 1 } : item)),
-        echo,
-        range
-      );
+      await waitFor(() => expect(mockMoveItemMutate).toHaveBeenCalled());
+      const optimistic = queryClient.getQueryData<PlannedItemFromQuery[]>(getQueryKey())!;
+      const echoOnly = applyMoveEchoInRange(optimistic, echo, range);
 
-      expect(answered.find((item) => item.id === "a")?.version).toBe(2);
-      expect(withoutTimes(applyMoveEchoInRange(answered, echo, range))).toEqual(
-        withoutTimes(answered)
-      );
-      expect(withoutTimes(echoOnly)).toEqual(withoutTimes(answered));
+      await act(async () => answerMove({ success: true, moved: true, item: answer }));
+      await waitFor(() => expect(queryClient.isMutating()).toBe(0));
+      const answerOnly = queryClient.getQueryData<PlannedItemFromQuery[]>(getQueryKey())!;
+      const answerThenEcho = applyMoveEchoInRange(answerOnly, echo, range);
+
+      expect(optimistic.find((item) => item.id === "a")?.version).toBe(1);
+      expect(answerOnly.find((item) => item.id === "a")?.version).toBe(2);
+      expect(withoutTimes(echoOnly)).toEqual(withoutTimes(answerOnly));
+      expect(withoutTimes(answerThenEcho)).toEqual(withoutTimes(answerOnly));
     });
   });
 });
