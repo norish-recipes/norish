@@ -16,6 +16,7 @@ import {
 import { useTranslations } from "next-intl";
 
 import type { UserCaldavConfigWithoutPasswordDto } from "@norish/shared/contracts";
+import { caldavMealTimeRange } from "@norish/shared/contracts";
 
 import type { ConnectionTarget } from "./use-connection-test";
 import { UntrustedCertificateNote } from "./untrusted-certificate-note";
@@ -33,8 +34,6 @@ const MEAL_TIME_DEFAULTS: Record<MealTimeField, string> = {
   dinnerTime: "18:00-19:00",
   snackTime: "15:00-16:00",
 };
-
-const TIME_RANGE = /^\d{2}:\d{2}-\d{2}:\d{2}$/;
 
 /** The CalDAV form's state, starting from the stored config, or empty for a first setup. */
 export function useCaldavForm(config: UserCaldavConfigWithoutPasswordDto | null) {
@@ -61,7 +60,7 @@ export function useCaldavForm(config: UserCaldavConfigWithoutPasswordDto | null)
     mealTimes,
     setMealTime: (field: MealTimeField, value: string) =>
       setMealTimes((prev) => ({ ...prev, [field]: value })),
-    timesValid: MEAL_TIME_FIELDS.every((field) => TIME_RANGE.test(mealTimes[field])),
+    timesValid: MEAL_TIME_FIELDS.every((field) => caldavMealTimeRange.test(mealTimes[field])),
     connection,
     /** The test target, with the password to test with. */
     target: (testPassword: string): ConnectionTarget => ({
@@ -185,7 +184,7 @@ export function CaldavFormFields({
               <p className="text-muted text-xs">{tConfig("timezone", { timezone })}</p>
 
               {MEAL_TIME_FIELDS.map((field) => {
-                const invalid = !TIME_RANGE.test(form.mealTimes[field]);
+                const invalid = !caldavMealTimeRange.test(form.mealTimes[field]);
 
                 return (
                   <TextField

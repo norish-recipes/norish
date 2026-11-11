@@ -3,6 +3,8 @@ import { z } from "zod";
 
 import { userCaldavConfig } from "@norish/db-schema/schema";
 
+import { caldavMealTimeRange } from "../constants/caldav";
+
 export const UserCaldavConfigSelectSchema = createSelectSchema(userCaldavConfig);
 
 export const UserCaldavConfigInsertSchema = createInsertSchema(userCaldavConfig).omit({
@@ -48,10 +50,10 @@ export const SaveCaldavConfigInputSchema = z.object({
   /** PEM of a certificate the user chose to trust for this server; null trusts only the usual ones. */
   trustedCertificate: z.string().max(16_384).nullable().optional(),
   enabled: z.boolean(),
-  breakfastTime: z.string().regex(/^\d{2}:\d{2}-\d{2}:\d{2}$/),
-  lunchTime: z.string().regex(/^\d{2}:\d{2}-\d{2}:\d{2}$/),
-  dinnerTime: z.string().regex(/^\d{2}:\d{2}-\d{2}:\d{2}$/),
-  snackTime: z.string().regex(/^\d{2}:\d{2}-\d{2}:\d{2}$/),
+  breakfastTime: z.string().regex(caldavMealTimeRange),
+  lunchTime: z.string().regex(caldavMealTimeRange),
+  dinnerTime: z.string().regex(caldavMealTimeRange),
+  snackTime: z.string().regex(caldavMealTimeRange),
 });
 
 export const DeleteCaldavConfigInputSchema = z.object({
