@@ -4,7 +4,7 @@
 
 **Blocked by:** 21
 
-**Status:** ready-for-agent
+**Status:** done
 
 - [x] `features/calendar` holds the calendar screen (today's `app/(app)/calendar/page.tsx` content and its root), the desktop and mobile timelines, `EditNotePanel` and `EditPlannedRecipePanel`. Its `components/` is grouped by area, with an `index.ts` only for pieces more than one screen draws. `app/(app)/calendar/page.tsx` renders the screen and the layout keeps its seed.
 - [x] Both timelines drag through one hook in `features/calendar` (the dragged item, the day dragged over, the start, over and end handlers and the collision detection), each passing its own sensors. Today each timeline holds a copy of the same handlers. The hook gets a unit test: a drop on a day moves the item there, and a drop elsewhere moves nothing.
@@ -13,7 +13,7 @@
 - [x] `hooks/calendar/` and `components/calendar/desktop/` are gone. Whatever of `components/calendar/mobile/` only the timeline draws has moved.
 - [x] The calendar's unit tests move into `features/calendar/__tests__/`.
 - [x] Gates green: `pnpm lint`, `pnpm typecheck`, `pnpm test:run`, `pnpm i18n:check`, `pnpm build`, `pnpm format:check`, `pnpm deps:cycles`, and mobile's lint, typecheck, test and `expo export --platform ios`.
-- [ ] The whole E2E suite (`ai`, `offline`, `realtime`) passes once, with no retries.
+- [x] The whole E2E suite (`ai`, `offline`, `realtime`) passes once, with no retries.
 
 ## Comments
 
@@ -28,3 +28,6 @@
 - Fix round: `useTimelineScroll` replaces `use-grow-at-edges` (options `pastGrowEdge`, `futureGrowEdge`, `todayBuffer`, `deferVisibilityCheck`); the per-day slot sort was deleted rather than shared, since both day cards regroup by slot and sort by `sortOrder` themselves; the drag E2E is in `ai/calendar-planning.e2e.ts` (5 of 5 with repeats). The fix range is re-reviewed inside the whole-branch review.
 - Whole-branch review (Fable xhigh on both axes, plus GPT-6.1 Sol). Fixed: a move to a date outside every cached range keeps the plan in the ranges that held it, as before this branch, so an Offline move stays visible (Sol, reproduced against the baseline); `rereadOnceWritesSettle` rereads a matching read that is in flight after it settles instead of joining it, for every caller; the drag E2E settles before it measures, takes today after the page loads and covers a drop into the next row; `scrollToToday` is memoised by hand again in the uncompiled scroll hook; hand-written memo goes from the compiled files this branch moved; empty days share one array; the day card and the day section share their droppable, labels and grouping; `PlannedItemDisplay` stops copying `PlannedItemFromQuery`; unread props, fields and exports go, `resolveCaldavConfigVersion` and `getInitialDateRange` fold in; names and long comments. Docs: CONTRIBUTING's subscription list and the Architecture page's feature areas name calendar, and `page-store/` is described as it works.
 - Rejected: dropping `deferVisibilityCheck` (it is the phones' own timing, and nothing visible may change); dropping `memo()` on the day pieces (CONTRIBUTING: a list memoises its rows).
+- Re-review of the whole-branch fixes (Fable high): the guard had been folded into the exported reread so that several asks during one read each queued a read, and a next page in flight was replaced. Fixed in 91d138f2f: `use-realtime-subscription.ts` now differs from the branch start only by the guard moving from the flush into `rereadOnceWritesSettle` and the private step's name.
+- E2E: the first full run failed `first-paint.e2e.ts:293` (today's meals for the reader's day, JavaScript off) once; it did not fail again in ten further runs of the test, and a rejected seeded read is now logged (d98fecc2e) so a next time names its cause. Two tests that counted requests against the go-live reread were flaky from before this branch and are fixed in the tests (eaf2a8aef, ac06cd43d). The suite then passed 276 of 276 on d98fecc2e, no retries.
+- Open, for Mike: a move bumps its slot-mates' versions on the server (`packages/db/src/repositories/planned-items.ts`) and neither the echo nor the move's answer carries them, so the next edit to a slot-mate is dropped as stale. It predates this branch; the drag E2E keeps its two plans in different slots because of it.
