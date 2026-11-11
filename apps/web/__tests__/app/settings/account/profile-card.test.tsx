@@ -5,22 +5,23 @@ import "@testing-library/jest-dom";
 
 import ProfileCard from "@/app/(app)/settings/account/components/profile-card";
 
-const mockContext = vi.hoisted(() => ({
+const mockAccount = vi.hoisted(() => ({
   user: { name: "Alice", email: "alice@example.com", image: null },
   updateName: vi.fn().mockResolvedValue(undefined),
-  updateImage: vi.fn().mockResolvedValue(undefined),
-  deleteImage: vi.fn().mockResolvedValue(undefined),
+  uploadAvatar: vi.fn().mockResolvedValue(undefined),
+  deleteAvatar: vi.fn().mockResolvedValue(undefined),
   isDeletingAvatar: false,
 }));
 
-let mockUser: { name: string; email: string; image: string | null } = mockContext.user;
+let mockUser: { name: string; email: string; image: string | null } = mockAccount.user;
 
 vi.mock("next-intl", () => ({
   useTranslations: () => (key: string) => key,
 }));
 
-vi.mock("@/app/(app)/settings/account/context", () => ({
-  useUserSettingsContext: () => ({ ...mockContext, user: mockUser }),
+vi.mock("@norish/shared-react/reader", () => ({
+  useProfileQuery: () => ({ user: mockUser, apiKeys: [] }),
+  useProfileMutations: () => mockAccount,
 }));
 
 vi.mock("@heroui/react", () => ({
@@ -78,15 +79,15 @@ describe("ProfileCard", () => {
       expect(saveButton).toBeEnabled();
     });
 
-    expect(mockContext.updateImage).not.toHaveBeenCalled();
+    expect(mockAccount.uploadAvatar).not.toHaveBeenCalled();
 
     fireEvent.click(saveButton);
 
     await waitFor(() => {
-      expect(mockContext.updateImage).toHaveBeenCalledTimes(1);
+      expect(mockAccount.uploadAvatar).toHaveBeenCalledTimes(1);
     });
-    expect(mockContext.updateImage).toHaveBeenCalledWith(file);
-    expect(mockContext.updateName).not.toHaveBeenCalled();
+    expect(mockAccount.uploadAvatar).toHaveBeenCalledWith(file);
+    expect(mockAccount.updateName).not.toHaveBeenCalled();
   });
 
   it("uses plain avatar URL without cache-busting query params", () => {

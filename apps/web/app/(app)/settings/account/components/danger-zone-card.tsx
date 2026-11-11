@@ -7,16 +7,13 @@ import { ExclamationCircleIcon } from "@heroicons/react/24/outline";
 import { Modal } from "@heroui/react";
 import { useTranslations } from "next-intl";
 
-import { useUserSettingsContext } from "../context";
+import { useDeleteAccountMutation } from "@norish/shared-react/reader";
 
 export default function DangerZoneCard() {
   const t = useTranslations("settings.user.dangerZone");
   const tActions = useTranslations("common.actions");
-  const { deleteAccount } = useUserSettingsContext();
+  const { deleteAccount } = useDeleteAccountMutation();
   const [showAccountDeleteModal, setShowAccountDeleteModal] = useState(false);
-  const handleDeleteAccount = async () => {
-    await deleteAccount();
-  };
   return (
     <>
       <SettingsCard
@@ -32,7 +29,6 @@ export default function DangerZoneCard() {
         </ActionButtonGroup>
       </SettingsCard>
 
-      {/* Delete Account Confirmation */}
       <Modal.Backdrop
         className="z-[1099]"
         isOpen={showAccountDeleteModal}
@@ -56,7 +52,7 @@ export default function DangerZoneCard() {
                     <ActionButton action="cancel" onPress={onClose}>
                       {tActions("cancel")}
                     </ActionButton>
-                    <ActionButton action="delete" variant="danger" onPress={handleDeleteAccount}>
+                    <ActionButton action="delete" variant="danger" onPress={deleteAccount}>
                       {t("deleteModal.confirmButton")}
                     </ActionButton>
                   </ActionButtonGroup>

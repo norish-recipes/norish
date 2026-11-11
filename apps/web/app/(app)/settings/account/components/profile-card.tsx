@@ -11,12 +11,13 @@ import { UserCircleIcon } from "@heroicons/react/24/outline";
 import { Button, Input, Label, TextField } from "@heroui/react";
 import { useTranslations } from "next-intl";
 
-import { useUserSettingsContext } from "../context";
+import { useProfileMutations, useProfileQuery } from "@norish/shared-react/reader";
 
 export default function ProfileCard() {
   const t = useTranslations("settings.user.profile");
   const tActions = useTranslations("common.actions");
-  const { user, updateName, updateImage, deleteImage, isDeletingAvatar } = useUserSettingsContext();
+  const { user } = useProfileQuery();
+  const { updateName, uploadAvatar, deleteAvatar, isDeletingAvatar } = useProfileMutations();
   const [name, setName] = useState(user?.name || "");
   const [syncedName, setSyncedName] = useState(user?.name);
   const [saving, whileSaving] = usePending();
@@ -24,7 +25,6 @@ export default function ProfileCard() {
   const [pendingImageFile, setPendingImageFile] = useState<File | null>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
 
-  // Update name when user data loads
   if (user?.name !== syncedName) {
     setSyncedName(user?.name);
     if (user?.name) {
@@ -42,7 +42,7 @@ export default function ProfileCard() {
         await updateName(name);
       }
       if (pendingImageFile) {
-        await updateImage(pendingImageFile);
+        await uploadAvatar(pendingImageFile);
         setImagePreview(null);
         setPendingImageFile(null);
       }
@@ -56,17 +56,14 @@ export default function ProfileCard() {
       return;
     }
 
-    // Validate file type
     if (!file.type.startsWith("image/")) {
       return;
     }
 
-    // Validate file size (max 5MB)
     if (file.size > 5 * 1024 * 1024) {
       return;
     }
 
-    // Create preview
     const reader = new FileReader();
     reader.onload = (event) => {
       setImagePreview(event.target?.result as string);
@@ -77,7 +74,7 @@ export default function ProfileCard() {
   const handleDeleteImage = async () => {
     setImagePreview(null);
     setPendingImageFile(null);
-    await deleteImage();
+    await deleteAvatar();
   };
   const hasPendingChanges = name !== user?.name || pendingImageFile !== null;
   const hasImage = imagePreview || user?.image;

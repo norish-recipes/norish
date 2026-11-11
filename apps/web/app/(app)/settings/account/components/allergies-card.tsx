@@ -1,34 +1,28 @@
 "use client";
 
-import { useCallback, useState } from "react";
+import { useState } from "react";
 import { SettingsCard } from "@/components/settings/settings-card";
 import { ActionButton, ActionButtonGroup } from "@/components/shared/action-button";
 import TagInput from "@/components/shared/tag-input";
 import { ExclamationTriangleIcon } from "@heroicons/react/24/outline";
 import { useTranslations } from "next-intl";
 
-import { useUserSettingsContext } from "../context";
+import { useAllergiesMutation, useAllergiesQuery } from "@norish/shared-react/reader";
 
 export default function AllergiesCard() {
   const t = useTranslations("settings.user.allergies");
   const tActions = useTranslations("common.actions");
-  const { allergies, updateAllergies, isUpdatingAllergies } = useUserSettingsContext();
+  const allergies = useAllergiesQuery();
+  const { setAllergies, isUpdatingAllergies } = useAllergiesMutation();
   const [localAllergies, setLocalAllergies] = useState<string[]>(allergies);
   const [syncedAllergies, setSyncedAllergies] = useState(allergies);
 
-  // Sync local state when allergies load
   if (allergies !== syncedAllergies) {
     setSyncedAllergies(allergies);
-    if (allergies) {
-      setLocalAllergies(allergies);
-    }
+    setLocalAllergies(allergies);
   }
   const hasChanges =
-    JSON.stringify(localAllergies.slice().sort()) !==
-    JSON.stringify((allergies || []).slice().sort());
-  const handleSave = useCallback(async () => {
-    await updateAllergies(localAllergies);
-  }, [localAllergies, updateAllergies]);
+    JSON.stringify(localAllergies.slice().sort()) !== JSON.stringify(allergies.slice().sort());
   return (
     <SettingsCard description={t("description")} icon={ExclamationTriangleIcon} title={t("title")}>
       <TagInput
@@ -41,7 +35,7 @@ export default function AllergiesCard() {
           action="save"
           isDisabled={!hasChanges}
           isPending={isUpdatingAllergies}
-          onPress={handleSave}
+          onPress={() => setAllergies(localAllergies)}
         >
           {tActions("save")}
         </ActionButton>

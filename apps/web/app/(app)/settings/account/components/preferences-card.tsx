@@ -1,6 +1,5 @@
 "use client";
 
-import { useCallback, useMemo } from "react";
 import { useRouter } from "next/navigation";
 import { SettingRow } from "@/components/settings/setting-row";
 import { SettingsCard } from "@/components/settings/settings-card";
@@ -11,7 +10,13 @@ import { Label, ListBox, Select } from "@heroui/react";
 import { useTranslations } from "next-intl";
 
 import { useLocaleConfigQuery, useTimersEnabledQuery } from "@norish/shared-react/config";
-import { useDeviceKind, useDevicePreference, usePermissions } from "@norish/shared-react/reader";
+import {
+  useDeviceKind,
+  useDevicePreference,
+  usePermissions,
+  usePreferencesMutation,
+  useProfileQuery,
+} from "@norish/shared-react/reader";
 import {
   RECIPE_PAGE_COLORS,
   TODAY_SECTION_VISIBILITIES,
@@ -28,11 +33,10 @@ import {
   measurementSystemTarget,
 } from "@norish/shared/lib/user-preferences";
 
-import { useUserSettingsContext } from "../context";
-
 export default function PreferencesCard() {
   const t = useTranslations("settings.user.preferences");
-  const { user, updatePreferences, isUpdatingPreferences } = useUserSettingsContext();
+  const { user } = useProfileQuery();
+  const { updatePreferences, isUpdatingPreferences } = usePreferencesMutation();
   const { globalEnabled } = useTimersEnabledQuery();
   const isAIEnabled = usePermissions((p) => p.isAIEnabled);
   const { enabledLocales, defaultLocale } = useLocaleConfigQuery();
@@ -51,10 +55,9 @@ export default function PreferencesCard() {
 
   // Timers are a capability an administrator can switch off for the whole
   // deployment; when they have, there is nothing to offer the reader.
-  const offeredHidden = useMemo(
-    () => (globalEnabled ? HIDDEN_ITEMS : HIDDEN_ITEMS.filter((item) => item !== "timers")),
-    [globalEnabled]
-  );
+  const offeredHidden = globalEnabled
+    ? HIDDEN_ITEMS
+    : HIDDEN_ITEMS.filter((item) => item !== "timers");
 
   // Converting with AI is on offer only where an administrator has AI on; a
   // choice of it made before reads as the same system without.
@@ -65,22 +68,16 @@ export default function PreferencesCard() {
 
   const { selected: selectedHidden, carried } = partitionHiddenItems(hiddenItems, offeredHidden);
 
-  const handleHiddenChange = useCallback(
-    (chosen: string[]) => {
-      setHiddenItems([...chosen, ...carried]);
-    },
-    [setHiddenItems, carried]
-  );
+  const handleHiddenChange = (chosen: string[]) => {
+    setHiddenItems([...chosen, ...carried]);
+  };
 
-  const handleLocaleChange = useCallback(
-    async (value: string) => {
-      if (!value || value === currentLocale) return;
+  const handleLocaleChange = async (value: string) => {
+    if (!value || value === currentLocale) return;
 
-      await updatePreferences({ locale: value });
-      router.refresh();
-    },
-    [updatePreferences, currentLocale, router]
-  );
+    await updatePreferences({ locale: value });
+    router.refresh();
+  };
 
   return (
     <SettingsCard

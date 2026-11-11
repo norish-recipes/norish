@@ -11,7 +11,7 @@ import { useMutation } from "@tanstack/react-query";
 import { useFormatter, useTranslations } from "next-intl";
 
 import { useAuthProvidersQuery } from "@norish/shared-react/config";
-import { useSignInMethodsQuery } from "@norish/shared-react/reader";
+import { useProfileQuery, useSignInMethodsQuery } from "@norish/shared-react/reader";
 import {
   keepsOfferedSignInMethod,
   LAST_SIGN_IN_METHOD,
@@ -20,7 +20,6 @@ import {
 import { authClient } from "@norish/shared/lib/auth/client";
 import { addBasePath } from "@norish/shared/lib/base-path";
 
-import { useUserSettingsContext } from "../context";
 import { ChangePasswordModal } from "./change-password-modal";
 
 type ErrorMessage =
@@ -43,7 +42,7 @@ async function orThrow(request: Promise<{ error: unknown }>): Promise<void> {
 export default function SignInMethodsCard() {
   const t = useTranslations("settings.user.signInMethods");
   const format = useFormatter();
-  const { user } = useUserSettingsContext();
+  const { user } = useProfileQuery();
   const router = useRouter();
   const pathname = usePathname();
   const searchParams = useSearchParams();

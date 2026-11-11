@@ -14,13 +14,14 @@ import { ArrowTopRightOnSquareIcon, KeyIcon } from "@heroicons/react/24/outline"
 import { Chip, Input, Label, Modal, Table, TextField } from "@heroui/react";
 import { useFormatter, useTranslations } from "next-intl";
 
-import { useUserSettingsContext } from "../context";
+import { useApiKeyMutations, useProfileQuery } from "@norish/shared-react/reader";
 
 export default function ApiKeyCard() {
   const t = useTranslations("settings.user.apiKeys");
   const tActions = useTranslations("common.actions");
   const format = useFormatter();
-  const { apiKeys, generateApiKey, deleteApiKey, toggleApiKey } = useUserSettingsContext();
+  const { apiKeys } = useProfileQuery();
+  const { createApiKey, deleteApiKey, toggleApiKey } = useApiKeyMutations();
   const [showTokenModal, setShowTokenModal] = useState(false);
   const [generatedKey, setGeneratedKey] = useState<string | null>(null);
   const [generatingKey, whileGeneratingKey] = usePending();
@@ -29,7 +30,7 @@ export default function ApiKeyCard() {
   const [newKeyName, setNewKeyName] = useState("");
   const handleGenerateKey = async () => {
     await whileGeneratingKey(() =>
-      generateApiKey(newKeyName || undefined).then(({ key }) => {
+      createApiKey(newKeyName || undefined).then((key) => {
         setGeneratedKey(key);
         setShowTokenModal(true);
         setNewKeyName("");

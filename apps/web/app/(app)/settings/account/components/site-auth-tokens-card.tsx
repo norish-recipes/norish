@@ -8,7 +8,6 @@ import {
   IconActionButton,
 } from "@/components/shared/action-button";
 import { InfoHint } from "@/components/shared/info-hint";
-import { showSafeErrorToast } from "@/lib/ui/safe-error-toast";
 import { ShieldCheckIcon } from "@heroicons/react/24/outline";
 import {
   Chip,
@@ -21,93 +20,37 @@ import {
   Table,
   TextField,
 } from "@heroui/react";
-import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { useFormatter, useTranslations } from "next-intl";
 
-import { useTRPC } from "@norish/shared-react/trpc";
+import { useSiteAuthTokenMutations, useSiteAuthTokensQuery } from "@norish/shared-react/reader";
 import { TokenDomainSchema } from "@norish/shared/contracts/zod/site-auth-tokens";
 
 export default function SiteAuthTokensCard() {
   const t = useTranslations("settings.user.siteAuthTokens");
-  const tErrors = useTranslations("common.errors");
   const tActions = useTranslations("common.actions");
   const format = useFormatter();
-  const trpc = useTRPC();
-  const queryClient = useQueryClient();
+  const tokens = useSiteAuthTokensQuery();
+  const { createToken, removeToken, isCreating, isRemoving } = useSiteAuthTokenMutations();
 
-  // Query
-  const listQueryOptions = trpc.siteAuthTokens.list.queryOptions();
-  const { data: tokens = [] } = useQuery(listQueryOptions);
-
-  // Mutations
-  const createMutation = useMutation(trpc.siteAuthTokens.create.mutationOptions());
-  const removeMutation = useMutation(trpc.siteAuthTokens.remove.mutationOptions());
-
-  // Form state
   const [domain, setDomain] = useState("");
   const [account, setAccount] = useState("");
   const [name, setName] = useState("");
   const [value, setValue] = useState("");
   const [type, setType] = useState<"header" | "cookie">("header");
-  const [isCreating, setIsCreating] = useState(false);
 
-  // Delete modal state
   const [showDeleteModal, setShowDeleteModal] = useState(false);
   const [tokenToDelete, setTokenToDelete] = useState<string | null>(null);
   const handleCreate = async () => {
     if (!domain.trim() || !name.trim() || !value.trim()) return;
-    setIsCreating(true);
-    await createMutation
-      .mutateAsync({
-        domain,
-        account,
-        name,
-        value,
-        type,
-      })
-      .then((newToken) => {
-        queryClient.setQueryData(listQueryOptions.queryKey, (prev: typeof tokens | undefined) =>
-          prev ? [...prev, newToken] : [newToken]
-        );
-        setDomain("");
-        setAccount("");
-        setName("");
-        setValue("");
-        setType("header");
-      })
-      .catch((error: unknown) =>
-        showSafeErrorToast({
-          title: tErrors("operationFailed"),
-          description: tErrors("technicalDetails"),
-          color: "danger",
-          error,
-          context: "site-auth-tokens:create",
-        })
-      );
-    setIsCreating(false);
+    if (!(await createToken({ domain, account, name, value, type }))) return;
+    setDomain("");
+    setAccount("");
+    setName("");
+    setValue("");
+    setType("header");
   };
   const handleDelete = async (tokenId: string) => {
-    const tokenVersion = tokens.find((token) => token.id === tokenId)?.version ?? 1;
-
-    await removeMutation
-      .mutateAsync({
-        id: tokenId,
-        version: tokenVersion,
-      })
-      .then(() =>
-        queryClient.setQueryData(listQueryOptions.queryKey, (prev: typeof tokens | undefined) =>
-          prev ? prev.filter((t) => t.id !== tokenId) : prev
-        )
-      )
-      .catch((error: unknown) =>
-        showSafeErrorToast({
-          title: tErrors("operationFailed"),
-          description: tErrors("technicalDetails"),
-          color: "danger",
-          error,
-          context: "site-auth-tokens:delete",
-        })
-      );
+    await removeToken(tokenId);
     setShowDeleteModal(false);
     setTokenToDelete(null);
   };
@@ -279,7 +222,7 @@ export default function SiteAuthTokensCard() {
                     </ActionButton>
                     <ActionButton
                       action="delete"
-                      isPending={removeMutation.isPending}
+                      isPending={isRemoving}
                       variant="danger"
                       onPress={() => tokenToDelete && handleDelete(tokenToDelete)}
                     >

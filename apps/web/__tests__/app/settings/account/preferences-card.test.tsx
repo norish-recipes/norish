@@ -7,7 +7,7 @@ import PreferencesCard from "@/app/(app)/settings/account/components/preferences
 
 import type { DeviceKind } from "@norish/shared/contracts/zod/device-preferences";
 
-const mockContext = vi.hoisted(() => ({
+const mockAccount = vi.hoisted(() => ({
   user: { preferences: {} },
   updatePreferences: vi.fn().mockResolvedValue(undefined),
   isUpdatingPreferences: false,
@@ -21,10 +21,6 @@ const mockRouterRefresh = vi.fn();
 
 vi.mock("next/navigation", () => ({
   useRouter: () => ({ refresh: mockRouterRefresh }),
-}));
-
-vi.mock("@/app/(app)/settings/account/context", () => ({
-  useUserSettingsContext: () => ({ ...mockContext, user: mockContext.user }),
 }));
 
 const todaysMealsMock = vi.hoisted(() => ({
@@ -44,8 +40,11 @@ const recipePageColorMock = vi.hoisted(() => ({
 
 const deviceKindMock = vi.hoisted(() => ({ kind: "phone" as DeviceKind }));
 
-vi.mock("@norish/shared-react/reader", async () =>
-  (await import("../../../helpers/reader-mock")).mockDevicePreferences(
+vi.mock("@norish/shared-react/reader", async () => ({
+  usePreferencesMutation: () => mockAccount,
+  ...(await (
+    await import("../../../helpers/reader-mock")
+  ).mockDevicePreferences(
     () => ({
       todaySectionVisibility: todaysMealsMock.visibility,
       hiddenItems: hiddenItemsMock.hidden,
@@ -53,7 +52,7 @@ vi.mock("@norish/shared-react/reader", async () =>
     }),
     {
       kind: () => deviceKindMock.kind,
-      reader: () => ({ permissions: permissionsMock }),
+      reader: () => ({ user: mockAccount.user, permissions: permissionsMock }),
       set: (key, next) => {
         const setters: Record<string, (next: unknown) => void> = {
           todaySectionVisibility: todaysMealsMock.setVisibility,
@@ -64,8 +63,8 @@ vi.mock("@norish/shared-react/reader", async () =>
         setters[key]?.(next);
       },
     }
-  )
-);
+  )),
+}));
 
 const permissionsMock = vi.hoisted(() => ({ isAIEnabled: false }));
 
@@ -150,7 +149,7 @@ describe("PreferencesCard", () => {
   beforeEach(() => {
     permissionsMock.isAIEnabled = false;
     hiddenItemsMock.hidden = [];
-    mockContext.user = { preferences: {} } as any;
+    mockAccount.user = { preferences: {} } as any;
   });
 
   const hiddenControl = () => screen.getByRole("listbox", { name: /hidden\.title/i });
@@ -258,7 +257,7 @@ describe("PreferencesCard", () => {
   });
 
   it("renders language dropdown with current locale", () => {
-    mockContext.user = { preferences: { locale: "en" } } as any;
+    mockAccount.user = { preferences: { locale: "en" } } as any;
 
     timersMock = { timersEnabled: true, globalEnabled: true } as any;
 
@@ -275,7 +274,7 @@ describe("PreferencesCard", () => {
   });
 
   it("calls updatePreferences with locale when language is changed", async () => {
-    mockContext.user = { preferences: { locale: "en" } } as any;
+    mockAccount.user = { preferences: { locale: "en" } } as any;
 
     timersMock = { timersEnabled: true, globalEnabled: true } as any;
 
@@ -286,7 +285,7 @@ describe("PreferencesCard", () => {
     fireEvent.change(select, { target: { value: "de-informal" } });
 
     await waitFor(() => {
-      expect(mockContext.updatePreferences).toHaveBeenCalledWith({ locale: "de-informal" });
+      expect(mockAccount.updatePreferences).toHaveBeenCalledWith({ locale: "de-informal" });
     });
   });
 
@@ -337,11 +336,11 @@ describe("PreferencesCard", () => {
 
     fireEvent.change(control, { target: { value: "addGroceries" } });
 
-    expect(mockContext.updatePreferences).toHaveBeenCalledWith({ afterPlanning: "addGroceries" });
+    expect(mockAccount.updatePreferences).toHaveBeenCalledWith({ afterPlanning: "addGroceries" });
   });
 
   it("reflects a stored after-planning choice", () => {
-    mockContext.user = { preferences: { afterPlanning: "nothing" } } as any;
+    mockAccount.user = { preferences: { afterPlanning: "nothing" } } as any;
 
     render(<PreferencesCard />);
 
@@ -351,7 +350,7 @@ describe("PreferencesCard", () => {
   });
 
   it("offers converting with AI only where AI is on, and stores the choice with the user", () => {
-    mockContext.user = { preferences: { measurementSystem: "usWithAI" } } as any;
+    mockAccount.user = { preferences: { measurementSystem: "usWithAI" } } as any;
 
     const { unmount } = render(<PreferencesCard />);
     const control = () => screen.getByRole("combobox", { name: /measurements\.title/i });
@@ -370,7 +369,7 @@ describe("PreferencesCard", () => {
 
     fireEvent.change(control(), { target: { value: "metric" } });
 
-    expect(mockContext.updatePreferences).toHaveBeenCalledWith({ measurementSystem: "metric" });
+    expect(mockAccount.updatePreferences).toHaveBeenCalledWith({ measurementSystem: "metric" });
   });
 
   it("says behind the title which kind of device its display choices apply to", () => {

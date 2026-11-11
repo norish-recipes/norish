@@ -2,7 +2,6 @@
 
 import { useArchiveImportProgress } from "@norish/shared-react/recipes";
 
-import { UserSettingsProvider } from "../context";
 import AllergiesCard from "./allergies-card";
 import ApiTokenCard from "./api-token-card";
 import ArchiveExportCard from "./archive-export-card";
@@ -14,7 +13,10 @@ import ShareLinksCard from "./share-links-card";
 import SignInMethodsCard from "./sign-in-methods-card";
 import SiteAuthTokensCard from "./site-auth-tokens-card";
 
-function UserSettingsContent() {
+export default function UserSettingsContent() {
+  // The archive import's progress, drawn by its card; the shell applies its outcome.
+  useArchiveImportProgress();
+
   return (
     <div className="flex w-full flex-col gap-6">
       <ProfileCard />
@@ -28,16 +30,5 @@ function UserSettingsContent() {
       <ArchiveExportCard />
       <DangerZoneCard />
     </div>
-  );
-}
-
-export default function UserSettingsContentWrapper() {
-  // The archive import's progress, drawn by its card; the shell applies its outcome.
-  useArchiveImportProgress();
-
-  return (
-    <UserSettingsProvider>
-      <UserSettingsContent />
-    </UserSettingsProvider>
   );
 }
