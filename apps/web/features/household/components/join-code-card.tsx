@@ -61,8 +61,11 @@ export default function JoinCodeCard() {
   const joinCodeExpired = msRemaining <= 0;
   const timeRemaining =
     msRemaining <= 0
-      ? "Expired"
-      : `${Math.floor(msRemaining / 60000)}m ${Math.floor((msRemaining % 60000) / 1000)}s`;
+      ? t("expired")
+      : t("countdown", {
+          minutes: Math.floor(msRemaining / 60000),
+          seconds: Math.floor((msRemaining % 60000) / 1000),
+        });
   const handleCopyJoinCode = async () => {
     // Type guard ensures household has joinCode
     if ("joinCode" in household && household.joinCode) {

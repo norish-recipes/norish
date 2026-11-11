@@ -87,7 +87,7 @@ export default function MembersCard() {
                                 onPress={() => {
                                   setUserToKick({
                                     id: user.id,
-                                    name: user.name || "Unknown",
+                                    name: user.name || t("unknown"),
                                   });
                                   setShowKickModal(true);
                                 }}
@@ -102,7 +102,7 @@ export default function MembersCard() {
                                   onPress={() => {
                                     setUserToTransfer({
                                       id: user.id,
-                                      name: user.name || "Unknown",
+                                      name: user.name || t("unknown"),
                                     });
                                     setShowTransferModal(true);
                                   }}
