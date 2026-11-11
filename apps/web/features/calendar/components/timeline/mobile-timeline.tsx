@@ -1,20 +1,18 @@
 "use client";
 
 import type { PlannedItemDisplay } from "@/components/calendar/mobile/types";
-import type { DragEndEvent, DragOverEvent, DragStartEvent } from "@dnd-kit/core";
 import { useCallback, useEffect, useId, useLayoutEffect, useMemo, useRef, useState } from "react";
 import { hasReachedDay, landOnDay, settleLanding } from "@/components/calendar/land-on-day";
 import { TimelineDaySection } from "@/components/calendar/mobile/timeline-day-section";
 import { SLOT_ORDER } from "@/components/calendar/mobile/types";
 import { useReaderToday } from "@/components/reader-today";
 import { CalendarSkeletonMobile } from "@/features/calendar/components/skeleton/calendar-skeleton";
+import { useCalendarDnd } from "@/features/calendar/hooks/use-calendar-dnd";
 import { usePrependAnchorRestore } from "@/features/calendar/hooks/use-prepend-anchor-restore";
 import {
   DndContext,
   DragOverlay,
   PointerSensor,
-  pointerWithin,
-  rectIntersection,
   TouchSensor,
   useSensor,
   useSensors,
@@ -24,7 +22,7 @@ import { useLocale } from "next-intl";
 import { useWindowSize } from "usehooks-ts";
 
 import type { Slot } from "@norish/shared/contracts";
-import { useCalendarMutations, useCalendarRangeQuery } from "@norish/shared-react/calendar";
+import { useCalendarRangeQuery } from "@norish/shared-react/calendar";
 import { dateKey, eachDayOfInterval, parseDateKey } from "@norish/shared/lib/helpers";
 
 import { TimelineDragOverlay } from "./timeline-drag-overlay";
@@ -50,7 +48,6 @@ export function MobileTimeline({ onAddItem, onNoteClick, onRecipeClick }: Mobile
   const locale = useLocale();
 
   const { range, isGrowing, grow, calendarData, isLoading } = useCalendarRangeQuery();
-  const { moveItem } = useCalendarMutations();
 
   const allDays = useMemo(
     () => eachDayOfInterval(parseDateKey(range.startISO), parseDateKey(range.endISO)),
@@ -233,9 +230,6 @@ export function MobileTimeline({ onAddItem, onNoteClick, onRecipeClick }: Mobile
   }, [virtualizer, todayIndex]);
 
   // Drag and drop
-  const [activeItem, setActiveItem] = useState<PlannedItemDisplay | null>(null);
-  const [dragOverDateKey, setDragOverDateKey] = useState<string | null>(null);
-
   const touchSensor = useSensor(TouchSensor, {
     activationConstraint: {
       delay: mobileDragActivationDelayMs,
@@ -252,88 +246,7 @@ export function MobileTimeline({ onAddItem, onNoteClick, onRecipeClick }: Mobile
 
   const dndId = useId();
   const sensors = useSensors(touchSensor, pointerSensor);
-
-  const handleDragStart = useCallback(
-    (event: DragStartEvent) => {
-      const { active } = event;
-      const itemId = active.id as string;
-
-      for (const dayItems of Object.values(calendarData)) {
-        const item = dayItems.find((i) => i.id === itemId);
-
-        if (item) {
-          setActiveItem(item as PlannedItemDisplay);
-          break;
-        }
-      }
-    },
-    [calendarData]
-  );
-
-  const handleDragEnd = useCallback(
-    (event: DragEndEvent) => {
-      const { over } = event;
-      const draggedItem = activeItem;
-
-      setActiveItem(null);
-      setDragOverDateKey(null);
-
-      if (!over || !draggedItem) return;
-
-      const overId = over.id as string;
-
-      // Only accept drops on day containers (format: "dateKey_drop")
-      if (!overId.endsWith("_drop")) return;
-
-      const targetDate = overId.replace("_drop", "");
-
-      // Skip if same day
-      if (draggedItem.date === targetDate) return;
-
-      // Keep the same slot - only change the day
-      const targetSlot = draggedItem.slot;
-
-      // Calculate target index (append to end of slot on target day)
-      const targetSlotItems = (calendarData[targetDate] ?? []).filter(
-        (i) => i.slot === targetSlot && i.id !== draggedItem.id
-      );
-      const targetIndex = targetSlotItems.length;
-
-      moveItem(draggedItem.id, targetDate, targetSlot, targetIndex);
-    },
-    [activeItem, calendarData, moveItem]
-  );
-
-  const handleDragOver = useCallback(
-    (event: DragOverEvent) => {
-      const { over } = event;
-
-      if (!over || !activeItem) {
-        setDragOverDateKey(null);
-
-        return;
-      }
-
-      const overId = over.id as string;
-
-      // Only highlight day containers
-      if (!overId.endsWith("_drop")) {
-        setDragOverDateKey(null);
-
-        return;
-      }
-
-      const targetDate = overId.replace("_drop", "");
-
-      // Only highlight if dragging to a different day
-      if (targetDate !== activeItem.date) {
-        setDragOverDateKey(targetDate);
-      } else {
-        setDragOverDateKey(null);
-      }
-    },
-    [activeItem]
-  );
+  const { activeItem, dragOverDateKey, dndContextProps } = useCalendarDnd(calendarData, sensors);
 
   // Also before the window is measured, which the server and the hydrating render never are: with
   // a seeded range the days draw on the first measured frame, without a request.
@@ -341,26 +254,9 @@ export function MobileTimeline({ onAddItem, onNoteClick, onRecipeClick }: Mobile
     return <CalendarSkeletonMobile />;
   }
 
-  const collisionDetection = (args: Parameters<typeof pointerWithin>[0]) => {
-    const pointerCollisions = pointerWithin(args);
-
-    if (pointerCollisions.length > 0) {
-      return pointerCollisions;
-    }
-
-    return rectIntersection(args);
-  };
-
   return (
     <div className="fade-in">
-      <DndContext
-        collisionDetection={collisionDetection}
-        id={dndId}
-        sensors={sensors}
-        onDragEnd={handleDragEnd}
-        onDragOver={handleDragOver}
-        onDragStart={handleDragStart}
-      >
+      <DndContext {...dndContextProps} id={dndId}>
         <div
           ref={containerRef}
           className="relative overflow-visible"
