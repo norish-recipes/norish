@@ -7,7 +7,8 @@
 **Status:** ready-for-agent
 
 - [ ] `features/calendar` holds the calendar screen (today's `app/(app)/calendar/page.tsx` content and its root), the desktop and mobile timelines, `EditNotePanel` and `EditPlannedRecipePanel`.
-- [ ] Both timelines drag through one hook in `features/calendar` (the dragged item, the day dragged over, the start, over and end handlers and the collision detection), each passing its own sensors. Today each timeline holds a copy of the same handlers. The hook gets a unit test: a drop on a day moves the item there, and a drop elsewhere moves nothing. Its `components/` is grouped by area, with an `index.ts` only for pieces more than one screen draws. `app/(app)/calendar/page.tsx` renders the screen and the layout keeps its seed.
+- [ ] Both timelines drag through one hook in `features/calendar` (the dragged item, the day dragged over, the start, over and end handlers and the collision detection), each passing its own sensors. Today each timeline holds a copy of the same handlers. The hook gets a unit test: a drop on a day moves the item there, and a drop elsewhere moves nothing.
+- [ ] The effect that grows the range when a scroll rests near an edge is written once and used by both timelines; they differ only in the edge threshold and in rows against days. Its `components/` is grouped by area, with an `index.ts` only for pieces more than one screen draws. `app/(app)/calendar/page.tsx` renders the screen and the layout keeps its seed.
 - [ ] Everything `MiniCalendar` imports from `components/calendar/` (`TimelineDaySection`, `land-on-day` and their own imports) stays there, and so does whatever else today's meals or `MiniCalendar` draws. Nothing in the shared folders imports `@/features/calendar`.
 - [ ] `hooks/calendar/` and `components/calendar/desktop/` are gone. Whatever of `components/calendar/mobile/` only the timeline draws has moved.
 - [ ] The calendar's unit tests move into `features/calendar/__tests__/`.
