@@ -54,10 +54,14 @@ test("a library card opens its recipe in a new tab and still navigates on a plai
   await expect(page).toHaveURL(/\/$/);
 
   // The options button opens the card's actions and leaves the reader on the Library.
+  // The card is focusable only while its row is swiped open.
   await card.getByLabel("Recipe options").click();
+  await expect(card).toHaveAttribute("tabindex", "0");
   await expect(page.getByRole("button", { name: "Add to calendar" }).first()).toBeVisible();
   await expect(page).toHaveURL(/\/$/);
+  // A title click while the row still slides shut retries into a scroll that puts it under the nav.
   await card.getByLabel("Recipe options").click();
+  await expect(card).toHaveAttribute("tabindex", "-1");
 
   await title.click();
   await expect(page).toHaveURL(recipeUrl);
