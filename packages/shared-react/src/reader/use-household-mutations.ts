@@ -4,6 +4,7 @@ import { useMutation } from "@tanstack/react-query";
 
 import type { HouseholdSettingsDto } from "@norish/shared/contracts/dto/household";
 
+import { usePlatform } from "../platform";
 import { useTRPC } from "../trpc";
 import { useHousehold, useHouseholdCacheHelpers } from "./use-household";
 import { useReader } from "./use-reader";
@@ -22,6 +23,7 @@ export function useHouseholdMutations(): HouseholdMutationsResult {
   const { household, currentUserId } = useHousehold();
   const { setHouseholdData, invalidate } = useHouseholdCacheHelpers();
   const userName = useReader().user?.name ?? null;
+  const { toast } = usePlatform();
 
   const getHouseholdVersion = (householdId: string): number =>
     household?.id === householdId ? household.version : 1;
@@ -103,6 +105,14 @@ export function useHouseholdMutations(): HouseholdMutationsResult {
           };
 
           return { ...prev, household: updated };
+        });
+        toast.show({
+          severity: "success",
+          title: toast.translate("settings.household.members.toasts.transferSuccess", {
+            name:
+              household?.users.find((user) => user.id === newAdminId)?.name ??
+              toast.translate("settings.household.members.unknown"),
+          }),
         });
       },
       onError,

@@ -6,7 +6,7 @@ import { ActionButton, ActionButtonGroup } from "@/components/shared/action-butt
 import { showSafeErrorToast } from "@/lib/ui/safe-error-toast";
 import { ShieldCheckIcon, UserMinusIcon } from "@heroicons/react/16/solid";
 import { UserGroupIcon } from "@heroicons/react/24/outline";
-import { Chip, Modal, Table, toast } from "@heroui/react";
+import { Chip, Modal, Table } from "@heroui/react";
 import { useTranslations } from "next-intl";
 
 import { useHousehold, useHouseholdMutations } from "@norish/shared-react/reader";
@@ -55,14 +55,6 @@ export default function MembersCard() {
     if (!userToTransfer) return;
     try {
       transferAdmin(household.id, userToTransfer.id);
-      toast(
-        t("toasts.transferSuccess", {
-          name: userToTransfer.name,
-        }),
-        {
-          variant: "success",
-        }
-      );
     } catch (error) {
       showSafeErrorToast({
         title: t("toasts.transferFailed"),

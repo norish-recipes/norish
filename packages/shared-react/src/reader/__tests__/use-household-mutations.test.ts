@@ -2,14 +2,18 @@ import { act, renderHook, waitFor } from "@testing-library/react";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 
 import type { HouseholdData } from "@norish/shared-react/reader";
-import { createTestQueryClient } from "@norish/shared-react/platform/testing";
+import {
+  createTestQueryClient,
+  createTestWrapper,
+  fakePlatformAdapter,
+} from "@norish/shared-react/platform/testing";
 import { useHouseholdMutations } from "@norish/shared-react/reader";
 
 import {
   createMockHouseholdData,
   createMockHouseholdSettings,
   createMockHouseholdUser,
-  readerWrapper,
+  READER,
 } from "./test-utils";
 
 type Deferred = { resolve: (value: unknown) => void; reject: (error: unknown) => void };
@@ -59,12 +63,13 @@ const KEY = ["households", "get"];
 
 describe("useHouseholdMutations", () => {
   let queryClient: ReturnType<typeof createTestQueryClient>;
+  let adapter: ReturnType<typeof fakePlatformAdapter>;
 
   const render = (data: HouseholdData) => {
     queryClient.setQueryData(KEY, data);
 
     return renderHook(() => useHouseholdMutations(), {
-      wrapper: readerWrapper(queryClient),
+      wrapper: createTestWrapper(queryClient, adapter),
     }).result;
   };
   const cached = () => queryClient.getQueryData<HouseholdData>(KEY);
@@ -101,6 +106,7 @@ describe("useHouseholdMutations", () => {
   beforeEach(() => {
     for (const name of Object.keys(calls)) delete calls[name];
     queryClient = createTestQueryClient();
+    adapter = fakePlatformAdapter("phone", READER);
   });
 
   describe("createHousehold", () => {
@@ -227,6 +233,27 @@ describe("useHouseholdMutations", () => {
         ["current-user", false],
         ["a", true],
         ["b", false],
+      ]);
+    });
+
+    it("announces the new admin only once the transfer succeeds", async () => {
+      const result = render(household());
+      const successes = () =>
+        vi.mocked(adapter.toast.show).mock.calls.filter(([toast]) => toast.severity === "success");
+
+      await act(async () => result.current.transferAdmin("h1", "a"));
+      await settle("transferAdmin", 0, "reject");
+      expect(successes()).toHaveLength(0);
+
+      await act(async () => result.current.transferAdmin("h1", "a"));
+      await settle("transferAdmin", 1, "resolve", { success: true });
+      expect(successes()).toEqual([
+        [
+          {
+            severity: "success",
+            title: "settings.household.members.toasts.transferSuccess",
+          },
+        ],
       ]);
     });
   });
