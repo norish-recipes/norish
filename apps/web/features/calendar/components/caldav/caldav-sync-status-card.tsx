@@ -42,12 +42,18 @@ export default function CaldavSyncStatusCard() {
   const t = useTranslations("settings.caldav.syncStatus");
   const tSlots = useTranslations("common.slots");
   const tItemTypes = useTranslations("calendar.timeline");
+  const tStatus = useTranslations("common.status");
   const { pageSize } = FIRST_SYNC_STATUS_PAGE;
   const [syncStatusPage, setSyncStatusPage] = useState<number>(FIRST_SYNC_STATUS_PAGE.page);
   const [syncStatusFilter, setSyncStatusFilter] = useState<CaldavSyncStatus | undefined>(
     FIRST_SYNC_STATUS_PAGE.statusFilter
   );
-  const { statuses: syncStatuses, total: syncStatusTotal } = useCaldavSyncStatusQuery({
+  const {
+    statuses: syncStatuses,
+    total: syncStatusTotal,
+    isLoading,
+    isPlaceholderData,
+  } = useCaldavSyncStatusQuery({
     page: syncStatusPage,
     pageSize,
     statusFilter: syncStatusFilter,
@@ -137,7 +143,10 @@ export default function CaldavSyncStatusCard() {
           )}
         </div>
       </div>
-      <Table className="p-0">
+      <Table
+        aria-busy={isPlaceholderData}
+        className={`p-0 transition-opacity ${isPlaceholderData ? "opacity-50" : ""}`}
+      >
         <Table.ScrollContainer>
           <Table.Content aria-label={t("title")}>
             <Table.Header>
@@ -154,11 +163,13 @@ export default function CaldavSyncStatusCard() {
             <Table.Body
               renderEmptyState={() => (
                 <div className="text-muted px-4 py-8 text-center text-sm">
-                  {syncStatusFilter
-                    ? t("emptyFiltered", {
-                        status: t(`statuses.${syncStatusFilter}`),
-                      })
-                    : t("emptyDefault")}
+                  {isLoading
+                    ? tStatus("loading")
+                    : syncStatusFilter
+                      ? t("emptyFiltered", {
+                          status: t(`statuses.${syncStatusFilter}`),
+                        })
+                      : t("emptyDefault")}
                 </div>
               )}
             >

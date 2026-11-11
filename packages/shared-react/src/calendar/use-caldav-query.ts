@@ -1,4 +1,4 @@
-import { keepPreviousData, useQuery, useQueryClient } from "@tanstack/react-query";
+import { hashKey, useQuery, useQueryClient } from "@tanstack/react-query";
 
 import type {
   CaldavSyncStatus,
@@ -55,9 +55,16 @@ export function useCaldavSyncStatusQuery(input: {
   statusFilter?: CaldavSyncStatus;
 }): CaldavSyncStatusQueryResult {
   const trpc = useTRPC();
-  const { data, error, isLoading } = useQuery(
-    // The page on screen stays while the next page or filter loads.
-    trpc.caldav.getSyncStatus.queryOptions(input, { placeholderData: keepPreviousData })
+  const { data, error, isLoading, isPlaceholderData } = useQuery(
+    trpc.caldav.getSyncStatus.queryOptions(input, {
+      // The page on screen stays while the next page of its filter loads, never another filter's.
+      placeholderData: (previous, previousQuery) =>
+        previous &&
+        previousQuery?.queryHash ===
+          hashKey(trpc.caldav.getSyncStatus.queryKey({ ...input, page: previous.page }))
+          ? previous
+          : undefined,
+    })
   );
 
   return {
@@ -67,6 +74,7 @@ export function useCaldavSyncStatusQuery(input: {
     pageSize: data?.pageSize ?? input.pageSize,
     error,
     isLoading,
+    isPlaceholderData,
   };
 }
 

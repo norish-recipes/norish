@@ -69,6 +69,8 @@ export type CaldavSyncStatusQueryResult = {
   pageSize: number;
   error: unknown;
   isLoading: boolean;
+  /** The rows are the last page of the same filter, shown while this one loads. */
+  isPlaceholderData: boolean;
 };
 
 export type CaldavSummaryQueryResult = {
