@@ -10,6 +10,7 @@ import { dehydrate, QueryClient } from "@tanstack/react-query";
 import { createTRPCOptionsProxy } from "@trpc/tanstack-react-query";
 
 import type { AppRouter } from "@norish/trpc/client";
+import { serverLogger as log } from "@norish/shared-server/logger";
 import { appRouter, createHttpContextFromHeaders } from "@norish/trpc/server";
 
 /** Each read a page seeds; `false` or `undefined` for one it leaves out. */
@@ -33,9 +34,22 @@ export async function readQuerySeed(reads: Reads): Promise<DehydratedState | und
   const queryClient = new QueryClient();
   const ctx = await createHttpContextFromHeaders(new Headers(requestHeaders), null);
 
-  await Promise.allSettled(
+  const settled = await Promise.allSettled(
     await reads(createTRPCOptionsProxy({ router: appRouter, ctx, queryClient }), queryClient)
   );
+  const failed = queryClient
+    .getQueryCache()
+    .findAll({ predicate: (q) => q.state.status === "error" });
+
+  for (const { queryKey, state } of failed) {
+    log.warn({ read: queryKey, err: state.error }, "A seeded read failed");
+  }
+  // A seed can also reject outside its read, which leaves no failed query to name.
+  for (const result of settled) {
+    if (result.status === "rejected" && !failed.some((q) => q.state.error === result.reason)) {
+      log.warn({ err: result.reason }, "A seed failed");
+    }
+  }
 
   return dehydrate(queryClient);
 }
