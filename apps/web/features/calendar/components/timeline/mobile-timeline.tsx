@@ -64,7 +64,6 @@ export function MobileTimeline({ onAddItem, onNoteClick, onRecipeClick }: Mobile
 
   // Today tracking
   const todayKey = useReaderToday();
-  const today = useMemo(() => parseDateKey(todayKey), [todayKey]);
   const todayIndex = useMemo(
     () => allDays.findIndex((d) => dateKey(d) === todayKey),
     [allDays, todayKey]

@@ -12,7 +12,7 @@ import { usePrependAnchorRestore } from "@/features/calendar/hooks/use-prepend-a
 import { useViewport } from "@/hooks/use-viewport";
 import { DndContext, DragOverlay, PointerSensor, useSensor, useSensors } from "@dnd-kit/core";
 import { useWindowVirtualizer } from "@tanstack/react-virtual";
-import { useLocale, useTranslations } from "next-intl";
+import { useLocale } from "next-intl";
 import { useWindowSize } from "usehooks-ts";
 
 import type { Slot } from "@norish/shared/contracts";
@@ -36,7 +36,6 @@ export function DesktopTimeline({ onAddItem, onNoteClick, onRecipeClick }: Deskt
   "use no memo";
 
   const locale = useLocale();
-  const tSlots = useTranslations("common.slots");
 
   const { range, isGrowing, grow, calendarData, isLoading } = useCalendarRangeQuery();
 
@@ -97,7 +96,6 @@ export function DesktopTimeline({ onAddItem, onNoteClick, onRecipeClick }: Deskt
 
   // Today tracking
   const todayKey = useReaderToday();
-  const today = useMemo(() => parseDateKey(todayKey), [todayKey]);
   const todayRowIndex = useMemo(() => {
     const dayIndex = allDays.findIndex((d) => dateKey(d) === todayKey);
 
@@ -222,16 +220,6 @@ export function DesktopTimeline({ onAddItem, onNoteClick, onRecipeClick }: Deskt
   const dndId = useId();
   const sensors = useSensors(pointerSensor);
   const { activeItem, dragOverDateKey, dndContextProps } = useCalendarDnd(calendarData);
-
-  const _slotLabels: Record<Slot, string> = useMemo(
-    () => ({
-      Breakfast: tSlots("breakfast"),
-      Lunch: tSlots("lunch"),
-      Dinner: tSlots("dinner"),
-      Snack: tSlots("snack"),
-    }),
-    [tSlots]
-  );
 
   // Also before the window is measured, which the server and the hydrating render never are: with
   // a seeded range the days draw on the first measured frame, without a request.
