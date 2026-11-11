@@ -3,6 +3,7 @@ import { beforeEach, describe, expect, it, vi } from "vitest";
 
 import { createTestQueryClient, createTestWrapper } from "@norish/shared-react/platform/testing";
 
+import { applyMoveEchoInRange } from "../calendar-cache-merge";
 import { useCalendarMutations } from "../use-calendar-mutations";
 
 const mockCreateItemMutate = vi.fn();
@@ -373,6 +374,88 @@ describe("useCalendarMutations", () => {
           title: "New title",
         });
       });
+    });
+  });
+
+  describe("a write's own answer", () => {
+    const range = { startISO, endISO };
+    const withoutTimes = (items: PlannedItemFromQuery[] | undefined) =>
+      items?.map(({ createdAt: _c, updatedAt: _u, ...rest }) => rest);
+
+    function setup() {
+      const a = createMockItem({ id: "a", slot: "Breakfast", sortOrder: 0, title: "a" });
+      const b = createMockItem({ id: "b", slot: "Breakfast", sortOrder: 1, title: "b" });
+
+      queryClient.setQueryData(getQueryKey(), [a, b]);
+      const answer = { ...a, slot: "Lunch" as const, sortOrder: 0, version: 2 };
+      const echo = {
+        item: answer,
+        targetSlotItems: [{ id: "a", sortOrder: 0 }],
+        sourceSlotItems: [{ id: "b", sortOrder: 0 }],
+        oldDate: a.date,
+        oldSlot: a.slot,
+        oldSortOrder: 0,
+      };
+
+      return { a, answer, echo };
+    }
+
+    it("places the moved plan's new version, so its next write is not stale", async () => {
+      const { answer } = setup();
+
+      mockMoveItemMutate.mockResolvedValue({ success: true, moved: true, item: answer });
+      const { result } = renderHook(() => useCalendarMutations(), {
+        wrapper: createTestWrapper(queryClient),
+      });
+
+      act(() => result.current.moveItem("a", "2025-01-15", "Lunch", 0));
+      await waitFor(() => expect(queryClient.isMutating()).toBe(0));
+      act(() => result.current.moveItem("a", "2025-01-15", "Dinner", 0));
+
+      await waitFor(() => expect(mockMoveItemMutate.mock.calls[1]?.[0].version).toBe(2));
+    });
+
+    it("places the updated plan's new version, so its next write is not stale", async () => {
+      const { a } = setup();
+
+      mockUpdateItemMutate.mockResolvedValue({
+        success: true,
+        stale: false,
+        item: { ...a, title: "renamed", version: 2 },
+      });
+      const { result } = renderHook(() => useCalendarMutations(), {
+        wrapper: createTestWrapper(queryClient),
+      });
+
+      act(() => result.current.updateItem("a", "renamed"));
+      await waitFor(() => expect(queryClient.isMutating()).toBe(0));
+      act(() => result.current.updateItem("a", "again"));
+
+      await waitFor(() => expect(mockUpdateItemMutate.mock.calls[1]?.[0].version).toBe(2));
+    });
+
+    it("an answer then its echo leaves the cache as either alone would", async () => {
+      const { answer, echo } = setup();
+
+      mockMoveItemMutate.mockResolvedValue({ success: true, moved: true, item: answer });
+      const { result } = renderHook(() => useCalendarMutations(), {
+        wrapper: createTestWrapper(queryClient),
+      });
+
+      act(() => result.current.moveItem("a", "2025-01-15", "Lunch", 0));
+      await waitFor(() => expect(queryClient.isMutating()).toBe(0));
+      const answered = queryClient.getQueryData<PlannedItemFromQuery[]>(getQueryKey())!;
+      const echoOnly = applyMoveEchoInRange(
+        answered.map((item) => (item.id === "a" ? { ...item, version: 1 } : item)),
+        echo,
+        range
+      );
+
+      expect(answered.find((item) => item.id === "a")?.version).toBe(2);
+      expect(withoutTimes(applyMoveEchoInRange(answered, echo, range))).toEqual(
+        withoutTimes(answered)
+      );
+      expect(withoutTimes(echoOnly)).toEqual(withoutTimes(answered));
     });
   });
 });

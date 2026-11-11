@@ -2,6 +2,7 @@ import type { Query } from "@tanstack/react-query";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 
 import type { PlannedItemFromQuery, Slot } from "@norish/shared/contracts";
+import type { PlannedItemWithRecipePayload } from "@norish/shared/contracts/zod";
 import type { CalendarRange } from "@norish/shared/lib/helpers";
 import { createClientId } from "@norish/shared/lib/operation-helpers";
 
@@ -63,6 +64,12 @@ export function useCalendarMutations(): CalendarMutationsResult {
     if ("stale" in result && result.stale) rereadAllRanges();
   };
 
+  // A move or update answers with its item, new version included: the echo is the fast path (ADR-0011).
+  const placeAnswer = (result: { stale?: boolean; item?: PlannedItemWithRecipePayload }) => {
+    rereadIfStale(result);
+    if (result.item) upsertItemAcrossRanges(result.item);
+  };
+
   // The newest copy: a range left behind (narrower, or after a reconnect) can hold an older one.
   const findItem = (itemId: string) =>
     cachedRanges()
@@ -104,7 +111,7 @@ export function useCalendarMutations(): CalendarMutationsResult {
           moved ? moveItemInRange(items, moved, target, range) : items
         );
       },
-      onSuccess: rereadIfStale,
+      onSuccess: placeAnswer,
       onError: rollBack,
     })
   );
@@ -117,7 +124,7 @@ export function useCalendarMutations(): CalendarMutationsResult {
             item.id === itemId ? { ...item, title, updatedAt: new Date() } : item
           )
         ),
-      onSuccess: rereadIfStale,
+      onSuccess: placeAnswer,
       onError: rollBack,
     })
   );
