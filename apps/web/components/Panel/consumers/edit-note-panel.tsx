@@ -29,7 +29,7 @@ export function EditNotePanel({
   date,
   slot,
 }: EditNotePanelProps) {
-  const { createItem, deleteItem, moveItem, updateItem } = useCalendarMutations();
+  const { planNote, deleteItem, moveItem, updateItem } = useCalendarMutations();
   const [title, setTitle] = useState(initialTitle);
   const [selectedDate, setSelectedDate] = useState<DateValue>(() => parseDate(date));
   const [selectedSlot, setSelectedSlot] = useState<Slot>(slot);
@@ -68,7 +68,7 @@ export function EditNotePanel({
   };
   const handleDuplicate = () => {
     if (!title.trim()) return;
-    createItem(selectedDate.toString(), selectedSlot, "note", undefined, title.trim());
+    planNote(selectedDate.toString(), selectedSlot, title.trim());
   };
   const handleSlotChange = (value: Key | null) => {
     if (value) {

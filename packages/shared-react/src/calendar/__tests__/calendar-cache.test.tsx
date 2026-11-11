@@ -351,7 +351,7 @@ describe("calendar cache convergence across ranges", () => {
     }));
 
     await act(async () => {
-      mutations!.createItem("2026-09-23", "Dinner", "recipe", "recipe-1");
+      mutations!.planRecipe("2026-09-23", "Dinner", "recipe-1");
       await vi.waitFor(() => expect(idsIn(queryClient, CALENDAR_PAGE)).toContain("item-1"));
     });
 

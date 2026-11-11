@@ -36,7 +36,7 @@ export function EditPlannedRecipePanel({
   date,
   slot,
 }: EditPlannedRecipePanelProps) {
-  const { createItem, deleteItem, moveItem } = useCalendarMutations();
+  const { planRecipe, deleteItem, moveItem } = useCalendarMutations();
   const [selectedDate, setSelectedDate] = useState<DateValue>(() => parseDate(date));
   const [selectedSlot, setSelectedSlot] = useState<Slot>(slot);
   const [seededFrom, setSeededFrom] = useState({ open, date, slot });
@@ -64,7 +64,7 @@ export function EditPlannedRecipePanel({
     onOpenChange(false);
   };
   const handleDuplicate = () => {
-    createItem(selectedDate.toString(), selectedSlot, "recipe", recipeId);
+    planRecipe(selectedDate.toString(), selectedSlot, recipeId);
   };
   const handleSlotChange = (value: Key | null) => {
     if (value) {

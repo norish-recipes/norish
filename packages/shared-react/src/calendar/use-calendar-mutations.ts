@@ -129,9 +129,12 @@ export function useCalendarMutations(): CalendarMutationsResult {
   const versionOf = (itemId: string) => findItem(itemId)?.version ?? 1;
 
   return {
-    createItem: (date, slot, itemType, recipeId, title) => {
+    planRecipe: (date, slot, recipeId) => {
       // Client-minted id, honoured on insert (ADR-0003).
-      mutateCreate({ id: createClientId(), date, slot, itemType, recipeId, title });
+      mutateCreate({ id: createClientId(), date, slot, itemType: "recipe", recipeId });
+    },
+    planNote: (date, slot, title) => {
+      mutateCreate({ id: createClientId(), date, slot, itemType: "note", title });
     },
     deleteItem: (itemId) => {
       mutateDelete({ itemId, version: versionOf(itemId) });

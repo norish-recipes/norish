@@ -200,7 +200,7 @@ function MiniRecipesContent({
   const [search, setSearch] = useState("");
   const [, startTransition] = useTransition();
   const [isRandomLoading, whileRandomLoading] = usePending();
-  const { createItem } = useCalendarMutations();
+  const { planRecipe, planNote } = useCalendarMutations();
   const { getRandomRecipe } = useRandomRecipe();
   const {
     recipes,
@@ -224,39 +224,39 @@ function MiniRecipesContent({
   const close = useCallback(() => onOpenChange(false), [onOpenChange]);
   const handlePlan = useCallback(
     (recipe: RecipeDashboardDTO, slot: Slot) => {
-      createItem(dateString, slot, "recipe", recipe.id);
+      planRecipe(dateString, slot, recipe.id);
       close();
       onPlanned(recipe.id);
     },
-    [dateString, close, createItem, onPlanned]
+    [dateString, close, planRecipe, onPlanned]
   );
   const handleRandomSelect = useCallback(async () => {
     if (!slot) return;
     await whileRandomLoading(() =>
       getRandomRecipe(SLOT_TO_CATEGORY[slot]).then((result) => {
         if (result) {
-          createItem(dateString, slot, "recipe", result.id);
+          planRecipe(dateString, slot, result.id);
           close();
           onPlanned(result.id);
         }
       })
     );
-  }, [slot, getRandomRecipe, createItem, dateString, close, onPlanned, whileRandomLoading]);
+  }, [slot, getRandomRecipe, planRecipe, dateString, close, onPlanned, whileRandomLoading]);
   const handlePlanNote = useCallback(
     (targetSlot: Slot) => {
       if (rawInput.trim()) {
-        createItem(dateString, targetSlot, "note", undefined, rawInput.trim());
+        planNote(dateString, targetSlot, rawInput.trim());
         close();
       }
     },
-    [dateString, rawInput, close, createItem]
+    [dateString, rawInput, close, planNote]
   );
   const handleDirectNote = useCallback(() => {
     if (slot && rawInput.trim()) {
-      createItem(dateString, slot, "note", undefined, rawInput.trim());
+      planNote(dateString, slot, rawInput.trim());
       close();
     }
-  }, [slot, rawInput, dateString, close, createItem]);
+  }, [slot, rawInput, dateString, close, planNote]);
   if (error) {
     return (
       <div className="flex min-h-0 flex-1 flex-col gap-3">

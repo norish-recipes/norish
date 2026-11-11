@@ -54,7 +54,7 @@ function MiniCalendarContent({
   const endISO = dateKey(rangeEnd);
   const { recipe } = useRecipeQuery(recipeId);
   const { calendarData, isLoading } = useCalendarQuery({ startISO, endISO });
-  const { createItem } = useCalendarMutations();
+  const { planRecipe } = useCalendarMutations();
   useCalendarSubscription();
   const allDays = useMemo(() => eachDayOfInterval(rangeStart, rangeEnd), [rangeStart, rangeEnd]);
   // A day's date on one line, as the calendar itself writes it: "Wed, Oct 7"
@@ -103,11 +103,11 @@ function MiniCalendarContent({
   const handlePlan = useCallback(
     (dayKey: string, slot: Slot) => {
       if (!recipe) return;
-      createItem(dayKey, slot, "recipe", recipe.id, undefined);
+      planRecipe(dayKey, slot, recipe.id);
       onOpenChange(false);
       onPlanned(recipe.id);
     },
-    [recipe, onOpenChange, createItem, onPlanned]
+    [recipe, onOpenChange, planRecipe, onPlanned]
   );
   if (isLoading) {
     return <>Loading...</>;

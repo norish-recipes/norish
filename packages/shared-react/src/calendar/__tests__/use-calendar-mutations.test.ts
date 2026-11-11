@@ -100,7 +100,7 @@ describe("useCalendarMutations", () => {
     return [["calendar", "listItems"], { input: { startISO, endISO }, type: "query" }];
   }
 
-  describe("createItem", () => {
+  describe("planRecipe and planNote", () => {
     it("calls mutation with correct parameters", async () => {
       mockCreateItemMutate.mockResolvedValue({ id: "new-item-1" });
 
@@ -109,7 +109,7 @@ describe("useCalendarMutations", () => {
       });
 
       act(() => {
-        result.current.createItem("2025-01-15", "Breakfast", "recipe", "recipe-123");
+        result.current.planRecipe("2025-01-15", "Breakfast", "recipe-123");
       });
 
       await waitFor(() => {
@@ -134,7 +134,7 @@ describe("useCalendarMutations", () => {
       });
 
       act(() => {
-        result.current.createItem("2025-01-15", "Lunch", "note", undefined, "Meal prep");
+        result.current.planNote("2025-01-15", "Lunch", "Meal prep");
       });
 
       await waitFor(() => {
@@ -394,7 +394,7 @@ describe("useCalendarMutations", () => {
       expect(result.current.isCreating).toBe(false);
 
       act(() => {
-        result.current.createItem("2025-01-15", "Breakfast", "recipe", "recipe-123");
+        result.current.planRecipe("2025-01-15", "Breakfast", "recipe-123");
       });
 
       await waitFor(() => {

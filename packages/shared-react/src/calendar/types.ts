@@ -45,13 +45,8 @@ export type CalendarQueryResult = {
 };
 
 export type CalendarMutationsResult = {
-  createItem: (
-    date: string,
-    slot: Slot,
-    itemType: "recipe" | "note",
-    recipeId?: string,
-    title?: string
-  ) => void;
+  planRecipe: (date: string, slot: Slot, recipeId: string) => void;
+  planNote: (date: string, slot: Slot, title: string) => void;
   deleteItem: (itemId: string) => void;
   moveItem: (itemId: string, targetDate: string, targetSlot: Slot, targetIndex: number) => void;
   updateItem: (itemId: string, title: string) => void;
