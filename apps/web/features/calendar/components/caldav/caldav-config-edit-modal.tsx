@@ -64,7 +64,7 @@ function CaldavConfigEditFields({
   const { saveConfig, isSavingConfig: saving } = useCaldavMutations();
   const form = useCaldavForm(config);
   const { serverUrl, username, password, calendarUrl, connection } = form;
-  // Revealing the stored password tests the connection once per opening.
+  // Revealing the password tests the connection once per config version; the fields remount on each.
   const hasAutoTestedRef = useRef(false);
 
   const handleRevealPassword = async () => {
