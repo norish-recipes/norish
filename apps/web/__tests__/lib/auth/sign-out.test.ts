@@ -92,4 +92,15 @@ describe("the web's sign-out", () => {
     expect(await offline.storage.keyval.keys()).toEqual([]);
     expect(address).toBe("/login");
   });
+
+  it.each([
+    ["the auth server signed the reader out", {}],
+    ["the Account was deleted", { accountDeleted: true }],
+  ])("still leaves for sign-in when clearing fails after %s", async (_, options) => {
+    vi.spyOn(offline.engine, "clearForSignOut").mockRejectedValue(new Error("quota"));
+
+    await expect(signOut(options)).resolves.toBeUndefined();
+
+    expect(address).toMatch(/^\/login/);
+  });
 });
