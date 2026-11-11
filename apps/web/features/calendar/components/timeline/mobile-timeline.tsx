@@ -216,7 +216,7 @@ export function MobileTimeline({ onAddItem, onNoteClick, onRecipeClick }: Mobile
 
   const dndId = useId();
   const sensors = useSensors(touchSensor, pointerSensor);
-  const { activeItem, dragOverDateKey, dndContextProps } = useCalendarDnd(calendarData, sensors);
+  const { activeItem, dragOverDateKey, dndContextProps } = useCalendarDnd(calendarData);
 
   // Also before the window is measured, which the server and the hydrating render never are: with
   // a seeded range the days draw on the first measured frame, without a request.
@@ -226,7 +226,7 @@ export function MobileTimeline({ onAddItem, onNoteClick, onRecipeClick }: Mobile
 
   return (
     <div className="fade-in">
-      <DndContext {...dndContextProps} id={dndId}>
+      <DndContext {...dndContextProps} id={dndId} sensors={sensors}>
         <div
           ref={containerRef}
           className="relative overflow-visible"

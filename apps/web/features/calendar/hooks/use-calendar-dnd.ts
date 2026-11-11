@@ -4,8 +4,6 @@ import type {
   DragEndEvent,
   DragOverEvent,
   DragStartEvent,
-  SensorDescriptor,
-  SensorOptions,
 } from "@dnd-kit/core";
 import { useState } from "react";
 import { dateKeyOfDrop } from "@/components/calendar/day-drop-id";
@@ -21,10 +19,7 @@ const collisionDetection: CollisionDetection = (args) => {
 };
 
 /** A planned item dragged onto another day, keeping its slot and landing last in it. */
-export function useCalendarDnd(
-  calendarData: Record<string, PlannedItemFromQuery[]>,
-  sensors: SensorDescriptor<SensorOptions>[]
-) {
+export function useCalendarDnd(calendarData: Record<string, PlannedItemFromQuery[]>) {
   const { moveItem } = useCalendarMutations();
   const [activeItem, setActiveItem] = useState<PlannedItemDisplay | null>(null);
   const [dragOverDateKey, setDragOverDateKey] = useState<string | null>(null);
@@ -67,7 +62,6 @@ export function useCalendarDnd(
     activeItem,
     dragOverDateKey,
     dndContextProps: {
-      sensors,
       collisionDetection,
       onDragStart,
       onDragOver,

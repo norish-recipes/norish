@@ -52,7 +52,7 @@ function render() {
 
   queryClient.setQueryData(RANGE_KEY, ITEMS);
 
-  const view = renderHook(() => useCalendarDnd(CALENDAR, []), {
+  const view = renderHook(() => useCalendarDnd(CALENDAR), {
     wrapper: createTestWrapper(queryClient),
   });
   const dragSoupOnto = (overId: string | null) => {

@@ -222,7 +222,7 @@ export function DesktopTimeline({ onAddItem, onNoteClick, onRecipeClick }: Deskt
 
   const dndId = useId();
   const sensors = useSensors(pointerSensor);
-  const { activeItem, dragOverDateKey, dndContextProps } = useCalendarDnd(calendarData, sensors);
+  const { activeItem, dragOverDateKey, dndContextProps } = useCalendarDnd(calendarData);
 
   const _slotLabels: Record<Slot, string> = useMemo(
     () => ({
@@ -242,7 +242,7 @@ export function DesktopTimeline({ onAddItem, onNoteClick, onRecipeClick }: Deskt
 
   return (
     <div className="fade-in">
-      <DndContext {...dndContextProps} id={dndId}>
+      <DndContext {...dndContextProps} id={dndId} sensors={sensors}>
         <div
           ref={containerRef}
           className="relative overflow-visible"
