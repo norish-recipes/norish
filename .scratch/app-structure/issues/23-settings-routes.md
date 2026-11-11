@@ -4,7 +4,7 @@
 
 **Blocked by:** None (calendar has landed)
 
-**Status:** ready-for-agent
+**Status:** done
 
 - [x] First, before anything moves, two E2E specs pass against today's code, each checked with `--repeat-each`:
   - household, two browsers: creating a household shows its join code; a second reader joins with the code and both see each other in the members card; the admin removes the member; a member who leaves sees the no-household view.
@@ -25,3 +25,7 @@
 - `readSettingsShape` split into `readHouseholdShape` and `readCaldavShape`; the household and CalDAV pages pass the shape to their content, so a client tab switch's in-tab wait draws the same skeleton as `loading.tsx`. Each tab's card list sits in its tab folder (`<tab>-skeleton.tsx`) over the shared `SettingsCardsSkeleton`.
 - `navTabPosition` now matches a path's first segment, so the navbar's Settings tab stays current on every `/settings/<tab>`. Each locale's "Account" reuses its existing `siteAuthTokens.account` word.
 - `root-messages.test.ts` exempts all of `components/settings/` (only settings routes draw it). Every E2E `"/settings"` visit now names `/settings/account`. The E2E specs use throwaway users and delete them afterwards.
+- Review (Opus 5.5 xhigh, both axes, then a re-review of the first fix round), fixed in 1fd4473a8..b5135d6b1: `settingsHref` and one `SETTINGS_HREF` in `components/settings/settings-tab.ts`; the bar is drawn from `SETTINGS_TABS`; each tab's shape type sits in its tab folder; the open tab's click no longer navigates; the tab's content sits in a `Tabs.Panel` again, with the bar's `RouterProvider` around the tab list only; the layout's admin check, a tab click (plain and under a base path) and E2E cleanup (`signedInContext`, `settingsCard`, `closeAndDelete`) are tested.
+- Two flakes in the new specs were bugs in released code, each fixed with a failing test first: `households.create` wrote a join code and then replaced it (ff165e8a8), and a `user.get` read begun before a profile write landed over it (b5135d6b1; 25 keeps this when the user hooks move).
+- Rejected: merging `readHouseholdShape` and `readCaldavShape` (one identity guard over two repositories); renaming `Caldav*` to `CalDav*` (shared-react uses `Caldav`; 26 settles it); narrowing the messages test's `components/settings/` exemption (the folder holds only what settings tabs draw); cancelling a pending tab navigation by clicking the open tab (the window ends when the next tab's skeleton shows); a focus ring on the tab panel while a skeleton shows (HeroUI's styling, as on the old bar).
+- For the docs pass after 29: the release-notes line for the tab addresses, and `apps/docs` pages that still say "Settings => User" (`configuration/authentication.md`, `site-authentication.md`). For 25: `UserSettingsContent` takes the Account's name when it moves.
