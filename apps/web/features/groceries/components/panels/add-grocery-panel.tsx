@@ -3,7 +3,8 @@
 import { useRef, useState } from "react";
 import Panel from "@/components/Panel/Panel";
 import { ActionButton, ActionButtonGroup } from "@/components/shared/action-button";
-import { useAisleChoice, useProductChoice } from "@/features/groceries/hooks";
+import { useAisleChoice } from "@/features/groceries/hooks/use-aisle-choice";
+import { useProductChoice } from "@/features/groceries/hooks/use-product-choice";
 import { Input } from "@heroui/react";
 import { useTranslations } from "next-intl";
 

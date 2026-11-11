@@ -1,6 +1,6 @@
 "use client";
 
-import { RecurrencePill } from "@/features/groceries/components/list";
+import { RecurrencePill } from "@/features/groceries/components/list/recurrence-pill";
 import { motion } from "motion/react";
 
 import type { RecurrencePattern } from "@norish/shared/contracts/recurrence";

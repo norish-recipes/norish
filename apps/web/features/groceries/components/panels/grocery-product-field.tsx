@@ -3,8 +3,12 @@
 import type { PackSizeWords } from "@/features/groceries/lib/format-price";
 import { useCallback, useEffect, useEffectEvent, useRef, useState } from "react";
 import { PanelComboBoxPopover } from "@/components/Panel/Panel";
-import { SalePrice } from "@/features/groceries/components/list";
-import { usePackSizeWords, useShopSearch, useStoreProducts } from "@/features/groceries/hooks";
+import { SalePrice } from "@/features/groceries/components/list/sale-price";
+import { usePackSizeWords } from "@/features/groceries/hooks/use-pack-size-words";
+import {
+  useShopSearch,
+  useStoreProducts,
+} from "@/features/groceries/hooks/use-store-products-query";
 import { formatPackSize, formatShelfPrice } from "@/features/groceries/lib/format-price";
 import { FIELD_CLASS, FIELD_STYLE } from "@/features/groceries/lib/grocery-field";
 import { ArrowTopRightOnSquareIcon, ChevronRightIcon } from "@heroicons/react/16/solid";

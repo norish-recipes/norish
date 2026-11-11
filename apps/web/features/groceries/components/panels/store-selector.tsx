@@ -3,7 +3,7 @@
 import type { Key } from "react";
 import { useMemo } from "react";
 import { PanelPortal } from "@/components/Panel/Panel";
-import { storeColorStyle } from "@/features/groceries/components/stores";
+import { storeColorStyle } from "@/features/groceries/components/stores/store-colors";
 import { Label, ListBox, Select } from "@heroui/react";
 
 import type { StoreDto } from "@norish/shared/contracts";

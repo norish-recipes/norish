@@ -15,8 +15,8 @@ import {
   useStoresSubscription,
 } from "@norish/shared-react/groceries";
 
-import { GroceriesHeader, VIEW_TRANSITION } from "./components/header";
-import { AddGroceryButton } from "./components/list";
+import { GroceriesHeader, VIEW_TRANSITION } from "./components/header/groceries-header";
+import AddGroceryButton from "./components/list/add-grocery-button";
 import { GroceriesListScreen } from "./groceries-list-screen";
 import { groceriesView } from "./lib/groceries-view";
 import { PantryScreen } from "./pantry-screen";

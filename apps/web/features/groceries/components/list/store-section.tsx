@@ -1,23 +1,20 @@
 "use client";
 
 import { memo, useCallback, useEffect, useMemo, useRef, useState } from "react";
-import { storeColorStyle } from "@/features/groceries/components/stores";
-import { useStructuralSharing } from "@/features/groceries/hooks";
+import { storeColorStyle } from "@/features/groceries/components/stores/store-colors";
+import { useStructuralSharing } from "@/features/groceries/hooks/use-structural-sharing";
 import { motion } from "motion/react";
 import { useTranslations } from "next-intl";
 
 import type { GroceryDto, RecurringGroceryDto, StoreDto } from "@norish/shared/contracts";
 
-import type { AisleResolver } from "./dnd";
-import {
-  aisleContainerId,
-  SortableAisleContainer,
-  SortableGroceryItem,
-  SortableStoreContainer,
-  storeItems,
-  UNSORTED_CONTAINER,
-  useDndGroceryContext,
-} from "./dnd";
+import type { AisleResolver } from "./dnd/types";
+import { useDndGroceryContext } from "./dnd/dnd-grocery-provider";
+import { SortableAisleContainer } from "./dnd/sortable-aisle-container";
+import { SortableGroceryItem } from "./dnd/sortable-grocery-item";
+import { SortableStoreContainer } from "./dnd/sortable-store-container";
+import { UNSORTED_CONTAINER } from "./dnd/types";
+import { aisleContainerId, storeItems } from "./dnd/utils";
 import { DoneRow } from "./done-row";
 import { GroceryItem } from "./grocery-item";
 import { StoreHeading } from "./store-heading";

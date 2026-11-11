@@ -72,8 +72,8 @@ function answer(storeId: string | null, term: string) {
 const KNOWN: Record<string, StoreProductDto[]> = { "store-a": [], "store-b": [] };
 
 // react-query's own semantics: a disabled query never leaves `pending`.
-vi.mock("@/features/groceries/hooks", async (importOriginal) => ({
-  ...(await importOriginal<typeof import("@/features/groceries/hooks")>()),
+vi.mock("@/features/groceries/hooks/use-store-products-query", async (importOriginal) => ({
+  ...(await importOriginal<typeof import("@/features/groceries/hooks/use-store-products-query")>()),
   useShopSearch: (storeId: string | null, term: string, enabled: boolean) => {
     searchCalls.push({ storeId, term, enabled });
     const on = enabled && Boolean(storeId) && term.trim().length > 0;

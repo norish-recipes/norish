@@ -18,14 +18,13 @@ import { useDevicePreference } from "@norish/shared-react/reader";
 import { useTRPC } from "@norish/shared-react/trpc";
 import { cssFloatingDockContentClearance } from "@norish/web/config/css-tokens";
 
-import {
-  ClearGroceriesModal,
-  GroceryList,
-  GroceryListByRecipe,
-  GrocerySkeleton,
-} from "./components/list";
-import { AddGroceryPanel, EditGroceryPanel } from "./components/panels";
-import { StoreManagerPanel } from "./components/stores";
+import { ClearGroceriesModal } from "./components/list";
+import { GroceryList } from "./components/list/grocery-list";
+import { GroceryListByRecipe } from "./components/list/grocery-list-by-recipe";
+import GrocerySkeleton from "./components/list/grocery-skeleton";
+import AddGroceryPanel from "./components/panels/add-grocery-panel";
+import EditGroceryPanel from "./components/panels/edit-grocery-panel";
+import { StoreManagerPanel } from "./components/stores/store-manager-panel";
 
 const NO_IDS: string[] = [];
 

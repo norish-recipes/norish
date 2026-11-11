@@ -1,4 +1,4 @@
-import { useStructuralSharing } from "@/features/groceries/hooks";
+import { useStructuralSharing } from "@/features/groceries/hooks/use-structural-sharing";
 import { renderHook } from "@testing-library/react";
 import { describe, expect, it } from "vitest";
 

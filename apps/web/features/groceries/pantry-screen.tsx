@@ -24,7 +24,8 @@ import { ingredientDisplayName } from "@norish/shared/lib/ingredient-names";
 import { pantryIngredientFor, sortPantryIngredients } from "@norish/shared/lib/pantry";
 import { foodKey } from "@norish/shared/lib/spelling-keys";
 
-import { FromYourRecipes, PutOnTheList, usePutOnTheList } from "./components/pantry";
+import { FromYourRecipes } from "./components/pantry/from-your-recipes";
+import { PutOnTheList, usePutOnTheList } from "./components/pantry/put-on-the-list";
 
 /** How long typing pauses before the catalogue is searched, as in the ingredient picker. */
 const SEARCH_DELAY_MS = 250;

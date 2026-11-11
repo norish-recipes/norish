@@ -3,7 +3,10 @@
 import { memo } from "react";
 import { IngredientIcon } from "@/components/ingredients/ingredient-icon";
 import { RoundCheckbox } from "@/components/round-checkbox";
-import { storeCheckbox, storeColorStyle } from "@/features/groceries/components/stores";
+import {
+  storeCheckbox,
+  storeColorStyle,
+} from "@/features/groceries/components/stores/store-colors";
 import { useUnitFormatter } from "@/hooks/use-unit-formatter";
 import { useTranslations } from "next-intl";
 

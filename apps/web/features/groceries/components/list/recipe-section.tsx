@@ -23,7 +23,8 @@ import { useTranslations } from "next-intl";
 
 import type { GroceryDto, RecurringGroceryDto, StoreDto } from "@norish/shared/contracts";
 
-import { GroceryDragOverlay, SortableGroceryItem } from "./dnd";
+import { GroceryDragOverlay } from "./dnd/grocery-drag-overlay";
+import { SortableGroceryItem } from "./dnd/sortable-grocery-item";
 import { DoneRow } from "./done-row";
 import { GroceryItem } from "./grocery-item";
 import { StoreHeading } from "./store-heading";

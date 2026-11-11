@@ -5,17 +5,25 @@ import { afterEach, describe, expect, it, vi } from "vitest";
 
 import "@testing-library/jest-dom";
 
-vi.mock("@/features/groceries/components/list", () => ({
-  ClearGroceriesModal: () => null,
+vi.mock("@/features/groceries/components/list", () => ({ ClearGroceriesModal: () => null }));
+vi.mock("@/features/groceries/components/list/grocery-list", () => ({
   GroceryList: () => <p>list</p>,
+}));
+vi.mock("@/features/groceries/components/list/grocery-list-by-recipe", () => ({
   GroceryListByRecipe: () => <p>list</p>,
-  GrocerySkeleton: () => <p>skeleton</p>,
 }));
-vi.mock("@/features/groceries/components/panels", () => ({
-  AddGroceryPanel: () => null,
-  EditGroceryPanel: () => null,
+vi.mock("@/features/groceries/components/list/grocery-skeleton", () => ({
+  default: () => <p>skeleton</p>,
 }));
-vi.mock("@/features/groceries/components/stores", () => ({ StoreManagerPanel: () => null }));
+vi.mock("@/features/groceries/components/panels/add-grocery-panel", () => ({
+  default: () => null,
+}));
+vi.mock("@/features/groceries/components/panels/edit-grocery-panel", () => ({
+  default: () => null,
+}));
+vi.mock("@/features/groceries/components/stores/store-manager-panel", () => ({
+  StoreManagerPanel: () => null,
+}));
 vi.mock("@norish/shared-react/groceries", async (importOriginal) => ({
   ...(await importOriginal()),
   useGroceriesMutations: () => ({}),

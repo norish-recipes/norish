@@ -2,7 +2,7 @@
 
 import { useMemo } from "react";
 import { useIngredientIcons } from "@/components/ingredients/ingredient-icon";
-import { useStructuralSharing } from "@/features/groceries/hooks";
+import { useStructuralSharing } from "@/features/groceries/hooks/use-structural-sharing";
 import { listFoodIds } from "@/features/groceries/lib/list-food-ids";
 import { ShoppingCartIcon } from "@heroicons/react/24/outline";
 import { motion } from "motion/react";
@@ -15,7 +15,8 @@ import { useFileGroceryName, useStoreAisles } from "@norish/shared-react/groceri
 import { groupGroceriesByIngredient } from "@norish/shared/lib/grocery-grouping";
 import { cssEmptyStateGlow } from "@norish/web/config/css-tokens";
 
-import { DndGroceryProvider, DndGroupedGroceryProvider } from "./dnd";
+import { DndGroceryProvider } from "./dnd/dnd-grocery-provider";
+import { DndGroupedGroceryProvider } from "./dnd/dnd-grouped-grocery-provider";
 import { GroupedStoreSection } from "./grouped-store-section";
 import { StoreSection } from "./store-section";
 

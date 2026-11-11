@@ -1,8 +1,8 @@
-import { useStructuralSharing } from "@/features/groceries/hooks";
+import { useStructuralSharing } from "@/features/groceries/hooks/use-structural-sharing";
 
 import type { AisleDto } from "@norish/shared/contracts";
 
-import { aisleContainerId } from "./dnd";
+import { aisleContainerId } from "./dnd/utils";
 
 export interface AisleBlock<T> {
   aisle: AisleDto;

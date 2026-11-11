@@ -1,7 +1,7 @@
 "use client";
 
 import { RoundCheckbox } from "@/components/round-checkbox";
-import { storeCheckbox } from "@/features/groceries/components/stores";
+import { storeCheckbox } from "@/features/groceries/components/stores/store-colors";
 import { useUnitFormatter } from "@/hooks/use-unit-formatter";
 import { Bars3Icon } from "@heroicons/react/16/solid";
 import { useTranslations } from "next-intl";
