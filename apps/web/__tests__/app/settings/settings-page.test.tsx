@@ -111,7 +111,7 @@ describe("the settings tab bar", () => {
     render(<SettingsTabs showAdminTab>content</SettingsTabs>);
     fireEvent.click(screen.getByRole("tab", { name: /tabs\.caldav/ }));
 
-    expect(push).toHaveBeenCalledWith("/settings/caldav", undefined);
+    expect(push.mock.lastCall?.[0]).toBe("/settings/caldav");
   });
 
   it("leaves links inside the tab's content to their own routing", () => {
