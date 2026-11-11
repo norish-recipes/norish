@@ -568,6 +568,29 @@ describe("useCalendarMutations", () => {
       await waitFor(() => expect(queryClient.isMutating()).toBe(0));
 
       expect(mockDeleteItemMutate.mock.calls[0]![0]).toEqual({ itemId: "a", version: 4 });
+      // The delete's answer removes the plan the move's answer put back.
+      expect(cachedA()).toBeUndefined();
+    });
+
+    it("a delete's answer removes a plan an echo put back meanwhile", async () => {
+      const { a } = setup();
+      const remove = Promise.withResolvers<object>();
+
+      mockDeleteItemMutate.mockReturnValue(remove.promise);
+      const { result } = renderHook(() => useCalendarMutations(), {
+        wrapper: createTestWrapper(queryClient),
+      });
+
+      act(() => result.current.deleteItem("a"));
+      await waitFor(() => expect(mockDeleteItemMutate).toHaveBeenCalledTimes(1));
+      // An earlier move's echo lands after the optimistic delete and appends the plan.
+      act(() => {
+        queryClient.setQueryData<PlannedItemFromQuery[]>(getQueryKey(), (items) => [...items!, a]);
+      });
+      await act(async () => remove.resolve({ success: true, stale: false }));
+      await waitFor(() => expect(queryClient.isMutating()).toBe(0));
+
+      expect(cachedA()).toBeUndefined();
     });
 
     it("a first write that fails sends the second with v+1, answered stale, then rereads", async () => {

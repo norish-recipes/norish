@@ -22,8 +22,13 @@ type RangeUpdate = (items: PlannedItemFromQuery[], range: CalendarRange) => Plan
 export function useCalendarMutations(): CalendarMutationsResult {
   const trpc = useTRPC();
   const queryClient = useQueryClient();
-  const { cachedRanges, writeRange, upsertItemAcrossRanges, rereadAllRanges } =
-    useCalendarCacheHelpers();
+  const {
+    cachedRanges,
+    writeRange,
+    upsertItemAcrossRanges,
+    removeItemAcrossRanges,
+    rereadAllRanges,
+  } = useCalendarCacheHelpers();
 
   // Synchronous, so a second write in the same tick reads this one; a manual write
   // during a cancelled read becomes the state that read reverts to.
@@ -57,11 +62,6 @@ export function useCalendarMutations(): CalendarMutationsResult {
     for (const { key, items } of context?.held ?? []) writeRange(key, items);
     // The snapshots can predate a later write or event; reread so each range converges.
     rereadAllRanges();
-  };
-
-  // The server drops version-stale writes; reread so the optimistic write converges.
-  const rereadIfStale = (result: object) => {
-    if ("stale" in result && result.stale) rereadAllRanges();
   };
 
   // A move or update answers with its item, new version included: the echo is the fast path (ADR-0011).
@@ -101,7 +101,12 @@ export function useCalendarMutations(): CalendarMutationsResult {
     trpc.calendar.deleteItem.mutationOptions({
       onMutate: ({ itemId }) =>
         writeAcrossRanges((items) => items.filter((item) => item.id !== itemId)),
-      onSuccess: rereadIfStale,
+      // Stale: the server kept the plan. Otherwise remove it again, over an earlier
+      // move's answer or echo that put it back after the optimistic delete (ADR-0011).
+      onSuccess: (result, { itemId }) => {
+        if (result.stale) rereadAllRanges();
+        else removeItemAcrossRanges(itemId);
+      },
       onError: rollBack,
       scope: planWrites,
     })
