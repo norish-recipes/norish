@@ -3,6 +3,8 @@ import { useCallback, useEffect, useLayoutEffect, useRef, useState } from "react
 import { useLandOnDay } from "@/components/calendar/land-on-day";
 import { usePrependAnchorRestore } from "@/features/calendar/hooks/use-prepend-anchor-restore";
 
+import type { GrowDirection } from "@norish/shared-react/calendar";
+
 type TimelineScrollArgs = {
   virtualizer: Pick<
     Virtualizer<Window, Element>,
@@ -18,11 +20,9 @@ type TimelineScrollArgs = {
   todayIndex: number;
   isLoading: boolean;
   isGrowing: boolean;
-  grow: (direction: "past" | "future") => void;
-  /** Items from the first at or within which a resting scroll grows the past. */
-  pastGrowEdge: number;
-  /** Items from the last at or within which a resting scroll grows the future. */
-  futureGrowEdge: number;
+  grow: (direction: GrowDirection) => void;
+  /** Items from the first (past) or last (future) at or within which a resting scroll grows that edge. */
+  growEdge: Record<GrowDirection, number>;
   /** Items today must sit inside the window's first and last before it counts as visible. */
   todayBuffer: { past: number; future: number };
   /** Checks today's visibility a frame after each scroll and first after 100 ms. */
@@ -51,8 +51,7 @@ export function useTimelineScroll({
   isLoading,
   isGrowing,
   grow,
-  pastGrowEdge,
-  futureGrowEdge,
+  growEdge,
   todayBuffer,
   deferVisibilityCheck = false,
 }: TimelineScrollArgs) {
@@ -133,8 +132,8 @@ export function useTimelineScroll({
 
     if (!firstItem || !lastItem) return;
 
-    const isNearStart = firstItem.index <= pastGrowEdge;
-    const isNearEnd = lastItem.index >= count - futureGrowEdge;
+    const isNearStart = firstItem.index <= growEdge.past;
+    const isNearEnd = lastItem.index >= count - growEdge.future;
 
     if (isNearStart && !isGrowing && !hasGrownPastRef.current) {
       captureAnchor({
@@ -160,8 +159,8 @@ export function useTimelineScroll({
   }, [
     virtualItems,
     count,
-    pastGrowEdge,
-    futureGrowEdge,
+    growEdge.past,
+    growEdge.future,
     isGrowing,
     grow,
     virtualizer,

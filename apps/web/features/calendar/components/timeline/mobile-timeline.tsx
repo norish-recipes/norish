@@ -109,8 +109,7 @@ export function MobileTimeline({ onAddItem, onNoteClick, onRecipeClick }: Mobile
     isLoading,
     isGrowing,
     grow,
-    pastGrowEdge: 2,
-    futureGrowEdge: 2,
+    growEdge: { past: 2, future: 2 },
     todayBuffer: { past: 2, future: 5 },
     deferVisibilityCheck: true,
   });

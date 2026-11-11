@@ -12,11 +12,14 @@ import { createPageStoreContext } from "../page-store";
 // Divisible by both 2 and 3 columns, so growing never shifts the grid.
 const GROW_DAYS = 12;
 
+/** Which edge of the calendar's range grows. */
+export type GrowDirection = "past" | "future";
+
 export type CalendarRangeState = {
   range: CalendarRange;
   /** Briefly true after a grow either way, so a scroll resting near an edge grows once. */
   isGrowing: boolean;
-  grow: (direction: "past" | "future") => void;
+  grow: (direction: GrowDirection) => void;
 };
 
 function shiftDays(iso: string, days: number) {
@@ -30,7 +33,7 @@ function shiftDays(iso: string, days: number) {
 /** The calendar's range, opening two weeks either side of `today` (`YYYY-MM-DD`). */
 export function createCalendarRangeStore(today: string) {
   // Per direction, so a tall screen at both edges grows both ways in one tick.
-  const settling = new Set<"past" | "future">();
+  const settling = new Set<GrowDirection>();
 
   return createStore<CalendarRangeState>()((set, get) => ({
     range: getInitialCalendarRange("mobile", today),

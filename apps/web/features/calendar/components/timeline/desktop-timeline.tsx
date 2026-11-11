@@ -135,8 +135,7 @@ export function DesktopTimeline({ onAddItem, onNoteClick, onRecipeClick }: Deskt
     isLoading,
     isGrowing,
     grow,
-    pastGrowEdge: 1,
-    futureGrowEdge: 2,
+    growEdge: { past: 1, future: 2 },
     todayBuffer: { past: 1, future: 1 },
   });
 

@@ -1,3 +1,4 @@
+export type { GrowDirection } from "./calendar-range-store";
 export {
   CalendarRangeProvider,
   createCalendarRangeStore,
