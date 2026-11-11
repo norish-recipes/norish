@@ -1,4 +1,4 @@
-// The household settings tab across two readers: create, join by code, remove a member, leave.
+// The household settings tab across two readers: create, join by code, remove, leave, transfer admin.
 import { randomUUID } from "node:crypto";
 import type { BrowserContext, Locator, Page } from "@playwright/test";
 
@@ -27,7 +27,7 @@ async function expectNoHousehold(page: Page): Promise<void> {
   await expect(card(page, "Join household")).toBeVisible();
 }
 
-test("a household is created, joined by code, a member removed, and left", async ({
+test("a household is created, joined by code, a member removed, left, and admin handed over", async ({
   browser,
   aiStack,
 }) => {
@@ -87,6 +87,17 @@ test("a household is created, joined by code, a member removed, and left", async
     await memberPage.getByRole("dialog").getByRole("button", { name: "Leave household" }).click();
     await expectNoHousehold(memberPage);
     await expect(memberRow(adminPage, member.name)).toBeHidden();
+
+    // The admin hands the role to a rejoined member; the toast names them in real text.
+    await joinWithCode(memberPage, code);
+    await expect(memberRow(adminPage, member.name)).toBeVisible();
+    await memberRow(adminPage, member.name).getByRole("button", { name: "Make admin" }).click();
+    await adminPage.getByRole("dialog").getByRole("button", { name: "Transfer admin" }).click();
+    await expect(adminPage.getByText(`Transferred admin to ${member.name}`)).toBeVisible();
+    await expect(memberRow(memberPage, member.name)).toContainText("Admin");
+    await expect(
+      memberRow(memberPage, admin.name).getByRole("button", { name: "Kick" })
+    ).toBeVisible();
   } finally {
     await closeAndDelete(contexts, users);
   }
