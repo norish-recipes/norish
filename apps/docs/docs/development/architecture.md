@@ -67,7 +67,8 @@ Web and mobile use the same layout. Web keeps its folders at the root of
   chunk. Groceries has `header/`, `list/`, `panels/`, `pantry/` and `stores/`.
   Recipes has `page/`, `share/`, `editor/`, `read-only/`, `media/` and
   `skeleton/`. Library has `grid/`, `header/`, `filters/`, `selection/`,
-  `panels/` and `skeleton/`. Skeletons, `loading.tsx` files and the shared
+  `panels/` and `skeleton/`. Calendar has `timeline/`, `panels/` and `skeleton/`,
+  with `hooks/` beside `components/`. Skeletons, `loading.tsx` files and the shared
   recipe page import files directly.
 - Features never import each other. Lint blocks `@/features/<x>` and
   `@/features/<x>/**` outside feature `<x>`, except in route files. Panels
@@ -110,8 +111,8 @@ The cross-cutting folders serve every domain:
   permissions and Device Preferences.
 - `realtime/` holds `useRealtimeSubscription`, which every subscription is built
   on, and `useKeepsCurrent`.
-- `page-store/` creates per-page store providers from a page key and selector
-  hooks, so components can read a store made for their page.
+- `page-store/` provides `createPageStoreContext`, which returns a provider that
+  creates a store once from the page's key and a hook that selects a slice of it.
 
 A domain never imports another domain, and a cross-cutting folder never imports
 a domain. Lint enforces both.
@@ -175,8 +176,7 @@ gives the reasons for decisions without an ADR.
   changes nothing and no client needs to skip its own
   ([ADR-0032](https://github.com/norish-recipes/Norish/blob/main/docs/adr/realtime/0032-realtime-is-one-hub-one-catalogue-one-idiom.md)).
 - A fresh subscription rereads its `liveQueryKeys` once its Cursor Mark says it
-  is live. Rereads due within 50 ms are combined. A read still in flight when
-  the subscription goes live is reread after it lands. A reread waits until no write is pending, and one an optimistic write cancels runs again then. A write waiting in the Outbox does not count as pending. A subscription that falls behind ends Lagged, starts
+  is live. Rereads due within 50 ms are combined. A reread requested while a matching read is in flight runs after it lands. A reread waits until no write is pending, and one an optimistic write cancels runs again then. A write waiting in the Outbox does not count as pending. A subscription that falls behind ends Lagged, starts
   fresh and rereads the same keys once live
   ([ADR-0032](https://github.com/norish-recipes/Norish/blob/main/docs/adr/realtime/0032-realtime-is-one-hub-one-catalogue-one-idiom.md)).
   A reconnect resumes missed events from a bounded buffer without a reread
