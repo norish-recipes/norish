@@ -5,7 +5,7 @@
  */
 
 import React, { act } from "react";
-import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
+import { QueryClient, QueryClientProvider, QueryObserver } from "@tanstack/react-query";
 import { TRPCClientError } from "@trpc/client";
 import { createRoot } from "react-dom/client";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
@@ -364,6 +364,58 @@ describe("useRealtimeSubscription", () => {
     expect(invalidate).not.toHaveBeenCalled();
     markLive(current().observer);
     expect(invalidate).toHaveBeenCalledTimes(1);
+  });
+
+  describe("a read in flight as the reread flushes", () => {
+    /** An active read whose every fetch waits for the test, so a reread shows as a second call. */
+    function observe(queryKey: unknown[]) {
+      const answers: Array<{ resolve: (value: string[]) => void; reject: (err: Error) => void }> =
+        [];
+      const queryFn = vi.fn(
+        () => new Promise<string[]>((resolve, reject) => answers.push({ resolve, reject }))
+      );
+      const unsubscribe = new QueryObserver(queryClient, {
+        queryKey,
+        queryFn,
+      }).subscribe(() => undefined);
+
+      observers.push(unsubscribe);
+
+      return { queryFn, answers };
+    }
+
+    const observers: Array<() => void> = [];
+
+    afterEach(() => {
+      for (const unsubscribe of observers.splice(0)) unsubscribe();
+    });
+
+    it("rereads a first fetch that was in flight once it lands", async () => {
+      const read = observe(GROCERIES);
+
+      render({ onEvent: vi.fn(), liveQueryKeys: [GROCERIES] });
+      markLive(current().observer);
+      expect(read.queryFn).toHaveBeenCalledTimes(1);
+
+      // That fetch may predate go-live, and its success would clear an invalidation made now.
+      await act(async () => read.answers[0]!.resolve(["before"]));
+
+      expect(read.queryFn).toHaveBeenCalledTimes(2);
+    });
+
+    it("holds no other read's reread behind a fetch that has yet to settle", async () => {
+      // A fetch that pauses offline never settles until the device is back online.
+      const hung = observe(STORES);
+      const idle = observe(GROCERIES);
+
+      await act(async () => idle.answers[0]!.resolve(["g"]));
+
+      render({ onEvent: vi.fn(), liveQueryKeys: [GROCERIES, STORES] });
+      markLive(current().observer);
+
+      expect(hung.queryFn).toHaveBeenCalledTimes(1);
+      expect(idle.queryFn).toHaveBeenCalledTimes(2);
+    });
   });
 
   it("does nothing for an error that is not a lag", () => {

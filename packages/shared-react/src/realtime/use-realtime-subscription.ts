@@ -15,7 +15,7 @@
  * nor an envelope is a programming error.
  */
 
-import type { QueryClient, QueryKey } from "@tanstack/react-query";
+import type { Query, QueryClient, QueryKey } from "@tanstack/react-query";
 import { useState } from "react";
 import { partialMatchKey, useQueryClient } from "@tanstack/react-query";
 import { TRPCClientError } from "@trpc/client";
@@ -79,8 +79,8 @@ const dueByClient = new WeakMap<QueryClient, QueryKey[]>();
 
 /**
  * Reads due within one window are invalidated together, so each matching query refetches once.
- * ponytail: a fixed 50 ms window; marks spread wider refetch once per window. Flush once every
- * open subscribe has its mark if spread marks show up as duplicate refetches.
+ * ponytail: a fixed 50 ms window, so marks spread wider refetch once per window; flush once
+ * every open subscribe has its mark if that shows up as duplicate refetches.
  */
 const LIVE_WINDOW_MS = 50;
 
@@ -98,8 +98,21 @@ function rereadInWindow(queryClient: QueryClient, queryKeys: QueryKey[]): void {
     const flushed = dueByClient.get(queryClient) ?? [];
 
     dueByClient.delete(queryClient);
+    const isDue = (query: Query) => flushed.some((key) => partialMatchKey(query.queryKey, key));
+    const inFlight = queryClient
+      .getQueryCache()
+      .findAll({ predicate: isDue, fetchStatus: "fetching" });
+
+    // A fetch in flight may predate go-live, and its success clears an invalidation made now:
+    // each waits for its own, so one that never settles (paused offline) holds back no other.
+    for (const query of inFlight) {
+      const reread = () =>
+        void queryClient.invalidateQueries({ queryKey: query.queryKey, exact: true });
+
+      void query.promise?.then(reread, reread);
+    }
     void queryClient.invalidateQueries({
-      predicate: (query) => flushed.some((queryKey) => partialMatchKey(query.queryKey, queryKey)),
+      predicate: (query) => isDue(query) && query.state.fetchStatus !== "fetching",
     });
   }, LIVE_WINDOW_MS);
 }
