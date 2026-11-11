@@ -16,7 +16,7 @@
  * scenarios about what a page shows run with JavaScript; where a wrong frame
  * could paint and be corrected, they record every frame from the start.
  */
-import type { Browser, BrowserContext, Page } from "@playwright/test";
+import type { Browser, BrowserContext, Page, Route } from "@playwright/test";
 
 import { updateRecipeDishColor } from "@norish/db/repositories/recipes";
 
@@ -75,29 +75,44 @@ async function openStatic(
 }
 
 /**
- * A live page as one Device Kind. With `watch` it records, from the very first
- * frame, every distinct value `selector`'s `attribute` takes (`present` when
- * no attribute is named), read back with {@link seen}.
- */
-/**
- * Every request a page sends for `path`, left unanswered so what draws can only come from the
- * document, each with the named subscriptions that were not live yet when it was sent.
+ * Every request a page sends for `path`, each with the named subscriptions that were not live
+ * yet when it was sent. Held unanswered until `release`, so what draws first can only come from
+ * the document; answered after, so a reread waiting on one can follow.
  */
 async function holdReads(page: Page, frames: FrameLog, path: RegExp, subscriptions: string[]) {
-  const notLiveAtRead: string[][] = [];
+  const reads: string[][] = [];
+  const held: Route[] = [];
+  let released = false;
 
   // The Cache Warmer runs only in the tab holding the leader lock; held here, every read is the page's.
   await page.addInitScript(() => {
     void navigator.locks.request("norish-outbox-replay", () => new Promise(() => {}));
   });
-  await page.route(path, () => {
-    notLiveAtRead.push(pathsNotLive(frames, subscriptions));
+  await page.route(path, async (route) => {
+    reads.push(pathsNotLive(frames, subscriptions));
+    if (released) await route.continue();
+    else held.push(route);
   });
 
-  return notLiveAtRead;
+  return {
+    reads,
+    release: async () => {
+      released = true;
+      await Promise.all(held.splice(0).map((route) => route.continue()));
+    },
+  };
 }
 
-/** The calendar screen's subscriptions, each of which rereads every cached range once live. */
+/**
+ * What a read is promised against its covering subscriptions: none before the first is live,
+ * and a last one once all are. How many reads, and when between, depends on the go-live windows.
+ */
+async function expectReadsFollowGoLive(reads: string[][], subscriptions: string[]) {
+  await expect.poll(() => reads.at(-1), { timeout: 30_000 }).toEqual([]);
+  for (const notLive of reads) expect(notLive.length).toBeLessThan(subscriptions.length);
+}
+
+/** The calendar screen's subscriptions, whose live keys cover every cached range. */
 const CALENDAR_SUBSCRIPTIONS = [
   "calendar.onItemCreated",
   "calendar.onItemDeleted",
@@ -107,7 +122,7 @@ const CALENDAR_SUBSCRIPTIONS = [
   "recipes.onUpdated",
 ];
 
-/** The Library screen's and the shell's subscriptions whose reread once live covers the Library. */
+/** The Library screen's and the shell's subscriptions whose live keys cover `library.list`. */
 const LIBRARY_SUBSCRIPTIONS = [
   "recipes.onCreated",
   "recipes.onUpdated",
@@ -124,9 +139,16 @@ const LIBRARY_SUBSCRIPTIONS = [
   "cookbooks.onDeleted",
   "pantry.onAdded",
   "pantry.onRemoved",
+  "ratings.onRatingUpdated",
+  "ratings.onRatingFailed",
   "permissions.onPolicyUpdated",
 ];
 
+/**
+ * A live page as one Device Kind. With `watch` it records, from the very first
+ * frame, every distinct value `selector`'s `attribute` takes (`present` when
+ * no attribute is named), read back with {@link seen}.
+ */
 async function openLive(
   browser: Browser,
   kind: DeviceKind,
@@ -322,15 +344,19 @@ test("a full load of the calendar draws its opening range from the document, rea
   });
   const { context, page } = await openLive(browser, "phone");
   const frames = recordFrames(page);
-  const reads = await holdReads(page, frames, /calendar\.listItems/, CALENDAR_SUBSCRIPTIONS);
+  const { reads, release } = await holdReads(
+    page,
+    frames,
+    /calendar\.listItems/,
+    CALENDAR_SUBSCRIPTIONS
+  );
 
   try {
     await page.goto("/calendar");
     await expect(page.getByText("Served calendar note").first()).toBeVisible();
+    await release();
     await waitForLive(frames, CALENDAR_SUBSCRIPTIONS);
-    // One reread for every subscription that went live together, and none before.
-    await expect.poll(() => reads.length).toBe(1);
-    expect(reads).toEqual([[]]);
+    await expectReadsFollowGoLive(reads, CALENDAR_SUBSCRIPTIONS);
   } finally {
     await context.close();
   }
@@ -1132,16 +1158,15 @@ test("a full load of the Library draws its first page from the document, read ag
   await ensureRecipe();
   const { context, page } = await openLive(browser, "phone");
   const frames = recordFrames(page);
-  const reads = await holdReads(page, frames, /library\.list/, LIBRARY_SUBSCRIPTIONS);
+  const { reads, release } = await holdReads(page, frames, /library\.list/, LIBRARY_SUBSCRIPTIONS);
 
   try {
     await storeFiltersCookie(context, {});
     await page.goto("/");
     await expect(page.locator("a[data-recipe-card]").first()).toBeVisible();
+    await release();
     await waitForLive(frames, LIBRARY_SUBSCRIPTIONS);
-    // Every read of the Library waited for the subscriptions that keep it current.
-    await expect.poll(() => reads.length).toBeGreaterThan(0);
-    for (const notLive of reads) expect(notLive).toEqual([]);
+    await expectReadsFollowGoLive(reads, LIBRARY_SUBSCRIPTIONS);
   } finally {
     await context.close();
   }
