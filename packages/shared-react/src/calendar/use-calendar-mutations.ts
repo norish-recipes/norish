@@ -71,7 +71,8 @@ export function useCalendarMutations(): CalendarMutationsResult {
     else rereadAllRanges();
   };
 
-  // One plan write at a time: same-tick writes share a batch the server runs concurrently.
+  // One plan write at a time: each is its own request, and two can reach the server in either
+  // order, so the second waits for the first's answer.
   const planWrites = { id: "calendar-plan-writes" };
 
   // The newest copy: a range left behind (narrower, or after a reconnect) can hold an older one.
