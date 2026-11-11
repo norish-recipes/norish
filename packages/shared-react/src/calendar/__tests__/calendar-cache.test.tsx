@@ -352,6 +352,30 @@ describe("a delete, move or update with no range", () => {
     }
   );
 
+  it.each(Object.keys(writes) as (keyof typeof writes)[])(
+    "sends the newest cached copy's version with a %s",
+    async (write) => {
+      // A narrower range left behind holds an older copy, and was cached first.
+      queryClient.clear();
+      queryClient.setQueryData(rangeKey(THIS_WEEK.startISO, THIS_WEEK.endISO), [
+        cachedItem({ id: "item-0", date: "2026-09-22", version: 1 }),
+      ]);
+      queryClient.setQueryData(rangeKey(CALENDAR_PAGE.startISO, CALENDAR_PAGE.endISO), [
+        cachedItem({ id: "item-0", date: "2026-09-22", version: 2, title: "Newer" }),
+      ]);
+      mount({ success: true });
+      act(() => writes[write]());
+      await settle();
+
+      expect(sent).toHaveBeenCalledWith(`${write}Item`, expect.objectContaining({ version: 2 }));
+      if (write === "move") {
+        expect(itemsIn(CALENDAR_PAGE)).toEqual([
+          expect.objectContaining({ id: "item-0", title: "Newer", version: 2 }),
+        ]);
+      }
+    }
+  );
+
   it("rereads both ranges after a stale write", async () => {
     mount({ success: true, stale: true });
     act(() => writes.update());

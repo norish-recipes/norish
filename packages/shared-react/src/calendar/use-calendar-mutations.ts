@@ -51,10 +51,15 @@ export function useCalendarMutations(): CalendarMutationsResult {
     if ("stale" in result && result.stale) invalidateAllRanges();
   };
 
+  // The newest copy: a range left behind (narrower, or after a reconnect) can hold an older one.
   const findItem = (itemId: string) =>
     cachedRanges()
       .flatMap(({ items }) => items)
-      .find((item) => item.id === itemId);
+      .filter((item) => item.id === itemId)
+      .reduce<PlannedItemFromQuery | undefined>(
+        (newest, item) => (newest && newest.version >= item.version ? newest : item),
+        undefined
+      );
 
   const createMutation = useMutation(
     trpc.calendar.createItem.mutationOptions({
