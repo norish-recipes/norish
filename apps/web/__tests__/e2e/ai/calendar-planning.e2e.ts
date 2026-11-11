@@ -154,13 +154,18 @@ function shiftDay(day: string, days: number): string {
   return dateKey(date);
 }
 
-test("a recipe dragged onto a day in its row or the next moves there and stays after a reload", async ({
+test("plans dragged out of one slot after a slot-mate's delete move there and stay after a reload", async ({
   browser,
   aiStack,
 }) => {
   const across = `Dragged Stew ${Date.now()}`;
   const down = `Dropped Soup ${Date.now()}`;
-  const ids = { [across]: await seedRecipe(across), [down]: await seedRecipe(down) };
+  const gone = `Deleted Pie ${Date.now()}`;
+  const ids = {
+    [across]: await seedRecipe(across),
+    [down]: await seedRecipe(down),
+    [gone]: await seedRecipe(gone),
+  };
   const context = await browser.newContext({
     baseURL: aiStack.baseURL,
     storageState: { cookies: aiStack.ownerCookies, origins: [] },
@@ -233,21 +238,26 @@ test("a recipe dragged onto a day in its row or the next moves there and stays a
     });
     const todayKey = dateKey(new Date(...today));
 
-    // Apart: a move bumps its slot-mates' versions, which the client is not told.
-    for (const [name, slot] of [
-      [across, "Dinner"],
-      [down, "Lunch"],
-    ] as const) {
+    // One slot: a delete or move renumbers its slot-mates, whose next writes must still apply.
+    for (const name of [across, down, gone]) {
       await callTrpc(aiStack.baseURL, aiStack.ownerCookies, "calendar.createItem", {
         date: todayKey,
-        slot,
+        slot: "Dinner",
         itemType: "recipe",
         recipeId: ids[name],
       });
     }
     await page.reload();
-    await expect(card(todayKey).getByText(across)).toBeVisible();
-    await expect(card(todayKey).getByText(down)).toBeVisible();
+    for (const name of [across, down, gone]) {
+      await expect(card(todayKey).getByText(name)).toBeVisible();
+    }
+
+    await card(todayKey).getByText(gone).click();
+    const editor = page.getByRole("dialog", { name: "Edit Planned Recipe" });
+
+    await editor.getByRole("button", { name: "Delete" }).click();
+    await expect(card(todayKey).getByText(gone)).toHaveCount(0);
+    await expect.poll(() => plannedDate(ids[gone]!)).toBeUndefined();
 
     // Whatever the weekday: a neighbour in today's row, and the day under today in the next.
     const todayRow = await rowOf(todayKey).getAttribute("data-index");
@@ -270,6 +280,7 @@ test("a recipe dragged onto a day in its row or the next moves there and stays a
     }
     await expect(card(todayKey).getByText(across)).toHaveCount(0);
     await expect(card(todayKey).getByText(down)).toHaveCount(0);
+    await expect(page.getByText(gone)).toHaveCount(0);
   } finally {
     await context.close();
   }
