@@ -41,6 +41,8 @@ export function useCalendarMutations(): CalendarMutationsResult {
     for (const { key, items } of context?.held ?? []) {
       queryClient.setQueryData<PlannedItemFromQuery[]>(key, items);
     }
+    // The snapshots can predate a later write or event; reread so each range converges.
+    invalidateAllRanges();
   };
 
   // The server drops version-stale writes; reread so the optimistic write converges.

@@ -376,6 +376,19 @@ describe("a delete, move or update with no range", () => {
     }
   );
 
+  it("rereads both ranges after rolling back a failed delete", async () => {
+    mount(new Error("refused"));
+    act(() => writes.delete());
+    await settle();
+
+    for (const range of [THIS_WEEK, CALENDAR_PAGE]) {
+      expect(itemsIn(range)).toEqual(ITEMS);
+      expect(queryClient.getQueryState(rangeKey(range.startISO, range.endISO))?.isInvalidated).toBe(
+        true
+      );
+    }
+  });
+
   it("keeps both writes started in one tick", async () => {
     mount({ success: true });
     // The note editor renames, then moves, in one handler.
