@@ -1,11 +1,17 @@
 import { useQueryClient } from "@tanstack/react-query";
 
 import type { PlannedItemFromQuery } from "@norish/shared/contracts";
+import type { CalendarRealtime } from "@norish/shared/contracts/realtime/calendar";
+import type { PayloadOf } from "@norish/shared/contracts/realtime/catalogue";
 import type { PlannedItemWithRecipePayload } from "@norish/shared/contracts/zod";
 
 import type { CachedCalendarRange, CalendarCacheHelpers } from "./types";
 import { useTRPC } from "../trpc";
-import { calendarRangeOfQueryKey, upsertItemInRange } from "./calendar-cache-merge";
+import {
+  applyMoveEchoInRange,
+  calendarRangeOfQueryKey,
+  upsertItemInRange,
+} from "./calendar-cache-merge";
 
 /** Every cached `calendar.listItems` range, mounted or not; a range with no data yet reads the server. */
 export function useCalendarCacheHelpers(): CalendarCacheHelpers {
@@ -38,9 +44,23 @@ export function useCalendarCacheHelpers(): CalendarCacheHelpers {
     }
   };
 
+  const applyMoveEchoAcrossRanges = (payload: PayloadOf<CalendarRealtime, "itemMoved">) => {
+    for (const { key, range } of cachedRanges()) {
+      queryClient.setQueryData<PlannedItemFromQuery[]>(key, (prev) =>
+        applyMoveEchoInRange(prev ?? [], payload, range)
+      );
+    }
+  };
+
   const invalidateAllRanges = () => {
     void queryClient.invalidateQueries({ queryKey: listKey });
   };
 
-  return { cachedRanges, upsertItemAcrossRanges, removeItemAcrossRanges, invalidateAllRanges };
+  return {
+    cachedRanges,
+    upsertItemAcrossRanges,
+    removeItemAcrossRanges,
+    applyMoveEchoAcrossRanges,
+    invalidateAllRanges,
+  };
 }

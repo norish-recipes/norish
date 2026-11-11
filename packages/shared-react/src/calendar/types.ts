@@ -9,6 +9,8 @@ import type {
   Slot,
   UserCaldavConfigWithoutPasswordDto,
 } from "@norish/shared/contracts";
+import type { CalendarRealtime } from "@norish/shared/contracts/realtime/calendar";
+import type { PayloadOf } from "@norish/shared/contracts/realtime/catalogue";
 import type { PlannedItemWithRecipePayload } from "@norish/shared/contracts/zod";
 
 import type { CalendarRange } from "./calendar-cache-merge";
@@ -28,6 +30,8 @@ export type CalendarCacheHelpers = {
   upsertItemAcrossRanges: (item: PlannedItemWithRecipePayload) => void;
   /** Drop an item from every cached range. */
   removeItemAcrossRanges: (itemId: string) => void;
+  /** Land a housemate's move in every cached range. */
+  applyMoveEchoAcrossRanges: (payload: PayloadOf<CalendarRealtime, "itemMoved">) => void;
   invalidateAllRanges: () => void;
 };
 

@@ -46,7 +46,7 @@ export function CalendarContextProvider({
   // isInitialLoading is true only for the very first load
   const isInitialLoading = isQueryLoading && !hasLoadedOnce;
 
-  useCalendarSubscription(startISO, endISO);
+  useCalendarSubscription();
 
   const expandRange = useCallback(
     (direction: "past" | "future") => {

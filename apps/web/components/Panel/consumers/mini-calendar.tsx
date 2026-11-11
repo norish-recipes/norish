@@ -55,7 +55,7 @@ function MiniCalendarContent({
   const { recipe } = useRecipeQuery(recipeId);
   const { calendarData, isLoading } = useCalendarQuery(startISO, endISO);
   const { createItem } = useCalendarMutations();
-  useCalendarSubscription(startISO, endISO);
+  useCalendarSubscription();
   const allDays = useMemo(() => eachDayOfInterval(rangeStart, rangeEnd), [rangeStart, rangeEnd]);
   // A day's date on one line, as the calendar itself writes it: "Wed, Oct 7"
   const dateFormatter = useMemo(

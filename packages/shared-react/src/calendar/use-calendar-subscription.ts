@@ -1,26 +1,21 @@
-import { useQueryClient } from "@tanstack/react-query";
-
-import type { PlannedItemFromQuery } from "@norish/shared/contracts";
 import type { CalendarRealtime } from "@norish/shared/contracts/realtime/calendar";
 import type { EventName, PayloadOf } from "@norish/shared/contracts/realtime/catalogue";
 import type { RecipesRealtime } from "@norish/shared/contracts/realtime/recipes";
 
 import { useRealtimeSubscription } from "../realtime/use-realtime-subscription";
 import { useTRPC } from "../trpc";
-import { isDateInRange, sortCalendarItems, toPlannedItemFromPayload } from "./calendar-cache-merge";
 import { useCalendarCacheHelpers } from "./use-calendar-cache";
 
 type Payload<E extends EventName<CalendarRealtime>> = PayloadOf<CalendarRealtime, E>;
 
-export function useCalendarSubscription(startISO: string, endISO: string) {
+export function useCalendarSubscription() {
   const trpc = useTRPC();
-  const queryClient = useQueryClient();
-  const { upsertItemAcrossRanges, removeItemAcrossRanges } = useCalendarCacheHelpers();
-  const rangeKey = trpc.calendar.listItems.queryKey({ startISO, endISO });
-
-  const setItems = (updater: (prev: PlannedItemFromQuery[]) => PlannedItemFromQuery[]) => {
-    queryClient.setQueryData<PlannedItemFromQuery[]>(rangeKey, (prev) => updater(prev ?? []));
-  };
+  const {
+    upsertItemAcrossRanges,
+    removeItemAcrossRanges,
+    applyMoveEchoAcrossRanges,
+    invalidateAllRanges,
+  } = useCalendarCacheHelpers();
 
   // Every cached range: the item events merge into each, an edited recipe rereads each.
   const live = { liveQueryKeys: [trpc.calendar.listItems.pathKey()] };
@@ -48,45 +43,7 @@ export function useCalendarSubscription(startISO: string, endISO: string) {
   useRealtimeSubscription<Payload<"itemMoved">>(trpc.calendar.onItemMoved, {
     ...live,
     onEvent: (payload) => {
-      setItems((prev) => {
-        const itemIsInRange = isDateInRange(payload.item.date, startISO, endISO);
-        const targetSortMap = new Map(
-          payload.targetSlotItems.map((item) => [item.id, item.sortOrder])
-        );
-        const sourceSortMap = payload.sourceSlotItems
-          ? new Map(payload.sourceSlotItems.map((item) => [item.id, item.sortOrder]))
-          : null;
-
-        const updated = prev
-          .filter((item) => item.id !== payload.item.id || itemIsInRange)
-          .map((item) => {
-            if (item.id === payload.item.id) {
-              return toPlannedItemFromPayload(payload.item, item);
-            }
-
-            if (targetSortMap.has(item.id)) {
-              return {
-                ...item,
-                sortOrder: targetSortMap.get(item.id)!,
-              };
-            }
-
-            if (sourceSortMap?.has(item.id)) {
-              return {
-                ...item,
-                sortOrder: sourceSortMap.get(item.id)!,
-              };
-            }
-
-            return item;
-          });
-
-        if (!itemIsInRange || updated.some((item) => item.id === payload.item.id)) {
-          return sortCalendarItems(updated);
-        }
-
-        return sortCalendarItems([...updated, toPlannedItemFromPayload(payload.item)]);
-      });
+      applyMoveEchoAcrossRanges(payload);
     },
   });
 
@@ -100,7 +57,7 @@ export function useCalendarSubscription(startISO: string, endISO: string) {
   useRealtimeSubscription<Payload<"failed">>(trpc.calendar.onFailed, {
     ...live,
     onEvent: () => {
-      void queryClient.invalidateQueries({ queryKey: rangeKey });
+      invalidateAllRanges();
     },
   });
 
@@ -110,7 +67,7 @@ export function useCalendarSubscription(startISO: string, endISO: string) {
     ...live,
     onEvent: ({ source }) => {
       if (source === "enrichment") return;
-      void queryClient.invalidateQueries({ queryKey: trpc.calendar.listItems.queryKey() });
+      invalidateAllRanges();
     },
   });
 }

@@ -152,9 +152,7 @@ describe("calendar cache convergence across ranges", () => {
   });
 
   function mountSubscription() {
-    ({ unmount } = renderHookWithClient(queryClient, () =>
-      useCalendarSubscription(THIS_WEEK.startISO, THIS_WEEK.endISO)
-    ));
+    ({ unmount } = renderHookWithClient(queryClient, () => useCalendarSubscription()));
   }
 
   function handler(name: string) {
@@ -198,6 +196,37 @@ describe("calendar cache convergence across ranges", () => {
     ).toBe(2);
   });
 
+  it("lands a move echo in every cached range, leaving and entering ranges by date", () => {
+    mountSubscription();
+    const moved = (date: string, version: number) =>
+      trackedEvent({
+        item: payload({ id: "item-0", date, slot: "Lunch", version }),
+        targetSlotItems: [{ id: "item-0", sortOrder: 0 }],
+        sourceSlotItems: [],
+        oldDate: "2026-09-22",
+        oldSlot: "Dinner",
+        oldSortOrder: 0,
+      });
+
+    act(() => handler("onItemMoved")(moved("2026-09-24", 2)));
+
+    for (const range of [THIS_WEEK, CALENDAR_PAGE]) {
+      expect(
+        queryClient.getQueryData<PlannedItemFromQuery[]>(rangeKey(range.startISO, range.endISO))
+      ).toEqual([expect.objectContaining({ id: "item-0", date: "2026-09-24", version: 2 })]);
+    }
+
+    act(() => handler("onItemMoved")(moved("2026-08-15", 3)));
+
+    expect(idsIn(queryClient, THIS_WEEK)).toEqual([]);
+    expect(idsIn(queryClient, CALENDAR_PAGE)).toEqual([]);
+    expect(
+      queryClient.getQueryData<PlannedItemFromQuery[]>(
+        rangeKey(LAST_MONTH.startISO, LAST_MONTH.endISO)
+      )
+    ).toEqual([expect.objectContaining({ id: "item-0", date: "2026-08-15", version: 3 })]);
+  });
+
   it("drops a deleted item from every cached range", () => {
     mountSubscription();
 
@@ -220,7 +249,7 @@ describe("calendar cache convergence across ranges", () => {
 
     ({ unmount } = renderHookWithClient(queryClient, () => {
       mutations = useCalendarMutations();
-      useCalendarSubscription(THIS_WEEK.startISO, THIS_WEEK.endISO);
+      useCalendarSubscription();
     }));
 
     await act(async () => {

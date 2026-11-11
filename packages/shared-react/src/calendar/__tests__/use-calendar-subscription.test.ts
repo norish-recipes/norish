@@ -125,7 +125,7 @@ describe("useCalendarSubscription", () => {
   });
 
   function renderSubscriptionHook() {
-    return renderHook(() => useCalendarSubscription(startISO, endISO), {
+    return renderHook(() => useCalendarSubscription(), {
       wrapper: createTestWrapper(queryClient),
     });
   }
@@ -645,21 +645,20 @@ describe("useCalendarSubscription", () => {
   });
 
   describe("onFailed subscription", () => {
-    it("invalidates query on failure", () => {
-      queryClient.setQueryData(getQueryKey(), []);
-      const invalidateSpy = vi.spyOn(queryClient, "invalidateQueries");
+    it("rereads every cached range on failure", () => {
+      const otherRange = [
+        ["calendar", "listItems"],
+        { input: { startISO: "2020-01-01", endISO: "2020-01-07" }, type: "query" },
+      ];
 
+      queryClient.setQueryData(getQueryKey(), []);
+      queryClient.setQueryData(otherRange, []);
       renderSubscriptionHook();
 
-      const callback = subscriptionCallbacks["onFailed"]!;
+      subscriptionCallbacks["onFailed"]!(trackedEvent({ reason: "Something went wrong" }));
 
-      expect(callback).toBeDefined();
-
-      callback(trackedEvent({ reason: "Something went wrong" }));
-
-      expect(invalidateSpy).toHaveBeenCalledWith({
-        queryKey: getQueryKey(),
-      });
+      expect(queryClient.getQueryState(getQueryKey())?.isInvalidated).toBe(true);
+      expect(queryClient.getQueryState(otherRange)?.isInvalidated).toBe(true);
     });
   });
 

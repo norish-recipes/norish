@@ -6,6 +6,8 @@
  */
 
 import type { PlannedItemFromQuery } from "@norish/shared/contracts";
+import type { CalendarRealtime } from "@norish/shared/contracts/realtime/calendar";
+import type { PayloadOf } from "@norish/shared/contracts/realtime/catalogue";
 import type { PlannedItemWithRecipePayload } from "@norish/shared/contracts/zod";
 
 export type CalendarRange = { startISO: string; endISO: string };
@@ -158,4 +160,33 @@ export function moveItemInRange(
   return sortCalendarItems(
     targetInRange ? [...shifted, { ...moved, ...target, updatedAt: new Date() }] : shifted
   );
+}
+
+/** A move echo as one range sees it: the item lands or leaves by its date, its slot-mates take the sent order. */
+export function applyMoveEchoInRange(
+  prev: PlannedItemFromQuery[],
+  payload: PayloadOf<CalendarRealtime, "itemMoved">,
+  { startISO, endISO }: CalendarRange
+) {
+  const itemIsInRange = isDateInRange(payload.item.date, startISO, endISO);
+  const sortOrders = new Map(
+    [...(payload.sourceSlotItems ?? []), ...payload.targetSlotItems].map((item) => [
+      item.id,
+      item.sortOrder,
+    ])
+  );
+  const updated = prev
+    .filter((item) => item.id !== payload.item.id || itemIsInRange)
+    .map((item) => {
+      if (item.id === payload.item.id) return toPlannedItemFromPayload(payload.item, item);
+      const sortOrder = sortOrders.get(item.id);
+
+      return sortOrder === undefined ? item : { ...item, sortOrder };
+    });
+
+  if (!itemIsInRange || updated.some((item) => item.id === payload.item.id)) {
+    return sortCalendarItems(updated);
+  }
+
+  return sortCalendarItems([...updated, toPlannedItemFromPayload(payload.item)]);
 }
