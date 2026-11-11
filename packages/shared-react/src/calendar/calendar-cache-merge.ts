@@ -43,6 +43,11 @@ export function toPlannedItemFromPayload(
   };
 }
 
+// A plan's version only rises on its own write, so a higher cached one is newer (a late answer).
+function holdsNewer(cached: PlannedItemFromQuery | undefined, incoming: { version: number }) {
+  return cached !== undefined && cached.version > incoming.version;
+}
+
 /** Place `item` in a range by its date: replaced if known, appended if new, dropped if it left. */
 export function upsertItemInRange(
   prev: PlannedItemFromQuery[],
@@ -51,8 +56,7 @@ export function upsertItemInRange(
 ) {
   const existing = prev.find((current) => current.id === item.id);
 
-  // A plan's version only rises on its own write, so a higher cached one is newer (a late answer).
-  if (existing && existing.version > item.version) return prev;
+  if (holdsNewer(existing, item)) return prev;
 
   if (!isDateInRange(item.date, range)) {
     return prev.filter((current) => current.id !== item.id);
@@ -168,8 +172,8 @@ export function applyMoveEchoInRange(
 ) {
   const existing = prev.find((item) => item.id === payload.item.id);
 
-  // As in `upsertItemInRange`: a higher cached version is a later write, its order included.
-  if (existing && existing.version > payload.item.version) return prev;
+  // A later write's order stands too.
+  if (holdsNewer(existing, payload.item)) return prev;
 
   const itemIsInRange = isDateInRange(payload.item.date, range);
   const sortOrders = new Map(
