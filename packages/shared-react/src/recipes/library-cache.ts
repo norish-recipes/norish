@@ -107,6 +107,37 @@ export function applyRecipeUpdateToLibrary(
 }
 
 /**
+ * Apply a recipe-list update to a cookbook's members, which the cookbook page draws with the
+ * Library's card. Edits and removals land; a row the updater added is not a member, so it is dropped.
+ */
+export function applyRecipeUpdateToMembers(
+  previous: InfiniteRecipeData | undefined,
+  updater: (previous: InfiniteRecipeData | undefined) => InfiniteRecipeData | undefined
+): InfiniteRecipeData | undefined {
+  if (!previous?.pages?.length) return previous;
+
+  const next = updater(previous);
+
+  if (!next?.pages) return previous;
+
+  const byId = new Map(next.pages.flatMap((page) => page.recipes).map((r) => [r.id, r] as const));
+  const pages = previous.pages.map((page) => ({
+    ...page,
+    recipes: page.recipes.flatMap((recipe) => byId.get(recipe.id) ?? []),
+  }));
+  // Every page carries the list's total, so each drops by every removal, as removeRecipesFromLists does.
+  const removed = previous.pages.reduce(
+    (count, page, index) => count + page.recipes.length - (pages[index]?.recipes.length ?? 0),
+    0
+  );
+
+  return {
+    ...previous,
+    pages: pages.map((page) => ({ ...page, total: Math.max(0, page.total - removed) })),
+  };
+}
+
+/**
  * Apply a cookbook-list update to a flat list of cookbooks.
  *
  * The membership panel's list is one array rather than pages, so it is

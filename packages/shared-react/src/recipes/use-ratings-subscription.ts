@@ -13,7 +13,7 @@ import { useRecipesCacheHelpers } from "./use-recipes-cache";
 type Payload<E extends EventName<RatingsRealtime>> = PayloadOf<RatingsRealtime, E>;
 
 /**
- * Ratings land where they are shown: the average and the list and Library rows are
+ * Ratings land where they are shown: the average and the list, Library and cookbook rows are
  * patched in place, by recipe id, and nothing is refetched for an event the
  * cache already reflects. Only a fresh subscription rereads. A rating the server refused is toasted.
  */
@@ -29,6 +29,7 @@ export function useRatingsSubscription() {
     trpc.ratings.getUserRating.queryKey(),
     trpc.recipes.list.pathKey(),
     trpc.library.list.pathKey(),
+    trpc.cookbooks.recipes.pathKey(),
   ];
 
   useRealtimeSubscription<Payload<"ratingUpdated">>(trpc.ratings.onRatingUpdated, {

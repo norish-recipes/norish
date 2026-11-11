@@ -76,6 +76,7 @@ function recipeListKeys(trpc: ReturnType<typeof useTRPC>) {
     trpc.recipes.get.pathKey(),
     trpc.recipes.getPending.queryKey(),
     trpc.library.list.pathKey(),
+    trpc.cookbooks.recipes.pathKey(),
   ];
 }
 

@@ -1,13 +1,13 @@
 "use client";
 
-import { useCallback, useMemo } from "react";
+import { useCallback } from "react";
 import { useQueryClient } from "@tanstack/react-query";
 
 import type { PendingRecipeDTO } from "@norish/shared/contracts";
 
 import type { InfiniteLibraryData, InfiniteRecipeData } from "./library-cache";
 import { useTRPC } from "../trpc";
-import { applyRecipeUpdateToLibrary } from "./library-cache";
+import { applyRecipeUpdateToLibrary, applyRecipeUpdateToMembers } from "./library-cache";
 
 export const OPTIMISTIC_PENDING_RECIPE_PREFIX = "optimistic-pending-recipe:";
 
@@ -57,40 +57,42 @@ export function useRecipesCacheHelpers(): RecipesCacheHelpers {
   const trpc = useTRPC();
   const queryClient = useQueryClient();
 
-  const recipesBaseKey = trpc.recipes.list.queryKey({});
-  const recipesPath = useMemo(() => [recipesBaseKey[0]], [recipesBaseKey]);
-  // The Library holds the same recipes in one interleaved list, so anything
-  // that reaches the recipe lists has to reach it too (ADR-0026).
-  const libraryBaseKey = trpc.library.list.queryKey({});
-  const libraryPath = useMemo(() => [libraryBaseKey[0]], [libraryBaseKey]);
-
   const pendingKey = trpc.recipes.getPending.queryKey();
 
+  // The Library holds the same recipes in one interleaved list (ADR-0026), and a cookbook page
+  // draws its members with the Library's card, so anything that reaches the recipe lists reaches both.
   const setAllRecipesData = useCallback(
     (updater: (prev: InfiniteRecipeData | undefined) => InfiniteRecipeData | undefined) => {
-      const queries = queryClient.getQueriesData<InfiniteRecipeData>({
-        queryKey: recipesPath,
-      });
-
-      for (const [key] of queries) {
+      for (const [key] of queryClient.getQueriesData<InfiniteRecipeData>({
+        queryKey: trpc.recipes.list.pathKey(),
+      })) {
         queryClient.setQueryData<InfiniteRecipeData>(key, updater);
       }
 
       for (const [key] of queryClient.getQueriesData<InfiniteLibraryData>({
-        queryKey: libraryPath,
+        queryKey: trpc.library.list.pathKey(),
       })) {
         queryClient.setQueryData<InfiniteLibraryData>(key, (previous) =>
           applyRecipeUpdateToLibrary(previous, updater)
         );
       }
+
+      for (const [key] of queryClient.getQueriesData<InfiniteRecipeData>({
+        queryKey: trpc.cookbooks.recipes.pathKey(),
+      })) {
+        queryClient.setQueryData<InfiniteRecipeData>(key, (previous) =>
+          applyRecipeUpdateToMembers(previous, updater)
+        );
+      }
     },
-    [queryClient, recipesPath, libraryPath]
+    [queryClient, trpc]
   );
 
   const invalidate = useCallback(() => {
-    queryClient.invalidateQueries({ queryKey: recipesPath });
-    queryClient.invalidateQueries({ queryKey: libraryPath });
-  }, [queryClient, recipesPath, libraryPath]);
+    queryClient.invalidateQueries({ queryKey: trpc.recipes.list.pathKey() });
+    queryClient.invalidateQueries({ queryKey: trpc.library.list.pathKey() });
+    queryClient.invalidateQueries({ queryKey: trpc.cookbooks.recipes.pathKey() });
+  }, [queryClient, trpc]);
 
   const addPendingRecipe = useCallback(
     (recipeId: string) => {

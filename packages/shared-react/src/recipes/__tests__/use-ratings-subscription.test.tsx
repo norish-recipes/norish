@@ -59,6 +59,7 @@ vi.mock("../../trpc", () => ({
         pathKey: () => [["library", "list"]],
       },
     },
+    cookbooks: { recipes: { pathKey: () => [["cookbooks", "recipes"]] } },
     ratings: {
       getAverage: { queryKey: (input?: { recipeId: string }) => averageKey(input?.recipeId) },
       getUserRating: { queryKey: (input?: { recipeId: string }) => userRatingKey(input?.recipeId) },

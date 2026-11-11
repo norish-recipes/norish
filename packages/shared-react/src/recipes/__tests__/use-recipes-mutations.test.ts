@@ -26,7 +26,7 @@ vi.mock("../../trpc", () => {
   return {
     useTRPC: () => ({
       recipes: {
-        list: { queryKey: key("recipes", "list") },
+        list: { queryKey: key("recipes", "list"), pathKey: key("recipes", "list") },
         get: { queryKey: key("recipes", "get") },
         getPending: { queryKey: key("recipes", "getPending") },
         create: procedure(server.create),
@@ -37,7 +37,8 @@ vi.mock("../../trpc", () => {
         delete: procedure(vi.fn()),
         convertMeasurements: procedure(vi.fn()),
       },
-      library: { list: { queryKey: key("library", "list") } },
+      library: { list: { queryKey: key("library", "list"), pathKey: key("library", "list") } },
+      cookbooks: { recipes: { pathKey: key("cookbooks", "recipes") } },
     }),
   };
 });
