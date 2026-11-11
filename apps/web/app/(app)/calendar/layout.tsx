@@ -3,7 +3,6 @@ import { readReaderToday } from "@/lib/reader-today-server";
 
 import { dateKey, getInitialDateRange } from "@norish/shared/lib/helpers";
 
-
 /** A full load of the calendar carries its opening range, worked out in the reader's time zone. */
 export default async function CalendarLayout({ children }: { children: React.ReactNode }) {
   const { start, end } = getInitialDateRange("mobile", await readReaderToday());
