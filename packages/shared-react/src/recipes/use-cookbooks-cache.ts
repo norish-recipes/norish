@@ -15,7 +15,7 @@ export function useCookbooksCacheHelpers(): CookbooksCacheHelpers {
   const trpc = useTRPC();
   const queryClient = useQueryClient();
 
-  const listPath = useMemo(() => [trpc.cookbooks.list.queryKey({})[0]], [trpc]);
+  const listPath = trpc.cookbooks.list.pathKey();
   // The membership panel's list is a cookbook list too, and it is the one a
   // reader is looking at while they create one. Leaving it out of these
   // helpers is what made a cookbook created from a recipe exist on the
@@ -23,12 +23,9 @@ export function useCookbooksCacheHelpers(): CookbooksCacheHelpers {
   const editableKey = useMemo(() => trpc.cookbooks.editable.queryKey(), [trpc]);
   // Cookbooks are Library rows too, so a change here has to reach the
   // interleaved list as well (ADR-0026).
-  const libraryPath = useMemo(() => [trpc.library.list.queryKey({})[0]], [trpc]);
+  const libraryPath = trpc.library.list.pathKey();
   const membershipPaths = useMemo(
-    () => [
-      [trpc.cookbooks.forRecipe.queryKey({ recipeId: "" })[0]],
-      [trpc.cookbooks.recipes.queryKey({ cookbookId: "" })[0]],
-    ],
+    () => [trpc.cookbooks.forRecipe.pathKey(), trpc.cookbooks.recipes.pathKey()],
     [trpc]
   );
 
@@ -76,7 +73,7 @@ export function useCookbooksCacheHelpers(): CookbooksCacheHelpers {
         queryKey: trpc.cookbooks.get.queryKey({ id: cookbookId }),
       });
       queryClient.invalidateQueries({
-        queryKey: [trpc.cookbooks.recipes.queryKey({ cookbookId })[0]],
+        queryKey: trpc.cookbooks.recipes.pathKey(),
         predicate: (query) => cookbookIdOf(query.queryKey) === cookbookId,
       });
       queryClient.invalidateQueries({

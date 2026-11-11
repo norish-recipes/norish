@@ -12,6 +12,7 @@ vi.mock("../../trpc", () => {
   const key =
     (...path: string[]) =>
     (input?: unknown) => [path, ...(input === undefined ? [] : [{ input }])];
+  const read = (...path: string[]) => ({ queryKey: key(...path), pathKey: () => [path] });
   const procedure = (mutationFn: (input: unknown) => unknown) => ({
     mutationOptions: (options?: object) => ({ ...options, mutationFn }),
   });
@@ -19,19 +20,19 @@ vi.mock("../../trpc", () => {
   return {
     useTRPC: () => ({
       cookbooks: {
-        list: { queryKey: key("cookbooks", "list") },
-        editable: { queryKey: key("cookbooks", "editable") },
-        get: { queryKey: key("cookbooks", "get") },
-        forRecipe: { queryKey: key("cookbooks", "forRecipe") },
-        recipes: { queryKey: key("cookbooks", "recipes") },
-        memberIds: { queryKey: key("cookbooks", "memberIds") },
+        list: read("cookbooks", "list"),
+        editable: read("cookbooks", "editable"),
+        get: read("cookbooks", "get"),
+        forRecipe: read("cookbooks", "forRecipe"),
+        recipes: read("cookbooks", "recipes"),
+        memberIds: read("cookbooks", "memberIds"),
         create: procedure(sendCreate),
         update: procedure(vi.fn()),
         remove: procedure(vi.fn()),
         setMembership: procedure(vi.fn()),
         uploadImage: procedure(vi.fn()),
       },
-      library: { list: { queryKey: key("library", "list") } },
+      library: { list: read("library", "list") },
     }),
   };
 });

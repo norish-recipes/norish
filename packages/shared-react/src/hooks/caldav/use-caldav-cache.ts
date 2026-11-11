@@ -15,7 +15,7 @@ export function createUseCaldavCache({ useTRPC }: CreateCaldavHooksOptions) {
     const trpc = useTRPC();
     const queryClient = useQueryClient();
     const configQueryKey = trpc.caldav.getConfig.queryKey();
-    const syncStatusBaseKey = trpc.caldav.getSyncStatus.queryKey({ page: 1, pageSize: 20 });
+    const syncStatusPath = trpc.caldav.getSyncStatus.pathKey();
     const summaryQueryKey = trpc.caldav.getSummary.queryKey();
 
     const setConfig = useCallback(
@@ -48,19 +48,19 @@ export function createUseCaldavCache({ useTRPC }: CreateCaldavHooksOptions) {
           page: number;
           pageSize: number;
         }>({
-          queryKey: [syncStatusBaseKey[0]],
+          queryKey: syncStatusPath,
         });
 
         for (const [key] of queries) {
           queryClient.setQueryData(key, updater);
         }
       },
-      [queryClient, syncStatusBaseKey]
+      [queryClient, syncStatusPath]
     );
 
     const invalidateSyncStatus = useCallback(() => {
-      queryClient.invalidateQueries({ queryKey: [syncStatusBaseKey[0]] });
-    }, [queryClient, syncStatusBaseKey]);
+      queryClient.invalidateQueries({ queryKey: syncStatusPath });
+    }, [queryClient, syncStatusPath]);
 
     const invalidateSummary = useCallback(() => {
       queryClient.invalidateQueries({ queryKey: summaryQueryKey });
