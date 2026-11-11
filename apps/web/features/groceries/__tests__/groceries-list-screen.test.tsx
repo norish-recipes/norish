@@ -5,7 +5,9 @@ import { afterEach, describe, expect, it, vi } from "vitest";
 
 import "@testing-library/jest-dom";
 
-vi.mock("@/features/groceries/components/list", () => ({ ClearGroceriesModal: () => null }));
+vi.mock("@/features/groceries/components/list/clear-groceries-modal", () => ({
+  ClearGroceriesModal: () => null,
+}));
 vi.mock("@/features/groceries/components/list/grocery-list", () => ({
   GroceryList: () => <p>list</p>,
 }));

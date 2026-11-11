@@ -8,7 +8,7 @@ import RecipePageDesktop from "@/features/recipes/components/page/recipe-page-de
 import RecipePageMobile from "@/features/recipes/components/page/recipe-page-mobile";
 import RecipePrint from "@/features/recipes/components/page/recipe-print";
 import { RecipePageTint } from "@/features/recipes/components/read-only";
-import { RecipeSkeleton } from "@/features/recipes/components/skeleton";
+import RecipeSkeleton from "@/features/recipes/components/skeleton/recipe-skeleton";
 import { useRecipeEnrichmentSubscription } from "@/features/recipes/hooks/use-recipe-enrichment";
 import { useRecipeSubscription } from "@/features/recipes/hooks/use-recipe-subscription";
 import { useAutoConversion } from "@/features/recipes/hooks/use-system-conversion";

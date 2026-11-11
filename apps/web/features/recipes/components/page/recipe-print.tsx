@@ -2,7 +2,7 @@
 
 import type { CSSProperties } from "react";
 import { useState } from "react";
-import { useAmountDisplayPreference } from "@/features/recipes/hooks";
+import { useAmountDisplayPreference } from "@/features/recipes/hooks/use-amount-display-preference";
 import { useUnitFormatter } from "@/hooks/use-unit-formatter";
 import { Button, Checkbox, Label, ListBox, Modal, Select } from "@heroui/react";
 import { useTranslations } from "next-intl";

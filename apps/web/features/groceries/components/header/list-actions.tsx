@@ -2,7 +2,7 @@
 
 import { useState } from "react";
 import UiSwitch from "@/components/shared/ui-switch";
-import { ClearGroceriesModal } from "@/features/groceries/components/list";
+import { ClearGroceriesModal } from "@/features/groceries/components/list/clear-groceries-modal";
 import {
   BookOpenIcon,
   BuildingStorefrontIcon,

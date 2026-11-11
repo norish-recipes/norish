@@ -18,7 +18,7 @@ import { useDevicePreference } from "@norish/shared-react/reader";
 import { useTRPC } from "@norish/shared-react/trpc";
 import { cssFloatingDockContentClearance } from "@norish/web/config/css-tokens";
 
-import { ClearGroceriesModal } from "./components/list";
+import { ClearGroceriesModal } from "./components/list/clear-groceries-modal";
 import { GroceryList } from "./components/list/grocery-list";
 import { GroceryListByRecipe } from "./components/list/grocery-list-by-recipe";
 import GrocerySkeleton from "./components/list/grocery-skeleton";

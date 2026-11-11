@@ -4,7 +4,7 @@ import { useMemo, useState } from "react";
 import Image from "next/image";
 import { FallbackPlaceholder, useImageErrors } from "@/components/shared/fallback-image";
 import { Carousel } from "@/components/ui/carousel";
-import { ImageLightbox } from "@/features/recipes/components/media";
+import ImageLightbox from "@/features/recipes/components/media/image-lightbox";
 import { Button } from "@heroui/react";
 
 import { addBasePath } from "@norish/shared/lib/base-path";

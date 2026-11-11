@@ -13,6 +13,5 @@ export {
 export { ReadonlyStepsList } from "./readonly-steps-list";
 export { default as RecipeHeaderMobile } from "./recipe-header-mobile";
 export { default as RecipePageTint } from "./recipe-page-tint";
-export { SmartInstruction } from "./smart-instruction";
 export { default as SourceCard } from "./source-card";
 export { StepIngredientsRow } from "./step-ingredients-row";

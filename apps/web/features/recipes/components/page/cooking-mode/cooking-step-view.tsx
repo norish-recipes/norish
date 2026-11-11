@@ -2,7 +2,8 @@
 
 import type { Transition } from "motion/react";
 import { useCallback, useEffect, useRef, useState } from "react";
-import { SmartInstruction, StepIngredientsRow } from "@/features/recipes/components/read-only";
+import { StepIngredientsRow } from "@/features/recipes/components/read-only";
+import { SmartInstruction } from "@/features/recipes/components/read-only/smart-instruction";
 import { usePrefersReducedMotion } from "@/hooks/use-prefers-reduced-motion";
 import { BookOpenIcon } from "@heroicons/react/20/solid";
 import { Chip, ScrollShadow, Surface } from "@heroui/react";

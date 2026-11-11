@@ -1,7 +1,7 @@
 "use client";
 
 import { useState } from "react";
-import { useAmountDisplayPreference } from "@/features/recipes/hooks";
+import { useAmountDisplayPreference } from "@/features/recipes/hooks/use-amount-display-preference";
 import { useSystemConversion } from "@/features/recipes/hooks/use-system-conversion";
 import {
   AdjustmentsHorizontalIcon,
