@@ -1,9 +1,8 @@
 import type { DataTag, QueryClient, QueryKey } from "@tanstack/react-query";
 
 /**
- * Writes `update(held)` to `queryKey`. A read under way answers for what was there before, so it is
- * cancelled, which reverts to what it began with: the write applies to what is held now. With nothing
- * held there is nothing to write over, and cancelling the first read would leave it loading.
+ * Writes `update(held)` over what is held, cancelling a read under way since it predates the write.
+ * With nothing held it leaves the read alone, as cancelling a first read would leave it loading.
  */
 export function writeOverRead<TData>(
   queryClient: QueryClient,
