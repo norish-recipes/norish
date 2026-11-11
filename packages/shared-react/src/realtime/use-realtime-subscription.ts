@@ -17,7 +17,7 @@
 
 import type { Query, QueryClient, QueryKey } from "@tanstack/react-query";
 import { useState } from "react";
-import { partialMatchKey, useQueryClient } from "@tanstack/react-query";
+import { CancelledError, partialMatchKey, useQueryClient } from "@tanstack/react-query";
 import { TRPCClientError } from "@trpc/client";
 import { useSubscription } from "@trpc/tanstack-react-query";
 
@@ -99,6 +99,7 @@ function rereadInWindow(queryClient: QueryClient, queryKeys: QueryKey[]): void {
 
     dueByClient.delete(queryClient);
     const isDue = (query: Query) => flushed.some((key) => partialMatchKey(query.queryKey, key));
+
     const inFlight = queryClient
       .getQueryCache()
       .findAll({ predicate: isDue, fetchStatus: "fetching" });
@@ -115,44 +116,28 @@ function rereadInWindow(queryClient: QueryClient, queryKeys: QueryKey[]): void {
 }
 
 /**
- * Invalidates the matching reads. A write's `cancelQueries` reverts a reread to its fetch-start
- * state and nothing refetches it, so one that ends neither answered nor failed goes again once no
- * write is pending (a paused Outbox write counts).
+ * Invalidates the matching reads once no write is pending. A write's `cancelQueries` reverts a
+ * read to its fetch-start state and nothing refetches it, so a reverted one goes again.
  */
 function reread(queryClient: QueryClient, predicate: (query: Query) => boolean): void {
-  const cache = queryClient.getQueryCache();
-  // Matched before the invalidation starts their fetches, which a predicate may exclude.
-  const due = cache.findAll({ predicate });
+  afterWrites(queryClient, () => {
+    const due = queryClient.getQueryCache().findAll({ predicate });
+    // A next-page fetch keeps the other pages as they were: replace it, never join it.
+    const cancelRefetch = due.some((query) => query.state.fetchMeta?.fetchMore);
+    const watch = (query: Query, promise = query.promise) =>
+      void promise?.catch((error: unknown) => {
+        if (!(error instanceof CancelledError)) return;
+        if (error.revert) reread(queryClient, (held) => held === query);
+        // A silent cancel hands the read to a newer fetch, whose outcome counts instead.
+        else if (query.promise !== promise) watch(query);
+      });
 
-  void queryClient.invalidateQueries({ predicate }, { cancelRefetch: false });
-  const unanswered = new Set(due.filter((query) => query.state.fetchStatus !== "idle"));
-  let open = unanswered.size;
-
-  if (open === 0) return;
-  // An optimistic `setQueryData` is a manual success: only the server's answer or failure counts.
-  const stop = cache.subscribe(({ query, ...event }) => {
-    const { action } = event.type === "updated" ? event : { action: undefined };
-
-    if (
-      event.type === "removed" ||
-      action?.type === "error" ||
-      (action?.type === "success" && !action.manual)
-    ) {
-      unanswered.delete(query);
-    }
+    void queryClient.invalidateQueries({ predicate }, { cancelRefetch });
+    due.forEach((query) => watch(query));
   });
-
-  for (const query of unanswered) {
-    const settled = () => {
-      if (--open === 0) stop();
-      if (unanswered.has(query))
-        afterWrites(queryClient, () => reread(queryClient, (held) => held === query));
-    };
-
-    void Promise.resolve(query.promise).then(settled, settled);
-  }
 }
 
+/** Runs `run` once no write is pending. An Outbox write fails its mutation, so it never counts. */
 function afterWrites(queryClient: QueryClient, run: () => void): void {
   if (queryClient.isMutating() === 0) return run();
   const stop = queryClient.getMutationCache().subscribe(() => {

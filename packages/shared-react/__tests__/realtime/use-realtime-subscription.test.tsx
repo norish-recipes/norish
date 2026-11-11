@@ -6,6 +6,7 @@
 
 import React, { act } from "react";
 import {
+  InfiniteQueryObserver,
   MutationObserver,
   QueryClient,
   QueryClientProvider,
@@ -424,7 +425,7 @@ describe("useRealtimeSubscription", () => {
 
     describe("a write that cancels the reread", () => {
       /** A write as shared-react's mutations make one: cancel the read, then write over it. */
-      async function write(queryKey: unknown[]) {
+      async function write(queryKey: unknown[], optimistic: unknown = ["optimistic"]) {
         const settle: Array<(failed?: Error) => void> = [];
         let sent = () => undefined as void;
         const running = new Promise<void>((resolve) => (sent = resolve));
@@ -438,7 +439,7 @@ describe("useRealtimeSubscription", () => {
           },
           onMutate: async () => {
             await queryClient.cancelQueries({ queryKey });
-            queryClient.setQueryData(queryKey, ["optimistic"]);
+            queryClient.setQueryData(queryKey, optimistic);
           },
         });
 
@@ -479,6 +480,89 @@ describe("useRealtimeSubscription", () => {
 
         await settle();
         expect(read.queryFn).toHaveBeenCalledTimes(3);
+      });
+
+      it("holds the reread of a read in flight at the flush until a write that cancels it settles", async () => {
+        const read = observe(GROCERIES);
+
+        await act(async () => read.answers[0]!.resolve(["before"]));
+        // A refetch from before go-live, still in flight as the window flushes.
+        void queryClient.refetchQueries({ queryKey: GROCERIES });
+        render({ onEvent: vi.fn(), liveQueryKeys: [GROCERIES] });
+        markLive(current().observer);
+        expect(read.queryFn).toHaveBeenCalledTimes(2);
+
+        const { settle } = await write(GROCERIES);
+
+        expect(read.queryFn).toHaveBeenCalledTimes(2);
+        expect(queryClient.getQueryData(GROCERIES)).toEqual(["optimistic"]);
+        await settle();
+        expect(read.queryFn).toHaveBeenCalledTimes(3);
+      });
+
+      it("rereads an infinite read from its first page when a next-page fetch is running", async () => {
+        const RECIPES = [["recipes", "list"], { type: "infinite" }];
+        const pageParams: number[] = [];
+        const answers: Array<(page: string) => void> = [];
+        const unsubscribe = new InfiniteQueryObserver(queryClient, {
+          queryKey: RECIPES,
+          queryFn: ({ pageParam }: { pageParam: number }) => {
+            pageParams.push(pageParam);
+
+            return new Promise<string>((resolve) => answers.push(resolve));
+          },
+          initialPageParam: 0,
+          getNextPageParam: (_last: string, pages: string[]) => pages.length,
+        }).subscribe(() => undefined);
+
+        observers.push(unsubscribe);
+        await act(async () => answers[0]!("p0"));
+        render({ onEvent: vi.fn(), liveQueryKeys: [RECIPES] });
+        markLive(current().observer);
+        expect(pageParams).toEqual([0, 0]);
+
+        const { settle } = await write(RECIPES, { pages: ["optimistic"], pageParams: [0] });
+        const observer = queryClient.getQueryCache().find({ queryKey: RECIPES })!.observers[0]!;
+
+        // A scroll while the write is pending: its fetch must not stand in for the reread.
+        void (observer as InfiniteQueryObserver<unknown>).fetchNextPage();
+        expect(pageParams).toEqual([0, 0, 1]);
+        await settle();
+        expect(pageParams).toEqual([0, 0, 1, 0]);
+      });
+
+      it("retries a reread a realtime patch landed on before a write cancelled it", async () => {
+        const read = await liveWithRereadInFlight();
+
+        act(() => queryClient.setQueryData(GROCERIES, ["patched"]));
+        await (await write(GROCERIES)).settle();
+
+        expect(read.queryFn).toHaveBeenCalledTimes(3);
+      });
+
+      it("retries when a write cancels the fetch an event's invalidation replaced the reread with", async () => {
+        const read = await liveWithRereadInFlight();
+
+        act(() => void queryClient.invalidateQueries({ queryKey: GROCERIES }));
+        expect(read.queryFn).toHaveBeenCalledTimes(3);
+        await (await write(GROCERIES)).settle();
+
+        expect(read.queryFn).toHaveBeenCalledTimes(4);
+      });
+
+      it("rereads nothing for a subscription that goes live while a write is pending until it settles", async () => {
+        const read = observe(GROCERIES);
+
+        await act(async () => read.answers[0]!.resolve(["before"]));
+        const { settle } = await write(GROCERIES);
+
+        render({ onEvent: vi.fn(), liveQueryKeys: [GROCERIES] });
+        markLive(current().observer);
+        expect(read.queryFn).toHaveBeenCalledTimes(1);
+        expect(queryClient.getQueryData(GROCERIES)).toEqual(["optimistic"]);
+
+        await settle();
+        expect(read.queryFn).toHaveBeenCalledTimes(2);
       });
 
       it("waits again when a second write cancels the retried reread", async () => {
