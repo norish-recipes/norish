@@ -25,7 +25,7 @@ export default function TodaysMealsContent({ visibility }: TodaysMealsContentPro
   const tCalendar = useTranslations("calendar");
   const tSlots = useTranslations("common.slots");
   const todayKey = useReaderToday();
-  const todayDate = useMemo(() => parseDateKey(todayKey), [todayKey]);
+  const todayDate = parseDateKey(todayKey);
   // The week the dashboard layout seeds, frozen at mount so a later today never reads an uncached one.
   const [week] = useState(() => getInitialCalendarRange("desktop", todayKey));
   const { calendarData: plannedItemsByDate, isLoading } = useCalendarQuery(week);

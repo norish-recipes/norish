@@ -12,6 +12,7 @@ import { useIsMobile } from "@/hooks/use-is-mobile";
 
 import type { Slot } from "@norish/shared/contracts";
 import { CalendarRangeProvider, useCalendarSubscription } from "@norish/shared-react/calendar";
+import { parseDateKey } from "@norish/shared/lib/helpers";
 
 function CalendarPageContent() {
   const [miniRecipesOpen, setMiniRecipesOpen] = useState(false);
@@ -75,13 +76,6 @@ function CalendarPageContent() {
   );
 
   const handleAddItem = useCallback((dateKey: string, slot: Slot) => {
-    // Parse the dateKey (YYYY-MM-DD format) into a Date
-    const [year, month, day] = dateKey.split("-").map(Number);
-
-    if (year === undefined || month === undefined || day === undefined) {
-      return;
-    }
-
     if (typeof window !== "undefined") {
       if (restoreMiniRecipesScrollTimerRef.current !== null) {
         window.clearTimeout(restoreMiniRecipesScrollTimerRef.current);
@@ -91,7 +85,7 @@ function CalendarPageContent() {
       pendingMiniRecipesScrollYRef.current = window.scrollY;
     }
 
-    setSelectedDate(new Date(year, month - 1, day));
+    setSelectedDate(parseDateKey(dateKey));
     setSelectedSlot(slot);
     setMiniRecipesOpen(true);
   }, []);
