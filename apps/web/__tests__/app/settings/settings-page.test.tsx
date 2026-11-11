@@ -1,9 +1,11 @@
+import type { ReactNode } from "react";
 import { fireEvent, render, screen } from "@testing-library/react";
 import { beforeAll, describe, expect, it, vi } from "vitest";
 
 import "@testing-library/jest-dom";
 
 import AdminSettingsLayout from "@/app/(app)/settings/admin/layout";
+import SettingsLayout from "@/app/(app)/settings/layout";
 import SettingsPage from "@/app/(app)/settings/page";
 import { SettingsTabs } from "@/components/settings/settings-tabs";
 
@@ -39,6 +41,12 @@ vi.mock("@/lib/request-profile", () => ({
 
 vi.mock("next-intl", () => ({
   useTranslations: (namespace: string) => (key: string) => `${namespace}.${key}`,
+  NextIntlClientProvider: ({ children }: { children: ReactNode }) => children,
+}));
+
+vi.mock("next-intl/server", () => ({
+  getMessages: async () => ({}),
+  getTranslations: async (namespace: string) => (key: string) => `${namespace}.${key}`,
 }));
 
 describe("the settings tab bar", () => {
@@ -103,6 +111,27 @@ describe("the settings tab bar", () => {
     fireEvent.click(screen.getByRole("tab", { name: /tabs\.caldav/ }));
 
     expect(push).toHaveBeenCalledWith("/settings/caldav", undefined);
+  });
+});
+
+describe("the settings layout", () => {
+  it("gives an administrator the Admin tab", async () => {
+    navigation.pathname = "/settings/account";
+    profile.identity = { isServerAdmin: true };
+
+    render(await SettingsLayout({ children: "content" }));
+
+    expect(screen.getByRole("tab", { name: /tabs\.admin/ })).toBeInTheDocument();
+  });
+
+  it("gives a regular member no Admin tab", async () => {
+    navigation.pathname = "/settings/account";
+    profile.identity = { isServerAdmin: false };
+
+    render(await SettingsLayout({ children: "content" }));
+
+    expect(screen.queryByRole("tab", { name: /tabs\.admin/ })).not.toBeInTheDocument();
+    expect(screen.getByRole("tabpanel")).toHaveTextContent("content");
   });
 });
 
