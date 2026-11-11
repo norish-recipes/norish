@@ -24,7 +24,14 @@ export function usePantrySubscription() {
   // What the Pantry covers is what "From your recipes" leaves out.
   const suggestionsKey = trpc.pantry.suggestions.queryKey();
   // A fresh or lagged subscription reads the Pantry again; the merges cannot close a gap.
-  const catchUp = { catchUpQueryKeys: [queryKey, suggestionsKey] };
+  const live = {
+    liveQueryKeys: [
+      queryKey,
+      suggestionsKey,
+      trpc.library.list.pathKey(),
+      trpc.cookbooks.recipes.pathKey(),
+    ],
+  };
   // Recipe lists filtered to what the Pantry covers read it too.
   const invalidateCovered = () => {
     void queryClient.invalidateQueries({ queryKey: suggestionsKey });
@@ -33,7 +40,7 @@ export function usePantrySubscription() {
   };
 
   useRealtimeSubscription<Payload<"added">>(trpc.pantry.onAdded, {
-    ...catchUp,
+    ...live,
     onEvent: ({ item }) => {
       queryClient.setQueryData<PantryData>(queryKey, (prev) => mergePantryAdded(prev ?? [], item));
       invalidateCovered();
@@ -41,7 +48,7 @@ export function usePantrySubscription() {
   });
 
   useRealtimeSubscription<Payload<"removed">>(trpc.pantry.onRemoved, {
-    ...catchUp,
+    ...live,
     onEvent: ({ itemId }) => {
       queryClient.setQueryData<PantryData>(queryKey, (prev) =>
         mergePantryRemoved(prev ?? [], itemId)

@@ -20,7 +20,7 @@ export function useStoresSubscription() {
   useKeepsCurrent([storesKey]);
 
   // A fresh or lagged subscription refetches the stores and the links that hang off them.
-  const catchUp = { catchUpQueryKeys: [storesKey, aisleLinksKey] };
+  const live = { liveQueryKeys: [storesKey, aisleLinksKey] };
 
   /**
    * A Store's aisles changed: the links of an aisle it no longer has went
@@ -39,7 +39,7 @@ export function useStoresSubscription() {
   };
 
   useRealtimeSubscription<Payload<"created">>(trpc.stores.onCreated, {
-    ...catchUp,
+    ...live,
     onEvent: ({ store }) => {
       queryClient.setQueryData<StoresData>(storesKey, (prev) => {
         if (!prev) return [store];
@@ -55,7 +55,7 @@ export function useStoresSubscription() {
   });
 
   useRealtimeSubscription<Payload<"updated">>(trpc.stores.onUpdated, {
-    ...catchUp,
+    ...live,
     onEvent: ({ store }) => {
       queryClient.setQueryData<StoresData>(storesKey, (prev) => {
         if (!prev) return prev;
@@ -67,7 +67,7 @@ export function useStoresSubscription() {
   });
 
   useRealtimeSubscription<Payload<"deleted">>(trpc.stores.onDeleted, {
-    ...catchUp,
+    ...live,
     onEvent: ({ storeId }) => {
       queryClient.setQueryData<StoresData>(storesKey, (prev) => {
         if (!prev) return prev;
@@ -79,7 +79,7 @@ export function useStoresSubscription() {
   });
 
   useRealtimeSubscription<Payload<"reordered">>(trpc.stores.onReordered, {
-    ...catchUp,
+    ...live,
     onEvent: ({ stores }) => {
       queryClient.setQueryData<StoresData>(storesKey, (prev) => {
         if (!prev) return stores;

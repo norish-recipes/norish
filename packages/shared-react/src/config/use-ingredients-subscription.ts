@@ -31,7 +31,7 @@ export function useIngredientsSubscription() {
     trpc.ingredients.nutritionFor.pathKey(),
   ]);
   useRealtimeSubscription<PayloadOf<IngredientsRealtime, "changed">>(trpc.ingredients.onChanged, {
-    catchUpQueryKeys: derived,
+    liveQueryKeys: derived,
     onEvent: () => {
       for (const queryKey of derived) void queryClient.invalidateQueries({ queryKey });
     },
@@ -45,7 +45,7 @@ export function useIngredientsSubscription() {
   useRealtimeSubscription<PayloadOf<IngredientsRealtime, "corrected">>(
     trpc.ingredients.onCorrected,
     {
-      catchUpQueryKeys: nutrition,
+      liveQueryKeys: nutrition,
       onEvent: () => {
         for (const queryKey of nutrition) void queryClient.invalidateQueries({ queryKey });
       },

@@ -17,6 +17,7 @@ vi.mock("@norish/shared-react/trpc", () => ({
   useTRPC: () => ({
     calendar: {
       listItems: {
+        pathKey: () => [["calendar", "listItems"]],
         // The shape @trpc/tanstack-react-query mints: the path, then the
         // input under `input` — what the cross-range merge reads back.
         queryKey: (input?: { startISO: string; endISO: string }) =>

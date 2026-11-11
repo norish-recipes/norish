@@ -89,10 +89,11 @@ export function createUseCaldavSubscription({
               break;
           }
         },
-        onCatchUp: () => {
-          invalidateSyncStatus();
-          invalidateSummary();
-        },
+        liveQueryKeys: [
+          trpc.caldav.getConfig.queryKey(),
+          trpc.caldav.getSyncStatus.pathKey(),
+          trpc.caldav.getSummary.queryKey(),
+        ],
       }
     );
   }

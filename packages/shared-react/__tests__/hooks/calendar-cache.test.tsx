@@ -47,6 +47,7 @@ function procedure(name: string) {
 const useTRPC = (() => ({
   calendar: {
     listItems: {
+      pathKey: () => [PATH],
       queryKey: (input?: { startISO: string; endISO: string }) =>
         input ? rangeKey(input.startISO, input.endISO) : [PATH],
       // Every read fails, as it does Offline.

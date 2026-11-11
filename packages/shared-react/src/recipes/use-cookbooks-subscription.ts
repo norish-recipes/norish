@@ -21,17 +21,18 @@ export function useCookbooksSubscription() {
   const { setAllCookbooksData, invalidate, invalidateCookbook, invalidateMembership } =
     useCookbooksCacheHelpers();
 
-  const catchUp = { onCatchUp: invalidate };
+  // Every cookbook read and the Library rows these events patch or invalidate.
+  const live = { liveQueryKeys: [trpc.cookbooks.pathKey(), trpc.library.list.pathKey()] };
 
   useRealtimeSubscription<Payload<"created">>(trpc.cookbooks.onCreated, {
-    ...catchUp,
+    ...live,
     // A new cookbook belongs wherever the reader's sort puts it, which is
     // not something a client can decide — refetch rather than guess.
     onEvent: () => invalidate(),
   });
 
   useRealtimeSubscription<Payload<"updated">>(trpc.cookbooks.onUpdated, {
-    ...catchUp,
+    ...live,
     onEvent: ({ cookbook }) => {
       setAllCookbooksData((prev) => {
         if (!prev) return prev;
@@ -51,7 +52,7 @@ export function useCookbooksSubscription() {
   });
 
   useRealtimeSubscription<Payload<"membershipChanged">>(trpc.cookbooks.onMembershipChanged, {
-    ...catchUp,
+    ...live,
     onEvent: ({ recipeIds, cookbookId }) => {
       // The member count and the derived cover are computed per reader on
       // the server, so a membership change is a refetch rather than a
@@ -63,7 +64,7 @@ export function useCookbooksSubscription() {
   });
 
   useRealtimeSubscription<Payload<"deleted">>(trpc.cookbooks.onDeleted, {
-    ...catchUp,
+    ...live,
     onEvent: ({ id }) => {
       setAllCookbooksData((prev) => {
         if (!prev) return prev;

@@ -10,17 +10,14 @@
  * Every fresh subscription (a mount, `enabled` turning true, the reset after
  * `REALTIME_LAGGED`) carries no cursor, so a change made before the server
  * registered it reaches neither the subscription nor a read taken earlier.
- * Its first Cursor Mark closes that gap: the server registers the listener
- * before it sends the mark, so the hook refetches the domain then (`onCatchUp`,
- * or invalidate `catchUpQueryKeys`) and every event after it reaches the
- * subscription. A reconnect resends the cursor on the same subscribe and
- * Resume replays what it missed, so its mark refetches nothing. Anything that
- * is neither a Cursor Mark nor an envelope is a programming error.
+ * The server registers the listener before it sends the first Cursor Mark, so
+ * the hook rereads `liveQueryKeys` then. Anything that is neither a Cursor Mark
+ * nor an envelope is a programming error.
  */
 
-import type { QueryKey } from "@tanstack/react-query";
+import type { QueryClient, QueryKey } from "@tanstack/react-query";
 import { useState } from "react";
-import { hashKey, useQueryClient } from "@tanstack/react-query";
+import { partialMatchKey, useQueryClient } from "@tanstack/react-query";
 import { TRPCClientError } from "@trpc/client";
 import { useSubscription } from "@trpc/tanstack-react-query";
 
@@ -54,9 +51,8 @@ export interface RealtimeSubscriptionProcedure {
 export interface RealtimeSubscriptionHandlers<P> {
   /** Every event of the procedure, validated server-side against its catalogue schema. */
   onEvent: (payload: P, meta: RealtimeEventMeta) => void;
-  /** Invalidated once each fresh subscription is live, unless `onCatchUp` takes over. */
-  catchUpQueryKeys?: QueryKey[];
-  onCatchUp?: () => void;
+  /** Every read `onEvent` patches or invalidates: reread once each fresh subscription is live. */
+  liveQueryKeys?: QueryKey[];
   enabled?: boolean;
 }
 
@@ -78,11 +74,41 @@ function isTrackedItem(data: unknown): data is TrackedItem {
   );
 }
 
+/** Per QueryClient: the reads due in the current window. */
+const dueByClient = new WeakMap<QueryClient, QueryKey[]>();
+
 /**
- * A fresh subscription's catch-up: armed by its subscribe, taken by its first Cursor Mark.
+ * Reads due within one window are invalidated together, so each matching query refetches once.
+ * ponytail: a fixed 50 ms window; marks spread wider refetch once per window. Flush once every
+ * open subscribe has its mark if spread marks show up as duplicate refetches.
+ */
+const LIVE_WINDOW_MS = 50;
+
+function rereadInWindow(queryClient: QueryClient, queryKeys: QueryKey[]): void {
+  const due = dueByClient.get(queryClient);
+
+  if (queryKeys.length === 0) return;
+  if (due) {
+    due.push(...queryKeys);
+
+    return;
+  }
+  dueByClient.set(queryClient, [...queryKeys]);
+  setTimeout(() => {
+    const flushed = dueByClient.get(queryClient) ?? [];
+
+    dueByClient.delete(queryClient);
+    void queryClient.invalidateQueries({
+      predicate: (query) => flushed.some((queryKey) => partialMatchKey(query.queryKey, queryKey)),
+    });
+  }, LIVE_WINDOW_MS);
+}
+
+/**
+ * A fresh subscription's reread: armed by its subscribe, taken by its first Cursor Mark.
  * Not a ref: the React Compiler skips a hook that reads one in callbacks `subscriptionOptions` gets.
  */
-function createCatchUpLatch() {
+function createLiveLatch() {
   let pending = false;
 
   return {
@@ -99,45 +125,12 @@ function createCatchUpLatch() {
   };
 }
 
-/**
- * Catch-ups due, by what they refetch: subscriptions that go live together share one refetch.
- * ponytail: a fixed window; marks spread wider refetch once per window, never before their mark.
- */
-const dueCatchUps = new Map<unknown, () => void>();
-const CATCH_UP_WINDOW_MS = 50;
-
-function runDueCatchUps(): void {
-  const due = [...dueCatchUps.values()];
-
-  dueCatchUps.clear();
-  for (const run of due) run();
-}
-
-function scheduleCatchUp(key: unknown, run: () => void): void {
-  if (dueCatchUps.size === 0) setTimeout(runDueCatchUps, CATCH_UP_WINDOW_MS);
-  dueCatchUps.set(key, run);
-}
-
 export function useRealtimeSubscription<P>(
   procedure: RealtimeSubscriptionProcedure,
   handlers: RealtimeSubscriptionHandlers<P>
 ) {
   const queryClient = useQueryClient();
-  const [catchUpLatch] = useState(createCatchUpLatch);
-
-  const catchUp = () => {
-    const { onCatchUp } = handlers;
-
-    if (onCatchUp) {
-      scheduleCatchUp(onCatchUp, onCatchUp);
-
-      return;
-    }
-
-    for (const queryKey of handlers.catchUpQueryKeys ?? []) {
-      scheduleCatchUp(hashKey(queryKey), () => void queryClient.invalidateQueries({ queryKey }));
-    }
-  };
+  const [liveLatch] = useState(createLiveLatch);
 
   // tRPC reads `"enabled" in opts`, not its value: a key that is present but
   // undefined disables the subscription. Only a stated choice is passed on.
@@ -151,9 +144,9 @@ export function useRealtimeSubscription<P>(
       const item = data.data;
 
       // A Cursor Mark carries no event: the transport tracks it, handlers never
-      // see it. It does say the subscription is live, which a catch-up waits for.
+      // see it. It does say the subscription is live, which the reread waits for.
       if (isCursorMark(item)) {
-        if (catchUpLatch.take()) catchUp();
+        if (liveLatch.take()) rereadInWindow(queryClient, handlers.liveQueryKeys ?? []);
 
         return;
       }
@@ -164,21 +157,20 @@ export function useRealtimeSubscription<P>(
     onError: (err) => {
       if (!isRealtimeLagged(err)) return;
 
-      // A fresh subscription, no cursor; the refetch follows its Cursor Mark.
+      // A fresh subscription, no cursor; the reread follows its Cursor Mark.
       subscription.reset();
     },
-  });
+  }) as Parameters<typeof useSubscription>[0];
 
-  // The one cast of the idiom: `subscriptionOptions` is typed by the router's
-  // output, which the structural procedure type above deliberately leaves open.
-  const tracked = options as Parameters<typeof useSubscription>[0];
+  // The one cast of the idiom, above: `subscriptionOptions` is typed by the router's
+  // output, which the structural procedure type deliberately leaves open.
   const subscription = useSubscription({
-    ...tracked,
+    ...options,
     // A reconnect resends on the same subscribe; only a new subscribe is fresh.
     subscribe: (observer) => {
-      catchUpLatch.arm();
+      liveLatch.arm();
 
-      return tracked.subscribe(observer);
+      return options.subscribe(observer);
     },
   });
 

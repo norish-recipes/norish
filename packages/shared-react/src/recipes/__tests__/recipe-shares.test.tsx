@@ -93,6 +93,7 @@ const trpc = {
       queryKey: () => [["recipes", "shareListAdmin"], { type: "query" }],
     },
     shareGet: {
+      pathKey: () => [["recipes", "shareGet"]],
       queryKey: ({ id }: { id: string }) => [
         ["recipes", "shareGet"],
         { input: { id }, type: "query" },

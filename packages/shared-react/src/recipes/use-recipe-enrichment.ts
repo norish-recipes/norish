@@ -327,7 +327,7 @@ export function useRecipeEnrichmentSubscription(
   useRealtimeSubscription<PayloadOf<RecipesRealtime, "enrichment">>(trpc.recipes.onEnrichment, {
     enabled: !!recipeId,
     // The status query is the recovery read: a fresh or lagged subscription refetches it.
-    catchUpQueryKeys: [statusKey],
+    liveQueryKeys: [statusKey],
     onEvent: (payload) => {
       // The catalogue declares this payload with `z.custom`, which validates
       // nothing at runtime yet, so the shape is still checked here.

@@ -69,6 +69,16 @@ function prependRecipes(recipes: RecipeDashboardDTO[]) {
   };
 }
 
+/** The reads both hooks' events patch or invalidate: every recipe list, detail and pending card. */
+function recipeListKeys(trpc: ReturnType<typeof useTRPC>) {
+  return [
+    trpc.recipes.list.pathKey(),
+    trpc.recipes.get.pathKey(),
+    trpc.recipes.getPending.queryKey(),
+    trpc.library.list.pathKey(),
+  ];
+}
+
 /**
  * The outcomes of imports and deletes, which the reader starts on any page, with their toasts:
  * mounted once in the shell. An import takes its pending card and ends in a recipe or a failure.
@@ -84,26 +94,19 @@ export function useRecipeOutcomesSubscription() {
     removePendingRecipe,
   } = useRecipesCacheHelpers();
 
-  const rereadPending = () =>
-    void queryClient.invalidateQueries({ queryKey: trpc.recipes.getPending.queryKey() });
-  // An import that ended before an outcome's subscription was live reaches neither, so each
-  // outcome's catch-up rereads the pending list as well as the lists.
-  const outcomeCatchUp = {
-    onCatchUp: () => {
-      invalidate();
-      rereadPending();
-    },
-  };
+  // An import that ended before an outcome's subscription was live reaches neither the
+  // subscription nor the pending list, so the pending list is reread with the lists.
+  const live = { liveQueryKeys: recipeListKeys(trpc) };
 
   useRealtimeSubscription<Payload<"importStarted">>(trpc.recipes.onImportStarted, {
-    onCatchUp: invalidate,
+    ...live,
     onEvent: ({ recipeId }) => {
       replaceOldestOptimisticPendingRecipe(recipeId);
     },
   });
 
   useRealtimeSubscription<Payload<"imported">>(trpc.recipes.onImported, {
-    ...outcomeCatchUp,
+    ...live,
     onEvent: (payload) => {
       const pendingId = payload.pendingRecipeId ?? payload.recipe.id;
 
@@ -121,7 +124,7 @@ export function useRecipeOutcomesSubscription() {
   });
 
   useRealtimeSubscription<Payload<"failed">>(trpc.recipes.onFailed, {
-    ...outcomeCatchUp,
+    ...live,
     onEvent: (payload) => {
       if (payload.recipeId) {
         replaceOldestOptimisticPendingRecipe(payload.recipeId);
@@ -143,7 +146,7 @@ export function useRecipeOutcomesSubscription() {
   });
 
   useRealtimeSubscription<Payload<"deleteKept">>(trpc.recipes.onDeleteKept, {
-    onCatchUp: invalidate,
+    ...live,
     // The kept recipes left the lists tentatively; refetching brings them back.
     onEvent: (payload) => {
       invalidate();
@@ -162,12 +165,10 @@ export function useRecipeOutcomesSubscription() {
 export function useRecipeListSubscription() {
   const trpc = useTRPC();
   const queryClient = useQueryClient();
-  const { setAllRecipesData, invalidate, removePendingRecipe } = useRecipesCacheHelpers();
+  const { setAllRecipesData, removePendingRecipe } = useRecipesCacheHelpers();
   const dropFromSelection = useRecipeSelection((state) => state.drop);
 
-  // A fresh or lagged subscription refetches the lists; the detail caches are
-  // refetched by the screens that hold them.
-  const catchUp = { onCatchUp: invalidate };
+  const live = { liveQueryKeys: [...recipeListKeys(trpc), trpc.config.categories.queryKey()] };
   // The server saves after the mutation answers, so the household's Categories
   // are reread when the save is announced, not when the mutation succeeds.
   const rereadCategories = () =>
@@ -190,7 +191,7 @@ export function useRecipeListSubscription() {
   };
 
   useRealtimeSubscription<Payload<"created">>(trpc.recipes.onCreated, {
-    ...catchUp,
+    ...live,
     onEvent: ({ recipe }) => {
       removePendingRecipe(recipe.id);
       setAllRecipesData(prependRecipes([recipe]));
@@ -199,7 +200,7 @@ export function useRecipeListSubscription() {
   });
 
   useRealtimeSubscription<Payload<"updated">>(trpc.recipes.onUpdated, {
-    ...catchUp,
+    ...live,
     onEvent: ({ recipe, source }) => {
       updateRecipeInList(recipe);
       queryClient.setQueryData(trpc.recipes.get.queryKey({ id: recipe.id }), recipe);
@@ -210,7 +211,7 @@ export function useRecipeListSubscription() {
   });
 
   useRealtimeSubscription<Payload<"deleted">>(trpc.recipes.onDeleted, {
-    ...catchUp,
+    ...live,
     onEvent: ({ ids }) => {
       setAllRecipesData((prev) => removeRecipesFromLists(prev, new Set(ids)));
       dropFromSelection(ids);
@@ -223,7 +224,7 @@ export function useRecipeListSubscription() {
   });
 
   useRealtimeSubscription<Payload<"converted">>(trpc.recipes.onConverted, {
-    ...catchUp,
+    ...live,
     onEvent: (payload) => {
       updateRecipeInList(payload.recipe);
       void queryClient.invalidateQueries({
@@ -233,7 +234,7 @@ export function useRecipeListSubscription() {
   });
 
   useRealtimeSubscription<Payload<"recipeBatchCreated">>(trpc.recipes.onRecipeBatchCreated, {
-    ...catchUp,
+    ...live,
     onEvent: ({ recipes }) => setAllRecipesData(prependRecipes(recipes)),
   });
 }

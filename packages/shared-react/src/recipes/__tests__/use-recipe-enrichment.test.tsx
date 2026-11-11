@@ -4,9 +4,8 @@ import { createRoot } from "react-dom/client";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 
 import type { RecipeEnrichmentStatusDto } from "@norish/shared/lib/recipe-enrichment";
-import { CURSOR_MARK } from "@norish/shared/contracts/realtime/envelope";
 
-import { trackedEvent } from "../../../__tests__/realtime/tracked-event";
+import { trackedCursorMark, trackedEvent } from "../../../__tests__/realtime/tracked-event";
 import { useRecipeEnrichment, useRecipeEnrichmentSubscription } from "../use-recipe-enrichment";
 
 const useSubscriptionMock = vi.hoisted(() => vi.fn());
@@ -176,7 +175,7 @@ describe("useRecipeEnrichment", () => {
 
     await act(async () => {
       options.subscribe({});
-      options.onData({ id: "1.abcdef01.1700000000000-0", data: CURSOR_MARK });
+      options.onData(trackedCursorMark());
     });
 
     await vi.waitFor(() => expect(cachedState("auto-tagging")).toBe("succeeded"));

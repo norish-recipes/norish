@@ -28,6 +28,7 @@ export function createUseArchiveSubscriptions({
     const trpc = useTRPC();
     const { setImportState } = useArchiveImportCacheHelpers();
 
+    // No liveQueryKeys: progress is not a query, and the next event carries the whole count.
     useRealtimeSubscription<Payload<"archiveProgress">>(trpc.archive.onArchiveProgress, {
       onEvent: (payload) => {
         log.debug({ payload }, "Progress event received");

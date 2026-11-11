@@ -6,8 +6,8 @@ import { hashKey, partialMatchKey } from "@tanstack/react-query";
 const keepers = new Map<string, { queryKey: QueryKey; count: number; since: number }>();
 
 /**
- * While the caller is mounted, its realtime subscriptions keep these reads current: Resume and
- * the lag catch-up close any gap, so a component that mounts meanwhile need not read them again.
+ * While the caller is mounted, its realtime subscriptions keep these reads current: Resume and the
+ * reread once a subscription is live close any gap, so a component mounting meanwhile need not.
  */
 export function useKeepsCurrent(queryKeys: QueryKey[]): void {
   const hashes = queryKeys.map((queryKey) => hashKey(queryKey)).join("\n");

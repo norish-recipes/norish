@@ -21,6 +21,7 @@ vi.mock("../../reader", () => ({ useReader: () => ({ user: { id: "user-1" } }) }
 
 const key = (path: string, input: unknown) => [["recipes", path], { input, type: "query" }];
 const procedure = (path: string) => ({
+  pathKey: () => [["recipes", path]],
   queryKey: (input?: unknown) => key(path, input),
   queryOptions: (input: unknown) => ({
     queryKey: key(path, input),

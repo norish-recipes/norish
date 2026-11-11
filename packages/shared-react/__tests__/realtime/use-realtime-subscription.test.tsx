@@ -1,7 +1,7 @@
 /**
  * The client subscription idiom, driven through the real `useSubscription`
  * with a fake procedure whose `subscribe` is recorded: what reaches a handler,
- * what a lag does, and what the subscription after a reset asks for.
+ * what each fresh subscription rereads once live, and what a reset asks for.
  */
 
 import React, { act } from "react";
@@ -39,27 +39,31 @@ const subscriptions: Array<{
 /** The options the hook handed `subscriptionOptions`, one per call. */
 const optionCalls: Array<Record<string, unknown>> = [];
 
-const procedure = {
-  subscriptionOptions(input: undefined, opts: Record<string, unknown>) {
-    optionCalls.push(opts);
+function fakeProcedure(path: string) {
+  return {
+    subscriptionOptions(input: undefined, opts: Record<string, unknown>) {
+      optionCalls.push(opts);
 
-    return {
-      ...opts,
-      queryKey: [["fake", "onEvent"], { type: "any" }],
-      // As @trpc/tanstack-react-query resolves it: the key's presence decides,
-      // not its value, so `{ enabled: undefined }` is a disabled subscription.
-      enabled: "enabled" in opts ? !!opts.enabled : true,
-      subscribe(observer: Observer) {
-        const unsubscribe = vi.fn();
+      return {
+        ...opts,
+        queryKey: [[path, "onEvent"], { type: "any" }],
+        // As @trpc/tanstack-react-query resolves it: the key's presence decides,
+        // not its value, so `{ enabled: undefined }` is a disabled subscription.
+        enabled: "enabled" in opts ? !!opts.enabled : true,
+        subscribe(observer: Observer) {
+          const unsubscribe = vi.fn();
 
-        subscriptions.push({ input, observer, unsubscribe });
-        observer.onStarted?.();
+          subscriptions.push({ input, observer, unsubscribe });
+          observer.onStarted?.();
 
-        return { unsubscribe };
-      },
-    };
-  },
-};
+          return { unsubscribe };
+        },
+      };
+    },
+  };
+}
+
+const procedure = fakeProcedure("fake");
 
 function envelope(payload: unknown): RealtimeEventEnvelope {
   return {
@@ -84,13 +88,28 @@ function lagged() {
   return new TRPCClientError(REALTIME_LAGGED);
 }
 
-let container: HTMLDivElement;
 let root: ReturnType<typeof createRoot>;
+let roots: Array<ReturnType<typeof createRoot>>;
 let queryClient: QueryClient;
 
-function render(handlers: RealtimeSubscriptionHandlers<{ n: number }>, strict = false) {
+function newRoot() {
+  const container = document.createElement("div");
+  const created = createRoot(container);
+
+  document.body.appendChild(container);
+  roots.push(created);
+
+  return created;
+}
+
+function render(
+  handlers: RealtimeSubscriptionHandlers<{ n: number }>,
+  strict = false,
+  into = root,
+  subscribedTo = procedure
+) {
   function Probe() {
-    useRealtimeSubscription<{ n: number }>(procedure, handlers);
+    useRealtimeSubscription<{ n: number }>(subscribedTo, handlers);
 
     return null;
   }
@@ -102,11 +121,23 @@ function render(handlers: RealtimeSubscriptionHandlers<{ n: number }>, strict = 
   );
 
   act(() => {
-    root.render(strict ? <React.StrictMode>{tree}</React.StrictMode> : tree);
+    into.render(strict ? <React.StrictMode>{tree}</React.StrictMode> : tree);
   });
 }
 
-/** The server's Cursor Mark, then the catch-up window it opens. */
+/** Another component holding the same subscription, in its own root so it unmounts alone. */
+function mountCopy(
+  handlers: RealtimeSubscriptionHandlers<{ n: number }>,
+  subscribedTo = procedure
+) {
+  const own = newRoot();
+
+  render(handlers, false, own, subscribedTo);
+
+  return { observer: current().observer, unmount: () => act(() => own.unmount()) };
+}
+
+/** The server's Cursor Mark, then the window it opens. */
 function markLive(observer: Observer) {
   act(() => {
     observer.onData?.(tracked(CURSOR_MARK));
@@ -114,6 +145,23 @@ function markLive(observer: Observer) {
   act(() => {
     vi.runOnlyPendingTimers();
   });
+}
+
+const GROCERIES = [["groceries", "list"], { type: "query" }];
+const STORES = [["stores", "list"], { type: "query" }];
+
+/** Cached reads, so a reread shows as their invalidation. */
+function seed(...queryKeys: unknown[][]) {
+  for (const queryKey of queryKeys) queryClient.setQueryData(queryKey, []);
+}
+
+function isReread(queryKey: unknown[]) {
+  return queryClient.getQueryState(queryKey)?.isInvalidated === true;
+}
+
+/** Marks the cached reads current again, so the next reread shows. */
+function settle(...queryKeys: unknown[][]) {
+  for (const queryKey of queryKeys) queryClient.setQueryData(queryKey, []);
 }
 
 function current() {
@@ -128,17 +176,19 @@ beforeEach(() => {
   vi.useFakeTimers();
   subscriptions.length = 0;
   optionCalls.length = 0;
-  queryClient = new QueryClient({ defaultOptions: { queries: { retry: false } } });
-  container = document.createElement("div");
-  document.body.appendChild(container);
-  root = createRoot(container);
+  // No garbage collection: the window's timers run every pending timer, the cache's too.
+  queryClient = new QueryClient({
+    defaultOptions: { queries: { retry: false, gcTime: Infinity } },
+  });
+  roots = [];
+  root = newRoot();
 });
 
 afterEach(() => {
   vi.runOnlyPendingTimers();
   vi.useRealTimers();
-  act(() => root.unmount());
-  container.remove();
+  for (const created of roots) act(() => created.unmount());
+  document.body.replaceChildren();
   queryClient.clear();
 });
 
@@ -183,11 +233,14 @@ describe("useRealtimeSubscription", () => {
     expect(() => current().observer.onData?.(envelope({ n: 1 }))).toThrow(TypeError);
   });
 
-  it("on REALTIME_LAGGED resets to a cursor-less subscription, and invalidates exactly catchUpQueryKeys once it is live", () => {
+  it("on REALTIME_LAGGED resets to a cursor-less subscription, and rereads exactly liveQueryKeys once it is live", () => {
     const invalidate = vi.spyOn(queryClient, "invalidateQueries");
-    const keys = [[["groceries"]], [["stores", "list"]]];
+    const other = [["pantry", "list"], { type: "query" }];
 
-    render({ onEvent: vi.fn(), catchUpQueryKeys: keys });
+    seed(GROCERIES, STORES, other);
+    render({ onEvent: vi.fn(), liveQueryKeys: [GROCERIES, [["stores"]]] });
+    markLive(current().observer);
+    settle(GROCERIES, STORES);
 
     const first = current();
 
@@ -200,30 +253,34 @@ describe("useRealtimeSubscription", () => {
     expect(current()).not.toBe(first);
     expect(current().input).toBeUndefined();
     // An event published before the fresh subscription is live would miss it
-    // and an early refetch both: the refetch waits for its Cursor Mark.
-    expect(invalidate).not.toHaveBeenCalled();
+    // and an early reread both: the reread waits for its Cursor Mark.
+    act(() => {
+      vi.runOnlyPendingTimers();
+    });
+    expect(invalidate).toHaveBeenCalledTimes(1);
 
     markLive(current().observer);
 
     expect(invalidate).toHaveBeenCalledTimes(2);
-    expect(invalidate).toHaveBeenNthCalledWith(1, { queryKey: keys[0] });
-    expect(invalidate).toHaveBeenNthCalledWith(2, { queryKey: keys[1] });
+    expect(isReread(GROCERIES)).toBe(true);
+    expect(isReread(STORES)).toBe(true);
+    expect(isReread(other)).toBe(false);
 
-    // Once: a later Cursor Mark (a reconnect's resume) is no lag to catch up on.
+    // Once: a later Cursor Mark (a reconnect's resume) rereads nothing.
     markLive(current().observer);
     expect(invalidate).toHaveBeenCalledTimes(2);
   });
 
-  it("catches up once on a fresh subscription's first Cursor Mark, not on a resumed reconnect's", () => {
+  it("rereads once on a fresh subscription's first Cursor Mark, not on a resumed reconnect's", () => {
     const invalidate = vi.spyOn(queryClient, "invalidateQueries");
-    const keys = [[["groceries"]]];
 
-    render({ onEvent: vi.fn(), catchUpQueryKeys: keys });
+    seed(GROCERIES);
+    render({ onEvent: vi.fn(), liveQueryKeys: [GROCERIES] });
     expect(invalidate).not.toHaveBeenCalled();
 
     markLive(current().observer);
     expect(invalidate).toHaveBeenCalledTimes(1);
-    expect(invalidate).toHaveBeenCalledWith({ queryKey: keys[0] });
+    expect(isReread(GROCERIES)).toBe(true);
 
     // The link resends the cursor on reconnect, on the same subscribe: Resume closes that gap.
     markLive(current().observer);
@@ -231,15 +288,15 @@ describe("useRealtimeSubscription", () => {
     expect(invalidate).toHaveBeenCalledTimes(1);
   });
 
-  it("refetches once for subscriptions that go live together and share what they refetch", () => {
+  it("rereads once for subscriptions that go live together, whatever keys they share", () => {
     const invalidate = vi.spyOn(queryClient, "invalidateQueries");
-    const onCatchUp = vi.fn();
+
+    seed(GROCERIES, STORES);
 
     function Probe() {
-      useRealtimeSubscription(procedure, { onEvent: vi.fn(), catchUpQueryKeys: [[["groceries"]]] });
-      useRealtimeSubscription(procedure, { onEvent: vi.fn(), catchUpQueryKeys: [[["groceries"]]] });
-      useRealtimeSubscription(procedure, { onEvent: vi.fn(), onCatchUp });
-      useRealtimeSubscription(procedure, { onEvent: vi.fn(), onCatchUp });
+      useRealtimeSubscription(fakeProcedure("a"), { onEvent: vi.fn(), liveQueryKeys: [GROCERIES] });
+      useRealtimeSubscription(fakeProcedure("b"), { onEvent: vi.fn(), liveQueryKeys: [GROCERIES] });
+      useRealtimeSubscription(fakeProcedure("c"), { onEvent: vi.fn(), liveQueryKeys: [STORES] });
 
       return null;
     }
@@ -256,62 +313,63 @@ describe("useRealtimeSubscription", () => {
         observer.onData?.(tracked(CURSOR_MARK));
       });
     }
-    // Not before the window closes: a mark still on its way shares the refetch.
+    // Not before the window closes: a mark still on its way shares the reread.
     expect(invalidate).not.toHaveBeenCalled();
     act(() => {
       vi.runOnlyPendingTimers();
     });
 
-    expect(subscriptions).toHaveLength(4);
+    expect(subscriptions).toHaveLength(3);
     expect(invalidate).toHaveBeenCalledTimes(1);
-    expect(onCatchUp).toHaveBeenCalledTimes(1);
+    expect(isReread(GROCERIES)).toBe(true);
+    expect(isReread(STORES)).toBe(true);
   });
 
-  it("catches up once under StrictMode's double mount", () => {
-    const onCatchUp = vi.fn();
+  it("gives a mark that arrives after the window flushed its own reread", () => {
+    const invalidate = vi.spyOn(queryClient, "invalidateQueries");
 
-    render({ onEvent: vi.fn(), onCatchUp }, true);
+    seed(GROCERIES);
+    render({ onEvent: vi.fn(), liveQueryKeys: [GROCERIES] }, false, root, fakeProcedure("a"));
+    markLive(current().observer);
+    expect(invalidate).toHaveBeenCalledTimes(1);
+    settle(GROCERIES);
+
+    mountCopy({ onEvent: vi.fn(), liveQueryKeys: [GROCERIES] }, fakeProcedure("b"));
+    markLive(current().observer);
+
+    expect(invalidate).toHaveBeenCalledTimes(2);
+    expect(isReread(GROCERIES)).toBe(true);
+  });
+
+  it("rereads once under StrictMode's double mount", () => {
+    const invalidate = vi.spyOn(queryClient, "invalidateQueries");
+
+    render({ onEvent: vi.fn(), liveQueryKeys: [GROCERIES] }, true);
 
     // StrictMode subscribes, unsubscribes and subscribes again; only the open one is answered.
     const open = subscriptions.filter((s) => s.unsubscribe.mock.calls.length === 0);
 
     expect(open).toHaveLength(1);
     markLive(open[0]!.observer);
-    expect(onCatchUp).toHaveBeenCalledTimes(1);
+    expect(invalidate).toHaveBeenCalledTimes(1);
   });
 
-  it("catches up when a disabled subscription is enabled, and not before", () => {
-    const onCatchUp = vi.fn();
-
-    render({ onEvent: vi.fn(), onCatchUp, enabled: false });
-    expect(subscriptions).toHaveLength(0);
-    expect(onCatchUp).not.toHaveBeenCalled();
-
-    render({ onEvent: vi.fn(), onCatchUp, enabled: true });
-    markLive(current().observer);
-    expect(onCatchUp).toHaveBeenCalledTimes(1);
-  });
-
-  it("prefers onCatchUp over catchUpQueryKeys", () => {
+  it("rereads when a disabled subscription is enabled, and not before", () => {
     const invalidate = vi.spyOn(queryClient, "invalidateQueries");
-    const onCatchUp = vi.fn();
 
-    render({ onEvent: vi.fn(), catchUpQueryKeys: [[["groceries"]]], onCatchUp });
+    render({ onEvent: vi.fn(), liveQueryKeys: [GROCERIES], enabled: false });
+    expect(subscriptions).toHaveLength(0);
 
-    act(() => {
-      current().observer.onError?.(lagged());
-    });
-    markLive(current().observer);
-
-    expect(onCatchUp).toHaveBeenCalledTimes(1);
+    render({ onEvent: vi.fn(), liveQueryKeys: [GROCERIES], enabled: true });
     expect(invalidate).not.toHaveBeenCalled();
-    expect(subscriptions).toHaveLength(2);
+    markLive(current().observer);
+    expect(invalidate).toHaveBeenCalledTimes(1);
   });
 
   it("does nothing for an error that is not a lag", () => {
     const invalidate = vi.spyOn(queryClient, "invalidateQueries");
 
-    render({ onEvent: vi.fn(), catchUpQueryKeys: [[["groceries"]]] });
+    render({ onEvent: vi.fn(), liveQueryKeys: [GROCERIES] });
 
     const first = current();
 

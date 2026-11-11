@@ -51,10 +51,11 @@ export function useRecipeShareSubscription(
   useRealtimeSubscription<PayloadOf<RecipesRealtime, "shareEvent">>(trpc.recipes.onShareEvent, {
     enabled: !!recipeId,
     onEvent: (payload) => handleEvent(payload.share),
-    onCatchUp: () => {
-      invalidateMyRecipeShares();
-      invalidateAdminRecipeShares();
-      if (recipeId) invalidateRecipeShares(recipeId);
-    },
+    liveQueryKeys: [
+      trpc.recipes.shareListMine.queryKey(),
+      trpc.recipes.shareListAdmin.queryKey(),
+      trpc.recipes.shareGet.pathKey(),
+      ...(recipeId ? [trpc.recipes.shareList.queryKey({ recipeId })] : []),
+    ],
   });
 }

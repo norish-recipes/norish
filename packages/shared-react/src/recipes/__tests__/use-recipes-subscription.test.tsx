@@ -4,20 +4,20 @@
  */
 
 import { act } from "react";
-import { QueryClient } from "@tanstack/react-query";
+import { matchQuery, QueryClient } from "@tanstack/react-query";
 import { renderHook } from "@testing-library/react";
 import { TRPCClientError } from "@trpc/client";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 
 import type { FullRecipeDTO, RecipeDashboardDTO } from "@norish/shared/contracts";
 import { createTestWrapper, fakePlatformAdapter } from "@norish/shared-react/platform/testing";
-import { CURSOR_MARK, REALTIME_LAGGED } from "@norish/shared/contracts/realtime/envelope";
+import { REALTIME_LAGGED } from "@norish/shared/contracts/realtime/envelope";
 import {
   NOT_A_RECIPE_REASON,
   PRIVATE_ADDRESS_REASON,
 } from "@norish/shared/contracts/realtime/recipes";
 
-import { trackedEvent } from "../../../__tests__/realtime/tracked-event";
+import { trackedCursorMark, trackedEvent } from "../../../__tests__/realtime/tracked-event";
 import { useRecipeSelection } from "../selection-store";
 import {
   useRecipeListSubscription,
@@ -47,6 +47,7 @@ function procedure(name: string) {
   return {
     subscriptionOptions: (_input: undefined, opts: object) => ({
       name,
+      queryKey: [["recipes", name], { type: "any" }],
       ...opts,
       subscribe: () => ({ unsubscribe: () => undefined }),
     }),
@@ -56,8 +57,14 @@ function procedure(name: string) {
 vi.mock("../../trpc", () => ({
   useTRPC: () => ({
     recipes: {
-      list: { queryKey: () => [["recipes", "list"], { input: {}, type: "query" }] },
-      get: { queryKey: ({ id }: { id: string }) => detailKey(id) },
+      list: {
+        pathKey: () => [["recipes", "list"]],
+        queryKey: () => [["recipes", "list"], { input: {}, type: "query" }],
+      },
+      get: {
+        pathKey: () => [["recipes", "get"]],
+        queryKey: ({ id }: { id: string }) => detailKey(id),
+      },
       getPending: { queryKey: () => PENDING_KEY },
       onCreated: procedure("onCreated"),
       onImportStarted: procedure("onImportStarted"),
@@ -70,7 +77,10 @@ vi.mock("../../trpc", () => ({
       onRecipeBatchCreated: procedure("onRecipeBatchCreated"),
     },
     library: {
-      list: { queryKey: () => [["library", "list"], { input: {}, type: "query" }] },
+      list: {
+        pathKey: () => [["library", "list"]],
+        queryKey: () => [["library", "list"], { input: {}, type: "query" }],
+      },
     },
     config: {
       categories: { queryKey: () => CATEGORIES_KEY },
@@ -126,33 +136,36 @@ function subscription(name: string) {
   return options;
 }
 
-/** A fresh subscribe, then its Cursor Mark: what `useSubscription` and the server do. */
-function goLive(name: string) {
-  vi.useFakeTimers();
-  try {
-    act(() => {
-      subscription(name).subscribe({});
-      subscription(name).onData({ id: "1.abcdef01.1700000000000-0", data: CURSOR_MARK });
-    });
-    // The catch-up waits out a short window for marks arriving with it.
-    act(() => {
-      vi.runOnlyPendingTimers();
-    });
-  } finally {
-    vi.useRealTimers();
-  }
+/** A fresh subscribe, as `useSubscription` opens one. */
+function subscribe(name: string) {
+  act(() => {
+    subscription(name).subscribe({});
+  });
+}
+
+/** The server's Cursor Mark, then the short window the reread waits out for marks arriving with it. */
+function markLive(name: string) {
+  act(() => subscription(name).onData(trackedCursorMark()));
+  act(() => {
+    vi.runOnlyPendingTimers();
+  });
 }
 
 function emit(name: string, payload: unknown) {
   act(() => subscription(name).onData(trackedEvent(payload)));
 }
 
-/** How often the pending imports were reread. */
-function pendingRereads() {
-  return invalidateQueries.mock.calls.filter(
-    ([filters]) => JSON.stringify(filters) === JSON.stringify({ queryKey: PENDING_KEY })
-  ).length;
+/** How often a cached read was invalidated, by key or by predicate. */
+function rereadsOf(queryKey: unknown[]) {
+  const query = queryClient.getQueryCache().find({ queryKey, exact: true });
+
+  if (!query) throw new Error(`Nothing cached at ${JSON.stringify(queryKey)}`);
+
+  return invalidateQueries.mock.calls.filter(([filters]) => matchQuery(filters ?? {}, query))
+    .length;
 }
+
+const pendingRereads = () => rereadsOf(PENDING_KEY);
 
 let queryClient: QueryClient;
 let rendered: ReturnType<typeof renderHook>;
@@ -160,7 +173,11 @@ let invalidateQueries: ReturnType<typeof vi.spyOn>;
 let platform: ReturnType<typeof fakePlatformAdapter>;
 
 beforeEach(() => {
-  queryClient = new QueryClient({ defaultOptions: { queries: { retry: false } } });
+  vi.useFakeTimers();
+  // No garbage collection: the reread's window runs every pending timer, the cache's too.
+  queryClient = new QueryClient({
+    defaultOptions: { queries: { retry: false, gcTime: Infinity } },
+  });
   queryClient.setQueryData(LIST_KEY, {
     pages: [{ recipes: [dashboardRecipe()], total: 1, nextCursor: null }],
     pageParams: [0],
@@ -170,6 +187,8 @@ beforeEach(() => {
     pageParams: [0],
   });
   queryClient.setQueryData(detailKey("recipe-1"), fullRecipe());
+  queryClient.setQueryData(PENDING_KEY, []);
+  queryClient.setQueryData(CATEGORIES_KEY, { categories: [], builtInAliases: {} });
   invalidateQueries = vi.spyOn(queryClient, "invalidateQueries");
 
   platform = fakePlatformAdapter();
@@ -184,6 +203,8 @@ beforeEach(() => {
 
 afterEach(() => {
   rendered.unmount();
+  vi.runOnlyPendingTimers();
+  vi.useRealTimers();
   queryClient.clear();
 });
 
@@ -237,7 +258,6 @@ describe("the recipe list events and recipe outcomes", () => {
       { input: { startISO: "2026-01-01", endISO: "2026-01-07" }, type: "query" },
     ];
 
-    queryClient.setQueryData(CATEGORIES_KEY, { categories: [], builtInAliases: {} });
     queryClient.setQueryData(calendarKey, []);
     emit("onUpdated", { recipe: fullRecipe({ name: "Renamed" }) });
 
@@ -299,36 +319,50 @@ describe("the recipe list events and recipe outcomes", () => {
     expect(list?.pages[0]?.recipes.map((r) => r.id)).toEqual(["recipe-2", "recipe-1"]);
   });
 
-  it.each(["onImported", "onFailed"])(
-    "rereads the pending imports and the lists once %s is live, for an import that ended before",
+  it.each(["onImportStarted", "onImported", "onFailed", "onDeleteKept"])(
+    "rereads the pending imports, the lists and the details once %s is live, for an import that ended before",
     (name) => {
-      goLive(name);
+      subscribe(name);
+      markLive(name);
       expect(pendingRereads()).toBe(1);
-      expect(invalidateQueries).toHaveBeenCalledWith({ queryKey: [["recipes", "list"]] });
+      expect(rereadsOf(LIST_KEY)).toBe(1);
+      expect(rereadsOf(LIBRARY_KEY)).toBe(1);
+      expect(rereadsOf(detailKey("recipe-1"))).toBe(1);
 
       // A reconnect's mark resumes the same subscribe: nothing to reread.
-      vi.useFakeTimers();
-      act(() => subscription(name).onData({ id: "1.abcdef01.1700000000000-0", data: CURSOR_MARK }));
-      act(() => {
-        vi.runOnlyPendingTimers();
-      });
-      vi.useRealTimers();
+      markLive(name);
       expect(pendingRereads()).toBe(1);
+    }
+  );
+
+  it.each(["onCreated", "onUpdated", "onDeleted", "onConverted", "onRecipeBatchCreated"])(
+    "rereads every read the list events touch, the Categories too, once %s is live",
+    (name) => {
+      subscribe(name);
+      markLive(name);
+
+      for (const key of [LIST_KEY, LIBRARY_KEY, detailKey("recipe-1"), PENDING_KEY]) {
+        expect(rereadsOf(key)).toBe(1);
+      }
+      expect(rereadsOf(CATEGORIES_KEY)).toBe(1);
     }
   );
 
   it.each(["onImported", "onFailed"])(
     "rereads the pending imports and the lists when %s lags, once it is live again",
     (name) => {
-      goLive("onImported");
-      goLive("onFailed");
+      subscribe("onImported");
+      markLive("onImported");
+      subscribe("onFailed");
+      markLive("onFailed");
       expect(pendingRereads()).toBe(2);
 
-      // The lag restarts this subscription alone, and catches up once its Cursor Mark arrives.
+      // The lag restarts this subscription alone, and rereads once its Cursor Mark arrives.
       act(() => subscription(name).onError(new TRPCClientError(REALTIME_LAGGED)));
       expect(pendingRereads()).toBe(2);
 
-      goLive(name);
+      subscribe(name);
+      markLive(name);
       expect(pendingRereads()).toBe(3);
     }
   );

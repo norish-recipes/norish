@@ -8,7 +8,7 @@ import {
 } from "@norish/shared-react/platform/testing";
 import { useHousehold, useHouseholdSubscription } from "@norish/shared-react/reader";
 
-import { trackedEvent } from "../../../__tests__/realtime/tracked-event";
+import { trackedCursorMark, trackedEvent } from "../../../__tests__/realtime/tracked-event";
 import {
   createMockHouseholdAdminSettings,
   createMockHouseholdData,
@@ -38,72 +38,75 @@ vi.mock("../../trpc", () => ({
         subscriptionOptions: vi.fn((_, options) => {
           subscriptionCallbacks.onCreated = options?.onData;
 
-          return { enabled: true };
+          return { enabled: true, subscribe: () => ({ unsubscribe: () => undefined }) };
         }),
       },
       onKicked: {
         subscriptionOptions: vi.fn((_, options) => {
           subscriptionCallbacks.onKicked = options?.onData;
 
-          return { enabled: true };
+          return { enabled: true, subscribe: () => ({ unsubscribe: () => undefined }) };
         }),
       },
       onFailed: {
         subscriptionOptions: vi.fn((_, options) => {
           subscriptionCallbacks.onFailed = options?.onData;
 
-          return { enabled: true };
+          return { enabled: true, subscribe: () => ({ unsubscribe: () => undefined }) };
         }),
       },
       onUserJoined: {
         subscriptionOptions: vi.fn((_, options) => {
           subscriptionCallbacks.onUserJoined = options?.onData;
 
-          return { enabled: true };
+          return { enabled: true, subscribe: () => ({ unsubscribe: () => undefined }) };
         }),
       },
       onUserLeft: {
         subscriptionOptions: vi.fn((_, options) => {
           subscriptionCallbacks.onUserLeft = options?.onData;
 
-          return { enabled: true };
+          return { enabled: true, subscribe: () => ({ unsubscribe: () => undefined }) };
         }),
       },
       onMemberRemoved: {
         subscriptionOptions: vi.fn((_, options) => {
           subscriptionCallbacks.onMemberRemoved = options?.onData;
 
-          return { enabled: true };
+          return { enabled: true, subscribe: () => ({ unsubscribe: () => undefined }) };
         }),
       },
       onAdminTransferred: {
         subscriptionOptions: vi.fn((_, options) => {
           subscriptionCallbacks.onAdminTransferred = options?.onData;
 
-          return { enabled: true };
+          return { enabled: true, subscribe: () => ({ unsubscribe: () => undefined }) };
         }),
       },
       onJoinCodeRegenerated: {
         subscriptionOptions: vi.fn((_, options) => {
           subscriptionCallbacks.onJoinCodeRegenerated = options?.onData;
 
-          return { enabled: true };
+          return { enabled: true, subscribe: () => ({ unsubscribe: () => undefined }) };
         }),
       },
       onAllergiesUpdated: {
         subscriptionOptions: vi.fn((_, options) => {
           subscriptionCallbacks.onAllergiesUpdated = options?.onData;
 
-          return { enabled: true };
+          return { enabled: true, subscribe: () => ({ unsubscribe: () => undefined }) };
         }),
       },
       onMemberProfileUpdated: {
         subscriptionOptions: vi.fn((_, options) => {
           subscriptionCallbacks.onMemberProfileUpdated = options?.onData;
 
-          return { enabled: true };
+          return { enabled: true, subscribe: () => ({ unsubscribe: () => undefined }) };
         }),
       },
+    },
+    recipes: {
+      pathKey: () => [["recipes"]],
     },
     calendar: {
       listRecipes: {
@@ -164,6 +167,41 @@ describe("useHouseholdSubscription", () => {
       // The hook should call useSubscription for each event type
       expect(useSubscription).toHaveBeenCalled();
     });
+  });
+
+  describe("once live", () => {
+    it.each(["onAllergiesUpdated", "onMemberProfileUpdated", "onKicked"])(
+      "%s rereads the household, the Reader's settings and the recipes",
+      async (name) => {
+        queryClient.setQueryData(householdQueryKey, createMockHouseholdData(null, "user-1"));
+        const invalidateSpy = vi.spyOn(queryClient, "invalidateQueries");
+
+        vi.mocked(useSubscription).mockClear();
+        renderHook(() => useHouseholdSubscription(), { wrapper: readerWrapper(queryClient) });
+
+        // The hook subscribes in the order the callbacks were registered.
+        const index = Object.keys(subscriptionCallbacks).indexOf(name);
+        const options = vi
+          .mocked(useSubscription)
+          .mock.calls.at(index - Object.keys(subscriptionCallbacks).length)![0] as {
+          subscribe: (observer: object) => unknown;
+        };
+
+        act(() => {
+          options.subscribe({});
+          subscriptionCallbacks[name]?.(trackedCursorMark());
+        });
+
+        await waitFor(() => expect(invalidateSpy).toHaveBeenCalledTimes(1));
+        const { predicate } = invalidateSpy.mock.calls[0]![0] as {
+          predicate: (query: { queryKey: unknown[] }) => boolean;
+        };
+
+        expect(predicate({ queryKey: householdQueryKey })).toBe(true);
+        expect(predicate({ queryKey: [["user", "get"], { type: "query" }] })).toBe(true);
+        expect(predicate({ queryKey: [["recipes", "list"], { type: "infinite" }] })).toBe(true);
+      }
+    );
   });
 
   describe("onCreated handler", () => {
