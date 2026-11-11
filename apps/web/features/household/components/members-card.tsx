@@ -16,7 +16,7 @@ export default function MembersCard() {
   const t = useTranslations("settings.household.members");
   const ti = useTranslations("settings.household.info");
   const tActions = useTranslations("common.actions");
-  const { household, currentUserId } = useHousehold();
+  const { household, currentUserId, isAdmin } = useHousehold();
   const { kickUser, transferAdmin } = useHouseholdMutations();
   const [showKickModal, setShowKickModal] = useState(false);
   const [showTransferModal, setShowTransferModal] = useState(false);
@@ -24,11 +24,6 @@ export default function MembersCard() {
   const [userToTransfer, setUserToTransfer] = useState<ChosenMember | null>(null);
   if (!household) return null;
 
-  // Check if current user is admin
-  const currentUserData = currentUserId
-    ? household.users.find((u) => u.id === currentUserId)
-    : null;
-  const isAdmin = currentUserData?.isAdmin === true;
   const handleKickUser = () => {
     if (!userToKick) return;
     kickUser(household.id, userToKick.id);

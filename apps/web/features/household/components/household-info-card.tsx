@@ -13,16 +13,11 @@ import { useHousehold, useHouseholdMutations } from "@norish/shared-react/reader
 export default function HouseholdInfoCard() {
   const t = useTranslations("settings.household.info");
   const tActions = useTranslations("common.actions");
-  const { household, currentUserId } = useHousehold();
+  const { household, currentUserId, isAdmin } = useHousehold();
   const { leaveHousehold } = useHouseholdMutations();
   const [showLeaveModal, setShowLeaveModal] = useState(false);
   if (!household) return null;
 
-  // Check if current user is admin
-  const currentUserData = currentUserId
-    ? household.users.find((u) => u.id === currentUserId)
-    : null;
-  const isAdmin = currentUserData?.isAdmin === true;
   const otherMembers = household.users.filter((u) => u.id !== currentUserId);
   const handleLeaveHousehold = () => {
     leaveHousehold(household.id);

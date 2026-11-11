@@ -31,7 +31,7 @@ function subscribeToSeconds(onTick: () => void) {
 export default function JoinCodeCard() {
   const t = useTranslations("settings.household.joinCode");
   const tErrors = useTranslations("common.errors");
-  const { household, currentUserId } = useHousehold();
+  const { household, isAdmin } = useHousehold();
   const { regenerateJoinCode } = useHouseholdMutations();
   const joinCodeExpiresAt =
     household && "joinCode" in household && household.joinCode ? household.joinCodeExpiresAt : null;
@@ -43,11 +43,6 @@ export default function JoinCodeCard() {
   );
   if (!household) return null;
 
-  // Check if current user is admin and if household has admin fields
-  const currentUserData = currentUserId
-    ? household.users.find((u) => u.id === currentUserId)
-    : null;
-  const isAdmin = currentUserData?.isAdmin === true;
 
   // Type guard: only admins get joinCode fields
   const hasJoinCode = "joinCode" in household;

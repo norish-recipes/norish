@@ -57,6 +57,33 @@ describe("useHousehold", () => {
     });
   });
 
+  it("says whether the Reader administers the household", async () => {
+    const users = [
+      { id: "admin", name: "A", isAdmin: true, version: 1 },
+      { id: "member", name: "M", isAdmin: false, version: 1 },
+    ];
+
+    for (const [reader, isAdmin] of [
+      ["admin", true],
+      ["member", false],
+    ] as const) {
+      const client = createTestQueryClient();
+
+      client.setQueryData(
+        mockQueryKey,
+        createMockHouseholdData(createMockHouseholdSettings({ users }), reader)
+      );
+      mockQueryOptions.mockReturnValue({
+        queryKey: mockQueryKey,
+        queryFn: () => new Promise(() => {}),
+      });
+
+      const { result } = renderHook(() => useHousehold(), { wrapper: readerWrapper(client) });
+
+      expect(result.current.isAdmin).toBe(isAdmin);
+    }
+  });
+
   describe("data fetching", () => {
     it("returns household data after successful fetch", async () => {
       const mockHousehold = createMockHouseholdSettings({

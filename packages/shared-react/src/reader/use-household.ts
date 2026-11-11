@@ -17,6 +17,8 @@ export type HouseholdData = {
 export type HouseholdResult = {
   household: HouseholdSettingsDto | HouseholdAdminSettingsDto | null;
   currentUserId: string | undefined;
+  /** Whether the Reader administers their household. */
+  isAdmin: boolean;
   error: unknown;
   isLoading: boolean;
 };
@@ -34,10 +36,12 @@ export type HouseholdCacheHelpers = {
 export function useHousehold(): HouseholdResult {
   const trpc = useTRPC();
   const { data, error, isLoading } = useQuery(trpc.households.get.queryOptions());
+  const household = data?.household ?? null;
 
   return {
-    household: data?.household ?? null,
+    household,
     currentUserId: data?.currentUserId,
+    isAdmin: household?.users.some((u) => u.id === data?.currentUserId && u.isAdmin) ?? false,
     error,
     isLoading,
   };
