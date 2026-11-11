@@ -376,6 +376,22 @@ describe("a delete, move or update with no range", () => {
     }
   );
 
+  it("keeps both writes started in one tick", async () => {
+    mount({ success: true });
+    // The note editor renames, then moves, in one handler.
+    act(() => {
+      mutations.updateItem("item-0", "Leftovers");
+      mutations.moveItem("item-0", "2026-09-24", "Lunch", 0);
+    });
+    await settle();
+
+    for (const range of [THIS_WEEK, CALENDAR_PAGE]) {
+      expect(itemsIn(range)?.find((item) => item.id === "item-0")).toEqual(
+        expect.objectContaining({ title: "Leftovers", date: "2026-09-24", slot: "Lunch" })
+      );
+    }
+  });
+
   it("rereads both ranges after a stale write", async () => {
     mount({ success: true, stale: true });
     act(() => writes.update());

@@ -21,16 +21,13 @@ export function useCalendarMutations(): CalendarMutationsResult {
   const queryClient = useQueryClient();
   const { cachedRanges, upsertItemAcrossRanges, invalidateAllRanges } = useCalendarCacheHelpers();
 
-  // Writes over what each range held before its read was cancelled: a cancel
-  // reverts to the fetch's start, which can predate a restored cache.
-  const writeAcrossRanges = async (update: RangeUpdate) => {
+  // Synchronous, so a second write in the same tick reads this one; a manual write
+  // during a cancelled read becomes the state that read reverts to.
+  const writeAcrossRanges = (update: RangeUpdate) => {
     const held = cachedRanges();
 
-    await Promise.all(
-      held.map(({ key }) => queryClient.cancelQueries({ queryKey: key, exact: true }))
-    );
-
     for (const { key, range, items } of held) {
+      void queryClient.cancelQueries({ queryKey: key, exact: true });
       queryClient.setQueryData<PlannedItemFromQuery[]>(key, update(items, range));
     }
 
