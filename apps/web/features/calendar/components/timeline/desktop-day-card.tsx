@@ -45,6 +45,7 @@ export const DesktopDayCard = memo(function DesktopDayCard({
   return (
     <Card
       ref={setNodeRef}
+      data-day-key={dateKey}
       className={`shadow-sm transition-all duration-200 ${showDragHighlight ? "ring-accent ring-2" : ""} ${isToday ? "ring-accent/50 shadow-md ring-2" : ""}`}
       style={{
         height: CARD_HEIGHT,

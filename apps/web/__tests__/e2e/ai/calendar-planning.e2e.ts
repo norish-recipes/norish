@@ -13,7 +13,10 @@
  */
 import type { Page } from "@playwright/test";
 
+import { dateKey, parseDateKey } from "@norish/shared/lib/helpers";
+
 import { fingerFor, glide } from "../harness/pointer";
+import { settled } from "../harness/settled";
 import { callTrpc, queryTrpc } from "../harness/trpc";
 import { seedRecipe } from "./cookbooks-support";
 import { expect, test } from "./fixture";
@@ -143,40 +146,30 @@ test("a recipe planned on the dashboard shows on the calendar page from the cach
   await context.close();
 });
 
-/** A date as the calendar keys it, in the browser's own calendar. */
-const isoDay = (date: Date) =>
-  `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, "0")}-${String(date.getDate()).padStart(2, "0")}`;
+function shiftDay(day: string, days: number): string {
+  const date = parseDateKey(day);
 
-test("a recipe dragged onto another day moves there and stays after a reload", async ({
+  date.setDate(date.getDate() + days);
+
+  return dateKey(date);
+}
+
+test("a recipe dragged onto a day in its row or the next moves there and stays after a reload", async ({
   browser,
   aiStack,
 }) => {
-  const name = `Dragged Stew ${Date.now()}`;
-  const recipeId = await seedRecipe(name);
-  const today = new Date();
-  const tomorrow = new Date(today.getFullYear(), today.getMonth(), today.getDate() + 1);
-
-  await callTrpc(aiStack.baseURL, aiStack.ownerCookies, "calendar.createItem", {
-    date: isoDay(today),
-    slot: "Dinner",
-    itemType: "recipe",
-    recipeId,
-  });
-
+  const across = `Dragged Stew ${Date.now()}`;
+  const down = `Dropped Soup ${Date.now()}`;
+  const ids = { [across]: await seedRecipe(across), [down]: await seedRecipe(down) };
   const context = await browser.newContext({
     baseURL: aiStack.baseURL,
     storageState: { cookies: aiStack.ownerCookies, origins: [] },
     viewport: { width: 1280, height: 900 },
   });
   const page = await context.newPage();
-  // Desktop day cards sit in the grid of a virtual row; a card's header names its day.
-  const card = (header: string) =>
-    page.locator("[data-index] .grid > *").filter({ has: page.getByText(header, { exact: true }) });
-  const todayCard = card("Today");
-  const tomorrowCard = card(
-    `${new Intl.DateTimeFormat("en", { month: "long" }).format(tomorrow)} ${tomorrow.getDate()}`
-  );
-  const plannedDate = async () => {
+  const card = (day: string) => page.locator(`[data-day-key="${day}"]`);
+  const rowOf = (day: string) => page.locator("[data-index]").filter({ has: card(day) });
+  const plannedDate = async (recipeId: string) => {
     const items = await queryTrpc<Array<{ date: string; recipeId: string | null }>>(
       aiStack.baseURL,
       aiStack.ownerCookies,
@@ -186,31 +179,75 @@ test("a recipe dragged onto another day moves there and stays after a reload", a
 
     return items.find((item) => item.recipeId === recipeId)?.date;
   };
+  const centre = (box: { x: number; y: number; width: number; height: number }) => ({
+    x: box.x + box.width / 2,
+    y: box.y + box.height / 2,
+  });
+
+  // Picks the item up, then finds the target wherever it is: in view, settled, under the pointer.
+  async function drag(name: string, to: string) {
+    const item = page.getByText(name);
+
+    await item.scrollIntoViewIfNeeded();
+    const start = centre(await settled(page, () => item.boundingBox()));
+    const lifted = { x: start.x + 12, y: start.y };
+    const mouse = await fingerFor(page, "mouse");
+
+    // The desktop pointer sensor starts a drag only after 8 px of movement.
+    await mouse.down(start);
+    await glide(page, mouse, start, lifted);
+    await card(to).scrollIntoViewIfNeeded();
+    await glide(page, mouse, lifted, centre(await settled(page, () => card(to).boundingBox())));
+    await mouse.up();
+  }
 
   try {
     await page.goto("/calendar");
-    const item = todayCard.getByText(name);
+    // Today as the page reads it, once it has loaded, so a run across midnight agrees with it.
+    const today = await page.evaluate(() => {
+      const now = new Date();
 
-    await expect(item).toBeVisible();
-    await expect(tomorrowCard).toBeVisible();
+      return [now.getFullYear(), now.getMonth(), now.getDate()] as const;
+    });
+    const todayKey = dateKey(new Date(...today));
 
-    // The desktop pointer sensor starts a drag only after 8 px of movement.
-    const from = (await item.boundingBox())!;
-    const to = (await tomorrowCard.boundingBox())!;
-    const start = { x: from.x + from.width / 2, y: from.y + from.height / 2 };
-    const mouse = await fingerFor(page, "mouse");
+    // Apart: a move bumps its slot-mates' versions, which the client is not told.
+    for (const [name, slot] of [
+      [across, "Dinner"],
+      [down, "Lunch"],
+    ] as const) {
+      await callTrpc(aiStack.baseURL, aiStack.ownerCookies, "calendar.createItem", {
+        date: todayKey,
+        slot,
+        itemType: "recipe",
+        recipeId: ids[name],
+      });
+    }
+    await page.reload();
+    await expect(card(todayKey).getByText(across)).toBeVisible();
+    await expect(card(todayKey).getByText(down)).toBeVisible();
 
-    await mouse.down(start);
-    await glide(page, mouse, start, { x: to.x + to.width / 2, y: to.y + to.height / 2 });
-    await mouse.up();
+    // Whatever the weekday: a neighbour in today's row, and the day under today in the next.
+    const todayRow = await rowOf(todayKey).getAttribute("data-index");
+    const after = shiftDay(todayKey, 1);
+    const beside =
+      (await rowOf(after).getAttribute("data-index")) === todayRow ? after : shiftDay(todayKey, -1);
+    const below = shiftDay(todayKey, await rowOf(todayKey).locator("[data-day-key]").count());
+    const targets = { [across]: beside, [down]: below };
 
-    await expect(tomorrowCard.getByText(name)).toBeVisible();
-    await expect(todayCard.getByText(name)).toHaveCount(0);
-    await expect.poll(plannedDate).toBe(isoDay(tomorrow));
+    for (const [name, day] of Object.entries(targets)) {
+      await drag(name, day);
+      await expect(card(day).getByText(name)).toBeVisible();
+      await expect(card(todayKey).getByText(name)).toHaveCount(0);
+      await expect.poll(() => plannedDate(ids[name]!)).toBe(day);
+    }
 
     await page.reload();
-    await expect(tomorrowCard.getByText(name)).toBeVisible();
-    await expect(todayCard.getByText(name)).toHaveCount(0);
+    for (const [name, day] of Object.entries(targets)) {
+      await expect(card(day).getByText(name)).toBeVisible();
+    }
+    await expect(card(todayKey).getByText(across)).toHaveCount(0);
+    await expect(card(todayKey).getByText(down)).toHaveCount(0);
   } finally {
     await context.close();
   }
