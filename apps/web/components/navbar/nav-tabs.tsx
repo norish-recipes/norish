@@ -1,9 +1,10 @@
 import type { ComponentProps } from "react";
 import NextLink from "next/link";
+import { settingsHref } from "@/components/settings/settings-tab";
 import { siteConfig } from "@/config/site";
 import { arriveAtTop } from "@/lib/scroll-memory";
 
-export const SETTINGS_HREF = "/settings/account";
+export const SETTINGS_HREF = settingsHref("account");
 
 // The navbar's tabs, left to right: the desktop bar shows the nav items, the phone bar adds Settings.
 export const NAV_TABS = [...siteConfig.navItems.map((item) => item.href), SETTINGS_HREF];

@@ -4,6 +4,7 @@ import React, { useCallback, useState } from "react";
 import { useRouter } from "next/navigation";
 import { OfflineStatusModal } from "@/components/navbar/offline-status/offline-status-modal";
 import { SignOutConfirmModal } from "@/components/navbar/sign-out-confirm-modal";
+import { settingsHref } from "@/components/settings/settings-tab";
 import ImportRecipeModal from "@/components/shared/import-recipe-modal";
 import { LanguageSwitchContent } from "@/components/shared/language-switch";
 import UserAvatar from "@/components/shared/user-avatar";
@@ -218,7 +219,7 @@ export default function NavbarUserMenu({
               // Every sibling item routes through the client router instead.
               onPress={() => {
                 handleOpenChange(false);
-                router.push("/settings/account");
+                router.push(settingsHref("account"));
               }}
             >
               <span className="text-muted">

@@ -2,7 +2,7 @@
 
 import type { SettingsTab } from "@/components/settings/settings-tab";
 import { usePathname, useRouter } from "next/navigation";
-import { settingsTabOf } from "@/components/settings/settings-tab";
+import { settingsHref, settingsTabOf } from "@/components/settings/settings-tab";
 import {
   BookOpenIcon as BookOpenIconSolid,
   HomeIcon as HomeIconSolid,
@@ -89,7 +89,7 @@ export function SettingsTabs({ showAdminTab }: { showAdminTab: boolean }) {
                   key={tab.id}
                   aria-label={tab.label}
                   className="h-12"
-                  href={`/settings/${tab.id}`}
+                  href={settingsHref(tab.id)}
                   id={tab.id}
                 >
                   <div className="flex items-center gap-2">

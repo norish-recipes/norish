@@ -2,6 +2,7 @@
 
 import { useEffect } from "react";
 import { useRouter } from "next/navigation";
+import { settingsHref } from "@/components/settings/settings-tab";
 import { useAIKeyRejections } from "@/hooks/admin/use-ai-key-rejections";
 import { showActionToast } from "@/lib/ui/action-toast";
 import { useTranslations } from "next-intl";
@@ -45,7 +46,7 @@ export default function AIKeyRejectionPrompt() {
       description: rejections.description,
       variant: "danger",
       timeout: 0,
-      action: { label: t("openSettings"), onPress: () => router.push("/settings/admin") },
+      action: { label: t("openSettings"), onPress: () => router.push(settingsHref("admin")) },
     });
     // The id says everything that would change what the toast says.
     // eslint-disable-next-line @eslint-react/exhaustive-deps
