@@ -1,9 +1,9 @@
 "use client";
 
-import type { PlannedItemDisplay } from "@/components/calendar/mobile";
+import type { PlannedItemDisplay } from "@/components/calendar/types";
 import { useCallback, useEffect, useMemo, useRef } from "react";
 import { landOnDay, settleLanding } from "@/components/calendar/land-on-day";
-import { TimelineDaySection } from "@/components/calendar/mobile";
+import { TimelineDaySection } from "@/components/calendar/timeline-day-section";
 import Panel from "@/components/Panel/Panel";
 import { useVirtualizer } from "@tanstack/react-virtual";
 import { useLocale, useTranslations } from "next-intl";

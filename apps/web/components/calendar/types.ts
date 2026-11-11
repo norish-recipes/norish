@@ -14,13 +14,6 @@ export type PlannedItemDisplay = {
   calories?: number | null;
 };
 
-export type TimelineDay = {
-  date: Date;
-  dateKey: string;
-  isToday: boolean;
-  items: PlannedItemDisplay[];
-};
-
 export const SLOTS: Slot[] = ["Breakfast", "Lunch", "Dinner", "Snack"];
 
 export const SLOT_ORDER: Record<Slot, number> = {

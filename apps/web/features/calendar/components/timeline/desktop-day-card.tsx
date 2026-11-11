@@ -1,9 +1,9 @@
 "use client";
 
-import type { PlannedItemDisplay } from "@/components/calendar/mobile/types";
+import type { PlannedItemDisplay } from "@/components/calendar/types";
 import { memo, useMemo } from "react";
-import { TimelineSlotContainer } from "@/components/calendar/mobile/timeline-slot-container";
-import { SLOTS } from "@/components/calendar/mobile/types";
+import { TimelineSlotContainer } from "@/components/calendar/timeline-slot-container";
+import { SLOTS } from "@/components/calendar/types";
 import { useDroppable } from "@dnd-kit/core";
 import { PlusIcon } from "@heroicons/react/16/solid";
 import { Button, Card, Dropdown, Label, Separator } from "@heroui/react";

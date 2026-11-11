@@ -1,6 +1,6 @@
 "use client";
 
-import type { PlannedItemDisplay } from "@/components/calendar/mobile";
+import type { PlannedItemDisplay } from "@/components/calendar/types";
 import { useEffect, useRef, useState } from "react";
 import MiniRecipes from "@/components/Panel/consumers/mini-recipes";
 import { useReaderToday } from "@/components/reader-today";

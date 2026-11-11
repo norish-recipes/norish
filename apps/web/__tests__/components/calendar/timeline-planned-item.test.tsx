@@ -1,4 +1,4 @@
-import { TimelinePlannedItem } from "@/components/calendar/mobile/timeline-planned-item";
+import { TimelinePlannedItem } from "@/components/calendar/timeline-planned-item";
 import { render, screen } from "@testing-library/react";
 import { describe, expect, it, vi } from "vitest";
 
@@ -10,7 +10,7 @@ vi.mock("@/hooks/use-recipe-prefetch", () => ({
   useRecipePrefetch: () => vi.fn(),
 }));
 
-vi.mock("@/components/calendar/mobile/planned-item-content", () => ({
+vi.mock("@/components/calendar/planned-item-content", () => ({
   PlannedItemContent: () => <span>planned item</span>,
 }));
 

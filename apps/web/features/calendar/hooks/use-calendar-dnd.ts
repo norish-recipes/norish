@@ -1,4 +1,4 @@
-import type { PlannedItemDisplay } from "@/components/calendar/mobile";
+import type { PlannedItemDisplay } from "@/components/calendar/types";
 import type {
   CollisionDetection,
   DragEndEvent,

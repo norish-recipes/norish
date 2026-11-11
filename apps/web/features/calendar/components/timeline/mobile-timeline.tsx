@@ -1,10 +1,10 @@
 "use client";
 
-import type { PlannedItemDisplay } from "@/components/calendar/mobile/types";
+import type { PlannedItemDisplay } from "@/components/calendar/types";
 import { useCallback, useEffect, useId, useLayoutEffect, useMemo, useRef, useState } from "react";
 import { landOnDay, settleLanding } from "@/components/calendar/land-on-day";
-import { TimelineDaySection } from "@/components/calendar/mobile/timeline-day-section";
-import { SLOT_ORDER } from "@/components/calendar/mobile/types";
+import { TimelineDaySection } from "@/components/calendar/timeline-day-section";
+import { SLOT_ORDER } from "@/components/calendar/types";
 import { useReaderToday } from "@/components/reader-today";
 import { CalendarSkeletonMobile } from "@/features/calendar/components/skeleton/calendar-skeleton";
 import { useCalendarDnd } from "@/features/calendar/hooks/use-calendar-dnd";
