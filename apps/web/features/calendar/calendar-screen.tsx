@@ -86,22 +86,14 @@ function CalendarPageContent() {
     setMiniRecipesOpen(true);
   };
 
-  const handleNoteClick = (item: PlannedItemFromQuery) => {
-    setEditingNote(item);
-  };
-
-  const handleRecipeClick = (item: PlannedItemFromQuery) => {
-    setEditingRecipe(item);
-  };
-
   const TimelineComponent = isDesktop ? DesktopTimeline : MobileTimeline;
 
   return (
     <>
       <TimelineComponent
         onAddItem={handleAddItem}
-        onNoteClick={handleNoteClick}
-        onRecipeClick={handleRecipeClick}
+        onNoteClick={setEditingNote}
+        onRecipeClick={setEditingRecipe}
       />
 
       {/* Mini recipes panel for adding items */}
