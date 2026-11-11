@@ -2,7 +2,7 @@
 
 Status: ready-for-agent
 
-Settled in `/grilling` sessions on 2026-11-07 (the architecture and the groceries pilot), 2026-11-09 (recipes, the second feature, and the decisions library takes with it) and 2026-11-10 (library, the third feature, which changed where subscriptions mount and where panels live) and 2026-11-11 (calendar, the fourth). Target Version: 0.27.0-beta. Tickets are in `issues/`: 01–09 are the groundwork and the groceries pilot, 10–15 are recipes, 16–19 are library, 20–22 are calendar. Each later feature gets its tickets once the one before it has landed. Starts on a branch off `rc/0.27.0-beta`, which `feat/mobile-catch-up` has merged into (4589f4f95); every feature stays on `refactor/app-structure`, since it is one refactor.
+Settled in `/grilling` sessions on 2026-11-07 (the architecture and the groceries pilot), 2026-11-09 (recipes, the second feature, and the decisions library takes with it) and 2026-11-10 (library, the third feature, which changed where subscriptions mount and where panels live) 2026-11-11 (calendar, the fourth) and again on 2026-11-11 (settings, the fifth, which became five features and stopped components calling tRPC). Target Version: 0.27.0-beta. Tickets are in `issues/`: 01–09 are the groundwork and the groceries pilot, 10–15 are recipes, 16–19 are library, 20–22 are calendar, 23–29 are settings. Each later feature gets its tickets once the one before it has landed. Starts on a branch off `rc/0.27.0-beta`, which `feat/mobile-catch-up` has merged into (4589f4f95); every feature stays on `refactor/app-structure`, since it is one refactor.
 
 ## Problem Statement
 
@@ -57,12 +57,16 @@ Groceries is the pilot, recipes the second feature and library the third. The re
 28. As a household member, I want a panel to show a housemate's change while it is open, wherever I opened it from.
 29. As a contributor, I want the panels several features open in the shared folders, so that no feature imports another.
 30. As a contributor, I want each layout to seed only what its screens draw, the `(app)` layout included, so that a full load of the groceries doesn't read the household's allergies.
+31. As a contributor, I want each settings tab in the feature of its domain, so that the household tab's code sits with the household, not in one settings folder holding five domains.
+32. As a contributor, I want every server read and write behind a named hook in shared-react, so that a component says what it reads and a mobile screen reuses the hook.
+33. As a household member, I want each settings tab at an address of its own, so that a link opens the tab it names.
+34. As someone syncing to CalDAV, I want the connection badge to show the check it just made, so that a working connection doesn't read "disconnected".
 
 ## Implementation Decisions
 
 ### Features
 
-- Features are named by domain: `library` (the dashboard's grid, filters and selection, and the cookbook page), `recipes` (detail, new, edit, and the shared recipe page), `groceries` (stores and pantry included), `calendar`, `imports`, `settings` and `auth`. Most map to one route; a route that shows several, like the dashboard with today's meals, composes them.
+- Features are named by domain: `library` (the dashboard's grid, filters and selection, and the cookbook page), `recipes` (detail, new, edit, and the shared recipe page), `groceries` (stores and pantry included), `calendar` (its CalDAV settings included), `account`, `household`, `ingredients` (the Ingredients page), `admin`, `imports` and `auth`. Most map to one route; a route that shows several, like the dashboard with today's meals, composes them. The settings page composes five: each tab is a route of its own that renders one feature's screen.
 - The cookbook page is the **Library** scoped to one cookbook: it renders the same grid, card, selection, search, view toggle and filters panel as the dashboard, so it belongs to `library` rather than a feature of its own. A shared recipe is the recipe page for someone holding the link, and it renders the recipe page's read-only pieces, so it belongs to `recipes`.
 - An app feature holds only the subfolders it needs. Code two or more features use lives in the app's shared `components/`, `hooks/` or `lib/`.
 - Imports run one way: shared folders, then features, then routes. A `no-restricted-imports` override in each app's ESLint config enforces it, as mobile's already does.
@@ -81,6 +85,7 @@ Groceries is the pilot, recipes the second feature and library the third. The re
 ### State
 
 - Server data is read through plain hooks over the Query cache, with `select` where a component needs a slice. It never lives in a context or a zustand store; the Query cache is its one source of truth (offline ADR-0001).
+- A component never calls tRPC itself: every read and write is a named hook in shared-react, in the domain it reads, so a component says what it reads and a mobile screen reuses the hook. Lint bans importing `useTRPC` and `useTRPCClient` in both apps, but for exceptions the rule names with a line of why. Settled with settings and swept through every migrated feature (29).
 - TanStack tells a query's readers in a `setTimeout(0)` task, so a value written to the cache in a click renders one task after the click's own state changes, in a commit of its own.
 - A read refetches on mount only when it may be behind. Web skips the server's seeded copy under the stale time and, until stale, a copy a mounted subscription keeps current (`useKeepsCurrent` in `realtime/`); config reads stay current through the admin's broadcast edits. A key a screen must keep while none of its observers is mounted, as the list's reads are while the Pantry view shows, gets a `gcTime` default in the Offline Cache.
 - A write's rollback and settle go in `useMutation`'s own options, never in a `mutate` call's, which run for the last call only and would skip an overlapped one. The component that holds a `useMutation` renders on each of its status changes; its memoised children don't.
@@ -104,7 +109,7 @@ Groceries is the pilot, recipes the second feature and library the third. The re
   - The recipe page: its recipe, shares, enrichment, ratings, cookbooks (its cookbooks card) and the ingredient catalogue. The editor: the ingredient catalogue.
   - Groceries' root: groceries, Stores, the Pantry and the ingredient catalogue.
   - Calendar's root, and today's meals on the dashboard: the calendar and recipe renames, which change a planned recipe's name and image.
-  - The user settings page: the archive import's progress, which its bar draws; its outcome stays in the shell, since the import runs on while the reader is elsewhere. The ingredient settings page: the ingredient catalogue.
+  - The account page: the archive import's progress, which its bar draws; its outcome stays in the shell, since the import runs on while the reader is elsewhere. The CalDAV page: CalDAV's sync events. The Ingredients page: the ingredient catalogue. The household page draws the Reader's household, which the shell keeps current; the admin page has no subscription.
   - Panels, while open, and a panel mounts its content only while open: `MiniGroceries` groceries, the Pantry and the ingredient catalogue; `MiniCookbooks` cookbooks; `MiniRecipes` the recipe list events; `MiniCalendar` the calendar, as it already did; `IngredientPanel` the ingredient catalogue, the Pantry and groceries.
 - Away from a screen nothing keeps its reads current, so coming back refetches them while the cached copy shows; `library.list` gets a `gcTime` default so the grid outlives a long cooking session.
 - Each layout seeds only what its screens draw, the `(app)` layout included: it seeds permissions (the AI-key prompt and the import modal read them on every page) and Device Preferences (the timer dock). The household and the reader's allergies are seeded by the Library's and the recipe page's layouts, which draw them, through one helper.
@@ -148,13 +153,31 @@ Settled 2026-11-11; tickets 20–22.
 - What changed on screen, all found in review: the CalDAV sync toast is translated; a housemate's move lands in every cached range, where it reached only the one on screen; a cancelled drag clears the day highlight; saving or deleting the CalDAV config rereads the sync-status page the tab shows, where it reread only the unfiltered first page.
 - Three bugs in released versions were fixed after the run, at Mike's call: a plan's next write was dropped after a slot-mate moved out or was deleted; the second of two quick writes to one plan was dropped; a write waiting its turn survived a reload in the offline cache and blocked later ones. Plan writes now go out one at a time, and when the first of two fails with a real error the second is dropped with it.
 
+### Settings (the fifth feature)
+
+Settled 2026-11-11; tickets 23–29.
+
+- Each settings tab is a feature of its own domain, since the tabs share nothing but their cards: `account` (the reader's name, Avatar, sign-in methods, preferences, allergies, API keys, site tokens, share links, the Recipe Archive and deleting the Account), `household`, `ingredients` (the Ingredients page) and `admin`, while the CalDAV tab joins `calendar`, since CalDAV is the calendar's sync. The Pantry stays in groceries, whose root draws it beside the list, and `IngredientPanel` stays in `components/ingredients/`, since recipes, groceries and the Ingredients page open it.
+- Each tab is a route: `/settings/account`, `/settings/household`, `/settings/caldav`, `/settings/ingredients` and `/settings/admin`. `settings/layout.tsx` draws the title and the tab bar as links and reads only whether the reader is an admin. Each tab's page seeds what it draws and renders its feature's screen, and its `loading.tsx` draws its skeleton, so `next/dynamic` and `SettingsShapeContext` go. A tab switch was already a server render, since the page read `?tab=`, and the `(app)` template doesn't remount under `settings/`, so a switch doesn't slide, as before.
+- `/settings` redirects to `/settings/account`, and `?tab=` links are not kept: only the nav, the avatar menu and the AI-key prompt used them. The admin route's layout sends a non-admin to account, as `?tab=admin` did, before its skeleton shows. The ingredient deep link becomes `/settings/ingredients?ingredient=<id>`. The user tab's label becomes "Account".
+- What several tabs draw lives in `components/settings/`: the tab bar, `SettingsCard`, `SettingRow`, `SettingsSwitch`, `NewFeatureChip`, `settings-tab.ts`, the skeleton pieces the tabs share, `archive-export-button` and `share-links-table-card` (account and admin both list share links). `provider-icon`, which login and the sign-in methods card draw, moves to `components/auth/`. Generic pieces only settings draws today (`ui/data-table`, `note`, `info-hint`, `ai-button`, `secret-input`) stay where they are.
+- shared-react:
+  - `reader/` takes the Account: its profile (`user.get`), allergies, sign-in methods and site tokens, and the writes to the name, Avatar, allergies, preferences, API keys and site tokens and deleting the Account. Recipes' `useSystemConversion` and the navbar's language switch read them too, so they can't live in a feature.
+  - `config/` takes `useAuthProvidersQuery`, which mobile's login and the sign-in methods card share; mobile's own copy goes.
+  - `recipes/` takes the Recipe Archive's import: its start, its progress and its outcome, held in a global zustand store in place of the `["archive-import"]` query whose `queryFn` only returned a default. The shell mounts the outcome and the account page the progress, as before.
+  - A new `admin/` holds the admin page's server data: the admin config and its writes, the endpoint tests and the secret read, the job queue, users, AI-key rejections (the shell's AI-key prompt reads them too), and what admin cards called inline: page renderers, bulk enrichment, the catalogue clean-up and fill gaps, the cuisine vocabulary, the available models and yt-dlp's version. Mobile has no admin page; this follows CalDAV, whose hooks sit in `shared-react/calendar` with no mobile screen, so a later one only writes the UI.
+  - A new `ingredients/` holds the catalogue: the list, kinds, AI changes, an Ingredient and its writes, nutrition corrections, icons and spellings, for the Ingredients page and `components/ingredients/`. The catalogue's subscription stays in `config/`, since it marks reads in every domain stale.
+  - The last factories go (`createAdminHooks`, `createArchiveHooks`, `createUserSettingsContext`, `createHouseholdSettingsContext`), and with them the `./hooks`, `./contexts` and `"."` exports and the lint rule's `legacy` list. `createUnitFormatter` moves beside `formatUnit` in `@norish/shared/lib/unit-localization`, and `useDirtyState`, which only web uses, to web's `hooks/`.
+- The four contexts go, with their unread fields. The admin context passed one query and its mutations through, so each card selects what it draws; the household context passed two reader hooks through; CalDAV's sync-status page and filter become `useState` in the sync-status card, their only reader.
+- What changes on screen: the settings addresses and the "Account" label, and on the CalDAV tab three fixes: the connection badge shows the check it just made (it showed the one before, so a first check always read "disconnected" and backed off), the stored password is read only while the edit modal is open, and the success toasts are translated.
+
 ### Migration
 
 1. Groceries (the pilot).
 2. Recipes, with the shared recipe page. The Reader's identity, household, allergies and permissions and the whole `shared-react/recipes` domain move first, and the ingredient icons move here: the recipe page, the editor and the shared recipe page all draw them.
 3. Library, with the cookbook page, the subscription and seeding rules, and the shared panels.
 4. Calendar.
-5. Settings.
+5. Settings, as five features (account, household, CalDAV in calendar, ingredients and admin), then the sweep that takes every tRPC call out of components.
 6. Imports and auth.
 
 The pilot's numbers are recorded in tickets 03 and 07. A problem with the shape itself amends this spec before the next feature starts. The pilot found none (07): groceries sits in `features/groceries` on web and `shared-react/groceries`, mobile's smoke screen reads the same hooks with no binding, and the rules it taught are folded into the sections above. Its one adjustment was letting shared code open a feature's panel through `index.ts`. Recipes' grilling added two rules: a per-page store handed down through a context, and a shell that mounts only what it draws. Library's changed two: whatever draws data mounts its subscriptions, another domain's included, and a panel several features open lives in the shared folders. Later features aren't measured. The mobile rewrite builds each screen once its feature has migrated, and mobile's catch-up spec line "Web keeps its current layout" points here.
@@ -163,9 +186,9 @@ The pilot's numbers are recorded in tickets 03 and 07. A problem with the shape 
 
 - CONTRIBUTING.md gains an "App architecture" section after "Project Structure" with the rules above and one line of why each; "Project Structure" shows the `features/` folders. AGENTS.md gets a one-line pointer.
 - An "Architecture" page in the docs' Development section explains the whole system at a high level: folder structure, what goes where, the decisions (linking their ADRs) and how a read, a write and a realtime update flow. CONTRIBUTING.md's rules link to it.
-- A feature that changes a rule updates CONTRIBUTING.md and the Architecture page with it: recipes adds the per-page store, library the subscription, seeding and panel rules.
+- A feature that changes a rule updates CONTRIBUTING.md and the Architecture page with it: recipes adds the per-page store, library the subscription, seeding and panel rules, settings the rule against calling tRPC from a component and a route that composes several features.
 - No ADR: the guide states the rules and their reasons.
-- The 0.27.0-beta release notes get one line saying the app architecture changed; no feature adds another.
+- The 0.27.0-beta release notes get one line saying the app architecture changed. A feature adds a line only for what a reader sees change: calendar its fixes; settings that each tab has an address of its own and that the CalDAV badge shows the current check.
 
 ## Testing Decisions
 
@@ -178,13 +201,15 @@ The pilot's numbers are recorded in tickets 03 and 07. A problem with the shape 
 - Recipes rewires the Reader, every recipe surface, the shared recipe page and the icons on groceries, so its proof is the whole E2E suite (`ai`, `offline`, `realtime`), run once after its last ticket. It is green today, so no spec is added ahead of the move.
 - Library moves the domains' subscriptions out of the shell, so three two-browser tests in `realtime.e2e.ts` pin the data a screen draws from another domain, written green against today's code before anything moves (16): a housemate files the open recipe into a cookbook; a housemate's Pantry change reorders a Library sorted by pantry share; a housemate renames a recipe on an open calendar. The whole E2E suite then runs once after 19.
 - Calendar's mutations without a range get unit tests in `shared-react/src/calendar/__tests__/`: a delete, a move and an update land in every cached range, and a failed write rolls every range back. `calendar-planning` and the realtime rename on an open calendar cover planning and renames; one E2E is added for a drag to another day, since no spec dragged on the calendar and 22 rewrote both timelines' drag code. The whole suite runs once after 22.
+- Settings rewrites tabs no E2E drives, so two specs pass against today's code before anything moves (23): the household tab (creating a household shows its join code, a second reader joins with it and both see each other, the admin removes the member, and a member who leaves sees the no-household view) and the account cards (an API key, a site token, allergies, the Avatar). The harness has no CalDAV server, so the CalDAV tab is pinned by unit tests of its cards over the plain hooks, each fix included. The archive store gets a unit test. The whole suite runs once after 29.
 - Every new test is checked with repeated runs; a test that only passes on re-run is a bug to fix.
 
 ## Out of Scope
 
-- Tickets for settings or any feature after it.
+- Tickets for imports, auth or anything after them.
+- Keeping the admin page current while a second admin edits: it was built for one admin, only its own saves reread its config, and `config.onChanged` doesn't cover it. To look into later.
 - Moving web into `src/`.
-- Visual or behavioural changes, but for what seeding only the first frame brings: on groceries, a first switch to the other view reads it, and the Pantry's suggestions are read on every visit (ticket 06). Library adds one: `MiniGroceries`' "on the list" mark becomes live wherever the panel opens, where today it is live only on the groceries screens.
+- Visual or behavioural changes, but for what seeding only the first frame brings: on groceries, a first switch to the other view reads it, and the Pantry's suggestions are read on every visit (ticket 06). Library adds one: `MiniGroceries`' "on the list" mark becomes live wherever the panel opens, where today it is live only on the groceries screens. Settings adds its addresses, the "Account" label and three CalDAV fixes (see Settings).
 - 07's remaining groceries renders (a changed Store renders its unchanged aisles' containers and headings; the ungrouped list and By Recipe keep the old prop shape) stay as recorded there.
 - New mobile screens; the mobile rewrite follows its own design track.
 
@@ -194,3 +219,4 @@ The pilot's numbers are recorded in tickets 03 and 07. A problem with the shape 
 - Recipes is tickets 10–15, one subagent each, in order: the Reader; the recipe domain as plain hooks, a wide refactor run as expand (11) and contract (13) around the recipe pages' stores (12); the ingredient icons (14); `features/recipes` (15), after which the whole E2E suite runs. Recipes has landed: the run's E2E failed one test on a race in the test itself, fixed in 2ffe80575.
 - Library is tickets 16–19, one subagent each, in order: `RecipesContext` goes (16), with the realtime tests first; the routes, root and filters store (17), after 16 because `RecipesContext` reads the filters from the shell; subscriptions and seeds where they're drawn (18); `features/library` and the shared panels (19), after which the whole E2E suite runs. Library has landed (E2E 275/275).
 - Calendar is tickets 20–22, one subagent each, in order: `shared-react/calendar` with CalDAV and mutations without a range (20); `CalendarContext` goes for the range store and plain hooks (21); `features/calendar` (22), after which the whole E2E suite runs. Calendar has landed (E2E 277/277 after the fixes that followed the run).
+- Settings is tickets 23–29, one subagent each, in order: the routes, with two E2E specs written first (23); household (24); account (25); CalDAV (26); ingredients (27); admin, which removes the last factory and the legacy exports (28); the sweep that takes tRPC out of every component, with its lint rule (29), after which the whole E2E suite runs. Terra's docs pass follows.
