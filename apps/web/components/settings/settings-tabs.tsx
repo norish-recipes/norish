@@ -42,8 +42,14 @@ export function SettingsTabs({ showAdminTab }: { showAdminTab: boolean }) {
   const currentTab = settingsTabOf(pathname);
 
   // A React Aria tab with an `href` renders a link; this sends it through Next's client router.
+  // React Aria navigates before it checks the selection, so the open tab's own address is skipped.
   return (
-    <RouterProvider navigate={router.push} useHref={addBasePath}>
+    <RouterProvider
+      navigate={(href, options) => {
+        if (href !== pathname) router.push(href, options);
+      }}
+      useHref={addBasePath}
+    >
       <Tabs aria-label={t("page.ariaLabel")} className="w-full" selectedKey={currentTab}>
         <Tabs.ListContainer>
           <Tabs.List aria-label={t("page.ariaLabel")}>

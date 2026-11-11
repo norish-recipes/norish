@@ -1,4 +1,4 @@
-import { render, screen } from "@testing-library/react";
+import { fireEvent, render, screen } from "@testing-library/react";
 import { beforeAll, describe, expect, it, vi } from "vitest";
 
 import "@testing-library/jest-dom";
@@ -19,13 +19,14 @@ beforeAll(() => {
   );
 });
 
-const { navigation, profile } = vi.hoisted(() => ({
+const { navigation, profile, push } = vi.hoisted(() => ({
+  push: vi.fn(),
   navigation: { pathname: "/settings/account" },
   profile: { identity: null as { isServerAdmin: boolean } | null },
 }));
 
 vi.mock("next/navigation", () => ({
-  useRouter: () => ({ push: vi.fn() }),
+  useRouter: () => ({ push }),
   usePathname: () => navigation.pathname,
   redirect: (to: string) => {
     throw new Error(`redirect:${to}`);
@@ -68,6 +69,26 @@ describe("the settings tab bar", () => {
       "aria-selected",
       "true"
     );
+  });
+
+  it("stays put when the open tab is clicked again", () => {
+    navigation.pathname = "/settings/household";
+    push.mockClear();
+
+    render(<SettingsTabs showAdminTab />);
+    fireEvent.click(screen.getByRole("tab", { name: /tabs\.household/ }));
+
+    expect(push).not.toHaveBeenCalled();
+  });
+
+  it("goes to another tab's address when it is clicked", () => {
+    navigation.pathname = "/settings/household";
+    push.mockClear();
+
+    render(<SettingsTabs showAdminTab />);
+    fireEvent.click(screen.getByRole("tab", { name: /tabs\.caldav/ }));
+
+    expect(push).toHaveBeenCalledWith("/settings/caldav", undefined);
   });
 });
 
