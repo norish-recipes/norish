@@ -5,9 +5,9 @@ import { useMutation } from "@tanstack/react-query";
 import type { UserPreferencesDto } from "@norish/shared/contracts/zod/user";
 import { uploadForm } from "@norish/shared/lib/upload-form";
 
+import { settled } from "../offline/settled";
 import { showRefusal, usePlatform } from "../platform";
 import { useTRPC } from "../trpc";
-import { settled } from "./settled";
 import { useProfileCache } from "./use-profile";
 
 type Answer = { success: boolean; error?: string };

@@ -4,3 +4,10 @@ export const settled = (write: Promise<unknown>): Promise<void> =>
     () => undefined,
     () => undefined
   );
+
+/** Resolves whether a write went through; its `onError` already told the reader why not. */
+export const wentThrough = (write: Promise<unknown>): Promise<boolean> =>
+  write.then(
+    () => true,
+    () => false
+  );

@@ -1,15 +1,10 @@
 import { useMutation } from "@tanstack/react-query";
 
 import type { CaldavMutationsResult, SaveCaldavConfigInput } from "./types";
+import { wentThrough } from "../offline/settled";
 import { usePlatform } from "../platform/platform";
 import { useTRPC } from "../trpc";
 import { useCaldavCacheHelpers } from "./use-caldav-cache";
-
-const outcome = (write: Promise<unknown>): Promise<boolean> =>
-  write.then(
-    () => true,
-    () => false
-  );
 
 export function useCaldavMutations(): CaldavMutationsResult {
   const trpc = useTRPC();
@@ -78,14 +73,16 @@ export function useCaldavMutations(): CaldavMutationsResult {
 
   return {
     saveConfig: (input: SaveCaldavConfigInput) =>
-      outcome(mutateSaveConfigAsync({ ...input, version: input.version ?? cachedConfigVersion() })),
+      wentThrough(
+        mutateSaveConfigAsync({ ...input, version: input.version ?? cachedConfigVersion() })
+      ),
     testConnection: (input) =>
       mutateTestConnectionAsync(input).catch((error: unknown) => ({
         success: false,
         message: error instanceof Error ? error.message : String(error),
       })),
     deleteConfig: (deleteEvents = false) =>
-      outcome(mutateDeleteConfigAsync({ deleteEvents, version: cachedConfigVersion() })),
+      wentThrough(mutateDeleteConfigAsync({ deleteEvents, version: cachedConfigVersion() })),
     triggerSync: () => mutateTriggerSync(),
     isSavingConfig: saveConfigMutation.isPending,
     isTestingConnection: testConnectionMutation.isPending,
