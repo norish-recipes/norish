@@ -90,7 +90,7 @@ describe("the web's sign-out", () => {
     expect(betterAuthSignOut).not.toHaveBeenCalled();
     expect(await offline.engine.outbox.size("u1")).toBe(0);
     expect(await offline.storage.keyval.keys()).toEqual([]);
-    expect(address).toBe("/login");
+    expect(address).toBe("/login?logout=true");
   });
 
   it.each([
@@ -101,6 +101,6 @@ describe("the web's sign-out", () => {
 
     await expect(signOut(options)).resolves.toBeUndefined();
 
-    expect(address).toMatch(/^\/login/);
+    expect(address).toBe("/login?logout=true");
   });
 });

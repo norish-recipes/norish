@@ -19,20 +19,21 @@ async function authSignedOut(): Promise<boolean> {
 }
 
 /** The session is gone by now, so sign-in loads even when clearing the offline data fails. */
-async function clearAndLeave(discardQueue: boolean, address: string): Promise<void> {
+async function clearAndLeave(discardQueue: boolean): Promise<void> {
   try {
     await offlineEngine.clearForSignOut({ discardQueue });
   } catch (error) {
     log.error({ error }, "Failed to clear offline data on sign out");
   } finally {
-    window.location.href = addBasePath(address);
+    // `logout=true` stops a lone OAuth provider's redirect, which could recreate a deleted Account.
+    window.location.href = addBasePath("/login?logout=true");
   }
 }
 
 // The offline engine is cleared only once the auth sign-out succeeded (ADR-0009).
 export const signOut: SignOut = async (options) => {
-  if (options?.accountDeleted) return clearAndLeave(true, "/login");
+  if (options?.accountDeleted) return clearAndLeave(true);
   if (!(await authSignedOut())) return;
 
-  await clearAndLeave(options?.discardQueue ?? false, "/login?logout=true");
+  await clearAndLeave(options?.discardQueue ?? false);
 };
