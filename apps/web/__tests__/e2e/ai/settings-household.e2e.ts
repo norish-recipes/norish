@@ -2,10 +2,8 @@
 import { randomUUID } from "node:crypto";
 import type { BrowserContext, Locator, Page } from "@playwright/test";
 
-import { deleteHousehold, getHouseholdForUser } from "@norish/db/repositories/households";
-import { deleteUser } from "@norish/db/repositories/users";
-
 import type { ThrowawayUser } from "./admin-users-support";
+import { closeAndDelete } from "../harness/accounts";
 import { signedInContext } from "../harness/auth";
 import { settingsCard as card, signUpThrowawayUser } from "./admin-users-support";
 import { expect, test } from "./fixture";
@@ -90,13 +88,6 @@ test("a household is created, joined by code, a member removed, and left", async
     await expectNoHousehold(memberPage);
     await expect(memberRow(adminPage, member.name)).toBeHidden();
   } finally {
-    await Promise.all(contexts.map((context) => context.close()));
-
-    for (const user of users) {
-      const household = await getHouseholdForUser(user.id);
-
-      if (household) await deleteHousehold(household.id);
-      await deleteUser(user.id);
-    }
+    await closeAndDelete(contexts, users);
   }
 });

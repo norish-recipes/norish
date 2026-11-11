@@ -3,9 +3,8 @@ import { randomUUID } from "node:crypto";
 import path from "node:path";
 import type { BrowserContext } from "@playwright/test";
 
-import { deleteUser } from "@norish/db/repositories/users";
-
 import type { ThrowawayUser } from "./admin-users-support";
+import { closeAndDelete } from "../harness/accounts";
 import { signedInContext } from "../harness/auth";
 import { callTrpc } from "../harness/trpc";
 import { settingsCard as card, signUpThrowawayUser } from "./admin-users-support";
@@ -19,16 +18,21 @@ test("a reader manages API keys, site tokens, allergies and their Avatar", async
   aiStack,
 }) => {
   const tag = randomUUID().slice(0, 8);
-  let user: ThrowawayUser | undefined;
-  let context: BrowserContext | undefined;
+  // Each user and context is recorded as it is made, so `finally` removes whatever exists.
+  const users: ThrowawayUser[] = [];
+  const contexts: BrowserContext[] = [];
 
   try {
-    user = await signUpThrowawayUser(aiStack, {
+    const user = await signUpThrowawayUser(aiStack, {
       email: `account-${tag}@norish.test`,
       password: `account-${tag}-password`,
       name: `Account ${tag}`,
     });
-    context = await signedInContext(browser, aiStack.baseURL, user);
+
+    users.push(user);
+    const context = await signedInContext(browser, aiStack.baseURL, user);
+
+    contexts.push(context);
     const cookies = await context.cookies();
     const page = await context.newPage();
 
@@ -97,7 +101,6 @@ test("a reader manages API keys, site tokens, allergies and their Avatar", async
     await expect(profile.getByRole("img", { name: user.name })).toBeVisible();
     await expect(avatar).toBeHidden();
   } finally {
-    await context?.close();
-    if (user) await deleteUser(user.id);
+    await closeAndDelete(contexts, users);
   }
 });
