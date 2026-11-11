@@ -15,6 +15,7 @@ import type { Locator, Page } from "@playwright/test";
 
 import { dateKey, parseDateKey } from "@norish/shared/lib/helpers";
 
+import type { Plan } from "../harness/plans";
 import { removePlans } from "../harness/plans";
 import { fingerFor, glide } from "../harness/pointer";
 import { settled } from "../harness/settled";
@@ -235,13 +236,7 @@ test("plans dragged out of one slot after a slot-mate's delete move there and st
     await mouse.down(start);
     await glide(page, mouse, start, lifted);
     await glide(page, mouse, lifted, end);
-    // The answer carries the plan's new version, which its next drag sends.
-    const answered = page.waitForResponse((response) =>
-      response.url().includes("calendar.moveItem")
-    );
-
     await mouse.up();
-    await answered;
   }
 
   try {
@@ -284,21 +279,45 @@ test("plans dragged out of one slot after a slot-mate's delete move there and st
       (await rowOf(after).getAttribute("data-index")) === todayRow ? after : shiftDay(todayKey, -1);
     const rowLength = await rowOf(todayKey).locator("[data-day-key]").count();
     const below = shiftDay(todayKey, rowLength);
-    const targets = { [across]: beside, [down]: below };
+    const twice = shiftDay(beside, rowLength);
+    const targets = { [across]: twice, [down]: below };
 
-    for (const [name, day] of Object.entries(targets)) {
-      await drag(name, day);
-      await expect(card(day).getByText(name)).toBeVisible();
-      await expect(card(todayKey).getByText(name)).toHaveCount(0);
-      await expect.poll(() => plannedDate(ids[name]!)).toBe(day);
-    }
+    await drag(down, below);
+    await expect(card(below).getByText(down)).toBeVisible();
+    await expect(card(todayKey).getByText(down)).toHaveCount(0);
+    await expect.poll(() => plannedDate(ids[down]!)).toBe(below);
 
-    // The same plan again at once: its second write sends the version its first answered with.
-    targets[across] = shiftDay(beside, rowLength);
-    await drag(across, targets[across]);
-    await expect(card(targets[across]).getByText(across)).toBeVisible();
+    // One plan twice: the first move reaches the server only after the second drop, as on a
+    // slow network, and a second request only after the first was answered.
+    let dropSecond!: () => void;
+    let answerFirst!: () => void;
+    const secondDropped = new Promise<void>((resolve) => (dropSecond = resolve));
+    const firstAnswered = new Promise<void>((resolve) => (answerFirst = resolve));
+    let moves = 0;
+
+    await page.route(
+      (url) => url.pathname.includes("calendar.moveItem"),
+      async (route) => {
+        if (++moves > 1) {
+          await firstAnswered;
+          await route.continue();
+
+          return;
+        }
+        await secondDropped;
+        const response = await route.fetch();
+
+        answerFirst();
+        await route.fulfill({ response });
+      }
+    );
+    await drag(across, beside);
+    await expect(card(beside).getByText(across)).toBeVisible();
+    await drag(across, twice);
+    await expect(card(twice).getByText(across)).toBeVisible();
+    dropSecond();
+    await expect.poll(() => plannedDate(ids[across]!)).toBe(twice);
     await expect(card(beside).getByText(across)).toHaveCount(0);
-    await expect.poll(() => plannedDate(ids[across]!)).toBe(targets[across]);
 
     await page.reload();
     for (const [name, day] of Object.entries(targets)) {
@@ -313,5 +332,66 @@ test("plans dragged out of one slot after a slot-mate's delete move there and st
     await removePlans(aiStack.baseURL, aiStack.ownerCookies, (plan) =>
       Object.values(ids).includes(plan.recipeId ?? "")
     );
+  }
+});
+
+test("a note saved with a new title and a new day keeps both after a reload", async ({
+  browser,
+  aiStack,
+}) => {
+  const before = `Plain note ${Date.now()}`;
+  const after = `Renamed note ${Date.now()}`;
+  const context = await browser.newContext({
+    baseURL: aiStack.baseURL,
+    storageState: { cookies: aiStack.ownerCookies, origins: [] },
+    viewport: { width: 1280, height: 900 },
+  });
+  const page = await context.newPage();
+  const ours = (plan: Plan) => plan.title === before || plan.title === after;
+
+  try {
+    await page.goto("/calendar");
+    const today = await page.evaluate(() => new Date().toLocaleDateString("en-CA"));
+
+    await callTrpc(aiStack.baseURL, aiStack.ownerCookies, "calendar.createItem", {
+      date: today,
+      slot: "Snack",
+      itemType: "note",
+      title: before,
+    });
+    await page.reload();
+    await page.getByText(before).click();
+    const editor = page.getByRole("dialog", { name: "Edit Note" });
+    const day = editor.getByRole("spinbutton", { name: /day/i });
+
+    await editor.getByRole("textbox", { name: "Note" }).fill(after);
+    // A neighbouring day of the same month, so the calendar draws it.
+    const isLastDay =
+      (await day.getAttribute("aria-valuenow")) === (await day.getAttribute("aria-valuemax"));
+
+    await day.press(isLastDay ? "ArrowDown" : "ArrowUp");
+    const newDay = `${today.slice(0, 8)}${(await day.getAttribute("aria-valuenow"))!.padStart(2, "0")}`;
+
+    await editor.getByRole("button", { name: "Save" }).click();
+    await expect(editor).toBeHidden();
+    await expect
+      .poll(async () => {
+        const plans = await queryTrpc<Plan[]>(
+          aiStack.baseURL,
+          aiStack.ownerCookies,
+          "calendar.listItems",
+          { startISO: newDay, endISO: newDay }
+        );
+
+        return plans.find(ours)?.title;
+      })
+      .toBe(after);
+
+    await page.reload();
+    await expect(page.locator(`[data-day-key="${newDay}"]`).getByText(after)).toBeVisible();
+    await expect(page.getByText(before)).toHaveCount(0);
+  } finally {
+    await context.close();
+    await removePlans(aiStack.baseURL, aiStack.ownerCookies, ours);
   }
 });
