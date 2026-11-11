@@ -44,7 +44,8 @@ export const SaveCaldavConfigInputSchema = z.object({
   serverUrl: z.url(),
   calendarUrl: z.url().optional().nullable(),
   username: z.string().min(1),
-  password: z.string().min(1),
+  /** Empty keeps the stored password; a first save without one is refused by saveConfig. */
+  password: z.string(),
   /** PEM of a certificate the user chose to trust for this server; null trusts only the usual ones. */
   trustedCertificate: z.string().max(16_384).nullable().optional(),
   enabled: z.boolean(),
