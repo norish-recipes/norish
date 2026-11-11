@@ -11,7 +11,7 @@
  * places the item in every cached range, so the calendar shows it even when
  * its refetch cannot be answered.
  */
-import type { Page } from "@playwright/test";
+import type { Locator, Page } from "@playwright/test";
 
 import { dateKey, parseDateKey } from "@norish/shared/lib/helpers";
 
@@ -184,20 +184,42 @@ test("a recipe dragged onto a day in its row or the next moves there and stays a
     y: box.y + box.height / 2,
   });
 
-  // Picks the item up, then finds the target wherever it is: in view, settled, under the pointer.
+  // Centres both ends in their scroller: dnd-kit auto-scrolls a drag near its edge.
+  async function bringIntoView(from: Locator, to: Locator) {
+    const target = await to.elementHandle();
+
+    await from.evaluate((source, other) => {
+      let scroller = source.parentElement;
+
+      const scrolls = (el: HTMLElement) =>
+        /(auto|scroll)/.test(getComputedStyle(el).overflowY) && el.scrollHeight > el.clientHeight;
+
+      while (scroller && !scrolls(scroller)) {
+        scroller = scroller.parentElement;
+      }
+      const box = (scroller ?? document.documentElement).getBoundingClientRect();
+      const viewportCentre = scroller ? box.top + box.height / 2 : window.innerHeight / 2;
+      const [a, b] = [source.getBoundingClientRect(), other.getBoundingClientRect()];
+      const pairCentre = (Math.min(a.top, b.top) + Math.max(a.bottom, b.bottom)) / 2;
+
+      (scroller ?? window).scrollBy(0, pairCentre - viewportCentre);
+    }, target);
+  }
+
+  // Both ends in view and settled first, so nothing scrolls between pointer down and up.
   async function drag(name: string, to: string) {
     const item = page.getByText(name);
 
-    await item.scrollIntoViewIfNeeded();
+    await bringIntoView(item, card(to));
     const start = centre(await settled(page, () => item.boundingBox()));
+    const end = centre(await settled(page, () => card(to).boundingBox()));
     const lifted = { x: start.x + 12, y: start.y };
     const mouse = await fingerFor(page, "mouse");
 
     // The desktop pointer sensor starts a drag only after 8 px of movement.
     await mouse.down(start);
     await glide(page, mouse, start, lifted);
-    await card(to).scrollIntoViewIfNeeded();
-    await glide(page, mouse, lifted, centre(await settled(page, () => card(to).boundingBox())));
+    await glide(page, mouse, lifted, end);
     await mouse.up();
   }
 
