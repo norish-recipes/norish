@@ -301,5 +301,9 @@
     "title": "Una clave de IA ha dejado de funcionar",
     "description": "El proveedor rechaza la clave API de {blocks} desde {since}. Guarda una clave nueva para que esas funciones de IA vuelvan a funcionar.",
     "openSettings": "Abrir ajustes"
+  },
+  "household": {
+    "adminTransferred": "Admin transferido a {name}",
+    "unknownMember": "Desconocido"
   }
 }

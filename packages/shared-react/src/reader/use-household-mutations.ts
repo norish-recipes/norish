@@ -108,10 +108,10 @@ export function useHouseholdMutations(): HouseholdMutationsResult {
         });
         toast.show({
           severity: "success",
-          title: toast.translate("settings.household.members.toasts.transferSuccess", {
+          title: toast.translate("common.household.adminTransferred", {
             name:
               household?.users.find((user) => user.id === newAdminId)?.name ??
-              toast.translate("settings.household.members.unknown"),
+              toast.translate("common.household.unknownMember"),
           }),
         });
       },

@@ -279,9 +279,6 @@
         "warning": "Vous deviendrez un simple membre et ne pourrez plus gérer les utilisateurs ni les codes d’invitation.",
         "confirmButton": "Transférer"
       },
-      "toasts": {
-        "transferSuccess": "Privilèges admin transférés à {name}"
-      },
       "unknown": "Inconnu"
     },
     "joinCode": {

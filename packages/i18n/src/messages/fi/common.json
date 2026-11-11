@@ -301,5 +301,9 @@
     "title": "Tekoälyavain lakkasi toimimasta",
     "description": "Palvelu on hylännyt kohteen {blocks} API-avaimen {since} alkaen. Tallenna uusi avain, jotta nämä tekoälytoiminnot toimivat taas.",
     "openSettings": "Avaa asetukset"
+  },
+  "household": {
+    "adminTransferred": "Ylläpito siirrettiin käyttäjälle {name}",
+    "unknownMember": "Tuntematon"
   }
 }

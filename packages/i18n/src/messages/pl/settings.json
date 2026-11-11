@@ -279,9 +279,6 @@
         "warning": "Staniesz się zwykłym członkiem i nie będziesz już mógł/mogła usuwać użytkowników ani zarządzać kodami dołączenia.",
         "confirmButton": "Przekaż administratora"
       },
-      "toasts": {
-        "transferSuccess": "Przekazano administratora użytkownikowi {name}"
-      },
       "unknown": "Nieznany"
     },
     "joinCode": {

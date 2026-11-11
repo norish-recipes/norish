@@ -301,5 +301,9 @@
     "title": "Klucz AI przestał działać",
     "description": "Dostawca odrzuca klucz API dla {blocks} od {since}. Zapisz nowy klucz, aby te funkcje AI znów działały.",
     "openSettings": "Otwórz ustawienia"
+  },
+  "household": {
+    "adminTransferred": "Przekazano administratora użytkownikowi {name}",
+    "unknownMember": "Nieznany"
   }
 }

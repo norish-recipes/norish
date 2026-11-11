@@ -279,9 +279,6 @@
         "warning": "Sie werden ein normales Mitglied und können keine Benutzer mehr entfernen oder Join-Codes verwalten.",
         "confirmButton": "Admin übertragen"
       },
-      "toasts": {
-        "transferSuccess": "Admin übertragen an {name}"
-      },
       "unknown": "Unbekannt"
     },
     "joinCode": {

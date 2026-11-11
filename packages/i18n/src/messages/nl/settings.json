@@ -279,9 +279,6 @@
         "warning": "Je wordt een gewoon lid en kunt geen gebruikers meer verwijderen of toegangscodes beheren.",
         "confirmButton": "Draag adminrechten over"
       },
-      "toasts": {
-        "transferSuccess": "Adminrechten overgedragen aan {name}"
-      },
       "unknown": "Onbekend"
     },
     "joinCode": {

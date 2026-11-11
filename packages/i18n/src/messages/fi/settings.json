@@ -279,9 +279,6 @@
         "warning": "Sinusta tulee tavallinen jäsen, etkä voi enää poistaa käyttäjiä tai hallinnoida liittymiskoodeja.",
         "confirmButton": "Siirrä ylläpito"
       },
-      "toasts": {
-        "transferSuccess": "Ylläpito siirrettiin käyttäjälle {name}"
-      },
       "unknown": "Tuntematon"
     },
     "joinCode": {

@@ -279,9 +279,6 @@
         "warning": "You will become a regular member and will no longer be able to kick users or manage join codes.",
         "confirmButton": "Transfer admin"
       },
-      "toasts": {
-        "transferSuccess": "Transferred admin to {name}"
-      },
       "unknown": "Unknown"
     },
     "joinCode": {

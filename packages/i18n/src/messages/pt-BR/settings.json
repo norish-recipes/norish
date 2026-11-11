@@ -279,9 +279,6 @@
         "warning": "Você se tornará um membro comum e não poderá mais remover usuários nem gerenciar códigos de entrada.",
         "confirmButton": "Transferir admin"
       },
-      "toasts": {
-        "transferSuccess": "Admin transferido para {name}"
-      },
       "unknown": "Desconhecido"
     },
     "joinCode": {

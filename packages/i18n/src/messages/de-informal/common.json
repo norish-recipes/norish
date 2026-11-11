@@ -301,5 +301,9 @@
     "title": "Ein KI-Schlüssel funktioniert nicht mehr",
     "description": "Der Anbieter lehnt den API-Schlüssel für {blocks} seit {since} ab. Speichere einen neuen Schlüssel, damit diese KI-Funktionen wieder laufen.",
     "openSettings": "Einstellungen öffnen"
+  },
+  "household": {
+    "adminTransferred": "Admin übertragen an {name}",
+    "unknownMember": "Unbekannt"
   }
 }

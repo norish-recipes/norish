@@ -251,7 +251,7 @@ describe("useHouseholdMutations", () => {
         [
           {
             severity: "success",
-            title: "settings.household.members.toasts.transferSuccess",
+            title: "common.household.adminTransferred",
           },
         ],
       ]);

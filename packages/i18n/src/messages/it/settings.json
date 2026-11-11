@@ -279,9 +279,6 @@
         "warning": "Diventerai un membro normale e non potrai più espellere utenti o gestire i codici di accesso.",
         "confirmButton": "Trasferisci amministratore"
       },
-      "toasts": {
-        "transferSuccess": "Privilegi di amministratore trasferiti a {name}"
-      },
       "unknown": "Sconosciuto"
     },
     "joinCode": {

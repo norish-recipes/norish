@@ -301,5 +301,9 @@
     "title": "An AI key stopped working",
     "description": "The provider has refused the API key for {blocks} since {since}. Save a new key to get those AI features working again.",
     "openSettings": "Open settings"
+  },
+  "household": {
+    "adminTransferred": "Transferred admin to {name}",
+    "unknownMember": "Unknown"
   }
 }

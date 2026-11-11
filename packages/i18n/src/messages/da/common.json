@@ -301,5 +301,9 @@
     "title": "En AI-nøgle virker ikke længere",
     "description": "Udbyderen har afvist API-nøglen til {blocks} siden {since}. Gem en ny nøgle for at få de AI-funktioner til at virke igen.",
     "openSettings": "Åbn indstillinger"
+  },
+  "household": {
+    "adminTransferred": "Overførte administrator til {name}",
+    "unknownMember": "Ukendt"
   }
 }

@@ -301,5 +301,9 @@
     "title": "Una chiave IA ha smesso di funzionare",
     "description": "Il fornitore rifiuta la chiave API per {blocks} dal {since}. Salva una nuova chiave per far funzionare di nuovo queste funzioni IA.",
     "openSettings": "Apri impostazioni"
+  },
+  "household": {
+    "adminTransferred": "Privilegi di amministratore trasferiti a {name}",
+    "unknownMember": "Sconosciuto"
   }
 }

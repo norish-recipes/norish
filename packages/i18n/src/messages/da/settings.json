@@ -279,9 +279,6 @@
         "warning": "Du bliver et almindeligt medlem og vil ikke længere kunne smide brugere ud eller administrere tilmeldingskoder.",
         "confirmButton": "Overfør administrator"
       },
-      "toasts": {
-        "transferSuccess": "Overførte administrator til {name}"
-      },
       "unknown": "Ukendt"
     },
     "joinCode": {

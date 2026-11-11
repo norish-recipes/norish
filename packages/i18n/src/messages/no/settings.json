@@ -279,9 +279,6 @@
         "warning": "Du blir et vanlig medlem og vil ikke lenger kunne fjerne brukere eller administrere invitasjonskoder.",
         "confirmButton": "Overfør administrator"
       },
-      "toasts": {
-        "transferSuccess": "Overførte administrator til {name}"
-      },
       "unknown": "Ukjent"
     },
     "joinCode": {

@@ -279,9 +279,6 @@
         "warning": "Du blir en vanlig medlem och kan inte längre ta bort användare eller hantera inbjudningskoder.",
         "confirmButton": "Överför administratörsbehörighet"
       },
-      "toasts": {
-        "transferSuccess": "Administratörsbehörigheten har överförts till {name}"
-      },
       "unknown": "Okänd"
     },
     "joinCode": {

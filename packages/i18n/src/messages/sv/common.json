@@ -301,5 +301,9 @@
     "title": "En AI-nyckel har slutat fungera",
     "description": "Leverantören har nekat API-nyckeln för {blocks} sedan {since}. Spara en ny nyckel för att få dessa AI-funktioner att fungera igen.",
     "openSettings": "Öppna inställningar"
+  },
+  "household": {
+    "adminTransferred": "Administratörsbehörigheten har överförts till {name}",
+    "unknownMember": "Okänd"
   }
 }

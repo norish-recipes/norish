@@ -301,5 +301,9 @@
     "title": "Een AI-sleutel werkt niet meer",
     "description": "De provider weigert de API-sleutel voor {blocks} sinds {since}. Sla een nieuwe sleutel op om die AI-functies weer te laten werken.",
     "openSettings": "Instellingen openen"
+  },
+  "household": {
+    "adminTransferred": "Adminrechten overgedragen aan {name}",
+    "unknownMember": "Onbekend"
   }
 }

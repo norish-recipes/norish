@@ -279,9 +279,6 @@
         "warning": "일반 구성원이 되며 더 이상 사용자를 내보내거나 참여 코드를 관리할 수 없습니다.",
         "confirmButton": "관리자 이전"
       },
-      "toasts": {
-        "transferSuccess": "관리자를 {name}(으)로 이전했습니다."
-      },
       "unknown": "알 수 없음"
     },
     "joinCode": {

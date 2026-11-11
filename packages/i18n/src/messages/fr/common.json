@@ -301,5 +301,9 @@
     "title": "Une clé d'IA ne fonctionne plus",
     "description": "Le fournisseur refuse la clé API pour {blocks} depuis le {since}. Enregistrez une nouvelle clé pour que ces fonctions d'IA marchent à nouveau.",
     "openSettings": "Ouvrir les paramètres"
+  },
+  "household": {
+    "adminTransferred": "Privilèges admin transférés à {name}",
+    "unknownMember": "Inconnu"
   }
 }

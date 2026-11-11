@@ -301,5 +301,9 @@
     "title": "En AI-nøkkel har sluttet å virke",
     "description": "Leverandøren har avvist API-nøkkelen for {blocks} siden {since}. Lagre en ny nøkkel for å få disse AI-funksjonene til å virke igjen.",
     "openSettings": "Åpne innstillinger"
+  },
+  "household": {
+    "adminTransferred": "Overførte administrator til {name}",
+    "unknownMember": "Ukjent"
   }
 }

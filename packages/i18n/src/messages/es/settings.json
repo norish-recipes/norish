@@ -279,9 +279,6 @@
         "warning": "Pasarás a ser un miembro normal y ya no podrás expulsar usuarios ni gestionar códigos de unión.",
         "confirmButton": "Transferir admin"
       },
-      "toasts": {
-        "transferSuccess": "Admin transferido a {name}"
-      },
       "unknown": "Desconocido"
     },
     "joinCode": {
