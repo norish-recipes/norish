@@ -21,10 +21,13 @@ describe("useCaldavSyncStatusQuery paging", () => {
   });
 
   it("keeps the page on screen while the next one loads", async () => {
-    const { result, rerender } = renderHook(({ page }) => useCaldavSyncStatusQuery(page, 20), {
-      initialProps: { page: 1 },
-      wrapper: createTestWrapper(createTestQueryClient()),
-    });
+    const { result, rerender } = renderHook(
+      ({ page }) => useCaldavSyncStatusQuery({ page, pageSize: 20 }),
+      {
+        initialProps: { page: 1 },
+        wrapper: createTestWrapper(createTestQueryClient()),
+      }
+    );
 
     await waitFor(() => expect(result.current.total).toBe(40));
     rerender({ page: 2 });

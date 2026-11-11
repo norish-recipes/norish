@@ -151,7 +151,7 @@ describe("CalDAV Query Hooks", () => {
         queryFn: async () => createMockSyncStatusData(),
       });
 
-      const { result } = renderHook(() => useCaldavSyncStatusQuery(1, 20), {
+      const { result } = renderHook(() => useCaldavSyncStatusQuery({ page: 1, pageSize: 20 }), {
         wrapper: createTestWrapper(queryClient),
       });
 
@@ -174,7 +174,7 @@ describe("CalDAV Query Hooks", () => {
         queryFn: async () => createMockSyncStatusData(mockStatuses, 2),
       });
 
-      const { result } = renderHook(() => useCaldavSyncStatusQuery(1, 20), {
+      const { result } = renderHook(() => useCaldavSyncStatusQuery({ page: 1, pageSize: 20 }), {
         wrapper: createTestWrapper(queryClient),
       });
 
@@ -192,9 +192,12 @@ describe("CalDAV Query Hooks", () => {
         queryFn: async () => createMockSyncStatusData(),
       });
 
-      const { result } = renderHook(() => useCaldavSyncStatusQuery(1, 20, "pending"), {
-        wrapper: createTestWrapper(queryClient),
-      });
+      const { result } = renderHook(
+        () => useCaldavSyncStatusQuery({ page: 1, pageSize: 20, statusFilter: "pending" }),
+        {
+          wrapper: createTestWrapper(queryClient),
+        }
+      );
 
       await waitFor(() => {
         expect(result.current.isLoading).toBe(false);

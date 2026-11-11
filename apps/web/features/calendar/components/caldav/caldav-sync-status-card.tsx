@@ -47,11 +47,11 @@ export default function CaldavSyncStatusCard() {
   const [syncStatusFilter, setSyncStatusFilter] = useState<CaldavSyncStatus | undefined>(
     FIRST_SYNC_STATUS_PAGE.statusFilter
   );
-  const { statuses: syncStatuses, total: syncStatusTotal } = useCaldavSyncStatusQuery(
-    syncStatusPage,
+  const { statuses: syncStatuses, total: syncStatusTotal } = useCaldavSyncStatusQuery({
+    page: syncStatusPage,
     pageSize,
-    syncStatusFilter
-  );
+    statusFilter: syncStatusFilter,
+  });
   const { summary: syncStatusSummary } = useCaldavSummaryQuery();
   const { triggerSync, isTriggeringSync: syncing } = useCaldavMutations();
   const format = useFormatter();

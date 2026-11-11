@@ -1,5 +1,7 @@
 import { keepPreviousData, useQuery, useQueryClient } from "@tanstack/react-query";
 
+import type { CaldavSyncStatus } from "@norish/shared/contracts";
+
 import type {
   CaldavConfigQueryResult,
   CaldavSummaryQueryResult,
@@ -30,25 +32,22 @@ export function useCaldavPasswordQuery() {
   };
 }
 
-export function useCaldavSyncStatusQuery(
-  page: number = 1,
-  pageSize: number = 20,
-  statusFilter?: "pending" | "synced" | "failed" | "removed"
-): CaldavSyncStatusQueryResult {
+export function useCaldavSyncStatusQuery(input: {
+  page: number;
+  pageSize: number;
+  statusFilter?: CaldavSyncStatus;
+}): CaldavSyncStatusQueryResult {
   const trpc = useTRPC();
   const { data, error, isLoading } = useQuery(
     // The page on screen stays while the next page or filter loads.
-    trpc.caldav.getSyncStatus.queryOptions(
-      { page, pageSize, statusFilter },
-      { placeholderData: keepPreviousData }
-    )
+    trpc.caldav.getSyncStatus.queryOptions(input, { placeholderData: keepPreviousData })
   );
 
   return {
     statuses: data?.statuses ?? [],
     total: data?.total ?? 0,
-    page: data?.page ?? page,
-    pageSize: data?.pageSize ?? pageSize,
+    page: data?.page ?? input.page,
+    pageSize: data?.pageSize ?? input.pageSize,
     error,
     isLoading,
   };
