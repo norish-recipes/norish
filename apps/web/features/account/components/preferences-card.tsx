@@ -1,9 +1,9 @@
 "use client";
 
-import { useRouter } from "next/navigation";
 import { SettingRow } from "@/components/settings/setting-row";
 import { SettingsCard } from "@/components/settings/settings-card";
 import { InfoHint } from "@/components/shared/info-hint";
+import { useLocale } from "@/hooks/user/use-locale";
 import { HIDDEN_ITEMS, partitionHiddenItems } from "@/lib/hidden-items";
 import { AdjustmentsHorizontalIcon } from "@heroicons/react/24/outline";
 import { Label, ListBox, Select } from "@heroui/react";
@@ -40,7 +40,7 @@ export default function PreferencesCard() {
   const { globalEnabled } = useTimersEnabledQuery();
   const isAIEnabled = usePermissions((p) => p.isAIEnabled);
   const { enabledLocales, defaultLocale } = useLocaleConfigQuery();
-  const router = useRouter();
+  const { changeLocale } = useLocale();
   const [todaySectionVisibility, setTodaySectionVisibility] =
     useDevicePreference("todaySectionVisibility");
   const [hiddenItems, setHiddenItems] = useDevicePreference("hiddenItems");
@@ -72,11 +72,8 @@ export default function PreferencesCard() {
     setHiddenItems([...chosen, ...carried]);
   };
 
-  const handleLocaleChange = async (value: string) => {
-    if (!value || value === currentLocale) return;
-
-    await updatePreferences({ locale: value });
-    router.refresh();
+  const handleLocaleChange = (value: string) => {
+    if (value !== currentLocale) void changeLocale(value);
   };
 
   return (

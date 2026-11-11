@@ -1,6 +1,6 @@
 "use client";
 
-import { useCallback, useTransition } from "react";
+import { useTransition } from "react";
 import { useRouter } from "next/navigation";
 
 import type { Locale } from "@norish/i18n/config";
@@ -8,48 +8,23 @@ import { isValidLocale } from "@norish/i18n/config";
 import { usePreferencesMutation, useReader } from "@norish/shared-react/reader";
 import { getLocalePreference } from "@norish/shared/lib/user-preferences";
 
-/**
- * Hook for managing user locale preference
- *
- * Reads locale from the Reader's preferences, the profile the shell already reads.
- * Writes locale via usePreferencesMutation (with optimistic update/rollback).
- * After changing locale, refreshes the page to apply the new locale.
- */
+/** The Reader's language, kept in their preferences; the page refreshes to render a new one. */
 export function useLocale() {
   const router = useRouter();
   const [isPending, startTransition] = useTransition();
   const { user } = useReader();
   const { updatePreferences, isUpdatingPreferences } = usePreferencesMutation();
 
-  const locale = getLocalePreference(user);
+  const changeLocale = async (newLocale: string) => {
+    if (!isValidLocale(newLocale)) return;
 
-  /**
-   * Change the locale
-   *
-   * Saves to database via updatePreferences and refreshes the page to apply the new locale.
-   */
-  const changeLocale = useCallback(
-    async (newLocale: Locale) => {
-      if (!isValidLocale(newLocale)) {
-        return;
-      }
-
-      await updatePreferences({ locale: newLocale });
-
-      // Refresh the page to apply the new locale
-      startTransition(() => {
-        router.refresh();
-      });
-    },
-    [updatePreferences, router]
-  );
+    await updatePreferences({ locale: newLocale });
+    startTransition(() => router.refresh());
+  };
 
   return {
-    /** Current locale from user preferences */
-    locale: locale as Locale | null | undefined,
-    /** Change the locale */
+    locale: getLocalePreference(user) as Locale | null | undefined,
     changeLocale,
-    /** Whether locale change is in progress */
     isChanging: isUpdatingPreferences || isPending,
   };
 }
