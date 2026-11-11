@@ -2,11 +2,12 @@
 
 import type { PlannedItemDisplay } from "@/components/calendar/mobile/types";
 import { useCallback, useEffect, useId, useLayoutEffect, useMemo, useRef, useState } from "react";
-import { hasReachedDay, landOnDay, settleLanding } from "@/components/calendar/land-on-day";
+import { landOnDay, settleLanding } from "@/components/calendar/land-on-day";
 import { SLOT_ORDER } from "@/components/calendar/mobile/types";
 import { useReaderToday } from "@/components/reader-today";
 import { CalendarSkeletonDesktop } from "@/features/calendar/components/skeleton/calendar-skeleton";
 import { useCalendarDnd } from "@/features/calendar/hooks/use-calendar-dnd";
+import { useGrowAtEdges } from "@/features/calendar/hooks/use-grow-at-edges";
 import { usePrependAnchorRestore } from "@/features/calendar/hooks/use-prepend-anchor-restore";
 import { useViewport } from "@/hooks/use-viewport";
 import { DndContext, DragOverlay, PointerSensor, useSensor, useSensors } from "@dnd-kit/core";
@@ -131,11 +132,8 @@ export function DesktopTimeline({ onAddItem, onNoteClick, onRecipeClick }: Deskt
     onChange: settleLanding,
   });
 
-  // Track if we've scrolled to today and if we've triggered expand
+  // Track if we've scrolled to today
   const hasScrolledRef = useRef(false);
-  const hasLandedRef = useRef(false);
-  const hasTriggeredExpandPastRef = useRef(false);
-  const hasTriggeredExpandFutureRef = useRef(false);
 
   // Scroll to today after initial data loads
   useEffect(() => {
@@ -198,46 +196,18 @@ export function DesktopTimeline({ onAddItem, onNoteClick, onRecipeClick }: Deskt
     );
   }, [virtualizer, restoreAnchor]);
 
-  // Infinite scroll: trigger grow when near the edges
-  useEffect(() => {
-    if (virtualItems.length === 0 || !hasScrolledRef.current) return;
-    if (!hasLandedRef.current) {
-      if (!hasReachedDay(virtualItems, todayRowIndex)) return;
-      hasLandedRef.current = true;
-    }
-
-    const firstItem = virtualItems[0];
-    const lastItem = virtualItems[virtualItems.length - 1];
-
-    if (!firstItem || !lastItem) return;
-
-    const isNearStart = firstItem.index <= 1;
-    const isNearEnd = lastItem.index >= rows.length - 2;
-
-    if (isNearStart && !isGrowing && !hasTriggeredExpandPastRef.current) {
-      const scrollOffset = virtualizer.scrollOffset ?? 0;
-
-      captureAnchor({
-        index: firstItem.index,
-        itemStart: firstItem.start,
-        scrollOffset,
-      });
-
-      hasTriggeredExpandPastRef.current = true;
-      grow("past");
-    }
-    if (!isNearStart) {
-      hasTriggeredExpandPastRef.current = false;
-    }
-
-    if (isNearEnd && !isGrowing && !hasTriggeredExpandFutureRef.current) {
-      hasTriggeredExpandFutureRef.current = true;
-      grow("future");
-    }
-    if (!isNearEnd) {
-      hasTriggeredExpandFutureRef.current = false;
-    }
-  }, [virtualItems, rows.length, isGrowing, grow, virtualizer, captureAnchor, todayRowIndex]);
+  // Infinite scroll: grow the range when a scroll rests near an edge
+  useGrowAtEdges({
+    virtualizer,
+    virtualItems,
+    count: rows.length,
+    todayIndex: todayRowIndex,
+    startEdge: 1,
+    hasScrolledRef,
+    captureAnchor,
+    isGrowing,
+    grow,
+  });
 
   const handleScrollToToday = useCallback(() => {
     virtualizer.scrollToIndex(todayRowIndex, { align: "start", behavior: "smooth" });
