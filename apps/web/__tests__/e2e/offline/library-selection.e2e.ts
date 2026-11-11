@@ -5,6 +5,7 @@ import { updateRecipeCategories } from "@norish/db/repositories/recipes";
 import { userIdOf } from "../harness/accounts";
 import { signIn } from "../harness/auth";
 import { recipeIdsNamed, seedRecipe } from "../harness/recipes";
+import { recordFrames, waitForLive } from "../realtime/support";
 import { expect, test, USER_A } from "./fixture";
 
 /** The Outbox's entries in the page's IndexedDB. */
@@ -58,8 +59,13 @@ test("a bulk delete made offline keeps the recipe edited meanwhile, and says so"
   await offlineHarness.context.clearCookies();
   await offlineHarness.context.addCookies(await signIn(offlineHarness.baseURL, USER_A));
   await page.setViewportSize({ width: 1280, height: 1600 });
+  const frames = recordFrames(page);
+
   await page.goto("/");
   for (const name of names) await expect(card(name)).toBeVisible();
+  // Only a subscription that has its Cursor Mark can resume; one cut off before it restarts fresh.
+  await waitForLive(frames, ["recipes.onDeleteKept"]);
+  frames.stop();
 
   await offlineHarness.transition("stopped");
   await card(names[0]!).click({ modifiers: ["Shift"] });
