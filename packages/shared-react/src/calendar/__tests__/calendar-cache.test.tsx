@@ -462,6 +462,29 @@ describe("a delete, move or update with no range", () => {
     }
   });
 
+  it("rereads a widened range a delete cancelled during its first read", async () => {
+    const WIDER = { startISO: "2026-08-26", endISO: CALENDAR_PAGE.endISO };
+    const server = [cachedItem({ id: "item-aug", date: "2026-08-28" }), ...PAGE_ITEMS.slice(1)];
+    let items: PlannedItemFromQuery[] = [];
+
+    // The first read hangs until the delete cancels it; the next one answers.
+    readRange.mockImplementationOnce(() => new Promise(() => {}));
+    readRange.mockResolvedValue(server);
+    mount({ success: true });
+    const view = renderHookWithClient(queryClient, () => {
+      items = useCalendarQuery(WIDER.startISO, WIDER.endISO).items;
+    });
+
+    expect(queryClient.getQueryState(rangeKeyOf(WIDER))?.fetchStatus).toBe("fetching");
+    act(() => writes.delete());
+    await settle();
+
+    await act(async () => {
+      await vi.waitFor(() => expect(items).toEqual(server));
+    });
+    view.unmount();
+  });
+
   it("rereads every range once two overlapping writes settle, the first failing", async () => {
     const failing = deferred<never>();
     const landing = deferred<{ success: true }>();

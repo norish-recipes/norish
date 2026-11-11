@@ -1,3 +1,4 @@
+import type { Query } from "@tanstack/react-query";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 
 import type { PlannedItemFromQuery, Slot } from "@norish/shared/contracts";
@@ -9,6 +10,7 @@ import {
   invalidateUnlessPreserved,
   shouldPreserveOptimisticUpdate,
 } from "../offline/optimistic-updates";
+import { rereadOnceWritesSettle } from "../realtime/use-realtime-subscription";
 import { useTRPC } from "../trpc";
 import { moveItemInRange } from "./calendar-cache-merge";
 import { useCalendarCacheHelpers } from "./use-calendar-cache";
@@ -26,10 +28,18 @@ export function useCalendarMutations(): CalendarMutationsResult {
   // during a cancelled read becomes the state that read reverts to.
   const writeAcrossRanges = (update: RangeUpdate) => {
     const held = cachedRanges();
+    const cancelled: Query[] = [];
 
     for (const { key, range, items } of held) {
+      const query = queryClient.getQueryCache().find({ queryKey: key, exact: true });
+
+      if (query?.state.fetchStatus === "fetching") cancelled.push(query);
       void queryClient.cancelQueries({ queryKey: key, exact: true });
       writeRange(key, update(items, range));
+    }
+    // Nothing else runs a cancelled read again, and the write left its range fresh.
+    if (cancelled.length > 0) {
+      rereadOnceWritesSettle(queryClient, (query) => cancelled.includes(query));
     }
 
     return { held };
