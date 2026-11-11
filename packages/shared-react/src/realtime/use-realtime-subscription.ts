@@ -107,11 +107,14 @@ function rereadInWindow(queryClient: QueryClient, queryKeys: QueryKey[]): void {
     // A fetch in flight may predate go-live, and its success clears an invalidation made now:
     // each waits for its own, so one that never settles (paused offline) holds back no other.
     for (const query of inFlight) {
-      const again = () => reread(queryClient, (held) => held === query);
+      const again = () => rereadOnceWritesSettle(queryClient, (held) => held === query);
 
       void query.promise?.then(again, again);
     }
-    reread(queryClient, (query) => isDue(query) && query.state.fetchStatus !== "fetching");
+    rereadOnceWritesSettle(
+      queryClient,
+      (query) => isDue(query) && query.state.fetchStatus !== "fetching"
+    );
   }, LIVE_WINDOW_MS);
 }
 
@@ -119,7 +122,10 @@ function rereadInWindow(queryClient: QueryClient, queryKeys: QueryKey[]): void {
  * Invalidates the matching reads once no write is pending. A write's `cancelQueries` reverts a
  * read to its fetch-start state and nothing refetches it, so a reverted one goes again.
  */
-function reread(queryClient: QueryClient, predicate: (query: Query) => boolean): void {
+export function rereadOnceWritesSettle(
+  queryClient: QueryClient,
+  predicate: (query: Query) => boolean
+): void {
   afterWrites(queryClient, () => {
     const due = queryClient.getQueryCache().findAll({ predicate });
     // A next-page fetch keeps the other pages as they were: replace it, never join it.
@@ -127,7 +133,7 @@ function reread(queryClient: QueryClient, predicate: (query: Query) => boolean):
     const watch = (query: Query, promise = query.promise) =>
       void promise?.catch((error: unknown) => {
         if (!(error instanceof CancelledError)) return;
-        if (error.revert) reread(queryClient, (held) => held === query);
+        if (error.revert) rereadOnceWritesSettle(queryClient, (held) => held === query);
         // A silent cancel hands the read to a newer fetch, whose outcome counts instead.
         else if (query.promise !== promise) watch(query);
       });
