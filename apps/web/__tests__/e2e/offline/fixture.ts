@@ -155,9 +155,16 @@ export const test = base.extend<Record<never, never>, OfflineWorkerFixtures>({
         const page = await context.newPage();
         let state: BackendState = "live";
 
+        // Overwrite before clearing the rest: an open page that reconnects in a cookieless
+        // gap gets a 4401 and assigns /login, aborting the caller's next goto.
         const selectIdentity = async (identity: "a" | "b") => {
-          await context!.clearCookies();
-          await context!.addCookies(identity === "a" ? cookiesA : cookiesB);
+          const incoming = identity === "a" ? cookiesA : cookiesB;
+          const names = new Set(incoming.map(({ name }) => name));
+
+          await context!.addCookies(incoming);
+          for (const { name, domain, path } of await context!.cookies()) {
+            if (!names.has(name)) await context!.clearCookies({ name, domain, path });
+          }
         };
         const transition = async (next: BackendState) => {
           if (state === next) return;
