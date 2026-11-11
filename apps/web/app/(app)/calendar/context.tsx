@@ -2,11 +2,13 @@
 
 import { createContext, use, useCallback, useMemo, useState } from "react";
 import { useReaderToday } from "@/components/reader-today";
-import { useCalendarMutations } from "@/hooks/calendar/use-calendar-mutations";
-import { useCalendarQuery } from "@/hooks/calendar/use-calendar-query";
-import { useCalendarSubscription } from "@/hooks/calendar/use-calendar-subscription";
 
 import type { PlannedItemFromQuery, Slot } from "@norish/shared/contracts";
+import {
+  useCalendarMutations,
+  useCalendarQuery,
+  useCalendarSubscription,
+} from "@norish/shared-react/calendar";
 import { dateKey, getInitialDateRange } from "@norish/shared/lib/helpers";
 
 import type {
@@ -32,7 +34,7 @@ export function CalendarContextProvider({
   const endISO = dateKey(dateRange.end);
 
   const { calendarData, isLoading: isQueryLoading } = useCalendarQuery(startISO, endISO);
-  const { createItem, deleteItem, moveItem, updateItem } = useCalendarMutations(startISO, endISO);
+  const { createItem, deleteItem, moveItem, updateItem } = useCalendarMutations();
 
   // Track if initial load has completed (only show skeleton on first load)
   const [hasLoadedOnce, setHasLoadedOnce] = useState(false);

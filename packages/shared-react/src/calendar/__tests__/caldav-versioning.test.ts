@@ -2,8 +2,8 @@ import { describe, expect, it } from "vitest";
 
 import type { CaldavSyncStatusViewDto } from "@norish/shared/contracts";
 
-import { resolveCaldavConfigVersion } from "./use-caldav-mutations";
-import { applyCaldavStatusUpdate } from "./use-caldav-subscription";
+import { resolveCaldavConfigVersion } from "../use-caldav-mutations";
+import { applyCaldavStatusUpdate } from "../use-caldav-subscription";
 
 describe("CalDAV version helpers", () => {
   it("prefers an explicit config version over the cached one", () => {

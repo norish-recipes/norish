@@ -11,14 +11,12 @@ import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import type { PlannedItemFromQuery } from "@norish/shared/contracts";
 import type { PlannedItemWithRecipePayload } from "@norish/shared/contracts/zod";
 
-import type { CreateCalendarHooksOptions } from "../../src/hooks/calendar/types";
-import { calendarRangeOfQueryKey } from "../../src/hooks/calendar/calendar-cache-merge";
-import { createUseCalendarCache } from "../../src/hooks/calendar/use-calendar-cache";
-import { createUseCalendarMutations } from "../../src/hooks/calendar/use-calendar-mutations";
-import { createUseCalendarQuery } from "../../src/hooks/calendar/use-calendar-query";
-import { createUseCalendarSubscription } from "../../src/hooks/calendar/use-calendar-subscription";
-import { trackedEvent } from "../realtime/tracked-event";
-import { renderHookWithClient } from "./render-hook";
+import { renderHookWithClient } from "../../../__tests__/hooks/render-hook";
+import { trackedEvent } from "../../../__tests__/realtime/tracked-event";
+import { calendarRangeOfQueryKey } from "../calendar-cache-merge";
+import { useCalendarMutations } from "../use-calendar-mutations";
+import { useCalendarQuery } from "../use-calendar-query";
+import { useCalendarSubscription } from "../use-calendar-subscription";
 
 const useSubscriptionMock = vi.hoisted(() => vi.fn());
 const createItemMutate = vi.hoisted(() => vi.fn());
@@ -44,7 +42,7 @@ function procedure(name: string) {
   return { subscriptionOptions: (_input: undefined, opts: object) => ({ name, ...opts }) };
 }
 
-const useTRPC = (() => ({
+const trpc = {
   calendar: {
     listItems: {
       pathKey: () => [PATH],
@@ -60,9 +58,15 @@ const useTRPC = (() => ({
     createItem: {
       mutationOptions: (opts: object) => ({ mutationKey: [["calendar", "createItem"]], ...opts }),
     },
-    deleteItem: { mutationOptions: (opts: object) => opts },
-    moveItem: { mutationOptions: (opts: object) => opts },
-    updateItem: { mutationOptions: (opts: object) => opts },
+    deleteItem: {
+      mutationOptions: (opts: object) => ({ mutationKey: [["calendar", "deleteItem"]], ...opts }),
+    },
+    moveItem: {
+      mutationOptions: (opts: object) => ({ mutationKey: [["calendar", "moveItem"]], ...opts }),
+    },
+    updateItem: {
+      mutationOptions: (opts: object) => ({ mutationKey: [["calendar", "updateItem"]], ...opts }),
+    },
     onItemCreated: procedure("onItemCreated"),
     onItemDeleted: procedure("onItemDeleted"),
     onItemMoved: procedure("onItemMoved"),
@@ -70,7 +74,9 @@ const useTRPC = (() => ({
     onFailed: procedure("onFailed"),
   },
   recipes: { onUpdated: procedure("recipes.onUpdated") },
-})) as unknown as CreateCalendarHooksOptions["useTRPC"];
+};
+
+vi.mock("../../trpc", () => ({ useTRPC: () => trpc }));
 
 function payload(
   overrides: Partial<PlannedItemWithRecipePayload> = {}
@@ -146,12 +152,6 @@ describe("calendar cache convergence across ranges", () => {
   });
 
   function mountSubscription() {
-    const useCalendarCacheHelpers = createUseCalendarCache({ useTRPC });
-    const useCalendarSubscription = createUseCalendarSubscription({
-      useTRPC,
-      useCalendarCacheHelpers,
-    });
-
     ({ unmount } = renderHookWithClient(queryClient, () =>
       useCalendarSubscription(THIS_WEEK.startISO, THIS_WEEK.endISO)
     ));
@@ -212,12 +212,6 @@ describe("calendar cache convergence across ranges", () => {
   });
 
   it("places the actor's own created item from the mutation result, and the echo is then a no-op", async () => {
-    const useCalendarCacheHelpers = createUseCalendarCache({ useTRPC });
-    const useCalendarMutations = createUseCalendarMutations({ useTRPC, useCalendarCacheHelpers });
-    const useCalendarSubscription = createUseCalendarSubscription({
-      useTRPC,
-      useCalendarCacheHelpers,
-    });
     let mutations: ReturnType<typeof useCalendarMutations> | null = null;
 
     queryClient.setMutationDefaults([["calendar", "createItem"]], {
@@ -225,7 +219,7 @@ describe("calendar cache convergence across ranges", () => {
     });
 
     ({ unmount } = renderHookWithClient(queryClient, () => {
-      mutations = useCalendarMutations(THIS_WEEK.startISO, THIS_WEEK.endISO);
+      mutations = useCalendarMutations();
       useCalendarSubscription(THIS_WEEK.startISO, THIS_WEEK.endISO);
     }));
 
@@ -243,10 +237,137 @@ describe("calendar cache convergence across ranges", () => {
   });
 });
 
+describe("a delete, move or update with no range", () => {
+  let queryClient: QueryClient;
+  let unmount: () => void = () => {};
+  let mutations: ReturnType<typeof useCalendarMutations>;
+  const sent = vi.fn();
+
+  const ITEMS = [
+    cachedItem({ id: "item-0", date: "2026-09-22", sortOrder: 0, version: 2 }),
+    cachedItem({ id: "item-2", date: "2026-09-22", sortOrder: 1, title: "Soup" }),
+  ];
+
+  // Each write answers with `answer`, or refuses with it when it is an Error.
+  function mount(answer: unknown) {
+    for (const name of ["deleteItem", "moveItem", "updateItem"]) {
+      queryClient.setMutationDefaults([["calendar", name]], {
+        mutationFn: async (input: unknown) => {
+          sent(name, input);
+          if (answer instanceof Error) throw answer;
+
+          return answer;
+        },
+      });
+    }
+    ({ unmount } = renderHookWithClient(queryClient, () => {
+      mutations = useCalendarMutations();
+    }));
+  }
+
+  async function settle() {
+    await act(async () => {
+      await vi.waitFor(() => expect(queryClient.isMutating()).toBe(0));
+    });
+  }
+
+  function itemsIn(range: { startISO: string; endISO: string }) {
+    return queryClient.getQueryData<PlannedItemFromQuery[]>(rangeKey(range.startISO, range.endISO));
+  }
+
+  const writes = {
+    delete: () => mutations.deleteItem("item-0"),
+    move: () => mutations.moveItem("item-0", "2026-10-05", "Lunch", 0),
+    update: () => mutations.updateItem("item-0", "Leftovers"),
+  };
+
+  beforeEach(() => {
+    queryClient = new QueryClient({ defaultOptions: { queries: { retry: false } } });
+    sent.mockReset();
+    queryClient.setQueryData(rangeKey(THIS_WEEK.startISO, THIS_WEEK.endISO), ITEMS);
+    queryClient.setQueryData(rangeKey(CALENDAR_PAGE.startISO, CALENDAR_PAGE.endISO), ITEMS);
+  });
+
+  afterEach(() => {
+    unmount();
+    unmount = () => {};
+  });
+
+  it("deletes from both cached ranges, sending the cached version", async () => {
+    mount({ success: true });
+    act(() => writes.delete());
+    await settle();
+
+    expect(idsIn(queryClient, THIS_WEEK)).toEqual(["item-2"]);
+    expect(idsIn(queryClient, CALENDAR_PAGE)).toEqual(["item-2"]);
+    expect(sent).toHaveBeenCalledWith("deleteItem", { itemId: "item-0", version: 2 });
+  });
+
+  it("moves in both cached ranges, leaving the one its new date is outside", async () => {
+    mount({ success: true, moved: true });
+    act(() => writes.move());
+    await settle();
+
+    // 2026-10-05 is past this week but on the calendar page's range.
+    expect(itemsIn(THIS_WEEK)).toEqual([expect.objectContaining({ id: "item-2", sortOrder: 0 })]);
+    expect(itemsIn(CALENDAR_PAGE)).toEqual([
+      expect.objectContaining({ id: "item-2", sortOrder: 0 }),
+      expect.objectContaining({ id: "item-0", date: "2026-10-05", slot: "Lunch", sortOrder: 0 }),
+    ]);
+    expect(sent).toHaveBeenCalledWith("moveItem", expect.objectContaining({ version: 2 }));
+  });
+
+  it("updates in both cached ranges", async () => {
+    mount({ success: true });
+    act(() => writes.update());
+    await settle();
+
+    for (const range of [THIS_WEEK, CALENDAR_PAGE]) {
+      expect(itemsIn(range)?.find((item) => item.id === "item-0")?.title).toBe("Leftovers");
+    }
+  });
+
+  it.each(Object.keys(writes) as (keyof typeof writes)[])(
+    "rolls both ranges back when a %s fails",
+    async (write) => {
+      mount(new Error("refused"));
+      act(() => writes[write]());
+      await settle();
+
+      expect(itemsIn(THIS_WEEK)).toEqual(ITEMS);
+      expect(itemsIn(CALENDAR_PAGE)).toEqual(ITEMS);
+    }
+  );
+
+  it.each(Object.keys(writes) as (keyof typeof writes)[])(
+    "keeps a Queued %s in both ranges",
+    async (write) => {
+      // Backend unreachable: the write sits in the Outbox (ADR-0009).
+      mount(new TypeError("Failed to fetch"));
+      act(() => writes[write]());
+      await settle();
+
+      expect(itemsIn(THIS_WEEK)).not.toEqual(ITEMS);
+      expect(itemsIn(CALENDAR_PAGE)).not.toEqual(ITEMS);
+    }
+  );
+
+  it("rereads both ranges after a stale write", async () => {
+    mount({ success: true, stale: true });
+    act(() => writes.update());
+    await settle();
+
+    for (const range of [THIS_WEEK, CALENDAR_PAGE]) {
+      expect(queryClient.getQueryState(rangeKey(range.startISO, range.endISO))?.isInvalidated).toBe(
+        true
+      );
+    }
+  });
+});
+
 describe("a range the cache has not read yet", () => {
   it("starts from the items cached for its days, and keeps them when its own read fails", async () => {
     const queryClient = new QueryClient({ defaultOptions: { queries: { retry: false } } });
-    const useCalendarQuery = createUseCalendarQuery({ useTRPC });
     // The calendar page widens its range twelve days into the past as it is
     // scrolled, and Offline the wider range can never be read.
     const WIDER = { startISO: "2026-08-26", endISO: CALENDAR_PAGE.endISO };

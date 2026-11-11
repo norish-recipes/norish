@@ -1,0 +1,112 @@
+/**
+ * Each CalDAV sync fact updates the reads it changes; the initial sync's
+ * start is toasted, translated, through the platform adapter.
+ */
+
+import { act } from "react";
+import { QueryClient } from "@tanstack/react-query";
+import { renderHook } from "@testing-library/react";
+import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
+
+import { createTestWrapper, fakePlatformAdapter } from "@norish/shared-react/platform/testing";
+
+import { trackedEvent } from "../../../__tests__/realtime/tracked-event";
+import { useCaldavSubscription } from "../use-caldav-subscription";
+import { createMockCaldavConfig } from "./test-utils";
+
+const useSubscriptionMock = vi.hoisted(() => vi.fn());
+
+vi.mock("@trpc/tanstack-react-query", async () => {
+  const actual = await vi.importActual<typeof import("@trpc/tanstack-react-query")>(
+    "@trpc/tanstack-react-query"
+  );
+
+  return { ...actual, useSubscription: useSubscriptionMock };
+});
+
+const CONFIG_KEY = [["caldav", "getConfig"], { type: "query" }];
+const SUMMARY_KEY = [["caldav", "getSummary"], { type: "query" }];
+
+vi.mock("../../trpc", () => ({
+  useTRPC: () => ({
+    caldav: {
+      getConfig: { queryKey: () => CONFIG_KEY },
+      getSyncStatus: { pathKey: () => [["caldav", "getSyncStatus"]] },
+      getSummary: { queryKey: () => SUMMARY_KEY },
+    },
+    caldavSubscriptions: {
+      onSyncEvent: {
+        subscriptionOptions: (_input: undefined, opts: object) => ({
+          ...opts,
+          subscribe: () => ({ unsubscribe: () => undefined }),
+        }),
+      },
+    },
+  }),
+}));
+
+function emit(event: unknown) {
+  const options = useSubscriptionMock.mock.calls.at(-1)?.[0] as {
+    onData: (data: unknown) => void;
+  };
+
+  act(() => options.onData(trackedEvent(event)));
+}
+
+let queryClient: QueryClient;
+let platform: ReturnType<typeof fakePlatformAdapter>;
+let rendered: ReturnType<typeof renderHook>;
+
+beforeEach(() => {
+  useSubscriptionMock.mockReset();
+  queryClient = new QueryClient({ defaultOptions: { queries: { retry: false } } });
+  platform = fakePlatformAdapter();
+  platform.toast.translate = (id, values) => (values ? `${id} ${JSON.stringify(values)}` : id);
+  rendered = renderHook(() => useCaldavSubscription(), {
+    wrapper: createTestWrapper(queryClient, platform),
+  });
+});
+
+afterEach(() => {
+  rendered.unmount();
+  queryClient.clear();
+});
+
+describe("useCaldavSubscription", () => {
+  it("toasts the initial sync's start through the platform, translated", () => {
+    emit({ type: "initialSyncComplete", data: { totalSynced: 4, totalFailed: 0 } });
+
+    expect(platform.toast.show).toHaveBeenCalledWith({
+      severity: "success",
+      title: "calendar.caldav.syncStarted",
+      description: 'calendar.caldav.syncStartedDescription {"queued":4}',
+    });
+  });
+
+  it("warns when some items could not be queued", () => {
+    emit({ type: "initialSyncComplete", data: { totalSynced: 3, totalFailed: 2 } });
+
+    expect(platform.toast.show).toHaveBeenCalledWith({
+      severity: "warning",
+      title: "calendar.caldav.syncStarted",
+      description: 'calendar.caldav.syncStartedWithFailures {"queued":3,"failed":2}',
+    });
+  });
+
+  it("writes a saved config into the cache and toasts nothing", () => {
+    const config = createMockCaldavConfig({ version: 3 });
+
+    emit({ type: "configSaved", data: { config } });
+
+    expect(queryClient.getQueryData(CONFIG_KEY)).toEqual(config);
+    expect(platform.toast.show).not.toHaveBeenCalled();
+  });
+
+  it("rereads the summary when a sync completes", () => {
+    queryClient.setQueryData(SUMMARY_KEY, { pending: 1, synced: 0, failed: 0, removed: 0 });
+
+    emit({ type: "syncCompleted", data: {} });
+
+    expect(queryClient.getQueryState(SUMMARY_KEY)?.isInvalidated).toBe(true);
+  });
+});

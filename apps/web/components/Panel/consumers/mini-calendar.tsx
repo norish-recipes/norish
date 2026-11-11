@@ -5,10 +5,14 @@ import { useCallback, useEffect, useMemo, useRef } from "react";
 import { landOnDay, settleLanding } from "@/components/calendar/land-on-day";
 import { TimelineDaySection } from "@/components/calendar/mobile";
 import Panel from "@/components/Panel/Panel";
-import { useCalendarMutations, useCalendarQuery, useCalendarSubscription } from "@/hooks/calendar";
 import { useVirtualizer } from "@tanstack/react-virtual";
 import { useLocale, useTranslations } from "next-intl";
 
+import {
+  useCalendarMutations,
+  useCalendarQuery,
+  useCalendarSubscription,
+} from "@norish/shared-react/calendar";
 import { useRecipeQuery } from "@norish/shared-react/recipes";
 import { Slot } from "@norish/shared/contracts";
 import {
@@ -50,7 +54,7 @@ function MiniCalendarContent({
   const endISO = dateKey(rangeEnd);
   const { recipe } = useRecipeQuery(recipeId);
   const { calendarData, isLoading } = useCalendarQuery(startISO, endISO);
-  const { createItem } = useCalendarMutations(startISO, endISO);
+  const { createItem } = useCalendarMutations();
   useCalendarSubscription(startISO, endISO);
   const allDays = useMemo(() => eachDayOfInterval(rangeStart, rangeEnd), [rangeStart, rangeEnd]);
   // A day's date on one line, as the calendar itself writes it: "Wed, Oct 7"

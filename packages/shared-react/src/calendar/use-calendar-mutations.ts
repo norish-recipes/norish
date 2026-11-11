@@ -1,0 +1,133 @@
+import { useMutation, useQueryClient } from "@tanstack/react-query";
+
+import type { PlannedItemFromQuery, Slot } from "@norish/shared/contracts";
+import { createClientId } from "@norish/shared/lib/operation-helpers";
+
+import type { CalendarRange } from "./calendar-cache-merge";
+import type { CachedCalendarRange, CalendarMutationsResult } from "./types";
+import {
+  invalidateUnlessPreserved,
+  shouldPreserveOptimisticUpdate,
+} from "../offline/optimistic-updates";
+import { useTRPC } from "../trpc";
+import { moveItemInRange } from "./calendar-cache-merge";
+import { useCalendarCacheHelpers } from "./use-calendar-cache";
+
+type RangeUpdate = (items: PlannedItemFromQuery[], range: CalendarRange) => PlannedItemFromQuery[];
+
+/** Plans and edits land in every cached `calendar.listItems` range, whichever screen shows it. */
+export function useCalendarMutations(): CalendarMutationsResult {
+  const trpc = useTRPC();
+  const queryClient = useQueryClient();
+  const { cachedRanges, upsertItemAcrossRanges, invalidateAllRanges } = useCalendarCacheHelpers();
+
+  // Writes over what each range held before its read was cancelled: a cancel
+  // reverts to the fetch's start, which can predate a restored cache.
+  const writeAcrossRanges = async (update: RangeUpdate) => {
+    const held = cachedRanges();
+
+    await Promise.all(
+      held.map(({ key }) => queryClient.cancelQueries({ queryKey: key, exact: true }))
+    );
+
+    for (const { key, range, items } of held) {
+      queryClient.setQueryData<PlannedItemFromQuery[]>(key, update(items, range));
+    }
+
+    return { held };
+  };
+
+  const rollBack = (error: unknown, context: { held: CachedCalendarRange[] } | undefined) => {
+    // Queued: keep the optimistic write; the Outbox will Replay it.
+    if (shouldPreserveOptimisticUpdate(error)) return;
+
+    for (const { key, items } of context?.held ?? []) {
+      queryClient.setQueryData<PlannedItemFromQuery[]>(key, items);
+    }
+  };
+
+  // The server drops version-stale writes; reread so the optimistic write converges.
+  const rereadIfStale = (result: object) => {
+    if ("stale" in result && result.stale) invalidateAllRanges();
+  };
+
+  const findItem = (itemId: string) =>
+    cachedRanges()
+      .flatMap(({ items }) => items)
+      .find((item) => item.id === itemId);
+
+  const createMutation = useMutation(
+    trpc.calendar.createItem.mutationOptions({
+      // The created item is placed in every cached range from the response
+      // itself: the realtime echo is the fast path, not the guarantee (ADR-0011).
+      onSuccess: (result) => {
+        if (result.item) upsertItemAcrossRanges(result.item);
+      },
+      // Queued for Replay when the backend is unreachable — nothing to refetch.
+      onError: invalidateUnlessPreserved(invalidateAllRanges),
+    })
+  );
+  const { mutate: mutateCreate } = createMutation;
+
+  const deleteMutation = useMutation(
+    trpc.calendar.deleteItem.mutationOptions({
+      onMutate: ({ itemId }) =>
+        writeAcrossRanges((items) => items.filter((item) => item.id !== itemId)),
+      onSuccess: rereadIfStale,
+      onError: (error, _vars, context) => rollBack(error, context),
+    })
+  );
+  const { mutate: mutateDelete } = deleteMutation;
+
+  const moveMutation = useMutation(
+    trpc.calendar.moveItem.mutationOptions({
+      onMutate: ({ itemId, targetDate, targetSlot, targetIndex }) => {
+        const moved = findItem(itemId);
+        const target = { date: targetDate, slot: targetSlot, sortOrder: targetIndex };
+
+        return writeAcrossRanges((items, range) =>
+          moved ? moveItemInRange(items, moved, target, range) : items
+        );
+      },
+      onSuccess: rereadIfStale,
+      onError: (error, _vars, context) => rollBack(error, context),
+    })
+  );
+  const { mutate: mutateMove } = moveMutation;
+
+  const updateMutation = useMutation(
+    trpc.calendar.updateItem.mutationOptions({
+      onMutate: ({ itemId, title }) =>
+        writeAcrossRanges((items) =>
+          items.map((item) =>
+            item.id === itemId ? { ...item, title, updatedAt: new Date() } : item
+          )
+        ),
+      onSuccess: rereadIfStale,
+      onError: (error, _vars, context) => rollBack(error, context),
+    })
+  );
+  const { mutate: mutateUpdate } = updateMutation;
+
+  const versionOf = (itemId: string) => findItem(itemId)?.version ?? 1;
+
+  return {
+    createItem: (date, slot, itemType, recipeId, title) => {
+      // Client-minted id, honoured on insert (ADR-0003).
+      mutateCreate({ id: createClientId(), date, slot, itemType, recipeId, title });
+    },
+    deleteItem: (itemId) => {
+      mutateDelete({ itemId, version: versionOf(itemId) });
+    },
+    moveItem: (itemId: string, targetDate: string, targetSlot: Slot, targetIndex: number) => {
+      mutateMove({ itemId, version: versionOf(itemId), targetDate, targetSlot, targetIndex });
+    },
+    updateItem: (itemId, title) => {
+      mutateUpdate({ itemId, version: versionOf(itemId), title });
+    },
+    isCreating: createMutation.isPending,
+    isDeleting: deleteMutation.isPending,
+    isMoving: moveMutation.isPending,
+    isUpdating: updateMutation.isPending,
+  };
+}

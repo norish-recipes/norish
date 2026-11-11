@@ -3,14 +3,14 @@
  * through the real `useSubscription` with a tRPC stand-in that answers any path.
  */
 
-import React, { act } from "react";
-import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
+import { act } from "react";
+import { QueryClient } from "@tanstack/react-query";
 import { renderHook } from "@testing-library/react";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 
-import type { CreateCaldavHooksOptions } from "../../src/hooks/caldav";
+import { useCaldavSubscription } from "../../src/calendar/use-caldav-subscription";
 import { usePantrySubscription } from "../../src/groceries/use-pantry-subscription";
-import { createUseCaldavCache, createUseCaldavSubscription } from "../../src/hooks/caldav";
+import { createTestWrapper } from "../../src/platform/testing";
 import { useCookbooksSubscription } from "../../src/recipes/use-cookbooks-subscription";
 import { useRecipeShareSubscription } from "../../src/recipes/use-recipe-share-subscription";
 import { trackedCursorMark } from "./tracked-event";
@@ -63,11 +63,7 @@ afterEach(() => {
 
 /** Mounts the hook, marks every subscription live and lets the window flush. */
 function goLive(useHook: () => void) {
-  const wrapper = ({ children }: { children: React.ReactNode }) => (
-    <QueryClientProvider client={queryClient}>{children}</QueryClientProvider>
-  );
-
-  renderHook(useHook, { wrapper });
+  renderHook(useHook, { wrapper: createTestWrapper(queryClient) });
   act(() => {
     for (const observer of observers) observer.onData?.(trackedCursorMark());
   });
@@ -132,12 +128,6 @@ describe("liveQueryKeys", () => {
   });
 
   it("caldav: the config a saved one patches, the statuses and the summary", () => {
-    const useTRPC = (() => trpc) as unknown as CreateCaldavHooksOptions["useTRPC"];
-    const { useCaldavSubscription } = createUseCaldavSubscription({
-      useTRPC,
-      useCaldavCacheHelpers: createUseCaldavCache({ useTRPC }),
-      useToastAdapter: () => ({ showSyncCompleteToast: () => undefined }),
-    });
     const check = expectReread([
       read(["caldav", "getConfig"]),
       [["caldav", "getSyncStatus"], { input: { page: 2, pageSize: 20 }, type: "query" }],

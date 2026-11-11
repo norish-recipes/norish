@@ -1,8 +1,9 @@
-import { useCalendarQuery } from "@/hooks/calendar/use-calendar-query";
 import { renderHook, waitFor } from "@testing-library/react";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 
 import { createTestQueryClient, createTestWrapper } from "@norish/shared-react/platform/testing";
+
+import { useCalendarQuery } from "../use-calendar-query";
 
 type PlannedItemFromQuery = {
   id: string;
@@ -23,7 +24,7 @@ type PlannedItemFromQuery = {
 
 const mockItemsQueryOptions = vi.fn();
 
-vi.mock("@norish/shared-react/trpc", () => ({
+vi.mock("../../trpc", () => ({
   useTRPC: () => ({
     calendar: {
       listItems: {
@@ -172,47 +173,6 @@ describe("useCalendarQuery", () => {
       expect(result.current.items).toHaveLength(2);
       expect(result.current.items[0]!.id).toBe("item-1");
       expect(result.current.items[1]!.id).toBe("item-2");
-    });
-  });
-
-  describe("helper functions", () => {
-    it("provides setCalendarData function", () => {
-      mockItemsQueryOptions.mockReturnValue({
-        queryKey: getQueryKey(),
-        queryFn: async () => [],
-      });
-
-      const { result } = renderHook(() => useCalendarQuery(startISO, endISO), {
-        wrapper: createTestWrapper(queryClient),
-      });
-
-      expect(typeof result.current.setCalendarData).toBe("function");
-    });
-
-    it("provides invalidate function", () => {
-      mockItemsQueryOptions.mockReturnValue({
-        queryKey: getQueryKey(),
-        queryFn: async () => [],
-      });
-
-      const { result } = renderHook(() => useCalendarQuery(startISO, endISO), {
-        wrapper: createTestWrapper(queryClient),
-      });
-
-      expect(typeof result.current.invalidate).toBe("function");
-    });
-
-    it("provides queryKey", () => {
-      mockItemsQueryOptions.mockReturnValue({
-        queryKey: getQueryKey(),
-        queryFn: async () => [],
-      });
-
-      const { result } = renderHook(() => useCalendarQuery(startISO, endISO), {
-        wrapper: createTestWrapper(queryClient),
-      });
-
-      expect(result.current.queryKey).toEqual(getQueryKey());
     });
   });
 });

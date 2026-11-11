@@ -111,3 +111,51 @@ export function calendarRangeOfQueryKey(queryKey: readonly unknown[]): CalendarR
 
   return typeof startISO === "string" && typeof endISO === "string" ? { startISO, endISO } : null;
 }
+
+/**
+ * A move as one range sees it: `moved` leaves its source slot and lands at
+ * `target.sortOrder` in the target slot when the target date is in the range.
+ */
+export function moveItemInRange(
+  prev: PlannedItemFromQuery[],
+  moved: PlannedItemFromQuery,
+  target: Pick<PlannedItemFromQuery, "date" | "slot" | "sortOrder">,
+  { startISO, endISO }: CalendarRange
+) {
+  const targetInRange = isDateInRange(target.date, startISO, endISO);
+
+  if (!targetInRange && !isDateInRange(moved.date, startISO, endISO)) return prev;
+
+  const isSameSlot = moved.date === target.date && moved.slot === target.slot;
+  const shifted = prev.flatMap((item) => {
+    if (item.id === moved.id) return [];
+
+    if (item.date === target.date && item.slot === target.slot) {
+      if (isSameSlot) {
+        if (item.sortOrder >= target.sortOrder && item.sortOrder < moved.sortOrder) {
+          return [{ ...item, sortOrder: item.sortOrder + 1 }];
+        }
+        if (item.sortOrder <= target.sortOrder && item.sortOrder > moved.sortOrder) {
+          return [{ ...item, sortOrder: item.sortOrder - 1 }];
+        }
+      } else if (item.sortOrder >= target.sortOrder) {
+        return [{ ...item, sortOrder: item.sortOrder + 1 }];
+      }
+    }
+
+    if (
+      !isSameSlot &&
+      item.date === moved.date &&
+      item.slot === moved.slot &&
+      item.sortOrder > moved.sortOrder
+    ) {
+      return [{ ...item, sortOrder: item.sortOrder - 1 }];
+    }
+
+    return [item];
+  });
+
+  return sortCalendarItems(
+    targetInRange ? [...shifted, { ...moved, ...target, updatedAt: new Date() }] : shifted
+  );
+}

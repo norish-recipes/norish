@@ -1,16 +1,15 @@
-// Import after mocking
+import { act, renderHook, waitFor } from "@testing-library/react";
+import { beforeEach, describe, expect, it, vi } from "vitest";
+
+import { createTestQueryClient, createTestWrapper } from "@norish/shared-react/platform/testing";
+
 import {
   useCaldavConfigQuery,
   useCaldavConnectionQuery,
   useCaldavPasswordQuery,
   useCaldavSummaryQuery,
   useCaldavSyncStatusQuery,
-} from "@/hooks/caldav/use-caldav-query";
-import { act, renderHook, waitFor } from "@testing-library/react";
-import { beforeEach, describe, expect, it, vi } from "vitest";
-
-import { createTestQueryClient, createTestWrapper } from "@norish/shared-react/platform/testing";
-
+} from "../use-caldav-query";
 import {
   createMockCaldavConfig,
   createMockSyncStatusData,
@@ -31,7 +30,7 @@ const mockSyncStatusQueryOptions = vi.fn();
 const mockSummaryQueryOptions = vi.fn();
 const mockConnectionQueryOptions = vi.fn();
 
-vi.mock("@norish/shared-react/trpc", () => ({
+vi.mock("../../trpc", () => ({
   useTRPC: () => ({
     caldav: {
       getConfig: {

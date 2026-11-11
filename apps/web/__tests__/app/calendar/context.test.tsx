@@ -10,23 +10,17 @@ import { createTestQueryClient } from "@norish/shared-react/platform/testing";
 const mockCalendarData = {};
 const mockIsLoading = false;
 
-vi.mock("@/hooks/calendar/use-calendar-query", () => ({
+vi.mock("@norish/shared-react/calendar", () => ({
   useCalendarQuery: vi.fn(() => ({
     calendarData: mockCalendarData,
     isLoading: mockIsLoading,
   })),
-}));
-
-vi.mock("@/hooks/calendar/use-calendar-mutations", () => ({
   useCalendarMutations: vi.fn(() => ({
     createItem: vi.fn(),
     deleteItem: vi.fn(),
     moveItem: vi.fn(),
     updateItem: vi.fn(),
   })),
-}));
-
-vi.mock("@/hooks/calendar/use-calendar-subscription", () => ({
   useCalendarSubscription: vi.fn(),
 }));
 

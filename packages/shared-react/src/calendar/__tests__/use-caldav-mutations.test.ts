@@ -1,10 +1,9 @@
-// Import after mocking
-import { useCaldavMutations } from "@/hooks/caldav/use-caldav-mutations";
 import { act, renderHook, waitFor } from "@testing-library/react";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 
 import { createTestQueryClient, createTestWrapper } from "@norish/shared-react/platform/testing";
 
+import { useCaldavMutations } from "../use-caldav-mutations";
 import { createMockCaldavConfig } from "./test-utils";
 
 // Mock query keys
@@ -23,7 +22,7 @@ const mockGetConfigQueryFn = vi.fn();
 const mockGetSyncStatusQueryFn = vi.fn();
 const mockGetSummaryQueryFn = vi.fn();
 
-vi.mock("@norish/shared-react/trpc", () => ({
+vi.mock("../../trpc", () => ({
   useTRPC: () => ({
     caldav: {
       getConfig: {

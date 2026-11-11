@@ -1,28 +1,77 @@
 import type { QueryKey } from "@tanstack/react-query";
-import type { createTRPCContext } from "@trpc/tanstack-react-query";
 
 import type {
   CalDavCalendarInfo,
   CaldavSyncStatusSummaryDto,
   CaldavSyncStatusViewDto,
   ConnectionTestResult,
+  PlannedItemFromQuery,
+  Slot,
   UserCaldavConfigWithoutPasswordDto,
 } from "@norish/shared/contracts";
-import type { AppRouter } from "@norish/trpc/client";
+import type { PlannedItemWithRecipePayload } from "@norish/shared/contracts/zod";
 
-type TrpcContext = ReturnType<typeof createTRPCContext<AppRouter>>;
-export type TrpcHookBinding = ReturnType<TrpcContext["useTRPC"]>;
+import type { CalendarRange } from "./calendar-cache-merge";
+
+export type CalendarData = Record<string, PlannedItemFromQuery[]>;
+
+/** A cached `calendar.listItems` range that holds data, with its key. */
+export type CachedCalendarRange = {
+  key: QueryKey;
+  range: CalendarRange;
+  items: PlannedItemFromQuery[];
+};
+
+export type CalendarCacheHelpers = {
+  cachedRanges: () => CachedCalendarRange[];
+  /** Place an item, by its date, in every cached range — a no-op where it already is. */
+  upsertItemAcrossRanges: (item: PlannedItemWithRecipePayload) => void;
+  /** Drop an item from every cached range. */
+  removeItemAcrossRanges: (itemId: string) => void;
+  invalidateAllRanges: () => void;
+};
+
+export type CalendarQueryResult = {
+  items: PlannedItemFromQuery[];
+  calendarData: CalendarData;
+  isLoading: boolean;
+  error: unknown;
+};
+
+export type CalendarMutationsResult = {
+  createItem: (
+    date: string,
+    slot: Slot,
+    itemType: "recipe" | "note",
+    recipeId?: string,
+    title?: string
+  ) => void;
+  deleteItem: (itemId: string) => void;
+  moveItem: (itemId: string, targetDate: string, targetSlot: Slot, targetIndex: number) => void;
+  updateItem: (itemId: string, title: string) => void;
+  isCreating: boolean;
+  isDeleting: boolean;
+  isMoving: boolean;
+  isUpdating: boolean;
+};
+
+type CaldavSyncStatusPage = {
+  statuses: CaldavSyncStatusViewDto[];
+  total: number;
+  page: number;
+  pageSize: number;
+};
+
+type CaldavConfigUpdater = (
+  prev: UserCaldavConfigWithoutPasswordDto | null | undefined
+) => UserCaldavConfigWithoutPasswordDto | null | undefined;
 
 export type CaldavConfigQueryResult = {
   config: UserCaldavConfigWithoutPasswordDto | null;
   error: unknown;
   isLoading: boolean;
   queryKey: QueryKey;
-  setConfig: (
-    updater: (
-      prev: UserCaldavConfigWithoutPasswordDto | null | undefined
-    ) => UserCaldavConfigWithoutPasswordDto | null | undefined
-  ) => void;
+  setConfig: (updater: CaldavConfigUpdater) => void;
   invalidate: () => void;
 };
 
@@ -35,13 +84,7 @@ export type CaldavSyncStatusQueryResult = {
   isLoading: boolean;
   queryKey: QueryKey;
   setStatuses: (
-    updater: (
-      prev:
-        | { statuses: CaldavSyncStatusViewDto[]; total: number; page: number; pageSize: number }
-        | undefined
-    ) =>
-      | { statuses: CaldavSyncStatusViewDto[]; total: number; page: number; pageSize: number }
-      | undefined
+    updater: (prev: CaldavSyncStatusPage | undefined) => CaldavSyncStatusPage | undefined
   ) => void;
   invalidate: () => void;
 };
@@ -55,19 +98,9 @@ export type CaldavSummaryQueryResult = {
 };
 
 export type CaldavCacheHelpers = {
-  setConfig: (
-    updater: (
-      prev: UserCaldavConfigWithoutPasswordDto | null | undefined
-    ) => UserCaldavConfigWithoutPasswordDto | null | undefined
-  ) => void;
+  setConfig: (updater: CaldavConfigUpdater) => void;
   setStatuses: (
-    updater: (
-      prev:
-        | { statuses: CaldavSyncStatusViewDto[]; total: number; page: number; pageSize: number }
-        | undefined
-    ) =>
-      | { statuses: CaldavSyncStatusViewDto[]; total: number; page: number; pageSize: number }
-      | undefined
+    updater: (prev: CaldavSyncStatusPage | undefined) => CaldavSyncStatusPage | undefined
   ) => void;
   invalidateSyncStatus: () => void;
   invalidateSummary: () => void;
@@ -114,7 +147,3 @@ export type CaldavMutationsResult = {
   isTriggeringSync: boolean;
   isSyncingAll: boolean;
 };
-
-export interface CreateCaldavHooksOptions {
-  useTRPC: () => TrpcHookBinding;
-}

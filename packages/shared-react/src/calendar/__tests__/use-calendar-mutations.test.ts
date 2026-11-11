@@ -1,19 +1,24 @@
-import { useCalendarMutations } from "@/hooks/calendar/use-calendar-mutations";
 import { act, renderHook, waitFor } from "@testing-library/react";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 
 import { createTestQueryClient, createTestWrapper } from "@norish/shared-react/platform/testing";
+
+import { useCalendarMutations } from "../use-calendar-mutations";
 
 const mockCreateItemMutate = vi.fn();
 const mockDeleteItemMutate = vi.fn();
 const mockMoveItemMutate = vi.fn();
 const mockUpdateItemMutate = vi.fn();
 
-vi.mock("@norish/shared-react/trpc", () => ({
+vi.mock("../../trpc", () => ({
   useTRPC: () => ({
     calendar: {
       listItems: {
-        queryKey: (input: { startISO: string; endISO: string }) => ["calendar", "listItems", input],
+        // The shape tRPC mints, which the cross-range writes read the range back from.
+        queryKey: (input?: { startISO: string; endISO: string }) =>
+          input
+            ? [["calendar", "listItems"], { input, type: "query" }]
+            : [["calendar", "listItems"]],
       },
       createItem: {
         mutationOptions: (options: Record<string, unknown>) => ({
@@ -92,14 +97,14 @@ describe("useCalendarMutations", () => {
   });
 
   function getQueryKey() {
-    return ["calendar", "listItems", { startISO, endISO }];
+    return [["calendar", "listItems"], { input: { startISO, endISO }, type: "query" }];
   }
 
   describe("createItem", () => {
     it("calls mutation with correct parameters", async () => {
       mockCreateItemMutate.mockResolvedValue({ id: "new-item-1" });
 
-      const { result } = renderHook(() => useCalendarMutations(startISO, endISO), {
+      const { result } = renderHook(() => useCalendarMutations(), {
         wrapper: createTestWrapper(queryClient),
       });
 
@@ -124,7 +129,7 @@ describe("useCalendarMutations", () => {
     it("calls mutation for note with title", async () => {
       mockCreateItemMutate.mockResolvedValue({ id: "new-note-1" });
 
-      const { result } = renderHook(() => useCalendarMutations(startISO, endISO), {
+      const { result } = renderHook(() => useCalendarMutations(), {
         wrapper: createTestWrapper(queryClient),
       });
 
@@ -156,7 +161,7 @@ describe("useCalendarMutations", () => {
 
       mockDeleteItemMutate.mockResolvedValue({ success: true });
 
-      const { result } = renderHook(() => useCalendarMutations(startISO, endISO), {
+      const { result } = renderHook(() => useCalendarMutations(), {
         wrapper: createTestWrapper(queryClient),
       });
 
@@ -182,7 +187,7 @@ describe("useCalendarMutations", () => {
 
       mockDeleteItemMutate.mockRejectedValue(new Error("Failed"));
 
-      const { result } = renderHook(() => useCalendarMutations(startISO, endISO), {
+      const { result } = renderHook(() => useCalendarMutations(), {
         wrapper: createTestWrapper(queryClient),
       });
 
@@ -208,7 +213,7 @@ describe("useCalendarMutations", () => {
 
       mockMoveItemMutate.mockResolvedValue({ success: true, moved: true });
 
-      const { result } = renderHook(() => useCalendarMutations(startISO, endISO), {
+      const { result } = renderHook(() => useCalendarMutations(), {
         wrapper: createTestWrapper(queryClient),
       });
 
@@ -241,7 +246,7 @@ describe("useCalendarMutations", () => {
 
       mockMoveItemMutate.mockResolvedValue({ success: true, moved: true });
 
-      const { result } = renderHook(() => useCalendarMutations(startISO, endISO), {
+      const { result } = renderHook(() => useCalendarMutations(), {
         wrapper: createTestWrapper(queryClient),
       });
 
@@ -265,7 +270,7 @@ describe("useCalendarMutations", () => {
 
       mockMoveItemMutate.mockResolvedValue({ success: true, moved: true });
 
-      const { result } = renderHook(() => useCalendarMutations(startISO, endISO), {
+      const { result } = renderHook(() => useCalendarMutations(), {
         wrapper: createTestWrapper(queryClient),
       });
 
@@ -294,7 +299,7 @@ describe("useCalendarMutations", () => {
 
       mockMoveItemMutate.mockRejectedValue(new Error("Failed"));
 
-      const { result } = renderHook(() => useCalendarMutations(startISO, endISO), {
+      const { result } = renderHook(() => useCalendarMutations(), {
         wrapper: createTestWrapper(queryClient),
       });
 
@@ -325,7 +330,7 @@ describe("useCalendarMutations", () => {
       // Outbox (Queued) — the optimistic move must be preserved, not rolled back.
       mockMoveItemMutate.mockRejectedValue(new TypeError("Failed to fetch"));
 
-      const { result } = renderHook(() => useCalendarMutations(startISO, endISO), {
+      const { result } = renderHook(() => useCalendarMutations(), {
         wrapper: createTestWrapper(queryClient),
       });
 
@@ -353,7 +358,7 @@ describe("useCalendarMutations", () => {
 
       mockUpdateItemMutate.mockResolvedValue({ success: true });
 
-      const { result } = renderHook(() => useCalendarMutations(startISO, endISO), {
+      const { result } = renderHook(() => useCalendarMutations(), {
         wrapper: createTestWrapper(queryClient),
       });
 
@@ -382,7 +387,7 @@ describe("useCalendarMutations", () => {
           })
       );
 
-      const { result } = renderHook(() => useCalendarMutations(startISO, endISO), {
+      const { result } = renderHook(() => useCalendarMutations(), {
         wrapper: createTestWrapper(queryClient),
       });
 
@@ -415,7 +420,7 @@ describe("useCalendarMutations", () => {
           })
       );
 
-      const { result } = renderHook(() => useCalendarMutations(startISO, endISO), {
+      const { result } = renderHook(() => useCalendarMutations(), {
         wrapper: createTestWrapper(queryClient),
       });
 
@@ -448,7 +453,7 @@ describe("useCalendarMutations", () => {
           })
       );
 
-      const { result } = renderHook(() => useCalendarMutations(startISO, endISO), {
+      const { result } = renderHook(() => useCalendarMutations(), {
         wrapper: createTestWrapper(queryClient),
       });
 

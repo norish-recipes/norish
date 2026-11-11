@@ -1,6 +1,6 @@
-import type { CalendarData } from "@/hooks/calendar/use-calendar-query";
 import type { ReactNode } from "react";
 
+import type { CalendarData } from "@norish/shared-react/calendar";
 import type { PlannedItemFromQuery, Slot } from "@norish/shared/contracts";
 
 export type CalendarDateRange = {

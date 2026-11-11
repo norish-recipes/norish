@@ -1,10 +1,10 @@
-import { useCalendarSubscription } from "@/hooks/calendar/use-calendar-subscription";
 import { renderHook } from "@testing-library/react";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 
 import { createTestQueryClient, createTestWrapper } from "@norish/shared-react/platform/testing";
 
-import { trackedEvent } from "../realtime-test-utils";
+import { trackedEvent } from "../../../__tests__/realtime/tracked-event";
+import { useCalendarSubscription } from "../use-calendar-subscription";
 
 type SubscriptionCallback = (data: unknown) => void;
 let subscriptionCallbacks: Record<string, SubscriptionCallback> = {};
@@ -13,7 +13,7 @@ vi.mock("@trpc/tanstack-react-query", () => ({
   useSubscription: vi.fn(),
 }));
 
-vi.mock("@norish/shared-react/trpc", () => ({
+vi.mock("../../trpc", () => ({
   useTRPC: () => ({
     calendar: {
       listItems: {

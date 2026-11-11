@@ -11,6 +11,7 @@
     "./platform": "./src/platform/index.ts",
     "./platform/testing": "./src/platform/testing.tsx",
     "./config": "./src/config/index.ts",
+    "./calendar": "./src/calendar/index.ts",
     "./groceries": "./src/groceries/index.ts",
     "./reader": "./src/reader/index.ts",
     "./recipes": "./src/recipes/index.ts",
