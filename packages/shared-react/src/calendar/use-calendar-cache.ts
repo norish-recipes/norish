@@ -1,3 +1,4 @@
+import type { QueryKey } from "@tanstack/react-query";
 import { partialMatchKey, useQueryClient } from "@tanstack/react-query";
 
 import type { PlannedItemFromQuery } from "@norish/shared/contracts";
@@ -29,27 +30,35 @@ export function useCalendarCacheHelpers(): CalendarCacheHelpers {
         return range && items ? [{ key, range, items }] : [];
       });
 
+  // `setQueryData` clears `isInvalidated`, so a flagged range no component shows would
+  // mount later without a read: flag it again, without refetching.
+  const writeRange = (key: QueryKey, items: PlannedItemFromQuery[]) => {
+    const wasInvalidated = queryClient.getQueryState(key)?.isInvalidated;
+
+    queryClient.setQueryData<PlannedItemFromQuery[]>(key, items);
+    if (wasInvalidated) {
+      void queryClient.invalidateQueries({ queryKey: key, exact: true, refetchType: "none" });
+    }
+  };
+
   const upsertItemAcrossRanges = (item: PlannedItemWithRecipePayload) => {
-    for (const { key, range } of cachedRanges()) {
-      queryClient.setQueryData<PlannedItemFromQuery[]>(key, (prev) =>
-        upsertItemInRange(prev ?? [], item, range)
-      );
+    for (const { key, range, items } of cachedRanges()) {
+      writeRange(key, upsertItemInRange(items, item, range));
     }
   };
 
   const removeItemAcrossRanges = (itemId: string) => {
-    for (const { key } of cachedRanges()) {
-      queryClient.setQueryData<PlannedItemFromQuery[]>(key, (prev) =>
-        prev ? prev.filter((item) => item.id !== itemId) : prev
+    for (const { key, items } of cachedRanges()) {
+      writeRange(
+        key,
+        items.filter((item) => item.id !== itemId)
       );
     }
   };
 
   const applyMoveEchoAcrossRanges = (payload: PayloadOf<CalendarRealtime, "itemMoved">) => {
-    for (const { key, range } of cachedRanges()) {
-      queryClient.setQueryData<PlannedItemFromQuery[]>(key, (prev) =>
-        applyMoveEchoInRange(prev ?? [], payload, range)
-      );
+    for (const { key, range, items } of cachedRanges()) {
+      writeRange(key, applyMoveEchoInRange(items, payload, range));
     }
   };
 
@@ -59,6 +68,7 @@ export function useCalendarCacheHelpers(): CalendarCacheHelpers {
 
   return {
     cachedRanges,
+    writeRange,
     upsertItemAcrossRanges,
     removeItemAcrossRanges,
     applyMoveEchoAcrossRanges,

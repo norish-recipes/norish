@@ -244,6 +244,25 @@ describe("calendar cache convergence across ranges", () => {
     ).toEqual([expect.objectContaining({ id: "item-0", date: "2026-08-15", version: 3 })]);
   });
 
+  it("keeps a flagged range no component shows flagged through an echo, so mounting it reads", async () => {
+    void queryClient.invalidateQueries({ queryKey: rangeKeyOf(THIS_WEEK), exact: true });
+    mountSubscription();
+    act(() => handler("onItemCreated")(trackedEvent({ item: payload() })));
+
+    const server = [cachedItem({ id: "item-server", date: "2026-09-24" })];
+    let items: PlannedItemFromQuery[] = [];
+
+    readRange.mockResolvedValue(server);
+    const view = renderHookWithClient(queryClient, () => {
+      items = useCalendarQuery(THIS_WEEK.startISO, THIS_WEEK.endISO).items;
+    });
+
+    await act(async () => {
+      await vi.waitFor(() => expect(items).toEqual(server));
+    });
+    view.unmount();
+  });
+
   it("drops a deleted item from every cached range", () => {
     mountSubscription();
 

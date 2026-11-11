@@ -32,6 +32,8 @@ export type CalendarCacheHelpers = {
   removeItemAcrossRanges: (itemId: string) => void;
   /** Land a housemate's move in every cached range. */
   applyMoveEchoAcrossRanges: (payload: PayloadOf<CalendarRealtime, "itemMoved">) => void;
+  /** Write one range, keeping it invalidated when it was. */
+  writeRange: (key: QueryKey, items: PlannedItemFromQuery[]) => void;
   /** Reread every range once no write is pending. */
   rereadAllRanges: () => void;
 };

@@ -19,7 +19,8 @@ type RangeUpdate = (items: PlannedItemFromQuery[], range: CalendarRange) => Plan
 export function useCalendarMutations(): CalendarMutationsResult {
   const trpc = useTRPC();
   const queryClient = useQueryClient();
-  const { cachedRanges, upsertItemAcrossRanges, rereadAllRanges } = useCalendarCacheHelpers();
+  const { cachedRanges, writeRange, upsertItemAcrossRanges, rereadAllRanges } =
+    useCalendarCacheHelpers();
 
   // Synchronous, so a second write in the same tick reads this one; a manual write
   // during a cancelled read becomes the state that read reverts to.
@@ -28,7 +29,7 @@ export function useCalendarMutations(): CalendarMutationsResult {
 
     for (const { key, range, items } of held) {
       void queryClient.cancelQueries({ queryKey: key, exact: true });
-      queryClient.setQueryData<PlannedItemFromQuery[]>(key, update(items, range));
+      writeRange(key, update(items, range));
     }
 
     return { held };
@@ -38,9 +39,7 @@ export function useCalendarMutations(): CalendarMutationsResult {
     // Queued: keep the optimistic write; the Outbox will Replay it.
     if (shouldPreserveOptimisticUpdate(error)) return;
 
-    for (const { key, items } of context?.held ?? []) {
-      queryClient.setQueryData<PlannedItemFromQuery[]>(key, items);
-    }
+    for (const { key, items } of context?.held ?? []) writeRange(key, items);
     // The snapshots can predate a later write or event; reread so each range converges.
     rereadAllRanges();
   };
