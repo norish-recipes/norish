@@ -31,17 +31,8 @@ export default function CaldavConfigSummary({ onEditClick }: CaldavConfigSummary
 
   const handleToggleEnabled = async (enabled: boolean) => {
     if (!config) return;
-    await saveConfig({
-      serverUrl: config.serverUrl,
-      username: config.username,
-      // Empty keeps the stored password.
-      password: "",
-      enabled,
-      breakfastTime: config.breakfastTime,
-      lunchTime: config.lunchTime,
-      dinnerTime: config.dinnerTime,
-      snackTime: config.snackTime,
-    });
+    // Empty keeps the stored password; the rest goes back as held.
+    await saveConfig({ ...config, password: "", enabled });
   };
 
   if (!config) return null;
