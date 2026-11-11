@@ -1,4 +1,9 @@
-import type { APIRequestContext, Browser, BrowserContext } from "@playwright/test";
+import type {
+  APIRequestContext,
+  Browser,
+  BrowserContext,
+  BrowserContextOptions,
+} from "@playwright/test";
 import { request } from "@playwright/test";
 
 import type { HarnessUser } from "./production-stack";
@@ -31,9 +36,11 @@ export async function signIn(
 export async function signedInContext(
   browser: Browser,
   baseURL: string,
-  user: Pick<HarnessUser, "email" | "password">
+  user: Pick<HarnessUser, "email" | "password">,
+  options: BrowserContextOptions = {}
 ): Promise<BrowserContext> {
   return browser.newContext({
+    ...options,
     baseURL,
     storageState: { cookies: await signIn(baseURL, user), origins: [] },
   });
