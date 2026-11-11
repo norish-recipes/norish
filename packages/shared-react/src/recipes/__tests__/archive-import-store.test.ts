@@ -52,6 +52,15 @@ describe("useArchiveImport", () => {
     });
   });
 
+  it("counts an outcome it saw no progress of by itself, not by an earlier import's total", () => {
+    archive().started(10);
+    archive().completed({ imported: 10, notes: [], errors: [] });
+
+    archive().completed({ imported: 2, notes: [], errors: [error("a.json")] });
+
+    expect(archive()).toMatchObject({ current: 3, total: 3, imported: 2, isImporting: false });
+  });
+
   it("picks up an import it saw no start of from its progress", () => {
     archive().progressed({ current: 1, total: 3, imported: 1, errors: [] });
 

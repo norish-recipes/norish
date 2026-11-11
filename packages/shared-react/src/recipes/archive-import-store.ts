@@ -38,10 +38,10 @@ export const useArchiveImport = create<ArchiveImportState>()((set) => ({
         ? { current, imported, errors: [...prev.errors, ...errors] }
         : { ...IDLE, current, total, imported, errors, isImporting: true }
     ),
-  // A reload mid-import loses the start; the outcome then accounts for the total itself.
+  // Without a running import's start (a reload, or one begun elsewhere) the outcome is its own total.
   completed: ({ imported, notes, errors }) =>
     set((prev) => {
-      const total = prev.total || imported + errors.length;
+      const total = prev.isImporting ? prev.total : imported + errors.length;
 
       return { current: total, total, imported, notes, errors, isImporting: false };
     }),
