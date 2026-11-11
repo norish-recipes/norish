@@ -170,11 +170,13 @@ test("grocery create, update and delete reach the other browser without a reload
 });
 
 test("a change made before a fresh screen's subscriptions are live shows once they are", async () => {
-  const name = "realtime-in-de-kloof";
+  // Random: a Playwright timeout skips the `finally`, and a fixed name would fail the retry.
+  const name = `realtime-in-de-kloof-${randomUUID().slice(0, 8)}`;
   const context = await stack.newContext("a");
   const page = await context.newPage();
   // Hold what the page sends on its socket: the server takes no subscription until released.
-  const { promise: released, resolve: release } = Promise.withResolvers<void>();
+  let release!: () => void;
+  const released = new Promise<void>((resolve) => (release = resolve));
   const held: string[] = [];
   const listReads: string[] = [];
 

@@ -1,7 +1,7 @@
 {
   "extends": "@norish/tsconfig/base.json",
   "compilerOptions": {
-    "lib": ["ES2022", "ES2024.Promise", "dom"],
+    "lib": ["ES2022", "dom"],
     "types": ["node"],
     "noImplicitAny": false,
     "jsx": "preserve",
