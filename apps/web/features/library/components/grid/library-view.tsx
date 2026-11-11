@@ -42,7 +42,7 @@ export default function LibraryView({ variant }: { variant: RecipeViewMode }) {
   const { deleteCookbook } = useCookbooksMutations();
   const isSelecting = useRecipeSelection((state) => state.selected.size > 0);
   const selectRange = useRecipeSelection((state) => state.selectRange);
-  const { items, recipes, isLoading, isValidating, loadMore } = useLibraryList();
+  const { items, recipes, isLoading, isFetchingNextPage, loadMore } = useLibraryList();
   const hasAppliedFilters = hasAppliedRecipeFilters(filters);
   const selectRangeTo = (recipe: SelectedRecipe) => selectRange(recipe, recipes);
 
@@ -112,7 +112,7 @@ export default function LibraryView({ variant }: { variant: RecipeViewMode }) {
   return (
     <LibraryGrid
       emptyState={emptyState}
-      isFetchingMore={isValidating && !isLoading}
+      isFetchingMore={isFetchingNextPage}
       isLoading={isLoading}
       items={gridItems}
       loadMore={loadMore}

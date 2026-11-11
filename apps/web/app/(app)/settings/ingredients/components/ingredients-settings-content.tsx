@@ -63,7 +63,7 @@ export default function IngredientsSettingsContent() {
   // filters panel says flat.
   const { tree: asTree, ...searchFilters } = filters;
   const treeMode = asTree && !search && !hasIngredientFilters({ ...searchFilters, tree: true });
-  const { data, isLoading, isFetching, hasNextPage, isFetchingNextPage, fetchNextPage } =
+  const { data, isLoading, isPlaceholderData, hasNextPage, isFetchingNextPage, fetchNextPage } =
     useInfiniteQuery(
       trpc.ingredients.list.infiniteQueryOptions(
         { search: search || undefined, ...searchFilters, rootsOnly: treeMode || undefined, locale },
@@ -74,7 +74,8 @@ export default function IngredientsSettingsContent() {
   // deferred copy of a keyed list that a transition is replacing was seen to
   // keep the old page on screen with the new one's kinds folded into it.
   const items = useMemo(() => data?.pages.flatMap((page) => page.items) ?? [], [data?.pages]);
-  const settling = isPending || (isFetching && !isFetchingNextPage);
+  // Another search's rows standing in, not a reread of the rows showing.
+  const settling = isPending || isPlaceholderData;
   // The end of a short list is in view as the list is read again (a search
   // cleared, an edit landed): asking for the next page then must not cancel
   // that read, or the first page keeps what it had before it.

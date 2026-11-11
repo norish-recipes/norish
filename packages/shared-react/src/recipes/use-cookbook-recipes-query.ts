@@ -31,7 +31,8 @@ export type CookbookRecipesQueryResult = {
   recipes: RecipeDashboardDTO[];
   total: number;
   isLoading: boolean;
-  isValidating: boolean;
+  /** Only the next page: a reread of pages already showing draws no indicator. */
+  isFetchingNextPage: boolean;
   hasMore: boolean;
   loadMore: () => void;
   invalidate: () => void;
@@ -65,10 +66,11 @@ export function useCookbookRecipesQuery(
     [trpc, cookbookId]
   );
 
-  const { data, isLoading, isFetching, hasNextPage, fetchNextPage } = useInfiniteQuery({
-    ...infiniteQueryOptions,
-    enabled: enabled && Boolean(cookbookId),
-  });
+  const { data, isLoading, isFetching, isFetchingNextPage, hasNextPage, fetchNextPage } =
+    useInfiniteQuery({
+      ...infiniteQueryOptions,
+      enabled: enabled && Boolean(cookbookId),
+    });
 
   const recipes = useMemo(() => data?.pages?.flatMap((page) => page.recipes) ?? [], [data?.pages]);
   const hasMore = hasNextPage ?? false;
@@ -77,7 +79,7 @@ export function useCookbookRecipesQuery(
     recipes,
     total: data?.pages?.[0]?.total ?? 0,
     isLoading,
-    isValidating: isFetching,
+    isFetchingNextPage,
     hasMore,
     loadMore: useCallback(() => {
       if (hasMore && !isFetching) fetchNextPage();

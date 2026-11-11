@@ -101,6 +101,8 @@ const listEnd = vi.hoisted(() => ({
 }));
 const fetchNextPage = vi.fn();
 let hasNextPage = false;
+/** The list read's fetch state: a reread of rows showing, the next page, or another search's rows. */
+let listFetch = { isFetching: false, isFetchingNextPage: false, isPlaceholderData: false };
 vi.mock("@norish/shared-react/trpc", () => ({
   useTRPC: () => ({
     ingredients: {
@@ -190,9 +192,8 @@ vi.mock("@tanstack/react-query", () => ({
     return {
       data: { pages: [{ items, nextCursor: null }] },
       isLoading: false,
-      isFetching: false,
+      ...listFetch,
       hasNextPage,
-      isFetchingNextPage: false,
       fetchNextPage,
     };
   },
@@ -411,6 +412,7 @@ describe("IngredientsSettingsContent", () => {
     );
     listEnd.onIntersect = undefined;
     hasNextPage = false;
+    listFetch = { isFetching: false, isFetchingNextPage: false, isPlaceholderData: false };
     viewerLocale = "en";
     listInputs.length = 0;
     items = [onion, salt];
@@ -440,6 +442,20 @@ describe("IngredientsSettingsContent", () => {
       listEnd.onIntersect?.([{ isIntersecting: true }]);
     });
     expect(fetchNextPage).toHaveBeenCalledTimes(2);
+  });
+
+  it("settles only while another search's rows stand in, not while the rows showing are read again", () => {
+    const busy = () => screen.getByTestId("ingredients-searching").getAttribute("data-fetching");
+
+    listFetch = { isFetching: true, isFetchingNextPage: false, isPlaceholderData: false };
+    const { unmount } = render(<IngredientsSettingsContent />);
+
+    expect(busy()).toBe("false");
+    unmount();
+
+    listFetch = { isFetching: true, isFetchingNextPage: false, isPlaceholderData: true };
+    render(<IngredientsSettingsContent />);
+    expect(busy()).toBe("true");
   });
 
   it("shows each food's icon in its row, and the food glyph for one with none", () => {

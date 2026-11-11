@@ -32,7 +32,8 @@ export type RecipesQueryResult = {
   recipes: RecipeDashboardDTO[];
   total: number;
   isLoading: boolean;
-  isValidating: boolean;
+  /** Only the next page: a reread of pages already showing draws no indicator. */
+  isFetchingNextPage: boolean;
   hasMore: boolean;
   error: unknown;
   queryKey: QueryKey;
@@ -90,7 +91,7 @@ export function useRecipesQuery(filters: RecipeFilters = {}): RecipesQueryResult
   const recipesBaseKey = trpc.recipes.list.queryKey({});
   const recipesPath = useMemo(() => [recipesBaseKey[0]], [recipesBaseKey]);
 
-  const { data, error, isLoading, isFetching, hasNextPage, fetchNextPage } =
+  const { data, error, isLoading, isFetching, isFetchingNextPage, hasNextPage, fetchNextPage } =
     useInfiniteQuery(infiniteQueryOptions);
 
   const pages = data?.pages;
@@ -137,7 +138,7 @@ export function useRecipesQuery(filters: RecipeFilters = {}): RecipesQueryResult
     recipes,
     total,
     isLoading,
-    isValidating: isFetching,
+    isFetchingNextPage,
     hasMore,
     error,
     queryKey,

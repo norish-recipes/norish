@@ -21,7 +21,8 @@ export type LibraryQueryResult = {
   /** Counts both kinds. Nothing may read this as a recipe count. */
   total: number;
   isLoading: boolean;
-  isValidating: boolean;
+  /** Only the next page: a reread of pages already showing draws no indicator. */
+  isFetchingNextPage: boolean;
   hasMore: boolean;
   error: unknown;
   loadMore: () => void;
@@ -46,10 +47,11 @@ export function useLibraryQuery(
   );
   const queryKey = infiniteQueryOptions.queryKey;
 
-  const { data, error, isLoading, isFetching, hasNextPage, fetchNextPage } = useInfiniteQuery({
-    ...infiniteQueryOptions,
-    enabled,
-  });
+  const { data, error, isLoading, isFetching, isFetchingNextPage, hasNextPage, fetchNextPage } =
+    useInfiniteQuery({
+      ...infiniteQueryOptions,
+      enabled,
+    });
 
   const items = useMemo(() => data?.pages?.flatMap((page) => page.items) ?? [], [data?.pages]);
   const hasMore = hasNextPage ?? false;
@@ -59,7 +61,7 @@ export function useLibraryQuery(
     queryKey,
     total: data?.pages?.[0]?.total ?? 0,
     isLoading,
-    isValidating: isFetching,
+    isFetchingNextPage,
     hasMore,
     error,
     loadMore: useCallback(() => {
