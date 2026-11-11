@@ -7,6 +7,9 @@ export function settingsHref(tab: SettingsTab) {
   return `/settings/${tab}`;
 }
 
+/** The tab settings opens on. */
+export const SETTINGS_HREF = settingsHref("account");
+
 /** The tab a `/settings/<tab>` path names, if any. */
 export function settingsTabOf(pathname: string): SettingsTab | undefined {
   const segment = pathname.split("/")[2];

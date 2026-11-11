@@ -7,9 +7,9 @@ import {
   NAV_TABS,
   NavTabLink,
   navTabPosition,
-  SETTINGS_HREF,
 } from "@/components/navbar/nav-tabs";
 import NavbarUserMenu from "@/components/navbar/navbar-user-menu";
+import { SETTINGS_HREF } from "@/components/settings/settings-tab";
 import { useAutoHide } from "@/hooks/auto-hide";
 import { useActionBarStore } from "@/lib/action-bar-store";
 import {
