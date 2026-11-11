@@ -1,4 +1,5 @@
 import { Linter } from "eslint";
+import tseslint from "typescript-eslint";
 import { describe, expect, it } from "vitest";
 
 import { compiledReactConfig, reactConfig } from "./react.ts";
@@ -14,11 +15,11 @@ function lint(code: string): (string | null)[] {
 }
 
 /** The restricted-syntax messages JSX `code` gets under the React config. */
-function lintJsx(code: string): string[] {
+function lintJsx(code: string, parser?: Linter.Parser): string[] {
   const rules = { "no-restricted-syntax": reactConfig[0]?.rules?.["no-restricted-syntax"] };
 
   return new Linter()
-    .verify(code, [{ languageOptions: jsx, rules }], "file.js")
+    .verify(code, [{ languageOptions: { ...jsx, parser }, rules }], "file.js")
     .map(({ message }) => message);
 }
 
@@ -28,6 +29,34 @@ describe("reactConfig", () => {
       "dnd-kit numbers DndContext's aria-describedby from a counter the server and client don't share: give it id={useId()}.",
     ]);
     expect(lintJsx("const a = <DndContext id={id} sensors={s} />;")).toEqual([]);
+  });
+
+  it("asks for the generated key wherever a hand-written tRPC-shaped key is passed", () => {
+    const generated =
+      "A query key comes from its generated builder (trpc.x.y.queryKey(), .pathKey(), .pathFilter(), .queryFilter()), never a hand-written array.";
+
+    for (const code of [
+      'useQuery({ queryKey: ["calendar", "combined"], queryFn });',
+      'queryClient.invalidateQueries({ queryKey: [["recipes"]] });',
+      'queryClient.getQueryData(["groceries", "list"]);',
+      'client.setQueryData([["stores", "list"], { type: "query" }], []);',
+      'queryClient.cancelQueries([["recipes"]]);',
+      'useQuery({ queryKey: ["version", "latest"] as const, queryFn });',
+      'queryClient.removeQueries([["recipes", "get"]] as const);',
+    ]) {
+      expect(lintJsx(code, tseslint.parser), code).toEqual([generated]);
+    }
+    for (const code of [
+      "useQuery({ queryKey: trpc.calendar.listItems.queryKey(input), queryFn });",
+      "queryClient.invalidateQueries({ queryKey: [...trpc.recipes.get.pathKey()] });",
+      "queryClient.getQueryData(LATEST_VERSION_KEY);",
+      "useQuery({ queryKey: LATEST_VERSION_KEY, queryFn });",
+      'list.push(["groceries", "list"]);',
+      'queryClient.setQueryData(key, ["a", "b"]);',
+      "useQuery({ queryKey: key as QueryKey, queryFn });",
+    ]) {
+      expect(lintJsx(code, tseslint.parser), code).toEqual([]);
+    }
   });
 
   it('asks a TanStack Virtual component to opt out of the compiler with "use no memo"', () => {

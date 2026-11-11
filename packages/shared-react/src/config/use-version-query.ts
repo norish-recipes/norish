@@ -4,6 +4,9 @@ import { isUpdateAvailable } from "@norish/shared/lib/version";
 
 const GITHUB_TAGS_URL = "https://api.github.com/repos/norish-recipes/norish/tags";
 
+/** A GitHub read, not a tRPC one: no generated key exists for it. */
+const LATEST_VERSION_KEY = ["version", "latest"] as const;
+
 async function fetchLatestVersion(): Promise<string | null> {
   try {
     const response = await fetch(GITHUB_TAGS_URL, {
@@ -27,7 +30,7 @@ async function fetchLatestVersion(): Promise<string | null> {
 /** The app's version against the newest release tag. */
 export function useVersionQuery(currentVersion: string) {
   const { data: latestVersion, isLoading } = useQuery({
-    queryKey: ["version", "latest"],
+    queryKey: LATEST_VERSION_KEY,
     queryFn: fetchLatestVersion,
     staleTime: 60 * 60 * 1000,
     gcTime: 60 * 60 * 1000,

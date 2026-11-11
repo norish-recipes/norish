@@ -200,18 +200,20 @@ export function describeOfflineStorageContract(name: string, harness: StorageCon
 
     describe("purge on account switch", () => {
       const cacheOf = (storage: OfflineStorage) => createCacheManager({ storage, buster: "test" });
+      // A stand-in read, not a tRPC one.
+      const GREETING = ["greeting"];
 
       /** Adopt `owner` and wait until a read it made has been persisted. */
       async function readAs(storage: OfflineStorage, owner: string, value: string) {
         const manager = cacheOf(storage);
 
         await manager.reconcileIdentity({ sessionUserId: owner, isOffline: false });
-        manager.queryClient.setQueryData(["greeting"], value);
+        manager.queryClient.setQueryData(GREETING, value);
         await vi.waitFor(async () => {
           const restored = cacheOf(storage);
 
           await restored.reconcileIdentity({ sessionUserId: owner, isOffline: false });
-          expect(restored.queryClient.getQueryData(["greeting"])).toBe(value);
+          expect(restored.queryClient.getQueryData(GREETING)).toBe(value);
         });
 
         return manager;
@@ -227,7 +229,7 @@ export function describeOfflineStorageContract(name: string, harness: StorageCon
         await relaunched.reconcileIdentity({ sessionUserId: null, isOffline: true });
 
         expect(relaunched.owner()).toBe("u1");
-        expect(relaunched.queryClient.getQueryData(["greeting"])).toBe("kept for u1");
+        expect(relaunched.queryClient.getQueryData(GREETING)).toBe("kept for u1");
       });
 
       it("purges the departed owner's reads but leaves their Outbox dormant", async () => {
@@ -240,7 +242,7 @@ export function describeOfflineStorageContract(name: string, harness: StorageCon
 
         await manager.reconcileIdentity({ sessionUserId: "u2", isOffline: false });
 
-        expect(manager.queryClient.getQueryData(["greeting"])).toBeUndefined();
+        expect(manager.queryClient.getQueryData(GREETING)).toBeUndefined();
         expect(await readLastWarmedAt("u1", storage.keyval)).toBeNull();
         expect(await outbox.size("u1")).toBe(1);
 
@@ -250,7 +252,7 @@ export function describeOfflineStorageContract(name: string, harness: StorageCon
         expect(relaunched.owner()).toBe("u2");
 
         await relaunched.reconcileIdentity({ sessionUserId: "u1", isOffline: false });
-        expect(relaunched.queryClient.getQueryData(["greeting"])).toBeUndefined();
+        expect(relaunched.queryClient.getQueryData(GREETING)).toBeUndefined();
       });
 
       it("forgets the owner on sign-out", async () => {
