@@ -2,7 +2,7 @@
  * Once CalDAV is configured the card shows the summary, and its Edit button
  * opens the edit modal, which can close itself again.
  */
-import CalDavConfigCard from "@/features/calendar/components/caldav/caldav-config-card";
+import CaldavConfigCard from "@/features/calendar/components/caldav/caldav-config-card";
 import { fireEvent, render, screen } from "@testing-library/react";
 import { describe, expect, it, vi } from "vitest";
 
@@ -12,12 +12,9 @@ vi.mock("next-intl", () => ({
   useTranslations: () => (key: string) => key,
 }));
 
-vi.mock("@/features/calendar/components/caldav/context", () => ({
-  useCalDavSettingsContext: () => ({
-    config: { serverUrl: "https://cal.example.com" },
-    saveConfig: vi.fn(),
-    testConnection: vi.fn(),
-  }),
+vi.mock("@norish/shared-react/calendar", () => ({
+  useCaldavConfigQuery: () => ({ config: { serverUrl: "https://cal.example.com" } }),
+  useCaldavMutations: () => ({ saveConfig: vi.fn(), isSavingConfig: false }),
 }));
 
 vi.mock("@/features/calendar/components/caldav/caldav-config-summary", () => ({
@@ -39,9 +36,9 @@ vi.mock("@/features/calendar/components/caldav/caldav-config-edit-modal", () => 
     ) : null,
 }));
 
-describe("CalDavConfigCard", () => {
+describe("CaldavConfigCard", () => {
   it("opens the edit modal from the summary and closes it again", () => {
-    render(<CalDavConfigCard />);
+    render(<CaldavConfigCard />);
 
     expect(screen.queryByRole("dialog")).not.toBeInTheDocument();
 

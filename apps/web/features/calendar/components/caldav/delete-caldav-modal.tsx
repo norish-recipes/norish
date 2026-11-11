@@ -7,24 +7,27 @@ import { usePending } from "@/hooks/use-pending";
 import { Modal } from "@heroui/react";
 import { useTranslations } from "next-intl";
 
-interface DeleteCalDavModalProps {
+interface DeleteCaldavModalProps {
   isOpen: boolean;
   onClose: () => void;
-  onConfirm: (deleteEvents: boolean) => Promise<void>;
+  /** Resolves whether the config was deleted; the modal closes only then. */
+  onConfirm: (deleteEvents: boolean) => Promise<boolean>;
 }
-export default function DeleteCalDavModal({ isOpen, onClose, onConfirm }: DeleteCalDavModalProps) {
+export default function DeleteCaldavModal({ isOpen, onClose, onConfirm }: DeleteCaldavModalProps) {
   const t = useTranslations("settings.caldav.deleteModal");
   const tActions = useTranslations("common.actions");
   const [deleteEvents, setDeleteEvents] = useState(false);
   const [deleting, whileDeleting] = usePending();
   const handleConfirm = async () => {
     await whileDeleting(() =>
-      onConfirm(deleteEvents).then(() => {
+      onConfirm(deleteEvents).then((deleted) => {
+        if (!deleted) return;
         setDeleteEvents(false);
         onClose();
       })
     );
   };
+
   return (
     <Modal.Backdrop className="z-[1099]" isOpen={isOpen} onOpenChange={onClose}>
       <Modal.Container className="z-[1100]">

@@ -1,5 +1,6 @@
 "use client";
 
+import { useState } from "react";
 import { SettingsCard } from "@/components/settings/settings-card";
 import { ActionButton } from "@/components/shared/action-button";
 import { ChipButton } from "@/components/shared/chip-button";
@@ -14,36 +15,38 @@ import {
 import { Button, Chip, Pagination, Popover, Table } from "@heroui/react";
 import { useFormatter, useNow, useTranslations } from "next-intl";
 
+import type { CaldavSyncStatus } from "@norish/shared/contracts/dto/caldav-sync-status";
+import {
+  useCaldavMutations,
+  useCaldavSummaryQuery,
+  useCaldavSyncStatusQuery,
+} from "@norish/shared-react/calendar";
 import { useHydrated } from "@norish/shared-react/platform";
 
-import { useCalDavSettingsContext } from "./context";
 import { FIRST_SYNC_STATUS_PAGE } from "./first-sync-status-page";
 
-export default function CalDavSyncStatusCard() {
+export default function CaldavSyncStatusCard() {
   const t = useTranslations("settings.caldav.syncStatus");
-  const {
-    syncStatuses,
+  const { pageSize } = FIRST_SYNC_STATUS_PAGE;
+  const [syncStatusPage, setSyncStatusPage] = useState<number>(FIRST_SYNC_STATUS_PAGE.page);
+  const [syncStatusFilter, setSyncStatusFilter] = useState<CaldavSyncStatus | undefined>(
+    FIRST_SYNC_STATUS_PAGE.statusFilter
+  );
+  const { statuses: syncStatuses, total: syncStatusTotal } = useCaldavSyncStatusQuery(
     syncStatusPage,
-    syncStatusTotal,
-    syncStatusSummary,
-    setSyncStatusPage,
-    syncStatusFilter,
-    setSyncStatusFilter,
-    triggerManualSync,
-    isTriggeringSync: syncing,
-  } = useCalDavSettingsContext();
+    pageSize,
+    syncStatusFilter
+  );
+  const { summary: syncStatusSummary } = useCaldavSummaryQuery();
+  const { triggerSync, isTriggeringSync: syncing } = useCaldavMutations();
   const format = useFormatter();
   // relativeTime needs a clock; this one moves on each minute.
   const now = useNow({ updateInterval: 60_000 });
   const hydrated = useHydrated();
-  const handleFilterClick = (status: "pending" | "synced" | "failed" | "removed") => {
-    if (syncStatusFilter === status) {
-      // Click same badge again to clear filter
-      setSyncStatusFilter(undefined);
-    } else {
-      setSyncStatusFilter(status);
-    }
-    setSyncStatusPage(1); // Reset to first page
+  // A second click on the active filter clears it.
+  const handleFilterClick = (status: CaldavSyncStatus) => {
+    setSyncStatusFilter(syncStatusFilter === status ? undefined : status);
+    setSyncStatusPage(1);
   };
   const getStatusColor = (status: string) => {
     switch (status) {
@@ -59,7 +62,7 @@ export default function CalDavSyncStatusCard() {
         return "default";
     }
   };
-  const formatDate = (dateString: string | null | undefined) => {
+  const formatDate = (dateString: Date | string | null | undefined) => {
     if (!dateString) return "—";
     try {
       // "3 minutes ago" only once hydrated: the server's clock is not the browser's.
@@ -70,7 +73,6 @@ export default function CalDavSyncStatusCard() {
       return "—";
     }
   };
-  const { pageSize } = FIRST_SYNC_STATUS_PAGE;
   const totalPages = Math.ceil(syncStatusTotal / pageSize);
   const startIndex = (syncStatusPage - 1) * pageSize + 1;
   const endIndex = Math.min(syncStatusPage * pageSize, syncStatusTotal);
@@ -83,7 +85,7 @@ export default function CalDavSyncStatusCard() {
           icon={ArrowPathIcon}
           isPending={syncing}
           size="sm"
-          onPress={triggerManualSync}
+          onPress={triggerSync}
         >
           {t("syncNow")}
         </ActionButton>
@@ -91,7 +93,6 @@ export default function CalDavSyncStatusCard() {
       icon={ClockIcon}
       title={t("title")}
     >
-      {/* Summary Badges - Clickable Filters */}
       <div className="flex flex-col gap-3">
         <div className="flex flex-wrap gap-2">
           <ChipButton
@@ -136,7 +137,6 @@ export default function CalDavSyncStatusCard() {
           </ChipButton>
         </div>
 
-        {/* Filter Status and Count */}
         <div className="flex items-center justify-between">
           {syncStatusFilter ? (
             <Button
@@ -166,7 +166,7 @@ export default function CalDavSyncStatusCard() {
       </div>
       <Table className="p-0">
         <Table.ScrollContainer>
-          <Table.Content aria-label="CalDAV sync status">
+          <Table.Content aria-label={t("title")}>
             <Table.Header>
               <Table.Column isRowHeader id="item">
                 {t("tableHeaders.item")}

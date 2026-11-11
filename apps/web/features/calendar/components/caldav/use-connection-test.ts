@@ -3,15 +3,14 @@
 import { useState } from "react";
 
 import type { CalDavCalendarInfo, ConnectionTestResult } from "@norish/shared/contracts";
-
-import { useCalDavSettingsContext } from "./context";
+import { useCaldavMutations } from "@norish/shared-react/calendar";
 
 /**
  * Tests a CalDAV connection and offers the calendars it found, keeping the
  * calendar already picked while the server still lists it, else the first.
  */
 export function useConnectionTest(setCalendarUrl: (url: string) => void) {
-  const { testConnection, isTestingConnection } = useCalDavSettingsContext();
+  const { testConnection, isTestingConnection } = useCaldavMutations();
   const [calendars, setCalendars] = useState<CalDavCalendarInfo[]>([]);
   const [testResult, setTestResult] = useState<ConnectionTestResult | null>(null);
   // A certificate the user trusted for this server; saved with the config.
@@ -26,7 +25,12 @@ export function useConnectionTest(setCalendarUrl: (url: string) => void) {
   ) => {
     setTestResult(null);
     setCalendars([]);
-    const result = await testConnection(serverUrl, username, password, certificate);
+    const result = await testConnection({
+      serverUrl,
+      username,
+      password,
+      trustedCertificate: certificate,
+    });
 
     setTestResult(result);
     const found = result.success ? (result.calendars ?? []) : [];

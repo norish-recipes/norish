@@ -9,55 +9,51 @@ import { ServerIcon } from "@heroicons/react/24/outline";
 import { Chip, useOverlayState } from "@heroui/react";
 import { useTranslations } from "next-intl";
 
-import { useCalDavSettingsContext } from "./context";
-import DeleteCalDavModal from "./delete-caldav-modal";
+import {
+  useCaldavConfigQuery,
+  useCaldavConnectionQuery,
+  useCaldavMutations,
+} from "@norish/shared-react/calendar";
 
-interface CalDavConfigSummaryProps {
+import DeleteCaldavModal from "./delete-caldav-modal";
+
+interface CaldavConfigSummaryProps {
   onEditClick: () => void;
 }
-export default function CalDavConfigSummary({ onEditClick }: CalDavConfigSummaryProps) {
+export default function CaldavConfigSummary({ onEditClick }: CaldavConfigSummaryProps) {
   const t = useTranslations("settings.caldav.config");
+  const { config } = useCaldavConfigQuery();
+  const { saveConfig, deleteConfig } = useCaldavMutations();
   const {
-    config,
-    syncStatusSummary: _syncStatusSummary,
-    checkConnectionStatus,
-    saveConfig,
-    syncStatuses,
-    deleteConfig,
-  } = useCalDavSettingsContext();
+    isConnected,
+    message: connectionMessage,
+    invalidate: recheckConnection,
+  } = useCaldavConnectionQuery();
   const { isOpen: isDeleteOpen, open: onDeleteOpen, close: onDeleteClose } = useOverlayState();
   const [connectionStatus, setConnectionStatus] = useState<
     "checking" | "connected" | "disconnected"
   >("checking");
-  const [pollingInterval, setPollingInterval] = useState(60000); // Start with 60s
-  const [_lastCheck, setLastCheck] = useState<Date | null>(null);
+  const [pollingInterval, setPollingInterval] = useState(60000);
 
-  // Check connection status
   const checkConnection = useCallback(async () => {
     if (!config) return;
     setConnectionStatus("checking");
-    const result = await checkConnectionStatus().catch(() => null);
+    recheckConnection();
+    const result = { success: isConnected, message: connectionMessage };
 
-    setConnectionStatus(result?.success ? "connected" : "disconnected");
-    if (result) setLastCheck(new Date());
-
-    // Reset interval to 60s on success, use exponential backoff on failure
-    if (result?.success) {
+    setConnectionStatus(result.success ? "connected" : "disconnected");
+    if (result.success) {
       setPollingInterval(60000);
     } else {
-      setPollingInterval((prev) => Math.min(prev * 2, 300000)); // Max 5 minutes
+      setPollingInterval((prev) => Math.min(prev * 2, 300000));
     }
-  }, [config, checkConnectionStatus]);
+  }, [config, recheckConnection, isConnected, connectionMessage]);
 
-  // Initial check and polling setup
   useEffect(() => {
     if (!config) return;
-
-    // Check immediately
     checkConnection();
-
-    // Set up polling
     const intervalId = setInterval(checkConnection, pollingInterval);
+
     return () => clearInterval(intervalId);
   }, [config, pollingInterval, checkConnection]);
   const handleToggleEnabled = async (enabled: boolean) => {
@@ -65,8 +61,8 @@ export default function CalDavConfigSummary({ onEditClick }: CalDavConfigSummary
     await saveConfig({
       serverUrl: config.serverUrl,
       username: config.username,
+      // Empty keeps the stored password.
       password: "",
-      // Don't change password
       enabled,
       breakfastTime: config.breakfastTime,
       lunchTime: config.lunchTime,
@@ -74,17 +70,9 @@ export default function CalDavConfigSummary({ onEditClick }: CalDavConfigSummary
       snackTime: config.snackTime,
     });
   };
+
   if (!config) return null;
 
-  // Find most recent sync timestamp
-  const _mostRecentSync = syncStatuses.reduce(
-    (latest, status) => {
-      if (!status.lastSyncAt) return latest;
-      const syncDate = new Date(status.lastSyncAt);
-      return !latest || syncDate > latest ? syncDate : latest;
-    },
-    null as Date | null
-  );
   const getConnectionStatusColor = () => {
     switch (connectionStatus) {
       case "connected":
@@ -109,6 +97,7 @@ export default function CalDavConfigSummary({ onEditClick }: CalDavConfigSummary
         return t("connectionStatus.unknown");
     }
   };
+
   return (
     <>
       <SettingsCard
@@ -137,7 +126,6 @@ export default function CalDavConfigSummary({ onEditClick }: CalDavConfigSummary
         icon={ServerIcon}
         title={t("title")}
       >
-        {/* Server URL and Enabled Toggle */}
         <div className="bg-surface-secondary flex flex-col justify-between gap-4 rounded-lg p-3 sm:flex-row sm:items-center">
           <div className="min-w-0 flex-1">
             <p className="text-foreground mb-1 text-base font-medium">{t("serverUrl")}</p>
@@ -156,14 +144,7 @@ export default function CalDavConfigSummary({ onEditClick }: CalDavConfigSummary
         </div>
       </SettingsCard>
 
-      <DeleteCalDavModal
-        isOpen={isDeleteOpen}
-        onClose={onDeleteClose}
-        onConfirm={async (deleteEvents) => {
-          await deleteConfig(deleteEvents);
-          onDeleteClose();
-        }}
-      />
+      <DeleteCaldavModal isOpen={isDeleteOpen} onClose={onDeleteClose} onConfirm={deleteConfig} />
     </>
   );
 }

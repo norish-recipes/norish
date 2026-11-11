@@ -5,9 +5,15 @@ import { usePlatform } from "../platform/platform";
 import { useTRPC } from "../trpc";
 import { useCaldavCacheHelpers } from "./use-caldav-cache";
 
+const outcome = (write: Promise<unknown>): Promise<boolean> =>
+  write.then(
+    () => true,
+    () => false
+  );
+
 export function useCaldavMutations(): CaldavMutationsResult {
   const trpc = useTRPC();
-  const { toast } = usePlatform();
+  const { toast, showError } = usePlatform();
   const {
     cachedConfigVersion,
     setConfig,
@@ -28,12 +34,13 @@ export function useCaldavMutations(): CaldavMutationsResult {
           description: toast.translate("calendar.caldav.configSavedDescription"),
         });
       },
+      onError: (error) => showError(error, "caldav:save-config"),
     })
   );
   const { mutateAsync: mutateSaveConfigAsync } = saveConfigMutation;
   const testConnectionMutation = useMutation(trpc.caldav.testConnection.mutationOptions());
-  const fetchCalendarsMutation = useMutation(trpc.caldav.fetchCalendars.mutationOptions());
-  const deleteConfigMutation = useMutation(
+  const { mutateAsync: mutateTestConnectionAsync } = testConnectionMutation;
+  const { mutateAsync: mutateDeleteConfigAsync } = useMutation(
     trpc.caldav.deleteConfig.mutationOptions({
       onSuccess: () => {
         setConfig(() => null);
@@ -46,9 +53,9 @@ export function useCaldavMutations(): CaldavMutationsResult {
           description: toast.translate("calendar.caldav.configDeletedDescription"),
         });
       },
+      onError: (error) => showError(error, "caldav:delete-config"),
     })
   );
-  const { mutateAsync: mutateDeleteConfigAsync } = deleteConfigMutation;
   const triggerSyncMutation = useMutation(
     trpc.caldav.triggerSync.mutationOptions({
       onSuccess: () => {
@@ -58,32 +65,24 @@ export function useCaldavMutations(): CaldavMutationsResult {
           description: toast.translate("calendar.caldav.retryStartedDescription"),
         });
       },
+      onError: (error) => showError(error, "caldav:trigger-sync"),
     })
   );
-  const { mutateAsync: mutateTriggerSyncAsync } = triggerSyncMutation;
-  const syncAllMutation = useMutation(trpc.caldav.syncAll.mutationOptions());
-  const { mutateAsync: mutateSyncAllAsync } = syncAllMutation;
+  const { mutate: mutateTriggerSync } = triggerSyncMutation;
 
   return {
     saveConfig: (input: SaveCaldavConfigInput) =>
-      mutateSaveConfigAsync({ ...input, version: input.version ?? cachedConfigVersion() }),
-    testConnection: testConnectionMutation.mutateAsync,
-    fetchCalendars: fetchCalendarsMutation.mutateAsync,
-    deleteConfig: async (deleteEvents: boolean = false) => {
-      await mutateDeleteConfigAsync({ deleteEvents, version: cachedConfigVersion() });
-    },
-    // Drop the server's answer: callers only await the sync's start.
-    triggerSync: async () => {
-      await mutateTriggerSyncAsync();
-    },
-    syncAll: async () => {
-      await mutateSyncAllAsync();
-    },
+      outcome(mutateSaveConfigAsync({ ...input, version: input.version ?? cachedConfigVersion() })),
+    testConnection: (input) =>
+      mutateTestConnectionAsync(input).catch((error: unknown) => ({
+        success: false,
+        message: error instanceof Error ? error.message : String(error),
+      })),
+    deleteConfig: (deleteEvents = false) =>
+      outcome(mutateDeleteConfigAsync({ deleteEvents, version: cachedConfigVersion() })),
+    triggerSync: () => mutateTriggerSync(),
     isSavingConfig: saveConfigMutation.isPending,
     isTestingConnection: testConnectionMutation.isPending,
-    isFetchingCalendars: fetchCalendarsMutation.isPending,
-    isDeletingConfig: deleteConfigMutation.isPending,
     isTriggeringSync: triggerSyncMutation.isPending,
-    isSyncingAll: syncAllMutation.isPending,
   };
 }

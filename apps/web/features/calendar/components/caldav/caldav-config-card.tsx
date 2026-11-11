@@ -19,24 +19,25 @@ import {
 } from "@heroui/react";
 import { useTranslations } from "next-intl";
 
-import { useCalDavSettingsContext } from "./context";
-import { useConnectionTest } from "./use-connection-test";
-import CalDavConfigEditModal from "./caldav-config-edit-modal";
-import CalDavConfigSummary from "./caldav-config-summary";
-import { UntrustedCertificateNote } from "./untrusted-certificate-note";
+import { useCaldavConfigQuery, useCaldavMutations } from "@norish/shared-react/calendar";
 
-export default function CalDavConfigCard() {
+import CaldavConfigEditModal from "./caldav-config-edit-modal";
+import CaldavConfigSummary from "./caldav-config-summary";
+import { UntrustedCertificateNote } from "./untrusted-certificate-note";
+import { useConnectionTest } from "./use-connection-test";
+
+export default function CaldavConfigCard() {
   const t = useTranslations("settings.caldav.setup");
   const tActions = useTranslations("common.actions");
   const tSecret = useTranslations("common.secret");
-  const { config, saveConfig, isSavingConfig: saving } = useCalDavSettingsContext();
+  const { config } = useCaldavConfigQuery();
+  const { saveConfig, isSavingConfig: saving } = useCaldavMutations();
   const {
     isOpen: isEditModalOpen,
     open: onEditModalOpen,
     close: onEditModalClose,
   } = useOverlayState();
 
-  // Initial setup form state (only used when no config exists)
   const [serverUrl, setServerUrl] = useState("");
   const [calendarUrl, setCalendarUrl] = useState<string | null>(null);
   const {
@@ -59,7 +60,7 @@ export default function CalDavConfigCard() {
   const handleTestConnection = () => runTest(serverUrl, username, password, calendarUrl);
   const handleInitialSetup = async () => {
     setTestResult(null);
-    await saveConfig({
+    const saved = await saveConfig({
       serverUrl,
       calendarUrl,
       username,
@@ -70,24 +71,24 @@ export default function CalDavConfigCard() {
       dinnerTime,
       snackTime,
       trustedCertificate,
-    }).then(() => setPassword("")); // Clear password after save
+    });
+
+    if (saved) setPassword("");
   };
 
-  // If config exists, show summary
   if (config) {
     return (
       <>
-        <CalDavConfigSummary onEditClick={onEditModalOpen} />
-        <CalDavConfigEditModal isOpen={isEditModalOpen} onClose={onEditModalClose} />
+        <CaldavConfigSummary onEditClick={onEditModalOpen} />
+        <CaldavConfigEditModal isOpen={isEditModalOpen} onClose={onEditModalClose} />
       </>
     );
   }
 
-  // If no config, show initial setup form with guidance
   const canSave = serverUrl && username && password && calendarUrl;
+
   return (
     <SettingsCard description={t("description")} icon={ServerIcon} title={t("title")}>
-      {/* Guidance Section */}
       <Note status="accent" title={t("gettingStarted")}>
         <p className="mb-2">{t("providerDescription")}</p>
         <ul className="ml-4 list-disc space-y-1">
@@ -119,17 +120,16 @@ export default function CalDavConfigCard() {
         </ul>
       </Note>
 
-      {/* Setup Form */}
       <TextField isRequired value={serverUrl} onChange={setServerUrl}>
         <Label>{t("serverUrlLabel")}</Label>
-        <Input variant="secondary" placeholder={t("serverUrlPlaceholder")} />
+        <Input placeholder={t("serverUrlPlaceholder")} variant="secondary" />
         <Description>{t("serverUrlDescription")}</Description>
       </TextField>
 
       <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
         <TextField isRequired value={username} onChange={setUsername}>
           <Label>{t("usernameLabel")}</Label>
-          <Input variant="secondary" placeholder={t("usernamePlaceholder")} />
+          <Input placeholder={t("usernamePlaceholder")} variant="secondary" />
         </TextField>
         <TextField
           isRequired
@@ -160,12 +160,12 @@ export default function CalDavConfigCard() {
 
       {/* Calendar Selection - always visible, disabled until calendars fetched */}
       <Select
-        variant="secondary"
         isDisabled={calendars.length === 0}
         placeholder={
           calendars.length === 0 ? t("calendarPlaceholderDisabled") : t("calendarPlaceholder")
         }
         value={calendarUrl}
+        variant="secondary"
         onChange={(selected) => {
           setCalendarUrl(typeof selected === "string" ? selected : null);
         }}
@@ -192,22 +192,22 @@ export default function CalDavConfigCard() {
       <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
         <TextField value={breakfastTime} onChange={setBreakfastTime}>
           <Label>{t("breakfastTime")}</Label>
-          <Input variant="secondary" placeholder="07:00-08:00" />
+          <Input placeholder="07:00-08:00" variant="secondary" />
           <Description>{t("timeFormat")}</Description>
         </TextField>
         <TextField value={lunchTime} onChange={setLunchTime}>
           <Label>{t("lunchTime")}</Label>
-          <Input variant="secondary" placeholder="12:00-13:00" />
+          <Input placeholder="12:00-13:00" variant="secondary" />
           <Description>{t("timeFormat")}</Description>
         </TextField>
         <TextField value={dinnerTime} onChange={setDinnerTime}>
           <Label>{t("dinnerTime")}</Label>
-          <Input variant="secondary" placeholder="18:00-19:00" />
+          <Input placeholder="18:00-19:00" variant="secondary" />
           <Description>{t("timeFormat")}</Description>
         </TextField>
         <TextField value={snackTime} onChange={setSnackTime}>
           <Label>{t("snackTime")}</Label>
-          <Input variant="secondary" placeholder="15:00-16:00" />
+          <Input placeholder="15:00-16:00" variant="secondary" />
           <Description>{t("timeFormat")}</Description>
         </TextField>
       </div>

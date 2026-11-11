@@ -2,7 +2,7 @@
  * Before CalDAV is configured, Test works as soon as the credentials are in and
  * nothing tests on a keystroke: a half-typed password failed and never retried (#703).
  */
-import CalDavConfigCard from "@/features/calendar/components/caldav/caldav-config-card";
+import CaldavConfigCard from "@/features/calendar/components/caldav/caldav-config-card";
 import { fireEvent, render, screen, waitFor } from "@testing-library/react";
 import { describe, expect, it, vi } from "vitest";
 
@@ -17,13 +17,19 @@ const testConnection = vi.fn(async (..._args: unknown[]): Promise<Record<string,
   message: "fetch failed",
 }));
 
-vi.mock("@/features/calendar/components/caldav/context", () => ({
-  useCalDavSettingsContext: () => ({ config: null, saveConfig: vi.fn(), testConnection }),
+vi.mock("@norish/shared-react/calendar", () => ({
+  useCaldavConfigQuery: () => ({ config: null }),
+  useCaldavMutations: () => ({
+    saveConfig: vi.fn(),
+    testConnection,
+    isSavingConfig: false,
+    isTestingConnection: false,
+  }),
 }));
 
 describe("CalDAV setup card", () => {
   it("tests only on Test, which needs no calendar picked", () => {
-    render(<CalDavConfigCard />);
+    render(<CaldavConfigCard />);
     const field = (name: string) => screen.getByPlaceholderText(`${name}Placeholder`);
     const test = screen.getByRole("button", { name: "test" });
 
@@ -38,12 +44,12 @@ describe("CalDAV setup card", () => {
     expect(test).toBeEnabled();
 
     fireEvent.click(test);
-    expect(testConnection).toHaveBeenCalledWith(
-      "https://cloud.example/remote.php/dav",
-      "chef",
-      "s",
-      null
-    );
+    expect(testConnection).toHaveBeenCalledWith({
+      serverUrl: "https://cloud.example/remote.php/dav",
+      username: "chef",
+      password: "s",
+      trustedCertificate: null,
+    });
   });
 
   it("tests again trusting the certificate the server was refused over (#703)", async () => {
@@ -52,7 +58,7 @@ describe("CalDAV setup card", () => {
       message: "fetch failed: unable to get local issuer certificate",
       untrustedCertificate: { pem: "PEM", name: "nextcloud.internal", fingerprint: "AB:CD" },
     });
-    render(<CalDavConfigCard />);
+    render(<CaldavConfigCard />);
     const field = (name: string) => screen.getByPlaceholderText(`${name}Placeholder`);
 
     fireEvent.change(field("serverUrl"), { target: { value: "https://nextcloud.internal/dav" } });
@@ -64,12 +70,12 @@ describe("CalDAV setup card", () => {
     fireEvent.click(screen.getByRole("button", { name: "trust" }));
 
     await waitFor(() =>
-      expect(testConnection).toHaveBeenLastCalledWith(
-        "https://nextcloud.internal/dav",
-        "chef",
-        "secret",
-        "PEM"
-      )
+      expect(testConnection).toHaveBeenLastCalledWith({
+        serverUrl: "https://nextcloud.internal/dav",
+        username: "chef",
+        password: "secret",
+        trustedCertificate: "PEM",
+      })
     );
   });
 });

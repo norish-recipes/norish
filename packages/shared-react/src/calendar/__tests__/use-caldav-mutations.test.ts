@@ -18,10 +18,8 @@ const mockSummaryQueryKey = ["caldav", "getSummary"];
 // Mock mutation functions
 const mockSaveConfigMutate = vi.fn();
 const mockTestConnectionMutate = vi.fn();
-const mockFetchCalendarsMutate = vi.fn();
 const mockDeleteConfigMutate = vi.fn();
 const mockTriggerSyncMutate = vi.fn();
-const mockSyncAllMutate = vi.fn();
 const mockGetConfigQueryFn = vi.fn();
 const mockGetSyncStatusQueryFn = vi.fn();
 const mockGetSummaryQueryFn = vi.fn();
@@ -63,12 +61,6 @@ vi.mock("../../trpc", () => ({
           mutationFn: mockTestConnectionMutate,
         }),
       },
-      fetchCalendars: {
-        mutationOptions: (options?: object) => ({
-          ...options,
-          mutationFn: mockFetchCalendarsMutate,
-        }),
-      },
       deleteConfig: {
         mutationOptions: (options?: object) => ({
           ...options,
@@ -79,12 +71,6 @@ vi.mock("../../trpc", () => ({
         mutationOptions: (options?: object) => ({
           ...options,
           mutationFn: mockTriggerSyncMutate,
-        }),
-      },
-      syncAll: {
-        mutationOptions: (options?: object) => ({
-          ...options,
-          mutationFn: mockSyncAllMutate,
         }),
       },
     },
@@ -158,7 +144,7 @@ describe("CalDAV Mutation Hooks", () => {
       expect(mockSaveConfigMutate.mock.calls[0]?.[0]).toEqual(configInput);
     });
 
-    it("returns saved config on success", async () => {
+    it("resolves whether the config was saved", async () => {
       const configInput = {
         serverUrl: "https://caldav.example.com",
         username: "testuser",
@@ -178,14 +164,13 @@ describe("CalDAV Mutation Hooks", () => {
         wrapper: createTestWrapper(queryClient),
       });
 
-      let savedConfig: any;
+      let saved: boolean | undefined;
 
       await act(async () => {
-        savedConfig = await result.current.saveConfig(configInput);
+        saved = await result.current.saveConfig(configInput);
       });
 
-      expect(savedConfig.serverUrl).toBe(configInput.serverUrl);
-      expect(savedConfig.username).toBe(configInput.username);
+      expect(saved).toBe(true);
     });
   });
 
@@ -393,27 +378,9 @@ describe("CalDAV Mutation Hooks", () => {
         wrapper: createTestWrapper(queryClient),
       });
 
-      await act(async () => {
-        await result.current.triggerSync();
-      });
+      act(() => result.current.triggerSync());
 
-      expect(mockTriggerSyncMutate).toHaveBeenCalled();
-    });
-  });
-
-  describe("useCaldavMutations.syncAll", () => {
-    it("calls syncAll mutation", async () => {
-      mockSyncAllMutate.mockResolvedValueOnce({ success: true });
-
-      const { result } = renderHook(() => useCaldavMutations(), {
-        wrapper: createTestWrapper(queryClient),
-      });
-
-      await act(async () => {
-        await result.current.syncAll();
-      });
-
-      expect(mockSyncAllMutate).toHaveBeenCalled();
+      await waitFor(() => expect(mockTriggerSyncMutate).toHaveBeenCalled());
     });
   });
 
@@ -456,86 +423,12 @@ describe("CalDAV Mutation Hooks", () => {
       expect(result.current.isTestingConnection).toBe(false);
     });
 
-    it("tracks isDeletingConfig loading state", async () => {
-      const { result } = renderHook(() => useCaldavMutations(), {
-        wrapper: createTestWrapper(queryClient),
-      });
-
-      expect(result.current.isDeletingConfig).toBe(false);
-    });
-
     it("tracks isTriggeringSync loading state", async () => {
       const { result } = renderHook(() => useCaldavMutations(), {
         wrapper: createTestWrapper(queryClient),
       });
 
       expect(result.current.isTriggeringSync).toBe(false);
-    });
-
-    it("tracks isFetchingCalendars loading state", async () => {
-      const { result } = renderHook(() => useCaldavMutations(), {
-        wrapper: createTestWrapper(queryClient),
-      });
-
-      expect(result.current.isFetchingCalendars).toBe(false);
-    });
-
-    it("tracks isSyncingAll loading state", async () => {
-      const { result } = renderHook(() => useCaldavMutations(), {
-        wrapper: createTestWrapper(queryClient),
-      });
-
-      expect(result.current.isSyncingAll).toBe(false);
-    });
-  });
-
-  describe("useCaldavMutations.fetchCalendars", () => {
-    it("calls fetchCalendars mutation with correct data", async () => {
-      const fetchInput = {
-        serverUrl: "https://caldav.example.com",
-        username: "testuser",
-        password: "testpass",
-      };
-
-      mockFetchCalendarsMutate.mockResolvedValueOnce([
-        { url: "https://caldav.example.com/cal/", displayName: "Default Calendar" },
-      ]);
-
-      const { result } = renderHook(() => useCaldavMutations(), {
-        wrapper: createTestWrapper(queryClient),
-      });
-
-      await act(async () => {
-        await result.current.fetchCalendars(fetchInput);
-      });
-
-      expect(mockFetchCalendarsMutate).toHaveBeenCalledWith(fetchInput, expect.anything());
-    });
-
-    it("returns calendar list on success", async () => {
-      const mockCalendars = [
-        { url: "https://caldav.example.com/cal/default/", displayName: "Default Calendar" },
-        { url: "https://caldav.example.com/cal/meals/", displayName: "Meals" },
-      ];
-
-      mockFetchCalendarsMutate.mockResolvedValueOnce(mockCalendars);
-
-      const { result } = renderHook(() => useCaldavMutations(), {
-        wrapper: createTestWrapper(queryClient),
-      });
-
-      let calendars: any;
-
-      await act(async () => {
-        calendars = await result.current.fetchCalendars({
-          serverUrl: "https://caldav.example.com",
-          username: "testuser",
-          password: "testpass",
-        });
-      });
-
-      expect(calendars).toHaveLength(2);
-      expect(calendars[0].displayName).toBe("Default Calendar");
     });
   });
 
@@ -564,8 +457,9 @@ describe("CalDAV Mutation Hooks", () => {
       await act(async () => {
         await result.current.saveConfig(configInput);
         await result.current.deleteConfig();
-        await result.current.triggerSync();
+        result.current.triggerSync();
       });
+      await waitFor(() => expect(platform.toast.show).toHaveBeenCalledTimes(3));
 
       expect(vi.mocked(platform.toast.show).mock.calls.map(([toast]) => toast)).toEqual([
         {
@@ -584,6 +478,53 @@ describe("CalDAV Mutation Hooks", () => {
           description: "calendar.caldav.retryStartedDescription",
         },
       ]);
+    });
+  });
+
+  describe("useCaldavMutations failures", () => {
+    it("shows a failed save and resolves that nothing was saved", async () => {
+      const platform = fakePlatformAdapter();
+
+      mockSaveConfigMutate.mockRejectedValueOnce(new Error("refused"));
+      const { result } = renderHook(() => useCaldavMutations(), {
+        wrapper: createTestWrapper(queryClient, platform),
+      });
+      let saved: boolean | undefined;
+
+      await act(async () => {
+        saved = await result.current.saveConfig({
+          serverUrl: "https://caldav.example.com",
+          username: "testuser",
+          password: "testpass",
+          enabled: true,
+          breakfastTime: "08:00-09:00",
+          lunchTime: "12:00-13:00",
+          dinnerTime: "18:00-19:00",
+          snackTime: "15:00-15:30",
+        });
+      });
+
+      expect(saved).toBe(false);
+      expect(platform.showError).toHaveBeenCalledWith(expect.any(Error), "caldav:save-config");
+      expect(platform.toast.show).not.toHaveBeenCalled();
+    });
+
+    it("answers a connection test whose request failed as a failed test", async () => {
+      mockTestConnectionMutate.mockRejectedValueOnce(new Error("fetch failed"));
+      const { result } = renderHook(() => useCaldavMutations(), {
+        wrapper: createTestWrapper(queryClient),
+      });
+      let answer: unknown;
+
+      await act(async () => {
+        answer = await result.current.testConnection({
+          serverUrl: "https://caldav.example.com",
+          username: "testuser",
+          password: "testpass",
+        });
+      });
+
+      expect(answer).toEqual({ success: false, message: "fetch failed" });
     });
   });
 });

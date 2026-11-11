@@ -1,5 +1,5 @@
 import { act } from "react";
-import CalDavSyncStatusCard from "@/features/calendar/components/caldav/caldav-sync-status-card";
+import CaldavSyncStatusCard from "@/features/calendar/components/caldav/caldav-sync-status-card";
 import { hydrateRoot } from "react-dom/client";
 import { renderToString } from "react-dom/server";
 import { afterEach, describe, expect, it, vi } from "vitest";
@@ -14,9 +14,9 @@ vi.mock("next-intl", () => ({
   useNow: () => new Date(),
 }));
 
-vi.mock("@/features/calendar/components/caldav/context", () => ({
-  useCalDavSettingsContext: () => ({
-    syncStatuses: [
+vi.mock("@norish/shared-react/calendar", () => ({
+  useCaldavSyncStatusQuery: () => ({
+    statuses: [
       {
         id: "s1",
         recipeName: "Synced Soup",
@@ -28,15 +28,10 @@ vi.mock("@/features/calendar/components/caldav/context", () => ({
         errorMessage: null,
       },
     ],
-    syncStatusPage: 1,
-    syncStatusTotal: 1,
-    syncStatusSummary: { pending: 0, synced: 1, failed: 0, removed: 0 },
-    setSyncStatusPage: vi.fn(),
-    syncStatusFilter: undefined,
-    setSyncStatusFilter: vi.fn(),
-    triggerManualSync: vi.fn(),
-    isTriggeringSync: false,
+    total: 1,
   }),
+  useCaldavSummaryQuery: () => ({ summary: { pending: 0, synced: 1, failed: 0, removed: 0 } }),
+  useCaldavMutations: () => ({ triggerSync: vi.fn(), isTriggeringSync: false }),
 }));
 
 afterEach(() => {
@@ -44,13 +39,13 @@ afterEach(() => {
   document.body.innerHTML = "";
 });
 
-describe("CalDavSyncStatusCard", () => {
+describe("CaldavSyncStatusCard", () => {
   it("hydrates a sync time the server drew, though the browser's clock has moved on", async () => {
     vi.useFakeTimers({ toFake: ["Date"] });
     vi.setSystemTime(new Date("2026-10-17T10:00:30Z"));
     const container = document.createElement("div");
 
-    container.innerHTML = renderToString(<CalDavSyncStatusCard />);
+    container.innerHTML = renderToString(<CaldavSyncStatusCard />);
     document.body.append(container);
 
     // A slow phone hydrates later: "less than a minute ago" has become "2 minutes ago".
@@ -58,7 +53,7 @@ describe("CalDavSyncStatusCard", () => {
     const onRecoverableError = vi.fn();
 
     await act(async () => {
-      hydrateRoot(container, <CalDavSyncStatusCard />, { onRecoverableError });
+      hydrateRoot(container, <CaldavSyncStatusCard />, { onRecoverableError });
     });
 
     expect(onRecoverableError).not.toHaveBeenCalled();

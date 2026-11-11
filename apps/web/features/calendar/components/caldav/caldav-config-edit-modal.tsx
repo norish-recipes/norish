@@ -1,6 +1,6 @@
 "use client";
 
-import { useCallback, useEffect, useRef, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { ActionButton, ActionButtonGroup } from "@/components/shared/action-button";
 import SecretInput from "@/components/shared/secret-input";
 import { ServerIcon } from "@heroicons/react/24/outline";
@@ -10,7 +10,6 @@ import {
   Description,
   FieldError,
   Input,
-  InputGroup,
   Label,
   ListBox,
   Modal,
@@ -19,24 +18,30 @@ import {
 } from "@heroui/react";
 import { useTranslations } from "next-intl";
 
-import { useCalDavSettingsContext } from "./context";
-import { useConnectionTest } from "./use-connection-test";
-import { UntrustedCertificateNote } from "./untrusted-certificate-note";
+import {
+  useCaldavConfigQuery,
+  useCaldavMutations,
+  useCaldavPasswordQuery,
+} from "@norish/shared-react/calendar";
 
-interface CalDavConfigEditModalProps {
+import { UntrustedCertificateNote } from "./untrusted-certificate-note";
+import { useConnectionTest } from "./use-connection-test";
+
+type TimeField = "breakfast" | "lunch" | "dinner" | "snack";
+
+const TIME_RANGE = /^\d{2}:\d{2}-\d{2}:\d{2}$/;
+
+interface CaldavConfigEditModalProps {
   isOpen: boolean;
   onClose: () => void;
 }
-export default function CalDavConfigEditModal({ isOpen, onClose }: CalDavConfigEditModalProps) {
+export default function CaldavConfigEditModal({ isOpen, onClose }: CaldavConfigEditModalProps) {
   const t = useTranslations("settings.caldav.setup");
   const tConfig = useTranslations("settings.caldav.config");
   const tActions = useTranslations("common.actions");
-  const {
-    config,
-    saveConfig,
-    getCaldavPassword,
-    isSavingConfig: saving,
-  } = useCalDavSettingsContext();
+  const { config } = useCaldavConfigQuery();
+  const { password: storedPassword } = useCaldavPasswordQuery();
+  const { saveConfig, isSavingConfig: saving } = useCaldavMutations();
   const [serverUrl, setServerUrl] = useState("");
   const [calendarUrl, setCalendarUrl] = useState<string | null>(null);
   const {
@@ -57,21 +62,10 @@ export default function CalDavConfigEditModal({ isOpen, onClose }: CalDavConfigE
   const [lunchTime, setLunchTime] = useState("12:00-13:00");
   const [dinnerTime, setDinnerTime] = useState("18:00-19:00");
   const [snackTime, setSnackTime] = useState("15:00-16:00");
-  const [timeErrors, setTimeErrors] = useState<{
-    breakfast?: string;
-    lunch?: string;
-    dinner?: string;
-    snack?: string;
-  }>({});
-
-  // Track if we've already auto-tested to avoid duplicate calls
+  const [timeErrors, setTimeErrors] = useState<Partial<Record<TimeField, boolean>>>({});
+  // Revealing the stored password tests the connection once per opening.
   const hasAutoTestedRef = useRef(false);
-
-  // Get user's timezone
   const timezone = Intl.DateTimeFormat().resolvedOptions().timeZone;
-
-  // Time format regex
-  const timeRegex = /^\d{2}:\d{2}-\d{2}:\d{2}$/;
 
   // Load existing config each time the modal opens or the config changes while open
   const [loadedFor, setLoadedFor] = useState<{ config: typeof config; isOpen: boolean } | null>(
@@ -102,69 +96,58 @@ export default function CalDavConfigEditModal({ isOpen, onClose }: CalDavConfigE
       hasAutoTestedRef.current = false;
     }
   }, [config, isOpen]);
-  const handleRevealPassword = useCallback(async () => {
-    const revealedPassword = await getCaldavPassword();
 
-    // Auto-test after revealing password
-    if (revealedPassword && serverUrl && username && !testing && !hasAutoTestedRef.current) {
+  const handleRevealPassword = async () => {
+    if (storedPassword && serverUrl && username && !testing && !hasAutoTestedRef.current) {
       hasAutoTestedRef.current = true;
-      // Small delay to allow state to update
+      // Lets the revealed password render before the test starts.
       setTimeout(() => {
-        runTest(serverUrl, username, revealedPassword, calendarUrl);
+        void runTest(serverUrl, username, storedPassword, calendarUrl);
       }, 100);
     }
-    return revealedPassword;
-  }, [getCaldavPassword, serverUrl, username, testing, calendarUrl, runTest]);
-  const validateTimeFormat = (time: string, field: string) => {
-    if (!timeRegex.test(time)) {
-      setTimeErrors((prev) => ({
-        ...prev,
-        [field]: "Format must be HH:MM-HH:MM",
-      }));
-      return false;
-    }
-    setTimeErrors((prev) => {
-      const newErrors = {
-        ...prev,
-      };
-      delete newErrors[field as keyof typeof timeErrors];
-      return newErrors;
-    });
-    return true;
+
+    return storedPassword;
   };
-  const handleTestConnection = async () => {
-    // Use form values for test
-    const passwordToUse = password || (config ? await getCaldavPassword() : null) || "";
-    await runTest(serverUrl, username, passwordToUse, calendarUrl);
+  const validateTimeFormat = (time: string, field: TimeField) => {
+    const valid = TIME_RANGE.test(time);
+
+    setTimeErrors((prev) => ({ ...prev, [field]: !valid }));
+
+    return valid;
   };
+  const passwordToUse = () => password || (config ? storedPassword : null) || "";
+  const handleTestConnection = () => runTest(serverUrl, username, passwordToUse(), calendarUrl);
   const handleSave = async () => {
-    // Validate time formats
     const breakfastValid = validateTimeFormat(breakfastTime, "breakfast");
     const lunchValid = validateTimeFormat(lunchTime, "lunch");
     const dinnerValid = validateTimeFormat(dinnerTime, "dinner");
     const snackValid = validateTimeFormat(snackTime, "snack");
+
     if (!breakfastValid || !lunchValid || !dinnerValid || !snackValid) {
       return;
     }
     setTestResult(null);
-    await saveConfig({
+    const saved = await saveConfig({
       serverUrl,
       calendarUrl,
       username,
+      // Empty keeps the stored password.
       password,
-      // Empty string if not changed
       enabled,
       breakfastTime,
       lunchTime,
       dinnerTime,
       snackTime,
       trustedCertificate,
-    }).then(() => onClose());
+    });
+
+    if (saved) onClose();
   };
   const canSave = serverUrl && username && (password || config) && calendarUrl;
+
   return (
     <Modal.Backdrop className="z-[1099]" isOpen={isOpen} onOpenChange={onClose}>
-      <Modal.Container className="z-[1100]" size="lg" scroll="inside">
+      <Modal.Container className="z-[1100]" scroll="inside" size="lg">
         <Modal.Dialog>
           <Modal.Header className="flex items-center gap-2">
             <ServerIcon className="h-5 w-5" />
@@ -174,16 +157,15 @@ export default function CalDavConfigEditModal({ isOpen, onClose }: CalDavConfigE
             <div className="flex flex-col gap-4">
               <TextField isRequired value={serverUrl} onChange={setServerUrl}>
                 <Label>{t("serverUrlLabel")}</Label>
-                <Input variant="secondary" placeholder={t("serverUrlPlaceholder")} />
+                <Input placeholder={t("serverUrlPlaceholder")} variant="secondary" />
                 <Description>{t("serverUrlDescription")}</Description>
               </TextField>
 
               <TextField isRequired value={username} onChange={setUsername}>
                 <Label>{t("usernameLabel")}</Label>
-                <Input variant="secondary" placeholder={t("usernamePlaceholder")} />
+                <Input placeholder={t("usernamePlaceholder")} variant="secondary" />
               </TextField>
 
-              {/* Password Section */}
               <SecretInput
                 isRequired
                 isConfigured={!!config}
@@ -194,17 +176,11 @@ export default function CalDavConfigEditModal({ isOpen, onClose }: CalDavConfigE
                 onValueChange={setPassword}
               />
 
-              {/* Test Connection Result */}
               {testResult?.untrustedCertificate ? (
                 <UntrustedCertificateNote
                   certificate={testResult.untrustedCertificate}
                   isPending={testing}
-                  onTrust={async () => {
-                    const passwordToUse =
-                      password || (config ? await getCaldavPassword() : null) || "";
-
-                    await trustAndRetest(serverUrl, username, passwordToUse, calendarUrl);
-                  }}
+                  onTrust={() => trustAndRetest(serverUrl, username, passwordToUse(), calendarUrl)}
                 />
               ) : (
                 testResult && (
@@ -216,7 +192,6 @@ export default function CalDavConfigEditModal({ isOpen, onClose }: CalDavConfigE
 
               {/* Calendar Selection - always visible, disabled until calendars fetched */}
               <Select
-                variant="secondary"
                 isDisabled={calendars.length === 0}
                 placeholder={
                   calendars.length === 0
@@ -224,6 +199,7 @@ export default function CalDavConfigEditModal({ isOpen, onClose }: CalDavConfigE
                     : t("calendarPlaceholder")
                 }
                 value={calendarUrl}
+                variant="secondary"
                 onChange={(selected) => {
                   setCalendarUrl(typeof selected === "string" ? selected : null);
                 }}
@@ -249,7 +225,6 @@ export default function CalDavConfigEditModal({ isOpen, onClose }: CalDavConfigE
                 </Select.Popover>
               </Select>
 
-              {/* Advanced Settings */}
               <Accordion>
                 <Accordion.Item id="advanced">
                   <Accordion.Heading>
@@ -275,7 +250,7 @@ export default function CalDavConfigEditModal({ isOpen, onClose }: CalDavConfigE
                         }}
                       >
                         <Label>{t("breakfastTime")}</Label>
-                        <Input variant="secondary" placeholder="07:00-08:00" />
+                        <Input placeholder="07:00-08:00" variant="secondary" />
                         {timeErrors.breakfast ? (
                           <FieldError>{t("timeFormatError")}</FieldError>
                         ) : (
@@ -292,7 +267,7 @@ export default function CalDavConfigEditModal({ isOpen, onClose }: CalDavConfigE
                         }}
                       >
                         <Label>{t("lunchTime")}</Label>
-                        <Input variant="secondary" placeholder="12:00-13:00" />
+                        <Input placeholder="12:00-13:00" variant="secondary" />
                         {timeErrors.lunch ? (
                           <FieldError>{t("timeFormatError")}</FieldError>
                         ) : (
@@ -309,7 +284,7 @@ export default function CalDavConfigEditModal({ isOpen, onClose }: CalDavConfigE
                         }}
                       >
                         <Label>{t("dinnerTime")}</Label>
-                        <Input variant="secondary" placeholder="18:00-19:00" />
+                        <Input placeholder="18:00-19:00" variant="secondary" />
                         {timeErrors.dinner ? (
                           <FieldError>{t("timeFormatError")}</FieldError>
                         ) : (
@@ -326,7 +301,7 @@ export default function CalDavConfigEditModal({ isOpen, onClose }: CalDavConfigE
                         }}
                       >
                         <Label>{t("snackTime")}</Label>
-                        <Input variant="secondary" placeholder="15:00-16:00" />
+                        <Input placeholder="15:00-16:00" variant="secondary" />
                         {timeErrors.snack ? (
                           <FieldError>{t("timeFormatError")}</FieldError>
                         ) : (
@@ -351,7 +326,7 @@ export default function CalDavConfigEditModal({ isOpen, onClose }: CalDavConfigE
               </ActionButton>
               <ActionButton
                 action="save"
-                isDisabled={!canSave || Object.keys(timeErrors).length > 0}
+                isDisabled={!canSave || Object.values(timeErrors).some(Boolean)}
                 isPending={saving}
                 onPress={handleSave}
               >

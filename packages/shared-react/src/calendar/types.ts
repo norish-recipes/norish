@@ -1,7 +1,6 @@
 import type { QueryKey } from "@tanstack/react-query";
 
 import type {
-  CalDavCalendarInfo,
   CaldavSyncStatusSummaryDto,
   CaldavSyncStatusViewDto,
   ConnectionTestResult,
@@ -114,23 +113,16 @@ export type TestConnectionInput = {
   trustedCertificate?: string | null;
 };
 
-export type FetchCalendarsInput = {
-  serverUrl: string;
-  username: string;
-  password: string;
-};
-
+/** Each write's failure is shown to the reader through the platform; the caller only learns the outcome. */
 export type CaldavMutationsResult = {
-  saveConfig: (input: SaveCaldavConfigInput) => Promise<UserCaldavConfigWithoutPasswordDto>;
+  /** Resolves whether the config was saved. */
+  saveConfig: (input: SaveCaldavConfigInput) => Promise<boolean>;
+  /** A request that fails answers as a failed test. */
   testConnection: (input: TestConnectionInput) => Promise<ConnectionTestResult>;
-  fetchCalendars: (input: FetchCalendarsInput) => Promise<CalDavCalendarInfo[]>;
-  deleteConfig: (deleteEvents?: boolean) => Promise<void>;
-  triggerSync: () => Promise<void>;
-  syncAll: () => Promise<void>;
+  /** Resolves whether the config was deleted. */
+  deleteConfig: (deleteEvents?: boolean) => Promise<boolean>;
+  triggerSync: () => void;
   isSavingConfig: boolean;
   isTestingConnection: boolean;
-  isFetchingCalendars: boolean;
-  isDeletingConfig: boolean;
   isTriggeringSync: boolean;
-  isSyncingAll: boolean;
 };
