@@ -54,7 +54,8 @@ const settle = () => act(() => new Promise((resolve) => setTimeout(resolve, 20))
 describe("CalDAV reads after a save", () => {
   let queryClient: ReturnType<typeof createTestQueryClient>;
   let stored: string;
-  let check: PromiseWithResolvers<unknown>;
+  let config: ReturnType<typeof createMockCaldavConfig> | null;
+  let checks: PromiseWithResolvers<unknown>[];
   let requests: string[];
   const sent = (path: string) => requests.filter((request) => request === path).length;
 
@@ -63,17 +64,30 @@ describe("CalDAV reads after a save", () => {
     useSubscriptionMock.mockReset();
     queryClient = createTestQueryClient();
     stored = "old";
-    check = Promise.withResolvers();
+    config = createMockCaldavConfig();
+    checks = [];
     requests = [];
     serveTRPC(async (path) => {
       requests.push(path);
-      if (path === "caldav.getConfig") return createMockCaldavConfig();
+      if (path === "caldav.getConfig") return config;
       if (path === "caldav.getPassword") return stored;
-      if (path === "caldav.checkConnection") return check.promise;
+      if (path === "caldav.checkConnection") {
+        const check = Promise.withResolvers();
+
+        checks.push(check);
+
+        return check.promise;
+      }
       if (path === "caldav.saveConfig") {
         stored = "new";
+        config = createMockCaldavConfig({ version: 2 });
 
-        return createMockCaldavConfig({ version: 2 });
+        return config;
+      }
+      if (path === "caldav.deleteConfig") {
+        config = null;
+
+        return { success: true };
       }
 
       return null;
@@ -131,11 +145,10 @@ describe("CalDAV reads after a save", () => {
     await expect(result.current.password.read()).resolves.toBe("elsewhere");
   });
 
-  const answerCheck = async (success: boolean) => {
-    const answered = check;
-
-    check = Promise.withResolvers();
-    await act(async () => answered.resolve({ success, message: "" }));
+  /** Answers the latest connection check once it was sent. */
+  const answerCheck = async (success: boolean, count = 1) => {
+    await vi.waitFor(() => expect(checks).toHaveLength(count));
+    await act(async () => checks.at(-1)?.resolve({ success, message: "" }));
   };
 
   it("checks the connection again after a save, showing the check until it answers", async () => {
@@ -149,7 +162,7 @@ describe("CalDAV reads after a save", () => {
     });
     await waitFor(() => expect(result.current.connection.isChecking).toBe(true));
 
-    await answerCheck(true);
+    await answerCheck(true, 2);
     await waitFor(() => expect(result.current.connection.isConnected).toBe(true));
     expect(result.current.connection.isChecking).toBe(false);
   });
@@ -162,7 +175,7 @@ describe("CalDAV reads after a save", () => {
 
     emitConfigSaved(2);
     await waitFor(() => expect(result.current.connection.isChecking).toBe(true));
-    await answerCheck(false);
+    await answerCheck(false, 2);
     await settle();
 
     expect(result.current.connection).toEqual({ isChecking: false, isConnected: false });
@@ -170,17 +183,34 @@ describe("CalDAV reads after a save", () => {
     expect(sent("caldav.saveConfig") + sent("caldav.deleteConfig")).toBe(0);
   });
 
-  it("checks the connection again after a delete, showing the check", async () => {
-    const result = render();
+  it("checks no connection after a delete and leaves no poller", async () => {
+    vi.useFakeTimers();
 
-    await answerCheck(true);
-    await waitFor(() => expect(result.current.connection.isConnected).toBe(true));
+    try {
+      const result = render();
 
-    await act(async () => {
-      await result.current.mutations.deleteConfig();
-    });
+      await answerCheck(true);
+      await act(() => vi.advanceTimersByTimeAsync(0));
+      expect(result.current.connection.isConnected).toBe(true);
 
-    await waitFor(() => expect(result.current.connection.isChecking).toBe(true));
+      await act(async () => {
+        await result.current.mutations.deleteConfig();
+      });
+      await act(() => vi.advanceTimersByTimeAsync(10 * 60_000));
+
+      expect(sent("caldav.checkConnection")).toBe(1);
+    } finally {
+      vi.useRealTimers();
+    }
+  });
+
+  it("checks the connection only once a config exists", async () => {
+    config = null;
+    render();
+    await settle();
+
+    expect(sent("caldav.getConfig")).toBe(1);
+    expect(sent("caldav.checkConnection")).toBe(0);
   });
 
   it("keeps the last answer on screen through a background recheck", async () => {
@@ -189,7 +219,6 @@ describe("CalDAV reads after a save", () => {
     try {
       const result = render();
 
-      await act(() => vi.advanceTimersByTimeAsync(0));
       await answerCheck(true);
       await act(() => vi.advanceTimersByTimeAsync(0));
       expect(result.current.connection.isConnected).toBe(true);

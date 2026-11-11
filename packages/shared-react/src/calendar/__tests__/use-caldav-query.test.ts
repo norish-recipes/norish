@@ -279,6 +279,14 @@ describe("CalDAV Query Hooks", () => {
   });
 
   describe("useCaldavConnectionQuery", () => {
+    // The connection is checked only while a config exists.
+    beforeEach(() => {
+      mockConfigQueryOptions.mockReturnValue({
+        queryKey: mockConfigQueryKey,
+        queryFn: async () => createMockCaldavConfig(),
+      });
+    });
+
     it("returns disconnected state when not connected", async () => {
       mockConnectionQueryOptions.mockReturnValue({
         queryKey: mockConnectionQueryKey,

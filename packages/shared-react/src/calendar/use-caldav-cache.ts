@@ -34,7 +34,11 @@ export function useCaldavCacheHelpers(): CaldavCacheHelpers {
       invalidateSyncStatus();
       invalidateSummary();
       // Back to pending, so the badge shows the check a changed config needs until it answers.
-      void queryClient.resetQueries({ queryKey: trpc.caldav.checkConnection.queryKey() });
+      // Removed with no config: a reset would refetch for an observer not yet disabled.
+      const connection = { queryKey: trpc.caldav.checkConnection.queryKey() };
+
+      if (config) void queryClient.resetQueries(connection);
+      else queryClient.removeQueries(connection);
     },
     invalidateConfig: () => {
       void queryClient.invalidateQueries({ queryKey: configKey });

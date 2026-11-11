@@ -81,11 +81,16 @@ export function useCaldavSummaryQuery(): CaldavSummaryQueryResult {
   };
 }
 
-/** The server's check of the CalDAV connection: each minute while it holds, each five while not. */
+/**
+ * The server's check of the CalDAV connection, only while a config exists:
+ * each minute while it holds, each five while not.
+ */
 export function useCaldavConnectionQuery() {
   const trpc = useTRPC();
+  const { slice: configured } = useCaldavConfigSlice((config) => config !== null);
   const { data, isPending } = useQuery(
     trpc.caldav.checkConnection.queryOptions(undefined, {
+      enabled: configured === true,
       staleTime: 30_000,
       refetchInterval: (query) => (query.state.data?.success ? 60_000 : 300_000),
     })
