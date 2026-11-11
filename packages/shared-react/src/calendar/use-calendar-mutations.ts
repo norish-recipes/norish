@@ -65,10 +65,14 @@ export function useCalendarMutations(): CalendarMutationsResult {
   };
 
   // A move or update answers with its item, new version included: the echo is the fast path (ADR-0011).
-  const placeAnswer = (result: { stale?: boolean; item?: PlannedItemWithRecipePayload }) => {
-    rereadIfStale(result);
+  // No item (stale, no-op, failed): the optimistic version was never earned, so reread.
+  const placeAnswer = (result: { item?: PlannedItemWithRecipePayload }) => {
     if (result.item) upsertItemAcrossRanges(result.item);
+    else rereadAllRanges();
   };
+
+  // One plan write at a time: same-tick writes share a batch the server runs concurrently.
+  const planWrites = { id: "calendar-plan-writes" };
 
   // The newest copy: a range left behind (narrower, or after a reconnect) can hold an older one.
   const findItem = (itemId: string) =>
@@ -98,6 +102,7 @@ export function useCalendarMutations(): CalendarMutationsResult {
         writeAcrossRanges((items) => items.filter((item) => item.id !== itemId)),
       onSuccess: rereadIfStale,
       onError: rollBack,
+      scope: planWrites,
     })
   );
 
@@ -113,6 +118,7 @@ export function useCalendarMutations(): CalendarMutationsResult {
       },
       onSuccess: placeAnswer,
       onError: rollBack,
+      scope: planWrites,
     })
   );
 
@@ -121,11 +127,14 @@ export function useCalendarMutations(): CalendarMutationsResult {
       onMutate: ({ itemId, title }) =>
         writeAcrossRanges((items) =>
           items.map((item) =>
-            item.id === itemId ? { ...item, title, updatedAt: new Date() } : item
+            item.id === itemId
+              ? { ...item, title, version: item.version + 1, updatedAt: new Date() }
+              : item
           )
         ),
       onSuccess: placeAnswer,
       onError: rollBack,
+      scope: planWrites,
     })
   );
 

@@ -111,7 +111,7 @@ export function calendarRangeOfQueryKey(queryKey: readonly unknown[]): CalendarR
 }
 
 /**
- * A move as one range sees it: `moved` leaves its source slot and lands at `target.sortOrder`.
+ * A move as one range sees it: `moved` leaves its slot and lands at `target.sortOrder`, one version up.
  * A range that held it keeps it past its edge, so a grown range can seed from it (its read drops it).
  */
 export function moveItemInRange(
@@ -154,7 +154,9 @@ export function moveItemInRange(
   });
 
   return sortCalendarItems(
-    keepsItem ? [...shifted, { ...moved, ...target, updatedAt: new Date() }] : shifted
+    keepsItem
+      ? [...shifted, { ...moved, ...target, version: moved.version + 1, updatedAt: new Date() }]
+      : shifted
   );
 }
 
@@ -164,6 +166,11 @@ export function applyMoveEchoInRange(
   payload: PayloadOf<CalendarRealtime, "itemMoved">,
   range: CalendarRange
 ) {
+  const existing = prev.find((item) => item.id === payload.item.id);
+
+  // As in `upsertItemInRange`: a higher cached version is a later write, its order included.
+  if (existing && existing.version > payload.item.version) return prev;
+
   const itemIsInRange = isDateInRange(payload.item.date, range);
   const sortOrders = new Map(
     [...(payload.sourceSlotItems ?? []), ...payload.targetSlotItems].map((item) => [

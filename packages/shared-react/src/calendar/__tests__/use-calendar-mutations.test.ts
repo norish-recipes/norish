@@ -453,10 +453,149 @@ describe("useCalendarMutations", () => {
       const answerOnly = queryClient.getQueryData<PlannedItemFromQuery[]>(getQueryKey())!;
       const answerThenEcho = applyMoveEchoInRange(answerOnly, echo, range);
 
-      expect(optimistic.find((item) => item.id === "a")?.version).toBe(1);
+      expect(optimistic.find((item) => item.id === "a")?.version).toBe(2);
       expect(answerOnly.find((item) => item.id === "a")?.version).toBe(2);
       expect(withoutTimes(echoOnly)).toEqual(withoutTimes(answerOnly));
       expect(withoutTimes(answerThenEcho)).toEqual(withoutTimes(answerOnly));
+    });
+  });
+
+  describe("overlapping writes to one plan", () => {
+    const range = { startISO, endISO };
+
+    function answerLater() {
+      let answer!: (result: object) => void;
+      const promise = new Promise<object>((resolve) => (answer = resolve));
+
+      return { promise, answer };
+    }
+
+    function setup() {
+      const a = createMockItem({ id: "a", title: "a", version: 3 });
+      const b = createMockItem({ id: "b", title: "b", sortOrder: 1 });
+
+      queryClient.setQueryData(getQueryKey(), [a, b]);
+
+      return { a };
+    }
+
+    const cachedA = () =>
+      queryClient.getQueryData<PlannedItemFromQuery[]>(getQueryKey())!.find((i) => i.id === "a");
+
+    it("a rename then a move in one tick send v then v+1, the move once the rename answered", async () => {
+      const { a } = setup();
+      const rename = answerLater();
+
+      mockUpdateItemMutate.mockReturnValue(rename.promise);
+      mockMoveItemMutate.mockResolvedValue({
+        success: true,
+        moved: true,
+        item: { ...a, title: "renamed", date: "2025-01-20", version: 5 },
+      });
+      const { result } = renderHook(() => useCalendarMutations(), {
+        wrapper: createTestWrapper(queryClient),
+      });
+
+      act(() => {
+        result.current.updateItem("a", "renamed");
+        result.current.moveItem("a", "2025-01-20", "Breakfast", 0);
+      });
+      await waitFor(() => expect(mockUpdateItemMutate).toHaveBeenCalledTimes(1));
+      await act(() => new Promise((resolve) => setTimeout(resolve, 20)));
+      expect(mockMoveItemMutate).not.toHaveBeenCalled();
+      expect(cachedA()).toMatchObject({ title: "renamed", date: "2025-01-20", version: 5 });
+
+      await act(async () =>
+        rename.answer({ success: true, stale: false, item: { ...a, title: "renamed", version: 4 } })
+      );
+      await waitFor(() => expect(queryClient.isMutating()).toBe(0));
+
+      expect(mockUpdateItemMutate.mock.calls[0]![0].version).toBe(3);
+      expect(mockMoveItemMutate.mock.calls[0]![0].version).toBe(4);
+      expect(cachedA()).toMatchObject({ title: "renamed", date: "2025-01-20", version: 5 });
+    });
+
+    it("two moves in one tick send v then v+1, the second once the first answered", async () => {
+      const { a } = setup();
+      const first = answerLater();
+
+      mockMoveItemMutate.mockReturnValueOnce(first.promise).mockResolvedValueOnce({
+        success: true,
+        moved: true,
+        item: { ...a, date: "2025-01-21", version: 5 },
+      });
+      const { result } = renderHook(() => useCalendarMutations(), {
+        wrapper: createTestWrapper(queryClient),
+      });
+
+      act(() => {
+        result.current.moveItem("a", "2025-01-20", "Breakfast", 0);
+        result.current.moveItem("a", "2025-01-21", "Breakfast", 0);
+      });
+      await waitFor(() => expect(mockMoveItemMutate).toHaveBeenCalledTimes(1));
+      await act(() => new Promise((resolve) => setTimeout(resolve, 20)));
+      expect(mockMoveItemMutate).toHaveBeenCalledTimes(1);
+
+      await act(async () =>
+        first.answer({ success: true, moved: true, item: { ...a, date: "2025-01-20", version: 4 } })
+      );
+      await waitFor(() => expect(queryClient.isMutating()).toBe(0));
+
+      expect(mockMoveItemMutate.mock.calls.map(([input]) => input.version)).toEqual([3, 4]);
+      expect(cachedA()).toMatchObject({ date: "2025-01-21", version: 5 });
+    });
+
+    it("the first move's echo leaves the second move's optimistic cache alone", () => {
+      const { a } = setup();
+
+      mockMoveItemMutate.mockReturnValue(new Promise(() => {}));
+      const { result } = renderHook(() => useCalendarMutations(), {
+        wrapper: createTestWrapper(queryClient),
+      });
+
+      act(() => {
+        result.current.moveItem("a", "2025-01-20", "Breakfast", 0);
+        result.current.moveItem("a", "2025-01-21", "Breakfast", 0);
+      });
+      const optimistic = queryClient.getQueryData<PlannedItemFromQuery[]>(getQueryKey())!;
+      const echo = {
+        item: { ...a, date: "2025-01-20", version: 4 },
+        targetSlotItems: [{ id: "a", sortOrder: 0 }],
+        sourceSlotItems: [{ id: "b", sortOrder: 7 }],
+        oldDate: a.date,
+        oldSlot: a.slot,
+        oldSortOrder: 0,
+      };
+
+      expect(applyMoveEchoInRange(optimistic, echo, range)).toBe(optimistic);
+    });
+
+    it.each([
+      {
+        name: "a move's no-op",
+        write: (mutations: ReturnType<typeof useCalendarMutations>) => {
+          mockMoveItemMutate.mockResolvedValue({ success: true, moved: false });
+          mutations.moveItem("a", "2025-01-20", "Breakfast", 0);
+        },
+      },
+      {
+        name: "a failed update",
+        write: (mutations: ReturnType<typeof useCalendarMutations>) => {
+          mockUpdateItemMutate.mockResolvedValue({ success: false });
+          mutations.updateItem("a", "renamed");
+        },
+      },
+    ])("$name answer, carrying no item, rereads", async ({ write }) => {
+      setup();
+      const { result } = renderHook(() => useCalendarMutations(), {
+        wrapper: createTestWrapper(queryClient),
+      });
+
+      act(() => write(result.current));
+
+      await waitFor(() =>
+        expect(queryClient.getQueryState(getQueryKey())?.isInvalidated).toBe(true)
+      );
     });
   });
 });

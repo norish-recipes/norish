@@ -545,7 +545,8 @@ describe("a delete, move or update with no range", () => {
     expect(sent).toHaveBeenCalledWith(`${write}Item`, expect.objectContaining({ version: 2 }));
     if (write === "move") {
       expect(itemsIn(CALENDAR_PAGE)).toEqual([
-        expect.objectContaining({ id: "item-0", title: "Newer", version: 2 }),
+        // Placed one version up, as the server writes it.
+        expect.objectContaining({ id: "item-0", title: "Newer", version: 3 }),
       ]);
     }
   });
