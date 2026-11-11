@@ -546,6 +546,53 @@ describe("useCalendarMutations", () => {
       expect(cachedA()).toMatchObject({ date: "2025-01-21", version: 5 });
     });
 
+    it("a delete made while a move waits is sent once the move answered, with v+1", async () => {
+      const { a } = setup();
+      const move = Promise.withResolvers<object>();
+
+      mockMoveItemMutate.mockReturnValue(move.promise);
+      mockDeleteItemMutate.mockResolvedValue({ success: true, stale: false });
+      const { result } = renderHook(() => useCalendarMutations(), {
+        wrapper: createTestWrapper(queryClient),
+      });
+
+      act(() => result.current.moveItem("a", "2025-01-20", "Breakfast", 0));
+      await waitFor(() => expect(mockMoveItemMutate).toHaveBeenCalledTimes(1));
+      act(() => result.current.deleteItem("a"));
+      await act(() => new Promise((resolve) => setTimeout(resolve, 20)));
+      expect(mockDeleteItemMutate).not.toHaveBeenCalled();
+
+      await act(async () =>
+        move.resolve({ success: true, moved: true, item: { ...a, date: "2025-01-20", version: 4 } })
+      );
+      await waitFor(() => expect(queryClient.isMutating()).toBe(0));
+
+      expect(mockDeleteItemMutate.mock.calls[0]![0]).toEqual({ itemId: "a", version: 4 });
+    });
+
+    it("a first write that fails sends the second with v+1, answered stale, then rereads", async () => {
+      setup();
+      const rename = Promise.withResolvers<object>();
+
+      mockUpdateItemMutate.mockReturnValue(rename.promise);
+      mockMoveItemMutate.mockResolvedValue({ success: true, moved: false, stale: true });
+      const { result } = renderHook(() => useCalendarMutations(), {
+        wrapper: createTestWrapper(queryClient),
+      });
+
+      act(() => {
+        result.current.updateItem("a", "renamed");
+        result.current.moveItem("a", "2025-01-20", "Breakfast", 0);
+      });
+      await waitFor(() => expect(mockUpdateItemMutate).toHaveBeenCalledTimes(1));
+      // A real error, not backend-unreachable: the rename never happened.
+      await act(async () => rename.reject(new Error("BAD_REQUEST")));
+      await waitFor(() => expect(queryClient.isMutating()).toBe(0));
+
+      expect(mockMoveItemMutate.mock.calls[0]![0].version).toBe(4);
+      expect(queryClient.getQueryState(getQueryKey())?.isInvalidated).toBe(true);
+    });
+
     it("the first move's echo leaves the second move's optimistic cache alone", () => {
       const { a } = setup();
 
