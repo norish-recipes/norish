@@ -90,6 +90,7 @@ export type CaldavCacheHelpers = {
   invalidateConfig: () => void;
   invalidateSyncStatus: () => void;
   invalidateSummary: () => void;
+  invalidateConnection: () => void;
 };
 
 export type SaveCaldavConfigInput = {

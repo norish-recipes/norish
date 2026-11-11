@@ -1,6 +1,5 @@
 "use client";
 
-import { useCallback, useEffect, useState } from "react";
 import { SettingsCard } from "@/components/settings/settings-card";
 import SettingsSwitch from "@/components/settings/settings-switch";
 import { ActionButton } from "@/components/shared/action-button";
@@ -17,6 +16,8 @@ import {
 
 import DeleteCaldavModal from "./delete-caldav-modal";
 
+const STATUS_COLOR = { checking: "warning", connected: "success", disconnected: "danger" } as const;
+
 interface CaldavConfigSummaryProps {
   onEditClick: () => void;
 }
@@ -24,38 +25,10 @@ export default function CaldavConfigSummary({ onEditClick }: CaldavConfigSummary
   const t = useTranslations("settings.caldav.config");
   const { config } = useCaldavConfigQuery();
   const { saveConfig, deleteConfig } = useCaldavMutations();
-  const {
-    isConnected,
-    message: connectionMessage,
-    invalidate: recheckConnection,
-  } = useCaldavConnectionQuery();
+  const { isChecking, isConnected } = useCaldavConnectionQuery();
   const { isOpen: isDeleteOpen, open: onDeleteOpen, close: onDeleteClose } = useOverlayState();
-  const [connectionStatus, setConnectionStatus] = useState<
-    "checking" | "connected" | "disconnected"
-  >("checking");
-  const [pollingInterval, setPollingInterval] = useState(60000);
+  const connectionStatus = isChecking ? "checking" : isConnected ? "connected" : "disconnected";
 
-  const checkConnection = useCallback(async () => {
-    if (!config) return;
-    setConnectionStatus("checking");
-    recheckConnection();
-    const result = { success: isConnected, message: connectionMessage };
-
-    setConnectionStatus(result.success ? "connected" : "disconnected");
-    if (result.success) {
-      setPollingInterval(60000);
-    } else {
-      setPollingInterval((prev) => Math.min(prev * 2, 300000));
-    }
-  }, [config, recheckConnection, isConnected, connectionMessage]);
-
-  useEffect(() => {
-    if (!config) return;
-    checkConnection();
-    const intervalId = setInterval(checkConnection, pollingInterval);
-
-    return () => clearInterval(intervalId);
-  }, [config, pollingInterval, checkConnection]);
   const handleToggleEnabled = async (enabled: boolean) => {
     if (!config) return;
     await saveConfig({
@@ -73,31 +46,6 @@ export default function CaldavConfigSummary({ onEditClick }: CaldavConfigSummary
 
   if (!config) return null;
 
-  const getConnectionStatusColor = () => {
-    switch (connectionStatus) {
-      case "connected":
-        return "success";
-      case "checking":
-        return "warning";
-      case "disconnected":
-        return "danger";
-      default:
-        return "default";
-    }
-  };
-  const getConnectionStatusText = () => {
-    switch (connectionStatus) {
-      case "connected":
-        return t("connectionStatus.connected");
-      case "checking":
-        return t("connectionStatus.checking");
-      case "disconnected":
-        return t("connectionStatus.disconnected");
-      default:
-        return t("connectionStatus.unknown");
-    }
-  };
-
   return (
     <>
       <SettingsCard
@@ -112,7 +60,7 @@ export default function CaldavConfigSummary({ onEditClick }: CaldavConfigSummary
           </>
         }
         badges={
-          <Chip color={getConnectionStatusColor()} size="sm" variant="soft">
+          <Chip color={STATUS_COLOR[connectionStatus]} size="sm" variant="soft">
             {connectionStatus === "checking" ? (
               <ArrowPathIcon className="h-3 w-3 animate-spin" />
             ) : connectionStatus === "connected" ? (
@@ -120,7 +68,7 @@ export default function CaldavConfigSummary({ onEditClick }: CaldavConfigSummary
             ) : (
               <XCircleIcon className="h-3 w-3" />
             )}
-            <Chip.Label>{getConnectionStatusText()}</Chip.Label>
+            <Chip.Label>{t(`connectionStatus.${connectionStatus}`)}</Chip.Label>
           </Chip>
         }
         icon={ServerIcon}

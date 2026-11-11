@@ -54,7 +54,10 @@ vi.mock("../../trpc", () => ({
       },
       checkConnection: {
         queryKey: () => mockConnectionQueryKey,
-        queryOptions: () => mockConnectionQueryOptions(),
+        queryOptions: (_input: unknown, options?: object) => ({
+          ...mockConnectionQueryOptions(),
+          ...options,
+        }),
       },
     },
   }),
@@ -264,12 +267,12 @@ describe("CalDAV Query Hooks", () => {
         wrapper: createTestWrapper(queryClient),
       });
 
+      expect(result.current.isChecking).toBe(true);
       await waitFor(() => {
-        expect(result.current.isLoading).toBe(false);
+        expect(result.current.isChecking).toBe(false);
       });
 
       expect(result.current.isConnected).toBe(false);
-      expect(result.current.message).toBe("Not configured");
     });
 
     it("returns connected state when connected", async () => {
@@ -283,11 +286,37 @@ describe("CalDAV Query Hooks", () => {
       });
 
       await waitFor(() => {
-        expect(result.current.isLoading).toBe(false);
+        expect(result.current.isChecking).toBe(false);
       });
 
       expect(result.current.isConnected).toBe(true);
-      expect(result.current.message).toBe("Connected");
+    });
+
+    it("checks again each minute while connected and each five minutes while not", async () => {
+      vi.useFakeTimers();
+      const connected = { current: true };
+      const check = vi.fn(async () => ({ success: connected.current, message: "" }));
+
+      mockConnectionQueryOptions.mockReturnValue({
+        queryKey: mockConnectionQueryKey,
+        queryFn: check,
+      });
+      renderHook(() => useCaldavConnectionQuery(), { wrapper: createTestWrapper(queryClient) });
+
+      try {
+        await act(() => vi.advanceTimersByTimeAsync(0));
+        expect(check).toHaveBeenCalledTimes(1);
+        connected.current = false;
+        await act(() => vi.advanceTimersByTimeAsync(60_000));
+        expect(check).toHaveBeenCalledTimes(2);
+
+        await act(() => vi.advanceTimersByTimeAsync(240_000));
+        expect(check).toHaveBeenCalledTimes(2);
+        await act(() => vi.advanceTimersByTimeAsync(60_000));
+        expect(check).toHaveBeenCalledTimes(3);
+      } finally {
+        vi.useRealTimers();
+      }
     });
   });
 });

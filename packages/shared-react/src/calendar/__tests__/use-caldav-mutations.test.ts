@@ -14,6 +14,7 @@ import { createMockCaldavConfig } from "./test-utils";
 const mockConfigQueryKey = ["caldav", "getConfig"];
 const mockSyncStatusQueryKey = ["caldav", "getSyncStatus"];
 const mockSummaryQueryKey = ["caldav", "getSummary"];
+const mockConnectionQueryKey = ["caldav", "checkConnection"];
 
 // Mock mutation functions
 const mockSaveConfigMutate = vi.fn();
@@ -48,6 +49,9 @@ vi.mock("../../trpc", () => ({
           queryKey: mockSummaryQueryKey,
           queryFn: mockGetSummaryQueryFn,
         }),
+      },
+      checkConnection: {
+        queryKey: () => mockConnectionQueryKey,
       },
       saveConfig: {
         mutationOptions: (options?: object) => ({
@@ -202,11 +206,12 @@ describe("CalDAV Mutation Hooks", () => {
       }
     }
 
-    it("saves the server's answer into the cached config and rereads status and summary", async () => {
+    it("saves the server's answer into the cached config and rereads status, summary and connection", async () => {
       const saved = createMockCaldavConfig({ username: "saved", version: 2 });
 
       mockSaveConfigMutate.mockResolvedValueOnce(saved);
       seedStatusAndSummary();
+      queryClient.setQueryData(mockConnectionQueryKey, { success: false, message: "" });
       const { result } = renderHook(() => useCaldavMutations(), {
         wrapper: createTestWrapper(queryClient),
       });
@@ -217,6 +222,7 @@ describe("CalDAV Mutation Hooks", () => {
 
       expect(queryClient.getQueryData(mockConfigQueryKey)).toEqual(saved);
       expectStatusAndSummaryInvalidated();
+      expect(queryClient.getQueryState(mockConnectionQueryKey)?.isInvalidated).toBe(true);
     });
 
     it("clears the cached config on delete and rereads status and summary", async () => {

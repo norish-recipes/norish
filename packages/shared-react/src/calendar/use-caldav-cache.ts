@@ -33,5 +33,8 @@ export function useCaldavCacheHelpers(): CaldavCacheHelpers {
     invalidateSummary: () => {
       void queryClient.invalidateQueries({ queryKey: trpc.caldav.getSummary.queryKey() });
     },
+    invalidateConnection: () => {
+      void queryClient.invalidateQueries({ queryKey: trpc.caldav.checkConnection.queryKey() });
+    },
   };
 }

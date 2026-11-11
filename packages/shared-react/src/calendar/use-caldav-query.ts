@@ -1,4 +1,4 @@
-import { useQuery, useQueryClient } from "@tanstack/react-query";
+import { useQuery } from "@tanstack/react-query";
 
 import type {
   CaldavConfigQueryResult,
@@ -57,19 +57,15 @@ export function useCaldavSummaryQuery(): CaldavSummaryQueryResult {
   };
 }
 
+/** The server's check of the CalDAV connection: each minute while it holds, each five while not. */
 export function useCaldavConnectionQuery() {
   const trpc = useTRPC();
-  const queryClient = useQueryClient();
-  const queryKey = trpc.caldav.checkConnection.queryKey();
-  const { data, error, isLoading } = useQuery(
-    trpc.caldav.checkConnection.queryOptions(undefined, { staleTime: 30_000 })
+  const { data, isPending } = useQuery(
+    trpc.caldav.checkConnection.queryOptions(undefined, {
+      staleTime: 30_000,
+      refetchInterval: (query) => (query.state.data?.success ? 60_000 : 300_000),
+    })
   );
 
-  return {
-    isConnected: data?.success ?? false,
-    message: data?.message ?? "",
-    error,
-    isLoading,
-    invalidate: () => queryClient.invalidateQueries({ queryKey }),
-  };
+  return { isChecking: isPending, isConnected: data?.success ?? false };
 }
