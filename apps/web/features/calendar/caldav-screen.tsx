@@ -1,10 +1,10 @@
 "use client";
 
-import type { CaldavShape } from "./caldav-shape";
-import { CalDavSettingsProvider, useCalDavSettingsContext } from "../context";
-import CalDavConfigCard from "./caldav-config-card";
-import CaldavSkeleton from "./caldav-skeleton";
-import CalDavSyncStatusCard from "./caldav-sync-status-card";
+import type { CaldavShape } from "./components/caldav/caldav-shape";
+import { CalDavSettingsProvider, useCalDavSettingsContext } from "./components/caldav/context";
+import CalDavConfigCard from "./components/caldav/caldav-config-card";
+import CaldavSkeleton from "./components/caldav/caldav-skeleton";
+import CalDavSyncStatusCard from "./components/caldav/caldav-sync-status-card";
 
 function CalDavSettingsContent({ shape }: { shape: CaldavShape }) {
   const { config, isLoading } = useCalDavSettingsContext();
@@ -21,7 +21,7 @@ function CalDavSettingsContent({ shape }: { shape: CaldavShape }) {
   );
 }
 
-export default function CalDavSettingsContentWrapper({ shape }: { shape: CaldavShape }) {
+export function CaldavScreen({ shape }: { shape: CaldavShape }) {
   return (
     <CalDavSettingsProvider>
       <CalDavSettingsContent shape={shape} />

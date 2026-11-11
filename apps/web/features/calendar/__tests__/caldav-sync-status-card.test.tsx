@@ -1,5 +1,5 @@
 import { act } from "react";
-import CalDavSyncStatusCard from "@/app/(app)/settings/caldav/components/caldav-sync-status-card";
+import CalDavSyncStatusCard from "@/features/calendar/components/caldav/caldav-sync-status-card";
 import { hydrateRoot } from "react-dom/client";
 import { renderToString } from "react-dom/server";
 import { afterEach, describe, expect, it, vi } from "vitest";
@@ -14,7 +14,7 @@ vi.mock("next-intl", () => ({
   useNow: () => new Date(),
 }));
 
-vi.mock("@/app/(app)/settings/caldav/context", () => ({
+vi.mock("@/features/calendar/components/caldav/context", () => ({
   useCalDavSettingsContext: () => ({
     syncStatuses: [
       {

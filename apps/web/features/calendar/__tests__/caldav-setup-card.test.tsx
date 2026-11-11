@@ -2,7 +2,7 @@
  * Before CalDAV is configured, Test works as soon as the credentials are in and
  * nothing tests on a keystroke: a half-typed password failed and never retried (#703).
  */
-import CalDavConfigCard from "@/app/(app)/settings/caldav/components/caldav-config-card";
+import CalDavConfigCard from "@/features/calendar/components/caldav/caldav-config-card";
 import { fireEvent, render, screen, waitFor } from "@testing-library/react";
 import { describe, expect, it, vi } from "vitest";
 
@@ -17,7 +17,7 @@ const testConnection = vi.fn(async (..._args: unknown[]): Promise<Record<string,
   message: "fetch failed",
 }));
 
-vi.mock("@/app/(app)/settings/caldav/context", () => ({
+vi.mock("@/features/calendar/components/caldav/context", () => ({
   useCalDavSettingsContext: () => ({ config: null, saveConfig: vi.fn(), testConnection }),
 }));
 

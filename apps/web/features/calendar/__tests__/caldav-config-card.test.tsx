@@ -2,7 +2,7 @@
  * Once CalDAV is configured the card shows the summary, and its Edit button
  * opens the edit modal, which can close itself again.
  */
-import CalDavConfigCard from "@/app/(app)/settings/caldav/components/caldav-config-card";
+import CalDavConfigCard from "@/features/calendar/components/caldav/caldav-config-card";
 import { fireEvent, render, screen } from "@testing-library/react";
 import { describe, expect, it, vi } from "vitest";
 
@@ -12,7 +12,7 @@ vi.mock("next-intl", () => ({
   useTranslations: () => (key: string) => key,
 }));
 
-vi.mock("@/app/(app)/settings/caldav/context", () => ({
+vi.mock("@/features/calendar/components/caldav/context", () => ({
   useCalDavSettingsContext: () => ({
     config: { serverUrl: "https://cal.example.com" },
     saveConfig: vi.fn(),
@@ -20,7 +20,7 @@ vi.mock("@/app/(app)/settings/caldav/context", () => ({
   }),
 }));
 
-vi.mock("@/app/(app)/settings/caldav/components/caldav-config-summary", () => ({
+vi.mock("@/features/calendar/components/caldav/caldav-config-summary", () => ({
   default: ({ onEditClick }: { onEditClick: () => void }) => (
     <button type="button" onClick={onEditClick}>
       Edit
@@ -28,7 +28,7 @@ vi.mock("@/app/(app)/settings/caldav/components/caldav-config-summary", () => ({
   ),
 }));
 
-vi.mock("@/app/(app)/settings/caldav/components/caldav-config-edit-modal", () => ({
+vi.mock("@/features/calendar/components/caldav/caldav-config-edit-modal", () => ({
   default: ({ isOpen, onClose }: { isOpen: boolean; onClose: () => void }) =>
     isOpen ? (
       <div role="dialog">

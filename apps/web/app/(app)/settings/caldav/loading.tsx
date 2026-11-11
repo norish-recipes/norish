@@ -1,5 +1,6 @@
-import { readCaldavShape } from "../read-settings-shape";
-import CaldavSkeleton from "./components/caldav-skeleton";
+import CaldavSkeleton from "@/features/calendar/components/caldav/caldav-skeleton";
+
+import { readCaldavShape } from "./read-caldav-shape";
 
 export default async function Loading() {
   // The page reads the same shape; this is the same cached read.

@@ -16,8 +16,8 @@ import { useFormatter, useNow, useTranslations } from "next-intl";
 
 import { useHydrated } from "@norish/shared-react/platform";
 
-import { useCalDavSettingsContext } from "../context";
-import { FIRST_SYNC_STATUS_PAGE } from "../first-sync-status-page";
+import { useCalDavSettingsContext } from "./context";
+import { FIRST_SYNC_STATUS_PAGE } from "./first-sync-status-page";
 
 export default function CalDavSyncStatusCard() {
   const t = useTranslations("settings.caldav.syncStatus");

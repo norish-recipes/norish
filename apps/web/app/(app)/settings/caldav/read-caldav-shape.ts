@@ -5,10 +5,11 @@ import { readRequestProfile } from "@/lib/request-profile";
 
 import { getCaldavConfigByUserId } from "@norish/db/repositories/caldav-config";
 
-import type { CaldavShape } from "./caldav/components/caldav-shape";
-
-/** Whether the reader has a CalDAV config and whether it is enabled. */
-export const readCaldavShape = cache(async (): Promise<CaldavShape> => {
+/**
+ * Whether the reader has a CalDAV config and whether it is enabled. `cache` shares the read
+ * between the tab's skeleton and its page.
+ */
+export const readCaldavShape = cache(async () => {
   const { identity } = await readRequestProfile();
   const caldav = identity ? await getCaldavConfigByUserId(identity.id) : null;
 

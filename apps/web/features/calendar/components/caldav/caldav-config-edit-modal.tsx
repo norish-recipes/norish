@@ -19,8 +19,8 @@ import {
 } from "@heroui/react";
 import { useTranslations } from "next-intl";
 
-import { useCalDavSettingsContext } from "../context";
-import { useConnectionTest } from "../use-connection-test";
+import { useCalDavSettingsContext } from "./context";
+import { useConnectionTest } from "./use-connection-test";
 import { UntrustedCertificateNote } from "./untrusted-certificate-note";
 
 interface CalDavConfigEditModalProps {

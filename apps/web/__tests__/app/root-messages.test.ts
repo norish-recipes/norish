@@ -15,6 +15,7 @@ const SETTINGS_ROUTE = [
   "components/settings/",
   "features/household/",
   "features/account/",
+  "features/calendar/components/caldav/",
 ];
 
 describe("the root layout's client messages", () => {
