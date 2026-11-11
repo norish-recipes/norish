@@ -1,29 +1,27 @@
-import type { TRPCLink } from "@trpc/client";
 import type { ReactNode } from "react";
 import { dehydrate, hydrate, QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { act, render, screen, waitFor } from "@testing-library/react";
-import { createTRPCClient, TRPCClientError } from "@trpc/client";
-import { observable } from "@trpc/server/observable";
-import { createTRPCOptionsProxy } from "@trpc/tanstack-react-query";
+import { TRPCClientError } from "@trpc/client";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 
 import type {
   DeviceKind,
   DevicePreferences,
 } from "@norish/shared/contracts/zod/device-preferences";
-import type { AppRouter } from "@norish/trpc/client";
 import { PlatformProvider } from "@norish/shared-react/platform";
 import { fakePlatformAdapter } from "@norish/shared-react/platform/testing";
 import { DevicePreferencesForVisit, useDevicePreference } from "@norish/shared-react/reader";
 import { DEVICE_PREFERENCE_DEFAULTS } from "@norish/shared/contracts/zod/device-preferences";
 
+import { keyOf, resetTRPCFake, serveTRPC } from "../../trpc/testing";
+
 type Blocks = Record<DeviceKind, DevicePreferences>;
 type Stored = Partial<Record<DeviceKind, Partial<DevicePreferences>>>;
 type Write = { kind: DeviceKind; preferences: Partial<DevicePreferences> };
 
-const current = vi.hoisted(() => ({ trpc: null as unknown }));
+vi.mock("../../trpc", async () => (await import("../../trpc/testing")).mockTRPC());
 
-vi.mock("../../trpc", () => ({ useTRPC: () => current.trpc }));
+const KEY = keyOf("user.getDevicePreferences");
 
 const AN_HOUR_AGO = Date.now() - 60 * 60_000;
 const TWO_HOURS_AGO = Date.now() - 2 * 60 * 60_000;
@@ -38,7 +36,6 @@ function blocks(stored: Stored = {}): Blocks {
 /** The server: its stored blocks, the reads it answered and the writes it was sent. */
 let server: { blocks: Blocks; read: ReturnType<typeof vi.fn>; write: ReturnType<typeof vi.fn> };
 let queryClient: QueryClient;
-let trpc: ReturnType<typeof createTRPCOptionsProxy<AppRouter>>;
 
 function answer(path: string, input: unknown): Promise<unknown> {
   if (path === "user.getDevicePreferences") return Promise.resolve(server.read());
@@ -47,24 +44,11 @@ function answer(path: string, input: unknown): Promise<unknown> {
   return Promise.reject(new Error(`unexpected ${path}`));
 }
 
-const link: TRPCLink<AppRouter> =
-  () =>
-  ({ op }) =>
-    observable((observer) => {
-      answer(op.path, op.input).then(
-        (data) => {
-          observer.next({ result: { type: "data", data } });
-          observer.complete();
-        },
-        (error: unknown) => observer.error(error as TRPCClientError<AppRouter>)
-      );
-    });
-
 /** The query's data as a server pass or the Offline Cache hands it over, saved at `at`. */
 function copyOf(stored: Stored, at = Date.now()) {
   const source = new QueryClient();
 
-  source.setQueryData(trpc.user.getDevicePreferences.queryKey(), blocks(stored), {
+  source.setQueryData(KEY, blocks(stored), {
     updatedAt: at,
   });
 
@@ -72,7 +56,7 @@ function copyOf(stored: Stored, at = Date.now()) {
 }
 
 function cached(): Blocks | undefined {
-  return queryClient.getQueryData(trpc.user.getDevicePreferences.queryKey());
+  return queryClient.getQueryData(KEY);
 }
 
 let setView!: ReturnType<typeof useDevicePreference<"groceryViewMode">>[1];
@@ -131,11 +115,8 @@ beforeEach(() => {
   queryClient = new QueryClient({
     defaultOptions: { queries: { retry: false }, mutations: { networkMode: "always", retry: 0 } },
   });
-  trpc = createTRPCOptionsProxy<AppRouter>({
-    client: createTRPCClient<AppRouter>({ links: [link] }),
-    queryClient,
-  });
-  current.trpc = trpc;
+  resetTRPCFake();
+  serveTRPC(answer);
   server = {
     blocks: blocks(),
     read: vi.fn(() => server.blocks),
@@ -344,7 +325,7 @@ describe("useDevicePreference", () => {
   it("keeps a copy restored from the Offline Cache while a read was on its way", () => {
     // A read that started before the offline copy was restored...
     void queryClient.fetchQuery({
-      queryKey: trpc.user.getDevicePreferences.queryKey(),
+      queryKey: KEY,
       queryFn: () => new Promise<Blocks>(() => {}),
     });
     // ...and the copy put back the way a restore does it, not by hand.
