@@ -1,88 +1,48 @@
 "use client";
 
-import { useState } from "react";
 import { SettingsCard } from "@/components/settings/settings-card";
 import { ActionButton, ActionButtonGroup } from "@/components/shared/action-button";
 import { Note } from "@/components/shared/note";
-import SecretInput from "@/components/shared/secret-input";
 import { ServerIcon } from "@heroicons/react/24/outline";
-import {
-  Description,
-  Input,
-  Label,
-  Link,
-  ListBox,
-  Select,
-  TextField,
-  useOverlayState,
-} from "@heroui/react";
+import { Link, useOverlayState } from "@heroui/react";
 import { useTranslations } from "next-intl";
 
 import { useCaldavConfigSlice, useCaldavMutations } from "@norish/shared-react/calendar";
 
 import CaldavConfigEditModal from "./caldav-config-edit-modal";
 import CaldavConfigSummary from "./caldav-config-summary";
-import { UntrustedCertificateNote } from "./untrusted-certificate-note";
-import { useConnectionTest } from "./use-connection-test";
+import { CaldavFormFields, useCaldavForm } from "./caldav-form";
 
 export default function CaldavConfigCard() {
-  const t = useTranslations("settings.caldav.setup");
-  const tActions = useTranslations("common.actions");
   const { slice: configured } = useCaldavConfigSlice((config) => config !== null);
-  const { saveConfig, isSavingConfig: saving } = useCaldavMutations();
   const {
     isOpen: isEditModalOpen,
     open: onEditModalOpen,
     close: onEditModalClose,
   } = useOverlayState();
 
-  const [serverUrl, setServerUrl] = useState("");
-  const [calendarUrl, setCalendarUrl] = useState<string | null>(null);
-  const {
-    calendars,
-    testResult,
-    setTestResult,
-    testing,
-    runTest,
-    trustedCertificate,
-    trustAndRetest,
-  } = useConnectionTest(setCalendarUrl);
-  const [username, setUsername] = useState("");
-  const [password, setPassword] = useState("");
-  const [breakfastTime, setBreakfastTime] = useState("07:00-08:00");
-  const [lunchTime, setLunchTime] = useState("12:00-13:00");
-  const [dinnerTime, setDinnerTime] = useState("18:00-19:00");
-  const [snackTime, setSnackTime] = useState("15:00-16:00");
+  if (!configured) return <CaldavSetupCard />;
 
-  const handleTestConnection = () => runTest({ serverUrl, username, password, calendarUrl });
-  const handleInitialSetup = async () => {
-    setTestResult(null);
-    const saved = await saveConfig({
-      serverUrl,
-      calendarUrl,
-      username,
-      password,
-      enabled: true,
-      breakfastTime,
-      lunchTime,
-      dinnerTime,
-      snackTime,
-      trustedCertificate,
-    });
+  return (
+    <>
+      <CaldavConfigSummary onEditClick={onEditModalOpen} />
+      <CaldavConfigEditModal isOpen={isEditModalOpen} onClose={onEditModalClose} />
+    </>
+  );
+}
 
-    if (saved) setPassword("");
+function CaldavSetupCard() {
+  const t = useTranslations("settings.caldav.setup");
+  const tActions = useTranslations("common.actions");
+  const { saveConfig, isSavingConfig: saving } = useCaldavMutations();
+  const form = useCaldavForm(null);
+  const { serverUrl, username, password, calendarUrl, connection } = form;
+  const canSave = serverUrl && username && password && calendarUrl && form.timesValid;
+
+  const handleSave = () => {
+    connection.setTestResult(null);
+    void saveConfig(form.toSave(true));
   };
-
-  if (configured) {
-    return (
-      <>
-        <CaldavConfigSummary onEditClick={onEditModalOpen} />
-        <CaldavConfigEditModal isOpen={isEditModalOpen} onClose={onEditModalClose} />
-      </>
-    );
-  }
-
-  const canSave = serverUrl && username && password && calendarUrl;
 
   return (
     <SettingsCard description={t("description")} icon={ServerIcon} title={t("title")}>
@@ -117,111 +77,22 @@ export default function CaldavConfigCard() {
         </ul>
       </Note>
 
-      <TextField isRequired value={serverUrl} onChange={setServerUrl}>
-        <Label>{t("serverUrlLabel")}</Label>
-        <Input placeholder={t("serverUrlPlaceholder")} variant="secondary" />
-        <Description>{t("serverUrlDescription")}</Description>
-      </TextField>
-
-      <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
-        <TextField isRequired value={username} onChange={setUsername}>
-          <Label>{t("usernameLabel")}</Label>
-          <Input placeholder={t("usernamePlaceholder")} variant="secondary" />
-        </TextField>
-        <SecretInput
-          isRequired
-          isConfigured={false}
-          label={t("passwordLabel")}
-          placeholder={t("passwordPlaceholder")}
-          value={password}
-          onValueChange={setPassword}
-        />
-      </div>
-
-      <Select
-        isDisabled={calendars.length === 0}
-        placeholder={
-          calendars.length === 0 ? t("calendarPlaceholderDisabled") : t("calendarPlaceholder")
-        }
-        value={calendarUrl}
-        variant="secondary"
-        onChange={(selected) => {
-          setCalendarUrl(typeof selected === "string" ? selected : null);
-        }}
-      >
-        <Label>{t("calendarLabel")}</Label>
-        <Select.Trigger>
-          <Select.Value />
-          <Select.Indicator />
-        </Select.Trigger>
-        <Description>
-          {calendars.length === 0 ? t("calendarDescriptionDisabled") : t("calendarDescription")}
-        </Description>
-        <Select.Popover>
-          <ListBox>
-            {calendars.map((cal) => (
-              <ListBox.Item key={cal.url} id={cal.url} textValue={cal.displayName}>
-                {cal.displayName}
-              </ListBox.Item>
-            ))}
-          </ListBox>
-        </Select.Popover>
-      </Select>
-
-      <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
-        <TextField value={breakfastTime} onChange={setBreakfastTime}>
-          <Label>{t("breakfastTime")}</Label>
-          <Input placeholder="07:00-08:00" variant="secondary" />
-          <Description>{t("timeFormat")}</Description>
-        </TextField>
-        <TextField value={lunchTime} onChange={setLunchTime}>
-          <Label>{t("lunchTime")}</Label>
-          <Input placeholder="12:00-13:00" variant="secondary" />
-          <Description>{t("timeFormat")}</Description>
-        </TextField>
-        <TextField value={dinnerTime} onChange={setDinnerTime}>
-          <Label>{t("dinnerTime")}</Label>
-          <Input placeholder="18:00-19:00" variant="secondary" />
-          <Description>{t("timeFormat")}</Description>
-        </TextField>
-        <TextField value={snackTime} onChange={setSnackTime}>
-          <Label>{t("snackTime")}</Label>
-          <Input placeholder="15:00-16:00" variant="secondary" />
-          <Description>{t("timeFormat")}</Description>
-        </TextField>
-      </div>
-
-      {testResult?.untrustedCertificate ? (
-        <UntrustedCertificateNote
-          certificate={testResult.untrustedCertificate}
-          isPending={testing}
-          onTrust={() => trustAndRetest({ serverUrl, username, password, calendarUrl })}
-        />
-      ) : (
-        testResult && (
-          <div
-            className={`rounded-lg p-3 text-base ${testResult.success ? "bg-success/10 text-success" : "bg-danger/10 text-danger"}`}
-          >
-            {testResult.message}
-          </div>
-        )
-      )}
+      <CaldavFormFields
+        form={form}
+        isConfigured={false}
+        onTrust={() => connection.trustAndRetest(form.target(password))}
+      />
 
       <ActionButtonGroup>
         <ActionButton
           action="test"
           isDisabled={!serverUrl || !username || !password}
-          isPending={testing}
-          onPress={handleTestConnection}
+          isPending={connection.testing}
+          onPress={() => connection.runTest(form.target(password))}
         >
           {tActions("test")}
         </ActionButton>
-        <ActionButton
-          action="save"
-          isDisabled={!canSave}
-          isPending={saving}
-          onPress={handleInitialSetup}
-        >
+        <ActionButton action="save" isDisabled={!canSave} isPending={saving} onPress={handleSave}>
           {tActions("save")}
         </ActionButton>
       </ActionButtonGroup>
