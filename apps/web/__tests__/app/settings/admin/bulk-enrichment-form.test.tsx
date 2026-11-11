@@ -30,7 +30,7 @@ vi.mock("next-intl", () => ({
 
 vi.mock("@/lib/ui/safe-error-toast", () => ({ showSafeErrorToast: vi.fn() }));
 
-vi.mock("@/app/(app)/settings/components/settings-switch", () => ({
+vi.mock("@/components/settings/settings-switch", () => ({
   default: ({
     isSelected,
     onValueChange,

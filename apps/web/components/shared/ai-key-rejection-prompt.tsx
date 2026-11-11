@@ -45,7 +45,7 @@ export default function AIKeyRejectionPrompt() {
       description: rejections.description,
       variant: "danger",
       timeout: 0,
-      action: { label: t("openSettings"), onPress: () => router.push("/settings?tab=admin") },
+      action: { label: t("openSettings"), onPress: () => router.push("/settings/admin") },
     });
     // The id says everything that would change what the toast says.
     // eslint-disable-next-line @eslint-react/exhaustive-deps

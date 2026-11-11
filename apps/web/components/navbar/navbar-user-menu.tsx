@@ -218,7 +218,7 @@ export default function NavbarUserMenu({
               // Every sibling item routes through the client router instead.
               onPress={() => {
                 handleOpenChange(false);
-                router.push("/settings?tab=user");
+                router.push("/settings/account");
               }}
             >
               <span className="text-muted">

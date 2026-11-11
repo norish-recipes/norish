@@ -4,7 +4,7 @@ import { expect } from "@playwright/test";
 import { getConfig, setConfig } from "@norish/db/repositories/server-config";
 
 export async function openPromptsPanel(page: Page) {
-  await page.goto("/settings?tab=admin");
+  await page.goto("/settings/admin");
 
   const trigger = page.getByRole("button", { name: /^Prompts/ }).first();
 

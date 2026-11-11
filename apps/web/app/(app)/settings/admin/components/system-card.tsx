@@ -1,8 +1,8 @@
 "use client";
 
 import { useState } from "react";
-import { SettingRow } from "@/app/(app)/settings/components/setting-row";
-import { SettingsCard } from "@/app/(app)/settings/components/settings-card";
+import { SettingRow } from "@/components/settings/setting-row";
+import { SettingsCard } from "@/components/settings/settings-card";
 import { ActionButton, ActionButtonGroup } from "@/components/shared/action-button";
 import { usePending } from "@/hooks/use-pending";
 import { ArrowPathIcon } from "@heroicons/react/16/solid";

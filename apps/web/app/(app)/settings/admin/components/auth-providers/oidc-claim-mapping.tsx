@@ -1,7 +1,7 @@
 "use client";
 
-import { SwitchRow } from "@/app/(app)/settings/components/setting-row";
-import SettingsSwitch from "@/app/(app)/settings/components/settings-switch";
+import { SwitchRow } from "@/components/settings/setting-row";
+import SettingsSwitch from "@/components/settings/settings-switch";
 import { Note } from "@/components/shared/note";
 import { UserGroupIcon } from "@heroicons/react/16/solid";
 import { Description, Input, Label, Separator, TextField } from "@heroui/react";

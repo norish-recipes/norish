@@ -1,25 +1,26 @@
 "use client";
 
-import { SettingsTabSkeleton } from "@/components/skeleton/settings-skeleton";
+import type { HouseholdShape } from "@/components/settings/settings-tab";
 
 import { HouseholdSettingsProvider, useHouseholdSettingsContext } from "../context";
+import HouseholdSkeleton from "./household-skeleton";
 import HouseholdView from "./household-view";
 import NoHouseholdView from "./no-household-view";
 
-function HouseholdSettingsContent() {
+function HouseholdSettingsContent({ shape }: { shape: HouseholdShape }) {
   const { household, isLoading } = useHouseholdSettingsContext();
 
   if (isLoading) {
-    return <SettingsTabSkeleton tab="household" />;
+    return <HouseholdSkeleton household={shape} />;
   }
 
   return household ? <HouseholdView /> : <NoHouseholdView />;
 }
 
-export default function HouseholdSettingsContentWrapper() {
+export default function HouseholdSettingsContentWrapper({ shape }: { shape: HouseholdShape }) {
   return (
     <HouseholdSettingsProvider>
-      <HouseholdSettingsContent />
+      <HouseholdSettingsContent shape={shape} />
     </HouseholdSettingsProvider>
   );
 }

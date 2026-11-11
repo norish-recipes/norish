@@ -1,7 +1,7 @@
 "use client";
 
 import { useState } from "react";
-import SettingsSwitch from "@/app/(app)/settings/components/settings-switch";
+import SettingsSwitch from "@/components/settings/settings-switch";
 import { ActionButton, ActionButtonGroup } from "@/components/shared/action-button";
 import { usePending } from "@/hooks/use-pending";
 import { Modal } from "@heroui/react";

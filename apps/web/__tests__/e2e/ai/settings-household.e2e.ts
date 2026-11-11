@@ -10,7 +10,7 @@ import { signIn } from "../harness/auth";
 import { signUpThrowawayUser } from "./admin-users-support";
 import { expect, test } from "./fixture";
 
-const HOUSEHOLD_SETTINGS = "/settings?tab=household";
+const HOUSEHOLD_SETTINGS = "/settings/household";
 
 function card(page: Page, title: string): Locator {
   return page

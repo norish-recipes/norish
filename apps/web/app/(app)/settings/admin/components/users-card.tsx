@@ -1,7 +1,7 @@
 "use client";
 
 import { useState } from "react";
-import { SettingsCard } from "@/app/(app)/settings/components/settings-card";
+import { SettingsCard } from "@/components/settings/settings-card";
 import { IconActionButton } from "@/components/shared/action-button";
 import UserAvatar from "@/components/shared/user-avatar";
 import DataTable from "@/components/ui/data-table";

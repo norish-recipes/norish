@@ -23,7 +23,7 @@ test("quick Hidden Items changes all land, and none drops out while the next is 
   await page.route("**/api/trpc/user.setDevicePreferences*", (route) => {
     held.push(route);
   });
-  await page.goto("/settings?tab=user");
+  await page.goto("/settings/account");
 
   await page.getByRole("button", { name: /Hidden items/ }).click();
   const option = (name: string) => page.getByRole("option", { name, exact: true });

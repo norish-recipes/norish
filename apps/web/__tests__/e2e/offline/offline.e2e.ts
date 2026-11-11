@@ -91,7 +91,7 @@ test.beforeAll(async ({ offlineHarness }) => {
 test("a Live visit installs the app shell and warms the Warm Set", async () => {
   // /settings is deliberately NOT a Warm Set surface: every later offline
   // navigation below is a genuinely unseen route in this browser profile.
-  await page.goto("/settings");
+  await page.goto("/settings/account");
 
   await page.waitForFunction(() => navigator.serviceWorker?.controller != null, undefined, {
     timeout: 60_000,
@@ -261,7 +261,7 @@ test("a hanging network observes the Reachability Deadline (ADR-0013)", async ()
   // initial Live visit predates the worker claiming the page, so the pages
   // cache is still empty.
   await offline.transition("live");
-  await page.goto("/settings");
+  await page.goto("/settings/account");
   await offline.transition("unresponsive");
 
   // An uncached route must fail over to the offline shell at the deadline.
@@ -274,7 +274,7 @@ test("a hanging network observes the Reachability Deadline (ADR-0013)", async ()
   // A route visited while Live serves its cached document at the deadline
   // instead of the shell.
   startedAt = Date.now();
-  await page.goto("/settings");
+  await page.goto("/settings/account");
   expect(Date.now() - startedAt).toBeLessThan(20_000);
   await expect(page.getByTestId("offline-unavailable")).not.toBeVisible();
 

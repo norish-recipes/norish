@@ -1,8 +1,8 @@
 "use client";
 
 import { useCallback, useEffect, useState } from "react";
-import { SettingsCard } from "@/app/(app)/settings/components/settings-card";
-import SettingsSwitch from "@/app/(app)/settings/components/settings-switch";
+import { SettingsCard } from "@/components/settings/settings-card";
+import SettingsSwitch from "@/components/settings/settings-switch";
 import { ActionButton } from "@/components/shared/action-button";
 import { ArrowPathIcon, CheckCircleIcon, XCircleIcon } from "@heroicons/react/16/solid";
 import { ServerIcon } from "@heroicons/react/24/outline";

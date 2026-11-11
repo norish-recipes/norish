@@ -1,7 +1,7 @@
 "use client";
 
 import type { ReactNode } from "react";
-import { SettingsCard } from "@/app/(app)/settings/components/settings-card";
+import { SettingsCard } from "@/components/settings/settings-card";
 import { ArrowDownTrayIcon, CircleStackIcon } from "@heroicons/react/24/outline";
 import { useTranslations } from "next-intl";
 

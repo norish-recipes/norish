@@ -1,8 +1,8 @@
 "use client";
 
 import { useState } from "react";
-import UiSwitch from "@/app/(app)/settings/components/settings-switch";
 import Panel from "@/components/Panel/Panel";
+import UiSwitch from "@/components/settings/settings-switch";
 import { ActionButton, ActionButtonGroup } from "@/components/shared/action-button";
 import { Chip } from "@heroui/react";
 import { useTranslations } from "next-intl";

@@ -386,7 +386,7 @@ test("an administrator cancels a running AI job, and the job monitor shows it Ca
     await submitPasteImport(page, "Import Held Stew — the harness never answers.");
     await expect.poll(() => chatRequestCount(), { timeout: 30_000 }).toBe(1);
 
-    await page.goto("/settings?tab=admin");
+    await page.goto("/settings/admin");
     const running = page
       .getByRole("row")
       .filter({ hasText: "Paste import" })

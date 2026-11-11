@@ -3,7 +3,7 @@ import { beforeEach, describe, expect, it, vi } from "vitest";
 
 import "@testing-library/jest-dom";
 
-import ProfileCard from "@/app/(app)/settings/user/components/profile-card";
+import ProfileCard from "@/app/(app)/settings/account/components/profile-card";
 
 const mockContext = vi.hoisted(() => ({
   user: { name: "Alice", email: "alice@example.com", image: null },
@@ -19,7 +19,7 @@ vi.mock("next-intl", () => ({
   useTranslations: () => (key: string) => key,
 }));
 
-vi.mock("@/app/(app)/settings/user/context", () => ({
+vi.mock("@/app/(app)/settings/account/context", () => ({
   useUserSettingsContext: () => ({ ...mockContext, user: mockUser }),
 }));
 

@@ -10,7 +10,7 @@ import { callTrpc } from "../harness/trpc";
 import { signUpThrowawayUser } from "./admin-users-support";
 import { expect, test } from "./fixture";
 
-const ACCOUNT_SETTINGS = "/settings";
+const ACCOUNT_SETTINGS = "/settings/account";
 const PHOTO = path.join(import.meta.dirname, "fixtures", "supplied-photo.jpg");
 
 function card(page: Page, title: string): Locator {

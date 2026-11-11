@@ -160,7 +160,7 @@ test("a Dutch 'ui' in the Pantry leaves an English recipe's 'onion' off the list
 });
 
 test("the list asks for its next page as the end comes into view", async () => {
-  await page.goto("/settings?tab=ingredients");
+  await page.goto("/settings/ingredients");
   await expect(ingredientRow("uitjes")).toBeVisible();
   // The last food is on the second page: not there until the end is reached.
   await expect(ingredientRow(fillerName(FILLER_COUNT))).toHaveCount(0);
@@ -183,7 +183,7 @@ test("a food's name, parent and translations land together with Save", async () 
   const before = fillerName(1);
   const after = "zz filler one";
 
-  await page.goto("/settings?tab=ingredients");
+  await page.goto("/settings/ingredients");
   await page.getByTestId("ingredients-search").fill(before);
   await ingredientRow(before).getByTestId("ingredient-toggle").click();
   const opened = ingredientPanel(before);
@@ -232,7 +232,7 @@ test("a food's name, parent and translations land together with Save", async () 
 });
 
 test("a food Norish was not sure about is marked on the Ingredients page", async () => {
-  await page.goto("/settings?tab=ingredients");
+  await page.goto("/settings/ingredients");
   // The filters sit in a panel and land with Apply, as the dashboard's do.
   await page.getByTestId("ingredients-filters").click();
   const filters = page.getByRole("dialog", { name: "Filters" });
@@ -260,7 +260,7 @@ test("a food Norish was not sure about is marked on the Ingredients page", async
 });
 
 test("the filters can show only the foods with neither parent nor kinds", async () => {
-  await page.goto("/settings?tab=ingredients");
+  await page.goto("/settings/ingredients");
   await page.getByTestId("ingredients-filters").click();
   const filters = page.getByRole("dialog", { name: "Filters" });
   const standalone = filters.getByRole("switch", { name: "Without parent or kinds" });
@@ -306,7 +306,7 @@ test("AI merges a food a recipe mints by itself, Changed by AI lists the merge, 
   await expect.poll(() => readIngredientOf("knoflookteentjes"), { timeout: 30_000 }).toBe("garlic");
 
   // Changed by AI lists the merge under the food it joined, with Undo.
-  await page.goto("/settings?tab=ingredients");
+  await page.goto("/settings/ingredients");
   await page.getByTestId("ingredients-ai-changes-open").click();
   const panel = page.getByRole("dialog", { name: "Changed by AI" });
   // Other specs in this database may have left changes of their own: this is the one.
@@ -365,7 +365,7 @@ test("AI gives a food a recipe mints its plain name by itself, listed on Changed
     .poll(() => readIngredientOf("Lekkerste Zalmmoot"), { timeout: 30_000 })
     .toBe("zalmmoot");
 
-  await page.goto("/settings?tab=ingredients");
+  await page.goto("/settings/ingredients");
   await page.getByTestId("ingredients-ai-changes-open").click();
   const panel = page.getByRole("dialog", { name: "Changed by AI" });
   const rename = panel
@@ -419,7 +419,7 @@ test("AI removes a food that names nothing; its line stays in the recipe with no
   await waitForAIPasses(aiStack);
   expect(ai.control.ingredientRequests).toHaveLength(asked);
 
-  await page.goto("/settings?tab=ingredients");
+  await page.goto("/settings/ingredients");
   await page.getByTestId("ingredients-ai-changes-open").click();
   const panel = page.getByRole("dialog", { name: "Changed by AI" });
   const deleted = panel
@@ -440,7 +440,7 @@ test("removing a translation by hand asks whether it names no food: Not a food k
   aiStack,
 }) => {
   await waitForAIPasses(aiStack);
-  await page.goto("/settings?tab=ingredients");
+  await page.goto("/settings/ingredients");
   await page.getByTestId("ingredients-search").fill("garlic");
   await ingredientRow("garlic").getByTestId("ingredient-toggle").click();
   const opened = ingredientPanel("garlic");
@@ -515,7 +515,7 @@ test("merging it into the food that holds an Aisle Link files its grocery in tha
   await addGrocery("uitjes");
   await expect.poll(() => rowsIn(AISLE)).toEqual(["red onion"]);
 
-  await page.goto("/settings?tab=ingredients");
+  await page.goto("/settings/ingredients");
   await ingredientRow("uitjes").getByTestId("ingredient-toggle").click();
   await ingredientPanel("uitjes").getByTestId("ingredient-merge").click();
   // Picking what to merge into is a panel over the food's own.
@@ -536,7 +536,7 @@ test("merging it into the food that holds an Aisle Link files its grocery in tha
 });
 
 test("a food nothing uses can be deleted, and so can one a grocery uses, which stays on the list", async () => {
-  await page.goto("/settings?tab=ingredients");
+  await page.goto("/settings/ingredients");
 
   await ingredientRow("shallot").getByTestId("ingredient-toggle").click();
   await ingredientPanel("shallot").getByTestId("ingredient-delete").click();
@@ -622,7 +622,7 @@ test("a food only a grocery names is not on the Ingredients page, and AI leaves 
   expect(await readIngredientOf(reserve)).toBe(reserve);
 
   // A search finds the listed food beside it, never the grocery's.
-  await page.goto("/settings?tab=ingredients");
+  await page.goto("/settings/ingredients");
   await page.getByTestId("ingredients-search").fill("reserve");
   await expect(ingredientRow("onion")).toHaveCount(0);
   await expect(ingredientRow("reservebrood")).toBeVisible();
@@ -639,7 +639,7 @@ test("a food only a grocery names is not on the Ingredients page, and AI leaves 
     )
     .toBe(reserve);
   // Another search than the cached one: nothing about the food itself changed to refetch it.
-  await page.goto("/settings?tab=ingredients");
+  await page.goto("/settings/ingredients");
   await page.getByTestId("ingredients-search").fill("nora reserve");
   await expect(ingredientRow(reserve)).toBeVisible();
 });

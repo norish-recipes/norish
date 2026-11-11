@@ -3,7 +3,7 @@ import { describe, expect, it } from "vitest";
 
 import "@testing-library/jest-dom";
 
-import { SettingRow, SwitchRow } from "@/app/(app)/settings/components/setting-row";
+import { SettingRow, SwitchRow } from "@/components/settings/setting-row";
 
 /**
  * The rows exist for one reason: a phone has room for the text or the control,

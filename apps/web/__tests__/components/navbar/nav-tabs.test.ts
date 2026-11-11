@@ -8,7 +8,8 @@ describe("navTabPosition", () => {
 
   it("places a page under its tab, query or not", () => {
     expect(navTabPosition("/groceries/pantry")).toBe(1);
-    expect(navTabPosition("/settings?tab=household")).toBe(3);
+    expect(navTabPosition("/settings/household")).toBe(3);
+    expect(navTabPosition("/settings/admin")).toBe(3);
     expect(navTabPosition("/?q=stew")).toBe(0);
   });
 
@@ -27,7 +28,7 @@ describe("slidesBack", () => {
 
   it("slides a tab to the right, or one opened from outside the tabs, forward", () => {
     expect(slidesBack("/", "/calendar")).toBe(false);
-    expect(slidesBack("/groceries", "/settings?tab=user")).toBe(false);
+    expect(slidesBack("/groceries", "/settings/account")).toBe(false);
     expect(slidesBack("/recipes/abc", "/")).toBe(false);
   });
 });

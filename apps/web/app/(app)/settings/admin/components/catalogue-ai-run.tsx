@@ -1,7 +1,7 @@
 "use client";
 
 import type { ReactNode } from "react";
-import { SettingRow } from "@/app/(app)/settings/components/setting-row";
+import { SettingRow } from "@/components/settings/setting-row";
 import { ActionButton, ActionButtonGroup } from "@/components/shared/action-button";
 import { AIButton } from "@/components/shared/ai-button";
 import { cssAIIconColor } from "@/config/css-tokens";

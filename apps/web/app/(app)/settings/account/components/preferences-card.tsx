@@ -2,8 +2,8 @@
 
 import { useCallback, useMemo } from "react";
 import { useRouter } from "next/navigation";
-import { SettingRow } from "@/app/(app)/settings/components/setting-row";
-import { SettingsCard } from "@/app/(app)/settings/components/settings-card";
+import { SettingRow } from "@/components/settings/setting-row";
+import { SettingsCard } from "@/components/settings/settings-card";
 import { InfoHint } from "@/components/shared/info-hint";
 import { HIDDEN_ITEMS, partitionHiddenItems } from "@/lib/hidden-items";
 import { AdjustmentsHorizontalIcon } from "@heroicons/react/24/outline";

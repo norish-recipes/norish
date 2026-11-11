@@ -131,7 +131,7 @@ describe("OfflineBootstrap", () => {
   it.each([
     "/recipes/new",
     "/recipes/11111111-1111-4111-8111-111111111111/edit",
-    "/settings",
+    "/settings/account",
     "/~offline",
   ])("renders Offline unavailable for unsupported path %s", async (pathname) => {
     renderPath(pathname);

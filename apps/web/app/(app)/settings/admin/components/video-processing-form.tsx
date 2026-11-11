@@ -1,8 +1,8 @@
 "use client";
 
 import { useCallback, useEffect, useMemo, useState } from "react";
-import { SwitchRow } from "@/app/(app)/settings/components/setting-row";
-import SettingsSwitch from "@/app/(app)/settings/components/settings-switch";
+import { SwitchRow } from "@/components/settings/setting-row";
+import SettingsSwitch from "@/components/settings/settings-switch";
 import { ActionButton, ActionButtonGroup } from "@/components/shared/action-button";
 import { Note } from "@/components/shared/note";
 import SecretInput from "@/components/shared/secret-input";

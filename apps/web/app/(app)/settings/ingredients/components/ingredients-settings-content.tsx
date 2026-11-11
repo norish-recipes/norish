@@ -2,9 +2,9 @@
 
 import { useCallback, useMemo, useState, useTransition } from "react";
 import { useSearchParams } from "next/navigation";
-import { SettingsCard } from "@/app/(app)/settings/components/settings-card";
 import { IngredientPanel } from "@/components/ingredients/ingredient-panel";
 import { isOpenChange, useAIChanges } from "@/components/ingredients/use-ai-changes";
+import { SettingsCard } from "@/components/settings/settings-card";
 import { ActionButton } from "@/components/shared/action-button";
 import { FunnelIcon, SparklesIcon } from "@heroicons/react/16/solid";
 import { BookOpenIcon } from "@heroicons/react/24/outline";

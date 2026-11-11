@@ -1,9 +1,9 @@
 "use client";
 
 import { useState } from "react";
-import NewFeatureChip from "@/app/(app)/settings/components/new-feature-chip";
-import { SettingsCard } from "@/app/(app)/settings/components/settings-card";
 import RecipeShareStatusChip from "@/components/recipes/recipe-share-status-chip";
+import NewFeatureChip from "@/components/settings/new-feature-chip";
+import { SettingsCard } from "@/components/settings/settings-card";
 import {
   ActionButton,
   ActionButtonGroup,

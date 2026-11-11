@@ -36,7 +36,7 @@ const storedKey = async (aiStack: AIE2EStack) =>
   ).value;
 
 async function openVideoSettings(page: Page): Promise<Locator> {
-  await page.goto("/settings?tab=admin");
+  await page.goto("/settings/admin");
   const trigger = page.getByRole("button", { name: /^Video processing/ }).first();
 
   await trigger.scrollIntoViewIfNeeded();

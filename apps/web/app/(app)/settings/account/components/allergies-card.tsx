@@ -1,7 +1,7 @@
 "use client";
 
 import { useCallback, useState } from "react";
-import { SettingsCard } from "@/app/(app)/settings/components/settings-card";
+import { SettingsCard } from "@/components/settings/settings-card";
 import { ActionButton, ActionButtonGroup } from "@/components/shared/action-button";
 import TagInput from "@/components/shared/tag-input";
 import { ExclamationTriangleIcon } from "@heroicons/react/24/outline";

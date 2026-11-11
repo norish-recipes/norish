@@ -1,7 +1,7 @@
 "use client";
 
 import { useRef, useState } from "react";
-import { SettingsCard } from "@/app/(app)/settings/components/settings-card";
+import { SettingsCard } from "@/components/settings/settings-card";
 import { ActionButton, ActionButtonGroup } from "@/components/shared/action-button";
 import UserAvatar from "@/components/shared/user-avatar";
 import { usePending } from "@/hooks/use-pending";

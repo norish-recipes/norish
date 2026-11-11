@@ -1,7 +1,7 @@
 "use client";
 
-import { SettingsCard } from "@/app/(app)/settings/components/settings-card";
 import ArchiveImporter from "@/components/navbar/archive-importer";
+import { SettingsCard } from "@/components/settings/settings-card";
 import { ArrowUpTrayIcon } from "@heroicons/react/24/outline";
 import { useTranslations } from "next-intl";
 

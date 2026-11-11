@@ -1,9 +1,9 @@
 "use client";
 
 import { useCallback, useState } from "react";
-import { SwitchRow } from "@/app/(app)/settings/components/setting-row";
-import { SettingsAccordion, SettingsCard } from "@/app/(app)/settings/components/settings-card";
-import SettingsSwitch from "@/app/(app)/settings/components/settings-switch";
+import { SwitchRow } from "@/components/settings/setting-row";
+import { SettingsAccordion, SettingsCard } from "@/components/settings/settings-card";
+import SettingsSwitch from "@/components/settings/settings-switch";
 import { KeyIcon } from "@heroicons/react/24/outline";
 import { Accordion, Separator } from "@heroui/react";
 import { useTranslations } from "next-intl";

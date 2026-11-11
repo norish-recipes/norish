@@ -221,8 +221,8 @@ test("a tab starts its page at the top, and a step back returns the page to wher
   const SHRUNKEN = /^matrix\(0\.8, /;
 
   try {
-    await page.goto("/settings?tab=user");
-    await expect(page.getByRole("tab", { name: "User" })).toBeVisible();
+    await page.goto("/settings/account");
+    await expect(page.getByRole("tab", { name: "Account" })).toBeVisible();
     // The nav ignores scrolling for a moment after a page arrives, so the way
     // down is retried until it reads.
     await expect(async () => {
@@ -241,7 +241,7 @@ test("a tab starts its page at the top, and a step back returns the page to wher
     await expect(nav).toHaveCSS("transform", "none");
 
     await page.goBack();
-    await expect(page).toHaveURL(/\/settings\?tab=user$/);
+    await expect(page).toHaveURL(/\/settings\/account$/);
     await expect.poll(scrollY).toBe(400);
     // Landing where the page was left is not the reader scrolling down.
     await expect(nav).toHaveCSS("transform", "none");
@@ -434,7 +434,7 @@ test("the tabs slide in their bar order: Recipes, Groceries, Calendar, Settings"
     await tab("Groceries");
     await expect(page).toHaveURL(/\/groceries$/);
     await tab("Settings");
-    await expect(page).toHaveURL(/\/settings\?tab=user$/);
+    await expect(page).toHaveURL(/\/settings\/account$/);
     await tab("Recipes");
     await expect(page).toHaveURL(/\/$/);
 

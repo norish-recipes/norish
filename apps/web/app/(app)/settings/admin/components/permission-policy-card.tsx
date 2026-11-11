@@ -2,8 +2,8 @@
 
 import type { ReactNode } from "react";
 import { useState } from "react";
-import { SettingRow } from "@/app/(app)/settings/components/setting-row";
-import { SettingsCard } from "@/app/(app)/settings/components/settings-card";
+import { SettingRow } from "@/components/settings/setting-row";
+import { SettingsCard } from "@/components/settings/settings-card";
 import { Note } from "@/components/shared/note";
 import { ShieldCheckIcon } from "@heroicons/react/24/outline";
 import { Separator } from "@heroui/react";

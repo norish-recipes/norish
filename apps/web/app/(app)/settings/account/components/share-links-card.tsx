@@ -1,6 +1,6 @@
 "use client";
 
-import ShareLinksTableCard from "@/components/recipes/share-links-table-card";
+import ShareLinksTableCard from "@/components/settings/share-links-table-card";
 
 import { useMyRecipeSharesQuery } from "@norish/shared-react/recipes";
 

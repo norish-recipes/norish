@@ -3,7 +3,7 @@ import { beforeEach, describe, expect, it, vi } from "vitest";
 
 import "@testing-library/jest-dom";
 
-import PreferencesCard from "@/app/(app)/settings/user/components/preferences-card";
+import PreferencesCard from "@/app/(app)/settings/account/components/preferences-card";
 
 import type { DeviceKind } from "@norish/shared/contracts/zod/device-preferences";
 
@@ -23,7 +23,7 @@ vi.mock("next/navigation", () => ({
   useRouter: () => ({ refresh: mockRouterRefresh }),
 }));
 
-vi.mock("@/app/(app)/settings/user/context", () => ({
+vi.mock("@/app/(app)/settings/account/context", () => ({
   useUserSettingsContext: () => ({ ...mockContext, user: mockContext.user }),
 }));
 

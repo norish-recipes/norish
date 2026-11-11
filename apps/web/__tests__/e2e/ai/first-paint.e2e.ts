@@ -1131,7 +1131,7 @@ test("a full load of the user settings tab draws the reader's name in its field"
   const { context, page } = await openStatic(browser, "phone");
 
   try {
-    await page.goto("/settings?tab=user");
+    await page.goto("/settings/account");
     await expect(page.locator(`input[value="${OWNER.name}"]`).first()).toBeAttached();
   } finally {
     await context.close();
@@ -1159,10 +1159,10 @@ test("the user settings tab draws a date the way the server sent it, in any brow
   });
 
   try {
-    await served.page.goto("/settings?tab=user");
+    await served.page.goto("/settings/account");
     const page = await live.newPage();
 
-    await page.goto("/settings?tab=user");
+    await page.goto("/settings/account");
     // A production build reports no mismatch; a hydrated date that differs from the served one is it.
     await expect(created(page)).toHaveText((await created(served.page).textContent()) ?? "");
   } finally {

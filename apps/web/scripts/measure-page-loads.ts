@@ -191,8 +191,8 @@ const PAGES: Array<{ name: string; url: string | undefined; marks: Marks }> = [
     marks: { fromYourRecipes: '[data-testid="pantry-suggestions"]' },
   },
   {
-    name: "/settings?tab=user",
-    url: "/settings?tab=user",
+    name: "/settings/account",
+    url: "/settings/account",
     marks: { name: 'input[placeholder="Your name"][value]:not([value=""])' },
   },
 ];

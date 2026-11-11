@@ -20,7 +20,7 @@ test("a password user connects OIDC in Settings, signs in with it, and disconnec
     const oidcRow = page.getByRole("listitem").filter({ hasText: IDP_NAME });
 
     // The server renders the card with its methods, so it never offers a Connect it takes back.
-    const html = await (await page.goto("/settings"))?.text();
+    const html = await (await page.goto("/settings/account"))?.text();
 
     expect(html).toContain(">Password</p>");
     expect(html).toContain(`Connect ${IDP_NAME}`);
@@ -29,12 +29,12 @@ test("a password user connects OIDC in Settings, signs in with it, and disconnec
     // Cancelling at the identity provider comes back with nothing added.
     aiStack.idp.signInAs = null;
     await Promise.all([page.waitForURL(/error=access_denied/), connect.click()]);
-    await expect(page).toHaveURL(/\/settings$/);
+    await expect(page).toHaveURL(/\/settings\/account$/);
     await expect(connect).toBeVisible();
 
     aiStack.idp.signInAs = { sub: "member-sub", email: "member@home.lan", name: "Member" };
     await connect.click();
-    await expect(page).toHaveURL(/\/settings$/);
+    await expect(page).toHaveURL(/\/settings\/account$/);
     await expect(oidcRow.getByRole("button", { name: "Disconnect" })).toBeVisible();
 
     const oidcPage = await oidcContext.newPage();
@@ -47,7 +47,7 @@ test("a password user connects OIDC in Settings, signs in with it, and disconnec
 
     expect(session.user.email).toBe(MEMBER.email);
 
-    await oidcPage.goto("/settings");
+    await oidcPage.goto("/settings/account");
     await oidcPage
       .getByRole("listitem")
       .filter({ hasText: IDP_NAME })
@@ -81,7 +81,7 @@ test("a password user changes their password in Settings and signs out their oth
   try {
     const page = await context.newPage();
 
-    await page.goto("/settings");
+    await page.goto("/settings/account");
     await page
       .getByRole("listitem")
       .filter({ hasText: "Password" })

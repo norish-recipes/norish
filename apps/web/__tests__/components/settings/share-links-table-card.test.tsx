@@ -1,4 +1,4 @@
-import ShareLinksTableCard from "@/components/recipes/share-links-table-card";
+import ShareLinksTableCard from "@/components/settings/share-links-table-card";
 import { render, screen } from "@testing-library/react";
 import { beforeAll, describe, expect, it, vi } from "vitest";
 
@@ -39,7 +39,7 @@ vi.mock("@norish/shared-react/recipes", async (importOriginal) => ({
   }),
 }));
 
-vi.mock("@/app/(app)/settings/components/new-feature-chip", () => ({
+vi.mock("@/components/settings/new-feature-chip", () => ({
   default: () => null,
 }));
 

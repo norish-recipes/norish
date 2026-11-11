@@ -1,10 +1,10 @@
 "use client";
 
 import { useState } from "react";
-import ArchiveExportButton from "@/app/(app)/settings/components/archive-export-button";
-import { SettingRow, SwitchRow } from "@/app/(app)/settings/components/setting-row";
-import { SettingsCard } from "@/app/(app)/settings/components/settings-card";
-import SettingsSwitch from "@/app/(app)/settings/components/settings-switch";
+import ArchiveExportButton from "@/components/settings/archive-export-button";
+import { SettingRow, SwitchRow } from "@/components/settings/setting-row";
+import { SettingsCard } from "@/components/settings/settings-card";
+import SettingsSwitch from "@/components/settings/settings-switch";
 import { ActionButton, ActionButtonGroup } from "@/components/shared/action-button";
 import { usePending } from "@/hooks/use-pending";
 import { showSafeErrorToast } from "@/lib/ui/safe-error-toast";

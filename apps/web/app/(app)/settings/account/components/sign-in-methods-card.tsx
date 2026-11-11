@@ -2,8 +2,8 @@
 
 import { useEffect, useState } from "react";
 import { usePathname, useRouter, useSearchParams } from "next/navigation";
-import { SettingsCard } from "@/app/(app)/settings/components/settings-card";
 import { ProviderIcon } from "@/app/(auth)/login/components/provider-icon";
+import { SettingsCard } from "@/components/settings/settings-card";
 import { KeyIcon, TrashIcon } from "@heroicons/react/16/solid";
 import { FingerPrintIcon } from "@heroicons/react/24/outline";
 import { Button, toast } from "@heroui/react";

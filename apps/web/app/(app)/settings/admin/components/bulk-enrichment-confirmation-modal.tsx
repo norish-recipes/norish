@@ -1,6 +1,6 @@
 "use client";
 
-import SettingsSwitch from "@/app/(app)/settings/components/settings-switch";
+import SettingsSwitch from "@/components/settings/settings-switch";
 import { ActionButton, ActionButtonGroup } from "@/components/shared/action-button";
 import { Note } from "@/components/shared/note";
 import { ExclamationTriangleIcon, SparklesIcon } from "@heroicons/react/16/solid";

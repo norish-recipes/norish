@@ -1,7 +1,8 @@
 "use client";
 
 import { useState } from "react";
-import { SettingsCard } from "@/app/(app)/settings/components/settings-card";
+import NewFeatureChip from "@/components/settings/new-feature-chip";
+import { SettingsCard } from "@/components/settings/settings-card";
 import {
   ActionButton,
   ActionButtonGroup,
@@ -13,7 +14,6 @@ import { ArrowTopRightOnSquareIcon, KeyIcon } from "@heroicons/react/24/outline"
 import { Chip, Input, Label, Modal, Table, TextField } from "@heroui/react";
 import { useFormatter, useTranslations } from "next-intl";
 
-import NewFeatureChip from "../../components/new-feature-chip";
 import { useUserSettingsContext } from "../context";
 
 export default function ApiKeyCard() {

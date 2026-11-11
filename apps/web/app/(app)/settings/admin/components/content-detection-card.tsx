@@ -1,7 +1,7 @@
 "use client";
 
 import { useCallback, useState } from "react";
-import { SettingsAccordion, SettingsCard } from "@/app/(app)/settings/components/settings-card";
+import { SettingsAccordion, SettingsCard } from "@/components/settings/settings-card";
 import { DocumentMagnifyingGlassIcon } from "@heroicons/react/24/outline";
 import { Accordion } from "@heroui/react";
 import { useTranslations } from "next-intl";

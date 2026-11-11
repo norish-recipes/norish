@@ -1,7 +1,7 @@
 "use client";
 
-import ArchiveExportButton from "@/app/(app)/settings/components/archive-export-button";
-import { SettingsCard } from "@/app/(app)/settings/components/settings-card";
+import ArchiveExportButton from "@/components/settings/archive-export-button";
+import { SettingsCard } from "@/components/settings/settings-card";
 import { ActionButtonGroup } from "@/components/shared/action-button";
 import { ArrowDownTrayIcon } from "@heroicons/react/24/outline";
 import { useTranslations } from "next-intl";
