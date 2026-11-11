@@ -1,5 +1,5 @@
 /** A planned item dropped on another day moves there; a drop anywhere else moves nothing. */
-import type { DragEndEvent, DragStartEvent } from "@dnd-kit/core";
+import type { DragEndEvent, DragOverEvent, DragStartEvent } from "@dnd-kit/core";
 import { fakeProcedure } from "@/__tests__/helpers/trpc-fake";
 import { useCalendarDnd } from "@/features/calendar/hooks/use-calendar-dnd";
 import { act, renderHook, waitFor } from "@testing-library/react";
@@ -99,5 +99,26 @@ describe("useCalendarDnd", () => {
 
     expect(cached()).toBe(ITEMS);
     expect(view.result.current.activeItem).toBeNull();
+  });
+
+  it("clears the highlighted day and the dragged item when a drag is cancelled", async () => {
+    const { view, cached } = render();
+    const props = () => view.result.current.dndContextProps;
+
+    act(() => props().onDragStart({ active: { id: "soup" } } as DragStartEvent));
+    act(() =>
+      props().onDragOver({
+        active: { id: "soup" },
+        over: { id: "2026-11-12_drop" },
+      } as unknown as DragOverEvent)
+    );
+    expect(view.result.current.dragOverDateKey).toBe("2026-11-12");
+
+    act(() => props().onDragCancel());
+
+    expect(view.result.current.dragOverDateKey).toBeNull();
+    expect(view.result.current.activeItem).toBeNull();
+    await new Promise((resolve) => setTimeout(resolve, 0));
+    expect(cached()).toBe(ITEMS);
   });
 });

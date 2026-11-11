@@ -46,12 +46,16 @@ export function useCalendarDnd(
     setDragOverDateKey(target !== activeItem?.date ? target : null);
   };
 
+  const onDragCancel = () => {
+    setActiveItem(null);
+    setDragOverDateKey(null);
+  };
+
   const onDragEnd = ({ over }: DragEndEvent) => {
     const draggedItem = activeItem;
     const targetDate = dropDateKey(over?.id);
 
-    setActiveItem(null);
-    setDragOverDateKey(null);
+    onDragCancel();
 
     if (!draggedItem || !targetDate || targetDate === draggedItem.date) return;
 
@@ -65,6 +69,13 @@ export function useCalendarDnd(
   return {
     activeItem,
     dragOverDateKey,
-    dndContextProps: { sensors, collisionDetection, onDragStart, onDragOver, onDragEnd },
+    dndContextProps: {
+      sensors,
+      collisionDetection,
+      onDragStart,
+      onDragOver,
+      onDragEnd,
+      onDragCancel,
+    },
   };
 }
