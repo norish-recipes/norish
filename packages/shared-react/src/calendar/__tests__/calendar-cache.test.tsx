@@ -272,9 +272,14 @@ describe("a delete, move or update with no range", () => {
   let mutations: ReturnType<typeof useCalendarMutations>;
   const sent = vi.fn();
 
-  const ITEMS = [
+  // Overlapping ranges that differ: only the calendar page's holds item-3.
+  const WEEK_ITEMS = [
     cachedItem({ id: "item-0", date: "2026-09-22", sortOrder: 0, version: 2 }),
     cachedItem({ id: "item-2", date: "2026-09-22", sortOrder: 1, title: "Soup" }),
+  ];
+  const PAGE_ITEMS = [
+    ...WEEK_ITEMS,
+    cachedItem({ id: "item-3", date: "2026-10-05", slot: "Lunch", sortOrder: 0, title: "Pasta" }),
   ];
 
   // Each write answers with `answer`, or refuses with it when it is an Error.
@@ -309,12 +314,43 @@ describe("a delete, move or update with no range", () => {
     move: () => mutations.moveItem("item-0", "2026-10-05", "Lunch", 0),
     update: () => mutations.updateItem("item-0", "Leftovers"),
   };
+  const WRITES = Object.keys(writes) as (keyof typeof writes)[];
+
+  // What each range holds once a write lands; 2026-10-05 is past this week, on the page.
+  const item = (fields: Partial<PlannedItemFromQuery>) => expect.objectContaining(fields);
+  const landed = {
+    delete: {
+      week: [item({ id: "item-2", sortOrder: 1 })],
+      page: [item({ id: "item-2", sortOrder: 1 }), item({ id: "item-3", sortOrder: 0 })],
+    },
+    move: {
+      week: [item({ id: "item-2", sortOrder: 0 })],
+      page: [
+        item({ id: "item-2", sortOrder: 0 }),
+        item({ id: "item-0", date: "2026-10-05", slot: "Lunch", sortOrder: 0 }),
+        item({ id: "item-3", date: "2026-10-05", slot: "Lunch", sortOrder: 1 }),
+      ],
+    },
+    update: {
+      week: [item({ id: "item-0", title: "Leftovers" }), item({ id: "item-2", title: "Soup" })],
+      page: [
+        item({ id: "item-0", title: "Leftovers" }),
+        item({ id: "item-2", title: "Soup" }),
+        item({ id: "item-3", title: "Pasta" }),
+      ],
+    },
+  };
+
+  function expectLanded(write: keyof typeof writes) {
+    expect(itemsIn(THIS_WEEK)).toEqual(landed[write].week);
+    expect(itemsIn(CALENDAR_PAGE)).toEqual(landed[write].page);
+  }
 
   beforeEach(() => {
     queryClient = new QueryClient({ defaultOptions: { queries: { retry: false } } });
     sent.mockReset();
-    queryClient.setQueryData(rangeKey(THIS_WEEK.startISO, THIS_WEEK.endISO), ITEMS);
-    queryClient.setQueryData(rangeKey(CALENDAR_PAGE.startISO, CALENDAR_PAGE.endISO), ITEMS);
+    queryClient.setQueryData(rangeKey(THIS_WEEK.startISO, THIS_WEEK.endISO), WEEK_ITEMS);
+    queryClient.setQueryData(rangeKey(CALENDAR_PAGE.startISO, CALENDAR_PAGE.endISO), PAGE_ITEMS);
   });
 
   afterEach(() => {
@@ -322,96 +358,68 @@ describe("a delete, move or update with no range", () => {
     unmount = () => {};
   });
 
-  it("deletes from both cached ranges, sending the cached version", async () => {
-    mount({ success: true });
-    act(() => writes.delete());
-    await settle();
-
-    expect(idsIn(queryClient, THIS_WEEK)).toEqual(["item-2"]);
-    expect(idsIn(queryClient, CALENDAR_PAGE)).toEqual(["item-2"]);
-    expect(sent).toHaveBeenCalledWith("deleteItem", { itemId: "item-0", version: 2 });
-  });
-
-  it("moves in both cached ranges, leaving the one its new date is outside", async () => {
-    mount({ success: true, moved: true });
-    act(() => writes.move());
-    await settle();
-
-    // 2026-10-05 is past this week but on the calendar page's range.
-    expect(itemsIn(THIS_WEEK)).toEqual([expect.objectContaining({ id: "item-2", sortOrder: 0 })]);
-    expect(itemsIn(CALENDAR_PAGE)).toEqual([
-      expect.objectContaining({ id: "item-2", sortOrder: 0 }),
-      expect.objectContaining({ id: "item-0", date: "2026-10-05", slot: "Lunch", sortOrder: 0 }),
-    ]);
-    expect(sent).toHaveBeenCalledWith("moveItem", expect.objectContaining({ version: 2 }));
-  });
-
-  it("updates in both cached ranges", async () => {
-    mount({ success: true });
-    act(() => writes.update());
-    await settle();
-
-    for (const range of [THIS_WEEK, CALENDAR_PAGE]) {
-      expect(itemsIn(range)?.find((item) => item.id === "item-0")?.title).toBe("Leftovers");
-    }
-  });
-
-  it.each(Object.keys(writes) as (keyof typeof writes)[])(
-    "rolls both ranges back when a %s fails",
+  it.each(WRITES)(
+    "lands a %s in each range by what it holds, sending the cached version",
     async (write) => {
-      mount(new Error("refused"));
-      act(() => writes[write]());
-      await settle();
-
-      expect(itemsIn(THIS_WEEK)).toEqual(ITEMS);
-      expect(itemsIn(CALENDAR_PAGE)).toEqual(ITEMS);
-    }
-  );
-
-  it.each(Object.keys(writes) as (keyof typeof writes)[])(
-    "keeps a Queued %s in both ranges",
-    async (write) => {
-      // Backend unreachable: the write sits in the Outbox (ADR-0009).
-      mount(new TypeError("Failed to fetch"));
-      act(() => writes[write]());
-      await settle();
-
-      expect(itemsIn(THIS_WEEK)).not.toEqual(ITEMS);
-      expect(itemsIn(CALENDAR_PAGE)).not.toEqual(ITEMS);
-    }
-  );
-
-  it.each(Object.keys(writes) as (keyof typeof writes)[])(
-    "sends the newest cached copy's version with a %s",
-    async (write) => {
-      // A narrower range left behind holds an older copy, and was cached first.
-      queryClient.clear();
-      queryClient.setQueryData(rangeKey(THIS_WEEK.startISO, THIS_WEEK.endISO), [
-        cachedItem({ id: "item-0", date: "2026-09-22", version: 1 }),
-      ]);
-      queryClient.setQueryData(rangeKey(CALENDAR_PAGE.startISO, CALENDAR_PAGE.endISO), [
-        cachedItem({ id: "item-0", date: "2026-09-22", version: 2, title: "Newer" }),
-      ]);
       mount({ success: true });
       act(() => writes[write]());
       await settle();
 
-      expect(sent).toHaveBeenCalledWith(`${write}Item`, expect.objectContaining({ version: 2 }));
-      if (write === "move") {
-        expect(itemsIn(CALENDAR_PAGE)).toEqual([
-          expect.objectContaining({ id: "item-0", title: "Newer", version: 2 }),
-        ]);
-      }
+      expectLanded(write);
+      expect(sent).toHaveBeenCalledWith(
+        `${write}Item`,
+        expect.objectContaining({ itemId: "item-0", version: 2 })
+      );
     }
   );
+
+  it.each(WRITES)("rolls both ranges back when a %s fails", async (write) => {
+    mount(new Error("refused"));
+    act(() => writes[write]());
+    await settle();
+
+    expect(itemsIn(THIS_WEEK)).toEqual(WEEK_ITEMS);
+    expect(itemsIn(CALENDAR_PAGE)).toEqual(PAGE_ITEMS);
+  });
+
+  it.each(WRITES)("keeps a Queued %s in both ranges", async (write) => {
+    // Backend unreachable: the write sits in the Outbox (ADR-0009).
+    mount(new TypeError("Failed to fetch"));
+    act(() => writes[write]());
+    await settle();
+
+    expectLanded(write);
+  });
+
+  it.each(WRITES)("sends the newest cached copy's version with a %s", async (write) => {
+    // A narrower range left behind holds an older copy, and was cached first.
+    queryClient.clear();
+    queryClient.setQueryData(rangeKey(THIS_WEEK.startISO, THIS_WEEK.endISO), [
+      cachedItem({ id: "item-0", date: "2026-09-22", version: 1 }),
+    ]);
+    queryClient.setQueryData(rangeKey(CALENDAR_PAGE.startISO, CALENDAR_PAGE.endISO), [
+      cachedItem({ id: "item-0", date: "2026-09-22", version: 2, title: "Newer" }),
+    ]);
+    mount({ success: true });
+    act(() => writes[write]());
+    await settle();
+
+    expect(sent).toHaveBeenCalledWith(`${write}Item`, expect.objectContaining({ version: 2 }));
+    if (write === "move") {
+      expect(itemsIn(CALENDAR_PAGE)).toEqual([
+        expect.objectContaining({ id: "item-0", title: "Newer", version: 2 }),
+      ]);
+    }
+  });
 
   it("rereads both ranges after rolling back a failed delete", async () => {
     mount(new Error("refused"));
     act(() => writes.delete());
     await settle();
 
+    expect(itemsIn(THIS_WEEK)).toEqual(WEEK_ITEMS);
+    expect(itemsIn(CALENDAR_PAGE)).toEqual(PAGE_ITEMS);
     for (const range of [THIS_WEEK, CALENDAR_PAGE]) {
-      expect(itemsIn(range)).toEqual(ITEMS);
       expect(queryClient.getQueryState(rangeKey(range.startISO, range.endISO))?.isInvalidated).toBe(
         true
       );
@@ -439,6 +447,7 @@ describe("a delete, move or update with no range", () => {
     act(() => writes.update());
     await settle();
 
+    expectLanded("update");
     for (const range of [THIS_WEEK, CALENDAR_PAGE]) {
       expect(queryClient.getQueryState(rangeKey(range.startISO, range.endISO))?.isInvalidated).toBe(
         true
