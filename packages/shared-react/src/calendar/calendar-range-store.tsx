@@ -8,7 +8,6 @@ import type { CalendarRange } from "@norish/shared/lib/helpers";
 import { dateKey, getInitialCalendarRange, parseDateKey } from "@norish/shared/lib/helpers";
 
 import { createPageStoreContext } from "../page-store";
-import { isDateInRange } from "./calendar-cache-merge";
 
 // Divisible by both 2 and 3 columns, so growing never shifts the grid.
 const GROW_DAYS = 12;
@@ -18,7 +17,6 @@ export type CalendarRangeState = {
   /** Briefly true after a grow either way, so a scroll resting near an edge grows once. */
   isGrowing: boolean;
   grow: (direction: "past" | "future") => void;
-  isDateInRange: (date: string) => boolean;
 };
 
 function shiftDays(iso: string, days: number) {
@@ -56,7 +54,6 @@ export function createCalendarRangeStore(today: string) {
         set({ isGrowing: settling.size > 0 });
       }, 100);
     },
-    isDateInRange: (date) => isDateInRange(date, get().range),
   }));
 }
 

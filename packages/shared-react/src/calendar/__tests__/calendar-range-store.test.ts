@@ -61,19 +61,6 @@ describe("createCalendarRangeStore", () => {
     expect(calendar.getState().isGrowing).toBe(false);
   });
 
-  it("answers whether a date is in range, its first and last days included", () => {
-    const calendar = createCalendarRangeStore(TODAY);
-    const { isDateInRange } = calendar.getState();
-
-    expect(isDateInRange("2026-10-26")).toBe(true);
-    expect(isDateInRange("2026-11-29")).toBe(true);
-    expect(isDateInRange("2026-10-25")).toBe(false);
-    expect(isDateInRange("2026-11-30")).toBe(false);
-
-    calendar.getState().grow("future");
-    expect(isDateInRange("2026-11-30")).toBe(true);
-  });
-
   it("is one store per page", () => {
     const one = createCalendarRangeStore(TODAY);
     const other = createCalendarRangeStore(TODAY);
