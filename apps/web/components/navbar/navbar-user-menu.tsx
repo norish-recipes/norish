@@ -213,10 +213,8 @@ export default function NavbarUserMenu({
               className={`py-3 ${cssButtonPill}`}
               id="settings"
               textValue={t("settings.title")}
-              // No React Aria RouterProvider is wired in this app, so a bare
-              // `href` here renders a native anchor and reboots the document —
-              // a blank flash plus a full app boot on the way to /settings.
-              // Every sibling item routes through the client router instead.
+              // The only React Aria RouterProvider wraps the settings tab bar, so a bare
+              // `href` here would render a native anchor and reboot the document.
               onPress={() => {
                 handleOpenChange(false);
                 router.push(SETTINGS_HREF);
