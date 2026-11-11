@@ -13,6 +13,7 @@ import { useTranslations } from "next-intl";
 import { usePermissions } from "@norish/shared-react/reader";
 import { useTRPC } from "@norish/shared-react/trpc";
 import { ICON_PICTURE_MIME_TYPES } from "@norish/shared/contracts";
+import { uploadForm } from "@norish/shared/lib/upload-form";
 
 import type { IngredientItem } from "./types";
 import { IngredientIcon } from "./ingredient-icon";
@@ -69,12 +70,8 @@ export function IngredientIconField({
   if (!item.canEdit) return <span data-testid="ingredient-panel-icon">{icon}</span>;
 
   const uploadPicture = async (file: File) => {
-    const form = new FormData();
-
-    form.set("ingredientId", item.id);
-    form.set("image", file);
     try {
-      const stored = await upload.mutateAsync(form);
+      const stored = await upload.mutateAsync(uploadForm({ ingredientId: item.id, image: file }));
 
       onDraftChange({ file: stored.file, address: stored.address });
     } catch (error) {

@@ -1,5 +1,6 @@
-import { uploadForm } from "@/features/recipes/lib/upload-form";
 import { describe, expect, it } from "vitest";
+
+import { uploadForm } from "@norish/shared/lib/upload-form";
 
 describe("uploadForm", () => {
   it("sends each given field, numbers as text, and leaves out the missing ones", () => {

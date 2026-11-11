@@ -3,6 +3,7 @@
 import { useMutation } from "@tanstack/react-query";
 
 import type { UserPreferencesDto } from "@norish/shared/contracts/zod/user";
+import { uploadForm } from "@norish/shared/lib/upload-form";
 
 import { showRefusal, usePlatform } from "../platform";
 import { useTRPC } from "../trpc";
@@ -64,11 +65,7 @@ export function useProfileMutations() {
     },
     /** Rejects when the upload fails, which the reader is shown. */
     uploadAvatar: async (file: File): Promise<void> => {
-      const formData = new FormData();
-
-      formData.append("file", file);
-      formData.append("version", String(version()));
-      const answer = await mutateUpload(formData);
+      const answer = await mutateUpload(uploadForm({ file, version: version() }));
 
       if (!answer.success) throw new Error(answer.error);
     },

@@ -11,6 +11,7 @@ import type {
   RecipeDashboardDTO,
 } from "@norish/shared/contracts";
 import { primaryRecipeImage } from "@norish/shared/lib/recipe-media";
+import { uploadForm } from "@norish/shared/lib/upload-form";
 
 import type { InfiniteRecipeData } from "./library-cache";
 import { shouldPreserveOptimisticUpdate } from "../offline/optimistic-updates";
@@ -341,7 +342,7 @@ export function useRecipesMutations(
     })
   );
   const { mutate: mutateImport } = importMutation;
-  const imageImportMutation = useMutation(
+  const { mutate: mutateImageImport } = useMutation(
     trpc.recipes.importFromImages.mutationOptions({
       onMutate: () => {
         const optimisticPendingId = createOptimisticPendingRecipeId();
@@ -364,7 +365,6 @@ export function useRecipesMutations(
       },
     })
   );
-  const { mutate: mutateImageImport } = imageImportMutation;
   const pasteImportMutation = useMutation(
     trpc.recipes.importFromPaste.mutationOptions({
       onMutate: () => {
@@ -647,15 +647,7 @@ export function useRecipesMutations(
   };
 
   const importRecipeFromImages = (files: File[]): void => {
-    const formData = new FormData();
-
-    files.forEach((file, index) => {
-      formData.append(`file${index}`, file);
-    });
-
-    const imageInput = formData as Parameters<typeof imageImportMutation.mutate>[0];
-
-    mutateImageImport(imageInput);
+    mutateImageImport(uploadForm(Object.fromEntries(files.map((file, i) => [`file${i}`, file]))));
   };
 
   const importRecipeFromPaste = (text: string): void => {

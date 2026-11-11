@@ -1,8 +1,7 @@
 "use client";
 
-import { uploadForm } from "@/features/recipes/lib/upload-form";
-
 import { useRecipeImages as useSharedRecipeImages } from "@norish/shared-react/recipes";
+import { uploadForm } from "@norish/shared/lib/upload-form";
 
 export type RecipeImagesResult = {
   uploadImage: (file: File) => Promise<{ success: boolean; url?: string; error?: string }>;

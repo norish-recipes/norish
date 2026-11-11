@@ -2,6 +2,8 @@
 
 import { useMutation } from "@tanstack/react-query";
 
+import { uploadForm } from "@norish/shared/lib/upload-form";
+
 import { showRefusal, usePlatform } from "../platform";
 import { useTRPC } from "../trpc";
 import { useArchiveImport } from "./archive-import-store";
@@ -35,13 +37,7 @@ export function useArchiveImportMutation() {
   );
 
   return {
-    startImport: (file: File) => {
-      const formData = new FormData();
-
-      formData.append("file", file);
-      // The router validates FormData at runtime; its declared input is a structural upload type.
-      mutate(formData as unknown as Parameters<typeof mutate>[0]);
-    },
+    startImport: (file: File) => mutate(uploadForm({ file })),
     isStarting: isPending,
   };
 }

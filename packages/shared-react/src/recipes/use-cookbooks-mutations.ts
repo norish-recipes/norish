@@ -5,6 +5,7 @@ import { useMutation } from "@tanstack/react-query";
 
 import type { CookbookSummaryDTO } from "@norish/shared/contracts";
 import { createClientId } from "@norish/shared/lib/operation-helpers";
+import { uploadForm } from "@norish/shared/lib/upload-form";
 
 import type { CookbooksMutationsResult } from "./cookbook-types";
 import {
@@ -288,12 +289,7 @@ export function useCookbooksMutations(): CookbooksMutationsResult {
   /** Store a cover and resolve with the URL an `updateCookbook` can save. */
   const uploadCookbookImage = useCallback(
     async (cookbookId: string, file: Blob) => {
-      const formData = new FormData();
-
-      formData.append("cookbookId", cookbookId);
-      formData.append("image", file);
-
-      const result = await mutateUploadImageAsync(formData);
+      const result = await mutateUploadImageAsync(uploadForm({ cookbookId, image: file }));
 
       if (!result.success) throw new Error(result.error);
 
