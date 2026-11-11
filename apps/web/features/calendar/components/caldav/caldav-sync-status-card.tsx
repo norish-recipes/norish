@@ -51,6 +51,7 @@ export default function CaldavSyncStatusCard() {
   const {
     statuses: syncStatuses,
     total: syncStatusTotal,
+    page: shownPage,
     isLoading,
     isPlaceholderData,
   } = useCaldavSyncStatusQuery({
@@ -80,8 +81,10 @@ export default function CaldavSyncStatusCard() {
     }
   };
   const totalPages = Math.ceil(syncStatusTotal / pageSize);
-  const startIndex = (syncStatusPage - 1) * pageSize + 1;
-  const endIndex = Math.min(syncStatusPage * pageSize, syncStatusTotal);
+
+  // The labels follow the rows drawn: a placeholder's are the previous page's.
+  const startIndex = (shownPage - 1) * pageSize + 1;
+  const endIndex = Math.min(shownPage * pageSize, syncStatusTotal);
 
   return (
     <SettingsCard
@@ -243,7 +246,7 @@ export default function CaldavSyncStatusCard() {
               </Pagination.Item>
               <Pagination.Item>
                 <Pagination.Summary>
-                  {t("pagination", { current: syncStatusPage, total: totalPages })}
+                  {t("pagination", { current: shownPage, total: totalPages })}
                 </Pagination.Summary>
               </Pagination.Item>
               <Pagination.Item>
