@@ -33,4 +33,32 @@ describe("the root layout's client messages", () => {
       )
     ).toEqual([]);
   });
+
+  it("hold every message a shared-react hook toasts", () => {
+    const sharedRoot = path.resolve(webRoot, "../../packages/shared-react/src");
+    const reads = fs
+      .readdirSync(sharedRoot, { recursive: true, encoding: "utf8" })
+      .filter(
+        (file) =>
+          /\.tsx?$/.test(file) &&
+          !file.split(path.sep).includes("__tests__") &&
+          !/\.test\./.test(path.basename(file))
+      )
+      .flatMap((file) =>
+        [
+          ...fs
+            .readFileSync(path.join(sharedRoot, file), "utf8")
+            .matchAll(/toast\.translate\(\s*"([^"]+)"/g),
+        ].map(([, id = ""]) => ({ file, id }))
+      );
+
+    // A broken walk must not read as a green run.
+    expect(reads.length).toBeGreaterThan(0);
+    expect(
+      reads.filter(
+        ({ id }) =>
+          id.startsWith("settings.") && !SHIPPED.some((shipped) => id.startsWith(`${shipped}.`))
+      )
+    ).toEqual([]);
+  });
 });
