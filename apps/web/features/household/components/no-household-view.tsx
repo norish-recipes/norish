@@ -28,7 +28,6 @@ export default function NoHouseholdView() {
   return (
     <div className="flex w-full flex-col gap-6">
       <div className="grid grid-cols-1 gap-6 md:grid-cols-2">
-        {/* Create Household */}
         <SettingsCard
           description={t("create.description")}
           icon={HomeIcon}
@@ -47,7 +46,6 @@ export default function NoHouseholdView() {
           </form>
         </SettingsCard>
 
-        {/* Join Household */}
         <SettingsCard
           description={t("join.description")}
           icon={UserGroupIcon}
@@ -64,10 +62,8 @@ export default function NoHouseholdView() {
                 onChange={setJoinCode}
               >
                 <InputOTP.Group className="justify-start gap-2">
-                  {/* The secondary-input treatment every other field on
-                        these cards carries: the soft warm fill, no shadow —
-                        the plain field fill is pure white and would vanish
-                        against the white card. */}
+                  {/* Secondary-input fill, no shadow: the plain field fill is white
+                      and would vanish against the white card. */}
                   {Array.from({ length: 6 }).map((_, index) => (
                     <InputOTP.Slot
                       // A code slot is its position.

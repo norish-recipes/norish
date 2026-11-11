@@ -16,7 +16,6 @@ import { ClipboardDocumentIcon as ClipboardDocumentIconOutline } from "@heroicon
 import { Button, Input, toast } from "@heroui/react";
 import { useTranslations } from "next-intl";
 
-import type { HouseholdAdminSettingsDto } from "@norish/shared/contracts/dto/household";
 import { useHousehold, useHouseholdMutations } from "@norish/shared-react/reader";
 
 const noSubscription = () => () => {};
@@ -41,16 +40,11 @@ export default function JoinCodeCard() {
     nowToTheSecond,
     nowToTheSecond
   );
-  if (!household) return null;
+  // Only an admin's household carries `joinCode`, so `in` narrows to the admin DTO.
+  if (!household || !isAdmin || !("joinCode" in household)) return null;
 
-  // Type guard: only admins get joinCode fields
-  const hasJoinCode = "joinCode" in household;
-  if (!isAdmin || !hasJoinCode) return null;
-
-  // Now TypeScript knows household has joinCode fields
-  const adminHousehold = household as HouseholdAdminSettingsDto;
-  const msRemaining = adminHousehold.joinCodeExpiresAt
-    ? new Date(adminHousehold.joinCodeExpiresAt).getTime() - now
+  const msRemaining = household.joinCodeExpiresAt
+    ? new Date(household.joinCodeExpiresAt).getTime() - now
     : -1;
   const joinCodeExpired = msRemaining <= 0;
   const timeRemaining =
@@ -61,8 +55,7 @@ export default function JoinCodeCard() {
           seconds: Math.floor((msRemaining % 60000) / 1000),
         });
   const handleCopyJoinCode = async () => {
-    // Type guard ensures household has joinCode
-    if ("joinCode" in household && household.joinCode) {
+    if (household.joinCode) {
       try {
         await navigator.clipboard.writeText(household.joinCode);
         toast(t("copySuccess"), {
@@ -84,7 +77,7 @@ export default function JoinCodeCard() {
   };
   return (
     <SettingsCard icon={ClipboardDocumentIconOutline} title={t("title")}>
-      {adminHousehold.joinCode && !joinCodeExpired ? (
+      {household.joinCode && !joinCodeExpired ? (
         <>
           <p className="text-muted text-base">{t("shareDescription")}</p>
           <div className="flex gap-2">
@@ -92,7 +85,7 @@ export default function JoinCodeCard() {
               variant="secondary"
               readOnly
               className="font-mono text-lg tracking-wider"
-              value={adminHousehold.joinCode || ""}
+              value={household.joinCode || ""}
             />
             <IconActionButton
               action="duplicate"
