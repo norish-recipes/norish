@@ -280,9 +280,7 @@
         "confirmButton": "Overfør administrator"
       },
       "toasts": {
-        "kickFailed": "Kunne ikke fjerne brugeren",
-        "transferSuccess": "Overførte administrator til {name}",
-        "transferFailed": "Kunne ikke overføre administrator"
+        "transferSuccess": "Overførte administrator til {name}"
       },
       "unknown": "Ukendt"
     },

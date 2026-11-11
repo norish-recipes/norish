@@ -280,9 +280,7 @@
         "confirmButton": "Trasferisci amministratore"
       },
       "toasts": {
-        "kickFailed": "Espulsione dell'utente non riuscita",
-        "transferSuccess": "Privilegi di amministratore trasferiti a {name}",
-        "transferFailed": "Trasferimento dei privilegi di amministratore non riuscito"
+        "transferSuccess": "Privilegi di amministratore trasferiti a {name}"
       },
       "unknown": "Sconosciuto"
     },

@@ -82,8 +82,8 @@ export default function JoinCodeCard() {
       }
     }
   };
-  const handleRegenerateCode = async () => {
-    await regenerateJoinCode(household.id);
+  const handleRegenerateCode = () => {
+    regenerateJoinCode(household.id);
   };
   return (
     <SettingsCard icon={ClipboardDocumentIconOutline} title={t("title")}>

@@ -24,8 +24,8 @@ export default function HouseholdInfoCard() {
     : null;
   const isAdmin = currentUserData?.isAdmin === true;
   const otherMembers = household.users.filter((u) => u.id !== currentUserId);
-  const handleLeaveHousehold = async () => {
-    await leaveHousehold(household.id);
+  const handleLeaveHousehold = () => {
+    leaveHousehold(household.id);
     setShowLeaveModal(false);
   };
   return (

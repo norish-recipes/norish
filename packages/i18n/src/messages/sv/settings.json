@@ -280,9 +280,7 @@
         "confirmButton": "Överför administratörsbehörighet"
       },
       "toasts": {
-        "kickFailed": "Det gick inte att ta bort användaren",
-        "transferSuccess": "Administratörsbehörigheten har överförts till {name}",
-        "transferFailed": "Det gick inte att överföra administratörsbehörigheten"
+        "transferSuccess": "Administratörsbehörigheten har överförts till {name}"
       },
       "unknown": "Okänd"
     },

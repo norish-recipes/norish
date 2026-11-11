@@ -280,9 +280,7 @@
         "confirmButton": "Draag adminrechten over"
       },
       "toasts": {
-        "kickFailed": "Gebruiker verwijderen mislukt",
-        "transferSuccess": "Adminrechten overgedragen aan {name}",
-        "transferFailed": "Adminrechten overdracht mislukt"
+        "transferSuccess": "Adminrechten overgedragen aan {name}"
       },
       "unknown": "Onbekend"
     },

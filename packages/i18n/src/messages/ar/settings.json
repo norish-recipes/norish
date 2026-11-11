@@ -280,9 +280,7 @@
         "confirmButton": "نقل الصلاحيات"
       },
       "toasts": {
-        "kickFailed": "تعذّرت إزالة المستخدم",
-        "transferSuccess": "نُقلت صلاحيات المسؤول إلى {name}",
-        "transferFailed": "تعذّر نقل صلاحيات المسؤول"
+        "transferSuccess": "نُقلت صلاحيات المسؤول إلى {name}"
       },
       "unknown": "غير معروف"
     },

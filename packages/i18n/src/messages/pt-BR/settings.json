@@ -280,9 +280,7 @@
         "confirmButton": "Transferir admin"
       },
       "toasts": {
-        "kickFailed": "Falha ao remover usuário",
-        "transferSuccess": "Admin transferido para {name}",
-        "transferFailed": "Falha ao transferir admin"
+        "transferSuccess": "Admin transferido para {name}"
       },
       "unknown": "Desconhecido"
     },

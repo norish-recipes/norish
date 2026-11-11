@@ -280,9 +280,7 @@
         "confirmButton": "Przekaż administratora"
       },
       "toasts": {
-        "kickFailed": "Nie udało się usunąć użytkownika",
-        "transferSuccess": "Przekazano administratora użytkownikowi {name}",
-        "transferFailed": "Nie udało się przekazać administratora"
+        "transferSuccess": "Przekazano administratora użytkownikowi {name}"
       },
       "unknown": "Nieznany"
     },

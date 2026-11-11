@@ -280,9 +280,7 @@
         "confirmButton": "Transférer"
       },
       "toasts": {
-        "kickFailed": "Échec de l’expulsion de l’utilisateur",
-        "transferSuccess": "Privilèges admin transférés à {name}",
-        "transferFailed": "Échec du transfert admin"
+        "transferSuccess": "Privilèges admin transférés à {name}"
       },
       "unknown": "Inconnu"
     },

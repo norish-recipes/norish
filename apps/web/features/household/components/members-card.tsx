@@ -3,7 +3,6 @@
 import { useState } from "react";
 import { SettingsCard } from "@/components/settings/settings-card";
 import { ActionButton, ActionButtonGroup } from "@/components/shared/action-button";
-import { showSafeErrorToast } from "@/lib/ui/safe-error-toast";
 import { ShieldCheckIcon, UserMinusIcon } from "@heroicons/react/16/solid";
 import { UserGroupIcon } from "@heroicons/react/24/outline";
 import { Chip, Modal, Table } from "@heroui/react";
@@ -13,7 +12,6 @@ import { useHousehold, useHouseholdMutations } from "@norish/shared-react/reader
 
 export default function MembersCard() {
   const t = useTranslations("settings.household.members");
-  const tErrors = useTranslations("common.errors");
   const ti = useTranslations("settings.household.info");
   const tActions = useTranslations("common.actions");
   const { household, currentUserId } = useHousehold();
@@ -37,33 +35,13 @@ export default function MembersCard() {
   const isAdmin = currentUserData?.isAdmin === true;
   const handleKickUser = () => {
     if (!userToKick) return;
-    try {
-      kickUser(household.id, userToKick.id);
-    } catch (error) {
-      showSafeErrorToast({
-        title: t("toasts.kickFailed"),
-        description: tErrors("technicalDetails"),
-        color: "danger",
-        error,
-        context: "household-members:kick",
-      });
-    }
+    kickUser(household.id, userToKick.id);
     setShowKickModal(false);
     setUserToKick(null);
   };
   const handleTransferAdmin = () => {
     if (!userToTransfer) return;
-    try {
-      transferAdmin(household.id, userToTransfer.id);
-    } catch (error) {
-      showSafeErrorToast({
-        title: t("toasts.transferFailed"),
-        description: tErrors("technicalDetails"),
-        color: "danger",
-        error,
-        context: "household-members:transfer-admin",
-      });
-    }
+    transferAdmin(household.id, userToTransfer.id);
     setShowTransferModal(false);
     setUserToTransfer(null);
   };
