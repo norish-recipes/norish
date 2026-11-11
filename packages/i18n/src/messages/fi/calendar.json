@@ -55,6 +55,12 @@
   "caldav": {
     "syncStarted": "CalDAV-synkronointi aloitettu",
     "syncStartedDescription": "Synkronoitavat kohteet: {queued}",
-    "syncStartedWithFailures": "Synkronoitavat kohteet: {queued}. Jonoon lisääminen epäonnistui: {failed}"
+    "syncStartedWithFailures": "Synkronoitavat kohteet: {queued}. Jonoon lisääminen epäonnistui: {failed}",
+    "configSaved": "Määritys tallennettu",
+    "configSavedDescription": "CalDAV-asetuksesi on tallennettu.",
+    "configDeleted": "Määritys poistettu",
+    "configDeletedDescription": "CalDAV-asetuksesi on poistettu.",
+    "retryStarted": "Synkronointi aloitettu",
+    "retryStartedDescription": "Yritetään uudelleen odottavia ja epäonnistuneita kohteita…"
   }
 }

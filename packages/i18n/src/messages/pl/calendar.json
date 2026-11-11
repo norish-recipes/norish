@@ -46,6 +46,12 @@
   "caldav": {
     "syncStarted": "Rozpoczęto synchronizację CalDAV",
     "syncStartedDescription": "Elementy do synchronizacji: {queued}",
-    "syncStartedWithFailures": "Elementy do synchronizacji: {queued}. Nie udało się dodać do kolejki: {failed}"
+    "syncStartedWithFailures": "Elementy do synchronizacji: {queued}. Nie udało się dodać do kolejki: {failed}",
+    "configSaved": "Konfiguracja zapisana",
+    "configSavedDescription": "Twoje ustawienia CalDAV zostały zapisane.",
+    "configDeleted": "Konfiguracja usunięta",
+    "configDeletedDescription": "Twoje ustawienia CalDAV zostały usunięte.",
+    "retryStarted": "Synchronizacja rozpoczęta",
+    "retryStartedDescription": "Ponawianie oczekujących i nieudanych elementów…"
   }
 }

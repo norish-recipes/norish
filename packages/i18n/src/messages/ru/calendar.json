@@ -55,6 +55,12 @@
   "caldav": {
     "syncStarted": "Синхронизация CalDAV запущена",
     "syncStartedDescription": "Элементов к синхронизации: {queued}",
-    "syncStartedWithFailures": "Элементов к синхронизации: {queued}. Не удалось поставить в очередь: {failed}"
+    "syncStartedWithFailures": "Элементов к синхронизации: {queued}. Не удалось поставить в очередь: {failed}",
+    "configSaved": "Конфигурация сохранена",
+    "configSavedDescription": "Ваши настройки CalDAV сохранены.",
+    "configDeleted": "Конфигурация удалена",
+    "configDeletedDescription": "Ваши настройки CalDAV удалены.",
+    "retryStarted": "Синхронизация запущена",
+    "retryStartedDescription": "Повторная попытка для ожидающих и неудачных элементов…"
   }
 }

@@ -131,10 +131,6 @@ export function CalDavSettingsProvider({ children }: { children: ReactNode }) {
     async (configInput: SaveCaldavConfigInput) => {
       try {
         await saveConfigMutation(configInput);
-        toast("Configuration saved", {
-          description: "Your CalDAV settings have been saved successfully.",
-          variant: "success",
-        });
       } catch (error) {
         showSafeErrorToast({
           title: tErrors("operationFailed"),
@@ -195,10 +191,6 @@ export function CalDavSettingsProvider({ children }: { children: ReactNode }) {
     async (deleteEvents: boolean) => {
       try {
         await deleteConfigMutation(deleteEvents);
-        toast("Configuration deleted", {
-          description: "Your CalDAV settings have been removed.",
-          variant: "success",
-        });
       } catch (error) {
         showSafeErrorToast({
           title: tErrors("operationFailed"),
@@ -216,10 +208,6 @@ export function CalDavSettingsProvider({ children }: { children: ReactNode }) {
   const triggerManualSync = useCallback(async () => {
     try {
       await triggerSync();
-      toast("Sync started", {
-        description: "Retrying pending and failed items...",
-        variant: "accent",
-      });
     } catch (error) {
       showSafeErrorToast({
         title: tErrors("operationFailed"),

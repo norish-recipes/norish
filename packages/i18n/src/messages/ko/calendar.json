@@ -55,6 +55,12 @@
   "caldav": {
     "syncStarted": "CalDAV 동기화 시작됨",
     "syncStartedDescription": "동기화할 항목: {queued}",
-    "syncStartedWithFailures": "동기화할 항목: {queued}. 대기열에 추가하지 못함: {failed}"
+    "syncStartedWithFailures": "동기화할 항목: {queued}. 대기열에 추가하지 못함: {failed}",
+    "configSaved": "구성이 저장됨",
+    "configSavedDescription": "CalDAV 설정이 저장되었습니다.",
+    "configDeleted": "구성이 삭제됨",
+    "configDeletedDescription": "CalDAV 설정이 제거되었습니다.",
+    "retryStarted": "동기화 시작됨",
+    "retryStartedDescription": "대기 중이거나 실패한 항목을 다시 시도하는 중…"
   }
 }

@@ -55,6 +55,12 @@
   "caldav": {
     "syncStarted": "CalDAV sync started",
     "syncStartedDescription": "Items to sync: {queued}",
-    "syncStartedWithFailures": "Items to sync: {queued}. Could not be queued: {failed}"
+    "syncStartedWithFailures": "Items to sync: {queued}. Could not be queued: {failed}",
+    "configSaved": "Configuration saved",
+    "configSavedDescription": "Your CalDAV settings have been saved.",
+    "configDeleted": "Configuration deleted",
+    "configDeletedDescription": "Your CalDAV settings have been removed.",
+    "retryStarted": "Sync started",
+    "retryStartedDescription": "Retrying pending and failed items…"
   }
 }

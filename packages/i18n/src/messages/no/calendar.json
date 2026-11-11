@@ -55,6 +55,12 @@
   "caldav": {
     "syncStarted": "CalDAV-synkronisering startet",
     "syncStartedDescription": "Elementer som skal synkroniseres: {queued}",
-    "syncStartedWithFailures": "Elementer som skal synkroniseres: {queued}. Kunne ikke settes i kø: {failed}"
+    "syncStartedWithFailures": "Elementer som skal synkroniseres: {queued}. Kunne ikke settes i kø: {failed}",
+    "configSaved": "Konfigurasjonen er lagret",
+    "configSavedDescription": "CalDAV-innstillingene dine er lagret.",
+    "configDeleted": "Konfigurasjonen er slettet",
+    "configDeletedDescription": "CalDAV-innstillingene dine er fjernet.",
+    "retryStarted": "Synkronisering startet",
+    "retryStartedDescription": "Prøver ventende og mislykkede elementer på nytt…"
   }
 }

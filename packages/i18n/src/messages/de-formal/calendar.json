@@ -55,6 +55,12 @@
   "caldav": {
     "syncStarted": "CalDAV-Synchronisierung gestartet",
     "syncStartedDescription": "Zu synchronisierende Einträge: {queued}",
-    "syncStartedWithFailures": "Zu synchronisierende Einträge: {queued}. Nicht eingereiht: {failed}"
+    "syncStartedWithFailures": "Zu synchronisierende Einträge: {queued}. Nicht eingereiht: {failed}",
+    "configSaved": "Konfiguration gespeichert",
+    "configSavedDescription": "Ihre CalDAV-Einstellungen wurden gespeichert.",
+    "configDeleted": "Konfiguration gelöscht",
+    "configDeletedDescription": "Ihre CalDAV-Einstellungen wurden entfernt.",
+    "retryStarted": "Synchronisierung gestartet",
+    "retryStartedDescription": "Ausstehende und fehlgeschlagene Einträge werden erneut versucht…"
   }
 }

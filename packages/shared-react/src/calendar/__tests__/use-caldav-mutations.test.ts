@@ -1,7 +1,11 @@
 import { act, renderHook, waitFor } from "@testing-library/react";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 
-import { createTestQueryClient, createTestWrapper } from "@norish/shared-react/platform/testing";
+import {
+  createTestQueryClient,
+  createTestWrapper,
+  fakePlatformAdapter,
+} from "@norish/shared-react/platform/testing";
 
 import { useCaldavMutations } from "../use-caldav-mutations";
 import { createMockCaldavConfig } from "./test-utils";
@@ -48,32 +52,38 @@ vi.mock("../../trpc", () => ({
         }),
       },
       saveConfig: {
-        mutationOptions: () => ({
+        mutationOptions: (options?: object) => ({
+          ...options,
           mutationFn: mockSaveConfigMutate,
         }),
       },
       testConnection: {
-        mutationOptions: () => ({
+        mutationOptions: (options?: object) => ({
+          ...options,
           mutationFn: mockTestConnectionMutate,
         }),
       },
       fetchCalendars: {
-        mutationOptions: () => ({
+        mutationOptions: (options?: object) => ({
+          ...options,
           mutationFn: mockFetchCalendarsMutate,
         }),
       },
       deleteConfig: {
-        mutationOptions: () => ({
+        mutationOptions: (options?: object) => ({
+          ...options,
           mutationFn: mockDeleteConfigMutate,
         }),
       },
       triggerSync: {
-        mutationOptions: () => ({
+        mutationOptions: (options?: object) => ({
+          ...options,
           mutationFn: mockTriggerSyncMutate,
         }),
       },
       syncAll: {
-        mutationOptions: () => ({
+        mutationOptions: (options?: object) => ({
+          ...options,
           mutationFn: mockSyncAllMutate,
         }),
       },
@@ -526,6 +536,54 @@ describe("CalDAV Mutation Hooks", () => {
 
       expect(calendars).toHaveLength(2);
       expect(calendars[0].displayName).toBe("Default Calendar");
+    });
+  });
+
+  describe("useCaldavMutations success toasts", () => {
+    const configInput = {
+      serverUrl: "https://caldav.example.com",
+      username: "testuser",
+      password: "testpass",
+      enabled: true,
+      breakfastTime: "08:00-09:00",
+      lunchTime: "12:00-13:00",
+      dinnerTime: "18:00-19:00",
+      snackTime: "15:00-15:30",
+    };
+
+    it("toasts a save, a delete and a sync's start, translated", async () => {
+      const platform = fakePlatformAdapter();
+
+      mockSaveConfigMutate.mockResolvedValueOnce(createMockCaldavConfig());
+      mockDeleteConfigMutate.mockResolvedValueOnce({ success: true });
+      mockTriggerSyncMutate.mockResolvedValueOnce({ success: true });
+      const { result } = renderHook(() => useCaldavMutations(), {
+        wrapper: createTestWrapper(queryClient, platform),
+      });
+
+      await act(async () => {
+        await result.current.saveConfig(configInput);
+        await result.current.deleteConfig();
+        await result.current.triggerSync();
+      });
+
+      expect(vi.mocked(platform.toast.show).mock.calls.map(([toast]) => toast)).toEqual([
+        {
+          severity: "success",
+          title: "calendar.caldav.configSaved",
+          description: "calendar.caldav.configSavedDescription",
+        },
+        {
+          severity: "success",
+          title: "calendar.caldav.configDeleted",
+          description: "calendar.caldav.configDeletedDescription",
+        },
+        {
+          severity: "default",
+          title: "calendar.caldav.retryStarted",
+          description: "calendar.caldav.retryStartedDescription",
+        },
+      ]);
     });
   });
 });

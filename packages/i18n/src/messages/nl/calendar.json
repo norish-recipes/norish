@@ -55,6 +55,12 @@
   "caldav": {
     "syncStarted": "CalDAV-synchronisatie gestart",
     "syncStartedDescription": "Te synchroniseren items: {queued}",
-    "syncStartedWithFailures": "Te synchroniseren items: {queued}. Niet in de wachtrij gezet: {failed}"
+    "syncStartedWithFailures": "Te synchroniseren items: {queued}. Niet in de wachtrij gezet: {failed}",
+    "configSaved": "Configuratie opgeslagen",
+    "configSavedDescription": "Je CalDAV-instellingen zijn opgeslagen.",
+    "configDeleted": "Configuratie verwijderd",
+    "configDeletedDescription": "Je CalDAV-instellingen zijn verwijderd.",
+    "retryStarted": "Synchronisatie gestart",
+    "retryStartedDescription": "Openstaande en mislukte items worden opnieuw geprobeerd…"
   }
 }

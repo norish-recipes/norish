@@ -55,6 +55,12 @@
   "caldav": {
     "syncStarted": "Синхронизацията с CalDAV започна",
     "syncStartedDescription": "Елементи за синхронизиране: {queued}",
-    "syncStartedWithFailures": "Елементи за синхронизиране: {queued}. Не можаха да бъдат добавени в опашката: {failed}"
+    "syncStartedWithFailures": "Елементи за синхронизиране: {queued}. Не можаха да бъдат добавени в опашката: {failed}",
+    "configSaved": "Конфигурацията е запазена",
+    "configSavedDescription": "Настройките ви за CalDAV са запазени.",
+    "configDeleted": "Конфигурацията е изтрита",
+    "configDeletedDescription": "Настройките ви за CalDAV са премахнати.",
+    "retryStarted": "Синхронизацията започна",
+    "retryStartedDescription": "Повторен опит за чакащите и неуспешните елементи…"
   }
 }

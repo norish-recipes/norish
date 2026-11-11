@@ -55,6 +55,12 @@
   "caldav": {
     "syncStarted": "Sincronização CalDAV iniciada",
     "syncStartedDescription": "Itens a sincronizar: {queued}",
-    "syncStartedWithFailures": "Itens a sincronizar: {queued}. Não foi possível enfileirar: {failed}"
+    "syncStartedWithFailures": "Itens a sincronizar: {queued}. Não foi possível enfileirar: {failed}",
+    "configSaved": "Configuração salva",
+    "configSavedDescription": "Suas configurações de CalDAV foram salvas.",
+    "configDeleted": "Configuração excluída",
+    "configDeletedDescription": "Suas configurações de CalDAV foram removidas.",
+    "retryStarted": "Sincronização iniciada",
+    "retryStartedDescription": "Tentando novamente os itens pendentes e com falha…"
   }
 }
