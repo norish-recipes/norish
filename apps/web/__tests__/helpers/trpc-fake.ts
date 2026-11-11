@@ -6,6 +6,12 @@ import { trackedEvent } from "../hooks/realtime-test-utils";
 /** Every write the fake tRPC was sent, as (procedure path, input); a write never answers. */
 export const sentWrites = vi.fn<(path: string, input: unknown) => void>();
 
+/** Every read the fake tRPC was sent, as (procedure path, input). */
+export const sentReads = vi.fn<(path: string, input: unknown) => void>();
+
+/** How a read answers, by dotted path; a read with none never answers. */
+export const readAnswers = new Map<string, (input: unknown) => Promise<unknown>>();
+
 const never = () => new Promise<never>(() => {});
 
 /** Each subscription mounted now, by procedure path: its `onData`. */
@@ -20,10 +26,15 @@ export function deliver(path: string, payload: unknown) {
   for (const onData of subscribers.get(path) ?? []) onData(trackedEvent(payload));
 }
 
-/** One procedure: keys shaped like the real client's, a query that never answers, a recorded write. */
+/** One procedure: keys shaped like the real client's, a recorded read and write. */
 function procedure(path: string[]) {
   const key = (input: unknown, type: string) =>
     input === undefined ? [path, { type }] : [path, { input, type }];
+  const read = (input: unknown) => () => {
+    sentReads(path.join("."), input);
+
+    return readAnswers.get(path.join("."))?.(input) ?? never();
+  };
 
   return {
     pathKey: () => [path],
@@ -33,12 +44,12 @@ function procedure(path: string[]) {
     queryOptions: (input?: unknown, options?: object) => ({
       ...options,
       queryKey: key(input, "query"),
-      queryFn: never,
+      queryFn: read(input),
     }),
     infiniteQueryOptions: (input?: unknown, options?: object) => ({
       ...options,
       queryKey: key(input, "infinite"),
-      queryFn: never,
+      queryFn: read(input),
     }),
     mutationKey: () => [path],
     mutationOptions: (options?: object) => ({

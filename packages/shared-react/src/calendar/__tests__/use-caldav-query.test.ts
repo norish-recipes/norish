@@ -115,7 +115,7 @@ describe("CalDAV Query Hooks", () => {
         queryFn: async () => null,
       });
 
-      const { result } = renderHook(() => useCaldavPasswordQuery({ enabled: true }), {
+      const { result } = renderHook(() => useCaldavPasswordQuery(), {
         wrapper: createTestWrapper(queryClient),
       });
 
@@ -132,7 +132,7 @@ describe("CalDAV Query Hooks", () => {
         queryFn: async () => "secretpassword",
       });
 
-      const { result } = renderHook(() => useCaldavPasswordQuery({ enabled: true }), {
+      const { result } = renderHook(() => useCaldavPasswordQuery(), {
         wrapper: createTestWrapper(queryClient),
       });
 
@@ -141,24 +141,6 @@ describe("CalDAV Query Hooks", () => {
       });
 
       expect(result.current.password).toBe("secretpassword");
-    });
-
-    it("reads nothing while disabled, and reads the password when asked", async () => {
-      const read = vi.fn(async () => "secretpassword");
-
-      mockPasswordQueryOptions.mockReturnValue({ queryKey: mockPasswordQueryKey, queryFn: read });
-      const { result } = renderHook(() => useCaldavPasswordQuery({ enabled: false }), {
-        wrapper: createTestWrapper(queryClient),
-      });
-
-      expect(read).not.toHaveBeenCalled();
-      let password: string | null = null;
-
-      await act(async () => {
-        password = await result.current.read();
-      });
-
-      expect(password).toBe("secretpassword");
     });
   });
 

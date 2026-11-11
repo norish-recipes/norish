@@ -14,11 +14,11 @@ export function useCaldavConfigQuery(): CaldavConfigQueryResult {
   return { config: data ?? null, error, isLoading };
 }
 
-/** The stored password, read only while `enabled`, as an edit form that shows it is open. */
-export function useCaldavPasswordQuery({ enabled }: { enabled: boolean }) {
+/** The stored password, read while the edit form that shows it is mounted and dropped after. */
+export function useCaldavPasswordQuery() {
   const trpc = useTRPC();
   const { data, error, isLoading, refetch } = useQuery(
-    trpc.caldav.getPassword.queryOptions(undefined, { enabled, staleTime: 0, gcTime: 0 })
+    trpc.caldav.getPassword.queryOptions(undefined, { staleTime: 0, gcTime: 0 })
   );
 
   return {

@@ -9,12 +9,15 @@ import { useCaldavMutations } from "@norish/shared-react/calendar";
  * Tests a CalDAV connection and offers the calendars it found, keeping the
  * calendar already picked while the server still lists it, else the first.
  */
-export function useConnectionTest(setCalendarUrl: (url: string) => void) {
+export function useConnectionTest(
+  setCalendarUrl: (url: string) => void,
+  storedCertificate: string | null = null
+) {
   const { testConnection, isTestingConnection } = useCaldavMutations();
   const [calendars, setCalendars] = useState<CalDavCalendarInfo[]>([]);
   const [testResult, setTestResult] = useState<ConnectionTestResult | null>(null);
   // A certificate the user trusted for this server; saved with the config.
-  const [trustedCertificate, setTrustedCertificate] = useState<string | null>(null);
+  const [trustedCertificate, setTrustedCertificate] = useState(storedCertificate);
 
   const runTest = async (
     serverUrl: string,
@@ -59,9 +62,7 @@ export function useConnectionTest(setCalendarUrl: (url: string) => void) {
   return {
     calendars,
     trustedCertificate,
-    setTrustedCertificate,
     trustAndRetest,
-    setCalendars,
     testResult,
     setTestResult,
     testing: isTestingConnection,

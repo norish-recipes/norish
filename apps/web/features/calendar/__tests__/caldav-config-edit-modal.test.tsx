@@ -1,11 +1,11 @@
 /**
  * The stored CalDAV password is read only while the edit modal is open, not on every visit to
- * the tab, which mounts the modal closed.
+ * the tab, which mounts the modal closed; closing it drops the password from the cache.
  */
-import { fakeProcedure } from "@/__tests__/helpers/trpc-fake";
+import { fakeProcedure, readAnswers, sentReads } from "@/__tests__/helpers/trpc-fake";
 import CaldavConfigEditModal from "@/features/calendar/components/caldav/caldav-config-edit-modal";
-import { render } from "@testing-library/react";
-import { describe, expect, it, vi } from "vitest";
+import { render, waitFor } from "@testing-library/react";
+import { beforeEach, describe, expect, it, vi } from "vitest";
 
 import { createTestQueryClient, createTestWrapper } from "@norish/shared-react/platform/testing";
 
@@ -29,11 +29,17 @@ const CONFIG = {
   version: 1,
 };
 
+const passwordReads = () =>
+  sentReads.mock.calls.filter(([path]) => path === "caldav.getPassword").length;
+
 describe("CaldavConfigEditModal", () => {
+  beforeEach(() => {
+    sentReads.mockClear();
+    readAnswers.clear();
+  });
+
   it("reads the stored password only while open", () => {
     const queryClient = createTestQueryClient();
-    const passwordReads = () =>
-      queryClient.isFetching({ queryKey: fakeProcedure("caldav.getPassword").queryKey() });
 
     queryClient.setQueryData(fakeProcedure("caldav.getConfig").queryKey(), CONFIG);
     const { rerender } = render(<CaldavConfigEditModal isOpen={false} onClose={() => {}} />, {
@@ -45,5 +51,22 @@ describe("CaldavConfigEditModal", () => {
     rerender(<CaldavConfigEditModal isOpen onClose={() => {}} />);
 
     expect(passwordReads()).toBe(1);
+  });
+
+  it("holds no password in the cache once closed", async () => {
+    const queryClient = createTestQueryClient();
+    const passwordKey = fakeProcedure("caldav.getPassword").queryKey();
+
+    readAnswers.set("caldav.getPassword", async () => "secret");
+    queryClient.setQueryData(fakeProcedure("caldav.getConfig").queryKey(), CONFIG);
+    const { rerender } = render(<CaldavConfigEditModal isOpen onClose={() => {}} />, {
+      wrapper: createTestWrapper(queryClient),
+    });
+
+    await waitFor(() => expect(queryClient.getQueryData(passwordKey)).toBe("secret"));
+
+    rerender(<CaldavConfigEditModal isOpen={false} onClose={() => {}} />);
+
+    await waitFor(() => expect(queryClient.getQueryState(passwordKey)).toBeUndefined());
   });
 });

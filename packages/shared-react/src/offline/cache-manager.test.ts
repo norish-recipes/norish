@@ -184,6 +184,26 @@ describe("createCacheManager", () => {
     first.resolve();
   });
 
+  it("never persists the stored CalDAV password", async () => {
+    const manager = createManager();
+    const trpc = createTRPCOptionsProxy<AppRouter>({
+      client: createTRPCClient<AppRouter>({ links: [] }),
+      queryClient: manager.queryClient,
+    });
+    const kept = trpc.caldav.getConfig.queryKey();
+
+    await manager.reconcileIdentity({ sessionUserId: "u1", isOffline: false });
+    manager.queryClient.setQueryData(trpc.caldav.getPassword.queryKey(), "secret");
+    manager.queryClient.setQueryData(kept, null);
+    await new Promise((resolve) => setTimeout(resolve, 0));
+
+    const persisted = await storage.keyval.get<PersistedClient>(queryCacheKey("u1"));
+    const persistedKeys = persisted?.clientState.queries.map((query) => query.queryKey);
+
+    expect(persistedKeys).toContainEqual(kept);
+    expect(JSON.stringify(persisted)).not.toContain("secret");
+  });
+
   it("does not restore a query whose initial request failed without data", async () => {
     const manager = createManager();
     const failedKey = [["groceries", "list"], { type: "query" }] as const;
