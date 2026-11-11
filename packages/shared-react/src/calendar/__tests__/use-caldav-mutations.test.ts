@@ -152,6 +152,91 @@ describe("CalDAV Mutation Hooks", () => {
     });
   });
 
+  describe("useCaldavMutations cache writes", () => {
+    const configInput = {
+      serverUrl: "https://caldav.example.com",
+      username: "testuser",
+      password: "testpass",
+      enabled: true,
+      breakfastTime: "08:00-09:00",
+      lunchTime: "12:00-13:00",
+      dinnerTime: "18:00-19:00",
+      snackTime: "15:00-15:30",
+    };
+    const pageKeys = [
+      [...mockSyncStatusQueryKey, { page: 1 }],
+      [...mockSyncStatusQueryKey, { page: 2 }],
+    ];
+
+    // Two sync-status pages and the summary, none of them shown, so nothing refetches.
+    function seedStatusAndSummary() {
+      for (const key of pageKeys) queryClient.setQueryData(key, { statuses: [], total: 0 });
+      queryClient.setQueryData(mockSummaryQueryKey, { pending: 0, synced: 0, failed: 0 });
+    }
+
+    function expectStatusAndSummaryInvalidated() {
+      for (const key of [...pageKeys, mockSummaryQueryKey]) {
+        expect(queryClient.getQueryState(key)?.isInvalidated).toBe(true);
+      }
+    }
+
+    it("saves the server's answer into the cached config and rereads status and summary", async () => {
+      const saved = createMockCaldavConfig({ username: "saved", version: 2 });
+
+      mockSaveConfigMutate.mockResolvedValueOnce(saved);
+      seedStatusAndSummary();
+      const { result } = renderHook(() => useCaldavMutations(), {
+        wrapper: createTestWrapper(queryClient),
+      });
+
+      await act(async () => {
+        await result.current.saveConfig(configInput);
+      });
+
+      expect(queryClient.getQueryData(mockConfigQueryKey)).toEqual(saved);
+      expectStatusAndSummaryInvalidated();
+    });
+
+    it("clears the cached config on delete and rereads status and summary", async () => {
+      mockDeleteConfigMutate.mockResolvedValueOnce({ success: true });
+      queryClient.setQueryData(mockConfigQueryKey, createMockCaldavConfig());
+      seedStatusAndSummary();
+      const { result } = renderHook(() => useCaldavMutations(), {
+        wrapper: createTestWrapper(queryClient),
+      });
+
+      await act(async () => {
+        await result.current.deleteConfig();
+      });
+
+      expect(queryClient.getQueryData(mockConfigQueryKey)).toBeNull();
+      expectStatusAndSummaryInvalidated();
+    });
+
+    it("sends the version cached when a save or delete runs, not when the hook rendered", async () => {
+      mockSaveConfigMutate.mockResolvedValueOnce(createMockCaldavConfig({ version: 8 }));
+      mockDeleteConfigMutate.mockResolvedValueOnce({ success: true });
+      const { result } = renderHook(() => useCaldavMutations(), {
+        wrapper: createTestWrapper(queryClient),
+      });
+
+      queryClient.setQueryData(mockConfigQueryKey, createMockCaldavConfig({ version: 7 }));
+      await act(async () => {
+        await result.current.saveConfig(configInput);
+      });
+      queryClient.setQueryData(mockConfigQueryKey, createMockCaldavConfig({ version: 9 }));
+      await act(async () => {
+        await result.current.deleteConfig();
+      });
+
+      expect(mockSaveConfigMutate.mock.calls[0]?.[0]).toEqual({ ...configInput, version: 7 });
+      expect(mockDeleteConfigMutate.mock.calls[0]?.[0]).toEqual({
+        deleteEvents: false,
+        version: 9,
+      });
+    });
+  });
+
   describe("useCaldavMutations.testConnection", () => {
     it("calls testConnection mutation with correct data", async () => {
       const connectionInput = {
