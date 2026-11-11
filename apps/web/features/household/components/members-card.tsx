@@ -10,6 +10,8 @@ import { useTranslations } from "next-intl";
 
 import { useHousehold, useHouseholdMutations } from "@norish/shared-react/reader";
 
+type ChosenMember = { id: string; name: string };
+
 export default function MembersCard() {
   const t = useTranslations("settings.household.members");
   const ti = useTranslations("settings.household.info");
@@ -18,14 +20,8 @@ export default function MembersCard() {
   const { kickUser, transferAdmin } = useHouseholdMutations();
   const [showKickModal, setShowKickModal] = useState(false);
   const [showTransferModal, setShowTransferModal] = useState(false);
-  const [userToKick, setUserToKick] = useState<{
-    id: string;
-    name: string;
-  } | null>(null);
-  const [userToTransfer, setUserToTransfer] = useState<{
-    id: string;
-    name: string;
-  } | null>(null);
+  const [userToKick, setUserToKick] = useState<ChosenMember | null>(null);
+  const [userToTransfer, setUserToTransfer] = useState<ChosenMember | null>(null);
   if (!household) return null;
 
   // Check if current user is admin
