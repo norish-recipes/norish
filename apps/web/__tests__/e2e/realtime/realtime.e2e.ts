@@ -169,6 +169,47 @@ test("grocery create, update and delete reach the other browser without a reload
   await expect(rowFor(pageB, "realtime-melk-hernoemd")).toHaveCount(0);
 });
 
+test("a change made before a fresh screen's subscriptions are live shows once they are", async () => {
+  const name = `in-de-kloof-${randomUUID().slice(0, 8)}`;
+  const context = await stack.newContext("a");
+  const page = await context.newPage();
+  // Hold what the page sends on its socket: the server takes no subscription until released.
+  let release!: () => void;
+  const released = new Promise<void>((resolve) => (release = resolve));
+  const held: string[] = [];
+
+  await page.routeWebSocket(/\/trpc$/, (socket) => {
+    const server = socket.connectToServer();
+
+    socket.onMessage(async (message) => {
+      held.push(String(message));
+      await released;
+      server.send(message);
+    });
+  });
+
+  try {
+    // The list arrives with the document and hydrates; its subscriptions wait on the socket.
+    await openGroceries(page);
+    await expect.poll(() => held.some((m) => m.includes("groceries.onCreated"))).toBe(true);
+
+    // A's live browser hears a grocery added inside the gap: after the read, before the listener.
+    const created = await callMutation(pageA, stack.baseURL, "groceries.create", [
+      { name, amount: null, unit: null, isDone: false },
+    ]);
+
+    expect(created.ok).toBe(true);
+    await expect(rowFor(pageA, name)).toBeVisible();
+    await expect(rowFor(page, name)).toHaveCount(0);
+
+    // Released, nothing else asks: the subscriptions' go-live alone has to bring it.
+    release();
+    await expect(rowFor(page, name)).toBeVisible();
+  } finally {
+    await context.close();
+  }
+});
+
 test("a typed name joining two foods is a grocery each, in both browsers", async () => {
   // A name splits only where every part is a known food; a Pantry add makes them known.
   for (const name of ["realtime-zout", "realtime-peper"]) {
