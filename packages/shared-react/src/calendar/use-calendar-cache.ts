@@ -31,7 +31,7 @@ export function useCalendarCacheHelpers(): CalendarCacheHelpers {
   const upsertItemAcrossRanges = (item: PlannedItemWithRecipePayload) => {
     for (const { key, range } of cachedRanges()) {
       queryClient.setQueryData<PlannedItemFromQuery[]>(key, (prev) =>
-        upsertItemInRange(prev ?? [], item, range.startISO, range.endISO)
+        upsertItemInRange(prev ?? [], item, range)
       );
     }
   };

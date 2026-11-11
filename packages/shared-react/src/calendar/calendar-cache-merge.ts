@@ -12,7 +12,7 @@ import type { PlannedItemWithRecipePayload } from "@norish/shared/contracts/zod"
 
 export type CalendarRange = { startISO: string; endISO: string };
 
-export function isDateInRange(date: string, startISO: string, endISO: string) {
+export function isDateInRange(date: string, { startISO, endISO }: CalendarRange) {
   return date >= startISO && date <= endISO;
 }
 
@@ -52,12 +52,11 @@ export function toPlannedItemFromPayload(
 export function upsertItemInRange(
   prev: PlannedItemFromQuery[],
   item: PlannedItemWithRecipePayload,
-  startISO: string,
-  endISO: string
+  range: CalendarRange
 ) {
   const existing = prev.find((current) => current.id === item.id);
 
-  if (!isDateInRange(item.date, startISO, endISO)) {
+  if (!isDateInRange(item.date, range)) {
     return prev.filter((current) => current.id !== item.id);
   }
 
@@ -75,11 +74,10 @@ export function upsertItemInRange(
  */
 export function knownItemsInRange(
   cached: { range: CalendarRange; items: PlannedItemFromQuery[] }[],
-  startISO: string,
-  endISO: string
+  wanted: CalendarRange
 ): PlannedItemFromQuery[] | undefined {
   const overlapping = cached.filter(
-    ({ range }) => range.startISO <= endISO && range.endISO >= startISO
+    ({ range }) => range.startISO <= wanted.endISO && range.endISO >= wanted.startISO
   );
 
   if (overlapping.length === 0) return undefined;
@@ -87,7 +85,7 @@ export function knownItemsInRange(
 
   for (const { items } of overlapping) {
     for (const item of items) {
-      if (isDateInRange(item.date, startISO, endISO) && !known.has(item.id)) {
+      if (isDateInRange(item.date, wanted) && !known.has(item.id)) {
         known.set(item.id, item);
       }
     }
@@ -122,11 +120,11 @@ export function moveItemInRange(
   prev: PlannedItemFromQuery[],
   moved: PlannedItemFromQuery,
   target: Pick<PlannedItemFromQuery, "date" | "slot" | "sortOrder">,
-  { startISO, endISO }: CalendarRange
+  range: CalendarRange
 ) {
-  const targetInRange = isDateInRange(target.date, startISO, endISO);
+  const targetInRange = isDateInRange(target.date, range);
 
-  if (!targetInRange && !isDateInRange(moved.date, startISO, endISO)) return prev;
+  if (!targetInRange && !isDateInRange(moved.date, range)) return prev;
 
   const isSameSlot = moved.date === target.date && moved.slot === target.slot;
   const shifted = prev.flatMap((item) => {
@@ -166,9 +164,9 @@ export function moveItemInRange(
 export function applyMoveEchoInRange(
   prev: PlannedItemFromQuery[],
   payload: PayloadOf<CalendarRealtime, "itemMoved">,
-  { startISO, endISO }: CalendarRange
+  range: CalendarRange
 ) {
-  const itemIsInRange = isDateInRange(payload.item.date, startISO, endISO);
+  const itemIsInRange = isDateInRange(payload.item.date, range);
   const sortOrders = new Map(
     [...(payload.sourceSlotItems ?? []), ...payload.targetSlotItems].map((item) => [
       item.id,
