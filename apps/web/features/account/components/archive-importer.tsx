@@ -9,15 +9,13 @@ import { useArchiveImport, useArchiveImportMutation } from "@norish/shared-react
 
 export default function ArchiveImporter() {
   const t = useTranslations("navbar.archiveImporter");
-  const {
-    current,
-    imported,
-    notes,
-    total,
-    errors: progressErrors,
-    isImporting,
-    clear: clearImport,
-  } = useArchiveImport();
+  const current = useArchiveImport((s) => s.current);
+  const imported = useArchiveImport((s) => s.imported);
+  const notes = useArchiveImport((s) => s.notes);
+  const total = useArchiveImport((s) => s.total);
+  const progressErrors = useArchiveImport((s) => s.errors);
+  const isImporting = useArchiveImport((s) => s.isImporting);
+  const clearImport = useArchiveImport((s) => s.clear);
   const { startImport, isStarting } = useArchiveImportMutation();
   const [dragActive, setDragActive] = useState(false);
   const [showNotes, setShowNotes] = useState(false);
