@@ -19,6 +19,12 @@ describe("useArchiveImport", () => {
     });
   });
 
+  it("reads an outcome with no progress before it as complete with its counts", () => {
+    archive().completed({ imported: 3, notes: [], errors: [error("a.json")] });
+
+    expect(archive()).toMatchObject({ current: 4, total: 4, imported: 3, isImporting: false });
+  });
+
   it("follows the progress, then holds the outcome", () => {
     archive().started(5);
     archive().progressed({ current: 2, total: 5, imported: 1, errors: [error("a.json")] });
