@@ -2,7 +2,7 @@
 // alike, so a range cached for another screen shows it without a refetch (#583).
 
 import { act } from "react";
-import { QueryClient } from "@tanstack/react-query";
+import { dehydrate, hydrate, QueryClient } from "@tanstack/react-query";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 
 import type { PlannedItemFromQuery } from "@norish/shared/contracts";
@@ -244,6 +244,68 @@ describe("calendar cache convergence across ranges", () => {
     ).toEqual([expect.objectContaining({ id: "item-0", date: "2026-08-15", version: 3 })]);
   });
 
+  it("leaves a range holding neither date of a move echo unchanged", () => {
+    const august = [cachedItem({ id: "item-aug", date: "2026-08-10", sortOrder: 0 })];
+
+    queryClient.setQueryData(rangeKeyOf(LAST_MONTH), august);
+    mountSubscription();
+
+    act(() =>
+      handler("onItemMoved")(
+        trackedEvent({
+          item: payload({ id: "item-0", date: "2026-09-24", slot: "Lunch", version: 2 }),
+          targetSlotItems: [{ id: "item-0", sortOrder: 0 }],
+          sourceSlotItems: [],
+          oldDate: "2026-09-22",
+          oldSlot: "Dinner",
+          oldSortOrder: 0,
+        })
+      )
+    );
+
+    expect(queryClient.getQueryData(rangeKeyOf(LAST_MONTH))).toEqual(august);
+  });
+
+  it("gives slot-mates in every range the order a move echo sends", () => {
+    const items = [
+      cachedItem({ id: "item-0", date: "2026-09-22", slot: "Dinner", sortOrder: 0 }),
+      cachedItem({ id: "item-a", date: "2026-09-22", slot: "Dinner", sortOrder: 1 }),
+      cachedItem({ id: "item-b", date: "2026-09-24", slot: "Lunch", sortOrder: 0 }),
+    ];
+
+    queryClient.setQueryData(rangeKeyOf(THIS_WEEK), items);
+    queryClient.setQueryData(rangeKeyOf(CALENDAR_PAGE), items);
+    mountSubscription();
+
+    act(() =>
+      handler("onItemMoved")(
+        trackedEvent({
+          item: payload({ id: "item-0", date: "2026-09-24", slot: "Lunch", version: 2 }),
+          targetSlotItems: [
+            { id: "item-0", sortOrder: 0 },
+            { id: "item-b", sortOrder: 1 },
+          ],
+          sourceSlotItems: [{ id: "item-a", sortOrder: 0 }],
+          oldDate: "2026-09-22",
+          oldSlot: "Dinner",
+          oldSortOrder: 0,
+        })
+      )
+    );
+
+    for (const range of [THIS_WEEK, CALENDAR_PAGE]) {
+      expect(
+        queryClient
+          .getQueryData<PlannedItemFromQuery[]>(rangeKeyOf(range))
+          ?.map(({ id, sortOrder }) => [id, sortOrder])
+      ).toEqual([
+        ["item-a", 0],
+        ["item-0", 0],
+        ["item-b", 1],
+      ]);
+    }
+  });
+
   it("keeps a flagged range no component shows flagged through an echo, so mounting it reads", async () => {
     void queryClient.invalidateQueries({ queryKey: rangeKeyOf(THIS_WEEK), exact: true });
     mountSubscription();
@@ -460,6 +522,39 @@ describe("a delete, move or update with no range", () => {
         true
       );
     }
+  });
+
+  it("lands a write in a range whose read is in flight, and in a hydrated range", async () => {
+    const other = new QueryClient();
+    const LATER = { startISO: "2026-09-20", endISO: "2026-09-30" };
+
+    other.setQueryData(rangeKeyOf(LATER), WEEK_ITEMS);
+    hydrate(queryClient, dehydrate(other));
+    void queryClient.fetchQuery({
+      queryKey: rangeKeyOf(THIS_WEEK),
+      queryFn: () => new Promise(() => {}),
+    });
+    mount({ success: true });
+    act(() => writes.delete());
+    await settle();
+
+    expect(itemsIn(THIS_WEEK)).toEqual(landed.delete.week);
+    expect(itemsIn(LATER)).toEqual(landed.delete.week);
+  });
+
+  it("creates no data for a range whose read has none yet", async () => {
+    const UNREAD = { startISO: "2026-09-20", endISO: "2026-09-30" };
+
+    void queryClient.prefetchQuery({
+      queryKey: rangeKeyOf(UNREAD),
+      queryFn: () => new Promise(() => {}),
+    });
+    mount({ success: true });
+    act(() => writes.delete());
+    await settle();
+
+    expect(queryClient.getQueryCache().find({ queryKey: rangeKeyOf(UNREAD) })).toBeDefined();
+    expect(itemsIn(UNREAD)).toBeUndefined();
   });
 
   it("rereads a widened range a delete cancelled during its first read", async () => {
