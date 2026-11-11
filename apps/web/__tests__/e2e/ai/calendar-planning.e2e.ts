@@ -288,27 +288,16 @@ test("plans dragged out of one slot after a slot-mate's delete move there and st
     await expect.poll(() => plannedDate(ids[down]!)).toBe(below);
 
     // One plan twice: the first move reaches the server only after the second drop, as on a
-    // slow network, and a second request only after the first was answered.
+    // slow network; any later request passes straight through.
     let dropSecond!: () => void;
-    let answerFirst!: () => void;
     const secondDropped = new Promise<void>((resolve) => (dropSecond = resolve));
-    const firstAnswered = new Promise<void>((resolve) => (answerFirst = resolve));
     let moves = 0;
 
     await page.route(
       (url) => url.pathname.includes("calendar.moveItem"),
       async (route) => {
-        if (++moves > 1) {
-          await firstAnswered;
-          await route.continue();
-
-          return;
-        }
-        await secondDropped;
-        const response = await route.fetch();
-
-        answerFirst();
-        await route.fulfill({ response });
+        if (++moves === 1) await secondDropped;
+        await route.continue();
       }
     );
     await drag(across, beside);
