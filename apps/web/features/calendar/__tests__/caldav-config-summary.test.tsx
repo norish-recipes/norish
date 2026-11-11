@@ -13,7 +13,7 @@ vi.mock("next-intl", () => ({
 }));
 
 const connection = vi.hoisted(() => ({
-  current: { isChecking: true, isConnected: false, message: "", invalidate: () => {} },
+  current: { isChecking: true, isConnected: false },
 }));
 
 vi.mock("@norish/shared-react/calendar", () => ({
