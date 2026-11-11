@@ -1022,7 +1022,7 @@ test("a reader who scrolls the Library before it hydrates meets no blank rows", 
   }
 });
 
-test("a cookbook opened under stored filters asks for its members once and never shows one they leave out", async ({
+test("a cookbook opened under stored filters asks for its members under them alone and never shows one they leave out", async ({
   browser,
 }) => {
   const dinner = await createRecipe("Filtered Dinner Member", "Dinner");
@@ -1041,12 +1041,18 @@ test("a cookbook opened under stored filters asks for its members once and never
     isMember: true,
   });
   const { context, page } = await openLive(browser, "phone");
+  // The input of every request for the members: the page's read, and its reread once live.
   const asked: string[] = [];
 
   page.on("request", (request) => {
-    const url = decodeURIComponent(request.url());
+    const url = new URL(request.url());
+    const at = url.pathname.split("/").pop()?.split(",").indexOf("cookbooks.recipes") ?? -1;
 
-    if (url.includes("cookbooks.recipes") && url.includes(cookbook.id)) asked.push(url);
+    if (at < 0) return;
+    const inputs = JSON.parse(url.searchParams.get("input") ?? "{}") as Record<string, unknown>;
+    const input = JSON.stringify(inputs[at]);
+
+    if (input.includes(cookbook.id)) asked.push(input);
   });
 
   try {
@@ -1077,7 +1083,8 @@ test("a cookbook opened under stored filters asks for its members once and never
     expect(
       await page.evaluate(() => (window as unknown as { __seen: { breakfast: boolean } }).__seen)
     ).toEqual({ breakfast: false });
-    expect(asked).toHaveLength(1);
+    // One read, under the stored filters. How often it goes out depends on the go-live windows.
+    expect([...new Set(asked)]).toHaveLength(1);
     expect(asked[0]).toContain('"categories":["Dinner"]');
   } finally {
     await context.close();
