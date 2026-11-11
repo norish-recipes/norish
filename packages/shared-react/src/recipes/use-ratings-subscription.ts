@@ -1,20 +1,19 @@
 "use client";
 
-import { useMemo } from "react";
 import { useQueryClient } from "@tanstack/react-query";
 
 import type { EventName, PayloadOf } from "@norish/shared/contracts/realtime/catalogue";
 import type { RatingsRealtime } from "@norish/shared/contracts/realtime/ratings";
 
-import type { InfiniteRecipeData } from "./library-cache";
 import { usePlatform } from "../platform/platform";
 import { useRealtimeSubscription } from "../realtime/use-realtime-subscription";
 import { useTRPC } from "../trpc";
+import { useRecipesCacheHelpers } from "./use-recipes-cache";
 
 type Payload<E extends EventName<RatingsRealtime>> = PayloadOf<RatingsRealtime, E>;
 
 /**
- * Ratings land where they are shown: the average and the dashboard rows are
+ * Ratings land where they are shown: the average and the list and Library rows are
  * patched in place, by recipe id, and nothing is refetched for an event the
  * cache already reflects. Only a fresh subscription rereads. A rating the server refused is toasted.
  */
@@ -23,13 +22,13 @@ export function useRatingsSubscription() {
   const trpc = useTRPC();
   const queryClient = useQueryClient();
 
-  const recipesBaseKey = trpc.recipes.list.queryKey({});
-  const recipesPath = useMemo(() => [recipesBaseKey[0]], [recipesBaseKey]);
+  const { setAllRecipesData } = useRecipesCacheHelpers();
 
   const liveQueryKeys = [
     trpc.ratings.getAverage.queryKey(),
     trpc.ratings.getUserRating.queryKey(),
-    recipesPath,
+    trpc.recipes.list.pathKey(),
+    trpc.library.list.pathKey(),
   ];
 
   useRealtimeSubscription<Payload<"ratingUpdated">>(trpc.ratings.onRatingUpdated, {
@@ -43,36 +42,19 @@ export function useRatingsSubscription() {
 
       void queryClient.invalidateQueries({ queryKey: userRatingQueryKey });
 
-      queryClient.setQueriesData<InfiniteRecipeData>({ queryKey: recipesPath }, (old) => {
-        if (!old?.pages) return old;
-
-        return {
-          ...old,
-          pages: old.pages.map((page) => {
-            const idx = page.recipes.findIndex((r) => r.id === recipeId);
-
-            if (idx === -1) return page;
-
-            const updatedRecipes = [...page.recipes];
-            const recipe = updatedRecipes[idx];
-
-            if (!recipe) {
-              return page;
+      setAllRecipesData((old) =>
+        old?.pages
+          ? {
+              ...old,
+              pages: old.pages.map((page) => ({
+                ...page,
+                recipes: page.recipes.map((recipe) =>
+                  recipe.id === recipeId ? { ...recipe, averageRating, ratingCount } : recipe
+                ),
+              })),
             }
-
-            updatedRecipes[idx] = {
-              ...recipe,
-              averageRating,
-              ratingCount,
-            };
-
-            return {
-              ...page,
-              recipes: updatedRecipes,
-            };
-          }),
-        };
-      });
+          : old
+      );
     },
   });
 

@@ -10,7 +10,7 @@ import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 
 import { createTestWrapper, fakePlatformAdapter } from "@norish/shared-react/platform/testing";
 
-import { trackedEvent } from "../../../__tests__/realtime/tracked-event";
+import { trackedCursorMark, trackedEvent } from "../../../__tests__/realtime/tracked-event";
 import { useRatingsSubscription } from "../use-ratings-subscription";
 
 const useSubscriptionMock = vi.hoisted(() => vi.fn());
@@ -24,6 +24,7 @@ vi.mock("@trpc/tanstack-react-query", async () => {
 });
 
 const LIST_KEY = [["recipes", "list"], { input: {}, type: "infinite" }];
+const LIBRARY_KEY = [["library", "list"], { input: {}, type: "infinite" }];
 const averageKey = (recipeId?: string) =>
   recipeId
     ? [["ratings", "getAverage"], { input: { recipeId }, type: "query" }]
@@ -34,13 +35,29 @@ const userRatingKey = (recipeId?: string) =>
     : [["ratings", "getUserRating"]];
 
 function procedure(name: string) {
-  return { subscriptionOptions: (_input: undefined, opts: object) => ({ name, ...opts }) };
+  return {
+    subscriptionOptions: (_input: undefined, opts: object) => ({
+      name,
+      ...opts,
+      subscribe: () => ({ unsubscribe: () => undefined }),
+    }),
+  };
 }
 
 vi.mock("../../trpc", () => ({
   useTRPC: () => ({
     recipes: {
-      list: { queryKey: () => [["recipes", "list"], { input: {}, type: "query" }] },
+      list: {
+        queryKey: () => [["recipes", "list"], { input: {}, type: "query" }],
+        pathKey: () => [["recipes", "list"]],
+      },
+      getPending: { queryKey: () => [["recipes", "getPending"], { type: "query" }] },
+    },
+    library: {
+      list: {
+        queryKey: () => [["library", "list"], { input: {}, type: "query" }],
+        pathKey: () => [["library", "list"]],
+      },
     },
     ratings: {
       getAverage: { queryKey: (input?: { recipeId: string }) => averageKey(input?.recipeId) },
@@ -51,14 +68,25 @@ vi.mock("../../trpc", () => ({
   }),
 }));
 
-function emit(name: string, payload: unknown) {
+function subscription(name: string) {
   const options = useSubscriptionMock.mock.calls
-    .map((call) => call[0] as { name: string; onData: (data: unknown) => void })
-    .find((opts) => opts.name === name);
+    .map(
+      (call) =>
+        call[0] as {
+          name: string;
+          onData: (data: unknown) => void;
+          subscribe: (observer: object) => unknown;
+        }
+    )
+    .findLast((opts) => opts.name === name);
 
   if (!options) throw new Error(`No subscription named ${name}`);
 
-  act(() => options.onData(trackedEvent(payload)));
+  return options;
+}
+
+function emit(name: string, payload: unknown) {
+  act(() => subscription(name).onData(trackedEvent(payload)));
 }
 
 let queryClient: QueryClient;
@@ -76,6 +104,18 @@ beforeEach(() => {
           { id: "recipe-2", averageRating: 3, ratingCount: 1 },
         ],
         total: 2,
+        nextCursor: null,
+      },
+    ],
+    pageParams: [0],
+  });
+  queryClient.setQueryData(LIBRARY_KEY, {
+    pages: [
+      {
+        items: [
+          { kind: "recipe", recipe: { id: "recipe-1", averageRating: null, ratingCount: 0 } },
+        ],
+        total: 1,
         nextCursor: null,
       },
     ],
@@ -117,6 +157,32 @@ describe("useRatingsSubscription", () => {
     );
     expect(invalidateQueries).toHaveBeenCalledTimes(1);
     expect(invalidateQueries).toHaveBeenCalledWith({ queryKey: userRatingKey("recipe-1") });
+  });
+
+  it("patches the recipe's Library card too, and rereads the Library once live", () => {
+    emit("onRatingUpdated", { recipeId: "recipe-1", averageRating: 4.5, ratingCount: 2 });
+
+    expect(queryClient.getQueryData(LIBRARY_KEY)).toEqual(
+      expect.objectContaining({
+        pages: [
+          expect.objectContaining({
+            items: [
+              { kind: "recipe", recipe: { id: "recipe-1", averageRating: 4.5, ratingCount: 2 } },
+            ],
+          }),
+        ],
+      })
+    );
+
+    vi.useFakeTimers();
+    try {
+      subscription("onRatingUpdated").subscribe({});
+      act(() => subscription("onRatingUpdated").onData(trackedCursorMark()));
+      act(() => vi.runOnlyPendingTimers());
+    } finally {
+      vi.useRealTimers();
+    }
+    expect(queryClient.getQueryState(LIBRARY_KEY)?.isInvalidated).toBe(true);
   });
 
   it("toasts a failed rating and refetches the user's rating", () => {
