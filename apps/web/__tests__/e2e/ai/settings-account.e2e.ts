@@ -1,41 +1,35 @@
 // The account settings cards a reader edits: API keys, site tokens, allergies and the Avatar.
 import { randomUUID } from "node:crypto";
 import path from "node:path";
-import type { Locator, Page } from "@playwright/test";
+import type { BrowserContext } from "@playwright/test";
 
 import { deleteUser } from "@norish/db/repositories/users";
 
-import { signIn } from "../harness/auth";
+import type { ThrowawayUser } from "./admin-users-support";
+import { signedInContext } from "../harness/auth";
 import { callTrpc } from "../harness/trpc";
-import { signUpThrowawayUser } from "./admin-users-support";
+import { settingsCard as card, signUpThrowawayUser } from "./admin-users-support";
 import { expect, test } from "./fixture";
 
 const ACCOUNT_SETTINGS = "/settings/account";
 const PHOTO = path.join(import.meta.dirname, "fixtures", "supplied-photo.jpg");
-
-function card(page: Page, title: string): Locator {
-  return page
-    .locator('[data-slot="card"]')
-    .filter({ has: page.getByRole("heading", { name: title, exact: true }) });
-}
 
 test("a reader manages API keys, site tokens, allergies and their Avatar", async ({
   browser,
   aiStack,
 }) => {
   const tag = randomUUID().slice(0, 8);
-  const user = await signUpThrowawayUser(aiStack, {
-    email: `account-${tag}@norish.test`,
-    password: `account-${tag}-password`,
-    name: `Account ${tag}`,
-  });
-  const cookies = await signIn(aiStack.baseURL, user);
-  const context = await browser.newContext({
-    baseURL: aiStack.baseURL,
-    storageState: { cookies, origins: [] },
-  });
+  let user: ThrowawayUser | undefined;
+  let context: BrowserContext | undefined;
 
   try {
+    user = await signUpThrowawayUser(aiStack, {
+      email: `account-${tag}@norish.test`,
+      password: `account-${tag}-password`,
+      name: `Account ${tag}`,
+    });
+    context = await signedInContext(browser, aiStack.baseURL, user);
+    const cookies = await context.cookies();
     const page = await context.newPage();
 
     await page.goto(ACCOUNT_SETTINGS);
@@ -103,7 +97,7 @@ test("a reader manages API keys, site tokens, allergies and their Avatar", async
     await expect(profile.getByRole("img", { name: user.name })).toBeVisible();
     await expect(avatar).toBeHidden();
   } finally {
-    await context.close();
-    await deleteUser(user.id);
+    await context?.close();
+    if (user) await deleteUser(user.id);
   }
 });

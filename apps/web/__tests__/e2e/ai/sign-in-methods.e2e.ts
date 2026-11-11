@@ -1,6 +1,6 @@
 // A password user connects OIDC under another email in Settings, signs in with it
 // to the same account, and disconnects it again; and changes their password there.
-import { signIn } from "../harness/auth";
+import { signedInContext, signIn } from "../harness/auth";
 import { signUpThrowawayUser } from "./admin-users-support";
 import { expect, IDP_NAME, MEMBER, test } from "./fixture";
 
@@ -8,10 +8,7 @@ test("a password user connects OIDC in Settings, signs in with it, and disconnec
   browser,
   aiStack,
 }) => {
-  const passwordContext = await browser.newContext({
-    baseURL: aiStack.baseURL,
-    storageState: { cookies: await signIn(aiStack.baseURL, MEMBER), origins: [] },
-  });
+  const passwordContext = await signedInContext(browser, aiStack.baseURL, MEMBER);
   const oidcContext = await browser.newContext({ baseURL: aiStack.baseURL });
 
   try {
@@ -69,14 +66,8 @@ test("a password user changes their password in Settings and signs out their oth
     name: "Change password",
     password: "original-password",
   });
-  const context = await browser.newContext({
-    baseURL: aiStack.baseURL,
-    storageState: { cookies: await signIn(aiStack.baseURL, user), origins: [] },
-  });
-  const other = await browser.newContext({
-    baseURL: aiStack.baseURL,
-    storageState: { cookies: await signIn(aiStack.baseURL, user), origins: [] },
-  });
+  const context = await signedInContext(browser, aiStack.baseURL, user);
+  const other = await signedInContext(browser, aiStack.baseURL, user);
 
   try {
     const page = await context.newPage();

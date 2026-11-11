@@ -1,22 +1,16 @@
 // The household settings tab across two readers: create, join by code, remove a member, leave.
 import { randomUUID } from "node:crypto";
-import type { Locator, Page } from "@playwright/test";
+import type { BrowserContext, Locator, Page } from "@playwright/test";
 
 import { deleteHousehold, getHouseholdForUser } from "@norish/db/repositories/households";
 import { deleteUser } from "@norish/db/repositories/users";
 
 import type { ThrowawayUser } from "./admin-users-support";
-import { signIn } from "../harness/auth";
-import { signUpThrowawayUser } from "./admin-users-support";
+import { signedInContext } from "../harness/auth";
+import { settingsCard as card, signUpThrowawayUser } from "./admin-users-support";
 import { expect, test } from "./fixture";
 
 const HOUSEHOLD_SETTINGS = "/settings/household";
-
-function card(page: Page, title: string): Locator {
-  return page
-    .locator('[data-slot="card"]')
-    .filter({ has: page.getByRole("heading", { name: title, exact: true }) });
-}
 
 function memberRow(page: Page, name: string): Locator {
   return card(page, "Members").getByRole("row").filter({ hasText: name });
@@ -40,25 +34,27 @@ test("a household is created, joined by code, a member removed, and left", async
   aiStack,
 }) => {
   const tag = randomUUID().slice(0, 8);
-  const throwaway = (role: string) =>
-    signUpThrowawayUser(aiStack, {
+  // Each user and context is recorded as it is made, so `finally` removes whatever exists.
+  const users: ThrowawayUser[] = [];
+  const contexts: BrowserContext[] = [];
+  const signedIn = async (role: string) => {
+    const user = await signUpThrowawayUser(aiStack, {
       email: `household-${role}-${tag}@norish.test`,
       password: `household-${role}-${tag}-password`,
       name: `Household ${role} ${tag}`,
     });
-  const admin = await throwaway("admin");
-  const member = await throwaway("member");
-  const signedIn = async (user: ThrowawayUser) =>
-    browser.newContext({
-      baseURL: aiStack.baseURL,
-      storageState: { cookies: await signIn(aiStack.baseURL, user), origins: [] },
-    });
-  const adminContext = await signedIn(admin);
-  const memberContext = await signedIn(member);
+
+    users.push(user);
+    const context = await signedInContext(browser, aiStack.baseURL, user);
+
+    contexts.push(context);
+
+    return { user, page: await context.newPage() };
+  };
 
   try {
-    const adminPage = await adminContext.newPage();
-    const memberPage = await memberContext.newPage();
+    const { user: admin, page: adminPage } = await signedIn("admin");
+    const { user: member, page: memberPage } = await signedIn("member");
 
     // Creating a household shows its join code to its admin.
     await adminPage.goto(HOUSEHOLD_SETTINGS);
@@ -92,9 +88,9 @@ test("a household is created, joined by code, a member removed, and left", async
     await expectNoHousehold(memberPage);
     await expect(memberRow(adminPage, member.name)).toBeHidden();
   } finally {
-    await Promise.all([adminContext.close(), memberContext.close()]);
+    await Promise.all(contexts.map((context) => context.close()));
 
-    for (const user of [admin, member]) {
+    for (const user of users) {
       const household = await getHouseholdForUser(user.id);
 
       if (household) await deleteHousehold(household.id);
