@@ -80,7 +80,7 @@ describe("useCalendarQuery", () => {
       });
 
       expect(result.current.calendarData).toEqual({});
-      expect(result.current.items).toEqual([]);
+      expect(Object.values(result.current.calendarData).flat()).toEqual([]);
     });
 
     it("returns loading state initially", () => {
@@ -151,7 +151,7 @@ describe("useCalendarQuery", () => {
       });
 
       expect(result.current.calendarData).toEqual({});
-      expect(result.current.items).toEqual([]);
+      expect(Object.values(result.current.calendarData).flat()).toEqual([]);
     });
 
     it("returns items array", async () => {
@@ -170,9 +170,9 @@ describe("useCalendarQuery", () => {
         expect(result.current.isLoading).toBe(false);
       });
 
-      expect(result.current.items).toHaveLength(2);
-      expect(result.current.items[0]!.id).toBe("item-1");
-      expect(result.current.items[1]!.id).toBe("item-2");
+      expect(Object.values(result.current.calendarData).flat()).toHaveLength(2);
+      expect(Object.values(result.current.calendarData).flat()[0]!.id).toBe("item-1");
+      expect(Object.values(result.current.calendarData).flat()[1]!.id).toBe("item-2");
     });
   });
 });

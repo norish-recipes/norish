@@ -73,7 +73,7 @@ export function useCalendarMutations(): CalendarMutationsResult {
         undefined
       );
 
-  const createMutation = useMutation(
+  const { mutate: mutateCreate } = useMutation(
     trpc.calendar.createItem.mutationOptions({
       // The created item is placed in every cached range from the response
       // itself: the realtime echo is the fast path, not the guarantee (ADR-0011).
@@ -84,9 +84,8 @@ export function useCalendarMutations(): CalendarMutationsResult {
       onError: invalidateUnlessPreserved(rereadAllRanges),
     })
   );
-  const { mutate: mutateCreate } = createMutation;
 
-  const deleteMutation = useMutation(
+  const { mutate: mutateDelete } = useMutation(
     trpc.calendar.deleteItem.mutationOptions({
       onMutate: ({ itemId }) =>
         writeAcrossRanges((items) => items.filter((item) => item.id !== itemId)),
@@ -94,9 +93,8 @@ export function useCalendarMutations(): CalendarMutationsResult {
       onError: rollBack,
     })
   );
-  const { mutate: mutateDelete } = deleteMutation;
 
-  const moveMutation = useMutation(
+  const { mutate: mutateMove } = useMutation(
     trpc.calendar.moveItem.mutationOptions({
       onMutate: ({ itemId, targetDate, targetSlot, targetIndex }) => {
         const moved = findItem(itemId);
@@ -110,9 +108,8 @@ export function useCalendarMutations(): CalendarMutationsResult {
       onError: rollBack,
     })
   );
-  const { mutate: mutateMove } = moveMutation;
 
-  const updateMutation = useMutation(
+  const { mutate: mutateUpdate } = useMutation(
     trpc.calendar.updateItem.mutationOptions({
       onMutate: ({ itemId, title }) =>
         writeAcrossRanges((items) =>
@@ -124,7 +121,6 @@ export function useCalendarMutations(): CalendarMutationsResult {
       onError: rollBack,
     })
   );
-  const { mutate: mutateUpdate } = updateMutation;
 
   const versionOf = (itemId: string) => findItem(itemId)?.version ?? 1;
 
@@ -145,9 +141,5 @@ export function useCalendarMutations(): CalendarMutationsResult {
     updateItem: (itemId, title) => {
       mutateUpdate({ itemId, version: versionOf(itemId), title });
     },
-    isCreating: createMutation.isPending,
-    isDeleting: deleteMutation.isPending,
-    isMoving: moveMutation.isPending,
-    isUpdating: updateMutation.isPending,
   };
 }

@@ -23,7 +23,7 @@ export function useCalendarQuery(range: CalendarRange): CalendarQueryResult {
   const trpc = useTRPC();
   const { cachedRanges } = useCalendarCacheHelpers();
 
-  const { data, error, isLoading } = useQuery({
+  const { data, isLoading } = useQuery({
     ...trpc.calendar.listItems.queryOptions(
       { startISO, endISO },
       {
@@ -37,7 +37,5 @@ export function useCalendarQuery(range: CalendarRange): CalendarQueryResult {
     initialDataUpdatedAt: 0,
   });
 
-  const items = data ?? [];
-
-  return { items, calendarData: groupItemsByDate(items), isLoading, error };
+  return { calendarData: groupItemsByDate(data ?? []), isLoading };
 }

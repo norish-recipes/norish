@@ -339,7 +339,7 @@ describe("useCalendarMutations", () => {
       });
 
       await waitFor(() => {
-        expect(result.current.isMoving).toBe(false);
+        expect(queryClient.isMutating()).toBe(0);
       });
 
       const data = queryClient.getQueryData<PlannedItemFromQuery[]>(getQueryKey());
@@ -372,107 +372,6 @@ describe("useCalendarMutations", () => {
           version: 4,
           title: "New title",
         });
-      });
-    });
-  });
-
-  describe("loading states", () => {
-    it("tracks isCreating state", async () => {
-      let resolvePromise: (value: unknown) => void;
-
-      mockCreateItemMutate.mockImplementation(
-        () =>
-          new Promise((resolve) => {
-            resolvePromise = resolve;
-          })
-      );
-
-      const { result } = renderHook(() => useCalendarMutations(), {
-        wrapper: createTestWrapper(queryClient),
-      });
-
-      expect(result.current.isCreating).toBe(false);
-
-      act(() => {
-        result.current.planRecipe("2025-01-15", "Breakfast", "recipe-123");
-      });
-
-      await waitFor(() => {
-        expect(result.current.isCreating).toBe(true);
-      });
-
-      act(() => {
-        resolvePromise!({ id: "new-id" });
-      });
-
-      await waitFor(() => {
-        expect(result.current.isCreating).toBe(false);
-      });
-    });
-
-    it("tracks isDeleting state", async () => {
-      let resolvePromise: (value: unknown) => void;
-
-      mockDeleteItemMutate.mockImplementation(
-        () =>
-          new Promise((resolve) => {
-            resolvePromise = resolve;
-          })
-      );
-
-      const { result } = renderHook(() => useCalendarMutations(), {
-        wrapper: createTestWrapper(queryClient),
-      });
-
-      expect(result.current.isDeleting).toBe(false);
-
-      act(() => {
-        result.current.deleteItem("item-1");
-      });
-
-      await waitFor(() => {
-        expect(result.current.isDeleting).toBe(true);
-      });
-
-      act(() => {
-        resolvePromise!({ success: true });
-      });
-
-      await waitFor(() => {
-        expect(result.current.isDeleting).toBe(false);
-      });
-    });
-
-    it("tracks isMoving state", async () => {
-      let resolvePromise: (value: unknown) => void;
-
-      mockMoveItemMutate.mockImplementation(
-        () =>
-          new Promise((resolve) => {
-            resolvePromise = resolve;
-          })
-      );
-
-      const { result } = renderHook(() => useCalendarMutations(), {
-        wrapper: createTestWrapper(queryClient),
-      });
-
-      expect(result.current.isMoving).toBe(false);
-
-      act(() => {
-        result.current.moveItem("item-1", "2025-01-20", "Dinner", 0);
-      });
-
-      await waitFor(() => {
-        expect(result.current.isMoving).toBe(true);
-      });
-
-      act(() => {
-        resolvePromise!({ success: true, moved: true });
-      });
-
-      await waitFor(() => {
-        expect(result.current.isMoving).toBe(false);
       });
     });
   });

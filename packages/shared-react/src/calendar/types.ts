@@ -38,10 +38,8 @@ export type CalendarCacheHelpers = {
 };
 
 export type CalendarQueryResult = {
-  items: PlannedItemFromQuery[];
   calendarData: CalendarData;
   isLoading: boolean;
-  error: unknown;
 };
 
 export type CalendarMutationsResult = {
@@ -50,10 +48,6 @@ export type CalendarMutationsResult = {
   deleteItem: (itemId: string) => void;
   moveItem: (itemId: string, targetDate: string, targetSlot: Slot, targetIndex: number) => void;
   updateItem: (itemId: string, title: string) => void;
-  isCreating: boolean;
-  isDeleting: boolean;
-  isMoving: boolean;
-  isUpdating: boolean;
 };
 
 type CaldavSyncStatusPage = {
