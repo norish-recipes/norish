@@ -1,6 +1,6 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 
-import { createCalendarRangeStore } from "@norish/shared-react/calendar";
+import { createCalendarRangeStore } from "../calendar-range-store";
 
 // A Wednesday: the range opens on the Monday two weeks back and closes on the Sunday two weeks on.
 const TODAY = "2026-11-11";
