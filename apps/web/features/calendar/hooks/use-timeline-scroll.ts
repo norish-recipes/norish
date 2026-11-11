@@ -1,6 +1,6 @@
 import type { VirtualItem, Virtualizer } from "@tanstack/react-virtual";
 import { useCallback, useEffect, useLayoutEffect, useRef, useState } from "react";
-import { landOnDay } from "@/components/calendar/land-on-day";
+import { useLandOnDay } from "@/components/calendar/land-on-day";
 import { usePrependAnchorRestore } from "@/features/calendar/hooks/use-prepend-anchor-restore";
 
 type TimelineScrollArgs = {
@@ -60,7 +60,6 @@ export function useTimelineScroll({
   "use no memo";
 
   const { captureAnchor, restoreAnchor } = usePrependAnchorRestore({ keys });
-  const hasScrolledRef = useRef(false);
   const hasLandedRef = useRef(false);
   const hasGrownPastRef = useRef(false);
   const hasGrownFutureRef = useRef(false);
@@ -69,21 +68,15 @@ export function useTimelineScroll({
   const count = keys.length;
   const { past: pastBuffer, future: futureBuffer } = todayBuffer;
 
-  // Scroll to today after initial data loads
-  useEffect(() => {
-    if (hasScrolledRef.current || isLoading || todayIndex < 0) return;
+  const landingAskedRef = useRef(false);
 
-    requestAnimationFrame(() => {
-      landOnDay(virtualizer, todayIndex);
-      hasScrolledRef.current = true;
-    });
-  }, [isLoading, todayIndex, virtualizer]);
+  useLandOnDay(virtualizer, todayIndex, isLoading, landingAskedRef);
 
   useEffect(() => {
     if (todayIndex < 0) return;
 
     const checkVisibility = () => {
-      if (!hasScrolledRef.current) return;
+      if (!landingAskedRef.current) return;
 
       const items = virtualizer.getVirtualItems();
       const firstItem = items[0];
@@ -129,7 +122,7 @@ export function useTimelineScroll({
 
   // Grows once per approach to an edge, after the landing on today has arrived.
   useEffect(() => {
-    if (virtualItems.length === 0 || !hasScrolledRef.current) return;
+    if (virtualItems.length === 0 || !landingAskedRef.current) return;
     if (!hasLandedRef.current) {
       if (!hasReachedDay(virtualItems, todayIndex)) return;
       hasLandedRef.current = true;

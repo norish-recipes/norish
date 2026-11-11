@@ -78,7 +78,7 @@ export function MobileTimeline({ onAddItem, onNoteClick, onRecipeClick }: Mobile
   const [scrollMargin, setScrollMargin] = useState(0);
 
   useEffect(() => {
-    if (windowHeight <= 0 || typeof window === "undefined" || !containerRef.current) {
+    if (windowHeight <= 0 || !containerRef.current) {
       setScrollMargin(0);
 
       return;

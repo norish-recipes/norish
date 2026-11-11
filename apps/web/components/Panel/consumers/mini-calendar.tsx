@@ -1,7 +1,7 @@
 "use client";
 
-import { useCallback, useEffect, useMemo, useRef } from "react";
-import { landOnDay, settleLanding } from "@/components/calendar/land-on-day";
+import { useCallback, useMemo, useRef } from "react";
+import { settleLanding, useLandOnDay } from "@/components/calendar/land-on-day";
 import { TimelineDaySection } from "@/components/calendar/timeline-day-section";
 import Panel from "@/components/Panel/Panel";
 import { useVirtualizer } from "@tanstack/react-virtual";
@@ -87,17 +87,9 @@ function MiniCalendarContent({
   });
 
   // Land on today the way the calendar itself does, once the days are drawn
-  const hasLandedRef = useRef(false);
+  const landingAskedRef = useRef(false);
 
-  useEffect(() => {
-    if (hasLandedRef.current || isLoading || todayIndex < 0) return;
-    const frame = requestAnimationFrame(() => {
-      landOnDay(virtualizer, todayIndex);
-      hasLandedRef.current = true;
-    });
-
-    return () => cancelAnimationFrame(frame);
-  }, [isLoading, todayIndex, virtualizer]);
+  useLandOnDay(virtualizer, todayIndex, isLoading, landingAskedRef);
   const virtualItems = virtualizer.getVirtualItems();
   const handlePlan = useCallback(
     (dayKey: string, slot: Slot) => {
