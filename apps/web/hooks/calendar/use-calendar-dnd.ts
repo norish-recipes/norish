@@ -1,5 +1,4 @@
 import { useCallback, useMemo, useRef, useState } from "react";
-import { useCalendarContext } from "@/app/(app)/calendar/context";
 import {
   CollisionDetection,
   DragEndEvent,
@@ -14,6 +13,11 @@ import {
 } from "@dnd-kit/core";
 import { arrayMove } from "@dnd-kit/sortable";
 
+import {
+  useCalendarMutations,
+  useCalendarQuery,
+  useCalendarRange,
+} from "@norish/shared-react/calendar";
 import { PlannedItemFromQuery, Slot } from "@norish/shared/contracts";
 
 export type CalendarContainerId = string;
@@ -57,7 +61,9 @@ function findContainerForItem(
 }
 
 export function useCalendarDnd() {
-  const { plannedItemsByDate, moveItem } = useCalendarContext();
+  const range = useCalendarRange((state) => state.range);
+  const { calendarData: plannedItemsByDate } = useCalendarQuery(range);
+  const { moveItem } = useCalendarMutations();
 
   const [activeId, setActiveId] = useState<string | null>(null);
   const [overContainerId, setOverContainerId] = useState<CalendarContainerId | null>(null);

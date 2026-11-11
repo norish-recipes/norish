@@ -23,65 +23,15 @@ type PlannedItemFromQuery = {
   updatedAt: Date;
 };
 
-const mockMoveItemMutate = vi.fn();
-
-vi.mock("@norish/shared-react/trpc", () => ({
-  useTRPC: () => ({
-    calendar: {
-      listItems: {
-        queryKey: (input: { startISO: string; endISO: string }) => ["calendar", "listItems", input],
-        queryOptions: () => ({
-          queryKey: ["calendar", "listItems", { startISO: "2025-01-01", endISO: "2025-01-31" }],
-          queryFn: async () => [],
-        }),
-      },
-      createItem: {
-        mutationOptions: (options: Record<string, unknown>) => ({
-          mutationFn: vi.fn(),
-          ...options,
-        }),
-      },
-      deleteItem: {
-        mutationOptions: (options: Record<string, unknown>) => ({
-          mutationFn: vi.fn(),
-          ...options,
-        }),
-      },
-      moveItem: {
-        mutationOptions: (options: Record<string, unknown>) => ({
-          mutationFn: mockMoveItemMutate,
-          ...options,
-        }),
-      },
-      onItemCreated: {
-        subscriptionOptions: () => ({ enabled: true }),
-      },
-      onItemDeleted: {
-        subscriptionOptions: () => ({ enabled: true }),
-      },
-      onItemMoved: {
-        subscriptionOptions: () => ({ enabled: true }),
-      },
-      onFailed: {
-        subscriptionOptions: () => ({ enabled: true }),
-      },
-    },
-  }),
-}));
-
-vi.mock("@trpc/tanstack-react-query", () => ({
-  useSubscription: vi.fn(),
-}));
-
-vi.mock("@/app/(app)/calendar/context", () => ({
-  useCalendarContext: () => ({
-    plannedItemsByDate: mockPlannedItemsByDate,
-    moveItem: mockContextMoveItem,
-  }),
+vi.mock("@norish/shared-react/calendar", () => ({
+  useCalendarRange: (select: (state: unknown) => unknown) =>
+    select({ range: { startISO: "2025-01-01", endISO: "2025-01-31" } }),
+  useCalendarQuery: () => ({ calendarData: mockPlannedItemsByDate }),
+  useCalendarMutations: () => ({ moveItem: mockMoveItem }),
 }));
 
 let mockPlannedItemsByDate: Record<string, PlannedItemFromQuery[]> = {};
-const mockContextMoveItem = vi.fn();
+const mockMoveItem = vi.fn();
 
 function createMockItem(overrides: Partial<PlannedItemFromQuery> = {}): PlannedItemFromQuery {
   return {
@@ -368,7 +318,7 @@ describe("Calendar DnD Integration", () => {
         } as any);
       });
 
-      expect(mockContextMoveItem).toHaveBeenCalledWith("item-1", "2025-01-15", "Lunch", 0);
+      expect(mockMoveItem).toHaveBeenCalledWith("item-1", "2025-01-15", "Lunch", 0);
     });
 
     it("handleDragEnd does not call moveItem when dropped in same position", () => {
@@ -412,7 +362,7 @@ describe("Calendar DnD Integration", () => {
         } as any);
       });
 
-      expect(mockContextMoveItem).not.toHaveBeenCalled();
+      expect(mockMoveItem).not.toHaveBeenCalled();
     });
   });
 
@@ -476,7 +426,7 @@ describe("Calendar DnD Integration", () => {
         } as any);
       });
 
-      expect(mockContextMoveItem).toHaveBeenCalledWith("item-1", "2025-01-16", "Dinner", 0);
+      expect(mockMoveItem).toHaveBeenCalledWith("item-1", "2025-01-16", "Dinner", 0);
     });
   });
 

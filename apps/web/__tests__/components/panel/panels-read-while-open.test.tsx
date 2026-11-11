@@ -25,8 +25,8 @@ vi.mock("@norish/shared-react/reader", async () =>
     reader: () => ({ user: { id: "reader" } }),
   })
 );
-vi.mock("@/app/(app)/calendar/context", () => ({
-  useCalendarContext: () => ({ planMeal: vi.fn(), planNote: vi.fn() }),
+vi.mock("@norish/shared-react/calendar", () => ({
+  useCalendarMutations: () => ({ createItem: vi.fn() }),
 }));
 vi.mock("next-intl", () => ({
   useTranslations: () => Object.assign((key: string) => key, { rich: (key: string) => key }),

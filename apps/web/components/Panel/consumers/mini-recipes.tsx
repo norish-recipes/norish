@@ -1,7 +1,6 @@
 "use client";
 
 import { ChangeEvent, memo, useCallback, useEffect, useRef, useState, useTransition } from "react";
-import { useCalendarContext } from "@/app/(app)/calendar/context";
 import { slotTranslationKeys } from "@/components/dashboard/today/todays-meals-constants";
 import Panel from "@/components/Panel/Panel";
 import { ActionButton } from "@/components/shared/action-button";
@@ -13,6 +12,7 @@ import { useVirtualizer } from "@tanstack/react-virtual";
 import { AnimatePresence, motion } from "motion/react";
 import { useLocale, useTranslations } from "next-intl";
 
+import { useCalendarMutations } from "@norish/shared-react/calendar";
 import {
   useRandomRecipe,
   useRecipeListSubscription,
@@ -200,7 +200,7 @@ function MiniRecipesContent({
   const [search, setSearch] = useState("");
   const [, startTransition] = useTransition();
   const [isRandomLoading, whileRandomLoading] = usePending();
-  const { planMeal, planNote } = useCalendarContext();
+  const { createItem } = useCalendarMutations();
   const { getRandomRecipe } = useRandomRecipe();
   const {
     recipes,
@@ -224,39 +224,39 @@ function MiniRecipesContent({
   const close = useCallback(() => onOpenChange(false), [onOpenChange]);
   const handlePlan = useCallback(
     (recipe: RecipeDashboardDTO, slot: Slot) => {
-      planMeal(dateString, slot, recipe.id);
+      createItem(dateString, slot, "recipe", recipe.id);
       close();
       onPlanned(recipe.id);
     },
-    [dateString, close, planMeal, onPlanned]
+    [dateString, close, createItem, onPlanned]
   );
   const handleRandomSelect = useCallback(async () => {
     if (!slot) return;
     await whileRandomLoading(() =>
       getRandomRecipe(SLOT_TO_CATEGORY[slot]).then((result) => {
         if (result) {
-          planMeal(dateString, slot, result.id);
+          createItem(dateString, slot, "recipe", result.id);
           close();
           onPlanned(result.id);
         }
       })
     );
-  }, [slot, getRandomRecipe, planMeal, dateString, close, onPlanned, whileRandomLoading]);
+  }, [slot, getRandomRecipe, createItem, dateString, close, onPlanned, whileRandomLoading]);
   const handlePlanNote = useCallback(
     (targetSlot: Slot) => {
       if (rawInput.trim()) {
-        planNote(dateString, targetSlot, rawInput.trim());
+        createItem(dateString, targetSlot, "note", undefined, rawInput.trim());
         close();
       }
     },
-    [dateString, rawInput, close, planNote]
+    [dateString, rawInput, close, createItem]
   );
   const handleDirectNote = useCallback(() => {
     if (slot && rawInput.trim()) {
-      planNote(dateString, slot, rawInput.trim());
+      createItem(dateString, slot, "note", undefined, rawInput.trim());
       close();
     }
-  }, [slot, rawInput, dateString, close, planNote]);
+  }, [slot, rawInput, dateString, close, createItem]);
   if (error) {
     return (
       <div className="flex min-h-0 flex-1 flex-col gap-3">

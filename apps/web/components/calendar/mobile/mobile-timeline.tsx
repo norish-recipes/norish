@@ -2,7 +2,6 @@
 
 import type { DragEndEvent, DragOverEvent, DragStartEvent } from "@dnd-kit/core";
 import { useCallback, useEffect, useId, useLayoutEffect, useMemo, useRef, useState } from "react";
-import { useCalendarContext } from "@/app/(app)/calendar/context";
 import { useReaderToday } from "@/components/reader-today";
 import { CalendarSkeletonMobile } from "@/components/skeleton/calendar-skeleton";
 import {
@@ -20,6 +19,11 @@ import { useLocale } from "next-intl";
 import { useWindowSize } from "usehooks-ts";
 
 import type { Slot } from "@norish/shared/contracts";
+import {
+  useCalendarMutations,
+  useCalendarQuery,
+  useCalendarRange,
+} from "@norish/shared-react/calendar";
 import { dateKey, eachDayOfInterval } from "@norish/shared/lib/helpers";
 
 import type { PlannedItemDisplay } from "./types";
@@ -49,20 +53,20 @@ export function MobileTimeline({ onAddItem, onNoteClick, onRecipeClick }: Mobile
 
   const locale = useLocale();
 
-  // Use calendar context (like recipe grid uses recipes context)
-  const {
-    plannedItemsByDate: calendarData,
-    isLoading,
-    isLoadingMore,
-    dateRange,
-    expandRange,
-    moveItem,
-  } = useCalendarContext();
+  const range = useCalendarRange((state) => state.range);
+  const isLoadingMore = useCalendarRange((state) => state.isGrowing);
+  const expandRange = useCalendarRange((state) => state.grow);
+  // A grown range starts from the days already read, so only the first read shows the skeleton.
+  const { calendarData, isLoading } = useCalendarQuery(range);
+  const { moveItem } = useCalendarMutations();
 
-  // Generate all days in range from context
   const allDays = useMemo(
-    () => eachDayOfInterval(dateRange.start, dateRange.end),
-    [dateRange.start, dateRange.end]
+    () =>
+      eachDayOfInterval(
+        new Date(`${range.startISO}T00:00:00`),
+        new Date(`${range.endISO}T00:00:00`)
+      ),
+    [range.startISO, range.endISO]
   );
   const dayKeys = useMemo(() => allDays.map((d) => dateKey(d)), [allDays]);
   const { captureAnchor, restoreAnchor } = usePrependAnchorRestore({ keys: dayKeys });

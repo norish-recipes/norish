@@ -4,7 +4,6 @@ import type { DateValue } from "@internationalized/date";
 import type { Key } from "react";
 import { useState } from "react";
 import Link from "next/link";
-import { useCalendarContext } from "@/app/(app)/calendar/context";
 import { PlannedItemThumbnail } from "@/components/calendar/planned-item-thumbnail";
 import { Panel, PanelPortal } from "@/components/Panel/Panel";
 import { ActionButton, ActionButtonGroup } from "@/components/shared/action-button";
@@ -13,6 +12,7 @@ import { Calendar, DateField, DatePicker, Label, ListBox, Select } from "@heroui
 import { parseDate } from "@internationalized/date";
 import { useTranslations } from "next-intl";
 
+import { useCalendarMutations } from "@norish/shared-react/calendar";
 import { Slot } from "@norish/shared/contracts";
 
 const SLOTS: Slot[] = ["Breakfast", "Lunch", "Dinner", "Snack"];
@@ -36,7 +36,7 @@ export function EditPlannedRecipePanel({
   date,
   slot,
 }: EditPlannedRecipePanelProps) {
-  const { deletePlanned, moveItem, planMeal } = useCalendarContext();
+  const { createItem, deleteItem, moveItem } = useCalendarMutations();
   const [selectedDate, setSelectedDate] = useState<DateValue>(() => parseDate(date));
   const [selectedSlot, setSelectedSlot] = useState<Slot>(slot);
   const [seededFrom, setSeededFrom] = useState({ open, date, slot });
@@ -60,11 +60,11 @@ export function EditPlannedRecipePanel({
     onOpenChange(false);
   };
   const handleDelete = () => {
-    deletePlanned(itemId);
+    deleteItem(itemId);
     onOpenChange(false);
   };
   const handleDuplicate = () => {
-    planMeal(selectedDate.toString(), selectedSlot, recipeId);
+    createItem(selectedDate.toString(), selectedSlot, "recipe", recipeId);
   };
   const handleSlotChange = (value: Key | null) => {
     if (value) {

@@ -7,11 +7,11 @@ import { MobileTimeline } from "@/components/calendar/mobile";
 import { EditNotePanel } from "@/components/Panel/consumers/edit-note-panel";
 import { EditPlannedRecipePanel } from "@/components/Panel/consumers/edit-planned-recipe-panel";
 import MiniRecipes from "@/components/Panel/consumers/mini-recipes";
+import { useReaderToday } from "@/components/reader-today";
 import { useIsMobile } from "@/hooks/use-is-mobile";
 
 import type { Slot } from "@norish/shared/contracts";
-
-import { CalendarContextProvider } from "./context";
+import { CalendarRangeProvider, useCalendarSubscription } from "@norish/shared-react/calendar";
 
 function CalendarPageContent() {
   const [miniRecipesOpen, setMiniRecipesOpen] = useState(false);
@@ -156,9 +156,14 @@ function CalendarPageContent() {
 }
 
 export default function CalendarPage() {
+  // The server's reading of today while hydrating, so the range asked for is the seeded one.
+  const today = useReaderToday();
+
+  useCalendarSubscription();
+
   return (
-    <CalendarContextProvider>
+    <CalendarRangeProvider today={today}>
       <CalendarPageContent />
-    </CalendarContextProvider>
+    </CalendarRangeProvider>
   );
 }

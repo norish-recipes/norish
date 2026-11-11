@@ -3,7 +3,6 @@
 import type { DateValue } from "@internationalized/date";
 import type { Key } from "react";
 import { useState } from "react";
-import { useCalendarContext } from "@/app/(app)/calendar/context";
 import { DateAndSlotFields } from "@/components/Panel/consumers/edit-planned-recipe-panel";
 import { Panel } from "@/components/Panel/Panel";
 import { ActionButton, ActionButtonGroup } from "@/components/shared/action-button";
@@ -11,6 +10,7 @@ import { Input, Label, TextField } from "@heroui/react";
 import { parseDate } from "@internationalized/date";
 import { useTranslations } from "next-intl";
 
+import { useCalendarMutations } from "@norish/shared-react/calendar";
 import { Slot } from "@norish/shared/contracts";
 
 type EditNotePanelProps = {
@@ -29,7 +29,7 @@ export function EditNotePanel({
   date,
   slot,
 }: EditNotePanelProps) {
-  const { deletePlanned, moveItem, updateItem, planNote } = useCalendarContext();
+  const { createItem, deleteItem, moveItem, updateItem } = useCalendarMutations();
   const [title, setTitle] = useState(initialTitle);
   const [selectedDate, setSelectedDate] = useState<DateValue>(() => parseDate(date));
   const [selectedSlot, setSelectedSlot] = useState<Slot>(slot);
@@ -63,12 +63,12 @@ export function EditNotePanel({
     onOpenChange(false);
   };
   const handleDelete = () => {
-    deletePlanned(noteId);
+    deleteItem(noteId);
     onOpenChange(false);
   };
   const handleDuplicate = () => {
     if (!title.trim()) return;
-    planNote(selectedDate.toString(), selectedSlot, title.trim());
+    createItem(selectedDate.toString(), selectedSlot, "note", undefined, title.trim());
   };
   const handleSlotChange = (value: Key | null) => {
     if (value) {

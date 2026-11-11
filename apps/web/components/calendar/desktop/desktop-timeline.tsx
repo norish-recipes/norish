@@ -3,7 +3,6 @@
 import type { PlannedItemDisplay } from "@/components/calendar/mobile/types";
 import type { DragEndEvent, DragOverEvent, DragStartEvent } from "@dnd-kit/core";
 import { useCallback, useEffect, useId, useLayoutEffect, useMemo, useRef, useState } from "react";
-import { useCalendarContext } from "@/app/(app)/calendar/context";
 import { SLOT_ORDER } from "@/components/calendar/mobile/types";
 import { useReaderToday } from "@/components/reader-today";
 import { CalendarSkeletonDesktop } from "@/components/skeleton/calendar-skeleton";
@@ -22,6 +21,11 @@ import { useLocale, useTranslations } from "next-intl";
 import { useWindowSize } from "usehooks-ts";
 
 import type { Slot } from "@norish/shared/contracts";
+import {
+  useCalendarMutations,
+  useCalendarQuery,
+  useCalendarRange,
+} from "@norish/shared-react/calendar";
 import { dateKey, eachDayOfInterval } from "@norish/shared/lib/helpers";
 
 import { hasReachedDay, landOnDay, settleLanding } from "../land-on-day";
@@ -46,23 +50,23 @@ export function DesktopTimeline({ onAddItem, onNoteClick, onRecipeClick }: Deskt
   const locale = useLocale();
   const tSlots = useTranslations("common.slots");
 
-  // Use calendar context
-  const {
-    plannedItemsByDate: calendarData,
-    isLoading,
-    isLoadingMore,
-    dateRange,
-    expandRange,
-    moveItem,
-  } = useCalendarContext();
+  const range = useCalendarRange((state) => state.range);
+  const isLoadingMore = useCalendarRange((state) => state.isGrowing);
+  const expandRange = useCalendarRange((state) => state.grow);
+  // A grown range starts from the days already read, so only the first read shows the skeleton.
+  const { calendarData, isLoading } = useCalendarQuery(range);
+  const { moveItem } = useCalendarMutations();
 
   // Responsive column count: 3 for lg+, 2 for md
   const columnCount = useViewport((width) => (width >= 1024 ? 3 : 2));
   const { height: _windowHeight } = useWindowSize();
 
-  // Generate all days in range from context, padded to fill complete rows
+  // Every day in the range, padded to fill complete rows
   const allDays = useMemo(() => {
-    const days = eachDayOfInterval(dateRange.start, dateRange.end);
+    const days = eachDayOfInterval(
+      new Date(`${range.startISO}T00:00:00`),
+      new Date(`${range.endISO}T00:00:00`)
+    );
     // Pad to complete rows to prevent grid shifting
     const remainder = days.length % columnCount;
 
@@ -83,7 +87,7 @@ export function DesktopTimeline({ onAddItem, onNoteClick, onRecipeClick }: Deskt
     }
 
     return days;
-  }, [dateRange.start, dateRange.end, columnCount]);
+  }, [range.startISO, range.endISO, columnCount]);
 
   // Group days into rows based on column count
   const rows = useMemo(() => {
