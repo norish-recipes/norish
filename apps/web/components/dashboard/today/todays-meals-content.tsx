@@ -10,7 +10,7 @@ import { useLocale, useTranslations } from "next-intl";
 import type { Slot } from "@norish/shared/contracts";
 import type { TodaySectionVisibility } from "@norish/shared/contracts/zod/device-preferences";
 import { useCalendarQuery, useCalendarSubscription } from "@norish/shared-react/calendar";
-import { dateKey, getInitialDateRange } from "@norish/shared/lib/helpers";
+import { getInitialCalendarRange, parseDateKey } from "@norish/shared/lib/helpers";
 
 import TodayMealSlotCard from "./today-meal-slot-card";
 import { slotTranslationKeys, TODAY_MEAL_SLOTS } from "./todays-meals-constants";
@@ -25,13 +25,11 @@ export default function TodaysMealsContent({ visibility }: TodaysMealsContentPro
   const tCalendar = useTranslations("calendar");
   const tSlots = useTranslations("common.slots");
   const todayKey = useReaderToday();
-  const todayDate = useMemo(() => new Date(`${todayKey}T00:00:00`), [todayKey]);
+  const todayDate = useMemo(() => parseDateKey(todayKey), [todayKey]);
   // The week the dashboard layout seeds, so a hydrating render reads the seeded copy.
-  const week = getInitialDateRange("desktop", todayKey);
-  const { calendarData: plannedItemsByDate, isLoading } = useCalendarQuery({
-    startISO: dateKey(week.start),
-    endISO: dateKey(week.end),
-  });
+  const { calendarData: plannedItemsByDate, isLoading } = useCalendarQuery(
+    getInitialCalendarRange("desktop", todayKey)
+  );
 
   useCalendarSubscription();
   const [planningSlot, setPlanningSlot] = useState<Slot | undefined>(undefined);

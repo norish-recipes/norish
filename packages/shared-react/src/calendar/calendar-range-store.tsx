@@ -4,7 +4,7 @@ import type { ReactNode } from "react";
 import { useState } from "react";
 import { createStore } from "zustand";
 
-import { dateKey, getInitialDateRange } from "@norish/shared/lib/helpers";
+import { dateKey, getInitialCalendarRange, parseDateKey } from "@norish/shared/lib/helpers";
 
 import type { CalendarRange } from "./calendar-cache-merge";
 import { createPageStoreContext } from "../page-store";
@@ -22,7 +22,7 @@ export type CalendarRangeState = {
 };
 
 function shiftDays(iso: string, days: number) {
-  const date = new Date(`${iso}T00:00:00`);
+  const date = parseDateKey(iso);
 
   date.setDate(date.getDate() + days);
 
@@ -31,10 +31,8 @@ function shiftDays(iso: string, days: number) {
 
 /** The calendar's range, opening two weeks either side of `today` (`YYYY-MM-DD`). */
 export function createCalendarRangeStore(today: string) {
-  const { start, end } = getInitialDateRange("mobile", today);
-
   return createStore<CalendarRangeState>()((set, get) => ({
-    range: { startISO: dateKey(start), endISO: dateKey(end) },
+    range: getInitialCalendarRange("mobile", today),
     isGrowing: false,
     grow: (direction) => {
       const { range, isGrowing } = get();

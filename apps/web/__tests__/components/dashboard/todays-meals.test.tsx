@@ -4,7 +4,7 @@ import { beforeEach, describe, expect, it, vi } from "vitest";
 
 import type { PlannedItemFromQuery } from "@norish/shared/contracts";
 import type { TodaySectionVisibility } from "@norish/shared/contracts/zod/device-preferences";
-import { dateKey, getInitialDateRange } from "@norish/shared/lib/helpers";
+import { dateKey, getInitialCalendarRange } from "@norish/shared/lib/helpers";
 
 const pushMock = vi.fn();
 const useCalendarQueryMock = vi.fn();
@@ -127,12 +127,7 @@ describe("TodaysMeals", () => {
     expect(screen.getByText("4 servings / 640 kcal")).toBeInTheDocument();
 
     // The week the dashboard layout seeds, so hydration reads the seeded copy.
-    const week = getInitialDateRange("desktop", todayKey);
-
-    expect(useCalendarQueryMock).toHaveBeenCalledWith({
-      startISO: dateKey(week.start),
-      endISO: dateKey(week.end),
-    });
+    expect(useCalendarQueryMock).toHaveBeenCalledWith(getInitialCalendarRange("desktop", todayKey));
   });
 
   it("opens planned recipes directly and empty slots in mini recipes", () => {

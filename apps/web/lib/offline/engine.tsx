@@ -30,7 +30,7 @@ import { ConnectivityProvider as SharedConnectivityProvider } from "@norish/shar
 import { isKeptCurrent } from "@norish/shared-react/realtime";
 import { useConnectionStatus } from "@norish/shared-react/trpc";
 import { addBasePath } from "@norish/shared/lib/base-path";
-import { dateKey, getInitialDateRange } from "@norish/shared/lib/helpers";
+import { getInitialCalendarRange } from "@norish/shared/lib/helpers";
 import { APP_VERSION } from "@norish/web/config/site";
 
 /** Marks the web client's replays in server logs. */
@@ -104,11 +104,7 @@ const refetchOnMount = (query: Query) => {
 };
 
 function calendarRanges(): CalendarRange[] {
-  return (["desktop", "mobile"] as const).map((mode) => {
-    const { start, end } = getInitialDateRange(mode);
-
-    return { startISO: dateKey(start), endISO: dateKey(end) };
-  });
+  return (["desktop", "mobile"] as const).map((mode) => getInitialCalendarRange(mode));
 }
 
 function browserLocks(): LockManagerLike | null {

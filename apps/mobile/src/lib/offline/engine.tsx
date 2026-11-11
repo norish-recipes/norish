@@ -16,7 +16,7 @@ import {
   useConnectivity,
 } from "@norish/shared-react/offline/react";
 import { useConnectionStatus, useTRPC, useTRPCClient } from "@norish/shared-react/trpc";
-import { dateKey, getInitialDateRange } from "@norish/shared/lib/helpers";
+import { getInitialCalendarRange } from "@norish/shared/lib/helpers";
 
 import { createMmkvStorage } from "./mmkv-storage";
 import { uploadFiles } from "./upload-files";
@@ -29,11 +29,7 @@ export const offlineEngine = createOfflineEngine({
   replayHeaderValue: OUTBOX_REPLAY_HEADER_VALUE,
   probeUrl: () => `${getBackendBaseUrl()}${HEALTH_PROBE_PATH}`,
   buster: APP_VERSION,
-  calendarRanges: () => {
-    const { start, end } = getInitialDateRange("mobile");
-
-    return [{ startISO: dateKey(start), endISO: dateKey(end) }];
-  },
+  calendarRanges: () => [getInitialCalendarRange("mobile")],
 });
 
 // A network change or a return to the foreground only brings the next probe forward, because

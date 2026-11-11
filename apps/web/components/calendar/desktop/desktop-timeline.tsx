@@ -26,7 +26,7 @@ import {
   useCalendarQuery,
   useCalendarRange,
 } from "@norish/shared-react/calendar";
-import { dateKey, eachDayOfInterval } from "@norish/shared/lib/helpers";
+import { dateKey, eachDayOfInterval, parseDateKey } from "@norish/shared/lib/helpers";
 
 import { hasReachedDay, landOnDay, settleLanding } from "../land-on-day";
 import { usePrependAnchorRestore } from "../use-prepend-anchor-restore";
@@ -63,10 +63,7 @@ export function DesktopTimeline({ onAddItem, onNoteClick, onRecipeClick }: Deskt
 
   // Every day in the range, padded to fill complete rows
   const allDays = useMemo(() => {
-    const days = eachDayOfInterval(
-      new Date(`${range.startISO}T00:00:00`),
-      new Date(`${range.endISO}T00:00:00`)
-    );
+    const days = eachDayOfInterval(parseDateKey(range.startISO), parseDateKey(range.endISO));
     // Pad to complete rows to prevent grid shifting
     const remainder = days.length % columnCount;
 
@@ -117,7 +114,7 @@ export function DesktopTimeline({ onAddItem, onNoteClick, onRecipeClick }: Deskt
 
   // Today tracking
   const todayKey = useReaderToday();
-  const today = useMemo(() => new Date(`${todayKey}T00:00:00`), [todayKey]);
+  const today = useMemo(() => parseDateKey(todayKey), [todayKey]);
   const todayRowIndex = useMemo(() => {
     const dayIndex = allDays.findIndex((d) => dateKey(d) === todayKey);
 

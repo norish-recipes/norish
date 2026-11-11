@@ -477,6 +477,11 @@ export function dateKey(d: Date): string {
   return `${y}-${m}-${day}`;
 }
 
+/** A `YYYY-MM-DD` key as local midnight on that day, the inverse of {@link dateKey}. */
+export function parseDateKey(key: string): Date {
+  return new Date(`${key}T00:00:00`);
+}
+
 /** The text without its trailing slashes, where they are not part of `//` (a bare `https://` keeps both). */
 export function withoutTrailingSlashes(text: string): string {
   return text.replace(/(?<!\/)\/+$/, "");
@@ -604,13 +609,23 @@ export function getInitialDateRange(
   mode: "desktop" | "mobile",
   today: string = dateKey(new Date())
 ): { start: Date; end: Date } {
-  const now = new Date(`${today}T00:00:00`);
+  const now = parseDateKey(today);
 
   if (mode === "desktop") {
     return { start: getWeekStart(now), end: getWeekEnd(now) };
   }
 
   return { start: getWeekStart(addWeeks(now, -2)), end: getWeekEnd(addWeeks(now, 2)) };
+}
+
+/** {@link getInitialDateRange} as date keys, the shape a calendar read asks for. */
+export function getInitialCalendarRange(
+  mode: "desktop" | "mobile",
+  today?: string
+): { startISO: string; endISO: string } {
+  const { start, end } = getInitialDateRange(mode, today);
+
+  return { startISO: dateKey(start), endISO: dateKey(end) };
 }
 
 export function buildAvatarFilename(

@@ -24,7 +24,7 @@ import {
   useCalendarQuery,
   useCalendarRange,
 } from "@norish/shared-react/calendar";
-import { dateKey, eachDayOfInterval } from "@norish/shared/lib/helpers";
+import { dateKey, eachDayOfInterval, parseDateKey } from "@norish/shared/lib/helpers";
 
 import type { PlannedItemDisplay } from "./types";
 import { hasReachedDay, landOnDay, settleLanding } from "../land-on-day";
@@ -61,11 +61,7 @@ export function MobileTimeline({ onAddItem, onNoteClick, onRecipeClick }: Mobile
   const { moveItem } = useCalendarMutations();
 
   const allDays = useMemo(
-    () =>
-      eachDayOfInterval(
-        new Date(`${range.startISO}T00:00:00`),
-        new Date(`${range.endISO}T00:00:00`)
-      ),
+    () => eachDayOfInterval(parseDateKey(range.startISO), parseDateKey(range.endISO)),
     [range.startISO, range.endISO]
   );
   const dayKeys = useMemo(() => allDays.map((d) => dateKey(d)), [allDays]);
@@ -79,7 +75,7 @@ export function MobileTimeline({ onAddItem, onNoteClick, onRecipeClick }: Mobile
 
   // Today tracking
   const todayKey = useReaderToday();
-  const today = useMemo(() => new Date(`${todayKey}T00:00:00`), [todayKey]);
+  const today = useMemo(() => parseDateKey(todayKey), [todayKey]);
   const todayIndex = useMemo(
     () => allDays.findIndex((d) => dateKey(d) === todayKey),
     [allDays, todayKey]
