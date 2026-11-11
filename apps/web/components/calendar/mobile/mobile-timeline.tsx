@@ -19,10 +19,7 @@ import { useLocale } from "next-intl";
 import { useWindowSize } from "usehooks-ts";
 
 import type { Slot } from "@norish/shared/contracts";
-import {
-  useCalendarMutations,
-  useCalendarRangeQuery,
-} from "@norish/shared-react/calendar";
+import { useCalendarMutations, useCalendarRangeQuery } from "@norish/shared-react/calendar";
 import { dateKey, eachDayOfInterval, parseDateKey } from "@norish/shared/lib/helpers";
 
 import type { PlannedItemDisplay } from "./types";
