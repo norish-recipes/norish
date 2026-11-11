@@ -4,12 +4,11 @@ import { useState } from "react";
 import { SettingsCard } from "@/components/settings/settings-card";
 import { ActionButton, ActionButtonGroup } from "@/components/shared/action-button";
 import { Note } from "@/components/shared/note";
-import { EyeIcon, EyeSlashIcon } from "@heroicons/react/16/solid";
+import SecretInput from "@/components/shared/secret-input";
 import { ServerIcon } from "@heroicons/react/24/outline";
 import {
   Description,
   Input,
-  InputGroup,
   Label,
   Link,
   ListBox,
@@ -29,7 +28,6 @@ import { useConnectionTest } from "./use-connection-test";
 export default function CaldavConfigCard() {
   const t = useTranslations("settings.caldav.setup");
   const tActions = useTranslations("common.actions");
-  const tSecret = useTranslations("common.secret");
   const { slice: configured } = useCaldavConfigSlice((config) => config !== null);
   const { saveConfig, isSavingConfig: saving } = useCaldavMutations();
   const {
@@ -51,7 +49,6 @@ export default function CaldavConfigCard() {
   } = useConnectionTest(setCalendarUrl);
   const [username, setUsername] = useState("");
   const [password, setPassword] = useState("");
-  const [showPassword, setShowPassword] = useState(false);
   const [breakfastTime, setBreakfastTime] = useState("07:00-08:00");
   const [lunchTime, setLunchTime] = useState("12:00-13:00");
   const [dinnerTime, setDinnerTime] = useState("18:00-19:00");
@@ -131,31 +128,14 @@ export default function CaldavConfigCard() {
           <Label>{t("usernameLabel")}</Label>
           <Input placeholder={t("usernamePlaceholder")} variant="secondary" />
         </TextField>
-        <TextField
+        <SecretInput
           isRequired
-          type={showPassword ? "text" : "password"}
+          isConfigured={false}
+          label={t("passwordLabel")}
+          placeholder={t("passwordPlaceholder")}
           value={password}
-          onChange={setPassword}
-        >
-          <Label>{t("passwordLabel")}</Label>
-          <InputGroup variant="secondary">
-            <InputGroup.Input placeholder={t("passwordPlaceholder")} />
-            <InputGroup.Suffix>
-              <button
-                aria-label={showPassword ? tSecret("hide") : tSecret("reveal")}
-                className="focus:outline-none"
-                type="button"
-                onClick={() => setShowPassword(!showPassword)}
-              >
-                {showPassword ? (
-                  <EyeSlashIcon className="text-muted h-4 w-4" />
-                ) : (
-                  <EyeIcon className="text-muted h-4 w-4" />
-                )}
-              </button>
-            </InputGroup.Suffix>
-          </InputGroup>
-        </TextField>
+          onValueChange={setPassword}
+        />
       </div>
 
       <Select
