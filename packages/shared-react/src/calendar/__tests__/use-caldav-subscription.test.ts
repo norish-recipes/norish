@@ -100,6 +100,18 @@ describe("useCaldavSubscription", () => {
     expect(platform.toast.show).not.toHaveBeenCalled();
   });
 
+  it("keeps a newer cached config over a late event's older one", () => {
+    const newer = createMockCaldavConfig({ version: 4, username: "newer" });
+
+    queryClient.setQueryData(CONFIG_KEY, newer);
+    emitSyncEvent(useSubscriptionMock, {
+      type: "configSaved",
+      data: { config: createMockCaldavConfig({ version: 3, username: "older" }) },
+    });
+
+    expect(queryClient.getQueryData(CONFIG_KEY)).toEqual(newer);
+  });
+
   it("rereads the summary when a sync completes", () => {
     queryClient.setQueryData(SUMMARY_KEY, { pending: 1, synced: 0, failed: 0, removed: 0 });
 

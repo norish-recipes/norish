@@ -25,7 +25,10 @@ export function useCaldavCacheHelpers(): CaldavCacheHelpers {
       queryClient.getQueryData<UserCaldavConfigWithoutPasswordDto | null>(configKey)?.version,
     // Cache writes only, so the configSaved event that also lands here can't emit another.
     applySavedConfig: (config) => {
-      writeOverRead(queryClient, configKey, () => config);
+      // A late event's older version never replaces a newer cached config.
+      writeOverRead(queryClient, configKey, (held) =>
+        held && config && held.version > config.version ? held : config
+      );
       // Stale without a refetch: a mounted form asks for nothing, the next read() asks the server.
       // A read under way is cancelled first, else its pre-save answer lands as fresh.
       const password = { queryKey: trpc.caldav.getPassword.queryKey() };
