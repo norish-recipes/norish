@@ -3,7 +3,7 @@ import { vi } from "vitest";
 
 import { trackedEvent } from "../hooks/realtime-test-utils";
 
-/** Every write the fake tRPC was sent, as (procedure path, input); a write never answers. */
+/** Every write the fake tRPC was sent, as (procedure path, input). */
 export const sentWrites = vi.fn<(path: string, input: unknown) => void>();
 
 /** Every read the fake tRPC was sent, as (procedure path, input). */
@@ -11,6 +11,9 @@ export const sentReads = vi.fn<(path: string, input: unknown) => void>();
 
 /** How a read answers, by dotted path; a read with none never answers. */
 export const readAnswers = new Map<string, (input: unknown) => Promise<unknown>>();
+
+/** How a write answers, by dotted path; a write with none never answers. */
+export const writeAnswers = new Map<string, (input: unknown) => Promise<unknown>>();
 
 const never = () => new Promise<never>(() => {});
 
@@ -58,7 +61,7 @@ function procedure(path: string[]) {
       mutationFn: (input: unknown) => {
         sentWrites(path.join("."), input);
 
-        return never();
+        return writeAnswers.get(path.join("."))?.(input) ?? never();
       },
     }),
     subscriptionOptions: (input: unknown, options: { enabled?: boolean } = {}) => ({

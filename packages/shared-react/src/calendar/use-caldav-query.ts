@@ -38,8 +38,12 @@ export function useCaldavPasswordQuery() {
 
   return {
     password: data ?? null,
-    /** The cached password, which a save drops, else the answer of a read. */
-    read: async () => (await queryClient.query({ ...options, staleTime: "static" })) ?? null,
+    /** The cached password, which a save drops, else a read's answer; null when the read fails. */
+    read: () =>
+      queryClient
+        .query({ ...options, staleTime: "static" })
+        .then((password) => password ?? null)
+        .catch(() => null),
     error,
     isLoading,
   };

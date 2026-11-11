@@ -2,12 +2,20 @@
  * The stored CalDAV password is read only while the edit modal is open, not on every visit to
  * the tab, which mounts the modal closed; closing it drops the password from the cache.
  */
-import { fakeProcedure, readAnswers, sentReads } from "@/__tests__/helpers/trpc-fake";
+import {
+  fakeProcedure,
+  readAnswers,
+  sentReads,
+  sentWrites,
+  writeAnswers,
+} from "@/__tests__/helpers/trpc-fake";
 import CaldavConfigEditModal from "@/features/calendar/components/caldav/caldav-config-edit-modal";
-import { render, waitFor } from "@testing-library/react";
+import { fireEvent, render, screen, waitFor } from "@testing-library/react";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 
 import { createTestQueryClient, createTestWrapper } from "@norish/shared-react/platform/testing";
+
+import "@testing-library/jest-dom";
 
 vi.mock("@norish/shared-react/trpc", async () =>
   (await import("@/__tests__/helpers/trpc-fake")).mockTRPC()
@@ -35,7 +43,37 @@ const passwordReads = () =>
 describe("CaldavConfigEditModal", () => {
   beforeEach(() => {
     sentReads.mockClear();
+    sentWrites.mockClear();
     readAnswers.clear();
+    writeAnswers.clear();
+  });
+
+  const renderOpen = () => {
+    const queryClient = createTestQueryClient();
+
+    queryClient.setQueryData(fakeProcedure("caldav.getConfig").queryKey(), CONFIG);
+    render(<CaldavConfigEditModal isOpen onClose={() => {}} />, {
+      wrapper: createTestWrapper(queryClient),
+    });
+
+    return queryClient;
+  };
+
+  it("shows a failed test when the stored password can't be read", async () => {
+    readAnswers.set("caldav.getPassword", () => Promise.reject(new Error("offline")));
+    writeAnswers.set("caldav.testConnection", async () => ({
+      success: false,
+      message: "Unauthorized",
+    }));
+    renderOpen();
+
+    fireEvent.click(screen.getByRole("button", { name: "test" }));
+
+    expect(await screen.findByText("Unauthorized")).toBeInTheDocument();
+    expect(sentWrites).toHaveBeenCalledWith(
+      "caldav.testConnection",
+      expect.objectContaining({ password: "" })
+    );
   });
 
   it("reads the stored password only while open", () => {
