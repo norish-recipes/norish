@@ -8,14 +8,11 @@ import type {
   SensorOptions,
 } from "@dnd-kit/core";
 import { useState } from "react";
+import { dateKeyOfDrop } from "@/components/calendar/day-drop-id";
 import { pointerWithin, rectIntersection } from "@dnd-kit/core";
 
 import type { PlannedItemFromQuery } from "@norish/shared/contracts";
 import { useCalendarMutations } from "@norish/shared-react/calendar";
-
-// A day accepts drops under the id "<dateKey>_drop".
-const dropDateKey = (overId: string | number | undefined) =>
-  typeof overId === "string" && overId.endsWith("_drop") ? overId.replace("_drop", "") : null;
 
 const collisionDetection: CollisionDetection = (args) => {
   const pointerCollisions = pointerWithin(args);
@@ -41,7 +38,7 @@ export function useCalendarDnd(
   };
 
   const onDragOver = ({ over }: DragOverEvent) => {
-    const target = activeItem ? dropDateKey(over?.id) : null;
+    const target = activeItem ? dateKeyOfDrop(over?.id) : null;
 
     setDragOverDateKey(target !== activeItem?.date ? target : null);
   };
@@ -53,7 +50,7 @@ export function useCalendarDnd(
 
   const onDragEnd = ({ over }: DragEndEvent) => {
     const draggedItem = activeItem;
-    const targetDate = dropDateKey(over?.id);
+    const targetDate = dateKeyOfDrop(over?.id);
 
     onDragCancel();
 

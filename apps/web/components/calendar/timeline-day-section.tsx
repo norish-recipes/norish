@@ -1,6 +1,7 @@
 "use client";
 
 import { memo, useMemo } from "react";
+import { dayDropId } from "@/components/calendar/day-drop-id";
 import { SlotDropdown } from "@/components/shared/slot-dropdown";
 import { useDroppable } from "@dnd-kit/core";
 import { PlusIcon } from "@heroicons/react/16/solid";
@@ -44,7 +45,7 @@ export const TimelineDaySection = memo(function TimelineDaySection({
 
   // Make the entire day section a drop target
   const { setNodeRef, isOver } = useDroppable({
-    id: `${dateKey}_drop`,
+    id: dayDropId(dateKey),
     data: {
       type: "day",
       dateKey,

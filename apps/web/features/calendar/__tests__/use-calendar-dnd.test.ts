@@ -1,6 +1,7 @@
 /** A planned item dropped on another day moves there; a drop anywhere else moves nothing. */
 import type { DragEndEvent, DragOverEvent, DragStartEvent } from "@dnd-kit/core";
 import { fakeProcedure } from "@/__tests__/helpers/trpc-fake";
+import { dayDropId } from "@/components/calendar/day-drop-id";
 import { useCalendarDnd } from "@/features/calendar/hooks/use-calendar-dnd";
 import { act, renderHook, waitFor } from "@testing-library/react";
 import { describe, expect, it, vi } from "vitest";
@@ -74,7 +75,7 @@ describe("useCalendarDnd", () => {
   it("moves an item dropped on another day to the end of its slot there", async () => {
     const { view, dragSoupOnto, cached } = render();
 
-    dragSoupOnto("2026-11-12_drop");
+    dragSoupOnto(dayDropId("2026-11-12"));
 
     await waitFor(() =>
       expect(cached()?.find((i) => i.id === "soup")).toMatchObject({
@@ -88,7 +89,7 @@ describe("useCalendarDnd", () => {
 
   it.each([
     ["nothing", null],
-    ["its own day", "2026-11-11_drop"],
+    ["its own day", dayDropId("2026-11-11")],
     ["another item", "salad"],
   ])("moves nothing when dropped on %s", async (_, overId) => {
     const { view, dragSoupOnto, cached } = render();
@@ -109,7 +110,7 @@ describe("useCalendarDnd", () => {
     act(() =>
       props().onDragOver({
         active: { id: "soup" },
-        over: { id: "2026-11-12_drop" },
+        over: { id: dayDropId("2026-11-12") },
       } as unknown as DragOverEvent)
     );
     expect(view.result.current.dragOverDateKey).toBe("2026-11-12");

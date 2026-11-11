@@ -2,6 +2,7 @@
 
 import type { PlannedItemDisplay } from "@/components/calendar/types";
 import { memo, useMemo } from "react";
+import { dayDropId } from "@/components/calendar/day-drop-id";
 import { TimelineSlotContainer } from "@/components/calendar/timeline-slot-container";
 import { SLOTS } from "@/components/calendar/types";
 import { useDroppable } from "@dnd-kit/core";
@@ -42,7 +43,7 @@ export const DesktopDayCard = memo(function DesktopDayCard({
 
   // Make the entire day section a drop target
   const { setNodeRef, isOver } = useDroppable({
-    id: `${dateKey}_drop`,
+    id: dayDropId(dateKey),
     data: {
       type: "day",
       dateKey,
