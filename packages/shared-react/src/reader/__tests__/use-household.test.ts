@@ -5,37 +5,23 @@ import type { HouseholdData } from "@norish/shared-react/reader";
 import { createTestQueryClient } from "@norish/shared-react/platform/testing";
 import { useHousehold, useHouseholdCacheHelpers } from "@norish/shared-react/reader";
 
+import { answerRead, failRead, keyOf, resetTRPCFake } from "../../trpc/testing";
 import { createMockHouseholdData, createMockHouseholdSettings, readerWrapper } from "./test-utils";
 
-// Mock the tRPC provider
-const mockQueryKey = ["households", "get"];
-const mockQueryOptions = vi.fn();
+const mockQueryKey = keyOf("households.get");
 
-vi.mock("../../trpc", () => ({
-  useTRPC: () => ({
-    households: {
-      get: {
-        queryKey: () => mockQueryKey,
-        queryOptions: () => mockQueryOptions(),
-      },
-    },
-  }),
-}));
+vi.mock("../../trpc", async () => (await import("../../trpc/testing")).mockTRPC());
 
 describe("useHousehold", () => {
   let queryClient: ReturnType<typeof createTestQueryClient>;
 
   beforeEach(() => {
+    resetTRPCFake();
     queryClient = createTestQueryClient();
   });
 
   describe("initial state", () => {
     it("returns null household when no data is loaded", () => {
-      mockQueryOptions.mockReturnValue({
-        queryKey: mockQueryKey,
-        queryFn: async () => createMockHouseholdData(null),
-      });
-
       const { result } = renderHook(() => useHousehold(), {
         wrapper: readerWrapper(queryClient),
       });
@@ -44,11 +30,6 @@ describe("useHousehold", () => {
     });
 
     it("returns loading state initially", () => {
-      mockQueryOptions.mockReturnValue({
-        queryKey: mockQueryKey,
-        queryFn: () => new Promise(() => {}), // Never resolves
-      });
-
       const { result } = renderHook(() => useHousehold(), {
         wrapper: readerWrapper(queryClient),
       });
@@ -73,10 +54,6 @@ describe("useHousehold", () => {
         mockQueryKey,
         createMockHouseholdData(createMockHouseholdSettings({ users }), reader)
       );
-      mockQueryOptions.mockReturnValue({
-        queryKey: mockQueryKey,
-        queryFn: () => new Promise(() => {}),
-      });
 
       const { result } = renderHook(() => useHousehold(), { wrapper: readerWrapper(client) });
 
@@ -91,14 +68,11 @@ describe("useHousehold", () => {
         name: "Test Household",
       });
 
-      mockQueryOptions.mockReturnValue({
-        queryKey: mockQueryKey,
-        queryFn: async () => createMockHouseholdData(mockHousehold, "user-1"),
-      });
-
       const { result } = renderHook(() => useHousehold(), {
         wrapper: readerWrapper(queryClient),
       });
+
+      act(() => answerRead("households.get", createMockHouseholdData(mockHousehold, "user-1")));
 
       await waitFor(() => {
         expect(result.current.isLoading).toBe(false);
@@ -109,25 +83,15 @@ describe("useHousehold", () => {
     });
 
     it("handles fetch failure gracefully", async () => {
-      const testError = new Error("Network error");
-
-      mockQueryOptions.mockReturnValue({
-        queryKey: mockQueryKey,
-        queryFn: async () => {
-          throw testError;
-        },
-      });
-
       const { result } = renderHook(() => useHousehold(), {
         wrapper: readerWrapper(queryClient),
       });
 
-      await waitFor(
-        () => {
-          expect(result.current.isLoading).toBe(false);
-        },
-        { timeout: 2000 }
-      );
+      act(() => failRead("households.get", new Error("Network error")));
+
+      await waitFor(() => {
+        expect(result.current.isLoading).toBe(false);
+      });
 
       expect(result.current.household).toBeNull();
     });
@@ -137,11 +101,6 @@ describe("useHousehold", () => {
     it("updates query cache with new data", async () => {
       const initialHousehold = createMockHouseholdSettings({ id: "h1", name: "Initial" });
       const initialData = createMockHouseholdData(initialHousehold, "user-1");
-
-      mockQueryOptions.mockReturnValue({
-        queryKey: mockQueryKey,
-        queryFn: async () => initialData,
-      });
 
       queryClient.setQueryData(mockQueryKey, initialData);
 
@@ -172,11 +131,6 @@ describe("useHousehold", () => {
       const initialHousehold = createMockHouseholdSettings({ id: "h1", name: "Test" });
       const initialData = createMockHouseholdData(initialHousehold, "user-1");
 
-      mockQueryOptions.mockReturnValue({
-        queryKey: mockQueryKey,
-        queryFn: async () => initialData,
-      });
-
       queryClient.setQueryData(mockQueryKey, initialData);
 
       const { result } = renderHook(() => ({ ...useHousehold(), ...useHouseholdCacheHelpers() }), {
@@ -205,11 +159,6 @@ describe("useHousehold", () => {
     it("invalidates queries correctly", async () => {
       const initialHousehold = createMockHouseholdSettings({ id: "h1", name: "Test" });
       const initialData = createMockHouseholdData(initialHousehold, "user-1");
-
-      mockQueryOptions.mockReturnValue({
-        queryKey: mockQueryKey,
-        queryFn: async () => initialData,
-      });
 
       queryClient.setQueryData(mockQueryKey, initialData);
 

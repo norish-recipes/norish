@@ -1,5 +1,5 @@
 import { act, renderHook, waitFor } from "@testing-library/react";
-import { describe, expect, it, vi } from "vitest";
+import { beforeEach, describe, expect, it, vi } from "vitest";
 
 import type { PermissionsData } from "@norish/shared-react/reader";
 import { createTestQueryClient } from "@norish/shared-react/platform/testing";
@@ -10,29 +10,12 @@ import {
   useRecipePermissions,
 } from "@norish/shared-react/reader";
 
+import { answerRead, keyOf, resetTRPCFake } from "../../trpc/testing";
 import { READER, readerWrapper } from "./test-utils";
 
-const PERMISSIONS_KEY = ["permissions", "get"];
+const PERMISSIONS_KEY = keyOf("permissions.get");
 
-const served = vi.hoisted(() => ({ current: null as unknown }));
-
-vi.mock("../../trpc", () => ({
-  useTRPC: () => ({
-    permissions: {
-      get: {
-        queryOptions: () => ({
-          queryKey: ["permissions", "get"],
-          queryFn: async () => served.current,
-        }),
-      },
-    },
-    user: {
-      get: {
-        queryOptions: () => ({ queryKey: ["user", "get"], queryFn: () => new Promise(() => {}) }),
-      },
-    },
-  }),
-}));
+vi.mock("../../trpc", async () => (await import("../../trpc/testing")).mockTRPC());
 
 const HOUSEHOLD_POLICY: PermissionsData = {
   recipePolicy: { view: "household", edit: "household", delete: "owner" },
@@ -65,14 +48,16 @@ describe("permission selectors", () => {
   });
 });
 
+beforeEach(() => resetTRPCFake());
+
 describe("usePermissions", () => {
   it("answers with the defaults until the server has, then with the server's", async () => {
-    served.current = HOUSEHOLD_POLICY;
     const { result } = renderHook(() => usePermissions((p) => p.isAIEnabled), {
       wrapper: readerWrapper(createTestQueryClient()),
     });
 
     expect(result.current).toBe(false);
+    act(() => answerRead("permissions.get", HOUSEHOLD_POLICY));
     await waitFor(() => expect(result.current).toBe(true));
   });
 
@@ -105,13 +90,14 @@ describe("usePermissions", () => {
 
 describe("useRecipePermissions", () => {
   it("decides by the policy, the household and who the Reader is", async () => {
-    served.current = HOUSEHOLD_POLICY;
     const { result } = renderHook(() => useRecipePermissions(), {
       wrapper: readerWrapper(createTestQueryClient()),
     });
 
     expect(result.current.isLoading).toBe(true);
     expect(result.current.canViewRecipe("partner")).toBe(false);
+
+    act(() => answerRead("permissions.get", HOUSEHOLD_POLICY));
 
     await waitFor(() => expect(result.current.isLoading).toBe(false));
     expect(result.current.canViewRecipe("partner")).toBe(true);

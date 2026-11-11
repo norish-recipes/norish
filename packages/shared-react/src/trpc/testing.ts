@@ -5,16 +5,30 @@ type Deferred = { resolve: (value: unknown) => void; reject: (error: unknown) =>
 /** Each write the fake was sent, by procedure path; each waits until the test settles it. */
 export const trpcCalls: Record<string, { input: unknown; deferred: Deferred }[]> = {};
 
-/** Reads that answer only when `answerRead` is called, by procedure path. */
-const pendingReads: Record<string, ((data: unknown) => void)[]> = {};
+/** Reads that answer only when `answerRead` or `failRead` is called, by procedure path. */
+const pendingReads: Record<string, Deferred[]> = {};
+
+/** A server that answers every read and write itself, instead of the test settling each. */
+type Server = (path: string, input: unknown) => Promise<unknown>;
+let server: Server | null = null;
 
 export function answerRead(path: string, data: unknown) {
-  for (const answer of pendingReads[path]?.splice(0) ?? []) answer(data);
+  for (const read of pendingReads[path]?.splice(0) ?? []) read.resolve(data);
+}
+
+export function failRead(path: string, error: unknown = new Error("offline")) {
+  for (const read of pendingReads[path]?.splice(0) ?? []) read.reject(error);
+}
+
+/** Hands every later read and write to `answer`, until `resetTRPCFake`. */
+export function serveTRPC(answer: Server) {
+  server = answer;
 }
 
 export function resetTRPCFake() {
   for (const name of Object.keys(trpcCalls)) delete trpcCalls[name];
   for (const name of Object.keys(pendingReads)) delete pendingReads[name];
+  server = null;
 }
 
 function procedure(path: string[]) {
@@ -27,15 +41,21 @@ function procedure(path: string[]) {
     queryOptions: (input?: unknown, options?: object) => ({
       ...options,
       queryKey: queryKey(input),
-      queryFn: () => new Promise((resolve) => (pendingReads[name] ??= []).push(resolve)),
+      queryFn: () =>
+        server
+          ? server(name, input)
+          : new Promise((resolve, reject) => (pendingReads[name] ??= []).push({ resolve, reject })),
     }),
+    mutationKey: () => [path],
     mutationOptions: (options: object = {}) => ({
       ...options,
       mutationKey: [path],
       mutationFn: (input: unknown) =>
-        new Promise((resolve, reject) => {
-          (trpcCalls[name] ??= []).push({ input, deferred: { resolve, reject } });
-        }),
+        server
+          ? server(name, input)
+          : new Promise((resolve, reject) => {
+              (trpcCalls[name] ??= []).push({ input, deferred: { resolve, reject } });
+            }),
     }),
   };
 }

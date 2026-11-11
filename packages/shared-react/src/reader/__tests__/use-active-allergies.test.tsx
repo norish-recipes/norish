@@ -4,37 +4,19 @@ import { describe, expect, it, vi } from "vitest";
 import { createTestQueryClient } from "@norish/shared-react/platform/testing";
 import { useActiveAllergies } from "@norish/shared-react/reader";
 
+import { keyOf } from "../../trpc/testing";
 import { createMockHouseholdSettings, readerWrapper } from "./test-utils";
 
-vi.mock("../../trpc", () => ({
-  useTRPC: () => ({
-    households: {
-      get: {
-        queryOptions: () => ({
-          queryKey: ["households", "get"],
-          queryFn: () => new Promise(() => {}),
-        }),
-      },
-    },
-    user: {
-      getAllergies: {
-        queryOptions: () => ({
-          queryKey: ["user", "getAllergies"],
-          queryFn: () => new Promise(() => {}),
-        }),
-      },
-    },
-  }),
-}));
+vi.mock("../../trpc", async () => (await import("../../trpc/testing")).mockTRPC());
 
 function render(household: string[] | null, own: string[]) {
   const queryClient = createTestQueryClient();
 
-  queryClient.setQueryData(["households", "get"], {
+  queryClient.setQueryData(keyOf("households.get"), {
     household: household ? createMockHouseholdSettings({ allergies: household }) : null,
     currentUserId: "current-user",
   });
-  queryClient.setQueryData(["user", "getAllergies"], { allergies: own, version: 1 });
+  queryClient.setQueryData(keyOf("user.getAllergies"), { allergies: own, version: 1 });
 
   return renderHook(() => useActiveAllergies(), { wrapper: readerWrapper(queryClient) }).result
     .current;

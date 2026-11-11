@@ -1,5 +1,5 @@
-import { renderHook, waitFor } from "@testing-library/react";
-import { describe, expect, it, vi } from "vitest";
+import { act, renderHook, waitFor } from "@testing-library/react";
+import { beforeEach, describe, expect, it, vi } from "vitest";
 
 import {
   createTestQueryClient,
@@ -8,30 +8,23 @@ import {
 } from "@norish/shared-react/platform/testing";
 import { useReader } from "@norish/shared-react/reader";
 
-const profile = vi.hoisted(() => ({
+import { answerRead, resetTRPCFake } from "../../trpc/testing";
+
+const profile = {
   id: "user-1",
   email: "fresh@example.com",
   name: "Fresh",
   image: "/avatars/user-1.png",
   version: 2,
-}));
+};
 
-vi.mock("../../trpc", () => ({
-  useTRPC: () => ({
-    user: {
-      get: {
-        queryOptions: () => ({
-          queryKey: ["user", "get"],
-          queryFn: async () => ({ user: profile, apiKeys: [] }),
-        }),
-      },
-    },
-  }),
-}));
+vi.mock("../../trpc", async () => (await import("../../trpc/testing")).mockTRPC());
 
 const STALE = { id: "user-1", email: "stale@example.com", name: "Stale", image: null, version: 1 };
 
 describe("useReader", () => {
+  beforeEach(() => resetTRPCFake());
+
   it("prefers the fresh profile over the session's stale user", async () => {
     const adapter = fakePlatformAdapter("phone", STALE);
     const { result } = renderHook(() => useReader(), {
@@ -39,6 +32,7 @@ describe("useReader", () => {
     });
 
     expect(result.current.user?.email).toBe("stale@example.com");
+    act(() => answerRead("user.get", { user: profile, apiKeys: [] }));
     await waitFor(() => expect(result.current.user?.image).toBe("/avatars/user-1.png"));
     expect(result.current.user?.email).toBe("fresh@example.com");
   });

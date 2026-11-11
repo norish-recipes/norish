@@ -12,16 +12,8 @@ import { PlatformProvider } from "@norish/shared-react/platform";
 import { createTestQueryClient, fakePlatformAdapter } from "@norish/shared-react/platform/testing";
 import { useReader, useSeededSession } from "@norish/shared-react/reader";
 
-vi.mock("../../trpc", () => ({
-  useTRPC: () => ({
-    user: {
-      get: {
-        // The profile never answers: what shows is the session's or the seed's.
-        queryOptions: () => ({ queryKey: ["user", "get"], queryFn: () => new Promise(() => {}) }),
-      },
-    },
-  }),
-}));
+// The profile never answers: what shows is the session's or the seed's.
+vi.mock("../../trpc", async () => (await import("../../trpc/testing")).mockTRPC());
 
 type AuthSession = { data: { user: SessionUser } | null; isPending: boolean };
 
