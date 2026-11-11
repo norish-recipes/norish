@@ -1,5 +1,6 @@
 import type { ReactNode } from "react";
 import { fireEvent, render, screen } from "@testing-library/react";
+import { Link } from "react-aria-components";
 import { beforeAll, describe, expect, it, vi } from "vitest";
 
 import "@testing-library/jest-dom";
@@ -111,6 +112,20 @@ describe("the settings tab bar", () => {
     fireEvent.click(screen.getByRole("tab", { name: /tabs\.caldav/ }));
 
     expect(push).toHaveBeenCalledWith("/settings/caldav", undefined);
+  });
+
+  it("leaves links inside the tab's content to their own routing", () => {
+    navigation.pathname = "/settings/household";
+    push.mockClear();
+
+    render(
+      <SettingsTabs showAdminTab>
+        <Link href="/recipes">recipes</Link>
+      </SettingsTabs>
+    );
+    fireEvent.click(screen.getByRole("link", { name: "recipes" }));
+
+    expect(push).not.toHaveBeenCalled();
   });
 });
 

@@ -48,16 +48,16 @@ export function SettingsTabs({
   const tabs = SETTINGS_TABS.filter((tab) => showAdminTab || tab !== "admin");
   const currentTab = settingsTabOf(pathname);
 
-  // A React Aria tab with an `href` renders a link; this sends it through Next's client router.
-  // React Aria navigates before it checks the selection, so the open tab's own address is skipped.
   return (
-    <RouterProvider
-      navigate={(href, options) => {
-        if (href !== pathname) router.push(href, options);
-      }}
-      useHref={addBasePath}
-    >
-      <Tabs aria-label={t("page.ariaLabel")} className="w-full" selectedKey={currentTab}>
+    <Tabs aria-label={t("page.ariaLabel")} className="w-full" selectedKey={currentTab}>
+      {/* A tab with an `href` renders a link; this provider sends only the tab bar's links through
+          Next's client router, skipping the open tab's own address (React Aria navigates first). */}
+      <RouterProvider
+        navigate={(href, options) => {
+          if (href !== pathname) router.push(href, options);
+        }}
+        useHref={addBasePath}
+      >
         <Tabs.ListContainer>
           <Tabs.List aria-label={t("page.ariaLabel")}>
             {tabs.map((tab) => {
@@ -85,10 +85,10 @@ export function SettingsTabs({
             })}
           </Tabs.List>
         </Tabs.ListContainer>
-        <Tabs.Panel className="px-0 py-4" id={currentTab}>
-          {children}
-        </Tabs.Panel>
-      </Tabs>
-    </RouterProvider>
+      </RouterProvider>
+      <Tabs.Panel className="px-0 py-4" id={currentTab}>
+        {children}
+      </Tabs.Panel>
+    </Tabs>
   );
 }
