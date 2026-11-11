@@ -40,7 +40,7 @@ export default function CaldavConfigEditModal({ isOpen, onClose }: CaldavConfigE
   const tConfig = useTranslations("settings.caldav.config");
   const tActions = useTranslations("common.actions");
   const { config } = useCaldavConfigQuery();
-  const { password: storedPassword } = useCaldavPasswordQuery();
+  const { read: readStoredPassword } = useCaldavPasswordQuery({ enabled: isOpen });
   const { saveConfig, isSavingConfig: saving } = useCaldavMutations();
   const [serverUrl, setServerUrl] = useState("");
   const [calendarUrl, setCalendarUrl] = useState<string | null>(null);
@@ -98,6 +98,8 @@ export default function CaldavConfigEditModal({ isOpen, onClose }: CaldavConfigE
   }, [config, isOpen]);
 
   const handleRevealPassword = async () => {
+    const storedPassword = await readStoredPassword();
+
     if (storedPassword && serverUrl && username && !testing && !hasAutoTestedRef.current) {
       hasAutoTestedRef.current = true;
       // Lets the revealed password render before the test starts.
@@ -115,8 +117,9 @@ export default function CaldavConfigEditModal({ isOpen, onClose }: CaldavConfigE
 
     return valid;
   };
-  const passwordToUse = () => password || (config ? storedPassword : null) || "";
-  const handleTestConnection = () => runTest(serverUrl, username, passwordToUse(), calendarUrl);
+  const passwordToUse = async () => password || (config ? await readStoredPassword() : null) || "";
+  const handleTestConnection = async () =>
+    runTest(serverUrl, username, await passwordToUse(), calendarUrl);
   const handleSave = async () => {
     const breakfastValid = validateTimeFormat(breakfastTime, "breakfast");
     const lunchValid = validateTimeFormat(lunchTime, "lunch");
@@ -180,7 +183,9 @@ export default function CaldavConfigEditModal({ isOpen, onClose }: CaldavConfigE
                 <UntrustedCertificateNote
                   certificate={testResult.untrustedCertificate}
                   isPending={testing}
-                  onTrust={() => trustAndRetest(serverUrl, username, passwordToUse(), calendarUrl)}
+                  onTrust={async () =>
+                    trustAndRetest(serverUrl, username, await passwordToUse(), calendarUrl)
+                  }
                 />
               ) : (
                 testResult && (

@@ -14,16 +14,20 @@ export function useCaldavConfigQuery(): CaldavConfigQueryResult {
   return { config: data ?? null, error, isLoading };
 }
 
-export function useCaldavPasswordQuery() {
+/** The stored password, read only while `enabled`, as an edit form that shows it is open. */
+export function useCaldavPasswordQuery({ enabled }: { enabled: boolean }) {
   const trpc = useTRPC();
-  const { data, error, isLoading } = useQuery(
-    trpc.caldav.getPassword.queryOptions(undefined, {
-      staleTime: 0,
-      gcTime: 0,
-    })
+  const { data, error, isLoading, refetch } = useQuery(
+    trpc.caldav.getPassword.queryOptions(undefined, { enabled, staleTime: 0, gcTime: 0 })
   );
 
-  return { password: data ?? null, error, isLoading };
+  return {
+    password: data ?? null,
+    /** The password, waiting for a read when none has answered yet. */
+    read: async () => data ?? (await refetch()).data ?? null,
+    error,
+    isLoading,
+  };
 }
 
 export function useCaldavSyncStatusQuery(
