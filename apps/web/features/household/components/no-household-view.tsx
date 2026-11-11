@@ -15,21 +15,15 @@ export default function NoHouseholdView() {
   const { createHousehold, joinHousehold } = useHouseholdMutations();
   const [householdName, setHouseholdName] = useState("");
   const [joinCode, setJoinCode] = useState("");
-  const [isCreating, setIsCreating] = useState(false);
-  const [isJoining, setIsJoining] = useState(false);
-  const handleCreateHousehold = async (e: SubmitEvent) => {
+  const handleCreateHousehold = (e: SubmitEvent) => {
     e.preventDefault();
-    setIsCreating(true);
     createHousehold(householdName);
     setHouseholdName("");
-    setIsCreating(false);
   };
-  const handleJoinHousehold = async (e: SubmitEvent) => {
+  const handleJoinHousehold = (e: SubmitEvent) => {
     e.preventDefault();
-    setIsJoining(true);
     joinHousehold(joinCode);
     setJoinCode("");
-    setIsJoining(false);
   };
   return (
     <div className="flex w-full flex-col gap-6">
@@ -46,7 +40,7 @@ export default function NoHouseholdView() {
               <Input variant="secondary" placeholder={t("create.namePlaceholder")} />
             </TextField>
             <ActionButtonGroup className="mt-auto">
-              <ActionButton action="create" isPending={isCreating} type="submit">
+              <ActionButton action="create" type="submit">
                 {t("create.submitButton")}
               </ActionButton>
             </ActionButtonGroup>
@@ -90,7 +84,6 @@ export default function NoHouseholdView() {
               <ActionButton
                 action="apply"
                 icon={ArrowRightEndOnRectangleIcon}
-                isPending={isJoining}
                 type="submit"
               >
                 {t("join.submitButton")}
