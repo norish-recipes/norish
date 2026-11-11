@@ -5,6 +5,14 @@ import { useState } from "react";
 import type { CalDavCalendarInfo, ConnectionTestResult } from "@norish/shared/contracts";
 import { useCaldavMutations } from "@norish/shared-react/calendar";
 
+/** The server a test reaches and the calendar picked on it. */
+export type ConnectionTarget = {
+  serverUrl: string;
+  username: string;
+  password: string;
+  calendarUrl: string | null;
+};
+
 /**
  * Tests a CalDAV connection and offers the calendars it found, keeping the
  * calendar already picked while the server still lists it, else the first.
@@ -20,10 +28,7 @@ export function useConnectionTest(
   const [trustedCertificate, setTrustedCertificate] = useState(storedCertificate);
 
   const runTest = async (
-    serverUrl: string,
-    username: string,
-    password: string,
-    calendarUrl: string | null,
+    { serverUrl, username, password, calendarUrl }: ConnectionTarget,
     certificate = trustedCertificate
   ) => {
     setTestResult(null);
@@ -45,18 +50,13 @@ export function useConnectionTest(
   };
 
   /** Trust the certificate the last test was refused over and test again with it. */
-  const trustAndRetest = (
-    serverUrl: string,
-    username: string,
-    password: string,
-    calendarUrl: string | null
-  ) => {
+  const trustAndRetest = (target: ConnectionTarget) => {
     const pem = testResult?.untrustedCertificate?.pem;
 
     if (!pem) return;
     setTrustedCertificate(pem);
 
-    return runTest(serverUrl, username, password, calendarUrl, pem);
+    return runTest(target, pem);
   };
 
   return {

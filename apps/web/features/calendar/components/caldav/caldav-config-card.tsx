@@ -57,7 +57,7 @@ export default function CaldavConfigCard() {
   const [dinnerTime, setDinnerTime] = useState("18:00-19:00");
   const [snackTime, setSnackTime] = useState("15:00-16:00");
 
-  const handleTestConnection = () => runTest(serverUrl, username, password, calendarUrl);
+  const handleTestConnection = () => runTest({ serverUrl, username, password, calendarUrl });
   const handleInitialSetup = async () => {
     setTestResult(null);
     const saved = await saveConfig({
@@ -215,7 +215,7 @@ export default function CaldavConfigCard() {
         <UntrustedCertificateNote
           certificate={testResult.untrustedCertificate}
           isPending={testing}
-          onTrust={() => trustAndRetest(serverUrl, username, password, calendarUrl)}
+          onTrust={() => trustAndRetest({ serverUrl, username, password, calendarUrl })}
         />
       ) : (
         testResult && (

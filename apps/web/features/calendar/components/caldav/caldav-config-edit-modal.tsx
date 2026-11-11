@@ -82,7 +82,7 @@ function CaldavConfigEditForm({ onClose }: { onClose: () => void }) {
 
     if (storedPassword && serverUrl && username && !testing && !hasAutoTestedRef.current) {
       hasAutoTestedRef.current = true;
-      void runTest(serverUrl, username, storedPassword, calendarUrl);
+      void runTest({ serverUrl, username, password: storedPassword, calendarUrl });
     }
 
     return storedPassword;
@@ -96,7 +96,7 @@ function CaldavConfigEditForm({ onClose }: { onClose: () => void }) {
   };
   const passwordToUse = async () => password || (config ? await readStoredPassword() : null) || "";
   const handleTestConnection = async () =>
-    runTest(serverUrl, username, await passwordToUse(), calendarUrl);
+    runTest({ serverUrl, username, password: await passwordToUse(), calendarUrl });
   const handleSave = async () => {
     const breakfastValid = validateTimeFormat(breakfastTime, "breakfast");
     const lunchValid = validateTimeFormat(lunchTime, "lunch");
@@ -159,7 +159,12 @@ function CaldavConfigEditForm({ onClose }: { onClose: () => void }) {
               certificate={testResult.untrustedCertificate}
               isPending={testing}
               onTrust={async () =>
-                trustAndRetest(serverUrl, username, await passwordToUse(), calendarUrl)
+                trustAndRetest({
+                  serverUrl,
+                  username,
+                  password: await passwordToUse(),
+                  calendarUrl,
+                })
               }
             />
           ) : (
