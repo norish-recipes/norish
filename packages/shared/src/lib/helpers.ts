@@ -604,26 +604,19 @@ export function addWeeks(date: Date, weeks: number): Date {
   return d;
 }
 
-/** The range a calendar opens on around `today` (`YYYY-MM-DD`), the reader's date by default. */
-export function getInitialDateRange(
-  mode: "desktop" | "mobile",
-  today: string = dateKey(new Date())
-): { start: Date; end: Date } {
-  const now = parseDateKey(today);
-
-  if (mode === "desktop") {
-    return { start: getWeekStart(now), end: getWeekEnd(now) };
-  }
-
-  return { start: getWeekStart(addWeeks(now, -2)), end: getWeekEnd(addWeeks(now, 2)) };
-}
-
 /** The first and last day of a calendar read, as date keys. */
 export type CalendarRange = { startISO: string; endISO: string };
 
-/** {@link getInitialDateRange} as date keys, the shape a calendar read asks for. */
-export function getInitialCalendarRange(mode: "desktop" | "mobile", today?: string): CalendarRange {
-  const { start, end } = getInitialDateRange(mode, today);
+/** The range a calendar opens on around `today` (`YYYY-MM-DD`), the reader's date by default. */
+export function getInitialCalendarRange(
+  mode: "desktop" | "mobile",
+  today: string = dateKey(new Date())
+): CalendarRange {
+  const now = parseDateKey(today);
+  const [start, end] =
+    mode === "desktop"
+      ? [getWeekStart(now), getWeekEnd(now)]
+      : [getWeekStart(addWeeks(now, -2)), getWeekEnd(addWeeks(now, 2))];
 
   return { startISO: dateKey(start), endISO: dateKey(end) };
 }
