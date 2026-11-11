@@ -7,10 +7,11 @@ import { SettingsCard } from "@/components/settings/settings-card";
 import { KeyIcon, TrashIcon } from "@heroicons/react/16/solid";
 import { FingerPrintIcon } from "@heroicons/react/24/outline";
 import { Button, toast } from "@heroui/react";
-import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
+import { useMutation } from "@tanstack/react-query";
 import { useFormatter, useTranslations } from "next-intl";
 
-import { useTRPC } from "@norish/shared-react/trpc";
+import { useAuthProvidersQuery } from "@norish/shared-react/config";
+import { useSignInMethodsQuery } from "@norish/shared-react/reader";
 import {
   keepsOfferedSignInMethod,
   LAST_SIGN_IN_METHOD,
@@ -43,18 +44,12 @@ export default function SignInMethodsCard() {
   const t = useTranslations("settings.user.signInMethods");
   const format = useFormatter();
   const { user } = useUserSettingsContext();
-  const trpc = useTRPC();
-  const queryClient = useQueryClient();
   const router = useRouter();
   const pathname = usePathname();
   const searchParams = useSearchParams();
   const [changingPassword, setChangingPassword] = useState(false);
-  const { data: offered = [] } = useQuery({
-    ...trpc.config.authProviders.queryOptions(),
-    select: (data) => data.providers,
-  });
-  const accountsQuery = trpc.user.signInMethods.queryOptions();
-  const { data: accounts = [] } = useQuery(accountsQuery);
+  const { providers: offered } = useAuthProvidersQuery();
+  const { accounts, refetch } = useSignInMethodsQuery();
 
   const showError = (code: string | undefined, fallback: ErrorMessage) =>
     toast(t(`errors.${ERROR_MESSAGES[code ?? ""] ?? fallback}`), { variant: "danger" });
@@ -88,7 +83,7 @@ export default function SignInMethodsCard() {
   const remove = useMutation({
     mutationFn: (accountId: string) => orThrow(authClient.unlinkAccount({ accountId })),
     onError: (error: { code?: string }) => showError(error.code, "removeFailed"),
-    onSettled: () => queryClient.invalidateQueries({ queryKey: accountsQuery.queryKey }),
+    onSettled: () => refetch(),
   });
 
   const offeredIds = new Set(offered.map((provider) => provider.id));

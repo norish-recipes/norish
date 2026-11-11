@@ -7,7 +7,6 @@ import { NoProvidersState } from "@/features/auth/components/no-providers-state"
 import { OAuthProviderList } from "@/features/auth/components/oauth-provider-list";
 import { ProviderErrorState } from "@/features/auth/components/provider-error-state";
 import { ProviderLoadingState } from "@/features/auth/components/provider-loading-state";
-import { useAuthProvidersQuery } from "@/features/auth/hooks/use-auth-providers-query";
 import { styles } from "@/features/auth/styles/login.styles";
 import { authFailure } from "@/features/auth/utils/auth-failure";
 import {
@@ -22,6 +21,7 @@ import { useThemeColor } from "heroui-native";
 import { useIntl } from "react-intl";
 
 import type { ProviderInfo } from "@norish/shared/contracts";
+import { useAuthProvidersQuery } from "@norish/shared-react/config";
 
 function LoginForm({ backendBaseUrl, redirectTo }: { backendBaseUrl: string; redirectTo: string }) {
   const router = useRouter();

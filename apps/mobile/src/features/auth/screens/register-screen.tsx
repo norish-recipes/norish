@@ -1,13 +1,14 @@
 import React, { useCallback, useState } from "react";
 import { Pressable, Text, View } from "react-native";
 import { AuthShell } from "@/features/auth/components/auth-shell";
-import { useAuthProvidersQuery } from "@/features/auth/hooks/use-auth-providers-query";
 import { styles } from "@/features/auth/styles/register.styles";
 import { authFailure } from "@/features/auth/utils/auth-failure";
 import { useAuth } from "@/lib/auth/auth-context";
 import { useRouter } from "expo-router";
 import { Button, Card, Input, useThemeColor } from "heroui-native";
 import { useIntl } from "react-intl";
+
+import { useAuthProvidersQuery } from "@norish/shared-react/config";
 
 const MIN_PASSWORD_LENGTH = 8;
 const MAX_PASSWORD_LENGTH = 128;

@@ -1,6 +1,7 @@
 export type { EnabledLocale, LocaleConfigResult, TimerKeywordsConfig, UploadLimits } from "./types";
 
 export { normalizeLocaleConfig } from "./normalize-locale-config";
+export { useAuthProvidersQuery } from "./use-auth-providers-query";
 export { useCategoriesQuery } from "./use-categories-query";
 export { useConfigSubscription } from "./use-config-subscription";
 export { useCuisinesQuery } from "./use-cuisines-query";
