@@ -1,8 +1,8 @@
 "use client";
 
-import type { SystemConversionOption } from "@/features/recipes/hooks";
+import type { SystemConversionOption } from "@/features/recipes/hooks/use-system-conversion";
 import React from "react";
-import { useSystemConversion } from "@/features/recipes/hooks";
+import { useSystemConversion } from "@/features/recipes/hooks/use-system-conversion";
 import { ArrowsRightLeftIcon, SparklesIcon } from "@heroicons/react/20/solid";
 import { Button, Dropdown, Label, Spinner } from "@heroui/react";
 import { useTranslations } from "next-intl";

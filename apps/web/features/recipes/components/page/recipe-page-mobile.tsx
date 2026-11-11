@@ -7,7 +7,7 @@ import {
   RecipeHeaderMobile,
   SourceCard,
 } from "@/features/recipes/components/read-only";
-import { useWorkedOutNutrition } from "@/features/recipes/hooks";
+import { useWorkedOutNutrition } from "@/features/recipes/hooks/use-worked-out-nutrition";
 import {
   MOBILE_RECIPE_MEDIA_HEIGHT_STYLE,
   RECIPE_HERO_CHROME_BUTTON_CLASS,
@@ -35,7 +35,7 @@ import { cssFloatingDockContentClearance } from "@norish/web/config/css-tokens";
 import ActionsMenu from "./actions-menu";
 import AddToGroceries from "./add-to-groceries-button";
 import CookbooksCard from "./cookbooks-card";
-import CookingMode from "./cooking-mode";
+import CookingMode from "./cooking-mode/cooking-mode";
 import IngredientsList from "./ingredient-list";
 import IngredientsOptionsMenu from "./ingredients-options-menu";
 import NotesCard from "./notes-card";

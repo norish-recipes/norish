@@ -1,30 +1,29 @@
 "use client";
 
-import type {
-  ParsedIngredient,
-  ProvenanceFormValue,
-  RecipeGalleryMedia,
-  Step,
-} from "@/features/recipes/components/editor";
+import type { ParsedIngredient } from "@/features/recipes/components/editor/ingredient-input";
+import type { RecipeGalleryMedia } from "@/features/recipes/components/editor/media-gallery-input";
+import type { ProvenanceFormValue } from "@/features/recipes/components/editor/provenance-fields";
+import type { Step } from "@/features/recipes/components/editor/step-input";
 import React, { useCallback, useMemo, useState } from "react";
 import { useRouter } from "next/navigation";
 import { ChipButton } from "@/components/shared/chip-button";
 import TagInput from "@/components/shared/tag-input";
+import IngredientInput from "@/features/recipes/components/editor/ingredient-input";
+import MeasurementSystemSelector from "@/features/recipes/components/editor/measurement-system-selector";
+import MediaGalleryInput from "@/features/recipes/components/editor/media-gallery-input";
+import ProvenanceFields, {
+  EMPTY_PROVENANCE_FORM_VALUE,
+} from "@/features/recipes/components/editor/provenance-fields";
+import SmartInputHelp from "@/features/recipes/components/editor/smart-input-help";
+import SmartTextInput from "@/features/recipes/components/editor/smart-text-input";
+import StepInput from "@/features/recipes/components/editor/step-input";
+import TimeInputs from "@/features/recipes/components/editor/time-inputs";
 import {
   buildInitialMedia,
-  EMPTY_PROVENANCE_FORM_VALUE,
-  IngredientInput,
-  MeasurementSystemSelector,
-  MediaGalleryInput,
-  ProvenanceFields,
-  SmartInputHelp,
-  SmartTextInput,
-  StepInput,
-  TimeInputs,
   useRecipeFormDirtyState,
-} from "@/features/recipes/components/editor";
-import { EditRecipeSkeleton } from "@/features/recipes/components/skeleton";
-import { useUnsavedNavigationGuard } from "@/features/recipes/hooks";
+} from "@/features/recipes/components/editor/use-recipe-form-dirty-state";
+import EditRecipeSkeleton from "@/features/recipes/components/skeleton/edit-recipe-skeleton";
+import { useUnsavedNavigationGuard } from "@/features/recipes/hooks/use-unsaved-navigation-guard";
 import { useRecipesMutations } from "@/hooks/use-recipes-mutations";
 import { useCategoryLabel } from "@/lib/category-display";
 import { Button, FieldError, Input, Label, TextField } from "@heroui/react";

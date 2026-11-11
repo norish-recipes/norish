@@ -119,7 +119,7 @@ vi.mock("@/features/recipes/components/page/actions-menu", () => ({
 vi.mock("@/features/recipes/components/page/add-to-groceries-button", () => ({
   default: () => <div data-testid="add-to-groceries" />,
 }));
-vi.mock("@/features/recipes/components/page/cooking-mode", () => ({
+vi.mock("@/features/recipes/components/page/cooking-mode/cooking-mode", () => ({
   default: ({ floating }: { floating?: boolean }) => (
     <div data-floating={String(Boolean(floating))} data-testid="cooking-mode" />
   ),

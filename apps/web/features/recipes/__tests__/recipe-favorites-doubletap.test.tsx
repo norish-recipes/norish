@@ -125,7 +125,7 @@ vi.mock("@/features/recipes/components/page/servings-control", () => ({
 vi.mock("@/features/recipes/components/read-only/amount-display-toggle", () => ({
   default: () => <div>amount-toggle</div>,
 }));
-vi.mock("@/features/recipes/components/page/cooking-mode", () => ({
+vi.mock("@/features/recipes/components/page/cooking-mode/cooking-mode", () => ({
   default: () => <div>cooking-mode</div>,
 }));
 vi.mock("@/features/recipes/components/page/steps-list", () => ({

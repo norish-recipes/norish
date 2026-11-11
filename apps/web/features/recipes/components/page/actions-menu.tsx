@@ -7,7 +7,7 @@ import MiniCalendar from "@/components/Panel/consumers/mini-calendar";
 import MiniCookbooks from "@/components/Panel/consumers/mini-cookbooks";
 import MiniGroceries from "@/components/Panel/consumers/mini-groceries";
 import { DeleteRecipeModal } from "@/components/shared/delete-recipe-modal";
-import { useRecipeEnrichment } from "@/features/recipes/hooks";
+import { useRecipeEnrichment } from "@/features/recipes/hooks/use-recipe-enrichment";
 import { useRecipesMutations } from "@/hooks/use-recipes-mutations";
 import {
   CalendarDaysIcon,

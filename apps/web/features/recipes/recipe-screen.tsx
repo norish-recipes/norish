@@ -3,19 +3,15 @@
 import { useState } from "react";
 import { useIngredientIcons } from "@/components/ingredients/ingredient-icon";
 import { NotFoundView } from "@/components/shared/not-found-view";
-import {
-  RecipePageDesktop,
-  RecipePageMobile,
-  RecipePrint,
-  ScreenWakeLock,
-} from "@/features/recipes/components/page";
+import { ScreenWakeLock } from "@/features/recipes/components/page/page-wake-lock";
+import RecipePageDesktop from "@/features/recipes/components/page/recipe-page-desktop";
+import RecipePageMobile from "@/features/recipes/components/page/recipe-page-mobile";
+import RecipePrint from "@/features/recipes/components/page/recipe-print";
 import { RecipePageTint } from "@/features/recipes/components/read-only";
 import { RecipeSkeleton } from "@/features/recipes/components/skeleton";
-import {
-  useAutoConversion,
-  useRecipeEnrichmentSubscription,
-  useRecipeSubscription,
-} from "@/features/recipes/hooks";
+import { useRecipeEnrichmentSubscription } from "@/features/recipes/hooks/use-recipe-enrichment";
+import { useRecipeSubscription } from "@/features/recipes/hooks/use-recipe-subscription";
+import { useAutoConversion } from "@/features/recipes/hooks/use-system-conversion";
 import { TRPCClientError } from "@trpc/client";
 import { useTranslations } from "next-intl";
 

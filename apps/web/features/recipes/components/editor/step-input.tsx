@@ -1,7 +1,7 @@
 "use client";
 
 import { useCallback, useMemo, useRef, useState } from "react";
-import { useRecipeImages } from "@/features/recipes/hooks";
+import { useRecipeImages } from "@/features/recipes/hooks/use-recipe-images";
 import { Bars3Icon, PhotoIcon, XMarkIcon } from "@heroicons/react/16/solid";
 import { Button } from "@heroui/react";
 import { Reorder, useDragControls } from "motion/react";

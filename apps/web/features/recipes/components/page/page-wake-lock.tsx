@@ -1,6 +1,6 @@
 "use client";
 
-import { useHoldWakeLock, useWakeLockSupported } from "@/features/recipes/hooks";
+import { useHoldWakeLock, useWakeLockSupported } from "@/features/recipes/hooks/use-wake-lock";
 
 import { useRecipePageStore } from "@norish/shared-react/recipes";
 

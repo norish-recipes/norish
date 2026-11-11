@@ -3,7 +3,8 @@
 import type { DragEndEvent } from "@dnd-kit/core";
 import React, { useCallback, useId, useRef, useState } from "react";
 import NextImage from "next/image";
-import { useRecipeImages, useRecipeVideos } from "@/features/recipes/hooks";
+import { useRecipeImages } from "@/features/recipes/hooks/use-recipe-images";
+import { useRecipeVideos } from "@/features/recipes/hooks/use-recipe-videos";
 import { useClipboardImagePaste } from "@/hooks/use-clipboard-image-paste";
 import { usePending } from "@/hooks/use-pending";
 import {

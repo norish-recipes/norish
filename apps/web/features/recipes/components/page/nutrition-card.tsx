@@ -7,7 +7,7 @@ import {
   NutritionBody,
   NutritionPortionControl,
 } from "@/features/recipes/components/read-only";
-import { useWorkedOutNutrition } from "@/features/recipes/hooks";
+import { useWorkedOutNutrition } from "@/features/recipes/hooks/use-worked-out-nutrition";
 import { useHiddenItemVisibility } from "@/hooks/user/use-hidden-item-visibility";
 import { ChevronRightIcon } from "@heroicons/react/16/solid";
 import { Card, Chip, Skeleton } from "@heroui/react";
