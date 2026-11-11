@@ -1,7 +1,7 @@
 "use client";
 
 import type { PlannedItemDisplay } from "@/components/calendar/mobile";
-import { useCallback, useEffect, useRef, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import MiniRecipes from "@/components/Panel/consumers/mini-recipes";
 import { useReaderToday } from "@/components/reader-today";
 import { EditNotePanel } from "@/features/calendar/components/panels/edit-note-panel";
@@ -37,7 +37,7 @@ function CalendarPageContent() {
     };
   }, []);
 
-  const restoreMiniRecipesScroll = useCallback(() => {
+  const restoreMiniRecipesScroll = () => {
     if (typeof window === "undefined") return;
 
     const scrollY = pendingMiniRecipesScrollYRef.current;
@@ -62,20 +62,17 @@ function CalendarPageContent() {
       restore();
       restoreMiniRecipesScrollTimerRef.current = null;
     }, 550);
-  }, []);
+  };
 
-  const handleMiniRecipesOpenChange = useCallback(
-    (open: boolean) => {
-      setMiniRecipesOpen(open);
+  const handleMiniRecipesOpenChange = (open: boolean) => {
+    setMiniRecipesOpen(open);
 
-      if (!open) {
-        restoreMiniRecipesScroll();
-      }
-    },
-    [restoreMiniRecipesScroll]
-  );
+    if (!open) {
+      restoreMiniRecipesScroll();
+    }
+  };
 
-  const handleAddItem = useCallback((dateKey: string, slot: Slot) => {
+  const handleAddItem = (dateKey: string, slot: Slot) => {
     if (typeof window !== "undefined") {
       if (restoreMiniRecipesScrollTimerRef.current !== null) {
         window.clearTimeout(restoreMiniRecipesScrollTimerRef.current);
@@ -88,7 +85,7 @@ function CalendarPageContent() {
     setSelectedDate(parseDateKey(dateKey));
     setSelectedSlot(slot);
     setMiniRecipesOpen(true);
-  }, []);
+  };
 
   const handleNoteClick = (item: PlannedItemDisplay) => {
     setEditingNote(item);
