@@ -18,7 +18,7 @@
   - the hooks only these pages use
 
   The import modals stay in `components/shared/` until imports moves.
-- [x] The dashboard's route renders today's meals, which stays in `components/dashboard/today/` until calendar, above the library screen. The `Dashboard` component goes, and the dashboard's skeleton composes the same two. The offline bootstrap renders the same composition and the cookbook screen.
+- [x] The dashboard's route renders today's meals, which stays shared in `components/dashboard/today/`, above the library screen. The `Dashboard` component goes, and the dashboard's skeleton composes the same two. The offline bootstrap renders the same composition and the cookbook screen.
 - [x] `MiniGroceries` moves from `features/groceries` to `components/Panel/consumers/`, beside `MiniCalendar`, `MiniCookbooks` and the after-planning step. `features/groceries/index.ts` goes.
 - [x] Each app's lint blocks `@/features/<x>` and `@/features/<x>/**` everywhere outside feature `<x>` except route files, mobile's included. The exception for a feature's `index.ts` goes.
 - [x] CONTRIBUTING's "App architecture" and the Architecture page state the panel rule: a panel several features open lives in the shared folders, and features never import each other. They drop "A feature's `index.ts` exports only the panels other features open" and "Opening a panel is the one way back". "Project Structure" shows `features/library`.
