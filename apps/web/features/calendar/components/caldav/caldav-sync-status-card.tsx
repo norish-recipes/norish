@@ -58,18 +58,17 @@ export default function CaldavSyncStatusCard() {
   // relativeTime needs a clock; this one moves on each minute.
   const now = useNow({ updateInterval: 60_000 });
   const hydrated = useHydrated();
-  // A second click on the active filter clears it.
   const handleFilterClick = (status: CaldavSyncStatus) => {
     setSyncStatusFilter(syncStatusFilter === status ? undefined : status);
     setSyncStatusPage(1);
   };
-  const formatDate = (dateString: Date | string | null | undefined) => {
-    if (!dateString) return "—";
+  const formatDate = (lastSyncAt: Date | string | null | undefined) => {
+    if (!lastSyncAt) return "—";
     try {
       // "3 minutes ago" only once hydrated: the server's clock is not the browser's.
-      if (!hydrated) return format.dateTime(new Date(dateString));
+      if (!hydrated) return format.dateTime(new Date(lastSyncAt));
 
-      return format.relativeTime(new Date(dateString), now);
+      return format.relativeTime(new Date(lastSyncAt), now);
     } catch {
       return "—";
     }
@@ -222,9 +221,7 @@ export default function CaldavSyncStatusCard() {
 
       {totalPages > 1 && (
         <div className="mt-4 flex justify-center">
-          {/* Pagination is a "dumb" compound component (Root/Previous/
-                Summary/Next) with no built-in state — no flat
-                page/total/onChange API, so wire it up manually. */}
+          {/* Pagination holds no page state: this card's page drives Previous, Summary and Next. */}
           <Pagination aria-label={t("title")} size="sm">
             <Pagination.Content>
               <Pagination.Item>

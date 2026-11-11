@@ -158,7 +158,6 @@ export default function CaldavConfigCard() {
         </TextField>
       </div>
 
-      {/* Calendar Selection - always visible, disabled until calendars fetched */}
       <Select
         isDisabled={calendars.length === 0}
         placeholder={

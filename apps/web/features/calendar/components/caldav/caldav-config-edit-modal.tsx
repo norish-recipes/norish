@@ -170,7 +170,6 @@ function CaldavConfigEditForm({ onClose }: { onClose: () => void }) {
             )
           )}
 
-          {/* Calendar Selection - always visible, disabled until calendars fetched */}
           <Select
             isDisabled={calendars.length === 0}
             placeholder={
