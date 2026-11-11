@@ -3,10 +3,9 @@
 import { useEffect, useState } from "react";
 import { PanelComboBoxPopover } from "@/components/Panel/Panel";
 import { ComboBox, Input, Label, ListBox } from "@heroui/react";
-import { useQuery } from "@tanstack/react-query";
 import { useLocale, useTranslations } from "next-intl";
 
-import { useTRPC } from "@norish/shared-react/trpc";
+import { useIngredientSearchQuery } from "@norish/shared-react/ingredients";
 import { ingredientDisplayName } from "@norish/shared/lib/ingredient-names";
 
 /** How long typing pauses before the catalogue is searched. */
@@ -34,7 +33,6 @@ export function IngredientPicker({
 }) {
   const t = useTranslations("settings.ingredients");
   const locale = useLocale();
-  const trpc = useTRPC();
   // Inside a Panel the options must portal into it, or vaul swallows every tap (#511).
   const [term, setTerm] = useState("");
   const [search, setSearch] = useState("");
@@ -46,13 +44,8 @@ export function IngredientPicker({
     return () => clearTimeout(timer);
   }, [term]);
 
-  const { data, isFetching } = useQuery({
-    ...trpc.ingredients.list.queryOptions({ search, locale }),
-    enabled: search.length > 0,
-  });
-  const found = (data?.items ?? []).filter(
-    (item) => item.id !== excludeId && (!editableOnly || item.canEdit)
-  );
+  const { items, isFetching } = useIngredientSearchQuery(search, locale);
+  const found = items.filter((item) => item.id !== excludeId && (!editableOnly || item.canEdit));
   const options = found.map((item) => ({ id: item.id, name: ingredientDisplayName(item, locale) }));
 
   return (

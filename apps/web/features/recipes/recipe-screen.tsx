@@ -1,7 +1,6 @@
 "use client";
 
 import { useState } from "react";
-import { useIngredientIcons } from "@/components/ingredients/ingredient-icon";
 import { NotFoundView } from "@/components/shared/not-found-view";
 import { ScreenWakeLock } from "@/features/recipes/components/page/page-wake-lock";
 import RecipePageDesktop from "@/features/recipes/components/page/recipe-page-desktop";
@@ -17,6 +16,7 @@ import { useTranslations } from "next-intl";
 
 import type { LibraryTypeFilter } from "@norish/shared/contracts";
 import { useIngredientsSubscription } from "@norish/shared-react/config";
+import { useIngredientIcons } from "@norish/shared-react/ingredients";
 import {
   RecipePageProvider,
   useCookbooksSubscription,

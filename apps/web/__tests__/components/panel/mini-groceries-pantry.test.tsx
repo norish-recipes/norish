@@ -97,6 +97,8 @@ vi.mock("@/hooks/use-unit-formatter", () => ({
 }));
 vi.mock("@/components/ingredients/ingredient-icon", () => ({
   IngredientIcon: () => null,
+}));
+vi.mock("@norish/shared-react/ingredients", () => ({
   useIngredientIcons: (ids: unknown[]) => iconsAskedFor.push(ids),
 }));
 vi.mock("@norish/shared-react/recipes", async (importOriginal) => ({

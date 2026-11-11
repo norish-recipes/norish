@@ -46,3 +46,21 @@ export type AIChange = {
   from: string | null;
   canAct: boolean;
 };
+
+/** A food a draft names, as its row shows it. */
+export type NamedIngredient = { id: string; name: string; localeNames?: LocaleNames };
+
+/**
+ * An Ingredient's panel draft as Save sends it. Undefined leaves a field as it is; `parent` null
+ * clears it, and `icon` null removes the food's own icon.
+ */
+export interface IngredientDraft {
+  ingredientId: string;
+  name?: string;
+  parent?: NamedIngredient | null;
+  add: string[];
+  remove: string[];
+  junk: string[];
+  /** A stored file to make the food's own, with the address it shows at. */
+  icon?: { file: string; address: string } | null;
+}

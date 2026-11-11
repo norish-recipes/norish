@@ -1,19 +1,21 @@
 "use client";
 
-import { useCallback, useMemo, useState, useTransition } from "react";
+import { useState, useTransition } from "react";
 import { useSearchParams } from "next/navigation";
 import { IngredientPanel } from "@/components/ingredients/ingredient-panel";
-import { isOpenChange, useAIChanges } from "@/components/ingredients/use-ai-changes";
 import { SettingsCard } from "@/components/settings/settings-card";
 import { ActionButton } from "@/components/shared/action-button";
 import { FunnelIcon, SparklesIcon } from "@heroicons/react/16/solid";
 import { BookOpenIcon } from "@heroicons/react/24/outline";
 import { Button, Skeleton } from "@heroui/react";
-import { keepPreviousData, useInfiniteQuery, useQueryClient } from "@tanstack/react-query";
 import { useLocale, useTranslations } from "next-intl";
 
 import { useIngredientsSubscription } from "@norish/shared-react/config";
-import { useTRPC } from "@norish/shared-react/trpc";
+import {
+  isOpenChange,
+  useAIChanges,
+  useIngredientListQuery,
+} from "@norish/shared-react/ingredients";
 
 import type { IngredientFilters } from "./ingredient-filters-panel";
 import { ChangedByAIPanel } from "./changed-by-ai-panel";
@@ -43,8 +45,6 @@ export default function IngredientsSettingsContent() {
   const t = useTranslations("settings.ingredients");
   const tFilters = useTranslations("common.filters");
   const locale = useLocale();
-  const trpc = useTRPC();
-  const queryClient = useQueryClient();
   const [search, setSearch] = useState("");
   const [filters, setFilters] = useState<IngredientFilters>(DEFAULT_INGREDIENT_FILTERS);
   const [filtersOpen, setFiltersOpen] = useState(false);
@@ -53,7 +53,7 @@ export default function IngredientsSettingsContent() {
   const [openId, setOpenId] = useState<string | null>(() => searchParams.get("ingredient"));
   const [isPending, startTransition] = useTransition();
   // A new search re-renders the rows at background priority, as the toggle does.
-  const onSearch = useCallback((next: string) => startTransition(() => setSearch(next)), []);
+  const onSearch = (next: string) => startTransition(() => setSearch(next));
 
   useIngredientsSubscription();
 
@@ -63,43 +63,25 @@ export default function IngredientsSettingsContent() {
   // filters panel says flat.
   const { tree: asTree, ...searchFilters } = filters;
   const treeMode = asTree && !search && !hasIngredientFilters({ ...searchFilters, tree: true });
-  const { data, isLoading, isPlaceholderData, hasNextPage, isFetchingNextPage, fetchNextPage } =
-    useInfiniteQuery(
-      trpc.ingredients.list.infiniteQueryOptions(
-        { search: search || undefined, ...searchFilters, rootsOnly: treeMode || undefined, locale },
-        { getNextPageParam: (page) => page.nextCursor, placeholderData: keepPreviousData }
-      )
-    );
   // The rows are not deferred: a search lands in a transition already, and a
   // deferred copy of a keyed list that a transition is replacing was seen to
   // keep the old page on screen with the new one's kinds folded into it.
-  const items = useMemo(() => data?.pages.flatMap((page) => page.items) ?? [], [data?.pages]);
+  const { items, isLoading, isPlaceholderData, hasNextPage, isFetchingNextPage, fetchNextPage } =
+    useIngredientListQuery({
+      search: search || undefined,
+      ...searchFilters,
+      rootsOnly: treeMode || undefined,
+      locale,
+    });
   // Another search's rows standing in, not a reread of the rows showing.
   const settling = isPending || isPlaceholderData;
-  // The end of a short list is in view as the list is read again (a search
-  // cleared, an edit landed): asking for the next page then must not cancel
-  // that read, or the first page keeps what it had before it.
-  const loadMore = useCallback(() => void fetchNextPage({ cancelRefetch: false }), [fetchNextPage]);
   const tree = useIngredientTree(items, treeMode, locale);
   // Every food on screen, the folded-out kinds included.
-  const shown = useMemo(() => tree.rows.map((row) => row.item), [tree.rows]);
+  const shown = tree.rows.map((row) => row.item);
   // The open panel follows its food through the list: a refresh, a housemate's
   // edit or AI's answer shows there too. The panel keeps the last version it
   // saw when a filter drops the row, and closes on its own merge or delete.
-  const openItem = useMemo(
-    () => (openId ? (shown.find((item) => item.id === openId) ?? null) : null),
-    [shown, openId]
-  );
-
-  const refresh = useCallback(
-    () =>
-      Promise.all([
-        queryClient.invalidateQueries({ queryKey: trpc.ingredients.list.pathKey() }),
-        queryClient.invalidateQueries({ queryKey: trpc.ingredients.kinds.pathKey() }),
-        queryClient.invalidateQueries({ queryKey: trpc.ingredients.aiChanges.pathKey() }),
-      ]),
-    [queryClient, trpc]
-  );
+  const openItem = openId ? (shown.find((item) => item.id === openId) ?? null) : null;
 
   const [changesOpen, setChangesOpen] = useState(false);
   const { changes } = useAIChanges();
@@ -162,7 +144,7 @@ export default function IngredientsSettingsContent() {
           <IngredientList
             hasMore={hasNextPage}
             isFetchingMore={isFetchingNextPage}
-            loadMore={loadMore}
+            loadMore={fetchNextPage}
             rows={tree.rows}
             settling={settling}
             onOpen={setOpenId}
@@ -182,14 +164,9 @@ export default function IngredientsSettingsContent() {
         id={openId}
         item={openItem}
         open={openId !== null}
-        onChanged={refresh}
         onClose={() => setOpenId(null)}
       />
-      <ChangedByAIPanel
-        open={changesOpen}
-        onChanged={refresh}
-        onClose={() => setChangesOpen(false)}
-      />
+      <ChangedByAIPanel open={changesOpen} onClose={() => setChangesOpen(false)} />
     </div>
   );
 }

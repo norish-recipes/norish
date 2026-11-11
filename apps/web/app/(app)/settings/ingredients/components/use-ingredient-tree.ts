@@ -1,10 +1,9 @@
 "use client";
 
-import type { IngredientItem } from "@/components/ingredients/types";
-import { useCallback, useMemo, useState } from "react";
-import { useQueries } from "@tanstack/react-query";
+import { useState } from "react";
 
-import { useTRPC } from "@norish/shared-react/trpc";
+import type { IngredientItem } from "@norish/shared-react/ingredients";
+import { useIngredientKinds } from "@norish/shared-react/ingredients";
 
 /** One line of the page's tree: a food, how deep it sits, and whether its kinds are folded out. */
 export interface IngredientTreeRow {
@@ -31,27 +30,16 @@ export function useIngredientTree(
   rows: IngredientTreeRow[];
   toggle: (id: string) => void;
 } {
-  const trpc = useTRPC();
   const [expanded, setExpanded] = useState<ReadonlySet<string>>(() => new Set());
-  const open = useMemo(() => (enabled ? [...expanded] : []), [enabled, expanded]);
-  const kinds = useQueries({
-    queries: open.map((parentId) => trpc.ingredients.kinds.queryOptions({ parentId, locale })),
-  });
-  const children = useMemo(() => {
-    const map = new Map<string, { items: IngredientItem[] | undefined; loading: boolean }>();
+  const open = enabled ? [...expanded] : [];
+  const kinds = useIngredientKinds(open, locale);
+  const children = new Map(open.map((id, index) => [id, kinds[index]]));
 
-    open.forEach((id, index) => {
-      const query = kinds[index];
+  const rows: IngredientTreeRow[] = [];
 
-      map.set(id, { items: query?.data, loading: query?.isPending ?? false });
-    });
-
-    return map;
-  }, [open, kinds]);
-
-  const rows = useMemo(() => {
-    if (!enabled) return roots.map((item) => ({ item, depth: 0, expanded: false, loading: false }));
-    const out: IngredientTreeRow[] = [];
+  if (!enabled) {
+    for (const item of roots) rows.push({ item, depth: 0, expanded: false, loading: false });
+  } else {
     // Each food once: a page of roots not yet refetched may still list a
     // food its new parent's kinds already fold out, and two rows with one
     // key leave React's list in a state it never recovers from.
@@ -63,17 +51,20 @@ export function useIngredientTree(
         const fetched = children.get(item.id);
         const isOpen = expanded.has(item.id) && item.kinds > 0;
 
-        out.push({ item, depth, expanded: isOpen, loading: isOpen && (fetched?.loading ?? false) });
+        rows.push({
+          item,
+          depth,
+          expanded: isOpen,
+          loading: isOpen && (fetched?.loading ?? false),
+        });
         if (isOpen && fetched?.items) walk(fetched.items, depth + 1);
       }
     };
 
     walk(roots, 0);
+  }
 
-    return out;
-  }, [enabled, roots, expanded, children]);
-
-  const toggle = useCallback((id: string) => {
+  const toggle = (id: string) => {
     setExpanded((current) => {
       const next = new Set(current);
 
@@ -82,7 +73,7 @@ export function useIngredientTree(
 
       return next;
     });
-  }, []);
+  };
 
   return { rows, toggle };
 }

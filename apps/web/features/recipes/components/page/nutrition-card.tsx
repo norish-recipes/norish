@@ -1,6 +1,6 @@
 "use client";
 
-import { useCallback, useState } from "react";
+import { useState } from "react";
 import { IngredientPanel } from "@/components/ingredients/ingredient-panel";
 import {
   getNutritionData,
@@ -11,12 +11,10 @@ import { useWorkedOutNutrition } from "@/features/recipes/hooks/use-worked-out-n
 import { useHiddenItemVisibility } from "@/hooks/user/use-hidden-item-visibility";
 import { ChevronRightIcon } from "@heroicons/react/16/solid";
 import { Card, Chip, Skeleton } from "@heroui/react";
-import { useQueryClient } from "@tanstack/react-query";
 import { useFormatter, useTranslations } from "next-intl";
 
 import type { LeftOutReason, WorkedOutNutrition } from "@norish/shared/lib/recipe-nutrition";
 import { usePageEnrichment, usePageRecipe } from "@norish/shared-react/recipes";
-import { useTRPC } from "@norish/shared-react/trpc";
 import { NUTRITION_CREDIT_NAMES } from "@norish/shared/contracts/ingredient-nutrition";
 import { PANEL_REASONS } from "@norish/shared/lib/recipe-nutrition";
 
@@ -153,18 +151,8 @@ export default function NutritionCard() {
 function WorkedOutNotes({ workedOut }: { workedOut: WorkedOutNutrition }) {
   const t = useTranslations("recipes.nutrition");
   const format = useFormatter();
-  const trpc = useTRPC();
-  const queryClient = useQueryClient();
   const [listOpen, setListOpen] = useState(false);
   const [openIngredientId, setOpenIngredientId] = useState<string | null>(null);
-  const onChanged = useCallback(
-    () =>
-      Promise.all([
-        queryClient.invalidateQueries({ queryKey: trpc.ingredients.nutritionFor.pathKey() }),
-        queryClient.invalidateQueries({ queryKey: trpc.ingredients.list.pathKey() }),
-      ]),
-    [queryClient, trpc]
-  );
   const sources = [
     ...workedOut.credits.map((credit) => NUTRITION_CREDIT_NAMES[credit]),
     ...(workedOut.household ? [t("householdNumbers")] : []),
@@ -223,7 +211,6 @@ function WorkedOutNotes({ workedOut }: { workedOut: WorkedOutNutrition }) {
         id={openIngredientId}
         item={null}
         open={openIngredientId !== null}
-        onChanged={onChanged}
         onClose={() => setOpenIngredientId(null)}
       />
     </div>

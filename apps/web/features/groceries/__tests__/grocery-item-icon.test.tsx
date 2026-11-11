@@ -3,13 +3,13 @@
  * a typed one too, once Norish knows its food, and nothing while a grocery
  * added offline waits for the server to resolve it.
  */
-import { useIngredientIcons } from "@/components/ingredients/ingredient-icon";
 import { GroceryItem } from "@/features/groceries/components/list/grocery-item";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { render, screen } from "@testing-library/react";
 import { describe, expect, it, vi } from "vitest";
 
 import type { GroceryDto } from "@norish/shared/contracts";
+import { useIngredientIcons } from "@norish/shared-react/ingredients";
 
 const ONION = "11111111-1111-4111-8111-111111111111";
 const ONION_ICON = "/ingredient-icons/0123456789abcdef0123456789abcdef.webp";

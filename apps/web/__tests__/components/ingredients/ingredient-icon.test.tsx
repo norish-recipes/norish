@@ -6,12 +6,13 @@
  */
 import type { ReactNode } from "react";
 import { Profiler } from "react";
-import { IngredientIcon, useIngredientIcons } from "@/components/ingredients/ingredient-icon";
+import { IngredientIcon } from "@/components/ingredients/ingredient-icon";
 import { QueryClientProvider } from "@tanstack/react-query";
 import { act, render, screen, waitFor } from "@testing-library/react";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 
 import type { AppRouter } from "@norish/trpc/client";
+import { useIngredientIcons } from "@norish/shared-react/ingredients";
 import { createOfflineQueryClient } from "@norish/shared-react/offline";
 import { createTestQueryClient } from "@norish/shared-react/platform/testing";
 

@@ -3,10 +3,9 @@
 import { ActionButton, ActionButtonGroup } from "@/components/shared/action-button";
 import { ExclamationTriangleIcon, EyeIcon } from "@heroicons/react/16/solid";
 import { Button, Modal } from "@heroui/react";
-import { useQuery } from "@tanstack/react-query";
 import { useTranslations } from "next-intl";
 
-import { useTRPC } from "@norish/shared-react/trpc";
+import { useIngredientUsesQuery } from "@norish/shared-react/ingredients";
 
 const DELETE_TOUCHES = ["recipeLines", "groceries", "pantry"] as const;
 
@@ -28,11 +27,7 @@ export function DeleteIngredientModal({
 }) {
   const t = useTranslations("settings.ingredients");
   const tActions = useTranslations("common.actions");
-  const trpc = useTRPC();
-  const { data, isPending } = useQuery({
-    ...trpc.ingredients.uses.queryOptions({ ingredientId }),
-    enabled: isOpen,
-  });
+  const { uses: data, isPending } = useIngredientUsesQuery(ingredientId, isOpen);
   const touched = DELETE_TOUCHES.filter((key) => (data?.counts[key] ?? 0) > 0);
 
   return (

@@ -1,7 +1,7 @@
 "use client";
 
 import { useState } from "react";
-import { IngredientIcon, useIngredientIcons } from "@/components/ingredients/ingredient-icon";
+import { IngredientIcon } from "@/components/ingredients/ingredient-icon";
 import { IconActionButton } from "@/components/shared/action-button";
 import { ChevronRightIcon } from "@heroicons/react/16/solid";
 import { Button } from "@heroui/react";
@@ -11,6 +11,7 @@ import type { PickedFood } from "@norish/shared-react/groceries";
 import type { PantryIngredientDto } from "@norish/shared/contracts";
 import { useSpellingRules } from "@norish/shared-react/config";
 import { usePantrySuggestions } from "@norish/shared-react/groceries";
+import { useIngredientIcons } from "@norish/shared-react/ingredients";
 import { ingredientDisplayName } from "@norish/shared/lib/ingredient-names";
 import { pantryIngredientFor } from "@norish/shared/lib/pantry";
 

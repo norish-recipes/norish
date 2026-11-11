@@ -1,7 +1,7 @@
 "use client";
 
 import { useRef, useState } from "react";
-import { IngredientIcon, useIngredientIcons } from "@/components/ingredients/ingredient-icon";
+import { IngredientIcon } from "@/components/ingredients/ingredient-icon";
 import { IngredientPanel } from "@/components/ingredients/ingredient-panel";
 import { IconActionButton } from "@/components/shared/action-button";
 import { FIELD_STYLE } from "@/features/groceries/lib/grocery-field";
@@ -16,6 +16,7 @@ import type { PickedFood } from "@norish/shared-react/groceries";
 import type { PantryIngredientDto } from "@norish/shared/contracts";
 import { useSpellingRules } from "@norish/shared-react/config";
 import { useOnTheList, usePantryMutations, usePantryQuery } from "@norish/shared-react/groceries";
+import { useIngredientIcons } from "@norish/shared-react/ingredients";
 import { useConnectivity } from "@norish/shared-react/offline/react";
 import { useTRPC } from "@norish/shared-react/trpc";
 import { PANTRY_INGREDIENT_NAME_MAX_LENGTH } from "@norish/shared/contracts/zod";

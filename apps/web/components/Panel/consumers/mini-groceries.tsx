@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useRef, useState } from "react";
-import { IngredientIcon, useIngredientIcons } from "@/components/ingredients/ingredient-icon";
+import { IngredientIcon } from "@/components/ingredients/ingredient-icon";
 import { OnTheListMark } from "@/components/ingredients/on-the-list-mark";
 import Panel from "@/components/Panel/Panel";
 import { isCheckboxEvent, RoundCheckbox } from "@/components/round-checkbox";
@@ -24,6 +24,7 @@ import {
   usePantryMutations,
   usePantryQuery,
 } from "@norish/shared-react/groceries";
+import { useIngredientIcons } from "@norish/shared-react/ingredients";
 import {
   formatServings,
   useLinkedRecipeIngredients,

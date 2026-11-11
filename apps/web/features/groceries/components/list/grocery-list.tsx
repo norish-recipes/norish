@@ -1,7 +1,6 @@
 "use client";
 
 import { useMemo } from "react";
-import { useIngredientIcons } from "@/components/ingredients/ingredient-icon";
 import { useStructuralSharing } from "@/features/groceries/hooks/use-structural-sharing";
 import { listFoodIds } from "@/features/groceries/lib/list-food-ids";
 import { ShoppingCartIcon } from "@heroicons/react/24/outline";
@@ -12,6 +11,7 @@ import type { GroceryDto, RecurringGroceryDto, StoreDto } from "@norish/shared/c
 import type { GroceryGroup } from "@norish/shared/lib/grocery-grouping";
 import { useUnitsQuery } from "@norish/shared-react/config";
 import { useFileGroceryName, useStoreAisles } from "@norish/shared-react/groceries";
+import { useIngredientIcons } from "@norish/shared-react/ingredients";
 import { groupGroceriesByIngredient } from "@norish/shared/lib/grocery-grouping";
 import { cssEmptyStateGlow } from "@norish/web/config/css-tokens";
 

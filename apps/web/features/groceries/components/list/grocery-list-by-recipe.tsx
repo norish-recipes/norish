@@ -1,13 +1,13 @@
 "use client";
 
 import { useMemo } from "react";
-import { useIngredientIcons } from "@/components/ingredients/ingredient-icon";
 import { listFoodIds } from "@/features/groceries/lib/list-food-ids";
 import { ShoppingCartIcon } from "@heroicons/react/24/outline";
 import { motion } from "motion/react";
 import { useTranslations } from "next-intl";
 
 import type { GroceryDto, RecurringGroceryDto, StoreDto } from "@norish/shared/contracts";
+import { useIngredientIcons } from "@norish/shared-react/ingredients";
 import { cssEmptyStateGlow } from "@norish/web/config/css-tokens";
 
 import { RecipeSection } from "./recipe-section";

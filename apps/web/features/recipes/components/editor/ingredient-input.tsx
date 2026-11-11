@@ -1,17 +1,14 @@
 "use client";
 
 import React, { useCallback, useRef, useState } from "react";
-import {
-  IngredientIcon,
-  useFoodsByName,
-  useIngredientIcons,
-} from "@/components/ingredients/ingredient-icon";
+import { IngredientIcon, useFoodsByName } from "@/components/ingredients/ingredient-icon";
 import { Bars3Icon, XMarkIcon } from "@heroicons/react/16/solid";
 import { Button } from "@heroui/react";
 import { Reorder, useDragControls } from "motion/react";
 import { useTranslations } from "next-intl";
 
 import { useUnitsQuery } from "@norish/shared-react/config";
+import { useIngredientIcons } from "@norish/shared-react/ingredients";
 import { MeasurementSystem } from "@norish/shared/contracts";
 import { debounce, parseIngredientWithDefaults } from "@norish/shared/lib/helpers";
 import { namesNoFood } from "@norish/shared/lib/ingredient-text";

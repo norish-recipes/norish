@@ -4,25 +4,22 @@ import { useRef } from "react";
 import { PanelPortal } from "@/components/Panel/Panel";
 import { cssAIIconColor } from "@/config/css-tokens";
 import { useHiddenItemVisibility } from "@/hooks/user/use-hidden-item-visibility";
-import { showSafeErrorToast } from "@/lib/ui/safe-error-toast";
 import { ArrowUpTrayIcon, SparklesIcon, TrashIcon } from "@heroicons/react/16/solid";
 import { Dropdown, Label, Spinner } from "@heroui/react";
-import { useMutation } from "@tanstack/react-query";
 import { useTranslations } from "next-intl";
 
+import type { IngredientItem, StoredIcon } from "@norish/shared-react/ingredients";
+import { useIngredientIconMutations } from "@norish/shared-react/ingredients";
 import { usePermissions } from "@norish/shared-react/reader";
-import { useTRPC } from "@norish/shared-react/trpc";
 import { ICON_PICTURE_MIME_TYPES } from "@norish/shared/contracts";
-import { uploadForm } from "@norish/shared/lib/upload-form";
 
-import type { IngredientItem } from "./types";
 import { IngredientIcon } from "./ingredient-icon";
 
 /**
  * The icon as the panel's draft holds it: unchanged (undefined), a stored
  * file to make the food's own, or the food's own removed (null).
  */
-export type IconDraft = { file: string; address: string } | null | undefined;
+export type IconDraft = StoredIcon | null | undefined;
 
 /**
  * The food's Ingredient Icon at the head of its panel. One the viewer may
@@ -42,11 +39,8 @@ export function IngredientIconField({
   onDraftChange: (draft: IconDraft) => void;
 }) {
   const t = useTranslations("settings.ingredients.icon");
-  const tIngredients = useTranslations("settings.ingredients");
-  const trpc = useTRPC();
   const pickerRef = useRef<HTMLInputElement>(null);
-  const upload = useMutation(trpc.ingredients.uploadIcon.mutationOptions());
-  const generate = useMutation(trpc.ingredients.generateIcon.mutationOptions());
+  const icons = useIngredientIconMutations(item.id);
   const canDrawImages = usePermissions((p) => p.canDrawImages);
   const { showIngredientIcons } = useHiddenItemVisibility();
 
@@ -55,7 +49,7 @@ export function IngredientIconField({
   // A removed own icon shows the placeholder until Save brings back what it falls back to.
   const shown = draft === undefined ? (item.icon ?? null) : (draft?.address ?? null);
   const hasOwn = draft === undefined ? Boolean(item.ownIcon) : draft !== null;
-  const pending = upload.isPending || generate.isPending;
+  const pending = icons.isPending;
   const icon = (
     <span className="relative block">
       <IngredientIcon placeholder size="panel" src={shown} />
@@ -70,33 +64,15 @@ export function IngredientIconField({
   if (!item.canEdit) return <span data-testid="ingredient-panel-icon">{icon}</span>;
 
   const uploadPicture = async (file: File) => {
-    try {
-      const stored = await upload.mutateAsync(uploadForm({ ingredientId: item.id, image: file }));
+    const stored = await icons.upload(file);
 
-      onDraftChange({ file: stored.file, address: stored.address });
-    } catch (error) {
-      showSafeErrorToast({
-        title: tIngredients("errors.title"),
-        description: t("failed"),
-        error,
-        context: "ingredients:upload-icon",
-      });
-    }
+    if (stored) onDraftChange(stored);
   };
 
   const generateIcon = async () => {
-    try {
-      const drawn = await generate.mutateAsync({ ingredientId: item.id });
+    const drawn = await icons.generate();
 
-      onDraftChange({ file: drawn.file, address: drawn.address });
-    } catch (error) {
-      showSafeErrorToast({
-        title: tIngredients("errors.title"),
-        description: t("generateFailed"),
-        error,
-        context: "ingredients:generate-icon",
-      });
-    }
+    if (drawn) onDraftChange(drawn);
   };
 
   return (

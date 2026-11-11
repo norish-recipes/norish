@@ -1,6 +1,5 @@
 "use client";
 
-import type { IngredientItem } from "@/components/ingredients/types";
 import { memo } from "react";
 import { IngredientIcon } from "@/components/ingredients/ingredient-icon";
 import { IngredientStatusChip } from "@/components/ingredients/ingredient-status-chip";
@@ -8,6 +7,7 @@ import { ChevronRightIcon } from "@heroicons/react/24/outline";
 import { Spinner } from "@heroui/react";
 import { useLocale, useTranslations } from "next-intl";
 
+import type { IngredientItem } from "@norish/shared-react/ingredients";
 import { ingredientDisplayName } from "@norish/shared/lib/ingredient-names";
 
 /** How far each level of the tree is set in from the one above. */

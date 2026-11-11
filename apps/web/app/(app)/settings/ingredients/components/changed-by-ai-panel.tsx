@@ -1,18 +1,18 @@
 "use client";
 
-import type { AIChange } from "@/components/ingredients/types";
 import type { ReactNode } from "react";
-import { useLayoutEffect, useMemo, useRef, useState } from "react";
+import { useLayoutEffect, useRef, useState } from "react";
 import { AIChangeActions } from "@/components/ingredients/ai-change-actions";
 import { IngredientPanel } from "@/components/ingredients/ingredient-panel";
 import { changeMessage } from "@/components/ingredients/review-copy";
-import { isOpenChange, useAIChanges } from "@/components/ingredients/use-ai-changes";
 import Panel from "@/components/Panel/Panel";
 import { ActionButton, ActionButtonGroup } from "@/components/shared/action-button";
 import { useVirtualizer } from "@tanstack/react-virtual";
 import { useLocale, useTranslations } from "next-intl";
 import { twMerge } from "tailwind-merge";
 
+import type { AIChange } from "@norish/shared-react/ingredients";
+import { isOpenChange, useAIChanges } from "@norish/shared-react/ingredients";
 import { ingredientDisplayName } from "@norish/shared/lib/ingredient-names";
 
 /** One line of the panel: all it shows is one virtualised run of these. */
@@ -38,6 +38,22 @@ function rowKey(row: PanelRow): string {
     default:
       return row.kind;
   }
+}
+
+/** Everything the panel shows, in order, as the rows of one list. */
+function panelRows(changes: AIChange[]): PanelRow[] {
+  const out: PanelRow[] = [];
+  const unsure = changes.filter(isOpenChange);
+  const rest = changes.filter((change) => !isOpenChange(change));
+
+  if (changes.length === 0) out.push({ kind: "empty" });
+  if (unsure.length > 0) out.push({ kind: "heading", of: "unsure" });
+  for (const change of unsure) out.push({ kind: "change", change });
+  // A heading for the rest only sets them apart from the unsure ones above.
+  if (unsure.length > 0 && rest.length > 0) out.push({ kind: "heading", of: "sure" });
+  for (const change of rest) out.push({ kind: "change", change });
+
+  return out;
 }
 
 /**
@@ -117,44 +133,18 @@ function VirtualRows({
  * Changed by AI: the last month's AI Changes, open ones first with Keep and Undo, and Keep all
  * and Undo all for them; Clear stops listing the rest. A name opens its panel.
  */
-export function ChangedByAIPanel({
-  open,
-  onClose,
-  onChanged,
-}: {
-  open: boolean;
-  onClose: () => void;
-  /** A food's panel changed it: the page reads its lists again. */
-  onChanged: () => void;
-}) {
+export function ChangedByAIPanel({ open, onClose }: { open: boolean; onClose: () => void }) {
   const t = useTranslations("settings.ingredients");
   const locale = useLocale();
   const { changes, keep, undo, keepAll, undoAll, clear } = useAIChanges();
   // What Keep all and Undo all answer: the open changes the viewer may act on.
-  const actionable = useMemo(
-    () => changes.filter((change) => isOpenChange(change) && change.canAct),
-    [changes]
-  );
+  const actionable = changes.filter((change) => isOpenChange(change) && change.canAct);
   const anySettled = changes.some((change) => !isOpenChange(change));
   const answerAll = actionable.length > 1;
   // The food whose own panel is open over this one.
   const [openId, setOpenId] = useState<string | null>(null);
 
-  // Everything the panel shows, in order, as the rows of one list.
-  const rows = useMemo(() => {
-    const out: PanelRow[] = [];
-    const unsure = changes.filter(isOpenChange);
-    const rest = changes.filter((change) => !isOpenChange(change));
-
-    if (changes.length === 0) out.push({ kind: "empty" });
-    if (unsure.length > 0) out.push({ kind: "heading", of: "unsure" });
-    for (const change of unsure) out.push({ kind: "change", change });
-    // A heading for the rest only sets them apart from the unsure ones above.
-    if (unsure.length > 0 && rest.length > 0) out.push({ kind: "heading", of: "sure" });
-    for (const change of rest) out.push({ kind: "change", change });
-
-    return out;
-  }, [changes]);
+  const rows = panelRows(changes);
 
   /** A food's name, opening its panel. */
   const foodName = (ingredientId: string, name: string) => (
@@ -282,7 +272,6 @@ export function ChangedByAIPanel({
         id={openId}
         item={null}
         open={openId !== null}
-        onChanged={onChanged}
         onClose={() => setOpenId(null)}
       />
     </Panel>

@@ -12,6 +12,7 @@
     "./config": "./src/config/index.ts",
     "./calendar": "./src/calendar/index.ts",
     "./groceries": "./src/groceries/index.ts",
+    "./ingredients": "./src/ingredients/index.ts",
     "./reader": "./src/reader/index.ts",
     "./page-store": "./src/page-store/index.tsx",
     "./recipes": "./src/recipes/index.ts",
