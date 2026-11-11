@@ -3,7 +3,10 @@ import { beforeEach, describe, expect, it, vi } from "vitest";
 
 import "@testing-library/jest-dom";
 
+import type { ReactNode } from "react";
 import ProfileCard from "@/features/account/components/profile-card";
+
+type Children = { children?: ReactNode };
 
 const mockAccount = vi.hoisted(() => ({
   user: { name: "Alice", email: "alice@example.com", image: null },
@@ -25,22 +28,40 @@ vi.mock("@norish/shared-react/reader", () => ({
 }));
 
 vi.mock("@heroui/react", () => ({
-  Card: Object.assign(({ children }: any) => <div>{children}</div>, {
-    Header: ({ children }: any) => <div>{children}</div>,
-    Content: ({ children }: any) => <div>{children}</div>,
+  Card: Object.assign(({ children }: Children) => <div>{children}</div>, {
+    Header: ({ children }: Children) => <div>{children}</div>,
+    Content: ({ children }: Children) => <div>{children}</div>,
   }),
-  TextField: ({ children, value, onChange, isReadOnly, isDisabled }: any) => (
+  TextField: ({
+    value,
+    onChange,
+    isReadOnly,
+    isDisabled,
+  }: {
+    value: string;
+    onChange?: (value: string) => void;
+    isReadOnly?: boolean;
+    isDisabled?: boolean;
+  }) => (
     <input
       disabled={isDisabled}
       readOnly={isReadOnly}
       value={value}
-      aria-label={children?.props?.children ?? undefined}
       onChange={(event) => onChange?.(event.target.value)}
     />
   ),
-  Label: ({ children }: any) => <span>{children}</span>,
+  Label: ({ children }: Children) => <span>{children}</span>,
   Input: () => null,
-  Button: ({ children, onPress, isDisabled, type = "button" }: any) => (
+  Button: ({
+    children,
+    onPress,
+    isDisabled,
+    type = "button",
+  }: Children & {
+    onPress?: () => void;
+    isDisabled?: boolean;
+    type?: "button" | "submit" | "reset";
+  }) => (
     <button disabled={isDisabled} type={type} onClick={onPress}>
       {children}
     </button>

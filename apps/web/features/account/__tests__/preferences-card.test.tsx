@@ -3,15 +3,25 @@ import { beforeEach, describe, expect, it, vi } from "vitest";
 
 import "@testing-library/jest-dom";
 
+import type { ReactNode } from "react";
 import PreferencesCard from "@/features/account/components/preferences-card";
 
+import type { useTimersEnabledQuery } from "@norish/shared-react/config";
+import type { User } from "@norish/shared/contracts";
 import type { DeviceKind } from "@norish/shared/contracts/zod/device-preferences";
+import type { UserPreferencesDto } from "@norish/shared/contracts/zod/user";
 
-const mockAccount = vi.hoisted(() => ({
-  user: { preferences: {} },
-  updatePreferences: vi.fn().mockResolvedValue(undefined),
-  isUpdatingPreferences: false,
-}));
+type Children = { children?: ReactNode };
+
+const mockAccount = vi.hoisted(() => {
+  const user: Partial<User> = { preferences: {} };
+
+  return {
+    user,
+    updatePreferences: vi.fn().mockResolvedValue(undefined),
+    isUpdatingPreferences: false,
+  };
+});
 
 vi.mock("next-intl", () => ({
   useTranslations: () => (key: string) => key,
@@ -68,7 +78,16 @@ vi.mock("@norish/shared-react/reader", async () => ({
 
 const permissionsMock = vi.hoisted(() => ({ isAIEnabled: false }));
 
-let timersMock = { timersEnabled: true, globalEnabled: true } as any;
+/** The timers capability as an administrator left it, with nothing hidden on this device. */
+const timers = (enabled: boolean): ReturnType<typeof useTimersEnabledQuery> => ({
+  timersEnabled: enabled,
+  globalEnabled: enabled,
+  isLoading: false,
+  error: null,
+});
+const withPreferences = (preferences: UserPreferencesDto): Partial<User> => ({ preferences });
+
+let timersMock = timers(true);
 
 vi.mock("@norish/shared-react/config", () => ({
   useTimersEnabledQuery: () => timersMock,
@@ -83,7 +102,7 @@ vi.mock("@norish/shared-react/config", () => ({
 
 // The popover itself is HeroUI's; what is pinned here is what it says.
 vi.mock("@/components/shared/info-hint", () => ({
-  InfoHint: ({ label, children }: any) => (
+  InfoHint: ({ label, children }: Children & { label: string }) => (
     <div aria-label={label} role="note">
       {children}
     </div>
@@ -91,12 +110,23 @@ vi.mock("@/components/shared/info-hint", () => ({
 }));
 
 vi.mock("@heroui/react", () => ({
-  Card: Object.assign(({ children }: any) => <div>{children}</div>, {
-    Header: ({ children }: any) => <div>{children}</div>,
-    Content: ({ children }: any) => <div>{children}</div>,
+  Card: Object.assign(({ children }: Children) => <div>{children}</div>, {
+    Header: ({ children }: Children) => <div>{children}</div>,
+    Content: ({ children }: Children) => <div>{children}</div>,
   }),
   Switch: Object.assign(
-    ({ isSelected, isDisabled, onChange, onValueChange, children }: any) => (
+    ({
+      isSelected,
+      isDisabled,
+      onChange,
+      onValueChange,
+      children,
+    }: Children & {
+      isSelected?: boolean;
+      isDisabled?: boolean;
+      onChange?: (selected: boolean) => void;
+      onValueChange?: (selected: boolean) => void;
+    }) => (
       <button
         aria-pressed={isSelected}
         disabled={isDisabled}
@@ -107,19 +137,34 @@ vi.mock("@heroui/react", () => ({
       </button>
     ),
     {
-      Control: ({ children }: any) => <>{children}</>,
-      Content: ({ children }: any) => <>{children}</>,
+      Control: ({ children }: Children) => <>{children}</>,
+      Content: ({ children }: Children) => <>{children}</>,
       Thumb: () => <>toggle</>,
     }
   ),
-  Chip: ({ children }: any) => <span>{children}</span>,
+  Chip: ({ children }: Children) => <span>{children}</span>,
   Label: () => null,
-  ListBox: Object.assign(({ children }: any) => <>{children}</>, {
-    Item: ({ children, id, textValue }: any) => <option value={id}>{textValue ?? children}</option>,
+  ListBox: Object.assign(({ children }: Children) => <>{children}</>, {
+    Item: ({ children, id, textValue }: Children & { id: string; textValue?: string }) => (
+      <option value={id}>{textValue ?? children}</option>
+    ),
     ItemIndicator: () => null,
   }),
   Select: Object.assign(
-    ({ children, "aria-label": ariaLabel, value, onChange, isDisabled, selectionMode }: any) => (
+    ({
+      children,
+      "aria-label": ariaLabel,
+      value,
+      onChange,
+      isDisabled,
+      selectionMode,
+    }: Children & {
+      "aria-label"?: string;
+      value?: string | string[] | null;
+      onChange?: (value: string | string[]) => void;
+      isDisabled?: boolean;
+      selectionMode?: "single" | "multiple";
+    }) => (
       <select
         aria-label={ariaLabel}
         disabled={isDisabled}
@@ -140,7 +185,7 @@ vi.mock("@heroui/react", () => ({
       Trigger: () => null,
       Value: () => null,
       Indicator: () => null,
-      Popover: ({ children }: any) => <>{children}</>,
+      Popover: ({ children }: Children) => <>{children}</>,
     }
   ),
 }));
@@ -149,7 +194,7 @@ describe("PreferencesCard", () => {
   beforeEach(() => {
     permissionsMock.isAIEnabled = false;
     hiddenItemsMock.hidden = [];
-    mockAccount.user = { preferences: {} } as any;
+    mockAccount.user = withPreferences({});
   });
 
   const hiddenControl = () => screen.getByRole("listbox", { name: /hidden\.title/i });
@@ -162,7 +207,7 @@ describe("PreferencesCard", () => {
       .map((option) => option.value);
 
   it("offers every hideable item from one control", () => {
-    timersMock = { timersEnabled: true, globalEnabled: true } as any;
+    timersMock = timers(true);
 
     render(<PreferencesCard />);
 
@@ -180,7 +225,7 @@ describe("PreferencesCard", () => {
   });
 
   it("hides nothing by default", () => {
-    timersMock = { timersEnabled: true, globalEnabled: true } as any;
+    timersMock = timers(true);
 
     render(<PreferencesCard />);
 
@@ -190,7 +235,7 @@ describe("PreferencesCard", () => {
   it("reflects the stored hidden list", () => {
     hiddenItemsMock.hidden = ["rating", "conversion"];
 
-    timersMock = { timersEnabled: true, globalEnabled: true } as any;
+    timersMock = timers(true);
 
     render(<PreferencesCard />);
 
@@ -200,7 +245,7 @@ describe("PreferencesCard", () => {
   it("writes the chosen items to the hidden list", () => {
     hiddenItemsMock.hidden = ["rating"];
 
-    timersMock = { timersEnabled: true, globalEnabled: true } as any;
+    timersMock = timers(true);
 
     render(<PreferencesCard />);
 
@@ -215,7 +260,7 @@ describe("PreferencesCard", () => {
   it("keeps a stored name it does not recognise", () => {
     hiddenItemsMock.hidden = ["rating", "something-newer"];
 
-    timersMock = { timersEnabled: true, globalEnabled: true } as any;
+    timersMock = timers(true);
 
     render(<PreferencesCard />);
 
@@ -228,7 +273,7 @@ describe("PreferencesCard", () => {
   });
 
   it("stops offering timers when an administrator has switched them off", () => {
-    timersMock = { timersEnabled: false, globalEnabled: false } as any;
+    timersMock = timers(false);
 
     render(<PreferencesCard />);
 
@@ -240,7 +285,7 @@ describe("PreferencesCard", () => {
   it("keeps a hidden timers choice through an administrator switching them off", () => {
     hiddenItemsMock.hidden = ["timers", "rating"];
 
-    timersMock = { timersEnabled: false, globalEnabled: false } as any;
+    timersMock = timers(false);
 
     render(<PreferencesCard />);
 
@@ -257,26 +302,24 @@ describe("PreferencesCard", () => {
   });
 
   it("renders language dropdown with current locale", () => {
-    mockAccount.user = { preferences: { locale: "en" } } as any;
+    mockAccount.user = withPreferences({ locale: "en" });
 
-    timersMock = { timersEnabled: true, globalEnabled: true } as any;
+    timersMock = timers(true);
 
     render(<PreferencesCard />);
 
-    // Language section should be visible
     expect(screen.getByText("language.title")).toBeInTheDocument();
     expect(screen.getByText("language.description")).toBeInTheDocument();
 
-    // Language select should be rendered
     const select = screen.getByRole("combobox", { name: /language\.title/i });
 
     expect(select).toBeInTheDocument();
   });
 
   it("calls updatePreferences with locale when language is changed", async () => {
-    mockAccount.user = { preferences: { locale: "en" } } as any;
+    mockAccount.user = withPreferences({ locale: "en" });
 
-    timersMock = { timersEnabled: true, globalEnabled: true } as any;
+    timersMock = timers(true);
 
     render(<PreferencesCard />);
 
@@ -340,7 +383,7 @@ describe("PreferencesCard", () => {
   });
 
   it("reflects a stored after-planning choice", () => {
-    mockAccount.user = { preferences: { afterPlanning: "nothing" } } as any;
+    mockAccount.user = withPreferences({ afterPlanning: "nothing" });
 
     render(<PreferencesCard />);
 
@@ -350,7 +393,7 @@ describe("PreferencesCard", () => {
   });
 
   it("offers converting with AI only where AI is on, and stores the choice with the user", () => {
-    mockAccount.user = { preferences: { measurementSystem: "usWithAI" } } as any;
+    mockAccount.user = withPreferences({ measurementSystem: "usWithAI" });
 
     const { unmount } = render(<PreferencesCard />);
     const control = () => screen.getByRole("combobox", { name: /measurements\.title/i });
