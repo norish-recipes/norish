@@ -58,7 +58,10 @@ export function MobileTimeline({ onAddItem, onNoteClick, onRecipeClick }: Mobile
   const grow = useCalendarRange((state) => state.grow);
   const { moveItem } = useCalendarMutations();
 
-  const allDays = eachDayOfInterval(parseDateKey(range.startISO), parseDateKey(range.endISO));
+  const allDays = useMemo(
+    () => eachDayOfInterval(parseDateKey(range.startISO), parseDateKey(range.endISO)),
+    [range.startISO, range.endISO]
+  );
   const dayKeys = useMemo(() => allDays.map((d) => dateKey(d)), [allDays]);
   const { captureAnchor, restoreAnchor } = usePrependAnchorRestore({ keys: dayKeys });
 

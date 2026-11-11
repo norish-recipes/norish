@@ -222,12 +222,15 @@ function MiniRecipesContent({
     });
   };
   const close = useCallback(() => onOpenChange(false), [onOpenChange]);
-  const handlePlan = (recipe: RecipeDashboardDTO, slot: Slot) => {
-    planRecipe(dateString, slot, recipe.id);
-    close();
-    onPlanned(recipe.id);
-  };
-  const handleRandomSelect = async () => {
+  const handlePlan = useCallback(
+    (recipe: RecipeDashboardDTO, slot: Slot) => {
+      planRecipe(dateString, slot, recipe.id);
+      close();
+      onPlanned(recipe.id);
+    },
+    [dateString, close, planRecipe, onPlanned]
+  );
+  const handleRandomSelect = useCallback(async () => {
     if (!slot) return;
     await whileRandomLoading(() =>
       getRandomRecipe(SLOT_TO_CATEGORY[slot]).then((result) => {
@@ -238,19 +241,22 @@ function MiniRecipesContent({
         }
       })
     );
-  };
-  const handlePlanNote = (targetSlot: Slot) => {
-    if (rawInput.trim()) {
-      planNote(dateString, targetSlot, rawInput.trim());
-      close();
-    }
-  };
-  const handleDirectNote = () => {
+  }, [slot, getRandomRecipe, planRecipe, dateString, close, onPlanned, whileRandomLoading]);
+  const handlePlanNote = useCallback(
+    (targetSlot: Slot) => {
+      if (rawInput.trim()) {
+        planNote(dateString, targetSlot, rawInput.trim());
+        close();
+      }
+    },
+    [dateString, rawInput, close, planNote]
+  );
+  const handleDirectNote = useCallback(() => {
     if (slot && rawInput.trim()) {
       planNote(dateString, slot, rawInput.trim());
       close();
     }
-  };
+  }, [slot, rawInput, dateString, close, planNote]);
   if (error) {
     return (
       <div className="flex min-h-0 flex-1 flex-col gap-3">
