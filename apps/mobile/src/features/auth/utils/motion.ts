@@ -1,9 +1,21 @@
 import type { SharedValue } from "react-native-reanimated";
-import { Easing, FadeIn, ReduceMotion, withDelay, withTiming } from "react-native-reanimated";
+import {
+  Easing,
+  FadeIn,
+  FadeInDown,
+  ReduceMotion,
+  withDelay,
+  withTiming,
+} from "react-native-reanimated";
 import { SESSION_END_FADE_MS } from "@/lib/auth/auth-session-sync";
 
 // Reanimated snaps every animation under Reduce Motion, so the plain fade opts out of that.
 export const FADE_IN = FadeIn.duration(240).reduceMotion(ReduceMotion.Never);
+
+// An error rising into its field; Reduce Motion falls back to FADE_IN.
+export const RISE_IN = FadeInDown.duration(240)
+  .easing(Easing.out(Easing.cubic))
+  .withInitialValues({ transform: [{ translateY: 16 }] });
 
 // A session end's signed-in screen fading out; a plain fade under Reduce Motion too.
 export const FADE_OUT_TIMING = {

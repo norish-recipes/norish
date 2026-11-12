@@ -2,25 +2,19 @@ import type { ReactNode } from "react";
 import React, { useEffect } from "react";
 import { Text, View } from "react-native";
 import Animated, {
-  Easing,
-  FadeInDown,
   useAnimatedStyle,
   useReducedMotion,
   useSharedValue,
   withSequence,
   withTiming,
 } from "react-native-reanimated";
-import { FADE_IN } from "@/features/auth/utils/motion";
+import { FADE_IN, RISE_IN } from "@/features/auth/utils/motion";
 import Feather from "@expo/vector-icons/Feather";
 import * as Haptics from "expo-haptics";
 import { FieldError, useThemeColor } from "heroui-native";
 
 /** A failed attempt; each one is a new object, so the same message shakes again. */
 export type InlineErrorState = { message: string } | null;
-
-const RISE_IN = FadeInDown.duration(240)
-  .easing(Easing.out(Easing.cubic))
-  .withInitialValues({ transform: [{ translateY: 16 }] });
 
 const SHAKE_OFFSETS = [-10, 9, -7, 5, -3, 0];
 
