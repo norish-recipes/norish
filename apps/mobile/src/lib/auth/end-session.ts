@@ -18,7 +18,8 @@ export async function endSession(authClient: SignOutClient, reason: LeaveReason)
   // A 401 may be a passing server error, so expiry leaves the server's session alone.
   if (reason === "sign-out") await signOutRemotely(authClient);
 
-  await closeMobileTrpcConnections();
+  // Not awaited: a socket mid-reconnect closes only once it opens. A retired client's 401s are ignored.
+  void closeMobileTrpcConnections();
 
   try {
     await resetAuthClientStorage();

@@ -2,10 +2,9 @@ import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 
 const order = vi.hoisted(() => [] as string[]);
 const resetAuthClientStorage = vi.hoisted(() => vi.fn());
+const closeMobileTrpcConnections = vi.hoisted(() => vi.fn());
 
-vi.mock("@/lib/trpc/trpc-provider", () => ({
-  closeMobileTrpcConnections: async () => void order.push("closed"),
-}));
+vi.mock("@/lib/trpc/trpc-provider", () => ({ closeMobileTrpcConnections }));
 vi.mock("@/lib/auth/auth-client", () => ({ resetAuthClientStorage }));
 
 const { endSession } = await import("@/lib/auth/end-session");
@@ -22,6 +21,7 @@ describe("endSession", () => {
     authClient.signOut.mockReset().mockImplementation(async () => {
       order.push("auth server");
     });
+    closeMobileTrpcConnections.mockReset().mockImplementation(async () => void order.push("closed"));
     resetAuthClientStorage
       .mockReset()
       .mockImplementation(async () => void order.push("stored session reset"));
@@ -61,5 +61,13 @@ describe("endSession", () => {
 
     expect(authClient.signOut).not.toHaveBeenCalled();
     expect(order).toEqual(["closed", "stored session reset"]);
+  });
+
+  it("does not wait for a socket that never finishes closing, mid-reconnect to a stalled server", async () => {
+    closeMobileTrpcConnections.mockReturnValue(new Promise(() => {}));
+
+    await endSession(authClient, "expiry");
+
+    expect(order).toEqual(["stored session reset"]);
   });
 });
