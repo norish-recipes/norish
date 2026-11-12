@@ -4,11 +4,11 @@ import { Text, View } from "react-native";
 import Animated from "react-native-reanimated";
 import { Brand } from "@/components/brand";
 import { AuthLayout } from "@/features/auth/components/auth-layout";
-import { FADE_IN } from "@/features/auth/components/inline-error";
 import { PasswordForm } from "@/features/auth/components/password-form";
 import { ProviderButtons } from "@/features/auth/components/provider-buttons";
 import { ServerChip } from "@/features/auth/components/server-chip";
 import { useAuthAttempt } from "@/features/auth/hooks/use-auth-attempt";
+import { FADE_IN } from "@/features/auth/utils/motion";
 import {
   DEFAULT_PROTECTED_ROUTE,
   firstParam,

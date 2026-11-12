@@ -3,15 +3,14 @@ import React, { useEffect } from "react";
 import { Text, View } from "react-native";
 import Animated, {
   Easing,
-  FadeIn,
   FadeInDown,
-  ReduceMotion,
   useAnimatedStyle,
   useReducedMotion,
   useSharedValue,
   withSequence,
   withTiming,
 } from "react-native-reanimated";
+import { FADE_IN } from "@/features/auth/utils/motion";
 import Feather from "@expo/vector-icons/Feather";
 import * as Haptics from "expo-haptics";
 import { FieldError, useThemeColor } from "heroui-native";
@@ -23,8 +22,6 @@ const RISE_IN = FadeInDown.duration(240)
   .easing(Easing.out(Easing.cubic))
   .withInitialValues({ transform: [{ translateY: 16 }] });
 
-// Reanimated snaps every animation under Reduce Motion, so the plain fade opts out of that.
-export const FADE_IN = FadeIn.duration(240).reduceMotion(ReduceMotion.Never);
 const SHAKE_OFFSETS = [-10, 9, -7, 5, -3, 0];
 
 /** One shake and one error haptic per failed attempt; Reduce Motion keeps only the haptic. */
