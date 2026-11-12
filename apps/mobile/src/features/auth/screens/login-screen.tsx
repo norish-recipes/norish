@@ -306,7 +306,7 @@ export function LoginScreen() {
 
   return (
     <AuthLayout footer={serverAddress ? <ServerChip address={serverAddress} /> : null}>
-      <Brand prefix={intl.formatMessage({ id: "auth.login.title" })} />
+      <Brand compact prefix={intl.formatMessage({ id: "auth.login.title" })} />
       <View className="mt-7">
         {authClient === null ? (
           <LoginStatus

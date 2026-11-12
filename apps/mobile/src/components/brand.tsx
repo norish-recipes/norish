@@ -10,6 +10,8 @@ import { useIntl } from "react-intl";
 // The native splash draws the logo at this width too (app.json's imageWidth); the viewBox is 2370 x 639.
 export const LOGO_WIDTH = 168;
 export const LOGO_HEIGHT = (LOGO_WIDTH * 639) / 2370;
+// The form screens' boards (Login, Register) draw it smaller, under their prefix line.
+const COMPACT_LOGO_WIDTH = 144;
 
 interface BrandProps {
   /** A line above the logo, such as "Sign in to". */
@@ -17,17 +19,25 @@ interface BrandProps {
   /** Whether the slogan shows under the logo. */
   slogan?: boolean;
   sloganStyle?: ComponentProps<typeof Animated.View>["style"];
+  /** The form screens' smaller logo instead of the splash's. */
+  compact?: boolean;
 }
 
 /** The logo, in the scheme's colour, with the slogan under it. */
-export function Brand({ prefix, slogan = true, sloganStyle }: BrandProps) {
+export function Brand({ prefix, slogan = true, sloganStyle, compact = false }: BrandProps) {
   const intl = useIntl();
   const Mark = useResolvedColorScheme() === "dark" ? LogoCream : Logo;
+  const width = compact ? COMPACT_LOGO_WIDTH : LOGO_WIDTH;
 
   return (
     <View className="items-center gap-3">
       {prefix ? <Text className="text-muted text-[17px] font-normal">{prefix}</Text> : null}
-      <Mark accessible accessibilityLabel="Norish" height={LOGO_HEIGHT} width={LOGO_WIDTH} />
+      <Mark
+        accessible
+        accessibilityLabel="Norish"
+        height={(width * LOGO_HEIGHT) / LOGO_WIDTH}
+        width={width}
+      />
       {slogan ? (
         <Animated.View style={sloganStyle}>
           <Text className="text-muted text-base leading-5 font-normal">
