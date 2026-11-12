@@ -107,17 +107,19 @@ The cross-cutting folders serve every domain:
 - `trpc/` creates the one tRPC context, so every hook imports `useTRPC` from
   here. It also builds the links and each app's provider.
 - `platform/` is the adapter each app mounts once, for toasts, navigation, error
-  display, storage, Device Kind, the session, `endSession`, `leave(reason)` and
-  the offline engine clear.
+  display, storage, Device Kind, the session, `endSession(scope)` (`"everywhere"`
+  or `"device"`), `leave(reason)` and the offline engine clear.
 - `offline/` is the offline engine: the Offline Cache, the Outbox, Replay,
   Recovery, and the optimistic-update helpers every domain's mutations use.
 - `config/` reads reference data such as units, tags and recurrence words,
   and provides `useAuthProvidersQuery`.
 - `reader/` holds the signed-in Reader and Account: identity, household,
   profile, allergies, Sign-in Methods, site tokens, their writes, permissions
-  and Device Preferences. It also holds `useSignOut`, `useSessionExpiry`, mounted
-  once in each signed-in shell, and `expireSession`, each app's 401 and 4401
-  callback.
+  and Device Preferences. `reader/session-end.ts` holds `useSignOut`,
+  `useSessionExpiry` and `expireSession`, each app's 401 and 4401 callback. Web
+  mounts `useSessionExpiry` in the signed-in shell; mobile mounts it in
+  `AuthProviders` from sign-in until leaving. Web's sign-in screen forgets the
+  Offline Cache when reached with a `callbackUrl`, except after sign-out.
 - `realtime/` holds `useRealtimeSubscription`, which every subscription is built
   on, and `useKeepsCurrent`.
 - `page-store/` provides `createPageStoreContext`, which returns a provider that
