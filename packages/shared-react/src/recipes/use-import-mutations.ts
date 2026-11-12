@@ -41,105 +41,28 @@ export function useImportMutations(
   const { addPendingRecipe, replacePendingRecipe, removePendingRecipe, invalidate } =
     useRecipesCacheHelpers();
 
-  const { mutate: mutateImport } = useMutation(
-    trpc.recipes.importFromUrl.mutationOptions({
-      onMutate: () => {
-        const optimisticPendingId = createOptimisticPendingRecipeId();
+  const addPlaceholder = (): ImportMutationContext => {
+    const optimisticPendingId = createOptimisticPendingRecipeId();
 
-        addPendingRecipe(optimisticPendingId);
+    addPendingRecipe(optimisticPendingId);
 
-        return { optimisticPendingId };
-      },
-      onSuccess: ({ recipeId, status }, _variables, context) => {
-        // Nothing was queued, so there is no pending recipe to stand in for:
-        // drop the placeholder and hand the id to whoever can offer it.
-        if (status === "exists") {
-          if (context) removePendingRecipe(context.optimisticPendingId);
-          onRecipeAlreadyExists?.(recipeId);
+    return { optimisticPendingId };
+  };
 
-          return;
-        }
+  const dropPlaceholder = (context: ImportMutationContext | undefined): void => {
+    if (context) removePendingRecipe(context.optimisticPendingId);
+  };
 
-        if (!context) {
-          addPendingRecipe(recipeId);
+  // The placeholder becomes the imported recipe; without one, the recipe is added.
+  const showImported = (recipeId: string, context: ImportMutationContext | undefined): void => {
+    if (!context) {
+      addPendingRecipe(recipeId);
 
-          return;
-        }
+      return;
+    }
 
-        replacePendingRecipe(context.optimisticPendingId, recipeId);
-      },
-      onError: (error, variables, context) => {
-        handleImportError(
-          error,
-          variables.forceAI ? "importFromUrlWithAI" : "importFromUrl",
-          context
-        );
-      },
-    })
-  );
-  const { mutate: mutateImageImport } = useMutation(
-    trpc.recipes.importFromImages.mutationOptions({
-      onMutate: () => {
-        const optimisticPendingId = createOptimisticPendingRecipeId();
-
-        addPendingRecipe(optimisticPendingId);
-
-        return { optimisticPendingId };
-      },
-      onSuccess: (recipeId, _variables, context) => {
-        if (!context) {
-          addPendingRecipe(recipeId);
-
-          return;
-        }
-
-        replacePendingRecipe(context.optimisticPendingId, recipeId);
-      },
-      onError: (error, _variables, context) => {
-        handleImportError(error, "importFromImages", context);
-      },
-    })
-  );
-  const { mutate: mutatePasteImport } = useMutation(
-    trpc.recipes.importFromPaste.mutationOptions({
-      onMutate: () => {
-        const optimisticPendingId = createOptimisticPendingRecipeId();
-
-        addPendingRecipe(optimisticPendingId);
-
-        return { optimisticPendingId };
-      },
-      onSuccess: (result, _variables, context) => {
-        const [firstRecipeId, ...remainingRecipeIds] = result.recipeIds;
-
-        if (!firstRecipeId) {
-          if (context) {
-            removePendingRecipe(context.optimisticPendingId);
-          }
-
-          invalidate();
-
-          return;
-        }
-
-        if (!context) {
-          result.recipeIds.forEach((recipeId) => addPendingRecipe(recipeId));
-
-          return;
-        }
-
-        replacePendingRecipe(context.optimisticPendingId, firstRecipeId);
-        remainingRecipeIds.forEach((recipeId) => addPendingRecipe(recipeId));
-      },
-      onError: (error, variables, context) => {
-        handleImportError(
-          error,
-          variables.forceAI ? "importFromPasteWithAI" : "importFromPaste",
-          context
-        );
-      },
-    })
-  );
+    replacePendingRecipe(context.optimisticPendingId, recipeId);
+  };
 
   const handleImportError = (
     error: unknown,
@@ -152,12 +75,70 @@ export function useImportMutations(
       return;
     }
 
-    if (context) {
-      removePendingRecipe(context.optimisticPendingId);
-    }
-
+    dropPlaceholder(context);
     invalidate();
   };
+
+  const { mutate: mutateImport } = useMutation(
+    trpc.recipes.importFromUrl.mutationOptions({
+      onMutate: addPlaceholder,
+      onSuccess: ({ recipeId, status }, _variables, context) => {
+        // Nothing was queued, so there is no pending recipe to stand in for:
+        // drop the placeholder and hand the id to whoever can offer it.
+        if (status === "exists") {
+          dropPlaceholder(context);
+          onRecipeAlreadyExists?.(recipeId);
+
+          return;
+        }
+
+        showImported(recipeId, context);
+      },
+      onError: (error, variables, context) => {
+        handleImportError(
+          error,
+          variables.forceAI ? "importFromUrlWithAI" : "importFromUrl",
+          context
+        );
+      },
+    })
+  );
+  const { mutate: mutateImageImport } = useMutation(
+    trpc.recipes.importFromImages.mutationOptions({
+      onMutate: addPlaceholder,
+      onSuccess: (recipeId, _variables, context) => {
+        showImported(recipeId, context);
+      },
+      onError: (error, _variables, context) => {
+        handleImportError(error, "importFromImages", context);
+      },
+    })
+  );
+  const { mutate: mutatePasteImport } = useMutation(
+    trpc.recipes.importFromPaste.mutationOptions({
+      onMutate: addPlaceholder,
+      onSuccess: (result, _variables, context) => {
+        const [firstRecipeId, ...remainingRecipeIds] = result.recipeIds;
+
+        if (!firstRecipeId) {
+          dropPlaceholder(context);
+          invalidate();
+
+          return;
+        }
+
+        showImported(firstRecipeId, context);
+        remainingRecipeIds.forEach((recipeId) => addPendingRecipe(recipeId));
+      },
+      onError: (error, variables, context) => {
+        handleImportError(
+          error,
+          variables.forceAI ? "importFromPasteWithAI" : "importFromPaste",
+          context
+        );
+      },
+    })
+  );
 
   return {
     importRecipe: (url) => mutateImport({ url }),
