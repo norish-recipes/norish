@@ -1,7 +1,7 @@
 "use client";
 
 import type { ReactNode } from "react";
-import { useEffect, useState } from "react";
+import { useState } from "react";
 import Panel, { PanelComboBoxPopover } from "@/components/Panel/Panel";
 import { ActionButton, ActionButtonGroup } from "@/components/shared/action-button";
 import {
@@ -14,6 +14,7 @@ import {
   ToggleButtonGroup,
 } from "@heroui/react";
 import { useFormatter, useTranslations } from "next-intl";
+import { useDebounceValue } from "usehooks-ts";
 
 import type {
   IngredientNutrition,
@@ -462,13 +463,7 @@ function DatasetFoodPicker({
   const format = useFormatter();
   // Inside a Panel the options must portal into it, or vaul swallows every tap (#511).
   const [term, setTerm] = useState(picked?.name ?? "");
-  const [search, setSearch] = useState("");
-
-  useEffect(() => {
-    const timer = setTimeout(() => setSearch(term.trim()), SEARCH_DELAY_MS);
-
-    return () => clearTimeout(timer);
-  }, [term]);
+  const [search] = useDebounceValue(term.trim(), SEARCH_DELAY_MS);
 
   const { foods, isFetching } = useNutritionFoodsQuery(search);
   const options = foods

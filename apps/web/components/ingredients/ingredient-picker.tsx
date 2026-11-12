@@ -1,9 +1,10 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useState } from "react";
 import { PanelComboBoxPopover } from "@/components/Panel/Panel";
 import { ComboBox, Input, Label, ListBox } from "@heroui/react";
 import { useLocale, useTranslations } from "next-intl";
+import { useDebounceValue } from "usehooks-ts";
 
 import { useIngredientSearchQuery } from "@norish/shared-react/ingredients";
 import { ingredientDisplayName } from "@norish/shared/lib/ingredient-names";
@@ -35,14 +36,8 @@ export function IngredientPicker({
   const locale = useLocale();
   // Inside a Panel the options must portal into it, or vaul swallows every tap (#511).
   const [term, setTerm] = useState("");
-  const [search, setSearch] = useState("");
+  const [search] = useDebounceValue(term.trim(), SEARCH_DELAY_MS);
   const [picked, setPicked] = useState<string | null>(null);
-
-  useEffect(() => {
-    const timer = setTimeout(() => setSearch(term.trim()), SEARCH_DELAY_MS);
-
-    return () => clearTimeout(timer);
-  }, [term]);
 
   const { items, isFetching } = useIngredientSearchQuery(search, locale);
   const found = items.filter((item) => item.id !== excludeId && (!editableOnly || item.canEdit));
