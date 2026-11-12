@@ -6,7 +6,6 @@ import type { OfflineEngine } from "../engine";
 import type { WarmSetInventory } from "../warm-set";
 import type { ConnectivityPosture } from "./connectivity";
 import type { OutboxSummary } from "./use-outbox-status";
-import { useTRPC } from "../../trpc";
 import { useConnectivity } from "./connectivity";
 import { useRecovery } from "./recovery-context";
 import { useOutboxStatus } from "./use-outbox-status";
@@ -46,7 +45,7 @@ export function useOfflineStatus(
 ): OfflineStatus {
   const { posture, isLive, isOffline, isForced } = useConnectivity();
   const recovery = useRecovery();
-  const warmSet = useWarmSet(engine, useTRPC());
+  const warmSet = useWarmSet(engine);
   const [inventory, setInventory] = useState<WarmSetInventory>(EMPTY_INVENTORY);
 
   const refreshInventory = useCallback(async () => {

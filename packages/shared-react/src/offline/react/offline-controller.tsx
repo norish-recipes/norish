@@ -7,7 +7,7 @@ import { useQueryClient } from "@tanstack/react-query";
 import type { ConnectionStatus } from "../../trpc/trpc-provider";
 import type { OfflineEngine } from "../engine";
 import type { ConnectivityValue } from "./connectivity";
-import { useTRPC, useTRPCClient } from "../../trpc";
+import { useTRPCClient } from "../../trpc";
 import { sessionVerdict } from "../recovery";
 import { RecoveryProvider } from "./recovery-context";
 import { useOfflineController } from "./use-offline-controller";
@@ -36,7 +36,7 @@ export function OfflineController({
 }) {
   const queryClient = useQueryClient();
   const transport = useTRPCClient();
-  const warmSet = useWarmSet(engine, useTRPC());
+  const warmSet = useWarmSet(engine);
 
   const recovery = useMemo(
     () =>
