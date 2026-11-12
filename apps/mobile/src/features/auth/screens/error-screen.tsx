@@ -8,7 +8,7 @@ import {
   sanitizeRedirectTarget,
 } from "@/features/auth/utils/redirect";
 import { ServerAddressContext } from "@/lib/network/server-address";
-import { useLocalSearchParams, useRouter } from "expo-router";
+import { Stack, useLocalSearchParams, useRouter } from "expo-router";
 import { useIntl } from "react-intl";
 
 import { useAuthProvidersQuery } from "@norish/shared-react/config";
@@ -39,6 +39,7 @@ export function AuthErrorScreen() {
 
   return (
     <>
+      <Stack.Screen options={{ headerShown: false }} />
       <StatusScreen
         action={{
           label: intl.formatMessage({ id: "common.actions.retry" }),
