@@ -268,7 +268,7 @@ function SignInMethods({ authClient, redirectTo }: { authClient: AuthClient; red
     );
   }
 
-  if (!methods.passwordForm && methods.oauthProviders.length === 0) {
+  if (methods.noMethod) {
     return (
       <LoginStatus
         description={intl.formatMessage({ id: "auth.login.noProviders.contactAdmin" })}
@@ -283,7 +283,7 @@ function SignInMethods({ authClient, redirectTo }: { authClient: AuthClient; red
         <PasswordForm authClient={authClient} signUp={methods.signUp} />
       ) : null}
       {methods.divider ? <OrDivider /> : null}
-      {methods.oauthProviders.length > 0 ? (
+      {methods.providerButtons ? (
         <ProviderButtons
           authClient={authClient}
           providers={methods.oauthProviders}

@@ -6,8 +6,11 @@ import type { AuthProvidersResponse, ProviderInfo } from "@norish/shared/contrac
 export type SignInMethods = {
   passwordForm: boolean;
   oauthProviders: ProviderInfo[];
+  providerButtons: boolean;
   divider: boolean;
   signUp: boolean;
+  /** The server offers no method at all, so Sign in says to ask the administrator. */
+  noMethod: boolean;
 };
 
 export function resolveSignInMethods({
@@ -16,11 +19,14 @@ export function resolveSignInMethods({
   registrationEnabled,
 }: AuthProvidersResponse): SignInMethods {
   const oauthProviders = providers.filter((provider) => toProviderType(provider) === "oauth");
+  const providerButtons = oauthProviders.length > 0;
 
   return {
     passwordForm: passwordAuthEnabled,
     oauthProviders,
-    divider: passwordAuthEnabled && oauthProviders.length > 0,
+    providerButtons,
+    divider: passwordAuthEnabled && providerButtons,
     signUp: passwordAuthEnabled && registrationEnabled,
+    noMethod: !passwordAuthEnabled && !providerButtons,
   };
 }

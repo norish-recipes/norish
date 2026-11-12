@@ -18,8 +18,10 @@ describe("resolveSignInMethods", () => {
     ).toEqual({
       passwordForm: true,
       oauthProviders: [google, github],
+      providerButtons: true,
       divider: true,
       signUp: true,
+      noMethod: false,
     });
   });
 
@@ -30,7 +32,14 @@ describe("resolveSignInMethods", () => {
         passwordAuthEnabled: true,
         registrationEnabled: false,
       })
-    ).toEqual({ passwordForm: true, oauthProviders: [], divider: false, signUp: false });
+    ).toEqual({
+      passwordForm: true,
+      oauthProviders: [],
+      providerButtons: false,
+      divider: false,
+      signUp: false,
+      noMethod: false,
+    });
   });
 
   it("shows only the providers, and no Sign up, without password sign-in", () => {
@@ -40,12 +49,30 @@ describe("resolveSignInMethods", () => {
         passwordAuthEnabled: false,
         registrationEnabled: true,
       })
-    ).toEqual({ passwordForm: false, oauthProviders: [google], divider: false, signUp: false });
+    ).toEqual({
+      passwordForm: false,
+      oauthProviders: [google],
+      providerButtons: true,
+      divider: false,
+      signUp: false,
+      noMethod: false,
+    });
   });
 
-  it("shows nothing when the server offers no method", () => {
+  it("shows nothing when the server offers no method, a credential provider included", () => {
     expect(
-      resolveSignInMethods({ providers: [], passwordAuthEnabled: false, registrationEnabled: true })
-    ).toEqual({ passwordForm: false, oauthProviders: [], divider: false, signUp: false });
+      resolveSignInMethods({
+        providers: [credential],
+        passwordAuthEnabled: false,
+        registrationEnabled: true,
+      })
+    ).toEqual({
+      passwordForm: false,
+      oauthProviders: [],
+      providerButtons: false,
+      divider: false,
+      signUp: false,
+      noMethod: true,
+    });
   });
 });
