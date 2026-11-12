@@ -1,35 +1,28 @@
 "use client";
 
+import type { inferRouterOutputs } from "@trpc/server";
 import { useQuery } from "@tanstack/react-query";
 
+import type { AppRouter } from "@norish/trpc/client";
+
+import { DEFAULT_TIMER_KEYWORDS, TIMER_KEYWORDS_READ_TIMES } from "../config";
 import { useTRPC } from "../trpc";
 
-const DEFAULT_SHARE_PUBLIC_CONFIG = {
-  units: {},
-  timersEnabled: true,
-  timerKeywords: {
-    enabled: true,
-    hours: [],
-    minutes: [],
-    seconds: [],
-    isOverridden: false,
-  },
-};
+export type SharePublicConfig = inferRouterOutputs<AppRouter>["recipes"]["sharePublicConfig"];
 
-export function useSharePublicConfigQuery(token: string) {
+/** One slice of a share's public config; the defaults answer until it arrives. */
+export function useSharePublicConfigQuery<T>(
+  token: string,
+  select: (config: SharePublicConfig) => T
+): T {
   const trpc = useTRPC();
-
-  const { data, error, isLoading } = useQuery({
+  const { data } = useQuery({
     ...trpc.recipes.sharePublicConfig.queryOptions({ token }),
-    staleTime: 5 * 60 * 1000,
-    gcTime: 60 * 60 * 1000,
+    ...TIMER_KEYWORDS_READ_TIMES,
+    select,
   });
 
-  return {
-    units: data?.units ?? DEFAULT_SHARE_PUBLIC_CONFIG.units,
-    timersEnabled: data?.timersEnabled ?? DEFAULT_SHARE_PUBLIC_CONFIG.timersEnabled,
-    timerKeywords: data?.timerKeywords ?? DEFAULT_SHARE_PUBLIC_CONFIG.timerKeywords,
-    isLoading,
-    error,
-  };
+  if (data !== undefined) return data;
+
+  return select({ units: {}, timersEnabled: true, timerKeywords: DEFAULT_TIMER_KEYWORDS });
 }

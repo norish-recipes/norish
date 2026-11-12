@@ -11,7 +11,11 @@ export { useLocaleConfigQuery } from "./use-locale-config-query";
 export { useRecurrenceConfigQuery } from "./use-recurrence-config-query";
 export { useSpellingRules } from "./use-spelling-rules";
 export { useTagsQuery } from "./use-tags-query";
-export { useTimerKeywordsQuery } from "./use-timer-keywords-query";
+export {
+  DEFAULT_TIMER_KEYWORDS,
+  TIMER_KEYWORDS_READ_TIMES,
+  useTimerKeywordsQuery,
+} from "./use-timer-keywords-query";
 export { useTimersEnabledQuery } from "./use-timers-enabled-query";
 export { useUnitsQuery } from "./use-units-query";
 export { useUploadLimitsQuery } from "./use-upload-limits-query";

@@ -26,7 +26,10 @@ export function PublicSmartInstruction({
   recipeName,
   stepIndex,
 }: PublicSmartInstructionProps) {
-  const { timersEnabled, timerKeywords } = useSharePublicConfigQuery(token);
+  const { timersEnabled, timerKeywords } = useSharePublicConfigQuery(token, (config) => ({
+    timersEnabled: config.timersEnabled,
+    timerKeywords: config.timerKeywords,
+  }));
 
   return (
     <SmartMarkdownRenderer

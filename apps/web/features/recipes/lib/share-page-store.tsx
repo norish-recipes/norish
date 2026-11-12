@@ -55,7 +55,7 @@ export function useSharedRecipe(): PublicRecipeViewDTO {
 export function useShareUnits() {
   const token = useSharePageStore((state) => state.token);
 
-  return useSharePublicConfigQuery(token).units;
+  return useSharePublicConfigQuery(token, (config) => config.units);
 }
 
 /** The servings the page shows: the reader's pick, else the recipe's own. */
