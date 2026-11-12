@@ -4,6 +4,10 @@ import { useConfirmedSignOut } from "@/hooks/use-confirmed-sign-out";
 import { resolveServerChange } from "@/lib/boot/boot-state";
 import { router } from "expo-router";
 
+import { createClientLogger } from "@norish/shared/lib/logger";
+
+const log = createClientLogger("server-change");
+
 const SERVER_ADDRESS_CHANGE: Href = { pathname: "/(auth)", params: { change: "server" } };
 
 // The signed-in shell's Sign-out, mounted while it is; a change asked for opens once signed out.
@@ -21,9 +25,15 @@ export function changeServerAddress() {
   }
 
   changeAfterSignOut = true;
-  void signOut?.().then((left) => {
-    if (!left) changeAfterSignOut = false;
-  });
+  void signOut?.()
+    .catch((error: unknown) => {
+      log.error({ error }, "Sign-out before a server change failed");
+
+      return false;
+    })
+    .then((left) => {
+      if (!left) changeAfterSignOut = false;
+    });
 }
 
 /** Mounted in the signed-in shell, so a change of Server Address signs out first. */
