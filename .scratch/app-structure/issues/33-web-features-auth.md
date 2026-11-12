@@ -4,7 +4,7 @@
 
 **Blocked by:** 30, 32
 
-**Status:** ready-for-agent
+**Status:** done
 
 - [x] `features/auth` holds the login, signup and auth-error screens and their components (`login-client`, `email-password-form`, `provider-button`, `auto-sign-in`, `signup-client`, `signup-form`, `auth-alert`, `auth-card`, `auth-frame`, `auth-marks`).
 - [x] `app/(auth)/` keeps the layout, the `loading.tsx` files and each page's server work (the providers read, the auto-redirect decision), rendering the feature's screens.
@@ -12,7 +12,7 @@
 - [x] Moved tests run against the new homes; the lint rule's feature boundaries hold with no new exceptions.
 - [x] CONTRIBUTING.md's "Project Structure" and the Architecture page list `features/auth` and `components/imports/`, and drop `imports` as a feature (Terra's docs pass).
 - [x] Gates green: `pnpm lint`, `pnpm typecheck`, `pnpm test:run`, `pnpm i18n:check`, `pnpm build`, `pnpm format:check`, `pnpm deps:cycles`, and mobile's lint, typecheck, test and `expo export --platform ios`.
-- [ ] The whole E2E suite (`ai`, `offline`, `realtime`) passes once, with no retries, and `base-path` on a `/norish` build; Maestro's sign-in and sign-out flows pass on iOS.
+- [x] The whole E2E suite (`ai`, `offline`, `realtime`) passes once, with no retries, and `base-path` on a `/norish` build; Maestro's sign-in and sign-out flows pass on iOS.
 
 ## Comments
 
@@ -68,3 +68,7 @@ Final fixes: A (`347ade5e9..b2e4f448a`) Sol's 1-2 and 4-9, 11; B (`c3c9be246..b0
 19. **fix** (bug): mobile's per-client storage wrapper no longer shares the plugin's write queue with `readPersistedSession()`, so a read torn by a chunked cookie write answers null, which reads as an expiry and wipes the device.
 20. **fix**: tests: the server-redirect E2E can pass through a cached document; no StrictMode case for the retired-client flag and no 4401 case; nothing shows a non-401 error or a pending re-read leaving a signed-in session alone. `session-end.ts:97`'s "Mount once in the signed-in shell" is stale.
 21. **reject**: the first E2E test no longer telling the in-app clear from the clear at sign-in. In a browser both end on the same page; the unit tests in `reader/` pin the in-app clear.
+
+Final fixes C (`5a203b8c5..9baba812b`): 17-20 fixed. The login route passes `sessionEnded` only without a session; `AutoSignIn` waits for the clear; every reader of mobile's stored session goes through the live client's storage queue; the detector fires only on a 401 or a settled no-session answer. Docs: `393dcc39f`, `b4f88690c`, `bd4dac9a5`.
+
+Final state (`9baba812b`): all eight gates green; the whole E2E suite 282/282 in one run with no retries (`ai`, `offline`, `realtime`); `base-path` 10/10 on a `/norish` build; Maestro on a fresh iOS Release build: `sign-out` three times in a row, `check-grocery`, `offline-launch`, `offline-replay`, `realtime` and `old-server` all passed.
