@@ -14,7 +14,8 @@
 
 ## Comments
 
-- Flows wait on elements (the splash plays first) and select by testID. The Sign in → Sign up link, "Already have an account? Sign in" and the mismatch error have no testID, so `sign-up.yaml` matches their text: app gap, report only.
-- Two iOS system sheets covered the app and Maestro cannot reliably see them: "Use Strong Password?" on Sign up (closed by position) and "Save Password?" after sign-in and after each relaunch (`subflows/dismiss-*.yaml`, tapped by position until the smoke screen shows).
-- `scripts/maestro.mjs` now re-opens registration after seeding the first Account, which closes it; Sign up needs it open.
-- Full run and five more set runs on an iPhone 17 (iOS 27.2) all green, so each flow passed six times in a row; no app defects found. Docs and release notes checkbox left to Terra; CONTRIBUTING's Maestro section should mention the Sign up flow.
+- Flows select by testID (Sign up links, error lines, `server-chip`) and share `subflows/connect.yaml`. New: `wrong-credentials`, `unreachable-server`, `server-chip`; `sign-out` and `update-server` now assert the host and both versions.
+- The password sheets are gone, not dismissed: `scripts/maestro.mjs` writes `com.apple.WebUI AutoFillPasswords=false` on the simulator (found by diffing Settings > AutoFill & Passwords; Maestro cannot see the sheets). Set `NORISH_SIMULATOR` to the udid when several are booted.
+- The script takes one flow path, checks that opening registration worked, and restores it when the run ends. A "no Sign up link while closed" check needs a run before registration opens (a restructure), so it is not there.
+- Foreground re-check of Update your server is not covered: the stub would have to change its version and then answer Sign in's auth calls (proxy to the real server).
+- Full set on an iPhone 18 Pro (iOS 27.2) green; each flow then passed five times in a row. Docs and release notes checkbox left to Terra; CONTRIBUTING's Maestro section should mention the Sign up flow and `NORISH_SIMULATOR`.
