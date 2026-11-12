@@ -1,10 +1,9 @@
-import type { InlineErrorState } from "@/features/auth/components/inline-error";
+import type { AuthAttempt } from "@/features/auth/hooks/use-auth-attempt";
 import type { AuthClient } from "@/lib/auth/auth-client";
-import React, { useState } from "react";
+import React from "react";
 import { View } from "react-native";
 import { InlineErrorBlock } from "@/features/auth/components/inline-error";
 import { ProviderIcon } from "@/features/auth/components/provider-icon";
-import { authFailure } from "@/features/auth/utils/auth-failure";
 import { Button, Spinner, useThemeColor } from "heroui-native";
 import { useIntl } from "react-intl";
 
@@ -12,30 +11,22 @@ import type { ProviderInfo } from "@norish/shared/contracts";
 
 interface ProviderButtonsProps {
   authClient: AuthClient;
+  signIn: AuthAttempt;
   providers: ProviderInfo[];
   redirectTo: string;
 }
 
-/** A "Sign in with" button per OAuth/OIDC provider. */
-export function ProviderButtons({ authClient, providers, redirectTo }: ProviderButtonsProps) {
+/** A "Sign in with" button per OAuth/OIDC provider, each attempt running under its id. */
+export function ProviderButtons({
+  authClient,
+  signIn,
+  providers,
+  redirectTo,
+}: ProviderButtonsProps) {
   const intl = useIntl();
   const [foregroundColor] = useThemeColor(["foreground"] as const);
-  const [activeProviderId, setActiveProviderId] = useState<string | null>(null);
-  const [error, setError] = useState<InlineErrorState>(null);
-
-  const handlePress = async (provider: ProviderInfo) => {
-    setError(null);
-    setActiveProviderId(provider.id);
-
-    const failure = await authFailure(
-      authClient.signIn.social({ provider: provider.id, callbackURL: redirectTo }),
-      "auth.errors.default.description"
-    );
-
-    if (failure !== null) setError({ message: intl.formatMessage({ id: failure }) });
-
-    setActiveProviderId(null);
-  };
+  const failedHere = providers.some((provider) => provider.id === signIn.failure?.method);
+  const error = failedHere ? signIn.failure : null;
 
   return (
     <View className="gap-2.5">
@@ -44,12 +35,18 @@ export function ProviderButtons({ authClient, providers, redirectTo }: ProviderB
           <Button
             key={provider.id}
             className="bg-surface rounded-full"
-            isDisabled={activeProviderId !== null}
+            isDisabled={signIn.running !== null}
             size="lg"
             variant="outline"
-            onPress={() => void handlePress(provider)}
+            onPress={() =>
+              void signIn.attempt(
+                provider.id,
+                () => authClient.signIn.social({ provider: provider.id, callbackURL: redirectTo }),
+                "auth.errors.default.description"
+              )
+            }
           >
-            {activeProviderId === provider.id ? (
+            {signIn.running === provider.id ? (
               <Spinner color={foregroundColor} size="sm" />
             ) : (
               <ProviderIcon color={foregroundColor} icon={provider.icon} size={18} />

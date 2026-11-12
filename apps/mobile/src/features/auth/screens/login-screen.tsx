@@ -6,6 +6,7 @@ import { AuthLayout } from "@/features/auth/components/auth-layout";
 import { PasswordForm } from "@/features/auth/components/password-form";
 import { ProviderButtons } from "@/features/auth/components/provider-buttons";
 import { ServerChip } from "@/features/auth/components/server-chip";
+import { useAuthAttempt } from "@/features/auth/hooks/use-auth-attempt";
 import {
   DEFAULT_PROTECTED_ROUTE,
   firstParam,
@@ -61,6 +62,8 @@ function SignInMethods({ authClient, redirectTo }: { authClient: AuthClient; red
   const intl = useIntl();
   const config = useAuthProvidersQuery();
   const methods = resolveSignInMethods(config);
+  // One attempt across every method, so a password and a provider sign-in never overlap.
+  const signIn = useAuthAttempt();
 
   if (config.isLoading) {
     return <Spinner className="self-center" />;
@@ -91,7 +94,7 @@ function SignInMethods({ authClient, redirectTo }: { authClient: AuthClient; red
   return (
     <View>
       {methods.passwordForm ? (
-        <PasswordForm authClient={authClient} showSignUpLink={methods.signUp} />
+        <PasswordForm authClient={authClient} showSignUpLink={methods.signUp} signIn={signIn} />
       ) : null}
       {methods.divider ? <OrDivider /> : null}
       {methods.providerButtons ? (
@@ -99,6 +102,7 @@ function SignInMethods({ authClient, redirectTo }: { authClient: AuthClient; red
           authClient={authClient}
           providers={methods.oauthProviders}
           redirectTo={redirectTo}
+          signIn={signIn}
         />
       ) : null}
     </View>

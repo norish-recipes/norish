@@ -1,22 +1,25 @@
-import type { InlineErrorState } from "@/features/auth/components/inline-error";
+import type { AuthAttempt } from "@/features/auth/hooks/use-auth-attempt";
 import type { AuthClient } from "@/lib/auth/auth-client";
 import React, { useState } from "react";
 import { Pressable, Text, View } from "react-native";
 import { AuthField } from "@/features/auth/components/auth-field";
 import { InlineErrorBlock } from "@/features/auth/components/inline-error";
-import { authFailure } from "@/features/auth/utils/auth-failure";
 import Feather from "@expo/vector-icons/Feather";
 import { useRouter } from "expo-router";
 import { Button, InputGroup, LinkButton, Spinner, useThemeColor } from "heroui-native";
 import { useIntl } from "react-intl";
 
+/** The attempt key a password sign-in runs under; providers run under their id. */
+const PASSWORD = "password";
+
 interface PasswordFormProps {
   authClient: AuthClient;
+  signIn: AuthAttempt;
   showSignUpLink: boolean;
 }
 
 /** Email and password, the link to Sign up, and Sign in. */
-export function PasswordForm({ authClient, showSignUpLink }: PasswordFormProps) {
+export function PasswordForm({ authClient, signIn, showSignUpLink }: PasswordFormProps) {
   const router = useRouter();
   const intl = useIntl();
   const [mutedColor, accentForegroundColor] = useThemeColor([
@@ -26,25 +29,18 @@ export function PasswordForm({ authClient, showSignUpLink }: PasswordFormProps) 
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [isPasswordShown, setIsPasswordShown] = useState(false);
-  const [isSubmitting, setIsSubmitting] = useState(false);
-  const [error, setError] = useState<InlineErrorState>(null);
-  const canSubmit = email.trim() !== "" && password !== "" && !isSubmitting;
+  const error = signIn.failure?.method === PASSWORD ? signIn.failure : null;
+  const isFilled = email.trim() !== "" && password !== "";
 
-  const handleSubmit = async () => {
-    if (!canSubmit) return;
+  // On success the Stack.Protected guard leaves Sign in once the session lands.
+  const handleSubmit = () => {
+    if (!isFilled) return;
 
-    setIsSubmitting(true);
-    setError(null);
-
-    // On success the Stack.Protected guard leaves Sign in once the session lands.
-    const failure = await authFailure(
-      authClient.signIn.email({ email: email.trim(), password }),
+    void signIn.attempt(
+      PASSWORD,
+      () => authClient.signIn.email({ email: email.trim(), password }),
       "auth.errors.default.description"
     );
-
-    if (failure !== null) setError({ message: intl.formatMessage({ id: failure }) });
-
-    setIsSubmitting(false);
   };
 
   return (
@@ -80,7 +76,7 @@ export function PasswordForm({ authClient, showSignUpLink }: PasswordFormProps) 
             textContentType="password"
             value={password}
             onChangeText={setPassword}
-            onSubmitEditing={() => void handleSubmit()}
+            onSubmitEditing={handleSubmit}
           />
           {/* heroui-native's own password toggle is a Pressable in the suffix. */}
           <InputGroup.Suffix>
@@ -116,12 +112,12 @@ export function PasswordForm({ authClient, showSignUpLink }: PasswordFormProps) 
 
       <Button
         className="rounded-full"
-        isDisabled={!canSubmit}
+        isDisabled={!isFilled || signIn.running !== null}
         size="lg"
         testID="login-submit"
-        onPress={() => void handleSubmit()}
+        onPress={handleSubmit}
       >
-        {isSubmitting ? (
+        {signIn.running === PASSWORD ? (
           <Spinner color={accentForegroundColor} size="sm" />
         ) : (
           <Feather color={accentForegroundColor} name="log-in" size={20} />
