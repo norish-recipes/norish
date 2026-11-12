@@ -8,6 +8,7 @@ import type { SessionCookies } from "../harness/auth";
 import { userIdOf } from "../harness/accounts";
 import { signIn } from "../harness/auth";
 import { hydratingBrowser } from "../harness/hydration";
+import { readOfflineStore } from "../harness/offline-store";
 import { ProductionStack } from "../harness/production-stack";
 import { seedRecipe } from "../harness/recipes";
 import { callTrpc } from "../harness/trpc";
@@ -206,70 +207,13 @@ export const test = base.extend<Record<never, never>, OfflineWorkerFixtures>({
 export type OutboxEntry = { ownerId: string; path: string; status: string };
 
 /** All Outbox entries in the page's IndexedDB, FIFO. */
-export function readOutbox(target: Page): Promise<OutboxEntry[]> {
-  return target.evaluate(
-    () =>
-      new Promise<OutboxEntry[]>((resolve) => {
-        const open = indexedDB.open("norish-offline");
-
-        open.onsuccess = () => {
-          const db = open.result;
-
-          if (!db.objectStoreNames.contains("outbox")) {
-            db.close();
-            resolve([]);
-
-            return;
-          }
-
-          const req = db.transaction("outbox", "readonly").objectStore("outbox").getAll();
-
-          req.onsuccess = () => {
-            db.close();
-            resolve(req.result as OutboxEntry[]);
-          };
-          req.onerror = () => {
-            db.close();
-            resolve([]);
-          };
-        };
-        open.onerror = () => resolve([]);
-      })
-  );
+export async function readOutbox(target: Page): Promise<OutboxEntry[]> {
+  return (await readOfflineStore(target, "outbox")) as OutboxEntry[];
 }
 
 /** Whether this browser's saved copy of its reads holds `fragment`. */
-export function persistedReadsHold(target: Page, fragment: string): Promise<boolean> {
-  return target.evaluate(
-    (needle) =>
-      new Promise<boolean>((resolve) => {
-        const open = indexedDB.open("norish-offline");
-
-        open.onsuccess = () => {
-          const db = open.result;
-
-          if (!db.objectStoreNames.contains("keyval")) {
-            db.close();
-            resolve(false);
-
-            return;
-          }
-
-          const req = db.transaction("keyval", "readonly").objectStore("keyval").getAll();
-
-          req.onsuccess = () => {
-            db.close();
-            resolve(JSON.stringify(req.result).includes(needle));
-          };
-          req.onerror = () => {
-            db.close();
-            resolve(false);
-          };
-        };
-        open.onerror = () => resolve(false);
-      }),
-    fragment
-  );
+export async function persistedReadsHold(target: Page, fragment: string): Promise<boolean> {
+  return JSON.stringify(await readOfflineStore(target, "keyval")).includes(fragment);
 }
 
 export { expect };

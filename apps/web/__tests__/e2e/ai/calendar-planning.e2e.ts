@@ -16,6 +16,7 @@ import type { Locator, Page } from "@playwright/test";
 import { dateKey, parseDateKey } from "@norish/shared/lib/helpers";
 
 import type { Plan } from "../harness/plans";
+import { readOfflineStore } from "../harness/offline-store";
 import { removePlans } from "../harness/plans";
 import { fingerFor, glide } from "../harness/pointer";
 import { settled } from "../harness/settled";
@@ -32,44 +33,15 @@ const NAME = `Planned Stew ${Date.now()}`;
  * `text` yet. Only the ranges count: a recipe's name is persisted with the
  * recipe lists long before the plan is.
  */
-function persistedCalendarHolds(page: Page, text: string): Promise<boolean> {
-  return page.evaluate(
-    (wanted) =>
-      new Promise<boolean>((resolve) => {
-        const open = indexedDB.open("norish-offline");
+async function persistedCalendarHolds(page: Page, text: string): Promise<boolean> {
+  type Persisted = {
+    clientState?: { queries?: { queryKey: unknown; state: { data: unknown } }[] };
+  };
+  const ranges = ((await readOfflineStore(page, "keyval")) as Persisted[])
+    .flatMap((client) => client?.clientState?.queries ?? [])
+    .filter((query) => JSON.stringify(query.queryKey).includes("listItems"));
 
-        open.onerror = () => resolve(false);
-        open.onsuccess = () => {
-          const database = open.result;
-
-          if (!database.objectStoreNames.contains("keyval")) {
-            database.close();
-            resolve(false);
-
-            return;
-          }
-
-          const all = database.transaction("keyval").objectStore("keyval").getAll();
-
-          all.onsuccess = () => {
-            database.close();
-            type Persisted = {
-              clientState?: { queries?: { queryKey: unknown; state: { data: unknown } }[] };
-            };
-            const ranges = (all.result as Persisted[])
-              .flatMap((client) => client?.clientState?.queries ?? [])
-              .filter((query) => JSON.stringify(query.queryKey).includes("listItems"));
-
-            resolve(ranges.some((query) => JSON.stringify(query.state.data).includes(wanted)));
-          };
-          all.onerror = () => {
-            database.close();
-            resolve(false);
-          };
-        };
-      }),
-    text
-  );
+  return ranges.some((query) => JSON.stringify(query.state.data).includes(text));
 }
 
 async function visitCalendar(page: Page): Promise<void> {
