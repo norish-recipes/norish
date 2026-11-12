@@ -12,7 +12,7 @@ backup.
 
 ## Exporting
 
-Under **Settings => Account**, press **Export** on the **Export recipe archive**
+Under **Settings => User**, press **Export** on the **Export recipe archive**
 card. The archive holds every recipe you can see, not only your own.
 
 ![The Export recipe archive card in user settings](/img/screenshots/recipe-archive-user-export.png)

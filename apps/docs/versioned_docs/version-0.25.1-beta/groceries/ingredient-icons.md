@@ -45,5 +45,5 @@ click its icon:
 
 ## Hiding icons
 
-Turn icons off under **Settings => Account => Hidden items => Ingredient icons**.
+Turn icons off under **Settings => User => Hidden items => Ingredient icons**.
 See [Hidden Items](../recipes/hidden-items.md).

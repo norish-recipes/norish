@@ -42,7 +42,7 @@ switch back. With AI set up, **Convert with AI** has the language model do the
 conversion instead.
 
 To convert every recipe as you open it, pick a system under
-**Settings => Account => Preferences => Measurements**. This applies to recipes
+**Settings => User => Preferences => Measurements**. This applies to recipes
 you can edit. **Metric with AI** and **US with AI** use the language model for
 recipes that have no converted copy yet.
 
@@ -68,7 +68,7 @@ the photo loads and offline too. Your light or dark theme still sets how light
 the page is, so text stays readable. Recipes without a photo use the plain
 theme.
 
-To turn it off, set **Settings => Account => Recipe page color** to
+To turn it off, set **Settings => User => Recipe page color** to
 `Plain theme colors`. This is kept separately for phone and desktop.
 
 ## Shared recipes

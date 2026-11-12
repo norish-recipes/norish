@@ -10,10 +10,10 @@ Some sites will not show a recipe to a visitor who is not signed in. **Site
 Authentication Tokens** let an import carry your own session to those sites.
 
 A token is one cookie or one request header. You save it under
-**Settings => Account**, and Norish sends it with imports from the domain you saved
+**Settings => User**, and Norish sends it with imports from the domain you saved
 it against.
 
-![The Site authentication tokens card under Settings => Account](/img/screenshots/site-auth-tokens.png)
+![The Site authentication tokens card under Settings => User](/img/screenshots/site-auth-tokens.png)
 
 Tokens are encrypted at rest with a key derived from the server's
 [`MASTER_KEY`](./server-runtime.md).

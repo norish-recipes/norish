@@ -9,10 +9,10 @@ description: Import from sites that only show recipes to signed-in visitors, usi
 Some sites only show a recipe to signed-in visitors. A **site authentication
 token** sends one of your own cookies or headers with imports from that site.
 
-Save tokens under **Settings => Account**. They are encrypted with a key derived
+Save tokens under **Settings => User**. They are encrypted with a key derived
 from [`MASTER_KEY`](./server-runtime.md).
 
-![The Site authentication tokens card under Settings => Account](/img/screenshots/site-auth-tokens.png)
+![The Site authentication tokens card under Settings => User](/img/screenshots/site-auth-tokens.png)
 
 ## Adding a token
 

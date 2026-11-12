@@ -51,7 +51,7 @@ Choose **Original** to return to the unchanged recipe. With AI set up,
 **Convert with AI** uses the language model instead.
 
 To convert every recipe as you open it, pick a system under
-**Settings => Account => Preferences => Measurements**. This applies to recipes
+**Settings => User => Preferences => Measurements**. This applies to recipes
 you can edit. **Metric with AI** and **US with AI** use the language model for
 recipes that have no converted copy yet.
 
@@ -76,7 +76,7 @@ Recipe pages use a tint from their photo, visible before the photo loads and
 while offline. The tint follows your light or dark theme to keep text
 readable. Recipes without photos use the plain theme.
 
-To turn it off, set **Settings => Account => Recipe page color** to
+To turn it off, set **Settings => User => Recipe page color** to
 `Plain theme colors`. This is kept separately for phone and desktop.
 
 ## Print a recipe or save a PDF
