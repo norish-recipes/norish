@@ -78,7 +78,7 @@ Web and mobile use the same layout. Web keeps its folders at the root of
 - Features never import each other. Lint blocks `@/features/<x>` and
   `@/features/<x>/**` outside feature `<x>`, except in route files. Panels
   several features open live in `components/Panel/consumers/`.
-- A feature's tests sit in one flat `features/<feature>/__tests__/` folder.
+- A feature's tests sit in one flat `features/<feature>/__tests__/` folder on web or `src/features/<feature>/__tests__/` on mobile.
 - One root draws the views that share a layout.
   `app/(app)/groceries/layout.tsx` renders `GroceriesRoot`, which holds the
   header and the subscriptions and draws the list or the Pantry from the
