@@ -17,7 +17,12 @@ const { default: LoginPage } = await import("@/app/(auth)/login/page");
 
 const GITHUB: ProviderInfo = { id: "github", name: "GitHub", icon: "github", type: "oauth" };
 const GOOGLE: ProviderInfo = { id: "google", name: "Google", icon: "google", type: "oauth" };
-const PASSWORD: ProviderInfo = { id: "credential", name: "Email", icon: "mail", type: "credential" };
+const PASSWORD: ProviderInfo = {
+  id: "credential",
+  name: "Email",
+  icon: "mail",
+  type: "credential",
+};
 
 async function autoSignInProvider(offered: ProviderInfo[], search: Record<string, string> = {}) {
   providers.current = offered;
