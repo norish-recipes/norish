@@ -120,6 +120,12 @@ test("opening the app on an expired session clears the Offline Cache before sign
     const warmed = await context.newPage();
 
     await queueWhileStopped(warmed, offline, "E2E Next Day Bread");
+    // No service worker, so the cached document cannot answer for the server.
+    await warmed.evaluate(async () => {
+      for (const registration of await navigator.serviceWorker.getRegistrations()) {
+        await registration.unregister();
+      }
+    });
     // Closed before the server returns, so only a fresh load meets the ended session.
     await warmed.close();
     await offline.transition("live");
@@ -128,7 +134,10 @@ test("opening the app on an expired session clears the Offline Cache before sign
     const page = await context.newPage();
 
     // The server sees no session and redirects before any of the app's code runs.
-    await page.goto("/groceries");
+    const response = await page.goto("/groceries");
+
+    expect(response?.fromServiceWorker()).toBe(false);
+    expect(response?.request().redirectedFrom()?.url()).toMatch(/\/groceries$/);
     await expectForgottenAndKept(page);
     await expectReplayedForReader(context, page, offline.baseURL, "E2E Next Day Bread");
   } finally {
