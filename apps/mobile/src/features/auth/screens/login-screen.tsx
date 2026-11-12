@@ -1,29 +1,23 @@
+import type { AuthConfig } from "@/features/auth/components/auth-gate";
 import type { AuthClient } from "@/lib/auth/auth-client";
-import type { ReactNode } from "react";
 import React, { use } from "react";
 import { Text, View } from "react-native";
-import Animated from "react-native-reanimated";
-import { Brand } from "@/components/brand";
-import { AuthLayout } from "@/features/auth/components/auth-layout";
+import { AuthGate } from "@/features/auth/components/auth-gate";
 import { AuthStatus } from "@/features/auth/components/auth-status";
 import { PasswordForm } from "@/features/auth/components/password-form";
 import { ProviderButtons } from "@/features/auth/components/provider-buttons";
 import { ServerChip } from "@/features/auth/components/server-chip";
 import { useAuthAttempt } from "@/features/auth/hooks/use-auth-attempt";
-import { FADE_IN } from "@/features/auth/utils/motion";
 import {
   DEFAULT_PROTECTED_ROUTE,
   firstParam,
   sanitizeRedirectTarget,
 } from "@/features/auth/utils/redirect";
-import { resolveMethodsStatus, resolveSignInMethods } from "@/features/auth/utils/sign-in-methods";
-import { useAuthClient } from "@/lib/auth/use-auth-client";
+import { resolveSignInMethods } from "@/features/auth/utils/sign-in-methods";
 import { ServerAddressContext } from "@/lib/network/server-address";
-import { useLocalSearchParams, useRouter } from "expo-router";
-import { Separator, Spinner } from "heroui-native";
+import { useLocalSearchParams } from "expo-router";
+import { Separator } from "heroui-native";
 import { useIntl } from "react-intl";
-
-import { useAuthProvidersQuery } from "@norish/shared-react/config";
 
 function OrDivider() {
   const intl = useIntl();
@@ -39,60 +33,31 @@ function OrDivider() {
   );
 }
 
-/** The brand, "Sign in to" and what sits under it, fading in once where they stay. */
-function SignInBlock({ children }: { children: ReactNode }) {
+function SignInMethods({
+  authClient,
+  config,
+  redirectTo,
+}: {
+  authClient: AuthClient;
+  config: AuthConfig;
+  redirectTo: string;
+}) {
   const intl = useIntl();
-
-  return (
-    <Animated.View entering={FADE_IN}>
-      <Brand compact prefix={intl.formatMessage({ id: "auth.login.title" })} />
-      <View className="mt-7">{children}</View>
-    </Animated.View>
-  );
-}
-
-function SignInMethods({ authClient, redirectTo }: { authClient: AuthClient; redirectTo: string }) {
-  const intl = useIntl();
-  const config = useAuthProvidersQuery();
   const methods = resolveSignInMethods(config);
-  const status = resolveMethodsStatus(config);
   // One attempt across every method, so a password and a provider sign-in never overlap.
   const signIn = useAuthAttempt();
 
-  // The spinner stands alone, so the block never moves when the methods replace it.
-  if (status === "loading") {
-    return <Spinner className="self-center" />;
-  }
-
-  // A failed background refetch leaves loaded methods up, so the form keeps its state.
-  if (status === "failed") {
-    return (
-      <SignInBlock>
-        <AuthStatus
-          action={{
-            label: intl.formatMessage({ id: "common.actions.retry" }),
-            onPress: () => void config.refetch(),
-          }}
-          description={intl.formatMessage({ id: "auth.errors.default.description" })}
-          title={intl.formatMessage({ id: "auth.errors.default.title" })}
-        />
-      </SignInBlock>
-    );
-  }
-
   if (methods.noMethod) {
     return (
-      <SignInBlock>
-        <AuthStatus
-          description={intl.formatMessage({ id: "auth.login.noProviders.contactAdmin" })}
-          title={intl.formatMessage({ id: "auth.login.noProviders.title" })}
-        />
-      </SignInBlock>
+      <AuthStatus
+        description={intl.formatMessage({ id: "auth.login.noProviders.contactAdmin" })}
+        title={intl.formatMessage({ id: "auth.login.noProviders.title" })}
+      />
     );
   }
 
   return (
-    <SignInBlock>
+    <>
       {methods.passwordForm ? (
         <PasswordForm authClient={authClient} showSignUpLink={methods.signUp} signIn={signIn} />
       ) : null}
@@ -105,36 +70,26 @@ function SignInMethods({ authClient, redirectTo }: { authClient: AuthClient; red
           signIn={signIn}
         />
       ) : null}
-    </SignInBlock>
+    </>
   );
 }
 
 export function LoginScreen() {
-  const router = useRouter();
-  const intl = useIntl();
   const params = useLocalSearchParams<{ redirectTo?: string | string[] }>();
-  const authClient = useAuthClient();
   const serverAddress = use(ServerAddressContext);
   const redirectTo = sanitizeRedirectTarget(
     firstParam(params.redirectTo) ?? DEFAULT_PROTECTED_ROUTE
   );
 
   return (
-    <AuthLayout footer={serverAddress ? <ServerChip address={serverAddress} /> : null}>
-      {authClient === null ? (
-        <SignInBlock>
-          <AuthStatus
-            action={{
-              label: intl.formatMessage({ id: "auth.connect.openConnect" }),
-              onPress: () => router.replace("/(auth)"),
-            }}
-            description={intl.formatMessage({ id: "auth.connect.backendRequiredDescription" })}
-            title={intl.formatMessage({ id: "auth.connect.backendRequiredTitle" })}
-          />
-        </SignInBlock>
-      ) : (
-        <SignInMethods authClient={authClient} redirectTo={redirectTo} />
+    <AuthGate
+      slogan
+      footer={serverAddress ? <ServerChip address={serverAddress} /> : null}
+      titleId="auth.login.title"
+    >
+      {(authClient, config) => (
+        <SignInMethods authClient={authClient} config={config} redirectTo={redirectTo} />
       )}
-    </AuthLayout>
+    </AuthGate>
   );
 }
