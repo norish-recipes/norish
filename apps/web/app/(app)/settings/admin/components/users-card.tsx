@@ -5,17 +5,15 @@ import { SettingsCard } from "@/components/settings/settings-card";
 import { IconActionButton } from "@/components/shared/action-button";
 import UserAvatar from "@/components/shared/user-avatar";
 import DataTable from "@/components/ui/data-table";
-import { useUserMutations, useUsersListQuery } from "@/hooks/admin";
-import { showSafeErrorToast } from "@/lib/ui/safe-error-toast";
 import {
   ShieldCheckIcon as ShieldCheckIconSolid,
   UserGroupIcon as UserGroupIconSolid,
 } from "@heroicons/react/16/solid";
 import { UsersIcon } from "@heroicons/react/24/outline";
-import { toast } from "@heroui/react";
 import { useTranslations } from "next-intl";
 
 import type { AdminUserRowDTO } from "@norish/shared/contracts";
+import { useUserMutations, useUsersListQuery } from "@norish/shared-react/admin";
 import { useReader } from "@norish/shared-react/reader";
 
 import { DeleteUserModal } from "./users/delete-user-modal";
@@ -24,46 +22,20 @@ import { UserRoleChips } from "./users/user-role-chips";
 
 export default function UsersCard() {
   const t = useTranslations("settings.admin.users");
-  const tErrors = useTranslations("common.errors");
-  const tToasts = useTranslations("settings.admin.toasts");
   const { user: currentUser } = useReader();
   const { users, isLoading, error } = useUsersListQuery();
-  const { setAdminStatus, deleteUser, isUpdatingAdminStatus, isDeleting } = useUserMutations();
-
-  const [pendingRoleChangeId, setPendingRoleChangeId] = useState<string | null>(null);
+  const { setAdminStatus, changingRoleOf, deleteUser, isDeleting } = useUserMutations();
   const [userToDelete, setUserToDelete] = useState<AdminUserRowDTO | null>(null);
-
-  const handleToggleAdmin = async (row: AdminUserRowDTO) => {
-    setPendingRoleChangeId(row.id);
-
-    await setAdminStatus(row.id, !row.isServerAdmin)
-      .then((result) => {
-        if (!result.success) {
-          showSafeErrorToast({
-            title: tErrors("operationFailed"),
-            description: result.error,
-          });
-        }
-      })
-      .finally(() => setPendingRoleChangeId(null));
-  };
 
   const handleConfirmDelete = async () => {
     if (!userToDelete) return;
 
-    const result = await deleteUser(userToDelete.id);
+    const deleted = await deleteUser({
+      userId: userToDelete.id,
+      name: userToDelete.name || userToDelete.email,
+    });
 
-    if (result.success) {
-      toast(tToasts("userDeleted", { name: userToDelete.name || userToDelete.email }), {
-        variant: "success",
-      });
-      setUserToDelete(null);
-    } else {
-      showSafeErrorToast({
-        title: tErrors("operationFailed"),
-        description: result.error,
-      });
-    }
+    if (deleted) setUserToDelete(null);
   };
 
   // The empty slot is the only place this table can speak from, so it has to
@@ -125,7 +97,7 @@ export default function UsersCard() {
               const isSelf = row.id === currentUser?.id;
               const canChangeRole = !row.isServerOwner && !(isSelf && row.isServerAdmin);
               const canDelete = !row.isServerOwner && !isSelf;
-              const roleBusy = isUpdatingAdminStatus && pendingRoleChangeId === row.id;
+              const roleBusy = changingRoleOf === row.id;
 
               return (
                 <div className="flex justify-center gap-1">
@@ -136,7 +108,7 @@ export default function UsersCard() {
                     isPending={roleBusy}
                     label={row.isServerAdmin ? t("actions.revokeAdmin") : t("actions.makeAdmin")}
                     size="sm"
-                    onPress={() => void handleToggleAdmin(row)}
+                    onPress={() => void setAdminStatus(row.id, !row.isServerAdmin)}
                   />
                   <IconActionButton
                     action="delete"

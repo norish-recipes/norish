@@ -2,7 +2,6 @@
 
 import { useState } from "react";
 import { ActionButton, ActionButtonGroup } from "@/components/shared/action-button";
-import { useJobDetailQuery, useJobQueueMutations } from "@/hooks/admin";
 import { ArrowPathIcon, StopCircleIcon } from "@heroicons/react/16/solid";
 import {
   CheckCircleIcon,
@@ -13,22 +12,18 @@ import {
 import { Accordion, Chip, Modal, Spinner } from "@heroui/react";
 import { useFormatter, useTranslations } from "next-intl";
 
+import type { JobRef } from "@norish/shared-react/admin";
 import type {
   AdminJobAttemptDTO,
   AdminJobModelDTO,
   AdminJobStepDTO,
 } from "@norish/shared/contracts";
+import { useJobDetailQuery, useJobQueueMutations } from "@norish/shared-react/admin";
 
 import { formatDuration, formatStep, formatTimestamp } from "./job-format";
 import JobStatusChip from "./job-status-chip";
 
 type Translate = ReturnType<typeof useTranslations>;
-
-type Props = {
-  queue: string | null;
-  jobId: string | null;
-  onClose: () => void;
-};
 
 type ConfirmAction = "remove" | null;
 
@@ -182,16 +177,40 @@ function AttemptBody({ attempt, t }: { attempt: AdminJobAttemptDTO; t: Translate
   );
 }
 
-export default function JobDetailModal({ queue, jobId, onClose }: Props) {
+/** The detail of the job picked in the table, while one is. */
+export default function JobDetailModal({
+  job: picked,
+  onClose,
+}: {
+  job: JobRef | null;
+  onClose: () => void;
+}) {
+  // The job last picked, so the dialog draws it while it animates closed.
+  const [shown, setShown] = useState(picked);
+
+  if (picked && picked !== shown) setShown(picked);
+
+  return (
+    <Modal.Backdrop
+      className="z-[1099]"
+      isOpen={picked !== null}
+      onOpenChange={(open) => !open && onClose()}
+    >
+      <Modal.Container className="z-[1100] max-w-2xl">
+        <Modal.Dialog className="max-h-[85vh]">
+          {() => shown && <JobDetail picked={shown} onClose={onClose} />}
+        </Modal.Dialog>
+      </Modal.Container>
+    </Modal.Backdrop>
+  );
+}
+
+/** Mounted only while the dialog is open, so the detail is read and polled only then. */
+function JobDetail({ picked, onClose }: { picked: JobRef; onClose: () => void }) {
   const t = useTranslations("settings.admin.jobQueue");
   const tActions = useTranslations("common.actions");
   const format = useFormatter();
-  const isOpen = !!queue && !!jobId;
-  const { job, isLoading, error } = useJobDetailQuery({
-    queue: queue ?? "",
-    jobId: jobId ?? "",
-    enabled: isOpen,
-  });
+  const { job, isLoading, error } = useJobDetailQuery(picked);
   const { retryJob, removeJob, cancelJob, isRetrying, isRemoving } = useJobQueueMutations();
   const tokensUsed = job ? totalTokens(job.models) : null;
   const [confirmAction, setConfirmAction] = useState<ConfirmAction>(null);
@@ -202,19 +221,12 @@ export default function JobDetailModal({ queue, jobId, onClose }: Props) {
   const isCancelling =
     cancelling !== null && job?.state === "active" && job.processedOn === cancelling;
 
-  const close = () => {
-    setConfirmAction(null);
-    setActionError(null);
-    setCancelling(null);
-    onClose();
-  };
-
   const handleCancel = async () => {
-    if (!queue || !jobId || !job) return;
+    if (!job) return;
 
     setActionError(null);
     setCancelling(job.processedOn);
-    const result = await cancelJob(queue, jobId);
+    const result = await cancelJob(picked);
 
     if (!result.success) {
       setCancelling(null);
@@ -224,10 +236,8 @@ export default function JobDetailModal({ queue, jobId, onClose }: Props) {
 
   // Retry is instant — no confirmation. Remove is destructive, so it confirms.
   const handleRetry = async () => {
-    if (!queue || !jobId) return;
-
     setActionError(null);
-    const result = await retryJob(queue, jobId);
+    const result = await retryJob(picked);
 
     if (!result.success) {
       setActionError(result.error);
@@ -235,9 +245,7 @@ export default function JobDetailModal({ queue, jobId, onClose }: Props) {
   };
 
   const handleRemove = async () => {
-    if (!queue || !jobId) return;
-
-    const result = await removeJob(queue, jobId);
+    const result = await removeJob(picked);
 
     setConfirmAction(null);
 
@@ -247,8 +255,7 @@ export default function JobDetailModal({ queue, jobId, onClose }: Props) {
       return;
     }
 
-    setActionError(null);
-    close();
+    onClose();
   };
 
   const field = (label: string, value: string, fullWidth = false) => (
@@ -261,186 +268,176 @@ export default function JobDetailModal({ queue, jobId, onClose }: Props) {
   );
 
   return (
-    <Modal.Backdrop className="z-[1099]" isOpen={isOpen} onOpenChange={(open) => !open && close()}>
-      <Modal.Container className="z-[1100] max-w-2xl">
-        <Modal.Dialog className="max-h-[85vh]">
-          {() => (
-            <>
-              <Modal.CloseTrigger />
-              <Modal.Header>
-                <div className="flex items-center gap-3">
-                  {t("detail.title")}
-                  {job ? <JobStatusChip isHanging={job.isHanging} state={job.state} /> : null}
+    <>
+      <Modal.CloseTrigger />
+      <Modal.Header>
+        <div className="flex items-center gap-3">
+          {t("detail.title")}
+          {job ? <JobStatusChip isHanging={job.isHanging} state={job.state} /> : null}
+        </div>
+      </Modal.Header>
+      <Modal.Body className="gap-6">
+        {isLoading && !job ? (
+          <div className="flex justify-center py-8">
+            <Spinner />
+          </div>
+        ) : null}
+        {error && !job ? <p className="text-danger text-sm">{t("detail.notFound")}</p> : null}
+        {job ? (
+          <>
+            {/* Overview fields */}
+            <dl className="grid grid-cols-2 gap-x-6 gap-y-3">
+              {field(
+                t("detail.fields.queue"),
+                t.has(`queues.${job.queue}`) ? t(`queues.${job.queue}`) : job.queue
+              )}
+              {field(t("detail.fields.jobId"), job.id)}
+              {job.target ? field(t("detail.fields.description"), job.target, true) : null}
+              {job.recipeId ? field(t("detail.fields.recipe"), job.recipeId) : null}
+              {field(t("detail.fields.created"), formatTimestamp(job.createdAt))}
+              {job.state === "delayed" && job.runAt !== null
+                ? field(
+                    job.isRepeat ? t("detail.fields.nextRun") : t("detail.fields.runsAt"),
+                    formatTimestamp(job.runAt)
+                  )
+                : null}
+              {field(t("detail.fields.started"), formatTimestamp(job.processedOn))}
+              {field(t("detail.fields.finished"), formatTimestamp(job.finishedOn))}
+              {field(t("detail.fields.duration"), formatDuration(job.durationMs))}
+              {field(t("detail.fields.attempts"), `${job.attemptsMade}/${job.maxAttempts}`)}
+              {tokensUsed !== null
+                ? field(t("detail.fields.tokens"), format.number(tokensUsed))
+                : null}
+              {job.models.length > 0 ? (
+                <div className="col-span-2">
+                  <dt className="text-muted mb-1 text-xs">{t("detail.fields.models")}</dt>
+                  <dd>
+                    <ModelChips models={job.models} t={t} />
+                  </dd>
                 </div>
-              </Modal.Header>
-              <Modal.Body className="gap-6">
-                {isLoading && !job ? (
-                  <div className="flex justify-center py-8">
-                    <Spinner />
-                  </div>
-                ) : null}
-                {error && !job ? (
-                  <p className="text-danger text-sm">{t("detail.notFound")}</p>
-                ) : null}
-                {job ? (
-                  <>
-                    {/* Overview fields */}
-                    <dl className="grid grid-cols-2 gap-x-6 gap-y-3">
-                      {field(
-                        t("detail.fields.queue"),
-                        t.has(`queues.${job.queue}`) ? t(`queues.${job.queue}`) : job.queue
-                      )}
-                      {field(t("detail.fields.jobId"), job.id)}
-                      {job.target ? field(t("detail.fields.description"), job.target, true) : null}
-                      {job.recipeId ? field(t("detail.fields.recipe"), job.recipeId) : null}
-                      {field(t("detail.fields.created"), formatTimestamp(job.createdAt))}
-                      {job.state === "delayed" && job.runAt !== null
-                        ? field(
-                            job.isRepeat ? t("detail.fields.nextRun") : t("detail.fields.runsAt"),
-                            formatTimestamp(job.runAt)
-                          )
-                        : null}
-                      {field(t("detail.fields.started"), formatTimestamp(job.processedOn))}
-                      {field(t("detail.fields.finished"), formatTimestamp(job.finishedOn))}
-                      {field(t("detail.fields.duration"), formatDuration(job.durationMs))}
-                      {field(t("detail.fields.attempts"), `${job.attemptsMade}/${job.maxAttempts}`)}
-                      {tokensUsed !== null
-                        ? field(t("detail.fields.tokens"), format.number(tokensUsed))
-                        : null}
-                      {job.models.length > 0 ? (
-                        <div className="col-span-2">
-                          <dt className="text-muted mb-1 text-xs">{t("detail.fields.models")}</dt>
-                          <dd>
-                            <ModelChips models={job.models} t={t} />
-                          </dd>
-                        </div>
-                      ) : null}
-                    </dl>
-                    {job.state === "cancelled" ? (
-                      <p className="text-muted text-sm">{t("detail.cancelledNote")}</p>
-                    ) : null}
+              ) : null}
+            </dl>
+            {job.state === "cancelled" ? (
+              <p className="text-muted text-sm">{t("detail.cancelledNote")}</p>
+            ) : null}
 
-                    {/* Input payload (moved to top) */}
-                    <div className="flex flex-col gap-2">
-                      <h3 className="border-divider border-t pt-4 font-semibold">
-                        {t("detail.sections.input")}
-                      </h3>
-                      <pre className="bg-surface-secondary max-h-56 overflow-auto rounded-lg p-3 text-xs">
-                        {job.dataJson}
-                      </pre>
-                    </div>
+            {/* Input payload (moved to top) */}
+            <div className="flex flex-col gap-2">
+              <h3 className="border-divider border-t pt-4 font-semibold">
+                {t("detail.sections.input")}
+              </h3>
+              <pre className="bg-surface-secondary max-h-56 overflow-auto rounded-lg p-3 text-xs">
+                {job.dataJson}
+              </pre>
+            </div>
 
-                    {/* Attempts: collapsible, one accordion item per attempt */}
-                    {job.attempts.length > 0 ? (
-                      <div className="flex flex-col gap-3">
-                        <h3 className="border-divider border-t pt-4 font-semibold">
-                          {t("detail.sections.pipelineSteps")}
-                        </h3>
-                        <Accordion
-                          allowsMultipleExpanded
-                          defaultExpandedKeys={[
-                            // Expand the most recent attempt by default.
-                            `attempt-${job.attempts[job.attempts.length - 1]?.attempt}`,
-                          ]}
-                          variant="surface"
-                        >
-                          {job.attempts.map((attempt) => (
-                            <Accordion.Item key={attempt.attempt} id={`attempt-${attempt.attempt}`}>
-                              <Accordion.Heading>
-                                <Accordion.Trigger>
-                                  <div className="flex items-center gap-2">
-                                    <span className="font-medium">
-                                      {t("detail.attempt", { number: attempt.attempt })}
-                                    </span>
-                                    <Chip
-                                      color={stepStatusColors[attempt.outcome]}
-                                      size="sm"
-                                      variant="soft"
-                                    >
-                                      {t(`stepStatus.${attempt.outcome}`)}
-                                    </Chip>
-                                  </div>
-                                  <Accordion.Indicator />
-                                </Accordion.Trigger>
-                              </Accordion.Heading>
-                              <Accordion.Panel>
-                                <Accordion.Body>
-                                  <AttemptBody attempt={attempt} t={t} />
-                                </Accordion.Body>
-                              </Accordion.Panel>
-                            </Accordion.Item>
-                          ))}
-                        </Accordion>
-                      </div>
-                    ) : job.failedReason ? (
-                      <div className="flex flex-col gap-2">
-                        <h3 className="text-danger border-divider border-t pt-4 font-semibold">
-                          {t("detail.sections.error")}
-                        </h3>
-                        <p className="text-danger text-sm break-all">{job.failedReason}</p>
-                      </div>
-                    ) : null}
-                  </>
-                ) : null}
-                {actionError ? <p className="text-danger text-sm">{actionError}</p> : null}
-              </Modal.Body>
-              <Modal.Footer>
-                {confirmAction === "remove" ? (
-                  <ActionButtonGroup
-                    start={<span className="text-muted text-sm">{t("removeModal.message")}</span>}
-                  >
-                    <ActionButton action="cancel" onPress={() => setConfirmAction(null)}>
-                      {tActions("cancel")}
-                    </ActionButton>
-                    <ActionButton
-                      action="delete"
-                      isPending={isRemoving}
-                      variant="danger"
-                      onPress={handleRemove}
-                    >
-                      {tActions("remove")}
-                    </ActionButton>
-                  </ActionButtonGroup>
-                ) : (
-                  <ActionButtonGroup
-                    start={
-                      job && !job.isRepeat && job.state !== "active" ? (
-                        <ActionButton action="delete" onPress={() => setConfirmAction("remove")}>
-                          {t("actions.remove")}
-                        </ActionButton>
-                      ) : null
-                    }
-                  >
-                    <ActionButton action="dismiss" onPress={close}>
-                      {tActions("close")}
-                    </ActionButton>
-                    {job?.state === "active" ? (
-                      <ActionButton
-                        action="remove"
-                        icon={StopCircleIcon}
-                        isPending={isCancelling}
-                        onPress={handleCancel}
-                      >
-                        {isCancelling ? t("actions.cancelling") : t("actions.cancel")}
-                      </ActionButton>
-                    ) : null}
-                    {job?.state === "failed" || job?.state === "cancelled" ? (
-                      <ActionButton
-                        action="apply"
-                        icon={ArrowPathIcon}
-                        isPending={isRetrying}
-                        onPress={handleRetry}
-                      >
-                        {t("actions.retry")}
-                      </ActionButton>
-                    ) : null}
-                  </ActionButtonGroup>
-                )}
-              </Modal.Footer>
-            </>
-          )}
-        </Modal.Dialog>
-      </Modal.Container>
-    </Modal.Backdrop>
+            {/* Attempts: collapsible, one accordion item per attempt */}
+            {job.attempts.length > 0 ? (
+              <div className="flex flex-col gap-3">
+                <h3 className="border-divider border-t pt-4 font-semibold">
+                  {t("detail.sections.pipelineSteps")}
+                </h3>
+                <Accordion
+                  allowsMultipleExpanded
+                  defaultExpandedKeys={[
+                    // Expand the most recent attempt by default.
+                    `attempt-${job.attempts[job.attempts.length - 1]?.attempt}`,
+                  ]}
+                  variant="surface"
+                >
+                  {job.attempts.map((attempt) => (
+                    <Accordion.Item key={attempt.attempt} id={`attempt-${attempt.attempt}`}>
+                      <Accordion.Heading>
+                        <Accordion.Trigger>
+                          <div className="flex items-center gap-2">
+                            <span className="font-medium">
+                              {t("detail.attempt", { number: attempt.attempt })}
+                            </span>
+                            <Chip
+                              color={stepStatusColors[attempt.outcome]}
+                              size="sm"
+                              variant="soft"
+                            >
+                              {t(`stepStatus.${attempt.outcome}`)}
+                            </Chip>
+                          </div>
+                          <Accordion.Indicator />
+                        </Accordion.Trigger>
+                      </Accordion.Heading>
+                      <Accordion.Panel>
+                        <Accordion.Body>
+                          <AttemptBody attempt={attempt} t={t} />
+                        </Accordion.Body>
+                      </Accordion.Panel>
+                    </Accordion.Item>
+                  ))}
+                </Accordion>
+              </div>
+            ) : job.failedReason ? (
+              <div className="flex flex-col gap-2">
+                <h3 className="text-danger border-divider border-t pt-4 font-semibold">
+                  {t("detail.sections.error")}
+                </h3>
+                <p className="text-danger text-sm break-all">{job.failedReason}</p>
+              </div>
+            ) : null}
+          </>
+        ) : null}
+        {actionError ? <p className="text-danger text-sm">{actionError}</p> : null}
+      </Modal.Body>
+      <Modal.Footer>
+        {confirmAction === "remove" ? (
+          <ActionButtonGroup
+            start={<span className="text-muted text-sm">{t("removeModal.message")}</span>}
+          >
+            <ActionButton action="cancel" onPress={() => setConfirmAction(null)}>
+              {tActions("cancel")}
+            </ActionButton>
+            <ActionButton
+              action="delete"
+              isPending={isRemoving}
+              variant="danger"
+              onPress={handleRemove}
+            >
+              {tActions("remove")}
+            </ActionButton>
+          </ActionButtonGroup>
+        ) : (
+          <ActionButtonGroup
+            start={
+              job && !job.isRepeat && job.state !== "active" ? (
+                <ActionButton action="delete" onPress={() => setConfirmAction("remove")}>
+                  {t("actions.remove")}
+                </ActionButton>
+              ) : null
+            }
+          >
+            <ActionButton action="dismiss" onPress={onClose}>
+              {tActions("close")}
+            </ActionButton>
+            {job?.state === "active" ? (
+              <ActionButton
+                action="remove"
+                icon={StopCircleIcon}
+                isPending={isCancelling}
+                onPress={handleCancel}
+              >
+                {isCancelling ? t("actions.cancelling") : t("actions.cancel")}
+              </ActionButton>
+            ) : null}
+            {job?.state === "failed" || job?.state === "cancelled" ? (
+              <ActionButton
+                action="apply"
+                icon={ArrowPathIcon}
+                isPending={isRetrying}
+                onPress={handleRetry}
+              >
+                {t("actions.retry")}
+              </ActionButton>
+            ) : null}
+          </ActionButtonGroup>
+        )}
+      </Modal.Footer>
+    </>
   );
 }

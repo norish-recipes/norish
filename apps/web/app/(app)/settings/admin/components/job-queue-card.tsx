@@ -5,12 +5,6 @@ import { SettingsCard } from "@/components/settings/settings-card";
 import { ActionButton, ActionButtonGroup } from "@/components/shared/action-button";
 import { ChipButton } from "@/components/shared/chip-button";
 import DataTable from "@/components/ui/data-table";
-import {
-  useAdminConfigsQuery,
-  useJobListQuery,
-  useJobQueueMutations,
-  useQueueSummaryQuery,
-} from "@/hooks/admin";
 import { ChevronLeftIcon, ChevronRightIcon, QueueListIcon } from "@heroicons/react/24/outline";
 import {
   Chip,
@@ -25,9 +19,17 @@ import {
 import { useFormatter, useNow, useTranslations } from "next-intl";
 
 import type { JobRetentionConfig } from "@norish/config/zod/server-config";
+import type { QueueName } from "@norish/queue/queue-names";
+import type { JobListFilter, JobRef } from "@norish/shared-react/admin";
 import type { AdminJobRowDTO } from "@norish/shared/contracts";
 import { DEFAULT_JOB_RETENTION, ServerConfigKeys } from "@norish/config/zod/server-config";
 import { QUEUE_NAMES } from "@norish/queue/queue-names";
+import {
+  useAdminConfig,
+  useJobListQuery,
+  useJobQueueMutations,
+  useQueueSummaryQuery,
+} from "@norish/shared-react/admin";
 
 import JobDetailModal from "./jobs/job-detail-modal";
 import { formatDuration, formatStep } from "./jobs/job-format";
@@ -40,14 +42,17 @@ import { UnsavedChangesChip } from "./unsaved-changes-chip";
  * queue added there is offered here without a second list to keep in step.
  * A leaf module with no server imports, so it is safe in the client bundle.
  */
-const QUEUE_OPTIONS = Object.values(QUEUE_NAMES);
+const QUEUE_OPTIONS: QueueName[] = Object.values(QUEUE_NAMES);
 
 const ALL = "all";
 const PAGE_SIZE = 10;
 
 type StateFilter = "active" | "waiting" | "failed" | "completed" | null;
 
-const STATE_FILTER_STATES: Record<Exclude<StateFilter, null>, string[]> = {
+const STATE_FILTER_STATES: Record<
+  Exclude<StateFilter, null>,
+  NonNullable<JobListFilter["states"]>
+> = {
   active: ["active"],
   waiting: ["waiting", "delayed"],
   failed: ["failed"],
@@ -60,12 +65,12 @@ export default function JobQueueCard() {
   // relativeTime needs a clock; this one moves on each minute.
   const now = useNow({ updateInterval: 60_000 });
   const tActions = useTranslations("common.actions");
-  const { configs } = useAdminConfigsQuery();
+  const storedRetention = useAdminConfig(ServerConfigKeys.JOB_RETENTION) ?? DEFAULT_JOB_RETENTION;
   const { updateJobRetention, isUpdatingRetention } = useJobQueueMutations();
-  const [queueFilter, setQueueFilter] = useState<string>(ALL);
+  const [queueFilter, setQueueFilter] = useState<QueueName | typeof ALL>(ALL);
   const [stateFilter, setStateFilter] = useState<StateFilter>(null);
   const [page, setPage] = useState(1);
-  const [selectedJob, setSelectedJob] = useState<{ queue: string; jobId: string } | null>(null);
+  const [selectedJob, setSelectedJob] = useState<JobRef | null>(null);
 
   const { summaries } = useQueueSummaryQuery();
   const { jobs } = useJobListQuery({
@@ -73,9 +78,6 @@ export default function JobQueueCard() {
     states: stateFilter ? STATE_FILTER_STATES[stateFilter] : undefined,
   });
 
-  const storedRetention =
-    (configs[ServerConfigKeys.JOB_RETENTION] as JobRetentionConfig | undefined) ??
-    DEFAULT_JOB_RETENTION;
   const { keepCompleted, keepFailed, maxAgeDays } = storedRetention;
   const [retention, setRetention] = useState<JobRetentionConfig>(storedRetention);
   const [prevRetention, setPrevRetention] = useState(storedRetention);
@@ -218,10 +220,8 @@ export default function JobQueueCard() {
             value={queueFilter}
             variant="secondary"
             onChange={(key) => {
-              if (typeof key === "string") {
-                setQueueFilter(key);
-                setPage(1);
-              }
+              setQueueFilter(QUEUE_OPTIONS.find((option) => option === key) ?? ALL);
+              setPage(1);
             }}
           >
             <Select.Trigger>
@@ -308,7 +308,11 @@ export default function JobQueueCard() {
           emptyState={t("empty")}
           rowKey={(job: AdminJobRowDTO) => `${job.queue}:${job.id}`}
           rows={pageJobs}
-          onRowAction={(job: AdminJobRowDTO) => setSelectedJob({ queue: job.queue, jobId: job.id })}
+          onRowAction={(job: AdminJobRowDTO) => {
+            const queue = QUEUE_OPTIONS.find((option) => option === job.queue);
+
+            if (queue) setSelectedJob({ queue, jobId: job.id });
+          }}
         />
 
         {totalPages > 1 ? (
@@ -345,11 +349,7 @@ export default function JobQueueCard() {
         ) : null}
       </div>
 
-      <JobDetailModal
-        jobId={selectedJob?.jobId ?? null}
-        queue={selectedJob?.queue ?? null}
-        onClose={() => setSelectedJob(null)}
-      />
+      <JobDetailModal job={selectedJob} onClose={() => setSelectedJob(null)} />
     </SettingsCard>
   );
 }
