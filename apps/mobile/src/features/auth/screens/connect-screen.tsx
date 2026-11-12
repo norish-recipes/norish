@@ -85,7 +85,7 @@ export function ConnectScreen() {
         </View>
       </Animated.View>
 
-      <Animated.View className="mt-[52px] gap-1.5" style={entrance.fieldStyle}>
+      <Animated.View className="mt-[52px] gap-2" style={entrance.fieldStyle}>
         <AuthField
           autoCapitalize="none"
           autoCorrect={false}
