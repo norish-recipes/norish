@@ -1,0 +1,31 @@
+# Connects to an address nothing answers at: Server address shows its error and stays. A good
+# address then connects to Sign in.
+appId: dev.norish.app
+---
+# Nothing listens on port 1, so the address is refused.
+- runFlow:
+    file: subflows/connect.yaml
+    env:
+      NORISH_CONNECT_URL: http://localhost:1
+- extendedWaitUntil:
+    visible:
+      id: connect-error
+    timeout: 20000
+- assertNotVisible:
+    id: login-email
+# Taps at the field's right end to put the caret after the address, erases its 18 characters and
+# connects to a good one.
+- tapOn:
+    id: connect-server-url
+    point: 95%,50%
+- eraseText: 18
+- inputText: ${NORISH_SERVER_URL}
+- hideKeyboard
+- tapOn:
+    id: connect-submit
+- extendedWaitUntil:
+    visible:
+      id: login-email
+    timeout: 20000
+- assertNotVisible:
+    id: connect-error

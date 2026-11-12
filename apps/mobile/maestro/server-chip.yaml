@@ -1,0 +1,40 @@
+# Opens Server address from Sign in's server chip, which holds the saved address. Connecting with
+# the same address returns to Sign in, and back does not lead to a second Sign in.
+appId: dev.norish.app
+---
+- runFlow:
+    file: subflows/connect.yaml
+    env:
+      NORISH_CONNECT_URL: ${NORISH_SERVER_URL}
+- extendedWaitUntil:
+    visible:
+      id: login-email
+    timeout: 20000
+- tapOn:
+    id: server-chip
+- extendedWaitUntil:
+    visible:
+      id: connect-server-url
+      text: ${NORISH_SERVER_URL}
+    timeout: 10000
+- tapOn:
+    id: connect-submit
+- extendedWaitUntil:
+    visible:
+      id: login-email
+    timeout: 20000
+- assertNotVisible:
+    id: connect-server-url
+# Marks this Sign in, so a second one beneath it would show an empty field after a swipe back.
+- tapOn:
+    id: login-email
+- inputText: marker
+- hideKeyboard
+- swipe:
+    start: 1%, 50%
+    end: 80%, 50%
+- assertVisible:
+    id: login-email
+    text: marker
+- assertNotVisible:
+    id: connect-server-url
