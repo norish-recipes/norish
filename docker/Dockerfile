@@ -92,7 +92,8 @@ RUN cd /app/.uv/python/cpython-* && \
 # production internally either way; this pins the rest of the task graph.
 ENV NODE_ENV=production \
   DATABASE_URL="postgresql://dummy:dummy@localhost:5432/dummy" \
-  SKIP_ENV_VALIDATION=1
+  SKIP_ENV_VALIDATION=1 \
+  TURBO_CONCURRENCY=10
 
 # The image takes .next as it is, less what only the build and the tracer
 # read: the caches, the type output, source maps and the trace files.

@@ -1,5 +1,6 @@
 {
   "$schema": "https://turborepo.com/schema.json",
+  "concurrency": "3",
   "globalDependencies": [".github/workflows/**", "pnpm-workspace.yaml"],
   "globalPassThroughEnv": [
     "NODE_ENV",
