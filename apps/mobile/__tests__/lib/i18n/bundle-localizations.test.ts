@@ -13,6 +13,6 @@ describe("CFBundleLocalizations", () => {
       ...new Set(Object.keys(LOCALE_CATALOG).map((code) => IOS_LANGUAGE[code] ?? code)),
     ];
 
-    expect(appConfig.expo.ios.infoPlist.CFBundleLocalizations).toEqual(expected);
+    expect([...appConfig.expo.ios.infoPlist.CFBundleLocalizations].sort()).toEqual(expected.sort());
   });
 });
