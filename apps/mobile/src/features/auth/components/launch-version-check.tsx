@@ -7,8 +7,10 @@ import { resolveLaunchVersionCheck } from "@/lib/boot/boot-state";
 import { getServerAddress, ServerAddressContext } from "@/lib/network/server-address";
 import { router } from "expo-router";
 
-// Once per app launch: the session stack remounts on sign-in, sign-out and onboarding's first Connect.
-let launchChecked = false;
+// Module scope, once per launch: the session stack remounts on every re-key (sign-in, sign-out),
+// so a remount picks up the check in flight and an answer acted on is never acted on again.
+let launchCheck: Promise<ServerAddressCheck> | null = null;
+let launchAnswered = false;
 
 /** Checks the saved Server Address once in the background; a too-old server gets Update your server. */
 export function LaunchVersionCheck({ enabled }: { enabled: boolean }) {
@@ -17,19 +19,30 @@ export function LaunchVersionCheck({ enabled }: { enabled: boolean }) {
   const [check, setCheck] = useState<ServerAddressCheck | null>(null);
 
   useEffect(() => {
-    // Waits for the navigator; a stack first mounted after the launch (onboarding's Connect) skips it.
-    if (!enabled || !address || finished || launchChecked) return;
+    // Waits for the navigator, so the answer has a stack to open on.
+    if (!enabled || !address || launchAnswered) return;
 
-    launchChecked = true;
-    void checkServerAddress(address).then(setCheck);
-  }, [enabled, address, finished]);
+    let mounted = true;
+
+    launchCheck ??= checkServerAddress(address);
+    void launchCheck.then((answer) => {
+      if (mounted) setCheck(answer);
+    });
+
+    return () => {
+      mounted = false;
+    };
+  }, [enabled, address]);
 
   // Held until the splash is gone, so the first screen it fades to isn't replaced mid-fade.
   useEffect(() => {
-    if (!check) return;
+    if (!check || launchAnswered) return;
 
     const next = resolveLaunchVersionCheck(check, getServerAddress(), finished);
 
+    if (next.screen === "wait") return;
+
+    launchAnswered = true;
     if (next.screen === "update-server") router.push(updateServerHref(next.address, next.version));
   }, [check, finished]);
 
