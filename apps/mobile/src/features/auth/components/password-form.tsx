@@ -6,7 +6,7 @@ import React, { useRef, useState } from "react";
 import { Pressable, Text, View } from "react-native";
 import { AuthField } from "@/features/auth/components/auth-field";
 import { AuthSubmitButton } from "@/features/auth/components/auth-submit-button";
-import { InlineErrorBlock } from "@/features/auth/components/inline-error";
+import { InlineError } from "@/features/auth/components/inline-error";
 import Feather from "@expo/vector-icons/Feather";
 import { useRouter } from "expo-router";
 import { InputGroup, LinkButton, useThemeColor } from "heroui-native";
@@ -42,60 +42,53 @@ export function PasswordForm({ authClient, signIn, showSignUpLink }: PasswordFor
 
   return (
     <View className="gap-3.5">
-      <InlineErrorBlock className="gap-3.5" error={error}>
-        <AuthField
-          isInvalid={error !== null}
-          label={intl.formatMessage({ id: "auth.emailPassword.email" })}
-        >
-          <InputGroup.Input
-            autoCapitalize="none"
-            autoCorrect={false}
-            keyboardType="email-address"
-            placeholder={intl.formatMessage({ id: "auth.emailPassword.emailPlaceholder" })}
-            returnKeyType="next"
-            submitBehavior="submit"
-            testID="login-email"
-            textContentType="username"
-            value={email}
-            onChangeText={setEmail}
-            onSubmitEditing={() => passwordInputRef.current?.focus()}
-          />
-        </AuthField>
-        <AuthField
-          isInvalid={error !== null}
-          label={intl.formatMessage({ id: "auth.emailPassword.password" })}
-        >
-          <InputGroup.Input
-            ref={passwordInputRef}
-            autoCapitalize="none"
-            autoCorrect={false}
-            placeholder={intl.formatMessage({ id: "auth.emailPassword.passwordPlaceholder" })}
-            returnKeyType="go"
-            secureTextEntry={!isPasswordShown}
-            testID="login-password"
-            textContentType="password"
-            value={password}
-            onChangeText={setPassword}
-            onSubmitEditing={handleSubmit}
-          />
-          {/* heroui-native's own password toggle is a Pressable in the suffix. */}
-          <InputGroup.Suffix>
-            <Pressable
-              accessibilityLabel={intl.formatMessage({
-                id: isPasswordShown
-                  ? "auth.emailPassword.hidePassword"
-                  : "auth.emailPassword.showPassword",
-              })}
-              accessibilityRole="button"
-              className="size-10 items-center justify-center"
-              hitSlop={4}
-              onPress={() => setIsPasswordShown((shown) => !shown)}
-            >
-              <Feather color={mutedColor} name={isPasswordShown ? "eye-off" : "eye"} size={20} />
-            </Pressable>
-          </InputGroup.Suffix>
-        </AuthField>
-      </InlineErrorBlock>
+      <AuthField error={error} label={intl.formatMessage({ id: "auth.emailPassword.email" })}>
+        <InputGroup.Input
+          autoCapitalize="none"
+          autoCorrect={false}
+          keyboardType="email-address"
+          placeholder={intl.formatMessage({ id: "auth.emailPassword.emailPlaceholder" })}
+          returnKeyType="next"
+          submitBehavior="submit"
+          testID="login-email"
+          textContentType="username"
+          value={email}
+          onChangeText={setEmail}
+          onSubmitEditing={() => passwordInputRef.current?.focus()}
+        />
+      </AuthField>
+      <AuthField error={error} label={intl.formatMessage({ id: "auth.emailPassword.password" })}>
+        <InputGroup.Input
+          ref={passwordInputRef}
+          autoCapitalize="none"
+          autoCorrect={false}
+          placeholder={intl.formatMessage({ id: "auth.emailPassword.passwordPlaceholder" })}
+          returnKeyType="go"
+          secureTextEntry={!isPasswordShown}
+          testID="login-password"
+          textContentType="password"
+          value={password}
+          onChangeText={setPassword}
+          onSubmitEditing={handleSubmit}
+        />
+        {/* heroui-native's own password toggle is a Pressable in the suffix. */}
+        <InputGroup.Suffix>
+          <Pressable
+            accessibilityLabel={intl.formatMessage({
+              id: isPasswordShown
+                ? "auth.emailPassword.hidePassword"
+                : "auth.emailPassword.showPassword",
+            })}
+            accessibilityRole="button"
+            className="size-10 items-center justify-center"
+            hitSlop={4}
+            onPress={() => setIsPasswordShown((shown) => !shown)}
+          >
+            <Feather color={mutedColor} name={isPasswordShown ? "eye-off" : "eye"} size={20} />
+          </Pressable>
+        </InputGroup.Suffix>
+      </AuthField>
+      <InlineError error={error} />
 
       {showSignUpLink ? (
         <View className="mt-0.5 flex-row flex-wrap items-center justify-center">

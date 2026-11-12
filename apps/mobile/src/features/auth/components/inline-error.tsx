@@ -24,28 +24,41 @@ const RISE_IN = FadeInDown.duration(240)
 
 const SHAKE_OFFSETS = [-10, 9, -7, 5, -3, 0];
 
-/** One shake and one error haptic per failed attempt; Reduce Motion keeps only the haptic. */
-function useErrorShake(error: InlineErrorState) {
+/** Its children, shaking once per failed attempt; still under Reduce Motion. */
+export function ErrorShake({
+  error,
+  className,
+  children,
+}: {
+  error: InlineErrorState;
+  className?: string;
+  children: ReactNode;
+}) {
   const offset = useSharedValue(0);
   const reduceMotion = useReducedMotion();
+  const shakeStyle = useAnimatedStyle(() => ({ transform: [{ translateX: offset.get() }] }));
 
   useEffect(() => {
-    if (!error) return;
-
-    void Haptics.notificationAsync(Haptics.NotificationFeedbackType.Error);
-
-    if (!reduceMotion) {
+    if (error && !reduceMotion) {
       offset.set(withSequence(...SHAKE_OFFSETS.map((to) => withTiming(to, { duration: 50 }))));
     }
   }, [error, offset, reduceMotion]);
 
-  return useAnimatedStyle(() => ({ transform: [{ translateX: offset.get() }] }));
+  return (
+    <Animated.View className={className} style={shakeStyle}>
+      {children}
+    </Animated.View>
+  );
 }
 
-/** The danger line under a field or form, rising in when an attempt fails. */
-function InlineError({ error }: { error: InlineErrorState }) {
+/** The danger line under a field or form, rising in with one error haptic per failed attempt. */
+export function InlineError({ error }: { error: InlineErrorState }) {
   const [dangerColor] = useThemeColor(["danger"] as const);
   const reduceMotion = useReducedMotion();
+
+  useEffect(() => {
+    if (error) void Haptics.notificationAsync(Haptics.NotificationFeedbackType.Error);
+  }, [error]);
 
   return (
     <FieldError
@@ -60,7 +73,7 @@ function InlineError({ error }: { error: InlineErrorState }) {
   );
 }
 
-/** A form's fields, shaking on each failed attempt, with the error line under them. */
+/** Controls that shake together on each failed attempt, with the error line under them. */
 export function InlineErrorBlock({
   error,
   className,
@@ -70,13 +83,11 @@ export function InlineErrorBlock({
   className?: string;
   children: ReactNode;
 }) {
-  const shakeStyle = useErrorShake(error);
-
   return (
     <>
-      <Animated.View className={className} style={shakeStyle}>
+      <ErrorShake className={className} error={error}>
         {children}
-      </Animated.View>
+      </ErrorShake>
       <InlineError error={error} />
     </>
   );

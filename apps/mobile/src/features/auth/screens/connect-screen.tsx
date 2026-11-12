@@ -7,7 +7,7 @@ import { AuthField } from "@/features/auth/components/auth-field";
 import { AuthLayout } from "@/features/auth/components/auth-layout";
 import { AuthSubmitButton } from "@/features/auth/components/auth-submit-button";
 import { HelpPopover } from "@/features/auth/components/help-popover";
-import { InlineErrorBlock } from "@/features/auth/components/inline-error";
+import { InlineError } from "@/features/auth/components/inline-error";
 import { useAuthAttempt } from "@/features/auth/hooks/use-auth-attempt";
 import { checkServerAddress } from "@/features/auth/utils/check-server-address";
 import { getServerAddress, saveServerAddress } from "@/lib/network/server-address";
@@ -86,34 +86,33 @@ export function ConnectScreen() {
       </Animated.View>
 
       <Animated.View className="mt-[52px] gap-1.5" style={entrance.fieldStyle}>
-        <InlineErrorBlock error={connect.failure}>
-          <AuthField
-            isInvalid={connect.failure !== null}
-            label={intl.formatMessage({ id: "auth.connect.serverAddressLabel" })}
-            labelAccessory={
-              <HelpPopover
-                label={intl.formatMessage({ id: "auth.connect.serverAddressHelp" })}
-                text={intl.formatMessage({ id: "auth.connect.example" })}
-              />
-            }
-          >
-            <InputGroup.Prefix isDecorative>
-              <Feather color={mutedColor} name="server" size={20} />
-            </InputGroup.Prefix>
-            <InputGroup.Input
-              autoCapitalize="none"
-              autoCorrect={false}
-              keyboardType="url"
-              placeholder={intl.formatMessage({ id: "auth.connect.serverAddressPlaceholder" })}
-              returnKeyType="go"
-              testID="connect-server-url"
-              textContentType="URL"
-              value={address}
-              onChangeText={setAddress}
-              onSubmitEditing={handleConnect}
+        <AuthField
+          error={connect.failure}
+          label={intl.formatMessage({ id: "auth.connect.serverAddressLabel" })}
+          labelAccessory={
+            <HelpPopover
+              label={intl.formatMessage({ id: "auth.connect.serverAddressHelp" })}
+              text={intl.formatMessage({ id: "auth.connect.example" })}
             />
-          </AuthField>
-        </InlineErrorBlock>
+          }
+        >
+          <InputGroup.Prefix isDecorative>
+            <Feather color={mutedColor} name="server" size={20} />
+          </InputGroup.Prefix>
+          <InputGroup.Input
+            autoCapitalize="none"
+            autoCorrect={false}
+            keyboardType="url"
+            placeholder={intl.formatMessage({ id: "auth.connect.serverAddressPlaceholder" })}
+            returnKeyType="go"
+            testID="connect-server-url"
+            textContentType="URL"
+            value={address}
+            onChangeText={setAddress}
+            onSubmitEditing={handleConnect}
+          />
+        </AuthField>
+        <InlineError error={connect.failure} />
       </Animated.View>
     </AuthLayout>
   );
