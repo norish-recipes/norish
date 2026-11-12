@@ -97,7 +97,8 @@ const { AuthProviders } = await import("@/lib/auth/auth-providers");
 const { getAuthTransportSnapshot, publishSignedOut, subscribeAuthTransport } =
   await import("@/lib/auth/auth-session-sync");
 const { AUTH_COOKIE_KEY, authStorage } = await import("@/lib/auth/auth-storage");
-const { saveBackendBaseUrl } = await import("@/lib/network/backend-base-url");
+const { BackendBaseUrlContext } = await import("@/lib/network/backend-base-url");
+const { resetAuthClientStorage } = await import("@/lib/auth/auth-client");
 
 const USER = { id: "reader-1", email: "reader@norish.test", name: "Reader" };
 const PENDING = { user: null, isPending: true };
@@ -107,13 +108,18 @@ const SIGNED_OUT = { user: null, isPending: false };
 function ReKeyed() {
   const { version } = useSyncExternalStore(subscribeAuthTransport, getAuthTransportSnapshot);
 
-  return <AuthProviders key={version}>{null}</AuthProviders>;
+  return (
+    <BackendBaseUrlContext value="https://norish.test">
+      <AuthProviders key={version}>{null}</AuthProviders>
+    </BackendBaseUrlContext>
+  );
 }
 
 describe("AuthProviders", () => {
   beforeEach(async () => {
+    // A fresh client per test, as after a sign-out.
+    await resetAuthClientStorage();
     secureStore.items.clear();
-    await saveBackendBaseUrl("https://norish.test");
     clients.length = 0;
     seen.sessions.length = 0;
     // The persisted session an Offline launch falls back on.

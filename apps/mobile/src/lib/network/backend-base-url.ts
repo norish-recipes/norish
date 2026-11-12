@@ -1,3 +1,4 @@
+import { createContext } from "react";
 import { resetAuthClientStorage } from "@/lib/auth/auth-client";
 import * as SecureStore from "expo-secure-store";
 
@@ -8,6 +9,9 @@ const BACKEND_BASE_URL_KEY = "norish.backend-base-url";
 const listeners = new Set<() => void>();
 // The last address read or saved, for callers that need it synchronously (tRPC, the probe).
 let currentBaseUrl = "";
+
+/** The server the boot gate renders the app with; null in onboarding, which has no tRPC. */
+export const BackendBaseUrlContext = createContext<string | null>(null);
 
 export function getBackendBaseUrl(): string {
   return currentBaseUrl;

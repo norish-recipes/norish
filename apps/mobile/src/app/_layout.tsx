@@ -11,6 +11,7 @@ import { useUserLocaleSync } from "@/hooks/use-user-locale-sync";
 import { AuthProviders } from "@/lib/auth/auth-providers";
 import { resolveBootPhase } from "@/lib/boot/boot-state";
 import { MobileIntlFallbackProvider } from "@/lib/i18n/mobile-i18n-context";
+import { BackendBaseUrlContext } from "@/lib/network/backend-base-url";
 import { ConnectivityProvider, OfflineController, offlineEngine } from "@/lib/offline/engine";
 import {
   AppearancePreferenceProvider,
@@ -145,17 +146,19 @@ function RootLayoutContent() {
   // Full provider tree — backend available
   return (
     <ThemeProvider value={theme}>
-      <TrpcProvider
-        baseUrl={boot.backendBaseUrl}
-        getQueryClient={getOfflineQueryClient}
-        mutationLink={offlineEngine.outboxLink}
-      >
-        <ConnectivityProvider>
-          <AuthProviders>
-            <SessionStack />
-          </AuthProviders>
-        </ConnectivityProvider>
-      </TrpcProvider>
+      <BackendBaseUrlContext value={boot.backendBaseUrl}>
+        <TrpcProvider
+          baseUrl={boot.backendBaseUrl}
+          getQueryClient={getOfflineQueryClient}
+          mutationLink={offlineEngine.outboxLink}
+        >
+          <ConnectivityProvider>
+            <AuthProviders>
+              <SessionStack />
+            </AuthProviders>
+          </ConnectivityProvider>
+        </TrpcProvider>
+      </BackendBaseUrlContext>
     </ThemeProvider>
   );
 }
