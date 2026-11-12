@@ -18,15 +18,18 @@ describe("authFailure", () => {
   });
 
   it("translates a server code auth.errors knows", async () => {
+    await expect(authFailure(refuse({ code: "PROVIDER_NOT_FOUND" }), "fallback")).resolves.toBe(
+      "auth.errors.provider_not_found.description"
+    );
+  });
+
+  it("says sign-ups are closed when the server refuses a new Account", async () => {
     await expect(
       authFailure(
         refuse({ code: "REGISTRATION_IS_CURRENTLY_DISABLED", message: "Registration disabled" }),
         "fallback"
       )
-    ).resolves.toBe("auth.errors.registration_is_currently_disabled.description");
-    await expect(authFailure(refuse({ code: "PROVIDER_NOT_FOUND" }), "fallback")).resolves.toBe(
-      "auth.errors.provider_not_found.description"
-    );
+    ).resolves.toBe("auth.signup.errors.closed");
   });
 
   it("says the email is in use when Sign up meets an existing account", async () => {

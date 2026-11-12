@@ -12,7 +12,6 @@ const TRANSLATED_CODES = new Set([
   "provider_not_found",
   "social_account_already_linked",
   "account_not_found",
-  "registration_is_currently_disabled",
   "user_not_found",
   "internal_server_error",
   "unauthorized",
@@ -23,6 +22,9 @@ function refusalMessageId(error: AuthError, fallback: string): string {
   // Sign up's refusal; web shows the server's own text, which mobile never does.
   if (error.code?.startsWith("USER_ALREADY_EXISTS"))
     return "auth.errors.account_not_linked.description";
+
+  // The server refuses a new Account when sign-ups are closed.
+  if (error.code === "REGISTRATION_IS_CURRENTLY_DISABLED") return "auth.signup.errors.closed";
 
   const code = error.code?.toLowerCase();
 
