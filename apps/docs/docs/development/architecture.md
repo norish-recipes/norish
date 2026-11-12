@@ -55,11 +55,15 @@ Web and mobile use the same layout. Web keeps its folders at the root of
 
 - `app/` holds the route files, which render screens from features. On web a
   route file also does the server-only work: seeding the cache, metadata and
-  params.
+  params, repository reads and redirects.
 - `features/<feature>/` holds one domain's screens, components, hooks and
   helpers. Each feature is a domain: `library` (with the cookbook page),
   `recipes` (with the shared recipe page), `groceries`, `calendar`, `imports`,
-  `settings` and `auth`.
+  `account`, `household`, `ingredients`, `admin` and `auth`. Imports are still
+  in shared app folders. The settings route composes five features: `account`,
+  `household`, `ingredients`, `admin` and CalDAV in `calendar`. Each tab has
+  its own route and renders its feature screen. `components/settings/` holds
+  UI shared by tabs.
 - A feature groups its `components/` by area. An area's `index.ts` re-exports
   only pieces more than one screen draws; import a piece one screen draws by
   file, and omit the index when nothing is shared. The bundler ships every file
@@ -85,18 +89,14 @@ Web and mobile use the same layout. Web keeps its folders at the root of
 
 Imports run one way: shared folders, then features, then routes.
 
-On web `groceries`, `recipes`, `library` and `calendar` have moved. The remaining
-features still live in web's `components/` and `hooks/`. In shared-react,
-`src/recipes/`, `src/calendar/` and `src/reader/` sit next to `groceries/`;
-`calendar/` holds planned items and their CalDAV mirror. Code still used by
-unmigrated features remains in `hooks/` and `contexts/`.
-
 ### In shared-react
 
 A domain folder in `packages/shared-react/src/`, such as `groceries/`, holds one
 domain's hooks, client stores, realtime subscriptions and types. Apps import it
 as `@norish/shared-react/<domain>`, and its tests sit in
-`src/<domain>/__tests__/`. One domain can serve several app features.
+`src/<domain>/__tests__/`. One domain can serve several app features. The domain folders are `admin`,
+`calendar`, `groceries`, `ingredients` and `recipes`. CalDAV belongs to
+`calendar`.
 
 The cross-cutting folders serve every domain:
 
@@ -106,9 +106,11 @@ The cross-cutting folders serve every domain:
   display, storage and Device Kind.
 - `offline/` is the offline engine: the Offline Cache, the Outbox, Replay,
   Recovery, and the optimistic-update helpers every domain's mutations use.
-- `config/` reads reference data such as units, tags and recurrence words.
-- `reader/` holds the signed-in Reader: identity, household, allergies,
-  permissions and Device Preferences.
+- `config/` reads reference data such as units, tags and recurrence words,
+  and provides `useAuthProvidersQuery`.
+- `reader/` holds the signed-in Reader and Account: identity, household,
+  profile, allergies, Sign-in Methods, site tokens, their writes, permissions
+  and Device Preferences.
 - `realtime/` holds `useRealtimeSubscription`, which every subscription is built
   on, and `useKeepsCurrent`.
 - `page-store/` provides `createPageStoreContext`, which returns a provider that
@@ -163,6 +165,9 @@ it. It never builds a provider client or passes a finished prompt
 [CONTRIBUTING.md](https://github.com/norish-recipes/Norish/blob/main/CONTRIBUTING.md#app-architecture)
 gives the reasons for decisions without an ADR.
 
+- Components use named shared-react hooks for every server read and write.
+  They never call tRPC directly. `restrictTRPC` bans `useTRPC` and
+  `useTRPCClient` in both apps, with no exceptions today.
 - Components read server data through hooks over the TanStack Query cache, the
   one copy on a client, which offline mode persists
   ([ADR-0001](https://github.com/norish-recipes/Norish/blob/main/docs/adr/offline/0001-web-offline-is-a-persisted-query-cache.md)).
@@ -205,7 +210,7 @@ gives the reasons for decisions without an ADR.
   Calendar's root and today's meals on the dashboard mount calendar events and
   recipe updates, which change a planned recipe's name and image.
   The editor also mounts recipe list events, which reread its category choices,
-  and Add to Groceries mounts the subscription of the recipe it draws. User settings mounts
+  and Add to Groceries mounts the subscription of the recipe it draws. The Account screen mounts
   archive import progress for its bar. A component inside `Panel` mounts its
   reads and subscriptions while open and through the exit animation. Each
   opening rereads data nothing kept current; hooks need no `enabled` or `open`
