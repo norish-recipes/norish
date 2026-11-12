@@ -1184,9 +1184,7 @@
     "unsavedChanges": "Tallentamattomia muutoksia",
     "jsonEditor": {
       "placeholder": "Kirjoita JSON-asetukset...",
-      "invalidJson": "Virheellinen JSON-muoto",
-      "failedToSave": "Tallennus epäonnistui",
-      "failedToRestore": "Oletusten palautus epäonnistui"
+      "invalidJson": "Virheellinen JSON-muoto"
     },
     "jobQueue": {
       "title": "Työjonot",

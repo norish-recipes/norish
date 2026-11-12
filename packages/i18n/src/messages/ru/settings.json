@@ -1184,9 +1184,7 @@
     "unsavedChanges": "Несохранённые изменения",
     "jsonEditor": {
       "placeholder": "Введите JSON-конфигурацию...",
-      "invalidJson": "Некорректный формат JSON",
-      "failedToSave": "Не удалось сохранить",
-      "failedToRestore": "Не удалось восстановить значения по умолчанию"
+      "invalidJson": "Некорректный формат JSON"
     },
     "jobQueue": {
       "title": "Очереди задач",

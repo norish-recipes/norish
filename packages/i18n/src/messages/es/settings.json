@@ -1184,9 +1184,7 @@
     "unsavedChanges": "Cambios sin guardar",
     "jsonEditor": {
       "placeholder": "Introduce la configuración JSON...",
-      "invalidJson": "Formato JSON inválido",
-      "failedToSave": "No se pudo guardar",
-      "failedToRestore": "No se pudo restaurar los valores predeterminados"
+      "invalidJson": "Formato JSON inválido"
     },
     "jobQueue": {
       "title": "Colas de trabajos",

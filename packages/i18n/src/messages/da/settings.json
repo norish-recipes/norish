@@ -1184,9 +1184,7 @@
     "unsavedChanges": "Ugemte ændringer",
     "jsonEditor": {
       "placeholder": "Indtast JSON-konfiguration...",
-      "invalidJson": "Ugyldigt JSON-format",
-      "failedToSave": "Kunne ikke gemme",
-      "failedToRestore": "Kunne ikke gendanne standardindstillinger"
+      "invalidJson": "Ugyldigt JSON-format"
     },
     "jobQueue": {
       "title": "Jobkøer",

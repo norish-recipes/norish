@@ -1184,9 +1184,7 @@
     "unsavedChanges": "Modifiche non salvate",
     "jsonEditor": {
       "placeholder": "Inserisci configurazione JSON...",
-      "invalidJson": "Formato JSON non valido",
-      "failedToSave": "Salvataggio non riuscito",
-      "failedToRestore": "Ripristino dei valori predefiniti non riuscito"
+      "invalidJson": "Formato JSON non valido"
     },
     "jobQueue": {
       "title": "Code dei job",

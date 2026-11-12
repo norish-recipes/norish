@@ -1184,9 +1184,7 @@
     "unsavedChanges": "Ulagrede endringer",
     "jsonEditor": {
       "placeholder": "Skriv inn JSON-konfigurasjon...",
-      "invalidJson": "Ugyldig JSON-format",
-      "failedToSave": "Kunne ikke lagre",
-      "failedToRestore": "Kunne ikke gjenopprette standardinnstillinger"
+      "invalidJson": "Ugyldig JSON-format"
     },
     "jobQueue": {
       "title": "Jobbkøer",

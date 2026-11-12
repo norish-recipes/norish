@@ -1184,9 +1184,7 @@
     "unsavedChanges": "Niezapisane zmiany",
     "jsonEditor": {
       "placeholder": "Wpisz konfigurację JSON...",
-      "invalidJson": "Nieprawidłowy format JSON",
-      "failedToSave": "Nie udało się zapisać",
-      "failedToRestore": "Nie udało się przywrócić domyślnych"
+      "invalidJson": "Nieprawidłowy format JSON"
     },
     "jobQueue": {
       "title": "Kolejki zadań",

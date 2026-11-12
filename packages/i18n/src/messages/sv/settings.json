@@ -1184,9 +1184,7 @@
     "unsavedChanges": "Osparade ändringar",
     "jsonEditor": {
       "placeholder": "Ange JSON-konfiguration...",
-      "invalidJson": "Ogiltigt JSON-format",
-      "failedToSave": "Det gick inte att spara",
-      "failedToRestore": "Det gick inte att återställa standardvärden"
+      "invalidJson": "Ogiltigt JSON-format"
     },
     "jobQueue": {
       "title": "Jobbköer",

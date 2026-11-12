@@ -1184,9 +1184,7 @@
     "unsavedChanges": "저장되지 않은 변경사항",
     "jsonEditor": {
       "placeholder": "JSON 구성 입력...",
-      "invalidJson": "잘못된 JSON 형식",
-      "failedToSave": "저장하지 못했습니다.",
-      "failedToRestore": "기본값을 복원하지 못했습니다."
+      "invalidJson": "잘못된 JSON 형식"
     },
     "jobQueue": {
       "title": "작업 대기열",

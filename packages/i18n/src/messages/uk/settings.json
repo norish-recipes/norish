@@ -1184,9 +1184,7 @@
     "unsavedChanges": "Незбережені зміни",
     "jsonEditor": {
       "placeholder": "Введіть конфігурацію JSON...",
-      "invalidJson": "Недійсний формат JSON",
-      "failedToSave": "Не вдалося зберегти",
-      "failedToRestore": "Не вдалося відновити типові значення"
+      "invalidJson": "Недійсний формат JSON"
     },
     "jobQueue": {
       "title": "Черги завдань",

@@ -1,26 +1,22 @@
 import { usePending } from "@/hooks/use-pending";
-import { useTranslations } from "next-intl";
 
 import type { WriteResult } from "@norish/shared-react/admin";
 
-/** An editor's save and restore; a refusal or a failed send lands in `setError`. */
+/** An editor's save and restore; a refusal lands in `setError`, a failed send shows itself. */
 export function useEditorWrites(setError: (error: string) => void, onSaved: () => void) {
-  const t = useTranslations("settings.admin.jsonEditor");
   const [saving, whileSaving] = usePending();
 
-  const run = (write: () => Promise<WriteResult | null>, failed: string, onDone?: () => void) =>
+  const run = (write: () => Promise<WriteResult | null>, onDone?: () => void) =>
     whileSaving(() =>
-      write()
-        .then((result) => {
-          if (result?.success) onDone?.();
-          else if (result?.error) setError(result.error);
-        })
-        .catch((e: unknown) => setError(e instanceof Error ? e.message : failed))
+      write().then((result) => {
+        if (result?.success) onDone?.();
+        else if (result?.error) setError(result.error);
+      })
     );
 
   return {
     saving,
-    save: (write: () => Promise<WriteResult | null>) => run(write, t("failedToSave"), onSaved),
-    restore: (write: () => Promise<WriteResult | null>) => run(write, t("failedToRestore")),
+    save: (write: () => Promise<WriteResult | null>) => run(write, onSaved),
+    restore: (write: () => Promise<WriteResult | null>) => run(write),
   };
 }

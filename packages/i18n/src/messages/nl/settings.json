@@ -1184,9 +1184,7 @@
     "unsavedChanges": "Niet-opgeslagen wijzigingen",
     "jsonEditor": {
       "placeholder": "Voer JSON-configuratie in...",
-      "invalidJson": "Ongeldig JSON-formaat",
-      "failedToSave": "Opslaan mislukt",
-      "failedToRestore": "Resetten herstellen mislukt"
+      "invalidJson": "Ongeldig JSON-formaat"
     },
     "jobQueue": {
       "title": "Jobwachtrijen",

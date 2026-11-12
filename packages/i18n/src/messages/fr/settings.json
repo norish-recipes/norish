@@ -1184,9 +1184,7 @@
     "unsavedChanges": "Modifications non enregistrées",
     "jsonEditor": {
       "placeholder": "Entrez la configuration JSON...",
-      "invalidJson": "Format JSON invalide",
-      "failedToSave": "Échec de l’enregistrement",
-      "failedToRestore": "Échec de la restauration"
+      "invalidJson": "Format JSON invalide"
     },
     "jobQueue": {
       "title": "Files de tâches",

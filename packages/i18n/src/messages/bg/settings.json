@@ -1184,9 +1184,7 @@
     "unsavedChanges": "Незапазени промени",
     "jsonEditor": {
       "placeholder": "Въведи JSON конфигурация...",
-      "invalidJson": "Невалиден JSON формат",
-      "failedToSave": "Запазването не бе успешно",
-      "failedToRestore": "Възстановяването на стойностите по подразбиране не бе успешно"
+      "invalidJson": "Невалиден JSON формат"
     },
     "jobQueue": {
       "title": "Опашки със задачи",

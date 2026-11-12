@@ -1184,9 +1184,7 @@
     "unsavedChanges": "Alterações não salvas",
     "jsonEditor": {
       "placeholder": "Insira a configuração JSON...",
-      "invalidJson": "Formato JSON inválido",
-      "failedToSave": "Falha ao salvar",
-      "failedToRestore": "Falha ao restaurar padrões"
+      "invalidJson": "Formato JSON inválido"
     },
     "jobQueue": {
       "title": "Filas de trabalhos",
