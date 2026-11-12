@@ -2,7 +2,7 @@ import type { ServerAddressCheck } from "@/lib/network/server-address";
 import React, { useEffect, useState } from "react";
 import { UpdateServerScreen } from "@/features/auth/screens/update-server-screen";
 import { checkServerAddress } from "@/features/auth/utils/check-server-address";
-import { resolveUpdateServerRoute } from "@/lib/boot/boot-state";
+import { resolveUpdateServerRoute } from "@/lib/boot/version-gate";
 import { getServerAddress } from "@/lib/network/server-address";
 import { getTooOldServer } from "@/lib/network/too-old-server";
 import { Redirect, useLocalSearchParams } from "expo-router";

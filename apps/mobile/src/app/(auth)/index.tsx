@@ -4,7 +4,7 @@ import { ConnectScreen } from "@/features/auth/screens/connect-screen";
 import { LoginScreen } from "@/features/auth/screens/login-screen";
 import { takeServerChangeAfterSignOut } from "@/hooks/use-change-server-address";
 import { takeSessionLeft } from "@/lib/auth/auth-session-sync";
-import { fadesInAfterSessionEnd, resolveSignedOutEntry } from "@/lib/boot/boot-state";
+import { fadesInAfterSessionEnd, resolveSignedOutEntry } from "@/lib/boot/signed-out-entry";
 import { getServerAddress } from "@/lib/network/server-address";
 import { useLocalSearchParams } from "expo-router";
 

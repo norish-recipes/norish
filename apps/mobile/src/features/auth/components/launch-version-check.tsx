@@ -3,7 +3,7 @@ import { use, useEffect, useState } from "react";
 import { useLaunchPhase } from "@/components/launch";
 import { checkServerAddress } from "@/features/auth/utils/check-server-address";
 import { updateServerHref } from "@/features/auth/utils/update-server-route";
-import { resolveLaunchVersionCheck, resolveTooOldServerRoute } from "@/lib/boot/boot-state";
+import { resolveLaunchVersionCheck, resolveTooOldServerRoute } from "@/lib/boot/version-gate";
 import { getServerAddress, ServerAddressContext } from "@/lib/network/server-address";
 import { markServerTooOld, useTooOldServer } from "@/lib/network/too-old-server";
 import { router, usePathname } from "expo-router";

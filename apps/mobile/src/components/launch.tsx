@@ -1,4 +1,4 @@
-import type { LaunchHandoff, LaunchPhase } from "@/lib/boot/boot-state";
+import type { LaunchHandoff, LaunchPhase } from "@/lib/boot/launch-motion";
 import type { ReactNode } from "react";
 import type { LayoutChangeEvent } from "react-native";
 import type { SharedValue } from "react-native-reanimated";
@@ -13,7 +13,7 @@ import Animated, {
 } from "react-native-reanimated";
 import { scheduleOnRN } from "react-native-worklets";
 import { Brand, useSplashBrandTop } from "@/components/brand";
-import { resolveLaunchMotion, resolveSloganStart, stepLaunchClock } from "@/lib/boot/boot-state";
+import { resolveLaunchMotion, resolveSloganStart, stepLaunchClock } from "@/lib/boot/launch-motion";
 import { useMobileLocaleSettings } from "@/lib/i18n/mobile-i18n-context";
 import { progress } from "@/lib/motion/progress";
 import * as SplashScreen from "expo-splash-screen";

@@ -1,4 +1,4 @@
-import type { ForegroundContinue } from "@/lib/boot/boot-state";
+import type { ForegroundContinue } from "@/lib/boot/version-gate";
 import React from "react";
 import { StatusBadge } from "@/features/auth/components/status-badge";
 import { StatusScreen } from "@/features/auth/components/status-screen";

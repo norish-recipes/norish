@@ -1,7 +1,7 @@
 import type { Href } from "expo-router";
 import { useEffect } from "react";
 import { useConfirmedSignOut } from "@/hooks/use-confirmed-sign-out";
-import { resolveServerChange } from "@/lib/boot/boot-state";
+import { resolveServerChange } from "@/lib/boot/version-gate";
 import { clearServerTooOld } from "@/lib/network/too-old-server";
 import { router } from "expo-router";
 

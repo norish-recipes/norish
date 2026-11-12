@@ -1,8 +1,8 @@
-import type { ForegroundContinue } from "@/lib/boot/boot-state";
+import type { ForegroundContinue } from "@/lib/boot/version-gate";
 import { useEffect, useEffectEvent } from "react";
 import { AppState } from "react-native";
 import { checkServerAddress } from "@/features/auth/utils/check-server-address";
-import { resolveForegroundVersionCheck } from "@/lib/boot/boot-state";
+import { resolveForegroundVersionCheck } from "@/lib/boot/version-gate";
 import { useIsFocused } from "expo-router";
 
 /**

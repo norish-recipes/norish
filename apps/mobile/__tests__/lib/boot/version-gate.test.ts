@@ -4,7 +4,7 @@ import {
   resolveServerChange,
   resolveTooOldServerRoute,
   resolveUpdateServerRoute,
-} from "@/lib/boot/boot-state";
+} from "@/lib/boot/version-gate";
 import { describe, expect, it } from "vitest";
 
 const address = "https://norish.example.com";
