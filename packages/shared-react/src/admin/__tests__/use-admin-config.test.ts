@@ -8,12 +8,13 @@ import {
   fakePlatformAdapter,
 } from "@norish/shared-react/platform/testing";
 
-import { answerCall, keyOf, resetTRPCFake, serveTRPC } from "../../trpc/testing";
+import { answerCall, failCall, keyOf, resetTRPCFake, serveTRPC } from "../../trpc/testing";
 import { useAdminConfig, useConfigSecret } from "../use-admin-config";
 import {
   useAuthProviderWrites,
   useContentConfigWrites,
   useGeneralConfigWrites,
+  useRestartServer,
   useRestoreDefault,
 } from "../use-admin-config-writes";
 
@@ -145,6 +146,23 @@ describe("the config writes", () => {
       "admin-auth-provider:delete:github"
     );
     expect(stale(CONFIGS)).toBe(false);
+  });
+
+  it("say a failed restart failed, and resolve that it did not go through", async () => {
+    const { platform, wrapper } = setUp();
+    const { result } = renderHook(() => useRestartServer(), { wrapper });
+    let restarted: Promise<boolean> | undefined;
+
+    act(() => {
+      restarted = result.current();
+    });
+    await failCall("admin.restartServer");
+
+    expect(await restarted).toBe(false);
+    expect(platform.showError).toHaveBeenCalledWith(
+      expect.objectContaining({ message: "offline" }),
+      "admin-system:restart"
+    );
   });
 });
 

@@ -224,7 +224,12 @@ export function useSchedulerMonthsWrite() {
 /** Resolves whether the server agreed to restart. */
 export function useRestartServer() {
   const trpc = useTRPC();
-  const { mutateAsync } = useMutation(trpc.admin.restartServer.mutationOptions());
+  const { showError } = usePlatform();
+  const { mutateAsync } = useMutation(
+    trpc.admin.restartServer.mutationOptions({
+      onError: (error) => showError(error, "admin-system:restart"),
+    })
+  );
 
   return () => wentThrough(mutateAsync());
 }

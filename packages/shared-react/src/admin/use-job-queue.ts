@@ -5,6 +5,7 @@ import type { JobRetentionConfig } from "@norish/config/zod/server-config";
 import type { AppRouter } from "@norish/trpc/client";
 
 import { settled } from "../offline/settled";
+import { usePlatform } from "../platform/platform";
 import { useTRPC } from "../trpc";
 
 type JobsInput = inferRouterInputs<AppRouter>["admin"]["jobs"];
@@ -72,6 +73,7 @@ const outcome = (write: Promise<unknown>): Promise<JobActionResult> =>
 export function useJobQueueMutations() {
   const trpc = useTRPC();
   const queryClient = useQueryClient();
+  const { showError } = usePlatform();
 
   const rereadJobs = () => {
     void queryClient.invalidateQueries({ queryKey: trpc.admin.jobs.list.pathKey() });
@@ -93,6 +95,7 @@ export function useJobQueueMutations() {
     trpc.admin.jobs.updateRetention.mutationOptions({
       onSuccess: () =>
         void queryClient.invalidateQueries({ queryKey: trpc.admin.getAllConfigs.queryKey() }),
+      onError: (error) => showError(error, "admin-jobs:update-retention"),
     })
   );
 

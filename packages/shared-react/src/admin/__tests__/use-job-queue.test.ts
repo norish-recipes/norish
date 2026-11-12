@@ -61,6 +61,24 @@ describe("useJobQueueMutations", () => {
     expect(await cancelled).toEqual({ success: false, error: "offline" });
     expect(stale(LIST)).toBe(false);
   });
+
+  it("says a retention save failed", async () => {
+    const platform = fakePlatformAdapter();
+    const wrapper = createTestWrapper(createTestQueryClient(), platform);
+    const { result } = renderHook(() => useJobQueueMutations(), { wrapper });
+    let saved: Promise<void> | undefined;
+
+    act(() => {
+      saved = result.current.updateJobRetention({ keepCompleted: 1, keepFailed: 1, maxAgeDays: 7 });
+    });
+    await failCall("admin.jobs.updateRetention");
+    await saved;
+
+    expect(platform.showError).toHaveBeenCalledWith(
+      expect.objectContaining({ message: "offline" }),
+      "admin-jobs:update-retention"
+    );
+  });
 });
 
 describe("useJobListQuery", () => {
