@@ -160,7 +160,7 @@ export function LoginScreen() {
         <Pressable
           style={styles.linkRow}
           onPress={() => {
-            router.push("/(auth)");
+            router.push({ pathname: "/(auth)", params: { change: "server" } });
           }}
         >
           <Text className="font-normal" style={[styles.linkText, { color: mutedColor }]}>

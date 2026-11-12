@@ -1,4 +1,8 @@
-import { resolveBootPhase, resolveLaunchMotion } from "@/lib/boot/boot-state";
+import {
+  resolveBootPhase,
+  resolveLaunchMotion,
+  resolveSignedOutEntry,
+} from "@/lib/boot/boot-state";
 import { describe, expect, it } from "vitest";
 
 /**
@@ -134,5 +138,19 @@ describe("resolveLaunchMotion", () => {
   it("fades under Reduce Motion and for every other handoff", () => {
     expect(resolveLaunchMotion("glide", true, 120)).toBe("fade");
     expect(resolveLaunchMotion("fade", false, 120)).toBe("fade");
+  });
+});
+
+describe("resolveSignedOutEntry", () => {
+  it("opens on Server address with no Server Address saved", () => {
+    expect(resolveSignedOutEntry("", false)).toBe("server-address");
+  });
+
+  it("opens on Sign in once a Server Address is saved", () => {
+    expect(resolveSignedOutEntry("https://norish.example", false)).toBe("sign-in");
+  });
+
+  it("opens on Server address when the reader asked to change the saved one", () => {
+    expect(resolveSignedOutEntry("https://norish.example", true)).toBe("server-address");
   });
 });

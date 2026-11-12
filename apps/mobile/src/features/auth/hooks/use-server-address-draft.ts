@@ -1,13 +1,11 @@
 import { useEffect, useState } from "react";
 import { getServerAddress, loadServerAddress } from "@/lib/network/server-address";
-import { useRouter } from "expo-router";
 
 import { createClientLogger } from "@norish/shared/lib/logger";
 
 const log = createClientLogger("server-address");
 
 export function useServerAddressDraft() {
-  const router = useRouter();
   // The boot gate's read, so a pushed Server address shows the saved one from its first frame.
   const [address, setAddress] = useState(getServerAddress);
   const [isHydrated, setIsHydrated] = useState(false);
@@ -36,22 +34,7 @@ export function useServerAddressDraft() {
         return;
       }
 
-      if (savedAddress) {
-        if (router.canGoBack()) {
-          // Navigated here intentionally (e.g. "Change server" from login).
-          // Show the form pre-filled with the current URL instead of redirecting.
-          setAddress(savedAddress);
-          setIsHydrated(true);
-
-          return;
-        }
-
-        // Cold-start: URL already configured - skip straight to login.
-        // Stack.Protected guard handles final redirect once authenticated.
-        router.replace("/login");
-
-        return;
-      }
+      if (savedAddress) setAddress(savedAddress);
 
       setIsHydrated(true);
     })();
@@ -59,7 +42,7 @@ export function useServerAddressDraft() {
     return () => {
       isMounted = false;
     };
-  }, [router]);
+  }, []);
 
   return {
     address,

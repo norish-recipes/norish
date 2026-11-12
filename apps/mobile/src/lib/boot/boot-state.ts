@@ -66,3 +66,17 @@ export function resolveLaunchMotion(
 
   return handoff === "glide" && !reduceMotion && target !== null ? "glide" : "fade";
 }
+
+/** The signed-out stack's first screen. */
+export type SignedOutEntry = "server-address" | "sign-in";
+
+/**
+ * Sign in once a Server Address is saved, decided before the first frame so nothing slides
+ * over it; Server address when none is saved or the reader asked to change it.
+ */
+export function resolveSignedOutEntry(
+  serverAddress: string,
+  changeRequested: boolean
+): SignedOutEntry {
+  return serverAddress && !changeRequested ? "sign-in" : "server-address";
+}
