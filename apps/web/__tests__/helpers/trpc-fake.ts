@@ -1,7 +1,7 @@
 import { skipToken } from "@tanstack/react-query";
 import { vi } from "vitest";
 
-import { trackedEvent } from "../hooks/realtime-test-utils";
+import { trackedEvent } from "./realtime-test-utils";
 
 /** Every write the fake tRPC was sent, as (procedure path, input). */
 export const sentWrites = vi.fn<(path: string, input: unknown) => void>();

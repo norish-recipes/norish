@@ -1,4 +1,4 @@
-import { trackedEvent } from "@/__tests__/hooks/realtime-test-utils";
+import { trackedEvent } from "@/__tests__/helpers/realtime-test-utils";
 import { act, renderHook } from "@testing-library/react";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 
