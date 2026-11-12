@@ -18,12 +18,12 @@ import { useThemeColor } from "heroui-native";
 
 // The launch timeline in ms from the JS splash's first frame, after the Launch board.
 const SLOGAN_IN = 400;
-const HOLD_END = 700;
-const FADE_END = 1000;
-const GLIDE_END = 1400;
-const FIELD_RISE = [1100, 1700] as const;
-const BUTTON_RISE = [1300, 1900] as const;
-const LAUNCH_END = 1900;
+const HOLD_END = 900;
+const FADE_END = 1200;
+const GLIDE_END = 1600;
+const FIELD_RISE = [1300, 1900] as const;
+const BUTTON_RISE = [1500, 2100] as const;
+const LAUNCH_END = 2100;
 const RISE_DISTANCE = 16;
 
 const glideEasing = Easing.bezierFn(0.65, 0, 0.35, 1);
