@@ -22,7 +22,8 @@ interface AuthGateProps {
   titleId: string;
   slogan: boolean;
   footer: ReactNode;
-  topAligned?: boolean;
+  /** Whether the loaded config top-aligns the block; status screens and the spinner stay centred. */
+  topAligned?: (config: AuthConfig) => boolean;
   /** What the form shows once there is a server and its config has loaded. */
   children: (authClient: AuthClient, config: AuthConfig) => ReactNode;
 }
@@ -47,37 +48,49 @@ function ConfigGate({
   authClient,
   titleId,
   slogan,
+  footer,
+  topAligned,
   children,
-}: Pick<AuthGateProps, "titleId" | "slogan" | "children"> & { authClient: AuthClient }) {
+}: Pick<AuthGateProps, "titleId" | "slogan" | "footer" | "topAligned" | "children"> & {
+  authClient: AuthClient;
+}) {
   const intl = useIntl();
   const config = useAuthProvidersQuery();
   const status = resolveMethodsStatus(config);
 
   // The spinner stands alone, so the block never moves when the content replaces it.
   if (status === "loading") {
-    return <Spinner className="self-center" />;
+    return (
+      <AuthLayout footer={footer}>
+        <Spinner className="self-center" />
+      </AuthLayout>
+    );
   }
 
   // A failed background refetch leaves loaded config up, so the form keeps its state.
   if (status === "failed") {
     return (
-      <AuthBlock slogan={slogan} titleId={titleId}>
-        <AuthStatus
-          action={{
-            label: intl.formatMessage({ id: "common.actions.retry" }),
-            onPress: () => void config.refetch(),
-          }}
-          description={intl.formatMessage({ id: "auth.errors.default.description" })}
-          title={intl.formatMessage({ id: "auth.errors.default.title" })}
-        />
-      </AuthBlock>
+      <AuthLayout footer={footer}>
+        <AuthBlock slogan={slogan} titleId={titleId}>
+          <AuthStatus
+            action={{
+              label: intl.formatMessage({ id: "common.actions.retry" }),
+              onPress: () => void config.refetch(),
+            }}
+            description={intl.formatMessage({ id: "auth.errors.default.description" })}
+            title={intl.formatMessage({ id: "auth.errors.default.title" })}
+          />
+        </AuthBlock>
+      </AuthLayout>
     );
   }
 
   return (
-    <AuthBlock slogan={slogan} titleId={titleId}>
-      {children(authClient, config)}
-    </AuthBlock>
+    <AuthLayout footer={footer} topAligned={topAligned?.(config)}>
+      <AuthBlock slogan={slogan} titleId={titleId}>
+        {children(authClient, config)}
+      </AuthBlock>
+    </AuthLayout>
   );
 }
 
@@ -87,9 +100,9 @@ export function AuthGate({ titleId, slogan, footer, topAligned, children }: Auth
   const intl = useIntl();
   const authClient = useAuthClient();
 
-  return (
-    <AuthLayout footer={footer} topAligned={topAligned}>
-      {authClient === null ? (
+  if (authClient === null) {
+    return (
+      <AuthLayout footer={footer}>
         <AuthBlock slogan={slogan} titleId={titleId}>
           <AuthStatus
             action={{
@@ -100,11 +113,19 @@ export function AuthGate({ titleId, slogan, footer, topAligned, children }: Auth
             title={intl.formatMessage({ id: "auth.connect.backendRequiredTitle" })}
           />
         </AuthBlock>
-      ) : (
-        <ConfigGate authClient={authClient} slogan={slogan} titleId={titleId}>
-          {children}
-        </ConfigGate>
-      )}
-    </AuthLayout>
+      </AuthLayout>
+    );
+  }
+
+  return (
+    <ConfigGate
+      authClient={authClient}
+      footer={footer}
+      slogan={slogan}
+      titleId={titleId}
+      topAligned={topAligned}
+    >
+      {children}
+    </ConfigGate>
   );
 }
