@@ -12,7 +12,11 @@ import { useLocale, useTranslations } from "next-intl";
 import { twMerge } from "tailwind-merge";
 
 import type { AIChange } from "@norish/shared-react/ingredients";
-import { isOpenChange, useAIChanges } from "@norish/shared-react/ingredients";
+import {
+  isOpenChange,
+  useAIChangeMutations,
+  useAIChangesQuery,
+} from "@norish/shared-react/ingredients";
 import { ingredientDisplayName } from "@norish/shared/lib/ingredient-names";
 
 /** One line of the panel: all it shows is one virtualised run of these. */
@@ -136,7 +140,8 @@ function VirtualRows({
 export function ChangedByAIPanel({ open, onClose }: { open: boolean; onClose: () => void }) {
   const t = useTranslations("settings.ingredients");
   const locale = useLocale();
-  const { changes, keep, undo, keepAll, undoAll, clear } = useAIChanges();
+  const changes = useAIChangesQuery((all) => all);
+  const { keep, undo, keepAll, undoAll, clear } = useAIChangeMutations();
   // What Keep all and Undo all answer: the open changes the viewer may act on.
   const actionable = changes.filter((change) => isOpenChange(change) && change.canAct);
   const anySettled = changes.some((change) => !isOpenChange(change));

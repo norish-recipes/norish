@@ -9,7 +9,7 @@ import {
 
 import type { AIChange, IngredientItem } from "../types";
 import { answerCall, keyOf, resetTRPCFake, sentCall } from "../../trpc/testing";
-import { useAIChanges } from "../use-ai-changes";
+import { useAIChangeMutations, useAIChangesQuery } from "../use-ai-changes";
 import { useIngredientMutations } from "../use-ingredient-mutations";
 
 vi.mock("../../trpc", async () => (await import("../../trpc/testing")).mockTRPC());
@@ -38,7 +38,7 @@ function setUp() {
   queryClient.setQueryData(KINDS, [onion]);
 
   const listed = () =>
-    queryClient.getQueryData<{ pages: { items: IngredientItem[] }[] }>(LIST)!.pages[0]!.items;
+    queryClient.getQueryData<{ pages: { items: IngredientItem[] }[] }>(LIST)?.pages[0]?.items ?? [];
   const stale = () => queryClient.getQueryState(LIST)?.isInvalidated;
 
   return {
@@ -129,7 +129,7 @@ describe("useIngredientMutations", () => {
   });
 });
 
-describe("useAIChanges", () => {
+describe("useAIChangeMutations", () => {
   const change: AIChange = {
     id: "c1",
     kind: "merge",
@@ -147,7 +147,7 @@ describe("useAIChanges", () => {
     const { queryClient, stale, wrapper } = setUp();
 
     queryClient.setQueryData(AI_CHANGES, [change]);
-    const { result } = renderHook(() => useAIChanges(), { wrapper });
+    const { result } = renderHook(() => useAIChangeMutations(), { wrapper });
 
     act(() => {
       void result.current.keep(change);
@@ -157,5 +157,39 @@ describe("useAIChanges", () => {
 
     await answerCall("ingredients.keepAIChange", { success: true });
     expect(stale()).toBe(true);
+  });
+});
+
+describe("useAIChangesQuery", () => {
+  it("hands each reader only its slice", () => {
+    const { queryClient, wrapper } = setUp();
+    const open: AIChange = {
+      id: "c1",
+      kind: "merge",
+      sure: false,
+      kept: false,
+      createdAt: new Date(0),
+      ingredient: { id: "onion", name: "onion", localeNames: {} },
+      target: null,
+      dropped: null,
+      from: "uitjes",
+      canAct: true,
+    };
+
+    queryClient.setQueryData(AI_CHANGES, [open, { ...open, id: "c2", kept: true }]);
+    const { result } = renderHook(() => useAIChangesQuery((changes) => changes.length), {
+      wrapper,
+    });
+
+    expect(result.current).toBe(2);
+  });
+
+  it("selects from no changes until the read answers", () => {
+    const { wrapper } = setUp();
+    const { result } = renderHook(() => useAIChangesQuery((changes) => changes.length), {
+      wrapper,
+    });
+
+    expect(result.current).toBe(0);
   });
 });

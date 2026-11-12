@@ -2,7 +2,7 @@ export type { AIChange, IngredientDraft, IngredientItem, NamedIngredient, Spelli
 export type { IngredientListInput } from "./use-ingredient-queries";
 export type { StoredIcon } from "./use-ingredient-icons";
 
-export { isOpenChange, useAIChanges } from "./use-ai-changes";
+export { isOpenChange, useAIChangeMutations, useAIChangesQuery } from "./use-ai-changes";
 export {
   useIngredientIconAddress,
   useIngredientIconMutations,

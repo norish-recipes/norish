@@ -18,16 +18,23 @@ const markKept = (ids: ReadonlySet<string>) => (list: AIChange[]) =>
 const drop = (ids: ReadonlySet<string>) => (list: AIChange[]) =>
   list.filter((it) => !ids.has(it.id));
 
+/** What AI changed, through `select` for the slice a reader draws, so it re-renders only on that. */
+export function useAIChangesQuery<T>(select: (changes: AIChange[]) => T): T {
+  const trpc = useTRPC();
+  const { data } = useQuery({ ...trpc.ingredients.aiChanges.queryOptions(), select });
+
+  return data ?? select(NO_CHANGES);
+}
+
 /**
- * What AI changed, with Keep and Undo, one or all, and Clear: an answer shows at once, then
- * Ingredients are read again, which also undoes a refused one.
+ * Keep and Undo, one or all, and Clear: an answer shows at once, then Ingredients are read again,
+ * which also undoes a refused one.
  */
-export function useAIChanges() {
+export function useAIChangeMutations() {
   const trpc = useTRPC();
   const queryClient = useQueryClient();
   const cache = useIngredientCache();
   const { refuse } = useCatalogueFailure();
-  const query = useQuery(trpc.ingredients.aiChanges.queryOptions());
 
   const show = (patch: (list: AIChange[]) => AIChange[]) =>
     queryClient.setQueriesData<AIChange[]>(
@@ -66,7 +73,6 @@ export function useAIChanges() {
   );
 
   return {
-    changes: query.data ?? NO_CHANGES,
     keep: (change: AIChange) => settled(keep.mutateAsync({ changeId: change.id })),
     undo: (change: AIChange) => settled(undo.mutateAsync({ changeId: change.id })),
     keepAll: (all: AIChange[]) =>

@@ -22,7 +22,8 @@ import type { PantryIngredientDto } from "@norish/shared/contracts";
 import { useOnTheList, usePantryItem, usePantryMutations } from "@norish/shared-react/groceries";
 import {
   isOpenChange,
-  useAIChanges,
+  useAIChangeMutations,
+  useAIChangesQuery,
   useIngredientMutations,
   useIngredientQuery,
   useIngredientSpellingsQuery,
@@ -144,10 +145,10 @@ function IngredientPanelContent({ item, onClose }: { item: IngredientItem; onClo
   const [relocation, setRelocation] = useState<Relocation | null>(null);
   const [deleting, setDeleting] = useState(false);
   const [showingUses, setShowingUses] = useState(false);
-  const aiChanges = useAIChanges();
+  const aiChanges = useAIChangeMutations();
   // What AI changed about this food without being sure: what its flag is for.
-  const unsure = aiChanges.changes.filter(
-    (change) => change.ingredient?.id === item.id && isOpenChange(change)
+  const unsure = useAIChangesQuery((changes) =>
+    changes.filter((change) => change.ingredient?.id === item.id && isOpenChange(change))
   );
 
   // Whether the household keeps the food, and the draft's say on it (null: untouched).

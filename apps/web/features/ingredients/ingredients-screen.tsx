@@ -13,7 +13,7 @@ import { useLocale, useTranslations } from "next-intl";
 import { useIngredientsSubscription } from "@norish/shared-react/config";
 import {
   isOpenChange,
-  useAIChanges,
+  useAIChangesQuery,
   useIngredientListQuery,
 } from "@norish/shared-react/ingredients";
 
@@ -84,14 +84,16 @@ export function IngredientsScreen() {
   const openItem = openId ? (shown.find((item) => item.id === openId) ?? null) : null;
 
   const [changesOpen, setChangesOpen] = useState(false);
-  const { changes } = useAIChanges();
-  const unsure = changes.filter(isOpenChange).length;
+  const { total, unsure } = useAIChangesQuery((changes) => ({
+    total: changes.length,
+    unsure: changes.filter(isOpenChange).length,
+  }));
 
   return (
     <div className="flex flex-col gap-6">
       <SettingsCard
         actions={
-          changes.length > 0 ? (
+          total > 0 ? (
             <ActionButton
               action="edit"
               data-testid="ingredients-ai-changes-open"
