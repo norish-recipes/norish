@@ -38,27 +38,18 @@ export function useIngredientListQuery(input: IngredientListInput) {
   };
 }
 
-/** The first page of foods a search finds, for a picker; nothing is read for an empty search. */
-export function useIngredientSearchQuery(search: string, locale: string) {
+/** The first page of foods a search finds; `null` reads nothing. `listedOnly: false` adds unlisted foods. */
+export function useIngredientSearchQuery(
+  search: string | null,
+  locale: string,
+  options: Pick<IngredientListInput, "listedOnly"> = {}
+) {
   const trpc = useTRPC();
-  const { data, isFetching } = useQuery({
-    ...trpc.ingredients.list.queryOptions({ search, locale }),
-    enabled: search.length > 0,
-  });
-
-  return { items: data?.items ?? [], isFetching };
-}
-
-/** Every catalogue food a search finds, unlisted ones included, for the Pantry; `null` reads nothing. */
-export function useCatalogueMatchesQuery(search: string | null, locale: string) {
-  const trpc = useTRPC();
-  const { data } = useQuery(
-    trpc.ingredients.list.queryOptions(
-      search === null ? skipToken : { search, locale, listedOnly: false }
-    )
+  const { data, isFetching } = useQuery(
+    trpc.ingredients.list.queryOptions(search === null ? skipToken : { search, locale, ...options })
   );
 
-  return data?.items;
+  return { items: data?.items ?? [], isFetching };
 }
 
 /** The kinds filed under each parent, read as each is asked for, in the order asked. */

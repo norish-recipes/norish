@@ -22,7 +22,6 @@ export {
   useNutritionFoodsQuery,
 } from "./use-ingredient-nutrition";
 export {
-  useCatalogueMatchesQuery,
   useHeldIngredient,
   useIngredientKinds,
   useIngredientListQuery,

@@ -15,7 +15,7 @@ import type { PickedFood } from "@norish/shared-react/groceries";
 import type { PantryIngredientDto } from "@norish/shared/contracts";
 import { useSpellingRules } from "@norish/shared-react/config";
 import { useOnTheList, usePantryMutations, usePantryQuery } from "@norish/shared-react/groceries";
-import { useCatalogueMatchesQuery, useIngredientIcons } from "@norish/shared-react/ingredients";
+import { useIngredientIcons, useIngredientSearchQuery } from "@norish/shared-react/ingredients";
 import { useConnectivity } from "@norish/shared-react/offline/react";
 import { PANTRY_INGREDIENT_NAME_MAX_LENGTH } from "@norish/shared/contracts/zod";
 import { foldName } from "@norish/shared/lib/fold-name";
@@ -67,9 +67,10 @@ export function PantryScreen() {
   const fieldRef = useRef<HTMLInputElement>(null);
   const typed = draft.trim();
   const [search] = useDebounceValue(typed, SEARCH_DELAY_MS);
-  const catalogue = useCatalogueMatchesQuery(
+  const { items: catalogue } = useIngredientSearchQuery(
     !isOffline && search.length >= SEARCH_MIN_LENGTH ? search : null,
-    locale
+    locale,
+    { listedOnly: false }
   );
 
   if (isUnavailable) {
@@ -104,7 +105,7 @@ export function PantryScreen() {
   // earlier text, or for the text an add just cleared, would add the wrong food.
   const matches =
     !isOffline && typed.length >= SEARCH_MIN_LENGTH && search === typed
-      ? (catalogue ?? []).filter((food) => !keptIds.has(food.id)).slice(0, CATALOGUE_MATCHES)
+      ? catalogue.filter((food) => !keptIds.has(food.id)).slice(0, CATALOGUE_MATCHES)
       : [];
   const canAdd = foodKey(draft, rules) !== "" && !duplicate;
   const addTyped = () => {

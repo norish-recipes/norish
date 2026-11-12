@@ -34,7 +34,7 @@ export function IngredientPicker({
   const [search] = useDebounceValue(term.trim(), SEARCH_DELAY_MS);
   const [picked, setPicked] = useState<string | null>(null);
 
-  const { items, isFetching } = useIngredientSearchQuery(search, locale);
+  const { items, isFetching } = useIngredientSearchQuery(search || null, locale);
   const found = items.filter((item) => item.id !== excludeId && (!editableOnly || item.canEdit));
   const options = found.map((item) => ({ id: item.id, name: ingredientDisplayName(item, locale) }));
 
