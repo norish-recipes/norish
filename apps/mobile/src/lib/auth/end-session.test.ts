@@ -11,11 +11,17 @@ vi.mock("@/lib/auth/auth-client", () => ({ resetAuthClientStorage }));
 const { endSession } = await import("@/lib/auth/end-session");
 
 describe("endSession", () => {
-  const authClient = { signOut: vi.fn(async () => void order.push("auth server")) };
+  const authClient = {
+    signOut: vi.fn(async (_options: { fetchOptions: { signal: AbortSignal } }) => {
+      order.push("auth server");
+    }),
+  };
 
   beforeEach(() => {
     order.length = 0;
-    authClient.signOut.mockReset().mockImplementation(async () => void order.push("auth server"));
+    authClient.signOut.mockReset().mockImplementation(async () => {
+      order.push("auth server");
+    });
     resetAuthClientStorage
       .mockReset()
       .mockImplementation(async () => void order.push("stored session reset"));
@@ -37,7 +43,7 @@ describe("endSession", () => {
     expect(order).toEqual(["closed"]);
   });
 
-  it("gives up on a stalled server after 5 s and still ends it on this device", async () => {
+  it("aborts a stalled server after 5 s, so it cannot answer late, and still ends it on this device", async () => {
     vi.useFakeTimers();
     authClient.signOut.mockReturnValue(new Promise(() => {}));
 
@@ -46,6 +52,7 @@ describe("endSession", () => {
     await vi.advanceTimersByTimeAsync(5_000);
     await ending;
 
+    expect(authClient.signOut.mock.calls[0]?.[0].fetchOptions.signal.aborted).toBe(true);
     expect(order).toEqual(["closed", "stored session reset"]);
   });
 
