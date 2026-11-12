@@ -39,7 +39,7 @@ export default function CleanUpCatalogue() {
       title={t("title")}
       onOpenChange={setIsOpen}
       onStart={async () => {
-        if (await start(scope)) setIsOpen(false);
+        if (await start({ scope })) setIsOpen(false);
       }}
     >
       <RadioGroup

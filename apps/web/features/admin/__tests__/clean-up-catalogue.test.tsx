@@ -42,7 +42,7 @@ describe("CleanUpCatalogue", () => {
     expect(screen.getByTestId("clean-up-count")).toHaveTextContent('count:{"count":40}');
     fireEvent.click(screen.getByTestId("clean-up-catalogue-start"));
 
-    expect(start).toHaveBeenCalledWith("whole-catalogue");
+    expect(start).toHaveBeenCalledWith({ scope: "whole-catalogue" });
     await waitFor(() => expect(screen.queryByTestId("clean-up-catalogue-dialog")).toBeNull());
   });
 

@@ -38,7 +38,7 @@ describe("the catalogue runs", () => {
     let started: Promise<boolean> | undefined;
 
     act(() => {
-      started = result.current.start("whole-catalogue");
+      started = result.current.start({ scope: "whole-catalogue" });
     });
     await answerCall("admin.ingredientCatalogue.cleanUp", { queued: 12 });
 
