@@ -173,7 +173,7 @@ export function useDeleteAccountMutation() {
     })
   );
 
-  // The delete ends the session, so it runs inside the guard and a Session Expiry it causes is ignored.
+  // Runs inside the guard: a Session Expiry the delete causes is ignored, or runs after a delete that failed.
   return {
     deleteAccount: () =>
       void once(async () => {

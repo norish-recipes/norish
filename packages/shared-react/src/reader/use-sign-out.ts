@@ -15,17 +15,27 @@ export type SignOutOptions = { discardQueue?: boolean };
 
 // One Sign-out, Account deletion or Session Expiry at a time, on this device: the first wins until it settles.
 let inFlight = false;
+let left = false;
+// A 401 during a sequence that then stays signed in (a failed sign-out or delete) expires it after.
+let expiryAsked = false;
 let mountedExpiry: (() => Promise<void>) | null = null;
 
 export async function once(sequence: () => Promise<void>): Promise<void> {
   if (inFlight) return;
   inFlight = true;
+  left = false;
+  expiryAsked = false;
 
   try {
     await sequence();
   } finally {
     inFlight = false;
   }
+
+  const expire = expiryAsked && !left;
+
+  expiryAsked = false;
+  if (expire) await expireSession();
 }
 
 export async function clearAndLeave(
@@ -39,6 +49,7 @@ export async function clearAndLeave(
     log.error({ error, reason }, "Failed to clear offline data");
   }
 
+  left = true;
   leave(reason);
 }
 
@@ -94,5 +105,7 @@ export function useSessionExpiry(): void {
 
 /** The apps' 401 and 4401 callback: runs the mounted Session Expiry, or nothing off the signed-in shell. */
 export function expireSession(): Promise<void> {
+  if (inFlight) expiryAsked = true;
+
   return mountedExpiry?.() ?? Promise.resolve();
 }

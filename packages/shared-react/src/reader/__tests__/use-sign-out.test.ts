@@ -187,6 +187,29 @@ describe("Sign-out and Session Expiry", () => {
       expect(steps).toEqual(["end", "clear", "leave:expiry"]);
     });
 
+    it("an expiry asked for during a sign-out that fails runs once it settles", async () => {
+      const ending = deferred();
+
+      vi.mocked(adapter.endSession).mockImplementation(async (reason) => {
+        steps.push(`end:${reason}`);
+        if (reason === "sign-out") {
+          await ending.promise;
+          throw new Error("401");
+        }
+      });
+      mountExpiry();
+
+      const signingOut = signOut();
+
+      await vi.waitFor(() => expect(steps).toContain("end:sign-out"));
+      await expireSession();
+      expireSession();
+      ending.resolve();
+      await signingOut;
+
+      expect(steps).toEqual(["end:sign-out", "end:expiry", "clear", "leave:expiry"]);
+    });
+
     it("runs again once the previous sequence settled", async () => {
       mountExpiry();
 

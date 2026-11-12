@@ -249,6 +249,24 @@ describe("the Account's writes", () => {
       expect(adapter.leave).toHaveBeenCalledExactlyOnceWith("sign-out");
     });
 
+    it("leaves as an expiry when the session expired under a failing delete", async () => {
+      const { unmount } = renderHook(() => useSessionExpiry(), {
+        wrapper: createTestWrapper(queryClient, adapter),
+      });
+      const result = render(() => useDeleteAccountMutation());
+
+      act(() => result.current.deleteAccount());
+      await sentCall("user.deleteAccount");
+      await expireSession();
+      await failCall("user.deleteAccount");
+
+      await waitFor(() => expect(adapter.leave).toHaveBeenCalledExactlyOnceWith("expiry"));
+      expect(adapter.offlineEngine.clearForSignOut).toHaveBeenCalledExactlyOnceWith({
+        discardQueue: false,
+      });
+      unmount();
+    });
+
     it("stays signed in when the write fails, and a later sign-out still runs", async () => {
       const result = render(() => useDeleteAccountMutation());
 
