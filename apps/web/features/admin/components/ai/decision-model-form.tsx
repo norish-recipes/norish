@@ -5,7 +5,7 @@ import { SettingRow } from "@/components/settings/setting-row";
 import { ActionButton, ActionButtonGroup } from "@/components/shared/action-button";
 import SecretInput from "@/components/shared/secret-input";
 import { usePending } from "@/hooks/use-pending";
-import { Description, Input, Label, ListBox, Select, TextField } from "@heroui/react";
+import { Description, Input, Label, TextField } from "@heroui/react";
 import { useTranslations } from "next-intl";
 
 import type { DecisionProvider, DecisionUse } from "@norish/config/zod/server-config";
@@ -26,6 +26,7 @@ import {
 import { ConnectionTestResult } from "../connection-test-result";
 import { KindsSelect } from "../kinds-select";
 import { useReportDirty } from "../use-report-dirty";
+import { ProviderSelect } from "./provider-select";
 
 interface DecisionModelFormProps {
   onDirtyChange?: (isDirty: boolean) => void;
@@ -126,31 +127,13 @@ export default function DecisionModelForm({ onDirtyChange }: DecisionModelFormPr
 
   return (
     <div className="flex flex-col gap-4">
-      <Select
-        variant="secondary"
-        placeholder={t("provider")}
+      <ProviderSelect
+        label={t("provider")}
+        messages="settings.admin.decisionConfig.providers"
+        options={PROVIDER_OPTIONS}
         value={provider}
-        onChange={(selected) => {
-          if (typeof selected === "string") {
-            handleProviderChange(selected as DecisionProvider);
-          }
-        }}
-      >
-        <Label>{t("provider")}</Label>
-        <Select.Trigger>
-          <Select.Value />
-          <Select.Indicator />
-        </Select.Trigger>
-        <Select.Popover>
-          <ListBox>
-            {PROVIDER_OPTIONS.map((option) => (
-              <ListBox.Item key={option} id={option} textValue={t(`providers.${option}`)}>
-                {t(`providers.${option}`)}
-              </ListBox.Item>
-            ))}
-          </ListBox>
-        </Select.Popover>
-      </Select>
+        onChange={handleProviderChange}
+      />
 
       {enabled && (
         <>

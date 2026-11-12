@@ -7,16 +7,7 @@ import { ActionButton, ActionButtonGroup } from "@/components/shared/action-butt
 import { Note } from "@/components/shared/note";
 import SecretInput from "@/components/shared/secret-input";
 import { usePending } from "@/hooks/use-pending";
-import {
-  Description,
-  Input,
-  InputGroup,
-  Label,
-  ListBox,
-  Select,
-  Separator,
-  TextField,
-} from "@heroui/react";
+import { Description, Input, InputGroup, Label, Separator, TextField } from "@heroui/react";
 import { useTranslations } from "next-intl";
 
 import type { TranscriptionProvider } from "@norish/config/zod/server-config";
@@ -36,6 +27,7 @@ import {
 
 import { useReportDirty } from "../use-report-dirty";
 import { ModelPicker } from "./model-picker";
+import { ProviderSelect } from "./provider-select";
 
 interface VideoProcessingFormProps {
   onDirtyChange?: (isDirty: boolean) => void;
@@ -292,39 +284,14 @@ export default function VideoProcessingForm({ onDirtyChange }: VideoProcessingFo
         <span className="text-muted text-base">{t("transcriptionDescription")}</span>
       </div>
 
-      <Select
-        variant="secondary"
+      <ProviderSelect
         isDisabled={isVideoUiDisabled}
-        placeholder={t("transcriptionProvider")}
+        label={t("transcriptionProvider")}
+        messages="settings.admin.videoConfig.transcriptionProviders"
+        options={TRANSCRIPTION_PROVIDER_OPTIONS}
         value={transcriptionProvider}
-        onChange={(selected) => {
-          if (typeof selected === "string") {
-            handleTranscriptionProviderChange(selected as TranscriptionProvider);
-          }
-        }}
-      >
-        <Label>{t("transcriptionProvider")}</Label>
-        <Select.Trigger>
-          <Select.Value />
-          <Select.Indicator />
-        </Select.Trigger>
-        <Select.Popover>
-          <ListBox>
-            {TRANSCRIPTION_PROVIDER_OPTIONS.map((option) => {
-              const label =
-                option === "generic-openai"
-                  ? t("transcriptionProviders.genericOpenai")
-                  : t(`transcriptionProviders.${option}` as Parameters<typeof t>[0]);
-
-              return (
-                <ListBox.Item key={option} id={option} textValue={label}>
-                  {label}
-                </ListBox.Item>
-              );
-            })}
-          </ListBox>
-        </Select.Popover>
-      </Select>
+        onChange={handleTranscriptionProviderChange}
+      />
 
       {transcriptionEnabled && (
         <>

@@ -36,6 +36,7 @@ import { ConnectionTestResult } from "../connection-test-result";
 import { KindsSelect } from "../kinds-select";
 import { useReportDirty } from "../use-report-dirty";
 import { ModelPicker } from "./model-picker";
+import { ProviderSelect } from "./provider-select";
 
 interface AIConfigFormProps {
   onDirtyChange?: (isDirty: boolean) => void;
@@ -53,6 +54,9 @@ const PROVIDER_OPTIONS: Array<AIConfig["provider"]> = [
   "lm-studio",
   "generic-openai",
 ];
+/** The providers reached by URL; every other one is a cloud API reached by key. */
+const ENDPOINT_PROVIDERS: Array<AIConfig["provider"]> = ["ollama", "lm-studio", "generic-openai"];
+const isCloudProvider = (provider: AIConfig["provider"]) => !ENDPOINT_PROVIDERS.includes(provider);
 const TAG_STRATEGY_OPTIONS: TagStrategy[] = ["predefined", "predefined_db", "freeform"];
 const CUISINE_STRATEGY_OPTIONS: CuisineStrategy[] = ["existing", "extend"];
 
@@ -96,32 +100,14 @@ export default function AIConfigForm({ onDirtyChange }: AIConfigFormProps) {
   const [testResult, setTestResult] = useState<WriteResult | null>(null);
   const [saving, whileSaving] = usePending();
 
-  // Fetch available models from the provider
-  // Cloud providers that don't require an endpoint (use official APIs)
-  const cloudProviders = [
-    "openai",
-    "azure",
-    "anthropic",
-    "google",
-    "mistral",
-    "deepseek",
-    "perplexity",
-    "groq",
-  ];
-  // Local providers that need an endpoint
-  const localProviders = ["ollama", "lm-studio"];
-  // Azure optionally accepts endpoint for custom resource URL
-  const needsEndpoint = localProviders.includes(provider) || provider === "generic-openai";
+  const needsEndpoint = !isCloudProvider(provider);
+  // Azure takes an optional endpoint for a custom resource URL.
   const supportsOptionalEndpoint = provider === "azure";
-  // Cloud providers need API key, local providers don't, generic-openai may need one
-  const needsApiKey = cloudProviders.includes(provider) || provider === "generic-openai";
-  // API key is only considered "configured" if the saved config matches the current provider
-  // This prevents validation from passing when switching between providers
+  const needsApiKey = isCloudProvider(provider) || provider === "generic-openai";
+  // A stored key counts only for the provider it was saved with.
   const isApiKeyConfigured = !!aiConfig?.apiKey && aiConfig?.provider === provider;
   const canFetchModels =
-    enabled &&
-    // Local providers and generic-openai need an endpoint
-    (cloudProviders.includes(provider) ? apiKey || isApiKeyConfigured : endpoint);
+    enabled && (isCloudProvider(provider) ? apiKey || isApiKeyConfigured : endpoint);
 
   const {
     models: availableModels,
@@ -219,20 +205,8 @@ export default function AIConfigForm({ onDirtyChange }: AIConfigFormProps) {
       setApiKey("");
       setModel("");
       setVisionModel("");
-      // Clear endpoint when switching to cloud providers (they don't need one)
-      const newCloudProviders = [
-        "openai",
-        "anthropic",
-        "google",
-        "mistral",
-        "deepseek",
-        "perplexity",
-        "groq",
-      ];
-      if (newCloudProviders.includes(newProvider)) {
-        setEndpoint("");
-      }
-      // Azure keeps endpoint as optional (for custom resource URL)
+      // A cloud API takes no endpoint; Azure keeps its optional one.
+      if (isCloudProvider(newProvider) && newProvider !== "azure") setEndpoint("");
     }
   };
   const handleTest = async () => {
@@ -278,41 +252,14 @@ export default function AIConfigForm({ onDirtyChange }: AIConfigFormProps) {
 
       {showValidationWarning && <Note status="warning">{t("configureWarning")}</Note>}
 
-      <Select
-        variant="secondary"
+      <ProviderSelect
         isDisabled={!enabled}
-        placeholder={t("provider")}
+        label={t("provider")}
+        messages="settings.admin.aiConfig.providers"
+        options={PROVIDER_OPTIONS}
         value={provider}
-        onChange={(selected) => {
-          if (typeof selected === "string") {
-            handleProviderChange(selected as AIConfig["provider"]);
-          }
-        }}
-      >
-        <Label>{t("provider")}</Label>
-        <Select.Trigger>
-          <Select.Value />
-          <Select.Indicator />
-        </Select.Trigger>
-        <Select.Popover>
-          <ListBox>
-            {PROVIDER_OPTIONS.map((option) => {
-              const label =
-                option === "lm-studio"
-                  ? t("providers.lmStudio")
-                  : option === "generic-openai"
-                    ? t("providers.genericOpenai")
-                    : t(`providers.${option}` as Parameters<typeof t>[0]);
-
-              return (
-                <ListBox.Item key={option} id={option} textValue={label}>
-                  {label}
-                </ListBox.Item>
-              );
-            })}
-          </ListBox>
-        </Select.Popover>
-      </Select>
+        onChange={handleProviderChange}
+      />
 
       {needsEndpoint && (
         <TextField isDisabled={!enabled} value={endpoint} onChange={setEndpoint}>

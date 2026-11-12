@@ -4,7 +4,7 @@ import { useState } from "react";
 import { ActionButton, ActionButtonGroup } from "@/components/shared/action-button";
 import SecretInput from "@/components/shared/secret-input";
 import { usePending } from "@/hooks/use-pending";
-import { Description, Input, Label, ListBox, Select, TextField } from "@heroui/react";
+import { Description, Input, Label, TextField } from "@heroui/react";
 import { useTranslations } from "next-intl";
 
 import type { ImageGenerationProvider } from "@norish/config/zod/server-config";
@@ -22,6 +22,7 @@ import {
 
 import { useReportDirty } from "../use-report-dirty";
 import { ModelPicker } from "./model-picker";
+import { ProviderSelect } from "./provider-select";
 
 interface ImageGenerationFormProps {
   onDirtyChange?: (isDirty: boolean) => void;
@@ -166,40 +167,13 @@ export default function ImageGenerationForm({ onDirtyChange }: ImageGenerationFo
     <div className="flex flex-col gap-4">
       <p className="text-muted text-sm">{t("description")}</p>
 
-      <Select
-        variant="secondary"
-        placeholder={t("provider")}
+      <ProviderSelect
+        label={t("provider")}
+        messages="settings.admin.imageGenerationConfig.providers"
+        options={PROVIDER_OPTIONS}
         value={provider}
-        onChange={(selected) => {
-          if (typeof selected === "string") {
-            handleProviderChange(selected as ImageGenerationProvider);
-          }
-        }}
-      >
-        <Label>{t("provider")}</Label>
-        <Select.Trigger>
-          <Select.Value />
-          <Select.Indicator />
-        </Select.Trigger>
-        <Select.Popover>
-          <ListBox>
-            {PROVIDER_OPTIONS.map((option) => {
-              const label =
-                option === "lm-studio"
-                  ? t("providers.lmStudio")
-                  : option === "generic-openai"
-                    ? t("providers.genericOpenai")
-                    : t(`providers.${option}` as Parameters<typeof t>[0]);
-
-              return (
-                <ListBox.Item key={option} id={option} textValue={label}>
-                  {label}
-                </ListBox.Item>
-              );
-            })}
-          </ListBox>
-        </Select.Popover>
-      </Select>
+        onChange={handleProviderChange}
+      />
 
       {aiProviderMatches && <p className="text-muted text-xs">{t("fallbackHint")}</p>}
 
