@@ -1,4 +1,4 @@
-import React, { createContext, useContext, useEffect, useState } from "react";
+import React, { createContext, use, useEffect, useState } from "react";
 import { Platform, Settings } from "react-native";
 import { deviceLanguage, matchDeviceLocale, resolveLocaleSelection } from "@/lib/i18n/locale-state";
 import {
@@ -229,7 +229,7 @@ export function MobileIntlFallbackProvider({ children }: { children: React.React
 }
 
 export function useMobileLocaleSettings() {
-  const context = useContext(MobileLocaleContext);
+  const context = use(MobileLocaleContext);
 
   if (!context) {
     throw new Error("useMobileLocaleSettings must be used inside MobileIntlProvider");
