@@ -1,8 +1,6 @@
 import { useTimerStore } from "@/lib/timers";
 import { afterEach, describe, expect, it, vi } from "vitest";
 
-const text = (label: string) => ({ title: label, body: `${label} is done!` });
-
 const warn = vi.hoisted(() => vi.fn());
 
 vi.mock("@norish/shared/lib/logger", () => ({
@@ -38,7 +36,7 @@ describe("timer completion in the background", () => {
       ],
     });
 
-    useTimerStore.getState().tick(text);
+    useTimerStore.getState().tick("Timer complete!");
 
     await vi.waitFor(() =>
       expect(warn).toHaveBeenCalledWith(refusal, "Failed to show timer notification")

@@ -49,8 +49,8 @@ describe("a timer completing in the background", () => {
 
     await vi.waitFor(() =>
       expect(showNotification).toHaveBeenCalledWith(
-        "Timer afgelopen",
-        expect.objectContaining({ body: "Simmer — Risotto is klaar!" })
+        "Simmer — Risotto",
+        expect.objectContaining({ body: "Timer afgelopen" })
       )
     );
   });

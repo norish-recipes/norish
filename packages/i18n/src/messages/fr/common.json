@@ -216,8 +216,7 @@
     "other": "Minuteurs",
     "label_one": "1 minuteur",
     "label_other": "{count} minuteurs",
-    "notification_title": "Minuteur terminé",
-    "notification_body": "{label} est prêt !",
+    "notification_body": "Minuteur terminé",
     "notifications_disabled": "Les notifications sont désactivées",
     "notifications_disabled_hint": "Activez les notifications dans les paramètres de votre navigateur pour recevoir des alertes lorsque les minuteurs se terminent en arrière-plan."
   },

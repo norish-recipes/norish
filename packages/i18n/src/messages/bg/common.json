@@ -216,8 +216,7 @@
     "other": "Таймери",
     "label_one": "1 таймер",
     "label_other": "{count} таймера",
-    "notification_title": "Таймерът приключи",
-    "notification_body": "{label} приключи!",
+    "notification_body": "Таймерът приключи",
     "notifications_disabled": "Известията са изключени",
     "notifications_disabled_hint": "Разреши известията в настройките на браузъра си, за да получаваш сигнали, когато таймерите приключат на заден план."
   },

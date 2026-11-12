@@ -216,8 +216,7 @@
     "other": "Timrar",
     "label_one": "1 timer",
     "label_other": "{count} timrar",
-    "notification_title": "Timern är klar",
-    "notification_body": "{label} är klar!",
+    "notification_body": "Timern är klar",
     "notifications_disabled": "Aviseringar är avstängda",
     "notifications_disabled_hint": "Aktivera aviseringar i webbläsarens inställningar för att få en avisering när en timer blir klar i bakgrunden."
   },

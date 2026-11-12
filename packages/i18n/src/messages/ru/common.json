@@ -216,8 +216,7 @@
     "other": "Таймеры",
     "label_one": "1 таймер",
     "label_other": "{count} таймеров",
-    "notification_title": "Таймер завершён",
-    "notification_body": "{label} завершён!",
+    "notification_body": "Таймер завершён",
     "notifications_disabled": "Уведомления отключены",
     "notifications_disabled_hint": "Включите уведомления в настройках браузера, чтобы получать оповещения при завершении таймеров в фоновом режиме."
   },

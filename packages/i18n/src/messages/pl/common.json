@@ -216,8 +216,7 @@
     "other": "Timery",
     "label_one": "1 Timer",
     "label_other": "{count} Timerów",
-    "notification_title": "Timer zakończony",
-    "notification_body": "{label} gotowe!",
+    "notification_body": "Timer zakończony",
     "notifications_disabled": "Powiadomienia są wyłączone",
     "notifications_disabled_hint": "Włącz powiadomienia w przeglądarce, aby otrzymywać alerty gdy timer skończy działać w tle."
   },

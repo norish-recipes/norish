@@ -1,8 +1,6 @@
 // @vitest-environment jsdom
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 
-const text = (label: string) => ({ title: label, body: `${label} is done!` });
-
 type TimerStore = typeof import("@/lib/timers");
 
 let useTimerStore: TimerStore["useTimerStore"];
@@ -55,7 +53,7 @@ describe("timer notifications under a base path", () => {
     addTimer("test-1", "recipe-1", "Test Timer", 1000);
     startTimer("test-1");
     vi.setSystemTime(Date.now() + 2000);
-    tick(text);
+    tick("Timer complete!");
 
     await Promise.resolve();
 

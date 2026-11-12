@@ -42,10 +42,7 @@ export function TimerTicker() {
       return;
     }
     const interval = setInterval(() => {
-      tick((label) => ({
-        title: t("notification_title"),
-        body: t("notification_body", { label }),
-      }));
+      tick(t("notification_body"));
     }, 1000);
     return () => clearInterval(interval);
   }, [tick, hasRunningTimers, t]);

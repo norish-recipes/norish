@@ -216,8 +216,7 @@
     "other": "타이머",
     "label_one": "타이머 1개",
     "label_other": "{count}개의 타이머",
-    "notification_title": "타이머 완료",
-    "notification_body": "{label}이(가) 완료되었습니다!",
+    "notification_body": "타이머 완료",
     "notifications_disabled": "알림이 비활성화되었습니다.",
     "notifications_disabled_hint": "타이머가 백그라운드에서 완료될 때 알림을 받으려면 브라우저 설정에서 알림을 활성화하세요."
   },

@@ -216,8 +216,7 @@
     "other": "Timer",
     "label_one": "1 Timer",
     "label_other": "{count} Timer",
-    "notification_title": "Timer completato",
-    "notification_body": "{label} è pronto!",
+    "notification_body": "Timer completato",
     "notifications_disabled": "Le notifiche sono disabilitate",
     "notifications_disabled_hint": "Abilita le notifiche nelle impostazioni del browser per ricevere avvisi quando i timer terminano in background."
   },

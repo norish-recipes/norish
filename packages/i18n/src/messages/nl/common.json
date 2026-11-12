@@ -216,8 +216,7 @@
     "other": "Timers",
     "label_one": "1 timer",
     "label_other": "{count} timers",
-    "notification_title": "Timer afgelopen",
-    "notification_body": "{label} is klaar!",
+    "notification_body": "Timer afgelopen",
     "notifications_disabled": "Meldingen zijn uitgeschakeld",
     "notifications_disabled_hint": "Schakel meldingen in via je browserinstellingen om waarschuwingen te ontvangen wanneer timers op de achtergrond aflopen."
   },

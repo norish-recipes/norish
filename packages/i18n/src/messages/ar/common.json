@@ -216,8 +216,7 @@
     "other": "مؤقّتات",
     "label_one": "مؤقّت واحد",
     "label_other": "{count} مؤقّتات",
-    "notification_title": "انتهى المؤقّت",
-    "notification_body": "انتهى {label}!",
+    "notification_body": "انتهى المؤقّت",
     "notifications_disabled": "الإشعارات معطّلة",
     "notifications_disabled_hint": "فعّل الإشعارات من إعدادات المتصفح لتصلك التنبيهات عند انتهاء المؤقّتات في الخلفية."
   },

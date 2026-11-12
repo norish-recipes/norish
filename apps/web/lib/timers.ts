@@ -6,17 +6,11 @@ import { createClientLogger } from "@norish/shared/lib/logger";
 
 const logger = createClientLogger("timers");
 
-/** The completed-timer notification's translated text; the caller holds the reader's locale. */
-export type TimerNotificationText = (label: string) => { title: string; body: string };
-
 /**
  * Show an OS notification via the service worker when a timer completes
  * while the app is in the background (document.hidden === true).
  */
-function showTimerNotification(
-  timer: { label: string; recipeName?: string },
-  text: TimerNotificationText
-) {
+function showTimerNotification(timer: { label: string; recipeName?: string }, body: string) {
   // Audio still plays in the foreground where notifications are unavailable.
   if (
     typeof document === "undefined" ||
@@ -31,8 +25,7 @@ function showTimerNotification(
 
   navigator.serviceWorker.ready
     .then((registration) => {
-      const label = timer.recipeName ? `${timer.label} — ${timer.recipeName}` : timer.label;
-      const { title, body } = text(label);
+      const title = timer.recipeName ? `${timer.label} — ${timer.recipeName}` : timer.label;
 
       return registration.showNotification(title, {
         body,
@@ -80,7 +73,7 @@ interface TimerState {
   adjustTimer: (id: string, deltaMs: number) => void;
 
   // The tick loop to update times
-  tick: (notificationText: TimerNotificationText) => void;
+  tick: (notificationBody: string) => void;
 }
 
 export const useTimerStore = create<TimerState>()(
@@ -179,7 +172,7 @@ export const useTimerStore = create<TimerState>()(
         }));
       },
 
-      tick: (notificationText) => {
+      tick: (notificationBody) => {
         const now = Date.now();
 
         set((state) => {
@@ -201,7 +194,7 @@ export const useTimerStore = create<TimerState>()(
 
             if (newRemaining === 0 && t.remainingMs > 0) {
               hasChanges = true;
-              showTimerNotification(t, notificationText);
+              showTimerNotification(t, notificationBody);
 
               return { ...t, remainingMs: 0, status: "completed", lastTickAt: now };
             }

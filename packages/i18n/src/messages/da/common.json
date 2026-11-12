@@ -216,8 +216,7 @@
     "other": "Timere",
     "label_one": "1 timer",
     "label_other": "{count} timere",
-    "notification_title": "Timer færdig",
-    "notification_body": "{label} er færdig!",
+    "notification_body": "Timer færdig",
     "notifications_disabled": "Notifikationer er deaktiveret",
     "notifications_disabled_hint": "Aktiver notifikationer i dine browserindstillinger for at modtage alarmer, når timere afsluttes i baggrunden."
   },
