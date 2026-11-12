@@ -15,7 +15,7 @@ export function RegisterScreen() {
     <AuthGate
       footer={
         <AuthFooterLink
-          className="items-center self-center pb-2"
+          className="self-center"
           lead={intl.formatMessage({ id: "auth.signup.hasAccount" })}
           link={intl.formatMessage({ id: "auth.signup.signIn" })}
           onPress={() => (router.canGoBack() ? router.back() : router.replace("/login"))}

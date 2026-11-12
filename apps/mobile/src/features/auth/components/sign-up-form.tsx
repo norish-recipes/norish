@@ -107,7 +107,7 @@ export function SignUpForm({ authClient }: { authClient: AuthClient }) {
       />
       <InlineError error={attempt.failure} />
 
-      <ErrorShake error={attempt.failureFor(SIGN_UP)}>
+      <ErrorShake className="mt-1.5" error={attempt.failureFor(SIGN_UP)}>
         <AuthSubmitButton
           icon={(color) => <Feather color={color} name="user-plus" size={20} />}
           isBusy={attempt.running === SIGN_UP}
