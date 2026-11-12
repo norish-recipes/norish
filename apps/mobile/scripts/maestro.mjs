@@ -1,6 +1,6 @@
 // Seeds a disposable account with unchecked groceries, runs the Maestro flows on the booted
 // simulator, then checks the groceries are done on the server, where the web client reads it.
-import { spawn } from "node:child_process";
+import { spawn, spawnSync } from "node:child_process";
 import { randomBytes } from "node:crypto";
 import { once } from "node:events";
 import { existsSync, readFileSync } from "node:fs";
@@ -11,6 +11,11 @@ import os from "node:os";
 import path from "node:path";
 import { PostgreSqlContainer } from "@testcontainers/postgresql";
 import { ValkeyContainer } from "@testcontainers/valkey";
+
+// An optional argument runs that one flow, with the same setup, instead of the whole folder.
+const only = process.argv[2] && path.resolve(process.argv[2]);
+
+if (only && !existsSync(only)) throw new Error(`No flow at ${only}`);
 
 const env = {
   NORISH_EMAIL: "maestro@norish.test",
@@ -139,9 +144,23 @@ cookie = signIn.response.headers
   .map((c) => c.split(";")[0])
   .join("; ");
 
-// The first Account closes registration; the Sign up flow needs it open. Only an admin can, so a
-// server whose registration was set by hand keeps that setting.
-await call("/api/trpc/admin.updateRegistration", { json: true });
+// The first Account closes registration; the Sign up flow needs it open, so it is opened here and
+// put back when the run ends. Only an admin can open it: the seeded Account is one on a new server.
+const registrationWasOpen = (await trpc("config.authProviders")).registrationEnabled;
+const setRegistration = (enabled) => call("/api/trpc/admin.updateRegistration", { json: enabled });
+
+if (!registrationWasOpen) {
+  const opened = await setRegistration(true);
+
+  if (!opened.ok) {
+    throw new Error(
+      `Cannot open registration on ${server} for the Sign up flow (${opened.response.status}): ` +
+        `${env.NORISH_EMAIL} is not an admin. Open registration by hand, or name an admin with ` +
+        "NORISH_EMAIL and NORISH_PASSWORD."
+    );
+  }
+  console.log(`Opened registration on ${server}; it is closed again when the run ends.`);
+}
 
 const stale = (await ours()).map(({ id, version }) => ({ id, version }));
 
@@ -189,20 +208,68 @@ const control = createServer(async (request, response) => {
 listenProxy();
 
 const flows = path.join(import.meta.dirname, "..", "maestro");
+// With several simulators booted, NORISH_SIMULATOR names the one to use (its udid).
+const simulator = env.NORISH_SIMULATOR ?? "booted";
 
+// iOS offers to save and to suggest passwords in sheets that Maestro cannot select, so AutoFill is
+// switched off on the simulator, as Settings > AutoFill & Passwords does.
+spawnSync(
+  "xcrun",
+  [
+    "simctl",
+    "spawn",
+    simulator,
+    "defaults",
+    "write",
+    "com.apple.WebUI",
+    "AutoFillPasswords",
+    "-bool",
+    "false",
+  ],
+  { stdio: "inherit" }
+);
 // Async, so the old-server stub below keeps answering while Maestro runs.
-async function maestro(folder, vars) {
+async function maestro(target, vars) {
   const args = Object.entries(vars).flatMap(([name, value]) => ["-e", `${name}=${value}`]);
   const [code] = await once(
-    spawn("maestro", ["test", ...args, folder], { stdio: "inherit" }),
+    spawn(
+      "maestro",
+      [...(env.NORISH_SIMULATOR ? ["--udid", simulator] : []), "test", ...args, target],
+      { stdio: "inherit" }
+    ),
     "exit"
   );
 
-  if (code !== 0) process.exit(code ?? 1);
+  if (code !== 0) throw Object.assign(new Error(`Maestro exited with ${code}`), { code });
 }
 
-await maestro(flows, {
+// A server older than the app supports: its readiness probe reports this version.
+const OLD_SERVER_VERSION = "0.1.0";
+const oldServer = createServer((_request, response) => {
+  response.writeHead(200, { "content-type": "application/json" });
+  response.end(
+    JSON.stringify({ status: "ok", version: OLD_SERVER_VERSION, parser: { status: "ok" } })
+  );
+}).listen(Number(env.NORISH_OLD_SERVER_PORT), LOOPBACK);
+const appVersion = JSON.parse(readFileSync(path.join(flows, "../package.json"), "utf8")).version;
+// The app's minimum, as in src/features/auth/utils/server-version.ts.
+const minimumVersion = appVersion.replace(/^(\d+\.\d+)\..*$/, "$1.0");
+// English copy the flows assert, from the catalogue so a rewording stays in step.
+const { signup } = JSON.parse(
+  readFileSync(
+    path.join(import.meta.dirname, "../../../packages/i18n/src/messages/en/auth.json"),
+    "utf8"
+  )
+);
+
+const vars = {
   NORISH_SERVER_URL: server,
+  NORISH_SERVER_HOST: backend.host,
+  NORISH_OLD_SERVER_URL: `http://localhost:${env.NORISH_OLD_SERVER_PORT}`,
+  NORISH_OLD_SERVER_HOST: `localhost:${env.NORISH_OLD_SERVER_PORT}`,
+  NORISH_OLD_SERVER_VERSION: OLD_SERVER_VERSION,
+  NORISH_MINIMUM_SERVER_VERSION: minimumVersion,
+  NORISH_COPY_PASSWORD_MISMATCH: signup.errors.passwordMismatch,
   NORISH_EMAIL: env.NORISH_EMAIL,
   NORISH_PASSWORD: env.NORISH_PASSWORD,
   NORISH_GROCERY_ID: idOf[env.NORISH_GROCERY],
@@ -211,26 +278,38 @@ await maestro(flows, {
   // The proxy forwards bytes, so a base path stays on the address the app is given.
   NORISH_PROXY_URL: `http://localhost:${env.NORISH_PROXY_PORT}${server.slice(backend.origin.length)}`,
   NORISH_PROXY_CONTROL_URL: `http://localhost:${env.NORISH_PROXY_CONTROL_PORT}`,
-});
-proxy.close();
-control.close();
+};
 
-const after = await ours();
+try {
+  await maestro(only ?? flows, vars);
+  proxy.close();
+  control.close();
 
-for (const name of seeded) {
-  if (!after.some((grocery) => grocery.name === name && grocery.isDone)) {
-    throw new Error(`${name} is not done on the server`);
+  if (!only) {
+    const after = await ours();
+
+    for (const name of seeded) {
+      if (!after.some((grocery) => grocery.name === name && grocery.isDone)) {
+        throw new Error(`${name} is not done on the server`);
+      }
+    }
+
+    await maestro(path.join(flows, "old-server"), vars);
   }
+} catch (error) {
+  console.error(error.message);
+  process.exitCode = error.code ?? 1;
+} finally {
+  oldServer.close();
+  if (!registrationWasOpen) {
+    const closed = await setRegistration(false).catch(() => null);
+
+    console.log(
+      closed?.ok
+        ? `Closed registration on ${server} again.`
+        : `Could not close registration on ${server}: close it again by hand.`
+    );
+  }
+  await stopServer();
+  process.exit();
 }
-
-// A server older than the app supports: its readiness probe reports 0.1.0.
-const oldServer = createServer((_request, response) => {
-  response.writeHead(200, { "content-type": "application/json" });
-  response.end(JSON.stringify({ status: "ok", version: "0.1.0", parser: { status: "ok" } }));
-}).listen(Number(env.NORISH_OLD_SERVER_PORT), LOOPBACK);
-
-await maestro(path.join(flows, "old-server"), {
-  NORISH_OLD_SERVER_URL: `http://localhost:${env.NORISH_OLD_SERVER_PORT}`,
-});
-oldServer.close();
-await stopServer();
