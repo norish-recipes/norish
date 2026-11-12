@@ -1,5 +1,6 @@
 import React from "react";
 import { View } from "react-native";
+import { hostOf } from "@/features/auth/utils/host-of";
 import { Button, Host, HStack, Image, Text } from "@expo/ui/swift-ui";
 import {
   accessibilityIdentifier,
@@ -12,15 +13,6 @@ import {
 import { useRouter } from "expo-router";
 import { useThemeColor } from "heroui-native";
 import { useIntl } from "react-intl";
-
-/** The host a Server Address names, such as `norish.example.com` or `localhost:3000`. */
-function hostOf(address: string): string {
-  try {
-    return new URL(address).host || address;
-  } catch {
-    return address;
-  }
-}
 
 /** The glass chip at a signed-out screen's foot: the server's host, opening Server address. */
 export function ServerChip({ address }: { address: string }) {
