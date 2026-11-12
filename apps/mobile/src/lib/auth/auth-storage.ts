@@ -1,6 +1,7 @@
 import { storageAdapter } from "@better-auth/expo/client";
 import * as SecureStore from "expo-secure-store";
 
+import type { SessionUser } from "@norish/shared-react/reader";
 import { createClientLogger } from "@norish/shared/lib/logger";
 
 const log = createClientLogger("auth-storage");
@@ -13,13 +14,6 @@ const AUTH_SESSION_DATA_KEY = `${AUTH_STORAGE_PREFIX}_session_data`;
 /** SecureStore as the auth client reads it: a large value is stored in chunks. */
 export const authStorage = storageAdapter(SecureStore);
 
-export type PersistedUser = {
-  id: string;
-  email: string;
-  name: string;
-  image?: string | null;
-};
-
 function readRequiredString(value: unknown): string | null {
   if (typeof value !== "string" || value.length === 0) {
     return null;
@@ -28,7 +22,7 @@ function readRequiredString(value: unknown): string | null {
   return value;
 }
 
-function toPersistedUser(value: unknown): PersistedUser | null {
+function toSessionUser(value: unknown): SessionUser | null {
   if (typeof value !== "object" || value === null) {
     return null;
   }
@@ -48,9 +42,9 @@ function toPersistedUser(value: unknown): PersistedUser | null {
 
   const parsedId = readRequiredString(id);
   const parsedEmail = readRequiredString(email);
-  const parsedName = readRequiredString(name);
 
-  if (!parsedId || !parsedEmail || !parsedName) {
+  // An empty name is still a reader, as the live session reads it.
+  if (!parsedId || !parsedEmail || typeof name !== "string") {
     return null;
   }
 
@@ -61,7 +55,7 @@ function toPersistedUser(value: unknown): PersistedUser | null {
   return {
     id: parsedId,
     email: parsedEmail,
-    name: parsedName,
+    name,
     image: image ?? null,
   };
 }
@@ -73,7 +67,7 @@ function toPersistedUser(value: unknown): PersistedUser | null {
  * Returns the validated user object, or `null` if the key is missing, empty,
  * unparseable, or the user shape is invalid.
  */
-export async function readPersistedSession(): Promise<PersistedUser | null> {
+export async function readPersistedSession(): Promise<SessionUser | null> {
   let authCookie: string | null;
   let raw: string | null;
 
@@ -106,7 +100,7 @@ export async function readPersistedSession(): Promise<PersistedUser | null> {
     return null;
   }
 
-  const user = toPersistedUser(parsed);
+  const user = toSessionUser(parsed);
 
   if (!user) {
     log.warn("Persisted session data has an invalid shape");

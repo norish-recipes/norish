@@ -9,7 +9,7 @@ import type { PlatformSession } from "../platform";
 import type { SessionUser } from "./session";
 import { useHydrated, usePlatform } from "../platform";
 import { useTRPC } from "../trpc";
-import { sessionReader } from "./session";
+import { useSessionReader } from "./session";
 
 export type ReaderIdentity = {
   /** The signed-in Reader, or null signed out or while the session is unknown. */
@@ -31,16 +31,7 @@ export function useSeededSession(
   // better-auth reports pending again on every refetch while signed out: the first answer stands.
   if (hydrated && !session.isPending && !answered) setAnswered(true);
 
-  // Kept by field, so a refetched session of the same reader keeps the same user.
-  const live = hydrated ? session.user : null;
-  const id = live?.id;
-  const email = live?.email;
-  const name = live?.name;
-  const image = live?.image;
-  const user =
-    id && email !== undefined && name !== undefined
-      ? sessionReader({ id, email, name, image })
-      : null;
+  const user = useSessionReader(hydrated ? session.user : null);
 
   return { user: user ?? (answered ? null : seed), isPending: session.isPending || !hydrated };
 }

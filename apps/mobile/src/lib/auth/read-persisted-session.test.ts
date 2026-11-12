@@ -214,14 +214,14 @@ describe("readPersistedSession", () => {
     expect(result).toBeNull();
   });
 
-  it("returns null when user.name is empty", async () => {
+  it("keeps a user whose name is empty", async () => {
     setSessionData({
       user: { id: "user-123", email: "test@example.com", name: "" },
     });
 
     const result = await read();
 
-    expect(result).toBeNull();
+    expect(result).toEqual({ id: "user-123", email: "test@example.com", name: "", image: null });
   });
 
   it("returns null when user.id is a number instead of string", async () => {

@@ -1,4 +1,3 @@
-import type { PersistedUser } from "@/lib/auth/auth-storage";
 import { useEffect, useState, useSyncExternalStore } from "react";
 import { readPersistedSession } from "@/lib/auth/auth-storage";
 import { useAuthClient } from "@/lib/auth/use-auth-client";
@@ -6,7 +5,7 @@ import { useAuthClient } from "@/lib/auth/use-auth-client";
 import type { PlatformSession } from "@norish/shared-react/platform";
 import type { SessionUser } from "@norish/shared-react/reader";
 import { useConnectivity } from "@norish/shared-react/offline/react";
-import { sessionReader } from "@norish/shared-react/reader";
+import { useSessionReader } from "@norish/shared-react/reader";
 
 type AuthClient = ReturnType<typeof useAuthClient>;
 type SessionState = {
@@ -34,7 +33,7 @@ export function useMobileSession(): PlatformSession {
   // Keyed by client: a reset wipes the stored session, so a new client reads it again.
   const [persisted, setPersisted] = useState<{
     client: AuthClient;
-    user: PersistedUser | null;
+    user: SessionUser | null;
   }>();
 
   const readsPersisted = !data && error?.status !== 401 && (isPending || !!error || isOffline);
@@ -54,14 +53,10 @@ export function useMobileSession(): PlatformSession {
     };
   }, [authClient, persistedUser, readsPersisted]);
 
-  const user = readsPersisted ? persistedUser : data?.user;
-  const id = user?.id;
-  const email = user?.email;
-  const name = user?.name;
-  const image = user?.image;
+  const user = useSessionReader(readsPersisted ? persistedUser : data?.user);
 
   return {
-    user: id && email && name ? sessionReader({ id, email, name, image }) : null,
+    user,
     isPending: readsPersisted ? persistedUser === undefined : isPending,
   };
 }

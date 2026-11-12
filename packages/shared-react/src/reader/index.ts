@@ -24,7 +24,7 @@ export {
   type PermissionsData,
   type ReaderPermissions,
 } from "./permission-selectors";
-export { sessionReader, type SessionUser } from "./session";
+export { useSessionReader, type SessionUser } from "./session";
 export {
   usePermissions,
   usePermissionsSubscription,
