@@ -16,6 +16,7 @@ export {
   useNutritionFoodsQuery,
 } from "./use-ingredient-nutrition";
 export {
+  useHeldIngredient,
   useIngredientKinds,
   useIngredientListQuery,
   useIngredientQuery,

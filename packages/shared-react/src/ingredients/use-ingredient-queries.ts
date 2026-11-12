@@ -57,34 +57,36 @@ export function useIngredientKinds(parentIds: readonly string[], locale: string)
 }
 
 /** One food read on its own, for a panel whose list no longer lists it. */
-export function useIngredientQuery(ingredientId: string | null, locale: string, enabled: boolean) {
+export function useIngredientQuery(ingredientId: string, locale: string) {
+  const trpc = useTRPC();
+  const { data } = useQuery(trpc.ingredients.get.queryOptions({ ingredientId, locale }));
+
+  return data ?? null;
+}
+
+/** That read as the cache holds it, never fetched here: what a mounted `useIngredientQuery` read. */
+export function useHeldIngredient(ingredientId: string, locale: string) {
   const trpc = useTRPC();
   const { data } = useQuery({
-    ...trpc.ingredients.get.queryOptions({ ingredientId: ingredientId ?? "", locale }),
-    enabled: enabled && ingredientId !== null,
+    ...trpc.ingredients.get.queryOptions({ ingredientId, locale }),
+    enabled: false,
   });
 
   return data ?? null;
 }
 
-/** Every spelling a food goes by, in every language; read only while `enabled`. */
-export function useIngredientSpellingsQuery(ingredientId: string, enabled: boolean) {
+/** Every spelling a food goes by, in every language. */
+export function useIngredientSpellingsQuery(ingredientId: string) {
   const trpc = useTRPC();
-  const { data } = useQuery({
-    ...trpc.ingredients.spellings.queryOptions({ ingredientId }),
-    enabled,
-  });
+  const { data } = useQuery(trpc.ingredients.spellings.queryOptions({ ingredientId }));
 
   return data;
 }
 
-/** What still uses a food, as far as the reader may see; read only while `enabled`. */
-export function useIngredientUsesQuery(ingredientId: string, enabled: boolean) {
+/** What still uses a food, as far as the reader may see. */
+export function useIngredientUsesQuery(ingredientId: string) {
   const trpc = useTRPC();
-  const { data, isPending } = useQuery({
-    ...trpc.ingredients.uses.queryOptions({ ingredientId }),
-    enabled,
-  });
+  const { data, isPending } = useQuery(trpc.ingredients.uses.queryOptions({ ingredientId }));
 
   return { uses: data, isPending };
 }

@@ -763,6 +763,57 @@ describe("IngredientsScreen", () => {
     expect(mutations.undoAIChange).toHaveBeenCalledWith({ changeId: "c1" });
   });
 
+  it("reads a food's own read, spellings and uses only while what shows them is open", async () => {
+    const reads = (path: string) => sentReads.mock.calls.filter(([read]) => read === path).length;
+
+    items = [{ ...onion, hiddenSpellings: 2 }, salt];
+    await renderScreen();
+    const opened = await open("onion");
+
+    expect([reads("ingredients.get"), reads("ingredients.spellings")]).toEqual([0, 0]);
+    expect(reads("ingredients.uses")).toBe(0);
+
+    await showSpellings(opened);
+    expect(reads("ingredients.spellings")).toBe(1);
+
+    await act(async () => {
+      fireEvent.click(within(opened).getByTestId("ingredient-delete"));
+    });
+    await settle();
+    expect(reads("ingredients.uses")).toBe(1);
+
+    // The list drops the open food: only now is it read on its own.
+    items = [salt];
+    await reread();
+    expect(reads("ingredients.get")).toBe(1);
+  });
+
+  it("reads a linked food on its own only while its panel is open", async () => {
+    const reads = () => sentReads.mock.calls.filter(([read]) => read === "ingredients.get").length;
+
+    linkedIngredient = "onion";
+    items = [salt];
+    ownItem = onion;
+    await renderScreen();
+
+    expect(await screen.findByRole("dialog", { name: "onion" })).toBeInTheDocument();
+    expect(reads()).toBe(1);
+
+    await act(async () => {
+      fireEvent.click(within(panel("onion")).getByTestId("ingredient-delete"));
+    });
+    await settle();
+    await act(async () => {
+      fireEvent.click(screen.getByTestId("ingredient-delete-confirm"));
+    });
+    await settle();
+    sentReads.mockClear();
+    await reread();
+
+    expect(screen.queryByRole("dialog", { name: "onion" })).toBeNull();
+    expect(reads()).toBe(0);
+  });
+
   it("holds Delete until it has read what the delete touches", async () => {
     let answer = () => {};
 

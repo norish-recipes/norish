@@ -24,6 +24,7 @@ import {
   isOpenChange,
   useAIChangeMutations,
   useAIChangesQuery,
+  useHeldIngredient,
   useIngredientMutations,
   useIngredientQuery,
   useIngredientSpellingsQuery,
@@ -80,21 +81,58 @@ export function IngredientPanel({
   onClose: () => void;
 }) {
   const locale = useLocale();
+  // The food asked for, else the last one, which stays while the panel slides away.
+  const [lastId, setLastId] = useState(id ?? item?.id ?? null);
+  const ownId = id ?? item?.id ?? lastId;
+
+  if (ownId !== lastId) setLastId(ownId);
+  if (ownId === null) return null;
+
+  return (
+    <>
+      {open && item === null ? <IngredientRead ingredientId={ownId} locale={locale} /> : null}
+      <IngredientPanelFrame
+        ingredientId={ownId}
+        item={item}
+        nested={nested}
+        open={open}
+        onClose={onClose}
+      />
+    </>
+  );
+}
+
+/** Reads a food the list does not list, mounted only while its panel is open. */
+function IngredientRead({ ingredientId, locale }: { ingredientId: string; locale: string }) {
+  useIngredientQuery(ingredientId, locale);
+
+  return null;
+}
+
+/** The panel over the listed food, else the food's own read as the cache holds it. */
+function IngredientPanelFrame({
+  ingredientId,
+  item,
+  open,
+  nested,
+  onClose,
+}: {
+  ingredientId: string;
+  item: IngredientItem | null;
+  open: boolean;
+  nested: boolean;
+  onClose: () => void;
+}) {
+  const locale = useLocale();
+  const held = useHeldIngredient(ingredientId, locale);
+  const current = item ?? held;
   // The last food the panel had stays on screen while the panel slides away.
   const [shown, setShown] = useState<IngredientItem | null>(item);
-  // A food a filter or a search no longer lists (marked distinct under
-  // "flagged only", say) is read on its own, so the panel keeps up with it.
-  // The food asked for comes first: a link to another food reads that one,
-  // not the one the panel showed last. With no food asked for (the panel
-  // closing), the last one stays.
-  const ownId = id ?? shown?.id ?? null;
-  const own = useIngredientQuery(ownId, locale, open && item === null);
-  const current: IngredientItem | null = item ?? own;
 
   if (current && current !== shown) setShown(current);
 
   // Another food asked for, not read yet: nothing, rather than the last one.
-  if (!shown || (open && id !== null && shown.id !== id && !current)) return null;
+  if (!shown || (open && shown.id !== ingredientId && !current)) return null;
 
   return (
     <Panel
@@ -127,8 +165,6 @@ function IngredientPanelContent({ item, onClose }: { item: IngredientItem; onClo
   // viewer's spellings and a person's own, and the rest are fetched when the
   // panel is asked for them.
   const hiddenSpellings = item.hiddenSpellings ?? 0;
-  const everySpelling: Spelling[] =
-    useIngredientSpellingsQuery(item.id, allSpellings && hiddenSpellings > 0) ?? item.aliases;
 
   // The draft: what the viewer has changed and not yet saved.
   const [name, setName] = useState(item.name);
@@ -517,7 +553,15 @@ function IngredientPanelContent({ item, onClose }: { item: IngredientItem; onClo
               className="flex flex-wrap items-center gap-1"
               data-testid="ingredient-spellings-all"
             >
-              {everySpelling.map(spellingChip)}
+              {hiddenSpellings > 0 ? (
+                <HeldBackSpellings
+                  aliases={item.aliases}
+                  chip={spellingChip}
+                  ingredientId={item.id}
+                />
+              ) : (
+                item.aliases.map(spellingChip)
+              )}
               {added.map((text) => (
                 <Chip
                   key={`new-${text}`}
@@ -661,14 +705,6 @@ function IngredientUsesPanel({
   onClose: () => void;
 }) {
   const t = useTranslations("settings.ingredients.uses");
-  const tActions = useTranslations("common.actions");
-  const { uses: data } = useIngredientUsesQuery(ingredientId, open);
-  const unused =
-    data &&
-    data.recipes.length === 0 &&
-    data.groceries.length === 0 &&
-    !data.pantry &&
-    data.elsewhere === 0;
 
   return (
     <Panel
@@ -679,6 +715,31 @@ function IngredientUsesPanel({
         if (!isOpen) onClose();
       }}
     >
+      <IngredientUsesContent ingredientId={ingredientId} onClose={onClose} />
+    </Panel>
+  );
+}
+
+/** The uses panel's content, mounted while it is open, so the uses are read only then. */
+function IngredientUsesContent({
+  ingredientId,
+  onClose,
+}: {
+  ingredientId: string;
+  onClose: () => void;
+}) {
+  const t = useTranslations("settings.ingredients.uses");
+  const tActions = useTranslations("common.actions");
+  const { uses: data } = useIngredientUsesQuery(ingredientId);
+  const unused =
+    data &&
+    data.recipes.length === 0 &&
+    data.groceries.length === 0 &&
+    !data.pantry &&
+    data.elsewhere === 0;
+
+  return (
+    <>
       <Panel.Body>
         <div className="flex flex-col gap-5 pb-2" data-testid="ingredient-uses">
           {!data ? <Skeleton className="h-16 w-full rounded-xl" /> : null}
@@ -730,8 +791,21 @@ function IngredientUsesPanel({
           </ActionButton>
         </ActionButtonGroup>
       </Panel.Footer>
-    </Panel>
+    </>
   );
+}
+
+/** Every spelling the food goes by, read once the panel showing them opens. */
+function HeldBackSpellings({
+  ingredientId,
+  aliases,
+  chip,
+}: {
+  ingredientId: string;
+  aliases: Spelling[];
+  chip: (spelling: Spelling) => ReactNode;
+}) {
+  return (useIngredientSpellingsQuery(ingredientId) ?? aliases).map(chip);
 }
 
 /** One part of the panel: a small heading over what it holds. */
