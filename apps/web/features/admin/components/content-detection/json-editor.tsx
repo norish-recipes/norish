@@ -1,6 +1,6 @@
 "use client";
 
-import { useCallback, useEffect, useState } from "react";
+import { useEffect, useState } from "react";
 import { ActionButton, ActionButtonGroup } from "@/components/shared/action-button";
 import { usePending } from "@/hooks/use-pending";
 import { CodeBracketIcon, ExclamationTriangleIcon } from "@heroicons/react/16/solid";
@@ -51,22 +51,19 @@ export default function JsonEditor({
   useEffect(() => {
     onDirtyChange?.(isDirty);
   }, [isDirty, onDirtyChange]);
-  const handleTextChange = useCallback(
-    (newText: string) => {
-      setText(newText);
-      setIsDirty(true);
+  const handleTextChange = (newText: string) => {
+    setText(newText);
+    setIsDirty(true);
 
-      // Validate JSON on change
-      try {
-        JSON.parse(newText);
-        setError(null);
-      } catch (_e) {
-        setError(t("invalidJson"));
-      }
-    },
-    [t]
-  );
-  const handleSave = useCallback(async () => {
+    // Validate JSON on change
+    try {
+      JSON.parse(newText);
+      setError(null);
+    } catch (_e) {
+      setError(t("invalidJson"));
+    }
+  };
+  const handleSave = async () => {
     if (error) return;
     await whileSaving(() =>
       onSave(text)
@@ -79,8 +76,8 @@ export default function JsonEditor({
         })
         .catch((e: unknown) => setError(e instanceof Error ? e.message : t("failedToSave")))
     );
-  }, [text, error, onSave, t, whileSaving]);
-  const handleRestoreDefaults = useCallback(async () => {
+  };
+  const handleRestoreDefaults = async () => {
     if (!onRestoreDefaults) return;
     await whileSaving(() =>
       onRestoreDefaults()
@@ -91,8 +88,8 @@ export default function JsonEditor({
         })
         .catch((e: unknown) => setError(e instanceof Error ? e.message : t("failedToRestore")))
     );
-  }, [onRestoreDefaults, t, whileSaving]);
-  const handleFormat = useCallback(() => {
+  };
+  const handleFormat = () => {
     try {
       const parsed = JSON.parse(text);
       setText(JSON.stringify(parsed, null, 2));
@@ -100,7 +97,7 @@ export default function JsonEditor({
     } catch {
       // Keep error state
     }
-  }, [text]);
+  };
   return (
     <div className="flex flex-col gap-3">
       {label && (

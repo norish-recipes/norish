@@ -59,12 +59,12 @@ export function useQueueSummaryQuery() {
 /** A job action's outcome: a failed one carries the server's message. */
 type JobActionResult = { success: true } | { success: false; error: string };
 
-const outcome = (write: Promise<unknown>, fallback: string): Promise<JobActionResult> =>
+const outcome = (write: Promise<unknown>): Promise<JobActionResult> =>
   write.then(
     () => ({ success: true as const }),
     (error: unknown) => ({
       success: false as const,
-      error: error instanceof Error ? error.message : fallback,
+      error: error instanceof Error ? error.message : String(error),
     })
   );
 
@@ -97,9 +97,9 @@ export function useJobQueueMutations() {
   );
 
   return {
-    retryJob: (job: JobRef) => outcome(retry.mutateAsync(job), "Failed to retry job"),
-    cancelJob: (job: JobRef) => outcome(cancel.mutateAsync(job), "Failed to cancel job"),
-    removeJob: (job: JobRef) => outcome(remove.mutateAsync(job), "Failed to remove job"),
+    retryJob: (job: JobRef) => outcome(retry.mutateAsync(job)),
+    cancelJob: (job: JobRef) => outcome(cancel.mutateAsync(job)),
+    removeJob: (job: JobRef) => outcome(remove.mutateAsync(job)),
     updateJobRetention: (config: JobRetentionConfig) => settled(retention.mutateAsync(config)),
     isRetrying: retry.isPending,
     isRemoving: remove.isPending,

@@ -1,6 +1,6 @@
 "use client";
 
-import { useCallback, useEffect, useState } from "react";
+import { useEffect, useState } from "react";
 import { SwitchRow } from "@/components/settings/setting-row";
 import SettingsSwitch from "@/components/settings/settings-switch";
 import { ActionButton, ActionButtonGroup } from "@/components/shared/action-button";
@@ -52,6 +52,7 @@ export default function TimerKeywordsEditor({
 }: TimerKeywordsEditorProps) {
   const t = useTranslations("settings.admin.contentDetection.timerKeywords");
   const tActions = useTranslations("common.actions");
+  const tEditor = useTranslations("settings.admin.jsonEditor");
   const [isEnabled, setIsEnabled] = useState(enabled);
   const [hoursText, setHoursText] = useState(() => hours.join(", "));
   const [minutesText, setMinutesText] = useState(() => minutes.join(", "));
@@ -79,31 +80,28 @@ export default function TimerKeywordsEditor({
   useEffect(() => {
     onDirtyChange?.(isDirty);
   }, [isDirty, onDirtyChange]);
-  const handleEnabledChange = useCallback((newEnabled: boolean) => {
+  const handleEnabledChange = (newEnabled: boolean) => {
     setIsEnabled(newEnabled);
     setIsDirty(true);
-  }, []);
-  const handleTextChange = useCallback(
-    (field: "hours" | "minutes" | "seconds", newText: string) => {
-      if (field === "hours") setHoursText(newText);
-      if (field === "minutes") setMinutesText(newText);
-      if (field === "seconds") setSecondsText(newText);
-      setIsDirty(true);
-      setError(null);
+  };
+  const handleTextChange = (field: "hours" | "minutes" | "seconds", newText: string) => {
+    if (field === "hours") setHoursText(newText);
+    if (field === "minutes") setMinutesText(newText);
+    if (field === "seconds") setSecondsText(newText);
+    setIsDirty(true);
+    setError(null);
 
-      // Validation: at least one keyword in one category when enabled
-      if (isEnabled) {
-        const hasHours = field === "hours" ? newText.trim() !== "" : hoursText.trim() !== "";
-        const hasMinutes = field === "minutes" ? newText.trim() !== "" : minutesText.trim() !== "";
-        const hasSeconds = field === "seconds" ? newText.trim() !== "" : secondsText.trim() !== "";
-        if (!hasHours && !hasMinutes && !hasSeconds) {
-          setError("At least one keyword required in hours, minutes, or seconds");
-        }
+    // Validation: at least one keyword in one category when enabled
+    if (isEnabled) {
+      const hasHours = field === "hours" ? newText.trim() !== "" : hoursText.trim() !== "";
+      const hasMinutes = field === "minutes" ? newText.trim() !== "" : minutesText.trim() !== "";
+      const hasSeconds = field === "seconds" ? newText.trim() !== "" : secondsText.trim() !== "";
+      if (!hasHours && !hasMinutes && !hasSeconds) {
+        setError(t("keywordRequired"));
       }
-    },
-    [isEnabled, hoursText, minutesText, secondsText]
-  );
-  const handleSave = useCallback(async () => {
+    }
+  };
+  const handleSave = async () => {
     if (error) return;
 
     const parsedHours = splitKeywords(hoursText);
@@ -117,7 +115,7 @@ export default function TimerKeywordsEditor({
       parsedMinutes.length === 0 &&
       parsedSeconds.length === 0
     ) {
-      setError("At least one keyword required in hours, minutes, or seconds");
+      setError(t("keywordRequired"));
       return;
     }
     await whileSaving(() =>
@@ -134,10 +132,10 @@ export default function TimerKeywordsEditor({
             setError(result.error);
           }
         })
-        .catch((e: unknown) => setError(e instanceof Error ? e.message : "Failed to save"))
+        .catch((e: unknown) => setError(e instanceof Error ? e.message : tEditor("failedToSave")))
     );
-  }, [hoursText, minutesText, secondsText, isEnabled, error, onUpdate, whileSaving]);
-  const handleRestoreDefaults = useCallback(async () => {
+  };
+  const handleRestoreDefaults = async () => {
     await whileSaving(() =>
       onRestoreDefaults()
         .then((result) => {
@@ -146,10 +144,10 @@ export default function TimerKeywordsEditor({
           }
         })
         .catch((e: unknown) =>
-          setError(e instanceof Error ? e.message : "Failed to restore defaults")
+          setError(e instanceof Error ? e.message : tEditor("failedToRestore"))
         )
     );
-  }, [onRestoreDefaults, whileSaving]);
+  };
   return (
     <div className="flex flex-col gap-4">
       <SwitchRow description={t("description")} title={t("enableToggle")}>
