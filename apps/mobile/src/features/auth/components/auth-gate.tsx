@@ -1,11 +1,12 @@
 import type { AuthClient } from "@/lib/auth/auth-client";
 import type { ReactNode } from "react";
 import React from "react";
-import { StyleSheet, View } from "react-native";
+import { View } from "react-native";
 import Animated from "react-native-reanimated";
 import { Brand } from "@/components/brand";
 import { AuthLayout } from "@/features/auth/components/auth-layout";
 import { AuthStatus } from "@/features/auth/components/auth-status";
+import { FadeInFill } from "@/features/auth/components/fade-in-fill";
 import { FADE_IN } from "@/features/auth/utils/motion";
 import { resolveMethodsStatus } from "@/features/auth/utils/sign-in-methods";
 import { useAuthClient } from "@/lib/auth/use-auth-client";
@@ -105,13 +106,7 @@ function ConfigGate({
     </AuthLayout>
   );
 
-  return fadeIn ? (
-    <Animated.View entering={FADE_IN} style={styles.fill}>
-      {form}
-    </Animated.View>
-  ) : (
-    form
-  );
+  return fadeIn ? <FadeInFill>{form}</FadeInFill> : form;
 }
 
 /** A signed-out form's frame: no server, loading and failed config, or the form itself. */
@@ -159,5 +154,3 @@ export function AuthGate({
     </ConfigGate>
   );
 }
-
-const styles = StyleSheet.create({ fill: { flex: 1 } });

@@ -1,9 +1,7 @@
 import React, { useState } from "react";
-import { StyleSheet } from "react-native";
-import Animated from "react-native-reanimated";
+import { FadeInFill } from "@/features/auth/components/fade-in-fill";
 import { ConnectScreen } from "@/features/auth/screens/connect-screen";
 import { LoginScreen } from "@/features/auth/screens/login-screen";
-import { FADE_IN } from "@/features/auth/utils/motion";
 import { takeServerChangeAfterSignOut } from "@/hooks/use-change-server-address";
 import { takeSessionLeft } from "@/lib/auth/auth-session-sync";
 import { fadesInAfterSessionEnd, resolveSignedOutEntry } from "@/lib/boot/boot-state";
@@ -28,12 +26,10 @@ export default function SignedOutEntryRoute() {
   if (arrival.entry === "sign-in") return <LoginScreen fadeIn={arrival.fades} />;
 
   return arrival.fades ? (
-    <Animated.View entering={FADE_IN} style={styles.fill}>
+    <FadeInFill>
       <ConnectScreen />
-    </Animated.View>
+    </FadeInFill>
   ) : (
     <ConnectScreen />
   );
 }
-
-const styles = StyleSheet.create({ fill: { flex: 1 } });
