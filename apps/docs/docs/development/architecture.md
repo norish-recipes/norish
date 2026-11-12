@@ -72,7 +72,7 @@ Web and mobile use the same layout. Web keeps its folders at the root of
   chunk. Groceries has `header/`, `list/`, `panels/`, `pantry/` and `stores/`.
   Recipes has `page/`, `share/`, `editor/`, `read-only/`, `media/` and
   `skeleton/`. Library has `grid/`, `header/`, `filters/`, `selection/`,
-  `panels/` and `skeleton/`. Calendar has `timeline/`, `panels/` and `skeleton/`,
+  `panels/` and `skeleton/`. Calendar has `timeline/`, `panels/`, `caldav/` and `skeleton/`,
   with `hooks/` beside `components/`. Skeletons, `loading.tsx` files and the shared
   recipe page import files directly.
 - Features never import each other. Lint blocks `@/features/<x>` and

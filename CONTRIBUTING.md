@@ -208,10 +208,10 @@ Use Pino logger instead of `console.log`:
 
 ```typescript
 // Server-side
+import { createLogger } from "@norish/shared-server/logger";
 
 // Client-side
-import { createClientLogger } from "@/lib/logger";
-import { createLogger } from "@/server/logger";
+import { createClientLogger } from "@norish/shared/lib/logger";
 
 const log = createLogger("my-module");
 log.info("Something happened");
@@ -342,7 +342,7 @@ The flows in `apps/mobile/maestro/old-server/` run last, against a stub server t
 
 ## Adding Translations
 
-Norish uses a configurable locale system. The bundled locale catalog lives in `packages/i18n/src/locales.ts`, server defaults are derived from that catalog in `packages/config/src/server-config-loader.ts`, and locales can be enabled/disabled at runtime via the Admin UI or environment variables.
+Norish uses a configurable locale system. The bundled locale catalog lives in `packages/i18n/src/locales.ts`, server defaults are derived from that catalog in `packages/shared-server/src/config/server-config-loader.ts`, and locales can be enabled/disabled at runtime via the Admin UI or environment variables.
 
 ### 1. Add Locale to the Bundled Locale Catalog
 
