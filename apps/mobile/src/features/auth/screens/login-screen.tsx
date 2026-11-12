@@ -8,7 +8,7 @@ import { AuthLayout } from "@/features/auth/components/auth-layout";
 import { InlineError, useErrorShake } from "@/features/auth/components/inline-error";
 import { ProviderIcon } from "@/features/auth/components/provider-icon";
 import { ServerChip } from "@/features/auth/components/server-chip";
-import { authFailure, signInFailure } from "@/features/auth/utils/auth-failure";
+import { authFailure } from "@/features/auth/utils/auth-failure";
 import {
   DEFAULT_PROTECTED_ROUTE,
   firstParam,
@@ -78,13 +78,12 @@ function PasswordForm({ authClient, signUp }: { authClient: AuthClient; signUp: 
     setError(null);
 
     // On success the Stack.Protected guard leaves Sign in once the session lands.
-    const failure = await signInFailure(
+    const failure = await authFailure(
       authClient.signIn.email({ email: email.trim(), password }),
-      intl.formatMessage({ id: "auth.login.wrongCredentials" }),
-      intl.formatMessage({ id: "auth.emailPassword.errors.generic" })
+      "auth.errors.default.description"
     );
 
-    if (failure !== null) setError({ message: failure });
+    if (failure !== null) setError({ message: intl.formatMessage({ id: failure }) });
 
     setIsSubmitting(false);
   };
@@ -197,10 +196,10 @@ function ProviderButtons({
 
     const failure = await authFailure(
       authClient.signIn.social({ provider: provider.id, callbackURL: redirectTo }),
-      intl.formatMessage({ id: "auth.errors.default.description" })
+      "auth.errors.default.description"
     );
 
-    if (failure !== null) setError({ message: failure });
+    if (failure !== null) setError({ message: intl.formatMessage({ id: failure }) });
 
     setActiveProviderId(null);
   };

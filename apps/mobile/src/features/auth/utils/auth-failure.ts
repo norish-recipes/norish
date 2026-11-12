@@ -1,32 +1,48 @@
+import { createClientLogger } from "@norish/shared/lib/logger";
+
+const log = createClientLogger("auth");
+
 type AuthError = { code?: string; message?: string };
 
+// Better Auth codes `auth.errors` translates, lowercased as web's auth-error screen keys them.
+const TRANSLATED_CODES = new Set([
+  "provider_not_found",
+  "social_account_already_linked",
+  "account_not_found",
+  "registration_is_currently_disabled",
+  "user_not_found",
+  "internal_server_error",
+  "unauthorized",
+]);
+
+function refusalMessageId(error: AuthError, fallback: string): string {
+  if (error.code === "INVALID_EMAIL_OR_PASSWORD") return "auth.login.wrongCredentials";
+
+  const code = error.code?.toLowerCase();
+
+  return code && TRANSLATED_CODES.has(code) ? `auth.errors.${code}.description` : fallback;
+}
+
 /**
- * The message a Better Auth call ends with, or null once it succeeds. A refusal comes back as
- * `error` and shows `refused` when it has no message; only a network failure throws.
+ * The message id a Better Auth call fails with, or null once it succeeds. A refusal comes back
+ * as `error`; a throw is a network failure (a `TypeError`) or else `fallback`. Raw text is only logged.
  */
 export function authFailure(
   call: Promise<{ error: AuthError | null }>,
-  refused: string,
-  failed: string = refused
+  fallback: string
 ): Promise<string | null> {
-  return call
-    .then(({ error }) => (error ? (error.message ?? refused) : null))
-    .catch((thrown: unknown) => (thrown instanceof Error && thrown.message) || failed);
-}
+  return call.then(
+    ({ error }) => {
+      if (!error) return null;
 
-/** Better Auth's code for an unknown email or a wrong password; it doesn't say which. */
-const WRONG_CREDENTIALS = "INVALID_EMAIL_OR_PASSWORD";
+      log.warn({ code: error.code, message: error.message }, "Auth call refused");
 
-/** A password sign-in's failure: `wrong` for wrong credentials, else as `authFailure` maps it. */
-export function signInFailure(
-  call: Promise<{ error: AuthError | null }>,
-  wrong: string,
-  refused: string
-): Promise<string | null> {
-  return authFailure(
-    call.then(({ error }) => ({
-      error: error?.code === WRONG_CREDENTIALS ? { message: wrong } : error,
-    })),
-    refused
+      return refusalMessageId(error, fallback);
+    },
+    (thrown: unknown) => {
+      log.warn({ error: thrown }, "Auth call failed");
+
+      return thrown instanceof TypeError ? "auth.connect.errors.unreachable" : fallback;
+    }
   );
 }

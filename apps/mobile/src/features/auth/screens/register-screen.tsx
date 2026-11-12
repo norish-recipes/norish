@@ -121,12 +121,11 @@ function RegisterForm({
 
     const failure = await authFailure(
       authClient.signUp.email({ name: trimmedName, email: trimmedEmail, password }),
-      intl.formatMessage({ id: "auth.signup.errors.createFailed" }),
-      intl.formatMessage({ id: "auth.signup.errors.generic" })
+      "auth.signup.errors.createFailed"
     );
 
     // autoSignIn establishes the session; Stack.Protected redirects to the smoke screen.
-    if (failure !== null) setErrorMessage(failure);
+    if (failure !== null) setErrorMessage(intl.formatMessage({ id: failure }));
 
     setIsSubmitting(false);
   }, [authClient, confirmPassword, email, intl, name, password]);
