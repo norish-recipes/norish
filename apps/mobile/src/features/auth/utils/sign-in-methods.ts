@@ -1,12 +1,6 @@
 import { toProviderType } from "@/features/auth/utils/redirect";
 
-import type { ProviderInfo } from "@norish/shared/contracts";
-
-type AuthProvidersConfig = {
-  providers: ProviderInfo[];
-  passwordAuthEnabled: boolean;
-  registrationEnabled: boolean;
-};
+import type { AuthProvidersResponse, ProviderInfo } from "@norish/shared/contracts";
 
 /** What Sign in draws: exactly the Sign-in Methods the server reports, never more. */
 export type SignInMethods = {
@@ -20,7 +14,7 @@ export function resolveSignInMethods({
   providers,
   passwordAuthEnabled,
   registrationEnabled,
-}: AuthProvidersConfig): SignInMethods {
+}: AuthProvidersResponse): SignInMethods {
   const oauthProviders = providers.filter((provider) => toProviderType(provider) === "oauth");
 
   return {
