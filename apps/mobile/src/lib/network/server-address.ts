@@ -18,11 +18,8 @@ export function getServerAddress(): string {
 }
 
 /**
- * Outcome of reading the stored Server Address.
- *
- * `error` is deliberately distinct from `ready` with a `null` url: secure
- * storage failing is not the same as the user not having configured a server,
- * and collapsing the two would silently discard a saved Server Address.
+ * Outcome of reading the stored Server Address. `error` stays apart from a `null` url,
+ * since a failed secure-storage read is not an unset server and must not discard a saved one.
  */
 export type ServerAddressState =
   | { status: "loading" }

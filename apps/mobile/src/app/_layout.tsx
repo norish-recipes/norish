@@ -116,9 +116,8 @@ function RootLayoutContent() {
     },
   };
 
-  // Secure storage could not be read, so which server this install belongs to
-  // is unknown. Treating that as "no Server Address" would quietly drop a
-  // configured server, so surface it instead.
+  // Unreadable secure storage leaves the Server Address unknown; reading that as none
+  // would drop a configured server, so the storage screen says so instead.
   if (boot.phase === "storage-error") {
     return (
       <ThemeProvider value={theme}>
