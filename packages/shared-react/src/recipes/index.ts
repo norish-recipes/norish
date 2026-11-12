@@ -30,6 +30,7 @@ export { useRatingsMutation } from "./use-ratings-mutation";
 export { useRatingsSubscription } from "./use-ratings-subscription";
 export { useRecipeAutocomplete } from "./use-recipe-autocomplete";
 export type { InfiniteRecipeData } from "./library-cache";
+export { useImportMutations } from "./use-import-mutations";
 export { useRecipesCacheHelpers, type RecipesCacheHelpers } from "./use-recipes-cache";
 export {
   useRecipesMutations,

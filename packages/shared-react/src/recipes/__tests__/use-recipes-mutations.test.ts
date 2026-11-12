@@ -1,8 +1,7 @@
 import { act, renderHook } from "@testing-library/react";
-import { TRPCClientError } from "@trpc/client";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 
-import type { FullRecipeDTO, PendingRecipeDTO } from "@norish/shared/contracts";
+import type { FullRecipeDTO } from "@norish/shared/contracts";
 import { createTestQueryClient, createTestWrapper } from "@norish/shared-react/platform/testing";
 
 import type { InfiniteRecipeData } from "../library-cache";
@@ -10,8 +9,6 @@ import { useRecipesMutations } from "../use-recipes-mutations";
 
 const server = vi.hoisted(() => ({
   create: vi.fn(),
-  importFromUrl: vi.fn(),
-  importFromPaste: vi.fn(),
   update: vi.fn(),
 }));
 
@@ -30,9 +27,6 @@ vi.mock("../../trpc", () => {
         get: { queryKey: key("recipes", "get") },
         getPending: { queryKey: key("recipes", "getPending") },
         create: procedure(server.create),
-        importFromUrl: procedure(server.importFromUrl),
-        importFromImages: procedure(vi.fn()),
-        importFromPaste: procedure(server.importFromPaste),
         update: procedure(server.update),
         delete: procedure(vi.fn()),
         convertMeasurements: procedure(vi.fn()),
@@ -44,7 +38,6 @@ vi.mock("../../trpc", () => {
 });
 
 const LIST_KEY = [["recipes", "list"], { input: {} }];
-const PENDING_KEY = [["recipes", "getPending"]];
 const detailKey = (id: string) => [["recipes", "get"], { input: { id } }];
 const EMPTY_LIST: InfiniteRecipeData = {
   pages: [{ recipes: [], total: 0, nextCursor: null }],
@@ -62,7 +55,6 @@ describe("useRecipesMutations", () => {
     for (const send of Object.values(server)) send.mockReset();
     queryClient = createTestQueryClient();
     queryClient.setQueryData(LIST_KEY, EMPTY_LIST);
-    queryClient.setQueryData<PendingRecipeDTO[]>(PENDING_KEY, []);
   });
 
   afterEach(() => vi.unstubAllGlobals());
@@ -74,8 +66,6 @@ describe("useRecipesMutations", () => {
     act(async () => {
       await vi.waitFor(() => expect(queryClient.isMutating()).toBe(0));
     });
-  const pendingIds = () =>
-    queryClient.getQueryData<PendingRecipeDTO[]>(PENDING_KEY)?.map((p) => p.recipeId);
   const firstCard = () =>
     queryClient.getQueryData<InfiniteRecipeData>(LIST_KEY)?.pages[0]?.recipes[0];
 
@@ -259,69 +249,6 @@ describe("useRecipesMutations", () => {
         { name: "pasta", version: 3 },
         { name: "quick", version: 1 },
       ]);
-    });
-  });
-
-  describe("imports", () => {
-    it("tracks a queued import under the id the server gave it", async () => {
-      server.importFromUrl.mockResolvedValue({ recipeId: "recipe-new", status: "queued" });
-      const result = render();
-
-      act(() => result.current.importRecipe("https://example.com/pasta"));
-      await settled();
-
-      expect(pendingIds()).toEqual(["recipe-new"]);
-    });
-
-    it("leaves no placeholder for a URL the household holds, and names that recipe", async () => {
-      const alreadyExists = vi.fn();
-
-      server.importFromUrl.mockResolvedValue({ recipeId: "recipe-held", status: "exists" });
-      const result = render(undefined, alreadyExists);
-
-      act(() => result.current.importRecipe("https://example.com/pasta"));
-      await settled();
-
-      expect(pendingIds()).toEqual([]);
-      expect(alreadyExists).toHaveBeenCalledWith("recipe-held");
-    });
-
-    it("keeps the placeholder when the backend is unreachable and the import is queued", async () => {
-      const onError = vi.fn();
-      const unreachable = new TRPCClientError("Request failed");
-
-      server.importFromUrl.mockRejectedValue(unreachable);
-      const result = render(onError);
-
-      act(() => result.current.importRecipe("https://example.com/pasta"));
-      await settled();
-
-      expect(pendingIds()).toEqual([expect.stringMatching(/^optimistic-pending-recipe:/)]);
-      expect(onError).toHaveBeenCalledWith(unreachable, "importFromUrl");
-    });
-
-    it("drops the placeholder and tells the caller when an import fails", async () => {
-      const onError = vi.fn();
-      const failure = new Error("Bad recipe URL");
-
-      server.importFromUrl.mockRejectedValue(failure);
-      const result = render(onError);
-
-      act(() => result.current.importRecipeWithAI("https://example.com/pasta"));
-      await settled();
-
-      expect(pendingIds()).toEqual([]);
-      expect(onError).toHaveBeenCalledWith(failure, "importFromUrlWithAI");
-    });
-
-    it("tracks every recipe a paste import found", async () => {
-      server.importFromPaste.mockResolvedValue({ recipeIds: ["recipe-1", "recipe-2", "recipe-3"] });
-      const result = render();
-
-      act(() => result.current.importRecipeFromPaste("three recipes"));
-      await settled();
-
-      expect(pendingIds()).toEqual(["recipe-1", "recipe-2", "recipe-3"]);
     });
   });
 });

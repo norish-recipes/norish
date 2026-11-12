@@ -11,20 +11,11 @@ import type {
   RecipeDashboardDTO,
 } from "@norish/shared/contracts";
 import { primaryRecipeImage } from "@norish/shared/lib/recipe-media";
-import { uploadForm } from "@norish/shared/lib/upload-form";
 
 import type { InfiniteRecipeData } from "./library-cache";
 import { shouldPreserveOptimisticUpdate } from "../offline/optimistic-updates";
 import { useTRPC } from "../trpc";
-import {
-  OPTIMISTIC_PENDING_RECIPE_PREFIX,
-  removeRecipesFromLists,
-  useRecipesCacheHelpers,
-} from "./use-recipes-cache";
-
-type ImportMutationContext = {
-  optimisticPendingId: string;
-};
+import { removeRecipesFromLists, useRecipesCacheHelpers } from "./use-recipes-cache";
 
 type CreateMutationContext = {
   recipeId?: string;
@@ -41,11 +32,6 @@ type UpdateMutationContext = {
   detailQueryKey: QueryKey;
   previousDetail: FullRecipeDTO | null | undefined;
 };
-
-function createOptimisticPendingRecipeId(): string {
-  // eslint-disable-next-line sonarjs/pseudo-random -- a placeholder id needs to be unique, not unpredictable
-  return `${OPTIMISTIC_PENDING_RECIPE_PREFIX}${Date.now()}-${Math.random().toString(36).slice(2, 10)}`;
-}
 
 function restoreRecipeLists(
   queryClient: QueryClient,
@@ -269,11 +255,6 @@ function createOptimisticDashboardRecipe(recipe: FullRecipeDTO): RecipeDashboard
 }
 
 export type RecipesMutationsResult = {
-  importRecipe: (url: string) => void;
-  importRecipeWithAI: (url: string) => void;
-  importRecipeFromImages: (files: File[]) => void;
-  importRecipeFromPaste: (text: string) => void;
-  importRecipeFromPasteWithAI: (text: string) => void;
   createRecipe: (input: FullRecipeInsertDTO) => void;
   updateRecipe: (id: string, input: FullRecipeUpdateDTO) => void;
   /** Delete recipes, each at the version the reader saw; one call however many. */
@@ -282,130 +263,14 @@ export type RecipesMutationsResult = {
 };
 
 export type RecipesMutationErrorHandler = (error: unknown, operation: string) => void;
-/**
- * Told when an import found a recipe the household already holds. Not an
- * error — the id is the one the caller was reaching for, so an app can offer
- * to open it.
- */
-export type RecipeAlreadyExistsAdapter = (recipeId: string) => void;
 
-export function useRecipesMutations(
-  onError?: RecipesMutationErrorHandler,
-  onRecipeAlreadyExists?: RecipeAlreadyExistsAdapter
-): RecipesMutationsResult {
+export function useRecipesMutations(onError?: RecipesMutationErrorHandler): RecipesMutationsResult {
   const trpc = useTRPC();
   const queryClient = useQueryClient();
-  const {
-    addPendingRecipe,
-    replacePendingRecipe,
-    removePendingRecipe,
-    setAllRecipesData,
-    invalidate,
-  } = useRecipesCacheHelpers();
+  const { setAllRecipesData, invalidate } = useRecipesCacheHelpers();
 
   const recipesPath = [trpc.recipes.list.queryKey({})[0]];
 
-  const importMutation = useMutation(
-    trpc.recipes.importFromUrl.mutationOptions({
-      onMutate: () => {
-        const optimisticPendingId = createOptimisticPendingRecipeId();
-
-        addPendingRecipe(optimisticPendingId);
-
-        return { optimisticPendingId };
-      },
-      onSuccess: ({ recipeId, status }, _variables, context) => {
-        // Nothing was queued, so there is no pending recipe to stand in for:
-        // drop the placeholder and hand the id to whoever can offer it.
-        if (status === "exists") {
-          if (context) removePendingRecipe(context.optimisticPendingId);
-          onRecipeAlreadyExists?.(recipeId);
-
-          return;
-        }
-
-        if (!context) {
-          addPendingRecipe(recipeId);
-
-          return;
-        }
-
-        replacePendingRecipe(context.optimisticPendingId, recipeId);
-      },
-      onError: (error, variables, context) => {
-        handleImportError(
-          error,
-          variables.forceAI ? "importFromUrlWithAI" : "importFromUrl",
-          context
-        );
-      },
-    })
-  );
-  const { mutate: mutateImport } = importMutation;
-  const { mutate: mutateImageImport } = useMutation(
-    trpc.recipes.importFromImages.mutationOptions({
-      onMutate: () => {
-        const optimisticPendingId = createOptimisticPendingRecipeId();
-
-        addPendingRecipe(optimisticPendingId);
-
-        return { optimisticPendingId };
-      },
-      onSuccess: (recipeId, _variables, context) => {
-        if (!context) {
-          addPendingRecipe(recipeId);
-
-          return;
-        }
-
-        replacePendingRecipe(context.optimisticPendingId, recipeId);
-      },
-      onError: (error, _variables, context) => {
-        handleImportError(error, "importFromImages", context);
-      },
-    })
-  );
-  const pasteImportMutation = useMutation(
-    trpc.recipes.importFromPaste.mutationOptions({
-      onMutate: () => {
-        const optimisticPendingId = createOptimisticPendingRecipeId();
-
-        addPendingRecipe(optimisticPendingId);
-
-        return { optimisticPendingId };
-      },
-      onSuccess: (result, _variables, context) => {
-        const [firstRecipeId, ...remainingRecipeIds] = result.recipeIds;
-
-        if (!firstRecipeId) {
-          if (context) {
-            removePendingRecipe(context.optimisticPendingId);
-          }
-
-          invalidate();
-
-          return;
-        }
-
-        if (!context) {
-          result.recipeIds.forEach((recipeId) => addPendingRecipe(recipeId));
-
-          return;
-        }
-
-        replacePendingRecipe(context.optimisticPendingId, firstRecipeId);
-        remainingRecipeIds.forEach((recipeId) => addPendingRecipe(recipeId));
-      },
-      onError: (error, variables, context) => {
-        handleImportError(
-          error,
-          variables.forceAI ? "importFromPasteWithAI" : "importFromPaste",
-          context
-        );
-      },
-    })
-  );
-  const { mutate: mutatePasteImport } = pasteImportMutation;
   const createMutation = useMutation(
     trpc.recipes.create.mutationOptions({
       onMutate: async (input) => {
@@ -600,32 +465,6 @@ export function useRecipesMutations(
     }
   };
 
-  const handleImportError = (
-    error: unknown,
-    operation: string,
-    context: ImportMutationContext | undefined
-  ): void => {
-    onError?.(error, operation);
-
-    if (shouldPreserveOptimisticUpdate(error)) {
-      return;
-    }
-
-    if (context) {
-      removePendingRecipe(context.optimisticPendingId);
-    }
-
-    invalidate();
-  };
-
-  const importRecipe = (url: string): void => {
-    mutateImport({ url });
-  };
-
-  const importRecipeWithAI = (url: string): void => {
-    mutateImport({ url, forceAI: true });
-  };
-
   const createRecipe = (input: FullRecipeInsertDTO): void => {
     mutateCreate(input);
   };
@@ -646,24 +485,7 @@ export function useRecipesMutations(
     mutateConvert({ recipeId, targetSystem, version });
   };
 
-  const importRecipeFromImages = (files: File[]): void => {
-    mutateImageImport(uploadForm(Object.fromEntries(files.map((file, i) => [`file${i}`, file]))));
-  };
-
-  const importRecipeFromPaste = (text: string): void => {
-    mutatePasteImport({ text });
-  };
-
-  const importRecipeFromPasteWithAI = (text: string): void => {
-    mutatePasteImport({ text, forceAI: true });
-  };
-
   return {
-    importRecipe,
-    importRecipeWithAI,
-    importRecipeFromImages,
-    importRecipeFromPaste,
-    importRecipeFromPasteWithAI,
     createRecipe,
     updateRecipe,
     deleteRecipes,
