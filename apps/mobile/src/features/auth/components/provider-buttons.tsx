@@ -49,11 +49,14 @@ export function ProviderButtons({
               )
             }
           >
-            {signIn.running === provider.id ? (
-              <Spinner color={foregroundColor} size="sm" />
-            ) : (
-              <ProviderIcon color={foregroundColor} icon={provider.icon} size={18} />
-            )}
+            {/* Hidden, so VoiceOver reads the label without the icon font's glyph. */}
+            <View accessibilityElementsHidden collapsable={false}>
+              {signIn.running === provider.id ? (
+                <Spinner color={foregroundColor} size="sm" />
+              ) : (
+                <ProviderIcon color={foregroundColor} icon={provider.icon} size={18} />
+              )}
+            </View>
             <Button.Label className="text-foreground text-base font-medium">
               {intl.formatMessage({ id: "auth.provider.signInWith" }, { provider: provider.name })}
             </Button.Label>
