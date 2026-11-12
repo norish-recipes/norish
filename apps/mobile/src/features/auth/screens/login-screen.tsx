@@ -1,8 +1,10 @@
 import type { AuthClient } from "@/lib/auth/auth-client";
 import React, { use } from "react";
 import { Text, View } from "react-native";
+import Animated from "react-native-reanimated";
 import { Brand } from "@/components/brand";
 import { AuthLayout } from "@/features/auth/components/auth-layout";
+import { FADE_IN } from "@/features/auth/components/inline-error";
 import { PasswordForm } from "@/features/auth/components/password-form";
 import { ProviderButtons } from "@/features/auth/components/provider-buttons";
 import { ServerChip } from "@/features/auth/components/server-chip";
@@ -91,8 +93,9 @@ function SignInMethods({ authClient, redirectTo }: { authClient: AuthClient; red
     );
   }
 
+  // Fades in as the methods arrive, after the launch cross-fade, rather than popping in.
   return (
-    <View>
+    <Animated.View entering={FADE_IN}>
       {methods.passwordForm ? (
         <PasswordForm authClient={authClient} showSignUpLink={methods.signUp} signIn={signIn} />
       ) : null}
@@ -105,7 +108,7 @@ function SignInMethods({ authClient, redirectTo }: { authClient: AuthClient; red
           signIn={signIn}
         />
       ) : null}
-    </View>
+    </Animated.View>
   );
 }
 
