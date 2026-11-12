@@ -127,18 +127,16 @@ describe("the Account's writes", () => {
       });
     });
 
-    it("rejects a refused Avatar upload and says why", async () => {
+    it("resolves that a refused Avatar upload did not go through and says why", async () => {
       const result = render(() => useProfileMutations());
-      let upload: Promise<unknown> = Promise.resolve();
+      let upload: Promise<boolean> = Promise.resolve(true);
 
       act(() => {
-        upload = result.current
-          .uploadAvatar(new File(["x"], "a.png", { type: "image/png" }))
-          .catch((error: unknown) => error);
+        upload = result.current.uploadAvatar(new File(["x"], "a.png", { type: "image/png" }));
       });
       await answerCall("user.uploadAvatar", { success: false, error: "File too large" });
 
-      expect(await upload).toEqual(new Error("File too large"));
+      expect(await upload).toBe(false);
       expect(adapter.showError).toHaveBeenCalledWith(
         "File too large",
         "user-settings:upload-avatar"
@@ -160,6 +158,19 @@ describe("the Account's writes", () => {
 
       await expect(created).resolves.toBe("sk-secret");
       expect(profile()?.apiKeys.map((key) => key.id)).toEqual(["k1", "k2"]);
+    });
+
+    it("resolve no key when the create failed, which the reader is shown", async () => {
+      const result = render(() => useApiKeyMutations());
+      let created: Promise<string | null> = Promise.resolve("");
+
+      act(() => {
+        created = result.current.createApiKey("Two");
+      });
+      await failCall("user.apiKeys.create");
+
+      await expect(created).resolves.toBeNull();
+      expect(adapter.showError).toHaveBeenCalledOnce();
     });
 
     it("drop a deleted key and flip a toggled one", async () => {

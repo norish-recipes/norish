@@ -31,6 +31,7 @@ export default function ApiKeyCard() {
   const handleGenerateKey = async () => {
     await whileGeneratingKey(() =>
       createApiKey(newKeyName || undefined).then((key) => {
+        if (!key) return;
         setGeneratedKey(key);
         setShowTokenModal(true);
         setNewKeyName("");

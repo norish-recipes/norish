@@ -5,7 +5,7 @@ import { useMutation } from "@tanstack/react-query";
 import type { UserPreferencesDto } from "@norish/shared/contracts/zod/user";
 import { uploadForm } from "@norish/shared/lib/upload-form";
 
-import { settled } from "../offline/settled";
+import { accepted, answered, settled } from "../offline/settled";
 import { showRefusal, usePlatform } from "../platform";
 import { useTRPC } from "../trpc";
 import { useProfileCache } from "./use-profile";
@@ -63,18 +63,11 @@ export function useProfileMutations() {
 
       await settled(mutateName({ name, version: version() }));
     },
-    /** Rejects when the upload fails, which the reader is shown. */
-    uploadAvatar: async (file: File): Promise<void> => {
-      const answer = await mutateUpload(uploadForm({ file, version: version() }));
-
-      if (!answer.success) throw new Error(answer.error);
-    },
-    /** Rejects when the delete fails, which the reader is shown. */
-    deleteAvatar: async (): Promise<void> => {
-      const answer = await mutateDelete({ version: version() });
-
-      if (!answer.success) throw new Error(answer.error);
-    },
+    /** Resolves whether the upload went through; the reader is shown why not. */
+    uploadAvatar: (file: File): Promise<boolean> =>
+      accepted(mutateUpload(uploadForm({ file, version: version() }))),
+    /** Resolves whether the delete went through; the reader is shown why not. */
+    deleteAvatar: (): Promise<boolean> => accepted(mutateDelete({ version: version() })),
     isDeletingAvatar,
   };
 }
@@ -157,8 +150,9 @@ export function useApiKeyMutations() {
   );
 
   return {
-    /** Resolves with the new key, shown only this once. */
-    createApiKey: async (name?: string): Promise<string> => (await mutateCreate({ name })).key,
+    /** Resolves with the new key, shown only this once, or null when the create failed. */
+    createApiKey: async (name?: string): Promise<string | null> =>
+      (await answered(mutateCreate({ name })))?.key ?? null,
     deleteApiKey: (keyId: string) => mutateDelete({ keyId }),
     toggleApiKey: (keyId: string, enabled: boolean) => mutateToggle({ keyId, enabled }),
   };

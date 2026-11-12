@@ -11,8 +11,8 @@ type Children = { children?: ReactNode };
 const mockAccount = vi.hoisted(() => ({
   user: { name: "Alice", email: "alice@example.com", image: null },
   updateName: vi.fn().mockResolvedValue(undefined),
-  uploadAvatar: vi.fn().mockResolvedValue(undefined),
-  deleteAvatar: vi.fn().mockResolvedValue(undefined),
+  uploadAvatar: vi.fn().mockResolvedValue(true),
+  deleteAvatar: vi.fn().mockResolvedValue(true),
   isDeletingAvatar: false,
 }));
 

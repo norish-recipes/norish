@@ -42,7 +42,7 @@ export default function ProfileCard() {
         await updateName(name);
       }
       if (pendingImageFile) {
-        await uploadAvatar(pendingImageFile);
+        if (!(await uploadAvatar(pendingImageFile))) return;
         setImagePreview(null);
         setPendingImageFile(null);
       }
