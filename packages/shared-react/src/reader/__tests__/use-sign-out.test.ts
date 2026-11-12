@@ -81,7 +81,7 @@ describe("Sign-out and Session Expiry", () => {
       await signOut();
 
       expect(steps).toEqual([]);
-      expect(adapter.showError).toHaveBeenCalledWith(error, "sign out");
+      expect(adapter.showError).toHaveBeenCalledWith(error, "auth:sign-out");
       expect(adapter.toast.show).not.toHaveBeenCalled();
     });
 

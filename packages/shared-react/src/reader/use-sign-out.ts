@@ -60,7 +60,7 @@ export function useSignOut() {
             title: platform.toast.translate("navbar.userMenu.signOutOffline"),
           });
         } else {
-          platform.showError(error, "sign out");
+          platform.showError(error, "auth:sign-out");
         }
 
         return;
