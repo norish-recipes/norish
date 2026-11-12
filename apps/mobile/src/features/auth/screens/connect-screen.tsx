@@ -1,4 +1,5 @@
 import type { InlineErrorState } from "@/features/auth/components/inline-error";
+import type { ServerAddressErrorId } from "@/features/auth/utils/check-server-address";
 import React, { useState } from "react";
 import { View } from "react-native";
 import Animated from "react-native-reanimated";
@@ -33,7 +34,8 @@ export function ConnectScreen() {
   const shakeStyle = useErrorShake(error);
   const entrance = useLaunchEntrance();
 
-  const fail = (id: string) => setError({ message: intl.formatMessage({ id }) });
+  const fail = (id: ServerAddressErrorId | "common.errors.operationFailed") =>
+    setError({ message: intl.formatMessage({ id }) });
 
   const handleConnect = async () => {
     if (isConnecting) return;

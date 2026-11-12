@@ -3,12 +3,12 @@ import { getServerHealthUrl, normalizeServerAddress } from "@/lib/network/server
 
 import { REACHABILITY_DEADLINE_MS } from "@norish/shared-react/offline/reachability";
 
+export type ServerAddressErrorId =
+  "auth.connect.errors.invalidUrl" | "auth.connect.errors.unreachable";
+
 type ServerAddressCheck =
   | { outcome: "ok" | "too-old"; address: string }
-  | {
-      outcome: "error";
-      messageId: "auth.connect.errors.invalidUrl" | "auth.connect.errors.unreachable";
-    };
+  | { outcome: "error"; messageId: ServerAddressErrorId };
 
 /** Asks the server at `input` what it is; anything but a Norish answer is one inline error. */
 export async function checkServerAddress(
