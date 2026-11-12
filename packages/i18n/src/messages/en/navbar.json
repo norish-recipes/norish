@@ -12,7 +12,7 @@
       "title": "Settings",
       "description": "Manage your account"
     },
-    "logout": "Logout",
+    "logout": "Sign out",
     "signOutOffline": "You're offline. Sign out when you're back online.",
     "signOutConfirm": {
       "title": "Discard unsynced changes?",

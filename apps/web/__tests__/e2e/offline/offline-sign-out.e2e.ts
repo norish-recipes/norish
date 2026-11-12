@@ -35,9 +35,9 @@ test("signing out while Offline keeps the reader signed in and says why", async 
     await expect(page.getByPlaceholder("e.g., 2 lbs chicken breast")).toBeHidden();
 
     await page.getByRole("button", { name: "Open user menu" }).click();
-    await page.getByRole("menuitem", { name: "Logout" }).click();
+    await page.getByRole("menuitem", { name: "Sign out" }).click();
     // The queued change asks first; agreeing still ends nothing without the server.
-    await page.getByRole("button", { name: "Logout", exact: true }).click();
+    await page.getByRole("button", { name: "Sign out", exact: true }).click();
 
     await expect(page.getByText("You're offline. Sign out when you're back online.")).toBeVisible();
     await expect(page).toHaveURL(/\/groceries$/);

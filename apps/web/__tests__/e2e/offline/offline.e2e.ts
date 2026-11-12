@@ -665,7 +665,7 @@ test("sign-out with unsynced work asks first; Cancel preserves everything", asyn
   await expect.poll(() => readOutbox(page)).toHaveLength(1);
 
   await page.getByRole("button", { name: "Open user menu" }).click();
-  await page.getByRole("menuitem", { name: "Logout" }).click();
+  await page.getByRole("menuitem", { name: "Sign out" }).click();
   await expect(page.getByText("Discard unsynced changes?")).toBeVisible();
   await page.getByRole("button", { name: "Cancel" }).click();
   await expect(page.getByText("Discard unsynced changes?")).toHaveCount(0);
@@ -677,9 +677,9 @@ test("sign-out with unsynced work asks first; Cancel preserves everything", asyn
 
 test("a confirmed sign-out discards the queue and completes", async () => {
   await page.getByRole("button", { name: "Open user menu" }).click();
-  await page.getByRole("menuitem", { name: "Logout" }).click();
+  await page.getByRole("menuitem", { name: "Sign out" }).click();
   await expect(page.getByText("Discard unsynced changes?")).toBeVisible();
-  await page.getByRole("button", { name: "Logout", exact: true }).click();
+  await page.getByRole("button", { name: "Sign out", exact: true }).click();
 
   await expect(page).toHaveURL(/\/login\?logout=true$/, { timeout: 30_000 });
 

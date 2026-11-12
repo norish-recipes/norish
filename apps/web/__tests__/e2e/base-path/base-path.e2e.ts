@@ -195,6 +195,6 @@ test("downloads the recipe archive under the base path", async ({ basePath: { at
 test("signs out to the base path's login page", async ({ basePath: { at, page } }) => {
   await page.goto(at("/"));
   await page.getByRole("button", { name: "Open user menu" }).click();
-  await page.getByRole("menuitem", { name: "Logout" }).click();
+  await page.getByRole("menuitem", { name: "Sign out" }).click();
   await expect(page).toHaveURL(at("/login?logout=true"));
 });
