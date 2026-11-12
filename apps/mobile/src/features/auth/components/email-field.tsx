@@ -3,7 +3,6 @@ import type { ComponentRef, Ref } from "react";
 import type { TextInput } from "react-native";
 import React from "react";
 import { AuthField } from "@/features/auth/components/auth-field";
-import { InputGroup } from "heroui-native";
 
 interface EmailFieldProps {
   label: string;
@@ -28,21 +27,22 @@ export function EmailField({
   ref,
 }: EmailFieldProps) {
   return (
-    <AuthField error={error} label={label}>
-      <InputGroup.Input
-        ref={ref}
-        autoCapitalize="none"
-        autoCorrect={false}
-        keyboardType="email-address"
-        placeholder={placeholder}
-        returnKeyType="next"
-        submitBehavior="submit"
-        testID={testID}
-        textContentType="username"
-        value={value}
-        onChangeText={onChangeText}
-        onSubmitEditing={onSubmitEditing}
-      />
-    </AuthField>
+    <AuthField
+      ref={ref}
+      compact
+      autoCapitalize="none"
+      autoCorrect={false}
+      error={error}
+      keyboardType="email-address"
+      label={label}
+      placeholder={placeholder}
+      returnKeyType="next"
+      submitBehavior="submit"
+      testID={testID}
+      textContentType="username"
+      value={value}
+      onChangeText={onChangeText}
+      onSubmitEditing={onSubmitEditing}
+    />
   );
 }

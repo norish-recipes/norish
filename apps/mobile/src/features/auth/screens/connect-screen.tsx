@@ -14,7 +14,7 @@ import { getServerAddress, saveServerAddress } from "@/lib/network/server-addres
 import Feather from "@expo/vector-icons/Feather";
 import MaterialCommunityIcons from "@expo/vector-icons/MaterialCommunityIcons";
 import { useLocalSearchParams, useRouter } from "expo-router";
-import { InputGroup, useThemeColor } from "heroui-native";
+import { useThemeColor } from "heroui-native";
 import { useIntl } from "react-intl";
 
 import { createClientLogger } from "@norish/shared/lib/logger";
@@ -87,7 +87,11 @@ export function ConnectScreen() {
 
       <Animated.View className="mt-[52px] gap-1.5" style={entrance.fieldStyle}>
         <AuthField
+          autoCapitalize="none"
+          autoCorrect={false}
           error={connect.failure}
+          icon={<Feather color={mutedColor} name="server" size={20} />}
+          keyboardType="url"
           label={intl.formatMessage({ id: "auth.connect.serverAddressLabel" })}
           labelAccessory={
             <HelpPopover
@@ -95,23 +99,14 @@ export function ConnectScreen() {
               text={intl.formatMessage({ id: "auth.connect.example" })}
             />
           }
-        >
-          <InputGroup.Prefix isDecorative>
-            <Feather color={mutedColor} name="server" size={20} />
-          </InputGroup.Prefix>
-          <InputGroup.Input
-            autoCapitalize="none"
-            autoCorrect={false}
-            keyboardType="url"
-            placeholder={intl.formatMessage({ id: "auth.connect.serverAddressPlaceholder" })}
-            returnKeyType="go"
-            testID="connect-server-url"
-            textContentType="URL"
-            value={address}
-            onChangeText={setAddress}
-            onSubmitEditing={handleConnect}
-          />
-        </AuthField>
+          placeholder={intl.formatMessage({ id: "auth.connect.serverAddressPlaceholder" })}
+          returnKeyType="go"
+          testID="connect-server-url"
+          textContentType="URL"
+          value={address}
+          onChangeText={setAddress}
+          onSubmitEditing={handleConnect}
+        />
         <InlineError error={connect.failure} />
       </Animated.View>
     </AuthLayout>

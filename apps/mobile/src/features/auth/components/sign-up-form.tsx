@@ -12,7 +12,6 @@ import { PasswordField } from "@/features/auth/components/password-field";
 import { useAuthAttempt } from "@/features/auth/hooks/use-auth-attempt";
 import { validateSignUp } from "@/features/auth/utils/validate-sign-up";
 import Feather from "@expo/vector-icons/Feather";
-import { InputGroup } from "heroui-native";
 import { useIntl } from "react-intl";
 
 /** The attempt key a server-side sign-up runs under; validation runs under the field's name. */
@@ -51,22 +50,20 @@ export function SignUpForm({ authClient }: { authClient: AuthClient }) {
   return (
     <View className="gap-3.5">
       <AuthField
+        compact
+        autoCapitalize="words"
+        autoCorrect={false}
         error={attempt.failureFor("name")}
         label={intl.formatMessage({ id: "auth.signup.name" })}
-      >
-        <InputGroup.Input
-          autoCapitalize="words"
-          autoCorrect={false}
-          placeholder={intl.formatMessage({ id: "auth.signup.namePlaceholder" })}
-          returnKeyType="next"
-          submitBehavior="submit"
-          testID="register-name"
-          textContentType="name"
-          value={name}
-          onChangeText={setName}
-          onSubmitEditing={() => emailRef.current?.focus()}
-        />
-      </AuthField>
+        placeholder={intl.formatMessage({ id: "auth.signup.namePlaceholder" })}
+        returnKeyType="next"
+        submitBehavior="submit"
+        testID="register-name"
+        textContentType="name"
+        value={name}
+        onChangeText={setName}
+        onSubmitEditing={() => emailRef.current?.focus()}
+      />
       <EmailField
         ref={emailRef}
         error={attempt.failureFor("email")}

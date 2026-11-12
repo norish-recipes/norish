@@ -5,7 +5,7 @@ import React, { useState } from "react";
 import { Pressable } from "react-native";
 import { AuthField } from "@/features/auth/components/auth-field";
 import Feather from "@expo/vector-icons/Feather";
-import { InputGroup, useThemeColor } from "heroui-native";
+import { useThemeColor } from "heroui-native";
 import { useIntl } from "react-intl";
 
 interface PasswordFieldProps {
@@ -46,24 +46,21 @@ export function PasswordField({
   const [isShown, setIsShown] = useState(false);
 
   return (
-    <AuthField error={error} label={label} labelAccessory={labelAccessory}>
-      <InputGroup.Input
-        ref={ref}
-        autoCapitalize="none"
-        autoCorrect={false}
-        placeholder={placeholder}
-        returnKeyType={returnKeyType}
-        secureTextEntry={!isShown}
-        submitBehavior={returnKeyType === "next" ? "submit" : undefined}
-        testID={testID}
-        textContentType={textContentType}
-        value={value}
-        onChangeText={onChangeText}
-        onSubmitEditing={onSubmitEditing}
-      />
-      {revealable ? (
-        // heroui-native's own password toggle is a Pressable in the suffix.
-        <InputGroup.Suffix>
+    <AuthField
+      ref={ref}
+      compact
+      autoCapitalize="none"
+      autoCorrect={false}
+      error={error}
+      label={label}
+      labelAccessory={labelAccessory}
+      placeholder={placeholder}
+      returnKeyType={returnKeyType}
+      secureTextEntry={!isShown}
+      submitBehavior={returnKeyType === "next" ? "submit" : undefined}
+      suffix={
+        revealable ? (
+          // heroui-native's own password toggle is a Pressable in the suffix.
           <Pressable
             accessibilityLabel={intl.formatMessage({
               id: isShown ? "auth.emailPassword.hidePassword" : "auth.emailPassword.showPassword",
@@ -75,8 +72,13 @@ export function PasswordField({
           >
             <Feather color={mutedColor} name={isShown ? "eye-off" : "eye"} size={20} />
           </Pressable>
-        </InputGroup.Suffix>
-      ) : null}
-    </AuthField>
+        ) : null
+      }
+      testID={testID}
+      textContentType={textContentType}
+      value={value}
+      onChangeText={onChangeText}
+      onSubmitEditing={onSubmitEditing}
+    />
   );
 }
