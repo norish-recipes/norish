@@ -119,7 +119,6 @@ export default function AIConfigForm({ onDirtyChange }: AIConfigFormProps) {
       : null
   );
 
-  // Create model options for autocomplete (includes current value even if not in list)
   const modelOptions: ModelOption[] = availableModels.map((m) => ({
     id: m.id,
     label: m.id,
@@ -145,7 +144,6 @@ export default function AIConfigForm({ onDirtyChange }: AIConfigFormProps) {
     }
   }
 
-  // Validation: Can't enable AI without valid config
   const hasValidConfig =
     (model ?? "").trim() !== "" &&
     (!needsEndpoint || (endpoint ?? "").trim() !== "") &&
@@ -177,13 +175,8 @@ export default function AIConfigForm({ onDirtyChange }: AIConfigFormProps) {
   useReportDirty(hasChanges, onDirtyChange);
   const handleRevealApiKey = () => fetchConfigSecret(ServerConfigKeys.AI_CONFIG, "apiKey");
 
-  /**
-   * The stored record read as the list the picker selects over. A column of
-   * switches read as separate decisions; which kinds are allowed to run unasked
-   * is one. Every kind belongs here — one left out of the list is not merely
-   * unreachable, it is rewritten to its default the moment any other kind is
-   * toggled, because the picker rebuilds the whole record from this list.
-   */
+  // The picker rebuilds the whole record from this list, so a kind missing from
+  // AUTOMATIC_ENRICHMENT_KEYS would be reset on any other kind's toggle.
   const selectedEnrichmentKinds = AUTOMATIC_ENRICHMENT_KEYS.filter(
     (key) => automaticEnrichment[key]
   );
@@ -197,11 +190,10 @@ export default function AIConfigForm({ onDirtyChange }: AIConfigFormProps) {
     );
   };
 
-  // Clear model fields when provider changes to avoid invalid model selection
   const handleProviderChange = (newProvider: AIConfig["provider"]) => {
     if (newProvider !== provider) {
       setProvider(newProvider);
-      // Clear API key and models when switching providers - user must select from list
+      // A key and models belong to one provider.
       setApiKey("");
       setModel("");
       setVisionModel("");
@@ -239,8 +231,7 @@ export default function AIConfigForm({ onDirtyChange }: AIConfigFormProps) {
         // The Ingredient catalogue section saves these.
         automaticIngredients: aiConfig.automaticIngredients,
       })
-        // Saved keys live on the server, not in the form: a key left in state
-        // reads as an unsaved change on every later render.
+        // A saved key lives on the server; left in state it reads as unsaved.
         .then(() => setApiKey(""))
     );
   };

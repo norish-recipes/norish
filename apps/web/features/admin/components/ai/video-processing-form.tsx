@@ -87,47 +87,34 @@ export default function VideoProcessingForm({ onDirtyChange }: VideoProcessingFo
   }
   const transcriptionEnabled = transcriptionProvider !== "disabled";
   const needsTranscriptionEndpoint = transcriptionProviderNeedsEndpoint(transcriptionProvider);
-  // API key only required for cloud providers, not for local models (generic-openai, ollama)
   const needsTranscriptionApiKey = isCloudTranscriptionProvider(transcriptionProvider);
-  // API key is optional for generic-openai (Ollama, LM Studio, etc.)
   const supportsOptionalApiKey = transcriptionProvider === "generic-openai";
-  // All enabled providers need a model
   const needsTranscriptionModel = transcriptionEnabled;
-  // Providers that support dynamic model listing
   const supportsModelListing = transcriptionProviderSupportsModelListing(transcriptionProvider);
-  // Check if API key is configured (masked value will be "••••••••")
-  // Only consider it configured if the provider hasn't changed from saved config
+  // A stored (masked) key counts only for the provider it was saved with.
   const providerMatchesSaved = transcriptionProvider === videoConfig?.transcriptionProvider;
   const isTranscriptionApiKeyConfigured =
     !isTranscriptionKeyCleared &&
     providerMatchesSaved &&
     !!videoConfig?.transcriptionApiKey &&
     videoConfig.transcriptionApiKey !== "";
-  // Check if AI config API key can be used as fallback
   const isAIApiKeyConfigured = aiConfig?.hasApiKey ?? false;
   const isAIEnabled = aiConfig?.enabled ?? false;
 
-  // What a provider authenticates its model list with, which is not always a key
-  // of its own: cloud providers may borrow the AI configuration's key, and local
-  // ones answer to an endpoint with no key at all. One predicate, because gating
-  // the fetch and the picker on different answers is what left the picker greyed
-  // out on the very path the API key field recommends.
+  // The fetch and the picker share this: cloud providers may borrow the AI key,
+  // local ones answer to an endpoint alone.
   const hasTranscriptionCredentials = needsTranscriptionApiKey
     ? !!transcriptionApiKey || isTranscriptionApiKeyConfigured || isAIApiKeyConfigured
     : !needsTranscriptionEndpoint || !!transcriptionEndpoint;
   const canFetchTranscriptionModels =
     enabled && transcriptionEnabled && supportsModelListing && hasTranscriptionCredentials;
-  // A report of the binary this server runs, not something the form saves — and
-  // worth reading precisely when video processing is off because imports broke,
-  // so it is not gated on the switches above.
+  // The server's yt-dlp binary, read even with video off: that is when imports broke.
   const {
     version: ytDlpVersion,
     error: ytDlpVersionError,
     isLoading: isLoadingYtDlpVersion,
   } = useYtDlpVersionQuery();
-  // A question that went unanswered is not the same as an absent binary, and
-  // saying "no binary" for a failed round trip is the kind of confident wrong
-  // answer this field was rewritten to stop giving.
+  // A failed read says "unknown", never "no binary".
   const ytDlpVersionLabel = isLoadingYtDlpVersion
     ? t("ytDlpVersionLoading")
     : ytDlpVersionError
@@ -210,7 +197,6 @@ export default function VideoProcessingForm({ onDirtyChange }: VideoProcessingFo
         enabled,
         maxLengthSeconds,
         maxVideoFileSize: maxVideoFileSizeMB * 1024 * 1024,
-        // Convert MB to bytes
         ytDlpProxy: ytDlpProxy || undefined,
         transcriptionProvider,
         transcriptionEndpoint: transcriptionEndpoint || undefined,
@@ -218,8 +204,7 @@ export default function VideoProcessingForm({ onDirtyChange }: VideoProcessingFo
         transcriptionApiKey: transcriptionApiKey || (isTranscriptionKeyCleared ? "" : undefined),
         transcriptionModel,
       })
-        // The stored key is what the field now stands for; leaving the typed one
-        // behind is what left this form claiming unsaved changes forever.
+        // A saved key lives on the server; left in state it reads as unsaved.
         .then(() => {
           setTranscriptionApiKey("");
           setIsTranscriptionKeyCleared(false);

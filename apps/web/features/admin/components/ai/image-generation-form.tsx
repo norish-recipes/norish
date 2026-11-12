@@ -81,10 +81,7 @@ export default function ImageGenerationForm({ onDirtyChange }: ImageGenerationFo
   // Endpoint and key fall back to the AI configuration when the provider
   // matches, so a matching setup needs neither typed again.
   const aiProviderMatches = enabled && aiConfig?.provider === provider;
-  // A key of this block's own and a borrowed one are different facts, and
-  // collapsing them is what made the field claim a key it does not hold: it
-  // then offered to reveal a secret that was never stored here, and refused
-  // to be typed into because it believed it was already filled.
+  // Its own key and a borrowed AI key stay apart: only its own can be revealed.
   const hasOwnApiKey =
     !isApiKeyCleared &&
     !!imageGenerationConfig?.apiKey &&

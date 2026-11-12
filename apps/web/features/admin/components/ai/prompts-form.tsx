@@ -11,11 +11,7 @@ import { useAdminConfig, usePromptsWrite, useRestoreDefault } from "@norish/shar
 
 import { useReportDirty } from "../use-report-dirty";
 
-/**
- * Every administrator-editable prompt, one entry each. Adding a prompt is one
- * row here (plus its three translation keys), not a hand-written state hook,
- * load line, dirty clause, submit key and form block.
- */
+/** Every administrator-editable prompt; a new prompt is one row here plus its translation keys. */
 const PROMPT_FIELDS = [
   { key: "recipeExtraction", rows: 6 },
   { key: "imageExtraction", rows: 6 },
@@ -59,9 +55,7 @@ export default function PromptsForm({ onDirtyChange }: PromptsFormProps) {
   // Starts unset so prompts present on the first render seed the form too.
   const [prevPrompts, setPrevPrompts] = useState<typeof prompts>();
 
-  // A prompt added after the stored config was
-  // written has no stored value; the loader falls back to the shipped file
-  // until an administrator saves one.
+  // A prompt newer than the stored config falls back to its shipped file.
   if (prompts !== prevPrompts) {
     setPrevPrompts(prompts);
     if (prompts) {

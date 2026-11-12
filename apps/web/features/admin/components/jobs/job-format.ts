@@ -21,9 +21,8 @@ export function formatTimestamp(epochMs: number | null): string {
 }
 
 /**
- * Translate a worker-reported step id. Steps may carry a suffix after ":"
- * (e.g. "creating-recipes:2/5", "running:media-cleanup"); the prefix is
- * translated and the suffix appended verbatim. Unknown ids render raw.
+ * Translates a step id's prefix before ":" and appends the suffix ("creating-recipes:2/5");
+ * unknown ids render raw.
  */
 export function formatStep(
   step: string | null,

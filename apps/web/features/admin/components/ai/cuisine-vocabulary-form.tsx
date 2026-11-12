@@ -13,12 +13,7 @@ import type { CuisineRefusal } from "@norish/shared-react/admin";
 import { useCuisineWrites } from "@norish/shared-react/admin";
 import { useCuisinesQuery } from "@norish/shared-react/config";
 
-/**
- * Cuisine vocabulary administration.
- *
- * A rename is one row and every recipe follows it; a delete is a silent cascade
- * with no usage count, so the only confirmation is the ordinary one.
- */
+/** Cuisine vocabulary: a rename is one row every recipe follows; a delete cascades silently. */
 export default function CuisineVocabularyForm() {
   const t = useTranslations("settings.admin.cuisineVocabulary");
   const tActions = useTranslations("common.actions");
@@ -30,7 +25,7 @@ export default function CuisineVocabularyForm() {
   const [error, setError] = useState<CuisineRefusal | null>(null);
   const { create, rename, remove, isPending } = useCuisineWrites(setError);
 
-  // Runs `onDone` once the write went through; a failure set `error` already.
+  // A failure already set `error` through `useCuisineWrites`.
   const run = async (write: () => Promise<boolean>, onDone: () => void) => {
     setError(null);
     if (await write()) onDone();

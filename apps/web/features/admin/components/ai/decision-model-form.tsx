@@ -54,9 +54,7 @@ export default function DecisionModelForm({ onDirtyChange }: DecisionModelFormPr
   const [model, setModel] = useState(decisionConfig?.model ?? DEFAULT_DECISION_MODEL);
   const [endpoint, setEndpoint] = useState(decisionConfig?.endpoint ?? "");
   const [apiKey, setApiKey] = useState("");
-  // A stored block without a list means every use, which is also what a
-  // fresh block starts with: enabling the Decision Model enables everything
-  // it can do, and an administrator deselects what they do not want.
+  // No stored list means every use, as a fresh block starts.
   const [uses, setUses] = useState<DecisionUse[]>(decisionConfig?.uses ?? [...DECISION_USES]);
   const [testing, whileTesting] = usePending();
   const [testResult, setTestResult] = useState<WriteResult | null>(null);

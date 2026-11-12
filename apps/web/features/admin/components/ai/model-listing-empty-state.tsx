@@ -15,14 +15,7 @@ interface ModelListingEmptyStateProps {
   refusal?: ListingRefusal;
 }
 
-/**
- * What a model dropdown says when it has nothing to offer.
- *
- * "Nothing to ask with yet" and "the provider rejected the key" both arrive as
- * an empty list, and only one of them is the reader's to fix. Saying which
- * happened is the difference between a setting that looks broken and one that
- * says what to do about it.
- */
+/** An empty model dropdown says whether nothing was asked yet or the provider refused the key. */
 export default function ModelListingEmptyState({
   isLoading,
   refusal,

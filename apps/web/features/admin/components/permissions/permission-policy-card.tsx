@@ -19,10 +19,8 @@ import { PermissionLevelSelect } from "./permission-level-select";
 type PolicyAction = "view" | "edit" | "delete";
 
 /**
- * Who may do what with what others made: one card, a section per kind of
- * thing. Recipes have a level for viewing, editing and deleting; Ingredients
- * one for editing, since the catalogue is always visible and adding a
- * translation is open to everyone. Each select saves as it changes.
+ * Who may view, edit or delete what others made; Ingredients have only an edit level.
+ * Each select saves as it changes.
  */
 export default function PermissionPolicyCard() {
   const t = useTranslations("settings.admin.permissions");

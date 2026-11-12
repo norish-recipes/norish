@@ -38,9 +38,7 @@ export default function UsersCard() {
     if (deleted) setUserToDelete(null);
   };
 
-  // The empty slot is the only place this table can speak from, so it has to
-  // tell a failed load apart from a server that genuinely has no users —
-  // otherwise a broken list reads as "there is nobody here".
+  // A failed load must not read as "no users".
   const emptyState = isLoading ? t("loading") : error ? t("loadFailed") : t("empty");
 
   return (

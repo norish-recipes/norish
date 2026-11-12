@@ -1,11 +1,4 @@
-/**
- * Bulk enrichment: the administrator's per-run overwrite choice.
- *
- * The destructive part of this feature is a boolean that has to survive the
- * trip from a switch to the mutation, and has to be forgotten afterwards —
- * a sweep that silently remembers "overwrite" from last time is the failure
- * this pins against.
- */
+/** Bulk enrichment: the overwrite choice reaches the mutation and is forgotten after the run. */
 
 import { fireEvent, render, screen } from "@testing-library/react";
 import { beforeEach, describe, expect, it, vi } from "vitest";

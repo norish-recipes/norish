@@ -37,11 +37,7 @@ import JobDetailModal from "./job-detail-modal";
 import { formatDuration, formatStep } from "./job-format";
 import JobStatusChip from "./job-status-chip";
 
-/**
- * Every queue the server runs, from the one table that declares them; a
- * queue added there is offered here without a second list to keep in step.
- * A leaf module with no server imports, so it is safe in the client bundle.
- */
+/** Every queue, from QUEUE_NAMES (a leaf module, safe in the client bundle). */
 const QUEUE_OPTIONS: QueueName[] = Object.values(QUEUE_NAMES);
 
 const ALL = "all";
