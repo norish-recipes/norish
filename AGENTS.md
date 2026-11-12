@@ -20,7 +20,7 @@ This Next.js has breaking changes from your training data: read the relevant gui
 ## Repo Shape
 
 - `apps/web` - web app and its custom server, run from source through tsx
-- `apps/mobile` - Expo app, started with `pnpm dev:mobile`. `expo install --check` is the authority for its Expo pins, except React, which follows the catalog (`expo.install.exclude`): SDK 58 pins 19.3.0 and React Native 0.88 runs on 19.3.1
+- `apps/mobile` - Expo app, started with `pnpm dev:mobile`. `expo install --check` is the authority for its Expo pins, except React and React DOM, which follow the catalog (`expo.install.exclude`): SDK 58 pins 19.3.0 and React Native 0.88 runs on 19.3.1
 - `packages/api` - server domain logic
 - `packages/trpc` - tRPC routers and API surface
 - `packages/db` - repositories and migrations; the Drizzle tables are in `packages/db-schema`
