@@ -193,7 +193,8 @@ describe("PantryScreen", () => {
     expect(screen.getByText("inRecipes 3")).toBeInTheDocument();
     fireEvent.click(screen.getByRole("button", { name: "addFood garlic" }));
     expect(addPantryIngredient).toHaveBeenCalledWith(
-      expect.objectContaining({ ingredientId: "i-garlic", name: "garlic" })
+      expect.objectContaining({ ingredientId: "i-garlic", name: "garlic" }),
+      "garlic"
     );
   });
 
@@ -230,7 +231,7 @@ describe("PantryScreen", () => {
     await act(async () => {
       fireEvent.keyDown(field, { key: "Enter" });
     });
-    expect(addPantryIngredient).toHaveBeenCalledWith("Flour");
+    expect(addPantryIngredient).toHaveBeenCalledWith("Flour", "Flour");
     expect(field).toHaveValue("");
 
     await act(async () => {

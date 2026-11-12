@@ -302,7 +302,7 @@ function MiniGroceriesContent({
       edited !== undefined || !item.ingredientId
         ? (edited ?? item.ingredientName)
         : { ingredientId: item.ingredientId, name: item.ingredientName }
-    ).catch(() => toast(t("keepFailed"), { variant: "danger" }));
+    );
   };
 
   useEffect(() => {

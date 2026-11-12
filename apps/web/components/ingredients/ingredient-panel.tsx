@@ -14,7 +14,7 @@ import UiSwitch from "@/components/shared/ui-switch";
 import { useGroceriesPantryAndCatalogueSubscriptions } from "@/hooks/use-groceries-pantry-and-catalogue-subscriptions";
 import { ArrowsRightLeftIcon, PencilSquareIcon } from "@heroicons/react/16/solid";
 import { ArrowUturnLeftIcon, ChevronRightIcon, XMarkIcon } from "@heroicons/react/24/outline";
-import { Button, Chip, Input, Skeleton, TextField, toast } from "@heroui/react";
+import { Button, Chip, Input, Skeleton, TextField } from "@heroui/react";
 import { useLocale, useTranslations } from "next-intl";
 
 import type { IngredientItem, NamedIngredient, Spelling } from "@norish/shared-react/ingredients";
@@ -188,7 +188,6 @@ function IngredientPanelContent({ item, onClose }: { item: IngredientItem; onClo
   );
 
   // Whether the household keeps the food, and the draft's say on it (null: untouched).
-  const tPantry = useTranslations("groceries.pantry");
   const tGroceries = useTranslations("groceries.page");
   const kept = usePantryItem(item.id);
   const { addPantryIngredient, removePantryIngredient } = usePantryMutations();
@@ -229,11 +228,10 @@ function IngredientPanelContent({ item, onClose }: { item: IngredientItem; onClo
     if (pantryChanged) {
       if (kept) removePantryIngredient(kept.id);
       else
-        void addPantryIngredient({
-          ingredientId: item.id,
-          name: item.name,
-          localeNames: item.localeNames,
-        }).catch(() => toast(tPantry("keepFailed", { name: displayName }), { variant: "danger" }));
+        void addPantryIngredient(
+          { ingredientId: item.id, name: item.name, localeNames: item.localeNames },
+          displayName
+        );
       setKeeps(null);
     }
     if (!catalogueDirty) return;

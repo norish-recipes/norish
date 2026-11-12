@@ -7,7 +7,7 @@ import { IconActionButton } from "@/components/shared/action-button";
 import { FIELD_STYLE } from "@/features/groceries/lib/grocery-field";
 import { useHiddenItemVisibility } from "@/hooks/user/use-hidden-item-visibility";
 import { MagnifyingGlassIcon, PlusIcon } from "@heroicons/react/16/solid";
-import { Button, InputGroup, Skeleton, TextField, toast } from "@heroui/react";
+import { Button, InputGroup, Skeleton, TextField } from "@heroui/react";
 import { useQuery } from "@tanstack/react-query";
 import { useLocale, useTranslations } from "next-intl";
 import { useDebounceValue } from "usehooks-ts";
@@ -86,9 +86,7 @@ export function PantryScreen() {
   const keep = (food: string | PickedFood) => {
     const name = typeof food === "string" ? food : ingredientDisplayName(food, locale);
 
-    void addPantryIngredient(food).catch(() =>
-      toast(t("keepFailed", { name }), { variant: "danger" })
-    );
+    void addPantryIngredient(food, name);
     setDraft("");
     // The field is where the next food goes, however the last one was added.
     fieldRef.current?.focus();

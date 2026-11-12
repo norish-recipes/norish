@@ -3,7 +3,11 @@ import { beforeEach, describe, expect, it, vi } from "vitest";
 
 import type { PantryIngredientDto } from "@norish/shared/contracts";
 import { usePantryMutations } from "@norish/shared-react/groceries";
-import { createTestQueryClient, createTestWrapper } from "@norish/shared-react/platform/testing";
+import {
+  createTestQueryClient,
+  createTestWrapper,
+  fakePlatformAdapter,
+} from "@norish/shared-react/platform/testing";
 
 /** What each procedure is sent; a test answers or refuses it by its implementation. */
 const sent = vi.hoisted(() => ({ add: vi.fn(), remove: vi.fn() }));
@@ -102,6 +106,48 @@ describe("usePantryMutations", () => {
 
     expect(rows?.map(({ id, name }) => ({ id, name }))).toEqual([{ id: answer, name: "Salt" }]);
     expect(queryClient.getQueryState(["pantry", "list"])?.isInvalidated).toBe(false);
+  });
+
+  it("says a refused add failed, naming the food where the caller named it, and resolves null", async () => {
+    queryClient.setQueryData(["pantry", "list"], []);
+    const platform = fakePlatformAdapter();
+    const { result } = renderHook(() => usePantryMutations(), {
+      wrapper: createTestWrapper(queryClient, platform),
+    });
+    const answers: (string | null)[] = [];
+
+    sent.add.mockRejectedValueOnce(new Error("forbidden"));
+    sent.add.mockRejectedValueOnce(new Error("forbidden"));
+    await act(async () => {
+      answers.push(await result.current.addPantryIngredient("Salt", "Sea salt"));
+      answers.push(await result.current.addPantryIngredient("Pepper"));
+    });
+
+    expect(answers).toEqual([null, null]);
+    expect(platform.toast.show).toHaveBeenNthCalledWith(1, {
+      severity: "danger",
+      title: "groceries.pantry.keepFailed",
+    });
+    expect(platform.toast.show).toHaveBeenNthCalledWith(2, {
+      severity: "danger",
+      title: "groceries.panel.keepFailed",
+    });
+    expect(queryClient.getQueryState(["pantry", "list"])?.isInvalidated).toBe(true);
+  });
+
+  it("says nothing of an add Queued in the Outbox", async () => {
+    queryClient.setQueryData(["pantry", "list"], []);
+    const platform = fakePlatformAdapter();
+    const { result } = renderHook(() => usePantryMutations(), {
+      wrapper: createTestWrapper(queryClient, platform),
+    });
+
+    sent.add.mockRejectedValueOnce(new TypeError("Failed to fetch"));
+    await act(async () => {
+      await result.current.addPantryIngredient("Salt", "Salt");
+    });
+
+    expect(platform.toast.show).not.toHaveBeenCalled();
   });
 
   it("reads the Pantry again when the earlier of two removals that overlap fails", async () => {

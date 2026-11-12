@@ -135,8 +135,11 @@ export type PantrySuggestionsResult = {
 };
 
 export type PantryMutationsResult = {
-  /** Put a typed name or a picked food in the Pantry; resolves to the item's id. */
-  addPantryIngredient: (food: string | PickedFood) => Promise<string>;
+  /**
+   * Put a typed name or a picked food in the Pantry; resolves to the item's id, or null once a
+   * failure's toast, naming it `shownAs` where given, said so.
+   */
+  addPantryIngredient: (food: string | PickedFood, shownAs?: string) => Promise<string | null>;
   /** Take an item out of the Pantry. */
   removePantryIngredient: (id: string) => void;
   isAdding: boolean;

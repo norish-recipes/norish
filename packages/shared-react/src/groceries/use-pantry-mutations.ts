@@ -1,5 +1,7 @@
+import type { inferRouterInputs } from "@trpc/server";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 
+import type { AppRouter } from "@norish/trpc/client";
 import { createClientId } from "@norish/shared/lib/operation-helpers";
 
 import type { PantryData, PantryMutationsResult, PickedFood } from "./types";
@@ -7,12 +9,18 @@ import {
   invalidateUnlessPreserved,
   shouldPreserveOptimisticUpdate,
 } from "../offline/optimistic-updates";
+import { usePlatform } from "../platform/platform";
 import { useTRPC } from "../trpc";
+import { projectedMutation } from "../trpc/projected-mutation";
 import { mergePantryAdded, mergePantryRemoved } from "./pantry-merge";
+
+/** An add as sent, and the name its failure's toast shows. */
+type Add = { payload: inferRouterInputs<AppRouter>["pantry"]["add"]; shownAs?: string };
 
 export function usePantryMutations(): PantryMutationsResult {
   const trpc = useTRPC();
   const queryClient = useQueryClient();
+  const { toast } = usePlatform();
 
   const pantryKey = trpc.pantry.list.queryKey();
 
@@ -20,8 +28,9 @@ export function usePantryMutations(): PantryMutationsResult {
 
   // Each answer is handled in useMutation's own options, which run whatever is mounted: a `mutate`
   // call's own callbacks are dropped once its observer mutates again.
-  const addOptions = trpc.pantry.add.mutationOptions({
-    onSuccess: (heldId, { id }) => {
+  const addMutation = useMutation({
+    ...projectedMutation(trpc.pantry.add.mutationOptions(), ({ payload }: Add) => payload),
+    onSuccess: (heldId, { payload: { id } }) => {
       // The household already had the food: the server answered with that item's id, and the
       // tentative row is one too many.
       if (id && heldId !== id) {
@@ -30,12 +39,20 @@ export function usePantryMutations(): PantryMutationsResult {
         );
       }
     },
-    onError: invalidateUnlessPreserved(refetch),
+    onError: (error, { shownAs }) => {
+      if (shouldPreserveOptimisticUpdate(error)) return;
+      refetch();
+      toast.show({
+        severity: "danger",
+        title: shownAs
+          ? toast.translate("groceries.pantry.keepFailed", { name: shownAs })
+          : toast.translate("groceries.panel.keepFailed"),
+      });
+    },
   });
   const removeOptions = trpc.pantry.remove.mutationOptions({
     onError: invalidateUnlessPreserved(refetch),
   });
-  const addMutation = useMutation(addOptions);
   const { mutateAsync: mutateAdd } = addMutation;
   const removeMutation = useMutation(removeOptions);
   const { mutate: mutateRemove } = removeMutation;
@@ -48,7 +65,7 @@ export function usePantryMutations(): PantryMutationsResult {
    * and "on the list" work before the server answers; a typed name is only
    * text until then, and is matched on its name.
    */
-  const addPantryIngredient = (food: string | PickedFood): Promise<string> => {
+  const addPantryIngredient = (food: string | PickedFood, shownAs?: string) => {
     const id = createClientId();
     const picked = typeof food === "string" ? null : food;
     const name = typeof food === "string" ? food.trim() : food.name;
@@ -71,10 +88,9 @@ export function usePantryMutations(): PantryMutationsResult {
     insertOptimistic();
 
     // Queued for Replay, the add stands under the id it was sent with.
-    return mutateAdd(payload).catch((error: unknown) => {
-      if (shouldPreserveOptimisticUpdate(error)) return id;
-      throw error;
-    });
+    return mutateAdd({ payload, shownAs }).catch((error: unknown) =>
+      shouldPreserveOptimisticUpdate(error) ? id : null
+    );
   };
 
   const removePantryIngredient = (id: string) => {
