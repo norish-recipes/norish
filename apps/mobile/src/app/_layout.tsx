@@ -120,7 +120,7 @@ function RootLayoutContent() {
     return (
       <ThemeProvider value={theme}>
         <MobileIntlFallbackProvider>
-          <StorageUnavailableScreen error={boot.error} onRetry={serverAddress.retry} />
+          <StorageUnavailableScreen onRetry={serverAddress.retry} />
           <LaunchSplash handoff="fade" />
         </MobileIntlFallbackProvider>
       </ThemeProvider>

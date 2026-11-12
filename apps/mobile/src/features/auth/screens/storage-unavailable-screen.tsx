@@ -1,15 +1,10 @@
-import React, { useEffect } from "react";
+import React from "react";
 import { StatusBadge } from "@/features/auth/components/status-badge";
 import { StatusScreen } from "@/features/auth/components/status-screen";
 import { useIntl } from "react-intl";
 
-import { createClientLogger } from "@norish/shared/lib/logger";
-
-const log = createClientLogger("storage");
-
 interface StorageUnavailableScreenProps {
-  /** The failure that stopped the boot; logged, never shown. */
-  error: unknown;
+  /** Re-reads storage; the read itself logs each failure. */
   onRetry: () => void;
 }
 
@@ -20,12 +15,8 @@ interface StorageUnavailableScreenProps {
  * guessing "not configured" would drop a server the user already set up. So
  * this is a dead end the user is told about rather than a silent blank screen.
  */
-export function StorageUnavailableScreen({ error, onRetry }: StorageUnavailableScreenProps) {
+export function StorageUnavailableScreen({ onRetry }: StorageUnavailableScreenProps) {
   const intl = useIntl();
-
-  useEffect(() => {
-    log.error({ error }, "Secure storage could not be read");
-  }, [error]);
 
   return (
     <StatusScreen
