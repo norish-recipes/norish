@@ -11,12 +11,15 @@ import { AuthCard } from "./components/auth-card";
 import { AutoSignIn } from "./components/auto-sign-in";
 import { EmailPasswordForm } from "./components/email-password-form";
 import { ProviderButton } from "./components/provider-button";
+import { useForgetEndedSession } from "./use-forget-ended-session";
 
 interface LoginScreenProps {
   providers: ProviderInfo[];
   callbackUrl?: string;
   autoSignInProvider?: ProviderInfo;
   registrationEnabled?: boolean;
+  /** Sent here from a signed-in page whose session the server no longer knows. */
+  sessionEnded?: boolean;
 }
 
 export function LoginScreen({
@@ -24,8 +27,11 @@ export function LoginScreen({
   callbackUrl = APP_ROOT,
   autoSignInProvider,
   registrationEnabled = false,
+  sessionEnded = false,
 }: LoginScreenProps) {
   const t = useTranslations("auth.login");
+
+  useForgetEndedSession(sessionEnded);
 
   if (autoSignInProvider) {
     return <AutoSignIn callbackUrl={callbackUrl} provider={autoSignInProvider} />;

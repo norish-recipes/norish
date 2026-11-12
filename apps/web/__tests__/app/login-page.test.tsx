@@ -24,14 +24,18 @@ const PASSWORD: ProviderInfo = {
   type: "credential",
 };
 
-async function autoSignInProvider(offered: ProviderInfo[], search: Record<string, string> = {}) {
+async function screenProps(offered: ProviderInfo[], search: Record<string, string> = {}) {
   providers.current = offered;
   const page = (await LoginPage({
     params: Promise.resolve({}),
     searchParams: Promise.resolve(search),
-  })) as ReactElement<{ autoSignInProvider?: ProviderInfo }>;
+  })) as ReactElement<{ autoSignInProvider?: ProviderInfo; sessionEnded?: boolean }>;
 
-  return page.props.autoSignInProvider;
+  return page.props;
+}
+
+async function autoSignInProvider(offered: ProviderInfo[], search: Record<string, string> = {}) {
+  return (await screenProps(offered, search)).autoSignInProvider;
 }
 
 describe("login page auto sign-in", () => {
@@ -50,5 +54,18 @@ describe("login page auto sign-in", () => {
 
   it("shows the form when credentials are the only way in", async () => {
     expect(await autoSignInProvider([PASSWORD])).toBeUndefined();
+  });
+});
+
+describe("login page after a session ended", () => {
+  it("tells the screen when a signed-in page sent the reader here", async () => {
+    expect((await screenProps([PASSWORD], { callbackUrl: "/groceries" })).sessionEnded).toBe(true);
+  });
+
+  it("does not after a sign-out, or on a plain visit", async () => {
+    const signedOut = { callbackUrl: "/groceries", logout: "true" };
+
+    expect((await screenProps([PASSWORD], signedOut)).sessionEnded).toBe(false);
+    expect((await screenProps([PASSWORD])).sessionEnded).toBe(false);
   });
 });

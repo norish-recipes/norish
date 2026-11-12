@@ -30,6 +30,8 @@ export default async function LoginPage({ searchParams }: PageProps<"/login">) {
       callbackUrl={typeof callbackUrl === "string" ? callbackUrl : APP_ROOT}
       providers={providers}
       registrationEnabled={registrationEnabled}
+      // A destination without a sign-out is a signed-in page the session no longer reaches.
+      sessionEnded={typeof callbackUrl === "string" && !justLoggedOut}
     />
   );
 }
