@@ -2,7 +2,7 @@
 import { act, renderHook } from "@testing-library/react";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 
-let signOut = vi.fn<() => Promise<boolean>>();
+let signOut = vi.fn<(onLeaving?: () => void) => Promise<boolean>>();
 const push = vi.fn();
 
 vi.mock("@/hooks/use-confirmed-sign-out", () => ({ useConfirmedSignOut: () => signOut }));
@@ -13,7 +13,14 @@ const { changeServerAddress, takeServerChangeAfterSignOut, useSignOutBeforeServe
 
 // The chip while signed in; resolves whether the signed-out stack's first screen opens Server address.
 async function chipThenSignedOut(result: Promise<boolean>) {
-  signOut = vi.fn(() => result);
+  // As useConfirmedSignOut: `onLeaving` runs only once the Sign-out goes ahead.
+  signOut = vi.fn(async (onLeaving) => {
+    const left = await result;
+
+    if (left) onLeaving?.();
+
+    return left;
+  });
   const shell = renderHook(() => useSignOutBeforeServerChange());
 
   changeServerAddress();
@@ -38,6 +45,17 @@ describe("changeServerAddress while signed in", () => {
 
   it("drops the change when the Sign-out is cancelled", async () => {
     expect(await chipThenSignedOut(Promise.resolve(false))).toBe(false);
+  });
+
+  it("holds no pending change while the unsynced-work confirm is up", async () => {
+    signOut = vi.fn(() => new Promise<boolean>(() => {}));
+    const shell = renderHook(() => useSignOutBeforeServerChange());
+
+    changeServerAddress();
+    // A Session Expiry lands on the signed-out entry while the confirm is still up.
+    shell.unmount();
+
+    expect(takeServerChangeAfterSignOut()).toBe(false);
   });
 
   it("drops the change when the unsynced-changes read rejects", async () => {
