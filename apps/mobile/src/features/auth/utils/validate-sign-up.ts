@@ -1,0 +1,34 @@
+export const MIN_PASSWORD_LENGTH = 8;
+export const MAX_PASSWORD_LENGTH = 128;
+
+export type SignUpField = "name" | "email" | "password" | "confirmPassword";
+
+export interface SignUpInput {
+  name: string;
+  email: string;
+  password: string;
+  confirmPassword: string;
+}
+
+/** The first field that can't be submitted and the message id saying why, or null. */
+export function validateSignUp(
+  input: SignUpInput
+): { field: SignUpField; messageId: string } | null {
+  const { name, email, password, confirmPassword } = input;
+
+  if (name.trim() === "") return { field: "name", messageId: "common.validation.required" };
+  if (email.trim() === "") return { field: "email", messageId: "common.validation.required" };
+  if (password === "") return { field: "password", messageId: "common.validation.required" };
+
+  if (password.length < MIN_PASSWORD_LENGTH)
+    return { field: "password", messageId: "auth.signup.errors.passwordTooShort" };
+  if (password.length > MAX_PASSWORD_LENGTH)
+    return { field: "password", messageId: "auth.signup.errors.passwordTooLong" };
+
+  if (confirmPassword === "")
+    return { field: "confirmPassword", messageId: "common.validation.required" };
+  if (password !== confirmPassword)
+    return { field: "confirmPassword", messageId: "auth.signup.errors.passwordMismatch" };
+
+  return null;
+}
