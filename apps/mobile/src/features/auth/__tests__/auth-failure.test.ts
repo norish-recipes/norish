@@ -1,6 +1,5 @@
-import { describe, expect, it } from "vitest";
-
 import { authFailure } from "@/features/auth/utils/auth-failure";
+import { describe, expect, it } from "vitest";
 
 describe("authFailure", () => {
   it("is null once the call succeeds", async () => {

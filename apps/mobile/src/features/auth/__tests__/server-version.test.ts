@@ -1,6 +1,5 @@
-import { describe, expect, it } from "vitest";
-
 import { classifyServerHealth, MINIMUM_SERVER_VERSION } from "@/features/auth/utils/server-version";
+import { describe, expect, it } from "vitest";
 
 describe("classifyServerHealth", () => {
   it("is not Norish for a body that isn't a Norish health response", () => {
