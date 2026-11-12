@@ -18,16 +18,15 @@ const ENDING = { user: null, isPending: true };
 /** Hands the session to the platform adapter, with `endSession` on the current client. */
 export function AuthProviders({ children }: { children: ReactNode }) {
   const authClient = useAuthClient();
-  const liveSession = useMobileSession();
+  const { ended, ...liveSession } = useMobileSession();
   const { hasActiveSession } = useSyncExternalStore(
     subscribeAuthTransport,
     getAuthTransportSnapshot
   );
   // Pending from endSession until leave's re-key remounts this: the client empties its store early.
   const [ending, setEnding] = useState(false);
-  // Signed in, then signed out with no sequence ending it: the server ended it, a Session Expiry.
-  const expired =
-    hasActiveSession && !ending && !liveSession.isPending && liveSession.user === null;
+  // Signed in, then the server answered no session with no sequence ending it: a Session Expiry.
+  const expired = hasActiveSession && !ending && ended;
   const session = ending || expired ? ENDING : liveSession;
   const signedIn = session.user !== null;
 

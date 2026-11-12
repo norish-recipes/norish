@@ -216,6 +216,46 @@ describe("AuthProviders", () => {
     }
   );
 
+  /** Signed in, then the session store moves to `next`; answers the sessions handed on since. */
+  async function afterSignedIn(next: SessionState) {
+    render(<ReKeyed />);
+    act(() => clients[0]?.session.set({ data: { user: USER }, isPending: false, error: null }));
+    await waitFor(() => expect(getAuthTransportSnapshot().hasActiveSession).toBe(true));
+
+    const { version } = getAuthTransportSnapshot();
+    const from = seen.sessions.length;
+
+    act(() => clients[0]?.session.set(next));
+    await act(() => new Promise((resolve) => setTimeout(resolve, 10)));
+
+    expect(seen.clearedAt).toEqual([]);
+    expect(getAuthTransportSnapshot()).toEqual({ hasActiveSession: true, version });
+
+    return seen.sessions.slice(from);
+  }
+
+  // better-auth keeps the last session through both.
+  it.each([
+    ["a non-401 error", { data: { user: USER }, isPending: false, error: { status: 500 } }],
+    ["a pending re-read", { data: { user: USER }, isPending: false, error: null }],
+  ])("leaves a signed-in session alone on %s", async (_, unsettled) => {
+    const sessions = await afterSignedIn(unsettled);
+
+    expect(sessions.every((session) => session.user?.id === USER.id && !session.isPending)).toBe(
+      true
+    );
+  });
+
+  // The detector reads only the server's answer, not what better-auth happens to keep.
+  it.each([
+    ["a non-401 error", { data: null, isPending: false, error: { status: 500 } }],
+    ["a pending re-read", { data: null, isPending: true, error: null }],
+  ])("starts no Session Expiry on %s without a kept session", async (_, unsettled) => {
+    // Signed in on this launch: no persisted session to fall back on.
+    secureStore.items.clear();
+    await afterSignedIn(unsettled);
+  });
+
   it("reads a 401 as signed out, not as a reason to fall back on the persisted session", async () => {
     render(<ReKeyed />);
     act(() => clients[0]?.session.set({ data: null, isPending: false, error: { status: 401 } }));

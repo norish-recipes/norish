@@ -20,8 +20,9 @@ const noSession = { get: () => SIGNED_OUT, listen: () => () => {} };
 /**
  * The current client's session, or the persisted one while Offline, pending or on a non-401
  * error, so an Offline launch opens on its cached data. A 401 means signed out.
+ * `ended` is the server's own answer: a 401, or a settled read with no session.
  */
-export function useMobileSession(): PlatformSession {
+export function useMobileSession(): PlatformSession & { ended: boolean } {
   const authClient = useAuthClient();
   // Read directly: better-auth's useStore shows the previous client's last value for a render.
   const sessionAtom = authClient?.$store.atoms.session ?? noSession;
@@ -58,5 +59,6 @@ export function useMobileSession(): PlatformSession {
   return {
     user,
     isPending: readsPersisted ? persistedUser === undefined : isPending,
+    ended: !data && !isPending && (!error || error.status === 401),
   };
 }
