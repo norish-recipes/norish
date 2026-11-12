@@ -23,7 +23,7 @@ vi.mock("next-intl", () => ({
     values ? `${key}:${JSON.stringify(values)}` : key,
 }));
 
-const { default: FillGaps } = await import("@/app/(app)/settings/admin/components/fill-gaps");
+const { default: FillGaps } = await import("@/features/admin/components/catalogue/fill-gaps");
 
 beforeEach(() => {
   start.mockReset().mockResolvedValue(true);

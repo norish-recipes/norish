@@ -17,8 +17,8 @@ import {
   useSchedulerMonthsWrite,
 } from "@norish/shared-react/admin";
 
+import { UnsavedChangesChip } from "../unsaved-changes-chip";
 import RestartConfirmationModal from "./restart-confirmation-modal";
-import { UnsavedChangesChip } from "./unsaved-changes-chip";
 
 export default function SystemCard() {
   const t = useTranslations("settings.admin.system");

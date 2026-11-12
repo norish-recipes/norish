@@ -15,6 +15,7 @@ const SETTINGS_ROUTE = [
   "components/settings/",
   "features/household/",
   "features/account/",
+  "features/admin/",
   "features/calendar/components/caldav/",
 ];
 

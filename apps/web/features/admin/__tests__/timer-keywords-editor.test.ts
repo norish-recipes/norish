@@ -2,7 +2,7 @@
  * The timer keywords are typed as one comma-separated list, and an Arabic
  * keyboard types its own comma: "ساعة، ساعات" is two keywords, not one.
  */
-import { splitKeywords } from "@/app/(app)/settings/admin/components/timer-keywords-editor";
+import { splitKeywords } from "@/features/admin/components/content-detection/timer-keywords-editor";
 import { describe, expect, it } from "vitest";
 
 describe("splitKeywords", () => {

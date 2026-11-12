@@ -24,7 +24,7 @@ vi.mock("next-intl", () => ({
 }));
 
 const { default: CleanUpCatalogue } =
-  await import("@/app/(app)/settings/admin/components/clean-up-catalogue");
+  await import("@/features/admin/components/catalogue/clean-up-catalogue");
 
 beforeEach(() => {
   start.mockReset().mockResolvedValue(true);

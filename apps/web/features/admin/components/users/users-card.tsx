@@ -16,9 +16,9 @@ import type { AdminUserRowDTO } from "@norish/shared/contracts";
 import { useUserMutations, useUsersListQuery } from "@norish/shared-react/admin";
 import { useReader } from "@norish/shared-react/reader";
 
-import { DeleteUserModal } from "./users/delete-user-modal";
-import { ShieldMinusIcon } from "./users/shield-minus-icon";
-import { UserRoleChips } from "./users/user-role-chips";
+import { DeleteUserModal } from "./delete-user-modal";
+import { ShieldMinusIcon } from "./shield-minus-icon";
+import { UserRoleChips } from "./user-role-chips";
 
 export default function UsersCard() {
   const t = useTranslations("settings.admin.users");

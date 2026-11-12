@@ -14,7 +14,7 @@ import { useTranslations } from "next-intl";
 import { ServerConfigKeys } from "@norish/config/zod/server-config";
 import { useAdminConfig, useGeneralConfigWrites } from "@norish/shared-react/admin";
 
-import { UnsavedChangesChip } from "./unsaved-changes-chip";
+import { UnsavedChangesChip } from "../unsaved-changes-chip";
 
 export default function GeneralCard() {
   const t = useTranslations("settings.admin.general");

@@ -8,14 +8,14 @@ import { SparklesIcon } from "@heroicons/react/24/outline";
 import { Accordion } from "@heroui/react";
 import { useTranslations } from "next-intl";
 
+import IngredientCatalogueForm from "../catalogue/ingredient-catalogue-form";
+import { UnsavedChangesChip } from "../unsaved-changes-chip";
 import AIConfigForm from "./ai-config-form";
 import BulkEnrichmentForm from "./bulk-enrichment-form";
 import CuisineVocabularyForm from "./cuisine-vocabulary-form";
 import DecisionModelForm from "./decision-model-form";
 import ImageGenerationForm from "./image-generation-form";
-import IngredientCatalogueForm from "./ingredient-catalogue-form";
 import PromptsForm from "./prompts-form";
-import { UnsavedChangesChip } from "./unsaved-changes-chip";
 import VideoProcessingForm from "./video-processing-form";
 
 export default function AIProcessingCard() {

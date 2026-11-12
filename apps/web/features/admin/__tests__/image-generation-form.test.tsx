@@ -19,7 +19,7 @@ vi.mock("@norish/shared-react/admin", async () => ({
 vi.mock("next-intl", () => ({ useTranslations: () => (key: string) => key }));
 
 const { default: ImageGenerationForm } =
-  await import("@/app/(app)/settings/admin/components/image-generation-form");
+  await import("@/features/admin/components/ai/image-generation-form");
 
 describe("ImageGenerationForm", () => {
   it("enables Save once the stored key is cleared", () => {

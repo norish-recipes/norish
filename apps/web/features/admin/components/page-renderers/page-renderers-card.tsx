@@ -18,8 +18,8 @@ import {
   usePageRendererTest,
 } from "@norish/shared-react/admin";
 
-import { ConnectionTestResult } from "./connection-test-result";
-import { UnsavedChangesChip } from "./unsaved-changes-chip";
+import { ConnectionTestResult } from "../connection-test-result";
+import { UnsavedChangesChip } from "../unsaved-changes-chip";
 
 const DEFAULT_TIMEOUT_MS = 45_000;
 // These answer on the private compose network, without TLS.

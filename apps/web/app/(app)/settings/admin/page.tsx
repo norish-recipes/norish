@@ -1,5 +1,5 @@
-import AdminSettingsContent from "./components/admin-settings-content";
+import { AdminScreen } from "@/features/admin/admin-screen";
 
 export default function AdminSettingsPage() {
-  return <AdminSettingsContent />;
+  return <AdminScreen />;
 }

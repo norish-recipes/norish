@@ -31,11 +31,11 @@ import {
   useQueueSummaryQuery,
 } from "@norish/shared-react/admin";
 
-import JobDetailModal from "./jobs/job-detail-modal";
-import { formatDuration, formatStep } from "./jobs/job-format";
-import JobStatusChip from "./jobs/job-status-chip";
-import { RestartRequiredChip } from "./restart-required-chip";
-import { UnsavedChangesChip } from "./unsaved-changes-chip";
+import { RestartRequiredChip } from "../restart-required-chip";
+import { UnsavedChangesChip } from "../unsaved-changes-chip";
+import JobDetailModal from "./job-detail-modal";
+import { formatDuration, formatStep } from "./job-format";
+import JobStatusChip from "./job-status-chip";
 
 /**
  * Every queue the server runs, from the one table that declares them; a

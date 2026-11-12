@@ -22,7 +22,7 @@ vi.mock("@norish/shared-react/admin", async () => ({
 vi.mock("next-intl", () => ({ useTranslations: () => (key: string) => key }));
 
 const { default: DecisionModelForm } =
-  await import("@/app/(app)/settings/admin/components/decision-model-form");
+  await import("@/features/admin/components/ai/decision-model-form");
 
 describe("DecisionModelForm endpoint", () => {
   beforeEach(() => {

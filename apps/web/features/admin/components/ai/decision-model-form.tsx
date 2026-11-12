@@ -22,7 +22,7 @@ import {
   useDecisionConfigWrite,
 } from "@norish/shared-react/admin";
 
-import { ConnectionTestResult } from "./connection-test-result";
+import { ConnectionTestResult } from "../connection-test-result";
 
 interface DecisionModelFormProps {
   onDirtyChange?: (isDirty: boolean) => void;

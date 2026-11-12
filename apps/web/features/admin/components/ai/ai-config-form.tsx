@@ -39,7 +39,7 @@ import {
   useConfigSecret,
 } from "@norish/shared-react/admin";
 
-import { ConnectionTestResult } from "./connection-test-result";
+import { ConnectionTestResult } from "../connection-test-result";
 import ModelListingEmptyState from "./model-listing-empty-state";
 
 interface AIConfigFormProps {

@@ -71,7 +71,7 @@ vi.mock("@heroui/react", () => {
 });
 
 const { default: BulkEnrichmentForm } =
-  await import("@/app/(app)/settings/admin/components/bulk-enrichment-form");
+  await import("@/features/admin/components/ai/bulk-enrichment-form");
 
 /** Opens the confirmation and returns its confirm button. */
 function openConfirmation() {

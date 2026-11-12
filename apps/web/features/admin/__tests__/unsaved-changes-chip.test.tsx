@@ -3,7 +3,7 @@ import { describe, expect, it, vi } from "vitest";
 
 import "@testing-library/jest-dom";
 
-import { UnsavedChangesChip } from "@/app/(app)/settings/admin/components/unsaved-changes-chip";
+import { UnsavedChangesChip } from "@/features/admin/components/unsaved-changes-chip";
 
 vi.mock("next-intl", () => ({
   useTranslations: () => (key: string) => (key === "unsavedChanges" ? "Unsaved changes" : key),

@@ -13,9 +13,9 @@ import {
   useRestoreDefault,
 } from "@norish/shared-react/admin";
 
+import { UnsavedChangesChip } from "../unsaved-changes-chip";
 import JsonEditor from "./json-editor";
 import TimerKeywordsEditor from "./timer-keywords-editor";
-import { UnsavedChangesChip } from "./unsaved-changes-chip";
 
 export default function ContentDetectionCard() {
   const t = useTranslations("settings.admin.contentDetection");

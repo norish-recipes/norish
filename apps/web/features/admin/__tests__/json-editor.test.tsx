@@ -4,7 +4,7 @@ import { describe, expect, it, vi } from "vitest";
 
 import "@testing-library/jest-dom";
 
-import JsonEditor from "@/app/(app)/settings/admin/components/json-editor";
+import JsonEditor from "@/features/admin/components/content-detection/json-editor";
 
 vi.mock("next-intl", () => ({
   useTranslations: () => (key: string) => key,
