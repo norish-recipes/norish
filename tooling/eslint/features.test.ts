@@ -35,15 +35,12 @@ describe("restrictDomains", () => {
     "shared-react/src/groceries",
     "shared-react/src/recipes",
     "shared-react/src/trpc",
-    "shared-react/src/offline/react",
-    "shared-react/src/hooks",
-    "shared-react/src/contexts"
+    "shared-react/src/offline/react"
   );
   const cwd = path.join(root, "shared-react");
   const config = restrictDomains(cwd, {
     srcDir: "src",
     crossCutting: ["trpc", "offline"],
-    legacy: ["hooks", "contexts"],
   });
   const at = (file: string, from: string) => lint(cwd, config, `src/${file}`, from);
 
@@ -54,44 +51,22 @@ describe("restrictDomains", () => {
     expect(at("groceries/list.ts", "@norish/shared-react/recipes")).toHaveLength(1);
   });
 
-  it("stops a domain importing a legacy folder", () => {
-    expect(at("recipes/detail.ts", "../hooks/recipes/types")).toHaveLength(1);
-    expect(at("groceries/list.ts", "@norish/shared-react/contexts")).toHaveLength(1);
-  });
-
   it("lets a domain import itself and cross-cutting folders", () => {
     expect(at("groceries/list.ts", "./row")).toEqual([]);
     expect(at("groceries/list.ts", "../trpc")).toEqual([]);
     expect(at("groceries/list.ts", "@norish/shared-react/offline")).toEqual([]);
   });
 
-  it("stops a cross-cutting folder importing a domain or a legacy folder", () => {
+  it("stops a cross-cutting folder importing a domain", () => {
     expect(at("trpc/client.ts", "../groceries")).toEqual([
       "A cross-cutting folder imports only other cross-cutting folders.",
     ]);
     expect(at("offline/react/hook.ts", "../../recipes/detail")).toHaveLength(1);
-    expect(at("offline/engine.ts", "../hooks/use-user")).toHaveLength(1);
-    expect(at("offline/react/hook.ts", "@norish/shared-react/contexts")).toHaveLength(1);
+    expect(at("offline/react/hook.ts", "@norish/shared-react/groceries")).toHaveLength(1);
   });
 
   it("lets a cross-cutting folder import another", () => {
     expect(at("offline/engine.ts", "../trpc")).toEqual([]);
-  });
-
-  it("leaves the legacy folders unrestricted", () => {
-    expect(at("hooks/use-user.ts", "../groceries")).toEqual([]);
-  });
-
-  it("still blocks the legacy folders before any domain exists", () => {
-    folders("bare/src/trpc", "bare/src/hooks");
-    const bareRoot = path.join(root, "bare");
-    const bare = restrictDomains(bareRoot, {
-      srcDir: "src",
-      crossCutting: ["trpc"],
-      legacy: ["hooks"],
-    });
-
-    expect(lint(bareRoot, bare, "src/trpc/client.ts", "../hooks")).toHaveLength(1);
   });
 });
 

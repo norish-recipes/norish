@@ -60,31 +60,31 @@ const domainPaths = (domain: string) => [
   ...andBelow(`@norish/shared-react/${domain}`),
 ];
 
-// shared-react: a domain imports neither another domain nor a legacy folder, and a cross-cutting
-// folder imports neither either. Every other folder in srcDir is a domain.
+// shared-react: a domain imports no other domain, and a cross-cutting folder imports no domain.
+// Every other folder in srcDir is a domain.
 export const restrictDomains = (
   root: string,
-  options: { srcDir: string; crossCutting: string[]; legacy: string[] }
+  options: { srcDir: string; crossCutting: string[] }
 ) => {
-  const { srcDir, crossCutting, legacy } = options;
+  const { srcDir, crossCutting } = options;
   const domains = readdirSync(path.join(root, srcDir), { withFileTypes: true })
     .filter((entry) => entry.isDirectory())
     .map((entry) => entry.name)
-    .filter((name) => !crossCutting.includes(name) && !legacy.includes(name));
+    .filter((name) => !crossCutting.includes(name));
 
   return defineConfig(
     { plugins: { features: plugin } },
     {
       files: crossCutting.map((folder) => `${srcDir}/${folder}/**/*.{ts,tsx}`),
       rules: restrict(
-        [...domains, ...legacy].flatMap(domainPaths),
+        domains.flatMap(domainPaths),
         "A cross-cutting folder imports only other cross-cutting folders."
       ),
     },
     ...domains.map((domain) => ({
       files: [`${srcDir}/${domain}/**/*.{ts,tsx}`],
       rules: restrict(
-        [...domains.filter((other) => other !== domain), ...legacy].flatMap(domainPaths),
+        domains.filter((other) => other !== domain).flatMap(domainPaths),
         "A domain imports only itself and cross-cutting folders."
       ),
     }))
