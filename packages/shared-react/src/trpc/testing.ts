@@ -89,8 +89,11 @@ export function mockTRPC() {
   return { useTRPC: () => trpc };
 }
 
-/** The key the real client gives a procedure's query with no input. */
-export const keyOf = (path: string) => [path.split("."), { type: "query" }];
+/** The key the real client gives a procedure's query, with no input unless one is given. */
+export const keyOf = (path: string, input?: unknown) =>
+  input === undefined
+    ? [path.split("."), { type: "query" }]
+    : [path.split("."), { input, type: "query" }];
 
 /** Waits until write `index` to `path` was sent, and hands it back. */
 export async function sentCall(path: string, index = 0) {

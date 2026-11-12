@@ -2,6 +2,7 @@ import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 
 import type { AIChange } from "./types";
 import { settled } from "../offline/settled";
+import { writeOverReads } from "../offline/write-over-read";
 import { useTRPC } from "../trpc";
 import { useCatalogueFailure } from "./use-catalogue-failure";
 import { useIngredientCache } from "./use-ingredient-cache";
@@ -37,7 +38,8 @@ export function useAIChangeMutations() {
   const { refuse } = useCatalogueFailure();
 
   const show = (patch: (list: AIChange[]) => AIChange[]) =>
-    queryClient.setQueriesData<AIChange[]>(
+    writeOverReads<AIChange[]>(
+      queryClient,
       { queryKey: trpc.ingredients.aiChanges.pathKey() },
       (list) => (list ? patch(list) : list)
     );

@@ -2,6 +2,7 @@
 
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 
+import { writeOverRead } from "../offline/write-over-read";
 import { usePlatform } from "../platform";
 import { useTRPC } from "../trpc";
 import { useProfileCache } from "./use-profile";
@@ -34,7 +35,10 @@ export function useAllergiesMutation() {
         if (!answer.success) return;
         const version = answer.version ?? heldVersion();
 
-        queryClient.setQueryData(queryKey, { allergies: answer.allergies ?? [], version });
+        writeOverRead(queryClient, queryKey, () => ({
+          allergies: answer.allergies ?? [],
+          version,
+        }));
         if (answer.version) mergeUser({ version: answer.version });
       },
       onError: (error) => showError(error, "user-settings:update-allergies"),

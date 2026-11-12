@@ -3,6 +3,7 @@
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 
 import { settled, wentThrough } from "../offline/settled";
+import { writeOverRead } from "../offline/write-over-read";
 import { usePlatform } from "../platform";
 import { useTRPC } from "../trpc";
 
@@ -23,14 +24,14 @@ export function useSiteAuthTokenMutations() {
   const { mutateAsync: mutateCreate, isPending: isCreating } = useMutation(
     trpc.siteAuthTokens.create.mutationOptions({
       onSuccess: (token) =>
-        queryClient.setQueryData(queryKey, (prev) => (prev ? [...prev, token] : [token])),
+        writeOverRead(queryClient, queryKey, (prev) => (prev ? [...prev, token] : [token])),
       onError: (error) => showError(error, "site-auth-tokens:create"),
     })
   );
   const { mutateAsync: mutateRemove, isPending: isRemoving } = useMutation(
     trpc.siteAuthTokens.remove.mutationOptions({
       onSuccess: (_answer, { id }) =>
-        queryClient.setQueryData(queryKey, (prev) => prev?.filter((token) => token.id !== id)),
+        writeOverRead(queryClient, queryKey, (prev) => prev?.filter((token) => token.id !== id)),
       onError: (error) => showError(error, "site-auth-tokens:delete"),
     })
   );

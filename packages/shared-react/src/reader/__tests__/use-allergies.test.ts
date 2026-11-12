@@ -8,6 +8,7 @@ import {
 } from "@norish/shared-react/platform/testing";
 
 import { useAllergiesMutation } from "..";
+import { readUnderWay } from "../../offline/testing";
 import { answerCall, keyOf, resetTRPCFake, sentCall } from "../../trpc/testing";
 
 vi.mock("../../trpc", async () => (await import("../../trpc/testing")).mockTRPC());
@@ -44,5 +45,19 @@ describe("useAllergiesMutation", () => {
       allergies: ["gluten", "nuts"],
       version: 4,
     });
+  });
+
+  it("keeps a read begun before the answer from landing over it", async () => {
+    const held = { allergies: ["nuts"], version: 3 };
+
+    queryClient.setQueryData(ALLERGIES_KEY, held);
+    const land = readUnderWay(queryClient, ALLERGIES_KEY, held);
+    const result = render(() => useAllergiesMutation());
+
+    act(() => result.current.setAllergies(["nuts", "gluten"]));
+    await answerCall("user.setAllergies", { success: true, allergies: ["gluten"], version: 4 });
+    await act(land);
+
+    expect(queryClient.getQueryData(ALLERGIES_KEY)).toEqual({ allergies: ["gluten"], version: 4 });
   });
 });

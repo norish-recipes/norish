@@ -1,6 +1,7 @@
 import { useQueryClient } from "@tanstack/react-query";
 
 import type { IngredientItem } from "./types";
+import { writeOverReads } from "../offline/write-over-read";
 import { useTRPC } from "../trpc";
 
 /** A page of the list as the infinite query holds it. */
@@ -32,18 +33,20 @@ export function useIngredientCache() {
       });
     const patchPage = (page: ListPage): ListPage => ({ ...page, items: patchList(page.items) });
 
-    queryClient.setQueriesData<ListData>({ queryKey: trpc.ingredients.list.pathKey() }, (data) =>
+    writeOverReads<ListData>(queryClient, { queryKey: trpc.ingredients.list.pathKey() }, (data) =>
       !data
         ? data
         : "pages" in data
           ? { ...data, pages: data.pages.map(patchPage) }
           : patchPage(data)
     );
-    queryClient.setQueriesData<IngredientItem[]>(
+    writeOverReads<IngredientItem[]>(
+      queryClient,
       { queryKey: trpc.ingredients.kinds.pathKey() },
       (items) => (items ? patchList(items) : items)
     );
-    queryClient.setQueriesData<IngredientItem | null>(
+    writeOverReads<IngredientItem | null>(
+      queryClient,
       { queryKey: trpc.ingredients.get.pathKey() },
       (item) => (item ? patch(item) : item)
     );

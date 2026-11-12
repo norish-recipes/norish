@@ -8,6 +8,7 @@ import {
 } from "@norish/shared-react/platform/testing";
 
 import type { AIChange, IngredientItem } from "../types";
+import { readUnderWay } from "../../offline/testing";
 import { answerCall, keyOf, resetTRPCFake, sentCall } from "../../trpc/testing";
 import { useAIChangeMutations, useAIChangesQuery } from "../use-ai-changes";
 import { useIngredientMutations } from "../use-ingredient-mutations";
@@ -157,6 +158,22 @@ describe("useAIChangeMutations", () => {
 
     await answerCall("ingredients.keepAIChange", { success: true });
     expect(stale()).toBe(true);
+  });
+
+  it("keeps a read begun before a keep from landing over it", async () => {
+    const { queryClient, wrapper } = setUp();
+
+    queryClient.setQueryData(AI_CHANGES, [change]);
+    const land = readUnderWay(queryClient, AI_CHANGES, [change]);
+    const { result } = renderHook(() => useAIChangeMutations(), { wrapper });
+
+    act(() => {
+      void result.current.keep(change);
+    });
+    await sentCall("ingredients.keepAIChange");
+    await act(land);
+
+    expect(queryClient.getQueryData<AIChange[]>(AI_CHANGES)?.[0]?.kept).toBe(true);
   });
 });
 

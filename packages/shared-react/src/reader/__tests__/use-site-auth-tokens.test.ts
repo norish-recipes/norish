@@ -8,6 +8,7 @@ import {
 } from "@norish/shared-react/platform/testing";
 
 import { useSiteAuthTokenMutations } from "..";
+import { readUnderWay } from "../../offline/testing";
 import { answerCall, keyOf, resetTRPCFake, sentCall } from "../../trpc/testing";
 
 vi.mock("../../trpc", async () => (await import("../../trpc/testing")).mockTRPC());
@@ -55,5 +56,24 @@ describe("useSiteAuthTokenMutations", () => {
     await answerCall("siteAuthTokens.remove", { success: true, stale: false });
 
     expect(queryClient.getQueryData(TOKENS_KEY)).toEqual([]);
+  });
+
+  it("keep a read begun before an add or a removal from landing over it", async () => {
+    queryClient.setQueryData(TOKENS_KEY, [token]);
+    const result = render(() => useSiteAuthTokenMutations());
+    const added = { ...token, id: "t2" };
+
+    let land = readUnderWay(queryClient, TOKENS_KEY, [token]);
+
+    act(() => void result.current.createToken({ ...added, value: "secret" }));
+    await answerCall("siteAuthTokens.create", added);
+    await act(land);
+    expect(queryClient.getQueryData(TOKENS_KEY)).toEqual([token, added]);
+
+    land = readUnderWay(queryClient, TOKENS_KEY, [token, added]);
+    act(() => void result.current.removeToken("t1"));
+    await answerCall("siteAuthTokens.remove", { success: true, stale: false });
+    await act(land);
+    expect(queryClient.getQueryData(TOKENS_KEY)).toEqual([added]);
   });
 });

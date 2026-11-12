@@ -4,6 +4,7 @@ import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import type { IngredientNutrition } from "@norish/shared/contracts/ingredient-nutrition";
 import type { AppRouter } from "@norish/trpc/client";
 
+import { writeOverRead } from "../offline/write-over-read";
 import { usePlatform } from "../platform/platform";
 import { useTRPC } from "../trpc";
 import { projectedMutation } from "../trpc/projected-mutation";
@@ -46,10 +47,13 @@ export function useNutritionCorrection(ingredientId: string) {
 
   const answer = (saved: "saved" | "removed") => ({
     onMutate: (correction: { shown: IngredientNutrition | null } | void) => {
-      if (correction && correction.shown) {
-        queryClient.setQueryData(
+      const shown = correction?.shown;
+
+      if (shown) {
+        writeOverRead(
+          queryClient,
           trpc.ingredients.nutrition.queryKey({ ingredientId }),
-          correction.shown
+          () => shown
         );
       }
       toast.show({

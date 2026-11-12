@@ -2,32 +2,17 @@ import type { DataTag, QueryKey } from "@tanstack/react-query";
 import { describe, expect, it } from "vitest";
 
 import { createTestQueryClient } from "../platform/testing";
+import { readUnderWay } from "./testing";
 import { writeOverRead } from "./write-over-read";
 
 const KEY = ["list"] as DataTag<QueryKey, string[]>;
-
-/** A read of KEY under way, answered with `answer`. */
-function readUnderWay(queryClient: ReturnType<typeof createTestQueryClient>, answer: string[]) {
-  let land: () => void = () => {};
-  const read = queryClient
-    .fetchQuery({
-      queryKey: KEY,
-      queryFn: () => new Promise<string[]>((resolve) => (land = () => resolve(answer))),
-    })
-    .catch(() => undefined);
-
-  return async () => {
-    land();
-    await read;
-  };
-}
 
 describe("writeOverRead", () => {
   it("keeps a read under way from landing over the write", async () => {
     const queryClient = createTestQueryClient();
 
     queryClient.setQueryData(KEY, ["a"]);
-    const land = readUnderWay(queryClient, ["stale"]);
+    const land = readUnderWay(queryClient, KEY, ["stale"]);
 
     writeOverRead(queryClient, KEY, (held) => [...(held ?? []), "b"]);
     await land();
@@ -37,7 +22,7 @@ describe("writeOverRead", () => {
 
   it("lets the first read land when nothing is held, rather than leave it loading", async () => {
     const queryClient = createTestQueryClient();
-    const land = readUnderWay(queryClient, ["server"]);
+    const land = readUnderWay(queryClient, KEY, ["server"]);
 
     writeOverRead(queryClient, KEY, (held) => held);
     await land();
