@@ -16,10 +16,6 @@ export const CATALOGUE_REFUSALS = [
 
 export type CatalogueRefusal = (typeof CATALOGUE_REFUSALS)[number];
 
-export function isCatalogueRefusal(value: unknown): value is CatalogueRefusal {
-  return (CATALOGUE_REFUSALS as readonly unknown[]).includes(value);
-}
-
 /**
  * Why an Ingredient is flagged (ADR-0037): what the resolver, the upgrade or
  * the seed knew when it minted or marked it. The Ingredients page shows the

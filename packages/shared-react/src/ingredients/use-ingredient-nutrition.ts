@@ -14,12 +14,6 @@ type CorrectionInput = Omit<
   "ingredientId"
 >;
 
-const REFUSALS = ["unknown-food", "empty", "not-found"] as const;
-
-function isRefusal(message: string): message is (typeof REFUSALS)[number] {
-  return (REFUSALS as readonly string[]).includes(message);
-}
-
 /** An Ingredient's nutrition and the measure its household's recipes use most for it. */
 export function useIngredientNutritionQuery(ingredientId: string) {
   const trpc = useTRPC();
@@ -48,7 +42,7 @@ export function useNutritionCorrection(ingredientId: string) {
   const trpc = useTRPC();
   const queryClient = useQueryClient();
   const { toast } = usePlatform();
-  const { fail } = useCatalogueFailure();
+  const { refuse } = useCatalogueFailure();
 
   const answer = (saved: "saved" | "removed") => ({
     onMutate: (correction: { shown: IngredientNutrition | null } | void) => {
@@ -63,17 +57,7 @@ export function useNutritionCorrection(ingredientId: string) {
         title: toast.translate(`settings.ingredients.nutrition.${saved}`),
       });
     },
-    onError: (error: unknown) =>
-      fail(
-        error,
-        "correct-nutrition",
-        toast.translate("settings.ingredients.nutrition.errors.title"),
-        toast.translate(
-          `settings.ingredients.nutrition.errors.${
-            error instanceof Error && isRefusal(error.message) ? error.message : "unknown"
-          }`
-        )
-      ),
+    onError: (error: unknown) => refuse(error, "correct-nutrition", "nutrition"),
     // The Ingredient's own facts, and every recipe total worked out from them.
     onSettled: () =>
       Promise.all([

@@ -13,7 +13,6 @@ import type { AppRouter } from "@norish/trpc/client";
 import { iconIds } from "@norish/shared/lib/ingredient-icon-ids";
 import { uploadForm } from "@norish/shared/lib/upload-form";
 
-import { usePlatform } from "../platform/platform";
 import { useTRPC } from "../trpc";
 import { useCatalogueFailure } from "./use-catalogue-failure";
 
@@ -94,16 +93,9 @@ export type StoredIcon = { file: string; address: string };
 /** Upload a picture or generate an icon for a food; each resolves the stored icon, or null when it failed. */
 export function useIngredientIconMutations(ingredientId: string) {
   const trpc = useTRPC();
-  const { toast } = usePlatform();
   const { fail } = useCatalogueFailure();
   const failed = (context: string, description: string) => ({
-    onError: (error: unknown) =>
-      fail(
-        error,
-        context,
-        toast.translate("settings.ingredients.errors.title"),
-        toast.translate(description)
-      ),
+    onError: (error: unknown) => fail(error, context, description),
   });
   const upload = useMutation(
     trpc.ingredients.uploadIcon.mutationOptions(
