@@ -12,16 +12,14 @@ import {
 import { useRouter } from "expo-router";
 import { useThemeColor } from "heroui-native";
 import { useIntl } from "react-intl";
+import { useCSSVariable } from "uniwind";
 
 /** The glass chip at a signed-out screen's foot: the server's host, opening Server address. */
 export function ServerChip({ address }: { address: string }) {
   const router = useRouter();
   const intl = useIntl();
-  const [foregroundColor, mutedColor, accentColor] = useThemeColor([
-    "foreground",
-    "muted",
-    "accent",
-  ] as const);
+  const [foregroundColor, mutedColor] = useThemeColor(["foreground", "muted"] as const);
+  const linkColor = useCSSVariable("--color-link");
   const host = hostOf(address);
 
   return (
@@ -37,7 +35,7 @@ export function ServerChip({ address }: { address: string }) {
         onPress={() => router.push({ pathname: "/(auth)", params: { change: "server" } })}
       >
         <HStack spacing={8}>
-          <Image color={accentColor} size={16} systemName="server.rack" />
+          <Image color={String(linkColor)} size={16} systemName="server.rack" />
           <Text
             modifiers={[
               // SwiftUI resolves the PostScript name; expo-font's `Inter_500Medium` alias is UIKit-only.
