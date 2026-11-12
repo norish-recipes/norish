@@ -103,13 +103,6 @@ export async function saveBackendBaseUrl(input: string): Promise<string> {
   return normalized;
 }
 
-export async function clearBackendBaseUrl(): Promise<void> {
-  await resetAuthClientStorage();
-  await SecureStore.deleteItemAsync(BACKEND_BASE_URL_KEY);
-  currentBaseUrl = "";
-  emitBackendBaseUrlChange();
-}
-
 export function getBackendHealthUrl(baseUrl: string): string {
   return `${baseUrl}/api/v1/health`;
 }
