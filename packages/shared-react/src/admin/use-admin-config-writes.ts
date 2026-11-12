@@ -92,6 +92,7 @@ export function useAuthProviderWrites() {
         reread(result);
         if (!result.success) showError(result.error, `admin-auth-provider:delete:${type}`);
       },
+      onError: (error, type) => showError(error, `admin-auth-provider:delete:${type}`),
     })
   );
   const test = useMutation(trpc.admin.auth.testProvider.mutationOptions());
