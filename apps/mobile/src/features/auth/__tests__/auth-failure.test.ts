@@ -47,9 +47,12 @@ describe("authFailure", () => {
     );
   });
 
-  it("says no server answered for a network failure, and the fallback for anything else", async () => {
+  it("says no server answered for a network failure or timeout, and the fallback for anything else", async () => {
     await expect(
       authFailure(Promise.reject(new TypeError("Network request failed")), "fallback")
+    ).resolves.toBe("auth.connect.errors.unreachable");
+    await expect(
+      authFailure(Promise.reject(new DOMException("Aborted", "AbortError")), "fallback")
     ).resolves.toBe("auth.connect.errors.unreachable");
     await expect(authFailure(Promise.reject(new Error("boom")), "fallback")).resolves.toBe(
       "fallback"

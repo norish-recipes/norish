@@ -27,8 +27,8 @@ function refusalMessageId(error: AuthError, fallback: string): string {
 }
 
 /**
- * The message id a Better Auth call fails with, or null once it succeeds. A refusal comes back
- * as `error`; a throw is a network failure (a `TypeError`) or else `fallback`. Raw text is only logged.
+ * The message id a Better Auth call fails with, or null on success; a network failure or timeout
+ * says no server answered, any other throw is `fallback`, and raw text is only logged.
  */
 export function authFailure(
   call: Promise<{ error: AuthError | null }>,
@@ -45,7 +45,11 @@ export function authFailure(
     (thrown: unknown) => {
       log.warn({ error: thrown }, "Auth call failed");
 
-      return thrown instanceof TypeError ? "auth.connect.errors.unreachable" : fallback;
+      // The client's timeout aborts a stalled request, which RN's fetch rejects as an AbortError.
+      const unreachable =
+        thrown instanceof TypeError || (thrown instanceof Error && thrown.name === "AbortError");
+
+      return unreachable ? "auth.connect.errors.unreachable" : fallback;
     }
   );
 }
