@@ -57,14 +57,8 @@ export function usePantryMutations(): PantryMutationsResult {
   const removeMutation = useMutation(removeOptions);
   const { mutate: mutateRemove } = removeMutation;
 
-  /**
-   * The food joins the Pantry on this screen at once, under a client-minted
-   * id the server honours (ADR-0003) — so a queued offline add stays
-   * addressable and the add-to-groceries panel can already leave it off
-   * the list. A picked food carries its Ingredient and names, so coverage
-   * and "on the list" work before the server answers; a typed name is only
-   * text until then, and is matched on its name.
-   */
+  // Optimistic insert under a client-minted id the server honours (ADR-0003), so a queued add
+  // stays addressable; a picked food carries its Ingredient, a typed one only its name.
   const addPantryIngredient = (food: string | PickedFood, shownAs?: string) => {
     const id = createClientId();
     const picked = typeof food === "string" ? null : food;

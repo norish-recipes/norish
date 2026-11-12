@@ -15,12 +15,7 @@ const SEARCH_DELAY_MS = 250;
 /** What a person picked: a known Ingredient, or a new one (`id` null). */
 export type IngredientPick = { id: string; name: string } | { id: null };
 
-/**
- * Find an Ingredient to merge into, file under or move a spelling to, by any
- * of its spellings. Only Ingredients the viewer may edit are offered where
- * `editableOnly` says so (a merge needs `edit` on both), and never the one
- * the action starts from.
- */
+/** Searches Ingredients by any spelling, never `excludeId`; `editableOnly` keeps the viewer's editable ones. */
 export function IngredientPicker({
   label,
   excludeId,
