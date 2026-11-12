@@ -1,4 +1,6 @@
-import { fireEvent, render, screen, within } from "@testing-library/react";
+import type { QueryClient } from "@tanstack/react-query";
+import { readAnswers, sentWrites } from "@/__tests__/helpers/trpc-fake";
+import { fireEvent, render, screen, waitFor, within } from "@testing-library/react";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 
 import "@testing-library/jest-dom";
@@ -10,61 +12,40 @@ import type {
   NutritionFact,
   NutritionSource,
 } from "@norish/shared/contracts/ingredient-nutrition";
+import { createTestQueryClient, createTestWrapper } from "@norish/shared-react/platform/testing";
 
 const mocks = vi.hoisted(() => ({
   nutrition: null as IngredientNutrition | null,
   measure: null as string | null,
-  pending: false,
-  correct: vi.fn(async (_input: unknown) => ({ success: true })),
-  remove: vi.fn(async (_input: unknown) => ({ success: true })),
-  setQueryData: vi.fn(),
 }));
 
-vi.mock("@norish/shared-react/trpc", () => ({
-  useTRPC: () => ({
-    ingredients: {
-      nutrition: {
-        queryOptions: (input: unknown) => ({ queryKey: ["nutrition", input] }),
-        queryKey: () => ["nutrition"],
-      },
-      nutritionFor: { queryKey: () => ["nutritionFor"] },
-      spoonMeasure: {
-        queryOptions: (input: unknown) => ({ queryKey: ["spoonMeasure", input] }),
-      },
-      nutritionFoods: {
-        queryOptions: (input: unknown) => ({ queryKey: ["nutritionFoods", input] }),
-      },
-      correctNutrition: { mutationOptions: () => ({ mutationFn: mocks.correct }) },
-      removeNutritionCorrection: { mutationOptions: () => ({ mutationFn: mocks.remove }) },
-    },
-  }),
-}));
+vi.mock("@norish/shared-react/trpc", async () =>
+  (await import("@/__tests__/helpers/trpc-fake")).mockTRPC()
+);
 
-vi.mock("@tanstack/react-query", () => ({
-  useQuery: (options: { queryKey: unknown[] }) =>
-    options.queryKey[0] === "nutrition"
-      ? { data: mocks.nutrition, isPending: mocks.pending }
-      : options.queryKey[0] === "spoonMeasure"
-        ? { data: mocks.measure, isPending: false }
-        : { data: [], isFetching: false },
-  useMutation: (options: { mutationFn: (input: unknown) => Promise<unknown> }) => ({
-    mutateAsync: options.mutationFn,
-    isPending: false,
-  }),
-  useQueryClient: () => ({ invalidateQueries: vi.fn(), setQueryData: mocks.setQueryData }),
-}));
+let queryClient: QueryClient;
+
+/** The section over a fresh cache, its reads answered; writes stay unanswered, as on a slow server. */
+async function renderSection(ingredientId: string, name: string) {
+  queryClient = createTestQueryClient();
+  readAnswers.set("ingredients.nutrition", async () => mocks.nutrition);
+  readAnswers.set("ingredients.spoonMeasure", async () => mocks.measure);
+  readAnswers.set("ingredients.nutritionFoods", async () => []);
+  render(<IngredientNutritionSection ingredientId={ingredientId} name={name} />, {
+    wrapper: createTestWrapper(queryClient),
+  });
+  await screen.findByTestId("ingredient-nutrition-open");
+  await waitFor(() => expect(queryClient.isFetching()).toBe(0));
+}
+
+/** What the section sent the server, by procedure. */
+const sent = (path: string) =>
+  sentWrites.mock.calls.filter(([written]) => written === path).map(([, input]) => input);
 
 vi.mock("next-intl", () => ({
   useFormatter: () => ({ number: (value: number) => String(Math.round(value * 10) / 10) }),
   useTranslations: () => (key: string, values?: Record<string, unknown>) =>
     values ? `${key} ${JSON.stringify(values)}` : key,
-}));
-
-vi.mock("@/lib/ui/safe-error-toast", () => ({ showSafeErrorToast: vi.fn() }));
-
-vi.mock("@heroui/react", async (importOriginal) => ({
-  ...(await importOriginal<typeof import("@heroui/react")>()),
-  toast: vi.fn(),
 }));
 
 vi.mock("@/components/shared/action-button", () => ({
@@ -108,7 +89,7 @@ const correction = () => screen.getByRole("dialog", { name: /^correctTitle/ });
 
 describe("an Ingredient's nutrition in its panel", () => {
   beforeEach(() => {
-    mocks.pending = false;
+    sentWrites.mockClear();
     mocks.measure = null;
     mocks.nutrition = {
       numbers: {
@@ -121,8 +102,8 @@ describe("an Ingredient's nutrition in its panel", () => {
     };
   });
 
-  it("sums the food up in one row, which opens the nutrition panel", () => {
-    render(<IngredientNutritionSection ingredientId="onion" name="onion" />);
+  it("sums the food up in one row, which opens the nutrition panel", async () => {
+    await renderSection("onion", "onion");
 
     expect(screen.getByTestId("ingredient-nutrition-summary")).toHaveTextContent(
       'summary {"value":"35"}'
@@ -132,8 +113,8 @@ describe("an Ingredient's nutrition in its panel", () => {
     expect(screen.getByRole("dialog", { name: "section" })).toBeInTheDocument();
   });
 
-  it("shows the four numbers per 100 g and the dataset food they came from", () => {
-    render(<IngredientNutritionSection ingredientId="onion" name="onion" />);
+  it("shows the four numbers per 100 g and the dataset food they came from", async () => {
+    await renderSection("onion", "onion");
     openNutrition();
 
     const numbers = screen.getByTestId("ingredient-nutrition-numbers");
@@ -149,14 +130,14 @@ describe("an Ingredient's nutrition in its panel", () => {
     expect(screen.queryByTestId("ingredient-nutrition-density")).toBeNull();
   });
 
-  it("says where borrowed numbers come from", () => {
+  it("says where borrowed numbers come from", async () => {
     mocks.nutrition = {
       numbers: { ...mocks.nutrition!.numbers!, borrowedFrom: { id: "onion", name: "onion" } },
       pieceWeight: null,
       density: null,
     };
 
-    render(<IngredientNutritionSection ingredientId="red-onion" name="red onion" />);
+    await renderSection("red-onion", "red onion");
     openNutrition();
 
     expect(screen.getByTestId("ingredient-nutrition-source")).toHaveTextContent(
@@ -164,22 +145,22 @@ describe("an Ingredient's nutrition in its panel", () => {
     );
   });
 
-  it("says when AI estimated the numbers", () => {
+  it("says when AI estimated the numbers", async () => {
     mocks.nutrition = {
       ...mocks.nutrition!,
       numbers: { ...mocks.nutrition!.numbers!, source: { kind: "ai" } },
     };
 
-    render(<IngredientNutritionSection ingredientId="onion" name="onion" />);
+    await renderSection("onion", "onion");
     openNutrition();
 
     expect(screen.getByTestId("ingredient-nutrition-source")).toHaveTextContent("source.ai");
   });
 
-  it("says it knows nothing where it does not", () => {
+  it("says it knows nothing where it does not", async () => {
     mocks.nutrition = { numbers: null, pieceWeight: null, density: null };
 
-    render(<IngredientNutritionSection ingredientId="brandy" name="brandy" />);
+    await renderSection("brandy", "brandy");
 
     expect(screen.getByTestId("ingredient-nutrition-summary")).toHaveTextContent("summaryNone");
     openNutrition();
@@ -194,23 +175,23 @@ describe("an Ingredient's nutrition in its panel", () => {
       borrowedFrom: null,
     });
 
-    it("shows no spoon row where no recipe the household can open measures the food by volume", () => {
+    it("shows no spoon row where no recipe the household can open measures the food by volume", async () => {
       mocks.nutrition = { ...mocks.nutrition!, density: density(0.67, { kind: "taxonomy" }) };
 
-      render(<IngredientNutritionSection ingredientId="onion" name="onion" />);
+      await renderSection("onion", "onion");
       openNutrition();
 
       expect(screen.queryByTestId("ingredient-nutrition-density")).toBeNull();
     });
 
-    it("states it in the measure the household's recipes use most, with where it came from", () => {
+    it("states it in the measure the household's recipes use most, with where it came from", async () => {
       mocks.measure = "teaspoon";
       mocks.nutrition = {
         ...mocks.nutrition!,
         density: density(0.4, { kind: "fix", food: CUMIN_SEED }),
       };
 
-      render(<IngredientNutritionSection ingredientId="cumin" name="cumin" />);
+      await renderSection("cumin", "cumin");
       openNutrition();
 
       const row = screen.getByTestId("ingredient-nutrition-density");
@@ -221,11 +202,11 @@ describe("an Ingredient's nutrition in its panel", () => {
       );
     });
 
-    it("reads millilitres to litres per 100 ml", () => {
+    it("reads millilitres to litres per 100 ml", async () => {
       mocks.measure = "100ml";
       mocks.nutrition = { ...mocks.nutrition!, density: density(1.03, { kind: "taxonomy" }) };
 
-      render(<IngredientNutritionSection ingredientId="milk" name="milk" />);
+      await renderSection("milk", "milk");
       openNutrition();
 
       expect(screen.getByTestId("ingredient-nutrition-density")).toHaveTextContent(
@@ -236,7 +217,7 @@ describe("an Ingredient's nutrition in its panel", () => {
     it("asks for the weight in that measure where none is known, and keeps it as a density", async () => {
       mocks.measure = "teaspoon";
 
-      render(<IngredientNutritionSection ingredientId="cumin" name="cumin" />);
+      await renderSection("cumin", "cumin");
       openNutrition();
       fireEvent.click(screen.getByTestId("ingredient-nutrition-density-ask"));
 
@@ -251,7 +232,7 @@ describe("an Ingredient's nutrition in its panel", () => {
       fireEvent.click(within(panel).getByTestId("nutrition-correction-save"));
 
       await vi.waitFor(() =>
-        expect(mocks.correct).toHaveBeenCalledWith({
+        expect(sent("ingredients.correctNutrition")).toContainEqual({
           ingredientId: "cumin",
           numbers: null,
           pieceWeight: null,
@@ -265,7 +246,7 @@ describe("an Ingredient's nutrition in its panel", () => {
       // Typed before as a cup weighing 125 g.
       mocks.nutrition = { ...mocks.nutrition!, density: density(125 / 240, { kind: "household" }) };
 
-      render(<IngredientNutritionSection ingredientId="flour" name="flour" />);
+      await renderSection("flour", "flour");
       openCorrection();
 
       const panel = correction();
@@ -274,7 +255,7 @@ describe("an Ingredient's nutrition in its panel", () => {
       fireEvent.click(within(panel).getByTestId("nutrition-correction-save"));
 
       await vi.waitFor(() =>
-        expect(mocks.correct).toHaveBeenCalledWith(
+        expect(sent("ingredients.correctNutrition")).toContainEqual(
           expect.objectContaining({ density: { gramsPerMl: 125 / 240 } })
         )
       );
@@ -283,7 +264,7 @@ describe("an Ingredient's nutrition in its panel", () => {
 
   it("corrects the numbers from a label, and a cup's weight as a density", async () => {
     mocks.measure = "cup";
-    render(<IngredientNutritionSection ingredientId="milk" name="milk" />);
+    await renderSection("milk", "milk");
     openCorrection();
 
     const panel = correction();
@@ -313,7 +294,7 @@ describe("an Ingredient's nutrition in its panel", () => {
     fireEvent.click(within(panel).getByTestId("nutrition-correction-save"));
 
     await vi.waitFor(() =>
-      expect(mocks.correct).toHaveBeenCalledWith({
+      expect(sent("ingredients.correctNutrition")).toContainEqual({
         ingredientId: "milk",
         numbers: { kcal: 47, fat: 1.5, carbs: 4.8, protein: 3.4 },
         pieceWeight: null,
@@ -321,8 +302,12 @@ describe("an Ingredient's nutrition in its panel", () => {
       })
     );
     // The facts show the correction the moment it is saved, credited to the household.
-    expect(mocks.setQueryData).toHaveBeenCalledWith(
-      ["nutrition"],
+    expect(
+      queryClient.getQueryData([
+        ["ingredients", "nutrition"],
+        { input: { ingredientId: "milk" }, type: "query" },
+      ])
+    ).toEqual(
       expect.objectContaining({
         numbers: {
           value: { kcal: 47, fat: 1.5, carbs: 4.8, protein: 3.4 },
@@ -334,8 +319,8 @@ describe("an Ingredient's nutrition in its panel", () => {
     );
   });
 
-  it("holds Save until every number of a label is there", () => {
-    render(<IngredientNutritionSection ingredientId="milk" name="milk" />);
+  it("holds Save until every number of a label is there", async () => {
+    await renderSection("milk", "milk");
     openCorrection();
 
     const panel = correction();
@@ -359,7 +344,7 @@ describe("an Ingredient's nutrition in its panel", () => {
       density: null,
     };
 
-    render(<IngredientNutritionSection ingredientId="milk" name="milk" />);
+    await renderSection("milk", "milk");
     openCorrection();
 
     const panel = correction();
@@ -367,6 +352,8 @@ describe("an Ingredient's nutrition in its panel", () => {
     expect(within(panel).getByTestId("nutrition-correction-calories")).toHaveValue("47");
     fireEvent.click(within(panel).getByTestId("nutrition-correction-remove"));
 
-    await vi.waitFor(() => expect(mocks.remove).toHaveBeenCalledWith({ ingredientId: "milk" }));
+    await vi.waitFor(() =>
+      expect(sent("ingredients.removeNutritionCorrection")).toEqual([{ ingredientId: "milk" }])
+    );
   });
 });

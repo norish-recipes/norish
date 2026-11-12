@@ -1,7 +1,7 @@
 "use client";
 
 import type { ReactNode } from "react";
-import { useEffect, useState } from "react";
+import { useEffect, useEffectEvent, useState } from "react";
 import { MagnifyingGlassIcon } from "@heroicons/react/24/outline";
 import { InputGroup, TextField } from "@heroui/react";
 import { useTranslations } from "next-intl";
@@ -30,9 +30,12 @@ export function IngredientSearch({
   const [text, setText] = useState("");
   const [search] = useDebounceValue(text.trim(), SEARCH_DELAY_MS);
 
+  // Handed on when the search changes, not when the page hands a new callback.
+  const handOn = useEffectEvent(onSearch);
+
   useEffect(() => {
-    onSearch(search);
-  }, [search, onSearch]);
+    handOn(search);
+  }, [search]);
 
   return (
     <TextField aria-label={t("search")} className="min-w-0 flex-1" value={text} onChange={setText}>

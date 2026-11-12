@@ -1,16 +1,25 @@
 /**
  * The Ingredients page: every food folded to a line, the flagged ones
  * marked, and a panel per food holding its spellings and only the actions
- * the server says the viewer may take.
+ * the server says the viewer may take. It runs over the catalogue's hooks
+ * and a real query cache, against a fake server.
  */
-import { useSyncExternalStore } from "react";
+import type { QueryClient } from "@tanstack/react-query";
+import { readAnswers, sentReads, writeAnswers } from "@/__tests__/helpers/trpc-fake";
 import { IngredientsScreen } from "@/features/ingredients/ingredients-screen";
-import { showSafeErrorToast } from "@/lib/ui/safe-error-toast";
-import { toast } from "@heroui/react";
 import { act, fireEvent, render, screen, waitFor, within } from "@testing-library/react";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 
+import type { AIChange } from "@norish/shared-react/ingredients";
+import type { PlatformAdapter } from "@norish/shared-react/platform";
+
 import "@testing-library/jest-dom";
+
+import {
+  createTestQueryClient,
+  createTestWrapper,
+  fakePlatformAdapter,
+} from "@norish/shared-react/platform/testing";
 
 type Item = {
   id: string;
@@ -33,124 +42,135 @@ type Item = {
   }>;
 };
 
+/** The server's catalogue, which its writes change as the real one would. */
 let items: Item[] = [];
 let everySpelling: Item["aliases"] = [];
 const listInputs: unknown[] = [];
-const mutations = {
-  saveDraft: vi.fn(async () => ({ success: true })),
-  markDistinct: vi.fn(async () => ({ success: true })),
-  merge: vi.fn(async () => ({ success: true })),
-  moveAlias: vi.fn(async () => ({ success: true })),
-  remove: vi.fn(async () => ({ success: true })),
-  keepAIChange: vi.fn(async () => ({ success: true })),
-  undoAIChange: vi.fn(async () => ({ success: true })),
-  settleAIChanges: vi.fn(async () => ({ success: true })),
-  clearAIChanges: vi.fn(async () => ({ success: true })),
-};
-const invalidateQueries = vi.fn();
-/**
- * The cache as the page patches it before the server answers: the list's
- * rows and AI's changes, written back so the next render shows them.
- */
-const setQueriesData = vi.fn(
-  ({ queryKey }: { queryKey: unknown[] }, update: (data: unknown) => unknown) => {
-    if (queryKey[0] === "ingredients.list") {
-      const next = update({ pages: [{ items, nextCursor: null }], pageParams: [] }) as {
-        pages: Array<{ items: Item[] }>;
-      };
-
-      items = next.pages[0]!.items;
-    }
-    if (queryKey[0] === "ingredients.aiChanges") {
-      changes = update(changes) as unknown[];
-    }
-    cache.changed();
-  }
-);
-/** A patch to the cache re-renders whatever reads it, as the real cache does. */
-const cache = vi.hoisted(() => {
-  const listeners = new Set<() => void>();
-  let version = 0;
-
-  return {
-    subscribe: (listener: () => void) => {
-      listeners.add(listener);
-
-      return () => listeners.delete(listener);
-    },
-    snapshot: () => version,
-    changed: () => {
-      version += 1;
-      listeners.forEach((listener) => listener());
-    },
-  };
-});
 /** What AI changed, as `aiChanges` answers. */
-let changes: unknown[] = [];
+let changes: AIChange[] = [];
 /** What `uses` answers: where the open food is still used. */
-let uses: unknown = undefined;
-/** Whether `uses` is still being read. */
-let usesPending = false;
+let uses: unknown;
+/** Holds the `uses` read until a test lets it answer. */
+let usesHeld: Promise<void> | null = null;
 /** What `get` answers for a food the list no longer lists. */
 let ownItem: unknown = undefined;
 /** What `kinds` answers per parent, for the rows folded out under it. */
 let kinds: Record<string, Item[]> = {};
-/** The observer watching the end of the list, so a test can bring it into view. */
+/** How many more pages the list runs on to after the one read. */
+let pagesLeft = 0;
+/** Holds every list read from now on, as a slow server does. */
+let listStalled = false;
+
+const ok = { success: true as const };
+const mutations = {
+  saveDraft: vi.fn(async (_input: unknown) => ok),
+  markDistinct: vi.fn(async ({ ingredientId }: { ingredientId: string }) => {
+    items = items.map((item) => (item.id === ingredientId ? { ...item, flagged: false } : item));
+
+    return ok;
+  }),
+  merge: vi.fn(async ({ sourceId }: { sourceId: string; targetId: string }) => {
+    items = items.filter((item) => item.id !== sourceId);
+
+    return ok;
+  }),
+  moveAlias: vi.fn(async (_input: unknown) => ok),
+  remove: vi.fn(async ({ ingredientId }: { ingredientId: string }) => {
+    items = items.filter((item) => item.id !== ingredientId);
+
+    return ok;
+  }),
+  keepAIChange: vi.fn(async ({ changeId }: { changeId: string }) => {
+    changes = changes.map((it) => (it.id === changeId ? { ...it, kept: true } : it));
+
+    return ok;
+  }),
+  undoAIChange: vi.fn(async ({ changeId }: { changeId: string }) => {
+    changes = changes.filter((it) => it.id !== changeId);
+
+    return ok;
+  }),
+  settleAIChanges: vi.fn(async ({ how, changeIds }: { how: string; changeIds: string[] }) => {
+    changes =
+      how === "keep"
+        ? changes.map((it) => (changeIds.includes(it.id) ? { ...it, kept: true } : it))
+        : changes.filter((it) => !changeIds.includes(it.id));
+
+    return ok;
+  }),
+  clearAIChanges: vi.fn(async () => {
+    changes = changes.filter((it) => !it.sure && !it.kept);
+
+    return ok;
+  }),
+};
+
+const never = () => new Promise<never>(() => {});
+
+function serve() {
+  readAnswers.clear();
+  writeAnswers.clear();
+  readAnswers.set("ingredients.list", async (input) => {
+    listInputs.push(input);
+    if (listStalled) return never();
+
+    return { items, nextCursor: pagesLeft-- > 0 ? 1 : null };
+  });
+  readAnswers.set("ingredients.aiChanges", async () => changes);
+  readAnswers.set("ingredients.get", async () => ownItem ?? null);
+  readAnswers.set("ingredients.spellings", async () => everySpelling);
+  readAnswers.set(
+    "ingredients.kinds",
+    async (input) => kinds[(input as { parentId: string }).parentId] ?? []
+  );
+  readAnswers.set("ingredients.uses", async () => {
+    await usesHeld;
+
+    return uses;
+  });
+  for (const [name, write] of Object.entries(mutations)) {
+    writeAnswers.set(`ingredients.${name}`, (input) =>
+      (write as (input: unknown) => Promise<unknown>)(input)
+    );
+  }
+}
+
+/** How many times the list was read. */
+const listReads = () => sentReads.mock.calls.filter(([path]) => path === "ingredients.list").length;
+
+let queryClient: QueryClient;
+let platform: PlatformAdapter;
+
+/** The page over a fresh cache, once its first reads have answered. */
+async function renderScreen() {
+  const view = render(<IngredientsScreen />, { wrapper: createTestWrapper(queryClient, platform) });
+
+  await settle();
+
+  return view;
+}
+
+/** Waits until no read is on its way. */
+async function settle() {
+  await waitFor(() => expect(queryClient.isFetching()).toBe(0));
+}
+
+/** The server's catalogue changed: the page reads it again, as an event would make it. */
+async function reread() {
+  await act(async () => {
+    await queryClient.invalidateQueries();
+  });
+  await settle();
+}
+
+/** The end of the list's observer, so a test can bring it into view. */
 const listEnd = vi.hoisted(() => ({
   onIntersect: undefined as ((entries: Array<{ isIntersecting: boolean }>) => void) | undefined,
 }));
-const fetchNextPage = vi.fn();
-let hasNextPage = false;
-/** The list read's fetch state: a reread of rows showing, the next page, or another search's rows. */
-let listFetch = { isFetching: false, isFetchingNextPage: false, isPlaceholderData: false };
-vi.mock("@norish/shared-react/trpc", () => ({
-  useTRPC: () => ({
-    ingredients: {
-      pathKey: () => ["ingredients"],
-      aiChanges: {
-        queryOptions: () => ({ queryKey: ["ingredients.aiChanges"] }),
-        pathKey: () => ["ingredients.aiChanges"],
-      },
-      keepAIChange: { mutationOptions: () => ({ name: "keepAIChange" }) },
-      undoAIChange: { mutationOptions: () => ({ name: "undoAIChange" }) },
-      settleAIChanges: { mutationOptions: () => ({ name: "settleAIChanges" }) },
-      clearAIChanges: { mutationOptions: () => ({ name: "clearAIChanges" }) },
-      list: {
-        infiniteQueryOptions: (input: unknown) => {
-          listInputs.push(input);
 
-          return { queryKey: ["ingredients.list", input] };
-        },
-        pathKey: () => ["ingredients.list"],
-      },
-      get: {
-        queryOptions: (input: unknown) => ({ queryKey: ["ingredients.get", input] }),
-        pathKey: () => ["ingredients.get"],
-      },
-      spellings: {
-        queryOptions: (input: unknown) => ({ queryKey: ["ingredients.spellings", input] }),
-      },
-      uses: {
-        queryOptions: (input: unknown) => ({ queryKey: ["ingredients.uses", input] }),
-      },
-      saveDraft: { mutationOptions: () => ({ name: "saveDraft" }) },
-      uploadIcon: { mutationOptions: () => ({ name: "uploadIcon" }) },
-      generateIcon: { mutationOptions: () => ({ name: "generateIcon" }) },
-      icons: {
-        queryOptions: (input: unknown) => ({ queryKey: ["ingredients.icons", input] }),
-        pathKey: () => ["ingredients.icons"],
-      },
-      markDistinct: { mutationOptions: () => ({ name: "markDistinct" }) },
-      merge: { mutationOptions: () => ({ name: "merge" }) },
-      moveAlias: { mutationOptions: () => ({ name: "moveAlias" }) },
-      remove: { mutationOptions: () => ({ name: "remove" }) },
-      kinds: {
-        queryOptions: (input: { parentId: string }) => ({ queryKey: ["ingredients.kinds", input] }),
-        pathKey: () => ["ingredients.kinds"],
-      },
-    },
-  }),
-}));
+vi.mock("@norish/shared-react/trpc", async () =>
+  (await import("@/__tests__/helpers/trpc-fake")).mockTRPC()
+);
 
 // jsdom lays nothing out, so a panel's scrolling body is 0 tall and the
 // Changed by AI's virtualised list would show no row: here it shows them all.
@@ -166,44 +186,6 @@ vi.mock("@tanstack/react-virtual", async (importOriginal) => ({
 
 vi.mock("@norish/shared-react/realtime", () => ({ useRealtimeSubscription: () => undefined }));
 
-vi.mock("@tanstack/react-query", () => ({
-  keepPreviousData: (data: unknown) => data,
-  useQuery: ({ enabled: asked, queryKey }: { enabled?: boolean; queryKey: unknown[] }) => {
-    // As react-query: a query without `enabled` runs.
-    const enabled = asked !== false;
-
-    useSyncExternalStore(cache.subscribe, cache.snapshot);
-    switch (queryKey[0]) {
-      case "ingredients.get":
-        return { data: enabled ? ownItem : undefined, isFetching: false, isPending: false };
-      case "ingredients.uses":
-        return { data: enabled ? uses : undefined, isFetching: false, isPending: usesPending };
-      case "ingredients.aiChanges":
-        return { data: changes, isFetching: false, isPending: false };
-      default:
-        return { data: enabled ? everySpelling : undefined, isFetching: false, isPending: false };
-    }
-  },
-  useQueries: ({ queries }: { queries: Array<{ queryKey: [string, { parentId: string }] }> }) =>
-    queries.map(({ queryKey }) => ({ data: kinds[queryKey[1].parentId] ?? [], isPending: false })),
-  useInfiniteQuery: () => {
-    useSyncExternalStore(cache.subscribe, cache.snapshot);
-
-    return {
-      data: { pages: [{ items, nextCursor: null }] },
-      isLoading: false,
-      ...listFetch,
-      hasNextPage,
-      fetchNextPage,
-    };
-  },
-  useMutation: ({ name }: { name: keyof typeof mutations }) => ({
-    mutateAsync: mutations[name],
-    isPending: false,
-  }),
-  useQueryClient: () => ({ invalidateQueries, setQueriesData }),
-}));
-
 let viewerLocale = "en";
 
 vi.mock("usehooks-ts", () => ({
@@ -217,7 +199,6 @@ vi.mock("next-intl", () => ({
   useFormatter: () => ({ number: (value: number) => String(value) }),
 }));
 
-vi.mock("@/lib/ui/safe-error-toast", () => ({ showSafeErrorToast: vi.fn() }));
 vi.mock("@/lib/ui/action-toast", () => ({ showActionToast: vi.fn() }));
 /** Whether the instance can draw icons. */
 const permissions = vi.hoisted(() => ({ isAIEnabled: true, canDrawImages: false }));
@@ -364,7 +345,7 @@ function change(
     dropped?: string | null;
     ingredientId?: string;
   } = {}
-) {
+): AIChange {
   return {
     id,
     kind,
@@ -384,6 +365,7 @@ async function open(name: string) {
   await act(async () => {
     fireEvent.click(within(row(name)).getByTestId("ingredient-toggle"));
   });
+  await settle();
 
   return panel(name);
 }
@@ -393,6 +375,7 @@ async function showSpellings(opened: HTMLElement) {
   await act(async () => {
     fireEvent.click(within(opened).getByTestId("ingredient-all-spellings"));
   });
+  await settle();
 }
 
 describe("IngredientsScreen", () => {
@@ -411,58 +394,68 @@ describe("IngredientsScreen", () => {
       }
     );
     listEnd.onIntersect = undefined;
-    hasNextPage = false;
-    listFetch = { isFetching: false, isFetchingNextPage: false, isPlaceholderData: false };
+    pagesLeft = 0;
+    listStalled = false;
     viewerLocale = "en";
     listInputs.length = 0;
     items = [onion, salt];
     everySpelling = [];
-    uses = undefined;
-    usesPending = false;
+    uses = {
+      recipes: [],
+      groceries: [],
+      pantry: false,
+      elsewhere: 0,
+      counts: { recipeLines: 0, groceries: 0, pantry: 0 },
+    };
+    usesHeld = null;
     permissions.canDrawImages = false;
     changes = [];
     ownItem = undefined;
     kinds = {};
+    sentReads.mockClear();
+    for (const write of Object.values(mutations)) write.mockClear();
+    serve();
+    queryClient = createTestQueryClient();
+    platform = fakePlatformAdapter();
   });
 
-  it("asks for the next page once the end of the list comes into view, and again while it stays", () => {
-    hasNextPage = true;
-    render(<IngredientsScreen />);
+  it("asks for the next page once the end of the list comes into view, and again while it stays", async () => {
+    pagesLeft = 2;
+    await renderScreen();
+    const before = listReads();
 
-    expect(fetchNextPage).not.toHaveBeenCalled();
+    expect(before).toBe(1);
+    // Each page lands with the end still in reach: the next is asked until the last.
     act(() => {
       listEnd.onIntersect?.([{ isIntersecting: true }]);
     });
-    expect(fetchNextPage).toHaveBeenCalledTimes(1);
-
-    // The next page lands and the end is still in reach: asked again.
-    items = [...items, { ...salt, id: "pepper", name: "pepper" }];
-    render(<IngredientsScreen />);
-    act(() => {
-      listEnd.onIntersect?.([{ isIntersecting: true }]);
-    });
-    expect(fetchNextPage).toHaveBeenCalledTimes(2);
+    await waitFor(() => expect(listReads()).toBe(3));
+    await settle();
+    expect(listReads()).toBe(3);
   });
 
-  it("settles only while another search's rows stand in, not while the rows showing are read again", () => {
+  it("settles only while another search's rows stand in, not while the rows showing are read again", async () => {
     const busy = () => screen.getByTestId("ingredients-searching").getAttribute("data-fetching");
 
-    listFetch = { isFetching: true, isFetchingNextPage: false, isPlaceholderData: false };
-    const { unmount } = render(<IngredientsScreen />);
-
+    await renderScreen();
+    listStalled = true;
+    act(() => {
+      void queryClient.invalidateQueries();
+    });
+    await waitFor(() => expect(queryClient.isFetching()).toBeGreaterThan(0));
     expect(busy()).toBe("false");
-    unmount();
 
-    listFetch = { isFetching: true, isFetchingNextPage: false, isPlaceholderData: true };
-    render(<IngredientsScreen />);
-    expect(busy()).toBe("true");
+    act(() => {
+      fireEvent.change(screen.getByTestId("ingredients-search"), { target: { value: "oni" } });
+    });
+    await waitFor(() => expect(busy()).toBe("true"));
   });
 
-  it("shows each food's icon in its row, and the food glyph for one with none", () => {
+  it("shows each food's icon in its row, and the food glyph for one with none", async () => {
     const icon = "/ingredient-icons/0123456789abcdef0123456789abcdef.webp";
 
     items = [{ ...onion, icon, ownIcon: true }, salt];
-    render(<IngredientsScreen />);
+    await renderScreen();
 
     expect(within(row("onion")).getByTestId("ingredient-icon").getAttribute("src")).toBe(icon);
     expect(within(row("salt")).queryByTestId("ingredient-icon")).toBeNull();
@@ -470,7 +463,7 @@ describe("IngredientsScreen", () => {
   });
 
   it("lists each food on a line, marks the flagged ones, and opens one to its spellings", async () => {
-    render(<IngredientsScreen />);
+    await renderScreen();
 
     expect(within(row("onion")).getByTestId("ingredient-flagged")).toBeInTheDocument();
     expect(within(row("salt")).queryByTestId("ingredient-flagged")).toBeNull();
@@ -490,13 +483,13 @@ describe("IngredientsScreen", () => {
   it("opens the panel of the food a link names, such as a recipe's Not counted line", async () => {
     linkedIngredient = "onion";
 
-    render(<IngredientsScreen />);
+    await renderScreen();
 
     expect(await screen.findByRole("dialog", { name: "onion" })).toBeInTheDocument();
   });
 
   it("offers only what the viewer may do", async () => {
-    render(<IngredientsScreen />);
+    await renderScreen();
     const mine = await open("onion");
     await showSpellings(mine);
 
@@ -524,7 +517,7 @@ describe("IngredientsScreen", () => {
 
   it("offers the cross on a spelling the viewer may remove, whatever uses it", async () => {
     items = [{ ...onion, aliases: [{ id: "a-onion", text: "onion", canRemove: true }] }];
-    render(<IngredientsScreen />);
+    await renderScreen();
     const opened = await open("onion");
 
     await showSpellings(opened);
@@ -534,19 +527,23 @@ describe("IngredientsScreen", () => {
   });
 
   it("marks a flagged food distinct", async () => {
-    render(<IngredientsScreen />);
+    await renderScreen();
     const opened = await open("onion");
 
     await act(async () => {
       fireEvent.click(within(opened).getByTestId("ingredient-mark-distinct"));
     });
+    await settle();
 
     expect(mutations.markDistinct).toHaveBeenCalledWith({ ingredientId: "onion" });
-    expect(invalidateQueries).toHaveBeenCalled();
+    // Landed, the list is read again: the row is the server's, unflagged.
+    await settle();
+    expect(within(row("onion")).queryByTestId("ingredient-flagged")).toBeNull();
   });
 
   it("renames a food from its name field, saved with the panel's Save", async () => {
-    render(<IngredientsScreen />);
+    await renderScreen();
+    const before = listReads();
     const opened = await open("onion");
     const field = within(opened).getByTestId("ingredient-name-input");
 
@@ -556,6 +553,7 @@ describe("IngredientsScreen", () => {
     await act(async () => {
       fireEvent.change(field, { target: { value: "Onion" } });
     });
+    await settle();
 
     expect(mutations.saveDraft).not.toHaveBeenCalled();
     expect(within(opened).getByTestId("ingredient-save")).toBeEnabled();
@@ -563,6 +561,7 @@ describe("IngredientsScreen", () => {
     await act(async () => {
       fireEvent.keyDown(field, { key: "Enter" });
     });
+    await settle();
 
     expect(mutations.saveDraft).toHaveBeenCalledWith({
       ingredientId: "onion",
@@ -571,49 +570,57 @@ describe("IngredientsScreen", () => {
       remove: [],
       junk: [],
     });
-    expect(invalidateQueries).toHaveBeenCalled();
+    await settle();
+    expect(listReads()).toBeGreaterThan(before);
   });
 
   it("deletes a food once the viewer confirms", async () => {
-    render(<IngredientsScreen />);
+    // The server has not answered yet.
+    mutations.remove.mockImplementationOnce(never);
+    await renderScreen();
     const opened = await open("onion");
 
     await act(async () => {
       fireEvent.click(within(opened).getByTestId("ingredient-delete"));
     });
+    await settle();
 
     expect(mutations.remove).not.toHaveBeenCalled();
 
     await act(async () => {
       fireEvent.click(screen.getByTestId("ingredient-delete-confirm"));
     });
+    await settle();
 
     expect(mutations.remove).toHaveBeenCalledWith({ ingredientId: "onion" });
-    expect(invalidateQueries).toHaveBeenCalled();
     // The row is gone the moment the viewer confirms, not when the server answers.
-    expect(items.map((item) => item.id)).toEqual(["salt"]);
+    expect(screen.getAllByTestId("ingredient-row").map((r) => r.dataset.ingredient)).toEqual([
+      "salt",
+    ]);
   });
 
   it("shows a refused edit undone, and says why", async () => {
     mutations.remove.mockRejectedValueOnce(new Error("forbidden"));
-    render(<IngredientsScreen />);
+    await renderScreen();
     const opened = await open("onion");
 
     await act(async () => {
       fireEvent.click(within(opened).getByTestId("ingredient-delete"));
     });
+    await settle();
     await act(async () => {
       fireEvent.click(screen.getByTestId("ingredient-delete-confirm"));
     });
+    await settle();
 
     // The guess is read back from the server rather than kept.
-    expect(invalidateQueries).toHaveBeenCalledWith({ queryKey: ["ingredients"] });
-    expect(showSafeErrorToast).toHaveBeenCalledWith(
-      expect.objectContaining({
-        description: "errors.forbidden",
-        context: "ingredients:delete",
-      })
-    );
+    await settle();
+    expect(row("onion")).toBeInTheDocument();
+    expect(platform.toast.show).toHaveBeenCalledWith({
+      severity: "danger",
+      title: "settings.ingredients.errors.title",
+      description: "settings.ingredients.errors.forbidden",
+    });
   });
 
   it("says what a delete touches before it is confirmed, and opens where", async () => {
@@ -624,12 +631,13 @@ describe("IngredientsScreen", () => {
       elsewhere: 2,
       counts: { recipeLines: 3, groceries: 0, pantry: 1 },
     };
-    render(<IngredientsScreen />);
+    await renderScreen();
     const opened = await open("onion");
 
     await act(async () => {
       fireEvent.click(within(opened).getByTestId("ingredient-delete"));
     });
+    await settle();
 
     const touches = screen.getByTestId("ingredient-delete-touches");
 
@@ -642,6 +650,7 @@ describe("IngredientsScreen", () => {
     await act(async () => {
       fireEvent.click(screen.getByRole("button", { name: "uses.show" }));
     });
+    await settle();
 
     expect(mutations.remove).not.toHaveBeenCalled();
     const where = screen.getByTestId("ingredient-uses");
@@ -664,7 +673,7 @@ describe("IngredientsScreen", () => {
       counts: { recipeLines: 2, groceries: 0, pantry: 1 },
     };
     items = [{ ...onion, name: "melted", flagReason: "ai-junk" }, salt];
-    render(<IngredientsScreen />);
+    await renderScreen();
     const opened = await open("melted");
 
     expect(within(opened).getByTestId("ingredient-flag-notice")).toHaveTextContent(
@@ -673,6 +682,7 @@ describe("IngredientsScreen", () => {
     await act(async () => {
       fireEvent.click(within(opened).getByTestId("ingredient-delete"));
     });
+    await settle();
 
     expect(screen.getByTestId("ingredient-delete-dialog")).toHaveTextContent("deleteTitle");
     expect(screen.getByTestId("ingredient-delete-touches")).toHaveTextContent(
@@ -681,6 +691,7 @@ describe("IngredientsScreen", () => {
     await act(async () => {
       fireEvent.click(screen.getByTestId("ingredient-delete-confirm"));
     });
+    await settle();
 
     expect(mutations.remove).toHaveBeenCalledWith({ ingredientId: "onion" });
   });
@@ -690,10 +701,11 @@ describe("IngredientsScreen", () => {
       change("c1", "spelling", "chicken breast", { from: "boneless" }),
       change("c2", "spelling", "chicken breast", { from: "kippendijen", target: "chicken thigh" }),
     ];
-    render(<IngredientsScreen />);
+    await renderScreen();
     await act(async () => {
       fireEvent.click(screen.getByTestId("ingredients-ai-changes-open"));
     });
+    await settle();
     const [removed, moved] = within(
       screen.getByRole("dialog", { name: "changedByAI.title" })
     ).getAllByTestId("ingredient-ai-change");
@@ -704,10 +716,11 @@ describe("IngredientsScreen", () => {
 
   it("lists a food AI deleted as not a food by its name on Changed by AI, with Undo", async () => {
     changes = [{ ...change("c1", "not-a-food", "melted"), ingredient: null, from: "melted" }];
-    render(<IngredientsScreen />);
+    await renderScreen();
     await act(async () => {
       fireEvent.click(screen.getByTestId("ingredients-ai-changes-open"));
     });
+    await settle();
     const [deleted] = within(
       screen.getByRole("dialog", { name: "changedByAI.title" })
     ).getAllByTestId("ingredient-ai-change");
@@ -718,12 +731,15 @@ describe("IngredientsScreen", () => {
     await act(async () => {
       fireEvent.click(within(deleted!).getByTestId("ingredient-ai-change-undo"));
     });
+    await settle();
     expect(mutations.undoAIChange).toHaveBeenCalledWith({ changeId: "c1" });
   });
 
   it("holds Delete until it has read what the delete touches", async () => {
-    usesPending = true;
-    render(<IngredientsScreen />);
+    let answer = () => {};
+
+    usesHeld = new Promise((resolve) => (answer = resolve));
+    await renderScreen();
     const opened = await open("onion");
 
     await act(async () => {
@@ -739,15 +755,14 @@ describe("IngredientsScreen", () => {
         elsewhere: 0,
         counts: { recipeLines: 0, groceries: 0, pantry: 0 },
       };
-      usesPending = false;
-      cache.changed();
+      answer();
     });
 
-    expect(screen.getByTestId("ingredient-delete-confirm")).toBeEnabled();
+    await waitFor(() => expect(screen.getByTestId("ingredient-delete-confirm")).toBeEnabled());
   });
 
   it("adds a household's own spelling clean, staged until Save", async () => {
-    render(<IngredientsScreen />);
+    await renderScreen();
     const opened = await open("salt");
     await showSpellings(opened);
     const field = within(opened).getByTestId("ingredient-alias-input");
@@ -755,9 +770,11 @@ describe("IngredientsScreen", () => {
     await act(async () => {
       fireEvent.change(field, { target: { value: " zout ((fijn)) " } });
     });
+    await settle();
     await act(async () => {
       fireEvent.keyDown(field, { key: "Enter" });
     });
+    await settle();
 
     // Staged as a chip of its own; nothing has been sent.
     expect(field).toHaveValue("");
@@ -771,6 +788,7 @@ describe("IngredientsScreen", () => {
     await act(async () => {
       fireEvent.click(within(opened).getByTestId("ingredient-save"));
     });
+    await settle();
 
     expect(mutations.saveDraft).toHaveBeenCalledWith({
       ingredientId: "salt",
@@ -781,7 +799,7 @@ describe("IngredientsScreen", () => {
   });
 
   it("removes a spelling on Save, and keeps one un-removed before it", async () => {
-    render(<IngredientsScreen />);
+    await renderScreen();
     const opened = await open("onion");
     await showSpellings(opened);
     const remove = async () => {
@@ -789,6 +807,7 @@ describe("IngredientsScreen", () => {
       await act(async () => {
         fireEvent.click(await screen.findByTestId("ingredient-junk-remove"));
       });
+      await settle();
     };
 
     await remove();
@@ -805,6 +824,7 @@ describe("IngredientsScreen", () => {
     await act(async () => {
       fireEvent.click(within(opened).getByTestId("ingredient-save"));
     });
+    await settle();
 
     expect(mutations.saveDraft).toHaveBeenCalledWith({
       ingredientId: "onion",
@@ -815,7 +835,7 @@ describe("IngredientsScreen", () => {
   });
 
   it("asks whether a spelling removed by hand names no food: yes marks it for the junk pile, closing stages nothing", async () => {
-    render(<IngredientsScreen />);
+    await renderScreen();
     const opened = await open("onion");
     await showSpellings(opened);
     const cross = () => within(opened).getByRole("button", { name: "removeAlias" });
@@ -825,6 +845,7 @@ describe("IngredientsScreen", () => {
     await act(async () => {
       fireEvent.keyDown(screen.getByTestId("ingredient-junk-dialog"), { key: "Escape" });
     });
+    await settle();
     await waitFor(() => expect(screen.queryByTestId("ingredient-junk-dialog")).toBeNull());
     expect(within(opened).getAllByTestId("ingredient-alias")[0]).not.toHaveAttribute(
       "data-pending"
@@ -834,9 +855,11 @@ describe("IngredientsScreen", () => {
     await act(async () => {
       fireEvent.click(await screen.findByTestId("ingredient-junk-mark"));
     });
+    await settle();
     await act(async () => {
       fireEvent.click(within(opened).getByTestId("ingredient-save"));
     });
+    await settle();
 
     expect(mutations.saveDraft).toHaveBeenCalledWith({
       ingredientId: "onion",
@@ -847,13 +870,14 @@ describe("IngredientsScreen", () => {
   });
 
   it("merges a food into one the viewer may edit, picked in a panel of its own", async () => {
-    render(<IngredientsScreen />);
+    await renderScreen();
     const opened = await open("onion");
 
     expect(screen.queryByRole("dialog", { name: "mergeInto" })).toBeNull();
     await act(async () => {
       fireEvent.click(within(opened).getByTestId("ingredient-merge"));
     });
+    await settle();
     const asking = screen.getByRole("dialog", { name: "mergeInto" });
     const picker = within(asking).getByTestId("picker");
 
@@ -865,40 +889,45 @@ describe("IngredientsScreen", () => {
     await act(async () => {
       fireEvent.click(within(picker).getByText("pick-salt"));
     });
+    await settle();
     await act(async () => {
       fireEvent.click(within(asking).getByTestId("ingredient-relocation-confirm"));
     });
+    await settle();
 
     expect(mutations.merge).toHaveBeenCalledWith({ sourceId: "onion", targetId: "salt" });
     expect(screen.queryByRole("dialog", { name: "mergeInto" })).toBeNull();
   });
 
   it("moves a spelling out to a new food", async () => {
-    render(<IngredientsScreen />);
+    await renderScreen();
     const opened = await open("onion");
     await showSpellings(opened);
 
     await act(async () => {
       fireEvent.click(within(opened).getByTestId("ingredient-alias-move"));
     });
+    await settle();
     const asking = screen.getByRole("dialog", { name: "moveTo" });
 
     // Its own food is a button of its own, not a search result typing would filter away.
     await act(async () => {
       fireEvent.click(within(asking).getByTestId("ingredient-relocation-new"));
     });
+    await settle();
 
     expect(mutations.moveAlias).toHaveBeenCalledWith({ aliasId: "a-onion", targetId: null });
   });
 
   it("sets the food a food is a kind of, from any Ingredient", async () => {
-    render(<IngredientsScreen />);
+    await renderScreen();
     const opened = await open("onion");
 
     expect(within(opened).queryByTestId("ingredient-clear-parent")).toBeNull();
     await act(async () => {
       fireEvent.click(within(opened).getByTestId("ingredient-set-parent"));
     });
+    await settle();
     const asking = screen.getByRole("dialog", { name: "setParent" });
     const picker = within(asking).getByTestId("picker");
 
@@ -906,9 +935,11 @@ describe("IngredientsScreen", () => {
     await act(async () => {
       fireEvent.click(within(picker).getByText("pick-salt"));
     });
+    await settle();
     await act(async () => {
       fireEvent.click(within(asking).getByTestId("ingredient-relocation-confirm"));
     });
+    await settle();
 
     // Picked, the parent joins the draft; it lands with Save.
     expect(within(opened).getByTestId("ingredient-parent")).toHaveTextContent("salt");
@@ -916,6 +947,7 @@ describe("IngredientsScreen", () => {
     await act(async () => {
       fireEvent.click(within(opened).getByTestId("ingredient-save"));
     });
+    await settle();
 
     expect(mutations.saveDraft).toHaveBeenCalledWith({
       ingredientId: "onion",
@@ -929,7 +961,7 @@ describe("IngredientsScreen", () => {
   it("folds a food's kinds out beneath it, and asks for them only then", async () => {
     items = [{ ...onion, kinds: 1 }, salt];
     kinds = { onion: [{ ...onion, id: "red", name: "red onion", kinds: 1, flagged: false }] };
-    render(<IngredientsScreen />);
+    await renderScreen();
 
     // With nothing typed and no filter on, the list is the roots.
     expect(listInputs.at(-1)).toMatchObject({ rootsOnly: true });
@@ -943,6 +975,7 @@ describe("IngredientsScreen", () => {
 
     expect(toggle).toHaveAttribute("aria-expanded", "false");
     fireEvent.click(toggle);
+    await settle();
 
     expect(screen.queryAllByTestId("ingredient-row").map((r) => r.dataset.ingredient)).toEqual([
       "onion",
@@ -960,7 +993,7 @@ describe("IngredientsScreen", () => {
 
   it("lists flat when the filters panel says so", async () => {
     items = [{ ...onion, kinds: 1 }];
-    render(<IngredientsScreen />);
+    await renderScreen();
 
     fireEvent.click(screen.getByTestId("ingredients-filters"));
     const filters = screen.getByRole("dialog", { name: "title" });
@@ -969,6 +1002,7 @@ describe("IngredientsScreen", () => {
     await act(async () => {
       fireEvent.click(within(filters).getByTestId("ingredients-filters-apply"));
     });
+    await settle();
 
     expect(listInputs.at(-1)).not.toHaveProperty("rootsOnly", true);
     expect(listInputs.at(-1)).not.toHaveProperty("tree");
@@ -977,7 +1011,7 @@ describe("IngredientsScreen", () => {
 
   it("lists the foods with neither parent nor kinds on request", async () => {
     items = [{ ...onion, flagged: false, kinds: 0 }, salt];
-    render(<IngredientsScreen />);
+    await renderScreen();
 
     fireEvent.click(screen.getByTestId("ingredients-filters"));
     const filters = screen.getByRole("dialog", { name: "title" });
@@ -986,14 +1020,15 @@ describe("IngredientsScreen", () => {
     await act(async () => {
       fireEvent.click(within(filters).getByTestId("ingredients-filters-apply"));
     });
+    await settle();
 
     expect(listInputs.at(-1)).toMatchObject({ standaloneOnly: true });
     expect(listInputs.at(-1)).not.toHaveProperty("rootsOnly", true);
   });
 
-  it("lists flat under a search, where a match may sit at any depth", () => {
+  it("lists flat under a search, where a match may sit at any depth", async () => {
     items = [{ ...onion, kinds: 1 }];
-    render(<IngredientsScreen />);
+    await renderScreen();
     // No chevron column at all when flat.
     act(() => {
       fireEvent.change(screen.getByTestId("ingredients-search"), { target: { value: "oni" } });
@@ -1010,7 +1045,7 @@ describe("IngredientsScreen", () => {
       salt,
       { ...onion, id: "red", name: "red onion", parent: { id: "onion", name: "onion" } },
     ];
-    render(<IngredientsScreen />);
+    await renderScreen();
 
     // Folded, the parent is in the summary; opened, it is a line of its own.
     expect(within(row("salt")).getByTestId("ingredient-toggle")).toHaveTextContent("summary");
@@ -1028,6 +1063,7 @@ describe("IngredientsScreen", () => {
     await act(async () => {
       fireEvent.click(within(mine).getByTestId("ingredient-save"));
     });
+    await settle();
 
     expect(mutations.saveDraft).toHaveBeenCalledWith({
       ingredientId: "red",
@@ -1039,18 +1075,21 @@ describe("IngredientsScreen", () => {
   });
 
   it("asks for the flagged ones alone when filtered", async () => {
-    render(<IngredientsScreen />);
+    await renderScreen();
 
     // The filters live in a panel and land with Apply, as the dashboard's do.
     await act(async () => {
       fireEvent.click(screen.getByTestId("ingredients-filters"));
     });
+    await settle();
     await act(async () => {
       fireEvent.click(screen.getByRole("switch", { name: "flaggedOnly" }));
     });
+    await settle();
     await act(async () => {
       fireEvent.click(screen.getByTestId("ingredients-filters-apply"));
     });
+    await settle();
 
     expect(listInputs.at(-1)).toEqual({
       search: undefined,
@@ -1083,13 +1122,14 @@ describe("IngredientsScreen", () => {
       { id: "a-zwiebel", text: "Zwiebel", locale: "de", seeded: true, canRemove: false },
       { id: "a-ajuin", text: "ajuin", locale: null, seeded: false, canRemove: true },
     ];
-    render(<IngredientsScreen />);
+    await renderScreen();
 
     expect(row("onion")).toHaveTextContent("ui");
     // The panel is named in the viewer's language too.
     await act(async () => {
       fireEvent.click(within(row("onion")).getByTestId("ingredient-toggle"));
     });
+    await settle();
     const opened = panel("ui");
     const chips = (scope: HTMLElement) =>
       within(scope)
@@ -1119,7 +1159,7 @@ describe("IngredientsScreen", () => {
         hiddenSpellings: 0,
       },
     ];
-    render(<IngredientsScreen />);
+    await renderScreen();
     const opened = await open("salt");
 
     await showSpellings(opened);
@@ -1129,7 +1169,7 @@ describe("IngredientsScreen", () => {
 
   it("says why a food is flagged, on the fold and in the panel, and asks no AI from either", async () => {
     items = [{ ...onion, flagReason: "ai-unsure" }, salt];
-    render(<IngredientsScreen />);
+    await renderScreen();
 
     expect(within(row("onion")).getByTestId("ingredient-flag-reason")).toHaveTextContent(
       "flagReasons.ai-unsure"
@@ -1153,7 +1193,7 @@ describe("IngredientsScreen", () => {
       change("c1", "merge", "onion", { sure: false, from: "uitjes" }),
       change("c2", "parent", "onion", { target: "vegetable" }),
     ];
-    render(<IngredientsScreen />);
+    await renderScreen();
     const opened = await open("onion");
     const [unsure, ...rest] = within(opened).getAllByTestId("ingredient-ai-change");
 
@@ -1163,6 +1203,7 @@ describe("IngredientsScreen", () => {
     await act(async () => {
       fireEvent.click(within(unsure!).getByTestId("ingredient-ai-change-undo"));
     });
+    await settle();
     expect(mutations.undoAIChange).toHaveBeenCalledWith({ changeId: "c1" });
     expect(mutations.merge).not.toHaveBeenCalled();
   });
@@ -1176,7 +1217,7 @@ describe("IngredientsScreen", () => {
         ingredientId: "onion",
       }),
     ];
-    render(<IngredientsScreen />);
+    await renderScreen();
     const opened = await open("peanut butter");
     const unsure = within(opened).getByTestId("ingredient-ai-change");
 
@@ -1184,12 +1225,13 @@ describe("IngredientsScreen", () => {
     await act(async () => {
       fireEvent.click(within(unsure).getByTestId("ingredient-ai-change-undo"));
     });
+    await settle();
 
     expect(mutations.undoAIChange).toHaveBeenCalledWith({ changeId: "c1" });
   });
 
   it("offers Changed by AI only while AI changed something, saying how many to check", async () => {
-    const { rerender } = render(<IngredientsScreen />);
+    await renderScreen();
 
     expect(screen.queryByTestId("ingredients-ai-changes-open")).toBeNull();
 
@@ -1197,10 +1239,11 @@ describe("IngredientsScreen", () => {
       change("c1", "merge", "onion", { from: "uitjes" }),
       { ...change("c2", "parent", "red onion", { target: "onion" }), canAct: false },
     ];
-    rerender(<IngredientsScreen />);
+    await reread();
     await act(async () => {
       fireEvent.click(screen.getByTestId("ingredients-ai-changes-open"));
     });
+    await settle();
     const [mine, theirs] = within(
       screen.getByRole("dialog", { name: "changedByAI.title" })
     ).getAllByTestId("ingredient-ai-change");
@@ -1219,14 +1262,16 @@ describe("IngredientsScreen", () => {
     ];
 
     changes = open();
-    const { rerender } = render(<IngredientsScreen />);
+    await renderScreen();
 
     await act(async () => {
       fireEvent.click(screen.getByTestId("ingredients-ai-changes-open"));
     });
+    await settle();
     await act(async () => {
       fireEvent.click(screen.getByTestId("ingredient-ai-changes-keep-all"));
     });
+    await settle();
     expect(mutations.settleAIChanges).toHaveBeenCalledWith({
       how: "keep",
       changeIds: ["c1", "c2"],
@@ -1235,10 +1280,11 @@ describe("IngredientsScreen", () => {
     expect(screen.queryByTestId("ingredient-ai-changes-keep-all")).toBeNull();
 
     changes = open();
-    rerender(<IngredientsScreen />);
+    await reread();
     await act(async () => {
       fireEvent.click(screen.getByTestId("ingredient-ai-changes-undo-all"));
     });
+    await settle();
     // Newest first, so no change is undone under a later one.
     expect(mutations.settleAIChanges).toHaveBeenLastCalledWith({
       how: "undo",
@@ -1251,13 +1297,15 @@ describe("IngredientsScreen", () => {
       change("c1", "merge", "onion", { sure: false }),
       change("c2", "parent", "red onion", { target: "onion" }),
     ];
-    render(<IngredientsScreen />);
+    await renderScreen();
     await act(async () => {
       fireEvent.click(screen.getByTestId("ingredients-ai-changes-open"));
     });
+    await settle();
     await act(async () => {
       fireEvent.click(screen.getByTestId("ingredient-ai-changes-clear"));
     });
+    await settle();
 
     expect(mutations.clearAIChanges).toHaveBeenCalled();
     expect(
@@ -1272,10 +1320,11 @@ describe("IngredientsScreen", () => {
     changes = [change("c1", "merge", "uitjes", { sure: false, from: "onions" })];
     // The list does not list uitjes, so its panel reads the food on its own.
     ownItem = { ...onion, id: "uitjes", name: "uitjes" };
-    render(<IngredientsScreen />);
+    await renderScreen();
     await act(async () => {
       fireEvent.click(screen.getByTestId("ingredients-ai-changes-open"));
     });
+    await settle();
     const shown = screen.getByRole("dialog", { name: "changedByAI.title" });
 
     await act(async () => {
@@ -1285,6 +1334,7 @@ describe("IngredientsScreen", () => {
         )
       );
     });
+    await settle();
 
     // The food's panel opens over Changed by AI, with what AI was unsure of at its top.
     const opened = screen.getByRole("dialog", { name: "uitjes" });
@@ -1296,31 +1346,34 @@ describe("IngredientsScreen", () => {
   });
 
   it("keeps the panel of a food a filter no longer lists, and closes it once merged away", async () => {
-    const { rerender } = render(<IngredientsScreen />);
+    await renderScreen();
     const opened = await open("onion");
 
     // Marked distinct under the flagged filter, the row goes; the panel stays.
     items = [salt];
-    rerender(<IngredientsScreen />);
+    await reread();
     expect(screen.getByRole("dialog", { name: "onion" })).toBeInTheDocument();
 
     await act(async () => {
       fireEvent.click(within(opened).getByTestId("ingredient-merge"));
     });
+    await settle();
     const asking = screen.getByRole("dialog", { name: "mergeInto" });
 
     await act(async () => {
       fireEvent.click(within(asking).getByText("pick-salt"));
     });
+    await settle();
     await act(async () => {
       fireEvent.click(within(asking).getByTestId("ingredient-relocation-confirm"));
     });
+    await settle();
 
     expect(screen.queryByRole("dialog")).toBeNull();
   });
 
   it("keeps the panel current once a filter no longer lists the food", async () => {
-    const { rerender } = render(<IngredientsScreen />);
+    await renderScreen();
     const opened = await open("onion");
 
     expect(within(opened).getByTestId("ingredient-flag-notice")).toBeInTheDocument();
@@ -1330,38 +1383,40 @@ describe("IngredientsScreen", () => {
     // the panel reads the food on its own and shows it as it now is.
     items = [salt];
     ownItem = { ...onion, flagged: false, parent: { id: "vegetable", name: "vegetable" } };
-    rerender(<IngredientsScreen />);
+    await reread();
 
     const current = screen.getByRole("dialog", { name: "onion" });
 
-    expect(within(current).queryByTestId("ingredient-flag-notice")).toBeNull();
+    await waitFor(() => expect(within(current).queryByTestId("ingredient-flag-notice")).toBeNull());
     expect(within(current).getByTestId("ingredient-parent")).toHaveTextContent("vegetable");
   });
 
   it("closes the panel of a food once it is deleted", async () => {
-    render(<IngredientsScreen />);
+    await renderScreen();
     const opened = await open("onion");
 
     await act(async () => {
       fireEvent.click(within(opened).getByTestId("ingredient-delete"));
     });
+    await settle();
     await act(async () => {
       fireEvent.click(screen.getByTestId("ingredient-delete-confirm"));
     });
+    await settle();
 
     expect(screen.queryByRole("dialog", { name: "onion" })).toBeNull();
   });
 
-  it("credits the catalogue's source and offers it as a download", () => {
-    render(<IngredientsScreen />);
+  it("credits the catalogue's source and offers it as a download", async () => {
+    await renderScreen();
 
     expect(screen.getByTestId("data-sources")).toHaveTextContent("notice");
     expect(screen.getByTestId("catalogue-export")).toHaveAttribute("href", "/export/ingredients");
   });
 
-  it("says when nothing is flagged", () => {
+  it("says when nothing is flagged", async () => {
     items = [];
-    render(<IngredientsScreen />);
+    await renderScreen();
 
     expect(screen.getByTestId("ingredients-empty")).toHaveTextContent("empty");
   });
