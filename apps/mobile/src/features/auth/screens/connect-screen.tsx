@@ -8,9 +8,8 @@ import { useLaunchEntrance } from "@/components/launch";
 import { AuthLayout } from "@/features/auth/components/auth-layout";
 import { HelpPopover } from "@/features/auth/components/help-popover";
 import { InlineError, useErrorShake } from "@/features/auth/components/inline-error";
-import { useServerAddressDraft } from "@/features/auth/hooks/use-server-address-draft";
 import { checkServerAddress } from "@/features/auth/utils/check-server-address";
-import { saveServerAddress } from "@/lib/network/server-address";
+import { getServerAddress, saveServerAddress } from "@/lib/network/server-address";
 import Feather from "@expo/vector-icons/Feather";
 import MaterialCommunityIcons from "@expo/vector-icons/MaterialCommunityIcons";
 import { useRouter } from "expo-router";
@@ -28,7 +27,8 @@ export function ConnectScreen() {
     "muted",
     "accent-foreground",
   ] as const);
-  const { address, setAddress, isHydrated } = useServerAddressDraft();
+  // The boot gate's read, so a Server address opened on request shows the saved one.
+  const [address, setAddress] = useState(getServerAddress);
   const [isConnecting, setIsConnecting] = useState(false);
   const [error, setError] = useState<InlineErrorState>(null);
   const shakeStyle = useErrorShake(error);
@@ -38,7 +38,7 @@ export function ConnectScreen() {
     setError({ message: intl.formatMessage({ id }) });
 
   const handleConnect = async () => {
-    if (isConnecting || !isHydrated) return;
+    if (isConnecting) return;
 
     setIsConnecting(true);
     setError(null);
@@ -116,8 +116,6 @@ export function ConnectScreen() {
               <InputGroup.Input
                 autoCapitalize="none"
                 autoCorrect={false}
-                // Drawn before the draft is read so the splash can measure the brand; typing waits for it.
-                editable={isHydrated}
                 keyboardType="url"
                 placeholder={intl.formatMessage({ id: "auth.connect.serverAddressPlaceholder" })}
                 returnKeyType="go"
