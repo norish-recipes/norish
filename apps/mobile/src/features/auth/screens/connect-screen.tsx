@@ -1,157 +1,125 @@
-import React, { useCallback, useState } from "react";
-import { ActivityIndicator, Text, View } from "react-native";
+import type { InlineErrorState } from "@/features/auth/components/inline-error";
+import React, { useState } from "react";
+import { View } from "react-native";
+import Animated from "react-native-reanimated";
 import { Brand } from "@/components/brand";
 import { AuthLayout } from "@/features/auth/components/auth-layout";
+import { HelpPopover } from "@/features/auth/components/help-popover";
+import { InlineError, useErrorShake } from "@/features/auth/components/inline-error";
 import { useServerAddressDraft } from "@/features/auth/hooks/use-server-address-draft";
-import { styles } from "@/features/auth/styles/connect.styles";
-import { classifyServerHealth } from "@/features/auth/utils/server-version";
-import {
-  getServerHealthUrl,
-  normalizeServerAddress,
-  saveServerAddress,
-} from "@/lib/network/server-address";
+import { checkServerAddress } from "@/features/auth/utils/check-server-address";
+import { saveServerAddress } from "@/lib/network/server-address";
+import Feather from "@expo/vector-icons/Feather";
+import MaterialCommunityIcons from "@expo/vector-icons/MaterialCommunityIcons";
 import { useRouter } from "expo-router";
-import { Button, Input, useThemeColor } from "heroui-native";
+import { Button, InputGroup, Label, Spinner, TextField, useThemeColor } from "heroui-native";
 import { useIntl } from "react-intl";
 
-import { REACHABILITY_DEADLINE_MS } from "@norish/shared-react/offline/reachability";
+import { createClientLogger } from "@norish/shared/lib/logger";
 
-/** Asks the server at `baseUrl` what it is, and saves the address once it's a Norish new enough. */
-async function reachServer(baseUrl: string, signal: AbortSignal) {
-  // The deprecated route, since servers before 0.26 have no /health/ready to answer.
-  const response = await fetch(getServerHealthUrl(baseUrl), {
-    method: "GET",
-    cache: "no-store",
-    credentials: "omit",
-    signal,
-  });
-
-  if (!response.ok) {
-    throw new Error(`Server returned ${response.status}`);
-  }
-
-  const verdict = classifyServerHealth(await response.json().catch(() => null));
-
-  if (verdict === "ok") await saveServerAddress(baseUrl);
-
-  return verdict;
-}
+const log = createClientLogger("server-address");
 
 export function ConnectScreen() {
   const router = useRouter();
   const intl = useIntl();
-  const [foregroundColor, mutedColor, separatorColor, dangerColor, dangerSoftColor] = useThemeColor(
-    ["foreground", "muted", "separator", "danger", "danger-soft"] as const
-  );
-  const { baseUrl, setBaseUrl, isHydrated } = useServerAddressDraft();
+  const [mutedColor, accentForegroundColor] = useThemeColor([
+    "muted",
+    "accent-foreground",
+  ] as const);
+  const { address, setAddress, isHydrated } = useServerAddressDraft();
   const [isConnecting, setIsConnecting] = useState(false);
-  const [errorMessage, setErrorMessage] = useState<string | null>(null);
+  const [error, setError] = useState<InlineErrorState>(null);
+  const shakeStyle = useErrorShake(error);
 
-  const handleConnect = useCallback(async () => {
-    const normalizedBaseUrl = normalizeServerAddress(baseUrl);
+  const fail = (id: string) => setError({ message: intl.formatMessage({ id }) });
 
-    if (!normalizedBaseUrl) {
-      setErrorMessage(intl.formatMessage({ id: "auth.connect.errors.invalidUrl" }));
-
-      return;
-    }
+  const handleConnect = async () => {
+    if (isConnecting) return;
 
     setIsConnecting(true);
-    setErrorMessage(null);
+    setError(null);
 
-    const controller = new AbortController();
-    const timeout = setTimeout(() => {
-      controller.abort();
-    }, REACHABILITY_DEADLINE_MS);
+    const check = await checkServerAddress(address);
 
-    // A separate catch, so a throw while navigating lands there too and the spinner still stops.
-    await reachServer(normalizedBaseUrl, controller.signal)
-      .then((verdict) => {
-        if (verdict === "not-norish") {
-          setErrorMessage(intl.formatMessage({ id: "auth.connect.errors.unreachable" }));
-        } else if (verdict === "too-old") {
-          router.push("/update-server");
-        } else {
-          router.replace("/login");
+    if (check.outcome === "error") {
+      fail(check.messageId);
+    } else if (check.outcome === "too-old") {
+      router.push("/update-server");
+    } else {
+      await saveServerAddress(check.address).then(
+        () => router.replace("/login"),
+        (saveError: unknown) => {
+          log.error({ error: saveError }, "Could not save the Server Address");
+          fail("common.errors.operationFailed");
         }
-      })
-      .catch((error: unknown) => {
-        if (error instanceof Error && error.name === "AbortError") {
-          setErrorMessage(intl.formatMessage({ id: "auth.connect.errors.timeout" }));
-        } else if (error instanceof Error) {
-          setErrorMessage(
-            intl.formatMessage(
-              { id: "auth.connect.errors.unreachableWithReason" },
-              { reason: error.message }
-            )
-          );
-        } else {
-          setErrorMessage(intl.formatMessage({ id: "auth.connect.errors.unreachable" }));
-        }
-      });
+      );
+    }
 
-    clearTimeout(timeout);
     setIsConnecting(false);
-  }, [baseUrl, intl, router]);
+  };
 
-  if (!isHydrated) {
-    return (
-      <View style={styles.loadingScreen}>
-        <ActivityIndicator />
-      </View>
-    );
-  }
+  if (!isHydrated) return null;
 
   return (
-    <AuthLayout>
-      <Brand prefix={intl.formatMessage({ id: "auth.connect.title" })} slogan={false} />
-      <View className="mt-7 gap-3">
-        <Text className="font-semibold" style={[styles.label, { color: foregroundColor }]}>
-          {intl.formatMessage({ id: "auth.connect.backendUrlLabel" })}
-        </Text>
-
-        <Input
-          autoCapitalize="none"
-          autoCorrect={false}
-          keyboardType="url"
-          placeholder={intl.formatMessage({ id: "auth.connect.backendUrlPlaceholder" })}
-          returnKeyType="done"
-          testID="connect-server-url"
-          value={baseUrl}
-          onChangeText={setBaseUrl}
-          onSubmitEditing={() => {
-            void handleConnect();
-          }}
-        />
-
+    <AuthLayout
+      footer={
         <Button
+          className="rounded-full"
           isDisabled={isConnecting}
-          style={styles.connectButton}
+          size="lg"
           testID="connect-submit"
-          onPress={() => {
-            void handleConnect();
-          }}
+          onPress={() => void handleConnect()}
         >
+          {isConnecting ? (
+            <Spinner color={accentForegroundColor} size="sm" />
+          ) : (
+            <MaterialCommunityIcons
+              color={accentForegroundColor}
+              name="power-plug-outline"
+              size={20}
+            />
+          )}
           <Button.Label>
-            {isConnecting
-              ? intl.formatMessage({ id: "auth.connect.connecting" })
-              : intl.formatMessage({ id: "auth.connect.connect" })}
+            {intl.formatMessage({
+              id: isConnecting ? "auth.connect.connecting" : "auth.connect.connect",
+            })}
           </Button.Label>
         </Button>
+      }
+    >
+      <Brand />
 
-        <Text
-          className="font-normal"
-          style={[
-            styles.helpText,
-            {
-              color: errorMessage ? dangerColor : mutedColor,
-              borderColor: errorMessage ? dangerSoftColor : separatorColor,
-            },
-          ]}
-        >
-          {errorMessage ?? intl.formatMessage({ id: "auth.connect.example" })}
-        </Text>
-      </View>
+      <TextField className="mt-[52px]" isInvalid={error !== null}>
+        <View className="flex-row items-center gap-1 pl-1">
+          <Label isInvalid={false}>
+            {intl.formatMessage({ id: "auth.connect.serverAddressLabel" })}
+          </Label>
+          <HelpPopover
+            label={intl.formatMessage({ id: "auth.connect.serverAddressHelp" })}
+            text={intl.formatMessage({ id: "auth.connect.example" })}
+          />
+        </View>
+        <Animated.View style={shakeStyle}>
+          <InputGroup>
+            <InputGroup.Prefix isDecorative>
+              <Feather color={mutedColor} name="server" size={20} />
+            </InputGroup.Prefix>
+            <InputGroup.Input
+              autoCapitalize="none"
+              autoCorrect={false}
+              keyboardType="url"
+              placeholder={intl.formatMessage({ id: "auth.connect.serverAddressPlaceholder" })}
+              returnKeyType="go"
+              testID="connect-server-url"
+              textContentType="URL"
+              value={address}
+              onChangeText={setAddress}
+              onSubmitEditing={() => void handleConnect()}
+            />
+          </InputGroup>
+        </Animated.View>
+        <InlineError error={error} />
+      </TextField>
     </AuthLayout>
   );
 }

@@ -8,17 +8,17 @@ const log = createClientLogger("server-address");
 
 export function useServerAddressDraft() {
   const router = useRouter();
-  const [baseUrl, setBaseUrl] = useState("");
+  const [address, setAddress] = useState("");
   const [isHydrated, setIsHydrated] = useState(false);
 
   useEffect(() => {
     let isMounted = true;
 
     void (async () => {
-      let existingBaseUrl: string | null;
+      let savedAddress: string | null;
 
       try {
-        existingBaseUrl = await loadServerAddress();
+        savedAddress = await loadServerAddress();
       } catch (error) {
         // Show the empty form rather than spinning forever. Nothing is
         // discarded: without a successful read there is no stored URL to
@@ -35,11 +35,11 @@ export function useServerAddressDraft() {
         return;
       }
 
-      if (existingBaseUrl) {
+      if (savedAddress) {
         if (router.canGoBack()) {
           // Navigated here intentionally (e.g. "Change server" from login).
           // Show the form pre-filled with the current URL instead of redirecting.
-          setBaseUrl(existingBaseUrl);
+          setAddress(savedAddress);
           setIsHydrated(true);
 
           return;
@@ -61,8 +61,8 @@ export function useServerAddressDraft() {
   }, [router]);
 
   return {
-    baseUrl,
-    setBaseUrl,
+    address,
+    setAddress,
     isHydrated,
   };
 }
