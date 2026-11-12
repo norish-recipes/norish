@@ -51,13 +51,20 @@ export function IngredientsScreen() {
   const treeMode = asTree && !search && !hasIngredientFilters({ ...searchFilters, tree: true });
   // Not deferred: a search lands in a transition, and a deferred copy kept the old page's rows with
   // the new one's kinds folded in.
-  const { items, isLoading, isPlaceholderData, hasNextPage, isFetchingNextPage, fetchNextPage } =
-    useIngredientListQuery({
-      search: search || undefined,
-      ...searchFilters,
-      rootsOnly: treeMode || undefined,
-      locale,
-    });
+  const {
+    items,
+    isLoading,
+    isPlaceholderData,
+    isPaused,
+    hasNextPage,
+    isFetchingNextPage,
+    fetchNextPage,
+  } = useIngredientListQuery({
+    search: search || undefined,
+    ...searchFilters,
+    rootsOnly: treeMode || undefined,
+    locale,
+  });
   // Another search's rows standing in, not a reread of the rows showing.
   const settling = isPending || isPlaceholderData;
   const tree = useIngredientTree(items, treeMode, locale);
@@ -114,8 +121,8 @@ export function IngredientsScreen() {
           onSearch={onSearch}
         />
 
-        {isLoading || (isPlaceholderData && items.length === 0) ? (
-          // The tab skeleton's rows, until the first page or a changed filter's first answer lands.
+        {isLoading || (isPlaceholderData && items.length === 0 && !isPaused) ? (
+          // The tab skeleton's rows until an answer lands; a read paused Offline is not loading.
           <div aria-busy className="flex flex-col gap-4" data-testid="ingredients-loading">
             {Array.from({ length: 5 }, (_, i) => (
               <Skeleton key={i} className="h-12 w-full rounded-lg" />

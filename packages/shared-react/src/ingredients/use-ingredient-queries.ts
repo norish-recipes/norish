@@ -24,6 +24,7 @@ export function useIngredientListQuery(input: IngredientListInput) {
     items: query.data?.pages.flatMap((page) => page.items) ?? [],
     isLoading: query.isLoading,
     isPlaceholderData: query.isPlaceholderData,
+    isPaused: query.fetchStatus === "paused",
     hasNextPage: query.hasNextPage,
     isFetchingNextPage: query.isFetchingNextPage,
     // A next page asked while the list is read again must not cancel that read.

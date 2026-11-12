@@ -8,6 +8,7 @@ import type { QueryClient } from "@tanstack/react-query";
 import type { ReactNode } from "react";
 import { readAnswers, sentReads, writeAnswers } from "@/__tests__/helpers/trpc-fake";
 import { IngredientsScreen } from "@/features/ingredients/ingredients-screen";
+import { onlineManager } from "@tanstack/react-query";
 import { act, fireEvent, render, screen, waitFor, within } from "@testing-library/react";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 
@@ -506,6 +507,22 @@ describe("IngredientsScreen", () => {
 
     expect(screen.queryByTestId("ingredients-empty")).toBeNull();
     expect(screen.getByTestId("ingredients-loading")).toHaveAttribute("aria-busy", "true");
+  });
+
+  it("says a changed filter found nothing Offline, where its unread answer is paused, not loading", async () => {
+    items = [];
+    await renderScreen();
+    onlineManager.setOnline(false);
+    try {
+      act(() => {
+        fireEvent.change(screen.getByTestId("ingredients-search"), { target: { value: "oni" } });
+      });
+
+      await waitFor(() => expect(screen.getByTestId("ingredients-empty")).toBeInTheDocument());
+      expect(screen.queryByTestId("ingredients-loading")).toBeNull();
+    } finally {
+      onlineManager.setOnline(true);
+    }
   });
 
   it("marks the previous filter's rows as loading while the changed filter is read", async () => {
