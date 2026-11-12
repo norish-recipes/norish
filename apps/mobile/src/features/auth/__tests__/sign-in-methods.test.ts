@@ -90,7 +90,9 @@ describe("resolveMethodsStatus", () => {
   });
 
   it("keeps loaded methods up through a failed or paused refetch", () => {
-    expect(resolveMethodsStatus({ ...settled, hasData: true, error: new Error("x") })).toBe("ready");
+    expect(resolveMethodsStatus({ ...settled, hasData: true, error: new Error("x") })).toBe(
+      "ready"
+    );
     expect(resolveMethodsStatus({ ...settled, hasData: true, isPaused: true })).toBe("ready");
   });
 });
