@@ -1,5 +1,5 @@
 import {
-  fadesIntoSignIn,
+  fadesInAfterSessionEnd,
   resolveBootPhase,
   resolveLaunchMotion,
   resolveSignedOutEntry,
@@ -179,22 +179,18 @@ describe("stepLaunchClock", () => {
   });
 });
 
-describe("fadesIntoSignIn", () => {
+describe("fadesInAfterSessionEnd", () => {
   const address = "https://norish.example";
 
-  it("fades Sign in in for the Server Address the session just left", () => {
-    expect(fadesIntoSignIn(address, address, false)).toBe(true);
+  it("fades in the screen a session end lands on, for the Server Address it left", () => {
+    expect(fadesInAfterSessionEnd(address, address)).toBe(true);
   });
 
-  it("cuts on a launch or any later arrival, with no session just left", () => {
-    expect(fadesIntoSignIn(null, address, false)).toBe(false);
+  it("cuts on a launch, or a Server Address change made while signed out", () => {
+    expect(fadesInAfterSessionEnd(null, address)).toBe(false);
   });
 
   it("cuts once the Server Address changed since the session ended", () => {
-    expect(fadesIntoSignIn(address, "https://other.example", false)).toBe(false);
-  });
-
-  it("cuts when the chip's Sign-out opens Server address", () => {
-    expect(fadesIntoSignIn(address, address, true)).toBe(false);
+    expect(fadesInAfterSessionEnd(address, "https://other.example")).toBe(false);
   });
 });

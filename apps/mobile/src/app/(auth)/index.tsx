@@ -6,7 +6,7 @@ import { LoginScreen } from "@/features/auth/screens/login-screen";
 import { FADE_IN } from "@/features/auth/utils/motion";
 import { takeServerChangeAfterSignOut } from "@/hooks/use-change-server-address";
 import { takeSessionLeft } from "@/lib/auth/auth-session-sync";
-import { fadesIntoSignIn, resolveSignedOutEntry } from "@/lib/boot/boot-state";
+import { fadesInAfterSessionEnd, resolveSignedOutEntry } from "@/lib/boot/boot-state";
 import { getServerAddress } from "@/lib/network/server-address";
 import { useLocalSearchParams } from "expo-router";
 
@@ -14,25 +14,25 @@ import { useLocalSearchParams } from "expo-router";
 export default function SignedOutEntryRoute() {
   const { change } = useLocalSearchParams<{ change?: string }>();
   // A server change that signed out first opens here, so the fresh stack never shows Sign in;
-  // the session's end is taken here too, so only this arrival fades.
+  // the session's end is taken here too, so only the arrival a session end lands on fades.
   const [arrival] = useState(() => {
     const address = getServerAddress();
     const changeRequested = change !== undefined || takeServerChangeAfterSignOut();
 
     return {
       entry: resolveSignedOutEntry(address, changeRequested),
-      fades: fadesIntoSignIn(takeSessionLeft(), address, changeRequested),
+      fades: fadesInAfterSessionEnd(takeSessionLeft(), address),
     };
   });
 
-  if (arrival.entry !== "sign-in") return <ConnectScreen />;
+  if (arrival.entry === "sign-in") return <LoginScreen fadeIn={arrival.fades} />;
 
   return arrival.fades ? (
     <Animated.View entering={FADE_IN} style={styles.fill}>
-      <LoginScreen />
+      <ConnectScreen />
     </Animated.View>
   ) : (
-    <LoginScreen />
+    <ConnectScreen />
   );
 }
 

@@ -82,15 +82,11 @@ export function resolveSignedOutEntry(
 }
 
 /**
- * Sign in fades in once, for the Server Address a Sign-out or Session Expiry just left, unless
- * the chip's Sign-out asked for Server address instead.
+ * The screen a Sign-out or Session Expiry lands on (Sign in, or Server address after the chip's
+ * Sign-out) fades in once, for the Server Address the session left.
  */
-export function fadesIntoSignIn(
-  leftFrom: string | null,
-  serverAddress: string,
-  changeRequested: boolean
-): boolean {
-  return leftFrom !== null && leftFrom === serverAddress && !changeRequested;
+export function fadesInAfterSessionEnd(leftFrom: string | null, serverAddress: string): boolean {
+  return leftFrom !== null && leftFrom === serverAddress;
 }
 
 /** The most one frame moves the launch clock: two 60 Hz frames. */

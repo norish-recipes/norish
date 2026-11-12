@@ -1,7 +1,7 @@
 import type { AuthClient } from "@/lib/auth/auth-client";
 import type { ReactNode } from "react";
 import React from "react";
-import { View } from "react-native";
+import { StyleSheet, View } from "react-native";
 import Animated from "react-native-reanimated";
 import { Brand } from "@/components/brand";
 import { AuthLayout } from "@/features/auth/components/auth-layout";
@@ -24,6 +24,8 @@ interface AuthGateProps {
   footer: ReactNode;
   /** Under the native header, with its back button (Sign up). */
   underHeader?: boolean;
+  /** Shows nothing while loading, then fades the whole screen in, footer too (a session end's arrival). */
+  fadeIn?: boolean;
   /** Whether the loaded config top-aligns the block; status screens and the spinner stay centred. */
   topAligned?: (config: AuthConfig) => boolean;
   /** What the form shows once there is a server and its config has loaded. */
@@ -34,12 +36,13 @@ interface AuthGateProps {
 function AuthBlock({
   titleId,
   slogan,
+  fades = true,
   children,
-}: Pick<AuthGateProps, "titleId" | "slogan"> & { children: ReactNode }) {
+}: Pick<AuthGateProps, "titleId" | "slogan"> & { fades?: boolean; children: ReactNode }) {
   const intl = useIntl();
 
   return (
-    <Animated.View entering={FADE_IN}>
+    <Animated.View entering={fades ? FADE_IN : undefined}>
       <Brand compact prefix={intl.formatMessage({ id: titleId })} slogan={slogan} />
       <View className="mt-7">{children}</View>
     </Animated.View>
@@ -51,18 +54,21 @@ function ConfigGate({
   titleId,
   slogan,
   footer,
+  fadeIn,
   underHeader,
   topAligned,
   children,
 }: Pick<
   AuthGateProps,
-  "titleId" | "slogan" | "footer" | "underHeader" | "topAligned" | "children"
+  "titleId" | "slogan" | "footer" | "fadeIn" | "underHeader" | "topAligned" | "children"
 > & {
   authClient: AuthClient;
 }) {
   const intl = useIntl();
   const config = useAuthProvidersQuery();
   const status = resolveMethodsStatus(config);
+
+  if (status === "loading" && fadeIn) return null;
 
   // The spinner stands alone, so the block never moves when the content replaces it.
   if (status === "loading") {
@@ -91,12 +97,20 @@ function ConfigGate({
     );
   }
 
-  return (
+  const form = (
     <AuthLayout footer={footer} topAligned={topAligned?.(config)} underHeader={underHeader}>
-      <AuthBlock slogan={slogan} titleId={titleId}>
+      <AuthBlock fades={!fadeIn} slogan={slogan} titleId={titleId}>
         {children(authClient, config)}
       </AuthBlock>
     </AuthLayout>
+  );
+
+  return fadeIn ? (
+    <Animated.View entering={FADE_IN} style={styles.fill}>
+      {form}
+    </Animated.View>
+  ) : (
+    form
   );
 }
 
@@ -105,6 +119,7 @@ export function AuthGate({
   titleId,
   slogan,
   footer,
+  fadeIn = false,
   underHeader = false,
   topAligned,
   children,
@@ -133,6 +148,7 @@ export function AuthGate({
   return (
     <ConfigGate
       authClient={authClient}
+      fadeIn={fadeIn}
       footer={footer}
       slogan={slogan}
       titleId={titleId}
@@ -143,3 +159,5 @@ export function AuthGate({
     </ConfigGate>
   );
 }
+
+const styles = StyleSheet.create({ fill: { flex: 1 } });

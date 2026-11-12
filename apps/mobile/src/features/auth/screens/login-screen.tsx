@@ -74,7 +74,8 @@ function SignInMethods({
   );
 }
 
-export function LoginScreen() {
+/** `fadeIn` holds the whole screen back until it has loaded, then fades it in as one. */
+export function LoginScreen({ fadeIn = false }: { fadeIn?: boolean }) {
   const params = useLocalSearchParams<{ redirectTo?: string | string[] }>();
   const serverAddress = use(ServerAddressContext);
   const redirectTo = sanitizeRedirectTarget(
@@ -84,6 +85,7 @@ export function LoginScreen() {
   return (
     <AuthGate
       slogan
+      fadeIn={fadeIn}
       footer={serverAddress ? <ServerChip address={serverAddress} /> : null}
       titleId="auth.login.title"
       topAligned={(config) => !resolveSignInMethods(config).noMethod}
