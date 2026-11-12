@@ -92,7 +92,7 @@ export function StatusBadge({ variant }: { variant: StatusBadgeVariant }) {
   const intl = useIntl();
   const reduceMotion = useReducedMotion();
   const { tone, timing, arrow, glyph, labelId }: Variant = VARIANTS[variant];
-  const { color, soft } = TONES[tone][useResolvedColorScheme() === "dark" ? "dark" : "light"];
+  const { color, soft } = TONES[tone][useResolvedColorScheme()];
   const clock = useSharedValue(timing.ms);
 
   useEffect(() => {
