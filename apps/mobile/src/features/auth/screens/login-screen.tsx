@@ -24,11 +24,11 @@ function OrDivider() {
 
   return (
     <View className="mt-5 mb-4 flex-row items-center gap-3">
-      <Separator className="flex-1" />
+      <Separator className="bg-border h-px flex-1" />
       <Text className="text-muted text-sm font-normal">
         {intl.formatMessage({ id: "auth.login.divider" })}
       </Text>
-      <Separator className="flex-1" />
+      <Separator className="bg-border h-px flex-1" />
     </View>
   );
 }
@@ -84,6 +84,7 @@ export function LoginScreen() {
   return (
     <AuthGate
       slogan
+      topAligned
       footer={serverAddress ? <ServerChip address={serverAddress} /> : null}
       titleId="auth.login.title"
     >

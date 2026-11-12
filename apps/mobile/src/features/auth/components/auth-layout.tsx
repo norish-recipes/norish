@@ -8,10 +8,12 @@ interface AuthLayoutProps {
   children: ReactNode;
   /** Pinned to the bottom, above the home indicator. */
   footer?: ReactNode;
+  /** Sets the block 40pt under the top instead of centring it (the Login board). */
+  topAligned?: boolean;
 }
 
 /** The signed-out screens' frame: a centred block over an optional pinned footer. */
-export function AuthLayout({ children, footer }: AuthLayoutProps) {
+export function AuthLayout({ children, footer, topAligned = false }: AuthLayoutProps) {
   const insets = useSafeAreaInsets();
 
   return (
@@ -25,7 +27,9 @@ export function AuthLayout({ children, footer }: AuthLayoutProps) {
         }}
         keyboardShouldPersistTaps="handled"
       >
-        <View className="flex-1 justify-center pb-10">{children}</View>
+        <View className={topAligned ? "flex-1 pt-10" : "flex-1 justify-center pb-10"}>
+          {children}
+        </View>
         {footer}
       </ScrollView>
     </KeyboardAvoidingView>

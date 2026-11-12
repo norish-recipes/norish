@@ -22,6 +22,7 @@ interface AuthGateProps {
   titleId: string;
   slogan: boolean;
   footer: ReactNode;
+  topAligned?: boolean;
   /** What the form shows once there is a server and its config has loaded. */
   children: (authClient: AuthClient, config: AuthConfig) => ReactNode;
 }
@@ -81,13 +82,13 @@ function ConfigGate({
 }
 
 /** A signed-out form's frame: no server, loading and failed config, or the form itself. */
-export function AuthGate({ titleId, slogan, footer, children }: AuthGateProps) {
+export function AuthGate({ titleId, slogan, footer, topAligned, children }: AuthGateProps) {
   const router = useRouter();
   const intl = useIntl();
   const authClient = useAuthClient();
 
   return (
-    <AuthLayout footer={footer}>
+    <AuthLayout footer={footer} topAligned={topAligned}>
       {authClient === null ? (
         <AuthBlock slogan={slogan} titleId={titleId}>
           <AuthStatus

@@ -10,6 +10,7 @@ import { useIntl } from "react-intl";
 // The native splash draws the logo at this width too (app.json's imageWidth); the viewBox is 2370 x 639.
 const LOGO_WIDTH = 168;
 const LOGO_HEIGHT = (LOGO_WIDTH * 639) / 2370;
+
 // The splash centres logo and slogan as one group (gap-3, the slogan's 20pt line); the
 // splash PNGs carry that 32pt as transparent rows under the logo, so iOS centres it the same.
 export const BRAND_HEIGHT = LOGO_HEIGHT + 12 + 20;
@@ -33,7 +34,8 @@ export function Brand({ prefix, slogan = true, sloganStyle, compact = false }: B
   const width = compact ? COMPACT_LOGO_WIDTH : LOGO_WIDTH;
 
   return (
-    <View className="items-center gap-3">
+    // The forms' boards space the prefix 10pt above the logo and the slogan 12pt under it.
+    <View className={compact ? "items-center gap-2.5" : "items-center gap-3"}>
       {prefix ? <Text className="text-muted text-[17px] font-normal">{prefix}</Text> : null}
       <Mark
         accessible
@@ -42,7 +44,7 @@ export function Brand({ prefix, slogan = true, sloganStyle, compact = false }: B
         width={width}
       />
       {slogan ? (
-        <Animated.View style={sloganStyle}>
+        <Animated.View className={compact ? "mt-0.5" : undefined} style={sloganStyle}>
           <Text className="text-muted text-base leading-5 font-normal">
             {intl.formatMessage({ id: "auth.login.subtitle" })}
           </Text>

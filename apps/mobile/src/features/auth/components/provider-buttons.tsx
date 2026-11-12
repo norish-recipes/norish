@@ -34,7 +34,7 @@ export function ProviderButtons({
         {providers.map((provider) => (
           <Button
             key={provider.id}
-            className="bg-surface rounded-full"
+            className="bg-surface h-[50px] rounded-full"
             isDisabled={signIn.running !== null}
             size="lg"
             variant="outline"
