@@ -1,6 +1,9 @@
-import { useImportRecipe } from "@/hooks/use-import-recipe";
+import { useImportRecipe } from "@/components/imports/use-import-recipe";
+import { showActionToast } from "@/lib/ui/action-toast";
 import { renderHook } from "@testing-library/react";
 import { beforeEach, describe, expect, it, vi } from "vitest";
+
+import { useImportMutations } from "@norish/shared-react/recipes";
 
 const mocks = vi.hoisted(() => ({
   push: vi.fn(),
@@ -14,11 +17,12 @@ vi.mock("@heroui/react", () => ({ toast: mocks.toast }));
 vi.mock("next-intl", () => ({
   useTranslations: (namespace: string) => (key: string) => `${namespace}.${key}`,
 }));
-vi.mock("@/hooks/use-recipes-mutations", () => ({
-  useRecipesMutations: () => ({
+vi.mock("@/lib/ui/action-toast", () => ({ showActionToast: vi.fn() }));
+vi.mock("@norish/shared-react/recipes", () => ({
+  useImportMutations: vi.fn(() => ({
     importRecipeFromPaste: mocks.importRecipeFromPaste,
     importRecipeFromImages: mocks.importRecipeFromImages,
-  }),
+  })),
 }));
 
 beforeEach(() => vi.clearAllMocks());
@@ -60,5 +64,18 @@ describe("useImportRecipe", () => {
     expect(() => result.current.importFromPaste("soup")).toThrow("offline");
     expect(mocks.toast).not.toHaveBeenCalled();
     expect(mocks.push).not.toHaveBeenCalled();
+  });
+
+  it("offers to open the recipe when the household already holds the URL", () => {
+    renderHook(() => useImportRecipe());
+    const onAlreadyExists = vi.mocked(useImportMutations).mock.calls.at(-1)![1]!;
+
+    onAlreadyExists("recipe-held");
+
+    expect(showActionToast).toHaveBeenCalledWith("recipes.import.alreadyExists", {
+      action: { label: "recipes.import.openExisting", onPress: expect.any(Function) },
+    });
+    vi.mocked(showActionToast).mock.calls[0]![1].action.onPress();
+    expect(mocks.push).toHaveBeenCalledWith("/recipes/recipe-held");
   });
 });

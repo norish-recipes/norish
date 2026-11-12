@@ -1,7 +1,5 @@
 "use client";
 
-import { useRouter } from "next/navigation";
-import { showActionToast } from "@/lib/ui/action-toast";
 import { isQueuedForReplay, showQueuedOfflineToast } from "@/lib/ui/queued-offline-toast";
 import { showSafeErrorToast } from "@/lib/ui/safe-error-toast";
 import { useTranslations } from "next-intl";
@@ -11,27 +9,14 @@ import { useRecipesMutations as useSharedRecipesMutations } from "@norish/shared
 
 export type { RecipesMutationsResult };
 
-export function useRecipesMutations(): RecipesMutationsResult {
-  const router = useRouter();
+/** The toast a failed recipe write shows; recipe imports show it too. */
+export function useRecipeMutationErrorToast(): (error: unknown, operation: string) => void {
   const tErrors = useTranslations("common.errors");
   const tQueued = useTranslations("common.queuedOffline");
-  const tImport = useTranslations("recipes.import");
 
-  // Importing a URL the household already holds is an answer, not a failure:
-  // say so, and offer the recipe the import was reaching for.
-  const showAlreadyExistsToast = (recipeId: string): void => {
-    showActionToast(tImport("alreadyExists"), {
-      action: {
-        label: tImport("openExisting"),
-        onPress: () => router.push(`/recipes/${recipeId}`),
-      },
-    });
-  };
-
-  const showMutationErrorToast = (error: unknown, operation: string): void => {
+  return (error, operation) => {
     // Backend-unreachable is the Queued outcome, not a failure: the Outbox has
-    // captured the mutation (an import simply runs at Replay time), so tell the
-    // user it's saved and will happen — never show an error toast for it.
+    // captured the write, so say it's saved and never show an error for it.
     if (isQueuedForReplay(error)) {
       showQueuedOfflineToast({
         title: tQueued("title"),
@@ -49,6 +34,8 @@ export function useRecipesMutations(): RecipesMutationsResult {
       context: `recipes-mutations:${operation}`,
     });
   };
+}
 
-  return useSharedRecipesMutations(showMutationErrorToast, showAlreadyExistsToast);
+export function useRecipesMutations(): RecipesMutationsResult {
+  return useSharedRecipesMutations(useRecipeMutationErrorToast());
 }

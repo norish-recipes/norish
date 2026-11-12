@@ -1,4 +1,4 @@
-import ClipboardImportPrompt from "@/components/shared/clipboard-import-prompt";
+import ClipboardImportPrompt from "@/components/imports/clipboard-import-prompt";
 import { act, render, waitFor } from "@testing-library/react";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 
@@ -15,8 +15,8 @@ vi.mock("next-intl", () => ({
   useTranslations: (namespace: string) => (key: string) => `${namespace}.${key}`,
 }));
 
-vi.mock("@/hooks/use-recipes-mutations", () => ({
-  useRecipesMutations: () => ({ importRecipe: importRecipeMock, importRecipeWithAI: vi.fn() }),
+vi.mock("@norish/shared-react/recipes", () => ({
+  useImportMutations: () => ({ importRecipe: importRecipeMock, importRecipeWithAI: vi.fn() }),
 }));
 
 // The action toast closes itself; here it is the toast it asks for, with its action.

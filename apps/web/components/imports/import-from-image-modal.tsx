@@ -3,9 +3,9 @@
 import type { DropZoneAreaProps } from "@/components/ui/drop-zone";
 import { useCallback, useState } from "react";
 import Image from "next/image";
+import { useImportRecipe } from "@/components/imports/use-import-recipe";
 import { DropZone } from "@/components/ui/drop-zone";
 import { useClipboardImagePaste } from "@/hooks/use-clipboard-image-paste";
-import { useImportRecipe } from "@/hooks/use-import-recipe";
 import { pdfPagesAsImages } from "@/lib/pdf-pages";
 import { showSafeErrorToast } from "@/lib/ui/safe-error-toast";
 import { PhotoIcon, SparklesIcon, XMarkIcon } from "@heroicons/react/16/solid";

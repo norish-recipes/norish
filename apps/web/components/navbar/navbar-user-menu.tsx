@@ -2,10 +2,10 @@
 
 import React, { useCallback, useState } from "react";
 import { useRouter } from "next/navigation";
+import ImportRecipeModal from "@/components/imports/import-recipe-modal";
 import { OfflineStatusModal } from "@/components/navbar/offline-status/offline-status-modal";
 import { SignOutConfirmModal } from "@/components/navbar/sign-out-confirm-modal";
 import { SETTINGS_HREF } from "@/components/settings/settings-tab";
-import ImportRecipeModal from "@/components/shared/import-recipe-modal";
 import { LanguageSwitchContent } from "@/components/shared/language-switch";
 import UserAvatar from "@/components/shared/user-avatar";
 import { useLanguageSwitch } from "@/hooks/user/use-language-switch";

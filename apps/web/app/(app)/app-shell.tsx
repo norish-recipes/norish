@@ -2,11 +2,11 @@ import type { DehydratedState } from "@tanstack/react-query";
 import { ShellSubscriptions } from "@/app/(app)/shell-subscriptions";
 import { AuthProviders } from "@/app/providers/auth-providers";
 import { ArrivalScroll } from "@/components/arrival-scroll";
+import ClipboardImportPrompt from "@/components/imports/clipboard-import-prompt";
 import { Navbar } from "@/components/navbar/navbar";
 import { QuerySeedBoundary } from "@/components/query-seed-boundary";
 import { ReaderTodayProvider } from "@/components/reader-today";
 import AIKeyRejectionPrompt from "@/components/shared/ai-key-rejection-prompt";
-import ClipboardImportPrompt from "@/components/shared/clipboard-import-prompt";
 import { TimerDock } from "@/components/timer-dock";
 import { OfflineCacheController } from "@/lib/offline/offline-cache-controller";
 

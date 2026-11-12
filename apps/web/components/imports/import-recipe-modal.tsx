@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { useImportRecipe } from "@/hooks/use-import-recipe";
+import { useImportRecipe } from "@/components/imports/use-import-recipe";
 import { readClipboardUrl } from "@/lib/clipboard-url";
 import { showSafeErrorToast } from "@/lib/ui/safe-error-toast";
 import { ArrowDownTrayIcon, SparklesIcon } from "@heroicons/react/16/solid";

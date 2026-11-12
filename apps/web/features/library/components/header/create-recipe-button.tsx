@@ -3,9 +3,9 @@
 import React, { useCallback, useMemo, useState } from "react";
 import { useRouter } from "next/navigation";
 import { CookbookIconSolid } from "@/components/cookbooks/cookbook-icon";
-import ImportFromImageModal from "@/components/shared/import-from-image-modal";
-import ImportFromPasteModal from "@/components/shared/import-from-paste-modal";
-import ImportRecipeModal from "@/components/shared/import-recipe-modal";
+import ImportFromImageModal from "@/components/imports/import-from-image-modal";
+import ImportFromPasteModal from "@/components/imports/import-from-paste-modal";
+import ImportRecipeModal from "@/components/imports/import-recipe-modal";
 import { CookbookTitlePanel } from "@/features/library/components/panels/cookbook-panels";
 import {
   ArrowDownTrayIcon,

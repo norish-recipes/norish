@@ -45,7 +45,7 @@ vi.mock("@/hooks/user/use-language-switch", () => ({
   }),
 }));
 
-vi.mock("@/components/shared/import-recipe-modal", () => ({
+vi.mock("@/components/imports/import-recipe-modal", () => ({
   default: ({ isOpen }: { isOpen: boolean }) => (isOpen ? <div>Import recipe modal</div> : null),
 }));
 

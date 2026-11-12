@@ -1,4 +1,4 @@
-import ImportRecipeModal from "@/components/shared/import-recipe-modal";
+import ImportRecipeModal from "@/components/imports/import-recipe-modal";
 import { toast } from "@heroui/react";
 import { fireEvent, render, screen, waitFor } from "@testing-library/react";
 import { describe, expect, it, vi } from "vitest";
@@ -11,8 +11,8 @@ vi.mock("next-intl", () => ({
   useTranslations: () => (key: string) => key,
 }));
 
-vi.mock("@/hooks/use-recipes-mutations", () => ({
-  useRecipesMutations: () => ({
+vi.mock("@norish/shared-react/recipes", () => ({
+  useImportMutations: () => ({
     importRecipe,
     importRecipeWithAI: vi.fn(),
   }),
@@ -21,7 +21,7 @@ vi.mock("@/hooks/use-recipes-mutations", () => ({
 vi.mock("next/navigation", () => ({ useRouter: () => ({ push }) }));
 
 vi.mock("@norish/shared-react/reader", async () =>
-  (await import("../helpers/reader-mock")).mockReader()
+  (await import("../../helpers/reader-mock")).mockReader()
 );
 
 vi.mock("@heroui/react", () => ({
