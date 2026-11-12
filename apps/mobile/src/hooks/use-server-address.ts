@@ -1,5 +1,5 @@
 import type { ServerAddressState } from "@/lib/network/server-address";
-import { useCallback, useEffect, useState } from "react";
+import { useEffect, useState } from "react";
 import { loadServerAddress, subscribeServerAddressChange } from "@/lib/network/server-address";
 
 import { createClientLogger } from "@norish/shared/lib/logger";
@@ -19,9 +19,7 @@ export function useServerAddress(): ServerAddressResult {
   const [attempt, setAttempt] = useState(0);
 
   // The error screen stays up until the re-read answers; "loading" would blank it, splash gone.
-  const retry = useCallback(() => {
-    setAttempt((current) => current + 1);
-  }, []);
+  const retry = () => setAttempt((current) => current + 1);
 
   useEffect(() => {
     let mounted = true;
