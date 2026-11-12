@@ -6,15 +6,17 @@ import { SettingsCard } from "@/components/settings/settings-card";
 import SettingsSwitch from "@/components/settings/settings-switch";
 import { ActionButton, ActionButtonGroup } from "@/components/shared/action-button";
 import SecretInput from "@/components/shared/secret-input";
-import { showSafeErrorToast } from "@/lib/ui/safe-error-toast";
 import { TrashIcon } from "@heroicons/react/16/solid";
 import { GlobeAltIcon } from "@heroicons/react/24/outline";
-import { Description, Input, Label, Separator, TextField, toast } from "@heroui/react";
-import { useMutation, useQuery } from "@tanstack/react-query";
+import { Description, Input, Label, Separator, TextField } from "@heroui/react";
 import { useTranslations } from "next-intl";
 
 import type { PageRenderersConfig } from "@norish/config/zod/server-config";
-import { useTRPC } from "@norish/shared-react/trpc";
+import {
+  usePageRendererTest,
+  usePageRenderersQuery,
+  usePageRenderersSave,
+} from "@norish/shared-react/admin";
 
 import { ConnectionTestResult } from "./connection-test-result";
 import { UnsavedChangesChip } from "./unsaved-changes-chip";
@@ -48,51 +50,32 @@ function formFrom(config: PageRenderersConfig | null | undefined) {
 export default function PageRenderersCard() {
   const t = useTranslations("settings.admin.pageRenderers");
   const tActions = useTranslations("common.actions");
-  const tErrors = useTranslations("common.errors");
-  const tToasts = useTranslations("settings.admin.toasts");
-  const trpc = useTRPC();
-  const stored = useQuery(trpc.admin.getPageRenderers.queryOptions());
-  const [form, setForm] = useState(() => formFrom(stored.data));
-  const [prevStored, setPrevStored] = useState(stored.data);
+  const { stored, isLoading } = usePageRenderersQuery();
+  const { save, isSaving } = usePageRenderersSave();
+  const [form, setForm] = useState(() => formFrom(stored));
+  const [prevStored, setPrevStored] = useState(stored);
 
-  if (stored.data !== prevStored) {
-    setPrevStored(stored.data);
-    setForm(formFrom(stored.data));
+  if (stored !== prevStored) {
+    setPrevStored(stored);
+    setForm(formFrom(stored));
   }
-
-  const save = useMutation(
-    trpc.admin.updatePageRenderers.mutationOptions({
-      onSuccess: () => {
-        toast(tToasts("pageRenderersSaved"), { variant: "success" });
-        void stored.refetch();
-      },
-      onError: (error) =>
-        showSafeErrorToast({
-          title: tToasts("pageRenderersError"),
-          description: tErrors("technicalDetails"),
-          color: "danger",
-          error,
-          context: "admin-page-renderers:save",
-        }),
-    })
-  );
 
   const set =
     <K extends keyof typeof form>(key: K) =>
     (value: (typeof form)[K]) =>
       setForm((current) => ({ ...current, [key]: value }));
-  const initial = formFrom(stored.data);
+  const initial = formFrom(stored);
   const isDirty = (Object.keys(form) as (keyof typeof form)[]).some(
     (key) => form[key] !== initial[key]
   );
   // The server drops the token for another endpoint, so only the stored one keeps it.
   const keepsStoredToken =
-    !!stored.data?.obscura.cdpToken &&
+    !!stored?.obscura.cdpToken &&
     !form.cdpTokenCleared &&
-    form.obscuraEndpoint.trim() === stored.data.obscura.endpoint;
+    form.obscuraEndpoint.trim() === stored.obscura.endpoint;
 
   const handleSave = () =>
-    save.mutate({
+    save({
       obscura: {
         enabled: form.obscuraEnabled,
         endpoint: form.obscuraEndpoint.trim(),
@@ -120,7 +103,7 @@ export default function PageRenderersCard() {
       <SwitchRow description={t("obscuraDescription")} title={t("obscura")}>
         <SettingsSwitch
           aria-label={t("obscura")}
-          isDisabled={stored.isLoading}
+          isDisabled={isLoading}
           isSelected={form.obscuraEnabled}
           onValueChange={set("obscuraEnabled")}
         />
@@ -162,7 +145,7 @@ export default function PageRenderersCard() {
         defaultEndpoint={CHROMIUM_DEFAULT}
         enabled={form.chromiumEnabled}
         endpoint={form.chromiumEndpoint}
-        isLoading={stored.isLoading}
+        isLoading={isLoading}
         renderer="chromium"
         onEnabledChange={set("chromiumEnabled")}
         onEndpointChange={set("chromiumEndpoint")}
@@ -174,7 +157,7 @@ export default function PageRenderersCard() {
         defaultEndpoint={SOLVER_DEFAULT}
         enabled={form.solverEnabled}
         endpoint={form.solverEndpoint}
-        isLoading={stored.isLoading}
+        isLoading={isLoading}
         renderer="solver"
         onEnabledChange={set("solverEnabled")}
         onEndpointChange={set("solverEndpoint")}
@@ -188,7 +171,7 @@ export default function PageRenderersCard() {
       >
         <SettingsSwitch
           aria-label={t("allowPrivateAddresses")}
-          isDisabled={stored.isLoading}
+          isDisabled={isLoading}
           isSelected={form.allowPrivateAddresses}
           onValueChange={set("allowPrivateAddresses")}
         />
@@ -208,7 +191,7 @@ export default function PageRenderersCard() {
         <ActionButton
           action="save"
           isDisabled={!isDirty}
-          isPending={save.isPending}
+          isPending={isSaving}
           onPress={handleSave}
         >
           {tActions("save")}
@@ -241,8 +224,7 @@ function TestedRenderer({
 }) {
   const t = useTranslations("settings.admin.pageRenderers");
   const tActions = useTranslations("common.actions");
-  const trpc = useTRPC();
-  const test = useMutation(trpc.admin.testPageRenderer.mutationOptions());
+  const test = usePageRendererTest();
 
   const handleSwitch = (on: boolean) => {
     onEnabledChange(on);
