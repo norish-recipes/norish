@@ -6,7 +6,7 @@ import { AppState } from "react-native";
 import { createMMKV } from "react-native-mmkv";
 import { APP_VERSION } from "@/lib/app-version";
 import { getAuthClient } from "@/lib/auth/auth-client";
-import { getServerAddress } from "@/lib/network/server-address";
+import { getServerAddress, subscribeServerAddressChange } from "@/lib/network/server-address";
 import { addNetworkStateListener } from "expo-network";
 
 import { createOfflineEngine, HEALTH_PROBE_PATH } from "@norish/shared-react/offline";
@@ -31,6 +31,10 @@ export const offlineEngine = createOfflineEngine({
   buster: APP_VERSION,
   calendarRanges: () => [getInitialCalendarRange("mobile")],
 });
+
+// Query keys carry no Server Address, so a saved one drops every cached answer, signed-out
+// reads such as `config.authProviders` included, before the next server's screens read them.
+subscribeServerAddressChange(() => offlineEngine.queryClient.clear());
 
 // A network change or a return to the foreground only brings the next probe forward, because
 // Wi-Fi is not the backend.

@@ -1,4 +1,4 @@
-import { subscribeDeviceHints } from "@/lib/offline/engine";
+import { offlineEngine, subscribeDeviceHints } from "@/lib/offline/engine";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 
 // The wiring builds the engine at import; its native and transport modules stay out of node.
@@ -6,9 +6,12 @@ vi.mock("react-native-mmkv", () => ({ createMMKV: () => ({ getString: () => unde
 vi.mock("expo-constants", () => ({ default: { expoConfig: { version: "0.0.0-test" } } }));
 vi.mock("expo-file-system", () => ({}));
 vi.mock("@/lib/auth/auth-client", () => ({}));
-vi.mock("@/lib/network/server-address", () => ({}));
+vi.mock("@/lib/network/server-address", () => ({
+  subscribeServerAddressChange: (listener: () => void) => serverAddressListeners.add(listener),
+}));
 vi.mock("@norish/shared-react/trpc", () => ({}));
 
+const serverAddressListeners = vi.hoisted(() => new Set<() => void>());
 const native = vi.hoisted(() => ({
   network: new Set<(event: { isConnected: boolean }) => void>(),
   appState: new Set<(state: string) => void>(),
@@ -73,5 +76,17 @@ describe("subscribeDeviceHints", () => {
     appBecomes("active");
 
     expect(probeNow).not.toHaveBeenCalled();
+  });
+});
+
+describe("a Server Address change", () => {
+  it("drops every cached answer, so one server's is never shown for another", () => {
+    offlineEngine.queryClient.setQueryData([["config", "authProviders"], { type: "query" }], {
+      providers: [],
+    });
+
+    for (const listener of serverAddressListeners) listener();
+
+    expect(offlineEngine.queryClient.getQueryCache().getAll()).toEqual([]);
   });
 });
