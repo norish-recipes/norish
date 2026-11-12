@@ -1,5 +1,5 @@
 /** The signed-out stack's first screen. */
-export type SignedOutEntry = "server-address" | "sign-in";
+type SignedOutEntry = "server-address" | "sign-in";
 
 /**
  * Sign in once a Server Address is saved, decided before the first frame so nothing slides

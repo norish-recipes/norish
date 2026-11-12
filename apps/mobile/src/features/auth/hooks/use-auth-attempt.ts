@@ -11,7 +11,7 @@ const DEFAULT_FAILURE = "auth.errors.default.description";
 type AuthCall = () => Promise<{ error: { code?: string; message?: string } | null }>;
 
 /** A failed attempt and the method it came from; each is a new object, so it shakes again. */
-export type AuthAttemptFailure = { method: string; message: string } | null;
+type AuthAttemptFailure = { method: string; message: string } | null;
 
 /**
  * A signed-out form's attempts: one in flight at a time, every method waiting on it, and one

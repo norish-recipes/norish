@@ -36,7 +36,7 @@ export function resolveSignInMethods(config: AuthProvidersResponse): SignInMetho
   };
 }
 
-export type MethodsStatus = "loading" | "failed" | "ready";
+type MethodsStatus = "loading" | "failed" | "ready";
 
 /** Whether Sign in has methods to draw; a first fetch paused offline is a failure, not "none". */
 export function resolveMethodsStatus(config: {

@@ -77,7 +77,7 @@ const VARIANTS = {
   },
 } satisfies Record<string, Variant>;
 
-export type StatusBadgeVariant = keyof typeof VARIANTS;
+type StatusBadgeVariant = keyof typeof VARIANTS;
 
 const GLYPH = "translate(19 19) scale(1.4167)";
 const GLYPH_PROPS = {

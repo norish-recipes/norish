@@ -1,9 +1,9 @@
 import { z } from "zod";
 
-export const MIN_PASSWORD_LENGTH = 8;
-export const MAX_PASSWORD_LENGTH = 128;
+const MIN_PASSWORD_LENGTH = 8;
+const MAX_PASSWORD_LENGTH = 128;
 
-export type SignUpField = "name" | "email" | "password" | "confirmPassword";
+type SignUpField = "name" | "email" | "password" | "confirmPassword";
 
 export interface SignUpInput {
   name: string;
@@ -12,7 +12,7 @@ export interface SignUpInput {
   confirmPassword: string;
 }
 
-export type SignUpMessageId =
+type SignUpMessageId =
   | "common.validation.required"
   | "common.validation.invalidEmail"
   | "auth.signup.errors.passwordTooShort"
