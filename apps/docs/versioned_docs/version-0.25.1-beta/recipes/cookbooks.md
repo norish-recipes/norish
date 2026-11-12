@@ -25,7 +25,7 @@ give it a title. Under **All**, the add menu offers a cookbook as well.
 ![Adding several recipes to a cookbook at once](/img/screenshots/cookbooks-add-recipes.png)
 
 The end of a recipe page lists the cookbooks it is in. Hide that card under
-**Settings => User => Hidden items**.
+**Settings => Account => Hidden items**.
 
 ![The cookbooks card at the end of a recipe page](/img/screenshots/cookbooks-recipe-card.png)
 

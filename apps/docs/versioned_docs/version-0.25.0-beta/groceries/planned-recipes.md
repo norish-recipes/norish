@@ -8,7 +8,7 @@ description: Planning a recipe in Norish.
 
 When you plan a recipe, from the calendar, the **Today** section or a recipe's
 **Add to calendar**. Norish automatically opens the groceries panel.
-This can be customised under: **Settings => User => Preferences => After planning a
+This can be customised under: **Settings => Account => Preferences => After planning a
 recipe**:
 
 - **Nothing**: just plan the recipe.

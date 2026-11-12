@@ -29,7 +29,7 @@ At the end of a recipe page there is a card showing all cookbooks the recipe is 
 
 ![The cookbooks card at the end of a recipe page](/img/screenshots/cookbooks-recipe-card.png)
 
-If you do no whish to see the cookbooks card you can hide it under: Settings => User => **Hidden
+If you do no whish to see the cookbooks card you can hide it under: Settings => Account => **Hidden
 Items**, this is a per device setting.
 
 ## Permissions

@@ -12,7 +12,7 @@ By default everything is **enabled** what you disable is on a per device basis.
 
 ## Hiding items
 
-Under Settings => User => **Hidden items** you can hide UI elements.
+Under Settings => Account => **Hidden items** you can hide UI elements.
 The following items can be hidden:
 
 - **Provenance**, the Recipe Provenance section. Flags beside the titles do remain;

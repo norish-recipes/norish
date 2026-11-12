@@ -51,5 +51,5 @@ This can be done under the following options:
 ## Hiding icons
 
 If you would rather not see the ingredient icons you may turn these off in:
-**Settings => User => Hidden items => Ingredient icons**. This is per device
+**Settings => Account => Hidden items => Ingredient icons**. This is per device
 See [Hidden Items](../recipes/hidden-items.md).

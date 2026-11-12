@@ -81,7 +81,7 @@ a dark photo can never produce an unreadable page. A recipe with no photo
 simply keeps the plain theme colours.
 
 If you would rather read every recipe on the plain theme background, that is
-yours to choose: **Settings => User => Recipe page color**, per device, with
+yours to choose: **Settings => Account => Recipe page color**, per device, with
 `From the dish photo` as the default and `Plain theme colors` as the
 alternative. The colour is still stored either way, so switching back is
 instant.

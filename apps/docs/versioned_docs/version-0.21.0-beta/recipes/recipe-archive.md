@@ -13,7 +13,7 @@ Currently this feature is limited to just recipes this is **NOT** a backup.
 
 ## Exporting your own recipes
 
-Go to **Settings => User**, find the **Export Recipe Archive** card, and press
+Go to **Settings => Account**, find the **Export Recipe Archive** card, and press
 **Export**.
 
 ![The Export Recipe Archive card in user settings](/img/screenshots/recipe-archive-user-export.png)

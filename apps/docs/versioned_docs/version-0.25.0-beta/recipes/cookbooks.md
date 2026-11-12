@@ -31,7 +31,7 @@ Each of these items are clickable and take you to the respective cookbook.
 
 ![The cookbooks card at the end of a recipe page](/img/screenshots/cookbooks-recipe-card.png)
 
-If you do no whish to see the cookbooks card you can hide it under: Settings => User => **Hidden
+If you do no whish to see the cookbooks card you can hide it under: Settings => Account => **Hidden
 Items**, kept per phone or desktop, on your profile.
 
 ## Editing one: cover, name and recipes

@@ -6,7 +6,7 @@ description: Hide parts of the recipe page you don't use.
 
 # Hidden Items
 
-Under **Settings => User => Hidden items** you can hide parts of the recipe
+Under **Settings => Account => Hidden items** you can hide parts of the recipe
 page. Everything shows by default, and your choice is kept separately for phone
 and desktop.
 
