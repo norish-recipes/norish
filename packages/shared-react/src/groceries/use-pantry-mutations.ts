@@ -39,16 +39,16 @@ export function usePantryMutations(): PantryMutationsResult {
         );
       }
     },
-    onError: (error, { shownAs }) => {
-      if (shouldPreserveOptimisticUpdate(error)) return;
-      refetch();
-      toast.show({
-        severity: "danger",
-        title: shownAs
-          ? toast.translate("groceries.pantry.keepFailed", { name: shownAs })
-          : toast.translate("groceries.panel.keepFailed"),
-      });
-    },
+    onError: (error, { shownAs }) =>
+      invalidateUnlessPreserved(() => {
+        refetch();
+        toast.show({
+          severity: "danger",
+          title: shownAs
+            ? toast.translate("groceries.pantry.keepFailed", { name: shownAs })
+            : toast.translate("groceries.panel.keepFailed"),
+        });
+      })(error),
   });
   const removeOptions = trpc.pantry.remove.mutationOptions({
     onError: invalidateUnlessPreserved(refetch),
