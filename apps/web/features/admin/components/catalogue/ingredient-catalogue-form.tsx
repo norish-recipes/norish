@@ -4,13 +4,13 @@ import { useEffect, useState } from "react";
 import { SettingRow } from "@/components/settings/setting-row";
 import { ActionButton, ActionButtonGroup } from "@/components/shared/action-button";
 import { usePending } from "@/hooks/use-pending";
-import { Label, ListBox, Select } from "@heroui/react";
 import { useTranslations } from "next-intl";
 
 import type { AutomaticIngredientsConfig } from "@norish/config/zod/server-config";
 import { DEFAULT_AUTOMATIC_INGREDIENTS, ServerConfigKeys } from "@norish/config/zod/server-config";
 import { useAdminConfig, useAIConfigWrite } from "@norish/shared-react/admin";
 
+import { KindsSelect } from "../kinds-select";
 import CleanUpCatalogue from "./clean-up-catalogue";
 import FillGaps from "./fill-gaps";
 
@@ -75,15 +75,17 @@ export default function IngredientCatalogueForm({ onDirtyChange }: IngredientCat
   return (
     <div className="flex flex-col gap-4">
       <SettingRow description={t("automaticDescription")} title={t("automatic")}>
-        <Select
-          aria-label={t("automatic")}
-          className="w-full"
-          data-testid="ai-automatic-ingredients"
+        <KindsSelect
           isDisabled={!aiConfig?.enabled}
+          label={t("automatic")}
+          options={offered.map((key) => ({
+            id: key,
+            label: t(`kinds.${key}`),
+            description: t(`kinds.${key}Description`),
+          }))}
           placeholder={t("automaticPlaceholder")}
-          selectionMode="multiple"
-          value={selected.filter((key) => offered.includes(key))}
-          variant="secondary"
+          testId="ai-automatic-ingredients"
+          value={selected}
           onChange={(chosen) =>
             // An option not offered keeps its stored value.
             setSelected(
@@ -92,39 +94,7 @@ export default function IngredientCatalogueForm({ onDirtyChange }: IngredientCat
               )
             )
           }
-        >
-          <Label className="sr-only">{t("automatic")}</Label>
-          <Select.Trigger>
-            <Select.Value className="min-w-0">
-              {({ defaultChildren, isPlaceholder }) =>
-                isPlaceholder ? (
-                  defaultChildren
-                ) : (
-                  <span className="block truncate">
-                    {selected
-                      .filter((key) => offered.includes(key))
-                      .map((key) => t(`kinds.${key}`))
-                      .join(", ")}
-                  </span>
-                )
-              }
-            </Select.Value>
-            <Select.Indicator />
-          </Select.Trigger>
-          <Select.Popover>
-            <ListBox selectionMode="multiple">
-              {offered.map((key) => (
-                <ListBox.Item key={key} id={key} textValue={t(`kinds.${key}`)}>
-                  <div className="flex flex-col">
-                    <span>{t(`kinds.${key}`)}</span>
-                    <span className="text-muted text-xs">{t(`kinds.${key}Description`)}</span>
-                  </div>
-                  <ListBox.ItemIndicator />
-                </ListBox.Item>
-              ))}
-            </ListBox>
-          </Select.Popover>
-        </Select>
+        />
       </SettingRow>
 
       <ActionButtonGroup className="pt-2">
