@@ -202,5 +202,41 @@ export const test = base.extend<Record<never, never>, OfflineWorkerFixtures>({
   ],
 });
 
+/** A queued change as the page's IndexedDB holds it. */
+export type OutboxEntry = { ownerId: string; path: string; status: string };
+
+/** All Outbox entries in the page's IndexedDB, FIFO. */
+export function readOutbox(target: Page): Promise<OutboxEntry[]> {
+  return target.evaluate(
+    () =>
+      new Promise<OutboxEntry[]>((resolve) => {
+        const open = indexedDB.open("norish-offline");
+
+        open.onsuccess = () => {
+          const db = open.result;
+
+          if (!db.objectStoreNames.contains("outbox")) {
+            db.close();
+            resolve([]);
+
+            return;
+          }
+
+          const req = db.transaction("outbox", "readonly").objectStore("outbox").getAll();
+
+          req.onsuccess = () => {
+            db.close();
+            resolve(req.result as OutboxEntry[]);
+          };
+          req.onerror = () => {
+            db.close();
+            resolve([]);
+          };
+        };
+        open.onerror = () => resolve([]);
+      })
+  );
+}
+
 export { expect };
 export type { SessionCookies };

@@ -1,44 +1,10 @@
-import type { Page } from "@playwright/test";
-
 import { updateRecipeCategories } from "@norish/db/repositories/recipes";
 
 import { userIdOf } from "../harness/accounts";
 import { signIn } from "../harness/auth";
 import { recipeIdsNamed, seedRecipe } from "../harness/recipes";
 import { recordFrames, waitForLive } from "../realtime/support";
-import { expect, test, USER_A } from "./fixture";
-
-/** The Outbox's entries in the page's IndexedDB. */
-function readOutbox(page: Page) {
-  return page.evaluate(
-    () =>
-      new Promise<Array<{ path: string; status: string }>>((resolve) => {
-        const open = indexedDB.open("norish-offline");
-
-        open.onsuccess = () => {
-          const db = open.result;
-
-          if (!db.objectStoreNames.contains("outbox")) {
-            db.close();
-            resolve([]);
-
-            return;
-          }
-          const request = db.transaction("outbox", "readonly").objectStore("outbox").getAll();
-
-          request.onsuccess = () => {
-            db.close();
-            resolve(request.result as Array<{ path: string; status: string }>);
-          };
-          request.onerror = () => {
-            db.close();
-            resolve([]);
-          };
-        };
-        open.onerror = () => resolve([]);
-      })
-  );
-}
+import { expect, readOutbox, test, USER_A } from "./fixture";
 
 test("a bulk delete made offline keeps the recipe edited meanwhile, and says so", async ({
   offlineHarness,

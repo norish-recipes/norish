@@ -6,7 +6,7 @@ import { request } from "@playwright/test";
 
 import type { SessionCookies } from "./fixture";
 import { signIn } from "../harness/auth";
-import { expect, SEEDED_RECIPE_IMAGE, test, USER_A } from "./fixture";
+import { expect, readOutbox, SEEDED_RECIPE_IMAGE, test, USER_A } from "./fixture";
 
 /** Ends the session these cookies carry on the server; the browser keeps its cookie. */
 async function endSessionOnServer(baseURL: string, cookies: SessionCookies): Promise<void> {
@@ -34,30 +34,7 @@ test("an expired session clears the Offline Cache and keeps the queued change fo
   try {
     await context.addCookies(cookies);
     const page = await context.newPage();
-    const outboxSize = () =>
-      page.evaluate(
-        () =>
-          new Promise<number>((resolve) => {
-            const open = indexedDB.open("norish-offline");
-
-            open.onsuccess = () => {
-              const db = open.result;
-
-              if (!db.objectStoreNames.contains("outbox")) {
-                db.close();
-                resolve(0);
-
-                return;
-              }
-              const count = db.transaction("outbox", "readonly").objectStore("outbox").count();
-
-              count.onsuccess = () => {
-                db.close();
-                resolve(count.result);
-              };
-            };
-          })
-      );
+    const outboxSize = async () => (await readOutbox(page)).length;
     const imagesKept = () => page.evaluate(() => caches.has("norish-images"));
 
     await page.goto("/groceries");

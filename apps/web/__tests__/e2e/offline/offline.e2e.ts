@@ -10,6 +10,7 @@ import type { OfflineHarness } from "./fixture";
 import { readDevicePreferences, setDevicePreferences } from "../harness/device-preferences";
 import {
   expect,
+  readOutbox,
   SEEDED_COOKBOOK_ID,
   SEEDED_COOKBOOK_TITLE,
   SEEDED_GROCERY_NAME,
@@ -27,39 +28,6 @@ test.describe.configure({ mode: "serial" });
 
 let offline: OfflineHarness;
 let page: Page;
-
-/** All Outbox entries in the page's IndexedDB, FIFO. */
-function readOutbox(target: Page) {
-  return target.evaluate(
-    () =>
-      new Promise<Array<{ ownerId: string; path: string; status: string }>>((resolve) => {
-        const open = indexedDB.open("norish-offline");
-
-        open.onsuccess = () => {
-          const db = open.result;
-
-          if (!db.objectStoreNames.contains("outbox")) {
-            db.close();
-            resolve([]);
-
-            return;
-          }
-
-          const req = db.transaction("outbox", "readonly").objectStore("outbox").getAll();
-
-          req.onsuccess = () => {
-            db.close();
-            resolve(req.result as Array<{ ownerId: string; path: string; status: string }>);
-          };
-          req.onerror = () => {
-            db.close();
-            resolve([]);
-          };
-        };
-        open.onerror = () => resolve([]);
-      })
-  );
-}
 
 /**
  * A ticked row folds into its section's done row, which is closed on every
