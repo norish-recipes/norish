@@ -2,7 +2,7 @@ import "@/global.css";
 import "@/lib/i18n/plural-rules";
 
 import React, { useEffect } from "react";
-import { StyleSheet, View } from "react-native";
+import { ActivityIndicator, StyleSheet, View } from "react-native";
 import { GestureHandlerRootView } from "react-native-gesture-handler";
 import { StorageUnavailableScreen } from "@/features/auth/screens/storage-unavailable-screen";
 import { useBackendBaseUrl } from "@/hooks/use-backend-base-url";
@@ -169,14 +169,18 @@ function RootLayoutContent() {
 
 const getOfflineQueryClient = () => offlineEngine.queryClient;
 
-/** The stack, wrapped in the offline controller while signed in; the bare ground while pending. */
+/** The stack, wrapped in the offline controller while signed in; a spinner while pending. */
 function SessionStack() {
   const { session } = usePlatform();
   const { colors } = useTheme();
   const signedIn = session.user !== null;
 
   if (session.isPending && !signedIn) {
-    return <View style={[styles.root, { backgroundColor: colors.background }]} />;
+    return (
+      <View style={[styles.root, styles.centred, { backgroundColor: colors.background }]}>
+        <ActivityIndicator />
+      </View>
+    );
   }
 
   const app = (
@@ -232,5 +236,9 @@ function RootStack({ signedIn }: { signedIn: boolean }) {
 const styles = StyleSheet.create({
   root: {
     flex: 1,
+  },
+  centred: {
+    alignItems: "center",
+    justifyContent: "center",
   },
 });
