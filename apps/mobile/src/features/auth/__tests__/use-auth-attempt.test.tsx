@@ -6,7 +6,14 @@ import { IntlProvider } from "react-intl";
 import { describe, expect, it, vi } from "vitest";
 
 const wrapper = ({ children }: { children: ReactNode }) => (
-  <IntlProvider locale="en" messages={{ fallback: "Something went wrong" }} onError={() => {}}>
+  <IntlProvider
+    locale="en"
+    messages={{
+      fallback: "Something went wrong",
+      "auth.errors.default.description": "Something went wrong on our end",
+    }}
+    onError={() => {}}
+  >
     {children}
   </IntlProvider>
 );
@@ -92,5 +99,31 @@ describe("useAuthAttempt", () => {
       method: "google",
       message: "Something went wrong",
     });
+  });
+
+  it.each([
+    [
+      "throws",
+      () => {
+        throw new Error("navigation failed");
+      },
+    ],
+    ["rejects", () => Promise.reject(new Error("navigation failed"))],
+  ])("releases the attempt with the default failure when its task %s", async (_, task) => {
+    const { result } = renderHook(() => useAuthAttempt(), { wrapper });
+
+    await act(() => result.current.run("connect", task));
+
+    expect(result.current.running).toBeNull();
+    expect(result.current.failure).toEqual({
+      method: "connect",
+      message: "Something went wrong on our end",
+    });
+
+    const next = vi.fn(() => Promise.resolve(null));
+
+    await act(() => result.current.run("connect", next));
+
+    expect(next).toHaveBeenCalledOnce();
   });
 });

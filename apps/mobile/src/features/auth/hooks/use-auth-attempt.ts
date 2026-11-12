@@ -2,6 +2,12 @@ import { useRef, useState } from "react";
 import { authFailure } from "@/features/auth/utils/auth-failure";
 import { useIntl } from "react-intl";
 
+import { createClientLogger } from "@norish/shared/lib/logger";
+
+const log = createClientLogger("auth");
+
+const DEFAULT_FAILURE = "auth.errors.default.description";
+
 type AuthCall = () => Promise<{ error: { code?: string; message?: string } | null }>;
 
 /** A failed attempt and the method it came from; each is a new object, so it shakes again. */
@@ -18,7 +24,7 @@ export function useAuthAttempt() {
   // State lands on the next render, so a second tap or return key in the same tick reads this.
   const inFlightRef = useRef(false);
 
-  /** Runs `task`, which resolves to the message id it failed with, or null. */
+  /** Runs `task`, which resolves to the message id it failed with, or null; a throw is the default. */
   const run = async (method: string, task: () => Promise<string | null>) => {
     if (inFlightRef.current) return;
 
@@ -26,16 +32,22 @@ export function useAuthAttempt() {
     setRunning(method);
     setFailure(null);
 
-    const messageId = await task();
+    try {
+      const messageId = await task();
 
-    if (messageId !== null) setFailure({ method, message: intl.formatMessage({ id: messageId }) });
-
-    inFlightRef.current = false;
-    setRunning(null);
+      if (messageId !== null)
+        setFailure({ method, message: intl.formatMessage({ id: messageId }) });
+    } catch (error) {
+      log.error({ error, method }, "Auth attempt threw");
+      setFailure({ method, message: intl.formatMessage({ id: DEFAULT_FAILURE }) });
+    } finally {
+      inFlightRef.current = false;
+      setRunning(null);
+    }
   };
 
   /** Runs a Better Auth call, its refusal translated by `authFailure`. */
-  const attempt = (method: string, call: AuthCall, fallback = "auth.errors.default.description") =>
+  const attempt = (method: string, call: AuthCall, fallback = DEFAULT_FAILURE) =>
     run(method, () => authFailure(call(), fallback));
 
   /** The failure when one of `methods` raised it, for the form that shows those methods. */
