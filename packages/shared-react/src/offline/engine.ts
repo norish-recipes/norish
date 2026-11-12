@@ -71,7 +71,7 @@ export interface OfflineEngine {
   discardAll(ownerId: string): Promise<number>;
   /** The signed-in owner's queued changes, Parked included: what a sign-out would discard. */
   unsyncedChanges(): Promise<number>;
-  /** Before an explicit sign-out: the read copy always goes, the queue only once confirmed. */
+  /** Once the session ended, at Sign-out or Session Expiry: the read copy goes, the queue only when asked. */
   clearForSignOut(options: { discardQueue: boolean }): Promise<void>;
 }
 

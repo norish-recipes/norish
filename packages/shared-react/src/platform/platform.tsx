@@ -7,6 +7,8 @@ import type { CompatibleMessageTranslator } from "@norish/i18n";
 import type { User } from "@norish/shared/contracts";
 import type { DeviceKind } from "@norish/shared/contracts/zod/device-preferences";
 
+import type { OfflineEngine } from "../offline/engine";
+
 export type ToastSeverity = "default" | "success" | "warning" | "danger";
 
 export type ToastAdapter = {
@@ -46,7 +48,7 @@ export type PlatformAdapter = {
   endSession: () => Promise<void>;
   /** Takes the signed-out reader to sign-in. */
   leave: () => void;
-  offlineEngine: { clearForSignOut: (options: { discardQueue: boolean }) => Promise<void> };
+  offlineEngine: Pick<OfflineEngine, "clearForSignOut">;
 };
 
 /** Tells the reader the server refused a write, with its reason when it named one. */
