@@ -1,16 +1,13 @@
 "use client";
 
-import type { TRPCOptionsProxy } from "@trpc/tanstack-react-query";
 import type { ReactNode } from "react";
 import { useMemo } from "react";
 import { useQueryClient } from "@tanstack/react-query";
 
-import type { AppRouter } from "@norish/trpc/client";
-
 import type { ConnectionStatus } from "../../trpc/trpc-provider";
 import type { OfflineEngine } from "../engine";
-import type { OutboxMutationClient } from "../replay-client";
 import type { ConnectivityValue } from "./connectivity";
+import { useTRPC, useTRPCClient } from "../../trpc";
 import { sessionVerdict } from "../recovery";
 import { RecoveryProvider } from "./recovery-context";
 import { useOfflineController } from "./use-offline-controller";
@@ -20,8 +17,6 @@ import { useWarmSet } from "./use-warm-set";
 export function OfflineController({
   children,
   engine,
-  transport,
-  trpc,
   getSessionUserId,
   sessionUserId,
   connectivity: { isLive, isOffline, probeNow, subscribeLiveProbes },
@@ -29,8 +24,6 @@ export function OfflineController({
 }: {
   children: ReactNode;
   engine: Pick<OfflineEngine, "cache" | "outbox" | "createRecovery" | "createWarmSet">;
-  transport: OutboxMutationClient;
-  trpc: TRPCOptionsProxy<AppRouter>;
   /** The live session's user, asked before Replay; must be stable. */
   getSessionUserId: () => Promise<string | null>;
   /** The signed-in user, or null while signed out or still unknown. */
@@ -42,7 +35,8 @@ export function OfflineController({
   wsStatus: ConnectionStatus;
 }) {
   const queryClient = useQueryClient();
-  const warmSet = useWarmSet(engine, trpc);
+  const transport = useTRPCClient();
+  const warmSet = useWarmSet(engine, useTRPC());
 
   const recovery = useMemo(
     () =>

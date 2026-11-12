@@ -5,10 +5,9 @@ import CookbookRoute from "@/app/(app)/(library)/cookbooks/[id]/page";
 import { OfflineUnavailable } from "@/app/~offline/offline-unavailable";
 import { routeParams } from "@/app/~offline/route-params";
 import { offlineEngine } from "@/lib/offline/engine";
-import { useQueryClient } from "@tanstack/react-query";
 
 import { useCacheOwner } from "@norish/shared-react/offline/react";
-import { useTRPC } from "@norish/shared-react/trpc";
+import { useHeldReads } from "@norish/shared-react/recipes";
 
 /**
  * Warmed-gated cookbook page for the offline bootstrap (ADR-0009).
@@ -20,14 +19,12 @@ import { useTRPC } from "@norish/shared-react/trpc";
  * for the restore: before that, absence only means "not hydrated yet".
  */
 export function OfflineCookbook({ id }: { id: string }) {
-  const trpc = useTRPC();
-  const queryClient = useQueryClient();
-
+  const held = useHeldReads();
   const owner = useCacheOwner(offlineEngine.cache);
 
   if (!owner) return <CookbookLoading />;
 
-  const warmed = queryClient.getQueryData(trpc.cookbooks.get.queryOptions({ id }).queryKey);
+  const warmed = held.cookbook(id);
 
   if (!warmed) {
     return <OfflineUnavailable />;

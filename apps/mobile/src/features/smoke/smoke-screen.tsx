@@ -13,7 +13,6 @@ import {
 import { useOfflineStatus } from "@norish/shared-react/offline/react";
 import { useReader } from "@norish/shared-react/reader";
 import { useRecipesQuery } from "@norish/shared-react/recipes";
-import { useTRPC } from "@norish/shared-react/trpc";
 
 // Throwaway screen that proves sign-in, tRPC, realtime and offline end to end
 // until the redesigned screens replace it.
@@ -23,10 +22,8 @@ export function SmokeScreen() {
   const { total, isLoading: recipesLoading } = useRecipesQuery({ limit: 1 });
   const { groceries } = useGroceriesQuery();
   const { toggleGroceries, toggleRecurringGrocery } = useGroceriesMutations();
-  const { isLive, outbox, isSyncing, syncNow, retryAll, discardAll } = useOfflineStatus(
-    offlineEngine,
-    useTRPC()
-  );
+  const { isLive, outbox, isSyncing, syncNow, retryAll, discardAll } =
+    useOfflineStatus(offlineEngine);
 
   useGroceriesSubscription();
 

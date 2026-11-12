@@ -5,7 +5,7 @@ import { offlineEngine } from "@/lib/offline/engine";
 
 import { OfflineController, useConnectivity } from "@norish/shared-react/offline/react";
 import { useReader } from "@norish/shared-react/reader";
-import { useConnectionStatus, useTRPC, useTRPCClient } from "@norish/shared-react/trpc";
+import { useConnectionStatus } from "@norish/shared-react/trpc";
 import { getSession } from "@norish/shared/lib/auth/client";
 
 const getSessionUserId = () => getSession().then((session) => session?.data?.user?.id ?? null);
@@ -22,8 +22,6 @@ export function OfflineCacheController({
   const { user } = useReader();
   const connectivity = useConnectivity();
   const { status: wsStatus } = useConnectionStatus();
-  const trpc = useTRPC();
-  const trpcClient = useTRPCClient();
 
   // The server's verified id stands in until the browser's own session request
   // answers, so the cache restores at hydration rather than a round trip later.
@@ -33,8 +31,6 @@ export function OfflineCacheController({
       engine={offlineEngine}
       getSessionUserId={getSessionUserId}
       sessionUserId={user?.id ?? seededUserId ?? null}
-      transport={trpcClient}
-      trpc={trpc}
       wsStatus={wsStatus}
     >
       {children}

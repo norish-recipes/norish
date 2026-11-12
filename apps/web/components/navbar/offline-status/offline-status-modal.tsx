@@ -20,7 +20,6 @@ import { useFormatter, useNow, useTranslations } from "next-intl";
 
 import type { OfflineStatus } from "@norish/shared-react/offline/react";
 import { useOfflineStatus } from "@norish/shared-react/offline/react";
-import { useTRPC } from "@norish/shared-react/trpc";
 
 interface OfflineStatusModalProps {
   isOpen: boolean;
@@ -67,7 +66,7 @@ export function OfflineStatusModal({ isOpen, onOpenChange }: OfflineStatusModalP
 }
 
 function OfflineStatusBody() {
-  const status = useOfflineStatus(offlineEngine, useTRPC());
+  const status = useOfflineStatus(offlineEngine);
 
   return (
     <div className="flex flex-col gap-6">

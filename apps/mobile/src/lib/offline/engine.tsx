@@ -15,7 +15,7 @@ import {
   OfflineController as SharedOfflineController,
   useConnectivity,
 } from "@norish/shared-react/offline/react";
-import { useConnectionStatus, useTRPC, useTRPCClient } from "@norish/shared-react/trpc";
+import { useConnectionStatus } from "@norish/shared-react/trpc";
 import { getInitialCalendarRange } from "@norish/shared/lib/helpers";
 
 import { createMmkvStorage } from "./mmkv-storage";
@@ -79,8 +79,6 @@ export function OfflineController({
 }) {
   const connectivity = useConnectivity();
   const { status: wsStatus } = useConnectionStatus();
-  const trpc = useTRPC();
-  const trpcClient = useTRPCClient();
 
   return (
     <SharedOfflineController
@@ -88,8 +86,6 @@ export function OfflineController({
       engine={offlineEngine}
       getSessionUserId={getSessionUserId}
       sessionUserId={sessionUserId}
-      transport={trpcClient}
-      trpc={trpc}
       wsStatus={wsStatus}
     >
       {children}
