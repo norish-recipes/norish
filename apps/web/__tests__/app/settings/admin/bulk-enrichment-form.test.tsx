@@ -12,23 +12,18 @@ import { beforeEach, describe, expect, it, vi } from "vitest";
 
 import "@testing-library/jest-dom";
 
-const mutate = vi.fn();
-const mockUseTRPC = vi.fn();
+const enrichAll = vi.fn();
 const sweepCounts = vi.hoisted(() => ({ current: undefined as unknown }));
 
-vi.mock("@norish/shared-react/trpc", () => ({ useTRPC: mockUseTRPC }));
-
-vi.mock("@tanstack/react-query", () => ({
-  useMutation: () => ({ mutate, isPending: false, isSuccess: false, data: undefined }),
-  useQuery: () => ({ data: sweepCounts.current }),
+vi.mock("@norish/shared-react/admin", () => ({
+  useEnrichAllRecipes: () => ({ enrichAll, queued: undefined, isPending: false }),
+  useImageGenerationSweepCount: () => sweepCounts.current,
 }));
 
 vi.mock("next-intl", () => ({
   useTranslations: () => (key: string, values?: Record<string, unknown>) =>
     values ? `${key}:${JSON.stringify(values)}` : key,
 }));
-
-vi.mock("@/lib/ui/safe-error-toast", () => ({ showSafeErrorToast: vi.fn() }));
 
 vi.mock("@/components/settings/settings-switch", () => ({
   default: ({
@@ -86,13 +81,8 @@ function openConfirmation() {
 }
 
 beforeEach(() => {
+  enrichAll.mockReset();
   sweepCounts.current = undefined;
-  mockUseTRPC.mockReturnValue({
-    admin: {
-      enrichAllRecipes: { mutationOptions: (options: unknown) => options },
-      imageGenerationSweepCount: { queryOptions: (_input: unknown, options: unknown) => options },
-    },
-  });
 });
 
 describe("BulkEnrichmentForm", () => {
@@ -100,7 +90,7 @@ describe("BulkEnrichmentForm", () => {
     render(<BulkEnrichmentForm />);
     fireEvent.click(openConfirmation());
 
-    expect(mutate).toHaveBeenCalledWith({ replaceExisting: false });
+    expect(enrichAll).toHaveBeenCalledWith(false);
   });
 
   it("carries the administrator's overwrite choice into the run", () => {
@@ -109,7 +99,7 @@ describe("BulkEnrichmentForm", () => {
     fireEvent.click(screen.getByTestId("replace-switch"));
     fireEvent.click(screen.getByText("confirmButtonReplace"));
 
-    expect(mutate).toHaveBeenCalledWith({ replaceExisting: true });
+    expect(enrichAll).toHaveBeenCalledWith(true);
   });
 
   it("names the destructive action differently once overwriting is on", () => {
@@ -133,7 +123,7 @@ describe("BulkEnrichmentForm", () => {
     // Reopening starts from gap-filling: overwriting is chosen each time.
     fireEvent.click(openConfirmation());
 
-    expect(mutate).toHaveBeenCalledWith({ replaceExisting: false });
+    expect(enrichAll).toHaveBeenCalledWith(false);
   });
 });
 

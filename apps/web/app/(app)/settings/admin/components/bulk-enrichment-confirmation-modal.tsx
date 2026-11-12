@@ -7,14 +7,11 @@ import { ExclamationTriangleIcon, SparklesIcon } from "@heroicons/react/16/solid
 import { Modal } from "@heroui/react";
 import { useTranslations } from "next-intl";
 
-type ImageGenerationSweepCounts =
-  { enabled: false } | { enabled: true; gapOnly: number; overwrite: number };
+import { useImageGenerationSweepCount } from "@norish/shared-react/admin";
 
 type BulkEnrichmentConfirmationModalProps = {
   isOpen: boolean;
   replaceExisting: boolean;
-  /** Absent while loading, or on a server where the kind is switched off. */
-  imageCounts?: ImageGenerationSweepCounts;
   onReplaceExistingChange: (replaceExisting: boolean) => void;
   onClose: () => void;
   onConfirm: () => void;
@@ -22,7 +19,6 @@ type BulkEnrichmentConfirmationModalProps = {
 export default function BulkEnrichmentConfirmationModal({
   isOpen,
   replaceExisting,
-  imageCounts,
   onReplaceExistingChange,
   onClose,
   onConfirm,
@@ -56,13 +52,7 @@ export default function BulkEnrichmentConfirmationModal({
                 {t("replaceWarning")}
               </Note>
             )}
-            {imageCounts?.enabled && (
-              <p className="text-muted mt-2 text-base">
-                {t("imageCount", {
-                  count: replaceExisting ? imageCounts.overwrite : imageCounts.gapOnly,
-                })}
-              </p>
-            )}
+            <SweepImageCount replaceExisting={replaceExisting} />
             <Note className="mt-2" status="warning">
               {t("costWarning")}
             </Note>
@@ -85,5 +75,19 @@ export default function BulkEnrichmentConfirmationModal({
         </Modal.Dialog>
       </Modal.Container>
     </Modal.Backdrop>
+  );
+}
+
+/** How many images the sweep would draw, read as the confirmation opens; nothing while unknown or off. */
+function SweepImageCount({ replaceExisting }: { replaceExisting: boolean }) {
+  const t = useTranslations("settings.admin.aiProcessing.bulkEnrichment");
+  const counts = useImageGenerationSweepCount();
+
+  if (!counts?.enabled) return null;
+
+  return (
+    <p className="text-muted mt-2 text-base">
+      {t("imageCount", { count: replaceExisting ? counts.overwrite : counts.gapOnly })}
+    </p>
   );
 }
