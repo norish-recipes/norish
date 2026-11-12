@@ -4,7 +4,7 @@
 
 **Blocked by:** 25 (the `"."` export re-exports the contexts)
 
-**Status:** ready-for-agent
+**Status:** done
 
 - [x] `shared-react/admin`, exported as `@norish/shared-react/admin`, holds the admin page's server data as plain hooks:
   - the admin config (`admin.getAllConfigs`), each card selecting what it draws, the job retention included, and each of its writes;
@@ -28,3 +28,10 @@
 - The secret read is `useConfigSecret`, fetched with `gcTime: 0`, so no copy stays in the cache; `admin.*` stays outside the persisted reads.
 - Dedup in moved code: `AccordionSection` (holds each section's dirty chip), `ModelPicker`, `KindsSelect`, `useReportDirty`; memo dropped from every moved file. The shared tRPC fake learned `skipToken`. No bug found that needed a failing test first.
 
+- Review (Opus 5.5 xhigh on standards, Fable 5.2 high on spec and on the fix round, since the tab holds the server's secrets), fixed in 51b022d2d..5862371a8. The spec axis traced every request, pending state, toast, polling interval and masked-secret save against the old code and found them equal; no admin read can reach the persisted cache, and a revealed secret lives only in the input that shows it.
+- Two notes above are corrected: `gcTime: 0` on the secret read and the sweep count rereading are how every `admin.*` read already behaved (the offline cache manager sets `staleTime: 0, gcTime: 0` on them). What changed on screen: the sweep-count line and the job detail are blank until their read lands on each open, where an always-mounted reader showed the last value (for the job detail, possibly another job's).
+- Bugs fixed with a failing test first: a failed server restart, job-retention save and auth-provider removal each showed nothing; each reports through `showError` in its mutation's options (51b022d2d, e33a2ce77).
+- Deduplicated: one config-write helper rereads the keys each save names; one catalogue-run implementation and counts reader; cuisine and job writes go through `wentThrough`, provider removal through `accepted` (`offline/settled.ts`); `useJobRetentionWrite` is its own hook; one `WriteResult`, provider-key type, test-result component, provider select and save-and-restore hook for the JSON and timer-keyword editors; the decision form uses `KindsSelect`; the auth-provider forms take typed configs. `isDirtyState` lives in `apps/web/lib/dirty-state.ts`: `useDirtyState` called no hook any more, so the wrapper the ticket names is gone.
+- `AdminConfigs` stays a hand-kept map behind one cast in `use-admin-config.ts`: the server types each config as `unknown`. A GitHub/Google save with the Client ID emptied now sends `""` where it left the field out; the input schema refuses both.
+- A wrong turn, reverted (5862371a8): routing a refused user write through `showError` replaced the server's reason with the generic description, and the platform's `showRefusal` cannot show it on web either. The users hook keeps its own toast.
+- Rejected: un-mocking the plain hooks in the web component tests (the ticket asks for it); reshaping `useSaveAndTest`; making the rest of `AuthProviderForm` generic.
