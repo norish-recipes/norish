@@ -4,7 +4,7 @@ import { useSyncExternalStore } from "react";
 import { act, render, waitFor } from "@testing-library/react";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 
-import type { LeaveReason, PlatformSession } from "@norish/shared-react/platform";
+import type { PlatformSession, SessionScope } from "@norish/shared-react/platform";
 
 type SessionState = {
   data: { user: object } | null;
@@ -31,7 +31,7 @@ const clients = vi.hoisted(
 );
 const seen = vi.hoisted(() => ({
   sessions: [] as PlatformSession[],
-  endSession: null as ((reason: LeaveReason) => Promise<void>) | null,
+  endSession: null as ((scope: SessionScope) => Promise<void>) | null,
   releaseSignOut: () => {},
   leave: () => {},
   // How many sessions the platform had been handed when the offline clear and the leave ran.
@@ -90,7 +90,7 @@ vi.mock("@/lib/platform/platform-provider", async () => {
     MobilePlatformProvider: (props: {
       children: ReactNode;
       session: PlatformSession;
-      endSession: (reason: LeaveReason) => Promise<void>;
+      endSession: (scope: SessionScope) => Promise<void>;
     }) => {
       seen.sessions.push(props.session);
       seen.endSession = props.endSession;
@@ -153,9 +153,9 @@ describe("AuthProviders", () => {
     await authStorage.setItemAsync("norish_session_data", JSON.stringify({ user: USER }));
   });
 
-  it.each<LeaveReason>(["sign-out", "expiry"])(
-    "on %s, reads pending until it leaves, then signed out after one re-key",
-    async (reason) => {
+  it.each<SessionScope>(["everywhere", "device"])(
+    "ending it %s, reads pending until it leaves, then signed out after one re-key",
+    async (scope) => {
       render(<ReKeyed />);
       // A launch opens on the persisted session until the server answers.
       await waitFor(() => expect(seen.sessions.at(-1)?.user?.id).toBe(USER.id));
@@ -166,7 +166,7 @@ describe("AuthProviders", () => {
       const from = seen.sessions.length;
       let ending = Promise.resolve();
 
-      act(() => void (ending = seen.endSession?.(reason) ?? ending));
+      act(() => void (ending = seen.endSession?.(scope) ?? ending));
       // A sign-out now waits on the server, with the old client's store already empty.
       await act(() => new Promise((resolve) => setTimeout(resolve, 10)));
       expect(seen.sessions.length).toBeGreaterThan(from);

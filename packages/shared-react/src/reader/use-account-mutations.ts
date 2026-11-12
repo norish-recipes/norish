@@ -9,8 +9,8 @@ import type { WriteResult } from "../offline/settled";
 import { accepted, answered, settled } from "../offline/settled";
 import { showRefusal, usePlatform } from "../platform";
 import { useTRPC } from "../trpc";
+import { dropAndLeave, runSessionEnd } from "./session-end";
 import { useProfileCache } from "./use-profile";
-import { dropAndLeave, once } from "./use-sign-out";
 
 /** A failed write's `onError`: reread the profile and tell the reader. */
 function useFailedWrite() {
@@ -178,7 +178,7 @@ export function useDeleteAccountMutation() {
   // Runs inside the guard: a Session Expiry the delete causes is ignored, or runs after a delete that failed.
   return {
     deleteAccount: () =>
-      void once(async () => {
+      void runSessionEnd(async () => {
         if (await accepted(mutateAsync())) await dropAndLeave(platform, true, "sign-out");
       }),
   };

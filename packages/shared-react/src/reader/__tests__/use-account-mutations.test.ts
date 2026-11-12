@@ -202,7 +202,7 @@ describe("the Account's writes", () => {
       await answerCall("user.deleteAccount", { success: true });
 
       await waitFor(() => expect(adapter.leave).toHaveBeenCalledExactlyOnceWith("sign-out"));
-      expect(adapter.endSession).toHaveBeenCalledExactlyOnceWith("expiry");
+      expect(adapter.endSession).toHaveBeenCalledExactlyOnceWith("device");
       expect(adapter.offlineEngine.clearForSignOut).toHaveBeenCalledExactlyOnceWith({
         discardQueue: true,
       });

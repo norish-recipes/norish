@@ -53,7 +53,7 @@ describe("Sign-out and Session Expiry", () => {
       await signOut();
 
       expect(steps).toEqual(["end", "clear", "leave:sign-out"]);
-      expect(adapter.endSession).toHaveBeenCalledExactlyOnceWith("sign-out");
+      expect(adapter.endSession).toHaveBeenCalledExactlyOnceWith("everywhere");
     });
 
     it("discards the queue once the reader agreed to", async () => {
@@ -104,7 +104,7 @@ describe("Sign-out and Session Expiry", () => {
       await expireSession();
 
       expect(steps).toEqual(["end", "clear", "leave:expiry"]);
-      expect(adapter.endSession).toHaveBeenCalledExactlyOnceWith("expiry");
+      expect(adapter.endSession).toHaveBeenCalledExactlyOnceWith("device");
     });
 
     it("still runs after the shell re-renders with a new platform", async () => {
@@ -190,9 +190,9 @@ describe("Sign-out and Session Expiry", () => {
     it("an expiry asked for during a sign-out that fails runs once it settles", async () => {
       const ending = deferred();
 
-      vi.mocked(adapter.endSession).mockImplementation(async (reason) => {
-        steps.push(`end:${reason}`);
-        if (reason === "sign-out") {
+      vi.mocked(adapter.endSession).mockImplementation(async (scope) => {
+        steps.push(`end:${scope}`);
+        if (scope === "everywhere") {
           await ending.promise;
           throw new Error("401");
         }
@@ -201,13 +201,13 @@ describe("Sign-out and Session Expiry", () => {
 
       const signingOut = signOut();
 
-      await vi.waitFor(() => expect(steps).toContain("end:sign-out"));
+      await vi.waitFor(() => expect(steps).toContain("end:everywhere"));
       await expireSession();
       expireSession();
       ending.resolve();
       await signingOut;
 
-      expect(steps).toEqual(["end:sign-out", "end:expiry", "clear", "leave:expiry"]);
+      expect(steps).toEqual(["end:everywhere", "end:device", "clear", "leave:expiry"]);
     });
 
     it("runs again once the previous sequence settled", async () => {

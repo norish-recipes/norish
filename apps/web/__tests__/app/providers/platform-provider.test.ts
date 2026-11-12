@@ -6,16 +6,16 @@ const signOut = vi.hoisted(() => vi.fn(async () => ({ error: null })));
 vi.mock("@norish/shared/lib/auth/client", () => ({ signOut }));
 
 describe("the web's endSession", () => {
-  it("ends the session on the server on a sign-out", async () => {
-    await endWebSession("sign-out");
+  it("ends the session on the server everywhere", async () => {
+    await endWebSession("everywhere");
 
     expect(signOut).toHaveBeenCalledOnce();
   });
 
-  it("leaves the server's session alone on expiry", async () => {
+  it("leaves the server's session alone on this device only", async () => {
     signOut.mockClear();
 
-    await endWebSession("expiry");
+    await endWebSession("device");
 
     expect(signOut).not.toHaveBeenCalled();
   });

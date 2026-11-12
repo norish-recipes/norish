@@ -46,10 +46,10 @@ export function AuthProviders({ children }: { children: ReactNode }) {
   return (
     <MobileIntlProvider signedIn={signedIn}>
       <MobilePlatformProvider
-        endSession={(reason) => {
+        endSession={(scope) => {
           setEnding(true);
 
-          return endSession(authClient, reason);
+          return endSession(authClient, scope);
         }}
         session={session}
       >

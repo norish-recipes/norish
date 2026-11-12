@@ -21,7 +21,9 @@ describe("endSession", () => {
     authClient.signOut.mockReset().mockImplementation(async () => {
       order.push("auth server");
     });
-    closeMobileTrpcConnections.mockReset().mockImplementation(async () => void order.push("closed"));
+    closeMobileTrpcConnections
+      .mockReset()
+      .mockImplementation(async () => void order.push("closed"));
     resetAuthClientStorage
       .mockReset()
       .mockImplementation(async () => void order.push("stored session reset"));
@@ -30,7 +32,7 @@ describe("endSession", () => {
   afterEach(() => vi.useRealTimers());
 
   it("ends the session on the server, then closes the connections and resets the stored session", async () => {
-    await endSession(authClient, "sign-out");
+    await endSession(authClient, "everywhere");
 
     expect(order).toEqual(["auth server", "closed", "stored session reset"]);
   });
@@ -39,7 +41,7 @@ describe("endSession", () => {
     authClient.signOut.mockRejectedValue(new Error("offline"));
     resetAuthClientStorage.mockRejectedValue(new Error("keychain"));
 
-    await expect(endSession(authClient, "sign-out")).resolves.toBeUndefined();
+    await expect(endSession(authClient, "everywhere")).resolves.toBeUndefined();
     expect(order).toEqual(["closed"]);
   });
 
@@ -47,7 +49,7 @@ describe("endSession", () => {
     vi.useFakeTimers();
     authClient.signOut.mockReturnValue(new Promise(() => {}));
 
-    const ending = endSession(authClient, "sign-out");
+    const ending = endSession(authClient, "everywhere");
 
     await vi.advanceTimersByTimeAsync(5_000);
     await ending;
@@ -56,8 +58,8 @@ describe("endSession", () => {
     expect(order).toEqual(["closed", "stored session reset"]);
   });
 
-  it("on expiry leaves the server alone and still ends it on this device", async () => {
-    await endSession(authClient, "expiry");
+  it("on this device only leaves the server alone and still ends it on this device", async () => {
+    await endSession(authClient, "device");
 
     expect(authClient.signOut).not.toHaveBeenCalled();
     expect(order).toEqual(["closed", "stored session reset"]);
@@ -66,7 +68,7 @@ describe("endSession", () => {
   it("does not wait for a socket that never finishes closing, mid-reconnect to a stalled server", async () => {
     closeMobileTrpcConnections.mockReturnValue(new Promise(() => {}));
 
-    await endSession(authClient, "expiry");
+    await endSession(authClient, "device");
 
     expect(order).toEqual(["stored session reset"]);
   });

@@ -10,7 +10,12 @@ import { showSafeErrorToast } from "@/lib/ui/safe-error-toast";
 import { toast } from "@heroui/react";
 import { useTranslations } from "next-intl";
 
-import type { LeaveReason, PlatformAdapter, PlatformSession } from "@norish/shared-react/platform";
+import type {
+  LeaveReason,
+  PlatformAdapter,
+  PlatformSession,
+  SessionScope,
+} from "@norish/shared-react/platform";
 import type { DeviceKind } from "@norish/shared/contracts/zod/device-preferences";
 import { PlatformProvider } from "@norish/shared-react/platform";
 import { signOut } from "@norish/shared/lib/auth/client";
@@ -19,15 +24,15 @@ import { deviceKindFromUserAgent } from "@norish/shared/lib/device-kind";
 
 const SIGNED_OUT: PlatformSession = { user: null, isPending: false };
 
-let left = false;
+let navigatedToLogin = false;
 
 /**
  * Sign-in once per page: a late 401 after a sign-out cannot replace its destination.
  * `logout=true` stops a lone OAuth provider's redirect, which could recreate a deleted Account.
  */
 export function leaveToLogin(reason: LeaveReason): void {
-  if (left) return;
-  left = true;
+  if (navigatedToLogin) return;
+  navigatedToLogin = true;
 
   const url = new URL(addBasePath("/login"), window.location.origin);
 
@@ -38,10 +43,10 @@ export function leaveToLogin(reason: LeaveReason): void {
 
 /**
  * Fails while Offline: the cookie is httpOnly, so only the server can end the session.
- * On expiry the device holds nothing to drop, and a passing 401 must not end a live session.
+ * On this device alone there is nothing to drop, and a passing 401 must not end a live session.
  */
-export async function endWebSession(reason: LeaveReason): Promise<void> {
-  if (reason === "expiry") return;
+export async function endWebSession(scope: SessionScope): Promise<void> {
+  if (scope === "device") return;
 
   const { error } = await signOut();
 

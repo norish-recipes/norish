@@ -1,7 +1,7 @@
 import { resetAuthClientStorage } from "@/lib/auth/auth-client";
 import { closeMobileTrpcConnections } from "@/lib/trpc/trpc-provider";
 
-import type { LeaveReason } from "@norish/shared-react/platform";
+import type { SessionScope } from "@norish/shared-react/platform";
 import { createClientLogger } from "@norish/shared/lib/logger";
 
 const log = createClientLogger("auth");
@@ -13,10 +13,10 @@ type SignOutClient = {
   signOut: (options: { fetchOptions: { signal: AbortSignal } }) => Promise<unknown>;
 };
 
-/** Ends the session on the server on a sign-out if it answers, and on this device always. */
-export async function endSession(authClient: SignOutClient, reason: LeaveReason): Promise<void> {
-  // A 401 may be a passing server error, so expiry leaves the server's session alone.
-  if (reason === "sign-out") await signOutRemotely(authClient);
+/** Ends the session on the server too when `scope` is everywhere and it answers, and on this device always. */
+export async function endSession(authClient: SignOutClient, scope: SessionScope): Promise<void> {
+  // A 401 may be a passing server error, so Session Expiry ends only the device's copy.
+  if (scope === "everywhere") await signOutRemotely(authClient);
 
   // Not awaited: a socket mid-reconnect closes only once it opens. A retired client's 401s are ignored.
   void closeMobileTrpcConnections();

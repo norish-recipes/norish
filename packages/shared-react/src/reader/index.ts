@@ -8,7 +8,7 @@ export { useHousehold, useHouseholdCacheHelpers, type HouseholdData } from "./us
 export { useHouseholdMutations } from "./use-household-mutations";
 export { useHouseholdSubscription } from "./use-household-subscription";
 export { useReader, useSeededSession } from "./use-reader";
-export { expireSession, useSessionExpiry, useSignOut, type SignOutOptions } from "./use-sign-out";
+export { expireSession, useSessionExpiry, useSignOut, type SignOutOptions } from "./session-end";
 export {
   normalizePermissionsData,
   selectCanDeleteRecipe,

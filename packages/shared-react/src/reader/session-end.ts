@@ -15,15 +15,16 @@ export type SignOutOptions = { discardQueue?: boolean };
 
 // One Sign-out, Account deletion or Session Expiry at a time, on this device: the first wins until it settles.
 let inFlight = false;
-let left = false;
+let sequenceLeft = false;
 // A 401 during a sequence that then stays signed in (a failed sign-out or delete) expires it after.
 let expiryAsked = false;
 let mountedExpiry: (() => Promise<void>) | null = null;
 
-export async function once(sequence: () => Promise<void>): Promise<void> {
+/** Runs one sequence that ends the session (Sign-out, Account deletion, Session Expiry) behind the guard. */
+export async function runSessionEnd(sequence: () => Promise<void>): Promise<void> {
   if (inFlight) return;
   inFlight = true;
-  left = false;
+  sequenceLeft = false;
   expiryAsked = false;
 
   try {
@@ -32,7 +33,7 @@ export async function once(sequence: () => Promise<void>): Promise<void> {
     inFlight = false;
   }
 
-  const expire = expiryAsked && !left;
+  const expire = expiryAsked && !sequenceLeft;
 
   expiryAsked = false;
   if (expire) await expireSession();
@@ -49,7 +50,7 @@ async function clearAndLeave(
     log.error({ error, reason }, "Failed to clear offline data");
   }
 
-  left = true;
+  sequenceLeft = true;
   leave(reason);
 }
 
@@ -60,7 +61,7 @@ export async function dropAndLeave(
   reason: LeaveReason
 ): Promise<void> {
   await platform
-    .endSession("expiry")
+    .endSession("device")
     .catch((error: unknown) => log.warn({ error }, "Could not drop the device's session"));
   await clearAndLeave(platform, discardQueue, reason);
 }
@@ -71,9 +72,9 @@ export function useSignOut() {
   const { isOffline } = useConnectivity();
 
   return ({ discardQueue = false }: SignOutOptions = {}) =>
-    once(async () => {
+    runSessionEnd(async () => {
       try {
-        await platform.endSession("sign-out");
+        await platform.endSession("everywhere");
       } catch (error) {
         log.warn({ error }, "Could not end the session, nothing was cleared");
 
@@ -99,7 +100,7 @@ export function useSessionExpiry(): void {
 
   useEffect(() => {
     // A 401 may be a passing server error, so only the device's session goes.
-    const expire = () => once(() => dropAndLeave(platform, false, "expiry"));
+    const expire = () => runSessionEnd(() => dropAndLeave(platform, false, "expiry"));
 
     mountedExpiry = expire;
 
