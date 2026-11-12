@@ -14,7 +14,7 @@ appId: dev.norish.app
     visible:
       id: login-email
     timeout: 20000
-# The old bug: the app read signed in again a moment after landing here.
+# Gives the app 5 s to read signed in again; it must stay on sign-in.
 - extendedWaitUntil:
     visible:
       id: smoke-user
@@ -24,20 +24,4 @@ appId: dev.norish.app
     id: smoke-user
 - assertVisible:
     id: login-email
-- tapOn:
-    id: login-email
-- inputText: ${NORISH_EMAIL}
-- tapOn:
-    id: login-password
-- inputText: ${NORISH_PASSWORD}
-- hideKeyboard
-- tapOn:
-    id: login-submit
-- tapOn:
-    text: Not Now
-    optional: true
-- extendedWaitUntil:
-    visible:
-      id: smoke-user
-      text: .*${NORISH_EMAIL}.*
-    timeout: 20000
+- runFlow: subflows/credentials.yaml
