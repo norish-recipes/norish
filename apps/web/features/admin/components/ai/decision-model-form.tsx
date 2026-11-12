@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useState } from "react";
 import { SettingRow } from "@/components/settings/setting-row";
 import { ActionButton, ActionButtonGroup } from "@/components/shared/action-button";
 import SecretInput from "@/components/shared/secret-input";
@@ -23,6 +23,7 @@ import {
 } from "@norish/shared-react/admin";
 
 import { ConnectionTestResult } from "../connection-test-result";
+import { useReportDirty } from "../use-report-dirty";
 
 interface DecisionModelFormProps {
   onDirtyChange?: (isDirty: boolean) => void;
@@ -82,9 +83,7 @@ export default function DecisionModelForm({ onDirtyChange }: DecisionModelFormPr
     apiKey.trim() !== "" ||
     !sameUses(uses, decisionConfig?.uses ?? DECISION_USES);
 
-  useEffect(() => {
-    onDirtyChange?.(hasChanges);
-  }, [hasChanges, onDirtyChange]);
+  useReportDirty(hasChanges, onDirtyChange);
 
   const handleRevealApiKey = () => fetchConfigSecret(ServerConfigKeys.DECISION_CONFIG, "apiKey");
 

@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useState } from "react";
 import { ActionButton, ActionButtonGroup } from "@/components/shared/action-button";
 import { Description, Label, TextArea, TextField } from "@heroui/react";
 import { useTranslations } from "next-intl";
@@ -8,6 +8,8 @@ import { useTranslations } from "next-intl";
 import type { PromptsConfig } from "@norish/config/zod/server-config";
 import { ServerConfigKeys } from "@norish/config/zod/server-config";
 import { useAdminConfig, usePromptsWrite, useRestoreDefault } from "@norish/shared-react/admin";
+
+import { useReportDirty } from "../use-report-dirty";
 
 /**
  * Every administrator-editable prompt, one entry each. Adding a prompt is one
@@ -75,9 +77,7 @@ export default function PromptsForm({ onDirtyChange }: PromptsFormProps) {
   const hasChanges =
     !!prompts && PROMPT_FIELDS.some(({ key }) => values[key] !== (prompts[key] ?? ""));
 
-  useEffect(() => {
-    onDirtyChange?.(hasChanges);
-  }, [hasChanges, onDirtyChange]);
+  useReportDirty(hasChanges, onDirtyChange);
   const handleSave = async () => {
     setSaving(true);
     await updatePrompts(values).finally(() => {

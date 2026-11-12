@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useState } from "react";
 import { SettingRow, SwitchRow } from "@/components/settings/setting-row";
 import SettingsSwitch from "@/components/settings/settings-switch";
 import { ActionButton, ActionButtonGroup } from "@/components/shared/action-button";
@@ -33,6 +33,7 @@ import {
 import type { ModelOption } from "./model-picker";
 import { ConnectionTestResult } from "../connection-test-result";
 import { KindsSelect } from "../kinds-select";
+import { useReportDirty } from "../use-report-dirty";
 import { ModelPicker } from "./model-picker";
 
 interface AIConfigFormProps {
@@ -189,9 +190,7 @@ export default function AIConfigForm({ onDirtyChange }: AIConfigFormProps) {
       apiKey.trim() !== ""
     );
   })();
-  useEffect(() => {
-    onDirtyChange?.(hasChanges);
-  }, [hasChanges, onDirtyChange]);
+  useReportDirty(hasChanges, onDirtyChange);
   const handleRevealApiKey = () => fetchConfigSecret(ServerConfigKeys.AI_CONFIG, "apiKey");
 
   /**

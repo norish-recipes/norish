@@ -1,11 +1,13 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useState } from "react";
 import { ActionButton, ActionButtonGroup } from "@/components/shared/action-button";
 import { usePending } from "@/hooks/use-pending";
 import { CodeBracketIcon, ExclamationTriangleIcon } from "@heroicons/react/16/solid";
 import { TextArea } from "@heroui/react";
 import { useTranslations } from "next-intl";
+
+import { useReportDirty } from "../use-report-dirty";
 
 interface JsonEditorProps {
   value: unknown;
@@ -48,9 +50,7 @@ export default function JsonEditor({
     setIsDirty(false);
     setError(null);
   }
-  useEffect(() => {
-    onDirtyChange?.(isDirty);
-  }, [isDirty, onDirtyChange]);
+  useReportDirty(isDirty, onDirtyChange);
   const handleTextChange = (newText: string) => {
     setText(newText);
     setIsDirty(true);

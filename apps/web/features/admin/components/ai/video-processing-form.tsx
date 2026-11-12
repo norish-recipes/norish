@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useState } from "react";
 import { SwitchRow } from "@/components/settings/setting-row";
 import SettingsSwitch from "@/components/settings/settings-switch";
 import { ActionButton, ActionButtonGroup } from "@/components/shared/action-button";
@@ -34,6 +34,7 @@ import {
   useYtDlpVersionQuery,
 } from "@norish/shared-react/admin";
 
+import { useReportDirty } from "../use-report-dirty";
 import { ModelPicker } from "./model-picker";
 
 interface VideoProcessingFormProps {
@@ -207,9 +208,7 @@ export default function VideoProcessingForm({ onDirtyChange }: VideoProcessingFo
       isTranscriptionKeyCleared
     );
   })();
-  useEffect(() => {
-    onDirtyChange?.(hasChanges);
-  }, [hasChanges, onDirtyChange]);
+  useReportDirty(hasChanges, onDirtyChange);
   const handleRevealTranscriptionApiKey = () =>
     fetchConfigSecret(ServerConfigKeys.VIDEO_CONFIG, "transcriptionApiKey");
   const handleSave = async () => {

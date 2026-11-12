@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useState } from "react";
 import { SettingRow } from "@/components/settings/setting-row";
 import { ActionButton, ActionButtonGroup } from "@/components/shared/action-button";
 import { usePending } from "@/hooks/use-pending";
@@ -11,6 +11,7 @@ import { DEFAULT_AUTOMATIC_INGREDIENTS, ServerConfigKeys } from "@norish/config/
 import { useAdminConfig, useAIConfigWrite } from "@norish/shared-react/admin";
 
 import { KindsSelect } from "../kinds-select";
+import { useReportDirty } from "../use-report-dirty";
 import CleanUpCatalogue from "./clean-up-catalogue";
 import FillGaps from "./fill-gaps";
 
@@ -56,9 +57,7 @@ export default function IngredientCatalogueForm({ onDirtyChange }: IngredientCat
     (key) => selected.includes(key) !== stored[key]
   );
 
-  useEffect(() => {
-    onDirtyChange?.(hasChanges);
-  }, [hasChanges, onDirtyChange]);
+  useReportDirty(hasChanges, onDirtyChange);
 
   const handleSave = async () => {
     if (!aiConfig) return;

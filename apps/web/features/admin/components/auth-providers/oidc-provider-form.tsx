@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useState } from "react";
 import SecretInput from "@/components/shared/secret-input";
 import { usePending } from "@/hooks/use-pending";
 import { Input, Label, TextField, useOverlayState } from "@heroui/react";
@@ -12,6 +12,7 @@ import { useDirtyState } from "@norish/shared-react/hooks";
 
 import type { ClaimMappingValues } from "./oidc-claim-mapping";
 import type { TestResult } from "./types";
+import { useReportDirty } from "../use-report-dirty";
 import { DeleteProviderModal } from "./delete-provider-modal";
 import { OIDCClaimMapping } from "./oidc-claim-mapping";
 import { ProviderActions } from "./provider-actions";
@@ -105,9 +106,7 @@ export function OIDCProviderForm({ config, onDirtyChange }: OIDCProviderFormProp
     );
   })();
 
-  useEffect(() => {
-    onDirtyChange?.(hasChanges);
-  }, [hasChanges, onDirtyChange]);
+  useReportDirty(hasChanges, onDirtyChange);
 
   const handleRevealSecret = (field: string) => () =>
     fetchConfigSecret(ServerConfigKeys.AUTH_PROVIDER_OIDC, field);

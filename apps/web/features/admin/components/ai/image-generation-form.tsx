@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useState } from "react";
 import { ActionButton, ActionButtonGroup } from "@/components/shared/action-button";
 import SecretInput from "@/components/shared/secret-input";
 import { usePending } from "@/hooks/use-pending";
@@ -20,6 +20,7 @@ import {
   useImageGenerationConfigWrite,
 } from "@norish/shared-react/admin";
 
+import { useReportDirty } from "../use-report-dirty";
 import { ModelPicker } from "./model-picker";
 
 interface ImageGenerationFormProps {
@@ -120,9 +121,7 @@ export default function ImageGenerationForm({ onDirtyChange }: ImageGenerationFo
     apiKey.trim() !== "" ||
     isApiKeyCleared;
 
-  useEffect(() => {
-    onDirtyChange?.(hasChanges);
-  }, [hasChanges, onDirtyChange]);
+  useReportDirty(hasChanges, onDirtyChange);
 
   // The key worth showing is the one a request would actually run with: this
   // block's own, or the AI configuration's when that is what it borrows.

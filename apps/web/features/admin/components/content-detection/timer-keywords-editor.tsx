@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useState } from "react";
 import { SwitchRow } from "@/components/settings/setting-row";
 import SettingsSwitch from "@/components/settings/settings-switch";
 import { ActionButton, ActionButtonGroup } from "@/components/shared/action-button";
@@ -8,6 +8,8 @@ import { usePending } from "@/hooks/use-pending";
 import { ExclamationTriangleIcon } from "@heroicons/react/16/solid";
 import { Description, Label, TextArea, TextField } from "@heroui/react";
 import { useTranslations } from "next-intl";
+
+import { useReportDirty } from "../use-report-dirty";
 
 interface TimerKeywordsEditorProps {
   enabled: boolean;
@@ -77,9 +79,7 @@ export default function TimerKeywordsEditor({
     setIsDirty(false);
     setError(null);
   }
-  useEffect(() => {
-    onDirtyChange?.(isDirty);
-  }, [isDirty, onDirtyChange]);
+  useReportDirty(isDirty, onDirtyChange);
   const handleEnabledChange = (newEnabled: boolean) => {
     setIsEnabled(newEnabled);
     setIsDirty(true);

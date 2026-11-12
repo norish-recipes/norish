@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useState } from "react";
 import SecretInput from "@/components/shared/secret-input";
 import { usePending } from "@/hooks/use-pending";
 import { Input, Label, TextField, useOverlayState } from "@heroui/react";
@@ -10,6 +10,7 @@ import { ServerConfigKeys } from "@norish/config/zod/server-config";
 import { useAuthProviderWrites, useConfigSecret } from "@norish/shared-react/admin";
 
 import type { FieldDef, ProviderKey, TestResult } from "./types";
+import { useReportDirty } from "../use-report-dirty";
 import { DeleteProviderModal } from "./delete-provider-modal";
 import { ProviderActions } from "./provider-actions";
 import { TestResultDisplay } from "./test-result-display";
@@ -64,9 +65,7 @@ export function AuthProviderForm({
     return value !== ((config?.[field.key] as string) ?? "");
   });
 
-  useEffect(() => {
-    onDirtyChange?.(hasChanges);
-  }, [hasChanges, onDirtyChange]);
+  useReportDirty(hasChanges, onDirtyChange);
 
   const handleRevealSecret = (field: string) => () =>
     fetchConfigSecret(CONFIG_KEYS[providerKey], field);
