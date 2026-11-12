@@ -58,3 +58,22 @@ For later tickets:
 - Older than this ticket: "Change server" then Connect with the same address leaves two Sign in screens stacked (`connect-screen.tsx` `replace("/login")`). Ticket 02's chip should fix it.
 - Device run (06): `expo prebuild` first (splash width 168, `CFBundleLocalizations`); check the glide landing, popover sizing and font, `pt-PT` and Nynorsk matching, and whether the smoke → Sign in replace animates on Sign-out.
 
+### Device round (2026-11-12)
+
+The maintainer ran the app on the simulator: the splash flickered and the screens did not follow the boards. Range `9311803f1..ce359f914`, verified by frame analysis of recorded launches and measured screenshots, then one review.
+
+Fixed:
+- The flicker: the native splash was hidden from an effect before the first JS frame was drawn (about 0.9 s of bare background). It now hides from the overlay's `onLayout`, and the clock starts after and steps at most two frames at a time (`stepLaunchClock`). `3c0662960`
+- The dark splash logo's cream matches the SVG. `c838dcdb9`
+- Splash position: logo and slogan centred as one group as on the Main board (logo top 398pt), the native PNGs padded so the hand-off stays in the same pixels. `4839f1c35`
+- Board values in the shared pieces (also tickets 02 and 03): fields 52pt on Server address and 50pt on the forms, 1pt border, no shadow; the 52pt primary button; Sign in's block 40pt from the top; divider, provider buttons, spacing; an `--accent-text` token for links and the chip icon. `c94bb5260`, `7aaaf8833`, `984e9b56b`, `033ce27e6`, `e795f5a0f`, `d2b83df78`, `2594fe3c2`
+- From the review: the token first shipped as `--link`, which HeroUI uses, and would have turned web's links green (renamed); Sign in's status screens and spinner are centred again; a comment corrected. `2594fe3c2`, `b61a7cf19`, `ce359f914`
+
+Rejected: remove the accent border on a focused field (the boards draw no focused state; a visible one stays).
+
+Left as built: the danger red is the theme token web shares; the plug icon's glyph; the native popover's and chip's chrome.
+
+Asked (open): the light logo changes colour at the hand-off on the simulator (launch image rgb(27,103,61), app rgb(51,102,65)); the PNG is #336640 and iOS appears to read it as Display P3. An iOS-only pre-compensated image would fix it; unconfirmed on a real iPhone.
+
+Device run (06), not yet seen on a device: Server address's error state, help popover and dark mode; Sign in and Sign up against their boards.
+
