@@ -86,9 +86,11 @@ export function createTRPCProviderBundle({
     "use memo";
 
     const [status, setStatus] = useState<ConnectionStatus>("idle");
-    const [{ queryClient, trpcClient, closeWebSocket }] = useState(() => {
+    const [{ queryClient, trpcClient, revive, retire }] = useState(() => {
       // The links' WebSocket client, closed when the provider unmounts.
       let webSocketClient: { close: () => Promise<void> } | null = null;
+      // Unmounted, this client's session is not the reader's now, so its 401 and 4401 say nothing.
+      let retired = false;
       const qc = externalGetQueryClient
         ? externalGetQueryClient()
         : new QueryClient({
@@ -127,16 +129,21 @@ export function createTRPCProviderBundle({
             setStatus(isNormalWebSocketClose(cause) ? "idle" : "disconnected");
             onWebSocketClose?.(cause);
           },
-          onWebSocketUnauthorized,
-          onUnauthorized,
+          onWebSocketUnauthorized: (cause) => {
+            if (!retired) onWebSocketUnauthorized?.(cause);
+          },
+          onUnauthorized: (cause) => {
+            if (!retired) onUnauthorized?.(cause);
+          },
           mutationLink,
           extraLinks,
         }),
       });
 
-      const closeWebSocket = () => {
+      const retire = () => {
         const client = webSocketClient;
 
+        retired = true;
         webSocketClient = null;
 
         if (!client) {
@@ -146,10 +153,19 @@ export function createTRPCProviderBundle({
         void client.close().catch(() => null);
       };
 
-      return { queryClient: qc, trpcClient: tc, closeWebSocket };
+      // StrictMode's remount runs the cleanup once without the client being replaced.
+      const revive = () => {
+        retired = false;
+      };
+
+      return { queryClient: qc, trpcClient: tc, revive, retire };
     });
 
-    useEffect(() => closeWebSocket, [closeWebSocket]);
+    useEffect(() => {
+      revive();
+
+      return retire;
+    }, [revive, retire]);
 
     const connectionValue: ConnectionContextValue = {
       status,
