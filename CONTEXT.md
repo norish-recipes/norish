@@ -419,6 +419,10 @@ An identity change — household created, joined or left, member kicked, account
 The one Norish account a person signs in to, by any of their Sign-in Methods, holding what is theirs rather than their household's: their name and Avatar, allergies, language, Device Preferences and API keys. The Reader is that person at the screen; the Account is what they are signed in as.
 _Avoid_: User (in anything a person reads), Profile (one part of it)
 
+**Server Address**:
+The address of the one Norish server an app is connected to, entered before anyone signs in. Every Account, Sign-in Method and Offline Cache on that app belongs to that server; changing the address means signing in again.
+_Avoid_: Backend URL, App URL, Instance URL
+
 **Sign-in Method**:
 One way a person signs in to their one Norish account: a password, Google, GitHub, or the server's OIDC provider under the name the administrator gave it. A person can have several, and every one leads to the same recipes, household and settings. A method is added only from a signed-in session, where the person has proven both sides, so its email need not match the account's; signing in never adds one, even when the email matches, because that is how an account is taken over. Adding the OIDC method applies its claims at once, as its next sign-in would.
 _Avoid_: Linked Account (collides with Site Account and suggests a second account), Provider (the server-side configuration, not what the person has), Account (the person's whole Norish account)
