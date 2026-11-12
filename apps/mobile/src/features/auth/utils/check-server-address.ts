@@ -1,4 +1,4 @@
-import { classifyServerHealth } from "@/features/auth/utils/server-version";
+import { classifyServerHealth, serverVersionOf } from "@/features/auth/utils/server-version";
 import { getServerHealthUrl, normalizeServerAddress } from "@/lib/network/server-address";
 
 import { REACHABILITY_DEADLINE_MS } from "@norish/shared-react/offline/reachability";
@@ -6,8 +6,10 @@ import { REACHABILITY_DEADLINE_MS } from "@norish/shared-react/offline/reachabil
 export type ServerAddressErrorId =
   "auth.connect.errors.invalidUrl" | "auth.connect.errors.unreachable";
 
-type ServerAddressCheck =
-  | { outcome: "ok" | "too-old"; address: string }
+export type ServerAddressCheck =
+  | { outcome: "ok"; address: string }
+  /** `version` is what the server reported, when it reported one. */
+  | { outcome: "too-old"; address: string; version?: string }
   | { outcome: "error"; messageId: ServerAddressErrorId };
 
 /** Asks the server at `input` what it is; anything but a Norish answer is one inline error. */
@@ -30,13 +32,16 @@ export async function checkServerAddress(
       credentials: "omit",
       signal: controller.signal,
     });
-    const verdict = response.ok
-      ? classifyServerHealth(await response.json().catch(() => null))
-      : "not-norish";
+    const health: unknown = response.ok ? await response.json().catch(() => null) : null;
+    const verdict = classifyServerHealth(health);
 
-    return verdict === "not-norish"
-      ? { outcome: "error", messageId: "auth.connect.errors.unreachable" }
-      : { outcome: verdict, address };
+    if (verdict === "not-norish") {
+      return { outcome: "error", messageId: "auth.connect.errors.unreachable" };
+    }
+
+    return verdict === "ok"
+      ? { outcome: "ok", address }
+      : { outcome: "too-old", address, version: serverVersionOf(health) };
   } catch {
     return { outcome: "error", messageId: "auth.connect.errors.unreachable" };
   } finally {

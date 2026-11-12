@@ -25,7 +25,7 @@ describe("checkServerAddress", () => {
   it("sends a Norish too old to Update your server", async () => {
     await expect(
       checkServerAddress("https://old.example", answering(norish("0.1.0")))
-    ).resolves.toEqual({ outcome: "too-old", address: "https://old.example" });
+    ).resolves.toEqual({ outcome: "too-old", address: "https://old.example", version: "0.1.0" });
   });
 
   it("asks for a valid URL without asking the network", async () => {

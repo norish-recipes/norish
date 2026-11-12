@@ -22,3 +22,8 @@ export function classifyServerHealth(health: unknown): ServerHealthVerdict {
     ? "ok"
     : "too-old";
 }
+
+/** The version a Norish health response reports, when it reports one. */
+export function serverVersionOf(health: unknown): string | undefined {
+  return isRecord(health) && typeof health.version === "string" ? health.version : undefined;
+}

@@ -10,6 +10,7 @@ import { HelpPopover } from "@/features/auth/components/help-popover";
 import { InlineError } from "@/features/auth/components/inline-error";
 import { useAuthAttempt } from "@/features/auth/hooks/use-auth-attempt";
 import { checkServerAddress } from "@/features/auth/utils/check-server-address";
+import { updateServerHref } from "@/features/auth/utils/update-server-route";
 import { getServerAddress, saveServerAddress } from "@/lib/network/server-address";
 import Feather from "@expo/vector-icons/Feather";
 import MaterialCommunityIcons from "@expo/vector-icons/MaterialCommunityIcons";
@@ -39,7 +40,7 @@ export function ConnectScreen() {
       if (check.outcome === "error") return check.messageId;
 
       if (check.outcome === "too-old") {
-        router.push("/update-server");
+        router.push(updateServerHref(check.address, check.version));
 
         return null;
       }
