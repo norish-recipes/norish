@@ -79,7 +79,7 @@ function flattenMessages(messages: Record<string, unknown>, prefix = ""): Record
   return flatMessages;
 }
 
-function MobileLocaleProviderInner({
+export function MobileIntlProvider({
   children,
   signedIn,
 }: {
@@ -202,16 +202,6 @@ function MobileLocaleProviderInner({
       </IntlProvider>
     </MobileLocaleContext.Provider>
   );
-}
-
-export function MobileIntlProvider({
-  children,
-  signedIn,
-}: {
-  children: React.ReactNode;
-  signedIn: boolean;
-}) {
-  return <MobileLocaleProviderInner signedIn={signedIn}>{children}</MobileLocaleProviderInner>;
 }
 
 export function MobileIntlFallbackProvider({ children }: { children: React.ReactNode }) {

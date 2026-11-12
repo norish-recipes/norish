@@ -1,3 +1,4 @@
+import type { AuthClient } from "@/lib/auth/auth-client";
 import { useEffect, useState, useSyncExternalStore } from "react";
 import { readPersistedSession } from "@/lib/auth/auth-storage";
 import { useAuthClient } from "@/lib/auth/use-auth-client";
@@ -7,7 +8,6 @@ import type { SessionUser } from "@norish/shared-react/reader";
 import { useConnectivity } from "@norish/shared-react/offline/react";
 import { useSessionReader } from "@norish/shared-react/reader";
 
-type AuthClient = ReturnType<typeof useAuthClient>;
 type SessionState = {
   data: { user: SessionUser } | null;
   isPending: boolean;
@@ -32,7 +32,7 @@ export function useMobileSession(): PlatformSession {
   const { isOffline } = useConnectivity();
   // Keyed by client: a reset wipes the stored session, so a new client reads it again.
   const [persisted, setPersisted] = useState<{
-    client: AuthClient;
+    client: AuthClient | null;
     user: SessionUser | null;
   }>();
 

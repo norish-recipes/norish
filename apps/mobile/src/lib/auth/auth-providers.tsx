@@ -24,6 +24,9 @@ export function AuthProviders({ children }: { children: ReactNode }) {
     if (!session.isPending) setHasActiveSession(signedIn);
   }, [session.isPending, signedIn]);
 
+  // The boot gate mounts this only with a server, so there is always a client.
+  if (!authClient) return null;
+
   return (
     <MobileIntlProvider signedIn={signedIn}>
       <MobilePlatformProvider
