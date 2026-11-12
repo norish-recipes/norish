@@ -53,8 +53,7 @@ vi.mock("@norish/shared-react/trpc", () => ({
   useTRPC: () => ({
     ingredients: {
       find: {
-        queryOptions: (input: { name: string }, opts: { enabled?: boolean }) => ({
-          ...opts,
+        queryOptions: (input: { name: string }) => ({
           queryKey: ["ingredients.find", input.name],
           data: { ingredientId: ingredientOf(input.name) },
         }),
@@ -67,6 +66,8 @@ vi.mock("@tanstack/react-query", async (importOriginal) => ({
   useQuery: (options: { enabled?: boolean; data?: unknown }) => ({
     data: options.enabled === false ? undefined : options.data,
   }),
+  useQueries: ({ queries }: { queries: Array<{ data?: unknown }> }) =>
+    queries.map((query) => ({ data: query.data })),
 }));
 
 /** Let the name typed settle, so the panel has asked for its Ingredient. */

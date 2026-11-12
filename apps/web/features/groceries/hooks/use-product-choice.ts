@@ -3,14 +3,10 @@
 import { useCallback, useEffect, useState } from "react";
 
 import type { StoreDto, StoreProductChoice } from "@norish/shared/contracts";
-import {
-  useChooseProduct,
-  useIngredientFor,
-  useLinkFor,
-  useProductLink,
-} from "@norish/shared-react/groceries";
+import { useChooseProduct, useLinkFor, useProductLink } from "@norish/shared-react/groceries";
 import { isPendingLink } from "@norish/shared/lib/product-link";
 
+import { useIngredientFor } from "./use-ingredient-for";
 import { useParsedGroceryName } from "./use-parsed-grocery-name";
 
 /** How long a shopper stops typing a grocery's name before its food and link are read. */
