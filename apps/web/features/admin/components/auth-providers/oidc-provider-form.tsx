@@ -2,13 +2,13 @@
 
 import { useState } from "react";
 import SecretInput from "@/components/shared/secret-input";
+import { useDirtyState } from "@/hooks/use-dirty-state";
 import { usePending } from "@/hooks/use-pending";
 import { Input, Label, TextField, useOverlayState } from "@heroui/react";
 import { useTranslations } from "next-intl";
 
 import { ServerConfigKeys } from "@norish/config/zod/server-config";
 import { useAuthProviderWrites, useConfigSecret } from "@norish/shared-react/admin";
-import { useDirtyState } from "@norish/shared-react/hooks";
 
 import type { ClaimMappingValues } from "./oidc-claim-mapping";
 import type { TestResult } from "./types";

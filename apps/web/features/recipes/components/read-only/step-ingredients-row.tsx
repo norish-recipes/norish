@@ -8,11 +8,11 @@ import { useLocale } from "next-intl";
 
 import type { UnitsMap } from "@norish/config/zod/server-config";
 import type { StepIngredientRefLike } from "@norish/shared/lib/step-ingredients";
-import { createUnitFormatter } from "@norish/shared-react/hooks";
 import { useDevicePreference } from "@norish/shared-react/reader";
 import { formatAmount } from "@norish/shared/lib/format-amount";
 import { namesNoFood } from "@norish/shared/lib/ingredient-text";
 import { resolveStepIngredients } from "@norish/shared/lib/step-ingredients";
+import { createUnitFormatter } from "@norish/shared/lib/unit-localization";
 
 type IngredientLike = {
   ingredientName: string;

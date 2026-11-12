@@ -293,3 +293,42 @@ export function formatUnit(
     }) ?? unitId
   );
 }
+
+/** A reader's unit formatters: a unit alone, and an amount with its unit. */
+export function createUnitFormatter({
+  locale,
+  units,
+  unitStyle,
+}: {
+  locale: string;
+  units: UnitsMap;
+  unitStyle?: UnitStyle;
+}) {
+  const formatAmount = (amount: number) =>
+    amount % 1 === 0 ? amount.toString() : amount.toFixed(1);
+
+  const formatUnitOnly = (
+    unit: string | null | undefined,
+    amount?: number | null | undefined
+  ): string => (unit ? formatUnit(unit, locale, units, amount, unitStyle) : "");
+
+  /** A unitless amount reads as a count ("2×"); a unit longer than two letters gets a space. */
+  const formatAmountUnit = (
+    amount: number | null | undefined,
+    unit: string | null | undefined
+  ): string => {
+    const hasAmount = !!amount || amount === 0;
+
+    if (!unit) return hasAmount ? `${formatAmount(amount ?? 0)}\u00D7` : "";
+
+    const localizedUnit = formatUnit(unit, locale, units, amount, unitStyle);
+
+    if (!hasAmount) return localizedUnit;
+
+    return localizedUnit.length > 2
+      ? `${formatAmount(amount ?? 0)} ${localizedUnit}`
+      : `${formatAmount(amount ?? 0)}${localizedUnit}`;
+  };
+
+  return { formatAmountUnit, formatUnitOnly, locale, units };
+}

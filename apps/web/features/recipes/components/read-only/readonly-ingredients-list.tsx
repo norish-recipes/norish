@@ -9,10 +9,10 @@ import { useUnitFormatter } from "@/hooks/use-unit-formatter";
 import { useLocale } from "next-intl";
 
 import type { UnitsMap } from "@norish/config/zod/server-config";
-import { createUnitFormatter } from "@norish/shared-react/hooks";
 import { useDevicePreference } from "@norish/shared-react/reader";
 import { formatAmount } from "@norish/shared/lib/format-amount";
 import { namesNoFood } from "@norish/shared/lib/ingredient-text";
+import { createUnitFormatter } from "@norish/shared/lib/unit-localization";
 
 import { AnimatedNumber } from "./animated-number";
 

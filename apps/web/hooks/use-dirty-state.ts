@@ -1,7 +1,3 @@
-"use client";
-
-import { useMemo } from "react";
-
 interface UseDirtyStateOptions<Current, Initial = Current> {
   normalizeCurrent?: (value: Current) => unknown;
   normalizeInitial?: (value: Initial) => unknown;
@@ -58,10 +54,5 @@ export function useDirtyState<Current, Initial = Current>(
   initial: Initial,
   options: UseDirtyStateOptions<Current, Initial> = {}
 ): boolean {
-  const { normalizeCurrent, normalizeInitial, isEqual } = options;
-
-  return useMemo(
-    () => isDirtyState(current, initial, { normalizeCurrent, normalizeInitial, isEqual }),
-    [current, initial, normalizeCurrent, normalizeInitial, isEqual]
-  );
+  return isDirtyState(current, initial, options);
 }
