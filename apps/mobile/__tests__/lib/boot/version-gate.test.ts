@@ -10,7 +10,7 @@ import { describe, expect, it } from "vitest";
 const address = "https://norish.example.com";
 const tooOld = { outcome: "too-old", address, version: "0.26.2" } as const;
 const newEnough = { outcome: "ok", address } as const;
-const unreachable = { outcome: "error", messageId: "auth.connect.errors.unreachable" } as const;
+const unreachable = { outcome: "error", reason: "unreachable" } as const;
 
 describe("resolveLaunchVersionCheck", () => {
   it("holds Update your server for a too old saved address", () => {

@@ -3,7 +3,8 @@ import { describe, expect, it, vi } from "vitest";
 vi.mock("expo-secure-store", () => ({}));
 vi.mock("@/lib/auth/auth-client", () => ({}));
 
-const { checkServerAddress } = await import("@/features/auth/utils/check-server-address");
+const { checkServerAddress, serverAddressErrorId } =
+  await import("@/features/auth/utils/check-server-address");
 
 const norish = (version: string) => ({ status: "ok", version, parser: { status: "ok" } });
 
@@ -43,13 +44,13 @@ describe("checkServerAddress", () => {
 
     await expect(checkServerAddress("   ", fetcher)).resolves.toEqual({
       outcome: "error",
-      messageId: "auth.connect.errors.invalidUrl",
+      reason: "invalid",
     });
     expect(fetcher).not.toHaveBeenCalled();
   });
 
   it("says no Norish server answered for anything else", async () => {
-    const unreachable = { outcome: "error", messageId: "auth.connect.errors.unreachable" };
+    const unreachable = { outcome: "error", reason: "unreachable" };
     const refused = vi.fn<typeof fetch>(() => Promise.reject(new TypeError("Network failed")));
     const timedOut = vi.fn<typeof fetch>(() =>
       Promise.reject(new DOMException("Aborted", "AbortError"))
@@ -61,5 +62,12 @@ describe("checkServerAddress", () => {
     await expect(checkServerAddress("a.example", answering("<html>"))).resolves.toEqual(
       unreachable
     );
+  });
+});
+
+describe("serverAddressErrorId", () => {
+  it("names the message for each reason a check fails", () => {
+    expect(serverAddressErrorId("invalid")).toBe("auth.connect.errors.invalidUrl");
+    expect(serverAddressErrorId("unreachable")).toBe("auth.connect.errors.unreachable");
   });
 });

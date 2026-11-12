@@ -9,7 +9,10 @@ import { AuthSubmitButton } from "@/features/auth/components/auth-submit-button"
 import { HelpPopover } from "@/features/auth/components/help-popover";
 import { InlineError } from "@/features/auth/components/inline-error";
 import { useAuthAttempt } from "@/features/auth/hooks/use-auth-attempt";
-import { checkServerAddress } from "@/features/auth/utils/check-server-address";
+import {
+  checkServerAddress,
+  serverAddressErrorId,
+} from "@/features/auth/utils/check-server-address";
 import { getServerAddress, saveServerAddress } from "@/lib/network/server-address";
 import { markServerTooOld } from "@/lib/network/too-old-server";
 import Feather from "@expo/vector-icons/Feather";
@@ -37,7 +40,7 @@ export function ConnectScreen() {
     void connect.run("connect", async () => {
       const check = await checkServerAddress(address);
 
-      if (check.outcome === "error") return check.messageId;
+      if (check.outcome === "error") return serverAddressErrorId(check.reason);
 
       // Held, so whichever navigator is mounted shows Update your server.
       if (check.outcome === "too-old") {
