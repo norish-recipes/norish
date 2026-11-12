@@ -93,6 +93,7 @@ export function IngredientList({
   return (
     <div ref={containerRef} className="flex flex-col">
       <div
+        aria-busy={settling}
         className={`border-border relative overflow-hidden rounded-xl border transition-opacity ${settling ? "opacity-60" : ""}`}
         data-testid="ingredients-list"
         role="list"

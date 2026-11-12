@@ -129,9 +129,9 @@ export function IngredientsScreen() {
           onSearch={onSearch}
         />
 
-        {isLoading ? (
-          // The same rows the tab's skeleton draws, until the first page arrives.
-          <div className="flex flex-col gap-4">
+        {isLoading || (isPlaceholderData && items.length === 0) ? (
+          // The tab skeleton's rows, until the first page or a changed filter's first answer lands.
+          <div aria-busy className="flex flex-col gap-4" data-testid="ingredients-loading">
             {Array.from({ length: 5 }, (_, i) => (
               <Skeleton key={i} className="h-12 w-full rounded-lg" />
             ))}

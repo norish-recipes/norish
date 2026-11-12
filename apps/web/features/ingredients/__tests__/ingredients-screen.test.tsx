@@ -451,6 +451,34 @@ describe("IngredientsScreen", () => {
     await waitFor(() => expect(busy()).toBe("true"));
   });
 
+  it("shows a changed filter's loading state, never the empty copy, while its first answer is on its way", async () => {
+    items = [];
+    await renderScreen();
+    expect(screen.getByTestId("ingredients-empty")).toBeInTheDocument();
+
+    items = [onion];
+    listStalled = true;
+    act(() => {
+      fireEvent.change(screen.getByTestId("ingredients-search"), { target: { value: "oni" } });
+    });
+    await waitFor(() => expect(listReads()).toBe(2));
+
+    expect(screen.queryByTestId("ingredients-empty")).toBeNull();
+    expect(screen.getByTestId("ingredients-loading")).toHaveAttribute("aria-busy", "true");
+  });
+
+  it("marks the previous filter's rows as loading while the changed filter is read", async () => {
+    await renderScreen();
+    listStalled = true;
+    act(() => {
+      fireEvent.change(screen.getByTestId("ingredients-search"), { target: { value: "oni" } });
+    });
+    await waitFor(() => expect(listReads()).toBe(2));
+
+    expect(screen.getByTestId("ingredients-list")).toHaveAttribute("aria-busy", "true");
+    expect(screen.getByTestId("ingredients-list")).toHaveClass("opacity-60");
+  });
+
   it("shows each food's icon in its row, and the food glyph for one with none", async () => {
     const icon = "/ingredient-icons/0123456789abcdef0123456789abcdef.webp";
 
