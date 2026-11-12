@@ -1,4 +1,5 @@
 import { Easing, Extrapolation, interpolate } from "react-native-reanimated";
+import { progress } from "@/lib/motion/progress";
 
 /** One badge's timing, from the board's markup: the shake's keyTimes run over `shakeMs`, the ring starts at `ringStart`. */
 export type BadgeTiming = {
@@ -63,13 +64,6 @@ export function badgeShake(clock: number, timing: BadgeTiming) {
   );
 }
 
-/** How far `t` is from `start` to `end`, from 0 to 1. */
-function span(t: number, start: number, end: number) {
-  "worklet";
-
-  return (t - start) / (end - start);
-}
-
 /** The arrow's vertical offset in points: it tries to rise, drops past rest, then settles. */
 export function badgeArrow(clock: number) {
   "worklet";
@@ -77,14 +71,14 @@ export function badgeArrow(clock: number) {
   const t = clock / UPDATE_TIMING.ms;
   let units = 0;
 
-  if (t < ARROW_RISEN_AT) units = ARROW_RISEN * arrowRise(span(t, 0, ARROW_RISEN_AT));
+  if (t < ARROW_RISEN_AT) units = ARROW_RISEN * arrowRise(progress(t, 0, ARROW_RISEN_AT));
   else if (t < ARROW_HELD_UNTIL) units = ARROW_RISEN;
   else if (t < ARROW_DIPPED_AT)
     units =
       ARROW_RISEN +
-      (ARROW_DIPPED - ARROW_RISEN) * arrowDrop(span(t, ARROW_HELD_UNTIL, ARROW_DIPPED_AT));
+      (ARROW_DIPPED - ARROW_RISEN) * arrowDrop(progress(t, ARROW_HELD_UNTIL, ARROW_DIPPED_AT));
   else if (t < ARROW_SETTLED_AT)
-    units = ARROW_DIPPED * (1 - arrowSettle(span(t, ARROW_DIPPED_AT, ARROW_SETTLED_AT)));
+    units = ARROW_DIPPED * (1 - arrowSettle(progress(t, ARROW_DIPPED_AT, ARROW_SETTLED_AT)));
 
   return units * GLYPH_SCALE;
 }
@@ -93,7 +87,7 @@ export function badgeArrow(clock: number) {
 export function badgeRing(clock: number, timing: BadgeTiming) {
   "worklet";
 
-  const t = Math.min(Math.max(span(clock, timing.ringStart, timing.ringStart + RING_MS), 0), 1);
+  const t = progress(clock, timing.ringStart, timing.ringStart + RING_MS);
 
   return {
     r: RING_FROM_RADIUS + (RING_TO_RADIUS - RING_FROM_RADIUS) * ringEase(t),

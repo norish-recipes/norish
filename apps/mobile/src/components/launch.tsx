@@ -6,8 +6,6 @@ import React, { createContext, use, useEffect, useState } from "react";
 import { StyleSheet } from "react-native";
 import Animated, {
   Easing,
-  Extrapolation,
-  interpolate,
   useAnimatedStyle,
   useFrameCallback,
   useReducedMotion,
@@ -17,6 +15,7 @@ import { scheduleOnRN } from "react-native-worklets";
 import { Brand, useSplashBrandTop } from "@/components/brand";
 import { resolveLaunchMotion, resolveSloganStart, stepLaunchClock } from "@/lib/boot/boot-state";
 import { useMobileLocaleSettings } from "@/lib/i18n/mobile-i18n-context";
+import { progress } from "@/lib/motion/progress";
 import * as SplashScreen from "expo-splash-screen";
 import { useThemeColor } from "heroui-native";
 
@@ -186,13 +185,6 @@ function LaunchOverlay({ handoff, launch }: { handoff: LaunchHandoff | null; lau
       </Animated.View>
     </Animated.View>
   );
-}
-
-/** How far the clock is from `start` to `end`, from 0 to 1. */
-function progress(clock: number, start: number, end: number) {
-  "worklet";
-
-  return interpolate(clock, [start, end], [0, 1], Extrapolation.CLAMP);
 }
 
 function rise(clock: number, [start, end]: readonly [number, number]) {
