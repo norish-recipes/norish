@@ -62,10 +62,10 @@ describe("useUserMutations", () => {
     await failCall("admin.users.setAdminStatus");
     await waitFor(() => expect(result.current.changingRoleOf).toBeNull());
     expect(stale()).toBe(false);
-    expect(platform.showError).toHaveBeenCalledWith(
-      expect.objectContaining({ message: "offline" }),
-      "admin-users:set-admin",
-      "common.errors.operationFailed"
-    );
+    expect(platform.toast.show).toHaveBeenCalledWith({
+      severity: "danger",
+      title: "common.errors.operationFailed",
+      description: "offline",
+    });
   });
 });
