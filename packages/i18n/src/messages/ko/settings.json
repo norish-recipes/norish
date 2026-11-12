@@ -636,8 +636,6 @@
       "localesDescription": "사용자가 선택할 수 있는 언어 선택",
       "defaultLocale": "기본 언어",
       "defaultLocaleDescription": "신규 사용자 및 대체 언어로 사용되는 언어",
-      "localesSaved": "언어 설정이 저장되었습니다",
-      "localesError": "언어 설정을 저장하지 못했습니다.",
       "atLeastOneLocale": "하나 이상의 언어를 활성화해야 합니다.",
       "export": {
         "title": "레시피 아카이브",
@@ -670,7 +668,6 @@
       },
       "deleteTitle": "{name}님을 삭제할까요?",
       "deleteConfirm": "이 작업은 사용자의 계정을 영구적으로 삭제하고 가구에서 제외합니다. 되돌릴 수 없습니다.",
-      "deleteSuccess": "{name}님이 삭제되었습니다",
       "countSummary": "총 {count}명"
     },
     "registration": {
@@ -1071,8 +1068,6 @@
       "allowPrivateAddressesDescription": "가져오기가 로컬 네트워크에 접근할 수 있게 합니다. Obscura는 어떤 경우에도 거부합니다.",
       "navigationTimeout": "탐색 시간 제한(ms)",
       "navigationTimeoutDescription": "렌더러가 페이지를 불러오는 데 주어지는 시간입니다.",
-      "saved": "페이지 렌더러를 저장했습니다",
-      "error": "페이지 렌더러를 저장하지 못했습니다",
       "connectionSuccess": "연결 성공"
     },
     "imageGenerationConfig": {
@@ -1324,6 +1319,13 @@
       "empty": "아직 요리가 없습니다.",
       "duplicate": "같은 이름의 요리가 이미 있습니다.",
       "saveFailed": "해당 요리를 저장할 수 없습니다."
+    },
+    "toasts": {
+      "localesSaved": "언어 설정이 저장되었습니다",
+      "localesError": "언어 설정을 저장하지 못했습니다.",
+      "userDeleted": "{name}님이 삭제되었습니다",
+      "pageRenderersSaved": "페이지 렌더러를 저장했습니다",
+      "pageRenderersError": "페이지 렌더러를 저장하지 못했습니다"
     }
   },
   "archiveExport": {

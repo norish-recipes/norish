@@ -19,6 +19,7 @@ export default function GeneralCard() {
   const t = useTranslations("settings.admin.general");
   const tActions = useTranslations("common.actions");
   const tErrors = useTranslations("common.errors");
+  const tToasts = useTranslations("settings.admin.toasts");
   const { registrationEnabled, updateRegistration, localeConfig, updateLocaleConfig, isLoading } =
     useAdminSettingsContext();
 
@@ -75,12 +76,12 @@ export default function GeneralCard() {
         enabledLocales,
       }).then((result) => {
         if (result.success) {
-          toast(t("localesSaved"), {
+          toast(tToasts("localesSaved"), {
             variant: "success",
           });
         } else {
           showSafeErrorToast({
-            title: t("localesError"),
+            title: tToasts("localesError"),
             description: tErrors("technicalDetails"),
             color: "danger",
             error: result.error,

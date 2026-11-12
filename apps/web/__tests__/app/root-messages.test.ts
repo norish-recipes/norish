@@ -7,7 +7,7 @@ import { describe, expect, it } from "vitest";
 import { webRoot, webSourceFiles } from "../helpers/web-source-files";
 
 // The settings messages app/layout.tsx ships outside the settings route.
-const SHIPPED = ["settings.ingredients", "settings.admin.aiProcessing"];
+const SHIPPED = ["settings.ingredients", "settings.admin.aiProcessing", "settings.admin.toasts"];
 
 // Drawn only inside the settings route, under its own full provider.
 const SETTINGS_ROUTE = [

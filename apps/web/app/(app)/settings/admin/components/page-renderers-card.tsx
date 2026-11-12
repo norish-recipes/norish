@@ -49,6 +49,7 @@ export default function PageRenderersCard() {
   const t = useTranslations("settings.admin.pageRenderers");
   const tActions = useTranslations("common.actions");
   const tErrors = useTranslations("common.errors");
+  const tToasts = useTranslations("settings.admin.toasts");
   const trpc = useTRPC();
   const stored = useQuery(trpc.admin.getPageRenderers.queryOptions());
   const [form, setForm] = useState(() => formFrom(stored.data));
@@ -62,12 +63,12 @@ export default function PageRenderersCard() {
   const save = useMutation(
     trpc.admin.updatePageRenderers.mutationOptions({
       onSuccess: () => {
-        toast(t("saved"), { variant: "success" });
+        toast(tToasts("pageRenderersSaved"), { variant: "success" });
         void stored.refetch();
       },
       onError: (error) =>
         showSafeErrorToast({
-          title: t("error"),
+          title: tToasts("pageRenderersError"),
           description: tErrors("technicalDetails"),
           color: "danger",
           error,

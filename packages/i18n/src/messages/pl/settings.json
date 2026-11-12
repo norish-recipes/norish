@@ -636,8 +636,6 @@
       "localesDescription": "Wybierz, które języki będą dostępne dla użytkowników",
       "defaultLocale": "Domyślny język",
       "defaultLocaleDescription": "Język używany dla nowych użytkowników i jako zapasowy",
-      "localesSaved": "Zapisano ustawienia językowe",
-      "localesError": "Nie udało się zapisać ustawień językowych",
       "atLeastOneLocale": "Musi być włączony co najmniej jeden język",
       "export": {
         "title": "Archiwum przepisów",
@@ -670,7 +668,6 @@
       },
       "deleteTitle": "Usunąć {name}?",
       "deleteConfirm": "To trwale usunie konto użytkownika i usunie go z gospodarstwa domowego. Tej operacji nie można cofnąć.",
-      "deleteSuccess": "{name} został(a) usunięty(a)",
       "countSummary": "{count, plural, one {# użytkownik} few {# użytkowników} many {# użytkowników} other {# użytkownika}} łącznie"
     },
     "registration": {
@@ -1071,8 +1068,6 @@
       "allowPrivateAddressesDescription": "Pozwala importom docierać do Twojej sieci lokalnej. Obscura i tak je odrzuca.",
       "navigationTimeout": "Limit czasu nawigacji (ms)",
       "navigationTimeoutDescription": "Ile czasu renderer ma na załadowanie strony.",
-      "saved": "Renderery stron zapisane",
-      "error": "Nie udało się zapisać rendererów stron",
       "connectionSuccess": "Połączenie udane"
     },
     "imageGenerationConfig": {
@@ -1324,6 +1319,13 @@
       "empty": "Brak kuchni.",
       "duplicate": "Kuchnia o tej nazwie już istnieje.",
       "saveFailed": "Nie udało się zapisać tej kuchni."
+    },
+    "toasts": {
+      "localesSaved": "Zapisano ustawienia językowe",
+      "localesError": "Nie udało się zapisać ustawień językowych",
+      "userDeleted": "{name} został(a) usunięty(a)",
+      "pageRenderersSaved": "Renderery stron zapisane",
+      "pageRenderersError": "Nie udało się zapisać rendererów stron"
     }
   },
   "archiveExport": {

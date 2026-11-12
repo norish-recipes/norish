@@ -636,8 +636,6 @@
       "localesDescription": "Seleziona quali lingue gli utenti possono scegliere",
       "defaultLocale": "Lingua predefinita",
       "defaultLocaleDescription": "Lingua utilizzata per i nuovi utenti e come fallback",
-      "localesSaved": "Impostazioni lingua salvate",
-      "localesError": "Salvataggio impostazioni lingua non riuscito",
       "atLeastOneLocale": "Almeno una lingua deve essere abilitata",
       "export": {
         "title": "Archivio ricette",
@@ -670,7 +668,6 @@
       },
       "deleteTitle": "Eliminare {name}?",
       "deleteConfirm": "Questo elimina definitivamente l'account dell'utente e lo rimuove dalla sua famiglia. L'azione non può essere annullata.",
-      "deleteSuccess": "{name} è stato eliminato",
       "countSummary": "{count, plural, one {# utente} other {# utenti}} in totale"
     },
     "registration": {
@@ -1071,8 +1068,6 @@
       "allowPrivateAddressesDescription": "Permette alle importazioni di raggiungere la tua rete locale. Obscura li rifiuta comunque.",
       "navigationTimeout": "Timeout di navigazione (ms)",
       "navigationTimeoutDescription": "Quanto tempo ha un renderer per caricare una pagina.",
-      "saved": "Renderer di pagine salvati",
-      "error": "Impossibile salvare i renderer di pagine",
       "connectionSuccess": "Connessione riuscita"
     },
     "imageGenerationConfig": {
@@ -1324,6 +1319,13 @@
       "empty": "Ancora nessuna cucina.",
       "duplicate": "Esiste già una cucina con quel nome.",
       "saveFailed": "Impossibile salvare quella cucina."
+    },
+    "toasts": {
+      "localesSaved": "Impostazioni lingua salvate",
+      "localesError": "Salvataggio impostazioni lingua non riuscito",
+      "userDeleted": "{name} è stato eliminato",
+      "pageRenderersSaved": "Renderer di pagine salvati",
+      "pageRenderersError": "Impossibile salvare i renderer di pagine"
     }
   },
   "archiveExport": {

@@ -636,8 +636,6 @@
       "localesDescription": "Valitse, mistä kielistä käyttäjät voivat valita",
       "defaultLocale": "Oletuskieli",
       "defaultLocaleDescription": "Uusien käyttäjien kieli ja varakieli",
-      "localesSaved": "Kieliasetukset tallennettu",
-      "localesError": "Kieliasetusten tallennus epäonnistui",
       "atLeastOneLocale": "Vähintään yhden kielen on oltava käytössä",
       "export": {
         "title": "Reseptiarkisto",
@@ -670,7 +668,6 @@
       },
       "deleteTitle": "Poistetaanko {name}?",
       "deleteConfirm": "Tämä poistaa käyttäjän tilin pysyvästi ja irrottaa hänet kotitaloudestaan. Tätä ei voi kumota.",
-      "deleteSuccess": "{name} poistettiin",
       "countSummary": "{count, plural, one {# käyttäjä} other {# käyttäjää}} yhteensä"
     },
     "registration": {
@@ -1071,8 +1068,6 @@
       "allowPrivateAddressesDescription": "Antaa tuontien tavoittaa paikallisen verkkosi. Obscura hylkää ne joka tapauksessa.",
       "navigationTimeout": "Navigoinnin aikakatkaisu (ms)",
       "navigationTimeoutDescription": "Kuinka kauan renderöijällä on aikaa ladata sivu.",
-      "saved": "Sivujen renderöijät tallennettu",
-      "error": "Sivujen renderöijien tallennus epäonnistui",
       "connectionSuccess": "Yhteys onnistui"
     },
     "imageGenerationConfig": {
@@ -1324,6 +1319,13 @@
       "empty": "Ei vielä ruokakulttuureita.",
       "duplicate": "Samanniminen ruokakulttuuri on jo olemassa.",
       "saveFailed": "Ruokakulttuuria ei voitu tallentaa."
+    },
+    "toasts": {
+      "localesSaved": "Kieliasetukset tallennettu",
+      "localesError": "Kieliasetusten tallennus epäonnistui",
+      "userDeleted": "{name} poistettiin",
+      "pageRenderersSaved": "Sivujen renderöijät tallennettu",
+      "pageRenderersError": "Sivujen renderöijien tallennus epäonnistui"
     }
   },
   "archiveExport": {

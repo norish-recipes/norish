@@ -636,8 +636,6 @@
       "localesDescription": "Selecciona los idiomas que los usuarios pueden elegir",
       "defaultLocale": "Idioma predeterminado",
       "defaultLocaleDescription": "Idioma usado para nuevos usuarios y como fallback",
-      "localesSaved": "Ajustes de idioma guardados",
-      "localesError": "No se pudieron guardar los ajustes de idioma",
       "atLeastOneLocale": "Debe habilitarse al menos un idioma",
       "export": {
         "title": "Archivo de recetas",
@@ -670,7 +668,6 @@
       },
       "deleteTitle": "¿Eliminar a {name}?",
       "deleteConfirm": "Esto elimina permanentemente la cuenta del usuario y lo saca de su hogar. Esta acción no se puede deshacer.",
-      "deleteSuccess": "{name} fue eliminado",
       "countSummary": "{count, plural, one {# usuario} other {# usuarios}} en total"
     },
     "registration": {
@@ -1071,8 +1068,6 @@
       "allowPrivateAddressesDescription": "Permite que las importaciones lleguen a tu red local. Obscura las rechaza de todos modos.",
       "navigationTimeout": "Tiempo de espera de navegación (ms)",
       "navigationTimeoutDescription": "Cuánto tiempo tiene un renderizador para cargar una página.",
-      "saved": "Renderizadores de páginas guardados",
-      "error": "No se pudieron guardar los renderizadores de páginas",
       "connectionSuccess": "Conexión correcta"
     },
     "imageGenerationConfig": {
@@ -1324,6 +1319,13 @@
       "empty": "Aún no hay cocinas.",
       "duplicate": "Ya existe una cocina con ese nombre.",
       "saveFailed": "No se pudo guardar esa cocina."
+    },
+    "toasts": {
+      "localesSaved": "Ajustes de idioma guardados",
+      "localesError": "No se pudieron guardar los ajustes de idioma",
+      "userDeleted": "{name} fue eliminado",
+      "pageRenderersSaved": "Renderizadores de páginas guardados",
+      "pageRenderersError": "No se pudieron guardar los renderizadores de páginas"
     }
   },
   "archiveExport": {

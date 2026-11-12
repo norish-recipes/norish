@@ -636,8 +636,6 @@
       "localesDescription": "Select which languages users can choose from",
       "defaultLocale": "Default language",
       "defaultLocaleDescription": "Language used for new users and as fallback",
-      "localesSaved": "Language settings saved",
-      "localesError": "Failed to save language settings",
       "atLeastOneLocale": "At least one language must be enabled",
       "export": {
         "title": "Recipe archive",
@@ -670,7 +668,6 @@
       },
       "deleteTitle": "Delete {name}?",
       "deleteConfirm": "This permanently deletes the user's account and removes them from their household. This cannot be undone.",
-      "deleteSuccess": "{name} was deleted",
       "countSummary": "{count, plural, one {# user} other {# users}} total"
     },
     "registration": {
@@ -1071,8 +1068,6 @@
       "allowPrivateAddressesDescription": "Let imports reach your local network. Obscura refuses these either way.",
       "navigationTimeout": "Navigation timeout (ms)",
       "navigationTimeoutDescription": "How long a renderer is given to load a page.",
-      "saved": "Page renderers saved",
-      "error": "Failed to save page renderers",
       "connectionSuccess": "Connection successful"
     },
     "imageGenerationConfig": {
@@ -1324,6 +1319,13 @@
       "empty": "No Cuisines yet.",
       "duplicate": "A Cuisine with that name already exists.",
       "saveFailed": "Could not save that Cuisine."
+    },
+    "toasts": {
+      "localesSaved": "Language settings saved",
+      "localesError": "Failed to save language settings",
+      "userDeleted": "{name} was deleted",
+      "pageRenderersSaved": "Page renderers saved",
+      "pageRenderersError": "Failed to save page renderers"
     }
   },
   "archiveExport": {

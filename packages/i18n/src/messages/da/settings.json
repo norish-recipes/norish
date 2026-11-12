@@ -636,8 +636,6 @@
       "localesDescription": "Vælg hvilke sprog brugere kan vælge imellem",
       "defaultLocale": "Standardsprog",
       "defaultLocaleDescription": "Sprog anvendt for nye brugere og som backup",
-      "localesSaved": "Sprogindstillinger gemt",
-      "localesError": "Kunne ikke gemme sprogindstillinger",
       "atLeastOneLocale": "Mindst ét sprog skal være aktiveret",
       "export": {
         "title": "Opskriftsarkiv",
@@ -670,7 +668,6 @@
       },
       "deleteTitle": "Slet {name}?",
       "deleteConfirm": "Dette sletter permanent brugerens konto og fjerner dem fra deres husstand. Dette kan ikke fortrydes.",
-      "deleteSuccess": "{name} blev slettet",
       "countSummary": "{count, plural, one {# bruger} other {# brugere}} i alt"
     },
     "registration": {
@@ -1071,8 +1068,6 @@
       "allowPrivateAddressesDescription": "Lader importer nå dit lokale netværk. Obscura afviser dem under alle omstændigheder.",
       "navigationTimeout": "Navigationstimeout (ms)",
       "navigationTimeoutDescription": "Hvor lang tid en renderer får til at indlæse en side.",
-      "saved": "Siderenderere gemt",
-      "error": "Kunne ikke gemme siderenderere",
       "connectionSuccess": "Forbindelse lykkedes"
     },
     "imageGenerationConfig": {
@@ -1324,6 +1319,13 @@
       "empty": "Ingen køkkener endnu.",
       "duplicate": "Der findes allerede et køkken med det navn.",
       "saveFailed": "Kunne ikke gemme det køkken."
+    },
+    "toasts": {
+      "localesSaved": "Sprogindstillinger gemt",
+      "localesError": "Kunne ikke gemme sprogindstillinger",
+      "userDeleted": "{name} blev slettet",
+      "pageRenderersSaved": "Siderenderere gemt",
+      "pageRenderersError": "Kunne ikke gemme siderenderere"
     }
   },
   "archiveExport": {

@@ -636,8 +636,6 @@
       "localesDescription": "Selecteer welke talen gebruikers kunnen kiezen",
       "defaultLocale": "Standaardtaal",
       "defaultLocaleDescription": "Taal voor nieuwe gebruikers en als fallback",
-      "localesSaved": "Taalinstellingen opgeslagen",
-      "localesError": "Taalinstellingen opslaan mislukt",
       "atLeastOneLocale": "Minimaal één taal moet ingeschakeld zijn",
       "export": {
         "title": "Archief",
@@ -670,7 +668,6 @@
       },
       "deleteTitle": "{name} verwijderen?",
       "deleteConfirm": "Dit verwijdert het account van deze gebruiker permanent en verwijdert hem/haar uit het huishouden. Dit kan niet ongedaan worden gemaakt.",
-      "deleteSuccess": "{name} is verwijderd",
       "countSummary": "{count, plural, one {# gebruiker} other {# gebruikers}} totaal"
     },
     "registration": {
@@ -1071,8 +1068,6 @@
       "allowPrivateAddressesDescription": "Laat imports je lokale netwerk bereiken. Obscura weigert deze hoe dan ook.",
       "navigationTimeout": "Navigatietime-out (ms)",
       "navigationTimeoutDescription": "Hoe lang een renderer krijgt om een pagina te laden.",
-      "saved": "Paginarenderers opgeslagen",
-      "error": "Paginarenderers opslaan mislukt",
       "connectionSuccess": "Verbinding succesvol"
     },
     "imageGenerationConfig": {
@@ -1324,6 +1319,13 @@
       "empty": "Nog geen keukens.",
       "duplicate": "Er bestaat al een keuken met die naam.",
       "saveFailed": "Kon die keuken niet opslaan."
+    },
+    "toasts": {
+      "localesSaved": "Taalinstellingen opgeslagen",
+      "localesError": "Taalinstellingen opslaan mislukt",
+      "userDeleted": "{name} is verwijderd",
+      "pageRenderersSaved": "Paginarenderers opgeslagen",
+      "pageRenderersError": "Paginarenderers opslaan mislukt"
     }
   },
   "archiveExport": {

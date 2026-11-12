@@ -25,6 +25,7 @@ import { UserRoleChips } from "./users/user-role-chips";
 export default function UsersCard() {
   const t = useTranslations("settings.admin.users");
   const tErrors = useTranslations("common.errors");
+  const tToasts = useTranslations("settings.admin.toasts");
   const { user: currentUser } = useReader();
   const { users, isLoading, error } = useUsersListQuery();
   const { setAdminStatus, deleteUser, isUpdatingAdminStatus, isDeleting } = useUserMutations();
@@ -53,7 +54,7 @@ export default function UsersCard() {
     const result = await deleteUser(userToDelete.id);
 
     if (result.success) {
-      toast(t("deleteSuccess", { name: userToDelete.name || userToDelete.email }), {
+      toast(tToasts("userDeleted", { name: userToDelete.name || userToDelete.email }), {
         variant: "success",
       });
       setUserToDelete(null);
