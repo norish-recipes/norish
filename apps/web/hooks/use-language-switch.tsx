@@ -1,6 +1,6 @@
 "use client";
 
-import { useMemo, useState } from "react";
+import { useState } from "react";
 import { useLocale } from "@/hooks/use-locale";
 import { GlobeAltIcon } from "@heroicons/react/16/solid";
 
@@ -8,32 +8,16 @@ import type { Locale } from "@norish/i18n/config";
 import { isValidLocale } from "@norish/i18n/config";
 import { useLocaleConfigQuery } from "@norish/shared-react/config";
 
-/**
- * Hook to get locale state and cycle function for language switching UI
- *
- * Used by authenticated users only - saves preference to database.
- * Fetches enabled locales from the API.
- */
+/** The language switch for signed-in readers: the choice is saved to their profile. */
 export function useLanguageSwitch() {
   const { locale, changeLocale, isChanging } = useLocale();
   const { enabledLocales, isLoading: isLoadingConfig } = useLocaleConfigQuery();
 
   // Get enabled locale codes as Locale[]
-  const enabledLocaleCodes = useMemo(
-    () => enabledLocales.map((l) => l.code).filter(isValidLocale),
-    [enabledLocales]
-  );
+  const enabledLocaleCodes = enabledLocales.map((l) => l.code).filter(isValidLocale);
 
   // Build locale names map from enabled locales
-  const localeNames = useMemo(() => {
-    const names: Record<string, string> = {};
-
-    for (const l of enabledLocales) {
-      names[l.code] = l.name;
-    }
-
-    return names;
-  }, [enabledLocales]);
+  const localeNames = Object.fromEntries(enabledLocales.map((l) => [l.code, l.name]));
 
   // Sync current locale index when locale or enabled locales change.
   // If current locale is not in enabled list, reset to first.

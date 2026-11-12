@@ -1,6 +1,6 @@
 "use client";
 
-import { useCallback, useMemo, useState, useTransition } from "react";
+import { useState, useTransition } from "react";
 import { useRouter } from "next/navigation";
 
 import type { Locale } from "@norish/i18n/config";
@@ -45,24 +45,14 @@ function setLocaleCookie(locale: Locale) {
   document.cookie = `${LOCALE_COOKIE_NAME}=${locale};path=/;expires=${expires.toUTCString()};SameSite=Lax`;
 }
 
-/**
- * Hook for managing locale via cookie (for unauthenticated users)
- *
- * Used on login/signup pages where user is not authenticated.
- * After changing locale, refreshes the page to apply the new locale.
- *
- * Fetches enabled locales from the public API.
- */
+/** The locale for signed-out pages, kept in a cookie; enabled locales come from the public API. */
 export function useLocaleCookie() {
   const router = useRouter();
   const [isPending, startTransition] = useTransition();
   const { enabledLocales, defaultLocale, isLoading: isLoadingConfig } = useLocaleConfigQuery();
 
   // Get enabled locale codes as Locale[]
-  const enabledLocaleCodes = useMemo(
-    () => enabledLocales.map((l) => l.code).filter(isValidLocale),
-    [enabledLocales]
-  );
+  const enabledLocaleCodes = enabledLocales.map((l) => l.code).filter(isValidLocale);
 
   // Use the API default locale, falling back to static default
   const effectiveDefault = isValidLocale(defaultLocale) ? defaultLocale : DEFAULT_LOCALE;
@@ -71,55 +61,40 @@ export function useLocaleCookie() {
     getLocaleFromCookie(effectiveDefault)
   );
 
-  // Validate current locale is still enabled
-  const validatedLocale = useMemo(() => {
-    if (enabledLocaleCodes.length === 0) return currentLocale;
-    if (enabledLocaleCodes.includes(currentLocale)) return currentLocale;
+  // A locale that is no longer enabled falls back to the default.
+  const validatedLocale =
+    enabledLocaleCodes.length === 0 || enabledLocaleCodes.includes(currentLocale)
+      ? currentLocale
+      : effectiveDefault;
 
-    // If current locale is disabled, fall back to default
-    return effectiveDefault;
-  }, [currentLocale, enabledLocaleCodes, effectiveDefault]);
+  /** Saves the cookie and refreshes the page to apply the new locale. */
+  const changeLocale = (locale: Locale) => {
+    if (!isValidLocale(locale)) {
+      return;
+    }
 
-  /**
-   * Change the locale
-   *
-   * Saves to cookie and refreshes the page to apply the new locale.
-   */
-  const changeLocale = useCallback(
-    (locale: Locale) => {
-      if (!isValidLocale(locale)) {
-        return;
-      }
+    // Only allow changing to enabled locales
+    if (enabledLocaleCodes.length > 0 && !enabledLocaleCodes.includes(locale)) {
+      return;
+    }
 
-      // Only allow changing to enabled locales
-      if (enabledLocaleCodes.length > 0 && !enabledLocaleCodes.includes(locale)) {
-        return;
-      }
+    setLocaleCookie(locale);
+    setCurrentLocale(locale);
 
-      setLocaleCookie(locale);
-      setCurrentLocale(locale);
+    startTransition(() => {
+      router.refresh();
+    });
+  };
 
-      // Refresh the page to apply the new locale
-      startTransition(() => {
-        router.refresh();
-      });
-    },
-    [router, enabledLocaleCodes]
-  );
-
-  /**
-   * Cycle through enabled locales
-   */
-  const cycleLocale = useCallback(() => {
+  const cycleLocale = () => {
     if (enabledLocaleCodes.length === 0) return;
 
     const currentIndex = enabledLocaleCodes.indexOf(validatedLocale);
     const nextIndex = (currentIndex + 1) % enabledLocaleCodes.length;
-
     const nextLocale = enabledLocaleCodes[nextIndex];
 
     if (nextLocale) changeLocale(nextLocale);
-  }, [validatedLocale, enabledLocaleCodes, changeLocale]);
+  };
 
   return {
     /** Current locale from cookie (validated against enabled locales) */

@@ -2,7 +2,7 @@
 
 import type { EmblaCarouselType, EmblaOptionsType, EmblaPluginType } from "embla-carousel";
 import type { ComponentPropsWithoutRef, KeyboardEvent, ReactNode } from "react";
-import { createContext, use, useCallback, useEffect, useState, useSyncExternalStore } from "react";
+import { createContext, use, useEffect, useState, useSyncExternalStore } from "react";
 import { ChevronLeftIcon, ChevronRightIcon } from "@heroicons/react/16/solid";
 import { Button, ScrollShadow } from "@heroui/react";
 import useEmblaCarousel from "embla-carousel-react";
@@ -81,22 +81,19 @@ function CarouselRoot({ children, className, opts, plugins, setApi, ...props }: 
     if (api && setApi) setApi(api);
   }, [api, setApi]);
 
-  const scrollPrev = useCallback(() => api?.scrollPrev(), [api]);
-  const scrollNext = useCallback(() => api?.scrollNext(), [api]);
-  const scrollTo = useCallback((index: number) => api?.scrollTo(index), [api]);
+  const scrollPrev = () => api?.scrollPrev();
+  const scrollNext = () => api?.scrollNext();
+  const scrollTo = (index: number) => api?.scrollTo(index);
 
-  const handleKeyDown = useCallback(
-    (event: KeyboardEvent<HTMLDivElement>) => {
-      if (event.key === "ArrowLeft") {
-        event.preventDefault();
-        scrollPrev();
-      } else if (event.key === "ArrowRight") {
-        event.preventDefault();
-        scrollNext();
-      }
-    },
-    [scrollNext, scrollPrev]
-  );
+  const handleKeyDown = (event: KeyboardEvent<HTMLDivElement>) => {
+    if (event.key === "ArrowLeft") {
+      event.preventDefault();
+      scrollPrev();
+    } else if (event.key === "ArrowRight") {
+      event.preventDefault();
+      scrollNext();
+    }
+  };
 
   return (
     <CarouselContext

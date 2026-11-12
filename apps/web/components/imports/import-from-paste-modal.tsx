@@ -1,6 +1,6 @@
 "use client";
 
-import { useCallback, useState } from "react";
+import { useState } from "react";
 import { useImportRecipe } from "@/components/imports/use-import-recipe";
 import { showSafeErrorToast } from "@/lib/ui/safe-error-toast";
 import { ArrowDownTrayIcon, SparklesIcon } from "@heroicons/react/16/solid";
@@ -56,15 +56,12 @@ export default function ImportFromPasteModal({ isOpen, onOpenChange }: ImportFro
     }
     submit(importFromPasteWithAI, "import-from-paste-modal:import-ai");
   };
-  const handleOpenChange = useCallback(
-    (open: boolean) => {
-      if (!open) {
-        setText("");
-      }
-      onOpenChange(open);
-    },
-    [onOpenChange]
-  );
+  const handleOpenChange = (open: boolean) => {
+    if (!open) {
+      setText("");
+    }
+    onOpenChange(open);
+  };
 
   return (
     <Modal.Backdrop className="z-[1099]" isOpen={isOpen} onOpenChange={handleOpenChange}>

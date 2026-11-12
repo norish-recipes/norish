@@ -1,10 +1,10 @@
 "use client";
 
 import type { DropZoneAreaProps } from "@/components/imports/drop-zone";
-import { useCallback, useState } from "react";
+import { useState } from "react";
 import Image from "next/image";
-import { useImportRecipe } from "@/components/imports/use-import-recipe";
 import { DropZone } from "@/components/imports/drop-zone";
+import { useImportRecipe } from "@/components/imports/use-import-recipe";
 import { useClipboardImagePaste } from "@/hooks/use-clipboard-image-paste";
 import { pdfPagesAsImages } from "@/lib/pdf-pages";
 import { showSafeErrorToast } from "@/lib/ui/safe-error-toast";
@@ -40,111 +40,105 @@ export default function ImportFromImageModal({ isOpen, onOpenChange }: ImportFro
   const { limits } = useUploadLimitsQuery();
   const [files, setFiles] = useState<FilePreview[]>([]);
   const [isSubmitting, setIsSubmitting] = useState(false);
-  const handleAddFiles = useCallback(
-    (selectedFiles: File[] | FileList | null) => {
-      if (!selectedFiles) return;
-      const fileArray = Array.isArray(selectedFiles)
-        ? selectedFiles
-        : Array.from(
-            {
-              length: selectedFiles.length,
-            },
-            (_, idx) => selectedFiles[idx]!
-          );
-      const newFiles: FilePreview[] = [];
+  const handleAddFiles = (selectedFiles: File[] | FileList | null) => {
+    if (!selectedFiles) return;
+    const fileArray = Array.isArray(selectedFiles)
+      ? selectedFiles
+      : Array.from(
+          {
+            length: selectedFiles.length,
+          },
+          (_, idx) => selectedFiles[idx]!
+        );
+    const newFiles: FilePreview[] = [];
 
-      for (let i = 0; i < fileArray.length; i++) {
-        const file = fileArray[i]!;
+    for (let i = 0; i < fileArray.length; i++) {
+      const file = fileArray[i]!;
 
-        // Validate file type
-        if (!ALLOWED_OCR_MIME_SET.has(file.type)) {
-          toast(t("invalidType"), {
-            description: t("notSupported", {
-              name: file.name,
-            }),
-            variant: "danger",
-          });
-          continue;
-        }
-
-        // Validate file size
-        if (file.size > limits.maxImageSize) {
-          toast(t("tooLarge"), {
-            description: t("exceeds", {
-              name: file.name,
-            }),
-            variant: "danger",
-          });
-          continue;
-        }
-
-        // Create preview
-        newFiles.push({
-          id: `${Date.now()}-${i}-${file.name}`,
-          file,
-          preview: URL.createObjectURL(file),
+      // Validate file type
+      if (!ALLOWED_OCR_MIME_SET.has(file.type)) {
+        toast(t("invalidType"), {
+          description: t("notSupported", {
+            name: file.name,
+          }),
+          variant: "danger",
         });
+        continue;
       }
-      setFiles((prev) => {
-        const availableSlots = MAX_OCR_FILES - prev.length;
 
-        if (availableSlots <= 0) {
-          newFiles.forEach((file) => URL.revokeObjectURL(file.preview));
-          toast(t("tooMany"), {
-            description: t("maxFiles", {
-              max: MAX_OCR_FILES,
-            }),
-            variant: "warning",
-          });
+      // Validate file size
+      if (file.size > limits.maxImageSize) {
+        toast(t("tooLarge"), {
+          description: t("exceeds", {
+            name: file.name,
+          }),
+          variant: "danger",
+        });
+        continue;
+      }
 
-          return prev;
-        }
-        if (newFiles.length > availableSlots) {
-          const acceptedFiles = newFiles.slice(0, availableSlots);
-
-          newFiles.slice(availableSlots).forEach((file) => URL.revokeObjectURL(file.preview));
-          toast(t("tooMany"), {
-            description: t("maxFiles", {
-              max: MAX_OCR_FILES,
-            }),
-            variant: "warning",
-          });
-
-          return [...prev, ...acceptedFiles];
-        }
-
-        return [...prev, ...newFiles];
+      // Create preview
+      newFiles.push({
+        id: `${Date.now()}-${i}-${file.name}`,
+        file,
+        preview: URL.createObjectURL(file),
       });
-    },
-    [t, limits.maxImageSize]
-  );
-  // A PDF goes in as its pages, drawn as pictures.
-  const handleAddFilesOrPdfs = useCallback(
-    (selectedFiles: File[] | FileList | null) => {
-      if (!selectedFiles) return;
-      void Promise.all(
-        Array.from(selectedFiles).map((file) =>
-          file.type === PDF_MIME_TYPE
-            ? pdfPagesAsImages(file, MAX_OCR_FILES).catch(() => {
-                toast(t("invalidType"), {
-                  description: t("notSupported", { name: file.name }),
-                  variant: "danger",
-                });
+    }
+    setFiles((prev) => {
+      const availableSlots = MAX_OCR_FILES - prev.length;
 
-                return [];
-              })
-            : [file]
-        )
-      ).then((pages) => handleAddFiles(pages.flat()));
-    },
-    [handleAddFiles, t]
-  );
+      if (availableSlots <= 0) {
+        newFiles.forEach((file) => URL.revokeObjectURL(file.preview));
+        toast(t("tooMany"), {
+          description: t("maxFiles", {
+            max: MAX_OCR_FILES,
+          }),
+          variant: "warning",
+        });
+
+        return prev;
+      }
+      if (newFiles.length > availableSlots) {
+        const acceptedFiles = newFiles.slice(0, availableSlots);
+
+        newFiles.slice(availableSlots).forEach((file) => URL.revokeObjectURL(file.preview));
+        toast(t("tooMany"), {
+          description: t("maxFiles", {
+            max: MAX_OCR_FILES,
+          }),
+          variant: "warning",
+        });
+
+        return [...prev, ...acceptedFiles];
+      }
+
+      return [...prev, ...newFiles];
+    });
+  };
+  // A PDF goes in as its pages, drawn as pictures.
+  const handleAddFilesOrPdfs = (selectedFiles: File[] | FileList | null) => {
+    if (!selectedFiles) return;
+    void Promise.all(
+      Array.from(selectedFiles).map((file) =>
+        file.type === PDF_MIME_TYPE
+          ? pdfPagesAsImages(file, MAX_OCR_FILES).catch(() => {
+              toast(t("invalidType"), {
+                description: t("notSupported", { name: file.name }),
+                variant: "danger",
+              });
+
+              return [];
+            })
+          : [file]
+      )
+    ).then((pages) => handleAddFiles(pages.flat()));
+  };
 
   useClipboardImagePaste({
     enabled: isOpen,
     onFiles: (pastedFiles) => handleAddFilesOrPdfs(pastedFiles),
   });
-  const handleRemoveFile = useCallback((id: string) => {
+  const handleRemoveFile = (id: string) => {
     setFiles((prev) => {
       const file = prev.find((f) => f.id === id);
 
@@ -152,27 +146,22 @@ export default function ImportFromImageModal({ isOpen, onOpenChange }: ImportFro
 
       return prev.filter((f) => f.id !== id);
     });
-  }, []);
-  const handleDrop = useCallback<NonNullable<DropZoneAreaProps["onDrop"]>>(
-    (event) => {
-      void (async () => {
-        const droppedFiles: File[] = [];
+  };
+  const handleDrop: NonNullable<DropZoneAreaProps["onDrop"]> = (event) => {
+    void (async () => {
+      const droppedFiles: File[] = [];
 
-        for (const item of event.items) {
-          if (item.kind === "file") {
-            droppedFiles.push(await item.getFile());
-          }
+      for (const item of event.items) {
+        if (item.kind === "file") {
+          droppedFiles.push(await item.getFile());
         }
+      }
 
-        handleAddFilesOrPdfs(droppedFiles);
-      })();
-    },
-    [handleAddFilesOrPdfs]
-  );
-  const getDropOperation = useCallback<NonNullable<DropZoneAreaProps["getDropOperation"]>>(
-    (types) => (OCR_ACCEPTED_TYPES.some((type) => types.has(type)) ? "copy" : "cancel"),
-    []
-  );
+      handleAddFilesOrPdfs(droppedFiles);
+    })();
+  };
+  const getDropOperation: NonNullable<DropZoneAreaProps["getDropOperation"]> = (types) =>
+    OCR_ACCEPTED_TYPES.some((type) => types.has(type)) ? "copy" : "cancel";
   const handleImport = () => {
     if (files.length === 0) return;
     setIsSubmitting(true);
@@ -197,18 +186,15 @@ export default function ImportFromImageModal({ isOpen, onOpenChange }: ImportFro
     }
     setIsSubmitting(false);
   };
-  const handleOpenChange = useCallback(
-    (open: boolean) => {
-      if (!open) {
-        files.forEach((f) => {
-          URL.revokeObjectURL(f.preview);
-        });
-        setFiles([]);
-      }
-      onOpenChange(open);
-    },
-    [files, onOpenChange]
-  );
+  const handleOpenChange = (open: boolean) => {
+    if (!open) {
+      files.forEach((f) => {
+        URL.revokeObjectURL(f.preview);
+      });
+      setFiles([]);
+    }
+    onOpenChange(open);
+  };
 
   return (
     <Modal.Backdrop className="z-[1099]" isOpen={isOpen} onOpenChange={handleOpenChange}>
