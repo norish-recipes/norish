@@ -27,6 +27,7 @@ export function StatusScreen({
 }: StatusScreenProps) {
   return (
     <AuthLayout
+      status
       footer={
         <>
           {action ? <AuthSubmitButton label={action.label} onPress={action.onPress} /> : null}

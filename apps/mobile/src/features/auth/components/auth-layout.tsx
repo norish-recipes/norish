@@ -10,15 +10,23 @@ interface AuthLayoutProps {
   footer?: ReactNode;
   /** Sets the block 40pt under the top instead of centring it (the Login board). */
   topAligned?: boolean;
+  /** Centres the block in the whole space above the footer, with no bounce (the status boards). */
+  status?: boolean;
 }
 
 /** The signed-out screens' frame: a centred block over an optional pinned footer. */
-export function AuthLayout({ children, footer, topAligned = false }: AuthLayoutProps) {
+export function AuthLayout({
+  children,
+  footer,
+  topAligned = false,
+  status = false,
+}: AuthLayoutProps) {
   const insets = useSafeAreaInsets();
 
   return (
     <KeyboardAvoidingView behavior="padding" className="flex-1">
       <ScrollView
+        alwaysBounceVertical={!status}
         contentContainerStyle={{
           flexGrow: 1,
           paddingTop: insets.top,
@@ -27,7 +35,15 @@ export function AuthLayout({ children, footer, topAligned = false }: AuthLayoutP
         }}
         keyboardShouldPersistTaps="handled"
       >
-        <View className={topAligned ? "flex-1 pt-10" : "flex-1 justify-center pb-10"}>
+        <View
+          className={
+            topAligned
+              ? "flex-1 pt-10"
+              : status
+                ? "flex-1 justify-center"
+                : "flex-1 justify-center pb-10"
+          }
+        >
           {children}
         </View>
         {footer}
