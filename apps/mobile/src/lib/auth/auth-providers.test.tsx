@@ -33,6 +33,10 @@ const seen = vi.hoisted(() => ({
   sessions: [] as PlatformSession[],
   endSession: null as ((reason: LeaveReason) => Promise<void>) | null,
   releaseSignOut: () => {},
+  leave: () => {},
+  // How many sessions the platform had been handed when the offline clear and the leave ran.
+  clearedAt: [] as { discardQueue: boolean; at: number }[],
+  leftAt: -1,
 }));
 
 vi.mock("expo-secure-store", () => secureStore);
@@ -78,18 +82,38 @@ vi.mock("@norish/shared-react/offline/react", () => ({
 vi.mock("@/lib/i18n/mobile-i18n-context", () => ({
   MobileIntlProvider: ({ children }: { children: ReactNode }) => children,
 }));
-vi.mock("@/lib/platform/platform-provider", () => ({
-  MobilePlatformProvider: (props: {
-    children: ReactNode;
-    session: PlatformSession;
-    endSession: (reason: LeaveReason) => Promise<void>;
-  }) => {
-    seen.sessions.push(props.session);
-    seen.endSession = props.endSession;
+vi.mock("@/lib/platform/platform-provider", async () => {
+  const { PlatformProvider } = await import("@norish/shared-react/platform");
+  const { fakePlatformAdapter } = await import("@norish/shared-react/platform/testing");
 
-    return props.children;
-  },
-}));
+  return {
+    MobilePlatformProvider: (props: {
+      children: ReactNode;
+      session: PlatformSession;
+      endSession: (reason: LeaveReason) => Promise<void>;
+    }) => {
+      seen.sessions.push(props.session);
+      seen.endSession = props.endSession;
+
+      // The real adapter's sequence steps: the offline clear, and leave as publishSignedOut.
+      const adapter = {
+        ...fakePlatformAdapter(),
+        session: props.session,
+        endSession: props.endSession,
+        leave: () => {
+          seen.leftAt = seen.sessions.length;
+          seen.leave();
+        },
+        offlineEngine: {
+          clearForSignOut: async ({ discardQueue }: { discardQueue: boolean }) =>
+            void seen.clearedAt.push({ discardQueue, at: seen.sessions.length }),
+        },
+      };
+
+      return <PlatformProvider adapter={adapter}>{props.children}</PlatformProvider>;
+    },
+  };
+});
 
 const { AuthProviders } = await import("@/lib/auth/auth-providers");
 const { getAuthTransportSnapshot, publishSignedOut, subscribeAuthTransport } =
@@ -97,6 +121,8 @@ const { getAuthTransportSnapshot, publishSignedOut, subscribeAuthTransport } =
 const { AUTH_COOKIE_KEY, authStorage } = await import("@/lib/auth/auth-storage");
 const { BackendBaseUrlContext } = await import("@/lib/network/backend-base-url");
 const { resetAuthClientStorage } = await import("@/lib/auth/auth-client");
+
+seen.leave = publishSignedOut;
 
 const USER = { id: "reader-1", email: "reader@norish.test", name: "Reader" };
 const PENDING = { user: null, isPending: true };
@@ -120,6 +146,8 @@ describe("AuthProviders", () => {
     secureStore.items.clear();
     clients.length = 0;
     seen.sessions.length = 0;
+    seen.clearedAt.length = 0;
+    seen.leftAt = -1;
     // The persisted session an Offline launch falls back on.
     await authStorage.setItemAsync(AUTH_COOKIE_KEY, JSON.stringify({ token: { value: "t" } }));
     await authStorage.setItemAsync("norish_session_data", JSON.stringify({ user: USER }));
@@ -151,6 +179,38 @@ describe("AuthProviders", () => {
       // The adapter's leave, after the offline clear.
       act(() => publishSignedOut());
       await waitFor(() => expect(seen.sessions.at(-1)).toEqual(SIGNED_OUT));
+      expect(seen.sessions.slice(from).filter((session) => session.user)).toEqual([]);
+      expect(getAuthTransportSnapshot()).toEqual({ hasActiveSession: false, version: version + 1 });
+      // The sequence in flight owns the clear: the emptied store starts no Session Expiry.
+      expect(seen.clearedAt).toEqual([]);
+    }
+  );
+
+  it.each([
+    ["answers 401", { data: null, isPending: false, error: { status: 401 } }],
+    ["answers with no session", { data: null, isPending: false, error: null }],
+  ])(
+    "when auth's own session read %s while signed in, runs Session Expiry before sign-in shows",
+    async (_, ended) => {
+      render(<ReKeyed />);
+      act(() => clients[0]?.session.set({ data: { user: USER }, isPending: false, error: null }));
+      await waitFor(() => expect(getAuthTransportSnapshot().hasActiveSession).toBe(true));
+
+      const { version } = getAuthTransportSnapshot();
+      const from = seen.sessions.length;
+
+      // No tRPC request has been answered 401 yet.
+      act(() => clients[0]?.session.set(ended));
+
+      await waitFor(() => expect(seen.sessions.at(-1)).toEqual(SIGNED_OUT));
+      expect(seen.clearedAt).toEqual([{ discardQueue: false, at: expect.any(Number) }]);
+
+      const cleared = seen.clearedAt[0]?.at ?? 0;
+
+      expect(cleared).toBeLessThanOrEqual(seen.leftAt);
+      expect(seen.sessions.slice(from, seen.leftAt)).toEqual(
+        seen.sessions.slice(from, seen.leftAt).map(() => PENDING)
+      );
       expect(seen.sessions.slice(from).filter((session) => session.user)).toEqual([]);
       expect(getAuthTransportSnapshot()).toEqual({ hasActiveSession: false, version: version + 1 });
     }

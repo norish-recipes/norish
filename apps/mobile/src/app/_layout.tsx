@@ -32,11 +32,7 @@ import { HeroUINativeProvider, useThemeColor } from "heroui-native";
 import { PortalHost } from "heroui-native/portal";
 
 import { usePlatform } from "@norish/shared-react/platform";
-import {
-  useHouseholdSubscription,
-  usePermissionsSubscription,
-  useSessionExpiry,
-} from "@norish/shared-react/reader";
+import { useHouseholdSubscription, usePermissionsSubscription } from "@norish/shared-react/reader";
 
 // The boot gate below renders nothing until hydration settles. Holding the
 // native splash over that window is what keeps it from showing as a blank
@@ -204,12 +200,11 @@ function AuthenticatedProviders({ children }: { children: React.ReactNode }) {
   );
 }
 
-/** The signed-in shell's effects: the Reader's locale, subscriptions and Session Expiry. */
+/** The signed-in shell's effects: the Reader's locale and subscriptions. */
 function AuthenticatedEffects() {
   useUserLocaleSync();
   useHouseholdSubscription();
   usePermissionsSubscription();
-  useSessionExpiry();
 
   return null;
 }

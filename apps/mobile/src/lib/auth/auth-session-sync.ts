@@ -28,15 +28,11 @@ export function subscribeAuthTransport(listener: () => void): () => void {
   };
 }
 
-export function setHasActiveSession(hasActiveSession: boolean): void {
-  if (snapshot.hasActiveSession === hasActiveSession) {
-    return;
-  }
+/** Signed in, with one re-key so everything below rebuilds on the session; once until leave. */
+export function publishSignedIn(): void {
+  if (snapshot.hasActiveSession) return;
 
-  snapshot = {
-    hasActiveSession,
-    version: snapshot.version + 1,
-  };
+  snapshot = { hasActiveSession: true, version: snapshot.version + 1 };
 
   emitSnapshotChange();
 }
