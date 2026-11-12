@@ -23,21 +23,17 @@ export default function CuisineVocabularyForm() {
   const t = useTranslations("settings.admin.cuisineVocabulary");
   const tActions = useTranslations("common.actions");
   const { cuisines, isLoading } = useCuisinesQuery();
-  const { create, rename, remove, isPending } = useCuisineWrites();
-
   const [newName, setNewName] = useState("");
   const [editingId, setEditingId] = useState<string | null>(null);
   const [editingName, setEditingName] = useState("");
   const [pendingDelete, setPendingDelete] = useState<{ id: string; name: string } | null>(null);
   const [error, setError] = useState<CuisineRefusal | null>(null);
+  const { create, rename, remove, isPending } = useCuisineWrites(setError);
 
-  // Shows why a write failed, or runs `onDone` once it went through.
-  const run = async (write: () => Promise<CuisineRefusal | null>, onDone: () => void) => {
+  // Runs `onDone` once the write went through; a failure set `error` already.
+  const run = async (write: () => Promise<boolean>, onDone: () => void) => {
     setError(null);
-    const refusal = await write();
-
-    if (refusal) setError(refusal);
-    else onDone();
+    if (await write()) onDone();
   };
 
   const handleAdd = () => {

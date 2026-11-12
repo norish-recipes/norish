@@ -30,23 +30,26 @@ afterEach(resetTRPCFake);
 describe("useCuisineWrites", () => {
   it("reads the vocabulary again once a cuisine is added", async () => {
     const { stale, wrapper } = setUp();
-    const { result } = renderHook(() => useCuisineWrites(), { wrapper });
-    let added: Promise<unknown> | undefined;
+    const onRefused = vi.fn();
+    const { result } = renderHook(() => useCuisineWrites(onRefused), { wrapper });
+    let added: Promise<boolean> | undefined;
 
     act(() => {
       added = result.current.create("Thai");
     });
     await answerCall("admin.cuisines.create", { id: "c1" });
 
-    expect(await added).toBeNull();
+    expect(await added).toBe(true);
+    expect(onRefused).not.toHaveBeenCalled();
     expect(stale()).toBe(true);
   });
 
   it("tells a taken name from any other failure", async () => {
     const { stale, wrapper } = setUp();
-    const { result } = renderHook(() => useCuisineWrites(), { wrapper });
-    let renamed: Promise<unknown> | undefined;
-    let removed: Promise<unknown> | undefined;
+    const onRefused = vi.fn();
+    const { result } = renderHook(() => useCuisineWrites(onRefused), { wrapper });
+    let renamed: Promise<boolean> | undefined;
+    let removed: Promise<boolean> | undefined;
 
     act(() => {
       renamed = result.current.rename("c1", "Thai");
@@ -60,8 +63,8 @@ describe("useCuisineWrites", () => {
       remove.deferred.reject(new Error("offline"));
     });
 
-    expect(await renamed).toBe("duplicate");
-    expect(await removed).toBe("saveFailed");
+    expect([await renamed, await removed]).toEqual([false, false]);
+    expect(onRefused.mock.calls).toEqual([["duplicate"], ["saveFailed"]]);
     expect(stale()).toBe(false);
   });
 });
