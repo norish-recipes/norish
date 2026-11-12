@@ -35,6 +35,7 @@ export function HelpPopover({ label, text, icon = "questionmark.circle" }: HelpP
               labelStyle("iconOnly"),
               buttonStyle("plain"),
               foregroundStyle(mutedColor),
+              font({ size: 16 }),
               frame({ width: 28, height: 28 }),
             ]}
             systemImage={icon}
@@ -44,7 +45,8 @@ export function HelpPopover({ label, text, icon = "questionmark.circle" }: HelpP
         <Popover.Content>
           <Text
             modifiers={[
-              font({ family: "Inter_400Regular", size: 14 }),
+              // SwiftUI resolves the PostScript name; expo-font's `Inter_400Regular` alias is UIKit-only.
+              font({ family: "Inter-Regular", size: 14 }),
               fixedSize({ horizontal: false, vertical: true }),
               frame({ maxWidth: 260, alignment: "leading" }),
               padding({ horizontal: 14, vertical: 12 }),
