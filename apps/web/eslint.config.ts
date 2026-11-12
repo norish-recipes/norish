@@ -1,7 +1,7 @@
 import { defineConfig } from "eslint/config";
 
 import { baseConfig, restrictEnvAccess } from "../../tooling/eslint/base.ts";
-import { restrictFeatures } from "../../tooling/eslint/features.ts";
+import { restrictFeatures, restrictTRPC } from "../../tooling/eslint/features.ts";
 import { nextjsConfig } from "../../tooling/eslint/nextjs.ts";
 import { compiledReactConfig, reactConfig } from "../../tooling/eslint/react.ts";
 
@@ -102,5 +102,6 @@ export default defineConfig(
     featuresDir: "features",
     appDir: "app",
     routeFiles: [`app/**/{${nextRouteFiles.join(",")}}.{js,jsx,ts,tsx}`],
-  })
+  }),
+  restrictTRPC()
 );

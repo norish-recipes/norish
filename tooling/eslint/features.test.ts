@@ -4,7 +4,7 @@ import path from "node:path";
 import { Linter } from "eslint";
 import { afterAll, describe, expect, it } from "vitest";
 
-import { restrictDomains, restrictFeatures } from "./features.ts";
+import { restrictDomains, restrictFeatures, restrictTRPC } from "./features.ts";
 
 const root = mkdtempSync(path.join(tmpdir(), "features-rule-"));
 
@@ -112,5 +112,37 @@ describe("restrictFeatures", () => {
     expect(at("features/groceries/list.tsx", "./row")).toEqual([]);
     expect(at("features/groceries/list.tsx", "@/features/groceries")).toEqual([]);
     expect(at("features/groceries/list.tsx", "@/features/groceries/row")).toEqual([]);
+  });
+});
+
+describe("restrictTRPC", () => {
+  const cwd = path.join(root, "app");
+  const config = restrictTRPC({ "lib/bridge.ts": "The bridge hands the client to a library." });
+  const at = (file: string, code: string) =>
+    new Linter({ cwd })
+      .verify(code, [{ files: ["**/*.{ts,tsx}"] }, ...config], path.join(cwd, file))
+      .map(({ message }) => message.replace(/^.* is restricted\. /, ""));
+  const banned = "Call tRPC through a named hook in the shared-react domain it reads.";
+
+  it("bans useTRPC and useTRPCClient from the app, by name or namespace", () => {
+    expect(
+      at("components/card.tsx", 'import { useTRPC } from "@norish/shared-react/trpc";')
+    ).toEqual([banned]);
+    expect(
+      at("features/list.tsx", 'import { useTRPCClient } from "@norish/shared-react/trpc";')
+    ).toEqual([banned]);
+    expect(
+      at("features/list.tsx", 'import * as trpc from "@norish/shared-react/trpc";')
+    ).toHaveLength(1);
+  });
+
+  it("leaves the rest of the tRPC folder importable", () => {
+    expect(
+      at("lib/offline.tsx", 'import { useConnectionStatus } from "@norish/shared-react/trpc";')
+    ).toEqual([]);
+  });
+
+  it("lets a named exception import them", () => {
+    expect(at("lib/bridge.ts", 'import { useTRPC } from "@norish/shared-react/trpc";')).toEqual([]);
   });
 });

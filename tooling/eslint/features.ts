@@ -90,3 +90,28 @@ export const restrictDomains = (
     }))
   );
 };
+
+// Both apps: a component reads and writes through named shared-react hooks, never tRPC itself.
+// An exception names its file, relative to the app, with one line of why.
+export const restrictTRPC = (exceptions: Record<string, string> = {}) =>
+  defineConfig(
+    { plugins: { trpc: plugin } },
+    {
+      files: ["**/*.{js,ts,tsx}"],
+      ignores: Object.keys(exceptions),
+      rules: {
+        "trpc/no-restricted-imports": [
+          "error",
+          {
+            paths: [
+              {
+                name: "@norish/shared-react/trpc",
+                importNames: ["useTRPC", "useTRPCClient"],
+                message: "Call tRPC through a named hook in the shared-react domain it reads.",
+              },
+            ],
+          },
+        ],
+      },
+    }
+  );

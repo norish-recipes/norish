@@ -1,7 +1,7 @@
 import { defineConfig } from "eslint/config";
 
 import { baseConfig } from "../../tooling/eslint/base.ts";
-import { restrictFeatures } from "../../tooling/eslint/features.ts";
+import { restrictFeatures, restrictTRPC } from "../../tooling/eslint/features.ts";
 import { compiledReactConfig, reactConfig } from "../../tooling/eslint/react.ts";
 
 export default defineConfig(
@@ -21,5 +21,6 @@ export default defineConfig(
     featuresDir: "src/features",
     appDir: "src/app",
     routeFiles: ["src/app/**"],
-  })
+  }),
+  restrictTRPC()
 );
