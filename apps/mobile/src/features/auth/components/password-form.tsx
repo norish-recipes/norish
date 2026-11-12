@@ -98,10 +98,10 @@ export function PasswordForm({ authClient, signIn, showSignUpLink }: PasswordFor
       <InlineError error={error} />
 
       {showSignUpLink ? (
-        // The whole sentence is one link, its 20pt line slopped to a 44pt target.
+        // The sentence, sized to its text, is one link, its 20pt line slopped to a 44pt target.
         <Pressable
           accessibilityRole="link"
-          className="mt-0.5"
+          className="mt-0.5 self-center"
           hitSlop={{ top: 12, bottom: 12 }}
           onPress={() => router.push("/register")}
         >
