@@ -8,7 +8,7 @@ import Animated from "react-native-reanimated";
 import { LaunchProvider, LaunchSplash } from "@/components/launch";
 import { LaunchVersionCheck } from "@/features/auth/components/launch-version-check";
 import { StorageUnavailableScreen } from "@/features/auth/screens/storage-unavailable-screen";
-import { FADE_IN } from "@/features/auth/utils/motion";
+import { PENDING_FADE_IN } from "@/features/auth/utils/motion";
 import { useSignOutBeforeServerChange } from "@/hooks/use-change-server-address";
 import { useResolvedColorScheme } from "@/hooks/use-resolved-color-scheme";
 import { useServerAddress } from "@/hooks/use-server-address";
@@ -183,7 +183,7 @@ function SessionStack() {
   return (
     <View style={[styles.root, { backgroundColor: colors.background }]}>
       {pending ? (
-        <Animated.View entering={FADE_IN} style={[styles.root, styles.centred]}>
+        <Animated.View entering={PENDING_FADE_IN} style={[styles.root, styles.centred]}>
           <ActivityIndicator />
         </Animated.View>
       ) : signedIn ? (

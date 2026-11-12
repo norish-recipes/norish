@@ -4,6 +4,9 @@ import { Easing, FadeIn, ReduceMotion, withDelay, withTiming } from "react-nativ
 // Reanimated snaps every animation under Reduce Motion, so the plain fade opts out of that.
 export const FADE_IN = FadeIn.duration(240).reduceMotion(ReduceMotion.Never);
 
+// A pending spinner waits this long before fading in, so a quick session read never shows one.
+export const PENDING_FADE_IN = FADE_IN.delay(400);
+
 /** Runs a badge's clock from 0 to `duration` after `delay`; callers skip it under Reduce Motion. */
 export function playBadge(clock: SharedValue<number>, duration: number, delay: number) {
   clock.set(0);
