@@ -1,8 +1,7 @@
 import { useQuery } from "@tanstack/react-query";
 
 import { useTRPC } from "../trpc";
-
-const NONE: never[] = [];
+import { NONE } from "./types";
 
 /** The configured AI keys the provider is refusing, by block and since when; empty while all answer. */
 export function useAIKeyRejectionsQuery() {

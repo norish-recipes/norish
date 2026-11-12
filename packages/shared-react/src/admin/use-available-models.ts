@@ -4,10 +4,10 @@ import { skipToken, useQuery } from "@tanstack/react-query";
 import type { AppRouter } from "@norish/trpc/client";
 
 import { useTRPC } from "../trpc";
+import { NONE } from "./types";
 
 type AdminInput = inferRouterInputs<AppRouter>["admin"];
 
-const NONE: never[] = [];
 const ASKED_A_MINUTE = { staleTime: 60_000, retry: false };
 
 /** The models a provider offers; `null` asks nothing, until the form can name a provider it can reach. */

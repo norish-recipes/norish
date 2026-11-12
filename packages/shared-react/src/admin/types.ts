@@ -47,3 +47,6 @@ export type AdminConfigKey = keyof AdminConfigs;
 
 /** An OAuth sign-in provider. */
 export type AuthProvider = "oidc" | "github" | "google";
+
+/** One empty list for every missing answer, so a re-render before it lands changes nothing. */
+export const NONE: never[] = [];
