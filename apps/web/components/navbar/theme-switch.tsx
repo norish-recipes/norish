@@ -78,17 +78,3 @@ export const ThemeSwitchContent: FC<ThemeSwitchContentProps> = (props) => (
     <ThemeSwitchLabel {...props} />
   </Suspense>
 );
-
-export const ThemeSwitch: FC = () => {
-  const themeSwitch = useThemeSwitch();
-
-  return (
-    <button
-      className="flex w-full cursor-pointer items-center gap-2 text-left"
-      type="button"
-      onClick={themeSwitch.cycleTheme}
-    >
-      <ThemeSwitchContent {...themeSwitch} />
-    </button>
-  );
-};

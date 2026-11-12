@@ -2,7 +2,6 @@ import { createElement } from "react";
 import { renderHook } from "@testing-library/react";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 
-import type { SignOutOptions } from "@norish/shared-react/reader";
 import { PlatformProvider } from "@norish/shared-react/platform";
 import {
   createTestQueryClient,
@@ -10,6 +9,8 @@ import {
   fakePlatformAdapter,
 } from "@norish/shared-react/platform/testing";
 import { expireSession, useSessionExpiry, useSignOut } from "@norish/shared-react/reader";
+
+import type { SignOutOptions } from "../session-end";
 
 const connectivity = vi.hoisted(() => ({ isOffline: false }));
 
