@@ -32,18 +32,20 @@ export function useAuthAttempt() {
     setRunning(method);
     setFailure(null);
 
-    try {
-      const messageId = await task();
+    let messageId: string | null;
 
-      if (messageId !== null)
-        setFailure({ method, message: intl.formatMessage({ id: messageId }) });
+    // The React Compiler can't take a `finally`; the catch takes every throw, so the release follows.
+    try {
+      messageId = await task();
     } catch (error) {
       log.error({ error, method }, "Auth attempt threw");
-      setFailure({ method, message: intl.formatMessage({ id: DEFAULT_FAILURE }) });
-    } finally {
-      inFlightRef.current = false;
-      setRunning(null);
+      messageId = DEFAULT_FAILURE;
     }
+
+    if (messageId !== null) setFailure({ method, message: intl.formatMessage({ id: messageId }) });
+
+    inFlightRef.current = false;
+    setRunning(null);
   };
 
   /** Runs a Better Auth call, its refusal translated by `authFailure`. */
