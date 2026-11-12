@@ -6,7 +6,6 @@ import {
   loadLocalePreference,
   saveLocalePreference,
 } from "@/lib/preferences/locale-preference-store";
-import { useMutation, useQuery } from "@tanstack/react-query";
 import { IntlProvider } from "react-intl";
 
 import type { EnabledLocale } from "@norish/shared-react/config";
@@ -21,7 +20,7 @@ import enNavbarMessages from "@norish/i18n/messages/en/navbar.json";
 import enRecipesMessages from "@norish/i18n/messages/en/recipes.json";
 import enSettingsMessages from "@norish/i18n/messages/en/settings.json";
 import { useLocaleConfigQuery } from "@norish/shared-react/config";
-import { useTRPC } from "@norish/shared-react/trpc";
+import { useLocaleSave } from "@norish/shared-react/reader";
 
 type MobileLocaleContextValue = {
   locale: string;
@@ -82,7 +81,6 @@ function flattenMessages(messages: Record<string, unknown>, prefix = ""): Record
 }
 
 function MobileLocaleProviderInner({ children }: { children: React.ReactNode }) {
-  const trpc = useTRPC();
   const { isAuthenticated } = useAuth();
   const [preferredLocale, setPreferredLocale] = useState<string | null>(null);
   const [messages, setMessages] = useState<Record<string, unknown>>(FALLBACK_MESSAGES);
@@ -90,12 +88,7 @@ function MobileLocaleProviderInner({ children }: { children: React.ReactNode }) 
   const { enabledLocales: configuredLocales, defaultLocale: configuredDefaultLocale } =
     useLocaleConfigQuery();
 
-  const updatePreferencesMutation = useMutation(trpc.user.updatePreferences.mutationOptions());
-  const { data: userSettings } = useQuery({
-    ...trpc.user.get.queryOptions(),
-    enabled: isAuthenticated,
-    staleTime: 60_000,
-  });
+  const saveLocale = useLocaleSave(isAuthenticated);
 
   const localeOptions = useMemo(
     () => resolveLocaleOptions(BUNDLED_LOCALES, configuredLocales),
@@ -173,10 +166,7 @@ function MobileLocaleProviderInner({ children }: { children: React.ReactNode }) 
         void saveLocalePreference(nextResolved);
 
         if (isAuthenticated && !options?.fromServer) {
-          void updatePreferencesMutation.mutateAsync({
-            version: userSettings?.user.version ?? 1,
-            preferences: { locale: nextResolved },
-          });
+          saveLocale(nextResolved);
         }
       },
     }),
@@ -187,8 +177,7 @@ function MobileLocaleProviderInner({ children }: { children: React.ReactNode }) 
       isMessagesLoading,
       localeNames,
       localeOptions,
-      updatePreferencesMutation,
-      userSettings?.user.version,
+      saveLocale,
     ]
   );
 
