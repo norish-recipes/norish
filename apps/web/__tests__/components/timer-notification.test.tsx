@@ -8,6 +8,8 @@ import common from "@norish/i18n/messages/nl/common.json";
 
 describe("a timer completing in the background", () => {
   afterEach(() => {
+    vi.restoreAllMocks();
+    Reflect.deleteProperty(navigator, "serviceWorker");
     vi.useRealTimers();
     vi.unstubAllGlobals();
     useTimerStore.setState({ timers: [] });
