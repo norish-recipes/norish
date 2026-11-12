@@ -19,7 +19,7 @@ describe("resolveBootPhase", () => {
         resolveBootPhase({
           appearanceHydrated: false,
           fontsReady: true,
-          backendBaseUrl: ready,
+          serverAddress: ready,
         })
       ).toEqual({ phase: "loading" });
     });
@@ -29,17 +29,17 @@ describe("resolveBootPhase", () => {
         resolveBootPhase({
           appearanceHydrated: true,
           fontsReady: false,
-          backendBaseUrl: ready,
+          serverAddress: ready,
         })
       ).toEqual({ phase: "loading" });
     });
 
-    it("waits while the backend URL is still being read", () => {
+    it("waits while the Server Address is still being read", () => {
       expect(
         resolveBootPhase({
           appearanceHydrated: true,
           fontsReady: true,
-          backendBaseUrl: loading,
+          serverAddress: loading,
         })
       ).toEqual({ phase: "loading" });
     });
@@ -53,18 +53,18 @@ describe("resolveBootPhase", () => {
         resolveBootPhase({
           appearanceHydrated: true,
           fontsReady: true,
-          backendBaseUrl: { status: "error", error },
+          serverAddress: { status: "error", error },
         })
       ).toEqual({ phase: "storage-error", error });
     });
 
     it("never reports onboarding for an unreadable store", () => {
-      // Regression guard: treating a failed read as "no backend configured"
+      // Regression guard: treating a failed read as "no Server Address"
       // would send a user with a working server back through setup.
       const phase = resolveBootPhase({
         appearanceHydrated: true,
         fontsReady: true,
-        backendBaseUrl: { status: "error", error: new Error("keychain locked") },
+        serverAddress: { status: "error", error: new Error("keychain locked") },
       });
 
       expect(phase.phase).not.toBe("onboarding");
@@ -77,41 +77,41 @@ describe("resolveBootPhase", () => {
         resolveBootPhase({
           appearanceHydrated: true,
           fontsReady: true,
-          backendBaseUrl: { status: "error", error },
+          serverAddress: { status: "error", error },
         }).phase
       ).toBe("storage-error");
     });
   });
 
   describe("onboarding", () => {
-    it("onboards when storage is readable and holds no backend", () => {
+    it("onboards when storage is readable and holds no Server Address", () => {
       expect(
         resolveBootPhase({
           appearanceHydrated: true,
           fontsReady: true,
-          backendBaseUrl: unconfigured,
+          serverAddress: unconfigured,
         })
       ).toEqual({ phase: "onboarding" });
     });
   });
 
   describe("ready", () => {
-    it("passes the configured backend through once everything settled", () => {
+    it("passes the saved Server Address through once everything settled", () => {
       expect(
         resolveBootPhase({
           appearanceHydrated: true,
           fontsReady: true,
-          backendBaseUrl: ready,
+          serverAddress: ready,
         })
-      ).toEqual({ phase: "ready", backendBaseUrl: "https://norish.example" });
+      ).toEqual({ phase: "ready", serverAddress: "https://norish.example" });
     });
 
-    it("still waits for the other inputs even with a backend in hand", () => {
+    it("still waits for the other inputs even with a Server Address in hand", () => {
       expect(
         resolveBootPhase({
           appearanceHydrated: false,
           fontsReady: true,
-          backendBaseUrl: ready,
+          serverAddress: ready,
         })
       ).toEqual({ phase: "loading" });
     });

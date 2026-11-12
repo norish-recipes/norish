@@ -5,37 +5,37 @@ import * as SecureStore from "expo-secure-store";
 import { withoutTrailingSlashes } from "@norish/shared/lib/helpers";
 import { httpUrlSchema } from "@norish/shared/lib/schema";
 
-const BACKEND_BASE_URL_KEY = "norish.backend-base-url";
+const SERVER_ADDRESS_KEY = "norish.backend-base-url";
 const listeners = new Set<() => void>();
 // The last address read or saved, for callers that need it synchronously (tRPC, the probe).
-let currentBaseUrl = "";
+let currentAddress = "";
 
 /** The server the boot gate renders the app with; null in onboarding, which has no tRPC. */
-export const BackendBaseUrlContext = createContext<string | null>(null);
+export const ServerAddressContext = createContext<string | null>(null);
 
-export function getBackendBaseUrl(): string {
-  return currentBaseUrl;
+export function getServerAddress(): string {
+  return currentAddress;
 }
 
 /**
- * Outcome of reading the stored backend URL.
+ * Outcome of reading the stored Server Address.
  *
  * `error` is deliberately distinct from `ready` with a `null` url: secure
  * storage failing is not the same as the user not having configured a server,
- * and collapsing the two would silently discard a configured backend.
+ * and collapsing the two would silently discard a saved Server Address.
  */
-export type BackendBaseUrlState =
+export type ServerAddressState =
   | { status: "loading" }
   | { status: "ready"; url: string | null }
   | { status: "error"; error: unknown };
 
-function emitBackendBaseUrlChange() {
+function emitServerAddressChange() {
   for (const listener of listeners) {
     listener();
   }
 }
 
-export function subscribeBackendBaseUrlChange(listener: () => void): () => void {
+export function subscribeServerAddressChange(listener: () => void): () => void {
   listeners.add(listener);
 
   return () => {
@@ -43,7 +43,7 @@ export function subscribeBackendBaseUrlChange(listener: () => void): () => void 
   };
 }
 
-export function normalizeBackendBaseUrl(input: string): string | null {
+export function normalizeServerAddress(input: string): string | null {
   const trimmed = input.trim();
 
   if (!trimmed) {
@@ -68,41 +68,41 @@ export function normalizeBackendBaseUrl(input: string): string | null {
   }
 }
 
-export async function loadBackendBaseUrl(): Promise<string | null> {
-  const stored = await SecureStore.getItemAsync(BACKEND_BASE_URL_KEY);
+export async function loadServerAddress(): Promise<string | null> {
+  const stored = await SecureStore.getItemAsync(SERVER_ADDRESS_KEY);
 
-  const normalized = stored ? normalizeBackendBaseUrl(stored) : null;
+  const normalized = stored ? normalizeServerAddress(stored) : null;
 
   if (stored && !normalized) {
-    await SecureStore.deleteItemAsync(BACKEND_BASE_URL_KEY);
+    await SecureStore.deleteItemAsync(SERVER_ADDRESS_KEY);
   }
 
-  currentBaseUrl = normalized ?? "";
+  currentAddress = normalized ?? "";
 
   return normalized;
 }
 
-export async function saveBackendBaseUrl(input: string): Promise<string> {
-  const normalized = normalizeBackendBaseUrl(input);
+export async function saveServerAddress(input: string): Promise<string> {
+  const normalized = normalizeServerAddress(input);
 
   if (!normalized) {
-    throw new Error("Please enter a valid backend URL.");
+    throw new Error("Please enter a valid server address.");
   }
 
-  const existing = await loadBackendBaseUrl();
+  const existing = await loadServerAddress();
 
   // The Offline Cache and Outbox are per signed-in owner, and sign-out already cleared the reads.
   if (existing !== normalized) {
     await resetAuthClientStorage();
   }
 
-  await SecureStore.setItemAsync(BACKEND_BASE_URL_KEY, normalized);
-  currentBaseUrl = normalized;
-  emitBackendBaseUrlChange();
+  await SecureStore.setItemAsync(SERVER_ADDRESS_KEY, normalized);
+  currentAddress = normalized;
+  emitServerAddressChange();
 
   return normalized;
 }
 
-export function getBackendHealthUrl(baseUrl: string): string {
+export function getServerHealthUrl(baseUrl: string): string {
   return `${baseUrl}/api/v1/health`;
 }

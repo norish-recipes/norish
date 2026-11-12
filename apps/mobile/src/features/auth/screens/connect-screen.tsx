@@ -1,14 +1,14 @@
 import React, { useCallback, useState } from "react";
 import { ActivityIndicator, Text, View } from "react-native";
 import { AuthShell } from "@/features/auth/components/auth-shell";
-import { useBackendUrl } from "@/features/auth/hooks/use-backend-url";
+import { useServerAddressDraft } from "@/features/auth/hooks/use-server-address-draft";
 import { styles } from "@/features/auth/styles/connect.styles";
 import { classifyServerHealth } from "@/features/auth/utils/server-version";
 import {
-  getBackendHealthUrl,
-  normalizeBackendBaseUrl,
-  saveBackendBaseUrl,
-} from "@/lib/network/backend-base-url";
+  getServerHealthUrl,
+  normalizeServerAddress,
+  saveServerAddress,
+} from "@/lib/network/server-address";
 import { useRouter } from "expo-router";
 import { Button, Input, useThemeColor } from "heroui-native";
 import { useIntl } from "react-intl";
@@ -18,7 +18,7 @@ import { REACHABILITY_DEADLINE_MS } from "@norish/shared-react/offline/reachabil
 /** Asks the server at `baseUrl` what it is, and saves the address once it's a Norish new enough. */
 async function reachServer(baseUrl: string, signal: AbortSignal) {
   // The deprecated route, since servers before 0.26 have no /health/ready to answer.
-  const response = await fetch(getBackendHealthUrl(baseUrl), {
+  const response = await fetch(getServerHealthUrl(baseUrl), {
     method: "GET",
     cache: "no-store",
     credentials: "omit",
@@ -31,7 +31,7 @@ async function reachServer(baseUrl: string, signal: AbortSignal) {
 
   const verdict = classifyServerHealth(await response.json().catch(() => null));
 
-  if (verdict === "ok") await saveBackendBaseUrl(baseUrl);
+  if (verdict === "ok") await saveServerAddress(baseUrl);
 
   return verdict;
 }
@@ -42,12 +42,12 @@ export function ConnectScreen() {
   const [foregroundColor, mutedColor, separatorColor, dangerColor, dangerSoftColor] = useThemeColor(
     ["foreground", "muted", "separator", "danger", "danger-soft"] as const
   );
-  const { baseUrl, setBaseUrl, isHydrated } = useBackendUrl();
+  const { baseUrl, setBaseUrl, isHydrated } = useServerAddressDraft();
   const [isConnecting, setIsConnecting] = useState(false);
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
 
   const handleConnect = useCallback(async () => {
-    const normalizedBaseUrl = normalizeBackendBaseUrl(baseUrl);
+    const normalizedBaseUrl = normalizeServerAddress(baseUrl);
 
     if (!normalizedBaseUrl) {
       setErrorMessage(intl.formatMessage({ id: "auth.connect.errors.invalidUrl" }));

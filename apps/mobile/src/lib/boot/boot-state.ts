@@ -1,4 +1,4 @@
-import type { BackendBaseUrlState } from "@/lib/network/backend-base-url";
+import type { ServerAddressState } from "@/lib/network/server-address";
 
 /**
  * What the app shell should render once (or while) its async prerequisites
@@ -12,19 +12,19 @@ import type { BackendBaseUrlState } from "@/lib/network/backend-base-url";
 type BootPhase =
   /** Hydration still in flight. The native splash stays up. */
   | { phase: "loading" }
-  /** Secure storage is unreadable, so the configured backend is unknown. */
+  /** Secure storage is unreadable, so the Server Address is unknown. */
   | { phase: "storage-error"; error: unknown }
-  /** Storage read fine and no backend is configured yet. */
+  /** Storage read fine and no Server Address is saved yet. */
   | { phase: "onboarding" }
-  /** Storage read fine and a backend is configured. */
-  | { phase: "ready"; backendBaseUrl: string };
+  /** Storage read fine and a Server Address is saved. */
+  | { phase: "ready"; serverAddress: string };
 
 type BootInputs = {
   /** Whether the persisted appearance preference has settled. */
   appearanceHydrated: boolean;
   /** Whether the app fonts have loaded (or failed and fell back to the system font). */
   fontsReady: boolean;
-  backendBaseUrl: BackendBaseUrlState;
+  serverAddress: ServerAddressState;
 };
 
 /**
@@ -33,19 +33,19 @@ type BootInputs = {
 export function resolveBootPhase({
   appearanceHydrated,
   fontsReady,
-  backendBaseUrl,
+  serverAddress,
 }: BootInputs): BootPhase {
-  if (!appearanceHydrated || !fontsReady || backendBaseUrl.status === "loading") {
+  if (!appearanceHydrated || !fontsReady || serverAddress.status === "loading") {
     return { phase: "loading" };
   }
 
-  if (backendBaseUrl.status === "error") {
-    return { phase: "storage-error", error: backendBaseUrl.error };
+  if (serverAddress.status === "error") {
+    return { phase: "storage-error", error: serverAddress.error };
   }
 
-  if (!backendBaseUrl.url) {
+  if (!serverAddress.url) {
     return { phase: "onboarding" };
   }
 
-  return { phase: "ready", backendBaseUrl: backendBaseUrl.url };
+  return { phase: "ready", serverAddress: serverAddress.url };
 }

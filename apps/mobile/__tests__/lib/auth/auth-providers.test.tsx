@@ -119,7 +119,7 @@ const { AuthProviders } = await import("@/lib/auth/auth-providers");
 const { getAuthTransportSnapshot, publishSignedOut, subscribeAuthTransport } =
   await import("@/lib/auth/auth-session-sync");
 const { AUTH_COOKIE_KEY, authStorage } = await import("@/lib/auth/auth-storage");
-const { BackendBaseUrlContext } = await import("@/lib/network/backend-base-url");
+const { ServerAddressContext } = await import("@/lib/network/server-address");
 const { resetAuthClientStorage } = await import("@/lib/auth/auth-client");
 
 seen.leave = publishSignedOut;
@@ -133,9 +133,9 @@ function ReKeyed() {
   const { version } = useSyncExternalStore(subscribeAuthTransport, getAuthTransportSnapshot);
 
   return (
-    <BackendBaseUrlContext value="https://norish.test">
+    <ServerAddressContext value="https://norish.test">
       <AuthProviders key={version}>{null}</AuthProviders>
-    </BackendBaseUrlContext>
+    </ServerAddressContext>
   );
 }
 

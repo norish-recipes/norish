@@ -5,13 +5,13 @@ import React, { useEffect } from "react";
 import { ActivityIndicator, StyleSheet, View } from "react-native";
 import { GestureHandlerRootView } from "react-native-gesture-handler";
 import { StorageUnavailableScreen } from "@/features/auth/screens/storage-unavailable-screen";
-import { useBackendBaseUrl } from "@/hooks/use-backend-base-url";
+import { useServerAddress } from "@/hooks/use-server-address";
 import { useResolvedColorScheme } from "@/hooks/use-resolved-color-scheme";
 import { useUserLocaleSync } from "@/hooks/use-user-locale-sync";
 import { AuthProviders } from "@/lib/auth/auth-providers";
 import { resolveBootPhase } from "@/lib/boot/boot-state";
 import { MobileIntlFallbackProvider } from "@/lib/i18n/mobile-i18n-context";
-import { BackendBaseUrlContext } from "@/lib/network/backend-base-url";
+import { ServerAddressContext } from "@/lib/network/server-address";
 import { ConnectivityProvider, OfflineController, offlineEngine } from "@/lib/offline/engine";
 import {
   AppearancePreferenceProvider,
@@ -73,7 +73,7 @@ function RootLayoutContent() {
   const { hydrated } = useAppearancePreference();
   const effectiveScheme = useResolvedColorScheme();
 
-  const backendBaseUrl = useBackendBaseUrl();
+  const serverAddress = useServerAddress();
   const [fontsLoaded, fontsError] = useFonts(FONTS);
   const [background, foreground, border, accent, danger] = useThemeColor([
     "background",
@@ -86,7 +86,7 @@ function RootLayoutContent() {
   const boot = resolveBootPhase({
     appearanceHydrated: hydrated,
     fontsReady: fontsLoaded || fontsError !== null,
-    backendBaseUrl,
+    serverAddress,
   });
 
   // Hand the screen over from the native splash only once there is something to
@@ -114,20 +114,20 @@ function RootLayoutContent() {
     },
   };
 
-  // Secure storage could not be read, so which backend this install belongs to
-  // is unknown. Treating that as "no backend configured" would quietly drop a
+  // Secure storage could not be read, so which server this install belongs to
+  // is unknown. Treating that as "no Server Address" would quietly drop a
   // configured server, so surface it instead.
   if (boot.phase === "storage-error") {
     return (
       <ThemeProvider value={theme}>
         <MobileIntlFallbackProvider>
-          <StorageUnavailableScreen error={boot.error} onRetry={backendBaseUrl.retry} />
+          <StorageUnavailableScreen error={boot.error} onRetry={serverAddress.retry} />
         </MobileIntlFallbackProvider>
       </ThemeProvider>
     );
   }
 
-  // No backend URL configured — minimal provider tree (setup / onboarding)
+  // No Server Address — minimal provider tree (setup / onboarding)
   if (boot.phase === "onboarding") {
     return (
       <ThemeProvider value={theme}>
@@ -139,12 +139,12 @@ function RootLayoutContent() {
     );
   }
 
-  // Full provider tree — backend available
+  // Full provider tree — a Server Address is saved
   return (
     <ThemeProvider value={theme}>
-      <BackendBaseUrlContext value={boot.backendBaseUrl}>
+      <ServerAddressContext value={boot.serverAddress}>
         <TrpcProvider
-          baseUrl={boot.backendBaseUrl}
+          baseUrl={boot.serverAddress}
           getQueryClient={getOfflineQueryClient}
           mutationLink={offlineEngine.outboxLink}
         >
@@ -154,7 +154,7 @@ function RootLayoutContent() {
             </AuthProviders>
           </ConnectivityProvider>
         </TrpcProvider>
-      </BackendBaseUrlContext>
+      </ServerAddressContext>
     </ThemeProvider>
   );
 }

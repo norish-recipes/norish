@@ -6,7 +6,7 @@ vi.mock("react-native-mmkv", () => ({ createMMKV: () => ({ getString: () => unde
 vi.mock("expo-constants", () => ({ default: { expoConfig: { version: "0.0.0-test" } } }));
 vi.mock("expo-file-system", () => ({}));
 vi.mock("@/lib/auth/auth-client", () => ({}));
-vi.mock("@/lib/network/backend-base-url", () => ({}));
+vi.mock("@/lib/network/server-address", () => ({}));
 vi.mock("@norish/shared-react/trpc", () => ({}));
 
 const native = vi.hoisted(() => ({

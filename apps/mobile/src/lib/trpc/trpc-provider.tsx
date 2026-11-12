@@ -3,7 +3,7 @@ import type { TRPCLink } from "@trpc/client";
 import React, { useMemo, useSyncExternalStore } from "react";
 import { getAuthTransportSnapshot, subscribeAuthTransport } from "@/lib/auth/auth-session-sync";
 import { AUTH_COOKIE_KEY, authStorage } from "@/lib/auth/auth-storage";
-import { getBackendBaseUrl } from "@/lib/network/backend-base-url";
+import { getServerAddress } from "@/lib/network/server-address";
 import { getBackendWsUrl } from "@/lib/network/backend-ws-url";
 import { getCookie } from "@better-auth/expo/client";
 
@@ -63,7 +63,7 @@ function createMobileWebSocket(): typeof WebSocket | undefined {
 // The auth client's getCookie is async and tRPC asks for headers synchronously, so read the
 // chunked SecureStore entry the auth client writes directly.
 function trpcBundleGetHeaders(): Record<string, string> {
-  if (!getBackendBaseUrl()) {
+  if (!getServerAddress()) {
     return {};
   }
 
@@ -74,8 +74,8 @@ function trpcBundleGetHeaders(): Record<string, string> {
 
 const { TRPCProviderWrapper } = createTRPCProviderBundle({
   logger: log,
-  getBaseUrl: getBackendBaseUrl,
-  getWsUrl: () => getBackendWsUrl(getBackendBaseUrl()),
+  getBaseUrl: getServerAddress,
+  getWsUrl: () => getBackendWsUrl(getServerAddress()),
   getHeaders: trpcBundleGetHeaders,
   getWebSocketImpl: createMobileWebSocket,
   wsLazyEnabled: true,

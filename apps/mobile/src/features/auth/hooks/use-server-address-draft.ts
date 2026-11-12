@@ -1,12 +1,12 @@
 import { useEffect, useState } from "react";
-import { loadBackendBaseUrl } from "@/lib/network/backend-base-url";
+import { loadServerAddress } from "@/lib/network/server-address";
 import { useRouter } from "expo-router";
 
 import { createClientLogger } from "@norish/shared/lib/logger";
 
-const log = createClientLogger("backend-base-url");
+const log = createClientLogger("server-address");
 
-export function useBackendUrl() {
+export function useServerAddressDraft() {
   const router = useRouter();
   const [baseUrl, setBaseUrl] = useState("");
   const [isHydrated, setIsHydrated] = useState(false);
@@ -18,13 +18,13 @@ export function useBackendUrl() {
       let existingBaseUrl: string | null;
 
       try {
-        existingBaseUrl = await loadBackendBaseUrl();
+        existingBaseUrl = await loadServerAddress();
       } catch (error) {
         // Show the empty form rather than spinning forever. Nothing is
         // discarded: without a successful read there is no stored URL to
         // preserve, and saving a new one surfaces the same failure with a
         // message attached.
-        log.error({ error }, "Could not read the stored backend URL, showing an empty form");
+        log.error({ error }, "Could not read the stored Server Address, showing an empty form");
 
         if (isMounted) setIsHydrated(true);
 

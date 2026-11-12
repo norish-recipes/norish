@@ -1,21 +1,21 @@
-import type { BackendBaseUrlState } from "@/lib/network/backend-base-url";
+import type { ServerAddressState } from "@/lib/network/server-address";
 import { useCallback, useEffect, useState } from "react";
-import { loadBackendBaseUrl, subscribeBackendBaseUrlChange } from "@/lib/network/backend-base-url";
+import { loadServerAddress, subscribeServerAddressChange } from "@/lib/network/server-address";
 
 import { createClientLogger } from "@norish/shared/lib/logger";
 
-const log = createClientLogger("backend-base-url");
+const log = createClientLogger("server-address");
 
-type BackendBaseUrlResult = BackendBaseUrlState & {
+type ServerAddressResult = ServerAddressState & {
   /** Re-reads storage. Lets the user recover without force-quitting the app. */
   retry: () => void;
 };
 
 /**
- * Loads (and live-updates) the backend base URL from secure storage.
+ * Loads (and live-updates) the Server Address from secure storage.
  */
-export function useBackendBaseUrl(): BackendBaseUrlResult {
-  const [state, setState] = useState<BackendBaseUrlState>({ status: "loading" });
+export function useServerAddress(): ServerAddressResult {
+  const [state, setState] = useState<ServerAddressState>({ status: "loading" });
   const [attempt, setAttempt] = useState(0);
 
   // The error screen stays up until the re-read answers; "loading" would blank it, splash gone.
@@ -28,17 +28,17 @@ export function useBackendBaseUrl(): BackendBaseUrlResult {
 
     async function load() {
       try {
-        const url = await loadBackendBaseUrl();
+        const url = await loadServerAddress();
 
         if (mounted) setState({ status: "ready", url });
       } catch (error) {
-        log.error({ error }, "Could not read the stored backend URL");
+        log.error({ error }, "Could not read the stored Server Address");
 
         if (mounted) setState({ status: "error", error });
       }
     }
 
-    const unsubscribe = subscribeBackendBaseUrlChange(() => void load());
+    const unsubscribe = subscribeServerAddressChange(() => void load());
 
     void load();
 

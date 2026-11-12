@@ -22,21 +22,21 @@ vi.mock("@better-auth/expo/client", () => ({ expoClient: () => ({}) }));
 vi.mock("better-auth/react", () => ({ createAuthClient: () => ({}) }));
 
 const { useAuthClient } = await import("@/lib/auth/use-auth-client");
-const { BackendBaseUrlContext, saveBackendBaseUrl } =
-  await import("@/lib/network/backend-base-url");
+const { ServerAddressContext, saveServerAddress } =
+  await import("@/lib/network/server-address");
 
 const URL = "https://norish.test";
 
 describe("useAuthClient", () => {
   it("has no client off the boot gate's server, though the connect screen just saved one", async () => {
-    await saveBackendBaseUrl(URL);
+    await saveServerAddress(URL);
 
     expect(renderHook(() => useAuthClient()).result.current).toBeNull();
   });
 
   it("has the client for the server the boot gate renders the app with", () => {
     const wrapper = ({ children }: { children: ReactNode }) => (
-      <BackendBaseUrlContext value={URL}>{children}</BackendBaseUrlContext>
+      <ServerAddressContext value={URL}>{children}</ServerAddressContext>
     );
 
     expect(renderHook(() => useAuthClient(), { wrapper }).result.current).not.toBeNull();
