@@ -5,6 +5,7 @@ import React from "react";
 import { ActivityIndicator, StyleSheet, View } from "react-native";
 import { GestureHandlerRootView } from "react-native-gesture-handler";
 import { LaunchProvider, LaunchSplash } from "@/components/launch";
+import { LaunchVersionCheck } from "@/features/auth/components/launch-version-check";
 import { StorageUnavailableScreen } from "@/features/auth/screens/storage-unavailable-screen";
 import { useResolvedColorScheme } from "@/hooks/use-resolved-color-scheme";
 import { useServerAddress } from "@/hooks/use-server-address";
@@ -186,6 +187,7 @@ function SessionStack() {
       ) : (
         app
       )}
+      <LaunchVersionCheck enabled={!pending} />
       <LaunchSplash handoff={pending ? null : "fade"} />
     </>
   );
@@ -224,6 +226,8 @@ function RootStack({ signedIn }: { signedIn: boolean }) {
       <Stack.Protected guard={!signedIn}>
         <Stack.Screen name="(auth)" />
       </Stack.Protected>
+      {/* Reachable signed in or out, with no swipe back: only a new enough server leaves it. */}
+      <Stack.Screen name="update-server" options={{ animation: "fade", gestureEnabled: false }} />
     </Stack>
   );
 }
