@@ -1,15 +1,37 @@
-import React from "react";
+import type { ServerAddressCheck } from "@/lib/network/server-address";
+import React, { useEffect, useState } from "react";
 import { UpdateServerScreen } from "@/features/auth/screens/update-server-screen";
-import { resolveUpdateServerAddress } from "@/lib/boot/boot-state";
+import { checkServerAddress } from "@/features/auth/utils/check-server-address";
+import { resolveUpdateServerRoute } from "@/lib/boot/boot-state";
 import { getServerAddress } from "@/lib/network/server-address";
+import { getTooOldServer } from "@/lib/network/too-old-server";
 import { Redirect, useLocalSearchParams } from "expo-router";
 
-/** Update your server for the address it was opened with; with nothing to check, the signed-out entry. */
+/** Update your server for an address found too old; opened without that knowledge, it checks first. */
 export default function UpdateServerRoute() {
-  const { address, version } = useLocalSearchParams<{ address?: string; version?: string }>();
-  const next = resolveUpdateServerAddress(address, getServerAddress());
+  const { address } = useLocalSearchParams<{ address?: string }>();
+  // The hold as it was when opened, so the screen stays while a continuation clears it.
+  const [tooOld] = useState(getTooOldServer);
+  const [check, setCheck] = useState<ServerAddressCheck | null>(null);
+  const next = resolveUpdateServerRoute(address, getServerAddress(), tooOld, check);
+  const checking = next.screen === "check" ? next.address : null;
 
-  if (next.screen === "signed-out-entry") return <Redirect href="/" />;
+  useEffect(() => {
+    if (!checking) return;
 
-  return <UpdateServerScreen address={next.address} version={version} />;
+    let mounted = true;
+
+    void checkServerAddress(checking).then((answer) => {
+      if (mounted) setCheck(answer);
+    });
+
+    return () => {
+      mounted = false;
+    };
+  }, [checking]);
+
+  if (next.screen === "leave") return <Redirect href="/" />;
+  if (next.screen === "check") return null;
+
+  return <UpdateServerScreen address={next.address} version={next.version} />;
 }

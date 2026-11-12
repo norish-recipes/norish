@@ -33,6 +33,10 @@ export function clearServerTooOld(): void {
   emit();
 }
 
+export function getTooOldServer(): TooOldServer | null {
+  return tooOld;
+}
+
 export function useTooOldServer(): TooOldServer | null {
   return useSyncExternalStore(subscribe, () => tooOld);
 }

@@ -146,14 +146,31 @@ export function resolveForegroundVersionCheck(
   return signedIn ? { screen: "signed-in-app" } : { screen: "sign-in", address: check.address };
 }
 
-/** Update your server checks the address it was opened for, else the saved one; with neither, the signed-out entry. */
-export function resolveUpdateServerAddress(
+/**
+ * Update your server shows only for an address a check found too old: the one it was opened
+ * for, else the saved one. Unknown (a deep link), it is checked first; anything else leaves.
+ */
+export function resolveUpdateServerRoute(
   param: string | undefined,
-  saved: string
-): { screen: "update-server"; address: string } | { screen: "signed-out-entry" } {
+  saved: string,
+  tooOld: TooOldServer | null,
+  check: ServerAddressCheck | null
+):
+  | { screen: "update-server"; address: string; version?: string }
+  | { screen: "check"; address: string }
+  | { screen: "leave" } {
   const address = param || saved;
 
-  return address ? { screen: "update-server", address } : { screen: "signed-out-entry" };
+  if (!address) return { screen: "leave" };
+
+  const answer =
+    check ?? (tooOld?.address === address ? { outcome: "too-old" as const, ...tooOld } : null);
+
+  if (!answer) return { screen: "check", address };
+
+  return answer.outcome === "too-old"
+    ? { screen: "update-server", address: answer.address, version: answer.version }
+    : { screen: "leave" };
 }
 
 /** Changing the Server Address: signed out, Server address opens; signed in, Sign-out comes first. */

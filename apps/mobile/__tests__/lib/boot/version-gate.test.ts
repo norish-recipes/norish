@@ -3,7 +3,7 @@ import {
   resolveLaunchVersionCheck,
   resolveServerChange,
   resolveTooOldServerRoute,
-  resolveUpdateServerAddress,
+  resolveUpdateServerRoute,
 } from "@/lib/boot/boot-state";
 import { describe, expect, it } from "vitest";
 
@@ -86,24 +86,34 @@ describe("resolveForegroundVersionCheck", () => {
   });
 });
 
-describe("resolveUpdateServerAddress", () => {
-  it("checks the address it was opened for", () => {
-    expect(resolveUpdateServerAddress(address, "https://saved.example")).toEqual({
-      screen: "update-server",
-      address,
-    });
+describe("resolveUpdateServerRoute", () => {
+  const held = { address, version: "0.26.2" };
+  const updateServer = { screen: "update-server", address, version: "0.26.2" };
+
+  it("shows Update your server for an address a check found too old", () => {
+    expect(resolveUpdateServerRoute(address, "https://saved.example", held, null)).toEqual(
+      updateServer
+    );
   });
 
-  it("falls back to the saved Server Address", () => {
-    expect(resolveUpdateServerAddress(undefined, address)).toEqual({
-      screen: "update-server",
-      address,
-    });
+  it("checks an address it knows nothing about first, as from a deep link", () => {
+    expect(resolveUpdateServerRoute(address, "", null, null)).toEqual({ screen: "check", address });
+    expect(resolveUpdateServerRoute(undefined, address, { address: "https://other.example" }, null))
+      .toEqual({ screen: "check", address });
   });
 
-  it("sends the reader to the signed-out entry with no address to check", () => {
-    expect(resolveUpdateServerAddress(undefined, "")).toEqual({ screen: "signed-out-entry" });
-    expect(resolveUpdateServerAddress("", "")).toEqual({ screen: "signed-out-entry" });
+  it("shows Update your server once that check answers too old", () => {
+    expect(resolveUpdateServerRoute(undefined, address, null, tooOld)).toEqual(updateServer);
+  });
+
+  it("leaves for where the reader belongs once the server is new enough or unreachable", () => {
+    expect(resolveUpdateServerRoute(address, "", null, newEnough)).toEqual({ screen: "leave" });
+    expect(resolveUpdateServerRoute(address, "", null, unreachable)).toEqual({ screen: "leave" });
+  });
+
+  it("leaves with no address to check", () => {
+    expect(resolveUpdateServerRoute(undefined, "", null, null)).toEqual({ screen: "leave" });
+    expect(resolveUpdateServerRoute("", "", null, null)).toEqual({ screen: "leave" });
   });
 });
 
