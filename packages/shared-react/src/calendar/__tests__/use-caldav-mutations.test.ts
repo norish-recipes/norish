@@ -10,6 +10,9 @@ import {
 import { useCaldavMutations } from "../use-caldav-mutations";
 import { createMockCaldavConfig } from "./test-utils";
 
+/** What a connection test resolves with. */
+type Tested = Awaited<ReturnType<ReturnType<typeof useCaldavMutations>["testConnection"]>>;
+
 // Mock query keys
 const mockConfigQueryKey = ["caldav", "getConfig"];
 const mockSyncStatusQueryKey = ["caldav", "getSyncStatus"];
@@ -37,8 +40,8 @@ vi.mock("../../trpc", () => ({
       },
       getSyncStatus: {
         pathKey: () => mockSyncStatusQueryKey,
-        queryKey: (input: any) => [...mockSyncStatusQueryKey, input],
-        queryOptions: (input: any) => ({
+        queryKey: (input: unknown) => [...mockSyncStatusQueryKey, input],
+        queryOptions: (input: unknown) => ({
           queryKey: [...mockSyncStatusQueryKey, input],
           queryFn: () => mockGetSyncStatusQueryFn(input),
         }),
@@ -322,7 +325,7 @@ describe("CalDAV Mutation Hooks", () => {
         wrapper: createTestWrapper(queryClient),
       });
 
-      let response: any;
+      let response: Tested | undefined;
 
       await act(async () => {
         response = await result.current.testConnection({
@@ -332,8 +335,8 @@ describe("CalDAV Mutation Hooks", () => {
         });
       });
 
-      expect(response.success).toBe(true);
-      expect(response.message).toBe("Connection successful");
+      expect(response?.success).toBe(true);
+      expect(response?.message).toBe("Connection successful");
     });
 
     it("handles connection failure", async () => {
@@ -346,7 +349,7 @@ describe("CalDAV Mutation Hooks", () => {
         wrapper: createTestWrapper(queryClient),
       });
 
-      let response: any;
+      let response: Tested | undefined;
 
       await act(async () => {
         response = await result.current.testConnection({
@@ -356,8 +359,8 @@ describe("CalDAV Mutation Hooks", () => {
         });
       });
 
-      expect(response.success).toBe(false);
-      expect(response.message).toBe("Invalid credentials");
+      expect(response?.success).toBe(false);
+      expect(response?.message).toBe("Invalid credentials");
     });
   });
 

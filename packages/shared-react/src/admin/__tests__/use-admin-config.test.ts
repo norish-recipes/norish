@@ -213,7 +213,7 @@ describe("useConfigSecret", () => {
     expect(await result.current(ServerConfigKeys.AI_CONFIG, "apiKey")).toBe("sk-live");
     await waitFor(() =>
       expect(
-        queryClient.getQueryCache().findAll({ queryKey: [["admin", "getSecretField"]] })
+        queryClient.getQueryCache().findAll({ queryKey: keyOf("admin.getSecretField") })
       ).toEqual([])
     );
   });

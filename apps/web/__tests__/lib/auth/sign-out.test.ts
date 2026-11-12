@@ -7,6 +7,8 @@ import type { OfflineEngine, OfflineStorage } from "@norish/shared-react/offline
 const betterAuthSignOut = vi.hoisted(() => vi.fn());
 // The real engine over fake-indexeddb, so a test reads what a sign-out left behind.
 const offline = vi.hoisted(() => ({}) as { engine: OfflineEngine; storage: OfflineStorage });
+// The grocery list's key, as tRPC builds it.
+const GROCERIES_KEY = [["groceries", "list"], { type: "query" }];
 
 vi.mock("@norish/shared/lib/auth/client", () => ({ signOut: betterAuthSignOut }));
 vi.mock("@/lib/offline/engine", () => ({
@@ -28,7 +30,7 @@ describe("the web's sign-out", () => {
     const { engine } = offline;
 
     await engine.cache.reconcileIdentity({ sessionUserId: "u1", isOffline: false });
-    engine.queryClient.setQueryData([["groceries", "list"], { type: "query" }], ["milk"]);
+    engine.queryClient.setQueryData(GROCERIES_KEY, ["milk"]);
     await engine.outbox.enqueue({
       id: "e",
       ownerId: "u1",

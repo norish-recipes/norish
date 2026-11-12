@@ -39,14 +39,14 @@ vi.mock("../../trpc", () => ({
       },
       getPassword: {
         queryKey: () => mockPasswordQueryKey,
-        queryOptions: (_input: any, options?: any) => ({
+        queryOptions: (_input: unknown, options?: object) => ({
           ...mockPasswordQueryOptions(),
           ...options,
         }),
       },
       getSyncStatus: {
-        queryKey: (input: any) => [...mockSyncStatusQueryKey, input],
-        queryOptions: (input: any) => mockSyncStatusQueryOptions(input),
+        queryKey: (input: unknown) => [...mockSyncStatusQueryKey, input],
+        queryOptions: (input: unknown) => mockSyncStatusQueryOptions(input),
       },
       getSummary: {
         queryKey: () => mockSummaryQueryKey,

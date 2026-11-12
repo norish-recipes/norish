@@ -1,9 +1,5 @@
-/**
- * The Ingredients page: every food folded to a line, the flagged ones
- * marked, and a panel per food holding its spellings and only the actions
- * the server says the viewer may take. It runs over the catalogue's hooks
- * and a real query cache, against a fake server.
- */
+// The Ingredients page over the catalogue's hooks and a real query cache, against a fake server:
+// a line per food, flags marked, a panel with its spellings and only the actions the viewer may take.
 import type { QueryClient } from "@tanstack/react-query";
 import type { ReactNode } from "react";
 import { readAnswers, sentReads, writeAnswers } from "@/__tests__/helpers/trpc-fake";

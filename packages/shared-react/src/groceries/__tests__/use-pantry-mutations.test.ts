@@ -9,6 +9,9 @@ import {
   fakePlatformAdapter,
 } from "@norish/shared-react/platform/testing";
 
+/** The Pantry list's key, as the mocked `pantry.list` gives it. */
+const PANTRY_KEY = vi.hoisted(() => ["pantry", "list"]);
+
 /** What each procedure is sent; a test answers or refuses it by its implementation. */
 const sent = vi.hoisted(() => ({ add: vi.fn(), remove: vi.fn() }));
 
@@ -21,7 +24,7 @@ vi.mock("../../trpc", () => {
   return {
     useTRPC: () => ({
       pantry: {
-        list: { queryKey: () => ["pantry", "list"] },
+        list: { queryKey: () => PANTRY_KEY },
         add: procedure(sent.add),
         remove: procedure(sent.remove),
       },
@@ -65,7 +68,7 @@ describe("usePantryMutations", () => {
     });
 
   it("settles both of two adds that overlap, each with its own answer", async () => {
-    queryClient.setQueryData(["pantry", "list"], []);
+    queryClient.setQueryData(PANTRY_KEY, []);
     const { result } = render();
     const first = answerLater(sent.add);
     const second = answerLater(sent.add);
@@ -85,12 +88,12 @@ describe("usePantryMutations", () => {
     expect(answers).toEqual(["salt kept-salt", expect.stringMatching(/^pepper /)]);
     // The tentative salt row went, as its answer said; pepper's stays.
     expect(
-      queryClient.getQueryData<PantryIngredientDto[]>(["pantry", "list"])?.map((row) => row.name)
+      queryClient.getQueryData<PantryIngredientDto[]>(PANTRY_KEY)?.map((row) => row.name)
     ).toEqual(["Pepper"]);
   });
 
   it("keeps an add Queued in the Outbox on the list, under the id it was sent with", async () => {
-    queryClient.setQueryData(["pantry", "list"], []);
+    queryClient.setQueryData(PANTRY_KEY, []);
     const { result } = render();
 
     // Unreachable and admitted to the Outbox: the Queued signal.
@@ -102,14 +105,14 @@ describe("usePantryMutations", () => {
     });
     await settled();
 
-    const rows = queryClient.getQueryData<PantryIngredientDto[]>(["pantry", "list"]);
+    const rows = queryClient.getQueryData<PantryIngredientDto[]>(PANTRY_KEY);
 
     expect(rows?.map(({ id, name }) => ({ id, name }))).toEqual([{ id: answer, name: "Salt" }]);
-    expect(queryClient.getQueryState(["pantry", "list"])?.isInvalidated).toBe(false);
+    expect(queryClient.getQueryState(PANTRY_KEY)?.isInvalidated).toBe(false);
   });
 
   it("says a refused add failed, naming the food where the caller named it, and resolves null", async () => {
-    queryClient.setQueryData(["pantry", "list"], []);
+    queryClient.setQueryData(PANTRY_KEY, []);
     const platform = fakePlatformAdapter();
     const { result } = renderHook(() => usePantryMutations(), {
       wrapper: createTestWrapper(queryClient, platform),
@@ -132,11 +135,11 @@ describe("usePantryMutations", () => {
       severity: "danger",
       title: "groceries.panel.keepFailed",
     });
-    expect(queryClient.getQueryState(["pantry", "list"])?.isInvalidated).toBe(true);
+    expect(queryClient.getQueryState(PANTRY_KEY)?.isInvalidated).toBe(true);
   });
 
   it("says nothing of an add Queued in the Outbox", async () => {
-    queryClient.setQueryData(["pantry", "list"], []);
+    queryClient.setQueryData(PANTRY_KEY, []);
     const platform = fakePlatformAdapter();
     const { result } = renderHook(() => usePantryMutations(), {
       wrapper: createTestWrapper(queryClient, platform),
@@ -151,7 +154,7 @@ describe("usePantryMutations", () => {
   });
 
   it("reads the Pantry again when the earlier of two removals that overlap fails", async () => {
-    queryClient.setQueryData(["pantry", "list"], [SALT]);
+    queryClient.setQueryData(PANTRY_KEY, [SALT]);
     const { result } = render();
     const first = answerLater(sent.remove);
     const second = answerLater(sent.remove);
@@ -162,6 +165,6 @@ describe("usePantryMutations", () => {
     await act(async () => first.reject(new Error("Version conflict")));
     await settled();
 
-    expect(queryClient.getQueryState(["pantry", "list"])?.isInvalidated).toBe(true);
+    expect(queryClient.getQueryState(PANTRY_KEY)?.isInvalidated).toBe(true);
   });
 });
