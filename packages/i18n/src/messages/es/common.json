@@ -216,6 +216,8 @@
     "other": "Temporizadores",
     "label_one": "1 temporizador",
     "label_other": "{count} temporizadores",
+    "notification_title": "Temporizador finalizado",
+    "notification_body": "{label} ha terminado!",
     "notifications_disabled": "Las notificaciones están desactivadas",
     "notifications_disabled_hint": "Activa las notificaciones en la configuración de tu navegador para recibir alertas cuando los temporizadores terminen en segundo plano."
   },

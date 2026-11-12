@@ -216,6 +216,8 @@
     "other": "Ajastimet",
     "label_one": "1 ajastin",
     "label_other": "{count} ajastinta",
+    "notification_title": "Ajastin päättyi",
+    "notification_body": "{label} on valmis!",
     "notifications_disabled": "Ilmoitukset ovat pois käytöstä",
     "notifications_disabled_hint": "Ota ilmoitukset käyttöön selaimesi asetuksissa, niin saat hälytyksen kun ajastin päättyy taustalla."
   },

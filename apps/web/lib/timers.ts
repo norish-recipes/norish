@@ -6,11 +6,17 @@ import { createClientLogger } from "@norish/shared/lib/logger";
 
 const logger = createClientLogger("timers");
 
+/** The completed-timer notification's translated text; the caller holds the reader's locale. */
+export type TimerNotificationText = (label: string) => { title: string; body: string };
+
 /**
  * Show an OS notification via the service worker when a timer completes
  * while the app is in the background (document.hidden === true).
  */
-function showTimerNotification(timer: { label: string; recipeName?: string }) {
+function showTimerNotification(
+  timer: { label: string; recipeName?: string },
+  text: TimerNotificationText
+) {
   // Audio still plays in the foreground where notifications are unavailable.
   if (
     typeof document === "undefined" ||
@@ -25,10 +31,11 @@ function showTimerNotification(timer: { label: string; recipeName?: string }) {
 
   navigator.serviceWorker.ready
     .then((registration) => {
-      const title = timer.recipeName ? `${timer.label} — ${timer.recipeName}` : timer.label;
+      const label = timer.recipeName ? `${timer.label} — ${timer.recipeName}` : timer.label;
+      const { title, body } = text(label);
 
       return registration.showNotification(title, {
-        body: "Timer complete!",
+        body,
         icon: addBasePath("/brand/icon-192.png"),
         tag: "timer-complete",
         renotify: true,
@@ -73,7 +80,7 @@ interface TimerState {
   adjustTimer: (id: string, deltaMs: number) => void;
 
   // The tick loop to update times
-  tick: () => void;
+  tick: (notificationText: TimerNotificationText) => void;
 }
 
 export const useTimerStore = create<TimerState>()(
@@ -172,7 +179,7 @@ export const useTimerStore = create<TimerState>()(
         }));
       },
 
-      tick: () => {
+      tick: (notificationText) => {
         const now = Date.now();
 
         set((state) => {
@@ -194,7 +201,7 @@ export const useTimerStore = create<TimerState>()(
 
             if (newRemaining === 0 && t.remainingMs > 0) {
               hasChanges = true;
-              showTimerNotification(t);
+              showTimerNotification(t, notificationText);
 
               return { ...t, remainingMs: 0, status: "completed", lastTickAt: now };
             }

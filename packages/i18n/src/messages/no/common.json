@@ -216,6 +216,8 @@
     "other": "Timere",
     "label_one": "1 timer",
     "label_other": "{count} timere",
+    "notification_title": "Timer ferdig",
+    "notification_body": "{label} er ferdig!",
     "notifications_disabled": "Varsler er deaktivert",
     "notifications_disabled_hint": "Aktiver varsler i nettleserinnstillingene for å motta alarmer når timere avsluttes i bakgrunnen."
   },

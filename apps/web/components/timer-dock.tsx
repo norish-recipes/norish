@@ -32,6 +32,7 @@ const logger = createClientLogger("timer-dock");
 export function TimerTicker() {
   const tick = useTimerStore((state) => state.tick);
   const timers = useTimerStore((state) => state.timers);
+  const t = useTranslations("common.timer");
 
   // Check if there are any running timers
   const hasRunningTimers = timers.some((t) => t.status === "running");
@@ -41,10 +42,13 @@ export function TimerTicker() {
       return;
     }
     const interval = setInterval(() => {
-      tick();
+      tick((label) => ({
+        title: t("notification_title"),
+        body: t("notification_body", { label }),
+      }));
     }, 1000);
     return () => clearInterval(interval);
-  }, [tick, hasRunningTimers]);
+  }, [tick, hasRunningTimers, t]);
   return null;
 }
 export function TimerDock({

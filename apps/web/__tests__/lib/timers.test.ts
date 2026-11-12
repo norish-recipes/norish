@@ -1,6 +1,8 @@
 import { useTimerStore } from "@/lib/timers";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 
+const text = (label: string) => ({ title: label, body: `${label} is done!` });
+
 describe("useTimerStore", () => {
   beforeEach(() => {
     // Mock storage
@@ -113,7 +115,7 @@ describe("useTimerStore", () => {
 
     // Advance time by 10 seconds
     vi.setSystemTime(Date.now() + 10000);
-    tick();
+    tick(text);
 
     let { timers } = useTimerStore.getState();
 
@@ -136,7 +138,7 @@ describe("useTimerStore", () => {
     const now = Date.now();
 
     vi.setSystemTime(now + 1000);
-    tick();
+    tick(text);
 
     const { timers } = useTimerStore.getState();
     const expectedRemainingIds = 60000 - 1000;
@@ -153,7 +155,7 @@ describe("useTimerStore", () => {
 
     // Advance time by 2 seconds (past duration)
     vi.setSystemTime(Date.now() + 2000);
-    tick();
+    tick(text);
 
     const { timers } = useTimerStore.getState();
 
@@ -187,14 +189,14 @@ describe("useTimerStore", () => {
     startTimer("test-1");
 
     vi.setSystemTime(Date.now() + 2000);
-    tick();
+    tick(text);
 
     await Promise.resolve();
 
     expect(showNotification).toHaveBeenCalledWith(
       "Test Timer",
       expect.objectContaining({
-        body: "Timer complete!",
+        body: "Test Timer is done!",
         icon: "/brand/icon-192.png",
         tag: "timer-complete",
         renotify: true,
