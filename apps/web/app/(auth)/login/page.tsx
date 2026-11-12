@@ -1,4 +1,5 @@
 import { LoginScreen } from "@/features/auth/login-screen";
+import { readRequestProfile } from "@/lib/request-profile";
 
 import { getAvailableProviders } from "@norish/auth/providers";
 import { isRegistrationEnabled } from "@norish/shared-server/config/server-config-loader";
@@ -15,6 +16,9 @@ export default async function LoginPage({ searchParams }: PageProps<"/login">) {
 
   const { callbackUrl, logout } = await searchParams;
   const justLoggedOut = logout === "true";
+  // A destination without a sign-out or a live session is a signed-in page the session no longer reaches.
+  const sessionEnded =
+    typeof callbackUrl === "string" && !justLoggedOut && !(await readRequestProfile()).identity;
 
   // One OAuth provider and nothing else signs straight in, unless the reader just signed out.
   const [onlyProvider] = providers;
@@ -30,8 +34,7 @@ export default async function LoginPage({ searchParams }: PageProps<"/login">) {
       callbackUrl={typeof callbackUrl === "string" ? callbackUrl : APP_ROOT}
       providers={providers}
       registrationEnabled={registrationEnabled}
-      // A destination without a sign-out is a signed-in page the session no longer reaches.
-      sessionEnded={typeof callbackUrl === "string" && !justLoggedOut}
+      sessionEnded={sessionEnded}
     />
   );
 }

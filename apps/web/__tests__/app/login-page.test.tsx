@@ -6,10 +6,14 @@ import { describe, expect, it, vi } from "vitest";
 import type { ProviderInfo } from "@norish/shared/contracts";
 
 const providers = vi.hoisted(() => ({ current: [] as ProviderInfo[] }));
+const identity = vi.hoisted(() => ({ current: null as { id: string } | null }));
 
 vi.mock("@norish/auth/providers", () => ({ getAvailableProviders: async () => providers.current }));
 vi.mock("@norish/shared-server/config/server-config-loader", () => ({
   isRegistrationEnabled: async () => false,
+}));
+vi.mock("@/lib/request-profile", () => ({
+  readRequestProfile: async () => ({ identity: identity.current }),
 }));
 vi.mock("@/features/auth/login-screen", () => ({ LoginScreen: () => null }));
 
@@ -24,8 +28,13 @@ const PASSWORD: ProviderInfo = {
   type: "credential",
 };
 
-async function screenProps(offered: ProviderInfo[], search: Record<string, string> = {}) {
+async function screenProps(
+  offered: ProviderInfo[],
+  search: Record<string, string> = {},
+  signedIn = false
+) {
   providers.current = offered;
+  identity.current = signedIn ? { id: "reader" } : null;
   const page = (await LoginPage({
     params: Promise.resolve({}),
     searchParams: Promise.resolve(search),
@@ -60,6 +69,12 @@ describe("login page auto sign-in", () => {
 describe("login page after a session ended", () => {
   it("tells the screen when a signed-in page sent the reader here", async () => {
     expect((await screenProps([PASSWORD], { callbackUrl: "/groceries" })).sessionEnded).toBe(true);
+  });
+
+  it("does not while the request still carries a session", async () => {
+    const back = { callbackUrl: "/groceries" };
+
+    expect((await screenProps([PASSWORD], back, true)).sessionEnded).toBe(false);
   });
 
   it("does not after a sign-out, or on a plain visit", async () => {
