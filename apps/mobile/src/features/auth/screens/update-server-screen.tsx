@@ -1,38 +1,56 @@
 import React from "react";
-import { StyleSheet, Text, View } from "react-native";
-import { Brand } from "@/components/brand";
-import { AuthLayout } from "@/features/auth/components/auth-layout";
+import { AuthStatus } from "@/features/auth/components/auth-status";
+import { UpdateBadge } from "@/features/auth/components/update-badge";
+import { useVersionRecheck } from "@/features/auth/hooks/use-version-recheck";
+import { hostOf } from "@/features/auth/utils/host-of";
 import { MINIMUM_SERVER_VERSION } from "@/features/auth/utils/server-version";
-import { useThemeColor } from "heroui-native";
+import { getServerAddress, saveServerAddress } from "@/lib/network/server-address";
+import { useLocalSearchParams, useRouter } from "expo-router";
 import { useIntl } from "react-intl";
 
-/** A dead end: the server is older than this app supports, so sign-in is not offered. */
+import { createClientLogger } from "@norish/shared/lib/logger";
+
+const log = createClientLogger("server-address");
+
+/** The server is older than this app supports: no Retry and no back, only the chip to another server. */
 export function UpdateServerScreen() {
   const intl = useIntl();
-  const [foregroundColor] = useThemeColor(["foreground"] as const);
+  const router = useRouter();
+  const params = useLocalSearchParams<{ address?: string; version?: string }>();
+  const address = params.address ?? getServerAddress();
+  const host = hostOf(address);
+
+  // Back to what this screen was pushed over; a Server Address not saved yet goes on to Sign in.
+  const continueToSignIn = (checked: string) => {
+    const wasSaved = getServerAddress() === checked;
+
+    saveServerAddress(checked).then(
+      () => {
+        const dismissed = router.canDismiss();
+
+        if (dismissed) router.dismissAll();
+        if (!wasSaved || !dismissed) router.replace("/login");
+      },
+      (error: unknown) => log.error({ error }, "Could not save the Server Address")
+    );
+  };
+
+  useVersionRecheck(address, continueToSignIn);
 
   return (
-    <AuthLayout>
-      <Brand prefix={intl.formatMessage({ id: "auth.updateServer.title" })} slogan={false} />
-      <View className="mt-7 gap-3">
-        <Text
-          className="font-normal"
-          style={[styles.description, { color: foregroundColor }]}
-          testID="update-server-description"
-        >
-          {intl.formatMessage(
-            { id: "auth.updateServer.description" },
-            { minimumVersion: MINIMUM_SERVER_VERSION }
-          )}
-        </Text>
-      </View>
-    </AuthLayout>
+    <AuthStatus
+      badge={<UpdateBadge />}
+      chipAddress={address}
+      description={intl.formatMessage(
+        {
+          id: params.version
+            ? "auth.updateServer.description"
+            : "auth.updateServer.descriptionOlder",
+        },
+        { host, version: params.version, minimumVersion: MINIMUM_SERVER_VERSION }
+      )}
+      descriptionTestID="update-server-description"
+      title={intl.formatMessage({ id: "auth.updateServer.title" })}
+    />
   );
 }
-
-const styles = StyleSheet.create({
-  description: {
-    fontSize: 15,
-    lineHeight: 22,
-  },
-});
