@@ -5,8 +5,10 @@ import React, { useRef, useState } from "react";
 import { View } from "react-native";
 import { AuthField } from "@/features/auth/components/auth-field";
 import { AuthSubmitButton } from "@/features/auth/components/auth-submit-button";
+import { EmailField } from "@/features/auth/components/email-field";
 import { HelpPopover } from "@/features/auth/components/help-popover";
 import { ErrorShake, InlineError } from "@/features/auth/components/inline-error";
+import { PasswordField } from "@/features/auth/components/password-field";
 import { useAuthAttempt } from "@/features/auth/hooks/use-auth-attempt";
 import { validateSignUp } from "@/features/auth/utils/validate-sign-up";
 import Feather from "@expo/vector-icons/Feather";
@@ -65,26 +67,18 @@ export function SignUpForm({ authClient }: { authClient: AuthClient }) {
           onSubmitEditing={() => emailRef.current?.focus()}
         />
       </AuthField>
-      <AuthField
+      <EmailField
+        ref={emailRef}
         error={attempt.failureFor("email")}
         label={intl.formatMessage({ id: "auth.signup.email" })}
-      >
-        <InputGroup.Input
-          ref={emailRef}
-          autoCapitalize="none"
-          autoCorrect={false}
-          keyboardType="email-address"
-          placeholder={intl.formatMessage({ id: "auth.signup.emailPlaceholder" })}
-          returnKeyType="next"
-          submitBehavior="submit"
-          testID="register-email"
-          textContentType="username"
-          value={email}
-          onChangeText={setEmail}
-          onSubmitEditing={() => passwordRef.current?.focus()}
-        />
-      </AuthField>
-      <AuthField
+        placeholder={intl.formatMessage({ id: "auth.signup.emailPlaceholder" })}
+        testID="register-email"
+        value={email}
+        onChangeText={setEmail}
+        onSubmitEditing={() => passwordRef.current?.focus()}
+      />
+      <PasswordField
+        ref={passwordRef}
         error={attempt.failureFor("password")}
         label={intl.formatMessage({ id: "auth.signup.password" })}
         labelAccessory={
@@ -94,40 +88,26 @@ export function SignUpForm({ authClient }: { authClient: AuthClient }) {
             text={intl.formatMessage({ id: "auth.signup.passwordDescription" })}
           />
         }
-      >
-        <InputGroup.Input
-          ref={passwordRef}
-          secureTextEntry
-          autoCapitalize="none"
-          autoCorrect={false}
-          placeholder={intl.formatMessage({ id: "auth.signup.passwordPlaceholder" })}
-          returnKeyType="next"
-          submitBehavior="submit"
-          testID="register-password"
-          textContentType="newPassword"
-          value={password}
-          onChangeText={setPassword}
-          onSubmitEditing={() => confirmRef.current?.focus()}
-        />
-      </AuthField>
-      <AuthField
+        placeholder={intl.formatMessage({ id: "auth.signup.passwordPlaceholder" })}
+        returnKeyType="next"
+        testID="register-password"
+        textContentType="newPassword"
+        value={password}
+        onChangeText={setPassword}
+        onSubmitEditing={() => confirmRef.current?.focus()}
+      />
+      <PasswordField
+        ref={confirmRef}
         error={attempt.failureFor("confirmPassword")}
         label={intl.formatMessage({ id: "auth.signup.confirmPassword" })}
-      >
-        <InputGroup.Input
-          ref={confirmRef}
-          secureTextEntry
-          autoCapitalize="none"
-          autoCorrect={false}
-          placeholder={intl.formatMessage({ id: "auth.signup.confirmPasswordPlaceholder" })}
-          returnKeyType="go"
-          testID="register-confirm-password"
-          textContentType="newPassword"
-          value={confirmPassword}
-          onChangeText={setConfirmPassword}
-          onSubmitEditing={handleSubmit}
-        />
-      </AuthField>
+        placeholder={intl.formatMessage({ id: "auth.signup.confirmPasswordPlaceholder" })}
+        returnKeyType="go"
+        testID="register-confirm-password"
+        textContentType="newPassword"
+        value={confirmPassword}
+        onChangeText={setConfirmPassword}
+        onSubmitEditing={handleSubmit}
+      />
       <InlineError error={attempt.failure} />
 
       <ErrorShake error={attempt.failureFor(SIGN_UP)}>
