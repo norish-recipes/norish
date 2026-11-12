@@ -4,16 +4,17 @@ import "@/lib/i18n/plural-rules";
 import React from "react";
 import { ActivityIndicator, StyleSheet, View } from "react-native";
 import { GestureHandlerRootView } from "react-native-gesture-handler";
-import Animated from "react-native-reanimated";
+import Animated, { useAnimatedStyle, withTiming } from "react-native-reanimated";
 import { LaunchProvider, LaunchSplash } from "@/components/launch";
 import { LaunchVersionCheck } from "@/features/auth/components/launch-version-check";
 import { StorageUnavailableScreen } from "@/features/auth/screens/storage-unavailable-screen";
-import { PENDING_FADE_IN } from "@/features/auth/utils/motion";
+import { FADE_OUT_TIMING, PENDING_FADE_IN } from "@/features/auth/utils/motion";
 import { useSignOutBeforeServerChange } from "@/hooks/use-change-server-address";
 import { useResolvedColorScheme } from "@/hooks/use-resolved-color-scheme";
 import { useServerAddress } from "@/hooks/use-server-address";
 import { useUserLocaleSync } from "@/hooks/use-user-locale-sync";
 import { AuthProviders } from "@/lib/auth/auth-providers";
+import { useSignedInFadingOut } from "@/lib/auth/auth-session-sync";
 import { resolveBootPhase } from "@/lib/boot/boot-state";
 import { MobileIntlFallbackProvider } from "@/lib/i18n/mobile-i18n-context";
 import { ServerAddressContext } from "@/lib/network/server-address";
@@ -187,7 +188,9 @@ function SessionStack() {
           <ActivityIndicator />
         </Animated.View>
       ) : signedIn ? (
-        <AuthenticatedProviders>{app}</AuthenticatedProviders>
+        <SignedInFade>
+          <AuthenticatedProviders>{app}</AuthenticatedProviders>
+        </SignedInFade>
       ) : (
         app
       )}
@@ -195,6 +198,16 @@ function SessionStack() {
       <LaunchSplash handoff={pending ? null : "fade"} />
     </View>
   );
+}
+
+/** The signed-in screen, faded out ahead of a session's end so the end never cuts. */
+function SignedInFade({ children }: { children: React.ReactNode }) {
+  const fading = useSignedInFadingOut();
+  const style = useAnimatedStyle(() => ({
+    opacity: withTiming(fading ? 0 : 1, FADE_OUT_TIMING),
+  }));
+
+  return <Animated.View style={[styles.root, style]}>{children}</Animated.View>;
 }
 
 function AuthenticatedProviders({ children }: { children: React.ReactNode }) {

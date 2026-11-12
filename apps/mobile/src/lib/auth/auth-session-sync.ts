@@ -12,6 +12,12 @@ let snapshot: AuthTransportSnapshot = {
   version: 0,
 };
 
+/** How long the signed-in screen fades out for before a session's end unmounts it. */
+export const SESSION_END_FADE_MS = 240;
+
+// Whether the signed-in screen is fading out ahead of a session's end; until leave, or a failure.
+let fadingOut = false;
+
 // The Server Address a session just ended on; module scope, so it outlives leave's re-key.
 let leftFrom: string | null = null;
 
@@ -46,6 +52,7 @@ export function publishSignedIn(): void {
 /** Mobile's leave: signed out and one re-key, so everything below rebuilds on the cleared cache. */
 export function publishSignedOut(serverAddress: string | null): void {
   leftFrom = serverAddress;
+  fadingOut = false;
   snapshot = { hasActiveSession: false, version: snapshot.version + 1 };
 
   emitSnapshotChange();
@@ -63,4 +70,17 @@ export function takeSessionLeft(): string | null {
 /** Whether a session is live; readable in onboarding too, which has no platform adapter. */
 export function useHasActiveSession(): boolean {
   return useSyncExternalStore(subscribeAuthTransport, getAuthTransportSnapshot).hasActiveSession;
+}
+
+/** Fades the signed-in screen out, resolving once it is gone; `false` brings it back. */
+export function fadeOutSignedIn(fading = true): Promise<void> {
+  fadingOut = fading;
+  emitSnapshotChange();
+
+  return new Promise((resolve) => setTimeout(resolve, fading ? SESSION_END_FADE_MS : 0));
+}
+
+/** Whether the signed-in screen is fading out ahead of a session's end. */
+export function useSignedInFadingOut(): boolean {
+  return useSyncExternalStore(subscribeAuthTransport, () => fadingOut);
 }

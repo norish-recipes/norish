@@ -116,7 +116,7 @@ vi.mock("@/lib/platform/platform-provider", async () => {
 });
 
 const { AuthProviders } = await import("@/lib/auth/auth-providers");
-const { getAuthTransportSnapshot, publishSignedOut, subscribeAuthTransport } =
+const { getAuthTransportSnapshot, publishSignedOut, SESSION_END_FADE_MS, subscribeAuthTransport } =
   await import("@/lib/auth/auth-session-sync");
 const { AUTH_COOKIE_KEY, authStorage } = await import("@/lib/auth/auth-storage");
 const { ServerAddressContext } = await import("@/lib/network/server-address");
@@ -167,8 +167,11 @@ describe("AuthProviders", () => {
       let ending = Promise.resolve();
 
       act(() => void (ending = seen.endSession?.(scope) ?? ending));
-      // A sign-out now waits on the server, with the old client's store already empty.
-      await act(() => new Promise((resolve) => setTimeout(resolve, 10)));
+      // The signed-in screen fades out first, still signed in.
+      expect(seen.sessions.at(-1)?.user?.id).toBe(USER.id);
+      // Once the signed-in screen has faded out, a sign-out waits on the server, with the old
+      // client's store already empty.
+      await act(() => new Promise((resolve) => setTimeout(resolve, SESSION_END_FADE_MS + 10)));
       expect(seen.sessions.length).toBeGreaterThan(from);
       expect(seen.sessions.slice(from)).toEqual(seen.sessions.slice(from).map(() => PENDING));
 

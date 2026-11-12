@@ -1,6 +1,7 @@
 import type { ReactNode } from "react";
 import { useEffect, useState, useSyncExternalStore } from "react";
 import {
+  fadeOutSignedIn,
   getAuthTransportSnapshot,
   publishSignedIn,
   subscribeAuthTransport,
@@ -45,10 +46,14 @@ export function AuthProviders({ children }: { children: ReactNode }) {
   return (
     <MobileIntlProvider signedIn={signedIn}>
       <MobilePlatformProvider
-        endSession={(scope) => {
+        endSession={async (scope) => {
+          // Faded out while still signed in, so the ending's unmount happens out of sight.
+          await fadeOutSignedIn();
           setEnding(true);
-
-          return endSession(authClient, scope);
+          await endSession(authClient, scope).catch((error: unknown) => {
+            void fadeOutSignedIn(false);
+            throw error;
+          });
         }}
         session={session}
       >
