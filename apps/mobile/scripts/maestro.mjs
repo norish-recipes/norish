@@ -139,6 +139,10 @@ cookie = signIn.response.headers
   .map((c) => c.split(";")[0])
   .join("; ");
 
+// The first Account closes registration; the Sign up flow needs it open. Only an admin can, so a
+// server whose registration was set by hand keeps that setting.
+await call("/api/trpc/admin.updateRegistration", { json: true });
+
 const stale = (await ours()).map(({ id, version }) => ({ id, version }));
 
 if (stale.length > 0) await trpc("groceries.delete", { groceries: stale });

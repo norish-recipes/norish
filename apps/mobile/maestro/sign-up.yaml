@@ -1,0 +1,72 @@
+# Creates an Account on a server with sign-ups open and lands signed in. Also checks the
+# mismatched-passwords error and that Already have an account? returns to Sign in. Each run
+# signs up a new email, so the server needs no reset. The link and the error have no testID.
+appId: dev.norish.app
+---
+- evalScript: ${output.email = 'signup-' + Date.now() + '@norish.test'}
+- launchApp:
+    clearState: true
+    clearKeychain: true
+- extendedWaitUntil:
+    visible:
+      id: connect-server-url
+    timeout: 20000
+- tapOn:
+    id: connect-server-url
+- inputText: ${NORISH_SERVER_URL}
+- hideKeyboard
+- tapOn:
+    id: connect-submit
+- extendedWaitUntil:
+    visible:
+      id: login-email
+    timeout: 20000
+# Sign in links to Sign up, and Sign up links back.
+- tapOn: .*Sign up
+- extendedWaitUntil:
+    visible:
+      id: register-name
+    timeout: 10000
+- tapOn: Already have an account\? Sign in
+- extendedWaitUntil:
+    visible:
+      id: login-email
+    timeout: 10000
+- tapOn: .*Sign up
+- extendedWaitUntil:
+    visible:
+      id: register-name
+    timeout: 10000
+- tapOn:
+    id: register-name
+- inputText: Maestro Signup
+- tapOn:
+    id: register-email
+- inputText: ${output.email}
+- tapOn:
+    id: register-password
+- runFlow: subflows/dismiss-strong-password.yaml
+- inputText: ${NORISH_PASSWORD}
+- tapOn:
+    id: register-confirm-password
+- runFlow: subflows/dismiss-strong-password.yaml
+- inputText: ${NORISH_PASSWORD}-different
+- tapOn:
+    id: register-submit
+- extendedWaitUntil:
+    visible: Passwords do not match
+    timeout: 5000
+# Fixes the confirmation and creates the Account.
+- tapOn:
+    id: register-confirm-password
+- runFlow: subflows/dismiss-strong-password.yaml
+- eraseText: 40
+- inputText: ${NORISH_PASSWORD}
+- tapOn:
+    id: register-submit
+- runFlow: subflows/dismiss-save-password.yaml
+- extendedWaitUntil:
+    visible:
+      id: smoke-user
+      text: .*${output.email}.*
+    timeout: 20000
