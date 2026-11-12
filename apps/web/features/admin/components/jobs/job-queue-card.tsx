@@ -4,7 +4,7 @@ import { useState } from "react";
 import { SettingsCard } from "@/components/settings/settings-card";
 import { ActionButton, ActionButtonGroup } from "@/components/shared/action-button";
 import { ChipButton } from "@/components/shared/chip-button";
-import DataTable from "@/components/ui/data-table";
+import DataTable from "@/features/admin/components/data-table";
 import { ChevronLeftIcon, ChevronRightIcon, QueueListIcon } from "@heroicons/react/24/outline";
 import {
   Chip,

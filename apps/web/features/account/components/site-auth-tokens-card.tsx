@@ -8,7 +8,7 @@ import {
   IconActionButton,
 } from "@/components/shared/action-button";
 import ConfirmModal from "@/components/shared/confirm-modal";
-import { InfoHint } from "@/components/shared/info-hint";
+import { InfoHint } from "@/features/account/components/info-hint";
 import { ShieldCheckIcon } from "@heroicons/react/24/outline";
 import { Chip, FieldError, Input, Label, ListBox, Select, Table, TextField } from "@heroui/react";
 import { useFormatter, useTranslations } from "next-intl";

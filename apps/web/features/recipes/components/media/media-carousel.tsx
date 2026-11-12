@@ -3,7 +3,7 @@
 import { useCallback, useEffect, useMemo, useState } from "react";
 import NextImage from "next/image";
 import { FallbackPlaceholder, useImageErrors } from "@/components/shared/fallback-image";
-import { Carousel, useCarousel } from "@/components/ui/carousel";
+import { Carousel, useCarousel } from "@/features/recipes/components/carousel";
 import { useTranslations } from "next-intl";
 
 import { addBasePath } from "@norish/shared/lib/base-path";

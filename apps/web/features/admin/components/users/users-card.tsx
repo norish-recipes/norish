@@ -4,7 +4,7 @@ import { useState } from "react";
 import { SettingsCard } from "@/components/settings/settings-card";
 import { IconActionButton } from "@/components/shared/action-button";
 import UserAvatar from "@/components/shared/user-avatar";
-import DataTable from "@/components/ui/data-table";
+import DataTable from "@/features/admin/components/data-table";
 import {
   ShieldCheckIcon as ShieldCheckIconSolid,
   UserGroupIcon as UserGroupIconSolid,

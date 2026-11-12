@@ -116,7 +116,7 @@ vi.mock("@norish/shared-react/config", () => ({
 }));
 
 // The popover itself is HeroUI's; what is pinned here is what it says.
-vi.mock("@/components/shared/info-hint", () => ({
+vi.mock("@/features/account/components/info-hint", () => ({
   InfoHint: ({ label, children }: Children & { label: string }) => (
     <div aria-label={label} role="note">
       {children}

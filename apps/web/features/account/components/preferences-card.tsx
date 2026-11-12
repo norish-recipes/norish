@@ -2,7 +2,7 @@
 
 import { SettingRow } from "@/components/settings/setting-row";
 import { SettingsCard } from "@/components/settings/settings-card";
-import { InfoHint } from "@/components/shared/info-hint";
+import { InfoHint } from "@/features/account/components/info-hint";
 import { useLocale } from "@/hooks/user/use-locale";
 import { HIDDEN_ITEMS, partitionHiddenItems } from "@/lib/hidden-items";
 import { AdjustmentsHorizontalIcon } from "@heroicons/react/24/outline";

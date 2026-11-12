@@ -3,7 +3,7 @@ import { describe, expect, it, vi } from "vitest";
 
 import "@testing-library/jest-dom";
 
-import DataTable from "@/components/ui/data-table";
+import DataTable from "@/features/admin/components/data-table";
 
 vi.mock("@heroui/react", () => {
   const Table = ({ children }: any) => <table>{children}</table>;

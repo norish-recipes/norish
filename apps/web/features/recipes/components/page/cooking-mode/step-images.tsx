@@ -3,7 +3,7 @@
 import { useMemo, useState } from "react";
 import Image from "next/image";
 import { FallbackPlaceholder, useImageErrors } from "@/components/shared/fallback-image";
-import { Carousel } from "@/components/ui/carousel";
+import { Carousel } from "@/features/recipes/components/carousel";
 import ImageLightbox from "@/features/recipes/components/media/image-lightbox";
 import { Button } from "@heroui/react";
 

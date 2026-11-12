@@ -2,9 +2,9 @@
 
 import type { ReactNode } from "react";
 import { SettingRow } from "@/components/settings/setting-row";
-import { AIButton } from "@/components/shared/ai-button";
 import ConfirmModal from "@/components/shared/confirm-modal";
 import { cssAIIconColor } from "@/config/css-tokens";
+import { AIButton } from "@/features/admin/components/ai-button";
 import { SparklesIcon } from "@heroicons/react/24/outline";
 import { Modal, Spinner } from "@heroui/react";
 import { twMerge } from "tailwind-merge";

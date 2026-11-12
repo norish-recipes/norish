@@ -4,7 +4,7 @@ import type { EmblaCarouselType } from "embla-carousel";
 import { useEffect, useMemo, useRef, useState } from "react";
 import Image from "next/image";
 import { FallbackPlaceholder, useImageErrors } from "@/components/shared/fallback-image";
-import { Carousel } from "@/components/ui/carousel";
+import { Carousel } from "@/features/recipes/components/carousel";
 import { XMarkIcon } from "@heroicons/react/16/solid";
 import { Button, Modal, Tooltip } from "@heroui/react";
 import { useTranslations } from "next-intl";
