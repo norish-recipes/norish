@@ -75,7 +75,8 @@
   },
   "validation": {
     "required": "Это поле обязательно",
-    "invalidUrl": "Введите корректный URL"
+    "invalidUrl": "Введите корректный URL",
+    "invalidEmail": "Введите действительный адрес электронной почты"
   },
   "slots": {
     "breakfast": "Завтрак",

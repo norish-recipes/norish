@@ -26,6 +26,8 @@ function refusalMessageId(error: AuthError, fallback: string): string {
   // The server refuses a new Account when sign-ups are closed.
   if (error.code === "REGISTRATION_IS_CURRENTLY_DISABLED") return "auth.signup.errors.closed";
 
+  if (error.code === "INVALID_EMAIL") return "common.validation.invalidEmail";
+
   const code = error.code?.toLowerCase();
 
   return code && TRANSLATED_CODES.has(code) ? `auth.errors.${code}.description` : fallback;

@@ -75,7 +75,8 @@
   },
   "validation": {
     "required": "Dit veld is verplicht",
-    "invalidUrl": "Voer een geldige URL in"
+    "invalidUrl": "Voer een geldige URL in",
+    "invalidEmail": "Voer een geldig e-mailadres in"
   },
   "errors": {
     "operationFailed": "Bewerking mislukt",

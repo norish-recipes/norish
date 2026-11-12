@@ -75,7 +75,8 @@
   },
   "validation": {
     "required": "هذا الحقل مطلوب",
-    "invalidUrl": "يرجى إدخال رابط صحيح"
+    "invalidUrl": "يرجى إدخال رابط صحيح",
+    "invalidEmail": "الرجاء إدخال عنوان بريد إلكتروني صالح"
   },
   "errors": {
     "operationFailed": "فشلت العملية",

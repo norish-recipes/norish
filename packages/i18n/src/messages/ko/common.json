@@ -75,7 +75,8 @@
   },
   "validation": {
     "required": "이 필드는 필수입니다",
-    "invalidUrl": "유효한 URL을 입력하세요."
+    "invalidUrl": "유효한 URL을 입력하세요.",
+    "invalidEmail": "올바른 이메일 주소를 입력하세요"
   },
   "errors": {
     "operationFailed": "작업에 실패했습니다",

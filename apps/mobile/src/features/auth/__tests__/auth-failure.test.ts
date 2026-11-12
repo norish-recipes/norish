@@ -32,6 +32,12 @@ describe("authFailure", () => {
     ).resolves.toBe("auth.signup.errors.closed");
   });
 
+  it("says to enter a valid email when the server finds the email malformed", async () => {
+    await expect(authFailure(refuse({ code: "INVALID_EMAIL" }), "fallback")).resolves.toBe(
+      "common.validation.invalidEmail"
+    );
+  });
+
   it("says the email is in use when Sign up meets an existing account", async () => {
     await expect(
       authFailure(refuse({ code: "USER_ALREADY_EXISTS_USE_ANOTHER_EMAIL" }), "fallback")

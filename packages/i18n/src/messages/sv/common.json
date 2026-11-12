@@ -75,7 +75,8 @@
   },
   "validation": {
     "required": "Det här fältet är obligatoriskt",
-    "invalidUrl": "Ange en giltig webbadress"
+    "invalidUrl": "Ange en giltig webbadress",
+    "invalidEmail": "Ange en giltig e-postadress"
   },
   "errors": {
     "operationFailed": "Åtgärden misslyckades",

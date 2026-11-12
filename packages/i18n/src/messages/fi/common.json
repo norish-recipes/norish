@@ -75,7 +75,8 @@
   },
   "validation": {
     "required": "Tämä kenttä on pakollinen",
-    "invalidUrl": "Anna kelvollinen verkko-osoite"
+    "invalidUrl": "Anna kelvollinen verkko-osoite",
+    "invalidEmail": "Anna kelvollinen sähköpostiosoite"
   },
   "errors": {
     "operationFailed": "Toiminto epäonnistui",

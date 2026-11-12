@@ -75,7 +75,8 @@
   },
   "validation": {
     "required": "This field is required",
-    "invalidUrl": "Please enter a valid URL"
+    "invalidUrl": "Please enter a valid URL",
+    "invalidEmail": "Please enter a valid email address"
   },
   "errors": {
     "operationFailed": "Operation failed",

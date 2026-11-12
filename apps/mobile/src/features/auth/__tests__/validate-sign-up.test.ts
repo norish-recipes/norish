@@ -52,4 +52,11 @@ describe("validateSignUp", () => {
       messageId: "auth.signup.errors.passwordMismatch",
     });
   });
+
+  it("asks for a well-formed email", () => {
+    expect(validateSignUp({ ...valid, email: "ada@" })).toEqual({
+      field: "email",
+      messageId: "common.validation.invalidEmail",
+    });
+  });
 });

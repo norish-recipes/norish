@@ -75,7 +75,8 @@
   },
   "validation": {
     "required": "Це поле обов’язкове",
-    "invalidUrl": "Введіть дійсний URL"
+    "invalidUrl": "Введіть дійсний URL",
+    "invalidEmail": "Введіть дійсну адресу електронної пошти"
   },
   "errors": {
     "operationFailed": "Не вдалося виконати операцію",

@@ -75,7 +75,8 @@
   },
   "validation": {
     "required": "Este campo es obligatorio",
-    "invalidUrl": "Introduce una URL válida"
+    "invalidUrl": "Introduce una URL válida",
+    "invalidEmail": "Introduce una dirección de correo electrónico válida"
   },
   "slots": {
     "breakfast": "Desayuno",

@@ -75,7 +75,8 @@
   },
   "validation": {
     "required": "Това поле е задължително",
-    "invalidUrl": "Моля, въведи валиден URL адрес"
+    "invalidUrl": "Моля, въведи валиден URL адрес",
+    "invalidEmail": "Моля, въведете валиден имейл адрес"
   },
   "errors": {
     "operationFailed": "Операцията не бе успешна",

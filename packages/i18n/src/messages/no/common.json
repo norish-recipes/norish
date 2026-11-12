@@ -75,7 +75,8 @@
   },
   "validation": {
     "required": "Dette feltet er påkrevd",
-    "invalidUrl": "Skriv inn en gyldig URL"
+    "invalidUrl": "Skriv inn en gyldig URL",
+    "invalidEmail": "Skriv inn en gyldig e-postadresse"
   },
   "errors": {
     "operationFailed": "Handlingen mislyktes",
