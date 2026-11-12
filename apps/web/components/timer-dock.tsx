@@ -35,7 +35,7 @@ export function TimerTicker() {
   const t = useTranslations("common.timer");
 
   // Check if there are any running timers
-  const hasRunningTimers = timers.some((t) => t.status === "running");
+  const hasRunningTimers = timers.some((timer) => timer.status === "running");
   useEffect(() => {
     // Only start interval if there are running timers
     if (!hasRunningTimers) {
