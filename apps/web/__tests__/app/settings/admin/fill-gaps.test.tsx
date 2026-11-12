@@ -3,32 +3,21 @@
  * provider draws, and a confirm that starts the run over the boxes picked; no run while one is on.
  */
 
-import { fireEvent, render, screen } from "@testing-library/react";
+import { fireEvent, render, screen, waitFor } from "@testing-library/react";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 
 import "@testing-library/jest-dom";
 
-const mutate = vi.fn();
+import { setConfigs } from "./admin-config-fake";
+
+const start = vi.fn();
 const counts = vi.hoisted(() => ({ current: undefined as unknown }));
 
-vi.mock("@norish/shared-react/trpc", () => ({
-  useTRPC: () => ({
-    admin: {
-      ingredientCatalogue: {
-        fillGapsCounts: { queryOptions: (_input: unknown, options: unknown) => options },
-        fillGaps: { mutationOptions: (options: unknown) => options },
-      },
-    },
-  }),
+vi.mock("@norish/shared-react/admin", async () => ({
+  useAdminConfig: (await import("./admin-config-fake")).useAdminConfig,
+  useFillGapsCounts: () => counts.current,
+  useFillGaps: () => ({ start, isStarting: false }),
 }));
-vi.mock("@tanstack/react-query", () => ({
-  useMutation: () => ({ mutate, isPending: false }),
-  useQuery: () => ({ data: counts.current, refetch: vi.fn() }),
-}));
-vi.mock("@/app/(app)/settings/admin/context", () => ({
-  useAdminSettingsContext: () => ({ aiConfig: { enabled: true } }),
-}));
-vi.mock("@/lib/ui/safe-error-toast", () => ({ showSafeErrorToast: vi.fn() }));
 vi.mock("next-intl", () => ({
   useTranslations: () => (key: string, values?: Record<string, unknown>) =>
     values ? `${key}:${JSON.stringify(values)}` : key,
@@ -37,7 +26,8 @@ vi.mock("next-intl", () => ({
 const { default: FillGaps } = await import("@/app/(app)/settings/admin/components/fill-gaps");
 
 beforeEach(() => {
-  mutate.mockReset();
+  start.mockReset().mockResolvedValue(true);
+  setConfigs({ ai_config: { enabled: true } });
   counts.current = { nutrition: 4, conversions: 0, icons: 2, running: false };
 });
 
@@ -58,7 +48,19 @@ describe("FillGaps", () => {
     fireEvent.click(box("icons"));
     fireEvent.click(screen.getByTestId("fill-gaps-start"));
 
-    expect(mutate).toHaveBeenCalledWith({ nutrition: true, conversions: false, icons: true });
+    expect(start).toHaveBeenCalledWith({ nutrition: true, conversions: false, icons: true });
+  });
+
+  it("stays open when the run did not start", async () => {
+    start.mockResolvedValue(false);
+    render(<FillGaps />);
+    fireEvent.click(screen.getByTestId("fill-gaps"));
+    fireEvent.click(box("nutrition"));
+    fireEvent.click(screen.getByTestId("fill-gaps-start"));
+
+    await waitFor(() => expect(start).toHaveBeenCalled());
+    expect(screen.getByTestId("fill-gaps-dialog")).toBeInTheDocument();
+    expect(box("nutrition")).toBeChecked();
   });
 
   it("offers no Icons where nothing can draw", () => {

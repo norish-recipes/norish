@@ -7,19 +7,12 @@ import { describe, expect, it, vi } from "vitest";
 
 import "@testing-library/jest-dom";
 
-// One object across renders, as the context hands out.
-const settings = vi.hoisted(() => ({
-  imageGenerationConfig: { provider: "openai", model: "gpt-image-1", apiKey: "••••" },
-  aiConfig: { enabled: false },
-  updateImageGenerationConfig: () => Promise.resolve(),
-  fetchConfigSecret: () => Promise.resolve(null),
-}));
+import { setConfigs } from "./admin-config-fake";
 
-vi.mock("@/app/(app)/settings/admin/context", () => ({
-  useAdminSettingsContext: () => settings,
-}));
-
-vi.mock("@/hooks/admin", () => ({
+vi.mock("@norish/shared-react/admin", async () => ({
+  useAdminConfig: (await import("./admin-config-fake")).useAdminConfig,
+  useImageGenerationConfigWrite: () => () => Promise.resolve(),
+  useConfigSecret: () => () => Promise.resolve(null),
   useAvailableModelsQuery: () => ({ models: [], refusal: null, isLoading: false }),
 }));
 
@@ -30,6 +23,10 @@ const { default: ImageGenerationForm } =
 
 describe("ImageGenerationForm", () => {
   it("enables Save once the stored key is cleared", () => {
+    setConfigs({
+      image_generation_config: { provider: "openai", model: "gpt-image-1", apiKey: "••••" },
+      ai_config: { enabled: false },
+    });
     render(<ImageGenerationForm />);
     expect(screen.getByRole("button", { name: "save" })).toBeDisabled();
 

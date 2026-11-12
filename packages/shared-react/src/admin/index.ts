@@ -9,6 +9,7 @@ export {
   useDecisionConfigWrite,
   useGeneralConfigWrites,
   useImageGenerationConfigWrite,
+  usePasswordAuthWrite,
   usePermissionPolicyWrites,
   usePromptsWrite,
   useRestartServer,

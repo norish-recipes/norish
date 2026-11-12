@@ -1,14 +1,12 @@
 "use client";
 
 import { useState } from "react";
-import { showSafeErrorToast } from "@/lib/ui/safe-error-toast";
-import { Checkbox, CheckboxGroup, Description, Label, toast } from "@heroui/react";
-import { useMutation, useQuery } from "@tanstack/react-query";
+import { Checkbox, CheckboxGroup, Description, Label } from "@heroui/react";
 import { useTranslations } from "next-intl";
 
-import { useTRPC } from "@norish/shared-react/trpc";
+import { useFillGaps, useFillGapsCounts } from "@norish/shared-react/admin";
 
-import { CatalogueAIRun, watchRun } from "./catalogue-ai-run";
+import { CatalogueAIRun } from "./catalogue-ai-run";
 
 const KINDS = ["nutrition", "conversions", "icons"] as const;
 
@@ -17,32 +15,10 @@ type Kind = (typeof KINDS)[number];
 /** Fill gaps: AI supplies what listed foods are missing, after picking which kinds and a confirm. */
 export default function FillGaps() {
   const t = useTranslations("settings.admin.aiProcessing.ingredientCatalogue.fillGaps");
-  const tErrors = useTranslations("common.errors");
-  const trpc = useTRPC();
   const [isOpen, setIsOpen] = useState(false);
   const [picked, setPicked] = useState<Kind[]>([]);
-  const counts = useQuery(
-    trpc.admin.ingredientCatalogue.fillGapsCounts.queryOptions(undefined, watchRun)
-  );
-  const fillGaps = useMutation(
-    trpc.admin.ingredientCatalogue.fillGaps.mutationOptions({
-      onSuccess: () => {
-        setIsOpen(false);
-        setPicked([]);
-        toast(t("started"), { variant: "success" });
-      },
-      onError: (error) =>
-        showSafeErrorToast({
-          title: t("error"),
-          description: tErrors("technicalDetails"),
-          color: "danger",
-          error,
-          context: "admin-ai:fill-gaps",
-        }),
-      onSettled: () => void counts.refetch(),
-    })
-  );
-  const data = counts.data;
+  const data = useFillGapsCounts();
+  const { start, isStarting } = useFillGaps();
   const countOf = (kind: Kind) => data?.[kind] ?? 0;
   // Icons are null where the image provider cannot draw: not offered.
   const offered = KINDS.filter((kind) => data?.[kind] !== null);
@@ -59,17 +35,22 @@ export default function FillGaps() {
       isOpen={isOpen}
       running={running}
       start={t("start")}
-      starting={fillGaps.isPending}
+      starting={isStarting}
       testId="fill-gaps"
       title={t("title")}
       onOpenChange={setIsOpen}
-      onStart={() =>
-        fillGaps.mutate({
+      onStart={async () => {
+        const started = await start({
           nutrition: chosen.includes("nutrition"),
           conversions: chosen.includes("conversions"),
           icons: chosen.includes("icons"),
-        })
-      }
+        });
+
+        if (started) {
+          setIsOpen(false);
+          setPicked([]);
+        }
+      }}
     >
       <CheckboxGroup
         aria-label={t("kindsLabel")}

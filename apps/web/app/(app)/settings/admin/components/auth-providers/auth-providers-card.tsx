@@ -8,7 +8,9 @@ import { KeyIcon } from "@heroicons/react/24/outline";
 import { Accordion, Separator } from "@heroui/react";
 import { useTranslations } from "next-intl";
 
-import { useAdminSettingsContext } from "../../context";
+import { ServerConfigKeys } from "@norish/config/zod/server-config";
+import { useAdminConfig, usePasswordAuthWrite } from "@norish/shared-react/admin";
+
 import { RestartRequiredChip } from "../restart-required-chip";
 import { UnsavedChangesChip } from "../unsaved-changes-chip";
 import { AuthProviderForm } from "./auth-provider-form";
@@ -19,14 +21,11 @@ export function AuthProvidersCard() {
   const t = useTranslations("settings.admin.authProviders");
   const tGithub = useTranslations("settings.admin.authProviders.github.fields");
   const tGoogle = useTranslations("settings.admin.authProviders.google.fields");
-  const {
-    authProviderOIDC,
-    authProviderGitHub,
-    authProviderGoogle,
-    passwordAuthEnabled,
-    updatePasswordAuth,
-    isLoading,
-  } = useAdminSettingsContext();
+  const authProviderOIDC = useAdminConfig(ServerConfigKeys.AUTH_PROVIDER_OIDC);
+  const authProviderGitHub = useAdminConfig(ServerConfigKeys.AUTH_PROVIDER_GITHUB);
+  const authProviderGoogle = useAdminConfig(ServerConfigKeys.AUTH_PROVIDER_GOOGLE);
+  const passwordAuthEnabled = useAdminConfig(ServerConfigKeys.PASSWORD_AUTH_ENABLED);
+  const updatePasswordAuth = usePasswordAuthWrite();
   const [dirtySections, setDirtySections] = useState({ oidc: false, github: false, google: false });
 
   const updateDirtySection = useCallback(
@@ -47,7 +46,6 @@ export function AuthProvidersCard() {
     >
       <SwitchRow description={t("passwordAuth.description")} title={t("passwordAuth.title")}>
         <SettingsSwitch
-          isDisabled={isLoading}
           isSelected={passwordAuthEnabled ?? false}
           onValueChange={updatePasswordAuth}
         />

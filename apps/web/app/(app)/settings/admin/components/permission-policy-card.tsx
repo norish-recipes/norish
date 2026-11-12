@@ -10,9 +10,10 @@ import { Separator } from "@heroui/react";
 import { useTranslations } from "next-intl";
 
 import type { PermissionLevel } from "@norish/config/zod/server-config";
+import { ServerConfigKeys } from "@norish/config/zod/server-config";
+import { useAdminConfig, usePermissionPolicyWrites } from "@norish/shared-react/admin";
 
 import type { PermissionLevelLabels } from "./permission-level-select";
-import { useAdminSettingsContext } from "../context";
 import { PermissionLevelSelect } from "./permission-level-select";
 
 type PolicyAction = "view" | "edit" | "delete";
@@ -26,12 +27,12 @@ type PolicyAction = "view" | "edit" | "delete";
 export default function PermissionPolicyCard() {
   const t = useTranslations("settings.admin.permissions");
   const tIngredients = useTranslations("settings.admin.ingredientPermissions");
-  const {
-    recipePermissionPolicy,
-    updateRecipePermissionPolicy,
-    ingredientPermissionPolicy,
-    updateIngredientPermissionPolicy,
-  } = useAdminSettingsContext();
+  const recipePermissionPolicy = useAdminConfig(ServerConfigKeys.RECIPE_PERMISSION_POLICY);
+  const ingredientEdit = useAdminConfig(
+    ServerConfigKeys.INGREDIENT_PERMISSION_POLICY,
+    (policy) => policy?.edit
+  );
+  const { saveRecipePolicy, saveIngredientPolicy } = usePermissionPolicyWrites();
   const [saving, setSaving] = useState<PolicyAction | "ingredients" | null>(null);
 
   const recipeLabels: PermissionLevelLabels = {
@@ -58,14 +59,14 @@ export default function PermissionPolicyCard() {
     if (!recipePermissionPolicy) return;
 
     setSaving(action);
-    await updateRecipePermissionPolicy({ ...recipePermissionPolicy, [action]: value }).finally(() =>
+    await saveRecipePolicy({ ...recipePermissionPolicy, [action]: value }).finally(() =>
       setSaving(null)
     );
   };
 
   const handleIngredientChange = async (edit: PermissionLevel) => {
     setSaving("ingredients");
-    await updateIngredientPermissionPolicy({ edit }).finally(() => setSaving(null));
+    await saveIngredientPolicy({ edit }).finally(() => setSaving(null));
   };
 
   const renderPolicySelect = (action: PolicyAction, ariaLabel: string) => (
@@ -113,7 +114,7 @@ export default function PermissionPolicyCard() {
             ariaLabel={tIngredients("editIngredients")}
             isDisabled={saving !== null}
             labels={ingredientLabels}
-            value={ingredientPermissionPolicy?.edit ?? null}
+            value={ingredientEdit ?? null}
             onChange={(level) => void handleIngredientChange(level)}
           />
         </SettingRow>

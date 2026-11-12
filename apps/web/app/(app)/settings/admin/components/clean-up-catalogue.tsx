@@ -1,14 +1,12 @@
 "use client";
 
 import { useState } from "react";
-import { showSafeErrorToast } from "@/lib/ui/safe-error-toast";
-import { Description, Label, Radio, RadioGroup, toast } from "@heroui/react";
-import { useMutation, useQuery } from "@tanstack/react-query";
+import { Description, Label, Radio, RadioGroup } from "@heroui/react";
 import { useTranslations } from "next-intl";
 
-import { useTRPC } from "@norish/shared-react/trpc";
+import { useCleanUpCatalogue, useCleanUpCounts } from "@norish/shared-react/admin";
 
-import { CatalogueAIRun, watchRun } from "./catalogue-ai-run";
+import { CatalogueAIRun } from "./catalogue-ai-run";
 
 const SCOPES = ["recipe-foods", "whole-catalogue"] as const;
 
@@ -19,48 +17,30 @@ const COUNT_OF = { "recipe-foods": "recipeFoods", "whole-catalogue": "wholeCatal
 /** Clean up catalogue: AI over the foods already listed, in one job, after a scope and a confirm. */
 export default function CleanUpCatalogue() {
   const t = useTranslations("settings.admin.aiProcessing.ingredientCatalogue.cleanUpCatalogue");
-  const tErrors = useTranslations("common.errors");
-  const trpc = useTRPC();
   const [isOpen, setIsOpen] = useState(false);
   const [scope, setScope] = useState<Scope>("recipe-foods");
-  const counts = useQuery(
-    trpc.admin.ingredientCatalogue.cleanUpCounts.queryOptions(undefined, watchRun)
-  );
-  const cleanUp = useMutation(
-    trpc.admin.ingredientCatalogue.cleanUp.mutationOptions({
-      onSuccess: ({ queued }) => {
-        setIsOpen(false);
-        toast(t("started", { count: queued }), { variant: "success" });
-      },
-      onError: (error) =>
-        showSafeErrorToast({
-          title: t("error"),
-          description: tErrors("technicalDetails"),
-          color: "danger",
-          error,
-          context: "admin-ai:clean-up-catalogue",
-        }),
-      onSettled: () => void counts.refetch(),
-    })
-  );
-  const count = counts.data?.[COUNT_OF[scope]] ?? 0;
-  const running = counts.data?.running ?? false;
+  const counts = useCleanUpCounts();
+  const { start, isStarting } = useCleanUpCatalogue();
+  const count = counts?.[COUNT_OF[scope]] ?? 0;
+  const running = counts?.running ?? false;
 
   return (
     <CatalogueAIRun
       button={t("button")}
       canStart={count > 0}
-      counted={counts.data !== undefined}
+      counted={counts !== undefined}
       description={running ? t("running") : t("description")}
       intro={t("intro")}
       isOpen={isOpen}
       running={running}
       start={t("start")}
-      starting={cleanUp.isPending}
+      starting={isStarting}
       testId="clean-up-catalogue"
       title={t("title")}
       onOpenChange={setIsOpen}
-      onStart={() => cleanUp.mutate({ scope })}
+      onStart={async () => {
+        if (await start(scope)) setIsOpen(false);
+      }}
     >
       <RadioGroup
         aria-label={t("scopeLabel")}

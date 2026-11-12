@@ -1,6 +1,6 @@
 "use client";
 
-import { useCallback, useEffect, useMemo, useState } from "react";
+import { useEffect, useState } from "react";
 import { SettingRow } from "@/components/settings/setting-row";
 import { ActionButton, ActionButtonGroup } from "@/components/shared/action-button";
 import SecretInput from "@/components/shared/secret-input";
@@ -16,8 +16,12 @@ import {
   selectedDecisionUses,
   ServerConfigKeys,
 } from "@norish/config/zod/server-config";
+import {
+  useAdminConfig,
+  useConfigSecret,
+  useDecisionConfigWrite,
+} from "@norish/shared-react/admin";
 
-import { useAdminSettingsContext } from "../context";
 import { ConnectionTestResult } from "./connection-test-result";
 
 interface DecisionModelFormProps {
@@ -35,8 +39,9 @@ function sameUses(a: readonly DecisionUse[], b: readonly DecisionUse[]): boolean
 export default function DecisionModelForm({ onDirtyChange }: DecisionModelFormProps) {
   const t = useTranslations("settings.admin.decisionConfig");
   const tActions = useTranslations("common.actions");
-  const { decisionConfig, updateDecisionConfig, testDecisionEndpoint, fetchConfigSecret } =
-    useAdminSettingsContext();
+  const decisionConfig = useAdminConfig(ServerConfigKeys.DECISION_CONFIG);
+  const { save: updateDecisionConfig, test: testDecisionEndpoint } = useDecisionConfigWrite();
+  const fetchConfigSecret = useConfigSecret();
   const [provider, setProvider] = useState<DecisionProvider>(
     decisionConfig?.provider ?? "disabled"
   );
@@ -70,26 +75,18 @@ export default function DecisionModelForm({ onDirtyChange }: DecisionModelFormPr
   // matches — so a stored key is only ever its own.
   const hasStoredApiKey = !!decisionConfig?.apiKey && decisionConfig.provider === provider;
 
-  const hasChanges = useMemo(() => {
-    const stored = decisionConfig;
-
-    return (
-      provider !== (stored?.provider ?? "disabled") ||
-      model !== (stored?.model ?? DEFAULT_DECISION_MODEL) ||
-      endpoint !== (stored?.endpoint ?? "") ||
-      apiKey.trim() !== "" ||
-      !sameUses(uses, stored?.uses ?? DECISION_USES)
-    );
-  }, [decisionConfig, provider, model, endpoint, apiKey, uses]);
+  const hasChanges =
+    provider !== (decisionConfig?.provider ?? "disabled") ||
+    model !== (decisionConfig?.model ?? DEFAULT_DECISION_MODEL) ||
+    endpoint !== (decisionConfig?.endpoint ?? "") ||
+    apiKey.trim() !== "" ||
+    !sameUses(uses, decisionConfig?.uses ?? DECISION_USES);
 
   useEffect(() => {
     onDirtyChange?.(hasChanges);
   }, [hasChanges, onDirtyChange]);
 
-  const handleRevealApiKey = useCallback(
-    () => fetchConfigSecret(ServerConfigKeys.DECISION_CONFIG, "apiKey"),
-    [fetchConfigSecret]
-  );
+  const handleRevealApiKey = () => fetchConfigSecret(ServerConfigKeys.DECISION_CONFIG, "apiKey");
 
   const handleProviderChange = (newProvider: DecisionProvider) => {
     if (newProvider === provider) return;

@@ -8,19 +8,15 @@ import { beforeEach, describe, expect, it, vi } from "vitest";
 
 import "@testing-library/jest-dom";
 
+import { configs, setConfigs } from "./admin-config-fake";
+
 const updateDecisionConfig = vi.fn();
 const testDecisionEndpoint = vi.fn();
-const context = vi.hoisted(() => ({ decisionConfig: undefined as unknown }));
 
-vi.mock("@/app/(app)/settings/admin/context", () => ({
-  useAdminSettingsContext: () => ({
-    decisionConfig: context.decisionConfig,
-    // AI off: the Decision block is its own switch, so Test and Save still work.
-    aiConfig: { enabled: false },
-    updateDecisionConfig,
-    testDecisionEndpoint,
-    fetchConfigSecret: vi.fn(),
-  }),
+vi.mock("@norish/shared-react/admin", async () => ({
+  useAdminConfig: (await import("./admin-config-fake")).useAdminConfig,
+  useDecisionConfigWrite: () => ({ save: updateDecisionConfig, test: testDecisionEndpoint }),
+  useConfigSecret: () => vi.fn(),
 }));
 
 vi.mock("next-intl", () => ({ useTranslations: () => (key: string) => key }));
@@ -32,7 +28,7 @@ describe("DecisionModelForm endpoint", () => {
   beforeEach(() => {
     testDecisionEndpoint.mockResolvedValue({ success: true });
     updateDecisionConfig.mockResolvedValue(undefined);
-    context.decisionConfig = { provider: "typesafe", apiKey: "••••", model: "von-1.3.0" };
+    setConfigs({ decision_config: { provider: "typesafe", apiKey: "••••", model: "von-1.3.0" } });
   });
 
   it("tests and saves the endpoint as typed", async () => {
@@ -53,7 +49,7 @@ describe("DecisionModelForm endpoint", () => {
   });
 
   it("an emptied endpoint saves as the default", () => {
-    context.decisionConfig = {
+    configs.decision_config = {
       provider: "typesafe",
       apiKey: "••••",
       endpoint: "http://von:8080/v1",

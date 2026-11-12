@@ -1,17 +1,15 @@
 "use client";
 
-import { useCallback, useEffect, useMemo, useState } from "react";
+import { useEffect, useState } from "react";
 import SecretInput from "@/components/shared/secret-input";
 import { usePending } from "@/hooks/use-pending";
-import { showSafeErrorToast } from "@/lib/ui/safe-error-toast";
 import { Input, Label, TextField, useOverlayState } from "@heroui/react";
-import { useTranslations } from "next-intl";
 
 import type { ServerConfigKey } from "@norish/config/zod/server-config";
 import { ServerConfigKeys } from "@norish/config/zod/server-config";
+import { useAuthProviderWrites, useConfigSecret } from "@norish/shared-react/admin";
 
 import type { FieldDef, ProviderKey, TestResult } from "./types";
-import { useAdminSettingsContext } from "../../context";
 import { DeleteProviderModal } from "./delete-provider-modal";
 import { ProviderActions } from "./provider-actions";
 import { TestResultDisplay } from "./test-result-display";
@@ -37,14 +35,8 @@ export function AuthProviderForm({
   fields,
   onDirtyChange,
 }: AuthProviderFormProps) {
-  const tErrors = useTranslations("common.errors");
-  const {
-    updateAuthProviderGitHub,
-    updateAuthProviderGoogle,
-    deleteAuthProvider,
-    testAuthProvider,
-    fetchConfigSecret,
-  } = useAdminSettingsContext();
+  const { saveGitHub, saveGoogle, remove, test } = useAuthProviderWrites();
+  const fetchConfigSecret = useConfigSecret();
 
   // Initialize form values from config (secrets start empty)
   const [values, setValues] = useState<Record<string, string>>(() =>
@@ -62,34 +54,28 @@ export function AuthProviderForm({
   const [saving, whileSaving] = usePending();
   const deleteModal = useOverlayState();
 
-  const hasChanges = useMemo(
-    () =>
-      fields.some((field) => {
-        const value = values[field.key] ?? "";
+  const hasChanges = fields.some((field) => {
+    const value = values[field.key] ?? "";
 
-        if (field.secret) {
-          return value.trim() !== "";
-        }
+    if (field.secret) {
+      return value.trim() !== "";
+    }
 
-        return value !== ((config?.[field.key] as string) ?? "");
-      }),
-    [fields, values, config]
-  );
+    return value !== ((config?.[field.key] as string) ?? "");
+  });
 
   useEffect(() => {
     onDirtyChange?.(hasChanges);
   }, [hasChanges, onDirtyChange]);
 
-  const handleRevealSecret = useCallback(
-    (field: string) => () => fetchConfigSecret(CONFIG_KEYS[providerKey], field),
-    [fetchConfigSecret, providerKey]
-  );
+  const handleRevealSecret = (field: string) => () =>
+    fetchConfigSecret(CONFIG_KEYS[providerKey], field);
 
   const handleTest = async () => {
     setTestResult(null);
     const testValues = Object.fromEntries(fields.map((f) => [f.key, values[f.key] || undefined]));
 
-    await whileTesting(() => testAuthProvider(providerKey, testValues).then(setTestResult));
+    await whileTesting(() => test(providerKey, testValues).then(setTestResult));
   };
 
   const handleSave = async () => {
@@ -98,13 +84,9 @@ export function AuthProviderForm({
 
       // Route to correct update function (OIDC uses OIDCProviderForm, not this generic form)
       if (providerKey === "github") {
-        await updateAuthProviderGitHub(
-          saveValues as Parameters<typeof updateAuthProviderGitHub>[0]
-        );
+        await saveGitHub(saveValues as Parameters<typeof saveGitHub>[0]);
       } else if (providerKey === "google") {
-        await updateAuthProviderGoogle(
-          saveValues as Parameters<typeof updateAuthProviderGoogle>[0]
-        );
+        await saveGoogle(saveValues as Parameters<typeof saveGoogle>[0]);
       }
       // Saved secrets live on the server, not in the form: a secret left in
       // state reads as an unsaved change on every later render.
@@ -123,21 +105,11 @@ export function AuthProviderForm({
   };
 
   const handleDelete = async () => {
-    const result = await deleteAuthProvider(providerKey);
-
-    if (!result.success) {
-      deleteModal.close();
-      showSafeErrorToast({
-        title: tErrors("operationFailed"),
-        description: tErrors("technicalDetails"),
-        error: result.error,
-        context: `admin-auth-provider:delete:${providerKey}`,
-      });
-
-      return;
-    }
+    const removed = await remove(providerKey);
 
     deleteModal.close();
+    if (!removed) return;
+
     setValues(
       fields.reduce(
         (acc, f) => {

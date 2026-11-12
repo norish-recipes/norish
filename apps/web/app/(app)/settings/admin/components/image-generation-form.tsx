@@ -1,9 +1,8 @@
 "use client";
 
-import { useCallback, useEffect, useMemo, useState } from "react";
+import { useEffect, useState } from "react";
 import { ActionButton, ActionButtonGroup } from "@/components/shared/action-button";
 import SecretInput from "@/components/shared/secret-input";
-import { useAvailableModelsQuery } from "@/hooks/admin";
 import { usePending } from "@/hooks/use-pending";
 import { ComboBox, Description, Input, Label, ListBox, Select, TextField } from "@heroui/react";
 import { useTranslations } from "next-intl";
@@ -14,8 +13,13 @@ import {
   isCloudImageGenerationProvider,
   ServerConfigKeys,
 } from "@norish/config/zod/server-config";
+import {
+  useAdminConfig,
+  useAvailableModelsQuery,
+  useConfigSecret,
+  useImageGenerationConfigWrite,
+} from "@norish/shared-react/admin";
 
-import { useAdminSettingsContext } from "../context";
 import ModelListingEmptyState from "./model-listing-empty-state";
 
 interface ImageGenerationFormProps {
@@ -39,8 +43,14 @@ const PROVIDER_OPTIONS: ImageGenerationProvider[] = [
 export default function ImageGenerationForm({ onDirtyChange }: ImageGenerationFormProps) {
   const t = useTranslations("settings.admin.imageGenerationConfig");
   const tActions = useTranslations("common.actions");
-  const { imageGenerationConfig, aiConfig, updateImageGenerationConfig, fetchConfigSecret } =
-    useAdminSettingsContext();
+  const imageGenerationConfig = useAdminConfig(ServerConfigKeys.IMAGE_GENERATION_CONFIG);
+  const aiConfig = useAdminConfig(ServerConfigKeys.AI_CONFIG, (ai) => ({
+    provider: ai?.provider,
+    endpoint: ai?.endpoint,
+    hasApiKey: !!ai?.apiKey,
+  }));
+  const updateImageGenerationConfig = useImageGenerationConfigWrite();
+  const fetchConfigSecret = useConfigSecret();
   const [provider, setProvider] = useState<ImageGenerationProvider>(
     imageGenerationConfig?.provider ?? "disabled"
   );
@@ -77,7 +87,7 @@ export default function ImageGenerationForm({ onDirtyChange }: ImageGenerationFo
     !isApiKeyCleared &&
     !!imageGenerationConfig?.apiKey &&
     imageGenerationConfig.provider === provider;
-  const inheritsAiApiKey = !hasOwnApiKey && aiProviderMatches && !!aiConfig?.apiKey;
+  const inheritsAiApiKey = !hasOwnApiKey && aiProviderMatches && !!aiConfig?.hasApiKey;
 
   const canFetchModels =
     enabled &&
@@ -89,26 +99,25 @@ export default function ImageGenerationForm({ onDirtyChange }: ImageGenerationFo
     models: availableModels,
     refusal: modelRefusal,
     isLoading: isLoadingModels,
-  } = useAvailableModelsQuery({
+  } = useAvailableModelsQuery(
     // Every drawing provider is also an AI provider, so this assignment
     // type-checks without a cast — and fails the build if the enums diverge.
-    provider: provider === "disabled" ? "openai" : provider,
-    endpoint: endpoint || (aiProviderMatches ? aiConfig?.endpoint : undefined),
-    apiKey: apiKey || undefined,
-    // Only the provider's models that can draw, where their names say so; any name may still be typed.
-    purpose: "image",
-    enabled: !!canFetchModels,
-  });
+    canFetchModels
+      ? {
+          provider,
+          endpoint: endpoint || (aiProviderMatches ? aiConfig?.endpoint : undefined),
+          apiKey: apiKey || undefined,
+          // Only the provider's models that can draw, where their names say so; any name may still be typed.
+          purpose: "image",
+        }
+      : null
+  );
 
-  const modelOptions = useMemo(() => {
-    const options = availableModels.map((available) => available.id);
+  const modelOptions = availableModels.map((available) => available.id);
 
-    if (model && !options.includes(model)) {
-      options.unshift(model);
-    }
-
-    return options;
-  }, [availableModels, model]);
+  if (model && !modelOptions.includes(model)) {
+    modelOptions.unshift(model);
+  }
 
   const hasChanges =
     provider !== (imageGenerationConfig?.provider ?? "disabled") ||
@@ -123,7 +132,7 @@ export default function ImageGenerationForm({ onDirtyChange }: ImageGenerationFo
 
   // The key worth showing is the one a request would actually run with: this
   // block's own, or the AI configuration's when that is what it borrows.
-  const handleRevealApiKey = useCallback(async () => {
+  const handleRevealApiKey = async () => {
     const own = isApiKeyCleared
       ? null
       : await fetchConfigSecret(ServerConfigKeys.IMAGE_GENERATION_CONFIG, "apiKey");
@@ -131,7 +140,7 @@ export default function ImageGenerationForm({ onDirtyChange }: ImageGenerationFo
     if (own) return own;
 
     return inheritsAiApiKey ? await fetchConfigSecret(ServerConfigKeys.AI_CONFIG, "apiKey") : null;
-  }, [fetchConfigSecret, inheritsAiApiKey, isApiKeyCleared]);
+  };
 
   const handleProviderChange = (newProvider: ImageGenerationProvider) => {
     if (newProvider === provider) return;

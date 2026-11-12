@@ -8,14 +8,13 @@ import { beforeEach, describe, expect, it, vi } from "vitest";
 
 import "@testing-library/jest-dom";
 
-const updateAIConfig = vi.fn();
-const context = vi.hoisted(() => ({
-  aiConfig: undefined as unknown,
-  imageGenerationConfig: undefined as unknown,
-}));
+import { configs, setConfigs } from "./admin-config-fake";
 
-vi.mock("@/app/(app)/settings/admin/context", () => ({
-  useAdminSettingsContext: () => ({ ...context, updateAIConfig }),
+const updateAIConfig = vi.fn();
+
+vi.mock("@norish/shared-react/admin", async () => ({
+  useAdminConfig: (await import("./admin-config-fake")).useAdminConfig,
+  useAIConfigWrite: () => ({ save: updateAIConfig }),
 }));
 
 vi.mock("next-intl", () => ({ useTranslations: () => (key: string) => key }));
@@ -40,8 +39,10 @@ function options() {
 describe("IngredientCatalogueForm", () => {
   beforeEach(() => {
     updateAIConfig.mockReset().mockResolvedValue({ success: true });
-    context.aiConfig = { enabled: true, model: "m", automaticIngredients: { ...off, icon: true } };
-    context.imageGenerationConfig = { provider: "disabled" };
+    setConfigs({
+      ai_config: { enabled: true, model: "m", automaticIngredients: { ...off, icon: true } },
+      image_generation_config: { provider: "disabled" },
+    });
   });
 
   it("offers Draw missing icons only with an image provider", () => {
@@ -50,7 +51,7 @@ describe("IngredientCatalogueForm", () => {
     expect(options()).toEqual(["cleanUp", "nutrition", "conversions"]);
     unmount();
 
-    context.imageGenerationConfig = { provider: "openai" };
+    configs.image_generation_config = { provider: "openai" };
     render(<IngredientCatalogueForm />);
     expect(options()).toEqual(["cleanUp", "nutrition", "conversions", "icon"]);
   });

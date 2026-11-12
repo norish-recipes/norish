@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useState } from "react";
 import { SettingRow } from "@/components/settings/setting-row";
 import { ActionButton, ActionButtonGroup } from "@/components/shared/action-button";
 import { usePending } from "@/hooks/use-pending";
@@ -8,9 +8,9 @@ import { Label, ListBox, Select } from "@heroui/react";
 import { useTranslations } from "next-intl";
 
 import type { AutomaticIngredientsConfig } from "@norish/config/zod/server-config";
-import { DEFAULT_AUTOMATIC_INGREDIENTS } from "@norish/config/zod/server-config";
+import { DEFAULT_AUTOMATIC_INGREDIENTS, ServerConfigKeys } from "@norish/config/zod/server-config";
+import { useAdminConfig, useAIConfigWrite } from "@norish/shared-react/admin";
 
-import { useAdminSettingsContext } from "../context";
 import CleanUpCatalogue from "./clean-up-catalogue";
 import FillGaps from "./fill-gaps";
 
@@ -34,10 +34,14 @@ function selectedOf(config: AutomaticIngredientsConfig): AutomaticIngredient[] {
 export default function IngredientCatalogueForm({ onDirtyChange }: IngredientCatalogueFormProps) {
   const t = useTranslations("settings.admin.aiProcessing.ingredientCatalogue");
   const tActions = useTranslations("common.actions");
-  const { aiConfig, imageGenerationConfig, updateAIConfig } = useAdminSettingsContext();
-  const stored = aiConfig?.automaticIngredients ?? DEFAULT_AUTOMATIC_INGREDIENTS;
+  const aiConfig = useAdminConfig(ServerConfigKeys.AI_CONFIG);
   // An icon is drawn by the image provider: without one, it is not offered.
-  const canDrawIcons = (imageGenerationConfig?.provider ?? "disabled") !== "disabled";
+  const canDrawIcons = useAdminConfig(
+    ServerConfigKeys.IMAGE_GENERATION_CONFIG,
+    (config) => (config?.provider ?? "disabled") !== "disabled"
+  );
+  const { save: updateAIConfig } = useAIConfigWrite();
+  const stored = aiConfig?.automaticIngredients ?? DEFAULT_AUTOMATIC_INGREDIENTS;
   const offered = AUTOMATIC_INGREDIENT_KEYS.filter((key) => key !== "icon" || canDrawIcons);
   const [selected, setSelected] = useState<AutomaticIngredient[]>(() => selectedOf(stored));
   const [prevStored, setPrevStored] = useState(stored);
@@ -48,9 +52,8 @@ export default function IngredientCatalogueForm({ onDirtyChange }: IngredientCat
     setSelected(selectedOf(stored));
   }
 
-  const hasChanges = useMemo(
-    () => AUTOMATIC_INGREDIENT_KEYS.some((key) => selected.includes(key) !== stored[key]),
-    [selected, stored]
+  const hasChanges = AUTOMATIC_INGREDIENT_KEYS.some(
+    (key) => selected.includes(key) !== stored[key]
   );
 
   useEffect(() => {

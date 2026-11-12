@@ -10,15 +10,22 @@ import { WrenchScrewdriverIcon } from "@heroicons/react/24/outline";
 import { Input, Separator, TextField, useOverlayState } from "@heroui/react";
 import { useTranslations } from "next-intl";
 
-import { useAdminSettingsContext } from "../context";
+import { ServerConfigKeys } from "@norish/config/zod/server-config";
+import {
+  useAdminConfig,
+  useRestartServer,
+  useSchedulerMonthsWrite,
+} from "@norish/shared-react/admin";
+
 import RestartConfirmationModal from "./restart-confirmation-modal";
 import { UnsavedChangesChip } from "./unsaved-changes-chip";
 
 export default function SystemCard() {
   const t = useTranslations("settings.admin.system");
   const tActions = useTranslations("common.actions");
-  const { schedulerCleanupMonths, updateSchedulerMonths, restartServer } =
-    useAdminSettingsContext();
+  const schedulerCleanupMonths = useAdminConfig(ServerConfigKeys.SCHEDULER_CLEANUP_MONTHS);
+  const saveSchedulerMonths = useSchedulerMonthsWrite();
+  const restartServer = useRestartServer();
   const [months, setMonths] = useState(schedulerCleanupMonths ?? 3);
   const [saving, whileSaving] = usePending();
   const restartModal = useOverlayState();
@@ -35,11 +42,10 @@ export default function SystemCard() {
     }
   }
   const handleSaveScheduler = async () => {
-    await whileSaving(() => updateSchedulerMonths(months));
+    await whileSaving(() => saveSchedulerMonths(months));
   };
   const handleRestart = async () => {
-    await restartServer();
-    restartModal.close();
+    if (await restartServer()) restartModal.close();
   };
 
   return (

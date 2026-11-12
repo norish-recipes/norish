@@ -1,12 +1,11 @@
 "use client";
 
-import { useCallback, useEffect, useMemo, useState } from "react";
+import { useEffect, useState } from "react";
 import { SwitchRow } from "@/components/settings/setting-row";
 import SettingsSwitch from "@/components/settings/settings-switch";
 import { ActionButton, ActionButtonGroup } from "@/components/shared/action-button";
 import { Note } from "@/components/shared/note";
 import SecretInput from "@/components/shared/secret-input";
-import { useAvailableTranscriptionModelsQuery, useYtDlpVersionQuery } from "@/hooks/admin";
 import { usePending } from "@/hooks/use-pending";
 import {
   ComboBox,
@@ -28,17 +27,19 @@ import {
   transcriptionProviderNeedsEndpoint,
   transcriptionProviderSupportsModelListing,
 } from "@norish/config/zod/server-config";
+import {
+  useAdminConfig,
+  useAvailableTranscriptionModelsQuery,
+  useConfigSecret,
+  useVideoConfigWrite,
+  useYtDlpVersionQuery,
+} from "@norish/shared-react/admin";
 
-import { useAdminSettingsContext } from "../context";
 import ModelListingEmptyState from "./model-listing-empty-state";
 
 interface VideoProcessingFormProps {
   onDirtyChange?: (isDirty: boolean) => void;
 }
-type TranscriptionModel = {
-  id: string;
-  name: string;
-};
 type TranscriptionModelOption = {
   value: string;
   label: string;
@@ -55,7 +56,13 @@ const TRANSCRIPTION_PROVIDER_OPTIONS: TranscriptionProvider[] = [
 export default function VideoProcessingForm({ onDirtyChange }: VideoProcessingFormProps) {
   const t = useTranslations("settings.admin.videoConfig");
   const tActions = useTranslations("common.actions");
-  const { videoConfig, updateVideoConfig, aiConfig, fetchConfigSecret } = useAdminSettingsContext();
+  const videoConfig = useAdminConfig(ServerConfigKeys.VIDEO_CONFIG);
+  const aiConfig = useAdminConfig(ServerConfigKeys.AI_CONFIG, (ai) => ({
+    enabled: ai?.enabled ?? false,
+    hasApiKey: !!ai?.apiKey,
+  }));
+  const updateVideoConfig = useVideoConfigWrite();
+  const fetchConfigSecret = useConfigSecret();
 
   // Combined video + transcription config state
   const [enabled, setEnabled] = useState(videoConfig?.enabled ?? false);
@@ -109,7 +116,7 @@ export default function VideoProcessingForm({ onDirtyChange }: VideoProcessingFo
     !!videoConfig?.transcriptionApiKey &&
     videoConfig.transcriptionApiKey !== "";
   // Check if AI config API key can be used as fallback
-  const isAIApiKeyConfigured = !!aiConfig?.apiKey && aiConfig.apiKey !== "";
+  const isAIApiKeyConfigured = aiConfig?.hasApiKey ?? false;
   const isAIEnabled = aiConfig?.enabled ?? false;
 
   // What a provider authenticates its model list with, which is not always a key
@@ -142,32 +149,27 @@ export default function VideoProcessingForm({ onDirtyChange }: VideoProcessingFo
     models: availableTranscriptionModels,
     refusal: transcriptionRefusal,
     isLoading: isLoadingTranscriptionModels,
-  } = useAvailableTranscriptionModelsQuery({
-    provider: transcriptionProvider,
-    endpoint: transcriptionEndpoint || undefined,
-    apiKey: transcriptionApiKey || undefined,
-    enabled: !!canFetchTranscriptionModels,
-  });
+  } = useAvailableTranscriptionModelsQuery(
+    canFetchTranscriptionModels
+      ? {
+          provider: transcriptionProvider,
+          endpoint: transcriptionEndpoint || undefined,
+          apiKey: transcriptionApiKey || undefined,
+        }
+      : null
+  );
 
-  // Create transcription model options for autocomplete
-  const transcriptionModelOptions = useMemo(() => {
-    const options = (availableTranscriptionModels as TranscriptionModel[]).map((m) => ({
-      value: m.id,
-      label: m.name,
-    }));
+  // The listed models, with a typed name that isn't listed kept first.
+  const transcriptionModelOptions: TranscriptionModelOption[] = availableTranscriptionModels.map(
+    (m) => ({ value: m.id, label: m.name })
+  );
 
-    // Add current model if not in list (allows keeping custom/typed values)
-    if (
-      transcriptionModel &&
-      !options.some((o: TranscriptionModelOption) => o.value === transcriptionModel)
-    ) {
-      options.unshift({
-        value: transcriptionModel,
-        label: transcriptionModel,
-      });
-    }
-    return options;
-  }, [availableTranscriptionModels, transcriptionModel]);
+  if (
+    transcriptionModel &&
+    !transcriptionModelOptions.some((o) => o.value === transcriptionModel)
+  ) {
+    transcriptionModelOptions.unshift({ value: transcriptionModel, label: transcriptionModel });
+  }
 
   // Auto-select first available model if none selected
   if (
@@ -175,7 +177,7 @@ export default function VideoProcessingForm({ onDirtyChange }: VideoProcessingFo
     availableTranscriptionModels.length > 0 &&
     !isLoadingTranscriptionModels
   ) {
-    const firstModel = (availableTranscriptionModels as TranscriptionModel[])[0];
+    const firstModel = availableTranscriptionModels[0];
     if (firstModel) {
       setTranscriptionModel(firstModel.id);
     }
@@ -208,7 +210,7 @@ export default function VideoProcessingForm({ onDirtyChange }: VideoProcessingFo
   const showValidationWarning = enabled && !hasValidTranscription;
   const isVideoUiDisabled = !enabled || !isAIEnabled;
   const showAiDisabledWarning = !isAIEnabled;
-  const hasChanges = useMemo(() => {
+  const hasChanges = (() => {
     if (!videoConfig) return false;
     return (
       enabled !== videoConfig.enabled ||
@@ -221,24 +223,12 @@ export default function VideoProcessingForm({ onDirtyChange }: VideoProcessingFo
       transcriptionApiKey.trim() !== "" ||
       isTranscriptionKeyCleared
     );
-  }, [
-    videoConfig,
-    enabled,
-    maxLengthSeconds,
-    maxVideoFileSizeMB,
-    ytDlpProxy,
-    transcriptionProvider,
-    transcriptionEndpoint,
-    transcriptionModel,
-    transcriptionApiKey,
-    isTranscriptionKeyCleared,
-  ]);
+  })();
   useEffect(() => {
     onDirtyChange?.(hasChanges);
   }, [hasChanges, onDirtyChange]);
-  const handleRevealTranscriptionApiKey = useCallback(async () => {
-    return await fetchConfigSecret(ServerConfigKeys.VIDEO_CONFIG, "transcriptionApiKey");
-  }, [fetchConfigSecret]);
+  const handleRevealTranscriptionApiKey = () =>
+    fetchConfigSecret(ServerConfigKeys.VIDEO_CONFIG, "transcriptionApiKey");
   const handleSave = async () => {
     if (enabled && !hasValidTranscription) return;
     await whileSaving(() =>

@@ -1,12 +1,11 @@
 "use client";
 
-import { useCallback, useEffect, useMemo, useState } from "react";
+import { useEffect, useState } from "react";
 import { SettingRow, SwitchRow } from "@/components/settings/setting-row";
 import SettingsSwitch from "@/components/settings/settings-switch";
 import { ActionButton, ActionButtonGroup } from "@/components/shared/action-button";
 import { Note } from "@/components/shared/note";
 import SecretInput from "@/components/shared/secret-input";
-import { useAvailableModelsQuery } from "@/hooks/admin";
 import { usePending } from "@/hooks/use-pending";
 import {
   ComboBox,
@@ -33,18 +32,19 @@ import {
   DEFAULT_TAG_STRATEGY,
   ServerConfigKeys,
 } from "@norish/config/zod/server-config";
+import {
+  useAdminConfig,
+  useAIConfigWrite,
+  useAvailableModelsQuery,
+  useConfigSecret,
+} from "@norish/shared-react/admin";
 
-import { useAdminSettingsContext } from "../context";
 import { ConnectionTestResult } from "./connection-test-result";
 import ModelListingEmptyState from "./model-listing-empty-state";
 
 interface AIConfigFormProps {
   onDirtyChange?: (isDirty: boolean) => void;
 }
-type AvailableModel = {
-  id: string;
-  supportsVision?: boolean;
-};
 type ModelOption = {
   value: string;
   supportsVision?: boolean;
@@ -79,7 +79,9 @@ const AUTOMATIC_ENRICHMENT_KEYS = [
 export default function AIConfigForm({ onDirtyChange }: AIConfigFormProps) {
   const t = useTranslations("settings.admin.aiConfig");
   const tActions = useTranslations("common.actions");
-  const { aiConfig, updateAIConfig, testAIEndpoint, fetchConfigSecret } = useAdminSettingsContext();
+  const aiConfig = useAdminConfig(ServerConfigKeys.AI_CONFIG);
+  const { save: updateAIConfig, test: testAIEndpoint } = useAIConfigWrite();
+  const fetchConfigSecret = useConfigSecret();
   const [enabled, setEnabled] = useState(aiConfig?.enabled ?? false);
   const [provider, setProvider] = useState(aiConfig?.provider ?? "openai");
   const [endpoint, setEndpoint] = useState(aiConfig?.endpoint ?? "");
@@ -137,46 +139,28 @@ export default function AIConfigForm({ onDirtyChange }: AIConfigFormProps) {
     models: availableModels,
     refusal: modelRefusal,
     isLoading: isLoadingModels,
-  } = useAvailableModelsQuery({
-    provider: provider as AIConfig["provider"],
-    endpoint: endpoint || undefined,
-    apiKey: apiKey || undefined,
-    enabled: !!canFetchModels,
-  });
+  } = useAvailableModelsQuery(
+    canFetchModels
+      ? { provider, endpoint: endpoint || undefined, apiKey: apiKey || undefined }
+      : null
+  );
 
   // Create model options for autocomplete (includes current value even if not in list)
-  const modelOptions = useMemo(() => {
-    const options = (availableModels as AvailableModel[]).map((m) => ({
+  // The listed models, with a typed name that isn't listed kept first.
+  const optionsWith = (current: string): ModelOption[] => {
+    const options: ModelOption[] = availableModels.map((m) => ({
       value: m.id,
       supportsVision: m.supportsVision,
     }));
 
-    // Add current model if not in list (allows keeping custom/typed values)
-    if (model && !options.some((o: ModelOption) => o.value === model)) {
-      options.unshift({
-        value: model,
-        supportsVision: undefined,
-      });
+    if (current && !options.some((o) => o.value === current)) {
+      options.unshift({ value: current, supportsVision: undefined });
     }
-    return options;
-  }, [availableModels, model]);
 
-  // Vision model options (filter to vision-capable models if available)
-  const visionModelOptions = useMemo(() => {
-    const options = (availableModels as AvailableModel[]).map((m) => ({
-      value: m.id,
-      supportsVision: m.supportsVision,
-    }));
-
-    // Add current vision model if not in list
-    if (visionModel && !options.some((o: ModelOption) => o.value === visionModel)) {
-      options.unshift({
-        value: visionModel,
-        supportsVision: undefined,
-      });
-    }
     return options;
-  }, [availableModels, visionModel]);
+  };
+  const modelOptions = optionsWith(model);
+  const visionModelOptions = optionsWith(visionModel);
   const [prevAiConfig, setPrevAiConfig] = useState(aiConfig);
 
   if (aiConfig !== prevAiConfig) {
@@ -204,7 +188,7 @@ export default function AIConfigForm({ onDirtyChange }: AIConfigFormProps) {
     (!needsApiKey || (apiKey ?? "").trim() !== "" || isApiKeyConfigured);
   const canEnable = !enabled || hasValidConfig;
   const showValidationWarning = enabled && !hasValidConfig;
-  const hasChanges = useMemo(() => {
+  const hasChanges = (() => {
     if (!aiConfig) return false;
     return (
       enabled !== aiConfig.enabled ||
@@ -225,28 +209,11 @@ export default function AIConfigForm({ onDirtyChange }: AIConfigFormProps) {
       ) ||
       apiKey.trim() !== ""
     );
-  }, [
-    aiConfig,
-    enabled,
-    provider,
-    endpoint,
-    model,
-    visionModel,
-    temperature,
-    maxTokens,
-    timeoutMs,
-    alwaysUseAI,
-    tagStrategy,
-    cuisineStrategy,
-    automaticEnrichment,
-    apiKey,
-  ]);
+  })();
   useEffect(() => {
     onDirtyChange?.(hasChanges);
   }, [hasChanges, onDirtyChange]);
-  const handleRevealApiKey = useCallback(async () => {
-    return await fetchConfigSecret(ServerConfigKeys.AI_CONFIG, "apiKey");
-  }, [fetchConfigSecret]);
+  const handleRevealApiKey = () => fetchConfigSecret(ServerConfigKeys.AI_CONFIG, "apiKey");
 
   /**
    * The stored record read as the list the picker selects over. A column of
@@ -255,11 +222,10 @@ export default function AIConfigForm({ onDirtyChange }: AIConfigFormProps) {
    * unreachable, it is rewritten to its default the moment any other kind is
    * toggled, because the picker rebuilds the whole record from this list.
    */
-  const selectedEnrichmentKinds = useMemo(
-    () => AUTOMATIC_ENRICHMENT_KEYS.filter((key) => automaticEnrichment[key]),
-    [automaticEnrichment]
+  const selectedEnrichmentKinds = AUTOMATIC_ENRICHMENT_KEYS.filter(
+    (key) => automaticEnrichment[key]
   );
-  const handleEnrichmentKindsChange = useCallback((chosen: string[]) => {
+  const handleEnrichmentKindsChange = (chosen: string[]) => {
     const selected = new Set(chosen);
 
     setAutomaticEnrichment(
@@ -267,7 +233,7 @@ export default function AIConfigForm({ onDirtyChange }: AIConfigFormProps) {
         AUTOMATIC_ENRICHMENT_KEYS.map((key) => [key, selected.has(key)])
       ) as AutomaticEnrichmentConfig
     );
-  }, []);
+  };
 
   // Clear model fields when provider changes to avoid invalid model selection
   const handleProviderChange = (newProvider: AIConfig["provider"]) => {

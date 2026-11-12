@@ -7,27 +7,37 @@ import { Accordion } from "@heroui/react";
 import { useTranslations } from "next-intl";
 
 import { ServerConfigKeys } from "@norish/config/zod/server-config";
+import {
+  useAdminConfig,
+  useContentConfigWrites,
+  useRestoreDefault,
+} from "@norish/shared-react/admin";
 
-import { useAdminSettingsContext } from "../context";
 import JsonEditor from "./json-editor";
 import TimerKeywordsEditor from "./timer-keywords-editor";
 import { UnsavedChangesChip } from "./unsaved-changes-chip";
 
 export default function ContentDetectionCard() {
   const t = useTranslations("settings.admin.contentDetection");
+  const contentIndicators = useAdminConfig(ServerConfigKeys.CONTENT_INDICATORS);
+  const units = useAdminConfig(ServerConfigKeys.UNITS, (config) => config?.units);
+  const ingredientWords = useAdminConfig(
+    ServerConfigKeys.INGREDIENT_WORDS,
+    (config) => config?.words
+  );
+  const recurrenceLocales = useAdminConfig(
+    ServerConfigKeys.RECURRENCE_CONFIG,
+    (config) => config?.locales
+  );
+  const timerKeywords = useAdminConfig(ServerConfigKeys.TIMER_KEYWORDS);
   const {
-    contentIndicators,
-    units,
-    ingredientWords,
-    recurrenceLocales,
-    timerKeywords,
-    updateContentIndicators,
-    updateUnits,
-    updateIngredientWords,
-    updateRecurrenceConfig,
-    updateTimerKeywords,
-    restoreDefaultConfig,
-  } = useAdminSettingsContext();
+    saveContentIndicators,
+    saveUnits,
+    saveIngredientWords,
+    saveRecurrence,
+    saveTimerKeywords,
+  } = useContentConfigWrites();
+  const restoreDefaultConfig = useRestoreDefault();
 
   const [dirtySections, setDirtySections] = useState({
     timerKeywords: false,
@@ -76,7 +86,7 @@ export default function ContentDetectionCard() {
                   seconds={timerKeywords?.seconds ?? []}
                   onDirtyChange={updateDirtySection("timerKeywords")}
                   onRestoreDefaults={() => restoreDefaultConfig(ServerConfigKeys.TIMER_KEYWORDS)}
-                  onUpdate={updateTimerKeywords}
+                  onUpdate={saveTimerKeywords}
                 />
               </div>
             </Accordion.Body>
@@ -106,7 +116,7 @@ export default function ContentDetectionCard() {
                   onRestoreDefaults={() =>
                     restoreDefaultConfig(ServerConfigKeys.CONTENT_INDICATORS)
                   }
-                  onSave={updateContentIndicators}
+                  onSave={saveContentIndicators}
                 />
               </div>
             </Accordion.Body>
@@ -134,7 +144,7 @@ export default function ContentDetectionCard() {
                   value={units}
                   onDirtyChange={updateDirtySection("units")}
                   onRestoreDefaults={() => restoreDefaultConfig(ServerConfigKeys.UNITS)}
-                  onSave={updateUnits}
+                  onSave={saveUnits}
                 />
               </div>
             </Accordion.Body>
@@ -162,7 +172,7 @@ export default function ContentDetectionCard() {
                   value={ingredientWords}
                   onDirtyChange={updateDirtySection("ingredientWords")}
                   onRestoreDefaults={() => restoreDefaultConfig(ServerConfigKeys.INGREDIENT_WORDS)}
-                  onSave={updateIngredientWords}
+                  onSave={saveIngredientWords}
                 />
               </div>
             </Accordion.Body>
@@ -190,7 +200,7 @@ export default function ContentDetectionCard() {
                   value={recurrenceLocales}
                   onDirtyChange={updateDirtySection("recurrence")}
                   onRestoreDefaults={() => restoreDefaultConfig(ServerConfigKeys.RECURRENCE_CONFIG)}
-                  onSave={updateRecurrenceConfig}
+                  onSave={saveRecurrence}
                 />
               </div>
             </Accordion.Body>

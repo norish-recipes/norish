@@ -7,21 +7,21 @@ import { SettingsCard } from "@/components/settings/settings-card";
 import SettingsSwitch from "@/components/settings/settings-switch";
 import { ActionButton, ActionButtonGroup } from "@/components/shared/action-button";
 import { usePending } from "@/hooks/use-pending";
-import { showSafeErrorToast } from "@/lib/ui/safe-error-toast";
 import { Cog6ToothIcon } from "@heroicons/react/24/outline";
 import { ListBox, Select, Separator, toast } from "@heroui/react";
 import { useTranslations } from "next-intl";
 
-import { useAdminSettingsContext } from "../context";
+import { ServerConfigKeys } from "@norish/config/zod/server-config";
+import { useAdminConfig, useGeneralConfigWrites } from "@norish/shared-react/admin";
+
 import { UnsavedChangesChip } from "./unsaved-changes-chip";
 
 export default function GeneralCard() {
   const t = useTranslations("settings.admin.general");
   const tActions = useTranslations("common.actions");
-  const tErrors = useTranslations("common.errors");
-  const tToasts = useTranslations("settings.admin.toasts");
-  const { registrationEnabled, updateRegistration, localeConfig, updateLocaleConfig, isLoading } =
-    useAdminSettingsContext();
+  const registrationEnabled = useAdminConfig(ServerConfigKeys.REGISTRATION_ENABLED);
+  const localeConfig = useAdminConfig(ServerConfigKeys.LOCALE_CONFIG);
+  const { setRegistration, saveLocales } = useGeneralConfigWrites();
 
   // Local state for locale config form
   const [enabledLocales, setEnabledLocales] = useState<string[]>([]);
@@ -43,7 +43,7 @@ export default function GeneralCard() {
     }
   }
   const handleRegistrationToggle = async (checked: boolean) => {
-    await updateRegistration(checked);
+    await setRegistration(checked);
   };
   const handleEnabledLocalesChange = (values: string[]) => {
     // Ensure at least one locale is enabled
@@ -70,26 +70,7 @@ export default function GeneralCard() {
       });
       return;
     }
-    await whileSaving(() =>
-      updateLocaleConfig({
-        defaultLocale,
-        enabledLocales,
-      }).then((result) => {
-        if (result.success) {
-          toast(tToasts("localesSaved"), {
-            variant: "success",
-          });
-        } else {
-          showSafeErrorToast({
-            title: tToasts("localesError"),
-            description: tErrors("technicalDetails"),
-            color: "danger",
-            error: result.error,
-            context: "admin-general:save-locales",
-          });
-        }
-      })
-    );
+    await whileSaving(() => saveLocales({ defaultLocale, enabledLocales }));
   };
 
   // Check if locale config has changed from server state
@@ -121,7 +102,6 @@ export default function GeneralCard() {
       {/* Registration Toggle */}
       <SwitchRow description={t("registrationDescription")} title={t("allowRegistration")}>
         <SettingsSwitch
-          isDisabled={isLoading}
           isSelected={registrationEnabled ?? false}
           onValueChange={handleRegistrationToggle}
         />
@@ -138,7 +118,7 @@ export default function GeneralCard() {
         <Select
           aria-label={t("locales")}
           className="w-full"
-          isDisabled={isLoading || isSaving}
+          isDisabled={isSaving}
           placeholder={t("locales")}
           value={enabledLocales}
           selectionMode="multiple"
@@ -185,7 +165,7 @@ export default function GeneralCard() {
           aria-label={t("defaultLocale")}
           variant="secondary"
           className="w-full"
-          isDisabled={isLoading || isSaving}
+          isDisabled={isSaving}
           placeholder={t("defaultLocale")}
           value={defaultLocale || null}
           onChange={(selected) => {
@@ -214,7 +194,7 @@ export default function GeneralCard() {
       <ActionButtonGroup>
         <ActionButton
           action="save"
-          isDisabled={isLoading || !hasLocaleChanges}
+          isDisabled={!hasLocaleChanges}
           isPending={isSaving}
           onPress={handleSaveLocales}
         >

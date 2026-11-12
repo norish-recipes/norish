@@ -7,8 +7,7 @@ import { useTranslations } from "next-intl";
 
 import type { PromptsConfig } from "@norish/config/zod/server-config";
 import { ServerConfigKeys } from "@norish/config/zod/server-config";
-
-import { useAdminSettingsContext } from "../context";
+import { useAdminConfig, usePromptsWrite, useRestoreDefault } from "@norish/shared-react/admin";
 
 /**
  * Every administrator-editable prompt, one entry each. Adding a prompt is one
@@ -49,14 +48,16 @@ interface PromptsFormProps {
 export default function PromptsForm({ onDirtyChange }: PromptsFormProps) {
   const t = useTranslations("settings.admin.promptsConfig");
   const tActions = useTranslations("common.actions");
-  const { prompts, updatePrompts, restoreDefaultConfig } = useAdminSettingsContext();
+  const prompts = useAdminConfig(ServerConfigKeys.PROMPTS);
+  const updatePrompts = usePromptsWrite();
+  const restoreDefaultConfig = useRestoreDefault();
   const [values, setValues] = useState<PromptValues>(EMPTY_VALUES);
   const [saving, setSaving] = useState(false);
   const [restoring, setRestoring] = useState(false);
   // Starts unset so prompts present on the first render seed the form too.
   const [prevPrompts, setPrevPrompts] = useState<typeof prompts>();
 
-  // Initialize from context. A prompt added after the stored config was
+  // A prompt added after the stored config was
   // written has no stored value; the loader falls back to the shipped file
   // until an administrator saves one.
   if (prompts !== prevPrompts) {

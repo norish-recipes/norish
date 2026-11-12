@@ -58,15 +58,20 @@ export function useGeneralConfigWrites() {
   return { setRegistration: registration.mutateAsync, saveLocales: locales.mutateAsync };
 }
 
-/** Password sign-in and the OAuth providers; a refused removal says so. */
+export function usePasswordAuthWrite() {
+  const trpc = useTRPC();
+  const reread = useReread();
+
+  return useMutation(trpc.admin.updatePasswordAuth.mutationOptions({ onSuccess: reread() }))
+    .mutateAsync;
+}
+
+/** The OAuth providers' saves, removal and test; a refused removal says so. */
 export function useAuthProviderWrites() {
   const trpc = useTRPC();
   const reread = useReread();
   const { showError } = usePlatform();
 
-  const passwordAuth = useMutation(
-    trpc.admin.updatePasswordAuth.mutationOptions({ onSuccess: reread() })
-  );
   const oidc = useMutation(trpc.admin.auth.updateOIDC.mutationOptions({ onSuccess: reread() }));
   const github = useMutation(trpc.admin.auth.updateGitHub.mutationOptions({ onSuccess: reread() }));
   const google = useMutation(trpc.admin.auth.updateGoogle.mutationOptions({ onSuccess: reread() }));
@@ -81,7 +86,6 @@ export function useAuthProviderWrites() {
   const test = useMutation(trpc.admin.auth.testProvider.mutationOptions());
 
   return {
-    setPasswordAuth: passwordAuth.mutateAsync,
     saveOIDC: oidc.mutateAsync,
     saveGitHub: github.mutateAsync,
     saveGoogle: google.mutateAsync,

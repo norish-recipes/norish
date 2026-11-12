@@ -1,18 +1,17 @@
 "use client";
 
-import { useCallback, useEffect, useMemo, useState } from "react";
+import { useEffect, useState } from "react";
 import SecretInput from "@/components/shared/secret-input";
 import { usePending } from "@/hooks/use-pending";
-import { showSafeErrorToast } from "@/lib/ui/safe-error-toast";
 import { Input, Label, TextField, useOverlayState } from "@heroui/react";
 import { useTranslations } from "next-intl";
 
 import { ServerConfigKeys } from "@norish/config/zod/server-config";
+import { useAuthProviderWrites, useConfigSecret } from "@norish/shared-react/admin";
 import { useDirtyState } from "@norish/shared-react/hooks";
 
 import type { ClaimMappingValues } from "./oidc-claim-mapping";
 import type { TestResult } from "./types";
-import { useAdminSettingsContext } from "../../context";
 import { DeleteProviderModal } from "./delete-provider-modal";
 import { OIDCClaimMapping } from "./oidc-claim-mapping";
 import { ProviderActions } from "./provider-actions";
@@ -25,9 +24,8 @@ interface OIDCProviderFormProps {
 
 export function OIDCProviderForm({ config, onDirtyChange }: OIDCProviderFormProps) {
   const tOidc = useTranslations("settings.admin.authProviders.oidc.fields");
-  const tErrors = useTranslations("common.errors");
-  const { updateAuthProviderOIDC, deleteAuthProvider, testAuthProvider, fetchConfigSecret } =
-    useAdminSettingsContext();
+  const { saveOIDC, remove, test } = useAuthProviderWrites();
+  const fetchConfigSecret = useConfigSecret();
 
   // Get existing claim config
   const existingClaimConfig = config?.claimConfig as
@@ -91,7 +89,7 @@ export function OIDCProviderForm({ config, onDirtyChange }: OIDCProviderFormProp
     }),
   });
 
-  const hasChanges = useMemo(() => {
+  const hasChanges = (() => {
     const configName = (config?.name as string) ?? "";
     const configIssuer = (config?.issuer as string) ?? "";
     const configClientId = (config?.clientId as string) ?? "";
@@ -105,16 +103,14 @@ export function OIDCProviderForm({ config, onDirtyChange }: OIDCProviderFormProp
       clientSecret.trim() !== "" ||
       hasClaimMappingChanges
     );
-  }, [config, name, issuer, clientId, clientSecret, wellknown, hasClaimMappingChanges]);
+  })();
 
   useEffect(() => {
     onDirtyChange?.(hasChanges);
   }, [hasChanges, onDirtyChange]);
 
-  const handleRevealSecret = useCallback(
-    (field: string) => () => fetchConfigSecret(ServerConfigKeys.AUTH_PROVIDER_OIDC, field),
-    [fetchConfigSecret]
-  );
+  const handleRevealSecret = (field: string) => () =>
+    fetchConfigSecret(ServerConfigKeys.AUTH_PROVIDER_OIDC, field);
 
   const handleTest = async () => {
     setTestResult(null);
@@ -126,7 +122,7 @@ export function OIDCProviderForm({ config, onDirtyChange }: OIDCProviderFormProp
       wellknown: wellknown || undefined,
     };
 
-    await whileTesting(() => testAuthProvider("oidc", testValues).then(setTestResult));
+    await whileTesting(() => test("oidc", testValues).then(setTestResult));
   };
 
   const handleSave = async () => {
@@ -137,7 +133,7 @@ export function OIDCProviderForm({ config, onDirtyChange }: OIDCProviderFormProp
       .filter((s) => s.length > 0);
 
     await whileSaving(() =>
-      updateAuthProviderOIDC({
+      saveOIDC({
         name,
         issuer,
         clientId,
@@ -157,21 +153,11 @@ export function OIDCProviderForm({ config, onDirtyChange }: OIDCProviderFormProp
   };
 
   const handleDelete = async () => {
-    const result = await deleteAuthProvider("oidc");
-
-    if (!result.success) {
-      deleteModal.close();
-      showSafeErrorToast({
-        title: tErrors("operationFailed"),
-        description: tErrors("technicalDetails"),
-        error: result.error,
-        context: "admin-auth-provider:delete:oidc",
-      });
-
-      return;
-    }
+    const removed = await remove("oidc");
 
     deleteModal.close();
+    if (!removed) return;
+
     // Reset all fields
     setName("");
     setIssuer("");

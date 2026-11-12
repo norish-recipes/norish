@@ -10,14 +10,8 @@ import { Modal, Spinner } from "@heroui/react";
 import { useTranslations } from "next-intl";
 import { twMerge } from "tailwind-merge";
 
-import { useAdminSettingsContext } from "../context";
-
-/** A run's counts, read again on every open and watched while it runs, so the button comes back. */
-export const watchRun = {
-  refetchOnMount: "always" as const,
-  refetchInterval: (query: { state: { data?: { running: boolean } } }) =>
-    query.state.data?.running ? 5_000 : false,
-};
+import { ServerConfigKeys } from "@norish/config/zod/server-config";
+import { useAdminConfig } from "@norish/shared-react/admin";
 
 /**
  * An administrator's AI run over the catalogue (Clean up catalogue, Fill gaps): a setting row's
@@ -56,14 +50,14 @@ export function CatalogueAIRun({
   children: ReactNode;
 }) {
   const tActions = useTranslations("common.actions");
-  const { aiConfig } = useAdminSettingsContext();
+  const aiEnabled = useAdminConfig(ServerConfigKeys.AI_CONFIG, (ai) => ai?.enabled ?? false);
 
   return (
     <SettingRow description={description} title={title}>
       <AIButton
         fullWidth
         data-testid={testId}
-        isDisabled={!aiConfig?.enabled || !counted || running}
+        isDisabled={!aiEnabled || !counted || running}
         variant="tertiary"
         onPress={() => onOpenChange(true)}
       >
