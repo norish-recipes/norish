@@ -1,5 +1,6 @@
 import type { ReactNode } from "react";
 import { Platform, View } from "react-native";
+import { reloadAuthTransport } from "@/lib/auth/auth-session-sync";
 import { offlineEngine } from "@/lib/offline/engine";
 import { storage } from "@/lib/storage/mmkv";
 import { useRouter } from "expo-router";
@@ -87,8 +88,8 @@ export function MobilePlatformProvider({
     deviceKind,
     session,
     endSession,
-    // The TrpcProvider re-key and the route guard take the signed-out reader to (auth).
-    leave: () => {},
+    // After the clear, so screens the signed-out route guard mounted earlier rebuild on the empty cache.
+    leave: reloadAuthTransport,
     offlineEngine,
   };
 
