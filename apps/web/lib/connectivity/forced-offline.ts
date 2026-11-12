@@ -10,10 +10,10 @@
  * connectivity provider; in production the flag is always absent, so the posture
  * collapses back to the machine state.
  *
- * {@link OFFLINE_FORCED_AVAILABLE} gates every path on `NODE_ENV`, the same
- * build-time strip `apps/web/lib/logger.ts` uses, so no forced-Offline code or
- * UI ships to users: the constant folds to `false` in a production build and
- * dead-code elimination removes the flag read, the toggle row and the dev link.
+ * {@link OFFLINE_FORCED_AVAILABLE} gates every path on `NODE_ENV`, a build-time
+ * strip, so no forced-Offline code or UI ships to users: the constant folds to
+ * `false` in a production build and dead-code elimination removes the flag read,
+ * the toggle row and the dev link.
  */
 
 const OFFLINE_FORCED_STORAGE_KEY = "norish.dev.offline-forced";
