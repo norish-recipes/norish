@@ -125,7 +125,7 @@ function LocaleScope({
   children: React.ReactNode;
 }) {
   return (
-    <MobileLocaleContext.Provider value={value}>
+    <MobileLocaleContext value={value}>
       <IntlProvider
         defaultLocale={DEFAULT_LOCALE}
         locale={value.locale}
@@ -133,7 +133,7 @@ function LocaleScope({
       >
         {children}
       </IntlProvider>
-    </MobileLocaleContext.Provider>
+    </MobileLocaleContext>
   );
 }
 
@@ -194,7 +194,7 @@ export function MobileIntlProvider({
   };
 
   return (
-    <LocaleScope value={value} messages={messages}>
+    <LocaleScope messages={messages} value={value}>
       {children}
     </LocaleScope>
   );
@@ -222,7 +222,7 @@ export function MobileIntlFallbackProvider({ children }: { children: React.React
   };
 
   return (
-    <LocaleScope value={value} messages={messages}>
+    <LocaleScope messages={messages} value={value}>
       {children}
     </LocaleScope>
   );
