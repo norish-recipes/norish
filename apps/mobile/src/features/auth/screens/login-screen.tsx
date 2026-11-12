@@ -73,7 +73,8 @@ function SignInMethods({ authClient, redirectTo }: { authClient: AuthClient; red
     return <Spinner className="self-center" />;
   }
 
-  if (config.error) {
+  // A failed background refetch leaves loaded methods up, so the form keeps its state.
+  if (config.error && !config.hasData) {
     return (
       <LoginStatus
         action={{
