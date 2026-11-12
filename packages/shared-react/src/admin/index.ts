@@ -1,4 +1,4 @@
-export type { AdminConfigKey, AdminConfigs, WriteResult } from "./types";
+export type { AdminConfigKey, AdminConfigs, AuthProvider, WriteResult } from "./types";
 export type { JobListFilter, JobRef } from "./use-job-queue";
 
 export { useAdminConfig, useAdminConfigsLoading, useConfigSecret } from "./use-admin-config";

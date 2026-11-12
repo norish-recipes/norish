@@ -1,29 +1,44 @@
-import type { QueryKey } from "@tanstack/react-query";
+import type { QueryKey, UseMutationOptions } from "@tanstack/react-query";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 
 import type { ServerConfigKey } from "@norish/config/zod/server-config";
 import { ServerConfigKeys } from "@norish/config/zod/server-config";
 
-import type { WriteResult } from "./types";
-import { wentThrough } from "../offline/settled";
+import type { AuthProvider, WriteResult } from "./types";
+import { accepted, wentThrough } from "../offline/settled";
 import { usePlatform } from "../platform/platform";
 import { useTRPC } from "../trpc";
 
-type AuthProvider = "oidc" | "github" | "google";
-
-/** An `onSuccess` that, once the server took the write, reads the admin config and `also` again. */
+/** Reads the admin config and `also` again, once the server took the write. */
 function useReread() {
   const trpc = useTRPC();
   const queryClient = useQueryClient();
 
-  return (...also: QueryKey[]) =>
-    (result: WriteResult) => {
-      if (!result.success) return;
+  return (result: WriteResult, also: QueryKey[] = []) => {
+    if (!result.success) return;
 
-      for (const queryKey of [trpc.admin.getAllConfigs.queryKey(), ...also]) {
-        void queryClient.invalidateQueries({ queryKey });
-      }
-    };
+    for (const queryKey of [trpc.admin.getAllConfigs.queryKey(), ...also]) {
+      void queryClient.invalidateQueries({ queryKey });
+    }
+  };
+}
+
+/** A procedure's config write, rereading the admin config and `also` once the server took it. */
+function useConfigWrite<TData extends WriteResult, TError, TVariables>(
+  options: UseMutationOptions<TData, TError, TVariables>,
+  also: QueryKey[] = []
+) {
+  const reread = useReread();
+
+  return useMutation({ ...options, onSuccess: (result) => reread(result, also) }).mutateAsync;
+}
+
+/** A config's save and its endpoint test; the test rereads nothing. */
+function useSaveAndTest<TData extends WriteResult, TError, TVariables, TTested, TTestError, TTest>(
+  save: UseMutationOptions<TData, TError, TVariables>,
+  test: UseMutationOptions<TTested, TTestError, TTest>
+) {
+  return { save: useConfigWrite(save), test: useMutation(test).mutateAsync };
 }
 
 /** Registration and the languages users choose from; the language save toasts how it went. */
@@ -32,13 +47,11 @@ export function useGeneralConfigWrites() {
   const reread = useReread();
   const { toast, showError } = usePlatform();
 
-  const registration = useMutation(
-    trpc.admin.updateRegistration.mutationOptions({ onSuccess: reread() })
-  );
+  const setRegistration = useConfigWrite(trpc.admin.updateRegistration.mutationOptions());
   const locales = useMutation(
     trpc.admin.updateLocaleConfig.mutationOptions({
       onSuccess: (result) => {
-        reread()(result);
+        reread(result);
         if (result.success) {
           toast.show({
             severity: "success",
@@ -55,15 +68,13 @@ export function useGeneralConfigWrites() {
     })
   );
 
-  return { setRegistration: registration.mutateAsync, saveLocales: locales.mutateAsync };
+  return { setRegistration, saveLocales: locales.mutateAsync };
 }
 
 export function usePasswordAuthWrite() {
   const trpc = useTRPC();
-  const reread = useReread();
 
-  return useMutation(trpc.admin.updatePasswordAuth.mutationOptions({ onSuccess: reread() }))
-    .mutateAsync;
+  return useConfigWrite(trpc.admin.updatePasswordAuth.mutationOptions());
 }
 
 /** The OAuth providers' saves, removal and test; a refused removal says so. */
@@ -72,13 +83,13 @@ export function useAuthProviderWrites() {
   const reread = useReread();
   const { showError } = usePlatform();
 
-  const oidc = useMutation(trpc.admin.auth.updateOIDC.mutationOptions({ onSuccess: reread() }));
-  const github = useMutation(trpc.admin.auth.updateGitHub.mutationOptions({ onSuccess: reread() }));
-  const google = useMutation(trpc.admin.auth.updateGoogle.mutationOptions({ onSuccess: reread() }));
+  const saveOIDC = useConfigWrite(trpc.admin.auth.updateOIDC.mutationOptions());
+  const saveGitHub = useConfigWrite(trpc.admin.auth.updateGitHub.mutationOptions());
+  const saveGoogle = useConfigWrite(trpc.admin.auth.updateGoogle.mutationOptions());
   const remove = useMutation(
     trpc.admin.auth.deleteProvider.mutationOptions({
       onSuccess: (result, type) => {
-        reread()(result);
+        reread(result);
         if (!result.success) showError(result.error, `admin-auth-provider:delete:${type}`);
       },
     })
@@ -86,11 +97,11 @@ export function useAuthProviderWrites() {
   const test = useMutation(trpc.admin.auth.testProvider.mutationOptions());
 
   return {
-    saveOIDC: oidc.mutateAsync,
-    saveGitHub: github.mutateAsync,
-    saveGoogle: google.mutateAsync,
+    saveOIDC,
+    saveGitHub,
+    saveGoogle,
     /** Resolves whether the server removed it. */
-    remove: (type: AuthProvider) => remove.mutateAsync(type).then((result) => result.success),
+    remove: (type: AuthProvider) => accepted(remove.mutateAsync(type)),
     test: (type: AuthProvider, config: Record<string, unknown>) =>
       test.mutateAsync({ type, config }),
   };
@@ -99,40 +110,26 @@ export function useAuthProviderWrites() {
 /** The content detection configs; each also rereads the public config reads built from it. */
 export function useContentConfigWrites() {
   const trpc = useTRPC();
-  const reread = useReread();
   const timersEnabled = trpc.config.timersEnabled.queryKey();
 
-  const indicators = useMutation(
-    trpc.admin.content.updateContentIndicators.mutationOptions({
-      onSuccess: reread(timersEnabled),
-    })
-  );
-  // Every page that reads a name reads it by the units map too.
-  const units = useMutation(
-    trpc.admin.content.updateUnits.mutationOptions({
-      onSuccess: reread(trpc.config.units.queryKey()),
-    })
-  );
-  const ingredientWords = useMutation(
-    trpc.admin.content.updateIngredientWords.mutationOptions({
-      onSuccess: reread(trpc.config.ingredientWords.queryKey()),
-    })
-  );
-  const recurrence = useMutation(
-    trpc.admin.content.updateRecurrenceConfig.mutationOptions({ onSuccess: reread() })
-  );
-  const timerKeywords = useMutation(
-    trpc.admin.content.updateTimerKeywords.mutationOptions({
-      onSuccess: reread(trpc.config.timerKeywords.queryKey(), timersEnabled),
-    })
-  );
-
   return {
-    saveContentIndicators: indicators.mutateAsync,
-    saveUnits: units.mutateAsync,
-    saveIngredientWords: ingredientWords.mutateAsync,
-    saveRecurrence: recurrence.mutateAsync,
-    saveTimerKeywords: timerKeywords.mutateAsync,
+    saveContentIndicators: useConfigWrite(
+      trpc.admin.content.updateContentIndicators.mutationOptions(),
+      [timersEnabled]
+    ),
+    // Every page that reads a name reads it by the units map too.
+    saveUnits: useConfigWrite(trpc.admin.content.updateUnits.mutationOptions(), [
+      trpc.config.units.queryKey(),
+    ]),
+    saveIngredientWords: useConfigWrite(
+      trpc.admin.content.updateIngredientWords.mutationOptions(),
+      [trpc.config.ingredientWords.queryKey()]
+    ),
+    saveRecurrence: useConfigWrite(trpc.admin.content.updateRecurrenceConfig.mutationOptions()),
+    saveTimerKeywords: useConfigWrite(trpc.admin.content.updateTimerKeywords.mutationOptions(), [
+      trpc.config.timerKeywords.queryKey(),
+      timersEnabled,
+    ]),
   };
 }
 
@@ -143,12 +140,12 @@ export function useRestoreDefault() {
   const { mutateAsync } = useMutation(
     trpc.admin.restoreDefault.mutationOptions({
       onSuccess: (result, key) =>
-        reread(
+        reread(result, [
           ...(key === ServerConfigKeys.UNITS ? [trpc.config.units.queryKey()] : []),
           ...(key === ServerConfigKeys.INGREDIENT_WORDS
             ? [trpc.config.ingredientWords.queryKey()]
-            : [])
-        )(result),
+            : []),
+        ]),
     })
   );
 
@@ -157,68 +154,55 @@ export function useRestoreDefault() {
 
 export function useAIConfigWrite() {
   const trpc = useTRPC();
-  const reread = useReread();
-  const save = useMutation(trpc.admin.updateAIConfig.mutationOptions({ onSuccess: reread() }));
-  const test = useMutation(trpc.admin.testAIEndpoint.mutationOptions());
 
-  return { save: save.mutateAsync, test: test.mutateAsync };
+  return useSaveAndTest(
+    trpc.admin.updateAIConfig.mutationOptions(),
+    trpc.admin.testAIEndpoint.mutationOptions()
+  );
 }
 
 export function useVideoConfigWrite() {
   const trpc = useTRPC();
-  const reread = useReread();
 
-  return useMutation(trpc.admin.updateVideoConfig.mutationOptions({ onSuccess: reread() }))
-    .mutateAsync;
+  return useConfigWrite(trpc.admin.updateVideoConfig.mutationOptions());
 }
 
 export function useImageGenerationConfigWrite() {
   const trpc = useTRPC();
-  const reread = useReread();
 
-  return useMutation(
-    trpc.admin.updateImageGenerationConfig.mutationOptions({ onSuccess: reread() })
-  ).mutateAsync;
+  return useConfigWrite(trpc.admin.updateImageGenerationConfig.mutationOptions());
 }
 
 export function useDecisionConfigWrite() {
   const trpc = useTRPC();
-  const reread = useReread();
-  const save = useMutation(
-    trpc.admin.updateDecisionConfig.mutationOptions({ onSuccess: reread() })
-  );
-  const test = useMutation(trpc.admin.testDecisionEndpoint.mutationOptions());
 
-  return { save: save.mutateAsync, test: test.mutateAsync };
+  return useSaveAndTest(
+    trpc.admin.updateDecisionConfig.mutationOptions(),
+    trpc.admin.testDecisionEndpoint.mutationOptions()
+  );
 }
 
 export function usePromptsWrite() {
   const trpc = useTRPC();
-  const reread = useReread();
 
-  return useMutation(trpc.admin.content.updatePrompts.mutationOptions({ onSuccess: reread() }))
-    .mutateAsync;
+  return useConfigWrite(trpc.admin.content.updatePrompts.mutationOptions());
 }
 
 export function usePermissionPolicyWrites() {
   const trpc = useTRPC();
-  const reread = useReread();
-  const recipes = useMutation(
-    trpc.admin.updateRecipePermissionPolicy.mutationOptions({ onSuccess: reread() })
-  );
-  const ingredients = useMutation(
-    trpc.admin.updateIngredientPermissionPolicy.mutationOptions({ onSuccess: reread() })
-  );
 
-  return { saveRecipePolicy: recipes.mutateAsync, saveIngredientPolicy: ingredients.mutateAsync };
+  return {
+    saveRecipePolicy: useConfigWrite(trpc.admin.updateRecipePermissionPolicy.mutationOptions()),
+    saveIngredientPolicy: useConfigWrite(
+      trpc.admin.updateIngredientPermissionPolicy.mutationOptions()
+    ),
+  };
 }
 
 export function useSchedulerMonthsWrite() {
   const trpc = useTRPC();
-  const reread = useReread();
 
-  return useMutation(trpc.admin.updateSchedulerMonths.mutationOptions({ onSuccess: reread() }))
-    .mutateAsync;
+  return useConfigWrite(trpc.admin.updateSchedulerMonths.mutationOptions());
 }
 
 /** Resolves whether the server agreed to restart. */

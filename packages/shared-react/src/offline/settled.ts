@@ -18,3 +18,7 @@ export const answered = <T>(write: Promise<T>): Promise<T | null> =>
     (answer) => answer,
     () => null
   );
+
+/** Resolves whether the server took a write that answers `{ success }`; its handlers told the reader why not. */
+export const accepted = (write: Promise<{ success: boolean }>): Promise<boolean> =>
+  write.then((answer) => answer.success);
