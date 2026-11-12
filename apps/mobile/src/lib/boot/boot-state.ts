@@ -96,14 +96,23 @@ export function stepLaunchClock(clock: number, elapsed: number | null, stop: num
   return Math.min(clock + Math.min(elapsed ?? 0, MAX_LAUNCH_STEP), stop);
 }
 
-/** At launch: a too old server goes to Update your server, unless the saved address changed since; anything else carries on. */
+/**
+ * At launch: a too old server goes to Update your server once the launch has played out, unless
+ * the saved address changed since; anything else carries on.
+ */
 export function resolveLaunchVersionCheck(
   check: ServerAddressCheck,
-  saved: string
-): { screen: "update-server"; address: string; version?: string } | { screen: "continue" } {
-  return check.outcome === "too-old" && check.address === saved
+  saved: string,
+  launchFinished: boolean
+):
+  | { screen: "update-server"; address: string; version?: string }
+  | { screen: "wait" }
+  | { screen: "continue" } {
+  if (check.outcome !== "too-old" || check.address !== saved) return { screen: "continue" };
+
+  return launchFinished
     ? { screen: "update-server", address: check.address, version: check.version }
-    : { screen: "continue" };
+    : { screen: "wait" };
 }
 
 /** On a foreground return while Update your server shows: only a new enough server moves on. */
