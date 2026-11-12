@@ -39,10 +39,14 @@ export function subscribeAuthClientReset(listener: () => void): () => void {
   };
 }
 
+/** Wipes the stored session and drops the client; a failed wipe still drops it, then rethrows. */
 export async function resetAuthClientStorage(): Promise<void> {
-  await clearAuthStorage();
-  _client = null;
-  _currentBaseUrl = null;
+  try {
+    await clearAuthStorage();
+  } finally {
+    _client = null;
+    _currentBaseUrl = null;
 
-  for (const listener of resetListeners) listener();
+    for (const listener of resetListeners) listener();
+  }
 }
