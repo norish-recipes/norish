@@ -166,6 +166,8 @@ export function useDeleteAccountMutation() {
 
   const { mutateAsync } = useMutation(
     trpc.user.deleteAccount.mutationOptions({
+      // Never queued: a delete made Offline would otherwise replay later, unseen.
+      trpc: { context: { skipOutboxCapture: true } },
       onSuccess: (answer) => {
         if (!answer.success) showRefusal(platform.showError, answer, context);
       },
