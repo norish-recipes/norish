@@ -32,10 +32,8 @@ export function AutoSignIn({ provider, callbackUrl }: AutoSignInProps) {
     <div className="flex min-h-full flex-col items-center justify-center">
       <Card className="w-full max-w-sm overflow-hidden">
         <Card.Content className="flex flex-col items-center gap-6 p-8">
-          {/* Logo */}
           <BrandLogo priority height={40} width={140} />
 
-          {/* Provider indicator */}
           <div className="flex flex-col items-center gap-4 py-4">
             <div className="relative">
               <div className="bg-accent/10 absolute inset-0 animate-ping rounded-full" />

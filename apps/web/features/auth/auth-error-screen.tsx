@@ -18,7 +18,6 @@ import { AuthFrame } from "./components/auth-frame";
 
 const log = createClientLogger("AuthError");
 
-// List of known error codes for type-safe translation lookups
 const ERROR_CODES = [
   "state_mismatch",
   "invalid_state",
@@ -65,7 +64,6 @@ function AuthErrorContent() {
     "Auth error"
   );
 
-  // Get error info from translations
   const errorKey = error && isKnownErrorCode(error) ? error : "default";
   const title = t(`${errorKey}.title`);
   const description = t(`${errorKey}.description`);

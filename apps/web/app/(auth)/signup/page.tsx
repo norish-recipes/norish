@@ -14,7 +14,6 @@ export default async function SignupPage({ searchParams }: PageProps<"/signup">)
     isRegistrationEnabled(),
   ]);
 
-  // Redirect to login if password auth or registration is disabled
   if (!passwordEnabled || !registrationEnabled) {
     redirect("/login");
   }

@@ -17,14 +17,12 @@ interface AuthCardProps {
 export function AuthCard({ title, subtitle, children, footer }: AuthCardProps) {
   return (
     <AuthFrame footer={footer}>
-      {/* Language selector - top right */}
       <div className="absolute top-2 right-2">
         <AuthLanguageSelector />
       </div>
 
-      {/* Header: on phones the wordmark above the card is hidden (AuthFrame),
-          so the logo stands in for the heading; md+ keeps the text heading.
-          The h1 stays in the tree for assistive tech either way. */}
+      {/* Phones hide AuthFrame's wordmark, so the logo stands in for the heading;
+          the h1 stays for assistive tech, visible from md. */}
       <div className="flex flex-col items-center gap-2 text-center">
         <BrandLogo
           priority

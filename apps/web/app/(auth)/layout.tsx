@@ -10,9 +10,8 @@ export default async function AuthLayout({ children }: { children: React.ReactNo
         className="bg-background relative flex items-center justify-center overflow-hidden p-4 [view-transition-name:auth-screen]"
         style={{ minHeight: "calc(100vh - env(safe-area-inset-top))" }}
       >
-        {/* marks.css gates its draw and turn rules on `.js`, so a reader
-            without scripting gets finished, still drawings. Set it before
-            first paint so the strokes can draw themselves once on arrival. */}
+        {/* marks.css gates its draw on `.js` (no scripting = finished drawings); set before
+            first paint so the strokes draw once on arrival. */}
         <script
           // A constant, and React escapes a script's text children, so it goes in as raw HTML.
           // eslint-disable-next-line @eslint-react/dom-no-dangerously-set-innerhtml

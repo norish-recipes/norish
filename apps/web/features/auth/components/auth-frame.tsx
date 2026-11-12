@@ -18,9 +18,7 @@ interface AuthFrameProps {
 export function AuthFrame({ children, contentClassName, footer }: AuthFrameProps) {
   return (
     <div className="flex min-h-full w-full flex-col items-center justify-center md:max-w-md">
-      {/* The wordmark stands well clear of the old inline size without
-          swallowing the page. On phones it would push the card into a scroll,
-          so it stands down below the usual md boundary. */}
+      {/* Hidden below md: on phones the wordmark would push the card into a scroll. */}
       <BrandLogo
         priority
         className="mb-6 hidden w-full max-w-72 [view-transition-name:brand-logo] md:block"

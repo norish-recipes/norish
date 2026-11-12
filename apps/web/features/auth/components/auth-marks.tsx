@@ -4,19 +4,14 @@ import { useEffect, useState } from "react";
 
 import { Mark } from "@norish/ui/mark";
 
-/**
- * The five ingredient drawings in the auth pages' margins. They draw once on
- * arrival: mounted undrawn, then shown — an auth page does not scroll, so
- * there is no reveal to couple them to. marks.css stands the animation down
- * under reduced motion, and nothing writes `--drift`, so they hold still.
- */
+/** The auth pages' margin drawings: mounted undrawn, then shown, so they draw once on arrival.
+ * No scroll reveal (auth pages don't scroll); marks.css holds them still under reduced motion. */
 export function AuthMarks() {
   const [shown, setShown] = useState(false);
 
   useEffect(() => {
-    // The layout's inline script covers full loads before first paint; a
-    // client-side navigation re-renders that script without executing it, so
-    // set the gate here too. Idempotent either way.
+    // A client-side navigation re-renders the layout's inline script without running it,
+    // so set the `.js` gate here too.
     document.documentElement.classList.add("js");
     // eslint-disable-next-line @eslint-react/set-state-in-effect -- the stroke transition needs the undrawn frame committed first; the second render is the draw
     setShown(true);
