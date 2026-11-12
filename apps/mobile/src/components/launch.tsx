@@ -15,7 +15,8 @@ import Animated, {
 } from "react-native-reanimated";
 import { scheduleOnRN } from "react-native-worklets";
 import { Brand, useSplashBrandTop } from "@/components/brand";
-import { resolveLaunchMotion, stepLaunchClock } from "@/lib/boot/boot-state";
+import { resolveLaunchMotion, resolveSloganStart, stepLaunchClock } from "@/lib/boot/boot-state";
+import { useMobileLocaleSettings } from "@/lib/i18n/mobile-i18n-context";
 import * as SplashScreen from "expo-splash-screen";
 import { useThemeColor } from "heroui-native";
 
@@ -35,6 +36,8 @@ const riseEasing = Easing.bezierFn(0.2, 0.7, 0.3, 1);
 type Launch = {
   /** Runs the timeline once; it rests at LAUNCH_END from then on. */
   clock: SharedValue<number>;
+  /** Where on the clock the slogan's fade starts, once its messages are in. */
+  sloganStart: SharedValue<number | null>;
   done: boolean;
   finish: () => void;
   /** How the splash leaves, decided once the hold ends. */
@@ -50,13 +53,23 @@ const LaunchContext = createContext<Launch | null>(null);
 /** Holds the launch's one timeline above the boot gate's branches, so it plays once. */
 export function LaunchProvider({ children }: { children: ReactNode }) {
   const clock = useSharedValue(0);
+  const sloganStart = useSharedValue<number | null>(null);
   const [done, setDone] = useState(false);
   const [target, setTarget] = useState<number | null>(null);
   const [motion, setMotion] = useState<LaunchHandoff | null>(null);
 
   return (
     <LaunchContext
-      value={{ clock, done, finish: () => setDone(true), motion, setMotion, target, setTarget }}
+      value={{
+        clock,
+        sloganStart,
+        done,
+        finish: () => setDone(true),
+        motion,
+        setMotion,
+        target,
+        setTarget,
+      }}
     >
       {children}
     </LaunchContext>
@@ -85,8 +98,10 @@ export function LaunchSplash({ handoff }: { handoff: LaunchHandoff | null }) {
 }
 
 function LaunchOverlay({ handoff, launch }: { handoff: LaunchHandoff | null; launch: Launch }) {
-  const { clock, finish, motion, setMotion, target } = launch;
+  const { clock, sloganStart, finish, motion, setMotion, target } = launch;
   const reduceMotion = useReducedMotion();
+  // The device's messages (and, with a server, its enabled locales) have loaded.
+  const messagesReady = !useMobileLocaleSettings().isLoading;
   const [background] = useThemeColor(["background"] as const);
   // A remount (the tRPC provider re-keys on sign-in) picks the clock up where it was.
   const [held, setHeld] = useState(() => clock.get() >= HOLD_END);
@@ -109,6 +124,8 @@ function LaunchOverlay({ handoff, launch }: { handoff: LaunchHandoff | null; lau
     const now = clock.get();
 
     if (now >= stop) return;
+
+    sloganStart.set(resolveSloganStart(sloganStart.get(), now, messagesReady, HOLD_END - SLOGAN_IN));
 
     const next = stepLaunchClock(now, timeSincePreviousFrame, stop);
 
@@ -142,9 +159,11 @@ function LaunchOverlay({ handoff, launch }: { handoff: LaunchHandoff | null; lau
       ],
     };
   });
-  const sloganStyle = useAnimatedStyle(() => ({
-    opacity: progress(clock.get(), 0, SLOGAN_IN),
-  }));
+  const sloganStyle = useAnimatedStyle(() => {
+    const start = sloganStart.get();
+
+    return { opacity: start === null ? 0 : progress(clock.get(), start, start + SLOGAN_IN) };
+  });
 
   // Hidden only once this frame is mounted, or the native splash reveals an empty window;
   // hide only queues the removal on the main queue, so the fade may start a frame early.

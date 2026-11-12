@@ -3,6 +3,7 @@ import {
   resolveBootPhase,
   resolveLaunchMotion,
   resolveSignedOutEntry,
+  resolveSloganStart,
   stepLaunchClock,
 } from "@/lib/boot/boot-state";
 import { describe, expect, it } from "vitest";
@@ -154,6 +155,25 @@ describe("resolveSignedOutEntry", () => {
 
   it("opens on Server address when the reader asked to change the saved one", () => {
     expect(resolveSignedOutEntry("https://norish.example", true)).toBe("server-address");
+  });
+});
+
+describe("resolveSloganStart", () => {
+  it("starts the slogan's fade on the first frame once the device's messages are in", () => {
+    expect(resolveSloganStart(null, 0, true, 500)).toBe(0);
+  });
+
+  it("holds the slogan while the messages load, then starts it where the clock is", () => {
+    expect(resolveSloganStart(null, 200, false, 500)).toBeNull();
+    expect(resolveSloganStart(null, 240, true, 500)).toBe(240);
+  });
+
+  it("starts it by the latest start anyway, so it is in by the hold's end", () => {
+    expect(resolveSloganStart(null, 510, false, 500)).toBe(500);
+  });
+
+  it("keeps a start once made", () => {
+    expect(resolveSloganStart(120, 600, false, 500)).toBe(120);
   });
 });
 

@@ -105,6 +105,23 @@ export function stepLaunchClock(clock: number, elapsed: number | null, stop: num
   return Math.min(clock + Math.min(elapsed ?? 0, MAX_LAUNCH_STEP), stop);
 }
 
+/**
+ * Where the slogan's fade starts on the launch clock: once the device's messages are in, so it
+ * is never seen changing language, and at `latest` anyway, so it is in by the hold's end.
+ */
+export function resolveSloganStart(
+  start: number | null,
+  clock: number,
+  ready: boolean,
+  latest: number
+): number | null {
+  "worklet";
+
+  if (start !== null) return start;
+
+  return ready || clock >= latest ? Math.min(clock, latest) : null;
+}
+
 /** Where the launch is: the splash still opaque, fading or gliding away, or gone. */
 export type LaunchPhase = "covered" | "leaving" | "done";
 
