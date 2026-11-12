@@ -31,10 +31,10 @@ export function LoginScreen({
 }: LoginScreenProps) {
   const t = useTranslations("auth.login");
 
-  useForgetEndedSession(sessionEnded);
+  const forgotten = useForgetEndedSession(sessionEnded);
 
   if (autoSignInProvider) {
-    return <AutoSignIn callbackUrl={callbackUrl} provider={autoSignInProvider} />;
+    return <AutoSignIn callbackUrl={callbackUrl} provider={autoSignInProvider} ready={forgotten} />;
   }
 
   const hasCredential = providers.some((p) => p.type === "credential");

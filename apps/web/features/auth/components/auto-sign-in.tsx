@@ -12,13 +12,15 @@ import { addBasePath } from "@norish/shared/lib/base-path";
 interface AutoSignInProps {
   provider: ProviderInfo;
   callbackUrl: string;
+  /** False until the ended session's offline data is forgotten; the provider page leaves this one. */
+  ready: boolean;
 }
 
-export function AutoSignIn({ provider, callbackUrl }: AutoSignInProps) {
+export function AutoSignIn({ provider, callbackUrl, ready }: AutoSignInProps) {
   const redirectInitiatedRef = useRef(false);
 
   useEffect(() => {
-    if (redirectInitiatedRef.current) return;
+    if (!ready || redirectInitiatedRef.current) return;
     redirectInitiatedRef.current = true;
 
     signIn.social({
@@ -26,7 +28,7 @@ export function AutoSignIn({ provider, callbackUrl }: AutoSignInProps) {
       callbackURL: callbackUrl,
       errorCallbackURL: addBasePath("/auth-error"),
     });
-  }, [provider, callbackUrl]);
+  }, [provider, callbackUrl, ready]);
 
   return (
     <div className="flex min-h-full flex-col items-center justify-center">
