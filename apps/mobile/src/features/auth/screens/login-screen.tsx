@@ -1,14 +1,11 @@
-import type { InlineErrorState } from "@/features/auth/components/inline-error";
 import type { AuthClient } from "@/lib/auth/auth-client";
-import React, { use, useState } from "react";
-import { Pressable, Text, View } from "react-native";
+import React, { use } from "react";
+import { Text, View } from "react-native";
 import { Brand } from "@/components/brand";
-import { AuthField } from "@/features/auth/components/auth-field";
 import { AuthLayout } from "@/features/auth/components/auth-layout";
-import { InlineErrorBlock } from "@/features/auth/components/inline-error";
-import { ProviderIcon } from "@/features/auth/components/provider-icon";
+import { PasswordForm } from "@/features/auth/components/password-form";
+import { ProviderButtons } from "@/features/auth/components/provider-buttons";
 import { ServerChip } from "@/features/auth/components/server-chip";
-import { authFailure } from "@/features/auth/utils/auth-failure";
 import {
   DEFAULT_PROTECTED_ROUTE,
   firstParam,
@@ -17,12 +14,10 @@ import {
 import { resolveSignInMethods } from "@/features/auth/utils/sign-in-methods";
 import { useAuthClient } from "@/lib/auth/use-auth-client";
 import { ServerAddressContext } from "@/lib/network/server-address";
-import Feather from "@expo/vector-icons/Feather";
 import { useLocalSearchParams, useRouter } from "expo-router";
-import { Button, InputGroup, Separator, Spinner, useThemeColor } from "heroui-native";
+import { Button, Separator, Spinner } from "heroui-native";
 import { useIntl } from "react-intl";
 
-import type { ProviderInfo } from "@norish/shared/contracts";
 import { useAuthProvidersQuery } from "@norish/shared-react/config";
 
 /** A title, a line and at most one action, where the form would be. */
@@ -44,172 +39,6 @@ function LoginStatus({
           <Button.Label>{action.label}</Button.Label>
         </Button>
       ) : null}
-    </View>
-  );
-}
-
-function PasswordForm({ authClient, signUp }: { authClient: AuthClient; signUp: boolean }) {
-  const router = useRouter();
-  const intl = useIntl();
-  const [mutedColor, accentForegroundColor] = useThemeColor([
-    "muted",
-    "accent-foreground",
-  ] as const);
-  const [email, setEmail] = useState("");
-  const [password, setPassword] = useState("");
-  const [isPasswordShown, setIsPasswordShown] = useState(false);
-  const [isSubmitting, setIsSubmitting] = useState(false);
-  const [error, setError] = useState<InlineErrorState>(null);
-  const canSubmit = email.trim() !== "" && password !== "" && !isSubmitting;
-
-  const handleSubmit = async () => {
-    if (!canSubmit) return;
-
-    setIsSubmitting(true);
-    setError(null);
-
-    // On success the Stack.Protected guard leaves Sign in once the session lands.
-    const failure = await authFailure(
-      authClient.signIn.email({ email: email.trim(), password }),
-      "auth.errors.default.description"
-    );
-
-    if (failure !== null) setError({ message: intl.formatMessage({ id: failure }) });
-
-    setIsSubmitting(false);
-  };
-
-  return (
-    <View className="gap-3.5">
-      <InlineErrorBlock className="gap-3.5" error={error}>
-        <AuthField
-          isInvalid={error !== null}
-          label={intl.formatMessage({ id: "auth.emailPassword.email" })}
-        >
-          <InputGroup.Input
-            autoCapitalize="none"
-            autoCorrect={false}
-            keyboardType="email-address"
-            placeholder={intl.formatMessage({ id: "auth.emailPassword.emailPlaceholder" })}
-            returnKeyType="next"
-            testID="login-email"
-            textContentType="username"
-            value={email}
-            onChangeText={setEmail}
-          />
-        </AuthField>
-        <AuthField
-          isInvalid={error !== null}
-          label={intl.formatMessage({ id: "auth.emailPassword.password" })}
-        >
-          <InputGroup.Input
-            autoCapitalize="none"
-            autoCorrect={false}
-            placeholder={intl.formatMessage({ id: "auth.emailPassword.passwordPlaceholder" })}
-            returnKeyType="go"
-            secureTextEntry={!isPasswordShown}
-            testID="login-password"
-            textContentType="password"
-            value={password}
-            onChangeText={setPassword}
-            onSubmitEditing={() => void handleSubmit()}
-          />
-          <InputGroup.Suffix>
-            <Pressable
-              accessibilityLabel={intl.formatMessage({
-                id: isPasswordShown
-                  ? "auth.emailPassword.hidePassword"
-                  : "auth.emailPassword.showPassword",
-              })}
-              accessibilityRole="button"
-              className="size-10 items-center justify-center"
-              hitSlop={4}
-              onPress={() => setIsPasswordShown((shown) => !shown)}
-            >
-              <Feather color={mutedColor} name={isPasswordShown ? "eye-off" : "eye"} size={20} />
-            </Pressable>
-          </InputGroup.Suffix>
-        </AuthField>
-      </InlineErrorBlock>
-
-      {signUp ? (
-        <Pressable accessibilityRole="link" onPress={() => router.push("/register")}>
-          <Text className="text-muted mt-0.5 text-center text-[15px] font-normal">
-            {intl.formatMessage({ id: "auth.emailPassword.noAccount" })}{" "}
-            <Text className="text-accent font-semibold">
-              {intl.formatMessage({ id: "auth.emailPassword.signUp" })}
-            </Text>
-          </Text>
-        </Pressable>
-      ) : null}
-
-      <Button
-        className="rounded-full"
-        isDisabled={!canSubmit}
-        size="lg"
-        testID="login-submit"
-        onPress={() => void handleSubmit()}
-      >
-        {isSubmitting ? (
-          <Spinner color={accentForegroundColor} size="sm" />
-        ) : (
-          <Feather color={accentForegroundColor} name="log-in" size={20} />
-        )}
-        <Button.Label>{intl.formatMessage({ id: "auth.emailPassword.signIn" })}</Button.Label>
-      </Button>
-    </View>
-  );
-}
-
-interface ProviderButtonsProps {
-  authClient: AuthClient;
-  providers: ProviderInfo[];
-  redirectTo: string;
-}
-
-function ProviderButtons({ authClient, providers, redirectTo }: ProviderButtonsProps) {
-  const intl = useIntl();
-  const [foregroundColor] = useThemeColor(["foreground"] as const);
-  const [activeProviderId, setActiveProviderId] = useState<string | null>(null);
-  const [error, setError] = useState<InlineErrorState>(null);
-
-  const handlePress = async (provider: ProviderInfo) => {
-    setError(null);
-    setActiveProviderId(provider.id);
-
-    const failure = await authFailure(
-      authClient.signIn.social({ provider: provider.id, callbackURL: redirectTo }),
-      "auth.errors.default.description"
-    );
-
-    if (failure !== null) setError({ message: intl.formatMessage({ id: failure }) });
-
-    setActiveProviderId(null);
-  };
-
-  return (
-    <View className="gap-2.5">
-      <InlineErrorBlock className="gap-2.5" error={error}>
-        {providers.map((provider) => (
-          <Button
-            key={provider.id}
-            className="bg-surface rounded-full"
-            isDisabled={activeProviderId !== null}
-            size="lg"
-            variant="outline"
-            onPress={() => void handlePress(provider)}
-          >
-            {activeProviderId === provider.id ? (
-              <Spinner color={foregroundColor} size="sm" />
-            ) : (
-              <ProviderIcon color={foregroundColor} icon={provider.icon} size={18} />
-            )}
-            <Button.Label className="text-foreground text-base font-medium">
-              {intl.formatMessage({ id: "auth.provider.signInWith" }, { provider: provider.name })}
-            </Button.Label>
-          </Button>
-        ))}
-      </InlineErrorBlock>
     </View>
   );
 }
@@ -262,7 +91,7 @@ function SignInMethods({ authClient, redirectTo }: { authClient: AuthClient; red
   return (
     <View>
       {methods.passwordForm ? (
-        <PasswordForm authClient={authClient} signUp={methods.signUp} />
+        <PasswordForm authClient={authClient} showSignUpLink={methods.signUp} />
       ) : null}
       {methods.divider ? <OrDivider /> : null}
       {methods.providerButtons ? (
