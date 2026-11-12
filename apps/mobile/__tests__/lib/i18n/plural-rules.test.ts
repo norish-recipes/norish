@@ -1,4 +1,4 @@
-import "./plural-rules";
+import "@/lib/i18n/plural-rules";
 
 import { describe, expect, it } from "vitest";
 
