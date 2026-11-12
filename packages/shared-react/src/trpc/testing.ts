@@ -1,3 +1,4 @@
+import { skipToken } from "@tanstack/react-query";
 import { act, waitFor } from "@testing-library/react";
 
 type Deferred = { resolve: (value: unknown) => void; reject: (error: unknown) => void };
@@ -42,10 +43,16 @@ function procedure(path: string[]) {
     queryOptions: (input?: unknown, options?: object) => ({
       ...options,
       queryKey: queryKey(input),
-      queryFn: () =>
-        server
-          ? server(name, input)
-          : new Promise((resolve, reject) => (pendingReads[name] ??= []).push({ resolve, reject })),
+      // As the real client: a skipped input asks nothing.
+      queryFn:
+        input === skipToken
+          ? skipToken
+          : () =>
+              server
+                ? server(name, input)
+                : new Promise((resolve, reject) =>
+                    (pendingReads[name] ??= []).push({ resolve, reject })
+                  ),
     }),
     // Subscribes to nothing: a test mocks `useSubscription` and delivers through its `onData`.
     subscriptionOptions: (_input: unknown, options: object = {}) => ({
