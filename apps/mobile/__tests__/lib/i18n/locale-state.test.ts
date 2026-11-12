@@ -77,9 +77,10 @@ describe("matchDeviceLocale", () => {
     expect(signedOutLocale("nb-NO")).toBe("no");
   });
 
-  it("gives German the first German variant", () => {
-    expect(signedOutLocale("de-DE")).toBe("de-formal");
-    expect(signedOutLocale("de-CH")).toBe("de-formal");
+  it("gives German the informal variant", () => {
+    for (const device of ["de", "de-DE", "de-CH", "de-AT"]) {
+      expect(signedOutLocale(device)).toBe("de-informal");
+    }
   });
 
   it("falls back to English when no locale matches", () => {

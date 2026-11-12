@@ -81,5 +81,8 @@ export function matchDeviceLocale(
   // iOS names Norwegian Bokmål and Nynorsk `nb` and `nn`; the catalogue has one `no`.
   const base = language === "nb" || language === "nn" ? "no" : language;
 
+  // German devices get the informal variant, not the catalogue's first German one.
+  if (base === "de" && codes.includes("de-informal")) return "de-informal";
+
   return codes.find((code) => code.split("-")[0] === base) ?? null;
 }
