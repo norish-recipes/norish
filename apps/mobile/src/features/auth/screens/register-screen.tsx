@@ -1,7 +1,8 @@
 import type { ReactNode } from "react";
 import React from "react";
-import { Pressable, Text, View } from "react-native";
+import { View } from "react-native";
 import { Brand } from "@/components/brand";
+import { AuthFooterLink } from "@/features/auth/components/auth-footer-link";
 import { AuthLayout } from "@/features/auth/components/auth-layout";
 import { AuthStatus } from "@/features/auth/components/auth-status";
 import { SignUpForm } from "@/features/auth/components/sign-up-form";
@@ -30,20 +31,12 @@ export function RegisterScreen() {
   const { registrationEnabled, hasData } = useAuthProvidersQuery();
 
   const signInLink = (
-    // The sentence, sized to its text, is one link, its 20pt line slopped to a 44pt target.
-    <Pressable
-      accessibilityRole="link"
+    <AuthFooterLink
       className="items-center self-center pb-2"
-      hitSlop={{ top: 12, bottom: 12 }}
+      lead={intl.formatMessage({ id: "auth.signup.hasAccount" })}
+      link={intl.formatMessage({ id: "auth.signup.signIn" })}
       onPress={() => (router.canGoBack() ? router.back() : router.replace("/login"))}
-    >
-      <Text className="text-muted text-center text-[15px] leading-5 font-normal">
-        {intl.formatMessage({ id: "auth.signup.hasAccount" })}{" "}
-        <Text className="text-accent font-semibold">
-          {intl.formatMessage({ id: "auth.signup.signIn" })}
-        </Text>
-      </Text>
-    </Pressable>
+    />
   );
 
   if (authClient === null) {

@@ -3,8 +3,9 @@ import type { AuthClient } from "@/lib/auth/auth-client";
 import type { ComponentRef } from "react";
 import type { TextInput } from "react-native";
 import React, { useRef, useState } from "react";
-import { Pressable, Text, View } from "react-native";
+import { Pressable, View } from "react-native";
 import { AuthField } from "@/features/auth/components/auth-field";
+import { AuthFooterLink } from "@/features/auth/components/auth-footer-link";
 import { AuthSubmitButton } from "@/features/auth/components/auth-submit-button";
 import { InlineError } from "@/features/auth/components/inline-error";
 import { SIGN_IN_DEADLINE_MS } from "@/features/auth/utils/auth-failure";
@@ -98,20 +99,12 @@ export function PasswordForm({ authClient, signIn, showSignUpLink }: PasswordFor
       <InlineError error={error} />
 
       {showSignUpLink ? (
-        // The sentence, sized to its text, is one link, its 20pt line slopped to a 44pt target.
-        <Pressable
-          accessibilityRole="link"
+        <AuthFooterLink
           className="mt-0.5 self-center"
-          hitSlop={{ top: 12, bottom: 12 }}
+          lead={intl.formatMessage({ id: "auth.emailPassword.noAccount" })}
+          link={intl.formatMessage({ id: "auth.emailPassword.signUp" })}
           onPress={() => router.push("/register")}
-        >
-          <Text className="text-muted text-center text-[15px] leading-5 font-normal">
-            {intl.formatMessage({ id: "auth.emailPassword.noAccount" })}{" "}
-            <Text className="text-accent font-semibold">
-              {intl.formatMessage({ id: "auth.emailPassword.signUp" })}
-            </Text>
-          </Text>
-        </Pressable>
+        />
       ) : null}
 
       <AuthSubmitButton
