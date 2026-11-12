@@ -1,5 +1,3 @@
-import type { InlineErrorState } from "@/features/auth/components/inline-error";
-import type { ServerAddressErrorId } from "@/features/auth/utils/check-server-address";
 import React, { useState } from "react";
 import { View } from "react-native";
 import Animated from "react-native-reanimated";
@@ -9,6 +7,7 @@ import { AuthField } from "@/features/auth/components/auth-field";
 import { AuthLayout } from "@/features/auth/components/auth-layout";
 import { HelpPopover } from "@/features/auth/components/help-popover";
 import { InlineErrorBlock } from "@/features/auth/components/inline-error";
+import { useAuthAttempt } from "@/features/auth/hooks/use-auth-attempt";
 import { checkServerAddress } from "@/features/auth/utils/check-server-address";
 import { getServerAddress, saveServerAddress } from "@/lib/network/server-address";
 import Feather from "@expo/vector-icons/Feather";
@@ -31,41 +30,37 @@ export function ConnectScreen() {
   ] as const);
   // The boot gate's read, so a Server address opened on request shows the saved one.
   const [address, setAddress] = useState(getServerAddress);
-  const [isConnecting, setIsConnecting] = useState(false);
-  const [error, setError] = useState<InlineErrorState>(null);
+  const connect = useAuthAttempt();
+  const isConnecting = connect.running !== null;
   const entrance = useLaunchEntrance();
 
-  const fail = (id: ServerAddressErrorId | "common.errors.operationFailed") =>
-    setError({ message: intl.formatMessage({ id }) });
+  const handleConnect = () =>
+    void connect.run("connect", async () => {
+      const check = await checkServerAddress(address);
 
-  const handleConnect = async () => {
-    if (isConnecting) return;
+      if (check.outcome === "error") return check.messageId;
 
-    setIsConnecting(true);
-    setError(null);
+      if (check.outcome === "too-old") {
+        router.push("/update-server");
 
-    const check = await checkServerAddress(address);
+        return null;
+      }
 
-    if (check.outcome === "error") {
-      fail(check.messageId);
-    } else if (check.outcome === "too-old") {
-      router.push("/update-server");
-    } else {
-      await saveServerAddress(check.address).then(
-        // A change returns to the Sign in it was pushed over instead of stacking another.
-        () =>
-          change !== undefined && router.canDismiss()
-            ? router.dismissAll()
-            : router.replace("/login"),
+      return saveServerAddress(check.address).then(
+        () => {
+          // A change returns to the Sign in it was pushed over instead of stacking another.
+          if (change !== undefined && router.canDismiss()) router.dismissAll();
+          else router.replace("/login");
+
+          return null;
+        },
         (saveError: unknown) => {
           log.error({ error: saveError }, "Could not save the Server Address");
-          fail("common.errors.operationFailed");
+
+          return "common.errors.operationFailed";
         }
       );
-    }
-
-    setIsConnecting(false);
-  };
+    });
 
   return (
     <AuthLayout
@@ -76,7 +71,7 @@ export function ConnectScreen() {
             isDisabled={isConnecting}
             size="lg"
             testID="connect-submit"
-            onPress={() => void handleConnect()}
+            onPress={handleConnect}
           >
             {isConnecting ? (
               <Spinner color={accentForegroundColor} size="sm" />
@@ -103,9 +98,9 @@ export function ConnectScreen() {
       </Animated.View>
 
       <Animated.View className="mt-[52px] gap-1.5" style={entrance.fieldStyle}>
-        <InlineErrorBlock error={error}>
+        <InlineErrorBlock error={connect.failure}>
           <AuthField
-            isInvalid={error !== null}
+            isInvalid={connect.failure !== null}
             label={intl.formatMessage({ id: "auth.connect.serverAddressLabel" })}
             labelAccessory={
               <HelpPopover
@@ -127,7 +122,7 @@ export function ConnectScreen() {
               textContentType="URL"
               value={address}
               onChangeText={setAddress}
-              onSubmitEditing={() => void handleConnect()}
+              onSubmitEditing={handleConnect}
             />
           </AuthField>
         </InlineErrorBlock>
