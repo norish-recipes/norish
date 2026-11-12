@@ -1,8 +1,8 @@
 import type { ProviderInfo } from "@norish/shared/contracts";
 
-export const DEFAULT_PROTECTED_ROUTE = "/smoke";
+const DEFAULT_PROTECTED_ROUTE = "/smoke";
 
-export function sanitizeRedirectTarget(target: string | null | undefined): string {
+function sanitizeRedirectTarget(target: string | null | undefined): string {
   if (!target) return DEFAULT_PROTECTED_ROUTE;
   let candidate = target;
 
@@ -20,6 +20,11 @@ export function sanitizeRedirectTarget(target: string | null | undefined): strin
 
 export function firstParam(param: string | string[] | undefined): string | undefined {
   return Array.isArray(param) ? param[0] : param;
+}
+
+/** The safe in-app target of a `redirectTo` search param. */
+export function redirectTargetOf(param: string | string[] | undefined): string {
+  return sanitizeRedirectTarget(firstParam(param));
 }
 
 export function toProviderType(provider: ProviderInfo): "oauth" | "credential" {

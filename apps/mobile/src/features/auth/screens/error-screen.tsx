@@ -2,11 +2,7 @@ import React, { use, useState } from "react";
 import { StatusBadge } from "@/features/auth/components/status-badge";
 import { StatusScreen } from "@/features/auth/components/status-screen";
 import { failedProviderName } from "@/features/auth/utils/failed-provider";
-import {
-  DEFAULT_PROTECTED_ROUTE,
-  firstParam,
-  sanitizeRedirectTarget,
-} from "@/features/auth/utils/redirect";
+import { firstParam, redirectTargetOf } from "@/features/auth/utils/redirect";
 import { ServerAddressContext } from "@/lib/network/server-address";
 import { Stack, useLocalSearchParams, useRouter } from "expo-router";
 import { useIntl } from "react-intl";
@@ -33,9 +29,7 @@ export function AuthErrorScreen() {
 
   if (line === undefined && decided !== undefined) setLine({ provider: decided });
 
-  const redirectTo = sanitizeRedirectTarget(
-    firstParam(params.redirectTo) ?? DEFAULT_PROTECTED_ROUTE
-  );
+  const redirectTo = redirectTargetOf(params.redirectTo);
 
   return (
     <>

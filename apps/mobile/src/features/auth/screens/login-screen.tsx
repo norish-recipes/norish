@@ -8,11 +8,7 @@ import { PasswordForm } from "@/features/auth/components/password-form";
 import { ProviderButtons } from "@/features/auth/components/provider-buttons";
 import { ServerChip } from "@/features/auth/components/server-chip";
 import { useAuthAttempt } from "@/features/auth/hooks/use-auth-attempt";
-import {
-  DEFAULT_PROTECTED_ROUTE,
-  firstParam,
-  sanitizeRedirectTarget,
-} from "@/features/auth/utils/redirect";
+import { redirectTargetOf } from "@/features/auth/utils/redirect";
 import { resolveSignInMethods } from "@/features/auth/utils/sign-in-methods";
 import { ServerAddressContext } from "@/lib/network/server-address";
 import { useLocalSearchParams } from "expo-router";
@@ -78,9 +74,7 @@ function SignInMethods({
 export function LoginScreen({ fadeIn = false }: { fadeIn?: boolean }) {
   const params = useLocalSearchParams<{ redirectTo?: string | string[] }>();
   const serverAddress = use(ServerAddressContext);
-  const redirectTo = sanitizeRedirectTarget(
-    firstParam(params.redirectTo) ?? DEFAULT_PROTECTED_ROUTE
-  );
+  const redirectTo = redirectTargetOf(params.redirectTo);
 
   return (
     <AuthGate
