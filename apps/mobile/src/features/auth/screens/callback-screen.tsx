@@ -5,8 +5,8 @@ import { Stack } from "expo-router";
 import { Spinner, useThemeColor } from "heroui-native";
 import { useIntl } from "react-intl";
 
-// The spinner's 28pt gap under the slogan, from the SigningIn board.
-const SPINNER_GAP = 28;
+// The SigningIn board's 12pt group gap plus the spinner's own 28pt margin.
+const SPINNER_GAP = 40;
 
 // @better-auth/expo's expoClient takes the session cookie from the norish:// deep link;
 // the root layout's Stack.Protected guard then leaves this screen.
