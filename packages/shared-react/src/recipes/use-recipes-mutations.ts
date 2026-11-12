@@ -13,8 +13,9 @@ import type {
 import { primaryRecipeImage } from "@norish/shared/lib/recipe-media";
 
 import type { InfiniteRecipeData } from "./library-cache";
-import { shouldPreserveOptimisticUpdate } from "../offline/optimistic-updates";
+import type { RecipesMutationErrorHandler } from "./recipes-mutation-error";
 import { useTRPC } from "../trpc";
+import { handleRecipesMutationError } from "./recipes-mutation-error";
 import { removeRecipesFromLists, useRecipesCacheHelpers } from "./use-recipes-cache";
 
 type CreateMutationContext = {
@@ -262,8 +263,6 @@ export type RecipesMutationsResult = {
   convertMeasurements: (recipeId: string, system: MeasurementSystem, version: number) => void;
 };
 
-export type RecipesMutationErrorHandler = (error: unknown, operation: string) => void;
-
 export function useRecipesMutations(onError?: RecipesMutationErrorHandler): RecipesMutationsResult {
   const trpc = useTRPC();
   const queryClient = useQueryClient();
@@ -297,9 +296,7 @@ export function useRecipesMutations(onError?: RecipesMutationErrorHandler): Reci
         return { recipeId: optimisticRecipe.id, detailQueryKey, previousDetail };
       },
       onError: (error, _variables, context) => {
-        onError?.(error, "create");
-
-        if (!shouldPreserveOptimisticUpdate(error)) {
+        handleRecipesMutationError(error, "create", onError, () => {
           const createContext = context as CreateMutationContext | undefined;
 
           const { detailQueryKey, previousDetail } = createContext ?? {};
@@ -322,7 +319,7 @@ export function useRecipesMutations(onError?: RecipesMutationErrorHandler): Reci
           }
 
           invalidate();
-        }
+        });
       },
     })
   );
@@ -365,20 +362,16 @@ export function useRecipesMutations(onError?: RecipesMutationErrorHandler): Reci
         return { detailQueryKey, previousDetail };
       },
       onError: (error, _variables, context) => {
-        onError?.(error, "update");
+        handleRecipesMutationError(error, "update", onError, () => {
+          const updateContext = context as UpdateMutationContext | undefined;
 
-        if (shouldPreserveOptimisticUpdate(error)) {
-          return;
-        }
+          if (updateContext?.detailQueryKey) {
+            queryClient.setQueryData(updateContext.detailQueryKey, updateContext.previousDetail);
+            queryClient.invalidateQueries({ queryKey: updateContext.detailQueryKey });
+          }
 
-        const updateContext = context as UpdateMutationContext | undefined;
-
-        if (updateContext?.detailQueryKey) {
-          queryClient.setQueryData(updateContext.detailQueryKey, updateContext.previousDetail);
-          queryClient.invalidateQueries({ queryKey: updateContext.detailQueryKey });
-        }
-
-        invalidate();
+          invalidate();
+        });
       },
     })
   );
@@ -425,18 +418,14 @@ export function useRecipesMutations(onError?: RecipesMutationErrorHandler): Reci
         }
       },
       onError: (error, _variables, context) => {
-        onError?.(error, "delete");
+        handleRecipesMutationError(error, "delete", onError, () => {
+          restoreDeletedRecipes(context);
+          invalidate();
 
-        if (shouldPreserveOptimisticUpdate(error)) {
-          return;
-        }
-
-        restoreDeletedRecipes(context);
-        invalidate();
-
-        for (const [queryKey] of context?.previousDetails ?? []) {
-          queryClient.invalidateQueries({ queryKey });
-        }
+          for (const [queryKey] of context?.previousDetails ?? []) {
+            queryClient.invalidateQueries({ queryKey });
+          }
+        });
       },
     })
   );
@@ -444,11 +433,7 @@ export function useRecipesMutations(onError?: RecipesMutationErrorHandler): Reci
   const { mutate: mutateConvert } = useMutation(
     trpc.recipes.convertMeasurements.mutationOptions({
       onError: (error) => {
-        onError?.(error, "convertMeasurements");
-
-        if (!shouldPreserveOptimisticUpdate(error)) {
-          invalidate();
-        }
+        handleRecipesMutationError(error, "convertMeasurements", onError, invalidate);
       },
     })
   );

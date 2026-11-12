@@ -4,8 +4,9 @@ import { useMutation } from "@tanstack/react-query";
 
 import { uploadForm } from "@norish/shared/lib/upload-form";
 
-import { shouldPreserveOptimisticUpdate } from "../offline/optimistic-updates";
+import type { RecipesMutationErrorHandler } from "./recipes-mutation-error";
 import { useTRPC } from "../trpc";
+import { handleRecipesMutationError } from "./recipes-mutation-error";
 import { OPTIMISTIC_PENDING_RECIPE_PREFIX, useRecipesCacheHelpers } from "./use-recipes-cache";
 
 type ImportMutationContext = {
@@ -20,7 +21,6 @@ export type ImportMutationsResult = {
   importRecipeFromPasteWithAI: (text: string) => void;
 };
 
-export type ImportMutationErrorHandler = (error: unknown, operation: string) => void;
 /**
  * Told when an import found a recipe the household already holds. Not an
  * error — the id is the one the caller was reaching for, so an app can offer
@@ -34,7 +34,7 @@ function createOptimisticPendingRecipeId(): string {
 }
 
 export function useImportMutations(
-  onError?: ImportMutationErrorHandler,
+  onError?: RecipesMutationErrorHandler,
   onRecipeAlreadyExists?: RecipeAlreadyExistsAdapter
 ): ImportMutationsResult {
   const trpc = useTRPC();
@@ -69,14 +69,10 @@ export function useImportMutations(
     operation: string,
     context: ImportMutationContext | undefined
   ): void => {
-    onError?.(error, operation);
-
-    if (shouldPreserveOptimisticUpdate(error)) {
-      return;
-    }
-
-    dropPlaceholder(context);
-    invalidate();
+    handleRecipesMutationError(error, operation, onError, () => {
+      dropPlaceholder(context);
+      invalidate();
+    });
   };
 
   const { mutate: mutateImport } = useMutation(
