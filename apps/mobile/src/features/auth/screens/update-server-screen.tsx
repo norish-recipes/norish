@@ -33,14 +33,18 @@ export function UpdateServerScreen({ address, version }: { address: string; vers
 
     const wasSaved = getServerAddress() === next.address;
 
-    saveServerAddress(next.address).then(
+    // Rejected, so the re-check stays armed and tries again on the next return.
+    return saveServerAddress(next.address).then(
       () => {
         const dismissed = router.canDismiss();
 
         if (dismissed) router.dismissAll();
         if (!wasSaved || !dismissed) router.replace("/login");
       },
-      (error: unknown) => log.error({ error }, "Could not save the Server Address")
+      (error: unknown) => {
+        log.error({ error }, "Could not save the Server Address");
+        throw error;
+      }
     );
   };
 

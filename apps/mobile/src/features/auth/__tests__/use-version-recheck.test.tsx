@@ -80,6 +80,24 @@ describe("useVersionRecheck", () => {
     expect(onNewEnough).not.toHaveBeenCalled();
   });
 
+  it("keeps re-checking after a continuation that failed", async () => {
+    const onNewEnough = vi
+      .fn<() => Promise<void>>()
+      .mockRejectedValueOnce(new Error("save failed"))
+      .mockResolvedValue(undefined);
+
+    renderHook(() => useVersionRecheck(address, false, onNewEnough));
+    foreground();
+    await act(async () => settle(newEnough));
+    foreground();
+    await act(async () => settle(newEnough));
+    foreground();
+
+    expect(onNewEnough).toHaveBeenCalledTimes(2);
+    // The second continuation succeeded, so the re-check stops.
+    expect(checkServerAddress).toHaveBeenCalledTimes(2);
+  });
+
   it("never runs two checks at once", async () => {
     renderHook(() => useVersionRecheck(address, false, vi.fn()));
 
