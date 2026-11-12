@@ -1,9 +1,8 @@
 "use client";
 
 import { useEffect, useRef } from "react";
-import { useQueryClient } from "@tanstack/react-query";
 
-import { useTRPC } from "@norish/shared-react/trpc";
+import { usePrefetchRecipe } from "@norish/shared-react/recipes";
 
 /**
  * Automatically prefetch recipe data when element comes into view.
@@ -15,8 +14,7 @@ export function useRecipePrefetch<T extends HTMLElement = HTMLDivElement>(
   recipeId: string,
   enabled = true
 ) {
-  const trpc = useTRPC();
-  const queryClient = useQueryClient();
+  const prefetchRecipe = usePrefetchRecipe();
   const elementRef = useRef<T>(null);
   const hasTriggeredRef = useRef(false);
 
@@ -29,8 +27,7 @@ export function useRecipePrefetch<T extends HTMLElement = HTMLDivElement>(
           // Only trigger once when element enters viewport
           if (entry.isIntersecting && !hasTriggeredRef.current) {
             hasTriggeredRef.current = true;
-            // A failed prefetch is fine: the data loads normally when the user clicks.
-            queryClient.query(trpc.recipes.get.queryOptions({ id: recipeId })).catch(() => {});
+            prefetchRecipe(recipeId);
           }
         });
       },
@@ -53,7 +50,7 @@ export function useRecipePrefetch<T extends HTMLElement = HTMLDivElement>(
       }
       observer.disconnect();
     };
-  }, [enabled, recipeId, queryClient, trpc.recipes.get]);
+  }, [enabled, recipeId, prefetchRecipe]);
 
   return elementRef;
 }

@@ -2,12 +2,10 @@
 
 import { useSearchParams } from "next/navigation";
 import { cookbookIdFromPath, recipeIdFromPath, safeOrigin } from "@/lib/back-destination";
-import { useQuery } from "@tanstack/react-query";
 import { useTranslations } from "next-intl";
 
 import type { LibraryTypeFilter } from "@norish/shared/contracts";
-import { useCookbookQuery } from "@norish/shared-react/recipes";
-import { useTRPC } from "@norish/shared-react/trpc";
+import { useCookbookQuery, useHeldRecipeName } from "@norish/shared-react/recipes";
 
 export type BackDestination = { href: string; label: string };
 
@@ -24,7 +22,6 @@ export type BackDestination = { href: string; label: string };
  */
 export function useBackDestination(libraryType: LibraryTypeFilter): BackDestination {
   const t = useTranslations("recipes.back");
-  const trpc = useTRPC();
   const from = safeOrigin(useSearchParams().get("from"));
 
   const cookbookId = cookbookIdFromPath(from);
@@ -34,12 +31,8 @@ export function useBackDestination(libraryType: LibraryTypeFilter): BackDestinat
   // is already cached, so this normally answers without a request.
   const { cookbook } = useCookbookQuery(cookbookId ?? "", { enabled: Boolean(cookbookId) });
 
-  // The recipe is read from the cache alone — a name for a back link is not
-  // worth a request, and a reader who came from a recipe has it cached.
-  const { data: recipe } = useQuery({
-    ...trpc.recipes.get.queryOptions({ id: recipeId ?? "" }),
-    enabled: false,
-  });
+  // A reader who came from a recipe has it cached.
+  const recipeName = useHeldRecipeName(recipeId);
 
   if (cookbookId) {
     return {
@@ -51,7 +44,7 @@ export function useBackDestination(libraryType: LibraryTypeFilter): BackDestinat
   if (recipeId) {
     return {
       href: from!,
-      label: recipe?.name ? t("named", { name: recipe.name }) : t("generic"),
+      label: recipeName ? t("named", { name: recipeName }) : t("generic"),
     };
   }
 
