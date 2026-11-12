@@ -4,9 +4,11 @@ import "@/lib/i18n/plural-rules";
 import React from "react";
 import { ActivityIndicator, StyleSheet, View } from "react-native";
 import { GestureHandlerRootView } from "react-native-gesture-handler";
+import Animated from "react-native-reanimated";
 import { LaunchProvider, LaunchSplash } from "@/components/launch";
 import { LaunchVersionCheck } from "@/features/auth/components/launch-version-check";
 import { StorageUnavailableScreen } from "@/features/auth/screens/storage-unavailable-screen";
+import { FADE_IN } from "@/features/auth/utils/motion";
 import { useSignOutBeforeServerChange } from "@/hooks/use-change-server-address";
 import { useResolvedColorScheme } from "@/hooks/use-resolved-color-scheme";
 import { useServerAddress } from "@/hooks/use-server-address";
@@ -177,12 +179,13 @@ function SessionStack() {
     </>
   );
 
+  // One themed ground under every phase, so a session ending never shows the bare window.
   return (
-    <>
+    <View style={[styles.root, { backgroundColor: colors.background }]}>
       {pending ? (
-        <View style={[styles.root, styles.centred, { backgroundColor: colors.background }]}>
+        <Animated.View entering={FADE_IN} style={[styles.root, styles.centred]}>
           <ActivityIndicator />
-        </View>
+        </Animated.View>
       ) : signedIn ? (
         <AuthenticatedProviders>{app}</AuthenticatedProviders>
       ) : (
@@ -190,7 +193,7 @@ function SessionStack() {
       )}
       <LaunchVersionCheck enabled={!pending} />
       <LaunchSplash handoff={pending ? null : "fade"} />
-    </>
+    </View>
   );
 }
 
