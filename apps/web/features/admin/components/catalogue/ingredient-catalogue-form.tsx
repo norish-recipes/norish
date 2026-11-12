@@ -10,8 +10,8 @@ import type { AutomaticIngredientsConfig } from "@norish/config/zod/server-confi
 import { DEFAULT_AUTOMATIC_INGREDIENTS, ServerConfigKeys } from "@norish/config/zod/server-config";
 import { useAdminConfig, useAIConfigMutations } from "@norish/shared-react/admin";
 
+import { useReportDirty } from "../../hooks/use-report-dirty";
 import { KindsSelect } from "../kinds-select";
-import { useReportDirty } from "../use-report-dirty";
 import CleanUpCatalogue from "./clean-up-catalogue";
 import FillGaps from "./fill-gaps";
 

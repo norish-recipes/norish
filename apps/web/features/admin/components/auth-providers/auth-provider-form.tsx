@@ -12,8 +12,8 @@ import { ServerConfigKeys } from "@norish/config/zod/server-config";
 import { useAuthProviderMutations, useConfigSecret } from "@norish/shared-react/admin";
 
 import type { FieldDef } from "./types";
+import { useReportDirty } from "../../hooks/use-report-dirty";
 import { ConnectionTestResult } from "../connection-test-result";
-import { useReportDirty } from "../use-report-dirty";
 import { DeleteProviderModal } from "./delete-provider-modal";
 import { ProviderActions } from "./provider-actions";
 

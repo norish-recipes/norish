@@ -13,7 +13,7 @@ import {
   useRestoreDefaultMutation,
 } from "@norish/shared-react/admin";
 
-import { useReportDirty } from "../use-report-dirty";
+import { useReportDirty } from "../../hooks/use-report-dirty";
 
 /** Every administrator-editable prompt; a new prompt is one row here plus its translation keys. */
 const PROMPT_FIELDS = [

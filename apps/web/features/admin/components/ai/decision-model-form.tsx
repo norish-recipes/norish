@@ -23,9 +23,9 @@ import {
   useDecisionConfigMutations,
 } from "@norish/shared-react/admin";
 
+import { useReportDirty } from "../../hooks/use-report-dirty";
 import { ConnectionTestResult } from "../connection-test-result";
 import { KindsSelect } from "../kinds-select";
-import { useReportDirty } from "../use-report-dirty";
 import { ProviderSelect } from "./provider-select";
 
 interface DecisionModelFormProps {

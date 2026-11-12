@@ -25,7 +25,7 @@ import {
   useYtDlpVersionQuery,
 } from "@norish/shared-react/admin";
 
-import { useReportDirty } from "../use-report-dirty";
+import { useReportDirty } from "../../hooks/use-report-dirty";
 import { ModelPicker } from "./model-picker";
 import { ProviderSelect } from "./provider-select";
 

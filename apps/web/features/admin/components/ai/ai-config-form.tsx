@@ -32,9 +32,9 @@ import {
 } from "@norish/shared-react/admin";
 
 import type { ModelOption } from "./model-picker";
+import { useReportDirty } from "../../hooks/use-report-dirty";
 import { ConnectionTestResult } from "../connection-test-result";
 import { KindsSelect } from "../kinds-select";
-import { useReportDirty } from "../use-report-dirty";
 import { ModelPicker } from "./model-picker";
 import { ProviderSelect } from "./provider-select";
 

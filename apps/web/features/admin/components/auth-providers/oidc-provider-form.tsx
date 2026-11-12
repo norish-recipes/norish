@@ -13,8 +13,8 @@ import { ServerConfigKeys } from "@norish/config/zod/server-config";
 import { useAuthProviderMutations, useConfigSecret } from "@norish/shared-react/admin";
 
 import type { ClaimMappingValues } from "./oidc-claim-mapping";
+import { useReportDirty } from "../../hooks/use-report-dirty";
 import { ConnectionTestResult } from "../connection-test-result";
-import { useReportDirty } from "../use-report-dirty";
 import { DeleteProviderModal } from "./delete-provider-modal";
 import { OIDCClaimMapping } from "./oidc-claim-mapping";
 import { ProviderActions } from "./provider-actions";

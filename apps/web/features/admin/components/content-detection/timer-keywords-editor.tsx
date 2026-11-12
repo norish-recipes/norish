@@ -10,8 +10,8 @@ import { useTranslations } from "next-intl";
 
 import type { WriteResult } from "@norish/shared-react/admin";
 
-import { useReportDirty } from "../use-report-dirty";
-import { useEditorWrites } from "./use-editor-writes";
+import { useEditorWrites } from "../../hooks/use-editor-writes";
+import { useReportDirty } from "../../hooks/use-report-dirty";
 
 interface TimerKeywordsEditorProps {
   enabled: boolean;
