@@ -9,6 +9,7 @@ import { useBackendBaseUrl } from "@/hooks/use-backend-base-url";
 import { useResolvedColorScheme } from "@/hooks/use-resolved-color-scheme";
 import { useUserLocaleSync } from "@/hooks/use-user-locale-sync";
 import { AuthProvider, useAuth } from "@/lib/auth/auth-context";
+import { registerSessionInvalidationHandler } from "@/lib/auth/auth-session-sync";
 import { resolveBootPhase } from "@/lib/boot/boot-state";
 import { MobileIntlFallbackProvider, MobileIntlProvider } from "@/lib/i18n/mobile-i18n-context";
 import { ConnectivityProvider, OfflineController, offlineEngine } from "@/lib/offline/engine";
@@ -31,7 +32,11 @@ import * as SplashScreen from "expo-splash-screen";
 import { HeroUINativeProvider, useThemeColor } from "heroui-native";
 import { PortalHost } from "heroui-native/portal";
 
-import { useHouseholdSubscription, usePermissionsSubscription } from "@norish/shared-react/reader";
+import {
+  useHouseholdSubscription,
+  usePermissionsSubscription,
+  useSignOut,
+} from "@norish/shared-react/reader";
 
 // The boot gate below renders nothing until hydration settles. Holding the
 // native splash over that window is what keeps it from showing as a blank
@@ -193,11 +198,15 @@ function AuthenticatedProviders({ children }: { children: React.ReactNode }) {
   );
 }
 
-/** The signed-in shell's effects: the Reader's locale and subscriptions. */
+/** The signed-in shell's effects: the Reader's locale, subscriptions and Session Expiry. */
 function AuthenticatedEffects() {
+  const signOut = useSignOut();
+
   useUserLocaleSync();
   useHouseholdSubscription();
   usePermissionsSubscription();
+  // Session Expiry keeps the Outbox for this Account (CONTEXT.md).
+  useEffect(() => registerSessionInvalidationHandler(() => signOut()), [signOut]);
 
   return null;
 }

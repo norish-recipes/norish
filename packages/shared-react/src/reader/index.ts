@@ -15,6 +15,7 @@ export {
 export { useHouseholdMutations, type HouseholdMutationsResult } from "./use-household-mutations";
 export { useHouseholdSubscription } from "./use-household-subscription";
 export { useReader, useSeededSession, type ReaderIdentity } from "./use-reader";
+export { useSignOut, type SignOutOptions } from "./use-sign-out";
 export {
   normalizePermissionsData,
   selectCanDeleteRecipe,

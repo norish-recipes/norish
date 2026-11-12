@@ -8,7 +8,7 @@ import type { DeviceKind } from "@norish/shared/contracts/zod/device-preferences
 import type { PlatformAdapter } from "./platform";
 import { PlatformProvider } from "./platform";
 
-/** A test's platform: spies for toasts, navigation, errors and sign-out, a storage that holds nothing. */
+/** A test's platform: spies for toasts, navigation, errors and sign-out's steps, a storage that holds nothing. */
 export function fakePlatformAdapter(
   deviceKind: DeviceKind = "phone",
   reader: User | null = null
@@ -20,7 +20,9 @@ export function fakePlatformAdapter(
     storage: { getItem: () => null, setItem: vi.fn(), removeItem: vi.fn() },
     deviceKind,
     session: { user: reader, isPending: false },
-    signOut: vi.fn(),
+    endSession: vi.fn(async () => {}),
+    leave: vi.fn(),
+    offlineEngine: { clearForSignOut: vi.fn(async () => {}) },
   };
 }
 

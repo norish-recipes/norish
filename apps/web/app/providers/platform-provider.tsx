@@ -3,8 +3,8 @@
 import type { ReactNode } from "react";
 import { useState } from "react";
 import { useRouter } from "next/navigation";
-import { signOut } from "@/lib/auth/sign-out";
 import { browserStorage } from "@/lib/browser-storage";
+import { offlineEngine } from "@/lib/offline/engine";
 import { showActionToast } from "@/lib/ui/action-toast";
 import { showSafeErrorToast } from "@/lib/ui/safe-error-toast";
 import { toast } from "@heroui/react";
@@ -13,6 +13,8 @@ import { useTranslations } from "next-intl";
 import type { PlatformAdapter, PlatformSession } from "@norish/shared-react/platform";
 import type { DeviceKind } from "@norish/shared/contracts/zod/device-preferences";
 import { PlatformProvider } from "@norish/shared-react/platform";
+import { signOut } from "@norish/shared/lib/auth/client";
+import { addBasePath } from "@norish/shared/lib/base-path";
 import { deviceKindFromUserAgent } from "@norish/shared/lib/device-kind";
 
 const SIGNED_OUT: PlatformSession = { user: null, isPending: false };
@@ -70,7 +72,15 @@ export function WebPlatformProvider({
     storage: browserStorage,
     deviceKind: kind,
     session,
-    signOut,
+    // Fails while Offline: the cookie is httpOnly, so only the server can end the session.
+    endSession: async () => {
+      const { error } = await signOut();
+
+      if (error) throw new Error(error.message ?? `Sign-out failed: ${error.status}`);
+    },
+    // `logout=true` stops a lone OAuth provider's redirect, which could recreate a deleted Account.
+    leave: () => window.location.assign(addBasePath("/login?logout=true")),
+    offlineEngine,
   };
 
   return <PlatformProvider adapter={adapter}>{children}</PlatformProvider>;

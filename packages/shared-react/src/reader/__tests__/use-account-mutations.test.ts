@@ -198,7 +198,9 @@ describe("the Account's writes", () => {
       act(() => result.current.deleteAccount());
       await answerCall("user.deleteAccount", { success: true });
 
-      expect(adapter.signOut).toHaveBeenCalledExactlyOnceWith({ accountDeleted: true });
+      await waitFor(() => expect(adapter.leave).toHaveBeenCalledOnce());
+      expect(adapter.endSession).not.toHaveBeenCalled();
+      expect(adapter.offlineEngine.clearForSignOut).toHaveBeenCalledWith({ discardQueue: true });
     });
 
     it("stays and says why when the server refuses", async () => {
@@ -207,7 +209,7 @@ describe("the Account's writes", () => {
       act(() => result.current.deleteAccount());
       await answerCall("user.deleteAccount", { success: false, error: "Transfer admin first" });
 
-      expect(adapter.signOut).not.toHaveBeenCalled();
+      expect(adapter.leave).not.toHaveBeenCalled();
       expect(adapter.showError).toHaveBeenCalledWith(
         "Transfer admin first",
         "user-settings:delete-account"
@@ -220,7 +222,7 @@ describe("the Account's writes", () => {
       act(() => result.current.deleteAccount());
       await failCall("user.deleteAccount");
 
-      expect(adapter.signOut).not.toHaveBeenCalled();
+      expect(adapter.leave).not.toHaveBeenCalled();
       expect(adapter.showError).toHaveBeenCalledOnce();
     });
   });

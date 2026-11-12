@@ -6,7 +6,6 @@ import "@testing-library/jest-dom";
 
 import NavbarUserMenu from "@/components/navbar/navbar-user-menu";
 
-const mockSignOut = vi.hoisted(() => vi.fn());
 const mockCycleLocale = vi.hoisted(() => vi.fn());
 const mockCycleTheme = vi.hoisted(() => vi.fn());
 
@@ -24,7 +23,6 @@ vi.mock("next-themes", () => ({
 
 vi.mock("@norish/shared-react/reader", async () =>
   (await import("../helpers/reader-mock")).mockReader(() => ({
-    signOut: mockSignOut,
     user: { email: "alice@example.com", id: "user-1", image: null, name: "Alice" },
   }))
 );

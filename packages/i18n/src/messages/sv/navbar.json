@@ -13,6 +13,7 @@
       "description": "Hantera ditt konto"
     },
     "logout": "Logga ut",
+    "signOutOffline": "Du är offline. Logga ut när du är online igen.",
     "signOutConfirm": {
       "title": "Kasta osynkroniserade ändringar?",
       "description": "{count, plural, one {# ändring som gjorts offline har inte nått servern ännu.} other {# ändringar som gjorts offline har inte nått servern ännu.}} Om du loggar ut kastas dessa väntande ändringar permanent och kontots offlinedata tas bort från den här enheten."

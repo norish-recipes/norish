@@ -11,14 +11,15 @@ import {
   useGroceriesSubscription,
 } from "@norish/shared-react/groceries";
 import { useOfflineStatus } from "@norish/shared-react/offline/react";
-import { useReader } from "@norish/shared-react/reader";
+import { useReader, useSignOut } from "@norish/shared-react/reader";
 import { useRecipesQuery } from "@norish/shared-react/recipes";
 
 // Throwaway screen that proves sign-in, tRPC, realtime and offline end to end
 // until the redesigned screens replace it.
 export function SmokeScreen() {
   const intl = useIntl();
-  const { user, signOut } = useReader();
+  const { user } = useReader();
+  const signOut = useSignOut();
   const { total, isLoading: recipesLoading } = useRecipesQuery({ limit: 1 });
   const { groceries } = useGroceriesQuery();
   const { toggleGroceries, toggleRecurringGrocery } = useGroceriesMutations();

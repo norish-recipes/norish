@@ -155,6 +155,20 @@ describe("createOfflineEngine", () => {
       expect(await engine.outbox.size("someone-else")).toBe(1);
     });
 
+    it("resets the read copy even when discarding the queue fails, and still rejects", async () => {
+      const engine = engineOver();
+
+      await engine.cache.reconcileIdentity({ sessionUserId: "u1", isOffline: false });
+      engine.queryClient.setQueryData(["groceries"], ["milk"]);
+      await engine.outbox.enqueue(entry("a"));
+      vi.spyOn(engine.outbox, "forOwner").mockRejectedValue(new Error("quota"));
+
+      await expect(engine.clearForSignOut({ discardQueue: true })).rejects.toThrow("quota");
+
+      expect(engine.queryClient.getQueryData(["groceries"])).toBeUndefined();
+      expect(engine.cache.owner()).toBeNull();
+    });
+
     it("replays a signed-out owner's queue only once that owner signs back in", async () => {
       const engine = engineOver();
       const mutate = vi.fn(async (_input: unknown, _opts: unknown) => ({ success: true }));

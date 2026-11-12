@@ -30,13 +30,6 @@ export type PlatformStorage = {
 /** Who the app's auth client says is signed in; `isPending` until it answers. */
 export type PlatformSession = { user: User | null; isPending: boolean };
 
-/**
- * `discardQueue` only once the reader agreed to lose their unsynced changes (ADR-0009).
- * `accountDeleted`: the server already ended the session, so only the local state is cleared, Outbox included.
- */
-export type SignOutOptions = { discardQueue?: boolean; accountDeleted?: boolean };
-export type SignOut = (options?: SignOutOptions) => void | Promise<void>;
-
 /** What shared code needs from the app it runs in. Each app mounts one. */
 export type PlatformAdapter = {
   toast: ToastAdapter;
@@ -49,7 +42,11 @@ export type PlatformAdapter = {
   storage: PlatformStorage;
   deviceKind: DeviceKind;
   session: PlatformSession;
-  signOut: SignOut;
+  /** Ends the session on the server and this device; rejects when it could not. */
+  endSession: () => Promise<void>;
+  /** Takes the signed-out reader to sign-in. */
+  leave: () => void;
+  offlineEngine: { clearForSignOut: (options: { discardQueue: boolean }) => Promise<void> };
 };
 
 /** Tells the reader the server refused a write, with its reason when it named one. */

@@ -10,6 +10,7 @@ import { accepted, answered, settled } from "../offline/settled";
 import { showRefusal, usePlatform } from "../platform";
 import { useTRPC } from "../trpc";
 import { useProfileCache } from "./use-profile";
+import { useSignOut } from "./use-sign-out";
 
 /** A failed write's `onError`: reread the profile and tell the reader. */
 function useFailedWrite() {
@@ -160,7 +161,8 @@ export function useApiKeyMutations() {
 /** Deletes the Reader's account and signs out on this device. */
 export function useDeleteAccountMutation() {
   const trpc = useTRPC();
-  const { signOut, showError } = usePlatform();
+  const { showError } = usePlatform();
+  const signOut = useSignOut();
   const context = "user-settings:delete-account";
 
   const { mutate } = useMutation(

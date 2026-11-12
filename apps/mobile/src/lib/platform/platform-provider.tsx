@@ -1,6 +1,7 @@
 import type { ReactNode } from "react";
 import { Platform, View } from "react-native";
 import { useAuth } from "@/lib/auth/auth-context";
+import { offlineEngine } from "@/lib/offline/engine";
 import { storage } from "@/lib/storage/mmkv";
 import { useRouter } from "expo-router";
 import { Toast, useThemeColor, useToast } from "heroui-native";
@@ -28,7 +29,7 @@ const mmkvStorage: PlatformStorage = {
 /** The mobile app's platform adapter: heroui-native toasts, Expo Router, MMKV, the auth context. */
 export function MobilePlatformProvider({ children }: { children: ReactNode }) {
   const intl = useIntl();
-  const { user, isLoading, signOut } = useAuth();
+  const { user, isLoading, endSession } = useAuth();
   const { toast } = useToast();
   const router = useRouter();
   const [dangerColor] = useThemeColor(["danger"] as const);
@@ -76,7 +77,10 @@ export function MobilePlatformProvider({ children }: { children: ReactNode }) {
     storage: mmkvStorage,
     deviceKind,
     session: { user: user ? sessionReader(user) : null, isPending: isLoading },
-    signOut,
+    endSession,
+    // The TrpcProvider re-key and the route guard take the signed-out reader to (auth).
+    leave: () => {},
+    offlineEngine,
   };
 
   return <PlatformProvider adapter={adapter}>{children}</PlatformProvider>;

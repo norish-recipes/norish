@@ -39,7 +39,6 @@ export async function mockDevicePreferences(
 
 export type MockReader = {
   user?: Partial<User> | null;
-  signOut?: () => void;
   /** Over the conservative defaults. */
   permissions?: Partial<ReaderPermissions>;
   /** Whether the Reader may edit and delete a recipe; `true` by default. */
@@ -62,8 +61,8 @@ export async function mockReader(read: () => MockReader = () => ({})) {
     useReader: () => ({
       user: read().user ?? null,
       isLoading: false,
-      signOut: read().signOut ?? (() => {}),
     }),
+    useSignOut: () => async () => {},
     useProfileQuery: () => ({ user: read().user ?? null, apiKeys: [] }),
     usePermissions: <T>(select: (p: ReaderPermissions) => T) => select(permissions()),
     useRecipePermissions: () => ({

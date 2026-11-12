@@ -37,17 +37,6 @@ describe("useReader", () => {
     expect(result.current.user?.email).toBe("fresh@example.com");
   });
 
-  it("signs out through the platform", () => {
-    const adapter = fakePlatformAdapter("phone", STALE);
-    const { result } = renderHook(() => useReader(), {
-      wrapper: createTestWrapper(createTestQueryClient(), adapter),
-    });
-
-    void result.current.signOut({ discardQueue: true });
-
-    expect(adapter.signOut).toHaveBeenCalledWith({ discardQueue: true });
-  });
-
   it("is loading while the session is unknown, and nobody once it answers signed out", () => {
     const pending = { ...fakePlatformAdapter(), session: { user: null, isPending: true } };
     const signedOut = fakePlatformAdapter();

@@ -9,19 +9,12 @@ import React, {
   useSyncExternalStore,
 } from "react";
 import { getAuthClient, subscribeAuthClientReset } from "@/lib/auth/auth-client";
-import {
-  registerSessionInvalidationHandler,
-  setHasActiveSession,
-} from "@/lib/auth/auth-session-sync";
+import { setHasActiveSession } from "@/lib/auth/auth-session-sync";
 import { readPersistedSession } from "@/lib/auth/auth-storage";
-import { clearSession } from "@/lib/auth/sign-out";
+import { endSession as endSessionOn } from "@/lib/auth/end-session";
 import { useStore } from "better-auth/react";
 
-import type { SignOutOptions } from "@norish/shared-react/platform";
 import { useConnectivity } from "@norish/shared-react/offline/react";
-import { createClientLogger } from "@norish/shared/lib/logger";
-
-const log = createClientLogger("auth");
 
 type AuthContextValue = {
   backendBaseUrl: string | null;
@@ -30,7 +23,8 @@ type AuthContextValue = {
   isLoading: boolean;
   justLoggedOut: boolean;
   user: { id: string; email: string; name: string; image?: string | null } | null;
-  signOut: (options?: SignOutOptions) => Promise<void>;
+  /** The platform adapter's `endSession`: always succeeds on a phone. */
+  endSession: () => Promise<void>;
   consumeLogoutFlag: () => void;
 };
 
@@ -124,36 +118,20 @@ function AuthProviderInner({
     shouldUsePersistedAuth,
   ]);
 
-  const signOut = useCallback(
-    async (options?: SignOutOptions) => {
-      setAuthOverride("signed-out");
-      setHasActiveSession(false);
-      await clearSession(authClient, options);
-
-      setPersistedUser(null);
-      setPersistedSessionStatus("idle");
-      setJustLoggedOut(true);
-      setHasActiveSession(false);
-    },
-    [authClient]
-  );
+  // The session store is emptied first, so a remount before these sets reads signed out.
+  const endSession = async () => {
+    await endSessionOn(authClient);
+    setAuthOverride("signed-out");
+    setPersistedUser(null);
+    setPersistedSessionStatus("idle");
+    setJustLoggedOut(true);
+  };
 
   // Publishing re-keys the tRPC provider, which remounts this one; a remount that published its
   // first "loading, signed out" render would flip the key back and loop.
   useEffect(() => {
     if (!isLoading) setHasActiveSession(isAuthenticated);
   }, [isAuthenticated, isLoading]);
-
-  useEffect(() => {
-    return registerSessionInvalidationHandler(async (reason) => {
-      if (!isAuthenticated) {
-        return;
-      }
-
-      log.info(`Session invalidated by ${reason}, signing out`);
-      await signOut();
-    });
-  }, [isAuthenticated, signOut]);
 
   const consumeLogoutFlag = useCallback(() => {
     setJustLoggedOut(false);
@@ -168,7 +146,7 @@ function AuthProviderInner({
       isLoading,
       justLoggedOut,
       user,
-      signOut,
+      endSession,
       consumeLogoutFlag,
     }),
     [
@@ -178,7 +156,7 @@ function AuthProviderInner({
       isAuthenticated,
       isLoading,
       justLoggedOut,
-      signOut,
+      endSession,
       user,
     ]
   );
@@ -201,7 +179,7 @@ export function AuthProvider({
       isLoading: false,
       justLoggedOut: false,
       user: null,
-      signOut: async () => {},
+      endSession: async () => {},
       consumeLogoutFlag: () => {},
     }),
     []

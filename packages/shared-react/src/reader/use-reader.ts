@@ -5,7 +5,7 @@ import { useQuery } from "@tanstack/react-query";
 
 import type { User } from "@norish/shared/contracts";
 
-import type { PlatformSession, SignOut } from "../platform";
+import type { PlatformSession } from "../platform";
 import type { SessionUser } from "./session";
 import { useHydrated, usePlatform } from "../platform";
 import { useTRPC } from "../trpc";
@@ -15,7 +15,6 @@ export type ReaderIdentity = {
   /** The signed-in Reader, or null signed out or while the session is unknown. */
   user: User | null;
   isLoading: boolean;
-  signOut: SignOut;
 };
 
 /**
@@ -49,7 +48,7 @@ export function useSeededSession(
 /** The signed-in Reader: the session's, overlaid by their profile once `user.get` has it. */
 export function useReader(): ReaderIdentity {
   const trpc = useTRPC();
-  const { session, signOut } = usePlatform();
+  const { session } = usePlatform();
   const sessionUser = session.user;
 
   const { data: profile } = useQuery({
@@ -59,5 +58,5 @@ export function useReader(): ReaderIdentity {
   });
   const user = profile ?? sessionUser;
 
-  return { user, isLoading: user === null && session.isPending, signOut };
+  return { user, isLoading: user === null && session.isPending };
 }

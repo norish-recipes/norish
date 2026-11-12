@@ -22,7 +22,7 @@ import { useTranslations } from "next-intl";
 
 import { useVersionQuery } from "@norish/shared-react/config";
 import { useConnectivity } from "@norish/shared-react/offline/react";
-import { useReader } from "@norish/shared-react/reader";
+import { useReader, useSignOut } from "@norish/shared-react/reader";
 import { cssButtonPill, cssButtonPillDanger } from "@norish/web/config/css-tokens";
 import { APP_VERSION } from "@norish/web/config/site";
 
@@ -44,7 +44,8 @@ export default function NavbarUserMenu({
 }: NavbarUserMenuProps) {
   const t = useTranslations("navbar.userMenu");
   const tc = useTranslations("common.connection");
-  const { user, signOut } = useReader();
+  const { user } = useReader();
+  const signOut = useSignOut();
   const { isOffline } = useConnectivity();
   const router = useRouter();
   const [localOpen, setLocalOpen] = useState(false);
@@ -65,29 +66,19 @@ export default function NavbarUserMenu({
     [onOpenChange]
   );
 
-  // Explicit sign-out (ADR-0009): with unsynced queued changes, open the
-  // guided confirmation instead of signing out; with a clean queue, sign out
-  // directly (the sign-out itself clears the personalized caches).
-  const handleSignOutPress = useCallback(() => {
-    void (async () => {
-      const unsynced = await offlineEngine.unsyncedChanges();
+  // Explicit sign-out (ADR-0009): unsynced queued changes are discarded only after the confirm.
+  const handleSignOutPress = async () => {
+    const unsynced = await offlineEngine.unsyncedChanges();
 
-      if (unsynced > 0) {
-        setSignOutUnsyncedCount(unsynced);
+    if (unsynced > 0) setSignOutUnsyncedCount(unsynced);
+    else await signOut();
+  };
 
-        return;
-      }
-
-      await signOut();
-    })();
-  }, [signOut]);
-
-  const handleConfirmedSignOut = useCallback(async () => {
+  // Still here when the session could not be ended: the dialog closes with everything kept.
+  const handleConfirmedSignOut = async () => {
     await signOut({ discardQueue: true });
-    // Still here: the auth sign-out failed (e.g. Offline) and nothing was
-    // discarded. Close the dialog with session, queue, and caches intact.
     setSignOutUnsyncedCount(null);
-  }, [signOut]);
+  };
 
   if (!user) return null;
 
@@ -239,7 +230,7 @@ export default function NavbarUserMenu({
               variant="danger"
               onPress={() => {
                 handleOpenChange(false);
-                handleSignOutPress();
+                void handleSignOutPress();
               }}
             >
               <span className="text-danger">
