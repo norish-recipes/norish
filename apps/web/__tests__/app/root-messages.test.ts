@@ -55,17 +55,15 @@ describe("the root layout's client messages", () => {
         [
           ...fs
             .readFileSync(path.join(sharedRoot, file), "utf8")
-            .matchAll(/toast\.translate\(\s*"([^"]+)"/g),
+            // Every settings id, a template's fixed prefix included: ids travel through variables.
+            .matchAll(/["'`](settings\.[^"'`$]*)/g),
         ].map(([, id = ""]) => ({ file, id }))
       );
 
     // A broken walk must not read as a green run.
     expect(reads.length).toBeGreaterThan(0);
     expect(
-      reads.filter(
-        ({ id }) =>
-          id.startsWith("settings.") && !SHIPPED.some((shipped) => id.startsWith(`${shipped}.`))
-      )
+      reads.filter(({ id }) => !SHIPPED.some((shipped) => id.startsWith(`${shipped}.`)))
     ).toEqual([]);
   });
 });
