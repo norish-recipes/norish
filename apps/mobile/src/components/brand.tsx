@@ -8,8 +8,11 @@ import { useResolvedColorScheme } from "@/hooks/use-resolved-color-scheme";
 import { useIntl } from "react-intl";
 
 // The native splash draws the logo at this width too (app.json's imageWidth); the viewBox is 2370 x 639.
-export const LOGO_WIDTH = 168;
-export const LOGO_HEIGHT = (LOGO_WIDTH * 639) / 2370;
+const LOGO_WIDTH = 168;
+const LOGO_HEIGHT = (LOGO_WIDTH * 639) / 2370;
+// The splash centres logo and slogan as one group (gap-3, the slogan's 20pt line); the
+// splash PNGs carry that 32pt as transparent rows under the logo, so iOS centres it the same.
+export const BRAND_HEIGHT = LOGO_HEIGHT + 12 + 20;
 // The form screens' boards (Login, Register) draw it smaller, under their prefix line.
 const COMPACT_LOGO_WIDTH = 144;
 

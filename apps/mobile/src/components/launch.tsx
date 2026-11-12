@@ -14,7 +14,7 @@ import Animated, {
   useSharedValue,
 } from "react-native-reanimated";
 import { scheduleOnRN } from "react-native-worklets";
-import { Brand, LOGO_HEIGHT } from "@/components/brand";
+import { Brand, BRAND_HEIGHT } from "@/components/brand";
 import { resolveLaunchMotion, stepLaunchClock } from "@/lib/boot/boot-state";
 import * as SplashScreen from "expo-splash-screen";
 import { useThemeColor } from "heroui-native";
@@ -81,8 +81,8 @@ function LaunchOverlay({ handoff, launch }: { handoff: LaunchHandoff | null; lau
   const [held, setHeld] = useState(() => clock.get() >= HOLD_END);
   // The clock starts once this frame is on screen, so the slogan fades in visibly.
   const [shown, setShown] = useState(() => clock.get() > 0);
-  // The native splash centres the logo on the window, so this frame does too.
-  const top = (height - LOGO_HEIGHT) / 2;
+  // The native splash centres the logo-plus-slogan group on the window, so this frame does too.
+  const top = (height - BRAND_HEIGHT) / 2;
   const decided = held ? resolveLaunchMotion(handoff, reduceMotion, target) : null;
   const glide = motion === "glide";
 
