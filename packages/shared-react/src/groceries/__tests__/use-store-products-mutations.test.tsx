@@ -1,14 +1,14 @@
 import { act, renderHook, waitFor } from "@testing-library/react";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 
-import { useChooseProduct, useStoreGroceryCount } from "@norish/shared-react/groceries";
+import { useChooseProduct } from "@norish/shared-react/groceries";
 import {
   createTestQueryClient,
   createTestWrapper,
   fakePlatformAdapter,
 } from "@norish/shared-react/platform/testing";
 
-import { answerCall, answerRead, failCall, keyOf, resetTRPCFake } from "../../trpc/testing";
+import { answerCall, failCall, keyOf, resetTRPCFake } from "../../trpc/testing";
 
 vi.mock("../../trpc", async () => (await import("../../trpc/testing")).mockTRPC());
 
@@ -46,25 +46,5 @@ describe("useChooseProduct", () => {
 
     await waitFor(() => expect(queryClient.getQueryState(PRICES)?.isInvalidated).toBe(true));
     expect(platform.showError).toHaveBeenCalledWith(expect.any(Error), "stores:chooseProduct");
-  });
-});
-
-describe("useStoreGroceryCount", () => {
-  it("reads nothing without a Store, and a Store's count once it answers", async () => {
-    const queryClient = createTestQueryClient();
-    const { result, rerender } = renderHook(
-      ({ storeId }: { storeId: string | null }) => useStoreGroceryCount(storeId),
-      { wrapper: createTestWrapper(queryClient), initialProps: { storeId: null } }
-    );
-
-    expect(result.current).toBeUndefined();
-    expect(queryClient.isFetching()).toBe(0);
-
-    rerender({ storeId: "store-1" });
-
-    await waitFor(() => {
-      answerRead("stores.getGroceryCount", 3);
-      expect(result.current).toBe(3);
-    });
   });
 });

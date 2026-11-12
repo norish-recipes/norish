@@ -15,7 +15,8 @@ export {
 export { useRecipeId, type RecipeIdResult } from "./use-recipe-id";
 export { useRecipeImages } from "./use-recipe-images";
 export { useRecipeIngredients } from "./use-recipe-ingredients";
-export { useHeldReads, useHeldRecipeName, usePrefetchRecipe } from "./use-held-recipe";
+export { useHeldReads, useHeldRecipeName } from "./use-held-reads";
+export { usePrefetchRecipe } from "./use-prefetch-recipe";
 export { useRecipeQuery, type RecipeQueryResult } from "./use-recipe-query";
 export { useRecipeSubscription, type RecipeSubscriptionCallbacks } from "./use-recipe-subscription";
 export { useRecipeVideos } from "./use-recipe-videos";
