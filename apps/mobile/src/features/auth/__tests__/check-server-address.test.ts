@@ -28,6 +28,16 @@ describe("checkServerAddress", () => {
     ).resolves.toEqual({ outcome: "too-old", address: "https://old.example", version: "0.1.0" });
   });
 
+  it("sends a Norish that reports no version to Update your server, with no version", async () => {
+    const before026 = { status: "ok", versions: { root: "0.25.1" }, parser: { status: "ok" } };
+
+    await expect(checkServerAddress("https://old.example", answering(before026))).resolves.toEqual({
+      outcome: "too-old",
+      address: "https://old.example",
+      version: undefined,
+    });
+  });
+
   it("asks for a valid URL without asking the network", async () => {
     const fetcher = answering(norish("99.0.0"));
 
