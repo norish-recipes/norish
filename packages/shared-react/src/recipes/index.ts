@@ -56,7 +56,9 @@ export {
   type MyRecipeSharesQueryResult,
   type RecipeSharesQueryResult,
 } from "./use-recipe-shares-query";
+export { useSharePublicConfigQuery } from "./use-share-public-config-query";
 export { useSharedRecipeQuery, type SharedRecipeQueryResult } from "./use-shared-recipe-query";
+export { useWorkedOutNutrition } from "./use-worked-out-nutrition";
 export type {
   CookbooksMutationsResult,
   EditableCookbook,

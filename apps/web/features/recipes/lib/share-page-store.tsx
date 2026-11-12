@@ -1,7 +1,6 @@
 "use client";
 
 import type { ReactNode } from "react";
-import { useSharePublicConfigQuery } from "@/features/recipes/hooks/use-share-public-config-query";
 import { createStore } from "zustand";
 
 import type { MeasurementSystem, PublicRecipeViewDTO } from "@norish/shared/contracts";
@@ -10,6 +9,7 @@ import {
   scaleIngredients,
   servingsShown,
   useSharedRecipeQuery,
+  useSharePublicConfigQuery,
 } from "@norish/shared-react/recipes";
 
 export type SharePageState = {

@@ -7,14 +7,17 @@ import {
   NutritionBody,
   NutritionPortionControl,
 } from "@/features/recipes/components/read-only";
-import { useWorkedOutNutrition } from "@/features/recipes/hooks/use-worked-out-nutrition";
 import { useHiddenItemVisibility } from "@/hooks/user/use-hidden-item-visibility";
 import { ChevronRightIcon } from "@heroicons/react/16/solid";
 import { Card, Chip, Skeleton } from "@heroui/react";
 import { useFormatter, useTranslations } from "next-intl";
 
 import type { LeftOutReason, WorkedOutNutrition } from "@norish/shared/lib/recipe-nutrition";
-import { usePageEnrichment, usePageRecipe } from "@norish/shared-react/recipes";
+import {
+  usePageEnrichment,
+  usePageRecipe,
+  useWorkedOutNutrition,
+} from "@norish/shared-react/recipes";
 import { NUTRITION_CREDIT_NAMES } from "@norish/shared/contracts/ingredient-nutrition";
 import { PANEL_REASONS } from "@norish/shared/lib/recipe-nutrition";
 

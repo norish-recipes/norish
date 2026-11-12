@@ -8,6 +8,8 @@ import type {
   UpdateRecipeShareInputDto,
 } from "@norish/shared/contracts";
 
+import { answered } from "../offline/settled";
+import { usePlatform } from "../platform/platform";
 import { useTRPC } from "../trpc";
 import { useRecipeShareCacheHelpers } from "./use-recipe-share-cache";
 
@@ -28,6 +30,7 @@ export type RecipeShareMutationsResult = {
 
 export function useRecipeShareMutations(recipeId: string | null): RecipeShareMutationsResult {
   const trpc = useTRPC();
+  const { toast, showError } = usePlatform();
   const {
     invalidateRecipeShares,
     invalidateMyRecipeShares,
@@ -50,7 +53,12 @@ export function useRecipeShareMutations(recipeId: string | null): RecipeShareMut
     trpc.recipes.shareCreate.mutationOptions({
       onSuccess: (data) => {
         invalidateShareCollections(data.id, data.recipeId);
+        toast.show({
+          severity: "success",
+          title: toast.translate("recipes.sharePanel.createSuccess"),
+        });
       },
+      onError: (error) => showError(error, "recipe-share-panel:create"),
     })
   );
   const { mutateAsync: mutateCreateAsync } = createMutation;
@@ -103,7 +111,7 @@ export function useRecipeShareMutations(recipeId: string | null): RecipeShareMut
         return null;
       }
 
-      return mutateCreateAsync({ recipeId, expiresIn });
+      return answered(mutateCreateAsync({ recipeId, expiresIn }));
     },
     updateShare: (input) => {
       mutateUpdate(input);

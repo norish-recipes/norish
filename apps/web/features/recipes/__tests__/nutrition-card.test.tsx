@@ -19,7 +19,8 @@ const mocks = vi.hoisted(() => ({
   panel: null as { id: string | null; open: boolean } | null,
 }));
 
-vi.mock("@/features/recipes/hooks/use-worked-out-nutrition", () => ({
+vi.mock("@norish/shared-react/recipes", async (importOriginal) => ({
+  ...(await importOriginal<object>()),
   useWorkedOutNutrition: () => mocks.workedOut,
 }));
 

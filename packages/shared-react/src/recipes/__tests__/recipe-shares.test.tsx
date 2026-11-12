@@ -6,6 +6,11 @@ import { createRoot } from "react-dom/client";
 import { afterEach, describe, expect, it, vi } from "vitest";
 
 import type { RecipeShareSummaryDto } from "@norish/shared/contracts";
+import {
+  createTestQueryClient,
+  createTestWrapper,
+  fakePlatformAdapter,
+} from "@norish/shared-react/platform/testing";
 import * as recipes from "@norish/shared-react/recipes";
 
 import { trackedEvent } from "../../../__tests__/realtime/tracked-event";
@@ -58,6 +63,7 @@ function createSubscriptionOptionsFactory(event: string) {
 vi.mock("../../trpc", () => ({ useTRPC: () => trpc }));
 
 const sentShareWrites: [string, unknown][] = [];
+const refuseCreate = { current: false };
 
 /** A share write that answers with the share, as the server does. */
 function shareWrite(name: string) {
@@ -100,7 +106,17 @@ const trpc = {
       ],
     },
     onShareEvent: { subscriptionOptions: createSubscriptionOptionsFactory("onShareEvent") },
-    shareCreate: shareWrite("shareCreate"),
+    shareCreate: {
+      mutationOptions: (options?: object) => ({
+        ...options,
+        mutationFn: async (input: { recipeId: string }) => {
+          sentShareWrites.push(["shareCreate", input]);
+          if (refuseCreate.current) throw new Error("refused");
+
+          return { id: "share-1", recipeId: input.recipeId, url: "/share/token-1" };
+        },
+      }),
+    },
     shareUpdate: shareWrite("shareUpdate"),
     shareRevoke: shareWrite("shareRevoke"),
     shareReactivate: shareWrite("shareReactivate"),
@@ -121,6 +137,7 @@ afterEach(() => {
 
   useSubscriptionMock.mockReset();
   sentShareWrites.length = 0;
+  refuseCreate.current = false;
 });
 
 describe("recipe share hooks", () => {
@@ -147,9 +164,7 @@ describe("recipe share hooks", () => {
     const listKey = trpc.recipes.shareList.queryKey({ recipeId: "recipe-1" });
 
     const { result } = renderHook(() => recipes.useRecipeShareMutations("recipe-1"), {
-      wrapper: ({ children }) => (
-        <QueryClientProvider client={queryClient}>{children}</QueryClientProvider>
-      ),
+      wrapper: createTestWrapper(queryClient),
     });
 
     act(() => result.current.revokeShare(share.id, share.version));
@@ -169,6 +184,38 @@ describe("recipe share hooks", () => {
         )
       ).toHaveLength(3)
     );
+  });
+
+  it("creates a share, toasts it and answers the share", async () => {
+    const platform = fakePlatformAdapter();
+    const { result } = renderHook(() => recipes.useRecipeShareMutations("recipe-1"), {
+      wrapper: createTestWrapper(createTestQueryClient(), platform),
+    });
+
+    const share = await act(() => result.current.createShare("1week"));
+
+    expect(sentShareWrites).toEqual([
+      ["shareCreate", { recipeId: "recipe-1", expiresIn: "1week" }],
+    ]);
+    expect(share?.url).toBe("/share/token-1");
+    expect(platform.toast.show).toHaveBeenCalledWith({
+      severity: "success",
+      title: "recipes.sharePanel.createSuccess",
+    });
+  });
+
+  it("tells the reader a refused share and answers null", async () => {
+    refuseCreate.current = true;
+    const platform = fakePlatformAdapter();
+    const { result } = renderHook(() => recipes.useRecipeShareMutations("recipe-1"), {
+      wrapper: createTestWrapper(createTestQueryClient(), platform),
+    });
+
+    const share = await act(() => result.current.createShare());
+
+    expect(share).toBeNull();
+    expect(platform.showError).toHaveBeenCalledWith(expect.any(Error), "recipe-share-panel:create");
+    expect(platform.toast.show).not.toHaveBeenCalled();
   });
 
   it("invalidates recipe share queries when share lifecycle events arrive", () => {

@@ -3,7 +3,6 @@
 import { useMemo, useState } from "react";
 import Panel, { PanelPortal } from "@/components/Panel/Panel";
 import RecipeShareStatusChip from "@/components/recipes/recipe-share-status-chip";
-import { showSafeErrorToast } from "@/lib/ui/safe-error-toast";
 import {
   ArrowTopRightOnSquareIcon,
   ClipboardDocumentIcon,
@@ -23,17 +22,14 @@ import {
   Spinner,
   toast,
 } from "@heroui/react";
-import { useMutation } from "@tanstack/react-query";
 import { useTranslations } from "next-intl";
 
 import type { CreateRecipeShareInputDto } from "@norish/shared/contracts";
 import {
   useLoadedPageRecipe,
-  useRecipeShareCacheHelpers,
   useRecipeShareMutations,
   useRecipeSharesQuery,
 } from "@norish/shared-react/recipes";
-import { useTRPC } from "@norish/shared-react/trpc";
 import { addBasePath } from "@norish/shared/lib/base-path";
 
 type Props = {
@@ -55,11 +51,11 @@ function formatDate(date: Date | null) {
 }
 export default function RecipeSharePanel({ open, onOpenChange }: Props) {
   const t = useTranslations("recipes.sharePanel");
-  const tErrors = useTranslations("common.errors");
-  const trpc = useTRPC();
   const recipe = useLoadedPageRecipe();
   const { shares, isLoading: isLoadingShares } = useRecipeSharesQuery(recipe.id);
   const {
+    createShare,
+    isCreating,
     revokeShare,
     reactivateShare,
     deleteShare,
@@ -67,37 +63,15 @@ export default function RecipeSharePanel({ open, onOpenChange }: Props) {
     isReactivating: isReactivatingShare,
     isDeleting: isDeletingShare,
   } = useRecipeShareMutations(recipe.id);
-  const {
-    invalidateRecipeShares,
-    invalidateMyRecipeShares,
-    invalidateAdminRecipeShares,
-    invalidateRecipeShare,
-  } = useRecipeShareCacheHelpers();
   const [expiresIn, setExpiresIn] = useState<CreateRecipeShareInputDto["expiresIn"]>("forever");
   const [latestCreatedUrl, setLatestCreatedUrl] = useState<string | null>(null);
-  const createShareMutation = useMutation(
-    trpc.recipes.shareCreate.mutationOptions({
-      onSuccess: (data) => {
-        invalidateRecipeShares(data.recipeId);
-        invalidateMyRecipeShares();
-        invalidateAdminRecipeShares();
-        invalidateRecipeShare(data.id);
-        setLatestCreatedUrl(new URL(addBasePath(data.url), window.location.origin).toString());
-        toast(t("createSuccess"), {
-          variant: "success",
-        });
-      },
-      onError: (error) => {
-        showSafeErrorToast({
-          title: tErrors("operationFailed"),
-          description: tErrors("technicalDetails"),
-          color: "danger",
-          context: "recipe-share-panel:create",
-          error,
-        });
-      },
-    })
-  );
+  const create = async () => {
+    const share = await createShare(expiresIn);
+
+    if (share) {
+      setLatestCreatedUrl(new URL(addBasePath(share.url), window.location.origin).toString());
+    }
+  };
   const shareRows = useMemo(
     () => shares.slice().sort((a, b) => b.createdAt.getTime() - a.createdAt.getTime()),
     [shares]
@@ -125,16 +99,7 @@ export default function RecipeSharePanel({ open, onOpenChange }: Props) {
             <Card.Content className="gap-3">
               <div className="flex flex-col gap-3 sm:flex-row sm:items-end">
                 <ExpirySelect expiresIn={expiresIn} onSelectExpiry={setExpiresIn} />
-                <Button
-                  onPress={() =>
-                    createShareMutation.mutate({
-                      recipeId: recipe.id,
-                      expiresIn,
-                    })
-                  }
-                  variant="primary"
-                  isPending={createShareMutation.isPending}
-                >
+                <Button onPress={create} variant="primary" isPending={isCreating}>
                   {<LinkIcon className="h-4 w-4" />}
                   {t("createLink")}
                 </Button>

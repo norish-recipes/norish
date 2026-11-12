@@ -7,7 +7,6 @@ import {
   RecipeHeaderMobile,
   SourceCard,
 } from "@/features/recipes/components/read-only";
-import { useWorkedOutNutrition } from "@/features/recipes/hooks/use-worked-out-nutrition";
 import {
   MOBILE_RECIPE_MEDIA_HEIGHT_STYLE,
   RECIPE_HERO_CHROME_BUTTON_CLASS,
@@ -28,6 +27,7 @@ import {
   usePageServings,
   useRatingQuery,
   useRatingsMutation,
+  useWorkedOutNutrition,
 } from "@norish/shared-react/recipes";
 import StarRating from "@norish/ui/star-rating";
 import { cssFloatingDockContentClearance } from "@norish/web/config/css-tokens";
