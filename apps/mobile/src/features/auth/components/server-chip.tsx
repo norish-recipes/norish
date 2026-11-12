@@ -1,5 +1,6 @@
 import React from "react";
 import { hostOf } from "@/features/auth/utils/host-of";
+import { changeServerAddress } from "@/hooks/use-change-server-address";
 import { Button, Host, HStack, Image, Text } from "@expo/ui/swift-ui";
 import {
   accessibilityIdentifier,
@@ -9,14 +10,12 @@ import {
   foregroundStyle,
   lineLimit,
 } from "@expo/ui/swift-ui/modifiers";
-import { useRouter } from "expo-router";
 import { useThemeColor } from "heroui-native";
 import { useIntl } from "react-intl";
 import { useCSSVariable } from "uniwind";
 
-/** The glass chip at a signed-out screen's foot: the server's host, opening Server address. */
+/** The glass chip at a screen's foot: the server's host, changing the Server Address. */
 export function ServerChip({ address }: { address: string }) {
-  const router = useRouter();
   const intl = useIntl();
   const [foregroundColor, mutedColor, accentColor] = useThemeColor([
     "foreground",
@@ -37,7 +36,7 @@ export function ServerChip({ address }: { address: string }) {
           accessibilityLabel(intl.formatMessage({ id: "auth.login.changeServer" }, { host })),
           accessibilityIdentifier("server-chip"),
         ]}
-        onPress={() => router.push({ pathname: "/(auth)", params: { change: "server" } })}
+        onPress={changeServerAddress}
       >
         <HStack spacing={8}>
           <Image

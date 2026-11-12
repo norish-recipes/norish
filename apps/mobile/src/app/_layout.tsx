@@ -7,6 +7,10 @@ import { GestureHandlerRootView } from "react-native-gesture-handler";
 import { LaunchProvider, LaunchSplash } from "@/components/launch";
 import { LaunchVersionCheck } from "@/features/auth/components/launch-version-check";
 import { StorageUnavailableScreen } from "@/features/auth/screens/storage-unavailable-screen";
+import {
+  useServerChangeAfterSignOut,
+  useSignOutBeforeServerChange,
+} from "@/hooks/use-change-server-address";
 import { useResolvedColorScheme } from "@/hooks/use-resolved-color-scheme";
 import { useServerAddress } from "@/hooks/use-server-address";
 import { useUserLocaleSync } from "@/hooks/use-user-locale-sync";
@@ -169,6 +173,8 @@ function SessionStack() {
   const signedIn = session.user !== null;
   const pending = session.isPending && !signedIn;
 
+  useServerChangeAfterSignOut(!pending && !signedIn);
+
   const app = (
     <>
       <RootStack signedIn={signedIn} />
@@ -204,8 +210,9 @@ function AuthenticatedProviders({ children }: { children: React.ReactNode }) {
   );
 }
 
-/** The signed-in shell's effects: the Reader's locale and subscriptions. */
+/** The signed-in shell's effects: the Reader's locale and subscriptions, and Sign-out before a server change. */
 function AuthenticatedEffects() {
+  useSignOutBeforeServerChange();
   useUserLocaleSync();
   useHouseholdSubscription();
   usePermissionsSubscription();

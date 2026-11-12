@@ -1,6 +1,7 @@
 import React from "react";
 import { Alert, ScrollView, Text, View } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
+import { useConfirmedSignOut } from "@/hooks/use-confirmed-sign-out";
 import { offlineEngine } from "@/lib/offline/engine";
 import { Button, Checkbox } from "heroui-native";
 import { useIntl } from "react-intl";
@@ -11,7 +12,7 @@ import {
   useGroceriesSubscription,
 } from "@norish/shared-react/groceries";
 import { useOfflineStatus } from "@norish/shared-react/offline/react";
-import { useReader, useSignOut } from "@norish/shared-react/reader";
+import { useReader } from "@norish/shared-react/reader";
 import { useRecipesQuery } from "@norish/shared-react/recipes";
 
 // Throwaway screen that proves sign-in, tRPC, realtime and offline end to end
@@ -19,7 +20,7 @@ import { useRecipesQuery } from "@norish/shared-react/recipes";
 export function SmokeScreen() {
   const intl = useIntl();
   const { user } = useReader();
-  const signOut = useSignOut();
+  const signOut = useConfirmedSignOut();
   const { total, isLoading: recipesLoading } = useRecipesQuery({ limit: 1 });
   const { groceries } = useGroceriesQuery();
   const { toggleGroceries, toggleRecurringGrocery } = useGroceriesMutations();
@@ -36,30 +37,6 @@ export function SmokeScreen() {
       { text: t("outbox.discardCancel"), style: "cancel" },
       { text: t("outbox.discardConfirm"), style: "destructive", onPress: () => void discardAll() },
     ]);
-
-  // Unsynced work is only discarded once the user says so (ADR-0009).
-  const handleSignOut = async () => {
-    const unsynced = await offlineEngine.unsyncedChanges();
-
-    if (unsynced === 0) {
-      await signOut();
-
-      return;
-    }
-
-    Alert.alert(
-      intl.formatMessage({ id: "navbar.userMenu.signOutConfirm.title" }),
-      intl.formatMessage({ id: "navbar.userMenu.signOutConfirm.description" }, { count: unsynced }),
-      [
-        { text: intl.formatMessage({ id: "common.actions.cancel" }), style: "cancel" },
-        {
-          text: intl.formatMessage({ id: "navbar.userMenu.logout" }),
-          style: "destructive",
-          onPress: () => void signOut({ discardQueue: true }),
-        },
-      ]
-    );
-  };
 
   return (
     <SafeAreaView style={{ flex: 1 }}>
@@ -115,7 +92,7 @@ export function SmokeScreen() {
             <Button.Label>{t("outbox.discardAll")}</Button.Label>
           </Button>
         ) : null}
-        <Button testID="smoke-sign-out" variant="secondary" onPress={() => void handleSignOut()}>
+        <Button testID="smoke-sign-out" variant="secondary" onPress={() => void signOut()}>
           <Button.Label>Sign out</Button.Label>
         </Button>
       </ScrollView>

@@ -138,3 +138,8 @@ export function resolveUpdateServerAddress(
 
   return address ? { screen: "update-server", address } : { screen: "signed-out-entry" };
 }
+
+/** Changing the Server Address: signed out, Server address opens; signed in, Sign-out comes first. */
+export function resolveServerChange(signedIn: boolean): "server-address" | "sign-out-first" {
+  return signedIn ? "sign-out-first" : "server-address";
+}

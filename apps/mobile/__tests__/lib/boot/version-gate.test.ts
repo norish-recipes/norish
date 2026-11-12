@@ -1,6 +1,7 @@
 import {
   resolveForegroundVersionCheck,
   resolveLaunchVersionCheck,
+  resolveServerChange,
   resolveUpdateServerAddress,
 } from "@/lib/boot/boot-state";
 import { describe, expect, it } from "vitest";
@@ -75,5 +76,15 @@ describe("resolveUpdateServerAddress", () => {
   it("sends the reader to the signed-out entry with no address to check", () => {
     expect(resolveUpdateServerAddress(undefined, "")).toEqual({ screen: "signed-out-entry" });
     expect(resolveUpdateServerAddress("", "")).toEqual({ screen: "signed-out-entry" });
+  });
+});
+
+describe("resolveServerChange", () => {
+  it("opens Server address while signed out", () => {
+    expect(resolveServerChange(false)).toBe("server-address");
+  });
+
+  it("signs out first while signed in", () => {
+    expect(resolveServerChange(true)).toBe("sign-out-first");
   });
 });
