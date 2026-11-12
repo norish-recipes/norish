@@ -26,6 +26,16 @@ export type ServerAddressState =
   | { status: "ready"; url: string | null }
   | { status: "error"; error: unknown };
 
+export type ServerAddressErrorId =
+  "auth.connect.errors.invalidUrl" | "auth.connect.errors.unreachable";
+
+/** What a version check of a Server Address found. */
+export type ServerAddressCheck =
+  | { outcome: "ok"; address: string }
+  /** `version` is what the server reported, when it reported one. */
+  | { outcome: "too-old"; address: string; version?: string }
+  | { outcome: "error"; messageId: ServerAddressErrorId };
+
 function emitServerAddressChange() {
   for (const listener of listeners) {
     listener();

@@ -1,4 +1,4 @@
-import type { ServerAddressState } from "@/lib/network/server-address";
+import type { ServerAddressCheck, ServerAddressState } from "@/lib/network/server-address";
 
 /**
  * What the app shell should render once (or while) its async prerequisites
@@ -95,12 +95,6 @@ export function stepLaunchClock(clock: number, elapsed: number | null, stop: num
 
   return Math.min(clock + Math.min(elapsed ?? 0, MAX_LAUNCH_STEP), stop);
 }
-
-/** What a version check of a Server Address found (the feature's check result satisfies it). */
-type ServerAddressCheck =
-  | { outcome: "ok"; address: string }
-  | { outcome: "too-old"; address: string; version?: string }
-  | { outcome: "error" };
 
 /** At launch: too old goes to Update your server; unreachable or fine carries on. */
 export function resolveLaunchVersionCheck(
