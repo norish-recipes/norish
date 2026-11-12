@@ -14,6 +14,7 @@ import { iconIds } from "@norish/shared/lib/ingredient-icon-ids";
 import { uploadForm } from "@norish/shared/lib/upload-form";
 
 import type { StoredIcon } from "./types";
+import { answered } from "../offline/settled";
 import { useTRPC } from "../trpc";
 import { useCatalogueFailure } from "./use-catalogue-failure";
 
@@ -106,10 +107,7 @@ export function useIngredientIconMutations(ingredientId: string) {
     )
   );
   const stored = (write: Promise<StoredIcon>) =>
-    write.then(
-      ({ file, address }): StoredIcon => ({ file, address }),
-      () => null
-    );
+    answered(write.then(({ file, address }): StoredIcon => ({ file, address })));
 
   return {
     upload: (image: File) => stored(upload.mutateAsync(uploadForm({ ingredientId, image }))),

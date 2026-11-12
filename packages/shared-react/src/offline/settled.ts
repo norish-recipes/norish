@@ -11,3 +11,10 @@ export const wentThrough = (write: Promise<unknown>): Promise<boolean> =>
     () => true,
     () => false
   );
+
+/** Resolves a write's answer, or null when it failed; its `onError` already told the reader why. */
+export const answered = <T>(write: Promise<T>): Promise<T | null> =>
+  write.then(
+    (answer) => answer,
+    () => null
+  );
