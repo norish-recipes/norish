@@ -1,7 +1,8 @@
 import type { AuthClient } from "@/lib/auth/auth-client";
 import React, { useCallback, useMemo, useState } from "react";
-import { Pressable, Text } from "react-native";
-import { AuthShell } from "@/features/auth/components/auth-shell";
+import { Pressable, Text, View } from "react-native";
+import { Brand } from "@/components/brand";
+import { AuthLayout } from "@/features/auth/components/auth-layout";
 import { BackendMissingState } from "@/features/auth/components/backend-missing-state";
 import { CredentialForm } from "@/features/auth/components/credential-form";
 import { NoProvidersState } from "@/features/auth/components/no-providers-state";
@@ -174,16 +175,20 @@ export function LoginScreen() {
   );
 
   return (
-    <AuthShell footer={footer} headingPrefix={intl.formatMessage({ id: "auth.login.title" })}>
-      {authClient === null ? (
-        <BackendMissingState
-          onOpenConnect={() => {
-            router.replace("/(auth)");
-          }}
-        />
-      ) : (
-        <LoginForm authClient={authClient} redirectTo={redirectTo} />
-      )}
-    </AuthShell>
+    <AuthLayout>
+      <Brand prefix={intl.formatMessage({ id: "auth.login.title" })} slogan={false} />
+      <View className="mt-7 gap-3">
+        {authClient === null ? (
+          <BackendMissingState
+            onOpenConnect={() => {
+              router.replace("/(auth)");
+            }}
+          />
+        ) : (
+          <LoginForm authClient={authClient} redirectTo={redirectTo} />
+        )}
+      </View>
+      {footer}
+    </AuthLayout>
   );
 }

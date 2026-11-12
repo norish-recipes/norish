@@ -1,7 +1,8 @@
 import type { AuthClient } from "@/lib/auth/auth-client";
 import React, { useCallback, useState } from "react";
 import { Pressable, Text, View } from "react-native";
-import { AuthShell } from "@/features/auth/components/auth-shell";
+import { Brand } from "@/components/brand";
+import { AuthLayout } from "@/features/auth/components/auth-layout";
 import { styles } from "@/features/auth/styles/register.styles";
 import { authFailure } from "@/features/auth/utils/auth-failure";
 import { useAuthClient } from "@/lib/auth/use-auth-client";
@@ -28,17 +29,20 @@ export function RegisterScreen() {
 
   if (authClient === null) {
     return (
-      <AuthShell headingPrefix={intl.formatMessage({ id: "auth.signup.title" })}>
-        <View style={styles.centered}>
-          <Button
-            onPress={() => {
-              router.replace("/(auth)");
-            }}
-          >
-            <Button.Label>{intl.formatMessage({ id: "auth.errors.backToLogin" })}</Button.Label>
-          </Button>
+      <AuthLayout>
+        <Brand prefix={intl.formatMessage({ id: "auth.signup.title" })} slogan={false} />
+        <View className="mt-7 gap-3">
+          <View style={styles.centered}>
+            <Button
+              onPress={() => {
+                router.replace("/(auth)");
+              }}
+            >
+              <Button.Label>{intl.formatMessage({ id: "auth.errors.backToLogin" })}</Button.Label>
+            </Button>
+          </View>
         </View>
-      </AuthShell>
+      </AuthLayout>
     );
   }
 
@@ -141,19 +145,25 @@ function RegisterForm({
   // If we've loaded the providers and registration is not enabled, show a message
   if (hasData && !registrationEnabled) {
     return (
-      <AuthShell
-        footer={signInLink}
-        headingPrefix={intl.formatMessage({
-          id: "auth.errors.registration_is_currently_disabled.title",
-        })}
-      >
-        <Card.Title style={{ color: foregroundColor }}>
-          {intl.formatMessage({ id: "auth.errors.registration_is_currently_disabled.title" })}
-        </Card.Title>
-        <Card.Description style={{ color: mutedColor }}>
-          {intl.formatMessage({ id: "auth.errors.registration_is_currently_disabled.description" })}
-        </Card.Description>
-      </AuthShell>
+      <AuthLayout>
+        <Brand
+          prefix={intl.formatMessage({
+            id: "auth.errors.registration_is_currently_disabled.title",
+          })}
+          slogan={false}
+        />
+        <View className="mt-7 gap-3">
+          <Card.Title style={{ color: foregroundColor }}>
+            {intl.formatMessage({ id: "auth.errors.registration_is_currently_disabled.title" })}
+          </Card.Title>
+          <Card.Description style={{ color: mutedColor }}>
+            {intl.formatMessage({
+              id: "auth.errors.registration_is_currently_disabled.description",
+            })}
+          </Card.Description>
+        </View>
+        {signInLink}
+      </AuthLayout>
     );
   }
 
@@ -161,8 +171,67 @@ function RegisterForm({
   const isFormValid = name.trim() && email.trim() && password && confirmPassword && passwordsMatch;
 
   return (
-    <AuthShell
-      footer={
+    <AuthLayout>
+      <Brand prefix={intl.formatMessage({ id: "auth.signup.title" })} slogan={false} />
+      <View className="mt-7 gap-3">
+        <View style={styles.formSection}>
+          <Input
+            autoCapitalize="words"
+            autoCorrect={false}
+            placeholder={intl.formatMessage({ id: "auth.signup.name" })}
+            value={name}
+            onChangeText={(text) => {
+              setName(text);
+              setErrorMessage(null);
+            }}
+          />
+          <Input
+            autoCapitalize="none"
+            autoCorrect={false}
+            keyboardType="email-address"
+            placeholder={intl.formatMessage({ id: "auth.signup.email" })}
+            value={email}
+            onChangeText={(text) => {
+              setEmail(text);
+              setErrorMessage(null);
+            }}
+          />
+          <Input
+            secureTextEntry
+            placeholder={intl.formatMessage({ id: "auth.signup.password" })}
+            value={password}
+            onChangeText={(text) => {
+              setPassword(text);
+              setErrorMessage(null);
+            }}
+          />
+          <Input
+            secureTextEntry
+            placeholder={intl.formatMessage({ id: "auth.signup.confirmPassword" })}
+            value={confirmPassword}
+            onChangeText={(text) => {
+              setConfirmPassword(text);
+              setErrorMessage(null);
+            }}
+          />
+          <Text className="font-normal" style={[styles.hint, { color: mutedColor }]}>
+            Password must be {MIN_PASSWORD_LENGTH}-{MAX_PASSWORD_LENGTH} characters.
+          </Text>
+          <Button
+            isDisabled={!isFormValid || isSubmitting}
+            onPress={() => {
+              void handleSignUp();
+            }}
+          >
+            <Button.Label>
+              {isSubmitting
+                ? intl.formatMessage({ id: "common.status.loading" })
+                : intl.formatMessage({ id: "auth.signup.createAccount" })}
+            </Button.Label>
+          </Button>
+        </View>
+      </View>
+      {
         <>
           {errorMessage && (
             <Text className="font-medium" style={[styles.errorText, { color: dangerColor }]}>
@@ -172,64 +241,6 @@ function RegisterForm({
           {signInLink}
         </>
       }
-      headingPrefix={intl.formatMessage({ id: "auth.signup.title" })}
-    >
-      <View style={styles.formSection}>
-        <Input
-          autoCapitalize="words"
-          autoCorrect={false}
-          placeholder={intl.formatMessage({ id: "auth.signup.name" })}
-          value={name}
-          onChangeText={(text) => {
-            setName(text);
-            setErrorMessage(null);
-          }}
-        />
-        <Input
-          autoCapitalize="none"
-          autoCorrect={false}
-          keyboardType="email-address"
-          placeholder={intl.formatMessage({ id: "auth.signup.email" })}
-          value={email}
-          onChangeText={(text) => {
-            setEmail(text);
-            setErrorMessage(null);
-          }}
-        />
-        <Input
-          secureTextEntry
-          placeholder={intl.formatMessage({ id: "auth.signup.password" })}
-          value={password}
-          onChangeText={(text) => {
-            setPassword(text);
-            setErrorMessage(null);
-          }}
-        />
-        <Input
-          secureTextEntry
-          placeholder={intl.formatMessage({ id: "auth.signup.confirmPassword" })}
-          value={confirmPassword}
-          onChangeText={(text) => {
-            setConfirmPassword(text);
-            setErrorMessage(null);
-          }}
-        />
-        <Text className="font-normal" style={[styles.hint, { color: mutedColor }]}>
-          Password must be {MIN_PASSWORD_LENGTH}-{MAX_PASSWORD_LENGTH} characters.
-        </Text>
-        <Button
-          isDisabled={!isFormValid || isSubmitting}
-          onPress={() => {
-            void handleSignUp();
-          }}
-        >
-          <Button.Label>
-            {isSubmitting
-              ? intl.formatMessage({ id: "common.status.loading" })
-              : intl.formatMessage({ id: "auth.signup.createAccount" })}
-          </Button.Label>
-        </Button>
-      </View>
-    </AuthShell>
+    </AuthLayout>
   );
 }

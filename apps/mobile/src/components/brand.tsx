@@ -1,0 +1,40 @@
+import type { StyleProp, ViewStyle } from "react-native";
+import React from "react";
+import { Text, View } from "react-native";
+import Animated from "react-native-reanimated";
+import LogoCream from "@/assets/brand/logo-cream.svg";
+import Logo from "@/assets/brand/logo.svg";
+import { useResolvedColorScheme } from "@/hooks/use-resolved-color-scheme";
+import { useIntl } from "react-intl";
+
+// The native splash draws the logo at this width too (app.json's imageWidth); the viewBox is 2370 x 639.
+export const LOGO_WIDTH = 168;
+export const LOGO_HEIGHT = (LOGO_WIDTH * 639) / 2370;
+
+interface BrandProps {
+  /** A line above the logo, such as "Sign in to". */
+  prefix?: string;
+  /** Whether the slogan shows under the logo. */
+  slogan?: boolean;
+  sloganStyle?: StyleProp<ViewStyle>;
+}
+
+/** The logo, in the scheme's colour, with the slogan under it. */
+export function Brand({ prefix, slogan = true, sloganStyle }: BrandProps) {
+  const intl = useIntl();
+  const Mark = useResolvedColorScheme() === "dark" ? LogoCream : Logo;
+
+  return (
+    <View className="items-center gap-3">
+      {prefix ? <Text className="text-muted text-[17px] font-normal">{prefix}</Text> : null}
+      <Mark accessible accessibilityLabel="Norish" height={LOGO_HEIGHT} width={LOGO_WIDTH} />
+      {slogan ? (
+        <Animated.View style={sloganStyle}>
+          <Text className="text-muted text-base leading-5 font-normal">
+            {intl.formatMessage({ id: "auth.login.subtitle" })}
+          </Text>
+        </Animated.View>
+      ) : null}
+    </View>
+  );
+}

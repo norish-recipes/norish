@@ -1,6 +1,7 @@
 import React from "react";
 import { Text, View } from "react-native";
-import { AuthShell } from "@/features/auth/components/auth-shell";
+import { Brand } from "@/components/brand";
+import { AuthLayout } from "@/features/auth/components/auth-layout";
 import { styles } from "@/features/auth/styles/storage-unavailable.styles";
 import { Button, useThemeColor } from "heroui-native";
 import { useIntl } from "react-intl";
@@ -35,23 +36,29 @@ export function StorageUnavailableScreen({ error, onRetry }: StorageUnavailableS
   ] as const);
 
   return (
-    <AuthShell headingPrefix={intl.formatMessage({ id: "common.storageUnavailable.title" })}>
-      <Text className="font-normal" style={[styles.description, { color: foregroundColor }]}>
-        {intl.formatMessage({ id: "common.storageUnavailable.description" })}
-      </Text>
-
-      <Button style={styles.retryButton} onPress={onRetry}>
-        <Button.Label>{intl.formatMessage({ id: "common.actions.retry" })}</Button.Label>
-      </Button>
-
-      <View style={[styles.details, { borderColor: separatorColor }]}>
-        <Text className="font-semibold" style={[styles.detailsLabel, { color: mutedColor }]}>
-          {intl.formatMessage({ id: "common.storageUnavailable.detailsLabel" })}
+    <AuthLayout>
+      <Brand
+        prefix={intl.formatMessage({ id: "common.storageUnavailable.title" })}
+        slogan={false}
+      />
+      <View className="mt-7 gap-3">
+        <Text className="font-normal" style={[styles.description, { color: foregroundColor }]}>
+          {intl.formatMessage({ id: "common.storageUnavailable.description" })}
         </Text>
-        <Text className="font-normal" style={[styles.detailsBody, { color: mutedColor }]}>
-          {describeError(error)}
-        </Text>
+
+        <Button style={styles.retryButton} onPress={onRetry}>
+          <Button.Label>{intl.formatMessage({ id: "common.actions.retry" })}</Button.Label>
+        </Button>
+
+        <View style={[styles.details, { borderColor: separatorColor }]}>
+          <Text className="font-semibold" style={[styles.detailsLabel, { color: mutedColor }]}>
+            {intl.formatMessage({ id: "common.storageUnavailable.detailsLabel" })}
+          </Text>
+          <Text className="font-normal" style={[styles.detailsBody, { color: mutedColor }]}>
+            {describeError(error)}
+          </Text>
+        </View>
       </View>
-    </AuthShell>
+    </AuthLayout>
   );
 }

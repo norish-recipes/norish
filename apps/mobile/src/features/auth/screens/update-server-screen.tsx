@@ -1,6 +1,7 @@
 import React from "react";
-import { StyleSheet, Text } from "react-native";
-import { AuthShell } from "@/features/auth/components/auth-shell";
+import { StyleSheet, Text, View } from "react-native";
+import { Brand } from "@/components/brand";
+import { AuthLayout } from "@/features/auth/components/auth-layout";
 import { MINIMUM_SERVER_VERSION } from "@/features/auth/utils/server-version";
 import { useThemeColor } from "heroui-native";
 import { useIntl } from "react-intl";
@@ -11,18 +12,21 @@ export function UpdateServerScreen() {
   const [foregroundColor] = useThemeColor(["foreground"] as const);
 
   return (
-    <AuthShell headingPrefix={intl.formatMessage({ id: "auth.updateServer.title" })}>
-      <Text
-        className="font-normal"
-        style={[styles.description, { color: foregroundColor }]}
-        testID="update-server-description"
-      >
-        {intl.formatMessage(
-          { id: "auth.updateServer.description" },
-          { minimumVersion: MINIMUM_SERVER_VERSION }
-        )}
-      </Text>
-    </AuthShell>
+    <AuthLayout>
+      <Brand prefix={intl.formatMessage({ id: "auth.updateServer.title" })} slogan={false} />
+      <View className="mt-7 gap-3">
+        <Text
+          className="font-normal"
+          style={[styles.description, { color: foregroundColor }]}
+          testID="update-server-description"
+        >
+          {intl.formatMessage(
+            { id: "auth.updateServer.description" },
+            { minimumVersion: MINIMUM_SERVER_VERSION }
+          )}
+        </Text>
+      </View>
+    </AuthLayout>
   );
 }
 

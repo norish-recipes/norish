@@ -1,6 +1,7 @@
 import React, { useCallback, useState } from "react";
 import { ActivityIndicator, Text, View } from "react-native";
-import { AuthShell } from "@/features/auth/components/auth-shell";
+import { Brand } from "@/components/brand";
+import { AuthLayout } from "@/features/auth/components/auth-layout";
 import { useServerAddressDraft } from "@/features/auth/hooks/use-server-address-draft";
 import { styles } from "@/features/auth/styles/connect.styles";
 import { classifyServerHealth } from "@/features/auth/utils/server-version";
@@ -102,52 +103,55 @@ export function ConnectScreen() {
   }
 
   return (
-    <AuthShell headingPrefix={intl.formatMessage({ id: "auth.connect.title" })}>
-      <Text className="font-semibold" style={[styles.label, { color: foregroundColor }]}>
-        {intl.formatMessage({ id: "auth.connect.backendUrlLabel" })}
-      </Text>
+    <AuthLayout>
+      <Brand prefix={intl.formatMessage({ id: "auth.connect.title" })} slogan={false} />
+      <View className="mt-7 gap-3">
+        <Text className="font-semibold" style={[styles.label, { color: foregroundColor }]}>
+          {intl.formatMessage({ id: "auth.connect.backendUrlLabel" })}
+        </Text>
 
-      <Input
-        autoCapitalize="none"
-        autoCorrect={false}
-        keyboardType="url"
-        placeholder={intl.formatMessage({ id: "auth.connect.backendUrlPlaceholder" })}
-        returnKeyType="done"
-        testID="connect-server-url"
-        value={baseUrl}
-        onChangeText={setBaseUrl}
-        onSubmitEditing={() => {
-          void handleConnect();
-        }}
-      />
+        <Input
+          autoCapitalize="none"
+          autoCorrect={false}
+          keyboardType="url"
+          placeholder={intl.formatMessage({ id: "auth.connect.backendUrlPlaceholder" })}
+          returnKeyType="done"
+          testID="connect-server-url"
+          value={baseUrl}
+          onChangeText={setBaseUrl}
+          onSubmitEditing={() => {
+            void handleConnect();
+          }}
+        />
 
-      <Button
-        isDisabled={isConnecting}
-        style={styles.connectButton}
-        testID="connect-submit"
-        onPress={() => {
-          void handleConnect();
-        }}
-      >
-        <Button.Label>
-          {isConnecting
-            ? intl.formatMessage({ id: "auth.connect.connecting" })
-            : intl.formatMessage({ id: "auth.connect.connect" })}
-        </Button.Label>
-      </Button>
+        <Button
+          isDisabled={isConnecting}
+          style={styles.connectButton}
+          testID="connect-submit"
+          onPress={() => {
+            void handleConnect();
+          }}
+        >
+          <Button.Label>
+            {isConnecting
+              ? intl.formatMessage({ id: "auth.connect.connecting" })
+              : intl.formatMessage({ id: "auth.connect.connect" })}
+          </Button.Label>
+        </Button>
 
-      <Text
-        className="font-normal"
-        style={[
-          styles.helpText,
-          {
-            color: errorMessage ? dangerColor : mutedColor,
-            borderColor: errorMessage ? dangerSoftColor : separatorColor,
-          },
-        ]}
-      >
-        {errorMessage ?? intl.formatMessage({ id: "auth.connect.example" })}
-      </Text>
-    </AuthShell>
+        <Text
+          className="font-normal"
+          style={[
+            styles.helpText,
+            {
+              color: errorMessage ? dangerColor : mutedColor,
+              borderColor: errorMessage ? dangerSoftColor : separatorColor,
+            },
+          ]}
+        >
+          {errorMessage ?? intl.formatMessage({ id: "auth.connect.example" })}
+        </Text>
+      </View>
+    </AuthLayout>
   );
 }
