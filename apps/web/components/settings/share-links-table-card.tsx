@@ -4,11 +4,12 @@ import { useState } from "react";
 import RecipeShareStatusChip from "@/components/recipes/recipe-share-status-chip";
 import NewFeatureChip from "@/components/settings/new-feature-chip";
 import { SettingsCard } from "@/components/settings/settings-card";
+import { SkeletonRows } from "@/components/settings/settings-skeleton";
 import { ActionButton, IconActionButton } from "@/components/shared/action-button";
 import ConfirmModal from "@/components/shared/confirm-modal";
 import { PauseIcon, PlayIcon } from "@heroicons/react/16/solid";
 import { LinkIcon } from "@heroicons/react/24/outline";
-import { Skeleton, Table } from "@heroui/react";
+import { Table } from "@heroui/react";
 import { useFormatter, useTranslations } from "next-intl";
 
 import type {
@@ -172,7 +173,7 @@ export default function ShareLinksTableCard({
       >
         {isLoading ? (
           // The tab skeleton's row for this card.
-          <Skeleton className="h-12 w-full rounded-lg" />
+          <SkeletonRows count={1} />
         ) : shares.length === 0 ? (
           <p className="text-muted text-base">{t("empty")}</p>
         ) : (

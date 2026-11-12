@@ -14,6 +14,13 @@ type CardPlaceholder = {
   rows: number;
 };
 
+/** A settings card's grey rows while its data loads. */
+export function SkeletonRows({ count }: { count: number }) {
+  return Array.from({ length: count }, (_, row) => (
+    <Skeleton key={row} className="h-12 w-full rounded-lg" />
+  ));
+}
+
 /**
  * A settings tab while it loads: its cards' real headers over grey rows. The tab's route and its
  * data wait both draw it.
@@ -41,9 +48,7 @@ export function SettingsCardsSkeleton({
           icon={icon}
           title={section ? t(`${section}.title`) : <Skeleton className="h-6 w-48 rounded-lg" />}
         >
-          {Array.from({ length: rows }, (_, row) => (
-            <Skeleton key={row} className="h-12 w-full rounded-lg" />
-          ))}
+          <SkeletonRows count={rows} />
         </SettingsCard>
       ))}
     </div>

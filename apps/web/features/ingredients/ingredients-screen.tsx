@@ -4,10 +4,11 @@ import { useState, useTransition } from "react";
 import { useSearchParams } from "next/navigation";
 import { IngredientPanel } from "@/components/ingredients/ingredient-panel";
 import { SettingsCard } from "@/components/settings/settings-card";
+import { SkeletonRows } from "@/components/settings/settings-skeleton";
 import { ActionButton } from "@/components/shared/action-button";
 import { FunnelIcon, SparklesIcon } from "@heroicons/react/16/solid";
 import { BookOpenIcon } from "@heroicons/react/24/outline";
-import { Button, Skeleton } from "@heroui/react";
+import { Button } from "@heroui/react";
 import { useLocale, useTranslations } from "next-intl";
 
 import { useIngredientsSubscription } from "@norish/shared-react/config";
@@ -124,9 +125,7 @@ export function IngredientsScreen() {
         {isLoading || (isPlaceholderData && items.length === 0 && !isPaused) ? (
           // The tab skeleton's rows until an answer lands; a read paused Offline is not loading.
           <div aria-busy className="flex flex-col gap-4" data-testid="ingredients-loading">
-            {Array.from({ length: 5 }, (_, i) => (
-              <Skeleton key={i} className="h-12 w-full rounded-lg" />
-            ))}
+            <SkeletonRows count={5} />
           </div>
         ) : items.length === 0 ? (
           <p className="text-muted py-6 text-center" data-testid="ingredients-empty">
