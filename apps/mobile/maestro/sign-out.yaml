@@ -1,0 +1,43 @@
+# Signs out from the smoke screen, stays on sign-in without flipping back, and signs in again.
+appId: dev.norish.app
+---
+- runFlow:
+    file: subflows/sign-in.yaml
+    env:
+      NORISH_SIGN_IN_URL: ${NORISH_SERVER_URL}
+- scrollUntilVisible:
+    element:
+      id: smoke-sign-out
+- tapOn:
+    id: smoke-sign-out
+- extendedWaitUntil:
+    visible:
+      id: login-email
+    timeout: 20000
+# The old bug: the app read signed in again a moment after landing here.
+- extendedWaitUntil:
+    visible:
+      id: smoke-user
+    timeout: 5000
+    optional: true
+- assertNotVisible:
+    id: smoke-user
+- assertVisible:
+    id: login-email
+- tapOn:
+    id: login-email
+- inputText: ${NORISH_EMAIL}
+- tapOn:
+    id: login-password
+- inputText: ${NORISH_PASSWORD}
+- hideKeyboard
+- tapOn:
+    id: login-submit
+- tapOn:
+    text: Not Now
+    optional: true
+- extendedWaitUntil:
+    visible:
+      id: smoke-user
+      text: .*${NORISH_EMAIL}.*
+    timeout: 20000
