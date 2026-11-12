@@ -7,44 +7,36 @@ import { usePending } from "@/hooks/use-pending";
 import { Input, Label, TextField, useOverlayState } from "@heroui/react";
 import { useTranslations } from "next-intl";
 
+import type { AuthProviderOIDC } from "@norish/config/zod/server-config";
+import type { WriteResult } from "@norish/shared-react/admin";
 import { ServerConfigKeys } from "@norish/config/zod/server-config";
 import { useAuthProviderWrites, useConfigSecret } from "@norish/shared-react/admin";
 
 import type { ClaimMappingValues } from "./oidc-claim-mapping";
-import type { TestResult } from "./types";
+import { ConnectionTestResult } from "../connection-test-result";
 import { useReportDirty } from "../use-report-dirty";
 import { DeleteProviderModal } from "./delete-provider-modal";
 import { OIDCClaimMapping } from "./oidc-claim-mapping";
 import { ProviderActions } from "./provider-actions";
-import { TestResultDisplay } from "./test-result-display";
 
 interface OIDCProviderFormProps {
-  config: Record<string, unknown> | undefined;
+  config: AuthProviderOIDC | undefined;
   onDirtyChange?: (isDirty: boolean) => void;
 }
 
 export function OIDCProviderForm({ config, onDirtyChange }: OIDCProviderFormProps) {
   const tOidc = useTranslations("settings.admin.authProviders.oidc.fields");
+  const tForm = useTranslations("settings.admin.authProviders.form");
   const { saveOIDC, remove, test } = useAuthProviderWrites();
   const fetchConfigSecret = useConfigSecret();
 
-  // Get existing claim config
-  const existingClaimConfig = config?.claimConfig as
-    | {
-        enabled?: boolean;
-        scopes?: string[];
-        groupsClaim?: string;
-        adminGroup?: string;
-        householdPrefix?: string;
-      }
-    | undefined;
+  const existingClaimConfig = config?.claimConfig;
 
-  // Core OIDC fields
-  const [name, setName] = useState((config?.name as string) ?? "");
-  const [issuer, setIssuer] = useState((config?.issuer as string) ?? "");
-  const [clientId, setClientId] = useState((config?.clientId as string) ?? "");
+  const [name, setName] = useState(config?.name ?? "");
+  const [issuer, setIssuer] = useState(config?.issuer ?? "");
+  const [clientId, setClientId] = useState(config?.clientId ?? "");
   const [clientSecret, setClientSecret] = useState("");
-  const [wellknown, setWellknown] = useState((config?.wellknown as string) ?? "");
+  const [wellknown, setWellknown] = useState(config?.wellknown ?? "");
 
   // Claim mapping state
   const [claimMapping, setClaimMapping] = useState<ClaimMappingValues>({
@@ -56,21 +48,11 @@ export function OIDCProviderForm({ config, onDirtyChange }: OIDCProviderFormProp
   });
 
   const [testing, whileTesting] = usePending();
-  const [testResult, setTestResult] = useState<TestResult | null>(null);
+  const [testResult, setTestResult] = useState<WriteResult | null>(null);
   const [saving, whileSaving] = usePending();
   const deleteModal = useOverlayState();
 
-  const configClaim = config?.claimConfig as
-    | {
-        enabled?: boolean;
-        scopes?: string[];
-        groupsClaim?: string;
-        adminGroup?: string;
-        householdPrefix?: string;
-      }
-    | undefined;
-
-  const hasClaimMappingChanges = useDirtyState(claimMapping, configClaim, {
+  const hasClaimMappingChanges = useDirtyState(claimMapping, existingClaimConfig, {
     normalizeCurrent: (current) => ({
       enabled: current.enabled,
       scopes: current.scopes
@@ -90,21 +72,13 @@ export function OIDCProviderForm({ config, onDirtyChange }: OIDCProviderFormProp
     }),
   });
 
-  const hasChanges = (() => {
-    const configName = (config?.name as string) ?? "";
-    const configIssuer = (config?.issuer as string) ?? "";
-    const configClientId = (config?.clientId as string) ?? "";
-    const configWellknown = (config?.wellknown as string) ?? "";
-
-    return (
-      name !== configName ||
-      issuer !== configIssuer ||
-      clientId !== configClientId ||
-      wellknown !== configWellknown ||
-      clientSecret.trim() !== "" ||
-      hasClaimMappingChanges
-    );
-  })();
+  const hasChanges =
+    name !== (config?.name ?? "") ||
+    issuer !== (config?.issuer ?? "") ||
+    clientId !== (config?.clientId ?? "") ||
+    wellknown !== (config?.wellknown ?? "") ||
+    clientSecret.trim() !== "" ||
+    hasClaimMappingChanges;
 
   useReportDirty(hasChanges, onDirtyChange);
 
@@ -206,7 +180,7 @@ export function OIDCProviderForm({ config, onDirtyChange }: OIDCProviderFormProp
         onChange={setClaimMapping}
       />
 
-      <TestResultDisplay result={testResult} />
+      <ConnectionTestResult result={testResult} successLabel={tForm("testSuccess")} />
 
       <ProviderActions
         hasChanges={hasChanges}

@@ -1,14 +1,9 @@
-export type ProviderKey = "oidc" | "github" | "google";
+import type { AuthProviderGitHubInput } from "@norish/config/zod/server-config";
 
 export interface FieldDef {
-  key: string;
+  key: keyof AuthProviderGitHubInput;
   label: string;
   placeholder?: string;
   secret?: boolean;
   optional?: boolean;
-}
-
-export interface TestResult {
-  success: boolean;
-  error?: string;
 }

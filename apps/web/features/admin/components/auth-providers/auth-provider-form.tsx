@@ -4,27 +4,30 @@ import { useState } from "react";
 import SecretInput from "@/components/shared/secret-input";
 import { usePending } from "@/hooks/use-pending";
 import { Input, Label, TextField, useOverlayState } from "@heroui/react";
+import { useTranslations } from "next-intl";
 
-import type { ServerConfigKey } from "@norish/config/zod/server-config";
+import type { AuthProviderGitHub, ServerConfigKey } from "@norish/config/zod/server-config";
+import type { AuthProvider, WriteResult } from "@norish/shared-react/admin";
 import { ServerConfigKeys } from "@norish/config/zod/server-config";
 import { useAuthProviderWrites, useConfigSecret } from "@norish/shared-react/admin";
 
-import type { FieldDef, ProviderKey, TestResult } from "./types";
+import type { FieldDef } from "./types";
+import { ConnectionTestResult } from "../connection-test-result";
 import { useReportDirty } from "../use-report-dirty";
 import { DeleteProviderModal } from "./delete-provider-modal";
 import { ProviderActions } from "./provider-actions";
-import { TestResultDisplay } from "./test-result-display";
 
-const CONFIG_KEYS: Record<ProviderKey, ServerConfigKey> = {
+const CONFIG_KEYS: Record<AuthProvider, ServerConfigKey> = {
   oidc: ServerConfigKeys.AUTH_PROVIDER_OIDC,
   github: ServerConfigKeys.AUTH_PROVIDER_GITHUB,
   google: ServerConfigKeys.AUTH_PROVIDER_GOOGLE,
 };
 
 interface AuthProviderFormProps {
-  providerKey: ProviderKey;
+  providerKey: "github" | "google";
   providerName: string;
-  config: Record<string, unknown> | undefined;
+  // GitHub and Google store the same fields.
+  config: AuthProviderGitHub | undefined;
   fields: FieldDef[];
   onDirtyChange?: (isDirty: boolean) => void;
 }
@@ -36,6 +39,7 @@ export function AuthProviderForm({
   fields,
   onDirtyChange,
 }: AuthProviderFormProps) {
+  const t = useTranslations("settings.admin.authProviders.form");
   const { saveGitHub, saveGoogle, remove, test } = useAuthProviderWrites();
   const fetchConfigSecret = useConfigSecret();
 
@@ -43,7 +47,7 @@ export function AuthProviderForm({
   const [values, setValues] = useState<Record<string, string>>(() =>
     fields.reduce(
       (acc, f) => {
-        acc[f.key] = f.secret ? "" : ((config?.[f.key] as string) ?? "");
+        acc[f.key] = f.secret ? "" : (config?.[f.key] ?? "");
 
         return acc;
       },
@@ -51,7 +55,7 @@ export function AuthProviderForm({
     )
   );
   const [testing, whileTesting] = usePending();
-  const [testResult, setTestResult] = useState<TestResult | null>(null);
+  const [testResult, setTestResult] = useState<WriteResult | null>(null);
   const [saving, whileSaving] = usePending();
   const deleteModal = useOverlayState();
 
@@ -62,7 +66,7 @@ export function AuthProviderForm({
       return value.trim() !== "";
     }
 
-    return value !== ((config?.[field.key] as string) ?? "");
+    return value !== (config?.[field.key] ?? "");
   });
 
   useReportDirty(hasChanges, onDirtyChange);
@@ -79,14 +83,12 @@ export function AuthProviderForm({
 
   const handleSave = async () => {
     const save = async () => {
-      const saveValues = Object.fromEntries(fields.map((f) => [f.key, values[f.key] || undefined]));
+      const saveValues = {
+        clientId: values.clientId ?? "",
+        clientSecret: values.clientSecret || undefined,
+      };
 
-      // Route to correct update function (OIDC uses OIDCProviderForm, not this generic form)
-      if (providerKey === "github") {
-        await saveGitHub(saveValues as Parameters<typeof saveGitHub>[0]);
-      } else if (providerKey === "google") {
-        await saveGoogle(saveValues as Parameters<typeof saveGoogle>[0]);
-      }
+      await (providerKey === "github" ? saveGitHub(saveValues) : saveGoogle(saveValues));
       // Saved secrets live on the server, not in the form: a secret left in
       // state reads as an unsaved change on every later render.
       setValues((prev) => {
@@ -146,7 +148,7 @@ export function AuthProviderForm({
         )
       )}
 
-      <TestResultDisplay result={testResult} />
+      <ConnectionTestResult result={testResult} successLabel={t("testSuccess")} />
 
       <ProviderActions
         hasChanges={hasChanges}

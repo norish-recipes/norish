@@ -52,10 +52,7 @@ export function AuthProvidersCard() {
           title={t("oidc.title")}
         >
           {(onDirtyChange) => (
-            <OIDCProviderForm
-              config={authProviderOIDC as Record<string, unknown> | undefined}
-              onDirtyChange={onDirtyChange}
-            />
+            <OIDCProviderForm config={authProviderOIDC} onDirtyChange={onDirtyChange} />
           )}
         </AccordionSection>
         <AccordionSection
@@ -66,7 +63,7 @@ export function AuthProvidersCard() {
         >
           {(onDirtyChange) => (
             <AuthProviderForm
-              config={authProviderGitHub as Record<string, unknown> | undefined}
+              config={authProviderGitHub}
               fields={[
                 { key: "clientId", label: tGithub("clientId") },
                 { key: "clientSecret", label: tGithub("clientSecret"), secret: true },
@@ -85,7 +82,7 @@ export function AuthProvidersCard() {
         >
           {(onDirtyChange) => (
             <AuthProviderForm
-              config={authProviderGoogle as Record<string, unknown> | undefined}
+              config={authProviderGoogle}
               fields={[
                 {
                   key: "clientId",
