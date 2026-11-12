@@ -286,9 +286,9 @@
     "description": "En cola: Norish lo completará automáticamente cuando vuelvas a estar en línea."
   },
   "storageUnavailable": {
-    "title": "No se pudo iniciar",
-    "description": "Norish no pudo leer su almacenamiento seguro, por lo que no sabe a qué servidor pertenece esta aplicación. No se ha cambiado nada. Vuelve a intentarlo o reinicia la aplicación.",
-    "detailsLabel": "Detalles técnicos"
+    "title": "Almacenamiento no disponible",
+    "description": "Norish no pudo leer el llavero de este iPhone.",
+    "badgeLabel": "Almacenamiento no disponible. Toca para repetir."
   },
   "aiKeyRejected": {
     "title": "Una clave de IA ha dejado de funcionar",

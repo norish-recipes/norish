@@ -286,9 +286,9 @@
     "description": "Jonossa – Norish viimeistelee tämän automaattisesti, kun yhteys palaa."
   },
   "storageUnavailable": {
-    "title": "Käynnistys epäonnistui",
-    "description": "Norish ei pystynyt lukemaan suojattua tallennustilaansa, joten se ei tiedä mille palvelimelle se kuuluu. Mitään ei ole muutettu. Yritä uudelleen tai käynnistä sovellus uudestaan.",
-    "detailsLabel": "Tekniset tiedot"
+    "title": "Tallennustila ei ole käytettävissä",
+    "description": "Norish ei voinut lukea tämän iPhonen avainnippua.",
+    "badgeLabel": "Tallennustila ei ole käytettävissä. Toista napauttamalla."
   },
   "aiKeyRejected": {
     "title": "Tekoälyavain lakkasi toimimasta",

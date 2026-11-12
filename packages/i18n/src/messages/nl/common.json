@@ -286,9 +286,9 @@
     "description": "In de wachtrij gezet — Norish maakt dit automatisch af zodra je weer online bent."
   },
   "storageUnavailable": {
-    "title": "Kan niet starten",
-    "description": "Norish kon de beveiligde opslag niet lezen en weet daardoor niet bij welke server deze app hoort. Er is niets gewijzigd. Probeer het opnieuw of herstart de app.",
-    "detailsLabel": "Technische details"
+    "title": "Opslag niet beschikbaar",
+    "description": "Norish kon de sleutelhanger van deze iPhone niet lezen.",
+    "badgeLabel": "Opslag niet beschikbaar. Tik om opnieuw af te spelen."
   },
   "aiKeyRejected": {
     "title": "Een AI-sleutel werkt niet meer",

@@ -286,9 +286,9 @@
     "description": "In der Warteschlange — Norish schließt dies automatisch ab, sobald Sie wieder online sind."
   },
   "storageUnavailable": {
-    "title": "Start nicht möglich",
-    "description": "Norish konnte den sicheren Speicher nicht lesen und weiß daher nicht, zu welchem Server diese App gehört. Es wurde nichts geändert. Versuchen Sie es erneut oder starten Sie die App neu.",
-    "detailsLabel": "Technische Details"
+    "title": "Speicher nicht verfügbar",
+    "description": "Norish konnte den Schlüsselbund dieses iPhones nicht lesen.",
+    "badgeLabel": "Speicher nicht verfügbar. Tippen Sie, um die Animation zu wiederholen."
   },
   "aiKeyRejected": {
     "title": "Ein KI-Schlüssel funktioniert nicht mehr",

@@ -286,9 +286,9 @@
     "description": "Sat i kø — Norish fuldfører dette automatisk, når du er online igen."
   },
   "storageUnavailable": {
-    "title": "Kunne ikke starte",
-    "description": "Norish kunne ikke læse sin sikre lagring og ved derfor ikke, hvilken server appen hører til. Intet er ændret. Prøv igen, eller genstart appen.",
-    "detailsLabel": "Tekniske detaljer"
+    "title": "Lager utilgængeligt",
+    "description": "Norish kunne ikke læse denne iPhones nøglering.",
+    "badgeLabel": "Lager utilgængeligt. Tryk for at afspille igen."
   },
   "aiKeyRejected": {
     "title": "En AI-nøgle virker ikke længere",

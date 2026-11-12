@@ -286,9 +286,9 @@
     "description": "Åtgärden har köats. Norish slutför den automatiskt när du är online igen."
   },
   "storageUnavailable": {
-    "title": "Det gick inte att starta",
-    "description": "Norish kunde inte läsa sin säkra lagring och kan därför inte avgöra vilken server appen tillhör. Inget har ändrats. Försök igen eller starta om appen.",
-    "detailsLabel": "Teknisk information"
+    "title": "Lagring otillgänglig",
+    "description": "Norish kunde inte läsa nyckelringen på den här iPhonen.",
+    "badgeLabel": "Lagring otillgänglig. Tryck för att spela upp igen."
   },
   "aiKeyRejected": {
     "title": "En AI-nyckel har slutat fungera",

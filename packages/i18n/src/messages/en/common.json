@@ -286,9 +286,9 @@
     "description": "Queued — Norish will finish this automatically when you're back online."
   },
   "storageUnavailable": {
-    "title": "Couldn't start",
-    "description": "Norish could not read its secure storage, so it cannot tell which server it belongs to. Nothing has been changed. Try again, or restart the app.",
-    "detailsLabel": "Technical details"
+    "title": "Storage unavailable",
+    "description": "Norish couldn't read this iPhone's keychain.",
+    "badgeLabel": "Storage unavailable. Tap to replay."
   },
   "aiKeyRejected": {
     "title": "An AI key stopped working",

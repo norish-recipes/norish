@@ -8,6 +8,7 @@ interface AuthStatusProps {
   action?: { label: string; onPress: () => void };
   /** `screen` sets the status screens' larger type under their badge; `inline` sits where a form would. */
   size?: "inline" | "screen";
+  titleTestID?: string;
   descriptionTestID?: string;
 }
 
@@ -30,13 +31,16 @@ export function AuthStatus({
   description,
   action,
   size = "inline",
+  titleTestID,
   descriptionTestID,
 }: AuthStatusProps) {
   const type = TYPE[size];
 
   return (
     <View className={type.block}>
-      <Text className={type.title}>{title}</Text>
+      <Text className={type.title} testID={titleTestID}>
+        {title}
+      </Text>
       <Text className={type.description} testID={descriptionTestID}>
         {description}
       </Text>

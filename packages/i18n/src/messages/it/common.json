@@ -286,9 +286,9 @@
     "description": "In coda: Norish completerà automaticamente quando tornerai online."
   },
   "storageUnavailable": {
-    "title": "Avvio non riuscito",
-    "description": "Norish non è riuscita a leggere l'archivio sicuro e non sa a quale server appartiene questa app. Non è stato modificato nulla. Riprova o riavvia l'app.",
-    "detailsLabel": "Dettagli tecnici"
+    "title": "Archiviazione non disponibile",
+    "description": "Norish non è riuscito a leggere il portachiavi di questo iPhone.",
+    "badgeLabel": "Archiviazione non disponibile. Tocca per riprodurre di nuovo."
   },
   "aiKeyRejected": {
     "title": "Una chiave IA ha smesso di funzionare",

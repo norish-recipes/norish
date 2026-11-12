@@ -286,9 +286,9 @@
     "description": "Dodano do kolejki — Norish dokończy to automatycznie, gdy wrócisz online."
   },
   "storageUnavailable": {
-    "title": "Nie można uruchomić",
-    "description": "Norish nie mógł odczytać bezpiecznego magazynu, więc nie wie, do którego serwera należy ta aplikacja. Nic nie zostało zmienione. Spróbuj ponownie lub uruchom aplikację jeszcze raz.",
-    "detailsLabel": "Szczegóły techniczne"
+    "title": "Pamięć niedostępna",
+    "description": "Norish nie mógł odczytać pęku kluczy tego iPhone'a.",
+    "badgeLabel": "Pamięć niedostępna. Dotknij, aby odtworzyć ponownie."
   },
   "aiKeyRejected": {
     "title": "Klucz AI przestał działać",
