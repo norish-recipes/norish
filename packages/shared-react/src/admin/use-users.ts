@@ -21,19 +21,18 @@ export function useUsersListQuery() {
 export function useUserMutations() {
   const trpc = useTRPC();
   const queryClient = useQueryClient();
-  const { toast } = usePlatform();
+  const { toast, showError } = usePlatform();
 
   const rereadUsers = () =>
     void queryClient.invalidateQueries({ queryKey: trpc.admin.users.list.queryKey() });
-  const refused = (error: { message: string }) =>
-    toast.show({
-      severity: "danger",
-      title: toast.translate("common.errors.operationFailed"),
-      description: error.message,
-    });
+  const refused = (context: string) => (error: unknown) =>
+    showError(error, context, toast.translate("common.errors.operationFailed"));
 
   const setAdmin = useMutation(
-    trpc.admin.users.setAdminStatus.mutationOptions({ onSuccess: rereadUsers, onError: refused })
+    trpc.admin.users.setAdminStatus.mutationOptions({
+      onSuccess: rereadUsers,
+      onError: refused("admin-users:set-admin"),
+    })
   );
   const remove = useMutation({
     // The name is only for the toast.
@@ -48,7 +47,7 @@ export function useUserMutations() {
         title: toast.translate("settings.admin.toasts.userDeleted", { name }),
       });
     },
-    onError: refused,
+    onError: refused("admin-users:delete"),
   });
 
   return {
