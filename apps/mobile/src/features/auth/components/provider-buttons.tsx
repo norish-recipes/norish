@@ -5,7 +5,6 @@ import { View } from "react-native";
 import { InlineErrorBlock } from "@/features/auth/components/inline-error";
 import { ProviderIcon } from "@/features/auth/components/provider-icon";
 import { SIGN_IN_DEADLINE_MS } from "@/features/auth/utils/auth-failure";
-import { rememberProviderAttempt } from "@/features/auth/utils/failed-provider";
 import { Button, Spinner, useThemeColor } from "heroui-native";
 import { useIntl } from "react-intl";
 
@@ -39,9 +38,7 @@ export function ProviderButtons({
             isDisabled={signIn.running !== null}
             size="lg"
             variant="outline"
-            onPress={() => {
-              rememberProviderAttempt(provider.id);
-
+            onPress={() =>
               void signIn.attempt(provider.id, () =>
                 // better-fetch clears the deadline once the server answers, before the sign-in sheet opens.
                 authClient.signIn.social({
@@ -49,8 +46,8 @@ export function ProviderButtons({
                   callbackURL: redirectTo,
                   fetchOptions: { timeout: SIGN_IN_DEADLINE_MS },
                 })
-              );
-            }}
+              )
+            }
           >
             {signIn.running === provider.id ? (
               <Spinner color={foregroundColor} size="sm" />

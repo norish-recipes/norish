@@ -2,33 +2,20 @@ import { toProviderType } from "@/features/auth/utils/redirect";
 
 import type { ProviderInfo } from "@norish/shared/contracts";
 
-// Module scope: the OAuth sheet's return can remount the tree, and the error route has no provider of its own.
-let attempted: string | undefined;
-
-export function rememberProviderAttempt(providerId: string) {
-  attempted = providerId;
-}
-
-export function lastProviderAttempt() {
-  return attempted;
-}
-
 /**
- * The display name of the provider a failed sign-in came from: the route's own, else the last one
- * tried, when the server still lists it as OAuth; null leaves the line unnamed.
+ * The display name of the route's provider when the server lists it as OAuth, null for the unnamed
+ * line, or undefined until the provider list has settled, so the line never changes once shown.
  */
 export function failedProviderName(
   routeProvider: string | undefined,
-  attemptedProvider: string | undefined,
-  providers: ProviderInfo[]
-): string | null {
-  const oauth = providers.filter((provider) => toProviderType(provider) === "oauth");
+  providers: ProviderInfo[],
+  settled: boolean
+): string | null | undefined {
+  if (!settled) return undefined;
 
-  for (const id of [routeProvider, attemptedProvider]) {
-    const match = id ? oauth.find((provider) => provider.id === id) : undefined;
+  const match = providers.find(
+    (provider) => provider.id === routeProvider && toProviderType(provider) === "oauth"
+  );
 
-    if (match) return match.name;
-  }
-
-  return null;
+  return match?.name ?? null;
 }

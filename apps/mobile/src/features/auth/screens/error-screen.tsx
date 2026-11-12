@@ -1,7 +1,7 @@
-import React, { use } from "react";
+import React, { use, useState } from "react";
 import { StatusBadge } from "@/features/auth/components/status-badge";
 import { StatusScreen } from "@/features/auth/components/status-screen";
-import { failedProviderName, lastProviderAttempt } from "@/features/auth/utils/failed-provider";
+import { failedProviderName } from "@/features/auth/utils/failed-provider";
 import {
   DEFAULT_PROTECTED_ROUTE,
   firstParam,
@@ -22,34 +22,46 @@ export function AuthErrorScreen() {
     redirectTo?: string | string[];
   }>();
   const serverAddress = use(ServerAddressContext);
-  const { providers } = useAuthProvidersQuery();
-
-  const provider = failedProviderName(
+  const { providers, hasData, error, isPaused } = useAuthProvidersQuery();
+  const decided = failedProviderName(
     firstParam(params.provider),
-    lastProviderAttempt(),
-    providers
+    providers,
+    hasData || error !== null || isPaused
   );
+  // Latched on the first settled render, so a later refetch can't rename the line.
+  const [line, setLine] = useState<{ provider: string | null }>();
+
+  if (line === undefined && decided !== undefined) setLine({ provider: decided });
+
   const redirectTo = sanitizeRedirectTarget(
     firstParam(params.redirectTo) ?? DEFAULT_PROTECTED_ROUTE
   );
 
   return (
-    <StatusScreen
-      action={{
-        label: intl.formatMessage({ id: "common.actions.retry" }),
-        testID: "sign-in-failed-retry",
-        onPress: () => router.replace({ pathname: "/login", params: { redirectTo } }),
-      }}
-      badge={<StatusBadge variant="failed" />}
-      chipAddress={serverAddress || undefined}
-      description={
-        provider
-          ? intl.formatMessage({ id: "auth.signInFailed.description" }, { provider })
-          : intl.formatMessage({ id: "auth.signInFailed.descriptionUnnamed" })
-      }
-      descriptionTestID="sign-in-failed-description"
-      title={intl.formatMessage({ id: "auth.signInFailed.title" })}
-      titleTestID="sign-in-failed-title"
-    />
+    <>
+      <StatusScreen
+        action={{
+          label: intl.formatMessage({ id: "common.actions.retry" }),
+          testID: "sign-in-failed-retry",
+          onPress: () => router.replace({ pathname: "/login", params: { redirectTo } }),
+        }}
+        badge={<StatusBadge variant="failed" />}
+        chipAddress={serverAddress || undefined}
+        description={
+          // A no-break space holds the line's height until the provider list settles.
+          line === undefined
+            ? "\u00a0"
+            : line.provider
+              ? intl.formatMessage(
+                  { id: "auth.signInFailed.description" },
+                  { provider: line.provider }
+                )
+              : intl.formatMessage({ id: "auth.signInFailed.descriptionUnnamed" })
+        }
+        descriptionTestID="sign-in-failed-description"
+        title={intl.formatMessage({ id: "auth.signInFailed.title" })}
+        titleTestID="sign-in-failed-title"
+      />
+    </>
   );
 }

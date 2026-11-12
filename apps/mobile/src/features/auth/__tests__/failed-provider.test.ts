@@ -15,28 +15,21 @@ const providers = [credential, google, pocket];
 
 describe("failedProviderName", () => {
   it("names the route's provider by its display name", () => {
-    expect(failedProviderName("pocket-id", undefined, providers)).toBe("Pocket ID");
+    expect(failedProviderName("pocket-id", providers, true)).toBe("Pocket ID");
   });
 
-  it("falls back to the last provider tried when the route has none", () => {
-    expect(failedProviderName(undefined, "google", providers)).toBe("Google");
-  });
-
-  it("prefers the route's provider over the last tried", () => {
-    expect(failedProviderName("pocket-id", "google", providers)).toBe("Pocket ID");
-  });
-
-  it("skips a route provider the server doesn't list and uses the one tried", () => {
-    expect(failedProviderName("gone", "google", providers)).toBe("Google");
-  });
-
-  it("leaves the line unnamed when no provider is known", () => {
-    expect(failedProviderName(undefined, undefined, providers)).toBeNull();
-    expect(failedProviderName("gone", "also-gone", providers)).toBeNull();
-    expect(failedProviderName("google", undefined, [])).toBeNull();
+  it("leaves the line unnamed with no route provider or one the server doesn't list", () => {
+    expect(failedProviderName(undefined, providers, true)).toBeNull();
+    expect(failedProviderName("gone", providers, true)).toBeNull();
+    expect(failedProviderName("google", [], true)).toBeNull();
   });
 
   it("never names the password method", () => {
-    expect(failedProviderName("credential", undefined, providers)).toBeNull();
+    expect(failedProviderName("credential", providers, true)).toBeNull();
+  });
+
+  it("decides nothing until the provider list has settled", () => {
+    expect(failedProviderName("google", [], false)).toBeUndefined();
+    expect(failedProviderName(undefined, [], false)).toBeUndefined();
   });
 });
