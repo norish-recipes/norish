@@ -13,9 +13,9 @@ import { useTranslations } from "next-intl";
 
 import type { PageRenderersConfig } from "@norish/config/zod/server-config";
 import {
-  usePageRendererTest,
   usePageRenderersQuery,
   usePageRenderersSave,
+  usePageRendererTest,
 } from "@norish/shared-react/admin";
 
 import { ConnectionTestResult } from "./connection-test-result";
@@ -188,12 +188,7 @@ export default function PageRenderersCard() {
       </TextField>
 
       <ActionButtonGroup>
-        <ActionButton
-          action="save"
-          isDisabled={!isDirty}
-          isPending={isSaving}
-          onPress={handleSave}
-        >
+        <ActionButton action="save" isDisabled={!isDirty} isPending={isSaving} onPress={handleSave}>
           {tActions("save")}
         </ActionButton>
       </ActionButtonGroup>
