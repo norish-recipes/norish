@@ -8,6 +8,8 @@ export type SessionUser = { id: string; email: string; name: string; image?: str
  * refetched session of the same reader keeps the same user.
  */
 export function useSessionReader(user: SessionUser | null | undefined): User | null {
+  "use memo";
+
   const id = user?.id;
   const email = user?.email;
   const name = user?.name;

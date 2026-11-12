@@ -36,6 +36,15 @@ const restrictedSyntax = [
     message:
       'A hook or component built inside a function starts with "use memo", or the React Compiler skips it.',
   })),
+  // Infer mode also skips a hook that calls no hook, so what it returns is new every render.
+  ...[
+    "FunctionDeclaration[id.name=/^use[A-Z0-9]/]",
+    "VariableDeclarator[id.name=/^use[A-Z0-9]/] > :function",
+  ].map((hook) => ({
+    selector: `${hook}:not([body.body.0.directive=/^use (no )?memo$/]):not(:has(CallExpression:matches([callee.name=/^use([A-Z0-9]|$)/], [callee.property.name=/^use([A-Z0-9]|$)/])))`,
+    message:
+      'A hook that calls no hook starts with "use memo", or the React Compiler skips it; or it is a plain function.',
+  })),
   // TanStack Virtual mutates one virtualizer object, so the compiler's memos keep the first rows.
   // It skips `useVirtualizer` but compiles `useWindowVirtualizer`; both opt out explicitly.
   {

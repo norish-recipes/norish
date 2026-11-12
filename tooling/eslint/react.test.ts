@@ -63,6 +63,22 @@ describe("reactConfig", () => {
     }
   });
 
+  it('asks a hook that calls no hook for "use memo", which the compiler would skip', () => {
+    const skipped =
+      'A hook that calls no hook starts with "use memo", or the React Compiler skips it; or it is a plain function.';
+
+    expect(lintJsx("function useReader(u) { return { id: u.id }; }")).toEqual([skipped]);
+    expect(lintJsx("const useReader = (u) => ({ id: u.id });")).toEqual([skipped]);
+    for (const code of [
+      "function useReader(u) { 'use memo'; return { id: u.id }; }",
+      "function useReader() { return useContext(C); }",
+      "function useReader() { return use(C); }",
+      "function useReader() { return trpc.user.useQuery(); }",
+    ]) {
+      expect(lintJsx(code), code).toEqual([]);
+    }
+  });
+
   it('asks a TanStack Virtual component to opt out of the compiler with "use no memo"', () => {
     expect(
       lintJsx(
