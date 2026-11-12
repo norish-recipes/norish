@@ -13,17 +13,14 @@ import {
   checkServerAddress,
   serverAddressErrorId,
 } from "@/features/auth/utils/check-server-address";
-import { getServerAddress, saveServerAddress } from "@/lib/network/server-address";
+import { saveServerAddressLogged } from "@/features/auth/utils/save-server-address";
+import { getServerAddress } from "@/lib/network/server-address";
 import { markServerTooOld } from "@/lib/network/too-old-server";
 import Feather from "@expo/vector-icons/Feather";
 import MaterialCommunityIcons from "@expo/vector-icons/MaterialCommunityIcons";
 import { useLocalSearchParams, useRouter } from "expo-router";
 import { useThemeColor } from "heroui-native";
 import { useIntl } from "react-intl";
-
-import { createClientLogger } from "@norish/shared/lib/logger";
-
-const log = createClientLogger("server-address");
 
 export function ConnectScreen() {
   const router = useRouter();
@@ -49,7 +46,7 @@ export function ConnectScreen() {
         return null;
       }
 
-      return saveServerAddress(check.address).then(
+      return saveServerAddressLogged(check.address).then(
         () => {
           // A change returns to the Sign in it was pushed over instead of stacking another.
           if (change !== undefined && router.canDismiss()) router.dismissAll();
@@ -57,11 +54,7 @@ export function ConnectScreen() {
 
           return null;
         },
-        (saveError: unknown) => {
-          log.error({ error: saveError }, "Could not save the Server Address");
-
-          return "common.errors.operationFailed";
-        }
+        () => "common.errors.operationFailed"
       );
     });
 

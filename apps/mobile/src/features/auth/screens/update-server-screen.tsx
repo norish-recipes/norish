@@ -4,16 +4,13 @@ import { StatusBadge } from "@/features/auth/components/status-badge";
 import { StatusScreen } from "@/features/auth/components/status-screen";
 import { useVersionRecheck } from "@/features/auth/hooks/use-version-recheck";
 import { hostOf } from "@/features/auth/utils/host-of";
+import { saveServerAddressLogged } from "@/features/auth/utils/save-server-address";
 import { MINIMUM_SERVER_VERSION } from "@/features/auth/utils/server-version";
 import { useHasActiveSession } from "@/lib/auth/auth-session-sync";
-import { getServerAddress, saveServerAddress } from "@/lib/network/server-address";
+import { getServerAddress } from "@/lib/network/server-address";
 import { clearServerTooOld } from "@/lib/network/too-old-server";
 import { useRouter } from "expo-router";
 import { useIntl } from "react-intl";
-
-import { createClientLogger } from "@norish/shared/lib/logger";
-
-const log = createClientLogger("server-address");
 
 /** The server is older than this app supports: no Retry and no back, only the chip to another server. */
 export function UpdateServerScreen({ address, version }: { address: string; version?: string }) {
@@ -36,20 +33,14 @@ export function UpdateServerScreen({ address, version }: { address: string; vers
     const wasSaved = getServerAddress() === next.address;
 
     // Rejected, so the re-check stays armed and tries again on the next return.
-    return saveServerAddress(next.address).then(
-      () => {
-        clearServerTooOld();
+    return saveServerAddressLogged(next.address).then(() => {
+      clearServerTooOld();
 
-        const dismissed = router.canDismiss();
+      const dismissed = router.canDismiss();
 
-        if (dismissed) router.dismissAll();
-        if (!wasSaved || !dismissed) router.replace("/login");
-      },
-      (error: unknown) => {
-        log.error({ error }, "Could not save the Server Address");
-        throw error;
-      }
-    );
+      if (dismissed) router.dismissAll();
+      if (!wasSaved || !dismissed) router.replace("/login");
+    });
   };
 
   useVersionRecheck(address, signedIn, continueFrom);
