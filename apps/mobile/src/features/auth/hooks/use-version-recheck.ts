@@ -1,25 +1,39 @@
-import { useEffect } from "react";
+import { useEffect, useEffectEvent } from "react";
 import { AppState } from "react-native";
 import { checkServerAddress } from "@/features/auth/utils/check-server-address";
 import { resolveForegroundVersionCheck } from "@/lib/boot/boot-state";
+import { useIsFocused } from "expo-router";
 
-/** Re-checks the server at `address` on each return to the foreground; calls `onNewEnough` once it is. */
+/** While the screen is focused, re-checks `address` on each return to the foreground; calls `onNewEnough` once it is. */
 export function useVersionRecheck(address: string, onNewEnough: (checkedAddress: string) => void) {
-  useEffect(() => {
-    let moved = false;
-    const subscription = AppState.addEventListener("change", (state) => {
-      if (state !== "active" || moved) return;
+  const focused = useIsFocused();
+  const continueOnce = useEffectEvent(onNewEnough);
 
+  useEffect(() => {
+    if (!focused) return;
+
+    // `live` drops a result landing after blur or unmount; `checking` keeps one check at a time.
+    let live = true;
+    let checking = false;
+    const subscription = AppState.addEventListener("change", (state) => {
+      if (state !== "active" || checking || !live) return;
+
+      checking = true;
       void checkServerAddress(address).then((check) => {
+        checking = false;
+
         const next = resolveForegroundVersionCheck(check);
 
-        if (moved || next.screen === "stay") return;
+        if (!live || next.screen === "stay") return;
 
-        moved = true;
-        onNewEnough(next.address);
+        live = false;
+        continueOnce(next.address);
       });
     });
 
-    return () => subscription.remove();
-  }, [address, onNewEnough]);
+    return () => {
+      live = false;
+      subscription.remove();
+    };
+  }, [address, focused]);
 }
