@@ -3,6 +3,8 @@ import type {
   Browser,
   BrowserContext,
   BrowserContextOptions,
+  Locator,
+  Page,
 } from "@playwright/test";
 import { request } from "@playwright/test";
 
@@ -44,4 +46,11 @@ export async function signedInContext(
     baseURL,
     storageState: { cookies: await signIn(baseURL, user), origins: [] },
   });
+}
+
+/** The settings card with this title. */
+export function settingsCard(page: Page, title: string): Locator {
+  return page
+    .locator('[data-slot="card"]')
+    .filter({ has: page.getByRole("heading", { name: title, exact: true }) });
 }

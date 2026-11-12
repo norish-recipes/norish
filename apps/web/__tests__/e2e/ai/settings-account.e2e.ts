@@ -5,9 +5,9 @@ import type { BrowserContext } from "@playwright/test";
 
 import type { ThrowawayUser } from "./admin-users-support";
 import { closeAndDelete } from "../harness/accounts";
-import { signedInContext } from "../harness/auth";
+import { settingsCard as card, signedInContext } from "../harness/auth";
 import { callTrpc } from "../harness/trpc";
-import { settingsCard as card, signUpThrowawayUser } from "./admin-users-support";
+import { signUpThrowawayUser } from "./admin-users-support";
 import { expect, test } from "./fixture";
 
 const ACCOUNT_SETTINGS = "/settings/account";

@@ -94,13 +94,6 @@ export async function countUserRow(stack: Owner, userId: string): Promise<number
   return rows.filter((row) => row.id === userId).length;
 }
 
-/** The settings card with this title. */
-export function settingsCard(page: Page, title: string): Locator {
-  return page
-    .locator('[data-slot="card"]')
-    .filter({ has: page.getByRole("heading", { name: title, exact: true }) });
-}
-
 /** The Users table on the admin settings page, once it has rendered. */
 export async function openUsersTable(page: Page): Promise<Locator> {
   await page.goto("/settings/admin");

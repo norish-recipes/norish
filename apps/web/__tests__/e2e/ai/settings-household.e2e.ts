@@ -4,8 +4,8 @@ import type { BrowserContext, Locator, Page } from "@playwright/test";
 
 import type { ThrowawayUser } from "./admin-users-support";
 import { closeAndDelete } from "../harness/accounts";
-import { signedInContext } from "../harness/auth";
-import { settingsCard as card, signUpThrowawayUser } from "./admin-users-support";
+import { settingsCard as card, signedInContext } from "../harness/auth";
+import { signUpThrowawayUser } from "./admin-users-support";
 import { expect, test } from "./fixture";
 
 const HOUSEHOLD_SETTINGS = "/settings/household";
