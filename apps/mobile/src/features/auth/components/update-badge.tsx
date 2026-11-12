@@ -1,15 +1,10 @@
-import type { SharedValue } from "react-native-reanimated";
 import React, { useEffect } from "react";
 import { Pressable, StyleSheet, View } from "react-native";
 import Animated, {
-  Easing,
-  ReduceMotion,
   useAnimatedProps,
   useAnimatedStyle,
   useReducedMotion,
   useSharedValue,
-  withDelay,
-  withTiming,
 } from "react-native-reanimated";
 import Svg, { Circle, G, Path } from "react-native-svg";
 import {
@@ -19,6 +14,7 @@ import {
   badgeRing,
   badgeShake,
 } from "@/features/auth/utils/badge-motion";
+import { playBadge } from "@/features/auth/utils/motion";
 import { useResolvedColorScheme } from "@/hooks/use-resolved-color-scheme";
 import { useIntl } from "react-intl";
 
@@ -37,21 +33,6 @@ const GLYPH_PROPS = {
   strokeLinejoin: "round",
 } as const;
 
-// Under Reduce Motion the badge never plays, so the opt-out only keeps a started play running.
-function play(clock: SharedValue<number>, delay: number) {
-  clock.set(0);
-  clock.set(
-    withDelay(
-      delay,
-      withTiming(BADGE_MS, {
-        duration: BADGE_MS,
-        easing: Easing.linear,
-        reduceMotion: ReduceMotion.Never,
-      })
-    )
-  );
-}
-
 /** The warning badge: one failed rise of the arrow, one shake, one ring; a tap replays it. */
 export function UpdateBadge() {
   const intl = useIntl();
@@ -60,7 +41,7 @@ export function UpdateBadge() {
   const clock = useSharedValue(BADGE_MS);
 
   useEffect(() => {
-    if (!reduceMotion) play(clock, BADGE_START_DELAY_MS);
+    if (!reduceMotion) playBadge(clock, BADGE_MS, BADGE_START_DELAY_MS);
   }, [clock, reduceMotion]);
 
   const shakeStyle = useAnimatedStyle(() => ({
@@ -77,7 +58,7 @@ export function UpdateBadge() {
       accessibilityRole="image"
       className="size-[72px]"
       onPress={() => {
-        if (!reduceMotion) play(clock, 0);
+        if (!reduceMotion) playBadge(clock, BADGE_MS, 0);
       }}
     >
       <View pointerEvents="none" style={styles.ring}>

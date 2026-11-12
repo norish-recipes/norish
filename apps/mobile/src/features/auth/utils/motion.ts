@@ -1,4 +1,17 @@
-import { FadeIn, ReduceMotion } from "react-native-reanimated";
+import type { SharedValue } from "react-native-reanimated";
+import { Easing, FadeIn, ReduceMotion, withDelay, withTiming } from "react-native-reanimated";
 
 // Reanimated snaps every animation under Reduce Motion, so the plain fade opts out of that.
 export const FADE_IN = FadeIn.duration(240).reduceMotion(ReduceMotion.Never);
+
+/** Runs a badge's clock from 0 to `duration` after `delay`; callers skip it under Reduce Motion. */
+export function playBadge(clock: SharedValue<number>, duration: number, delay: number) {
+  clock.set(0);
+  // The opt-out only keeps a started play running, so it isn't snapped to its end.
+  clock.set(
+    withDelay(
+      delay,
+      withTiming(duration, { duration, easing: Easing.linear, reduceMotion: ReduceMotion.Never })
+    )
+  );
+}
