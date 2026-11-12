@@ -19,6 +19,7 @@ export function RegisterScreen() {
           className="self-center"
           lead={intl.formatMessage({ id: "auth.signup.hasAccount" })}
           link={intl.formatMessage({ id: "auth.signup.signIn" })}
+          testID="register-sign-in-link"
           onPress={() => (router.canGoBack() ? router.back() : router.replace("/login"))}
         />
       }

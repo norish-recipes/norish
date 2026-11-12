@@ -7,17 +7,19 @@ interface AuthFooterLinkProps {
   /** The accented half, which is the link. */
   link: string;
   className?: string;
+  testID?: string;
   onPress: () => void;
 }
 
 /** A sentence that is one link to the other form. */
-export function AuthFooterLink({ lead, link, className, onPress }: AuthFooterLinkProps) {
+export function AuthFooterLink({ lead, link, className, testID, onPress }: AuthFooterLinkProps) {
   return (
     // Hit slop extends the 20pt text line to a 44pt target.
     <Pressable
       accessibilityRole="link"
       className={className}
       hitSlop={{ top: 12, bottom: 12 }}
+      testID={testID}
       onPress={onPress}
     >
       <Text className="text-muted text-center text-[15px] leading-5 font-normal">

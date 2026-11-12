@@ -52,7 +52,7 @@ export function ErrorShake({
 }
 
 /** The danger line under a field or form, rising in with one error haptic per failed attempt. */
-export function InlineError({ error }: { error: InlineErrorState }) {
+export function InlineError({ error, testID }: { error: InlineErrorState; testID?: string }) {
   const [dangerColor] = useThemeColor(["danger"] as const);
   const reduceMotion = useReducedMotion();
 
@@ -67,7 +67,9 @@ export function InlineError({ error }: { error: InlineErrorState }) {
     >
       <View className="flex-row items-start gap-1.5 pl-1">
         <Feather color={dangerColor} name="alert-circle" size={16} style={{ marginTop: 2 }} />
-        <Text className="text-danger flex-1 text-sm font-normal">{error?.message}</Text>
+        <Text className="text-danger flex-1 text-sm font-normal" testID={testID}>
+          {error?.message}
+        </Text>
       </View>
     </FieldError>
   );
@@ -77,10 +79,13 @@ export function InlineError({ error }: { error: InlineErrorState }) {
 export function InlineErrorBlock({
   error,
   className,
+  testID,
   children,
 }: {
   error: InlineErrorState;
   className?: string;
+  /** The error line's. */
+  testID?: string;
   children: ReactNode;
 }) {
   return (
@@ -88,7 +93,7 @@ export function InlineErrorBlock({
       <ErrorShake className={className} error={error}>
         {children}
       </ErrorShake>
-      <InlineError error={error} />
+      <InlineError error={error} testID={testID} />
     </>
   );
 }

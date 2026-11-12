@@ -30,7 +30,7 @@ export function ProviderButtons({
 
   return (
     <View className="gap-2.5">
-      <InlineErrorBlock className="gap-2.5" error={error}>
+      <InlineErrorBlock className="gap-2.5" error={error} testID="login-error">
         {providers.map((provider) => (
           <Button
             key={provider.id}

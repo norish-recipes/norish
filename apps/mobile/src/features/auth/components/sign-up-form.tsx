@@ -105,7 +105,7 @@ export function SignUpForm({ authClient }: { authClient: AuthClient }) {
         onChangeText={attempt.edit(setConfirmPassword)}
         onSubmitEditing={handleSubmit}
       />
-      <InlineError error={attempt.failure} />
+      <InlineError error={attempt.failure} testID="register-error" />
 
       <ErrorShake className="mt-1.5" error={attempt.failureFor(SIGN_UP)}>
         <AuthSubmitButton

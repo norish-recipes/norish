@@ -70,13 +70,14 @@ export function PasswordForm({ authClient, signIn, showSignUpLink }: PasswordFor
         onChangeText={signIn.edit(setPassword)}
         onSubmitEditing={handleSubmit}
       />
-      <InlineError error={error} />
+      <InlineError error={error} testID="login-error" />
 
       {showSignUpLink ? (
         <AuthFooterLink
           className="mt-0.5 self-center"
           lead={intl.formatMessage({ id: "auth.emailPassword.noAccount" })}
           link={intl.formatMessage({ id: "auth.emailPassword.signUp" })}
+          testID="login-sign-up-link"
           onPress={() => router.push("/register")}
         />
       ) : null}

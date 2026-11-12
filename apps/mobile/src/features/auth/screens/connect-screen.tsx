@@ -108,7 +108,7 @@ export function ConnectScreen() {
           onChangeText={connect.edit(setAddress)}
           onSubmitEditing={handleConnect}
         />
-        <InlineError error={connect.failure} />
+        <InlineError error={connect.failure} testID="connect-error" />
       </Animated.View>
     </AuthLayout>
   );
