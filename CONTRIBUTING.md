@@ -79,9 +79,11 @@ norish/
 ├── apps/                 # App workspaces
 │   ├── web/              # Next.js app (App Router + server entry)
 │   │   ├── app/          # Routes
+│   │   ├── components/imports/ # Shared recipe import UI
 │   │   └── features/     # One folder per feature
 │   │       ├── account/
 │   │       ├── admin/
+│   │       ├── auth/
 │   │       ├── calendar/
 │   │       ├── groceries/
 │   │       ├── household/
@@ -123,13 +125,13 @@ norish/
 
 Web and mobile use the same layout and share logic in `packages/shared-react`. [Architecture](https://docs.norish.dev/development/architecture) in the docs shows where each piece lives and traces a read, a write and a realtime update through it.
 
-- Web features cover `library` (with the cookbook page), `recipes` (with the shared recipe page), `groceries`, `calendar`, `account`, `household`, `ingredients` and `admin`. Mobile has `auth`; imports and auth have yet to move on web. `features/<feature>/` holds its screens, components and hooks. Route files in `app/` render screens from features, and a page that shows several, such as the dashboard, composes them. The settings route composes `account`, `household`, `ingredients`, `admin` and CalDAV in `calendar`; each tab has its own route and screen. Shared settings UI lives in `components/settings/`. Mobile's `smoke` isn't a domain: it is a throwaway screen that tests the plumbing until the redesigned screens replace it.
+- Web features cover `library` (with the cookbook page), `recipes` (with the shared recipe page), `groceries`, `calendar`, `account`, `household`, `ingredients`, `admin` and `auth`. `features/<feature>/` holds its screens, components and hooks. Auth holds the login, signup and auth-error screens; `app/(auth)/` keeps the layout, `loading.tsx` files and each page's server work. Route files in `app/` render screens from features, and a page that shows several, such as the dashboard, composes them. The settings route composes `account`, `household`, `ingredients`, `admin` and CalDAV in `calendar`; each tab has its own route and screen. Shared settings UI lives in `components/settings/`. Mobile's `smoke` isn't a domain: it is a throwaway screen that tests the plumbing until the redesigned screens replace it.
 - Features never import each other. Lint blocks `@/features/<x>` and `@/features/<x>/**` outside feature `<x>`, except in route files. A panel several features open lives in the shared `components/Panel/consumers/` folder.
 - A feature's components are grouped by area (`list/`, `panels/`, `stores/`). An area's `index.ts` re-exports only pieces more than one screen draws; import a piece one screen draws by file, and omit the index when nothing is shared. The bundler ships every file an index re-exports, so mixing pieces puts one screen's code in another's chunk.
 - Skeletons, `loading.tsx` files and the shared recipe page import files directly, never through an area's `index.ts`. Importing directly cut the recipe skeleton's own code from 324 KB to 38 KB.
 - Each layout seeds only what its screens draw in the first frame, and some seeded reads are reread once their subscriptions are live to cover changes made before registration. `(app)` seeds permissions and Device Preferences; `(library)` and the recipe layout seed favourites, the household and the reader's allergies through `lib/reader-recipe-seeds.ts`; `(dashboard)` seeds pending imports. The shell reads the Reader's profile (`user.get`) itself. Seeds arrive only on a full document load; in-app navigations carry none.
 - Views that share a layout, as the grocery list and the Pantry do, are drawn by one root the layout renders, which picks the view from the address, so a switch stays on the client. The layout seeds only the view a full load opens on; each page just gives its view an address.
-- Code two or more features use goes in the app's shared `components/`, `hooks/` or `lib/`, so no feature imports it from another. Imports run one way: shared folders, then features, then routes.
+- Code two or more features use goes in the app's shared `components/`, `hooks/` or `lib/`, so no feature imports it from another. `components/imports/` holds the URL, paste and image import modals, the copied-link prompt and `use-import-recipe`. The library header and shell open the import UI. Imports run one way: shared folders, then features, then routes.
 - Components never call tRPC. Every read and write uses a named shared-react hook in its domain; `restrictTRPC` in `tooling/eslint/features.ts` bans `useTRPC` and `useTRPCClient` in both apps, with named exceptions when needed (none today). The hooks are reusable by both apps.
 - Server-only work, such as repository reads, seeds and redirects, stays in route folders, so features remain client-facing.
 - A shared-react hook passes toast messages in namespaces shipped by web's root layout; `root-messages.test.ts` guards them.
@@ -142,7 +144,7 @@ Web and mobile use the same layout and share logic in `packages/shared-react`. [
 - Client state several components share goes in a zustand store, and state one component owns stays in `useState`. Each component subscribes to the fields it reads, so a change re-renders only those components. A store holds ids, never a copy of server data, which would go stale.
 - A store is global unless its first value comes from the request or the page. A component reads a global store without a provider above it, and one that must start fresh on each screen resets on unmount. A persisted store persists through the platform adapter's storage, so the same store runs on web and mobile.
 - A store whose first value comes from the request or the page, such as the recipe page's recipe id, belongs to the page: the page's provider creates it once with zustand's `createStore` and hands it down through a context that holds only the store, and components read it with a selector. A module-level store is one object on the server, shared by every request, so it can't hold one page's recipe while the server renders.
-- shared-react groups code by domain, including `admin` and `ingredients`, coarser than the app features: `recipes` holds the list, filters, selection, detail and cookbooks that `library` and `recipes` import. `src/<domain>/` holds its hooks, client stores, realtime subscription and types, exported as `@norish/shared-react/<domain>`, so a mobile screen reuses what web uses and adds only its UI. Domains never import each other, and the cross-cutting folders they import never import a domain, so changing one domain never breaks the rest, and lint enforces both. The cross-cutting folders:
+- shared-react groups code by domain, including `admin` and `ingredients`, coarser than the app features: `recipes` holds the list, filters, selection, detail and cookbooks that `library` and `recipes` import, plus `useImportMutations` alongside `useRecipesMutations`. `src/<domain>/` holds its hooks, client stores, realtime subscription and types, exported as `@norish/shared-react/<domain>`, so a mobile screen reuses what web uses and adds only its UI. Domains never import each other, and the cross-cutting folders they import never import a domain, so changing one domain never breaks the rest, and lint enforces both. The cross-cutting folders:
   - `trpc/` creates the one tRPC context, so every hook imports `useTRPC` directly with no factory to bind in each app.
   - `platform/` is the one adapter each app mounts for toasts, navigation, errors, storage, Device Kind, the session, `endSession`, `leave(reason)` and the offline engine clear, so shared code holds no web or mobile imports.
   - `offline/` holds the Outbox and the optimistic updates every domain's mutations use, so every write is Queued and replayed the same way while Offline.
@@ -222,7 +224,6 @@ const log = createClientLogger("MyComponent");
 Web, mobile, `packages/shared-react` and `packages/ui` compile with the React Compiler, which memoises components and hooks itself:
 
 - Don't write `useMemo` or `useCallback`; the compiler memoises. The one exception is a value an effect depends on that must keep its identity, with a one-line comment saying so. A component marked `"use no memo"`, such as a TanStack Virtual list, keeps its own, since the compiler skips it.
-- Existing ones go as each feature migrates, together with that feature's tests.
 - Keep a hook's `use` prefix when you alias it (`const useX = hooks.useX`). The compiler knows a hook only by its name.
 - Derive values during render instead of copying them into state from an effect. The lint flags state set in an effect, refs read during render, and mutated props.
 - Lint reports every component or hook the compiler skips, through `eslint-plugin-react-hooks`. Fix the code rather than silence it; one that must stay uncompiled, such as a TanStack Virtual list, opens with `"use no memo"`.
@@ -292,7 +293,7 @@ An unavailable or environmentally blocked browser run is reported as blocked, no
 
 ## Testing
 
-Tests live in `__tests__/` directories: a workspace's own (e.g., `apps/web/__tests__/...`, `packages/shared/__tests__/...`), or a migrated feature's (`apps/web/features/groceries/__tests__/`, `packages/shared-react/src/groceries/__tests__/`), one flat folder per feature. We use Vitest with React Testing Library.
+Tests live in `__tests__/` directories: a workspace's own (e.g., `apps/web/__tests__/...`, `packages/shared/__tests__/...`), or a feature's (`apps/web/features/groceries/__tests__/`, `packages/shared-react/src/groceries/__tests__/`), one flat folder per feature. We use Vitest with React Testing Library.
 
 User-visible workflows whose acceptance criteria depend on browser behavior require production-like browser E2E coverage. Keep third-party dependencies deterministic at their narrow external boundary while exercising the real Norish application path. Backend-only changes do not require browser E2E unless their acceptance criteria explicitly cross that boundary.
 

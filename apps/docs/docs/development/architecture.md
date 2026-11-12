@@ -59,8 +59,9 @@ Web and mobile use the same layout. Web keeps its folders at the root of
 - `features/<feature>/` holds one domain's screens, components, hooks and
   helpers. Web features cover `library` (with the cookbook page),
   `recipes` (with the shared recipe page), `groceries`, `calendar`,
-  `account`, `household`, `ingredients` and `admin`. Mobile has `auth`;
-  imports and auth have yet to move on web. The settings route composes five features: `account`,
+  `account`, `household`, `ingredients`, `admin` and `auth`. Auth holds the
+  login, signup and auth-error screens; `app/(auth)/` keeps the layout,
+  `loading.tsx` files and each page's server work. The settings route composes five features: `account`,
   `household`, `ingredients`, `admin` and CalDAV in `calendar`. Each tab has
   its own route and renders its feature screen. `components/settings/` holds
   UI shared by tabs.
@@ -86,6 +87,9 @@ Web and mobile use the same layout. Web keeps its folders at the root of
   nothing and only give each view an address.
 - Code two or more features use goes in the app's shared folders: `components/`,
   `hooks/` and `lib/` on web, `hooks/` and `lib/` on mobile.
+  `components/imports/` holds the URL, paste and image import modals, the
+  copied-link prompt and `use-import-recipe`. The library header and shell open
+  the import UI.
 
 Imports run one way: shared folders, then features, then routes.
 
@@ -96,7 +100,7 @@ domain's hooks, client stores, realtime subscriptions and types. Apps import it
 as `@norish/shared-react/<domain>`, and its tests sit in
 `src/<domain>/__tests__/`. One domain can serve several app features. The domain folders are `admin`,
 `calendar`, `groceries`, `ingredients` and `recipes`. CalDAV belongs to
-`calendar`.
+`calendar`. `recipes` holds `useImportMutations` alongside `useRecipesMutations`.
 
 The cross-cutting folders serve every domain:
 
