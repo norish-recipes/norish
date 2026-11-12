@@ -5,20 +5,20 @@ import { Button, Spinner, useThemeColor } from "heroui-native";
 interface AuthSubmitButtonProps {
   label: string;
   /** Draws the button's icon in the colour it is given. */
-  icon: (color: string) => ReactNode;
+  icon?: (color: string) => ReactNode;
   /** Its attempt is running, so a spinner stands in for the icon. */
-  isBusy: boolean;
-  isDisabled: boolean;
-  testID: string;
+  isBusy?: boolean;
+  isDisabled?: boolean;
+  testID?: string;
   onPress: () => void;
 }
 
-/** A signed-out form's solid primary action. */
+/** The signed-out screens' solid primary action. */
 export function AuthSubmitButton({
   label,
   icon,
-  isBusy,
-  isDisabled,
+  isBusy = false,
+  isDisabled = false,
   testID,
   onPress,
 }: AuthSubmitButtonProps) {
@@ -38,7 +38,7 @@ export function AuthSubmitButton({
           <Spinner.Indicator iconProps={{ width: 20, height: 20 }} />
         </Spinner>
       ) : (
-        icon(accentForegroundColor)
+        icon?.(accentForegroundColor)
       )}
       <Button.Label className="text-[17px] font-semibold">{label}</Button.Label>
     </Button>

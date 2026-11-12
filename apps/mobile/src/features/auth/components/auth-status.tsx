@@ -1,89 +1,50 @@
-import type { ReactNode } from "react";
 import React from "react";
 import { Text, View } from "react-native";
-import { useSafeAreaInsets } from "react-native-safe-area-context";
-import { ServerChip } from "@/features/auth/components/server-chip";
-import { Button } from "heroui-native";
+import { AuthSubmitButton } from "@/features/auth/components/auth-submit-button";
 
 interface AuthStatusProps {
   title: string;
   description: string;
   action?: { label: string; onPress: () => void };
-  /** With a badge this is the whole-screen status layout; without, a block where a form would be. */
-  badge?: ReactNode;
-  /** The Server Address whose chip closes the screen, where one is known. */
-  chipAddress?: string;
+  /** `screen` sets the status screens' larger type under their badge; `inline` sits where a form would. */
+  size?: "inline" | "screen";
   descriptionTestID?: string;
 }
 
-/** A title, a line and at most one action; with a badge, the status screens' shared layout. */
+const TYPE = {
+  inline: {
+    block: "items-center gap-2",
+    title: "text-foreground text-center text-[17px] font-semibold",
+    description: "text-muted text-center text-[15px] font-normal",
+  },
+  screen: {
+    block: "mt-2 items-center gap-4",
+    title: "text-foreground text-center text-[26px] leading-8 font-semibold tracking-[-0.57px]",
+    description: "text-muted text-center text-[17px] leading-6 font-normal",
+  },
+};
+
+/** A title, a line and at most one action. */
 export function AuthStatus({
   title,
   description,
   action,
-  badge,
-  chipAddress,
+  size = "inline",
   descriptionTestID,
 }: AuthStatusProps) {
-  if (badge) {
-    return (
-      <StatusScreen
-        action={action}
-        badge={badge}
-        chipAddress={chipAddress}
-        description={description}
-        descriptionTestID={descriptionTestID}
-        title={title}
-      />
-    );
-  }
+  const type = TYPE[size];
 
   return (
-    <View className="items-center gap-2">
-      <Text className="text-foreground text-center text-[17px] font-semibold">{title}</Text>
-      <Text className="text-muted text-center text-[15px] font-normal" testID={descriptionTestID}>
+    <View className={type.block}>
+      <Text className={type.title}>{title}</Text>
+      <Text className={type.description} testID={descriptionTestID}>
         {description}
       </Text>
       {action ? (
-        <Button className="mt-4 self-stretch rounded-full" size="lg" onPress={action.onPress}>
-          <Button.Label>{action.label}</Button.Label>
-        </Button>
+        <View className="mt-4 self-stretch">
+          <AuthSubmitButton label={action.label} onPress={action.onPress} />
+        </View>
       ) : null}
-    </View>
-  );
-}
-
-/** The boards' status frame: badge, title and line centred, the action and chip pinned below. */
-function StatusScreen({
-  title,
-  description,
-  action,
-  badge,
-  chipAddress,
-  descriptionTestID,
-}: AuthStatusProps) {
-  const insets = useSafeAreaInsets();
-
-  return (
-    <View className="flex-1 px-6" style={{ paddingTop: insets.top, paddingBottom: insets.bottom }}>
-      <View className="flex-1 items-center justify-center gap-4 px-2">
-        {badge}
-        <Text className="text-foreground mt-2 text-center text-[26px] leading-8 font-semibold tracking-[-0.57px]">
-          {title}
-        </Text>
-        <Text
-          className="text-muted text-center text-[17px] leading-6 font-normal"
-          testID={descriptionTestID}
-        >
-          {description}
-        </Text>
-      </View>
-      {action ? (
-        <Button className="h-[52px] rounded-full" onPress={action.onPress}>
-          <Button.Label className="text-[17px] font-semibold">{action.label}</Button.Label>
-        </Button>
-      ) : null}
-      {chipAddress ? <ServerChip address={chipAddress} /> : null}
     </View>
   );
 }

@@ -1,6 +1,6 @@
 import type { ForegroundContinue } from "@/lib/boot/boot-state";
 import React from "react";
-import { AuthStatus } from "@/features/auth/components/auth-status";
+import { StatusScreen } from "@/features/auth/components/status-screen";
 import { UpdateBadge } from "@/features/auth/components/update-badge";
 import { useVersionRecheck } from "@/features/auth/hooks/use-version-recheck";
 import { hostOf } from "@/features/auth/utils/host-of";
@@ -47,7 +47,7 @@ export function UpdateServerScreen({ address, version }: { address: string; vers
   useVersionRecheck(address, signedIn, continueFrom);
 
   return (
-    <AuthStatus
+    <StatusScreen
       badge={<UpdateBadge />}
       chipAddress={address}
       description={intl.formatMessage(
