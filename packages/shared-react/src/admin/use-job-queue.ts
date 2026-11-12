@@ -4,7 +4,7 @@ import { keepPreviousData, useMutation, useQuery, useQueryClient } from "@tansta
 import type { JobRetentionConfig } from "@norish/config/zod/server-config";
 import type { AppRouter } from "@norish/trpc/client";
 
-import { settled } from "../offline/settled";
+import { settled, wentThrough } from "../offline/settled";
 import { usePlatform } from "../platform/platform";
 import { useTRPC } from "../trpc";
 
@@ -57,23 +57,11 @@ export function useQueueSummaryQuery() {
   return { summaries: data ?? [], error, isLoading };
 }
 
-/** A job action's outcome: a failed one carries the server's message. */
-type JobActionResult = { success: true } | { success: false; error: string };
-
-const outcome = (write: Promise<unknown>): Promise<JobActionResult> =>
-  write.then(
-    () => ({ success: true as const }),
-    (error: unknown) => ({
-      success: false as const,
-      error: error instanceof Error ? error.message : String(error),
-    })
-  );
-
-/** Retry, cancel and remove a job, and the retention the queues keep. */
-export function useJobQueueMutations() {
+/** Retry, cancel and remove a job. */
+export function useJobQueueMutations(onFailed: (reason: string) => void) {
   const trpc = useTRPC();
   const queryClient = useQueryClient();
-  const { showError } = usePlatform();
+  const failed = (error: { message: string }) => onFailed(error.message);
 
   const rereadJobs = () => {
     void queryClient.invalidateQueries({ queryKey: trpc.admin.jobs.list.pathKey() });
@@ -87,10 +75,29 @@ export function useJobQueueMutations() {
         // The open detail shows the retried job's new state.
         void queryClient.invalidateQueries({ queryKey: trpc.admin.jobs.detail.pathKey() });
       },
+      onError: failed,
     })
   );
-  const remove = useMutation(trpc.admin.jobs.remove.mutationOptions({ onSuccess: rereadJobs }));
-  const cancel = useMutation(trpc.admin.jobs.cancel.mutationOptions());
+  const remove = useMutation(
+    trpc.admin.jobs.remove.mutationOptions({ onSuccess: rereadJobs, onError: failed })
+  );
+  const cancel = useMutation(trpc.admin.jobs.cancel.mutationOptions({ onError: failed }));
+
+  return {
+    /** Each resolves whether it went through; a failure hands `onFailed` the server's message. */
+    retryJob: (job: JobRef) => wentThrough(retry.mutateAsync(job)),
+    cancelJob: (job: JobRef) => wentThrough(cancel.mutateAsync(job)),
+    removeJob: (job: JobRef) => wentThrough(remove.mutateAsync(job)),
+    isRetrying: retry.isPending,
+    isRemoving: remove.isPending,
+  };
+}
+
+/** The retention the queues keep; a failed save says so. */
+export function useJobRetentionWrite() {
+  const trpc = useTRPC();
+  const queryClient = useQueryClient();
+  const { showError } = usePlatform();
   const retention = useMutation(
     trpc.admin.jobs.updateRetention.mutationOptions({
       onSuccess: () =>
@@ -100,12 +107,7 @@ export function useJobQueueMutations() {
   );
 
   return {
-    retryJob: (job: JobRef) => outcome(retry.mutateAsync(job)),
-    cancelJob: (job: JobRef) => outcome(cancel.mutateAsync(job)),
-    removeJob: (job: JobRef) => outcome(remove.mutateAsync(job)),
     updateJobRetention: (config: JobRetentionConfig) => settled(retention.mutateAsync(config)),
-    isRetrying: retry.isPending,
-    isRemoving: remove.isPending,
     isUpdatingRetention: retention.isPending,
   };
 }

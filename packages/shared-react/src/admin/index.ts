@@ -22,6 +22,7 @@ export {
   useJobDetailQuery,
   useJobListQuery,
   useJobQueueMutations,
+  useJobRetentionWrite,
   useQueueSummaryQuery,
 } from "./use-job-queue";
 export { useUserMutations, useUsersListQuery } from "./use-users";

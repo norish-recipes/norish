@@ -27,7 +27,7 @@ import { QUEUE_NAMES } from "@norish/queue/queue-names";
 import {
   useAdminConfig,
   useJobListQuery,
-  useJobQueueMutations,
+  useJobRetentionWrite,
   useQueueSummaryQuery,
 } from "@norish/shared-react/admin";
 
@@ -66,7 +66,7 @@ export default function JobQueueCard() {
   const now = useNow({ updateInterval: 60_000 });
   const tActions = useTranslations("common.actions");
   const storedRetention = useAdminConfig(ServerConfigKeys.JOB_RETENTION) ?? DEFAULT_JOB_RETENTION;
-  const { updateJobRetention, isUpdatingRetention } = useJobQueueMutations();
+  const { updateJobRetention, isUpdatingRetention } = useJobRetentionWrite();
   const [queueFilter, setQueueFilter] = useState<QueueName | typeof ALL>(ALL);
   const [stateFilter, setStateFilter] = useState<StateFilter>(null);
   const [page, setPage] = useState(1);

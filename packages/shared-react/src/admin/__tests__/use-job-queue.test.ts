@@ -8,7 +8,7 @@ import {
 } from "@norish/shared-react/platform/testing";
 
 import { answerCall, failCall, keyOf, resetTRPCFake, serveTRPC } from "../../trpc/testing";
-import { useJobListQuery, useJobQueueMutations } from "../use-job-queue";
+import { useJobListQuery, useJobQueueMutations, useJobRetentionWrite } from "../use-job-queue";
 
 vi.mock("../../trpc", async () => (await import("../../trpc/testing")).mockTRPC());
 
@@ -36,36 +36,40 @@ afterEach(() => {
 describe("useJobQueueMutations", () => {
   it("reads the list, the counts and the open detail again after a retry", async () => {
     const { stale, wrapper } = setUp();
-    const { result } = renderHook(() => useJobQueueMutations(), { wrapper });
-    let retried: Promise<unknown> | undefined;
+    const { result } = renderHook(() => useJobQueueMutations(vi.fn()), { wrapper });
+    let retried: Promise<boolean> | undefined;
 
     act(() => {
       retried = result.current.retryJob(JOB);
     });
     await answerCall("admin.jobs.retry", { success: true });
 
-    expect(await retried).toEqual({ success: true });
+    expect(await retried).toBe(true);
     expect([stale(LIST), stale(SUMMARY), stale(DETAIL)]).toEqual([true, true, true]);
   });
 
   it("hands back why a cancel failed", async () => {
     const { stale, wrapper } = setUp();
-    const { result } = renderHook(() => useJobQueueMutations(), { wrapper });
-    let cancelled: Promise<unknown> | undefined;
+    const onFailed = vi.fn();
+    const { result } = renderHook(() => useJobQueueMutations(onFailed), { wrapper });
+    let cancelled: Promise<boolean> | undefined;
 
     act(() => {
       cancelled = result.current.cancelJob(JOB);
     });
     await failCall("admin.jobs.cancel");
 
-    expect(await cancelled).toEqual({ success: false, error: "offline" });
+    expect(await cancelled).toBe(false);
+    expect(onFailed).toHaveBeenCalledWith("offline");
     expect(stale(LIST)).toBe(false);
   });
+});
 
+describe("useJobRetentionWrite", () => {
   it("says a retention save failed", async () => {
     const platform = fakePlatformAdapter();
     const wrapper = createTestWrapper(createTestQueryClient(), platform);
-    const { result } = renderHook(() => useJobQueueMutations(), { wrapper });
+    const { result } = renderHook(() => useJobRetentionWrite(), { wrapper });
     let saved: Promise<void> | undefined;
 
     act(() => {

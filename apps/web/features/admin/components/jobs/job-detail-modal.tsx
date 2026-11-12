@@ -211,10 +211,11 @@ function JobDetail({ picked, onClose }: { picked: JobRef; onClose: () => void })
   const tActions = useTranslations("common.actions");
   const format = useFormatter();
   const { job, isLoading, error } = useJobDetailQuery(picked);
-  const { retryJob, removeJob, cancelJob, isRetrying, isRemoving } = useJobQueueMutations();
   const tokensUsed = job ? totalTokens(job.models) : null;
   const [confirmAction, setConfirmAction] = useState<ConfirmAction>(null);
   const [actionError, setActionError] = useState<string | null>(null);
+  const { retryJob, removeJob, cancelJob, isRetrying, isRemoving } =
+    useJobQueueMutations(setActionError);
   // The run a cancel was asked for, by its start: it reads "Cancelling…" until
   // that run leaves active, so a retried run offers Cancel again.
   const [cancelling, setCancelling] = useState<number | null>(null);
@@ -226,36 +227,20 @@ function JobDetail({ picked, onClose }: { picked: JobRef; onClose: () => void })
 
     setActionError(null);
     setCancelling(job.processedOn);
-    const result = await cancelJob(picked);
-
-    if (!result.success) {
-      setCancelling(null);
-      setActionError(result.error);
-    }
+    if (!(await cancelJob(picked))) setCancelling(null);
   };
 
   // Retry is instant — no confirmation. Remove is destructive, so it confirms.
   const handleRetry = async () => {
     setActionError(null);
-    const result = await retryJob(picked);
-
-    if (!result.success) {
-      setActionError(result.error);
-    }
+    await retryJob(picked);
   };
 
   const handleRemove = async () => {
-    const result = await removeJob(picked);
+    const removed = await removeJob(picked);
 
     setConfirmAction(null);
-
-    if (!result.success) {
-      setActionError(result.error);
-
-      return;
-    }
-
-    onClose();
+    if (removed) onClose();
   };
 
   const field = (label: string, value: string, fullWidth = false) => (
