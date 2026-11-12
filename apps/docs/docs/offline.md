@@ -49,4 +49,10 @@ queued change.
 ## Accounts and shared devices
 
 The offline cache and the outbox belong to the signed-in account in that
-browser. Signing out discards unsent changes and clears the offline cache.
+browser. Signing out discards unsent changes and clears the offline cache. You
+can't sign out while offline; Norish says, "You're offline. Sign out when
+you're back online."
+
+When your session expires, Norish clears the device's offline data before the
+sign-in page. Changes still waiting to sync are kept and sent when you sign in
+again with the same account.
