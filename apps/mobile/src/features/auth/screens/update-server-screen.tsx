@@ -7,6 +7,7 @@ import { hostOf } from "@/features/auth/utils/host-of";
 import { MINIMUM_SERVER_VERSION } from "@/features/auth/utils/server-version";
 import { useHasActiveSession } from "@/lib/auth/auth-session-sync";
 import { getServerAddress, saveServerAddress } from "@/lib/network/server-address";
+import { clearServerTooOld } from "@/lib/network/too-old-server";
 import { useRouter } from "expo-router";
 import { useIntl } from "react-intl";
 
@@ -25,6 +26,7 @@ export function UpdateServerScreen({ address, version }: { address: string; vers
   // or on to Sign in for an address not saved yet.
   const continueFrom = (next: ForegroundContinue) => {
     if (next.screen === "signed-in-app") {
+      clearServerTooOld();
       if (router.canDismiss()) router.dismissAll();
       else router.replace("/");
 
@@ -36,6 +38,8 @@ export function UpdateServerScreen({ address, version }: { address: string; vers
     // Rejected, so the re-check stays armed and tries again on the next return.
     return saveServerAddress(next.address).then(
       () => {
+        clearServerTooOld();
+
         const dismissed = router.canDismiss();
 
         if (dismissed) router.dismissAll();

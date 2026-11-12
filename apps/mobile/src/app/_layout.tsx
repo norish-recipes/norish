@@ -134,6 +134,7 @@ function RootLayoutContent() {
         <MobileIntlFallbackProvider>
           <RootStack signedIn={false} />
           <PortalHost name="app" />
+          <LaunchVersionCheck enabled />
           <LaunchSplash handoff="glide" />
         </MobileIntlFallbackProvider>
       </ThemeProvider>

@@ -1,5 +1,6 @@
 import { createContext } from "react";
 import { resetAuthClientStorage } from "@/lib/auth/auth-client";
+import { clearServerTooOld } from "@/lib/network/too-old-server";
 import * as SecureStore from "expo-secure-store";
 
 import { withoutTrailingSlashes } from "@norish/shared/lib/helpers";
@@ -103,6 +104,7 @@ export async function saveServerAddress(input: string): Promise<string> {
   await resetAuthClientStorage();
   await SecureStore.setItemAsync(SERVER_ADDRESS_KEY, normalized);
   currentAddress = normalized;
+  clearServerTooOld();
   emitServerAddressChange();
 
   return normalized;

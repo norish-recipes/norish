@@ -15,6 +15,7 @@ const checkServerAddress = vi.fn(
     })
 );
 const push = vi.fn();
+let pathname = "/";
 const ServerAddressContext = createContext<string | null>(null);
 
 vi.mock("@/components/launch", () => ({ useLaunchPhase: () => phase }));
@@ -23,7 +24,7 @@ vi.mock("@/lib/network/server-address", () => ({
   ServerAddressContext,
   getServerAddress: () => address,
 }));
-vi.mock("expo-router", () => ({ router: { push } }));
+vi.mock("expo-router", () => ({ router: { push }, usePathname: () => pathname }));
 
 const updateServer = { pathname: "/update-server", params: { address, version: "0.26.2" } };
 
@@ -41,6 +42,7 @@ async function launch() {
 
 beforeEach(() => {
   phase = "leaving";
+  pathname = "/";
   checkServerAddress.mockClear();
   push.mockClear();
 });
@@ -71,17 +73,51 @@ describe("LaunchVersionCheck", () => {
     expect(push).toHaveBeenCalledWith(updateServer);
   });
 
-  it("opens Update your server once per launch", async () => {
+  it("checks once per launch and opens nothing more once Update your server shows", async () => {
     phase = "done";
     const tree = await launch();
     const first = render(tree());
 
     await act(async () => settle(tooOld));
+    pathname = "/update-server";
     first.unmount();
     render(tree());
     await act(async () => {});
 
+    expect(checkServerAddress).toHaveBeenCalledTimes(1);
     expect(push).toHaveBeenCalledTimes(1);
+  });
+
+  it("shows Update your server again on a stack remounted after the push", async () => {
+    phase = "covered";
+    const tree = await launch();
+    const first = render(tree());
+
+    await act(async () => settle(tooOld));
+    expect(push).toHaveBeenCalledTimes(1);
+
+    // The session settles and re-keys the tree; the new navigator starts on the signed-in app.
+    first.unmount();
+    pathname = "/smoke";
+    render(tree());
+
+    expect(push).toHaveBeenCalledTimes(2);
+  });
+
+  it("shows Update your server again when a Session Expiry remounts the stack on Sign in", async () => {
+    phase = "done";
+    const tree = await launch();
+    const first = render(tree());
+
+    await act(async () => settle(tooOld));
+    pathname = "/update-server";
+    first.rerender(tree());
+    first.unmount();
+    pathname = "/login";
+    render(tree());
+
+    expect(push).toHaveBeenCalledTimes(2);
+    expect(push).toHaveBeenLastCalledWith(updateServer);
   });
 
   it("opens Update your server unanimated while the splash still covers the screen", async () => {

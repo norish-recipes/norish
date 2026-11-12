@@ -1,4 +1,5 @@
 import type { ServerAddressCheck, ServerAddressState } from "@/lib/network/server-address";
+import type { TooOldServer } from "@/lib/network/too-old-server";
 
 /**
  * What the app shell should render once (or while) its async prerequisites
@@ -107,29 +108,28 @@ export function stepLaunchClock(clock: number, elapsed: number | null, stop: num
 /** Where the launch is: the splash still opaque, fading or gliding away, or gone. */
 export type LaunchPhase = "covered" | "leaving" | "done";
 
-/**
- * At launch: a too old server goes to Update your server, unanimated while the splash still
- * covers the screen, after the splash has left once it is leaving, unless the saved address
- * changed since; anything else carries on.
- */
+/** At launch: a too old answer for the still-saved address holds Update your server; anything else carries on. */
 export function resolveLaunchVersionCheck(
   check: ServerAddressCheck,
-  saved: string,
-  phase: LaunchPhase
-):
-  | { screen: "update-server"; address: string; version?: string; animated: boolean }
-  | { screen: "wait" }
-  | { screen: "continue" } {
+  saved: string
+): { screen: "update-server"; address: string; version?: string } | { screen: "continue" } {
   if (check.outcome !== "too-old" || check.address !== saved) return { screen: "continue" };
 
-  if (phase === "leaving") return { screen: "wait" };
+  return { screen: "update-server", address: check.address, version: check.version };
+}
 
-  return {
-    screen: "update-server",
-    address: check.address,
-    version: check.version,
-    animated: phase === "done",
-  };
+/**
+ * While a Server Address is held too old, the mounted navigator shows Update your server:
+ * unanimated while the splash still covers the screen, after the splash once it is leaving.
+ */
+export function resolveTooOldServerRoute(
+  tooOld: TooOldServer | null,
+  onUpdateServer: boolean,
+  phase: LaunchPhase
+): { screen: "update-server"; address: string; version?: string; animated: boolean } | { screen: "stay" } {
+  if (!tooOld || onUpdateServer || phase === "leaving") return { screen: "stay" };
+
+  return { screen: "update-server", ...tooOld, animated: phase === "done" };
 }
 
 /** Where a new enough server continues to: Sign in signed out (saving the address), else the signed-in app. */

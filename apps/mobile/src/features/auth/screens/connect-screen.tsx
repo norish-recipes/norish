@@ -10,8 +10,8 @@ import { HelpPopover } from "@/features/auth/components/help-popover";
 import { InlineError } from "@/features/auth/components/inline-error";
 import { useAuthAttempt } from "@/features/auth/hooks/use-auth-attempt";
 import { checkServerAddress } from "@/features/auth/utils/check-server-address";
-import { updateServerHref } from "@/features/auth/utils/update-server-route";
 import { getServerAddress, saveServerAddress } from "@/lib/network/server-address";
+import { markServerTooOld } from "@/lib/network/too-old-server";
 import Feather from "@expo/vector-icons/Feather";
 import MaterialCommunityIcons from "@expo/vector-icons/MaterialCommunityIcons";
 import { useLocalSearchParams, useRouter } from "expo-router";
@@ -39,8 +39,9 @@ export function ConnectScreen() {
 
       if (check.outcome === "error") return check.messageId;
 
+      // Held, so whichever navigator is mounted shows Update your server.
       if (check.outcome === "too-old") {
-        router.push(updateServerHref(check.address, check.version));
+        markServerTooOld({ address: check.address, version: check.version });
 
         return null;
       }

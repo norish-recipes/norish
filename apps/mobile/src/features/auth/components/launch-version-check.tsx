@@ -3,12 +3,13 @@ import { use, useEffect, useState } from "react";
 import { useLaunchPhase } from "@/components/launch";
 import { checkServerAddress } from "@/features/auth/utils/check-server-address";
 import { updateServerHref } from "@/features/auth/utils/update-server-route";
-import { resolveLaunchVersionCheck } from "@/lib/boot/boot-state";
+import { resolveLaunchVersionCheck, resolveTooOldServerRoute } from "@/lib/boot/boot-state";
 import { getServerAddress, ServerAddressContext } from "@/lib/network/server-address";
-import { router } from "expo-router";
+import { markServerTooOld, useTooOldServer } from "@/lib/network/too-old-server";
+import { router, usePathname } from "expo-router";
 
 // Module scope, once per launch: the session stack remounts on every re-key (sign-in, sign-out),
-// so a remount picks up the check in flight and an answer acted on is never acted on again.
+// so a remount picks up the check in flight and an answer is taken only once.
 let launchCheck: Promise<ServerAddressCheck> | null = null;
 let launchAnswered = false;
 
@@ -18,14 +19,18 @@ function launchCheckOf(address: string) {
   return launchCheck;
 }
 
-/** Checks the saved Server Address once in the background; a too-old server gets Update your server. */
+/**
+ * Checks the saved Server Address once in the background, and shows Update your server on
+ * whichever navigator is mounted while an address is held too old.
+ */
 export function LaunchVersionCheck({ enabled }: { enabled: boolean }) {
   const address = use(ServerAddressContext);
   const phase = useLaunchPhase();
+  const pathname = usePathname();
+  const tooOld = useTooOldServer();
   const [check, setCheck] = useState<ServerAddressCheck | null>(null);
 
   useEffect(() => {
-    // Waits for the navigator, so the answer has a stack to open on.
     if (!enabled || !address || launchAnswered) return;
 
     let mounted = true;
@@ -39,20 +44,28 @@ export function LaunchVersionCheck({ enabled }: { enabled: boolean }) {
     };
   }, [enabled, address]);
 
-  // Under the opaque splash it cuts in, revealed by the splash's fade; once the splash is leaving
-  // it waits, so the screen being revealed isn't replaced mid-fade.
   useEffect(() => {
     if (!check || launchAnswered) return;
 
-    const next = resolveLaunchVersionCheck(check, getServerAddress(), phase);
-
-    if (next.screen === "wait") return;
-
     launchAnswered = true;
+
+    const next = resolveLaunchVersionCheck(check, getServerAddress());
+
+    if (next.screen === "update-server") {
+      markServerTooOld({ address: next.address, version: next.version });
+    }
+  }, [check]);
+
+  // Waits for the navigator; under the opaque splash it cuts in, revealed by the splash's fade.
+  useEffect(() => {
+    if (!enabled) return;
+
+    const next = resolveTooOldServerRoute(tooOld, pathname === "/update-server", phase);
+
     if (next.screen === "update-server") {
       router.push(updateServerHref(next.address, next.version, next.animated));
     }
-  }, [check, phase]);
+  }, [enabled, pathname, phase, tooOld]);
 
   return null;
 }

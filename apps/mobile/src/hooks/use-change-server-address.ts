@@ -2,6 +2,7 @@ import type { Href } from "expo-router";
 import { useEffect } from "react";
 import { useConfirmedSignOut } from "@/hooks/use-confirmed-sign-out";
 import { resolveServerChange } from "@/lib/boot/boot-state";
+import { clearServerTooOld } from "@/lib/network/too-old-server";
 import { router } from "expo-router";
 
 import { createClientLogger } from "@norish/shared/lib/logger";
@@ -19,14 +20,17 @@ export function changeServerAddress() {
   const signOut = mountedSignOut;
 
   if (resolveServerChange(signOut !== null) === "server-address") {
+    clearServerTooOld();
     router.push(SERVER_ADDRESS_CHANGE);
 
     return;
   }
 
-  // Pending only once the Sign-out goes ahead, so an expiry during its confirm lands on Sign in.
+  // Pending only once the Sign-out goes ahead, so an expiry during its confirm lands on Sign in;
+  // the too-old hold goes then too, so the fresh stack opens on Server address.
   void signOut?.(() => {
     changeAfterSignOut = true;
+    clearServerTooOld();
   })
     .catch((error: unknown) => {
       log.error({ error }, "Sign-out before a server change failed");
