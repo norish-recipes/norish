@@ -8,6 +8,7 @@ import {
   buttonStyle,
   font,
   foregroundStyle,
+  frame,
   lineLimit,
 } from "@expo/ui/swift-ui/modifiers";
 import { useThemeColor } from "heroui-native";
@@ -38,7 +39,8 @@ export function ServerChip({ address }: { address: string }) {
         ]}
         onPress={changeServerAddress}
       >
-        <HStack spacing={8}>
+        {/* The glass style pads the label 7pt above and below, so a 26pt label makes the board's 40pt chip. */}
+        <HStack modifiers={[frame({ height: 26 })]} spacing={8}>
           <Image
             color={typeof accentText === "string" ? accentText : accentColor}
             size={16}
