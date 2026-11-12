@@ -1,6 +1,7 @@
 "use client";
 
-import { AdminSettingsProvider, useAdminSettingsContext } from "../context";
+import { useAdminConfigsLoading } from "@norish/shared-react/admin";
+
 import AdminSkeleton from "./admin-skeleton";
 import AIProcessingCard from "./ai-processing-card";
 import { AuthProvidersCard } from "./auth-providers";
@@ -13,8 +14,8 @@ import AdminShareLinksCard from "./share-links-card";
 import SystemCard from "./system-card";
 import UsersCard from "./users-card";
 
-function AdminSettingsContent() {
-  const { isLoading } = useAdminSettingsContext();
+export default function AdminSettingsContent() {
+  const isLoading = useAdminConfigsLoading();
 
   if (isLoading) {
     return <AdminSkeleton />;
@@ -33,13 +34,5 @@ function AdminSettingsContent() {
       <JobQueueCard />
       <SystemCard />
     </div>
-  );
-}
-
-export default function AdminSettingsContentWrapper() {
-  return (
-    <AdminSettingsProvider>
-      <AdminSettingsContent />
-    </AdminSettingsProvider>
   );
 }
