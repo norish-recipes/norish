@@ -423,6 +423,14 @@ _Avoid_: User (in anything a person reads), Profile (one part of it)
 One way a person signs in to their one Norish account: a password, Google, GitHub, or the server's OIDC provider under the name the administrator gave it. A person can have several, and every one leads to the same recipes, household and settings. A method is added only from a signed-in session, where the person has proven both sides, so its email need not match the account's; signing in never adds one, even when the email matches, because that is how an account is taken over. Adding the OIDC method applies its claims at once, as its next sign-in would.
 _Avoid_: Linked Account (collides with Site Account and suggests a second account), Provider (the server-side configuration, not what the person has), Account (the person's whole Norish account)
 
+**Sign-out**:
+The Reader ending their own session. The session ends first, then the device forgets the Offline Cache; if the session cannot be ended, nothing is forgotten and the reader is told why. A browser cannot end its session while Offline, a phone always can. Work still in the Outbox is discarded, after the reader confirms it.
+_Avoid_: Log out, Logout (in anything a person reads)
+
+**Session Expiry**:
+The server ending a session the Reader did not end: it timed out or was revoked. The device forgets the Offline Cache as at Sign-out, but the Outbox stays, kept for that Account alone, and replays when the same Account signs in again.
+_Avoid_: Sign-out (the reader's own act)
+
 ### Releases & Docs
 
 **Target Version**:
