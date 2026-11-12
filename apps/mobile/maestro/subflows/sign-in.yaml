@@ -6,6 +6,11 @@ appId: dev.norish.app
 - launchApp:
     clearState: true
     clearKeychain: true
+# The launch splash plays about two seconds before Server address takes input.
+- extendedWaitUntil:
+    visible:
+      id: connect-server-url
+    timeout: 20000
 - tapOn:
     id: connect-server-url
 - inputText: ${NORISH_SIGN_IN_URL}
@@ -20,6 +25,7 @@ appId: dev.norish.app
     timeout: 10000
 - stopApp
 - launchApp
+- runFlow: dismiss-save-password.yaml
 - extendedWaitUntil:
     visible:
       id: smoke-user
