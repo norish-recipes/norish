@@ -258,7 +258,7 @@ export default function VideoProcessingForm({ onDirtyChange }: VideoProcessingFo
         <InputGroup variant="secondary">
           <InputGroup.Input min={1} />
           <InputGroup.Suffix>
-            <span className="text-muted text-sm">MB</span>
+            <span className="text-muted text-sm">{t("maxFileSizeUnit")}</span>
           </InputGroup.Suffix>
         </InputGroup>
         <Description>{t("maxFileSizeDescription")}</Description>
@@ -308,7 +308,7 @@ export default function VideoProcessingForm({ onDirtyChange }: VideoProcessingFo
                   transcriptionProvider === "ollama"
                     ? "http://localhost:11434"
                     : transcriptionProvider === "generic-openai"
-                      ? "http://localhost:8000 (faster-whisper-server) or http://localhost:8080 (LocalAI)"
+                      ? t("transcriptionEndpointPlaceholderGeneric")
                       : "https://api.example.com/v1"
                 }
               />

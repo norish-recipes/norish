@@ -1020,6 +1020,7 @@
       "maxLength": "الحد الأقصى لطول الفيديو (بالثواني)",
       "maxLengthDescription": "تستغرق الفيديوهات الأطول وقتًا وموارد أكثر للمعالجة",
       "maxFileSize": "الحد الأقصى لحجم ملف الفيديو",
+      "maxFileSizeUnit": "MB",
       "maxFileSizeDescription": "الحجم الأقصى لملفات الفيديو التي يتم تنزيلها",
       "ytDlpVersion": "إصدار yt-dlp",
       "ytDlpVersionDescription": "إصدار yt-dlp الذي يعمل على هذا الخادم. لا يمكن تغييره من هنا.",
@@ -1041,6 +1042,7 @@
         "genericOpenai": "متوافق مع OpenAI (عام)"
       },
       "transcriptionEndpoint": "رابط نقطة الوصول (Endpoint)",
+      "transcriptionEndpointPlaceholderGeneric": "http://localhost:8000 (faster-whisper-server) أو http://localhost:8080 (LocalAI)",
       "transcriptionEndpointDescription": "نقطة وصول متوافقة مع OpenAI تدعم Whisper، أو نقطة وصول Ollama",
       "transcriptionModel": "النموذج",
       "transcriptionModelDescription": "النموذج المستخدم للتفريغ النصي",

@@ -1020,6 +1020,7 @@
       "maxLength": "Maximal videolängd (sekunder)",
       "maxLengthDescription": "Längre videor tar mer tid och resurser att bearbeta",
       "maxFileSize": "Maximal videofilstorlek",
+      "maxFileSizeUnit": "MB",
       "maxFileSizeDescription": "Maximal storlek för nedladdade videofiler",
       "ytDlpVersion": "yt-dlp-version",
       "ytDlpVersionDescription": "Den version av yt-dlp som körs på servern. Kan inte ändras här.",
@@ -1041,6 +1042,7 @@
         "genericOpenai": "Generell OpenAI-kompatibel"
       },
       "transcriptionEndpoint": "API-adress",
+      "transcriptionEndpointPlaceholderGeneric": "http://localhost:8000 (faster-whisper-server) eller http://localhost:8080 (LocalAI)",
       "transcriptionEndpointDescription": "OpenAI-kompatibelt API med Whisper-stöd eller Ollama-API",
       "transcriptionModel": "Modell",
       "transcriptionModelDescription": "Whisper-modell för transkribering",

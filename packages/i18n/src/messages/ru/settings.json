@@ -1020,6 +1020,7 @@
       "maxLength": "Макс. длина видео (секунды)",
       "maxLengthDescription": "Более длинные видео требуют больше времени и ресурсов",
       "maxFileSize": "Макс. размер видеофайла",
+      "maxFileSizeUnit": "МБ",
       "maxFileSizeDescription": "Максимальный размер загружаемых видеофайлов",
       "ytDlpVersion": "Версия yt-dlp",
       "ytDlpVersionDescription": "Версия yt-dlp, работающая на этом сервере. Здесь не изменяется.",
@@ -1041,6 +1042,7 @@
         "genericOpenai": "Совместимый с OpenAI"
       },
       "transcriptionEndpoint": "URL эндпоинта",
+      "transcriptionEndpointPlaceholderGeneric": "http://localhost:8000 (faster-whisper-server) или http://localhost:8080 (LocalAI)",
       "transcriptionEndpointDescription": "OpenAI-совместимый эндпоинт с поддержкой Whisper или эндпоинт Ollama",
       "transcriptionModel": "Модель",
       "transcriptionModelDescription": "Модель для транскрибации",

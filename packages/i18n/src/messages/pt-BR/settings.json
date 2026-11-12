@@ -1020,6 +1020,7 @@
       "maxLength": "Duração máxima do vídeo (segundos)",
       "maxLengthDescription": "Vídeos mais longos levam mais tempo e recursos para processar",
       "maxFileSize": "Tamanho máximo do arquivo de vídeo",
+      "maxFileSizeUnit": "MB",
       "maxFileSizeDescription": "Tamanho máximo para arquivos de vídeo baixados",
       "ytDlpVersion": "Versão do yt-dlp",
       "ytDlpVersionDescription": "Versão do yt-dlp que este servidor está executando. Não pode ser alterada aqui.",
@@ -1041,6 +1042,7 @@
         "genericOpenai": "Genérico compatível com OpenAI"
       },
       "transcriptionEndpoint": "URL do endpoint",
+      "transcriptionEndpointPlaceholderGeneric": "http://localhost:8000 (faster-whisper-server) ou http://localhost:8080 (LocalAI)",
       "transcriptionEndpointDescription": "Endpoint compatível com OpenAI com suporte a Whisper, ou endpoint Ollama",
       "transcriptionModel": "Modelo",
       "transcriptionModelDescription": "Modelo a usar para transcrição",

@@ -1020,6 +1020,7 @@
       "maxLength": "최대 비디오 길이(초)",
       "maxLengthDescription": "동영상이 길수록 처리하는 데 더 많은 시간과 리소스가 소요됩니다.",
       "maxFileSize": "최대 비디오 파일 크기",
+      "maxFileSizeUnit": "MB",
       "maxFileSizeDescription": "다운로드한 비디오 파일의 최대 크기",
       "ytDlpVersion": "yt-dlp 버전",
       "ytDlpVersionDescription": "이 서버가 실행 중인 yt-dlp 버전입니다. 여기서는 변경할 수 없습니다.",
@@ -1041,6 +1042,7 @@
         "genericOpenai": "일반 OpenAI 호환"
       },
       "transcriptionEndpoint": "엔드포인트 URL",
+      "transcriptionEndpointPlaceholderGeneric": "http://localhost:8000 (faster-whisper-server) 또는 http://localhost:8080 (LocalAI)",
       "transcriptionEndpointDescription": "Whisper를 지원하는 OpenAI 호환 엔드포인트 또는 Ollama 엔드포인트",
       "transcriptionModel": "모델",
       "transcriptionModelDescription": "음성 변환에 사용할 모델",

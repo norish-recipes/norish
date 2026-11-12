@@ -1020,6 +1020,7 @@
       "maxLength": "Videon enimmäispituus (sekuntia)",
       "maxLengthDescription": "Pidemmät videot vievät enemmän aikaa ja resursseja",
       "maxFileSize": "Videotiedoston enimmäiskoko",
+      "maxFileSizeUnit": "MB",
       "maxFileSizeDescription": "Ladattavien videotiedostojen enimmäiskoko",
       "ytDlpVersion": "yt-dlp-versio",
       "ytDlpVersionDescription": "Tämän palvelimen käyttämä yt-dlp-versio. Ei muutettavissa täällä.",
@@ -1041,6 +1042,7 @@
         "genericOpenai": "Yleinen OpenAI-yhteensopiva"
       },
       "transcriptionEndpoint": "Päätepisteen osoite",
+      "transcriptionEndpointPlaceholderGeneric": "http://localhost:8000 (faster-whisper-server) tai http://localhost:8080 (LocalAI)",
       "transcriptionEndpointDescription": "OpenAI-yhteensopiva päätepiste Whisper-tuella tai Ollama-päätepiste",
       "transcriptionModel": "Malli",
       "transcriptionModelDescription": "Litterointiin käytettävä malli",
