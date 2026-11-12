@@ -1,6 +1,6 @@
 "use client";
 
-import { useQuery, useQueryClient } from "@tanstack/react-query";
+import { skipToken, useQuery, useQueryClient } from "@tanstack/react-query";
 
 import { useTRPC } from "../trpc";
 
@@ -22,7 +22,7 @@ export function useHeldReads() {
 export function useHeldRecipeName(id: string | null): string | undefined {
   const trpc = useTRPC();
   const { data } = useQuery({
-    ...trpc.recipes.get.queryOptions({ id: id ?? "" }),
+    ...trpc.recipes.get.queryOptions(id === null ? skipToken : { id }),
     enabled: false,
     select: (recipe) => recipe?.name,
   });
