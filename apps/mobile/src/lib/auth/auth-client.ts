@@ -7,8 +7,6 @@ import {
 import { expoClient } from "@better-auth/expo/client";
 import { createAuthClient } from "better-auth/react";
 
-import { REACHABILITY_DEADLINE_MS } from "@norish/shared-react/offline/reachability";
-
 export type AuthClient = ReturnType<typeof createAuthClient>;
 
 let _client: AuthClient | null = null;
@@ -23,8 +21,6 @@ export function getAuthClient(baseUrl: string): AuthClient {
   _client = createAuthClient({
     // Better Auth takes a URL with a path as the auth root, so a base-path server needs it spelled out.
     baseURL: `${baseUrl}/api/auth`,
-    // A stalled server fails the attempt instead of holding every Sign-in Method until iOS gives up.
-    fetchOptions: { timeout: REACHABILITY_DEADLINE_MS },
     plugins: [
       expoClient({
         scheme: "norish",

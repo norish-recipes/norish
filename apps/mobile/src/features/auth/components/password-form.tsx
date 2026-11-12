@@ -7,6 +7,7 @@ import { Pressable, Text, View } from "react-native";
 import { AuthField } from "@/features/auth/components/auth-field";
 import { AuthSubmitButton } from "@/features/auth/components/auth-submit-button";
 import { InlineError } from "@/features/auth/components/inline-error";
+import { SIGN_IN_DEADLINE_MS } from "@/features/auth/utils/auth-failure";
 import Feather from "@expo/vector-icons/Feather";
 import { useRouter } from "expo-router";
 import { InputGroup, useThemeColor } from "heroui-native";
@@ -37,7 +38,13 @@ export function PasswordForm({ authClient, signIn, showSignUpLink }: PasswordFor
   const handleSubmit = () => {
     if (!isFilled) return;
 
-    void signIn.attempt(PASSWORD, () => authClient.signIn.email({ email: email.trim(), password }));
+    void signIn.attempt(PASSWORD, () =>
+      authClient.signIn.email({
+        email: email.trim(),
+        password,
+        fetchOptions: { timeout: SIGN_IN_DEADLINE_MS },
+      })
+    );
   };
 
   return (

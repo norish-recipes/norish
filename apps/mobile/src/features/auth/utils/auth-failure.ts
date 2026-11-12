@@ -2,6 +2,9 @@ import { createClientLogger } from "@norish/shared/lib/logger";
 
 const log = createClientLogger("auth");
 
+/** How long a sign-in may stall before it fails; slow hardware hashes a password for seconds. */
+export const SIGN_IN_DEADLINE_MS = 15_000;
+
 type AuthError = { code?: string; message?: string };
 
 // Better Auth codes `auth.errors` translates, lowercased as web's auth-error screen keys them.
@@ -45,7 +48,7 @@ export function authFailure(
     (thrown: unknown) => {
       log.warn({ error: thrown }, "Auth call failed");
 
-      // The client's timeout aborts a stalled request, which RN's fetch rejects as an AbortError.
+      // A sign-in's deadline aborts a stalled request, which RN's fetch rejects as an AbortError.
       const unreachable =
         thrown instanceof TypeError || (thrown instanceof Error && thrown.name === "AbortError");
 

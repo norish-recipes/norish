@@ -26,6 +26,7 @@ const secureStore = vi.hoisted(() => {
   };
 });
 const pluginStorages = vi.hoisted(() => [] as Storage[]);
+const createAuthClient = vi.hoisted(() => vi.fn((_options: object) => ({})));
 
 vi.mock("@/lib/auth/auth-storage", async (importOriginal) => ({
   ...(await importOriginal<typeof import("@/lib/auth/auth-storage")>()),
@@ -35,7 +36,7 @@ vi.mock("@better-auth/expo/client", async (importOriginal) => ({
   ...(await importOriginal<typeof import("@better-auth/expo/client")>()),
   expoClient: ({ storage }: { storage: Storage }) => void pluginStorages.push(storage),
 }));
-vi.mock("better-auth/react", () => ({ createAuthClient: () => ({}) }));
+vi.mock("better-auth/react", () => ({ createAuthClient }));
 vi.mock("expo-secure-store", () => secureStore);
 vi.mock("expo-constants", () => ({ default: {} }));
 vi.mock("expo-linking", () => ({}));
@@ -91,5 +92,11 @@ describe("getAuthClient", () => {
     getAuthClient(BASE_URL);
     await pluginStorages.at(-1)?.setItemAsync("norish_cookie", "new-reader");
     expect(secureStore.items.get("norish_cookie")).toBe("new-reader");
+  });
+
+  it("puts no deadline on every request, so a slow sign-up or session read still lands", () => {
+    getAuthClient("https://deadline.test");
+
+    expect(createAuthClient.mock.lastCall?.[0]).not.toHaveProperty("fetchOptions");
   });
 });
