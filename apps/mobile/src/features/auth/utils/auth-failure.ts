@@ -17,6 +17,9 @@ const TRANSLATED_CODES = new Set([
 
 function refusalMessageId(error: AuthError, fallback: string): string {
   if (error.code === "INVALID_EMAIL_OR_PASSWORD") return "auth.login.wrongCredentials";
+  // Sign up's refusal; web shows the server's own text, which mobile never does.
+  if (error.code?.startsWith("USER_ALREADY_EXISTS"))
+    return "auth.errors.account_not_linked.description";
 
   const code = error.code?.toLowerCase();
 

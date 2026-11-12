@@ -29,6 +29,15 @@ describe("authFailure", () => {
     );
   });
 
+  it("says the email is in use when Sign up meets an existing account", async () => {
+    await expect(
+      authFailure(refuse({ code: "USER_ALREADY_EXISTS_USE_ANOTHER_EMAIL" }), "fallback")
+    ).resolves.toBe("auth.errors.account_not_linked.description");
+    await expect(authFailure(refuse({ code: "USER_ALREADY_EXISTS" }), "fallback")).resolves.toBe(
+      "auth.errors.account_not_linked.description"
+    );
+  });
+
   it("never shows a server's own message for an unknown refusal", async () => {
     await expect(
       authFailure(refuse({ code: "EMAIL_NOT_VERIFIED", message: "Email not verified" }), "fallback")
