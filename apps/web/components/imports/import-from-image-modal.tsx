@@ -1,10 +1,10 @@
 "use client";
 
-import type { DropZoneAreaProps } from "@/components/ui/drop-zone";
+import type { DropZoneAreaProps } from "@/components/imports/drop-zone";
 import { useCallback, useState } from "react";
 import Image from "next/image";
 import { useImportRecipe } from "@/components/imports/use-import-recipe";
-import { DropZone } from "@/components/ui/drop-zone";
+import { DropZone } from "@/components/imports/drop-zone";
 import { useClipboardImagePaste } from "@/hooks/use-clipboard-image-paste";
 import { pdfPagesAsImages } from "@/lib/pdf-pages";
 import { showSafeErrorToast } from "@/lib/ui/safe-error-toast";
