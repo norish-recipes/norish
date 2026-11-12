@@ -2,7 +2,7 @@ import "@/global.css";
 import "@/lib/i18n/plural-rules";
 
 import React, { useEffect } from "react";
-import { StyleSheet } from "react-native";
+import { StyleSheet, View } from "react-native";
 import { GestureHandlerRootView } from "react-native-gesture-handler";
 import { StorageUnavailableScreen } from "@/features/auth/screens/storage-unavailable-screen";
 import { useBackendBaseUrl } from "@/hooks/use-backend-base-url";
@@ -25,7 +25,7 @@ import { Inter_600SemiBold } from "@expo-google-fonts/inter/600SemiBold";
 import { Inter_700Bold } from "@expo-google-fonts/inter/700Bold";
 import { useFonts } from "expo-font";
 import { Stack } from "expo-router";
-import { DarkTheme, DefaultTheme, ThemeProvider } from "expo-router/react-navigation";
+import { DarkTheme, DefaultTheme, ThemeProvider, useTheme } from "expo-router/react-navigation";
 import * as SplashScreen from "expo-splash-screen";
 import { HeroUINativeProvider, useThemeColor } from "heroui-native";
 import { PortalHost } from "heroui-native/portal";
@@ -152,7 +152,7 @@ function RootLayoutContent() {
       >
         <ConnectivityProvider>
           <AuthProviders>
-            <DomainProviders />
+            <SessionStack />
           </AuthProviders>
         </ConnectivityProvider>
       </TrpcProvider>
@@ -161,14 +161,21 @@ function RootLayoutContent() {
 }
 
 // ============================================================================
-// Domain providers — added only when authenticated
+// Session stack — the stack for the platform's session
 // ============================================================================
 
 const getOfflineQueryClient = () => offlineEngine.queryClient;
 
-/** The stack, wrapped in the offline controller while signed in. */
-function DomainProviders() {
-  const signedIn = usePlatform().session.user !== null;
+/** The stack, wrapped in the offline controller while signed in; the bare ground while pending. */
+function SessionStack() {
+  const { session } = usePlatform();
+  const { colors } = useTheme();
+  const signedIn = session.user !== null;
+
+  if (session.isPending && !signedIn) {
+    return <View style={[styles.root, { backgroundColor: colors.background }]} />;
+  }
+
   const app = (
     <>
       <RootStack signedIn={signedIn} />

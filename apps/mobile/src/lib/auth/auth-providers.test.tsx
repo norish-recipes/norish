@@ -1,5 +1,6 @@
 // @vitest-environment jsdom
 import type { ReactNode } from "react";
+import { useSyncExternalStore } from "react";
 import { act, render, waitFor } from "@testing-library/react";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 
@@ -31,6 +32,7 @@ const clients = vi.hoisted(
 const seen = vi.hoisted(() => ({
   sessions: [] as PlatformSession[],
   endSession: null as ((reason: LeaveReason) => Promise<void>) | null,
+  releaseSignOut: () => {},
 }));
 
 vi.mock("expo-secure-store", () => secureStore);
@@ -57,13 +59,21 @@ vi.mock("better-auth/react", () => ({
         for (const listener of listeners) listener(value);
       },
     };
-    // Offline: the server never answers, so the store keeps the user.
     clients.push({ session });
 
-    return { $store: { atoms: { session } }, signOut: () => Promise.reject(new Error("offline")) };
+    // As better-auth's expo client: the store empties when the call starts, then the server is slow.
+    const signOut = () => {
+      session.set({ data: null, isPending: false, error: null });
+
+      return new Promise((resolve) => (seen.releaseSignOut = () => resolve(null)));
+    };
+
+    return { $store: { atoms: { session } }, signOut };
   },
 }));
-vi.mock("@/lib/trpc/trpc-provider", () => ({ closeMobileTrpcConnections: async () => {} }));
+const closeConnections = vi.hoisted(() => vi.fn(async () => {}));
+
+vi.mock("@/lib/trpc/trpc-provider", () => ({ closeMobileTrpcConnections: closeConnections }));
 vi.mock("@norish/shared-react/offline/react", () => ({
   useConnectivity: () => ({ isOffline: false }),
 }));
@@ -84,12 +94,21 @@ vi.mock("@/lib/platform/platform-provider", () => ({
 }));
 
 const { AuthProviders } = await import("@/lib/auth/auth-providers");
-const { subscribeAuthClientReset } = await import("@/lib/auth/auth-client");
-const { getAuthTransportSnapshot } = await import("@/lib/auth/auth-session-sync");
+const { getAuthTransportSnapshot, publishSignedOut, subscribeAuthTransport } =
+  await import("@/lib/auth/auth-session-sync");
 const { AUTH_COOKIE_KEY, authStorage } = await import("@/lib/auth/auth-storage");
 const { saveBackendBaseUrl } = await import("@/lib/network/backend-base-url");
 
 const USER = { id: "reader-1", email: "reader@norish.test", name: "Reader" };
+const PENDING = { user: null, isPending: true };
+const SIGNED_OUT = { user: null, isPending: false };
+
+/** Remounts on each re-key, as the `TrpcProvider` key does. */
+function ReKeyed() {
+  const { version } = useSyncExternalStore(subscribeAuthTransport, getAuthTransportSnapshot);
+
+  return <AuthProviders key={version}>{null}</AuthProviders>;
+}
 
 describe("AuthProviders", () => {
   beforeEach(async () => {
@@ -103,35 +122,51 @@ describe("AuthProviders", () => {
   });
 
   it.each<LeaveReason>(["sign-out", "expiry"])(
-    "on %s, with the old session store still holding the user, never reads signed in again",
+    "on %s, reads pending until it leaves, then signed out after one re-key",
     async (reason) => {
-      render(<AuthProviders>{null}</AuthProviders>);
+      render(<ReKeyed />);
       // A launch opens on the persisted session until the server answers.
       await waitFor(() => expect(seen.sessions.at(-1)?.user?.id).toBe(USER.id));
       act(() => clients[0]?.session.set({ data: { user: USER }, isPending: false, error: null }));
       await waitFor(() => expect(getAuthTransportSnapshot().hasActiveSession).toBe(true));
 
-      let resetAt = -1;
-      const unsubscribe = subscribeAuthClientReset(() => (resetAt = seen.sessions.length));
+      const { version } = getAuthTransportSnapshot();
+      const from = seen.sessions.length;
+      let ending = Promise.resolve();
 
-      await act(() => seen.endSession?.(reason));
-      unsubscribe();
+      act(() => void (ending = seen.endSession?.(reason) ?? ending));
+      // A sign-out now waits on the server, with the old client's store already empty.
+      await act(() => new Promise((resolve) => setTimeout(resolve, 10)));
+      expect(seen.sessions.length).toBeGreaterThan(from);
+      expect(seen.sessions.slice(from)).toEqual(seen.sessions.slice(from).map(() => PENDING));
 
-      await waitFor(() => expect(seen.sessions.at(-1)).toEqual({ user: null, isPending: false }));
-      expect(resetAt).toBeGreaterThan(0);
-      expect(seen.sessions.slice(resetAt).filter((session) => session.user)).toEqual([]);
-      // The old client's store still holds the user; nothing reads it any more.
-      expect(clients[0]?.session.get().data).toEqual({ user: USER });
-      // The route guard's signal: the tRPC re-key and RootStack go to (auth).
-      expect(getAuthTransportSnapshot().hasActiveSession).toBe(false);
+      seen.releaseSignOut();
+      await act(() => ending);
+      expect(seen.sessions.slice(from)).toEqual(seen.sessions.slice(from).map(() => PENDING));
+
+      // The adapter's leave, after the offline clear.
+      act(() => publishSignedOut());
+      await waitFor(() => expect(seen.sessions.at(-1)).toEqual(SIGNED_OUT));
+      expect(seen.sessions.slice(from).filter((session) => session.user)).toEqual([]);
+      expect(getAuthTransportSnapshot()).toEqual({ hasActiveSession: false, version: version + 1 });
     }
   );
 
+  it("reads the live session again when ending it fails", async () => {
+    render(<ReKeyed />);
+    act(() => clients[0]?.session.set({ data: { user: USER }, isPending: false, error: null }));
+    closeConnections.mockRejectedValueOnce(new Error("closing failed"));
+
+    await act(() => expect(seen.endSession?.("expiry")).rejects.toThrow("closing failed"));
+    expect(seen.sessions.at(-1)?.user?.id).toBe(USER.id);
+    expect(seen.sessions.at(-1)?.isPending).toBe(false);
+  });
+
   it("reads a 401 as signed out, not as a reason to fall back on the persisted session", async () => {
-    render(<AuthProviders>{null}</AuthProviders>);
+    render(<ReKeyed />);
     act(() => clients[0]?.session.set({ data: null, isPending: false, error: { status: 401 } }));
 
-    await waitFor(() => expect(seen.sessions.at(-1)).toEqual({ user: null, isPending: false }));
+    await waitFor(() => expect(seen.sessions.at(-1)).toEqual(SIGNED_OUT));
     expect(seen.sessions.filter((session) => session.user)).toEqual([]);
   });
 });

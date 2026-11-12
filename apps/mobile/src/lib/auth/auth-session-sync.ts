@@ -41,9 +41,9 @@ export function setHasActiveSession(hasActiveSession: boolean): void {
   emitSnapshotChange();
 }
 
-/** Mobile's reload: re-keys the tRPC provider, so everything below rebuilds on the cleared cache. */
-export function reloadAuthTransport(): void {
-  snapshot = { ...snapshot, version: snapshot.version + 1 };
+/** Mobile's leave: signed out and one re-key, so everything below rebuilds on the cleared cache. */
+export function publishSignedOut(): void {
+  snapshot = { hasActiveSession: false, version: snapshot.version + 1 };
 
   emitSnapshotChange();
 }
