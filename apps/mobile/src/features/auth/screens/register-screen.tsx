@@ -13,6 +13,7 @@ export function RegisterScreen() {
 
   return (
     <AuthGate
+      underHeader
       footer={
         <AuthFooterLink
           className="self-center"

@@ -22,6 +22,8 @@ interface AuthGateProps {
   titleId: string;
   slogan: boolean;
   footer: ReactNode;
+  /** Under the native header, with its back button (Sign up). */
+  underHeader?: boolean;
   /** Whether the loaded config top-aligns the block; status screens and the spinner stay centred. */
   topAligned?: (config: AuthConfig) => boolean;
   /** What the form shows once there is a server and its config has loaded. */
@@ -49,9 +51,13 @@ function ConfigGate({
   titleId,
   slogan,
   footer,
+  underHeader,
   topAligned,
   children,
-}: Pick<AuthGateProps, "titleId" | "slogan" | "footer" | "topAligned" | "children"> & {
+}: Pick<
+  AuthGateProps,
+  "titleId" | "slogan" | "footer" | "underHeader" | "topAligned" | "children"
+> & {
   authClient: AuthClient;
 }) {
   const intl = useIntl();
@@ -61,7 +67,7 @@ function ConfigGate({
   // The spinner stands alone, so the block never moves when the content replaces it.
   if (status === "loading") {
     return (
-      <AuthLayout footer={footer}>
+      <AuthLayout footer={footer} underHeader={underHeader}>
         <Spinner className="self-center" />
       </AuthLayout>
     );
@@ -70,7 +76,7 @@ function ConfigGate({
   // A failed background refetch leaves loaded config up, so the form keeps its state.
   if (status === "failed") {
     return (
-      <AuthLayout footer={footer}>
+      <AuthLayout footer={footer} underHeader={underHeader}>
         <AuthBlock slogan={slogan} titleId={titleId}>
           <AuthStatus
             action={{
@@ -86,7 +92,7 @@ function ConfigGate({
   }
 
   return (
-    <AuthLayout footer={footer} topAligned={topAligned?.(config)}>
+    <AuthLayout footer={footer} topAligned={topAligned?.(config)} underHeader={underHeader}>
       <AuthBlock slogan={slogan} titleId={titleId}>
         {children(authClient, config)}
       </AuthBlock>
@@ -95,14 +101,21 @@ function ConfigGate({
 }
 
 /** A signed-out form's frame: no server, loading and failed config, or the form itself. */
-export function AuthGate({ titleId, slogan, footer, topAligned, children }: AuthGateProps) {
+export function AuthGate({
+  titleId,
+  slogan,
+  footer,
+  underHeader = false,
+  topAligned,
+  children,
+}: AuthGateProps) {
   const router = useRouter();
   const intl = useIntl();
   const authClient = useAuthClient();
 
   if (authClient === null) {
     return (
-      <AuthLayout footer={footer}>
+      <AuthLayout footer={footer} underHeader={underHeader}>
         <AuthBlock slogan={slogan} titleId={titleId}>
           <AuthStatus
             action={{
@@ -124,6 +137,7 @@ export function AuthGate({ titleId, slogan, footer, topAligned, children }: Auth
       slogan={slogan}
       titleId={titleId}
       topAligned={topAligned}
+      underHeader={underHeader}
     >
       {children}
     </ConfigGate>

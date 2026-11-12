@@ -12,7 +12,11 @@ interface AuthLayoutProps {
   topAligned?: boolean;
   /** Centres the block in the whole space above the footer, with no bounce (the status boards). */
   status?: boolean;
+  /** Starts the space under the native header's 48pt row, as the Register board does. */
+  underHeader?: boolean;
 }
+
+const HEADER_ROW = 48;
 
 /** The signed-out screens' frame: a centred block over an optional pinned footer. */
 export function AuthLayout({
@@ -20,6 +24,7 @@ export function AuthLayout({
   footer,
   topAligned = false,
   status = false,
+  underHeader = false,
 }: AuthLayoutProps) {
   const insets = useSafeAreaInsets();
 
@@ -29,7 +34,7 @@ export function AuthLayout({
         alwaysBounceVertical={!status}
         contentContainerStyle={{
           flexGrow: 1,
-          paddingTop: insets.top,
+          paddingTop: insets.top + (underHeader ? HEADER_ROW : 0),
           paddingBottom: insets.bottom,
           paddingHorizontal: 24,
         }}
