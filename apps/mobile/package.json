@@ -64,8 +64,11 @@
     "@norish/eslint-config": "workspace:*",
     "@testcontainers/postgresql": "catalog:",
     "@testcontainers/valkey": "catalog:",
+    "@testing-library/react": "^16.3.3",
     "@types/react": "catalog:",
     "eslint": "catalog:",
+    "jsdom": "catalog:",
+    "react-dom": "catalog:",
     "react-native-svg-transformer": "^1.5.3",
     "tailwindcss": "catalog:",
     "typescript": "catalog:",
@@ -74,7 +77,8 @@
   "expo": {
     "install": {
       "exclude": [
-        "react"
+        "react",
+        "react-dom"
       ]
     }
   }
