@@ -86,13 +86,11 @@ export async function saveServerAddress(input: string): Promise<string> {
     throw new Error("Please enter a valid server address.");
   }
 
-  const existing = await loadServerAddress();
+  // The same address again keeps the client, the cache and the screens reading them.
+  if ((await loadServerAddress()) === normalized) return normalized;
 
   // The Offline Cache and Outbox are per signed-in owner, and sign-out already cleared the reads.
-  if (existing !== normalized) {
-    await resetAuthClientStorage();
-  }
-
+  await resetAuthClientStorage();
   await SecureStore.setItemAsync(SERVER_ADDRESS_KEY, normalized);
   currentAddress = normalized;
   emitServerAddressChange();

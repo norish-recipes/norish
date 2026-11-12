@@ -32,7 +32,7 @@ export const offlineEngine = createOfflineEngine({
   calendarRanges: () => [getInitialCalendarRange("mobile")],
 });
 
-// Query keys carry no Server Address, so a saved one drops every cached answer, signed-out
+// Query keys carry no Server Address, so a new one drops every cached answer, signed-out
 // reads such as `config.authProviders` included, before the next server's screens read them.
 subscribeServerAddressChange(() => offlineEngine.queryClient.clear());
 
