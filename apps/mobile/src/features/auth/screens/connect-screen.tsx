@@ -105,7 +105,7 @@ export function ConnectScreen() {
           testID="connect-server-url"
           textContentType="URL"
           value={address}
-          onChangeText={setAddress}
+          onChangeText={connect.edit(setAddress)}
           onSubmitEditing={handleConnect}
         />
         <InlineError error={connect.failure} />

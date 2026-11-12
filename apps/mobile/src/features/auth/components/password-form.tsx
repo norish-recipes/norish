@@ -54,7 +54,7 @@ export function PasswordForm({ authClient, signIn, showSignUpLink }: PasswordFor
         placeholder={intl.formatMessage({ id: "auth.emailPassword.emailPlaceholder" })}
         testID="login-email"
         value={email}
-        onChangeText={setEmail}
+        onChangeText={signIn.edit(setEmail)}
         onSubmitEditing={() => passwordInputRef.current?.focus()}
       />
       <PasswordField
@@ -67,7 +67,7 @@ export function PasswordForm({ authClient, signIn, showSignUpLink }: PasswordFor
         testID="login-password"
         textContentType="password"
         value={password}
-        onChangeText={setPassword}
+        onChangeText={signIn.edit(setPassword)}
         onSubmitEditing={handleSubmit}
       />
       <InlineError error={error} />

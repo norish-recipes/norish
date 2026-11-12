@@ -15,7 +15,7 @@ export type AuthAttemptFailure = { method: string; message: string } | null;
 
 /**
  * A signed-out form's attempts: one in flight at a time, every method waiting on it, and one
- * translated inline error, cleared as the next attempt starts.
+ * translated inline error, cleared as a field is edited or the next attempt starts.
  */
 export function useAuthAttempt() {
   const intl = useIntl();
@@ -56,7 +56,15 @@ export function useAuthAttempt() {
   const failureFor = (...methods: string[]) =>
     failure !== null && methods.includes(failure.method) ? failure : null;
 
-  return { running, failure, run, attempt, failureFor };
+  /** Wraps a field's setter so editing it clears the form's inline error. */
+  const edit =
+    <T>(set: (value: T) => void) =>
+    (value: T) => {
+      setFailure(null);
+      set(value);
+    };
+
+  return { running, failure, run, attempt, failureFor, edit };
 }
 
 export type AuthAttempt = ReturnType<typeof useAuthAttempt>;

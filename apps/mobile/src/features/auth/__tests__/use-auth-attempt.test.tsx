@@ -81,6 +81,19 @@ describe("useAuthAttempt", () => {
     });
   });
 
+  it("clears the inline error when the reader edits a field", async () => {
+    const { result } = renderHook(() => useAuthAttempt(), { wrapper });
+    const setEmail = vi.fn();
+
+    await act(() => result.current.run("email", () => Promise.resolve("fallback")));
+    expect(result.current.failure).not.toBeNull();
+
+    act(() => result.current.edit(setEmail)("you@example.com"));
+
+    expect(setEmail).toHaveBeenCalledWith("you@example.com");
+    expect(result.current.failure).toBeNull();
+  });
+
   it("hands the failure only to the methods it came from", async () => {
     const { result } = renderHook(() => useAuthAttempt(), { wrapper });
 

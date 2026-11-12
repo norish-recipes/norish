@@ -61,7 +61,7 @@ export function SignUpForm({ authClient }: { authClient: AuthClient }) {
         testID="register-name"
         textContentType="name"
         value={name}
-        onChangeText={setName}
+        onChangeText={attempt.edit(setName)}
         onSubmitEditing={() => emailRef.current?.focus()}
       />
       <EmailField
@@ -71,7 +71,7 @@ export function SignUpForm({ authClient }: { authClient: AuthClient }) {
         placeholder={intl.formatMessage({ id: "auth.signup.emailPlaceholder" })}
         testID="register-email"
         value={email}
-        onChangeText={setEmail}
+        onChangeText={attempt.edit(setEmail)}
         onSubmitEditing={() => passwordRef.current?.focus()}
       />
       <PasswordField
@@ -90,7 +90,7 @@ export function SignUpForm({ authClient }: { authClient: AuthClient }) {
         testID="register-password"
         textContentType="newPassword"
         value={password}
-        onChangeText={setPassword}
+        onChangeText={attempt.edit(setPassword)}
         onSubmitEditing={() => confirmRef.current?.focus()}
       />
       <PasswordField
@@ -102,7 +102,7 @@ export function SignUpForm({ authClient }: { authClient: AuthClient }) {
         testID="register-confirm-password"
         textContentType="newPassword"
         value={confirmPassword}
-        onChangeText={setConfirmPassword}
+        onChangeText={attempt.edit(setConfirmPassword)}
         onSubmitEditing={handleSubmit}
       />
       <InlineError error={attempt.failure} />
