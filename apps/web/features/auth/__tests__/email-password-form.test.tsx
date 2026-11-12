@@ -1,4 +1,4 @@
-import { EmailPasswordForm } from "@/app/(auth)/login/components/email-password-form";
+import { EmailPasswordForm } from "@/features/auth/components/email-password-form";
 import { fireEvent, render, screen, waitFor } from "@testing-library/react";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 

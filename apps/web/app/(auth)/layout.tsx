@@ -1,7 +1,7 @@
+import { AuthMarks } from "@/features/auth/components/auth-marks";
 import { readRequestDeviceKind } from "@/lib/request-profile";
 
 import { BaseProviders } from "../providers/base-providers";
-import { AuthMarks } from "./components/auth-marks";
 
 export default async function AuthLayout({ children }: { children: React.ReactNode }) {
   return (

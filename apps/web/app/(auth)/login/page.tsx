@@ -1,8 +1,8 @@
+import { LoginScreen } from "@/features/auth/login-screen";
+
 import { getAvailableProviders } from "@norish/auth/providers";
 import { isRegistrationEnabled } from "@norish/shared-server/config/server-config-loader";
 import { APP_ROOT } from "@norish/shared/lib/base-path";
-
-import { LoginClient } from "./components/login-client";
 
 export const dynamic = "force-dynamic";
 export const revalidate = 0;
@@ -22,7 +22,7 @@ export default async function LoginPage({ searchParams }: PageProps<"/login">) {
   const shouldAutoRedirect = oauthProviders.length === 1 && !hasCredential && !justLoggedOut;
 
   return (
-    <LoginClient
+    <LoginScreen
       autoRedirect={shouldAutoRedirect}
       // A repeated parameter arrives as a list; only a single one is a destination.
       callbackUrl={typeof callbackUrl === "string" ? callbackUrl : APP_ROOT}

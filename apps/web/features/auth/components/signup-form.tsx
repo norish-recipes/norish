@@ -11,7 +11,7 @@ import { useTranslations } from "next-intl";
 import { signUp } from "@norish/shared/lib/auth/client";
 import { APP_ROOT } from "@norish/shared/lib/base-path";
 
-import { AuthAlert } from "../../components/auth-alert";
+import { AuthAlert } from "./auth-alert";
 
 interface SignupFormProps {
   callbackUrl?: string;

@@ -10,7 +10,7 @@ import { useTranslations } from "next-intl";
 import { signIn } from "@norish/shared/lib/auth/client";
 import { APP_ROOT } from "@norish/shared/lib/base-path";
 
-import { AuthAlert } from "../../components/auth-alert";
+import { AuthAlert } from "./auth-alert";
 
 interface EmailPasswordFormProps {
   callbackUrl?: string;

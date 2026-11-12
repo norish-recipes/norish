@@ -6,25 +6,25 @@ import { useTranslations } from "next-intl";
 import type { ProviderInfo } from "@norish/shared/contracts";
 import { APP_ROOT } from "@norish/shared/lib/base-path";
 
-import { AuthAlert } from "../../components/auth-alert";
-import { AuthCard } from "../../components/auth-card";
-import { AutoSignIn } from "./auto-sign-in";
-import { EmailPasswordForm } from "./email-password-form";
-import { ProviderButton } from "./provider-button";
+import { AuthAlert } from "./components/auth-alert";
+import { AuthCard } from "./components/auth-card";
+import { AutoSignIn } from "./components/auto-sign-in";
+import { EmailPasswordForm } from "./components/email-password-form";
+import { ProviderButton } from "./components/provider-button";
 
-interface LoginClientProps {
+interface LoginScreenProps {
   providers: ProviderInfo[];
   callbackUrl?: string;
   autoRedirect?: boolean;
   registrationEnabled?: boolean;
 }
 
-export function LoginClient({
+export function LoginScreen({
   providers,
   callbackUrl = APP_ROOT,
   autoRedirect = false,
   registrationEnabled = false,
-}: LoginClientProps) {
+}: LoginScreenProps) {
   const t = useTranslations("auth.login");
   // Separate credential and OAuth providers
   const credentialProvider = providers.find((p) => p.type === "credential");

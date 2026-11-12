@@ -1,8 +1,9 @@
 "use client";
 
-import { AuthCard } from "@/app/(auth)/components/auth-card";
 import { Description, Label, Skeleton } from "@heroui/react";
 import { useTranslations } from "next-intl";
+
+import { AuthCard } from "./auth-card";
 
 /**
  * Sign-in before the server says how: the real frame and heading over grey rows, since

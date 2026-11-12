@@ -4,7 +4,7 @@ import { describe, expect, it, vi } from "vitest";
 
 import "@testing-library/jest-dom";
 
-import AuthErrorPage from "@/app/(auth)/auth-error/page";
+import { AuthErrorScreen } from "@/features/auth/auth-error-screen";
 
 import auth from "@norish/i18n/messages/en/auth.json";
 
@@ -12,11 +12,11 @@ vi.mock("next/navigation", () => ({
   useSearchParams: () => new URLSearchParams("error=account_not_linked"),
 }));
 
-describe("auth error page", () => {
+describe("auth error screen", () => {
   it("says the email is already in use when a provider cannot be linked", async () => {
     render(
       <NextIntlClientProvider locale="en" messages={{ auth }}>
-        <AuthErrorPage />
+        <AuthErrorScreen />
       </NextIntlClientProvider>
     );
 
