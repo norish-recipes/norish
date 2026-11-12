@@ -4,7 +4,7 @@ import { useEffect, useState } from "react";
 import { ActionButton, ActionButtonGroup } from "@/components/shared/action-button";
 import SecretInput from "@/components/shared/secret-input";
 import { usePending } from "@/hooks/use-pending";
-import { ComboBox, Description, Input, Label, ListBox, Select, TextField } from "@heroui/react";
+import { Description, Input, Label, ListBox, Select, TextField } from "@heroui/react";
 import { useTranslations } from "next-intl";
 
 import type { ImageGenerationProvider } from "@norish/config/zod/server-config";
@@ -20,7 +20,7 @@ import {
   useImageGenerationConfigWrite,
 } from "@norish/shared-react/admin";
 
-import ModelListingEmptyState from "./model-listing-empty-state";
+import { ModelPicker } from "./model-picker";
 
 interface ImageGenerationFormProps {
   onDirtyChange?: (isDirty: boolean) => void;
@@ -112,12 +112,6 @@ export default function ImageGenerationForm({ onDirtyChange }: ImageGenerationFo
         }
       : null
   );
-
-  const modelOptions = availableModels.map((available) => available.id);
-
-  if (model && !modelOptions.includes(model)) {
-    modelOptions.unshift(model);
-  }
 
   const hasChanges =
     provider !== (imageGenerationConfig?.provider ?? "disabled") ||
@@ -243,33 +237,17 @@ export default function ImageGenerationForm({ onDirtyChange }: ImageGenerationFo
       )}
 
       {enabled && (
-        <ComboBox
-          allowsCustomValue
-          inputValue={model}
+        <ModelPicker
+          description={t("modelDescription")}
           isDisabled={!canFetchModels}
-          onInputChange={setModel}
-          onChange={(key) => key && setModel(key as string)}
-        >
-          <Label>{t("model")}</Label>
-          <ComboBox.InputGroup>
-            <Input variant="secondary" placeholder={t("modelPlaceholder")} />
-            <ComboBox.Trigger />
-          </ComboBox.InputGroup>
-          <Description>{t("modelDescription")}</Description>
-          <ComboBox.Popover>
-            <ListBox
-              renderEmptyState={() => (
-                <ModelListingEmptyState isLoading={isLoadingModels} refusal={modelRefusal} />
-              )}
-            >
-              {modelOptions.map((option) => (
-                <ListBox.Item key={option} id={option} textValue={option}>
-                  {option}
-                </ListBox.Item>
-              ))}
-            </ListBox>
-          </ComboBox.Popover>
-        </ComboBox>
+          isLoading={isLoadingModels}
+          label={t("model")}
+          options={availableModels.map((available) => ({ id: available.id, label: available.id }))}
+          placeholder={t("modelPlaceholder")}
+          refusal={modelRefusal}
+          value={model}
+          onChange={setModel}
+        />
       )}
 
       <ActionButtonGroup className="pt-2">

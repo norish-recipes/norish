@@ -8,7 +8,6 @@ import { Note } from "@/components/shared/note";
 import SecretInput from "@/components/shared/secret-input";
 import { usePending } from "@/hooks/use-pending";
 import {
-  ComboBox,
   Description,
   Input,
   InputGroup,
@@ -35,15 +34,11 @@ import {
   useYtDlpVersionQuery,
 } from "@norish/shared-react/admin";
 
-import ModelListingEmptyState from "./model-listing-empty-state";
+import { ModelPicker } from "./model-picker";
 
 interface VideoProcessingFormProps {
   onDirtyChange?: (isDirty: boolean) => void;
 }
-type TranscriptionModelOption = {
-  value: string;
-  label: string;
-};
 const TRANSCRIPTION_PROVIDER_OPTIONS: TranscriptionProvider[] = [
   "disabled",
   "openai",
@@ -158,18 +153,6 @@ export default function VideoProcessingForm({ onDirtyChange }: VideoProcessingFo
         }
       : null
   );
-
-  // The listed models, with a typed name that isn't listed kept first.
-  const transcriptionModelOptions: TranscriptionModelOption[] = availableTranscriptionModels.map(
-    (m) => ({ value: m.id, label: m.name })
-  );
-
-  if (
-    transcriptionModel &&
-    !transcriptionModelOptions.some((o) => o.value === transcriptionModel)
-  ) {
-    transcriptionModelOptions.unshift({ value: transcriptionModel, label: transcriptionModel });
-  }
 
   // Auto-select first available model if none selected
   if (
@@ -396,36 +379,17 @@ export default function VideoProcessingForm({ onDirtyChange }: VideoProcessingFo
           )}
 
           {needsTranscriptionModel && supportsModelListing && (
-            <ComboBox
-              allowsCustomValue
-              inputValue={transcriptionModel}
+            <ModelPicker
+              description={t("transcriptionModelDescription")}
               isDisabled={isVideoUiDisabled || !hasTranscriptionCredentials}
-              onInputChange={setTranscriptionModel}
-              onChange={(key) => key && setTranscriptionModel(key as string)}
-            >
-              <Label>{t("transcriptionModel")}</Label>
-              <ComboBox.InputGroup>
-                <Input variant="secondary" placeholder={t("transcriptionModelPlaceholder")} />
-                <ComboBox.Trigger />
-              </ComboBox.InputGroup>
-              <Description>{t("transcriptionModelDescription")}</Description>
-              <ComboBox.Popover>
-                <ListBox
-                  renderEmptyState={() => (
-                    <ModelListingEmptyState
-                      isLoading={isLoadingTranscriptionModels}
-                      refusal={transcriptionRefusal}
-                    />
-                  )}
-                >
-                  {transcriptionModelOptions.map((item) => (
-                    <ListBox.Item key={item.value} id={item.value} textValue={item.label}>
-                      {item.label}
-                    </ListBox.Item>
-                  ))}
-                </ListBox>
-              </ComboBox.Popover>
-            </ComboBox>
+              isLoading={isLoadingTranscriptionModels}
+              label={t("transcriptionModel")}
+              options={availableTranscriptionModels.map((m) => ({ id: m.id, label: m.name }))}
+              placeholder={t("transcriptionModelPlaceholder")}
+              refusal={transcriptionRefusal}
+              value={transcriptionModel}
+              onChange={setTranscriptionModel}
+            />
           )}
 
           {needsTranscriptionModel && !supportsModelListing && (
