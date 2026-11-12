@@ -1,6 +1,6 @@
 import type { ComponentProps } from "react";
 import React from "react";
-import { Text, View } from "react-native";
+import { Text, useWindowDimensions, View } from "react-native";
 import Animated from "react-native-reanimated";
 import LogoCream from "@/assets/brand/logo-cream.svg";
 import Logo from "@/assets/brand/logo.svg";
@@ -13,9 +13,14 @@ const LOGO_HEIGHT = (LOGO_WIDTH * 639) / 2370;
 
 // The splash centres logo and slogan as one group (gap-3, the slogan's 20pt line); the
 // splash PNGs carry that 32pt as transparent rows under the logo, so iOS centres it the same.
-export const BRAND_HEIGHT = LOGO_HEIGHT + 12 + 20;
+const BRAND_HEIGHT = LOGO_HEIGHT + 12 + 20;
 // The form screens' boards (Login, Register) draw it smaller, under their prefix line.
 const COMPACT_LOGO_WIDTH = 144;
+
+/** The splash brand's top in window points: the native splash centres the group on the window. */
+export function useSplashBrandTop() {
+  return (useWindowDimensions().height - BRAND_HEIGHT) / 2;
+}
 
 interface BrandProps {
   /** A line above the logo, such as "Sign in to". */

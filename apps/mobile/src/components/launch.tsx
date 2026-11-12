@@ -3,7 +3,7 @@ import type { ReactNode } from "react";
 import type { LayoutChangeEvent } from "react-native";
 import type { SharedValue } from "react-native-reanimated";
 import React, { createContext, use, useEffect, useState } from "react";
-import { StyleSheet, useWindowDimensions } from "react-native";
+import { StyleSheet } from "react-native";
 import Animated, {
   Easing,
   Extrapolation,
@@ -14,7 +14,7 @@ import Animated, {
   useSharedValue,
 } from "react-native-reanimated";
 import { scheduleOnRN } from "react-native-worklets";
-import { Brand, BRAND_HEIGHT } from "@/components/brand";
+import { Brand, useSplashBrandTop } from "@/components/brand";
 import { resolveLaunchMotion, stepLaunchClock } from "@/lib/boot/boot-state";
 import * as SplashScreen from "expo-splash-screen";
 import { useThemeColor } from "heroui-native";
@@ -80,14 +80,12 @@ export function LaunchSplash({ handoff }: { handoff: LaunchHandoff | null }) {
 function LaunchOverlay({ handoff, launch }: { handoff: LaunchHandoff | null; launch: Launch }) {
   const { clock, finish, motion, setMotion, target } = launch;
   const reduceMotion = useReducedMotion();
-  const { height } = useWindowDimensions();
   const [background] = useThemeColor(["background"] as const);
   // A remount (the tRPC provider re-keys on sign-in) picks the clock up where it was.
   const [held, setHeld] = useState(() => clock.get() >= HOLD_END);
   // The clock starts once this frame is on screen, so the slogan fades in visibly.
   const [shown, setShown] = useState(() => clock.get() > 0);
-  // The native splash centres the logo-plus-slogan group on the window, so this frame does too.
-  const top = (height - BRAND_HEIGHT) / 2;
+  const top = useSplashBrandTop();
   const decided = held ? resolveLaunchMotion(handoff, reduceMotion, target) : null;
   const glide = motion === "glide";
 

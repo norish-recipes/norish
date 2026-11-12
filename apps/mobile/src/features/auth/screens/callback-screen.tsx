@@ -1,6 +1,6 @@
 import React from "react";
-import { useWindowDimensions, View } from "react-native";
-import { Brand, BRAND_HEIGHT } from "@/components/brand";
+import { View } from "react-native";
+import { Brand, useSplashBrandTop } from "@/components/brand";
 import { Stack } from "expo-router";
 import { Spinner, useThemeColor } from "heroui-native";
 import { useIntl } from "react-intl";
@@ -13,16 +13,13 @@ const SPINNER_GAP = 28;
 /** The splash with a spinner under the slogan: the brand sits exactly where the splash draws it. */
 export function AuthCallbackScreen() {
   const intl = useIntl();
-  const { height } = useWindowDimensions();
+  const top = useSplashBrandTop();
   const [mutedColor] = useThemeColor(["muted"] as const);
 
   return (
     <View className="flex-1">
       <Stack.Screen options={{ headerShown: false }} />
-      <View
-        className="absolute inset-x-0 items-center"
-        style={{ top: (height - BRAND_HEIGHT) / 2 }}
-      >
+      <View className="absolute inset-x-0 items-center" style={{ top }}>
         <Brand />
         <Spinner
           accessibilityLabel={intl.formatMessage({ id: "auth.callback.signingIn" })}
