@@ -134,11 +134,11 @@ export function AuthGate({
         <AuthBlock slogan={slogan} titleId={titleId}>
           <AuthStatus
             action={{
-              label: intl.formatMessage({ id: "auth.connect.openConnect" }),
+              label: intl.formatMessage({ id: "auth.connect.openServerAddress" }),
               onPress: () => router.replace("/(auth)"),
             }}
-            description={intl.formatMessage({ id: "auth.connect.backendRequiredDescription" })}
-            title={intl.formatMessage({ id: "auth.connect.backendRequiredTitle" })}
+            description={intl.formatMessage({ id: "auth.connect.noServerAddressDescription" })}
+            title={intl.formatMessage({ id: "auth.connect.noServerAddressTitle" })}
           />
         </AuthBlock>
       </AuthLayout>
