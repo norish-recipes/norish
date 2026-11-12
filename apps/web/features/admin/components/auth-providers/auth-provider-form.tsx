@@ -7,7 +7,7 @@ import { Input, Label, TextField, useOverlayState } from "@heroui/react";
 import { useTranslations } from "next-intl";
 
 import type { AuthProviderGitHub, ServerConfigKey } from "@norish/config/zod/server-config";
-import type { AuthProvider, WriteResult } from "@norish/shared-react/admin";
+import type { WriteResult } from "@norish/shared-react/admin";
 import { ServerConfigKeys } from "@norish/config/zod/server-config";
 import { useAuthProviderWrites, useConfigSecret } from "@norish/shared-react/admin";
 
@@ -17,8 +17,7 @@ import { useReportDirty } from "../use-report-dirty";
 import { DeleteProviderModal } from "./delete-provider-modal";
 import { ProviderActions } from "./provider-actions";
 
-const CONFIG_KEYS: Record<AuthProvider, ServerConfigKey> = {
-  oidc: ServerConfigKeys.AUTH_PROVIDER_OIDC,
+const CONFIG_KEYS: Record<"github" | "google", ServerConfigKey> = {
   github: ServerConfigKeys.AUTH_PROVIDER_GITHUB,
   google: ServerConfigKeys.AUTH_PROVIDER_GOOGLE,
 };
