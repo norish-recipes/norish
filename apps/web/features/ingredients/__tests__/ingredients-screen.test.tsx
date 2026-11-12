@@ -5,6 +5,7 @@
  * and a real query cache, against a fake server.
  */
 import type { QueryClient } from "@tanstack/react-query";
+import type { ReactNode } from "react";
 import { readAnswers, sentReads, writeAnswers } from "@/__tests__/helpers/trpc-fake";
 import { IngredientsScreen } from "@/features/ingredients/ingredients-screen";
 import { act, fireEvent, render, screen, waitFor, within } from "@testing-library/react";
@@ -220,18 +221,40 @@ vi.mock("@heroui/react", async (importOriginal) => ({
 }));
 
 vi.mock("@/components/shared/action-button", () => ({
-  ActionButton: ({ children, onPress, isDisabled, "data-testid": testId }: any) => (
+  ActionButton: ({
+    children,
+    onPress,
+    isDisabled,
+    "data-testid": testId,
+  }: {
+    children?: ReactNode;
+    onPress?: () => void;
+    isDisabled?: boolean;
+    "data-testid"?: string;
+  }) => (
     <button data-testid={testId} disabled={isDisabled} type="button" onClick={onPress}>
       {children}
     </button>
   ),
-  ActionButtonGroup: ({ children, start }: any) => (
+  ActionButtonGroup: ({ children, start }: { children?: ReactNode; start?: ReactNode }) => (
     <div>
       {start}
       {children}
     </div>
   ),
-  IconActionButton: ({ label, onPress, action, isDisabled, "data-testid": testId }: any) => (
+  IconActionButton: ({
+    label,
+    onPress,
+    action,
+    isDisabled,
+    "data-testid": testId,
+  }: {
+    label: string;
+    onPress?: () => void;
+    action: string;
+    isDisabled?: boolean;
+    "data-testid"?: string;
+  }) => (
     <button
       aria-label={label}
       data-testid={testId ?? `icon-${action}`}
@@ -244,7 +267,17 @@ vi.mock("@/components/shared/action-button", () => ({
 
 // A Panel is a dialog named after its title; a closed one renders nothing.
 vi.mock("@/components/Panel/Panel", () => {
-  const Panel = ({ children, open, title, titleAddon }: any) =>
+  const Panel = ({
+    children,
+    open,
+    title,
+    titleAddon,
+  }: {
+    children?: ReactNode;
+    open?: boolean;
+    title?: string;
+    titleAddon?: ReactNode;
+  }) =>
     open ? (
       <div aria-label={title} role="dialog">
         {titleAddon}
@@ -252,10 +285,10 @@ vi.mock("@/components/Panel/Panel", () => {
       </div>
     ) : null;
 
-  Panel.Body = ({ children }: any) => <div>{children}</div>;
-  Panel.Footer = ({ children }: any) => <div>{children}</div>;
+  Panel.Body = ({ children }: { children?: ReactNode }) => <div>{children}</div>;
+  Panel.Footer = ({ children }: { children?: ReactNode }) => <div>{children}</div>;
 
-  return { default: Panel, PanelPortal: ({ children }: { children: React.ReactNode }) => children };
+  return { default: Panel, PanelPortal: ({ children }: { children: ReactNode }) => children };
 });
 
 // A food's nutrition and its corrections are the nutrition section's own tests' business.
@@ -287,7 +320,15 @@ vi.mock("next/navigation", () => ({
 
 // The picker searches the catalogue; here it offers salt.
 vi.mock("@/components/ingredients/ingredient-picker", () => ({
-  IngredientPicker: ({ onPick, editableOnly, excludeId }: any) => (
+  IngredientPicker: ({
+    onPick,
+    editableOnly,
+    excludeId,
+  }: {
+    onPick: (pick: { id: string; name: string }) => void;
+    editableOnly?: boolean;
+    excludeId?: string;
+  }) => (
     <div data-editable-only={editableOnly} data-exclude={excludeId} data-testid="picker">
       <button type="button" onClick={() => onPick({ id: "salt", name: "salt" })}>
         pick-salt

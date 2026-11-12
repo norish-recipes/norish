@@ -1,4 +1,5 @@
 import type { QueryClient } from "@tanstack/react-query";
+import type { ReactNode } from "react";
 import { readAnswers, sentWrites } from "@/__tests__/helpers/trpc-fake";
 import { fireEvent, render, screen, waitFor, within } from "@testing-library/react";
 import { beforeEach, describe, expect, it, vi } from "vitest";
@@ -49,12 +50,22 @@ vi.mock("next-intl", () => ({
 }));
 
 vi.mock("@/components/shared/action-button", () => ({
-  ActionButton: ({ children, onPress, isDisabled, "data-testid": testId }: any) => (
+  ActionButton: ({
+    children,
+    onPress,
+    isDisabled,
+    "data-testid": testId,
+  }: {
+    children?: ReactNode;
+    onPress?: () => void;
+    isDisabled?: boolean;
+    "data-testid"?: string;
+  }) => (
     <button data-testid={testId} disabled={isDisabled} type="button" onClick={onPress}>
       {children}
     </button>
   ),
-  ActionButtonGroup: ({ children, start }: any) => (
+  ActionButtonGroup: ({ children, start }: { children?: ReactNode; start?: ReactNode }) => (
     <div>
       {start}
       {children}
@@ -63,17 +74,25 @@ vi.mock("@/components/shared/action-button", () => ({
 }));
 
 vi.mock("@/components/Panel/Panel", () => {
-  const Panel = ({ children, open, title }: any) =>
+  const Panel = ({
+    children,
+    open,
+    title,
+  }: {
+    children?: ReactNode;
+    open?: boolean;
+    title?: string;
+  }) =>
     open ? (
       <div aria-label={title} role="dialog">
         {children}
       </div>
     ) : null;
 
-  Panel.Body = ({ children }: any) => <div>{children}</div>;
-  Panel.Footer = ({ children }: any) => <div>{children}</div>;
+  Panel.Body = ({ children }: { children?: ReactNode }) => <div>{children}</div>;
+  Panel.Footer = ({ children }: { children?: ReactNode }) => <div>{children}</div>;
 
-  return { default: Panel, PanelPortal: ({ children }: { children: React.ReactNode }) => children };
+  return { default: Panel, PanelPortal: ({ children }: { children: ReactNode }) => children };
 });
 
 const ONION_RAW = { dataset: "ciqual" as const, code: "20034", name: "Onion, raw" };
