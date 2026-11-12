@@ -15,4 +15,11 @@ describe("updateServerHref", () => {
       params: { address: "https://old.example" },
     });
   });
+
+  it("marks an unanimated opening, for the launch splash to reveal", () => {
+    expect(updateServerHref("https://old.example", "0.26.2", false)).toEqual({
+      pathname: "/update-server",
+      params: { address: "https://old.example", version: "0.26.2", instant: "1" },
+    });
+  });
 });

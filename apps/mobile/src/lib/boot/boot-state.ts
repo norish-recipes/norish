@@ -104,23 +104,32 @@ export function stepLaunchClock(clock: number, elapsed: number | null, stop: num
   return Math.min(clock + Math.min(elapsed ?? 0, MAX_LAUNCH_STEP), stop);
 }
 
+/** Where the launch is: the splash still opaque, fading or gliding away, or gone. */
+export type LaunchPhase = "covered" | "leaving" | "done";
+
 /**
- * At launch: a too old server goes to Update your server once the launch has played out, unless
- * the saved address changed since; anything else carries on.
+ * At launch: a too old server goes to Update your server, unanimated while the splash still
+ * covers the screen, after the splash has left once it is leaving, unless the saved address
+ * changed since; anything else carries on.
  */
 export function resolveLaunchVersionCheck(
   check: ServerAddressCheck,
   saved: string,
-  launchFinished: boolean
+  phase: LaunchPhase
 ):
-  | { screen: "update-server"; address: string; version?: string }
+  | { screen: "update-server"; address: string; version?: string; animated: boolean }
   | { screen: "wait" }
   | { screen: "continue" } {
   if (check.outcome !== "too-old" || check.address !== saved) return { screen: "continue" };
 
-  return launchFinished
-    ? { screen: "update-server", address: check.address, version: check.version }
-    : { screen: "wait" };
+  if (phase === "leaving") return { screen: "wait" };
+
+  return {
+    screen: "update-server",
+    address: check.address,
+    version: check.version,
+    animated: phase === "done",
+  };
 }
 
 /** Where a new enough server continues to: Sign in signed out (saving the address), else the signed-in app. */

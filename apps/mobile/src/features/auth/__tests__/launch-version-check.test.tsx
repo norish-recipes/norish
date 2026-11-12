@@ -6,7 +6,7 @@ import { beforeEach, describe, expect, it, vi } from "vitest";
 
 const address = "https://norish.example";
 const tooOld = { outcome: "too-old", address, version: "0.26.2" } as const;
-let finished = false;
+let phase: "covered" | "leaving" | "done" = "leaving";
 let settle = (_check: ServerAddressCheck) => {};
 const checkServerAddress = vi.fn(
   () =>
@@ -17,7 +17,7 @@ const checkServerAddress = vi.fn(
 const push = vi.fn();
 const ServerAddressContext = createContext<string | null>(null);
 
-vi.mock("@/components/launch", () => ({ useLaunchFinished: () => finished }));
+vi.mock("@/components/launch", () => ({ useLaunchPhase: () => phase }));
 vi.mock("@/features/auth/utils/check-server-address", () => ({ checkServerAddress }));
 vi.mock("@/lib/network/server-address", () => ({
   ServerAddressContext,
@@ -40,7 +40,7 @@ async function launch() {
 }
 
 beforeEach(() => {
-  finished = false;
+  phase = "leaving";
   checkServerAddress.mockClear();
   push.mockClear();
 });
@@ -54,7 +54,7 @@ describe("LaunchVersionCheck", () => {
     const second = render(tree());
 
     await act(async () => settle(tooOld));
-    finished = true;
+    phase = "done";
     second.rerender(tree());
 
     expect(checkServerAddress).toHaveBeenCalledTimes(1);
@@ -62,7 +62,7 @@ describe("LaunchVersionCheck", () => {
   });
 
   it("checks a stack first mounted after the launch finished, as after a storage retry", async () => {
-    finished = true;
+    phase = "done";
     const tree = await launch();
 
     render(tree());
@@ -72,7 +72,7 @@ describe("LaunchVersionCheck", () => {
   });
 
   it("opens Update your server once per launch", async () => {
-    finished = true;
+    phase = "done";
     const tree = await launch();
     const first = render(tree());
 
@@ -84,14 +84,27 @@ describe("LaunchVersionCheck", () => {
     expect(push).toHaveBeenCalledTimes(1);
   });
 
-  it("waits for the launch to finish before navigating", async () => {
+  it("opens Update your server unanimated while the splash still covers the screen", async () => {
+    phase = "covered";
+    const tree = await launch();
+
+    render(tree());
+    await act(async () => settle(tooOld));
+
+    expect(push).toHaveBeenCalledWith({
+      pathname: "/update-server",
+      params: { address, version: "0.26.2", instant: "1" },
+    });
+  });
+
+  it("waits for the splash to leave before navigating", async () => {
     const tree = await launch();
     const view = render(tree());
 
     await act(async () => settle(tooOld));
     expect(push).not.toHaveBeenCalled();
 
-    finished = true;
+    phase = "done";
     view.rerender(tree());
     expect(push).toHaveBeenCalledWith(updateServer);
   });

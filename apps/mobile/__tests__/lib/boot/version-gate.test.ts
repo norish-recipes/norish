@@ -12,30 +12,42 @@ const newEnough = { outcome: "ok", address } as const;
 const unreachable = { outcome: "error", messageId: "auth.connect.errors.unreachable" } as const;
 
 describe("resolveLaunchVersionCheck", () => {
-  it("sends a too old server to Update your server, with what it reported", () => {
-    expect(resolveLaunchVersionCheck(tooOld, address, true)).toEqual({
-      screen: "update-server",
-      address,
-      version: "0.26.2",
+  const updateServer = { screen: "update-server", address, version: "0.26.2" };
+
+  it("opens Update your server at once, unanimated, while the splash still covers the screen", () => {
+    expect(resolveLaunchVersionCheck(tooOld, address, "covered")).toEqual({
+      ...updateServer,
+      animated: false,
     });
   });
 
-  it("waits for the launch to finish before leaving the first screen", () => {
-    expect(resolveLaunchVersionCheck(tooOld, address, false)).toEqual({ screen: "wait" });
+  it("waits while the splash fades or glides away, so the screen it reveals isn't replaced", () => {
+    expect(resolveLaunchVersionCheck(tooOld, address, "leaving")).toEqual({ screen: "wait" });
+  });
+
+  it("opens Update your server at once once the launch has finished", () => {
+    expect(resolveLaunchVersionCheck(tooOld, address, "done")).toEqual({
+      ...updateServer,
+      animated: true,
+    });
   });
 
   it("drops a too old result for an address that is no longer the saved one", () => {
-    expect(resolveLaunchVersionCheck(tooOld, "https://other.example", true)).toEqual({
+    expect(resolveLaunchVersionCheck(tooOld, "https://other.example", "done")).toEqual({
       screen: "continue",
     });
   });
 
   it("carries on when the server is new enough", () => {
-    expect(resolveLaunchVersionCheck(newEnough, address, true)).toEqual({ screen: "continue" });
+    expect(resolveLaunchVersionCheck(newEnough, address, "covered")).toEqual({
+      screen: "continue",
+    });
   });
 
   it("skips the check when the server is unreachable", () => {
-    expect(resolveLaunchVersionCheck(unreachable, address, false)).toEqual({ screen: "continue" });
+    expect(resolveLaunchVersionCheck(unreachable, address, "leaving")).toEqual({
+      screen: "continue",
+    });
   });
 });
 

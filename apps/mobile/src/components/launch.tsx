@@ -1,4 +1,4 @@
-import type { LaunchHandoff } from "@/lib/boot/boot-state";
+import type { LaunchHandoff, LaunchPhase } from "@/lib/boot/boot-state";
 import type { ReactNode } from "react";
 import type { LayoutChangeEvent } from "react-native";
 import type { SharedValue } from "react-native-reanimated";
@@ -63,9 +63,16 @@ export function LaunchProvider({ children }: { children: ReactNode }) {
   );
 }
 
-/** Whether the launch has played out; true outside a LaunchProvider. */
-export function useLaunchFinished() {
-  return use(LaunchContext)?.done ?? true;
+/**
+ * Covered until the splash starts to leave (its motion is decided only then), leaving through its
+ * fade or glide, then done; done outside a LaunchProvider.
+ */
+export function useLaunchPhase(): LaunchPhase {
+  const launch = use(LaunchContext);
+
+  if (!launch || launch.done) return "done";
+
+  return launch.motion === null ? "covered" : "leaving";
 }
 
 /** The JS splash over the screen it hands off to; a `null` handoff holds it. */

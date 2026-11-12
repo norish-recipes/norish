@@ -245,7 +245,14 @@ function RootStack({ signedIn }: { signedIn: boolean }) {
         <Stack.Screen name="(auth)" />
       </Stack.Protected>
       {/* Reachable signed in or out, with no swipe back: only a new enough server leaves it. */}
-      <Stack.Screen name="update-server" options={{ animation: "fade", gestureEnabled: false }} />
+      <Stack.Screen
+        name="update-server"
+        options={({ route }) => ({
+          // Opened under the launch splash, it cuts in so the splash's own fade reveals it.
+          animation: route.params && "instant" in route.params ? "none" : "fade",
+          gestureEnabled: false,
+        })}
+      />
     </Stack>
   );
 }

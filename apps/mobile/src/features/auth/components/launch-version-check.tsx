@@ -1,6 +1,6 @@
 import type { ServerAddressCheck } from "@/lib/network/server-address";
 import { use, useEffect, useState } from "react";
-import { useLaunchFinished } from "@/components/launch";
+import { useLaunchPhase } from "@/components/launch";
 import { checkServerAddress } from "@/features/auth/utils/check-server-address";
 import { updateServerHref } from "@/features/auth/utils/update-server-route";
 import { resolveLaunchVersionCheck } from "@/lib/boot/boot-state";
@@ -21,7 +21,7 @@ function launchCheckOf(address: string) {
 /** Checks the saved Server Address once in the background; a too-old server gets Update your server. */
 export function LaunchVersionCheck({ enabled }: { enabled: boolean }) {
   const address = use(ServerAddressContext);
-  const finished = useLaunchFinished();
+  const phase = useLaunchPhase();
   const [check, setCheck] = useState<ServerAddressCheck | null>(null);
 
   useEffect(() => {
@@ -39,17 +39,20 @@ export function LaunchVersionCheck({ enabled }: { enabled: boolean }) {
     };
   }, [enabled, address]);
 
-  // Held until the splash is gone, so the first screen it fades to isn't replaced mid-fade.
+  // Under the opaque splash it cuts in, revealed by the splash's fade; once the splash is leaving
+  // it waits, so the screen being revealed isn't replaced mid-fade.
   useEffect(() => {
     if (!check || launchAnswered) return;
 
-    const next = resolveLaunchVersionCheck(check, getServerAddress(), finished);
+    const next = resolveLaunchVersionCheck(check, getServerAddress(), phase);
 
     if (next.screen === "wait") return;
 
     launchAnswered = true;
-    if (next.screen === "update-server") router.push(updateServerHref(next.address, next.version));
-  }, [check, finished]);
+    if (next.screen === "update-server") {
+      router.push(updateServerHref(next.address, next.version, next.animated));
+    }
+  }, [check, phase]);
 
   return null;
 }
