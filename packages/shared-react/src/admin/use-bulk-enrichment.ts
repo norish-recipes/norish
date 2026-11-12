@@ -14,7 +14,7 @@ export function useImageGenerationSweepCount() {
 }
 
 /** Queues every enabled enrichment for every recipe; a refusal toasts why. */
-export function useEnrichAllRecipes() {
+export function useEnrichAllRecipesMutation() {
   const trpc = useTRPC();
   const { toast, showError } = usePlatform();
   const { mutate, data, isPending } = useMutation(

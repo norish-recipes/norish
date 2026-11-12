@@ -13,9 +13,9 @@ import { useTranslations } from "next-intl";
 
 import type { PageRenderersConfig } from "@norish/config/zod/server-config";
 import {
+  usePageRenderersMutation,
   usePageRenderersQuery,
-  usePageRenderersSave,
-  usePageRendererTest,
+  usePageRendererTestMutation,
 } from "@norish/shared-react/admin";
 
 import { ConnectionTestResult } from "../connection-test-result";
@@ -51,7 +51,7 @@ export default function PageRenderersCard() {
   const t = useTranslations("settings.admin.pageRenderers");
   const tActions = useTranslations("common.actions");
   const { stored, isLoading } = usePageRenderersQuery();
-  const { save, isSaving } = usePageRenderersSave();
+  const { save, isSaving } = usePageRenderersMutation();
   const [form, setForm] = useState(() => formFrom(stored));
   const [prevStored, setPrevStored] = useState(stored);
 
@@ -219,7 +219,7 @@ function TestedRenderer({
 }) {
   const t = useTranslations("settings.admin.pageRenderers");
   const tActions = useTranslations("common.actions");
-  const test = usePageRendererTest();
+  const test = usePageRendererTestMutation();
 
   const handleSwitch = (on: boolean) => {
     onEnabledChange(on);

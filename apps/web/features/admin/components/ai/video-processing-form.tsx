@@ -21,7 +21,7 @@ import {
   useAdminConfig,
   useAvailableTranscriptionModelsQuery,
   useConfigSecret,
-  useVideoConfigWrite,
+  useVideoConfigMutation,
   useYtDlpVersionQuery,
 } from "@norish/shared-react/admin";
 
@@ -49,7 +49,7 @@ export default function VideoProcessingForm({ onDirtyChange }: VideoProcessingFo
     enabled: ai?.enabled ?? false,
     hasApiKey: !!ai?.apiKey,
   }));
-  const updateVideoConfig = useVideoConfigWrite();
+  const updateVideoConfig = useVideoConfigMutation();
   const fetchConfigSecret = useConfigSecret();
 
   // Combined video + transcription config state

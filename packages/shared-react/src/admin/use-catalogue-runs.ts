@@ -55,7 +55,7 @@ export function useCleanUpCounts() {
 }
 
 /** Starts a clean-up; toasts how many foods it queued, or that it failed. */
-export function useCleanUpCatalogue() {
+export function useCleanUpCatalogueMutation() {
   const trpc = useTRPC();
   const catalogue = trpc.admin.ingredientCatalogue;
 
@@ -75,7 +75,7 @@ export function useFillGapsCounts() {
 }
 
 /** Starts Fill gaps for the kinds chosen; toasts that it started, or that it failed. */
-export function useFillGaps() {
+export function useFillGapsMutation() {
   const trpc = useTRPC();
   const catalogue = trpc.admin.ingredientCatalogue;
 

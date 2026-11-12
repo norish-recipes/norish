@@ -8,7 +8,7 @@ import {
 } from "@norish/shared-react/platform/testing";
 
 import { answerCall, failCall, keyOf, resetTRPCFake } from "../../trpc/testing";
-import { useCleanUpCatalogue, useFillGaps } from "../use-catalogue-runs";
+import { useCleanUpCatalogueMutation, useFillGapsMutation } from "../use-catalogue-runs";
 
 vi.mock("../../trpc", async () => (await import("../../trpc/testing")).mockTRPC());
 
@@ -34,7 +34,7 @@ afterEach(resetTRPCFake);
 describe("the catalogue runs", () => {
   it("say a clean-up started and read its counts again", async () => {
     const { platform, stale, wrapper } = setUp();
-    const { result } = renderHook(() => useCleanUpCatalogue(), { wrapper });
+    const { result } = renderHook(() => useCleanUpCatalogueMutation(), { wrapper });
     let started: Promise<boolean> | undefined;
 
     act(() => {
@@ -52,7 +52,7 @@ describe("the catalogue runs", () => {
 
   it("say a fill that failed failed, and still read its counts again", async () => {
     const { platform, stale, wrapper } = setUp();
-    const { result } = renderHook(() => useFillGaps(), { wrapper });
+    const { result } = renderHook(() => useFillGapsMutation(), { wrapper });
     let started: Promise<boolean> | undefined;
 
     act(() => {

@@ -3,26 +3,26 @@ export type { JobListFilter, JobRef } from "./use-job-queue";
 
 export { useAdminConfig, useAdminConfigsLoading, useConfigSecret } from "./use-admin-config";
 export {
-  useAIConfigWrite,
-  useAuthProviderWrites,
-  useContentConfigWrites,
-  useDecisionConfigWrite,
-  useGeneralConfigWrites,
-  useImageGenerationConfigWrite,
-  usePasswordAuthWrite,
-  usePermissionPolicyWrites,
-  usePromptsWrite,
-  useRestartServer,
-  useRestoreDefault,
-  useSchedulerMonthsWrite,
-  useVideoConfigWrite,
-} from "./use-admin-config-writes";
+  useAIConfigMutations,
+  useAuthProviderMutations,
+  useContentConfigMutations,
+  useDecisionConfigMutations,
+  useGeneralConfigMutations,
+  useImageGenerationConfigMutation,
+  usePasswordAuthMutation,
+  usePermissionPolicyMutations,
+  usePromptsMutation,
+  useRestartServerMutation,
+  useRestoreDefaultMutation,
+  useSchedulerMonthsMutation,
+  useVideoConfigMutation,
+} from "./use-admin-config-mutations";
 export { useAIKeyRejectionsQuery } from "./use-ai-key-rejections";
 export {
   useJobDetailQuery,
   useJobListQuery,
   useJobQueueMutations,
-  useJobRetentionWrite,
+  useJobRetentionMutation,
   useQueueSummaryQuery,
 } from "./use-job-queue";
 export { useUserMutations, useUsersListQuery } from "./use-users";
@@ -31,17 +31,17 @@ export {
   useAvailableTranscriptionModelsQuery,
   useYtDlpVersionQuery,
 } from "./use-available-models";
-export { useEnrichAllRecipes, useImageGenerationSweepCount } from "./use-bulk-enrichment";
+export { useEnrichAllRecipesMutation, useImageGenerationSweepCount } from "./use-bulk-enrichment";
 export {
-  useCleanUpCatalogue,
+  useCleanUpCatalogueMutation,
   useCleanUpCounts,
-  useFillGaps,
+  useFillGapsMutation,
   useFillGapsCounts,
 } from "./use-catalogue-runs";
-export type { CuisineRefusal } from "./use-cuisine-writes";
-export { useCuisineWrites } from "./use-cuisine-writes";
+export type { CuisineRefusal } from "./use-cuisine-mutations";
+export { useCuisineMutations } from "./use-cuisine-mutations";
 export {
-  usePageRendererTest,
+  usePageRendererTestMutation,
   usePageRenderersQuery,
-  usePageRenderersSave,
+  usePageRenderersMutation,
 } from "./use-page-renderers";

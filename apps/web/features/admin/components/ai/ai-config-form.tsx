@@ -26,7 +26,7 @@ import {
 } from "@norish/config/zod/server-config";
 import {
   useAdminConfig,
-  useAIConfigWrite,
+  useAIConfigMutations,
   useAvailableModelsQuery,
   useConfigSecret,
 } from "@norish/shared-react/admin";
@@ -75,7 +75,7 @@ export default function AIConfigForm({ onDirtyChange }: AIConfigFormProps) {
   const t = useTranslations("settings.admin.aiConfig");
   const tActions = useTranslations("common.actions");
   const aiConfig = useAdminConfig(ServerConfigKeys.AI_CONFIG);
-  const { save: updateAIConfig, test: testAIEndpoint } = useAIConfigWrite();
+  const { save: updateAIConfig, test: testAIEndpoint } = useAIConfigMutations();
   const fetchConfigSecret = useConfigSecret();
   const [enabled, setEnabled] = useState(aiConfig?.enabled ?? false);
   const [provider, setProvider] = useState(aiConfig?.provider ?? "openai");

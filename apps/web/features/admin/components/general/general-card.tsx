@@ -12,7 +12,7 @@ import { ListBox, Select, Separator, toast } from "@heroui/react";
 import { useTranslations } from "next-intl";
 
 import { ServerConfigKeys } from "@norish/config/zod/server-config";
-import { useAdminConfig, useGeneralConfigWrites } from "@norish/shared-react/admin";
+import { useAdminConfig, useGeneralConfigMutations } from "@norish/shared-react/admin";
 
 import { UnsavedChangesChip } from "../unsaved-changes-chip";
 
@@ -21,7 +21,7 @@ export default function GeneralCard() {
   const tActions = useTranslations("common.actions");
   const registrationEnabled = useAdminConfig(ServerConfigKeys.REGISTRATION_ENABLED);
   const localeConfig = useAdminConfig(ServerConfigKeys.LOCALE_CONFIG);
-  const { setRegistration, saveLocales } = useGeneralConfigWrites();
+  const { setRegistration, saveLocales } = useGeneralConfigMutations();
 
   // Local state for locale config form
   const [enabledLocales, setEnabledLocales] = useState<string[]>([]);

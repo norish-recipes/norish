@@ -8,7 +8,7 @@ import {
 } from "@norish/shared-react/platform/testing";
 
 import { failCall, keyOf, resetTRPCFake, sentCall } from "../../trpc/testing";
-import { useAuthProviderWrites } from "../use-admin-config-writes";
+import { useAuthProviderMutations } from "../use-admin-config-mutations";
 
 vi.mock("../../trpc", async () => (await import("../../trpc/testing")).mockTRPC());
 
@@ -16,13 +16,13 @@ const CONFIGS = keyOf("admin.getAllConfigs");
 
 afterEach(resetTRPCFake);
 
-describe("useAuthProviderWrites", () => {
+describe("useAuthProviderMutations", () => {
   it("shows a failed removal once and leaves the provider in place", async () => {
     const queryClient = createTestQueryClient();
     const platform = fakePlatformAdapter();
 
     queryClient.setQueryData(CONFIGS, {});
-    const { result } = renderHook(() => useAuthProviderWrites(), {
+    const { result } = renderHook(() => useAuthProviderMutations(), {
       wrapper: createTestWrapper(queryClient, platform),
     });
     let removed: Promise<boolean> | undefined;

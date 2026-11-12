@@ -17,7 +17,7 @@ import {
   useAdminConfig,
   useAvailableModelsQuery,
   useConfigSecret,
-  useImageGenerationConfigWrite,
+  useImageGenerationConfigMutation,
 } from "@norish/shared-react/admin";
 
 import { useReportDirty } from "../use-report-dirty";
@@ -51,7 +51,7 @@ export default function ImageGenerationForm({ onDirtyChange }: ImageGenerationFo
     endpoint: ai?.endpoint,
     hasApiKey: !!ai?.apiKey,
   }));
-  const updateImageGenerationConfig = useImageGenerationConfigWrite();
+  const updateImageGenerationConfig = useImageGenerationConfigMutation();
   const fetchConfigSecret = useConfigSecret();
   const [provider, setProvider] = useState<ImageGenerationProvider>(
     imageGenerationConfig?.provider ?? "disabled"

@@ -14,7 +14,7 @@ const updateAIConfig = vi.fn();
 
 vi.mock("@norish/shared-react/admin", async () => ({
   useAdminConfig: (await import("./admin-config-fake")).useAdminConfig,
-  useAIConfigWrite: () => ({ save: updateAIConfig }),
+  useAIConfigMutations: () => ({ save: updateAIConfig }),
 }));
 
 vi.mock("next-intl", () => ({ useTranslations: () => (key: string) => key }));

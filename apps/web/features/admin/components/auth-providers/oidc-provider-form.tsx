@@ -10,7 +10,7 @@ import { useTranslations } from "next-intl";
 import type { AuthProviderOIDC } from "@norish/config/zod/server-config";
 import type { WriteResult } from "@norish/shared-react/admin";
 import { ServerConfigKeys } from "@norish/config/zod/server-config";
-import { useAuthProviderWrites, useConfigSecret } from "@norish/shared-react/admin";
+import { useAuthProviderMutations, useConfigSecret } from "@norish/shared-react/admin";
 
 import type { ClaimMappingValues } from "./oidc-claim-mapping";
 import { ConnectionTestResult } from "../connection-test-result";
@@ -27,7 +27,7 @@ interface OIDCProviderFormProps {
 export function OIDCProviderForm({ config, onDirtyChange }: OIDCProviderFormProps) {
   const tOidc = useTranslations("settings.admin.authProviders.oidc.fields");
   const tForm = useTranslations("settings.admin.authProviders.form");
-  const { saveOIDC, remove, test } = useAuthProviderWrites();
+  const { saveOIDC, remove, test } = useAuthProviderMutations();
   const fetchConfigSecret = useConfigSecret();
 
   const existingClaimConfig = config?.claimConfig;

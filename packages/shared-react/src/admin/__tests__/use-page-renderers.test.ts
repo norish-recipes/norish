@@ -8,7 +8,7 @@ import {
 } from "@norish/shared-react/platform/testing";
 
 import { answerCall, failCall, keyOf, resetTRPCFake } from "../../trpc/testing";
-import { usePageRenderersSave } from "../use-page-renderers";
+import { usePageRenderersMutation } from "../use-page-renderers";
 
 vi.mock("../../trpc", async () => (await import("../../trpc/testing")).mockTRPC());
 
@@ -36,10 +36,10 @@ function setUp() {
 
 afterEach(resetTRPCFake);
 
-describe("usePageRenderersSave", () => {
+describe("usePageRenderersMutation", () => {
   it("says the save went through and reads the setting back", async () => {
     const { platform, stale, wrapper } = setUp();
-    const { result } = renderHook(() => usePageRenderersSave(), { wrapper });
+    const { result } = renderHook(() => usePageRenderersMutation(), { wrapper });
 
     act(() => result.current.save(SETTING));
     await answerCall("admin.updatePageRenderers", { success: true });
@@ -53,7 +53,7 @@ describe("usePageRenderersSave", () => {
 
   it("says a failed save failed", async () => {
     const { platform, stale, wrapper } = setUp();
-    const { result } = renderHook(() => usePageRenderersSave(), { wrapper });
+    const { result } = renderHook(() => usePageRenderersMutation(), { wrapper });
 
     act(() => result.current.save(SETTING));
     await failCall("admin.updatePageRenderers");

@@ -7,8 +7,8 @@ import { useTranslations } from "next-intl";
 import { ServerConfigKeys } from "@norish/config/zod/server-config";
 import {
   useAdminConfig,
-  useContentConfigWrites,
-  useRestoreDefault,
+  useContentConfigMutations,
+  useRestoreDefaultMutation,
 } from "@norish/shared-react/admin";
 
 import { AccordionSection } from "../accordion-section";
@@ -34,8 +34,8 @@ export default function ContentDetectionCard() {
     saveIngredientWords,
     saveRecurrence,
     saveTimerKeywords,
-  } = useContentConfigWrites();
-  const restoreDefaultConfig = useRestoreDefault();
+  } = useContentConfigMutations();
+  const restoreDefaultConfig = useRestoreDefaultMutation();
 
   return (
     <SettingsCard

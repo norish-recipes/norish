@@ -20,7 +20,7 @@ import {
 import {
   useAdminConfig,
   useConfigSecret,
-  useDecisionConfigWrite,
+  useDecisionConfigMutations,
 } from "@norish/shared-react/admin";
 
 import { ConnectionTestResult } from "../connection-test-result";
@@ -44,7 +44,7 @@ export default function DecisionModelForm({ onDirtyChange }: DecisionModelFormPr
   const t = useTranslations("settings.admin.decisionConfig");
   const tActions = useTranslations("common.actions");
   const decisionConfig = useAdminConfig(ServerConfigKeys.DECISION_CONFIG);
-  const { save: updateDecisionConfig, test: testDecisionEndpoint } = useDecisionConfigWrite();
+  const { save: updateDecisionConfig, test: testDecisionEndpoint } = useDecisionConfigMutations();
   const fetchConfigSecret = useConfigSecret();
   const [provider, setProvider] = useState<DecisionProvider>(
     decisionConfig?.provider ?? "disabled"

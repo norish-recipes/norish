@@ -13,8 +13,8 @@ import { useTranslations } from "next-intl";
 import { ServerConfigKeys } from "@norish/config/zod/server-config";
 import {
   useAdminConfig,
-  useRestartServer,
-  useSchedulerMonthsWrite,
+  useRestartServerMutation,
+  useSchedulerMonthsMutation,
 } from "@norish/shared-react/admin";
 
 import { UnsavedChangesChip } from "../unsaved-changes-chip";
@@ -24,8 +24,8 @@ export default function SystemCard() {
   const t = useTranslations("settings.admin.system");
   const tActions = useTranslations("common.actions");
   const schedulerCleanupMonths = useAdminConfig(ServerConfigKeys.SCHEDULER_CLEANUP_MONTHS);
-  const saveSchedulerMonths = useSchedulerMonthsWrite();
-  const restartServer = useRestartServer();
+  const saveSchedulerMonths = useSchedulerMonthsMutation();
+  const restartServer = useRestartServerMutation();
   const [months, setMonths] = useState(schedulerCleanupMonths ?? 3);
   const [saving, whileSaving] = usePending();
   const restartModal = useOverlayState();

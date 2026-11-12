@@ -94,7 +94,7 @@ export function useJobQueueMutations(onFailed: (reason: string) => void) {
 }
 
 /** The retention the queues keep; a failed save says so. */
-export function useJobRetentionWrite() {
+export function useJobRetentionMutation() {
   const trpc = useTRPC();
   const queryClient = useQueryClient();
   const { showError } = usePlatform();

@@ -13,7 +13,7 @@ export type CuisineRefusal = "duplicate" | "saveFailed";
  * Adds, renames and deletes cuisines, then rereads the vocabulary every cuisine picker offers.
  * A failed write hands `onRefused` why.
  */
-export function useCuisineWrites(onRefused: (refusal: CuisineRefusal) => void) {
+export function useCuisineMutations(onRefused: (refusal: CuisineRefusal) => void) {
   const trpc = useTRPC();
   const queryClient = useQueryClient();
   const handlers = {

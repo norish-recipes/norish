@@ -8,7 +8,7 @@ import { Separator } from "@heroui/react";
 import { useTranslations } from "next-intl";
 
 import { ServerConfigKeys } from "@norish/config/zod/server-config";
-import { useAdminConfig, usePasswordAuthWrite } from "@norish/shared-react/admin";
+import { useAdminConfig, usePasswordAuthMutation } from "@norish/shared-react/admin";
 
 import { AccordionSection } from "../accordion-section";
 import { RestartRequiredChip } from "../restart-required-chip";
@@ -24,7 +24,7 @@ export function AuthProvidersCard() {
   const authProviderGitHub = useAdminConfig(ServerConfigKeys.AUTH_PROVIDER_GITHUB);
   const authProviderGoogle = useAdminConfig(ServerConfigKeys.AUTH_PROVIDER_GOOGLE);
   const passwordAuthEnabled = useAdminConfig(ServerConfigKeys.PASSWORD_AUTH_ENABLED);
-  const updatePasswordAuth = usePasswordAuthWrite();
+  const updatePasswordAuth = usePasswordAuthMutation();
 
   return (
     <SettingsCard

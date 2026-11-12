@@ -11,7 +11,7 @@ import { useTranslations } from "next-intl";
 
 import type { PermissionLevel } from "@norish/config/zod/server-config";
 import { ServerConfigKeys } from "@norish/config/zod/server-config";
-import { useAdminConfig, usePermissionPolicyWrites } from "@norish/shared-react/admin";
+import { useAdminConfig, usePermissionPolicyMutations } from "@norish/shared-react/admin";
 
 import type { PermissionLevelLabels } from "./permission-level-select";
 import { PermissionLevelSelect } from "./permission-level-select";
@@ -30,7 +30,7 @@ export default function PermissionPolicyCard() {
     ServerConfigKeys.INGREDIENT_PERMISSION_POLICY,
     (policy) => policy?.edit
   );
-  const { saveRecipePolicy, saveIngredientPolicy } = usePermissionPolicyWrites();
+  const { saveRecipePolicy, saveIngredientPolicy } = usePermissionPolicyMutations();
   const [saving, setSaving] = useState<PolicyAction | "ingredients" | null>(null);
 
   const recipeLabels: PermissionLevelLabels = {

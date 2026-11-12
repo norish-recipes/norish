@@ -10,7 +10,7 @@ import { Input, Modal, ScrollShadow, TextField } from "@heroui/react";
 import { useTranslations } from "next-intl";
 
 import type { CuisineRefusal } from "@norish/shared-react/admin";
-import { useCuisineWrites } from "@norish/shared-react/admin";
+import { useCuisineMutations } from "@norish/shared-react/admin";
 import { useCuisinesQuery } from "@norish/shared-react/config";
 
 /** Cuisine vocabulary: a rename is one row every recipe follows; a delete cascades silently. */
@@ -23,9 +23,9 @@ export default function CuisineVocabularyForm() {
   const [editingName, setEditingName] = useState("");
   const [pendingDelete, setPendingDelete] = useState<{ id: string; name: string } | null>(null);
   const [error, setError] = useState<CuisineRefusal | null>(null);
-  const { create, rename, remove, isPending } = useCuisineWrites(setError);
+  const { create, rename, remove, isPending } = useCuisineMutations(setError);
 
-  // A failure already set `error` through `useCuisineWrites`.
+  // A failure already set `error` through `useCuisineMutations`.
   const run = async (write: () => Promise<boolean>, onDone: () => void) => {
     setError(null);
     if (await write()) onDone();

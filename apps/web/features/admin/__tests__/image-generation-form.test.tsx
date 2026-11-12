@@ -11,7 +11,7 @@ import { setConfigs } from "./admin-config-fake";
 
 vi.mock("@norish/shared-react/admin", async () => ({
   useAdminConfig: (await import("./admin-config-fake")).useAdminConfig,
-  useImageGenerationConfigWrite: () => () => Promise.resolve(),
+  useImageGenerationConfigMutation: () => () => Promise.resolve(),
   useConfigSecret: () => () => Promise.resolve(null),
   useAvailableModelsQuery: () => ({ models: [], refusal: null, isLoading: false }),
 }));

@@ -9,7 +9,7 @@ import { useTranslations } from "next-intl";
 import type { AuthProviderGitHub, ServerConfigKey } from "@norish/config/zod/server-config";
 import type { WriteResult } from "@norish/shared-react/admin";
 import { ServerConfigKeys } from "@norish/config/zod/server-config";
-import { useAuthProviderWrites, useConfigSecret } from "@norish/shared-react/admin";
+import { useAuthProviderMutations, useConfigSecret } from "@norish/shared-react/admin";
 
 import type { FieldDef } from "./types";
 import { ConnectionTestResult } from "../connection-test-result";
@@ -39,7 +39,7 @@ export function AuthProviderForm({
   onDirtyChange,
 }: AuthProviderFormProps) {
   const t = useTranslations("settings.admin.authProviders.form");
-  const { saveGitHub, saveGoogle, remove, test } = useAuthProviderWrites();
+  const { saveGitHub, saveGoogle, remove, test } = useAuthProviderMutations();
   const fetchConfigSecret = useConfigSecret();
 
   // Initialize form values from config (secrets start empty)

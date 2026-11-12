@@ -11,13 +11,13 @@ import {
 import { answerCall, failCall, keyOf, resetTRPCFake, serveTRPC } from "../../trpc/testing";
 import { useAdminConfig, useConfigSecret } from "../use-admin-config";
 import {
-  useAIConfigWrite,
-  useAuthProviderWrites,
-  useContentConfigWrites,
-  useGeneralConfigWrites,
-  useRestartServer,
-  useRestoreDefault,
-} from "../use-admin-config-writes";
+  useAIConfigMutations,
+  useAuthProviderMutations,
+  useContentConfigMutations,
+  useGeneralConfigMutations,
+  useRestartServerMutation,
+  useRestoreDefaultMutation,
+} from "../use-admin-config-mutations";
 
 vi.mock("../../trpc", async () => (await import("../../trpc/testing")).mockTRPC());
 
@@ -64,7 +64,7 @@ describe("useAdminConfig", () => {
 describe("the config writes", () => {
   it("read the admin config and the units again once the server took the units", async () => {
     const { stale, wrapper } = setUp();
-    const { result } = renderHook(() => useContentConfigWrites(), { wrapper });
+    const { result } = renderHook(() => useContentConfigMutations(), { wrapper });
     let saved: Promise<unknown> | undefined;
 
     act(() => {
@@ -79,7 +79,7 @@ describe("the config writes", () => {
 
   it("read nothing again when the server refused the write", async () => {
     const { stale, wrapper } = setUp();
-    const { result } = renderHook(() => useContentConfigWrites(), { wrapper });
+    const { result } = renderHook(() => useContentConfigMutations(), { wrapper });
     let saved: Promise<unknown> | undefined;
 
     act(() => {
@@ -94,7 +94,7 @@ describe("the config writes", () => {
 
   it("reread the ingredient words a restored default feeds, and only those", async () => {
     const { stale, wrapper } = setUp();
-    const { result } = renderHook(() => useRestoreDefault(), { wrapper });
+    const { result } = renderHook(() => useRestoreDefaultMutation(), { wrapper });
 
     act(() => {
       void result.current(ServerConfigKeys.INGREDIENT_WORDS);
@@ -108,7 +108,7 @@ describe("the config writes", () => {
 
   it("say how a language save went", async () => {
     const { platform, wrapper } = setUp();
-    const { result } = renderHook(() => useGeneralConfigWrites(), { wrapper });
+    const { result } = renderHook(() => useGeneralConfigMutations(), { wrapper });
     const locales = { defaultLocale: "en", enabledLocales: ["en"] };
 
     act(() => {
@@ -132,9 +132,9 @@ describe("the config writes", () => {
   });
 
   it.each([
-    ["a config save", "admin.content.updateUnits", useContentConfigWrites, "saveUnits"],
-    ["a language save", "admin.updateLocaleConfig", useGeneralConfigWrites, "saveLocales"],
-    ["an endpoint test", "admin.testAIEndpoint", useAIConfigWrite, "test"],
+    ["a config save", "admin.content.updateUnits", useContentConfigMutations, "saveUnits"],
+    ["a language save", "admin.updateLocaleConfig", useGeneralConfigMutations, "saveLocales"],
+    ["an endpoint test", "admin.testAIEndpoint", useAIConfigMutations, "test"],
   ] as const)("say %s failed and resolve null, rejecting nothing", async (_, path, hook, name) => {
     const { platform, stale, wrapper } = setUp();
     const { result } = renderHook(() => hook(), { wrapper });
@@ -155,7 +155,7 @@ describe("the config writes", () => {
 
   it("say a failed default restore failed and resolve null", async () => {
     const { platform, wrapper } = setUp();
-    const { result } = renderHook(() => useRestoreDefault(), { wrapper });
+    const { result } = renderHook(() => useRestoreDefaultMutation(), { wrapper });
     let restored: Promise<unknown> | undefined;
 
     act(() => {
@@ -169,7 +169,7 @@ describe("the config writes", () => {
 
   it("say a refused provider removal was refused, and resolve that it was", async () => {
     const { platform, stale, wrapper } = setUp();
-    const { result } = renderHook(() => useAuthProviderWrites(), { wrapper });
+    const { result } = renderHook(() => useAuthProviderMutations(), { wrapper });
     let removed: Promise<boolean> | undefined;
 
     act(() => {
@@ -187,7 +187,7 @@ describe("the config writes", () => {
 
   it("say a failed restart failed, and resolve that it did not go through", async () => {
     const { platform, wrapper } = setUp();
-    const { result } = renderHook(() => useRestartServer(), { wrapper });
+    const { result } = renderHook(() => useRestartServerMutation(), { wrapper });
     let restarted: Promise<boolean> | undefined;
 
     act(() => {

@@ -4,7 +4,7 @@ import { useState } from "react";
 import { Checkbox, CheckboxGroup, Description, Label } from "@heroui/react";
 import { useTranslations } from "next-intl";
 
-import { useFillGaps, useFillGapsCounts } from "@norish/shared-react/admin";
+import { useFillGapsCounts, useFillGapsMutation } from "@norish/shared-react/admin";
 
 import { CatalogueAIRun } from "./catalogue-ai-run";
 
@@ -18,7 +18,7 @@ export default function FillGaps() {
   const [isOpen, setIsOpen] = useState(false);
   const [picked, setPicked] = useState<Kind[]>([]);
   const data = useFillGapsCounts();
-  const { start, isStarting } = useFillGaps();
+  const { start, isStarting } = useFillGapsMutation();
   const countOf = (kind: Kind) => data?.[kind] ?? 0;
   // Icons are null where the image provider cannot draw: not offered.
   const offered = KINDS.filter((kind) => data?.[kind] !== null);

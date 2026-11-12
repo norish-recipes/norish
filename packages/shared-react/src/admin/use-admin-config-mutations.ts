@@ -61,7 +61,7 @@ function useSaveAndTest<TData extends WriteResult, TError, TVariables, TTested, 
 }
 
 /** Registration and the languages users choose from; the language save toasts how it went. */
-export function useGeneralConfigWrites() {
+export function useGeneralConfigMutations() {
   const trpc = useTRPC();
   const reread = useReread();
   const { toast, showError } = usePlatform();
@@ -94,14 +94,14 @@ export function useGeneralConfigWrites() {
   return { setRegistration, saveLocales };
 }
 
-export function usePasswordAuthWrite() {
+export function usePasswordAuthMutation() {
   const trpc = useTRPC();
 
   return useConfigWrite(trpc.admin.updatePasswordAuth.mutationOptions(), "admin-auth:password");
 }
 
 /** The OAuth providers' saves, removal and test; a refused removal says so. */
-export function useAuthProviderWrites() {
+export function useAuthProviderMutations() {
   const trpc = useTRPC();
   const reread = useReread();
   const { showError } = usePlatform();
@@ -143,7 +143,7 @@ export function useAuthProviderWrites() {
 }
 
 /** The content detection configs; each also rereads the public config reads built from it. */
-export function useContentConfigWrites() {
+export function useContentConfigMutations() {
   const trpc = useTRPC();
   const timersEnabled = trpc.config.timersEnabled.queryKey();
 
@@ -177,7 +177,7 @@ export function useContentConfigWrites() {
 }
 
 /** Puts a config back to its shipped default, rereading the public read it feeds. */
-export function useRestoreDefault() {
+export function useRestoreDefaultMutation() {
   const trpc = useTRPC();
   const reread = useReread();
   return useAnsweredWrite(
@@ -194,7 +194,7 @@ export function useRestoreDefault() {
   );
 }
 
-export function useAIConfigWrite() {
+export function useAIConfigMutations() {
   const trpc = useTRPC();
 
   return useSaveAndTest(
@@ -204,13 +204,13 @@ export function useAIConfigWrite() {
   );
 }
 
-export function useVideoConfigWrite() {
+export function useVideoConfigMutation() {
   const trpc = useTRPC();
 
   return useConfigWrite(trpc.admin.updateVideoConfig.mutationOptions(), "admin-video:save");
 }
 
-export function useImageGenerationConfigWrite() {
+export function useImageGenerationConfigMutation() {
   const trpc = useTRPC();
 
   return useConfigWrite(
@@ -219,7 +219,7 @@ export function useImageGenerationConfigWrite() {
   );
 }
 
-export function useDecisionConfigWrite() {
+export function useDecisionConfigMutations() {
   const trpc = useTRPC();
 
   return useSaveAndTest(
@@ -229,13 +229,13 @@ export function useDecisionConfigWrite() {
   );
 }
 
-export function usePromptsWrite() {
+export function usePromptsMutation() {
   const trpc = useTRPC();
 
   return useConfigWrite(trpc.admin.content.updatePrompts.mutationOptions(), "admin-prompts:save");
 }
 
-export function usePermissionPolicyWrites() {
+export function usePermissionPolicyMutations() {
   const trpc = useTRPC();
 
   return {
@@ -250,7 +250,7 @@ export function usePermissionPolicyWrites() {
   };
 }
 
-export function useSchedulerMonthsWrite() {
+export function useSchedulerMonthsMutation() {
   const trpc = useTRPC();
 
   return useConfigWrite(
@@ -260,7 +260,7 @@ export function useSchedulerMonthsWrite() {
 }
 
 /** Resolves whether the server agreed to restart. */
-export function useRestartServer() {
+export function useRestartServerMutation() {
   const trpc = useTRPC();
   const { showError } = usePlatform();
   const { mutateAsync } = useMutation(

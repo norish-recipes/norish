@@ -8,7 +8,7 @@ import {
 } from "@norish/shared-react/platform/testing";
 
 import { answerCall, failCall, keyOf, resetTRPCFake, serveTRPC } from "../../trpc/testing";
-import { useJobListQuery, useJobQueueMutations, useJobRetentionWrite } from "../use-job-queue";
+import { useJobListQuery, useJobQueueMutations, useJobRetentionMutation } from "../use-job-queue";
 
 vi.mock("../../trpc", async () => (await import("../../trpc/testing")).mockTRPC());
 
@@ -65,11 +65,11 @@ describe("useJobQueueMutations", () => {
   });
 });
 
-describe("useJobRetentionWrite", () => {
+describe("useJobRetentionMutation", () => {
   it("says a retention save failed", async () => {
     const platform = fakePlatformAdapter();
     const wrapper = createTestWrapper(createTestQueryClient(), platform);
-    const { result } = renderHook(() => useJobRetentionWrite(), { wrapper });
+    const { result } = renderHook(() => useJobRetentionMutation(), { wrapper });
     let saved: Promise<void> | undefined;
 
     act(() => {

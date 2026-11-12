@@ -8,7 +8,7 @@ import {
 } from "@norish/shared-react/platform/testing";
 
 import { answerCall, resetTRPCFake, sentCall } from "../../trpc/testing";
-import { useEnrichAllRecipes } from "../use-bulk-enrichment";
+import { useEnrichAllRecipesMutation } from "../use-bulk-enrichment";
 
 vi.mock("../../trpc", async () => (await import("../../trpc/testing")).mockTRPC());
 
@@ -20,10 +20,10 @@ function setUp() {
 
 afterEach(resetTRPCFake);
 
-describe("useEnrichAllRecipes", () => {
+describe("useEnrichAllRecipesMutation", () => {
   it("hands back what a run queued", async () => {
     const { wrapper } = setUp();
-    const { result } = renderHook(() => useEnrichAllRecipes(), { wrapper });
+    const { result } = renderHook(() => useEnrichAllRecipesMutation(), { wrapper });
 
     act(() => result.current.enrichAll(true));
     expect((await sentCall("admin.enrichAllRecipes")).input).toEqual({ replaceExisting: true });
@@ -34,7 +34,7 @@ describe("useEnrichAllRecipes", () => {
 
   it("warns that AI is off when the server says so, and errors otherwise", async () => {
     const { platform, wrapper } = setUp();
-    const { result } = renderHook(() => useEnrichAllRecipes(), { wrapper });
+    const { result } = renderHook(() => useEnrichAllRecipesMutation(), { wrapper });
 
     act(() => result.current.enrichAll(false));
     const off = await sentCall("admin.enrichAllRecipes");

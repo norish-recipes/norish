@@ -16,7 +16,7 @@ const counts = vi.hoisted(() => ({ current: undefined as unknown }));
 vi.mock("@norish/shared-react/admin", async () => ({
   useAdminConfig: (await import("./admin-config-fake")).useAdminConfig,
   useFillGapsCounts: () => counts.current,
-  useFillGaps: () => ({ start, isStarting: false }),
+  useFillGapsMutation: () => ({ start, isStarting: false }),
 }));
 vi.mock("next-intl", () => ({
   useTranslations: () => (key: string, values?: Record<string, unknown>) =>

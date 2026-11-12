@@ -8,7 +8,7 @@ import { useTranslations } from "next-intl";
 
 import type { AutomaticIngredientsConfig } from "@norish/config/zod/server-config";
 import { DEFAULT_AUTOMATIC_INGREDIENTS, ServerConfigKeys } from "@norish/config/zod/server-config";
-import { useAdminConfig, useAIConfigWrite } from "@norish/shared-react/admin";
+import { useAdminConfig, useAIConfigMutations } from "@norish/shared-react/admin";
 
 import { KindsSelect } from "../kinds-select";
 import { useReportDirty } from "../use-report-dirty";
@@ -41,7 +41,7 @@ export default function IngredientCatalogueForm({ onDirtyChange }: IngredientCat
     ServerConfigKeys.IMAGE_GENERATION_CONFIG,
     (config) => (config?.provider ?? "disabled") !== "disabled"
   );
-  const { save: updateAIConfig } = useAIConfigWrite();
+  const { save: updateAIConfig } = useAIConfigMutations();
   const stored = aiConfig?.automaticIngredients ?? DEFAULT_AUTOMATIC_INGREDIENTS;
   const offered = AUTOMATIC_INGREDIENT_KEYS.filter((key) => key !== "icon" || canDrawIcons);
   const [selected, setSelected] = useState<AutomaticIngredient[]>(() => selectedOf(stored));

@@ -12,7 +12,7 @@ export function usePageRenderersQuery() {
 }
 
 /** Saves the page renderers, toasts how it went and reads the setting back. */
-export function usePageRenderersSave() {
+export function usePageRenderersMutation() {
   const trpc = useTRPC();
   const queryClient = useQueryClient();
   const { toast, showError } = usePlatform();
@@ -40,7 +40,7 @@ export function usePageRenderersSave() {
 }
 
 /** Tries one renderer's endpoint; its answer stays on the returned mutation until reset. */
-export function usePageRendererTest() {
+export function usePageRendererTestMutation() {
   const trpc = useTRPC();
 
   return useMutation(trpc.admin.testPageRenderer.mutationOptions());

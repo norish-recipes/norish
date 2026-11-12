@@ -15,7 +15,7 @@ const testDecisionEndpoint = vi.fn();
 
 vi.mock("@norish/shared-react/admin", async () => ({
   useAdminConfig: (await import("./admin-config-fake")).useAdminConfig,
-  useDecisionConfigWrite: () => ({ save: updateDecisionConfig, test: testDecisionEndpoint }),
+  useDecisionConfigMutations: () => ({ save: updateDecisionConfig, test: testDecisionEndpoint }),
   useConfigSecret: () => vi.fn(),
 }));
 

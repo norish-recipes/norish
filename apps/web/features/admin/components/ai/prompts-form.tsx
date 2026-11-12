@@ -7,7 +7,11 @@ import { useTranslations } from "next-intl";
 
 import type { PromptsConfig } from "@norish/config/zod/server-config";
 import { ServerConfigKeys } from "@norish/config/zod/server-config";
-import { useAdminConfig, usePromptsWrite, useRestoreDefault } from "@norish/shared-react/admin";
+import {
+  useAdminConfig,
+  usePromptsMutation,
+  useRestoreDefaultMutation,
+} from "@norish/shared-react/admin";
 
 import { useReportDirty } from "../use-report-dirty";
 
@@ -47,8 +51,8 @@ export default function PromptsForm({ onDirtyChange }: PromptsFormProps) {
   const t = useTranslations("settings.admin.promptsConfig");
   const tActions = useTranslations("common.actions");
   const prompts = useAdminConfig(ServerConfigKeys.PROMPTS);
-  const updatePrompts = usePromptsWrite();
-  const restoreDefaultConfig = useRestoreDefault();
+  const updatePrompts = usePromptsMutation();
+  const restoreDefaultConfig = useRestoreDefaultMutation();
   const [values, setValues] = useState<PromptValues>(EMPTY_VALUES);
   const [saving, setSaving] = useState(false);
   const [restoring, setRestoring] = useState(false);

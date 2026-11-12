@@ -5,7 +5,7 @@ import { ActionButton } from "@/components/shared/action-button";
 import { SparklesIcon } from "@heroicons/react/16/solid";
 import { useTranslations } from "next-intl";
 
-import { useEnrichAllRecipes } from "@norish/shared-react/admin";
+import { useEnrichAllRecipesMutation } from "@norish/shared-react/admin";
 
 import BulkEnrichmentConfirmationModal from "./bulk-enrichment-confirmation-modal";
 
@@ -15,7 +15,7 @@ export default function BulkEnrichmentForm() {
   // Deliberately not remembered between openings: overwriting the library is a
   // choice to make each time, not a setting that lies in wait.
   const [replaceExisting, setReplaceExisting] = useState(false);
-  const { enrichAll, queued, isPending } = useEnrichAllRecipes();
+  const { enrichAll, queued, isPending } = useEnrichAllRecipesMutation();
   const openConfirm = () => {
     setReplaceExisting(false);
     setIsConfirmOpen(true);

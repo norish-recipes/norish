@@ -8,7 +8,7 @@ import {
 } from "@norish/shared-react/platform/testing";
 
 import { answerCall, keyOf, resetTRPCFake, sentCall } from "../../trpc/testing";
-import { useCuisineWrites } from "../use-cuisine-writes";
+import { useCuisineMutations } from "../use-cuisine-mutations";
 
 vi.mock("../../trpc", async () => (await import("../../trpc/testing")).mockTRPC());
 
@@ -27,11 +27,11 @@ function setUp() {
 
 afterEach(resetTRPCFake);
 
-describe("useCuisineWrites", () => {
+describe("useCuisineMutations", () => {
   it("reads the vocabulary again once a cuisine is added", async () => {
     const { stale, wrapper } = setUp();
     const onRefused = vi.fn();
-    const { result } = renderHook(() => useCuisineWrites(onRefused), { wrapper });
+    const { result } = renderHook(() => useCuisineMutations(onRefused), { wrapper });
     let added: Promise<boolean> | undefined;
 
     act(() => {
@@ -47,7 +47,7 @@ describe("useCuisineWrites", () => {
   it("tells a taken name from any other failure", async () => {
     const { stale, wrapper } = setUp();
     const onRefused = vi.fn();
-    const { result } = renderHook(() => useCuisineWrites(onRefused), { wrapper });
+    const { result } = renderHook(() => useCuisineMutations(onRefused), { wrapper });
     let renamed: Promise<boolean> | undefined;
     let removed: Promise<boolean> | undefined;
 
