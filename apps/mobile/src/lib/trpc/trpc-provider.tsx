@@ -67,7 +67,7 @@ function trpcBundleGetHeaders(): Record<string, string> {
     return {};
   }
 
-  const cookies = getCookie(authStorage.getItem(AUTH_COOKIE_KEY));
+  const cookies = getCookie(authStorage().getItem(AUTH_COOKIE_KEY));
 
   return cookies ? { Cookie: cookies } : {};
 }

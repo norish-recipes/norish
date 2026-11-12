@@ -149,8 +149,8 @@ describe("AuthProviders", () => {
     seen.clearedAt.length = 0;
     seen.leftAt = -1;
     // The persisted session an Offline launch falls back on.
-    await authStorage.setItemAsync(AUTH_COOKIE_KEY, JSON.stringify({ token: { value: "t" } }));
-    await authStorage.setItemAsync("norish_session_data", JSON.stringify({ user: USER }));
+    await authStorage().setItemAsync(AUTH_COOKIE_KEY, JSON.stringify({ token: { value: "t" } }));
+    await authStorage().setItemAsync("norish_session_data", JSON.stringify({ user: USER }));
   });
 
   it.each<SessionScope>(["everywhere", "device"])(

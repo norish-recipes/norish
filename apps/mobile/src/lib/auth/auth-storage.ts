@@ -11,8 +11,56 @@ export const AUTH_STORAGE_PREFIX = "norish";
 export const AUTH_COOKIE_KEY = `${AUTH_STORAGE_PREFIX}_cookie`;
 const AUTH_SESSION_DATA_KEY = `${AUTH_STORAGE_PREFIX}_session_data`;
 
-/** SecureStore as the auth client reads it: a large value is stored in chunks. */
-export const authStorage = storageAdapter(SecureStore);
+type ClientStorage = Pick<
+  typeof SecureStore,
+  "getItem" | "getItemAsync" | "setItem" | "setItemAsync"
+>;
+
+/** SecureStore for one client; once retired, its reads answer empty and its writes are dropped. */
+function retirableStorage() {
+  let retired = false;
+  const storage: ClientStorage = {
+    getItem: (...args) => (retired ? null : SecureStore.getItem(...args)),
+    getItemAsync: async (...args) => (retired ? null : SecureStore.getItemAsync(...args)),
+    setItem: (...args) => {
+      if (!retired) SecureStore.setItem(...args);
+    },
+    setItemAsync: async (...args) => {
+      if (!retired) await SecureStore.setItemAsync(...args);
+    },
+  };
+
+  // The plugin queues reads and writes per storage object, so readers share the client's queue.
+  return {
+    storage,
+    adapter: storageAdapter(storage),
+    claimed: false,
+    retire: () => {
+      retired = true;
+    },
+  };
+}
+
+let current = retirableStorage();
+
+/** SecureStore as the current auth client reads it: chunked, and queued behind its writes. */
+export function authStorage() {
+  return current.adapter;
+}
+
+/** The storage a new auth client writes through; a replaced client's is retired first. */
+export function claimClientStorage(): ClientStorage {
+  if (current.claimed) retireClientStorage();
+  current.claimed = true;
+
+  return current.storage;
+}
+
+/** Drops whatever the current client still writes; readers move to a fresh storage. */
+export function retireClientStorage(): void {
+  current.retire();
+  current = retirableStorage();
+}
 
 function readRequiredString(value: unknown): string | null {
   if (typeof value !== "string" || value.length === 0) {
@@ -73,8 +121,8 @@ export async function readPersistedSession(): Promise<SessionUser | null> {
 
   try {
     [authCookie, raw] = await Promise.all([
-      authStorage.getItemAsync(AUTH_COOKIE_KEY),
-      authStorage.getItemAsync(AUTH_SESSION_DATA_KEY),
+      authStorage().getItemAsync(AUTH_COOKIE_KEY),
+      authStorage().getItemAsync(AUTH_SESSION_DATA_KEY),
     ]);
   } catch {
     log.warn("Failed to read persisted auth data from SecureStore");
@@ -114,7 +162,7 @@ export async function clearAuthStorage(): Promise<void> {
   // The adapter has no delete; writing "" through it empties every chunk, then the key goes.
   const wipes = await Promise.allSettled(
     [AUTH_COOKIE_KEY, AUTH_SESSION_DATA_KEY].map(async (key) => {
-      await authStorage.setItemAsync(key, "");
+      await authStorage().setItemAsync(key, "");
       await SecureStore.deleteItemAsync(key);
     })
   );

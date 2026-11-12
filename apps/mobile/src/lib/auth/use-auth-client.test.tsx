@@ -15,6 +15,8 @@ vi.mock("expo-secure-store", () => {
 vi.mock("@/lib/auth/auth-storage", () => ({
   AUTH_STORAGE_PREFIX: "norish",
   clearAuthStorage: async () => {},
+  claimClientStorage: () => ({}),
+  retireClientStorage: () => {},
 }));
 vi.mock("@better-auth/expo/client", () => ({ expoClient: () => ({}) }));
 vi.mock("better-auth/react", () => ({ createAuthClient: () => ({}) }));

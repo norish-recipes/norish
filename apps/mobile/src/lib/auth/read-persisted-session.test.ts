@@ -1,3 +1,4 @@
+import { getAuthClient } from "@/lib/auth/auth-client";
 import { clearAuthStorage, readPersistedSession } from "@/lib/auth/auth-storage";
 import { storageAdapter } from "@better-auth/expo/client";
 import { beforeEach, describe, expect, it, vi } from "vitest";
@@ -16,9 +17,17 @@ const secureStore = vi.hoisted(() => {
   return {
     items,
     getItem: (key: string) => items.get(key) ?? null,
-    getItemAsync: async (key: string) => items.get(key) ?? null,
+    // Each async call crosses the native bridge, so others run in between.
+    getItemAsync: async (key: string) => {
+      await new Promise((bridge) => setTimeout(bridge, 0));
+
+      return items.get(key) ?? null;
+    },
     setItem: (key: string, value: string) => void items.set(key, value),
-    setItemAsync: async (key: string, value: string) => void items.set(key, value),
+    setItemAsync: async (key: string, value: string) => {
+      await new Promise((bridge) => setTimeout(bridge, 0));
+      items.set(key, value);
+    },
     deleteItemAsync: vi.fn(async (key: string): Promise<void> => void items.delete(key)),
   };
 });
@@ -32,7 +41,19 @@ function setSessionData(value: unknown): void {
   sessionDataValue = typeof value === "string" ? value : JSON.stringify(value);
 }
 
+// The storage the live client's expo plugin was handed.
+const pluginStorage = vi.hoisted(() => ({
+  current: null as Parameters<typeof storageAdapter>[0] | null,
+}));
+
 vi.mock("expo-secure-store", () => secureStore);
+vi.mock("@better-auth/expo/client", async (importOriginal) => ({
+  ...(await importOriginal<typeof import("@better-auth/expo/client")>()),
+  expoClient: ({ storage }: { storage: Parameters<typeof storageAdapter>[0] }) => {
+    pluginStorage.current = storage;
+  },
+}));
+vi.mock("better-auth/react", () => ({ createAuthClient: () => ({}) }));
 vi.mock("expo-constants", () => ({ default: {} }));
 vi.mock("expo-linking", () => ({}));
 vi.mock("react-native", () => ({ Platform: { OS: "ios" }, AppState: {} }));
@@ -62,6 +83,25 @@ describe("readPersistedSession", () => {
     cookieValue = "session-token=abc";
 
     await expect(read()).resolves.toEqual(user);
+  });
+
+  it("reads the whole old or new session while the live client rewrites it", async () => {
+    const reader = (id: string) => ({ id, email: `${id}@example.com`, name: id, image: null });
+    const stored = (id: string) =>
+      JSON.stringify({ user: reader(id), session: { padding: id.repeat(5000) } });
+
+    getAuthClient("https://norish.test");
+    const live = storageAdapter(pluginStorage.current ?? secureStore);
+
+    secureStore.items.set(COOKIE_KEY, "session-token=abc");
+    await live.setItemAsync(SESSION_DATA_KEY, stored("b"));
+
+    // A session that fits one entry: the write empties the chunks the read is reading.
+    const writing = live.setItemAsync(SESSION_DATA_KEY, JSON.stringify({ user: reader("c") }));
+    const read = await readPersistedSession();
+
+    await writing;
+    expect([reader("b"), reader("c")]).toContainEqual(read);
   });
 
   it("returns user object for a valid persisted session", async () => {

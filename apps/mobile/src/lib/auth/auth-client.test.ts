@@ -27,12 +27,19 @@ const secureStore = vi.hoisted(() => {
 });
 const pluginStorages = vi.hoisted(() => [] as Storage[]);
 
-vi.mock("@/lib/auth/auth-storage", () => ({ AUTH_STORAGE_PREFIX: "norish", clearAuthStorage }));
-vi.mock("@better-auth/expo/client", () => ({
+vi.mock("@/lib/auth/auth-storage", async (importOriginal) => ({
+  ...(await importOriginal<typeof import("@/lib/auth/auth-storage")>()),
+  clearAuthStorage,
+}));
+vi.mock("@better-auth/expo/client", async (importOriginal) => ({
+  ...(await importOriginal<typeof import("@better-auth/expo/client")>()),
   expoClient: ({ storage }: { storage: Storage }) => void pluginStorages.push(storage),
 }));
 vi.mock("better-auth/react", () => ({ createAuthClient: () => ({}) }));
 vi.mock("expo-secure-store", () => secureStore);
+vi.mock("expo-constants", () => ({ default: {} }));
+vi.mock("expo-linking", () => ({}));
+vi.mock("react-native", () => ({ Platform: { OS: "ios" }, AppState: {} }));
 
 const BASE_URL = "https://norish.test";
 
