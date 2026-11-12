@@ -1,5 +1,4 @@
 import {
-  buildLocaleDisplayMap,
   deviceLanguage,
   matchDeviceLocale,
   normalizeEnabledLocales,
@@ -45,20 +44,6 @@ describe("resolveLocaleSelection", () => {
 
   it("falls back to configured default locale when selection is disabled", () => {
     expect(resolveLocaleSelection("es", enabledLocales, "en")).toBe("en");
-  });
-});
-
-describe("buildLocaleDisplayMap", () => {
-  it("creates selector label map from enabled locales", () => {
-    expect(
-      buildLocaleDisplayMap([
-        { code: "en", name: "English" },
-        { code: "nl", name: "Nederlands" },
-      ])
-    ).toEqual({
-      en: "English",
-      nl: "Nederlands",
-    });
   });
 });
 

@@ -1,8 +1,6 @@
 import type { EnabledLocale } from "@norish/shared-react/config";
 import { DEFAULT_LOCALE, getValidLocale, isValidLocale } from "@norish/i18n/config";
 
-type LocaleDisplayMap = Record<string, string>;
-
 function getLocaleDisplayName(localeCode: string): string {
   try {
     const baseLanguage = localeCode.split("-")[0] ?? localeCode;
@@ -55,16 +53,6 @@ export function resolveLocaleSelection(
   }
 
   return enabledLocales[0]?.code ?? DEFAULT_LOCALE;
-}
-
-export function buildLocaleDisplayMap(locales: EnabledLocale[]): LocaleDisplayMap {
-  const displayMap: LocaleDisplayMap = {};
-
-  for (const locale of locales) {
-    displayMap[locale.code] = locale.name || getLocaleDisplayName(locale.code);
-  }
-
-  return displayMap;
 }
 
 /** The enabled locale nearest a device language tag: an exact match, else the first of its language. */
