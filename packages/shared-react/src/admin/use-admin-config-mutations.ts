@@ -4,7 +4,8 @@ import { useMutation, useQueryClient } from "@tanstack/react-query";
 import type { ServerConfigKey } from "@norish/config/zod/server-config";
 import { ServerConfigKeys } from "@norish/config/zod/server-config";
 
-import type { AuthProvider, WriteResult } from "./types";
+import type { WriteResult } from "../offline/settled";
+import type { AuthProvider } from "./types";
 import { accepted, answered, wentThrough } from "../offline/settled";
 import { usePlatform } from "../platform/platform";
 import { useTRPC } from "../trpc";
@@ -180,6 +181,7 @@ export function useContentConfigMutations() {
 export function useRestoreDefaultMutation() {
   const trpc = useTRPC();
   const reread = useReread();
+
   return useAnsweredWrite(
     trpc.admin.restoreDefault.mutationOptions({
       onSuccess: (result, key: ServerConfigKey) =>

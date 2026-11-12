@@ -5,12 +5,11 @@ import { useMutation } from "@tanstack/react-query";
 import type { UserPreferencesDto } from "@norish/shared/contracts/zod/user";
 import { uploadForm } from "@norish/shared/lib/upload-form";
 
+import type { WriteResult } from "../offline/settled";
 import { accepted, answered, settled } from "../offline/settled";
 import { showRefusal, usePlatform } from "../platform";
 import { useTRPC } from "../trpc";
 import { useProfileCache } from "./use-profile";
-
-type Answer = { success: boolean; error?: string };
 
 /** A failed write's `onError`: reread the profile and tell the reader. */
 function useFailedWrite() {
@@ -31,7 +30,7 @@ export function useProfileMutations() {
   const failed = useFailedWrite();
 
   const settle = (context: string) => ({
-    onSuccess: (answer: Answer & { user?: Parameters<typeof mergeUser>[0] }) => {
+    onSuccess: (answer: WriteResult & { user?: Parameters<typeof mergeUser>[0] }) => {
       if (answer.success && answer.user) mergeUser(answer.user);
       else if (!answer.success) showRefusal(showError, answer, context);
     },

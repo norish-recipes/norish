@@ -47,6 +47,3 @@ export type AdminConfigKey = keyof AdminConfigs;
 
 /** An OAuth sign-in provider. */
 export type AuthProvider = "oidc" | "github" | "google";
-
-/** A config write's answer: a refused one says why. */
-export type WriteResult = { success: boolean; error?: string };

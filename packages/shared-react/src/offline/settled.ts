@@ -1,3 +1,6 @@
+/** A write's answer: a refused one says why. */
+export type WriteResult = { success: boolean; error?: string };
+
 /** Resolves once a write settles; its `onError` already told the reader, the caller only waits to go on. */
 export const settled = (write: Promise<unknown>): Promise<void> =>
   write.then(
