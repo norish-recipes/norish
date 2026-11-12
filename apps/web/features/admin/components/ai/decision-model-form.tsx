@@ -24,6 +24,7 @@ import {
 } from "@norish/shared-react/admin";
 
 import { ConnectionTestResult } from "../connection-test-result";
+import { KindsSelect } from "../kinds-select";
 import { useReportDirty } from "../use-report-dirty";
 
 interface DecisionModelFormProps {
@@ -94,10 +95,6 @@ export default function DecisionModelForm({ onDirtyChange }: DecisionModelFormPr
     // A key is issued by a provider and only that provider accepts it.
     setApiKey("");
     setTestResult(null);
-  };
-
-  const handleUsesChange = (selected: string[]) => {
-    setUses(DECISION_USES.filter((use) => selected.includes(use)));
   };
 
   const handleTest = async () => {
@@ -181,45 +178,18 @@ export default function DecisionModelForm({ onDirtyChange }: DecisionModelFormPr
       )}
 
       <SettingRow title={t("uses")}>
-        <Select
-          aria-label={t("uses")}
-          className="w-full"
+        <KindsSelect
           isDisabled={!enabled}
+          label={t("uses")}
+          options={DECISION_USES.map((use) => ({
+            id: use,
+            label: t(`useNames.${use}`),
+            description: t(`useNames.${use}Description`),
+          }))}
           placeholder={t("usesPlaceholder")}
-          selectionMode="multiple"
           value={uses}
-          variant="secondary"
-          onChange={(selected) => handleUsesChange(selected.map(String))}
-        >
-          <Label className="sr-only">{t("uses")}</Label>
-          <Select.Trigger>
-            <Select.Value className="min-w-0">
-              {({ defaultChildren, isPlaceholder }) =>
-                isPlaceholder ? (
-                  defaultChildren
-                ) : (
-                  <span className="block truncate">
-                    {uses.map((use) => t(`useNames.${use}`)).join(", ")}
-                  </span>
-                )
-              }
-            </Select.Value>
-            <Select.Indicator />
-          </Select.Trigger>
-          <Select.Popover>
-            <ListBox selectionMode="multiple">
-              {DECISION_USES.map((use) => (
-                <ListBox.Item key={use} id={use} textValue={t(`useNames.${use}`)}>
-                  <div className="flex flex-col">
-                    <span>{t(`useNames.${use}`)}</span>
-                    <span className="text-muted text-xs">{t(`useNames.${use}Description`)}</span>
-                  </div>
-                  <ListBox.ItemIndicator />
-                </ListBox.Item>
-              ))}
-            </ListBox>
-          </Select.Popover>
-        </Select>
+          onChange={setUses}
+        />
       </SettingRow>
 
       <ConnectionTestResult result={testResult} successLabel={t("connectionSuccess")} />
