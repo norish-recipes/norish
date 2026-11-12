@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect } from "react";
-import AuthLanguageSelector from "@/components/shared/auth-language-selector";
+import { AuthLanguageSelector } from "@/components/shared/auth-language-selector";
 import { NotFoundView } from "@/components/shared/not-found-view";
 import { TimerTicker } from "@/components/timer-dock";
 import RecipePageTint from "@/features/recipes/components/read-only/recipe-page-tint";

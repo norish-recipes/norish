@@ -1,6 +1,6 @@
 "use client";
 
-import AuthLanguageSelector from "@/components/shared/auth-language-selector";
+import { AuthLanguageSelector } from "@/components/shared/auth-language-selector";
 import CookingTimeCard from "@/features/recipes/components/read-only/cooking-time-card";
 import { ReadonlyNutritionCard } from "@/features/recipes/components/read-only/readonly-nutrition";
 import {

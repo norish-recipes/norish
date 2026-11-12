@@ -60,4 +60,3 @@ export function AuthLanguageSelector() {
     </Dropdown>
   );
 }
-export default AuthLanguageSelector;
