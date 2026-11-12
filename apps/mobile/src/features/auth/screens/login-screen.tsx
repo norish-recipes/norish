@@ -1,7 +1,7 @@
 import type { AuthClient } from "@/lib/auth/auth-client";
 import React, { use } from "react";
 import { Text, View } from "react-native";
-import Animated from "react-native-reanimated";
+import Animated, { Easing, LinearTransition } from "react-native-reanimated";
 import { Brand } from "@/components/brand";
 import { AuthLayout } from "@/features/auth/components/auth-layout";
 import { PasswordForm } from "@/features/auth/components/password-form";
@@ -22,6 +22,8 @@ import { Button, Separator, Spinner } from "heroui-native";
 import { useIntl } from "react-intl";
 
 import { useAuthProvidersQuery } from "@norish/shared-react/config";
+
+const GLIDE = LinearTransition.duration(240).easing(Easing.out(Easing.cubic));
 
 /** A title, a line and at most one action, where the form would be. */
 function LoginStatus({
@@ -124,21 +126,24 @@ export function LoginScreen() {
 
   return (
     <AuthLayout footer={serverAddress ? <ServerChip address={serverAddress} /> : null}>
-      <Brand compact prefix={intl.formatMessage({ id: "auth.login.title" })} />
-      <View className="mt-7">
-        {authClient === null ? (
-          <LoginStatus
-            action={{
-              label: intl.formatMessage({ id: "auth.connect.openConnect" }),
-              onPress: () => router.replace("/(auth)"),
-            }}
-            description={intl.formatMessage({ id: "auth.connect.backendRequiredDescription" })}
-            title={intl.formatMessage({ id: "auth.connect.backendRequiredTitle" })}
-          />
-        ) : (
-          <SignInMethods authClient={authClient} redirectTo={redirectTo} />
-        )}
-      </View>
+      {/* The centred block glides to fit the methods as they replace the spinner; Reduce Motion cuts. */}
+      <Animated.View layout={GLIDE}>
+        <Brand compact prefix={intl.formatMessage({ id: "auth.login.title" })} />
+        <View className="mt-7">
+          {authClient === null ? (
+            <LoginStatus
+              action={{
+                label: intl.formatMessage({ id: "auth.connect.openConnect" }),
+                onPress: () => router.replace("/(auth)"),
+              }}
+              description={intl.formatMessage({ id: "auth.connect.backendRequiredDescription" })}
+              title={intl.formatMessage({ id: "auth.connect.backendRequiredTitle" })}
+            />
+          ) : (
+            <SignInMethods authClient={authClient} redirectTo={redirectTo} />
+          )}
+        </View>
+      </Animated.View>
     </AuthLayout>
   );
 }
