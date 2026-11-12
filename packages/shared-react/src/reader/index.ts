@@ -37,5 +37,6 @@ export {
   useProfileMutations,
 } from "./use-account-mutations";
 export { useAllergiesMutation, useAllergiesQuery } from "./use-allergies";
-export { useLocaleSave, useProfileQuery, useSignInMethodsQuery, type Profile } from "./use-profile";
+export { useLocaleSave } from "./use-locale-save";
+export { useProfileQuery, useSignInMethodsQuery, type Profile } from "./use-profile";
 export { useSiteAuthTokenMutations, useSiteAuthTokensQuery } from "./use-site-auth-tokens";
