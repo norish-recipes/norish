@@ -1,9 +1,12 @@
 import {
   buildLocaleDisplayMap,
+  matchDeviceLocale,
   normalizeEnabledLocales,
   resolveLocaleSelection,
 } from "@/lib/i18n/locale-state";
 import { describe, expect, it } from "vitest";
+
+import { getBundledLocales } from "@norish/i18n/locales";
 
 describe("normalizeEnabledLocales", () => {
   it("filters invalid locale codes", () => {
@@ -55,5 +58,31 @@ describe("buildLocaleDisplayMap", () => {
       en: "English",
       nl: "Nederlands",
     });
+  });
+});
+
+describe("matchDeviceLocale", () => {
+  const bundled = getBundledLocales();
+  const signedOutLocale = (device: string) =>
+    resolveLocaleSelection(matchDeviceLocale(device, bundled), bundled, "en");
+
+  it("takes an exact match", () => {
+    expect(signedOutLocale("nl")).toBe("nl");
+    expect(signedOutLocale("pt-BR")).toBe("pt-BR");
+  });
+
+  it("falls back from a region to its language", () => {
+    expect(signedOutLocale("nl-BE")).toBe("nl");
+    expect(signedOutLocale("pt-PT")).toBe("pt-BR");
+    expect(signedOutLocale("nb-NO")).toBe("no");
+  });
+
+  it("gives German the first German variant", () => {
+    expect(signedOutLocale("de-DE")).toBe("de-formal");
+    expect(signedOutLocale("de-CH")).toBe("de-formal");
+  });
+
+  it("falls back to English when no locale matches", () => {
+    expect(signedOutLocale("ja-JP")).toBe("en");
   });
 });

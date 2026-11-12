@@ -9,7 +9,28 @@
     "backgroundColor": "#F8F3E7",
     "ios": {
       "bundleIdentifier": "dev.norish.app",
-      "supportsTablet": false
+      "supportsTablet": false,
+      "infoPlist": {
+        "CFBundleLocalizations": [
+          "en",
+          "nl",
+          "de",
+          "fr",
+          "es",
+          "ru",
+          "ko",
+          "nb",
+          "pl",
+          "da",
+          "it",
+          "pt-BR",
+          "bg",
+          "fi",
+          "uk",
+          "sv",
+          "ar"
+        ]
+      }
     },
     "android": {
       "package": "dev.norish.app",

@@ -1,5 +1,9 @@
 import React, { createContext, useContext, useEffect, useMemo, useState } from "react";
-import { buildLocaleDisplayMap, resolveLocaleSelection } from "@/lib/i18n/locale-state";
+import {
+  buildLocaleDisplayMap,
+  matchDeviceLocale,
+  resolveLocaleSelection,
+} from "@/lib/i18n/locale-state";
 import { publishLocale } from "@/lib/i18n/locale-store";
 import {
   loadLocalePreference,
@@ -43,6 +47,9 @@ const FALLBACK_MESSAGES: Record<string, unknown> = {
 };
 
 const BUNDLED_LOCALES: EnabledLocale[] = getBundledLocales();
+
+// Hermes reads the app's iOS language, which the per-app language setting changes with a relaunch.
+const DEVICE_LOCALE = Intl.DateTimeFormat().resolvedOptions().locale;
 
 function resolveLocaleOptions(
   bundledLocales: EnabledLocale[],
@@ -104,9 +111,15 @@ export function MobileIntlProvider({
     return bundledCodes.has(configuredDefaultLocale) ? configuredDefaultLocale : DEFAULT_LOCALE;
   }, [configuredDefaultLocale, localeOptions]);
 
+  // Signed out, the screens follow the device language.
   const activeLocale = useMemo(
-    () => resolveLocaleSelection(preferredLocale, localeOptions, effectiveDefaultLocale),
-    [effectiveDefaultLocale, localeOptions, preferredLocale]
+    () =>
+      resolveLocaleSelection(
+        signedIn ? preferredLocale : matchDeviceLocale(DEVICE_LOCALE, localeOptions),
+        localeOptions,
+        effectiveDefaultLocale
+      ),
+    [effectiveDefaultLocale, localeOptions, preferredLocale, signedIn]
   );
 
   const localeNames = useMemo(() => buildLocaleDisplayMap(localeOptions), [localeOptions]);
@@ -211,17 +224,14 @@ export function MobileIntlFallbackProvider({ children }: { children: React.React
   const localeOptions = BUNDLED_LOCALES;
   const localeNames = useMemo(() => buildLocaleDisplayMap(localeOptions), [localeOptions]);
   const activeLocale = useMemo(
-    () => resolveLocaleSelection(preferredLocale, localeOptions, DEFAULT_LOCALE),
+    () =>
+      resolveLocaleSelection(
+        preferredLocale ?? matchDeviceLocale(DEVICE_LOCALE, localeOptions),
+        localeOptions,
+        DEFAULT_LOCALE
+      ),
     [preferredLocale, localeOptions]
   );
-
-  useEffect(() => {
-    const storedLocale = loadLocalePreference();
-
-    if (storedLocale) {
-      setPreferredLocale(storedLocale);
-    }
-  }, []);
 
   useEffect(() => {
     let isMounted = true;

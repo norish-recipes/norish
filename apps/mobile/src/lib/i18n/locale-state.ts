@@ -66,3 +66,20 @@ export function buildLocaleDisplayMap(locales: EnabledLocale[]): LocaleDisplayMa
 
   return displayMap;
 }
+
+/** The enabled locale nearest a device language tag: an exact match, else the first of its language. */
+export function matchDeviceLocale(
+  deviceLocale: string,
+  enabledLocales: EnabledLocale[]
+): string | null {
+  const codes = enabledLocales.map((locale) => locale.code);
+  const exact = codes.find((code) => code.toLowerCase() === deviceLocale.toLowerCase());
+
+  if (exact) return exact;
+
+  const language = deviceLocale.split("-")[0]?.toLowerCase();
+  // iOS names Norwegian Bokmål and Nynorsk `nb` and `nn`; the catalogue has one `no`.
+  const base = language === "nb" || language === "nn" ? "no" : language;
+
+  return codes.find((code) => code.split("-")[0] === base) ?? null;
+}
