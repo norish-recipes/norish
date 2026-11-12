@@ -1,4 +1,4 @@
-import { beforeEach, describe, expect, it, vi } from "vitest";
+import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 
 const order = vi.hoisted(() => [] as string[]);
 const resetAuthClientStorage = vi.hoisted(() => vi.fn());
@@ -21,6 +21,8 @@ describe("endSession", () => {
       .mockImplementation(async () => void order.push("stored session reset"));
   });
 
+  afterEach(() => vi.useRealTimers());
+
   it("ends the session on the server, then closes the connections and resets the stored session", async () => {
     await endSession(authClient);
 
@@ -33,5 +35,17 @@ describe("endSession", () => {
 
     await expect(endSession(authClient)).resolves.toBeUndefined();
     expect(order).toEqual(["closed"]);
+  });
+
+  it("gives up on a stalled server after 5 s and still ends it on this device", async () => {
+    vi.useFakeTimers();
+    authClient.signOut.mockReturnValue(new Promise(() => {}));
+
+    const ending = endSession(authClient);
+
+    await vi.advanceTimersByTimeAsync(5_000);
+    await ending;
+
+    expect(order).toEqual(["closed", "stored session reset"]);
   });
 });
