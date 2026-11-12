@@ -6,6 +6,7 @@ import type { AppRouter } from "@norish/trpc/client";
 
 import { usePlatform } from "../platform/platform";
 import { useTRPC } from "../trpc";
+import { projectedMutation } from "../trpc/projected-mutation";
 import { useCatalogueFailure } from "./use-catalogue-failure";
 
 type CorrectionInput = Omit<
@@ -81,21 +82,23 @@ export function useNutritionCorrection(ingredientId: string) {
       ]),
   });
 
-  const { mutationKey: correctKey, mutationFn: sendCorrection } =
-    trpc.ingredients.correctNutrition.mutationOptions();
   const correct = useMutation({
-    mutationKey: correctKey,
-    mutationFn: (
-      { correction }: { correction: CorrectionInput; shown: IngredientNutrition | null },
-      context
-    ) => sendCorrection!({ ingredientId, ...correction }, context),
+    ...projectedMutation(
+      trpc.ingredients.correctNutrition.mutationOptions(),
+      ({ correction }: { correction: CorrectionInput; shown: IngredientNutrition | null }) => ({
+        ingredientId,
+        ...correction,
+      })
+    ),
     ...answer("saved"),
   });
-  const { mutationKey: removeKey, mutationFn: sendRemoval } =
-    trpc.ingredients.removeNutritionCorrection.mutationOptions();
   const remove = useMutation({
-    mutationKey: removeKey,
-    mutationFn: (_removal: void, context) => sendRemoval!({ ingredientId }, context),
+    ...projectedMutation(
+      trpc.ingredients.removeNutritionCorrection.mutationOptions(),
+      (_removal: void) => ({
+        ingredientId,
+      })
+    ),
     ...answer("removed"),
   });
 

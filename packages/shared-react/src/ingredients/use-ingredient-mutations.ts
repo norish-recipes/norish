@@ -4,6 +4,7 @@ import type { IngredientDraft } from "./types";
 import { wentThrough } from "../offline/settled";
 import { usePlatform } from "../platform/platform";
 import { useTRPC } from "../trpc";
+import { projectedMutation } from "../trpc/projected-mutation";
 import { useCatalogueFailure } from "./use-catalogue-failure";
 import { useIngredientCache } from "./use-ingredient-cache";
 
@@ -27,23 +28,19 @@ export function useIngredientMutations() {
   });
 
   // The draft carries what the row shows (the parent's names, the icon's address) beside what is sent.
-  const { mutationKey: draftKey, mutationFn: sendDraft } =
-    trpc.ingredients.saveDraft.mutationOptions();
   const saveDraft = useMutation({
-    mutationKey: draftKey,
-    mutationFn: (draft: IngredientDraft, context) =>
-      sendDraft!(
-        {
-          ingredientId: draft.ingredientId,
-          ...(draft.name !== undefined ? { name: draft.name } : {}),
-          ...(draft.parent !== undefined ? { parentId: draft.parent?.id ?? null } : {}),
-          add: draft.add,
-          remove: draft.remove,
-          junk: draft.junk,
-          ...(draft.icon !== undefined ? { icon: draft.icon?.file ?? null } : {}),
-        },
-        context
-      ),
+    ...projectedMutation(
+      trpc.ingredients.saveDraft.mutationOptions(),
+      (draft: IngredientDraft) => ({
+        ingredientId: draft.ingredientId,
+        ...(draft.name !== undefined ? { name: draft.name } : {}),
+        ...(draft.parent !== undefined ? { parentId: draft.parent?.id ?? null } : {}),
+        add: draft.add,
+        remove: draft.remove,
+        junk: draft.junk,
+        ...(draft.icon !== undefined ? { icon: draft.icon?.file ?? null } : {}),
+      })
+    ),
     onMutate: (draft) =>
       cache.patchRow(draft.ingredientId, (row) => ({
         ...row,
@@ -78,14 +75,14 @@ export function useIngredientMutations() {
     })
   );
 
-  const { mutationKey: moveKey, mutationFn: sendMove } =
-    trpc.ingredients.moveAlias.mutationOptions();
   const moveAlias = useMutation({
-    mutationKey: moveKey,
-    mutationFn: (
-      move: { ingredientId: string; aliasId: string; targetId: string | null },
-      context
-    ) => sendMove!({ aliasId: move.aliasId, targetId: move.targetId }, context),
+    ...projectedMutation(
+      trpc.ingredients.moveAlias.mutationOptions(),
+      (move: { ingredientId: string; aliasId: string; targetId: string | null }) => ({
+        aliasId: move.aliasId,
+        targetId: move.targetId,
+      })
+    ),
     onMutate: ({ ingredientId, aliasId }) =>
       cache.patchRow(ingredientId, (row) => ({
         ...row,
@@ -94,13 +91,14 @@ export function useIngredientMutations() {
     ...refused("move-alias"),
   });
 
-  const { mutationKey: mergeKey, mutationFn: sendMerge } = trpc.ingredients.merge.mutationOptions();
   const merge = useMutation({
-    mutationKey: mergeKey,
-    mutationFn: (
-      merge: { sourceId: string; targetId: string; name: string; into: string },
-      context
-    ) => sendMerge!({ sourceId: merge.sourceId, targetId: merge.targetId }, context),
+    ...projectedMutation(
+      trpc.ingredients.merge.mutationOptions(),
+      (merge: { sourceId: string; targetId: string; name: string; into: string }) => ({
+        sourceId: merge.sourceId,
+        targetId: merge.targetId,
+      })
+    ),
     // Merged away, the food is gone; the toast says where it went and how to get it back.
     onMutate: ({ sourceId, name, into }) => {
       cache.dropRow(sourceId);
