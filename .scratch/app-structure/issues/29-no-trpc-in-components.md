@@ -4,7 +4,7 @@
 
 **Blocked by:** 25, 26, 27, 28
 
-**Status:** ready-for-agent
+**Status:** done
 
 - [x] Each remaining `useTRPC` and `useTRPCClient` call in web moves into a shared-react hook of the domain it reads:
   - groceries: the list and Pantry screens, the delete-store modal, `use-ingredient-for`, the store products' query and mutations;
@@ -26,3 +26,7 @@
 - The delete-store confirm reads its count from content mounted only while open, which also starts each opening on "keep". `useChooseProduct`'s reread and refusal toast moved into `useMutation`'s options (`showError`, same copy and log context). The share panel's create uses the hook's `createShare` (`answered`). The unused `NutritionGapEstimate` import and the moved hooks' memos went.
 - E2E: the offline, pantry, grocery-prices and ingredient-linking (share page) specs pass, 49/49. No spec drives the share panel's create. The whole-suite box is the gatekeeper's.
 
+- Review (Opus 5.5 xhigh on standards, Fable 5.2 high on spec, since the ticket touches offline sync), fixed in 65e7d7588..38475a80e. The spec axis compared every moved call with the code before the ticket and found each the same request; `OfflineController` and `useOfflineStatus` read the same tRPC context the apps read one level up, so each app keeps its client and link chain, and what the Warm Set warms and the cache manager persists is untouched.
+- `useWarmSet` reads the proxy itself. One `useIngredientSearchQuery(search | null, locale, { listedOnly }?)` serves the Pantry and the pickers. `useIngredientFor` is web's (`features/groceries/hooks/`), composing `useIngredientsNamed` from `ingredients` with the own-Ingredient check, so the read is never stale until the catalogue's subscription marks it. `useHeldRecipeName` takes `null`. `DEFAULT_TIMER_KEYWORDS` and its cache times are `config/`'s, and `useSharePublicConfigQuery` takes a `select`. A failed locale save on mobile no longer rejects unhandled (test first). The lint test pins re-exports and type-only imports as banned.
+- Rejected: `null` inputs for `useShopSearch` and `useStoreProducts` (the field shows a disabled observer's answer, and a reshaping of this path failed `grocery-prices` 3/3); reshaping `useLocaleSave(signedIn)` (a move, with no device tests in this run); dropping `restrictTRPC`'s exceptions parameter (the ticket asks for named exceptions); stripping hand-written memos from files only edited here; the cache-only flags in web's prefetch and back-link hooks.
+- The whole-suite E2E box is ticked by the final pass.
