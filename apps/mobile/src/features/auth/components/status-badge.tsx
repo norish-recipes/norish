@@ -129,24 +129,39 @@ export function StatusBadge({ variant }: { variant: StatusBadgeVariant }) {
         </Svg>
       </View>
       <Animated.View style={[styles.fill, shakeStyle]}>
-        <Svg height={72} width={72}>
-          <Circle cx={36} cy={36} fill={soft} r={36} />
-          <G {...GLYPH_PROPS} stroke={color} transform={GLYPH}>
-            {glyph}
-          </G>
-        </Svg>
+        <Glyph color={color} ground={soft}>
+          {glyph}
+        </Glyph>
         {arrow ? (
           <Animated.View style={[styles.fill, arrowStyle]}>
-            <Svg height={72} width={72}>
-              <G {...GLYPH_PROPS} stroke={color} transform={GLYPH}>
-                <Path d="m16 12-4-4-4 4" />
-                <Path d="M12 16V8" />
-              </G>
-            </Svg>
+            <Glyph color={color}>
+              <Path d="m16 12-4-4-4 4" />
+              <Path d="M12 16V8" />
+            </Glyph>
           </Animated.View>
         ) : null}
       </Animated.View>
     </Pressable>
+  );
+}
+
+/** The board's 24-unit glyph on the 72pt badge, over its soft ground when given. */
+function Glyph({
+  color,
+  ground,
+  children,
+}: {
+  color: string;
+  ground?: string;
+  children: ReactNode;
+}) {
+  return (
+    <Svg height={72} width={72}>
+      {ground ? <Circle cx={36} cy={36} fill={ground} r={36} /> : null}
+      <G {...GLYPH_PROPS} stroke={color} transform={GLYPH}>
+        {children}
+      </G>
+    </Svg>
   );
 }
 
