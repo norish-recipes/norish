@@ -304,6 +304,8 @@
   },
   "household": {
     "adminTransferred": "Overførte administrator til {name}",
-    "unknownMember": "Ukjent"
+    "unknownMember": "Ukjent",
+    "removedTitle": "Fjernet fra husstanden",
+    "removedDescription": "En administrator har fjernet deg fra husstanden."
   }
 }

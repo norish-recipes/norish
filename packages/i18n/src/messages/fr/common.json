@@ -304,6 +304,8 @@
   },
   "household": {
     "adminTransferred": "Privilèges admin transférés à {name}",
-    "unknownMember": "Inconnu"
+    "unknownMember": "Inconnu",
+    "removedTitle": "Retiré du foyer",
+    "removedDescription": "Un administrateur vous a retiré du foyer."
   }
 }

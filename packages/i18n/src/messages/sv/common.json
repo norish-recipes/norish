@@ -304,6 +304,8 @@
   },
   "household": {
     "adminTransferred": "Administratörsbehörigheten har överförts till {name}",
-    "unknownMember": "Okänd"
+    "unknownMember": "Okänd",
+    "removedTitle": "Borttagen från hushållet",
+    "removedDescription": "En administratör har tagit bort dig från hushållet."
   }
 }

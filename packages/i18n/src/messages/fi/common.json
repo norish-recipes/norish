@@ -304,6 +304,8 @@
   },
   "household": {
     "adminTransferred": "Ylläpito siirrettiin käyttäjälle {name}",
-    "unknownMember": "Tuntematon"
+    "unknownMember": "Tuntematon",
+    "removedTitle": "Poistettu kotitaloudesta",
+    "removedDescription": "Ylläpitäjä poisti sinut kotitaloudesta."
   }
 }

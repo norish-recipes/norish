@@ -51,8 +51,8 @@ export function useHouseholdSubscription() {
     onEvent: () => {
       toast.show({
         severity: "warning",
-        title: "Removed from household",
-        description: "You have been removed from the household by an admin.",
+        title: toast.translate("common.household.removedTitle"),
+        description: toast.translate("common.household.removedDescription"),
       });
 
       // Clear household from cache

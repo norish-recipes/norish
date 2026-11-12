@@ -304,6 +304,8 @@
   },
   "household": {
     "adminTransferred": "Adminrechten overgedragen aan {name}",
-    "unknownMember": "Onbekend"
+    "unknownMember": "Onbekend",
+    "removedTitle": "Verwijderd uit huishouden",
+    "removedDescription": "Een admin heeft je uit het huishouden verwijderd."
   }
 }

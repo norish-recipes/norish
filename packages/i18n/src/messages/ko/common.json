@@ -304,6 +304,8 @@
   },
   "household": {
     "adminTransferred": "관리자를 {name}(으)로 이전했습니다.",
-    "unknownMember": "알 수 없음"
+    "unknownMember": "알 수 없음",
+    "removedTitle": "가구에서 제거됨",
+    "removedDescription": "관리자가 회원님을 가구에서 제거했습니다."
   }
 }

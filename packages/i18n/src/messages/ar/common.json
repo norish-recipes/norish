@@ -304,6 +304,8 @@
   },
   "household": {
     "adminTransferred": "نُقلت صلاحيات المسؤول إلى {name}",
-    "unknownMember": "غير معروف"
+    "unknownMember": "غير معروف",
+    "removedTitle": "تمت إزالتك من الأسرة",
+    "removedDescription": "أزالك أحد المسؤولين من الأسرة."
   }
 }

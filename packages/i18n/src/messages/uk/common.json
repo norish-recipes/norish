@@ -304,6 +304,8 @@
   },
   "household": {
     "adminTransferred": "Права адміністратора передано користувачу {name}",
-    "unknownMember": "Невідомо"
+    "unknownMember": "Невідомо",
+    "removedTitle": "Вилучено з домогосподарства",
+    "removedDescription": "Адміністратор вилучив вас із домогосподарства."
   }
 }

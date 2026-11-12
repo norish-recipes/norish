@@ -303,7 +303,11 @@ describe("useHouseholdSubscription", () => {
 
       await waitFor(() => expect(result.current.household).toBeNull());
       expect(adapter.toast.show).toHaveBeenCalledWith(
-        expect.objectContaining({ severity: "warning", title: "Removed from household" })
+        {
+          severity: "warning",
+          title: "common.household.removedTitle",
+          description: "common.household.removedDescription",
+        }
       );
     });
   });

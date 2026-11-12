@@ -304,6 +304,8 @@
   },
   "household": {
     "adminTransferred": "Admin übertragen an {name}",
-    "unknownMember": "Unbekannt"
+    "unknownMember": "Unbekannt",
+    "removedTitle": "Aus dem Haushalt entfernt",
+    "removedDescription": "Ein Admin hat Sie aus dem Haushalt entfernt."
   }
 }

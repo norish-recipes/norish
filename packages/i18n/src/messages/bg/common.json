@@ -304,6 +304,8 @@
   },
   "household": {
     "adminTransferred": "Администраторските права бяха прехвърлени на {name}",
-    "unknownMember": "Неизвестно"
+    "unknownMember": "Неизвестно",
+    "removedTitle": "Премахнати от домакинството",
+    "removedDescription": "Администратор ви премахна от домакинството."
   }
 }

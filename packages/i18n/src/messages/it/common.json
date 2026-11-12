@@ -304,6 +304,8 @@
   },
   "household": {
     "adminTransferred": "Privilegi di amministratore trasferiti a {name}",
-    "unknownMember": "Sconosciuto"
+    "unknownMember": "Sconosciuto",
+    "removedTitle": "Rimosso dalla famiglia",
+    "removedDescription": "Un amministratore ti ha rimosso dalla famiglia."
   }
 }

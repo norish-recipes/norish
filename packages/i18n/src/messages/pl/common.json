@@ -304,6 +304,8 @@
   },
   "household": {
     "adminTransferred": "Przekazano administratora użytkownikowi {name}",
-    "unknownMember": "Nieznany"
+    "unknownMember": "Nieznany",
+    "removedTitle": "Usunięto z gospodarstwa domowego",
+    "removedDescription": "Administrator usunął Cię z gospodarstwa domowego."
   }
 }
