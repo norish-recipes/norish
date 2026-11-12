@@ -22,8 +22,7 @@ vi.mock("@better-auth/expo/client", () => ({ expoClient: () => ({}) }));
 vi.mock("better-auth/react", () => ({ createAuthClient: () => ({}) }));
 
 const { useAuthClient } = await import("@/lib/auth/use-auth-client");
-const { ServerAddressContext, saveServerAddress } =
-  await import("@/lib/network/server-address");
+const { ServerAddressContext, saveServerAddress } = await import("@/lib/network/server-address");
 
 const URL = "https://norish.test";
 

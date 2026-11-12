@@ -3,8 +3,8 @@ import type { TRPCLink } from "@trpc/client";
 import React, { useMemo, useSyncExternalStore } from "react";
 import { getAuthTransportSnapshot, subscribeAuthTransport } from "@/lib/auth/auth-session-sync";
 import { AUTH_COOKIE_KEY, authStorage } from "@/lib/auth/auth-storage";
-import { getServerAddress } from "@/lib/network/server-address";
 import { getBackendWsUrl } from "@/lib/network/backend-ws-url";
+import { getServerAddress } from "@/lib/network/server-address";
 import { getCookie } from "@better-auth/expo/client";
 
 import type { AppRouter } from "@norish/trpc/client";
