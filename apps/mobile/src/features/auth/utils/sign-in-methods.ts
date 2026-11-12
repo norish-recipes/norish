@@ -13,11 +13,16 @@ export type SignInMethods = {
   noMethod: boolean;
 };
 
-export function resolveSignInMethods({
-  providers,
+/** Sign up exists only where the server takes registrations and the password form it uses. */
+export function isSignUpOpen({
   passwordAuthEnabled,
   registrationEnabled,
-}: AuthProvidersResponse): SignInMethods {
+}: Pick<AuthProvidersResponse, "passwordAuthEnabled" | "registrationEnabled">): boolean {
+  return passwordAuthEnabled && registrationEnabled;
+}
+
+export function resolveSignInMethods(config: AuthProvidersResponse): SignInMethods {
+  const { providers, passwordAuthEnabled } = config;
   const oauthProviders = providers.filter((provider) => toProviderType(provider) === "oauth");
   const providerButtons = oauthProviders.length > 0;
 
@@ -26,7 +31,7 @@ export function resolveSignInMethods({
     oauthProviders,
     providerButtons,
     divider: passwordAuthEnabled && providerButtons,
-    signUp: passwordAuthEnabled && registrationEnabled,
+    signUp: isSignUpOpen(config),
     noMethod: !passwordAuthEnabled && !providerButtons,
   };
 }

@@ -1,4 +1,8 @@
-import { resolveMethodsStatus, resolveSignInMethods } from "@/features/auth/utils/sign-in-methods";
+import {
+  isSignUpOpen,
+  resolveMethodsStatus,
+  resolveSignInMethods,
+} from "@/features/auth/utils/sign-in-methods";
 import { describe, expect, it } from "vitest";
 
 import type { ProviderInfo } from "@norish/shared/contracts";
@@ -94,5 +98,15 @@ describe("resolveMethodsStatus", () => {
       "ready"
     );
     expect(resolveMethodsStatus({ ...settled, hasData: true, isPaused: true })).toBe("ready");
+  });
+});
+
+describe("isSignUpOpen", () => {
+  const config = { providers: [], passwordAuthEnabled: true, registrationEnabled: true };
+
+  it("is open only when registration and password sign-in are both on", () => {
+    expect(isSignUpOpen(config)).toBe(true);
+    expect(isSignUpOpen({ ...config, registrationEnabled: false })).toBe(false);
+    expect(isSignUpOpen({ ...config, passwordAuthEnabled: false })).toBe(false);
   });
 });
