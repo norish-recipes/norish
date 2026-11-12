@@ -16,14 +16,16 @@ export default async function LoginPage({ searchParams }: PageProps<"/login">) {
   const { callbackUrl, logout } = await searchParams;
   const justLoggedOut = logout === "true";
 
-  // Only auto-redirect for single OAuth provider
-  const oauthProviders = providers.filter((p) => p.type === "oauth");
-  const hasCredential = providers.some((p) => p.type === "credential");
-  const shouldAutoRedirect = oauthProviders.length === 1 && !hasCredential && !justLoggedOut;
+  // One OAuth provider and nothing else signs straight in, unless the reader just signed out.
+  const [onlyProvider] = providers;
+  const autoSignInProvider =
+    providers.length === 1 && onlyProvider?.type === "oauth" && !justLoggedOut
+      ? onlyProvider
+      : undefined;
 
   return (
     <LoginScreen
-      autoRedirect={shouldAutoRedirect}
+      autoSignInProvider={autoSignInProvider}
       // A repeated parameter arrives as a list; only a single one is a destination.
       callbackUrl={typeof callbackUrl === "string" ? callbackUrl : APP_ROOT}
       providers={providers}

@@ -15,28 +15,24 @@ import { ProviderButton } from "./components/provider-button";
 interface LoginScreenProps {
   providers: ProviderInfo[];
   callbackUrl?: string;
-  autoRedirect?: boolean;
+  autoSignInProvider?: ProviderInfo;
   registrationEnabled?: boolean;
 }
 
 export function LoginScreen({
   providers,
   callbackUrl = APP_ROOT,
-  autoRedirect = false,
+  autoSignInProvider,
   registrationEnabled = false,
 }: LoginScreenProps) {
   const t = useTranslations("auth.login");
-  // Separate credential and OAuth providers
-  const credentialProvider = providers.find((p) => p.type === "credential");
-  const oauthProviders = providers.filter((p) => p.type !== "credential");
-  const singleOauthProvider = oauthProviders[0];
 
-  // Auto-redirect for single OAuth provider setups (only if no credential provider)
-  if (autoRedirect && oauthProviders.length === 1 && !credentialProvider && singleOauthProvider) {
-    return <AutoSignIn callbackUrl={callbackUrl} provider={singleOauthProvider} />;
+  if (autoSignInProvider) {
+    return <AutoSignIn callbackUrl={callbackUrl} provider={autoSignInProvider} />;
   }
 
-  const hasCredential = !!credentialProvider;
+  const hasCredential = providers.some((p) => p.type === "credential");
+  const oauthProviders = providers.filter((p) => p.type !== "credential");
   const hasOAuth = oauthProviders.length > 0;
 
   return (
@@ -50,12 +46,10 @@ export function LoginScreen({
       subtitle={t("subtitle")}
       title={t("heading")}
     >
-      {/* Email/Password form */}
       {hasCredential && (
         <EmailPasswordForm callbackUrl={callbackUrl} registrationEnabled={registrationEnabled} />
       )}
 
-      {/* Separator between form and OAuth */}
       {hasCredential && hasOAuth && (
         <div className="flex items-center gap-4">
           <Separator className="flex-1" />
@@ -64,7 +58,6 @@ export function LoginScreen({
         </div>
       )}
 
-      {/* OAuth provider buttons */}
       {hasOAuth && (
         <div className="flex flex-col gap-3">
           {oauthProviders.map((provider) => (
