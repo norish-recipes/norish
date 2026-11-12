@@ -47,12 +47,11 @@ export interface StoreAislesResult {
    * null where it was never told or no longer has that aisle. Nothing is guessed from words.
    */
   aisleFor: (storeId: string | null, ingredientId: string | null | undefined) => string | null;
-  isLoading: boolean;
 }
 
 export function useStoreAisles(): StoreAislesResult {
   const trpc = useTRPC();
-  const { data, isLoading } = useQuery(trpc.stores.aisleLinks.queryOptions());
+  const { data } = useQuery(trpc.stores.aisleLinks.queryOptions());
   const { stores } = useStoresQuery();
   const byKey = useMemo(() => {
     const map = new Map<string, string>();
@@ -79,7 +78,7 @@ export function useStoreAisles(): StoreAislesResult {
     [byKey, stores]
   );
 
-  return { aisleFor, isLoading };
+  return { aisleFor };
 }
 
 /** Whether the aisle links are still on their way; a filing doesn't render its reader. */
