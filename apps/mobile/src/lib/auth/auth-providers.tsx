@@ -33,10 +33,7 @@ export function AuthProviders({ children }: { children: ReactNode }) {
         endSession={(reason) => {
           setEnding(true);
 
-          return endSession(authClient, reason).catch((error: unknown) => {
-            setEnding(false);
-            throw error;
-          });
+          return endSession(authClient, reason);
         }}
         session={session}
       >

@@ -71,9 +71,7 @@ vi.mock("better-auth/react", () => ({
     return { $store: { atoms: { session } }, signOut };
   },
 }));
-const closeConnections = vi.hoisted(() => vi.fn(async () => {}));
-
-vi.mock("@/lib/trpc/trpc-provider", () => ({ closeMobileTrpcConnections: closeConnections }));
+vi.mock("@/lib/trpc/trpc-provider", () => ({ closeMobileTrpcConnections: async () => {} }));
 vi.mock("@norish/shared-react/offline/react", () => ({
   useConnectivity: () => ({ isOffline: false }),
 }));
@@ -157,16 +155,6 @@ describe("AuthProviders", () => {
       expect(getAuthTransportSnapshot()).toEqual({ hasActiveSession: false, version: version + 1 });
     }
   );
-
-  it("reads the live session again when ending it fails", async () => {
-    render(<ReKeyed />);
-    act(() => clients[0]?.session.set({ data: { user: USER }, isPending: false, error: null }));
-    closeConnections.mockRejectedValueOnce(new Error("closing failed"));
-
-    await act(() => expect(seen.endSession?.("expiry")).rejects.toThrow("closing failed"));
-    expect(seen.sessions.at(-1)?.user?.id).toBe(USER.id);
-    expect(seen.sessions.at(-1)?.isPending).toBe(false);
-  });
 
   it("reads a 401 as signed out, not as a reason to fall back on the persisted session", async () => {
     render(<ReKeyed />);
