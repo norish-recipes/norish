@@ -6,7 +6,7 @@ import type { ReactNode } from "react";
 import { useIngredientFor } from "@/features/groceries/hooks/use-ingredient-for";
 import { QueryClientProvider } from "@tanstack/react-query";
 import { renderHook, waitFor } from "@testing-library/react";
-import { beforeEach, describe, expect, it, vi } from "vitest";
+import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 
 import type { AppRouter } from "@norish/trpc/client";
 import { createTestQueryClient } from "@norish/shared-react/platform/testing";
@@ -44,7 +44,10 @@ vi.mock("@norish/shared-react/trpc", async () => {
           await new Promise<void>((resolve) => (mocks.release = resolve));
         }
 
-        return { ingredientId: mocks.answers[input.name] ?? null };
+        const ingredientId = mocks.answers[input.name];
+
+        // As the server: a name that names nothing answers null.
+        return ingredientId ? { ingredientId } : null;
       },
     }),
   };
@@ -57,17 +60,56 @@ function answerTheRead() {
   mocks.release?.();
 }
 
+let queryClient = createTestQueryClient();
+
 function wrapper({ children }: { children: ReactNode }) {
-  return <QueryClientProvider client={createTestQueryClient()}>{children}</QueryClientProvider>;
+  return <QueryClientProvider client={queryClient}>{children}</QueryClientProvider>;
 }
 
 beforeEach(() => {
+  queryClient = createTestQueryClient();
   mocks.asked = [];
   mocks.answers = { tomato: FOUND };
   mocks.release = () => {};
 });
 
+afterEach(() => vi.useRealTimers());
+
 describe("useIngredientFor", () => {
+  it("asks again for a name that named nothing once five minutes passed, as a new one may be minted", async () => {
+    vi.useFakeTimers({ toFake: ["Date"] });
+    const { result, rerender } = renderHook(({ name }) => useIngredientFor(name, name, null), {
+      wrapper,
+      initialProps: { name: "basil" },
+    });
+
+    await waitFor(() => expect(mocks.asked).toEqual(["basil"]));
+    expect(result.current).toBeNull();
+
+    mocks.answers.basil = FOUND;
+    rerender({ name: "" });
+    vi.setSystemTime(Date.now() + 5 * 60_000 + 1);
+    rerender({ name: "basil" });
+
+    await waitFor(() => expect(result.current).toBe(FOUND));
+  });
+
+  it("never asks again for a name that named an Ingredient", async () => {
+    vi.useFakeTimers({ toFake: ["Date"] });
+    const { result, rerender } = renderHook(({ name }) => useIngredientFor(name, name, null), {
+      wrapper,
+      initialProps: { name: "tomato" },
+    });
+
+    await waitFor(() => expect(result.current).toBe(FOUND));
+    rerender({ name: "" });
+    vi.setSystemTime(Date.now() + 60 * 60_000);
+    rerender({ name: "tomato" });
+
+    await new Promise((resolve) => setTimeout(resolve, 20));
+    expect(mocks.asked).toEqual(["tomato"]);
+  });
+
   it("is the grocery's own Ingredient while the name is still its, and asks nothing", async () => {
     const { result } = renderHook(
       () => useIngredientFor("tomato", "tomato", { name: "Tomato", ingredientId: OWN }),

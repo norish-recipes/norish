@@ -76,13 +76,17 @@ export function useIngredientIconAddress(ingredientId: string): string | null | 
   return useSyncExternalStore(subscribe, read, read);
 }
 
+const MISS_STALE_MS = 5 * 60_000;
+
 /** The food each name already names, or null where it names none yet. A reader: it never mints. */
 export function useIngredientsNamed(names: readonly string[]): ReadonlyMap<string, string | null> {
   const trpc = useTRPC();
   const found = useQueries({
     queries: names.map((name) => ({
       ...trpc.ingredients.find.queryOptions({ name: name.slice(0, 300) }),
-      staleTime: Infinity,
+      // A found food goes stale only through the catalogue's subscription; a mint announces nothing.
+      staleTime: (query: { state: { data?: { ingredientId: string } | null } }) =>
+        query.state.data ? Infinity : MISS_STALE_MS,
     })),
   });
 
