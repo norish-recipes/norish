@@ -44,8 +44,8 @@ Edit `.env.local` with your local configuration. At minimum, you need:
 pnpm run docker:up
 ```
 
-That starts PostgreSQL, Valkey, and Obscura — the browser that renders pages for
-URL imports — so nothing has to be launched by hand. `pnpm run docker:down`
+That starts PostgreSQL, Valkey, and Obscura, the browser that renders pages for
+URL imports, so nothing has to be launched by hand. `pnpm run docker:down`
 stops them again.
 
 ### 5. Run Development Server
@@ -123,7 +123,7 @@ norish/
 
 Web and mobile use the same layout and share logic in `packages/shared-react`. [Architecture](https://docs.norish.dev/development/architecture) in the docs shows where each piece lives and traces a read, a write and a realtime update through it.
 
-- A feature is a domain: `library` (with the cookbook page), `recipes` (with the shared recipe page), `groceries`, `calendar`, `account`, `household`, `ingredients`, `admin`, `imports` or `auth`. `features/<feature>/` holds its screens, components and hooks. Route files in `app/` render screens from features, and a page that shows several, such as the dashboard, composes them. The settings route composes `account`, `household`, `ingredients`, `admin` and CalDAV in `calendar`; each tab has its own route and screen. Shared settings UI lives in `components/settings/`. One feature's code then sits in one folder per app. Mobile's `smoke` isn't a domain: it is a throwaway screen that tests the plumbing until the redesigned screens replace it.
+- Web features cover `library` (with the cookbook page), `recipes` (with the shared recipe page), `groceries`, `calendar`, `account`, `household`, `ingredients` and `admin`. Mobile has `auth`; imports and auth have yet to move on web. `features/<feature>/` holds its screens, components and hooks. Route files in `app/` render screens from features, and a page that shows several, such as the dashboard, composes them. The settings route composes `account`, `household`, `ingredients`, `admin` and CalDAV in `calendar`; each tab has its own route and screen. Shared settings UI lives in `components/settings/`. Mobile's `smoke` isn't a domain: it is a throwaway screen that tests the plumbing until the redesigned screens replace it.
 - Features never import each other. Lint blocks `@/features/<x>` and `@/features/<x>/**` outside feature `<x>`, except in route files. A panel several features open lives in the shared `components/Panel/consumers/` folder.
 - A feature's components are grouped by area (`list/`, `panels/`, `stores/`). An area's `index.ts` re-exports only pieces more than one screen draws; import a piece one screen draws by file, and omit the index when nothing is shared. The bundler ships every file an index re-exports, so mixing pieces puts one screen's code in another's chunk.
 - Skeletons, `loading.tsx` files and the shared recipe page import files directly, never through an area's `index.ts`. Importing directly cut the recipe skeleton's own code from 324 KB to 38 KB.
@@ -287,7 +287,7 @@ An unavailable or environmentally blocked browser run is reported as blocked, no
 - Follow the PR template
 - Link the PR to an issue (`Fixes #...` in the PR body)
 - PRs without a linked issue will be closed, except translation-only PRs
-  (maintainer PRs may reference a Linear issue id — e.g. `GEZ-46` — instead)
+  (maintainer PRs may reference a Linear issue id such as `GEZ-46` instead)
 - Ensure CI checks pass
 
 ## Testing

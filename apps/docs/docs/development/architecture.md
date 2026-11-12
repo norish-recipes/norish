@@ -57,10 +57,10 @@ Web and mobile use the same layout. Web keeps its folders at the root of
   route file also does the server-only work: seeding the cache, metadata and
   params, repository reads and redirects.
 - `features/<feature>/` holds one domain's screens, components, hooks and
-  helpers. Each feature is a domain: `library` (with the cookbook page),
-  `recipes` (with the shared recipe page), `groceries`, `calendar`, `imports`,
-  `account`, `household`, `ingredients`, `admin` and `auth`. Imports are still
-  in shared app folders. The settings route composes five features: `account`,
+  helpers. Web features cover `library` (with the cookbook page),
+  `recipes` (with the shared recipe page), `groceries`, `calendar`,
+  `account`, `household`, `ingredients` and `admin`. Mobile has `auth`;
+  imports and auth have yet to move on web. The settings route composes five features: `account`,
   `household`, `ingredients`, `admin` and CalDAV in `calendar`. Each tab has
   its own route and renders its feature screen. `components/settings/` holds
   UI shared by tabs.
