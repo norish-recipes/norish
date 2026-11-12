@@ -30,3 +30,18 @@ export function resolveSignInMethods({
     noMethod: !passwordAuthEnabled && !providerButtons,
   };
 }
+
+export type MethodsStatus = "loading" | "failed" | "ready";
+
+/** Whether Sign in has methods to draw; a first fetch paused offline is a failure, not "none". */
+export function resolveMethodsStatus(config: {
+  isLoading: boolean;
+  isPaused: boolean;
+  error: unknown;
+  hasData: boolean;
+}): MethodsStatus {
+  if (config.isLoading) return "loading";
+  if (!config.hasData && (config.error || config.isPaused)) return "failed";
+
+  return "ready";
+}

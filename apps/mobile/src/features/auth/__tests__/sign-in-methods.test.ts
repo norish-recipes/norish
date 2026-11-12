@@ -1,4 +1,4 @@
-import { resolveSignInMethods } from "@/features/auth/utils/sign-in-methods";
+import { resolveMethodsStatus, resolveSignInMethods } from "@/features/auth/utils/sign-in-methods";
 import { describe, expect, it } from "vitest";
 
 import type { ProviderInfo } from "@norish/shared/contracts";
@@ -74,5 +74,23 @@ describe("resolveSignInMethods", () => {
       signUp: false,
       noMethod: true,
     });
+  });
+});
+
+describe("resolveMethodsStatus", () => {
+  const settled = { isLoading: false, isPaused: false, error: null, hasData: false };
+
+  it("loads while the first fetch runs", () => {
+    expect(resolveMethodsStatus({ ...settled, isLoading: true })).toBe("loading");
+  });
+
+  it("fails when the first fetch errored or is paused offline with nothing cached", () => {
+    expect(resolveMethodsStatus({ ...settled, error: new Error("x") })).toBe("failed");
+    expect(resolveMethodsStatus({ ...settled, isPaused: true })).toBe("failed");
+  });
+
+  it("keeps loaded methods up through a failed or paused refetch", () => {
+    expect(resolveMethodsStatus({ ...settled, hasData: true, error: new Error("x") })).toBe("ready");
+    expect(resolveMethodsStatus({ ...settled, hasData: true, isPaused: true })).toBe("ready");
   });
 });

@@ -15,7 +15,7 @@ import {
   firstParam,
   sanitizeRedirectTarget,
 } from "@/features/auth/utils/redirect";
-import { resolveSignInMethods } from "@/features/auth/utils/sign-in-methods";
+import { resolveMethodsStatus, resolveSignInMethods } from "@/features/auth/utils/sign-in-methods";
 import { useAuthClient } from "@/lib/auth/use-auth-client";
 import { ServerAddressContext } from "@/lib/network/server-address";
 import { useLocalSearchParams, useRouter } from "expo-router";
@@ -77,16 +77,17 @@ function SignInMethods({ authClient, redirectTo }: { authClient: AuthClient; red
   const intl = useIntl();
   const config = useAuthProvidersQuery();
   const methods = resolveSignInMethods(config);
+  const status = resolveMethodsStatus(config);
   // One attempt across every method, so a password and a provider sign-in never overlap.
   const signIn = useAuthAttempt();
 
   // The spinner stands alone, so the block never moves when the methods replace it.
-  if (config.isLoading) {
+  if (status === "loading") {
     return <Spinner className="self-center" />;
   }
 
   // A failed background refetch leaves loaded methods up, so the form keeps its state.
-  if (config.error && !config.hasData) {
+  if (status === "failed") {
     return (
       <SignInBlock>
         <LoginStatus
