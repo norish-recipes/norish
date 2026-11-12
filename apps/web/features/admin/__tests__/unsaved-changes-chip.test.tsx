@@ -1,3 +1,4 @@
+import type { ReactNode } from "react";
 import { render, screen } from "@testing-library/react";
 import { describe, expect, it, vi } from "vitest";
 
@@ -10,7 +11,17 @@ vi.mock("next-intl", () => ({
 }));
 
 vi.mock("@heroui/react", () => ({
-  Chip: ({ children, color, size, variant }: any) => (
+  Chip: ({
+    children,
+    color,
+    size,
+    variant,
+  }: {
+    children: ReactNode;
+    color?: string;
+    size?: string;
+    variant?: string;
+  }) => (
     <div data-color={color} data-size={size} data-variant={variant}>
       {children}
     </div>

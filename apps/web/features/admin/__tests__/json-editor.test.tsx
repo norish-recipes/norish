@@ -1,3 +1,4 @@
+import type { ComponentProps, ReactNode } from "react";
 import { useState } from "react";
 import { fireEvent, render, screen, waitFor } from "@testing-library/react";
 import { describe, expect, it, vi } from "vitest";
@@ -11,10 +12,18 @@ vi.mock("next-intl", () => ({
 }));
 
 vi.mock("@heroui/react", () => ({
-  TextArea: ({ value, onChange, placeholder }: any) => (
+  TextArea: ({ value, onChange, placeholder }: ComponentProps<"textarea">) => (
     <textarea aria-label="json" placeholder={placeholder} value={value} onChange={onChange} />
   ),
-  Button: ({ children, onPress, isDisabled }: any) => (
+  Button: ({
+    children,
+    onPress,
+    isDisabled,
+  }: {
+    children: ReactNode;
+    onPress?: () => void;
+    isDisabled?: boolean;
+  }) => (
     <button disabled={!!isDisabled} type="button" onClick={onPress}>
       {children}
     </button>

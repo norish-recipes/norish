@@ -123,14 +123,7 @@ export default function GeneralCard() {
           value={enabledLocales}
           selectionMode="multiple"
           variant="secondary"
-          onChange={(e: any) => {
-            const val = e?.target ? e.target.value : e;
-            if (typeof val === "string") {
-              handleEnabledLocalesChange(val ? val.split(",") : []);
-            } else if (Array.isArray(val)) {
-              handleEnabledLocalesChange(val);
-            }
-          }}
+          onChange={(keys) => handleEnabledLocalesChange(keys.map(String))}
         >
           <Select.Trigger>
             <Select.Value className="min-w-0">
