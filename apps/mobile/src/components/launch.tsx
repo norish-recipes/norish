@@ -37,6 +37,9 @@ type Launch = {
   clock: SharedValue<number>;
   done: boolean;
   finish: () => void;
+  /** How the splash leaves, decided once the hold ends. */
+  motion: LaunchHandoff | null;
+  setMotion: (motion: LaunchHandoff) => void;
   /** Server address's brand top, in window points: where the glide lands. */
   target: number | null;
   setTarget: (top: number) => void;
@@ -49,9 +52,12 @@ export function LaunchProvider({ children }: { children: ReactNode }) {
   const clock = useSharedValue(0);
   const [done, setDone] = useState(false);
   const [target, setTarget] = useState<number | null>(null);
+  const [motion, setMotion] = useState<LaunchHandoff | null>(null);
 
   return (
-    <LaunchContext value={{ clock, done, finish: () => setDone(true), target, setTarget }}>
+    <LaunchContext
+      value={{ clock, done, finish: () => setDone(true), motion, setMotion, target, setTarget }}
+    >
       {children}
     </LaunchContext>
   );
@@ -67,7 +73,7 @@ export function LaunchSplash({ handoff }: { handoff: LaunchHandoff | null }) {
 }
 
 function LaunchOverlay({ handoff, launch }: { handoff: LaunchHandoff | null; launch: Launch }) {
-  const { clock, finish, target } = launch;
+  const { clock, finish, motion, setMotion, target } = launch;
   const reduceMotion = useReducedMotion();
   const { height } = useWindowDimensions();
   const [background] = useThemeColor(["background"] as const);
@@ -75,13 +81,13 @@ function LaunchOverlay({ handoff, launch }: { handoff: LaunchHandoff | null; lau
   const [held, setHeld] = useState(() => clock.get() >= HOLD_END);
   // The native splash centres the logo on the window, so this frame does too.
   const top = (height - LOGO_HEIGHT) / 2;
-  // Decided once the hold ends, so a target landing mid-fade can't turn it into a glide.
-  const [motion, setMotion] = useState<LaunchHandoff | null>(null);
   const decided = held ? resolveLaunchMotion(handoff, reduceMotion, target) : null;
-
-  if (motion === null && decided !== null) setMotion(decided);
-
   const glide = motion === "glide";
+
+  // Decided once the hold ends, so a target landing mid-fade can't turn it into a glide.
+  useEffect(() => {
+    if (motion === null && decided !== null) setMotion(decided);
+  }, [decided, motion, setMotion]);
 
   useEffect(() => {
     if (held) return;
@@ -167,12 +173,8 @@ function progress(clock: number, start: number, end: number) {
   return interpolate(clock, [start, end], [0, 1], Extrapolation.CLAMP);
 }
 
-function rise(clock: number, [start, end]: readonly [number, number], reduceMotion: boolean) {
+function rise(clock: number, [start, end]: readonly [number, number]) {
   "worklet";
-
-  if (reduceMotion) {
-    return { opacity: progress(clock, HOLD_END, FADE_END), transform: [{ translateY: 0 }] };
-  }
 
   const risen = progress(clock, start, end);
 
@@ -187,17 +189,14 @@ export function useLaunchEntrance() {
   const launch = use(LaunchContext);
   const settled = useSharedValue(LAUNCH_END);
   const clock = launch?.clock ?? settled;
-  const reduceMotion = useReducedMotion();
+  // A fading splash cross-fades to this screen, so it is drawn whole beneath it.
+  const fading = launch?.motion === "fade";
 
   const brandStyle = useAnimatedStyle(() => ({
-    opacity: reduceMotion
-      ? progress(clock.get(), HOLD_END, FADE_END)
-      : clock.get() >= GLIDE_END
-        ? 1
-        : 0,
+    opacity: fading || clock.get() >= GLIDE_END ? 1 : 0,
   }));
-  const fieldStyle = useAnimatedStyle(() => rise(clock.get(), FIELD_RISE, reduceMotion));
-  const buttonStyle = useAnimatedStyle(() => rise(clock.get(), BUTTON_RISE, reduceMotion));
+  const fieldStyle = useAnimatedStyle(() => rise(fading ? LAUNCH_END : clock.get(), FIELD_RISE));
+  const buttonStyle = useAnimatedStyle(() => rise(fading ? LAUNCH_END : clock.get(), BUTTON_RISE));
 
   const onBrandLayout = ({ currentTarget }: LayoutChangeEvent) => {
     if (typeof currentTarget !== "number") {
