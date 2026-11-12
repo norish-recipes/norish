@@ -113,3 +113,13 @@ export function resolveForegroundVersionCheck(
     ? { screen: "continue", address: check.address }
     : { screen: "stay" };
 }
+
+/** Update your server checks the address it was opened for, else the saved one; with neither, the signed-out entry. */
+export function resolveUpdateServerAddress(
+  param: string | undefined,
+  saved: string
+): { screen: "update-server"; address: string } | { screen: "signed-out-entry" } {
+  const address = param || saved;
+
+  return address ? { screen: "update-server", address } : { screen: "signed-out-entry" };
+}

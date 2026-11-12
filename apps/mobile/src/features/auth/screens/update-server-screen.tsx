@@ -5,7 +5,7 @@ import { useVersionRecheck } from "@/features/auth/hooks/use-version-recheck";
 import { hostOf } from "@/features/auth/utils/host-of";
 import { MINIMUM_SERVER_VERSION } from "@/features/auth/utils/server-version";
 import { getServerAddress, saveServerAddress } from "@/lib/network/server-address";
-import { useLocalSearchParams, useRouter } from "expo-router";
+import { useRouter } from "expo-router";
 import { useIntl } from "react-intl";
 
 import { createClientLogger } from "@norish/shared/lib/logger";
@@ -13,11 +13,9 @@ import { createClientLogger } from "@norish/shared/lib/logger";
 const log = createClientLogger("server-address");
 
 /** The server is older than this app supports: no Retry and no back, only the chip to another server. */
-export function UpdateServerScreen() {
+export function UpdateServerScreen({ address, version }: { address: string; version?: string }) {
   const intl = useIntl();
   const router = useRouter();
-  const params = useLocalSearchParams<{ address?: string; version?: string }>();
-  const address = params.address ?? getServerAddress();
   const host = hostOf(address);
 
   // Back to what this screen was pushed over; a Server Address not saved yet goes on to Sign in.
@@ -43,11 +41,9 @@ export function UpdateServerScreen() {
       chipAddress={address}
       description={intl.formatMessage(
         {
-          id: params.version
-            ? "auth.updateServer.description"
-            : "auth.updateServer.descriptionOlder",
+          id: version ? "auth.updateServer.description" : "auth.updateServer.descriptionOlder",
         },
-        { host, version: params.version, minimumVersion: MINIMUM_SERVER_VERSION }
+        { host, version, minimumVersion: MINIMUM_SERVER_VERSION }
       )}
       descriptionTestID="update-server-description"
       title={intl.formatMessage({ id: "auth.updateServer.title" })}

@@ -1,4 +1,8 @@
-import { resolveForegroundVersionCheck, resolveLaunchVersionCheck } from "@/lib/boot/boot-state";
+import {
+  resolveForegroundVersionCheck,
+  resolveLaunchVersionCheck,
+  resolveUpdateServerAddress,
+} from "@/lib/boot/boot-state";
 import { describe, expect, it } from "vitest";
 
 const address = "https://norish.example.com";
@@ -35,5 +39,26 @@ describe("resolveForegroundVersionCheck", () => {
 
   it("stays while the server is unreachable", () => {
     expect(resolveForegroundVersionCheck(unreachable)).toEqual({ screen: "stay" });
+  });
+});
+
+describe("resolveUpdateServerAddress", () => {
+  it("checks the address it was opened for", () => {
+    expect(resolveUpdateServerAddress(address, "https://saved.example")).toEqual({
+      screen: "update-server",
+      address,
+    });
+  });
+
+  it("falls back to the saved Server Address", () => {
+    expect(resolveUpdateServerAddress(undefined, address)).toEqual({
+      screen: "update-server",
+      address,
+    });
+  });
+
+  it("sends the reader to the signed-out entry with no address to check", () => {
+    expect(resolveUpdateServerAddress(undefined, "")).toEqual({ screen: "signed-out-entry" });
+    expect(resolveUpdateServerAddress("", "")).toEqual({ screen: "signed-out-entry" });
   });
 });
