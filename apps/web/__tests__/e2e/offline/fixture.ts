@@ -238,5 +238,39 @@ export function readOutbox(target: Page): Promise<OutboxEntry[]> {
   );
 }
 
+/** Whether this browser's saved copy of its reads holds `fragment`. */
+export function persistedReadsHold(target: Page, fragment: string): Promise<boolean> {
+  return target.evaluate(
+    (needle) =>
+      new Promise<boolean>((resolve) => {
+        const open = indexedDB.open("norish-offline");
+
+        open.onsuccess = () => {
+          const db = open.result;
+
+          if (!db.objectStoreNames.contains("keyval")) {
+            db.close();
+            resolve(false);
+
+            return;
+          }
+
+          const req = db.transaction("keyval", "readonly").objectStore("keyval").getAll();
+
+          req.onsuccess = () => {
+            db.close();
+            resolve(JSON.stringify(req.result).includes(needle));
+          };
+          req.onerror = () => {
+            db.close();
+            resolve(false);
+          };
+        };
+        open.onerror = () => resolve(false);
+      }),
+    fragment
+  );
+}
+
 export { expect };
 export type { SessionCookies };

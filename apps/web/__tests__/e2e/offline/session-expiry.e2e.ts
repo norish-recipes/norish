@@ -6,7 +6,15 @@ import { request } from "@playwright/test";
 
 import type { SessionCookies } from "./fixture";
 import { signIn } from "../harness/auth";
-import { expect, readOutbox, SEEDED_RECIPE_IMAGE, test, USER_A } from "./fixture";
+import {
+  expect,
+  persistedReadsHold,
+  readOutbox,
+  SEEDED_GROCERY_NAME,
+  SEEDED_RECIPE_IMAGE,
+  test,
+  USER_A,
+} from "./fixture";
 
 /** Ends the session these cookies carry on the server; the browser keeps its cookie. */
 async function endSessionOnServer(baseURL: string, cookies: SessionCookies): Promise<void> {
@@ -49,6 +57,7 @@ test("an expired session clears the Offline Cache and keeps the queued change fo
         { timeout: 60_000 }
       )
       .toBe(true);
+    await expect.poll(() => persistedReadsHold(page, SEEDED_GROCERY_NAME)).toBe(true);
 
     await offline.transition("stopped");
     await page.getByRole("button", { name: "Add Item" }).click();
@@ -64,6 +73,7 @@ test("an expired session clears the Offline Cache and keeps the queued change fo
 
     await expect(page).toHaveURL(/\/login\?callbackUrl=%2Fgroceries/, { timeout: 30_000 });
     await expect.poll(imagesKept).toBe(false);
+    await expect.poll(() => persistedReadsHold(page, SEEDED_GROCERY_NAME)).toBe(false);
     expect(await outboxSize()).toBe(1);
 
     await context.addCookies(await signIn(offline.baseURL, USER_A));

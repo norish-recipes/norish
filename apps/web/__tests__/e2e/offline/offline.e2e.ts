@@ -10,6 +10,7 @@ import type { OfflineHarness } from "./fixture";
 import { readDevicePreferences, setDevicePreferences } from "../harness/device-preferences";
 import {
   expect,
+  persistedReadsHold,
   readOutbox,
   SEEDED_COOKBOOK_ID,
   SEEDED_COOKBOOK_TITLE,
@@ -138,32 +139,6 @@ test("the Dish Colour tint is present while Offline (ADR-0023)", async () => {
   await expect(scope).toHaveCount(1);
   await expect(scope).toHaveAttribute("style", /--dish-h/);
 });
-
-/** Whether this browser's saved copy of its reads holds `fragment`. */
-function persistedReadsHold(target: Page, fragment: string): Promise<boolean> {
-  return target.evaluate(
-    (needle) =>
-      new Promise<boolean>((resolve) => {
-        const open = indexedDB.open("norish-offline");
-
-        open.onsuccess = () => {
-          const db = open.result;
-          const req = db.transaction("keyval", "readonly").objectStore("keyval").getAll();
-
-          req.onsuccess = () => {
-            db.close();
-            resolve(JSON.stringify(req.result).includes(needle));
-          };
-          req.onerror = () => {
-            db.close();
-            resolve(false);
-          };
-        };
-        open.onerror = () => resolve(false);
-      }),
-    fragment
-  );
-}
 
 test("a reader who declined the tint never renders a tinted frame offline", async () => {
   // The choice is made on another desktop; this browser's copy of the
@@ -706,7 +681,7 @@ test("a confirmed sign-out discards the queue and completes", async () => {
   await expect(page.getByText("Discard unsynced changes?")).toBeVisible();
   await page.getByRole("button", { name: "Logout", exact: true }).click();
 
-  await page.waitForURL("**/login**", { timeout: 30_000 });
+  await expect(page).toHaveURL(/\/login\?logout=true$/, { timeout: 30_000 });
 
   // The queue was discarded and the personalized caches are gone.
   await expect.poll(() => readOutbox(page)).toHaveLength(0);
