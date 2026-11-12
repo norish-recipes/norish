@@ -1,5 +1,4 @@
-import { isDirtyState, useDirtyState } from "@/hooks/use-dirty-state";
-import { renderHook } from "@testing-library/react";
+import { isDirtyState } from "@/lib/dirty-state";
 import { describe, expect, it } from "vitest";
 
 describe("isDirtyState", () => {
@@ -46,22 +45,5 @@ describe("isDirtyState", () => {
     );
 
     expect(dirty).toBe(false);
-  });
-});
-
-describe("useDirtyState", () => {
-  it("updates when current value changes", () => {
-    const { result, rerender } = renderHook(
-      ({ current, initial }) => useDirtyState(current, initial),
-      {
-        initialProps: { current: { enabled: false }, initial: { enabled: false } },
-      }
-    );
-
-    expect(result.current).toBe(false);
-
-    rerender({ current: { enabled: true }, initial: { enabled: false } });
-
-    expect(result.current).toBe(true);
   });
 });

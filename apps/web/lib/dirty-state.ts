@@ -1,4 +1,4 @@
-interface UseDirtyStateOptions<Current, Initial = Current> {
+interface DirtyStateOptions<Current, Initial = Current> {
   normalizeCurrent?: (value: Current) => unknown;
   normalizeInitial?: (value: Initial) => unknown;
   isEqual?: (left: unknown, right: unknown) => boolean;
@@ -40,19 +40,11 @@ function deepEqual(left: unknown, right: unknown): boolean {
 export function isDirtyState<Current, Initial = Current>(
   current: Current,
   initial: Initial,
-  options: UseDirtyStateOptions<Current, Initial> = {}
+  options: DirtyStateOptions<Current, Initial> = {}
 ): boolean {
   const { normalizeCurrent, normalizeInitial, isEqual = deepEqual } = options;
   const normalizedCurrent = normalizeCurrent ? normalizeCurrent(current) : current;
   const normalizedInitial = normalizeInitial ? normalizeInitial(initial) : initial;
 
   return !isEqual(normalizedCurrent, normalizedInitial);
-}
-
-export function useDirtyState<Current, Initial = Current>(
-  current: Current,
-  initial: Initial,
-  options: UseDirtyStateOptions<Current, Initial> = {}
-): boolean {
-  return isDirtyState(current, initial, options);
 }

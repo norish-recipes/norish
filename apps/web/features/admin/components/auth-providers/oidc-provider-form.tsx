@@ -2,8 +2,8 @@
 
 import { useState } from "react";
 import SecretInput from "@/components/shared/secret-input";
-import { useDirtyState } from "@/hooks/use-dirty-state";
 import { usePending } from "@/hooks/use-pending";
+import { isDirtyState } from "@/lib/dirty-state";
 import { Input, Label, TextField, useOverlayState } from "@heroui/react";
 import { useTranslations } from "next-intl";
 
@@ -52,7 +52,7 @@ export function OIDCProviderForm({ config, onDirtyChange }: OIDCProviderFormProp
   const [saving, whileSaving] = usePending();
   const deleteModal = useOverlayState();
 
-  const hasClaimMappingChanges = useDirtyState(claimMapping, existingClaimConfig, {
+  const hasClaimMappingChanges = isDirtyState(claimMapping, existingClaimConfig, {
     normalizeCurrent: (current) => ({
       enabled: current.enabled,
       scopes: current.scopes

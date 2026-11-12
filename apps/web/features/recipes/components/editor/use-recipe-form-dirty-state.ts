@@ -1,7 +1,7 @@
 "use client";
 
 import { useMemo } from "react";
-import { useDirtyState } from "@/hooks/use-dirty-state";
+import { isDirtyState } from "@/lib/dirty-state";
 
 import type { UnitsMap } from "@norish/config/zod/server-config";
 import type { FullRecipeDTO, MeasurementSystem, RecipeCategory } from "@norish/shared/contracts";
@@ -141,7 +141,7 @@ export function useRecipeFormDirtyState({
     };
   }, [initialData, locale, mode, units, unitStyle]);
 
-  const isDirty = useDirtyState(current, initial);
+  const isDirty = isDirtyState(current, initial);
   const isReady = mode !== "edit" || !initialData || initializedRecipeId === initialData.id;
 
   return isReady && isDirty;
