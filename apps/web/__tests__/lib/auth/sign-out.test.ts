@@ -93,6 +93,16 @@ describe("the web's sign-out", () => {
     expect(address).toBe("/login?logout=true");
   });
 
+  it("resets the offline copy even when discarding the Outbox fails, and still reports it", async () => {
+    await signedInWithWork();
+    vi.spyOn(offline.engine.outbox, "forOwner").mockRejectedValue(new Error("quota"));
+
+    await expect(offline.engine.clearForSignOut({ discardQueue: true })).rejects.toThrow("quota");
+
+    expect(await offline.storage.keyval.keys()).toEqual([]);
+    expect(offline.engine.cache.owner()).toBeNull();
+  });
+
   it.each([
     ["the auth server signed the reader out", {}],
     ["the Account was deleted", { accountDeleted: true }],

@@ -125,11 +125,12 @@ export function createOfflineEngine(options: OfflineEngineOptions): OfflineEngin
     clearForSignOut: async ({ discardQueue }) => {
       const owner = cache.owner();
 
-      if (discardQueue && owner) {
-        await discardAllEntries(owner, outbox);
+      // A failed discard still rejects to the caller's log, after the read cache is reset.
+      try {
+        if (discardQueue && owner) await discardAllEntries(owner, outbox);
+      } finally {
+        await cache.resetOfflineCopy("sign-out");
       }
-
-      await cache.resetOfflineCopy("sign-out");
     },
   };
 }
