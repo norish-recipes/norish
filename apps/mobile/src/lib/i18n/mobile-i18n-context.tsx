@@ -112,14 +112,10 @@ export function MobileIntlProvider({
   }, [configuredDefaultLocale, localeOptions]);
 
   // Signed out, the screens follow the device language.
-  const activeLocale = useMemo(
-    () =>
-      resolveLocaleSelection(
-        signedIn ? preferredLocale : matchDeviceLocale(DEVICE_LOCALE, localeOptions),
-        localeOptions,
-        effectiveDefaultLocale
-      ),
-    [effectiveDefaultLocale, localeOptions, preferredLocale, signedIn]
+  const activeLocale = resolveLocaleSelection(
+    signedIn ? preferredLocale : matchDeviceLocale(DEVICE_LOCALE, localeOptions),
+    localeOptions,
+    effectiveDefaultLocale
   );
 
   const localeNames = useMemo(() => buildLocaleDisplayMap(localeOptions), [localeOptions]);
@@ -223,14 +219,10 @@ export function MobileIntlFallbackProvider({ children }: { children: React.React
   const [isLoadingMessages, setIsLoadingMessages] = useState(false);
   const localeOptions = BUNDLED_LOCALES;
   const localeNames = useMemo(() => buildLocaleDisplayMap(localeOptions), [localeOptions]);
-  const activeLocale = useMemo(
-    () =>
-      resolveLocaleSelection(
-        preferredLocale ?? matchDeviceLocale(DEVICE_LOCALE, localeOptions),
-        localeOptions,
-        DEFAULT_LOCALE
-      ),
-    [preferredLocale, localeOptions]
+  const activeLocale = resolveLocaleSelection(
+    preferredLocale ?? matchDeviceLocale(DEVICE_LOCALE, localeOptions),
+    localeOptions,
+    DEFAULT_LOCALE
   );
 
   useEffect(() => {
