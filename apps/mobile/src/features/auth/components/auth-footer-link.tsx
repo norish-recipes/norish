@@ -21,7 +21,7 @@ export function AuthFooterLink({ lead, link, className, onPress }: AuthFooterLin
       onPress={onPress}
     >
       <Text className="text-muted text-center text-[15px] leading-5 font-normal">
-        {lead} <Text className="text-link font-semibold">{link}</Text>
+        {lead} <Text className="text-accent-text font-semibold">{link}</Text>
       </Text>
     </Pressable>
   );

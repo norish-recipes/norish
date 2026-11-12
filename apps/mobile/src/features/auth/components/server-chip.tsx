@@ -18,8 +18,13 @@ import { useCSSVariable } from "uniwind";
 export function ServerChip({ address }: { address: string }) {
   const router = useRouter();
   const intl = useIntl();
-  const [foregroundColor, mutedColor] = useThemeColor(["foreground", "muted"] as const);
-  const linkColor = useCSSVariable("--color-link");
+  const [foregroundColor, mutedColor, accentColor] = useThemeColor([
+    "foreground",
+    "muted",
+    "accent",
+  ] as const);
+  // useThemeColor only names heroui-native's own tokens, so this one is read directly.
+  const accentText = useCSSVariable("--color-accent-text");
   const host = hostOf(address);
 
   return (
@@ -35,7 +40,11 @@ export function ServerChip({ address }: { address: string }) {
         onPress={() => router.push({ pathname: "/(auth)", params: { change: "server" } })}
       >
         <HStack spacing={8}>
-          <Image color={String(linkColor)} size={16} systemName="server.rack" />
+          <Image
+            color={typeof accentText === "string" ? accentText : accentColor}
+            size={16}
+            systemName="server.rack"
+          />
           <Text
             modifiers={[
               // SwiftUI resolves the PostScript name; expo-font's `Inter_500Medium` alias is UIKit-only.

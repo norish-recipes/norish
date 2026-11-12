@@ -48,7 +48,7 @@
     --focus: oklch(46.37% 0.0828 150.36);
     --foreground: oklch(21.03% 0.0015 150.36);
     /* Accent-coloured text: the accent itself in light, lifted in dark so it reads on brown. */
-    --link: oklch(46.37% 0.0828 150.36);
+    --accent-text: oklch(46.37% 0.0828 150.36);
     --muted: oklch(52.5% 0.012 80);
     --nutrition-calories: oklch(78.19% 0.159 59.91);
     --nutrition-calories-soft: color-mix(in oklch, var(--nutrition-calories) 14%, transparent);
@@ -106,7 +106,7 @@
     --field-placeholder: oklch(71.5% 0.011 80);
     --focus: oklch(46.37% 0.0828 150.36);
     --foreground: oklch(99.11% 0.0015 150.36);
-    --link: oklch(74% 0.11 150);
+    --accent-text: oklch(74% 0.11 150);
     --muted: oklch(71.5% 0.011 80);
     --nutrition-calories: oklch(82.03% 0.1392 63.92);
     --nutrition-calories-soft: color-mix(in oklch, var(--nutrition-calories) 16%, transparent);
@@ -146,7 +146,7 @@
   --color-chrome-muted: var(--chrome-muted);
   --color-cooking-cook: var(--cooking-cook);
   --color-cooking-prep: var(--cooking-prep);
-  --color-link: var(--link);
+  --color-accent-text: var(--accent-text);
   --color-nutrition-calories: var(--nutrition-calories);
   --color-nutrition-calories-soft: var(--nutrition-calories-soft);
   --color-nutrition-carbs: var(--nutrition-carbs);
