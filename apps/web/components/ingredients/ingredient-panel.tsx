@@ -1,7 +1,7 @@
 "use client";
 
 import type { ReactNode } from "react";
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useEffectEvent, useRef, useState } from "react";
 import Link from "next/link";
 import { OnTheListMark } from "@/components/ingredients/on-the-list-mark";
 import Panel from "@/components/Panel/Panel";
@@ -182,7 +182,7 @@ function IngredientPanelContent({ item, onClose }: { item: IngredientItem; onClo
 
   // A change elsewhere (a housemate's, or AI's) shows in the draft where the
   // viewer has not touched that field.
-  useEffect(() => {
+  const takeSaved = useEffectEvent(() => {
     if (keepDraftRef.current) {
       keepDraftRef.current = false;
 
@@ -190,7 +190,11 @@ function IngredientPanelContent({ item, onClose }: { item: IngredientItem; onClo
     }
     setName(item.name);
     setParent(item.parent);
-  }, [item.name, item.parent]);
+  });
+  const parentId = item.parent?.id ?? null;
+
+  // Keyed on the saved values: the panel's own read brings the same parent as a new object.
+  useEffect(() => takeSaved(), [item.name, parentId]);
 
   const nextName = name.trim();
   const nameChanged = nextName !== "" && nextName !== item.name;

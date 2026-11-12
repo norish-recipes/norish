@@ -1528,6 +1528,32 @@ describe("IngredientsScreen", () => {
     expect(within(current).getByTestId("ingredient-parent")).toHaveTextContent("vegetable");
   });
 
+  it("keeps the typed name and parent once a filter drops the open food and the panel reads it on its own", async () => {
+    const vegetable = { id: "vegetable", name: "vegetable" };
+
+    items = [{ ...onion, parent: vegetable }, salt];
+    await renderScreen();
+    const opened = await open("onion");
+
+    await act(async () => {
+      fireEvent.change(within(opened).getByTestId("ingredient-name-input"), {
+        target: { value: "Onions" },
+      });
+      fireEvent.click(within(opened).getByTestId("ingredient-clear-parent"));
+    });
+
+    // The same name and parent arrive as the panel's own read, a new object; its flag shows the switch.
+    items = [salt];
+    ownItem = { ...onion, flagged: false, parent: { ...vegetable } };
+    await reread();
+
+    const current = panel("onion");
+
+    await waitFor(() => expect(within(current).queryByTestId("ingredient-flag-notice")).toBeNull());
+    expect(within(current).getByTestId("ingredient-name-input")).toHaveValue("Onions");
+    expect(within(current).queryByTestId("ingredient-clear-parent")).toBeNull();
+  });
+
   it("closes the panel of a food once it is deleted", async () => {
     await renderScreen();
     const opened = await open("onion");
