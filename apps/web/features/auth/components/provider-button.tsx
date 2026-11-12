@@ -27,9 +27,10 @@ export function ProviderButton({
       errorCallbackURL: addBasePath("/auth-error"),
     });
   };
+
   return (
-    <Button fullWidth className="h-11 gap-3" onPress={handleSignIn} variant="tertiary">
-      {<ProviderIcon icon={icon} providerName={providerName} width={20} />}
+    <Button fullWidth className="h-11 gap-3" variant="tertiary" onPress={handleSignIn}>
+      <ProviderIcon icon={icon} providerName={providerName} width={20} />
       {t("signInWith", {
         provider: providerName,
       })}
