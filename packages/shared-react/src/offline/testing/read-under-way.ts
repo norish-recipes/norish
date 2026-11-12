@@ -4,7 +4,7 @@ import type { QueryClient, QueryKey } from "@tanstack/react-query";
 export function readUnderWay(queryClient: QueryClient, queryKey: QueryKey, answer: unknown) {
   let land: () => void = () => {};
   const read = queryClient
-    .fetchQuery({
+    .query({
       queryKey,
       queryFn: () => new Promise((resolve) => (land = () => resolve(answer))),
     })
