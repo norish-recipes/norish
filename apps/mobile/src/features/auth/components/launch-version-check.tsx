@@ -12,6 +12,12 @@ import { router } from "expo-router";
 let launchCheck: Promise<ServerAddressCheck> | null = null;
 let launchAnswered = false;
 
+function launchCheckOf(address: string) {
+  launchCheck ??= checkServerAddress(address);
+
+  return launchCheck;
+}
+
 /** Checks the saved Server Address once in the background; a too-old server gets Update your server. */
 export function LaunchVersionCheck({ enabled }: { enabled: boolean }) {
   const address = use(ServerAddressContext);
@@ -24,8 +30,7 @@ export function LaunchVersionCheck({ enabled }: { enabled: boolean }) {
 
     let mounted = true;
 
-    launchCheck ??= checkServerAddress(address);
-    void launchCheck.then((answer) => {
+    void launchCheckOf(address).then((answer) => {
       if (mounted) setCheck(answer);
     });
 
