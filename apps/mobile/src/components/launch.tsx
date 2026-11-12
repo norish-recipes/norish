@@ -151,8 +151,8 @@ function LaunchOverlay({ handoff, launch }: { handoff: LaunchHandoff | null; lau
     <Animated.View
       accessibilityElementsHidden
       importantForAccessibility="no-hide-descendants"
-      onLayout={onLayout}
       style={[styles.fill, overlayStyle]}
+      onLayout={onLayout}
     >
       <Animated.View style={[styles.fill, { backgroundColor: background }, groundStyle]} />
       <Animated.View style={[styles.brand, { top }, brandStyle]}>

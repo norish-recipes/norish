@@ -84,9 +84,9 @@ export function LoginScreen() {
   return (
     <AuthGate
       slogan
-      topAligned={(config) => !resolveSignInMethods(config).noMethod}
       footer={serverAddress ? <ServerChip address={serverAddress} /> : null}
       titleId="auth.login.title"
+      topAligned={(config) => !resolveSignInMethods(config).noMethod}
     >
       {(authClient, config) => (
         <SignInMethods authClient={authClient} config={config} redirectTo={redirectTo} />
