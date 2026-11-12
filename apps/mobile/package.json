@@ -60,7 +60,8 @@
     "superjson": "catalog:",
     "tailwind-merge": "^3.7.0",
     "tailwind-variants": "^3.3.1",
-    "uniwind": "^1.13.1"
+    "uniwind": "^1.13.1",
+    "zod": "catalog:"
   },
   "devDependencies": {
     "@norish/eslint-config": "workspace:*",

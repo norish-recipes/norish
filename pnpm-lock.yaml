@@ -541,6 +541,9 @@ importers:
       uniwind:
         specifier: ^1.13.1
         version: 1.13.1(@expo/metro-config@58.0.21(expo@58.0.23)(supports-color@10.2.2)(typescript@6.0.3))(metro-cache@0.87.2(supports-color@10.2.2))(metro-transform-worker@0.87.2(supports-color@10.2.2))(metro@0.87.2(supports-color@10.2.2))(react-native@0.88.1(@babel/core@7.29.7(supports-color@10.2.2))(@react-native/metro-config@0.88.1(@babel/core@7.29.7(supports-color@10.2.2))(supports-color@10.2.2))(@types/react@19.3.0)(react@19.3.1)(supports-color@10.2.2))(react@19.3.1)(tailwindcss@4.3.3)
+      zod:
+        specifier: 4.6.7
+        version: 4.6.7
     devDependencies:
       '@norish/eslint-config':
         specifier: workspace:*
