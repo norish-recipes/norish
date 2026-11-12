@@ -3,14 +3,13 @@
 import { useState } from "react";
 import { SettingsCard } from "@/components/settings/settings-card";
 import { ActionButton } from "@/components/shared/action-button";
+import ConfirmModal from "@/components/shared/confirm-modal";
 import { ShieldCheckIcon, UserMinusIcon } from "@heroicons/react/16/solid";
 import { UserGroupIcon } from "@heroicons/react/24/outline";
 import { Chip, Table } from "@heroui/react";
 import { useTranslations } from "next-intl";
 
 import { useHousehold, useHouseholdMutations } from "@norish/shared-react/reader";
-
-import ConfirmModal from "./confirm-modal";
 
 type ChosenMember = { id: string; name: string };
 

@@ -2,12 +2,11 @@
 
 import type { ReactNode } from "react";
 import { SettingRow } from "@/components/settings/setting-row";
-import { ActionButton, ActionButtonGroup } from "@/components/shared/action-button";
 import { AIButton } from "@/components/shared/ai-button";
+import ConfirmModal from "@/components/shared/confirm-modal";
 import { cssAIIconColor } from "@/config/css-tokens";
 import { SparklesIcon } from "@heroicons/react/24/outline";
 import { Modal, Spinner } from "@heroui/react";
-import { useTranslations } from "next-intl";
 import { twMerge } from "tailwind-merge";
 
 import { ServerConfigKeys } from "@norish/config/zod/server-config";
@@ -49,7 +48,6 @@ export function CatalogueAIRun({
   onStart: () => void;
   children: ReactNode;
 }) {
-  const tActions = useTranslations("common.actions");
   const aiEnabled = useAdminConfig(ServerConfigKeys.AI_CONFIG, (ai) => ai?.enabled ?? false);
 
   return (
@@ -63,43 +61,40 @@ export function CatalogueAIRun({
       >
         {button}
       </AIButton>
-      <Modal.Backdrop className="z-[1099]" isOpen={isOpen} onOpenChange={onOpenChange}>
-        <Modal.Container className="z-[1100]">
-          <Modal.Dialog data-testid={`${testId}-dialog`}>
-            <Modal.Header className="flex-row items-center gap-2">
-              <SparklesIcon className={twMerge("size-5 shrink-0", cssAIIconColor)} />
-              <Modal.Heading>{title}</Modal.Heading>
-            </Modal.Header>
-            <Modal.Body className="flex flex-col">
-              <p>{intro}</p>
-              {counted ? (
-                children
-              ) : (
-                <div className="flex justify-center pt-6 pb-2">
-                  <Spinner size="sm" />
-                </div>
-              )}
-            </Modal.Body>
-            <Modal.Footer>
-              <ActionButtonGroup>
-                <ActionButton action="cancel" onPress={() => onOpenChange(false)}>
-                  {tActions("cancel")}
-                </ActionButton>
-                <AIButton
-                  className="min-w-28"
-                  data-testid={`${testId}-start`}
-                  isDisabled={!canStart}
-                  isPending={starting}
-                  variant="secondary"
-                  onPress={onStart}
-                >
-                  {start}
-                </AIButton>
-              </ActionButtonGroup>
-            </Modal.Footer>
-          </Modal.Dialog>
-        </Modal.Container>
-      </Modal.Backdrop>
+      <ConfirmModal
+        bodyClassName="flex flex-col"
+        confirm={
+          <AIButton
+            className="min-w-28"
+            data-testid={`${testId}-start`}
+            isDisabled={!canStart}
+            isPending={starting}
+            variant="secondary"
+            onPress={onStart}
+          >
+            {start}
+          </AIButton>
+        }
+        data-testid={`${testId}-dialog`}
+        headerClassName="flex-row items-center gap-2"
+        isOpen={isOpen}
+        title={
+          <>
+            <SparklesIcon className={twMerge("size-5 shrink-0", cssAIIconColor)} />
+            <Modal.Heading>{title}</Modal.Heading>
+          </>
+        }
+        onOpenChange={onOpenChange}
+      >
+        <p>{intro}</p>
+        {counted ? (
+          children
+        ) : (
+          <div className="flex justify-center pt-6 pb-2">
+            <Spinner size="sm" />
+          </div>
+        )}
+      </ConfirmModal>
     </SettingRow>
   );
 }

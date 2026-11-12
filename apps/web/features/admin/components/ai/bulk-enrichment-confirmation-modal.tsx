@@ -1,10 +1,10 @@
 "use client";
 
 import SettingsSwitch from "@/components/settings/settings-switch";
-import { ActionButton, ActionButtonGroup } from "@/components/shared/action-button";
+import { ActionButton } from "@/components/shared/action-button";
+import ConfirmModal from "@/components/shared/confirm-modal";
 import { Note } from "@/components/shared/note";
 import { ExclamationTriangleIcon, SparklesIcon } from "@heroicons/react/16/solid";
-import { Modal } from "@heroui/react";
 import { useTranslations } from "next-intl";
 
 import { useImageGenerationSweepCount } from "@norish/shared-react/admin";
@@ -24,57 +24,51 @@ export default function BulkEnrichmentConfirmationModal({
   onConfirm,
 }: BulkEnrichmentConfirmationModalProps) {
   const t = useTranslations("settings.admin.aiProcessing.bulkEnrichment");
-  const tActions = useTranslations("common.actions");
 
   return (
-    <Modal.Backdrop className="z-[1099]" isOpen={isOpen} onOpenChange={onClose}>
-      <Modal.Container className="z-[1100]">
-        <Modal.Dialog>
-          <Modal.Header className="flex items-center gap-2">
-            <ExclamationTriangleIcon className="text-warning h-5 w-5" />
-            {t("confirmTitle")}
-          </Modal.Header>
-          <Modal.Body>
-            <p>{t("confirmMessage")}</p>
-            <div className="mt-4 flex items-center justify-between gap-4">
-              <div className="flex flex-col gap-1">
-                <span className="font-medium">{t("replaceExisting")}</span>
-                <span className="text-muted text-base">{t("replaceExistingDescription")}</span>
-              </div>
-              <SettingsSwitch
-                aria-label={t("replaceExisting")}
-                isSelected={replaceExisting}
-                onValueChange={onReplaceExistingChange}
-              />
-            </div>
-            {replaceExisting && (
-              <Note className="mt-2" status="danger">
-                {t("replaceWarning")}
-              </Note>
-            )}
-            <SweepImageCount replaceExisting={replaceExisting} />
-            <Note className="mt-2" status="warning">
-              {t("costWarning")}
-            </Note>
-          </Modal.Body>
-          <Modal.Footer>
-            <ActionButtonGroup>
-              <ActionButton action="cancel" onPress={onClose}>
-                {tActions("cancel")}
-              </ActionButton>
-              <ActionButton
-                action="apply"
-                icon={SparklesIcon}
-                variant={replaceExisting ? "danger" : "secondary"}
-                onPress={onConfirm}
-              >
-                {replaceExisting ? t("confirmButtonReplace") : t("confirmButton")}
-              </ActionButton>
-            </ActionButtonGroup>
-          </Modal.Footer>
-        </Modal.Dialog>
-      </Modal.Container>
-    </Modal.Backdrop>
+    <ConfirmModal
+      confirm={
+        <ActionButton
+          action="apply"
+          icon={SparklesIcon}
+          variant={replaceExisting ? "danger" : "secondary"}
+          onPress={onConfirm}
+        >
+          {replaceExisting ? t("confirmButtonReplace") : t("confirmButton")}
+        </ActionButton>
+      }
+      headerClassName="flex items-center gap-2"
+      isOpen={isOpen}
+      title={
+        <>
+          <ExclamationTriangleIcon className="text-warning h-5 w-5" />
+          {t("confirmTitle")}
+        </>
+      }
+      onOpenChange={onClose}
+    >
+      <p>{t("confirmMessage")}</p>
+      <div className="mt-4 flex items-center justify-between gap-4">
+        <div className="flex flex-col gap-1">
+          <span className="font-medium">{t("replaceExisting")}</span>
+          <span className="text-muted text-base">{t("replaceExistingDescription")}</span>
+        </div>
+        <SettingsSwitch
+          aria-label={t("replaceExisting")}
+          isSelected={replaceExisting}
+          onValueChange={onReplaceExistingChange}
+        />
+      </div>
+      {replaceExisting && (
+        <Note className="mt-2" status="danger">
+          {t("replaceWarning")}
+        </Note>
+      )}
+      <SweepImageCount replaceExisting={replaceExisting} />
+      <Note className="mt-2" status="warning">
+        {t("costWarning")}
+      </Note>
+    </ConfirmModal>
   );
 }
 

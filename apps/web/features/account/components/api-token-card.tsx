@@ -8,6 +8,7 @@ import {
   ActionButtonGroup,
   IconActionButton,
 } from "@/components/shared/action-button";
+import ConfirmModal from "@/components/shared/confirm-modal";
 import { usePending } from "@/hooks/use-pending";
 import { ClipboardDocumentIcon, PauseIcon, PlayIcon } from "@heroicons/react/16/solid";
 import { ArrowTopRightOnSquareIcon, KeyIcon } from "@heroicons/react/24/outline";
@@ -18,7 +19,6 @@ import { useApiKeyMutations, useProfileQuery } from "@norish/shared-react/reader
 
 export default function ApiKeyCard() {
   const t = useTranslations("settings.user.apiKeys");
-  const tActions = useTranslations("common.actions");
   const format = useFormatter();
   const { apiKeys } = useProfileQuery();
   const { createApiKey, deleteApiKey, toggleApiKey } = useApiKeyMutations();
@@ -196,38 +196,22 @@ export default function ApiKeyCard() {
           </Modal.Dialog>
         </Modal.Container>
       </Modal.Backdrop>
-      <Modal.Backdrop
-        className="z-[1099]"
+      <ConfirmModal
+        confirm={
+          <ActionButton
+            action="delete"
+            variant="danger"
+            onPress={() => keyToDelete && handleDeleteKey(keyToDelete)}
+          >
+            {t("deleteModal.confirmButton")}
+          </ActionButton>
+        }
         isOpen={showDeleteModal}
+        title={t("deleteModal.title")}
         onOpenChange={setShowDeleteModal}
       >
-        <Modal.Container className="z-[1100]">
-          <Modal.Dialog>
-            {({ close: onClose }) => (
-              <>
-                <Modal.Header>{t("deleteModal.title")}</Modal.Header>
-                <Modal.Body>
-                  <p>{t("deleteModal.message")}</p>
-                </Modal.Body>
-                <Modal.Footer>
-                  <ActionButtonGroup>
-                    <ActionButton action="cancel" onPress={onClose}>
-                      {tActions("cancel")}
-                    </ActionButton>
-                    <ActionButton
-                      action="delete"
-                      variant="danger"
-                      onPress={() => keyToDelete && handleDeleteKey(keyToDelete)}
-                    >
-                      {t("deleteModal.confirmButton")}
-                    </ActionButton>
-                  </ActionButtonGroup>
-                </Modal.Footer>
-              </>
-            )}
-          </Modal.Dialog>
-        </Modal.Container>
-      </Modal.Backdrop>
+        <p>{t("deleteModal.message")}</p>
+      </ConfirmModal>
     </>
   );
 }

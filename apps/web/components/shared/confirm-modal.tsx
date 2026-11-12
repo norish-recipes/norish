@@ -12,6 +12,11 @@ type ConfirmModalProps = {
   children: ReactNode;
   /** The button that confirms, beside Cancel. */
   confirm: ReactNode;
+  headerClassName?: string;
+  bodyClassName?: string;
+  /** Holds Cancel while the confirmed write runs. */
+  isCancelDisabled?: boolean;
+  "data-testid"?: string;
 };
 
 export default function ConfirmModal({
@@ -20,20 +25,24 @@ export default function ConfirmModal({
   title,
   children,
   confirm,
+  headerClassName,
+  bodyClassName,
+  isCancelDisabled,
+  "data-testid": testId,
 }: ConfirmModalProps) {
   const tActions = useTranslations("common.actions");
 
   return (
     <Modal.Backdrop className="z-[1099]" isOpen={isOpen} onOpenChange={onOpenChange}>
       <Modal.Container className="z-[1100]">
-        <Modal.Dialog>
+        <Modal.Dialog data-testid={testId}>
           {({ close }) => (
             <>
-              <Modal.Header>{title}</Modal.Header>
-              <Modal.Body>{children}</Modal.Body>
+              <Modal.Header className={headerClassName}>{title}</Modal.Header>
+              <Modal.Body className={bodyClassName}>{children}</Modal.Body>
               <Modal.Footer>
                 <ActionButtonGroup>
-                  <ActionButton action="cancel" onPress={close}>
+                  <ActionButton action="cancel" isDisabled={isCancelDisabled} onPress={close}>
                     {tActions("cancel")}
                   </ActionButton>
                   {confirm}

@@ -38,6 +38,7 @@ vi.mock("@/components/settings/settings-switch", () => ({
 
 vi.mock("@heroui/react", () => {
   const Passthrough = ({ children }: { children?: React.ReactNode }) => <div>{children}</div>;
+  let close = () => {};
 
   return {
     toast: vi.fn(),
@@ -47,10 +48,28 @@ vi.mock("@heroui/react", () => {
       </button>
     ),
     Modal: {
-      Backdrop: ({ children, isOpen }: { children?: React.ReactNode; isOpen: boolean }) =>
-        isOpen ? <div>{children}</div> : null,
+      Backdrop: ({
+        children,
+        isOpen,
+        onOpenChange,
+      }: {
+        children?: React.ReactNode;
+        isOpen: boolean;
+        onOpenChange?: (open: boolean) => void;
+      }) => {
+        // The dialog's `close` asks the backdrop to close, as HeroUI's does.
+        close = () => onOpenChange?.(false);
+
+        return isOpen ? <div>{children}</div> : null;
+      },
       Container: Passthrough,
-      Dialog: Passthrough,
+      Dialog: ({
+        children,
+      }: {
+        children?: React.ReactNode | ((dialog: { close: () => void }) => React.ReactNode);
+      }) => (
+        <div>{typeof children === "function" ? children({ close: () => close() }) : children}</div>
+      ),
       Header: Passthrough,
       Body: Passthrough,
       Footer: Passthrough,

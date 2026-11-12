@@ -1,12 +1,9 @@
 "use client";
 
 import { useState } from "react";
-import {
-  ActionButton,
-  ActionButtonGroup,
-  IconActionButton,
-} from "@/components/shared/action-button";
-import { Input, Modal, ScrollShadow, TextField } from "@heroui/react";
+import { ActionButton, IconActionButton } from "@/components/shared/action-button";
+import ConfirmModal from "@/components/shared/confirm-modal";
+import { Input, ScrollShadow, TextField } from "@heroui/react";
 import { useTranslations } from "next-intl";
 
 import type { CuisineRefusal } from "@norish/shared-react/admin";
@@ -142,47 +139,32 @@ export default function CuisineVocabularyForm() {
         </ul>
       </ScrollShadow>
 
-      <Modal.Backdrop
-        className="z-[1099]"
+      <ConfirmModal
+        confirm={
+          <ActionButton
+            action="delete"
+            variant="danger"
+            onPress={() => {
+              const target = pendingDelete;
+
+              if (!target) return;
+
+              void run(
+                () => remove(target.id),
+                () => setPendingDelete(null)
+              );
+            }}
+          >
+            {tActions("delete")}
+          </ActionButton>
+        }
+        headerClassName="text-danger"
         isOpen={pendingDelete !== null}
+        title={tActions("delete")}
         onOpenChange={() => setPendingDelete(null)}
       >
-        <Modal.Container className="z-[1100]">
-          <Modal.Dialog>
-            {({ close }) => (
-              <>
-                <Modal.Header className="text-danger">{tActions("delete")}</Modal.Header>
-                <Modal.Body>
-                  <p>{t("deleteConfirm", { name: pendingDelete?.name ?? "" })}</p>
-                </Modal.Body>
-                <Modal.Footer>
-                  <ActionButtonGroup>
-                    <ActionButton action="cancel" onPress={close}>
-                      {tActions("cancel")}
-                    </ActionButton>
-                    <ActionButton
-                      action="delete"
-                      variant="danger"
-                      onPress={() => {
-                        const target = pendingDelete;
-
-                        if (!target) return;
-
-                        void run(
-                          () => remove(target.id),
-                          () => setPendingDelete(null)
-                        );
-                      }}
-                    >
-                      {tActions("delete")}
-                    </ActionButton>
-                  </ActionButtonGroup>
-                </Modal.Footer>
-              </>
-            )}
-          </Modal.Dialog>
-        </Modal.Container>
-      </Modal.Backdrop>
+        <p>{t("deleteConfirm", { name: pendingDelete?.name ?? "" })}</p>
+      </ConfirmModal>
     </div>
   );
 }

@@ -4,14 +4,11 @@ import { useState } from "react";
 import RecipeShareStatusChip from "@/components/recipes/recipe-share-status-chip";
 import NewFeatureChip from "@/components/settings/new-feature-chip";
 import { SettingsCard } from "@/components/settings/settings-card";
-import {
-  ActionButton,
-  ActionButtonGroup,
-  IconActionButton,
-} from "@/components/shared/action-button";
+import { ActionButton, IconActionButton } from "@/components/shared/action-button";
+import ConfirmModal from "@/components/shared/confirm-modal";
 import { PauseIcon, PlayIcon } from "@heroicons/react/16/solid";
 import { LinkIcon } from "@heroicons/react/24/outline";
-import { Modal, Skeleton, Table } from "@heroui/react";
+import { Skeleton, Table } from "@heroui/react";
 import { useFormatter, useTranslations } from "next-intl";
 
 import type {
@@ -207,48 +204,28 @@ export default function ShareLinksTableCard({
           </Table>
         )}
       </SettingsCard>
-      <Modal.Backdrop
-        className="z-[1099]"
+      <ConfirmModal
+        confirm={
+          <ActionButton
+            {...CONFIRM_BUTTONS[confirmAction?.type ?? "reactivate"]}
+            isPending={isRevoking || isReactivating || isDeleting}
+            onPress={handleConfirm}
+          >
+            {confirmAction ? t(`${confirmAction.type}Modal.confirm`) : tActions("confirm")}
+          </ActionButton>
+        }
         isOpen={!!confirmAction}
+        title={confirmAction ? t(`${confirmAction.type}Modal.title`) : ""}
         onOpenChange={() => setConfirmAction(null)}
       >
-        <Modal.Container className="z-[1100]">
-          <Modal.Dialog>
-            {({ close: onClose }) => (
-              <>
-                <Modal.Header>
-                  {confirmAction ? t(`${confirmAction.type}Modal.title`) : ""}
-                </Modal.Header>
-                <Modal.Body>
-                  <p>
-                    {confirmAction
-                      ? t(`${confirmAction.type}Modal.message`, {
-                          recipeName: confirmAction.share.recipeName,
-                        })
-                      : ""}
-                  </p>
-                </Modal.Body>
-                <Modal.Footer>
-                  <ActionButtonGroup>
-                    <ActionButton action="cancel" onPress={onClose}>
-                      {tActions("cancel")}
-                    </ActionButton>
-                    <ActionButton
-                      {...CONFIRM_BUTTONS[confirmAction?.type ?? "reactivate"]}
-                      isPending={isRevoking || isReactivating || isDeleting}
-                      onPress={handleConfirm}
-                    >
-                      {confirmAction
-                        ? t(`${confirmAction.type}Modal.confirm`)
-                        : tActions("confirm")}
-                    </ActionButton>
-                  </ActionButtonGroup>
-                </Modal.Footer>
-              </>
-            )}
-          </Modal.Dialog>
-        </Modal.Container>
-      </Modal.Backdrop>
+        <p>
+          {confirmAction
+            ? t(`${confirmAction.type}Modal.message`, {
+                recipeName: confirmAction.share.recipeName,
+              })
+            : ""}
+        </p>
+      </ConfirmModal>
     </>
   );
 }

@@ -3,14 +3,13 @@
 import { useState } from "react";
 import { SettingsCard } from "@/components/settings/settings-card";
 import { ActionButton, ActionButtonGroup } from "@/components/shared/action-button";
+import ConfirmModal from "@/components/shared/confirm-modal";
 import { ArrowLeftStartOnRectangleIcon } from "@heroicons/react/16/solid";
 import { HomeIcon } from "@heroicons/react/24/outline";
 import { Chip, Separator } from "@heroui/react";
 import { useTranslations } from "next-intl";
 
 import { useHousehold, useHouseholdMutations } from "@norish/shared-react/reader";
-
-import ConfirmModal from "./confirm-modal";
 
 export default function HouseholdInfoCard() {
   const t = useTranslations("settings.household.info");

@@ -7,19 +7,10 @@ import {
   ActionButtonGroup,
   IconActionButton,
 } from "@/components/shared/action-button";
+import ConfirmModal from "@/components/shared/confirm-modal";
 import { InfoHint } from "@/components/shared/info-hint";
 import { ShieldCheckIcon } from "@heroicons/react/24/outline";
-import {
-  Chip,
-  FieldError,
-  Input,
-  Label,
-  ListBox,
-  Modal,
-  Select,
-  Table,
-  TextField,
-} from "@heroui/react";
+import { Chip, FieldError, Input, Label, ListBox, Select, Table, TextField } from "@heroui/react";
 import { useFormatter, useTranslations } from "next-intl";
 
 import { useSiteAuthTokenMutations, useSiteAuthTokensQuery } from "@norish/shared-react/reader";
@@ -27,7 +18,6 @@ import { TokenDomainSchema } from "@norish/shared/contracts/zod/site-auth-tokens
 
 export default function SiteAuthTokensCard() {
   const t = useTranslations("settings.user.siteAuthTokens");
-  const tActions = useTranslations("common.actions");
   const format = useFormatter();
   const tokens = useSiteAuthTokensQuery();
   const { createToken, removeToken, isCreating, isRemoving } = useSiteAuthTokenMutations();
@@ -199,39 +189,23 @@ export default function SiteAuthTokensCard() {
         {tokens.length === 0 && <p className="text-muted py-4 text-base">{t("noTokens")}</p>}
       </SettingsCard>
 
-      <Modal.Backdrop
-        className="z-[1099]"
+      <ConfirmModal
+        confirm={
+          <ActionButton
+            action="delete"
+            isPending={isRemoving}
+            variant="danger"
+            onPress={() => tokenToDelete && handleDelete(tokenToDelete)}
+          >
+            {t("deleteModal.confirmButton")}
+          </ActionButton>
+        }
         isOpen={showDeleteModal}
+        title={t("deleteModal.title")}
         onOpenChange={setShowDeleteModal}
       >
-        <Modal.Container className="z-[1100]">
-          <Modal.Dialog>
-            {({ close: onClose }) => (
-              <>
-                <Modal.Header>{t("deleteModal.title")}</Modal.Header>
-                <Modal.Body>
-                  <p>{t("deleteModal.message")}</p>
-                </Modal.Body>
-                <Modal.Footer>
-                  <ActionButtonGroup>
-                    <ActionButton action="cancel" onPress={onClose}>
-                      {tActions("cancel")}
-                    </ActionButton>
-                    <ActionButton
-                      action="delete"
-                      isPending={isRemoving}
-                      variant="danger"
-                      onPress={() => tokenToDelete && handleDelete(tokenToDelete)}
-                    >
-                      {t("deleteModal.confirmButton")}
-                    </ActionButton>
-                  </ActionButtonGroup>
-                </Modal.Footer>
-              </>
-            )}
-          </Modal.Dialog>
-        </Modal.Container>
-      </Modal.Backdrop>
+        <p>{t("deleteModal.message")}</p>
+      </ConfirmModal>
     </>
   );
 }
