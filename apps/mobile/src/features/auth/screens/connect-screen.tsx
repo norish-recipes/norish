@@ -38,7 +38,7 @@ export function ConnectScreen() {
     setError({ message: intl.formatMessage({ id }) });
 
   const handleConnect = async () => {
-    if (isConnecting) return;
+    if (isConnecting || !isHydrated) return;
 
     setIsConnecting(true);
     setError(null);
@@ -61,8 +61,6 @@ export function ConnectScreen() {
 
     setIsConnecting(false);
   };
-
-  if (!isHydrated) return null;
 
   return (
     <AuthLayout
@@ -118,6 +116,8 @@ export function ConnectScreen() {
               <InputGroup.Input
                 autoCapitalize="none"
                 autoCorrect={false}
+                // Drawn before the draft is read so the splash can measure the brand; typing waits for it.
+                editable={isHydrated}
                 keyboardType="url"
                 placeholder={intl.formatMessage({ id: "auth.connect.serverAddressPlaceholder" })}
                 returnKeyType="go"

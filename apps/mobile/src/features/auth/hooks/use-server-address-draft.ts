@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react";
-import { loadServerAddress } from "@/lib/network/server-address";
+import { getServerAddress, loadServerAddress } from "@/lib/network/server-address";
 import { useRouter } from "expo-router";
 
 import { createClientLogger } from "@norish/shared/lib/logger";
@@ -8,7 +8,8 @@ const log = createClientLogger("server-address");
 
 export function useServerAddressDraft() {
   const router = useRouter();
-  const [address, setAddress] = useState("");
+  // The boot gate's read, so a pushed Server address shows the saved one from its first frame.
+  const [address, setAddress] = useState(getServerAddress);
   const [isHydrated, setIsHydrated] = useState(false);
 
   useEffect(() => {
