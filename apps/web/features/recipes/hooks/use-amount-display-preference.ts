@@ -5,12 +5,7 @@ import { useCallback } from "react";
 import type { AmountDisplayMode } from "@norish/shared/lib/format-amount";
 import { useDevicePreference } from "@norish/shared-react/reader";
 
-/**
- * The shared hook's interface over the web's Device Preference: every consumer
- * — the readonly ingredients list, the per-step rows, the toggle — is
- * untouched, only the storage underneath changed. Mobile keeps the shared
- * factory over its own native binding.
- */
+/** Decimal or fraction amounts, read and toggled through the `amountDisplay` Device Preference. */
 export function useAmountDisplayPreference(): {
   mode: AmountDisplayMode;
   setMode: (mode: AmountDisplayMode) => void;
