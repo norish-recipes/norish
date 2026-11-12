@@ -12,7 +12,7 @@ import { checkServerAddress } from "@/features/auth/utils/check-server-address";
 import { getServerAddress, saveServerAddress } from "@/lib/network/server-address";
 import Feather from "@expo/vector-icons/Feather";
 import MaterialCommunityIcons from "@expo/vector-icons/MaterialCommunityIcons";
-import { useRouter } from "expo-router";
+import { useLocalSearchParams, useRouter } from "expo-router";
 import { Button, InputGroup, Label, Spinner, TextField, useThemeColor } from "heroui-native";
 import { useIntl } from "react-intl";
 
@@ -23,6 +23,7 @@ const log = createClientLogger("server-address");
 export function ConnectScreen() {
   const router = useRouter();
   const intl = useIntl();
+  const { change } = useLocalSearchParams<{ change?: string }>();
   const [mutedColor, accentForegroundColor] = useThemeColor([
     "muted",
     "accent-foreground",
@@ -51,7 +52,11 @@ export function ConnectScreen() {
       router.push("/update-server");
     } else {
       await saveServerAddress(check.address).then(
-        () => router.replace("/login"),
+        // A change returns to the Sign in it was pushed over instead of stacking another.
+        () =>
+          change !== undefined && router.canDismiss()
+            ? router.dismissAll()
+            : router.replace("/login"),
         (saveError: unknown) => {
           log.error({ error: saveError }, "Could not save the Server Address");
           fail("common.errors.operationFailed");
