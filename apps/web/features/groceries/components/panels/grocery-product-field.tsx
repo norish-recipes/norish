@@ -23,12 +23,7 @@ import { useLocale, useTranslations } from "next-intl";
 import type { StoreDto, StoreProductChoice, StoreProductDto } from "@norish/shared/contracts";
 import type { PricedCandidate } from "@norish/shared/lib/currency";
 import type { PackSize } from "@norish/shared/lib/pack-size";
-import {
-  useHeldShopSearch,
-  useHeldStoreProducts,
-  useShopSearch,
-  useStoreProducts,
-} from "@norish/shared-react/groceries";
+import { useShopSearch, useStoreProducts } from "@norish/shared-react/groceries";
 import { chooseUnmistakable, distinctProducts } from "@norish/shared/lib/auto-link";
 import { currencyForUrl, isPriced } from "@norish/shared/lib/currency";
 import { nameWords } from "@norish/shared/lib/fold-name";
@@ -228,20 +223,6 @@ function answers(name: string, term: string): boolean {
  * by its own Save or Add, because writing on tap reads as "it saved without me
  * saving".
  */
-/** Asks the shop while mounted; the field reads the answer from the cache. */
-function AskShop({ storeId, term }: { storeId: string; term: string }) {
-  useShopSearch(storeId, term);
-
-  return null;
-}
-
-/** Reads the Store's products while mounted, once the field was asked. */
-function ReadStoreProducts({ storeId }: { storeId: string }) {
-  useStoreProducts(storeId);
-
-  return null;
-}
-
 export function GroceryProductField({
   store,
   itemName,
@@ -326,11 +307,11 @@ export function GroceryProductField({
   // rather than still being read.
   const unanswered = !linkedProduct && !linkPending;
   const wants = canSearch && asked && (typed || unanswered);
-  // Exactly when `AskShop` is mounted, so what the field says about the search
+  // Exactly the query's own `enabled`, so what the field says about the search
   // and what the search is doing cannot drift apart.
   const asking = wants && searchedTerm.trim().length > 0;
-  const search = useHeldShopSearch(store.id, searchedTerm);
-  const products = useHeldStoreProducts(store.id);
+  const search = useShopSearch(store.id, searchedTerm, asking);
+  const products = useStoreProducts(store.id, asked);
   const candidates = (search.data?.candidates ?? []).filter(isPriced);
   const stored = products.data ?? [];
   const storedByPage = new Map(
@@ -683,8 +664,6 @@ export function GroceryProductField({
 
   return (
     <div className="flex flex-col gap-2">
-      {asking && <AskShop storeId={store.id} term={searchedTerm} />}
-      {asked && <ReadStoreProducts storeId={store.id} />}
       <ComboBox
         allowsEmptyCollection
         inputValue={term}

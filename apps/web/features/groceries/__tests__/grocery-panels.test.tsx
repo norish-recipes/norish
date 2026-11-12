@@ -127,13 +127,12 @@ vi.mock("@norish/shared-react/groceries", async (importOriginal) => ({
     AISLE_LINKS[`${storeId}|${ingredientId}`] ?? null,
   useFileGroceryName: () => fileGroceryName,
   useChooseProduct: () => chooseProduct,
-  useShopSearch: () => undefined,
-  useHeldShopSearch: () => ({ data: undefined, isPending: true, isFetching: false }),
-  useStoreProducts: () => undefined,
-  // Every Store's products, as if the field had asked.
-  useHeldStoreProducts: (storeId: string | null) => ({
-    data: Object.values(LINKS).filter((candidate) => candidate.storeId === storeId),
-    isPending: false,
+  useShopSearch: () => ({ data: undefined, isPending: true, isFetching: false }),
+  useStoreProducts: (storeId: string | null, enabled: boolean) => ({
+    data: enabled
+      ? Object.values(LINKS).filter((candidate) => candidate.storeId === storeId)
+      : undefined,
+    isPending: !enabled,
     isFetching: false,
   }),
   useProductLink: (storeId: string | null, name: string) => {

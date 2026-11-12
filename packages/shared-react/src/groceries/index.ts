@@ -55,11 +55,5 @@ export { useStoresMutations } from "./use-stores-mutations";
 export { useStoreGroceryCount, useStoresQuery } from "./use-stores-query";
 export { useStoresSubscription } from "./use-stores-subscription";
 export { useIngredientFor } from "./use-ingredient-for";
-export {
-  useHeldShopSearch,
-  useHeldStoreProducts,
-  useProductLink,
-  useShopSearch,
-  useStoreProducts,
-} from "./use-store-products-query";
+export { useProductLink, useShopSearch, useStoreProducts } from "./use-store-products-query";
 export { useChooseProduct } from "./use-store-products-mutations";

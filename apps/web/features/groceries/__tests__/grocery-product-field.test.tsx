@@ -71,75 +71,43 @@ function answer(storeId: string | null, term: string) {
 /** What each Store has already stored, which the field shows without asking. */
 const KNOWN: Record<string, StoreProductDto[]> = { "store-a": [], "store-b": [] };
 
-/** The terms a shop was asked, by "storeId|term": what the query cache would hold. */
-const ASKED = new Set<string>();
-const askedListeners = new Set<() => void>();
-const subscribeAsked = (listener: () => void) => {
-  askedListeners.add(listener);
+// react-query's own semantics: a disabled query never leaves `pending`.
+vi.mock("@norish/shared-react/groceries", async (importOriginal) => ({
+  ...(await importOriginal<object>()),
+  useShopSearch: (storeId: string | null, term: string, enabled: boolean) => {
+    searchCalls.push({ storeId, term, enabled });
+    const on = enabled && Boolean(storeId) && term.trim().length > 0;
 
-  return () => askedListeners.delete(listener);
-};
+    if (!on) return { data: undefined, isPending: true, isFetching: false };
+    if (SEARCH_IS_SLOW.current) return { data: undefined, isPending: true, isFetching: true };
+    if (SHOP_IS_DOWN.current) {
+      return { data: { candidates: [], answered: false }, isPending: false, isFetching: false };
+    }
 
-// react-query's own semantics: the field's held read is pending until a mounted
-// `useShopSearch` asked, and keeps the answer once it no longer asks.
-vi.mock("@norish/shared-react/groceries", async (importOriginal) => {
-  const { useEffect, useSyncExternalStore } = await import("react");
-
-  return {
-    ...(await importOriginal<object>()),
-    useShopSearch: (storeId: string | null, term: string) => {
-      searchCalls.push({ storeId, term, enabled: true });
-      useEffect(() => {
-        if (!storeId || term.trim().length === 0) return;
-        ASKED.add(`${storeId}|${term.trim()}`);
-        for (const listener of askedListeners) listener();
-      }, [storeId, term]);
-    },
-    useHeldShopSearch: (storeId: string | null, term: string) => {
-      searchCalls.push({ storeId, term, enabled: false });
-      const on = useSyncExternalStore(subscribeAsked, () => ASKED.has(`${storeId}|${term.trim()}`));
-
-      if (!on) return { data: undefined, isPending: true, isFetching: false };
-      if (SEARCH_IS_SLOW.current) return { data: undefined, isPending: true, isFetching: true };
-      if (SHOP_IS_DOWN.current) {
-        return { data: { candidates: [], answered: false }, isPending: false, isFetching: false };
-      }
-
-      return {
-        data: {
-          candidates: answer(storeId, term).map((candidate) => ({
-            name: candidate.name,
-            url: candidate.url,
-            price: candidate.price,
-            currency: "EUR",
-            size: candidate.size,
-            pack: readPackSize(candidate.size) ?? undefined,
-            regularPrice: candidate.regularPrice,
-            dealWords: candidate.dealWords,
-          })),
-          answered: true,
-        },
-        isPending: false,
-        isFetching: false,
-      };
-    },
-    useStoreProducts: (storeId: string) => {
-      useEffect(() => {
-        ASKED.add(`products|${storeId}`);
-        for (const listener of askedListeners) listener();
-      }, [storeId]);
-    },
-    useHeldStoreProducts: (storeId: string | null) => {
-      const read = useSyncExternalStore(subscribeAsked, () => ASKED.has(`products|${storeId}`));
-
-      return {
-        data: read ? (KNOWN[storeId ?? ""] ?? []) : undefined,
-        isPending: !read,
-        isFetching: false,
-      };
-    },
-  };
-});
+    return {
+      data: {
+        candidates: answer(storeId, term).map((candidate) => ({
+          name: candidate.name,
+          url: candidate.url,
+          price: candidate.price,
+          currency: "EUR",
+          size: candidate.size,
+          pack: readPackSize(candidate.size) ?? undefined,
+          regularPrice: candidate.regularPrice,
+          dealWords: candidate.dealWords,
+        })),
+        answered: true,
+      },
+      isPending: false,
+      isFetching: false,
+    };
+  },
+  useStoreProducts: (storeId: string | null, enabled: boolean) => ({
+    data: enabled ? (KNOWN[storeId ?? ""] ?? []) : undefined,
+    isPending: !enabled,
+    isFetching: false,
+  }),
+}));
 
 vi.mock("next-intl", () => ({
   useTranslations: () => (key: string, params?: Record<string, unknown>) =>
@@ -221,7 +189,6 @@ function options(): string[] {
 
 beforeEach(() => {
   searchCalls.length = 0;
-  ASKED.clear();
   KNOWN["store-a"] = [];
   KNOWN["store-b"] = [];
   SHOP_IS_DOWN.current = false;
