@@ -34,17 +34,8 @@ export function useFoodsByName(names: readonly string[]): ReadonlyMap<string, st
 }
 
 /**
- * An Ingredient Icon: a small picture of the food standing on nothing,
- * decoration beside its name and never in place of it. A food with no icon
- * anywhere shows nothing, nor does a line whose food the server has not
- * resolved yet; only while the surface's read is on its way does it hold an
- * empty slot, so the line does not jump when the icon lands. `placeholder`
- * shows a muted leaf on the icon's tile instead of nothing, for the
- * Ingredients list and the panel field an icon is set in. A reader who hid
- * icons gets none of these. A heading is not a food and
- * is given no icon at all. `src` is the address outright, where a surface has
- * it (the share page exposes no ids); otherwise the surface's read is looked
- * up by `ingredientId`.
+ * A food's icon from `src`, else from the surface's read by `ingredientId`; an empty slot holds its
+ * place while that read is pending.
  */
 export function IngredientIcon({
   ingredientId,

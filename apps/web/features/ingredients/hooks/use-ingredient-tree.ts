@@ -14,14 +14,7 @@ export interface IngredientTreeRow {
   loading: boolean;
 }
 
-/**
- * The catalogue as a tree of kinds: the roots the list was given, and under
- * each one the viewer folded out, its kinds, fetched as they are opened and
- * folded out as deep as the viewer goes. "chocolate" opens to "white
- * chocolate", which opens to "Belgian white chocolate". Off (`enabled`
- * false) the rows are the list as given, flat: a search finds a food at any
- * depth, so it is not shown as a tree.
- */
+/** The roots, each folded-out food's kinds read beneath it; flat while `enabled` is false. */
 export function useIngredientTree(
   roots: IngredientItem[],
   enabled: boolean,
@@ -40,9 +33,8 @@ export function useIngredientTree(
   if (!enabled) {
     for (const item of roots) rows.push({ item, depth: 0, expanded: false, loading: false });
   } else {
-    // Each food once: a page of roots not yet refetched may still list a
-    // food its new parent's kinds already fold out, and two rows with one
-    // key leave React's list in a state it never recovers from.
+    // Each food once: a stale page of roots may list a food its new parent's kinds fold out too,
+    // and duplicate keys break React's list.
     const listed = new Set<string>();
     const walk = (items: IngredientItem[], depth: number) => {
       for (const item of items) {

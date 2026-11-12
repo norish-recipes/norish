@@ -48,22 +48,7 @@ import { changeMessage } from "./review-copy";
 /** The parent as the draft holds it: the food picked, or none. */
 type DraftParent = NamedIngredient | null;
 
-/**
- * One Ingredient, opened: its icon, its name, what it is a kind of, the
- * spellings it goes by, and every edit the server says the viewer may make.
- * The icon, the name, the parent and the spellings are a draft the panel
- * holds until Save, as
- * every other panel does; nothing lands on its own. What names another
- * Ingredient (a merge, a parent, a spelling's move) is picked in a second
- * panel over this one: a parent joins the draft, a merge or a move is an
- * action of its own with its own confirm. A flagged food says why at the
- * top, with Mark distinct, under what AI was unsure of, to keep or undo. The
- * panel follows the item it was opened for through the list, and reads it on
- * its own once the list no longer lists it, so its own edit, a housemate's or
- * AI's shows here too. Every edit shows the moment it is made: the row and
- * the panel change as the server will change them, and a refusal puts them
- * back and says why.
- */
+/** One Ingredient's panel: fields are a draft until Save; actions patch the cache at once. */
 export function IngredientPanel({
   id = null,
   item,

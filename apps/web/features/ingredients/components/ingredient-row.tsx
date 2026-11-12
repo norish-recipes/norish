@@ -13,15 +13,7 @@ import { ingredientDisplayName } from "@norish/shared/lib/ingredient-names";
 /** How far each level of the tree is set in from the one above. */
 const INDENT_PX = 24;
 
-/**
- * One Ingredient of the catalogue, folded to a line: its name in the
- * viewer's language, its flag and why, and how many spellings it goes by.
- * Pressing it opens the Ingredient's panel, where the spellings and every
- * edit the server says the viewer may make live. In the page's tree a food
- * with kinds carries a chevron that folds them out beneath it, set in by
- * `depth`. A row re-renders only when its own item changes, so a page of
- * fifty rows stays out of the way of typing.
- */
+/** One Ingredient on a line, indented by `depth`; memoised to re-render only on its item. */
 export const IngredientRow = memo(function IngredientRow({
   item,
   depth = 0,

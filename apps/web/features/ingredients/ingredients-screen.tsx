@@ -29,18 +29,7 @@ import { IngredientList } from "./components/ingredient-list";
 import { IngredientSearch } from "./components/ingredient-search";
 import { useIngredientTree } from "./hooks/use-ingredient-tree";
 
-/**
- * The catalogue of Ingredients (ADR-0037): every food Norish knows, folded to
- * a line each, with the ones Norish was not sure about marked and told why.
- * With nothing typed and no filter on, the list is the tree of kinds: the
- * foods filed under none, each folding its kinds out beneath it. A search or
- * a filter lists flat, since a match may sit at any depth. A row opens the
- * food's panel, where its spellings and edits live; an action the viewer may
- * not take is not offered. The list stays on screen while a search runs, as
- * the dashboard's does, the search lands in a transition so typing never
- * waits on it, and it is virtualised with the next page fetched as the end
- * comes into view.
- */
+/** The catalogue of Ingredients (ADR-0037): a tree of kinds unless searched or filtered. */
 export function IngredientsScreen() {
   const t = useTranslations("settings.ingredients");
   const tFilters = useTranslations("common.filters");
@@ -57,15 +46,11 @@ export function IngredientsScreen() {
 
   useIngredientsSubscription();
 
-  // With nothing typed and no other filter on, the list is the tree of kinds:
-  // the foods filed under none, each folding its kinds out. A search or a
-  // filter finds a food at any depth, so it lists flat, as it does when the
-  // filters panel says flat.
+  // A search or filter may match at any depth, so only the unfiltered list is a tree of roots.
   const { tree: asTree, ...searchFilters } = filters;
   const treeMode = asTree && !search && !hasIngredientFilters({ ...searchFilters, tree: true });
-  // The rows are not deferred: a search lands in a transition already, and a
-  // deferred copy of a keyed list that a transition is replacing was seen to
-  // keep the old page on screen with the new one's kinds folded into it.
+  // Not deferred: a search lands in a transition, and a deferred copy kept the old page's rows with
+  // the new one's kinds folded in.
   const { items, isLoading, isPlaceholderData, hasNextPage, isFetchingNextPage, fetchNextPage } =
     useIngredientListQuery({
       search: search || undefined,
@@ -78,9 +63,7 @@ export function IngredientsScreen() {
   const tree = useIngredientTree(items, treeMode, locale);
   // Every food on screen, the folded-out kinds included.
   const shown = tree.rows.map((row) => row.item);
-  // The open panel follows its food through the list: a refresh, a housemate's
-  // edit or AI's answer shows there too. The panel keeps the last version it
-  // saw when a filter drops the row, and closes on its own merge or delete.
+  // The panel follows its food's row, and reads it on its own once a filter drops the row.
   const openItem = openId ? (shown.find((item) => item.id === openId) ?? null) : null;
 
   const [changesOpen, setChangesOpen] = useState(false);

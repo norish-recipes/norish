@@ -10,13 +10,7 @@ import { useDebounceValue } from "usehooks-ts";
 /** How long typing pauses before the list is searched again, as on the dashboard. */
 const SEARCH_DELAY_MS = 300;
 
-/**
- * The search field of the Ingredients page. It owns what is being typed, so
- * a keystroke re-renders this field alone, and hands the page the search
- * once typing pauses: the page, and the fifty rows under it, re-render only
- * then. `busy` pulses the icon while the page is fetching or settling.
- * `suffix` sits inside the field's end, as the Pantry's add button does.
- */
+/** The search field holds the typed text; only the debounced search re-renders the page. */
 export function IngredientSearch({
   busy,
   onSearch,
