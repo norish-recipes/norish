@@ -6,7 +6,7 @@ export type {
   Spelling,
   StoredIcon,
 } from "./types";
-export type { IngredientListInput } from "./use-ingredient-queries";
+export type { IngredientListInput } from "./use-ingredient-query";
 
 export { isOpenChange, useAIChangeMutations, useAIChangesQuery } from "./use-ai-changes";
 export {
@@ -29,4 +29,4 @@ export {
   useIngredientSearchQuery,
   useIngredientSpellingsQuery,
   useIngredientUsesQuery,
-} from "./use-ingredient-queries";
+} from "./use-ingredient-query";
