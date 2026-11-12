@@ -38,7 +38,7 @@ export async function once(sequence: () => Promise<void>): Promise<void> {
   if (expire) await expireSession();
 }
 
-export async function clearAndLeave(
+async function clearAndLeave(
   { offlineEngine, leave }: PlatformAdapter,
   discardQueue: boolean,
   reason: LeaveReason
@@ -51,6 +51,18 @@ export async function clearAndLeave(
 
   left = true;
   leave(reason);
+}
+
+/** Drops the device's session, leaving the server's alone, then clears and leaves. */
+export async function dropAndLeave(
+  platform: PlatformAdapter,
+  discardQueue: boolean,
+  reason: LeaveReason
+): Promise<void> {
+  await platform
+    .endSession("expiry")
+    .catch((error: unknown) => log.warn({ error }, "Could not drop the device's session"));
+  await clearAndLeave(platform, discardQueue, reason);
 }
 
 /** Sign-out (CONTEXT.md): end the session, then forget the Offline Cache, then leave. */
@@ -86,14 +98,8 @@ export function useSessionExpiry(): void {
   const platform = usePlatform();
 
   useEffect(() => {
-    const expire = () =>
-      once(async () => {
-        // A 401 may be a passing server error, so the server's session is left alone; only the device's goes.
-        await platform
-          .endSession("expiry")
-          .catch((error: unknown) => log.warn({ error }, "Could not drop the device's session"));
-        await clearAndLeave(platform, false, "expiry");
-      });
+    // A 401 may be a passing server error, so only the device's session goes.
+    const expire = () => once(() => dropAndLeave(platform, false, "expiry"));
 
     mountedExpiry = expire;
 

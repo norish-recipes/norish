@@ -10,7 +10,7 @@ import { accepted, answered, settled } from "../offline/settled";
 import { showRefusal, usePlatform } from "../platform";
 import { useTRPC } from "../trpc";
 import { useProfileCache } from "./use-profile";
-import { clearAndLeave, once } from "./use-sign-out";
+import { dropAndLeave, once } from "./use-sign-out";
 
 /** A failed write's `onError`: reread the profile and tell the reader. */
 function useFailedWrite() {
@@ -158,7 +158,7 @@ export function useApiKeyMutations() {
   };
 }
 
-/** Deletes the Reader's account, then clears this device, Outbox included, and leaves as a Sign-out. */
+/** Deletes the Reader's account, then drops and clears this device, Outbox included, and leaves as a Sign-out. */
 export function useDeleteAccountMutation() {
   const trpc = useTRPC();
   const platform = usePlatform();
@@ -177,7 +177,7 @@ export function useDeleteAccountMutation() {
   return {
     deleteAccount: () =>
       void once(async () => {
-        if (await accepted(mutateAsync())) await clearAndLeave(platform, true, "sign-out");
+        if (await accepted(mutateAsync())) await dropAndLeave(platform, true, "sign-out");
       }),
   };
 }

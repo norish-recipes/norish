@@ -195,17 +195,20 @@ describe("the Account's writes", () => {
   });
 
   describe("deleting the Account", () => {
-    it("clears with the queue discarded and leaves as a sign-out, without the auth server", async () => {
+    it("drops the device's session, clears with the queue discarded and leaves as a sign-out", async () => {
       const result = render(() => useDeleteAccountMutation());
 
       act(() => result.current.deleteAccount());
       await answerCall("user.deleteAccount", { success: true });
 
       await waitFor(() => expect(adapter.leave).toHaveBeenCalledExactlyOnceWith("sign-out"));
-      expect(adapter.endSession).not.toHaveBeenCalled();
+      expect(adapter.endSession).toHaveBeenCalledExactlyOnceWith("expiry");
       expect(adapter.offlineEngine.clearForSignOut).toHaveBeenCalledExactlyOnceWith({
         discardQueue: true,
       });
+      expect(vi.mocked(adapter.endSession)).toHaveBeenCalledBefore(
+        vi.mocked(adapter.offlineEngine.clearForSignOut)
+      );
     });
 
     it("ignores a Session Expiry that arrives while the delete is in flight", async () => {
