@@ -5,6 +5,7 @@ import { Text, View } from "react-native";
 import Animated from "react-native-reanimated";
 import { Brand } from "@/components/brand";
 import { AuthLayout } from "@/features/auth/components/auth-layout";
+import { AuthStatus } from "@/features/auth/components/auth-status";
 import { PasswordForm } from "@/features/auth/components/password-form";
 import { ProviderButtons } from "@/features/auth/components/provider-buttons";
 import { ServerChip } from "@/features/auth/components/server-chip";
@@ -19,33 +20,10 @@ import { resolveMethodsStatus, resolveSignInMethods } from "@/features/auth/util
 import { useAuthClient } from "@/lib/auth/use-auth-client";
 import { ServerAddressContext } from "@/lib/network/server-address";
 import { useLocalSearchParams, useRouter } from "expo-router";
-import { Button, Separator, Spinner } from "heroui-native";
+import { Separator, Spinner } from "heroui-native";
 import { useIntl } from "react-intl";
 
 import { useAuthProvidersQuery } from "@norish/shared-react/config";
-
-/** A title, a line and at most one action, where the form would be. */
-function LoginStatus({
-  title,
-  description,
-  action,
-}: {
-  title: string;
-  description: string;
-  action?: { label: string; onPress: () => void };
-}) {
-  return (
-    <View className="items-center gap-2">
-      <Text className="text-foreground text-center text-[17px] font-semibold">{title}</Text>
-      <Text className="text-muted text-center text-[15px] font-normal">{description}</Text>
-      {action ? (
-        <Button className="mt-4 self-stretch rounded-full" size="lg" onPress={action.onPress}>
-          <Button.Label>{action.label}</Button.Label>
-        </Button>
-      ) : null}
-    </View>
-  );
-}
 
 function OrDivider() {
   const intl = useIntl();
@@ -90,7 +68,7 @@ function SignInMethods({ authClient, redirectTo }: { authClient: AuthClient; red
   if (status === "failed") {
     return (
       <SignInBlock>
-        <LoginStatus
+        <AuthStatus
           action={{
             label: intl.formatMessage({ id: "common.actions.retry" }),
             onPress: () => void config.refetch(),
@@ -105,7 +83,7 @@ function SignInMethods({ authClient, redirectTo }: { authClient: AuthClient; red
   if (methods.noMethod) {
     return (
       <SignInBlock>
-        <LoginStatus
+        <AuthStatus
           description={intl.formatMessage({ id: "auth.login.noProviders.contactAdmin" })}
           title={intl.formatMessage({ id: "auth.login.noProviders.title" })}
         />
@@ -145,7 +123,7 @@ export function LoginScreen() {
     <AuthLayout footer={serverAddress ? <ServerChip address={serverAddress} /> : null}>
       {authClient === null ? (
         <SignInBlock>
-          <LoginStatus
+          <AuthStatus
             action={{
               label: intl.formatMessage({ id: "auth.connect.openConnect" }),
               onPress: () => router.replace("/(auth)"),
