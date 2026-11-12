@@ -2,7 +2,6 @@
 
 import { useState } from "react";
 import { ActionButton, ActionButtonGroup } from "@/components/shared/action-button";
-import { usePending } from "@/hooks/use-pending";
 import { CodeBracketIcon, ExclamationTriangleIcon } from "@heroicons/react/16/solid";
 import { TextArea } from "@heroui/react";
 import { useTranslations } from "next-intl";
@@ -10,6 +9,7 @@ import { useTranslations } from "next-intl";
 import type { WriteResult } from "@norish/shared-react/admin";
 
 import { useReportDirty } from "../use-report-dirty";
+import { useEditorWrites } from "./use-editor-writes";
 
 interface JsonEditorProps {
   value: unknown;
@@ -35,8 +35,8 @@ export default function JsonEditor({
   const tActions = useTranslations("common.actions");
   const [text, setText] = useState(() => toText(value));
   const [error, setError] = useState<string | null>(null);
-  const [saving, whileSaving] = usePending();
   const [isDirty, setIsDirty] = useState(false);
+  const { saving, save, restore } = useEditorWrites(setError, () => setIsDirty(false));
   const [prevValue, setPrevValue] = useState(value);
 
   // Initialize text when value changes
@@ -61,29 +61,11 @@ export default function JsonEditor({
   };
   const handleSave = async () => {
     if (error) return;
-    await whileSaving(() =>
-      onSave(text)
-        .then((result) => {
-          if (result.success) {
-            setIsDirty(false);
-          } else if (result.error) {
-            setError(result.error);
-          }
-        })
-        .catch((e: unknown) => setError(e instanceof Error ? e.message : t("failedToSave")))
-    );
+    await save(() => onSave(text));
   };
   const handleRestoreDefaults = async () => {
     if (!onRestoreDefaults) return;
-    await whileSaving(() =>
-      onRestoreDefaults()
-        .then((result) => {
-          if (!result.success && result.error) {
-            setError(result.error);
-          }
-        })
-        .catch((e: unknown) => setError(e instanceof Error ? e.message : t("failedToRestore")))
-    );
+    await restore(onRestoreDefaults);
   };
   const handleFormat = () => {
     try {

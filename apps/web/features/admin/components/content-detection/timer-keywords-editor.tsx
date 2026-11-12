@@ -4,7 +4,6 @@ import { useState } from "react";
 import { SwitchRow } from "@/components/settings/setting-row";
 import SettingsSwitch from "@/components/settings/settings-switch";
 import { ActionButton, ActionButtonGroup } from "@/components/shared/action-button";
-import { usePending } from "@/hooks/use-pending";
 import { ExclamationTriangleIcon } from "@heroicons/react/16/solid";
 import { Description, Label, TextArea, TextField } from "@heroui/react";
 import { useTranslations } from "next-intl";
@@ -12,6 +11,7 @@ import { useTranslations } from "next-intl";
 import type { WriteResult } from "@norish/shared-react/admin";
 
 import { useReportDirty } from "../use-report-dirty";
+import { useEditorWrites } from "./use-editor-writes";
 
 interface TimerKeywordsEditorProps {
   enabled: boolean;
@@ -50,14 +50,13 @@ export default function TimerKeywordsEditor({
 }: TimerKeywordsEditorProps) {
   const t = useTranslations("settings.admin.contentDetection.timerKeywords");
   const tActions = useTranslations("common.actions");
-  const tEditor = useTranslations("settings.admin.jsonEditor");
   const [isEnabled, setIsEnabled] = useState(enabled);
   const [hoursText, setHoursText] = useState(() => hours.join(", "));
   const [minutesText, setMinutesText] = useState(() => minutes.join(", "));
   const [secondsText, setSecondsText] = useState(() => seconds.join(", "));
   const [error, setError] = useState<string | null>(null);
-  const [saving, whileSaving] = usePending();
   const [isDirty, setIsDirty] = useState(false);
+  const { saving, save, restore } = useEditorWrites(setError, () => setIsDirty(false));
   const [prevKeywords, setPrevKeywords] = useState({ enabled, hours, minutes, seconds });
 
   // Initialize text when keywords change
@@ -114,35 +113,17 @@ export default function TimerKeywordsEditor({
       setError(t("keywordRequired"));
       return;
     }
-    await whileSaving(() =>
+    await save(() =>
       onUpdate({
         enabled: isEnabled,
         hours: parsedHours,
         minutes: parsedMinutes,
         seconds: parsedSeconds,
       })
-        .then((result) => {
-          if (result.success) {
-            setIsDirty(false);
-          } else if (result.error) {
-            setError(result.error);
-          }
-        })
-        .catch((e: unknown) => setError(e instanceof Error ? e.message : tEditor("failedToSave")))
     );
   };
   const handleRestoreDefaults = async () => {
-    await whileSaving(() =>
-      onRestoreDefaults()
-        .then((result) => {
-          if (!result.success && result.error) {
-            setError(result.error);
-          }
-        })
-        .catch((e: unknown) =>
-          setError(e instanceof Error ? e.message : tEditor("failedToRestore"))
-        )
-    );
+    await restore(onRestoreDefaults);
   };
   return (
     <div className="flex flex-col gap-4">
