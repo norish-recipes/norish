@@ -29,6 +29,9 @@ export type PlatformStorage = {
   removeItem: (key: string) => void | Promise<void>;
 };
 
+/** Why the reader leaves the signed-in app: their own Sign-out, or Session Expiry. */
+export type LeaveReason = "sign-out" | "expiry";
+
 /** Who the app's auth client says is signed in; `isPending` until it answers. */
 export type PlatformSession = { user: User | null; isPending: boolean };
 
@@ -47,7 +50,7 @@ export type PlatformAdapter = {
   /** Ends the session on the server and this device; rejects when it could not. */
   endSession: () => Promise<void>;
   /** Takes the signed-out reader to sign-in. */
-  leave: () => void;
+  leave: (reason: LeaveReason) => void;
   offlineEngine: Pick<OfflineEngine, "clearForSignOut">;
 };
 

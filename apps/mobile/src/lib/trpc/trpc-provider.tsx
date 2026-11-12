@@ -1,17 +1,14 @@
 import type { QueryClient } from "@tanstack/react-query";
 import type { TRPCLink } from "@trpc/client";
 import React, { useMemo, useSyncExternalStore } from "react";
-import {
-  getAuthTransportSnapshot,
-  invalidateSession,
-  subscribeAuthTransport,
-} from "@/lib/auth/auth-session-sync";
+import { getAuthTransportSnapshot, subscribeAuthTransport } from "@/lib/auth/auth-session-sync";
 import { AUTH_COOKIE_KEY, authStorage } from "@/lib/auth/auth-storage";
 import { getBackendBaseUrl } from "@/lib/network/backend-base-url";
 import { getBackendWsUrl } from "@/lib/network/backend-ws-url";
 import { getCookie } from "@better-auth/expo/client";
 
 import type { AppRouter } from "@norish/trpc/client";
+import { expireSession } from "@norish/shared-react/reader";
 import { createTRPCProviderBundle } from "@norish/shared-react/trpc";
 import { createClientLogger } from "@norish/shared/lib/logger";
 
@@ -86,14 +83,9 @@ const { TRPCProviderWrapper } = createTRPCProviderBundle({
   onWebSocketClientCreate: (client) => {
     mobileWebSocketClients.add(client);
   },
-  onWebSocketUnauthorized: () => {
-    log.info("WebSocket rejected with unauthorized response, signing out");
-    void invalidateSession("websocket-unauthorized");
-  },
-  onUnauthorized: () => {
-    log.info("tRPC request returned unauthorized response, signing out");
-    void invalidateSession("transport-unauthorized");
-  },
+  // The server closed the socket with 4401, or a request was answered 401: Session Expiry.
+  onWebSocketUnauthorized: expireSession,
+  onUnauthorized: expireSession,
 });
 
 /** `getQueryClient` and `mutationLink` come from the offline engine; both are read once. */

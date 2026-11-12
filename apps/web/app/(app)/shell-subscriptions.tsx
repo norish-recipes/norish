@@ -1,7 +1,11 @@
 "use client";
 
 import { useConfigSubscription } from "@norish/shared-react/config";
-import { useHouseholdSubscription, usePermissionsSubscription } from "@norish/shared-react/reader";
+import {
+  useHouseholdSubscription,
+  usePermissionsSubscription,
+  useSessionExpiry,
+} from "@norish/shared-react/reader";
 import {
   useArchiveImportOutcome,
   useRecipeOutcomesSubscription,
@@ -18,6 +22,8 @@ export function ShellSubscriptions() {
   useRecipeOutcomesSubscription();
   // An archive import runs on elsewhere: the shell applies its completion and toasts once.
   useArchiveImportOutcome();
+  // A 401 or 4401 here is Session Expiry; off the signed-in shell it means nothing.
+  useSessionExpiry();
 
   return null;
 }

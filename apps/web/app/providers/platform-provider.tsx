@@ -10,7 +10,7 @@ import { showSafeErrorToast } from "@/lib/ui/safe-error-toast";
 import { toast } from "@heroui/react";
 import { useTranslations } from "next-intl";
 
-import type { PlatformAdapter, PlatformSession } from "@norish/shared-react/platform";
+import type { LeaveReason, PlatformAdapter, PlatformSession } from "@norish/shared-react/platform";
 import type { DeviceKind } from "@norish/shared/contracts/zod/device-preferences";
 import { PlatformProvider } from "@norish/shared-react/platform";
 import { signOut } from "@norish/shared/lib/auth/client";
@@ -18,6 +18,23 @@ import { addBasePath } from "@norish/shared/lib/base-path";
 import { deviceKindFromUserAgent } from "@norish/shared/lib/device-kind";
 
 const SIGNED_OUT: PlatformSession = { user: null, isPending: false };
+
+let left = false;
+
+/**
+ * Sign-in once per page: a late 401 after a sign-out cannot replace its destination.
+ * `logout=true` stops a lone OAuth provider's redirect, which could recreate a deleted Account.
+ */
+export function leaveToLogin(reason: LeaveReason): void {
+  if (left) return;
+  left = true;
+
+  const url = new URL(addBasePath("/login"), window.location.origin);
+
+  if (reason === "sign-out") url.searchParams.set("logout", "true");
+  else url.searchParams.set("callbackUrl", window.location.pathname + window.location.search);
+  window.location.assign(url.toString());
+}
 
 /**
  * The web's platform adapter. `deviceKind` is the request's; an Offline start-up has none.
@@ -78,8 +95,7 @@ export function WebPlatformProvider({
 
       if (error) throw new Error(error.message ?? `Sign-out failed: ${error.status}`);
     },
-    // `logout=true` stops a lone OAuth provider's redirect, which could recreate a deleted Account.
-    leave: () => window.location.assign(addBasePath("/login?logout=true")),
+    leave: leaveToLogin,
     offlineEngine,
   };
 
