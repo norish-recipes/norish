@@ -96,11 +96,12 @@ export function stepLaunchClock(clock: number, elapsed: number | null, stop: num
   return Math.min(clock + Math.min(elapsed ?? 0, MAX_LAUNCH_STEP), stop);
 }
 
-/** At launch: too old goes to Update your server; unreachable or fine carries on. */
+/** At launch: a too old server goes to Update your server, unless the saved address changed since; anything else carries on. */
 export function resolveLaunchVersionCheck(
-  check: ServerAddressCheck
+  check: ServerAddressCheck,
+  saved: string
 ): { screen: "update-server"; address: string; version?: string } | { screen: "continue" } {
-  return check.outcome === "too-old"
+  return check.outcome === "too-old" && check.address === saved
     ? { screen: "update-server", address: check.address, version: check.version }
     : { screen: "continue" };
 }

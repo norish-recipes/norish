@@ -63,6 +63,11 @@ export function LaunchProvider({ children }: { children: ReactNode }) {
   );
 }
 
+/** Whether the launch has played out; true outside a LaunchProvider. */
+export function useLaunchFinished() {
+  return use(LaunchContext)?.done ?? true;
+}
+
 /** The JS splash over the screen it hands off to; a `null` handoff holds it. */
 export function LaunchSplash({ handoff }: { handoff: LaunchHandoff | null }) {
   const launch = use(LaunchContext);

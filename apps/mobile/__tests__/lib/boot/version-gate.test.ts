@@ -12,19 +12,25 @@ const unreachable = { outcome: "error", messageId: "auth.connect.errors.unreacha
 
 describe("resolveLaunchVersionCheck", () => {
   it("sends a too old server to Update your server, with what it reported", () => {
-    expect(resolveLaunchVersionCheck(tooOld)).toEqual({
+    expect(resolveLaunchVersionCheck(tooOld, address)).toEqual({
       screen: "update-server",
       address,
       version: "0.26.2",
     });
   });
 
+  it("drops a too old result for an address that is no longer the saved one", () => {
+    expect(resolveLaunchVersionCheck(tooOld, "https://other.example")).toEqual({
+      screen: "continue",
+    });
+  });
+
   it("carries on when the server is new enough", () => {
-    expect(resolveLaunchVersionCheck(newEnough)).toEqual({ screen: "continue" });
+    expect(resolveLaunchVersionCheck(newEnough, address)).toEqual({ screen: "continue" });
   });
 
   it("skips the check when the server is unreachable", () => {
-    expect(resolveLaunchVersionCheck(unreachable)).toEqual({ screen: "continue" });
+    expect(resolveLaunchVersionCheck(unreachable, address)).toEqual({ screen: "continue" });
   });
 });
 
