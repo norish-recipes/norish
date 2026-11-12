@@ -10,17 +10,14 @@ import { usePlatform } from "../platform";
 
 const log = createClientLogger("auth");
 
-/**
- * `discardQueue` only once the reader agreed to lose their unsynced changes (ADR-0009).
- * `accountDeleted`: the server already ended the session, so only this device is cleared, Outbox included.
- */
-export type SignOutOptions = { discardQueue?: boolean; accountDeleted?: boolean };
+/** `discardQueue` only once the reader agreed to lose their unsynced changes (ADR-0009). */
+export type SignOutOptions = { discardQueue?: boolean };
 
-// One Sign-out or Session Expiry at a time, on this device: the first wins until it settles.
+// One Sign-out, Account deletion or Session Expiry at a time, on this device: the first wins until it settles.
 let inFlight = false;
 let mountedExpiry: (() => Promise<void>) | null = null;
 
-async function once(sequence: () => Promise<void>): Promise<void> {
+export async function once(sequence: () => Promise<void>): Promise<void> {
   if (inFlight) return;
   inFlight = true;
 
@@ -31,7 +28,7 @@ async function once(sequence: () => Promise<void>): Promise<void> {
   }
 }
 
-async function clearAndLeave(
+export async function clearAndLeave(
   { offlineEngine, leave }: PlatformAdapter,
   discardQueue: boolean,
   reason: LeaveReason
@@ -50,28 +47,26 @@ export function useSignOut() {
   const platform = usePlatform();
   const { isOffline } = useConnectivity();
 
-  return ({ discardQueue = false, accountDeleted = false }: SignOutOptions = {}) =>
+  return ({ discardQueue = false }: SignOutOptions = {}) =>
     once(async () => {
-      if (!accountDeleted) {
-        try {
-          await platform.endSession();
-        } catch (error) {
-          log.warn({ error }, "Could not end the session, nothing was cleared");
+      try {
+        await platform.endSession();
+      } catch (error) {
+        log.warn({ error }, "Could not end the session, nothing was cleared");
 
-          if (isOffline) {
-            platform.toast.show({
-              severity: "warning",
-              title: platform.toast.translate("navbar.userMenu.signOutOffline"),
-            });
-          } else {
-            platform.showError(error, "sign out");
-          }
-
-          return;
+        if (isOffline) {
+          platform.toast.show({
+            severity: "warning",
+            title: platform.toast.translate("navbar.userMenu.signOutOffline"),
+          });
+        } else {
+          platform.showError(error, "sign out");
         }
+
+        return;
       }
 
-      await clearAndLeave(platform, discardQueue || accountDeleted, "sign-out");
+      await clearAndLeave(platform, discardQueue, "sign-out");
     });
 }
 

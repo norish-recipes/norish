@@ -9,10 +9,13 @@ import {
 } from "@norish/shared-react/platform/testing";
 
 import {
+  expireSession,
   useApiKeyMutations,
   useDeleteAccountMutation,
   usePreferencesMutation,
   useProfileMutations,
+  useSessionExpiry,
+  useSignOut,
 } from "..";
 import {
   answerCall,
@@ -192,38 +195,74 @@ describe("the Account's writes", () => {
   });
 
   describe("deleting the Account", () => {
-    it("signs out without the auth server, whose session is gone", async () => {
+    it("clears with the queue discarded and leaves as a sign-out, without the auth server", async () => {
       const result = render(() => useDeleteAccountMutation());
 
       act(() => result.current.deleteAccount());
       await answerCall("user.deleteAccount", { success: true });
 
-      await waitFor(() => expect(adapter.leave).toHaveBeenCalledOnce());
+      await waitFor(() => expect(adapter.leave).toHaveBeenCalledExactlyOnceWith("sign-out"));
       expect(adapter.endSession).not.toHaveBeenCalled();
-      expect(adapter.offlineEngine.clearForSignOut).toHaveBeenCalledWith({ discardQueue: true });
+      expect(adapter.offlineEngine.clearForSignOut).toHaveBeenCalledExactlyOnceWith({
+        discardQueue: true,
+      });
     });
 
-    it("stays and says why when the server refuses", async () => {
+    it("ignores a Session Expiry that arrives while the delete is in flight", async () => {
+      const { unmount } = renderHook(() => useSessionExpiry(), {
+        wrapper: createTestWrapper(queryClient, adapter),
+      });
+      const result = render(() => useDeleteAccountMutation());
+
+      act(() => result.current.deleteAccount());
+      await sentCall("user.deleteAccount");
+      await expireSession();
+
+      expect(adapter.offlineEngine.clearForSignOut).not.toHaveBeenCalled();
+      expect(adapter.leave).not.toHaveBeenCalled();
+
+      await answerCall("user.deleteAccount", { success: true });
+
+      await waitFor(() => expect(adapter.leave).toHaveBeenCalledExactlyOnceWith("sign-out"));
+      expect(adapter.offlineEngine.clearForSignOut).toHaveBeenCalledExactlyOnceWith({
+        discardQueue: true,
+      });
+      unmount();
+    });
+
+    it("stays and says why when the server refuses, and a later sign-out still runs", async () => {
       const result = render(() => useDeleteAccountMutation());
 
       act(() => result.current.deleteAccount());
       await answerCall("user.deleteAccount", { success: false, error: "Transfer admin first" });
 
+      expect(adapter.offlineEngine.clearForSignOut).not.toHaveBeenCalled();
       expect(adapter.leave).not.toHaveBeenCalled();
       expect(adapter.showError).toHaveBeenCalledWith(
         "Transfer admin first",
         "user-settings:delete-account"
       );
+
+      const signOut = render(() => useSignOut()).current;
+
+      await act(() => signOut());
+      expect(adapter.leave).toHaveBeenCalledExactlyOnceWith("sign-out");
     });
 
-    it("stays signed in when the write fails", async () => {
+    it("stays signed in when the write fails, and a later sign-out still runs", async () => {
       const result = render(() => useDeleteAccountMutation());
 
       act(() => result.current.deleteAccount());
       await failCall("user.deleteAccount");
 
+      expect(adapter.offlineEngine.clearForSignOut).not.toHaveBeenCalled();
       expect(adapter.leave).not.toHaveBeenCalled();
       expect(adapter.showError).toHaveBeenCalledOnce();
+
+      const signOut = render(() => useSignOut()).current;
+
+      await act(() => signOut());
+      expect(adapter.leave).toHaveBeenCalledExactlyOnceWith("sign-out");
     });
   });
 });

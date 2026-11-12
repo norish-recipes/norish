@@ -10,7 +10,7 @@ import { accepted, answered, settled } from "../offline/settled";
 import { showRefusal, usePlatform } from "../platform";
 import { useTRPC } from "../trpc";
 import { useProfileCache } from "./use-profile";
-import { useSignOut } from "./use-sign-out";
+import { clearAndLeave, once } from "./use-sign-out";
 
 /** A failed write's `onError`: reread the profile and tell the reader. */
 function useFailedWrite() {
@@ -158,22 +158,26 @@ export function useApiKeyMutations() {
   };
 }
 
-/** Deletes the Reader's account and signs out on this device. */
+/** Deletes the Reader's account, then clears this device, Outbox included, and leaves as a Sign-out. */
 export function useDeleteAccountMutation() {
   const trpc = useTRPC();
-  const { showError } = usePlatform();
-  const signOut = useSignOut();
+  const platform = usePlatform();
   const context = "user-settings:delete-account";
 
-  const { mutate } = useMutation(
+  const { mutateAsync } = useMutation(
     trpc.user.deleteAccount.mutationOptions({
       onSuccess: (answer) => {
-        if (answer.success) void signOut({ accountDeleted: true });
-        else showRefusal(showError, answer, context);
+        if (!answer.success) showRefusal(platform.showError, answer, context);
       },
-      onError: (error) => showError(error, context),
+      onError: (error) => platform.showError(error, context),
     })
   );
 
-  return { deleteAccount: () => mutate() };
+  // The delete ends the session, so it runs inside the guard and a Session Expiry it causes is ignored.
+  return {
+    deleteAccount: () =>
+      void once(async () => {
+        if (await accepted(mutateAsync())) await clearAndLeave(platform, true, "sign-out");
+      }),
+  };
 }

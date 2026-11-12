@@ -85,12 +85,6 @@ describe("Sign-out and Session Expiry", () => {
       expect(adapter.toast.show).not.toHaveBeenCalled();
     });
 
-    it("after the Account was deleted, skips the server and discards the queue", async () => {
-      await signOut({ accountDeleted: true });
-
-      expect(steps).toEqual(["clear+discard", "leave:sign-out"]);
-    });
-
     it("still leaves when clearing fails", async () => {
       vi.mocked(adapter.offlineEngine.clearForSignOut).mockRejectedValue(new Error("quota"));
 
