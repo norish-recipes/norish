@@ -13,6 +13,7 @@ import type { AppRouter } from "@norish/trpc/client";
 import { iconIds } from "@norish/shared/lib/ingredient-icon-ids";
 import { uploadForm } from "@norish/shared/lib/upload-form";
 
+import type { StoredIcon } from "./types";
 import { useTRPC } from "../trpc";
 import { useCatalogueFailure } from "./use-catalogue-failure";
 
@@ -86,9 +87,6 @@ export function useIngredientsNamed(names: readonly string[]): ReadonlyMap<strin
 
   return new Map(names.map((name, index) => [name, found[index]?.data?.ingredientId ?? null]));
 }
-
-/** A drawn or uploaded icon, stored but not yet the food's: Save makes it so. */
-export type StoredIcon = { file: string; address: string };
 
 /** Upload a picture or generate an icon for a food; each resolves the stored icon, or null when it failed. */
 export function useIngredientIconMutations(ingredientId: string) {

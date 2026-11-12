@@ -16,7 +16,7 @@ export interface IngredientItem {
   localeNames?: LocaleNames;
   flagged: boolean;
   flagReason?: FlagReason | null;
-  parent: { id: string; name: string; localeNames?: LocaleNames } | null;
+  parent: NamedIngredient | null;
   /** How many foods are kinds of this one. */
   kinds: number;
   /** The Ingredient Icon it shows, own, shipped or borrowed; null shows the placeholder. */
@@ -47,8 +47,12 @@ export type AIChange = {
   canAct: boolean;
 };
 
-/** A food a draft names, as its row shows it. */
-export type NamedIngredient = { id: string; name: string; localeNames?: LocaleNames };
+/** A food as a row names it: a list's `NamedFood`, its translations where it has them. */
+export type NamedIngredient = Pick<NamedFood, "id" | "name"> &
+  Partial<Pick<NamedFood, "localeNames">>;
+
+/** A drawn or uploaded icon, stored but not yet the food's: Save makes it so. */
+export type StoredIcon = { file: string; address: string };
 
 /**
  * An Ingredient's panel draft as Save sends it. Undefined leaves a field as it is; `parent` null
@@ -62,5 +66,5 @@ export interface IngredientDraft {
   remove: string[];
   junk: string[];
   /** A stored file to make the food's own, with the address it shows at. */
-  icon?: { file: string; address: string } | null;
+  icon?: StoredIcon | null;
 }

@@ -1,6 +1,12 @@
-export type { AIChange, IngredientDraft, IngredientItem, NamedIngredient, Spelling } from "./types";
+export type {
+  AIChange,
+  IngredientDraft,
+  IngredientItem,
+  NamedIngredient,
+  Spelling,
+  StoredIcon,
+} from "./types";
 export type { IngredientListInput } from "./use-ingredient-queries";
-export type { StoredIcon } from "./use-ingredient-icons";
 
 export { isOpenChange, useAIChangeMutations, useAIChangesQuery } from "./use-ai-changes";
 export {
