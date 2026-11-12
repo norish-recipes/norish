@@ -7,14 +7,14 @@ import { ServerIcon } from "@heroicons/react/24/outline";
 import { Link, useOverlayState } from "@heroui/react";
 import { useTranslations } from "next-intl";
 
-import { useCaldavConfigSlice, useCaldavMutations } from "@norish/shared-react/calendar";
+import { useCaldavConfigQuery, useCaldavMutations } from "@norish/shared-react/calendar";
 
 import CaldavConfigEditModal from "./caldav-config-edit-modal";
 import CaldavConfigSummary from "./caldav-config-summary";
 import { CaldavFormFields, useCaldavForm } from "./caldav-form";
 
 export default function CaldavConfigCard() {
-  const { slice: configured } = useCaldavConfigSlice((config) => config !== null);
+  const { config: configured } = useCaldavConfigQuery((config) => config !== null);
   const {
     isOpen: isEditModalOpen,
     open: onEditModalOpen,

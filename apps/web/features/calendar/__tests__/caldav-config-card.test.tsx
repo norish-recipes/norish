@@ -13,8 +13,8 @@ vi.mock("next-intl", () => ({
 }));
 
 vi.mock("@norish/shared-react/calendar", () => ({
-  useCaldavConfigSlice: (select: (config: object | null) => unknown) => ({
-    slice: select({ serverUrl: "https://cal.example.com" }),
+  useCaldavConfigQuery: (select: (config: object | null) => unknown) => ({
+    config: select({ serverUrl: "https://cal.example.com" }),
   }),
   useCaldavMutations: () => ({ saveConfig: vi.fn(), isSavingConfig: false }),
 }));

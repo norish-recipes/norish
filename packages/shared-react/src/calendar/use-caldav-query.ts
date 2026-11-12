@@ -12,21 +12,23 @@ import type {
 } from "./types";
 import { useTRPC } from "../trpc";
 
-export function useCaldavConfigQuery(): CaldavConfigQueryResult {
+type CaldavConfig = UserCaldavConfigWithoutPasswordDto | null;
+
+/** The config, or through `select` a slice of it, so a reader re-renders only when that slice changes. */
+export function useCaldavConfigQuery(): CaldavConfigQueryResult;
+export function useCaldavConfigQuery<T>(
+  select: (config: CaldavConfig) => T
+): Omit<CaldavConfigQueryResult, "config"> & { config: T | undefined };
+export function useCaldavConfigQuery(
+  select?: (config: CaldavConfig) => unknown
+): Omit<CaldavConfigQueryResult, "config"> & { config: unknown } {
   const trpc = useTRPC();
-  const { data, error, isLoading } = useQuery(trpc.caldav.getConfig.queryOptions());
+  const { data, error, isLoading } = useQuery({
+    ...trpc.caldav.getConfig.queryOptions(),
+    select: select ?? ((config: CaldavConfig) => config),
+  });
 
-  return { config: data ?? null, error, isLoading };
-}
-
-/** A slice of the config, so a reader re-renders only when that slice changes. */
-export function useCaldavConfigSlice<T>(
-  select: (config: UserCaldavConfigWithoutPasswordDto | null) => T
-) {
-  const trpc = useTRPC();
-  const { data, isLoading } = useQuery({ ...trpc.caldav.getConfig.queryOptions(), select });
-
-  return { slice: data, isLoading };
+  return { config: select ? data : (data ?? null), error, isLoading };
 }
 
 /** The stored password, read while the edit form that shows it is mounted and dropped after. */
@@ -95,7 +97,7 @@ export function useCaldavSummaryQuery(): CaldavSummaryQueryResult {
  */
 export function useCaldavConnectionQuery() {
   const trpc = useTRPC();
-  const { slice: configured } = useCaldavConfigSlice((config) => config !== null);
+  const { config: configured } = useCaldavConfigQuery((config) => config !== null);
   const { data, isPending } = useQuery(
     trpc.caldav.checkConnection.queryOptions(undefined, {
       enabled: configured === true,
