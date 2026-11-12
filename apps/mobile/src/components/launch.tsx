@@ -116,27 +116,25 @@ function LaunchOverlay({ handoff, launch }: { handoff: LaunchHandoff | null; lau
   }, [clock, finish, motion]);
 
   const overlayStyle = useAnimatedStyle(() => ({
-    opacity: glide
-      ? 1
-      : interpolate(clock.get(), [HOLD_END, FADE_END], [1, 0], Extrapolation.CLAMP),
+    opacity: glide ? 1 : 1 - progress(clock.get(), HOLD_END, FADE_END),
   }));
   // Server address draws only the ground under a glide, so the splash's own ground can go.
   const groundStyle = useAnimatedStyle(() => ({
     opacity: glide && clock.get() > HOLD_END ? 0 : 1,
   }));
   const brandStyle = useAnimatedStyle(() => {
-    const progress = interpolate(clock.get(), [HOLD_END, GLIDE_END], [0, 1], Extrapolation.CLAMP);
+    const glided = progress(clock.get(), HOLD_END, GLIDE_END);
 
     return {
       // Server address shows its own brand on the same frame this one hides.
       opacity: glide && clock.get() >= GLIDE_END ? 0 : 1,
       transform: [
-        { translateY: glide && target !== null ? glideEasing(progress) * (target - top) : 0 },
+        { translateY: glide && target !== null ? glideEasing(glided) * (target - top) : 0 },
       ],
     };
   });
   const sloganStyle = useAnimatedStyle(() => ({
-    opacity: interpolate(clock.get(), [0, SLOGAN_IN], [0, 1], Extrapolation.CLAMP),
+    opacity: progress(clock.get(), 0, SLOGAN_IN),
   }));
 
   return (
@@ -153,22 +151,25 @@ function LaunchOverlay({ handoff, launch }: { handoff: LaunchHandoff | null; lau
   );
 }
 
-function fadeIn(clock: number) {
+/** How far the clock is from `start` to `end`, from 0 to 1. */
+function progress(clock: number, start: number, end: number) {
   "worklet";
 
-  return interpolate(clock, [HOLD_END, FADE_END], [0, 1], Extrapolation.CLAMP);
+  return interpolate(clock, [start, end], [0, 1], Extrapolation.CLAMP);
 }
 
 function rise(clock: number, [start, end]: readonly [number, number], reduceMotion: boolean) {
   "worklet";
 
-  if (reduceMotion) return { opacity: fadeIn(clock), transform: [{ translateY: 0 }] };
+  if (reduceMotion) {
+    return { opacity: progress(clock, HOLD_END, FADE_END), transform: [{ translateY: 0 }] };
+  }
 
-  const progress = interpolate(clock, [start, end], [0, 1], Extrapolation.CLAMP);
+  const risen = progress(clock, start, end);
 
   return {
-    opacity: progress,
-    transform: [{ translateY: (1 - riseEasing(progress)) * RISE_DISTANCE }],
+    opacity: risen,
+    transform: [{ translateY: (1 - riseEasing(risen)) * RISE_DISTANCE }],
   };
 }
 
@@ -180,7 +181,11 @@ export function useLaunchEntrance() {
   const reduceMotion = useReducedMotion();
 
   const brandStyle = useAnimatedStyle(() => ({
-    opacity: reduceMotion ? fadeIn(clock.get()) : clock.get() >= GLIDE_END ? 1 : 0,
+    opacity: reduceMotion
+      ? progress(clock.get(), HOLD_END, FADE_END)
+      : clock.get() >= GLIDE_END
+        ? 1
+        : 0,
   }));
   const fieldStyle = useAnimatedStyle(() => rise(clock.get(), FIELD_RISE, reduceMotion));
   const buttonStyle = useAnimatedStyle(() => rise(clock.get(), BUTTON_RISE, reduceMotion));
