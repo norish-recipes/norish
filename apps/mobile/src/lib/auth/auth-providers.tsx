@@ -50,10 +50,7 @@ export function AuthProviders({ children }: { children: ReactNode }) {
           // Faded out while still signed in, so the ending's unmount happens out of sight.
           await fadeOutSignedIn();
           setEnding(true);
-          await endSession(authClient, scope).catch((error: unknown) => {
-            void fadeOutSignedIn(false);
-            throw error;
-          });
+          await endSession(authClient, scope);
         }}
         session={session}
       >
