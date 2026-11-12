@@ -87,12 +87,7 @@ function ToggleChip({
   );
 }
 
-/**
- * The Ingredients page's filters, in a panel like the dashboard's: how the
- * text is matched, where it is looked for, and whether only the flagged foods
- * show. Changes land with Apply, as they do there; Reset puts the defaults
- * back and applies them.
- */
+/** The page's filters, like the dashboard's: they land with Apply; Reset applies the defaults. */
 export function IngredientFiltersPanel({
   open,
   value,

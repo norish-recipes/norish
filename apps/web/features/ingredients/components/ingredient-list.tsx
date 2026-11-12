@@ -15,12 +15,8 @@ const ROW_OVERSCAN = 12;
 const LOAD_MORE_MARGIN = "600px";
 
 /**
- * The catalogue's rows, virtualised against the window as the dashboard's
- * grid is: only the rows in and around view are in the tree. The next page
- * is asked for when the end of the list comes within reach of the viewport,
- * watched by an observer rather than read off the virtual rows, so a page
- * shorter than the window still asks for the next. Rows carry their own
- * state; this list only knows how tall they are.
+ * The rows, virtualised against the window; an IntersectionObserver on the list's end asks for the
+ * next page, so a page shorter than the window still asks.
  */
 export function IngredientList({
   rows,
@@ -53,9 +49,8 @@ export function IngredientList({
   const { height: windowHeight } = useWindowSize();
   const isEmpty = rows.length === 0;
 
-  // Where the list starts on the page; the virtualizer measures from there.
-  // Read once the container is in the DOM, again on resize, and when the
-  // list first has rows to place.
+  // Where the list starts on the page, which the virtualizer measures from; read again on resize
+  // and once rows arrive.
   const [scrollMargin, setScrollMargin] = useState(0);
 
   useLayoutEffect(() => {

@@ -60,12 +60,7 @@ function panelRows(changes: AIChange[]): PanelRow[] {
   return out;
 }
 
-/**
- * The panel's rows, virtualised against the panel's own scrolling body: a month
- * may hold a thousand changes, a row each with a button or two, and only the
- * rows in and around view are in the tree.
- * Rows carry their own spacing; the virtualizer measures each one.
- */
+/** The panel's rows, virtualised against its scrolling body: a month may hold thousands. */
 function VirtualRows({
   rows,
   render,

@@ -6,11 +6,7 @@ import { useDebounceValue } from "usehooks-ts";
 import { useIngredientIconAddress, useIngredientsNamed } from "@norish/shared-react/ingredients";
 import { addBasePath } from "@norish/shared/lib/base-path";
 
-/**
- * The sizes an Ingredient Icon is shown at: beside a step's chip, a line or
- * a row (smaller on a phone, where every pixel beside a line wraps it), and
- * in its panel.
- */
+/** An icon's size beside a chip, a line or row (smaller on a phone), or in its panel. */
 const SIZES = { chip: "size-5", line: "size-6 md:size-8", panel: "size-16" } as const;
 
 export type IngredientIconSize = keyof typeof SIZES;
@@ -18,12 +14,7 @@ export type IngredientIconSize = keyof typeof SIZES;
 /** How long typing pauses before a typed name is looked up. */
 const FIND_DELAY_MS = 400;
 
-/**
- * The food each typed name already names, by the name, or null where it
- * names none yet: what an editor row shows the icon of as soon as Norish
- * knows what was typed. A reader: it never mints. Names are looked up once
- * typing pauses; a name not looked up yet answers nothing.
- */
+/** The food each typed name names, or null, looked up once typing pauses; it never mints. */
 export function useFoodsByName(names: readonly string[]): ReadonlyMap<string, string | null> {
   const [typed] = useDebounceValue(
     [...new Set(names.filter((name) => name !== ""))].join("\n"),

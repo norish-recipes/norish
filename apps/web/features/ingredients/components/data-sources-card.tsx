@@ -28,11 +28,8 @@ function ExternalLink({ href, children }: { href: string; children: ReactNode })
 }
 
 /**
- * Where the ingredient catalogue comes from (ADR-0038): Open Food Facts'
- * taxonomy, under the ODbL, which asks for this credit and for the derived
- * catalogue to be offered as data — hence the download, for every member.
- * Ingredient Nutrition's datasets are credited beside it (ADR-0039), as their
- * terms ask: CIQUAL and CALNUT by source and edition.
+ * The ODbL credit and download Open Food Facts' taxonomy asks for (ADR-0038), beside the nutrition
+ * datasets' credits (ADR-0039).
  */
 export default function DataSourcesCard() {
   const t = useTranslations("settings.ingredients.dataSources");

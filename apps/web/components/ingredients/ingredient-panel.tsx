@@ -146,9 +146,7 @@ function IngredientPanelContent({ item, onClose }: { item: IngredientItem; onClo
 
   useGroceriesPantryAndCatalogueSubscriptions();
   const [allSpellings, setAllSpellings] = useState(false);
-  // The catalogue knows a food in dozens of languages; the server sends the
-  // viewer's spellings and a person's own, and the rest are fetched when the
-  // panel is asked for them.
+  // The server sends the viewer's and the household's spellings; the rest are read once asked for.
   const hiddenSpellings = item.hiddenSpellings ?? 0;
 
   // The draft: what the viewer has changed and not yet saved.
@@ -203,11 +201,7 @@ function IngredientPanelContent({ item, onClose }: { item: IngredientItem; onClo
   const pantryChanged = keeps !== null && keeps !== (kept !== null);
   const dirty = catalogueDirty || pantryChanged;
 
-  /**
-   * Land the draft: the Pantry switch, which is the household's and open to
-   * any member, and the catalogue fields as one edit; a refusal of those
-   * changes nothing, keeps them in the draft and says why.
-   */
+  /** Lands the Pantry switch, and the catalogue fields as one edit the draft keeps if refused. */
   const save = async () => {
     if (!dirty) return;
     if (pantryChanged) {
@@ -640,13 +634,7 @@ function IngredientPanelContent({ item, onClose }: { item: IngredientItem; onClo
   );
 }
 
-/**
- * Whether the household keeps this food. The switch is part of the draft and
- * lands with Save, open to any member whatever the edit policy says, since
- * keeping a food is a household matter. It reflects the food itself only; a
- * kept kind of it does not turn it on. A kept food whose grocery is still to
- * buy says so; putting it on the list is the Pantry page's.
- */
+/** Whether the household keeps this food itself: a draft switch any member may set. */
 function PantryRow({
   kept,
   keeping,
