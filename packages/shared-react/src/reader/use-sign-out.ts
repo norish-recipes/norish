@@ -50,7 +50,7 @@ export function useSignOut() {
   return ({ discardQueue = false }: SignOutOptions = {}) =>
     once(async () => {
       try {
-        await platform.endSession();
+        await platform.endSession("sign-out");
       } catch (error) {
         log.warn({ error }, "Could not end the session, nothing was cleared");
 
@@ -77,10 +77,10 @@ export function useSessionExpiry(): void {
   useEffect(() => {
     const expire = () =>
       once(async () => {
-        // The server already ended it; this only drops what the device still holds.
+        // A 401 may be a passing server error, so the server's session is left alone; only the device's goes.
         await platform
-          .endSession()
-          .catch((error: unknown) => log.info({ error }, "Session already gone"));
+          .endSession("expiry")
+          .catch((error: unknown) => log.warn({ error }, "Could not drop the device's session"));
         await clearAndLeave(platform, false, "expiry");
       });
 

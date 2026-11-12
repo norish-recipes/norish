@@ -1,5 +1,25 @@
-import { leaveToLogin } from "@/app/providers/platform-provider";
+import { endWebSession, leaveToLogin } from "@/app/providers/platform-provider";
 import { afterEach, describe, expect, it, vi } from "vitest";
+
+const signOut = vi.hoisted(() => vi.fn(async () => ({ error: null })));
+
+vi.mock("@norish/shared/lib/auth/client", () => ({ signOut }));
+
+describe("the web's endSession", () => {
+  it("ends the session on the server on a sign-out", async () => {
+    await endWebSession("sign-out");
+
+    expect(signOut).toHaveBeenCalledOnce();
+  });
+
+  it("leaves the server's session alone on expiry", async () => {
+    signOut.mockClear();
+
+    await endWebSession("expiry");
+
+    expect(signOut).not.toHaveBeenCalled();
+  });
+});
 
 describe("the web's leave", () => {
   const originalLocation = window.location;

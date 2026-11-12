@@ -37,6 +37,18 @@ export function leaveToLogin(reason: LeaveReason): void {
 }
 
 /**
+ * Fails while Offline: the cookie is httpOnly, so only the server can end the session.
+ * On expiry the device holds nothing to drop, and a passing 401 must not end a live session.
+ */
+export async function endWebSession(reason: LeaveReason): Promise<void> {
+  if (reason === "expiry") return;
+
+  const { error } = await signOut();
+
+  if (error) throw new Error(error.message ?? `Sign-out failed: ${error.status}`);
+}
+
+/**
  * The web's platform adapter. `deviceKind` is the request's; an Offline start-up has none.
  * `session` comes from the signed-in shell; login and share pages read no session.
  */
@@ -89,12 +101,7 @@ export function WebPlatformProvider({
     storage: browserStorage,
     deviceKind: kind,
     session,
-    // Fails while Offline: the cookie is httpOnly, so only the server can end the session.
-    endSession: async () => {
-      const { error } = await signOut();
-
-      if (error) throw new Error(error.message ?? `Sign-out failed: ${error.status}`);
-    },
+    endSession: endWebSession,
     leave: leaveToLogin,
     offlineEngine,
   };

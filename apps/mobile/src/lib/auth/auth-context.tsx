@@ -14,6 +14,7 @@ import { readPersistedSession } from "@/lib/auth/auth-storage";
 import { endSession as endSessionOn } from "@/lib/auth/end-session";
 import { useStore } from "better-auth/react";
 
+import type { LeaveReason } from "@norish/shared-react/platform";
 import { useConnectivity } from "@norish/shared-react/offline/react";
 
 type AuthContextValue = {
@@ -24,7 +25,7 @@ type AuthContextValue = {
   justLoggedOut: boolean;
   user: { id: string; email: string; name: string; image?: string | null } | null;
   /** The platform adapter's `endSession`: always succeeds on a phone. */
-  endSession: () => Promise<void>;
+  endSession: (reason: LeaveReason) => Promise<void>;
   consumeLogoutFlag: () => void;
 };
 
@@ -119,8 +120,8 @@ function AuthProviderInner({
   ]);
 
   // The session store is emptied first, so a remount before these sets reads signed out.
-  const endSession = async () => {
-    await endSessionOn(authClient);
+  const endSession = async (reason: LeaveReason) => {
+    await endSessionOn(authClient, reason);
     setAuthOverride("signed-out");
     setPersistedUser(null);
     setPersistedSessionStatus("idle");

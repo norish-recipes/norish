@@ -53,6 +53,7 @@ describe("Sign-out and Session Expiry", () => {
       await signOut();
 
       expect(steps).toEqual(["end", "clear", "leave:sign-out"]);
+      expect(adapter.endSession).toHaveBeenCalledExactlyOnceWith("sign-out");
     });
 
     it("discards the queue once the reader agreed to", async () => {
@@ -97,12 +98,13 @@ describe("Sign-out and Session Expiry", () => {
   });
 
   describe("Session Expiry", () => {
-    it("ends what is left of the session, clears keeping the queue, then leaves", async () => {
+    it("drops the device's session, clears keeping the queue, then leaves", async () => {
       mountExpiry();
 
       await expireSession();
 
       expect(steps).toEqual(["end", "clear", "leave:expiry"]);
+      expect(adapter.endSession).toHaveBeenCalledExactlyOnceWith("expiry");
     });
 
     it("still runs after the shell re-renders with a new platform", async () => {
@@ -119,7 +121,7 @@ describe("Sign-out and Session Expiry", () => {
       expect(steps).toEqual(["end:new", "clear", "leave:expiry"]);
     });
 
-    it("keeps the queue and still clears and leaves when the session cannot be ended", async () => {
+    it("keeps the queue and still clears and leaves when the device's session cannot be dropped", async () => {
       vi.mocked(adapter.endSession).mockRejectedValue(new Error("401"));
       mountExpiry();
 

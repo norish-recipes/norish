@@ -47,8 +47,8 @@ export type PlatformAdapter = {
   storage: PlatformStorage;
   deviceKind: DeviceKind;
   session: PlatformSession;
-  /** Ends the session on the server and this device; rejects when it could not. */
-  endSession: () => Promise<void>;
+  /** Ends the session on the server and this device, or on expiry only this device's copy; rejects when it could not. */
+  endSession: (reason: LeaveReason) => Promise<void>;
   /** Takes the signed-out reader to sign-in. */
   leave: (reason: LeaveReason) => void;
   offlineEngine: Pick<OfflineEngine, "clearForSignOut">;
