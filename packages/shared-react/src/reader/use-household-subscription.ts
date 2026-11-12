@@ -1,5 +1,7 @@
 "use client";
 
+import { useQueryClient } from "@tanstack/react-query";
+
 import type { HouseholdAdminSettingsDto } from "@norish/shared/contracts/dto/household";
 import type { EventName, PayloadOf } from "@norish/shared/contracts/realtime/catalogue";
 import type { HouseholdsRealtime } from "@norish/shared/contracts/realtime/households";
@@ -7,6 +9,7 @@ import type { HouseholdsRealtime } from "@norish/shared/contracts/realtime/house
 import { usePlatform } from "../platform";
 import { useRealtimeSubscription } from "../realtime";
 import { useTRPC } from "../trpc";
+import type { HouseholdData } from "./use-household";
 import { useHouseholdCacheHelpers } from "./use-household";
 import { useReader } from "./use-reader";
 
@@ -15,6 +18,7 @@ type Payload<E extends EventName<HouseholdsRealtime>> = PayloadOf<HouseholdsReal
 /** Keeps the cached household current; the shell mounts it once. */
 export function useHouseholdSubscription() {
   const trpc = useTRPC();
+  const queryClient = useQueryClient();
   const currentUserId = useReader().user?.id;
   const { setHouseholdData, invalidate, invalidateUserSettings, invalidateRecipes } =
     useHouseholdCacheHelpers();
@@ -129,6 +133,20 @@ export function useHouseholdSubscription() {
   useRealtimeSubscription<Payload<"adminTransferred">>(trpc.households.onAdminTransferred, {
     ...live,
     onEvent: (payload) => {
+      // The server answers the transfer before running it, so the giver hears of it here.
+      if (payload.oldAdminId === currentUserId) {
+        const held = queryClient.getQueryData<HouseholdData>(trpc.households.get.queryKey());
+
+        toast.show({
+          severity: "success",
+          title: toast.translate("common.household.adminTransferred", {
+            name:
+              held?.household?.users.find((user) => user.id === payload.newAdminId)?.name ??
+              toast.translate("common.household.unknownMember"),
+          }),
+        });
+      }
+
       setHouseholdData((prev) => {
         if (!prev?.household) return prev;
 

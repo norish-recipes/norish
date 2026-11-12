@@ -199,25 +199,13 @@ describe("useHouseholdMutations", () => {
       ]);
     });
 
-    it("announces the new admin only once the transfer succeeds", async () => {
+    it("raises no success toast on the answer alone, which precedes the transfer", async () => {
       const result = render(household());
-      const successes = () =>
-        vi.mocked(adapter.toast.show).mock.calls.filter(([toast]) => toast.severity === "success");
 
       await act(async () => result.current.transferAdmin("h1", "a"));
-      await settle("transferAdmin", 0, "reject");
-      expect(successes()).toHaveLength(0);
+      await settle("transferAdmin", 0, "resolve", { success: true });
 
-      await act(async () => result.current.transferAdmin("h1", "a"));
-      await settle("transferAdmin", 1, "resolve", { success: true });
-      expect(successes()).toEqual([
-        [
-          {
-            severity: "success",
-            title: "common.household.adminTransferred",
-          },
-        ],
-      ]);
+      expect(adapter.toast.show).not.toHaveBeenCalled();
     });
   });
 });

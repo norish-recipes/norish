@@ -453,6 +453,51 @@ describe("useHouseholdSubscription", () => {
       });
     });
 
+    const transferred = (oldAdminId: string) => {
+      const initialHousehold = createMockHouseholdSettings({
+        users: [
+          createMockHouseholdUser({ id: "user-1", isAdmin: true }),
+          createMockHouseholdUser({ id: READER.id, isAdmin: true }),
+          createMockHouseholdUser({ id: "user-2", name: "Anna", isAdmin: false }),
+        ],
+      });
+
+      queryClient.setQueryData(
+        householdQueryKey,
+        createMockHouseholdData(initialHousehold, READER.id)
+      );
+      const adapter = fakePlatformAdapter("phone", READER);
+
+      adapter.toast.translate = (id, values) => (values ? `${id}:${values.name}` : id);
+      renderHook(() => useHouseholdSubscription(), {
+        wrapper: createTestWrapper(queryClient, adapter),
+      });
+
+      act(() => {
+        subscriptionCallbacks.onAdminTransferred?.(
+          trackedEvent({ oldAdminId, newAdminId: "user-2", version: 2 })
+        );
+      });
+
+      return adapter;
+    };
+
+    it("announces the new admin once the Reader's own transfer is confirmed", () => {
+      const adapter = transferred(READER.id);
+
+      expect(adapter.toast.show).toHaveBeenCalledTimes(1);
+      expect(adapter.toast.show).toHaveBeenCalledWith({
+        severity: "success",
+        title: "common.household.adminTransferred:Anna",
+      });
+    });
+
+    it("announces nothing when someone else gave the role away", () => {
+      const adapter = transferred("user-1");
+
+      expect(adapter.toast.show).not.toHaveBeenCalled();
+    });
+
     it("refetches the household when the Reader becomes admin, for its join code", () => {
       const initialHousehold = createMockHouseholdSettings({
         users: [
