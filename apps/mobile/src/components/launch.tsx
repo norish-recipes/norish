@@ -8,15 +8,15 @@ import Animated, {
   Easing,
   Extrapolation,
   interpolate,
-  ReduceMotion,
   useAnimatedStyle,
+  useFrameCallback,
   useReducedMotion,
   useSharedValue,
-  withTiming,
 } from "react-native-reanimated";
 import { scheduleOnRN } from "react-native-worklets";
 import { Brand, LOGO_HEIGHT } from "@/components/brand";
-import { resolveLaunchMotion } from "@/lib/boot/boot-state";
+import { resolveLaunchMotion, stepLaunchClock } from "@/lib/boot/boot-state";
+import * as SplashScreen from "expo-splash-screen";
 import { useThemeColor } from "heroui-native";
 
 // The launch timeline in ms from the JS splash's first frame, after the Launch board.
@@ -79,6 +79,8 @@ function LaunchOverlay({ handoff, launch }: { handoff: LaunchHandoff | null; lau
   const [background] = useThemeColor(["background"] as const);
   // A remount (the tRPC provider re-keys on sign-in) picks the clock up where it was.
   const [held, setHeld] = useState(() => clock.get() >= HOLD_END);
+  // The clock starts once this frame is on screen, so the slogan fades in visibly.
+  const [shown, setShown] = useState(() => clock.get() > 0);
   // The native splash centres the logo on the window, so this frame does too.
   const top = (height - LOGO_HEIGHT) / 2;
   const decided = held ? resolveLaunchMotion(handoff, reduceMotion, target) : null;
@@ -89,46 +91,28 @@ function LaunchOverlay({ handoff, launch }: { handoff: LaunchHandoff | null; lau
     if (motion === null && decided !== null) setMotion(decided);
   }, [decided, motion, setMotion]);
 
-  useEffect(() => {
-    if (held) return;
+  const end = motion === null ? HOLD_END : motion === "glide" ? LAUNCH_END : FADE_END;
+  const stop = shown ? end : 0;
 
-    clock.set(
-      withTiming(
-        HOLD_END,
-        {
-          duration: HOLD_END - clock.get(),
-          easing: Easing.linear,
-          reduceMotion: ReduceMotion.Never,
-        },
-        (finished) => {
-          if (finished) scheduleOnRN(setHeld, true);
-        }
-      )
-    );
-  }, [clock, held]);
+  // Stepped per frame rather than timed, so a stalled frame slows the launch instead of skipping it.
+  useFrameCallback(({ timeSincePreviousFrame }) => {
+    const now = clock.get();
 
-  useEffect(() => {
-    if (motion === null) return;
+    if (now >= stop) return;
 
-    const end = motion === "glide" ? LAUNCH_END : FADE_END;
+    const next = stepLaunchClock(now, timeSincePreviousFrame, stop);
 
-    clock.set(
-      withTiming(
-        end,
-        {
-          duration: Math.max(0, end - clock.get()),
-          easing: Easing.linear,
-          reduceMotion: ReduceMotion.Never,
-        },
-        (finished) => {
-          if (!finished) return;
+    clock.set(next);
 
-          clock.set(LAUNCH_END);
-          scheduleOnRN(finish);
-        }
-      )
-    );
-  }, [clock, finish, motion]);
+    if (next < stop) return;
+
+    if (stop === HOLD_END) {
+      scheduleOnRN(setHeld, true);
+    } else {
+      clock.set(LAUNCH_END);
+      scheduleOnRN(finish);
+    }
+  });
 
   const overlayStyle = useAnimatedStyle(() => ({
     opacity: glide ? 1 : 1 - progress(clock.get(), HOLD_END, FADE_END),
@@ -152,10 +136,17 @@ function LaunchOverlay({ handoff, launch }: { handoff: LaunchHandoff | null; lau
     opacity: progress(clock.get(), 0, SLOGAN_IN),
   }));
 
+  // Hidden only once this frame is mounted, or the native splash reveals an empty window;
+  // the clock starts after hide's main-queue removal, so the fade begins on screen.
+  const onLayout = () => {
+    void SplashScreen.hideAsync().then(() => setShown(true));
+  };
+
   return (
     <Animated.View
       accessibilityElementsHidden
       importantForAccessibility="no-hide-descendants"
+      onLayout={onLayout}
       style={[styles.fill, overlayStyle]}
     >
       <Animated.View style={[styles.fill, { backgroundColor: background }, groundStyle]} />

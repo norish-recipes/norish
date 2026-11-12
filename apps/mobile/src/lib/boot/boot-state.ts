@@ -80,3 +80,18 @@ export function resolveSignedOutEntry(
 ): SignedOutEntry {
   return serverAddress && !changeRequested ? "sign-in" : "server-address";
 }
+
+/** The most one frame moves the launch clock: two 60 Hz frames. */
+const MAX_LAUNCH_STEP = 1000 / 30;
+
+/**
+ * The launch clock after a frame: forward by the frame's time, capped so a frame stalled on
+ * the first mount can't skip the slogan's fade, and never past `stop`.
+ */
+export function stepLaunchClock(clock: number, elapsed: number | null, stop: number) {
+  "worklet";
+
+  if (clock >= stop) return clock;
+
+  return Math.min(clock + Math.min(elapsed ?? 0, MAX_LAUNCH_STEP), stop);
+}

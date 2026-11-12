@@ -2,6 +2,7 @@ import {
   resolveBootPhase,
   resolveLaunchMotion,
   resolveSignedOutEntry,
+  stepLaunchClock,
 } from "@/lib/boot/boot-state";
 import { describe, expect, it } from "vitest";
 
@@ -152,5 +153,27 @@ describe("resolveSignedOutEntry", () => {
 
   it("opens on Server address when the reader asked to change the saved one", () => {
     expect(resolveSignedOutEntry("https://norish.example", true)).toBe("server-address");
+  });
+});
+
+describe("stepLaunchClock", () => {
+  it("advances by the frame's elapsed time", () => {
+    expect(stepLaunchClock(100, 16.7, 900)).toBeCloseTo(116.7);
+  });
+
+  it("advances at most two 60 Hz frames, so a stalled frame can't skip the launch", () => {
+    expect(stepLaunchClock(0, 195, 900)).toBeCloseTo(1000 / 30);
+  });
+
+  it("stops at the stop point", () => {
+    expect(stepLaunchClock(890, 16.7, 900)).toBe(900);
+  });
+
+  it("stays put on a frame with no elapsed time yet", () => {
+    expect(stepLaunchClock(100, null, 900)).toBe(100);
+  });
+
+  it("never moves back when the stop point is behind it", () => {
+    expect(stepLaunchClock(1200, 16.7, 900)).toBe(1200);
   });
 });

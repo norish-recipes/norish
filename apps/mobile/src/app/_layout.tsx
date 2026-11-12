@@ -1,7 +1,7 @@
 import "@/global.css";
 import "@/lib/i18n/plural-rules";
 
-import React, { useEffect } from "react";
+import React from "react";
 import { ActivityIndicator, StyleSheet, View } from "react-native";
 import { GestureHandlerRootView } from "react-native-gesture-handler";
 import { LaunchProvider, LaunchSplash } from "@/components/launch";
@@ -35,9 +35,8 @@ import { PortalHost } from "heroui-native/portal";
 import { usePlatform } from "@norish/shared-react/platform";
 import { useHouseholdSubscription, usePermissionsSubscription } from "@norish/shared-react/reader";
 
-// The boot gate below renders nothing until hydration settles. Holding the
-// native splash over that window is what keeps it from showing as a blank
-// screen; every branch of the gate hides it again.
+// The boot gate renders nothing until hydration settles, so the native splash holds
+// until every branch's LaunchSplash is laid out and hides it.
 void SplashScreen.preventAutoHideAsync();
 
 // The faces the font tokens in global.css name.
@@ -91,12 +90,6 @@ function RootLayoutContent() {
     fontsReady: fontsLoaded || fontsError !== null,
     serverAddress,
   });
-
-  // Every branch below mounts LaunchSplash, whose first frame matches the native splash,
-  // so hiding it shows no jump, including a boot that fails and has to say so.
-  useEffect(() => {
-    if (boot.phase !== "loading") void SplashScreen.hideAsync();
-  }, [boot.phase]);
 
   // Gate: wait for all async hydration before rendering anything
   if (boot.phase === "loading") {
