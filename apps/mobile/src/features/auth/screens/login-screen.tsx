@@ -1,7 +1,8 @@
 import type { AuthClient } from "@/lib/auth/auth-client";
+import type { ReactNode } from "react";
 import React, { use } from "react";
 import { Text, View } from "react-native";
-import Animated, { Easing, LinearTransition } from "react-native-reanimated";
+import Animated from "react-native-reanimated";
 import { Brand } from "@/components/brand";
 import { AuthLayout } from "@/features/auth/components/auth-layout";
 import { PasswordForm } from "@/features/auth/components/password-form";
@@ -22,8 +23,6 @@ import { Button, Separator, Spinner } from "heroui-native";
 import { useIntl } from "react-intl";
 
 import { useAuthProvidersQuery } from "@norish/shared-react/config";
-
-const GLIDE = LinearTransition.duration(240).easing(Easing.out(Easing.cubic));
 
 /** A title, a line and at most one action, where the form would be. */
 function LoginStatus({
@@ -62,6 +61,18 @@ function OrDivider() {
   );
 }
 
+/** The brand, "Sign in to" and what sits under it, fading in once where they stay. */
+function SignInBlock({ children }: { children: ReactNode }) {
+  const intl = useIntl();
+
+  return (
+    <Animated.View entering={FADE_IN}>
+      <Brand compact prefix={intl.formatMessage({ id: "auth.login.title" })} />
+      <View className="mt-7">{children}</View>
+    </Animated.View>
+  );
+}
+
 function SignInMethods({ authClient, redirectTo }: { authClient: AuthClient; redirectTo: string }) {
   const intl = useIntl();
   const config = useAuthProvidersQuery();
@@ -69,6 +80,7 @@ function SignInMethods({ authClient, redirectTo }: { authClient: AuthClient; red
   // One attempt across every method, so a password and a provider sign-in never overlap.
   const signIn = useAuthAttempt();
 
+  // The spinner stands alone, so the block never moves when the methods replace it.
   if (config.isLoading) {
     return <Spinner className="self-center" />;
   }
@@ -76,29 +88,32 @@ function SignInMethods({ authClient, redirectTo }: { authClient: AuthClient; red
   // A failed background refetch leaves loaded methods up, so the form keeps its state.
   if (config.error && !config.hasData) {
     return (
-      <LoginStatus
-        action={{
-          label: intl.formatMessage({ id: "common.actions.retry" }),
-          onPress: () => void config.refetch(),
-        }}
-        description={intl.formatMessage({ id: "auth.errors.default.description" })}
-        title={intl.formatMessage({ id: "auth.errors.default.title" })}
-      />
+      <SignInBlock>
+        <LoginStatus
+          action={{
+            label: intl.formatMessage({ id: "common.actions.retry" }),
+            onPress: () => void config.refetch(),
+          }}
+          description={intl.formatMessage({ id: "auth.errors.default.description" })}
+          title={intl.formatMessage({ id: "auth.errors.default.title" })}
+        />
+      </SignInBlock>
     );
   }
 
   if (methods.noMethod) {
     return (
-      <LoginStatus
-        description={intl.formatMessage({ id: "auth.login.noProviders.contactAdmin" })}
-        title={intl.formatMessage({ id: "auth.login.noProviders.title" })}
-      />
+      <SignInBlock>
+        <LoginStatus
+          description={intl.formatMessage({ id: "auth.login.noProviders.contactAdmin" })}
+          title={intl.formatMessage({ id: "auth.login.noProviders.title" })}
+        />
+      </SignInBlock>
     );
   }
 
-  // Fades in as the methods arrive, after the launch cross-fade, rather than popping in.
   return (
-    <Animated.View entering={FADE_IN}>
+    <SignInBlock>
       {methods.passwordForm ? (
         <PasswordForm authClient={authClient} showSignUpLink={methods.signUp} signIn={signIn} />
       ) : null}
@@ -111,7 +126,7 @@ function SignInMethods({ authClient, redirectTo }: { authClient: AuthClient; red
           signIn={signIn}
         />
       ) : null}
-    </Animated.View>
+    </SignInBlock>
   );
 }
 
@@ -127,24 +142,20 @@ export function LoginScreen() {
 
   return (
     <AuthLayout footer={serverAddress ? <ServerChip address={serverAddress} /> : null}>
-      {/* The centred block glides to fit the methods as they replace the spinner; Reduce Motion cuts. */}
-      <Animated.View layout={GLIDE}>
-        <Brand compact prefix={intl.formatMessage({ id: "auth.login.title" })} />
-        <View className="mt-7">
-          {authClient === null ? (
-            <LoginStatus
-              action={{
-                label: intl.formatMessage({ id: "auth.connect.openConnect" }),
-                onPress: () => router.replace("/(auth)"),
-              }}
-              description={intl.formatMessage({ id: "auth.connect.backendRequiredDescription" })}
-              title={intl.formatMessage({ id: "auth.connect.backendRequiredTitle" })}
-            />
-          ) : (
-            <SignInMethods authClient={authClient} redirectTo={redirectTo} />
-          )}
-        </View>
-      </Animated.View>
+      {authClient === null ? (
+        <SignInBlock>
+          <LoginStatus
+            action={{
+              label: intl.formatMessage({ id: "auth.connect.openConnect" }),
+              onPress: () => router.replace("/(auth)"),
+            }}
+            description={intl.formatMessage({ id: "auth.connect.backendRequiredDescription" })}
+            title={intl.formatMessage({ id: "auth.connect.backendRequiredTitle" })}
+          />
+        </SignInBlock>
+      ) : (
+        <SignInMethods authClient={authClient} redirectTo={redirectTo} />
+      )}
     </AuthLayout>
   );
 }
