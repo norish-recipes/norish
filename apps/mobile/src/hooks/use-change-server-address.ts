@@ -49,13 +49,11 @@ export function useSignOutBeforeServerChange() {
   }, [signOut]);
 }
 
-/** Once the signed-out stack is up, opens Server address for a change that signed out first. */
-export function useServerChangeAfterSignOut(signedOut: boolean) {
-  useEffect(() => {
-    if (!signedOut || !changeAfterSignOut) return;
+/** Whether a change that signed out first is pending; read once, by the signed-out stack's first screen. */
+export function takeServerChangeAfterSignOut(): boolean {
+  const pending = changeAfterSignOut;
 
-    changeAfterSignOut = false;
-    // Replaces whatever the stack kept on top, such as Update your server.
-    router.replace(SERVER_ADDRESS_CHANGE);
-  }, [signedOut]);
+  changeAfterSignOut = false;
+
+  return pending;
 }

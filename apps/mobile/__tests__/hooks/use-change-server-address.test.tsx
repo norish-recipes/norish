@@ -4,15 +4,14 @@ import { beforeEach, describe, expect, it, vi } from "vitest";
 
 let signOut = vi.fn<() => Promise<boolean>>();
 const push = vi.fn();
-const replace = vi.fn();
 
 vi.mock("@/hooks/use-confirmed-sign-out", () => ({ useConfirmedSignOut: () => signOut }));
-vi.mock("expo-router", () => ({ router: { push, replace } }));
+vi.mock("expo-router", () => ({ router: { push } }));
 
-const { changeServerAddress, useServerChangeAfterSignOut, useSignOutBeforeServerChange } =
+const { changeServerAddress, takeServerChangeAfterSignOut, useSignOutBeforeServerChange } =
   await import("@/hooks/use-change-server-address");
 
-// The chip while signed in, then the signed-out stack mounting after a later Sign-out.
+// The chip while signed in; resolves whether the signed-out stack's first screen opens Server address.
 async function chipThenSignedOut(result: Promise<boolean>) {
   signOut = vi.fn(() => result);
   const shell = renderHook(() => useSignOutBeforeServerChange());
@@ -22,30 +21,26 @@ async function chipThenSignedOut(result: Promise<boolean>) {
     await result.catch(() => {});
   });
   shell.unmount();
-  renderHook(() => useServerChangeAfterSignOut(true));
+
+  return takeServerChangeAfterSignOut();
 }
 
 beforeEach(() => {
   push.mockClear();
-  replace.mockClear();
+  takeServerChangeAfterSignOut();
 });
 
 describe("changeServerAddress while signed in", () => {
   it("opens Server address once the Sign-out completes", async () => {
-    await chipThenSignedOut(Promise.resolve(true));
-
-    expect(replace).toHaveBeenCalledTimes(1);
+    expect(await chipThenSignedOut(Promise.resolve(true))).toBe(true);
+    expect(takeServerChangeAfterSignOut()).toBe(false);
   });
 
   it("drops the change when the Sign-out is cancelled", async () => {
-    await chipThenSignedOut(Promise.resolve(false));
-
-    expect(replace).not.toHaveBeenCalled();
+    expect(await chipThenSignedOut(Promise.resolve(false))).toBe(false);
   });
 
   it("drops the change when the unsynced-changes read rejects", async () => {
-    await chipThenSignedOut(Promise.reject(new Error("outbox unreadable")));
-
-    expect(replace).not.toHaveBeenCalled();
+    expect(await chipThenSignedOut(Promise.reject(new Error("outbox unreadable")))).toBe(false);
   });
 });
