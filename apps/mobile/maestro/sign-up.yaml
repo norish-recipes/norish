@@ -1,38 +1,31 @@
-# Creates an Account on a server with sign-ups open and lands signed in. Also checks the
-# mismatched-passwords error and that Already have an account? returns to Sign in. Each run
-# signs up a new email, so the server needs no reset. The link and the error have no testID.
+# Creates an Account on a server with sign-ups open and lands signed in, after checking the
+# mismatch error and the links between Sign in and Sign up. Each run signs up a new email.
 appId: dev.norish.app
 ---
 - evalScript: ${output.email = 'signup-' + Date.now() + '@norish.test'}
-- launchApp:
-    clearState: true
-    clearKeychain: true
-- extendedWaitUntil:
-    visible:
-      id: connect-server-url
-    timeout: 20000
-- tapOn:
-    id: connect-server-url
-- inputText: ${NORISH_SERVER_URL}
-- hideKeyboard
-- tapOn:
-    id: connect-submit
+- runFlow:
+    file: subflows/connect.yaml
+    env:
+      NORISH_CONNECT_URL: ${NORISH_SERVER_URL}
 - extendedWaitUntil:
     visible:
       id: login-email
     timeout: 20000
 # Sign in links to Sign up, and Sign up links back.
-- tapOn: .*Sign up
+- tapOn:
+    id: login-sign-up-link
 - extendedWaitUntil:
     visible:
       id: register-name
     timeout: 10000
-- tapOn: Already have an account\? Sign in
+- tapOn:
+    id: register-sign-in-link
 - extendedWaitUntil:
     visible:
       id: login-email
     timeout: 10000
-- tapOn: .*Sign up
+- tapOn:
+    id: login-sign-up-link
 - extendedWaitUntil:
     visible:
       id: register-name
@@ -45,26 +38,23 @@ appId: dev.norish.app
 - inputText: ${output.email}
 - tapOn:
     id: register-password
-- runFlow: subflows/dismiss-strong-password.yaml
 - inputText: ${NORISH_PASSWORD}
 - tapOn:
     id: register-confirm-password
-- runFlow: subflows/dismiss-strong-password.yaml
 - inputText: ${NORISH_PASSWORD}-different
 - tapOn:
     id: register-submit
 - extendedWaitUntil:
-    visible: Passwords do not match
+    visible:
+      id: register-error
+      text: ${NORISH_COPY_PASSWORD_MISMATCH}
     timeout: 5000
-# Fixes the confirmation and creates the Account.
+# Erases the 10 characters of -different, which leaves the matching password, and submits.
 - tapOn:
     id: register-confirm-password
-- runFlow: subflows/dismiss-strong-password.yaml
-- eraseText: 40
-- inputText: ${NORISH_PASSWORD}
+- eraseText: 10
 - tapOn:
     id: register-submit
-- runFlow: subflows/dismiss-save-password.yaml
 - extendedWaitUntil:
     visible:
       id: smoke-user

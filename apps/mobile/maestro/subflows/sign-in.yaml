@@ -2,21 +2,10 @@
 # keeps the session across a relaunch. NORISH_EMAIL/PASSWORD come from the maestro script.
 appId: dev.norish.app
 ---
-# The session lives in the keychain, which outlives the app's own data.
-- launchApp:
-    clearState: true
-    clearKeychain: true
-# The launch splash plays about two seconds before Server address takes input.
-- extendedWaitUntil:
-    visible:
-      id: connect-server-url
-    timeout: 20000
-- tapOn:
-    id: connect-server-url
-- inputText: ${NORISH_SIGN_IN_URL}
-- hideKeyboard
-- tapOn:
-    id: connect-submit
+- runFlow:
+    file: connect.yaml
+    env:
+      NORISH_CONNECT_URL: ${NORISH_SIGN_IN_URL}
 - runFlow: credentials.yaml
 - extendedWaitUntil:
     visible:
@@ -25,7 +14,6 @@ appId: dev.norish.app
     timeout: 10000
 - stopApp
 - launchApp
-- runFlow: dismiss-save-password.yaml
 - extendedWaitUntil:
     visible:
       id: smoke-user

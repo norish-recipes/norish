@@ -1,25 +1,15 @@
-# Points the app at a server reporting an older version and lands on the update screen,
-# with no sign-in. `pnpm --filter @norish/mobile maestro` serves that old server.
+# Points the app at a server reporting an older version and lands on the update screen naming
+# both versions, with no sign-in. `pnpm --filter @norish/mobile maestro` serves that old server.
 appId: dev.norish.app
 ---
-- launchApp:
-    clearState: true
-    clearKeychain: true
-# The launch splash plays about two seconds before Server address takes input.
-- extendedWaitUntil:
-    visible:
-      id: connect-server-url
-    timeout: 20000
-- tapOn:
-    id: connect-server-url
-- inputText: ${NORISH_OLD_SERVER_URL}
-- hideKeyboard
-- tapOn:
-    id: connect-submit
+- runFlow:
+    file: ../subflows/connect.yaml
+    env:
+      NORISH_CONNECT_URL: ${NORISH_OLD_SERVER_URL}
 - extendedWaitUntil:
     visible:
       id: update-server-description
-      text: ".*\\d+\\.\\d+\\.0 or newer.*"
+      text: .*${NORISH_OLD_SERVER_HOST}.*${NORISH_OLD_SERVER_VERSION}.*${NORISH_MINIMUM_SERVER_VERSION}.*
     timeout: 10000
 - assertNotVisible:
     id: login-submit

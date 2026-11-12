@@ -10,7 +10,6 @@ appId: dev.norish.app
 - evalScript: "${http.post(NORISH_PROXY_CONTROL_URL + '/cut', { body: '' })}"
 - stopApp
 - launchApp
-- runFlow: subflows/dismiss-save-password.yaml
 - extendedWaitUntil:
     visible:
       id: smoke-connection

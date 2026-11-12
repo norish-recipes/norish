@@ -1,4 +1,5 @@
-# Signs out from the smoke screen, stays on sign-in without flipping back, and signs in again.
+# Signs out from the smoke screen, lands on Sign in for the same server without flipping back,
+# and signs in again.
 appId: dev.norish.app
 ---
 - runFlow:
@@ -14,14 +15,21 @@ appId: dev.norish.app
     visible:
       id: login-email
     timeout: 20000
+- assertVisible:
+    id: server-chip
+    text: .*${NORISH_SERVER_HOST}.*
 # Gives the app 5 s to read signed in again; it must stay on sign-in.
 - extendedWaitUntil:
     visible:
       id: smoke-user
     timeout: 5000
+    # Absent is the pass: the app stays signed out.
     optional: true
 - assertNotVisible:
     id: smoke-user
 - assertVisible:
     id: login-email
+- assertVisible:
+    id: server-chip
+    text: .*${NORISH_SERVER_HOST}.*
 - runFlow: subflows/credentials.yaml
