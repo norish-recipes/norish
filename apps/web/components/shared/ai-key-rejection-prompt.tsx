@@ -3,7 +3,7 @@
 import { useEffect } from "react";
 import { useRouter } from "next/navigation";
 import { settingsHref } from "@/components/settings/settings-tab";
-import { useAIKeyRejections } from "@/hooks/admin/use-ai-key-rejections";
+import { useAIKeyRejections } from "@/hooks/use-ai-key-rejections";
 import { showActionToast } from "@/lib/ui/action-toast";
 import { useTranslations } from "next-intl";
 
@@ -34,7 +34,13 @@ function rememberShown(id: string): void {
  */
 export default function AIKeyRejectionPrompt() {
   const isServerAdmin = usePermissions((p) => p.isServerAdmin);
-  const rejections = useAIKeyRejections(isServerAdmin);
+
+  return isServerAdmin ? <AdminKeyRejectionPrompt /> : null;
+}
+
+/** Mounted for an admin only, so nobody else asks the admin-only read. */
+function AdminKeyRejectionPrompt() {
+  const rejections = useAIKeyRejections();
   const router = useRouter();
   const t = useTranslations("common.aiKeyRejected");
 

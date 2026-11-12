@@ -1,9 +1,8 @@
 "use client";
 
-import { useQuery } from "@tanstack/react-query";
 import { useFormatter, useTranslations } from "next-intl";
 
-import { useTRPC } from "@norish/shared-react/trpc";
+import { useAIKeyRejectionsQuery } from "@norish/shared-react/admin";
 
 /** Each settings block's heading under AI processing, by the config key a rejection names. */
 const BLOCK_TITLES = {
@@ -14,18 +13,16 @@ const BLOCK_TITLES = {
 } as const;
 
 /**
- * The configured AI keys the provider is refusing, in the admin's words:
- * which blocks, and since when. Null while every key answers. `enabled`
- * keeps the admin-only query from being asked by anyone else.
+ * The configured AI keys the provider is refusing, in the admin's words: which blocks, and since
+ * when. Null while every key answers. An admin-only read: only an admin's components mount it.
  */
-export function useAIKeyRejections(enabled = true) {
-  const trpc = useTRPC();
+export function useAIKeyRejections() {
   const t = useTranslations("common.aiKeyRejected");
   const tBlocks = useTranslations("settings.admin.aiProcessing");
   const format = useFormatter();
-  const { data } = useQuery(trpc.admin.aiKeyRejections.queryOptions(undefined, { enabled }));
+  const data = useAIKeyRejectionsQuery();
 
-  if (!data || data.length === 0) return null;
+  if (data.length === 0) return null;
 
   const since = data.map((rejection) => rejection.since).sort((a, b) => (a < b ? -1 : 1))[0]!;
 

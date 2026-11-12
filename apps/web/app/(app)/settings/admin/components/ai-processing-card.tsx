@@ -3,7 +3,7 @@
 import { useCallback, useState } from "react";
 import { SettingsAccordion, SettingsCard } from "@/components/settings/settings-card";
 import { Note } from "@/components/shared/note";
-import { useAIKeyRejections } from "@/hooks/admin/use-ai-key-rejections";
+import { useAIKeyRejections } from "@/hooks/use-ai-key-rejections";
 import { SparklesIcon } from "@heroicons/react/24/outline";
 import { Accordion } from "@heroui/react";
 import { useTranslations } from "next-intl";
