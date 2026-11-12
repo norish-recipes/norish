@@ -57,24 +57,11 @@ function AuthErrorContent() {
   const searchParams = useSearchParams();
   const error = searchParams.get("error")?.toLowerCase();
 
-  log.debug(
-    {
-      error,
-    },
-    "Auth error"
-  );
-
   const errorKey = error && isKnownErrorCode(error) ? error : "default";
   const title = t(`${errorKey}.title`);
   const description = t(`${errorKey}.description`);
 
-  log.debug(
-    {
-      title,
-      description,
-    },
-    "Auth error info"
-  );
+  log.debug({ error, title, description }, "Auth error");
   const isServerError = error === "internal_server_error";
 
   return (
