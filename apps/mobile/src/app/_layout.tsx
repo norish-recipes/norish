@@ -207,7 +207,12 @@ function SignedInFade({ children }: { children: React.ReactNode }) {
     opacity: withTiming(fading ? 0 : 1, FADE_OUT_TIMING),
   }));
 
-  return <Animated.View style={[styles.root, style]}>{children}</Animated.View>;
+  // Not interactive while it fades: the session it shows is already ending.
+  return (
+    <Animated.View pointerEvents={fading ? "none" : "auto"} style={[styles.root, style]}>
+      {children}
+    </Animated.View>
+  );
 }
 
 function AuthenticatedProviders({ children }: { children: React.ReactNode }) {

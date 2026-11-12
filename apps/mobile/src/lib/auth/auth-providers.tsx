@@ -28,7 +28,12 @@ export function AuthProviders({ children }: { children: ReactNode }) {
   const [ending, setEnding] = useState(false);
   // Signed in, then the server answered no session with no sequence ending it: a Session Expiry.
   const expired = hasActiveSession && !ending && ended;
-  const session = ending || expired ? ENDING : liveSession;
+  // The last signed-in session stays shown until endSession has faded it out.
+  const [shown, setShown] = useState(liveSession.user ? liveSession : null);
+
+  if (liveSession.user && liveSession.user.id !== shown?.user?.id) setShown(liveSession);
+
+  const session = ending ? ENDING : expired ? (shown ?? ENDING) : liveSession;
   const signedIn = session.user !== null;
 
   // Publishing re-keys the tRPC provider, which remounts this one; signed out is leave's to publish.

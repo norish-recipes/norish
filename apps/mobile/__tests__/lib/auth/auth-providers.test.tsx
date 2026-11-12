@@ -207,17 +207,23 @@ describe("AuthProviders", () => {
 
       // No tRPC request has been answered 401 yet.
       act(() => clients[0]?.session.set(ended));
+      // The signed-in screen stays mounted through its fade-out, as on a Sign-out.
+      expect(seen.sessions.at(-1)?.user?.id).toBe(USER.id);
 
       await waitFor(() => expect(seen.sessions.at(-1)).toEqual(SIGNED_OUT));
       expect(seen.clearedAt).toEqual([{ discardQueue: false, at: expect.any(Number) }]);
 
       const cleared = seen.clearedAt[0]?.at ?? 0;
+      const ending = seen.sessions.slice(from, seen.leftAt);
+      const firstPending = ending.findIndex((session) => session.isPending);
 
       expect(cleared).toBeLessThanOrEqual(seen.leftAt);
-      expect(seen.sessions.slice(from, seen.leftAt)).toEqual(
-        seen.sessions.slice(from, seen.leftAt).map(() => PENDING)
+      // Signed in until the fade ends, then pending until leave; never signed in again.
+      expect(firstPending).toBeGreaterThan(0);
+      expect(ending.slice(0, firstPending).every((session) => session.user?.id === USER.id)).toBe(
+        true
       );
-      expect(seen.sessions.slice(from).filter((session) => session.user)).toEqual([]);
+      expect(ending.slice(firstPending)).toEqual(ending.slice(firstPending).map(() => PENDING));
       expect(getAuthTransportSnapshot()).toEqual({
         hasActiveSession: false,
         version: version + 1,
