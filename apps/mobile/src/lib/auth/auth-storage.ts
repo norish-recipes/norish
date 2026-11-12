@@ -109,12 +109,16 @@ export async function readPersistedSession(): Promise<SessionUser | null> {
   return user;
 }
 
+/** Wipes both keys, each settled before a failed one rejects, so the client is replaced after both. */
 export async function clearAuthStorage(): Promise<void> {
   // The adapter has no delete; writing "" through it empties every chunk, then the key goes.
-  await Promise.all(
+  const wipes = await Promise.allSettled(
     [AUTH_COOKIE_KEY, AUTH_SESSION_DATA_KEY].map(async (key) => {
       await authStorage.setItemAsync(key, "");
       await SecureStore.deleteItemAsync(key);
     })
   );
+  const failed = wipes.find((wipe): wipe is PromiseRejectedResult => wipe.status === "rejected");
+
+  if (failed) throw failed.reason;
 }

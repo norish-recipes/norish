@@ -19,7 +19,7 @@ const secureStore = vi.hoisted(() => {
     getItemAsync: async (key: string) => items.get(key) ?? null,
     setItem: (key: string, value: string) => void items.set(key, value),
     setItemAsync: async (key: string, value: string) => void items.set(key, value),
-    deleteItemAsync: async (key: string) => void items.delete(key),
+    deleteItemAsync: vi.fn(async (key: string): Promise<void> => void items.delete(key)),
   };
 });
 const COOKIE_KEY = "norish_cookie";
@@ -269,5 +269,21 @@ describe("clearAuthStorage", () => {
     await clearAuthStorage();
 
     expect([...secureStore.items.values()].filter(Boolean)).toEqual([]);
+  });
+
+  it("lets every key's wipe settle before it reports one that failed", async () => {
+    secureStore.items.clear();
+    await storageAdapter(secureStore).setItemAsync(SESSION_DATA_KEY, "x".repeat(5000));
+    await storageAdapter(secureStore).setItemAsync(COOKIE_KEY, "session-token=abc");
+    const wipe = async (key: string) => {
+      if (key === COOKIE_KEY) throw new Error("keychain locked");
+      await new Promise((resolve) => setTimeout(resolve, 10));
+      secureStore.items.delete(key);
+    };
+
+    secureStore.deleteItemAsync.mockImplementationOnce(wipe).mockImplementationOnce(wipe);
+
+    await expect(clearAuthStorage()).rejects.toThrow("keychain locked");
+    expect(secureStore.items.has(SESSION_DATA_KEY)).toBe(false);
   });
 });
