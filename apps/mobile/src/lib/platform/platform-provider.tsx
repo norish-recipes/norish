@@ -53,14 +53,14 @@ export function MobilePlatformProvider({ children }: { children: ReactNode }) {
       // No recipe screen yet; the library's migration adds one.
       toRecipe: (id) => log.warn({ id }, "No recipe screen to open"),
     },
-    showError: (error, context) => {
+    showError: (error, context, title) => {
       log.error({ error }, context);
       toast.show({
         component: (props) => (
           <Toast variant="danger" {...props} className="gap-1">
             <View>
               <Toast.Title className="text-foreground">
-                {intl.formatMessage({ id: "common.errors.operationFailed" })}
+                {title ?? intl.formatMessage({ id: "common.errors.operationFailed" })}
               </Toast.Title>
               <Toast.Description className="text-muted">
                 {intl.formatMessage({ id: "common.errors.technicalDetails" })}

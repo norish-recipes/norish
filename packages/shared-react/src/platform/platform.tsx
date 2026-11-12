@@ -44,8 +44,8 @@ export type PlatformAdapter = {
     toHome: () => void;
     toRecipe: (id: string) => void;
   };
-  /** Tells the reader an operation failed; `context` names where, for the log. */
-  showError: (error: unknown, context: string) => void;
+  /** Tells the reader an operation failed, under `title` if given; `context` names where, for the log. */
+  showError: (error: unknown, context: string, title?: string) => void;
   storage: PlatformStorage;
   deviceKind: DeviceKind;
   session: PlatformSession;

@@ -60,9 +60,9 @@ export function WebPlatformProvider({
       toHome: () => router.push("/"),
       toRecipe: (id) => router.push(`/recipes/${id}`),
     },
-    showError: (error, context) =>
+    showError: (error, context, title) =>
       showSafeErrorToast({
-        title: tErrors("operationFailed"),
+        title: title ?? tErrors("operationFailed"),
         description: tErrors("technicalDetails"),
         error,
         context,
