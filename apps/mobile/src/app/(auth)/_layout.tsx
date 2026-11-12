@@ -10,6 +10,8 @@ export default function AuthLayout() {
         headerTransparent: Platform.OS === "ios",
         headerShadowVisible: false,
         headerTitle: "",
+        // The back button is the board's icon alone, with no previous title.
+        headerBackButtonDisplayMode: "minimal",
         // The native push and pop between the auth screens.
         animation: "default",
       }}
