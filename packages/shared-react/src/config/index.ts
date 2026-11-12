@@ -5,7 +5,7 @@ export { useAuthProvidersQuery } from "./use-auth-providers-query";
 export { useCategoriesQuery } from "./use-categories-query";
 export { useConfigSubscription } from "./use-config-subscription";
 export { useCuisinesQuery } from "./use-cuisines-query";
-export { useIngredientsSubscription } from "./use-ingredients-subscription";
+export { nutritionQueryKeys, useIngredientsSubscription } from "./use-ingredients-subscription";
 export { useIngredientWordsQuery } from "./use-ingredient-words-query";
 export { useLocaleConfigQuery } from "./use-locale-config-query";
 export { useRecurrenceConfigQuery } from "./use-recurrence-config-query";

@@ -4,6 +4,7 @@ import { skipToken, useMutation, useQuery, useQueryClient } from "@tanstack/reac
 import type { IngredientNutrition } from "@norish/shared/contracts/ingredient-nutrition";
 import type { AppRouter } from "@norish/trpc/client";
 
+import { nutritionQueryKeys } from "../config";
 import { writeOverRead } from "../offline/write-over-read";
 import { usePlatform } from "../platform/platform";
 import { useTRPC } from "../trpc";
@@ -61,12 +62,10 @@ export function useNutritionCorrection(ingredientId: string) {
       });
     },
     onError: (error: unknown) => refuse(error, "correct-nutrition", "nutrition"),
-    // The Ingredient's own facts, and every recipe total worked out from them.
     onSettled: () =>
-      Promise.all([
-        queryClient.invalidateQueries({ queryKey: trpc.ingredients.nutrition.queryKey() }),
-        queryClient.invalidateQueries({ queryKey: trpc.ingredients.nutritionFor.queryKey() }),
-      ]),
+      Promise.all(
+        nutritionQueryKeys(trpc).map((queryKey) => queryClient.invalidateQueries({ queryKey }))
+      ),
   });
 
   const correct = useMutation({

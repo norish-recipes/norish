@@ -6,6 +6,12 @@ import type { IngredientsRealtime } from "@norish/shared/contracts/realtime/ingr
 import { useKeepsCurrent, useRealtimeSubscription } from "../realtime";
 import { useTRPC } from "../trpc";
 
+/** What a nutrition correction changes: every Ingredient's facts and every recipe total from them. */
+export const nutritionQueryKeys = (trpc: ReturnType<typeof useTRPC>) => [
+  trpc.ingredients.nutrition.queryKey(),
+  trpc.ingredients.nutritionFor.queryKey(),
+];
+
 /**
  * A catalogue change refetches every read derived from an Ingredient (ADR-0037), a nutrition
  * correction the nutrition reads (ADR-0039); refetches are idempotent, so echoes change nothing.
@@ -37,10 +43,7 @@ export function useIngredientsSubscription() {
     },
   });
 
-  const nutrition = [
-    trpc.ingredients.nutrition.queryKey(),
-    trpc.ingredients.nutritionFor.queryKey(),
-  ];
+  const nutrition = nutritionQueryKeys(trpc);
 
   useRealtimeSubscription<PayloadOf<IngredientsRealtime, "corrected">>(
     trpc.ingredients.onCorrected,
