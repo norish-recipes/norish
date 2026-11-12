@@ -6,7 +6,7 @@ import { useTranslations } from "next-intl";
 
 import { MeasurementSystem } from "@norish/shared/contracts";
 
-export interface MeasurementSystemSelectorProps {
+interface MeasurementSystemSelectorProps {
   value: MeasurementSystem;
   onChange: (system: MeasurementSystem) => void;
   detected?: MeasurementSystem;

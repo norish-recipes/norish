@@ -14,7 +14,7 @@ import { useLocale, useTranslations } from "next-intl";
 import type { StoreTotal } from "./store-total";
 
 /** Mark all done, Delete done and Clear all: what a section's kebab can hold. */
-export interface StoreHeadingActions {
+interface StoreHeadingActions {
   onMarkAllDone?: () => void;
   onDeleteDone?: () => void;
   onClearAll?: () => void;

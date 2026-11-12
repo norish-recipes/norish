@@ -16,13 +16,13 @@ import type { StepIngredientDraft } from "./step-ingredient-chips";
 import SmartTextInput from "./smart-text-input";
 import { StepIngredientChips } from "./step-ingredient-chips";
 
-export interface StepImage {
+interface StepImage {
   id?: string;
   image: string;
   order: number;
   version?: number;
 }
-export interface StepIngredientRef {
+interface StepIngredientRef {
   ingredientOrder: number;
   share: number;
   order?: number;
@@ -35,14 +35,14 @@ export interface Step {
   images?: StepImage[];
   stepIngredients?: StepIngredientRef[];
 }
-export interface StepInputIngredient {
+interface StepInputIngredient {
   ingredientName: string;
   amount: number | null;
   unit: string | null;
   systemUsed: MeasurementSystem;
   order: number;
 }
-export interface StepInputProps {
+interface StepInputProps {
   steps: Step[];
   onChange: (steps: Step[]) => void;
   systemUsed?: MeasurementSystem;

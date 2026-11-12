@@ -5,19 +5,19 @@ import type { AisleResolver, ContainerId, ItemsState, ReorderUpdate } from "./ty
 import { placeOfContainer, storeContainers } from "./utils";
 
 /** A grocery as a drop files it: its name, and the Ingredient that is filed. */
-export interface FiledGrocery {
+interface FiledGrocery {
   name: string | null;
   ingredientId?: string | null;
 }
 
 /** What a drop teaches a Store about one grocery. */
-export interface DropFiling {
+interface DropFiling {
   storeId: string;
   grocery: FiledGrocery;
   aisleId: string | null;
 }
 
-export interface DropPlan {
+interface DropPlan {
   /** Every row whose place changed: a per-Store sort order, and the Store on the one that moved Store. */
   updates: ReorderUpdate[];
   /** What the drop teaches the target Store — a grocery filed under an aisle, or under none — written after the reorder. */

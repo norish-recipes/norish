@@ -4,12 +4,12 @@ import type { AisleDto } from "@norish/shared/contracts";
 
 import { aisleContainerId } from "./dnd/utils";
 
-export interface AisleBlock<T> {
+interface AisleBlock<T> {
   aisle: AisleDto;
   rows: T[];
 }
 
-export interface AisleBlocks<T> {
+interface AisleBlocks<T> {
   /** Rows the Store has never been told about: first, under no heading, so they are noticed and filed. */
   unfiled: T[];
   /** Every aisle of the Store in the Store's order, each with what is filed under it, empty or not. */

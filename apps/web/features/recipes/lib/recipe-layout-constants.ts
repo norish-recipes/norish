@@ -1,4 +1,4 @@
-export const MOBILE_RECIPE_MEDIA_HEIGHT_REM = 28;
+const MOBILE_RECIPE_MEDIA_HEIGHT_REM = 28;
 export const MOBILE_RECIPE_MEDIA_HEIGHT_STYLE = `calc(${MOBILE_RECIPE_MEDIA_HEIGHT_REM}rem + env(safe-area-inset-top))`;
 
 /**

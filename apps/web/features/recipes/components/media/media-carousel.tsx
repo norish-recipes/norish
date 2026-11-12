@@ -72,7 +72,7 @@ export function buildMediaItems(recipe: RecipeMedia): MediaItem[] {
 
   return items;
 }
-export interface MediaCarouselProps {
+interface MediaCarouselProps {
   items: MediaItem[];
   onImageClick?: (index: number) => void;
   onActiveItemChange?: (item: MediaItem, index: number) => void;

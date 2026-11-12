@@ -12,7 +12,7 @@ import {
   useSharePublicConfigQuery,
 } from "@norish/shared-react/recipes";
 
-export type SharePageState = {
+type SharePageState = {
   token: string;
   /** The servings the reader picked; null shows the recipe's own. */
   servings: number | null;

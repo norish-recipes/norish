@@ -18,7 +18,7 @@ import {
 
 type RecipeTagLike = { name: string };
 
-export type RecipeHeaderRecipeLike = {
+type RecipeHeaderRecipeLike = {
   name: string;
   description: string | null;
   categories: RecipeCategory[];

@@ -7,7 +7,7 @@ import { useTranslations } from "next-intl";
 import type { LibraryTypeFilter } from "@norish/shared/contracts";
 import { useCookbookQuery, useHeldRecipeName } from "@norish/shared-react/recipes";
 
-export type BackDestination = { href: string; label: string };
+type BackDestination = { href: string; label: string };
 
 /**
  * The way back from a page that can be reached from several places.

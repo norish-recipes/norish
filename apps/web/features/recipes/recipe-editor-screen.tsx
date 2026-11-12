@@ -46,7 +46,7 @@ import { formatUnit } from "@norish/shared/lib/unit-localization";
 
 const log = createClientLogger("RecipeEditorScreen");
 
-export interface RecipeEditorScreenProps {
+interface RecipeEditorScreenProps {
   mode: "create" | "edit";
   initialData?: FullRecipeDTO;
 }

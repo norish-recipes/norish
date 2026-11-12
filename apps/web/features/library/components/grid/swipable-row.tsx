@@ -53,7 +53,7 @@ function calculateActionsWidth(actionCount: number, buttonSize: number, stacked:
  * than a quarter of the row: three abreast need 200px, more than a phone's
  * two-column card has.
  */
-export function fitActions(
+function fitActions(
   actionCount: number,
   width: number,
   height: number,

@@ -22,7 +22,7 @@ import { createMmkvStorage } from "./mmkv-storage";
 import { uploadFiles } from "./upload-files";
 
 /** Marks the app's replays in server logs. */
-export const OUTBOX_REPLAY_HEADER_VALUE = "mobile-outbox";
+const OUTBOX_REPLAY_HEADER_VALUE = "mobile-outbox";
 
 export const offlineEngine = createOfflineEngine({
   storage: createMmkvStorage({ mmkv: createMMKV({ id: "norish-offline" }), files: uploadFiles }),

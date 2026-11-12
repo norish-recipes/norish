@@ -28,5 +28,3 @@ export function useLocale() {
     isChanging: isUpdatingPreferences || isPending,
   };
 }
-
-export type UseLocaleResult = ReturnType<typeof useLocale>;

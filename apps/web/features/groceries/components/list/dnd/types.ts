@@ -37,7 +37,7 @@ export interface ReorderUpdate {
 }
 
 /** What a drag arranged, until the list it was dropped on comes back from the cache. */
-export interface Arrangement<T> {
+interface Arrangement<T> {
   items: ItemsState;
   /** Every row or group by key, since one dragged in comes from another Store's. */
   byKey: Map<string, T>;

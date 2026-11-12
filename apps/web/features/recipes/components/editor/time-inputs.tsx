@@ -4,7 +4,7 @@ import React, { useCallback } from "react";
 import { Input, Label, TextField } from "@heroui/react";
 import { useTranslations } from "next-intl";
 
-export interface TimeInputsProps {
+interface TimeInputsProps {
   prepMinutes?: number | null;
   cookMinutes?: number | null;
   totalMinutes?: number | null;

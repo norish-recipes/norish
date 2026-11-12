@@ -26,7 +26,7 @@ import { oklchHueChromaFromSrgb } from "@norish/shared/lib/oklab";
  */
 export const MAX_DISH_TINT_CHROMA = 0.05;
 
-export type DishTintStyle = CSSProperties & {
+type DishTintStyle = CSSProperties & {
   "--dish-h": string;
   "--dish-c": string;
 };

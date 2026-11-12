@@ -66,7 +66,7 @@ function SortableTagItem({ tag, onEdit }: SortableTagItemProps) {
   );
 }
 
-export interface TagInputProps {
+interface TagInputProps {
   value: string[];
   onChange: (tags: string[]) => void;
   placeholder?: string;

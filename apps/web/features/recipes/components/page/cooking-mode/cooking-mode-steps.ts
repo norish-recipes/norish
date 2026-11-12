@@ -2,12 +2,12 @@
 
 import type { StepIngredientRefLike } from "@norish/shared/lib/step-ingredients";
 
-export type CookingModeStepImage = {
+type CookingModeStepImage = {
   image: string;
   order?: number;
 };
 
-export type CookingModeStepLike = {
+type CookingModeStepLike = {
   step: string;
   systemUsed: string;
   order: number;

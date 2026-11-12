@@ -5,7 +5,7 @@ import type { ResolvedCookingModeStep } from "./cooking-mode-steps";
 /** Which of cooking mode's two views is on screen. */
 export type CookingModeView = "steps" | "ingredients";
 
-export type IngredientLike = {
+type IngredientLike = {
   ingredientName: string;
   amount: number | null;
   unit: string | null;

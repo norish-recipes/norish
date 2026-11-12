@@ -3,7 +3,7 @@
 import type { ReactNode } from "react";
 import { Table } from "@heroui/react";
 
-export interface DataTableColumn<Row> {
+interface DataTableColumn<Row> {
   key: string;
   label: ReactNode;
   /** Exactly one column should be the row header for accessibility */

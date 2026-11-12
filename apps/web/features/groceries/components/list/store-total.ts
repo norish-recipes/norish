@@ -54,13 +54,13 @@ export function lineOfGroup(group: GroceryGroup): PricedLine {
   };
 }
 
-export type PriceFor = (
+type PriceFor = (
   storeId: string | null,
   ingredientId: string | null | undefined
 ) => StoreProductDto | null;
 
 /** What a row costs at its Store, and the product that prices it; null where the Store cannot price it. */
-export function priceLine(
+function priceLine(
   line: PricedLine,
   priceFor: PriceFor
 ): (LineCost & { product: StoreProductDto }) | null {

@@ -7,7 +7,7 @@ import type { CookingTimeSegmentKind } from "@norish/shared/lib/cooking-time";
 import { reconcileCookingTime } from "@norish/shared/lib/cooking-time";
 import { formatMinutesHM } from "@norish/shared/lib/helpers";
 
-export type CookingTimeRecipeLike = {
+type CookingTimeRecipeLike = {
   prepMinutes: number | null;
   cookMinutes: number | null;
   totalMinutes: number | null;

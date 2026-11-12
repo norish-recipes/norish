@@ -21,7 +21,7 @@ type LineLike = {
   unit?: string | null;
 };
 
-export interface StepIngredientChipsProps {
+interface StepIngredientChipsProps {
   refs: StepIngredientDraft[];
   /** The recipe's ingredient lines in the editor's active system. */
   ingredients: LineLike[];

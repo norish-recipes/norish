@@ -21,7 +21,7 @@ import { cssMediaControl } from "@norish/web/config/css-tokens";
 
 import VideoPlayerSkeleton from "./video-player-skeleton";
 
-export interface VideoPlayerProps {
+interface VideoPlayerProps {
   src: string;
   duration?: number | null;
   poster?: string;

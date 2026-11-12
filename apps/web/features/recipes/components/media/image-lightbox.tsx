@@ -12,7 +12,7 @@ import { useTranslations } from "next-intl";
 import { addBasePath } from "@norish/shared/lib/base-path";
 import { cssMediaControl } from "@norish/web/config/css-tokens";
 
-export interface ImageLightboxProps {
+interface ImageLightboxProps {
   images: {
     src: string;
     alt?: string;

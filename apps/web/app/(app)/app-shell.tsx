@@ -18,7 +18,7 @@ import {
 } from "@norish/web/config/css-tokens";
 
 /** What the layout read for the providers' first render; the offline bootstrap has none. */
-export type AppSeed = {
+type AppSeed = {
   /** The request's Device Kind, from its user agent. */
   deviceKind: DeviceKind;
   /** Drawn until the session answers; the Offline Cache restores this reader's at hydration. */

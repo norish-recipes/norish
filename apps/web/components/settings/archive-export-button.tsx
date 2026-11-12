@@ -14,7 +14,7 @@ import { addBasePath } from "@norish/shared/lib/base-path";
  * policy; `instance` exports every recipe on the server. Both go through the
  * same route, which authorises the instance scope itself.
  */
-export type ArchiveExportScope = "viewer" | "instance";
+type ArchiveExportScope = "viewer" | "instance";
 
 const EXPORT_PATH = "/export/recipes";
 
@@ -25,7 +25,7 @@ const EXPORT_PATH = "/export/recipes";
  */
 const HANDOFF_GUARD_MS = 3000;
 
-export interface ArchiveExportButtonProps {
+interface ArchiveExportButtonProps {
   label: string;
   scope?: ArchiveExportScope;
   fullWidth?: boolean;

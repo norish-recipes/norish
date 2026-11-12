@@ -12,7 +12,7 @@ const logger = createClientLogger("smart-markdown-renderer");
 const TIMER_HREF_PREFIX = "norish-timer:";
 const MARKDOWN_LABEL_ESCAPE = /[\\\[\]]/g;
 
-export type SmartMarkdownLinkMode = "private" | "public" | "disabled";
+type SmartMarkdownLinkMode = "private" | "public" | "disabled";
 
 export type SmartMarkdownTimerConfig = {
   enabled: boolean;
@@ -22,7 +22,7 @@ export type SmartMarkdownTimerConfig = {
   keywords?: TimerKeywords;
 };
 
-export interface SmartMarkdownRendererProps {
+interface SmartMarkdownRendererProps {
   text: string;
   className?: string;
   disableLinks?: boolean;

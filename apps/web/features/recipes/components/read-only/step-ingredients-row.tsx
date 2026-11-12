@@ -26,7 +26,7 @@ type IngredientLike = {
   icon?: string | null;
 };
 
-export type StepIngredientsRowProps = {
+type StepIngredientsRowProps = {
   refs: StepIngredientRefLike[];
   ingredients: IngredientLike[];
   systemUsed: string;

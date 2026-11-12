@@ -3,7 +3,7 @@
 import { useRecipeVideos as useSharedRecipeVideos } from "@norish/shared-react/recipes";
 import { uploadForm } from "@norish/shared/lib/upload-form";
 
-export type RecipeVideosResult = {
+type RecipeVideosResult = {
   uploadGalleryVideo: (
     file: File,
     recipeId: string,

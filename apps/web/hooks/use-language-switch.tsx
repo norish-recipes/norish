@@ -97,5 +97,3 @@ export function useLanguageSwitch() {
     isLoadingConfig,
   };
 }
-
-export type UseLanguageSwitchResult = ReturnType<typeof useLanguageSwitch>;

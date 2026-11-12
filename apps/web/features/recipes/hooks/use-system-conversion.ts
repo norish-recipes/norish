@@ -27,7 +27,7 @@ export type SystemConversionOption = {
   isOriginal: boolean;
 };
 
-export type SystemConversion = {
+type SystemConversion = {
   /** Whether there is a conversion worth offering this reader at all. */
   isAvailable: boolean;
   options: SystemConversionOption[];

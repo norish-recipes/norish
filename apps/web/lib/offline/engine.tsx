@@ -29,13 +29,13 @@ import { getInitialCalendarRange } from "@norish/shared/lib/helpers";
 import { APP_VERSION } from "@norish/web/config/site";
 
 /** Marks the web client's replays in server logs. */
-export const OUTBOX_REPLAY_HEADER_VALUE = "web-outbox";
+const OUTBOX_REPLAY_HEADER_VALUE = "web-outbox";
 
 /** The readiness route under the web client's base path. */
 const HEALTH_PROBE_URL = addBasePath(HEALTH_PROBE_PATH);
 
 /** A restored cache from another app version is dropped, never migrated; the Outbox is kept. */
-export const CACHE_BUSTER = APP_VERSION;
+const CACHE_BUSTER = APP_VERSION;
 
 /**
  * The data each query held as the server sent it with this page load, by query hash, until its

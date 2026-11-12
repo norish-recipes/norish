@@ -136,5 +136,3 @@ export function useLocaleCookie() {
     enabledLocales,
   };
 }
-
-export type UseLocaleCookieResult = ReturnType<typeof useLocaleCookie>;

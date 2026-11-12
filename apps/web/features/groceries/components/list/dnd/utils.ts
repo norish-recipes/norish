@@ -13,7 +13,7 @@ export function aisleContainerId(aisleId: string): ContainerId {
 }
 
 /** The aisle a container stands for, or null for a Store's own unfiled area and for `unsorted`. */
-export function aisleOfContainer(containerId: ContainerId): string | null {
+function aisleOfContainer(containerId: ContainerId): string | null {
   return containerId.startsWith(AISLE_CONTAINER_PREFIX)
     ? containerId.slice(AISLE_CONTAINER_PREFIX.length)
     : null;
@@ -52,7 +52,7 @@ export function storeContainers(storeId: string | null, stores: StoreDto[]): Con
  * where it still has that aisle, and the Store's unfiled area where the aisle
  * is null or gone.
  */
-export function containerFor(
+function containerFor(
   storeId: string | null,
   aisleId: string | null,
   stores: StoreDto[]
@@ -66,16 +66,8 @@ export function containerFor(
 }
 
 /** Converts a Store-level container ID back to storeId (UNSORTED_CONTAINER => null) */
-export function containerIdToStoreId(containerId: ContainerId): string | null {
+function containerIdToStoreId(containerId: ContainerId): string | null {
   return containerId === UNSORTED_CONTAINER ? null : containerId;
-}
-
-/** Check if an ID is a container (store, aisle or unsorted) vs a grocery item */
-export function isContainerId(id: UniqueIdentifier, stores: StoreDto[]): boolean {
-  if (id === UNSORTED_CONTAINER) return true;
-  if (typeof id === "string" && aisleOfContainer(id) !== null) return true;
-
-  return stores.some((s) => s.id === id);
 }
 
 /** Find which container an item belongs to */

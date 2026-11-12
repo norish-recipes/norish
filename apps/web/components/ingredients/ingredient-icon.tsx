@@ -9,7 +9,7 @@ import { addBasePath } from "@norish/shared/lib/base-path";
 /** An icon's size beside a chip, a line or row (smaller on a phone), or in its panel. */
 const SIZES = { chip: "size-5", line: "size-6 md:size-8", panel: "size-16" } as const;
 
-export type IngredientIconSize = keyof typeof SIZES;
+type IngredientIconSize = keyof typeof SIZES;
 
 /** How long typing pauses before a typed name is looked up. */
 const FIND_DELAY_MS = 400;

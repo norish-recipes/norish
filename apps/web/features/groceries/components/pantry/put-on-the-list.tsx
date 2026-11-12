@@ -11,7 +11,7 @@ import { useGroceriesMutations } from "@norish/shared-react/groceries";
 import { ingredientDisplayName } from "@norish/shared/lib/ingredient-names";
 
 /** A kept food, as much of it as putting it on the list needs. */
-export type KeptFood = { name: string; localeNames?: LocaleNames };
+type KeptFood = { name: string; localeNames?: LocaleNames };
 
 /**
  * Running out of a kept food: one grocery for it, named the way the reader

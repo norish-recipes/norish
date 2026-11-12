@@ -24,7 +24,7 @@ export interface ParsedIngredient {
   order: number;
   systemUsed: MeasurementSystem;
 }
-export interface IngredientInputProps {
+interface IngredientInputProps {
   ingredients: ParsedIngredient[];
   onChange: (ingredients: ParsedIngredient[]) => void;
   systemUsed?: MeasurementSystem;

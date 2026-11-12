@@ -9,7 +9,7 @@ import { formatAmountAsDecimal } from "@norish/shared/lib/format-amount";
 
 import { AnimatedNumber } from "./animated-number";
 
-export interface NutritionPortionControlProps {
+interface NutritionPortionControlProps {
   portions: number;
   onChange: (portions: number) => void;
 }

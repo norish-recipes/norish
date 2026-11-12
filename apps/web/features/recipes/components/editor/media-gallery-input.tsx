@@ -51,7 +51,7 @@ export interface RecipeGalleryMedia {
   version?: number;
 }
 
-export interface MediaGalleryInputProps {
+interface MediaGalleryInputProps {
   media: RecipeGalleryMedia[];
   onChange: (media: RecipeGalleryMedia[]) => void;
   recipeId: string;

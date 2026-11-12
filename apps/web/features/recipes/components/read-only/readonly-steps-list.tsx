@@ -37,7 +37,7 @@ type IngredientLike = {
   order: number;
 };
 
-export type ReadonlyStepsListProps = {
+type ReadonlyStepsListProps = {
   steps: StepLike[];
   systemUsed: string;
   interactive?: boolean;

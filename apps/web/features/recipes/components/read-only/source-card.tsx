@@ -5,7 +5,7 @@ import { ArrowTopRightOnSquareIcon, GlobeAltIcon } from "@heroicons/react/16/sol
 import { Card } from "@heroui/react";
 import { useTranslations } from "next-intl";
 
-export type SourceRecipeLike = {
+type SourceRecipeLike = {
   url: string | null;
   author?: { id?: string; name?: string | null; image?: string | null } | null;
 };

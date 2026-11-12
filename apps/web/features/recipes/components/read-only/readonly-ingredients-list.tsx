@@ -28,7 +28,7 @@ type IngredientLike = {
   icon?: string | null;
 };
 
-export type ReadonlyIngredientsListProps = {
+type ReadonlyIngredientsListProps = {
   ingredients: IngredientLike[];
   systemUsed: string;
   interactive?: boolean;

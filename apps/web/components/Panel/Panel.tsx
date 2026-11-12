@@ -7,7 +7,7 @@ import { UNSAFE_PortalProvider } from "react-aria";
 import { twMerge } from "tailwind-merge";
 import { Drawer } from "vaul";
 
-export interface PanelProps {
+interface PanelProps {
   className?: string;
   contentClassName?: string;
   panelClassName?: string;
@@ -36,7 +36,7 @@ const PanelContext = createContext<{
   portalContainer: HTMLElement | null;
 }>({ open: false, close: () => {}, toggle: () => {}, portalContainer: null });
 
-export function usePanel() {
+function usePanel() {
   return use(PanelContext);
 }
 
@@ -99,7 +99,7 @@ const BACKDROP_VARIANT_CLASSES: Record<NonNullable<PanelProps["backdropVariant"]
   transparent: "bg-transparent",
 };
 
-export function PanelBody({ children, className }: PanelSectionProps) {
+function PanelBody({ children, className }: PanelSectionProps) {
   return (
     <div
       className={twMerge(
@@ -113,7 +113,7 @@ export function PanelBody({ children, className }: PanelSectionProps) {
   );
 }
 
-export function PanelFooter({ children, className }: PanelSectionProps) {
+function PanelFooter({ children, className }: PanelSectionProps) {
   return (
     <footer
       className={twMerge("flex shrink-0 items-center justify-end gap-2 px-5 pt-2 pb-4", className)}

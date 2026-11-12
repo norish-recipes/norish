@@ -3,7 +3,7 @@
 import { useRecipeImages as useSharedRecipeImages } from "@norish/shared-react/recipes";
 import { uploadForm } from "@norish/shared/lib/upload-form";
 
-export type RecipeImagesResult = {
+type RecipeImagesResult = {
   uploadImage: (file: File) => Promise<{ success: boolean; url?: string; error?: string }>;
   deleteImage: (url: string) => Promise<{ success: boolean; error?: string }>;
   uploadStepImage: (

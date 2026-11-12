@@ -2,7 +2,7 @@
 
 import { Label, ListBox, Select } from "@heroui/react";
 
-export type KindOption<K extends string> = { id: K; label: string; description: string };
+type KindOption<K extends string> = { id: K; label: string; description: string };
 
 /** A multi-select of kinds, each with a line saying what it does; the trigger names the chosen. */
 export function KindsSelect<K extends string>({

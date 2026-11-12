@@ -82,7 +82,7 @@ export function useCaldavForm(config: UserCaldavConfigWithoutPasswordDto | null)
   };
 }
 
-export type CaldavForm = ReturnType<typeof useCaldavForm>;
+type CaldavForm = ReturnType<typeof useCaldavForm>;
 
 interface CaldavFormFieldsProps {
   form: CaldavForm;

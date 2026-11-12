@@ -2,7 +2,7 @@
 
 import { useMemo, useState } from "react";
 import { BeakerIcon, BoltIcon, CubeIcon, FireIcon } from "@heroicons/react/16/solid";
-import { Card, Separator } from "@heroui/react";
+import { Card } from "@heroui/react";
 import { useTranslations } from "next-intl";
 
 import type { MacroCalorieShare, MacroKey } from "@norish/shared/lib/nutrition-macros";
@@ -11,7 +11,7 @@ import { macroCalorieShares } from "@norish/shared/lib/nutrition-macros";
 import { AnimatedNumber } from "./animated-number";
 import NutritionPortionControl from "./nutrition-portion-control";
 
-export type NutritionRecipeLike = {
+type NutritionRecipeLike = {
   calories: number | null;
   fat: number | string | null;
   carbs: number | string | null;
@@ -178,13 +178,7 @@ export function NutritionBody({
   );
 }
 
-function NutritionValues({
-  inCard = true,
-  recipe,
-}: {
-  inCard?: boolean;
-  recipe: NutritionRecipeLike;
-}) {
+export function ReadonlyNutritionCard({ recipe }: { recipe: NutritionRecipeLike }) {
   const t = useTranslations("recipes.nutrition");
   const [portions, setPortions] = useState(1);
   const nutritionData = useMemo(() => getNutritionData(recipe, portions), [recipe, portions]);
@@ -193,37 +187,20 @@ function NutritionValues({
     return null;
   }
 
-  const content = (
-    <>
-      <div className={`flex items-center justify-between ${inCard ? "mb-3" : ""}`}>
-        <h2 className="text-lg font-semibold">{t("title")}</h2>
-        <NutritionPortionControl portions={portions} onChange={setPortions} />
-      </div>
-      <NutritionBody portions={portions} recipe={recipe} />
-      {portions !== 1 && (
-        <p className="text-muted mt-2 text-center text-xs">
-          {t("showingPortions", { count: portions })}
-        </p>
-      )}
-    </>
-  );
-
-  return inCard ? (
+  return (
     <Card className="rounded-2xl">
-      <Card.Content className="p-5">{content}</Card.Content>
+      <Card.Content className="p-5">
+        <div className="mb-3 flex items-center justify-between">
+          <h2 className="text-lg font-semibold">{t("title")}</h2>
+          <NutritionPortionControl portions={portions} onChange={setPortions} />
+        </div>
+        <NutritionBody portions={portions} recipe={recipe} />
+        {portions !== 1 && (
+          <p className="text-muted mt-2 text-center text-xs">
+            {t("showingPortions", { count: portions })}
+          </p>
+        )}
+      </Card.Content>
     </Card>
-  ) : (
-    <>
-      <Separator />
-      <div className="space-y-2">{content}</div>
-    </>
   );
-}
-
-export function ReadonlyNutritionCard({ recipe }: { recipe: NutritionRecipeLike }) {
-  return <NutritionValues recipe={recipe} />;
-}
-
-export function ReadonlyNutritionSection({ recipe }: { recipe: NutritionRecipeLike }) {
-  return <NutritionValues inCard={false} recipe={recipe} />;
 }

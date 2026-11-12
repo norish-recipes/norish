@@ -9,7 +9,7 @@ import type { DeviceKind } from "@norish/shared/contracts/zod/device-preferences
 import { WebPlatformProvider } from "./platform-provider";
 import { TRPCProviderWrapper } from "./trpc-provider";
 
-export interface BaseProvidersProps {
+interface BaseProvidersProps {
   children: React.ReactNode;
   /** The request's Device Kind; absent on an Offline start-up. */
   deviceKind?: DeviceKind;

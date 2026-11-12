@@ -41,7 +41,7 @@ function showTimerNotification(timer: { label: string; recipeName?: string }) {
     });
 }
 
-export type TimerStatus = "running" | "paused" | "completed";
+type TimerStatus = "running" | "paused" | "completed";
 
 export type Timer = {
   id: string; // Composite ID: recipeId-stepIndex-occurrenceIndex
