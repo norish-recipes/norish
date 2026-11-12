@@ -81,6 +81,18 @@ export function resolveSignedOutEntry(
   return serverAddress && !changeRequested ? "sign-in" : "server-address";
 }
 
+/**
+ * Sign in fades in once, for the Server Address a Sign-out or Session Expiry just left, unless
+ * the chip's Sign-out asked for Server address instead.
+ */
+export function fadesIntoSignIn(
+  leftFrom: string | null,
+  serverAddress: string,
+  changeRequested: boolean
+): boolean {
+  return leftFrom !== null && leftFrom === serverAddress && !changeRequested;
+}
+
 /** The most one frame moves the launch clock: two 60 Hz frames. */
 const MAX_LAUNCH_STEP = 1000 / 30;
 

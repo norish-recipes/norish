@@ -2,8 +2,6 @@ import { useSyncExternalStore } from "react";
 
 type AuthTransportSnapshot = {
   hasActiveSession: boolean;
-  /** The session ended (Sign-out or Session Expiry) and none has begun since. */
-  leftSession: boolean;
   version: number;
 };
 
@@ -11,9 +9,11 @@ const listeners = new Set<() => void>();
 
 let snapshot: AuthTransportSnapshot = {
   hasActiveSession: false,
-  leftSession: false,
   version: 0,
 };
+
+// The Server Address a session just ended on; module scope, so it outlives leave's re-key.
+let leftFrom: string | null = null;
 
 function emitSnapshotChange(): void {
   for (const listener of listeners) {
@@ -37,16 +37,27 @@ export function subscribeAuthTransport(listener: () => void): () => void {
 export function publishSignedIn(): void {
   if (snapshot.hasActiveSession) return;
 
-  snapshot = { hasActiveSession: true, leftSession: false, version: snapshot.version + 1 };
+  leftFrom = null;
+  snapshot = { hasActiveSession: true, version: snapshot.version + 1 };
 
   emitSnapshotChange();
 }
 
 /** Mobile's leave: signed out and one re-key, so everything below rebuilds on the cleared cache. */
-export function publishSignedOut(): void {
-  snapshot = { hasActiveSession: false, leftSession: true, version: snapshot.version + 1 };
+export function publishSignedOut(serverAddress: string | null): void {
+  leftFrom = serverAddress;
+  snapshot = { hasActiveSession: false, version: snapshot.version + 1 };
 
   emitSnapshotChange();
+}
+
+/** The Server Address a Sign-out or Session Expiry left, once; the signed-out entry's first render takes it. */
+export function takeSessionLeft(): string | null {
+  const left = leftFrom;
+
+  leftFrom = null;
+
+  return left;
 }
 
 /** Whether a session is live; readable in onboarding too, which has no platform adapter. */

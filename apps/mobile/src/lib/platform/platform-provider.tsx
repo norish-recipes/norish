@@ -1,6 +1,8 @@
 import type { ReactNode } from "react";
+import { use } from "react";
 import { Platform, View } from "react-native";
 import { publishSignedOut } from "@/lib/auth/auth-session-sync";
+import { ServerAddressContext } from "@/lib/network/server-address";
 import { offlineEngine } from "@/lib/offline/engine";
 import { storage } from "@/lib/storage/mmkv";
 import { useRouter } from "expo-router";
@@ -43,6 +45,7 @@ export function MobilePlatformProvider({
   const { toast } = useToast();
   const router = useRouter();
   const [dangerColor] = useThemeColor(["danger"] as const);
+  const serverAddress = use(ServerAddressContext);
 
   const adapter: PlatformAdapter = {
     toast: {
@@ -89,7 +92,7 @@ export function MobilePlatformProvider({
     session,
     endSession,
     // After the clear: the session reads pending until this, so the sign-in stack mounts on the empty cache.
-    leave: publishSignedOut,
+    leave: () => publishSignedOut(serverAddress),
     offlineEngine,
   };
 

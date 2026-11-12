@@ -1,25 +1,21 @@
 import { describe, expect, it } from "vitest";
 
-const { getAuthTransportSnapshot, publishSignedIn, publishSignedOut } =
+const { publishSignedIn, publishSignedOut, takeSessionLeft } =
   await import("@/lib/auth/auth-session-sync");
 
-describe("leftSession", () => {
-  it("is set by a session ending and cleared by the next sign-in", () => {
-    expect(getAuthTransportSnapshot().leftSession).toBe(false);
+describe("takeSessionLeft", () => {
+  it("hands the left Server Address to one arrival, then nothing", () => {
+    expect(takeSessionLeft()).toBeNull();
 
     publishSignedIn();
-    expect(getAuthTransportSnapshot().leftSession).toBe(false);
+    publishSignedOut("https://a.example");
+    expect(takeSessionLeft()).toBe("https://a.example");
+    expect(takeSessionLeft()).toBeNull();
+  });
 
-    publishSignedOut();
-    expect(getAuthTransportSnapshot()).toMatchObject({
-      hasActiveSession: false,
-      leftSession: true,
-    });
-
+  it("is dropped by the next sign-in", () => {
+    publishSignedOut("https://a.example");
     publishSignedIn();
-    expect(getAuthTransportSnapshot()).toMatchObject({
-      hasActiveSession: true,
-      leftSession: false,
-    });
+    expect(takeSessionLeft()).toBeNull();
   });
 });

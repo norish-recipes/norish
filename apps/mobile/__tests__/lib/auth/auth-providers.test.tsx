@@ -122,7 +122,7 @@ const { AUTH_COOKIE_KEY, authStorage } = await import("@/lib/auth/auth-storage")
 const { ServerAddressContext } = await import("@/lib/network/server-address");
 const { resetAuthClientStorage } = await import("@/lib/auth/auth-client");
 
-seen.leave = publishSignedOut;
+seen.leave = () => publishSignedOut("https://norish.test");
 
 const USER = { id: "reader-1", email: "reader@norish.test", name: "Reader" };
 const PENDING = { user: null, isPending: true };
@@ -177,12 +177,11 @@ describe("AuthProviders", () => {
       expect(seen.sessions.slice(from)).toEqual(seen.sessions.slice(from).map(() => PENDING));
 
       // The adapter's leave, after the offline clear.
-      act(() => publishSignedOut());
+      act(() => publishSignedOut("https://norish.test"));
       await waitFor(() => expect(seen.sessions.at(-1)).toEqual(SIGNED_OUT));
       expect(seen.sessions.slice(from).filter((session) => session.user)).toEqual([]);
       expect(getAuthTransportSnapshot()).toEqual({
         hasActiveSession: false,
-        leftSession: true,
         version: version + 1,
       });
       // The sequence in flight owns the clear: the emptied store starts no Session Expiry.
@@ -218,7 +217,6 @@ describe("AuthProviders", () => {
       expect(seen.sessions.slice(from).filter((session) => session.user)).toEqual([]);
       expect(getAuthTransportSnapshot()).toEqual({
         hasActiveSession: false,
-        leftSession: true,
         version: version + 1,
       });
     }
@@ -239,7 +237,6 @@ describe("AuthProviders", () => {
     expect(seen.clearedAt).toEqual([]);
     expect(getAuthTransportSnapshot()).toEqual({
       hasActiveSession: true,
-      leftSession: false,
       version,
     });
 

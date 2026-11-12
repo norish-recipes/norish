@@ -1,4 +1,5 @@
 import {
+  fadesIntoSignIn,
   resolveBootPhase,
   resolveLaunchMotion,
   resolveSignedOutEntry,
@@ -175,5 +176,25 @@ describe("stepLaunchClock", () => {
 
   it("never moves back when the stop point is behind it", () => {
     expect(stepLaunchClock(1200, 16.7, 900)).toBe(1200);
+  });
+});
+
+describe("fadesIntoSignIn", () => {
+  const address = "https://norish.example";
+
+  it("fades Sign in in for the Server Address the session just left", () => {
+    expect(fadesIntoSignIn(address, address, false)).toBe(true);
+  });
+
+  it("cuts on a launch or any later arrival, with no session just left", () => {
+    expect(fadesIntoSignIn(null, address, false)).toBe(false);
+  });
+
+  it("cuts once the Server Address changed since the session ended", () => {
+    expect(fadesIntoSignIn(address, "https://other.example", false)).toBe(false);
+  });
+
+  it("cuts when the chip's Sign-out opens Server address", () => {
+    expect(fadesIntoSignIn(address, address, true)).toBe(false);
   });
 });
