@@ -6,7 +6,7 @@ import { beforeEach, describe, expect, it, vi } from "vitest";
 import { createTestQueryClient } from "@norish/shared-react/platform/testing";
 
 import { useLocaleSave } from "..";
-import { answerRead, keyOf, resetTRPCFake, sentCall } from "../../trpc/testing";
+import { answerRead, failCall, keyOf, resetTRPCFake, sentCall } from "../../trpc/testing";
 
 vi.mock("../../trpc", async () => (await import("../../trpc/testing")).mockTRPC());
 
@@ -48,5 +48,22 @@ describe("useLocaleSave", () => {
       version: 1,
       preferences: { locale: "de" },
     });
+  });
+
+  it("rejects nothing when a save fails", async () => {
+    const rejected = vi.fn();
+
+    process.on("unhandledRejection", rejected);
+    try {
+      const { result } = render(false);
+
+      act(() => result.current("fr"));
+      await failCall("user.updatePreferences");
+      await new Promise((resolve) => setTimeout(resolve, 0));
+
+      expect(rejected).not.toHaveBeenCalled();
+    } finally {
+      process.off("unhandledRejection", rejected);
+    }
   });
 });
