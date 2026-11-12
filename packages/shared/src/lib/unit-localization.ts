@@ -304,7 +304,7 @@ export function createUnitFormatter({
   units: UnitsMap;
   unitStyle?: UnitStyle;
 }) {
-  const formatAmount = (amount: number) =>
+  const toOneDecimal = (amount: number) =>
     amount % 1 === 0 ? amount.toString() : amount.toFixed(1);
 
   const formatUnitOnly = (
@@ -319,15 +319,15 @@ export function createUnitFormatter({
   ): string => {
     const hasAmount = !!amount || amount === 0;
 
-    if (!unit) return hasAmount ? `${formatAmount(amount ?? 0)}\u00D7` : "";
+    if (!unit) return hasAmount ? `${toOneDecimal(amount ?? 0)}\u00D7` : "";
 
     const localizedUnit = formatUnit(unit, locale, units, amount, unitStyle);
 
     if (!hasAmount) return localizedUnit;
 
     return localizedUnit.length > 2
-      ? `${formatAmount(amount ?? 0)} ${localizedUnit}`
-      : `${formatAmount(amount ?? 0)}${localizedUnit}`;
+      ? `${toOneDecimal(amount ?? 0)} ${localizedUnit}`
+      : `${toOneDecimal(amount ?? 0)}${localizedUnit}`;
   };
 
   return { formatAmountUnit, formatUnitOnly, locale, units };
