@@ -16,6 +16,7 @@ import type {
   CuisineStrategy,
   TagStrategy,
 } from "@norish/config/zod/server-config";
+import type { WriteResult } from "@norish/shared-react/admin";
 import {
   DEFAULT_AI_TIMEOUT_MS,
   DEFAULT_AUTOMATIC_ENRICHMENT,
@@ -92,10 +93,7 @@ export default function AIConfigForm({ onDirtyChange }: AIConfigFormProps) {
     aiConfig?.automaticEnrichment ?? DEFAULT_AUTOMATIC_ENRICHMENT
   );
   const [testing, whileTesting] = usePending();
-  const [testResult, setTestResult] = useState<{
-    success: boolean;
-    error?: string;
-  } | null>(null);
+  const [testResult, setTestResult] = useState<WriteResult | null>(null);
   const [saving, whileSaving] = usePending();
 
   // Fetch available models from the provider

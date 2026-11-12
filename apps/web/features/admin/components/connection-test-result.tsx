@@ -2,12 +2,14 @@
 
 import { CheckIcon, XMarkIcon } from "@heroicons/react/16/solid";
 
+import type { WriteResult } from "@norish/shared-react/admin";
+
 /** A Test connection's outcome: the success line, or the reason it failed. */
 export function ConnectionTestResult({
   result,
   successLabel,
 }: {
-  result: { success: boolean; error?: string } | null | undefined;
+  result: WriteResult | null | undefined;
   successLabel: string;
 }) {
   if (!result) return null;

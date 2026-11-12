@@ -9,6 +9,8 @@ import { ExclamationTriangleIcon } from "@heroicons/react/16/solid";
 import { Description, Label, TextArea, TextField } from "@heroui/react";
 import { useTranslations } from "next-intl";
 
+import type { WriteResult } from "@norish/shared-react/admin";
+
 import { useReportDirty } from "../use-report-dirty";
 
 interface TimerKeywordsEditorProps {
@@ -21,14 +23,8 @@ interface TimerKeywordsEditorProps {
     hours: string[];
     minutes: string[];
     seconds: string[];
-  }) => Promise<{
-    success: boolean;
-    error?: string;
-  }>;
-  onRestoreDefaults: () => Promise<{
-    success: boolean;
-    error?: string;
-  }>;
+  }) => Promise<WriteResult>;
+  onRestoreDefaults: () => Promise<WriteResult>;
   onDirtyChange?: (isDirty: boolean) => void;
 }
 

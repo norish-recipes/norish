@@ -7,20 +7,16 @@ import { CodeBracketIcon, ExclamationTriangleIcon } from "@heroicons/react/16/so
 import { TextArea } from "@heroui/react";
 import { useTranslations } from "next-intl";
 
+import type { WriteResult } from "@norish/shared-react/admin";
+
 import { useReportDirty } from "../use-report-dirty";
 
 interface JsonEditorProps {
   value: unknown;
   label?: string;
   description: string;
-  onSave: (jsonString: string) => Promise<{
-    success: boolean;
-    error?: string;
-  }>;
-  onRestoreDefaults?: () => Promise<{
-    success: boolean;
-    error?: string;
-  }>;
+  onSave: (jsonString: string) => Promise<WriteResult>;
+  onRestoreDefaults?: () => Promise<WriteResult>;
   disabled?: boolean;
   onDirtyChange?: (isDirty: boolean) => void;
 }

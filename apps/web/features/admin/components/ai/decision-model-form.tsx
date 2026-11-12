@@ -9,6 +9,7 @@ import { Description, Input, Label, ListBox, Select, TextField } from "@heroui/r
 import { useTranslations } from "next-intl";
 
 import type { DecisionProvider, DecisionUse } from "@norish/config/zod/server-config";
+import type { WriteResult } from "@norish/shared-react/admin";
 import {
   DECISION_USES,
   DEFAULT_DECISION_ENDPOINT,
@@ -56,7 +57,7 @@ export default function DecisionModelForm({ onDirtyChange }: DecisionModelFormPr
   // it can do, and an administrator deselects what they do not want.
   const [uses, setUses] = useState<DecisionUse[]>(decisionConfig?.uses ?? [...DECISION_USES]);
   const [testing, whileTesting] = usePending();
-  const [testResult, setTestResult] = useState<{ success: boolean; error?: string } | null>(null);
+  const [testResult, setTestResult] = useState<WriteResult | null>(null);
   const [saving, whileSaving] = usePending();
 
   const [prevDecisionConfig, setPrevDecisionConfig] = useState(decisionConfig);
