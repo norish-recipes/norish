@@ -6,10 +6,10 @@ import type { HouseholdAdminSettingsDto } from "@norish/shared/contracts/dto/hou
 import type { EventName, PayloadOf } from "@norish/shared/contracts/realtime/catalogue";
 import type { HouseholdsRealtime } from "@norish/shared/contracts/realtime/households";
 
+import type { HouseholdData } from "./use-household";
 import { usePlatform } from "../platform";
 import { useRealtimeSubscription } from "../realtime";
 import { useTRPC } from "../trpc";
-import type { HouseholdData } from "./use-household";
 import { useHouseholdCacheHelpers } from "./use-household";
 import { useReader } from "./use-reader";
 

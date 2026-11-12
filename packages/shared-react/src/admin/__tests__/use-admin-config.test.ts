@@ -138,9 +138,9 @@ describe("the config writes", () => {
   ] as const)("say %s failed and resolve null, rejecting nothing", async (_, path, hook, name) => {
     const { platform, stale, wrapper } = setUp();
     const { result } = renderHook(() => hook(), { wrapper });
-    const write = (result.current as unknown as Record<string, (input: unknown) => Promise<unknown>>)[
-      name
-    ]!;
+    const write = (
+      result.current as unknown as Record<string, (input: unknown) => Promise<unknown>>
+    )[name]!;
     let saved: Promise<unknown> | undefined;
 
     act(() => {

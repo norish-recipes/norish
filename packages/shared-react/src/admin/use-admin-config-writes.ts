@@ -154,9 +154,11 @@ export function useContentConfigWrites() {
       [timersEnabled]
     ),
     // Every page that reads a name reads it by the units map too.
-    saveUnits: useConfigWrite(trpc.admin.content.updateUnits.mutationOptions(), "admin-content:units", [
-      trpc.config.units.queryKey(),
-    ]),
+    saveUnits: useConfigWrite(
+      trpc.admin.content.updateUnits.mutationOptions(),
+      "admin-content:units",
+      [trpc.config.units.queryKey()]
+    ),
     saveIngredientWords: useConfigWrite(
       trpc.admin.content.updateIngredientWords.mutationOptions(),
       "admin-content:ingredient-words",
