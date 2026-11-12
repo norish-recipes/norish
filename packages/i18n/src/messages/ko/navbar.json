@@ -34,11 +34,6 @@
     "calendar": "달력",
     "groceries": "장보기"
   },
-  "mobile": {
-    "searchPlaceholder": "레시피 검색...",
-    "toggleSearch": "검색 전환",
-    "goBack": "돌아가기"
-  },
   "archiveImporter": {
     "uploading": "업로드 중…",
     "uploadFile": "파일 업로드",

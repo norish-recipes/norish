@@ -193,7 +193,6 @@
           "abbreviated": "Abrégées"
         }
       },
-      "applyError": "Échec de l'application du paramètre",
       "afterPlanning": {
         "title": "Après avoir planifié une recette",
         "description": "Ce qui se passe quand vous planifiez une recette",

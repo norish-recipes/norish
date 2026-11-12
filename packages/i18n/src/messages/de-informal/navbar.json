@@ -34,11 +34,6 @@
     "calendar": "Kalender",
     "groceries": "Einkaufsliste"
   },
-  "mobile": {
-    "searchPlaceholder": "Rezepte durchsuchen...",
-    "toggleSearch": "Suche umschalten",
-    "goBack": "Zurück"
-  },
   "archiveImporter": {
     "uploading": "Wird hochgeladen…",
     "uploadFile": "Datei hochladen",

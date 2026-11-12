@@ -21,7 +21,6 @@
   },
   "item": {
     "unnamedItem": "Unavngivet vare",
-    "fromRecipes": "Fra {count, plural, one {# opskrift} other {# opskrifter}}",
     "items": "{count, plural, one {# vare} other {# varer}}"
   },
   "store": {
@@ -54,7 +53,6 @@
       "violet": "Lilla"
     },
     "confirmDelete": "Er du sikker på, at du vil slette {storeName}?",
-    "deleteWarning": "Varer i denne butik flyttes til Usorteret.",
     "noStoresYet": "Ingen butikker endnu",
     "createStoreHint": "Opret en butik for at organisere dine indkøb",
     "hasItems": "Denne butik har {count} indkøbsvare.",
@@ -113,26 +111,11 @@
   "panel": {
     "addTitle": "Tilføj indkøbsvare",
     "editTitle": "Rediger indkøbsvare",
-    "itemName": "Varenavn",
-    "itemNamePlaceholder": "f.eks. Mælk, Æg, Brød...",
     "selectStore": "Vælg butik",
-    "noStore": "Ingen butik",
     "recurrence": "Gentagelse",
     "savePreference": "Husk butik for denne vare",
     "addAnother": "Tilføj endnu en",
     "addRepeat": "Indstil gentagelse",
-    "recurrenceEnabled": "Gentages",
-    "recurrenceSheet": {
-      "title": "Gentagelse",
-      "subtitle": "Føj automatisk denne vare til indkøbslisten igen",
-      "enable": "Aktivér gentagelse",
-      "disable": "Deaktivér gentagelse",
-      "frequency": "Hyppighed",
-      "weekly": "Ugentligt",
-      "biweekly": "Hver 2. uge",
-      "monthly": "Månedligt",
-      "confirm": "Bekræft"
-    },
     "storeOptional": "Butik (valgfrit)",
     "autoDetectFromHistory": "Registrér automatisk fra historik",
     "autoDetectOrSelect": "Registrér automatisk eller vælg",
@@ -143,7 +126,6 @@
     "pantryUnavailable": "Dit spisekammer kunne ikke læses, så intet er markeret endnu. Markér det, du skal købe.",
     "loadingIngredients": "Indlæser ingredienser...",
     "noIngredients": "Ingen ingredienser.",
-    "addSelectedToGroceries": "Tilføj til indkøbsliste",
     "ingredientsAdded": "Ingredienser tilføjet til indkøbslisten.",
     "ingredientsFailed": "Kunne ikke tilføje ingredienser til indkøbslisten.",
     "addToGroceries": "Tilføj til indkøbsliste",
@@ -168,7 +150,6 @@
     "productLabel": "Produkt hos {store}",
     "cannotSearch": "Denne butik kan ikke søges",
     "cannotSearchHint": "Norish kunne ikke læse en søgeside ud af butikslinket til {store}. Ret det under Administrer butikker, så følger priserne.",
-    "packSize": "Pakkestørrelse",
     "packAmount": "Mængde pr. pakke",
     "packUnit": "Enhed",
     "productPage": "Produktside",

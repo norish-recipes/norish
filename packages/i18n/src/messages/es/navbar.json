@@ -34,11 +34,6 @@
     "calendar": "Calendario",
     "groceries": "Ingredientes"
   },
-  "mobile": {
-    "searchPlaceholder": "Buscar recetas...",
-    "toggleSearch": "Abrir buscador",
-    "goBack": "Volver"
-  },
   "archiveImporter": {
     "uploading": "Subiendo…",
     "uploadFile": "Subir un archivo",

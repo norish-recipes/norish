@@ -11,12 +11,6 @@
     "noteLabel": "Huomautus",
     "notePlaceholder": "Kirjoita huomautus..."
   },
-  "navigation": {
-    "previousMonth": "Edellinen kuukausi",
-    "nextMonth": "Seuraava kuukausi",
-    "prev": "Edell.",
-    "next": "Seur."
-  },
   "weekdays": {
     "mon": "Ma",
     "tue": "Ti",

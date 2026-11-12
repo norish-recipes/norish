@@ -34,11 +34,6 @@
     "calendar": "Calendário",
     "groceries": "Compras"
   },
-  "mobile": {
-    "searchPlaceholder": "Buscar receitas...",
-    "toggleSearch": "Alternar busca",
-    "goBack": "Voltar"
-  },
   "archiveImporter": {
     "uploading": "Enviando…",
     "uploadFile": "Enviar um arquivo",

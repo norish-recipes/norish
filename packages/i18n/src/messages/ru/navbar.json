@@ -34,11 +34,6 @@
     "calendar": "Календарь",
     "groceries": "Список покупок"
   },
-  "mobile": {
-    "searchPlaceholder": "Поиск рецептов...",
-    "toggleSearch": "Показать/скрыть поиск",
-    "goBack": "Назад"
-  },
   "archiveImporter": {
     "uploading": "Загрузка…",
     "uploadFile": "Загрузить файл",

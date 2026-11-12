@@ -11,12 +11,6 @@
     "noteLabel": "Бележка",
     "notePlaceholder": "Въведи бележка..."
   },
-  "navigation": {
-    "previousMonth": "Предходен месец",
-    "nextMonth": "Следващ месец",
-    "prev": "Назад",
-    "next": "Напред"
-  },
   "weekdays": {
     "mon": "Пон",
     "tue": "Вт",

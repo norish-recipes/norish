@@ -34,11 +34,6 @@
     "calendar": "Calendrier",
     "groceries": "Courses"
   },
-  "mobile": {
-    "searchPlaceholder": "Rechercher des recettes…",
-    "toggleSearch": "Afficher/masquer la recherche",
-    "goBack": "Retour"
-  },
   "archiveImporter": {
     "uploading": "Téléversement…",
     "uploadFile": "Téléverser un fichier",

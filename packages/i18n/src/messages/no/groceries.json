@@ -21,7 +21,6 @@
   },
   "item": {
     "unnamedItem": "Navnløs vare",
-    "fromRecipes": "Fra {count, plural, one {# oppskrift} other {# oppskrifter}}",
     "items": "{count, plural, one {# vare} other {# varer}}"
   },
   "store": {
@@ -54,7 +53,6 @@
       "violet": "Fiolett"
     },
     "confirmDelete": "Er du sikker på at du vil slette {storeName}?",
-    "deleteWarning": "Varer i denne butikken flyttes til Usortert.",
     "noStoresYet": "Ingen butikker ennå",
     "createStoreHint": "Opprett en butikk for å organisere handleturene dine",
     "hasItems": "Denne butikken har {count} handlevare.",
@@ -113,26 +111,11 @@
   "panel": {
     "addTitle": "Legg til handlevare",
     "editTitle": "Rediger handlevare",
-    "itemName": "Varenavn",
-    "itemNamePlaceholder": "f.eks. Melk, Egg, Brød...",
     "selectStore": "Velg butikk",
-    "noStore": "Ingen butikk",
     "recurrence": "Gjentakelse",
     "savePreference": "Husk butikk for denne varen",
     "addAnother": "Legg til enda en",
     "addRepeat": "Sett opp gjentakelse",
-    "recurrenceEnabled": "Gjentakende",
-    "recurrenceSheet": {
-      "title": "Gjentakelse",
-      "subtitle": "Legg automatisk denne varen til handlelisten igjen",
-      "enable": "Aktiver gjentakelse",
-      "disable": "Deaktiver gjentakelse",
-      "frequency": "Hyppighet",
-      "weekly": "Ukentlig",
-      "biweekly": "Hver 2. uke",
-      "monthly": "Månedlig",
-      "confirm": "Bekreft"
-    },
     "storeOptional": "Butikk (valgfritt)",
     "autoDetectFromHistory": "Registrer automatisk fra historikk",
     "autoDetectOrSelect": "Registrer automatisk eller velg",
@@ -143,7 +126,6 @@
     "pantryUnavailable": "Spiskammeret kunne ikke leses, så ingenting er huket av ennå. Huk av det du må kjøpe.",
     "loadingIngredients": "Laster ingredienser...",
     "noIngredients": "Ingen ingredienser.",
-    "addSelectedToGroceries": "Legg til i handleliste",
     "ingredientsAdded": "Ingredienser lagt til i handlelisten.",
     "ingredientsFailed": "Kunne ikke legge til ingredienser i handlelisten.",
     "addToGroceries": "Legg til i handleliste",
@@ -168,7 +150,6 @@
     "productLabel": "Produkt hos {store}",
     "cannotSearch": "Denne butikken kan ikke søkes i",
     "cannotSearchHint": "Norish klarte ikke å lese en søkeside ut av butikklenken til {store}. Rett den under Administrer butikker, så følger prisene.",
-    "packSize": "Pakkestørrelse",
     "packAmount": "Mengde per pakke",
     "packUnit": "Enhet",
     "productPage": "Produktside",

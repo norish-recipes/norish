@@ -11,12 +11,6 @@
     "noteLabel": "Notiz",
     "notePlaceholder": "Notiz eingeben..."
   },
-  "navigation": {
-    "previousMonth": "Vorheriger Monat",
-    "nextMonth": "Nächster Monat",
-    "prev": "Zurück",
-    "next": "Weiter"
-  },
   "weekdays": {
     "mon": "Mo",
     "tue": "Di",

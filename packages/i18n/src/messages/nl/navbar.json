@@ -34,11 +34,6 @@
     "calendar": "Kalender",
     "groceries": "Boodschappen"
   },
-  "mobile": {
-    "searchPlaceholder": "Zoek recepten...",
-    "toggleSearch": "Zoekfunctie in- of uitschakelen",
-    "goBack": "Ga terug"
-  },
   "archiveImporter": {
     "uploading": "Uploaden...",
     "uploadFile": "Upload een bestand",

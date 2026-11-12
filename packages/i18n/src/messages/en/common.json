@@ -40,7 +40,6 @@
   "status": {
     "loading": "Loading...",
     "saving": "Saving...",
-    "deleting": "Deleting...",
     "error": "Error",
     "success": "Success",
     "noResults": "No results found",
@@ -92,9 +91,6 @@
   },
   "connection": {
     "connecting": "Connecting to Norish...",
-    "checkInternet": "Please check your internet connection",
-    "offlineBanner": "You're offline, showing cached data",
-    "serverUnreachableBanner": "Can't reach the Norish server, showing cached data",
     "live": "Connected",
     "offline": "Offline",
     "openDetails": "Connection details"
@@ -151,10 +147,7 @@
       "analyzing": "Analyzing your images, please wait...",
       "failed": "Import failed",
       "selectedCount": "{count} images selected - they will be combined as one recipe",
-      "library": "Library",
-      "takePhoto": "Take Photo",
-      "counter": "{count} / {max} photos",
-      "importFromCount": "Import from {count, plural, one {# Photo} other {# Photos}}"
+      "library": "Library"
     },
     "menu": {
       "description": "Import from a URL, scan a photo, or start from scratch."
@@ -223,8 +216,6 @@
     "other": "Timers",
     "label_one": "1 Timer",
     "label_other": "{count} Timers",
-    "notification_title": "Timer Complete",
-    "notification_body": "{label} is done!",
     "notifications_disabled": "Notifications are disabled",
     "notifications_disabled_hint": "Enable notifications in your browser settings to get alerts when timers finish in the background."
   },

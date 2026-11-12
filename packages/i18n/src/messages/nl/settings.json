@@ -152,7 +152,6 @@
         "title": "Taal",
         "description": "Kies je voorkeurstaal"
       },
-      "applyError": "Instelling kon niet worden toegepast",
       "hidden": {
         "title": "Verborgen onderdelen",
         "description": "Verberg onderdelen die je niet wilt zien",

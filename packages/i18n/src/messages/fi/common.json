@@ -40,7 +40,6 @@
   "status": {
     "loading": "Ladataan...",
     "saving": "Tallennetaan...",
-    "deleting": "Poistetaan...",
     "error": "Virhe",
     "success": "Onnistui",
     "noResults": "Tuloksia ei löytynyt",
@@ -92,9 +91,6 @@
   },
   "connection": {
     "connecting": "Yhdistetään Norishiin...",
-    "checkInternet": "Tarkista internet-yhteytesi",
-    "offlineBanner": "Olet offline-tilassa, näytetään välimuistin tiedot",
-    "serverUnreachableBanner": "Norish-palvelinta ei tavoiteta, näytetään välimuistin tiedot",
     "live": "Yhteydessä",
     "offline": "Offline-tilassa",
     "openDetails": "Yhteyden tiedot"
@@ -151,10 +147,7 @@
       "analyzing": "Analysoidaan kuviasi, odota hetki...",
       "failed": "Tuonti epäonnistui",
       "selectedCount": "{count} kuvaa valittu – ne yhdistetään yhdeksi reseptiksi",
-      "library": "Kirjasto",
-      "takePhoto": "Ota kuva",
-      "counter": "{count} / {max} kuvaa",
-      "importFromCount": "Tuo {count, plural, one {# kuvasta} other {# kuvasta}}"
+      "library": "Kirjasto"
     },
     "menu": {
       "description": "Tuo osoitteesta, skannaa kuva tai aloita tyhjästä."
@@ -223,8 +216,6 @@
     "other": "Ajastimet",
     "label_one": "1 ajastin",
     "label_other": "{count} ajastinta",
-    "notification_title": "Ajastin päättyi",
-    "notification_body": "{label} on valmis!",
     "notifications_disabled": "Ilmoitukset ovat pois käytöstä",
     "notifications_disabled_hint": "Ota ilmoitukset käyttöön selaimesi asetuksissa, niin saat hälytyksen kun ajastin päättyy taustalla."
   },

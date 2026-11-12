@@ -11,12 +11,6 @@
     "noteLabel": "Заметка",
     "notePlaceholder": "Введите заметку..."
   },
-  "navigation": {
-    "previousMonth": "Предыдущий месяц",
-    "nextMonth": "Следующий месяц",
-    "prev": "Назад",
-    "next": "Вперёд"
-  },
   "weekdays": {
     "mon": "Пн",
     "tue": "Вт",

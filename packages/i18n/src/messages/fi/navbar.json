@@ -34,11 +34,6 @@
     "calendar": "Kalenteri",
     "groceries": "Ostokset"
   },
-  "mobile": {
-    "searchPlaceholder": "Hae reseptejä...",
-    "toggleSearch": "Näytä tai piilota haku",
-    "goBack": "Takaisin"
-  },
   "archiveImporter": {
     "uploading": "Lähetetään…",
     "uploadFile": "Lähetä tiedosto",

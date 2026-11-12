@@ -21,7 +21,6 @@
   },
   "item": {
     "unnamedItem": "Produkt bez nazwy",
-    "fromRecipes": "Z {count, plural, one {# przepisu} other {# przepisów}}",
     "items": "{count, plural, one {# produkt} other {# produktów}}"
   },
   "store": {
@@ -54,7 +53,6 @@
       "violet": "Fioletowy"
     },
     "confirmDelete": "Czy na pewno chcesz usunąć {storeName}?",
-    "deleteWarning": "Produkty z tego sklepu zostaną przeniesione do Nieposortowanych.",
     "noStoresYet": "Brak sklepów",
     "createStoreHint": "Utwórz sklep, aby organizować zakupy",
     "hasItems": "Ten sklep ma {count} produkt.",
@@ -113,26 +111,11 @@
   "panel": {
     "addTitle": "Dodaj zakup",
     "editTitle": "Edytuj zakup",
-    "itemName": "Nazwa produktu",
-    "itemNamePlaceholder": "np. Mleko, Jajka, Chleb...",
     "selectStore": "Wybierz sklep",
-    "noStore": "Brak sklepu",
     "recurrence": "Powtarzanie",
     "savePreference": "Zapamiętaj sklep dla tego produktu",
     "addAnother": "Dodaj kolejny",
     "addRepeat": "Skonfiguruj powtarzanie",
-    "recurrenceEnabled": "Powtarzane",
-    "recurrenceSheet": {
-      "title": "Powtarzanie",
-      "subtitle": "Automatycznie dodawaj ponownie ten produkt do listy zakupów",
-      "enable": "Włącz powtarzanie",
-      "disable": "Wyłącz powtarzanie",
-      "frequency": "Częstotliwość",
-      "weekly": "Co tydzień",
-      "biweekly": "Co 2 tygodnie",
-      "monthly": "Co miesiąc",
-      "confirm": "Potwierdź"
-    },
     "storeOptional": "Sklep (opcjonalnie)",
     "autoDetectFromHistory": "Wykryj automatycznie z historii",
     "autoDetectOrSelect": "Wykryj lub wybierz",
@@ -143,7 +126,6 @@
     "pantryUnavailable": "Nie udało się odczytać spiżarni, więc nic nie jest jeszcze zaznaczone. Zaznacz to, co musisz kupić.",
     "loadingIngredients": "Ładowanie składników...",
     "noIngredients": "Brak składników.",
-    "addSelectedToGroceries": "Dodaj do zakupów",
     "ingredientsAdded": "Składniki dodane do listy zakupów.",
     "ingredientsFailed": "Nie udało się dodać składników do listy zakupów.",
     "addToGroceries": "Dodaj do zakupów",
@@ -168,7 +150,6 @@
     "productLabel": "Produkt w {store}",
     "cannotSearch": "W tym sklepie nie można szukać",
     "cannotSearchHint": "Norish nie odczytał strony wyszukiwania z linku sklepu {store}. Popraw go w Zarządzaj sklepami, a ceny się pojawią.",
-    "packSize": "Wielkość opakowania",
     "packAmount": "Ilość w opakowaniu",
     "packUnit": "Jednostka",
     "productPage": "Strona produktu",

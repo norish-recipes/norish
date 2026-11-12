@@ -40,7 +40,6 @@
   "status": {
     "loading": "Загрузка...",
     "saving": "Сохранение...",
-    "deleting": "Удаление...",
     "error": "Ошибка",
     "success": "Успешно",
     "noResults": "Ничего не найдено",
@@ -87,9 +86,6 @@
   },
   "connection": {
     "connecting": "Подключение к Norish...",
-    "checkInternet": "Пожалуйста, проверьте подключение к интернету",
-    "offlineBanner": "Вы офлайн, показываем сохранённые данные",
-    "serverUnreachableBanner": "Не удаётся связаться с сервером Norish, показываем сохранённые данные",
     "live": "На связи",
     "offline": "Не в сети",
     "openDetails": "Подробности подключения"
@@ -146,10 +142,7 @@
       "analyzing": "Анализ изображений, пожалуйста подождите...",
       "failed": "Ошибка импорта",
       "selectedCount": "Выбрано {count} изображений — они будут объединены в один рецепт",
-      "library": "Галерея",
-      "takePhoto": "Сделать фото",
-      "counter": "{count} / {max} фото",
-      "importFromCount": "Импорт из {count, plural, one {# фото} few {# фото} many {# фото} other {# фото}}"
+      "library": "Галерея"
     },
     "menu": {
       "description": "Импортируйте по URL, отсканируйте фото или начните с нуля."
@@ -223,8 +216,6 @@
     "other": "Таймеры",
     "label_one": "1 таймер",
     "label_other": "{count} таймеров",
-    "notification_title": "Таймер завершён",
-    "notification_body": "{label} завершён!",
     "notifications_disabled": "Уведомления отключены",
     "notifications_disabled_hint": "Включите уведомления в настройках браузера, чтобы получать оповещения при завершении таймеров в фоновом режиме."
   },

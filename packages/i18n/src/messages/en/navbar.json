@@ -34,11 +34,6 @@
     "calendar": "Calendar",
     "groceries": "Groceries"
   },
-  "mobile": {
-    "searchPlaceholder": "Search recipes...",
-    "toggleSearch": "Toggle search",
-    "goBack": "Go back"
-  },
   "archiveImporter": {
     "uploading": "Uploading…",
     "uploadFile": "Upload a file",

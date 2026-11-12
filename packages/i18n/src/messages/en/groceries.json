@@ -21,7 +21,6 @@
   },
   "item": {
     "unnamedItem": "Unnamed item",
-    "fromRecipes": "From {count, plural, one {# recipe} other {# recipes}}",
     "items": "{count, plural, one {# item} other {# items}}"
   },
   "store": {
@@ -54,7 +53,6 @@
       "violet": "Violet"
     },
     "confirmDelete": "Are you sure you want to delete {storeName}?",
-    "deleteWarning": "Items in this store will be moved to Unsorted.",
     "noStoresYet": "No stores yet",
     "createStoreHint": "Create a store to organize your groceries",
     "hasItems": "This store has {count} grocery item.",
@@ -113,26 +111,11 @@
   "panel": {
     "addTitle": "Add Grocery",
     "editTitle": "Edit Grocery",
-    "itemName": "Item name",
-    "itemNamePlaceholder": "e.g., Milk, Eggs, Bread...",
     "selectStore": "Select store",
-    "noStore": "No store",
     "recurrence": "Recurrence",
     "savePreference": "Remember store for this item",
     "addAnother": "Add another",
     "addRepeat": "Configure recurrence",
-    "recurrenceEnabled": "Recurring",
-    "recurrenceSheet": {
-      "title": "Recurrence",
-      "subtitle": "Automatically re-add this item to your grocery list",
-      "enable": "Enable recurrence",
-      "disable": "Disable recurrence",
-      "frequency": "Frequency",
-      "weekly": "Weekly",
-      "biweekly": "Every 2 weeks",
-      "monthly": "Monthly",
-      "confirm": "Confirm"
-    },
     "storeOptional": "Store (optional)",
     "autoDetectFromHistory": "Auto-detect from history",
     "autoDetectOrSelect": "Auto-detect or select",
@@ -143,7 +126,6 @@
     "pantryUnavailable": "Your pantry could not be read, so nothing is ticked yet. Tick what you need to buy.",
     "loadingIngredients": "Loading ingredients...",
     "noIngredients": "No ingredients.",
-    "addSelectedToGroceries": "Add to groceries",
     "ingredientsAdded": "Ingredients added to grocery list.",
     "ingredientsFailed": "Failed to add ingredients to grocery list.",
     "addToGroceries": "Add to Groceries",
@@ -168,7 +150,6 @@
     "productLabel": "Product at {store}",
     "cannotSearch": "This shop cannot be searched",
     "cannotSearchHint": "Norish could not read a search page out of {store}'s shop link. Correct it in Manage Stores and prices follow.",
-    "packSize": "Pack size",
     "packAmount": "Amount per pack",
     "packUnit": "Unit",
     "productPage": "Product page",

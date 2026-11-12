@@ -34,11 +34,6 @@
     "calendar": "Kalender",
     "groceries": "Indkøbsliste"
   },
-  "mobile": {
-    "searchPlaceholder": "Søg opskrifter...",
-    "toggleSearch": "Slå søgning til/fra",
-    "goBack": "Gå tilbage"
-  },
   "archiveImporter": {
     "uploading": "Uploader…",
     "uploadFile": "Upload en fil",

@@ -21,7 +21,6 @@
   },
   "item": {
     "unnamedItem": "Nimetön ostos",
-    "fromRecipes": "{count, plural, one {# reseptistä} other {# reseptistä}}",
     "items": "{count, plural, one {# ostos} other {# ostosta}}"
   },
   "store": {
@@ -54,7 +53,6 @@
       "violet": "Violetti"
     },
     "confirmDelete": "Haluatko varmasti poistaa kaupan {storeName}?",
-    "deleteWarning": "Tämän kaupan ostokset siirretään kohtaan Lajittelematta.",
     "noStoresYet": "Ei vielä kauppoja",
     "createStoreHint": "Luo kauppa järjestääksesi ostoksesi",
     "hasItems": "Tässä kaupassa on {count} ostos.",
@@ -113,26 +111,11 @@
   "panel": {
     "addTitle": "Lisää ostos",
     "editTitle": "Muokkaa ostosta",
-    "itemName": "Ostoksen nimi",
-    "itemNamePlaceholder": "esim. maito, kananmunat, leipä...",
     "selectStore": "Valitse kauppa",
-    "noStore": "Ei kauppaa",
     "recurrence": "Toisto",
     "savePreference": "Muista kauppa tälle ostokselle",
     "addAnother": "Lisää toinen",
     "addRepeat": "Määritä toisto",
-    "recurrenceEnabled": "Toistuva",
-    "recurrenceSheet": {
-      "title": "Toisto",
-      "subtitle": "Lisää tämä ostos automaattisesti uudelleen ostoslistallesi",
-      "enable": "Ota toisto käyttöön",
-      "disable": "Poista toisto käytöstä",
-      "frequency": "Toistoväli",
-      "weekly": "Viikoittain",
-      "biweekly": "Joka toinen viikko",
-      "monthly": "Kuukausittain",
-      "confirm": "Vahvista"
-    },
     "storeOptional": "Kauppa (valinnainen)",
     "autoDetectFromHistory": "Tunnista historiasta",
     "autoDetectOrSelect": "Tunnista tai valitse",
@@ -143,7 +126,6 @@
     "pantryUnavailable": "Ruokakomeroa ei voitu lukea, joten mitään ei ole vielä valittu. Valitse, mitä sinun täytyy ostaa.",
     "loadingIngredients": "Ladataan ainesosia...",
     "noIngredients": "Ei ainesosia.",
-    "addSelectedToGroceries": "Lisää ostoslistalle",
     "ingredientsAdded": "Ainesosat lisättiin ostoslistalle.",
     "ingredientsFailed": "Ainesosien lisääminen ostoslistalle epäonnistui.",
     "addToGroceries": "Lisää ostoslistalle",
@@ -168,7 +150,6 @@
     "productLabel": "Tuote kaupassa {store}",
     "cannotSearch": "Tästä kaupasta ei voi hakea",
     "cannotSearchHint": "Norish ei saanut hakusivua kaupan {store} linkistä. Korjaa se kohdassa Hallinnoi kauppoja, niin hinnat seuraavat perässä.",
-    "packSize": "Pakkauskoko",
     "packAmount": "Määrä pakkauksessa",
     "packUnit": "Yksikkö",
     "productPage": "Tuotesivu",

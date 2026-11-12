@@ -40,7 +40,6 @@
   "status": {
     "loading": "Indlæser...",
     "saving": "Gemmer...",
-    "deleting": "Sletter...",
     "error": "Fejl",
     "success": "Succes",
     "noResults": "Ingen resultater fundet",
@@ -92,9 +91,6 @@
   },
   "connection": {
     "connecting": "Opretter forbindelse til Norish...",
-    "checkInternet": "Tjek venligst din internetforbindelse",
-    "offlineBanner": "Du er offline og ser cachelagrede data",
-    "serverUnreachableBanner": "Norish-serveren er ikke tilgængelig, ser cachelagrede data",
     "live": "Forbundet",
     "offline": "Offline",
     "openDetails": "Forbindelsesdetaljer"
@@ -151,10 +147,7 @@
       "analyzing": "Analyserer dine billeder, vent venligst...",
       "failed": "Importering mislykkedes",
       "selectedCount": "{count} billeder valgt – de kombineres til én opskrift",
-      "library": "Bibliotek",
-      "takePhoto": "Tag billede",
-      "counter": "{count} / {max} billeder",
-      "importFromCount": "Importer fra {count, plural, one {# billede} other {# billeder}}"
+      "library": "Bibliotek"
     },
     "menu": {
       "description": "Importer fra en URL, scan et billede eller start fra bunden."
@@ -223,8 +216,6 @@
     "other": "Timere",
     "label_one": "1 timer",
     "label_other": "{count} timere",
-    "notification_title": "Timer færdig",
-    "notification_body": "{label} er færdig!",
     "notifications_disabled": "Notifikationer er deaktiveret",
     "notifications_disabled_hint": "Aktiver notifikationer i dine browserindstillinger for at modtage alarmer, når timere afsluttes i baggrunden."
   },

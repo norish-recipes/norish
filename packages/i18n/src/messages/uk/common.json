@@ -40,7 +40,6 @@
   "status": {
     "loading": "Завантаження...",
     "saving": "Збереження...",
-    "deleting": "Видалення...",
     "error": "Помилка",
     "success": "Успішно",
     "noResults": "Нічого не знайдено",
@@ -92,9 +91,6 @@
   },
   "connection": {
     "connecting": "Під’єднання до Norish...",
-    "checkInternet": "Перевірте підключення до інтернету",
-    "offlineBanner": "Ви офлайн, показано кешовані дані",
-    "serverUnreachableBanner": "Сервер Norish недоступний, показано кешовані дані",
     "live": "Підключено",
     "offline": "Офлайн",
     "openDetails": "Подробиці з’єднання"
@@ -151,10 +147,7 @@
       "analyzing": "Аналізуємо ваші зображення, зачекайте...",
       "failed": "Помилка імпорту",
       "selectedCount": "Вибрано зображень: {count} — їх буде об’єднано в один рецепт",
-      "library": "Галерея",
-      "takePhoto": "Зробити фото",
-      "counter": "Фото: {count} / {max}",
-      "importFromCount": "Імпортувати з {count, plural, one {# фото} few {# фото} many {# фото} other {# фото}}"
+      "library": "Галерея"
     },
     "menu": {
       "description": "Імпортуйте за URL, скануйте фото або почніть з нуля."
@@ -223,8 +216,6 @@
     "other": "Таймери",
     "label_one": "1 таймер",
     "label_other": "Таймерів: {count}",
-    "notification_title": "Таймер завершено",
-    "notification_body": "{label} — готово!",
     "notifications_disabled": "Сповіщення вимкнено",
     "notifications_disabled_hint": "Увімкніть сповіщення в налаштуваннях браузера, щоб отримувати сигнали, коли таймери завершуються у фоновому режимі."
   },

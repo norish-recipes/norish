@@ -11,12 +11,6 @@
     "noteLabel": "Anteckning",
     "notePlaceholder": "Skriv en anteckning..."
   },
-  "navigation": {
-    "previousMonth": "Föregående månad",
-    "nextMonth": "Nästa månad",
-    "prev": "Föregående",
-    "next": "Nästa"
-  },
   "weekdays": {
     "mon": "mån",
     "tue": "tis",

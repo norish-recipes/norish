@@ -34,11 +34,6 @@
     "calendar": "Kalender",
     "groceries": "Inköpslista"
   },
-  "mobile": {
-    "searchPlaceholder": "Sök efter recept...",
-    "toggleSearch": "Visa eller dölj sökning",
-    "goBack": "Gå tillbaka"
-  },
   "archiveImporter": {
     "uploading": "Laddar upp…",
     "uploadFile": "Ladda upp en fil",

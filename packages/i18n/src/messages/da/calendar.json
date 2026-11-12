@@ -11,12 +11,6 @@
     "noteLabel": "Note",
     "notePlaceholder": "Skriv note..."
   },
-  "navigation": {
-    "previousMonth": "Forrige måned",
-    "nextMonth": "Næste måned",
-    "prev": "Forrige",
-    "next": "Næste"
-  },
   "weekdays": {
     "mon": "Man",
     "tue": "Tir",

@@ -193,7 +193,6 @@
           "abbreviated": "Abbreviated"
         }
       },
-      "applyError": "Failed to apply preference",
       "afterPlanning": {
         "title": "After planning a recipe",
         "description": "What happens when you plan a recipe",

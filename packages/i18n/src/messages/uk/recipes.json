@@ -67,7 +67,6 @@
     "notFoundMessage": "Цього рецепта не існує або у вас немає дозволу на його перегляд.",
     "prep": "підготовка",
     "total": "загалом",
-    "planMeal": "Запланувати страву",
     "recipeActions": "Дії з рецептом",
     "instructions": "Інструкції",
     "cook": "Готувати",
@@ -86,7 +85,6 @@
     "edit": "Редагувати",
     "delete": "Видалити",
     "share": "Поділитися",
-    "visitOriginal": "Відкрити оригінальний рецепт",
     "addToCalendar": "Додати в календар",
     "autoTag": "Згенерувати теги",
     "autoTagging": "Генеруємо теги...",
@@ -103,7 +101,6 @@
     "inferringProvenance": "Визначаємо походження…",
     "linkIngredients": "Пов’язати інгредієнти з кроками",
     "linkingIngredients": "Пов’язуємо інгредієнти…",
-    "enrichmentFailed": "Останній запуск не вдався",
     "generateImage": "Згенерувати зображення",
     "generatingImage": "Генеруємо зображення…",
     "cookbooks": "Кулінарні книги"
@@ -173,7 +170,6 @@
     "editTitle": "Редагувати рецепт",
     "createDescription": "Додайте новий рецепт до своєї колекції",
     "editDescription": "Оновіть дані рецепта",
-    "initializingForm": "Готуємо форму...",
     "photo": "Фото",
     "basicInfo": "Основна інформація",
     "ingredients": "Інгредієнти",
@@ -225,19 +221,12 @@
     "createRecipe": "Створити рецепт",
     "saveChanges": "Зберегти зміни",
     "uploading": "Завантаження...",
-    "clickToUpload": "Натисніть, щоб завантажити, або перетягніть файл",
-    "pasteToUpload": "щоб вставити",
-    "imageFormats": "PNG, JPG, WEBP до 5 МБ",
     "discardChangesConfirm": "У вас є незбережені зміни. Відкинути їх і піти з цієї сторінки?"
   },
   "gallery": {
-    "addImage": "Додати зображення",
     "uploading": "Завантаження...",
     "uploadFailed": "Не вдалося завантажити",
-    "dragToReorder": "Перетягніть, щоб змінити порядок",
-    "maxImagesReached": "Можна додати не більше {max} зображень",
-    "maxVideosReached": "Можна додати не більше {max} відео",
-    "invalidFileType": "Непідтримуваний тип файлу"
+    "dragToReorder": "Перетягніть, щоб змінити порядок"
   },
   "carousel": {
     "noImageAvailable": "Зображення немає",
@@ -265,8 +254,6 @@
     "carbs": "Вуглеводи",
     "protein": "Білки",
     "showingPortions": "Значення для {count} {count, plural, one {порції} few {порцій} many {порцій} other {порції}}",
-    "noInfo": "Даних про поживну цінність немає",
-    "estimateWithAI": "Оцінити за допомогою ШІ",
     "estimated": "Оцінка",
     "leftOut": "{count, plural, one {# рядок не враховано} few {# рядки не враховано} many {# рядків не враховано} other {# рядка не враховано}}",
     "estimatedByAI": "оцінено ШІ",
@@ -334,8 +321,6 @@
     "incomplete": "Цей рецепт може бути неповним. Звірте його з джерелом.",
     "notARecipe": "Ця сторінка не схожа на рецепт.",
     "privateAddress": "Імпорт з адрес приватної мережі на цьому сервері заборонено.",
-    "batchImported": "Рецепти імпортовано",
-    "batchImportedDescription": "Імпортовано рецептів з архіву: {count}",
     "view": "Переглянути",
     "open": "Відкрити",
     "deleteKept": "{count, plural, one {# рецепт змінено} few {# рецепти змінено} many {# рецептів змінено} other {# рецепта змінено}} іншим користувачем і збережено.",
@@ -355,9 +340,6 @@
     "servings": "Порції",
     "serving": "{count, plural, one {# порція} few {# порції} many {# порцій} other {# порції}}",
     "stepCounter": "{current} / {total}",
-    "swipeSteps": "Проводьте, щоб перемикати кроки",
-    "swipeIngredients": "Проведіть уліво до інгредієнтів",
-    "swipeBackToSteps": "Проведіть управо до кроків",
     "readyAt": "Буде готово близько {time}",
     "timers": "Таймери",
     "nextStep": "Наступний крок"
@@ -383,10 +365,7 @@
   "provenance": {
     "title": "Походження",
     "region": "Регіон",
-    "cuisines": "Кухні",
-    "inferring": "З’ясовуємо, звідки походить цей рецепт…",
-    "noInfo": "Даних про походження ще немає",
-    "inferWithAI": "Визначити за допомогою ШІ"
+    "cuisines": "Кухні"
   },
   "import": {
     "alreadyExists": "Цей рецепт у вас уже є",

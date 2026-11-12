@@ -11,12 +11,6 @@
     "noteLabel": "Нотатка",
     "notePlaceholder": "Введіть нотатку..."
   },
-  "navigation": {
-    "previousMonth": "Попередній місяць",
-    "nextMonth": "Наступний місяць",
-    "prev": "Назад",
-    "next": "Далі"
-  },
   "weekdays": {
     "mon": "Пн",
     "tue": "Вт",

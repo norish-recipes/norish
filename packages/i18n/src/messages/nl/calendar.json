@@ -11,12 +11,6 @@
     "noteLabel": "Notitie",
     "notePlaceholder": "Voer notitie in..."
   },
-  "navigation": {
-    "previousMonth": "Vorige maand",
-    "nextMonth": "Volgende maand",
-    "prev": "Vorige",
-    "next": "Volgende"
-  },
   "weekdays": {
     "mon": "Ma",
     "tue": "Di",

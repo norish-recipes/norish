@@ -193,7 +193,6 @@
           "abbreviated": "줄여서"
         }
       },
-      "applyError": "환경설정을 적용하지 못했습니다",
       "afterPlanning": {
         "title": "레시피 계획 후",
         "description": "레시피를 계획할 때 일어나는 일",

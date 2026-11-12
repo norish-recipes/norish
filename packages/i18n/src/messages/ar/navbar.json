@@ -34,11 +34,6 @@
     "calendar": "التقويم",
     "groceries": "المشتريات"
   },
-  "mobile": {
-    "searchPlaceholder": "ابحث عن وصفات...",
-    "toggleSearch": "إظهار/إخفاء البحث",
-    "goBack": "رجوع"
-  },
   "archiveImporter": {
     "uploading": "جارٍ الرفع…",
     "uploadFile": "رفع ملف",

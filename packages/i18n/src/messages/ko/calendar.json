@@ -11,12 +11,6 @@
     "noteLabel": "메모",
     "notePlaceholder": "메모 입력..."
   },
-  "navigation": {
-    "previousMonth": "이전 달",
-    "nextMonth": "다음 달",
-    "prev": "이전",
-    "next": "다음"
-  },
   "weekdays": {
     "mon": "월",
     "tue": "화",

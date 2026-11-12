@@ -67,7 +67,6 @@
     "notFoundMessage": "Dieses Rezept existiert nicht oder Sie haben keine Berechtigung, es anzuzeigen.",
     "prep": "Vorbereitung",
     "total": "gesamt",
-    "planMeal": "Mahlzeit planen",
     "recipeActions": "Rezept-Aktionen",
     "instructions": "Anleitung",
     "cook": "Kochen",
@@ -86,7 +85,6 @@
     "edit": "Bearbeiten",
     "delete": "Löschen",
     "share": "Teilen",
-    "visitOriginal": "Originalrezept besuchen",
     "addToCalendar": "Zum Kalender hinzufügen",
     "autoTag": "Auto-Tagging",
     "autoTagging": "Tags werden generiert...",
@@ -103,7 +101,6 @@
     "inferringProvenance": "Herkunft wird ermittelt …",
     "linkIngredients": "Zutaten mit Schritten verknüpfen",
     "linkingIngredients": "Zutaten werden verknüpft…",
-    "enrichmentFailed": "Letzter Versuch fehlgeschlagen",
     "generateImage": "Bild generieren",
     "generatingImage": "Bild wird generiert…",
     "cookbooks": "Kochbücher"
@@ -173,7 +170,6 @@
     "editTitle": "Rezept bearbeiten",
     "createDescription": "Fügen Sie ein neues Rezept zu Ihrer Sammlung hinzu",
     "editDescription": "Aktualisieren Sie Ihre Rezeptdetails",
-    "initializingForm": "Formular wird initialisiert...",
     "photo": "Foto",
     "basicInfo": "Grundinformationen",
     "ingredients": "Zutaten",
@@ -225,19 +221,12 @@
     "createRecipe": "Rezept erstellen",
     "saveChanges": "Änderungen speichern",
     "uploading": "Wird hochgeladen...",
-    "clickToUpload": "Zum Hochladen klicken oder Drag & Drop",
-    "pasteToUpload": "zum Einfügen",
-    "imageFormats": "PNG, JPG, WEBP bis zu 5MB",
     "discardChangesConfirm": "Sie haben ungespeicherte Änderungen. Verwerfen und diese Seite verlassen?"
   },
   "gallery": {
-    "addImage": "Bild hinzufügen",
     "uploading": "Wird hochgeladen...",
     "uploadFailed": "Hochladen fehlgeschlagen",
-    "dragToReorder": "Ziehe Bilder, um sie neu zu ordnen",
-    "maxImagesReached": "Maximal {max} Bilder erlaubt",
-    "maxVideosReached": "Maximal {max} Videos erlaubt",
-    "invalidFileType": "Ungültiger Dateityp"
+    "dragToReorder": "Ziehe Bilder, um sie neu zu ordnen"
   },
   "carousel": {
     "noImageAvailable": "Kein Bild verfügbar",
@@ -265,8 +254,6 @@
     "carbs": "Kohlenhydrate",
     "protein": "Eiweiß",
     "showingPortions": "Zeige Werte für {count} {count, plural, one {Portion} other {Portionen}}",
-    "noInfo": "Keine Nährwertinformationen verfügbar",
-    "estimateWithAI": "Mit KI schätzen",
     "estimated": "Geschätzt",
     "leftOut": "{count, plural, one {# Zeile nicht mitgezählt} other {# Zeilen nicht mitgezählt}}",
     "estimatedByAI": "von KI geschätzt",
@@ -334,8 +321,6 @@
     "incomplete": "Dieses Rezept ist möglicherweise unvollständig. Vergleichen Sie es mit der Quelle.",
     "notARecipe": "Diese Seite scheint kein Rezept zu sein.",
     "privateAddress": "Importe von privaten Netzwerkadressen sind auf diesem Server nicht erlaubt.",
-    "batchImported": "Rezepte importiert",
-    "batchImportedDescription": "{count} Rezepte aus Archiv importiert",
     "view": "Anzeigen",
     "open": "Öffnen",
     "deleteKept": "{count, plural, one {# Rezept wurde} other {# Rezepte wurden}} von jemand anderem geändert und behalten.",
@@ -355,9 +340,6 @@
     "servings": "Portionen",
     "serving": "{count, plural, one {# Portion} other {# Portionen}}",
     "stepCounter": "{current} / {total}",
-    "swipeSteps": "Wischen Sie, um durch die Schritte zu navigieren",
-    "swipeIngredients": "Nach links wischen für Zutaten",
-    "swipeBackToSteps": "Nach rechts wischen für Schritte",
     "readyAt": "Fertig gegen {time}",
     "timers": "Timer",
     "nextStep": "Nächster Schritt"
@@ -383,10 +365,7 @@
   "provenance": {
     "title": "Herkunft",
     "region": "Region",
-    "cuisines": "Küchen",
-    "inferring": "Die Herkunft dieses Rezepts wird ermittelt …",
-    "noInfo": "Noch keine Herkunftsangaben",
-    "inferWithAI": "Mit KI ermitteln"
+    "cuisines": "Küchen"
   },
   "import": {
     "alreadyExists": "Sie haben dieses Rezept bereits",

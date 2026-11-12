@@ -11,12 +11,6 @@
     "noteLabel": "ملاحظة",
     "notePlaceholder": "اكتب ملاحظة..."
   },
-  "navigation": {
-    "previousMonth": "الشهر السابق",
-    "nextMonth": "الشهر التالي",
-    "prev": "السابق",
-    "next": "التالي"
-  },
   "weekdays": {
     "mon": "اثنين",
     "tue": "ثلاثاء",

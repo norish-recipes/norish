@@ -40,7 +40,6 @@
   "status": {
     "loading": "불러오는 중...",
     "saving": "저장 중...",
-    "deleting": "삭제 중...",
     "error": "오류",
     "success": "성공",
     "noResults": "검색 결과가 없습니다",
@@ -92,9 +91,6 @@
   },
   "connection": {
     "connecting": "Norish에 연결 중...",
-    "checkInternet": "인터넷 연결을 확인해주세요",
-    "offlineBanner": "오프라인 상태입니다 캐시된 데이터를 표시합니다",
-    "serverUnreachableBanner": "Norish 서버에 연결할 수 없습니다 캐시된 데이터를 표시합니다",
     "live": "연결됨",
     "offline": "오프라인",
     "openDetails": "연결 세부정보"
@@ -151,10 +147,7 @@
       "analyzing": "이미지를 분석하는 중입니다. 잠시 기다려 주세요...",
       "failed": "가져오기 실패",
       "selectedCount": "{count}개의 이미지가 선택되었습니다. 하나의 레시피로 결합됩니다.",
-      "library": "라이브러리",
-      "takePhoto": "사진 촬영",
-      "counter": "{count} / {max} 사진",
-      "importFromCount": "{count, plural, one {#장 사진에서 가져오기} other {#장 사진에서 가져오기}}"
+      "library": "라이브러리"
     },
     "menu": {
       "description": "URL에서 가져오거나 사진을 스캔하거나 처음부터 시작하세요."
@@ -223,8 +216,6 @@
     "other": "타이머",
     "label_one": "타이머 1개",
     "label_other": "{count}개의 타이머",
-    "notification_title": "타이머 완료",
-    "notification_body": "{label}이(가) 완료되었습니다!",
     "notifications_disabled": "알림이 비활성화되었습니다.",
     "notifications_disabled_hint": "타이머가 백그라운드에서 완료될 때 알림을 받으려면 브라우저 설정에서 알림을 활성화하세요."
   },

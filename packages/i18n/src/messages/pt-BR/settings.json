@@ -168,7 +168,6 @@
           "ingredientIcons": "Ícones de ingredientes"
         }
       },
-      "applyError": "Falha ao aplicar preferência",
       "todaySection": {
         "title": "Seção Hoje",
         "description": "Como a seção Hoje do painel se comporta",

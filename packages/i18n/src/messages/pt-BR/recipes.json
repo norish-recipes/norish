@@ -67,7 +67,6 @@
     "notFoundMessage": "Esta receita não existe ou você não tem permissão para visualizá-la.",
     "prep": "preparo",
     "total": "total",
-    "planMeal": "Planejar refeição",
     "recipeActions": "Ações da receita",
     "instructions": "Instruções",
     "cook": "Cozinhar",
@@ -86,7 +85,6 @@
     "edit": "Editar",
     "delete": "Excluir",
     "share": "Compartilhar",
-    "visitOriginal": "Ver receita original",
     "addToCalendar": "Adicionar ao calendário",
     "autoTag": "Gerar tags automaticamente",
     "autoTagging": "Gerando tags...",
@@ -103,7 +101,6 @@
     "inferringProvenance": "Descobrindo a procedência…",
     "linkIngredients": "Vincular ingredientes às etapas",
     "linkingIngredients": "Vinculando ingredientes…",
-    "enrichmentFailed": "A última execução falhou",
     "generateImage": "Gerar imagem",
     "generatingImage": "Gerando imagem…",
     "cookbooks": "Livros de receitas"
@@ -173,7 +170,6 @@
     "editTitle": "Editar receita",
     "createDescription": "Adicione uma nova receita à sua coleção",
     "editDescription": "Atualize os detalhes da sua receita",
-    "initializingForm": "Inicializando formulário...",
     "photo": "Foto",
     "basicInfo": "Informações básicas",
     "ingredients": "Ingredientes",
@@ -225,19 +221,12 @@
     "createRecipe": "Criar receita",
     "saveChanges": "Salvar alterações",
     "uploading": "Enviando...",
-    "clickToUpload": "Clique para enviar ou arraste e solte",
-    "pasteToUpload": "para colar",
-    "imageFormats": "PNG, JPG, WEBP até 5 MB",
     "discardChangesConfirm": "Você tem alterações não salvas. Deseja descartá-las e sair desta página?"
   },
   "gallery": {
-    "addImage": "Adicionar imagem",
     "uploading": "Enviando...",
     "uploadFailed": "Falha no envio",
-    "dragToReorder": "Arraste para reordenar",
-    "maxImagesReached": "Máximo de {max} imagens permitido",
-    "maxVideosReached": "Máximo de {max} vídeos permitido",
-    "invalidFileType": "Tipo de arquivo inválido"
+    "dragToReorder": "Arraste para reordenar"
   },
   "carousel": {
     "noImageAvailable": "Nenhuma imagem disponível",
@@ -265,8 +254,6 @@
     "carbs": "Carboidratos",
     "protein": "Proteína",
     "showingPortions": "Mostrando valores para {count} {count, plural, one {porção} other {porções}}",
-    "noInfo": "Nenhuma informação nutricional disponível",
-    "estimateWithAI": "Estimar com IA",
     "estimated": "Estimado",
     "leftOut": "{count, plural, one {# linha não contada} other {# linhas não contadas}}",
     "estimatedByAI": "estimado por IA",
@@ -334,8 +321,6 @@
     "incomplete": "Esta receita pode estar incompleta. Compare-a com a fonte.",
     "notARecipe": "Esta página não parece ser uma receita.",
     "privateAddress": "Importações de endereços de rede privada não são permitidas neste servidor.",
-    "batchImported": "Receitas importadas",
-    "batchImportedDescription": "{count} receitas importadas do arquivo",
     "view": "Ver",
     "open": "Abrir",
     "deleteKept": "{count, plural, one {# receita foi alterada} other {# receitas foram alteradas}} por outra pessoa e {count, plural, one {mantida} other {mantidas}}.",
@@ -355,9 +340,6 @@
     "servings": "Porções",
     "serving": "{count, plural, one {# porção} other {# porções}}",
     "stepCounter": "{current} / {total}",
-    "swipeSteps": "Deslize para navegar pelas etapas",
-    "swipeIngredients": "Deslize para a esquerda para ver os ingredientes",
-    "swipeBackToSteps": "Deslize para a direita para ver as etapas",
     "readyAt": "Pronto por volta das {time}",
     "timers": "Temporizadores",
     "nextStep": "Próximo passo"
@@ -383,10 +365,7 @@
   "provenance": {
     "title": "Procedência",
     "region": "Região",
-    "cuisines": "Culinárias",
-    "inferring": "Descobrindo de onde vem esta receita…",
-    "noInfo": "Ainda sem informações de procedência",
-    "inferWithAI": "Descobrir com IA"
+    "cuisines": "Culinárias"
   },
   "import": {
     "alreadyExists": "Você já tem esta receita",

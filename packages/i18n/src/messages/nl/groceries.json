@@ -21,7 +21,6 @@
   },
   "item": {
     "unnamedItem": "Naamloos item",
-    "fromRecipes": "Uit {count, plural, one {# recept} other {# recepten}}",
     "items": "{count, plural, one {# item} other {# items}}"
   },
   "store": {
@@ -54,7 +53,6 @@
       "violet": "Violet"
     },
     "confirmDelete": "Weet je zeker dat je {storeName} wilt verwijderen?",
-    "deleteWarning": "Items in deze winkel worden verplaatst naar Ongeordend.",
     "noStoresYet": "Nog geen winkels",
     "createStoreHint": "Maak een winkel aan om je boodschappen te organiseren",
     "hasItems": "Deze winkel heeft {count} boodschap.",
@@ -113,26 +111,11 @@
   "panel": {
     "addTitle": "Boodschap toevoegen",
     "editTitle": "Boodschap bewerken",
-    "itemName": "boodschappen naam",
-    "itemNamePlaceholder": "bijv. Melk, Eieren, Brood...",
     "selectStore": "Selecteer winkel",
-    "noStore": "Geen winkel",
     "recurrence": "Herhaling",
     "savePreference": "Onthoud winkel voor dit item",
     "addAnother": "Voeg nog een toe",
     "addRepeat": "Herhaling instellen",
-    "recurrenceEnabled": "Terugkerend",
-    "recurrenceSheet": {
-      "title": "Herhaling",
-      "subtitle": "Voeg dit item automatisch opnieuw toe aan je boodschappenlijst",
-      "enable": "Herhaling inschakelen",
-      "disable": "Herhaling uitschakelen",
-      "frequency": "Frequentie",
-      "weekly": "Wekelijks",
-      "biweekly": "Elke 2 weken",
-      "monthly": "Maandelijks",
-      "confirm": "Bevestigen"
-    },
     "storeOptional": "Winkel (optioneel)",
     "autoDetectFromHistory": "Automatisch detecteren uit geschiedenis",
     "autoDetectOrSelect": "Automatisch detecteren of selecteren",
@@ -143,7 +126,6 @@
     "pantryUnavailable": "Je voorraadkast kon niet worden gelezen, dus er is nog niets aangevinkt. Vink aan wat je moet kopen.",
     "loadingIngredients": "Ingrediënten laden...",
     "noIngredients": "Geen ingrediënten.",
-    "addSelectedToGroceries": "Voeg toe aan boodschappen",
     "ingredientsAdded": "Ingrediënten toegevoegd aan boodschappenlijst.",
     "ingredientsFailed": "Kan ingrediënten niet toevoegen aan boodschappenlijst.",
     "addToGroceries": "Toevoegen aan boodschappen",
@@ -168,7 +150,6 @@
     "productLabel": "Product bij {store}",
     "cannotSearch": "Deze winkel kan niet doorzocht worden",
     "cannotSearchHint": "Norish kon geen zoekpagina uit de winkellink van {store} lezen. Pas hem aan bij Winkels beheren en de prijzen volgen.",
-    "packSize": "Verpakking",
     "packAmount": "Hoeveelheid per verpakking",
     "packUnit": "Eenheid",
     "productPage": "Productpagina",

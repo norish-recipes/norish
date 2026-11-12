@@ -40,7 +40,6 @@
   "status": {
     "loading": "جارٍ التحميل...",
     "saving": "جارٍ الحفظ...",
-    "deleting": "جارٍ الحذف...",
     "error": "خطأ",
     "success": "تم بنجاح",
     "noResults": "لا توجد نتائج",
@@ -92,9 +91,6 @@
   },
   "connection": {
     "connecting": "جارٍ الاتصال بـ Norish...",
-    "checkInternet": "يرجى التحقق من اتصالك بالإنترنت",
-    "offlineBanner": "أنت غير متصل، تُعرض البيانات المحفوظة",
-    "serverUnreachableBanner": "تعذّر الوصول إلى خادم Norish، تُعرض البيانات المحفوظة",
     "live": "متصل",
     "offline": "غير متصل",
     "openDetails": "تفاصيل الاتصال"
@@ -151,10 +147,7 @@
       "analyzing": "جارٍ تحليل الصور، يرجى الانتظار...",
       "failed": "فشل الاستيراد",
       "selectedCount": "تم اختيار {count} صور - سيتم دمجها في وصفة واحدة",
-      "library": "المعرض",
-      "takePhoto": "التقاط صورة",
-      "counter": "{count} / {max} صور",
-      "importFromCount": "استيراد من {count, plural, zero {# صور} one {صورة واحدة} two {صورتين} few {# صور} many {# صورة} other {# صورة}}"
+      "library": "المعرض"
     },
     "menu": {
       "description": "استورد من رابط، أو صوّر وصفة، أو ابدأ من الصفر."
@@ -223,8 +216,6 @@
     "other": "مؤقّتات",
     "label_one": "مؤقّت واحد",
     "label_other": "{count} مؤقّتات",
-    "notification_title": "انتهى المؤقّت",
-    "notification_body": "انتهى {label}!",
     "notifications_disabled": "الإشعارات معطّلة",
     "notifications_disabled_hint": "فعّل الإشعارات من إعدادات المتصفح لتصلك التنبيهات عند انتهاء المؤقّتات في الخلفية."
   },

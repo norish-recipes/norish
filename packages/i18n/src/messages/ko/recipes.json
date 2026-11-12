@@ -67,7 +67,6 @@
     "notFoundMessage": "이 레시피는 존재하지 않거나 볼 수 있는 권한이 없습니다.",
     "prep": "준비",
     "total": "총",
-    "planMeal": "식사 계획",
     "recipeActions": "레시피 작업",
     "instructions": "조리 방법",
     "cook": "요리",
@@ -86,7 +85,6 @@
     "edit": "편집",
     "delete": "삭제",
     "share": "공유",
-    "visitOriginal": "원본 레시피 보기",
     "addToCalendar": "캘린더에 추가",
     "autoTag": "자동 태그",
     "autoTagging": "태그 생성 중...",
@@ -103,7 +101,6 @@
     "inferringProvenance": "출처를 알아보는 중…",
     "linkIngredients": "재료를 단계에 연결",
     "linkingIngredients": "재료 연결 중…",
-    "enrichmentFailed": "마지막 실행 실패",
     "generateImage": "이미지 생성",
     "generatingImage": "이미지 생성 중…",
     "cookbooks": "요리책"
@@ -173,7 +170,6 @@
     "editTitle": "레시피 편집",
     "createDescription": "컬렉션에 새로운 레시피를 추가하세요",
     "editDescription": "레시피 세부정보 수정",
-    "initializingForm": "양식 초기화 중...",
     "photo": "사진",
     "basicInfo": "기본정보",
     "ingredients": "재료",
@@ -225,19 +221,12 @@
     "createRecipe": "레시피 만들기",
     "saveChanges": "변경사항 저장",
     "uploading": "업로드 중...",
-    "clickToUpload": "클릭하여 업로드하거나 드래그 앤 드롭하세요.",
-    "pasteToUpload": "붙여넣기",
-    "imageFormats": "최대 5MB의 PNG, JPG, WEBP",
     "discardChangesConfirm": "저장하지 않은 변경사항이 있습니다. 변경사항을 버리고 이 페이지를 떠나시겠어요?"
   },
   "gallery": {
-    "addImage": "이미지 추가",
     "uploading": "업로드 중...",
     "uploadFailed": "업로드 실패",
-    "dragToReorder": "드래그하여 재정렬하세요.",
-    "maxImagesReached": "이미지는 최대 {max}개까지 가능합니다.",
-    "maxVideosReached": "동영상은 최대 {max}개까지 가능합니다.",
-    "invalidFileType": "잘못된 파일 형식"
+    "dragToReorder": "드래그하여 재정렬하세요."
   },
   "carousel": {
     "noImageAvailable": "이미지가 없습니다.",
@@ -265,8 +254,6 @@
     "carbs": "탄수화물",
     "protein": "단백질",
     "showingPortions": "{count, plural, one {#인분} other {#인분}} 기준 영양 정보",
-    "noInfo": "영양정보가 없습니다.",
-    "estimateWithAI": "AI로 추정",
     "estimated": "추정치",
     "leftOut": "{count, plural, other {계산되지 않은 줄 #개}}",
     "estimatedByAI": "AI 추정",
@@ -334,8 +321,6 @@
     "incomplete": "이 레시피는 불완전할 수 있습니다. 원본과 비교해 확인하세요.",
     "notARecipe": "이 페이지는 레시피가 아닌 것 같습니다.",
     "privateAddress": "이 서버에서는 사설 네트워크 주소에서 가져오기가 허용되지 않습니다.",
-    "batchImported": "레시피 가져오기 완료",
-    "batchImportedDescription": "아카이브에서 {count}개 레시피를 가져왔습니다.",
     "view": "보기",
     "open": "열기",
     "deleteKept": "다른 사람이 변경한 레시피 {count}개는 유지되었습니다.",
@@ -355,9 +340,6 @@
     "servings": "인분",
     "serving": "{count}인분",
     "stepCounter": "{current} / {total}",
-    "swipeSteps": "스와이프하여 단계를 탐색하세요",
-    "swipeIngredients": "왼쪽으로 스와이프하여 재료 보기",
-    "swipeBackToSteps": "오른쪽으로 스와이프하여 단계 보기",
     "readyAt": "{time}쯤 완성",
     "timers": "타이머",
     "nextStep": "다음 단계"
@@ -383,10 +365,7 @@
   "provenance": {
     "title": "출처",
     "region": "지역",
-    "cuisines": "요리",
-    "inferring": "이 레시피의 출처를 알아보는 중…",
-    "noInfo": "아직 출처 정보가 없습니다",
-    "inferWithAI": "AI로 알아보기"
+    "cuisines": "요리"
   },
   "import": {
     "alreadyExists": "이미 저장된 레시피입니다",

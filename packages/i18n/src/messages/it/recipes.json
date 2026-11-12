@@ -67,7 +67,6 @@
     "notFoundMessage": "Questa ricetta non esiste o non hai il permesso di visualizzarla.",
     "prep": "preparazione",
     "total": "totale",
-    "planMeal": "Pianifica pasto",
     "recipeActions": "Azioni ricetta",
     "instructions": "Istruzioni",
     "cook": "Cucina",
@@ -86,7 +85,6 @@
     "edit": "Modifica",
     "delete": "Elimina",
     "share": "Condividi",
-    "visitOriginal": "Visita ricetta originale",
     "addToCalendar": "Aggiungi al calendario",
     "autoTag": "Tag automatici",
     "autoTagging": "Generazione tag...",
@@ -103,7 +101,6 @@
     "inferringProvenance": "Deduzione della provenienza…",
     "linkIngredients": "Collega gli ingredienti ai passaggi",
     "linkingIngredients": "Collegamento degli ingredienti…",
-    "enrichmentFailed": "Ultimo tentativo non riuscito",
     "generateImage": "Genera immagine",
     "generatingImage": "Generazione immagine…",
     "cookbooks": "Libri di cucina"
@@ -173,7 +170,6 @@
     "editTitle": "Modifica ricetta",
     "createDescription": "Aggiungi una nuova ricetta alla tua collezione",
     "editDescription": "Aggiorna i dettagli della tua ricetta",
-    "initializingForm": "Inizializzazione modulo...",
     "photo": "Foto",
     "basicInfo": "Informazioni di base",
     "ingredients": "Ingredienti",
@@ -225,19 +221,12 @@
     "createRecipe": "Crea ricetta",
     "saveChanges": "Salva modifiche",
     "uploading": "Caricamento...",
-    "clickToUpload": "Clicca per caricare o trascina e rilascia",
-    "pasteToUpload": "per incollare",
-    "imageFormats": "PNG, JPG, WEBP fino a 5MB",
     "discardChangesConfirm": "Hai modifiche non salvate. Scartarle e lasciare questa pagina?"
   },
   "gallery": {
-    "addImage": "Aggiungi immagine",
     "uploading": "Caricamento...",
     "uploadFailed": "Caricamento non riuscito",
-    "dragToReorder": "Trascina per riordinare",
-    "maxImagesReached": "Massimo {max} immagini consentite",
-    "maxVideosReached": "Massimo {max} video consentiti",
-    "invalidFileType": "Tipo di file non valido"
+    "dragToReorder": "Trascina per riordinare"
   },
   "carousel": {
     "noImageAvailable": "Nessuna immagine disponibile",
@@ -265,8 +254,6 @@
     "carbs": "Carboidrati",
     "protein": "Proteine",
     "showingPortions": "Valori mostrati per {count} {count, plural, one {porzione} other {porzioni}}",
-    "noInfo": "Nessuna informazione nutrizionale disponibile",
-    "estimateWithAI": "Stima con IA",
     "estimated": "Stimato",
     "leftOut": "{count, plural, one {# riga non conteggiata} other {# righe non conteggiate}}",
     "estimatedByAI": "stimato dall'IA",
@@ -334,8 +321,6 @@
     "incomplete": "Questa ricetta potrebbe essere incompleta. Confrontala con la fonte.",
     "notARecipe": "Questa pagina non sembra una ricetta.",
     "privateAddress": "Le importazioni da indirizzi di rete privati non sono consentite su questo server.",
-    "batchImported": "Ricette importate",
-    "batchImportedDescription": "{count} ricette importate dall'archivio",
     "view": "Visualizza",
     "open": "Apri",
     "deleteKept": "{count, plural, one {# ricetta è stata modificata} other {# ricette sono state modificate}} da qualcun altro e {count, plural, one {mantenuta} other {mantenute}}.",
@@ -355,9 +340,6 @@
     "servings": "Porzioni",
     "serving": "{count, plural, one {# porzione} other {# porzioni}}",
     "stepCounter": "{current} / {total}",
-    "swipeSteps": "Scorri per navigare tra i passaggi",
-    "swipeIngredients": "Scorri a sinistra per gli ingredienti",
-    "swipeBackToSteps": "Scorri a destra per i passaggi",
     "readyAt": "Pronto verso le {time}",
     "timers": "Timer",
     "nextStep": "Passo successivo"
@@ -383,10 +365,7 @@
   "provenance": {
     "title": "Provenienza",
     "region": "Regione",
-    "cuisines": "Cucine",
-    "inferring": "Sto capendo da dove viene questa ricetta…",
-    "noInfo": "Ancora nessuna informazione sulla provenienza",
-    "inferWithAI": "Deduci con IA"
+    "cuisines": "Cucine"
   },
   "import": {
     "alreadyExists": "Hai già questa ricetta",

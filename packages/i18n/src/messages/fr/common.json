@@ -40,7 +40,6 @@
   "status": {
     "loading": "Chargement...",
     "saving": "Sauvegarde...",
-    "deleting": "Suppression...",
     "error": "Erreur",
     "success": "Succès",
     "noResults": "Auncun resultat trouvé",
@@ -92,9 +91,6 @@
   },
   "connection": {
     "connecting": "Connection à Norish...",
-    "checkInternet": "Veuillez vérifier votre connexion internet",
-    "offlineBanner": "Vous êtes hors ligne, affichage des données en cache",
-    "serverUnreachableBanner": "Impossible de contacter le serveur Norish, affichage des données en cache",
     "live": "Connecté",
     "offline": "Hors ligne",
     "openDetails": "Détails de la connexion"
@@ -151,10 +147,7 @@
       "analyzing": "Analyse de vos images, veuillez patienter...",
       "failed": "Importation échouée",
       "selectedCount": "{count} images sélectionnées - elles seront combinées en une seule recette",
-      "library": "Bibliotheque",
-      "takePhoto": "Prendre une photo",
-      "counter": "{count} / {max} photos",
-      "importFromCount": "Importer depuis {count, plural, one {# photo} other {# photos}}"
+      "library": "Bibliotheque"
     },
     "menu": {
       "description": "Importer depuis une URL, scanner une photo ou partir de zero."
@@ -223,8 +216,6 @@
     "other": "Minuteurs",
     "label_one": "1 minuteur",
     "label_other": "{count} minuteurs",
-    "notification_title": "Minuteur terminé",
-    "notification_body": "{label} est prêt !",
     "notifications_disabled": "Les notifications sont désactivées",
     "notifications_disabled_hint": "Activez les notifications dans les paramètres de votre navigateur pour recevoir des alertes lorsque les minuteurs se terminent en arrière-plan."
   },

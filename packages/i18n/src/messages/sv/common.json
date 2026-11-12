@@ -40,7 +40,6 @@
   "status": {
     "loading": "Läser in...",
     "saving": "Sparar...",
-    "deleting": "Tar bort...",
     "error": "Fel",
     "success": "Klart",
     "noResults": "Inga resultat hittades",
@@ -92,9 +91,6 @@
   },
   "connection": {
     "connecting": "Ansluter till Norish...",
-    "checkInternet": "Kontrollera din internetanslutning",
-    "offlineBanner": "Du är offline. Sparade data visas",
-    "serverUnreachableBanner": "Det går inte att nå Norish-servern. Sparade data visas",
     "live": "Ansluten",
     "offline": "Offline",
     "openDetails": "Anslutningsinformation"
@@ -151,10 +147,7 @@
       "analyzing": "Analyserar dina bilder, vänta...",
       "failed": "Importen misslyckades",
       "selectedCount": "{count} bilder valda – de kombineras till ett recept",
-      "library": "Bildbibliotek",
-      "takePhoto": "Ta foto",
-      "counter": "{count} / {max} foton",
-      "importFromCount": "Importera från {count, plural, one {# foto} other {# foton}}"
+      "library": "Bildbibliotek"
     },
     "menu": {
       "description": "Importera från en webbadress, skanna ett foto eller börja från grunden."
@@ -223,8 +216,6 @@
     "other": "Timrar",
     "label_one": "1 timer",
     "label_other": "{count} timrar",
-    "notification_title": "Timern är klar",
-    "notification_body": "{label} är klar!",
     "notifications_disabled": "Aviseringar är avstängda",
     "notifications_disabled_hint": "Aktivera aviseringar i webbläsarens inställningar för att få en avisering när en timer blir klar i bakgrunden."
   },

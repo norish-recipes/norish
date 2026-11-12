@@ -67,7 +67,6 @@
     "notFoundMessage": "Dit recept bestaat niet of je hebt geen toestemming om het te bekijken.",
     "prep": "voorb.",
     "total": "totaal",
-    "planMeal": "Plannen",
     "recipeActions": "Recept acties",
     "instructions": "Instructies",
     "cook": "Koken",
@@ -86,7 +85,6 @@
     "edit": "Bewerken",
     "delete": "Verwijder",
     "share": "Delen",
-    "visitOriginal": "Bekijk Origineel Recept",
     "addToCalendar": "Toevoegen aan Agenda",
     "autoTag": "Automatisch taggen",
     "autoTagging": "Tags genereren...",
@@ -103,7 +101,6 @@
     "inferringProvenance": "Herkomst bepalen…",
     "linkIngredients": "Ingrediënten aan stappen koppelen",
     "linkingIngredients": "Ingrediënten koppelen…",
-    "enrichmentFailed": "Laatste poging mislukt",
     "generateImage": "Afbeelding genereren",
     "generatingImage": "Afbeelding genereren…",
     "cookbooks": "Kookboeken"
@@ -173,7 +170,6 @@
     "editTitle": "Recept Bewerken",
     "createDescription": "Voeg een nieuw recept toe",
     "editDescription": "Werk je receptdetails bij",
-    "initializingForm": "Formulier initialiseren...",
     "photo": "Foto",
     "basicInfo": "Basisinformatie",
     "ingredients": "Ingrediënten",
@@ -225,19 +221,12 @@
     "createRecipe": "Recept Maken",
     "saveChanges": "Wijzigingen Opslaan",
     "uploading": "Bezig met uploaden...",
-    "clickToUpload": "Klik om te uploaden of sleep en zet neer",
-    "pasteToUpload": "om te plakken",
-    "imageFormats": "PNG, JPG, WEBP tot 5MB",
     "discardChangesConfirm": "Je hebt niet-opgeslagen wijzigingen. Ze verwijderen en deze pagina verlaten?"
   },
   "gallery": {
-    "addImage": "Afbeelding toevoegen",
     "uploading": "Bezig met uploaden...",
     "uploadFailed": "Upload mislukt",
-    "dragToReorder": "Sleep afbeeldingen om te herordenen",
-    "maxImagesReached": "Maximaal {max} afbeeldingen toegestaan",
-    "maxVideosReached": "Maximaal {max} video's toegestaan",
-    "invalidFileType": "Ongeldig bestandstype"
+    "dragToReorder": "Sleep afbeeldingen om te herordenen"
   },
   "carousel": {
     "noImageAvailable": "Geen afbeelding beschikbaar",
@@ -265,8 +254,6 @@
     "carbs": "Koolhydraten",
     "protein": "Eiwitten",
     "showingPortions": "Waardes voor {count} {count, plural, one {portie} other {porties}}",
-    "noInfo": "Geen voedingsinformatie beschikbaar",
-    "estimateWithAI": "Schatten met AI",
     "estimated": "Geschat",
     "leftOut": "{count, plural, one {# regel niet meegeteld} other {# regels niet meegeteld}}",
     "estimatedByAI": "geschat door AI",
@@ -334,8 +321,6 @@
     "incomplete": "Dit recept is mogelijk onvolledig. Vergelijk het met de bron.",
     "notARecipe": "Deze pagina lijkt geen recept te zijn.",
     "privateAddress": "Imports van privénetwerkadressen zijn op deze server niet toegestaan.",
-    "batchImported": "Recepten geïmporteerd",
-    "batchImportedDescription": "{count} recepten geïmporteerd uit archief",
     "view": "Bekijk",
     "open": "Openen",
     "deleteKept": "{count, plural, one {# recept is} other {# recepten zijn}} door iemand anders gewijzigd en bewaard.",
@@ -355,9 +340,6 @@
     "servings": "Porties",
     "serving": "{count, plural, one {# portie} other {# porties}}",
     "stepCounter": "{current} / {total}",
-    "swipeSteps": "Veeg om door stappen te navigeren",
-    "swipeIngredients": "Veeg links voor ingrediënten",
-    "swipeBackToSteps": "Veeg rechts voor stappen",
     "readyAt": "Rond {time} klaar",
     "timers": "Timers",
     "nextStep": "Volgende stap"
@@ -383,10 +365,7 @@
   "provenance": {
     "title": "Herkomst",
     "region": "Streek",
-    "cuisines": "Keukens",
-    "inferring": "Bezig met bepalen waar dit recept vandaan komt…",
-    "noInfo": "Nog geen herkomstinformatie",
-    "inferWithAI": "Bepalen met AI"
+    "cuisines": "Keukens"
   },
   "import": {
     "alreadyExists": "Je hebt dit recept al",

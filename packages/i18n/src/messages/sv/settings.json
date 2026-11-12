@@ -193,7 +193,6 @@
           "abbreviated": "Förkortade"
         }
       },
-      "applyError": "Det gick inte att tillämpa inställningen",
       "afterPlanning": {
         "title": "Efter att ett recept planerats",
         "description": "Vad som händer när du planerar ett recept",
