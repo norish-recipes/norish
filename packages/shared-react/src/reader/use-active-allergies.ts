@@ -5,7 +5,7 @@ import { useQuery } from "@tanstack/react-query";
 import { useTRPC } from "../trpc";
 import { useAllergiesQuery } from "./use-allergies";
 
-export type ActiveAllergies = {
+type ActiveAllergies = {
   allergies: string[];
   /** Lower-cased, for a case-insensitive lookup. */
   allergySet: Set<string>;

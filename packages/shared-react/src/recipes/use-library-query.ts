@@ -10,12 +10,12 @@ import { byNextCursor, libraryListInput } from "@norish/shared/contracts/list-qu
 import type { RecipeFilters } from "./use-recipes-query";
 import { useTRPC } from "../trpc";
 
-export type LibraryFilters = RecipeFilters & {
+type LibraryFilters = RecipeFilters & {
   type?: LibraryTypeFilter;
   favoritesOnly?: boolean;
 };
 
-export type LibraryQueryResult = {
+type LibraryQueryResult = {
   items: LibraryItemDTO[];
   queryKey: QueryKey;
   /** Counts both kinds. Nothing may read this as a recipe count. */

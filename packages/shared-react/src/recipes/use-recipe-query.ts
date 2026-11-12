@@ -8,7 +8,7 @@ import type { FullRecipeDTO } from "@norish/shared/contracts";
 
 import { useTRPC } from "../trpc";
 
-export type RecipeQueryResult = {
+type RecipeQueryResult = {
   recipe: FullRecipeDTO | null;
   isLoading: boolean;
   isFetching: boolean;

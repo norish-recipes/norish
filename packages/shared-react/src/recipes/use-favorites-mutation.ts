@@ -5,7 +5,7 @@ import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { shouldPreserveOptimisticUpdate } from "../offline/optimistic-updates";
 import { useTRPC } from "../trpc";
 
-export type FavoritesMutationResult = {
+type FavoritesMutationResult = {
   toggleFavorite: (recipeId: string) => void;
   isToggling: boolean;
 };

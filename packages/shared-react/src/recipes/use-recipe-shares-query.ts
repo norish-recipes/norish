@@ -12,7 +12,7 @@ import type {
 
 import { useTRPC } from "../trpc";
 
-export type RecipeSharesQueryResult = {
+type RecipeSharesQueryResult = {
   shares: RecipeShareSummaryDto[];
   isLoading: boolean;
   error: unknown;
@@ -31,8 +31,8 @@ type ShareInventoryQueryResult<TShare> = {
   invalidate: () => void;
 };
 
-export type MyRecipeSharesQueryResult = ShareInventoryQueryResult<RecipeShareInventoryDto>;
-export type AdminRecipeSharesQueryResult = ShareInventoryQueryResult<AdminRecipeShareInventoryDto>;
+type MyRecipeSharesQueryResult = ShareInventoryQueryResult<RecipeShareInventoryDto>;
+type AdminRecipeSharesQueryResult = ShareInventoryQueryResult<AdminRecipeShareInventoryDto>;
 
 export function useRecipeSharesQuery(recipeId: string | null): RecipeSharesQueryResult {
   const trpc = useTRPC();

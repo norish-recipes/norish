@@ -11,12 +11,12 @@ import type {
 import type { RecurrencePattern } from "@norish/shared/contracts/recurrence";
 import type { LocaleNames } from "@norish/shared/lib/ingredient-names";
 
-export type RecipeInfo = {
+type RecipeInfo = {
   recipeId: string;
   recipeName: string;
 };
 
-export type RecipeMap = Record<string, RecipeInfo>;
+type RecipeMap = Record<string, RecipeInfo>;
 
 export type GroceriesData = {
   groceries: GroceryDto[];

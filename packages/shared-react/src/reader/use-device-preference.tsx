@@ -45,7 +45,7 @@ export function useDeviceKind(): DeviceKind {
 
 type SetDevicePreference<V> = (next: V | ((prev: V) => V)) => void;
 
-export type DevicePreferenceState<V> = readonly [V, SetDevicePreference<V>];
+type DevicePreferenceState<V> = readonly [V, SetDevicePreference<V>];
 
 /**
  * One Device Preference for the platform's Device Kind and its setter, like `useState`. The read

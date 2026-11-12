@@ -27,7 +27,7 @@ import { BASE_PATH } from "@norish/shared/lib/base-path";
 import { createOperationIdLink } from "./operation-id-link";
 import { createBatchRequestHeadersResolver, createRequestHeadersResolver } from "./request-headers";
 
-export type TrpcLogger = {
+type TrpcLogger = {
   info: (message: string) => void;
   warn: (meta: unknown, message: string) => void;
   debug: (meta: unknown, message: string) => void;
@@ -38,10 +38,10 @@ type ManagedWebSocketClient = {
 };
 
 /** The close code the server sends when the socket's session is not valid. */
-export const WS_CLOSE_UNAUTHORIZED = 4401;
+const WS_CLOSE_UNAUTHORIZED = 4401;
 
 /** The longest wait between two reconnect attempts. */
-export const WS_RETRY_MAX_DELAY_MS = 30_000;
+const WS_RETRY_MAX_DELAY_MS = 30_000;
 
 export type CreateTRPCProviderBundleOptions<TRouter extends AnyTRPCRouter> = {
   logger: TrpcLogger;

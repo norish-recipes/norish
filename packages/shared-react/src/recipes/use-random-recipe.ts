@@ -7,7 +7,7 @@ import type { RecipeCategory } from "@norish/shared/contracts";
 
 import { useTRPC } from "../trpc";
 
-export type RandomRecipeResult = {
+type RandomRecipeResult = {
   id: string;
   name: string;
   image: string | null;

@@ -14,7 +14,7 @@ export type HouseholdData = {
   currentUserId: string;
 };
 
-export type HouseholdResult = {
+type HouseholdResult = {
   household: HouseholdSettingsDto | HouseholdAdminSettingsDto | null;
   currentUserId: string | undefined;
   /** Whether the Reader administers their household. */
@@ -25,7 +25,7 @@ export type HouseholdResult = {
 
 type HouseholdUpdater = (prev: HouseholdData | undefined) => HouseholdData | undefined;
 
-export type HouseholdCacheHelpers = {
+type HouseholdCacheHelpers = {
   setHouseholdData: (updater: HouseholdUpdater) => void;
   invalidate: () => void;
   invalidateUserSettings: () => void;

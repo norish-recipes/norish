@@ -32,7 +32,7 @@ export function usePermissions<T>(select: (permissions: ReaderPermissions) => T)
   return data === undefined ? select(DEFAULTS) : data;
 }
 
-export type RecipePermissions = {
+type RecipePermissions = {
   /** Until the server has answered, every check below says no. */
   isLoading: boolean;
   canViewRecipe: (ownerId: string) => boolean;

@@ -8,7 +8,7 @@ import { useKeepsCurrent, useRealtimeSubscription } from "../realtime";
 import { useTRPC } from "../trpc";
 import { useRecipeShareCacheHelpers } from "./use-recipe-share-cache";
 
-export type RecipeShareSubscriptionCallbacks = {
+type RecipeShareSubscriptionCallbacks = {
   onEvent?: (payload: RecipeShareLifecycleEventDto) => void;
 };
 

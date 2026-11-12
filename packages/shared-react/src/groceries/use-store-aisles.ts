@@ -41,7 +41,7 @@ export function mergeAisleFiling(prev: StoreAislesData, filing: AisleFiled): Sto
   ];
 }
 
-export interface StoreAislesResult {
+interface StoreAislesResult {
   /**
    * The aisle a Store files an Ingredient under, its own or its nearest Parent's (ADR-0031), or
    * null where it was never told or no longer has that aisle. Nothing is guessed from words.

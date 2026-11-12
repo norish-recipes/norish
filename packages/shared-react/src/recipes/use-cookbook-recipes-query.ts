@@ -27,7 +27,7 @@ export function cookbookIdOf(key: readonly unknown[]): string | undefined {
   return typeof input?.cookbookId === "string" ? input.cookbookId : undefined;
 }
 
-export type CookbookRecipesQueryResult = {
+type CookbookRecipesQueryResult = {
   recipes: RecipeDashboardDTO[];
   total: number;
   isLoading: boolean;

@@ -1,2 +1,6 @@
-export * from "./trpc-links";
-export * from "./trpc-provider";
+export {
+  createTRPCProviderBundle,
+  useConnectionStatus,
+  useTRPC,
+  useTRPCClient,
+} from "./trpc-provider";

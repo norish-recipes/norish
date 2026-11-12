@@ -4,7 +4,7 @@ import type { ArchiveImportError, ArchiveImportNote } from "@norish/shared/contr
 
 type Counts = { current: number; total: number; imported: number; errors: ArchiveImportError[] };
 
-export type ArchiveImport = Counts & {
+type ArchiveImport = Counts & {
   notes: ArchiveImportNote[];
   isImporting: boolean;
 };

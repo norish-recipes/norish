@@ -5,7 +5,7 @@ import { useQueryClient } from "@tanstack/react-query";
 
 import { useTRPC } from "../trpc";
 
-export type RecipeShareCacheHelpers = {
+type RecipeShareCacheHelpers = {
   invalidateRecipeShares: (recipeId: string) => void;
   invalidateMyRecipeShares: () => void;
   invalidateAdminRecipeShares: () => void;

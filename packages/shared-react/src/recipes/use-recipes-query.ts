@@ -28,7 +28,7 @@ export type RecipeFilters = {
   maxCookingTime?: number;
 };
 
-export type RecipesQueryResult = {
+type RecipesQueryResult = {
   recipes: RecipeDashboardDTO[];
   total: number;
   isLoading: boolean;

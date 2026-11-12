@@ -42,10 +42,7 @@ function linkKey(link: Pick<ResolvedProductLink, "storeId" | "ingredientId">): s
 type IngredientKey = string | null | undefined;
 
 /** The Store Product a grocery's Ingredient resolves to, or null where the Store knows it as a Miss or not at all. */
-export type PriceFor = (
-  storeId: string | null,
-  ingredientId: IngredientKey
-) => StoreProductDto | null;
+type PriceFor = (storeId: string | null, ingredientId: IngredientKey) => StoreProductDto | null;
 
 function priceForIn(links: StorePricesData): PriceFor {
   const byKey = new Map(links.map((link) => [linkKey(link), link.product ?? null]));

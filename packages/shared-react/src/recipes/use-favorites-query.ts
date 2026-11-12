@@ -5,7 +5,7 @@ import { useQuery, useQueryClient } from "@tanstack/react-query";
 
 import { useTRPC } from "../trpc";
 
-export type FavoritesQueryResult = {
+type FavoritesQueryResult = {
   favoriteIds: string[];
   favoriteVersions: Record<string, number>;
   isFavorite: (recipeId: string) => boolean;

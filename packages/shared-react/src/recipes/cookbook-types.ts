@@ -56,7 +56,7 @@ export type RecipeCookbooksQueryResult = {
 };
 
 /** A cookbook offered for filing, with this recipe's membership shown. */
-export type EditableCookbook = CookbookSummaryDTO & { containsRecipe: boolean };
+type EditableCookbook = CookbookSummaryDTO & { containsRecipe: boolean };
 
 export type EditableCookbooksQueryResult = {
   cookbooks: EditableCookbook[];

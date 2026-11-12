@@ -11,7 +11,7 @@ import { useHydrated, usePlatform } from "../platform";
 import { useTRPC } from "../trpc";
 import { useSessionReader } from "./session";
 
-export type ReaderIdentity = {
+type ReaderIdentity = {
   /** The signed-in Reader, or null signed out or while the session is unknown. */
   user: User | null;
   isLoading: boolean;

@@ -8,7 +8,7 @@ import { useTRPC } from "../trpc";
 import { useHousehold, useHouseholdCacheHelpers } from "./use-household";
 import { useReader } from "./use-reader";
 
-export type HouseholdMutationsResult = {
+type HouseholdMutationsResult = {
   createHousehold: (name: string) => void;
   joinHousehold: (code: string) => void;
   leaveHousehold: (householdId: string) => void;

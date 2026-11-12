@@ -37,7 +37,7 @@ export function isRealtimeLagged(err: unknown): boolean {
  * A subscription procedure as `useTRPC()` decorates it, reduced to the one
  * call this hook makes. The router's own types satisfy it structurally.
  */
-export interface RealtimeSubscriptionProcedure {
+interface RealtimeSubscriptionProcedure {
   subscriptionOptions(
     input: undefined,
     opts: {

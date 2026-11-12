@@ -10,7 +10,7 @@ import type { AppRouter } from "@norish/trpc/client";
 import { writeOverRead } from "../offline/write-over-read";
 import { useTRPC } from "../trpc";
 
-export type Profile = { user: User | null; apiKeys: ApiKeyMetadataDto[] };
+type Profile = { user: User | null; apiKeys: ApiKeyMetadataDto[] };
 
 const NO_KEYS: ApiKeyMetadataDto[] = [];
 

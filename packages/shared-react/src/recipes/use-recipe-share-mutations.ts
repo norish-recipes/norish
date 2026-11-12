@@ -13,7 +13,7 @@ import { usePlatform } from "../platform/platform";
 import { useTRPC } from "../trpc";
 import { useRecipeShareCacheHelpers } from "./use-recipe-share-cache";
 
-export type RecipeShareMutationsResult = {
+type RecipeShareMutationsResult = {
   createShare: (
     expiresIn?: CreateRecipeShareInputDto["expiresIn"]
   ) => Promise<RecipeShareCreatedDto | null>;

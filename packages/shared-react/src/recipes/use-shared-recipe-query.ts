@@ -8,7 +8,7 @@ import type { PublicRecipeViewDTO } from "@norish/shared/contracts";
 
 import { useTRPC } from "../trpc";
 
-export type SharedRecipeQueryResult = {
+type SharedRecipeQueryResult = {
   recipe: PublicRecipeViewDTO | null;
   isLoading: boolean;
   error: unknown;

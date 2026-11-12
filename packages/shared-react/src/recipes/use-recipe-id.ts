@@ -9,7 +9,7 @@ import { useHydrated } from "../platform/use-hydrated";
 
 const log = createClientLogger("useRecipeId");
 
-export type RecipeIdResult = {
+type RecipeIdResult = {
   recipeId: string | null;
   isLoading: boolean;
   error: string | null;

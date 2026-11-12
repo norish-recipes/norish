@@ -9,7 +9,7 @@ import { useRecipeQuery } from "./use-recipe-query";
 
 type Payload<E extends EventName<RecipesRealtime>> = PayloadOf<RecipesRealtime, E>;
 
-export type RecipeSubscriptionCallbacks = {
+type RecipeSubscriptionCallbacks = {
   onDeleted?: (payload: Payload<"deleted">) => void;
   onFailed?: (payload: Payload<"failed">) => void;
 };

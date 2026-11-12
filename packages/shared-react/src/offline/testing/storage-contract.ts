@@ -11,7 +11,7 @@ import { createCacheManager } from "../cache-manager";
 import { readLastWarmedAt, writeLastWarmedAt } from "../last-warmed";
 import { createOutboxStore } from "../outbox-store";
 
-export interface StorageContractHarness {
+interface StorageContractHarness {
   /** A fresh, empty adapter over its own backing store. */
   create(): OfflineStorage | Promise<OfflineStorage>;
   /** An upload value as this client's FormData holds it. */

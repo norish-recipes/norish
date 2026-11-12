@@ -14,7 +14,7 @@ export type ScaledIngredient<T extends IngredientWithAmount> = Omit<T, "amount">
   amount: number | null;
 };
 
-export type ServingsScalerResult<T extends IngredientWithAmount> = {
+type ServingsScalerResult<T extends IngredientWithAmount> = {
   servings: number;
   scaledIngredients: ScaledIngredient<T>[];
   setServings: (servings: number) => void;

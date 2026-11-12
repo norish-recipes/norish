@@ -21,7 +21,7 @@ import { useReader } from "../reader";
 import { useKeepsCurrent, useRealtimeSubscription } from "../realtime";
 import { useTRPC } from "../trpc";
 
-export type RecipeEnrichmentStateMap = Record<RecipeEnrichmentKind, RecipeEnrichmentLifecycleState>;
+type RecipeEnrichmentStateMap = Record<RecipeEnrichmentKind, RecipeEnrichmentLifecycleState>;
 
 export interface RecipeEnrichmentResult {
   /** Lifecycle state per kind. Always every kind, so callers never handle "unknown". */
@@ -33,7 +33,7 @@ export interface RecipeEnrichmentResult {
   isLoading: boolean;
 }
 
-export interface RecipeEnrichmentCallbacks {
+interface RecipeEnrichmentCallbacks {
   /**
    * Called for a manual enqueue rejection or a manual terminal failure.
    * Automatic failures never call this: quiet background work must not look

@@ -4,7 +4,7 @@ import { useQuery } from "@tanstack/react-query";
 
 import { useTRPC } from "../trpc";
 
-export type CookbookMemberIdsQueryResult = {
+type CookbookMemberIdsQueryResult = {
   memberIds: string[];
   isLoading: boolean;
 };

@@ -42,7 +42,7 @@ export function removeRecipesFromLists(
   };
 }
 
-export type RecipesCacheHelpers = {
+type RecipesCacheHelpers = {
   setAllRecipesData: (
     updater: (prev: InfiniteRecipeData | undefined) => InfiniteRecipeData | undefined
   ) => void;

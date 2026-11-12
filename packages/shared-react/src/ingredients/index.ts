@@ -1,12 +1,4 @@
-export type {
-  AIChange,
-  IngredientDraft,
-  IngredientItem,
-  NamedIngredient,
-  Spelling,
-  StoredIcon,
-} from "./types";
-export type { IngredientListInput } from "./use-ingredient-query";
+export type { AIChange, IngredientItem, NamedIngredient, Spelling, StoredIcon } from "./types";
 
 export { isOpenChange, useAIChangeMutations, useAIChangesQuery } from "./use-ai-changes";
 export {

@@ -9,9 +9,9 @@ import type { DeviceKind } from "@norish/shared/contracts/zod/device-preferences
 
 import type { OfflineEngine } from "../offline/engine";
 
-export type ToastSeverity = "default" | "success" | "warning" | "danger";
+type ToastSeverity = "default" | "success" | "warning" | "danger";
 
-export type ToastAdapter = {
+type ToastAdapter = {
   show: (toast: {
     severity: ToastSeverity;
     title: string;

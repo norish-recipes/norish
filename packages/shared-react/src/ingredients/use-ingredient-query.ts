@@ -11,10 +11,7 @@ import type { AppRouter } from "@norish/trpc/client";
 
 import { useTRPC } from "../trpc";
 
-export type IngredientListInput = Omit<
-  inferRouterInputs<AppRouter>["ingredients"]["list"],
-  "cursor"
->;
+type IngredientListInput = Omit<inferRouterInputs<AppRouter>["ingredients"]["list"], "cursor">;
 
 /** The Ingredients page's list, a page at a time; the previous rows stay while other filters are read. */
 export function useIngredientListQuery(input: IngredientListInput) {

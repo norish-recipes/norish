@@ -1,5 +1,4 @@
 export type { WriteResult } from "../offline/settled";
-export type { AdminConfigKey, AdminConfigs, AuthProvider } from "./types";
 export type { JobListFilter, JobRef } from "./use-job-queue";
 
 export { useAdminConfig, useAdminConfigsLoading, useConfigSecret } from "./use-admin-config";
