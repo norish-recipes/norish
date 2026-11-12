@@ -2,10 +2,10 @@ import type { InlineErrorState } from "@/features/auth/components/inline-error";
 import type { AuthClient } from "@/lib/auth/auth-client";
 import React, { use, useState } from "react";
 import { Pressable, Text, View } from "react-native";
-import Animated from "react-native-reanimated";
 import { Brand } from "@/components/brand";
+import { AuthField } from "@/features/auth/components/auth-field";
 import { AuthLayout } from "@/features/auth/components/auth-layout";
-import { InlineError, useErrorShake } from "@/features/auth/components/inline-error";
+import { InlineErrorBlock } from "@/features/auth/components/inline-error";
 import { ProviderIcon } from "@/features/auth/components/provider-icon";
 import { ServerChip } from "@/features/auth/components/server-chip";
 import { authFailure } from "@/features/auth/utils/auth-failure";
@@ -19,15 +19,7 @@ import { useAuthClient } from "@/lib/auth/use-auth-client";
 import { ServerAddressContext } from "@/lib/network/server-address";
 import Feather from "@expo/vector-icons/Feather";
 import { useLocalSearchParams, useRouter } from "expo-router";
-import {
-  Button,
-  InputGroup,
-  Label,
-  Separator,
-  Spinner,
-  TextField,
-  useThemeColor,
-} from "heroui-native";
+import { Button, InputGroup, Separator, Spinner, useThemeColor } from "heroui-native";
 import { useIntl } from "react-intl";
 
 import type { ProviderInfo } from "@norish/shared/contracts";
@@ -68,7 +60,6 @@ function PasswordForm({ authClient, signUp }: { authClient: AuthClient; signUp: 
   const [isPasswordShown, setIsPasswordShown] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [error, setError] = useState<InlineErrorState>(null);
-  const shakeStyle = useErrorShake(error);
   const canSubmit = email.trim() !== "" && password !== "" && !isSubmitting;
 
   const handleSubmit = async () => {
@@ -90,61 +81,56 @@ function PasswordForm({ authClient, signUp }: { authClient: AuthClient; signUp: 
 
   return (
     <View className="gap-3.5">
-      <Animated.View className="gap-3.5" style={shakeStyle}>
-        <TextField isInvalid={error !== null}>
-          <Label className="pl-1" isInvalid={false}>
-            {intl.formatMessage({ id: "auth.emailPassword.email" })}
-          </Label>
-          <InputGroup>
-            <InputGroup.Input
-              autoCapitalize="none"
-              autoCorrect={false}
-              keyboardType="email-address"
-              placeholder={intl.formatMessage({ id: "auth.emailPassword.emailPlaceholder" })}
-              returnKeyType="next"
-              testID="login-email"
-              textContentType="username"
-              value={email}
-              onChangeText={setEmail}
-            />
-          </InputGroup>
-        </TextField>
-        <TextField isInvalid={error !== null}>
-          <Label className="pl-1" isInvalid={false}>
-            {intl.formatMessage({ id: "auth.emailPassword.password" })}
-          </Label>
-          <InputGroup>
-            <InputGroup.Input
-              autoCapitalize="none"
-              autoCorrect={false}
-              placeholder={intl.formatMessage({ id: "auth.emailPassword.passwordPlaceholder" })}
-              returnKeyType="go"
-              secureTextEntry={!isPasswordShown}
-              testID="login-password"
-              textContentType="password"
-              value={password}
-              onChangeText={setPassword}
-              onSubmitEditing={() => void handleSubmit()}
-            />
-            <InputGroup.Suffix>
-              <Pressable
-                accessibilityLabel={intl.formatMessage({
-                  id: isPasswordShown
-                    ? "auth.emailPassword.hidePassword"
-                    : "auth.emailPassword.showPassword",
-                })}
-                accessibilityRole="button"
-                className="size-10 items-center justify-center"
-                hitSlop={4}
-                onPress={() => setIsPasswordShown((shown) => !shown)}
-              >
-                <Feather color={mutedColor} name={isPasswordShown ? "eye-off" : "eye"} size={20} />
-              </Pressable>
-            </InputGroup.Suffix>
-          </InputGroup>
-        </TextField>
-      </Animated.View>
-      <InlineError error={error} />
+      <InlineErrorBlock className="gap-3.5" error={error}>
+        <AuthField
+          isInvalid={error !== null}
+          label={intl.formatMessage({ id: "auth.emailPassword.email" })}
+        >
+          <InputGroup.Input
+            autoCapitalize="none"
+            autoCorrect={false}
+            keyboardType="email-address"
+            placeholder={intl.formatMessage({ id: "auth.emailPassword.emailPlaceholder" })}
+            returnKeyType="next"
+            testID="login-email"
+            textContentType="username"
+            value={email}
+            onChangeText={setEmail}
+          />
+        </AuthField>
+        <AuthField
+          isInvalid={error !== null}
+          label={intl.formatMessage({ id: "auth.emailPassword.password" })}
+        >
+          <InputGroup.Input
+            autoCapitalize="none"
+            autoCorrect={false}
+            placeholder={intl.formatMessage({ id: "auth.emailPassword.passwordPlaceholder" })}
+            returnKeyType="go"
+            secureTextEntry={!isPasswordShown}
+            testID="login-password"
+            textContentType="password"
+            value={password}
+            onChangeText={setPassword}
+            onSubmitEditing={() => void handleSubmit()}
+          />
+          <InputGroup.Suffix>
+            <Pressable
+              accessibilityLabel={intl.formatMessage({
+                id: isPasswordShown
+                  ? "auth.emailPassword.hidePassword"
+                  : "auth.emailPassword.showPassword",
+              })}
+              accessibilityRole="button"
+              className="size-10 items-center justify-center"
+              hitSlop={4}
+              onPress={() => setIsPasswordShown((shown) => !shown)}
+            >
+              <Feather color={mutedColor} name={isPasswordShown ? "eye-off" : "eye"} size={20} />
+            </Pressable>
+          </InputGroup.Suffix>
+        </AuthField>
+      </InlineErrorBlock>
 
       {signUp ? (
         <Pressable accessibilityRole="link" onPress={() => router.push("/register")}>
@@ -175,20 +161,17 @@ function PasswordForm({ authClient, signUp }: { authClient: AuthClient; signUp: 
   );
 }
 
-function ProviderButtons({
-  authClient,
-  providers,
-  redirectTo,
-}: {
+interface ProviderButtonsProps {
   authClient: AuthClient;
   providers: ProviderInfo[];
   redirectTo: string;
-}) {
+}
+
+function ProviderButtons({ authClient, providers, redirectTo }: ProviderButtonsProps) {
   const intl = useIntl();
   const [foregroundColor] = useThemeColor(["foreground"] as const);
   const [activeProviderId, setActiveProviderId] = useState<string | null>(null);
   const [error, setError] = useState<InlineErrorState>(null);
-  const shakeStyle = useErrorShake(error);
 
   const handlePress = async (provider: ProviderInfo) => {
     setError(null);
@@ -206,7 +189,7 @@ function ProviderButtons({
 
   return (
     <View className="gap-2.5">
-      <Animated.View className="gap-2.5" style={shakeStyle}>
+      <InlineErrorBlock className="gap-2.5" error={error}>
         {providers.map((provider) => (
           <Button
             key={provider.id}
@@ -226,8 +209,7 @@ function ProviderButtons({
             </Button.Label>
           </Button>
         ))}
-      </Animated.View>
-      <InlineError error={error} />
+      </InlineErrorBlock>
     </View>
   );
 }

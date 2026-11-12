@@ -1,6 +1,7 @@
+import type { ReactNode } from "react";
 import React, { useEffect } from "react";
 import { Text, View } from "react-native";
-import {
+import Animated, {
   Easing,
   FadeIn,
   FadeInDown,
@@ -21,12 +22,13 @@ export type InlineErrorState = { message: string } | null;
 const RISE_IN = FadeInDown.duration(240)
   .easing(Easing.out(Easing.cubic))
   .withInitialValues({ transform: [{ translateY: 16 }] });
+
 // Reanimated snaps every animation under Reduce Motion, so the plain fade opts out of that.
-const FADE_IN = FadeIn.duration(240).reduceMotion(ReduceMotion.Never);
+export const FADE_IN = FadeIn.duration(240).reduceMotion(ReduceMotion.Never);
 const SHAKE_OFFSETS = [-10, 9, -7, 5, -3, 0];
 
 /** One shake and one error haptic per failed attempt; Reduce Motion keeps only the haptic. */
-export function useErrorShake(error: InlineErrorState) {
+function useErrorShake(error: InlineErrorState) {
   const offset = useSharedValue(0);
   const reduceMotion = useReducedMotion();
 
@@ -44,7 +46,7 @@ export function useErrorShake(error: InlineErrorState) {
 }
 
 /** The danger line under a field or form, rising in when an attempt fails. */
-export function InlineError({ error }: { error: InlineErrorState }) {
+function InlineError({ error }: { error: InlineErrorState }) {
   const [dangerColor] = useThemeColor(["danger"] as const);
   const reduceMotion = useReducedMotion();
 
@@ -58,5 +60,27 @@ export function InlineError({ error }: { error: InlineErrorState }) {
         <Text className="text-danger flex-1 text-sm font-normal">{error?.message}</Text>
       </View>
     </FieldError>
+  );
+}
+
+/** A form's fields, shaking on each failed attempt, with the error line under them. */
+export function InlineErrorBlock({
+  error,
+  className,
+  children,
+}: {
+  error: InlineErrorState;
+  className?: string;
+  children: ReactNode;
+}) {
+  const shakeStyle = useErrorShake(error);
+
+  return (
+    <>
+      <Animated.View className={className} style={shakeStyle}>
+        {children}
+      </Animated.View>
+      <InlineError error={error} />
+    </>
   );
 }

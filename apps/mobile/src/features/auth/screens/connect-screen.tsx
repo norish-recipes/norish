@@ -5,15 +5,16 @@ import { View } from "react-native";
 import Animated from "react-native-reanimated";
 import { Brand } from "@/components/brand";
 import { useLaunchEntrance } from "@/components/launch";
+import { AuthField } from "@/features/auth/components/auth-field";
 import { AuthLayout } from "@/features/auth/components/auth-layout";
 import { HelpPopover } from "@/features/auth/components/help-popover";
-import { InlineError, useErrorShake } from "@/features/auth/components/inline-error";
+import { InlineErrorBlock } from "@/features/auth/components/inline-error";
 import { checkServerAddress } from "@/features/auth/utils/check-server-address";
 import { getServerAddress, saveServerAddress } from "@/lib/network/server-address";
 import Feather from "@expo/vector-icons/Feather";
 import MaterialCommunityIcons from "@expo/vector-icons/MaterialCommunityIcons";
 import { useLocalSearchParams, useRouter } from "expo-router";
-import { Button, InputGroup, Label, Spinner, TextField, useThemeColor } from "heroui-native";
+import { Button, InputGroup, Spinner, useThemeColor } from "heroui-native";
 import { useIntl } from "react-intl";
 
 import { createClientLogger } from "@norish/shared/lib/logger";
@@ -32,7 +33,6 @@ export function ConnectScreen() {
   const [address, setAddress] = useState(getServerAddress);
   const [isConnecting, setIsConnecting] = useState(false);
   const [error, setError] = useState<InlineErrorState>(null);
-  const shakeStyle = useErrorShake(error);
   const entrance = useLaunchEntrance();
 
   const fail = (id: ServerAddressErrorId | "common.errors.operationFailed") =>
@@ -102,38 +102,35 @@ export function ConnectScreen() {
         </View>
       </Animated.View>
 
-      <Animated.View style={entrance.fieldStyle}>
-        <TextField className="mt-[52px]" isInvalid={error !== null}>
-          <View className="flex-row items-center gap-1 pl-1">
-            <Label isInvalid={false}>
-              {intl.formatMessage({ id: "auth.connect.serverAddressLabel" })}
-            </Label>
-            <HelpPopover
-              label={intl.formatMessage({ id: "auth.connect.serverAddressHelp" })}
-              text={intl.formatMessage({ id: "auth.connect.example" })}
-            />
-          </View>
-          <Animated.View style={shakeStyle}>
-            <InputGroup>
-              <InputGroup.Prefix isDecorative>
-                <Feather color={mutedColor} name="server" size={20} />
-              </InputGroup.Prefix>
-              <InputGroup.Input
-                autoCapitalize="none"
-                autoCorrect={false}
-                keyboardType="url"
-                placeholder={intl.formatMessage({ id: "auth.connect.serverAddressPlaceholder" })}
-                returnKeyType="go"
-                testID="connect-server-url"
-                textContentType="URL"
-                value={address}
-                onChangeText={setAddress}
-                onSubmitEditing={() => void handleConnect()}
+      <Animated.View className="mt-[52px] gap-1.5" style={entrance.fieldStyle}>
+        <InlineErrorBlock error={error}>
+          <AuthField
+            isInvalid={error !== null}
+            label={intl.formatMessage({ id: "auth.connect.serverAddressLabel" })}
+            labelAccessory={
+              <HelpPopover
+                label={intl.formatMessage({ id: "auth.connect.serverAddressHelp" })}
+                text={intl.formatMessage({ id: "auth.connect.example" })}
               />
-            </InputGroup>
-          </Animated.View>
-          <InlineError error={error} />
-        </TextField>
+            }
+          >
+            <InputGroup.Prefix isDecorative>
+              <Feather color={mutedColor} name="server" size={20} />
+            </InputGroup.Prefix>
+            <InputGroup.Input
+              autoCapitalize="none"
+              autoCorrect={false}
+              keyboardType="url"
+              placeholder={intl.formatMessage({ id: "auth.connect.serverAddressPlaceholder" })}
+              returnKeyType="go"
+              testID="connect-server-url"
+              textContentType="URL"
+              value={address}
+              onChangeText={setAddress}
+              onSubmitEditing={() => void handleConnect()}
+            />
+          </AuthField>
+        </InlineErrorBlock>
       </Animated.View>
     </AuthLayout>
   );
