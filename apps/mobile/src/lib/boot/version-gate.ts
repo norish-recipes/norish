@@ -68,3 +68,11 @@ export function resolveUpdateServerRoute(
     ? { screen: "update-server", address: answer.address, version: answer.version }
     : { screen: "leave" };
 }
+
+/**
+ * After a new enough server is saved over Update your server: dismiss it when there is a screen
+ * beneath, and go on to Sign in unless that screen already was Sign in for this saved address.
+ */
+export function resolveSavedServerContinue(wasSaved: boolean, canDismiss: boolean) {
+  return { dismiss: canDismiss, signIn: !wasSaved || !canDismiss };
+}

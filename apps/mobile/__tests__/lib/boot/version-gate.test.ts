@@ -1,6 +1,7 @@
 import {
   resolveForegroundVersionCheck,
   resolveLaunchVersionCheck,
+  resolveSavedServerContinue,
   resolveTooOldServerRoute,
   resolveUpdateServerRoute,
 } from "@/lib/boot/version-gate";
@@ -114,5 +115,16 @@ describe("resolveUpdateServerRoute", () => {
   it("leaves with no address to check", () => {
     expect(resolveUpdateServerRoute(undefined, "", null, null)).toEqual({ screen: "leave" });
     expect(resolveUpdateServerRoute("", "", null, null)).toEqual({ screen: "leave" });
+  });
+});
+
+describe("resolveSavedServerContinue", () => {
+  it("dismisses back to the screen beneath when it is Sign in for the saved address", () => {
+    expect(resolveSavedServerContinue(true, true)).toEqual({ dismiss: true, signIn: false });
+  });
+
+  it("goes on to Sign in for an address not saved yet, or with nothing beneath", () => {
+    expect(resolveSavedServerContinue(false, true)).toEqual({ dismiss: true, signIn: true });
+    expect(resolveSavedServerContinue(true, false)).toEqual({ dismiss: false, signIn: true });
   });
 });

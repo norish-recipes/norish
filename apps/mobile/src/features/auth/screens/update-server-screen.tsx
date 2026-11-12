@@ -8,6 +8,7 @@ import { SESSION_ROOT_HREF, SIGN_IN_HREF } from "@/features/auth/utils/hrefs";
 import { saveServerAddressLogged } from "@/features/auth/utils/save-server-address";
 import { MINIMUM_SERVER_VERSION } from "@/features/auth/utils/server-version";
 import { useHasActiveSession } from "@/lib/auth/auth-session-sync";
+import { resolveSavedServerContinue } from "@/lib/boot/version-gate";
 import { getServerAddress } from "@/lib/network/server-address";
 import { clearServerTooOld } from "@/lib/network/too-old-server";
 import { useRouter } from "expo-router";
@@ -37,10 +38,10 @@ export function UpdateServerScreen({ address, version }: { address: string; vers
     return saveServerAddressLogged(next.address).then(() => {
       clearServerTooOld();
 
-      const dismissed = router.canDismiss();
+      const route = resolveSavedServerContinue(wasSaved, router.canDismiss());
 
-      if (dismissed) router.dismissAll();
-      if (!wasSaved || !dismissed) router.replace(SIGN_IN_HREF);
+      if (route.dismiss) router.dismissAll();
+      if (route.signIn) router.replace(SIGN_IN_HREF);
     });
   };
 
