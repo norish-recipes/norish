@@ -1,3 +1,5 @@
+import { useSyncExternalStore } from "react";
+
 type AuthTransportSnapshot = {
   hasActiveSession: boolean;
   version: number;
@@ -42,4 +44,9 @@ export function publishSignedOut(): void {
   snapshot = { hasActiveSession: false, version: snapshot.version + 1 };
 
   emitSnapshotChange();
+}
+
+/** Whether a session is live; readable in onboarding too, which has no platform adapter. */
+export function useHasActiveSession(): boolean {
+  return useSyncExternalStore(subscribeAuthTransport, getAuthTransportSnapshot).hasActiveSession;
 }

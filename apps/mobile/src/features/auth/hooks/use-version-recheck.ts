@@ -1,3 +1,4 @@
+import type { ForegroundContinue } from "@/lib/boot/boot-state";
 import { useEffect, useEffectEvent } from "react";
 import { AppState } from "react-native";
 import { checkServerAddress } from "@/features/auth/utils/check-server-address";
@@ -5,7 +6,11 @@ import { resolveForegroundVersionCheck } from "@/lib/boot/boot-state";
 import { useIsFocused } from "expo-router";
 
 /** While the screen is focused, re-checks `address` on each return to the foreground; calls `onNewEnough` once it is. */
-export function useVersionRecheck(address: string, onNewEnough: (checkedAddress: string) => void) {
+export function useVersionRecheck(
+  address: string,
+  signedIn: boolean,
+  onNewEnough: (next: ForegroundContinue) => void
+) {
   const focused = useIsFocused();
   const continueOnce = useEffectEvent(onNewEnough);
 
@@ -22,12 +27,12 @@ export function useVersionRecheck(address: string, onNewEnough: (checkedAddress:
       void checkServerAddress(address).then((check) => {
         checking = false;
 
-        const next = resolveForegroundVersionCheck(check);
+        const next = resolveForegroundVersionCheck(check, signedIn);
 
         if (!live || next.screen === "stay") return;
 
         live = false;
-        continueOnce(next.address);
+        continueOnce(next);
       });
     });
 
@@ -35,5 +40,5 @@ export function useVersionRecheck(address: string, onNewEnough: (checkedAddress:
       live = false;
       subscription.remove();
     };
-  }, [address, focused]);
+  }, [address, focused, signedIn]);
 }

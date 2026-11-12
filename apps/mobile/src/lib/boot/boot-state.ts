@@ -115,13 +115,18 @@ export function resolveLaunchVersionCheck(
     : { screen: "wait" };
 }
 
+/** Where a new enough server continues to: Sign in signed out (saving the address), else the signed-in app. */
+export type ForegroundContinue =
+  { screen: "sign-in"; address: string } | { screen: "signed-in-app" };
+
 /** On a foreground return while Update your server shows: only a new enough server moves on. */
 export function resolveForegroundVersionCheck(
-  check: ServerAddressCheck
-): { screen: "continue"; address: string } | { screen: "stay" } {
-  return check.outcome === "ok"
-    ? { screen: "continue", address: check.address }
-    : { screen: "stay" };
+  check: ServerAddressCheck,
+  signedIn: boolean
+): ForegroundContinue | { screen: "stay" } {
+  if (check.outcome !== "ok") return { screen: "stay" };
+
+  return signedIn ? { screen: "signed-in-app" } : { screen: "sign-in", address: check.address };
 }
 
 /** Update your server checks the address it was opened for, else the saved one; with neither, the signed-out entry. */

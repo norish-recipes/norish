@@ -41,17 +41,17 @@ describe("useVersionRecheck", () => {
   it("re-checks on a return to the foreground and continues once the server is new enough", async () => {
     const onNewEnough = vi.fn();
 
-    renderHook(() => useVersionRecheck(address, onNewEnough));
+    renderHook(() => useVersionRecheck(address, false, onNewEnough));
     foreground();
     await act(async () => settle(newEnough));
 
     expect(checkServerAddress).toHaveBeenCalledWith(address);
-    expect(onNewEnough).toHaveBeenCalledWith(address);
+    expect(onNewEnough).toHaveBeenCalledWith({ screen: "sign-in", address });
   });
 
   it("doesn't re-check while Update your server isn't the focused screen", () => {
     focused = false;
-    renderHook(() => useVersionRecheck(address, vi.fn()));
+    renderHook(() => useVersionRecheck(address, false, vi.fn()));
     foreground();
 
     expect(checkServerAddress).not.toHaveBeenCalled();
@@ -59,7 +59,7 @@ describe("useVersionRecheck", () => {
 
   it("ignores a result that arrives after focus is lost", async () => {
     const onNewEnough = vi.fn();
-    const { rerender } = renderHook(() => useVersionRecheck(address, onNewEnough));
+    const { rerender } = renderHook(() => useVersionRecheck(address, false, onNewEnough));
 
     foreground();
     focused = false;
@@ -71,7 +71,7 @@ describe("useVersionRecheck", () => {
 
   it("ignores a result that arrives after unmount", async () => {
     const onNewEnough = vi.fn();
-    const { unmount } = renderHook(() => useVersionRecheck(address, onNewEnough));
+    const { unmount } = renderHook(() => useVersionRecheck(address, false, onNewEnough));
 
     foreground();
     unmount();
@@ -81,7 +81,7 @@ describe("useVersionRecheck", () => {
   });
 
   it("never runs two checks at once", async () => {
-    renderHook(() => useVersionRecheck(address, vi.fn()));
+    renderHook(() => useVersionRecheck(address, false, vi.fn()));
 
     foreground();
     foreground();

@@ -1,9 +1,11 @@
+import type { ForegroundContinue } from "@/lib/boot/boot-state";
 import React from "react";
 import { AuthStatus } from "@/features/auth/components/auth-status";
 import { UpdateBadge } from "@/features/auth/components/update-badge";
 import { useVersionRecheck } from "@/features/auth/hooks/use-version-recheck";
 import { hostOf } from "@/features/auth/utils/host-of";
 import { MINIMUM_SERVER_VERSION } from "@/features/auth/utils/server-version";
+import { useHasActiveSession } from "@/lib/auth/auth-session-sync";
 import { getServerAddress, saveServerAddress } from "@/lib/network/server-address";
 import { useRouter } from "expo-router";
 import { useIntl } from "react-intl";
@@ -17,12 +19,21 @@ export function UpdateServerScreen({ address, version }: { address: string; vers
   const intl = useIntl();
   const router = useRouter();
   const host = hostOf(address);
+  const signedIn = useHasActiveSession();
 
-  // Back to what this screen was pushed over; a Server Address not saved yet goes on to Sign in.
-  const continueToSignIn = (checked: string) => {
-    const wasSaved = getServerAddress() === checked;
+  // Signed in: back to the app. Signed out: back to what this screen was pushed over,
+  // or on to Sign in for an address not saved yet.
+  const continueFrom = (next: ForegroundContinue) => {
+    if (next.screen === "signed-in-app") {
+      if (router.canDismiss()) router.dismissAll();
+      else router.replace("/");
 
-    saveServerAddress(checked).then(
+      return;
+    }
+
+    const wasSaved = getServerAddress() === next.address;
+
+    saveServerAddress(next.address).then(
       () => {
         const dismissed = router.canDismiss();
 
@@ -33,7 +44,7 @@ export function UpdateServerScreen({ address, version }: { address: string; vers
     );
   };
 
-  useVersionRecheck(address, continueToSignIn);
+  useVersionRecheck(address, signedIn, continueFrom);
 
   return (
     <AuthStatus

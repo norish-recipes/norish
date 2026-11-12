@@ -39,16 +39,21 @@ describe("resolveLaunchVersionCheck", () => {
 });
 
 describe("resolveForegroundVersionCheck", () => {
-  it("continues to Sign in once the server is new enough, at the checked address", () => {
-    expect(resolveForegroundVersionCheck(newEnough)).toEqual({ screen: "continue", address });
+  it("continues to Sign in once the server is new enough, signed out, at the checked address", () => {
+    expect(resolveForegroundVersionCheck(newEnough, false)).toEqual({ screen: "sign-in", address });
+  });
+
+  it("returns to the signed-in app once the server is new enough, signed in", () => {
+    expect(resolveForegroundVersionCheck(newEnough, true)).toEqual({ screen: "signed-in-app" });
   });
 
   it("stays while the server is still too old", () => {
-    expect(resolveForegroundVersionCheck(tooOld)).toEqual({ screen: "stay" });
+    expect(resolveForegroundVersionCheck(tooOld, false)).toEqual({ screen: "stay" });
+    expect(resolveForegroundVersionCheck(tooOld, true)).toEqual({ screen: "stay" });
   });
 
   it("stays while the server is unreachable", () => {
-    expect(resolveForegroundVersionCheck(unreachable)).toEqual({ screen: "stay" });
+    expect(resolveForegroundVersionCheck(unreachable, false)).toEqual({ screen: "stay" });
   });
 });
 
