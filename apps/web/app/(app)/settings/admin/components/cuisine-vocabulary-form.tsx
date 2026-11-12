@@ -1,6 +1,6 @@
 "use client";
 
-import { useCallback, useState } from "react";
+import { useState } from "react";
 import {
   ActionButton,
   ActionButtonGroup,
@@ -9,9 +9,9 @@ import {
 import { Input, Modal, ScrollShadow, TextField } from "@heroui/react";
 import { useTranslations } from "next-intl";
 
+import type { CuisineRefusal } from "@norish/shared-react/admin";
+import { useCuisineWrites } from "@norish/shared-react/admin";
 import { useCuisinesQuery } from "@norish/shared-react/config";
-
-import { useCuisineAdminMutations } from "../hooks/use-cuisine-admin-mutations";
 
 /**
  * Cuisine vocabulary administration.
@@ -23,29 +23,22 @@ export default function CuisineVocabularyForm() {
   const t = useTranslations("settings.admin.cuisineVocabulary");
   const tActions = useTranslations("common.actions");
   const { cuisines, isLoading } = useCuisinesQuery();
-  const { create, rename, remove, isPending } = useCuisineAdminMutations();
+  const { create, rename, remove, isPending } = useCuisineWrites();
 
   const [newName, setNewName] = useState("");
   const [editingId, setEditingId] = useState<string | null>(null);
   const [editingName, setEditingName] = useState("");
   const [pendingDelete, setPendingDelete] = useState<{ id: string; name: string } | null>(null);
-  const [error, setError] = useState<"duplicate" | "saveFailed" | null>(null);
+  const [error, setError] = useState<CuisineRefusal | null>(null);
 
-  const run = useCallback(async (action: () => Promise<unknown>, onDone: () => void) => {
+  // Shows why a write failed, or runs `onDone` once it went through.
+  const run = async (write: () => Promise<CuisineRefusal | null>, onDone: () => void) => {
     setError(null);
+    const refusal = await write();
 
-    try {
-      await action();
-      onDone();
-    } catch (err) {
-      const isConflict =
-        typeof err === "object" && err !== null && "data" in err
-          ? (err as { data?: { code?: string } }).data?.code === "CONFLICT"
-          : false;
-
-      setError(isConflict ? "duplicate" : "saveFailed");
-    }
-  }, []);
+    if (refusal) setError(refusal);
+    else onDone();
+  };
 
   const handleAdd = () => {
     const name = newName.trim();
