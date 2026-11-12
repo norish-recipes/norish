@@ -49,3 +49,20 @@ export function resolveBootPhase({
 
   return { phase: "ready", serverAddress: serverAddress.url };
 }
+
+/** After the splash: glide into Server address, or fade to the screen underneath. */
+export type LaunchHandoff = "glide" | "fade";
+
+/**
+ * How the splash leaves once its hold ends; `null` holds it until the boot phase decides.
+ * A glide needs Server address's measured brand, so without one the splash fades.
+ */
+export function resolveLaunchMotion(
+  handoff: LaunchHandoff | null,
+  reduceMotion: boolean,
+  target: number | null
+): LaunchHandoff | null {
+  if (handoff === null) return null;
+
+  return handoff === "glide" && !reduceMotion && target !== null ? "glide" : "fade";
+}

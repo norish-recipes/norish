@@ -1,4 +1,4 @@
-import { resolveBootPhase } from "@/lib/boot/boot-state";
+import { resolveBootPhase, resolveLaunchMotion } from "@/lib/boot/boot-state";
 import { describe, expect, it } from "vitest";
 
 /**
@@ -115,5 +115,24 @@ describe("resolveBootPhase", () => {
         })
       ).toEqual({ phase: "loading" });
     });
+  });
+});
+
+describe("resolveLaunchMotion", () => {
+  it("holds while the boot phase has no handoff yet", () => {
+    expect(resolveLaunchMotion(null, false, 120)).toBeNull();
+  });
+
+  it("glides when Server address has measured its brand", () => {
+    expect(resolveLaunchMotion("glide", false, 120)).toBe("glide");
+  });
+
+  it("fades when no glide target arrived by the end of the hold", () => {
+    expect(resolveLaunchMotion("glide", false, null)).toBe("fade");
+  });
+
+  it("fades under Reduce Motion and for every other handoff", () => {
+    expect(resolveLaunchMotion("glide", true, 120)).toBe("fade");
+    expect(resolveLaunchMotion("fade", false, 120)).toBe("fade");
   });
 });

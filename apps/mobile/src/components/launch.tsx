@@ -1,3 +1,4 @@
+import type { LaunchHandoff } from "@/lib/boot/boot-state";
 import type { ReactNode } from "react";
 import type { LayoutChangeEvent } from "react-native";
 import type { SharedValue } from "react-native-reanimated";
@@ -14,6 +15,7 @@ import Animated, {
 } from "react-native-reanimated";
 import { scheduleOnRN } from "react-native-worklets";
 import { Brand, LOGO_HEIGHT } from "@/components/brand";
+import { resolveLaunchMotion } from "@/lib/boot/boot-state";
 import { useThemeColor } from "heroui-native";
 
 // The launch timeline in ms from the JS splash's first frame, after the Launch board.
@@ -28,9 +30,6 @@ const RISE_DISTANCE = 16;
 
 const glideEasing = Easing.bezierFn(0.65, 0, 0.35, 1);
 const riseEasing = Easing.bezierFn(0.2, 0.7, 0.3, 1);
-
-/** After the splash: glide into Server address, or fade to the screen underneath. */
-export type LaunchHandoff = "glide" | "fade";
 
 type Launch = {
   /** Runs the timeline once; it rests at LAUNCH_END from then on. */
@@ -75,8 +74,13 @@ function LaunchOverlay({ handoff, launch }: { handoff: LaunchHandoff | null; lau
   const [held, setHeld] = useState(() => clock.get() >= HOLD_END);
   // The native splash centres the logo on the window, so this frame does too.
   const top = (height - LOGO_HEIGHT) / 2;
-  const glide = handoff === "glide" && !reduceMotion;
-  const ready = held && handoff !== null && (!glide || target !== null);
+  // Decided once the hold ends, so a target landing mid-fade can't turn it into a glide.
+  const [motion, setMotion] = useState<LaunchHandoff | null>(null);
+  const decided = held ? resolveLaunchMotion(handoff, reduceMotion, target) : null;
+
+  if (motion === null && decided !== null) setMotion(decided);
+
+  const glide = motion === "glide";
 
   useEffect(() => {
     if (held) return;
@@ -93,9 +97,9 @@ function LaunchOverlay({ handoff, launch }: { handoff: LaunchHandoff | null; lau
   }, [clock, held]);
 
   useEffect(() => {
-    if (!ready) return;
+    if (motion === null) return;
 
-    const end = glide ? LAUNCH_END : FADE_END;
+    const end = motion === "glide" ? LAUNCH_END : FADE_END;
 
     clock.set(
       withTiming(
@@ -109,7 +113,7 @@ function LaunchOverlay({ handoff, launch }: { handoff: LaunchHandoff | null; lau
         }
       )
     );
-  }, [clock, finish, glide, ready]);
+  }, [clock, finish, motion]);
 
   const overlayStyle = useAnimatedStyle(() => ({
     opacity: glide
