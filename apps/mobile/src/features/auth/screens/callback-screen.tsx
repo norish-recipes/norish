@@ -1,8 +1,7 @@
-import React, { useEffect, useState } from "react";
+import React, { useEffect } from "react";
 import { View } from "react-native";
 import { Brand, useSplashBrandTop } from "@/components/brand";
-import { SIGN_IN_DEADLINE_MS } from "@/features/auth/utils/auth-failure";
-import { resolveSigningIn } from "@/features/auth/utils/signing-in";
+import { useSigningIn } from "@/features/auth/hooks/use-signing-in";
 import { useHasActiveSession } from "@/lib/auth/auth-session-sync";
 import { Stack, useRouter } from "expo-router";
 import { Spinner, useThemeColor } from "heroui-native";
@@ -19,14 +18,7 @@ export function AuthCallbackScreen() {
   const top = useSplashBrandTop();
   const [mutedColor] = useThemeColor(["muted"] as const);
   const router = useRouter();
-  const [waited, setWaited] = useState(0);
-  const outcome = resolveSigningIn(useHasActiveSession(), waited);
-
-  useEffect(() => {
-    const timer = setTimeout(() => setWaited(SIGN_IN_DEADLINE_MS), SIGN_IN_DEADLINE_MS);
-
-    return () => clearTimeout(timer);
-  }, []);
+  const outcome = useSigningIn(useHasActiveSession());
 
   useEffect(() => {
     if (outcome === "failed") router.replace("/auth/error");
