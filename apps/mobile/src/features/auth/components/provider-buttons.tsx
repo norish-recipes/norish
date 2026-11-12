@@ -39,10 +39,8 @@ export function ProviderButtons({
             size="lg"
             variant="outline"
             onPress={() =>
-              void signIn.attempt(
-                provider.id,
-                () => authClient.signIn.social({ provider: provider.id, callbackURL: redirectTo }),
-                "auth.errors.default.description"
+              void signIn.attempt(provider.id, () =>
+                authClient.signIn.social({ provider: provider.id, callbackURL: redirectTo })
               )
             }
           >

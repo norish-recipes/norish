@@ -18,7 +18,11 @@ export function useAuthAttempt() {
   // State lands on the next render, so a second tap or return key in the same tick reads this.
   const inFlightRef = useRef(false);
 
-  const attempt = async (method: string, call: AuthCall, fallback: string) => {
+  const attempt = async (
+    method: string,
+    call: AuthCall,
+    fallback = "auth.errors.default.description"
+  ) => {
     if (inFlightRef.current) return;
 
     inFlightRef.current = true;

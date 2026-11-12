@@ -39,11 +39,7 @@ export function PasswordForm({ authClient, signIn, showSignUpLink }: PasswordFor
   const handleSubmit = () => {
     if (!isFilled) return;
 
-    void signIn.attempt(
-      PASSWORD,
-      () => authClient.signIn.email({ email: email.trim(), password }),
-      "auth.errors.default.description"
-    );
+    void signIn.attempt(PASSWORD, () => authClient.signIn.email({ email: email.trim(), password }));
   };
 
   return (
