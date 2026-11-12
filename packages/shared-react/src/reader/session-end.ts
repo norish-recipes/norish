@@ -94,7 +94,7 @@ export function useSignOut() {
     });
 }
 
-/** Session Expiry (CONTEXT.md): forget the Offline Cache, keep the Outbox, leave. Mount once in the signed-in shell. */
+/** Session Expiry (CONTEXT.md): forget the Offline Cache, keep the Outbox, leave. Mount once while signed in: web in its shell, mobile in AuthProviders. */
 export function useSessionExpiry(): void {
   const platform = usePlatform();
 
