@@ -38,7 +38,7 @@ export function AuthField({
         className={`flex-row items-center gap-1 pl-1 ${compact && labelAccessory ? "h-5" : ""}`}
       >
         <Label isInvalid={false}>
-          <Label.Text className="text-[14px]">{label}</Label.Text>
+          <Label.Text className="text-[14px] leading-[17px]">{label}</Label.Text>
         </Label>
         {labelAccessory}
       </View>
