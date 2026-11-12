@@ -37,7 +37,11 @@ export function useAuthAttempt() {
     setRunning(null);
   };
 
-  return { running, failure, attempt };
+  /** The failure when one of `methods` raised it, for the form that shows those methods. */
+  const failureFor = (...methods: string[]) =>
+    failure !== null && methods.includes(failure.method) ? failure : null;
+
+  return { running, failure, attempt, failureFor };
 }
 
 export type AuthAttempt = ReturnType<typeof useAuthAttempt>;

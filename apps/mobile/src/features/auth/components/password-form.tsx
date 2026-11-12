@@ -32,7 +32,7 @@ export function PasswordForm({ authClient, signIn, showSignUpLink }: PasswordFor
   const [password, setPassword] = useState("");
   const [isPasswordShown, setIsPasswordShown] = useState(false);
   const passwordInputRef = useRef<ComponentRef<typeof TextInput>>(null);
-  const error = signIn.failure?.method === PASSWORD ? signIn.failure : null;
+  const error = signIn.failureFor(PASSWORD);
   const isFilled = email.trim() !== "" && password !== "";
 
   // On success the Stack.Protected guard leaves Sign in once the session lands.

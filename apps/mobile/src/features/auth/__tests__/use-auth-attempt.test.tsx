@@ -73,4 +73,24 @@ describe("useAuthAttempt", () => {
       await attempt;
     });
   });
+
+  it("hands the failure only to the methods it came from", async () => {
+    const { result } = renderHook(() => useAuthAttempt(), { wrapper });
+
+    expect(result.current.failureFor("password")).toBeNull();
+
+    await act(() =>
+      result.current.attempt(
+        "google",
+        () => Promise.resolve({ error: { code: "SOMETHING" } }),
+        "fallback"
+      )
+    );
+
+    expect(result.current.failureFor("password")).toBeNull();
+    expect(result.current.failureFor("github", "google")).toEqual({
+      method: "google",
+      message: "Something went wrong",
+    });
+  });
 });

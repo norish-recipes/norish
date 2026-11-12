@@ -25,8 +25,7 @@ export function ProviderButtons({
 }: ProviderButtonsProps) {
   const intl = useIntl();
   const [foregroundColor] = useThemeColor(["foreground"] as const);
-  const failedHere = providers.some((provider) => provider.id === signIn.failure?.method);
-  const error = failedHere ? signIn.failure : null;
+  const error = signIn.failureFor(...providers.map((provider) => provider.id));
 
   return (
     <View className="gap-2.5">
