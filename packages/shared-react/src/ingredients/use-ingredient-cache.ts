@@ -62,7 +62,7 @@ export function useIngredientCache() {
         queryClient.invalidateQueries({ queryKey: trpc.ingredients.aiChanges.pathKey() }),
         queryClient.invalidateQueries({ queryKey: trpc.ingredients.nutritionFor.pathKey() }),
       ]),
-    /** Reads everything about Ingredients again, undoing a refused edit's guess. */
-    rollback: () => queryClient.invalidateQueries({ queryKey: trpc.ingredients.pathKey() }),
+    /** Rereads every `ingredients` query, which replaces any guess the cache holds. */
+    rereadAll: () => queryClient.invalidateQueries({ queryKey: trpc.ingredients.pathKey() }),
   };
 }

@@ -21,7 +21,7 @@ export function useIngredientMutations() {
 
   const refused = (context: string) => ({
     onError: (error: unknown) => {
-      void cache.rollback();
+      void cache.rereadAll();
       refuse(error, context);
     },
   });

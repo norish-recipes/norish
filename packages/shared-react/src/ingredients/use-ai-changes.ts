@@ -36,7 +36,7 @@ export function useAIChanges() {
     );
   const answer = {
     onError: (error: unknown) => refuse(error, "ai-changes"),
-    onSettled: () => void cache.rollback(),
+    onSettled: () => void cache.rereadAll(),
   };
 
   const keep = useMutation(
