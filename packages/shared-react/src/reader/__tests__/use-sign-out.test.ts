@@ -9,6 +9,10 @@ import {
 } from "@norish/shared-react/platform/testing";
 import { expireSession, useSessionExpiry, useSignOut } from "@norish/shared-react/reader";
 
+const connectivity = vi.hoisted(() => ({ isOffline: false }));
+
+vi.mock("../../offline/react/connectivity", () => ({ useConnectivity: () => connectivity }));
+
 /** A promise the test settles by hand. */
 function deferred() {
   let resolve!: () => void;
@@ -31,6 +35,7 @@ describe("Sign-out and Session Expiry", () => {
   beforeEach(() => {
     steps = [];
     unmounts = [];
+    connectivity.isOffline = false;
     adapter = fakePlatformAdapter();
     vi.mocked(adapter.endSession).mockImplementation(async () => void steps.push("end"));
     vi.mocked(adapter.offlineEngine.clearForSignOut).mockImplementation(
@@ -54,7 +59,8 @@ describe("Sign-out and Session Expiry", () => {
       expect(steps).toEqual(["end", "clear+discard", "leave:sign-out"]);
     });
 
-    it("clears nothing and says why when the session could not be ended", async () => {
+    it("while Offline, clears nothing and says the reader is offline", async () => {
+      connectivity.isOffline = true;
       vi.mocked(adapter.endSession).mockRejectedValue(new Error("offline"));
 
       await signOut({ discardQueue: true });
@@ -64,6 +70,19 @@ describe("Sign-out and Session Expiry", () => {
         severity: "warning",
         title: "navbar.userMenu.signOutOffline",
       });
+      expect(adapter.showError).not.toHaveBeenCalled();
+    });
+
+    it("while Live, clears nothing and shows the server's failure as an error", async () => {
+      const error = new Error("500");
+
+      vi.mocked(adapter.endSession).mockRejectedValue(error);
+
+      await signOut();
+
+      expect(steps).toEqual([]);
+      expect(adapter.showError).toHaveBeenCalledWith(error, "sign out");
+      expect(adapter.toast.show).not.toHaveBeenCalled();
     });
 
     it("after the Account was deleted, skips the server and discards the queue", async () => {

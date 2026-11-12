@@ -5,6 +5,7 @@ import { useEffect } from "react";
 import { createClientLogger } from "@norish/shared/lib/logger";
 
 import type { LeaveReason, PlatformAdapter } from "../platform";
+import { useConnectivity } from "../offline/react/connectivity";
 import { usePlatform } from "../platform";
 
 const log = createClientLogger("auth");
@@ -47,6 +48,7 @@ async function clearAndLeave(
 /** Sign-out (CONTEXT.md): end the session, then forget the Offline Cache, then leave. */
 export function useSignOut() {
   const platform = usePlatform();
+  const { isOffline } = useConnectivity();
 
   return ({ discardQueue = false, accountDeleted = false }: SignOutOptions = {}) =>
     once(async () => {
@@ -56,10 +58,14 @@ export function useSignOut() {
         } catch (error) {
           log.warn({ error }, "Could not end the session, nothing was cleared");
 
-          platform.toast.show({
-            severity: "warning",
-            title: platform.toast.translate("navbar.userMenu.signOutOffline"),
-          });
+          if (isOffline) {
+            platform.toast.show({
+              severity: "warning",
+              title: platform.toast.translate("navbar.userMenu.signOutOffline"),
+            });
+          } else {
+            platform.showError(error, "sign out");
+          }
 
           return;
         }
