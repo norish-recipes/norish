@@ -13,7 +13,7 @@ type ImportMutationContext = {
   optimisticPendingId: string;
 };
 
-export type ImportMutationsResult = {
+type ImportMutationsResult = {
   importRecipe: (url: string) => void;
   importRecipeWithAI: (url: string) => void;
   importRecipeFromImages: (files: File[]) => void;
@@ -21,12 +21,8 @@ export type ImportMutationsResult = {
   importRecipeFromPasteWithAI: (text: string) => void;
 };
 
-/**
- * Told when an import found a recipe the household already holds. Not an
- * error — the id is the one the caller was reaching for, so an app can offer
- * to open it.
- */
-export type RecipeAlreadyExistsAdapter = (recipeId: string) => void;
+/** Told the id of a recipe the household already holds: not an error, so an app can offer it. */
+type RecipeAlreadyExistsHandler = (recipeId: string) => void;
 
 function createOptimisticPendingRecipeId(): string {
   // eslint-disable-next-line sonarjs/pseudo-random -- a placeholder id needs to be unique, not unpredictable
@@ -35,7 +31,7 @@ function createOptimisticPendingRecipeId(): string {
 
 export function useImportMutations(
   onError?: RecipesMutationErrorHandler,
-  onRecipeAlreadyExists?: RecipeAlreadyExistsAdapter
+  onRecipeAlreadyExists?: RecipeAlreadyExistsHandler
 ): ImportMutationsResult {
   const trpc = useTRPC();
   const { addPendingRecipe, replacePendingRecipe, removePendingRecipe, invalidate } =

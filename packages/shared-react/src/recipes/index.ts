@@ -32,7 +32,6 @@ export { useRecipeAutocomplete } from "./use-recipe-autocomplete";
 export type { InfiniteRecipeData } from "./library-cache";
 export { useImportMutations } from "./use-import-mutations";
 export { useRecipesCacheHelpers, type RecipesCacheHelpers } from "./use-recipes-cache";
-export type { RecipesMutationErrorHandler } from "./recipes-mutation-error";
 export { useRecipesMutations, type RecipesMutationsResult } from "./use-recipes-mutations";
 export { useRecipesQuery, type RecipeFilters, type RecipesQueryResult } from "./use-recipes-query";
 export {

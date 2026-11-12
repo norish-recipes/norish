@@ -7,8 +7,6 @@ import { useTranslations } from "next-intl";
 import type { RecipesMutationsResult } from "@norish/shared-react/recipes";
 import { useRecipesMutations as useSharedRecipesMutations } from "@norish/shared-react/recipes";
 
-export type { RecipesMutationsResult };
-
 /** The toast a failed recipe write shows; recipe imports show it too. */
 export function useRecipeMutationErrorToast(): (error: unknown, operation: string) => void {
   const tErrors = useTranslations("common.errors");

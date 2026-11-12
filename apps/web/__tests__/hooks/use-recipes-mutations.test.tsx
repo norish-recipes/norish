@@ -6,10 +6,7 @@ import { beforeEach, describe, expect, it, vi } from "vitest";
 
 import { useRecipesMutations as useSharedRecipesMutations } from "@norish/shared-react/recipes";
 
-vi.mock("@heroui/react", () => ({
-  toast: Object.assign(vi.fn(), { close: vi.fn() }),
-  Button: () => null,
-}));
+vi.mock("@heroui/react", () => ({ toast: vi.fn() }));
 
 vi.mock("next-intl", () => ({
   useTranslations: () => (key: string) => key,
