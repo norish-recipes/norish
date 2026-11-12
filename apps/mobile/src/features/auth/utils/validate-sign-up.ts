@@ -1,8 +1,13 @@
 export const MIN_PASSWORD_LENGTH = 8;
 export const MAX_PASSWORD_LENGTH = 128;
 
-// Only the shape; the server decides the rest.
-const EMAIL_SHAPE = /^\S+@\S+\.\S+$/;
+// Only the shape (text, one "@", a dotted domain); the server decides the rest.
+function hasEmailShape(email: string): boolean {
+  const parts = email.split("@");
+  const domain = parts[1] ?? "";
+
+  return parts.length === 2 && parts[0] !== "" && domain.includes(".") && !/\s/.test(email);
+}
 
 export type SignUpField = "name" | "email" | "password" | "confirmPassword";
 
@@ -28,7 +33,7 @@ export function validateSignUp(
 
   if (name.trim() === "") return { field: "name", messageId: "common.validation.required" };
   if (email.trim() === "") return { field: "email", messageId: "common.validation.required" };
-  if (!EMAIL_SHAPE.test(email.trim()))
+  if (!hasEmailShape(email.trim()))
     return { field: "email", messageId: "common.validation.invalidEmail" };
   if (password === "") return { field: "password", messageId: "common.validation.required" };
 
