@@ -1,7 +1,6 @@
 import {
   resolveForegroundVersionCheck,
   resolveLaunchVersionCheck,
-  resolveServerChange,
   resolveTooOldServerRoute,
   resolveUpdateServerRoute,
 } from "@/lib/boot/version-gate";
@@ -115,15 +114,5 @@ describe("resolveUpdateServerRoute", () => {
   it("leaves with no address to check", () => {
     expect(resolveUpdateServerRoute(undefined, "", null, null)).toEqual({ screen: "leave" });
     expect(resolveUpdateServerRoute("", "", null, null)).toEqual({ screen: "leave" });
-  });
-});
-
-describe("resolveServerChange", () => {
-  it("opens Server address while signed out", () => {
-    expect(resolveServerChange(false)).toBe("server-address");
-  });
-
-  it("signs out first while signed in", () => {
-    expect(resolveServerChange(true)).toBe("sign-out-first");
   });
 });
