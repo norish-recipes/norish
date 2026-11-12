@@ -1,6 +1,8 @@
 import type { AuthAttempt } from "@/features/auth/hooks/use-auth-attempt";
 import type { AuthClient } from "@/lib/auth/auth-client";
-import React, { useState } from "react";
+import type { ComponentRef } from "react";
+import type { TextInput } from "react-native";
+import React, { useRef, useState } from "react";
 import { Pressable, Text, View } from "react-native";
 import { AuthField } from "@/features/auth/components/auth-field";
 import { InlineErrorBlock } from "@/features/auth/components/inline-error";
@@ -29,6 +31,7 @@ export function PasswordForm({ authClient, signIn, showSignUpLink }: PasswordFor
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [isPasswordShown, setIsPasswordShown] = useState(false);
+  const passwordInputRef = useRef<ComponentRef<typeof TextInput>>(null);
   const error = signIn.failure?.method === PASSWORD ? signIn.failure : null;
   const isFilled = email.trim() !== "" && password !== "";
 
@@ -56,10 +59,12 @@ export function PasswordForm({ authClient, signIn, showSignUpLink }: PasswordFor
             keyboardType="email-address"
             placeholder={intl.formatMessage({ id: "auth.emailPassword.emailPlaceholder" })}
             returnKeyType="next"
+            submitBehavior="submit"
             testID="login-email"
             textContentType="username"
             value={email}
             onChangeText={setEmail}
+            onSubmitEditing={() => passwordInputRef.current?.focus()}
           />
         </AuthField>
         <AuthField
@@ -67,6 +72,7 @@ export function PasswordForm({ authClient, signIn, showSignUpLink }: PasswordFor
           label={intl.formatMessage({ id: "auth.emailPassword.password" })}
         >
           <InputGroup.Input
+            ref={passwordInputRef}
             autoCapitalize="none"
             autoCorrect={false}
             placeholder={intl.formatMessage({ id: "auth.emailPassword.passwordPlaceholder" })}
