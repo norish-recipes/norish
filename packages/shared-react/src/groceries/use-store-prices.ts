@@ -12,7 +12,7 @@ import { useTRPC } from "../trpc";
 
 type Payload<E extends EventName<StoresRealtime>> = PayloadOf<StoresRealtime, E>;
 
-export type StorePricesData = ResolvedProductLink[];
+type StorePricesData = ResolvedProductLink[];
 
 /**
  * How long a Pending Link is believed on this screen. The queue answers in

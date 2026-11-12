@@ -9,7 +9,7 @@ import type { BackendBaseUrlState } from "@/lib/network/backend-base-url";
  * failure was indistinguishable from a slow read and left the app on a blank
  * screen forever.
  */
-export type BootPhase =
+type BootPhase =
   /** Hydration still in flight. The native splash stays up. */
   | { phase: "loading" }
   /** Secure storage is unreadable, so the configured backend is unknown. */
@@ -19,7 +19,7 @@ export type BootPhase =
   /** Storage read fine and a backend is configured. */
   | { phase: "ready"; backendBaseUrl: string };
 
-export type BootInputs = {
+type BootInputs = {
   /** Whether the persisted appearance preference has settled. */
   appearanceHydrated: boolean;
   /** Whether the app fonts have loaded (or failed and fell back to the system font). */

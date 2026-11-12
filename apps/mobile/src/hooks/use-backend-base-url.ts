@@ -6,7 +6,7 @@ import { createClientLogger } from "@norish/shared/lib/logger";
 
 const log = createClientLogger("backend-base-url");
 
-export type BackendBaseUrlResult = BackendBaseUrlState & {
+type BackendBaseUrlResult = BackendBaseUrlState & {
   /** Re-reads storage. Lets the user recover without force-quitting the app. */
   retry: () => void;
 };

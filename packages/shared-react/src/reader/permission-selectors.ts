@@ -17,12 +17,9 @@ export type ReaderPermissions = {
 };
 
 /** What a recipe permission is decided by. */
-export type RecipeAccess = Pick<
-  ReaderPermissions,
-  "recipePolicy" | "householdUserIds" | "isServerAdmin"
->;
+type RecipeAccess = Pick<ReaderPermissions, "recipePolicy" | "householdUserIds" | "isServerAdmin">;
 
-export type PermissionAccessInput = {
+type PermissionAccessInput = {
   policyLevel: PermissionLevel;
   userId: string;
   ownerId: string;
@@ -48,7 +45,7 @@ export function normalizePermissionsData(
   };
 }
 
-export function checkPermissionAccess({
+function checkPermissionAccess({
   policyLevel,
   userId,
   ownerId,

@@ -14,7 +14,7 @@ type ConvertMutationContext = {
   didSwitchLocally: boolean;
 };
 
-export type ConvertMutationResult = {
+type ConvertMutationResult = {
   convertMeasurements: (targetSystem: MeasurementSystem, version: number, withAI?: boolean) => void;
   error: unknown;
   reset: () => void;
@@ -31,7 +31,7 @@ function hasLocalMeasurementSystem(recipe: FullRecipeDTO, target: MeasurementSys
   return hasTargetIngredients && hasTargetSteps;
 }
 
-export type ConvertMutationCallbacks = {
+type ConvertMutationCallbacks = {
   /** A conversion failed and was rolled back; a queued one keeps its switch and is not reported. */
   onError?: (error: unknown) => void;
 };

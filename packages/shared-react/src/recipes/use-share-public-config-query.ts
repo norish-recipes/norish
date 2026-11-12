@@ -8,7 +8,7 @@ import type { AppRouter } from "@norish/trpc/client";
 import { DEFAULT_TIMER_KEYWORDS, TIMER_KEYWORDS_READ_TIMES } from "../config";
 import { useTRPC } from "../trpc";
 
-export type SharePublicConfig = inferRouterOutputs<AppRouter>["recipes"]["sharePublicConfig"];
+type SharePublicConfig = inferRouterOutputs<AppRouter>["recipes"]["sharePublicConfig"];
 
 /** One slice of a share's public config; the defaults answer until it arrives. */
 export function useSharePublicConfigQuery<T>(

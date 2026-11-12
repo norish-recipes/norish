@@ -17,7 +17,7 @@ import {
 
 import { createPageStoreContext } from "../page-store";
 
-export type LibraryFiltersState = {
+type LibraryFiltersState = {
   filters: CanonicalRecipeFilters;
   /** False until the stored filters are applied: without the cookie, the first render's are the defaults. */
   hydrated: boolean;

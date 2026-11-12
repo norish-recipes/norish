@@ -8,7 +8,7 @@ import type {
 
 import type { InfiniteCookbookData } from "./cookbook-types";
 
-export type LibraryPage = {
+type LibraryPage = {
   items: LibraryItemDTO[];
   total: number;
   nextCursor: number | null;

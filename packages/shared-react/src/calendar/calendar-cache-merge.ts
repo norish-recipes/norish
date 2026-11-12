@@ -7,11 +7,11 @@ import type { PayloadOf } from "@norish/shared/contracts/realtime/catalogue";
 import type { PlannedItemWithRecipePayload } from "@norish/shared/contracts/zod";
 import type { CalendarRange } from "@norish/shared/lib/helpers";
 
-export function isDateInRange(date: string, { startISO, endISO }: CalendarRange) {
+function isDateInRange(date: string, { startISO, endISO }: CalendarRange) {
   return date >= startISO && date <= endISO;
 }
 
-export function sortCalendarItems(items: PlannedItemFromQuery[]) {
+function sortCalendarItems(items: PlannedItemFromQuery[]) {
   return [...items].sort((a, b) => {
     if (a.date !== b.date) return a.date.localeCompare(b.date);
     if (a.slot !== b.slot) return a.slot.localeCompare(b.slot);
@@ -20,7 +20,7 @@ export function sortCalendarItems(items: PlannedItemFromQuery[]) {
   });
 }
 
-export function toPlannedItemFromPayload(
+function toPlannedItemFromPayload(
   item: PlannedItemWithRecipePayload,
   existing?: PlannedItemFromQuery
 ): PlannedItemFromQuery {

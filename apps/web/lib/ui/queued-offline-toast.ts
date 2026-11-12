@@ -17,7 +17,7 @@ export function isQueuedForReplay(error: unknown): boolean {
   return isQueuedOutboxSignal(error);
 }
 
-export interface QueuedOfflineToastStrings {
+interface QueuedOfflineToastStrings {
   title: string;
   description: string;
 }

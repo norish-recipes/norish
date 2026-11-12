@@ -116,7 +116,7 @@ export interface CacheManager {
   subscribe(listener: () => void): () => void;
 }
 
-export interface CacheManagerOptions {
+interface CacheManagerOptions {
   storage: OfflineStorage;
   /** A restored cache from a different app version is dropped wholesale, never migrated. */
   buster: string | undefined;

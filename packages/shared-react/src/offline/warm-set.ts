@@ -32,7 +32,7 @@ const WARM_COOKBOOK_LIST_LIMIT = 200;
 type WarmSetTRPC = TRPCOptionsProxy<AppRouter>;
 export type WarmedRecipe = { id: string; image?: string | null };
 
-export type WarmSetTopUpResult = "complete" | "partial" | "not-leader";
+type WarmSetTopUpResult = "complete" | "partial" | "not-leader";
 
 export interface WarmSetInventory {
   recipes: number;

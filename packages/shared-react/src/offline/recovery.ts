@@ -51,7 +51,7 @@ interface RecoveryDependencies {
  * the page itself and `queued` that a write was just admitted while Live, so
  * the reads are current either way; `resync` means they may have fallen behind.
  */
-export type RecoveryReason = "startup" | "resync" | "queued";
+type RecoveryReason = "startup" | "resync" | "queued";
 
 export interface Recovery {
   recover(reason?: RecoveryReason): Promise<void>;

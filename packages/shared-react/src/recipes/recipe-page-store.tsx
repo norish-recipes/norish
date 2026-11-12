@@ -8,7 +8,7 @@ import type { MeasurementSystem } from "@norish/shared/contracts";
 import { createPageStoreContext } from "../page-store";
 
 /** A conversion the reader asked for, and the recipe version it was asked on. */
-export type RecipeConversion = { target: MeasurementSystem; withAI: boolean; version: number };
+type RecipeConversion = { target: MeasurementSystem; withAI: boolean; version: number };
 
 export type RecipePageState = {
   recipeId: string;

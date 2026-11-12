@@ -105,7 +105,7 @@ export type SaveCaldavConfigInput = {
   snackTime: string;
 };
 
-export type TestConnectionInput = {
+type TestConnectionInput = {
   serverUrl: string;
   username: string;
   password: string;

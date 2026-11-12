@@ -42,7 +42,7 @@ interface RecipeEnrichmentCallbacks {
   onManualError?: (kind: RecipeEnrichmentKind, error: unknown) => void;
 }
 
-export interface EnrichmentRequestInput {
+interface EnrichmentRequestInput {
   recipeId: string;
   kind: RecipeEnrichmentKind;
 }

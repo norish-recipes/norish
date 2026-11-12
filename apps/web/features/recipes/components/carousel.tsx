@@ -35,7 +35,7 @@ export function useCarousel() {
   return context;
 }
 
-export interface CarouselRootProps extends ComponentPropsWithoutRef<"div"> {
+interface CarouselRootProps extends ComponentPropsWithoutRef<"div"> {
   opts?: EmblaOptionsType;
   plugins?: EmblaPluginType[];
   setApi?: (api: EmblaCarouselType) => void;

@@ -25,7 +25,7 @@ export function useProfileQuery(): Profile {
 /** The profile as `user.get` answers it, which the cache holds. */
 type HeldProfile = inferRouterOutputs<AppRouter>["user"]["get"];
 
-export type ProfileCache = {
+type ProfileCache = {
   held: () => HeldProfile | undefined;
   /** The held user's version, for a write to send. */
   version: () => number;

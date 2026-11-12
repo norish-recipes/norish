@@ -16,7 +16,7 @@ import type { PersistedClient, Persister } from "@tanstack/query-persist-client-
 import type { OfflineStorage } from "./storage";
 import { queryCacheKey } from "./cache-identity";
 
-export interface OwnerScopedPersister extends Persister {
+interface OwnerScopedPersister extends Persister {
   /** Re-point persistence at another owner's cache key. */
   setOwner(ownerId: string): void;
   /** The owner this persister currently reads and writes. */

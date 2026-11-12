@@ -5,7 +5,7 @@ import { TRPCClientError } from "@trpc/client";
 import { observable } from "@trpc/server/observable";
 
 /** The client's Offline Toggle flag: whether Offline is forced, and change notification. */
-export interface ForcedOfflineFlag {
+interface ForcedOfflineFlag {
   isForced(): boolean;
   subscribe(listener: () => void): () => void;
 }

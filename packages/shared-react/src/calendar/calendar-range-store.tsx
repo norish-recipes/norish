@@ -15,7 +15,7 @@ const GROW_DAYS = 12;
 /** Which edge of the calendar's range grows. */
 export type GrowDirection = "past" | "future";
 
-export type CalendarRangeState = {
+type CalendarRangeState = {
   range: CalendarRange;
   /** Briefly true after a grow either way, so a scroll resting near an edge grows once. */
   isGrowing: boolean;

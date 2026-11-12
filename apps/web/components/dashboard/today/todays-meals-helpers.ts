@@ -2,7 +2,7 @@ import type { PlannedItemFromQuery, Slot } from "@norish/shared/contracts";
 
 import { TODAY_MEAL_SLOTS } from "./todays-meals-constants";
 
-export type PlannedItemSubtitleLabels = {
+type PlannedItemSubtitleLabels = {
   note: string;
   serving: string;
   servings: string;

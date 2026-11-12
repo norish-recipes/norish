@@ -60,7 +60,7 @@ export function usePageEnrichment(): RecipeEnrichmentResult {
   return useRecipeEnrichment(recipeId);
 }
 
-export type RecipeConversionResult = {
+type RecipeConversionResult = {
   /** The system on its way, until the recipe shows it. */
   convertingTo: MeasurementSystem | null;
   /** Convert to `target`; with AI, the copy in it is written again even where one exists. */

@@ -20,7 +20,7 @@ const EMBEDDED_PARSER_HEALTHCHECK_TIMEOUT_MS = 1_000;
 const EMBEDDED_PARSER_SHUTDOWN_TIMEOUT_MS = 10_000;
 const EMBEDDED_PARSER_POLL_INTERVAL_MS = 250;
 
-export type EmbeddedParserHandle = {
+type EmbeddedParserHandle = {
   stop: () => Promise<void>;
 };
 

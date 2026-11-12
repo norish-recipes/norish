@@ -25,7 +25,7 @@ import { replayOutboxEntry } from "./replay-client";
 import { discardAllEntries, requeueParkedEntries } from "./status-actions";
 import { createWarmSet } from "./warm-set";
 
-export interface OfflineEngineOptions {
+interface OfflineEngineOptions {
   storage: OfflineStorage;
   /** The client's value of the replay header (web: "web-outbox"). */
   replayHeaderValue: string;
@@ -44,7 +44,7 @@ export interface OfflineEngineOptions {
   onClear?: () => void;
 }
 
-export interface RecoveryTransport {
+interface RecoveryTransport {
   /** The client's raw tRPC client; Replay re-sends each entry through it. */
   transport: OutboxMutationClient;
   /** Whether the live session still belongs to the Outbox owner about to Replay. */

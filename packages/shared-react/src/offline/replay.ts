@@ -26,9 +26,9 @@ export function retryDelayMs(attempts: number): number {
   return Math.min(RETRY_BASE_MS * 2 ** Math.max(0, attempts - 1), RETRY_MAX_MS);
 }
 
-export type ReplayHaltReason = "unreachable" | "unauthorized" | "retry";
+type ReplayHaltReason = "unreachable" | "unauthorized" | "retry";
 
-export interface ReplayPassResult {
+interface ReplayPassResult {
   removed: number;
   parked: number;
   /** Pending entries still queued for this owner after the pass. */

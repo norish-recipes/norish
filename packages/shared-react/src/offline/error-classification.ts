@@ -21,7 +21,7 @@ import { isBackendUnreachableError } from "@norish/shared/lib/trpc-errors";
 
 import { isUnauthorizedTRPCError } from "../trpc/trpc-links";
 
-export type ReplayFailureClass = "unreachable" | "unauthorized" | "ambiguous" | "deterministic";
+type ReplayFailureClass = "unreachable" | "unauthorized" | "ambiguous" | "deterministic";
 
 export type ReplayOutcome = { kind: "success" } | { kind: "conflict" | ReplayFailureClass };
 
