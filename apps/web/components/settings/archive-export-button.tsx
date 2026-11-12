@@ -1,6 +1,6 @@
 "use client";
 
-import { useCallback, useEffect, useRef, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { ActionButton } from "@/components/shared/action-button";
 import { startArchiveDownload } from "@/lib/export/archive-download-client";
 import { showSafeErrorToast } from "@/lib/ui/safe-error-toast";
@@ -68,11 +68,11 @@ export default function ArchiveExportButton({
     };
   }, []);
 
-  const finish = useCallback(() => {
+  const finish = () => {
     if (!mountedRef.current) return;
     setExporting(false);
     setBytes(0);
-  }, []);
+  };
 
   const handleExport = async () => {
     if (exporting) return;
