@@ -180,7 +180,11 @@ describe("AuthProviders", () => {
       act(() => publishSignedOut());
       await waitFor(() => expect(seen.sessions.at(-1)).toEqual(SIGNED_OUT));
       expect(seen.sessions.slice(from).filter((session) => session.user)).toEqual([]);
-      expect(getAuthTransportSnapshot()).toEqual({ hasActiveSession: false, version: version + 1 });
+      expect(getAuthTransportSnapshot()).toEqual({
+        hasActiveSession: false,
+        leftSession: true,
+        version: version + 1,
+      });
       // The sequence in flight owns the clear: the emptied store starts no Session Expiry.
       expect(seen.clearedAt).toEqual([]);
     }
@@ -212,7 +216,11 @@ describe("AuthProviders", () => {
         seen.sessions.slice(from, seen.leftAt).map(() => PENDING)
       );
       expect(seen.sessions.slice(from).filter((session) => session.user)).toEqual([]);
-      expect(getAuthTransportSnapshot()).toEqual({ hasActiveSession: false, version: version + 1 });
+      expect(getAuthTransportSnapshot()).toEqual({
+        hasActiveSession: false,
+        leftSession: true,
+        version: version + 1,
+      });
     }
   );
 
@@ -229,7 +237,11 @@ describe("AuthProviders", () => {
     await act(() => new Promise((resolve) => setTimeout(resolve, 10)));
 
     expect(seen.clearedAt).toEqual([]);
-    expect(getAuthTransportSnapshot()).toEqual({ hasActiveSession: true, version });
+    expect(getAuthTransportSnapshot()).toEqual({
+      hasActiveSession: true,
+      leftSession: false,
+      version,
+    });
 
     return seen.sessions.slice(from);
   }
