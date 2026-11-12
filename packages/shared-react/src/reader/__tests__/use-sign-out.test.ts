@@ -1,7 +1,9 @@
+import { createElement } from "react";
 import { renderHook } from "@testing-library/react";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 
 import type { SignOutOptions } from "@norish/shared-react/reader";
+import { PlatformProvider } from "@norish/shared-react/platform";
 import {
   createTestQueryClient,
   createTestWrapper,
@@ -101,6 +103,20 @@ describe("Sign-out and Session Expiry", () => {
       await expireSession();
 
       expect(steps).toEqual(["end", "clear", "leave:expiry"]);
+    });
+
+    it("still runs after the shell re-renders with a new platform", async () => {
+      let current = adapter;
+      const { rerender, unmount } = renderHook(() => useSessionExpiry(), {
+        wrapper: ({ children }) => createElement(PlatformProvider, { adapter: current }, children),
+      });
+
+      unmounts.push(unmount);
+      current = { ...adapter, endSession: vi.fn(async () => void steps.push("end:new")) };
+      rerender();
+      await expireSession();
+
+      expect(steps).toEqual(["end:new", "clear", "leave:expiry"]);
     });
 
     it("keeps the queue and still clears and leaves when the session cannot be ended", async () => {
