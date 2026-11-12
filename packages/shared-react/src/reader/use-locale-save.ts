@@ -4,11 +4,7 @@ import { skipToken, useMutation, useQuery } from "@tanstack/react-query";
 
 import { useTRPC } from "../trpc";
 
-/**
- * Saves a language to the Reader's preferences at the version their profile holds, with no
- * optimistic change or toast: mobile's locale switch, which sits above the platform adapter.
- * Signed out, the profile isn't read.
- */
+/** Saves a language at the profile's version, no toast: mobile's switch sits above the adapter. */
 export function useLocaleSave(signedIn: boolean): (locale: string) => void {
   const trpc = useTRPC();
   const { mutate } = useMutation(trpc.user.updatePreferences.mutationOptions());

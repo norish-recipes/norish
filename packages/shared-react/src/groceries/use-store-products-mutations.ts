@@ -7,11 +7,7 @@ import type { PackSizeDto, StoreProductChoice } from "@norish/shared/contracts";
 import { usePlatform } from "../platform/platform";
 import { useTRPC } from "../trpc";
 
-/**
- * Writes what the picker decided, on the grocery panel's own Save or Add. The panel has closed by
- * the time the server answers, so a refusal is told as every failed write is; the prices are
- * reread either way.
- */
+/** Writes the picker's choice on Save or Add; a refusal toasts, and the prices are reread. */
 export function useChooseProduct() {
   const trpc = useTRPC();
   const queryClient = useQueryClient();

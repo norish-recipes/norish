@@ -36,9 +36,7 @@ export function OfflineStatusModal({ isOpen, onOpenChange }: OfflineStatusModalP
   const t = useTranslations("common.offlineStatus");
   const isMobile = useIsMobile();
 
-  // Only mount the body — and thus the data layer (the tRPC reads, the Outbox
-  // subscription, the cache reads) — while the modal is open, so a closed modal
-  // costs nothing and doesn't depend on the tRPC provider being present.
+  // The body holds the tRPC reads and Outbox subscription, so it mounts only while open.
   const body = isOpen ? <OfflineStatusBody /> : null;
 
   if (isMobile) {

@@ -13,11 +13,7 @@ import {
 import { useSpellingRules, useUnitsQuery } from "../config";
 import { useTRPC } from "../trpc";
 
-/**
- * A recipe's worked-out nutrition for the reader's household (ADR-0039), from its lines as they
- * are and the server's nutrition per Ingredient. Null for a recipe that supplies its own, and
- * while the Ingredients' nutrition is still being read.
- */
+/** Nutrition summed from a recipe's lines (ADR-0039); null if it has its own or while reading. */
 export function useWorkedOutNutrition(
   recipe: RecipeForNutrition | null
 ): WorkedOutNutrition | null {

@@ -21,11 +21,7 @@ export function useShopSearch(storeId: string | null, term: string, enabled: boo
   );
 }
 
-/**
- * What this Store has learned this grocery name means. The list's own prices
- * answer only for the Store each grocery sits under, so a panel where the
- * shopper has selected another Store reads its link here instead.
- */
+/** A Store's link for a name; the list's prices cover only each grocery's own Store. */
 export function useProductLink(storeId: string | null, name: string) {
   const trpc = useTRPC();
   const term = name.trim();

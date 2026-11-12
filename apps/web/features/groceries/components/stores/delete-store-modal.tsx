@@ -21,12 +21,8 @@ export function DeleteStoreModal({
   onConfirm,
 }: DeleteStoreModalProps) {
   return (
-    // This confirm opens while the store-manager Panel is still up: z-* lifts it
-    // above the drawer (z-[1001]), and pointer-events-auto opts back out of the
-    // `pointer-events: none` vaul sets on <body>, which the portalled backdrop
-    // inherits — without it every click in the modal is swallowed. It must stay
-    // portalled to <body>: inside the drawer, vaul's transform would re-root
-    // `position: fixed` and shrink the backdrop to the sheet's own box.
+    // Portalled to <body> above the open drawer (z-[1001]); pointer-events-auto undoes the
+    // `pointer-events: none` vaul sets on <body>, which would swallow every click.
     <Modal.Backdrop className="pointer-events-auto z-[1099]" isOpen={isOpen} onOpenChange={onClose}>
       <Modal.Container className="z-[1100]">
         <Modal.Dialog>
