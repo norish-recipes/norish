@@ -24,8 +24,8 @@ export function useIngredientMutations() {
       void cache.rollback();
       refuse(error, context);
     },
-    onSuccess: () => void cache.refreshLists(),
   });
+  const refreshLists = () => void cache.refreshLists();
 
   // The draft carries what the row shows (the parent's names, the icon's address) beside what is sent.
   const saveDraft = useMutation({
@@ -72,6 +72,7 @@ export function useIngredientMutations() {
       onMutate: ({ ingredientId }) =>
         cache.patchRow(ingredientId, (row) => ({ ...row, flagged: false, flagReason: null })),
       ...refused("mark-distinct"),
+      onSuccess: refreshLists,
     })
   );
 
@@ -89,6 +90,7 @@ export function useIngredientMutations() {
         aliases: row.aliases.filter((spelling) => spelling.id !== aliasId),
       })),
     ...refused("move-alias"),
+    onSuccess: refreshLists,
   });
 
   const merge = useMutation({
@@ -108,12 +110,14 @@ export function useIngredientMutations() {
       });
     },
     ...refused("merge"),
+    onSuccess: refreshLists,
   });
 
   const remove = useMutation(
     trpc.ingredients.remove.mutationOptions({
       onMutate: ({ ingredientId }) => cache.dropRow(ingredientId),
       ...refused("delete"),
+      onSuccess: refreshLists,
     })
   );
 
