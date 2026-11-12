@@ -1,5 +1,4 @@
 import React, { createContext, useContext, useEffect, useMemo, useState } from "react";
-import { useAuth } from "@/lib/auth/auth-context";
 import { buildLocaleDisplayMap, resolveLocaleSelection } from "@/lib/i18n/locale-state";
 import { publishLocale } from "@/lib/i18n/locale-store";
 import {
@@ -80,15 +79,20 @@ function flattenMessages(messages: Record<string, unknown>, prefix = ""): Record
   return flatMessages;
 }
 
-function MobileLocaleProviderInner({ children }: { children: React.ReactNode }) {
-  const { isAuthenticated } = useAuth();
+function MobileLocaleProviderInner({
+  children,
+  signedIn,
+}: {
+  children: React.ReactNode;
+  signedIn: boolean;
+}) {
   const [preferredLocale, setPreferredLocale] = useState<string | null>(null);
   const [messages, setMessages] = useState<Record<string, unknown>>(FALLBACK_MESSAGES);
   const [isMessagesLoading, setIsMessagesLoading] = useState(false);
   const { enabledLocales: configuredLocales, defaultLocale: configuredDefaultLocale } =
     useLocaleConfigQuery();
 
-  const saveLocale = useLocaleSave(isAuthenticated);
+  const saveLocale = useLocaleSave(signedIn);
 
   const localeOptions = useMemo(
     () => resolveLocaleOptions(BUNDLED_LOCALES, configuredLocales),
@@ -165,7 +169,7 @@ function MobileLocaleProviderInner({ children }: { children: React.ReactNode }) 
         setPreferredLocale(nextResolved);
         void saveLocalePreference(nextResolved);
 
-        if (isAuthenticated && !options?.fromServer) {
+        if (signedIn && !options?.fromServer) {
           saveLocale(nextResolved);
         }
       },
@@ -173,7 +177,7 @@ function MobileLocaleProviderInner({ children }: { children: React.ReactNode }) 
     [
       activeLocale,
       effectiveDefaultLocale,
-      isAuthenticated,
+      signedIn,
       isMessagesLoading,
       localeNames,
       localeOptions,
@@ -200,8 +204,14 @@ function MobileLocaleProviderInner({ children }: { children: React.ReactNode }) 
   );
 }
 
-export function MobileIntlProvider({ children }: { children: React.ReactNode }) {
-  return <MobileLocaleProviderInner>{children}</MobileLocaleProviderInner>;
+export function MobileIntlProvider({
+  children,
+  signedIn,
+}: {
+  children: React.ReactNode;
+  signedIn: boolean;
+}) {
+  return <MobileLocaleProviderInner signedIn={signedIn}>{children}</MobileLocaleProviderInner>;
 }
 
 export function MobileIntlFallbackProvider({ children }: { children: React.ReactNode }) {

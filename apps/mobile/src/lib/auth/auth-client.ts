@@ -3,11 +3,13 @@ import { expoClient } from "@better-auth/expo/client";
 import { createAuthClient } from "better-auth/react";
 import * as SecureStore from "expo-secure-store";
 
-let _client: ReturnType<typeof createAuthClient> | null = null;
+export type AuthClient = ReturnType<typeof createAuthClient>;
+
+let _client: AuthClient | null = null;
 let _currentBaseUrl: string | null = null;
 const resetListeners = new Set<() => void>();
 
-export function getAuthClient(baseUrl: string): ReturnType<typeof createAuthClient> {
+export function getAuthClient(baseUrl: string): AuthClient {
   if (_client && _currentBaseUrl === baseUrl) {
     return _client;
   }

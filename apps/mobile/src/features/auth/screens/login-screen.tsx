@@ -1,3 +1,4 @@
+import type { AuthClient } from "@/lib/auth/auth-client";
 import React, { useCallback, useMemo, useState } from "react";
 import { Pressable, Text } from "react-native";
 import { AuthShell } from "@/features/auth/components/auth-shell";
@@ -15,7 +16,7 @@ import {
   sanitizeRedirectTarget,
   toProviderType,
 } from "@/features/auth/utils/redirect";
-import { useAuth } from "@/lib/auth/auth-context";
+import { useAuthClient } from "@/lib/auth/use-auth-client";
 import { useLocalSearchParams, useRouter } from "expo-router";
 import { useThemeColor } from "heroui-native";
 import { useIntl } from "react-intl";
@@ -23,10 +24,9 @@ import { useIntl } from "react-intl";
 import type { ProviderInfo } from "@norish/shared/contracts";
 import { useAuthProvidersQuery } from "@norish/shared-react/config";
 
-function LoginForm({ backendBaseUrl, redirectTo }: { backendBaseUrl: string; redirectTo: string }) {
+function LoginForm({ authClient, redirectTo }: { authClient: AuthClient; redirectTo: string }) {
   const router = useRouter();
   const intl = useIntl();
-  const { authClient, consumeLogoutFlag } = useAuth();
   const [mutedColor, dangerColor, accentColor] = useThemeColor([
     "muted",
     "danger",
@@ -47,8 +47,6 @@ function LoginForm({ backendBaseUrl, redirectTo }: { backendBaseUrl: string; red
 
   const handleOAuthSignIn = useCallback(
     async (provider: ProviderInfo) => {
-      if (!authClient || !backendBaseUrl) return;
-
       setErrorMessage(null);
       setActiveOAuthProviderId(provider.id);
 
@@ -57,17 +55,14 @@ function LoginForm({ backendBaseUrl, redirectTo }: { backendBaseUrl: string; red
         intl.formatMessage({ id: "auth.errors.default.description" })
       );
 
-      if (failure === null) consumeLogoutFlag();
-      else setErrorMessage(failure);
+      if (failure !== null) setErrorMessage(failure);
 
       setActiveOAuthProviderId(null);
     },
-    [authClient, backendBaseUrl, consumeLogoutFlag, intl, redirectTo]
+    [authClient, intl, redirectTo]
   );
 
   const handlePasswordSubmit = useCallback(async () => {
-    if (!authClient) return;
-
     setIsSubmittingCredentials(true);
     setErrorMessage(null);
 
@@ -77,11 +72,10 @@ function LoginForm({ backendBaseUrl, redirectTo }: { backendBaseUrl: string; red
     );
 
     // Stack.Protected guard handles redirect once session is established
-    if (failure === null) consumeLogoutFlag();
-    else setErrorMessage(failure);
+    if (failure !== null) setErrorMessage(failure);
 
     setIsSubmittingCredentials(false);
-  }, [authClient, consumeLogoutFlag, email, intl, password]);
+  }, [authClient, email, intl, password]);
 
   return (
     <>
@@ -147,7 +141,7 @@ export function LoginScreen() {
   const router = useRouter();
   const intl = useIntl();
   const params = useLocalSearchParams();
-  const { backendBaseUrl, justLoggedOut } = useAuth();
+  const authClient = useAuthClient();
 
   const [mutedColor, accentColor] = useThemeColor(["muted", "accent"] as const);
 
@@ -159,12 +153,9 @@ export function LoginScreen() {
     [params.redirectTo]
   );
 
-  const justLoggedOutFromQuery =
-    firstParam(params.logout as string | string[] | undefined) === "true";
-
   const footer = (
     <>
-      {backendBaseUrl !== null && (
+      {authClient !== null && (
         <Pressable
           style={styles.linkRow}
           onPress={() => {
@@ -184,14 +175,14 @@ export function LoginScreen() {
 
   return (
     <AuthShell footer={footer} headingPrefix={intl.formatMessage({ id: "auth.login.title" })}>
-      {backendBaseUrl === null ? (
+      {authClient === null ? (
         <BackendMissingState
           onOpenConnect={() => {
             router.replace("/(auth)");
           }}
         />
       ) : (
-        <LoginForm backendBaseUrl={backendBaseUrl} redirectTo={redirectTo} />
+        <LoginForm authClient={authClient} redirectTo={redirectTo} />
       )}
     </AuthShell>
   );

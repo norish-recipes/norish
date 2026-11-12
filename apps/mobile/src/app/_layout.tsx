@@ -8,11 +8,10 @@ import { StorageUnavailableScreen } from "@/features/auth/screens/storage-unavai
 import { useBackendBaseUrl } from "@/hooks/use-backend-base-url";
 import { useResolvedColorScheme } from "@/hooks/use-resolved-color-scheme";
 import { useUserLocaleSync } from "@/hooks/use-user-locale-sync";
-import { AuthProvider, useAuth } from "@/lib/auth/auth-context";
+import { AuthProviders } from "@/lib/auth/auth-providers";
 import { resolveBootPhase } from "@/lib/boot/boot-state";
-import { MobileIntlFallbackProvider, MobileIntlProvider } from "@/lib/i18n/mobile-i18n-context";
+import { MobileIntlFallbackProvider } from "@/lib/i18n/mobile-i18n-context";
 import { ConnectivityProvider, OfflineController, offlineEngine } from "@/lib/offline/engine";
-import { MobilePlatformProvider } from "@/lib/platform/platform-provider";
 import {
   AppearancePreferenceProvider,
   useAppearancePreference,
@@ -31,6 +30,7 @@ import * as SplashScreen from "expo-splash-screen";
 import { HeroUINativeProvider, useThemeColor } from "heroui-native";
 import { PortalHost } from "heroui-native/portal";
 
+import { usePlatform } from "@norish/shared-react/platform";
 import {
   useHouseholdSubscription,
   usePermissionsSubscription,
@@ -134,12 +134,10 @@ function RootLayoutContent() {
   if (boot.phase === "onboarding") {
     return (
       <ThemeProvider value={theme}>
-        <AuthProvider backendBaseUrl={null}>
-          <MobileIntlFallbackProvider>
-            <RootStack />
-            <PortalHost name="app" />
-          </MobileIntlFallbackProvider>
-        </AuthProvider>
+        <MobileIntlFallbackProvider>
+          <RootStack signedIn={false} />
+          <PortalHost name="app" />
+        </MobileIntlFallbackProvider>
       </ThemeProvider>
     );
   }
@@ -153,16 +151,9 @@ function RootLayoutContent() {
         mutationLink={offlineEngine.outboxLink}
       >
         <ConnectivityProvider>
-          <AuthProvider backendBaseUrl={boot.backendBaseUrl}>
-            <MobileIntlProvider>
-              <MobilePlatformProvider>
-                <DomainProviders>
-                  <RootStack />
-                  <PortalHost name="app" />
-                </DomainProviders>
-              </MobilePlatformProvider>
-            </MobileIntlProvider>
-          </AuthProvider>
+          <AuthProviders>
+            <DomainProviders />
+          </AuthProviders>
         </ConnectivityProvider>
       </TrpcProvider>
     </ThemeProvider>
@@ -175,19 +166,21 @@ function RootLayoutContent() {
 
 const getOfflineQueryClient = () => offlineEngine.queryClient;
 
-/** When authenticated, wraps children with the offline controller; otherwise renders them. */
-function DomainProviders({ children }: { children: React.ReactNode }) {
-  const { isAuthenticated } = useAuth();
+/** The stack, wrapped in the offline controller while signed in. */
+function DomainProviders() {
+  const signedIn = usePlatform().session.user !== null;
+  const app = (
+    <>
+      <RootStack signedIn={signedIn} />
+      <PortalHost name="app" />
+    </>
+  );
 
-  if (!isAuthenticated) {
-    return children;
-  }
-
-  return <AuthenticatedProviders>{children}</AuthenticatedProviders>;
+  return signedIn ? <AuthenticatedProviders>{app}</AuthenticatedProviders> : app;
 }
 
 function AuthenticatedProviders({ children }: { children: React.ReactNode }) {
-  const { user } = useAuth();
+  const { user } = usePlatform().session;
 
   return (
     <OfflineController sessionUserId={user?.id ?? null}>
@@ -211,15 +204,13 @@ function AuthenticatedEffects() {
 // Navigation
 // ============================================================================
 
-function RootStack() {
-  const { isAuthenticated } = useAuth();
-
+function RootStack({ signedIn }: { signedIn: boolean }) {
   return (
     <Stack screenOptions={{ headerShown: false }}>
-      <Stack.Protected guard={isAuthenticated}>
+      <Stack.Protected guard={signedIn}>
         <Stack.Screen name="smoke" />
       </Stack.Protected>
-      <Stack.Protected guard={!isAuthenticated}>
+      <Stack.Protected guard={!signedIn}>
         <Stack.Screen name="(auth)" />
       </Stack.Protected>
     </Stack>

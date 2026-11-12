@@ -14,9 +14,12 @@ type SignOutClient = {
 };
 
 /** Ends the session on the server on a sign-out if it answers, and on this device always. */
-export async function endSession(authClient: SignOutClient, reason: LeaveReason): Promise<void> {
+export async function endSession(
+  authClient: SignOutClient | null,
+  reason: LeaveReason
+): Promise<void> {
   // A 401 may be a passing server error, so expiry leaves the server's session alone.
-  if (reason === "sign-out") await signOutRemotely(authClient);
+  if (reason === "sign-out" && authClient) await signOutRemotely(authClient);
 
   await closeMobileTrpcConnections();
 

@@ -16,21 +16,21 @@ vi.mock("expo-secure-store", () => ({}));
 const BASE_URL = "https://norish.test";
 
 describe("getAuthClient", () => {
-  it("hands the auth context a new client after a sign-out's reset, the one the engine gets too", async () => {
+  it("hands useAuthClient a new client after a sign-out's reset, the one the engine gets too", async () => {
     const signedIn = getAuthClient(BASE_URL);
-    // What the auth context's store does when told of a reset.
-    const contextRereads = vi.fn(() => getAuthClient(BASE_URL));
-    const unsubscribe = subscribeAuthClientReset(contextRereads);
+    // What useAuthClient's store does when told of a reset.
+    const hookRereads = vi.fn(() => getAuthClient(BASE_URL));
+    const unsubscribe = subscribeAuthClientReset(hookRereads);
 
     expect(getAuthClient(BASE_URL)).toBe(signedIn);
 
     await resetAuthClientStorage();
     unsubscribe();
 
-    const contextClient = contextRereads.mock.results[0]?.value;
+    const hookClient = hookRereads.mock.results[0]?.value;
 
-    expect(contextClient).not.toBe(signedIn);
-    // The offline engine's read, without the context.
-    expect(getAuthClient(BASE_URL)).toBe(contextClient);
+    expect(hookClient).not.toBe(signedIn);
+    // The offline engine's read, without the hook.
+    expect(getAuthClient(BASE_URL)).toBe(hookClient);
   });
 });
