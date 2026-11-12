@@ -8,6 +8,7 @@ import Animated, {
   Easing,
   Extrapolation,
   interpolate,
+  ReduceMotion,
   useAnimatedStyle,
   useReducedMotion,
   useSharedValue,
@@ -88,7 +89,11 @@ function LaunchOverlay({ handoff, launch }: { handoff: LaunchHandoff | null; lau
     clock.set(
       withTiming(
         HOLD_END,
-        { duration: HOLD_END - clock.get(), easing: Easing.linear },
+        {
+          duration: HOLD_END - clock.get(),
+          easing: Easing.linear,
+          reduceMotion: ReduceMotion.Never,
+        },
         (finished) => {
           if (finished) scheduleOnRN(setHeld, true);
         }
@@ -104,7 +109,11 @@ function LaunchOverlay({ handoff, launch }: { handoff: LaunchHandoff | null; lau
     clock.set(
       withTiming(
         end,
-        { duration: Math.max(0, end - clock.get()), easing: Easing.linear },
+        {
+          duration: Math.max(0, end - clock.get()),
+          easing: Easing.linear,
+          reduceMotion: ReduceMotion.Never,
+        },
         (finished) => {
           if (!finished) return;
 
