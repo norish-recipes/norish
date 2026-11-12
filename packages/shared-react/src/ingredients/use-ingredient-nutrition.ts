@@ -1,5 +1,5 @@
 import type { inferRouterInputs } from "@trpc/server";
-import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
+import { skipToken, useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 
 import type { IngredientNutrition } from "@norish/shared/contracts/ingredient-nutrition";
 import type { AppRouter } from "@norish/trpc/client";
@@ -24,13 +24,12 @@ export function useIngredientNutritionQuery(ingredientId: string) {
   return { nutrition: data ?? null, measure: measure ?? null, isPending };
 }
 
-/** The dataset foods a search finds, from two letters on. */
-export function useNutritionFoodsQuery(search: string) {
+/** The dataset foods a search finds; `null` reads nothing. */
+export function useNutritionFoodsQuery(search: string | null) {
   const trpc = useTRPC();
-  const { data, isFetching } = useQuery({
-    ...trpc.ingredients.nutritionFoods.queryOptions({ search }),
-    enabled: search.length >= 2,
-  });
+  const { data, isFetching } = useQuery(
+    trpc.ingredients.nutritionFoods.queryOptions(search === null ? skipToken : { search })
+  );
 
   return { foods: data ?? [], isFetching };
 }

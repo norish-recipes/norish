@@ -465,7 +465,8 @@ function DatasetFoodPicker({
   const [term, setTerm] = useState(picked?.name ?? "");
   const [search] = useDebounceValue(term.trim(), SEARCH_DELAY_MS);
 
-  const { foods, isFetching } = useNutritionFoodsQuery(search);
+  // A search reads from two letters on.
+  const { foods, isFetching } = useNutritionFoodsQuery(search.length >= 2 ? search : null);
   const options = foods
     .filter((food) =>
       fact === "pieceWeight"
