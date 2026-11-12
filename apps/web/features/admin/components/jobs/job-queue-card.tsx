@@ -69,7 +69,7 @@ export default function JobQueueCard() {
   const [selectedJob, setSelectedJob] = useState<JobRef | null>(null);
 
   const { summaries } = useQueueSummaryQuery();
-  const { jobs } = useJobListQuery({
+  const { jobs, isPlaceholderData } = useJobListQuery({
     queue: queueFilter === ALL ? undefined : queueFilter,
     states: stateFilter ? STATE_FILTER_STATES[stateFilter] : undefined,
   });
@@ -243,73 +243,79 @@ export default function JobQueueCard() {
           </Select>
         </div>
 
-        <DataTable
-          aria-label={t("title")}
-          columns={[
-            {
-              key: "job",
-              label: t("table.job"),
-              isRowHeader: true,
-              render: (job: AdminJobRowDTO) => (
-                <div className="flex min-w-0 flex-col">
-                  <span className="font-medium">
-                    {t.has(`queues.${job.queue}`) ? t(`queues.${job.queue}`) : job.queue}
-                  </span>
-                  {job.target ? (
-                    <span
-                      className="text-muted max-w-28 truncate text-xs min-[400px]:max-w-40 sm:max-w-64"
-                      title={job.target}
-                    >
-                      {job.target}
+        {/* Another filter's rows stand in until the new filter answers. */}
+        <div
+          aria-busy={isPlaceholderData}
+          className={`transition-opacity ${isPlaceholderData ? "opacity-50" : ""}`}
+        >
+          <DataTable
+            aria-label={t("title")}
+            columns={[
+              {
+                key: "job",
+                label: t("table.job"),
+                isRowHeader: true,
+                render: (job: AdminJobRowDTO) => (
+                  <div className="flex min-w-0 flex-col">
+                    <span className="font-medium">
+                      {t.has(`queues.${job.queue}`) ? t(`queues.${job.queue}`) : job.queue}
                     </span>
-                  ) : null}
-                </div>
-              ),
-            },
-            {
-              key: "status",
-              label: t("table.status"),
-              render: (job: AdminJobRowDTO) => (
-                <JobStatusChip isHanging={job.isHanging} state={job.state} />
-              ),
-            },
-            {
-              key: "step",
-              hideOnNarrow: true,
-              label: t("table.step"),
-              className: "text-sm",
-              render: (job: AdminJobRowDTO) =>
-                job.state === "active" && job.step ? formatStep(job.step, t) : "-",
-            },
-            {
-              key: "duration",
-              hideOnNarrow: true,
-              label: t("table.duration"),
-              className: "text-sm",
-              render: (job: AdminJobRowDTO) =>
-                job.state === "delayed" && job.runAt !== null
-                  ? t("table.runsAt", {
-                      time: format.relativeTime(new Date(job.runAt), now),
-                    })
-                  : formatDuration(job.durationMs),
-            },
-            {
-              key: "created",
-              hideOnNarrow: true,
-              label: t("table.created"),
-              className: "text-muted text-xs",
-              render: (job: AdminJobRowDTO) => format.relativeTime(new Date(job.createdAt), now),
-            },
-          ]}
-          emptyState={t("empty")}
-          rowKey={(job: AdminJobRowDTO) => `${job.queue}:${job.id}`}
-          rows={pageJobs}
-          onRowAction={(job: AdminJobRowDTO) => {
-            const queue = QUEUE_OPTIONS.find((option) => option === job.queue);
+                    {job.target ? (
+                      <span
+                        className="text-muted max-w-28 truncate text-xs min-[400px]:max-w-40 sm:max-w-64"
+                        title={job.target}
+                      >
+                        {job.target}
+                      </span>
+                    ) : null}
+                  </div>
+                ),
+              },
+              {
+                key: "status",
+                label: t("table.status"),
+                render: (job: AdminJobRowDTO) => (
+                  <JobStatusChip isHanging={job.isHanging} state={job.state} />
+                ),
+              },
+              {
+                key: "step",
+                hideOnNarrow: true,
+                label: t("table.step"),
+                className: "text-sm",
+                render: (job: AdminJobRowDTO) =>
+                  job.state === "active" && job.step ? formatStep(job.step, t) : "-",
+              },
+              {
+                key: "duration",
+                hideOnNarrow: true,
+                label: t("table.duration"),
+                className: "text-sm",
+                render: (job: AdminJobRowDTO) =>
+                  job.state === "delayed" && job.runAt !== null
+                    ? t("table.runsAt", {
+                        time: format.relativeTime(new Date(job.runAt), now),
+                      })
+                    : formatDuration(job.durationMs),
+              },
+              {
+                key: "created",
+                hideOnNarrow: true,
+                label: t("table.created"),
+                className: "text-muted text-xs",
+                render: (job: AdminJobRowDTO) => format.relativeTime(new Date(job.createdAt), now),
+              },
+            ]}
+            emptyState={t("empty")}
+            rowKey={(job: AdminJobRowDTO) => `${job.queue}:${job.id}`}
+            rows={pageJobs}
+            onRowAction={(job: AdminJobRowDTO) => {
+              const queue = QUEUE_OPTIONS.find((option) => option === job.queue);
 
-            if (queue) setSelectedJob({ queue, jobId: job.id });
-          }}
-        />
+              if (queue) setSelectedJob({ queue, jobId: job.id });
+            }}
+          />
+        </div>
 
         {totalPages > 1 ? (
           <div className="flex justify-center">

@@ -17,17 +17,17 @@ export type JobRef = JobsInput["detail"];
 const LIST_REFETCH_INTERVAL_MS = 5_000;
 const SUMMARY_REFETCH_INTERVAL_MS = 15_000;
 
-/** Up to 200 jobs of a filter, polled while shown; the last list stays while a new filter loads. */
+/** Up to 200 jobs of a filter, polled while shown. `isPlaceholderData`: another filter's rows stand in. */
 export function useJobListQuery(filter: JobListFilter = {}) {
   const trpc = useTRPC();
-  const { data, error, isLoading } = useQuery(
+  const { data, error, isLoading, isPlaceholderData } = useQuery(
     trpc.admin.jobs.list.queryOptions(
       { ...filter, limit: 200 },
       { refetchInterval: LIST_REFETCH_INTERVAL_MS, placeholderData: keepPreviousData }
     )
   );
 
-  return { jobs: data ?? [], error, isLoading };
+  return { jobs: data ?? [], error, isLoading, isPlaceholderData };
 }
 
 /** One job, polled while its detail is open; the last answer stays on screen while a retry rereads it. */

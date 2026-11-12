@@ -1,4 +1,4 @@
-import { act, renderHook } from "@testing-library/react";
+import { act, renderHook, waitFor } from "@testing-library/react";
 import { afterEach, describe, expect, it, vi } from "vitest";
 
 import {
@@ -106,5 +106,33 @@ describe("useJobListQuery", () => {
     unmount();
     await act(() => vi.advanceTimersByTimeAsync(15_000));
     expect(reads).toHaveBeenCalledTimes(2);
+  });
+
+  it("marks another filter's rows as standing in until the new filter answers", async () => {
+    let answerFailed: (rows: { id: string }[]) => void = () => {};
+
+    serveTRPC((path, input) => {
+      const { states } = input as { states?: string[] };
+
+      if (path !== "admin.jobs.list" || !states) return Promise.resolve([{ id: "all" }]);
+
+      return new Promise((resolve) => (answerFailed = resolve));
+    });
+    const wrapper = createTestWrapper(createTestQueryClient(), fakePlatformAdapter());
+    const { result, rerender } = renderHook(
+      ({ states }: { states?: "failed"[] }) => useJobListQuery({ states }),
+      { wrapper, initialProps: {} }
+    );
+
+    await waitFor(() => expect(result.current.jobs).toEqual([{ id: "all" }]));
+    expect(result.current.isPlaceholderData).toBe(false);
+
+    rerender({ states: ["failed"] });
+    expect(result.current.jobs).toEqual([{ id: "all" }]);
+    expect(result.current.isPlaceholderData).toBe(true);
+
+    await act(async () => answerFailed([{ id: "failed" }]));
+    await waitFor(() => expect(result.current.isPlaceholderData).toBe(false));
+    expect(result.current.jobs).toEqual([{ id: "failed" }]);
   });
 });
