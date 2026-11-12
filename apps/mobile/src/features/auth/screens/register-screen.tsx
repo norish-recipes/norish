@@ -3,6 +3,7 @@ import { AuthFooterLink } from "@/features/auth/components/auth-footer-link";
 import { AuthGate } from "@/features/auth/components/auth-gate";
 import { AuthStatus } from "@/features/auth/components/auth-status";
 import { SignUpForm } from "@/features/auth/components/sign-up-form";
+import { SIGN_IN_HREF } from "@/features/auth/utils/hrefs";
 import { isSignUpOpen } from "@/features/auth/utils/sign-in-methods";
 import { useRouter } from "expo-router";
 import { useIntl } from "react-intl";
@@ -20,7 +21,7 @@ export function RegisterScreen() {
           lead={intl.formatMessage({ id: "auth.signup.hasAccount" })}
           link={intl.formatMessage({ id: "auth.signup.signIn" })}
           testID="register-sign-in-link"
-          onPress={() => (router.canGoBack() ? router.back() : router.replace("/login"))}
+          onPress={() => (router.canGoBack() ? router.back() : router.replace(SIGN_IN_HREF))}
         />
       }
       slogan={false}

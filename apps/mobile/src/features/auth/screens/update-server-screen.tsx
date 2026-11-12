@@ -4,6 +4,7 @@ import { StatusBadge } from "@/features/auth/components/status-badge";
 import { StatusScreen } from "@/features/auth/components/status-screen";
 import { useVersionRecheck } from "@/features/auth/hooks/use-version-recheck";
 import { hostOf } from "@/features/auth/utils/host-of";
+import { SESSION_ROOT_HREF, SIGN_IN_HREF } from "@/features/auth/utils/hrefs";
 import { saveServerAddressLogged } from "@/features/auth/utils/save-server-address";
 import { MINIMUM_SERVER_VERSION } from "@/features/auth/utils/server-version";
 import { useHasActiveSession } from "@/lib/auth/auth-session-sync";
@@ -25,7 +26,7 @@ export function UpdateServerScreen({ address, version }: { address: string; vers
     if (next.screen === "signed-in-app") {
       clearServerTooOld();
       if (router.canDismiss()) router.dismissAll();
-      else router.replace("/");
+      else router.replace(SESSION_ROOT_HREF);
 
       return;
     }
@@ -39,7 +40,7 @@ export function UpdateServerScreen({ address, version }: { address: string; vers
       const dismissed = router.canDismiss();
 
       if (dismissed) router.dismissAll();
-      if (!wasSaved || !dismissed) router.replace("/login");
+      if (!wasSaved || !dismissed) router.replace(SIGN_IN_HREF);
     });
   };
 

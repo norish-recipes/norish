@@ -13,6 +13,7 @@ import {
   checkServerAddress,
   serverAddressErrorId,
 } from "@/features/auth/utils/check-server-address";
+import { SIGN_IN_HREF } from "@/features/auth/utils/hrefs";
 import { saveServerAddressLogged } from "@/features/auth/utils/save-server-address";
 import { getServerAddress } from "@/lib/network/server-address";
 import { markServerTooOld } from "@/lib/network/too-old-server";
@@ -50,7 +51,7 @@ export function ConnectScreen() {
         () => {
           // A change returns to the Sign in it was pushed over instead of stacking another.
           if (change !== undefined && router.canDismiss()) router.dismissAll();
-          else router.replace("/login");
+          else router.replace(SIGN_IN_HREF);
 
           return null;
         },
