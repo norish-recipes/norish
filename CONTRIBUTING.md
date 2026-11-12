@@ -338,6 +338,18 @@ pnpm --filter @norish/mobile maestro
 
 Step 3 starts that build on throwaway Postgres and Valkey containers, as the browser E2E does, so rebuild after a server change. It signs up `maestro@norish.test` and puts three unchecked groceries on its list. It then runs the flows and checks that all three are done on the server. The offline flows reach the server through a proxy on port 3998 that they cut and restore through port 3997 (`NORISH_PROXY_PORT`, `NORISH_PROXY_CONTROL_PORT`); the realtime flow asks the same port to check a grocery off as the web would. To use a running server instead, set `NORISH_SERVER_URL`; when its registration is closed, create that account by hand or name another with `NORISH_EMAIL` and `NORISH_PASSWORD`.
 
+The flows cover checking a grocery, offline launch and replay, realtime updates,
+Sign up, Sign-out, wrong credentials, an unreachable server and the server chip.
+The script opens registration for Sign up if it was closed and attempts to restore
+the previous setting when the run ends. On a running server, the account must be
+an admin to open registration. It turns off password AutoFill prompts on the
+simulator. Set `NORISH_SIMULATOR` to a simulator udid to select it when several
+are booted. Pass one flow path to run only that flow, for example:
+
+```bash
+pnpm --filter @norish/mobile maestro maestro/sign-up.yaml
+```
+
 The flows in `apps/mobile/maestro/old-server/` run last, against a stub server that reports an old version. It listens on port 3999, or on `NORISH_OLD_SERVER_PORT`.
 
 ## Adding Translations
