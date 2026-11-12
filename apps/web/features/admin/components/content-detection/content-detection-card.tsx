@@ -1,9 +1,7 @@
 "use client";
 
-import { useCallback, useState } from "react";
 import { SettingsAccordion, SettingsCard } from "@/components/settings/settings-card";
 import { DocumentMagnifyingGlassIcon } from "@heroicons/react/24/outline";
-import { Accordion } from "@heroui/react";
 import { useTranslations } from "next-intl";
 
 import { ServerConfigKeys } from "@norish/config/zod/server-config";
@@ -13,7 +11,7 @@ import {
   useRestoreDefault,
 } from "@norish/shared-react/admin";
 
-import { UnsavedChangesChip } from "../unsaved-changes-chip";
+import { AccordionSection } from "../accordion-section";
 import JsonEditor from "./json-editor";
 import TimerKeywordsEditor from "./timer-keywords-editor";
 
@@ -39,23 +37,6 @@ export default function ContentDetectionCard() {
   } = useContentConfigWrites();
   const restoreDefaultConfig = useRestoreDefault();
 
-  const [dirtySections, setDirtySections] = useState({
-    timerKeywords: false,
-    contentIndicators: false,
-    units: false,
-    ingredientWords: false,
-    recurrence: false,
-  });
-
-  const updateDirtySection = useCallback(
-    (section: keyof typeof dirtySections) => (isDirty: boolean) => {
-      setDirtySections((current) =>
-        current[section] === isDirty ? current : { ...current, [section]: isDirty }
-      );
-    },
-    []
-  );
-
   return (
     <SettingsCard
       description={t("description")}
@@ -63,149 +44,79 @@ export default function ContentDetectionCard() {
       title={t("title")}
     >
       <SettingsAccordion>
-        <Accordion.Item id="timer-keywords">
-          <Accordion.Heading>
-            <Accordion.Trigger>
-              <div className="flex min-w-0 flex-col items-start gap-1">
-                <div className="flex flex-wrap items-center gap-2">
-                  {t("timerKeywords.title")}
-                  {dirtySections.timerKeywords && <UnsavedChangesChip />}
-                </div>
-                <span className="text-muted text-sm">{t("timerKeywords.subtitle")}</span>
-              </div>
-              <Accordion.Indicator />
-            </Accordion.Trigger>
-          </Accordion.Heading>
-          <Accordion.Panel>
-            <Accordion.Body>
-              <div>
-                <TimerKeywordsEditor
-                  enabled={timerKeywords?.enabled ?? true}
-                  hours={timerKeywords?.hours ?? []}
-                  minutes={timerKeywords?.minutes ?? []}
-                  seconds={timerKeywords?.seconds ?? []}
-                  onDirtyChange={updateDirtySection("timerKeywords")}
-                  onRestoreDefaults={() => restoreDefaultConfig(ServerConfigKeys.TIMER_KEYWORDS)}
-                  onUpdate={saveTimerKeywords}
-                />
-              </div>
-            </Accordion.Body>
-          </Accordion.Panel>
-        </Accordion.Item>
-
-        <Accordion.Item id="content-indicators">
-          <Accordion.Heading>
-            <Accordion.Trigger>
-              <div className="flex min-w-0 flex-col items-start gap-1">
-                <div className="flex flex-wrap items-center gap-2">
-                  {t("contentIndicators.title")}
-                  {dirtySections.contentIndicators && <UnsavedChangesChip />}
-                </div>
-                <span className="text-muted text-sm">{t("contentIndicators.subtitle")}</span>
-              </div>
-              <Accordion.Indicator />
-            </Accordion.Trigger>
-          </Accordion.Heading>
-          <Accordion.Panel>
-            <Accordion.Body>
-              <div>
-                <JsonEditor
-                  description={t("contentIndicators.description")}
-                  value={contentIndicators}
-                  onDirtyChange={updateDirtySection("contentIndicators")}
-                  onRestoreDefaults={() =>
-                    restoreDefaultConfig(ServerConfigKeys.CONTENT_INDICATORS)
-                  }
-                  onSave={saveContentIndicators}
-                />
-              </div>
-            </Accordion.Body>
-          </Accordion.Panel>
-        </Accordion.Item>
-
-        <Accordion.Item id="units">
-          <Accordion.Heading>
-            <Accordion.Trigger>
-              <div className="flex min-w-0 flex-col items-start gap-1">
-                <div className="flex flex-wrap items-center gap-2">
-                  {t("units.title")}
-                  {dirtySections.units && <UnsavedChangesChip />}
-                </div>
-                <span className="text-muted text-sm">{t("units.subtitle")}</span>
-              </div>
-              <Accordion.Indicator />
-            </Accordion.Trigger>
-          </Accordion.Heading>
-          <Accordion.Panel>
-            <Accordion.Body>
-              <div>
-                <JsonEditor
-                  description={t("units.description")}
-                  value={units}
-                  onDirtyChange={updateDirtySection("units")}
-                  onRestoreDefaults={() => restoreDefaultConfig(ServerConfigKeys.UNITS)}
-                  onSave={saveUnits}
-                />
-              </div>
-            </Accordion.Body>
-          </Accordion.Panel>
-        </Accordion.Item>
-
-        <Accordion.Item id="ingredient-words">
-          <Accordion.Heading>
-            <Accordion.Trigger>
-              <div className="flex min-w-0 flex-col items-start gap-1">
-                <div className="flex flex-wrap items-center gap-2">
-                  {t("ingredientWords.title")}
-                  {dirtySections.ingredientWords && <UnsavedChangesChip />}
-                </div>
-                <span className="text-muted text-sm">{t("ingredientWords.subtitle")}</span>
-              </div>
-              <Accordion.Indicator />
-            </Accordion.Trigger>
-          </Accordion.Heading>
-          <Accordion.Panel>
-            <Accordion.Body>
-              <div>
-                <JsonEditor
-                  description={t("ingredientWords.description")}
-                  value={ingredientWords}
-                  onDirtyChange={updateDirtySection("ingredientWords")}
-                  onRestoreDefaults={() => restoreDefaultConfig(ServerConfigKeys.INGREDIENT_WORDS)}
-                  onSave={saveIngredientWords}
-                />
-              </div>
-            </Accordion.Body>
-          </Accordion.Panel>
-        </Accordion.Item>
-
-        <Accordion.Item id="recurrence">
-          <Accordion.Heading>
-            <Accordion.Trigger>
-              <div className="flex min-w-0 flex-col items-start gap-1">
-                <div className="flex flex-wrap items-center gap-2">
-                  {t("recurrence.title")}
-                  {dirtySections.recurrence && <UnsavedChangesChip />}
-                </div>
-                <span className="text-muted text-sm">{t("recurrence.subtitle")}</span>
-              </div>
-              <Accordion.Indicator />
-            </Accordion.Trigger>
-          </Accordion.Heading>
-          <Accordion.Panel>
-            <Accordion.Body>
-              <div>
-                <JsonEditor
-                  description={t("recurrence.description")}
-                  value={recurrenceLocales}
-                  onDirtyChange={updateDirtySection("recurrence")}
-                  onRestoreDefaults={() => restoreDefaultConfig(ServerConfigKeys.RECURRENCE_CONFIG)}
-                  onSave={saveRecurrence}
-                />
-              </div>
-            </Accordion.Body>
-          </Accordion.Panel>
-        </Accordion.Item>
+        <AccordionSection
+          id="timer-keywords"
+          subtitle={t("timerKeywords.subtitle")}
+          title={t("timerKeywords.title")}
+        >
+          {(onDirtyChange) => (
+            <TimerKeywordsEditor
+              enabled={timerKeywords?.enabled ?? true}
+              hours={timerKeywords?.hours ?? []}
+              minutes={timerKeywords?.minutes ?? []}
+              seconds={timerKeywords?.seconds ?? []}
+              onDirtyChange={onDirtyChange}
+              onRestoreDefaults={() => restoreDefaultConfig(ServerConfigKeys.TIMER_KEYWORDS)}
+              onUpdate={saveTimerKeywords}
+            />
+          )}
+        </AccordionSection>
+        <AccordionSection
+          id="content-indicators"
+          subtitle={t("contentIndicators.subtitle")}
+          title={t("contentIndicators.title")}
+        >
+          {(onDirtyChange) => (
+            <JsonEditor
+              description={t("contentIndicators.description")}
+              value={contentIndicators}
+              onDirtyChange={onDirtyChange}
+              onRestoreDefaults={() => restoreDefaultConfig(ServerConfigKeys.CONTENT_INDICATORS)}
+              onSave={saveContentIndicators}
+            />
+          )}
+        </AccordionSection>
+        <AccordionSection id="units" subtitle={t("units.subtitle")} title={t("units.title")}>
+          {(onDirtyChange) => (
+            <JsonEditor
+              description={t("units.description")}
+              value={units}
+              onDirtyChange={onDirtyChange}
+              onRestoreDefaults={() => restoreDefaultConfig(ServerConfigKeys.UNITS)}
+              onSave={saveUnits}
+            />
+          )}
+        </AccordionSection>
+        <AccordionSection
+          id="ingredient-words"
+          subtitle={t("ingredientWords.subtitle")}
+          title={t("ingredientWords.title")}
+        >
+          {(onDirtyChange) => (
+            <JsonEditor
+              description={t("ingredientWords.description")}
+              value={ingredientWords}
+              onDirtyChange={onDirtyChange}
+              onRestoreDefaults={() => restoreDefaultConfig(ServerConfigKeys.INGREDIENT_WORDS)}
+              onSave={saveIngredientWords}
+            />
+          )}
+        </AccordionSection>
+        <AccordionSection
+          id="recurrence"
+          subtitle={t("recurrence.subtitle")}
+          title={t("recurrence.title")}
+        >
+          {(onDirtyChange) => (
+            <JsonEditor
+              description={t("recurrence.description")}
+              value={recurrenceLocales}
+              onDirtyChange={onDirtyChange}
+              onRestoreDefaults={() => restoreDefaultConfig(ServerConfigKeys.RECURRENCE_CONFIG)}
+              onSave={saveRecurrence}
+            />
+          )}
+        </AccordionSection>
       </SettingsAccordion>
     </SettingsCard>
   );

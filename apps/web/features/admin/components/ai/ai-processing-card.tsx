@@ -1,15 +1,13 @@
 "use client";
 
-import { useCallback, useState } from "react";
 import { SettingsAccordion, SettingsCard } from "@/components/settings/settings-card";
 import { Note } from "@/components/shared/note";
 import { useAIKeyRejections } from "@/hooks/use-ai-key-rejections";
 import { SparklesIcon } from "@heroicons/react/24/outline";
-import { Accordion } from "@heroui/react";
 import { useTranslations } from "next-intl";
 
+import { AccordionSection } from "../accordion-section";
 import IngredientCatalogueForm from "../catalogue/ingredient-catalogue-form";
-import { UnsavedChangesChip } from "../unsaved-changes-chip";
 import AIConfigForm from "./ai-config-form";
 import BulkEnrichmentForm from "./bulk-enrichment-form";
 import CuisineVocabularyForm from "./cuisine-vocabulary-form";
@@ -21,23 +19,6 @@ import VideoProcessingForm from "./video-processing-form";
 export default function AIProcessingCard() {
   const t = useTranslations("settings.admin.aiProcessing");
   const keyRejections = useAIKeyRejections();
-  const [dirtySections, setDirtySections] = useState({
-    ai: false,
-    video: false,
-    imageGeneration: false,
-    decisionModel: false,
-    prompts: false,
-    ingredientCatalogue: false,
-  });
-
-  const updateDirtySection = useCallback(
-    (section: keyof typeof dirtySections) => (isDirty: boolean) => {
-      setDirtySections((current) =>
-        current[section] === isDirty ? current : { ...current, [section]: isDirty }
-      );
-    },
-    []
-  );
 
   return (
     <SettingsCard description={t("description")} icon={SparklesIcon} title={t("title")}>
@@ -47,159 +28,50 @@ export default function AIProcessingCard() {
         </Note>
       )}
       <SettingsAccordion>
-        <Accordion.Item id="ai">
-          <Accordion.Heading>
-            <Accordion.Trigger>
-              <div className="flex min-w-0 flex-col items-start gap-1">
-                <div className="flex flex-wrap items-center gap-2">
-                  {t("aiConfig.title")}
-                  {dirtySections.ai && <UnsavedChangesChip />}
-                </div>
-                <span className="text-muted text-sm">{t("aiConfig.subtitle")}</span>
-              </div>
-              <Accordion.Indicator />
-            </Accordion.Trigger>
-          </Accordion.Heading>
-          <Accordion.Panel>
-            <Accordion.Body>
-              <AIConfigForm onDirtyChange={updateDirtySection("ai")} />
-            </Accordion.Body>
-          </Accordion.Panel>
-        </Accordion.Item>
-
-        <Accordion.Item id="video">
-          <Accordion.Heading>
-            <Accordion.Trigger>
-              <div className="flex min-w-0 flex-col items-start gap-1">
-                <div className="flex flex-wrap items-center gap-2">
-                  {t("video.title")}
-                  {dirtySections.video && <UnsavedChangesChip />}
-                </div>
-                <span className="text-muted text-sm">{t("video.subtitle")}</span>
-              </div>
-              <Accordion.Indicator />
-            </Accordion.Trigger>
-          </Accordion.Heading>
-          <Accordion.Panel>
-            <Accordion.Body>
-              <VideoProcessingForm onDirtyChange={updateDirtySection("video")} />
-            </Accordion.Body>
-          </Accordion.Panel>
-        </Accordion.Item>
-
-        <Accordion.Item id="imageGeneration">
-          <Accordion.Heading>
-            <Accordion.Trigger>
-              <div className="flex min-w-0 flex-col items-start gap-1">
-                <div className="flex flex-wrap items-center gap-2">
-                  {t("imageGeneration.title")}
-                  {dirtySections.imageGeneration && <UnsavedChangesChip />}
-                </div>
-                <span className="text-muted text-sm">{t("imageGeneration.subtitle")}</span>
-              </div>
-              <Accordion.Indicator />
-            </Accordion.Trigger>
-          </Accordion.Heading>
-          <Accordion.Panel>
-            <Accordion.Body>
-              <ImageGenerationForm onDirtyChange={updateDirtySection("imageGeneration")} />
-            </Accordion.Body>
-          </Accordion.Panel>
-        </Accordion.Item>
-
-        <Accordion.Item id="decisionModel">
-          <Accordion.Heading>
-            <Accordion.Trigger>
-              <div className="flex min-w-0 flex-col items-start gap-1">
-                <div className="flex flex-wrap items-center gap-2">
-                  {t("decisionModel.title")}
-                  {dirtySections.decisionModel && <UnsavedChangesChip />}
-                </div>
-                <span className="text-muted text-sm">{t("decisionModel.subtitle")}</span>
-              </div>
-              <Accordion.Indicator />
-            </Accordion.Trigger>
-          </Accordion.Heading>
-          <Accordion.Panel>
-            <Accordion.Body>
-              <DecisionModelForm onDirtyChange={updateDirtySection("decisionModel")} />
-            </Accordion.Body>
-          </Accordion.Panel>
-        </Accordion.Item>
-
-        <Accordion.Item id="prompts">
-          <Accordion.Heading>
-            <Accordion.Trigger>
-              <div className="flex min-w-0 flex-col items-start gap-1">
-                <div className="flex flex-wrap items-center gap-2">
-                  {t("prompts.title")}
-                  {dirtySections.prompts && <UnsavedChangesChip />}
-                </div>
-                <span className="text-muted text-sm">{t("prompts.subtitle")}</span>
-              </div>
-              <Accordion.Indicator />
-            </Accordion.Trigger>
-          </Accordion.Heading>
-          <Accordion.Panel>
-            <Accordion.Body>
-              <PromptsForm onDirtyChange={updateDirtySection("prompts")} />
-            </Accordion.Body>
-          </Accordion.Panel>
-        </Accordion.Item>
-
-        <Accordion.Item id="cuisines">
-          <Accordion.Heading>
-            <Accordion.Trigger>
-              <div className="flex min-w-0 flex-col items-start gap-1">
-                <div className="flex flex-wrap items-center gap-2">{t("cuisines.title")}</div>
-                <span className="text-muted text-sm">{t("cuisines.subtitle")}</span>
-              </div>
-              <Accordion.Indicator />
-            </Accordion.Trigger>
-          </Accordion.Heading>
-          <Accordion.Panel>
-            <Accordion.Body>
-              <CuisineVocabularyForm />
-            </Accordion.Body>
-          </Accordion.Panel>
-        </Accordion.Item>
-
-        <Accordion.Item id="bulkEnrichment">
-          <Accordion.Heading>
-            <Accordion.Trigger>
-              <div className="flex min-w-0 flex-col items-start gap-1">
-                <div className="flex flex-wrap items-center gap-2">{t("bulkEnrichment.title")}</div>
-                <span className="text-muted text-sm">{t("bulkEnrichment.subtitle")}</span>
-              </div>
-              <Accordion.Indicator />
-            </Accordion.Trigger>
-          </Accordion.Heading>
-          <Accordion.Panel>
-            <Accordion.Body>
-              <BulkEnrichmentForm />
-            </Accordion.Body>
-          </Accordion.Panel>
-        </Accordion.Item>
-
-        <Accordion.Item id="ingredientCatalogue">
-          <Accordion.Heading>
-            <Accordion.Trigger>
-              <div className="flex min-w-0 flex-col items-start gap-1">
-                <div className="flex flex-wrap items-center gap-2">
-                  {t("ingredientCatalogue.title")}
-                  {dirtySections.ingredientCatalogue && <UnsavedChangesChip />}
-                </div>
-                <span className="text-muted text-sm">{t("ingredientCatalogue.subtitle")}</span>
-              </div>
-              <Accordion.Indicator />
-            </Accordion.Trigger>
-          </Accordion.Heading>
-          <Accordion.Panel>
-            <Accordion.Body>
-              <IngredientCatalogueForm onDirtyChange={updateDirtySection("ingredientCatalogue")} />
-            </Accordion.Body>
-          </Accordion.Panel>
-        </Accordion.Item>
+        <AccordionSection id="ai" subtitle={t("aiConfig.subtitle")} title={t("aiConfig.title")}>
+          {(onDirtyChange) => <AIConfigForm onDirtyChange={onDirtyChange} />}
+        </AccordionSection>
+        <AccordionSection id="video" subtitle={t("video.subtitle")} title={t("video.title")}>
+          {(onDirtyChange) => <VideoProcessingForm onDirtyChange={onDirtyChange} />}
+        </AccordionSection>
+        <AccordionSection
+          id="imageGeneration"
+          subtitle={t("imageGeneration.subtitle")}
+          title={t("imageGeneration.title")}
+        >
+          {(onDirtyChange) => <ImageGenerationForm onDirtyChange={onDirtyChange} />}
+        </AccordionSection>
+        <AccordionSection
+          id="decisionModel"
+          subtitle={t("decisionModel.subtitle")}
+          title={t("decisionModel.title")}
+        >
+          {(onDirtyChange) => <DecisionModelForm onDirtyChange={onDirtyChange} />}
+        </AccordionSection>
+        <AccordionSection id="prompts" subtitle={t("prompts.subtitle")} title={t("prompts.title")}>
+          {(onDirtyChange) => <PromptsForm onDirtyChange={onDirtyChange} />}
+        </AccordionSection>
+        <AccordionSection
+          id="cuisines"
+          subtitle={t("cuisines.subtitle")}
+          title={t("cuisines.title")}
+        >
+          <CuisineVocabularyForm />
+        </AccordionSection>
+        <AccordionSection
+          id="bulkEnrichment"
+          subtitle={t("bulkEnrichment.subtitle")}
+          title={t("bulkEnrichment.title")}
+        >
+          <BulkEnrichmentForm />
+        </AccordionSection>
+        <AccordionSection
+          id="ingredientCatalogue"
+          subtitle={t("ingredientCatalogue.subtitle")}
+          title={t("ingredientCatalogue.title")}
+        >
+          {(onDirtyChange) => <IngredientCatalogueForm onDirtyChange={onDirtyChange} />}
+        </AccordionSection>
       </SettingsAccordion>
     </SettingsCard>
   );
