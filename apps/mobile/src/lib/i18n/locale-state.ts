@@ -86,3 +86,10 @@ export function matchDeviceLocale(
 
   return codes.find((code) => code.split("-")[0] === base) ?? null;
 }
+
+/** The app's iOS language (`AppleLanguages`, which the per-app language sets), else `fallback`. */
+export function deviceLanguage(appleLanguages: unknown, fallback: string): string {
+  const first: unknown = Array.isArray(appleLanguages) ? appleLanguages[0] : undefined;
+
+  return typeof first === "string" ? first : fallback;
+}

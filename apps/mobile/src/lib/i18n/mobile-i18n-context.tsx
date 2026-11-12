@@ -1,6 +1,8 @@
 import React, { createContext, useContext, useEffect, useMemo, useState } from "react";
+import { Platform, Settings } from "react-native";
 import {
   buildLocaleDisplayMap,
+  deviceLanguage,
   matchDeviceLocale,
   resolveLocaleSelection,
 } from "@/lib/i18n/locale-state";
@@ -48,8 +50,11 @@ const FALLBACK_MESSAGES: Record<string, unknown> = {
 
 const BUNDLED_LOCALES: EnabledLocale[] = getBundledLocales();
 
-// Hermes reads the app's iOS language, which the per-app language setting changes with a relaunch.
-const DEVICE_LOCALE = Intl.DateTimeFormat().resolvedOptions().locale;
+// Intl ignores the per-app language; AppleLanguages follows it, and iOS relaunches on a change.
+const DEVICE_LOCALE = deviceLanguage(
+  Platform.OS === "ios" ? Settings.get("AppleLanguages") : undefined,
+  Intl.DateTimeFormat().resolvedOptions().locale
+);
 
 function resolveLocaleOptions(
   bundledLocales: EnabledLocale[],

@@ -1,5 +1,6 @@
 import {
   buildLocaleDisplayMap,
+  deviceLanguage,
   matchDeviceLocale,
   normalizeEnabledLocales,
   resolveLocaleSelection,
@@ -85,5 +86,16 @@ describe("matchDeviceLocale", () => {
 
   it("falls back to English when no locale matches", () => {
     expect(signedOutLocale("ja-JP")).toBe("en");
+  });
+});
+
+describe("deviceLanguage", () => {
+  it("takes the app's first iOS language, which the per-app language setting changes", () => {
+    expect(deviceLanguage(["nl-NL", "en-US"], "en-US")).toBe("nl-NL");
+  });
+
+  it("falls back when iOS reports no languages", () => {
+    expect(deviceLanguage(undefined, "en-US")).toBe("en-US");
+    expect(deviceLanguage([], "en-US")).toBe("en-US");
   });
 });
