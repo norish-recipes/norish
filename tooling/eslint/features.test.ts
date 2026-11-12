@@ -2,6 +2,7 @@ import { mkdirSync, mkdtempSync, rmSync } from "node:fs";
 import { tmpdir } from "node:os";
 import path from "node:path";
 import { Linter } from "eslint";
+import tseslint from "typescript-eslint";
 import { afterAll, describe, expect, it } from "vitest";
 
 import { restrictDomains, restrictFeatures, restrictTRPC } from "./features.ts";
@@ -118,9 +119,13 @@ describe("restrictFeatures", () => {
 describe("restrictTRPC", () => {
   const cwd = path.join(root, "app");
   const config = restrictTRPC({ "lib/bridge.ts": "The bridge hands the client to a library." });
-  const at = (file: string, code: string) =>
+  const at = (file: string, code: string, languageOptions: Linter.LanguageOptions = {}) =>
     new Linter({ cwd })
-      .verify(code, [{ files: ["**/*.{ts,tsx}"] }, ...config], path.join(cwd, file))
+      .verify(
+        code,
+        [{ files: ["**/*.{ts,tsx}"], languageOptions }, ...config],
+        path.join(cwd, file)
+      )
       .map(({ message }) => message.replace(/^.* is restricted\. /, ""));
   // Assembled, so the workspace import check doesn't read the fixtures as this file's imports.
   const from = (names: string) => `import ${names} from "${"@norish/shared-react"}/trpc";`;
@@ -130,6 +135,18 @@ describe("restrictTRPC", () => {
     expect(at("components/card.tsx", from("{ useTRPC }"))).toEqual([banned]);
     expect(at("features/list.tsx", from("{ useTRPCClient }"))).toEqual([banned]);
     expect(at("features/list.tsx", from("* as trpc"))).toHaveLength(1);
+  });
+
+  it("bans re-exporting them", () => {
+    const reexport = `export { useTRPC } from "${"@norish/shared-react"}/trpc";`;
+
+    expect(at("components/hooks.ts", reexport)).toEqual([banned]);
+  });
+
+  it("bans a type-only import too, on purpose: a hook's type is no reason to name it", () => {
+    const typed = from("type { useTRPC }");
+
+    expect(at("components/card.tsx", typed, { parser: tseslint.parser })).toEqual([banned]);
   });
 
   it("leaves the rest of the tRPC folder importable", () => {
