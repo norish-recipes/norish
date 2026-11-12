@@ -137,7 +137,7 @@ function LaunchOverlay({ handoff, launch }: { handoff: LaunchHandoff | null; lau
   }));
 
   // Hidden only once this frame is mounted, or the native splash reveals an empty window;
-  // the clock starts after hide's main-queue removal, so the fade begins on screen.
+  // hide only queues the removal on the main queue, so the fade may start a frame early.
   const onLayout = () => {
     void SplashScreen.hideAsync().then(() => setShown(true));
   };
