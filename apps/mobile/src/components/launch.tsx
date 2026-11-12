@@ -125,7 +125,9 @@ function LaunchOverlay({ handoff, launch }: { handoff: LaunchHandoff | null; lau
 
     if (now >= stop) return;
 
-    sloganStart.set(resolveSloganStart(sloganStart.get(), now, messagesReady, HOLD_END - SLOGAN_IN));
+    sloganStart.set(
+      resolveSloganStart(sloganStart.get(), now, messagesReady, HOLD_END - SLOGAN_IN)
+    );
 
     const next = stepLaunchClock(now, timeSincePreviousFrame, stop);
 

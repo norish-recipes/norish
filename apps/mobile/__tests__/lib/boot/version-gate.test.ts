@@ -98,8 +98,9 @@ describe("resolveUpdateServerRoute", () => {
 
   it("checks an address it knows nothing about first, as from a deep link", () => {
     expect(resolveUpdateServerRoute(address, "", null, null)).toEqual({ screen: "check", address });
-    expect(resolveUpdateServerRoute(undefined, address, { address: "https://other.example" }, null))
-      .toEqual({ screen: "check", address });
+    expect(
+      resolveUpdateServerRoute(undefined, address, { address: "https://other.example" }, null)
+    ).toEqual({ screen: "check", address });
   });
 
   it("shows Update your server once that check answers too old", () => {

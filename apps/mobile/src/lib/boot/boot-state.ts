@@ -143,7 +143,9 @@ export function resolveTooOldServerRoute(
   tooOld: TooOldServer | null,
   onUpdateServer: boolean,
   phase: LaunchPhase
-): { screen: "update-server"; address: string; version?: string; animated: boolean } | { screen: "stay" } {
+):
+  | { screen: "update-server"; address: string; version?: string; animated: boolean }
+  | { screen: "stay" } {
   if (!tooOld || onUpdateServer || phase === "leaving") return { screen: "stay" };
 
   return { screen: "update-server", ...tooOld, animated: phase === "done" };
