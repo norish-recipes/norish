@@ -25,15 +25,22 @@ export function AuthSubmitButton({
   const [accentForegroundColor] = useThemeColor(["accent-foreground"] as const);
 
   return (
+    // The boards dim a running attempt to 0.7, over heroui-native's 0.5 disabled opacity.
     <Button
-      className="rounded-full"
+      className="h-[52px] gap-2 rounded-full"
       isDisabled={isDisabled}
-      size="lg"
+      style={isBusy ? { opacity: 0.7 } : undefined}
       testID={testID}
       onPress={onPress}
     >
-      {isBusy ? <Spinner color={accentForegroundColor} size="sm" /> : icon(accentForegroundColor)}
-      <Button.Label>{label}</Button.Label>
+      {isBusy ? (
+        <Spinner className="size-5" color={accentForegroundColor}>
+          <Spinner.Indicator iconProps={{ width: 20, height: 20 }} />
+        </Spinner>
+      ) : (
+        icon(accentForegroundColor)
+      )}
+      <Button.Label className="text-[17px] font-semibold">{label}</Button.Label>
     </Button>
   );
 }
