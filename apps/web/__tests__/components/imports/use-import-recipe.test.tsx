@@ -1,6 +1,7 @@
 import { useImportRecipe } from "@/components/imports/use-import-recipe";
 import { showActionToast } from "@/lib/ui/action-toast";
 import { renderHook } from "@testing-library/react";
+import { TRPCClientError } from "@trpc/client";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 
 import { useImportMutations } from "@norish/shared-react/recipes";
@@ -77,5 +78,32 @@ describe("useImportRecipe", () => {
     });
     vi.mocked(showActionToast).mock.calls[0]![1].action.onPress();
     expect(mocks.push).toHaveBeenCalledWith("/recipes/recipe-held");
+  });
+
+  it("shows the error toast when an import fails", () => {
+    renderHook(() => useImportRecipe());
+
+    vi.mocked(useImportMutations).mock.calls.at(-1)![0]!(new Error("boom"), "importFromUrl");
+
+    expect(mocks.toast).toHaveBeenCalledWith("common.errors.operationFailed", {
+      description: "common.errors.technicalDetails",
+      variant: "default",
+    });
+  });
+
+  it("says an import made while Offline is saved, not failed", () => {
+    renderHook(() => useImportRecipe());
+
+    // No HTTP status: the backend-unreachable shape the Outbox link captures.
+    vi.mocked(useImportMutations).mock.calls.at(-1)![0]!(
+      new TRPCClientError("Failed to fetch"),
+      "importFromUrl"
+    );
+
+    expect(mocks.toast).toHaveBeenCalledTimes(1);
+    expect(mocks.toast).toHaveBeenCalledWith("common.queuedOffline.title", {
+      description: "common.queuedOffline.description",
+      variant: "warning",
+    });
   });
 });
