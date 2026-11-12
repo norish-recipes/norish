@@ -27,7 +27,13 @@ export function HelpPopover({ label, text, icon = "questionmark.circle" }: HelpP
 
   return (
     <Host matchContents>
-      <Popover arrowEdge="bottom" isPresented={isPresented} onIsPresentedChange={setIsPresented}>
+      <Popover
+        // The popover's own edge that carries the arrow: on top, so it opens below the button.
+        arrowEdge="top"
+        attachmentAnchor="bottom"
+        isPresented={isPresented}
+        onIsPresentedChange={setIsPresented}
+      >
         <Popover.Trigger>
           <Button
             label={label}
