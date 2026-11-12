@@ -27,7 +27,7 @@
         {
           "backgroundColor": "#F8F3E7",
           "image": "./assets/brand/splash.png",
-          "imageWidth": 175,
+          "imageWidth": 168,
           "resizeMode": "contain",
           "dark": {
             "backgroundColor": "#14110D",

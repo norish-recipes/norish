@@ -1,4 +1,4 @@
-import type { StyleProp, ViewStyle } from "react-native";
+import type { ComponentProps } from "react";
 import React from "react";
 import { Text, View } from "react-native";
 import Animated from "react-native-reanimated";
@@ -16,7 +16,7 @@ interface BrandProps {
   prefix?: string;
   /** Whether the slogan shows under the logo. */
   slogan?: boolean;
-  sloganStyle?: StyleProp<ViewStyle>;
+  sloganStyle?: ComponentProps<typeof Animated.View>["style"];
 }
 
 /** The logo, in the scheme's colour, with the slogan under it. */

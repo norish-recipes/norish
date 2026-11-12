@@ -4,9 +4,10 @@ import "@/lib/i18n/plural-rules";
 import React, { useEffect } from "react";
 import { ActivityIndicator, StyleSheet, View } from "react-native";
 import { GestureHandlerRootView } from "react-native-gesture-handler";
+import { LaunchProvider, LaunchSplash } from "@/components/launch";
 import { StorageUnavailableScreen } from "@/features/auth/screens/storage-unavailable-screen";
-import { useServerAddress } from "@/hooks/use-server-address";
 import { useResolvedColorScheme } from "@/hooks/use-resolved-color-scheme";
+import { useServerAddress } from "@/hooks/use-server-address";
 import { useUserLocaleSync } from "@/hooks/use-user-locale-sync";
 import { AuthProviders } from "@/lib/auth/auth-providers";
 import { resolveBootPhase } from "@/lib/boot/boot-state";
@@ -58,7 +59,9 @@ export default function RootLayout() {
     <GestureHandlerRootView style={styles.root}>
       <HeroUINativeProvider>
         <AppearancePreferenceProvider>
-          <RootLayoutContent />
+          <LaunchProvider>
+            <RootLayoutContent />
+          </LaunchProvider>
         </AppearancePreferenceProvider>
       </HeroUINativeProvider>
     </GestureHandlerRootView>
@@ -89,9 +92,8 @@ function RootLayoutContent() {
     serverAddress,
   });
 
-  // Hand the screen over from the native splash only once there is something to
-  // show, including the failure case: a boot that cannot finish still has to say
-  // so rather than sit under the splash forever.
+  // Every branch below mounts LaunchSplash, whose first frame matches the native splash,
+  // so hiding it shows no jump, including a boot that fails and has to say so.
   useEffect(() => {
     if (boot.phase !== "loading") void SplashScreen.hideAsync();
   }, [boot.phase]);
@@ -122,6 +124,7 @@ function RootLayoutContent() {
       <ThemeProvider value={theme}>
         <MobileIntlFallbackProvider>
           <StorageUnavailableScreen error={boot.error} onRetry={serverAddress.retry} />
+          <LaunchSplash handoff="fade" />
         </MobileIntlFallbackProvider>
       </ThemeProvider>
     );
@@ -134,6 +137,7 @@ function RootLayoutContent() {
         <MobileIntlFallbackProvider>
           <RootStack signedIn={false} />
           <PortalHost name="app" />
+          <LaunchSplash handoff="glide" />
         </MobileIntlFallbackProvider>
       </ThemeProvider>
     );
@@ -165,19 +169,12 @@ function RootLayoutContent() {
 
 const getOfflineQueryClient = () => offlineEngine.queryClient;
 
-/** The stack, wrapped in the offline controller while signed in; a spinner while pending. */
+/** The stack, wrapped in the offline controller while signed in; held under the splash while pending. */
 function SessionStack() {
   const { session } = usePlatform();
   const { colors } = useTheme();
   const signedIn = session.user !== null;
-
-  if (session.isPending && !signedIn) {
-    return (
-      <View style={[styles.root, styles.centred, { backgroundColor: colors.background }]}>
-        <ActivityIndicator />
-      </View>
-    );
-  }
+  const pending = session.isPending && !signedIn;
 
   const app = (
     <>
@@ -186,7 +183,20 @@ function SessionStack() {
     </>
   );
 
-  return signedIn ? <AuthenticatedProviders>{app}</AuthenticatedProviders> : app;
+  return (
+    <>
+      {pending ? (
+        <View style={[styles.root, styles.centred, { backgroundColor: colors.background }]}>
+          <ActivityIndicator />
+        </View>
+      ) : signedIn ? (
+        <AuthenticatedProviders>{app}</AuthenticatedProviders>
+      ) : (
+        app
+      )}
+      <LaunchSplash handoff={pending ? null : "fade"} />
+    </>
+  );
 }
 
 function AuthenticatedProviders({ children }: { children: React.ReactNode }) {
