@@ -53,10 +53,17 @@ describe("validateSignUp", () => {
     });
   });
 
-  it("asks for a well-formed email", () => {
-    expect(validateSignUp({ ...valid, email: "ada@" })).toEqual({
-      field: "email",
-      messageId: "common.validation.invalidEmail",
-    });
+  it("refuses the emails the server's z.email() refuses", () => {
+    for (const email of ["ada@", "a@b.c", "a@münchen.de", "user@nas"]) {
+      expect(validateSignUp({ ...valid, email })).toEqual({
+        field: "email",
+        messageId: "common.validation.invalidEmail",
+      });
+    }
+  });
+
+  it("accepts a plus-tagged subdomain email, and one with a trailing space", () => {
+    expect(validateSignUp({ ...valid, email: "User.Name+tag@sub.example.com" })).toBeNull();
+    expect(validateSignUp({ ...valid, email: "ada@example.com " })).toBeNull();
   });
 });

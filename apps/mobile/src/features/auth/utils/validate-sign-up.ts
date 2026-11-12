@@ -1,13 +1,7 @@
+import { z } from "zod";
+
 export const MIN_PASSWORD_LENGTH = 8;
 export const MAX_PASSWORD_LENGTH = 128;
-
-// Only the shape (text, one "@", a dotted domain); the server decides the rest.
-function hasEmailShape(email: string): boolean {
-  const parts = email.split("@");
-  const domain = parts[1] ?? "";
-
-  return parts.length === 2 && parts[0] !== "" && domain.includes(".") && !/\s/.test(email);
-}
 
 export type SignUpField = "name" | "email" | "password" | "confirmPassword";
 
@@ -33,7 +27,7 @@ export function validateSignUp(
 
   if (name.trim() === "") return { field: "name", messageId: "common.validation.required" };
   if (email.trim() === "") return { field: "email", messageId: "common.validation.required" };
-  if (!hasEmailShape(email.trim()))
+  if (!z.email().safeParse(email.trim()).success)
     return { field: "email", messageId: "common.validation.invalidEmail" };
   if (password === "") return { field: "password", messageId: "common.validation.required" };
 
