@@ -21,7 +21,7 @@ export function StorageUnavailableScreen({ onRetry }: StorageUnavailableScreenPr
   return (
     <StatusScreen
       action={{
-        label: intl.formatMessage({ id: "common.actions.retry" }),
+        label: intl.formatMessage({ id: "common.errorPage.retry" }),
         testID: "storage-unavailable-retry",
         onPress: onRetry,
       }}

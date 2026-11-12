@@ -32,7 +32,8 @@ export function StatusScreen({
     <AuthLayout
       status
       footer={
-        <>
+        // The boards keep 16pt between the block, the action and the chip.
+        <View className={action && chipAddress ? "gap-4 pt-4" : undefined}>
           {action ? (
             <AuthSubmitButton
               icon={(color) => <Feather color={color} name="refresh-cw" size={20} />}
@@ -42,7 +43,7 @@ export function StatusScreen({
             />
           ) : null}
           {chipAddress ? <ServerChip address={chipAddress} /> : null}
-        </>
+        </View>
       }
     >
       <View className="items-center gap-4 px-2">

@@ -42,7 +42,7 @@ export function AuthErrorScreen() {
       <Stack.Screen options={{ headerShown: false }} />
       <StatusScreen
         action={{
-          label: intl.formatMessage({ id: "common.actions.retry" }),
+          label: intl.formatMessage({ id: "common.errorPage.retry" }),
           testID: "sign-in-failed-retry",
           onPress: () => router.replace({ pathname: "/login", params: { redirectTo } }),
         }}
