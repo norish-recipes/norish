@@ -5,6 +5,7 @@ import { Brand } from "@/components/brand";
 import { useLaunchEntrance } from "@/components/launch";
 import { AuthField } from "@/features/auth/components/auth-field";
 import { AuthLayout } from "@/features/auth/components/auth-layout";
+import { AuthSubmitButton } from "@/features/auth/components/auth-submit-button";
 import { HelpPopover } from "@/features/auth/components/help-popover";
 import { InlineErrorBlock } from "@/features/auth/components/inline-error";
 import { useAuthAttempt } from "@/features/auth/hooks/use-auth-attempt";
@@ -13,7 +14,7 @@ import { getServerAddress, saveServerAddress } from "@/lib/network/server-addres
 import Feather from "@expo/vector-icons/Feather";
 import MaterialCommunityIcons from "@expo/vector-icons/MaterialCommunityIcons";
 import { useLocalSearchParams, useRouter } from "expo-router";
-import { Button, InputGroup, Spinner, useThemeColor } from "heroui-native";
+import { InputGroup, useThemeColor } from "heroui-native";
 import { useIntl } from "react-intl";
 
 import { createClientLogger } from "@norish/shared/lib/logger";
@@ -24,10 +25,7 @@ export function ConnectScreen() {
   const router = useRouter();
   const intl = useIntl();
   const { change } = useLocalSearchParams<{ change?: string }>();
-  const [mutedColor, accentForegroundColor] = useThemeColor([
-    "muted",
-    "accent-foreground",
-  ] as const);
+  const [mutedColor] = useThemeColor(["muted"] as const);
   // The boot gate's read, so a Server address opened on request shows the saved one.
   const [address, setAddress] = useState(getServerAddress);
   const connect = useAuthAttempt();
@@ -66,28 +64,18 @@ export function ConnectScreen() {
     <AuthLayout
       footer={
         <Animated.View style={entrance.buttonStyle}>
-          <Button
-            className="rounded-full"
+          <AuthSubmitButton
+            icon={(color) => (
+              <MaterialCommunityIcons color={color} name="power-plug-outline" size={20} />
+            )}
+            isBusy={isConnecting}
             isDisabled={isConnecting}
-            size="lg"
+            label={intl.formatMessage({
+              id: isConnecting ? "auth.connect.connecting" : "auth.connect.connect",
+            })}
             testID="connect-submit"
             onPress={handleConnect}
-          >
-            {isConnecting ? (
-              <Spinner color={accentForegroundColor} size="sm" />
-            ) : (
-              <MaterialCommunityIcons
-                color={accentForegroundColor}
-                name="power-plug-outline"
-                size={20}
-              />
-            )}
-            <Button.Label>
-              {intl.formatMessage({
-                id: isConnecting ? "auth.connect.connecting" : "auth.connect.connect",
-              })}
-            </Button.Label>
-          </Button>
+          />
         </Animated.View>
       }
     >

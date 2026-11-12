@@ -5,10 +5,11 @@ import type { TextInput } from "react-native";
 import React, { useRef, useState } from "react";
 import { Pressable, Text, View } from "react-native";
 import { AuthField } from "@/features/auth/components/auth-field";
+import { AuthSubmitButton } from "@/features/auth/components/auth-submit-button";
 import { InlineErrorBlock } from "@/features/auth/components/inline-error";
 import Feather from "@expo/vector-icons/Feather";
 import { useRouter } from "expo-router";
-import { Button, InputGroup, LinkButton, Spinner, useThemeColor } from "heroui-native";
+import { InputGroup, LinkButton, useThemeColor } from "heroui-native";
 import { useIntl } from "react-intl";
 
 /** The attempt key a password sign-in runs under; providers run under their id. */
@@ -24,10 +25,7 @@ interface PasswordFormProps {
 export function PasswordForm({ authClient, signIn, showSignUpLink }: PasswordFormProps) {
   const router = useRouter();
   const intl = useIntl();
-  const [mutedColor, accentForegroundColor] = useThemeColor([
-    "muted",
-    "accent-foreground",
-  ] as const);
+  const [mutedColor] = useThemeColor(["muted"] as const);
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [isPasswordShown, setIsPasswordShown] = useState(false);
@@ -112,20 +110,14 @@ export function PasswordForm({ authClient, signIn, showSignUpLink }: PasswordFor
         </View>
       ) : null}
 
-      <Button
-        className="rounded-full"
+      <AuthSubmitButton
+        icon={(color) => <Feather color={color} name="log-in" size={20} />}
+        isBusy={signIn.running === PASSWORD}
         isDisabled={!isFilled || signIn.running !== null}
-        size="lg"
+        label={intl.formatMessage({ id: "auth.emailPassword.signIn" })}
         testID="login-submit"
         onPress={handleSubmit}
-      >
-        {signIn.running === PASSWORD ? (
-          <Spinner color={accentForegroundColor} size="sm" />
-        ) : (
-          <Feather color={accentForegroundColor} name="log-in" size={20} />
-        )}
-        <Button.Label>{intl.formatMessage({ id: "auth.emailPassword.signIn" })}</Button.Label>
-      </Button>
+      />
     </View>
   );
 }
