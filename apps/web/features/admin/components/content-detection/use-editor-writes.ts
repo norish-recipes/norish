@@ -8,19 +8,19 @@ export function useEditorWrites(setError: (error: string) => void, onSaved: () =
   const t = useTranslations("settings.admin.jsonEditor");
   const [saving, whileSaving] = usePending();
 
-  const run = (write: () => Promise<WriteResult>, failed: string, onDone?: () => void) =>
+  const run = (write: () => Promise<WriteResult | null>, failed: string, onDone?: () => void) =>
     whileSaving(() =>
       write()
         .then((result) => {
-          if (result.success) onDone?.();
-          else if (result.error) setError(result.error);
+          if (result?.success) onDone?.();
+          else if (result?.error) setError(result.error);
         })
         .catch((e: unknown) => setError(e instanceof Error ? e.message : failed))
     );
 
   return {
     saving,
-    save: (write: () => Promise<WriteResult>) => run(write, t("failedToSave"), onSaved),
-    restore: (write: () => Promise<WriteResult>) => run(write, t("failedToRestore")),
+    save: (write: () => Promise<WriteResult | null>) => run(write, t("failedToSave"), onSaved),
+    restore: (write: () => Promise<WriteResult | null>) => run(write, t("failedToRestore")),
   };
 }

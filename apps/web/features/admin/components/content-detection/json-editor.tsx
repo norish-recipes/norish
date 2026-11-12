@@ -15,8 +15,8 @@ interface JsonEditorProps {
   value: unknown;
   label?: string;
   description: string;
-  onSave: (jsonString: string) => Promise<WriteResult>;
-  onRestoreDefaults?: () => Promise<WriteResult>;
+  onSave: (jsonString: string) => Promise<WriteResult | null>;
+  onRestoreDefaults?: () => Promise<WriteResult | null>;
   disabled?: boolean;
   onDirtyChange?: (isDirty: boolean) => void;
 }

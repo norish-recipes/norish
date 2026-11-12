@@ -11,6 +11,7 @@ import {
 import { answerCall, failCall, keyOf, resetTRPCFake, serveTRPC } from "../../trpc/testing";
 import { useAdminConfig, useConfigSecret } from "../use-admin-config";
 import {
+  useAIConfigWrite,
   useAuthProviderWrites,
   useContentConfigWrites,
   useGeneralConfigWrites,
@@ -128,6 +129,42 @@ describe("the config writes", () => {
       "admin-general:save-locales",
       "settings.admin.toasts.localesError"
     );
+  });
+
+  it.each([
+    ["a config save", "admin.content.updateUnits", useContentConfigWrites, "saveUnits"],
+    ["a language save", "admin.updateLocaleConfig", useGeneralConfigWrites, "saveLocales"],
+    ["an endpoint test", "admin.testAIEndpoint", useAIConfigWrite, "test"],
+  ] as const)("say %s failed and resolve null, rejecting nothing", async (_, path, hook, name) => {
+    const { platform, stale, wrapper } = setUp();
+    const { result } = renderHook(() => hook(), { wrapper });
+    const write = (result.current as unknown as Record<string, (input: unknown) => Promise<unknown>>)[
+      name
+    ]!;
+    let saved: Promise<unknown> | undefined;
+
+    act(() => {
+      saved = write({});
+    });
+    await failCall(path);
+
+    expect(await saved).toBeNull();
+    expect(platform.showError).toHaveBeenCalledOnce();
+    expect(stale(CONFIGS)).toBe(false);
+  });
+
+  it("say a failed default restore failed and resolve null", async () => {
+    const { platform, wrapper } = setUp();
+    const { result } = renderHook(() => useRestoreDefault(), { wrapper });
+    let restored: Promise<unknown> | undefined;
+
+    act(() => {
+      restored = result.current(ServerConfigKeys.UNITS);
+    });
+    await failCall("admin.restoreDefault");
+
+    expect(await restored).toBeNull();
+    expect(platform.showError).toHaveBeenCalledOnce();
   });
 
   it("say a refused provider removal was refused, and resolve that it was", async () => {

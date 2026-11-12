@@ -119,7 +119,9 @@ export default function DecisionModelForm({ onDirtyChange }: DecisionModelFormPr
         // Every use selected is stored as no list, so the block keeps meaning
         // "every use" and a use added later is on for it (ADR-0035).
         uses: selectedDecisionUses(uses),
-      }).then(() => setApiKey(""))
+      }).then((answer) => {
+        if (answer) setApiKey("");
+      })
     );
   };
 

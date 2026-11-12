@@ -205,7 +205,8 @@ export default function VideoProcessingForm({ onDirtyChange }: VideoProcessingFo
         transcriptionModel,
       })
         // A saved key lives on the server; left in state it reads as unsaved.
-        .then(() => {
+        .then((answer) => {
+          if (!answer) return;
           setTranscriptionApiKey("");
           setIsTranscriptionKeyCleared(false);
         })

@@ -153,7 +153,8 @@ export default function ImageGenerationForm({ onDirtyChange }: ImageGenerationFo
         endpoint: endpoint || undefined,
         // Empty removes the stored key, so the AI key is used; omitted keeps it.
         apiKey: apiKey || (isApiKeyCleared ? "" : undefined),
-      }).then(() => {
+      }).then((answer) => {
+        if (!answer) return;
         setApiKey("");
         setIsApiKeyCleared(false);
       })

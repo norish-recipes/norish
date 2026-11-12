@@ -23,8 +23,8 @@ interface TimerKeywordsEditorProps {
     hours: string[];
     minutes: string[];
     seconds: string[];
-  }) => Promise<WriteResult>;
-  onRestoreDefaults: () => Promise<WriteResult>;
+  }) => Promise<WriteResult | null>;
+  onRestoreDefaults: () => Promise<WriteResult | null>;
   onDirtyChange?: (isDirty: boolean) => void;
 }
 

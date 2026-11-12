@@ -87,7 +87,11 @@ export function AuthProviderForm({
         clientSecret: values.clientSecret || undefined,
       };
 
-      await (providerKey === "github" ? saveGitHub(saveValues) : saveGoogle(saveValues));
+      const answer = await (providerKey === "github"
+        ? saveGitHub(saveValues)
+        : saveGoogle(saveValues));
+
+      if (!answer) return;
       // Saved secrets live on the server, not in the form: a secret left in
       // state reads as an unsaved change on every later render.
       setValues((prev) => {

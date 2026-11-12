@@ -121,7 +121,9 @@ export function OIDCProviderForm({ config, onDirtyChange }: OIDCProviderFormProp
         },
       })
         // Saved secrets live on the server, not in the form.
-        .then(() => setClientSecret(""))
+        .then((answer) => {
+          if (answer) setClientSecret("");
+        })
     );
   };
 

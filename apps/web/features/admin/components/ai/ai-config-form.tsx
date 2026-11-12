@@ -232,7 +232,9 @@ export default function AIConfigForm({ onDirtyChange }: AIConfigFormProps) {
         automaticIngredients: aiConfig.automaticIngredients,
       })
         // A saved key lives on the server; left in state it reads as unsaved.
-        .then(() => setApiKey(""))
+        .then((answer) => {
+          if (answer) setApiKey("");
+        })
     );
   };
   return (

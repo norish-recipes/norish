@@ -3,7 +3,7 @@
  * server is only reachable when the typed endpoint reaches both Test and Save.
  */
 
-import { fireEvent, render, screen } from "@testing-library/react";
+import { act, fireEvent, render, screen } from "@testing-library/react";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 
 import "@testing-library/jest-dom";
@@ -62,5 +62,23 @@ describe("DecisionModelForm endpoint", () => {
     expect(updateDecisionConfig).toHaveBeenCalledWith(
       expect.objectContaining({ endpoint: undefined })
     );
+  });
+
+  it.each([
+    ["keeps the typed key when the save failed", null, "sk-new"],
+    ["clears the typed key once the save went through", { success: true }, ""],
+  ])("%s", async (_, answer, left) => {
+    updateDecisionConfig.mockResolvedValue(answer);
+    render(<DecisionModelForm />);
+    const key = screen.getByLabelText("apiKey");
+
+    fireEvent.change(key, { target: { value: "sk-new" } });
+    fireEvent.click(screen.getByRole("button", { name: "save" }));
+
+    // Lets the save's answer land before reading the field.
+    await act(async () => {});
+
+    expect(updateDecisionConfig).toHaveBeenCalled();
+    expect(key).toHaveValue(left);
   });
 });
