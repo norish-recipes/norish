@@ -25,7 +25,7 @@ vi.mock("@norish/shared-react/reader", async () =>
   }))
 );
 
-vi.mock("@/hooks/user/use-hidden-item-visibility", () => ({
+vi.mock("@/hooks/use-hidden-item-visibility", () => ({
   useHiddenItemVisibility: () => ({ showConversion: true }),
 }));
 

@@ -8,7 +8,7 @@ import { SignOutConfirmModal } from "@/components/navbar/sign-out-confirm-modal"
 import { SETTINGS_HREF } from "@/components/settings/settings-tab";
 import { LanguageSwitchContent } from "@/components/shared/language-switch";
 import UserAvatar from "@/components/shared/user-avatar";
-import { useLanguageSwitch } from "@/hooks/user/use-language-switch";
+import { useLanguageSwitch } from "@/hooks/use-language-switch";
 import { offlineEngine } from "@/lib/offline/engine";
 import {
   ArrowDownTrayIcon,

@@ -5,7 +5,7 @@ import { IngredientIcon } from "@/components/ingredients/ingredient-icon";
 import { IngredientPanel } from "@/components/ingredients/ingredient-panel";
 import { IconActionButton } from "@/components/shared/action-button";
 import { FIELD_STYLE } from "@/features/groceries/lib/grocery-field";
-import { useHiddenItemVisibility } from "@/hooks/user/use-hidden-item-visibility";
+import { useHiddenItemVisibility } from "@/hooks/use-hidden-item-visibility";
 import { MagnifyingGlassIcon, PlusIcon } from "@heroicons/react/16/solid";
 import { Button, InputGroup, Skeleton, TextField } from "@heroui/react";
 import { useLocale, useTranslations } from "next-intl";

@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useMemo, useRef } from "react";
-import { useHiddenItemVisibility } from "@/hooks/user/use-hidden-item-visibility";
+import { useHiddenItemVisibility } from "@/hooks/use-hidden-item-visibility";
 import { useTranslations } from "next-intl";
 
 import type { MeasurementSystem } from "@norish/shared/contracts";

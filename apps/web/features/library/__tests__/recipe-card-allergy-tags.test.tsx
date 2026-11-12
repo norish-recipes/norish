@@ -23,7 +23,7 @@ vi.mock("@/hooks/use-recipe-prefetch", () => ({
   useRecipePrefetch: () => ({ current: null }),
 }));
 
-vi.mock("@/hooks/user/use-hidden-item-visibility", () => ({
+vi.mock("@/hooks/use-hidden-item-visibility", () => ({
   useHiddenItemVisibility: () => ({ showRatings: true, showFavorites: true }),
 }));
 

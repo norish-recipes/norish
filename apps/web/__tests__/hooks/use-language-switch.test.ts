@@ -3,11 +3,11 @@
  * may be rebuilt on any render, and following it by identity re-rendered the
  * switch without end on every page.
  */
-import { useLanguageSwitch } from "@/hooks/user/use-language-switch";
+import { useLanguageSwitch } from "@/hooks/use-language-switch";
 import { act, renderHook } from "@testing-library/react";
 import { describe, expect, it, vi } from "vitest";
 
-vi.mock("@/hooks/user/use-locale", () => ({
+vi.mock("@/hooks/use-locale", () => ({
   useLocale: () => ({ locale: "nl", changeLocale: vi.fn(), isChanging: false }),
 }));
 

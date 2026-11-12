@@ -3,7 +3,7 @@ import { beforeEach, describe, expect, it, vi } from "vitest";
 
 import "@testing-library/jest-dom";
 
-import { useHiddenItemVisibility } from "@/hooks/user/use-hidden-item-visibility";
+import { useHiddenItemVisibility } from "@/hooks/use-hidden-item-visibility";
 
 import { useDevicePreference } from "@norish/shared-react/reader";
 

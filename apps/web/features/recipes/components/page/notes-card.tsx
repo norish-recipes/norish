@@ -1,7 +1,7 @@
 "use client";
 
 import { ReadonlyRecipeNotes } from "@/features/recipes/components/read-only";
-import { useHiddenItemVisibility } from "@/hooks/user/use-hidden-item-visibility";
+import { useHiddenItemVisibility } from "@/hooks/use-hidden-item-visibility";
 import { Card } from "@heroui/react";
 import { useTranslations } from "next-intl";
 

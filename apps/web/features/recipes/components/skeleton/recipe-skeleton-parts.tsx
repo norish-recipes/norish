@@ -1,7 +1,7 @@
 "use client";
 
 import { ActionButton } from "@/components/shared/action-button";
-import { useHiddenItemVisibility } from "@/hooks/user/use-hidden-item-visibility";
+import { useHiddenItemVisibility } from "@/hooks/use-hidden-item-visibility";
 import { FireIcon } from "@heroicons/react/20/solid";
 import { Button, Card, Skeleton } from "@heroui/react";
 import { useTranslations } from "next-intl";

@@ -3,7 +3,7 @@
 import { useRef } from "react";
 import { PanelPortal } from "@/components/Panel/Panel";
 import { cssAIIconColor } from "@/config/css-tokens";
-import { useHiddenItemVisibility } from "@/hooks/user/use-hidden-item-visibility";
+import { useHiddenItemVisibility } from "@/hooks/use-hidden-item-visibility";
 import { ArrowUpTrayIcon, SparklesIcon, TrashIcon } from "@heroicons/react/16/solid";
 import { Dropdown, Label, Spinner } from "@heroui/react";
 import { useTranslations } from "next-intl";

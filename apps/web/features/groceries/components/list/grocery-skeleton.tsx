@@ -1,6 +1,6 @@
 "use client";
 
-import { useHiddenItemVisibility } from "@/hooks/user/use-hidden-item-visibility";
+import { useHiddenItemVisibility } from "@/hooks/use-hidden-item-visibility";
 import { Bars3Icon, ChevronDownIcon, EllipsisVerticalIcon } from "@heroicons/react/16/solid";
 import { Skeleton } from "@heroui/react";
 

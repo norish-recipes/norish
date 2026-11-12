@@ -1,7 +1,7 @@
 "use client";
 
 import { useMemo, useState } from "react";
-import { useLocale } from "@/hooks/user/use-locale";
+import { useLocale } from "@/hooks/use-locale";
 import { GlobeAltIcon } from "@heroicons/react/16/solid";
 
 import type { Locale } from "@norish/i18n/config";

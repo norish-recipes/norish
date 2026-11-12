@@ -36,8 +36,8 @@ vi.mock("next/navigation", () => ({
 // A language save is its own mutation, so the card's preferences mutation is idle meanwhile.
 const localeMock = vi.hoisted(() => ({ isChanging: false }));
 
-vi.mock("@/hooks/user/use-locale", async (importOriginal) => {
-  const actual = await importOriginal<typeof import("@/hooks/user/use-locale")>();
+vi.mock("@/hooks/use-locale", async (importOriginal) => {
+  const actual = await importOriginal<typeof import("@/hooks/use-locale")>();
 
   return {
     useLocale: () => {

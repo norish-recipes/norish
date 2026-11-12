@@ -36,7 +36,7 @@ vi.mock("@norish/shared-react/config", () => ({
   }),
 }));
 
-vi.mock("@/hooks/user/use-language-switch", () => ({
+vi.mock("@/hooks/use-language-switch", () => ({
   useLanguageSwitch: () => ({
     cycleLocale: mockCycleLocale,
     icon: null,

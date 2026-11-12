@@ -25,7 +25,7 @@ describe("useLocaleCookie", () => {
 
     document.cookie = "NEXT_LOCALE=es; path=/";
 
-    const { useLocaleCookie } = await import("@/hooks/user/use-locale-cookie");
+    const { useLocaleCookie } = await import("@/hooks/use-locale-cookie");
     const { result } = renderHook(() => useLocaleCookie());
 
     expect(result.current.locale).toBe("fr");
@@ -40,7 +40,7 @@ describe("useLocaleCookie", () => {
 
     document.cookie = "NEXT_LOCALE=en; path=/";
 
-    const { useLocaleCookie } = await import("@/hooks/user/use-locale-cookie");
+    const { useLocaleCookie } = await import("@/hooks/use-locale-cookie");
     const { result } = renderHook(() => useLocaleCookie());
 
     act(() => {

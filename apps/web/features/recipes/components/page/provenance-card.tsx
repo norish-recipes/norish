@@ -1,7 +1,7 @@
 "use client";
 
 import OriginFlag from "@/components/recipes/origin-flag";
-import { useHiddenItemVisibility } from "@/hooks/user/use-hidden-item-visibility";
+import { useHiddenItemVisibility } from "@/hooks/use-hidden-item-visibility";
 import { Card, Chip, Skeleton } from "@heroui/react";
 import { useLocale, useTranslations } from "next-intl";
 

@@ -4,7 +4,7 @@ import { useState } from "react";
 import Link from "next/link";
 import { CookbookIconSolid } from "@/components/cookbooks/cookbook-icon";
 import MiniCookbooks from "@/components/Panel/consumers/mini-cookbooks";
-import { useHiddenItemVisibility } from "@/hooks/user/use-hidden-item-visibility";
+import { useHiddenItemVisibility } from "@/hooks/use-hidden-item-visibility";
 import { withOrigin } from "@/lib/back-destination";
 import { Button, Card, Chip } from "@heroui/react";
 import { useTranslations } from "next-intl";
