@@ -52,6 +52,11 @@ vi.mock("@norish/shared-react/trpc", async () => {
   return { useTRPC: () => ({ ingredients: { find } }) };
 });
 
+/** Answers a read held back by a null `release`. */
+function answerTheRead() {
+  mocks.release?.();
+}
+
 function wrapper({ children }: { children: ReactNode }) {
   return <QueryClientProvider client={createTestQueryClient()}>{children}</QueryClientProvider>;
 }
@@ -99,7 +104,7 @@ describe("useIngredientFor", () => {
 
     await waitFor(() => expect(mocks.asked).toEqual(["tomato"]));
     expect(result.current).toBeNull();
-    mocks.release?.();
+    answerTheRead();
     await waitFor(() => expect(result.current).toBe(FOUND));
   });
 
