@@ -9,7 +9,7 @@ import { AuthSubmitButton } from "@/features/auth/components/auth-submit-button"
 import { InlineError } from "@/features/auth/components/inline-error";
 import Feather from "@expo/vector-icons/Feather";
 import { useRouter } from "expo-router";
-import { InputGroup, LinkButton, useThemeColor } from "heroui-native";
+import { InputGroup, useThemeColor } from "heroui-native";
 import { useIntl } from "react-intl";
 
 /** The attempt key a password sign-in runs under; providers run under their id. */
@@ -91,16 +91,20 @@ export function PasswordForm({ authClient, signIn, showSignUpLink }: PasswordFor
       <InlineError error={error} />
 
       {showSignUpLink ? (
-        <View className="mt-0.5 flex-row flex-wrap items-center justify-center">
-          <Text className="text-muted text-[15px] font-normal">
+        // The whole sentence is one link, its 20pt line slopped to a 44pt target.
+        <Pressable
+          accessibilityRole="link"
+          className="mt-0.5"
+          hitSlop={{ top: 12, bottom: 12 }}
+          onPress={() => router.push("/register")}
+        >
+          <Text className="text-muted text-center text-[15px] leading-5 font-normal">
             {intl.formatMessage({ id: "auth.emailPassword.noAccount" })}{" "}
-          </Text>
-          <LinkButton onPress={() => router.push("/register")}>
-            <LinkButton.Label className="text-accent text-[15px] font-semibold">
+            <Text className="text-accent font-semibold">
               {intl.formatMessage({ id: "auth.emailPassword.signUp" })}
-            </LinkButton.Label>
-          </LinkButton>
-        </View>
+            </Text>
+          </Text>
+        </Pressable>
       ) : null}
 
       <AuthSubmitButton
