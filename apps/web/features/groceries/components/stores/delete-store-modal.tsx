@@ -2,10 +2,9 @@
 
 import { useState } from "react";
 import { Button, Modal, Radio, RadioGroup } from "@heroui/react";
-import { useQuery } from "@tanstack/react-query";
 import { useTranslations } from "next-intl";
 
-import { useTRPC } from "@norish/shared-react/trpc";
+import { useStoreGroceryCount } from "@norish/shared-react/groceries";
 
 interface DeleteStoreModalProps {
   isOpen: boolean;
@@ -21,34 +20,6 @@ export function DeleteStoreModal({
   onClose,
   onConfirm,
 }: DeleteStoreModalProps) {
-  const [deleteOption, setDeleteOption] = useState<"keep" | "delete">("keep");
-  const trpc = useTRPC();
-  const t = useTranslations("groceries.storeManager");
-  const tActions = useTranslations("common.actions");
-
-  // Fetch grocery count for this store
-  const { data: groceryCount } = useQuery({
-    ...trpc.stores.getGroceryCount.queryOptions({
-      storeId: storeId ?? "",
-    }),
-    enabled: isOpen && !!storeId,
-  });
-
-  // Reset state when modal opens
-  const [wasOpen, setWasOpen] = useState(isOpen);
-
-  if (wasOpen !== isOpen) {
-    setWasOpen(isOpen);
-    if (isOpen) setDeleteOption("keep");
-  }
-
-  const handleConfirm = () => {
-    if (!storeId) return;
-    onConfirm(storeId, deleteOption === "delete");
-    onClose();
-  };
-  const itemCount = groceryCount ?? 0;
-
   return (
     // This confirm opens while the store-manager Panel is still up: z-* lifts it
     // above the drawer (z-[1001]), and pointer-events-auto opts back out of the
@@ -59,64 +30,94 @@ export function DeleteStoreModal({
     <Modal.Backdrop className="pointer-events-auto z-[1099]" isOpen={isOpen} onOpenChange={onClose}>
       <Modal.Container className="z-[1100]">
         <Modal.Dialog>
-          <Modal.Header>{t("deleteStore")}</Modal.Header>
-          <Modal.Body className="gap-4">
-            <p className="text-muted text-base">
-              {t("confirmDelete", {
-                storeName,
-              })}
-            </p>
-
-            {itemCount > 0 && (
-              <div>
-                <p className="text-danger mb-3 text-sm font-medium">
-                  {itemCount === 1
-                    ? t("hasItems", {
-                        count: itemCount,
-                      })
-                    : t("hasItemsPlural", {
-                        count: itemCount,
-                      })}{" "}
-                  {t("whatToDo")}
-                </p>
-
-                <RadioGroup
-                  className="gap-3"
-                  value={deleteOption}
-                  onChange={(v) => setDeleteOption(v === "delete" ? "delete" : "keep")}
-                >
-                  <Radio value="keep">
-                    <Radio.Content>
-                      <div className="ml-1">
-                        <p className="text-base font-medium">{t("keepItems")}</p>
-                        <p className="text-muted text-xs">{t("keepItemsDescription")}</p>
-                      </div>
-                    </Radio.Content>
-                  </Radio>
-                  <Radio value="delete">
-                    <Radio.Content>
-                      <div className="ml-1">
-                        <p className="text-base font-medium">{t("deleteItems")}</p>
-                        <p className="text-muted text-xs">{t("deleteItemsDescription")}</p>
-                      </div>
-                    </Radio.Content>
-                  </Radio>
-                </RadioGroup>
-              </div>
-            )}
-
-            {itemCount === 0 && <p className="text-muted text-sm">{t("noItems")}</p>}
-          </Modal.Body>
-          <Modal.Footer>
-            <Button variant="tertiary" onPress={onClose}>
-              {tActions("cancel")}
-            </Button>
-            <Button variant="danger" onPress={handleConfirm}>
-              {t("deleteStore")}
-            </Button>
-          </Modal.Footer>
+          <DeleteStoreDialog
+            storeId={storeId}
+            storeName={storeName}
+            onClose={onClose}
+            onConfirm={onConfirm}
+          />
         </Modal.Dialog>
       </Modal.Container>
     </Modal.Backdrop>
+  );
+}
+
+/** The confirm's content, mounted only while the modal is open, so each opening starts on "keep". */
+function DeleteStoreDialog({
+  storeId,
+  storeName,
+  onClose,
+  onConfirm,
+}: Omit<DeleteStoreModalProps, "isOpen">) {
+  const [deleteOption, setDeleteOption] = useState<"keep" | "delete">("keep");
+  const t = useTranslations("groceries.storeManager");
+  const tActions = useTranslations("common.actions");
+  const itemCount = useStoreGroceryCount(storeId) ?? 0;
+
+  const handleConfirm = () => {
+    if (!storeId) return;
+    onConfirm(storeId, deleteOption === "delete");
+    onClose();
+  };
+
+  return (
+    <>
+      <Modal.Header>{t("deleteStore")}</Modal.Header>
+      <Modal.Body className="gap-4">
+        <p className="text-muted text-base">
+          {t("confirmDelete", {
+            storeName,
+          })}
+        </p>
+
+        {itemCount > 0 && (
+          <div>
+            <p className="text-danger mb-3 text-sm font-medium">
+              {itemCount === 1
+                ? t("hasItems", {
+                    count: itemCount,
+                  })
+                : t("hasItemsPlural", {
+                    count: itemCount,
+                  })}{" "}
+              {t("whatToDo")}
+            </p>
+
+            <RadioGroup
+              className="gap-3"
+              value={deleteOption}
+              onChange={(v) => setDeleteOption(v === "delete" ? "delete" : "keep")}
+            >
+              <Radio value="keep">
+                <Radio.Content>
+                  <div className="ml-1">
+                    <p className="text-base font-medium">{t("keepItems")}</p>
+                    <p className="text-muted text-xs">{t("keepItemsDescription")}</p>
+                  </div>
+                </Radio.Content>
+              </Radio>
+              <Radio value="delete">
+                <Radio.Content>
+                  <div className="ml-1">
+                    <p className="text-base font-medium">{t("deleteItems")}</p>
+                    <p className="text-muted text-xs">{t("deleteItemsDescription")}</p>
+                  </div>
+                </Radio.Content>
+              </Radio>
+            </RadioGroup>
+          </div>
+        )}
+
+        {itemCount === 0 && <p className="text-muted text-sm">{t("noItems")}</p>}
+      </Modal.Body>
+      <Modal.Footer>
+        <Button variant="tertiary" onPress={onClose}>
+          {tActions("cancel")}
+        </Button>
+        <Button variant="danger" onPress={handleConfirm}>
+          {t("deleteStore")}
+        </Button>
+      </Modal.Footer>
+    </>
   );
 }

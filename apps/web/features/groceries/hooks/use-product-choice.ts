@@ -3,13 +3,15 @@
 import { useCallback, useEffect, useState } from "react";
 
 import type { StoreDto, StoreProductChoice } from "@norish/shared/contracts";
-import { useLinkFor } from "@norish/shared-react/groceries";
+import {
+  useChooseProduct,
+  useIngredientFor,
+  useLinkFor,
+  useProductLink,
+} from "@norish/shared-react/groceries";
 import { isPendingLink } from "@norish/shared/lib/product-link";
 
-import { useIngredientFor } from "./use-ingredient-for";
 import { useParsedGroceryName } from "./use-parsed-grocery-name";
-import { useChooseProduct } from "./use-store-products-mutations";
-import { useProductLink } from "./use-store-products-query";
 
 /** How long a shopper stops typing a grocery's name before its food and link are read. */
 const LOOKUP_DEBOUNCE_MS = 400;
@@ -112,7 +114,7 @@ export function useProductChoice(options: {
     // Unlinking what was never linked writes a Miss for a name the Store may
     // still be about to answer; there is nothing to undo.
     if (chosen.kind === "none" && !linked) return;
-    void chooseProduct(selectedStoreId, groceryName, chosen);
+    chooseProduct(selectedStoreId, groceryName, chosen);
   }, [choice, chooseProduct, groceryName, linked, selectedStoreId]);
 
   return {

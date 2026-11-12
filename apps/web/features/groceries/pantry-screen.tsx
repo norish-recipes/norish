@@ -8,7 +8,6 @@ import { FIELD_STYLE } from "@/features/groceries/lib/grocery-field";
 import { useHiddenItemVisibility } from "@/hooks/user/use-hidden-item-visibility";
 import { MagnifyingGlassIcon, PlusIcon } from "@heroicons/react/16/solid";
 import { Button, InputGroup, Skeleton, TextField } from "@heroui/react";
-import { useQuery } from "@tanstack/react-query";
 import { useLocale, useTranslations } from "next-intl";
 import { useDebounceValue } from "usehooks-ts";
 
@@ -16,9 +15,8 @@ import type { PickedFood } from "@norish/shared-react/groceries";
 import type { PantryIngredientDto } from "@norish/shared/contracts";
 import { useSpellingRules } from "@norish/shared-react/config";
 import { useOnTheList, usePantryMutations, usePantryQuery } from "@norish/shared-react/groceries";
-import { useIngredientIcons } from "@norish/shared-react/ingredients";
+import { useCatalogueMatchesQuery, useIngredientIcons } from "@norish/shared-react/ingredients";
 import { useConnectivity } from "@norish/shared-react/offline/react";
-import { useTRPC } from "@norish/shared-react/trpc";
 import { PANTRY_INGREDIENT_NAME_MAX_LENGTH } from "@norish/shared/contracts/zod";
 import { foldName } from "@norish/shared/lib/fold-name";
 import { ingredientDisplayName } from "@norish/shared/lib/ingredient-names";
@@ -55,7 +53,6 @@ export function PantryScreen() {
   const t = useTranslations("groceries.pantry");
   const tStatus = useTranslations("common.status");
   const locale = useLocale();
-  const trpc = useTRPC();
   const rules = useSpellingRules();
   const { isOffline } = useConnectivity();
   const { items, isLoading, isUnavailable } = usePantryQuery();
@@ -70,10 +67,10 @@ export function PantryScreen() {
   const fieldRef = useRef<HTMLInputElement>(null);
   const typed = draft.trim();
   const [search] = useDebounceValue(typed, SEARCH_DELAY_MS);
-  const catalogue = useQuery({
-    ...trpc.ingredients.list.queryOptions({ search, locale, listedOnly: false }),
-    enabled: !isOffline && search.length >= SEARCH_MIN_LENGTH,
-  });
+  const catalogue = useCatalogueMatchesQuery(
+    !isOffline && search.length >= SEARCH_MIN_LENGTH ? search : null,
+    locale
+  );
 
   if (isUnavailable) {
     return (
@@ -107,9 +104,7 @@ export function PantryScreen() {
   // earlier text, or for the text an add just cleared, would add the wrong food.
   const matches =
     !isOffline && typed.length >= SEARCH_MIN_LENGTH && search === typed
-      ? (catalogue.data?.items ?? [])
-          .filter((food) => !keptIds.has(food.id))
-          .slice(0, CATALOGUE_MATCHES)
+      ? (catalogue ?? []).filter((food) => !keptIds.has(food.id)).slice(0, CATALOGUE_MATCHES)
       : [];
   const canAdd = foodKey(draft, rules) !== "" && !duplicate;
   const addTyped = () => {

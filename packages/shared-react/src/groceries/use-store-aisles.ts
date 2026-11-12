@@ -82,6 +82,13 @@ export function useStoreAisles(): StoreAislesResult {
   return { aisleFor, isLoading };
 }
 
+/** Whether the aisle links are still on their way; a filing doesn't render its reader. */
+export function useAisleLinksLoading(): boolean {
+  const trpc = useTRPC();
+
+  return useQuery(trpc.stores.aisleLinks.queryOptions()).isLoading;
+}
+
 /**
  * Where a Store files one Ingredient, as `aisleFor` answers it. Its reader re-renders only when
  * that answer changes, not for every filing in the household.

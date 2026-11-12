@@ -37,6 +37,7 @@ export { useRecurrenceDetection } from "./use-recurrence-detection";
 export {
   mergeAisleFiling,
   useAisleFor,
+  useAisleLinksLoading,
   useFileGroceryName,
   useStoreAisles,
   useStoreAislesSubscription,
@@ -51,5 +52,14 @@ export {
   type PriceFor,
 } from "./use-store-prices";
 export { useStoresMutations } from "./use-stores-mutations";
-export { useStoresQuery } from "./use-stores-query";
+export { useStoreGroceryCount, useStoresQuery } from "./use-stores-query";
 export { useStoresSubscription } from "./use-stores-subscription";
+export { useIngredientFor } from "./use-ingredient-for";
+export {
+  useHeldShopSearch,
+  useHeldStoreProducts,
+  useProductLink,
+  useShopSearch,
+  useStoreProducts,
+} from "./use-store-products-query";
+export { useChooseProduct } from "./use-store-products-mutations";

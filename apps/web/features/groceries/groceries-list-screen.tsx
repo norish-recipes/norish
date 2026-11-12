@@ -2,11 +2,11 @@
 
 import type { ComponentProps } from "react";
 import { useState } from "react";
-import { useQuery } from "@tanstack/react-query";
 
 import type { GroceryDto, StoreDto } from "@norish/shared/contracts";
 import type { RecurrencePattern } from "@norish/shared/contracts/recurrence";
 import {
+  useAisleLinksLoading,
   useGroceriesMutations,
   useGroceriesQuery,
   useGroceriesUiStore,
@@ -15,7 +15,6 @@ import {
   useStoresQuery,
 } from "@norish/shared-react/groceries";
 import { useDevicePreference } from "@norish/shared-react/reader";
-import { useTRPC } from "@norish/shared-react/trpc";
 import { cssFloatingDockContentClearance } from "@norish/web/config/css-tokens";
 
 import { ClearGroceriesModal } from "./components/list/clear-groceries-modal";
@@ -30,7 +29,6 @@ const NO_IDS: string[] = [];
 
 /** The grocery list's screen: the list in the reader's view, and the panels it opens. */
 export function GroceriesListScreen() {
-  const trpc = useTRPC();
   const { groceries, recurringGroceries, recipeMap, isLoading, getRecipeNameForGrocery } =
     useGroceriesQuery();
   const {
@@ -43,8 +41,7 @@ export function GroceriesListScreen() {
     deleteDoneInStore,
   } = useGroceriesMutations();
   const { stores, isLoading: storesLoading } = useStoresQuery();
-  // Only whether the aisles are on their way, so a filing doesn't render the screen.
-  const aislesLoading = useQuery(trpc.stores.aisleLinks.queryOptions()).isLoading;
+  const aislesLoading = useAisleLinksLoading();
   // Device Preferences: the server renders the page the way the reader left it.
   const [viewMode] = useDevicePreference("groceryViewMode");
   const [groupSimilarIngredients] = useDevicePreference("groceryGroupSimilar");

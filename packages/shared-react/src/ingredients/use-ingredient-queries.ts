@@ -1,5 +1,11 @@
 import type { inferRouterInputs } from "@trpc/server";
-import { keepPreviousData, useInfiniteQuery, useQueries, useQuery } from "@tanstack/react-query";
+import {
+  keepPreviousData,
+  skipToken,
+  useInfiniteQuery,
+  useQueries,
+  useQuery,
+} from "@tanstack/react-query";
 
 import type { AppRouter } from "@norish/trpc/client";
 
@@ -41,6 +47,18 @@ export function useIngredientSearchQuery(search: string, locale: string) {
   });
 
   return { items: data?.items ?? [], isFetching };
+}
+
+/** Every catalogue food a search finds, unlisted ones included, for the Pantry; `null` reads nothing. */
+export function useCatalogueMatchesQuery(search: string | null, locale: string) {
+  const trpc = useTRPC();
+  const { data } = useQuery(
+    trpc.ingredients.list.queryOptions(
+      search === null ? skipToken : { search, locale, listedOnly: false }
+    )
+  );
+
+  return data?.items;
 }
 
 /** The kinds filed under each parent, read as each is asked for, in the order asked. */
