@@ -45,21 +45,16 @@ export interface HouseholdRow {
   joinCode: string | null;
 }
 
-/**
- * The household as `identity` reads it, once the asynchronous create/join has landed. Create
- * inserts the household and then replaces its code (version 2), so only version 2 on counts.
- */
+/** The household as `identity` reads it: null until the asynchronous create or join has made them a member. */
 export async function readHousehold(
   stack: RealtimeStack,
   identity: Identity
 ): Promise<HouseholdRow | null> {
   const { household } = await callTrpc<{
-    household: { id: string; version: number; joinCode?: string | null } | null;
+    household: { id: string; joinCode?: string | null } | null;
   }>(stack.baseURL, stack.cookies[identity], "households.get");
 
-  return household && household.version > 1
-    ? { id: household.id, joinCode: household.joinCode ?? null }
-    : null;
+  return household ? { id: household.id, joinCode: household.joinCode ?? null } : null;
 }
 
 /** The newest grocery by this name: a new grocery takes the top of its store's list. */
