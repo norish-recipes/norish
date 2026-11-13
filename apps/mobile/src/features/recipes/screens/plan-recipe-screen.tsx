@@ -18,6 +18,7 @@ import { parseDateKey } from "@norish/shared/lib/helpers";
 
 import { CardPhoto } from "../components/card-photo";
 import { GlassCloseButton } from "../components/glass-close-button";
+import { planDay } from "../utils/plan-day";
 
 /** The days offered, today first. */
 const DAYS = 14;
@@ -37,7 +38,8 @@ export function PlanRecipeScreen() {
     { length: DAYS },
     (_, offset) => new Date(today.getFullYear(), today.getMonth(), today.getDate() + offset)
   );
-  const [date, setDate] = useState(today);
+  const [picked, setPicked] = useState<Date | null>(null);
+  const date = planDay(picked, days);
   const [slot, setSlot] = useState(() => asSlot(params.slot));
   const [input, setInput] = useState("");
   const search = useDeferredValue(input.trim());
@@ -92,7 +94,7 @@ export function PlanRecipeScreen() {
               accessibilityState={{ checked: selected }}
               className={`h-16 w-[52px] items-center justify-center gap-0.5 rounded-[18px] ${selected ? "bg-accent" : "bg-surface"}`}
               testID={`plan-recipe-day-${offset}`}
-              onPress={() => setDate(day)}
+              onPress={() => setPicked(day)}
             >
               <Text
                 className={`text-xs font-medium ${selected ? "text-accent-foreground" : "text-foreground"}`}
