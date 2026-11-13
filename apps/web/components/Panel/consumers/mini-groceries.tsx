@@ -10,7 +10,6 @@ import {
   ActionButtonGroup,
   IconActionButton,
 } from "@/components/shared/action-button";
-import { useGroceriesPantryAndCatalogueSubscriptions } from "@/hooks/use-groceries-pantry-and-catalogue-subscriptions";
 import { useUnitFormatter } from "@/hooks/use-unit-formatter";
 import { ArchiveBoxArrowDownIcon } from "@heroicons/react/16/solid";
 import { Button, Input, toast } from "@heroui/react";
@@ -20,6 +19,7 @@ import type { FoodToBuy, LineWithFoods } from "@norish/shared/lib/line-foods";
 import { useSpellingRules } from "@norish/shared-react/config";
 import {
   useGroceriesMutations,
+  useGroceriesPantryAndCatalogueSubscriptions,
   useOnTheList,
   usePantryMutations,
   usePantryQuery,

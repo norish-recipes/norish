@@ -74,6 +74,7 @@ vi.mock("@norish/shared-react/groceries", async () => {
 
   return {
     useGroceriesMutations: () => ({ createGroceriesFromData }),
+    useGroceriesPantryAndCatalogueSubscriptions: () => undefined,
     // What the hook's select answers over the list these tests hold.
     useOnTheList: (kept: PantryIngredientDto[]) =>
       kept.filter((item) => groceryOnTheList(groceries, item) !== null).map((item) => item.id),
@@ -86,9 +87,6 @@ vi.mock("@norish/shared-react/groceries", async () => {
     }),
   };
 });
-vi.mock("@/hooks/use-groceries-pantry-and-catalogue-subscriptions", () => ({
-  useGroceriesPantryAndCatalogueSubscriptions: () => undefined,
-}));
 vi.mock("@/hooks/use-unit-formatter", () => ({
   useUnitFormatter: () => ({
     formatAmountUnit: (amount: number | null, unit: string | null) =>
