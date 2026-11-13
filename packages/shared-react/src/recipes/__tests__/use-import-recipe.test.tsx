@@ -5,18 +5,21 @@ import { beforeEach, describe, expect, it, vi } from "vitest";
 
 import { PlatformProvider } from "@norish/shared-react/platform";
 import { fakePlatformAdapter } from "@norish/shared-react/platform/testing";
+import { MAX_RECIPE_PASTE_CHARS } from "@norish/shared/contracts/uploads";
 
 import { useImportMutations } from "../use-import-mutations";
 import { useImportRecipe } from "../use-import-recipe";
 
 const mocks = vi.hoisted(() => ({
   importRecipeFromPaste: vi.fn(),
+  importRecipeFromPasteWithAI: vi.fn(),
   importRecipeFromImages: vi.fn(),
 }));
 
 vi.mock("../use-import-mutations", () => ({
   useImportMutations: vi.fn(() => ({
     importRecipeFromPaste: mocks.importRecipeFromPaste,
+    importRecipeFromPasteWithAI: mocks.importRecipeFromPasteWithAI,
     importRecipeFromImages: mocks.importRecipeFromImages,
   })),
 }));
@@ -112,6 +115,34 @@ describe("useImportRecipe", () => {
       severity: "warning",
       title: "common.queuedOffline.title",
       description: "common.queuedOffline.description",
+    });
+  });
+
+  it("refuses an AI paste import over the length cap with a warning", () => {
+    const { result } = renderHook(() => useImportRecipe(), { wrapper });
+
+    expect(
+      result.current.importFromPasteWithAI(`  ${"a".repeat(MAX_RECIPE_PASTE_CHARS + 1)}  `)
+    ).toBe(false);
+    expect(mocks.importRecipeFromPasteWithAI).not.toHaveBeenCalled();
+    expect(adapter.toast.show).toHaveBeenCalledExactlyOnceWith({
+      severity: "warning",
+      title: "common.import.paste.tooLarge",
+      description: "common.import.paste.maxCharacters",
+    });
+    expect(adapter.navigation.toHome).not.toHaveBeenCalled();
+  });
+
+  it("starts an AI paste import at the cap, surrounding spaces aside", () => {
+    const text = ` ${"a".repeat(MAX_RECIPE_PASTE_CHARS)} `;
+    const { result } = renderHook(() => useImportRecipe(), { wrapper });
+
+    expect(result.current.importFromPasteWithAI(text)).toBe(true);
+    expect(mocks.importRecipeFromPasteWithAI).toHaveBeenCalledWith(text);
+    expect(adapter.toast.show).toHaveBeenCalledWith({
+      severity: "default",
+      title: "common.import.paste.importingWithAI",
+      description: "common.import.paste.inProgress",
     });
   });
 });

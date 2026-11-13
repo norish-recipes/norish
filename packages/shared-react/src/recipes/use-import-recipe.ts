@@ -1,5 +1,7 @@
 "use client";
 
+import { MAX_RECIPE_PASTE_CHARS } from "@norish/shared/contracts/uploads";
+
 import { usePlatform } from "../platform/platform";
 import { useImportMutations } from "./use-import-mutations";
 import { useRecipeMutationErrorToast } from "./use-recipe-mutation-error-toast";
@@ -36,6 +38,12 @@ export function useImportRecipe({ stay = false }: { stay?: boolean } = {}) {
       if (!stay) navigation.toHome();
     };
 
+  const startPasteWithAI = start(
+    "common.import.paste.importingWithAI",
+    "common.import.paste.inProgress",
+    mutations.importRecipeFromPasteWithAI
+  );
+
   return {
     importRecipe: start(
       "common.import.paste.importing",
@@ -52,11 +60,23 @@ export function useImportRecipe({ stay = false }: { stay?: boolean } = {}) {
       "common.import.paste.inProgress",
       mutations.importRecipeFromPaste
     ),
-    importFromPasteWithAI: start(
-      "common.import.paste.importingWithAI",
-      "common.import.paste.inProgress",
-      mutations.importRecipeFromPasteWithAI
-    ),
+    /** False, with a warning, when the text is over the AI import's length cap. */
+    importFromPasteWithAI: (text: string): boolean => {
+      if (text.trim().length > MAX_RECIPE_PASTE_CHARS) {
+        toast.show({
+          severity: "warning",
+          title: toast.translate("common.import.paste.tooLarge"),
+          description: toast.translate("common.import.paste.maxCharacters", {
+            max: MAX_RECIPE_PASTE_CHARS.toLocaleString(),
+          }),
+        });
+
+        return false;
+      }
+      startPasteWithAI(text);
+
+      return true;
+    },
     importFromImages: start(
       "common.import.image.importing",
       "common.import.image.analyzing",
