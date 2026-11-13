@@ -1,7 +1,6 @@
 import React from "react";
-import { Image, Text, View } from "react-native";
+import { Text, View } from "react-native";
 import { GestureDetector, useTapGesture } from "react-native-gesture-handler";
-import { useServerImage } from "@/lib/network/server-url";
 import Ionicons from "@expo/vector-icons/Ionicons";
 import { useRouter } from "expo-router";
 import { useThemeColor } from "heroui-native";
@@ -9,48 +8,14 @@ import { useIntl } from "react-intl";
 
 import type { CookbookSummaryDTO } from "@norish/shared/contracts";
 import type { RecipeViewMode } from "@norish/shared/contracts/zod/device-preferences";
-import { coverMosaicColumns } from "@norish/shared-react/recipes";
 import { allergenSet, formatMinutesHM, isAllergenTag } from "@norish/shared/lib/helpers";
 
 import type { CardActions } from "../hooks/use-card-actions";
 import { useCardActionMenu } from "../hooks/use-card-action-menu";
 import { COOKBOOK_ACTION_DEFINITIONS, cookbookMenuActions } from "../utils/card-actions";
 import { CardMenu } from "./card-menu";
+import { CookbookCover } from "./cookbook-cover";
 import { Pill } from "./pill";
-
-/** A cookbook's cover: its own photo, else a mosaic of up to four members' photos. */
-function CookbookCover({
-  cookbook,
-  className,
-}: {
-  cookbook: CookbookSummaryDTO;
-  className: string;
-}) {
-  const toImage = useServerImage();
-  const [muted] = useThemeColor(["muted"] as const);
-  const photos = cookbook.image ? [cookbook.image] : cookbook.coverImages.slice(0, 4);
-  const tile = (uri: string, tileClass: string) => (
-    <Image key={uri} className={`bg-default ${tileClass}`} source={toImage(uri)} />
-  );
-
-  if (photos.length === 0) {
-    return (
-      <View className={`bg-default items-center justify-center ${className}`}>
-        <Ionicons color={muted} name="book-outline" size={26} />
-      </View>
-    );
-  }
-
-  return (
-    <View className={`flex-row gap-0.5 overflow-hidden ${className}`}>
-      {coverMosaicColumns(photos.length).map((rows) => (
-        <View key={rows.join()} className="flex-1 gap-0.5">
-          {rows.map((index) => tile(photos[index] ?? "", "w-full flex-1"))}
-        </View>
-      ))}
-    </View>
-  );
-}
 
 /** A cookbook in the Library, as a row or a grid card; a long press offers Add recipes, Rename and Delete. */
 export function CookbookCard({
