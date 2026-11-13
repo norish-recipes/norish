@@ -38,6 +38,7 @@ export type CookbooksMutationsResult = {
     image?: string | null;
     version: number;
   }) => void;
+  /** A browser `File` or an expo-file-system `File`, which is a Blob too. */
   uploadCookbookImage: (cookbookId: string, file: Blob) => Promise<string>;
   deleteCookbook: (input: { id: string; version: number }) => void;
   /** File recipes into a cookbook, or take them out — the same call both ways. */
