@@ -57,6 +57,5 @@ appId: dev.norish.app
     id: register-submit
 - extendedWaitUntil:
     visible:
-      id: smoke-user
-      text: .*${output.email}.*
+      id: recipes-screen
     timeout: 20000

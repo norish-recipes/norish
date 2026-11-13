@@ -18,4 +18,4 @@ appId: dev.norish.app
     id: server-chip
     text: .*${NORISH_SERVER_HOST}.*
 - assertNotVisible:
-    id: smoke-user
+    id: recipes-screen

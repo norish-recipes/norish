@@ -1,4 +1,4 @@
-# Signs out from the smoke screen, lands on Sign in for the same server without flipping back,
+# Signs out from Settings, lands on Sign in for the same server without flipping back,
 # and signs in again.
 appId: dev.norish.app
 ---
@@ -6,9 +6,7 @@ appId: dev.norish.app
     file: subflows/sign-in.yaml
     env:
       NORISH_SIGN_IN_URL: ${NORISH_SERVER_URL}
-- scrollUntilVisible:
-    element:
-      id: smoke-sign-out
+- tapOn: Settings
 - tapOn:
     id: smoke-sign-out
 - extendedWaitUntil:
@@ -21,12 +19,12 @@ appId: dev.norish.app
 # Gives the app 5 s to read signed in again; it must stay on sign-in.
 - extendedWaitUntil:
     visible:
-      id: smoke-user
+      id: recipes-screen
     timeout: 5000
     # Absent is the pass: the app stays signed out.
     optional: true
 - assertNotVisible:
-    id: smoke-user
+    id: recipes-screen
 - assertVisible:
     id: login-email
 - assertVisible:

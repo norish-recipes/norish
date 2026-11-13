@@ -9,13 +9,11 @@ appId: dev.norish.app
 - runFlow: credentials.yaml
 - extendedWaitUntil:
     visible:
-      id: smoke-recipe-count
-      text: "Recipes: \\d+"
+      id: recipes-screen
     timeout: 10000
 - stopApp
 - launchApp
 - extendedWaitUntil:
     visible:
-      id: smoke-user
-      text: .*${NORISH_EMAIL}.*
+      id: recipes-screen
     timeout: 20000
