@@ -7,6 +7,7 @@ import { createMMKV } from "react-native-mmkv";
 import { APP_VERSION } from "@/lib/app-version";
 import { getAuthClient } from "@/lib/auth/auth-client";
 import { getServerAddress, subscribeServerAddressChange } from "@/lib/network/server-address";
+import { focusManager } from "@tanstack/react-query";
 import { addNetworkStateListener } from "expo-network";
 
 import { createOfflineEngine, HEALTH_PROBE_PATH } from "@norish/shared-react/offline";
@@ -24,12 +25,26 @@ import { uploadFiles } from "./upload-files";
 /** Marks the app's replays in server logs. */
 const OUTBOX_REPLAY_HEADER_VALUE = "mobile-outbox";
 
+/** Reads restored from an earlier launch may predate a change made elsewhere. */
+const LAUNCHED_AT = Date.now();
+
 export const offlineEngine = createOfflineEngine({
   storage: createMmkvStorage({ mmkv: createMMKV({ id: "norish-offline" }), files: uploadFiles }),
   replayHeaderValue: OUTBOX_REPLAY_HEADER_VALUE,
   probeUrl: () => `${getServerAddress()}${HEALTH_PROBE_PATH}`,
   buster: APP_VERSION,
   calendarRanges: () => [getInitialCalendarRange("mobile")],
+  // As web: a read restored from an earlier launch refetches when it mounts, fresh or not.
+  refetchOnMount: (query) => (query.state.dataUpdatedAt < LAUNCHED_AT ? "always" : true),
+});
+
+// React Native has no window focus, so the foreground is focus: stale reads refetch on return.
+focusManager.setEventListener((setFocused) => {
+  const subscription = AppState.addEventListener("change", (state) =>
+    setFocused(state === "active")
+  );
+
+  return () => subscription.remove();
 });
 
 // Query keys carry no Server Address, so a new one drops every cached answer, signed-out
