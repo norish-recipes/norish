@@ -28,7 +28,8 @@
       "recipes": "Рецепты",
       "cookbooks": "Кулинарные книги"
     },
-    "importingCard": "Импорт…"
+    "importingCard": "Импорт…",
+    "favourited": "В избранном"
   },
   "back": {
     "all": "Назад к библиотеке",

@@ -28,7 +28,8 @@
       "recipes": "Recept",
       "cookbooks": "Kokböcker"
     },
-    "importingCard": "Importerar…"
+    "importingCard": "Importerar…",
+    "favourited": "Favorit"
   },
   "back": {
     "all": "Tillbaka till biblioteket",

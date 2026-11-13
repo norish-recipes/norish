@@ -91,7 +91,7 @@ export function RecipeCard({ recipe, variant, isFavorite, allergies, actions, co
         {...accessibilityProps}
         accessibilityLabel={
           isFavorite
-            ? `${recipe.name}, ${intl.formatMessage({ id: "recipes.actions.favourite" })}`
+            ? `${recipe.name}, ${intl.formatMessage({ id: "recipes.dashboard.favourited" })}`
             : recipe.name
         }
         accessibilityRole="button"

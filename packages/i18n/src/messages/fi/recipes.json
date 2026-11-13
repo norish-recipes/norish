@@ -28,7 +28,8 @@
       "recipes": "Reseptit",
       "cookbooks": "Keittokirjat"
     },
-    "importingCard": "Tuodaan…"
+    "importingCard": "Tuodaan…",
+    "favourited": "Suosikki"
   },
   "back": {
     "all": "Takaisin kirjastoon",

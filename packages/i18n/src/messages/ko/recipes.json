@@ -28,7 +28,8 @@
       "recipes": "레시피",
       "cookbooks": "요리책"
     },
-    "importingCard": "가져오는 중…"
+    "importingCard": "가져오는 중…",
+    "favourited": "즐겨찾기됨"
   },
   "back": {
     "all": "라이브러리로 돌아가기",

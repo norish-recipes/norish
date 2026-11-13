@@ -28,7 +28,8 @@
       "recipes": "Recepten",
       "cookbooks": "Kookboeken"
     },
-    "importingCard": "Importeren…"
+    "importingCard": "Importeren…",
+    "favourited": "Favoriet"
   },
   "back": {
     "all": "Terug naar bibliotheek",

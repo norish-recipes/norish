@@ -28,7 +28,8 @@
       "recipes": "الوصفات",
       "cookbooks": "كتب الطبخ"
     },
-    "importingCard": "جارٍ الاستيراد…"
+    "importingCard": "جارٍ الاستيراد…",
+    "favourited": "مفضلة"
   },
   "back": {
     "all": "العودة إلى المكتبة",

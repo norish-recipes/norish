@@ -28,7 +28,8 @@
       "recipes": "Рецепти",
       "cookbooks": "Готварски книги"
     },
-    "importingCard": "Импортиране…"
+    "importingCard": "Импортиране…",
+    "favourited": "В любими"
   },
   "back": {
     "all": "Обратно към библиотеката",

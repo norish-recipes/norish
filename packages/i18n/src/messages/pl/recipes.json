@@ -28,7 +28,8 @@
       "recipes": "Przepisy",
       "cookbooks": "Książki kucharskie"
     },
-    "importingCard": "Importowanie…"
+    "importingCard": "Importowanie…",
+    "favourited": "W ulubionych"
   },
   "back": {
     "all": "Wróć do biblioteki",
