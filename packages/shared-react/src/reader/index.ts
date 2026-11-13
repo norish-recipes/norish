@@ -4,6 +4,7 @@ export {
   partitionHiddenItems,
   type HiddenItemVisibility,
 } from "./hidden-items";
+export { ownerAllows } from "./owner-access";
 export { useHiddenItemVisibility } from "./use-hidden-item-visibility";
 export { useActiveAllergies } from "./use-active-allergies";
 export {
