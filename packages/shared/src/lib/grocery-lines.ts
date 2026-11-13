@@ -1,4 +1,4 @@
-import type { LineWithFoods } from "@norish/shared/lib/line-foods";
+import type { LineWithFoods } from "./line-foods";
 
 /** A recipe's ingredient line as the groceries panel reads it. */
 export type GroceryIngredient = LineWithFoods & {

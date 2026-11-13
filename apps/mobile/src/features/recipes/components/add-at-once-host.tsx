@@ -4,7 +4,7 @@ import { useRouter } from "expo-router";
 
 import { plannedServings } from "@norish/shared-react/calendar";
 import { useAddAtOnce } from "@norish/shared-react/groceries";
-import { useRecipeQuery } from "@norish/shared-react/recipes";
+import { useRecipeFoodsToBuy, useRecipeQuery } from "@norish/shared-react/recipes";
 
 const AddAtOnceContext = createContext<((recipeId: string) => void) | null>(null);
 
@@ -21,10 +21,15 @@ function AddAtOnce({ recipeId, onDone }: { recipeId: string; onDone: () => void 
   const router = useRouter();
   const servings = plannedServings(useRecipeQuery(recipeId).recipe ?? {});
 
-  useAddAtOnce({
+  const { scaledIngredients, isLoading, linkedLoading } = useRecipeFoodsToBuy(
     recipeId,
-    initialServings: servings,
-    originalServings: servings,
+    servings,
+    servings
+  );
+
+  useAddAtOnce({
+    lines: scaledIngredients,
+    linesReady: !isLoading && !linkedLoading,
     onDone,
     // A Pantry that cannot be read opens the sheet, as on web.
     onOpenChange: (open) => {

@@ -15,10 +15,8 @@ import { ArchiveBoxArrowDownIcon } from "@heroicons/react/16/solid";
 import { Button, Input } from "@heroui/react";
 import { useTranslations } from "next-intl";
 
-import type { EditedIngredient, GroceryIngredient } from "@norish/shared-react/groceries";
+import type { EditedIngredient, GroceryIngredient } from "@norish/shared/lib/grocery-lines";
 import {
-  formatEditableIngredient,
-  parseEditedIngredientLine,
   useAddAtOnce,
   useGroceriesPantryAndCatalogueSubscriptions,
   useLineSelection,
@@ -26,7 +24,15 @@ import {
   useOnTheList,
 } from "@norish/shared-react/groceries";
 import { useIngredientIcons } from "@norish/shared-react/ingredients";
-import { formatServings, useRecipeSubscription } from "@norish/shared-react/recipes";
+import {
+  formatServings,
+  useRecipeFoodsToBuy,
+  useRecipeSubscription,
+} from "@norish/shared-react/recipes";
+import {
+  formatEditableIngredient,
+  parseEditedIngredientLine,
+} from "@norish/shared/lib/grocery-lines";
 
 type MiniGroceriesProps = {
   open: boolean;
@@ -57,7 +63,18 @@ function AddAtOnce({
   onOpenChange,
   onDone,
 }: LinesProps & { onDone: () => void }) {
-  useAddAtOnce({ recipeId, initialServings, originalServings, onOpenChange, onDone });
+  const { scaledIngredients, isLoading, linkedLoading } = useRecipeFoodsToBuy(
+    recipeId,
+    originalServings,
+    initialServings
+  );
+
+  useAddAtOnce({
+    lines: scaledIngredients,
+    linesReady: !isLoading && !linkedLoading,
+    onOpenChange,
+    onDone,
+  });
 
   return null;
 }
@@ -76,19 +93,12 @@ function MiniGroceriesContent({
   const [editingId, setEditingId] = useState<string | null>(null);
   const [editValue, setEditValue] = useState<string>("");
   const [editedIngredients, setEditedIngredients] = useState<Record<string, EditedIngredient>>({});
-  const {
-    isLoading,
-    servings,
+  const { isLoading, servings, scaledIngredients, incrementServings, decrementServings } =
+    useRecipeFoodsToBuy(recipeId, originalServings, initialServings);
+  const { pantry, keptFor, keepLine, toBuy, inPantry, addLines } = useLinesToBuy(
     scaledIngredients,
-    incrementServings,
-    decrementServings,
-    pantry,
-    keptFor,
-    keepLine,
-    toBuy,
-    inPantry,
-    addLines,
-  } = useLinesToBuy(recipeId, originalServings, initialServings, editedIngredients);
+    editedIngredients
+  );
 
   useGroceriesPantryAndCatalogueSubscriptions();
   useRecipeSubscription(recipeId);

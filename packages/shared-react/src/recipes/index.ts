@@ -61,6 +61,7 @@ export { scaleIngredients } from "./scale-ingredients";
 export { useRecipeSelection, type SelectedRecipe } from "./selection-store";
 export { MIN_SERVINGS, servingsDown, servingsShown, servingsUp } from "./servings";
 export { formatServings, useServingsScaler } from "./use-servings-scaler";
+export { useRecipeFoodsToBuy } from "./use-recipe-foods-to-buy";
 export { useUnitFormatter } from "./use-unit-formatter";
 export {
   createRecipePageStore,

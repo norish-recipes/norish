@@ -7,11 +7,17 @@ const state = vi.hoisted(() => ({
   recipe: null as { servings: number } | null,
   hook: undefined as undefined | ((args: Record<string, unknown>) => void),
   mounted: [] as string[],
+  foodsArgs: {} as Record<string, unknown>,
 }));
 
 vi.mock("expo-router", () => ({ useRouter: () => router }));
 vi.mock("@norish/shared-react/recipes", () => ({
   useRecipeQuery: () => ({ recipe: state.recipe }),
+  useRecipeFoodsToBuy: (recipeId: string, original: number, initial: number) => {
+    state.foodsArgs = { recipeId, original, initial };
+
+    return { scaledIngredients: [], isLoading: false, linkedLoading: false };
+  },
 }));
 vi.mock("@norish/shared-react/groceries", async () => {
   const { useEffect } = await import("react");
@@ -19,7 +25,7 @@ vi.mock("@norish/shared-react/groceries", async () => {
   return {
     useAddAtOnce: (args: Record<string, unknown>) => {
       useEffect(() => {
-        state.mounted.push(String(args.recipeId));
+        state.mounted.push(String(state.foodsArgs.recipeId));
         state.hook?.(args);
       }, []);
     },
@@ -53,13 +59,11 @@ describe("AddAtOnceHost", () => {
   });
 
   it("adds a planned recipe's lines at the recipe's own servings", () => {
-    let args: Record<string, unknown> = {};
-
-    state.hook = (given) => (args = given);
     mount();
     act(() => start("r1"));
 
-    expect(args).toMatchObject({ recipeId: "r1", initialServings: 4, originalServings: 4 });
+    expect(state.foodsArgs).toEqual({ recipeId: "r1", original: 4, initial: 4 });
+    expect(state.mounted).toEqual(["r1"]);
   });
 
   it("waits for the recipe before reading the lines", () => {

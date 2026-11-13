@@ -5,6 +5,7 @@ import { beforeEach, describe, expect, it, vi } from "vitest";
 import type { UnitsMap } from "@norish/config/zod/server-config";
 import type { PantryIngredientDto } from "@norish/shared/contracts";
 import { createTestQueryClient, createTestWrapper } from "@norish/shared-react/platform/testing";
+import { foodsToBuy } from "@norish/shared/lib/line-foods";
 
 import { useAddAtOnce } from "../use-add-at-once";
 
@@ -13,7 +14,8 @@ const state = vi.hoisted(() => ({
   loading: false,
   fetching: false,
   unavailable: false,
-  lines: [] as unknown[],
+  lines: [] as never[],
+  linesReady: true,
   create: undefined as unknown as ReturnType<typeof vi.fn>,
 }));
 
@@ -37,16 +39,6 @@ vi.mock("../use-pantry-query", () => ({
     isUnavailable: state.unavailable,
   }),
 }));
-vi.mock("../../recipes", async (importOriginal) => ({
-  ...(await importOriginal<typeof import("../../recipes")>()),
-  useRecipeIngredients: () => ({
-    ingredients: state.lines,
-    systemUsed: "metric",
-    isLoading: false,
-  }),
-  useLinkedRecipeIngredients: () => ({ ingredients: [], isLoading: false }),
-}));
-
 const line = (id: string, name: string, ingredientId: string | null = `i-${name}`) => ({
   id,
   ingredientId,
@@ -75,9 +67,8 @@ function run(onOpenChange = vi.fn(), onDone = vi.fn()) {
   const view = renderHook(
     () =>
       useAddAtOnce({
-        recipeId: "r1",
-        initialServings: 1,
-        originalServings: 1,
+        lines: foodsToBuy(state.lines).map((food) => ({ ...food, amount: food.amount ?? null })),
+        linesReady: state.linesReady,
         onOpenChange,
         onDone,
       }),
@@ -94,6 +85,7 @@ describe("useAddAtOnce", () => {
     state.loading = false;
     state.fetching = false;
     state.unavailable = false;
+    state.linesReady = true;
     state.lines = [
       line("l-oil", "olive oil"),
       line("l-chicken", "chicken breast"),
@@ -126,6 +118,19 @@ describe("useAddAtOnce", () => {
     expect(state.create).toHaveBeenCalledTimes(1);
     expect(addedNames()).toEqual(["chicken breast"]);
     expect(onOpenChange).toHaveBeenCalledWith(false);
+  });
+
+  it("waits for the recipe to answer", async () => {
+    state.linesReady = false;
+    const { rerender, onOpenChange } = run();
+
+    await act(async () => {});
+    expect(onOpenChange).not.toHaveBeenCalled();
+
+    state.linesReady = true;
+    await act(async () => rerender());
+
+    expect(addedNames()).toEqual(["chicken breast"]);
   });
 
   it("decides from the Pantry read again, not from a cached copy", async () => {
@@ -167,16 +172,6 @@ describe("useAddAtOnce", () => {
     await act(async () => rerender());
 
     expect(state.create).not.toHaveBeenCalled();
-  });
-
-  it("leaves a line that names no food off the list, such as a tool", async () => {
-    state.lines = [...(state.lines as object[]), line("l-tin", "springvorm (26 cm)", null)];
-
-    await act(async () => {
-      run();
-    });
-
-    expect(addedNames()).toEqual(["chicken breast"]);
   });
 
   it("adds nothing, and closes, when the Pantry holds every line", async () => {

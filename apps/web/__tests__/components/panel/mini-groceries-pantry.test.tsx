@@ -121,11 +121,15 @@ vi.mock("@norish/shared-react/ingredients", () => ({
 vi.mock("@norish/shared-react/recipes", async (importOriginal) => ({
   ...(await importOriginal<typeof import("@norish/shared-react/recipes")>()),
   useRecipeSubscription: () => undefined,
+}));
+vi.mock("../../../../../packages/shared-react/src/recipes/use-recipe-ingredients", () => ({
   useRecipeIngredients: () => ({
     ingredients: [...INGREDIENTS, ...linkedLines],
     systemUsed: "metric",
     isLoading: false,
   }),
+}));
+vi.mock("../../../../../packages/shared-react/src/recipes/use-linked-recipe-ingredients", () => ({
   useLinkedRecipeIngredients: (ids: string[]) => {
     linkedAskedFor.push(ids);
 

@@ -1,13 +1,6 @@
 export type { PickedFood } from "./types";
 
 export { mergePantryAdded, mergePantryRemoved } from "./pantry-merge";
-export type { EditedIngredient, GroceryIngredient } from "./recipe-lines";
-export {
-  extractLinkedRecipeIds,
-  formatEditableIngredient,
-  isGroceryIngredient,
-  parseEditedIngredientLine,
-} from "./recipe-lines";
 export { useAddAtOnce } from "./use-add-at-once";
 export { useGroceriesMutations } from "./use-groceries-mutations";
 export {
@@ -23,6 +16,7 @@ export { useGroceriesSubscription } from "./use-groceries-subscription";
 export { useGroceriesUiStore } from "./use-groceries-ui-store";
 export { useGroceryFormState } from "./use-grocery-form-state";
 export { useLineSelection } from "./use-line-selection";
+export type { ScaledFood } from "./use-lines-to-buy";
 export { useLinesToBuy } from "./use-lines-to-buy";
 export { usePantryMutations } from "./use-pantry-mutations";
 export { usePantryItem, usePantryQuery } from "./use-pantry-query";

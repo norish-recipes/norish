@@ -11,6 +11,7 @@ import type { FullRecipeDTO } from "@norish/shared/contracts";
 import { plannedServings } from "@norish/shared-react/calendar";
 import { useLineSelection, useLinesToBuy, useOnTheList } from "@norish/shared-react/groceries";
 import {
+  useRecipeFoodsToBuy,
   useRecipeQuery,
   useRecipeSubscription,
   useUnitFormatter,
@@ -110,13 +111,11 @@ function GroceriesSheet({ recipe }: { recipe: FullRecipeDTO }) {
     incrementServings,
     decrementServings,
     scaledIngredients,
-    pantry,
-    keptFor,
-    keepLine,
-    toBuy,
-    inPantry,
-    addLines,
-  } = useLinesToBuy(recipe.id, servings, servings, AS_WRITTEN);
+  } = useRecipeFoodsToBuy(recipe.id, servings, servings);
+  const { pantry, keptFor, keepLine, toBuy, inPantry, addLines } = useLinesToBuy(
+    scaledIngredients,
+    AS_WRITTEN
+  );
   const onTheList = useOnTheList(pantry.items);
   const { selectedIds, selectedCount, inPantrySelectedCount, toggleSelect, toggleSection } =
     useLineSelection({

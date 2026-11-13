@@ -1,12 +1,12 @@
 import { describe, expect, it } from "vitest";
 
-import type { GroceryIngredient } from "../recipe-lines";
+import type { GroceryIngredient } from "@norish/shared/lib/grocery-lines";
 import {
   extractLinkedRecipeIds,
   formatEditableIngredient,
   isGroceryIngredient,
   parseEditedIngredientLine,
-} from "../recipe-lines";
+} from "@norish/shared/lib/grocery-lines";
 
 const line = (over: Partial<GroceryIngredient> = {}): GroceryIngredient => ({
   id: "i1",
