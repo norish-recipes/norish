@@ -37,8 +37,17 @@ import * as SplashScreen from "expo-splash-screen";
 import { HeroUINativeProvider, useThemeColor } from "heroui-native";
 import { PortalHost } from "heroui-native/portal";
 
+import { useCalendarSubscription } from "@norish/shared-react/calendar";
+import { useConfigSubscription } from "@norish/shared-react/config";
+import { usePantrySubscription } from "@norish/shared-react/groceries";
 import { usePlatform } from "@norish/shared-react/platform";
 import { useHouseholdSubscription, usePermissionsSubscription } from "@norish/shared-react/reader";
+import {
+  useCookbooksSubscription,
+  useRatingsSubscription,
+  useRecipeListSubscription,
+  useRecipeOutcomesSubscription,
+} from "@norish/shared-react/recipes";
 
 // The boot gate renders nothing until hydration settles, so the native splash holds
 // until every branch's LaunchSplash is laid out and hides it.
@@ -227,12 +236,20 @@ function AuthenticatedProviders({ children }: { children: React.ReactNode }) {
   );
 }
 
-/** The signed-in shell's effects: the Reader's locale and subscriptions, and Sign-out before a server change. */
+/** The signed-in shell's effects: the Reader's locale, the subscriptions every tab leans on, and Sign-out before a server change. */
 function AuthenticatedEffects() {
   useSignOutBeforeServerChange();
   useUserLocaleSync();
   useHouseholdSubscription();
   usePermissionsSubscription();
+  useConfigSubscription();
+  // An import or a delete starts on any tab, so its outcome toasts here.
+  useRecipeOutcomesSubscription();
+  useRecipeListSubscription();
+  useRatingsSubscription();
+  useCookbooksSubscription();
+  usePantrySubscription();
+  useCalendarSubscription();
 
   return null;
 }
@@ -245,7 +262,17 @@ function RootStack({ signedIn }: { signedIn: boolean }) {
   return (
     <Stack screenOptions={{ headerShown: false }}>
       <Stack.Protected guard={signedIn}>
-        <Stack.Screen name="smoke" />
+        <Stack.Screen name="(tabs)" />
+        <Stack.Screen
+          name="recipe/[id]"
+          options={{
+            headerShown: true,
+            headerTransparent: true,
+            headerTitle: "",
+            headerShadowVisible: false,
+            headerBackButtonDisplayMode: "minimal",
+          }}
+        />
       </Stack.Protected>
       <Stack.Protected guard={!signedIn}>
         <Stack.Screen name="(auth)" />

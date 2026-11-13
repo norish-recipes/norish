@@ -64,8 +64,7 @@ export function MobilePlatformProvider({
     },
     navigation: {
       toHome: () => router.replace("/"),
-      // No recipe screen yet; the library's migration adds one.
-      toRecipe: (id) => log.warn({ id }, "No recipe screen to open"),
+      toRecipe: (id) => router.push({ pathname: "/recipe/[id]", params: { id } }),
     },
     showError: (error, context, title) => {
       log.error({ error }, context);
