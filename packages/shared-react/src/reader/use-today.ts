@@ -1,3 +1,5 @@
+"use client";
+
 import { useSyncExternalStore } from "react";
 
 import { dateKey } from "@norish/shared/lib/helpers";
