@@ -13,7 +13,9 @@
     "OBSCURA_ENDPOINT",
     "OBSCURA_CDP_TOKEN",
     "VALKEY_URL",
-    "PARSER_API_TIMEOUT_MS"
+    "PARSER_API_TIMEOUT_MS",
+    "UPLOADS_DIR",
+    "YT_DLP_BIN_DIR"
   ],
   "tasks": {
     "topo": {
