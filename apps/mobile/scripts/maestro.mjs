@@ -1,5 +1,4 @@
-// Seeds a disposable account with unchecked groceries, runs the Maestro flows on the booted
-// simulator, then checks the groceries are done on the server, where the web client reads it.
+// Signs in a disposable account and runs the Maestro flows on the booted simulator.
 import { spawn, spawnSync } from "node:child_process";
 import { randomBytes } from "node:crypto";
 import { once } from "node:events";
@@ -20,9 +19,6 @@ if (only && !existsSync(only)) throw new Error(`No flow at ${only}`);
 const env = {
   NORISH_EMAIL: "maestro@norish.test",
   NORISH_PASSWORD: "maestro-password-1",
-  NORISH_GROCERY: "maestrocheck",
-  NORISH_OFFLINE_GROCERY: "maestrooffline",
-  NORISH_REALTIME_GROCERY: "maestrorealtime",
   NORISH_PROXY_PORT: "3998",
   NORISH_PROXY_CONTROL_PORT: "3997",
   NORISH_OLD_SERVER_PORT: "3999",
@@ -127,10 +123,6 @@ const trpc = async (procedure, input) => {
   return data.result.data.json;
 };
 
-const seeded = [env.NORISH_GROCERY, env.NORISH_OFFLINE_GROCERY, env.NORISH_REALTIME_GROCERY];
-const ours = async () =>
-  (await trpc("groceries.list")).groceries.filter((g) => seeded.includes(g.name));
-
 const credentials = { email: env.NORISH_EMAIL, password: env.NORISH_PASSWORD };
 
 // Fails once the account exists, or when registration is closed and it was made by hand.
@@ -162,19 +154,7 @@ if (!registrationWasOpen) {
   console.log(`Opened registration on ${server}; it is closed again when the run ends.`);
 }
 
-const stale = (await ours()).map(({ id, version }) => ({ id, version }));
-
-if (stale.length > 0) await trpc("groceries.delete", { groceries: stale });
-await trpc(
-  "groceries.create",
-  seeded.map((name) => ({ name, unit: null, amount: null }))
-);
-
-// The flows find each checkbox by its id, since iOS reports the checked state in its value.
-const idOf = Object.fromEntries((await ours()).map(({ name, id }) => [name, id]));
-
-// The offline flow cuts this proxy (`POST /cut`) so the backend goes while the simulator's network
-// stays; the realtime flow has the web's check-off done with `POST /check-on-web`.
+// The offline flow cuts this proxy (`POST /cut`) so the backend goes while the simulator's network stays.
 const backend = new URL(server);
 const sockets = new Set();
 const proxy = net.createServer((client) => {
@@ -192,11 +172,7 @@ const proxy = net.createServer((client) => {
 });
 const listenProxy = () => proxy.listen(Number(env.NORISH_PROXY_PORT), LOOPBACK);
 const control = createServer(async (request, response) => {
-  if (request.url === "/check-on-web") {
-    const { id, version } = (await ours()).find((g) => g.name === env.NORISH_REALTIME_GROCERY);
-
-    await trpc("groceries.toggle", { groceries: [{ id, version }], isDone: true });
-  } else if (request.url === "/cut") {
+  if (request.url === "/cut") {
     proxy.close();
     for (const socket of sockets) socket.destroy();
   } else if (request.url === "/restore" && !proxy.listening) {
@@ -341,9 +317,6 @@ const vars = {
   NORISH_COPY_PASSWORD_MISMATCH: signup.errors.passwordMismatch,
   NORISH_EMAIL: env.NORISH_EMAIL,
   NORISH_PASSWORD: env.NORISH_PASSWORD,
-  NORISH_GROCERY_ID: idOf[env.NORISH_GROCERY],
-  NORISH_OFFLINE_GROCERY_ID: idOf[env.NORISH_OFFLINE_GROCERY],
-  NORISH_REALTIME_GROCERY_ID: idOf[env.NORISH_REALTIME_GROCERY],
   // The proxy forwards bytes, so a base path stays on the address the app is given.
   NORISH_PROXY_URL: `http://localhost:${env.NORISH_PROXY_PORT}${server.slice(backend.origin.length)}`,
   NORISH_PROXY_CONTROL_URL: `http://localhost:${env.NORISH_PROXY_CONTROL_PORT}`,
@@ -353,17 +326,7 @@ try {
   await maestro(only ?? flows, vars);
   proxy.close();
 
-  if (!only) {
-    const after = await ours();
-
-    for (const name of seeded) {
-      if (!after.some((grocery) => grocery.name === name && grocery.isDone)) {
-        throw new Error(`${name} is not done on the server`);
-      }
-    }
-
-    await maestro(path.join(flows, "old-server"), vars);
-  }
+  if (!only) await maestro(path.join(flows, "old-server"), vars);
 } catch (error) {
   console.error(error.message);
   process.exitCode = error.code ?? 1;

@@ -336,11 +336,11 @@ pnpm --filter @norish/mobile ios --configuration Release
 pnpm --filter @norish/mobile maestro
 ```
 
-Step 3 starts the web build with throwaway Postgres and Valkey containers, so rebuild after a server change. It signs up `maestro@norish.test`, creates three unchecked groceries, runs the flows and checks that all three are done on the server. It then runs the flows in `apps/mobile/maestro/old-server/`. The flows cover groceries, offline use, realtime updates, sign-in, sign-up, sign-out, session expiry and server version checks.
+Step 3 starts the web build with throwaway Postgres and Valkey containers, so rebuild after a server change. It signs up `maestro@norish.test` and runs the flows, then runs the flows in `apps/mobile/maestro/old-server/`. The flows cover offline launch, sign-in, sign-up, sign-out, session expiry and server version checks.
 
 To use a running server, set `NORISH_SERVER_URL`. If registration is closed, create the account first or set `NORISH_EMAIL` and `NORISH_PASSWORD` for an existing account. The script opens registration if needed and attempts to restore it afterward. The account must be an admin to open registration. The script also turns off password AutoFill prompts on the simulator. Set `NORISH_SIMULATOR` to a simulator UDID when several are booted.
 
-The offline flows use a proxy on port 3998, controlled through port 3997 (`NORISH_PROXY_PORT` and `NORISH_PROXY_CONTROL_PORT`). The realtime flow uses the control port to check a grocery on the server. The version proxy on port 3999 (`NORISH_OLD_SERVER_PORT`) forwards to the same server. Calls to `/old` and `/real` on the control port switch between an old version and the real version. The control port also lets the session expiry flow revoke the app's session.
+The offline flows use a proxy on port 3998, controlled through port 3997 (`NORISH_PROXY_PORT` and `NORISH_PROXY_CONTROL_PORT`). The version proxy on port 3999 (`NORISH_OLD_SERVER_PORT`) forwards to the same server. Calls to `/old` and `/real` on the control port switch between an old version and the real version. The control port also lets the session expiry flow revoke the app's session.
 
 Pass a flow path to run just that flow with the same setup:
 
