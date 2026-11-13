@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useRef, useState } from "react";
+import { useState } from "react";
 import { IngredientIcon } from "@/components/ingredients/ingredient-icon";
 import { OnTheListMark } from "@/components/ingredients/on-the-list-mark";
 import Panel from "@/components/Panel/Panel";
@@ -19,6 +19,7 @@ import type { EditedIngredient, GroceryIngredient } from "@norish/shared-react/g
 import {
   formatEditableIngredient,
   parseEditedIngredientLine,
+  useAddAtOnce,
   useGroceriesPantryAndCatalogueSubscriptions,
   useLineSelection,
   useLinesToBuy,
@@ -48,8 +49,7 @@ type LinesProps = {
   onOpenChange: (open: boolean) => void;
 };
 
-/* Adds what the panel would have ticked once the recipe has answered and the Pantry was read in
-   this mount, never from a cached copy; a Pantry that cannot be read opens the panel instead. */
+/* Adds what the panel would have ticked, unseen; see useAddAtOnce. */
 function AddAtOnce({
   recipeId,
   initialServings,
@@ -57,23 +57,7 @@ function AddAtOnce({
   onOpenChange,
   onDone,
 }: LinesProps & { onDone: () => void }) {
-  const { isLoading, linkedLoading, pantry, toBuy, addLines } = useLinesToBuy(
-    recipeId,
-    originalServings,
-    initialServings,
-    {}
-  );
-  const addedRef = useRef(false);
-  const ready = !isLoading && !linkedLoading && !pantry.isLoading && !pantry.isFetching;
-
-  useEffect(() => {
-    if (!ready || addedRef.current) return;
-    addedRef.current = true;
-    onDone();
-    if (pantry.isUnavailable) onOpenChange(true);
-    else if (toBuy.length === 0) onOpenChange(false);
-    else void addLines(toBuy).finally(() => onOpenChange(false));
-  });
+  useAddAtOnce({ recipeId, initialServings, originalServings, onOpenChange, onDone });
 
   return null;
 }
