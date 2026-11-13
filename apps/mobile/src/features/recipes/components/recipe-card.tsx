@@ -21,56 +21,28 @@ type Props = {
 /** A recipe in the Library, as a row or a grid card; a press opens it. */
 export function RecipeCard({ recipe, variant, isFavorite, allergies }: Props) {
   const { navigation } = usePlatform();
-  const { tagNames, allergySet, timeLabel, servings } = recipeCardFacts(recipe, allergies);
-  const description = recipe.description?.trim() ?? "";
-  const open = () => navigation.toRecipe(recipe.id);
+  const facts = recipeCardFacts(recipe, allergies);
+  const Card = variant === "grid" ? GridCard : RowCard;
 
-  return variant === "grid" ? (
-    <GridCard
-      allergySet={allergySet}
-      description={description}
+  return (
+    <Card
+      facts={facts}
       isFavorite={isFavorite}
       recipe={recipe}
-      servings={servings}
-      tagNames={tagNames}
-      timeLabel={timeLabel}
-      onPress={open}
-    />
-  ) : (
-    <RowCard
-      allergySet={allergySet}
-      description={description}
-      isFavorite={isFavorite}
-      recipe={recipe}
-      servings={servings}
-      tagNames={tagNames}
-      timeLabel={timeLabel}
-      onPress={open}
+      onPress={() => navigation.toRecipe(recipe.id)}
     />
   );
 }
 
 type CardProps = {
   recipe: RecipeDashboardDTO;
-  description: string;
+  facts: ReturnType<typeof recipeCardFacts>;
   isFavorite: boolean;
-  tagNames: string[];
-  allergySet: Set<string>;
-  timeLabel: string | null | undefined;
-  servings: number | null;
   onPress: () => void;
 };
 
-function RowCard({
-  recipe,
-  description,
-  isFavorite,
-  tagNames,
-  allergySet,
-  timeLabel,
-  servings,
-  onPress,
-}: CardProps) {
+function RowCard({ recipe, facts, isFavorite, onPress }: CardProps) {
+  const { description, tagNames, allergySet, timeLabel, servings } = facts;
   const [firstTag, ...otherTags] = tagNames;
   const overflowIsAllergen = otherTags.some((tag) => isAllergenTag(tag, allergySet));
 
@@ -127,16 +99,9 @@ function RowCard({
   );
 }
 
-function GridCard({
-  recipe,
-  description,
-  isFavorite,
-  tagNames,
-  allergySet,
-  timeLabel,
-  servings,
-  onPress,
-}: CardProps) {
+function GridCard({ recipe, facts, isFavorite, onPress }: CardProps) {
+  const { description, tagNames, allergySet, timeLabel, servings } = facts;
+
   return (
     <Pressable
       accessibilityRole="button"
@@ -173,12 +138,12 @@ function GridCard({
         </Text>
         <View className="border-border mt-auto flex-row gap-1 overflow-hidden border-t pt-2.5">
           {timeLabel ? (
-            <Pill icon="time-outline" size="foot">
+            <Pill icon="time-outline" size="footer">
               {timeLabel}
             </Pill>
           ) : null}
           {servings ? (
-            <Pill icon="people-outline" size="foot">
+            <Pill icon="people-outline" size="footer">
               {servings}
             </Pill>
           ) : null}

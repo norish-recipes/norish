@@ -4,17 +4,17 @@ import { Text, View } from "react-native";
 import Ionicons from "@expo/vector-icons/Ionicons";
 import { useThemeColor } from "heroui-native";
 
-type Size = "row" | "foot" | "overlay";
+type Size = "row" | "footer" | "overlay";
 type Tone = "default" | "surface" | "warning";
 
 const BOX: Record<Size, string> = {
   row: "h-6 gap-1 rounded-xl px-2",
-  foot: "h-[22px] gap-1 rounded-[11px] px-[7px]",
+  footer: "h-[22px] gap-1 rounded-[11px] px-[7px]",
   overlay: "h-6 gap-1 rounded-xl px-[9px]",
 };
 const TEXT: Record<Size, string> = {
   row: "text-[13px]",
-  foot: "text-[11px]",
+  footer: "text-[11px]",
   overlay: "text-xs",
 };
 const GROUND: Record<Tone, string> = {
@@ -43,7 +43,7 @@ export function Pill({
         <Ionicons
           color={tone === "warning" ? warningForeground : muted}
           name={icon}
-          size={size === "foot" ? 11 : 13}
+          size={size === "footer" ? 11 : 13}
         />
       ) : null}
       <Text

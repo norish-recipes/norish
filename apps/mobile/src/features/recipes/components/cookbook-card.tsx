@@ -7,6 +7,7 @@ import { useIntl } from "react-intl";
 
 import type { CookbookSummaryDTO } from "@norish/shared/contracts";
 import type { RecipeViewMode } from "@norish/shared/contracts/zod/device-preferences";
+import { allergenSet, coverMosaicColumns } from "@norish/shared-react/recipes";
 import { formatMinutesHM, isAllergenTag } from "@norish/shared/lib/helpers";
 
 import { Pill } from "./pill";
@@ -34,20 +35,9 @@ function CookbookCover({
     );
   }
 
-  // The board's mosaic: one photo whole, two side by side, three as one tall and two stacked, four in a grid.
-  const columns =
-    photos.length >= 4
-      ? [
-          [0, 2],
-          [1, 3],
-        ]
-      : photos.length === 3
-        ? [[0], [1, 2]]
-        : photos.map((_, index) => [index]);
-
   return (
     <View className={`flex-row gap-0.5 overflow-hidden ${className}`}>
-      {columns.map((rows) => (
+      {coverMosaicColumns(photos.length).map((rows) => (
         <View key={rows.join()} className="flex-1 gap-0.5">
           {rows.map((index) => tile(photos[index] ?? "", "w-full flex-1"))}
         </View>
@@ -68,7 +58,7 @@ export function CookbookCard({
 }) {
   const intl = useIntl();
   const [accent] = useThemeColor(["accent"] as const);
-  const allergySet = new Set(allergies.map((allergy) => allergy.toLowerCase()));
+  const allergySet = allergenSet(allergies);
   const allergens = cookbook.memberTags.filter((tag) => isAllergenTag(tag, allergySet));
   const timeLabel = formatMinutesHM(cookbook.totalMinutes ?? undefined);
   const count = intl.formatMessage(
@@ -76,7 +66,7 @@ export function CookbookCard({
     { count: cookbook.memberCount }
   );
   const description = cookbook.memberTitles.join(", ");
-  const size = variant === "grid" ? "foot" : "row";
+  const size = variant === "grid" ? "footer" : "row";
 
   const facts = (
     <View className="flex-row gap-1.5 overflow-hidden">
