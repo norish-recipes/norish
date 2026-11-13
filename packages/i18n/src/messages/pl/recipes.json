@@ -431,7 +431,10 @@
     "changeCover": "Zmień okładkę",
     "renameTitle": "Zmień nazwę książki kucharskiej",
     "coverFromLibrary": "Wybierz z biblioteki",
-    "coverFromCamera": "Zrób zdjęcie"
+    "coverFromCamera": "Zrób zdjęcie",
+    "cameraDeniedTitle": "Dostęp do aparatu jest wyłączony",
+    "cameraDeniedMessage": "Zezwól na dostęp do aparatu w Ustawieniach, aby zrobić zdjęcie.",
+    "openSettings": "Otwórz ustawienia"
   },
   "print": {
     "title": "Drukuj przepis",

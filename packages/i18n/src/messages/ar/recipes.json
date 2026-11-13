@@ -431,7 +431,10 @@
     "changeCover": "تغيير الغلاف",
     "renameTitle": "إعادة تسمية كتاب الطبخ",
     "coverFromLibrary": "اختيار من المكتبة",
-    "coverFromCamera": "التقاط صورة"
+    "coverFromCamera": "التقاط صورة",
+    "cameraDeniedTitle": "الوصول إلى الكاميرا متوقف",
+    "cameraDeniedMessage": "اسمح بالوصول إلى الكاميرا في الإعدادات لالتقاط صورة.",
+    "openSettings": "فتح الإعدادات"
   },
   "print": {
     "title": "طباعة الوصفة",

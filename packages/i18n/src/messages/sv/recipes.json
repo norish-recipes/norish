@@ -431,7 +431,10 @@
     "changeCover": "Byt omslag",
     "renameTitle": "Byt namn på kokboken",
     "coverFromLibrary": "Välj från biblioteket",
-    "coverFromCamera": "Ta ett foto"
+    "coverFromCamera": "Ta ett foto",
+    "cameraDeniedTitle": "Kameraåtkomst är avstängd",
+    "cameraDeniedMessage": "Tillåt kameraåtkomst i Inställningar för att ta ett foto.",
+    "openSettings": "Öppna inställningar"
   },
   "print": {
     "title": "Skriv ut recept",

@@ -1,4 +1,4 @@
-import { ActionSheetIOS } from "react-native";
+import { ActionSheetIOS, Alert, Linking } from "react-native";
 import { File } from "expo-file-system";
 import * as ImagePicker from "expo-image-picker";
 import { useIntl } from "react-intl";
@@ -23,7 +23,24 @@ export function useCookbookCoverPicker(onPicked: (file: File) => void) {
   const fromCamera = async () => {
     const { granted } = await ImagePicker.requestCameraPermissionsAsync();
 
-    if (granted) take(await ImagePicker.launchCameraAsync(PICKER));
+    if (granted) {
+      take(await ImagePicker.launchCameraAsync(PICKER));
+
+      return;
+    }
+
+    // The photo library needs no permission here: the system picker hands over only what is chosen.
+    Alert.alert(
+      intl.formatMessage({ id: "recipes.cookbooks.cameraDeniedTitle" }),
+      intl.formatMessage({ id: "recipes.cookbooks.cameraDeniedMessage" }),
+      [
+        { text: intl.formatMessage({ id: "common.actions.cancel" }), style: "cancel" },
+        {
+          text: intl.formatMessage({ id: "recipes.cookbooks.openSettings" }),
+          onPress: () => void Linking.openSettings(),
+        },
+      ]
+    );
   };
 
   return () =>

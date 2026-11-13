@@ -431,7 +431,10 @@
     "changeCover": "Titelbild ändern",
     "renameTitle": "Kochbuch umbenennen",
     "coverFromLibrary": "Aus Mediathek wählen",
-    "coverFromCamera": "Foto aufnehmen"
+    "coverFromCamera": "Foto aufnehmen",
+    "cameraDeniedTitle": "Kamerazugriff ist ausgeschaltet",
+    "cameraDeniedMessage": "Erlauben Sie den Kamerazugriff in den Einstellungen, um ein Foto aufzunehmen.",
+    "openSettings": "Einstellungen öffnen"
   },
   "print": {
     "title": "Rezept drucken",

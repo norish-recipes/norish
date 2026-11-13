@@ -431,7 +431,10 @@
     "changeCover": "Omslag wijzigen",
     "renameTitle": "Kookboek hernoemen",
     "coverFromLibrary": "Kies uit bibliotheek",
-    "coverFromCamera": "Foto maken"
+    "coverFromCamera": "Foto maken",
+    "cameraDeniedTitle": "Cameratoegang staat uit",
+    "cameraDeniedMessage": "Sta cameratoegang toe in Instellingen om een foto te maken.",
+    "openSettings": "Instellingen openen"
   },
   "print": {
     "title": "Recept afdrukken",

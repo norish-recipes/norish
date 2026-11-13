@@ -431,7 +431,10 @@
     "changeCover": "Alterar capa",
     "renameTitle": "Renomear livro de receitas",
     "coverFromLibrary": "Escolher da biblioteca",
-    "coverFromCamera": "Tirar foto"
+    "coverFromCamera": "Tirar foto",
+    "cameraDeniedTitle": "O acesso à câmera está desativado",
+    "cameraDeniedMessage": "Permita o acesso à câmera nos Ajustes para tirar uma foto.",
+    "openSettings": "Abrir ajustes"
   },
   "print": {
     "title": "Imprimir receita",

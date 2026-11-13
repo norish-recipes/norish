@@ -431,7 +431,10 @@
     "changeCover": "Cambiar portada",
     "renameTitle": "Renombrar recetario",
     "coverFromLibrary": "Elegir de la fototeca",
-    "coverFromCamera": "Hacer una foto"
+    "coverFromCamera": "Hacer una foto",
+    "cameraDeniedTitle": "El acceso a la cámara está desactivado",
+    "cameraDeniedMessage": "Permite el acceso a la cámara en Ajustes para hacer una foto.",
+    "openSettings": "Abrir ajustes"
   },
   "print": {
     "title": "Imprimir receta",
