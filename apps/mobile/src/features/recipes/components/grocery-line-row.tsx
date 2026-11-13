@@ -1,7 +1,8 @@
 import React from "react";
 import { Pressable, Text, View } from "react-native";
+import { RoundTick } from "@/components/round-tick";
 import Ionicons from "@expo/vector-icons/Ionicons";
-import { Checkbox, Chip, Skeleton, useThemeColor } from "heroui-native";
+import { Chip, Skeleton, useThemeColor } from "heroui-native";
 import { useIntl } from "react-intl";
 
 const ROW = "flex-row items-center gap-3 px-3.5 py-2.5";
@@ -66,16 +67,7 @@ export function GroceryLineRow({
         testID={testID}
         onPress={onToggle}
       >
-        <Checkbox
-          className={`size-6 rounded-full border-2 bg-transparent shadow-none ${selected ? "border-transparent" : "border-border"}`}
-          importantForAccessibility="no-hide-descendants"
-          isSelected={selected}
-          pointerEvents="none"
-        >
-          {/* The filled tick is the indicator, whose radius heroui animates to 0 when selected;
-              iOS clamps a radius to half the side, so this keeps it a circle. */}
-          <Checkbox.Indicator animation={{ borderRadius: { value: [999, 999] } }} />
-        </Checkbox>
+        <RoundTick selected={selected} />
         <Text className="text-foreground min-w-0 flex-1 text-base">
           {amount ? <Text className="text-accent-text font-medium">{`${amount} `}</Text> : null}
           {name}
