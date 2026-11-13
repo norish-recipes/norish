@@ -64,7 +64,7 @@ test("a browser AI paste import receives the controlled provider response", asyn
 
   await page.goto("/");
 
-  // Start an AI-assisted paste import; the AI Import action is present
+  // Start an AI-assisted paste import; the AI import action is present
   // because the harness has AI enabled server-side.
   await submitPasteImport(
     page,
