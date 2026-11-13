@@ -9,10 +9,12 @@ import { useCSSVariable } from "uniwind";
 
 import type { RecipeViewMode } from "@norish/shared/contracts/zod/device-preferences";
 
+import type { RecipeSwipeAction } from "../utils/card-actions";
+
 type IconName = ComponentProps<typeof Ionicons>["name"];
 
 export type SwipeAction = {
-  key: "groceries" | "plan" | "delete";
+  key: RecipeSwipeAction;
   label: string;
   onPress: () => void;
   testID: string;
@@ -63,17 +65,8 @@ export function SwipeActions({
         <View
           accessibilityElementsHidden={!isOpen}
           importantForAccessibility={isOpen ? "auto" : "no-hide-descendants"}
-          style={
-            isGrid
-              ? {
-                  width,
-                  paddingLeft: GRID_GAP,
-                  justifyContent: "center",
-                  alignItems: "center",
-                  gap: 18,
-                }
-              : { width, paddingLeft: LIST_GAP, flexDirection: "row" }
-          }
+          className={isGrid ? "items-center justify-center gap-[18px] pl-1" : "flex-row pl-2"}
+          style={{ width }}
         >
           {actions.map((action) => (
             <ActionButton
@@ -117,28 +110,19 @@ function ActionButton({
   const shopForeground = useCSSVariable("--color-shop-foreground");
   const icon =
     action.key === "groceries" && typeof shopForeground === "string" ? shopForeground : onColour;
-  const circle = isGrid ? 44 : 48;
 
   return (
     <Pressable
       accessibilityLabel={action.label}
       accessibilityRole="button"
-      className={isGrid ? "items-center gap-1.5" : "flex-1 items-center justify-center gap-[7px]"}
-      style={isGrid ? { width: 72 } : undefined}
+      className={
+        isGrid ? "w-[72px] items-center gap-1.5" : "flex-1 items-center justify-center gap-[7px]"
+      }
       testID={action.testID}
       onPress={onPress}
     >
       <View
-        className={`items-center justify-center ${GROUND[action.key]}`}
-        style={{
-          width: circle,
-          height: circle,
-          borderRadius: circle / 2,
-          shadowColor: "#000",
-          shadowOpacity: 0.14,
-          shadowRadius: 4,
-          shadowOffset: { width: 0, height: 2 },
-        }}
+        className={`items-center justify-center rounded-full shadow-sm ${isGrid ? "size-11" : "size-12"} ${GROUND[action.key]}`}
       >
         <Ionicons color={icon} name={ICONS[action.key]} size={isGrid ? 19 : 20} />
       </View>

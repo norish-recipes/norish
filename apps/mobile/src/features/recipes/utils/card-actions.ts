@@ -1,7 +1,20 @@
+import type { MenuItem } from "../components/card-menu";
+
 /** What a recipe card's swipe offers, left to right. */
-export function recipeSwipeActions(canDelete: boolean): ("groceries" | "plan" | "delete")[] {
-  return canDelete ? ["groceries", "plan", "delete"] : ["groceries", "plan"];
+export function recipeSwipeActions(canDelete: boolean) {
+  return canDelete ? (["groceries", "plan", "delete"] as const) : (["groceries", "plan"] as const);
 }
+
+export type RecipeSwipeAction = ReturnType<typeof recipeSwipeActions>[number];
+
+/** How an action reads and looks: its i18n ids, its SF Symbol, and whether it is destructive. */
+export type ActionDefinition = {
+  labelId: string;
+  /** The swipe's caption, where it differs from the menu's. */
+  swipeLabelId?: string;
+  icon: MenuItem["icon"];
+  destructive?: boolean;
+};
 
 export type RecipeMenuAction =
   "favourite" | "groceries" | "plan" | "addToCookbook" | "removeFromCookbook" | "delete";
@@ -39,3 +52,35 @@ export function cookbookMenuActions({
     ...(canDelete ? (["delete"] as const) : []),
   ];
 }
+
+export function recipeActionDefinition(
+  key: RecipeMenuAction,
+  isFavorite: boolean
+): ActionDefinition {
+  const definitions: Record<RecipeMenuAction, ActionDefinition> = {
+    favourite: isFavorite
+      ? { labelId: "recipes.actions.unfavourite", icon: "heart.fill" }
+      : { labelId: "recipes.actions.favourite", icon: "heart" },
+    groceries: {
+      labelId: "recipes.detail.addToGroceries",
+      swipeLabelId: "recipes.actions.groceries",
+      icon: "bag",
+    },
+    plan: { labelId: "recipes.actions.plan", icon: "calendar" },
+    addToCookbook: { labelId: "recipes.selection.addToCookbook", icon: "book" },
+    removeFromCookbook: {
+      labelId: "recipes.cookbooks.removeFromCookbook",
+      icon: "minus.circle",
+      destructive: true,
+    },
+    delete: { labelId: "recipes.actions.delete", icon: "trash", destructive: true },
+  };
+
+  return definitions[key];
+}
+
+export const COOKBOOK_ACTION_DEFINITIONS: Record<CookbookMenuAction, ActionDefinition> = {
+  addRecipes: { labelId: "recipes.cookbooks.addRecipes", icon: "plus" },
+  rename: { labelId: "recipes.cookbooks.rename", icon: "pencil" },
+  delete: { labelId: "recipes.actions.delete", icon: "trash", destructive: true },
+};

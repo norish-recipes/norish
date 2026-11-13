@@ -13,8 +13,8 @@ import { coverMosaicColumns } from "@norish/shared-react/recipes";
 import { allergenSet, formatMinutesHM, isAllergenTag } from "@norish/shared/lib/helpers";
 
 import type { CardActions } from "../hooks/use-card-actions";
-import type { MenuItem } from "./card-menu";
-import { cookbookMenuActions } from "../utils/card-actions";
+import { useCardActionMenu } from "../hooks/use-card-action-menu";
+import { COOKBOOK_ACTION_DEFINITIONS, cookbookMenuActions } from "../utils/card-actions";
 import { CardMenu } from "./card-menu";
 import { Pill } from "./pill";
 
@@ -107,46 +107,31 @@ export function CookbookCard({
     </View>
   );
 
-  const labels = {
-    addRecipes: intl.formatMessage({ id: "recipes.cookbooks.addRecipes" }),
-    rename: intl.formatMessage({ id: "recipes.cookbooks.rename" }),
-    delete: intl.formatMessage({ id: "recipes.actions.delete" }),
-  };
-  const runs = {
+  const handlers = {
     addRecipes: () => actions.addRecipes(cookbook),
     rename: () => actions.renameCookbook(cookbook),
     delete: () => actions.deleteCookbook(cookbook),
   };
-  const icons: Record<keyof typeof runs, MenuItem["icon"]> = {
-    addRecipes: "plus",
-    rename: "pencil",
-    delete: "trash",
-  };
-  const menu: MenuItem[] = cookbookMenuActions({
-    canEdit: actions.canEditCookbook(cookbook),
-    canDelete: actions.canDeleteCookbook(cookbook),
-  }).map((key) => ({
-    key,
-    label: labels[key],
-    icon: icons[key],
-    destructive: key === "delete",
-    onPress: runs[key],
-  }));
+  const { items, accessibilityProps } = useCardActionMenu(
+    cookbookMenuActions({
+      canEdit: actions.canEdit(cookbook),
+      canDelete: actions.canDelete(cookbook),
+    }),
+    (key) => COOKBOOK_ACTION_DEFINITIONS[key],
+    handlers
+  );
   const open = () => router.push({ pathname: "/cookbook/[id]", params: { id: cookbook.id } });
   const tap = useTapGesture({ runOnJS: true, onActivate: open });
 
   return (
-    <CardMenu href={{ pathname: "/cookbook/[id]", params: { id: cookbook.id } }} items={menu}>
+    <CardMenu href={{ pathname: "/cookbook/[id]", params: { id: cookbook.id } }} items={items}>
       <View
         accessible
-        accessibilityActions={menu.map(({ key, label }) => ({ name: key, label }))}
+        {...accessibilityProps}
         accessibilityLabel={cookbook.title}
         accessibilityRole="button"
         className={variant === "grid" ? "flex-1" : undefined}
         testID={`cookbook-card-${cookbook.id}`}
-        onAccessibilityAction={({ nativeEvent }) =>
-          runs[nativeEvent.actionName as keyof typeof runs]?.()
-        }
         onAccessibilityTap={open}
       >
         <GestureDetector gesture={tap}>

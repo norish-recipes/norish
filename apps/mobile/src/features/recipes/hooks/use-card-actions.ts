@@ -14,10 +14,7 @@ import {
 type Recipe = Pick<RecipeDashboardDTO, "id" | "name" | "version" | "userId">;
 type Cookbook = Pick<CookbookSummaryDTO, "id" | "title" | "version" | "userId">;
 
-/**
- * What a recipe or cookbook card can do, built once per list. Every write is a shared mutation,
- * so offline it queues in the Outbox as on web; the sheets are routes their tickets fill.
- */
+/** What a recipe or cookbook card can do; writes are shared mutations, so offline they queue in the Outbox. */
 export function useCardActions() {
   const intl = useIntl();
   const router = useRouter();
@@ -38,10 +35,8 @@ export function useCardActions() {
     ]);
 
   return {
-    canDelete: (recipe: Recipe) => ownerAllows(recipe.userId, canDeleteRecipe),
-    canRemoveFromCookbook: (cookbook: Cookbook) => ownerAllows(cookbook.userId, canEditRecipe),
-    canEditCookbook: (cookbook: Cookbook) => ownerAllows(cookbook.userId, canEditRecipe),
-    canDeleteCookbook: (cookbook: Cookbook) => ownerAllows(cookbook.userId, canDeleteRecipe),
+    canDelete: (owned: Pick<Recipe, "userId">) => ownerAllows(owned.userId, canDeleteRecipe),
+    canEdit: (owned: Pick<Recipe, "userId">) => ownerAllows(owned.userId, canEditRecipe),
     toggleFavourite: (recipe: Recipe) => toggleFavorite(recipe.id),
     addToGroceries: (recipe: Recipe) =>
       router.push({ pathname: "/add-to-groceries", params: { recipeId: recipe.id } }),
