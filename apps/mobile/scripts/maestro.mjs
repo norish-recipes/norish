@@ -5,7 +5,7 @@ import { randomBytes } from "node:crypto";
 import { once } from "node:events";
 import { existsSync, readFileSync } from "node:fs";
 import { mkdtemp } from "node:fs/promises";
-import { createServer } from "node:http";
+import { createServer, request as httpRequest } from "node:http";
 import net from "node:net";
 import os from "node:os";
 import path from "node:path";
@@ -201,6 +201,11 @@ const control = createServer(async (request, response) => {
     for (const socket of sockets) socket.destroy();
   } else if (request.url === "/restore" && !proxy.listening) {
     listenProxy();
+  } else if (request.url === "/old" || request.url === "/real") {
+    tooOld = request.url === "/old";
+  } else if (request.url === "/revoke-other-sessions") {
+    // This script's own session stays; the app's, signed in as the same Account, ends.
+    await call("/api/auth/revoke-other-sessions", {});
   }
   response.end();
 }).listen(Number(env.NORISH_PROXY_CONTROL_PORT), LOOPBACK);
@@ -228,7 +233,7 @@ spawnSync(
   ],
   { stdio: "inherit" }
 );
-// Async, so the old-server stub below keeps answering while Maestro runs.
+// Async, so the version proxy below keeps answering while Maestro runs.
 async function maestro(target, vars) {
   const args = Object.entries(vars).flatMap(([name, value]) => ["-e", `${name}=${value}`]);
   const [code] = await once(
@@ -243,19 +248,73 @@ async function maestro(target, vars) {
   if (code !== 0) throw Object.assign(new Error(`Maestro exited with ${code}`), { code });
 }
 
-// A server older than the app supports: its readiness probe reports this version.
+// The throwaway server behind a proxy that reports a version too old for the app while `tooOld` is
+// set, which the flows switch on the control port (`/old`, `/real`). Everything else is forwarded.
 const OLD_SERVER_VERSION = "0.1.0";
-const oldServer = createServer((_request, response) => {
-  response.writeHead(200, { "content-type": "application/json" });
-  response.end(
-    JSON.stringify({ status: "ok", version: OLD_SERVER_VERSION, parser: { status: "ok" } })
+let tooOld = false;
+const versionProxy = createServer((request, response) => {
+  if (tooOld && request.url?.startsWith(`${backend.pathname.replace(/\/+$/, "")}/api/v1/health`)) {
+    response.writeHead(200, { "content-type": "application/json" });
+    response.end(
+      JSON.stringify({ status: "ok", version: OLD_SERVER_VERSION, parser: { status: "ok" } })
+    );
+
+    return;
+  }
+
+  const upstream = httpRequest(
+    {
+      host: backend.hostname,
+      port: Number(backend.port || 80),
+      path: request.url,
+      method: request.method,
+      headers: { ...request.headers, host: backend.host },
+    },
+    (answer) => {
+      response.writeHead(answer.statusCode ?? 502, answer.headers);
+      answer.pipe(response);
+    }
   );
-}).listen(Number(env.NORISH_OLD_SERVER_PORT), LOOPBACK);
+
+  upstream.on("error", () => {
+    response.writeHead(502);
+    response.end();
+  });
+  request.pipe(upstream);
+});
+
+versionProxy.on("upgrade", (request, socket, head) => {
+  const upstream = net.connect(Number(backend.port || 80), backend.hostname, () => {
+    const headers = { ...request.headers, host: backend.host };
+
+    upstream.write(
+      `${request.method} ${request.url} HTTP/1.1\r\n` +
+        Object.entries(headers)
+          .map(([name, value]) => `${name}: ${value}`)
+          .join("\r\n") +
+        "\r\n\r\n"
+    );
+    upstream.write(head);
+    upstream.pipe(socket);
+    socket.pipe(upstream);
+  });
+
+  upstream.on("error", () => socket.destroy());
+  socket.on("error", () => upstream.destroy());
+});
+versionProxy.listen(Number(env.NORISH_OLD_SERVER_PORT), LOOPBACK);
+// A provider this server lists as OAuth, for the Sign-in failed flow's deep link.
+const oauthProvider = (await trpc("config.authProviders")).providers.find(
+  (provider) => provider.type === "oauth"
+);
+
+if (!oauthProvider) throw new Error(`${server} lists no OAuth provider for the Sign-in failed flow`);
+
 const appVersion = JSON.parse(readFileSync(path.join(flows, "../package.json"), "utf8")).version;
 // The app's minimum, as in src/features/auth/utils/server-version.ts.
 const minimumVersion = appVersion.replace(/^(\d+\.\d+)\..*$/, "$1.0");
 // English copy the flows assert, from the catalogue so a rewording stays in step.
-const { signup } = JSON.parse(
+const { signup, signInFailed, updateServer } = JSON.parse(
   readFileSync(
     path.join(import.meta.dirname, "../../../packages/i18n/src/messages/en/auth.json"),
     "utf8"
@@ -265,9 +324,18 @@ const { signup } = JSON.parse(
 const vars = {
   NORISH_SERVER_URL: server,
   NORISH_SERVER_HOST: backend.host,
-  NORISH_OLD_SERVER_URL: `http://localhost:${env.NORISH_OLD_SERVER_PORT}`,
-  NORISH_OLD_SERVER_HOST: `localhost:${env.NORISH_OLD_SERVER_PORT}`,
+  // The version proxy: the real server's address, until `/old` makes its version check say too old.
+  NORISH_VERSION_PROXY_URL: `http://localhost:${env.NORISH_OLD_SERVER_PORT}${server.slice(backend.origin.length)}`,
+  NORISH_VERSION_PROXY_HOST: `localhost:${env.NORISH_OLD_SERVER_PORT}`,
   NORISH_OLD_SERVER_VERSION: OLD_SERVER_VERSION,
+  NORISH_OAUTH_PROVIDER_ID: oauthProvider.id,
+  NORISH_COPY_SIGN_IN_FAILED_TITLE: signInFailed.title,
+  NORISH_COPY_SIGN_IN_FAILED_NAMED: signInFailed.description.replace(
+    "{provider}",
+    oauthProvider.name
+  ),
+  NORISH_COPY_SIGN_IN_FAILED_UNNAMED: signInFailed.descriptionUnnamed,
+  NORISH_COPY_UPDATE_SERVER_TITLE: updateServer.title,
   NORISH_MINIMUM_SERVER_VERSION: minimumVersion,
   NORISH_COPY_PASSWORD_MISMATCH: signup.errors.passwordMismatch,
   NORISH_EMAIL: env.NORISH_EMAIL,
@@ -283,7 +351,6 @@ const vars = {
 try {
   await maestro(only ?? flows, vars);
   proxy.close();
-  control.close();
 
   if (!only) {
     const after = await ours();
@@ -300,7 +367,8 @@ try {
   console.error(error.message);
   process.exitCode = error.code ?? 1;
 } finally {
-  oldServer.close();
+  control.close();
+  versionProxy.close();
   if (!registrationWasOpen) {
     const closed = await setRegistration(false).catch(() => null);
 
