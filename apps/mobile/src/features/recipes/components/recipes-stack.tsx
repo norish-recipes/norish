@@ -17,7 +17,10 @@ export function RecipesStack() {
           headerLargeTitle: true,
           headerTransparent: true,
           headerLargeTitleShadowVisible: false,
-          headerRight: () => <AccountAvatar />,
+          // The board draws the avatar bare, without iOS 26's shared glass capsule.
+          unstable_headerRightItems: () => [
+            { type: "custom", element: <AccountAvatar />, hidesSharedBackground: true },
+          ],
         }}
       >
         <Stack.Screen

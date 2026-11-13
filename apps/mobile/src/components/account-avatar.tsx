@@ -19,9 +19,13 @@ export function AccountAvatar() {
       testID="account-avatar"
       onPress={() => router.navigate("/settings")}
     >
-      <Avatar alt={name} size="md">
+      <Avatar alt={name} className="size-9">
         {user?.image ? <Avatar.Image source={{ uri: toUrl(user.image) }} /> : null}
-        <Avatar.Fallback>{name.slice(0, 1).toUpperCase()}</Avatar.Fallback>
+        <Avatar.Fallback
+          classNames={{ container: "bg-avatar", text: "text-foreground text-base font-semibold" }}
+        >
+          {name.slice(0, 1).toUpperCase()}
+        </Avatar.Fallback>
       </Avatar>
     </Pressable>
   );
