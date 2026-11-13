@@ -1,6 +1,6 @@
 "use client";
 
-import { useCallback, useMemo, useRef } from "react";
+import { useMemo, useRef } from "react";
 import { settleLanding, useLandOnDay } from "@/components/calendar/land-on-day";
 import { TimelineDaySection } from "@/components/calendar/timeline-day-section";
 import Panel from "@/components/Panel/Panel";
@@ -38,7 +38,7 @@ function MiniCalendarContent({
   const today = useMemo(() => new Date(), []);
   const { recipe } = useRecipeQuery(recipeId);
   const { days: allDays, todayKey, todayIndex, calendarData, isLoading } = useMiniCalendar(today);
-  const close = useCallback(() => onOpenChange(false), [onOpenChange]);
+  const close = () => onOpenChange(false);
   const handlePlan = usePlanOnDay({ recipe, close, onPlanned });
   // A day's date on one line, as the calendar itself writes it: "Wed, Oct 7"
   const dateFormatter = useMemo(
