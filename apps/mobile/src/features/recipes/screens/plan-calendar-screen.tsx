@@ -1,7 +1,8 @@
 import React from "react";
-import { FlatList, View } from "react-native";
+import { View } from "react-native";
 import { DayCard, DayCardSkeleton, formatDay } from "@/components/day-card";
 import { DAY_CARD, dayCardHeight, dayCardOffsets } from "@/components/day-card-height";
+import { Sheet, SheetList } from "@/components/sheet";
 import { useLocalSearchParams, useRouter } from "expo-router";
 import { useIntl } from "react-intl";
 
@@ -16,7 +17,6 @@ import { slotTranslationKeys } from "@norish/shared-react/calendar/todays-meals"
 import { useToday } from "@norish/shared-react/reader";
 import { dateKey, parseDateKey } from "@norish/shared/lib/helpers";
 
-import { SheetHeader } from "../components/sheet-header";
 import { usePlanExit } from "../hooks/use-plan-exit";
 
 const SKELETONS = [0, 1, 2, 3];
@@ -80,8 +80,8 @@ function usePlanMode(items: PlannedItemFromQuery[]): Mode {
 }
 
 /**
- * The mini calendar as a sheet: every day from last month to next month, opened on today. Its
- * header is pinned above the list, and the shared mutations queue in the Outbox offline.
+ * The mini calendar as a sheet: every day from last month to next month, opened on today. The
+ * shared mutations queue in the Outbox offline.
  */
 export function PlanCalendarScreen() {
   const intl = useIntl();
@@ -95,23 +95,10 @@ export function PlanCalendarScreen() {
   const offsets = dayCardOffsets(heights, 0);
 
   return (
-    <>
-      {/* react-native-screens takes a sheet's first child as a header and sizes the list below it. */}
-      <View className="px-4 pt-[27px] pb-3.5" collapsable={false}>
-        <SheetHeader
-          closeTestID="plan-close"
-          subtitle={mode.subtitle}
-          title={mode.title}
-          onClose={() => router.back()}
-        />
-      </View>
-      <FlatList
+    <Sheet name="plan" subtitle={mode.subtitle} title={mode.title} onClose={() => router.back()}>
+      <SheetList
         // The list remounts when the plan arrives, so it opens on today instead of jumping there.
         key={isLoading ? "loading" : "days"}
-        className="flex-1"
-        contentContainerClassName="px-4 pb-8"
-        contentInsetAdjustmentBehavior="never"
-        contentOffset={{ x: 0, y: isLoading || todayIndex < 0 ? 0 : offsets[todayIndex]! }}
         data={rows}
         getItemLayout={
           isLoading
@@ -123,6 +110,7 @@ export function PlanCalendarScreen() {
               })
         }
         initialNumToRender={8}
+        initialScrollIndex={isLoading || todayIndex < 0 ? undefined : todayIndex}
         keyExtractor={(item) => (typeof item === "number" ? `skeleton-${item}` : dateKey(item))}
         maintainVisibleContentPosition={{ minIndexForVisible: 0 }}
         renderItem={({ item, index }) => {
@@ -148,9 +136,7 @@ export function PlanCalendarScreen() {
             </View>
           );
         }}
-        showsVerticalScrollIndicator={false}
-        testID="plan-sheet"
       />
-    </>
+    </Sheet>
   );
 }
