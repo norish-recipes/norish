@@ -16,6 +16,7 @@ export { useRecipeSubscription } from "./use-recipe-subscription";
 export { useRecipeVideos } from "./use-recipe-videos";
 export { useFavoritesMutation } from "./use-favorites-mutation";
 export { useFavoritesQuery } from "./use-favorites-query";
+export { libraryGridItems, recipeGridItems, type LibraryGridItem } from "./library-grid-items";
 export { useLibraryQuery } from "./use-library-query";
 export {
   useCookbookList,
