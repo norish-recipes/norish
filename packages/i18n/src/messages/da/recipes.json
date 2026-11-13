@@ -194,6 +194,7 @@
     "tagsHelp": "Skriv tags og klik på forslag for at tilføje. Tags på opskriften er udfyldte, nye tags har stiplet kant.",
     "tagsAndCategories": "Tags og kategorier",
     "categoriesHelp": "Vælg måltidskategorier for denne opskrift.",
+    "addCategory": "Tilføj kategori",
     "category": {
       "breakfast": "Morgenmad",
       "lunch": "Frokost",

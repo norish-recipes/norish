@@ -81,18 +81,18 @@ export class InstagramProcessor extends BaseVideoProcessor {
   readonly name: string = "InstagramProcessor";
 
   async process(context: VideoProcessorContext): Promise<FullRecipeInsertDTO> {
-    const { url, recipeId, tokens } = context;
+    const { url, recipeId, tokens, householdCategories } = context;
 
     log.info({ url }, "Processing Instagram post");
 
     const metadata = await this.getMetadata(url, tokens);
 
     if (metadata.videoStream === "absent") {
-      return this.processImagePost(url, recipeId, metadata, tokens);
+      return this.processImagePost(url, recipeId, metadata, tokens, householdCategories);
     }
 
     if (metadata.videoStream === "present") {
-      return this.processVideoPost(url, recipeId, metadata, tokens);
+      return this.processVideoPost(url, recipeId, metadata, tokens, householdCategories);
     }
 
     // An Unclassified Post: yt-dlp said nothing either way, so the video path is
@@ -101,13 +101,13 @@ export class InstagramProcessor extends BaseVideoProcessor {
     // failure, and quietly answering it with a caption-only recipe would hide
     // the outage behind a thin recipe.
     try {
-      return await this.processVideoPost(url, recipeId, metadata, tokens);
+      return await this.processVideoPost(url, recipeId, metadata, tokens, householdCategories);
     } catch (err) {
       if (!isMediaUnavailable(err)) throw err;
 
       log.info({ url, err }, "Unclassified Instagram post had no media, trying caption");
 
-      return this.processImagePost(url, recipeId, metadata, tokens);
+      return this.processImagePost(url, recipeId, metadata, tokens, householdCategories);
     }
   }
 
@@ -119,7 +119,8 @@ export class InstagramProcessor extends BaseVideoProcessor {
     url: string,
     recipeId: string,
     metadata: VideoMetadata,
-    tokens?: SiteAuthTokenDecryptedDto[]
+    tokens: SiteAuthTokenDecryptedDto[] | undefined,
+    householdCategories: readonly string[]
   ): Promise<FullRecipeInsertDTO> {
     log.info({ url }, "Detected Instagram image post");
 
@@ -149,7 +150,7 @@ export class InstagramProcessor extends BaseVideoProcessor {
     let recipe;
 
     try {
-      recipe = await extractRecipeWithAI(description, recipeId, url);
+      recipe = await extractRecipeWithAI(description, recipeId, { url, householdCategories });
     } catch (error) {
       log.warn({ url, err: error }, "AI extraction failed for Instagram image post");
       throw new Error("Instagram image posts are only supported if the caption contains a recipe", {
@@ -184,7 +185,8 @@ export class InstagramProcessor extends BaseVideoProcessor {
     url: string,
     recipeId: string,
     metadata: VideoMetadata,
-    tokens?: SiteAuthTokenDecryptedDto[]
+    tokens: SiteAuthTokenDecryptedDto[] | undefined,
+    householdCategories: readonly string[]
   ): Promise<FullRecipeInsertDTO> {
     let audioPath: string | null = null;
     let videoPath: string | null = null;
@@ -215,7 +217,13 @@ export class InstagramProcessor extends BaseVideoProcessor {
         // A failed description extraction is not terminal: the audio itself
         // is still there to transcribe.
         try {
-          const recipe = await extractRecipeFromVideo(descriptionText, metadata, recipeId, url);
+          const recipe = await extractRecipeFromVideo(
+            descriptionText,
+            metadata,
+            recipeId,
+            url,
+            householdCategories
+          );
 
           if (hasSteps(recipe)) {
             log.info({ url }, "Successfully extracted recipe from description");
@@ -253,7 +261,10 @@ export class InstagramProcessor extends BaseVideoProcessor {
 
           if (!captionRecipe && captionMayHoldRecipe(descriptionText, verdict, 50)) {
             try {
-              return await extractRecipeWithAI(descriptionText, recipeId, url);
+              return await extractRecipeWithAI(descriptionText, recipeId, {
+                url,
+                householdCategories,
+              });
             } catch (descriptionError) {
               log.warn({ url, err: descriptionError }, "Description extraction failed too");
             }
@@ -270,7 +281,7 @@ export class InstagramProcessor extends BaseVideoProcessor {
         // Combine transcript with description
         const combinedText = [transcript, descriptionText].filter(Boolean).join("\n\n---\n\n");
 
-        return extractRecipeFromVideo(combinedText, metadata, recipeId, url);
+        return extractRecipeFromVideo(combinedText, metadata, recipeId, url, householdCategories);
       });
 
       const savedVideo = videoPath

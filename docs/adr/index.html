@@ -500,7 +500,7 @@
           >
           <p>
             Persist the TanStack Query cache and use a Cache Warmer; offline search remains degraded
-            by design.
+            by design. Amended: one engine shared by web and mobile, with storage per client.
           </p>
         </li>
         <li>
@@ -939,6 +939,17 @@
             form) and a list of parents that never lend their numbers. A correction belongs to a
             household, and a recipe's worked-out nutrition is computed on read for the reader's
             household.
+          </p>
+        </li>
+        <li>
+          <a href="recipes/0040-categories-are-household-scoped.md"
+            >ADR-0040 &mdash; Categories are household-scoped, not instance-wide</a
+          >
+          <p>
+            <b>Accepted.</b> Categories move from an enum to Tag-shaped rows. The four built-ins are
+            fixed, and a household adds more on its own recipes, offered only to that household
+            whatever the view policy. Rejects an administrator-owned list and a household settings
+            table.
           </p>
         </li>
       </ul>

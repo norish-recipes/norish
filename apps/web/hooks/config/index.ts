@@ -1,4 +1,5 @@
 export { useTagsQuery } from "./use-tags-query";
+export { useCategoriesQuery } from "./use-categories-query";
 export { useCuisinesQuery } from "./use-cuisines-query";
 export { useUnitsQuery } from "./use-units-query";
 export { useIngredientWordsQuery } from "./use-ingredient-words-query";

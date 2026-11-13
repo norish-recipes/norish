@@ -7,14 +7,13 @@ import { useCalendarQuery } from "@/hooks/calendar/use-calendar-query";
 import { useCalendarSubscription } from "@/hooks/calendar/use-calendar-subscription";
 
 import type { PlannedItemFromQuery, Slot } from "@norish/shared/contracts";
-import { dateKey } from "@norish/shared/lib/helpers";
+import { dateKey, getInitialDateRange } from "@norish/shared/lib/helpers";
 
 import type {
   CalendarContextProviderProps,
   CalendarContextValue,
   CalendarDateRange,
 } from "./context-types";
-import { getInitialDateRange } from "./context-helpers";
 
 const CalendarContext = createContext<CalendarContextValue | null>(null);
 

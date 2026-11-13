@@ -81,6 +81,10 @@ vi.mock("@/context/device-preferences-context", async () =>
 );
 
 vi.mock("@/hooks/config", () => ({
+  useCategoriesQuery: () => ({
+    categories: ["Breakfast", "Lunch", "Dinner", "Snack", "Drinks"],
+    isLoading: false,
+  }),
   useTagsQuery: () => ({
     tags: ["Dinner", "Quick", "Vegetarian", "Soup", "Pasta", "Spicy"],
     isLoading: false,
@@ -166,5 +170,12 @@ describe("FiltersPanel", () => {
     expect(screen.getByText("rating-stars")).toBeInTheDocument();
 
     userPreferencesState.hidden = [];
+  });
+
+  it("offers the household's own Categories beside the built-ins", () => {
+    render(<FiltersPanel open onOpenChange={vi.fn()} />);
+
+    expect(screen.getByRole("button", { name: "category.breakfast" })).toBeInTheDocument();
+    expect(screen.getByRole("button", { name: "Drinks" })).toHaveAttribute("aria-pressed", "false");
   });
 });

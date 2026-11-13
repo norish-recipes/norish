@@ -1,0 +1,21 @@
+# Cuts the backend and cold-launches the app: it opens on the signed-in smoke screen, Offline.
+# `pnpm --filter @norish/mobile maestro` serves the cuttable proxy.
+appId: dev.norish.app
+---
+- evalScript: "${http.post(NORISH_PROXY_CONTROL_URL + '/restore', { body: '' })}"
+- runFlow:
+    file: subflows/sign-in.yaml
+    env:
+      NORISH_SIGN_IN_URL: ${NORISH_PROXY_URL}
+- evalScript: "${http.post(NORISH_PROXY_CONTROL_URL + '/cut', { body: '' })}"
+- stopApp
+- launchApp
+- extendedWaitUntil:
+    visible:
+      id: smoke-connection
+      text: Offline
+    timeout: 20000
+- assertVisible:
+    id: smoke-user
+    text: .*${NORISH_EMAIL}.*
+- evalScript: "${http.post(NORISH_PROXY_CONTROL_URL + '/restore', { body: '' })}"

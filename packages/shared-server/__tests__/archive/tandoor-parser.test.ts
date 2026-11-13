@@ -7,6 +7,7 @@ import {
   parseTandoorRecipeToDTO,
   TandoorRecipeSchema,
 } from "@norish/shared-server/archive/tandoor-parser";
+import { BUILT_IN_CATEGORIES } from "@norish/shared/lib/categories";
 
 // @vitest-environment node
 
@@ -214,7 +215,12 @@ describe("Tandoor Parser", () => {
     });
 
     it("converts Tandoor recipe to DTO", async () => {
-      const dto = await parseTandoorRecipeToDTO(mockRecipe, "123e4567-e89b-42d3-a456-426614174000");
+      const dto = await parseTandoorRecipeToDTO(
+        mockRecipe,
+        "123e4567-e89b-42d3-a456-426614174000",
+        undefined,
+        BUILT_IN_CATEGORIES
+      );
 
       expect(dto.name).toBe("'Bami'");
       expect(dto.description).toContain("bami");
@@ -227,7 +233,12 @@ describe("Tandoor Parser", () => {
     });
 
     it("flattens ingredients from all steps", async () => {
-      const dto = await parseTandoorRecipeToDTO(mockRecipe, "123e4567-e89b-42d3-a456-426614174000");
+      const dto = await parseTandoorRecipeToDTO(
+        mockRecipe,
+        "123e4567-e89b-42d3-a456-426614174000",
+        undefined,
+        BUILT_IN_CATEGORIES
+      );
 
       expect(dto.recipeIngredients).toHaveLength(2);
       expect(dto.recipeIngredients![0].ingredientName).toBe("mienestjes");
@@ -239,7 +250,12 @@ describe("Tandoor Parser", () => {
     });
 
     it("maps steps correctly (ignoring nested ingredients)", async () => {
-      const dto = await parseTandoorRecipeToDTO(mockRecipe, "123e4567-e89b-42d3-a456-426614174000");
+      const dto = await parseTandoorRecipeToDTO(
+        mockRecipe,
+        "123e4567-e89b-42d3-a456-426614174000",
+        undefined,
+        BUILT_IN_CATEGORIES
+      );
 
       expect(dto.steps).toHaveLength(2);
       expect(dto.steps![0].step).toBe(
@@ -252,7 +268,12 @@ describe("Tandoor Parser", () => {
       const recipeId = "123e4567-e89b-42d3-a456-426614174000";
 
       it("links each ingredient line to the step that listed it", async () => {
-        const dto = await parseTandoorRecipeToDTO(mockRecipe, recipeId);
+        const dto = await parseTandoorRecipeToDTO(
+          mockRecipe,
+          recipeId,
+          undefined,
+          BUILT_IN_CATEGORIES
+        );
 
         expect(dto.steps![0].stepIngredients).toEqual([
           { ingredientOrder: 0, share: 1, order: 0 },
@@ -263,7 +284,12 @@ describe("Tandoor Parser", () => {
       });
 
       it("references lines by the order they were given in recipeIngredients", async () => {
-        const dto = await parseTandoorRecipeToDTO(mockRecipe, recipeId);
+        const dto = await parseTandoorRecipeToDTO(
+          mockRecipe,
+          recipeId,
+          undefined,
+          BUILT_IN_CATEGORIES
+        );
         const linkedNames = dto.steps![0].stepIngredients!.map(
           (link) =>
             dto.recipeIngredients!.find((line) => line.order === link.ingredientOrder)
@@ -291,7 +317,12 @@ describe("Tandoor Parser", () => {
           },
         ];
 
-        const dto = await parseTandoorRecipeToDTO(mockRecipe, recipeId);
+        const dto = await parseTandoorRecipeToDTO(
+          mockRecipe,
+          recipeId,
+          undefined,
+          BUILT_IN_CATEGORIES
+        );
 
         expect(dto.recipeIngredients!.map((line) => line.ingredientName)).toEqual([
           "flour",
@@ -315,7 +346,12 @@ describe("Tandoor Parser", () => {
           },
         ];
 
-        const dto = await parseTandoorRecipeToDTO(mockRecipe, recipeId);
+        const dto = await parseTandoorRecipeToDTO(
+          mockRecipe,
+          recipeId,
+          undefined,
+          BUILT_IN_CATEGORIES
+        );
 
         // The ingredient of the dropped step is still imported, just unlinked.
         expect(dto.recipeIngredients!.map((line) => line.ingredientName)).toEqual(["salt", "rice"]);
@@ -337,7 +373,12 @@ describe("Tandoor Parser", () => {
           },
         ];
 
-        const dto = await parseTandoorRecipeToDTO(mockRecipe, recipeId);
+        const dto = await parseTandoorRecipeToDTO(
+          mockRecipe,
+          recipeId,
+          undefined,
+          BUILT_IN_CATEGORIES
+        );
         const lineName = (order: number) =>
           dto.recipeIngredients!.find((line) => line.order === order)?.ingredientName;
 
@@ -390,7 +431,7 @@ describe("Tandoor Parser", () => {
           ],
         } as TandoorRecipe;
 
-        const dto = await parseTandoorRecipeToDTO(tuna, recipeId);
+        const dto = await parseTandoorRecipeToDTO(tuna, recipeId, undefined, BUILT_IN_CATEGORIES);
 
         expect(dto.recipeIngredients!.map((line) => line.ingredientName)).toEqual([
           "Pasta",
@@ -418,14 +459,24 @@ describe("Tandoor Parser", () => {
         },
       ];
 
-      const dto = await parseTandoorRecipeToDTO(mockRecipe, "123e4567-e89b-42d3-a456-426614174000");
+      const dto = await parseTandoorRecipeToDTO(
+        mockRecipe,
+        "123e4567-e89b-42d3-a456-426614174000",
+        undefined,
+        BUILT_IN_CATEGORIES
+      );
 
       expect(dto.steps).toHaveLength(1);
       expect(dto.steps![0].step).toBe("**Step Note** Do the thing");
     });
 
     it("extracts tags from keywords", async () => {
-      const dto = await parseTandoorRecipeToDTO(mockRecipe, "123e4567-e89b-42d3-a456-426614174000");
+      const dto = await parseTandoorRecipeToDTO(
+        mockRecipe,
+        "123e4567-e89b-42d3-a456-426614174000",
+        undefined,
+        BUILT_IN_CATEGORIES
+      );
 
       expect(dto.tags).toHaveLength(3);
       expect(dto.tags![0].name).toBe("hoofdgerecht");
@@ -440,11 +491,33 @@ describe("Tandoor Parser", () => {
         { name: "snack", description: "" },
       ];
 
-      const dto = await parseTandoorRecipeToDTO(mockRecipe, "123e4567-e89b-42d3-a456-426614174000");
+      const dto = await parseTandoorRecipeToDTO(
+        mockRecipe,
+        "123e4567-e89b-42d3-a456-426614174000",
+        undefined,
+        BUILT_IN_CATEGORIES
+      );
 
       expect(dto.categories).toContain("Breakfast");
       expect(dto.categories).toContain("Dinner");
       expect(dto.categories).toContain("Snack");
+    });
+
+    it("prefers the household's own Category and keeps an unmatched keyword a Tag only", async () => {
+      mockRecipe.keywords = [
+        { name: "Dessert", description: "" },
+        { name: "Holiday", description: "" },
+      ];
+
+      const dto = await parseTandoorRecipeToDTO(
+        mockRecipe,
+        "123e4567-e89b-42d3-a456-426614174000",
+        undefined,
+        [...BUILT_IN_CATEGORIES, "Dessert"]
+      );
+
+      expect(dto.categories).toEqual(["Dessert"]);
+      expect(dto.tags!.map((tag) => tag.name)).toEqual(["Dessert", "Holiday"]);
     });
 
     it("derives categories from localized keyword tags", async () => {
@@ -455,7 +528,12 @@ describe("Tandoor Parser", () => {
         { name: "Collation", description: "" },
       ];
 
-      const dto = await parseTandoorRecipeToDTO(mockRecipe, "123e4567-e89b-42d3-a456-426614174000");
+      const dto = await parseTandoorRecipeToDTO(
+        mockRecipe,
+        "123e4567-e89b-42d3-a456-426614174000",
+        undefined,
+        BUILT_IN_CATEGORIES
+      );
 
       expect(dto.categories).toContain("Breakfast");
       expect(dto.categories).toContain("Lunch");
@@ -467,7 +545,12 @@ describe("Tandoor Parser", () => {
       mockRecipe.working_time = 20;
       mockRecipe.waiting_time = 40;
 
-      const dto = await parseTandoorRecipeToDTO(mockRecipe, "123e4567-e89b-42d3-a456-426614174000");
+      const dto = await parseTandoorRecipeToDTO(
+        mockRecipe,
+        "123e4567-e89b-42d3-a456-426614174000",
+        undefined,
+        BUILT_IN_CATEGORIES
+      );
 
       expect(dto.prepMinutes).toBe(20);
       // Waiting is not cooking: it shows as the rest of the total.
@@ -479,7 +562,12 @@ describe("Tandoor Parser", () => {
       mockRecipe.working_time = null;
       mockRecipe.waiting_time = null;
 
-      const dto = await parseTandoorRecipeToDTO(mockRecipe, "123e4567-e89b-42d3-a456-426614174000");
+      const dto = await parseTandoorRecipeToDTO(
+        mockRecipe,
+        "123e4567-e89b-42d3-a456-426614174000",
+        undefined,
+        BUILT_IN_CATEGORIES
+      );
 
       expect(dto.prepMinutes).toBeUndefined();
       expect(dto.cookMinutes).toBeUndefined();
@@ -491,7 +579,8 @@ describe("Tandoor Parser", () => {
       const dto = await parseTandoorRecipeToDTO(
         mockRecipe,
         "123e4567-e89b-42d3-a456-426614174000",
-        imageBuffer
+        imageBuffer,
+        BUILT_IN_CATEGORIES
       );
 
       expect(dto.images).toEqual([{ image: "mocked-image-guid", order: 0 }]);
@@ -513,7 +602,12 @@ describe("Tandoor Parser", () => {
         },
       ];
 
-      const dto = await parseTandoorRecipeToDTO(mockRecipe, "123e4567-e89b-42d3-a456-426614174000");
+      const dto = await parseTandoorRecipeToDTO(
+        mockRecipe,
+        "123e4567-e89b-42d3-a456-426614174000",
+        undefined,
+        BUILT_IN_CATEGORIES
+      );
 
       expect(dto.systemUsed).toBe("us");
       expect(dto.recipeIngredients![0].systemUsed).toBe("us");
@@ -535,7 +629,12 @@ describe("Tandoor Parser", () => {
         },
       ];
 
-      const dto = await parseTandoorRecipeToDTO(mockRecipe, "123e4567-e89b-42d3-a456-426614174000");
+      const dto = await parseTandoorRecipeToDTO(
+        mockRecipe,
+        "123e4567-e89b-42d3-a456-426614174000",
+        undefined,
+        BUILT_IN_CATEGORIES
+      );
 
       // Metric should win (1 vs 1, ties go to metric)
       expect(dto.systemUsed).toBe("metric");
@@ -559,7 +658,12 @@ describe("Tandoor Parser", () => {
         },
       ];
 
-      const dto = await parseTandoorRecipeToDTO(mockRecipe, "123e4567-e89b-42d3-a456-426614174000");
+      const dto = await parseTandoorRecipeToDTO(
+        mockRecipe,
+        "123e4567-e89b-42d3-a456-426614174000",
+        undefined,
+        BUILT_IN_CATEGORIES
+      );
 
       expect(dto.recipeIngredients).toHaveLength(1);
       expect(dto.recipeIngredients![0].ingredientName).toBe("flour");
@@ -585,7 +689,12 @@ describe("Tandoor Parser", () => {
           },
         ];
 
-        const dto = await parseTandoorRecipeToDTO(mockRecipe, recipeId);
+        const dto = await parseTandoorRecipeToDTO(
+          mockRecipe,
+          recipeId,
+          undefined,
+          BUILT_IN_CATEGORIES
+        );
 
         expect(dto.recipeIngredients).toMatchObject([
           { ingredientName: "# For the dough", amount: null, unit: null, order: 0 },
@@ -607,7 +716,12 @@ describe("Tandoor Parser", () => {
           },
         ];
 
-        const dto = await parseTandoorRecipeToDTO(mockRecipe, recipeId);
+        const dto = await parseTandoorRecipeToDTO(
+          mockRecipe,
+          recipeId,
+          undefined,
+          BUILT_IN_CATEGORIES
+        );
 
         expect(dto.recipeIngredients!.map((line) => line.ingredientName)).toEqual([
           "parsley, chopped",
@@ -628,7 +742,12 @@ describe("Tandoor Parser", () => {
           },
         ];
 
-        const dto = await parseTandoorRecipeToDTO(mockRecipe, recipeId);
+        const dto = await parseTandoorRecipeToDTO(
+          mockRecipe,
+          recipeId,
+          undefined,
+          BUILT_IN_CATEGORIES
+        );
 
         expect(dto.recipeIngredients).toMatchObject([
           { ingredientName: "salt", amount: null, unit: null },
@@ -650,7 +769,12 @@ describe("Tandoor Parser", () => {
           },
         ];
 
-        const dto = await parseTandoorRecipeToDTO(mockRecipe, recipeId);
+        const dto = await parseTandoorRecipeToDTO(
+          mockRecipe,
+          recipeId,
+          undefined,
+          BUILT_IN_CATEGORIES
+        );
 
         expect(dto.recipeIngredients).toMatchObject([
           // The line reads as Tandoor shows it and resolves from the food's name.
@@ -679,7 +803,12 @@ describe("Tandoor Parser", () => {
           },
         ];
 
-        const dto = await parseTandoorRecipeToDTO(mockRecipe, recipeId);
+        const dto = await parseTandoorRecipeToDTO(
+          mockRecipe,
+          recipeId,
+          undefined,
+          BUILT_IN_CATEGORIES
+        );
 
         expect(dto.steps![0].step).toBe("Whisk 2 eggs with sugar (caster) for 2 minutes.");
       });
@@ -690,7 +819,12 @@ describe("Tandoor Parser", () => {
           { instruction: "First", ingredients: [{ food: food("flour"), amount: 1 }], order: 0 },
         ];
 
-        const dto = await parseTandoorRecipeToDTO(mockRecipe, recipeId);
+        const dto = await parseTandoorRecipeToDTO(
+          mockRecipe,
+          recipeId,
+          undefined,
+          BUILT_IN_CATEGORIES
+        );
 
         expect(dto.recipeIngredients!.map((line) => line.ingredientName)).toEqual([
           "flour",
@@ -718,7 +852,12 @@ describe("Tandoor Parser", () => {
         },
       ];
 
-      const dto = await parseTandoorRecipeToDTO(mockRecipe, "123e4567-e89b-42d3-a456-426614174000");
+      const dto = await parseTandoorRecipeToDTO(
+        mockRecipe,
+        "123e4567-e89b-42d3-a456-426614174000",
+        undefined,
+        BUILT_IN_CATEGORIES
+      );
 
       expect(dto.steps).toHaveLength(1);
       expect(dto.steps![0].step).toBe("Valid step");
@@ -728,7 +867,12 @@ describe("Tandoor Parser", () => {
       mockRecipe.name = "";
 
       await expect(
-        parseTandoorRecipeToDTO(mockRecipe, "123e4567-e89b-42d3-a456-426614174000")
+        parseTandoorRecipeToDTO(
+          mockRecipe,
+          "123e4567-e89b-42d3-a456-426614174000",
+          undefined,
+          BUILT_IN_CATEGORIES
+        )
       ).rejects.toThrow("Missing recipe name");
     });
   });

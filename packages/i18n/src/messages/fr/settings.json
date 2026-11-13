@@ -1116,7 +1116,7 @@
       "usesPlaceholder": "Rien",
       "useNames": {
         "autoCategorization": "Catégorisation automatique",
-        "autoCategorizationDescription": "Décider si une recette est un petit-déjeuner, un déjeuner, un dîner ou une collation",
+        "autoCategorizationDescription": "Décider à quelles catégories du foyer appartient une recette",
         "autoTagging": "Étiquetage automatique",
         "autoTaggingDescription": "Choisir les tags de la liste prédéfinie et confirmer chaque tag proposé par l'IA",
         "allergyDetection": "Détection des allergies",
@@ -1149,7 +1149,7 @@
       "autoTaggingDescription": "Utilisé pour générer les tags des recettes importées",
       "autoTaggingPlaceholder": "Entrez le prompt...",
       "autoCategorization": "Prompt de catégorisation automatique",
-      "autoCategorizationDescription": "Ce prompt est utilisé pour classer les recettes en catégories de repas (petit-déjeuner, déjeuner, dîner, en-cas).",
+      "autoCategorizationDescription": "Ce prompt est utilisé pour classer les recettes dans les catégories du foyer.",
       "autoCategorizationPlaceholder": "Saisissez le prompt de catégorisation automatique...",
       "allergyDetection": "Prompt de détection des allergènes",
       "allergyDetectionDescription": "Ce prompt est utilisé pour détecter les allergènes configurés du foyer dans les ingrédients d'une recette.",

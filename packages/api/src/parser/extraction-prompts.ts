@@ -1,10 +1,12 @@
+import { householdCategoriesSection } from "@norish/shared-server/ai/prompts/sections";
+
 /**
  * Extraction input sections.
  *
  * The administrator-editable recipe-extraction prompt carries the extraction
  * rules; these sections — the source under extraction — are appended after it
- * by the AI Runtime. Image extraction has its own prompt and passes images
- * instead of sections.
+ * by the AI Runtime. Image extraction has its own prompt and passes images,
+ * with only the household's Categories as a section.
  */
 
 export interface RecipeExtractionSectionOptions {
@@ -22,6 +24,11 @@ export interface RecipeExtractionSectionOptions {
    * The video URLs the page embeds, for the model to pick the recipe's own from.
    */
   videos?: string[];
+
+  /**
+   * The importing household's Categories, the only ones the model may name.
+   */
+  categories: readonly string[];
 }
 
 export interface VideoExtractionSectionOptions extends RecipeExtractionSectionOptions {
@@ -54,9 +61,9 @@ export interface VideoExtractionSectionOptions extends RecipeExtractionSectionOp
  */
 export function buildRecipeExtractionSections(
   content: string,
-  options: RecipeExtractionSectionOptions = {}
+  options: RecipeExtractionSectionOptions
 ): string[] {
-  const { url, jsonLd, videos = [] } = options;
+  const { url, jsonLd, videos = [], categories } = options;
 
   // No tagging or allergy instructions: extraction reads source facts, and every
   // inference belongs to the background enrichment workers under their own policy.
@@ -81,6 +88,8 @@ export function buildRecipeExtractionSections(
     sections.push(`VIDEOS ON THE PAGE:\n${videos.join("\n")}`);
   }
 
+  sections.push(householdCategoriesSection(categories));
+
   return sections;
 }
 
@@ -94,7 +103,7 @@ export function buildVideoExtractionSections(
   transcript: string,
   options: VideoExtractionSectionOptions
 ): string[] {
-  const { url, title, description, duration, uploader } = options;
+  const { url, title, description, duration, uploader, categories } = options;
 
   const durationMinutes = Math.floor(duration / 60);
   const durationSeconds = (duration % 60).toString().padStart(2, "0");
@@ -115,5 +124,6 @@ export function buildVideoExtractionSections(
     metadataLines.join("\n"),
     `VIDEO TRANSCRIPT:\n${transcript}`,
     "NOTE: This is a video transcript, not webpage text. Extract the recipe from the spoken content. If amounts are not specified, estimate typical quantities for the dish type.",
+    householdCategoriesSection(categories),
   ];
 }

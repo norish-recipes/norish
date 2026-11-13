@@ -1,7 +1,8 @@
 "use client";
 
+import { ConnectivityProvider } from "@/lib/offline/engine";
+
 import { BaseProviders } from "./base-providers";
-import { ConnectivityProvider } from "./connectivity-provider";
 
 export interface AuthProvidersProps {
   children: React.ReactNode;

@@ -30,6 +30,8 @@ export interface VideoProcessorContext {
   url: string;
   recipeId: string;
   tokens?: SiteAuthTokenDecryptedDto[];
+  /** The importing household's Categories, the only ones a category may become. */
+  householdCategories: readonly string[];
 }
 
 /**

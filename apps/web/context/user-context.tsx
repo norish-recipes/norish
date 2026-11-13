@@ -2,7 +2,7 @@
 
 import { createContext, ReactNode, use, useCallback } from "react";
 import { useTRPC } from "@/app/providers/trpc-provider";
-import { clearOfflineStateForSignOut } from "@/lib/offline/sign-out";
+import { offlineEngine } from "@/lib/offline/engine";
 import { useQuery } from "@tanstack/react-query";
 
 import type { UserContextValue } from "@norish/shared-react/contexts";
@@ -35,9 +35,7 @@ const shared = createUserContext({
         return;
       }
 
-      await clearOfflineStateForSignOut({
-        discardQueue: options?.discardQueue ?? false,
-      });
+      await offlineEngine.clearForSignOut({ discardQueue: options?.discardQueue ?? false });
       window.location.href = addBasePath("/login?logout=true");
     }, []);
   },

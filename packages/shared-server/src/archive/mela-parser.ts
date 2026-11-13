@@ -2,6 +2,7 @@ import JSZip from "jszip";
 
 import { serverLogger as log } from "@norish/shared-server/logger";
 import { FullRecipeInsertDTO } from "@norish/shared/contracts";
+import { sortSourceCategories } from "@norish/shared/lib/category-matcher";
 
 import {
   buildRecipeDTO,
@@ -36,7 +37,8 @@ export type MelaRecipe = {
  */
 export async function parseMelaRecipeToDTO(
   json: MelaRecipe,
-  recipeId: string
+  recipeId: string,
+  householdCategories: readonly string[]
 ): Promise<FullRecipeInsertDTO> {
   const title = (json.title || "").trim();
 
@@ -64,7 +66,11 @@ export async function parseMelaRecipeToDTO(
     categories: json.categories,
   });
 
-  return { ...dto, id: recipeId };
+  return {
+    ...dto,
+    id: recipeId,
+    categories: sortSourceCategories(json.categories ?? [], householdCategories).categories,
+  };
 }
 
 export async function parseMelaArchive(zip: JSZip): Promise<MelaRecipe[]> {

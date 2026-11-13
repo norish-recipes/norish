@@ -1,6 +1,5 @@
 import type {
   ProductReading,
-  RecipeCategory,
   SearchAddressCheck,
   Slot,
   StoreCandidate,
@@ -38,22 +37,39 @@ export interface QueueMediaCleanupResult {
  */
 export interface QueueApiHandlers {
   extractRecipeNodesFromJsonValue(input: unknown): Record<string, unknown>[];
-  normalizeRecipeFromJson(json: unknown, recipeId: string): Promise<FullRecipeInsertDTO | null>;
-  parseCategories(recipeCategory: unknown): RecipeCategory[];
+  normalizeRecipeFromJson(
+    json: unknown,
+    recipeId: string,
+    householdCategories: readonly string[]
+  ): Promise<FullRecipeInsertDTO | null>;
+  parseCategories(
+    recipeCategory: unknown,
+    householdCategories: readonly string[]
+  ): { categories: string[]; tags: string[] };
   parseTags(keywords: unknown): { name: string }[];
   extractRecipeWithAI(
     source: string,
     recipeId: string,
-    url?: string,
-    jsonLd?: Record<string, unknown>[]
+    options: {
+      url?: string;
+      jsonLd?: Record<string, unknown>[];
+      householdCategories: readonly string[];
+    }
   ): Promise<FullRecipeInsertDTO>;
   parseRecipeFromUrl(
     url: string,
     recipeId: string,
-    forceAI?: boolean,
-    tokens?: SiteAuthTokenDecryptedDto[]
+    options: {
+      forceAI?: boolean;
+      tokens?: SiteAuthTokenDecryptedDto[];
+      householdCategories: readonly string[];
+    }
   ): Promise<QueueParseRecipeResult>;
-  extractRecipeFromImages(recipeId: string, files: ImageImportFile[]): Promise<FullRecipeInsertDTO>;
+  extractRecipeFromImages(
+    recipeId: string,
+    files: ImageImportFile[],
+    householdCategories: readonly string[]
+  ): Promise<FullRecipeInsertDTO>;
   syncPlannedItem(
     userId: string,
     itemId: string,

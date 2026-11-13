@@ -1116,7 +1116,7 @@
       "usesPlaceholder": "Nichts",
       "useNames": {
         "autoCategorization": "Automatische Kategorisierung",
-        "autoCategorizationDescription": "Entscheiden, ob ein Rezept ein Frühstück, Mittagessen, Abendessen oder Snack ist",
+        "autoCategorizationDescription": "Entscheiden, zu welchen Kategorien des Haushalts ein Rezept gehört",
         "autoTagging": "Automatische Tags",
         "autoTaggingDescription": "Tags aus der vordefinierten Liste wählen und jeden von der KI vorgeschlagenen Tag bestätigen",
         "allergyDetection": "Allergieerkennung",
@@ -1149,7 +1149,7 @@
       "autoTaggingDescription": "Dieser Prompt wird verwendet, um Tags für importierte Rezepte zu generieren. Definiere Tagging-Regeln und vordefinierte Tags-Liste.",
       "autoTaggingPlaceholder": "Geben Sie den Auto-Tagging-Prompt ein...",
       "autoCategorization": "Prompt für Auto-Kategorisierung",
-      "autoCategorizationDescription": "Dieser Prompt wird verwendet, um Rezepte in Mahlzeitenkategorien einzuordnen (Frühstück, Mittagessen, Abendessen, Snack).",
+      "autoCategorizationDescription": "Dieser Prompt wird verwendet, um Rezepte in die Kategorien des Haushalts einzuordnen.",
       "autoCategorizationPlaceholder": "Geben Sie den Prompt für die Auto-Kategorisierung ein...",
       "allergyDetection": "Prompt für Allergenerkennung",
       "allergyDetectionDescription": "Dieser Prompt wird verwendet, um die konfigurierten Allergene des Haushalts in den Zutaten eines Rezepts zu erkennen.",

@@ -1,11 +1,17 @@
-import { clearQueryCachesOnUrlChange } from "@/hooks/use-cache-lifecycle";
-import { resetAuthClientStorage } from "@/lib/auth-client";
+import { resetAuthClientStorage } from "@/lib/auth/auth-client";
 import * as SecureStore from "expo-secure-store";
 
+import { withoutTrailingSlashes } from "@norish/shared/lib/helpers";
 import { httpUrlSchema } from "@norish/shared/lib/schema";
 
 const BACKEND_BASE_URL_KEY = "norish.backend-base-url";
 const listeners = new Set<() => void>();
+// The last address read or saved, for callers that need it synchronously (tRPC, the probe).
+let currentBaseUrl = "";
+
+export function getBackendBaseUrl(): string {
+  return currentBaseUrl;
+}
 
 /**
  * Outcome of reading the stored backend URL.
@@ -52,7 +58,7 @@ export function normalizeBackendBaseUrl(input: string): string | null {
     parsed.hash = "";
     parsed.search = "";
 
-    return parsed.toString().replace(/\/+$/, "");
+    return withoutTrailingSlashes(parsed.toString());
   } catch {
     return null;
   }
@@ -61,16 +67,13 @@ export function normalizeBackendBaseUrl(input: string): string | null {
 export async function loadBackendBaseUrl(): Promise<string | null> {
   const stored = await SecureStore.getItemAsync(BACKEND_BASE_URL_KEY);
 
-  if (!stored) {
-    return null;
-  }
+  const normalized = stored ? normalizeBackendBaseUrl(stored) : null;
 
-  const normalized = normalizeBackendBaseUrl(stored);
-
-  if (!normalized) {
+  if (stored && !normalized) {
     await SecureStore.deleteItemAsync(BACKEND_BASE_URL_KEY);
-    return null;
   }
+
+  currentBaseUrl = normalized ?? "";
 
   return normalized;
 }
@@ -84,12 +87,13 @@ export async function saveBackendBaseUrl(input: string): Promise<string> {
 
   const existing = await loadBackendBaseUrl();
 
+  // The Offline Cache and Outbox are per signed-in owner, and sign-out already cleared the reads.
   if (existing !== normalized) {
-    clearQueryCachesOnUrlChange();
     await resetAuthClientStorage();
   }
 
   await SecureStore.setItemAsync(BACKEND_BASE_URL_KEY, normalized);
+  currentBaseUrl = normalized;
   emitBackendBaseUrlChange();
 
   return normalized;
@@ -98,13 +102,10 @@ export async function saveBackendBaseUrl(input: string): Promise<string> {
 export async function clearBackendBaseUrl(): Promise<void> {
   await resetAuthClientStorage();
   await SecureStore.deleteItemAsync(BACKEND_BASE_URL_KEY);
+  currentBaseUrl = "";
   emitBackendBaseUrlChange();
 }
 
 export function getBackendHealthUrl(baseUrl: string): string {
   return `${baseUrl}/api/v1/health`;
-}
-
-export function getBackendTrpcUrl(baseUrl: string): string {
-  return `${baseUrl}/api/trpc`;
 }

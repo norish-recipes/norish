@@ -1116,7 +1116,7 @@
       "usesPlaceholder": "لا شيء",
       "useNames": {
         "autoCategorization": "التصنيف التلقائي",
-        "autoCategorizationDescription": "تحديد ما إذا كانت الوصفة فطورًا أو غداءً أو عشاءً أو تصبيرة",
+        "autoCategorizationDescription": "تحديد تصنيفات المنزل التي تنتمي إليها الوصفة",
         "autoTagging": "الوسوم التلقائية",
         "autoTaggingDescription": "اختيار الوسوم من القائمة المحددة مسبقًا، وتأكيد كل وسم يقترحه الذكاء الاصطناعي",
         "allergyDetection": "كشف الحساسية",
@@ -1149,7 +1149,7 @@
       "autoTaggingDescription": "تُستخدم هذه التعليمات لإنشاء وسوم للوصفات المستوردة. حدّد قواعد الوسوم وقائمة الوسوم المحددة مسبقًا.",
       "autoTaggingPlaceholder": "أدخل تعليمات الوسوم التلقائية...",
       "autoCategorization": "تعليمات التصنيف التلقائي",
-      "autoCategorizationDescription": "تُستخدم هذه التعليمات لتوزيع الوصفات على تصنيفات الوجبات (فطور، غداء، عشاء، تصبيرة).",
+      "autoCategorizationDescription": "تُستخدم هذه التعليمات لتوزيع الوصفات على تصنيفات المنزل.",
       "autoCategorizationPlaceholder": "أدخل تعليمات التصنيف التلقائي...",
       "allergyDetection": "تعليمات كشف الحساسية",
       "allergyDetectionDescription": "تُستخدم هذه التعليمات لكشف مسبّبات الحساسية المحددة للمنزل في مكوّنات الوصفة.",

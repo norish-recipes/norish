@@ -66,12 +66,6 @@
     "cookingTimeUnder60": "<60 min",
     "cookingTimeUnder120": "<120 min",
     "categories": "Catégories",
-    "category": {
-      "breakfast": "Petit-déjeuner",
-      "lunch": "Déjeuner",
-      "dinner": "Dîner",
-      "snack": "Collation"
-    },
     "sortByTitle": "Titre",
     "sortByDate": "Date",
     "clearFilters": "Effacer les filtres"

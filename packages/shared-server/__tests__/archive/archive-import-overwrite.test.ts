@@ -71,6 +71,9 @@ vi.mock("@norish/db/repositories/cookbooks", () => ({
   addRecipeToCookbook: vi.fn(),
 }));
 
+vi.mock("@norish/db/repositories/categories", () => ({
+  listCategoryNamesForUsers: vi.fn().mockResolvedValue(["Breakfast", "Lunch", "Dinner", "Snack"]),
+}));
 vi.mock("@norish/db/repositories/cuisines", () => ({
   listCuisines: vi.fn().mockResolvedValue([]),
 }));

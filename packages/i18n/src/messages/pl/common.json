@@ -66,12 +66,6 @@
     "cookingTimeUnder60": "<60 min",
     "cookingTimeUnder120": "<120 min",
     "categories": "Kategorie",
-    "category": {
-      "breakfast": "Śniadanie",
-      "lunch": "Lunch",
-      "dinner": "Obiad",
-      "snack": "Przekąska"
-    },
     "sortByTitle": "Tytuł",
     "sortByDate": "Data",
     "clearFilters": "Wyczyść filtry"

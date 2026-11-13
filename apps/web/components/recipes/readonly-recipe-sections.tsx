@@ -6,14 +6,12 @@ import OriginFlag from "@/components/recipes/origin-flag";
 import { RECIPE_HERO_CHROME_BUTTON_CLASS } from "@/components/recipes/recipe-layout-constants";
 import MediaCarousel, { buildMediaItems } from "@/components/shared/media-carousel";
 import SmartMarkdownRenderer from "@/components/shared/smart-markdown-renderer";
+import { CategoryIcon, useCategoryLabel } from "@/lib/category-display";
 import {
   ArrowsPointingOutIcon,
   ArrowTopRightOnSquareIcon,
-  CakeIcon,
   ClockIcon,
   FireIcon,
-  MoonIcon,
-  SunIcon,
   WrenchScrewdriverIcon,
 } from "@heroicons/react/16/solid";
 import { Button, Chip, Link } from "@heroui/react";
@@ -91,13 +89,6 @@ type ReadonlyRecipeMediaProps = {
   topLeftContent?: React.ReactNode;
   topRightContent?: React.ReactNode;
   bottomRightContent?: React.ReactNode;
-};
-
-const categoryIcons: Record<RecipeCategory, typeof FireIcon> = {
-  Breakfast: FireIcon,
-  Lunch: SunIcon,
-  Dinner: MoonIcon,
-  Snack: CakeIcon,
 };
 
 /**
@@ -206,7 +197,7 @@ export function ReadonlyRecipeSummary({
   timeVariant = "desktop",
 }: ReadonlyRecipeSummaryProps) {
   const t = useTranslations("recipes.detail");
-  const tForm = useTranslations("recipes.form");
+  const categoryLabel = useCategoryLabel();
 
   return (
     <div className="space-y-4">
@@ -240,16 +231,12 @@ export function ReadonlyRecipeSummary({
 
       {recipe.categories.length > 0 && (
         <div className="text-muted flex flex-wrap items-center gap-x-4 gap-y-2 text-base">
-          {recipe.categories.map((category) => {
-            const IconComponent = categoryIcons[category] ?? SunIcon;
-
-            return (
-              <span key={category} className="flex items-center gap-1">
-                <IconComponent className="h-4 w-4" />
-                {tForm(`category.${category.toLowerCase()}`)}
-              </span>
-            );
-          })}
+          {recipe.categories.map((category) => (
+            <span key={category} className="flex items-center gap-1">
+              <CategoryIcon className="h-4 w-4" name={category} />
+              {categoryLabel(category)}
+            </span>
+          ))}
         </div>
       )}
 

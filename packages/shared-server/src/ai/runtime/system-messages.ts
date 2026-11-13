@@ -16,7 +16,7 @@ export const SYSTEM_MESSAGES = {
   "auto-tagging":
     "You are a recipe tagging assistant. Analyze the recipe and assign relevant tags based on the provided rules.",
   "auto-categorization":
-    "You are a culinary assistant that assigns breakfast/lunch/dinner/snack categories to recipes.",
+    "You are a culinary assistant that assigns categories to recipes from the list it is given.",
   "allergy-detection":
     "You are an allergy detection assistant. Analyze recipe ingredients to identify allergens. Be accurate and only report allergens that are definitely present.",
   // Deliberately no language instruction: the prompt decides the note's

@@ -1,0 +1,20 @@
+# Has a grocery checked off as the web does and sees it checked on the smoke screen with no
+# refresh, over the realtime socket. `pnpm --filter @norish/mobile maestro` does the check-off.
+appId: dev.norish.app
+---
+- runFlow:
+    file: subflows/sign-in.yaml
+    env:
+      NORISH_SIGN_IN_URL: ${NORISH_SERVER_URL}
+- scrollUntilVisible:
+    element:
+      id: smoke-grocery-${NORISH_REALTIME_GROCERY_ID}
+- assertVisible:
+    id: smoke-grocery-${NORISH_REALTIME_GROCERY_ID}
+    text: checkbox, unchecked
+- evalScript: "${http.post(NORISH_PROXY_CONTROL_URL + '/check-on-web', { body: '' })}"
+- extendedWaitUntil:
+    visible:
+      id: smoke-grocery-${NORISH_REALTIME_GROCERY_ID}
+      text: checkbox, checked
+    timeout: 10000

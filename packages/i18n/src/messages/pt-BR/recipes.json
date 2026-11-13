@@ -194,6 +194,7 @@
     "tagsHelp": "Digite tags e clique nas sugestões para adicionar. As tags da receita são preenchidas, novas tags têm uma borda tracejada.",
     "tagsAndCategories": "Tags e categorias",
     "categoriesHelp": "Selecione categorias de refeição para esta receita.",
+    "addCategory": "Adicionar categoria",
     "category": {
       "breakfast": "Café da manhã",
       "lunch": "Almoço",

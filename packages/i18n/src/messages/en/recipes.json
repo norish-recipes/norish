@@ -194,6 +194,7 @@
     "tagsHelp": "Type tags and click suggestions to add. Tags on the recipe are filled in; new tags have a dashed border.",
     "tagsAndCategories": "Tags & Categories",
     "categoriesHelp": "Select meal categories for this recipe.",
+    "addCategory": "Add a category",
     "category": {
       "breakfast": "Breakfast",
       "lunch": "Lunch",

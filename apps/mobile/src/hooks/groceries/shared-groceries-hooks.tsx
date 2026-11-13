@@ -1,6 +1,6 @@
 import { View } from "react-native";
 import { sharedConfigHooks } from "@/hooks/config/shared-config-hooks";
-import { useTRPC } from "@/providers/trpc-provider";
+import { useTRPC } from "@/lib/trpc/trpc-provider";
 import { Toast, useThemeColor, useToast } from "heroui-native";
 import { useIntl } from "react-intl";
 

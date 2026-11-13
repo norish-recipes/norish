@@ -1,6 +1,7 @@
 "use client";
 
 import FallbackImage from "@/components/shared/fallback-image";
+import { useCategoryLabel } from "@/lib/category-display";
 import { XMarkIcon } from "@heroicons/react/20/solid";
 import { Button, Tooltip } from "@heroui/react";
 import { useTranslations } from "next-intl";
@@ -21,11 +22,11 @@ type CookingModeHeaderProps = {
  * belongs to the step.
  */
 export function CookingModeHeader({ recipe, onClose }: CookingModeHeaderProps) {
-  const tForm = useTranslations("recipes.form");
+  const categoryLabel = useCategoryLabel();
   const tCommon = useTranslations("common.actions");
 
   const subtitle = [
-    recipe.categories.map((category) => tForm(`category.${category.toLowerCase()}`)).join(", "),
+    recipe.categories.map(categoryLabel).join(", "),
     recipe.totalMinutes ? formatMinutesHM(recipe.totalMinutes) : "",
   ]
     .filter(Boolean)

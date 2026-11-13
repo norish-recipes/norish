@@ -194,6 +194,7 @@
     "tagsHelp": "Skriv taggar och klicka på förslag för att lägga till dem. Befintliga taggar är fyllda, nya taggar har en streckad ram.",
     "tagsAndCategories": "Taggar och kategorier",
     "categoriesHelp": "Välj måltidskategorier för det här receptet.",
+    "addCategory": "Lägg till kategori",
     "category": {
       "breakfast": "Frukost",
       "lunch": "Lunch",

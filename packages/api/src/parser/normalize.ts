@@ -10,10 +10,10 @@
  * - Videos
  */
 
-import type { RecipeCategory } from "@norish/shared/contracts";
 import type { FullRecipeInsertDTO } from "@norish/shared/contracts/dto/recipe";
 import { getUnits } from "@norish/shared-server/config/server-config-loader";
 import { parserLogger } from "@norish/shared-server/logger";
+import { sortSourceCategories } from "@norish/shared/lib/category-matcher";
 import { isUrl } from "@norish/shared/lib/helpers";
 import { normalizeEnrichmentTagNames } from "@norish/shared/lib/recipe-enrichment";
 
@@ -63,48 +63,22 @@ function parseAllergyIndications(json: Record<string, unknown>): string[] {
   });
 }
 
-export function parseCategories(recipeCategory: unknown): RecipeCategory[] {
-  const validCategories: RecipeCategory[] = ["Breakfast", "Lunch", "Dinner", "Snack"];
-  const categoryMap: Record<string, RecipeCategory> = {
-    breakfast: "Breakfast",
-    lunch: "Lunch",
-    dinner: "Dinner",
-    snack: "Snack",
-    brunch: "Breakfast",
-    "morning meal": "Breakfast",
-    supper: "Dinner",
-    "main course": "Dinner",
-    "main dish": "Dinner",
-    entree: "Dinner",
-    entrée: "Dinner",
-    appetizer: "Snack",
-    dessert: "Snack",
-    starter: "Snack",
-    side: "Snack",
-    "side dish": "Snack",
-  };
+/**
+ * A source's recipeCategory (a list, or one comma-separated string) through the
+ * import rule: household and built-in Categories, the rest as Tags.
+ */
+export function parseCategories(
+  recipeCategory: unknown,
+  householdCategories: readonly string[]
+): { categories: string[]; tags: string[] } {
+  const names =
+    typeof recipeCategory === "string"
+      ? recipeCategory.split(/[,;]/)
+      : Array.isArray(recipeCategory)
+        ? recipeCategory.filter((v): v is string => typeof v === "string")
+        : [];
 
-  let rawValues: string[] = [];
-
-  if (typeof recipeCategory === "string") {
-    rawValues = recipeCategory.split(/[,;]/).map((s) => s.trim().toLowerCase());
-  } else if (Array.isArray(recipeCategory)) {
-    rawValues = recipeCategory
-      .filter((v): v is string => typeof v === "string")
-      .map((s) => s.trim().toLowerCase());
-  }
-
-  const mapped = new Set<RecipeCategory>();
-
-  for (const raw of rawValues) {
-    const category = categoryMap[raw];
-
-    if (category && validCategories.includes(category)) {
-      mapped.add(category);
-    }
-  }
-
-  return Array.from(mapped);
+  return sortSourceCategories(names, householdCategories);
 }
 
 function getCandidateUrl(value: unknown): string | null {
@@ -150,7 +124,8 @@ function getSourceUrl(json: Record<string, unknown>): string | null {
  */
 export async function normalizeRecipeFromJson(
   json: unknown,
-  recipeId: string
+  recipeId: string,
+  householdCategories: readonly string[]
 ): Promise<FullRecipeInsertDTO | null> {
   if (!json) return null;
 
@@ -183,14 +158,18 @@ export async function normalizeRecipeFromJson(
     log.debug({ count: videos.length }, "Parsed videos from JSON-LD");
   }
 
+  // --- CATEGORIES (an unmatched one becomes a tag) ---
+  const { categories, tags: categoryTags } = parseCategories(
+    jsonObj.recipeCategory,
+    householdCategories
+  );
+
   // --- TAGS ---
   const tags = normalizeEnrichmentTagNames([
     ...parseTags(jsonObj.keywords).map((tag) => tag.name),
     ...parseAllergyIndications(jsonObj),
+    ...categoryTags,
   ]).map((name) => ({ name }));
-
-  // --- CATEGORIES ---
-  const categories = parseCategories(jsonObj.recipeCategory);
 
   // --- FINAL STRUCTURE ---
   return {

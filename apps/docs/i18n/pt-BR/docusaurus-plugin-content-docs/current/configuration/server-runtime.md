@@ -37,6 +37,8 @@ openssl rand -base64 32
 | `/api/v1/health/live`  | O servidor responde e o parser dele responde                                             | Reiniciar o Norish: o healthcheck da imagem, liveness do Kubernetes |
 | `/api/v1/health/ready` | O banco de dados e o Valkey respondem; o parser é informado, mas nunca é levado em conta | Enviar tráfego: readiness do Kubernetes, balanceadores de carga     |
 
+A resposta de ready inclui `version`, a versão do Norish em execução.
+
 ## Rede e origens {#networking--origins}
 
 | Variável          | Descrição                                                            | Padrão  |

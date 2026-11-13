@@ -56,21 +56,21 @@ pnpm dev
 
 ## Development Commands
 
-| Command              | Description                                                                                           |
-| -------------------- | ----------------------------------------------------------------------------------------------------- |
-| `pnpm dev`           | Start development server with hot reload                                                              |
-| `pnpm dev:mobile`    | Start the parked Expo app (install it first with `pnpm --dir apps/mobile install --ignore-workspace`) |
-| `pnpm build`         | Create production build                                                                               |
-| `pnpm start`         | Run production server                                                                                 |
-| `pnpm test`          | Run tests via Turbo (all workspaces)                                                                  |
-| `pnpm test:run`      | Alias for `pnpm test`                                                                                 |
-| `pnpm test:coverage` | Run tests with coverage report                                                                        |
-| `pnpm lint`          | Check for linting errors                                                                              |
-| `pnpm typecheck`     | Type-check every workspace                                                                            |
-| `pnpm format`        | Format every workspace with Prettier                                                                  |
-| `pnpm format:check`  | Check formatting without changes                                                                      |
-| `pnpm i18n:check`    | Check for missing locale keys                                                                         |
-| `pnpm db:push`       | Push schema changes to database                                                                       |
+| Command              | Description                              |
+| -------------------- | ---------------------------------------- |
+| `pnpm dev`           | Start development server with hot reload |
+| `pnpm dev:mobile`    | Start the Expo app (`apps/mobile`)       |
+| `pnpm build`         | Create production build                  |
+| `pnpm start`         | Run production server                    |
+| `pnpm test`          | Run tests via Turbo (all workspaces)     |
+| `pnpm test:run`      | Alias for `pnpm test`                    |
+| `pnpm test:coverage` | Run tests with coverage report           |
+| `pnpm lint`          | Check for linting errors                 |
+| `pnpm typecheck`     | Type-check every workspace               |
+| `pnpm format`        | Format every workspace with Prettier     |
+| `pnpm format:check`  | Check formatting without changes         |
+| `pnpm i18n:check`    | Check for missing locale keys            |
+| `pnpm db:push`       | Push schema changes to database          |
 
 ## Project Structure
 
@@ -78,7 +78,7 @@ pnpm dev
 norish/
 ├── apps/             # App workspaces
 │   ├── web/          # Next.js app (App Router + server entry)
-│   └── mobile/       # Expo app (@norish/mobile) — parked pending a rewrite; outside the workspace, not covered by the gates
+│   └── mobile/       # Expo app (@norish/mobile)
 ├── packages/         # Shared libraries
 │   ├── api/          # Server API logic (routers, AI, parsing)
 │   ├── auth/         # Auth helpers
@@ -266,6 +266,26 @@ pnpm --filter @norish/web run test:e2e --project=realtime
 NEXT_PUBLIC_BASE_PATH=/norish pnpm run build --filter=@norish/web...
 pnpm --filter @norish/web run test:e2e
 ```
+
+### Mobile app flows (Maestro)
+
+The flows in `apps/mobile/maestro/` drive the iOS app against a throwaway server. They run on your machine only; CI does not run them. You need [Maestro](https://maestro.dev), Docker, Xcode and a booted iPhone simulator.
+
+```bash
+# 1. Build the web app, which the flows' server runs
+pnpm build:web
+
+# 2. Build the app and install it in the booted simulator. A Release build carries its
+#    own bundle, so the flows need no Metro server.
+pnpm --filter @norish/mobile ios --configuration Release
+
+# 3. Run every flow
+pnpm --filter @norish/mobile maestro
+```
+
+Step 3 starts that build on throwaway Postgres and Valkey containers, as the browser E2E does, so rebuild after a server change. It signs up `maestro@norish.test` and puts three unchecked groceries on its list. It then runs the flows and checks that all three are done on the server. The offline flows reach the server through a proxy on port 3998 that they cut and restore through port 3997 (`NORISH_PROXY_PORT`, `NORISH_PROXY_CONTROL_PORT`); the realtime flow asks the same port to check a grocery off as the web would. To use a running server instead, set `NORISH_SERVER_URL`; when its registration is closed, create that account by hand or name another with `NORISH_EMAIL` and `NORISH_PASSWORD`.
+
+The flows in `apps/mobile/maestro/old-server/` run last, against a stub server that reports an old version. It listens on port 3999, or on `NORISH_OLD_SERVER_PORT`.
 
 ## Adding Translations
 

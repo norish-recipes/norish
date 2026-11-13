@@ -66,12 +66,6 @@
     "cookingTimeUnder60": "<60 min",
     "cookingTimeUnder120": "<120 min",
     "categories": "Kategoriat",
-    "category": {
-      "breakfast": "Aamiainen",
-      "lunch": "Lounas",
-      "dinner": "Päivällinen",
-      "snack": "Välipala"
-    },
     "sortByTitle": "Nimi",
     "sortByDate": "Päivämäärä",
     "clearFilters": "Tyhjennä suodattimet"

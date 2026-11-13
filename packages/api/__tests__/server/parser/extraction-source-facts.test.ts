@@ -1,6 +1,7 @@
 import { readFileSync } from "node:fs";
 import { join } from "node:path";
 import { describe, expect, it } from "vitest";
+import { z } from "zod";
 
 import {
   buildRecipeExtractionSections,
@@ -8,6 +9,7 @@ import {
 } from "@norish/api/parser/extraction-prompts";
 import { recipeExtractionSchema } from "@norish/api/parser/extraction.schema";
 import { resolveExistingWorkspacePath } from "@norish/shared-server/lib/workspace-paths";
+import { BUILT_IN_CATEGORIES } from "@norish/shared/lib/categories";
 
 const IMAGE_EXTRACTION_PROMPT = readFileSync(
   join(
@@ -19,7 +21,10 @@ const IMAGE_EXTRACTION_PROMPT = readFileSync(
 
 describe("extraction inputs request no inference", () => {
   it("builds the HTML sections without tagging or allergy instructions", () => {
-    const sections = buildRecipeExtractionSections("WEBPAGE", { url: "https://example.com" });
+    const sections = buildRecipeExtractionSections("WEBPAGE", {
+      url: "https://example.com",
+      categories: BUILT_IN_CATEGORIES,
+    });
     const composed = sections.join("\n\n");
 
     expect(composed).toContain("WEBPAGE");
@@ -39,11 +44,19 @@ describe("extraction inputs request no inference", () => {
     expect(IMAGE_EXTRACTION_PROMPT).toMatch(/combine them into a single complete recipe/i);
   });
 
+  it("names no Category itself: the household's list arrives as a section", () => {
+    const sections = buildRecipeExtractionSections("WEBPAGE", { categories: ["Lunch", "Drinks"] });
+
+    expect(sections).toContain("HOUSEHOLD CATEGORIES:\n- Lunch\n- Drinks");
+    expect(JSON.stringify(z.toJSONSchema(recipeExtractionSchema))).not.toMatch(/Breakfast/);
+  });
+
   it("builds the video sections without tagging or allergy instructions", () => {
     const sections = buildVideoExtractionSections("TRANSCRIPT", {
       title: "Pasta",
       duration: 120,
       url: "https://example.com/video",
+      categories: BUILT_IN_CATEGORIES,
     });
     const composed = sections.join("\n\n");
 

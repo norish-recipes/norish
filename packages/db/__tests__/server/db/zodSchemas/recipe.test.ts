@@ -10,31 +10,15 @@ import {
 } from "@norish/shared/contracts/zod/recipe";
 
 describe("recipeCategorySchema", () => {
-  it("accepts valid category values", () => {
-    expect(() => recipeCategorySchema.parse("Breakfast")).not.toThrow();
-    expect(() => recipeCategorySchema.parse("Dinner")).not.toThrow();
+  it("accepts any name, trimmed with its inner whitespace collapsed", () => {
+    expect(recipeCategorySchema.parse("Breakfast")).toBe("Breakfast");
+    expect(recipeCategorySchema.parse("  Side   dishes ")).toBe("Side dishes");
   });
 
-  it("rejects invalid category values", () => {
-    expect(() => recipeCategorySchema.parse("InvalidCategory")).toThrow();
-  });
-});
-
-describe("recipe category arrays", () => {
-  it("accepts valid categories arrays", () => {
-    const categories = ["Lunch", "Dinner"];
-
-    expect(() => recipeCategorySchema.array().parse(categories)).not.toThrow();
-  });
-
-  it("rejects invalid categories arrays", () => {
-    const categories = ["InvalidCategory"];
-
-    expect(() => recipeCategorySchema.array().parse(categories)).toThrow();
-  });
-
-  it("accepts empty array with default", () => {
-    expect(() => recipeCategorySchema.array().default([]).parse(undefined)).not.toThrow();
+  it("rejects a blank name and one longer than 40 characters", () => {
+    expect(() => recipeCategorySchema.parse("   ")).toThrow();
+    expect(() => recipeCategorySchema.parse("x".repeat(41))).toThrow();
+    expect(() => recipeCategorySchema.parse("x".repeat(40))).not.toThrow();
   });
 });
 

@@ -42,10 +42,14 @@ _Avoid_: Origin (names only one part), Provenance Inference (names the process, 
 
 **Cuisine**:
 A named culinary style a recipe belongs to, drawn from a controlled vocabulary that an administrator owns — extended by them directly, or by AI only under an explicitly permissive strategy setting. A recipe may carry several, so fusion dishes remain describable. A Cuisine name is a canonical identifier shown verbatim in every locale, never a translated label.
-_Avoid_: Cuisine Tag (a Tag is open, a Cuisine is curated), Category (that is the meal-time taxonomy)
+_Avoid_: Cuisine Tag (a Tag is open, a Cuisine is curated), Category (that is the course taxonomy)
 
 **Tag**:
 A free-form keyword attached to a recipe, mintable by anyone and by AI. Tags are an open folksonomy and deliberately overlap other taxonomies; Cuisines and Categories are the curated lists.
+
+**Category**:
+The course a recipe is served as — when or how it is eaten, such as Breakfast or Drinks — kept as a short list a reader picks from at a glance, never an open folksonomy. Breakfast, Lunch, Dinner and Snack are built in: fixed for everyone, translated, and never renamed or removed. A household extends the list by naming a new Category on one of its recipes; it is offered only to that household, whatever the recipe view policy, and lasts as long as one of its recipes carries it. A recipe seen from another household still shows its own Categories. AI and other apps' imports never add one: AI chooses among the household's list, and an import keeps a name it cannot match as a Tag; a Norish Recipe Archive carries its Categories over as they are. Meal plan slots are a separate, fixed set that happens to share the four built-in names.
+_Avoid_: Meal type, Course (use Category), Tag (a Tag is open, a Category is curated)
 
 **Ingredient**:
 One food, or anything else a household buys with its groceries (toilet paper, floor cleaner, dog food), known by many Ingredient Aliases: "onion", "onions", "onion, diced" and "ui" are one Ingredient once Norish knows they are. Whatever a household teaches Norish about a food is taught about the Ingredient, so it holds for every spelling. An Ingredient has a name of its own, English where known, and belongs to whoever's action minted it, or to no one when the catalogue seed wrote it (ADR-0037). Deleting an Ingredient reads every recipe line and Grocery that named it again from its own text, minting nothing: one whose words name other foods points at them ("zout en peper" under a deleted "kruidenmix"), and the rest keep their text with no food, as a Heading has none: no price, no Aisle, no nutrition; the household no longer keeps it in the Pantry. One that someone's action minted is deleted the same way once no recipe line, Grocery, recurring grocery or Pantry Ingredient has named it for three months and no food is a kind of it any more, so a one-off purchase does not stay in the catalogue; a seeded one never is, by unused-food removal or by AI. The Ingredients page lists the seeded Ingredients and those a recipe line names. An own one that only Groceries, recurring groceries or Pantry Ingredients name, a grocery food, is hidden there, read from the rows rather than stored: it keeps its Aisle and price: AI never asks about it, and no pass without AI files, merges or re-files it, until a recipe line names it.
@@ -253,7 +257,7 @@ The optional second AI provider that answers closed questions and generates noth
 _Avoid_: Decision provider (names the settings block, not the thing), Classifier (it also scores and ranks), Jev (a product name; the glossary names the role)
 
 **Decision**:
-One request to the Decision Model: a state — text or structured JSON, composed by the feature — plus named Choice, Score and Boolean questions, answered together with a probability for every option. The AI Runtime's fourth entry point, `decide`, beside structured generation, transcription and image generation. It has no Prompt: its criteria come from the domain (the four categories, the household's allergens, the administrator's Cuisines) and its instructions are code-owned, exactly as system messages are (ADR-0035).
+One request to the Decision Model: a state — text or structured JSON, composed by the feature — plus named Choice, Score and Boolean questions, answered together with a probability for every option. The AI Runtime's fourth entry point, `decide`, beside structured generation, transcription and image generation. It has no Prompt: its criteria come from the domain (the household's Categories, the household's allergens, the administrator's Cuisines) and its instructions are code-owned, exactly as system messages are (ADR-0035).
 _Avoid_: Evaluation (the SDK's word; it reads as judging quality), Classification (only one of the three question shapes)
 
 **Clear Case**:
@@ -298,6 +302,10 @@ _Avoid_: Aborted (also names the restart interruption, which is not a cancel), K
 
 ### People & Presentation
 
+**Reader**:
+The signed-in person Norish is showing itself to right now, seen through their household: whose allergies count, which recipes they may edit, which Device Preferences apply. A signed-out visitor to a shared recipe is a reader without a household.
+_Avoid_: User (the account record, not the person at the screen), Viewer, Current user
+
 **Avatar**:
 A person's profile picture, shown as a circle at every size wherever the person appears; absent or unloadable, it degrades to their initials. Offline it is best-effort: initials are the accepted rendering, not a defect.
 _Avoid_: User icon (ambiguous with App Icon), profile photo
@@ -321,22 +329,22 @@ _Avoid_: Loader, Preloader, Spinner (a progress sign, not the page's shape)
 ### Connectivity & Offline
 
 **Offline**:
-The state in which the web client cannot reach the Norish backend — because the client lost its network, the backend is down or unreachable, or it was forced via the (development-only) Offline Toggle. Not synonymous with "no internet".
+The state in which a client cannot reach the Norish backend — because the client lost its network, the backend is down or unreachable, or it was forced via the (development-only) Offline Toggle. Not synonymous with "no internet".
 _Avoid_: disconnected (that is the WebSocket status, a narrower thing)
 
 **Live**:
-The state in which the web client can reach the Norish backend and data exchange is permitted. Live does not require the realtime channel to be up — reaching the backend at all is what counts.
+The state in which a client can reach the Norish backend and data exchange is permitted. Live does not require the realtime channel to be up — reaching the backend at all is what counts.
 _Avoid_: online (ambiguous with general internet connectivity)
 
 **Reachability Deadline**:
-The single bounded wait — five seconds — after which the backend counts as unreachable for the attempt at hand. The connectivity verdict and a launching page navigation observe the same deadline: a launch that outlives it proceeds Offline with what is cached rather than waiting indefinitely.
+The single bounded wait — five seconds — after which the backend counts as unreachable for the attempt at hand. The connectivity verdict and a launch observe the same deadline: a launch that outlives it proceeds Offline with what is cached rather than waiting indefinitely.
 _Avoid_: Network timeout (a mechanism, not the meaning), Launch timeout (the deadline is shared, not launch-specific)
 
 **App Shell**:
-The static assets (HTML, JS, CSS, fonts, icons) required to boot the web app without any backend response.
+The static assets (HTML, JS, CSS, fonts, icons) required to boot the web client without any backend response. Web only: the app's own bundle plays this part on a phone.
 
 **Offline Cache**:
-The personalized persisted copy of previously fetched server data that the web app serves while Offline. It contains at minimum the Warm Set, treats everything else as best-effort, and excludes both the mutation Outbox and the static App Shell.
+The personalized persisted copy of previously fetched server data that a client serves while Offline, kept per signed-in account. It contains at minimum the Warm Set, treats everything else as best-effort, and excludes both the mutation Outbox and the static App Shell.
 
 **Warm Set**:
 The content guaranteed to be in the Offline Cache: the 50 most recent recipes in full (each with its primary image; further gallery images and videos are excluded from the guarantee), all groceries (including recurring) and stores, every cookbook the reader can see together with its membership, and the calendar's initial view window (roughly the current week on desktop, two weeks back/forward on mobile — enough to see the coming week's planned days). The Warm Set is a guaranteed floor — anything else fetched while Live is kept best-effort. A recipe the user creates joins the Warm Set on create (ADR-0008), so it is offline-available immediately rather than only at the next warm. A cookbook's members are guaranteed only insofar as they fall inside the fifty, so an Offline cookbook may list a recipe that cannot be opened.

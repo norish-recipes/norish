@@ -11,6 +11,11 @@ import { createMockAuthedContext, createMockHousehold, createMockUser } from "./
 const mocks = vi.hoisted(() => ({
   addPasteImportJob: vi.fn(),
   preparePasteImport: vi.fn(),
+  listCategoryNamesForUsers: vi.fn(),
+}));
+
+vi.mock("@norish/db/repositories/categories", () => ({
+  listCategoryNamesForUsers: mocks.listCategoryNamesForUsers,
 }));
 
 vi.mock("@norish/queue", () => ({
@@ -52,6 +57,7 @@ describe("importFromPasteProcedure", () => {
       structuredRecipes: [],
     });
     mocks.addPasteImportJob.mockResolvedValue({ status: "queued", job: { id: "job-1" } });
+    mocks.listCategoryNamesForUsers.mockResolvedValue(["Breakfast", "Drinks"]);
 
     const router = t.router({ importFromPaste: importFromPasteProcedure });
     const caller = t.createCallerFactory(router)(ctx);
@@ -60,7 +66,12 @@ describe("importFromPasteProcedure", () => {
       recipeIds: ["123e4567-e89b-42d3-a456-426614174001", "123e4567-e89b-42d3-a456-426614174002"],
     });
 
-    expect(mocks.preparePasteImport).toHaveBeenCalledWith("pasted", undefined);
+    // Categories in the paste may only become the household's own.
+    expect(mocks.listCategoryNamesForUsers).toHaveBeenCalledWith(ctx.userIds);
+    expect(mocks.preparePasteImport).toHaveBeenCalledWith("pasted", undefined, [
+      "Breakfast",
+      "Drinks",
+    ]);
     expect(mocks.addPasteImportJob).toHaveBeenCalledWith(
       {},
       expect.objectContaining({

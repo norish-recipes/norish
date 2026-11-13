@@ -12,7 +12,7 @@ Use this file for lightweight repo context.
 - Node.js 26 + TypeScript
 - pnpm workspaces + Turborepo
 - `apps/web`: Next.js 16 App Router, React 19, HeroUI v3 (`@heroui/react`), Tailwind CSS v4, Motion, TanStack Query, custom Node server run from source through tsx
-- `apps/mobile`: Expo SDK 56, Expo Router, React Native 0.85, React 19, HeroUI Native v1 (`heroui-native`), Uniwind, Tailwind CSS v4 theme tokens, TanStack Query
+- `apps/mobile`: Expo SDK 58, Expo Router, React Native 0.88, React 19, HeroUI Native v1 (`heroui-native`), Uniwind, Tailwind CSS v4 theme tokens, TanStack Query
 - tRPC, PostgreSQL + Drizzle, Valkey + BullMQ, Better Auth
 
 This Next.js has breaking changes from your training data: read the relevant guide in `apps/web/node_modules/next/dist/docs/` before writing Next code. Landing sets `agentRules: false`, so `next dev` writes no app-level AGENTS.md.
@@ -20,7 +20,7 @@ This Next.js has breaking changes from your training data: read the relevant gui
 ## Repo Shape
 
 - `apps/web` - web app and its custom server, run from source through tsx
-- `apps/mobile` - Expo app, **parked pending a rewrite** and outside the pnpm workspace: install it on its own with `pnpm --dir apps/mobile install --ignore-workspace`, then `pnpm dev:mobile` starts it. No root gate reaches it, and it is expected to break at compile and runtime against the current release
+- `apps/mobile` - Expo app, started with `pnpm dev:mobile`. `expo install --check` is the authority for its Expo pins, except React, which follows the catalog (`expo.install.exclude`): SDK 58 pins 19.3.0 and React Native 0.88 runs on 19.3.1
 - `packages/api` - server domain logic
 - `packages/trpc` - tRPC routers and API surface
 - `packages/db` - schema and repositories

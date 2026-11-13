@@ -66,12 +66,6 @@
     "cookingTimeUnder60": "<60 хв",
     "cookingTimeUnder120": "<120 хв",
     "categories": "Категорії",
-    "category": {
-      "breakfast": "Сніданок",
-      "lunch": "Обід",
-      "dinner": "Вечеря",
-      "snack": "Перекус"
-    },
     "sortByTitle": "Назва",
     "sortByDate": "Дата",
     "clearFilters": "Скинути фільтри"

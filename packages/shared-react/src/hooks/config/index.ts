@@ -1,4 +1,5 @@
 import type { CreateConfigHooksOptions } from "./types";
+import { createUseCategoriesQuery } from "./use-categories-query";
 import { createUseCuisinesQuery } from "./use-cuisines-query";
 import { createUseIngredientWordsQuery } from "./use-ingredient-words-query";
 import { createUseLocaleConfigQuery } from "./use-locale-config-query";
@@ -20,6 +21,7 @@ export type {
 export { normalizeLocaleConfig } from "./normalize-locale-config";
 export { createUseLocaleConfigQuery } from "./use-locale-config-query";
 export { createUseTagsQuery } from "./use-tags-query";
+export { createUseCategoriesQuery } from "./use-categories-query";
 export { createUseCuisinesQuery } from "./use-cuisines-query";
 export { createUseIngredientWordsQuery } from "./use-ingredient-words-query";
 export { createUseUnitsQuery } from "./use-units-query";
@@ -33,6 +35,7 @@ export function createConfigHooks(options: CreateConfigHooksOptions) {
   return {
     useLocaleConfigQuery: createUseLocaleConfigQuery(options),
     useTagsQuery: createUseTagsQuery(options),
+    useCategoriesQuery: createUseCategoriesQuery(options),
     useCuisinesQuery: createUseCuisinesQuery(options),
     useUnitsQuery: createUseUnitsQuery(options),
     useIngredientWordsQuery: createUseIngredientWordsQuery(options),

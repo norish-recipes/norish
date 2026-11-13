@@ -11,7 +11,6 @@ import {
 } from "drizzle-orm/pg-core";
 
 import { users } from "./auth";
-import { recipeCategoryEnum } from "./recipe-categories";
 import { versionColumn } from "./shared";
 
 export const measurementSystemEnum = pgEnum("measurement_system", ["metric", "us"]);
@@ -59,7 +58,6 @@ export const recipes = pgTable(
     dishColor: text("dish_color"),
     createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
     updatedAt: timestamp("updated_at", { withTimezone: true }).notNull().defaultNow(),
-    categories: recipeCategoryEnum("categories").array().notNull().default([]),
     ...versionColumn,
   },
   (t) => [

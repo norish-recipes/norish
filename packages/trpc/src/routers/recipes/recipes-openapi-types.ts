@@ -1,13 +1,14 @@
 import { z } from "zod";
 
 import { MAX_RECIPE_PASTE_CHARS } from "@norish/shared/contracts/uploads";
+import { recipeCategorySchema } from "@norish/shared/contracts/zod";
 
 export const recipeAutocompleteInputSchema = z.object({
   query: z.string().min(1).max(100),
 });
 
 export const randomRecipeInputSchema = z.object({
-  category: z.enum(["Breakfast", "Lunch", "Dinner", "Snack"]).optional(),
+  category: recipeCategorySchema.optional(),
 });
 
 export const recipeImportPasteInputSchema = z.object({

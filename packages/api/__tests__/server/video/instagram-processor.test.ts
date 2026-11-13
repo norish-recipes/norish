@@ -73,6 +73,7 @@ vi.mock("@norish/shared-server/logger", () => ({
 
 const URL_UNDER_TEST = "https://www.instagram.com/reel/ABC123/";
 const RECIPE_ID = "recipe-1";
+const HOUSEHOLD = ["Breakfast", "Lunch", "Dinner", "Snack", "Drinks"];
 
 /** A caption long enough to clear the image-post floor but not the video one. */
 const SHORT_CAPTION = "A quick pasta with garlic, chilli and a lot of good olive oil.";
@@ -105,7 +106,11 @@ function steplessRecipe(): FullRecipeInsertDTO {
 }
 
 function process() {
-  return new InstagramProcessor().process({ url: URL_UNDER_TEST, recipeId: RECIPE_ID });
+  return new InstagramProcessor().process({
+    url: URL_UNDER_TEST,
+    recipeId: RECIPE_ID,
+    householdCategories: HOUSEHOLD,
+  });
 }
 
 /** The media downloads and converts cleanly. */
@@ -328,7 +333,10 @@ describe("import triage with a Decision Model", () => {
     expect(result.name).toBe("Pasta");
     // Long enough by the Decision's word: the post is not rendered for more.
     expect(boundary.fetchRenderedPage).not.toHaveBeenCalled();
-    expect(boundary.extractRecipeWithAI).toHaveBeenCalledWith(terse, RECIPE_ID, URL_UNDER_TEST);
+    expect(boundary.extractRecipeWithAI).toHaveBeenCalledWith(terse, RECIPE_ID, {
+      url: URL_UNDER_TEST,
+      householdCategories: HOUSEHOLD,
+    });
   });
 
   it("extracts a video post from a short caption the Decision Model says holds a recipe, before any transcription", async () => {
@@ -345,7 +353,8 @@ describe("import triage with a Decision Model", () => {
       SHORT_CAPTION,
       expect.anything(),
       RECIPE_ID,
-      URL_UNDER_TEST
+      URL_UNDER_TEST,
+      HOUSEHOLD
     );
     expect(boundary.downloadVideoAudio).not.toHaveBeenCalled();
     expect(boundary.transcribe).not.toHaveBeenCalled();
@@ -408,11 +417,10 @@ describe("import triage with a Decision Model", () => {
 
     expect(result.name).toBe("Pasta");
     expect(boundary.judgeRecipe).toHaveBeenCalledTimes(1);
-    expect(boundary.extractRecipeWithAI).toHaveBeenCalledWith(
-      SHORT_CAPTION,
-      RECIPE_ID,
-      URL_UNDER_TEST
-    );
+    expect(boundary.extractRecipeWithAI).toHaveBeenCalledWith(SHORT_CAPTION, RECIPE_ID, {
+      url: URL_UNDER_TEST,
+      householdCategories: HOUSEHOLD,
+    });
   });
 
   it("keeps the length rules when triage has no opinion", async () => {

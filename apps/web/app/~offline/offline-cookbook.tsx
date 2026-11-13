@@ -1,13 +1,14 @@
 "use client";
 
-import { useSyncExternalStore } from "react";
 import { CookbookSkeleton } from "@/app/(app)/cookbooks/[id]/cookbook-page";
 import CookbookRoute from "@/app/(app)/cookbooks/[id]/page";
 import { OfflineUnavailable } from "@/app/~offline/offline-unavailable";
 import { routeParams } from "@/app/~offline/route-params";
 import { useTRPC } from "@/app/providers/trpc-provider";
-import { cacheManager } from "@/lib/query-cache";
+import { offlineEngine } from "@/lib/offline/engine";
 import { useQueryClient } from "@tanstack/react-query";
+
+import { useCacheOwner } from "@norish/shared-react/offline/react";
 
 /**
  * Warmed-gated cookbook page for the offline bootstrap (ADR-0009).
@@ -22,7 +23,7 @@ export function OfflineCookbook({ id }: { id: string }) {
   const trpc = useTRPC();
   const queryClient = useQueryClient();
 
-  const owner = useSyncExternalStore(cacheManager.subscribe, cacheManager.owner, () => null);
+  const owner = useCacheOwner(offlineEngine.cache);
 
   if (!owner) return <CookbookSkeleton />;
 

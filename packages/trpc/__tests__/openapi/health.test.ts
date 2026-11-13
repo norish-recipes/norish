@@ -4,6 +4,7 @@ import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 
 import { apiKeyRateLimited } from "@norish/auth/api-key-rate-limit";
 
+import rootPackage from "../../../../package.json" with { type: "json" };
 import { getOpenApiDocument, handleOpenApiRequest } from "../../src/openapi";
 
 process.env.NODE_ENV = "development";
@@ -189,6 +190,7 @@ describe("openapi liveness and readiness endpoints", () => {
       expect(response.status).toBe(200);
       await expect(response.json()).resolves.toEqual({
         status: "ok",
+        version: rootPackage.version,
         db: { status: "ok" },
         valkey: { status: "ok" },
         parser: { status: "error", statusCode: 503 },
@@ -249,6 +251,17 @@ describe("openapi liveness and readiness endpoints", () => {
   });
 
   describe("/health", () => {
+    it("reports the server version like /health/ready", async () => {
+      parserAnswers(200);
+
+      const response = await get("/health");
+
+      expect(response.status).toBe(200);
+      await expect(response.json()).resolves.toEqual(
+        expect.objectContaining({ version: rootPackage.version })
+      );
+    });
+
     it("still answers as ready, marked deprecated", async () => {
       parserAnswers(503);
       getValkeyHealthMock.mockResolvedValue({ status: "error" });

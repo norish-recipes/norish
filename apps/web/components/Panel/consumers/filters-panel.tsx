@@ -7,8 +7,9 @@ import { ActionButton, ActionButtonGroup } from "@/components/shared/action-butt
 import { ChipButton } from "@/components/shared/chip-button";
 import ChipSkeleton from "@/components/skeleton/chip-skeleton";
 import { useRecipesFiltersContext } from "@/context/recipes-filters-context";
-import { useTagsQuery } from "@/hooks/config";
+import { useCategoriesQuery, useTagsQuery } from "@/hooks/config";
 import { useHiddenItemVisibility } from "@/hooks/user/use-hidden-item-visibility";
+import { useCategoryLabel } from "@/lib/category-display";
 import {
   ArchiveBoxIcon,
   ArrowRightIcon,
@@ -25,7 +26,6 @@ import type { FilterMode, RecipeCategory, SearchField, SortOrder } from "@norish
 import { DEFAULT_RECIPE_FILTERS } from "@norish/shared-react/contexts";
 import StarRating from "@norish/ui/star-rating";
 
-const ALL_CATEGORIES: RecipeCategory[] = ["Breakfast", "Lunch", "Dinner", "Snack"];
 const COOKING_TIME_OPTIONS: Array<{
   value: number;
   labelKey: string;
@@ -115,6 +115,10 @@ export default function FiltersPanel({ open, onOpenChange }: FiltersPanelProps) 
   const [tagFilter, setTagFilter] = useState("");
   const [workingTags, setWorkingTags] = useState<string[]>(filters.searchTags);
   const [workingCategories, setWorkingCategories] = useState<RecipeCategory[]>(filters.categories);
+  const { categories: householdCategories } = useCategoriesQuery();
+  const categoryLabel = useCategoryLabel();
+  // A stored filter stays visible, so it can be cleared, even once the list drops it.
+  const categoryOptions = Array.from(new Set([...householdCategories, ...workingCategories]));
   const [localFilterMode, setLocalFilterMode] = useState<FilterMode>(filters.filterMode);
   const [localSortMode, setLocalSortMode] = useState<SortOrder>(() =>
     normalizeSortMode(filters.sortMode)
@@ -411,7 +415,7 @@ export default function FiltersPanel({ open, onOpenChange }: FiltersPanelProps) 
               {t("categories")}
             </h3>
             <div className="flex flex-wrap gap-1">
-              {ALL_CATEGORIES.map((category) => {
+              {categoryOptions.map((category) => {
                 const active = workingCategories.includes(category);
 
                 return (
@@ -423,7 +427,7 @@ export default function FiltersPanel({ open, onOpenChange }: FiltersPanelProps) 
                     variant={active ? "primary" : "tertiary"}
                     onClick={() => toggleCategory(category)}
                   >
-                    {t(`category.${category.toLowerCase()}`)}
+                    {categoryLabel(category)}
                   </ChipButton>
                 );
               })}

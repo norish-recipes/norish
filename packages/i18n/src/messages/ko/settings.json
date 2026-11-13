@@ -1116,7 +1116,7 @@
       "usesPlaceholder": "없음",
       "useNames": {
         "autoCategorization": "자동 분류",
-        "autoCategorizationDescription": "레시피가 아침, 점심, 저녁, 간식 중 무엇인지 결정",
+        "autoCategorizationDescription": "레시피가 가구의 어떤 카테고리에 속하는지 결정",
         "autoTagging": "자동 태그 지정",
         "autoTaggingDescription": "미리 정의된 목록에서 태그를 고르고 AI가 제안한 각 태그를 확인",
         "allergyDetection": "알레르기 감지",
@@ -1149,7 +1149,7 @@
       "autoTaggingDescription": "이 프롬프트는 가져온 레시피에 대한 태그를 생성하는 데 사용됩니다. 태그 지정 규칙과 사전 정의된 태그 목록을 정의합니다.",
       "autoTaggingPlaceholder": "자동 태그 추가 프롬프트를 입력하세요...",
       "autoCategorization": "자동 분류 프롬프트",
-      "autoCategorizationDescription": "이 프롬프트는 레시피를 식사 카테고리(아침, 점심, 저녁, 간식)로 분류할 때 사용됩니다.",
+      "autoCategorizationDescription": "이 프롬프트는 레시피를 가구의 카테고리로 분류할 때 사용됩니다.",
       "autoCategorizationPlaceholder": "자동 분류 프롬프트를 입력하세요...",
       "allergyDetection": "알레르기 감지 프롬프트",
       "allergyDetectionDescription": "이 프롬프트는 레시피 재료에서 가구에 설정된 알레르겐을 감지할 때 사용됩니다.",

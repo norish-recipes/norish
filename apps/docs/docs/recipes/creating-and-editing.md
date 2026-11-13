@@ -13,6 +13,17 @@ Open the form with **Add Recipe**, or **Edit** in a recipe's actions menu.
 - **Steps** go one per row. Drag a row to reorder it.
 - **Photos** go on the recipe or on a step. A step can have several.
 
+## Categories
+
+Breakfast, Lunch, Dinner and Snack are built in. To add another, like Drinks
+or Desserts, type it in **Add a category** under **Tags & Categories** and
+press Enter. From then on your household can pick it and filter by it. Other
+households don't see it.
+
+![Drinks added beside the built-in Categories on the recipe form](/img/screenshots/recipe-form-add-category.png)
+
+A Category stays on your list while one of your household's recipes has it.
+
 ## Headings with `#`
 
 Start an ingredient or a step with `#` to make it a heading, like

@@ -1,13 +1,14 @@
 "use client";
 
-import { useSyncExternalStore } from "react";
 import RecipeDetailPage from "@/app/(app)/recipes/[id]/page";
 import { OfflineUnavailable } from "@/app/~offline/offline-unavailable";
 import { routeParams } from "@/app/~offline/route-params";
 import { useTRPC } from "@/app/providers/trpc-provider";
 import RecipeSkeleton from "@/components/skeleton/recipe-skeleton";
-import { cacheManager } from "@/lib/query-cache";
+import { offlineEngine } from "@/lib/offline/engine";
 import { useQueryClient } from "@tanstack/react-query";
+
+import { useCacheOwner } from "@norish/shared-react/offline/react";
 
 /**
  * Warmed-gated recipe detail for the offline bootstrap (ADR-0009): a recipe
@@ -21,7 +22,7 @@ export function OfflineRecipeDetail({ id }: { id: string }) {
   const trpc = useTRPC();
   const queryClient = useQueryClient();
 
-  const owner = useSyncExternalStore(cacheManager.subscribe, cacheManager.owner, () => null);
+  const owner = useCacheOwner(offlineEngine.cache);
 
   if (!owner) {
     return <RecipeSkeleton />;

@@ -1116,7 +1116,7 @@
       "usesPlaceholder": "Niets",
       "useNames": {
         "autoCategorization": "Automatisch categoriseren",
-        "autoCategorizationDescription": "Bepaal of een recept een ontbijt, lunch, diner of snack is",
+        "autoCategorizationDescription": "Bepaal in welke categorieën van het huishouden een recept hoort",
         "autoTagging": "Automatisch taggen",
         "autoTaggingDescription": "Kies tags uit de vaste lijst en bevestig elke tag die de AI voorstelt",
         "allergyDetection": "Allergiedetectie",
@@ -1149,7 +1149,7 @@
       "autoTaggingDescription": "Deze prompt wordt gebruikt om tags te genereren voor geïmporteerde recepten. Definieer taggingregels en een lijst met voorgedefinieerde tags.",
       "autoTaggingPlaceholder": "Voer de auto-tagging prompt in...",
       "autoCategorization": "Prompt voor automatische categorisering",
-      "autoCategorizationDescription": "Deze prompt wordt gebruikt om recepten in maaltijdcategorieën in te delen (ontbijt, lunch, diner, tussendoortje).",
+      "autoCategorizationDescription": "Deze prompt wordt gebruikt om recepten in de categorieën van het huishouden in te delen.",
       "autoCategorizationPlaceholder": "Voer de prompt voor automatische categorisering in...",
       "allergyDetection": "Prompt voor allergiedetectie",
       "allergyDetectionDescription": "Deze prompt wordt gebruikt om de geconfigureerde allergenen van het huishouden in de ingrediënten van een recept te detecteren.",

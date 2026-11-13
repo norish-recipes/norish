@@ -1,6 +1,6 @@
 {
   "name": "@norish/web",
-  "version": "0.26.1-beta",
+  "version": "0.27.0-beta",
   "private": true,
   "type": "module",
   "scripts": {
@@ -66,7 +66,6 @@
     "@playwright/test": "^1.64.1",
     "@serwist/turbopack": "^9.5.13",
     "@tailwindcss/postcss": "catalog:",
-    "@tanstack/query-persist-client-core": "5.105.0",
     "@tanstack/react-query": "catalog:",
     "@tanstack/react-virtual": "^3.14.23",
     "@testcontainers/postgresql": "catalog:",

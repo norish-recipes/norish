@@ -37,15 +37,8 @@ import {
   normalizeProvenanceGroup,
 } from "@norish/shared/lib/recipe-enrichment";
 
+import { attachCategoriesToRecipeByInputTx, recipeHasCategoriesTx } from "./categories";
 import { replaceRecipeCuisinesTx } from "./cuisines";
-
-/**
- * SQL predicate for "this recipe has no substantive category".
- * Mirrors `hasSubstantiveCategories`: null, empty, and whitespace-only are absent.
- */
-const CATEGORIES_ABSENT = sql`NOT EXISTS (
-  SELECT 1 FROM unnest(${recipes.categories}) AS category WHERE btrim(category::text) <> ''
-)`;
 
 /**
  * SQL predicate for "this recipe's Nutrition Information group is incomplete".
@@ -77,9 +70,8 @@ function validateCategories(categories: readonly RecipeCategory[]): RecipeCatego
  * domain rule rather than a caller's choice: a gap-filling run defers to
  * Supplied Recipe Data, and a replacing run is a deliberate refresh.
  *
- * For a gap-filling run the absence check is part of the UPDATE itself, so if a
- * person supplied categories while the AI request was in flight this becomes a
- * successful no-op and the newer supplied data wins.
+ * A gap-filling run checks for categories under a lock on the recipe row, so
+ * ones a person saved meanwhile win and the run is a successful no-op.
  *
  * @returns whether the replacement was applied
  */
@@ -89,17 +81,25 @@ export async function replaceRecipeCategories(
   mode: RecipeEnrichmentWriteMode
 ): Promise<boolean> {
   const validated = validateCategories(categories);
-  const guards = [eq(recipes.id, recipeId)];
 
-  if (mode === "gap-fill") guards.push(CATEGORIES_ABSENT);
+  return await db.transaction(async (tx) => {
+    const [locked] = await tx
+      .select({ id: recipes.id })
+      .from(recipes)
+      .where(eq(recipes.id, recipeId))
+      .for("update");
 
-  const updated = await db
-    .update(recipes)
-    .set({ categories: validated, updatedAt: new Date(), version: sql`${recipes.version} + 1` })
-    .where(and(...guards))
-    .returning({ id: recipes.id });
+    if (!locked) return false;
+    if (mode === "gap-fill" && (await recipeHasCategoriesTx(tx, recipeId))) return false;
 
-  return updated.length > 0;
+    await tx
+      .update(recipes)
+      .set({ updatedAt: new Date(), version: sql`${recipes.version} + 1` })
+      .where(eq(recipes.id, recipeId));
+    await attachCategoriesToRecipeByInputTx(tx, recipeId, validated);
+
+    return true;
+  });
 }
 
 function validateNutrition(nutrition: NutritionGroupInput) {

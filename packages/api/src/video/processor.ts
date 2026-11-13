@@ -36,7 +36,8 @@ function getFactory(): VideoProcessorFactory {
 export async function processVideoRecipe(
   url: string,
   recipeId: string,
-  tokens?: SiteAuthTokenDecryptedDto[]
+  tokens: SiteAuthTokenDecryptedDto[] | undefined,
+  householdCategories: readonly string[]
 ): Promise<FullRecipeInsertDTO> {
   // Checked separately so the error names the setting that is actually off,
   // rather than sending an administrator to the wrong one.
@@ -55,7 +56,7 @@ export async function processVideoRecipe(
 
   // No error log here: the import worker logs the failed job with this error.
   try {
-    return await processor.process({ url, recipeId, tokens });
+    return await processor.process({ url, recipeId, tokens, householdCategories });
   } catch (error: unknown) {
     const errorMessage = error instanceof Error ? error.message : "Unknown error";
 

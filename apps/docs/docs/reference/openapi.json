@@ -102,7 +102,7 @@
       "get": {
         "operationId": "healthReady",
         "summary": "Check whether Norish is ready for traffic",
-        "description": "Answers 503 while the database or Valkey is unreachable, and 200 otherwise. The parser's state is in the response but does not fail the check. Point readiness probes and load balancers here.",
+        "description": "Answers 503 while the database or Valkey is unreachable, and 200 otherwise, reporting the running server version. The parser's state is in the response but does not fail the check. Point readiness probes and load balancers here.",
         "tags": [
           "Health"
         ],
@@ -117,6 +117,10 @@
                     "status": {
                       "type": "string",
                       "const": "ok"
+                    },
+                    "version": {
+                      "type": "string",
+                      "description": "The running Norish version, e.g. 0.27.0-beta."
                     },
                     "db": {
                       "type": "object",
@@ -165,6 +169,7 @@
                   },
                   "required": [
                     "status",
+                    "version",
                     "db",
                     "valkey",
                     "parser"
@@ -208,6 +213,10 @@
                       "type": "string",
                       "const": "ok"
                     },
+                    "version": {
+                      "type": "string",
+                      "description": "The running Norish version, e.g. 0.27.0-beta."
+                    },
                     "db": {
                       "type": "object",
                       "properties": {
@@ -255,6 +264,7 @@
                   },
                   "required": [
                     "status",
+                    "version",
                     "db",
                     "valkey",
                     "parser"
@@ -471,19 +481,6 @@
                     },
                     "updatedAt": {
                       "type": "string"
-                    },
-                    "categories": {
-                      "default": [],
-                      "type": "array",
-                      "items": {
-                        "type": "string",
-                        "enum": [
-                          "Breakfast",
-                          "Lunch",
-                          "Dinner",
-                          "Snack"
-                        ]
-                      }
                     },
                     "version": {
                       "type": "integer",
@@ -718,6 +715,15 @@
                         "additionalProperties": false
                       }
                     },
+                    "categories": {
+                      "default": [],
+                      "type": "array",
+                      "items": {
+                        "type": "string",
+                        "minLength": 1,
+                        "maxLength": 40
+                      }
+                    },
                     "author": {
                       "type": "object",
                       "properties": {
@@ -900,12 +906,12 @@
                     "dishColor",
                     "createdAt",
                     "updatedAt",
-                    "categories",
                     "version",
                     "recipeIngredients",
                     "steps",
                     "tags",
                     "cuisines",
+                    "categories",
                     "images",
                     "videos"
                   ],
@@ -1138,18 +1144,6 @@
                       "updatedAt": {
                         "type": "string"
                       },
-                      "categories": {
-                        "type": "array",
-                        "items": {
-                          "type": "string",
-                          "enum": [
-                            "Breakfast",
-                            "Lunch",
-                            "Dinner",
-                            "Snack"
-                          ]
-                        }
-                      },
                       "version": {
                         "type": "integer",
                         "minimum": -2147483648,
@@ -1230,6 +1224,14 @@
                           "type": "string",
                           "format": "uuid",
                           "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$"
+                        }
+                      },
+                      "categories": {
+                        "type": "array",
+                        "items": {
+                          "type": "string",
+                          "minLength": 1,
+                          "maxLength": 40
                         }
                       },
                       "steps": {
@@ -1571,19 +1573,6 @@
                             "updatedAt": {
                               "type": "string"
                             },
-                            "categories": {
-                              "default": [],
-                              "type": "array",
-                              "items": {
-                                "type": "string",
-                                "enum": [
-                                  "Breakfast",
-                                  "Lunch",
-                                  "Dinner",
-                                  "Snack"
-                                ]
-                              }
-                            },
                             "version": {
                               "type": "integer",
                               "minimum": -2147483648,
@@ -1817,6 +1806,15 @@
                                 "additionalProperties": false
                               }
                             },
+                            "categories": {
+                              "default": [],
+                              "type": "array",
+                              "items": {
+                                "type": "string",
+                                "minLength": 1,
+                                "maxLength": 40
+                              }
+                            },
                             "author": {
                               "type": "object",
                               "properties": {
@@ -1999,12 +1997,12 @@
                             "dishColor",
                             "createdAt",
                             "updatedAt",
-                            "categories",
                             "version",
                             "recipeIngredients",
                             "steps",
                             "tags",
                             "cuisines",
+                            "categories",
                             "images",
                             "videos"
                           ],
@@ -2133,12 +2131,8 @@
                     "type": "array",
                     "items": {
                       "type": "string",
-                      "enum": [
-                        "Breakfast",
-                        "Lunch",
-                        "Dinner",
-                        "Snack"
-                      ]
+                      "minLength": 1,
+                      "maxLength": 40
                     }
                   },
                   "filterMode": {
@@ -2289,19 +2283,6 @@
                           "updatedAt": {
                             "type": "string"
                           },
-                          "categories": {
-                            "default": [],
-                            "type": "array",
-                            "items": {
-                              "type": "string",
-                              "enum": [
-                                "Breakfast",
-                                "Lunch",
-                                "Dinner",
-                                "Snack"
-                              ]
-                            }
-                          },
                           "version": {
                             "type": "integer",
                             "minimum": -2147483648,
@@ -2331,6 +2312,15 @@
                                 "version"
                               ],
                               "additionalProperties": false
+                            }
+                          },
+                          "categories": {
+                            "default": [],
+                            "type": "array",
+                            "items": {
+                              "type": "string",
+                              "minLength": 1,
+                              "maxLength": 40
                             }
                           },
                           "author": {
@@ -2394,10 +2384,10 @@
                           "originCountry",
                           "createdAt",
                           "updatedAt",
-                          "categories",
                           "version",
                           "image",
-                          "tags"
+                          "tags",
+                          "categories"
                         ],
                         "additionalProperties": false
                       }
@@ -2610,19 +2600,6 @@
                       "null"
                     ]
                   },
-                  "categories": {
-                    "default": [],
-                    "type": "array",
-                    "items": {
-                      "type": "string",
-                      "enum": [
-                        "Breakfast",
-                        "Lunch",
-                        "Dinner",
-                        "Snack"
-                      ]
-                    }
-                  },
                   "version": {
                     "type": "integer",
                     "minimum": -2147483648,
@@ -2716,6 +2693,15 @@
                       "type": "string",
                       "format": "uuid",
                       "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$"
+                    }
+                  },
+                  "categories": {
+                    "default": [],
+                    "type": "array",
+                    "items": {
+                      "type": "string",
+                      "minLength": 1,
+                      "maxLength": 40
                     }
                   },
                   "steps": {
@@ -3069,19 +3055,6 @@
                             "updatedAt": {
                               "type": "string"
                             },
-                            "categories": {
-                              "default": [],
-                              "type": "array",
-                              "items": {
-                                "type": "string",
-                                "enum": [
-                                  "Breakfast",
-                                  "Lunch",
-                                  "Dinner",
-                                  "Snack"
-                                ]
-                              }
-                            },
                             "version": {
                               "type": "integer",
                               "minimum": -2147483648,
@@ -3111,6 +3084,15 @@
                                   "version"
                                 ],
                                 "additionalProperties": false
+                              }
+                            },
+                            "categories": {
+                              "default": [],
+                              "type": "array",
+                              "items": {
+                                "type": "string",
+                                "minLength": 1,
+                                "maxLength": 40
                               }
                             },
                             "author": {
@@ -3174,10 +3156,10 @@
                             "originCountry",
                             "createdAt",
                             "updatedAt",
-                            "categories",
                             "version",
                             "image",
-                            "tags"
+                            "tags",
+                            "categories"
                           ],
                           "additionalProperties": false
                         },
@@ -3416,19 +3398,6 @@
                             "updatedAt": {
                               "type": "string"
                             },
-                            "categories": {
-                              "default": [],
-                              "type": "array",
-                              "items": {
-                                "type": "string",
-                                "enum": [
-                                  "Breakfast",
-                                  "Lunch",
-                                  "Dinner",
-                                  "Snack"
-                                ]
-                              }
-                            },
                             "version": {
                               "type": "integer",
                               "minimum": -2147483648,
@@ -3458,6 +3427,15 @@
                                   "version"
                                 ],
                                 "additionalProperties": false
+                              }
+                            },
+                            "categories": {
+                              "default": [],
+                              "type": "array",
+                              "items": {
+                                "type": "string",
+                                "minLength": 1,
+                                "maxLength": 40
                               }
                             },
                             "author": {
@@ -3521,10 +3499,10 @@
                             "originCountry",
                             "createdAt",
                             "updatedAt",
-                            "categories",
                             "version",
                             "image",
-                            "tags"
+                            "tags",
+                            "categories"
                           ],
                           "additionalProperties": false
                         },

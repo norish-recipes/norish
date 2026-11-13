@@ -22,6 +22,7 @@ import { initializeQueues } from "@norish/queue/registry";
 import { startWorkers } from "@norish/queue/start-workers";
 import { serverLogger as log, redactUrl } from "@norish/shared-server/logger";
 import { startRealtimeHub } from "@norish/shared-server/realtime/hub";
+import { addBasePath, BASE_PATH } from "@norish/shared/lib/base-path";
 
 import { startEmbeddedParser } from "./embedded-parser";
 
@@ -112,8 +113,8 @@ async function main() {
   server.listen(port, hostname, () => {
     log.info("-".repeat(50));
     log.info("Server ready:");
-    log.info(`  HTTP: http://${hostname}:${port}`);
-    log.info(`  WS:   ws://${hostname}:${port}/trpc`);
+    log.info(`  HTTP: http://${hostname}:${port}${BASE_PATH}`);
+    log.info(`  WS:   ws://${hostname}:${port}${addBasePath("/trpc")}`);
     log.info(`  ENV:  ${SERVER_CONFIG.NODE_ENV}`);
     log.info("-".repeat(50));
   });

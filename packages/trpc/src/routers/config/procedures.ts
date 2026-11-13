@@ -2,7 +2,9 @@ import { TRPCError } from "@trpc/server";
 
 import { getAvailableProviders, isPasswordAuthEnabled } from "@norish/auth/providers";
 import { buildInternalParserApiUrl, SERVER_CONFIG } from "@norish/config/env-config-server";
+import configPackage from "@norish/config/package.json" with { type: "json" };
 import { getDatabaseHealth } from "@norish/db/drizzle";
+import { listCategoryNamesForUsers } from "@norish/db/repositories/categories";
 import { listCuisines } from "@norish/db/repositories/cuisines";
 import { listAllTagNames, listTagNamesForUsers } from "@norish/db/repositories/tags";
 import {
@@ -17,6 +19,7 @@ import {
 } from "@norish/shared-server/config/server-config-loader";
 import { trpcLogger as log } from "@norish/shared-server/logger";
 import { getValkeyHealth } from "@norish/shared-server/valkey/client";
+import { BUILT_IN_ALIASES } from "@norish/shared/lib/category-matcher";
 
 import { authedProcedure } from "../../middleware";
 import { publicProcedure, router } from "../../trpc";
@@ -98,6 +101,19 @@ const tags = authedProcedure.query(async ({ ctx }) => {
       : await listTagNamesForUsers(ctx.userIds);
 
   return { tags: tagNames };
+});
+
+/**
+ * The household's Categories. Always household-scoped, unlike `tags`: another
+ * household's Categories would fill the chip row (ADR-0040).
+ */
+const categories = authedProcedure.query(async ({ ctx }) => {
+  log.debug({ userId: ctx.user.id }, "Getting categories");
+
+  return {
+    categories: await listCategoryNamesForUsers(ctx.userIds),
+    builtInAliases: BUILT_IN_ALIASES,
+  };
 });
 
 /**
@@ -237,7 +253,8 @@ async function checkReady() {
     });
   }
 
-  return { status: "ok" as const, db, valkey, parser };
+  // Every workspace package carries the release version (tooling/monorepo/scripts/sync-version.mjs).
+  return { status: "ok" as const, version: configPackage.version, db, valkey, parser };
 }
 
 /**
@@ -253,7 +270,7 @@ export const healthReady = publicProcedure
       tags: ["Health"],
       summary: "Check whether Norish is ready for traffic",
       description:
-        "Answers 503 while the database or Valkey is unreachable, and 200 otherwise. The parser's state is in the response but does not fail the check. Point readiness probes and load balancers here.",
+        "Answers 503 while the database or Valkey is unreachable, and 200 otherwise, reporting the running server version. The parser's state is in the response but does not fail the check. Point readiness probes and load balancers here.",
       successDescription: "The database and Valkey are healthy.",
       errorResponses: { 503: "The database or Valkey is unhealthy or unreachable" },
     },
@@ -283,6 +300,7 @@ export const health = publicProcedure
 export const configProcedures = router({
   localeConfig,
   tags,
+  categories,
   cuisines,
   units,
   ingredientWords,

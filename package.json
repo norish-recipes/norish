@@ -1,6 +1,6 @@
 {
   "name": "norish",
-  "version": "0.26.1-beta",
+  "version": "0.27.0-beta",
   "private": true,
   "type": "module",
   "packageManager": "pnpm@12.11.2",
@@ -10,7 +10,7 @@
   "scripts": {
     "dev": "turbo watch dev --filter=@norish/web... --continue",
     "dev:tui": "turbo watch dev --ui=tui --filter=@norish/web... --continue",
-    "dev:mobile": "pnpm --dir apps/mobile --ignore-workspace run start",
+    "dev:mobile": "pnpm --filter @norish/mobile run start",
     "build:web": "pnpm --filter @norish/web run build:web",
     "build": "turbo run build",
     "docs_update": "pnpm -C apps/docs run docs_update",

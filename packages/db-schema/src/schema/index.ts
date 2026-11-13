@@ -18,6 +18,7 @@ export * from "./recipe-videos";
 export * from "./households";
 export * from "./household-users";
 export * from "./planned-items";
+export * from "./categories";
 export * from "./recipe-categories";
 export * from "./groceries";
 export * from "./recurring-groceries";

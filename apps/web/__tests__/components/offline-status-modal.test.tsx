@@ -1,6 +1,7 @@
-import type { OfflineStatus } from "@/components/navbar/offline-status/use-offline-status";
 import { fireEvent, render, screen, waitFor } from "@testing-library/react";
 import { beforeEach, describe, expect, it, vi } from "vitest";
+
+import type { OfflineStatus } from "@norish/shared-react/offline/react";
 
 import "@testing-library/jest-dom";
 
@@ -10,16 +11,21 @@ const h = vi.hoisted(() => ({
   status: {} as Record<string, unknown>,
 }));
 
-vi.mock("@/components/navbar/offline-status/use-offline-status", () => ({
+vi.mock("@norish/shared-react/offline/react", () => ({
   useOfflineStatus: () => h.status,
 }));
+
+vi.mock("@/app/providers/trpc-provider", () => ({ useTRPC: () => ({}) }));
+
+vi.mock("@/lib/offline/engine", () => ({ offlineEngine: {} }));
 
 vi.mock("@/hooks/use-is-mobile", () => ({
   useIsMobile: () => false,
 }));
 
-vi.mock("@/lib/connectivity", () => ({
+vi.mock("@/lib/connectivity/forced-offline", () => ({
   OFFLINE_FORCED_AVAILABLE: true,
+  switchOfflineForced: vi.fn(),
 }));
 
 vi.mock("@/components/Panel/Panel", () => ({
@@ -63,7 +69,6 @@ function makeStatus(overrides: Partial<OfflineStatus> = {}): Record<string, unkn
     retryAll: vi.fn(async () => {}),
     discardAll: vi.fn(async () => {}),
     wipeCache: vi.fn(async () => {}),
-    setForcedOffline: vi.fn(),
     ...overrides,
   };
 }

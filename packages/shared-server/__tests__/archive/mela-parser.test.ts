@@ -1,6 +1,7 @@
 import { describe, expect, it, vi } from "vitest";
 
 import { parseMelaRecipeToDTO } from "@norish/shared-server/archive/mela-parser";
+import { BUILT_IN_CATEGORIES } from "@norish/shared/lib/categories";
 
 // @vitest-environment node
 
@@ -22,7 +23,8 @@ describe("Mela Parser", () => {
         ingredients: "Per la crema:\n3 eggs\nSAVOIARDI\n# Per servire\ncocoa",
         instructions: "Crema:\nWhisk the eggs with the sugar until pale and thick.",
       },
-      RECIPE_ID
+      RECIPE_ID,
+      BUILT_IN_CATEGORIES
     );
 
     expect(dto.recipeIngredients.map((line) => line.ingredientName)).toEqual([
@@ -40,11 +42,23 @@ describe("Mela Parser", () => {
     ]);
   });
 
+  it("makes a matched category a Category, keeping every name a Tag", async () => {
+    const dto = await parseMelaRecipeToDTO(
+      { title: "Margarita", ingredients: "tequila", categories: ["Drinks", "Supper", "Holiday"] },
+      RECIPE_ID,
+      [...BUILT_IN_CATEGORIES, "Drinks"]
+    );
+
+    expect(dto.categories).toEqual(["Drinks", "Dinner"]);
+    expect(dto.tags!.map((tag) => tag.name)).toEqual(["Drinks", "Supper", "Holiday"]);
+  });
+
   it("keeps a long step ending in a colon as a step", async () => {
     const step = "Whisk the eggs with the sugar, then fold in the following:";
     const dto = await parseMelaRecipeToDTO(
       { title: "Tiramisù", ingredients: "3 eggs", instructions: step },
-      RECIPE_ID
+      RECIPE_ID,
+      BUILT_IN_CATEGORIES
     );
 
     expect(dto.steps.map((s) => s.step)).toEqual([step]);

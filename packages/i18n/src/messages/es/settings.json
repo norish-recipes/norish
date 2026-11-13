@@ -1116,7 +1116,7 @@
       "usesPlaceholder": "Nada",
       "useNames": {
         "autoCategorization": "Categorización automática",
-        "autoCategorizationDescription": "Decidir si una receta es desayuno, comida, cena o tentempié",
+        "autoCategorizationDescription": "Decidir a qué categorías del hogar pertenece una receta",
         "autoTagging": "Etiquetado automático",
         "autoTaggingDescription": "Elegir etiquetas de la lista predefinida y confirmar cada etiqueta que propone la IA",
         "allergyDetection": "Detección de alergias",
@@ -1149,7 +1149,7 @@
       "autoTaggingDescription": "Este prompt se usa para generar etiquetas al importar recetas. Define reglas de etiquetado y la lista de etiquetas predefinidas.",
       "autoTaggingPlaceholder": "Introduce el prompt de etiquetado automático...",
       "autoCategorization": "Prompt de categorización automática",
-      "autoCategorizationDescription": "Este prompt se usa para clasificar recetas en categorías de comidas (desayuno, almuerzo, cena, tentempié).",
+      "autoCategorizationDescription": "Este prompt se usa para clasificar recetas en las categorías del hogar.",
       "autoCategorizationPlaceholder": "Introduce el prompt de categorización automática...",
       "allergyDetection": "Prompt de detección de alérgenos",
       "allergyDetectionDescription": "Este prompt se usa para detectar los alérgenos configurados del hogar en los ingredientes de una receta.",

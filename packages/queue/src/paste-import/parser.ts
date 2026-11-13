@@ -177,7 +177,8 @@ function assertRecipePasteWithinLimit(value: unknown): void {
 
 async function normalizeRecipeFromYamlValue(
   rawRecipe: Record<string, unknown>,
-  recipeId: string
+  recipeId: string,
+  householdCategories: readonly string[]
 ): Promise<{ recipe: FullRecipeInsertDTO | null; importedRating: number | null }> {
   const parseCategories = requireQueueApiHandler("parseCategories");
   const units = await getUnits();
@@ -234,6 +235,14 @@ async function normalizeRecipeFromYamlValue(
       : {};
 
   const title = typeof rawRecipe.title === "string" ? stripHtmlTags(rawRecipe.title).trim() : "";
+  const { categories, tags: categoryTags } = parseCategories(
+    rawRecipe.categories,
+    householdCategories
+  );
+  const tagNames = new Set([
+    ...normalizeYamlTags(rawRecipe.tags).map((tag) => tag.name),
+    ...categoryTags.map((name) => name.toLowerCase()),
+  ]);
 
   return {
     importedRating: extractStructuredRating(rawRecipe.rating),
@@ -270,8 +279,8 @@ async function normalizeRecipeFromYamlValue(
               systemUsed,
             })),
             recipeIngredients,
-            tags: normalizeYamlTags(rawRecipe.tags),
-            categories: parseCategories(rawRecipe.categories),
+            tags: [...tagNames].map((name) => ({ name })),
+            categories,
             images,
             videos,
           },
@@ -322,7 +331,10 @@ async function normalizeStructuredRecipes(
     });
 }
 
-async function parseStructuredJson(text: string): Promise<StructuredPasteImportRecipe[] | null> {
+async function parseStructuredJson(
+  text: string,
+  householdCategories: readonly string[]
+): Promise<StructuredPasteImportRecipe[] | null> {
   const extractRecipeNodesFromJsonValue = requireQueueApiHandler("extractRecipeNodesFromJsonValue");
   const normalizeRecipeFromJson = requireQueueApiHandler("normalizeRecipeFromJson");
 
@@ -349,14 +361,17 @@ async function parseStructuredJson(text: string): Promise<StructuredPasteImportR
   return normalizeStructuredRecipes(
     recipeNodes.map((node) => ({ node, importedRating: extractJsonLdRating(node) })),
     async (node, recipeId) => {
-      const recipe = await normalizeRecipeFromJson(node, recipeId);
+      const recipe = await normalizeRecipeFromJson(node, recipeId, householdCategories);
 
       return { recipe, importedRating: extractJsonLdRating(node) };
     }
   );
 }
 
-async function parseStructuredYaml(text: string): Promise<StructuredPasteImportRecipe[] | null> {
+async function parseStructuredYaml(
+  text: string,
+  householdCategories: readonly string[]
+): Promise<StructuredPasteImportRecipe[] | null> {
   let parsedYaml: unknown;
 
   try {
@@ -383,13 +398,14 @@ async function parseStructuredYaml(text: string): Promise<StructuredPasteImportR
 
   return normalizeStructuredRecipes(
     recipeMappings.map((node) => ({ node, importedRating: extractStructuredRating(node.rating) })),
-    normalizeRecipeFromYamlValue
+    (node, recipeId) => normalizeRecipeFromYamlValue(node, recipeId, householdCategories)
   );
 }
 
 export async function preparePasteImport(
   text: string,
-  forceAI?: boolean
+  forceAI: boolean | undefined,
+  householdCategories: readonly string[]
 ): Promise<PreparedPasteImport> {
   const trimmed = text.trim();
 
@@ -412,8 +428,9 @@ export async function preparePasteImport(
     };
   }
 
-  const structuredRecipes = await parseStructuredJson(trimmed);
-  const yamlRecipes = structuredRecipes === null ? await parseStructuredYaml(trimmed) : null;
+  const structuredRecipes = await parseStructuredJson(trimmed, householdCategories);
+  const yamlRecipes =
+    structuredRecipes === null ? await parseStructuredYaml(trimmed, householdCategories) : null;
   const preparedStructuredRecipes = structuredRecipes ?? yamlRecipes;
 
   if (preparedStructuredRecipes && preparedStructuredRecipes.length === 0) {

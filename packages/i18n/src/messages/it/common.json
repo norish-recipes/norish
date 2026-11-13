@@ -66,12 +66,6 @@
     "cookingTimeUnder60": "<60 min",
     "cookingTimeUnder120": "<120 min",
     "categories": "Categorie",
-    "category": {
-      "breakfast": "Colazione",
-      "lunch": "Pranzo",
-      "dinner": "Cena",
-      "snack": "Spuntino"
-    },
     "sortByTitle": "Titolo",
     "sortByDate": "Data",
     "clearFilters": "Cancella filtri"

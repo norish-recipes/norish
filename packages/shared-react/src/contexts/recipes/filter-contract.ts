@@ -9,6 +9,7 @@ import {
   SearchField,
   SortOrder,
 } from "@norish/shared/contracts";
+import { recipeCategorySchema } from "@norish/shared/contracts/zod";
 
 export type CanonicalRecipeFilters = {
   rawInput: string;
@@ -40,7 +41,6 @@ export type RecipeFilterPreset = {
   isActive: (filters: CanonicalRecipeFilters) => boolean;
 };
 
-const VALID_CATEGORIES: RecipeCategory[] = ["Breakfast", "Lunch", "Dinner", "Snack"];
 const VALID_SORT_MODES: SortOrder[] = ["titleAsc", "titleDesc", "dateAsc", "dateDesc", "none"];
 const VALID_FILTER_MODES: FilterMode[] = ["AND", "OR"];
 
@@ -87,8 +87,6 @@ export const RECIPE_COOKING_TIME_OPTIONS: Array<{ label: string; value: number }
   { label: "< 2 hrs", value: 120 },
 ];
 
-export const RECIPE_CATEGORY_OPTIONS: readonly RecipeCategory[] = VALID_CATEGORIES;
-
 export function normalizePersistedRecipeFilters(data: unknown): PersistedRecipeFilters | null {
   if (typeof data !== "object" || data === null) return null;
 
@@ -118,9 +116,11 @@ export function normalizePersistedRecipeFilters(data: unknown): PersistedRecipeF
       ? (d.maxCookingTime as number | null)
       : null;
   const categories = Array.isArray(d.categories)
-    ? d.categories.filter((category): category is RecipeCategory =>
-        VALID_CATEGORIES.includes(category as RecipeCategory)
-      )
+    ? d.categories.flatMap((category): RecipeCategory[] => {
+        const parsed = recipeCategorySchema.safeParse(category);
+
+        return parsed.success ? [parsed.data] : [];
+      })
     : null;
 
   // An absent or unrecognised value is All rather than a rejection: the mobile

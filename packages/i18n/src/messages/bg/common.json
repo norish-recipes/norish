@@ -66,12 +66,6 @@
     "cookingTimeUnder60": "<60 мин",
     "cookingTimeUnder120": "<120 мин",
     "categories": "Категории",
-    "category": {
-      "breakfast": "Закуска",
-      "lunch": "Обяд",
-      "dinner": "Вечеря",
-      "snack": "Лека закуска"
-    },
     "sortByTitle": "Заглавие",
     "sortByDate": "Дата",
     "clearFilters": "Изчисти филтрите"

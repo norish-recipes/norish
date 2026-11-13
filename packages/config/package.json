@@ -1,6 +1,6 @@
 {
   "name": "@norish/config",
-  "version": "0.26.1-beta",
+  "version": "0.27.0-beta",
   "private": true,
   "type": "module",
   "exports": {
@@ -12,7 +12,8 @@
     "./recurrence-config.default.json": "./src/recurrence-config.default.json",
     "./timer-keywords.default.json": "./src/timer-keywords.default.json",
     "./units.default.json": "./src/units.default.json",
-    "./ingredient-words.default.json": "./src/ingredient-words.default.json"
+    "./ingredient-words.default.json": "./src/ingredient-words.default.json",
+    "./package.json": "./package.json"
   },
   "scripts": {
     "build": "rm -rf dist && pnpm exec tsc -p tsconfig.json --noCheck",

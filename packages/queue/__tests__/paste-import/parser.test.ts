@@ -2,6 +2,9 @@
 
 import { describe, expect, it, vi } from "vitest";
 
+import { BUILT_IN_CATEGORIES } from "@norish/shared/lib/categories";
+import { sortSourceCategories } from "@norish/shared/lib/category-matcher";
+
 const mockNormalizeRecipeFromJson = vi.fn(
   async (node: Record<string, unknown>, recipeId: string) => ({
     id: recipeId,
@@ -36,8 +39,8 @@ const mockNormalizeRecipeFromJson = vi.fn(
     videos: [],
   })
 );
-const mockParseCategories = vi.fn((value: unknown) =>
-  typeof value === "string" && value.toLowerCase() === "breakfast" ? ["Breakfast"] : []
+const mockParseCategories = vi.fn((value: unknown, household?: readonly string[]) =>
+  sortSourceCategories(typeof value === "string" ? value.split(",") : [], household ?? [])
 );
 const mockParseTags = vi.fn((value: unknown) =>
   Array.isArray(value)
@@ -114,7 +117,9 @@ describe("preparePasteImport", () => {
             },
           ],
         },
-      ])
+      ]),
+      false,
+      BUILT_IN_CATEGORIES
     );
 
     expect(result.recipeIds).toHaveLength(2);
@@ -143,7 +148,9 @@ describe("preparePasteImport", () => {
         url: "https://example.com/linked-recipe",
         recipeIngredient: ["1 egg"],
         recipeInstructions: ["Mix"],
-      })
+      }),
+      false,
+      BUILT_IN_CATEGORIES
     );
 
     expect(result.structuredRecipes?.[0]?.recipe.url).toBe("https://example.com/linked-recipe");
@@ -152,7 +159,8 @@ describe("preparePasteImport", () => {
   it("normalizes YAML aliases, tags, and source URL", async () => {
     const { preparePasteImport } = await import("../../src/paste-import/parser");
 
-    const result = await preparePasteImport(`
+    const result = await preparePasteImport(
+      `
 title: Fancy Toast
 ingredients:
   - 2 slices bread
@@ -164,7 +172,10 @@ image: https://example.com/image.jpg
 video: https://example.com/video.mp4
 sourceUrl: https://example.com/fancy-toast
 rating: 3.6
-`);
+`,
+      false,
+      BUILT_IN_CATEGORIES
+    );
 
     expect(result.recipeIds).toHaveLength(1);
     expect(result.structuredRecipes?.[0]?.recipeId).toBe(result.structuredRecipes?.[0]?.recipe.id);
@@ -187,16 +198,66 @@ rating: 3.6
     expect(result.structuredRecipes?.[0]?.importedRating).toBe(3.6);
   });
 
+  it("sorts YAML categories through the household's list, an unmatched one a Tag", async () => {
+    const { preparePasteImport } = await import("../../src/paste-import/parser");
+
+    const result = await preparePasteImport(
+      `
+title: Tiramisu
+ingredients:
+  - 250 g mascarpone
+steps:
+  - Layer
+tags: italian
+categories: dessert, Holiday
+`,
+      false,
+      [...BUILT_IN_CATEGORIES, "Dessert"]
+    );
+
+    expect(result.structuredRecipes?.[0]?.recipe.categories).toEqual(["Dessert"]);
+    expect(result.structuredRecipes?.[0]?.recipe.tags).toEqual([
+      { name: "italian" },
+      { name: "holiday" },
+    ]);
+  });
+
+  it("hands the household's list to JSON-LD normalization", async () => {
+    const { preparePasteImport } = await import("../../src/paste-import/parser");
+    const household = [...BUILT_IN_CATEGORIES, "Drinks"];
+
+    await preparePasteImport(
+      JSON.stringify({
+        "@type": "Recipe",
+        name: "Margarita",
+        recipeIngredient: ["tequila"],
+        recipeInstructions: ["Shake"],
+      }),
+      false,
+      household
+    );
+
+    expect(mockNormalizeRecipeFromJson).toHaveBeenLastCalledWith(
+      expect.anything(),
+      expect.any(String),
+      household
+    );
+  });
+
   it("rejects structured input when no valid recipes remain", async () => {
     const { preparePasteImport } = await import("../../src/paste-import/parser");
 
     await expect(
-      preparePasteImport(`
+      preparePasteImport(
+        `
 title: Broken Recipe
 ingredients: not-an-array
 steps:
   - Step one
-`)
+`,
+        false,
+        BUILT_IN_CATEGORIES
+      )
     ).rejects.toThrow("No valid recipes found in structured paste input.");
   });
 
@@ -205,7 +266,8 @@ steps:
 
     const result = await preparePasteImport(
       '{"@type":"Recipe","name":"Ignored","recipeIngredient":["1 egg"],"recipeInstructions":["Mix"]}',
-      true
+      true,
+      BUILT_IN_CATEGORIES
     );
 
     expect(result.recipeIds).toHaveLength(1);
@@ -220,13 +282,17 @@ steps:
     const oversizedTitle = "a".repeat(MAX_RECIPE_PASTE_CHARS + 1);
 
     await expect(
-      preparePasteImport(`
+      preparePasteImport(
+        `
 - title: ${oversizedTitle}
   ingredients:
     - 1 egg
   steps:
     - Mix
-`)
+`,
+        false,
+        BUILT_IN_CATEGORIES
+      )
     ).rejects.toThrow(`Each pasted recipe must be at most ${MAX_RECIPE_PASTE_CHARS} characters.`);
   });
 });

@@ -17,14 +17,16 @@ import TagInput from "@/components/shared/tag-input";
 import EditRecipeSkeleton from "@/components/skeleton/edit-recipe-skeleton";
 import { useDevicePreference } from "@/context/device-preferences-context";
 import { useRecipesContext } from "@/context/recipes-context";
-import { useUnitsQuery } from "@/hooks/config";
+import { useCategoriesQuery, useUnitsQuery } from "@/hooks/config";
 import { useRecipeId } from "@/hooks/recipes";
 import { useUnsavedNavigationGuard } from "@/hooks/use-unsaved-navigation-guard";
+import { useCategoryLabel } from "@/lib/category-display";
 import { Button, FieldError, Input, Label, TextField } from "@heroui/react";
 import { useLocale, useTranslations } from "next-intl";
 
 import type { FullRecipeDTO, MeasurementSystem, RecipeCategory } from "@norish/shared/contracts";
 import { useHydrated } from "@norish/shared-react/hooks";
+import { resolveCategoryName } from "@norish/shared/lib/categories";
 import { inferSystemUsedFromParsed } from "@norish/shared/lib/determine-recipe-system";
 import { parseIngredientWithDefaults } from "@norish/shared/lib/helpers";
 import { createClientLogger } from "@norish/shared/lib/logger";
@@ -35,7 +37,6 @@ import ProvenanceFields, { EMPTY_PROVENANCE_FORM_VALUE } from "./provenance-fiel
 import { buildInitialMedia, useRecipeFormDirtyState } from "./use-recipe-form-dirty-state";
 
 const log = createClientLogger("RecipeForm");
-const ALL_CATEGORIES: RecipeCategory[] = ["Breakfast", "Lunch", "Dinner", "Snack"];
 export interface RecipeFormProps {
   mode: "create" | "edit";
   initialData?: FullRecipeDTO;
@@ -45,6 +46,8 @@ export default function RecipeForm({ mode, initialData }: RecipeFormProps) {
   const { createRecipe, updateRecipe } = useRecipesContext();
   const locale = useLocale();
   const { units, isLoading: isLoadingUnits } = useUnitsQuery();
+  const { categories: householdCategories, builtInAliases } = useCategoriesQuery();
+  const categoryLabel = useCategoryLabel();
   const [unitStyle] = useDevicePreference("unitStyle");
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [errors, setErrors] = useState<Record<string, string>>({});
@@ -69,6 +72,15 @@ export default function RecipeForm({ mode, initialData }: RecipeFormProps) {
   );
   const [tags, setTags] = useState<string[]>(initialData?.tags?.map((t) => t.name) ?? []);
   const [categories, setCategories] = useState<RecipeCategory[]>(initialData?.categories ?? []);
+  // The household's list, plus any the recipe carries from elsewhere or was just given.
+  const categoryOptions = useMemo(
+    () =>
+      Array.from(
+        new Set([...householdCategories, ...(initialData?.categories ?? []), ...categories])
+      ),
+    [householdCategories, initialData?.categories, categories]
+  );
+  const [newCategory, setNewCategory] = useState("");
   const [ingredients, setIngredients] = useState<ParsedIngredient[]>([]);
   const [steps, setSteps] = useState<Step[]>([]);
   const [systemUsed, setSystemUsed] = useState<MeasurementSystem>(
@@ -263,6 +275,15 @@ export default function RecipeForm({ mode, initialData }: RecipeFormProps) {
       prev.includes(category) ? prev.filter((c) => c !== category) : [...prev, category]
     );
   }, []);
+  // Resolved like the server does, so a typed name picks the chip it will save as.
+  const addCategory = () => {
+    const pick = resolveCategoryName(newCategory, builtInAliases, categoryOptions);
+
+    setNewCategory("");
+    if (!pick) return;
+
+    setCategories((prev) => (prev.includes(pick) ? prev : [...prev, pick]));
+  };
   const validate = useCallback((): boolean => {
     const newErrors: Record<string, string> = {};
     if (!name.trim()) {
@@ -558,7 +579,7 @@ export default function RecipeForm({ mode, initialData }: RecipeFormProps) {
             <div>
               <p className="text-muted mb-3 text-base">{t("categoriesHelp")}</p>
               <div className="flex flex-wrap gap-2">
-                {ALL_CATEGORIES.map((category) => {
+                {categoryOptions.map((category) => {
                   const active = categories.includes(category);
                   return (
                     <ChipButton
@@ -569,10 +590,26 @@ export default function RecipeForm({ mode, initialData }: RecipeFormProps) {
                       variant={active ? "primary" : "tertiary"}
                       onClick={() => toggleCategory(category)}
                     >
-                      {t(`category.${category.toLowerCase()}`)}
+                      {categoryLabel(category)}
                     </ChipButton>
                   );
                 })}
+                <input
+                  aria-label={t("addCategory")}
+                  className="bg-default text-foreground placeholder:text-muted h-8 w-40 rounded-full border border-(--field-border) px-3 text-sm outline-none"
+                  maxLength={40}
+                  placeholder={t("addCategory")}
+                  style={{ fontSize: "16px" }}
+                  type="text"
+                  value={newCategory}
+                  onBlur={addCategory}
+                  onChange={(e) => setNewCategory(e.target.value)}
+                  onKeyDown={(e) => {
+                    if (e.key !== "Enter") return;
+                    e.preventDefault();
+                    addCategory();
+                  }}
+                />
               </div>
             </div>
           </div>
