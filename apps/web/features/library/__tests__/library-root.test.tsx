@@ -90,6 +90,18 @@ describe("LibraryRoot", () => {
     expect(cookie().sortMode).toBe("titleAsc");
   });
 
+  it("keeps the search text out of the cookie", () => {
+    render(
+      <LibraryRoot filters={undefined}>
+        <Probe />
+      </LibraryRoot>
+    );
+
+    act(() => searchSoup());
+
+    expect(decodeURIComponent(document.cookie)).not.toContain("soup");
+  });
+
   it("releases the loading gate with no cookie and nothing stored", () => {
     render(
       <LibraryRoot filters={undefined}>

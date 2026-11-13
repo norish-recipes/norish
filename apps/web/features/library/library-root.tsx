@@ -24,8 +24,10 @@ let lastFilters: CanonicalRecipeFilters | undefined;
 
 // The device's storage keeps the filters; the cookie tells the server, so a full load draws the same list.
 function keep(filters: CanonicalRecipeFilters) {
+  const { rawInput: _rawInput, ...persisted } = filters;
+
   lastFilters = filters;
-  writeRecipeFiltersCookie(filters);
+  writeRecipeFiltersCookie(persisted);
 }
 
 /** What the Library draws kept current, and the filters kept in the browser and the cookie. */
