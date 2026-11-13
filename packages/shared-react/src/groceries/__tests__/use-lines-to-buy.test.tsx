@@ -170,6 +170,37 @@ describe("useLinesToBuy", () => {
       });
     });
 
+    it("adds once however often it is called, and shows it is adding", async () => {
+      const { result } = setup();
+
+      await act(async () => {
+        await Promise.all([
+          result.current.addLines(result.current.toBuy),
+          result.current.addLines(result.current.toBuy),
+        ]);
+      });
+
+      expect(state.create).toHaveBeenCalledTimes(1);
+      expect(result.current.isAdding).toBe(true);
+    });
+
+    it("lets the person try again after the list refused", async () => {
+      state.create = vi.fn(async () => {
+        throw new Error("no");
+      });
+      const { result } = setup();
+
+      await act(async () => {
+        await result.current.addLines(result.current.toBuy);
+      });
+      expect(result.current.isAdding).toBe(false);
+      await act(async () => {
+        await result.current.addLines(result.current.toBuy);
+      });
+
+      expect(state.create).toHaveBeenCalledTimes(2);
+    });
+
     it("answers false and warns when the list refuses", async () => {
       state.create = vi.fn(async () => {
         throw new Error("no");

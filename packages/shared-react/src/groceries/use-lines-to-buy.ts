@@ -1,3 +1,5 @@
+import { useRef, useState } from "react";
+
 import type { EditedIngredient, GroceryIngredient } from "@norish/shared/lib/grocery-lines";
 import type { FoodToBuy } from "@norish/shared/lib/line-foods";
 import { pantryIngredientFor } from "@norish/shared/lib/pantry";
@@ -26,6 +28,9 @@ export function useLinesToBuy<T extends ScaledFood>(
   // edited here is only text, so it is matched by its name.
   const pantry = usePantryQuery();
   const rules = useSpellingRules();
+  // One add per opened sheet: a second tap before the sheet closes must not mint the lines again.
+  const addingRef = useRef(false);
+  const [isAdding, setIsAdding] = useState(false);
 
   /** The Pantry Ingredient that covers a line, as edited here if it was. */
   const keptFor = (item: GroceryIngredient) => {
@@ -57,9 +62,13 @@ export function useLinesToBuy<T extends ScaledFood>(
     );
   };
 
-  /** Puts these lines on the list, as edited here; true once they are on it. */
-  const addLines = (picked: Array<FoodToBuy<GroceryIngredient>>) =>
-    createGroceriesFromData(
+  /** Puts these lines on the list, as edited here; true once they are on it, false if not added. */
+  const addLines = (picked: Array<FoodToBuy<GroceryIngredient>>) => {
+    if (addingRef.current) return Promise.resolve(false);
+    addingRef.current = true;
+    setIsAdding(true);
+
+    return createGroceriesFromData(
       picked.map((ri) => ({
         name: editedIngredients[ri.id]?.name ?? ri.ingredientName,
         amount: editedIngredients[ri.id]?.amount ?? ri.amount,
@@ -81,9 +90,12 @@ export function useLinesToBuy<T extends ScaledFood>(
           severity: "warning",
           title: toast.translate("groceries.panel.ingredientsFailed"),
         });
+        addingRef.current = false;
+        setIsAdding(false);
 
         return false;
       });
+  };
 
-  return { pantry, keptFor, keepLine, toBuy, inPantry, addLines };
+  return { pantry, keptFor, keepLine, toBuy, inPantry, addLines, isAdding };
 }
