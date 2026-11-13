@@ -39,10 +39,12 @@ export const offlineEngine = createOfflineEngine({
 });
 
 // React Native has no window focus, so the foreground is focus: stale reads refetch on return.
+// iOS `inactive` (Face ID, the share sheet, the switcher peek) is not leaving, so it changes nothing.
 focusManager.setEventListener((setFocused) => {
-  const subscription = AppState.addEventListener("change", (state) =>
-    setFocused(state === "active")
-  );
+  const subscription = AppState.addEventListener("change", (state) => {
+    if (state === "active") setFocused(true);
+    else if (state === "background") setFocused(false);
+  });
 
   return () => subscription.remove();
 });
