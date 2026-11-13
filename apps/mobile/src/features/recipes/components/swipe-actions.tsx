@@ -1,0 +1,148 @@
+import type { ComponentProps, ReactNode } from "react";
+import type { SwipeableMethods } from "react-native-gesture-handler/ReanimatedSwipeable";
+import React, { useRef, useState } from "react";
+import { Pressable, Text, View } from "react-native";
+import ReanimatedSwipeable from "react-native-gesture-handler/ReanimatedSwipeable";
+import Ionicons from "@expo/vector-icons/Ionicons";
+import { useThemeColor } from "heroui-native";
+import { useCSSVariable } from "uniwind";
+
+import type { RecipeViewMode } from "@norish/shared/contracts/zod/device-preferences";
+
+type IconName = ComponentProps<typeof Ionicons>["name"];
+
+export type SwipeAction = {
+  key: "groceries" | "plan" | "delete";
+  label: string;
+  onPress: () => void;
+  testID: string;
+};
+
+const ICONS: Record<SwipeAction["key"], IconName> = {
+  groceries: "bag-outline",
+  plan: "calendar-outline",
+  delete: "trash-outline",
+};
+const GROUND: Record<SwipeAction["key"], string> = {
+  groceries: "bg-shop",
+  plan: "bg-plan",
+  delete: "bg-danger",
+};
+
+// The board's panels: list circles are 48 pt in a 208 pt panel, grid circles 44 pt in an 80 pt one;
+// the card stops 8 / 4 pt short of the panel.
+const LIST_BUTTON = 208 / 3;
+const LIST_GAP = 8;
+const GRID_PANEL = 80;
+const GRID_GAP = 4;
+
+// Module scope: one card is open at a time, and the tRPC remount must not strand a stale ref.
+let openRow: SwipeableMethods | null = null;
+
+/** The card's swipe-left actions: coloured circles on the page with a neutral label under each. */
+export function SwipeActions({
+  variant,
+  actions,
+  children,
+}: {
+  variant: RecipeViewMode;
+  actions: SwipeAction[];
+  children: ReactNode;
+}) {
+  const [isOpen, setIsOpen] = useState(false);
+  const rowRef = useRef<SwipeableMethods>(null);
+  const isGrid = variant === "grid";
+  const width = isGrid ? GRID_PANEL + GRID_GAP : LIST_GAP + LIST_BUTTON * actions.length;
+
+  return (
+    <ReanimatedSwipeable
+      ref={rowRef}
+      containerStyle={isGrid ? { flex: 1, borderRadius: 24 } : undefined}
+      overshootRight={false}
+      renderRightActions={(_progress, _translation, methods) => (
+        <View
+          accessibilityElementsHidden={!isOpen}
+          importantForAccessibility={isOpen ? "auto" : "no-hide-descendants"}
+          style={
+            isGrid
+              ? {
+                  width,
+                  paddingLeft: GRID_GAP,
+                  justifyContent: "center",
+                  alignItems: "center",
+                  gap: 18,
+                }
+              : { width, paddingLeft: LIST_GAP, flexDirection: "row" }
+          }
+        >
+          {actions.map((action) => (
+            <ActionButton
+              key={action.key}
+              action={action}
+              isGrid={isGrid}
+              onPress={() => {
+                methods.close();
+                action.onPress();
+              }}
+            />
+          ))}
+        </View>
+      )}
+      rightThreshold={40}
+      onSwipeableClose={() => {
+        setIsOpen(false);
+        if (openRow === rowRef.current) openRow = null;
+      }}
+      onSwipeableOpen={() => setIsOpen(true)}
+      onSwipeableWillOpen={() => {
+        if (openRow !== rowRef.current) openRow?.close();
+        openRow = rowRef.current;
+      }}
+    >
+      {children}
+    </ReanimatedSwipeable>
+  );
+}
+
+function ActionButton({
+  action,
+  isGrid,
+  onPress,
+}: {
+  action: SwipeAction;
+  isGrid: boolean;
+  onPress: () => void;
+}) {
+  const [onColour] = useThemeColor(["danger-foreground"] as const);
+  const shopForeground = useCSSVariable("--color-shop-foreground");
+  const icon =
+    action.key === "groceries" && typeof shopForeground === "string" ? shopForeground : onColour;
+  const circle = isGrid ? 44 : 48;
+
+  return (
+    <Pressable
+      accessibilityLabel={action.label}
+      accessibilityRole="button"
+      className={isGrid ? "items-center gap-1.5" : "flex-1 items-center justify-center gap-[7px]"}
+      style={isGrid ? { width: 72 } : undefined}
+      testID={action.testID}
+      onPress={onPress}
+    >
+      <View
+        className={`items-center justify-center ${GROUND[action.key]}`}
+        style={{
+          width: circle,
+          height: circle,
+          borderRadius: circle / 2,
+          shadowColor: "#000",
+          shadowOpacity: 0.14,
+          shadowRadius: 4,
+          shadowOffset: { width: 0, height: 2 },
+        }}
+      >
+        <Ionicons color={icon} name={ICONS[action.key]} size={isGrid ? 19 : 20} />
+      </View>
+      <Text className="text-muted text-xs font-medium">{action.label}</Text>
+    </Pressable>
+  );
+}

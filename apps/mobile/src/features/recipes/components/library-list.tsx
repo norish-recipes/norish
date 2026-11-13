@@ -14,6 +14,7 @@ import {
 } from "@norish/shared-react/recipes";
 import { hasAppliedRecipeFilters } from "@norish/shared/contracts/filter-contract";
 
+import { useCardActions } from "../hooks/use-card-actions";
 import { CookbookCard } from "./cookbook-card";
 import { LibraryHeader } from "./library-header";
 import { LibrarySkeleton } from "./library-skeleton";
@@ -33,6 +34,7 @@ export function LibraryList({ header, testID }: { header?: ReactNode; testID?: s
   const filters = useLibraryFilters((state) => state.filters);
   const clearFilters = useLibraryFilters((state) => state.clearFilters);
   const { isFavorite, allergies } = useLibraryCards();
+  const actions = useCardActions();
   const { pendingRecipes, pendingRecipeIds } = usePendingRecipesQuery();
   const { items, isLoading, isFetchingNextPage, loadMore } = useLibraryList();
   const rows = libraryGridItems(items, pendingRecipeIds, filters.libraryType);
@@ -43,13 +45,19 @@ export function LibraryList({ header, testID }: { header?: ReactNode; testID?: s
     const card =
       item.kind === "recipe" ? (
         <RecipeCard
+          actions={actions}
           allergies={allergies}
           isFavorite={isFavorite(item.recipe.id)}
           recipe={item.recipe}
           variant={variant}
         />
       ) : item.kind === "cookbook" ? (
-        <CookbookCard allergies={allergies} cookbook={item.cookbook} variant={variant} />
+        <CookbookCard
+          actions={actions}
+          allergies={allergies}
+          cookbook={item.cookbook}
+          variant={variant}
+        />
       ) : (
         <PendingCard
           id={item.id}
