@@ -2,13 +2,14 @@ import type { ComponentProps, ReactNode } from "react";
 import React from "react";
 import { Link } from "expo-router";
 
+import type { MenuIcon } from "../utils/card-actions";
+
 type Href = ComponentProps<typeof Link>["href"];
 
 export type MenuItem = {
   key: string;
   label: string;
-  /** An SF Symbol. */
-  icon: ComponentProps<typeof Link.MenuAction>["icon"];
+  icon: MenuIcon;
   destructive?: boolean;
   onPress: () => void;
 };

@@ -16,7 +16,7 @@ import type { RecipeMenuAction } from "../utils/card-actions";
 import type { SwipeAction } from "./swipe-actions";
 import { useCardActionMenu } from "../hooks/use-card-action-menu";
 import {
-  recipeActionDefinition,
+  RECIPE_ACTION_DEFINITIONS,
   recipeMenuActions,
   recipeSwipeActions,
 } from "../utils/card-actions";
@@ -51,7 +51,8 @@ export function RecipeCard({ recipe, variant, isFavorite, allergies, actions, co
     removeFromCookbook: () => cookbook && actions.removeFromCookbook(cookbook, recipe),
     delete: () => actions.deleteRecipe(recipe),
   };
-  const definition = (key: RecipeMenuAction) => recipeActionDefinition(key, isFavorite);
+  const definition = (key: RecipeMenuAction) =>
+    RECIPE_ACTION_DEFINITIONS[key === "favourite" && isFavorite ? "unfavourite" : key];
   const { items, accessibilityProps } = useCardActionMenu(
     recipeMenuActions({
       canDelete,

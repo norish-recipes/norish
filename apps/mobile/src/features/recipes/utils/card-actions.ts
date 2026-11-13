@@ -1,4 +1,5 @@
-import type { MenuItem } from "../components/card-menu";
+import type { Link } from "expo-router";
+import type { ComponentProps } from "react";
 
 /** What a recipe card's swipe offers, left to right. */
 export function recipeSwipeActions(canDelete: boolean) {
@@ -7,12 +8,15 @@ export function recipeSwipeActions(canDelete: boolean) {
 
 export type RecipeSwipeAction = ReturnType<typeof recipeSwipeActions>[number];
 
+/** An SF Symbol, as the native context menu takes it. */
+export type MenuIcon = ComponentProps<typeof Link.MenuAction>["icon"];
+
 /** How an action reads and looks: its i18n ids, its SF Symbol, and whether it is destructive. */
 export type ActionDefinition = {
   labelId: string;
   /** The swipe's caption, where it differs from the menu's. */
   swipeLabelId?: string;
-  icon: MenuItem["icon"];
+  icon: MenuIcon;
   destructive?: boolean;
 };
 
@@ -53,14 +57,17 @@ export function cookbookMenuActions({
   ];
 }
 
-export function recipeActionDefinition(
-  key: RecipeMenuAction,
-  isFavorite: boolean
-): ActionDefinition {
-  const definitions: Record<RecipeMenuAction, ActionDefinition> = {
-    favourite: isFavorite
-      ? { labelId: "recipes.actions.unfavourite", icon: "heart.fill" }
-      : { labelId: "recipes.actions.favourite", icon: "heart" },
+const DELETE: ActionDefinition = {
+  labelId: "recipes.actions.delete",
+  icon: "trash",
+  destructive: true,
+};
+
+/** A favourited recipe's menu offers `unfavourite` in the `favourite` slot. */
+export const RECIPE_ACTION_DEFINITIONS: Record<RecipeMenuAction | "unfavourite", ActionDefinition> =
+  {
+    favourite: { labelId: "recipes.actions.favourite", icon: "heart" },
+    unfavourite: { labelId: "recipes.actions.unfavourite", icon: "heart.fill" },
     groceries: {
       labelId: "recipes.detail.addToGroceries",
       swipeLabelId: "recipes.actions.groceries",
@@ -73,14 +80,11 @@ export function recipeActionDefinition(
       icon: "minus.circle",
       destructive: true,
     },
-    delete: { labelId: "recipes.actions.delete", icon: "trash", destructive: true },
+    delete: DELETE,
   };
-
-  return definitions[key];
-}
 
 export const COOKBOOK_ACTION_DEFINITIONS: Record<CookbookMenuAction, ActionDefinition> = {
   addRecipes: { labelId: "recipes.cookbooks.addRecipes", icon: "plus" },
   rename: { labelId: "recipes.cookbooks.rename", icon: "pencil" },
-  delete: { labelId: "recipes.actions.delete", icon: "trash", destructive: true },
+  delete: DELETE,
 };
