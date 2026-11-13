@@ -33,15 +33,11 @@ import { useFormatter, useTranslations } from "next-intl";
 import { useLongPress } from "react-aria";
 
 import { useHiddenItemVisibility, useRecipePermissions } from "@norish/shared-react/reader";
-import { useRecipeSelection } from "@norish/shared-react/recipes";
+import { recipeCardFacts, useRecipeSelection } from "@norish/shared-react/recipes";
 import { RecipeDashboardDTO } from "@norish/shared/contracts";
 import { RECIPE_DASHBOARD_KEYS } from "@norish/shared/contracts/zod";
 import { addBasePath } from "@norish/shared/lib/base-path";
-import {
-  formatMinutesHM,
-  isAllergenTag,
-  sortTagsWithAllergyPriority,
-} from "@norish/shared/lib/helpers";
+import { isAllergenTag } from "@norish/shared/lib/helpers";
 
 import { CardFact, CardFacts } from "./card-facts";
 import RecipeMetadata from "./recipe-metadata";
@@ -71,28 +67,6 @@ function isPlainClick(event: ClickModifiers) {
 /** The card is a real link (#555): plain clicks stay with its handlers, and no button opens a tab. */
 function keepClicksInPage(event: MouseEvent) {
   if (isPlainClick(event) || (event.target as Element).closest("button")) event.preventDefault();
-}
-
-type RecipeTagValue = RecipeDashboardDTO["tags"][number] | string | null | undefined;
-
-function normalizeRecipeTagNames(tags: readonly RecipeTagValue[] | null | undefined) {
-  const seen = new Set<string>();
-  const names: string[] = [];
-
-  for (const tag of tags ?? []) {
-    const name = (typeof tag === "string" ? tag : tag?.name)?.trim();
-
-    if (!name) continue;
-
-    const key = name.toLowerCase();
-
-    if (seen.has(key)) continue;
-
-    seen.add(key);
-    names.push(name);
-  }
-
-  return names;
 }
 
 // Structural equality for card-sized values: Dates by timestamp, arrays and
@@ -212,23 +186,7 @@ function RecipeCardComponent({
     }
   }, [router, recipe.id, open, recipeHref]);
 
-  const summedMinutes = (recipe.prepMinutes ?? 0) + (recipe.cookMinutes ?? 0);
-  const totalMinutes = recipe.totalMinutes ?? (summedMinutes || undefined);
-  const timeLabel = formatMinutesHM(totalMinutes);
-
-  const servings = recipe.servings;
-  const allergySet = useMemo(() => new Set(allergies.map((a) => a.toLowerCase())), [allergies]);
-  // Allergen tags always sort ahead of the rest, so the two visible list-view
-  // chips (and the tooltip behind "+N") surface the warning instead of hiding
-  // it. The grid overlay applies the same priority inside RecipeTags.
-  const tagNames = useMemo(
-    () =>
-      sortTagsWithAllergyPriority(
-        normalizeRecipeTagNames(recipe.tags).map((name) => ({ name })),
-        allergies
-      ).map((t) => t.name),
-    [recipe.tags, allergies]
-  );
+  const { tagNames, allergySet, timeLabel, servings } = recipeCardFacts(recipe, allergies);
   const visibleTagNames = tagNames.slice(0, 2);
   const hiddenTagCount = tagNames.length - visibleTagNames.length;
   // More allergens than visible slots: the overflow chip inherits the warning
