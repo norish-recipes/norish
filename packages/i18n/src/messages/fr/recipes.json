@@ -105,7 +105,9 @@
     "linkingIngredients": "Liaison des ingrédients…",
     "generateImage": "Générer une image",
     "generatingImage": "Génération de l'image…",
-    "cookbooks": "Livres de cuisine"
+    "cookbooks": "Livres de cuisine",
+    "favourite": "Favori",
+    "unfavourite": "Retirer des favoris"
   },
   "sharePanel": {
     "title": "Partager la recette",
@@ -165,7 +167,8 @@
     "confirmMessage": "Êtes-vous sûr de vouloir supprimer \"{recipeName}\" ?",
     "warning": "Cette action ne peut pas être annulée.",
     "confirmCount": "Supprimer {count, plural, one {# recette} other {# recettes}} ?",
-    "keptCount": "{count, plural, one {# recette reste} other {# recettes restent}}, car vous n’avez pas le droit de {count, plural, one {la} other {les}} supprimer."
+    "keptCount": "{count, plural, one {# recette reste} other {# recettes restent}}, car vous n’avez pas le droit de {count, plural, one {la} other {les}} supprimer.",
+    "alertTitle": "Supprimer {name} ?"
   },
   "form": {
     "createTitle": "Créer une recette",
@@ -421,7 +424,9 @@
     "changeImage": "Changer l'image",
     "removeImage": "Retirer l'image",
     "imageUploadFailed": "L'image n'a pas pu être envoyée.",
-    "imageNeedsConnection": "Les images pourront être modifiées une fois de retour en ligne."
+    "imageNeedsConnection": "Les images pourront être modifiées une fois de retour en ligne.",
+    "rename": "Renommer",
+    "deleteAlertTitle": "Supprimer {title} ?"
   },
   "print": {
     "title": "Imprimer la recette",

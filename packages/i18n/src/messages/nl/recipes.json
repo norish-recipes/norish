@@ -105,7 +105,9 @@
     "linkingIngredients": "Ingrediënten koppelen…",
     "generateImage": "Afbeelding genereren",
     "generatingImage": "Afbeelding genereren…",
-    "cookbooks": "Kookboeken"
+    "cookbooks": "Kookboeken",
+    "favourite": "Favoriet",
+    "unfavourite": "Favoriet verwijderen"
   },
   "sharePanel": {
     "title": "Recept delen",
@@ -165,7 +167,8 @@
     "confirmMessage": "Weet je zeker dat je \"{recipeName}\" wilt verwijderen?",
     "warning": "Deze actie kan niet ongedaan worden gemaakt.",
     "confirmCount": "{count, plural, one {# recept} other {# recepten}} verwijderen?",
-    "keptCount": "{count, plural, one {# recept blijft} other {# recepten blijven}} staan, omdat je {count, plural, one {het} other {ze}} niet mag verwijderen."
+    "keptCount": "{count, plural, one {# recept blijft} other {# recepten blijven}} staan, omdat je {count, plural, one {het} other {ze}} niet mag verwijderen.",
+    "alertTitle": "{name} verwijderen?"
   },
   "form": {
     "createTitle": "Recept Maken",
@@ -421,7 +424,9 @@
     "changeImage": "Afbeelding wijzigen",
     "removeImage": "Afbeelding verwijderen",
     "imageUploadFailed": "De afbeelding kon niet worden geüpload.",
-    "imageNeedsConnection": "Afbeeldingen kun je wijzigen zodra je weer online bent."
+    "imageNeedsConnection": "Afbeeldingen kun je wijzigen zodra je weer online bent.",
+    "rename": "Hernoemen",
+    "deleteAlertTitle": "{title} verwijderen?"
   },
   "print": {
     "title": "Recept afdrukken",

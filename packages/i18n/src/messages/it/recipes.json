@@ -105,7 +105,9 @@
     "linkingIngredients": "Collegamento degli ingredienti…",
     "generateImage": "Genera immagine",
     "generatingImage": "Generazione immagine…",
-    "cookbooks": "Libri di cucina"
+    "cookbooks": "Libri di cucina",
+    "favourite": "Preferito",
+    "unfavourite": "Rimuovi dai preferiti"
   },
   "sharePanel": {
     "title": "Condividi ricetta",
@@ -165,7 +167,8 @@
     "confirmMessage": "Sei sicuro di voler eliminare \"{recipeName}\"?",
     "warning": "Questa azione non può essere annullata.",
     "confirmCount": "Eliminare {count, plural, one {# ricetta} other {# ricette}}?",
-    "keptCount": "{count, plural, one {# ricetta resta} other {# ricette restano}}, perché non puoi {count, plural, one {eliminarla} other {eliminarle}}."
+    "keptCount": "{count, plural, one {# ricetta resta} other {# ricette restano}}, perché non puoi {count, plural, one {eliminarla} other {eliminarle}}.",
+    "alertTitle": "Eliminare {name}?"
   },
   "form": {
     "createTitle": "Crea ricetta",
@@ -421,7 +424,9 @@
     "changeImage": "Cambia immagine",
     "removeImage": "Rimuovi immagine",
     "imageUploadFailed": "Impossibile caricare l'immagine.",
-    "imageNeedsConnection": "Potrai cambiare le immagini quando sarai di nuovo online."
+    "imageNeedsConnection": "Potrai cambiare le immagini quando sarai di nuovo online.",
+    "rename": "Rinomina",
+    "deleteAlertTitle": "Eliminare {title}?"
   },
   "print": {
     "title": "Stampa ricetta",

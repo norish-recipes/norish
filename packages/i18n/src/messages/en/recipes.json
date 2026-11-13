@@ -105,7 +105,9 @@
     "linkingIngredients": "Linking ingredients…",
     "generateImage": "Generate Picture",
     "generatingImage": "Generating picture…",
-    "cookbooks": "Cookbooks"
+    "cookbooks": "Cookbooks",
+    "favourite": "Favourite",
+    "unfavourite": "Unfavourite"
   },
   "sharePanel": {
     "title": "Share recipe",
@@ -165,7 +167,8 @@
     "confirmMessage": "Are you sure you want to delete \"{recipeName}\"?",
     "warning": "This action cannot be undone.",
     "confirmCount": "Delete {count, plural, one {# recipe} other {# recipes}}?",
-    "keptCount": "{count, plural, one {# recipe stays} other {# recipes stay}}, because you may not delete {count, plural, one {it} other {them}}."
+    "keptCount": "{count, plural, one {# recipe stays} other {# recipes stay}}, because you may not delete {count, plural, one {it} other {them}}.",
+    "alertTitle": "Delete {name}?"
   },
   "form": {
     "createTitle": "Create Recipe",
@@ -421,7 +424,9 @@
     "changeImage": "Change image",
     "removeImage": "Remove image",
     "imageUploadFailed": "The image could not be uploaded.",
-    "imageNeedsConnection": "Images can be changed once you are back online."
+    "imageNeedsConnection": "Images can be changed once you are back online.",
+    "rename": "Rename",
+    "deleteAlertTitle": "Delete {title}?"
   },
   "print": {
     "title": "Print recipe",

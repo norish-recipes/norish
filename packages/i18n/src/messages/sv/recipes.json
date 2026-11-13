@@ -105,7 +105,9 @@
     "linkingIngredients": "Kopplar ingredienser…",
     "generateImage": "Skapa bild",
     "generatingImage": "Skapar bild…",
-    "cookbooks": "Kokböcker"
+    "cookbooks": "Kokböcker",
+    "favourite": "Favorit",
+    "unfavourite": "Ta bort som favorit"
   },
   "sharePanel": {
     "title": "Dela recept",
@@ -165,7 +167,8 @@
     "confirmMessage": "Vill du ta bort ”{recipeName}”?",
     "warning": "Det går inte att ångra den här åtgärden.",
     "confirmCount": "Radera {count, plural, one {# recept} other {# recept}}?",
-    "keptCount": "{count, plural, one {# recept blir kvar} other {# recept blir kvar}}, eftersom du inte får radera {count, plural, one {det} other {dem}}."
+    "keptCount": "{count, plural, one {# recept blir kvar} other {# recept blir kvar}}, eftersom du inte får radera {count, plural, one {det} other {dem}}.",
+    "alertTitle": "Ta bort {name}?"
   },
   "form": {
     "createTitle": "Skapa recept",
@@ -421,7 +424,9 @@
     "changeImage": "Byt bild",
     "removeImage": "Ta bort bild",
     "imageUploadFailed": "Det gick inte att ladda upp bilden.",
-    "imageNeedsConnection": "Du kan byta bilder när du är online igen."
+    "imageNeedsConnection": "Du kan byta bilder när du är online igen.",
+    "rename": "Byt namn",
+    "deleteAlertTitle": "Ta bort {title}?"
   },
   "print": {
     "title": "Skriv ut recept",

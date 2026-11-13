@@ -105,7 +105,9 @@
     "linkingIngredients": "Linkitetään ainesosia…",
     "generateImage": "Luo kuva",
     "generatingImage": "Luodaan kuvaa…",
-    "cookbooks": "Keittokirjat"
+    "cookbooks": "Keittokirjat",
+    "favourite": "Suosikki",
+    "unfavourite": "Poista suosikeista"
   },
   "sharePanel": {
     "title": "Jaa resepti",
@@ -165,7 +167,8 @@
     "confirmMessage": "Haluatko varmasti poistaa reseptin \"{recipeName}\"?",
     "warning": "Tätä toimintoa ei voi kumota.",
     "confirmCount": "Poistetaanko {count, plural, one {# resepti} other {# reseptiä}}?",
-    "keptCount": "{count, plural, one {# resepti jää} other {# reseptiä jää}}, koska sinulla ei ole oikeutta poistaa {count, plural, one {sitä} other {niitä}}."
+    "keptCount": "{count, plural, one {# resepti jää} other {# reseptiä jää}}, koska sinulla ei ole oikeutta poistaa {count, plural, one {sitä} other {niitä}}.",
+    "alertTitle": "Poistetaanko {name}?"
   },
   "form": {
     "createTitle": "Luo resepti",
@@ -421,7 +424,9 @@
     "changeImage": "Vaihda kuva",
     "removeImage": "Poista kuva",
     "imageUploadFailed": "Kuvan lataaminen epäonnistui.",
-    "imageNeedsConnection": "Kuvia voi vaihtaa, kun olet taas verkossa."
+    "imageNeedsConnection": "Kuvia voi vaihtaa, kun olet taas verkossa.",
+    "rename": "Nimeä uudelleen",
+    "deleteAlertTitle": "Poistetaanko {title}?"
   },
   "print": {
     "title": "Tulosta resepti",

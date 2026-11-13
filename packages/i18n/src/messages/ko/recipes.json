@@ -105,7 +105,9 @@
     "linkingIngredients": "재료 연결 중…",
     "generateImage": "이미지 생성",
     "generatingImage": "이미지 생성 중…",
-    "cookbooks": "요리책"
+    "cookbooks": "요리책",
+    "favourite": "즐겨찾기",
+    "unfavourite": "즐겨찾기 해제"
   },
   "sharePanel": {
     "title": "레시피 공유",
@@ -165,7 +167,8 @@
     "confirmMessage": "정말로 \"{recipeName}\"을(를) 삭제하시겠습니까?",
     "warning": "이 작업은 취소할 수 없습니다.",
     "confirmCount": "레시피 {count}개를 삭제할까요?",
-    "keptCount": "삭제 권한이 없어 레시피 {count}개는 남습니다."
+    "keptCount": "삭제 권한이 없어 레시피 {count}개는 남습니다.",
+    "alertTitle": "{name}을(를) 삭제할까요?"
   },
   "form": {
     "createTitle": "레시피 만들기",
@@ -421,7 +424,9 @@
     "changeImage": "이미지 변경",
     "removeImage": "이미지 삭제",
     "imageUploadFailed": "이미지를 업로드하지 못했습니다.",
-    "imageNeedsConnection": "다시 온라인 상태가 되면 이미지를 변경할 수 있습니다."
+    "imageNeedsConnection": "다시 온라인 상태가 되면 이미지를 변경할 수 있습니다.",
+    "rename": "이름 변경",
+    "deleteAlertTitle": "{title}을(를) 삭제할까요?"
   },
   "print": {
     "title": "레시피 인쇄",

@@ -105,7 +105,9 @@
     "linkingIngredients": "Wiązanie składników…",
     "generateImage": "Wygeneruj obraz",
     "generatingImage": "Generowanie obrazu…",
-    "cookbooks": "Książki kucharskie"
+    "cookbooks": "Książki kucharskie",
+    "favourite": "Ulubione",
+    "unfavourite": "Usuń z ulubionych"
   },
   "sharePanel": {
     "title": "Udostępnij przepis",
@@ -165,7 +167,8 @@
     "confirmMessage": "Czy na pewno chcesz usunąć \"{recipeName}\"?",
     "warning": "Tej akcji nie można cofnąć.",
     "confirmCount": "Usunąć {count, plural, one {# przepis} few {# przepisy} many {# przepisów} other {# przepisu}}?",
-    "keptCount": "Pozostaje {count, plural, one {# przepis} few {# przepisy} many {# przepisów} other {# przepisu}}, ponieważ nie możesz {count, plural, one {go} few {ich} many {ich} other {ich}} usunąć."
+    "keptCount": "Pozostaje {count, plural, one {# przepis} few {# przepisy} many {# przepisów} other {# przepisu}}, ponieważ nie możesz {count, plural, one {go} few {ich} many {ich} other {ich}} usunąć.",
+    "alertTitle": "Usunąć {name}?"
   },
   "form": {
     "createTitle": "Utwórz przepis",
@@ -421,7 +424,9 @@
     "changeImage": "Zmień obraz",
     "removeImage": "Usuń obraz",
     "imageUploadFailed": "Nie udało się przesłać obrazu.",
-    "imageNeedsConnection": "Obrazy możesz zmienić, gdy znów będziesz online."
+    "imageNeedsConnection": "Obrazy możesz zmienić, gdy znów będziesz online.",
+    "rename": "Zmień nazwę",
+    "deleteAlertTitle": "Usunąć {title}?"
   },
   "print": {
     "title": "Drukuj przepis",

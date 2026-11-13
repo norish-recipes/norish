@@ -105,7 +105,9 @@
     "linkingIngredients": "Kobler ingredienser…",
     "generateImage": "Generer bilde",
     "generatingImage": "Genererer bilde…",
-    "cookbooks": "Kokebøker"
+    "cookbooks": "Kokebøker",
+    "favourite": "Favoritt",
+    "unfavourite": "Fjern fra favoritter"
   },
   "sharePanel": {
     "title": "Del oppskrift",
@@ -165,7 +167,8 @@
     "confirmMessage": "Er du sikker på at du vil slette \"{recipeName}\"?",
     "warning": "Denne handlingen kan ikke angres.",
     "confirmCount": "Slette {count, plural, one {# oppskrift} other {# oppskrifter}}?",
-    "keptCount": "{count, plural, one {# oppskrift blir} other {# oppskrifter blir}} igjen, fordi du ikke kan slette {count, plural, one {den} other {dem}}."
+    "keptCount": "{count, plural, one {# oppskrift blir} other {# oppskrifter blir}} igjen, fordi du ikke kan slette {count, plural, one {den} other {dem}}.",
+    "alertTitle": "Slette {name}?"
   },
   "form": {
     "createTitle": "Opprett oppskrift",
@@ -421,7 +424,9 @@
     "changeImage": "Bytt bilde",
     "removeImage": "Fjern bilde",
     "imageUploadFailed": "Bildet kunne ikke lastes opp.",
-    "imageNeedsConnection": "Bilder kan endres når du er tilkoblet igjen."
+    "imageNeedsConnection": "Bilder kan endres når du er tilkoblet igjen.",
+    "rename": "Gi nytt navn",
+    "deleteAlertTitle": "Slette {title}?"
   },
   "print": {
     "title": "Skriv ut oppskrift",

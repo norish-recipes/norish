@@ -105,7 +105,9 @@
     "linkingIngredients": "Zutaten werden verknüpft…",
     "generateImage": "Bild generieren",
     "generatingImage": "Bild wird generiert…",
-    "cookbooks": "Kochbücher"
+    "cookbooks": "Kochbücher",
+    "favourite": "Favorit",
+    "unfavourite": "Aus Favoriten entfernen"
   },
   "sharePanel": {
     "title": "Rezept teilen",
@@ -165,7 +167,8 @@
     "confirmMessage": "Sind Sie sicher, dass Sie \"{recipeName}\" löschen möchten?",
     "warning": "Diese Aktion kann nicht rückgängig gemacht werden.",
     "confirmCount": "{count, plural, one {# Rezept} other {# Rezepte}} löschen?",
-    "keptCount": "{count, plural, one {# Rezept bleibt} other {# Rezepte bleiben}}, weil Sie {count, plural, one {es} other {sie}} nicht löschen dürfen."
+    "keptCount": "{count, plural, one {# Rezept bleibt} other {# Rezepte bleiben}}, weil Sie {count, plural, one {es} other {sie}} nicht löschen dürfen.",
+    "alertTitle": "{name} löschen?"
   },
   "form": {
     "createTitle": "Rezept erstellen",
@@ -421,7 +424,9 @@
     "changeImage": "Bild ändern",
     "removeImage": "Bild entfernen",
     "imageUploadFailed": "Das Bild konnte nicht hochgeladen werden.",
-    "imageNeedsConnection": "Bilder können Sie ändern, sobald Sie wieder online sind."
+    "imageNeedsConnection": "Bilder können Sie ändern, sobald Sie wieder online sind.",
+    "rename": "Umbenennen",
+    "deleteAlertTitle": "{title} löschen?"
   },
   "print": {
     "title": "Rezept drucken",

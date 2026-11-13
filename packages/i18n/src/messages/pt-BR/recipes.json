@@ -105,7 +105,9 @@
     "linkingIngredients": "Vinculando ingredientes…",
     "generateImage": "Gerar imagem",
     "generatingImage": "Gerando imagem…",
-    "cookbooks": "Livros de receitas"
+    "cookbooks": "Livros de receitas",
+    "favourite": "Favoritar",
+    "unfavourite": "Desfavoritar"
   },
   "sharePanel": {
     "title": "Compartilhar receita",
@@ -165,7 +167,8 @@
     "confirmMessage": "Tem certeza de que deseja excluir \"{recipeName}\"?",
     "warning": "Esta ação não pode ser desfeita.",
     "confirmCount": "Excluir {count, plural, one {# receita} other {# receitas}}?",
-    "keptCount": "{count, plural, one {# receita fica} other {# receitas ficam}}, porque você não pode {count, plural, one {excluí-la} other {excluí-las}}."
+    "keptCount": "{count, plural, one {# receita fica} other {# receitas ficam}}, porque você não pode {count, plural, one {excluí-la} other {excluí-las}}.",
+    "alertTitle": "Excluir {name}?"
   },
   "form": {
     "createTitle": "Criar receita",
@@ -421,7 +424,9 @@
     "changeImage": "Trocar imagem",
     "removeImage": "Remover imagem",
     "imageUploadFailed": "Não foi possível enviar a imagem.",
-    "imageNeedsConnection": "Você pode trocar imagens quando estiver online de novo."
+    "imageNeedsConnection": "Você pode trocar imagens quando estiver online de novo.",
+    "rename": "Renomear",
+    "deleteAlertTitle": "Excluir {title}?"
   },
   "print": {
     "title": "Imprimir receita",

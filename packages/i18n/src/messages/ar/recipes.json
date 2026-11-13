@@ -105,7 +105,9 @@
     "linkingIngredients": "جارٍ ربط المكوّنات…",
     "generateImage": "إنشاء صورة",
     "generatingImage": "جارٍ إنشاء الصورة…",
-    "cookbooks": "كتب الطبخ"
+    "cookbooks": "كتب الطبخ",
+    "favourite": "المفضلة",
+    "unfavourite": "إزالة من المفضلة"
   },
   "sharePanel": {
     "title": "مشاركة الوصفة",
@@ -165,7 +167,8 @@
     "confirmMessage": "هل أنت متأكد من حذف \"{recipeName}\"؟",
     "warning": "لا يمكن التراجع عن هذا الإجراء.",
     "confirmCount": "حذف {count, plural, one {وصفة واحدة} two {وصفتين} few {# وصفات} many {# وصفة} other {# وصفة}}؟",
-    "keptCount": "ستبقى {count, plural, one {وصفة واحدة} two {وصفتان} few {# وصفات} many {# وصفة} other {# وصفة}} لأنه لا يُسمح لك بحذفها."
+    "keptCount": "ستبقى {count, plural, one {وصفة واحدة} two {وصفتان} few {# وصفات} many {# وصفة} other {# وصفة}} لأنه لا يُسمح لك بحذفها.",
+    "alertTitle": "حذف {name}؟"
   },
   "form": {
     "createTitle": "إنشاء وصفة",
@@ -421,7 +424,9 @@
     "changeImage": "تغيير الصورة",
     "removeImage": "إزالة الصورة",
     "imageUploadFailed": "تعذّر رفع الصورة.",
-    "imageNeedsConnection": "يمكن تغيير الصور عند عودة الاتصال."
+    "imageNeedsConnection": "يمكن تغيير الصور عند عودة الاتصال.",
+    "rename": "إعادة تسمية",
+    "deleteAlertTitle": "حذف {title}؟"
   },
   "print": {
     "title": "طباعة الوصفة",

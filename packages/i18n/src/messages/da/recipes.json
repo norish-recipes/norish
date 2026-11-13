@@ -105,7 +105,9 @@
     "linkingIngredients": "Tilknytter ingredienser…",
     "generateImage": "Generér billede",
     "generatingImage": "Genererer billede…",
-    "cookbooks": "Kogebøger"
+    "cookbooks": "Kogebøger",
+    "favourite": "Favorit",
+    "unfavourite": "Fjern fra favoritter"
   },
   "sharePanel": {
     "title": "Del opskrift",
@@ -165,7 +167,8 @@
     "confirmMessage": "Er du sikker på, at du vil slette \"{recipeName}\"?",
     "warning": "Denne handling kan ikke fortrydes.",
     "confirmCount": "Slet {count, plural, one {# opskrift} other {# opskrifter}}?",
-    "keptCount": "{count, plural, one {# opskrift bliver} other {# opskrifter bliver}}, fordi du ikke må slette {count, plural, one {den} other {dem}}."
+    "keptCount": "{count, plural, one {# opskrift bliver} other {# opskrifter bliver}}, fordi du ikke må slette {count, plural, one {den} other {dem}}.",
+    "alertTitle": "Slet {name}?"
   },
   "form": {
     "createTitle": "Opret opskrift",
@@ -421,7 +424,9 @@
     "changeImage": "Skift billede",
     "removeImage": "Fjern billede",
     "imageUploadFailed": "Billedet kunne ikke uploades.",
-    "imageNeedsConnection": "Billeder kan ændres, når du er online igen."
+    "imageNeedsConnection": "Billeder kan ændres, når du er online igen.",
+    "rename": "Omdøb",
+    "deleteAlertTitle": "Slet {title}?"
   },
   "print": {
     "title": "Udskriv opskrift",

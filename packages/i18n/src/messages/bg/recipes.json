@@ -105,7 +105,9 @@
     "linkingIngredients": "Свързване на съставките…",
     "generateImage": "Генерирай изображение",
     "generatingImage": "Генериране на изображение…",
-    "cookbooks": "Готварски книги"
+    "cookbooks": "Готварски книги",
+    "favourite": "Любима",
+    "unfavourite": "Премахни от любимите"
   },
   "sharePanel": {
     "title": "Сподели рецепта",
@@ -165,7 +167,8 @@
     "confirmMessage": "Наистина ли искаш да изтриеш „{recipeName}“?",
     "warning": "Това действие не може да бъде отменено.",
     "confirmCount": "Изтриване на {count, plural, one {# рецепта} other {# рецепти}}?",
-    "keptCount": "{count, plural, one {# рецепта остава} other {# рецепти остават}}, защото нямате право да {count, plural, one {я} other {ги}} изтриете."
+    "keptCount": "{count, plural, one {# рецепта остава} other {# рецепти остават}}, защото нямате право да {count, plural, one {я} other {ги}} изтриете.",
+    "alertTitle": "Да се изтрие ли {name}?"
   },
   "form": {
     "createTitle": "Създаване на рецепта",
@@ -421,7 +424,9 @@
     "changeImage": "Смяна на изображението",
     "removeImage": "Премахване на изображението",
     "imageUploadFailed": "Изображението не можа да бъде качено.",
-    "imageNeedsConnection": "Изображенията могат да се сменят, когато отново сте онлайн."
+    "imageNeedsConnection": "Изображенията могат да се сменят, когато отново сте онлайн.",
+    "rename": "Преименуване",
+    "deleteAlertTitle": "Да се изтрие ли {title}?"
   },
   "print": {
     "title": "Печат на рецептата",
