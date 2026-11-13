@@ -115,7 +115,7 @@ export function PlanRecipeScreen() {
           {TODAY_MEAL_SLOTS.map((target) => (
             <Tabs.Trigger
               key={target}
-              className="h-[34px] flex-1"
+              className="h-[34px] flex-1 px-0"
               testID={`plan-recipe-slot-${target}`}
               value={target}
             >

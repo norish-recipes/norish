@@ -70,7 +70,7 @@ export function TodaySection({ today }: { today: Today }) {
 
   return (
     <View testID="today-section">
-      <Text className="text-muted px-5 pt-0.5 text-base" testID="today-date">
+      <Text className="text-muted px-5 pt-0.5 text-base leading-[19px]" testID="today-date">
         {intl.formatDate(today.todayDate, { weekday: "long", month: "short", day: "numeric" })}
       </Text>
       {today.isLoading ? (

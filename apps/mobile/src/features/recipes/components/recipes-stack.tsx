@@ -1,7 +1,6 @@
 import React from "react";
 import { AccountAvatar } from "@/components/account-avatar";
 import { Stack } from "expo-router";
-import { useIntl } from "react-intl";
 
 import { LibraryRoot } from "./library-root";
 
@@ -14,22 +13,16 @@ const SHEETS = [
   "cookbook-rename",
 ] as const;
 
-/** The Recipes tab's stack: iOS's own large title, collapsing on scroll, with the account avatar on its right. */
+/** The Recipes tab's stack: a transparent native header with the account avatar pinned right; the screen draws its own large title. */
 export function RecipesStack() {
-  const intl = useIntl();
-
   return (
     <LibraryRoot>
       <Stack
         screenOptions={{
-          title: intl.formatMessage({ id: "navbar.nav.home" }),
-          headerLargeTitle: true,
           headerTransparent: true,
-          headerLargeTitleShadowVisible: false,
-          // The board draws the avatar bare, without iOS 26's shared glass capsule.
-          unstable_headerRightItems: () => [
-            { type: "custom", element: <AccountAvatar />, hidesSharedBackground: true },
-          ],
+          headerShadowVisible: false,
+          headerTitleStyle: { fontSize: 17, fontWeight: "600" },
+          unstable_headerRightItems: () => [{ type: "custom", element: <AccountAvatar /> }],
         }}
       >
         <Stack.Screen

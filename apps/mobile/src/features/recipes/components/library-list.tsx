@@ -1,6 +1,8 @@
 import type { ReactNode } from "react";
-import React from "react";
-import { FlatList, View } from "react-native";
+import React, { useState } from "react";
+import { FlatList, Text, View } from "react-native";
+import { useSafeAreaInsets } from "react-native-safe-area-context";
+import { Stack } from "expo-router";
 import { Spinner } from "heroui-native";
 
 import type { LibraryGridItem } from "@norish/shared-react/recipes";
@@ -24,12 +26,28 @@ import { RecipeCard } from "./recipe-card";
 
 /** The tab bar's Add recipe accessory floats over the list's end, so the last row scrolls clear of it. */
 const ACCESSORY_CLEARANCE = 72;
+/** UIKit no longer insets the list for the tab bar, so its 49 pt is added here. */
+const TAB_BAR = 49;
+
+/** Scrolled this far (the title's 6 pt offset and 41 pt line, less a margin), the header shows the title. */
+const TITLE_SCROLLED_AT = 40;
 
 /**
- * The Recipes tab's scroll view: `header` (Today) above the Library, whose rows are the running
- * imports, then recipes and cookbooks as one list, paged as the reader scrolls.
+ * The Recipes tab's scroll view: the large `title` on the avatar's band, `header` (Today) below it,
+ * then the Library, whose rows are the running imports, recipes and cookbooks as one list, paged as
+ * the reader scrolls. Once the title has scrolled away the native header shows it inline.
  */
-export function LibraryList({ header, testID }: { header?: ReactNode; testID?: string }) {
+export function LibraryList({
+  title,
+  header,
+  testID,
+}: {
+  title: string;
+  header?: ReactNode;
+  testID?: string;
+}) {
+  const insets = useSafeAreaInsets();
+  const [titleScrolled, setTitleScrolled] = useState(false);
   const [variant] = useDevicePreference("recipeViewMode");
   const filters = useLibraryFilters((state) => state.filters);
   const clearFilters = useLibraryFilters((state) => state.clearFilters);
@@ -87,21 +105,33 @@ export function LibraryList({ header, testID }: { header?: ReactNode; testID?: s
       ListFooterComponent={isFetchingNextPage ? <Spinner className="py-4" /> : undefined}
       ListHeaderComponent={
         <>
+          <Stack.Screen options={{ title: titleScrolled ? title : "" }} />
+          <Text
+            className="text-foreground px-5 text-[34px] leading-[41px] font-semibold tracking-[-0.75px]"
+            style={{ paddingTop: insets.top + 6 }}
+            testID="large-title"
+          >
+            {title}
+          </Text>
           {header}
           <LibraryHeader />
         </>
       }
       columnWrapperStyle={isGrid ? { gap: 12, paddingHorizontal: 20, marginBottom: 12 } : undefined}
-      contentContainerStyle={{ paddingBottom: ACCESSORY_CLEARANCE }}
-      contentInsetAdjustmentBehavior="automatic"
+      contentContainerStyle={{ paddingBottom: insets.bottom + TAB_BAR + ACCESSORY_CLEARANCE }}
+      contentInsetAdjustmentBehavior="never"
       data={isLoading ? [] : rows}
       keyExtractor={(row) => `${row.kind}-${row.id}`}
       numColumns={isGrid ? 2 : 1}
       renderItem={renderRow}
+      scrollEventThrottle={16}
       style={{ flex: 1 }}
       testID={testID}
       onEndReached={loadMore}
       onEndReachedThreshold={0.6}
+      onScroll={({ nativeEvent }) =>
+        setTitleScrolled(nativeEvent.contentOffset.y > TITLE_SCROLLED_AT)
+      }
     />
   );
 }

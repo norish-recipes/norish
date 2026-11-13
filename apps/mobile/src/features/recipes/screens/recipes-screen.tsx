@@ -1,5 +1,4 @@
 import React from "react";
-import { Stack } from "expo-router";
 import { useIntl } from "react-intl";
 
 import type { TodaySectionVisibility } from "@norish/shared/contracts/zod/device-preferences";
@@ -15,18 +14,9 @@ export function RecipesScreen() {
   const [visibility] = useDevicePreference("todaySectionVisibility");
 
   return visibility === "hidden" ? (
-    <LibraryScreen title={intl.formatMessage({ id: "navbar.nav.home" })} />
+    <LibraryList testID="recipes-screen" title={intl.formatMessage({ id: "navbar.nav.home" })} />
   ) : (
     <WithToday visibility={visibility} />
-  );
-}
-
-function LibraryScreen({ title, header }: { title: string; header?: React.ReactNode }) {
-  return (
-    <>
-      <Stack.Screen options={{ title }} />
-      <LibraryList header={header} testID="recipes-screen" />
-    </>
   );
 }
 
@@ -38,11 +28,12 @@ function WithToday({ visibility }: { visibility: TodaySectionVisibility }) {
   const shown = today.isLoading || today.visibleSlots.length > 0;
 
   return shown ? (
-    <LibraryScreen
+    <LibraryList
       header={<TodaySection today={today} />}
+      testID="recipes-screen"
       title={intl.formatMessage({ id: "calendar.mobile.today" })}
     />
   ) : (
-    <LibraryScreen title={intl.formatMessage({ id: "navbar.nav.home" })} />
+    <LibraryList testID="recipes-screen" title={intl.formatMessage({ id: "navbar.nav.home" })} />
   );
 }

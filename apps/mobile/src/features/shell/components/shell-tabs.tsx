@@ -14,7 +14,7 @@ export function ShellTabs() {
       <NativeTabs.BottomAccessory>
         <AddRecipeAccessory />
       </NativeTabs.BottomAccessory>
-      <NativeTabs.Trigger name="(recipes)" testID="tab-recipes">
+      <NativeTabs.Trigger disableAutomaticContentInsets name="(recipes)" testID="tab-recipes">
         <NativeTabs.Trigger.Icon sf={{ default: "house", selected: "house.fill" }} />
         <NativeTabs.Trigger.Label>
           {intl.formatMessage({ id: "navbar.nav.home" })}
