@@ -431,12 +431,7 @@
     "changeCover": "Skift omslag",
     "renameTitle": "Omdøb kogebog",
     "coverFromLibrary": "Vælg fra biblioteket",
-    "coverFromCamera": "Tag et billede",
-    "cameraDeniedTitle": "Adgang til kameraet er slået fra",
-    "cameraDeniedMessage": "Tillad adgang til kameraet i Indstillinger for at tage et foto.",
-    "openSettings": "Åbn indstillinger",
-    "coverPickFailedTitle": "Kunne ikke vælge et foto",
-    "coverPickFailedMessage": "Prøv igen, eller vælg et andet foto."
+    "coverFromCamera": "Tag et billede"
   },
   "print": {
     "title": "Udskriv opskrift",

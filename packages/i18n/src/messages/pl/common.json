@@ -301,5 +301,12 @@
     "unknownMember": "Nieznany",
     "removedTitle": "Usunięto z gospodarstwa domowego",
     "removedDescription": "Administrator usunął Cię z gospodarstwa domowego."
+  },
+  "photos": {
+    "pickFailedTitle": "Nie udało się wybrać zdjęcia",
+    "pickFailedMessage": "Spróbuj ponownie lub wybierz inne zdjęcie.",
+    "cameraDeniedTitle": "Dostęp do aparatu jest wyłączony",
+    "cameraDeniedMessage": "Zezwól na dostęp do aparatu w Ustawieniach, aby zrobić zdjęcie.",
+    "openSettings": "Otwórz ustawienia"
   }
 }

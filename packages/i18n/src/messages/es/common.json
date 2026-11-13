@@ -301,5 +301,12 @@
     "unknownMember": "Desconocido",
     "removedTitle": "Eliminado del hogar",
     "removedDescription": "Un administrador te ha eliminado del hogar."
+  },
+  "photos": {
+    "pickFailedTitle": "No se pudo elegir la foto",
+    "pickFailedMessage": "Inténtalo de nuevo o elige otra foto.",
+    "cameraDeniedTitle": "El acceso a la cámara está desactivado",
+    "cameraDeniedMessage": "Permite el acceso a la cámara en Ajustes para hacer una foto.",
+    "openSettings": "Abrir ajustes"
   }
 }

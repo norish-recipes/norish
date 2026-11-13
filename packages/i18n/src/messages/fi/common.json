@@ -301,5 +301,12 @@
     "unknownMember": "Tuntematon",
     "removedTitle": "Poistettu kotitaloudesta",
     "removedDescription": "Ylläpitäjä poisti sinut kotitaloudesta."
+  },
+  "photos": {
+    "pickFailedTitle": "Kuvan valinta epäonnistui",
+    "pickFailedMessage": "Yritä uudelleen tai valitse toinen kuva.",
+    "cameraDeniedTitle": "Kameran käyttö on pois päältä",
+    "cameraDeniedMessage": "Salli kameran käyttö Asetuksissa, jotta voit ottaa kuvan.",
+    "openSettings": "Avaa asetukset"
   }
 }

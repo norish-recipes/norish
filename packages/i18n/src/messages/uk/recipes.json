@@ -431,12 +431,7 @@
     "changeCover": "Змінити обкладинку",
     "renameTitle": "Перейменувати кулінарну книгу",
     "coverFromLibrary": "Вибрати з медіатеки",
-    "coverFromCamera": "Зробити фото",
-    "cameraDeniedTitle": "Доступ до камери вимкнено",
-    "cameraDeniedMessage": "Дозвольте доступ до камери в налаштуваннях, щоб зробити фото.",
-    "openSettings": "Відкрити налаштування",
-    "coverPickFailedTitle": "Не вдалося вибрати фото",
-    "coverPickFailedMessage": "Спробуйте ще раз або виберіть інше фото."
+    "coverFromCamera": "Зробити фото"
   },
   "print": {
     "title": "Друк рецепта",

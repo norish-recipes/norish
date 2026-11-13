@@ -301,5 +301,12 @@
     "unknownMember": "Unbekannt",
     "removedTitle": "Aus dem Haushalt entfernt",
     "removedDescription": "Ein Admin hat dich aus dem Haushalt entfernt."
+  },
+  "photos": {
+    "pickFailedTitle": "Foto konnte nicht gewählt werden",
+    "pickFailedMessage": "Versuch es erneut oder wähle ein anderes Foto.",
+    "cameraDeniedTitle": "Kamerazugriff ist ausgeschaltet",
+    "cameraDeniedMessage": "Erlaube den Kamerazugriff in den Einstellungen, um ein Foto aufzunehmen.",
+    "openSettings": "Einstellungen öffnen"
   }
 }

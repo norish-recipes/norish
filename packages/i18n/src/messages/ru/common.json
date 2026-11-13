@@ -301,5 +301,12 @@
     "unknownMember": "Неизвестно",
     "removedTitle": "Удалены из домохозяйства",
     "removedDescription": "Администратор удалил вас из домохозяйства."
+  },
+  "photos": {
+    "pickFailedTitle": "Не удалось выбрать фото",
+    "pickFailedMessage": "Попробуйте ещё раз или выберите другое фото.",
+    "cameraDeniedTitle": "Доступ к камере выключен",
+    "cameraDeniedMessage": "Разрешите доступ к камере в настройках, чтобы сделать фото.",
+    "openSettings": "Открыть настройки"
   }
 }

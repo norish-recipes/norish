@@ -301,5 +301,12 @@
     "unknownMember": "Sconosciuto",
     "removedTitle": "Rimosso dalla famiglia",
     "removedDescription": "Un amministratore ti ha rimosso dalla famiglia."
+  },
+  "photos": {
+    "pickFailedTitle": "Impossibile scegliere la foto",
+    "pickFailedMessage": "Riprova o scegli un'altra foto.",
+    "cameraDeniedTitle": "L’accesso alla fotocamera è disattivato",
+    "cameraDeniedMessage": "Consenti l’accesso alla fotocamera nelle Impostazioni per scattare una foto.",
+    "openSettings": "Apri impostazioni"
   }
 }

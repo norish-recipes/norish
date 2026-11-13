@@ -301,5 +301,12 @@
     "unknownMember": "Inconnu",
     "removedTitle": "Retiré du foyer",
     "removedDescription": "Un administrateur vous a retiré du foyer."
+  },
+  "photos": {
+    "pickFailedTitle": "Impossible de choisir la photo",
+    "pickFailedMessage": "Réessayez ou choisissez une autre photo.",
+    "cameraDeniedTitle": "L’accès à l’appareil photo est désactivé",
+    "cameraDeniedMessage": "Autorisez l’accès à l’appareil photo dans les Réglages pour prendre une photo.",
+    "openSettings": "Ouvrir les réglages"
   }
 }

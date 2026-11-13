@@ -301,5 +301,12 @@
     "unknownMember": "Ukjent",
     "removedTitle": "Fjernet fra husstanden",
     "removedDescription": "En administrator har fjernet deg fra husstanden."
+  },
+  "photos": {
+    "pickFailedTitle": "Kunne ikke velge bilde",
+    "pickFailedMessage": "Prøv igjen, eller velg et annet bilde.",
+    "cameraDeniedTitle": "Kameratilgang er slått av",
+    "cameraDeniedMessage": "Tillat kameratilgang i Innstillinger for å ta et bilde.",
+    "openSettings": "Åpne innstillinger"
   }
 }

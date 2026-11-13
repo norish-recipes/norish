@@ -431,12 +431,7 @@
     "changeCover": "Changer la couverture",
     "renameTitle": "Renommer le livre de cuisine",
     "coverFromLibrary": "Choisir dans la photothèque",
-    "coverFromCamera": "Prendre une photo",
-    "cameraDeniedTitle": "L’accès à l’appareil photo est désactivé",
-    "cameraDeniedMessage": "Autorisez l’accès à l’appareil photo dans les Réglages pour prendre une photo.",
-    "openSettings": "Ouvrir les réglages",
-    "coverPickFailedTitle": "Impossible de choisir la photo",
-    "coverPickFailedMessage": "Réessayez ou choisissez une autre photo."
+    "coverFromCamera": "Prendre une photo"
   },
   "print": {
     "title": "Imprimer la recette",

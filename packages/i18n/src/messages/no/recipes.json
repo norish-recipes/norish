@@ -431,12 +431,7 @@
     "changeCover": "Endre omslag",
     "renameTitle": "Gi kokeboken nytt navn",
     "coverFromLibrary": "Velg fra bildebiblioteket",
-    "coverFromCamera": "Ta bilde",
-    "cameraDeniedTitle": "Kameratilgang er slått av",
-    "cameraDeniedMessage": "Tillat kameratilgang i Innstillinger for å ta et bilde.",
-    "openSettings": "Åpne innstillinger",
-    "coverPickFailedTitle": "Kunne ikke velge bilde",
-    "coverPickFailedMessage": "Prøv igjen, eller velg et annet bilde."
+    "coverFromCamera": "Ta bilde"
   },
   "print": {
     "title": "Skriv ut oppskrift",

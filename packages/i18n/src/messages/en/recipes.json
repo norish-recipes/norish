@@ -431,12 +431,7 @@
     "changeCover": "Change cover",
     "renameTitle": "Rename cookbook",
     "coverFromLibrary": "Choose from library",
-    "coverFromCamera": "Take photo",
-    "cameraDeniedTitle": "Camera access is off",
-    "cameraDeniedMessage": "Allow camera access in Settings to take a photo.",
-    "openSettings": "Open settings",
-    "coverPickFailedTitle": "Couldn't pick a photo",
-    "coverPickFailedMessage": "Try again or choose another photo."
+    "coverFromCamera": "Take photo"
   },
   "print": {
     "title": "Print recipe",

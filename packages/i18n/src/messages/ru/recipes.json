@@ -431,12 +431,7 @@
     "changeCover": "Сменить обложку",
     "renameTitle": "Переименовать книгу рецептов",
     "coverFromLibrary": "Выбрать из медиатеки",
-    "coverFromCamera": "Сделать снимок",
-    "cameraDeniedTitle": "Доступ к камере выключен",
-    "cameraDeniedMessage": "Разрешите доступ к камере в настройках, чтобы сделать фото.",
-    "openSettings": "Открыть настройки",
-    "coverPickFailedTitle": "Не удалось выбрать фото",
-    "coverPickFailedMessage": "Попробуйте ещё раз или выберите другое фото."
+    "coverFromCamera": "Сделать снимок"
   },
   "print": {
     "title": "Печать рецепта",

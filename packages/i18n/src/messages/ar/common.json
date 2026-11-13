@@ -301,5 +301,12 @@
     "unknownMember": "غير معروف",
     "removedTitle": "تمت إزالتك من الأسرة",
     "removedDescription": "أزالك أحد المسؤولين من الأسرة."
+  },
+  "photos": {
+    "pickFailedTitle": "تعذّر اختيار الصورة",
+    "pickFailedMessage": "حاول مرة أخرى أو اختر صورة أخرى.",
+    "cameraDeniedTitle": "الوصول إلى الكاميرا متوقف",
+    "cameraDeniedMessage": "اسمح بالوصول إلى الكاميرا في الإعدادات لالتقاط صورة.",
+    "openSettings": "فتح الإعدادات"
   }
 }

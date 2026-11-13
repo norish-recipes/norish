@@ -301,5 +301,12 @@
     "unknownMember": "Onbekend",
     "removedTitle": "Verwijderd uit huishouden",
     "removedDescription": "Een admin heeft je uit het huishouden verwijderd."
+  },
+  "photos": {
+    "pickFailedTitle": "Foto kiezen mislukt",
+    "pickFailedMessage": "Probeer het opnieuw of kies een andere foto.",
+    "cameraDeniedTitle": "Cameratoegang staat uit",
+    "cameraDeniedMessage": "Sta cameratoegang toe in Instellingen om een foto te maken.",
+    "openSettings": "Instellingen openen"
   }
 }

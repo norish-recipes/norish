@@ -301,5 +301,12 @@
     "unknownMember": "Okänd",
     "removedTitle": "Borttagen från hushållet",
     "removedDescription": "En administratör har tagit bort dig från hushållet."
+  },
+  "photos": {
+    "pickFailedTitle": "Det gick inte att välja foto",
+    "pickFailedMessage": "Försök igen eller välj ett annat foto.",
+    "cameraDeniedTitle": "Kameraåtkomst är avstängd",
+    "cameraDeniedMessage": "Tillåt kameraåtkomst i Inställningar för att ta ett foto.",
+    "openSettings": "Öppna inställningar"
   }
 }

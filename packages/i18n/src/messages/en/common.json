@@ -301,5 +301,12 @@
     "unknownMember": "Unknown",
     "removedTitle": "Removed from household",
     "removedDescription": "An admin removed you from the household."
+  },
+  "photos": {
+    "pickFailedTitle": "Couldn't pick a photo",
+    "pickFailedMessage": "Try again or choose another photo.",
+    "cameraDeniedTitle": "Camera access is off",
+    "cameraDeniedMessage": "Allow camera access in Settings to take a photo.",
+    "openSettings": "Open settings"
   }
 }

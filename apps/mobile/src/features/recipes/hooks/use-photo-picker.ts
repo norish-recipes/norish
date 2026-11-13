@@ -17,8 +17,8 @@ export function usePhotoPicker(onPicked: (assets: ImagePicker.ImagePickerAsset[]
     if (outcome.kind === "picked") onPicked(outcome.assets);
     if (outcome.kind === "failed") {
       Alert.alert(
-        intl.formatMessage({ id: "recipes.cookbooks.coverPickFailedTitle" }),
-        intl.formatMessage({ id: "recipes.cookbooks.coverPickFailedMessage" })
+        intl.formatMessage({ id: "common.photos.pickFailedTitle" }),
+        intl.formatMessage({ id: "common.photos.pickFailedMessage" })
       );
     }
   };
@@ -33,12 +33,12 @@ export function usePhotoPicker(onPicked: (assets: ImagePicker.ImagePickerAsset[]
 
     // The photo library needs no permission here: the system picker hands over only what is chosen.
     Alert.alert(
-      intl.formatMessage({ id: "recipes.cookbooks.cameraDeniedTitle" }),
-      intl.formatMessage({ id: "recipes.cookbooks.cameraDeniedMessage" }),
+      intl.formatMessage({ id: "common.photos.cameraDeniedTitle" }),
+      intl.formatMessage({ id: "common.photos.cameraDeniedMessage" }),
       [
         { text: intl.formatMessage({ id: "common.actions.cancel" }), style: "cancel" },
         {
-          text: intl.formatMessage({ id: "recipes.cookbooks.openSettings" }),
+          text: intl.formatMessage({ id: "common.photos.openSettings" }),
           onPress: () => void Linking.openSettings(),
         },
       ]

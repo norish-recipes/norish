@@ -431,12 +431,7 @@
     "changeCover": "Vaihda kansi",
     "renameTitle": "Nimeä keittokirja uudelleen",
     "coverFromLibrary": "Valitse kirjastosta",
-    "coverFromCamera": "Ota kuva",
-    "cameraDeniedTitle": "Kameran käyttö on pois päältä",
-    "cameraDeniedMessage": "Salli kameran käyttö Asetuksissa, jotta voit ottaa kuvan.",
-    "openSettings": "Avaa asetukset",
-    "coverPickFailedTitle": "Kuvan valinta epäonnistui",
-    "coverPickFailedMessage": "Yritä uudelleen tai valitse toinen kuva."
+    "coverFromCamera": "Ota kuva"
   },
   "print": {
     "title": "Tulosta resepti",
