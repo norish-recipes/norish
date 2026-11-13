@@ -4,7 +4,7 @@ import React from "react";
 import { Pressable, Text, View } from "react-native";
 import { Sheet, SheetBody } from "@/components/sheet";
 import { useAccentTextColor } from "@/hooks/use-accent-text-color";
-import { hostOf } from "@/lib/network/host-of";
+import { hostOf, plainLink } from "@/lib/network/host-of";
 import Ionicons from "@expo/vector-icons/Ionicons";
 import { useRouter } from "expo-router";
 import { useThemeColor } from "heroui-native";
@@ -20,21 +20,18 @@ type IconName = ComponentProps<typeof Ionicons>["name"];
 
 type Option = { key: string; icon: IconName; title: string; hint: string; to: Href };
 
-/** A copied link as the board shows it: no scheme, no `www.`. */
-const shownLink = (url: string) => url.replace(/^https?:\/\/(www\.)?/, "");
-
 /** The copied link, imported in one tap: the sheet's first row, on the accent. */
 function CopiedLinkRow({ url, onPress }: { url: string; onPress: () => void }) {
   const intl = useIntl();
   const [accentForeground] = useThemeColor(["accent-foreground"] as const);
   const title = intl.formatMessage(
     { id: "recipes.addRecipe.importHost" },
-    { host: hostOf(url).replace(/^www\./, "") }
+    { host: plainLink(hostOf(url)) }
   );
 
   return (
     <Pressable
-      accessibilityHint={shownLink(url)}
+      accessibilityHint={plainLink(url)}
       accessibilityLabel={title}
       accessibilityRole="button"
       className="bg-accent flex-row items-center gap-3.5 rounded-3xl px-4 py-3"
@@ -49,7 +46,7 @@ function CopiedLinkRow({ url, onPress }: { url: string; onPress: () => void }) {
           {title}
         </Text>
         <Text className="text-accent-foreground text-[13px] opacity-80" numberOfLines={1}>
-          {shownLink(url)}
+          {plainLink(url)}
         </Text>
       </View>
       <Ionicons color={accentForeground} name="download-outline" size={20} />

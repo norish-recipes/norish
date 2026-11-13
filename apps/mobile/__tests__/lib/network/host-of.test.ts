@@ -1,4 +1,4 @@
-import { hostOf, isWebLink } from "@/lib/network/host-of";
+import { hostOf, isWebLink, plainLink } from "@/lib/network/host-of";
 import { describe, expect, it } from "vitest";
 
 describe("hostOf", () => {
@@ -25,5 +25,14 @@ describe("isWebLink", () => {
     expect(isWebLink("http://example.com")).toBe(true);
     expect(isWebLink("/recipes/1/image.jpg")).toBe(false);
     expect(isWebLink("[pasted]")).toBe(false);
+  });
+});
+
+describe("plainLink", () => {
+  it("drops the scheme and www. from a link or a host", () => {
+    expect(plainLink("https://www.example.com/pasta")).toBe("example.com/pasta");
+    expect(plainLink("http://example.com")).toBe("example.com");
+    expect(plainLink("www.example.com")).toBe("example.com");
+    expect(plainLink("example.com")).toBe("example.com");
   });
 });

@@ -1,7 +1,7 @@
 import React from "react";
 import { Text, View } from "react-native";
 import { ImportSpinner } from "@/features/recipes/components/import-spinner";
-import { hostOf, isWebLink } from "@/lib/network/host-of";
+import { hostOf, isWebLink, plainLink } from "@/lib/network/host-of";
 import { Skeleton } from "heroui-native";
 import { useIntl } from "react-intl";
 
@@ -19,7 +19,7 @@ export function PendingCard({
 }) {
   const intl = useIntl();
   // Text and photo imports carry a label such as "[pasted]", not a link.
-  const host = url && isWebLink(url) ? hostOf(url).replace(/^www\./, "") : "";
+  const host = url && isWebLink(url) ? plainLink(hostOf(url)) : "";
   const title = intl.formatMessage({ id: "recipes.dashboard.importingCard" });
 
   const copy = (

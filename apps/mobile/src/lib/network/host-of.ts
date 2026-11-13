@@ -11,3 +11,8 @@ export function hostOf(address: string): string {
     return address;
   }
 }
+
+/** A link or host as people say it, without the scheme or `www.`: `example.com/pasta`. */
+export function plainLink(value: string): string {
+  return value.replace(/^(https?:\/\/)?(www\.)?/, "");
+}
