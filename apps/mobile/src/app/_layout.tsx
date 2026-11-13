@@ -6,6 +6,7 @@ import { ActivityIndicator, StyleSheet, View } from "react-native";
 import { GestureHandlerRootView } from "react-native-gesture-handler";
 import Animated, { useAnimatedStyle, withTiming } from "react-native-reanimated";
 import { LaunchProvider, LaunchSplash } from "@/components/launch";
+import { FIT_SHEET_OPTIONS, SHEET_OPTIONS } from "@/components/sheet-options";
 import { LaunchVersionCheck } from "@/features/auth/components/launch-version-check";
 import { StorageUnavailableScreen } from "@/features/auth/screens/storage-unavailable-screen";
 import { FADE_OUT_TIMING, PENDING_FADE_IN } from "@/features/auth/utils/motion";
@@ -267,12 +268,21 @@ const OPENED_SCREEN = {
   headerBackButtonDisplayMode: "minimal",
 } as const;
 
+/** The import sheets as tall as their content; From text's field takes the sheet's height. */
+const FIT_IMPORT_SHEETS = ["add-recipe", "import-link", "import-photos"] as const;
+
 function RootStack({ signedIn }: { signedIn: boolean }) {
   return (
     <Stack screenOptions={{ headerShown: false }}>
       <Stack.Protected guard={signedIn}>
         <Stack.Screen name="(tabs)" />
         <Stack.Screen name="recipe/[id]" options={OPENED_SCREEN} />
+        <Stack.Screen name="recipe/new" options={OPENED_SCREEN} />
+        {/* Add recipe and its imports present over whichever tab the accessory was pressed on. */}
+        {FIT_IMPORT_SHEETS.map((name) => (
+          <Stack.Screen key={name} name={name} options={FIT_SHEET_OPTIONS} />
+        ))}
+        <Stack.Screen name="import-text" options={SHEET_OPTIONS} />
       </Stack.Protected>
       <Stack.Protected guard={!signedIn}>
         <Stack.Screen name="(auth)" />
