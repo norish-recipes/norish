@@ -16,7 +16,8 @@ type ImportMutationContext = {
 type ImportMutationsResult = {
   importRecipe: (url: string) => void;
   importRecipeWithAI: (url: string) => void;
-  importRecipeFromImages: (files: File[]) => void;
+  /** Browser `File`s or expo-file-system `File`s, which are Blobs too. */
+  importRecipeFromImages: (files: Blob[]) => void;
   importRecipeFromPaste: (text: string) => void;
   importRecipeFromPasteWithAI: (text: string) => void;
 };

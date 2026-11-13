@@ -10,6 +10,7 @@ import { useImportMutations } from "../use-import-mutations";
 const server = vi.hoisted(() => ({
   importFromUrl: vi.fn(),
   importFromPaste: vi.fn(),
+  importFromImages: vi.fn(),
 }));
 
 vi.mock("../../trpc", () => {
@@ -27,7 +28,7 @@ vi.mock("../../trpc", () => {
         get: { queryKey: key("recipes", "get") },
         getPending: { queryKey: key("recipes", "getPending") },
         importFromUrl: procedure(server.importFromUrl),
-        importFromImages: procedure(vi.fn()),
+        importFromImages: procedure(server.importFromImages),
         importFromPaste: procedure(server.importFromPaste),
       },
       library: { list: { queryKey: key("library", "list"), pathKey: key("library", "list") } },
@@ -116,5 +117,20 @@ describe("useImportMutations", () => {
     await settled();
 
     expect(pendingIds()).toEqual(["recipe-1", "recipe-2", "recipe-3"]);
+  });
+
+  it("sends each image as its own file field, any Blob accepted", async () => {
+    server.importFromImages.mockResolvedValue("recipe-photo");
+    const pages = [new Blob(["a"], { type: "image/png" }), new Blob(["b"], { type: "image/jpeg" })];
+    const result = render();
+
+    act(() => result.current.importRecipeFromImages(pages));
+    await settled();
+
+    const form = server.importFromImages.mock.calls[0]![0] as FormData;
+
+    expect([...form.keys()]).toEqual(["file0", "file1"]);
+    expect((form.get("file1") as Blob).type).toBe("image/jpeg");
+    expect(pendingIds()).toEqual(["recipe-photo"]);
   });
 });
