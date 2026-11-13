@@ -20,6 +20,8 @@ export function usePendingRecipesQuery() {
   }, [data]);
 
   return {
+    /** The running imports, each with the link it was started from. */
+    pendingRecipes: data ?? [],
     pendingRecipeIds,
     isLoading,
     error,
