@@ -18,8 +18,8 @@ import { createIntlMessageTranslator } from "@norish/i18n";
 import { PlatformProvider } from "@norish/shared-react/platform";
 import { createClientLogger } from "@norish/shared/lib/logger";
 
-import type { ToastSeverity } from "./glass-toast";
-import { GlassToast } from "./glass-toast";
+import type { ToastSeverity } from "./app-toast";
+import { AppToast } from "./app-toast";
 import { mobileToastDescription } from "./toast-description";
 
 const log = createClientLogger("mobile-platform");
@@ -60,7 +60,7 @@ export function MobilePlatformProvider({
   }) => {
     toast.show({
       duration: content.actionLabel ? 8000 : 4000,
-      component: (props) => <GlassToast {...props} {...content} />,
+      component: (props) => <AppToast {...props} {...content} />,
     });
     AccessibilityInfo.announceForAccessibility(
       content.body ? `${content.title}, ${content.body}` : content.title

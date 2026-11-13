@@ -1,9 +1,7 @@
 import type { ToastComponentProps } from "heroui-native";
 import type { ComponentProps } from "react";
 import React, { useRef } from "react";
-import { StyleSheet, Text, View } from "react-native";
-import { Host, Rectangle } from "@expo/ui/swift-ui";
-import { foregroundStyle, glassEffect } from "@expo/ui/swift-ui/modifiers";
+import { Text, View } from "react-native";
 import Ionicons from "@expo/vector-icons/Ionicons";
 import { Button, Toast, useThemeColor } from "heroui-native";
 import { useCSSVariable } from "uniwind";
@@ -25,20 +23,8 @@ const BADGE: Record<
   danger: { icon: "alert-circle-outline", circle: "bg-danger-soft", color: "--color-danger" },
 };
 
-/** The native glass behind the pill: a clear rectangle with the system's glass in the toast's shape. */
-const glass = (
-  <Host pointerEvents="none" style={StyleSheet.absoluteFill}>
-    <Rectangle
-      modifiers={[
-        foregroundStyle("#00000000"),
-        glassEffect({ glass: { variant: "regular" }, shape: "roundedRectangle", cornerRadius: 32 }),
-      ]}
-    />
-  </Host>
-);
-
-/** Every toast of the app: a glass pill with the severity's circle, title, optional body and action. */
-export function GlassToast({
+/** Every toast of the app: the board's pill with the severity's circle, title, optional body and action. */
+export function AppToast({
   severity,
   title,
   body,
@@ -60,8 +46,9 @@ export function GlassToast({
   return (
     <Toast
       {...props}
-      background={glass}
-      className="min-h-16 flex-row items-center gap-3 rounded-[32px] bg-transparent py-2.5 pr-2.5 pl-3 shadow-none"
+      // ponytail: opaque overlay, as heroui's glass theme forces; native glass drew nothing in the toast window.
+      background={null}
+      className="bg-overlay min-h-16 flex-row items-center gap-3 rounded-[32px] py-2.5 pr-2.5 pl-3"
       testID="toast"
     >
       <View className={`size-10 items-center justify-center rounded-full ${badge.circle}`}>
