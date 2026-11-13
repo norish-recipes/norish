@@ -27,8 +27,11 @@ export function useCardActionMenu<Key extends string>(
     items,
     accessibilityProps: {
       accessibilityActions: items.map(({ key, label }) => ({ name: key, label })),
-      onAccessibilityAction: ({ nativeEvent }: AccessibilityActionEvent) =>
-        handlers[nativeEvent.actionName as Key]?.(),
+      onAccessibilityAction: ({ nativeEvent }: AccessibilityActionEvent) => {
+        const key = keys.find((candidate) => candidate === nativeEvent.actionName);
+
+        if (key) handlers[key]();
+      },
     },
   };
 }
