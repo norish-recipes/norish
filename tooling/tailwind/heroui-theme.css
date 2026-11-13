@@ -74,6 +74,8 @@
     --surface-tertiary-foreground: oklch(21.03% 0.0015 150.36);
     --warning: oklch(78.19% 0.159 59.91);
     --warning-foreground: oklch(21.03% 0.0059 59.91);
+    --warning-ink: oklch(45% 0.11 60);
+    --avatar: oklch(88% 0.07 75);
     --radius: 0.5rem;
     --field-radius: 0.75rem;
     --font-sans: var(--font-inter);
@@ -132,6 +134,8 @@
     --surface-tertiary-foreground: oklch(99.11% 0.0015 150.36);
     --warning: oklch(82.03% 0.1392 63.92);
     --warning-foreground: oklch(21.03% 0.0059 63.92);
+    --warning-ink: oklch(82.03% 0.1392 63.92);
+    --avatar: oklch(45% 0.06 70);
     --radius: 0.5rem;
     --field-radius: 0.75rem;
     --font-sans: var(--font-inter);
@@ -147,6 +151,8 @@
   --color-cooking-cook: var(--cooking-cook);
   --color-cooking-prep: var(--cooking-prep);
   --color-accent-text: var(--accent-text);
+  --color-warning-ink: var(--warning-ink);
+  --color-avatar: var(--avatar);
   --color-nutrition-calories: var(--nutrition-calories);
   --color-nutrition-calories-soft: var(--nutrition-calories-soft);
   --color-nutrition-carbs: var(--nutrition-carbs);

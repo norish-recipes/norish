@@ -1,6 +1,7 @@
 import React from "react";
 import { Pressable, Text, View } from "react-native";
 import { useAccentTextColor } from "@/hooks/use-accent-text-color";
+import { useWarningInkColor } from "@/hooks/use-warning-ink-color";
 import Ionicons from "@expo/vector-icons/Ionicons";
 import { useThemeColor } from "heroui-native";
 import { useIntl } from "react-intl";
@@ -51,7 +52,8 @@ export function CookbooksEmpty() {
 /** Filters left nothing to show; Clear filters undoes them. */
 export function LibraryNoResults({ onClear }: { onClear: () => void }) {
   const intl = useIntl();
-  const [warning, warningInk] = useThemeColor(["warning", "warning-foreground"] as const);
+  const warning = useThemeColor("warning");
+  const warningInk = useWarningInkColor();
 
   return (
     <View className="bg-surface mx-5 gap-3.5 rounded-3xl p-[18px]" testID="library-no-results">
@@ -75,7 +77,7 @@ export function LibraryNoResults({ onClear }: { onClear: () => void }) {
         onPress={onClear}
       >
         <Ionicons color={warningInk} name="refresh" size={18} />
-        <Text className="text-warning-foreground text-[15px] font-medium">
+        <Text className="text-warning-ink text-[15px] font-medium">
           {intl.formatMessage({ id: "common.filters.clearFilters" })}
         </Text>
       </Pressable>
