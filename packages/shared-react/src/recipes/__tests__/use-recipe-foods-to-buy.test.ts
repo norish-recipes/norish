@@ -8,6 +8,7 @@ const state = vi.hoisted(() => ({
   lines: [] as unknown[],
   linked: [] as unknown[],
   linkedAskedFor: [] as string[][],
+  linkedLoading: false,
 }));
 
 vi.mock("../use-recipe-ingredients", () => ({
@@ -21,7 +22,7 @@ vi.mock("../use-linked-recipe-ingredients", () => ({
   useLinkedRecipeIngredients: (ids: string[]) => {
     state.linkedAskedFor.push(ids);
 
-    return { ingredients: state.linked, isLoading: false };
+    return { ingredients: state.linked, isLoading: state.linkedLoading };
   },
 }));
 
@@ -41,6 +42,7 @@ describe("useRecipeFoodsToBuy", () => {
     state.lines = [line("l-oil", "olive oil", 2), line("l-chicken", "chicken breast", 500)];
     state.linked = [];
     state.linkedAskedFor = [];
+    state.linkedLoading = false;
   });
 
   it("scales the amounts to the servings picked", () => {
@@ -79,6 +81,19 @@ describe("useRecipeFoodsToBuy", () => {
     const { result } = renderHook(() => useRecipeFoodsToBuy("r1", 2, 2));
 
     expect(result.current.scaledIngredients.map((item) => item.id)).toContain("l-pesto");
+  });
+
+  it("is loading until the recipes a line links to have answered", () => {
+    state.lines = [line("i-sauce", "[Sauce](id:recipe-1)", null)];
+    state.linkedLoading = true;
+    const { result, rerender } = renderHook(() => useRecipeFoodsToBuy("r1", 2, 2));
+
+    expect(result.current.isLoading).toBe(true);
+
+    state.linkedLoading = false;
+    rerender();
+
+    expect(result.current.isLoading).toBe(false);
   });
 
   describe("a line naming several foods", () => {

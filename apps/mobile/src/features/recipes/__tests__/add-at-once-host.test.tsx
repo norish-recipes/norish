@@ -16,7 +16,7 @@ vi.mock("@norish/shared-react/recipes", () => ({
   useRecipeFoodsToBuy: (recipeId: string, original: number, initial: number) => {
     state.foodsArgs = { recipeId, original, initial };
 
-    return { scaledIngredients: [], isLoading: false, linkedLoading: false };
+    return { scaledIngredients: [], isLoading: false };
   },
 }));
 vi.mock("@norish/shared-react/groceries", async () => {

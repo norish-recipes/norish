@@ -28,15 +28,11 @@ function AddAtOnce({
 }) {
   const router = useRouter();
 
-  const { scaledIngredients, isLoading, linkedLoading } = useRecipeFoodsToBuy(
-    recipeId,
-    servings,
-    servings
-  );
+  const { scaledIngredients, isLoading } = useRecipeFoodsToBuy(recipeId, servings, servings);
 
   useAddAtOnce({
     lines: scaledIngredients,
-    linesReady: !isLoading && !linkedLoading,
+    linesReady: !isLoading,
     onDone,
     // A Pantry that cannot be read opens the sheet, as on web.
     onOpenChange: (open) => {

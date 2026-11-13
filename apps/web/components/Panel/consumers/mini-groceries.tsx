@@ -61,7 +61,7 @@ function AddAtOnce({
   onOpenChange,
   onDone,
 }: LinesProps & { onDone: () => void }) {
-  const { scaledIngredients, isLoading, linkedLoading } = useRecipeFoodsToBuy(
+  const { scaledIngredients, isLoading } = useRecipeFoodsToBuy(
     recipeId,
     originalServings,
     initialServings
@@ -69,7 +69,7 @@ function AddAtOnce({
 
   useAddAtOnce({
     lines: scaledIngredients,
-    linesReady: !isLoading && !linkedLoading,
+    linesReady: !isLoading,
     onOpenChange,
     onDone,
   });
