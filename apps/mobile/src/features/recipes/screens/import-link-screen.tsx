@@ -27,6 +27,12 @@ export function ImportLinkScreen() {
   const fieldRef = useFocusOnMount<ComponentRef<typeof InputGroup.Input>>(!copiedUrl);
   const trimmed = link.trim();
 
+  // A new text clears the error the old one raised.
+  const changeLink = (value: string) => {
+    setLink(value);
+    setIsInvalid(false);
+  };
+
   // A link that can't be opened is said under the field and starts nothing.
   const start = (run: (url: string) => void) =>
     startImport(() => {
@@ -73,10 +79,7 @@ export function ImportLinkScreen() {
               testID="import-link-field"
               textContentType="URL"
               value={link}
-              onChangeText={(value) => {
-                setLink(value);
-                setIsInvalid(false);
-              }}
+              onChangeText={changeLink}
               onSubmitEditing={trimmed ? start(importRecipe) : undefined}
             />
             {link ? (
@@ -88,8 +91,7 @@ export function ImportLinkScreen() {
                   hitSlop={8}
                   testID="import-link-clear"
                   onPress={() => {
-                    setLink("");
-                    setIsInvalid(false);
+                    changeLink("");
                     fieldRef.current?.focus();
                   }}
                 >
