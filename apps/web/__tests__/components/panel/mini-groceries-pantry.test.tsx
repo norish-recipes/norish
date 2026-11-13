@@ -69,10 +69,11 @@ vi.mock("@norish/shared-react/config", async () => {
 
   return { useSpellingRules: () => spellingRules(units as UnitsMap) };
 });
-vi.mock("@norish/shared-react/groceries", async () => {
+vi.mock("@norish/shared-react/groceries", async (importOriginal) => {
   const { groceryOnTheList } = await import("@norish/shared/lib/pantry");
 
   return {
+    ...(await importOriginal<typeof import("@norish/shared-react/groceries")>()),
     useGroceriesMutations: () => ({ createGroceriesFromData }),
     useGroceriesPantryAndCatalogueSubscriptions: () => undefined,
     // What the hook's select answers over the list these tests hold.
