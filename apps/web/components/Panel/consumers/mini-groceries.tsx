@@ -12,33 +12,19 @@ import {
 } from "@/components/shared/action-button";
 import { useUnitFormatter } from "@/hooks/use-unit-formatter";
 import { ArchiveBoxArrowDownIcon } from "@heroicons/react/16/solid";
-import { Button, Input, toast } from "@heroui/react";
+import { Button, Input } from "@heroui/react";
 import { useTranslations } from "next-intl";
 
 import type { EditedIngredient, GroceryIngredient } from "@norish/shared-react/groceries";
-import type { FoodToBuy } from "@norish/shared/lib/line-foods";
-import { useSpellingRules } from "@norish/shared-react/config";
 import {
-  extractLinkedRecipeIds,
   formatEditableIngredient,
-  isGroceryIngredient,
   parseEditedIngredientLine,
-  useGroceriesMutations,
   useGroceriesPantryAndCatalogueSubscriptions,
+  useLinesToBuy,
   useOnTheList,
-  usePantryMutations,
-  usePantryQuery,
 } from "@norish/shared-react/groceries";
 import { useIngredientIcons } from "@norish/shared-react/ingredients";
-import {
-  formatServings,
-  useLinkedRecipeIngredients,
-  useRecipeIngredients,
-  useRecipeSubscription,
-  useServingsScaler,
-} from "@norish/shared-react/recipes";
-import { foodsToBuy } from "@norish/shared/lib/line-foods";
-import { pantryIngredientFor } from "@norish/shared/lib/pantry";
+import { formatServings, useRecipeSubscription } from "@norish/shared-react/recipes";
 
 type MiniGroceriesProps = {
   open: boolean;
@@ -53,85 +39,6 @@ type MiniGroceriesProps = {
    */
   addAtOnce?: boolean;
 };
-
-/**
- * A recipe's foods to buy at the servings picked, each line as edited here, split by whether the
- * Pantry holds it; and what puts lines on the list.
- */
-function useLinesToBuy(
-  recipeId: string,
-  originalServings: number,
-  initialServings: number,
-  editedIngredients: Record<string, EditedIngredient>
-) {
-  const t = useTranslations("groceries.panel");
-  const { createGroceriesFromData } = useGroceriesMutations();
-  const { ingredients: rawIngredients, systemUsed, isLoading } = useRecipeIngredients(recipeId);
-  const { ingredients: linkedIngredients, isLoading: linkedLoading } = useLinkedRecipeIngredients(
-    extractLinkedRecipeIds(rawIngredients as GroceryIngredient[]),
-    systemUsed
-  );
-  // One row per food a line puts on the list: each of an "and" line's, an "or" line's first.
-  const ingredients = foodsToBuy(
-    [
-      ...(rawIngredients as GroceryIngredient[]),
-      ...(linkedIngredients as GroceryIngredient[]),
-    ].filter(isGroceryIngredient)
-  );
-  const scaler = useServingsScaler(ingredients, originalServings, initialServings);
-  // A line whose food the Pantry holds is shown apart and left off the list unless ticked; a line
-  // edited here is only text, so it is matched by its name.
-  const pantry = usePantryQuery();
-  const rules = useSpellingRules();
-
-  /** The Pantry Ingredient that covers a line, as edited here if it was. */
-  const keptFor = (item: GroceryIngredient) => {
-    const edited = editedIngredients[item.id]?.name;
-
-    return pantryIngredientFor(
-      pantry.items,
-      edited === undefined ? item : { ingredientName: edited },
-      rules
-    );
-  };
-  const toBuy: typeof scaler.scaledIngredients = [];
-  const inPantry: typeof scaler.scaledIngredients = [];
-
-  for (const item of scaler.scaledIngredients) (keptFor(item) ? inPantry : toBuy).push(item);
-
-  /** Puts these lines on the list, as edited here; true once they are on it. */
-  const addLines = (lines: Array<FoodToBuy<GroceryIngredient>>) =>
-    createGroceriesFromData(
-      lines.map((ri) => ({
-        name: editedIngredients[ri.id]?.name ?? ri.ingredientName,
-        amount: editedIngredients[ri.id]?.amount ?? ri.amount,
-        unit: editedIngredients[ri.id]?.unit ?? ri.unit ?? null,
-        isDone: false,
-        recipeIngredientId: ri.lineId,
-      }))
-    )
-      .then(() => {
-        toast(t("ingredientsAdded"), { variant: "success" });
-
-        return true;
-      })
-      .catch(() => {
-        toast(t("ingredientsFailed"), { variant: "warning" });
-
-        return false;
-      });
-
-  return {
-    ...scaler,
-    isLoading,
-    linkedLoading,
-    pantry,
-    keptFor,
-    toBuy,
-    inPantry,
-    addLines,
-  };
-}
 
 type LinesProps = {
   recipeId: string;
@@ -193,6 +100,7 @@ function MiniGroceriesContent({
     decrementServings,
     pantry,
     keptFor,
+    keepLine,
     toBuy,
     inPantry,
     addLines,
@@ -207,26 +115,9 @@ function MiniGroceriesContent({
   // Which lines the Pantry held when the ticks were last settled, so a line
   // that crosses between the sections can be told from one that has not.
   const knownInPantryIdsRef = useRef<Set<string>>(new Set());
-  const { addPantryIngredient } = usePantryMutations();
   const onTheList = useOnTheList(pantry.items);
   const pantryLoading = pantry.isLoading;
   const pantryUnavailable = pantry.isUnavailable;
-
-  /**
-   * "We keep this": the line's own food goes in the Pantry, or the food of
-   * the name as edited here, resolved as a typed name is. The Pantry's
-   * optimistic row moves the line under "In your pantry" at once, and the
-   * line takes that section's default: unticked.
-   */
-  const keepLine = (item: GroceryIngredient) => {
-    const edited = editedIngredients[item.id]?.name;
-
-    void addPantryIngredient(
-      edited !== undefined || !item.ingredientId
-        ? (edited ?? item.ingredientName)
-        : { ingredientId: item.ingredientId, name: item.ingredientName }
-    );
-  };
 
   useEffect(() => {
     // Selection starts from what is to buy, so the Pantry has to have

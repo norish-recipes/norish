@@ -69,25 +69,43 @@ vi.mock("@norish/shared-react/config", async () => {
 
   return { useSpellingRules: () => spellingRules(units as UnitsMap) };
 });
-vi.mock("@norish/shared-react/groceries", async (importOriginal) => {
-  const { groceryOnTheList } = await import("@norish/shared/lib/pantry");
+// The shared hooks reach the Pantry, the list and the platform through their own modules, so the
+// seams are mocked where they are read.
+vi.mock("../../../../../packages/shared-react/src/groceries/use-groceries-mutations", () => ({
+  useGroceriesMutations: () => ({ createGroceriesFromData }),
+}));
+vi.mock(
+  "../../../../../packages/shared-react/src/groceries/use-groceries-pantry-and-catalogue-subscriptions",
+  () => ({ useGroceriesPantryAndCatalogueSubscriptions: () => undefined })
+);
+vi.mock(
+  "../../../../../packages/shared-react/src/groceries/use-groceries-query",
+  async (importOriginal) => {
+    const { groceryOnTheList } = await import("@norish/shared/lib/pantry");
 
-  return {
-    ...(await importOriginal<typeof import("@norish/shared-react/groceries")>()),
-    useGroceriesMutations: () => ({ createGroceriesFromData }),
-    useGroceriesPantryAndCatalogueSubscriptions: () => undefined,
-    // What the hook's select answers over the list these tests hold.
-    useOnTheList: (kept: PantryIngredientDto[]) =>
-      kept.filter((item) => groceryOnTheList(groceries, item) !== null).map((item) => item.id),
-    usePantryMutations: () => ({ addPantryIngredient }),
-    usePantryQuery: () => ({
-      items: pantry,
-      isLoading: pantryLoading,
-      isFetching: pantryFetching,
-      isUnavailable: pantryUnavailable,
-    }),
-  };
-});
+    return {
+      ...(await importOriginal<object>()),
+      // What the hook's select answers over the list these tests hold.
+      useOnTheList: (kept: PantryIngredientDto[]) =>
+        kept.filter((item) => groceryOnTheList(groceries, item) !== null).map((item) => item.id),
+    };
+  }
+);
+vi.mock("../../../../../packages/shared-react/src/groceries/use-pantry-mutations", () => ({
+  usePantryMutations: () => ({ addPantryIngredient }),
+}));
+vi.mock("../../../../../packages/shared-react/src/groceries/use-pantry-query", () => ({
+  usePantryQuery: () => ({
+    items: pantry,
+    isLoading: pantryLoading,
+    isFetching: pantryFetching,
+    isUnavailable: pantryUnavailable,
+  }),
+}));
+vi.mock("@norish/shared-react/platform", async (importOriginal) => ({
+  ...(await importOriginal<object>()),
+  usePlatform: () => ({ toast: { show: () => undefined, translate: (id: string) => id } }),
+}));
 vi.mock("@/hooks/use-unit-formatter", () => ({
   useUnitFormatter: () => ({
     formatAmountUnit: (amount: number | null, unit: string | null) =>
