@@ -38,8 +38,8 @@ export function RecipesStack() {
             presentation: "formSheet",
             headerShown: false,
             sheetGrabberVisible: true,
-            // The board's sheet opens 664 of 874 pt tall; the content scrolls inside.
-            sheetAllowedDetents: [0.76],
+            // A detent is a fraction of the sheet's ~800 pt maximum; the board's sheet is 664 pt.
+            sheetAllowedDetents: [0.83],
             contentStyle: { backgroundColor: "transparent" },
           }}
         />

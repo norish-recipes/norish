@@ -49,11 +49,11 @@ export function FiltersScreen() {
   const close = () => router.back();
 
   return (
-    <View className="flex-1" testID="filters-sheet">
-      {/* Header inside the scroll content and a pinned footer, so neither depends on how the sheet sizes its children. */}
+    <>
+      {/* react-native-screens sizes only a ScrollView that is the sheet's first child; the footer overlays it. */}
       <ScrollView
-        className="absolute inset-0"
         contentContainerClassName="gap-[18px] px-5 pt-5 pb-[100px]"
+        testID="filters-sheet"
         contentInsetAdjustmentBehavior="never"
         showsVerticalScrollIndicator={false}
       >
@@ -262,6 +262,6 @@ export function FiltersScreen() {
           <Button.Label>{intl.formatMessage({ id: "common.actions.apply" })}</Button.Label>
         </Button>
       </View>
-    </View>
+    </>
   );
 }
