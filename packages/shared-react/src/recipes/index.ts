@@ -34,6 +34,7 @@ export { useRatingsMutation } from "./use-ratings-mutation";
 export { useRatingsSubscription } from "./use-ratings-subscription";
 export { useRecipeAutocomplete } from "./use-recipe-autocomplete";
 export { useImportMutations } from "./use-import-mutations";
+export { useRecipeMutationErrorToast } from "./use-recipe-mutation-error-toast";
 export { useRecipesMutations, type RecipesMutationsResult } from "./use-recipes-mutations";
 export { useRecipesQuery } from "./use-recipes-query";
 export {
