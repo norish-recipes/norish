@@ -13,11 +13,8 @@ import { useTranslations } from "next-intl";
 
 import { useUploadLimitsQuery } from "@norish/shared-react/config";
 import { useImportRecipe } from "@norish/shared-react/recipes";
-import {
-  ALLOWED_OCR_MIME_SET,
-  ALLOWED_OCR_MIME_TYPES,
-  MAX_OCR_FILES,
-} from "@norish/shared/contracts";
+import { ALLOWED_OCR_MIME_TYPES, MAX_OCR_FILES } from "@norish/shared/contracts";
+import { fitOcrCap, refuseOcrImage } from "@norish/shared/lib/ocr-images";
 
 interface ImportFromImageModalProps {
   isOpen: boolean;
@@ -54,9 +51,9 @@ export default function ImportFromImageModal({ isOpen, onOpenChange }: ImportFro
 
     for (let i = 0; i < fileArray.length; i++) {
       const file = fileArray[i]!;
+      const refusal = refuseOcrImage(file, limits.maxImageSize);
 
-      // Validate file type
-      if (!ALLOWED_OCR_MIME_SET.has(file.type)) {
+      if (refusal === "type") {
         toast(t("invalidType"), {
           description: t("notSupported", {
             name: file.name,
@@ -66,8 +63,7 @@ export default function ImportFromImageModal({ isOpen, onOpenChange }: ImportFro
         continue;
       }
 
-      // Validate file size
-      if (file.size > limits.maxImageSize) {
+      if (refusal === "size") {
         toast(t("tooLarge"), {
           description: t("exceeds", {
             name: file.name,
@@ -85,34 +81,20 @@ export default function ImportFromImageModal({ isOpen, onOpenChange }: ImportFro
       });
     }
     setFiles((prev) => {
-      const availableSlots = MAX_OCR_FILES - prev.length;
+      const { kept, dropped } = fitOcrCap(prev.length, newFiles);
 
-      if (availableSlots <= 0) {
-        newFiles.forEach((file) => URL.revokeObjectURL(file.preview));
+      // A full set says so even when nothing new came in.
+      if (dropped.length > 0 || prev.length >= MAX_OCR_FILES) {
+        dropped.forEach((file) => URL.revokeObjectURL(file.preview));
         toast(t("tooMany"), {
           description: t("maxFiles", {
             max: MAX_OCR_FILES,
           }),
           variant: "warning",
         });
-
-        return prev;
-      }
-      if (newFiles.length > availableSlots) {
-        const acceptedFiles = newFiles.slice(0, availableSlots);
-
-        newFiles.slice(availableSlots).forEach((file) => URL.revokeObjectURL(file.preview));
-        toast(t("tooMany"), {
-          description: t("maxFiles", {
-            max: MAX_OCR_FILES,
-          }),
-          variant: "warning",
-        });
-
-        return [...prev, ...acceptedFiles];
       }
 
-      return [...prev, ...newFiles];
+      return [...prev, ...kept];
     });
   };
   // A PDF goes in as its pages, drawn as pictures.
