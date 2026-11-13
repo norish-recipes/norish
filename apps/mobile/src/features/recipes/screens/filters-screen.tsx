@@ -53,8 +53,8 @@ export function FiltersScreen() {
       {/* react-native-screens sizes a sheet's ScrollView as the content minus its first child (the footer, 84 pt),
           and moves it to that child's height unless it has a margin, so the scroll ends above the buttons. */}
       <View
-        collapsable={false}
         className="absolute inset-x-0 bottom-0 flex-row gap-2.5 px-5 pt-3.5 pb-5"
+        collapsable={false}
       >
         <Button
           className="bg-warning/20 h-[50px] flex-1"
@@ -86,9 +86,9 @@ export function FiltersScreen() {
       <ScrollView
         className="mt-px"
         contentContainerClassName="gap-[18px] px-5 pt-5 pb-4"
-        testID="filters-sheet"
         contentInsetAdjustmentBehavior="never"
         showsVerticalScrollIndicator={false}
+        testID="filters-sheet"
       >
         <View className="flex-row items-center justify-between pl-2">
           <Text className="text-foreground text-[22px] font-semibold">
