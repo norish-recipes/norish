@@ -1,28 +1,21 @@
 import React from "react";
 import { Text, View } from "react-native";
-import Svg, { Defs, LinearGradient, Rect, Stop } from "react-native-svg";
-import { Skeleton, useThemeColor } from "heroui-native";
+import { Skeleton } from "heroui-native";
 import { useIntl } from "react-intl";
 
 import type { CookbookSummaryDTO } from "@norish/shared/contracts";
 
 import { CookbookCover } from "./cookbook-cover";
 
-/** The cover's last 58% fades into the page, so the title sits on the ground. */
-function CoverFade() {
-  const [background] = useThemeColor(["background"] as const);
+const FADE_BANDS = Array.from({ length: 29 }, (_, band) => (band + 1) / 29);
 
+/** The cover's last 58% fades into the page, so the title sits on the ground: bands of rising opacity. */
+function CoverFade() {
   return (
-    <View className="absolute inset-0" pointerEvents="none">
-      <Svg height="100%" width="100%">
-        <Defs>
-          <LinearGradient id="cookbook-cover-fade" x1="0" x2="0" y1="0" y2="1">
-            <Stop offset="0.42" stopColor={background} stopOpacity={0} />
-            <Stop offset="1" stopColor={background} stopOpacity={1} />
-          </LinearGradient>
-        </Defs>
-        <Rect fill="url(#cookbook-cover-fade)" height="100%" width="100%" />
-      </Svg>
+    <View className="absolute inset-x-0 bottom-0 h-[174px]" pointerEvents="none">
+      {FADE_BANDS.map((opacity) => (
+        <View key={opacity} className="bg-background flex-1" style={{ opacity }} />
+      ))}
     </View>
   );
 }
@@ -30,11 +23,16 @@ function CoverFade() {
 /** A cookbook page's top: its cover under the transparent header, then its title over its recipe count. */
 export function CookbookHero({ cookbook }: { cookbook: CookbookSummaryDTO }) {
   const intl = useIntl();
+  const hasPhotos = cookbook.image !== null || cookbook.coverImages.length > 0;
 
   return (
     <View testID="cookbook-hero">
       <View className="h-[300px]">
-        <CookbookCover className="h-[300px] w-full pb-10" cookbook={cookbook} iconSize={56} />
+        <CookbookCover
+          className={`h-[300px] w-full ${hasPhotos ? "" : "pb-10"}`}
+          cookbook={cookbook}
+          iconSize={56}
+        />
         <CoverFade />
       </View>
       <View className="-mt-[46px] items-center gap-1 px-5">
