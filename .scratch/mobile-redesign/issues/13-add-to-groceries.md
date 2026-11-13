@@ -14,7 +14,7 @@
 
 ## Comments
 
-- Moved to shared-react (`groceries/`): the subscriptions hook, `recipe-lines` helpers, `useLinesToBuy` (with `keepLine`), `useLineSelection`, `useAddAtOnce`; `useUnitFormatter(locale)` (`recipes/`) too, since the lines need amounts. Web switched in separate commits, no behaviour change; its test now mocks the shared hooks' leaf modules and keeps all 24 assertions.
+- Moved: the subscriptions hook, `useLineSelection`, `useAddAtOnce`, `useLinesToBuy` (pantry split, `keepLine`, `addLines`) to `groceries/`; `useRecipeFoodsToBuy` and `useUnitFormatter(locale)` to `recipes/`; the pure line helpers to `@norish/shared/lib/grocery-lines`. Domains may not import each other, so the apps compose the recipe and groceries hooks. Web switched in separate commits with no behaviour change; its test keeps all 24 assertions, mocking the hooks' leaf modules.
 - Add at once: `AddAtOnceHost` above the Recipes stack adds without any sheet (plan sheet closes, toast shows) and pushes the sheet when the Pantry can't be read. The sheet reads the recipe itself and starts at `plannedServings(recipe)`, so card and after-planning share one default.
 - Deviations: no inline line editing (the board draws none; the edit helpers are moved but unused on mobile); "we keep this" gives the line its new section's default, unticked, as web does; new key `groceries.panel.addCount` for "Add N items".
-- Device (light and dark): stepper, select/deselect all, keep, add (checked on web, then cleared), open and add-at-once and nothing after planning ran. Offline and the first-frame skeleton were not seen on the device.
+- Device (light and dark, before the last recomposition of the hooks, which unit tests cover): stepper, select/deselect all, keep, add (checked on web, then cleared), open and add-at-once and nothing after planning ran. Offline and the first-frame skeleton were not seen on the device.
