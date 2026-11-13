@@ -4,7 +4,28 @@ import { beforeEach, describe, expect, it, vi } from "vitest";
 
 import type { PlannedItemFromQuery } from "@norish/shared/contracts";
 import type { TodaySectionVisibility } from "@norish/shared/contracts/zod/device-preferences";
+import { PlatformProvider } from "@norish/shared-react/platform";
+import { fakePlatformAdapter } from "@norish/shared-react/platform/testing";
 import { dateKey, getInitialCalendarRange } from "@norish/shared/lib/helpers";
+
+const labels: Record<string, string> = {
+  "calendar.timeline.untitled": "Untitled",
+  "calendar.timeline.note": "Note",
+  "calendar.timeline.serving": "serving",
+  "calendar.timeline.servings": "servings",
+};
+const adapter = {
+  ...fakePlatformAdapter(),
+  toast: { show: vi.fn(), translate: (id: string) => labels[id] ?? id },
+};
+
+function Today() {
+  return (
+    <PlatformProvider adapter={adapter}>
+      <TodaysMeals />
+    </PlatformProvider>
+  );
+}
 
 const pushMock = vi.fn();
 const useCalendarQueryMock = vi.fn();
@@ -125,7 +146,7 @@ describe("TodaysMeals", () => {
       isLoading: false,
     });
 
-    render(<TodaysMeals />);
+    render(<Today />);
 
     expect(screen.getByRole("heading", { name: "Today" })).toBeInTheDocument();
     expect(screen.getAllByText("Breakfast")).not.toHaveLength(0);
@@ -139,19 +160,18 @@ describe("TodaysMeals", () => {
     expect(useCalendarQueryMock).toHaveBeenCalledWith(getInitialCalendarRange("desktop", todayKey));
   });
 
-  it("keeps the week it mounted with when the reader's today moves into the next week", () => {
-    // A Sunday, then the Monday after: the server's week, then the browser's.
+  it("follows the reader's today into the next week", () => {
     readerTodayMock = "2026-11-15";
     useCalendarQueryMock.mockReturnValue({ calendarData: {}, isLoading: false });
 
-    const { rerender } = render(<TodaysMeals />);
+    const { rerender } = render(<Today />);
 
     readerTodayMock = "2026-11-16";
-    rerender(<TodaysMeals />);
+    rerender(<Today />);
 
     expect(useCalendarQueryMock).toHaveBeenLastCalledWith({
-      startISO: "2026-11-09",
-      endISO: "2026-11-15",
+      startISO: "2026-11-16",
+      endISO: "2026-11-22",
     });
   });
 
@@ -167,7 +187,7 @@ describe("TodaysMeals", () => {
       isLoading: false,
     });
 
-    render(<TodaysMeals />);
+    render(<Today />);
 
     // A real link, so it opens in a new tab too (#555).
     expect(screen.getByRole("link", { name: "Pasta Night" })).toHaveAttribute(
@@ -195,7 +215,7 @@ describe("TodaysMeals", () => {
       isLoading: false,
     });
 
-    render(<TodaysMeals />);
+    render(<Today />);
 
     expect(screen.getByRole("heading", { name: "Today" })).toBeInTheDocument();
     expect(screen.getAllByText("Dinner")).not.toHaveLength(0);
@@ -212,7 +232,7 @@ describe("TodaysMeals", () => {
       isLoading: false,
     });
 
-    render(<TodaysMeals />);
+    render(<Today />);
 
     expect(screen.queryByRole("heading", { name: "Today" })).not.toBeInTheDocument();
   });
@@ -228,7 +248,7 @@ describe("TodaysMeals", () => {
       isLoading: false,
     });
 
-    render(<TodaysMeals />);
+    render(<Today />);
 
     expect(screen.queryByRole("heading", { name: "Today" })).not.toBeInTheDocument();
     expect(screen.queryByText("Pasta Night")).not.toBeInTheDocument();

@@ -14,4 +14,5 @@ export {
 } from "./use-caldav-query";
 export { useCaldavSubscription } from "./use-caldav-subscription";
 export { useTodaysMeals } from "./use-todays-meals";
+export { usePlannedItemText } from "./use-planned-item-text";
 export { useSlotPlanning } from "./use-slot-planning";

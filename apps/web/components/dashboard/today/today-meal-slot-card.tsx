@@ -7,11 +7,8 @@ import { PhotoIcon } from "@heroicons/react/24/outline";
 import { Card, Chip } from "@heroui/react";
 import { useTranslations } from "next-intl";
 
-import {
-  buildPlannedItemSubtitle,
-  getPlannedItemTitle,
-  isRecipeItem,
-} from "@norish/shared-react/calendar/todays-meals";
+import { usePlannedItemText } from "@norish/shared-react/calendar";
+import { isRecipeItem } from "@norish/shared-react/calendar/todays-meals";
 
 import type { TodayMealSlotCardProps } from "./todays-meals-types";
 import TodaysMealsSlotChip from "./todays-meals-slot-chip";
@@ -37,18 +34,13 @@ export default function TodayMealSlotCard({
   items,
   onPlan,
 }: TodayMealSlotCardProps) {
-  const tCalendar = useTranslations("calendar.timeline");
   const tCalendarPanel = useTranslations("calendar.panel");
   const primaryItem = items[0];
   const remainingCount = Math.max(items.length - 1, 0);
   const isPlanned = Boolean(primaryItem);
   const imageSrc = primaryItem && isRecipeItem(primaryItem) ? primaryItem.recipeImage : null;
-  const title = getPlannedItemTitle(primaryItem, tCalendar("untitled"));
-  const subtitle = buildPlannedItemSubtitle(primaryItem, {
-    note: tCalendar("note"),
-    serving: tCalendar("serving"),
-    servings: tCalendar("servings"),
-  });
+  const plannedItemText = usePlannedItemText();
+  const { title, subtitle } = plannedItemText(primaryItem);
 
   // A planned slot is a real link (#555); an empty one is a button that plans it.
   const href = !primaryItem
