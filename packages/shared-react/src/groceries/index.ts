@@ -8,6 +8,7 @@ export {
   isGroceryIngredient,
   parseEditedIngredientLine,
 } from "./recipe-lines";
+export { useAddAtOnce } from "./use-add-at-once";
 export { useGroceriesMutations } from "./use-groceries-mutations";
 export {
   useGroceriesQuery,
