@@ -427,7 +427,11 @@
     "imageUploadFailed": "Das Bild konnte nicht hochgeladen werden.",
     "imageNeedsConnection": "Bilder kannst du ändern, sobald du wieder online bist.",
     "rename": "Umbenennen",
-    "deleteAlertTitle": "{title} löschen?"
+    "deleteAlertTitle": "{title} löschen?",
+    "changeCover": "Titelbild ändern",
+    "renameTitle": "Kochbuch umbenennen",
+    "coverFromLibrary": "Aus Mediathek wählen",
+    "coverFromCamera": "Foto aufnehmen"
   },
   "print": {
     "title": "Rezept drucken",

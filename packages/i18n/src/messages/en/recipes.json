@@ -427,7 +427,11 @@
     "imageUploadFailed": "The image could not be uploaded.",
     "imageNeedsConnection": "Images can be changed once you are back online.",
     "rename": "Rename",
-    "deleteAlertTitle": "Delete {title}?"
+    "deleteAlertTitle": "Delete {title}?",
+    "changeCover": "Change cover",
+    "renameTitle": "Rename cookbook",
+    "coverFromLibrary": "Choose from library",
+    "coverFromCamera": "Take photo"
   },
   "print": {
     "title": "Print recipe",

@@ -427,7 +427,11 @@
     "imageUploadFailed": "Impossibile caricare l'immagine.",
     "imageNeedsConnection": "Potrai cambiare le immagini quando sarai di nuovo online.",
     "rename": "Rinomina",
-    "deleteAlertTitle": "Eliminare {title}?"
+    "deleteAlertTitle": "Eliminare {title}?",
+    "changeCover": "Cambia copertina",
+    "renameTitle": "Rinomina ricettario",
+    "coverFromLibrary": "Scegli dalla libreria",
+    "coverFromCamera": "Scatta una foto"
   },
   "print": {
     "title": "Stampa ricetta",

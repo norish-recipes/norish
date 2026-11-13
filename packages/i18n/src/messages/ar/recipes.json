@@ -427,7 +427,11 @@
     "imageUploadFailed": "تعذّر رفع الصورة.",
     "imageNeedsConnection": "يمكن تغيير الصور عند عودة الاتصال.",
     "rename": "إعادة تسمية",
-    "deleteAlertTitle": "حذف {title}؟"
+    "deleteAlertTitle": "حذف {title}؟",
+    "changeCover": "تغيير الغلاف",
+    "renameTitle": "إعادة تسمية كتاب الطبخ",
+    "coverFromLibrary": "اختيار من المكتبة",
+    "coverFromCamera": "التقاط صورة"
   },
   "print": {
     "title": "طباعة الوصفة",

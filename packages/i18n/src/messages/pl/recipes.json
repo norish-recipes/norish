@@ -427,7 +427,11 @@
     "imageUploadFailed": "Nie udało się przesłać obrazu.",
     "imageNeedsConnection": "Obrazy możesz zmienić, gdy znów będziesz online.",
     "rename": "Zmień nazwę",
-    "deleteAlertTitle": "Usunąć {title}?"
+    "deleteAlertTitle": "Usunąć {title}?",
+    "changeCover": "Zmień okładkę",
+    "renameTitle": "Zmień nazwę książki kucharskiej",
+    "coverFromLibrary": "Wybierz z biblioteki",
+    "coverFromCamera": "Zrób zdjęcie"
   },
   "print": {
     "title": "Drukuj przepis",

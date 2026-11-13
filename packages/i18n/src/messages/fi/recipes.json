@@ -427,7 +427,11 @@
     "imageUploadFailed": "Kuvan lataaminen epäonnistui.",
     "imageNeedsConnection": "Kuvia voi vaihtaa, kun olet taas verkossa.",
     "rename": "Nimeä uudelleen",
-    "deleteAlertTitle": "Poistetaanko {title}?"
+    "deleteAlertTitle": "Poistetaanko {title}?",
+    "changeCover": "Vaihda kansi",
+    "renameTitle": "Nimeä keittokirja uudelleen",
+    "coverFromLibrary": "Valitse kirjastosta",
+    "coverFromCamera": "Ota kuva"
   },
   "print": {
     "title": "Tulosta resepti",

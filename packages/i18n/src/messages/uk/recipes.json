@@ -427,7 +427,11 @@
     "imageUploadFailed": "Не вдалося завантажити зображення.",
     "imageNeedsConnection": "Зображення можна буде змінити, коли ви знову будете онлайн.",
     "rename": "Перейменувати",
-    "deleteAlertTitle": "Видалити «{title}»?"
+    "deleteAlertTitle": "Видалити «{title}»?",
+    "changeCover": "Змінити обкладинку",
+    "renameTitle": "Перейменувати кулінарну книгу",
+    "coverFromLibrary": "Вибрати з медіатеки",
+    "coverFromCamera": "Зробити фото"
   },
   "print": {
     "title": "Друк рецепта",

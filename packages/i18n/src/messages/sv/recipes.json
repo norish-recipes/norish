@@ -427,7 +427,11 @@
     "imageUploadFailed": "Det gick inte att ladda upp bilden.",
     "imageNeedsConnection": "Du kan byta bilder när du är online igen.",
     "rename": "Byt namn",
-    "deleteAlertTitle": "Ta bort {title}?"
+    "deleteAlertTitle": "Ta bort {title}?",
+    "changeCover": "Byt omslag",
+    "renameTitle": "Byt namn på kokboken",
+    "coverFromLibrary": "Välj från biblioteket",
+    "coverFromCamera": "Ta ett foto"
   },
   "print": {
     "title": "Skriv ut recept",

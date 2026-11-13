@@ -427,7 +427,11 @@
     "imageUploadFailed": "L'image n'a pas pu être envoyée.",
     "imageNeedsConnection": "Les images pourront être modifiées une fois de retour en ligne.",
     "rename": "Renommer",
-    "deleteAlertTitle": "Supprimer {title} ?"
+    "deleteAlertTitle": "Supprimer {title} ?",
+    "changeCover": "Changer la couverture",
+    "renameTitle": "Renommer le livre de cuisine",
+    "coverFromLibrary": "Choisir dans la photothèque",
+    "coverFromCamera": "Prendre une photo"
   },
   "print": {
     "title": "Imprimer la recette",

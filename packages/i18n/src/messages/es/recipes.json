@@ -427,7 +427,11 @@
     "imageUploadFailed": "No se pudo subir la imagen.",
     "imageNeedsConnection": "Podrás cambiar las imágenes cuando vuelvas a estar en línea.",
     "rename": "Renombrar",
-    "deleteAlertTitle": "¿Eliminar {title}?"
+    "deleteAlertTitle": "¿Eliminar {title}?",
+    "changeCover": "Cambiar portada",
+    "renameTitle": "Renombrar recetario",
+    "coverFromLibrary": "Elegir de la fototeca",
+    "coverFromCamera": "Hacer una foto"
   },
   "print": {
     "title": "Imprimir receta",

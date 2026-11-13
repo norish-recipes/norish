@@ -427,7 +427,11 @@
     "imageUploadFailed": "Bildet kunne ikke lastes opp.",
     "imageNeedsConnection": "Bilder kan endres når du er tilkoblet igjen.",
     "rename": "Gi nytt navn",
-    "deleteAlertTitle": "Slette {title}?"
+    "deleteAlertTitle": "Slette {title}?",
+    "changeCover": "Endre omslag",
+    "renameTitle": "Gi kokeboken nytt navn",
+    "coverFromLibrary": "Velg fra bildebiblioteket",
+    "coverFromCamera": "Ta bilde"
   },
   "print": {
     "title": "Skriv ut oppskrift",

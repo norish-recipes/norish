@@ -427,7 +427,11 @@
     "imageUploadFailed": "De afbeelding kon niet worden geüpload.",
     "imageNeedsConnection": "Afbeeldingen kun je wijzigen zodra je weer online bent.",
     "rename": "Hernoemen",
-    "deleteAlertTitle": "{title} verwijderen?"
+    "deleteAlertTitle": "{title} verwijderen?",
+    "changeCover": "Omslag wijzigen",
+    "renameTitle": "Kookboek hernoemen",
+    "coverFromLibrary": "Kies uit bibliotheek",
+    "coverFromCamera": "Foto maken"
   },
   "print": {
     "title": "Recept afdrukken",

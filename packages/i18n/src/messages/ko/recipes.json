@@ -427,7 +427,11 @@
     "imageUploadFailed": "이미지를 업로드하지 못했습니다.",
     "imageNeedsConnection": "다시 온라인 상태가 되면 이미지를 변경할 수 있습니다.",
     "rename": "이름 변경",
-    "deleteAlertTitle": "{title}을(를) 삭제할까요?"
+    "deleteAlertTitle": "{title}을(를) 삭제할까요?",
+    "changeCover": "표지 변경",
+    "renameTitle": "요리책 이름 변경",
+    "coverFromLibrary": "사진 보관함에서 선택",
+    "coverFromCamera": "사진 찍기"
   },
   "print": {
     "title": "레시피 인쇄",

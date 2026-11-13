@@ -427,7 +427,11 @@
     "imageUploadFailed": "Изображението не можа да бъде качено.",
     "imageNeedsConnection": "Изображенията могат да се сменят, когато отново сте онлайн.",
     "rename": "Преименуване",
-    "deleteAlertTitle": "Да се изтрие ли {title}?"
+    "deleteAlertTitle": "Да се изтрие ли {title}?",
+    "changeCover": "Смяна на корицата",
+    "renameTitle": "Преименуване на готварската книга",
+    "coverFromLibrary": "Избор от библиотеката",
+    "coverFromCamera": "Правене на снимка"
   },
   "print": {
     "title": "Печат на рецептата",

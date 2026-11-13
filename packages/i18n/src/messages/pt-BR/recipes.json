@@ -427,7 +427,11 @@
     "imageUploadFailed": "Não foi possível enviar a imagem.",
     "imageNeedsConnection": "Você pode trocar imagens quando estiver online de novo.",
     "rename": "Renomear",
-    "deleteAlertTitle": "Excluir {title}?"
+    "deleteAlertTitle": "Excluir {title}?",
+    "changeCover": "Alterar capa",
+    "renameTitle": "Renomear livro de receitas",
+    "coverFromLibrary": "Escolher da biblioteca",
+    "coverFromCamera": "Tirar foto"
   },
   "print": {
     "title": "Imprimir receita",

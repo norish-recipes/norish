@@ -427,7 +427,11 @@
     "imageUploadFailed": "Billedet kunne ikke uploades.",
     "imageNeedsConnection": "Billeder kan ændres, når du er online igen.",
     "rename": "Omdøb",
-    "deleteAlertTitle": "Slet {title}?"
+    "deleteAlertTitle": "Slet {title}?",
+    "changeCover": "Skift omslag",
+    "renameTitle": "Omdøb kogebog",
+    "coverFromLibrary": "Vælg fra biblioteket",
+    "coverFromCamera": "Tag et billede"
   },
   "print": {
     "title": "Udskriv opskrift",
