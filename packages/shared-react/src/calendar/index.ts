@@ -20,3 +20,4 @@ export { miniCalendarRange, useMiniCalendar } from "./use-mini-calendar";
 export { usePlanOnDay } from "./use-plan-on-day";
 export { afterPlanningStep, plannedServings, useAfterPlanning } from "./after-planning";
 export type { Planned } from "./after-planning";
+export { moveTargetIndex, useMovePlannedItem } from "./use-move-planned-item";
