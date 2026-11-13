@@ -6,12 +6,7 @@ import { AddAtOnceHost } from "./add-at-once-host";
 import { LibraryRoot } from "./library-root";
 
 // The sheets the card actions open; their tickets fill them.
-const SHEETS = [
-  "add-to-groceries",
-  "add-to-cookbook",
-  "cookbook-add-recipes",
-  "cookbook-rename",
-] as const;
+const SHEETS = ["add-to-cookbook", "cookbook-add-recipes", "cookbook-rename"] as const;
 
 /** The Recipes tab's stack: a transparent native header with the account avatar pinned right; the screen draws its own large title. */
 export function RecipesStack() {
@@ -45,6 +40,17 @@ export function RecipesStack() {
               sheetGrabberVisible: true,
               // The board's sheet is 619 pt (a 0.785 detent) of the ~800 pt maximum.
               sheetAllowedDetents: [0.785],
+              contentStyle: { backgroundColor: "transparent" },
+            }}
+          />
+          <Stack.Screen
+            name="add-to-groceries"
+            options={{
+              presentation: "formSheet",
+              headerShown: false,
+              sheetGrabberVisible: true,
+              // The board's sheet is 774 pt; glass stops at 0.98 of the ~790 pt maximum.
+              sheetAllowedDetents: [0.98],
               contentStyle: { backgroundColor: "transparent" },
             }}
           />
