@@ -455,5 +455,24 @@
     "newCookbook": "Uusi keittokirja",
     "filedInto": "{count, plural, one {# resepti lisätty} other {# reseptiä lisätty}} kohteeseen {title}",
     "filedIntoMany": "{count, plural, one {# resepti lisätty} other {# reseptiä lisätty}} {cookbooks} keittokirjaan"
+  },
+  "addRecipe": {
+    "fromLink": "Linkistä",
+    "fromLinkHint": "Mikä tahansa reseptisivusto tai video",
+    "fromPhotos": "Kuvista",
+    "fromPhotosHint": "Keittokirjan sivuja tai kuvakaappaus",
+    "fromText": "Tekstistä",
+    "fromTextHint": "Liitä resepti tai JSON-LD",
+    "writeYourself": "Kirjoita itse",
+    "writeYourselfHint": "Aloita tyhjästä reseptistä",
+    "importHost": "Tuo {host}",
+    "linkTitle": "Tuo linkistä",
+    "textTitle": "Tuo tekstistä",
+    "photosTitle": "Tuo kuvista",
+    "camera": "Kamera",
+    "photoLibrary": "Kuvakirjasto",
+    "photoCount": "{count, plural, one {# kuva, tuodaan yhtenä reseptinä} other {# kuvaa, tuodaan yhtenä reseptinä}}",
+    "photoLimits": "Enintään {max} kuvaa, JPEG, PNG tai WebP",
+    "removePhoto": "Poista kuva {number}"
   }
 }

@@ -455,5 +455,24 @@
     "newCookbook": "Ny kogebog",
     "filedInto": "{count, plural, one {# opskrift} other {# opskrifter}} føjet til {title}",
     "filedIntoMany": "{count, plural, one {# opskrift} other {# opskrifter}} føjet til {cookbooks} kogebøger"
+  },
+  "addRecipe": {
+    "fromLink": "Fra et link",
+    "fromLinkHint": "Ethvert opskriftssite eller video",
+    "fromPhotos": "Fra fotos",
+    "fromPhotosHint": "Kogebogssider eller et skærmbillede",
+    "fromText": "Fra tekst",
+    "fromTextHint": "Indsæt en opskrift eller JSON-LD",
+    "writeYourself": "Skriv den selv",
+    "writeYourselfHint": "Start med en tom opskrift",
+    "importHost": "Importér {host}",
+    "linkTitle": "Importér fra et link",
+    "textTitle": "Importér fra tekst",
+    "photosTitle": "Importér fra fotos",
+    "camera": "Kamera",
+    "photoLibrary": "Fotobibliotek",
+    "photoCount": "{count, plural, one {# foto, importeret som én opskrift} other {# fotos, importeret som én opskrift}}",
+    "photoLimits": "Op til {max} fotos, JPEG, PNG eller WebP",
+    "removePhoto": "Fjern foto {number}"
   }
 }

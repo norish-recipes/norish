@@ -455,5 +455,24 @@
     "newCookbook": "Nieuw kookboek",
     "filedInto": "{count, plural, one {# recept} other {# recepten}} toegevoegd aan {title}",
     "filedIntoMany": "{count, plural, one {# recept} other {# recepten}} toegevoegd aan {cookbooks} kookboeken"
+  },
+  "addRecipe": {
+    "fromLink": "Via een link",
+    "fromLinkHint": "Elke receptensite of video",
+    "fromPhotos": "Via foto's",
+    "fromPhotosHint": "Kookboekpagina's of een screenshot",
+    "fromText": "Via tekst",
+    "fromTextHint": "Plak een recept of JSON-LD",
+    "writeYourself": "Zelf schrijven",
+    "writeYourselfHint": "Begin met een leeg recept",
+    "importHost": "{host} importeren",
+    "linkTitle": "Importeren via een link",
+    "textTitle": "Importeren via tekst",
+    "photosTitle": "Importeren via foto's",
+    "camera": "Camera",
+    "photoLibrary": "Fotobibliotheek",
+    "photoCount": "{count, plural, one {# foto, geïmporteerd als één recept} other {# foto's, geïmporteerd als één recept}}",
+    "photoLimits": "Tot {max} foto's, JPEG, PNG of WebP",
+    "removePhoto": "Foto {number} verwijderen"
   }
 }

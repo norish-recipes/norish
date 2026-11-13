@@ -455,5 +455,24 @@
     "newCookbook": "Nowa książka kucharska",
     "filedInto": "Dodano {count, plural, one {# przepis} few {# przepisy} many {# przepisów} other {# przepisu}} do {title}",
     "filedIntoMany": "Dodano {count, plural, one {# przepis} few {# przepisy} many {# przepisów} other {# przepisu}} do {cookbooks} książek kucharskich"
+  },
+  "addRecipe": {
+    "fromLink": "Z linku",
+    "fromLinkHint": "Dowolna strona z przepisami lub wideo",
+    "fromPhotos": "Ze zdjęć",
+    "fromPhotosHint": "Strony książki kucharskiej lub zrzut ekranu",
+    "fromText": "Z tekstu",
+    "fromTextHint": "Wklej przepis lub JSON-LD",
+    "writeYourself": "Napisz samodzielnie",
+    "writeYourselfHint": "Zacznij od pustego przepisu",
+    "importHost": "Importuj {host}",
+    "linkTitle": "Importuj z linku",
+    "textTitle": "Importuj z tekstu",
+    "photosTitle": "Importuj ze zdjęć",
+    "camera": "Aparat",
+    "photoLibrary": "Biblioteka zdjęć",
+    "photoCount": "{count, plural, one {# zdjęcie, zaimportowane jako jeden przepis} few {# zdjęcia, zaimportowane jako jeden przepis} many {# zdjęć, zaimportowanych jako jeden przepis} other {# zdjęcia, zaimportowane jako jeden przepis}}",
+    "photoLimits": "Do {max} zdjęć, JPEG, PNG lub WebP",
+    "removePhoto": "Usuń zdjęcie {number}"
   }
 }

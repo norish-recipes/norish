@@ -455,5 +455,24 @@
     "newCookbook": "Нова кулінарна книга",
     "filedInto": "{count, plural, one {# рецепт додано} few {# рецепти додано} many {# рецептів додано} other {# рецепта додано}} до {title}",
     "filedIntoMany": "{count, plural, one {# рецепт додано} few {# рецепти додано} many {# рецептів додано} other {# рецепта додано}} до кулінарних книг: {cookbooks}"
+  },
+  "addRecipe": {
+    "fromLink": "За посиланням",
+    "fromLinkHint": "Будь-який сайт із рецептами або відео",
+    "fromPhotos": "З фото",
+    "fromPhotosHint": "Сторінки кулінарної книги або знімок екрана",
+    "fromText": "З тексту",
+    "fromTextHint": "Вставте рецепт або JSON-LD",
+    "writeYourself": "Написати самостійно",
+    "writeYourselfHint": "Почати з порожнього рецепта",
+    "importHost": "Імпортувати {host}",
+    "linkTitle": "Імпорт за посиланням",
+    "textTitle": "Імпорт із тексту",
+    "photosTitle": "Імпорт із фото",
+    "camera": "Камера",
+    "photoLibrary": "Медіатека",
+    "photoCount": "{count, plural, one {# фото, імпортується як один рецепт} few {# фото, імпортуються як один рецепт} many {# фото, імпортуються як один рецепт} other {# фото, імпортуються як один рецепт}}",
+    "photoLimits": "До {max} фото, JPEG, PNG або WebP",
+    "removePhoto": "Видалити фото {number}"
   }
 }

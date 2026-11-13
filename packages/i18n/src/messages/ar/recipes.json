@@ -455,5 +455,24 @@
     "newCookbook": "كتاب طبخ جديد",
     "filedInto": "تمت إضافة {count, plural, one {وصفة واحدة} two {وصفتين} few {# وصفات} many {# وصفة} other {# وصفة}} إلى {title}",
     "filedIntoMany": "تمت إضافة {count, plural, one {وصفة واحدة} two {وصفتين} few {# وصفات} many {# وصفة} other {# وصفة}} إلى {cookbooks} كتب طبخ"
+  },
+  "addRecipe": {
+    "fromLink": "من رابط",
+    "fromLinkHint": "أي موقع وصفات أو فيديو",
+    "fromPhotos": "من الصور",
+    "fromPhotosHint": "صفحات كتاب طبخ أو لقطة شاشة",
+    "fromText": "من نص",
+    "fromTextHint": "الصق وصفة أو JSON-LD",
+    "writeYourself": "اكتبها بنفسك",
+    "writeYourselfHint": "ابدأ بوصفة فارغة",
+    "importHost": "استيراد {host}",
+    "linkTitle": "استيراد من رابط",
+    "textTitle": "استيراد من نص",
+    "photosTitle": "استيراد من الصور",
+    "camera": "الكاميرا",
+    "photoLibrary": "مكتبة الصور",
+    "photoCount": "{count, plural, zero {# صور، تُستورد كوصفة واحدة} one {صورة واحدة، تُستورد كوصفة واحدة} two {صورتان، تُستوردان كوصفة واحدة} few {# صور، تُستورد كوصفة واحدة} many {# صورة، تُستورد كوصفة واحدة} other {# صورة، تُستورد كوصفة واحدة}}",
+    "photoLimits": "حتى {max} صور، JPEG أو PNG أو WebP",
+    "removePhoto": "إزالة الصورة {number}"
   }
 }

@@ -455,5 +455,24 @@
     "newCookbook": "Новая кулинарная книга",
     "filedInto": "{count, plural, one {# рецепт добавлен} few {# рецепта добавлено} many {# рецептов добавлено} other {# рецепта добавлено}} в {title}",
     "filedIntoMany": "{count, plural, one {# рецепт добавлен} few {# рецепта добавлено} many {# рецептов добавлено} other {# рецепта добавлено}} в кулинарные книги: {cookbooks}"
+  },
+  "addRecipe": {
+    "fromLink": "По ссылке",
+    "fromLinkHint": "Любой сайт с рецептами или видео",
+    "fromPhotos": "Из фото",
+    "fromPhotosHint": "Страницы кулинарной книги или скриншот",
+    "fromText": "Из текста",
+    "fromTextHint": "Вставьте рецепт или JSON-LD",
+    "writeYourself": "Написать самому",
+    "writeYourselfHint": "Начать с пустого рецепта",
+    "importHost": "Импортировать {host}",
+    "linkTitle": "Импорт по ссылке",
+    "textTitle": "Импорт из текста",
+    "photosTitle": "Импорт из фото",
+    "camera": "Камера",
+    "photoLibrary": "Медиатека",
+    "photoCount": "{count, plural, one {# фото, импортируется как один рецепт} few {# фото, импортируются как один рецепт} many {# фото, импортируются как один рецепт} other {# фото, импортируются как один рецепт}}",
+    "photoLimits": "До {max} фото, JPEG, PNG или WebP",
+    "removePhoto": "Удалить фото {number}"
   }
 }

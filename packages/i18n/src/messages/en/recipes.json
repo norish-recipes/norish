@@ -455,5 +455,24 @@
     "newCookbook": "New cookbook",
     "filedInto": "{count, plural, one {# recipe} other {# recipes}} added to {title}",
     "filedIntoMany": "{count, plural, one {# recipe} other {# recipes}} added to {cookbooks} cookbooks"
+  },
+  "addRecipe": {
+    "fromLink": "From a link",
+    "fromLinkHint": "Any recipe site or video",
+    "fromPhotos": "From photos",
+    "fromPhotosHint": "Cookbook pages or a screenshot",
+    "fromText": "From text",
+    "fromTextHint": "Paste a recipe or JSON-LD",
+    "writeYourself": "Write it yourself",
+    "writeYourselfHint": "Start from an empty recipe",
+    "importHost": "Import {host}",
+    "linkTitle": "Import from a link",
+    "textTitle": "Import from text",
+    "photosTitle": "Import from photos",
+    "camera": "Camera",
+    "photoLibrary": "Photo library",
+    "photoCount": "{count, plural, one {# photo, imported as one recipe} other {# photos, imported as one recipe}}",
+    "photoLimits": "Up to {max} photos, JPEG, PNG or WebP",
+    "removePhoto": "Remove photo {number}"
   }
 }

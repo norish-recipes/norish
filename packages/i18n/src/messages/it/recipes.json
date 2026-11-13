@@ -455,5 +455,24 @@
     "newCookbook": "Nuovo ricettario",
     "filedInto": "{count, plural, one {# ricetta aggiunta} other {# ricette aggiunte}} a {title}",
     "filedIntoMany": "{count, plural, one {# ricetta aggiunta} other {# ricette aggiunte}} a {cookbooks} ricettari"
+  },
+  "addRecipe": {
+    "fromLink": "Da un link",
+    "fromLinkHint": "Qualsiasi sito di ricette o video",
+    "fromPhotos": "Da foto",
+    "fromPhotosHint": "Pagine di un ricettario o uno screenshot",
+    "fromText": "Da testo",
+    "fromTextHint": "Incolla una ricetta o JSON-LD",
+    "writeYourself": "Scrivila tu",
+    "writeYourselfHint": "Parti da una ricetta vuota",
+    "importHost": "Importa {host}",
+    "linkTitle": "Importa da un link",
+    "textTitle": "Importa da testo",
+    "photosTitle": "Importa da foto",
+    "camera": "Fotocamera",
+    "photoLibrary": "Libreria foto",
+    "photoCount": "{count, plural, one {# foto, importata come una ricetta} other {# foto, importate come una ricetta}}",
+    "photoLimits": "Fino a {max} foto, JPEG, PNG o WebP",
+    "removePhoto": "Rimuovi foto {number}"
   }
 }

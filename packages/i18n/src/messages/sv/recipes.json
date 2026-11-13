@@ -455,5 +455,24 @@
     "newCookbook": "Ny kokbok",
     "filedInto": "{count, plural, one {# recept} other {# recept}} tillagda i {title}",
     "filedIntoMany": "{count, plural, one {# recept} other {# recept}} tillagda i {cookbooks} kokböcker"
+  },
+  "addRecipe": {
+    "fromLink": "Från en länk",
+    "fromLinkHint": "Valfri receptsajt eller video",
+    "fromPhotos": "Från foton",
+    "fromPhotosHint": "Kokbokssidor eller en skärmbild",
+    "fromText": "Från text",
+    "fromTextHint": "Klistra in ett recept eller JSON-LD",
+    "writeYourself": "Skriv det själv",
+    "writeYourselfHint": "Börja med ett tomt recept",
+    "importHost": "Importera {host}",
+    "linkTitle": "Importera från en länk",
+    "textTitle": "Importera från text",
+    "photosTitle": "Importera från foton",
+    "camera": "Kamera",
+    "photoLibrary": "Bildbibliotek",
+    "photoCount": "{count, plural, one {# foto, importerat som ett recept} other {# foton, importerade som ett recept}}",
+    "photoLimits": "Upp till {max} foton, JPEG, PNG eller WebP",
+    "removePhoto": "Ta bort foto {number}"
   }
 }

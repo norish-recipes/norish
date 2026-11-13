@@ -455,5 +455,24 @@
     "newCookbook": "Ny kokebok",
     "filedInto": "{count, plural, one {# oppskrift} other {# oppskrifter}} lagt til i {title}",
     "filedIntoMany": "{count, plural, one {# oppskrift} other {# oppskrifter}} lagt til i {cookbooks} kokebøker"
+  },
+  "addRecipe": {
+    "fromLink": "Fra en lenke",
+    "fromLinkHint": "Hvilken som helst oppskriftsside eller video",
+    "fromPhotos": "Fra bilder",
+    "fromPhotosHint": "Kokebokssider eller et skjermbilde",
+    "fromText": "Fra tekst",
+    "fromTextHint": "Lim inn en oppskrift eller JSON-LD",
+    "writeYourself": "Skriv den selv",
+    "writeYourselfHint": "Start med en tom oppskrift",
+    "importHost": "Importer {host}",
+    "linkTitle": "Importer fra en lenke",
+    "textTitle": "Importer fra tekst",
+    "photosTitle": "Importer fra bilder",
+    "camera": "Kamera",
+    "photoLibrary": "Bildebibliotek",
+    "photoCount": "{count, plural, one {# bilde, importert som én oppskrift} other {# bilder, importert som én oppskrift}}",
+    "photoLimits": "Opptil {max} bilder, JPEG, PNG eller WebP",
+    "removePhoto": "Fjern bilde {number}"
   }
 }

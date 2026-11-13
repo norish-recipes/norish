@@ -455,5 +455,24 @@
     "newCookbook": "Nouveau livre de recettes",
     "filedInto": "{count, plural, one {# recette ajoutée} other {# recettes ajoutées}} à {title}",
     "filedIntoMany": "{count, plural, one {# recette ajoutée} other {# recettes ajoutées}} à {cookbooks} livres de recettes"
+  },
+  "addRecipe": {
+    "fromLink": "Depuis un lien",
+    "fromLinkHint": "N'importe quel site de recettes ou vidéo",
+    "fromPhotos": "Depuis des photos",
+    "fromPhotosHint": "Pages de livre de cuisine ou capture d'écran",
+    "fromText": "Depuis du texte",
+    "fromTextHint": "Collez une recette ou du JSON-LD",
+    "writeYourself": "L'écrire vous-même",
+    "writeYourselfHint": "Partir d'une recette vide",
+    "importHost": "Importer {host}",
+    "linkTitle": "Importer depuis un lien",
+    "textTitle": "Importer depuis du texte",
+    "photosTitle": "Importer depuis des photos",
+    "camera": "Appareil photo",
+    "photoLibrary": "Photothèque",
+    "photoCount": "{count, plural, one {# photo, importée comme une seule recette} other {# photos, importées comme une seule recette}}",
+    "photoLimits": "Jusqu'à {max} photos, JPEG, PNG ou WebP",
+    "removePhoto": "Retirer la photo {number}"
   }
 }

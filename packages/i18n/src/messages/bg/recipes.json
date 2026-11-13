@@ -455,5 +455,24 @@
     "newCookbook": "Нова готварска книга",
     "filedInto": "{count, plural, one {# рецепта е добавена} other {# рецепти са добавени}} в {title}",
     "filedIntoMany": "{count, plural, one {# рецепта е добавена} other {# рецепти са добавени}} в {cookbooks} готварски книги"
+  },
+  "addRecipe": {
+    "fromLink": "От линк",
+    "fromLinkHint": "Всеки сайт с рецепти или видео",
+    "fromPhotos": "От снимки",
+    "fromPhotosHint": "Страници от готварска книга или екранна снимка",
+    "fromText": "От текст",
+    "fromTextHint": "Поставете рецепта или JSON-LD",
+    "writeYourself": "Напишете я сами",
+    "writeYourselfHint": "Започнете с празна рецепта",
+    "importHost": "Импортиране от {host}",
+    "linkTitle": "Импортиране от линк",
+    "textTitle": "Импортиране от текст",
+    "photosTitle": "Импортиране от снимки",
+    "camera": "Камера",
+    "photoLibrary": "Фотобиблиотека",
+    "photoCount": "{count, plural, one {# снимка, импортирана като една рецепта} other {# снимки, импортирани като една рецепта}}",
+    "photoLimits": "До {max} снимки, JPEG, PNG или WebP",
+    "removePhoto": "Премахване на снимка {number}"
   }
 }

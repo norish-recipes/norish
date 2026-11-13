@@ -455,5 +455,24 @@
     "newCookbook": "새 요리책",
     "filedInto": "레시피 {count}개를 {title}에 추가했습니다",
     "filedIntoMany": "레시피 {count}개를 요리책 {cookbooks}권에 추가했습니다"
+  },
+  "addRecipe": {
+    "fromLink": "링크에서",
+    "fromLinkHint": "모든 레시피 사이트 또는 동영상",
+    "fromPhotos": "사진에서",
+    "fromPhotosHint": "요리책 페이지 또는 스크린샷",
+    "fromText": "텍스트에서",
+    "fromTextHint": "레시피 또는 JSON-LD 붙여넣기",
+    "writeYourself": "직접 작성",
+    "writeYourselfHint": "빈 레시피로 시작",
+    "importHost": "{host} 가져오기",
+    "linkTitle": "링크에서 가져오기",
+    "textTitle": "텍스트에서 가져오기",
+    "photosTitle": "사진에서 가져오기",
+    "camera": "카메라",
+    "photoLibrary": "사진 보관함",
+    "photoCount": "{count, plural, other {사진 #장, 레시피 하나로 가져옴}}",
+    "photoLimits": "최대 {max}장, JPEG, PNG 또는 WebP",
+    "removePhoto": "사진 {number} 삭제"
   }
 }
