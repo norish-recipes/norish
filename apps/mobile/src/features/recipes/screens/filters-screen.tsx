@@ -1,5 +1,6 @@
 import React from "react";
-import { Pressable, ScrollView, Text, View } from "react-native";
+import { Pressable, Text, View } from "react-native";
+import { Sheet, SheetScrollView } from "@/components/sheet";
 import { FilterSection } from "@/features/recipes/components/filter-section";
 import { ToggleChip } from "@/features/recipes/components/toggle-chip";
 import { useWarningInkColor } from "@/hooks/use-warning-ink-color";
@@ -49,15 +50,11 @@ export function FiltersScreen() {
   const close = () => router.back();
 
   return (
-    <>
-      {/* react-native-screens sizes the scroll view minus this first child (84 pt) and moves it down
-          by that height, so its margin puts it back and the scroll ends above the buttons. */}
-      <View
-        className="absolute inset-x-0 bottom-0 flex-row gap-2.5 px-5 pt-3.5 pb-5"
-        collapsable={false}
-      >
+    <Sheet
+      actions={[
         <Button
-          className="bg-warning/20 h-[50px] flex-1"
+          key="reset"
+          className="bg-warning/20 h-[50px]"
           testID="filters-reset"
           variant="secondary"
           onPress={() => {
@@ -69,9 +66,10 @@ export function FiltersScreen() {
           <Button.Label className="text-warning-ink">
             {intl.formatMessage({ id: "common.filters.clearFilters" })}
           </Button.Label>
-        </Button>
+        </Button>,
         <Button
-          className="h-[50px] flex-1"
+          key="apply"
+          className="h-[50px]"
           testID="filters-apply"
           variant="primary"
           onPress={() => {
@@ -81,30 +79,13 @@ export function FiltersScreen() {
         >
           <Ionicons color="white" name="checkmark" size={20} />
           <Button.Label>{intl.formatMessage({ id: "common.actions.apply" })}</Button.Label>
-        </Button>
-      </View>
-      <ScrollView
-        className="mt-px"
-        contentContainerClassName="gap-[18px] px-5 pt-5 pb-4"
-        contentInsetAdjustmentBehavior="never"
-        showsVerticalScrollIndicator={false}
-        testID="filters-sheet"
-      >
-        <View className="flex-row items-center justify-between pl-2">
-          <Text className="text-foreground text-[22px] font-semibold">
-            {intl.formatMessage({ id: "common.filters.title" })}
-          </Text>
-          <Pressable
-            accessibilityLabel={intl.formatMessage({ id: "common.actions.close" })}
-            accessibilityRole="button"
-            className="bg-surface size-10 items-center justify-center rounded-full"
-            testID="filters-close"
-            onPress={close}
-          >
-            <Ionicons color={foreground} name="close" size={20} />
-          </Pressable>
-        </View>
-
+        </Button>,
+      ]}
+      name="filters"
+      title={intl.formatMessage({ id: "common.filters.title" })}
+      onClose={close}
+    >
+      <SheetScrollView gapClassName="gap-[18px]">
         <FilterSection title={intl.formatMessage({ id: "common.filters.sort" })}>
           <View className="flex-row flex-wrap gap-1.5">
             {(["title", "date"] as const).map((key) => {
@@ -265,7 +246,7 @@ export function FiltersScreen() {
             </View>
           )}
         </FilterSection>
-      </ScrollView>
-    </>
+      </SheetScrollView>
+    </Sheet>
   );
 }
