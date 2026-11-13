@@ -64,8 +64,8 @@ export function SwipeActions({
       renderRightActions={(_progress, _translation, methods) => (
         <View
           accessibilityElementsHidden={!isOpen}
-          importantForAccessibility={isOpen ? "auto" : "no-hide-descendants"}
           className={isGrid ? "items-center justify-center gap-[18px] pl-1" : "flex-row pl-2"}
+          importantForAccessibility={isOpen ? "auto" : "no-hide-descendants"}
           style={{ width }}
         >
           {actions.map((action) => (
