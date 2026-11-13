@@ -42,10 +42,8 @@ export function subscribeAuthTransport(listener: () => void): () => void {
 // The account the tree below the tRPC provider renders for: null signed out, undefined not known yet.
 let keyedFor: string | null | undefined;
 
-/**
- * Whether a session settling on `next` re-keys the tree rendered for `rendered`: only when it
- * rendered another account or signed out, never when it first learns the account it shows.
- */
+// Re-keys when the tree rendered another account or signed out, not when it learns its
+// first account (undefined), so a remount happens only on a real account change.
 export function rekeysOnSettle(rendered: string | null | undefined, next: string | null): boolean {
   return rendered !== undefined && rendered !== next;
 }
