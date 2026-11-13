@@ -6,7 +6,8 @@ appId: dev.norish.app
     file: subflows/sign-in.yaml
     env:
       NORISH_SIGN_IN_URL: ${NORISH_SERVER_URL}
-- tapOn: Settings
+- tapOn:
+    id: tab-settings
 - tapOn:
     id: smoke-sign-out
 - extendedWaitUntil:
