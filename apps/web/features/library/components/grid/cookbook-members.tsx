@@ -1,6 +1,5 @@
 "use client";
 
-import { useRecipeMutationErrorToast } from "@/hooks/use-recipes-mutations";
 import { Card } from "@heroui/react";
 import { useTranslations } from "next-intl";
 
@@ -12,6 +11,7 @@ import {
   useCookbooksMutations,
   useLibraryCards,
   useLibraryQueryFilters,
+  useRecipeMutationErrorToast,
   useRecipeSelection,
 } from "@norish/shared-react/recipes";
 import {

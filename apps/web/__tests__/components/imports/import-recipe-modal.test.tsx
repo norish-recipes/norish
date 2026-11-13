@@ -12,6 +12,7 @@ vi.mock("next-intl", () => ({
 }));
 
 vi.mock("@norish/shared-react/recipes", () => ({
+  useRecipeMutationErrorToast: () => vi.fn(),
   useImportMutations: () => ({
     importRecipe,
     importRecipeWithAI: vi.fn(),

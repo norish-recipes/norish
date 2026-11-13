@@ -1,13 +1,13 @@
 import { useImportRecipe } from "@/components/imports/use-import-recipe";
 import { showActionToast } from "@/lib/ui/action-toast";
 import { renderHook } from "@testing-library/react";
-import { TRPCClientError } from "@trpc/client";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 
 import { useImportMutations } from "@norish/shared-react/recipes";
 
 const mocks = vi.hoisted(() => ({
   push: vi.fn(),
+  errorToast: vi.fn(),
   toast: vi.fn(),
   importRecipeFromPaste: vi.fn(),
   importRecipeFromImages: vi.fn(),
@@ -20,6 +20,7 @@ vi.mock("next-intl", () => ({
 }));
 vi.mock("@/lib/ui/action-toast", () => ({ showActionToast: vi.fn() }));
 vi.mock("@norish/shared-react/recipes", () => ({
+  useRecipeMutationErrorToast: () => mocks.errorToast,
   useImportMutations: vi.fn(() => ({
     importRecipeFromPaste: mocks.importRecipeFromPaste,
     importRecipeFromImages: mocks.importRecipeFromImages,
@@ -80,30 +81,9 @@ describe("useImportRecipe", () => {
     expect(mocks.push).toHaveBeenCalledWith("/recipes/recipe-held");
   });
 
-  it("shows the error toast when an import fails", () => {
+  it("hands the shared write-error toast to the import mutations", () => {
     renderHook(() => useImportRecipe());
 
-    vi.mocked(useImportMutations).mock.calls.at(-1)![0]!(new Error("boom"), "importFromUrl");
-
-    expect(mocks.toast).toHaveBeenCalledWith("common.errors.operationFailed", {
-      description: "common.errors.technicalDetails",
-      variant: "default",
-    });
-  });
-
-  it("says an import made while Offline is saved, not failed", () => {
-    renderHook(() => useImportRecipe());
-
-    // No HTTP status: the backend-unreachable shape the Outbox link captures.
-    vi.mocked(useImportMutations).mock.calls.at(-1)![0]!(
-      new TRPCClientError("Failed to fetch"),
-      "importFromUrl"
-    );
-
-    expect(mocks.toast).toHaveBeenCalledTimes(1);
-    expect(mocks.toast).toHaveBeenCalledWith("common.queuedOffline.title", {
-      description: "common.queuedOffline.description",
-      variant: "warning",
-    });
+    expect(vi.mocked(useImportMutations).mock.calls.at(-1)![0]).toBe(mocks.errorToast);
   });
 });

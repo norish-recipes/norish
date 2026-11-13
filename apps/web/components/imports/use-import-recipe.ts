@@ -1,12 +1,11 @@
 "use client";
 
 import { useRouter } from "next/navigation";
-import { useRecipeMutationErrorToast } from "@/hooks/use-recipes-mutations";
 import { showActionToast } from "@/lib/ui/action-toast";
 import { toast } from "@heroui/react";
 import { useTranslations } from "next-intl";
 
-import { useImportMutations } from "@norish/shared-react/recipes";
+import { useImportMutations, useRecipeMutationErrorToast } from "@norish/shared-react/recipes";
 
 /**
  * Import a link, pasted text or images and say so; unless `stay`, go to the Library, where its

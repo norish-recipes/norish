@@ -1,7 +1,6 @@
 "use client";
 
 import { RecipeCardSkeleton } from "@/features/library/components/skeleton";
-import { useRecipeMutationErrorToast } from "@/hooks/use-recipes-mutations";
 
 import type { LibraryGridItem, SelectedRecipe } from "@norish/shared-react/recipes";
 import type { RecipeViewMode } from "@norish/shared/contracts/zod/device-preferences";
@@ -12,6 +11,7 @@ import {
   useLibraryFilters,
   useLibraryList,
   usePendingRecipesQuery,
+  useRecipeMutationErrorToast,
   useRecipeSelection,
 } from "@norish/shared-react/recipes";
 import {
