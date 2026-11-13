@@ -7,20 +7,9 @@ import Panel from "@/components/Panel/Panel";
 import { useVirtualizer } from "@tanstack/react-virtual";
 import { useLocale, useTranslations } from "next-intl";
 
-import {
-  useCalendarMutations,
-  useCalendarQuery,
-  useCalendarSubscription,
-} from "@norish/shared-react/calendar";
+import { useMiniCalendar, usePlanOnDay } from "@norish/shared-react/calendar";
 import { useRecipeQuery } from "@norish/shared-react/recipes";
-import { Slot } from "@norish/shared/contracts";
-import {
-  addMonths,
-  dateKey,
-  eachDayOfInterval,
-  endOfMonth,
-  startOfMonth,
-} from "@norish/shared/lib/helpers";
+import { dateKey } from "@norish/shared/lib/helpers";
 
 import { useAfterPlanning } from "./after-planning";
 
@@ -47,24 +36,14 @@ function MiniCalendarContent({
   const t = useTranslations("calendar.panel");
   const locale = useLocale();
   const today = useMemo(() => new Date(), []);
-  const rangeStart = useMemo(() => startOfMonth(addMonths(today, -1)), [today]);
-  const rangeEnd = useMemo(() => endOfMonth(addMonths(today, 1)), [today]);
-  const startISO = dateKey(rangeStart);
-  const endISO = dateKey(rangeEnd);
   const { recipe } = useRecipeQuery(recipeId);
-  const { calendarData, isLoading } = useCalendarQuery({ startISO, endISO });
-  const { planRecipe } = useCalendarMutations();
-  useCalendarSubscription();
-  const allDays = useMemo(() => eachDayOfInterval(rangeStart, rangeEnd), [rangeStart, rangeEnd]);
+  const { days: allDays, todayKey, todayIndex, calendarData, isLoading } = useMiniCalendar(today);
+  const close = useCallback(() => onOpenChange(false), [onOpenChange]);
+  const handlePlan = usePlanOnDay({ recipe, close, onPlanned });
   // A day's date on one line, as the calendar itself writes it: "Wed, Oct 7"
   const dateFormatter = useMemo(
     () => new Intl.DateTimeFormat(locale, { weekday: "short", month: "short", day: "numeric" }),
     [locale]
-  );
-  const todayKey = useMemo(() => dateKey(today), [today]);
-  const todayIndex = useMemo(
-    () => allDays.findIndex((d) => dateKey(d) === todayKey),
-    [allDays, todayKey]
   );
   const parentRef = useRef<HTMLDivElement>(null);
 
@@ -91,15 +70,6 @@ function MiniCalendarContent({
 
   useLandOnDay(virtualizer, todayIndex, isLoading, landingAskedRef);
   const virtualItems = virtualizer.getVirtualItems();
-  const handlePlan = useCallback(
-    (dayKey: string, slot: Slot) => {
-      if (!recipe) return;
-      planRecipe(dayKey, slot, recipe.id);
-      onOpenChange(false);
-      onPlanned(recipe.id);
-    },
-    [recipe, onOpenChange, planRecipe, onPlanned]
-  );
   if (isLoading) {
     return <>Loading...</>;
   }
