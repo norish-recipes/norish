@@ -92,7 +92,7 @@ describe("useImportRecipe", () => {
   it("shows the error toast when an import fails", () => {
     const { show } = adapter.toast;
     renderHook(() => useImportRecipe(), { wrapper });
-    const onError = vi.mocked(useImportMutations).mock.calls.at(-1)![0];
+    const onError = vi.mocked(useImportMutations).mock.calls.at(-1)![0]!;
 
     onError(new Error("boom"), "importFromUrl");
 
@@ -106,7 +106,7 @@ describe("useImportRecipe", () => {
   it("says an import made while Offline is saved, not failed", () => {
     const { show } = adapter.toast;
     renderHook(() => useImportRecipe(), { wrapper });
-    const onError = vi.mocked(useImportMutations).mock.calls.at(-1)![0];
+    const onError = vi.mocked(useImportMutations).mock.calls.at(-1)![0]!;
 
     // No HTTP status: the backend-unreachable shape the Outbox link captures.
     onError(new TRPCClientError("Failed to fetch"), "importFromUrl");
