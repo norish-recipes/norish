@@ -63,9 +63,9 @@ export function publishSignedIn(userId: string): void {
   emitSnapshotChange();
 }
 
-/** The tree renders signed out, so the next sign-in re-keys it. */
+/** The tree renders signed out, so the next sign-in re-keys it; a signed-in tree ends only through leave. */
 export function noteSignedOut(): void {
-  keyedFor = null;
+  if (!snapshot.hasActiveSession) keyedFor = null;
 }
 
 /** Mobile's leave: signed out and one re-key, so everything below rebuilds on the cleared cache. */

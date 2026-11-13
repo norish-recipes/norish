@@ -51,6 +51,27 @@ describe("publishSignedIn", () => {
   });
 });
 
+describe("noteSignedOut", () => {
+  it("keeps the signed-in tree when a failed read settles signed out, then on its account", () => {
+    publishSignedIn("reader-1");
+    const start = getAuthTransportSnapshot().version;
+
+    // An Offline launch whose persisted read failed: no user, while the tree is signed in.
+    noteSignedOut();
+    publishSignedIn("reader-1");
+    expect(getAuthTransportSnapshot()).toEqual({ hasActiveSession: true, version: start });
+  });
+
+  it("still re-keys when another account settles after it", () => {
+    publishSignedIn("reader-1");
+    const start = getAuthTransportSnapshot().version;
+
+    noteSignedOut();
+    publishSignedIn("reader-2");
+    expect(getAuthTransportSnapshot().version).toBe(start + 1);
+  });
+});
+
 describe("takeSessionLeft", () => {
   it("hands the left Server Address to one arrival, then nothing", () => {
     takeSessionLeft();
