@@ -1,5 +1,6 @@
 import React from "react";
 import { AccountAvatar } from "@/components/account-avatar";
+import { SHEET_DETENTS } from "@/components/sheet-detents";
 import { Stack } from "expo-router";
 
 import { AddAtOnceHost } from "./add-at-once-host";
@@ -49,8 +50,11 @@ export function RecipesStack() {
               presentation: "formSheet",
               headerShown: false,
               sheetGrabberVisible: true,
-              // The board's sheet is 774 pt; glass stops at 0.98 of the ~790 pt maximum.
-              sheetAllowedDetents: [0.98],
+              // Opens at the first detent; scrolling the list to its edge or dragging the grabber takes it
+              // to the full one, and dragging down from the first dismisses it.
+              sheetAllowedDetents: SHEET_DETENTS,
+              sheetInitialDetentIndex: 0,
+              sheetExpandsWhenScrolledToEdge: true,
               contentStyle: { backgroundColor: "transparent" },
             }}
           />
@@ -61,17 +65,6 @@ export function RecipesStack() {
               headerShown: false,
               sheetGrabberVisible: true,
               // Glass sheets stop at 0.98 (765 pt, the board has 804); 0.99 is the opaque full-width sheet.
-              sheetAllowedDetents: [0.98],
-              contentStyle: { backgroundColor: "transparent" },
-            }}
-          />
-          <Stack.Screen
-            name="add-to-groceries"
-            options={{
-              presentation: "formSheet",
-              headerShown: false,
-              sheetGrabberVisible: true,
-              // The board's sheet is 774 pt; glass stops at 0.98 of the ~790 pt maximum.
               sheetAllowedDetents: [0.98],
               contentStyle: { backgroundColor: "transparent" },
             }}

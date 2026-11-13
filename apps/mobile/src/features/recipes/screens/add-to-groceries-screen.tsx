@@ -24,8 +24,9 @@ import { SheetHeader } from "../components/sheet-header";
 /** Lines are only ever edited on web; the sheet takes each as the recipe has it. */
 const AS_WRITTEN = {};
 
-/** Room the pinned footer takes below the list: its padding and the 50 pt button. */
-const FOOTER_SPACE = "mb-[82px]";
+/** The pinned header and servings take 132 pt, the pinned footer 82 pt. */
+const HEADER_SPACE = "mt-[132px]";
+const PINNED_SPACE = "h-[214px]";
 
 /**
  * The sheet's frame: the header and servings pinned on top, the lines scrolling between them and
@@ -47,8 +48,14 @@ function Frame({
 
   return (
     <>
-      {/* react-native-screens takes a sheet's first child as a header and sizes the list below it. */}
-      <View collapsable={false}>
+      {/* react-native-screens ends a sheet's scroll view above its first child's height and starts it
+          at that height unless it has a margin: this child is header plus footer tall, the margin
+          below puts the scroll view back under the header. */}
+      <View
+        className={`absolute inset-x-0 top-0 ${PINNED_SPACE}`}
+        collapsable={false}
+        pointerEvents="box-none"
+      >
         <View className="px-4 pt-[27px] pb-3.5">
           <SheetHeader
             closeTestID="add-to-groceries-close"
@@ -65,7 +72,7 @@ function Frame({
         </View>
       </View>
       <ScrollView
-        className={`flex-1 ${FOOTER_SPACE}`}
+        className={HEADER_SPACE}
         contentContainerClassName="gap-3 px-4 pb-3"
         contentInsetAdjustmentBehavior="never"
         showsVerticalScrollIndicator={false}
