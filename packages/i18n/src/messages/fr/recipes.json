@@ -322,7 +322,6 @@
   },
   "toasts": {
     "imported": "Recette importée",
-    "failed": "Échec de l'opération",
     "failedDescription": "Une erreur s'est produite pendant le traitement de votre recette. Consultez la console du navigateur pour les détails techniques.",
     "incomplete": "Cette recette est peut-être incomplète. Comparez-la avec la source.",
     "notARecipe": "Cette page ne semble pas être une recette.",

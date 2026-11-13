@@ -17,7 +17,7 @@ export function isPasteTooLong(text: string): boolean {
  */
 export function useImportRecipe({ stay = false }: { stay?: boolean } = {}) {
   const { toast, navigation } = usePlatform();
-  const showErrorToast = useRecipeMutationErrorToast();
+  const showErrorToast = useRecipeMutationErrorToast("common.import.paste.failed");
 
   // Importing a URL the household already holds is an answer, not a failure:
   // say so, and offer the recipe the import was reaching for.

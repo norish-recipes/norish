@@ -99,7 +99,7 @@ describe("useImportRecipe", () => {
 
     expect(adapter.toast.show).toHaveBeenCalledExactlyOnceWith({
       severity: "default",
-      title: "common.errors.operationFailed",
+      title: "common.import.paste.failed",
       description: "common.errors.technicalDetails",
     });
   });

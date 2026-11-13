@@ -322,7 +322,6 @@
   },
   "toasts": {
     "imported": "Receta importada",
-    "failed": "Operación de receta fallida",
     "failedDescription": "Algo ha salido mal al procesar tu receta. Comprueba la consola del navegador para obtener detalles técnicos.",
     "incomplete": "Puede que esta receta esté incompleta. Compárala con la fuente.",
     "notARecipe": "Esta página no parece ser una receta.",

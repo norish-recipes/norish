@@ -322,7 +322,6 @@
   },
   "toasts": {
     "imported": "Oppskrift importert",
-    "failed": "Oppskrifthandling mislyktes",
     "failedDescription": "Noe gikk galt under behandling av oppskriften din. Sjekk nettleserkonsollen for tekniske detaljer.",
     "incomplete": "Denne oppskriften kan være ufullstendig. Sammenlign den med kilden.",
     "notARecipe": "Denne siden ser ikke ut som en oppskrift.",

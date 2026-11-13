@@ -322,7 +322,6 @@
   },
   "toasts": {
     "imported": "Recipe imported",
-    "failed": "Recipe operation failed",
     "failedDescription": "Something went wrong while processing your recipe. Check the browser console for technical details.",
     "incomplete": "This recipe may be incomplete. Check it against the source.",
     "notARecipe": "This page doesn't look like a recipe.",

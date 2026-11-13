@@ -409,11 +409,11 @@ describe("the recipe list events and recipe outcomes", () => {
     expect(
       vi
         .mocked(platform.toast.show)
-        .mock.calls.map(([toast]) => [toast.severity, toast.description])
+        .mock.calls.map(([toast]) => [toast.severity, toast.title, toast.description])
     ).toEqual([
-      ["danger", "recipes.toasts.notARecipe"],
-      ["danger", "recipes.toasts.privateAddress"],
-      ["danger", "recipes.toasts.failedDescription"],
+      ["danger", "common.import.paste.failed", "recipes.toasts.notARecipe"],
+      ["danger", "common.import.paste.failed", "recipes.toasts.privateAddress"],
+      ["danger", "common.import.paste.failed", "recipes.toasts.failedDescription"],
     ]);
   });
 });

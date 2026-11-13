@@ -10,9 +10,9 @@ const log = createClientLogger("recipes-mutations");
 
 /**
  * The toast a failed recipe write shows. A write the Outbox captured is saved, not failed:
- * it says so as a warning; anything else is a generic failure, never the backend's message.
+ * it says so as a warning; anything else is a generic failure, never the backend's message, under `titleId`.
  */
-export function useRecipeMutationErrorToast(): RecipesMutationErrorHandler {
+export function useRecipeMutationErrorToast(titleId = "common.errors.operationFailed"): RecipesMutationErrorHandler {
   const { toast } = usePlatform();
 
   return (error, operation) => {
@@ -29,7 +29,7 @@ export function useRecipeMutationErrorToast(): RecipesMutationErrorHandler {
     log.error({ error }, `recipes-mutations:${operation}`);
     toast.show({
       severity: "default",
-      title: toast.translate("common.errors.operationFailed"),
+      title: toast.translate(titleId),
       description: toast.translate("common.errors.technicalDetails"),
     });
   };

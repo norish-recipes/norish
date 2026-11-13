@@ -322,7 +322,6 @@
   },
   "toasts": {
     "imported": "Przepis zaimportowany",
-    "failed": "Operacja na przepisie nie powiodła się",
     "failedDescription": "Coś poszło nie tak. Sprawdź konsolę przeglądarki.",
     "incomplete": "Ten przepis może być niekompletny. Porównaj go ze źródłem.",
     "notARecipe": "Ta strona nie wygląda na przepis.",

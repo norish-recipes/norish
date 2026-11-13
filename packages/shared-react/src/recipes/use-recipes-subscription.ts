@@ -138,7 +138,7 @@ export function useRecipeOutcomesSubscription() {
 
       toast.show({
         severity: "danger",
-        title: toast.translate("recipes.toasts.failed"),
+        title: toast.translate("common.import.paste.failed"),
         // Server reasons stay in the job monitor; the ones a person can act on are translated.
         description: reasonKey
           ? toast.translate(reasonKey)

@@ -322,7 +322,6 @@
   },
   "toasts": {
     "imported": "Receptet har importerats",
-    "failed": "Receptåtgärden misslyckades",
     "failedDescription": "Något gick fel när receptet bearbetades. Teknisk information finns i webbläsarens konsol.",
     "incomplete": "Receptet kan vara ofullständigt. Jämför det med källan.",
     "notARecipe": "Den här sidan ser inte ut som ett recept.",
