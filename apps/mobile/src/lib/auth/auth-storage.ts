@@ -16,6 +16,20 @@ type ClientStorage = Pick<
   "getItem" | "getItemAsync" | "setItem" | "setItemAsync"
 >;
 
+// The stored cookie as last read, so headers skip the Keychain; undefined until read or after a write.
+let storedCookie: string | null | undefined;
+
+function forgetCookie(key: string): void {
+  if (key.startsWith(AUTH_COOKIE_KEY)) storedCookie = undefined;
+}
+
+/** The stored cookie JSON, read from the Keychain once per write to it. */
+export function readStoredCookie(): string | null {
+  if (storedCookie === undefined) storedCookie = authStorage().getItem(AUTH_COOKIE_KEY);
+
+  return storedCookie;
+}
+
 /** SecureStore for one client; once retired, its reads answer empty and its writes are dropped. */
 function retirableStorage() {
   let retired = false;
@@ -23,10 +37,14 @@ function retirableStorage() {
     getItem: (...args) => (retired ? null : SecureStore.getItem(...args)),
     getItemAsync: async (...args) => (retired ? null : SecureStore.getItemAsync(...args)),
     setItem: (...args) => {
-      if (!retired) SecureStore.setItem(...args);
+      if (retired) return;
+      SecureStore.setItem(...args);
+      forgetCookie(args[0]);
     },
     setItemAsync: async (...args) => {
-      if (!retired) await SecureStore.setItemAsync(...args);
+      if (retired) return;
+      await SecureStore.setItemAsync(...args);
+      forgetCookie(args[0]);
     },
   };
 
@@ -60,6 +78,7 @@ export function claimClientStorage(): ClientStorage {
 export function retireClientStorage(): void {
   current.retire();
   current = retirableStorage();
+  storedCookie = undefined;
 }
 
 function readRequiredString(value: unknown): string | null {
@@ -164,6 +183,7 @@ export async function clearAuthStorage(): Promise<void> {
     [AUTH_COOKIE_KEY, AUTH_SESSION_DATA_KEY].map(async (key) => {
       await authStorage().setItemAsync(key, "");
       await SecureStore.deleteItemAsync(key);
+      forgetCookie(key);
     })
   );
   const failed = wipes.find((wipe): wipe is PromiseRejectedResult => wipe.status === "rejected");
