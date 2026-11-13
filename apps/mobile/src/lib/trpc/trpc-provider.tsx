@@ -1,8 +1,8 @@
 import type { QueryClient } from "@tanstack/react-query";
 import type { TRPCLink } from "@trpc/client";
 import React, { useMemo, useSyncExternalStore } from "react";
-import { getAuthTransportSnapshot, subscribeAuthTransport } from "@/lib/auth/auth-session-sync";
 import { authHeaders } from "@/lib/auth/auth-headers";
+import { getAuthTransportSnapshot, subscribeAuthTransport } from "@/lib/auth/auth-session-sync";
 import { getBackendWsUrl } from "@/lib/network/backend-ws-url";
 import { getServerAddress } from "@/lib/network/server-address";
 

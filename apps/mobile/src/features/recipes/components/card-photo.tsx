@@ -17,11 +17,5 @@ export function CardPhoto({ image, className }: { image: string | null; classNam
     );
   }
 
-  return (
-    <Image
-      className={`bg-default ${className}`}
-      resizeMode="cover"
-      source={toImage(image)}
-    />
-  );
+  return <Image className={`bg-default ${className}`} resizeMode="cover" source={toImage(image)} />;
 }
