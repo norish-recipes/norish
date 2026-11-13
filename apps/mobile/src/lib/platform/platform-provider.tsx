@@ -1,12 +1,12 @@
 import type { ReactNode } from "react";
 import { use } from "react";
-import { Platform, View } from "react-native";
+import { AccessibilityInfo, Platform } from "react-native";
 import { publishSignedOut } from "@/lib/auth/auth-session-sync";
 import { ServerAddressContext } from "@/lib/network/server-address";
 import { offlineEngine } from "@/lib/offline/engine";
 import { storage } from "@/lib/storage/mmkv";
 import { useRouter } from "expo-router";
-import { Toast, useThemeColor, useToast } from "heroui-native";
+import { useToast } from "heroui-native";
 import { useIntl } from "react-intl";
 
 import type {
@@ -18,6 +18,8 @@ import { createIntlMessageTranslator } from "@norish/i18n";
 import { PlatformProvider } from "@norish/shared-react/platform";
 import { createClientLogger } from "@norish/shared/lib/logger";
 
+import type { ToastSeverity } from "./glass-toast";
+import { GlassToast } from "./glass-toast";
 import { mobileToastDescription } from "./toast-description";
 
 const log = createClientLogger("mobile-platform");
@@ -46,24 +48,38 @@ export function MobilePlatformProvider({
   const intl = useIntl();
   const { toast } = useToast();
   const router = useRouter();
-  const [dangerColor] = useThemeColor(["danger"] as const);
   const serverAddress = use(ServerAddressContext);
+
+  // An action toast stays long enough to reach its button; web's 4 s pause on hover has no touch twin.
+  const showToast = (content: {
+    severity: ToastSeverity;
+    title: string;
+    body?: string;
+    actionLabel?: string;
+    onAction?: () => void;
+  }) => {
+    toast.show({
+      duration: content.actionLabel ? 8000 : 4000,
+      component: (props) => <GlassToast {...props} {...content} />,
+    });
+    AccessibilityInfo.announceForAccessibility(
+      content.body ? `${content.title}, ${content.body}` : content.title
+    );
+  };
 
   const adapter: PlatformAdapter = {
     toast: {
-      show: ({ severity, title, description, actionLabel, onActionPress }) =>
-        toast.show({
-          variant: severity,
-          label: title,
-          description: mobileToastDescription(
-            description,
-            intl.formatMessage({ id: "common.errors.technicalDetails" })
-          ),
+      show: ({ severity, title, description, subject, actionLabel, onActionPress }) =>
+        showToast({
+          severity,
+          title,
+          body:
+            mobileToastDescription(
+              description,
+              intl.formatMessage({ id: "common.errors.technicalDetails" })
+            ) ?? subject,
           actionLabel,
-          onActionPress: ({ hide }) => {
-            hide();
-            onActionPress?.();
-          },
+          onAction: onActionPress,
         }),
       translate: createIntlMessageTranslator(intl.formatMessage),
     },
@@ -73,19 +89,10 @@ export function MobilePlatformProvider({
     },
     showError: (error, context, title) => {
       log.error({ error }, context);
-      toast.show({
-        component: (props) => (
-          <Toast variant="danger" {...props} className="gap-1">
-            <View>
-              <Toast.Title className="text-foreground">
-                {title ?? intl.formatMessage({ id: "common.errors.operationFailed" })}
-              </Toast.Title>
-              <Toast.Description style={{ color: dangerColor }}>
-                {error instanceof Error ? error.message : String(error)}
-              </Toast.Description>
-            </View>
-          </Toast>
-        ),
+      showToast({
+        severity: "danger",
+        title: title ?? intl.formatMessage({ id: "common.errors.operationFailed" }),
+        body: error instanceof Error ? error.message : String(error),
       });
     },
     storage: mmkvStorage,
