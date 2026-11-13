@@ -50,9 +50,42 @@ export function FiltersScreen() {
 
   return (
     <>
-      {/* react-native-screens sizes only a ScrollView that is the sheet's first child; the footer overlays it. */}
+      {/* react-native-screens sizes a sheet's ScrollView as the content minus its first child (the footer, 84 pt),
+          and moves it to that child's height unless it has a margin, so the scroll ends above the buttons. */}
+      <View
+        collapsable={false}
+        className="absolute inset-x-0 bottom-0 flex-row gap-2.5 px-5 pt-3.5 pb-5"
+      >
+        <Button
+          className="bg-warning/20 h-[50px] flex-1"
+          testID="filters-reset"
+          variant="secondary"
+          onPress={() => {
+            reset();
+            close();
+          }}
+        >
+          <Ionicons color={warningInk} name="refresh" size={18} />
+          <Button.Label className="text-warning-ink">
+            {intl.formatMessage({ id: "common.filters.clearFilters" })}
+          </Button.Label>
+        </Button>
+        <Button
+          className="h-[50px] flex-1"
+          testID="filters-apply"
+          variant="primary"
+          onPress={() => {
+            apply();
+            close();
+          }}
+        >
+          <Ionicons color="white" name="checkmark" size={20} />
+          <Button.Label>{intl.formatMessage({ id: "common.actions.apply" })}</Button.Label>
+        </Button>
+      </View>
       <ScrollView
-        contentContainerClassName="gap-[18px] px-5 pt-5 pb-[100px]"
+        contentContainerClassName="gap-[18px] px-5 pt-5 pb-4"
+        style={{ marginTop: 1 }}
         testID="filters-sheet"
         contentInsetAdjustmentBehavior="never"
         showsVerticalScrollIndicator={false}
@@ -233,35 +266,6 @@ export function FiltersScreen() {
           )}
         </FilterSection>
       </ScrollView>
-
-      <View className="bg-background absolute inset-x-0 bottom-0 flex-row gap-2.5 px-5 pt-3.5 pb-5">
-        <Button
-          className="bg-warning/20 h-[50px] flex-1"
-          testID="filters-reset"
-          variant="secondary"
-          onPress={() => {
-            reset();
-            close();
-          }}
-        >
-          <Ionicons color={warningInk} name="refresh" size={18} />
-          <Button.Label className="text-warning-ink">
-            {intl.formatMessage({ id: "common.filters.clearFilters" })}
-          </Button.Label>
-        </Button>
-        <Button
-          className="h-[50px] flex-1"
-          testID="filters-apply"
-          variant="primary"
-          onPress={() => {
-            apply();
-            close();
-          }}
-        >
-          <Ionicons color="white" name="checkmark" size={20} />
-          <Button.Label>{intl.formatMessage({ id: "common.actions.apply" })}</Button.Label>
-        </Button>
-      </View>
     </>
   );
 }
