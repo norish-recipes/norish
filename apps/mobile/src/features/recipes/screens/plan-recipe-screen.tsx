@@ -17,7 +17,8 @@ import {
 import { parseDateKey } from "@norish/shared/lib/helpers";
 
 import { CardPhoto } from "../components/card-photo";
-import { GlassCloseButton } from "../components/glass-close-button";
+import { SheetHeader } from "../components/sheet-header";
+import { usePlanExit } from "../hooks/use-plan-exit";
 import { planDay } from "../utils/plan-day";
 
 /** The days offered, today first. */
@@ -45,11 +46,12 @@ export function PlanRecipeScreen() {
   const search = useDeferredValue(input.trim());
   const { recipes, isLoading, error, loadMore } = useRecipesQuery({ search: search || undefined });
   const { getRandomRecipe } = useRandomRecipe();
+  const planExit = usePlanExit();
   const { isRandomLoading, planRecipe, planRandom, planNote } = useSlotPlanning({
     date,
     slot,
     getRandomRecipe,
-    close: () => router.back(),
+    close: planExit,
   });
 
   useRecipeListSubscription();
@@ -59,12 +61,11 @@ export function PlanRecipeScreen() {
 
   const header = (
     <View className="gap-3">
-      <View className="flex-row items-center justify-between pl-2">
-        <Text className="text-foreground text-[22px] font-semibold">
-          {intl.formatMessage({ id: "calendar.panel.planRecipe" })}
-        </Text>
-        <GlassCloseButton testID="plan-recipe-close" onPress={() => router.back()} />
-      </View>
+      <SheetHeader
+        closeTestID="plan-recipe-close"
+        title={intl.formatMessage({ id: "calendar.panel.planRecipe" })}
+        onClose={() => router.back()}
+      />
 
       {/* heroui-native has no day strip, so these chips are hand-built. */}
       <ScrollView

@@ -13,17 +13,11 @@ import { slotTranslationKeys } from "@norish/shared-react/calendar/todays-meals"
 
 import { useCardActionMenu } from "../hooks/use-card-action-menu";
 import { useTodayActions } from "../hooks/use-today-actions";
+import { SLOT_SYMBOLS } from "../utils/slot-icons";
 import { TODAY_ACTION_DEFINITIONS, todayMenuActions } from "../utils/today-actions";
 import { CardMenu } from "./card-menu";
 import { CardPhoto } from "./card-photo";
 import { GlassChip } from "./glass-chip";
-
-const SLOT_ICONS: Record<Slot, React.ComponentProps<typeof GlassChip>["systemName"]> = {
-  Breakfast: "sunrise",
-  Lunch: "sun.max",
-  Dinner: "moon",
-  Snack: "sparkles",
-};
 
 /** The one size of a Today card: the board's 172 by 244 pt, its photo 164 pt tall, 12 pt between. */
 export const TODAY_CARD = "h-[244px] w-[172px] flex-none overflow-hidden rounded-[22px]";
@@ -45,7 +39,7 @@ function SlotChip({ slot }: { slot: Slot }) {
     <GlassChip
       className="absolute top-2.5 left-2.5"
       label={intl.formatMessage({ id: `common.slots.${slotTranslationKeys[slot]}` })}
-      systemName={SLOT_ICONS[slot]}
+      systemName={SLOT_SYMBOLS[slot]}
     />
   );
 }
