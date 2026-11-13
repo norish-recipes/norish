@@ -1,6 +1,6 @@
 import type { ProviderInfo } from "@norish/shared/contracts";
 
-const DEFAULT_PROTECTED_ROUTE = "/smoke";
+const DEFAULT_PROTECTED_ROUTE = "/";
 
 function sanitizeRedirectTarget(target: string | null | undefined): string {
   if (!target) return DEFAULT_PROTECTED_ROUTE;

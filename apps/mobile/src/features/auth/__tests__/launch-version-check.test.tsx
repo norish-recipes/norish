@@ -98,7 +98,7 @@ describe("LaunchVersionCheck", () => {
 
     // The session settles and re-keys the tree; the new navigator starts on the signed-in app.
     first.unmount();
-    pathname = "/smoke";
+    pathname = "/";
     render(tree());
 
     expect(push).toHaveBeenCalledTimes(2);
