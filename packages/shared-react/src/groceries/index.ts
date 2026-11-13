@@ -10,6 +10,7 @@ export {
   useOnTheList,
   useRecurringGroceryFor,
 } from "./use-groceries-query";
+export { useGroceriesPantryAndCatalogueSubscriptions } from "./use-groceries-pantry-and-catalogue-subscriptions";
 export { useGroceriesSubscription } from "./use-groceries-subscription";
 export { useGroceriesUiStore } from "./use-groceries-ui-store";
 export { useGroceryFormState } from "./use-grocery-form-state";
