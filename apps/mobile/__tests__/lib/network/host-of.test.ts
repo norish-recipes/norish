@@ -1,4 +1,4 @@
-import { hostOf } from "@/lib/network/host-of";
+import { hostOf, isWebLink } from "@/lib/network/host-of";
 import { describe, expect, it } from "vitest";
 
 describe("hostOf", () => {
@@ -16,5 +16,14 @@ describe("hostOf", () => {
 
   it("is the address itself when it doesn't parse", () => {
     expect(hostOf("not a url")).toBe("not a url");
+  });
+});
+
+describe("isWebLink", () => {
+  it("is an absolute http(s) link, not a server path or a label", () => {
+    expect(isWebLink("https://example.com/a")).toBe(true);
+    expect(isWebLink("http://example.com")).toBe(true);
+    expect(isWebLink("/recipes/1/image.jpg")).toBe(false);
+    expect(isWebLink("[pasted]")).toBe(false);
   });
 });
