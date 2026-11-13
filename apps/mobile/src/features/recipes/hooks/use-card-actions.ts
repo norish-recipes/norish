@@ -32,7 +32,8 @@ export function useCardActions() {
     toggleFavourite: (recipe: Recipe) => toggleFavorite(recipe.id),
     addToGroceries: (recipe: Recipe) =>
       router.push({ pathname: "/add-to-groceries", params: { recipeId: recipe.id } }),
-    plan: (recipe: Recipe) => router.push({ pathname: "/plan", params: { recipeId: recipe.id } }),
+    plan: (recipe: Recipe) =>
+      router.push({ pathname: "/plan", params: { recipeId: recipe.id, name: recipe.name } }),
     addToCookbook: (recipe: Recipe) =>
       router.push({ pathname: "/add-to-cookbook", params: { recipeId: recipe.id } }),
     removeFromCookbook: (cookbook: Cookbook, recipe: Recipe) =>

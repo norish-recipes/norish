@@ -6,7 +6,6 @@ import { LibraryRoot } from "./library-root";
 
 // The sheets the card actions open; their tickets fill them.
 const SHEETS = [
-  "plan",
   "add-to-groceries",
   "add-to-cookbook",
   "cookbook-add-recipes",
@@ -44,6 +43,17 @@ export function RecipesStack() {
             sheetGrabberVisible: true,
             // The board's sheet is 619 pt (a 0.785 detent) of the ~800 pt maximum.
             sheetAllowedDetents: [0.785],
+            contentStyle: { backgroundColor: "transparent" },
+          }}
+        />
+        <Stack.Screen
+          name="plan"
+          options={{
+            presentation: "formSheet",
+            headerShown: false,
+            sheetGrabberVisible: true,
+            // The board's sheet is 804 pt; the largest detent is an opaque full-width sheet, so stay under it.
+            sheetAllowedDetents: [0.95],
             contentStyle: { backgroundColor: "transparent" },
           }}
         />
