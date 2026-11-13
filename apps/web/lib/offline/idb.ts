@@ -117,6 +117,9 @@ export function createOfflineIdb(factory?: IDBFactory): OfflineIdb {
       tx.onabort = () => reject(tx.error ?? request.error);
       tx.oncomplete = () => resolve(request.result);
       request.onerror = () => reject(request.error);
+      // Commit now rather than when the page's tasks run out, so a write
+      // a `pagehide` flush starts still lands once the page unloads.
+      if (mode === "readwrite") tx.commit();
     });
   }
 
