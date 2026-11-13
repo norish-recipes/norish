@@ -1,3 +1,10 @@
+export {
+  HIDDEN_ITEMS,
+  hiddenItemVisibility,
+  partitionHiddenItems,
+  type HiddenItemVisibility,
+} from "./hidden-items";
+export { useHiddenItemVisibility } from "./use-hidden-item-visibility";
 export { useActiveAllergies } from "./use-active-allergies";
 export {
   DevicePreferencesForVisit,
