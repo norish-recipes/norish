@@ -3,6 +3,7 @@
 import { useState } from "react";
 import { CookbookIconOutline } from "@/components/cookbooks/cookbook-icon";
 
+import { coverMosaicColumns } from "@norish/shared-react/recipes";
 import { addBasePath } from "@norish/shared/lib/base-path";
 
 /**
@@ -44,28 +45,26 @@ export default function CookbookCover({
     );
   }
 
-  // One tile fills; two split; three or four make a quarter grid with the
-  // first image spanning the empty quarter, so a three-member cover still
-  // reads as a deliberate arrangement.
-  const layout =
-    usable.length === 1
-      ? "grid-cols-1 grid-rows-1"
-      : usable.length === 2
-        ? "grid-cols-2 grid-rows-1"
-        : "grid-cols-2 grid-rows-2";
-
   return (
-    <div className={`grid h-full w-full gap-0.5 ${layout} ${className}`}>
-      {usable.map((tile, index) => (
-        <img
-          key={tile}
-          alt=""
-          className={`h-full w-full object-cover ${usable.length === 3 && index === 0 ? "row-span-2" : ""}`}
-          loading="lazy"
-          src={addBasePath(tile)}
-          title={title}
-          onError={() => setFailed((previous) => [...previous, tile])}
-        />
+    <div className={`flex h-full w-full gap-0.5 ${className}`}>
+      {coverMosaicColumns(usable.length).map((rows) => (
+        <div key={rows.join()} className="flex min-w-0 flex-1 flex-col gap-0.5">
+          {rows.map((index) => {
+            const tile = usable[index] ?? "";
+
+            return (
+              <img
+                key={tile}
+                alt=""
+                className="min-h-0 w-full flex-1 object-cover"
+                loading="lazy"
+                src={addBasePath(tile)}
+                title={title}
+                onError={() => setFailed((previous) => [...previous, tile])}
+              />
+            );
+          })}
+        </div>
       ))}
     </div>
   );

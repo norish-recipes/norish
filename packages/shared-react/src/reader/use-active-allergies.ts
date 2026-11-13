@@ -2,6 +2,7 @@
 
 import { useQuery } from "@tanstack/react-query";
 
+import { allergenSet } from "../recipes/recipe-card-facts";
 import { useTRPC } from "../trpc";
 import { useAllergiesQuery } from "./use-allergies";
 
@@ -21,7 +22,7 @@ export function useActiveAllergies(): ActiveAllergies {
   const own = useAllergiesQuery();
 
   const allergies = household && household.length > 0 ? household : own;
-  const allergySet = new Set(allergies.map((a) => a.toLowerCase()));
+  const allergySet = allergenSet(allergies);
 
   return { allergies, allergySet };
 }

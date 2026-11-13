@@ -23,6 +23,7 @@ import { useTranslations } from "next-intl";
 
 import type { CookbookSummaryDTO } from "@norish/shared/contracts";
 import { useRecipePermissions } from "@norish/shared-react/reader";
+import { allergenSet } from "@norish/shared-react/recipes";
 import { formatMinutesHM, isAllergenTag } from "@norish/shared/lib/helpers";
 
 import { CardFacts } from "./card-facts";
@@ -157,10 +158,7 @@ function CookbookCardComponent({
   // Cook the whole cookbook and the smallest member is what it feeds without
   // scaling something up, so that is the honest number to put on the card.
   const servings = minServings;
-  const allergySet = useMemo(
-    () => new Set(allergies.map((allergy) => allergy.toLowerCase())),
-    [allergies]
-  );
+  const allergySet = useMemo(() => allergenSet(allergies), [allergies]);
   // Only the reader's own allergens, not every tag the members carry: a
   // cookbook is a set of other people's recipes and the warning is the part
   // worth the space.

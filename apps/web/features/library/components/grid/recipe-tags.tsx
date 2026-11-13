@@ -4,6 +4,7 @@ import { useEffect, useMemo, useRef, useState } from "react";
 import { Chip } from "@heroui/react";
 import { motion, useMotionValue } from "motion/react";
 
+import { allergenSet } from "@norish/shared-react/recipes";
 import { isAllergenTag, sortTagsWithAllergyPriority } from "@norish/shared/lib/helpers";
 
 interface RecipeTagsProps {
@@ -35,7 +36,7 @@ export default function RecipeTags({ tags, allergies = [] }: RecipeTagsProps) {
   const x = useMotionValue(0);
 
   // Pre-compute allergySet for O(1) lookups
-  const allergySet = useMemo(() => new Set(allergies.map((a) => a.toLowerCase())), [allergies]);
+  const allergySet = useMemo(() => allergenSet(allergies), [allergies]);
 
   // Sort tags: allergens first, then rest alphabetically
   const sortedTags = useMemo(() => {

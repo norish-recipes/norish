@@ -186,7 +186,10 @@ function RecipeCardComponent({
     }
   }, [router, recipe.id, open, recipeHref]);
 
-  const { tagNames, allergySet, timeLabel, servings } = recipeCardFacts(recipe, allergies);
+  const { description, tagNames, allergySet, timeLabel, servings } = recipeCardFacts(
+    recipe,
+    allergies
+  );
   const visibleTagNames = tagNames.slice(0, 2);
   const hiddenTagCount = tagNames.length - visibleTagNames.length;
   // More allergens than visible slots: the overflow chip inherits the warning
@@ -195,7 +198,6 @@ function RecipeCardComponent({
     .slice(visibleTagNames.length)
     .filter((tag) => isAllergenTag(tag, allergySet)).length;
   const allTags = tagNames.map((name) => ({ name }));
-  const description = recipe.description?.trim() || "";
 
   // The resolved primary image: the list projection serves the first gallery
   // image.
