@@ -43,12 +43,6 @@ export function useImportRecipe({ stay = false }: { stay?: boolean } = {}) {
       if (!stay) navigation.toHome();
     };
 
-  const startPasteWithAI = start(
-    "common.import.paste.importingWithAI",
-    "common.import.paste.inProgress",
-    mutations.importRecipeFromPasteWithAI
-  );
-
   return {
     importRecipe: start(
       "common.import.paste.importing",
@@ -78,7 +72,11 @@ export function useImportRecipe({ stay = false }: { stay?: boolean } = {}) {
 
         return false;
       }
-      startPasteWithAI(text);
+      start(
+        "common.import.paste.importingWithAI",
+        "common.import.paste.inProgress",
+        mutations.importRecipeFromPasteWithAI
+      )(text);
 
       return true;
     },
