@@ -120,7 +120,9 @@ export function LibraryList({
         </>
       }
       columnWrapperStyle={isGrid ? { gap: 12, paddingHorizontal: 20, marginBottom: 12 } : undefined}
-      contentContainerStyle={{ paddingBottom: insets.bottom + TAB_BAR_HEIGHT + ACCESSORY_CLEARANCE }}
+      contentContainerStyle={{
+        paddingBottom: insets.bottom + TAB_BAR_HEIGHT + ACCESSORY_CLEARANCE,
+      }}
       contentInsetAdjustmentBehavior="never"
       data={isLoading ? [] : rows}
       keyExtractor={(row) => `${row.kind}-${row.id}`}
