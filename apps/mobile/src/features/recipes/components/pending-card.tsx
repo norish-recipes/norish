@@ -1,0 +1,70 @@
+import React from "react";
+import { Text, View } from "react-native";
+import { useAccentTextColor } from "@/hooks/use-accent-text-color";
+import { hostOf } from "@/lib/network/host-of";
+import Ionicons from "@expo/vector-icons/Ionicons";
+import { Skeleton } from "heroui-native";
+import { useIntl } from "react-intl";
+
+import type { RecipeViewMode } from "@norish/shared/contracts/zod/device-preferences";
+
+/** A running import as a card: the link's host, and placeholders where its facts will go. */
+export function PendingCard({
+  id,
+  url,
+  variant,
+}: {
+  id: string;
+  url: string | undefined;
+  variant: RecipeViewMode;
+}) {
+  const intl = useIntl();
+  const accentText = useAccentTextColor();
+  const host = url ? hostOf(url).replace(/^www\./, "") : "";
+  const title = intl.formatMessage({ id: "recipes.dashboard.importingCard" });
+
+  const copy = (
+    <>
+      <Text className="text-foreground text-base font-semibold" numberOfLines={1}>
+        {title}
+      </Text>
+      <Text className="text-muted text-sm" numberOfLines={1}>
+        {host}
+      </Text>
+    </>
+  );
+  const icon = <Ionicons color={accentText} name="cloud-download-outline" size={28} />;
+
+  return variant === "grid" ? (
+    <View
+      accessibilityLabel={`${title} ${host}`}
+      className="bg-surface border-border h-[286px] flex-1 overflow-hidden rounded-3xl border"
+      testID={`pending-card-${id}`}
+    >
+      <View className="bg-default h-40 items-center justify-center">{icon}</View>
+      <View className="flex-1 gap-0.5 px-3 pt-2.5 pb-3">
+        {copy}
+        <View className="border-border mt-auto flex-row gap-1 border-t pt-2.5">
+          <Skeleton className="h-[22px] w-11 rounded-[11px]" />
+          <Skeleton className="h-[22px] w-[34px] rounded-[11px]" />
+        </View>
+      </View>
+    </View>
+  ) : (
+    <View
+      accessibilityLabel={`${title} ${host}`}
+      className="bg-surface h-[116px] flex-row overflow-hidden rounded-[20px]"
+      testID={`pending-card-${id}`}
+    >
+      <View className="bg-default h-[116px] w-[108px] items-center justify-center">{icon}</View>
+      <View className="min-w-0 flex-1 gap-[3px] px-3.5 py-3">
+        {copy}
+        <View className="mt-auto flex-row gap-1.5">
+          <Skeleton className="h-6 w-[52px] rounded-xl" />
+          <Skeleton className="h-6 w-10 rounded-xl" />
+          <Skeleton className="h-6 w-[76px] rounded-xl" />
+        </View>
+      </View>
+    </View>
+  );
+}
