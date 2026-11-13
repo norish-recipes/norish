@@ -16,3 +16,5 @@ export { useCaldavSubscription } from "./use-caldav-subscription";
 export { useTodaysMeals } from "./use-todays-meals";
 export { usePlannedItemText } from "./use-planned-item-text";
 export { useSlotPlanning } from "./use-slot-planning";
+export { miniCalendarRange, useMiniCalendar } from "./use-mini-calendar";
+export { usePlanOnDay } from "./use-plan-on-day";
