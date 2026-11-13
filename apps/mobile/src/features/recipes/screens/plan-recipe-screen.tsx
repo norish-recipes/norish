@@ -1,6 +1,7 @@
 import React, { useDeferredValue, useState } from "react";
-import { FlatList, Pressable, ScrollView, Text, View } from "react-native";
+import { Pressable, ScrollView, Text, View } from "react-native";
 import { CardPhoto } from "@/components/card-photo";
+import { Sheet, SheetList } from "@/components/sheet";
 import Ionicons from "@expo/vector-icons/Ionicons";
 import { useLocalSearchParams, useRouter } from "expo-router";
 import { Button, SearchField, Skeleton, Spinner, Tabs, useThemeColor } from "heroui-native";
@@ -17,7 +18,6 @@ import {
 } from "@norish/shared-react/recipes";
 import { parseDateKey } from "@norish/shared/lib/helpers";
 
-import { SheetHeader } from "../components/sheet-header";
 import { usePlanExit } from "../hooks/use-plan-exit";
 import { planDay } from "../utils/plan-day";
 
@@ -61,18 +61,12 @@ export function PlanRecipeScreen() {
 
   const header = (
     <View className="gap-3">
-      <SheetHeader
-        closeTestID="plan-recipe-close"
-        title={intl.formatMessage({ id: "calendar.panel.planRecipe" })}
-        onClose={() => router.back()}
-      />
-
       {/* heroui-native has no day strip, so these chips are hand-built. */}
       <ScrollView
         horizontal
         accessibilityLabel={intl.formatMessage({ id: "calendar.panel.addToCalendar" })}
-        className="-mx-5"
-        contentContainerClassName="gap-2 px-5"
+        className="-mx-4"
+        contentContainerClassName="gap-2 px-4"
         showsHorizontalScrollIndicator={false}
         testID="plan-recipe-days"
       >
@@ -172,56 +166,54 @@ export function PlanRecipeScreen() {
   );
 
   return (
-    // react-native-screens sizes only a scroll view that sits directly in the sheet.
-    <FlatList
-      ListEmptyComponent={
-        error ? undefined : (
-          <View className="bg-surface border-separator rounded-b-[22px] border-t">
-            {isLoading ? (
-              SKELETON_ROWS.map((row) => (
-                <View key={row} className="flex-row items-center gap-3 px-3.5 py-2.5">
-                  <Skeleton className="size-11 rounded-xl" />
-                  <Skeleton className="h-4 w-40 rounded-md" />
-                </View>
-              ))
-            ) : (
-              <Text className="text-muted p-4 text-base">
-                {intl.formatMessage({ id: "calendar.panel.noRecipesFound" })}
-              </Text>
-            )}
-          </View>
-        )
-      }
-      ListFooterComponent={<View className="h-8" />}
-      ListHeaderComponent={header}
-      contentContainerClassName="px-5 pt-5"
-      contentInsetAdjustmentBehavior="never"
-      data={recipes}
-      keyExtractor={(recipe) => recipe.id}
-      keyboardDismissMode="on-drag"
-      keyboardShouldPersistTaps="handled"
-      renderItem={({ item: recipe, index }) => (
-        <Button
-          accessibilityLabel={recipe.name}
-          className={`border-separator bg-surface h-auto justify-start gap-3 rounded-none border-t px-3.5 py-2.5 ${index === recipes.length - 1 ? "rounded-b-[22px]" : ""}`}
-          testID={`plan-recipe-${recipe.id}`}
-          variant="ghost"
-          onPress={() => planRecipe(recipe, slot)}
-        >
-          <CardPhoto className="size-11 rounded-xl" image={recipe.image} />
-          <Text className="text-foreground flex-1 text-base" numberOfLines={1}>
-            {recipe.name}
-          </Text>
-          <View className="bg-default size-8 items-center justify-center rounded-full">
-            <Ionicons color={foreground} name="add" size={17} />
-          </View>
-        </Button>
-      )}
-      showsVerticalScrollIndicator={false}
-      testID="plan-recipe-sheet"
-      onEndReached={loadMore}
-      onEndReachedThreshold={0.6}
-    />
+    <Sheet
+      name="plan-recipe"
+      title={intl.formatMessage({ id: "calendar.panel.planRecipe" })}
+      onClose={() => router.back()}
+    >
+      <SheetList
+        ListEmptyComponent={
+          error ? undefined : (
+            <View className="bg-surface border-separator rounded-b-[22px] border-t">
+              {isLoading ? (
+                SKELETON_ROWS.map((row) => (
+                  <View key={row} className="flex-row items-center gap-3 px-3.5 py-2.5">
+                    <Skeleton className="size-11 rounded-xl" />
+                    <Skeleton className="h-4 w-40 rounded-md" />
+                  </View>
+                ))
+              ) : (
+                <Text className="text-muted p-4 text-base">
+                  {intl.formatMessage({ id: "calendar.panel.noRecipesFound" })}
+                </Text>
+              )}
+            </View>
+          )
+        }
+        ListHeaderComponent={header}
+        data={recipes}
+        keyExtractor={(recipe) => recipe.id}
+        renderItem={({ item: recipe, index }) => (
+          <Button
+            accessibilityLabel={recipe.name}
+            className={`border-separator bg-surface h-auto justify-start gap-3 rounded-none border-t px-3.5 py-2.5 ${index === recipes.length - 1 ? "rounded-b-[22px]" : ""}`}
+            testID={`plan-recipe-${recipe.id}`}
+            variant="ghost"
+            onPress={() => planRecipe(recipe, slot)}
+          >
+            <CardPhoto className="size-11 rounded-xl" image={recipe.image} />
+            <Text className="text-foreground flex-1 text-base" numberOfLines={1}>
+              {recipe.name}
+            </Text>
+            <View className="bg-default size-8 items-center justify-center rounded-full">
+              <Ionicons color={foreground} name="add" size={17} />
+            </View>
+          </Button>
+        )}
+        onEndReached={loadMore}
+        onEndReachedThreshold={0.6}
+      />
+    </Sheet>
   );
 }
 
