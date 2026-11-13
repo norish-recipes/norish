@@ -22,15 +22,62 @@ const VIEWS = [
   { mode: "list", icon: "list-outline", label: "recipes.dashboard.viewMode.list" },
 ] as const satisfies readonly { mode: RecipeViewMode; icon: string; label: string }[];
 
+/** The grid or list toggle, the reader's own choice on this device. */
+export function ViewToggle() {
+  const intl = useIntl();
+  const [view, setView] = useDevicePreference("recipeViewMode");
+  const [foreground, muted] = useThemeColor(["foreground", "muted"] as const);
+
+  return (
+    <View className="bg-default h-9 flex-row gap-0.5 rounded-full p-[3px]">
+      {VIEWS.map(({ mode, icon, label }) => (
+        <Pressable
+          key={mode}
+          accessibilityLabel={intl.formatMessage({ id: label })}
+          accessibilityRole="button"
+          accessibilityState={{ selected: view === mode }}
+          className={`h-[30px] w-[38px] items-center justify-center rounded-full ${view === mode ? "bg-surface" : ""}`}
+          testID={`library-view-${mode}`}
+          onPress={() => setView(mode)}
+        >
+          <Ionicons color={view === mode ? foreground : muted} name={icon} size={17} />
+        </Pressable>
+      ))}
+    </View>
+  );
+}
+
+/** The Filters button, marked while any filter is on. */
+export function FiltersButton() {
+  const intl = useIntl();
+  const router = useRouter();
+  const [foreground] = useThemeColor(["foreground"] as const);
+  const filtersOn = hasActiveLibraryFilters(useLibraryFilters((state) => state.filters));
+
+  return (
+    <Pressable
+      accessibilityLabel={intl.formatMessage({ id: "common.filters.title" })}
+      accessibilityRole="button"
+      className="bg-surface border-border size-9 items-center justify-center rounded-full border"
+      testID="library-filters-button"
+      onPress={() => router.push("/filters")}
+    >
+      <Ionicons color={foreground} name="funnel-outline" size={17} />
+      {filtersOn ? (
+        <View
+          className="bg-accent border-surface absolute top-[3px] right-[3px] size-[9px] rounded-full border-2"
+          testID="library-filters-active"
+        />
+      ) : null}
+    </Pressable>
+  );
+}
+
 /** The Library's heading and its grid or list toggle, the lenses and the Filters button. */
 export function LibraryHeader() {
   const intl = useIntl();
-  const router = useRouter();
-  const [view, setView] = useDevicePreference("recipeViewMode");
-  const [foreground, muted] = useThemeColor(["foreground", "muted"] as const);
   const filters = useLibraryFilters((state) => state.filters);
   const setFilters = useLibraryFilters((state) => state.setFilters);
-  const filtersOn = hasActiveLibraryFilters(filters);
 
   return (
     <View className="gap-3.5 pt-7 pb-4">
@@ -38,21 +85,7 @@ export function LibraryHeader() {
         <Text className="text-foreground text-2xl font-semibold" testID="library-heading">
           {intl.formatMessage({ id: HEADING_KEYS[filters.libraryType] })}
         </Text>
-        <View className="bg-default h-9 flex-row gap-0.5 rounded-full p-[3px]">
-          {VIEWS.map(({ mode, icon, label }) => (
-            <Pressable
-              key={mode}
-              accessibilityLabel={intl.formatMessage({ id: label })}
-              accessibilityRole="button"
-              accessibilityState={{ selected: view === mode }}
-              className={`h-[30px] w-[38px] items-center justify-center rounded-full ${view === mode ? "bg-surface" : ""}`}
-              testID={`library-view-${mode}`}
-              onPress={() => setView(mode)}
-            >
-              <Ionicons color={view === mode ? foreground : muted} name={icon} size={17} />
-            </Pressable>
-          ))}
-        </View>
+        <ViewToggle />
       </View>
       <View className="flex-row items-center gap-2 px-5">
         {LIBRARY_TYPE_FILTERS.map((type) => {
@@ -76,21 +109,7 @@ export function LibraryHeader() {
           );
         })}
         <View className="flex-1" />
-        <Pressable
-          accessibilityLabel={intl.formatMessage({ id: "common.filters.title" })}
-          accessibilityRole="button"
-          className="bg-surface border-border size-9 items-center justify-center rounded-full border"
-          testID="library-filters-button"
-          onPress={() => router.push("/filters")}
-        >
-          <Ionicons color={foreground} name="funnel-outline" size={17} />
-          {filtersOn ? (
-            <View
-              className="bg-accent border-surface absolute top-[3px] right-[3px] size-[9px] rounded-full border-2"
-              testID="library-filters-active"
-            />
-          ) : null}
-        </Pressable>
+        <FiltersButton />
       </View>
     </View>
   );
