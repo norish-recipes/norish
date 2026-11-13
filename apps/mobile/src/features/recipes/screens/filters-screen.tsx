@@ -24,7 +24,6 @@ const STARS = [1, 2, 3, 4, 5];
 export function FiltersScreen() {
   const intl = useIntl();
   const router = useRouter();
-  const t = (id: string) => intl.formatMessage({ id });
   const [foreground, muted, star] = useThemeColor(["foreground", "muted", "warning"] as const);
   const { showRatings, showFavorites } = useHiddenItemVisibility();
   const {
@@ -42,17 +41,19 @@ export function FiltersScreen() {
   // A stored filter stays visible, so it can be cleared, even once the list drops it.
   const categories = Array.from(new Set([...householdCategories, ...draft.categories]));
   const categoryLabel = (name: RecipeCategory) =>
-    isBuiltInCategory(name) ? t(`recipes.form.category.${name.toLowerCase()}`) : name;
+    isBuiltInCategory(name)
+      ? intl.formatMessage({ id: `recipes.form.category.${name.toLowerCase()}` })
+      : name;
   const close = () => router.back();
 
   return (
     <View className="flex-1 px-5 pt-5" testID="filters-sheet">
       <View className="flex-row items-center justify-between pl-2">
         <Text className="text-foreground text-[22px] font-semibold">
-          {t("common.filters.title")}
+          {intl.formatMessage({ id: "common.filters.title" })}
         </Text>
         <Pressable
-          accessibilityLabel={t("common.actions.close")}
+          accessibilityLabel={intl.formatMessage({ id: "common.actions.close" })}
           accessibilityRole="button"
           className="bg-surface size-10 items-center justify-center rounded-full"
           testID="filters-close"
@@ -67,7 +68,7 @@ export function FiltersScreen() {
         contentContainerClassName="gap-[18px] pt-4 pb-4"
         showsVerticalScrollIndicator={false}
       >
-        <FilterSection title={t("common.filters.sort")}>
+        <FilterSection title={intl.formatMessage({ id: "common.filters.sort" })}>
           <View className="flex-row flex-wrap gap-1.5">
             {(["title", "date"] as const).map((key) => {
               const active = draft.sortMode.startsWith(key);
@@ -83,9 +84,10 @@ export function FiltersScreen() {
                         : "arrow-down"
                       : undefined
                   }
-                  label={t(
-                    key === "title" ? "common.filters.sortByTitle" : "common.filters.sortByDate"
-                  )}
+                  label={intl.formatMessage({
+                    id:
+                      key === "title" ? "common.filters.sortByTitle" : "common.filters.sortByDate",
+                  })}
                   testID={`filters-sort-${key}`}
                   onPress={() => decideSortOrder(key)}
                 />
@@ -97,18 +99,18 @@ export function FiltersScreen() {
         {showFavorites || showRatings ? (
           <View className="flex-row gap-[18px]">
             {showFavorites ? (
-              <FilterSection title={t("common.filters.favorites")}>
+              <FilterSection title={intl.formatMessage({ id: "common.filters.favorites" })}>
                 <ToggleChip
                   active={draft.showFavoritesOnly}
                   icon="heart-outline"
-                  label={t("common.filters.favorites")}
+                  label={intl.formatMessage({ id: "common.filters.favorites" })}
                   testID="filters-favorites"
                   onPress={() => update({ showFavoritesOnly: !draft.showFavoritesOnly })}
                 />
               </FilterSection>
             ) : null}
             {showRatings ? (
-              <FilterSection title={t("common.filters.minRating")}>
+              <FilterSection title={intl.formatMessage({ id: "common.filters.minRating" })}>
                 <View className="h-[34px] flex-row items-center gap-0.5">
                   {STARS.map((value) => (
                     <Pressable
@@ -142,25 +144,25 @@ export function FiltersScreen() {
           </View>
         ) : null}
 
-        <FilterSection title={t("common.filters.pantry")}>
+        <FilterSection title={intl.formatMessage({ id: "common.filters.pantry" })}>
           <View className="flex-row">
             <ToggleChip
               active={draft.showPantryOnly}
               icon="file-tray-full-outline"
-              label={t("common.filters.pantryOnly")}
+              label={intl.formatMessage({ id: "common.filters.pantryOnly" })}
               testID="filters-pantry"
               onPress={() => update({ showPantryOnly: !draft.showPantryOnly })}
             />
           </View>
         </FilterSection>
 
-        <FilterSection title={t("common.filters.cookingTime")}>
+        <FilterSection title={intl.formatMessage({ id: "common.filters.cookingTime" })}>
           <View className="flex-row flex-wrap gap-1.5">
             {COOKING_TIME_OPTIONS.map(({ value, labelKey }) => (
               <ToggleChip
                 key={value}
                 active={draft.maxCookingTime === value}
-                label={t(`common.filters.${labelKey}`)}
+                label={intl.formatMessage({ id: `common.filters.${labelKey}` })}
                 testID={`filters-time-${value}`}
                 onPress={() => toggleCookingTime(value)}
               />
@@ -168,7 +170,7 @@ export function FiltersScreen() {
           </View>
         </FilterSection>
 
-        <FilterSection title={t("common.filters.categories")}>
+        <FilterSection title={intl.formatMessage({ id: "common.filters.categories" })}>
           <View className="flex-row flex-wrap gap-1.5">
             {categories.map((category) => (
               <ToggleChip
@@ -183,7 +185,7 @@ export function FiltersScreen() {
         </FilterSection>
 
         <FilterSection
-          title={t("common.filters.tags")}
+          title={intl.formatMessage({ id: "common.filters.tags" })}
           trailing={
             <View className="bg-default flex-row gap-0.5 rounded-full p-[3px]">
               {MODES.map(({ value, label }) => (
@@ -199,7 +201,7 @@ export function FiltersScreen() {
                     className="text-[13px] font-medium"
                     style={{ color: draft.filterMode === value ? foreground : muted }}
                   >
-                    {t(label)}
+                    {intl.formatMessage({ id: label })}
                   </Text>
                 </Pressable>
               ))}
@@ -240,7 +242,7 @@ export function FiltersScreen() {
         >
           <Ionicons color={foreground} name="refresh" size={18} />
           <Button.Label className="text-warning-foreground">
-            {t("common.filters.clearFilters")}
+            {intl.formatMessage({ id: "common.filters.clearFilters" })}
           </Button.Label>
         </Button>
         <Button
@@ -253,7 +255,7 @@ export function FiltersScreen() {
           }}
         >
           <Ionicons color="white" name="checkmark" size={20} />
-          <Button.Label>{t("common.actions.apply")}</Button.Label>
+          <Button.Label>{intl.formatMessage({ id: "common.actions.apply" })}</Button.Label>
         </Button>
       </View>
     </View>
