@@ -22,7 +22,7 @@ export type SwipeAction = {
 
 const ICONS: Record<SwipeAction["key"], IconName> = {
   groceries: "bag-outline",
-  plan: "calendar-outline",
+  plan: "calendar-clear-outline",
   delete: "trash-outline",
 };
 const GROUND: Record<SwipeAction["key"], string> = {
@@ -37,6 +37,14 @@ const LIST_BUTTON = 208 / 3;
 const LIST_GAP = 8;
 const GRID_PANEL = 80;
 const GRID_GAP = 4;
+
+// The board's `0 2px 8px` at 14% black.
+const CIRCLE_SHADOW = {
+  shadowColor: "#000",
+  shadowOpacity: 0.14,
+  shadowRadius: 4,
+  shadowOffset: { width: 0, height: 2 },
+};
 
 // Module scope: one card is open at a time, and the tRPC remount must not strand a stale ref.
 let openRow: SwipeableMethods | null = null;
@@ -122,7 +130,8 @@ function ActionButton({
       onPress={onPress}
     >
       <View
-        className={`items-center justify-center rounded-full shadow-sm ${isGrid ? "size-11" : "size-12"} ${GROUND[action.key]}`}
+        className={`items-center justify-center rounded-full ${isGrid ? "size-11" : "size-12"} ${GROUND[action.key]}`}
+        style={CIRCLE_SHADOW}
       >
         <Ionicons color={icon} name={ICONS[action.key]} size={isGrid ? 19 : 20} />
       </View>
