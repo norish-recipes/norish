@@ -14,7 +14,6 @@ import HeartButton from "@/components/shared/heart-button";
 import SmartMarkdownRenderer from "@/components/shared/smart-markdown-renderer";
 import { useRecipeLeaving } from "@/features/library/components/selection";
 import { useMountedOnceOpened } from "@/features/library/hooks";
-import { useHiddenItemVisibility } from "@/hooks/use-hidden-item-visibility";
 import { useRecipePrefetch } from "@/hooks/use-recipe-prefetch";
 import { withOrigin } from "@/lib/back-destination";
 import {
@@ -33,7 +32,7 @@ import { Button, Card, Chip, Tooltip, useOverlayState } from "@heroui/react";
 import { useFormatter, useTranslations } from "next-intl";
 import { useLongPress } from "react-aria";
 
-import { useRecipePermissions } from "@norish/shared-react/reader";
+import { useHiddenItemVisibility, useRecipePermissions } from "@norish/shared-react/reader";
 import { useRecipeSelection } from "@norish/shared-react/recipes";
 import { RecipeDashboardDTO } from "@norish/shared/contracts";
 import { RECIPE_DASHBOARD_KEYS } from "@norish/shared/contracts/zod";

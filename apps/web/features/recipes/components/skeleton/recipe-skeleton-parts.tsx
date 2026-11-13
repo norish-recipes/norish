@@ -1,11 +1,11 @@
 "use client";
 
 import { ActionButton } from "@/components/shared/action-button";
-import { useHiddenItemVisibility } from "@/hooks/use-hidden-item-visibility";
 import { FireIcon } from "@heroicons/react/20/solid";
 import { Button, Card, Skeleton } from "@heroui/react";
 import { useTranslations } from "next-intl";
 
+import { useHiddenItemVisibility } from "@norish/shared-react/reader";
 import StarRating from "@norish/ui/star-rating";
 
 // Pieces both recipe skeletons draw. Controls are real but inert: nothing behind them has loaded.

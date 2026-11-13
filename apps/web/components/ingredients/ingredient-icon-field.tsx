@@ -3,14 +3,13 @@
 import { useRef } from "react";
 import { PanelPortal } from "@/components/Panel/Panel";
 import { cssAIIconColor } from "@/config/css-tokens";
-import { useHiddenItemVisibility } from "@/hooks/use-hidden-item-visibility";
 import { ArrowUpTrayIcon, SparklesIcon, TrashIcon } from "@heroicons/react/16/solid";
 import { Dropdown, Label, Spinner } from "@heroui/react";
 import { useTranslations } from "next-intl";
 
 import type { IngredientItem, StoredIcon } from "@norish/shared-react/ingredients";
 import { useIngredientIconMutations } from "@norish/shared-react/ingredients";
-import { usePermissions } from "@norish/shared-react/reader";
+import { useHiddenItemVisibility, usePermissions } from "@norish/shared-react/reader";
 import { ICON_PICTURE_MIME_TYPES } from "@norish/shared/contracts";
 
 import { IngredientIcon } from "./ingredient-icon";

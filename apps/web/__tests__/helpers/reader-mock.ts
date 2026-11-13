@@ -26,8 +26,13 @@ export async function mockDevicePreferences(
     reader?: () => MockReader;
   } = {}
 ) {
+  const { hiddenItemVisibility } = await vi.importActual<
+    typeof import("@norish/shared-react/reader")
+  >("@norish/shared-react/reader");
+
   return {
     ...(await mockReader(reader)),
+    useHiddenItemVisibility: () => hiddenItemVisibility(read().hiddenItems ?? []),
     useDeviceKind: kind,
     useDevicePreference: <K extends DevicePreferenceKey>(key: K) =>
       [
@@ -49,15 +54,20 @@ export type MockReader = {
 
 /** The Reader's identity, permissions and allergies over the test's own state, read on every render. */
 export async function mockReader(read: () => MockReader = () => ({})) {
-  const { normalizePermissionsData } = await vi.importActual<
-    typeof import("@norish/shared-react/reader")
-  >("@norish/shared-react/reader");
+  const { normalizePermissionsData, hiddenItemVisibility, HIDDEN_ITEMS, partitionHiddenItems } =
+    await vi.importActual<typeof import("@norish/shared-react/reader")>(
+      "@norish/shared-react/reader"
+    );
   const permissions = (): ReaderPermissions => ({
     ...normalizePermissionsData(null),
     ...read().permissions,
   });
 
   return {
+    HIDDEN_ITEMS,
+    hiddenItemVisibility,
+    partitionHiddenItems,
+    useHiddenItemVisibility: () => hiddenItemVisibility([]),
     useReader: () => ({
       user: read().user ?? null,
       isLoading: false,

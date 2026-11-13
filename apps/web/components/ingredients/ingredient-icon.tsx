@@ -1,9 +1,9 @@
 "use client";
 
-import { useHiddenItemVisibility } from "@/hooks/use-hidden-item-visibility";
 import { useDebounceValue } from "usehooks-ts";
 
 import { useIngredientIconAddress, useIngredientsNamed } from "@norish/shared-react/ingredients";
+import { useHiddenItemVisibility } from "@norish/shared-react/reader";
 import { addBasePath } from "@norish/shared/lib/base-path";
 
 /** An icon's size beside a chip, a line or row (smaller on a phone), or in its panel. */

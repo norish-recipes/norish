@@ -15,16 +15,13 @@ vi.mock("next-intl", () => ({
   useFormatter: () => ({ number: String }),
 }));
 
-vi.mock("@norish/shared-react/reader", async () =>
-  (await import("@/__tests__/helpers/reader-mock")).mockReader()
-);
+vi.mock("@norish/shared-react/reader", async () => ({
+  ...(await (await import("@/__tests__/helpers/reader-mock")).mockReader()),
+  useHiddenItemVisibility: () => ({ showRatings: true, showFavorites: true }),
+}));
 
 vi.mock("@/hooks/use-recipe-prefetch", () => ({
   useRecipePrefetch: () => ({ current: null }),
-}));
-
-vi.mock("@/hooks/use-hidden-item-visibility", () => ({
-  useHiddenItemVisibility: () => ({ showRatings: true, showFavorites: true }),
 }));
 
 vi.mock("@/components/Panel/consumers/mini-calendar", () => ({

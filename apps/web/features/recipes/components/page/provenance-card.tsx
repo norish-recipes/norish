@@ -1,10 +1,10 @@
 "use client";
 
 import OriginFlag from "@/components/recipes/origin-flag";
-import { useHiddenItemVisibility } from "@/hooks/use-hidden-item-visibility";
 import { Card, Chip, Skeleton } from "@heroui/react";
 import { useLocale, useTranslations } from "next-intl";
 
+import { useHiddenItemVisibility } from "@norish/shared-react/reader";
 import { usePageEnrichment, usePageRecipe } from "@norish/shared-react/recipes";
 import { hasSubstantiveProvenance } from "@norish/shared/lib/recipe-enrichment";
 import { countryEndonym } from "@norish/shared/lib/recipe-provenance";

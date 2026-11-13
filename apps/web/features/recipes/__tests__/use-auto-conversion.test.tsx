@@ -17,15 +17,14 @@ vi.mock("@norish/shared-react/trpc", async () =>
   (await import("@/__tests__/helpers/trpc-fake")).mockTRPC()
 );
 
-vi.mock("@norish/shared-react/reader", async () =>
-  (await import("@/__tests__/helpers/reader-mock")).mockReader(() => ({
+vi.mock("@norish/shared-react/reader", async () => ({
+  ...(await (
+    await import("@/__tests__/helpers/reader-mock")
+  ).mockReader(() => ({
     user: { preferences: { measurementSystem: mocks.measurementSystem } },
     permissions: { isAIEnabled: mocks.isAIEnabled },
     canEditRecipe: () => mocks.canEdit,
-  }))
-);
-
-vi.mock("@/hooks/use-hidden-item-visibility", () => ({
+  }))),
   useHiddenItemVisibility: () => ({ showConversion: true }),
 }));
 

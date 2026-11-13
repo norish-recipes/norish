@@ -7,12 +7,12 @@ import {
   NutritionBody,
   NutritionPortionControl,
 } from "@/features/recipes/components/read-only";
-import { useHiddenItemVisibility } from "@/hooks/use-hidden-item-visibility";
 import { ChevronRightIcon } from "@heroicons/react/16/solid";
 import { Card, Chip, Skeleton } from "@heroui/react";
 import { useFormatter, useTranslations } from "next-intl";
 
 import type { LeftOutReason, WorkedOutNutrition } from "@norish/shared/lib/recipe-nutrition";
+import { useHiddenItemVisibility } from "@norish/shared-react/reader";
 import {
   usePageEnrichment,
   usePageRecipe,

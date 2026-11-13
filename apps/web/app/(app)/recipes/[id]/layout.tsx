@@ -1,8 +1,8 @@
 import { QuerySeed } from "@/components/query-seed";
-import { hiddenItemVisibility } from "@/lib/hidden-items";
 import { readerRecipeSeeds } from "@/lib/reader-recipe-seeds";
 import { readRequestProfile } from "@/lib/request-profile";
 
+import { hiddenItemVisibility } from "@norish/shared-react/reader";
 import { deviceBlocks } from "@norish/shared/contracts/zod/device-preferences";
 
 export default async function RecipeLayout({ children, params }: LayoutProps<"/recipes/[id]">) {

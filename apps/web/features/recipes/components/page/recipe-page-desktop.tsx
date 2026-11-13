@@ -10,13 +10,12 @@ import {
   ReadonlyRecipeSummary,
 } from "@/features/recipes/components/read-only";
 import { useBackDestination } from "@/hooks/use-back-destination";
-import { useHiddenItemVisibility } from "@/hooks/use-hidden-item-visibility";
 import { ArrowLeftIcon } from "@heroicons/react/16/solid";
 import { Card } from "@heroui/react";
 import { useTranslations } from "next-intl";
 
 import type { LibraryTypeFilter } from "@norish/shared/contracts";
-import { useActiveAllergies } from "@norish/shared-react/reader";
+import { useActiveAllergies, useHiddenItemVisibility } from "@norish/shared-react/reader";
 import {
   useFavoritesMutation,
   useFavoritesQuery,

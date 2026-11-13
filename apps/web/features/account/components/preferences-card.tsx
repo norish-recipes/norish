@@ -4,13 +4,14 @@ import { SettingRow } from "@/components/settings/setting-row";
 import { SettingsCard } from "@/components/settings/settings-card";
 import { InfoHint } from "@/features/account/components/info-hint";
 import { useLocale } from "@/hooks/use-locale";
-import { HIDDEN_ITEMS, partitionHiddenItems } from "@/lib/hidden-items";
 import { AdjustmentsHorizontalIcon } from "@heroicons/react/24/outline";
 import { Label, ListBox, Select } from "@heroui/react";
 import { useTranslations } from "next-intl";
 
 import { useLocaleConfigQuery, useTimersEnabledQuery } from "@norish/shared-react/config";
 import {
+  HIDDEN_ITEMS,
+  partitionHiddenItems,
   useDeviceKind,
   useDevicePreference,
   usePermissions,

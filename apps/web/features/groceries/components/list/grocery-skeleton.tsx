@@ -1,10 +1,9 @@
 "use client";
 
-import { useHiddenItemVisibility } from "@/hooks/use-hidden-item-visibility";
 import { Bars3Icon, ChevronDownIcon, EllipsisVerticalIcon } from "@heroicons/react/16/solid";
 import { Skeleton } from "@heroui/react";
 
-import { useDevicePreference } from "@norish/shared-react/reader";
+import { useDevicePreference, useHiddenItemVisibility } from "@norish/shared-react/reader";
 
 /**
  * The list before it arrives, in the reader's view and grouping: one card per section,

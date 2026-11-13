@@ -1,6 +1,6 @@
 "use client";
 
-import { useHiddenItemVisibility } from "@/hooks/use-hidden-item-visibility";
+import { useHiddenItemVisibility } from "@norish/shared-react/reader";
 
 import type { RecipeSkeletonParts } from "./recipe-skeleton-parts";
 import RecipeSkeletonDesktop from "./recipe-skeleton-desktop";

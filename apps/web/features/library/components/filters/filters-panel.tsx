@@ -5,7 +5,6 @@ import Panel from "@/components/Panel/Panel";
 import { ActionButton, ActionButtonGroup } from "@/components/shared/action-button";
 import { ChipButton } from "@/components/shared/chip-button";
 import { ChipSkeleton } from "@/features/library/components/skeleton";
-import { useHiddenItemVisibility } from "@/hooks/use-hidden-item-visibility";
 import { useCategoryLabel } from "@/lib/category-display";
 import {
   ArchiveBoxIcon,
@@ -22,6 +21,7 @@ import { useTranslations } from "next-intl";
 import type { FilterMode, RecipeCategory, SearchField, SortOrder } from "@norish/shared/contracts";
 import type { CanonicalRecipeFilters } from "@norish/shared/contracts/filter-contract";
 import { useCategoriesQuery, useTagsQuery } from "@norish/shared-react/config";
+import { useHiddenItemVisibility } from "@norish/shared-react/reader";
 import { useLibraryFilters } from "@norish/shared-react/recipes";
 import { DEFAULT_RECIPE_FILTERS } from "@norish/shared/contracts/filter-contract";
 import StarRating from "@norish/ui/star-rating";
