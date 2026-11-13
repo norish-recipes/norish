@@ -7,19 +7,6 @@ import type { CookbookSummaryDTO } from "@norish/shared/contracts";
 
 import { CookbookCover } from "./cookbook-cover";
 
-const FADE_BANDS = Array.from({ length: 58 }, (_, band) => (band + 1) / 58);
-
-/** The cover's last 58% fades into the page, so the title sits on the ground: bands of rising opacity. */
-function CoverFade() {
-  return (
-    <View className="absolute inset-x-0 bottom-0 h-[174px]" pointerEvents="none">
-      {FADE_BANDS.map((opacity) => (
-        <View key={opacity} className="bg-background flex-1" style={{ opacity }} />
-      ))}
-    </View>
-  );
-}
-
 /** A cookbook page's top: its cover under the transparent header, then its title over its recipe count. */
 export function CookbookHero({ cookbook }: { cookbook: CookbookSummaryDTO }) {
   const intl = useIntl();
@@ -33,7 +20,11 @@ export function CookbookHero({ cookbook }: { cookbook: CookbookSummaryDTO }) {
           cookbook={cookbook}
           iconSize={56}
         />
-        <CoverFade />
+        {/* The cover's last 58% fades into the page, so the title sits on the ground. */}
+        <View
+          className="to-background from-background/0 absolute inset-x-0 bottom-0 h-[174px] bg-linear-to-b"
+          pointerEvents="none"
+        />
       </View>
       <View className="-mt-[46px] items-center gap-1 px-5">
         <Text
