@@ -92,11 +92,23 @@ function NewCookbookButton() {
   );
 }
 
-/** The Library's heading and its grid or list toggle, the lenses and the Filters button. */
-export function LibraryHeader() {
+/**
+ * The Library's heading and its grid or list toggle, the lenses and the Filters button. `scoped`,
+ * for a cookbook's page, keeps only the toggle and Filters, at the page's right.
+ */
+export function LibraryHeader({ scoped = false }: { scoped?: boolean }) {
   const intl = useIntl();
   const filters = useLibraryFilters((state) => state.filters);
   const setFilters = useLibraryFilters((state) => state.setFilters);
+
+  if (scoped) {
+    return (
+      <View className="flex-row items-center justify-end gap-2 px-5 pt-[18px] pb-3.5">
+        <ViewToggle />
+        <FiltersButton />
+      </View>
+    );
+  }
 
   return (
     <View className="gap-3.5 pt-7 pb-4">

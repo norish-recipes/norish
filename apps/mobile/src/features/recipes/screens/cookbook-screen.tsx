@@ -18,7 +18,7 @@ import { hasAppliedRecipeFilters } from "@norish/shared/contracts/filter-contrac
 
 import { CardList } from "../components/card-list";
 import { CookbookHero, CookbookHeroSkeleton } from "../components/cookbook-hero";
-import { FiltersButton, ViewToggle } from "../components/library-header";
+import { LibraryHeader } from "../components/library-header";
 import { LibrarySkeleton } from "../components/library-skeleton";
 import { CookbookNoRecipes, LibraryNoResults } from "../components/library-states";
 import { RecipeCard } from "../components/recipe-card";
@@ -27,16 +27,6 @@ import { useCardActions } from "../hooks/use-card-actions";
 import { useCookbookCoverPicker } from "../hooks/use-cookbook-cover-picker";
 import { COOKBOOK_ACTION_DEFINITIONS, cookbookPageActions } from "../utils/card-actions";
 
-/** The view toggle and Filters button under the title, at the page's right. */
-function Toolbar() {
-  return (
-    <View className="flex-row items-center justify-end gap-2 px-5 pt-[18px] pb-3.5">
-      <ViewToggle />
-      <FiltersButton />
-    </View>
-  );
-}
-
 /** What the cookbook page shows until the cookbook is read: the hero's and the cards' shells. */
 function CookbookPageSkeleton() {
   const [variant] = useDevicePreference("recipeViewMode");
@@ -44,7 +34,7 @@ function CookbookPageSkeleton() {
   return (
     <View className="bg-background flex-1" testID="cookbook-screen">
       <CookbookHeroSkeleton />
-      <Toolbar />
+      <LibraryHeader scoped />
       <LibrarySkeleton variant={variant} />
     </View>
   );
@@ -146,7 +136,7 @@ function CookbookPage({ cookbook }: { cookbook: CookbookSummaryDTO }) {
             }}
           />
           <CookbookHero cookbook={cookbook} />
-          <Toolbar />
+          <LibraryHeader scoped />
         </>
       }
       isFetchingNextPage={isFetchingNextPage}
