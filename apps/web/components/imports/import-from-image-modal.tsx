@@ -4,7 +4,6 @@ import type { DropZoneAreaProps } from "@/components/imports/drop-zone";
 import { useState } from "react";
 import Image from "next/image";
 import { DropZone } from "@/components/imports/drop-zone";
-import { useImportRecipe } from "@/components/imports/use-import-recipe";
 import { useClipboardImagePaste } from "@/hooks/use-clipboard-image-paste";
 import { pdfPagesAsImages } from "@/lib/pdf-pages";
 import { showSafeErrorToast } from "@/lib/ui/safe-error-toast";
@@ -13,6 +12,7 @@ import { Button, Kbd, Modal, toast } from "@heroui/react";
 import { useTranslations } from "next-intl";
 
 import { useUploadLimitsQuery } from "@norish/shared-react/config";
+import { useImportRecipe } from "@norish/shared-react/recipes";
 import {
   ALLOWED_OCR_MIME_SET,
   ALLOWED_OCR_MIME_TYPES,

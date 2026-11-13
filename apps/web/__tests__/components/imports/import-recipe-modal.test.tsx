@@ -1,25 +1,19 @@
 import ImportRecipeModal from "@/components/imports/import-recipe-modal";
-import { toast } from "@heroui/react";
 import { fireEvent, render, screen, waitFor } from "@testing-library/react";
 import { describe, expect, it, vi } from "vitest";
 
 const modalMock = vi.hoisted(() => vi.fn());
 const importRecipe = vi.hoisted(() => vi.fn());
-const push = vi.hoisted(() => vi.fn());
+const useImportRecipe = vi.hoisted(() =>
+  vi.fn(() => ({ importRecipe, importRecipeWithAI: vi.fn() }))
+);
 
 vi.mock("next-intl", () => ({
   useTranslations: () => (key: string) => key,
 }));
 
-vi.mock("@norish/shared-react/recipes", () => ({
-  useRecipeMutationErrorToast: () => vi.fn(),
-  useImportMutations: () => ({
-    importRecipe,
-    importRecipeWithAI: vi.fn(),
-  }),
-}));
-
-vi.mock("next/navigation", () => ({ useRouter: () => ({ push }) }));
+// Its toasts and the trip to the Library are the shared hook's, tested with it.
+vi.mock("@norish/shared-react/recipes", () => ({ useImportRecipe }));
 
 vi.mock("@norish/shared-react/reader", async () =>
   (await import("../../helpers/reader-mock")).mockReader()
@@ -75,7 +69,7 @@ vi.mock("@heroui/react", () => ({
 }));
 
 describe("ImportRecipeModal", () => {
-  it("says the import is under way, starts it and goes to the Library", async () => {
+  it("starts the import, which goes to the Library, and closes", async () => {
     const onOpenChange = vi.fn();
 
     render(<ImportRecipeModal isOpen onOpenChange={onOpenChange} />);
@@ -84,12 +78,8 @@ describe("ImportRecipeModal", () => {
     });
     fireEvent.click(screen.getByRole("button", { name: "import" }));
 
-    expect(toast).toHaveBeenCalledWith("importing", {
-      description: "inProgress",
-      variant: "default",
-    });
+    expect(useImportRecipe).toHaveBeenCalledWith();
     expect(importRecipe).toHaveBeenCalledWith("https://example.com/soup");
-    expect(push).toHaveBeenCalledWith("/");
     await waitFor(() => expect(onOpenChange).toHaveBeenCalledWith(false));
   });
 

@@ -1,10 +1,11 @@
 "use client";
 
 import { useEffect, useRef } from "react";
-import { useImportRecipe } from "@/components/imports/use-import-recipe";
 import { readClipboardUrl } from "@/lib/clipboard-url";
 import { showActionToast } from "@/lib/ui/action-toast";
 import { useTranslations } from "next-intl";
+
+import { useImportRecipe } from "@norish/shared-react/recipes";
 
 /** How long the ask stays up, unless it is being hovered or focused. */
 const PROMPT_TIMEOUT_MS = 15_000;

@@ -2,23 +2,23 @@ import ClipboardImportPrompt from "@/components/imports/clipboard-import-prompt"
 import { act, render, waitFor } from "@testing-library/react";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 
-const { toastMock, toastCloseMock, importRecipeMock, pushMock } = vi.hoisted(() => ({
-  toastMock: vi.fn(),
-  toastCloseMock: vi.fn(),
-  importRecipeMock: vi.fn(),
-  pushMock: vi.fn(),
-}));
+const { toastMock, toastCloseMock, importRecipeMock, useImportRecipeMock } = vi.hoisted(() => {
+  const importRecipeMock = vi.fn();
 
-vi.mock("next/navigation", () => ({ useRouter: () => ({ push: pushMock }) }));
+  return {
+    toastMock: vi.fn(),
+    toastCloseMock: vi.fn(),
+    importRecipeMock,
+    useImportRecipeMock: vi.fn(() => ({ importRecipe: importRecipeMock })),
+  };
+});
 
 vi.mock("next-intl", () => ({
   useTranslations: (namespace: string) => (key: string) => `${namespace}.${key}`,
 }));
 
-vi.mock("@norish/shared-react/recipes", () => ({
-  useRecipeMutationErrorToast: () => vi.fn(),
-  useImportMutations: () => ({ importRecipe: importRecipeMock, importRecipeWithAI: vi.fn() }),
-}));
+// The import's own toast is the shared hook's, tested with it.
+vi.mock("@norish/shared-react/recipes", () => ({ useImportRecipe: useImportRecipeMock }));
 
 // The action toast closes itself; here it is the toast it asks for, with its action.
 vi.mock("@/lib/ui/action-toast", () => ({
@@ -103,12 +103,7 @@ describe("ClipboardImportPrompt", () => {
 
     expect(importRecipeMock).toHaveBeenCalledWith(LINK);
     // The import is announced in place; nothing here navigates.
-    expect(toastMock).toHaveBeenCalledTimes(2);
-    expect(toastMock).toHaveBeenLastCalledWith(
-      "common.import.paste.importing",
-      expect.objectContaining({ description: "common.import.paste.inProgress" })
-    );
-    expect(pushMock).not.toHaveBeenCalled();
+    expect(useImportRecipeMock).toHaveBeenCalledWith({ stay: true });
   });
 
   it("asks nothing when the clipboard holds no link", async () => {

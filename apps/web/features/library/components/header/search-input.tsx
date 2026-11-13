@@ -1,14 +1,13 @@
 "use client";
 
 import { useEffect, useEffectEvent, useState } from "react";
-import { useImportRecipe } from "@/components/imports/use-import-recipe";
 import { Filters } from "@/features/library/components/filters";
 import { MagnifyingGlassIcon, XMarkIcon } from "@heroicons/react/16/solid";
 import { Input } from "@heroui/react";
 import { useTranslations } from "next-intl";
 import { useDebounceValue } from "usehooks-ts";
 
-import { useLibraryFilters } from "@norish/shared-react/recipes";
+import { useImportRecipe, useLibraryFilters } from "@norish/shared-react/recipes";
 import { isUrl } from "@norish/shared/lib/helpers";
 
 export default function SearchInput() {

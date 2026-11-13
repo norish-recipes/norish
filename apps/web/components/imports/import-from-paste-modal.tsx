@@ -1,13 +1,13 @@
 "use client";
 
 import { useState } from "react";
-import { useImportRecipe } from "@/components/imports/use-import-recipe";
 import { showSafeErrorToast } from "@/lib/ui/safe-error-toast";
 import { ArrowDownTrayIcon, SparklesIcon } from "@heroicons/react/16/solid";
 import { Button, Label, Modal, TextArea, TextField, toast } from "@heroui/react";
 import { useTranslations } from "next-intl";
 
 import { usePermissions } from "@norish/shared-react/reader";
+import { useImportRecipe } from "@norish/shared-react/recipes";
 import { MAX_RECIPE_PASTE_CHARS } from "@norish/shared/contracts/uploads";
 
 interface ImportFromPasteModalProps {

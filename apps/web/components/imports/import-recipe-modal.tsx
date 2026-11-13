@@ -1,7 +1,6 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { useImportRecipe } from "@/components/imports/use-import-recipe";
 import { readClipboardUrl } from "@/lib/clipboard-url";
 import { showSafeErrorToast } from "@/lib/ui/safe-error-toast";
 import { ArrowDownTrayIcon, SparklesIcon } from "@heroicons/react/16/solid";
@@ -9,6 +8,7 @@ import { Button, Input, Label, Modal, TextField } from "@heroui/react";
 import { useTranslations } from "next-intl";
 
 import { usePermissions } from "@norish/shared-react/reader";
+import { useImportRecipe } from "@norish/shared-react/recipes";
 
 interface ImportRecipeModalProps {
   isOpen: boolean;
