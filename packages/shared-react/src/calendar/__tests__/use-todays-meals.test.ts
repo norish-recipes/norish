@@ -51,8 +51,7 @@ describe("useTodaysMeals", () => {
     ]);
   });
 
-  it("keeps the week it mounted with when the reader's today moves into the next week", () => {
-    // A Sunday, then the Monday after: the server's week, then the browser's.
+  it("follows today into the next week, and keeps the range while today stays inside it", () => {
     useCalendarQueryMock.mockReturnValue({ calendarData: {}, isLoading: false });
 
     const { rerender } = renderHook(({ today }) => useTodaysMeals(today, "always"), {
@@ -60,11 +59,15 @@ describe("useTodaysMeals", () => {
     });
 
     rerender({ today: "2026-11-16" });
-
     expect(useCalendarQueryMock).toHaveBeenLastCalledWith({
-      startISO: "2026-11-09",
-      endISO: "2026-11-15",
+      startISO: "2026-11-16",
+      endISO: "2026-11-22",
     });
+
+    const week = useCalendarQueryMock.mock.lastCall?.[0];
+
+    rerender({ today: "2026-11-17" });
+    expect(useCalendarQueryMock.mock.lastCall?.[0]).toEqual(week);
   });
 
   it("shows only slots with planned items in planned mode, none when nothing is planned", () => {

@@ -1,5 +1,3 @@
-import { useState } from "react";
-
 import type { TodaySectionVisibility } from "@norish/shared/contracts/zod/device-preferences";
 import { getInitialCalendarRange, parseDateKey } from "@norish/shared/lib/helpers";
 
@@ -12,8 +10,8 @@ import { useCalendarSubscription } from "./use-calendar-subscription";
  * ones. Planned-only can leave none, so a screen shows nothing until the plan says.
  */
 export function useTodaysMeals(todayKey: string, visibility: TodaySectionVisibility) {
-  // The week the dashboard layout seeds, frozen at mount so a later today never reads an uncached one.
-  const [week] = useState(() => getInitialCalendarRange("desktop", todayKey));
+  // The dashboard layout's week; it only changes when today leaves it, so no refetch inside a week.
+  const week = getInitialCalendarRange("desktop", todayKey);
   const { calendarData, isLoading } = useCalendarQuery(week);
 
   useCalendarSubscription();
