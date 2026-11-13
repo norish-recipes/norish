@@ -434,7 +434,9 @@
     "coverFromCamera": "Ta bilde",
     "cameraDeniedTitle": "Kameratilgang er slått av",
     "cameraDeniedMessage": "Tillat kameratilgang i Innstillinger for å ta et bilde.",
-    "openSettings": "Åpne innstillinger"
+    "openSettings": "Åpne innstillinger",
+    "coverPickFailedTitle": "Kunne ikke velge bilde",
+    "coverPickFailedMessage": "Prøv igjen, eller velg et annet bilde."
   },
   "print": {
     "title": "Skriv ut oppskrift",

@@ -434,7 +434,9 @@
     "coverFromCamera": "Ta ett foto",
     "cameraDeniedTitle": "Kameraåtkomst är avstängd",
     "cameraDeniedMessage": "Tillåt kameraåtkomst i Inställningar för att ta ett foto.",
-    "openSettings": "Öppna inställningar"
+    "openSettings": "Öppna inställningar",
+    "coverPickFailedTitle": "Det gick inte att välja foto",
+    "coverPickFailedMessage": "Försök igen eller välj ett annat foto."
   },
   "print": {
     "title": "Skriv ut recept",

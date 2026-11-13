@@ -434,7 +434,9 @@
     "coverFromCamera": "Правене на снимка",
     "cameraDeniedTitle": "Достъпът до камерата е изключен",
     "cameraDeniedMessage": "Разрешете достъпа до камерата в настройките, за да направите снимка.",
-    "openSettings": "Отваряне на настройките"
+    "openSettings": "Отваряне на настройките",
+    "coverPickFailedTitle": "Снимката не може да се избере",
+    "coverPickFailedMessage": "Опитайте отново или изберете друга снимка."
   },
   "print": {
     "title": "Печат на рецептата",

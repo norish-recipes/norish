@@ -434,7 +434,9 @@
     "coverFromCamera": "Foto aufnehmen",
     "cameraDeniedTitle": "Kamerazugriff ist ausgeschaltet",
     "cameraDeniedMessage": "Erlauben Sie den Kamerazugriff in den Einstellungen, um ein Foto aufzunehmen.",
-    "openSettings": "Einstellungen öffnen"
+    "openSettings": "Einstellungen öffnen",
+    "coverPickFailedTitle": "Foto konnte nicht gewählt werden",
+    "coverPickFailedMessage": "Versuchen Sie es erneut oder wählen Sie ein anderes Foto."
   },
   "print": {
     "title": "Rezept drucken",

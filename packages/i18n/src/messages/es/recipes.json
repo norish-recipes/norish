@@ -434,7 +434,9 @@
     "coverFromCamera": "Hacer una foto",
     "cameraDeniedTitle": "El acceso a la cámara está desactivado",
     "cameraDeniedMessage": "Permite el acceso a la cámara en Ajustes para hacer una foto.",
-    "openSettings": "Abrir ajustes"
+    "openSettings": "Abrir ajustes",
+    "coverPickFailedTitle": "No se pudo elegir la foto",
+    "coverPickFailedMessage": "Inténtalo de nuevo o elige otra foto."
   },
   "print": {
     "title": "Imprimir receta",

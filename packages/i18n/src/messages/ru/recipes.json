@@ -434,7 +434,9 @@
     "coverFromCamera": "Сделать снимок",
     "cameraDeniedTitle": "Доступ к камере выключен",
     "cameraDeniedMessage": "Разрешите доступ к камере в настройках, чтобы сделать фото.",
-    "openSettings": "Открыть настройки"
+    "openSettings": "Открыть настройки",
+    "coverPickFailedTitle": "Не удалось выбрать фото",
+    "coverPickFailedMessage": "Попробуйте ещё раз или выберите другое фото."
   },
   "print": {
     "title": "Печать рецепта",

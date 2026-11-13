@@ -434,7 +434,9 @@
     "coverFromCamera": "Prendre une photo",
     "cameraDeniedTitle": "L’accès à l’appareil photo est désactivé",
     "cameraDeniedMessage": "Autorisez l’accès à l’appareil photo dans les Réglages pour prendre une photo.",
-    "openSettings": "Ouvrir les réglages"
+    "openSettings": "Ouvrir les réglages",
+    "coverPickFailedTitle": "Impossible de choisir la photo",
+    "coverPickFailedMessage": "Réessayez ou choisissez une autre photo."
   },
   "print": {
     "title": "Imprimer la recette",

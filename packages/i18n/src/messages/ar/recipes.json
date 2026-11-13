@@ -434,7 +434,9 @@
     "coverFromCamera": "التقاط صورة",
     "cameraDeniedTitle": "الوصول إلى الكاميرا متوقف",
     "cameraDeniedMessage": "اسمح بالوصول إلى الكاميرا في الإعدادات لالتقاط صورة.",
-    "openSettings": "فتح الإعدادات"
+    "openSettings": "فتح الإعدادات",
+    "coverPickFailedTitle": "تعذّر اختيار الصورة",
+    "coverPickFailedMessage": "حاول مرة أخرى أو اختر صورة أخرى."
   },
   "print": {
     "title": "طباعة الوصفة",

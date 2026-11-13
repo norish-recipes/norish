@@ -434,7 +434,9 @@
     "coverFromCamera": "Foto maken",
     "cameraDeniedTitle": "Cameratoegang staat uit",
     "cameraDeniedMessage": "Sta cameratoegang toe in Instellingen om een foto te maken.",
-    "openSettings": "Instellingen openen"
+    "openSettings": "Instellingen openen",
+    "coverPickFailedTitle": "Foto kiezen mislukt",
+    "coverPickFailedMessage": "Probeer het opnieuw of kies een andere foto."
   },
   "print": {
     "title": "Recept afdrukken",

@@ -434,7 +434,9 @@
     "coverFromCamera": "Zrób zdjęcie",
     "cameraDeniedTitle": "Dostęp do aparatu jest wyłączony",
     "cameraDeniedMessage": "Zezwól na dostęp do aparatu w Ustawieniach, aby zrobić zdjęcie.",
-    "openSettings": "Otwórz ustawienia"
+    "openSettings": "Otwórz ustawienia",
+    "coverPickFailedTitle": "Nie udało się wybrać zdjęcia",
+    "coverPickFailedMessage": "Spróbuj ponownie lub wybierz inne zdjęcie."
   },
   "print": {
     "title": "Drukuj przepis",

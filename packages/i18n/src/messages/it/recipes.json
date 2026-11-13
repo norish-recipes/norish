@@ -434,7 +434,9 @@
     "coverFromCamera": "Scatta una foto",
     "cameraDeniedTitle": "L’accesso alla fotocamera è disattivato",
     "cameraDeniedMessage": "Consenti l’accesso alla fotocamera nelle Impostazioni per scattare una foto.",
-    "openSettings": "Apri impostazioni"
+    "openSettings": "Apri impostazioni",
+    "coverPickFailedTitle": "Impossibile scegliere la foto",
+    "coverPickFailedMessage": "Riprova o scegli un'altra foto."
   },
   "print": {
     "title": "Stampa ricetta",

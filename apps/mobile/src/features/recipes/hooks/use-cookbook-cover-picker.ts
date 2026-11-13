@@ -1,4 +1,6 @@
 import { ActionSheetIOS, Alert, Linking } from "react-native";
+import { coverSources, settleCoverPick } from "@/features/recipes/utils/cover-source";
+import { isDevice } from "expo-device";
 import { File } from "expo-file-system";
 import * as ImagePicker from "expo-image-picker";
 import { useIntl } from "react-intl";
@@ -13,18 +15,24 @@ const PICKER = {
 /** The cover's source: asks library or camera in the native action sheet, then hands the picked file over. */
 export function useCookbookCoverPicker(onPicked: (file: File) => void) {
   const intl = useIntl();
-  const take = (result: ImagePicker.ImagePickerResult) => {
-    const asset = result.canceled ? undefined : result.assets[0];
+  const run = async (pick: () => Promise<ImagePicker.ImagePickerResult>) => {
+    const outcome = await settleCoverPick(pick);
 
     // An expo-file-system File is a Blob, so the shared upload takes it as it takes a browser's.
-    if (asset) onPicked(new File(asset.uri));
+    if (outcome.kind === "picked") onPicked(new File(outcome.uri));
+    if (outcome.kind === "failed") {
+      Alert.alert(
+        intl.formatMessage({ id: "recipes.cookbooks.coverPickFailedTitle" }),
+        intl.formatMessage({ id: "recipes.cookbooks.coverPickFailedMessage" })
+      );
+    }
   };
-  const fromLibrary = async () => take(await ImagePicker.launchImageLibraryAsync(PICKER));
+  const fromLibrary = () => run(() => ImagePicker.launchImageLibraryAsync(PICKER));
   const fromCamera = async () => {
     const { granted } = await ImagePicker.requestCameraPermissionsAsync();
 
     if (granted) {
-      take(await ImagePicker.launchCameraAsync(PICKER));
+      await run(() => ImagePicker.launchCameraAsync(PICKER));
 
       return;
     }
@@ -43,17 +51,30 @@ export function useCookbookCoverPicker(onPicked: (file: File) => void) {
     );
   };
 
+  const sources = coverSources(isDevice);
+
   return () =>
     ActionSheetIOS.showActionSheetWithOptions(
       {
         title: intl.formatMessage({ id: "recipes.cookbooks.changeCover" }),
         options: [
-          intl.formatMessage({ id: "recipes.cookbooks.coverFromLibrary" }),
-          intl.formatMessage({ id: "recipes.cookbooks.coverFromCamera" }),
+          ...sources.map((source) =>
+            intl.formatMessage({
+              id:
+                source === "camera"
+                  ? "recipes.cookbooks.coverFromCamera"
+                  : "recipes.cookbooks.coverFromLibrary",
+            })
+          ),
           intl.formatMessage({ id: "common.actions.cancel" }),
         ],
-        cancelButtonIndex: 2,
+        cancelButtonIndex: sources.length,
       },
-      (index) => void (index === 0 ? fromLibrary() : index === 1 ? fromCamera() : undefined)
+      (index) => {
+        const source = sources[index];
+
+        if (source === "library") void fromLibrary();
+        if (source === "camera") void fromCamera();
+      }
     );
 }
