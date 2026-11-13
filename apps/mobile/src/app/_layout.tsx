@@ -258,21 +258,22 @@ function AuthenticatedEffects() {
 // Navigation
 // ============================================================================
 
+/** A recipe or cookbook opened from the Library: a transparent header with just the back arrow. */
+const OPENED_SCREEN = {
+  headerShown: true,
+  headerTransparent: true,
+  headerTitle: "",
+  headerShadowVisible: false,
+  headerBackButtonDisplayMode: "minimal",
+} as const;
+
 function RootStack({ signedIn }: { signedIn: boolean }) {
   return (
     <Stack screenOptions={{ headerShown: false }}>
       <Stack.Protected guard={signedIn}>
         <Stack.Screen name="(tabs)" />
-        <Stack.Screen
-          name="recipe/[id]"
-          options={{
-            headerShown: true,
-            headerTransparent: true,
-            headerTitle: "",
-            headerShadowVisible: false,
-            headerBackButtonDisplayMode: "minimal",
-          }}
-        />
+        <Stack.Screen name="recipe/[id]" options={OPENED_SCREEN} />
+        <Stack.Screen name="cookbook/[id]" options={OPENED_SCREEN} />
       </Stack.Protected>
       <Stack.Protected guard={!signedIn}>
         <Stack.Screen name="(auth)" />

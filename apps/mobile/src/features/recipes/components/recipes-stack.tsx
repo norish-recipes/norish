@@ -5,6 +5,15 @@ import { useIntl } from "react-intl";
 
 import { LibraryRoot } from "./library-root";
 
+// The sheets the card actions open; their tickets fill them.
+const SHEETS = [
+  "plan",
+  "add-to-groceries",
+  "add-to-cookbook",
+  "cookbook-add-recipes",
+  "cookbook-rename",
+] as const;
+
 /** The Recipes tab's stack: iOS's own large title, collapsing on scroll, with the account avatar on its right. */
 export function RecipesStack() {
   const intl = useIntl();
@@ -34,6 +43,18 @@ export function RecipesStack() {
             contentStyle: { backgroundColor: "transparent" },
           }}
         />
+        {SHEETS.map((name) => (
+          <Stack.Screen
+            key={name}
+            name={name}
+            options={{
+              presentation: "formSheet",
+              headerShown: false,
+              sheetGrabberVisible: true,
+              sheetAllowedDetents: [0.5],
+            }}
+          />
+        ))}
       </Stack>
     </LibraryRoot>
   );
