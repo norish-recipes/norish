@@ -1,7 +1,13 @@
 import type { ReactNode } from "react";
-import type { FlatListProps, ScrollViewProps } from "react-native";
-import React from "react";
-import { FlatList, ScrollView, Text, View } from "react-native";
+import type {
+  FlatListProps,
+  KeyboardEvent,
+  LayoutChangeEvent,
+  ScrollViewProps,
+} from "react-native";
+import React, { useEffect, useState } from "react";
+import { FlatList, Keyboard, LayoutAnimation, ScrollView, Text, View } from "react-native";
+import { initialWindowMetrics } from "react-native-safe-area-context";
 import { useRouter } from "expo-router";
 
 import { GlassCloseButton } from "./glass-close-button";
@@ -101,8 +107,43 @@ function SheetAction({ children }: { children: ReactNode }) {
   return <View className="flex-1">{children}</View>;
 }
 
-/** The one sheet layout: title, subtitle and close on top, the body between, the actions pinned
- *  below, as flex siblings so the body scrolls under neither. */
+/** The top of a sheet at its full height, the window's safe-area top. */
+const FULL_SHEET_TOP = initialWindowMetrics?.insets.top ?? 0;
+
+/**
+ * How far the keyboard covers the sheet. UIKit lifts a sheet above it as far as its full height's
+ * top; JS layout starts at the sheet's own top, so the sheet's height places its bottom.
+ */
+function useKeyboardOverlap() {
+  const [height, setHeight] = useState(0);
+  const [keyboardTop, setKeyboardTop] = useState<number | null>(null);
+
+  useEffect(() => {
+    const moveTo = (top: number | null) => {
+      LayoutAnimation.configureNext(LayoutAnimation.Presets.easeInEaseOut);
+      setKeyboardTop(top);
+    };
+    const subscriptions = [
+      Keyboard.addListener("keyboardWillChangeFrame", (event: KeyboardEvent) =>
+        moveTo(event.endCoordinates.screenY)
+      ),
+      Keyboard.addListener("keyboardWillHide", () => moveTo(null)),
+    ];
+
+    return () => subscriptions.forEach((subscription) => subscription.remove());
+  }, []);
+
+  return {
+    overlap:
+      keyboardTop === null ? 0 : Math.max(0, Math.round(FULL_SHEET_TOP + height - keyboardTop)),
+    onLayout: (event: LayoutChangeEvent) => setHeight(event.nativeEvent.layout.height),
+  };
+}
+
+/**
+ * The one sheet layout: title, subtitle and close on top, the body between, the actions pinned
+ * below. They are flex siblings, and the keyboard's overlap pads the bottom so it covers none.
+ */
 export function Sheet({
   name,
   title,
@@ -123,10 +164,17 @@ export function Sheet({
   children?: ReactNode;
 }) {
   const router = useRouter();
+  const { overlap, onLayout } = useKeyboardOverlap();
 
   return (
     // Not flattened, so react-native-screens never resizes the body directly.
-    <View className="grow" collapsable={false} testID={`${name}-sheet`}>
+    <View
+      className="grow"
+      collapsable={false}
+      style={{ paddingBottom: overlap }}
+      testID={`${name}-sheet`}
+      onLayout={onLayout}
+    >
       {/* Top-aligned so the close button never moves; pt-1.5 centres the title on the button. */}
       <View className="flex-row items-start justify-between gap-2.5 px-4 pt-[27px] pb-3.5">
         <View className="min-w-0 flex-1 pt-1.5 pl-2">
