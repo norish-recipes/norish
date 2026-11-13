@@ -15,7 +15,8 @@ import { ArchiveBoxArrowDownIcon } from "@heroicons/react/16/solid";
 import { Button, Input } from "@heroui/react";
 import { useTranslations } from "next-intl";
 
-import type { EditedIngredient, GroceryIngredient } from "@norish/shared/lib/grocery-lines";
+import type { ScaledFood } from "@norish/shared-react/groceries";
+import type { EditedIngredient } from "@norish/shared/lib/grocery-lines";
 import {
   useAddAtOnce,
   useGroceriesPantryAndCatalogueSubscriptions,
@@ -95,18 +96,13 @@ function MiniGroceriesContent({
     useRecipeFoodsToBuy(recipeId, originalServings, initialServings);
   const {
     pantry,
-    keptFor,
-    keepLine,
     toBuy,
     inPantry,
-    addLines,
+    addTicked,
     isAdding,
-    onTheList,
-    selectedIds,
     selectedCount,
     inPantrySelectedCount,
-    toggleSelect,
-    toggleSection,
+    controls,
   } = useGroceryLines(scaledIngredients, editedIngredients);
 
   useGroceriesPantryAndCatalogueSubscriptions();
@@ -140,9 +136,7 @@ function MiniGroceriesContent({
     setEditingId(null);
   };
   const handleConfirm = () => {
-    void addLines(scaledIngredients.filter((g) => selectedIds.includes(g.id))).then(
-      (added) => added && onOpenChange(false)
-    );
+    void addTicked().then((added) => added && onOpenChange(false));
   };
 
   /**
@@ -151,9 +145,8 @@ function MiniGroceriesContent({
    * name on one line. A line to buy can be kept from here; a kept line whose
    * food is already on the list says so, so it is not bought twice.
    */
-  const renderRow = (item: GroceryIngredient) => {
+  const renderRow = (item: ScaledFood) => {
     const isEditing = editingId === item.id;
-    const kept = keptFor(item);
     const edited = editedIngredients[item.id];
     const amountDisplay = formatAmountUnit(
       edited?.amount ?? item.amount,
@@ -176,9 +169,9 @@ function MiniGroceriesContent({
       >
         <RoundCheckbox
           aria-label={item.ingredientName}
-          isSelected={selectedIds.includes(item.id)}
+          isSelected={controls.isSelected(item.id)}
           size="lg"
-          onChange={() => toggleSelect(item.id)}
+          onChange={() => controls.toggle(item.id)}
         />
         {/* As on the list, decoration a phone's row has no room for; a line
             edited here is only text, so it shows no food's icon. */}
@@ -211,7 +204,7 @@ function MiniGroceriesContent({
           </span>
         )}
         {/* A press here is its own (React Aria stops it reaching the row). */}
-        {kept === null ? (
+        {controls.canKeep(item) ? (
           <IconActionButton
             action="add"
             className="shrink-0"
@@ -219,9 +212,9 @@ function MiniGroceriesContent({
             label={t("weKeepThis")}
             size="sm"
             variant="tertiary"
-            onPress={() => keepLine(item)}
+            onPress={() => controls.keep(item)}
           />
-        ) : onTheList.includes(kept.id) ? (
+        ) : controls.isOnTheList(item) ? (
           <OnTheListMark />
         ) : null}
       </div>
@@ -234,8 +227,8 @@ function MiniGroceriesContent({
    * select-all where the Store's kebab would be, then its rows.
    */
   const renderSection = (
-    section: GroceryIngredient[],
-    other: GroceryIngredient[],
+    section: ScaledFood[],
+    other: ScaledFood[],
     {
       name,
       selected,
@@ -257,7 +250,7 @@ function MiniGroceriesContent({
           data-testid={toggleTestId}
           size="sm"
           variant="tertiary"
-          onPress={() => toggleSection(section, other)}
+          onPress={() => controls.toggleSection(section, other)}
         >
           {selected === section.length ? tActions("deselectAll") : tActions("selectAll")}
         </Button>

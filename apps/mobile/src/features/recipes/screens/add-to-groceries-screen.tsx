@@ -8,7 +8,7 @@ import { useLocalSearchParams, useRouter } from "expo-router";
 import { Button, Spinner, useThemeColor } from "heroui-native";
 import { useIntl } from "react-intl";
 
-import type { ScaledFood } from "@norish/shared-react/groceries";
+import type { GroceryLineControls, ScaledFood } from "@norish/shared-react/groceries";
 import type { FullRecipeDTO } from "@norish/shared/contracts";
 import { plannedServings } from "@norish/shared-react/calendar";
 import {
@@ -119,29 +119,18 @@ function LineSection({
   other,
   title,
   selected,
-  selectedIds,
   testID,
-  keptFor,
-  onTheList,
-  formatAmountUnit,
-  onKeep,
-  onToggle,
-  onToggleSection,
+  controls,
 }: {
   lines: ScaledFood[];
   other: ScaledFood[];
   title: string;
   selected: number;
-  selectedIds: string[];
   testID: string;
-  keptFor: (item: ScaledFood) => { id: string } | null;
-  onTheList: string[];
-  formatAmountUnit: (amount: number | null, unit: string | null) => string;
-  onKeep: (item: ScaledFood) => void;
-  onToggle: (id: string) => void;
-  onToggleSection: (section: ScaledFood[], other: ScaledFood[]) => void;
+  controls: GroceryLineControls<ScaledFood>;
 }) {
   const intl = useIntl();
+  const { formatAmountUnit } = useUnitFormatter(intl.locale);
 
   return (
     <GroceryLinesSection
@@ -154,26 +143,22 @@ function LineSection({
       toggleLabel={intl.formatMessage({
         id: selected === lines.length ? "common.actions.deselectAll" : "common.actions.selectAll",
       })}
-      onToggleAll={() => onToggleSection(lines, other)}
+      onToggleAll={() => controls.toggleSection(lines, other)}
     >
-      {lines.map((item, index) => {
-        const kept = keptFor(item);
-
-        return (
-          <GroceryLineRow
-            key={item.id}
-            amount={formatAmountUnit(item.amount, item.unit)}
-            canKeep={kept === null}
-            first={index === 0}
-            name={item.ingredientName}
-            selected={selectedIds.includes(item.id)}
-            testID={`grocery-line-${item.id}`}
-            onKeep={() => onKeep(item)}
-            onTheList={kept !== null && onTheList.includes(kept.id)}
-            onToggle={() => onToggle(item.id)}
-          />
-        );
-      })}
+      {lines.map((item, index) => (
+        <GroceryLineRow
+          key={item.id}
+          amount={formatAmountUnit(item.amount, item.unit)}
+          canKeep={controls.canKeep(item)}
+          first={index === 0}
+          name={item.ingredientName}
+          selected={controls.isSelected(item.id)}
+          testID={`grocery-line-${item.id}`}
+          onKeep={() => controls.keep(item)}
+          onTheList={controls.isOnTheList(item)}
+          onToggle={() => controls.toggle(item.id)}
+        />
+      ))}
     </GroceryLinesSection>
   );
 }
@@ -181,7 +166,6 @@ function LineSection({
 function GroceriesSheet({ recipe }: { recipe: FullRecipeDTO }) {
   const intl = useIntl();
   const router = useRouter();
-  const { formatAmountUnit } = useUnitFormatter(intl.locale);
   const servings = plannedServings(recipe);
   const {
     isLoading,
@@ -192,33 +176,19 @@ function GroceriesSheet({ recipe }: { recipe: FullRecipeDTO }) {
   } = useRecipeFoodsToBuy(recipe.id, servings, servings);
   const {
     pantry,
-    keptFor,
-    keepLine,
     toBuy,
     inPantry,
-    addLines,
+    addTicked,
     isAdding,
-    onTheList,
-    selectedIds,
     selectedCount,
     inPantrySelectedCount,
-    toggleSelect,
-    toggleSection,
+    controls,
   } = useGroceryLines(scaledIngredients, AS_WRITTEN);
 
   useGroceriesPantryAndCatalogueSubscriptions();
 
   const loading = isLoading || pantry.isLoading;
   const ticked = selectedCount + inPantrySelectedCount;
-  const section = {
-    selectedIds,
-    keptFor,
-    onTheList,
-    formatAmountUnit,
-    onKeep: keepLine,
-    onToggle: toggleSelect,
-    onToggleSection: toggleSection,
-  };
 
   return (
     <Frame
@@ -227,11 +197,7 @@ function GroceriesSheet({ recipe }: { recipe: FullRecipeDTO }) {
           busy={isAdding}
           count={ticked}
           disabled={loading || ticked === 0}
-          onPress={() =>
-            void addLines(scaledIngredients.filter((line) => selectedIds.includes(line.id))).then(
-              (added) => added && router.back()
-            )
-          }
+          onPress={() => void addTicked().then((added) => added && router.back())}
         />
       }
       servings={
@@ -260,7 +226,7 @@ function GroceriesSheet({ recipe }: { recipe: FullRecipeDTO }) {
           ) : null}
           {toBuy.length > 0 ? (
             <LineSection
-              {...section}
+              controls={controls}
               lines={toBuy}
               other={inPantry}
               selected={selectedCount}
@@ -270,7 +236,7 @@ function GroceriesSheet({ recipe }: { recipe: FullRecipeDTO }) {
           ) : null}
           {inPantry.length > 0 ? (
             <LineSection
-              {...section}
+              controls={controls}
               lines={inPantry}
               other={toBuy}
               selected={inPantrySelectedCount}
