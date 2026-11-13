@@ -4,11 +4,18 @@
 
 **Blocked by:** 08
 
-**Status:** open
+**Status:** done
 
-- [ ] Moved first, in separate commits, web switched over with its unit tests: `useLibraryQueryFilters`/`useLibraryList`/`useCookbookList`/`useLibraryCards` (`features/library/hooks/use-library.ts`), pending ids ahead of the items (`library-view.tsx`), `hiddenItemVisibility` (`lib/hidden-items.ts`, `use-hidden-item-visibility.ts`), filter persistence through platform storage (`library-root.tsx`, `lib/recipe-filters-storage.ts`), and the Filters panel's draft (`filters-panel.tsx`).
-- [ ] All / Recipes / Cookbooks lenses; list and grid per `recipeViewMode`; cards per the boards (tags with allergens first, time, servings, heart on favourites); paged as web loads.
-- [ ] Pending import cards first, not under Cookbooks.
-- [ ] Filters sheet on `LibraryFiltersProvider`, web's filters minus "Search in", kept across launches.
-- [ ] Empty, no-results (with Clear filters) and skeleton states.
-- [ ] Gates green, including mobile's lint, typecheck, test and `expo export --platform ios`.
+- [x] Moved first, in separate commits, web switched over with its unit tests: `useLibraryQueryFilters`/`useLibraryList`/`useCookbookList`/`useLibraryCards` (`features/library/hooks/use-library.ts`), pending ids ahead of the items (`library-view.tsx`), `hiddenItemVisibility` (`lib/hidden-items.ts`, `use-hidden-item-visibility.ts`), filter persistence through platform storage (`library-root.tsx`, `lib/recipe-filters-storage.ts`), and the Filters panel's draft (`filters-panel.tsx`).
+- [x] All / Recipes / Cookbooks lenses; list and grid per `recipeViewMode`; cards per the boards (tags with allergens first, time, servings, heart on favourites); paged as web loads.
+- [x] Pending import cards first, not under Cookbooks.
+- [x] Filters sheet on `LibraryFiltersProvider`, web's filters minus "Search in", kept across launches.
+- [x] Empty, no-results (with Clear filters) and skeleton states.
+- [x] Gates green, including mobile's lint, typecheck, test and `expo export --platform ios`.
+
+## Comments
+
+- Moved into shared-react: the list hooks, `libraryGridItems`, hidden-item visibility, filter persistence (`useLibraryFiltersPersistence`, storage passed in; the web cookie stays an `onKeep` callback) and the Filters draft (`useFiltersDraft`). Also moved `recipeCardFacts` (tags allergen-first, time, servings) so mobile does not copy web's card logic, and `usePendingRecipesQuery` now returns the imports' links for the pending card's host.
+- Library lives in `features/recipes` (features may not import each other); the Filters sheet is a `formSheet` route in the Recipes stack, under the `LibraryRoot` that keeps filters across the tRPC remount. `hostOf` moved to `lib/network`.
+- Added three i18n keys in every locale (`recipes.dashboard.importingCard`, `recipes.empty.descriptionMobile`, `common.filters.minRating`) because the boards' text differs from web's. The list row also shows the favourite heart (the board draws it in the grid only; the spec says both views).
+- Left for later tickets: cookbook cards open nothing and the Cookbooks empty state has no "New cookbook" button (14); `Today` is the list header slot (11); swipe and menus (10). Not checked on a device: the formSheet's glass, the heart/tag overlay and the tab-accessory clearance (72 pt) need the simulator pass.
