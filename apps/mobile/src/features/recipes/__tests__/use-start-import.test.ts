@@ -36,4 +36,16 @@ describe("useStartImport", () => {
     expect(run).toHaveBeenCalledTimes(2);
     expect(router.back).toHaveBeenCalledOnce();
   });
+
+  it("ignores a second control's press once the first started", () => {
+    const first = vi.fn();
+    const second = vi.fn();
+    const { result } = renderHook(() => useStartImport());
+
+    result.current(first)();
+    result.current(second)();
+
+    expect(second).not.toHaveBeenCalled();
+    expect(router.back).toHaveBeenCalledOnce();
+  });
 });
