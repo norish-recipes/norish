@@ -1,5 +1,7 @@
 import React from "react";
 import { FlatList, View } from "react-native";
+import { DayCard, DayCardSkeleton } from "@/components/day-card";
+import { DAY_CARD, dayCardHeight, dayCardOffsets } from "@/components/day-card-height";
 import { useLocalSearchParams, useRouter } from "expo-router";
 import { useIntl } from "react-intl";
 
@@ -14,10 +16,8 @@ import { slotTranslationKeys } from "@norish/shared-react/calendar/todays-meals"
 import { useToday } from "@norish/shared-react/reader";
 import { dateKey, parseDateKey } from "@norish/shared/lib/helpers";
 
-import { DayCard, DayCardSkeleton } from "../components/day-card";
 import { SheetHeader } from "../components/sheet-header";
 import { usePlanExit } from "../hooks/use-plan-exit";
-import { DAY_CARD, dayCardHeight, dayCardOffsets } from "../utils/day-card-height";
 
 /** The header's own height: 20 pt above, the title and its line, and the 14 pt before the first card; the list's offsets start after it. */
 const HEADER = 79;

@@ -2,6 +2,7 @@ import type { ReactNode } from "react";
 import React from "react";
 import { Text, View } from "react-native";
 import { GestureDetector, useTapGesture } from "react-native-gesture-handler";
+import { CardPhoto } from "@/components/card-photo";
 import * as Haptics from "expo-haptics";
 import { useIntl } from "react-intl";
 
@@ -21,7 +22,6 @@ import {
   recipeSwipeActions,
 } from "../utils/card-actions";
 import { CardMenu } from "./card-menu";
-import { CardPhoto } from "./card-photo";
 import { FavouriteMark } from "./favourite-mark";
 import { Pill } from "./pill";
 import { SwipeActions } from "./swipe-actions";

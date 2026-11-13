@@ -1,6 +1,8 @@
 import React from "react";
 import { Pressable, Text, View } from "react-native";
 import { GestureDetector, useTapGesture } from "react-native-gesture-handler";
+import { CardPhoto } from "@/components/card-photo";
+import { SLOT_SYMBOLS } from "@/components/slot-icons";
 import Ionicons from "@expo/vector-icons/Ionicons";
 import { useRouter } from "expo-router";
 import { useThemeColor } from "heroui-native";
@@ -13,10 +15,8 @@ import { slotTranslationKeys } from "@norish/shared-react/calendar/todays-meals"
 
 import { useCardActionMenu } from "../hooks/use-card-action-menu";
 import { useTodayActions } from "../hooks/use-today-actions";
-import { SLOT_SYMBOLS } from "../utils/slot-icons";
 import { TODAY_ACTION_DEFINITIONS, todayMenuActions } from "../utils/today-actions";
 import { CardMenu } from "./card-menu";
-import { CardPhoto } from "./card-photo";
 import { GlassChip } from "./glass-chip";
 
 /** The one size of a Today card: the board's 172 by 244 pt, its photo 164 pt tall, 12 pt between. */

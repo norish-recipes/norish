@@ -1,4 +1,4 @@
-import { dayCardHeight, dayCardOffsets } from "@/features/recipes/utils/day-card-height";
+import { dayCardHeight, dayCardOffsets } from "@/components/day-card-height";
 import { describe, expect, it } from "vitest";
 
 describe("dayCardHeight", () => {

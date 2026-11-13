@@ -1,5 +1,6 @@
 import React from "react";
 import { Text, View } from "react-native";
+import { CardPhoto } from "@/components/card-photo";
 import { Button, Host, Image, Menu } from "@expo/ui/swift-ui";
 import { accessibilityIdentifier, accessibilityLabel, frame } from "@expo/ui/swift-ui/modifiers";
 import Ionicons from "@expo/vector-icons/Ionicons";
@@ -16,8 +17,7 @@ import {
   TODAY_MEAL_SLOTS,
 } from "@norish/shared-react/calendar/todays-meals";
 
-import { SLOT_GLYPHS, SLOT_SYMBOLS } from "../utils/slot-icons";
-import { CardPhoto } from "./card-photo";
+import { SLOT_GLYPHS, SLOT_SYMBOLS } from "./slot-icons";
 
 /** One planned item: its photo, or a note's glyph, and its name. */
 function PlannedRow({ item }: { item: PlannedItemFromQuery }) {
@@ -85,7 +85,7 @@ function SlotMenu({
 
 /**
  * A day as a card: its date, what is planned in each slot, and a "+" that asks for a slot.
- * Heights are fixed (`utils/day-card-height.ts` adds them up), so a list can lay days out unmeasured.
+ * Heights are fixed (`day-card-height.ts` adds them up), so a list can lay days out unmeasured.
  */
 export function DayCard({
   date,
