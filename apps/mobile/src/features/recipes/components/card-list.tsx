@@ -50,7 +50,8 @@ export function CardList<Row>({
       ListEmptyComponent={empty}
       ListFooterComponent={isFetchingNextPage ? <Spinner className="py-4" /> : undefined}
       ListHeaderComponent={header}
-      columnWrapperStyle={isGrid ? { gap: 12, paddingHorizontal: 20, marginBottom: 12 } : undefined}
+      className="flex-1"
+      columnWrapperClassName={isGrid ? "mb-3 gap-3 px-5" : undefined}
       contentContainerStyle={{
         paddingBottom: insets.bottom + TAB_BAR_HEIGHT + ACCESSORY_CLEARANCE,
       }}
@@ -64,7 +65,6 @@ export function CardList<Row>({
         return isGrid ? card : <View className="px-5 pb-3">{card}</View>;
       }}
       scrollEventThrottle={16}
-      style={{ flex: 1 }}
       testID={testID}
       onEndReached={onEndReached}
       onEndReachedThreshold={0.6}
