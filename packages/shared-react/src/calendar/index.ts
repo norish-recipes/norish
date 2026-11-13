@@ -13,14 +13,5 @@ export {
   useCaldavSyncStatusQuery,
 } from "./use-caldav-query";
 export { useCaldavSubscription } from "./use-caldav-subscription";
-export {
-  TODAY_MEAL_SLOTS,
-  buildPlannedItemSubtitle,
-  firstSlotFrom,
-  getPlannedItemTitle,
-  groupTodayItemsBySlot,
-  nextMealSlot,
-  slotTranslationKeys,
-} from "./todays-meals";
 export { useTodaysMeals } from "./use-todays-meals";
 export { SLOT_TO_CATEGORY, useSlotPlanning } from "./use-slot-planning";

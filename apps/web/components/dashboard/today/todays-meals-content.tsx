@@ -10,11 +10,16 @@ import { useLocale, useTranslations } from "next-intl";
 import type { Slot } from "@norish/shared/contracts";
 import type { TodaySectionVisibility } from "@norish/shared/contracts/zod/device-preferences";
 import { useCalendarQuery, useCalendarSubscription } from "@norish/shared-react/calendar";
+import {
+  firstSlotFrom,
+  groupTodayItemsBySlot,
+  nextMealSlot,
+  slotTranslationKeys,
+  TODAY_MEAL_SLOTS,
+} from "@norish/shared-react/calendar/todays-meals";
 import { getInitialCalendarRange, parseDateKey } from "@norish/shared/lib/helpers";
 
 import TodayMealSlotCard from "./today-meal-slot-card";
-import { slotTranslationKeys, TODAY_MEAL_SLOTS } from "./todays-meals-constants";
-import { firstSlotFrom, groupTodayItemsBySlot, nextMealSlot } from "./todays-meals-helpers";
 
 type TodaysMealsContentProps = {
   visibility: TodaySectionVisibility;

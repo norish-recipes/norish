@@ -7,8 +7,12 @@ import { PhotoIcon } from "@heroicons/react/24/outline";
 import { Card, Chip } from "@heroui/react";
 import { useTranslations } from "next-intl";
 
+import {
+  buildPlannedItemSubtitle,
+  getPlannedItemTitle,
+} from "@norish/shared-react/calendar/todays-meals";
+
 import type { TodayMealSlotCardProps } from "./todays-meals-types";
-import { buildPlannedItemSubtitle, getPlannedItemTitle } from "./todays-meals-helpers";
 import TodaysMealsSlotChip from "./todays-meals-slot-chip";
 
 const cardClassName =

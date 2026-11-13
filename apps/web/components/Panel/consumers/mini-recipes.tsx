@@ -1,7 +1,6 @@
 "use client";
 
 import { ChangeEvent, memo, useCallback, useEffect, useRef, useState, useTransition } from "react";
-import { slotTranslationKeys } from "@/components/dashboard/today/todays-meals-constants";
 import Panel from "@/components/Panel/Panel";
 import { ActionButton } from "@/components/shared/action-button";
 import { SlotDropdown } from "@/components/shared/slot-dropdown";
@@ -13,6 +12,7 @@ import { AnimatePresence, motion } from "motion/react";
 import { useLocale, useTranslations } from "next-intl";
 
 import { useCalendarMutations } from "@norish/shared-react/calendar";
+import { slotTranslationKeys } from "@norish/shared-react/calendar/todays-meals";
 import {
   useRandomRecipe,
   useRecipeListSubscription,

@@ -2,7 +2,6 @@
 
 import type { ComponentProps } from "react";
 import { useState } from "react";
-import { slotTranslationKeys } from "@/components/dashboard/today/todays-meals-constants";
 import { SettingsCard } from "@/components/settings/settings-card";
 import { ActionButton } from "@/components/shared/action-button";
 import { ChipButton } from "@/components/shared/chip-button";
@@ -24,6 +23,7 @@ import {
   useCaldavSummaryQuery,
   useCaldavSyncStatusQuery,
 } from "@norish/shared-react/calendar";
+import { slotTranslationKeys } from "@norish/shared-react/calendar/todays-meals";
 import { useHydrated } from "@norish/shared-react/platform";
 import { caldavSyncStatuses } from "@norish/shared/contracts";
 

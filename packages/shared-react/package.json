@@ -10,6 +10,7 @@
     "./config": "./src/config/index.ts",
     "./admin": "./src/admin/index.ts",
     "./calendar": "./src/calendar/index.ts",
+    "./calendar/todays-meals": "./src/calendar/todays-meals.ts",
     "./groceries": "./src/groceries/index.ts",
     "./ingredients": "./src/ingredients/index.ts",
     "./reader": "./src/reader/index.ts",

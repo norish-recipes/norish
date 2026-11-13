@@ -1,14 +1,11 @@
 "use client";
 
-import {
-  slotTranslationKeys,
-  TODAY_MEAL_SLOTS,
-} from "@/components/dashboard/today/todays-meals-constants";
 import TodaysMealsSlotChip from "@/components/dashboard/today/todays-meals-slot-chip";
 import { Card, Skeleton } from "@heroui/react";
 import { useTranslations } from "next-intl";
 
 import type { Slot } from "@norish/shared/contracts";
+import { slotTranslationKeys, TODAY_MEAL_SLOTS } from "@norish/shared-react/calendar/todays-meals";
 
 function TodayMealSlotSkeleton({ slot }: { slot: Slot }) {
   const tSlots = useTranslations("common.slots");
