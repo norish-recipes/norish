@@ -1,4 +1,4 @@
-import { copiedLinkToOffer } from "@/features/recipes/utils/copied-link";
+import { copiedLinkToOffer, isImportableLink } from "@/features/recipes/utils/copied-link";
 import { describe, expect, it, vi } from "vitest";
 
 vi.mock("@/lib/auth/auth-headers", () => ({ authHeaders: () => ({}) }));
@@ -26,7 +26,7 @@ describe("copiedLinkToOffer", () => {
   });
 
   it("offers nothing for a URL that is not a web link", () => {
-    for (const url of ["mailto:cook@example.com", "norish://recipe/1", "", null]) {
+    for (const url of ["mailto:cook@example.com", "norish://recipe/1", "https://", "", null]) {
       expect(copiedLinkToOffer({ hasUrl: true, url, serverAddress: SERVER })).toBeNull();
     }
   });
@@ -47,5 +47,24 @@ describe("copiedLinkToOffer", () => {
 
   it("offers a web link while no Server Address is known", () => {
     expect(copiedLinkToOffer({ hasUrl: true, url: RECIPE, serverAddress: null })).toBe(RECIPE);
+  });
+});
+
+describe("isImportableLink", () => {
+  it("takes an http or https link with a host", () => {
+    expect(isImportableLink("https://example.com/soup")).toBe(true);
+    expect(isImportableLink("http://localhost:3000/recipes/1")).toBe(true);
+  });
+
+  it("refuses text, other schemes and a link without a host", () => {
+    for (const value of [
+      "soup",
+      "example.com/soup",
+      "ftp://example.com",
+      "https://",
+      "https:// x",
+    ]) {
+      expect(isImportableLink(value)).toBe(false);
+    }
   });
 });
