@@ -71,7 +71,11 @@ export function GroceryLineRow({
           importantForAccessibility="no-hide-descendants"
           isSelected={selected}
           pointerEvents="none"
-        />
+        >
+          {/* The filled tick is the indicator, whose radius heroui animates to 0 when selected;
+              iOS clamps a radius to half the side, so this keeps it a circle. */}
+          <Checkbox.Indicator animation={{ borderRadius: { value: [999, 999] } }} />
+        </Checkbox>
         <Text className="text-foreground min-w-0 flex-1 text-base">
           {amount ? <Text className="text-accent-text font-medium">{`${amount} `}</Text> : null}
           {name}
