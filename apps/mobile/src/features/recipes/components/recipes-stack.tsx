@@ -43,6 +43,17 @@ export function RecipesStack() {
             contentStyle: { backgroundColor: "transparent" },
           }}
         />
+        <Stack.Screen
+          name="plan-recipe"
+          options={{
+            presentation: "formSheet",
+            headerShown: false,
+            sheetGrabberVisible: true,
+            // The board's sheet is 619 pt (a 0.785 detent) of the ~800 pt maximum.
+            sheetAllowedDetents: [0.785],
+            contentStyle: { backgroundColor: "transparent" },
+          }}
+        />
         {SHEETS.map((name) => (
           <Stack.Screen
             key={name}
