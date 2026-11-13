@@ -1,18 +1,24 @@
 "use client";
 
-import { useCookbookList, useLibraryCards, useLibraryQueryFilters } from "@/features/library/hooks";
+import { useRecipeMutationErrorToast } from "@/hooks/use-recipes-mutations";
 import { Card } from "@heroui/react";
 import { useTranslations } from "next-intl";
 
-import type { SelectedRecipe } from "@norish/shared-react/recipes";
+import type { LibraryGridItem, SelectedRecipe } from "@norish/shared-react/recipes";
 import type { RecipeViewMode } from "@norish/shared/contracts/zod/device-preferences";
-import { useCookbooksMutations, useRecipeSelection } from "@norish/shared-react/recipes";
+import {
+  recipeGridItems,
+  useCookbookList,
+  useCookbooksMutations,
+  useLibraryCards,
+  useLibraryQueryFilters,
+  useRecipeSelection,
+} from "@norish/shared-react/recipes";
 import {
   hasAppliedRecipeFilters,
   serializeRecipeFilters,
 } from "@norish/shared/contracts/filter-contract";
 
-import type { LibraryGridItem } from "./library-items";
 import LibraryGrid from "./library-grid";
 import RecipeCard from "./recipe-card";
 
@@ -32,7 +38,9 @@ export default function CookbookMembers({
 }) {
   const t = useTranslations("recipes.cookbooks");
   const { filters } = useLibraryQueryFilters();
-  const { isFavorite, toggleFavorite, deleteRecipes, allergies } = useLibraryCards();
+  const { isFavorite, toggleFavorite, deleteRecipes, allergies } = useLibraryCards(
+    useRecipeMutationErrorToast()
+  );
   const { setMembership } = useCookbooksMutations();
   const selectRange = useRecipeSelection((state) => state.selectRange);
 
@@ -41,11 +49,7 @@ export default function CookbookMembers({
 
   const selectRangeTo = (recipe: SelectedRecipe) => selectRange(recipe, recipes);
 
-  const items: LibraryGridItem[] = recipes.map((recipe) => ({
-    kind: "recipe" as const,
-    id: recipe.id,
-    recipe,
-  }));
+  const items = recipeGridItems(recipes);
 
   // Taking a recipe out of the cookbook it is being read in, from the card's
   // swipe actions. The member list is this cookbook's own read, so drop the

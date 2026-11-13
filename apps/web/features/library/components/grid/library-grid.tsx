@@ -18,11 +18,10 @@ import { Spinner } from "@heroui/react";
 import { useWindowVirtualizer } from "@tanstack/react-virtual";
 import { useWindowSize } from "usehooks-ts";
 
+import type { LibraryGridItem } from "@norish/shared-react/recipes";
 import type { RecipeViewMode } from "@norish/shared/contracts/zod/device-preferences";
 import { useHydrated } from "@norish/shared-react/platform";
 import { useDeviceKind } from "@norish/shared-react/reader";
-
-import type { LibraryGridItem } from "./library-items";
 
 // Estimated row height (card height + gap). Both kinds of card match these,
 // or the estimate degrades for every row on a mixed page (ADR-0026).

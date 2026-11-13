@@ -1,8 +1,7 @@
 "use client";
 
-import { useCookbookList } from "@/features/library/hooks";
-
 import type { CookbookSummaryDTO } from "@norish/shared/contracts";
+import { useCookbookList } from "@norish/shared-react/recipes";
 
 import RecipeSelectionBar from "./recipe-selection-bar";
 

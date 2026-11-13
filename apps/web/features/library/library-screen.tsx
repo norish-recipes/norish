@@ -7,8 +7,9 @@ import LibraryHeader, {
   LIBRARY_HEADING_ID,
 } from "@/features/library/components/header/library-header";
 import { RecipeSelectionBar } from "@/features/library/components/selection";
-import { useLibraryList } from "@/features/library/hooks";
 import { Tabs } from "@heroui/react";
+
+import { useLibraryList } from "@norish/shared-react/recipes";
 
 /** The Library's screen, which the dashboard draws under Today's meals. */
 export function LibraryScreen() {
