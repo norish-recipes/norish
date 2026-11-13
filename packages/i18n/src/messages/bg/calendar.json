@@ -10,7 +10,10 @@
     "openRecipe": "Отвори рецептата",
     "move": "Премести…",
     "removeTitle": "Да се премахне ли от днес?",
-    "removeMessage": "„{name}“ се премахва от {slot} ({day})."
+    "removeMessage": "„{name}“ се премахва от {slot} ({day}).",
+    "moveTitle": "Премести",
+    "moveSubtitle": "{name}, {slot} днес",
+    "moveToDay": "Премести {name} на {day}"
   },
   "editNote": {
     "title": "Редактиране на бележка",
@@ -53,7 +56,9 @@
     "failedToLoadRecipes": "Зареждането на рецептите не бе успешно.",
     "planRecipe": "Планирай рецепта",
     "searchOrAddNote": "Търсете рецепти или добавете бележка",
-    "random": "Случайна рецепта"
+    "random": "Случайна рецепта",
+    "planThisRecipe": "Планирай тази рецепта",
+    "planOnDay": "Планирай {name} за {day}"
   },
   "caldav": {
     "syncStarted": "Синхронизацията с CalDAV започна",

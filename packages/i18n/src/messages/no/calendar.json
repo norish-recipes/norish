@@ -10,7 +10,10 @@
     "openRecipe": "Åpne oppskrift",
     "move": "Flytt…",
     "removeTitle": "Fjerne fra i dag?",
-    "removeMessage": "{name} fjernes fra {slot} på {day}."
+    "removeMessage": "{name} fjernes fra {slot} på {day}.",
+    "moveTitle": "Flytt",
+    "moveSubtitle": "{name}, dagens {slot}",
+    "moveToDay": "Flytt {name} til {day}"
   },
   "editNote": {
     "title": "Rediger notat",
@@ -53,7 +56,9 @@
     "failedToLoadRecipes": "Kunne ikke laste oppskrifter.",
     "planRecipe": "Planlegg en oppskrift",
     "searchOrAddNote": "Søk etter oppskrifter eller legg til et notat",
-    "random": "Tilfeldig oppskrift"
+    "random": "Tilfeldig oppskrift",
+    "planThisRecipe": "Planlegg denne oppskriften",
+    "planOnDay": "Planlegg {name} på {day}"
   },
   "caldav": {
     "syncStarted": "CalDAV-synkronisering startet",

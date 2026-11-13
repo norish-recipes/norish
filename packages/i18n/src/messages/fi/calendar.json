@@ -10,7 +10,10 @@
     "openRecipe": "Avaa resepti",
     "move": "Siirrä…",
     "removeTitle": "Poistetaanko tältä päivältä?",
-    "removeMessage": "{name} poistetaan kohdasta {slot}, {day}."
+    "removeMessage": "{name} poistetaan kohdasta {slot}, {day}.",
+    "moveTitle": "Siirrä",
+    "moveSubtitle": "{name}, tämän päivän {slot}",
+    "moveToDay": "Siirrä {name} päivälle {day}"
   },
   "editNote": {
     "title": "Muokkaa huomautusta",
@@ -53,7 +56,9 @@
     "failedToLoadRecipes": "Reseptien lataaminen epäonnistui.",
     "planRecipe": "Suunnittele resepti",
     "searchOrAddNote": "Hae reseptejä tai lisää muistiinpano",
-    "random": "Satunnainen resepti"
+    "random": "Satunnainen resepti",
+    "planThisRecipe": "Suunnittele tämä resepti",
+    "planOnDay": "Suunnittele {name} päivälle {day}"
   },
   "caldav": {
     "syncStarted": "CalDAV-synkronointi aloitettu",

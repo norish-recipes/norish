@@ -10,7 +10,10 @@
     "openRecipe": "Recept openen",
     "move": "Verplaatsen…",
     "removeTitle": "Van vandaag halen?",
-    "removeMessage": "{name} gaat van {slot} op {day} af."
+    "removeMessage": "{name} gaat van {slot} op {day} af.",
+    "moveTitle": "Verplaatsen",
+    "moveSubtitle": "{name}, {slot} van vandaag",
+    "moveToDay": "{name} verplaatsen naar {day}"
   },
   "editNote": {
     "title": "Notitie bewerken",
@@ -53,7 +56,9 @@
     "failedToLoadRecipes": "Kan recepten niet laden.",
     "planRecipe": "Recept plannen",
     "searchOrAddNote": "Zoek recepten of voeg een notitie toe",
-    "random": "Willekeurig recept"
+    "random": "Willekeurig recept",
+    "planThisRecipe": "Dit recept plannen",
+    "planOnDay": "{name} plannen op {day}"
   },
   "caldav": {
     "syncStarted": "CalDAV-synchronisatie gestart",

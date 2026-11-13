@@ -10,7 +10,10 @@
     "openRecipe": "Öppna recept",
     "move": "Flytta…",
     "removeTitle": "Ta bort från idag?",
-    "removeMessage": "{name} tas bort från {slot} på {day}."
+    "removeMessage": "{name} tas bort från {slot} på {day}.",
+    "moveTitle": "Flytta",
+    "moveSubtitle": "{name}, dagens {slot}",
+    "moveToDay": "Flytta {name} till {day}"
   },
   "editNote": {
     "title": "Redigera anteckning",
@@ -53,7 +56,9 @@
     "failedToLoadRecipes": "Det gick inte att hämta recepten.",
     "planRecipe": "Planera ett recept",
     "searchOrAddNote": "Sök recept eller lägg till en anteckning",
-    "random": "Slumpmässigt recept"
+    "random": "Slumpmässigt recept",
+    "planThisRecipe": "Planera det här receptet",
+    "planOnDay": "Planera {name} på {day}"
   },
   "caldav": {
     "syncStarted": "CalDAV-synkronisering startad",

@@ -10,7 +10,10 @@
     "openRecipe": "레시피 열기",
     "move": "이동…",
     "removeTitle": "오늘에서 제거할까요?",
-    "removeMessage": "{day} {slot}에서 {name}을(를) 제거합니다."
+    "removeMessage": "{day} {slot}에서 {name}을(를) 제거합니다.",
+    "moveTitle": "이동",
+    "moveSubtitle": "{name}, 오늘의 {slot}",
+    "moveToDay": "{name}을(를) {day}(으)로 이동"
   },
   "editNote": {
     "title": "메모 편집",
@@ -53,7 +56,9 @@
     "failedToLoadRecipes": "레시피를 불러오지 못했습니다.",
     "planRecipe": "레시피 계획하기",
     "searchOrAddNote": "레시피를 검색하거나 메모를 추가하세요",
-    "random": "무작위 레시피"
+    "random": "무작위 레시피",
+    "planThisRecipe": "이 레시피 계획하기",
+    "planOnDay": "{day}에 {name} 계획하기"
   },
   "caldav": {
     "syncStarted": "CalDAV 동기화 시작됨",

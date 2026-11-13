@@ -10,7 +10,10 @@
     "openRecipe": "Відкрити рецепт",
     "move": "Перемістити…",
     "removeTitle": "Прибрати із сьогоднішнього плану?",
-    "removeMessage": "«{name}» буде прибрано з прийому їжі «{slot}» ({day})."
+    "removeMessage": "«{name}» буде прибрано з прийому їжі «{slot}» ({day}).",
+    "moveTitle": "Перемістити",
+    "moveSubtitle": "«{name}», {slot} сьогодні",
+    "moveToDay": "Перемістити «{name}» на {day}"
   },
   "editNote": {
     "title": "Редагувати нотатку",
@@ -53,7 +56,9 @@
     "failedToLoadRecipes": "Не вдалося завантажити рецепти.",
     "planRecipe": "Запланувати рецепт",
     "searchOrAddNote": "Знайдіть рецепт або додайте нотатку",
-    "random": "Випадковий рецепт"
+    "random": "Випадковий рецепт",
+    "planThisRecipe": "Запланувати цей рецепт",
+    "planOnDay": "Запланувати «{name}» на {day}"
   },
   "caldav": {
     "syncStarted": "Синхронізацію CalDAV розпочато",

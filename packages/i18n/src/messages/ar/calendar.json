@@ -10,7 +10,10 @@
     "openRecipe": "فتح الوصفة",
     "move": "نقل…",
     "removeTitle": "هل تريد الإزالة من اليوم؟",
-    "removeMessage": "ستتم إزالة {name} من {slot} يوم {day}."
+    "removeMessage": "ستتم إزالة {name} من {slot} يوم {day}.",
+    "moveTitle": "نقل",
+    "moveSubtitle": "{name}، {slot} اليوم",
+    "moveToDay": "نقل {name} إلى {day}"
   },
   "editNote": {
     "title": "تعديل الملاحظة",
@@ -53,7 +56,9 @@
     "failedToLoadRecipes": "تعذّر تحميل الوصفات.",
     "planRecipe": "خطّط لوصفة",
     "searchOrAddNote": "ابحث عن وصفات أو أضف ملاحظة",
-    "random": "وصفة عشوائية"
+    "random": "وصفة عشوائية",
+    "planThisRecipe": "تخطيط هذه الوصفة",
+    "planOnDay": "تخطيط {name} ليوم {day}"
   },
   "caldav": {
     "syncStarted": "بدأت مزامنة CalDAV",

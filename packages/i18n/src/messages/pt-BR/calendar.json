@@ -10,7 +10,10 @@
     "openRecipe": "Abrir receita",
     "move": "Mover…",
     "removeTitle": "Remover de hoje?",
-    "removeMessage": "{name} sai de {slot} de {day}."
+    "removeMessage": "{name} sai de {slot} de {day}.",
+    "moveTitle": "Mover",
+    "moveSubtitle": "{name}, {slot} de hoje",
+    "moveToDay": "Mover {name} para {day}"
   },
   "editNote": {
     "title": "Editar nota",
@@ -53,7 +56,9 @@
     "failedToLoadRecipes": "Falha ao carregar receitas.",
     "planRecipe": "Planejar uma receita",
     "searchOrAddNote": "Busque receitas ou adicione uma nota",
-    "random": "Receita aleatória"
+    "random": "Receita aleatória",
+    "planThisRecipe": "Planejar esta receita",
+    "planOnDay": "Planejar {name} em {day}"
   },
   "caldav": {
     "syncStarted": "Sincronização CalDAV iniciada",
