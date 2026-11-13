@@ -3,7 +3,7 @@
 import { useState } from "react";
 import { showSafeErrorToast } from "@/lib/ui/safe-error-toast";
 import { ArrowDownTrayIcon, SparklesIcon } from "@heroicons/react/16/solid";
-import { Button, Label, Modal, TextArea, TextField, toast } from "@heroui/react";
+import { Button, Label, Modal, TextArea, TextField } from "@heroui/react";
 import { useTranslations } from "next-intl";
 
 import { usePermissions } from "@norish/shared-react/reader";
@@ -22,15 +22,17 @@ export default function ImportFromPasteModal({ isOpen, onOpenChange }: ImportFro
   const { importFromPaste, importFromPasteWithAI } = useImportRecipe();
   const [text, setText] = useState("");
   const [isSubmitting, setIsSubmitting] = useState(false);
-  const submit = (run: (text: string) => void, context: string) => {
+  // `run` answers false when it refused the text and said why; the modal stays open then.
+  const submit = (run: (text: string) => boolean | void, context: string) => {
     const trimmed = text.trim();
 
     if (!trimmed) return;
     setIsSubmitting(true);
     try {
-      run(trimmed);
-      onOpenChange(false);
-      setText("");
+      if (run(trimmed) !== false) {
+        onOpenChange(false);
+        setText("");
+      }
     } catch (error) {
       showSafeErrorToast({
         title: t("failed"),
@@ -43,19 +45,7 @@ export default function ImportFromPasteModal({ isOpen, onOpenChange }: ImportFro
     setIsSubmitting(false);
   };
   const handleImport = () => submit(importFromPaste, "import-from-paste-modal:import");
-  const handleAIImport = () => {
-    if (text.trim().length > MAX_RECIPE_PASTE_CHARS) {
-      toast(t("tooLarge"), {
-        description: t("maxCharacters", {
-          max: MAX_RECIPE_PASTE_CHARS.toLocaleString(),
-        }),
-        variant: "warning",
-      });
-
-      return;
-    }
-    submit(importFromPasteWithAI, "import-from-paste-modal:import-ai");
-  };
+  const handleAIImport = () => submit(importFromPasteWithAI, "import-from-paste-modal:import-ai");
   const handleOpenChange = (open: boolean) => {
     if (!open) {
       setText("");
