@@ -6,7 +6,7 @@
     "searchPlaceholder": "Search or add recipe...",
     "searchRecipesPlaceholder": "Search recipes...",
     "libraryCount": "{count, plural, one {# item} other {# items}}",
-    "addRecipe": "Add Recipe",
+    "addRecipe": "Add recipe",
     "importFromUrl": "URL",
     "importFromPaste": "Paste",
     "importFromImage": "Image",
