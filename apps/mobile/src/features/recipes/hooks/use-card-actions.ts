@@ -35,9 +35,12 @@ export function useCardActions() {
     plan: (recipe: Recipe) =>
       router.push({ pathname: "/plan", params: { recipeId: recipe.id, name: recipe.name } }),
     addToCookbook: (recipe: Recipe) =>
-      router.push({ pathname: "/add-to-cookbook", params: { recipeId: recipe.id } }),
-    removeFromCookbook: (cookbook: Cookbook, recipe: Recipe) =>
-      setMembership({ cookbookId: cookbook.id, recipeIds: [recipe.id], isMember: false }),
+      router.push({
+        pathname: "/add-to-cookbook",
+        params: { recipeId: recipe.id, name: recipe.name },
+      }),
+    removeFromCookbook: (cookbook: CookbookSummaryDTO, recipe: Recipe) =>
+      setMembership({ cookbookId: cookbook.id, recipeIds: [recipe.id], isMember: false, cookbook }),
     deleteRecipe: (recipe: Recipe) =>
       confirm({
         title: intl.formatMessage({ id: "recipes.deleteModal.alertTitle" }, { name: recipe.name }),
@@ -45,17 +48,26 @@ export function useCardActions() {
         onConfirm: () => deleteRecipes([{ id: recipe.id, version: recipe.version }]),
       }),
     addRecipes: (cookbook: Cookbook) =>
-      router.push({ pathname: "/cookbook-add-recipes", params: { cookbookId: cookbook.id } }),
+      router.push({
+        pathname: "/cookbook-add-recipes",
+        params: { cookbookId: cookbook.id, title: cookbook.title },
+      }),
     renameCookbook: (cookbook: Cookbook) =>
-      router.push({ pathname: "/cookbook-rename", params: { cookbookId: cookbook.id } }),
-    deleteCookbook: (cookbook: Cookbook) =>
+      router.push({
+        pathname: "/cookbook-rename",
+        params: { cookbookId: cookbook.id, title: cookbook.title },
+      }),
+    deleteCookbook: (cookbook: Cookbook, onDeleted?: () => void) =>
       confirm({
         title: intl.formatMessage(
           { id: "recipes.cookbooks.deleteAlertTitle" },
           { title: cookbook.title }
         ),
         message: intl.formatMessage({ id: "recipes.cookbooks.deleteKeepsRecipes" }),
-        onConfirm: () => deleteCookbook({ id: cookbook.id, version: cookbook.version }),
+        onConfirm: () => {
+          deleteCookbook({ id: cookbook.id, version: cookbook.version });
+          onDeleted?.();
+        },
       }),
   };
 }

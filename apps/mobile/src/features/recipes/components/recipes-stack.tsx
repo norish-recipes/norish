@@ -6,7 +6,7 @@ import { Stack } from "expo-router";
 import { AddAtOnceHost } from "./add-at-once-host";
 import { LibraryRoot } from "./library-root";
 
-// The sheets whose content can outgrow 62%; cookbook-rename's fits its content.
+// The sheets whose content can outgrow 62%; the cookbook title sheets fit their content.
 const SHEETS = [
   "filters",
   "plan-recipe",
@@ -15,6 +15,8 @@ const SHEETS = [
   "add-to-cookbook",
   "cookbook-add-recipes",
 ] as const;
+
+const FIT_SHEETS = ["cookbook-rename", "new-cookbook"] as const;
 
 /** The Recipes tab's stack: a transparent native header with the account avatar pinned right; the screen draws its own large title. */
 export function RecipesStack() {
@@ -32,7 +34,9 @@ export function RecipesStack() {
           {SHEETS.map((name) => (
             <Stack.Screen key={name} name={name} options={SHEET_OPTIONS} />
           ))}
-          <Stack.Screen name="cookbook-rename" options={FIT_SHEET_OPTIONS} />
+          {FIT_SHEETS.map((name) => (
+            <Stack.Screen key={name} name={name} options={FIT_SHEET_OPTIONS} />
+          ))}
         </Stack>
       </AddAtOnceHost>
     </LibraryRoot>
