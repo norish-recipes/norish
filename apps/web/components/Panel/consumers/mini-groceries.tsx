@@ -19,9 +19,7 @@ import type { EditedIngredient, GroceryIngredient } from "@norish/shared/lib/gro
 import {
   useAddAtOnce,
   useGroceriesPantryAndCatalogueSubscriptions,
-  useLineSelection,
-  useLinesToBuy,
-  useOnTheList,
+  useGroceryLines,
 } from "@norish/shared-react/groceries";
 import { useIngredientIcons } from "@norish/shared-react/ingredients";
 import {
@@ -95,25 +93,26 @@ function MiniGroceriesContent({
   const [editedIngredients, setEditedIngredients] = useState<Record<string, EditedIngredient>>({});
   const { isLoading, servings, scaledIngredients, incrementServings, decrementServings } =
     useRecipeFoodsToBuy(recipeId, originalServings, initialServings);
-  const { pantry, keptFor, keepLine, toBuy, inPantry, addLines } = useLinesToBuy(
-    scaledIngredients,
-    editedIngredients
-  );
+  const {
+    pantry,
+    keptFor,
+    keepLine,
+    toBuy,
+    inPantry,
+    addLines,
+    isAdding,
+    onTheList,
+    selectedIds,
+    selectedCount,
+    inPantrySelectedCount,
+    toggleSelect,
+    toggleSection,
+  } = useGroceryLines(scaledIngredients, editedIngredients);
 
   useGroceriesPantryAndCatalogueSubscriptions();
   useRecipeSubscription(recipeId);
   useIngredientIcons(scaledIngredients.map((item) => item.ingredientId));
 
-  const onTheList = useOnTheList(pantry.items);
-  const pantryUnavailable = pantry.isUnavailable;
-  const { selectedIds, selectedCount, inPantrySelectedCount, toggleSelect, toggleSection } =
-    useLineSelection({
-      lines: scaledIngredients,
-      toBuy,
-      inPantry,
-      pantryLoading: pantry.isLoading,
-      pantryUnavailable,
-    });
   const handleEditStart = (id: string) => {
     const item = scaledIngredients.find((i) => i.id === id);
 
@@ -300,7 +299,7 @@ function MiniGroceriesContent({
               </div>
             </div>
 
-            {pantryUnavailable && (
+            {pantry.isUnavailable && (
               <p className="text-muted mb-2 px-1 text-xs" data-testid="pantry-unavailable">
                 {t("pantryUnavailable")}
               </p>
@@ -337,7 +336,7 @@ function MiniGroceriesContent({
           <ActionButtonGroup>
             <ActionButton
               action="add"
-              isDisabled={selectedCount + inPantrySelectedCount === 0}
+              isDisabled={selectedCount + inPantrySelectedCount === 0 || isAdding}
               onPress={handleConfirm}
             >
               {tActions("add")}
