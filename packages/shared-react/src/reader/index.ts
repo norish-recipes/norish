@@ -5,6 +5,7 @@ export {
   type HiddenItemVisibility,
 } from "./hidden-items";
 export { ownerAllows } from "./owner-access";
+export { useToday } from "./use-today";
 export { useHiddenItemVisibility } from "./use-hidden-item-visibility";
 export { useActiveAllergies } from "./use-active-allergies";
 export {
