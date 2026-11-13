@@ -194,7 +194,7 @@ function RecipeCardComponent({
   const hiddenAllergenCount = tagNames
     .slice(visibleTagNames.length)
     .filter((tag) => isAllergenTag(tag, allergySet)).length;
-  const allTags = useMemo(() => tagNames.map((name) => ({ name })), [tagNames]);
+  const allTags = tagNames.map((name) => ({ name }));
   const description = recipe.description?.trim() || "";
 
   // The resolved primary image: the list projection serves the first gallery
