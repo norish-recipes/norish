@@ -9,6 +9,7 @@ import { Button, Description, FieldError, InputGroup, Label, Link, TextField } f
 import { useTranslations } from "next-intl";
 
 import { signUp } from "@norish/shared/lib/auth/client";
+import { MAX_PASSWORD_LENGTH, MIN_PASSWORD_LENGTH } from "@norish/shared/lib/auth/password";
 import { APP_ROOT } from "@norish/shared/lib/base-path";
 
 import { AuthAlert } from "./auth-alert";
@@ -28,8 +29,8 @@ export function SignupForm({ callbackUrl = APP_ROOT }: SignupFormProps) {
   const [error, setError] = useState<string | null>(null);
   const passwordsMatch = password === confirmPassword;
   // Field-level rules live on their fields; the alert is for the server's answer.
-  const passwordTooShort = password.length > 0 && password.length < 8;
-  const passwordTooLong = password.length > 128;
+  const passwordTooShort = password.length > 0 && password.length < MIN_PASSWORD_LENGTH;
+  const passwordTooLong = password.length > MAX_PASSWORD_LENGTH;
   const isFormValid =
     name &&
     email &&

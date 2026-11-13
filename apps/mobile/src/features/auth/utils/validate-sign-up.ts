@@ -1,7 +1,6 @@
 import { z } from "zod";
 
-const MIN_PASSWORD_LENGTH = 8;
-const MAX_PASSWORD_LENGTH = 128;
+import { MAX_PASSWORD_LENGTH, MIN_PASSWORD_LENGTH } from "@norish/shared/lib/auth/password";
 
 type SignUpField = "name" | "email" | "password" | "confirmPassword";
 

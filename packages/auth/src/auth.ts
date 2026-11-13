@@ -20,6 +20,7 @@ import * as schema from "@norish/db/schema/auth";
 import { isRegistrationEnabled } from "@norish/shared-server/config/server-config-loader";
 import { authLogger } from "@norish/shared-server/logger";
 import { keepsOfferedSignInMethod, LAST_SIGN_IN_METHOD } from "@norish/shared/contracts/dto/auth";
+import { MAX_PASSWORD_LENGTH, MIN_PASSWORD_LENGTH } from "@norish/shared/lib/auth/password";
 import { addBasePath } from "@norish/shared/lib/base-path";
 
 import { consumeApiKeyRequest } from "./api-key-rate-limit";
@@ -276,8 +277,8 @@ function buildEmailAndPasswordConfig() {
     enabled: true,
     requireEmailVerification: false,
     autoSignIn: true,
-    minPasswordLength: 8,
-    maxPasswordLength: 128,
+    minPasswordLength: MIN_PASSWORD_LENGTH,
+    maxPasswordLength: MAX_PASSWORD_LENGTH,
   };
 }
 
