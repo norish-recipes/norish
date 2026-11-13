@@ -4,7 +4,7 @@ import { useCalendarMutations } from "./use-calendar-mutations";
 
 type PlanOnDayOptions = {
   /** The recipe being planned; nothing is planned until it has loaded. */
-  recipe: { id: string } | undefined;
+  recipe: { id: string } | null | undefined;
   /** Closes the planning calendar, as the recipe is planned. */
   close: (plannedRecipeId?: string) => void;
   /** Runs after the recipe is planned, with its id. */
