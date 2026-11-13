@@ -1,10 +1,9 @@
 "use client";
 
 import type { ReactNode } from "react";
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useEffectEvent, useRef, useState } from "react";
 import Link from "next/link";
-import { useTRPC } from "@/app/providers/trpc-provider";
-import { OnTheListMark } from "@/components/groceries/pantry/put-on-the-list";
+import { OnTheListMark } from "@/components/ingredients/on-the-list-mark";
 import Panel from "@/components/Panel/Panel";
 import {
   ActionButton,
@@ -12,25 +11,31 @@ import {
   IconActionButton,
 } from "@/components/shared/action-button";
 import UiSwitch from "@/components/shared/ui-switch";
-import { useSpellingRules } from "@/hooks/config";
-import { useGroceriesQuery } from "@/hooks/groceries";
-import { usePantryMutations, usePantryQuery } from "@/hooks/pantry";
+import { useGroceriesPantryAndCatalogueSubscriptions } from "@/hooks/use-groceries-pantry-and-catalogue-subscriptions";
 import { ArrowsRightLeftIcon, PencilSquareIcon } from "@heroicons/react/16/solid";
 import { ArrowUturnLeftIcon, ChevronRightIcon, XMarkIcon } from "@heroicons/react/24/outline";
-import { Button, Chip, Input, Skeleton, TextField, toast } from "@heroui/react";
-import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
+import { Button, Chip, Input, Skeleton, TextField } from "@heroui/react";
 import { useLocale, useTranslations } from "next-intl";
 
+import type { IngredientItem, NamedIngredient, Spelling } from "@norish/shared-react/ingredients";
 import type { PantryIngredientDto } from "@norish/shared/contracts";
-import type { LocaleNames } from "@norish/shared/lib/ingredient-names";
+import { useOnTheList, usePantryItem, usePantryMutations } from "@norish/shared-react/groceries";
+import {
+  isOpenChange,
+  useAIChangeMutations,
+  useAIChangesQuery,
+  useHeldIngredient,
+  useIngredientMutations,
+  useIngredientQuery,
+  useIngredientSpellingsQuery,
+  useIngredientUsesQuery,
+} from "@norish/shared-react/ingredients";
 import { ingredientDisplayName } from "@norish/shared/lib/ingredient-names";
-import { groceryOnTheList } from "@norish/shared/lib/pantry";
 import { cleanSpelling } from "@norish/shared/lib/spelling-keys";
 
 import type { IconDraft } from "./ingredient-icon-field";
 import type { IngredientPick } from "./ingredient-picker";
 import type { Relocation } from "./ingredient-relocation";
-import type { IngredientItem, Spelling } from "./types";
 import { AIChangeActions } from "./ai-change-actions";
 import { DeleteIngredientModal } from "./delete-ingredient-modal";
 import { IngredientIconField } from "./ingredient-icon-field";
@@ -38,36 +43,18 @@ import { IngredientNutritionSection } from "./ingredient-nutrition";
 import { IngredientRelocationPanel } from "./ingredient-relocation";
 import { IngredientStatusChip } from "./ingredient-status-chip";
 import { JunkSpellingModal } from "./junk-spelling-modal";
-import { changeMessage, showRefusal } from "./review-copy";
-import { isOpenChange, useAIChanges } from "./use-ai-changes";
-import { useIngredientCache } from "./use-ingredient-cache";
+import { changeMessage } from "./review-copy";
 
 /** The parent as the draft holds it: the food picked, or none. */
-type DraftParent = { id: string; name: string; localeNames?: LocaleNames } | null;
+type DraftParent = NamedIngredient | null;
 
-/**
- * One Ingredient, opened: its icon, its name, what it is a kind of, the
- * spellings it goes by, and every edit the server says the viewer may make.
- * The icon, the name, the parent and the spellings are a draft the panel
- * holds until Save, as
- * every other panel does; nothing lands on its own. What names another
- * Ingredient (a merge, a parent, a spelling's move) is picked in a second
- * panel over this one: a parent joins the draft, a merge or a move is an
- * action of its own with its own confirm. A flagged food says why at the
- * top, with Mark distinct, under what AI was unsure of, to keep or undo. The
- * panel follows the item it was opened for through the list, and reads it on
- * its own once the list no longer lists it, so its own edit, a housemate's or
- * AI's shows here too. Every edit shows the moment it is made: the row and
- * the panel change as the server will change them, and a refusal puts them
- * back and says why.
- */
+/** One Ingredient's panel: fields are a draft until Save; actions patch the cache at once. */
 export function IngredientPanel({
   id = null,
   item,
   open,
   nested = false,
   onClose,
-  onChanged,
 }: {
   /** The food the panel is open for, which a link may name before the list lists it. */
   id?: string | null;
@@ -77,73 +64,90 @@ export function IngredientPanel({
   /** Opened from another panel, over it: closing comes back to that one. */
   nested?: boolean;
   onClose: () => void;
-  /** An edit landed: the opener reads what it lists again. */
-  onChanged?: () => void;
 }) {
   const locale = useLocale();
-  const trpc = useTRPC();
-  // The last food the panel had stays on screen while the panel slides away.
-  const [shown, setShown] = useState<IngredientItem | null>(item);
-  // A food a filter or a search no longer lists (marked distinct under
-  // "flagged only", say) is read on its own, so the panel keeps up with it.
-  // The food asked for comes first: a link to another food reads that one,
-  // not the one the panel showed last. With no food asked for (the panel
-  // closing), the last one stays.
-  const ownId = id ?? shown?.id ?? null;
-  const own = useQuery({
-    ...trpc.ingredients.get.queryOptions({ ingredientId: ownId ?? "", locale }),
-    enabled: open && ownId !== null && item === null,
-  });
-  const current: IngredientItem | null = item ?? own.data ?? null;
+  // The food asked for, else the last one, which stays while the panel slides away.
+  const [lastId, setLastId] = useState(id ?? item?.id ?? null);
+  const ownId = id ?? item?.id ?? lastId;
 
-  if (current && current !== shown) setShown(current);
-
-  // Another food asked for, not read yet: nothing, rather than the last one.
-  if (!shown || (open && id !== null && shown.id !== id && !current)) return null;
+  if (ownId !== lastId) setLastId(ownId);
+  if (ownId === null) return null;
 
   return (
-    <IngredientPanelContent
-      // Another food is another panel: its fields start from that food.
-      key={shown.id}
-      item={shown}
-      nested={nested}
-      open={open}
-      onChanged={onChanged}
-      onClose={onClose}
-    />
+    <>
+      {open && item === null ? <IngredientRead ingredientId={ownId} locale={locale} /> : null}
+      <IngredientPanelFrame
+        ingredientId={ownId}
+        item={item}
+        nested={nested}
+        open={open}
+        onClose={onClose}
+      />
+    </>
   );
 }
 
-function IngredientPanelContent({
+/** Reads a food the list does not list, mounted only while its panel is open. */
+function IngredientRead({ ingredientId, locale }: { ingredientId: string; locale: string }) {
+  useIngredientQuery(ingredientId, locale);
+
+  return null;
+}
+
+/** The panel over the listed food, else the food's own read as the cache holds it. */
+function IngredientPanelFrame({
+  ingredientId,
   item,
   open,
   nested,
   onClose,
-  onChanged,
 }: {
-  item: IngredientItem;
+  ingredientId: string;
+  item: IngredientItem | null;
   open: boolean;
   nested: boolean;
   onClose: () => void;
-  onChanged?: () => void;
 }) {
+  const locale = useLocale();
+  const held = useHeldIngredient(ingredientId, locale);
+  const current = item ?? held;
+  // The last food the panel had stays on screen while the panel slides away.
+  const [shown, setShown] = useState<IngredientItem | null>(item);
+
+  if (current && current !== shown) setShown(current);
+
+  // Another food asked for, not read yet: nothing, rather than the last one.
+  if (!shown || (open && shown.id !== ingredientId && !current)) return null;
+
+  return (
+    <Panel
+      // Another food is another panel: its fields start from that food.
+      key={shown.id}
+      nested={nested}
+      open={open}
+      title={ingredientDisplayName(shown, locale)}
+      titleAddon={<IngredientStatusChip flagged={shown.flagged} />}
+      onOpenChange={(isOpen) => {
+        if (!isOpen) onClose();
+      }}
+    >
+      <IngredientPanelContent item={shown} onClose={onClose} />
+    </Panel>
+  );
+}
+
+/** The panel's content, mounted while it is open: each opening is a fresh draft. */
+function IngredientPanelContent({ item, onClose }: { item: IngredientItem; onClose: () => void }) {
   const t = useTranslations("settings.ingredients");
   const tActions = useTranslations("common.actions");
   const locale = useLocale();
-  const trpc = useTRPC();
-  const queryClient = useQueryClient();
-  const cache = useIngredientCache();
+  const edits = useIngredientMutations();
   const displayName = ingredientDisplayName(item, locale);
+
+  useGroceriesPantryAndCatalogueSubscriptions();
   const [allSpellings, setAllSpellings] = useState(false);
-  // The catalogue knows a food in dozens of languages; the server sends the
-  // viewer's spellings and a person's own, and the rest are fetched when the
-  // panel is asked for them.
+  // The server sends the viewer's and the household's spellings; the rest are read once asked for.
   const hiddenSpellings = item.hiddenSpellings ?? 0;
-  const allSpellingsQuery = useQuery({
-    ...trpc.ingredients.spellings.queryOptions({ ingredientId: item.id }),
-    enabled: allSpellings && hiddenSpellings > 0,
-  });
-  const everySpelling: Spelling[] = allSpellingsQuery.data ?? item.aliases;
 
   // The draft: what the viewer has changed and not yet saved.
   const [name, setName] = useState(item.name);
@@ -160,18 +164,16 @@ function IngredientPanelContent({
   const [relocation, setRelocation] = useState<Relocation | null>(null);
   const [deleting, setDeleting] = useState(false);
   const [showingUses, setShowingUses] = useState(false);
-  const aiChanges = useAIChanges();
+  const aiChanges = useAIChangeMutations();
   // What AI changed about this food without being sure: what its flag is for.
-  const unsure = aiChanges.changes.filter(
-    (change) => change.ingredient?.id === item.id && isOpenChange(change)
+  const unsure = useAIChangesQuery((changes) =>
+    changes.filter((change) => change.ingredient?.id === item.id && isOpenChange(change))
   );
 
   // Whether the household keeps the food, and the draft's say on it (null: untouched).
-  const tPantry = useTranslations("groceries.pantry");
   const tGroceries = useTranslations("groceries.page");
-  const { items: pantry } = usePantryQuery();
+  const kept = usePantryItem(item.id);
   const { addPantryIngredient, removePantryIngredient } = usePantryMutations();
-  const kept = pantry.find((held) => held.ingredientId === item.id) ?? null;
   const [keeps, setKeeps] = useState<boolean | null>(null);
 
   // A refused save is read back from the server, which would overwrite the
@@ -180,7 +182,7 @@ function IngredientPanelContent({
 
   // A change elsewhere (a housemate's, or AI's) shows in the draft where the
   // viewer has not touched that field.
-  useEffect(() => {
+  const takeSaved = useEffectEvent(() => {
     if (keepDraftRef.current) {
       keepDraftRef.current = false;
 
@@ -188,33 +190,11 @@ function IngredientPanelContent({
     }
     setName(item.name);
     setParent(item.parent);
-  }, [item.name, item.parent]);
+  });
+  const parentId = item.parent?.id ?? null;
 
-  const saveDraft = useMutation(trpc.ingredients.saveDraft.mutationOptions());
-  const markDistinct = useMutation(trpc.ingredients.markDistinct.mutationOptions());
-  const merge = useMutation(trpc.ingredients.merge.mutationOptions());
-  const moveAlias = useMutation(trpc.ingredients.moveAlias.mutationOptions());
-  const remove = useMutation(trpc.ingredients.remove.mutationOptions());
-
-  /**
-   * Make an edit: `show` changes the cache as the server will, now; `edit`
-   * is the server's turn, after which everything is read again. A refusal
-   * reads everything again too, which undoes what was shown, and says why.
-   */
-  const run = async (context: string, show: () => void, edit: () => Promise<unknown>) => {
-    try {
-      show();
-      await edit();
-    } catch (error) {
-      void cache.rollback();
-      showRefusal(t, error, context);
-
-      return false;
-    }
-    onChanged?.();
-
-    return true;
-  };
+  // Keyed on the saved values: the panel's own read brings the same parent as a new object.
+  useEffect(() => takeSaved(), [item.name, parentId]);
 
   const nextName = name.trim();
   const nameChanged = nextName !== "" && nextName !== item.name;
@@ -225,21 +205,16 @@ function IngredientPanelContent({
   const pantryChanged = keeps !== null && keeps !== (kept !== null);
   const dirty = catalogueDirty || pantryChanged;
 
-  /**
-   * Land the draft: the Pantry switch, which is the household's and open to
-   * any member, and the catalogue fields as one edit; a refusal of those
-   * changes nothing, keeps them in the draft and says why.
-   */
+  /** Lands the Pantry switch, and the catalogue fields as one edit the draft keeps if refused. */
   const save = async () => {
     if (!dirty) return;
     if (pantryChanged) {
       if (kept) removePantryIngredient(kept.id);
       else
-        void addPantryIngredient({
-          ingredientId: item.id,
-          name: item.name,
-          localeNames: item.localeNames,
-        }).catch(() => toast(tPantry("keepFailed", { name: displayName }), { variant: "danger" }));
+        void addPantryIngredient(
+          { ingredientId: item.id, name: item.name, localeNames: item.localeNames },
+          displayName
+        );
       setKeeps(null);
     }
     if (!catalogueDirty) return;
@@ -250,33 +225,15 @@ function IngredientPanelContent({
     setRemoved(new Set());
     setJunk(new Set());
     setIcon(undefined);
-    const saved = await run(
-      "save",
-      () =>
-        cache.patchRow(item.id, (row) => ({
-          ...row,
-          ...(nameChanged ? { name: nextName } : {}),
-          ...(parentChanged ? { parent: parent ? { ...parent } : null } : {}),
-          // A flagged food the viewer saved by hand is settled by it.
-          ...(parentChanged && parent ? { flagged: false, flagReason: null } : {}),
-          // A removed icon's fallback is the server's to say, on the read that follows.
-          ...(icon ? { icon: icon.address, ownIcon: true } : {}),
-          aliases: [
-            ...row.aliases.filter((spelling) => !removed.has(spelling.id)),
-            ...added.map((text) => ({ id: `draft:${text}`, text, canRemove: true })),
-          ],
-        })),
-      () =>
-        saveDraft.mutateAsync({
-          ingredientId: item.id,
-          ...(nameChanged ? { name: nextName } : {}),
-          ...(parentChanged ? { parentId: parent?.id ?? null } : {}),
-          add: added,
-          remove: [...removed],
-          junk: [...junk],
-          ...(iconChanged ? { icon: icon?.file ?? null } : {}),
-        })
-    );
+    const saved = await edits.saveDraft({
+      ingredientId: item.id,
+      ...(nameChanged ? { name: nextName } : {}),
+      ...(parentChanged ? { parent } : {}),
+      add: added,
+      remove: [...removed],
+      junk: [...junk],
+      ...(iconChanged ? { icon } : {}),
+    });
 
     // A refused draft is the viewer's to fix, so it comes back as it was.
     if (!saved) {
@@ -287,9 +244,6 @@ function IngredientPanelContent({
       setName(nextName);
       setParent(draft.parent);
       setIcon(draft.icon);
-    } else if (iconChanged) {
-      // Every surface showing this food, or a kind of it that borrows its icon, reads again.
-      void queryClient.invalidateQueries({ queryKey: trpc.ingredients.icons.pathKey() });
     }
   };
 
@@ -314,38 +268,20 @@ function IngredientPanelContent({
 
     setRelocation(null);
     if (asked.kind === "move") {
-      void run(
-        "move-alias",
-        () =>
-          cache.patchRow(item.id, (row) => ({
-            ...row,
-            aliases: row.aliases.filter((spelling) => spelling.id !== asked.aliasId),
-          })),
-        () => moveAlias.mutateAsync({ aliasId: asked.aliasId, targetId })
-      );
+      void edits.moveAlias(item.id, asked.aliasId, targetId);
 
       return;
     }
     if (targetId === null) return;
-    // Merged away, the food is gone: nothing is left to show for it. The
-    // toast says where it went and how to get it back.
+    // Merged away, the food is gone: nothing is left to show for it.
     onClose();
-    toast(t("mergedToast", { name: displayName, into: target.name }), { variant: "success" });
-    void run(
-      "merge",
-      () => cache.dropRow(item.id),
-      () => merge.mutateAsync({ sourceId: item.id, targetId })
-    );
+    void edits.merge({ id: item.id, name: displayName }, { id: targetId, name: target.name });
   };
 
   const confirmDelete = () => {
     setDeleting(false);
     onClose();
-    void run(
-      "delete",
-      () => cache.dropRow(item.id),
-      () => remove.mutateAsync({ ingredientId: item.id })
-    );
+    void edits.remove(item.id);
   };
 
   /** Stage a spelling's removal, onto the junk pile when `asJunk`; staged again, it is kept. */
@@ -419,15 +355,7 @@ function IngredientPanelContent({
   };
 
   return (
-    <Panel
-      nested={nested}
-      open={open}
-      title={displayName}
-      titleAddon={<IngredientStatusChip flagged={item.flagged} />}
-      onOpenChange={(isOpen) => {
-        if (!isOpen) onClose();
-      }}
-    >
+    <>
       <Panel.Body>
         <div className="flex flex-col gap-5 pb-2" data-testid="ingredient-details">
           {unsure.length > 0 ? (
@@ -462,18 +390,7 @@ function IngredientPanelContent({
                     data-testid="ingredient-mark-distinct"
                     size="sm"
                     variant="secondary"
-                    onPress={() =>
-                      void run(
-                        "mark-distinct",
-                        () =>
-                          cache.patchRow(item.id, (row) => ({
-                            ...row,
-                            flagged: false,
-                            flagReason: null,
-                          })),
-                        () => markDistinct.mutateAsync({ ingredientId: item.id })
-                      )
-                    }
+                    onPress={() => void edits.markDistinct(item.id)}
                   >
                     <ArrowsRightLeftIcon className="size-4" />
                     {t("markDistinct")}
@@ -617,7 +534,15 @@ function IngredientPanelContent({
               className="flex flex-wrap items-center gap-1"
               data-testid="ingredient-spellings-all"
             >
-              {everySpelling.map(spellingChip)}
+              {hiddenSpellings > 0 ? (
+                <HeldBackSpellings
+                  aliases={item.aliases}
+                  chip={spellingChip}
+                  ingredientId={item.id}
+                />
+              ) : (
+                item.aliases.map(spellingChip)
+              )}
               {added.map((text) => (
                 <Chip
                   key={`new-${text}`}
@@ -709,17 +634,11 @@ function IngredientPanelContent({
         open={showingUses}
         onClose={() => setShowingUses(false)}
       />
-    </Panel>
+    </>
   );
 }
 
-/**
- * Whether the household keeps this food. The switch is part of the draft and
- * lands with Save, open to any member whatever the edit policy says, since
- * keeping a food is a household matter. It reflects the food itself only; a
- * kept kind of it does not turn it on. A kept food whose grocery is still to
- * buy says so; putting it on the list is the Pantry page's.
- */
+/** Whether the household keeps this food itself: a draft switch any member may set. */
 function PantryRow({
   kept,
   keeping,
@@ -730,8 +649,7 @@ function PantryRow({
   onKeepingChange: (keeping: boolean) => void;
 }) {
   const t = useTranslations("groceries.pantry");
-  const rules = useSpellingRules();
-  const { groceries } = useGroceriesQuery();
+  const onTheList = useOnTheList(kept ? [kept] : []).length > 0;
 
   return (
     <div
@@ -741,7 +659,7 @@ function PantryRow({
       <UiSwitch isSelected={keeping} onValueChange={onKeepingChange}>
         <span className="text-sm">{t("inYourPantry")}</span>
       </UiSwitch>
-      {kept && keeping && groceryOnTheList(groceries, kept, rules) ? <OnTheListMark /> : null}
+      {kept && keeping && onTheList ? <OnTheListMark /> : null}
     </div>
   );
 }
@@ -762,18 +680,6 @@ function IngredientUsesPanel({
   onClose: () => void;
 }) {
   const t = useTranslations("settings.ingredients.uses");
-  const tActions = useTranslations("common.actions");
-  const trpc = useTRPC();
-  const { data } = useQuery({
-    ...trpc.ingredients.uses.queryOptions({ ingredientId }),
-    enabled: open,
-  });
-  const unused =
-    data &&
-    data.recipes.length === 0 &&
-    data.groceries.length === 0 &&
-    !data.pantry &&
-    data.elsewhere === 0;
 
   return (
     <Panel
@@ -784,6 +690,31 @@ function IngredientUsesPanel({
         if (!isOpen) onClose();
       }}
     >
+      <IngredientUsesContent ingredientId={ingredientId} onClose={onClose} />
+    </Panel>
+  );
+}
+
+/** The uses panel's content, mounted while it is open, so the uses are read only then. */
+function IngredientUsesContent({
+  ingredientId,
+  onClose,
+}: {
+  ingredientId: string;
+  onClose: () => void;
+}) {
+  const t = useTranslations("settings.ingredients.uses");
+  const tActions = useTranslations("common.actions");
+  const { uses: data } = useIngredientUsesQuery(ingredientId);
+  const unused =
+    data &&
+    data.recipes.length === 0 &&
+    data.groceries.length === 0 &&
+    !data.pantry &&
+    data.elsewhere === 0;
+
+  return (
+    <>
       <Panel.Body>
         <div className="flex flex-col gap-5 pb-2" data-testid="ingredient-uses">
           {!data ? <Skeleton className="h-16 w-full rounded-xl" /> : null}
@@ -835,8 +766,21 @@ function IngredientUsesPanel({
           </ActionButton>
         </ActionButtonGroup>
       </Panel.Footer>
-    </Panel>
+    </>
   );
+}
+
+/** Every spelling the food goes by, read once the panel showing them opens. */
+function HeldBackSpellings({
+  ingredientId,
+  aliases,
+  chip,
+}: {
+  ingredientId: string;
+  aliases: Spelling[];
+  chip: (spelling: Spelling) => ReactNode;
+}) {
+  return (useIngredientSpellingsQuery(ingredientId) ?? aliases).map(chip);
 }
 
 /** One part of the panel: a small heading over what it holds. */

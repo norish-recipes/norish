@@ -1,17 +1,13 @@
 import React, { createContext, useContext, useEffect, useMemo, useState } from "react";
-import { useLocaleConfigQuery } from "@/hooks/config";
-import { useAuth } from "@/lib/auth/auth-context";
 import { buildLocaleDisplayMap, resolveLocaleSelection } from "@/lib/i18n/locale-state";
 import { publishLocale } from "@/lib/i18n/locale-store";
 import {
   loadLocalePreference,
   saveLocalePreference,
 } from "@/lib/preferences/locale-preference-store";
-import { useTRPC } from "@/lib/trpc/trpc-provider";
-import { useMutation, useQuery } from "@tanstack/react-query";
 import { IntlProvider } from "react-intl";
 
-import type { EnabledLocale } from "@norish/shared-react/hooks";
+import type { EnabledLocale } from "@norish/shared-react/config";
 import { DEFAULT_LOCALE } from "@norish/i18n/config";
 import { getBundledLocales } from "@norish/i18n/locales";
 import { loadLocaleMessages } from "@norish/i18n/messages";
@@ -22,6 +18,8 @@ import enGroceriesMessages from "@norish/i18n/messages/en/groceries.json";
 import enNavbarMessages from "@norish/i18n/messages/en/navbar.json";
 import enRecipesMessages from "@norish/i18n/messages/en/recipes.json";
 import enSettingsMessages from "@norish/i18n/messages/en/settings.json";
+import { useLocaleConfigQuery } from "@norish/shared-react/config";
+import { useLocaleSave } from "@norish/shared-react/reader";
 
 type MobileLocaleContextValue = {
   locale: string;
@@ -81,21 +79,20 @@ function flattenMessages(messages: Record<string, unknown>, prefix = ""): Record
   return flatMessages;
 }
 
-function MobileLocaleProviderInner({ children }: { children: React.ReactNode }) {
-  const trpc = useTRPC();
-  const { isAuthenticated } = useAuth();
+export function MobileIntlProvider({
+  children,
+  signedIn,
+}: {
+  children: React.ReactNode;
+  signedIn: boolean;
+}) {
   const [preferredLocale, setPreferredLocale] = useState<string | null>(null);
   const [messages, setMessages] = useState<Record<string, unknown>>(FALLBACK_MESSAGES);
   const [isMessagesLoading, setIsMessagesLoading] = useState(false);
   const { enabledLocales: configuredLocales, defaultLocale: configuredDefaultLocale } =
     useLocaleConfigQuery();
 
-  const updatePreferencesMutation = useMutation(trpc.user.updatePreferences.mutationOptions());
-  const { data: userSettings } = useQuery({
-    ...trpc.user.get.queryOptions(),
-    enabled: isAuthenticated,
-    staleTime: 60_000,
-  });
+  const saveLocale = useLocaleSave(signedIn);
 
   const localeOptions = useMemo(
     () => resolveLocaleOptions(BUNDLED_LOCALES, configuredLocales),
@@ -172,23 +169,19 @@ function MobileLocaleProviderInner({ children }: { children: React.ReactNode }) 
         setPreferredLocale(nextResolved);
         void saveLocalePreference(nextResolved);
 
-        if (isAuthenticated && !options?.fromServer) {
-          void updatePreferencesMutation.mutateAsync({
-            version: userSettings?.user.version ?? 1,
-            preferences: { locale: nextResolved },
-          });
+        if (signedIn && !options?.fromServer) {
+          saveLocale(nextResolved);
         }
       },
     }),
     [
       activeLocale,
       effectiveDefaultLocale,
-      isAuthenticated,
+      signedIn,
       isMessagesLoading,
       localeNames,
       localeOptions,
-      updatePreferencesMutation,
-      userSettings?.user.version,
+      saveLocale,
     ]
   );
 
@@ -209,10 +202,6 @@ function MobileLocaleProviderInner({ children }: { children: React.ReactNode }) 
       </IntlProvider>
     </MobileLocaleContext.Provider>
   );
-}
-
-export function MobileIntlProvider({ children }: { children: React.ReactNode }) {
-  return <MobileLocaleProviderInner>{children}</MobileLocaleProviderInner>;
 }
 
 export function MobileIntlFallbackProvider({ children }: { children: React.ReactNode }) {

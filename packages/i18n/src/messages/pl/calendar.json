@@ -1,16 +1,15 @@
 {
-  "page": { "title": "Kalendarz" },
-  "mobile": { "today": "Dziś", "scrollToToday": "Przejdź do dziś" },
+  "page": {
+    "title": "Kalendarz"
+  },
+  "mobile": {
+    "today": "Dziś",
+    "scrollToToday": "Przejdź do dziś"
+  },
   "editNote": {
     "title": "Edytuj notatkę",
     "noteLabel": "Notatka",
     "notePlaceholder": "Wpisz notatkę..."
-  },
-  "navigation": {
-    "previousMonth": "Poprzedni miesiąc",
-    "nextMonth": "Następny miesiąc",
-    "prev": "Poprz",
-    "next": "Nast"
   },
   "weekdays": {
     "mon": "Pn",
@@ -32,7 +31,11 @@
     "recipe": "Przepis",
     "note": "Notatka"
   },
-  "editPlannedRecipe": { "title": "Edytuj zaplanowany przepis", "date": "Data", "slot": "Posiłek" },
+  "editPlannedRecipe": {
+    "title": "Edytuj zaplanowany przepis",
+    "date": "Data",
+    "slot": "Posiłek"
+  },
   "panel": {
     "addToCalendar": "Dodaj do kalendarza",
     "addRecipe": "Dodaj przepis",
@@ -42,5 +45,16 @@
     "randomRecipe": "Losowy przepis",
     "noRecipesFound": "Nie znaleziono przepisów.",
     "failedToLoadRecipes": "Nie udało się załadować przepisów."
+  },
+  "caldav": {
+    "syncStarted": "Rozpoczęto synchronizację CalDAV",
+    "syncStartedDescription": "Elementy do synchronizacji: {queued}",
+    "syncStartedWithFailures": "Elementy do synchronizacji: {queued}. Nie udało się dodać do kolejki: {failed}",
+    "configSaved": "Konfiguracja zapisana",
+    "configSavedDescription": "Twoje ustawienia CalDAV zostały zapisane.",
+    "configDeleted": "Konfiguracja usunięta",
+    "configDeletedDescription": "Twoje ustawienia CalDAV zostały usunięte.",
+    "retryStarted": "Synchronizacja rozpoczęta",
+    "retryStartedDescription": "Ponawianie oczekujących i nieudanych elementów…"
   }
 }

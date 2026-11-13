@@ -32,6 +32,10 @@ catalog:
   date-fns: ^4.4.0
   drizzle-orm: 0.45.4
   eslint: 10.13.0
+  # The compiler the build runs and the one the lint plugin bundles move together, or lint misses
+  # the build's skips: 7.0.1 bundles 1.0.0, 7.1 a newer one. Expo's preset takes it by override.
+  babel-plugin-react-compiler: 1.0.0
+  eslint-plugin-react-hooks: 7.0.1
   fuse.js: ^7.5.0
   html-entities: ^2.6.0
   ioredis: ^6.0.0
@@ -56,6 +60,7 @@ catalog:
   ws: 8.22.0
   zod: 4.6.7
   zod-openapi: ^5.4.6
+  zustand: 5.0.16
 
 
 allowBuilds:
@@ -82,10 +87,17 @@ overrides:
   "@trpc/client": "catalog:"
   "@trpc/server": "catalog:"
   "@trpc/tanstack-react-query": "catalog:"
+  # The catalog's compiler for babel-preset-expo too, so mobile builds with the one lint bundles.
+  babel-plugin-react-compiler: "catalog:"
   # One zod across the workspaces, zod-openapi, trpc-to-openapi and better-auth:
   # a second copy breaks declaration emit with TS2742 errors naming
   # @norish/shared/node_modules/zod.
   zod: "catalog:"
+
+peerDependencyRules:
+  allowedVersions:
+    # 7.0.1's peer range stops at ESLint 9, but it feature-detects the context API ESLint 10 dropped.
+    eslint-plugin-react-hooks>eslint: "10"
 
 auditConfig:
   ignoreGhsas:

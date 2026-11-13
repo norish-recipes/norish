@@ -4,7 +4,7 @@
     "ariaLabel": "Abas de configurações"
   },
   "tabs": {
-    "user": "Usuário",
+    "account": "Conta",
     "household": "Casa",
     "caldav": "CalDAV",
     "admin": "Admin",
@@ -168,7 +168,6 @@
           "ingredientIcons": "Ícones de ingredientes"
         }
       },
-      "applyError": "Falha ao aplicar preferência",
       "todaySection": {
         "title": "Seção Hoje",
         "description": "Como a seção Hoje do painel se comporta",
@@ -279,11 +278,7 @@
         "warning": "Você se tornará um membro comum e não poderá mais remover usuários nem gerenciar códigos de entrada.",
         "confirmButton": "Transferir admin"
       },
-      "toasts": {
-        "kickFailed": "Falha ao remover usuário",
-        "transferSuccess": "Admin transferido para {name}",
-        "transferFailed": "Falha ao transferir admin"
-      }
+      "unknown": "Desconhecido"
     },
     "joinCode": {
       "title": "Código de entrada",
@@ -291,6 +286,7 @@
       "expiresIn": "Expira em:",
       "regenerateButton": "Gerar novamente",
       "expired": "Expirado",
+      "countdown": "{minutes} min {seconds} s",
       "noCodeDescription": "Nenhum código de entrada ativo. Gere um para convidar novos membros.",
       "generateButton": "Gerar código de entrada",
       "copySuccess": "Código de entrada copiado",
@@ -356,8 +352,7 @@
       "connectionStatus": {
         "connected": "Conectado",
         "checking": "Verificando...",
-        "disconnected": "Desconectado",
-        "unknown": "Desconhecido"
+        "disconnected": "Desconectado"
       }
     },
     "deleteModal": {
@@ -388,10 +383,11 @@
         "failed": "Falhou",
         "removed": "Removido"
       },
-      "emptyFiltered": "Nenhum item com status {status} encontrado",
+      "emptyFiltered": "Nenhum item com este status",
       "emptyDefault": "Nenhum registro de sincronização encontrado",
       "errorDetails": "Detalhes do erro",
-      "pagination": "Página {current} de {total}"
+      "pagination": "Página {current} de {total}",
+      "paginationLabel": "Páginas do status da sincronização"
     }
   },
   "ingredients": {
@@ -639,8 +635,6 @@
       "localesDescription": "Selecione quais idiomas os usuários podem escolher",
       "defaultLocale": "Idioma padrão",
       "defaultLocaleDescription": "Idioma usado para novos usuários e como fallback",
-      "localesSaved": "Configurações de idioma salvas",
-      "localesError": "Falha ao salvar configurações de idioma",
       "atLeastOneLocale": "Pelo menos um idioma deve estar ativado",
       "export": {
         "title": "Arquivo de receitas",
@@ -673,7 +667,6 @@
       },
       "deleteTitle": "Excluir {name}?",
       "deleteConfirm": "Isso exclui permanentemente a conta do usuário e o remove de sua residência. Essa ação não pode ser desfeita.",
-      "deleteSuccess": "{name} foi excluído",
       "countSummary": "{count, plural, one {# usuário} other {# usuários}} no total"
     },
     "registration": {
@@ -834,6 +827,7 @@
         "subtitle": "Palavras-chave de unidades de tempo para detecção de temporizador",
         "description": "Configure palavras-chave usadas para detectar temporizadores nas instruções de receitas. Compatível com vários idiomas.",
         "enableToggle": "Ativar detecção de temporizador",
+        "keywordRequired": "É necessária pelo menos uma palavra-chave em horas, minutos ou segundos",
         "hoursLabel": "Palavras-chave de horas",
         "hoursPlaceholder": "hora, horas, h",
         "hoursHelp": "Palavras-chave para horas (ex.: hour, stunde, heure, uur)",
@@ -971,6 +965,7 @@
       "apiKey": "Chave de API",
       "apiKeyPlaceholder": "Insira a chave de API",
       "temperature": "Temperatura: {value}",
+      "temperatureLabel": "Temperatura",
       "temperatureHint": "Menor = mais focado, maior = mais criativo",
       "maxTokens": "Máx. tokens",
       "requestTimeout": "Tempo limite da solicitação (ms)",
@@ -1024,6 +1019,7 @@
       "maxLength": "Duração máxima do vídeo (segundos)",
       "maxLengthDescription": "Vídeos mais longos levam mais tempo e recursos para processar",
       "maxFileSize": "Tamanho máximo do arquivo de vídeo",
+      "maxFileSizeUnit": "MB",
       "maxFileSizeDescription": "Tamanho máximo para arquivos de vídeo baixados",
       "ytDlpVersion": "Versão do yt-dlp",
       "ytDlpVersionDescription": "Versão do yt-dlp que este servidor está executando. Não pode ser alterada aqui.",
@@ -1045,6 +1041,7 @@
         "genericOpenai": "Genérico compatível com OpenAI"
       },
       "transcriptionEndpoint": "URL do endpoint",
+      "transcriptionEndpointPlaceholderGeneric": "http://localhost:8000 (faster-whisper-server) ou http://localhost:8080 (LocalAI)",
       "transcriptionEndpointDescription": "Endpoint compatível com OpenAI com suporte a Whisper, ou endpoint Ollama",
       "transcriptionModel": "Modelo",
       "transcriptionModelDescription": "Modelo a usar para transcrição",
@@ -1074,8 +1071,6 @@
       "allowPrivateAddressesDescription": "Permite que importações alcancem sua rede local. O Obscura as recusa de qualquer forma.",
       "navigationTimeout": "Tempo limite de navegação (ms)",
       "navigationTimeoutDescription": "Quanto tempo um renderizador tem para carregar uma página.",
-      "saved": "Renderizadores de páginas salvos",
-      "error": "Falha ao salvar os renderizadores de páginas",
       "connectionSuccess": "Conexão bem-sucedida"
     },
     "imageGenerationConfig": {
@@ -1188,9 +1183,7 @@
     "unsavedChanges": "Alterações não salvas",
     "jsonEditor": {
       "placeholder": "Insira a configuração JSON...",
-      "invalidJson": "Formato JSON inválido",
-      "failedToSave": "Falha ao salvar",
-      "failedToRestore": "Falha ao restaurar padrões"
+      "invalidJson": "Formato JSON inválido"
     },
     "jobQueue": {
       "title": "Filas de trabalhos",
@@ -1327,6 +1320,13 @@
       "empty": "Nenhuma culinária ainda.",
       "duplicate": "Já existe uma culinária com esse nome.",
       "saveFailed": "Não foi possível salvar essa culinária."
+    },
+    "toasts": {
+      "localesSaved": "Configurações de idioma salvas",
+      "localesError": "Falha ao salvar configurações de idioma",
+      "userDeleted": "{name} foi excluído",
+      "pageRenderersSaved": "Renderizadores de páginas salvos",
+      "pageRenderersError": "Falha ao salvar os renderizadores de páginas"
     }
   },
   "archiveExport": {

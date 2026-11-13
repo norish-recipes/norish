@@ -89,13 +89,24 @@ describe("household mutations announce before they restart the socket", () => {
     householdDb.getHouseholdForUser.mockResolvedValueOnce(null).mockResolvedValue(household);
     householdDb.createHousehold.mockResolvedValue({ id: householdId });
     householdDb.addUserToHousehold.mockResolvedValue({ version: 1 });
-    householdDb.regenerateJoinCode.mockResolvedValue({ value: household });
 
     await householdsRouter.createCaller(ctx as never).create({ name: "Home" });
     await settle();
 
     expect(timeline()).toEqual(["household:created", "connection.invalidate:household-created"]);
     expect(households.published[0]!.target).toEqual({ userId: user.id });
+  });
+
+  it("create: keeps the join code the household was created with", async () => {
+    householdDb.getHouseholdForUser.mockResolvedValueOnce(null).mockResolvedValue(household);
+    householdDb.createHousehold.mockResolvedValue({ id: householdId });
+    householdDb.addUserToHousehold.mockResolvedValue({ version: 1 });
+
+    await householdsRouter.createCaller(ctx as never).create({ name: "Home" });
+    await settle();
+
+    // A second code would replace the first after a reader may already have been shown it.
+    expect(householdDb.regenerateJoinCode).not.toHaveBeenCalled();
   });
 
   it("join: the joiner and the household hear it before the invalidation", async () => {

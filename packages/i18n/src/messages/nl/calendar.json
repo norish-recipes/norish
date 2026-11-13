@@ -11,12 +11,6 @@
     "noteLabel": "Notitie",
     "notePlaceholder": "Voer notitie in..."
   },
-  "navigation": {
-    "previousMonth": "Vorige maand",
-    "nextMonth": "Volgende maand",
-    "prev": "Vorige",
-    "next": "Volgende"
-  },
   "weekdays": {
     "mon": "Ma",
     "tue": "Di",
@@ -51,5 +45,16 @@
     "randomRecipe": "Willekeurig recept",
     "noRecipesFound": "Geen recepten gevonden.",
     "failedToLoadRecipes": "Kan recepten niet laden."
+  },
+  "caldav": {
+    "syncStarted": "CalDAV-synchronisatie gestart",
+    "syncStartedDescription": "Te synchroniseren items: {queued}",
+    "syncStartedWithFailures": "Te synchroniseren items: {queued}. Niet in de wachtrij gezet: {failed}",
+    "configSaved": "Configuratie opgeslagen",
+    "configSavedDescription": "Je CalDAV-instellingen zijn opgeslagen.",
+    "configDeleted": "Configuratie verwijderd",
+    "configDeletedDescription": "Je CalDAV-instellingen zijn verwijderd.",
+    "retryStarted": "Synchronisatie gestart",
+    "retryStartedDescription": "Openstaande en mislukte items worden opnieuw geprobeerd…"
   }
 }

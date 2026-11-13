@@ -34,13 +34,13 @@ export const viewport = appViewport;
 export default async function RootLayout({ children }: { children: React.ReactNode }) {
   const locale = await getLocale();
   // The settings tabs' messages ship with that route's own provider; other pages keep what
-  // their client code reads (the ingredient panels, the AI key prompt).
+  // their client code reads (the ingredient panels, the AI key prompt, the admin hooks' toasts).
   const { settings, ...messages } = await getMessages();
   const clientMessages = {
     ...messages,
     settings: {
       ingredients: settings.ingredients,
-      admin: { aiProcessing: settings.admin.aiProcessing },
+      admin: { aiProcessing: settings.admin.aiProcessing, toasts: settings.admin.toasts },
     },
   };
 

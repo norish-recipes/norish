@@ -13,6 +13,7 @@ import type { Page } from "@playwright/test";
 import type { FakeShop } from "../harness/fake-shop";
 import type { AIE2EStack } from "./fixture";
 import { createFakeShop } from "../harness/fake-shop";
+import { closePanel, rowFor } from "../harness/groceries";
 import { expect, test } from "./fixture";
 import { dragRowTo } from "./grocery-dnd-support";
 import {
@@ -64,20 +65,14 @@ async function addGroceryToShop(name: string, shown: string = name): Promise<voi
   await expect(page.getByText(shown).first()).toBeVisible();
   // The add panel stays open for batch adding; the list underneath is what
   // every assertion here is about.
-  await page.getByRole("button", { name: "Close panel" }).click();
-  await expect(page.getByRole("dialog")).toHaveCount(0);
-}
-
-/** One grocery's own row, whichever Store's section it is sitting in. */
-function rowFor(name: string) {
-  return page.locator(`[data-grocery-name="${name}"]`).first();
+  await closePanel(page);
 }
 
 /** Move a grocery into another Store's section the way a shopper does. */
 async function dragGroceryToStore(name: string, storeName: string): Promise<void> {
   const target = page.locator(`[data-store-drop-target]`).filter({ hasText: storeName }).first();
 
-  await dragRowTo(page, rowFor(name), target);
+  await dragRowTo(page, rowFor(page, name), target);
 }
 
 test("a name the shop states unmistakably is priced without being asked", async () => {
@@ -86,7 +81,7 @@ test("a name the shop states unmistakably is priced without being asked", async 
   // The Store has been asked and has not answered: the row says so with a
   // loader — a Pending Link, written before the job — rather than a blank
   // that reads as failure.
-  await expect(rowFor("oude kaas").getByTestId("grocery-price-pending")).toBeVisible({
+  await expect(rowFor(page, "oude kaas").getByTestId("grocery-price-pending")).toBeVisible({
     timeout: 15_000,
   });
 
@@ -96,7 +91,7 @@ test("a name the shop states unmistakably is priced without being asked", async 
   const price = page.getByTestId("grocery-price").first();
 
   await expect(price).toContainText(/4[.,]99/, { timeout: 60_000 });
-  await expect(rowFor("oude kaas").getByTestId("grocery-price-pending")).toBeHidden();
+  await expect(rowFor(page, "oude kaas").getByTestId("grocery-price-pending")).toBeHidden();
   // The row says which of the shop's products that price is for.
   await expect(page.getByTestId("grocery-product").first()).toHaveText("Oude kaas");
   expect((await readStoredLink(stack, "oude kaas"))?.productName).toBe("Oude kaas");
@@ -258,7 +253,7 @@ test("a grocery dragged into another Store is priced there, on the list", async 
   await page.goto("/groceries");
   await addGroceryToShop("roomboter");
 
-  await expect(rowFor("roomboter").getByTestId("grocery-product")).toHaveText("Roomboter", {
+  await expect(rowFor(page, "roomboter").getByTestId("grocery-product")).toHaveText("Roomboter", {
     timeout: 60_000,
   });
 
@@ -275,7 +270,7 @@ test("a grocery dragged into another Store is priced there, on the list", async 
   });
   await page.getByRole("button", { name: "Save", exact: true }).click();
 
-  await expect(rowFor("roomboter").getByTestId("grocery-product")).toHaveText("Bruin brood", {
+  await expect(rowFor(page, "roomboter").getByTestId("grocery-product")).toHaveText("Bruin brood", {
     timeout: 30_000,
   });
 
@@ -283,7 +278,7 @@ test("a grocery dragged into another Store is priced there, on the list", async 
   // what the Stores its groceries sit under know, and nothing about the Store
   // this one is about to be dragged into.
   await page.reload();
-  await expect(rowFor("roomboter").getByTestId("grocery-product")).toHaveText("Bruin brood", {
+  await expect(rowFor(page, "roomboter").getByTestId("grocery-product")).toHaveText("Bruin brood", {
     timeout: 30_000,
   });
 
@@ -295,7 +290,7 @@ test("a grocery dragged into another Store is priced there, on the list", async 
   await expect
     .poll(async () => readGroceryStore(stack, "roomboter"), { timeout: 30_000 })
     .toBe(STORE_NAME);
-  await expect(rowFor("roomboter").getByTestId("grocery-product")).toHaveText("Roomboter", {
+  await expect(rowFor(page, "roomboter").getByTestId("grocery-product")).toHaveText("Roomboter", {
     timeout: 30_000,
   });
 });
@@ -306,7 +301,7 @@ test("700 g of a 500 g pack is two packs, on the row and at the heading", async 
   // known Pack Size: the queue links it on its own.
   await addGroceryToShop("700 g tarwebloem", "tarwebloem");
 
-  const row = rowFor("tarwebloem");
+  const row = rowFor(page, "tarwebloem");
 
   await expect(row.getByTestId("grocery-product")).toHaveText("Tarwebloem", { timeout: 60_000 });
   // The Line Cost first, the packs after: two 500 g packs at €1.15.
@@ -336,7 +331,7 @@ test("a product on Sale shows the struck price and the new one in a chip beside 
   await page.goto("/groceries");
   await addGroceryToShop("300 g geitenkaas plakken", "geitenkaas plakken");
 
-  const row = rowFor("geitenkaas plakken");
+  const row = rowFor(page, "geitenkaas plakken");
 
   await expect(row.getByTestId("grocery-product")).toContainText("Geitenkaas plakken", {
     timeout: 60_000,
@@ -366,7 +361,7 @@ test("a product on Sale corrected by hand keeps its Sale", async () => {
 
   // The row is the same Sale under a better name: two 150 g packs, the
   // regular Line Cost struck through, the shop's words still there.
-  const row = rowFor("geitenkaas plakken");
+  const row = rowFor(page, "geitenkaas plakken");
 
   await expect(row.getByTestId("grocery-product")).toHaveText("Geitenkaas plakken, 150 g", {
     timeout: 30_000,
@@ -399,7 +394,7 @@ test("what is sold loose is priced by the weight the line states", async () => {
   await page.goto("/groceries");
   await addGroceryToShop("700 g bananen los", "bananen los");
 
-  const row = rowFor("bananen los");
+  const row = rowFor(page, "bananen los");
 
   await expect(row.getByTestId("grocery-product")).toHaveText("Bananen los", { timeout: 60_000 });
   // 700 g of something priced per kilo at €1.89 is €1.32, and the row says
@@ -416,7 +411,7 @@ test("editing the purchase amount preserves the requirement and survives reload"
 
   await page.getByTestId("grocery-purchase-amount").fill("3");
   await page.getByRole("button", { name: "Save", exact: true }).click();
-  await expect(rowFor("tarwebloem").getByTestId("grocery-line-cost")).toContainText(
+  await expect(rowFor(page, "tarwebloem").getByTestId("grocery-line-cost")).toContainText(
     "€3.45 (3 × €1.15)"
   );
   // Wait for the persisted server event before reload: the optimistic number alone is insufficient.
@@ -428,8 +423,8 @@ test("editing the purchase amount preserves the requirement and survives reload"
     })
     .toBe(3);
   await page.reload();
-  await expect(rowFor("tarwebloem")).toContainText("700");
-  await expect(rowFor("tarwebloem").getByTestId("grocery-line-cost")).toContainText(
+  await expect(rowFor(page, "tarwebloem")).toContainText("700");
+  await expect(rowFor(page, "tarwebloem").getByTestId("grocery-line-cost")).toContainText(
     "€3.45 (3 × €1.15)"
   );
 
@@ -440,7 +435,7 @@ test("editing the purchase amount preserves the requirement and survives reload"
   await page.getByRole("button", { name: "Save", exact: true }).click();
   await expect.poll(async () => (await readGroceryAmount("tarwebloem"))?.purchaseAmount).toBeNull();
   await page.reload();
-  await expect(rowFor("tarwebloem").getByTestId("grocery-line-cost")).toContainText(
+  await expect(rowFor(page, "tarwebloem").getByTestId("grocery-line-cost")).toContainText(
     "€2.30 (2 × €1.15)"
   );
 });
@@ -458,8 +453,8 @@ test("a purchase amount chosen during creation is saved with the grocery", async
   await page.getByRole("button", { name: "Close panel" }).click();
   await expect.poll(async () => (await readGroceryAmount("bakbloem"))?.purchaseAmount).toBe(4);
   await page.reload();
-  await expect(rowFor("bakbloem")).toContainText("200");
-  await expect(rowFor("bakbloem").getByTestId("grocery-line-cost")).toContainText(
+  await expect(rowFor(page, "bakbloem")).toContainText("200");
+  await expect(rowFor(page, "bakbloem").getByTestId("grocery-line-cost")).toContainText(
     "€4.60 (4 × €1.15)"
   );
 });
@@ -489,6 +484,6 @@ test("a linked product is unlinked from the panel, and the row is unpriced", asy
       { timeout: 30_000 }
     )
     .toBe("miss");
-  await expect(rowFor("bakbloem").getByTestId("grocery-price")).toBeHidden();
-  await expect(rowFor("bakbloem").getByTestId("grocery-price-pending")).toBeHidden();
+  await expect(rowFor(page, "bakbloem").getByTestId("grocery-price")).toBeHidden();
+  await expect(rowFor(page, "bakbloem").getByTestId("grocery-price-pending")).toBeHidden();
 });

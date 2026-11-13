@@ -1,19 +1,23 @@
 "use client";
 
 import { ChangeEvent, memo, useCallback, useEffect, useRef, useState, useTransition } from "react";
-import { useCalendarContext } from "@/app/(app)/calendar/context";
 import { slotTranslationKeys } from "@/components/dashboard/today/todays-meals-constants";
 import Panel from "@/components/Panel/Panel";
 import { ActionButton } from "@/components/shared/action-button";
 import { SlotDropdown } from "@/components/shared/slot-dropdown";
 import MiniRecipeSkeleton from "@/components/skeleton/mini-recipe-skeleton";
-import { useRandomRecipe, useRecipesQuery } from "@/hooks/recipes";
 import { usePending } from "@/hooks/use-pending";
 import { Input } from "@heroui/react";
 import { useVirtualizer } from "@tanstack/react-virtual";
 import { AnimatePresence, motion } from "motion/react";
 import { useLocale, useTranslations } from "next-intl";
 
+import { useCalendarMutations } from "@norish/shared-react/calendar";
+import {
+  useRandomRecipe,
+  useRecipeListSubscription,
+  useRecipesQuery,
+} from "@norish/shared-react/recipes";
 import { RecipeCategory, RecipeDashboardDTO, Slot } from "@norish/shared/contracts";
 import { addBasePath } from "@norish/shared/lib/base-path";
 import { dateKey } from "@norish/shared/lib/helpers";
@@ -196,7 +200,7 @@ function MiniRecipesContent({
   const [search, setSearch] = useState("");
   const [, startTransition] = useTransition();
   const [isRandomLoading, whileRandomLoading] = usePending();
-  const { planMeal, planNote } = useCalendarContext();
+  const { planRecipe, planNote } = useCalendarMutations();
   const { getRandomRecipe } = useRandomRecipe();
   const {
     recipes,
@@ -207,6 +211,8 @@ function MiniRecipesContent({
   } = useRecipesQuery({
     search: search || undefined,
   });
+
+  useRecipeListSubscription();
   const dateString = dateKey(date);
   const handleInputChange = (e: ChangeEvent<HTMLInputElement>) => {
     const value = e.target.value;
@@ -218,24 +224,24 @@ function MiniRecipesContent({
   const close = useCallback(() => onOpenChange(false), [onOpenChange]);
   const handlePlan = useCallback(
     (recipe: RecipeDashboardDTO, slot: Slot) => {
-      planMeal(dateString, slot, recipe.id);
+      planRecipe(dateString, slot, recipe.id);
       close();
       onPlanned(recipe.id);
     },
-    [dateString, close, planMeal, onPlanned]
+    [dateString, close, planRecipe, onPlanned]
   );
   const handleRandomSelect = useCallback(async () => {
     if (!slot) return;
     await whileRandomLoading(() =>
       getRandomRecipe(SLOT_TO_CATEGORY[slot]).then((result) => {
         if (result) {
-          planMeal(dateString, slot, result.id);
+          planRecipe(dateString, slot, result.id);
           close();
           onPlanned(result.id);
         }
       })
     );
-  }, [slot, getRandomRecipe, planMeal, dateString, close, onPlanned, whileRandomLoading]);
+  }, [slot, getRandomRecipe, planRecipe, dateString, close, onPlanned, whileRandomLoading]);
   const handlePlanNote = useCallback(
     (targetSlot: Slot) => {
       if (rawInput.trim()) {
@@ -401,14 +407,12 @@ export default function MiniRecipes({ open, onOpenChange, date, slot }: MiniReci
     <>
       <Panel open={open} panelClassName="h-[80dvh]" title={title} onOpenChange={onOpenChange}>
         <Panel.Body className="flex min-h-0 flex-1 flex-col overflow-hidden">
-          {open && (
-            <MiniRecipesContent
-              date={date}
-              slot={slot}
-              onOpenChange={onOpenChange}
-              onPlanned={afterPlanning}
-            />
-          )}
+          <MiniRecipesContent
+            date={date}
+            slot={slot}
+            onOpenChange={onOpenChange}
+            onPlanned={afterPlanning}
+          />
         </Panel.Body>
       </Panel>
       {afterPlanningPanel}

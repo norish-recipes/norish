@@ -4,8 +4,8 @@
  */
 import type { Browser, BrowserContext, Locator, Page } from "@playwright/test";
 
-import type { AIE2EStack, SessionCookies } from "./fixture";
-import { signIn } from "../harness/auth";
+import type { AIE2EStack } from "./fixture";
+import { signedInContext, signIn } from "../harness/auth";
 import { settled } from "../harness/settled";
 import { callTrpc } from "../harness/trpc";
 import {
@@ -15,7 +15,7 @@ import {
   seedCookbook,
   seedRecipe,
 } from "./cookbooks-support";
-import { expect, MEMBER, test } from "./fixture";
+import { expect, MEMBER, OWNER, test } from "./fixture";
 
 const PHONE = { width: 390, height: 844 };
 const DESKTOP = { width: 1280, height: 1600 };
@@ -28,14 +28,9 @@ function token(label: string): string {
 async function openPage(
   browser: Browser,
   stack: AIE2EStack,
-  {
-    phone = false,
-    cookies = stack.ownerCookies,
-  }: { phone?: boolean; cookies?: SessionCookies } = {}
+  { phone = false, user = OWNER }: { phone?: boolean; user?: typeof OWNER } = {}
 ): Promise<{ context: BrowserContext; page: Page }> {
-  const context = await browser.newContext({
-    baseURL: stack.baseURL,
-    storageState: { cookies, origins: [] },
+  const context = await signedInContext(browser, stack.baseURL, user, {
     viewport: phone ? PHONE : DESKTOP,
     hasTouch: phone,
   });
@@ -83,7 +78,7 @@ async function libraryWith(
   browser: Browser,
   stack: AIE2EStack,
   names: string[],
-  options: { phone?: boolean; cookies?: SessionCookies; query: string }
+  options: { phone?: boolean; user?: typeof OWNER; query: string }
 ): Promise<{ context: BrowserContext; page: Page; ids: string[] }> {
   const ids: string[] = [];
 
@@ -356,7 +351,7 @@ test("Delete says how many stay when the reader may not delete some", async ({
 
   const { context, page } = await libraryWith(browser, aiStack, names, {
     query: word,
-    cookies: memberCookies,
+    user: MEMBER,
   });
 
   try {
@@ -390,7 +385,6 @@ test("Delete is unavailable when no selected recipe may be deleted", async ({
 }) => {
   const word = token("Locked");
   const names = [`${word} Owned`];
-  const memberCookies = await signIn(aiStack.baseURL, MEMBER);
 
   await callTrpc(aiStack.baseURL, aiStack.ownerCookies, "admin.updateRecipePermissionPolicy", {
     view: "everyone",
@@ -400,7 +394,7 @@ test("Delete is unavailable when no selected recipe may be deleted", async ({
 
   const { context, page } = await libraryWith(browser, aiStack, names, {
     query: word,
-    cookies: memberCookies,
+    user: MEMBER,
   });
 
   try {

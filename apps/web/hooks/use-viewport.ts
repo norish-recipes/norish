@@ -1,7 +1,8 @@
 "use client";
 
 import { useSyncExternalStore } from "react";
-import { useDeviceKind } from "@/context/device-preferences-context";
+
+import { useDeviceKind } from "@norish/shared-react/reader";
 
 /** The window the server and the hydrating render assume for each Device Kind. */
 export const DEVICE_KIND_WINDOW = {

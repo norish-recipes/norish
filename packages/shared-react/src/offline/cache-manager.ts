@@ -6,7 +6,7 @@ import {
   persistQueryClientRestore,
   persistQueryClientSubscribe,
 } from "@tanstack/query-persist-client-core";
-import { QueryClient } from "@tanstack/react-query";
+import { partialMatchKey, QueryClient } from "@tanstack/react-query";
 import { createTRPCClient } from "@trpc/client";
 import { createTRPCOptionsProxy } from "@trpc/tanstack-react-query";
 
@@ -27,12 +27,26 @@ const ANON_OWNER = "__anon__";
 
 export type RefetchOnMount = boolean | "always" | ((query: Query) => boolean | "always");
 
+// Names tRPC's path keys; it never sends a request or touches a client.
+const keys = createTRPCOptionsProxy<AppRouter>({
+  client: createTRPCClient<AppRouter>({ links: [] }),
+  queryClient: () => new QueryClient(),
+});
+
 /**
- * Persist usable read data even when its latest background refetch failed. Admin reads stay out:
- * they hold other users' details and, in a query's input, a key being typed.
+ * Reads never written to storage: admin reads hold other users' details and, in a query's input, a
+ * key being typed; the CalDAV password is a decrypted secret and its connection check a live probe.
  */
+const NEVER_PERSISTED = [
+  keys.admin.pathKey(),
+  keys.caldav.getPassword.pathKey(),
+  keys.caldav.checkConnection.pathKey(),
+];
+
+/** Persist usable read data even when its latest background refetch failed. */
 const shouldDehydrateQuery = (query: { queryKey: readonly unknown[]; state: { data: unknown } }) =>
-  query.state.data !== undefined && (query.queryKey[0] as string[] | undefined)?.[0] !== "admin";
+  query.state.data !== undefined &&
+  !NEVER_PERSISTED.some((key) => partialMatchKey(query.queryKey, key));
 
 /** The engine's QueryClient defaults; a client renders its server pass with its own copy. */
 export function createOfflineQueryClient({
@@ -63,14 +77,20 @@ export function createOfflineQueryClient({
   // however it got in: the Warm Set, the page the reader opened, or the seed a
   // create writes Live or Offline.
   // The reads a reader opens or makes that must outlive a trip Offline: a recipe
-  // and a cookbook (ADR-0008). tRPC builds their path keys, so each matches every
-  // id; the proxy only names keys and never sends a request.
-  const keys = createTRPCOptionsProxy<AppRouter>({
-    client: createTRPCClient<AppRouter>({ links: [] }),
-    queryClient,
-  });
-
-  for (const pathKey of [keys.recipes.get.pathKey(), keys.cookbooks.get.pathKey()]) {
+  // and a cookbook (ADR-0008). tRPC builds their path keys, so each matches every id.
+  for (const pathKey of [
+    keys.recipes.get.pathKey(),
+    keys.cookbooks.get.pathKey(),
+    // And the groceries list's reads, which no observer holds while the Pantry view shows.
+    keys.groceries.list.pathKey(),
+    keys.stores.list.pathKey(),
+    keys.stores.groceryPrices.pathKey(),
+    keys.stores.aisleLinks.pathKey(),
+    // And a surface's previous icons read, which its icons show while a changed set is read.
+    keys.ingredients.icons.pathKey(),
+    // And the Library's grid, which no observer holds through a long cooking session.
+    keys.library.list.pathKey(),
+  ]) {
     queryClient.setQueryDefaults(pathKey, { gcTime: CACHE_MAX_AGE_MS });
   }
 
@@ -96,7 +116,7 @@ export interface CacheManager {
   subscribe(listener: () => void): () => void;
 }
 
-export interface CacheManagerOptions {
+interface CacheManagerOptions {
   storage: OfflineStorage;
   /** A restored cache from a different app version is dropped wholesale, never migrated. */
   buster: string | undefined;
@@ -127,7 +147,9 @@ export function createCacheManager({
       queryClient,
       persister,
       buster,
-      dehydrateOptions: { shouldDehydrateQuery },
+      // The Outbox is the durable write queue (ADR-0009); a restored paused mutation has no
+      // mutationFn and would block its scope.
+      dehydrateOptions: { shouldDehydrateQuery, shouldDehydrateMutation: () => false },
     });
   }
 

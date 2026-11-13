@@ -7,9 +7,11 @@
 import type { Page } from "@playwright/test";
 
 import type { OfflineHarness } from "./fixture";
-import { readProfilePreferences, setDevicePreferences } from "../harness/device-preferences";
+import { readDevicePreferences, setDevicePreferences } from "../harness/device-preferences";
 import {
   expect,
+  persistedReadsHold,
+  readOutbox,
   SEEDED_COOKBOOK_ID,
   SEEDED_COOKBOOK_TITLE,
   SEEDED_GROCERY_NAME,
@@ -27,39 +29,6 @@ test.describe.configure({ mode: "serial" });
 
 let offline: OfflineHarness;
 let page: Page;
-
-/** All Outbox entries in the page's IndexedDB, FIFO. */
-function readOutbox(target: Page) {
-  return target.evaluate(
-    () =>
-      new Promise<Array<{ ownerId: string; path: string; status: string }>>((resolve) => {
-        const open = indexedDB.open("norish-offline");
-
-        open.onsuccess = () => {
-          const db = open.result;
-
-          if (!db.objectStoreNames.contains("outbox")) {
-            db.close();
-            resolve([]);
-
-            return;
-          }
-
-          const req = db.transaction("outbox", "readonly").objectStore("outbox").getAll();
-
-          req.onsuccess = () => {
-            db.close();
-            resolve(req.result as Array<{ ownerId: string; path: string; status: string }>);
-          };
-          req.onerror = () => {
-            db.close();
-            resolve([]);
-          };
-        };
-        open.onerror = () => resolve([]);
-      })
-  );
-}
 
 /**
  * A ticked row folds into its section's done row, which is closed on every
@@ -91,7 +60,7 @@ test.beforeAll(async ({ offlineHarness }) => {
 test("a Live visit installs the app shell and warms the Warm Set", async () => {
   // /settings is deliberately NOT a Warm Set surface: every later offline
   // navigation below is a genuinely unseen route in this browser profile.
-  await page.goto("/settings");
+  await page.goto("/settings/account");
 
   await page.waitForFunction(() => navigator.serviceWorker?.controller != null, undefined, {
     timeout: 60_000,
@@ -171,32 +140,6 @@ test("the Dish Colour tint is present while Offline (ADR-0023)", async () => {
   await expect(scope).toHaveAttribute("style", /--dish-h/);
 });
 
-/** Whether this browser's saved copy of its reads holds `fragment`. */
-function persistedReadsHold(target: Page, fragment: string): Promise<boolean> {
-  return target.evaluate(
-    (needle) =>
-      new Promise<boolean>((resolve) => {
-        const open = indexedDB.open("norish-offline");
-
-        open.onsuccess = () => {
-          const db = open.result;
-          const req = db.transaction("keyval", "readonly").objectStore("keyval").getAll();
-
-          req.onsuccess = () => {
-            db.close();
-            resolve(JSON.stringify(req.result).includes(needle));
-          };
-          req.onerror = () => {
-            db.close();
-            resolve(false);
-          };
-        };
-        open.onerror = () => resolve(false);
-      }),
-    fragment
-  );
-}
-
 test("a reader who declined the tint never renders a tinted frame offline", async () => {
   // The choice is made on another desktop; this browser's copy of the
   // profile learns it on its next Live visit.
@@ -261,7 +204,7 @@ test("a hanging network observes the Reachability Deadline (ADR-0013)", async ()
   // initial Live visit predates the worker claiming the page, so the pages
   // cache is still empty.
   await offline.transition("live");
-  await page.goto("/settings");
+  await page.goto("/settings/account");
   await offline.transition("unresponsive");
 
   // An uncached route must fail over to the offline shell at the deadline.
@@ -274,7 +217,7 @@ test("a hanging network observes the Reachability Deadline (ADR-0013)", async ()
   // A route visited while Live serves its cached document at the deadline
   // instead of the shell.
   startedAt = Date.now();
-  await page.goto("/settings");
+  await page.goto("/settings/account");
   expect(Date.now() - startedAt).toBeLessThan(20_000);
   await expect(page.getByTestId("offline-unavailable")).not.toBeVisible();
 
@@ -625,13 +568,10 @@ test("a grocery view changed Offline applies at once, and is on the profile once
   await offline.transition("live");
   await expect.poll(() => readOutbox(page), { timeout: 30_000 }).toHaveLength(0);
   // The suite's browser is a desktop.
-  const preferences = await readProfilePreferences(
-    offline.baseURL,
-    await offline.context.cookies()
-  );
+  const preferences = await readDevicePreferences(offline.baseURL, await offline.context.cookies());
 
   expect(preferences.desktop).toMatchObject({ groceryViewMode: "recipe" });
-  expect(preferences.phone).toBeUndefined();
+  expect(preferences.phone).toMatchObject({ groceryViewMode: "store" });
 });
 
 test("a page the service worker cached before the change settles on the profile's view", async () => {
@@ -725,7 +665,7 @@ test("sign-out with unsynced work asks first; Cancel preserves everything", asyn
   await expect.poll(() => readOutbox(page)).toHaveLength(1);
 
   await page.getByRole("button", { name: "Open user menu" }).click();
-  await page.getByRole("menuitem", { name: "Logout" }).click();
+  await page.getByRole("menuitem", { name: "Sign out" }).click();
   await expect(page.getByText("Discard unsynced changes?")).toBeVisible();
   await page.getByRole("button", { name: "Cancel" }).click();
   await expect(page.getByText("Discard unsynced changes?")).toHaveCount(0);
@@ -737,11 +677,11 @@ test("sign-out with unsynced work asks first; Cancel preserves everything", asyn
 
 test("a confirmed sign-out discards the queue and completes", async () => {
   await page.getByRole("button", { name: "Open user menu" }).click();
-  await page.getByRole("menuitem", { name: "Logout" }).click();
+  await page.getByRole("menuitem", { name: "Sign out" }).click();
   await expect(page.getByText("Discard unsynced changes?")).toBeVisible();
-  await page.getByRole("button", { name: "Logout", exact: true }).click();
+  await page.getByRole("button", { name: "Sign out", exact: true }).click();
 
-  await page.waitForURL("**/login**", { timeout: 30_000 });
+  await expect(page).toHaveURL(/\/login\?logout=true$/, { timeout: 30_000 });
 
   // The queue was discarded and the personalized caches are gone.
   await expect.poll(() => readOutbox(page)).toHaveLength(0);

@@ -11,12 +11,6 @@
     "noteLabel": "ملاحظة",
     "notePlaceholder": "اكتب ملاحظة..."
   },
-  "navigation": {
-    "previousMonth": "الشهر السابق",
-    "nextMonth": "الشهر التالي",
-    "prev": "السابق",
-    "next": "التالي"
-  },
   "weekdays": {
     "mon": "اثنين",
     "tue": "ثلاثاء",
@@ -51,5 +45,16 @@
     "randomRecipe": "وصفة عشوائية",
     "noRecipesFound": "لم يُعثر على وصفات.",
     "failedToLoadRecipes": "تعذّر تحميل الوصفات."
+  },
+  "caldav": {
+    "syncStarted": "بدأت مزامنة CalDAV",
+    "syncStartedDescription": "العناصر المراد مزامنتها: {queued}",
+    "syncStartedWithFailures": "العناصر المراد مزامنتها: {queued}. تعذّر وضعها في قائمة الانتظار: {failed}",
+    "configSaved": "تم حفظ الإعدادات",
+    "configSavedDescription": "تم حفظ إعدادات CalDAV الخاصة بك.",
+    "configDeleted": "تم حذف الإعدادات",
+    "configDeletedDescription": "تمت إزالة إعدادات CalDAV الخاصة بك.",
+    "retryStarted": "بدأت المزامنة",
+    "retryStartedDescription": "جارٍ إعادة محاولة العناصر المعلقة والفاشلة…"
   }
 }

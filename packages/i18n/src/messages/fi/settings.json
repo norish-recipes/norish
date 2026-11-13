@@ -4,7 +4,7 @@
     "ariaLabel": "Asetusvälilehdet"
   },
   "tabs": {
-    "user": "Käyttäjä",
+    "account": "Tili",
     "household": "Kotitalous",
     "caldav": "CalDAV",
     "admin": "Ylläpito",
@@ -193,7 +193,6 @@
           "abbreviated": "Lyhennettyinä"
         }
       },
-      "applyError": "Asetuksen käyttöönotto epäonnistui",
       "afterPlanning": {
         "title": "Reseptin suunnittelun jälkeen",
         "description": "Mitä tapahtuu, kun suunnittelet reseptin",
@@ -279,11 +278,7 @@
         "warning": "Sinusta tulee tavallinen jäsen, etkä voi enää poistaa käyttäjiä tai hallinnoida liittymiskoodeja.",
         "confirmButton": "Siirrä ylläpito"
       },
-      "toasts": {
-        "kickFailed": "Käyttäjän poistaminen epäonnistui",
-        "transferSuccess": "Ylläpito siirrettiin käyttäjälle {name}",
-        "transferFailed": "Ylläpidon siirto epäonnistui"
-      }
+      "unknown": "Tuntematon"
     },
     "joinCode": {
       "title": "Liittymiskoodi",
@@ -291,6 +286,7 @@
       "expiresIn": "Vanhenee:",
       "regenerateButton": "Luo uudelleen",
       "expired": "Vanhentunut",
+      "countdown": "{minutes} min {seconds} s",
       "noCodeDescription": "Ei aktiivista liittymiskoodia. Luo koodi kutsuaksesi uusia jäseniä.",
       "generateButton": "Luo liittymiskoodi",
       "copySuccess": "Liittymiskoodi kopioitu",
@@ -356,8 +352,7 @@
       "connectionStatus": {
         "connected": "Yhdistetty",
         "checking": "Tarkistetaan...",
-        "disconnected": "Ei yhteyttä",
-        "unknown": "Tuntematon"
+        "disconnected": "Ei yhteyttä"
       }
     },
     "deleteModal": {
@@ -388,10 +383,11 @@
         "failed": "Epäonnistui",
         "removed": "Poistettu"
       },
-      "emptyFiltered": "Kohteita tilassa {status} ei löytynyt",
+      "emptyFiltered": "Ei kohteita tässä tilassa",
       "emptyDefault": "Synkronointimerkintöjä ei löytynyt",
       "errorDetails": "Virheen tiedot",
-      "pagination": "Sivu {current} / {total}"
+      "pagination": "Sivu {current} / {total}",
+      "paginationLabel": "Synkronoinnin tilan sivut"
     }
   },
   "ingredients": {
@@ -639,8 +635,6 @@
       "localesDescription": "Valitse, mistä kielistä käyttäjät voivat valita",
       "defaultLocale": "Oletuskieli",
       "defaultLocaleDescription": "Uusien käyttäjien kieli ja varakieli",
-      "localesSaved": "Kieliasetukset tallennettu",
-      "localesError": "Kieliasetusten tallennus epäonnistui",
       "atLeastOneLocale": "Vähintään yhden kielen on oltava käytössä",
       "export": {
         "title": "Reseptiarkisto",
@@ -673,7 +667,6 @@
       },
       "deleteTitle": "Poistetaanko {name}?",
       "deleteConfirm": "Tämä poistaa käyttäjän tilin pysyvästi ja irrottaa hänet kotitaloudestaan. Tätä ei voi kumota.",
-      "deleteSuccess": "{name} poistettiin",
       "countSummary": "{count, plural, one {# käyttäjä} other {# käyttäjää}} yhteensä"
     },
     "registration": {
@@ -834,6 +827,7 @@
         "subtitle": "Aikayksiköiden avainsanat ajastimien tunnistukseen",
         "description": "Määritä avainsanat, joilla ajastimet tunnistetaan reseptin ohjeista. Tukee useita kieliä.",
         "enableToggle": "Ota ajastimien tunnistus käyttöön",
+        "keywordRequired": "Vähintään yksi avainsana tarvitaan tunteihin, minuutteihin tai sekunteihin",
         "hoursLabel": "Tuntien avainsanat",
         "hoursPlaceholder": "tunti, tuntia, t, h",
         "hoursHelp": "Tuntien avainsanat (esim. hour, stunde, heure, tunti)",
@@ -971,6 +965,7 @@
       "apiKey": "API-avain",
       "apiKeyPlaceholder": "Kirjoita API-avain",
       "temperature": "Lämpötila: {value}",
+      "temperatureLabel": "Lämpötila",
       "temperatureHint": "Pienempi = keskittyneempi, suurempi = luovempi",
       "maxTokens": "Tokenien enimmäismäärä",
       "requestTimeout": "Pyynnön aikakatkaisu (ms)",
@@ -1024,6 +1019,7 @@
       "maxLength": "Videon enimmäispituus (sekuntia)",
       "maxLengthDescription": "Pidemmät videot vievät enemmän aikaa ja resursseja",
       "maxFileSize": "Videotiedoston enimmäiskoko",
+      "maxFileSizeUnit": "MB",
       "maxFileSizeDescription": "Ladattavien videotiedostojen enimmäiskoko",
       "ytDlpVersion": "yt-dlp-versio",
       "ytDlpVersionDescription": "Tämän palvelimen käyttämä yt-dlp-versio. Ei muutettavissa täällä.",
@@ -1045,6 +1041,7 @@
         "genericOpenai": "Yleinen OpenAI-yhteensopiva"
       },
       "transcriptionEndpoint": "Päätepisteen osoite",
+      "transcriptionEndpointPlaceholderGeneric": "http://localhost:8000 (faster-whisper-server) tai http://localhost:8080 (LocalAI)",
       "transcriptionEndpointDescription": "OpenAI-yhteensopiva päätepiste Whisper-tuella tai Ollama-päätepiste",
       "transcriptionModel": "Malli",
       "transcriptionModelDescription": "Litterointiin käytettävä malli",
@@ -1074,8 +1071,6 @@
       "allowPrivateAddressesDescription": "Antaa tuontien tavoittaa paikallisen verkkosi. Obscura hylkää ne joka tapauksessa.",
       "navigationTimeout": "Navigoinnin aikakatkaisu (ms)",
       "navigationTimeoutDescription": "Kuinka kauan renderöijällä on aikaa ladata sivu.",
-      "saved": "Sivujen renderöijät tallennettu",
-      "error": "Sivujen renderöijien tallennus epäonnistui",
       "connectionSuccess": "Yhteys onnistui"
     },
     "imageGenerationConfig": {
@@ -1188,9 +1183,7 @@
     "unsavedChanges": "Tallentamattomia muutoksia",
     "jsonEditor": {
       "placeholder": "Kirjoita JSON-asetukset...",
-      "invalidJson": "Virheellinen JSON-muoto",
-      "failedToSave": "Tallennus epäonnistui",
-      "failedToRestore": "Oletusten palautus epäonnistui"
+      "invalidJson": "Virheellinen JSON-muoto"
     },
     "jobQueue": {
       "title": "Työjonot",
@@ -1327,6 +1320,13 @@
       "empty": "Ei vielä ruokakulttuureita.",
       "duplicate": "Samanniminen ruokakulttuuri on jo olemassa.",
       "saveFailed": "Ruokakulttuuria ei voitu tallentaa."
+    },
+    "toasts": {
+      "localesSaved": "Kieliasetukset tallennettu",
+      "localesError": "Kieliasetusten tallennus epäonnistui",
+      "userDeleted": "{name} poistettiin",
+      "pageRenderersSaved": "Sivujen renderöijät tallennettu",
+      "pageRenderersError": "Sivujen renderöijien tallennus epäonnistui"
     }
   },
   "archiveExport": {

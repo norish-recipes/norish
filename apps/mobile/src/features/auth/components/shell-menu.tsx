@@ -2,7 +2,7 @@ import React from "react";
 import { Host, Menu } from "@expo/ui/swift-ui";
 import { buttonStyle, foregroundStyle, labelStyle } from "@expo/ui/swift-ui/modifiers";
 
-export interface ShellMenuProps {
+interface ShellMenuProps {
   /** Text label for the menu trigger button. */
   label: string;
   /** SF Symbol name displayed as the trigger icon. */

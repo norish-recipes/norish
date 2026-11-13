@@ -1,11 +1,10 @@
 import { vi } from "vitest";
 
 /**
- * The tRPC slice the Device Preferences provider uses. A test installs it with
- * `vi.mock("@/app/providers/trpc-provider", () => import("../helpers/device-preferences-trpc"))`
- * (path relative to the test) and reads what was written from `deviceWrite`.
+ * The tRPC slice `useDevicePreference` uses, for `vi.mock("@norish/shared-react/trpc")`: writes
+ * reach `deviceWrite`, and reads are refused, so a re-read leaves the cache as the test set it.
  */
-export const userQueryKey = [["user", "get"], { type: "query" }] as const;
+export const devicePreferencesQueryKey = [["user", "getDevicePreferences"], { type: "query" }];
 export const deviceWrite = vi.fn();
 
 const writeKey = [["user", "setDevicePreferences"]];
@@ -13,14 +12,20 @@ const writeKey = [["user", "setDevicePreferences"]];
 export function useTRPC() {
   return {
     user: {
-      get: {
-        queryKey: () => userQueryKey,
-        queryOptions: () => ({ queryKey: userQueryKey, queryFn: async () => null }),
+      getDevicePreferences: {
+        queryKey: () => devicePreferencesQueryKey,
+        queryOptions: () => ({
+          queryKey: devicePreferencesQueryKey,
+          queryFn: () => Promise.reject(new Error("not served in this test")),
+        }),
       },
-      getAllergies: { queryKey: () => [["user", "getAllergies"], { type: "query" }] },
       setDevicePreferences: {
         mutationKey: () => writeKey,
-        mutationOptions: () => ({ mutationKey: writeKey, mutationFn: deviceWrite }),
+        mutationOptions: (options: object = {}) => ({
+          ...options,
+          mutationKey: writeKey,
+          mutationFn: deviceWrite,
+        }),
       },
     },
   };

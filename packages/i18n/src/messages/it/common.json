@@ -40,7 +40,6 @@
   "status": {
     "loading": "Caricamento...",
     "saving": "Salvataggio...",
-    "deleting": "Eliminazione...",
     "error": "Errore",
     "success": "Successo",
     "noResults": "Nessun risultato trovato",
@@ -92,9 +91,6 @@
   },
   "connection": {
     "connecting": "Connessione a Norish...",
-    "checkInternet": "Controlla la tua connessione internet",
-    "offlineBanner": "Sei offline, visualizzazione dei dati memorizzati nella cache",
-    "serverUnreachableBanner": "Impossibile raggiungere il server Norish, visualizzazione dei dati memorizzati nella cache",
     "live": "Connesso",
     "offline": "Offline",
     "openDetails": "Dettagli connessione"
@@ -151,10 +147,7 @@
       "analyzing": "Analisi delle immagini in corso, attendere...",
       "failed": "Importazione non riuscita",
       "selectedCount": "{count} immagini selezionate - verranno combinate in una ricetta",
-      "library": "Libreria",
-      "takePhoto": "Scatta foto",
-      "counter": "{count} / {max} foto",
-      "importFromCount": "Importa da {count, plural, one {# foto} other {# foto}}"
+      "library": "Libreria"
     },
     "menu": {
       "description": "Importa da un URL, scansiona una foto o parti da zero."
@@ -223,8 +216,7 @@
     "other": "Timer",
     "label_one": "1 Timer",
     "label_other": "{count} Timer",
-    "notification_title": "Timer completato",
-    "notification_body": "{label} è pronto!",
+    "notification_body": "Timer completato",
     "notifications_disabled": "Le notifiche sono disabilitate",
     "notifications_disabled_hint": "Abilita le notifiche nelle impostazioni del browser per ricevere avvisi quando i timer terminano in background."
   },
@@ -301,5 +293,11 @@
     "title": "Una chiave IA ha smesso di funzionare",
     "description": "Il fornitore rifiuta la chiave API per {blocks} dal {since}. Salva una nuova chiave per far funzionare di nuovo queste funzioni IA.",
     "openSettings": "Apri impostazioni"
+  },
+  "household": {
+    "adminTransferred": "Privilegi di amministratore trasferiti a {name}",
+    "unknownMember": "Sconosciuto",
+    "removedTitle": "Rimosso dalla famiglia",
+    "removedDescription": "Un amministratore ti ha rimosso dalla famiglia."
   }
 }

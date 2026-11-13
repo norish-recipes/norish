@@ -6,7 +6,6 @@ import "@testing-library/jest-dom";
 
 import NavbarUserMenu from "@/components/navbar/navbar-user-menu";
 
-const mockSignOut = vi.hoisted(() => vi.fn());
 const mockCycleLocale = vi.hoisted(() => vi.fn());
 const mockCycleTheme = vi.hoisted(() => vi.fn());
 
@@ -22,19 +21,13 @@ vi.mock("next-themes", () => ({
   }),
 }));
 
-vi.mock("@/context/user-context", () => ({
-  useUserContext: () => ({
-    signOut: mockSignOut,
-    user: {
-      email: "alice@example.com",
-      id: "user-1",
-      image: null,
-      name: "Alice",
-    },
-  }),
-}));
+vi.mock("@norish/shared-react/reader", async () =>
+  (await import("../helpers/reader-mock")).mockReader(() => ({
+    user: { email: "alice@example.com", id: "user-1", image: null, name: "Alice" },
+  }))
+);
 
-vi.mock("@/hooks/config", () => ({
+vi.mock("@norish/shared-react/config", () => ({
   useVersionQuery: () => ({
     currentVersion: "1.2.3",
     latestVersion: null,
@@ -43,7 +36,7 @@ vi.mock("@/hooks/config", () => ({
   }),
 }));
 
-vi.mock("@/hooks/user/use-language-switch", () => ({
+vi.mock("@/hooks/use-language-switch", () => ({
   useLanguageSwitch: () => ({
     cycleLocale: mockCycleLocale,
     icon: null,
@@ -52,7 +45,7 @@ vi.mock("@/hooks/user/use-language-switch", () => ({
   }),
 }));
 
-vi.mock("@/components/shared/import-recipe-modal", () => ({
+vi.mock("@/components/imports/import-recipe-modal", () => ({
   default: ({ isOpen }: { isOpen: boolean }) => (isOpen ? <div>Import recipe modal</div> : null),
 }));
 

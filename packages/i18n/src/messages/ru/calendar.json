@@ -11,12 +11,6 @@
     "noteLabel": "Заметка",
     "notePlaceholder": "Введите заметку..."
   },
-  "navigation": {
-    "previousMonth": "Предыдущий месяц",
-    "nextMonth": "Следующий месяц",
-    "prev": "Назад",
-    "next": "Вперёд"
-  },
   "weekdays": {
     "mon": "Пн",
     "tue": "Вт",
@@ -51,5 +45,16 @@
     "randomRecipe": "Случайный рецепт",
     "noRecipesFound": "Рецепты не найдены.",
     "failedToLoadRecipes": "Не удалось загрузить рецепты."
+  },
+  "caldav": {
+    "syncStarted": "Синхронизация CalDAV запущена",
+    "syncStartedDescription": "Элементов к синхронизации: {queued}",
+    "syncStartedWithFailures": "Элементов к синхронизации: {queued}. Не удалось поставить в очередь: {failed}",
+    "configSaved": "Конфигурация сохранена",
+    "configSavedDescription": "Ваши настройки CalDAV сохранены.",
+    "configDeleted": "Конфигурация удалена",
+    "configDeletedDescription": "Ваши настройки CalDAV удалены.",
+    "retryStarted": "Синхронизация запущена",
+    "retryStartedDescription": "Повторная попытка для ожидающих и неудачных элементов…"
   }
 }

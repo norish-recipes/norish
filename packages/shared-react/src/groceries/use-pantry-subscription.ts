@@ -1,0 +1,59 @@
+import { useQueryClient } from "@tanstack/react-query";
+
+import type { EventName, PayloadOf } from "@norish/shared/contracts/realtime/catalogue";
+import type { PantryRealtime } from "@norish/shared/contracts/realtime/pantry";
+
+import type { PantryData } from "./types";
+import { useKeepsCurrent, useRealtimeSubscription } from "../realtime";
+import { useTRPC } from "../trpc";
+import { mergePantryAdded, mergePantryRemoved } from "./pantry-merge";
+
+type Payload<E extends EventName<PantryRealtime>> = PayloadOf<PantryRealtime, E>;
+
+/**
+ * A housemate's Pantry lands here without a reload: the handlers are the same
+ * idempotent merges the mutations' optimistic writes use, so the actor's own
+ * echo is a no-op and nothing is suppressed.
+ */
+export function usePantrySubscription() {
+  const trpc = useTRPC();
+  const queryClient = useQueryClient();
+  const queryKey = trpc.pantry.list.queryKey();
+
+  useKeepsCurrent([queryKey]);
+  // What the Pantry covers is what "From your recipes" leaves out.
+  const suggestionsKey = trpc.pantry.suggestions.queryKey();
+  // A fresh or lagged subscription reads the Pantry again; the merges cannot close a gap.
+  const live = {
+    liveQueryKeys: [
+      queryKey,
+      suggestionsKey,
+      trpc.library.list.pathKey(),
+      trpc.cookbooks.recipes.pathKey(),
+    ],
+  };
+  // Recipe lists filtered to what the Pantry covers read it too.
+  const invalidateCovered = () => {
+    void queryClient.invalidateQueries({ queryKey: suggestionsKey });
+    void queryClient.invalidateQueries(trpc.library.list.pathFilter());
+    void queryClient.invalidateQueries(trpc.cookbooks.recipes.pathFilter());
+  };
+
+  useRealtimeSubscription<Payload<"added">>(trpc.pantry.onAdded, {
+    ...live,
+    onEvent: ({ item }) => {
+      queryClient.setQueryData<PantryData>(queryKey, (prev) => mergePantryAdded(prev ?? [], item));
+      invalidateCovered();
+    },
+  });
+
+  useRealtimeSubscription<Payload<"removed">>(trpc.pantry.onRemoved, {
+    ...live,
+    onEvent: ({ itemId }) => {
+      queryClient.setQueryData<PantryData>(queryKey, (prev) =>
+        mergePantryRemoved(prev ?? [], itemId)
+      );
+      invalidateCovered();
+    },
+  });
+}

@@ -2,14 +2,13 @@
 
 import React, { useCallback, useState } from "react";
 import { useRouter } from "next/navigation";
+import ImportRecipeModal from "@/components/imports/import-recipe-modal";
 import { OfflineStatusModal } from "@/components/navbar/offline-status/offline-status-modal";
 import { SignOutConfirmModal } from "@/components/navbar/sign-out-confirm-modal";
-import ImportRecipeModal from "@/components/shared/import-recipe-modal";
+import { SETTINGS_HREF } from "@/components/settings/settings-tab";
 import { LanguageSwitchContent } from "@/components/shared/language-switch";
 import UserAvatar from "@/components/shared/user-avatar";
-import { useUserContext } from "@/context/user-context";
-import { useVersionQuery } from "@/hooks/config";
-import { useLanguageSwitch } from "@/hooks/user/use-language-switch";
+import { useLanguageSwitch } from "@/hooks/use-language-switch";
 import { offlineEngine } from "@/lib/offline/engine";
 import {
   ArrowDownTrayIcon,
@@ -21,8 +20,11 @@ import {
 import { Button, Dropdown, Label } from "@heroui/react";
 import { useTranslations } from "next-intl";
 
+import { useVersionQuery } from "@norish/shared-react/config";
 import { useConnectivity } from "@norish/shared-react/offline/react";
+import { useReader, useSignOut } from "@norish/shared-react/reader";
 import { cssButtonPill, cssButtonPillDanger } from "@norish/web/config/css-tokens";
+import { APP_VERSION } from "@norish/web/config/site";
 
 import { ThemeSwitchContent, useThemeSwitch } from "./theme-switch";
 
@@ -42,7 +44,8 @@ export default function NavbarUserMenu({
 }: NavbarUserMenuProps) {
   const t = useTranslations("navbar.userMenu");
   const tc = useTranslations("common.connection");
-  const { user, signOut } = useUserContext();
+  const { user } = useReader();
+  const signOut = useSignOut();
   const { isOffline } = useConnectivity();
   const router = useRouter();
   const [localOpen, setLocalOpen] = useState(false);
@@ -51,7 +54,8 @@ export default function NavbarUserMenu({
   const [signOutUnsyncedCount, setSignOutUnsyncedCount] = useState<number | null>(null);
   const themeSwitch = useThemeSwitch();
   const languageSwitch = useLanguageSwitch();
-  const { currentVersion, latestVersion, updateAvailable, releaseUrl } = useVersionQuery();
+  const { currentVersion, latestVersion, updateAvailable, releaseUrl } =
+    useVersionQuery(APP_VERSION);
   const menuOpen = isOpen ?? localOpen;
 
   const handleOpenChange = useCallback(
@@ -62,29 +66,19 @@ export default function NavbarUserMenu({
     [onOpenChange]
   );
 
-  // Explicit sign-out (ADR-0009): with unsynced queued changes, open the
-  // guided confirmation instead of signing out; with a clean queue, sign out
-  // directly (the sign-out itself clears the personalized caches).
-  const handleSignOutPress = useCallback(() => {
-    void (async () => {
-      const unsynced = await offlineEngine.unsyncedChanges();
+  // Explicit sign-out (ADR-0009): unsynced queued changes are discarded only after the confirm.
+  const handleSignOutPress = async () => {
+    const unsynced = await offlineEngine.unsyncedChanges();
 
-      if (unsynced > 0) {
-        setSignOutUnsyncedCount(unsynced);
+    if (unsynced > 0) setSignOutUnsyncedCount(unsynced);
+    else await signOut();
+  };
 
-        return;
-      }
-
-      await signOut();
-    })();
-  }, [signOut]);
-
-  const handleConfirmedSignOut = useCallback(async () => {
+  // Still here when the session could not be ended: the dialog closes with everything kept.
+  const handleConfirmedSignOut = async () => {
     await signOut({ discardQueue: true });
-    // Still here: the auth sign-out failed (e.g. Offline) and nothing was
-    // discarded. Close the dialog with session, queue, and caches intact.
     setSignOutUnsyncedCount(null);
-  }, [signOut]);
+  };
 
   if (!user) return null;
 
@@ -210,13 +204,11 @@ export default function NavbarUserMenu({
               className={`py-3 ${cssButtonPill}`}
               id="settings"
               textValue={t("settings.title")}
-              // No React Aria RouterProvider is wired in this app, so a bare
-              // `href` here renders a native anchor and reboots the document —
-              // a blank flash plus a full app boot on the way to /settings.
-              // Every sibling item routes through the client router instead.
+              // The only React Aria RouterProvider wraps the settings tab bar, so a bare
+              // `href` here would render a native anchor and reboot the document.
               onPress={() => {
                 handleOpenChange(false);
-                router.push("/settings?tab=user");
+                router.push(SETTINGS_HREF);
               }}
             >
               <span className="text-muted">
@@ -238,7 +230,7 @@ export default function NavbarUserMenu({
               variant="danger"
               onPress={() => {
                 handleOpenChange(false);
-                handleSignOutPress();
+                void handleSignOutPress();
               }}
             >
               <span className="text-danger">

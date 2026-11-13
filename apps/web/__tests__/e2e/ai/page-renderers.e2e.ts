@@ -48,7 +48,7 @@ test.describe("the Page Renderers card", () => {
       solver: { enabled: false },
     });
 
-    await page.goto("/settings?tab=admin");
+    await page.goto("/settings/admin");
     await cardOf(page).scrollIntoViewIfNeeded();
     await expect(cardOf(page).getByLabel("Obscura endpoint")).toHaveValue(ENDPOINT);
     await expect(cardOf(page).getByText(KEEPS_TOKEN_HINT)).toBeVisible();
@@ -169,7 +169,7 @@ test.describe("the Chromium browser", () => {
     page,
   }) => {
     await saveSetting(aiStack, { ...before, chromium: { enabled: false, endpoint: "" } });
-    await page.goto("/settings?tab=admin");
+    await page.goto("/settings/admin");
     const card = cardOf(page);
     const result = card.getByRole("status");
     const chromiumSwitch = card.getByRole("switch", { name: "Chromium browser" });

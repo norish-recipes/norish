@@ -1,10 +1,7 @@
 import { TRPCError } from "@trpc/server";
 import { z } from "zod";
 
-import type {
-  PlannedItemWithRecipePayload,
-  SlotItemSortUpdate,
-} from "@norish/shared/contracts/zod";
+import type { SlotItemSortUpdate } from "@norish/shared/contracts/zod";
 import { assertHouseholdAccess } from "@norish/auth/permissions";
 import {
   getPlannedItemById,
@@ -25,6 +22,7 @@ import { dateKey, endOfMonth, startOfMonth } from "@norish/shared/lib/helpers";
 import { authedProcedure } from "../../middleware";
 import { router } from "../../trpc";
 import {
+  buildPlannedItemPayload,
   createCalendarItem,
   deleteCalendarItem,
   endOfServerWeek,
@@ -237,21 +235,7 @@ export const plannedItemsProcedures = router({
       }));
     }
 
-    const itemPayload: PlannedItemWithRecipePayload = {
-      id: movedItemWithRecipe.id,
-      date: movedItemWithRecipe.date,
-      slot: movedItemWithRecipe.slot,
-      sortOrder: movedItemWithRecipe.sortOrder,
-      itemType: movedItemWithRecipe.itemType,
-      recipeId: movedItemWithRecipe.recipeId,
-      title: movedItemWithRecipe.title,
-      userId: movedItemWithRecipe.userId,
-      version: movedItemWithRecipe.version,
-      recipeName: movedItemWithRecipe.recipeName,
-      recipeImage: movedItemWithRecipe.recipeImage,
-      servings: movedItemWithRecipe.servings,
-      calories: movedItemWithRecipe.calories,
-    };
+    const itemPayload = buildPlannedItemPayload(movedItemWithRecipe);
 
     await publishCalendarItemEvent(
       "itemMoved",
@@ -266,7 +250,8 @@ export const plannedItemsProcedures = router({
       ctx.householdKey
     );
 
-    return { success: true, moved: true, stale: false };
+    // The moved item rides the answer, as a create's does: the echo is the fast path (ADR-0011).
+    return { success: true, moved: true, stale: false, item: itemPayload };
   }),
 
   createItem: authedProcedure.input(createItemInput).mutation(async ({ ctx, input }) => {
@@ -312,25 +297,11 @@ export const plannedItemsProcedures = router({
           throw new Error("Failed to fetch updated item");
         }
 
-        const itemPayload: PlannedItemWithRecipePayload = {
-          id: itemWithRecipe.id,
-          date: itemWithRecipe.date,
-          slot: itemWithRecipe.slot,
-          sortOrder: itemWithRecipe.sortOrder,
-          itemType: itemWithRecipe.itemType,
-          recipeId: itemWithRecipe.recipeId,
-          title: itemWithRecipe.title,
-          userId: itemWithRecipe.userId,
-          version: itemWithRecipe.version,
-          recipeName: itemWithRecipe.recipeName,
-          recipeImage: itemWithRecipe.recipeImage,
-          servings: itemWithRecipe.servings,
-          calories: itemWithRecipe.calories,
-        };
+        const itemPayload = buildPlannedItemPayload(itemWithRecipe);
 
         await publishCalendarItemEvent("itemUpdated", { item: itemPayload }, householdKey);
 
-        return { success: true, stale: false };
+        return { success: true, stale: false, item: itemPayload };
       } catch (err) {
         log.error({ err, userId, itemId }, "Failed to update calendar item");
         void calendar.publish("failed", { reason: "Failed to update item" }, { householdKey });

@@ -1,29 +1,14 @@
 import { QuerySeed } from "@/components/query-seed";
-import { readReaderToday } from "@/lib/reader-today-server";
-import { readRecipeQueryFilters } from "@/lib/recipe-filters-server";
+import { LibraryRoot } from "@/features/library/library-root";
+import { readerRecipeSeeds } from "@/lib/reader-recipe-seeds";
+import { readRecipeFilters } from "@/lib/recipe-filters-server";
 
-import { byNextCursor, libraryListInput } from "@norish/shared-react/list-queries";
-import { dateKey, getInitialDateRange } from "@norish/shared/lib/helpers";
-
-// A full load carries the week Today's meals reads, in the reader's time zone, and the Library's
-// first page. Here above the loading boundary, so the app's providers find it in their first render.
+// The dashboard and a cookbook page share the Library's filters, drawn under the reader's cookie,
+// and the Reader's favourites and allergies their cards draw.
 export default async function LibraryLayout({ children }: LayoutProps<"/">) {
-  const [today, filters] = await Promise.all([readReaderToday(), readRecipeQueryFilters()]);
-  const { start, end } = getInitialDateRange("desktop", today);
-
   return (
-    <QuerySeed
-      reads={(trpc, client) => [
-        client.query(
-          trpc.calendar.listItems.queryOptions({ startISO: dateKey(start), endISO: dateKey(end) })
-        ),
-        filters &&
-          client.infiniteQuery(
-            trpc.library.list.infiniteQueryOptions(libraryListInput(filters), byNextCursor)
-          ),
-      ]}
-    >
-      {children}
+    <QuerySeed reads={readerRecipeSeeds}>
+      <LibraryRoot filters={await readRecipeFilters()}>{children}</LibraryRoot>
     </QuerySeed>
   );
 }

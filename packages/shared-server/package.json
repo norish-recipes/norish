@@ -49,6 +49,7 @@
     "./realtime/caldav": "./src/realtime/caldav.ts",
     "./realtime/calendar": "./src/realtime/calendar.ts",
     "./realtime/channel": "./src/realtime/channel.ts",
+    "./realtime/config": "./src/realtime/config.ts",
     "./realtime/connection": "./src/realtime/connection.ts",
     "./realtime/cookbooks": "./src/realtime/cookbooks.ts",
     "./realtime/domain": "./src/realtime/domain.ts",

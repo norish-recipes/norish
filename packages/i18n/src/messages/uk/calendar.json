@@ -11,12 +11,6 @@
     "noteLabel": "Нотатка",
     "notePlaceholder": "Введіть нотатку..."
   },
-  "navigation": {
-    "previousMonth": "Попередній місяць",
-    "nextMonth": "Наступний місяць",
-    "prev": "Назад",
-    "next": "Далі"
-  },
   "weekdays": {
     "mon": "Пн",
     "tue": "Вт",
@@ -51,5 +45,16 @@
     "randomRecipe": "Випадковий рецепт",
     "noRecipesFound": "Рецептів не знайдено.",
     "failedToLoadRecipes": "Не вдалося завантажити рецепти."
+  },
+  "caldav": {
+    "syncStarted": "Синхронізацію CalDAV розпочато",
+    "syncStartedDescription": "Елементів для синхронізації: {queued}",
+    "syncStartedWithFailures": "Елементів для синхронізації: {queued}. Не вдалося додати до черги: {failed}",
+    "configSaved": "Конфігурацію збережено",
+    "configSavedDescription": "Ваші налаштування CalDAV збережено.",
+    "configDeleted": "Конфігурацію видалено",
+    "configDeletedDescription": "Ваші налаштування CalDAV видалено.",
+    "retryStarted": "Синхронізацію розпочато",
+    "retryStartedDescription": "Повторна спроба для очікуваних і невдалих елементів…"
   }
 }

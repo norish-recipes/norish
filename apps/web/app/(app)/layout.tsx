@@ -4,8 +4,9 @@ import { AppShell } from "@/app/(app)/app-shell";
 import { readQuerySeed } from "@/components/query-seed";
 import { DESTINATION_HEADER, loginPath } from "@/lib/auth/login-redirect";
 import { readReaderToday } from "@/lib/reader-today-server";
-import { readRecipeFilters } from "@/lib/recipe-filters-server";
-import { readDevicePreferencesSeed, readRequestProfile } from "@/lib/request-profile";
+import { readRequestProfile } from "@/lib/request-profile";
+
+import { deviceBlocks } from "@norish/shared/contracts/zod/device-preferences";
 
 /**
  * The page gate of the signed-in app. The proxy only checks that a session
@@ -13,35 +14,31 @@ import { readDevicePreferencesSeed, readRequestProfile } from "@/lib/request-pro
  * per request, and a reader without one is sent to sign in and back.
  */
 export default async function AppLayout({ children }: { children: React.ReactNode }) {
-  const { identity } = await readRequestProfile();
+  const { identity, kind, preferences } = await readRequestProfile();
 
   if (!identity) {
     redirect(loginPath((await headers()).get(DESTINATION_HEADER)));
   }
 
-  // What the providers' first render needs, read once. Not `user.get`: its API-key metadata would
-  // sit in every document the worker keeps.
-  const [devicePreferences, readerToday, recipeFilters, queries] = await Promise.all([
-    readDevicePreferencesSeed(),
+  // The shell's own reads: permissions (the AI-key prompt, the import modal) and Device Preferences.
+  // Not `user.get`: its API-key metadata would sit in every document the worker keeps.
+  const [readerToday, queries] = await Promise.all([
     readReaderToday(),
-    readRecipeFilters(),
-    readQuerySeed((trpc, client) => [
-      client.query(trpc.permissions.get.queryOptions()),
-      client.query(trpc.households.get.queryOptions()),
-      client.query(trpc.favorites.list.queryOptions()),
-      client.query(trpc.user.getAllergies.queryOptions()),
-      client.query(trpc.recipes.getPending.queryOptions()),
-    ]),
+    readQuerySeed((trpc, client) => {
+      // What user.getDevicePreferences answers, from the preferences the gate already read.
+      client.setQueryData(trpc.user.getDevicePreferences.queryKey(), deviceBlocks(preferences));
+
+      return [client.query(trpc.permissions.get.queryOptions())];
+    }),
   ]);
   const { id, email, name, image, version } = identity;
 
   return (
     <AppShell
       seed={{
-        devicePreferences,
+        deviceKind: kind,
         reader: { id, email, name, image, version },
         readerToday,
-        recipeFilters,
         queries,
       }}
     >

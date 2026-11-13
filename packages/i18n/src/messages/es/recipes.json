@@ -67,7 +67,6 @@
     "notFoundMessage": "Esta receta no existe o no tienes permiso para verla.",
     "prep": "preparación",
     "total": "total",
-    "planMeal": "Planificar comida",
     "recipeActions": "Acciones de la receta",
     "instructions": "Instrucciones",
     "cook": "Cocinar",
@@ -86,7 +85,6 @@
     "edit": "Editar",
     "delete": "Eliminar",
     "share": "Compartir",
-    "visitOriginal": "Ver receta original",
     "addToCalendar": "Añadir al calendario",
     "autoTag": "Etiquetado automático",
     "autoTagging": "Generando etiquetas...",
@@ -103,7 +101,6 @@
     "inferringProvenance": "Averiguando la procedencia…",
     "linkIngredients": "Vincular ingredientes a los pasos",
     "linkingIngredients": "Vinculando ingredientes…",
-    "enrichmentFailed": "El último intento falló",
     "generateImage": "Generar imagen",
     "generatingImage": "Generando imagen…",
     "cookbooks": "Libros de cocina"
@@ -173,7 +170,6 @@
     "editTitle": "Editar receta",
     "createDescription": "Añade una nueva receta a tu colección",
     "editDescription": "Actualiza los detalles de tu receta",
-    "initializingForm": "Inicializando formulario...",
     "photo": "Foto",
     "basicInfo": "Información básica",
     "ingredients": "Ingredientes",
@@ -225,19 +221,12 @@
     "createRecipe": "Crear receta",
     "saveChanges": "Guardar cambios",
     "uploading": "Subiendo...",
-    "clickToUpload": "Haz clic para subir o arrastra y suelta",
-    "pasteToUpload": "para pegar",
-    "imageFormats": "PNG, JPG, WEBP hasta 5MB",
     "discardChangesConfirm": "Tienes cambios sin guardar. ¿Descartarlos y salir de esta página?"
   },
   "gallery": {
-    "addImage": "Añadir imagen",
     "uploading": "Subiendo...",
     "uploadFailed": "Error al subir",
-    "dragToReorder": "Arrastra para reordenar",
-    "maxImagesReached": "{max} imágenes permitidas como máximo",
-    "maxVideosReached": "{max} vídeos permitidos como máximo",
-    "invalidFileType": "Tipo de archivo no válido"
+    "dragToReorder": "Arrastra para reordenar"
   },
   "carousel": {
     "noImageAvailable": "No hay imagen disponible",
@@ -246,8 +235,11 @@
       "mute": "Silenciar",
       "unmute": "Activar sonido",
       "fullscreen": "Pantalla completa",
-      "exitFullscreen": "Salir de pantalla completa"
-    }
+      "exitFullscreen": "Salir de pantalla completa",
+      "progress": "Progreso del vídeo"
+    },
+    "recipeImage": "Imagen de la receta",
+    "closeViewer": "Cerrar el visor de imágenes"
   },
   "validation": {
     "nameRequired": "El nombre de la receta es obligatorio",
@@ -262,8 +254,6 @@
     "carbs": "Carbohidratos",
     "protein": "Proteínas",
     "showingPortions": "Mostrando valores para {count} {count, plural, one {porción} other {porciones}}",
-    "noInfo": "No hay información nutricional disponible",
-    "estimateWithAI": "Estimar con IA",
     "estimated": "Estimado",
     "leftOut": "{count, plural, one {# línea sin contar} other {# líneas sin contar}}",
     "estimatedByAI": "estimado por IA",
@@ -276,7 +266,9 @@
       "noPieceWeight": "aún sin peso por pieza"
     },
     "workedOutFrom": "Calculado a partir de los ingredientes, con {sources}.",
-    "householdNumbers": "los valores de tu hogar"
+    "householdNumbers": "los valores de tu hogar",
+    "decreasePortions": "Menos raciones",
+    "increasePortions": "Más raciones"
   },
   "measurementSystem": {
     "label": "Sistema de medidas",
@@ -291,7 +283,9 @@
   },
   "stepInput": {
     "stepPlaceholder": "Paso {number}: Describe el paso...",
-    "stepPlaceholderShort": "Paso {number}"
+    "stepPlaceholderShort": "Paso {number}",
+    "recipeSuggestions": "Sugerencias de recetas",
+    "ingredientSuggestions": "Sugerencias de ingredientes"
   },
   "stepIngredients": {
     "rowLabel": "Ingredientes vinculados",
@@ -327,11 +321,11 @@
     "incomplete": "Puede que esta receta esté incompleta. Compárala con la fuente.",
     "notARecipe": "Esta página no parece ser una receta.",
     "privateAddress": "Las importaciones desde direcciones de red privada no están permitidas en este servidor.",
-    "batchImported": "Recetas importadas",
-    "batchImportedDescription": "{count} recetas importadas desde el archivo",
     "view": "Ver",
     "open": "Abrir",
-    "deleteKept": "{count, plural, one {# receta fue modificada} other {# recetas fueron modificadas}} por otra persona y se {count, plural, one {conservó} other {conservaron}}."
+    "deleteKept": "{count, plural, one {# receta fue modificada} other {# recetas fueron modificadas}} por otra persona y se {count, plural, one {conservó} other {conservaron}}.",
+    "deleted": "Receta eliminada",
+    "deletedDescription": "Esta receta se ha eliminado."
   },
   "tags": {
     "panel": {
@@ -346,9 +340,6 @@
     "servings": "Porciones",
     "serving": "{count, plural, one {# porción} other {# porciones}}",
     "stepCounter": "{current} / {total}",
-    "swipeSteps": "Desliza para navegar entre pasos",
-    "swipeIngredients": "Desliza a la izquierda para ingredientes",
-    "swipeBackToSteps": "Desliza a la derecha para pasos",
     "readyAt": "Listo hacia las {time}",
     "timers": "Temporizadores",
     "nextStep": "Siguiente paso"
@@ -374,10 +365,7 @@
   "provenance": {
     "title": "Procedencia",
     "region": "Región",
-    "cuisines": "Cocinas",
-    "inferring": "Averiguando de dónde viene esta receta…",
-    "noInfo": "Aún no hay información de procedencia",
-    "inferWithAI": "Averiguar con IA"
+    "cuisines": "Cocinas"
   },
   "import": {
     "alreadyExists": "Ya tienes esta receta",

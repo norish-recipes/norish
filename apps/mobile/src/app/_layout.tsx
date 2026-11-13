@@ -2,16 +2,16 @@ import "@/global.css";
 import "@/lib/i18n/plural-rules";
 
 import React, { useEffect } from "react";
-import { StyleSheet } from "react-native";
+import { ActivityIndicator, StyleSheet, View } from "react-native";
 import { GestureHandlerRootView } from "react-native-gesture-handler";
 import { StorageUnavailableScreen } from "@/features/auth/screens/storage-unavailable-screen";
 import { useBackendBaseUrl } from "@/hooks/use-backend-base-url";
 import { useResolvedColorScheme } from "@/hooks/use-resolved-color-scheme";
 import { useUserLocaleSync } from "@/hooks/use-user-locale-sync";
-import { AuthProvider, useAuth } from "@/lib/auth/auth-context";
-import { UserProvider } from "@/lib/auth/user-context";
+import { AuthProviders } from "@/lib/auth/auth-providers";
 import { resolveBootPhase } from "@/lib/boot/boot-state";
-import { MobileIntlFallbackProvider, MobileIntlProvider } from "@/lib/i18n/mobile-i18n-context";
+import { MobileIntlFallbackProvider } from "@/lib/i18n/mobile-i18n-context";
+import { BackendBaseUrlContext } from "@/lib/network/backend-base-url";
 import { ConnectivityProvider, OfflineController, offlineEngine } from "@/lib/offline/engine";
 import {
   AppearancePreferenceProvider,
@@ -26,10 +26,13 @@ import { Inter_600SemiBold } from "@expo-google-fonts/inter/600SemiBold";
 import { Inter_700Bold } from "@expo-google-fonts/inter/700Bold";
 import { useFonts } from "expo-font";
 import { Stack } from "expo-router";
-import { DarkTheme, DefaultTheme, ThemeProvider } from "expo-router/react-navigation";
+import { DarkTheme, DefaultTheme, ThemeProvider, useTheme } from "expo-router/react-navigation";
 import * as SplashScreen from "expo-splash-screen";
 import { HeroUINativeProvider, useThemeColor } from "heroui-native";
 import { PortalHost } from "heroui-native/portal";
+
+import { usePlatform } from "@norish/shared-react/platform";
+import { useHouseholdSubscription, usePermissionsSubscription } from "@norish/shared-react/reader";
 
 // The boot gate below renders nothing until hydration settles. Holding the
 // native splash over that window is what keeps it from showing as a blank
@@ -128,12 +131,10 @@ function RootLayoutContent() {
   if (boot.phase === "onboarding") {
     return (
       <ThemeProvider value={theme}>
-        <AuthProvider backendBaseUrl={null}>
-          <MobileIntlFallbackProvider>
-            <RootStack />
-            <PortalHost name="app" />
-          </MobileIntlFallbackProvider>
-        </AuthProvider>
+        <MobileIntlFallbackProvider>
+          <RootStack signedIn={false} />
+          <PortalHost name="app" />
+        </MobileIntlFallbackProvider>
       </ThemeProvider>
     );
   }
@@ -141,62 +142,69 @@ function RootLayoutContent() {
   // Full provider tree — backend available
   return (
     <ThemeProvider value={theme}>
-      <TrpcProvider
-        baseUrl={boot.backendBaseUrl}
-        getQueryClient={getOfflineQueryClient}
-        mutationLink={offlineEngine.outboxLink}
-      >
-        <ConnectivityProvider>
-          <AuthProvider backendBaseUrl={boot.backendBaseUrl}>
-            <MobileIntlProvider>
-              <DomainProviders>
-                <RootStack />
-                <PortalHost name="app" />
-              </DomainProviders>
-            </MobileIntlProvider>
-          </AuthProvider>
-        </ConnectivityProvider>
-      </TrpcProvider>
+      <BackendBaseUrlContext value={boot.backendBaseUrl}>
+        <TrpcProvider
+          baseUrl={boot.backendBaseUrl}
+          getQueryClient={getOfflineQueryClient}
+          mutationLink={offlineEngine.outboxLink}
+        >
+          <ConnectivityProvider>
+            <AuthProviders>
+              <SessionStack />
+            </AuthProviders>
+          </ConnectivityProvider>
+        </TrpcProvider>
+      </BackendBaseUrlContext>
     </ThemeProvider>
   );
 }
 
 // ============================================================================
-// Domain providers — added only when authenticated
+// Session stack — the stack for the platform's session
 // ============================================================================
 
 const getOfflineQueryClient = () => offlineEngine.queryClient;
 
-/**
- * When authenticated, wraps children with the user provider. When
- * unauthenticated, renders children directly.
- */
-function DomainProviders({ children }: { children: React.ReactNode }) {
-  const { isAuthenticated } = useAuth();
+/** The stack, wrapped in the offline controller while signed in; a spinner while pending. */
+function SessionStack() {
+  const { session } = usePlatform();
+  const { colors } = useTheme();
+  const signedIn = session.user !== null;
 
-  if (!isAuthenticated) {
-    return children;
+  if (session.isPending && !signedIn) {
+    return (
+      <View style={[styles.root, styles.centred, { backgroundColor: colors.background }]}>
+        <ActivityIndicator />
+      </View>
+    );
   }
 
-  return <AuthenticatedProviders>{children}</AuthenticatedProviders>;
+  const app = (
+    <>
+      <RootStack signedIn={signedIn} />
+      <PortalHost name="app" />
+    </>
+  );
+
+  return signedIn ? <AuthenticatedProviders>{app}</AuthenticatedProviders> : app;
 }
 
 function AuthenticatedProviders({ children }: { children: React.ReactNode }) {
-  const { user } = useAuth();
+  const { user } = usePlatform().session;
 
   return (
-    <UserProvider>
-      <OfflineController sessionUserId={user?.id ?? null}>
-        <AuthenticatedEffects />
-        {children}
-      </OfflineController>
-    </UserProvider>
+    <OfflineController sessionUserId={user?.id ?? null}>
+      <AuthenticatedEffects />
+      {children}
+    </OfflineController>
   );
 }
 
-/** Hooks that require UserProvider + MobileIntlProvider. */
+/** The signed-in shell's effects: the Reader's locale and subscriptions. */
 function AuthenticatedEffects() {
   useUserLocaleSync();
+  useHouseholdSubscription();
+  usePermissionsSubscription();
 
   return null;
 }
@@ -205,15 +213,13 @@ function AuthenticatedEffects() {
 // Navigation
 // ============================================================================
 
-function RootStack() {
-  const { isAuthenticated } = useAuth();
-
+function RootStack({ signedIn }: { signedIn: boolean }) {
   return (
     <Stack screenOptions={{ headerShown: false }}>
-      <Stack.Protected guard={isAuthenticated}>
+      <Stack.Protected guard={signedIn}>
         <Stack.Screen name="smoke" />
       </Stack.Protected>
-      <Stack.Protected guard={!isAuthenticated}>
+      <Stack.Protected guard={!signedIn}>
         <Stack.Screen name="(auth)" />
       </Stack.Protected>
     </Stack>
@@ -225,5 +231,9 @@ function RootStack() {
 const styles = StyleSheet.create({
   root: {
     flex: 1,
+  },
+  centred: {
+    alignItems: "center",
+    justifyContent: "center",
   },
 });

@@ -65,6 +65,11 @@ export async function queryTrpc<T>(
   );
 }
 
+/** The `cookie` request header that sends these cookies. */
+export function cookieHeader(cookies: ReadonlyArray<{ name: string; value: string }>): string {
+  return cookies.map((cookie) => `${cookie.name}=${cookie.value}`).join("; ");
+}
+
 /** A procedure answered with a non-OK status; `status` says which. */
 export class TrpcHttpError extends Error {
   constructor(
@@ -85,7 +90,7 @@ async function overHttp<T>(
     baseURL,
     extraHTTPHeaders: {
       origin: new URL(baseURL).origin,
-      cookie: cookies.map((cookie) => `${cookie.name}=${cookie.value}`).join("; "),
+      cookie: cookieHeader(cookies),
     },
   });
 

@@ -162,6 +162,53 @@ describe("createCacheManager", () => {
     }
   });
 
+  it("never persists a mutation waiting behind another in its scope (the Outbox is the queue)", async () => {
+    const manager = createManager();
+    const scope = { id: "plan-writes" };
+    const first = Promise.withResolvers<void>();
+    const mutate = (mutationFn: () => Promise<void>) =>
+      manager.queryClient.getMutationCache().build(manager.queryClient, { mutationFn, scope });
+
+    await manager.reconcileIdentity({ sessionUserId: "u1", isOffline: false });
+    void mutate(() => first.promise).execute(undefined);
+    const waiting = mutate(() => Promise.resolve());
+
+    void waiting.execute(undefined);
+    manager.queryClient.setQueryData(["k"], "v");
+    await new Promise((resolve) => setTimeout(resolve, 0));
+
+    expect(waiting.state.isPaused).toBe(true);
+    const persisted = await storage.keyval.get<PersistedClient>(queryCacheKey("u1"));
+
+    expect(persisted?.clientState.mutations).toEqual([]);
+    first.resolve();
+  });
+
+  it("never persists the stored CalDAV password or the live connection check", async () => {
+    const manager = createManager();
+    const trpc = createTRPCOptionsProxy<AppRouter>({
+      client: createTRPCClient<AppRouter>({ links: [] }),
+      queryClient: manager.queryClient,
+    });
+    const kept = trpc.caldav.getConfig.queryKey();
+
+    await manager.reconcileIdentity({ sessionUserId: "u1", isOffline: false });
+    manager.queryClient.setQueryData(trpc.caldav.getPassword.queryKey(), "secret");
+    manager.queryClient.setQueryData(trpc.caldav.checkConnection.queryKey(), {
+      success: true,
+      message: "checked",
+    });
+    manager.queryClient.setQueryData(kept, null);
+    await new Promise((resolve) => setTimeout(resolve, 0));
+
+    const persisted = await storage.keyval.get<PersistedClient>(queryCacheKey("u1"));
+    const persistedKeys = persisted?.clientState.queries.map((query) => query.queryKey);
+
+    expect(persistedKeys).toContainEqual(kept);
+    expect(JSON.stringify(persisted)).not.toContain("secret");
+    expect(JSON.stringify(persisted)).not.toContain("checked");
+  });
+
   it("does not restore a query whose initial request failed without data", async () => {
     const manager = createManager();
     const failedKey = [["groceries", "list"], { type: "query" }] as const;
@@ -199,7 +246,7 @@ describe("createCacheManager", () => {
     expect(query?.gcTime).toBe(CACHE_MAX_AGE_MS);
   });
 
-  it("holds a recipe and a cookbook the reader opened past the default gcTime (ADR-0008)", async () => {
+  it("holds a recipe, a cookbook, the groceries list's reads and the Library past the default gcTime (ADR-0008)", async () => {
     vi.useFakeTimers();
 
     const { queryClient } = createManager();
@@ -211,8 +258,17 @@ describe("createCacheManager", () => {
     const opened = [
       trpc.recipes.get.queryKey({ id: "r1" }),
       trpc.cookbooks.get.queryKey({ id: "c1" }),
+      // Unobserved while the Pantry view shows.
+      trpc.groceries.list.queryKey(),
+      trpc.stores.list.queryKey(),
+      trpc.stores.groceryPrices.queryKey(),
+      trpc.stores.aisleLinks.queryKey(),
+      // Unobserved once a surface's set changes, while its icons still show it.
+      trpc.ingredients.icons.queryKey({ ids: ["i1"] }),
+      // Unobserved while the reader cooks from a recipe.
+      trpc.library.list.infiniteQueryKey({ search: "soup" }),
     ];
-    const elsewhere = trpc.groceries.list.queryKey();
+    const elsewhere = trpc.pantry.suggestions.queryKey();
 
     for (const queryKey of [...opened, elsewhere]) {
       // The page reads it while it is open, then the reader leaves.

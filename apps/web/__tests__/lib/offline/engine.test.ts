@@ -3,37 +3,52 @@ import { createWebOfflineEngine, markServerCopies } from "@/lib/offline/engine";
 import { createIdbStorage } from "@/lib/offline/idb-storage";
 import { PAGES_CACHE_NAME } from "@serwist/turbopack/worker";
 import { dehydrate, hydrate, QueryClient, QueryObserver } from "@tanstack/react-query";
+import { renderHook } from "@testing-library/react";
 import { createTRPCClient } from "@trpc/client";
 import { createTRPCOptionsProxy } from "@trpc/tanstack-react-query";
 import { IDBFactory } from "fake-indexeddb";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 
 import type { AppRouter } from "@norish/trpc/client";
+import { QUERY_STALE_TIME_MS } from "@norish/shared-react/offline";
+import { useKeepsCurrent } from "@norish/shared-react/realtime";
+
+/** A fresh engine, its key builder, and how many reads a reader mounting on a key sends. */
+function openEngine() {
+  const { queryClient } = createWebOfflineEngine(createIdbStorage(new IDBFactory()));
+  const trpc = createTRPCOptionsProxy<AppRouter>({
+    client: createTRPCClient<AppRouter>({ links: [] }),
+    queryClient,
+  });
+  const fetchesOnOpen = async (queryKey: readonly unknown[], staleTime = QUERY_STALE_TIME_MS) => {
+    const queryFn = vi.fn(async () => ({ fetched: true }));
+    const leave = new QueryObserver(queryClient, { queryKey, queryFn, staleTime }).subscribe(
+      () => {}
+    );
+
+    await new Promise((resolve) => setTimeout(resolve, 0));
+    leave();
+
+    return queryFn.mock.calls.length;
+  };
+
+  return { queryClient, trpc, fetchesOnOpen };
+}
 
 describe("the web offline engine", () => {
   beforeEach(() => {
+    // A frozen clock: a read and its keeper share a millisecond unless a test moves it on.
+    vi.useFakeTimers({ toFake: ["Date"] });
     window.localStorage.clear();
   });
 
   afterEach(() => {
+    vi.useRealTimers();
     vi.unstubAllGlobals();
   });
 
   it("opens the server's copy as it is until it changes, and refetches any other copy", async () => {
-    const { queryClient } = createWebOfflineEngine(createIdbStorage(new IDBFactory()));
-    const trpc = createTRPCOptionsProxy<AppRouter>({
-      client: createTRPCClient<AppRouter>({ links: [] }),
-      queryClient,
-    });
-    const fetchesOnOpen = async (queryKey: readonly unknown[]) => {
-      const queryFn = vi.fn(async () => ({ fetched: true }));
-      const leave = new QueryObserver(queryClient, { queryKey, queryFn }).subscribe(() => {});
-
-      await new Promise((resolve) => setTimeout(resolve, 0));
-      leave();
-
-      return queryFn.mock.calls.length;
-    };
+    const { queryClient, trpc, fetchesOnOpen } = openEngine();
     // The app's own keys, untagged so the test can seed any data.
     const seeded = [...trpc.recipes.get.queryKey({ id: "r1" })];
     const restored = [...trpc.recipes.get.queryKey({ id: "r2" })];
@@ -60,6 +75,89 @@ describe("the web offline engine", () => {
     queryClient.setQueryData(seeded, { id: "r1", edited: true });
 
     expect(await fetchesOnOpen(seeded)).toBe(1);
+  });
+
+  it("lets a copy the server answered wait for its stale time while a subscription keeps it current", async () => {
+    const { queryClient, trpc, fetchesOnOpen } = openEngine();
+    const seeded = [...trpc.groceries.list.queryKey()];
+    const read = [...trpc.stores.list.queryKey()];
+    const written = [...trpc.stores.groceryPrices.queryKey()];
+    const server = new QueryClient();
+
+    server.setQueryData(seeded, { groceries: [] });
+    const state = dehydrate(server);
+
+    markServerCopies(state);
+    hydrate(queryClient, state);
+    // The seed, then a tick on this page.
+    queryClient.setQueryData(seeded, { groceries: [{ id: "g1" }] });
+    await queryClient.fetchQuery({ queryKey: read, queryFn: async () => [] });
+    // Written here and never read, as a realtime echo writes into an empty cache.
+    queryClient.setQueryData(written, []);
+
+    const screen = renderHook(() => useKeepsCurrent([seeded, read, written]));
+
+    // A view switch: another reader mounts and asks for nothing.
+    expect(await fetchesOnOpen(seeded)).toBe(0);
+    expect(await fetchesOnOpen(read)).toBe(0);
+    expect(await fetchesOnOpen(written)).toBe(1);
+
+    // The screen left, and nothing kept them current: each may have missed a change.
+    screen.unmount();
+
+    expect(await fetchesOnOpen(seeded)).toBe(1);
+    expect(await fetchesOnOpen(read)).toBe(1);
+  });
+
+  it("forgets what kept a read current once its last reader leaves, but not across a remount", async () => {
+    const { queryClient, trpc, fetchesOnOpen } = openEngine();
+    const seeded = [...trpc.library.list.queryKey({})];
+    const read = [...trpc.groceries.list.queryKey()];
+    const server = new QueryClient();
+    const tick = () => new Promise((resolve) => setTimeout(resolve, 0));
+
+    server.setQueryData(seeded, { recipes: [] });
+    const state = dehydrate(server);
+
+    markServerCopies(state);
+    hydrate(queryClient, state);
+    await queryClient.fetchQuery({ queryKey: read, queryFn: async () => [] });
+    const screen = renderHook(() => useKeepsCurrent([read]));
+
+    // Each reopens before the tick after the last reader left: a remount in one commit.
+    expect(await fetchesOnOpen(seeded)).toBe(0);
+    expect(await fetchesOnOpen(seeded)).toBe(0);
+    expect(await fetchesOnOpen(read)).toBe(0);
+
+    // The reader's forget runs while the subscription still keeps its read current.
+    await tick();
+    // Then the subscription leaves, and comes back later than the read it kept.
+    screen.unmount();
+    vi.setSystemTime(Date.now() + 1000);
+    const back = renderHook(() => useKeepsCurrent([read]));
+
+    expect(await fetchesOnOpen(seeded)).toBe(1);
+    // The subscription is back, but it missed what changed while it was away.
+    expect(await fetchesOnOpen(read)).toBe(1);
+    back.unmount();
+  });
+
+  it("lets every read under a key a subscription keeps wait for its stale time, and no other", async () => {
+    const { queryClient, trpc, fetchesOnOpen } = openEngine();
+    const icons = [...trpc.ingredients.icons.queryKey({ ids: ["i1"] })];
+    const uses = [...trpc.ingredients.uses.queryKey({ ingredientId: "i1" })];
+    const units = [...trpc.config.units.queryKey()];
+
+    for (const queryKey of [icons, uses, units]) {
+      await queryClient.fetchQuery({ queryKey, queryFn: async () => ({}) });
+    }
+    const shell = renderHook(() => useKeepsCurrent([trpc.ingredients.icons.pathKey()]));
+
+    expect(await fetchesOnOpen(icons)).toBe(0);
+    expect(await fetchesOnOpen(uses)).toBe(1);
+    // A long stale time alone keeps nothing current: an administrator's edit would go unseen.
+    expect(await fetchesOnOpen(units, 60 * 60 * 1000)).toBe(1);
+    shell.unmount();
   });
 
   it("resets the service worker's image and page caches with the read copy", async () => {

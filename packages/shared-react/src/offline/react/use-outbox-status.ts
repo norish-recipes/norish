@@ -25,7 +25,7 @@ function summarize(entries: OutboxEntry[]): OutboxSummary {
   };
 }
 
-export interface OutboxStatus {
+interface OutboxStatus {
   owner: string | null;
   outbox: OutboxSummary;
   isSyncing: boolean;

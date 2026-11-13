@@ -1,23 +1,20 @@
 "use client";
 
 import type { ReactNode } from "react";
-import { useEffect, useState } from "react";
-import { useTRPC } from "@/app/providers/trpc-provider";
+import { useState } from "react";
 import Panel, { PanelComboBoxPopover } from "@/components/Panel/Panel";
 import { ActionButton, ActionButtonGroup } from "@/components/shared/action-button";
-import { showSafeErrorToast } from "@/lib/ui/safe-error-toast";
 import {
   ComboBox,
   Input,
   Label,
   ListBox,
   TextField,
-  toast,
   ToggleButton,
   ToggleButtonGroup,
 } from "@heroui/react";
-import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { useFormatter, useTranslations } from "next-intl";
+import { useDebounceValue } from "usehooks-ts";
 
 import type {
   IngredientNutrition,
@@ -26,6 +23,7 @@ import type {
   Per100g,
 } from "@norish/shared/contracts/ingredient-nutrition";
 import type { SpoonMeasure } from "@norish/shared/lib/spoon-measure";
+import { useNutritionCorrection, useNutritionFoodsQuery } from "@norish/shared-react/ingredients";
 import { NUTRITION_CREDIT_NAMES } from "@norish/shared/contracts/ingredient-nutrition";
 import { densityFromSpoon, spoonWeight } from "@norish/shared/lib/spoon-measure";
 
@@ -158,8 +156,7 @@ export function NutritionCorrectionPanel({
   const t = useTranslations("settings.ingredients.nutrition");
   const tActions = useTranslations("common.actions");
   const format = useFormatter();
-  const trpc = useTRPC();
-  const queryClient = useQueryClient();
+  const correction = useNutritionCorrection(ingredientId);
   // A density is typed as what the household's measure weighs; with none,
   // a correction made before is shown per 100 ml.
   const spoon = measure ?? "100ml";
@@ -188,17 +185,6 @@ export function NutritionCorrectionPanel({
     measure || initial.density.mode !== "sources"
       ? ["numbers", "pieceWeight", "density"]
       : ["numbers", "pieceWeight"];
-
-  const correct = useMutation(trpc.ingredients.correctNutrition.mutationOptions());
-  const remove = useMutation(trpc.ingredients.removeNutritionCorrection.mutationOptions());
-
-  // What the server did replaces what was shown: the Ingredient's own facts,
-  // and every recipe total worked out from them.
-  const refetch = () =>
-    Promise.all([
-      queryClient.invalidateQueries({ queryKey: trpc.ingredients.nutrition.queryKey() }),
-      queryClient.invalidateQueries({ queryKey: trpc.ingredients.nutritionFor.queryKey() }),
-    ]);
 
   /**
    * One fact as the procedure takes it: a dataset food, a label's numbers
@@ -245,16 +231,6 @@ export function NutritionCorrectionPanel({
   const complete = numbers !== undefined && pieceWeight !== undefined && density !== undefined;
   const nothing = complete && numbers === null && pieceWeight === null && density === null;
 
-  const fail = (error: unknown) =>
-    showSafeErrorToast({
-      title: t("errors.title"),
-      description: t(
-        `errors.${error instanceof Error && isRefusal(error.message) ? error.message : "unknown"}`
-      ),
-      error,
-      context: "ingredients:correct-nutrition",
-    });
-
   /** What the section shows the moment the correction is saved, before the server has it. */
   const shownNutrition = (): IngredientNutrition | null => {
     if (!numbers && !pieceWeight && !density) return null;
@@ -292,34 +268,17 @@ export function NutritionCorrectionPanel({
   };
 
   /** The panel closes and the facts change at once; the server's word follows, and a refusal undoes it. */
-  const land = (
-    shown: IngredientNutrition | null,
-    message: string,
-    edit: () => Promise<unknown>
-  ) => {
-    if (shown) {
-      queryClient.setQueryData(trpc.ingredients.nutrition.queryKey({ ingredientId }), shown);
-    }
-    toast(message, { variant: "success" });
-    onClose();
-    edit()
-      .catch(fail)
-      .finally(() => void refetch());
-  };
-
   const save = () => {
     if (!complete) return;
-    if (nothing) {
-      land(null, t("removed"), () => remove.mutateAsync({ ingredientId }));
-
-      return;
-    }
-    land(shownNutrition(), t("saved"), () =>
-      correct.mutateAsync({ ingredientId, numbers, pieceWeight, density })
-    );
+    onClose();
+    if (nothing) correction.remove();
+    else correction.correct({ numbers, pieceWeight, density }, shownNutrition());
   };
 
-  const removeAll = () => land(null, t("removed"), () => remove.mutateAsync({ ingredientId }));
+  const removeAll = () => {
+    onClose();
+    correction.remove();
+  };
 
   const set = (fact: Fact, next: Partial<FactDraft>) =>
     setDraft((previous) => ({ ...previous, [fact]: { ...previous[fact], ...next } }));
@@ -389,12 +348,6 @@ export function NutritionCorrectionPanel({
       </Panel.Footer>
     </Panel>
   );
-}
-
-const REFUSALS = ["unknown-food", "empty", "not-found"] as const;
-
-function isRefusal(message: string): message is (typeof REFUSALS)[number] {
-  return (REFUSALS as readonly string[]).includes(message);
 }
 
 /** One fact of the correction: what it is now, where the correction comes from, and the food or the label's numbers. */
@@ -508,22 +461,13 @@ function DatasetFoodPicker({
 }) {
   const t = useTranslations("settings.ingredients.nutrition");
   const format = useFormatter();
-  const trpc = useTRPC();
   // Inside a Panel the options must portal into it, or vaul swallows every tap (#511).
   const [term, setTerm] = useState(picked?.name ?? "");
-  const [search, setSearch] = useState("");
+  const [search] = useDebounceValue(term.trim(), SEARCH_DELAY_MS);
 
-  useEffect(() => {
-    const timer = setTimeout(() => setSearch(term.trim()), SEARCH_DELAY_MS);
-
-    return () => clearTimeout(timer);
-  }, [term]);
-
-  const { data, isFetching } = useQuery({
-    ...trpc.ingredients.nutritionFoods.queryOptions({ search }),
-    enabled: search.length >= 2,
-  });
-  const options = (data ?? [])
+  // A search reads from two letters on.
+  const { foods, isFetching } = useNutritionFoodsQuery(search.length >= 2 ? search : null);
+  const options = foods
     .filter((food) =>
       fact === "pieceWeight"
         ? food.pieceWeight !== null

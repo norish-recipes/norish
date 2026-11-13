@@ -1,0 +1,530 @@
+import { act, renderHook, waitFor } from "@testing-library/react";
+import { beforeAll, beforeEach, describe, expect, it, vi } from "vitest";
+
+import {
+  createTestQueryClient,
+  createTestWrapper,
+  fakePlatformAdapter,
+} from "@norish/shared-react/platform/testing";
+import { useHousehold, useHouseholdSubscription } from "@norish/shared-react/reader";
+
+import { trackedCursorMark, trackedEvent } from "../../../__tests__/realtime/tracked-event";
+import {
+  createMockHouseholdAdminSettings,
+  createMockHouseholdData,
+  createMockHouseholdSettings,
+  createMockHouseholdUser,
+  READER,
+  readerWrapper,
+} from "./test-utils";
+
+// Track subscription callbacks
+const subscriptionCallbacks: Record<string, ((data: unknown) => void) | undefined> = {};
+
+// Define query keys to match mock format
+const householdQueryKey = [["households", "get"], { type: "query" }];
+
+vi.mock("../../trpc", () => ({
+  useTRPC: () => ({
+    households: {
+      get: {
+        queryKey: () => [["households", "get"], { type: "query" }],
+        queryOptions: () => ({
+          queryKey: [["households", "get"], { type: "query" }],
+          queryFn: async () => createMockHouseholdData(),
+        }),
+      },
+      onCreated: {
+        subscriptionOptions: vi.fn((_, options) => {
+          subscriptionCallbacks.onCreated = options?.onData;
+
+          return { enabled: true, subscribe: () => ({ unsubscribe: () => undefined }) };
+        }),
+      },
+      onKicked: {
+        subscriptionOptions: vi.fn((_, options) => {
+          subscriptionCallbacks.onKicked = options?.onData;
+
+          return { enabled: true, subscribe: () => ({ unsubscribe: () => undefined }) };
+        }),
+      },
+      onFailed: {
+        subscriptionOptions: vi.fn((_, options) => {
+          subscriptionCallbacks.onFailed = options?.onData;
+
+          return { enabled: true, subscribe: () => ({ unsubscribe: () => undefined }) };
+        }),
+      },
+      onUserJoined: {
+        subscriptionOptions: vi.fn((_, options) => {
+          subscriptionCallbacks.onUserJoined = options?.onData;
+
+          return { enabled: true, subscribe: () => ({ unsubscribe: () => undefined }) };
+        }),
+      },
+      onUserLeft: {
+        subscriptionOptions: vi.fn((_, options) => {
+          subscriptionCallbacks.onUserLeft = options?.onData;
+
+          return { enabled: true, subscribe: () => ({ unsubscribe: () => undefined }) };
+        }),
+      },
+      onMemberRemoved: {
+        subscriptionOptions: vi.fn((_, options) => {
+          subscriptionCallbacks.onMemberRemoved = options?.onData;
+
+          return { enabled: true, subscribe: () => ({ unsubscribe: () => undefined }) };
+        }),
+      },
+      onAdminTransferred: {
+        subscriptionOptions: vi.fn((_, options) => {
+          subscriptionCallbacks.onAdminTransferred = options?.onData;
+
+          return { enabled: true, subscribe: () => ({ unsubscribe: () => undefined }) };
+        }),
+      },
+      onJoinCodeRegenerated: {
+        subscriptionOptions: vi.fn((_, options) => {
+          subscriptionCallbacks.onJoinCodeRegenerated = options?.onData;
+
+          return { enabled: true, subscribe: () => ({ unsubscribe: () => undefined }) };
+        }),
+      },
+      onAllergiesUpdated: {
+        subscriptionOptions: vi.fn((_, options) => {
+          subscriptionCallbacks.onAllergiesUpdated = options?.onData;
+
+          return { enabled: true, subscribe: () => ({ unsubscribe: () => undefined }) };
+        }),
+      },
+      onMemberProfileUpdated: {
+        subscriptionOptions: vi.fn((_, options) => {
+          subscriptionCallbacks.onMemberProfileUpdated = options?.onData;
+
+          return { enabled: true, subscribe: () => ({ unsubscribe: () => undefined }) };
+        }),
+      },
+    },
+    recipes: {
+      get: { pathKey: () => [["recipes", "get"]] },
+    },
+    calendar: {
+      listRecipes: {
+        queryKey: () => [["calendar", "listRecipes"], { type: "query" }],
+      },
+    },
+    user: {
+      get: {
+        queryKey: () => [["user", "get"], { type: "query" }],
+        // The Reader's profile never answers: the session's Reader stands.
+        queryOptions: () => ({
+          queryKey: [["user", "get"], { type: "query" }],
+          queryFn: () => new Promise(() => {}),
+        }),
+      },
+    },
+  }),
+}));
+
+// Mock useSubscription
+vi.mock("@trpc/tanstack-react-query", async (importOriginal) => ({
+  ...(await importOriginal<typeof import("@trpc/tanstack-react-query")>()),
+  useSubscription: vi.fn((options) => {
+    // Call subscriptionOptions to register callbacks
+    if (typeof options === "function") {
+      options();
+    }
+  }),
+}));
+
+let useSubscription: (typeof import("@trpc/tanstack-react-query"))["useSubscription"];
+
+describe("useHouseholdSubscription", () => {
+  let queryClient: ReturnType<typeof createTestQueryClient>;
+
+  beforeAll(async () => {
+    ({ useSubscription } = await import("@trpc/tanstack-react-query"));
+  });
+
+  beforeEach(() => {
+    // Clear subscription callbacks
+    Object.keys(subscriptionCallbacks).forEach((key) => {
+      delete subscriptionCallbacks[key];
+    });
+    queryClient = createTestQueryClient();
+  });
+
+  describe("subscription setup", () => {
+    it("sets up all subscription handlers", async () => {
+      const initialData = createMockHouseholdData(null, "current-user");
+
+      queryClient.setQueryData(householdQueryKey, initialData);
+
+      renderHook(() => useHouseholdSubscription(), {
+        wrapper: readerWrapper(queryClient),
+      });
+
+      // The hook should call useSubscription for each event type
+      expect(useSubscription).toHaveBeenCalled();
+    });
+  });
+
+  describe("once live", () => {
+    it.each(["onAllergiesUpdated", "onMemberProfileUpdated", "onKicked"])(
+      "%s rereads the household, the Reader's settings and the recipe pages",
+      async (name) => {
+        queryClient.setQueryData(householdQueryKey, createMockHouseholdData(null, "user-1"));
+        const invalidateSpy = vi.spyOn(queryClient, "invalidateQueries");
+
+        vi.mocked(useSubscription).mockClear();
+        renderHook(() => useHouseholdSubscription(), { wrapper: readerWrapper(queryClient) });
+
+        // The hook subscribes in the order the callbacks were registered.
+        const index = Object.keys(subscriptionCallbacks).indexOf(name);
+        const options = vi
+          .mocked(useSubscription)
+          .mock.calls.at(index - Object.keys(subscriptionCallbacks).length)![0] as {
+          subscribe: (observer: object) => unknown;
+        };
+
+        act(() => {
+          options.subscribe({});
+          subscriptionCallbacks[name]?.(trackedCursorMark());
+        });
+
+        await waitFor(() => expect(invalidateSpy).toHaveBeenCalledTimes(1));
+        const { predicate } = invalidateSpy.mock.calls[0]![0] as {
+          predicate: (query: { queryKey: unknown[]; state: { fetchStatus: string } }) => boolean;
+        };
+        const due = (queryKey: unknown[]) =>
+          predicate({ queryKey, state: { fetchStatus: "idle" } });
+
+        expect(due(householdQueryKey)).toBe(true);
+        expect(due([["user", "get"], { type: "query" }])).toBe(true);
+        expect(due([["recipes", "get"], { input: { id: "r1" }, type: "query" }])).toBe(true);
+        // Only the recipe page draws the author: the paged lists are not reread on every start.
+        expect(due([["recipes", "list"], { type: "infinite" }])).toBe(false);
+      }
+    );
+  });
+
+  describe("onCreated handler", () => {
+    it("updates cache with new household data", async () => {
+      const initialData = createMockHouseholdData(null, "current-user");
+
+      queryClient.setQueryData(householdQueryKey, initialData);
+
+      // Render subscription hook to set up handlers
+      renderHook(() => useHouseholdSubscription(), {
+        wrapper: readerWrapper(queryClient),
+      });
+
+      // Render query hook to get current state
+      const { result } = renderHook(() => useHousehold(), {
+        wrapper: readerWrapper(queryClient),
+      });
+
+      // Initially no household
+      expect(result.current.household).toBeNull();
+    });
+  });
+
+  describe("onUserJoined handler", () => {
+    it("adds new user to household users list", async () => {
+      const existingUser = createMockHouseholdUser({ id: "user-1", name: "User 1", isAdmin: true });
+      const initialHousehold = createMockHouseholdSettings({
+        id: "h1",
+        users: [existingUser],
+      });
+      const initialData = createMockHouseholdData(initialHousehold, "user-1");
+
+      queryClient.setQueryData(householdQueryKey, initialData);
+
+      renderHook(() => useHouseholdSubscription(), {
+        wrapper: readerWrapper(queryClient),
+      });
+
+      const { result } = renderHook(() => useHousehold(), {
+        wrapper: readerWrapper(queryClient),
+      });
+
+      // Verify initial state
+      expect(result.current.household?.users).toHaveLength(1);
+    });
+  });
+
+  describe("onUserLeft handler", () => {
+    it("removes user from household users list", async () => {
+      const user1 = createMockHouseholdUser({ id: "user-1", name: "User 1", isAdmin: true });
+      const user2 = createMockHouseholdUser({ id: "user-2", name: "User 2", isAdmin: false });
+      const initialHousehold = createMockHouseholdSettings({
+        id: "h1",
+        users: [user1, user2],
+      });
+      const initialData = createMockHouseholdData(initialHousehold, "user-1");
+
+      queryClient.setQueryData(householdQueryKey, initialData);
+
+      renderHook(() => useHouseholdSubscription(), {
+        wrapper: readerWrapper(queryClient),
+      });
+
+      const { result } = renderHook(() => useHousehold(), {
+        wrapper: readerWrapper(queryClient),
+      });
+
+      // Verify initial state has 2 users
+      expect(result.current.household?.users).toHaveLength(2);
+    });
+  });
+
+  describe("onKicked handler", () => {
+    it("clears household when current user is kicked", async () => {
+      const initialHousehold = createMockHouseholdSettings({ id: "h1" });
+      const initialData = createMockHouseholdData(initialHousehold, "current-user");
+
+      queryClient.setQueryData(householdQueryKey, initialData);
+
+      const adapter = fakePlatformAdapter("phone", READER);
+
+      renderHook(() => useHouseholdSubscription(), {
+        wrapper: createTestWrapper(queryClient, adapter),
+      });
+
+      const { result } = renderHook(() => useHousehold(), {
+        wrapper: readerWrapper(queryClient),
+      });
+
+      expect(result.current.household).not.toBeNull();
+
+      act(() => {
+        subscriptionCallbacks.onKicked?.(trackedEvent({}));
+      });
+
+      await waitFor(() => expect(result.current.household).toBeNull());
+      expect(adapter.toast.show).toHaveBeenCalledWith({
+        severity: "warning",
+        title: "common.household.removedTitle",
+        description: "common.household.removedDescription",
+      });
+    });
+  });
+
+  describe("onFailed handler", () => {
+    it("hands the reason to the platform's error display", async () => {
+      const initialHousehold = createMockHouseholdSettings({ id: "h1" });
+      const initialData = createMockHouseholdData(initialHousehold, "current-user");
+
+      queryClient.setQueryData(householdQueryKey, initialData);
+
+      const adapter = fakePlatformAdapter("phone", READER);
+
+      renderHook(() => useHouseholdSubscription(), {
+        wrapper: createTestWrapper(queryClient, adapter),
+      });
+
+      act(() => {
+        subscriptionCallbacks.onFailed?.(
+          trackedEvent({
+            reason: "Very long backend stack trace that should not be shown in toast",
+          })
+        );
+      });
+
+      // The platform's error display shows its generic copy and only logs the reason.
+      expect(adapter.showError).toHaveBeenCalledWith(
+        "Very long backend stack trace that should not be shown in toast",
+        "household-subscription:onFailed"
+      );
+    });
+  });
+
+  describe("onMemberProfileUpdated handler", () => {
+    it("refetches user settings and recipes when the current user's profile changed", async () => {
+      const initialHousehold = createMockHouseholdSettings({ id: "h1" });
+      const initialData = createMockHouseholdData(initialHousehold, "user-1");
+
+      queryClient.setQueryData(householdQueryKey, initialData);
+
+      const invalidateSpy = vi.spyOn(queryClient, "invalidateQueries");
+
+      renderHook(() => useHouseholdSubscription(), {
+        wrapper: readerWrapper(queryClient),
+      });
+
+      act(() => {
+        subscriptionCallbacks.onMemberProfileUpdated?.(
+          trackedEvent({ userId: READER.id, image: "/avatars/current-user-1755000000000.png" })
+        );
+      });
+
+      expect(invalidateSpy).toHaveBeenCalledWith({
+        queryKey: [["user", "get"], { type: "query" }],
+      });
+      expect(invalidateSpy).toHaveBeenCalledWith({ queryKey: [["recipes", "get"]] });
+    });
+
+    it("refetches only recipe pages when another member's profile changed", async () => {
+      const initialHousehold = createMockHouseholdSettings({ id: "h1" });
+      const initialData = createMockHouseholdData(initialHousehold, "user-1");
+
+      queryClient.setQueryData(householdQueryKey, initialData);
+
+      const invalidateSpy = vi.spyOn(queryClient, "invalidateQueries");
+
+      renderHook(() => useHouseholdSubscription(), {
+        wrapper: readerWrapper(queryClient),
+      });
+
+      act(() => {
+        subscriptionCallbacks.onMemberProfileUpdated?.(
+          trackedEvent({ userId: "user-2", image: null })
+        );
+      });
+
+      expect(invalidateSpy).toHaveBeenCalledWith({ queryKey: [["recipes", "get"]] });
+      expect(invalidateSpy).not.toHaveBeenCalledWith({
+        queryKey: [["user", "get"], { type: "query" }],
+      });
+    });
+  });
+
+  describe("versioned household events", () => {
+    it("updates household version on join code regeneration", async () => {
+      const initialHousehold = createMockHouseholdAdminSettings({ version: 1 });
+      const initialData = createMockHouseholdData(initialHousehold, "current-user");
+
+      queryClient.setQueryData(householdQueryKey, initialData);
+
+      renderHook(() => useHouseholdSubscription(), {
+        wrapper: readerWrapper(queryClient),
+      });
+
+      act(() => {
+        subscriptionCallbacks.onJoinCodeRegenerated?.(
+          trackedEvent({
+            joinCode: "654321",
+            joinCodeExpiresAt: new Date(Date.now() + 5 * 60 * 1000).toISOString(),
+            version: 2,
+          })
+        );
+      });
+
+      await waitFor(() => {
+        const data = queryClient.getQueryData<{ household: { version: number } }>(
+          householdQueryKey
+        );
+
+        expect(data?.household).toMatchObject({ version: 2 });
+      });
+    });
+
+    it("updates household version on admin transfer", async () => {
+      const initialHousehold = createMockHouseholdSettings({
+        version: 3,
+        users: [
+          createMockHouseholdUser({ id: "user-1", isAdmin: true, version: 1 }),
+          createMockHouseholdUser({ id: "user-2", isAdmin: false, version: 1 }),
+        ],
+      });
+      const initialData = createMockHouseholdData(initialHousehold, "user-1");
+
+      queryClient.setQueryData(householdQueryKey, initialData);
+
+      renderHook(() => useHouseholdSubscription(), {
+        wrapper: readerWrapper(queryClient),
+      });
+
+      act(() => {
+        subscriptionCallbacks.onAdminTransferred?.(
+          trackedEvent({
+            oldAdminId: "user-1",
+            newAdminId: "user-2",
+            version: 4,
+          })
+        );
+      });
+
+      await waitFor(() => {
+        const data = queryClient.getQueryData<{
+          household: { version: number; users: Array<{ id: string; isAdmin?: boolean }> };
+        }>(householdQueryKey);
+
+        expect(data?.household).toMatchObject({ version: 4 });
+        expect(data?.household.users.find((user) => user.id === "user-2")?.isAdmin).toBe(true);
+      });
+    });
+
+    const transferred = (oldAdminId: string) => {
+      const initialHousehold = createMockHouseholdSettings({
+        users: [
+          createMockHouseholdUser({ id: "user-1", isAdmin: true }),
+          createMockHouseholdUser({ id: READER.id, isAdmin: true }),
+          createMockHouseholdUser({ id: "user-2", name: "Anna", isAdmin: false }),
+        ],
+      });
+
+      queryClient.setQueryData(
+        householdQueryKey,
+        createMockHouseholdData(initialHousehold, READER.id)
+      );
+      const adapter = fakePlatformAdapter("phone", READER);
+
+      adapter.toast.translate = (id, values) => (values ? `${id}:${values.name}` : id);
+      renderHook(() => useHouseholdSubscription(), {
+        wrapper: createTestWrapper(queryClient, adapter),
+      });
+
+      act(() => {
+        subscriptionCallbacks.onAdminTransferred?.(
+          trackedEvent({ oldAdminId, newAdminId: "user-2", version: 2 })
+        );
+      });
+
+      return adapter;
+    };
+
+    it("announces the new admin once the Reader's own transfer is confirmed", () => {
+      const adapter = transferred(READER.id);
+
+      expect(adapter.toast.show).toHaveBeenCalledTimes(1);
+      expect(adapter.toast.show).toHaveBeenCalledWith({
+        severity: "success",
+        title: "common.household.adminTransferred:Anna",
+      });
+    });
+
+    it("announces nothing when someone else gave the role away", () => {
+      const adapter = transferred("user-1");
+
+      expect(adapter.toast.show).not.toHaveBeenCalled();
+    });
+
+    it("refetches the household when the Reader becomes admin, for its join code", () => {
+      const initialHousehold = createMockHouseholdSettings({
+        users: [
+          createMockHouseholdUser({ id: "user-1", isAdmin: true }),
+          createMockHouseholdUser({ id: READER.id, isAdmin: false }),
+        ],
+      });
+
+      queryClient.setQueryData(
+        householdQueryKey,
+        createMockHouseholdData(initialHousehold, READER.id)
+      );
+      const invalidateSpy = vi.spyOn(queryClient, "invalidateQueries");
+
+      renderHook(() => useHouseholdSubscription(), {
+        wrapper: readerWrapper(queryClient),
+      });
+
+      act(() => {
+        subscriptionCallbacks.onAdminTransferred?.(
+          trackedEvent({ oldAdminId: "user-1", newAdminId: READER.id, version: 2 })
+        );
+      });
+
+      expect(invalidateSpy).toHaveBeenCalledWith({ queryKey: householdQueryKey });
+    });
+  });
+});

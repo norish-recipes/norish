@@ -207,7 +207,7 @@ test.describe("the bulk sweep", () => {
   const PHOTO_RECIPE = "Bulk Photographed Stew";
 
   async function openBulkPanel() {
-    await page.goto("/settings?tab=admin");
+    await page.goto("/settings/admin");
     const trigger = page.getByRole("button", { name: /^Bulk enrichment/ }).first();
 
     await trigger.scrollIntoViewIfNeeded();

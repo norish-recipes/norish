@@ -2,7 +2,6 @@
 
 import type { FC, ReactNode } from "react";
 import { Suspense, use } from "react";
-import { useLanguageSwitch } from "@/hooks/user/use-language-switch";
 import { GlobeAltIcon } from "@heroicons/react/16/solid";
 import { useTranslations } from "next-intl";
 import { browser } from "react-dom";
@@ -54,24 +53,3 @@ export const LanguageSwitchContent: FC<LanguageSwitchContentProps> = (props) => 
     <LanguageSwitchLabel {...props} />
   </Suspense>
 );
-
-/**
- * Language switch component for use outside menu item action hosts.
- *
- * Used by authenticated users only - saves preference to database.
- */
-export const LanguageSwitch: FC = () => {
-  const languageSwitch = useLanguageSwitch();
-
-  return (
-    <button
-      className="flex w-full cursor-pointer items-center gap-2 text-left"
-      type="button"
-      onClick={languageSwitch.cycleLocale}
-    >
-      <LanguageSwitchContent {...languageSwitch} />
-    </button>
-  );
-};
-
-export default LanguageSwitch;

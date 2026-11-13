@@ -4,6 +4,9 @@
  * came from, for one household.
  */
 
+/** Why the server refuses a nutrition correction; each has its own message. */
+export const NUTRITION_REFUSALS = ["unknown-food", "empty", "not-found"] as const;
+
 /** The datasets a number can come from; `off` is Open Food Facts' own piece weights and densities. */
 export const NUTRITION_CREDITS = [
   "ciqual",

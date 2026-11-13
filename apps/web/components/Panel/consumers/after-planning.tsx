@@ -2,12 +2,11 @@
 
 import type { ReactNode } from "react";
 import { useCallback, useState } from "react";
-import { useRecipeQuery } from "@/hooks/recipes";
-import { useUserSettingsQuery } from "@/hooks/user/use-user-query";
+import MiniGroceries from "@/components/Panel/consumers/mini-groceries";
 
+import { useReader } from "@norish/shared-react/reader";
+import { useRecipeQuery } from "@norish/shared-react/recipes";
 import { getAfterPlanningPreference } from "@norish/shared/lib/user-preferences";
-
-import MiniGroceries from "./mini-groceries";
 
 type Planned = { key: number; recipeId: string; addAtOnce: boolean; open: boolean };
 
@@ -49,8 +48,7 @@ export function useAfterPlanning(): {
   afterPlanning: (recipeId: string) => void;
   afterPlanningPanel: ReactNode;
 } {
-  const { user } = useUserSettingsQuery();
-  const choice = getAfterPlanningPreference(user);
+  const choice = getAfterPlanningPreference(useReader().user);
   const [planned, setPlanned] = useState<Planned | null>(null);
 
   const afterPlanning = useCallback(

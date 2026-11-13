@@ -2,16 +2,11 @@
 
 import { useCallback, useEffect, useState } from "react";
 import { usePathname } from "next/navigation";
-import {
-  NAV_LABEL_KEYS,
-  NAV_TABS,
-  NavTabLink,
-  navTabPosition,
-  SETTINGS_HREF,
-} from "@/components/navbar/nav-tabs";
+import { NAV_LABEL_KEYS, NAV_TABS, NavTabLink, navTabPosition } from "@/components/navbar/nav-tabs";
 import NavbarUserMenu from "@/components/navbar/navbar-user-menu";
+import { SETTINGS_HREF } from "@/components/settings/settings-tab";
 import { useAutoHide } from "@/hooks/auto-hide";
-import { useAppStore } from "@/stores/useAppStore";
+import { useActionBarStore } from "@/lib/action-bar-store";
 import {
   CalendarDaysIcon,
   ClipboardDocumentListIcon,
@@ -47,7 +42,7 @@ export const MobileNav = () => {
   const activeTab = navTabPosition(pathname);
   const [userMenuOpen, setUserMenuOpen] = useState(false);
   // An action bar stands in the nav's place while it is up.
-  const actionBarOpen = useAppStore((state) => state.actionBarOpen);
+  const actionBarOpen = useActionBarStore((state) => state.actionBarOpen);
 
   const { isVisible, show } = useAutoHide({
     disabled: userMenuOpen,

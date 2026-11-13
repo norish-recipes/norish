@@ -2,17 +2,16 @@
 
 import type { ReactNode } from "react";
 import { useState } from "react";
-import { useTRPC } from "@/app/providers/trpc-provider";
 import Panel from "@/components/Panel/Panel";
 import { ActionButton, ActionButtonGroup } from "@/components/shared/action-button";
 import { PlusIcon } from "@heroicons/react/16/solid";
 import { ChevronRightIcon } from "@heroicons/react/24/outline";
 import { Button, Skeleton } from "@heroui/react";
-import { useQuery } from "@tanstack/react-query";
 import { useFormatter, useTranslations } from "next-intl";
 
 import type { IngredientNutrition } from "@norish/shared/contracts/ingredient-nutrition";
 import type { SpoonMeasure } from "@norish/shared/lib/spoon-measure";
+import { useIngredientNutritionQuery } from "@norish/shared-react/ingredients";
 import { spoonWeight } from "@norish/shared/lib/spoon-measure";
 
 import { factSource, spoonKey } from "./nutrition-copy";
@@ -39,16 +38,13 @@ export function IngredientNutritionSection({
   const t = useTranslations("settings.ingredients.nutrition");
   const tActions = useTranslations("common.actions");
   const format = useFormatter();
-  const trpc = useTRPC();
   const [open, setOpen] = useState(false);
   const [correcting, setCorrecting] = useState(false);
   // Each opening of the correction panel is a fresh draft, ready to type the
   // spoon's weight when the spoon row asked for it.
   const [opening, setOpening] = useState({ count: 0, askSpoon: false });
-  const { data, isPending } = useQuery(trpc.ingredients.nutrition.queryOptions({ ingredientId }));
-  const { data: measure } = useQuery(trpc.ingredients.spoonMeasure.queryOptions({ ingredientId }));
+  const { nutrition: facts, measure, isPending } = useIngredientNutritionQuery(ingredientId);
   const number = (value: number) => format.number(value, { maximumFractionDigits: 1 });
-  const facts = data ?? null;
   const correct = (askSpoon: boolean) => {
     setOpening((previous) => ({ count: previous.count + 1, askSpoon }));
     setCorrecting(true);
@@ -87,7 +83,7 @@ export function IngredientNutritionSection({
           <div className="flex flex-col gap-3 pb-2" data-testid="ingredient-nutrition-details">
             <NutritionFacts
               facts={facts}
-              measure={measure ?? null}
+              measure={measure}
               number={number}
               onAskSpoon={() => correct(true)}
             />
@@ -112,7 +108,7 @@ export function IngredientNutritionSection({
           askSpoon={opening.askSpoon}
           current={facts}
           ingredientId={ingredientId}
-          measure={measure ?? null}
+          measure={measure}
           name={name}
           open={correcting}
           onClose={() => setCorrecting(false)}

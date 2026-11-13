@@ -7,7 +7,6 @@ import { createMMKV } from "react-native-mmkv";
 import { APP_VERSION } from "@/lib/app-version";
 import { getAuthClient } from "@/lib/auth/auth-client";
 import { getBackendBaseUrl } from "@/lib/network/backend-base-url";
-import { useConnectionStatus, useTRPC, useTRPCClient } from "@/lib/trpc/trpc-provider";
 import { addNetworkStateListener } from "expo-network";
 
 import { createOfflineEngine, HEALTH_PROBE_PATH } from "@norish/shared-react/offline";
@@ -16,24 +15,21 @@ import {
   OfflineController as SharedOfflineController,
   useConnectivity,
 } from "@norish/shared-react/offline/react";
-import { dateKey, getInitialDateRange } from "@norish/shared/lib/helpers";
+import { useConnectionStatus } from "@norish/shared-react/trpc";
+import { getInitialCalendarRange } from "@norish/shared/lib/helpers";
 
 import { createMmkvStorage } from "./mmkv-storage";
 import { uploadFiles } from "./upload-files";
 
 /** Marks the app's replays in server logs. */
-export const OUTBOX_REPLAY_HEADER_VALUE = "mobile-outbox";
+const OUTBOX_REPLAY_HEADER_VALUE = "mobile-outbox";
 
 export const offlineEngine = createOfflineEngine({
   storage: createMmkvStorage({ mmkv: createMMKV({ id: "norish-offline" }), files: uploadFiles }),
   replayHeaderValue: OUTBOX_REPLAY_HEADER_VALUE,
   probeUrl: () => `${getBackendBaseUrl()}${HEALTH_PROBE_PATH}`,
   buster: APP_VERSION,
-  calendarRanges: () => {
-    const { start, end } = getInitialDateRange("mobile");
-
-    return [{ startISO: dateKey(start), endISO: dateKey(end) }];
-  },
+  calendarRanges: () => [getInitialCalendarRange("mobile")],
 });
 
 // A network change or a return to the foreground only brings the next probe forward, because
@@ -67,7 +63,8 @@ export function ConnectivityProvider({ children }: { children: React.ReactNode }
   );
 }
 
-// The auth client is one per server address, so this reads the current session without the context.
+// The auth client is one per server address until a sign-out resets it, and the context rereads
+// it then, so this reads the current session without the context.
 const getSessionUserId = async () =>
   (await getAuthClient(getBackendBaseUrl()).getSession()).data?.user?.id ?? null;
 
@@ -82,8 +79,6 @@ export function OfflineController({
 }) {
   const connectivity = useConnectivity();
   const { status: wsStatus } = useConnectionStatus();
-  const trpc = useTRPC();
-  const trpcClient = useTRPCClient();
 
   return (
     <SharedOfflineController
@@ -91,8 +86,6 @@ export function OfflineController({
       engine={offlineEngine}
       getSessionUserId={getSessionUserId}
       sessionUserId={sessionUserId}
-      transport={trpcClient}
-      trpc={trpc}
       wsStatus={wsStatus}
     >
       {children}

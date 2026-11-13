@@ -1,0 +1,170 @@
+"use client";
+
+import { useState } from "react";
+import { ActionButton, IconActionButton } from "@/components/shared/action-button";
+import ConfirmModal from "@/components/shared/confirm-modal";
+import { Input, ScrollShadow, TextField } from "@heroui/react";
+import { useTranslations } from "next-intl";
+
+import type { CuisineRefusal } from "@norish/shared-react/admin";
+import { useCuisineMutations } from "@norish/shared-react/admin";
+import { useCuisinesQuery } from "@norish/shared-react/config";
+
+/** Cuisine vocabulary: a rename is one row every recipe follows; a delete cascades silently. */
+export default function CuisineVocabularyForm() {
+  const t = useTranslations("settings.admin.cuisineVocabulary");
+  const tActions = useTranslations("common.actions");
+  const { cuisines, isLoading } = useCuisinesQuery();
+  const [newName, setNewName] = useState("");
+  const [editingId, setEditingId] = useState<string | null>(null);
+  const [editingName, setEditingName] = useState("");
+  const [pendingDelete, setPendingDelete] = useState<{ id: string; name: string } | null>(null);
+  const [error, setError] = useState<CuisineRefusal | null>(null);
+  const { create, rename, remove, isPending } = useCuisineMutations(setError);
+
+  // A failure already set `error` through `useCuisineMutations`.
+  const run = async (write: () => Promise<boolean>, onDone: () => void) => {
+    setError(null);
+    if (await write()) onDone();
+  };
+
+  const handleAdd = () => {
+    const name = newName.trim();
+
+    if (!name) return;
+
+    void run(
+      () => create(name),
+      () => setNewName("")
+    );
+  };
+
+  const handleRename = () => {
+    const name = editingName.trim();
+
+    if (!editingId || !name) return;
+
+    void run(
+      () => rename(editingId, name),
+      () => setEditingId(null)
+    );
+  };
+
+  return (
+    <div className="flex flex-col gap-4">
+      <p className="text-muted text-base">{t("description")}</p>
+
+      <div className="flex items-end gap-2">
+        <TextField
+          aria-label={t("addLabel")}
+          className="flex-1"
+          value={newName}
+          onChange={setNewName}
+          onKeyDown={(event) => {
+            if (event.key === "Enter") handleAdd();
+          }}
+        >
+          <Input placeholder={t("namePlaceholder")} variant="secondary" />
+        </TextField>
+        <ActionButton
+          action="add"
+          isDisabled={newName.trim().length === 0 || isPending}
+          onPress={handleAdd}
+        >
+          {tActions("add")}
+        </ActionButton>
+      </div>
+
+      {error && <p className="text-danger text-sm">{t(error)}</p>}
+
+      {!isLoading && cuisines.length === 0 && <p className="text-muted text-base">{t("empty")}</p>}
+
+      {/* The vocabulary grows without bound, so the list scrolls inside a fixed
+          height rather than pushing the add field off the top of the card. */}
+      <ScrollShadow className="max-h-80" size={24}>
+        <ul className="divide-border divide-y">
+          {cuisines.map((cuisine) =>
+            editingId === cuisine.id ? (
+              <li key={cuisine.id} className="flex items-center gap-2 py-2">
+                <TextField
+                  aria-label={t("renameLabel", { name: cuisine.name })}
+                  className="flex-1"
+                  value={editingName}
+                  onChange={setEditingName}
+                  onKeyDown={(event) => {
+                    if (event.key === "Enter") handleRename();
+                    if (event.key === "Escape") setEditingId(null);
+                  }}
+                >
+                  <Input variant="secondary" />
+                </TextField>
+                <IconActionButton
+                  action="save"
+                  isDisabled={editingName.trim().length === 0 || isPending}
+                  label={tActions("save")}
+                  size="sm"
+                  onPress={handleRename}
+                />
+                <IconActionButton
+                  action="cancel"
+                  label={tActions("cancel")}
+                  size="sm"
+                  onPress={() => setEditingId(null)}
+                />
+              </li>
+            ) : (
+              <li key={cuisine.id} className="flex items-center justify-between gap-2 py-2">
+                <span className="text-base">{cuisine.name}</span>
+                <div className="flex items-center gap-1">
+                  <IconActionButton
+                    action="edit"
+                    label={t("renameLabel", { name: cuisine.name })}
+                    size="sm"
+                    onPress={() => {
+                      setError(null);
+                      setEditingId(cuisine.id);
+                      setEditingName(cuisine.name);
+                    }}
+                  />
+                  <IconActionButton
+                    action="delete"
+                    label={t("deleteLabel", { name: cuisine.name })}
+                    size="sm"
+                    onPress={() => setPendingDelete({ id: cuisine.id, name: cuisine.name })}
+                  />
+                </div>
+              </li>
+            )
+          )}
+        </ul>
+      </ScrollShadow>
+
+      <ConfirmModal
+        confirm={
+          <ActionButton
+            action="delete"
+            variant="danger"
+            onPress={() => {
+              const target = pendingDelete;
+
+              if (!target) return;
+
+              void run(
+                () => remove(target.id),
+                () => setPendingDelete(null)
+              );
+            }}
+          >
+            {tActions("delete")}
+          </ActionButton>
+        }
+        headerClassName="text-danger"
+        isOpen={pendingDelete !== null}
+        title={tActions("delete")}
+        onOpenChange={() => setPendingDelete(null)}
+      >
+        <p>{t("deleteConfirm", { name: pendingDelete?.name ?? "" })}</p>
+      </ConfirmModal>
+    </div>
+  );
+}

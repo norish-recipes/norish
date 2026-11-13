@@ -19,7 +19,7 @@ export const HIDDEN_ITEMS = [
   "ingredientIcons",
 ] as const;
 
-export type HiddenItem = (typeof HIDDEN_ITEMS)[number];
+type HiddenItem = (typeof HIDDEN_ITEMS)[number];
 
 /**
  * A stored list split into what a control can show and what it must carry.

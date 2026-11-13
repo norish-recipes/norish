@@ -1,6 +1,2 @@
-export {
-  isRealtimeLagged,
-  useRealtimeSubscription,
-  type RealtimeSubscriptionHandlers,
-  type RealtimeSubscriptionProcedure,
-} from "./use-realtime-subscription";
+export { isKeptCurrent, useKeepsCurrent } from "./kept-current";
+export { useRealtimeSubscription } from "./use-realtime-subscription";

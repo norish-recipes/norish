@@ -49,7 +49,7 @@ function normalizeHeaders(headers: unknown): Record<string, string> {
   );
 }
 
-export interface OutboxLinkDependencies {
+interface OutboxLinkDependencies {
   store: OutboxStore;
   /** The applied cache owner; admission fails while there is none. */
   owner: () => string | null;

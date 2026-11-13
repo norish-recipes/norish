@@ -1,12 +1,19 @@
-import { AUTH_STORAGE_PREFIX, clearAuthStorage } from "@/lib/auth/auth-storage";
+import {
+  AUTH_STORAGE_PREFIX,
+  claimClientStorage,
+  clearAuthStorage,
+  retireClientStorage,
+} from "@/lib/auth/auth-storage";
 import { expoClient } from "@better-auth/expo/client";
 import { createAuthClient } from "better-auth/react";
-import * as SecureStore from "expo-secure-store";
 
-let _client: ReturnType<typeof createAuthClient> | null = null;
+export type AuthClient = ReturnType<typeof createAuthClient>;
+
+let _client: AuthClient | null = null;
 let _currentBaseUrl: string | null = null;
+const resetListeners = new Set<() => void>();
 
-export function getAuthClient(baseUrl: string): ReturnType<typeof createAuthClient> {
+export function getAuthClient(baseUrl: string): AuthClient {
   if (_client && _currentBaseUrl === baseUrl) {
     return _client;
   }
@@ -18,7 +25,8 @@ export function getAuthClient(baseUrl: string): ReturnType<typeof createAuthClie
       expoClient({
         scheme: "norish",
         storagePrefix: AUTH_STORAGE_PREFIX,
-        storage: SecureStore,
+        // A request still in flight on the replaced client must not write its session back.
+        storage: claimClientStorage(),
       }),
     ],
   });
@@ -27,8 +35,25 @@ export function getAuthClient(baseUrl: string): ReturnType<typeof createAuthClie
   return _client;
 }
 
+/** Calls `listener` after each reset, when the next getAuthClient builds a new client. */
+export function subscribeAuthClientReset(listener: () => void): () => void {
+  resetListeners.add(listener);
+
+  return () => {
+    resetListeners.delete(listener);
+  };
+}
+
+/** Retires the client, wipes the stored session and drops it; a failed wipe still drops it, then rethrows. */
 export async function resetAuthClientStorage(): Promise<void> {
-  await clearAuthStorage();
-  _client = null;
-  _currentBaseUrl = null;
+  retireClientStorage();
+
+  try {
+    await clearAuthStorage();
+  } finally {
+    _client = null;
+    _currentBaseUrl = null;
+
+    for (const listener of resetListeners) listener();
+  }
 }

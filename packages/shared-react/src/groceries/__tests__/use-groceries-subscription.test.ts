@@ -1,0 +1,510 @@
+import { act, renderHook } from "@testing-library/react";
+import { beforeEach, describe, expect, it, vi } from "vitest";
+
+import { useGroceriesSubscription } from "@norish/shared-react/groceries";
+import {
+  createTestQueryClient,
+  createTestWrapper,
+  fakePlatformAdapter,
+} from "@norish/shared-react/platform/testing";
+
+import { trackedEvent } from "../../../__tests__/realtime/tracked-event";
+import {
+  createMockGroceriesData,
+  createMockGrocery,
+  createMockRecurringGrocery,
+} from "./test-utils";
+
+// Track subscription callbacks
+const subscriptionCallbacks: Record<string, (data: unknown) => void> = {};
+
+function emitPayload(payload: unknown) {
+  return trackedEvent(payload);
+}
+
+vi.mock("@trpc/tanstack-react-query", () => ({
+  useSubscription: vi.fn((options) => {
+    // Extract event name from the options and store callback
+    if (options?.onData) {
+      // Store the callback for testing
+      const eventName = options.queryKey?.[0] ?? "unknown";
+
+      subscriptionCallbacks[eventName] = options.onData;
+    }
+
+    return {
+      data: undefined,
+      error: null,
+      isLoading: false,
+    };
+  }),
+}));
+
+// Mock the query key
+const mockQueryKey = ["groceries", "list"];
+
+vi.mock("../../trpc", () => ({
+  useTRPC: () => ({
+    groceries: {
+      list: {
+        queryKey: () => mockQueryKey,
+        queryOptions: () => ({
+          queryKey: mockQueryKey,
+          queryFn: async () => createMockGroceriesData(),
+        }),
+      },
+      onCreated: {
+        subscriptionOptions: (input: unknown, options: { onData: (data: unknown) => void }) => {
+          subscriptionCallbacks.onCreated = options.onData;
+
+          return { queryKey: ["onCreated"] };
+        },
+      },
+      onUpdated: {
+        subscriptionOptions: (input: unknown, options: { onData: (data: unknown) => void }) => {
+          subscriptionCallbacks.onUpdated = options.onData;
+
+          return { queryKey: ["onUpdated"] };
+        },
+      },
+      onDeleted: {
+        subscriptionOptions: (input: unknown, options: { onData: (data: unknown) => void }) => {
+          subscriptionCallbacks.onDeleted = options.onData;
+
+          return { queryKey: ["onDeleted"] };
+        },
+      },
+      onRecurringCreated: {
+        subscriptionOptions: (input: unknown, options: { onData: (data: unknown) => void }) => {
+          subscriptionCallbacks.onRecurringCreated = options.onData;
+
+          return { queryKey: ["onRecurringCreated"] };
+        },
+      },
+      onRecurringUpdated: {
+        subscriptionOptions: (input: unknown, options: { onData: (data: unknown) => void }) => {
+          subscriptionCallbacks.onRecurringUpdated = options.onData;
+
+          return { queryKey: ["onRecurringUpdated"] };
+        },
+      },
+      onRecurringDeleted: {
+        subscriptionOptions: (input: unknown, options: { onData: (data: unknown) => void }) => {
+          subscriptionCallbacks.onRecurringDeleted = options.onData;
+
+          return { queryKey: ["onRecurringDeleted"] };
+        },
+      },
+      onFailed: {
+        subscriptionOptions: (input: unknown, options: { onData: (data: unknown) => void }) => {
+          subscriptionCallbacks.onFailed = options.onData;
+
+          return { queryKey: ["onFailed"] };
+        },
+      },
+      onStale: {
+        subscriptionOptions: (input: unknown, options: { onData: (data: unknown) => void }) => {
+          subscriptionCallbacks.onStale = options.onData;
+
+          return { queryKey: ["onStale"] };
+        },
+      },
+    },
+  }),
+}));
+
+describe("useGroceriesSubscription", () => {
+  let queryClient: ReturnType<typeof createTestQueryClient>;
+
+  beforeEach(() => {
+    // Clear subscription callbacks
+    Object.keys(subscriptionCallbacks).forEach((key) => {
+      delete subscriptionCallbacks[key];
+    });
+    queryClient = createTestQueryClient();
+  });
+
+  describe("subscription setup", () => {
+    it("sets up all subscription handlers", async () => {
+      const initialData = createMockGroceriesData();
+
+      queryClient.setQueryData(mockQueryKey, initialData);
+
+      renderHook(() => useGroceriesSubscription(), {
+        wrapper: createTestWrapper(queryClient),
+      });
+
+      // Verify all subscription callbacks were registered
+      expect(subscriptionCallbacks.onCreated).toBeDefined();
+      expect(subscriptionCallbacks.onUpdated).toBeDefined();
+      expect(subscriptionCallbacks.onDeleted).toBeDefined();
+      expect(subscriptionCallbacks.onRecurringCreated).toBeDefined();
+      expect(subscriptionCallbacks.onRecurringUpdated).toBeDefined();
+      expect(subscriptionCallbacks.onRecurringDeleted).toBeDefined();
+      expect(subscriptionCallbacks.onFailed).toBeDefined();
+      expect(subscriptionCallbacks.onStale).toBeDefined();
+    });
+  });
+
+  describe("onCreated handler", () => {
+    it("adds new groceries to the cache", async () => {
+      const existingGrocery = createMockGrocery({ id: "g1", name: "Milk" });
+      const initialData = createMockGroceriesData([existingGrocery], []);
+
+      queryClient.setQueryData(mockQueryKey, initialData);
+
+      renderHook(() => useGroceriesSubscription(), {
+        wrapper: createTestWrapper(queryClient),
+      });
+
+      const newGrocery = createMockGrocery({ id: "g2", name: "Bread" });
+
+      // Simulate WebSocket event
+      act(() => {
+        subscriptionCallbacks.onCreated!(emitPayload({ groceries: [newGrocery] }));
+      });
+
+      const cachedData =
+        queryClient.getQueryData<ReturnType<typeof createMockGroceriesData>>(mockQueryKey);
+
+      expect(cachedData?.groceries).toHaveLength(2);
+      expect(cachedData?.groceries[0]).toEqual(newGrocery);
+    });
+
+    it("does not add duplicate groceries", async () => {
+      const existingGrocery = createMockGrocery({ id: "g1", name: "Milk" });
+      const initialData = createMockGroceriesData([existingGrocery], []);
+
+      queryClient.setQueryData(mockQueryKey, initialData);
+
+      renderHook(() => useGroceriesSubscription(), {
+        wrapper: createTestWrapper(queryClient),
+      });
+
+      // Try to add the same grocery
+      act(() => {
+        subscriptionCallbacks.onCreated!(emitPayload({ groceries: [existingGrocery] }));
+      });
+
+      const cachedData =
+        queryClient.getQueryData<ReturnType<typeof createMockGroceriesData>>(mockQueryKey);
+
+      expect(cachedData?.groceries).toHaveLength(1);
+    });
+
+    it("puts the server's rows in place of one held since it was typed, as a name that split replays", async () => {
+      queryClient.setQueryData(
+        mockQueryKey,
+        createMockGroceriesData([createMockGrocery({ id: "g1", name: "zout en peper" })], [])
+      );
+
+      renderHook(() => useGroceriesSubscription(), {
+        wrapper: createTestWrapper(queryClient),
+      });
+
+      const zout = createMockGrocery({ id: "g1", name: "zout" });
+      const peper = createMockGrocery({ id: "g2", name: "peper" });
+
+      act(() => {
+        subscriptionCallbacks.onCreated!(emitPayload({ groceries: [zout, peper] }));
+      });
+
+      const cachedData =
+        queryClient.getQueryData<ReturnType<typeof createMockGroceriesData>>(mockQueryKey);
+
+      expect(cachedData?.groceries.map((grocery) => grocery.name).sort()).toEqual([
+        "peper",
+        "zout",
+      ]);
+    });
+
+    it("keeps a held row changed since its create", async () => {
+      const checked = createMockGrocery({ id: "g1", name: "Milk", isDone: true, version: 2 });
+
+      queryClient.setQueryData(mockQueryKey, createMockGroceriesData([checked], []));
+
+      renderHook(() => useGroceriesSubscription(), {
+        wrapper: createTestWrapper(queryClient),
+      });
+
+      act(() => {
+        subscriptionCallbacks.onCreated!(
+          emitPayload({ groceries: [{ ...checked, isDone: false, version: 1 }] })
+        );
+      });
+
+      expect(
+        queryClient.getQueryData<ReturnType<typeof createMockGroceriesData>>(mockQueryKey)
+          ?.groceries
+      ).toEqual([checked]);
+    });
+
+    it("shifts existing groceries in the same store when a new grocery is created", async () => {
+      const existingGrocery = createMockGrocery({
+        id: "g1",
+        name: "Milk",
+        storeId: "store-1",
+        sortOrder: 0,
+      });
+      const otherStoreGrocery = createMockGrocery({
+        id: "g2",
+        name: "Bread",
+        storeId: "store-2",
+        sortOrder: 0,
+      });
+      const initialData = createMockGroceriesData([existingGrocery, otherStoreGrocery], []);
+
+      queryClient.setQueryData(mockQueryKey, initialData);
+
+      renderHook(() => useGroceriesSubscription(), {
+        wrapper: createTestWrapper(queryClient),
+      });
+
+      const newGrocery = createMockGrocery({
+        id: "g3",
+        name: "Apples",
+        storeId: "store-1",
+        sortOrder: 0,
+      });
+
+      act(() => {
+        subscriptionCallbacks.onCreated!(emitPayload({ groceries: [newGrocery] }));
+      });
+
+      const cachedData =
+        queryClient.getQueryData<ReturnType<typeof createMockGroceriesData>>(mockQueryKey);
+
+      expect(cachedData?.groceries.find((g) => g.id === "g1")?.sortOrder).toBe(1);
+      expect(cachedData?.groceries.find((g) => g.id === "g2")?.sortOrder).toBe(0);
+    });
+  });
+
+  describe("onUpdated handler", () => {
+    it("updates existing groceries in the cache", async () => {
+      const existingGrocery = createMockGrocery({ id: "g1", name: "Milk", isDone: false });
+      const initialData = createMockGroceriesData([existingGrocery], []);
+
+      queryClient.setQueryData(mockQueryKey, initialData);
+
+      renderHook(() => useGroceriesSubscription(), {
+        wrapper: createTestWrapper(queryClient),
+      });
+
+      const updatedGrocery = { ...existingGrocery, isDone: true };
+
+      act(() => {
+        subscriptionCallbacks.onUpdated!(emitPayload({ changedGroceries: [updatedGrocery] }));
+      });
+
+      const cachedData =
+        queryClient.getQueryData<ReturnType<typeof createMockGroceriesData>>(mockQueryKey);
+
+      expect(cachedData?.groceries[0]!.isDone).toBe(true);
+    });
+
+    it("leaves non-updated groceries unchanged", async () => {
+      const grocery1 = createMockGrocery({ id: "g1", name: "Milk" });
+      const grocery2 = createMockGrocery({ id: "g2", name: "Bread" });
+      const initialData = createMockGroceriesData([grocery1, grocery2], []);
+
+      queryClient.setQueryData(mockQueryKey, initialData);
+
+      renderHook(() => useGroceriesSubscription(), {
+        wrapper: createTestWrapper(queryClient),
+      });
+
+      const updatedGrocery1 = { ...grocery1, name: "Whole Milk" };
+
+      act(() => {
+        subscriptionCallbacks.onUpdated!(emitPayload({ changedGroceries: [updatedGrocery1] }));
+      });
+
+      const cachedData =
+        queryClient.getQueryData<ReturnType<typeof createMockGroceriesData>>(mockQueryKey);
+
+      expect(cachedData?.groceries.find((g) => g.id === "g1")?.name).toBe("Whole Milk");
+      expect(cachedData?.groceries.find((g) => g.id === "g2")?.name).toBe("Bread");
+    });
+  });
+
+  describe("onDeleted handler", () => {
+    it("removes deleted groceries from the cache", async () => {
+      const grocery1 = createMockGrocery({ id: "g1", name: "Milk" });
+      const grocery2 = createMockGrocery({ id: "g2", name: "Bread" });
+      const initialData = createMockGroceriesData([grocery1, grocery2], []);
+
+      queryClient.setQueryData(mockQueryKey, initialData);
+
+      renderHook(() => useGroceriesSubscription(), {
+        wrapper: createTestWrapper(queryClient),
+      });
+
+      act(() => {
+        subscriptionCallbacks.onDeleted!(emitPayload({ groceryIds: ["g1"] }));
+      });
+
+      const cachedData =
+        queryClient.getQueryData<ReturnType<typeof createMockGroceriesData>>(mockQueryKey);
+
+      expect(cachedData?.groceries).toHaveLength(1);
+      expect(cachedData?.groceries[0]!.id).toBe("g2");
+    });
+
+    it("handles deleting multiple groceries", async () => {
+      const grocery1 = createMockGrocery({ id: "g1", name: "Milk" });
+      const grocery2 = createMockGrocery({ id: "g2", name: "Bread" });
+      const grocery3 = createMockGrocery({ id: "g3", name: "Eggs" });
+      const initialData = createMockGroceriesData([grocery1, grocery2, grocery3], []);
+
+      queryClient.setQueryData(mockQueryKey, initialData);
+
+      renderHook(() => useGroceriesSubscription(), {
+        wrapper: createTestWrapper(queryClient),
+      });
+
+      act(() => {
+        subscriptionCallbacks.onDeleted!(emitPayload({ groceryIds: ["g1", "g3"] }));
+      });
+
+      const cachedData =
+        queryClient.getQueryData<ReturnType<typeof createMockGroceriesData>>(mockQueryKey);
+
+      expect(cachedData?.groceries).toHaveLength(1);
+      expect(cachedData?.groceries[0]!.id).toBe("g2");
+    });
+  });
+
+  describe("onRecurringCreated handler", () => {
+    it("adds new recurring grocery and linked grocery to cache", async () => {
+      const initialData = createMockGroceriesData([], []);
+
+      queryClient.setQueryData(mockQueryKey, initialData);
+
+      renderHook(() => useGroceriesSubscription(), {
+        wrapper: createTestWrapper(queryClient),
+      });
+
+      const newGrocery = createMockGrocery({ id: "g1", name: "Eggs", recurringGroceryId: "r1" });
+      const newRecurring = createMockRecurringGrocery({ id: "r1", name: "Weekly Eggs" });
+
+      act(() => {
+        subscriptionCallbacks.onRecurringCreated!(
+          emitPayload({
+            grocery: newGrocery,
+            recurringGrocery: newRecurring,
+          })
+        );
+      });
+
+      const cachedData =
+        queryClient.getQueryData<ReturnType<typeof createMockGroceriesData>>(mockQueryKey);
+
+      expect(cachedData?.groceries).toHaveLength(1);
+      expect(cachedData?.recurringGroceries).toHaveLength(1);
+      expect(cachedData?.groceries[0]).toEqual(newGrocery);
+      expect(cachedData?.recurringGroceries[0]).toEqual(newRecurring);
+    });
+  });
+
+  describe("onRecurringUpdated handler", () => {
+    it("updates both recurring grocery and linked grocery in cache", async () => {
+      const grocery = createMockGrocery({ id: "g1", name: "Eggs", recurringGroceryId: "r1" });
+      const recurring = createMockRecurringGrocery({ id: "r1", name: "Weekly Eggs" });
+      const initialData = createMockGroceriesData([grocery], [recurring]);
+
+      queryClient.setQueryData(mockQueryKey, initialData);
+
+      renderHook(() => useGroceriesSubscription(), {
+        wrapper: createTestWrapper(queryClient),
+      });
+
+      const updatedGrocery = { ...grocery, name: "Organic Eggs" };
+      const updatedRecurring = { ...recurring, name: "Weekly Organic Eggs" };
+
+      act(() => {
+        subscriptionCallbacks.onRecurringUpdated!(
+          emitPayload({
+            grocery: updatedGrocery,
+            recurringGrocery: updatedRecurring,
+          })
+        );
+      });
+
+      const cachedData =
+        queryClient.getQueryData<ReturnType<typeof createMockGroceriesData>>(mockQueryKey);
+
+      expect(cachedData?.groceries[0]!.name).toBe("Organic Eggs");
+      expect(cachedData?.recurringGroceries[0]!.name).toBe("Weekly Organic Eggs");
+    });
+  });
+
+  describe("onRecurringDeleted handler", () => {
+    it("removes only the recurring definition; linked groceries arrive via deleted/updated events", async () => {
+      const grocery1 = createMockGrocery({ id: "g1", name: "Eggs", recurringGroceryId: "r1" });
+      const grocery2 = createMockGrocery({ id: "g2", name: "Milk", recurringGroceryId: null });
+      const recurring = createMockRecurringGrocery({ id: "r1", name: "Weekly Eggs" });
+      const initialData = createMockGroceriesData([grocery1, grocery2], [recurring]);
+
+      queryClient.setQueryData(mockQueryKey, initialData);
+
+      renderHook(() => useGroceriesSubscription(), {
+        wrapper: createTestWrapper(queryClient),
+      });
+
+      act(() => {
+        subscriptionCallbacks.onRecurringDeleted!(emitPayload({ recurringGroceryId: "r1" }));
+      });
+
+      const cachedData =
+        queryClient.getQueryData<ReturnType<typeof createMockGroceriesData>>(mockQueryKey);
+
+      // Groceries stay: a detach keeps them (they arrive via "updated"), a
+      // full delete removes them via the separate "deleted" event.
+      expect(cachedData?.groceries).toHaveLength(2);
+      expect(cachedData?.recurringGroceries).toHaveLength(0);
+    });
+  });
+
+  describe("onStale handler", () => {
+    it("silently refetches without showing a toast", async () => {
+      const adapter = fakePlatformAdapter();
+      const initialData = createMockGroceriesData();
+
+      queryClient.setQueryData(mockQueryKey, initialData);
+      const invalidateSpy = vi.spyOn(queryClient, "invalidateQueries");
+
+      renderHook(() => useGroceriesSubscription(), {
+        wrapper: createTestWrapper(queryClient, adapter),
+      });
+
+      act(() => {
+        subscriptionCallbacks.onStale!(emitPayload({ reason: "Grocery was updated elsewhere" }));
+      });
+
+      expect(invalidateSpy).toHaveBeenCalled();
+      expect(adapter.showError).not.toHaveBeenCalled();
+    });
+  });
+
+  describe("onFailed handler", () => {
+    it("shows toast notification on failure", async () => {
+      const adapter = fakePlatformAdapter();
+      const initialData = createMockGroceriesData();
+
+      queryClient.setQueryData(mockQueryKey, initialData);
+
+      renderHook(() => useGroceriesSubscription(), {
+        wrapper: createTestWrapper(queryClient, adapter),
+      });
+
+      act(() => {
+        subscriptionCallbacks.onFailed!(emitPayload({ reason: "Failed to save grocery" }));
+      });
+
+      expect(adapter.showError).toHaveBeenCalledWith(
+        "Failed to save grocery",
+        "groceries-subscription:onFailed"
+      );
+    });
+  });
+});

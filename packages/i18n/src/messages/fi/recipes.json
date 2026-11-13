@@ -67,7 +67,6 @@
     "notFoundMessage": "Tätä reseptiä ei ole olemassa tai sinulla ei ole oikeutta nähdä sitä.",
     "prep": "valmistelu",
     "total": "yhteensä",
-    "planMeal": "Suunnittele ateria",
     "recipeActions": "Reseptin toiminnot",
     "instructions": "Ohjeet",
     "cook": "Kokkaa",
@@ -86,7 +85,6 @@
     "edit": "Muokkaa",
     "delete": "Poista",
     "share": "Jaa",
-    "visitOriginal": "Avaa alkuperäinen resepti",
     "addToCalendar": "Lisää kalenteriin",
     "autoTag": "Luo tunnisteet",
     "autoTagging": "Luodaan tunnisteita...",
@@ -103,7 +101,6 @@
     "inferringProvenance": "Selvitetään alkuperää…",
     "linkIngredients": "Linkitä ainesosat työvaiheisiin",
     "linkingIngredients": "Linkitetään ainesosia…",
-    "enrichmentFailed": "Viime ajo epäonnistui",
     "generateImage": "Luo kuva",
     "generatingImage": "Luodaan kuvaa…",
     "cookbooks": "Keittokirjat"
@@ -173,7 +170,6 @@
     "editTitle": "Muokkaa reseptiä",
     "createDescription": "Lisää uusi resepti kokoelmaasi",
     "editDescription": "Päivitä reseptisi tiedot",
-    "initializingForm": "Alustetaan lomaketta...",
     "photo": "Kuva",
     "basicInfo": "Perustiedot",
     "ingredients": "Ainesosat",
@@ -225,19 +221,12 @@
     "createRecipe": "Luo resepti",
     "saveChanges": "Tallenna muutokset",
     "uploading": "Lähetetään...",
-    "clickToUpload": "Napsauta lähettääksesi tai raahaa ja pudota",
-    "pasteToUpload": "liittääksesi",
-    "imageFormats": "PNG, JPG, WEBP enintään 5 Mt",
     "discardChangesConfirm": "Sinulla on tallentamattomia muutoksia. Hylätäänkö ne ja poistutaan tältä sivulta?"
   },
   "gallery": {
-    "addImage": "Lisää kuva",
     "uploading": "Lähetetään...",
     "uploadFailed": "Lähetys epäonnistui",
-    "dragToReorder": "Raahaa järjestääksesi",
-    "maxImagesReached": "Enintään {max} kuvaa sallittu",
-    "maxVideosReached": "Enintään {max} videota sallittu",
-    "invalidFileType": "Virheellinen tiedostotyyppi"
+    "dragToReorder": "Raahaa järjestääksesi"
   },
   "carousel": {
     "noImageAvailable": "Ei kuvaa saatavilla",
@@ -246,8 +235,11 @@
       "mute": "Mykistä",
       "unmute": "Poista mykistys",
       "fullscreen": "Siirry koko näyttöön",
-      "exitFullscreen": "Poistu koko näytöstä"
-    }
+      "exitFullscreen": "Poistu koko näytöstä",
+      "progress": "Videon edistyminen"
+    },
+    "recipeImage": "Reseptin kuva",
+    "closeViewer": "Sulje kuvanäkymä"
   },
   "validation": {
     "nameRequired": "Reseptin nimi on pakollinen",
@@ -262,8 +254,6 @@
     "carbs": "Hiilihydraatit",
     "protein": "Proteiini",
     "showingPortions": "Näytetään arvot {count} {count, plural, one {annokselle} other {annokselle}}",
-    "noInfo": "Ravintosisältötietoja ei ole saatavilla",
-    "estimateWithAI": "Arvioi tekoälyllä",
     "estimated": "Arvioitu",
     "leftOut": "{count, plural, one {# rivi jäi laskematta} other {# riviä jäi laskematta}}",
     "estimatedByAI": "tekoälyn arvioima",
@@ -276,7 +266,9 @@
       "noPieceWeight": "ei vielä kappaleen painoa"
     },
     "workedOutFrom": "Laskettu aineksista, lähteinä {sources}.",
-    "householdNumbers": "kotitaloutesi arvot"
+    "householdNumbers": "kotitaloutesi arvot",
+    "decreasePortions": "Vähemmän annoksia",
+    "increasePortions": "Enemmän annoksia"
   },
   "measurementSystem": {
     "label": "Mittajärjestelmä",
@@ -291,7 +283,9 @@
   },
   "stepInput": {
     "stepPlaceholder": "Vaihe {number}: Kuvaile vaihe...",
-    "stepPlaceholderShort": "Vaihe {number}"
+    "stepPlaceholderShort": "Vaihe {number}",
+    "recipeSuggestions": "Reseptiehdotukset",
+    "ingredientSuggestions": "Ainesosaehdotukset"
   },
   "stepIngredients": {
     "rowLabel": "Linkitetyt ainesosat",
@@ -327,11 +321,11 @@
     "incomplete": "Tämä resepti voi olla puutteellinen. Vertaa sitä lähteeseen.",
     "notARecipe": "Tämä sivu ei näytä reseptiltä.",
     "privateAddress": "Tuonnit yksityisistä verkko-osoitteista eivät ole sallittuja tällä palvelimella.",
-    "batchImported": "Reseptit tuotu",
-    "batchImportedDescription": "{count} reseptiä tuotu arkistosta",
     "view": "Näytä",
     "open": "Avaa",
-    "deleteKept": "{count, plural, one {Joku muu muutti # reseptiä, ja se säilytettiin} other {Joku muu muutti # reseptiä, ja ne säilytettiin}}."
+    "deleteKept": "{count, plural, one {Joku muu muutti # reseptiä, ja se säilytettiin} other {Joku muu muutti # reseptiä, ja ne säilytettiin}}.",
+    "deleted": "Resepti poistettu",
+    "deletedDescription": "Tämä resepti on poistettu."
   },
   "tags": {
     "panel": {
@@ -346,9 +340,6 @@
     "servings": "Annokset",
     "serving": "{count, plural, one {# annos} other {# annosta}}",
     "stepCounter": "{current} / {total}",
-    "swipeSteps": "Pyyhkäise siirtyäksesi vaiheiden välillä",
-    "swipeIngredients": "Pyyhkäise vasemmalle nähdäksesi ainesosat",
-    "swipeBackToSteps": "Pyyhkäise oikealle palataksesi vaiheisiin",
     "readyAt": "Valmis noin klo {time}",
     "timers": "Ajastimet",
     "nextStep": "Seuraava vaihe"
@@ -374,10 +365,7 @@
   "provenance": {
     "title": "Alkuperä",
     "region": "Alue",
-    "cuisines": "Ruokakulttuurit",
-    "inferring": "Selvitetään, mistä tämä resepti on peräisin…",
-    "noInfo": "Ei vielä tietoa alkuperästä",
-    "inferWithAI": "Selvitä tekoälyllä"
+    "cuisines": "Ruokakulttuurit"
   },
   "import": {
     "alreadyExists": "Sinulla on jo tämä resepti",

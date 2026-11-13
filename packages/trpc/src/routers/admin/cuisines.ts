@@ -11,6 +11,7 @@ import { z } from "zod";
 
 import { createCuisine, deleteCuisine, renameCuisine } from "@norish/db/repositories/cuisines";
 import { trpcLogger as log } from "@norish/shared-server/logger";
+import { config } from "@norish/shared-server/realtime/config";
 import { CuisineNameSchema } from "@norish/shared/contracts/zod";
 
 import { adminProcedure } from "../../middleware";
@@ -21,8 +22,10 @@ const create = adminProcedure
   .mutation(async ({ ctx, input }) => {
     log.info({ userId: ctx.user.id, name: input.name }, "Adding a Cuisine");
 
+    let created;
+
     try {
-      return await createCuisine(input.name);
+      created = await createCuisine(input.name);
     } catch (err) {
       throw new TRPCError({
         code: "CONFLICT",
@@ -30,6 +33,9 @@ const create = adminProcedure
         cause: err,
       });
     }
+    void config.publish("changed", {}, undefined);
+
+    return created;
   });
 
 const rename = adminProcedure
@@ -52,6 +58,7 @@ const rename = adminProcedure
     if (!renamed) {
       throw new TRPCError({ code: "NOT_FOUND", message: "Cuisine not found" });
     }
+    void config.publish("changed", {}, undefined);
 
     return renamed;
   });
@@ -68,6 +75,7 @@ const remove = adminProcedure.input(z.object({ id: z.uuid() })).mutation(async (
   if (!(await deleteCuisine(input.id))) {
     throw new TRPCError({ code: "NOT_FOUND", message: "Cuisine not found" });
   }
+  void config.publish("changed", {}, undefined);
 
   return { success: true };
 });

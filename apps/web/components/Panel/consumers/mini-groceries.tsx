@@ -1,31 +1,39 @@
 "use client";
 
-import { useCallback, useEffect, useMemo, useRef, useState } from "react";
-import { GroceryCheckbox, isCheckboxEvent } from "@/components/groceries/grocery-checkbox";
-import { OnTheListMark } from "@/components/groceries/pantry/put-on-the-list";
-import { IngredientIcon, IngredientIconsProvider } from "@/components/ingredients/ingredient-icon";
+import { useEffect, useRef, useState } from "react";
+import { IngredientIcon } from "@/components/ingredients/ingredient-icon";
+import { OnTheListMark } from "@/components/ingredients/on-the-list-mark";
 import Panel from "@/components/Panel/Panel";
+import { isCheckboxEvent, RoundCheckbox } from "@/components/round-checkbox";
 import {
   ActionButton,
   ActionButtonGroup,
   IconActionButton,
 } from "@/components/shared/action-button";
-import { useSpellingRules } from "@/hooks/config";
-import { useGroceriesMutations, useGroceriesQuery } from "@/hooks/groceries";
-import { usePantryMutations, usePantryQuery } from "@/hooks/pantry";
-import {
-  useLinkedRecipeIngredients,
-  useRecipeIngredients,
-} from "@/hooks/recipes/use-recipe-ingredients";
+import { useGroceriesPantryAndCatalogueSubscriptions } from "@/hooks/use-groceries-pantry-and-catalogue-subscriptions";
 import { useUnitFormatter } from "@/hooks/use-unit-formatter";
 import { ArchiveBoxArrowDownIcon } from "@heroicons/react/16/solid";
 import { Button, Input, toast } from "@heroui/react";
 import { useTranslations } from "next-intl";
 
 import type { FoodToBuy, LineWithFoods } from "@norish/shared/lib/line-foods";
-import { formatServings, useServingsScaler } from "@norish/shared-react/hooks";
+import { useSpellingRules } from "@norish/shared-react/config";
+import {
+  useGroceriesMutations,
+  useOnTheList,
+  usePantryMutations,
+  usePantryQuery,
+} from "@norish/shared-react/groceries";
+import { useIngredientIcons } from "@norish/shared-react/ingredients";
+import {
+  formatServings,
+  useLinkedRecipeIngredients,
+  useRecipeIngredients,
+  useRecipeSubscription,
+  useServingsScaler,
+} from "@norish/shared-react/recipes";
 import { foodsToBuy } from "@norish/shared/lib/line-foods";
-import { groceryOnTheList, pantryIngredientFor } from "@norish/shared/lib/pantry";
+import { pantryIngredientFor } from "@norish/shared/lib/pantry";
 
 type MiniGroceriesProps = {
   open: boolean;
@@ -123,81 +131,163 @@ function formatEditableIngredient(item: GroceryIngredient) {
   return [item.amount, item.unit, item.ingredientName].filter(Boolean).join(" ");
 }
 
-export default function MiniGroceries({
-  open,
-  recipeId,
-  onOpenChange,
-  initialServings = 1,
-  originalServings = 1,
-  addAtOnce = false,
-}: MiniGroceriesProps) {
+/**
+ * A recipe's foods to buy at the servings picked, each line as edited here, split by whether the
+ * Pantry holds it; and what puts lines on the list.
+ */
+function useLinesToBuy(
+  recipeId: string,
+  originalServings: number,
+  initialServings: number,
+  editedIngredients: Record<string, EditedIngredient>
+) {
   const t = useTranslations("groceries.panel");
-  const tActions = useTranslations("common.actions");
   const { createGroceriesFromData } = useGroceriesMutations();
-  const { formatAmountUnit } = useUnitFormatter();
-  const {
-    ingredients: rawIngredients,
-    systemUsed,
-    isLoading,
-  } = useRecipeIngredients(open || addAtOnce ? recipeId : null);
-
-  const linkedRecipeIds = useMemo(
-    () => extractLinkedRecipeIds(rawIngredients as GroceryIngredient[]),
-    [rawIngredients]
-  );
+  const { ingredients: rawIngredients, systemUsed, isLoading } = useRecipeIngredients(recipeId);
   const { ingredients: linkedIngredients, isLoading: linkedLoading } = useLinkedRecipeIngredients(
-    linkedRecipeIds,
+    extractLinkedRecipeIds(rawIngredients as GroceryIngredient[]),
     systemUsed
   );
-
   // One row per food a line puts on the list: each of an "and" line's, an "or" line's first.
-  const ingredients = useMemo(
-    () =>
-      foodsToBuy(
-        [
-          ...(rawIngredients as GroceryIngredient[]),
-          ...(linkedIngredients as GroceryIngredient[]),
-        ].filter(isGroceryIngredient)
-      ),
-    [rawIngredients, linkedIngredients]
+  const ingredients = foodsToBuy(
+    [
+      ...(rawIngredients as GroceryIngredient[]),
+      ...(linkedIngredients as GroceryIngredient[]),
+    ].filter(isGroceryIngredient)
   );
-  const { servings, scaledIngredients, setServings, incrementServings, decrementServings } =
-    useServingsScaler(ingredients, originalServings, initialServings);
+  const scaler = useServingsScaler(ingredients, originalServings, initialServings);
+  // A line whose food the Pantry holds is shown apart and left off the list unless ticked; a line
+  // edited here is only text, so it is matched by its name.
+  const pantry = usePantryQuery();
+  const rules = useSpellingRules();
+
+  /** The Pantry Ingredient that covers a line, as edited here if it was. */
+  const keptFor = (item: GroceryIngredient) => {
+    const edited = editedIngredients[item.id]?.name;
+
+    return pantryIngredientFor(
+      pantry.items,
+      edited === undefined ? item : { ingredientName: edited },
+      rules
+    );
+  };
+  const toBuy: typeof scaler.scaledIngredients = [];
+  const inPantry: typeof scaler.scaledIngredients = [];
+
+  for (const item of scaler.scaledIngredients) (keptFor(item) ? inPantry : toBuy).push(item);
+
+  /** Puts these lines on the list, as edited here; true once they are on it. */
+  const addLines = (lines: Array<FoodToBuy<GroceryIngredient>>) =>
+    createGroceriesFromData(
+      lines.map((ri) => ({
+        name: editedIngredients[ri.id]?.name ?? ri.ingredientName,
+        amount: editedIngredients[ri.id]?.amount ?? ri.amount,
+        unit: editedIngredients[ri.id]?.unit ?? ri.unit ?? null,
+        isDone: false,
+        recipeIngredientId: ri.lineId,
+      }))
+    )
+      .then(() => {
+        toast(t("ingredientsAdded"), { variant: "success" });
+
+        return true;
+      })
+      .catch(() => {
+        toast(t("ingredientsFailed"), { variant: "warning" });
+
+        return false;
+      });
+
+  return {
+    ...scaler,
+    isLoading,
+    linkedLoading,
+    pantry,
+    keptFor,
+    toBuy,
+    inPantry,
+    addLines,
+  };
+}
+
+type LinesProps = {
+  recipeId: string;
+  initialServings: number;
+  originalServings: number;
+  onOpenChange: (open: boolean) => void;
+};
+
+/* Adds what the panel would have ticked once the recipe has answered and the Pantry was read in
+   this mount, never from a cached copy; a Pantry that cannot be read opens the panel instead. */
+function AddAtOnce({
+  recipeId,
+  initialServings,
+  originalServings,
+  onOpenChange,
+  onDone,
+}: LinesProps & { onDone: () => void }) {
+  const { isLoading, linkedLoading, pantry, toBuy, addLines } = useLinesToBuy(
+    recipeId,
+    originalServings,
+    initialServings,
+    {}
+  );
+  const addedRef = useRef(false);
+  const ready = !isLoading && !linkedLoading && !pantry.isLoading && !pantry.isFetching;
+
+  useEffect(() => {
+    if (!ready || addedRef.current) return;
+    addedRef.current = true;
+    onDone();
+    if (pantry.isUnavailable) onOpenChange(true);
+    else if (toBuy.length === 0) onOpenChange(false);
+    else void addLines(toBuy).finally(() => onOpenChange(false));
+  });
+
+  return null;
+}
+
+/** The panel's content, mounted while it is open: each opening starts from what is to buy. */
+function MiniGroceriesContent({
+  recipeId,
+  initialServings,
+  originalServings,
+  onOpenChange,
+}: LinesProps) {
+  const t = useTranslations("groceries.panel");
+  const tActions = useTranslations("common.actions");
+  const tDetail = useTranslations("recipes.detail");
+  const { formatAmountUnit } = useUnitFormatter();
   const [selectedIds, setSelectedIds] = useState<string[]>([]);
   const [editingId, setEditingId] = useState<string | null>(null);
   const [editValue, setEditValue] = useState<string>("");
   const [editedIngredients, setEditedIngredients] = useState<Record<string, EditedIngredient>>({});
+  const {
+    isLoading,
+    servings,
+    scaledIngredients,
+    incrementServings,
+    decrementServings,
+    pantry,
+    keptFor,
+    toBuy,
+    inPantry,
+    addLines,
+  } = useLinesToBuy(recipeId, originalServings, initialServings, editedIngredients);
+
+  useGroceriesPantryAndCatalogueSubscriptions();
+  useRecipeSubscription(recipeId);
+  useIngredientIcons(scaledIngredients.map((item) => item.ingredientId));
+
   const hasInitializedRef = useRef(false);
   const knownIngredientIdsRef = useRef<Set<string>>(new Set());
   // Which lines the Pantry held when the ticks were last settled, so a line
   // that crosses between the sections can be told from one that has not.
   const knownInPantryIdsRef = useRef<Set<string>>(new Set());
-  // What the household already has: a line whose Ingredient is in the Pantry
-  // is shown apart and left off the list unless it is ticked. A line edited
-  // here is only text until it is a grocery, so it is matched by its name.
-  const {
-    items: pantryIngredients,
-    isLoading: pantryLoading,
-    isUnavailable: pantryUnavailable,
-  } = usePantryQuery();
-  const rules = useSpellingRules();
   const { addPantryIngredient } = usePantryMutations();
-  const { groceries } = useGroceriesQuery();
-
-  /** The Pantry Ingredient that covers a line, as edited here if it was. */
-  const keptFor = useCallback(
-    (item: GroceryIngredient) => {
-      const edited = editedIngredients[item.id]?.name;
-
-      return pantryIngredientFor(
-        pantryIngredients,
-        edited === undefined ? item : { ingredientName: edited },
-        rules
-      );
-    },
-    [pantryIngredients, editedIngredients, rules]
-  );
-  const isInPantry = useCallback((item: GroceryIngredient) => keptFor(item) !== null, [keptFor]);
+  const onTheList = useOnTheList(pantry.items);
+  const pantryLoading = pantry.isLoading;
+  const pantryUnavailable = pantry.isUnavailable;
 
   /**
    * "We keep this": the line's own food goes in the Pantry, or the food of
@@ -212,34 +302,8 @@ export default function MiniGroceries({
       edited !== undefined || !item.ingredientId
         ? (edited ?? item.ingredientName)
         : { ingredientId: item.ingredientId, name: item.ingredientName }
-    ).catch(() => toast(t("keepFailed"), { variant: "danger" }));
+    );
   };
-  const { toBuy, inPantry } = useMemo(() => {
-    const buy: typeof scaledIngredients = [];
-    const have: typeof scaledIngredients = [];
-
-    for (const item of scaledIngredients) (isInPantry(item) ? have : buy).push(item);
-
-    return { toBuy: buy, inPantry: have };
-  }, [scaledIngredients, isInPantry]);
-
-  const [session, setSession] = useState({ open, recipeId });
-
-  if (session.open !== open || session.recipeId !== recipeId) {
-    setSession({ open, recipeId });
-    setSelectedIds([]);
-    setEditingId(null);
-    setEditValue("");
-    setEditedIngredients({});
-    // The panel is mounted with the page, so each opening takes the servings picked there.
-    if (open) setServings(initialServings ?? originalServings);
-  }
-
-  useEffect(() => {
-    hasInitializedRef.current = false;
-    knownIngredientIdsRef.current = new Set();
-    knownInPantryIdsRef.current = new Set();
-  }, [open, recipeId]);
 
   useEffect(() => {
     // Selection starts from what is to buy, so the Pantry has to have
@@ -289,14 +353,8 @@ export default function MiniGroceries({
      so an id left behind by an ingredient that has since disappeared cannot
      make the list look fully selected. The count, and "select all", are about
      what is to buy; a line in the Pantry is ticked on its own. */
-  const selectedCount = useMemo(
-    () => toBuy.filter((item) => selectedIds.includes(item.id)).length,
-    [toBuy, selectedIds]
-  );
-  const inPantrySelectedCount = useMemo(
-    () => inPantry.filter((item) => selectedIds.includes(item.id)).length,
-    [inPantry, selectedIds]
-  );
+  const selectedCount = toBuy.filter((item) => selectedIds.includes(item.id)).length;
+  const inPantrySelectedCount = inPantry.filter((item) => selectedIds.includes(item.id)).length;
   const toggleSelect = (id: string) => {
     setSelectedIds((prev) => (prev.includes(id) ? prev.filter((x) => x !== id) : [...prev, id]));
   };
@@ -340,62 +398,11 @@ export default function MiniGroceries({
     }
     setEditingId(null);
   };
-  const close = useCallback(() => onOpenChange(false), [onOpenChange]);
-  /** Puts these lines on the list, as edited here; true once they are on it. */
-  const addLines = useCallback(
-    (lines: Array<FoodToBuy<GroceryIngredient>>) =>
-      createGroceriesFromData(
-        lines.map((ri) => ({
-          name: editedIngredients[ri.id]?.name ?? ri.ingredientName,
-          amount: editedIngredients[ri.id]?.amount ?? ri.amount,
-          unit: editedIngredients[ri.id]?.unit ?? ri.unit ?? null,
-          isDone: false,
-          recipeIngredientId: ri.lineId,
-        }))
-      )
-        .then(() => {
-          toast(t("ingredientsAdded"), { variant: "success" });
-
-          return true;
-        })
-        .catch(() => {
-          toast(t("ingredientsFailed"), { variant: "warning" });
-
-          return false;
-        }),
-    [createGroceriesFromData, editedIngredients, t]
-  );
   const handleConfirm = () => {
     void addLines(scaledIngredients.filter((g) => selectedIds.includes(g.id))).then(
-      (added) => added && close()
+      (added) => added && onOpenChange(false)
     );
   };
-
-  /* Adding at once takes what the panel would have ticked — every line to
-     buy, none the Pantry holds — once the recipe and the Pantry have
-     answered. A Pantry that cannot be read ticks nothing, so the panel opens
-     instead, to say so and let the person tick. */
-  const addedAtOnceRef = useRef(false);
-
-  useEffect(() => {
-    if (!addAtOnce || open || addedAtOnceRef.current) return;
-    if (isLoading || linkedLoading || pantryLoading) return;
-    addedAtOnceRef.current = true;
-    if (pantryUnavailable) onOpenChange(true);
-    else if (toBuy.length === 0) close();
-    else void addLines(toBuy).finally(close);
-  }, [
-    addAtOnce,
-    open,
-    isLoading,
-    linkedLoading,
-    pantryLoading,
-    pantryUnavailable,
-    toBuy,
-    addLines,
-    close,
-    onOpenChange,
-  ]);
 
   /**
    * One ingredient line, to buy or in the Pantry alike, drawn as a row of the
@@ -426,7 +433,7 @@ export default function MiniGroceries({
           }
         }}
       >
-        <GroceryCheckbox
+        <RoundCheckbox
           aria-label={item.ingredientName}
           isSelected={selectedIds.includes(item.id)}
           size="lg"
@@ -473,7 +480,7 @@ export default function MiniGroceries({
             variant="tertiary"
             onPress={() => keepLine(item)}
           />
-        ) : groceryOnTheList(groceries, kept, rules) ? (
+        ) : onTheList.includes(kept.id) ? (
           <OnTheListMark />
         ) : null}
       </div>
@@ -519,73 +526,71 @@ export default function MiniGroceries({
   );
 
   return (
-    <Panel open={open} title={t("addToGroceries")} onOpenChange={onOpenChange}>
+    <>
       <Panel.Body className="flex min-h-0 flex-1 flex-col">
-        <IngredientIconsProvider ids={ingredients.map((item) => item.ingredientId)}>
-          {open && isLoading ? (
-            <div className="text-muted p-4 text-base">{t("loadingIngredients")}</div>
-          ) : open ? (
-            <div className="flex min-h-0 flex-1 flex-col">
-              {/* Servings Control */}
-              <div className="mb-3 flex items-center justify-between px-1">
-                <span className="text-foreground text-sm font-medium">{t("servings")}</span>
-                <div className="inline-flex items-center gap-2">
-                  <IconActionButton
-                    action="decrease"
-                    className="bg-surface-secondary"
-                    label="Decrease servings"
-                    size="sm"
-                    tooltipPlacement="bottom"
-                    onPress={decrementServings}
-                  />
-                  <span className="min-w-8 text-center text-sm font-semibold">
-                    {formatServings(servings)}
-                  </span>
-                  <IconActionButton
-                    action="increase"
-                    className="bg-surface-secondary"
-                    label="Increase servings"
-                    size="sm"
-                    tooltipPlacement="bottom"
-                    onPress={incrementServings}
-                  />
-                </div>
+        {isLoading ? (
+          <div className="text-muted p-4 text-base">{t("loadingIngredients")}</div>
+        ) : (
+          <div className="flex min-h-0 flex-1 flex-col">
+            {/* Servings Control */}
+            <div className="mb-3 flex items-center justify-between px-1">
+              <span className="text-foreground text-sm font-medium">{t("servings")}</span>
+              <div className="inline-flex items-center gap-2">
+                <IconActionButton
+                  action="decrease"
+                  className="bg-surface-secondary"
+                  label={tDetail("decreaseServings")}
+                  size="sm"
+                  tooltipPlacement="bottom"
+                  onPress={decrementServings}
+                />
+                <span className="min-w-8 text-center text-sm font-semibold">
+                  {formatServings(servings)}
+                </span>
+                <IconActionButton
+                  action="increase"
+                  className="bg-surface-secondary"
+                  label={tDetail("increaseServings")}
+                  size="sm"
+                  tooltipPlacement="bottom"
+                  onPress={incrementServings}
+                />
               </div>
-
-              {pantryUnavailable && (
-                <p className="text-muted mb-2 px-1 text-xs" data-testid="pantry-unavailable">
-                  {t("pantryUnavailable")}
-                </p>
-              )}
-
-              {scaledIngredients.length === 0 ? (
-                <div className="text-muted flex flex-1 items-center justify-center text-base">
-                  {t("noIngredients")}
-                </div>
-              ) : (
-                <div className="flex min-h-0 flex-1 flex-col gap-3 overflow-y-auto pb-1">
-                  {toBuy.length > 0 &&
-                    renderSection(toBuy, inPantry, {
-                      name: t("toBuy"),
-                      selected: selectedCount,
-                      testId: "to-buy-section",
-                      toggleTestId: "toggle-all",
-                    })}
-                  {inPantry.length > 0 &&
-                    renderSection(inPantry, toBuy, {
-                      name: t("inPantry"),
-                      selected: inPantrySelectedCount,
-                      testId: "pantry-section",
-                      toggleTestId: "toggle-all-pantry",
-                    })}
-                </div>
-              )}
             </div>
-          ) : null}
-        </IngredientIconsProvider>
+
+            {pantryUnavailable && (
+              <p className="text-muted mb-2 px-1 text-xs" data-testid="pantry-unavailable">
+                {t("pantryUnavailable")}
+              </p>
+            )}
+
+            {scaledIngredients.length === 0 ? (
+              <div className="text-muted flex flex-1 items-center justify-center text-base">
+                {t("noIngredients")}
+              </div>
+            ) : (
+              <div className="flex min-h-0 flex-1 flex-col gap-3 overflow-y-auto pb-1">
+                {toBuy.length > 0 &&
+                  renderSection(toBuy, inPantry, {
+                    name: t("toBuy"),
+                    selected: selectedCount,
+                    testId: "to-buy-section",
+                    toggleTestId: "toggle-all",
+                  })}
+                {inPantry.length > 0 &&
+                  renderSection(inPantry, toBuy, {
+                    name: t("inPantry"),
+                    selected: inPantrySelectedCount,
+                    testId: "pantry-section",
+                    toggleTestId: "toggle-all-pantry",
+                  })}
+              </div>
+            )}
+          </div>
+        )}
       </Panel.Body>
 
-      {open && !isLoading && scaledIngredients.length > 0 && (
+      {!isLoading && scaledIngredients.length > 0 && (
         <Panel.Footer>
           <ActionButtonGroup>
             <ActionButton
@@ -598,6 +603,29 @@ export default function MiniGroceries({
           </ActionButtonGroup>
         </Panel.Footer>
       )}
-    </Panel>
+    </>
+  );
+}
+
+export default function MiniGroceries({
+  open,
+  recipeId,
+  onOpenChange,
+  initialServings = 1,
+  originalServings = 1,
+  addAtOnce = false,
+}: MiniGroceriesProps) {
+  const t = useTranslations("groceries.panel");
+  // Once per mount: a panel opened because the Pantry could not be read does not add again.
+  const [atOnce, setAtOnce] = useState(addAtOnce);
+  const lines = { recipeId, initialServings, originalServings, onOpenChange };
+
+  return (
+    <>
+      {atOnce && !open ? <AddAtOnce {...lines} onDone={() => setAtOnce(false)} /> : null}
+      <Panel open={open} title={t("addToGroceries")} onOpenChange={onOpenChange}>
+        <MiniGroceriesContent key={recipeId} {...lines} />
+      </Panel>
+    </>
   );
 }

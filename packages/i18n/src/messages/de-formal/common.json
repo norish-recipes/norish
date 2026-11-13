@@ -40,7 +40,6 @@
   "status": {
     "loading": "Wird geladen...",
     "saving": "Wird gespeichert...",
-    "deleting": "Wird gelöscht...",
     "error": "Fehler",
     "success": "Erfolg",
     "noResults": "Keine Ergebnisse gefunden",
@@ -92,9 +91,6 @@
   },
   "connection": {
     "connecting": "Verbindung zu Norish wird hergestellt...",
-    "checkInternet": "Bitte überprüfen Sie Ihre Internetverbindung",
-    "offlineBanner": "Sie sind offline, zwischengespeicherte Daten werden angezeigt",
-    "serverUnreachableBanner": "Der Norish-Server ist nicht erreichbar, zwischengespeicherte Daten werden angezeigt",
     "live": "Verbunden",
     "offline": "Offline",
     "openDetails": "Verbindungsdetails"
@@ -151,10 +147,7 @@
       "analyzing": "Bilder werden analysiert, bitte warten...",
       "failed": "Import fehlgeschlagen",
       "selectedCount": "{count} Bilder ausgewählt - werden als ein Rezept kombiniert",
-      "library": "Mediathek",
-      "takePhoto": "Foto aufnehmen",
-      "counter": "{count} / {max} Fotos",
-      "importFromCount": "Importieren von {count, plural, one {# Foto} other {# Fotos}}"
+      "library": "Mediathek"
     },
     "menu": {
       "description": "Importieren Sie per URL, scannen Sie ein Foto oder beginnen Sie von Grund auf."
@@ -223,8 +216,7 @@
     "other": "Timer",
     "label_one": "1 Timer",
     "label_other": "{count} Timer",
-    "notification_title": "Timer abgelaufen",
-    "notification_body": "{label} ist fertig!",
+    "notification_body": "Timer abgelaufen",
     "notifications_disabled": "Benachrichtigungen sind deaktiviert",
     "notifications_disabled_hint": "Aktivieren Sie Benachrichtigungen in Ihren Browser-Einstellungen, um Hinweise zu erhalten, wenn Timer im Hintergrund ablaufen."
   },
@@ -301,5 +293,11 @@
     "title": "Ein KI-Schlüssel funktioniert nicht mehr",
     "description": "Der Anbieter lehnt den API-Schlüssel für {blocks} seit {since} ab. Speichern Sie einen neuen Schlüssel, damit diese KI-Funktionen wieder laufen.",
     "openSettings": "Einstellungen öffnen"
+  },
+  "household": {
+    "adminTransferred": "Admin übertragen an {name}",
+    "unknownMember": "Unbekannt",
+    "removedTitle": "Aus dem Haushalt entfernt",
+    "removedDescription": "Ein Admin hat Sie aus dem Haushalt entfernt."
   }
 }

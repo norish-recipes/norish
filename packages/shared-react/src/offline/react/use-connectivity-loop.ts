@@ -2,7 +2,7 @@
 
 import { useCallback, useEffect, useRef, useState } from "react";
 
-import type { ConnectionStatus } from "../../providers/trpc-provider";
+import type { ConnectionStatus } from "../../trpc/trpc-provider";
 import type { ConnectivitySnapshot, ConnectivityState } from "../connectivity-machine";
 import { startConnectivityLoop } from "../connectivity-loop";
 import { INITIAL_CONNECTIVITY } from "../connectivity-machine";

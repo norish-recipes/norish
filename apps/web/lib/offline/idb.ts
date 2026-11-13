@@ -16,23 +16,23 @@
  * `fake-indexeddb` in unit tests without a browser.
  */
 
-export const OFFLINE_DB_NAME = "norish-offline";
+const OFFLINE_DB_NAME = "norish-offline";
 
 /**
  * Schema version. Bump when adding an object store and extend
  * {@link applyUpgrade}; existing databases upgrade in place, so no store that
  * already holds data (notably the Outbox) is ever dropped.
  */
-export const OFFLINE_DB_VERSION = 2;
+const OFFLINE_DB_VERSION = 2;
 
 export const KEYVAL_STORE = "keyval";
 export const OUTBOX_STORE = "outbox";
 
 /** All object stores that exist at the current {@link OFFLINE_DB_VERSION}. */
-export type OfflineStoreName = typeof KEYVAL_STORE | typeof OUTBOX_STORE;
+type OfflineStoreName = typeof KEYVAL_STORE | typeof OUTBOX_STORE;
 
 /** Keypath of the Outbox store — the auto-incremented FIFO sequence number. */
-export const OUTBOX_SEQ_KEYPATH = "seq";
+const OUTBOX_SEQ_KEYPATH = "seq";
 
 function applyUpgrade(db: IDBDatabase, oldVersion: number): void {
   if (oldVersion < 1) {
@@ -59,7 +59,7 @@ function resolveFactory(factory?: IDBFactory): IDBFactory {
  * A lazily-opened connection to the offline database, exposing the minimal
  * typed operations the storage adapter needs. Create one per `IDBFactory`.
  */
-export interface OfflineIdb {
+interface OfflineIdb {
   get<T>(store: OfflineStoreName, key: IDBValidKey): Promise<T | undefined>;
   set(store: OfflineStoreName, key: IDBValidKey, value: unknown): Promise<void>;
   del(store: OfflineStoreName, key: IDBValidKey): Promise<void>;

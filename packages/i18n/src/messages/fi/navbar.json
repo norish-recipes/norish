@@ -13,6 +13,7 @@
       "description": "Hallinnoi tiliäsi"
     },
     "logout": "Kirjaudu ulos",
+    "signOutOffline": "Olet offline-tilassa. Kirjaudu ulos, kun yhteys palaa.",
     "signOutConfirm": {
       "title": "Hylätäänkö synkronoimattomat muutokset?",
       "description": "{count, plural, one {# offline-tilassa tehty muutos ei ole vielä tavoittanut palvelinta.} other {# offline-tilassa tehtyä muutosta ei ole vielä tavoittanut palvelinta.}} Uloskirjautuminen hylkää jonossa olevat muutokset pysyvästi ja poistaa tilisi offline-tiedot tältä laitteelta."
@@ -32,11 +33,6 @@
     "home": "Reseptit",
     "calendar": "Kalenteri",
     "groceries": "Ostokset"
-  },
-  "mobile": {
-    "searchPlaceholder": "Hae reseptejä...",
-    "toggleSearch": "Näytä tai piilota haku",
-    "goBack": "Takaisin"
   },
   "archiveImporter": {
     "uploading": "Lähetetään…",

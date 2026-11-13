@@ -17,7 +17,7 @@ import { request } from "@playwright/test";
 
 import type { TypeSafeAnswer } from "../harness/ai-provider";
 import type { AIE2EStack } from "./fixture";
-import { submitMutation } from "../harness/trpc";
+import { cookieHeader, submitMutation } from "../harness/trpc";
 import { expect, test } from "./fixture";
 import { submitPasteImport } from "./import-support";
 import {
@@ -108,7 +108,7 @@ function ownerApi() {
     baseURL: stack.baseURL,
     extraHTTPHeaders: {
       origin: stack.baseURL,
-      cookie: stack.ownerCookies.map((cookie) => `${cookie.name}=${cookie.value}`).join("; "),
+      cookie: cookieHeader(stack.ownerCookies),
     },
   });
 }
@@ -386,7 +386,7 @@ test("an administrator cancels a running AI job, and the job monitor shows it Ca
     await submitPasteImport(page, "Import Held Stew — the harness never answers.");
     await expect.poll(() => chatRequestCount(), { timeout: 30_000 }).toBe(1);
 
-    await page.goto("/settings?tab=admin");
+    await page.goto("/settings/admin");
     const running = page
       .getByRole("row")
       .filter({ hasText: "Paste import" })

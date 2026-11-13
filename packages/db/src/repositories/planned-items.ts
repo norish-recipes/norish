@@ -249,7 +249,7 @@ export async function deletePlannedItem(
       if (!item) continue;
       const [row] = await trx
         .update(plannedItems)
-        .set({ sortOrder: i, updatedAt: new Date(), version: sql`${plannedItems.version} + 1` })
+        .set({ sortOrder: i, updatedAt: new Date() })
         .where(eq(plannedItems.id, item.id))
         .returning();
 
@@ -329,7 +329,7 @@ export async function moveItem(
 
         await trx
           .update(plannedItems)
-          .set({ sortOrder: i, updatedAt: new Date(), version: sql`${plannedItems.version} + 1` })
+          .set({ sortOrder: i, updatedAt: new Date() })
           .where(eq(plannedItems.id, item.id))
           .returning();
       }
@@ -341,25 +341,29 @@ export async function moveItem(
       const item = nextTargetItems[i];
 
       if (!item) continue;
-      const updateData: PlannedItemUpdate = { sortOrder: i, updatedAt: new Date() };
-      const versionIncrement = sql`${plannedItems.version} + 1`;
-
-      if (item.id === itemId) {
-        updateData.date = targetDate;
-        updateData.slot = targetSlot;
-      }
+      const isMoved = item.id === itemId;
+      // Only the moved plan's version moves: slot-mates' order changes, they were not written.
+      const updateData = isMoved
+        ? {
+            sortOrder: i,
+            updatedAt: new Date(),
+            date: targetDate,
+            slot: targetSlot,
+            version: sql`${plannedItems.version} + 1`,
+          }
+        : { sortOrder: i, updatedAt: new Date() };
 
       const [row] = await trx
         .update(plannedItems)
-        .set({ ...updateData, version: versionIncrement })
+        .set(updateData)
         .where(
-          item.id === itemId && version
+          isMoved && version
             ? and(eq(plannedItems.id, item.id), eq(plannedItems.version, version))
             : eq(plannedItems.id, item.id)
         )
         .returning();
 
-      if (row && item.id === itemId) {
+      if (row && isMoved) {
         moved = row;
       }
     }
@@ -369,32 +373,6 @@ export async function moveItem(
     }
 
     return appliedOutcome(moved);
-  });
-}
-
-export async function reorderInSlot(
-  updates: { id: string; sortOrder: number }[]
-): Promise<PlannedItem[]> {
-  if (!updates.length) return [];
-
-  return await db.transaction(async (trx) => {
-    const updated: PlannedItem[] = [];
-
-    for (const update of updates) {
-      const [row] = await trx
-        .update(plannedItems)
-        .set({
-          sortOrder: update.sortOrder,
-          updatedAt: new Date(),
-          version: sql`${plannedItems.version} + 1`,
-        })
-        .where(eq(plannedItems.id, update.id))
-        .returning();
-
-      if (row) updated.push(row);
-    }
-
-    return updated;
   });
 }
 

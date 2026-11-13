@@ -4,7 +4,7 @@
     "ariaLabel": "Innstillingsfaner"
   },
   "tabs": {
-    "user": "Bruker",
+    "account": "Konto",
     "household": "Husstand",
     "caldav": "CalDAV",
     "admin": "Admin",
@@ -193,7 +193,6 @@
           "abbreviated": "Forkortet"
         }
       },
-      "applyError": "Kunne ikke bruke preferanse",
       "afterPlanning": {
         "title": "Etter planlegging av en oppskrift",
         "description": "Hva som skjer når du planlegger en oppskrift",
@@ -279,11 +278,7 @@
         "warning": "Du blir et vanlig medlem og vil ikke lenger kunne fjerne brukere eller administrere invitasjonskoder.",
         "confirmButton": "Overfør administrator"
       },
-      "toasts": {
-        "kickFailed": "Kunne ikke fjerne brukeren",
-        "transferSuccess": "Overførte administrator til {name}",
-        "transferFailed": "Kunne ikke overføre administrator"
-      }
+      "unknown": "Ukjent"
     },
     "joinCode": {
       "title": "Invitasjonskode",
@@ -291,6 +286,7 @@
       "expiresIn": "Utløper om:",
       "regenerateButton": "Generer ny",
       "expired": "Utløpt",
+      "countdown": "{minutes} min {seconds} s",
       "noCodeDescription": "Ingen aktiv invitasjonskode. Generer én for å invitere nye medlemmer.",
       "generateButton": "Generer invitasjonskode",
       "copySuccess": "Invitasjonskode kopiert",
@@ -356,8 +352,7 @@
       "connectionStatus": {
         "connected": "Tilkoblet",
         "checking": "Sjekker...",
-        "disconnected": "Ikke tilkoblet",
-        "unknown": "Ukjent"
+        "disconnected": "Ikke tilkoblet"
       }
     },
     "deleteModal": {
@@ -388,10 +383,11 @@
         "failed": "Mislyktes",
         "removed": "Fjernet"
       },
-      "emptyFiltered": "Ingen {status}-elementer funnet",
+      "emptyFiltered": "Ingen elementer med denne statusen",
       "emptyDefault": "Ingen synkroniseringsposter funnet",
       "errorDetails": "Feildetaljer",
-      "pagination": "Side {current} av {total}"
+      "pagination": "Side {current} av {total}",
+      "paginationLabel": "Sider med synkroniseringsstatus"
     }
   },
   "ingredients": {
@@ -639,8 +635,6 @@
       "localesDescription": "Velg hvilke språk brukere kan velge mellom",
       "defaultLocale": "Standardspråk",
       "defaultLocaleDescription": "Språk brukt for nye brukere og som reserve",
-      "localesSaved": "Språkinnstillinger lagret",
-      "localesError": "Kunne ikke lagre språkinnstillinger",
       "atLeastOneLocale": "Minst ett språk må være aktivert",
       "export": {
         "title": "Oppskriftsarkiv",
@@ -673,7 +667,6 @@
       },
       "deleteTitle": "Slette {name}?",
       "deleteConfirm": "Dette sletter brukerens konto permanent og fjerner dem fra husstanden. Dette kan ikke angres.",
-      "deleteSuccess": "{name} ble slettet",
       "countSummary": "{count, plural, one {# bruker} other {# brukere}} totalt"
     },
     "registration": {
@@ -834,6 +827,7 @@
         "subtitle": "Tidsenhetsnøkkelord for timerregistrering",
         "description": "Konfigurer nøkkelord som brukes til å registrere timere i oppskriftinstruksjoner. Støtter flere språk.",
         "enableToggle": "Aktiver timerregistrering",
+        "keywordRequired": "Minst ett nøkkelord kreves for timer, minutter eller sekunder",
         "hoursLabel": "Time-nøkkelord",
         "hoursPlaceholder": "time, timer, t",
         "hoursHelp": "Nøkkelord for timer (f.eks. time, stunde, heure, uur)",
@@ -971,6 +965,7 @@
       "apiKey": "API-nøkkel",
       "apiKeyPlaceholder": "Skriv inn API-nøkkel",
       "temperature": "Temperatur: {value}",
+      "temperatureLabel": "Temperatur",
       "temperatureHint": "Lavere = mer fokusert, Høyere = mer kreativ",
       "maxTokens": "Maks. tokens",
       "requestTimeout": "Tidsavbrudd for forespørsel (ms)",
@@ -1024,6 +1019,7 @@
       "maxLength": "Maks. videolengde (sekunder)",
       "maxLengthDescription": "Lengre videoer tar mer tid og ressurser å behandle",
       "maxFileSize": "Maks. videofilstørrelse",
+      "maxFileSizeUnit": "MB",
       "maxFileSizeDescription": "Maksimal størrelse for nedlastede videofiler",
       "ytDlpVersion": "yt-dlp-versjon",
       "ytDlpVersionDescription": "Versjon av yt-dlp denne serveren kjører. Kan ikke endres her.",
@@ -1045,6 +1041,7 @@
         "genericOpenai": "Generisk OpenAI-kompatibel"
       },
       "transcriptionEndpoint": "Endpoint-URL",
+      "transcriptionEndpointPlaceholderGeneric": "http://localhost:8000 (faster-whisper-server) eller http://localhost:8080 (LocalAI)",
       "transcriptionEndpointDescription": "OpenAI-kompatibelt endpoint med Whisper-støtte, eller Ollama-endpoint",
       "transcriptionModel": "Modell",
       "transcriptionModelDescription": "Modell som brukes ved transkripsjon",
@@ -1074,8 +1071,6 @@
       "allowPrivateAddressesDescription": "Lar importer nå ditt lokale nettverk. Obscura avviser dem uansett.",
       "navigationTimeout": "Navigasjonstidsavbrudd (ms)",
       "navigationTimeoutDescription": "Hvor lang tid en renderer får til å laste en side.",
-      "saved": "Siderenderere lagret",
-      "error": "Kunne ikke lagre siderenderere",
       "connectionSuccess": "Tilkobling vellykket"
     },
     "imageGenerationConfig": {
@@ -1188,9 +1183,7 @@
     "unsavedChanges": "Ulagrede endringer",
     "jsonEditor": {
       "placeholder": "Skriv inn JSON-konfigurasjon...",
-      "invalidJson": "Ugyldig JSON-format",
-      "failedToSave": "Kunne ikke lagre",
-      "failedToRestore": "Kunne ikke gjenopprette standardinnstillinger"
+      "invalidJson": "Ugyldig JSON-format"
     },
     "jobQueue": {
       "title": "Jobbkøer",
@@ -1327,6 +1320,13 @@
       "empty": "Ingen kjøkken ennå.",
       "duplicate": "Et kjøkken med det navnet finnes allerede.",
       "saveFailed": "Kunne ikke lagre det kjøkkenet."
+    },
+    "toasts": {
+      "localesSaved": "Språkinnstillinger lagret",
+      "localesError": "Kunne ikke lagre språkinnstillinger",
+      "userDeleted": "{name} ble slettet",
+      "pageRenderersSaved": "Siderenderere lagret",
+      "pageRenderersError": "Kunne ikke lagre siderenderere"
     }
   },
   "archiveExport": {

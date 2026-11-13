@@ -1,15 +1,18 @@
 "use client";
 
-import type { PlannedItemDisplay } from "@/components/calendar/mobile";
-import { useCallback, useEffect, useMemo, useRef } from "react";
-import { landOnDay, settleLanding } from "@/components/calendar/land-on-day";
-import { TimelineDaySection } from "@/components/calendar/mobile";
+import { useCallback, useMemo, useRef } from "react";
+import { settleLanding, useLandOnDay } from "@/components/calendar/land-on-day";
+import { TimelineDaySection } from "@/components/calendar/timeline-day-section";
 import Panel from "@/components/Panel/Panel";
-import { useCalendarMutations, useCalendarQuery, useCalendarSubscription } from "@/hooks/calendar";
-import { useRecipeQuery } from "@/hooks/recipes";
 import { useVirtualizer } from "@tanstack/react-virtual";
 import { useLocale, useTranslations } from "next-intl";
 
+import {
+  useCalendarMutations,
+  useCalendarQuery,
+  useCalendarSubscription,
+} from "@norish/shared-react/calendar";
+import { useRecipeQuery } from "@norish/shared-react/recipes";
 import { Slot } from "@norish/shared/contracts";
 import {
   addMonths,
@@ -49,9 +52,9 @@ function MiniCalendarContent({
   const startISO = dateKey(rangeStart);
   const endISO = dateKey(rangeEnd);
   const { recipe } = useRecipeQuery(recipeId);
-  const { calendarData, isLoading } = useCalendarQuery(startISO, endISO);
-  const { createItem } = useCalendarMutations(startISO, endISO);
-  useCalendarSubscription(startISO, endISO);
+  const { calendarData, isLoading } = useCalendarQuery({ startISO, endISO });
+  const { planRecipe } = useCalendarMutations();
+  useCalendarSubscription();
   const allDays = useMemo(() => eachDayOfInterval(rangeStart, rangeEnd), [rangeStart, rangeEnd]);
   // A day's date on one line, as the calendar itself writes it: "Wed, Oct 7"
   const dateFormatter = useMemo(
@@ -84,26 +87,18 @@ function MiniCalendarContent({
   });
 
   // Land on today the way the calendar itself does, once the days are drawn
-  const hasLandedRef = useRef(false);
+  const landingAskedRef = useRef(false);
 
-  useEffect(() => {
-    if (hasLandedRef.current || isLoading || todayIndex < 0) return;
-    const frame = requestAnimationFrame(() => {
-      landOnDay(virtualizer, todayIndex);
-      hasLandedRef.current = true;
-    });
-
-    return () => cancelAnimationFrame(frame);
-  }, [isLoading, todayIndex, virtualizer]);
+  useLandOnDay(virtualizer, todayIndex, isLoading, landingAskedRef);
   const virtualItems = virtualizer.getVirtualItems();
   const handlePlan = useCallback(
     (dayKey: string, slot: Slot) => {
       if (!recipe) return;
-      createItem(dayKey, slot, "recipe", recipe.id, undefined);
+      planRecipe(dayKey, slot, recipe.id);
       onOpenChange(false);
       onPlanned(recipe.id);
     },
-    [recipe, onOpenChange, createItem, onPlanned]
+    [recipe, onOpenChange, planRecipe, onPlanned]
   );
   if (isLoading) {
     return <>Loading...</>;
@@ -131,7 +126,7 @@ function MiniCalendarContent({
               return null;
             }
             const key = dateKey(d);
-            const items = (calendarData[key] ?? []) as PlannedItemDisplay[];
+            const items = calendarData[key] ?? [];
             const isToday = key === todayKey;
             return (
               <div
@@ -177,13 +172,11 @@ export default function MiniCalendar({ open, onOpenChange, recipeId }: MiniCalen
         onOpenChange={onOpenChange}
       >
         <Panel.Body className="flex min-h-0 flex-1 flex-col overflow-hidden">
-          {open && (
-            <MiniCalendarContent
-              recipeId={recipeId}
-              onOpenChange={onOpenChange}
-              onPlanned={afterPlanning}
-            />
-          )}
+          <MiniCalendarContent
+            recipeId={recipeId}
+            onOpenChange={onOpenChange}
+            onPlanned={afterPlanning}
+          />
         </Panel.Body>
       </Panel>
       {afterPlanningPanel}

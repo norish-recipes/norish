@@ -13,6 +13,7 @@
       "description": "Zarządzaj swoim kontem"
     },
     "logout": "Wyloguj się",
+    "signOutOffline": "Jesteś offline. Wyloguj się, gdy wrócisz do sieci.",
     "signOutConfirm": {
       "title": "Odrzucić niezsynchronizowane zmiany?",
       "description": "{count, plural, one {# zmiana wprowadzona offline nie dotarła jeszcze na serwer.} few {# zmiany wprowadzone offline nie dotarły jeszcze na serwer.} many {# zmian wprowadzonych offline nie dotarło jeszcze na serwer.} other {# zmiany wprowadzone offline nie dotarły jeszcze na serwer.}} Wylogowanie spowoduje trwałe odrzucenie tych oczekujących zmian i usunięcie danych offline konta z tego urządzenia."
@@ -32,11 +33,6 @@
     "home": "Przepisy",
     "calendar": "Kalendarz",
     "groceries": "Zakupy"
-  },
-  "mobile": {
-    "searchPlaceholder": "Szukaj przepisów...",
-    "toggleSearch": "Przełącz wyszukiwanie",
-    "goBack": "Wróć"
   },
   "archiveImporter": {
     "uploading": "Przesyłanie…",

@@ -1,7 +1,7 @@
 "use client";
 
 import type { ComponentProps, ReactNode } from "react";
-import { GroceryCheckbox, isCheckboxEvent } from "@/components/groceries/grocery-checkbox";
+import { isCheckboxEvent, RoundCheckbox } from "@/components/round-checkbox";
 
 type SelectableRowProps = Omit<ComponentProps<"div">, "children" | "onClick" | "role"> & {
   isSelected: boolean;
@@ -15,12 +15,7 @@ type SelectableRowProps = Omit<ComponentProps<"div">, "children" | "onClick" | "
 /**
  * One thing in a cookbook panel, in or out.
  *
- * Every list in this feature asks the same question — is this in the cookbook
- * or not — so they all ask it the same way, with the same control the
- * groceries panel ticks its items with. It is named for groceries because that
- * is where it was written; it is the app's round select box, and a second one
- * drawn by hand here was the reason ticking a cookbook and ticking a grocery
- * animated differently.
+ * Ticks with `RoundCheckbox`, the control groceries use, so both animate alike.
  *
  * The whole row is the target, so the checkbox has to be told apart from it or
  * a tap on the control would toggle twice — once from the control, once from
@@ -63,7 +58,7 @@ export function SelectableRow({
         {subtitle && <span className="text-muted truncate text-xs">{subtitle}</span>}
       </span>
 
-      <GroceryCheckbox
+      <RoundCheckbox
         aria-label={title}
         className="shrink-0"
         isSelected={isSelected}

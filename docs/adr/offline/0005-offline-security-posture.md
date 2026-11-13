@@ -1,6 +1,6 @@
 # Offline security posture: device possession = read access
 
-While Offline there is no server to validate a session against, so the Offline Cache is readable on the browser's authority alone: reads and queueing keep working across cookie expiry (Replay halts on UNAUTHORIZED until re-login), sign-out is disabled while Offline rather than faked locally, and we do not encrypt the cache against the session — cache-at-rest encryption buys little when the device is already unlocked, and belongs to the multi-day local-first scenario we explicitly rejected. The server's authority resumes at the sync boundary: nothing replays without a valid session.
+While Offline there is no server to validate a session against, so the Offline Cache is readable on the browser's authority alone: reads and queueing keep working across cookie expiry until Session Expiry (a 401 response or 4401 socket close clears the Offline Cache and keeps the Outbox for that Account), sign-out is disabled while Offline rather than faked locally, and we do not encrypt the cache against the session — cache-at-rest encryption buys little when the device is already unlocked, and belongs to the multi-day local-first scenario we explicitly rejected. The server's authority resumes at the sync boundary: nothing replays without a valid session.
 
 ## Consequences
 

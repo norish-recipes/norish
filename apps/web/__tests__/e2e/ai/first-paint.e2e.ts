@@ -16,11 +16,12 @@
  * scenarios about what a page shows run with JavaScript; where a wrong frame
  * could paint and be corrected, they record every frame from the start.
  */
-import type { Browser, BrowserContext, Page } from "@playwright/test";
+import type { Browser, BrowserContext, Page, Route } from "@playwright/test";
 
 import { updateRecipeDishColor } from "@norish/db/repositories/recipes";
 
 import type { DeviceKind } from "../harness/device-preferences";
+import type { FrameLog } from "../realtime/support";
 import type { AIE2EStack } from "./fixture";
 import { RECIPE_FILTERS_COOKIE } from "../../../lib/recipe-filters-cookie";
 import {
@@ -29,8 +30,10 @@ import {
   IPHONE_USER_AGENT,
   setDevicePreferences,
 } from "../harness/device-preferences";
+import { removePlans } from "../harness/plans";
 import { readRecipe, waitForRecipe } from "../harness/recipes";
 import { callTrpc, queryTrpc } from "../harness/trpc";
+import { pathsNotLive, recordFrames, waitForLive } from "../realtime/support";
 import { expect, OWNER, test } from "./fixture";
 import { readMarks } from "./recipe-archive-support";
 
@@ -42,6 +45,11 @@ test.beforeEach(async ({ aiStack }) => {
   stack = aiStack;
   await clearDevicePreferences();
 });
+
+// The notes planned here are titled "Served …"; the worker's later specs share this database.
+test.afterEach(() =>
+  removePlans(stack.baseURL, stack.ownerCookies, (plan) => !!plan.title?.startsWith("Served "))
+);
 
 const USER_AGENTS: Record<DeviceKind, string> = {
   phone: IPHONE_USER_AGENT,
@@ -71,6 +79,76 @@ async function openStatic(
 
   return { context, page: await context.newPage() };
 }
+
+/**
+ * Every request a page sends for `path`, each with the named subscriptions that were not live
+ * yet when it was sent. Held unanswered until `release`, so what draws first can only come from
+ * the document; answered after, so a reread waiting on one can follow.
+ */
+async function holdReads(page: Page, frames: FrameLog, path: RegExp, subscriptions: string[]) {
+  const reads: string[][] = [];
+  const held: Route[] = [];
+  let released = false;
+
+  // The Cache Warmer runs only in the tab holding the leader lock; held here, every read is the page's.
+  await page.addInitScript(() => {
+    void navigator.locks.request("norish-outbox-replay", () => new Promise(() => {}));
+  });
+  await page.route(path, async (route) => {
+    reads.push(pathsNotLive(frames, subscriptions));
+    if (released) await route.continue();
+    else held.push(route);
+  });
+
+  return {
+    reads,
+    release: async () => {
+      released = true;
+      await Promise.all(held.splice(0).map((route) => route.continue()));
+    },
+  };
+}
+
+/**
+ * What a read is promised against its covering subscriptions: none before the first is live,
+ * and a last one once all are. How many reads, and when between, depends on the go-live windows.
+ */
+async function expectReadsFollowGoLive(reads: string[][], subscriptions: string[]) {
+  await expect.poll(() => reads.at(-1), { timeout: 30_000 }).toEqual([]);
+  for (const notLive of reads) expect(notLive.length).toBeLessThan(subscriptions.length);
+}
+
+/** The calendar screen's subscriptions, whose live keys cover every cached range. */
+const CALENDAR_SUBSCRIPTIONS = [
+  "calendar.onItemCreated",
+  "calendar.onItemDeleted",
+  "calendar.onItemMoved",
+  "calendar.onItemUpdated",
+  "calendar.onFailed",
+  "recipes.onUpdated",
+];
+
+/** The Library screen's and the shell's subscriptions whose live keys cover `library.list`. */
+const LIBRARY_SUBSCRIPTIONS = [
+  "recipes.onCreated",
+  "recipes.onUpdated",
+  "recipes.onDeleted",
+  "recipes.onConverted",
+  "recipes.onRecipeBatchCreated",
+  "recipes.onImportStarted",
+  "recipes.onImported",
+  "recipes.onFailed",
+  "recipes.onDeleteKept",
+  "cookbooks.onCreated",
+  "cookbooks.onUpdated",
+  "cookbooks.onMembershipChanged",
+  "cookbooks.onDeleted",
+  "pantry.onAdded",
+  "pantry.onRemoved",
+  "ratings.onRatingUpdated",
+  "ratings.onRatingFailed",
+  "permissions.onPolicyUpdated",
+];
 
 /**
  * A live page as one Device Kind. With `watch` it records, from the very first
@@ -230,6 +308,12 @@ test("a full load of the dashboard draws Today's meals for the reader's day, fro
   const today = todayIn(timeZone);
 
   await seed("desktop", { todaySectionVisibility: "planned" });
+  // The card draws a slot's first plan only, so the slot starts empty whatever ran before.
+  await removePlans(
+    stack.baseURL,
+    stack.ownerCookies,
+    (plan) => plan.date === today && plan.slot === "Dinner"
+  );
   await callApi("calendar.createItem", {
     id: crypto.randomUUID(),
     date: today,
@@ -260,7 +344,7 @@ test("a full load of the dashboard draws Today's meals for the reader's day, fro
   }
 });
 
-test("a full load of the calendar carries its opening range, so its days draw without asking", async ({
+test("a full load of the calendar draws its opening range from the document, read again once live", async ({
   browser,
 }) => {
   await callApi("calendar.createItem", {
@@ -271,16 +355,20 @@ test("a full load of the calendar carries its opening range, so its days draw wi
     title: "Served calendar note",
   });
   const { context, page } = await openLive(browser, "phone");
-  const asked: string[] = [];
-
-  page.on("request", (request) => {
-    if (request.url().includes("calendar.listItems")) asked.push(request.url());
-  });
+  const frames = recordFrames(page);
+  const { reads, release } = await holdReads(
+    page,
+    frames,
+    /calendar\.listItems/,
+    CALENDAR_SUBSCRIPTIONS
+  );
 
   try {
     await page.goto("/calendar");
     await expect(page.getByText("Served calendar note").first()).toBeVisible();
-    expect(asked).toEqual([]);
+    await release();
+    await waitForLive(frames, CALENDAR_SUBSCRIPTIONS);
+    await expectReadsFollowGoLive(reads, CALENDAR_SUBSCRIPTIONS);
   } finally {
     await context.close();
   }
@@ -946,7 +1034,7 @@ test("a reader who scrolls the Library before it hydrates meets no blank rows", 
   }
 });
 
-test("a cookbook opened under stored filters asks for its members once and never shows one they leave out", async ({
+test("a cookbook opened under stored filters asks for its members under them alone and never shows one they leave out", async ({
   browser,
 }) => {
   const dinner = await createRecipe("Filtered Dinner Member", "Dinner");
@@ -965,12 +1053,18 @@ test("a cookbook opened under stored filters asks for its members once and never
     isMember: true,
   });
   const { context, page } = await openLive(browser, "phone");
+  // The input of every request for the members: the page's read, and its reread once live.
   const asked: string[] = [];
 
   page.on("request", (request) => {
-    const url = decodeURIComponent(request.url());
+    const url = new URL(request.url());
+    const at = url.pathname.split("/").pop()?.split(",").indexOf("cookbooks.recipes") ?? -1;
 
-    if (url.includes("cookbooks.recipes") && url.includes(cookbook.id)) asked.push(url);
+    if (at < 0) return;
+    const inputs = JSON.parse(url.searchParams.get("input") ?? "{}") as Record<string, unknown>;
+    const input = JSON.stringify(inputs[at]);
+
+    if (input.includes(cookbook.id)) asked.push(input);
   });
 
   try {
@@ -1001,7 +1095,8 @@ test("a cookbook opened under stored filters asks for its members once and never
     expect(
       await page.evaluate(() => (window as unknown as { __seen: { breakfast: boolean } }).__seen)
     ).toEqual({ breakfast: false });
-    expect(asked).toHaveLength(1);
+    // One read, under the stored filters. How often it goes out depends on the go-live windows.
+    expect([...new Set(asked)]).toHaveLength(1);
     expect(asked[0]).toContain('"categories":["Dinner"]');
   } finally {
     await context.close();
@@ -1036,7 +1131,7 @@ test("a full load of the user settings tab draws the reader's name in its field"
   const { context, page } = await openStatic(browser, "phone");
 
   try {
-    await page.goto("/settings?tab=user");
+    await page.goto("/settings/account");
     await expect(page.locator(`input[value="${OWNER.name}"]`).first()).toBeAttached();
   } finally {
     await context.close();
@@ -1064,10 +1159,10 @@ test("the user settings tab draws a date the way the server sent it, in any brow
   });
 
   try {
-    await served.page.goto("/settings?tab=user");
+    await served.page.goto("/settings/account");
     const page = await live.newPage();
 
-    await page.goto("/settings?tab=user");
+    await page.goto("/settings/account");
     // A production build reports no mismatch; a hydrated date that differs from the served one is it.
     await expect(created(page)).toHaveText((await created(served.page).textContent()) ?? "");
   } finally {
@@ -1076,27 +1171,55 @@ test("the user settings tab draws a date the way the server sent it, in any brow
   }
 });
 
-test("a full load of the Library never asks for its first page: the document carries it", async ({
+test("a full load of the Library draws its first page from the document, read again once live", async ({
   browser,
 }) => {
   await ensureRecipe();
   const { context, page } = await openLive(browser, "phone");
-  const asked: string[] = [];
-
-  page.on("request", (request) => {
-    if (request.url().includes("library.list")) asked.push(request.url());
-  });
+  const frames = recordFrames(page);
+  const { reads, release } = await holdReads(page, frames, /library\.list/, LIBRARY_SUBSCRIPTIONS);
 
   try {
     await storeFiltersCookie(context, {});
-    // The Cache Warmer reads the Library too; held off here, every request left is the page's own.
-    await context.addInitScript(() => {
-      void navigator.locks.request("norish-outbox-replay", () => new Promise(() => {}));
-    });
-    // Returns once every card has hydrated, after the app's providers above them asked for data.
     await page.goto("/");
     await expect(page.locator("a[data-recipe-card]").first()).toBeVisible();
-    expect(asked).toEqual([]);
+    await release();
+    await waitForLive(frames, LIBRARY_SUBSCRIPTIONS);
+    await expectReadsFollowGoLive(reads, LIBRARY_SUBSCRIPTIONS);
+  } finally {
+    await context.close();
+  }
+});
+
+test("a fully loaded Library rereads its cards when the reader comes back from renaming one", async ({
+  browser,
+}) => {
+  const id = await createRecipe("Library Before Rename");
+  const { context, page } = await openLive(browser, "desktop");
+
+  try {
+    await storeFiltersCookie(context, {});
+    await page.goto("/");
+    await page.locator("a[data-recipe-card]").filter({ hasText: "Library Before Rename" }).click();
+    await page.waitForURL(new RegExp(`/recipes/${id}`));
+    await expect(page.getByRole("heading", { name: "Library Before Rename" })).toBeVisible();
+
+    const recipe = (await readRecipe(stack.baseURL, stack.ownerCookies, id))!;
+
+    await callApi("recipes.update", {
+      id,
+      version: recipe.version,
+      data: { name: "Library After Rename" },
+    });
+    await expect(page.getByRole("heading", { name: "Library After Rename" })).toBeVisible();
+    // Back within the stale time: the seeded first page is no longer the server's current copy.
+    await page.goBack();
+    await expect(
+      page.locator("a[data-recipe-card]").filter({ hasText: "Library After Rename" })
+    ).toBeVisible();
+    await expect(
+      page.locator("a[data-recipe-card]").filter({ hasText: "Library Before Rename" })
+    ).toHaveCount(0);
   } finally {
     await context.close();
   }
@@ -1131,6 +1254,74 @@ test("a page the installed app's worker fetches itself still carries its recipe"
 
     expect(response?.fromServiceWorker()).toBe(true);
     expect(await response!.text()).toContain(RECIPE.name);
+  } finally {
+    await context.close();
+  }
+});
+
+test("the Library keeps its search and order when the reader comes back to it, painting no other list first", async ({
+  browser,
+}) => {
+  // A word only this run's recipes carry, so the search finds nothing another test left.
+  const word = `kept${Date.now().toString(36)}`;
+  const [aardvark, zebra] = [`Aardvark ${word} Soup`, `Zebra ${word} Soup`];
+
+  await createRecipe(aardvark);
+  await createRecipe(zebra);
+  await createRecipe("Elsewhere Pie");
+  const { context, page } = await openLive(browser, "desktop");
+  const firstCard = page.locator("a[data-recipe-card]:visible h3").first();
+
+  try {
+    await storeFiltersCookie(context, {});
+    // Every recipe the Library draws first, in order, from the first frame.
+    await context.addInitScript(() => {
+      const firsts: string[] = [];
+
+      (window as unknown as { __firsts: string[] }).__firsts = firsts;
+      new MutationObserver(() => {
+        const card = [...document.querySelectorAll("a[data-recipe-card]")].find((element) =>
+          element.checkVisibility()
+        );
+        const name = card?.querySelector("h3")?.textContent;
+
+        if (name && firsts[firsts.length - 1] !== name) firsts.push(name);
+      }).observe(document, { subtree: true, childList: true, characterData: true });
+    });
+    await page.goto("/");
+    await page.waitForLoadState("networkidle");
+    await page.locator("#search-input").fill(word);
+    await expect(firstCard).toHaveText(zebra);
+    await page.getByRole("button", { name: "Filters" }).click();
+    const filters = page.getByRole("dialog", { name: "Filters" });
+
+    // "Title" is also a search-in chip, above the sort buttons.
+    await filters.getByRole("button", { name: "Title", exact: true }).last().click();
+    await filters.getByRole("button", { name: "Apply" }).click();
+    await expect(page.locator("a[data-recipe-card]:visible h3")).toHaveText([aardvark, zebra]);
+    await page.evaluate(() => {
+      (window as unknown as { __firsts: string[] }).__firsts.length = 0;
+    });
+
+    const backInTheLibrary = async () => {
+      await expect(page).toHaveURL(/\/$/);
+      await expect(page.locator("#search-input")).toHaveValue(word);
+      await expect(page.locator("a[data-recipe-card]:visible h3")).toHaveText([aardvark, zebra]);
+    };
+
+    await firstCard.click();
+    await expect(page.getByRole("heading", { name: aardvark, level: 1 })).toBeVisible();
+    await page.getByRole("link", { name: "Back to library" }).first().click();
+    await backInTheLibrary();
+
+    await firstCard.click();
+    await expect(page.getByRole("heading", { name: aardvark, level: 1 })).toBeVisible();
+    await page.goBack();
+    await backInTheLibrary();
+
+    expect(
+      await page.evaluate(() => (window as unknown as { __firsts: string[] }).__firsts)
+    ).toEqual([aardvark]);
   } finally {
     await context.close();
   }

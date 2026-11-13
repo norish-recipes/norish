@@ -40,7 +40,6 @@
   "status": {
     "loading": "Laden...",
     "saving": "Opslaan...",
-    "deleting": "Verwijder...",
     "error": "Fout",
     "success": "Succes",
     "noResults": "Geen resultaten gevonden",
@@ -92,9 +91,6 @@
   },
   "connection": {
     "connecting": "Verbinden met Norish...",
-    "checkInternet": "Controleer uw internetverbinding",
-    "offlineBanner": "Je bent offline, opgeslagen gegevens worden getoond",
-    "serverUnreachableBanner": "Kan de Norish-server niet bereiken, opgeslagen gegevens worden getoond",
     "live": "Verbonden",
     "offline": "Offline",
     "openDetails": "Verbindingsdetails"
@@ -151,10 +147,7 @@
       "analyzing": "Afbeeldingen analyseren, even geduld...",
       "failed": "Importeren mislukt",
       "selectedCount": "{count} afbeeldingen geselecteerd - ze worden gecombineerd als één recept",
-      "library": "Bibliotheek",
-      "takePhoto": "Foto maken",
-      "counter": "{count} / {max} foto's",
-      "importFromCount": "Importeren van {count, plural, one {# foto} other {# foto's}}"
+      "library": "Bibliotheek"
     },
     "menu": {
       "description": "Importeer via een URL, scan een foto of begin vanaf nul."
@@ -223,8 +216,7 @@
     "other": "Timers",
     "label_one": "1 timer",
     "label_other": "{count} timers",
-    "notification_title": "Timer afgelopen",
-    "notification_body": "{label} is klaar!",
+    "notification_body": "Timer afgelopen",
     "notifications_disabled": "Meldingen zijn uitgeschakeld",
     "notifications_disabled_hint": "Schakel meldingen in via je browserinstellingen om waarschuwingen te ontvangen wanneer timers op de achtergrond aflopen."
   },
@@ -301,5 +293,11 @@
     "title": "Een AI-sleutel werkt niet meer",
     "description": "De provider weigert de API-sleutel voor {blocks} sinds {since}. Sla een nieuwe sleutel op om die AI-functies weer te laten werken.",
     "openSettings": "Instellingen openen"
+  },
+  "household": {
+    "adminTransferred": "Adminrechten overgedragen aan {name}",
+    "unknownMember": "Onbekend",
+    "removedTitle": "Verwijderd uit huishouden",
+    "removedDescription": "Een admin heeft je uit het huishouden verwijderd."
   }
 }

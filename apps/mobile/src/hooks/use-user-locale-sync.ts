@@ -1,7 +1,7 @@
 import { useEffect } from "react";
-import { useUserContext } from "@/lib/auth/user-context";
 import { useMobileLocaleSettings } from "@/lib/i18n/mobile-i18n-context";
 
+import { useReader } from "@norish/shared-react/reader";
 import { getLocalePreference } from "@norish/shared/lib/user-preferences";
 
 /**
@@ -9,10 +9,10 @@ import { getLocalePreference } from "@norish/shared/lib/user-preferences";
  * locale provider. This covers the case where a user sets their locale
  * on another platform (e.g. web) and mobile should pick it up.
  *
- * Must be called inside both `UserProvider` and `MobileIntlProvider`.
+ * Must be called inside both the platform adapter and `MobileIntlProvider`.
  */
 export function useUserLocaleSync() {
-  const { user } = useUserContext();
+  const { user } = useReader();
   const { setLocale } = useMobileLocaleSettings();
 
   const serverLocale = getLocalePreference(user);

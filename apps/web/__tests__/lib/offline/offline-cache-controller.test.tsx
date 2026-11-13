@@ -4,7 +4,8 @@ import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 
 import "@testing-library/jest-dom";
 
-import { OfflineCacheController, offlineEngine } from "@/lib/offline/engine";
+import { offlineEngine } from "@/lib/offline/engine";
+import { OfflineCacheController } from "@/lib/offline/offline-cache-controller";
 
 import type { OutboxEntry } from "@norish/shared-react/offline";
 
@@ -99,7 +100,9 @@ let user: { id: string } | null = null;
 let connectivity = { isLive: true, isOffline: false };
 let wsStatus: "idle" | "connected" | "disconnected" = "idle";
 
-vi.mock("@/context/user-context", () => ({ useUserContext: () => ({ user }) }));
+vi.mock("@norish/shared-react/reader", async () =>
+  (await import("../../helpers/reader-mock")).mockReader(() => ({ user }))
+);
 vi.mock("@norish/shared-react/offline/react", async (importOriginal) => ({
   ...(await importOriginal<typeof import("@norish/shared-react/offline/react")>()),
   useConnectivity: () => ({
@@ -112,7 +115,7 @@ const trpcClient = vi.hoisted(() => ({}));
 
 const trpc = vi.hoisted(() => ({}));
 
-vi.mock("@/app/providers/trpc-provider", () => ({
+vi.mock("@norish/shared-react/trpc", () => ({
   useTRPC: () => trpc,
   useTRPCClient: () => trpcClient,
   useConnectionStatus: () => ({ status: wsStatus }),

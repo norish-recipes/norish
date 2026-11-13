@@ -1,12 +1,15 @@
+import type { AuthClient } from "@/lib/auth/auth-client";
 import React, { useCallback, useState } from "react";
 import { Pressable, Text, View } from "react-native";
 import { AuthShell } from "@/features/auth/components/auth-shell";
-import { useAuthProvidersQuery } from "@/features/auth/hooks/use-auth-providers-query";
 import { styles } from "@/features/auth/styles/register.styles";
-import { useAuth } from "@/lib/auth/auth-context";
+import { authFailure } from "@/features/auth/utils/auth-failure";
+import { useAuthClient } from "@/lib/auth/use-auth-client";
 import { useRouter } from "expo-router";
 import { Button, Card, Input, useThemeColor } from "heroui-native";
 import { useIntl } from "react-intl";
+
+import { useAuthProvidersQuery } from "@norish/shared-react/config";
 
 const MIN_PASSWORD_LENGTH = 8;
 const MAX_PASSWORD_LENGTH = 128;
@@ -14,7 +17,7 @@ const MAX_PASSWORD_LENGTH = 128;
 export function RegisterScreen() {
   const router = useRouter();
   const intl = useIntl();
-  const { backendBaseUrl, authClient, consumeLogoutFlag } = useAuth();
+  const authClient = useAuthClient();
 
   const [foregroundColor, mutedColor, accentColor, dangerColor] = useThemeColor([
     "foreground",
@@ -23,7 +26,7 @@ export function RegisterScreen() {
     "danger",
   ] as const);
 
-  if (backendBaseUrl === null) {
+  if (authClient === null) {
     return (
       <AuthShell headingPrefix={intl.formatMessage({ id: "auth.signup.title" })}>
         <View style={styles.centered}>
@@ -43,7 +46,6 @@ export function RegisterScreen() {
     <RegisterForm
       accentColor={accentColor}
       authClient={authClient}
-      consumeLogoutFlag={consumeLogoutFlag}
       dangerColor={dangerColor}
       foregroundColor={foregroundColor}
       mutedColor={mutedColor}
@@ -53,14 +55,12 @@ export function RegisterScreen() {
 
 function RegisterForm({
   authClient,
-  consumeLogoutFlag,
   foregroundColor,
   mutedColor,
   accentColor,
   dangerColor,
 }: {
-  authClient: ReturnType<typeof import("@/lib/auth/auth-client").getAuthClient> | null;
-  consumeLogoutFlag: () => void;
+  authClient: AuthClient;
   foregroundColor: string;
   mutedColor: string;
   accentColor: string;
@@ -78,8 +78,6 @@ function RegisterForm({
   const { registrationEnabled, hasData } = useAuthProvidersQuery();
 
   const handleSignUp = useCallback(async () => {
-    if (!authClient) return;
-
     setErrorMessage(null);
 
     const trimmedName = name.trim();
@@ -117,31 +115,17 @@ function RegisterForm({
 
     setIsSubmitting(true);
 
-    try {
-      const { error } = await authClient.signUp.email({
-        name: trimmedName,
-        email: trimmedEmail,
-        password,
-      });
+    const failure = await authFailure(
+      authClient.signUp.email({ name: trimmedName, email: trimmedEmail, password }),
+      intl.formatMessage({ id: "auth.signup.errors.createFailed" }),
+      intl.formatMessage({ id: "auth.signup.errors.generic" })
+    );
 
-      if (error) {
-        setErrorMessage(
-          error.message ?? intl.formatMessage({ id: "auth.signup.errors.createFailed" })
-        );
-      } else {
-        // autoSignIn establishes the session; Stack.Protected redirects to the smoke screen.
-        consumeLogoutFlag();
-      }
-    } catch (error) {
-      if (error instanceof Error && error.message) {
-        setErrorMessage(error.message);
-      } else {
-        setErrorMessage(intl.formatMessage({ id: "auth.signup.errors.generic" }));
-      }
-    }
+    // autoSignIn establishes the session; Stack.Protected redirects to the smoke screen.
+    if (failure !== null) setErrorMessage(failure);
 
     setIsSubmitting(false);
-  }, [authClient, confirmPassword, consumeLogoutFlag, email, intl, name, password]);
+  }, [authClient, confirmPassword, email, intl, name, password]);
 
   const signInLink = (
     <Pressable style={styles.linkRow} onPress={() => router.replace("/login")}>

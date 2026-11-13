@@ -12,7 +12,8 @@
       "title": "Settings",
       "description": "Manage your account"
     },
-    "logout": "Logout",
+    "logout": "Sign out",
+    "signOutOffline": "You're offline. Sign out when you're back online.",
     "signOutConfirm": {
       "title": "Discard unsynced changes?",
       "description": "{count, plural, one {# change made offline has not reached the server yet.} other {# changes made offline have not reached the server yet.}} Signing out permanently discards this queued work and removes your account's offline data from this device."
@@ -32,11 +33,6 @@
     "home": "Recipes",
     "calendar": "Calendar",
     "groceries": "Groceries"
-  },
-  "mobile": {
-    "searchPlaceholder": "Search recipes...",
-    "toggleSearch": "Toggle search",
-    "goBack": "Go back"
   },
   "archiveImporter": {
     "uploading": "Uploading…",

@@ -17,7 +17,8 @@
     "typecheck": "next typegen && pnpm exec tsc --noEmit && pnpm exec tsc -p tsconfig.sw.json",
     "clean": "git clean -xdf .cache .next .turbo node_modules dist",
     "generate:splash": "tsx scripts/generate-splash.tsx",
-    "measure:page-loads": "tsx scripts/measure-page-loads.ts"
+    "measure:page-loads": "tsx scripts/measure-page-loads.ts",
+    "measure:renders": "tsx scripts/measure-renders.ts"
   },
   "dependencies": {
     "@better-auth/api-key": "catalog:",
@@ -81,7 +82,7 @@
     "@vitejs/plugin-react": "catalog:",
     "@vitest/coverage-v8": "^5.0.5",
     "ai": "^7.0.155",
-    "babel-plugin-react-compiler": "1.0.0",
+    "babel-plugin-react-compiler": "catalog:",
     "embla-carousel": "^8.6.0",
     "embla-carousel-react": "^8.6.0",
     "eslint": "catalog:",
@@ -107,7 +108,7 @@
     "vite": "catalog:",
     "vitest": "catalog:",
     "zod": "catalog:",
-    "zustand": "5.0.16"
+    "zustand": "catalog:"
   },
   "prettier": "@norish/prettier-config"
 }

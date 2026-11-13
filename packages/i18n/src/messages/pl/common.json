@@ -40,7 +40,6 @@
   "status": {
     "loading": "Ładowanie...",
     "saving": "Zapisywanie...",
-    "deleting": "Usuwanie...",
     "error": "Błąd",
     "success": "Sukces",
     "noResults": "Brak wyników",
@@ -92,9 +91,6 @@
   },
   "connection": {
     "connecting": "Łączenie z Norish...",
-    "checkInternet": "Sprawdź połączenie internetowe",
-    "offlineBanner": "Jesteś offline, wyświetlane są dane z pamięci podręcznej",
-    "serverUnreachableBanner": "Nie można połączyć się z serwerem Norish, wyświetlane są dane z pamięci podręcznej",
     "live": "Połączono",
     "offline": "Offline",
     "openDetails": "Szczegóły połączenia"
@@ -151,10 +147,7 @@
       "analyzing": "Analizowanie obrazów...",
       "failed": "Import nie powiódł się",
       "selectedCount": "{count} obrazów wybranych",
-      "library": "Biblioteka",
-      "takePhoto": "Zrób zdjęcie",
-      "counter": "{count} / {max} zdjęć",
-      "importFromCount": "Importuj z {count, plural, one {# zdjęcia} other {# zdjęć}}"
+      "library": "Biblioteka"
     },
     "menu": {
       "description": "Importuj z URL, zeskanuj zdjęcie lub zacznij od zera."
@@ -223,8 +216,7 @@
     "other": "Timery",
     "label_one": "1 Timer",
     "label_other": "{count} Timerów",
-    "notification_title": "Timer zakończony",
-    "notification_body": "{label} gotowe!",
+    "notification_body": "Timer zakończony",
     "notifications_disabled": "Powiadomienia są wyłączone",
     "notifications_disabled_hint": "Włącz powiadomienia w przeglądarce, aby otrzymywać alerty gdy timer skończy działać w tle."
   },
@@ -301,5 +293,11 @@
     "title": "Klucz AI przestał działać",
     "description": "Dostawca odrzuca klucz API dla {blocks} od {since}. Zapisz nowy klucz, aby te funkcje AI znów działały.",
     "openSettings": "Otwórz ustawienia"
+  },
+  "household": {
+    "adminTransferred": "Przekazano administratora użytkownikowi {name}",
+    "unknownMember": "Nieznany",
+    "removedTitle": "Usunięto z gospodarstwa domowego",
+    "removedDescription": "Administrator usunął Cię z gospodarstwa domowego."
   }
 }

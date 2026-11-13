@@ -21,7 +21,6 @@
   },
   "item": {
     "unnamedItem": "Articolo senza nome",
-    "fromRecipes": "Da {count, plural, one {# ricetta} other {# ricette}}",
     "items": "{count, plural, one {# articolo} other {# articoli}}"
   },
   "store": {
@@ -54,7 +53,6 @@
       "violet": "Viola"
     },
     "confirmDelete": "Sei sicuro di voler eliminare {storeName}?",
-    "deleteWarning": "Gli articoli in questo negozio verranno spostati in Non ordinati.",
     "noStoresYet": "Nessun negozio ancora",
     "createStoreHint": "Crea un negozio per organizzare la tua spesa",
     "hasItems": "Questo negozio ha {count} articolo.",
@@ -113,26 +111,11 @@
   "panel": {
     "addTitle": "Aggiungi articolo",
     "editTitle": "Modifica articolo",
-    "itemName": "Nome articolo",
-    "itemNamePlaceholder": "es. Latte, Uova, Pane...",
     "selectStore": "Seleziona negozio",
-    "noStore": "Nessun negozio",
     "recurrence": "Ricorrenza",
     "savePreference": "Ricorda il negozio per questo articolo",
     "addAnother": "Aggiungi un altro",
     "addRepeat": "Configura la ricorrenza",
-    "recurrenceEnabled": "Ricorrente",
-    "recurrenceSheet": {
-      "title": "Ripetizione",
-      "subtitle": "Aggiungi automaticamente di nuovo questo articolo alla lista della spesa",
-      "enable": "Attiva ripetizione",
-      "disable": "Disattiva ripetizione",
-      "frequency": "Frequenza",
-      "weekly": "Settimanale",
-      "biweekly": "Ogni 2 settimane",
-      "monthly": "Mensile",
-      "confirm": "Conferma"
-    },
     "storeOptional": "Negozio (opzionale)",
     "autoDetectFromHistory": "Rileva automaticamente dalla cronologia",
     "autoDetectOrSelect": "Rileva automaticamente o seleziona",
@@ -143,7 +126,6 @@
     "pantryUnavailable": "Non è stato possibile leggere la dispensa, quindi non c'è ancora nulla di selezionato. Seleziona ciò che devi comprare.",
     "loadingIngredients": "Caricamento ingredienti...",
     "noIngredients": "Nessun ingrediente.",
-    "addSelectedToGroceries": "Aggiungi alla spesa",
     "ingredientsAdded": "Ingredienti aggiunti alla lista della spesa.",
     "ingredientsFailed": "Aggiunta degli ingredienti alla lista della spesa non riuscita.",
     "addToGroceries": "Aggiungi alla spesa",
@@ -168,7 +150,6 @@
     "productLabel": "Prodotto da {store}",
     "cannotSearch": "Non si può cercare in questo negozio",
     "cannotSearchHint": "Norish non è riuscito a ricavare una pagina di ricerca dal link di {store}. Correggilo in Gestisci negozi e i prezzi seguiranno.",
-    "packSize": "Confezione",
     "packAmount": "Quantità per confezione",
     "packUnit": "Unità",
     "productPage": "Pagina del prodotto",

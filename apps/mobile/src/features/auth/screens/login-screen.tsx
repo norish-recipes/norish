@@ -1,3 +1,4 @@
+import type { AuthClient } from "@/lib/auth/auth-client";
 import React, { useCallback, useMemo, useState } from "react";
 import { Pressable, Text } from "react-native";
 import { AuthShell } from "@/features/auth/components/auth-shell";
@@ -7,25 +8,25 @@ import { NoProvidersState } from "@/features/auth/components/no-providers-state"
 import { OAuthProviderList } from "@/features/auth/components/oauth-provider-list";
 import { ProviderErrorState } from "@/features/auth/components/provider-error-state";
 import { ProviderLoadingState } from "@/features/auth/components/provider-loading-state";
-import { useAuthProvidersQuery } from "@/features/auth/hooks/use-auth-providers-query";
 import { styles } from "@/features/auth/styles/login.styles";
+import { authFailure } from "@/features/auth/utils/auth-failure";
 import {
   DEFAULT_PROTECTED_ROUTE,
   firstParam,
   sanitizeRedirectTarget,
   toProviderType,
 } from "@/features/auth/utils/redirect";
-import { useAuth } from "@/lib/auth/auth-context";
+import { useAuthClient } from "@/lib/auth/use-auth-client";
 import { useLocalSearchParams, useRouter } from "expo-router";
 import { useThemeColor } from "heroui-native";
 import { useIntl } from "react-intl";
 
 import type { ProviderInfo } from "@norish/shared/contracts";
+import { useAuthProvidersQuery } from "@norish/shared-react/config";
 
-function LoginForm({ backendBaseUrl, redirectTo }: { backendBaseUrl: string; redirectTo: string }) {
+function LoginForm({ authClient, redirectTo }: { authClient: AuthClient; redirectTo: string }) {
   const router = useRouter();
   const intl = useIntl();
-  const { authClient, consumeLogoutFlag } = useAuth();
   const [mutedColor, dangerColor, accentColor] = useThemeColor([
     "muted",
     "danger",
@@ -46,68 +47,35 @@ function LoginForm({ backendBaseUrl, redirectTo }: { backendBaseUrl: string; red
 
   const handleOAuthSignIn = useCallback(
     async (provider: ProviderInfo) => {
-      if (!authClient || !backendBaseUrl) return;
-
       setErrorMessage(null);
       setActiveOAuthProviderId(provider.id);
 
-      try {
-        // Like signIn.email, a refused sign-in comes back as `error`; only a network failure throws.
-        const { error: signInError } = await authClient.signIn.social({
-          provider: provider.id,
-          callbackURL: redirectTo,
-        });
+      const failure = await authFailure(
+        authClient.signIn.social({ provider: provider.id, callbackURL: redirectTo }),
+        intl.formatMessage({ id: "auth.errors.default.description" })
+      );
 
-        if (signInError) {
-          setErrorMessage(
-            signInError.message ?? intl.formatMessage({ id: "auth.errors.default.description" })
-          );
-        } else {
-          consumeLogoutFlag();
-        }
-      } catch (oauthError) {
-        if (oauthError instanceof Error && oauthError.message) {
-          setErrorMessage(oauthError.message);
-        } else {
-          setErrorMessage(intl.formatMessage({ id: "auth.errors.default.description" }));
-        }
-      }
+      if (failure !== null) setErrorMessage(failure);
 
       setActiveOAuthProviderId(null);
     },
-    [authClient, backendBaseUrl, consumeLogoutFlag, intl, redirectTo]
+    [authClient, intl, redirectTo]
   );
 
   const handlePasswordSubmit = useCallback(async () => {
-    if (!authClient) return;
-
     setIsSubmittingCredentials(true);
     setErrorMessage(null);
 
-    try {
-      const { error: signInError } = await authClient.signIn.email({
-        email: email.trim(),
-        password,
-      });
+    const failure = await authFailure(
+      authClient.signIn.email({ email: email.trim(), password }),
+      intl.formatMessage({ id: "auth.emailPassword.errors.generic" })
+    );
 
-      if (signInError) {
-        setErrorMessage(
-          signInError.message ?? intl.formatMessage({ id: "auth.emailPassword.errors.generic" })
-        );
-      } else {
-        consumeLogoutFlag();
-      }
-      // Stack.Protected guard handles redirect once session is established
-    } catch (signInError) {
-      if (signInError instanceof Error && signInError.message) {
-        setErrorMessage(signInError.message);
-      } else {
-        setErrorMessage(intl.formatMessage({ id: "auth.emailPassword.errors.generic" }));
-      }
-    }
+    // Stack.Protected guard handles redirect once session is established
+    if (failure !== null) setErrorMessage(failure);
 
     setIsSubmittingCredentials(false);
-  }, [authClient, consumeLogoutFlag, email, intl, password]);
+  }, [authClient, email, intl, password]);
 
   return (
     <>
@@ -173,7 +141,7 @@ export function LoginScreen() {
   const router = useRouter();
   const intl = useIntl();
   const params = useLocalSearchParams();
-  const { backendBaseUrl, justLoggedOut } = useAuth();
+  const authClient = useAuthClient();
 
   const [mutedColor, accentColor] = useThemeColor(["muted", "accent"] as const);
 
@@ -185,12 +153,9 @@ export function LoginScreen() {
     [params.redirectTo]
   );
 
-  const justLoggedOutFromQuery =
-    firstParam(params.logout as string | string[] | undefined) === "true";
-
   const footer = (
     <>
-      {backendBaseUrl !== null && (
+      {authClient !== null && (
         <Pressable
           style={styles.linkRow}
           onPress={() => {
@@ -210,14 +175,14 @@ export function LoginScreen() {
 
   return (
     <AuthShell footer={footer} headingPrefix={intl.formatMessage({ id: "auth.login.title" })}>
-      {backendBaseUrl === null ? (
+      {authClient === null ? (
         <BackendMissingState
           onOpenConnect={() => {
             router.replace("/(auth)");
           }}
         />
       ) : (
-        <LoginForm backendBaseUrl={backendBaseUrl} redirectTo={redirectTo} />
+        <LoginForm authClient={authClient} redirectTo={redirectTo} />
       )}
     </AuthShell>
   );

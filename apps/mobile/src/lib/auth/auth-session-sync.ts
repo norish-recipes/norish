@@ -1,7 +1,3 @@
-type SessionInvalidationReason = "transport-unauthorized" | "websocket-unauthorized";
-
-type SessionInvalidationHandler = (reason: SessionInvalidationReason) => Promise<void>;
-
 type AuthTransportSnapshot = {
   hasActiveSession: boolean;
   version: number;
@@ -13,9 +9,6 @@ let snapshot: AuthTransportSnapshot = {
   hasActiveSession: false,
   version: 0,
 };
-
-let invalidationHandler: SessionInvalidationHandler | null = null;
-let invalidationPromise: Promise<void> | null = null;
 
 function emitSnapshotChange(): void {
   for (const listener of listeners) {
@@ -35,41 +28,18 @@ export function subscribeAuthTransport(listener: () => void): () => void {
   };
 }
 
-export function setHasActiveSession(hasActiveSession: boolean): void {
-  if (snapshot.hasActiveSession === hasActiveSession) {
-    return;
-  }
+/** Signed in, with one re-key so everything below rebuilds on the session; once until leave. */
+export function publishSignedIn(): void {
+  if (snapshot.hasActiveSession) return;
 
-  snapshot = {
-    hasActiveSession,
-    version: snapshot.version + 1,
-  };
+  snapshot = { hasActiveSession: true, version: snapshot.version + 1 };
 
   emitSnapshotChange();
 }
 
-export function registerSessionInvalidationHandler(
-  handler: SessionInvalidationHandler | null
-): () => void {
-  invalidationHandler = handler;
+/** Mobile's leave: signed out and one re-key, so everything below rebuilds on the cleared cache. */
+export function publishSignedOut(): void {
+  snapshot = { hasActiveSession: false, version: snapshot.version + 1 };
 
-  return () => {
-    if (invalidationHandler === handler) {
-      invalidationHandler = null;
-    }
-  };
-}
-
-export async function invalidateSession(reason: SessionInvalidationReason): Promise<void> {
-  if (!invalidationHandler) {
-    return;
-  }
-
-  if (!invalidationPromise) {
-    invalidationPromise = invalidationHandler(reason).finally(() => {
-      invalidationPromise = null;
-    });
-  }
-
-  await invalidationPromise;
+  emitSnapshotChange();
 }

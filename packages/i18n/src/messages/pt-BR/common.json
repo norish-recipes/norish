@@ -40,7 +40,6 @@
   "status": {
     "loading": "Carregando...",
     "saving": "Salvando...",
-    "deleting": "Excluindo...",
     "error": "Erro",
     "success": "Sucesso",
     "noResults": "Nenhum resultado encontrado",
@@ -92,9 +91,6 @@
   },
   "connection": {
     "connecting": "Conectando ao Norish...",
-    "checkInternet": "Verifique sua conexão com a internet",
-    "offlineBanner": "Você está offline, mostrando dados em cache",
-    "serverUnreachableBanner": "Não foi possível acessar o servidor Norish, mostrando dados em cache",
     "live": "Conectado",
     "offline": "Offline",
     "openDetails": "Detalhes da conexão"
@@ -151,10 +147,7 @@
       "analyzing": "Analisando suas imagens, aguarde...",
       "failed": "Falha na importação",
       "selectedCount": "{count} imagens selecionadas - elas serão combinadas em uma única receita",
-      "library": "Biblioteca",
-      "takePhoto": "Tirar foto",
-      "counter": "{count} / {max} fotos",
-      "importFromCount": "Importar de {count, plural, one {# foto} other {# fotos}}"
+      "library": "Biblioteca"
     },
     "menu": {
       "description": "Importe de uma URL, escaneie uma foto ou comece do zero."
@@ -223,8 +216,7 @@
     "other": "Temporizadores",
     "label_one": "1 temporizador",
     "label_other": "{count} temporizadores",
-    "notification_title": "Temporizador concluído",
-    "notification_body": "{label} terminou!",
+    "notification_body": "Temporizador concluído",
     "notifications_disabled": "As notificações estão desativadas",
     "notifications_disabled_hint": "Ative as notificações nas configurações do navegador para receber alertas quando os temporizadores terminarem em segundo plano."
   },
@@ -301,5 +293,11 @@
     "title": "Uma chave de IA parou de funcionar",
     "description": "O provedor está recusando a chave de API de {blocks} desde {since}. Salve uma nova chave para que esses recursos de IA voltem a funcionar.",
     "openSettings": "Abrir configurações"
+  },
+  "household": {
+    "adminTransferred": "Admin transferido para {name}",
+    "unknownMember": "Desconhecido",
+    "removedTitle": "Removido da casa",
+    "removedDescription": "Um administrador removeu você da casa."
   }
 }

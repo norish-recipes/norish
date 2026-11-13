@@ -2,10 +2,12 @@
 
 import { useEffect } from "react";
 import { useRouter } from "next/navigation";
-import { usePermissionsContext } from "@/context/permissions-context";
-import { useAIKeyRejections } from "@/hooks/admin/use-ai-key-rejections";
+import { settingsHref } from "@/components/settings/settings-tab";
+import { useAIKeyRejections } from "@/hooks/use-ai-key-rejections";
 import { showActionToast } from "@/lib/ui/action-toast";
 import { useTranslations } from "next-intl";
+
+import { usePermissions } from "@norish/shared-react/reader";
 
 /** The rejections this tab last told the admin about, so a closed toast is not repeated. */
 const SHOWN_STORAGE_KEY = "norish.ai-key-rejection.shown";
@@ -31,8 +33,14 @@ function rememberShown(id: string): void {
  * revoked key shows. It stays up until closed, once per tab for each refusal.
  */
 export default function AIKeyRejectionPrompt() {
-  const { isServerAdmin } = usePermissionsContext();
-  const rejections = useAIKeyRejections(isServerAdmin);
+  const isServerAdmin = usePermissions((p) => p.isServerAdmin);
+
+  return isServerAdmin ? <AdminKeyRejectionPrompt /> : null;
+}
+
+/** Mounted for an admin only, so nobody else asks the admin-only read. */
+function AdminKeyRejectionPrompt() {
+  const rejections = useAIKeyRejections();
   const router = useRouter();
   const t = useTranslations("common.aiKeyRejected");
 
@@ -44,7 +52,7 @@ export default function AIKeyRejectionPrompt() {
       description: rejections.description,
       variant: "danger",
       timeout: 0,
-      action: { label: t("openSettings"), onPress: () => router.push("/settings?tab=admin") },
+      action: { label: t("openSettings"), onPress: () => router.push(settingsHref("admin")) },
     });
     // The id says everything that would change what the toast says.
     // eslint-disable-next-line @eslint-react/exhaustive-deps

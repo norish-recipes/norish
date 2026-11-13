@@ -4,7 +4,7 @@
     "ariaLabel": "설정 탭"
   },
   "tabs": {
-    "user": "사용자",
+    "account": "계정",
     "household": "가구",
     "caldav": "CalDAV",
     "admin": "관리자",
@@ -193,7 +193,6 @@
           "abbreviated": "줄여서"
         }
       },
-      "applyError": "환경설정을 적용하지 못했습니다",
       "afterPlanning": {
         "title": "레시피 계획 후",
         "description": "레시피를 계획할 때 일어나는 일",
@@ -279,11 +278,7 @@
         "warning": "일반 구성원이 되며 더 이상 사용자를 내보내거나 참여 코드를 관리할 수 없습니다.",
         "confirmButton": "관리자 이전"
       },
-      "toasts": {
-        "kickFailed": "사용자를 내보내지 못했습니다.",
-        "transferSuccess": "관리자를 {name}(으)로 이전했습니다.",
-        "transferFailed": "관리자를 이전하지 못했습니다."
-      }
+      "unknown": "알 수 없음"
     },
     "joinCode": {
       "title": "참여 코드",
@@ -291,6 +286,7 @@
       "expiresIn": "만료까지:",
       "regenerateButton": "재생성",
       "expired": "만료됨",
+      "countdown": "{minutes}분 {seconds}초",
       "noCodeDescription": "활성 참여 코드가 없습니다. 새 구성원을 초대하려면 코드를 생성하세요.",
       "generateButton": "참여 코드 만들기",
       "copySuccess": "참여 코드가 복사되었습니다",
@@ -356,8 +352,7 @@
       "connectionStatus": {
         "connected": "연결됨",
         "checking": "확인 중...",
-        "disconnected": "연결이 끊김",
-        "unknown": "알 수 없음"
+        "disconnected": "연결이 끊김"
       }
     },
     "deleteModal": {
@@ -388,10 +383,11 @@
         "failed": "실패",
         "removed": "제거됨"
       },
-      "emptyFiltered": "{status} 항목을 찾을 수 없습니다.",
+      "emptyFiltered": "이 상태의 항목이 없습니다.",
       "emptyDefault": "동기화 기록을 찾을 수 없습니다.",
       "errorDetails": "오류 세부정보",
-      "pagination": "{total}페이지 중 {current}페이지"
+      "pagination": "{total}페이지 중 {current}페이지",
+      "paginationLabel": "동기화 상태 페이지"
     }
   },
   "ingredients": {
@@ -639,8 +635,6 @@
       "localesDescription": "사용자가 선택할 수 있는 언어 선택",
       "defaultLocale": "기본 언어",
       "defaultLocaleDescription": "신규 사용자 및 대체 언어로 사용되는 언어",
-      "localesSaved": "언어 설정이 저장되었습니다",
-      "localesError": "언어 설정을 저장하지 못했습니다.",
       "atLeastOneLocale": "하나 이상의 언어를 활성화해야 합니다.",
       "export": {
         "title": "레시피 아카이브",
@@ -673,7 +667,6 @@
       },
       "deleteTitle": "{name}님을 삭제할까요?",
       "deleteConfirm": "이 작업은 사용자의 계정을 영구적으로 삭제하고 가구에서 제외합니다. 되돌릴 수 없습니다.",
-      "deleteSuccess": "{name}님이 삭제되었습니다",
       "countSummary": "총 {count}명"
     },
     "registration": {
@@ -834,6 +827,7 @@
         "subtitle": "타이머 감지를 위한 시간 단위 키워드",
         "description": "레시피 지침에서 타이머를 감지하는 데 사용되는 키워드를 구성합니다. 여러 언어를 지원합니다.",
         "enableToggle": "타이머 감지 활성화",
+        "keywordRequired": "시간, 분 또는 초에 키워드가 하나 이상 필요합니다",
         "hoursLabel": "시간 키워드",
         "hoursPlaceholder": "시간, hour, hours, hr, hrs, h",
         "hoursHelp": "시간에 대한 키워드(예: 시간, hour, stunde, heure, uur)",
@@ -971,6 +965,7 @@
       "apiKey": "API 키",
       "apiKeyPlaceholder": "API 키를 입력하세요",
       "temperature": "온도: {value}",
+      "temperatureLabel": "온도",
       "temperatureHint": "낮음 = 더 집중적, 높음 = 더 창의적",
       "maxTokens": "최대 토큰",
       "requestTimeout": "요청 제한 시간 (ms)",
@@ -1024,6 +1019,7 @@
       "maxLength": "최대 비디오 길이(초)",
       "maxLengthDescription": "동영상이 길수록 처리하는 데 더 많은 시간과 리소스가 소요됩니다.",
       "maxFileSize": "최대 비디오 파일 크기",
+      "maxFileSizeUnit": "MB",
       "maxFileSizeDescription": "다운로드한 비디오 파일의 최대 크기",
       "ytDlpVersion": "yt-dlp 버전",
       "ytDlpVersionDescription": "이 서버가 실행 중인 yt-dlp 버전입니다. 여기서는 변경할 수 없습니다.",
@@ -1045,6 +1041,7 @@
         "genericOpenai": "일반 OpenAI 호환"
       },
       "transcriptionEndpoint": "엔드포인트 URL",
+      "transcriptionEndpointPlaceholderGeneric": "http://localhost:8000 (faster-whisper-server) 또는 http://localhost:8080 (LocalAI)",
       "transcriptionEndpointDescription": "Whisper를 지원하는 OpenAI 호환 엔드포인트 또는 Ollama 엔드포인트",
       "transcriptionModel": "모델",
       "transcriptionModelDescription": "음성 변환에 사용할 모델",
@@ -1074,8 +1071,6 @@
       "allowPrivateAddressesDescription": "가져오기가 로컬 네트워크에 접근할 수 있게 합니다. Obscura는 어떤 경우에도 거부합니다.",
       "navigationTimeout": "탐색 시간 제한(ms)",
       "navigationTimeoutDescription": "렌더러가 페이지를 불러오는 데 주어지는 시간입니다.",
-      "saved": "페이지 렌더러를 저장했습니다",
-      "error": "페이지 렌더러를 저장하지 못했습니다",
       "connectionSuccess": "연결 성공"
     },
     "imageGenerationConfig": {
@@ -1188,9 +1183,7 @@
     "unsavedChanges": "저장되지 않은 변경사항",
     "jsonEditor": {
       "placeholder": "JSON 구성 입력...",
-      "invalidJson": "잘못된 JSON 형식",
-      "failedToSave": "저장하지 못했습니다.",
-      "failedToRestore": "기본값을 복원하지 못했습니다."
+      "invalidJson": "잘못된 JSON 형식"
     },
     "jobQueue": {
       "title": "작업 대기열",
@@ -1327,6 +1320,13 @@
       "empty": "아직 요리가 없습니다.",
       "duplicate": "같은 이름의 요리가 이미 있습니다.",
       "saveFailed": "해당 요리를 저장할 수 없습니다."
+    },
+    "toasts": {
+      "localesSaved": "언어 설정이 저장되었습니다",
+      "localesError": "언어 설정을 저장하지 못했습니다.",
+      "userDeleted": "{name}님이 삭제되었습니다",
+      "pageRenderersSaved": "페이지 렌더러를 저장했습니다",
+      "pageRenderersError": "페이지 렌더러를 저장하지 못했습니다"
     }
   },
   "archiveExport": {

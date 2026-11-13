@@ -1,10 +1,14 @@
-import { render, screen } from "@testing-library/react";
+import type { ReactNode } from "react";
+import { fireEvent, render, screen } from "@testing-library/react";
+import { Link } from "react-aria-components";
 import { beforeAll, describe, expect, it, vi } from "vitest";
 
 import "@testing-library/jest-dom";
 
-import SettingsPageContent from "@/app/(app)/settings/components/settings-page-content";
-import { openSettingsTab } from "@/app/(app)/settings/settings-tab";
+import AdminSettingsLayout from "@/app/(app)/settings/admin/layout";
+import SettingsLayout from "@/app/(app)/settings/layout";
+import SettingsPage from "@/app/(app)/settings/page";
+import { SettingsTabs } from "@/components/settings/settings-tabs";
 
 beforeAll(() => {
   // HeroUI's Tabs list measures its overflow; jsdom has no ResizeObserver.
@@ -18,78 +22,150 @@ beforeAll(() => {
   );
 });
 
-const { navigation } = vi.hoisted(() => ({
-  navigation: { searchParams: new URLSearchParams() },
+const { navigation, profile, push } = vi.hoisted(() => ({
+  push: vi.fn(),
+  navigation: { pathname: "/settings/account" },
+  profile: { identity: null as { isServerAdmin: boolean } | null },
 }));
 
 vi.mock("next/navigation", () => ({
-  useRouter: () => ({ push: vi.fn() }),
-  useSearchParams: () => navigation.searchParams,
+  useRouter: () => ({ push }),
+  usePathname: () => navigation.pathname,
+  redirect: (to: string) => {
+    throw new Error(`redirect:${to}`);
+  },
 }));
 
-// The tab contents are irrelevant to tab presence and drag in the whole
-// data layer; the ticket explicitly allows the panels to stay lazy.
-vi.mock("next/dynamic", () => ({
-  default: () => () => null,
+vi.mock("@/lib/request-profile", () => ({
+  readRequestProfile: async () => profile,
 }));
 
 vi.mock("next-intl", () => ({
   useTranslations: (namespace: string) => (key: string) => `${namespace}.${key}`,
+  NextIntlClientProvider: ({ children }: { children: ReactNode }) => children,
 }));
 
-const shape = { showAdminTab: false, household: "none", caldav: "none" } as const;
+vi.mock("next-intl/server", () => ({
+  getMessages: async () => ({}),
+  getTranslations: async (namespace: string) => (key: string) => `${namespace}.${key}`,
+}));
 
-describe("settings tab list", () => {
-  it("shows the Admin tab in the first painted tab list for an administrator", () => {
-    navigation.searchParams = new URLSearchParams();
-
-    render(<SettingsPageContent shape={{ ...shape, showAdminTab: true }} />);
+describe("the settings tab bar", () => {
+  it("shows the Admin tab to an administrator", () => {
+    render(<SettingsTabs showAdminTab>content</SettingsTabs>);
 
     expect(screen.getByRole("tab", { name: /tabs\.admin/ })).toBeInTheDocument();
   });
 
-  it("never renders an Admin tab for a regular member", () => {
-    navigation.searchParams = new URLSearchParams();
-
-    render(<SettingsPageContent shape={shape} />);
+  it("never shows an Admin tab to a regular member", () => {
+    render(<SettingsTabs showAdminTab={false}>content</SettingsTabs>);
 
     expect(screen.queryByRole("tab", { name: /tabs\.admin/ })).not.toBeInTheDocument();
-    // User, Household, CalDAV and Ingredients.
+    // Account, Household, CalDAV and Ingredients.
     expect(screen.getAllByRole("tab")).toHaveLength(4);
   });
 
-  it("lands an administrator directly on a deep-linked admin tab", () => {
-    navigation.searchParams = new URLSearchParams("tab=admin");
+  it("links each tab to its route and marks the one the address names", () => {
+    navigation.pathname = "/settings/household";
 
-    render(<SettingsPageContent shape={{ ...shape, showAdminTab: true }} />);
+    render(<SettingsTabs showAdminTab>content</SettingsTabs>);
 
-    expect(screen.getByRole("tab", { name: /tabs\.admin/ })).toHaveAttribute(
+    expect(screen.getByRole("tab", { name: /tabs\.account/ })).toHaveAttribute(
+      "href",
+      "/settings/account"
+    );
+    expect(screen.getByRole("tab", { name: /tabs\.household/ })).toHaveAttribute(
       "aria-selected",
       "true"
     );
   });
 
-  it("falls back to the default tab when a member deep-links to admin", () => {
-    navigation.searchParams = new URLSearchParams("tab=admin");
+  it("draws the open tab's content in the panel the tab controls", () => {
+    navigation.pathname = "/settings/caldav";
 
-    render(<SettingsPageContent shape={shape} />);
+    render(<SettingsTabs showAdminTab>caldav content</SettingsTabs>);
 
-    expect(screen.queryByRole("tab", { name: /tabs\.admin/ })).not.toBeInTheDocument();
-    expect(screen.getByRole("tab", { name: /tabs\.user/ })).toHaveAttribute(
-      "aria-selected",
-      "true"
+    const panel = screen.getByRole("tabpanel");
+
+    expect(panel).toHaveTextContent("caldav content");
+    expect(screen.getByRole("tab", { name: /tabs\.caldav/ })).toHaveAttribute(
+      "aria-controls",
+      panel.id
     );
+  });
+
+  it("stays put when the open tab is clicked again", () => {
+    navigation.pathname = "/settings/household";
+    push.mockClear();
+
+    render(<SettingsTabs showAdminTab>content</SettingsTabs>);
+    fireEvent.click(screen.getByRole("tab", { name: /tabs\.household/ }));
+
+    expect(push).not.toHaveBeenCalled();
+  });
+
+  it("goes to another tab's address when it is clicked", () => {
+    navigation.pathname = "/settings/household";
+    push.mockClear();
+
+    render(<SettingsTabs showAdminTab>content</SettingsTabs>);
+    fireEvent.click(screen.getByRole("tab", { name: /tabs\.caldav/ }));
+
+    expect(push.mock.lastCall?.[0]).toBe("/settings/caldav");
+  });
+
+  it("leaves links inside the tab's content to their own routing", () => {
+    navigation.pathname = "/settings/household";
+    push.mockClear();
+
+    render(
+      <SettingsTabs showAdminTab>
+        <Link href="/recipes">recipes</Link>
+      </SettingsTabs>
+    );
+    fireEvent.click(screen.getByRole("link", { name: "recipes" }));
+
+    expect(push).not.toHaveBeenCalled();
   });
 });
 
-describe("the tab an address opens", () => {
-  it.each([
-    ["caldav", false, "caldav"],
-    ["admin", true, "admin"],
-    ["admin", false, "user"],
-    ["sideways", false, "user"],
-    [null, false, "user"],
-  ] as const)("?tab=%s with admin %s opens %s", (param, admin, open) => {
-    expect(openSettingsTab(param, { ...shape, showAdminTab: admin })).toBe(open);
+describe("the settings layout", () => {
+  it("gives an administrator the Admin tab", async () => {
+    navigation.pathname = "/settings/account";
+    profile.identity = { isServerAdmin: true };
+
+    render(await SettingsLayout({ children: "content" }));
+
+    expect(screen.getByRole("tab", { name: /tabs\.admin/ })).toBeInTheDocument();
+  });
+
+  it("gives a regular member no Admin tab", async () => {
+    navigation.pathname = "/settings/account";
+    profile.identity = { isServerAdmin: false };
+
+    render(await SettingsLayout({ children: "content" }));
+
+    expect(screen.queryByRole("tab", { name: /tabs\.admin/ })).not.toBeInTheDocument();
+    expect(screen.getByRole("tabpanel")).toHaveTextContent("content");
+  });
+});
+
+describe("the settings redirects", () => {
+  it("sends /settings to the account tab", () => {
+    expect(() => SettingsPage()).toThrow("redirect:/settings/account");
+  });
+
+  it("sends a non-admin away from the admin tab", async () => {
+    profile.identity = { isServerAdmin: false };
+
+    await expect(AdminSettingsLayout({ children: "admin" })).rejects.toThrow(
+      "redirect:/settings/account"
+    );
+  });
+
+  it("lets an administrator into the admin tab", async () => {
+    profile.identity = { isServerAdmin: true };
+
+    await expect(AdminSettingsLayout({ children: "admin" })).resolves.toBe("admin");
   });
 });

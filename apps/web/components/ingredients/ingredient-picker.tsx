@@ -1,12 +1,12 @@
 "use client";
 
-import { useEffect, useState } from "react";
-import { useTRPC } from "@/app/providers/trpc-provider";
+import { useState } from "react";
 import { PanelComboBoxPopover } from "@/components/Panel/Panel";
 import { ComboBox, Input, Label, ListBox } from "@heroui/react";
-import { useQuery } from "@tanstack/react-query";
 import { useLocale, useTranslations } from "next-intl";
+import { useDebounceValue } from "usehooks-ts";
 
+import { useIngredientSearchQuery } from "@norish/shared-react/ingredients";
 import { ingredientDisplayName } from "@norish/shared/lib/ingredient-names";
 
 /** How long typing pauses before the catalogue is searched. */
@@ -15,12 +15,7 @@ const SEARCH_DELAY_MS = 250;
 /** What a person picked: a known Ingredient, or a new one (`id` null). */
 export type IngredientPick = { id: string; name: string } | { id: null };
 
-/**
- * Find an Ingredient to merge into, file under or move a spelling to, by any
- * of its spellings. Only Ingredients the viewer may edit are offered where
- * `editableOnly` says so (a merge needs `edit` on both), and never the one
- * the action starts from.
- */
+/** Searches Ingredients by any spelling, never `excludeId`; `editableOnly` keeps the viewer's editable ones. */
 export function IngredientPicker({
   label,
   excludeId,
@@ -34,25 +29,13 @@ export function IngredientPicker({
 }) {
   const t = useTranslations("settings.ingredients");
   const locale = useLocale();
-  const trpc = useTRPC();
   // Inside a Panel the options must portal into it, or vaul swallows every tap (#511).
   const [term, setTerm] = useState("");
-  const [search, setSearch] = useState("");
+  const [search] = useDebounceValue(term.trim(), SEARCH_DELAY_MS);
   const [picked, setPicked] = useState<string | null>(null);
 
-  useEffect(() => {
-    const timer = setTimeout(() => setSearch(term.trim()), SEARCH_DELAY_MS);
-
-    return () => clearTimeout(timer);
-  }, [term]);
-
-  const { data, isFetching } = useQuery({
-    ...trpc.ingredients.list.queryOptions({ search, locale }),
-    enabled: search.length > 0,
-  });
-  const found = (data?.items ?? []).filter(
-    (item) => item.id !== excludeId && (!editableOnly || item.canEdit)
-  );
+  const { items, isFetching } = useIngredientSearchQuery(search || null, locale);
+  const found = items.filter((item) => item.id !== excludeId && (!editableOnly || item.canEdit));
   const options = found.map((item) => ({ id: item.id, name: ingredientDisplayName(item, locale) }));
 
   return (

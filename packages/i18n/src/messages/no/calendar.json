@@ -11,12 +11,6 @@
     "noteLabel": "Notat",
     "notePlaceholder": "Skriv notat..."
   },
-  "navigation": {
-    "previousMonth": "Forrige måned",
-    "nextMonth": "Neste måned",
-    "prev": "Forrige",
-    "next": "Neste"
-  },
   "weekdays": {
     "mon": "Man",
     "tue": "Tir",
@@ -51,5 +45,16 @@
     "randomRecipe": "Tilfeldig oppskrift",
     "noRecipesFound": "Ingen oppskrifter funnet.",
     "failedToLoadRecipes": "Kunne ikke laste oppskrifter."
+  },
+  "caldav": {
+    "syncStarted": "CalDAV-synkronisering startet",
+    "syncStartedDescription": "Elementer som skal synkroniseres: {queued}",
+    "syncStartedWithFailures": "Elementer som skal synkroniseres: {queued}. Kunne ikke settes i kø: {failed}",
+    "configSaved": "Konfigurasjonen er lagret",
+    "configSavedDescription": "CalDAV-innstillingene dine er lagret.",
+    "configDeleted": "Konfigurasjonen er slettet",
+    "configDeletedDescription": "CalDAV-innstillingene dine er fjernet.",
+    "retryStarted": "Synkronisering startet",
+    "retryStartedDescription": "Prøver ventende og mislykkede elementer på nytt…"
   }
 }

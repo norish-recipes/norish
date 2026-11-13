@@ -477,6 +477,11 @@ export function dateKey(d: Date): string {
   return `${y}-${m}-${day}`;
 }
 
+/** A `YYYY-MM-DD` key as local midnight on that day, the inverse of {@link dateKey}. */
+export function parseDateKey(key: string): Date {
+  return new Date(`${key}T00:00:00`);
+}
+
 /** The text without its trailing slashes, where they are not part of `//` (a bare `https://` keeps both). */
 export function withoutTrailingSlashes(text: string): string {
   return text.replace(/(?<!\/)\/+$/, "");
@@ -543,9 +548,12 @@ export function sortTagsWithAllergyPriority<T extends { name: string }>(
  * @param allergySet - Pre-computed Set of lowercase allergy names for O(1) lookup
  * @returns True if the tag is an allergen
  */
-export function isAllergenTag(tagName: string, allergySet: Set<string>): boolean {
+export function isAllergenTag(tagName: string, allergySet: ReadonlySet<string>): boolean {
   return allergySet.has(tagName.toLowerCase());
 }
+
+/** The allergy set of a reader without allergies, one shared instance so it never changes. */
+export const NO_ALLERGIES: ReadonlySet<string> = new Set();
 
 /**
  * Get the Monday (ISO week start) of the week containing the provided date.
@@ -596,18 +604,21 @@ export function addWeeks(date: Date, weeks: number): Date {
   return d;
 }
 
+/** The first and last day of a calendar read, as date keys. */
+export type CalendarRange = { startISO: string; endISO: string };
+
 /** The range a calendar opens on around `today` (`YYYY-MM-DD`), the reader's date by default. */
-export function getInitialDateRange(
+export function getInitialCalendarRange(
   mode: "desktop" | "mobile",
   today: string = dateKey(new Date())
-): { start: Date; end: Date } {
-  const now = new Date(`${today}T00:00:00`);
+): CalendarRange {
+  const now = parseDateKey(today);
+  const [start, end] =
+    mode === "desktop"
+      ? [getWeekStart(now), getWeekEnd(now)]
+      : [getWeekStart(addWeeks(now, -2)), getWeekEnd(addWeeks(now, 2))];
 
-  if (mode === "desktop") {
-    return { start: getWeekStart(now), end: getWeekEnd(now) };
-  }
-
-  return { start: getWeekStart(addWeeks(now, -2)), end: getWeekEnd(addWeeks(now, 2)) };
+  return { startISO: dateKey(start), endISO: dateKey(end) };
 }
 
 export function buildAvatarFilename(

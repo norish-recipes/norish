@@ -2,13 +2,13 @@
 
 import { useEffect, useRef } from "react";
 
-import type { ConnectionStatus } from "../../providers/trpc-provider";
+import type { ConnectionStatus } from "../../trpc/trpc-provider";
 import type { CacheManager } from "../cache-manager";
 import type { OutboxStore } from "../outbox-store";
 import type { Recovery } from "../recovery";
 import { useCacheOwner } from "./use-cache-owner";
 
-export interface OfflineControllerInputs {
+interface OfflineControllerInputs {
   engine: {
     cache: Pick<CacheManager, "owner" | "subscribe" | "reconcileIdentity">;
     outbox: Pick<OutboxStore, "forOwner" | "subscribe">;

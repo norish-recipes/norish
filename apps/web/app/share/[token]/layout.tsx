@@ -1,14 +1,12 @@
-import { IngredientIconsProvider } from "@/components/ingredients/ingredient-icon";
 import { QuerySeed } from "@/components/query-seed";
-import { DevicePreferencesProvider } from "@/context/device-preferences-context";
-import { readDevicePreferencesSeed } from "@/lib/request-profile";
+import { readRequestProfile } from "@/lib/request-profile";
+
+import { DevicePreferencesForVisit } from "@norish/shared-react/reader";
+import { deviceBlocks } from "@norish/shared/contracts/zod/device-preferences";
 
 /**
- * A shared recipe is often read signed-out. A signed-in reader gets their own
- * Device Preferences for this kind, so a reader who hid Ingredient Icons is
- * shown none here either; a signed-out reader gets the defaults, and the
- * fractions or decimals switch lasts only for the visit. The lines carry
- * their icons' addresses, so the icons' provider here reads nothing.
+ * A signed-in reader gets their own Device Preferences, a signed-out one the defaults; a change
+ * lasts for the visit.
  */
 export default async function SharedRecipeLayout({
   children,
@@ -17,15 +15,22 @@ export default async function SharedRecipeLayout({
   const { token } = await params;
 
   return (
-    <DevicePreferencesProvider seed={await readDevicePreferencesSeed()}>
-      <QuerySeed
-        reads={(trpc, client) => [
+    <QuerySeed
+      reads={async (trpc, client) => {
+        const recipe = [
           client.query(trpc.recipes.getShared.queryOptions({ token })),
           client.query(trpc.recipes.sharePublicConfig.queryOptions({ token })),
-        ]}
-      >
-        <IngredientIconsProvider>{children}</IngredientIconsProvider>
-      </QuerySeed>
-    </DevicePreferencesProvider>
+        ];
+        const { userId, preferences } = await readRequestProfile();
+
+        if (userId !== null) {
+          client.setQueryData(trpc.user.getDevicePreferences.queryKey(), deviceBlocks(preferences));
+        }
+
+        return recipe;
+      }}
+    >
+      <DevicePreferencesForVisit>{children}</DevicePreferencesForVisit>
+    </QuerySeed>
   );
 }

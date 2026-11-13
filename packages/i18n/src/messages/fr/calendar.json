@@ -11,12 +11,6 @@
     "noteLabel": "Note",
     "notePlaceholder": "Entrez une note..."
   },
-  "navigation": {
-    "previousMonth": "Mois précédent",
-    "nextMonth": "Mois suivant",
-    "prev": "Précédent",
-    "next": "Suivant"
-  },
   "weekdays": {
     "mon": "Lun",
     "tue": "Mar",
@@ -51,5 +45,16 @@
     "randomRecipe": "Recette aléatoire",
     "noRecipesFound": "Pas de recette trouvée.",
     "failedToLoadRecipes": "Impossible de charger les recettes."
+  },
+  "caldav": {
+    "syncStarted": "Synchronisation CalDAV démarrée",
+    "syncStartedDescription": "Éléments à synchroniser : {queued}",
+    "syncStartedWithFailures": "Éléments à synchroniser : {queued}. Non mis en file d'attente : {failed}",
+    "configSaved": "Configuration enregistrée",
+    "configSavedDescription": "Vos paramètres CalDAV ont été enregistrés.",
+    "configDeleted": "Configuration supprimée",
+    "configDeletedDescription": "Vos paramètres CalDAV ont été supprimés.",
+    "retryStarted": "Synchronisation lancée",
+    "retryStartedDescription": "Nouvelle tentative pour les éléments en attente et en échec…"
   }
 }

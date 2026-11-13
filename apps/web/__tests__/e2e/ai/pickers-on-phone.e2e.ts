@@ -61,7 +61,7 @@ async function expectResultsAbove(input: Locator): Promise<void> {
 }
 
 test("the parent picker opens its results above the input, and one can be tapped", async () => {
-  await page.goto("/settings?tab=ingredients");
+  await page.goto("/settings/ingredients");
   await page.getByTestId("ingredients-search").fill("red onion");
   await page
     .locator('[data-testid="ingredient-row"][data-ingredient="red onion"]')

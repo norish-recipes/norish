@@ -5,12 +5,14 @@
   "exports": {
     "./base": "./base.ts",
     "./react": "./react.ts",
-    "./nextjs": "./nextjs.ts"
+    "./nextjs": "./nextjs.ts",
+    "./features": "./features.ts"
   },
   "scripts": {
     "clean": "git clean -xdf .cache .turbo node_modules",
     "format": "prettier --check . --ignore-path ../../.gitignore",
-    "typecheck": "pnpm exec tsc --noEmit"
+    "typecheck": "pnpm exec tsc --noEmit",
+    "test": "vitest run"
   },
   "dependencies": {
     "@eslint-react/eslint-plugin": "^5.28.8",
@@ -19,6 +21,7 @@
     "@stylistic/eslint-plugin": "^5.10.0",
     "eslint": "catalog:",
     "eslint-plugin-jsx-a11y-x": "^0.2.0",
+    "eslint-plugin-react-hooks": "catalog:",
     "eslint-plugin-sonarjs": "^4.2.2",
     "eslint-plugin-turbo": "^2.11.10",
     "eslint-plugin-unused-imports": "^4.4.1",
@@ -30,7 +33,8 @@
     "@norish/tsconfig": "workspace:*",
     "@types/node": "catalog:",
     "prettier": "catalog:",
-    "typescript": "catalog:"
+    "typescript": "catalog:",
+    "vitest": "catalog:"
   },
   "prettier": "@norish/prettier-config"
 }

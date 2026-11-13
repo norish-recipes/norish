@@ -67,7 +67,6 @@
     "notFoundMessage": "This recipe doesn't exist or you don't have permission to view it.",
     "prep": "prep",
     "total": "total",
-    "planMeal": "Plan meal",
     "recipeActions": "Recipe actions",
     "instructions": "Instructions",
     "cook": "Cook",
@@ -86,7 +85,6 @@
     "edit": "Edit",
     "delete": "Delete",
     "share": "Share",
-    "visitOriginal": "Visit Original Recipe",
     "addToCalendar": "Add to Calendar",
     "autoTag": "Auto-tag",
     "autoTagging": "Generating tags...",
@@ -103,7 +101,6 @@
     "inferringProvenance": "Working out provenance…",
     "linkIngredients": "Link Ingredients to Steps",
     "linkingIngredients": "Linking ingredients…",
-    "enrichmentFailed": "Last run failed",
     "generateImage": "Generate Picture",
     "generatingImage": "Generating picture…",
     "cookbooks": "Cookbooks"
@@ -173,7 +170,6 @@
     "editTitle": "Edit Recipe",
     "createDescription": "Add a new recipe to your collection",
     "editDescription": "Update your recipe details",
-    "initializingForm": "Initializing form...",
     "photo": "Photo",
     "basicInfo": "Basic Information",
     "ingredients": "Ingredients",
@@ -225,19 +221,12 @@
     "createRecipe": "Create Recipe",
     "saveChanges": "Save Changes",
     "uploading": "Uploading...",
-    "clickToUpload": "Click to upload or drag and drop",
-    "pasteToUpload": "to paste",
-    "imageFormats": "PNG, JPG, WEBP up to 5MB",
     "discardChangesConfirm": "You have unsaved changes. Discard them and leave this page?"
   },
   "gallery": {
-    "addImage": "Add image",
     "uploading": "Uploading...",
     "uploadFailed": "Upload failed",
-    "dragToReorder": "Drag to reorder",
-    "maxImagesReached": "Maximum {max} images allowed",
-    "maxVideosReached": "Maximum {max} videos allowed",
-    "invalidFileType": "Invalid file type"
+    "dragToReorder": "Drag to reorder"
   },
   "carousel": {
     "noImageAvailable": "No image available",
@@ -246,8 +235,11 @@
       "mute": "Mute",
       "unmute": "Unmute",
       "fullscreen": "Enter fullscreen",
-      "exitFullscreen": "Exit fullscreen"
-    }
+      "exitFullscreen": "Exit fullscreen",
+      "progress": "Video progress"
+    },
+    "recipeImage": "Recipe image",
+    "closeViewer": "Close image viewer"
   },
   "validation": {
     "nameRequired": "Recipe name is required",
@@ -262,8 +254,6 @@
     "carbs": "Carbs",
     "protein": "Protein",
     "showingPortions": "Showing values for {count} {count, plural, one {portion} other {portions}}",
-    "noInfo": "No nutrition information available",
-    "estimateWithAI": "Estimate with AI",
     "estimated": "Estimated",
     "leftOut": "{count, plural, one {# line not counted} other {# lines not counted}}",
     "estimatedByAI": "estimated by AI",
@@ -276,7 +266,9 @@
       "noPieceWeight": "no piece weight yet"
     },
     "workedOutFrom": "Worked out from the ingredients, with {sources}.",
-    "householdNumbers": "your household's numbers"
+    "householdNumbers": "your household's numbers",
+    "decreasePortions": "Decrease portions",
+    "increasePortions": "Increase portions"
   },
   "measurementSystem": {
     "label": "Measurement System",
@@ -291,7 +283,9 @@
   },
   "stepInput": {
     "stepPlaceholder": "Step {number}: Describe the step...",
-    "stepPlaceholderShort": "Step {number}"
+    "stepPlaceholderShort": "Step {number}",
+    "recipeSuggestions": "Recipe suggestions",
+    "ingredientSuggestions": "Ingredient suggestions"
   },
   "stepIngredients": {
     "rowLabel": "Linked ingredients",
@@ -327,11 +321,11 @@
     "incomplete": "This recipe may be incomplete. Check it against the source.",
     "notARecipe": "This page doesn't look like a recipe.",
     "privateAddress": "Imports from private network addresses are not allowed on this server.",
-    "batchImported": "Recipes imported",
-    "batchImportedDescription": "{count} recipes imported from archive",
     "view": "View",
     "open": "Open",
-    "deleteKept": "{count, plural, one {# recipe was} other {# recipes were}} changed by someone else and kept."
+    "deleteKept": "{count, plural, one {# recipe was} other {# recipes were}} changed by someone else and kept.",
+    "deleted": "Recipe deleted",
+    "deletedDescription": "This recipe has been removed."
   },
   "tags": {
     "panel": {
@@ -346,9 +340,6 @@
     "servings": "Servings",
     "serving": "{count, plural, one {# serving} other {# servings}}",
     "stepCounter": "{current} / {total}",
-    "swipeSteps": "Swipe to navigate steps",
-    "swipeIngredients": "Swipe left for ingredients",
-    "swipeBackToSteps": "Swipe right for steps",
     "readyAt": "Ready around {time}",
     "timers": "Timers",
     "nextStep": "Next step"
@@ -374,10 +365,7 @@
   "provenance": {
     "title": "Provenance",
     "region": "Region",
-    "cuisines": "Cuisines",
-    "inferring": "Working out where this recipe comes from…",
-    "noInfo": "No provenance information yet",
-    "inferWithAI": "Work out with AI"
+    "cuisines": "Cuisines"
   },
   "import": {
     "alreadyExists": "You already have this recipe",

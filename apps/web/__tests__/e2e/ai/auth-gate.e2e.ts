@@ -8,7 +8,7 @@
 import path from "node:path";
 import { request } from "@playwright/test";
 
-import { callTrpc } from "../harness/trpc";
+import { callTrpc, cookieHeader } from "../harness/trpc";
 import { seedRecipe } from "./cookbooks-support";
 import { expect, OWNER, test } from "./fixture";
 import { seedRecipePhoto } from "./image-generation-support";
@@ -59,7 +59,7 @@ test("a recipe image is served to a signed-in reader and a share link, never wit
   const signedIn = await request.newContext({
     baseURL: aiStack.baseURL,
     extraHTTPHeaders: {
-      cookie: aiStack.ownerCookies.map((cookie) => `${cookie.name}=${cookie.value}`).join("; "),
+      cookie: cookieHeader(aiStack.ownerCookies),
     },
   });
   const signedOut = await request.newContext({ baseURL: aiStack.baseURL });

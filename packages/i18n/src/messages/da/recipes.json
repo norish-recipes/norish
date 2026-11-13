@@ -67,7 +67,6 @@
     "notFoundMessage": "Denne opskrift eksisterer ikke, eller du har ikke adgang til at se den.",
     "prep": "forberedelse",
     "total": "i alt",
-    "planMeal": "Planlæg måltid",
     "recipeActions": "Opskrifthandlinger",
     "instructions": "Fremgangsmåde",
     "cook": "Tilbered",
@@ -86,7 +85,6 @@
     "edit": "Rediger",
     "delete": "Slet",
     "share": "Del",
-    "visitOriginal": "Besøg original opskrift",
     "addToCalendar": "Tilføj til kalender",
     "autoTag": "Tag automatisk",
     "autoTagging": "Genererer tags...",
@@ -103,7 +101,6 @@
     "inferringProvenance": "Finder oprindelsen …",
     "linkIngredients": "Tilknyt ingredienser til trin",
     "linkingIngredients": "Tilknytter ingredienser…",
-    "enrichmentFailed": "Sidste forsøg mislykkedes",
     "generateImage": "Generér billede",
     "generatingImage": "Genererer billede…",
     "cookbooks": "Kogebøger"
@@ -173,7 +170,6 @@
     "editTitle": "Rediger opskrift",
     "createDescription": "Tilføj en ny opskrift til din samling",
     "editDescription": "Opdater dine opskriftoplysninger",
-    "initializingForm": "Initialiserer formular...",
     "photo": "Billede",
     "basicInfo": "Grundoplysninger",
     "ingredients": "Ingredienser",
@@ -225,19 +221,12 @@
     "createRecipe": "Opret opskrift",
     "saveChanges": "Gem ændringer",
     "uploading": "Uploader...",
-    "clickToUpload": "Klik for at uploade eller træk og slip",
-    "pasteToUpload": "for at indsætte",
-    "imageFormats": "PNG, JPG, WEBP op til 5 MB",
     "discardChangesConfirm": "Du har ændringer, der ikke er gemt. Vil du kassere dem og forlade siden?"
   },
   "gallery": {
-    "addImage": "Tilføj billede",
     "uploading": "Uploader...",
     "uploadFailed": "Upload mislykkedes",
-    "dragToReorder": "Træk for at omarrangere",
-    "maxImagesReached": "Maksimalt {max} billeder er tilladt",
-    "maxVideosReached": "Maksimalt {max} videoer er tilladt",
-    "invalidFileType": "Ugyldig filtype"
+    "dragToReorder": "Træk for at omarrangere"
   },
   "carousel": {
     "noImageAvailable": "Intet billede tilgængeligt",
@@ -246,8 +235,11 @@
       "mute": "Slå lyd fra",
       "unmute": "Slå lyd til",
       "fullscreen": "Gå til fuld skærm",
-      "exitFullscreen": "Forlad fuld skærm"
-    }
+      "exitFullscreen": "Forlad fuld skærm",
+      "progress": "Videoforløb"
+    },
+    "recipeImage": "Opskriftsbillede",
+    "closeViewer": "Luk billedfremviser"
   },
   "validation": {
     "nameRequired": "Opskriftsnavn er påkrævet",
@@ -262,8 +254,6 @@
     "carbs": "Kulhydrater",
     "protein": "Protein",
     "showingPortions": "Viser værdier for {count} {count, plural, one {portion} other {portioner}}",
-    "noInfo": "Ingen næringsoplysninger tilgængelige",
-    "estimateWithAI": "Estimér med AI",
     "estimated": "Anslået",
     "leftOut": "{count, plural, one {# linje ikke talt med} other {# linjer ikke talt med}}",
     "estimatedByAI": "anslået af AI",
@@ -276,7 +266,9 @@
       "noPieceWeight": "ingen stykvægt endnu"
     },
     "workedOutFrom": "Beregnet ud fra ingredienserne, med {sources}.",
-    "householdNumbers": "din husstands værdier"
+    "householdNumbers": "din husstands værdier",
+    "decreasePortions": "Færre portioner",
+    "increasePortions": "Flere portioner"
   },
   "measurementSystem": {
     "label": "Målesystem",
@@ -291,7 +283,9 @@
   },
   "stepInput": {
     "stepPlaceholder": "Trin {number}: Beskriv trinnet...",
-    "stepPlaceholderShort": "Trin {number}"
+    "stepPlaceholderShort": "Trin {number}",
+    "recipeSuggestions": "Opskriftsforslag",
+    "ingredientSuggestions": "Ingrediensforslag"
   },
   "stepIngredients": {
     "rowLabel": "Tilknyttede ingredienser",
@@ -327,11 +321,11 @@
     "incomplete": "Denne opskrift er muligvis ufuldstændig. Sammenlign den med kilden.",
     "notARecipe": "Denne side ligner ikke en opskrift.",
     "privateAddress": "Import fra private netværksadresser er ikke tilladt på denne server.",
-    "batchImported": "Opskrifter importeret",
-    "batchImportedDescription": "{count} opskrifter importeret fra arkiv",
     "view": "Se",
     "open": "Åbn",
-    "deleteKept": "{count, plural, one {# opskrift blev} other {# opskrifter blev}} ændret af en anden og beholdt."
+    "deleteKept": "{count, plural, one {# opskrift blev} other {# opskrifter blev}} ændret af en anden og beholdt.",
+    "deleted": "Opskrift slettet",
+    "deletedDescription": "Denne opskrift er blevet fjernet."
   },
   "tags": {
     "panel": {
@@ -346,9 +340,6 @@
     "servings": "Portioner",
     "serving": "{count, plural, one {# portion} other {# portioner}}",
     "stepCounter": "{current} / {total}",
-    "swipeSteps": "Swipe for at navigere mellem trin",
-    "swipeIngredients": "Swipe til venstre for ingredienser",
-    "swipeBackToSteps": "Swipe til højre for trin",
     "readyAt": "Klar omkring {time}",
     "timers": "Timere",
     "nextStep": "Næste trin"
@@ -374,10 +365,7 @@
   "provenance": {
     "title": "Oprindelse",
     "region": "Region",
-    "cuisines": "Køkkener",
-    "inferring": "Finder ud af, hvor denne opskrift kommer fra …",
-    "noInfo": "Ingen oprindelsesoplysninger endnu",
-    "inferWithAI": "Find ud af det med AI"
+    "cuisines": "Køkkener"
   },
   "import": {
     "alreadyExists": "Du har allerede denne opskrift",

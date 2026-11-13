@@ -1,10 +1,10 @@
 "use client";
 
-import type { Timer } from "@/stores/timers";
-import { useTimersEnabledQuery } from "@/hooks/config";
-import { useTimerStore } from "@/stores/timers";
+import type { Timer } from "@/lib/timers";
+import { useTimerStore } from "@/lib/timers";
 
-import { useHydrated } from "@norish/shared-react/hooks";
+import { useTimersEnabledQuery } from "@norish/shared-react/config";
+import { useHydrated } from "@norish/shared-react/platform";
 
 const NO_TIMERS: Timer[] = [];
 

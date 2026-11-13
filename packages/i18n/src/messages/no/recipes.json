@@ -67,7 +67,6 @@
     "notFoundMessage": "Denne oppskriften eksisterer ikke, eller du har ikke tilgang til å se den.",
     "prep": "forberedelse",
     "total": "totalt",
-    "planMeal": "Planlegg måltid",
     "recipeActions": "Oppskrifthandlinger",
     "instructions": "Fremgangsmåte",
     "cook": "Tilbered",
@@ -86,7 +85,6 @@
     "edit": "Rediger",
     "delete": "Slett",
     "share": "Del",
-    "visitOriginal": "Besøk original oppskrift",
     "addToCalendar": "Legg til i kalender",
     "autoTag": "Tagg automatisk",
     "autoTagging": "Genererer tags...",
@@ -103,7 +101,6 @@
     "inferringProvenance": "Finner opphavet …",
     "linkIngredients": "Koble ingredienser til trinn",
     "linkingIngredients": "Kobler ingredienser…",
-    "enrichmentFailed": "Siste forsøk mislyktes",
     "generateImage": "Generer bilde",
     "generatingImage": "Genererer bilde…",
     "cookbooks": "Kokebøker"
@@ -173,7 +170,6 @@
     "editTitle": "Rediger oppskrift",
     "createDescription": "Legg til en ny oppskrift i samlingen din",
     "editDescription": "Oppdater oppskriftinformasjonen din",
-    "initializingForm": "Initialiserer skjema...",
     "photo": "Bilde",
     "basicInfo": "Grunnleggende informasjon",
     "ingredients": "Ingredienser",
@@ -225,19 +221,12 @@
     "createRecipe": "Opprett oppskrift",
     "saveChanges": "Lagre endringer",
     "uploading": "Laster opp...",
-    "clickToUpload": "Klikk for å laste opp eller dra og slipp",
-    "pasteToUpload": "for å lime inn",
-    "imageFormats": "PNG, JPG, WEBP opp til 5 MB",
     "discardChangesConfirm": "Du har ulagrede endringer. Vil du forkaste dem og forlate siden?"
   },
   "gallery": {
-    "addImage": "Legg til bilde",
     "uploading": "Laster opp...",
     "uploadFailed": "Opplasting mislyktes",
-    "dragToReorder": "Dra for å omorganisere",
-    "maxImagesReached": "Maks. {max} bilder er tillatt",
-    "maxVideosReached": "Maks. {max} videoer er tillatt",
-    "invalidFileType": "Ugyldig filtype"
+    "dragToReorder": "Dra for å omorganisere"
   },
   "carousel": {
     "noImageAvailable": "Ingen bilde tilgjengelig",
@@ -246,8 +235,11 @@
       "mute": "Slå av lyd",
       "unmute": "Slå på lyd",
       "fullscreen": "Gå til fullskjerm",
-      "exitFullscreen": "Forlat fullskjerm"
-    }
+      "exitFullscreen": "Forlat fullskjerm",
+      "progress": "Videofremdrift"
+    },
+    "recipeImage": "Oppskriftsbilde",
+    "closeViewer": "Lukk bildevisning"
   },
   "validation": {
     "nameRequired": "Oppskriftnavn er påkrevd",
@@ -262,8 +254,6 @@
     "carbs": "Karbohydrater",
     "protein": "Protein",
     "showingPortions": "Viser verdier for {count} {count, plural, one {porsjon} other {porsjoner}}",
-    "noInfo": "Ingen næringsinformasjon tilgjengelig",
-    "estimateWithAI": "Estimér med AI",
     "estimated": "Anslått",
     "leftOut": "{count, plural, one {# linje ikke regnet med} other {# linjer ikke regnet med}}",
     "estimatedByAI": "anslått av AI",
@@ -276,7 +266,9 @@
       "noPieceWeight": "ingen stykkvekt ennå"
     },
     "workedOutFrom": "Beregnet fra ingrediensene, med {sources}.",
-    "householdNumbers": "husstandens verdier"
+    "householdNumbers": "husstandens verdier",
+    "decreasePortions": "Færre porsjoner",
+    "increasePortions": "Flere porsjoner"
   },
   "measurementSystem": {
     "label": "Målesystem",
@@ -291,7 +283,9 @@
   },
   "stepInput": {
     "stepPlaceholder": "Trinn {number}: Beskriv trinnet...",
-    "stepPlaceholderShort": "Trinn {number}"
+    "stepPlaceholderShort": "Trinn {number}",
+    "recipeSuggestions": "Oppskriftsforslag",
+    "ingredientSuggestions": "Ingrediensforslag"
   },
   "stepIngredients": {
     "rowLabel": "Koblede ingredienser",
@@ -327,11 +321,11 @@
     "incomplete": "Denne oppskriften kan være ufullstendig. Sammenlign den med kilden.",
     "notARecipe": "Denne siden ser ikke ut som en oppskrift.",
     "privateAddress": "Import fra private nettverksadresser er ikke tillatt på denne serveren.",
-    "batchImported": "Oppskrifter importert",
-    "batchImportedDescription": "{count} oppskrifter importert fra arkiv",
     "view": "Se",
     "open": "Åpne",
-    "deleteKept": "{count, plural, one {# oppskrift ble} other {# oppskrifter ble}} endret av noen andre og beholdt."
+    "deleteKept": "{count, plural, one {# oppskrift ble} other {# oppskrifter ble}} endret av noen andre og beholdt.",
+    "deleted": "Oppskrift slettet",
+    "deletedDescription": "Denne oppskriften er fjernet."
   },
   "tags": {
     "panel": {
@@ -346,9 +340,6 @@
     "servings": "Porsjoner",
     "serving": "{count, plural, one {# porsjon} other {# porsjoner}}",
     "stepCounter": "{current} / {total}",
-    "swipeSteps": "Sveip for å navigere mellom trinn",
-    "swipeIngredients": "Sveip til venstre for ingredienser",
-    "swipeBackToSteps": "Sveip til høyre for trinn",
     "readyAt": "Ferdig rundt {time}",
     "timers": "Tidtakere",
     "nextStep": "Neste steg"
@@ -374,10 +365,7 @@
   "provenance": {
     "title": "Opphav",
     "region": "Region",
-    "cuisines": "Kjøkken",
-    "inferring": "Finner ut hvor denne oppskriften kommer fra …",
-    "noInfo": "Ingen opphavsinformasjon ennå",
-    "inferWithAI": "Finn ut med AI"
+    "cuisines": "Kjøkken"
   },
   "import": {
     "alreadyExists": "Du har allerede denne oppskriften",

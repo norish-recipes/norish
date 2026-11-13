@@ -1,4 +1,6 @@
 import type { Virtualizer } from "@tanstack/react-virtual";
+import type { RefObject } from "react";
+import { useEffect } from "react";
 
 /** The page's own timeline scrolls the window; a panel's scrolls an element. */
 type Timeline<TScroll extends Element | Window> = Pick<
@@ -7,11 +9,8 @@ type Timeline<TScroll extends Element | Window> = Pick<
 >;
 
 /**
- * Scrolls a day to the top of the window, holding off TanStack's correction
- * for the days above it while they are measured on the way. The scroll
- * already follows the day to its place, so correcting as well counts their
- * growth twice: iOS applies its deferred correction once the landing has
- * settled, which left today under the status bar.
+ * Scrolls a day to the top with TanStack's size correction off: the scroll already follows the days
+ * above as they are measured, and correcting too (deferred on iOS) hid today under the status bar.
  */
 export function landOnDay<TScroll extends Element | Window>(
   timeline: Timeline<TScroll>,
@@ -26,12 +25,20 @@ export function settleLanding<TScroll extends Element | Window>(timeline: Timeli
   if (!timeline.isScrolling) timeline.shouldAdjustScrollPositionOnItemSizeChange = undefined;
 }
 
-/**
- * Whether the window has reached the day a landing was for. A timeline loads
- * more at its edges only after that: right after the landing is asked for, the
- * window still shows the top rows, and widening the range there pins the
- * window at the top instead of today. A day outside the range is not waited for.
- */
-export function hasReachedDay(items: readonly { index: number }[], index: number): boolean {
-  return index < 0 || items.some((item) => item.index === index);
+/** Lands on `index` once, a frame after the days are drawn, and marks `landingAskedRef`. */
+export function useLandOnDay<TScroll extends Element | Window>(
+  timeline: Timeline<TScroll>,
+  index: number,
+  isLoading: boolean,
+  landingAskedRef: RefObject<boolean>
+) {
+  useEffect(() => {
+    if (landingAskedRef.current || isLoading || index < 0) return;
+    const frame = requestAnimationFrame(() => {
+      landOnDay(timeline, index);
+      landingAskedRef.current = true;
+    });
+
+    return () => cancelAnimationFrame(frame);
+  }, [isLoading, index, timeline, landingAskedRef]);
 }

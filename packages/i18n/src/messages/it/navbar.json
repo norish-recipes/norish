@@ -13,6 +13,7 @@
       "description": "Gestisci il tuo account"
     },
     "logout": "Esci",
+    "signOutOffline": "Sei offline. Esci quando sarai di nuovo online.",
     "signOutConfirm": {
       "title": "Scartare le modifiche non sincronizzate?",
       "description": "{count, plural, one {# modifica fatta offline non ha ancora raggiunto il server.} other {# modifiche fatte offline non hanno ancora raggiunto il server.}} Uscendo, questo lavoro in attesa verrà scartato definitivamente e i dati offline del tuo account verranno rimossi da questo dispositivo."
@@ -32,11 +33,6 @@
     "home": "Ricette",
     "calendar": "Calendario",
     "groceries": "Spesa"
-  },
-  "mobile": {
-    "searchPlaceholder": "Cerca ricette...",
-    "toggleSearch": "Attiva/disattiva ricerca",
-    "goBack": "Torna indietro"
   },
   "archiveImporter": {
     "uploading": "Caricamento…",

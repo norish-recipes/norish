@@ -1,50 +1,46 @@
 "use client";
 
-// The web client's offline wiring (ADR-0001): the shared engine over IndexedDB, its connectivity
-// hints and controller, plus what only web has: the QuerySeed first frame and the image cache.
-
-import type { DehydratedState, Query, QueryClient } from "@tanstack/react-query";
+// The web client's offline wiring (ADR-0001): the shared engine over IndexedDB and its connectivity
+// hints, plus what only web has: the QuerySeed first frame and the image cache.
+import type {
+  DehydratedState,
+  Query,
+  QueryCacheNotifyEvent,
+  QueryClient,
+} from "@tanstack/react-query";
 import type { ReactNode } from "react";
 import { useSyncExternalStore } from "react";
-import { useConnectionStatus, useTRPC, useTRPCClient } from "@/app/providers/trpc-provider";
-import { useUserContext } from "@/context/user-context";
 import { isOfflineForced, subscribeOfflineForced } from "@/lib/connectivity/forced-offline";
 import { createIdbStorage } from "@/lib/offline/idb-storage";
 import { warmPrimaryImages } from "@/lib/offline/warm-images";
 
-import type {
-  CalendarRange,
-  LockManagerLike,
-  OfflineEngine,
-  OfflineStorage,
-} from "@norish/shared-react/offline";
+import type { LockManagerLike, OfflineEngine, OfflineStorage } from "@norish/shared-react/offline";
 import {
   createOfflineEngine,
   createOfflineQueryClient,
   HEALTH_PROBE_PATH,
   QUERY_STALE_TIME_MS,
 } from "@norish/shared-react/offline";
-import {
-  OfflineController,
-  ConnectivityProvider as SharedConnectivityProvider,
-  useConnectivity,
-} from "@norish/shared-react/offline/react";
-import { getSession } from "@norish/shared/lib/auth/client";
+import { ConnectivityProvider as SharedConnectivityProvider } from "@norish/shared-react/offline/react";
+import { isKeptCurrent } from "@norish/shared-react/realtime";
+import { useConnectionStatus } from "@norish/shared-react/trpc";
 import { addBasePath } from "@norish/shared/lib/base-path";
-import { dateKey, getInitialDateRange } from "@norish/shared/lib/helpers";
+import { getInitialCalendarRange } from "@norish/shared/lib/helpers";
+import { APP_VERSION } from "@norish/web/config/site";
 
 /** Marks the web client's replays in server logs. */
-export const OUTBOX_REPLAY_HEADER_VALUE = "web-outbox";
+const OUTBOX_REPLAY_HEADER_VALUE = "web-outbox";
 
 /** The readiness route under the web client's base path. */
 const HEALTH_PROBE_URL = addBasePath(HEALTH_PROBE_PATH);
 
 /** A restored cache from another app version is dropped, never migrated; the Outbox is kept. */
-// NEXT_PUBLIC values are intentionally exposed to the browser by Next.js.
-// eslint-disable-next-line no-restricted-properties
-export const CACHE_BUSTER = process.env.NEXT_PUBLIC_APP_VERSION;
+const CACHE_BUSTER = APP_VERSION;
 
-/** The data each query held as the server sent it with this page load, by query hash. */
+/**
+ * The data each query held as the server sent it with this page load, by query hash, until its
+ * last reader unmounts.
+ */
 const serverCopies = new Map<string, unknown>();
 
 /**
@@ -59,26 +55,51 @@ export function markServerCopies(state: DehydratedState | undefined): void {
   }
 }
 
+/** The queries the server has answered since this page loaded: a read, or the seed it arrived with. */
+const answered = new WeakSet<Query>();
+
+function noteAnswer({ query, ...event }: QueryCacheNotifyEvent): void {
+  const read = event.type === "updated" && event.action.type === "success" && !event.action.manual;
+  const seeded =
+    query.state.data !== undefined && serverCopies.get(query.queryHash) === query.state.data;
+
+  if (read || seeded) answered.add(query);
+  // A tick later, so a remount in the same commit (StrictMode, a view switch) keeps them.
+  if (event.type === "observerRemoved" && query.getObserversCount() === 0) {
+    setTimeout(() => forgetUnwatched(query), 0);
+  }
+}
+
+/** Away from its screen nothing keeps a read current, so coming back refetches it. */
+function forgetUnwatched(query: Query): void {
+  if (query.getObserversCount() > 0) return;
+  serverCopies.delete(query.queryHash);
+  if (!isKeptCurrent(query.queryKey, query.state.dataUpdatedAt)) answered.delete(query);
+}
+
 /**
- * A server copy, unchanged and under the stale time (a document the worker kept can be old), is
- * current. Every other copy refetches on mount: a restored one may predate a change made elsewhere.
+ * The server's unchanged copy under the stale time is current, and until stale so is one it answered
+ * that a mounted subscription keeps current. Any other may predate a change made elsewhere.
  */
-const refetchOnMount = (query: Query) =>
+const refetchOnMount = (query: Query) => {
   // Never on the server: a seeded query marked as refetching renders a spinner there, which the
   // hydrating render does not.
-  typeof window === "undefined" ||
-  (serverCopies.has(query.queryHash) &&
+  if (typeof window === "undefined") return false;
+  if (
+    serverCopies.has(query.queryHash) &&
     serverCopies.get(query.queryHash) === query.state.data &&
-    !query.isStaleByTime(QUERY_STALE_TIME_MS))
-    ? false
+    !query.isStaleByTime(QUERY_STALE_TIME_MS)
+  ) {
+    return false;
+  }
+
+  return answered.has(query) && isKeptCurrent(query.queryKey, query.state.dataUpdatedAt)
+    ? true
     : ("always" as const);
+};
 
-function calendarRanges(): CalendarRange[] {
-  return (["desktop", "mobile"] as const).map((mode) => {
-    const { start, end } = getInitialDateRange(mode);
-
-    return { startISO: dateKey(start), endISO: dateKey(end) };
-  });
+function calendarRanges() {
+  return (["desktop", "mobile"] as const).map((mode) => getInitialCalendarRange(mode));
 }
 
 function browserLocks(): LockManagerLike | null {
@@ -93,7 +114,7 @@ function browserLocks(): LockManagerLike | null {
 export function createWebOfflineEngine(
   storage: OfflineStorage = createIdbStorage()
 ): OfflineEngine {
-  return createOfflineEngine({
+  const engine = createOfflineEngine({
     storage,
     replayHeaderValue: OUTBOX_REPLAY_HEADER_VALUE,
     probeUrl: () => HEALTH_PROBE_URL,
@@ -104,6 +125,10 @@ export function createWebOfflineEngine(
     refetchOnMount,
     onClear: () => serverCopies.clear(),
   });
+
+  engine.queryClient.getQueryCache().subscribe(noteAnswer);
+
+  return engine;
 }
 
 export const offlineEngine = createWebOfflineEngine();
@@ -151,39 +176,5 @@ export function ConnectivityProvider({ children }: { children: ReactNode }) {
     >
       {children}
     </SharedConnectivityProvider>
-  );
-}
-
-const getSessionUserId = () => getSession().then((session) => session?.data?.user?.id ?? null);
-
-/** The shared offline controller over the web engine, below `UserProvider`. */
-export function OfflineCacheController({
-  children,
-  seededUserId,
-}: {
-  children: ReactNode;
-  /** The reader the layout's server pass verified; absent offline. */
-  seededUserId?: string;
-}) {
-  const { user } = useUserContext();
-  const connectivity = useConnectivity();
-  const { status: wsStatus } = useConnectionStatus();
-  const trpc = useTRPC();
-  const trpcClient = useTRPCClient();
-
-  // The server's verified id stands in until the browser's own session request
-  // answers, so the cache restores at hydration rather than a round trip later.
-  return (
-    <OfflineController
-      connectivity={connectivity}
-      engine={offlineEngine}
-      getSessionUserId={getSessionUserId}
-      sessionUserId={user?.id ?? seededUserId ?? null}
-      transport={trpcClient}
-      trpc={trpc}
-      wsStatus={wsStatus}
-    >
-      {children}
-    </OfflineController>
   );
 }

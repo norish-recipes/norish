@@ -5,7 +5,7 @@ import "@testing-library/jest-dom";
 
 import SmartMarkdownRenderer from "@/components/shared/smart-markdown-renderer";
 
-vi.mock("@/components/recipe/timer-chip", () => ({
+vi.mock("@/components/timer-chip", () => ({
   TimerChip: ({ originalText }: { originalText: string }) => <span>timer:{originalText}</span>,
 }));
 

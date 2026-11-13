@@ -19,11 +19,13 @@ It describes the shape as it stands when it ships, with one line naming the feat
 
 **Blocked by:** 02, 06
 
-**Status:** ready-for-agent
+**Status:** done
 
-- [ ] The page exists in the Development section and builds in the docs site.
-- [ ] It covers folder structure, what goes where, the decisions and the three data flows.
-- [ ] Every decision with an ADR links it; nothing restates an ADR at length.
-- [ ] Folder and file names in it match the repo at the time it ships.
-- [ ] CONTRIBUTING.md and AGENTS.md link to it.
-- [ ] Examples are English.
+Review fixes (e42d28b3e and the next commit): `packages/api` is server startup, not the server process; the publish call, Outbox replay and queue handlers match the code; `ai/providers/` joins the AI boundary here and in AGENTS.md; CONTRIBUTING's tree lists every workspace, `db-schema/` included; repeats cut.
+
+- [x] The page exists in the Development section and builds in the docs site.
+- [x] It covers folder structure, what goes where, the decisions and the three data flows.
+- [x] Every decision with an ADR links it; nothing restates an ADR at length.
+- [x] Folder and file names in it match the repo at the time it ships.
+- [x] CONTRIBUTING.md and AGENTS.md link to it.
+- [x] Examples are English.

@@ -44,8 +44,8 @@ Edit `.env.local` with your local configuration. At minimum, you need:
 pnpm run docker:up
 ```
 
-That starts PostgreSQL, Valkey, and Obscura — the browser that renders pages for
-URL imports — so nothing has to be launched by hand. `pnpm run docker:down`
+That starts PostgreSQL, Valkey, and Obscura, the browser that renders pages for
+URL imports, so nothing has to be launched by hand. `pnpm run docker:down`
 stops them again.
 
 ### 5. Run Development Server
@@ -76,30 +76,82 @@ pnpm dev
 
 ```
 norish/
-├── apps/             # App workspaces
-│   ├── web/          # Next.js app (App Router + server entry)
-│   └── mobile/       # Expo app (@norish/mobile)
-├── packages/         # Shared libraries
-│   ├── api/          # Server API logic (routers, AI, parsing)
-│   ├── auth/         # Auth helpers
-│   ├── config/       # Shared config
-│   ├── db/           # Drizzle schema + repositories
-│   ├── i18n/         # Locale tooling and data
-│   ├── queue/        # Background jobs
-│   ├── shared/       # Shared utilities and contracts
-│   ├── shared-react/ # Shared React hooks and contexts
-│   ├── shared-server/# Shared server utilities
-│   ├── trpc/         # tRPC router definitions
-│   └── ui/           # UI component library
-├── tooling/          # Repo tooling
-│   ├── eslint/        # @norish/eslint-config
-│   ├── github/        # Shared GitHub Actions composite actions
-│   ├── monorepo/      # Circular dependency checks
-│   ├── prettier/      # @norish/prettier-config
-│   ├── tailwind/      # @norish/tailwind-config
-│   └── typescript/    # @norish/tsconfig
-└── docker/           # Local runtime containers
+├── apps/                 # App workspaces
+│   ├── web/              # Next.js app (App Router + server entry)
+│   │   ├── app/          # Routes
+│   │   ├── components/imports/ # Shared recipe import UI
+│   │   └── features/     # One folder per feature
+│   │       ├── account/
+│   │       ├── admin/
+│   │       ├── auth/
+│   │       ├── calendar/
+│   │       ├── groceries/
+│   │       ├── household/
+│   │       ├── ingredients/
+│   │       ├── library/
+│   │       └── recipes/
+│   ├── mobile/           # Expo app (@norish/mobile)
+│   │   └── src/          # Routes and features, as on web
+│   ├── parser-api/       # Python service around recipe-scrapers
+│   ├── docs/             # Docs site (docs.norish.dev)
+│   ├── landing/          # Landing page (norish.dev)
+│   └── quick-import-extension/ # Browser extension, a git submodule
+├── packages/             # Shared libraries
+│   ├── api/              # Server startup, import parser, CalDAV sync, video
+│   ├── auth/             # Auth helpers
+│   ├── config/           # Shared config
+│   ├── db/               # Repositories, migrations, Drizzle client
+│   ├── db-schema/        # Drizzle table definitions
+│   ├── i18n/             # Locale tooling and data
+│   ├── queue/            # Background jobs
+│   ├── shared/           # Shared utilities and contracts
+│   ├── shared-react/     # React logic both apps share, by domain
+│   ├── shared-server/    # Shared server utilities
+│   ├── trpc/             # tRPC router definitions
+│   └── ui/               # UI component library
+├── tooling/              # Repo tooling
+│   ├── eslint/           # @norish/eslint-config
+│   ├── github/           # Shared GitHub Actions composite actions
+│   ├── ingredient-icons/ # Draws the Ingredient Icons Norish ships
+│   ├── monorepo/         # Circular dependency checks
+│   ├── nutrition/        # Builds the nutrition source table
+│   ├── prettier/         # @norish/prettier-config
+│   ├── tailwind/         # @norish/tailwind-config
+│   └── typescript/       # @norish/tsconfig
+└── docker/               # Local runtime containers
 ```
+
+## App architecture
+
+Web and mobile use the same layout and share logic in `packages/shared-react`. [Architecture](https://docs.norish.dev/development/architecture) in the docs shows where each piece lives and traces a read, a write and a realtime update through it.
+
+- Web features cover `library` (with the cookbook page), `recipes` (with the shared recipe page), `groceries`, `calendar`, `account`, `household`, `ingredients`, `admin` and `auth`. `features/<feature>/` holds its screens, components and hooks. Auth holds the login, signup and auth-error screens; `app/(auth)/` keeps the layout, `loading.tsx` files and each page's server work. Route files in `app/` render screens from features, and a page that shows several, such as the dashboard, composes them. The settings route composes `account`, `household`, `ingredients`, `admin` and CalDAV in `calendar`; each tab has its own route and screen. Shared settings UI lives in `components/settings/`. Mobile's `smoke` isn't a domain: it is a throwaway screen that tests the plumbing until the redesigned screens replace it.
+- Features never import each other. Lint blocks `@/features/<x>` and `@/features/<x>/**` outside feature `<x>`, except in route files. A panel several features open lives in the shared `components/Panel/consumers/` folder.
+- A feature's components are grouped by area (`list/`, `panels/`, `stores/`). An area's `index.ts` re-exports only pieces more than one screen draws; import a piece one screen draws by file, and omit the index when nothing is shared. The bundler ships every file an index re-exports, so mixing pieces puts one screen's code in another's chunk.
+- Skeletons, `loading.tsx` files and the shared recipe page import files directly, never through an area's `index.ts`. Importing directly cut the recipe skeleton's own code from 324 KB to 38 KB.
+- Each layout seeds only what its screens draw in the first frame, and some seeded reads are reread once their subscriptions are live to cover changes made before registration. `(app)` seeds permissions and Device Preferences; `(library)` and the recipe layout seed favourites, the household and the reader's allergies through `lib/reader-recipe-seeds.ts`; `(dashboard)` seeds pending imports. The shell reads the Reader's profile (`user.get`) itself. Seeds arrive only on a full document load; in-app navigations carry none.
+- Views that share a layout, as the grocery list and the Pantry do, are drawn by one root the layout renders, which picks the view from the address, so a switch stays on the client. The layout seeds only the view a full load opens on; each page just gives its view an address.
+- Code two or more features use goes in the app's shared `components/`, `hooks/` or `lib/`, so no feature imports it from another. `components/imports/` holds the URL, paste and image import modals, the copied-link prompt and `use-import-recipe`. The library header and shell open the import UI. Imports run one way: shared folders, then features, then routes.
+- Components never call tRPC. Every read and write uses a named shared-react hook in its domain; `restrictTRPC` in `tooling/eslint/features.ts` bans `useTRPC` and `useTRPCClient` in both apps, with named exceptions when needed (none today). The hooks are reusable by both apps.
+- Server-only work, such as repository reads, seeds and redirects, stays in route folders, so features remain client-facing.
+- A shared-react hook passes toast messages in namespaces shipped by web's root layout; `root-messages.test.ts` guards them.
+- Components read server data through plain hooks over the TanStack Query cache, with `select` for a slice, and never copy it into a context or a store. The cache stays the one source of truth, which offline mode persists ([ADR-0001](docs/adr/offline/0001-web-offline-is-a-persisted-query-cache.md)), and a component re-renders only when its slice changes.
+- Use generated builders (`queryKey()`, `mutationKey()`, `pathKey()`, `pathFilter()`, `queryFilter()`, `infiniteQueryKey()`) for tRPC query keys and a named constant for a non-tRPC query key; lint reports hand-written keys, and a key that matches no query fails silently. Match a list read as an infinite query with `pathKey()`, not `queryKey()` with no input.
+- A list rebuilt from changed data keeps each unchanged item's object, as the Query cache does, and memoises its rows, so a change renders only the rows it touches.
+- A write's rollback and settle go in `useMutation`'s own options, never in a `mutate` call, whose callbacks run for the last call only, so an overlapped failure would keep its optimistic change.
+- The component that draws data mounts its subscriptions: a feature root for its screens, a panel while open, and the shell for its own data and the Reader. A screen also mounts subscriptions for other domains it draws, so unused pages don't stay subscribed. The shell mounts the Reader's household and permissions, admin config, `useRecipeOutcomesSubscription` and the archive import outcome, each showing its own toasts through the platform adapter. Library's root mounts recipe list events, ratings, cookbooks and the Pantry. Calendar's root and today's meals on the dashboard mount calendar events and recipe updates. The editor also mounts recipe list events, which reread its category choices, and Add to Groceries mounts the subscription of the recipe it draws. The Account screen mounts archive import progress for its bar. A component inside `Panel` mounts its reads and subscriptions while open and through the exit animation. Each opening rereads data nothing kept current; hooks need no `enabled` or `open` flag. A subscription names its reads with `useKeepsCurrent`, so web doesn't read them again on mount until they go stale. A mounted subscription vouches only for a read that arrived after it mounted, so a read from before a gap in its subscription is fetched again. A subscription mounting with the screen rereads its `liveQueryKeys` once live. A reread waits until no write is pending, and one an optimistic write cancels runs again then. A write waiting in the Outbox does not count as pending.
+- A context only hands down a per-page store or wires compound components such as `Panel`. Every consumer re-renders when its value changes, so it holds nothing that changes often.
+- Client state several components share goes in a zustand store, and state one component owns stays in `useState`. Each component subscribes to the fields it reads, so a change re-renders only those components. A store holds ids, never a copy of server data, which would go stale.
+- A store is global unless its first value comes from the request or the page. A component reads a global store without a provider above it, and one that must start fresh on each screen resets on unmount. A persisted store persists through the platform adapter's storage, so the same store runs on web and mobile.
+- A store whose first value comes from the request or the page, such as the recipe page's recipe id, belongs to the page: the page's provider creates it once with zustand's `createStore` and hands it down through a context that holds only the store, and components read it with a selector. A module-level store is one object on the server, shared by every request, so it can't hold one page's recipe while the server renders.
+- shared-react groups code by domain, including `admin` and `ingredients`, coarser than the app features: `recipes` holds the list, filters, selection, detail and cookbooks that `library` and `recipes` import, plus `useImportMutations` alongside `useRecipesMutations`. `src/<domain>/` holds its hooks, client stores, realtime subscription and types, exported as `@norish/shared-react/<domain>`, so a mobile screen reuses what web uses and adds only its UI. Domains never import each other, and the cross-cutting folders they import never import a domain, so changing one domain never breaks the rest, and lint enforces both. The cross-cutting folders:
+  - `trpc/` creates the one tRPC context, so every hook imports `useTRPC` directly with no factory to bind in each app.
+  - `platform/` is the one adapter each app mounts for toasts, navigation, errors, storage, Device Kind, the session, `endSession(scope)` (`"everywhere"` or `"device"`), `leave(reason)` and the offline engine clear, so shared code holds no web or mobile imports.
+  - `offline/` holds the Outbox and the optimistic updates every domain's mutations use, so every write is Queued and replayed the same way while Offline.
+  - `config/` holds `useAuthProvidersQuery` and reference data such as units, tags and recurrence, which every domain reads and none owns.
+  - `reader/` holds the signed-in Reader and Account: identity, household, profile, allergies, Sign-in Methods, site tokens, their writes, permissions and Device Preferences, which every domain checks without fetching its own copy. `reader/session-end.ts` holds `useSignOut`, `useSessionExpiry` and `expireSession`, each app's 401 and 4401 callback. Web mounts `useSessionExpiry` in the signed-in shell; mobile mounts it in `AuthProviders` from sign-in until leaving. Web's sign-in screen forgets the Offline Cache when reached with a `callbackUrl`, except after sign-out.
+  - `realtime/` holds the hook every domain's realtime subscription is built on, so each one rereads once live and recovers from a lag the same way.
+  - `page-store/` provides `createPageStoreContext`, which returns a provider that creates a store once from the page's key and a hook that selects a slice of it.
 
 ## Script Ownership
 
@@ -113,7 +165,7 @@ norish/
 - Shared lint, format, and TypeScript settings are published as workspace packages under `tooling/`.
 - Workspaces should compose from these packages instead of creating root-level config files.
 - Current shared packages:
-  - `@norish/eslint-config` (`tooling/eslint`) with `base`, `react`, and `nextjs` exports
+  - `@norish/eslint-config` (`tooling/eslint`) with `base`, `react`, `nextjs`, and `features` exports
   - `@norish/prettier-config` (`tooling/prettier`)
   - `@norish/tsconfig` (`tooling/typescript`) with `base.json` and `compiled-package.json`
   - `@norish/tailwind-config` (`tooling/tailwind`) with `theme` and `postcss-config` exports
@@ -133,10 +185,10 @@ Always use the `@/` path alias for imports:
 
 ```typescript
 // Good
-import { useRecipesContext } from "@/context/recipes-context";
+import { useLibraryList } from "@/features/library/hooks/use-library";
 
 // Bad
-import { useRecipesContext } from "../../../context/recipes-context";
+import { useLibraryList } from "../../../features/library/hooks/use-library";
 ```
 
 ### Type Safety
@@ -156,10 +208,10 @@ Use Pino logger instead of `console.log`:
 
 ```typescript
 // Server-side
+import { createLogger } from "@norish/shared-server/logger";
 
 // Client-side
-import { createClientLogger } from "@/lib/logger";
-import { createLogger } from "@/server/logger";
+import { createClientLogger } from "@norish/shared/lib/logger";
 
 const log = createLogger("my-module");
 log.info("Something happened");
@@ -169,11 +221,12 @@ const log = createClientLogger("MyComponent");
 
 ### React
 
-The web app compiles with the React Compiler, which memoises components and hooks itself:
+Web, mobile, `packages/shared-react` and `packages/ui` compile with the React Compiler, which memoises components and hooks itself:
 
-- New code doesn't add `useMemo` or `useCallback`. Existing ones stay.
+- Don't write `useMemo` or `useCallback`; the compiler memoises. The one exception is a value an effect depends on that must keep its identity, with a one-line comment saying so. A component marked `"use no memo"`, such as a TanStack Virtual list, keeps its own, since the compiler skips it.
 - Keep a hook's `use` prefix when you alias it (`const useX = hooks.useX`). The compiler knows a hook only by its name.
 - Derive values during render instead of copying them into state from an effect. The lint flags state set in an effect, refs read during render, and mutated props.
+- Lint reports every component or hook the compiler skips, through `eslint-plugin-react-hooks`. Fix the code rather than silence it; one that must stay uncompiled, such as a TanStack Virtual list, opens with `"use no memo"`.
 
 ### Database Access
 
@@ -235,12 +288,12 @@ An unavailable or environmentally blocked browser run is reported as blocked, no
 - Follow the PR template
 - Link the PR to an issue (`Fixes #...` in the PR body)
 - PRs without a linked issue will be closed, except translation-only PRs
-  (maintainer PRs may reference a Linear issue id — e.g. `GEZ-46` — instead)
+  (maintainer PRs may reference a Linear issue id such as `GEZ-46` instead)
 - Ensure CI checks pass
 
 ## Testing
 
-Tests are colocated in workspace `__tests__/` directories (e.g., `apps/web/__tests__/...`, `packages/shared/__tests__/...`). We use Vitest with React Testing Library.
+Tests live in `__tests__/` directories: a workspace's own (e.g., `apps/web/__tests__/...`, `apps/mobile/__tests__/...`, `packages/shared/__tests__/...`), or a feature's (`apps/web/features/groceries/__tests__/`, `apps/mobile/src/features/auth/__tests__/`, `packages/shared-react/src/groceries/__tests__/`), one flat folder per feature. Mobile's shared tests mirror `src/` without the `src/` segment, such as `src/lib/auth/x.ts` in `__tests__/lib/auth/x.test.ts`. We use Vitest with React Testing Library.
 
 User-visible workflows whose acceptance criteria depend on browser behavior require production-like browser E2E coverage. Keep third-party dependencies deterministic at their narrow external boundary while exercising the real Norish application path. Backend-only changes do not require browser E2E unless their acceptance criteria explicitly cross that boundary.
 
@@ -252,7 +305,7 @@ pnpm test:run
 pnpm --filter @norish/web run test
 
 # Run a specific test file (from within the workspace directory)
-cd apps/web && pnpm exec vitest run __tests__/hooks/recipes/use-recipes-query.test.ts
+cd apps/web && pnpm exec vitest run __tests__/hooks/use-recipes-mutations.test.tsx
 
 # Build once and run the complete browser E2E gate (Offline + AI + Realtime projects)
 pnpm test:e2e
@@ -289,7 +342,7 @@ The flows in `apps/mobile/maestro/old-server/` run last, against a stub server t
 
 ## Adding Translations
 
-Norish uses a configurable locale system. The bundled locale catalog lives in `packages/i18n/src/locales.ts`, server defaults are derived from that catalog in `packages/config/src/server-config-loader.ts`, and locales can be enabled/disabled at runtime via the Admin UI or environment variables.
+Norish uses a configurable locale system. The bundled locale catalog lives in `packages/i18n/src/locales.ts`, server defaults are derived from that catalog in `packages/shared-server/src/config/server-config-loader.ts`, and locales can be enabled/disabled at runtime via the Admin UI or environment variables.
 
 ### 1. Add Locale to the Bundled Locale Catalog
 

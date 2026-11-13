@@ -1,6 +1,7 @@
 import { storageAdapter } from "@better-auth/expo/client";
 import * as SecureStore from "expo-secure-store";
 
+import type { SessionUser } from "@norish/shared-react/reader";
 import { createClientLogger } from "@norish/shared/lib/logger";
 
 const log = createClientLogger("auth-storage");
@@ -10,15 +11,56 @@ export const AUTH_STORAGE_PREFIX = "norish";
 export const AUTH_COOKIE_KEY = `${AUTH_STORAGE_PREFIX}_cookie`;
 const AUTH_SESSION_DATA_KEY = `${AUTH_STORAGE_PREFIX}_session_data`;
 
-/** SecureStore as the auth client reads it: a large value is stored in chunks. */
-export const authStorage = storageAdapter(SecureStore);
+type ClientStorage = Pick<
+  typeof SecureStore,
+  "getItem" | "getItemAsync" | "setItem" | "setItemAsync"
+>;
 
-export type PersistedUser = {
-  id: string;
-  email: string;
-  name: string;
-  image?: string | null;
-};
+/** SecureStore for one client; once retired, its reads answer empty and its writes are dropped. */
+function retirableStorage() {
+  let retired = false;
+  const storage: ClientStorage = {
+    getItem: (...args) => (retired ? null : SecureStore.getItem(...args)),
+    getItemAsync: async (...args) => (retired ? null : SecureStore.getItemAsync(...args)),
+    setItem: (...args) => {
+      if (!retired) SecureStore.setItem(...args);
+    },
+    setItemAsync: async (...args) => {
+      if (!retired) await SecureStore.setItemAsync(...args);
+    },
+  };
+
+  // The plugin queues reads and writes per storage object, so readers share the client's queue.
+  return {
+    storage,
+    adapter: storageAdapter(storage),
+    claimed: false,
+    retire: () => {
+      retired = true;
+    },
+  };
+}
+
+let current = retirableStorage();
+
+/** SecureStore as the current auth client reads it: chunked, and queued behind its writes. */
+export function authStorage() {
+  return current.adapter;
+}
+
+/** The storage a new auth client writes through; a replaced client's is retired first. */
+export function claimClientStorage(): ClientStorage {
+  if (current.claimed) retireClientStorage();
+  current.claimed = true;
+
+  return current.storage;
+}
+
+/** Drops whatever the current client still writes; readers move to a fresh storage. */
+export function retireClientStorage(): void {
+  current.retire();
+  current = retirableStorage();
+}
 
 function readRequiredString(value: unknown): string | null {
   if (typeof value !== "string" || value.length === 0) {
@@ -28,7 +70,7 @@ function readRequiredString(value: unknown): string | null {
   return value;
 }
 
-function toPersistedUser(value: unknown): PersistedUser | null {
+function toSessionUser(value: unknown): SessionUser | null {
   if (typeof value !== "object" || value === null) {
     return null;
   }
@@ -48,9 +90,9 @@ function toPersistedUser(value: unknown): PersistedUser | null {
 
   const parsedId = readRequiredString(id);
   const parsedEmail = readRequiredString(email);
-  const parsedName = readRequiredString(name);
 
-  if (!parsedId || !parsedEmail || !parsedName) {
+  // An empty name is still a reader, as the live session reads it.
+  if (!parsedId || !parsedEmail || typeof name !== "string") {
     return null;
   }
 
@@ -61,7 +103,7 @@ function toPersistedUser(value: unknown): PersistedUser | null {
   return {
     id: parsedId,
     email: parsedEmail,
-    name: parsedName,
+    name,
     image: image ?? null,
   };
 }
@@ -73,14 +115,14 @@ function toPersistedUser(value: unknown): PersistedUser | null {
  * Returns the validated user object, or `null` if the key is missing, empty,
  * unparseable, or the user shape is invalid.
  */
-export async function readPersistedSession(): Promise<PersistedUser | null> {
+export async function readPersistedSession(): Promise<SessionUser | null> {
   let authCookie: string | null;
   let raw: string | null;
 
   try {
     [authCookie, raw] = await Promise.all([
-      authStorage.getItemAsync(AUTH_COOKIE_KEY),
-      authStorage.getItemAsync(AUTH_SESSION_DATA_KEY),
+      authStorage().getItemAsync(AUTH_COOKIE_KEY),
+      authStorage().getItemAsync(AUTH_SESSION_DATA_KEY),
     ]);
   } catch {
     log.warn("Failed to read persisted auth data from SecureStore");
@@ -106,7 +148,7 @@ export async function readPersistedSession(): Promise<PersistedUser | null> {
     return null;
   }
 
-  const user = toPersistedUser(parsed);
+  const user = toSessionUser(parsed);
 
   if (!user) {
     log.warn("Persisted session data has an invalid shape");
@@ -115,12 +157,16 @@ export async function readPersistedSession(): Promise<PersistedUser | null> {
   return user;
 }
 
+/** Wipes both keys, each settled before a failed one rejects, so the client is replaced after both. */
 export async function clearAuthStorage(): Promise<void> {
   // The adapter has no delete; writing "" through it empties every chunk, then the key goes.
-  await Promise.all(
+  const wipes = await Promise.allSettled(
     [AUTH_COOKIE_KEY, AUTH_SESSION_DATA_KEY].map(async (key) => {
-      await authStorage.setItemAsync(key, "");
+      await authStorage().setItemAsync(key, "");
       await SecureStore.deleteItemAsync(key);
     })
   );
+  const failed = wipes.find((wipe): wipe is PromiseRejectedResult => wipe.status === "rejected");
+
+  if (failed) throw failed.reason;
 }

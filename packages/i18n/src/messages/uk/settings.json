@@ -4,7 +4,7 @@
     "ariaLabel": "Вкладки налаштувань"
   },
   "tabs": {
-    "user": "Користувач",
+    "account": "Обліковий запис",
     "household": "Домогосподарство",
     "caldav": "CalDAV",
     "admin": "Адміністрування",
@@ -193,7 +193,6 @@
           "abbreviated": "Скорочено"
         }
       },
-      "applyError": "Не вдалося застосувати параметр",
       "afterPlanning": {
         "title": "Після планування рецепта",
         "description": "Що відбувається, коли ви плануєте рецепт",
@@ -279,11 +278,7 @@
         "warning": "Ви станете звичайним учасником і більше не зможете вилучати користувачів чи керувати кодами приєднання.",
         "confirmButton": "Передати права"
       },
-      "toasts": {
-        "kickFailed": "Не вдалося вилучити користувача",
-        "transferSuccess": "Права адміністратора передано користувачу {name}",
-        "transferFailed": "Не вдалося передати права адміністратора"
-      }
+      "unknown": "Невідомо"
     },
     "joinCode": {
       "title": "Код приєднання",
@@ -291,6 +286,7 @@
       "expiresIn": "Діє ще:",
       "regenerateButton": "Створити новий",
       "expired": "Термін дії минув",
+      "countdown": "{minutes} хв {seconds} с",
       "noCodeDescription": "Немає активного коду приєднання. Створіть його, щоб запросити нових учасників.",
       "generateButton": "Створити код приєднання",
       "copySuccess": "Код приєднання скопійовано",
@@ -356,8 +352,7 @@
       "connectionStatus": {
         "connected": "Підключено",
         "checking": "Перевірка...",
-        "disconnected": "Відключено",
-        "unknown": "Невідомо"
+        "disconnected": "Відключено"
       }
     },
     "deleteModal": {
@@ -388,10 +383,11 @@
         "failed": "Помилка",
         "removed": "Прибрано"
       },
-      "emptyFiltered": "Записів зі статусом «{status}» не знайдено",
+      "emptyFiltered": "Немає записів із цим статусом",
       "emptyDefault": "Записів синхронізації не знайдено",
       "errorDetails": "Подробиці помилки",
-      "pagination": "Сторінка {current} з {total}"
+      "pagination": "Сторінка {current} з {total}",
+      "paginationLabel": "Сторінки стану синхронізації"
     }
   },
   "ingredients": {
@@ -639,8 +635,6 @@
       "localesDescription": "Виберіть мови, з яких можуть обирати користувачі",
       "defaultLocale": "Мова за замовчуванням",
       "defaultLocaleDescription": "Мова для нових користувачів і резервна мова",
-      "localesSaved": "Налаштування мов збережено",
-      "localesError": "Не вдалося зберегти налаштування мов",
       "atLeastOneLocale": "Має бути увімкнена хоча б одна мова",
       "export": {
         "title": "Архів рецептів",
@@ -673,7 +667,6 @@
       },
       "deleteTitle": "Видалити {name}?",
       "deleteConfirm": "Обліковий запис користувача буде остаточно видалено, а самого користувача вилучено з домогосподарства. Цю дію неможливо скасувати.",
-      "deleteSuccess": "{name} видалено",
       "countSummary": "Усього {count, plural, one {# користувач} few {# користувачі} many {# користувачів} other {# користувача}}"
     },
     "registration": {
@@ -834,6 +827,7 @@
         "subtitle": "Ключові слова одиниць часу для виявлення таймерів",
         "description": "Налаштуйте ключові слова для виявлення таймерів в інструкціях рецептів. Підтримується кілька мов.",
         "enableToggle": "Увімкнути виявлення таймерів",
+        "keywordRequired": "Потрібне принаймні одне ключове слово для годин, хвилин або секунд",
         "hoursLabel": "Ключові слова для годин",
         "hoursPlaceholder": "година, години, годин, год",
         "hoursHelp": "Ключові слова для годин (напр., година, hour, stunde, heure)",
@@ -971,6 +965,7 @@
       "apiKey": "Ключ API",
       "apiKeyPlaceholder": "Введіть ключ API",
       "temperature": "Температура: {value}",
+      "temperatureLabel": "Температура",
       "temperatureHint": "Нижча — точніше, вища — креативніше",
       "maxTokens": "Макс. токенів",
       "requestTimeout": "Тайм-аут запиту (мс)",
@@ -1024,6 +1019,7 @@
       "maxLength": "Макс. тривалість відео (секунди)",
       "maxLengthDescription": "Довші відео потребують більше часу й ресурсів для обробки",
       "maxFileSize": "Макс. розмір відеофайлу",
+      "maxFileSizeUnit": "МБ",
       "maxFileSizeDescription": "Максимальний розмір завантажених відеофайлів",
       "ytDlpVersion": "Версія yt-dlp",
       "ytDlpVersionDescription": "Версія yt-dlp, що працює на цьому сервері. Тут її змінити не можна.",
@@ -1045,6 +1041,7 @@
         "genericOpenai": "Універсальний, сумісний з OpenAI"
       },
       "transcriptionEndpoint": "URL кінцевої точки",
+      "transcriptionEndpointPlaceholderGeneric": "http://localhost:8000 (faster-whisper-server) або http://localhost:8080 (LocalAI)",
       "transcriptionEndpointDescription": "Сумісна з OpenAI кінцева точка з підтримкою Whisper або кінцева точка Ollama",
       "transcriptionModel": "Модель",
       "transcriptionModelDescription": "Модель для транскрибування",
@@ -1074,8 +1071,6 @@
       "allowPrivateAddressesDescription": "Дозволяє імпорту звертатися до вашої локальної мережі. Obscura відхиляє їх у будь-якому разі.",
       "navigationTimeout": "Тайм-аут навігації (мс)",
       "navigationTimeoutDescription": "Скільки часу рендерер має на завантаження сторінки.",
-      "saved": "Рендерери сторінок збережено",
-      "error": "Не вдалося зберегти рендерери сторінок",
       "connectionSuccess": "З’єднання успішне"
     },
     "imageGenerationConfig": {
@@ -1188,9 +1183,7 @@
     "unsavedChanges": "Незбережені зміни",
     "jsonEditor": {
       "placeholder": "Введіть конфігурацію JSON...",
-      "invalidJson": "Недійсний формат JSON",
-      "failedToSave": "Не вдалося зберегти",
-      "failedToRestore": "Не вдалося відновити типові значення"
+      "invalidJson": "Недійсний формат JSON"
     },
     "jobQueue": {
       "title": "Черги завдань",
@@ -1327,6 +1320,13 @@
       "empty": "Кухонь ще немає.",
       "duplicate": "Кухня з такою назвою вже існує.",
       "saveFailed": "Не вдалося зберегти цю кухню."
+    },
+    "toasts": {
+      "localesSaved": "Налаштування мов збережено",
+      "localesError": "Не вдалося зберегти налаштування мов",
+      "userDeleted": "{name} видалено",
+      "pageRenderersSaved": "Рендерери сторінок збережено",
+      "pageRenderersError": "Не вдалося зберегти рендерери сторінок"
     }
   },
   "archiveExport": {

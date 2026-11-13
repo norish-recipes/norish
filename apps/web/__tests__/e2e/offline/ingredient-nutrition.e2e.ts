@@ -129,7 +129,7 @@ test("a recipe without nutrition shows one worked out from its lines, estimated 
 });
 
 test("a household's correction changes its own total and no other household's", async () => {
-  await pageA.goto(`/settings?tab=ingredients&ingredient=${scenario!.ingredientIds.rice}`);
+  await pageA.goto(`/settings/ingredients?ingredient=${scenario!.ingredientIds.rice}`);
 
   const panel = pageA.getByRole("dialog", { name: "rice", exact: true });
 
@@ -165,7 +165,7 @@ test("a household's correction changes its own total and no other household's", 
 });
 
 test("a household's teaspoon of cumin changes its own total and no other household's", async () => {
-  await pageA.goto(`/settings?tab=ingredients&ingredient=${scenario!.ingredientIds.cumin}`);
+  await pageA.goto(`/settings/ingredients?ingredient=${scenario!.ingredientIds.cumin}`);
 
   const panel = pageA.getByRole("dialog", { name: "cumin", exact: true });
 
@@ -220,7 +220,7 @@ test("a legacy salt to taste line lands on salt once the resolver's rules change
   await offlineHarness.transition("live");
 
   // The Ingredients page finds the spelling on salt, and no flagged food of its own.
-  await pageA.goto("/settings?tab=ingredients");
+  await pageA.goto("/settings/ingredients");
   await pageA.getByTestId("ingredients-search").fill("salt to taste");
 
   const rows = pageA.getByTestId("ingredient-row");

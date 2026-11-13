@@ -32,6 +32,7 @@ import {
   UpdateUserNameInputSchema,
   UpdateUserPreferencesInputSchema,
 } from "@norish/shared/contracts/zod";
+import { deviceBlocks } from "@norish/shared/contracts/zod/device-preferences";
 import { UpdateUserAllergiesSchema } from "@norish/shared/contracts/zod/user-allergies";
 import { avatarFilenameFromImagePath, buildAvatarFilename } from "@norish/shared/lib/helpers";
 
@@ -64,14 +65,19 @@ function emitMemberProfileUpdated(
 }
 
 /**
- * Get current user settings (user profile + API keys)
+ * Get current user settings (user profile + API keys). The Device Preferences
+ * are left to getDevicePreferences, so the client holds one copy.
  */
 const get = authedProcedure.query(async ({ ctx }) => {
   log.debug({ userId: ctx.user.id }, "Getting user settings");
 
   const freshUser = await getUserById(ctx.user.id);
   const apiKeys = await getApiKeysForUser(ctx.user.id);
-  const preferences = await getUserPreferences(ctx.user.id);
+  const {
+    phone: _phone,
+    desktop: _desktop,
+    ...preferences
+  } = await getUserPreferences(ctx.user.id);
 
   // completed DB reads
 
@@ -133,6 +139,11 @@ const updatePreferences = authedProcedure
       version: updatedUser?.version ?? input.version,
     };
   });
+
+/** The reader's Device Preferences: each Device Kind's block, the defaults where none is stored. */
+const getDevicePreferences = authedProcedure.query(async ({ ctx }) =>
+  deviceBlocks(await getUserPreferences(ctx.user.id))
+);
 
 /**
  * Set Device Preferences for the named Device Kind. The kind travels in the
@@ -419,5 +430,6 @@ export const userProcedures = router({
   getAllergies,
   setAllergies,
   updatePreferences,
+  getDevicePreferences,
   setDevicePreferences,
 });

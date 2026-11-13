@@ -5,6 +5,7 @@ import type { QueryClient } from "@tanstack/react-query";
 import type { TRPCLink } from "@trpc/client";
 import type { TRPCOptionsProxy } from "@trpc/tanstack-react-query";
 
+import type { CalendarRange } from "@norish/shared/lib/helpers";
 import type { AppRouter } from "@norish/trpc/client";
 
 import type { CacheManager, RefetchOnMount } from "./cache-manager";
@@ -14,7 +15,7 @@ import type { ProbeOptions } from "./probe";
 import type { Recovery } from "./recovery";
 import type { OutboxMutationClient } from "./replay-client";
 import type { OfflineStorage } from "./storage";
-import type { CalendarRange, WarmedRecipe, WarmSet } from "./warm-set";
+import type { WarmedRecipe, WarmSet } from "./warm-set";
 import { createCacheManager } from "./cache-manager";
 import { createOutboxLink } from "./outbox-link";
 import { createOutboxStore } from "./outbox-store";
@@ -24,7 +25,7 @@ import { replayOutboxEntry } from "./replay-client";
 import { discardAllEntries, requeueParkedEntries } from "./status-actions";
 import { createWarmSet } from "./warm-set";
 
-export interface OfflineEngineOptions {
+interface OfflineEngineOptions {
   storage: OfflineStorage;
   /** The client's value of the replay header (web: "web-outbox"). */
   replayHeaderValue: string;
@@ -43,7 +44,7 @@ export interface OfflineEngineOptions {
   onClear?: () => void;
 }
 
-export interface RecoveryTransport {
+interface RecoveryTransport {
   /** The client's raw tRPC client; Replay re-sends each entry through it. */
   transport: OutboxMutationClient;
   /** Whether the live session still belongs to the Outbox owner about to Replay. */
@@ -70,7 +71,7 @@ export interface OfflineEngine {
   discardAll(ownerId: string): Promise<number>;
   /** The signed-in owner's queued changes, Parked included: what a sign-out would discard. */
   unsyncedChanges(): Promise<number>;
-  /** Before an explicit sign-out: the read copy always goes, the queue only once confirmed. */
+  /** Once the session ended, at Sign-out or Session Expiry: the read copy goes, the queue only when asked. */
   clearForSignOut(options: { discardQueue: boolean }): Promise<void>;
 }
 
@@ -124,11 +125,12 @@ export function createOfflineEngine(options: OfflineEngineOptions): OfflineEngin
     clearForSignOut: async ({ discardQueue }) => {
       const owner = cache.owner();
 
-      if (discardQueue && owner) {
-        await discardAllEntries(owner, outbox);
+      // A failed discard still rejects to the caller's log, after the read cache is reset.
+      try {
+        if (discardQueue && owner) await discardAllEntries(owner, outbox);
+      } finally {
+        await cache.resetOfflineCopy("sign-out");
       }
-
-      await cache.resetOfflineCopy("sign-out");
     },
   };
 }

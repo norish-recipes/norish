@@ -9,8 +9,8 @@ import { arrivesBack, arriveWhereLeft } from "@/lib/scroll-memory";
 import { APP_PAGE_COLUMN_CLASS } from "@norish/web/config/css-tokens";
 
 /**
- * The template of `(app)` and of `recipes`, so every navigation remounts one and slides it. The div
- * gives the browser one box per page to capture, whatever the page renders.
+ * The template of `(app)`, `(library)` and `recipes`, so every navigation remounts one and slides
+ * it. The div gives the browser one box per page to capture, whatever the page renders.
  */
 export function PageTransition({ children }: { children: ReactNode }) {
   // The link records the direction (lib/scroll-memory.ts), not transitionTypes: React queues types

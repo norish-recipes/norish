@@ -4,7 +4,7 @@
     "ariaLabel": "Onglets des paramètres"
   },
   "tabs": {
-    "user": "Utilisateur",
+    "account": "Compte",
     "household": "Foyer",
     "caldav": "CalDAV",
     "admin": "Admin",
@@ -193,7 +193,6 @@
           "abbreviated": "Abrégées"
         }
       },
-      "applyError": "Échec de l'application du paramètre",
       "afterPlanning": {
         "title": "Après avoir planifié une recette",
         "description": "Ce qui se passe quand vous planifiez une recette",
@@ -279,11 +278,7 @@
         "warning": "Vous deviendrez un simple membre et ne pourrez plus gérer les utilisateurs ni les codes d’invitation.",
         "confirmButton": "Transférer"
       },
-      "toasts": {
-        "kickFailed": "Échec de l’expulsion de l’utilisateur",
-        "transferSuccess": "Privilèges admin transférés à {name}",
-        "transferFailed": "Échec du transfert admin"
-      }
+      "unknown": "Inconnu"
     },
     "joinCode": {
       "title": "Code d’invitation",
@@ -291,6 +286,7 @@
       "expiresIn": "Expire dans :",
       "regenerateButton": "Régénérer",
       "expired": "Expiré",
+      "countdown": "{minutes} min {seconds} s",
       "noCodeDescription": "Aucun code actif. Générez-en un pour inviter de nouveaux membres.",
       "generateButton": "Générer un code",
       "copySuccess": "Code copié",
@@ -356,8 +352,7 @@
       "connectionStatus": {
         "connected": "Connecté",
         "checking": "Vérification...",
-        "disconnected": "Déconnecté",
-        "unknown": "Inconnu"
+        "disconnected": "Déconnecté"
       }
     },
     "deleteModal": {
@@ -388,10 +383,11 @@
         "failed": "Échoué",
         "removed": "Supprimé"
       },
-      "emptyFiltered": "Aucun élément {status} trouvé",
+      "emptyFiltered": "Aucun élément avec ce statut",
       "emptyDefault": "Aucun enregistrement de synchronisation",
       "errorDetails": "Détails de l’erreur",
-      "pagination": "Page {current} sur {total}"
+      "pagination": "Page {current} sur {total}",
+      "paginationLabel": "Pages de l'état de la synchronisation"
     }
   },
   "ingredients": {
@@ -639,8 +635,6 @@
       "localesDescription": "Sélectionnez les langues disponibles pour les utilisateurs",
       "defaultLocale": "Langue par défaut",
       "defaultLocaleDescription": "Langue utilisée pour les nouveaux utilisateurs et comme langue de repli",
-      "localesSaved": "Paramètres de langue enregistrés",
-      "localesError": "Échec de l'enregistrement des paramètres de langue",
       "atLeastOneLocale": "Au moins une langue doit être activée",
       "export": {
         "title": "Archive de recettes",
@@ -673,7 +667,6 @@
       },
       "deleteTitle": "Supprimer {name} ?",
       "deleteConfirm": "Cette action supprime définitivement le compte de l'utilisateur et le retire de son foyer. Cette action est irréversible.",
-      "deleteSuccess": "{name} a été supprimé",
       "countSummary": "{count, plural, one {# utilisateur} other {# utilisateurs}} au total"
     },
     "registration": {
@@ -834,6 +827,7 @@
         "subtitle": "Mots-clés d'unité de temps pour la détection de minuterie",
         "description": "Configurez les mots-clés utilisés pour détecter les minuteries dans les instructions de recette. Supporte plusieurs langues.",
         "enableToggle": "Activer la détection de minuterie",
+        "keywordRequired": "Au moins un mot-clé est requis pour les heures, minutes ou secondes",
         "hoursLabel": "Mots-clés pour heures",
         "hoursPlaceholder": "heure, heures, h",
         "hoursHelp": "Mots-clés pour les heures (par ex. heure, hour, stunde, uur)",
@@ -971,6 +965,7 @@
       "apiKey": "Clé API",
       "apiKeyPlaceholder": "Entrer la clé API",
       "temperature": "Température : {value}",
+      "temperatureLabel": "Température",
       "temperatureHint": "Bas = plus précis, Haut = plus créatif",
       "maxTokens": "Tokens max",
       "requestTimeout": "Délai d'expiration (ms)",
@@ -1024,6 +1019,7 @@
       "maxLength": "Longueur max (secondes)",
       "maxLengthDescription": "Les vidéos plus longues demandent plus de ressources",
       "maxFileSize": "Taille max du fichier vidéo",
+      "maxFileSizeUnit": "MB",
       "maxFileSizeDescription": "Taille maximale des fichiers vidéo téléchargés",
       "ytDlpVersion": "Version de yt-dlp",
       "ytDlpVersionDescription": "Version de yt-dlp utilisée par ce serveur. Non modifiable ici.",
@@ -1045,6 +1041,7 @@
         "genericOpenai": "Compatible OpenAI générique"
       },
       "transcriptionEndpoint": "URL de l'endpoint",
+      "transcriptionEndpointPlaceholderGeneric": "http://localhost:8000 (faster-whisper-server) ou http://localhost:8080 (LocalAI)",
       "transcriptionEndpointDescription": "Endpoint compatible OpenAI supportant Whisper, ou endpoint Ollama",
       "transcriptionModel": "Modèle",
       "transcriptionModelDescription": "Modèle utilisé pour la transcription",
@@ -1074,8 +1071,6 @@
       "allowPrivateAddressesDescription": "Permet aux imports d'atteindre votre réseau local. Obscura les refuse dans tous les cas.",
       "navigationTimeout": "Délai de navigation (ms)",
       "navigationTimeoutDescription": "Le temps accordé à un moteur de rendu pour charger une page.",
-      "saved": "Moteurs de rendu de pages enregistrés",
-      "error": "Échec de l'enregistrement des moteurs de rendu de pages",
       "connectionSuccess": "Connexion réussie"
     },
     "imageGenerationConfig": {
@@ -1188,9 +1183,7 @@
     "unsavedChanges": "Modifications non enregistrées",
     "jsonEditor": {
       "placeholder": "Entrez la configuration JSON...",
-      "invalidJson": "Format JSON invalide",
-      "failedToSave": "Échec de l’enregistrement",
-      "failedToRestore": "Échec de la restauration"
+      "invalidJson": "Format JSON invalide"
     },
     "jobQueue": {
       "title": "Files de tâches",
@@ -1327,6 +1320,13 @@
       "empty": "Aucune cuisine pour le moment.",
       "duplicate": "Une cuisine porte déjà ce nom.",
       "saveFailed": "Impossible d'enregistrer cette cuisine."
+    },
+    "toasts": {
+      "localesSaved": "Paramètres de langue enregistrés",
+      "localesError": "Échec de l'enregistrement des paramètres de langue",
+      "userDeleted": "{name} a été supprimé",
+      "pageRenderersSaved": "Moteurs de rendu de pages enregistrés",
+      "pageRenderersError": "Échec de l'enregistrement des moteurs de rendu de pages"
     }
   },
   "archiveExport": {

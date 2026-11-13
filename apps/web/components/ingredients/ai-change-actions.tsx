@@ -4,8 +4,8 @@ import { ArrowUturnLeftIcon, CheckIcon } from "@heroicons/react/16/solid";
 import { Button } from "@heroui/react";
 import { useTranslations } from "next-intl";
 
-import type { AIChange } from "./types";
-import { isOpenChange } from "./use-ai-changes";
+import type { AIChange } from "@norish/shared-react/ingredients";
+import { isOpenChange } from "@norish/shared-react/ingredients";
 
 /** Undo, and Keep while the change is open, for a change the viewer may act on. */
 export function AIChangeActions({

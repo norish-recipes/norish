@@ -4,7 +4,7 @@
 import type { ConnectivitySnapshot } from "./connectivity-machine";
 import { nextProbeDelayMs, reduceProbeResult } from "./connectivity-machine";
 
-export interface ConnectivityLoop {
+interface ConnectivityLoop {
   /** Probe now instead of at the next scheduled tick; coalesces with one in flight. */
   probeNow(): void;
   stop(): void;
