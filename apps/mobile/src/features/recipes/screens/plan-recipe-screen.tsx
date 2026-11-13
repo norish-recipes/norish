@@ -1,8 +1,8 @@
 import React, { useDeferredValue, useState } from "react";
-import { Pressable, ScrollView, Text, TextInput, View } from "react-native";
+import { FlatList, Pressable, ScrollView, Text, View } from "react-native";
 import Ionicons from "@expo/vector-icons/Ionicons";
 import { useLocalSearchParams, useRouter } from "expo-router";
-import { Spinner, useThemeColor } from "heroui-native";
+import { Button, SearchField, Skeleton, Spinner, Tabs, useThemeColor } from "heroui-native";
 import { useIntl } from "react-intl";
 
 import type { Slot } from "@norish/shared/contracts";
@@ -17,10 +17,11 @@ import {
 import { parseDateKey } from "@norish/shared/lib/helpers";
 
 import { CardPhoto } from "../components/card-photo";
+import { GlassCloseButton } from "../components/glass-close-button";
 
 /** The days offered, today first. */
 const DAYS = 14;
-const SCROLL_END_MARGIN = 240;
+const SKELETON_ROWS = [0, 1, 2, 3];
 
 const asSlot = (value: string | undefined): Slot =>
   TODAY_MEAL_SLOTS.find((slot) => slot === value) ?? "Dinner";
@@ -30,7 +31,7 @@ export function PlanRecipeScreen() {
   const intl = useIntl();
   const router = useRouter();
   const params = useLocalSearchParams<{ slot?: string }>();
-  const [foreground, muted] = useThemeColor(["foreground", "muted"] as const);
+  const [foreground] = useThemeColor(["foreground"] as const);
   const today = parseDateKey(useToday());
   const days = Array.from(
     { length: DAYS },
@@ -47,47 +48,23 @@ export function PlanRecipeScreen() {
     slot,
     getRandomRecipe,
     close: () => router.back(),
-    // ponytail: after-planning (open or add groceries) arrives with the plan and groceries sheets.
-    onPlanned: () => {},
   });
 
   useRecipeListSubscription();
 
-  const slotLabel = (target: Slot) =>
-    intl.formatMessage({ id: `common.slots.${slotTranslationKeys[target]}` });
   const hasNote = input.trim().length > 0;
+  const first = error && recipes.length === 0 ? "rounded-[22px]" : "rounded-t-[22px]";
 
-  return (
-    // react-native-screens sizes only a ScrollView that sits directly in the sheet.
-    <ScrollView
-      contentContainerClassName="gap-3 px-5 pt-5 pb-8"
-      contentInsetAdjustmentBehavior="never"
-      keyboardDismissMode="on-drag"
-      keyboardShouldPersistTaps="handled"
-      scrollEventThrottle={64}
-      showsVerticalScrollIndicator={false}
-      testID="plan-recipe-sheet"
-      onScroll={({ nativeEvent: { contentOffset, contentSize, layoutMeasurement } }) => {
-        if (contentOffset.y + layoutMeasurement.height > contentSize.height - SCROLL_END_MARGIN) {
-          loadMore();
-        }
-      }}
-    >
+  const header = (
+    <View className="gap-3">
       <View className="flex-row items-center justify-between pl-2">
         <Text className="text-foreground text-[22px] font-semibold">
           {intl.formatMessage({ id: "calendar.panel.planRecipe" })}
         </Text>
-        <Pressable
-          accessibilityLabel={intl.formatMessage({ id: "common.actions.close" })}
-          accessibilityRole="button"
-          className="bg-surface size-10 items-center justify-center rounded-full"
-          testID="plan-recipe-close"
-          onPress={() => router.back()}
-        >
-          <Ionicons color={foreground} name="close" size={20} />
-        </Pressable>
+        <GlassCloseButton testID="plan-recipe-close" onPress={() => router.back()} />
       </View>
 
+      {/* heroui-native has no day strip, so these chips are hand-built. */}
       <ScrollView
         horizontal
         accessibilityLabel={intl.formatMessage({ id: "calendar.panel.addToCalendar" })}
@@ -132,45 +109,40 @@ export function PlanRecipeScreen() {
         })}
       </ScrollView>
 
-      <View
-        accessibilityRole="radiogroup"
-        className="bg-default flex-row gap-0.5 rounded-full p-[3px]"
-      >
-        {TODAY_MEAL_SLOTS.map((target) => (
-          <Pressable
-            key={target}
-            accessibilityRole="radio"
-            accessibilityState={{ checked: slot === target }}
-            className={`h-[34px] flex-1 items-center justify-center rounded-full ${slot === target ? "bg-surface" : ""}`}
-            testID={`plan-recipe-slot-${target}`}
-            onPress={() => setSlot(target)}
-          >
-            <Text
-              className={`text-sm font-medium ${slot === target ? "text-foreground" : "text-muted"}`}
-              numberOfLines={1}
+      <Tabs value={slot} onValueChange={(next) => setSlot(asSlot(next))}>
+        <Tabs.List className="bg-default h-10 rounded-full p-[3px]">
+          <Tabs.Indicator className="bg-surface rounded-full" />
+          {TODAY_MEAL_SLOTS.map((target) => (
+            <Tabs.Trigger
+              key={target}
+              className="h-[34px] flex-1"
+              testID={`plan-recipe-slot-${target}`}
+              value={target}
             >
-              {slotLabel(target)}
-            </Text>
-          </Pressable>
-        ))}
-      </View>
+              <Tabs.Label className="text-sm font-medium" numberOfLines={1}>
+                {intl.formatMessage({ id: `common.slots.${slotTranslationKeys[target]}` })}
+              </Tabs.Label>
+            </Tabs.Trigger>
+          ))}
+        </Tabs.List>
+      </Tabs>
 
-      <View className="bg-surface h-12 flex-row items-center gap-2.5 rounded-3xl px-4">
-        <Ionicons color={muted} name="search" size={18} />
-        <TextInput
-          accessibilityLabel={intl.formatMessage({ id: "calendar.panel.searchOrAddNote" })}
-          autoCorrect={false}
-          className="text-foreground flex-1 text-base"
-          placeholder={intl.formatMessage({ id: "calendar.panel.searchOrAddNote" })}
-          placeholderTextColor={muted}
-          returnKeyType="search"
-          testID="plan-recipe-search"
-          value={input}
-          onChangeText={setInput}
-        />
-      </View>
+      <SearchField value={input} onChange={setInput}>
+        <SearchField.Group>
+          <SearchField.SearchIcon />
+          <SearchField.Input
+            accessibilityLabel={intl.formatMessage({ id: "calendar.panel.searchOrAddNote" })}
+            autoCorrect={false}
+            className="bg-surface h-12 rounded-3xl"
+            placeholder={intl.formatMessage({ id: "calendar.panel.searchOrAddNote" })}
+            returnKeyType="search"
+            testID="plan-recipe-search"
+          />
+          <SearchField.ClearButton />
+        </SearchField.Group>
+      </SearchField>
 
-      <View className="bg-surface overflow-hidden rounded-[22px]">
+      <View className={`bg-surface ${first}`}>
         {hasNote ? (
           <ActionRow
             icon="document-text-outline"
@@ -192,32 +164,61 @@ export function PlanRecipeScreen() {
             {intl.formatMessage({ id: "calendar.panel.failedToLoadRecipes" })}
           </Text>
         ) : null}
-        {recipes.map((recipe) => (
-          <Pressable
-            key={recipe.id}
-            accessibilityLabel={recipe.name}
-            accessibilityRole="button"
-            className="border-separator flex-row items-center gap-3 border-t px-3.5 py-2.5"
-            testID={`plan-recipe-${recipe.id}`}
-            onPress={() => planRecipe(recipe, slot)}
-          >
-            <CardPhoto className="size-11 rounded-xl" image={recipe.image} />
-            <Text className="text-foreground flex-1 text-base" numberOfLines={1}>
-              {recipe.name}
-            </Text>
-            <View className="bg-default size-8 items-center justify-center rounded-full">
-              <Ionicons color={foreground} name="add" size={17} />
-            </View>
-          </Pressable>
-        ))}
-        {isLoading && recipes.length === 0 ? <Spinner className="py-4" /> : null}
-        {!isLoading && !error && recipes.length === 0 ? (
-          <Text className="text-muted border-separator border-t p-4 text-base">
-            {intl.formatMessage({ id: "calendar.panel.noRecipesFound" })}
-          </Text>
-        ) : null}
       </View>
-    </ScrollView>
+    </View>
+  );
+
+  return (
+    // react-native-screens sizes only a scroll view that sits directly in the sheet.
+    <FlatList
+      ListEmptyComponent={
+        error ? undefined : (
+          <View className="bg-surface border-separator rounded-b-[22px] border-t">
+            {isLoading ? (
+              SKELETON_ROWS.map((row) => (
+                <View key={row} className="flex-row items-center gap-3 px-3.5 py-2.5">
+                  <Skeleton className="size-11 rounded-xl" />
+                  <Skeleton className="h-4 w-40 rounded-md" />
+                </View>
+              ))
+            ) : (
+              <Text className="text-muted p-4 text-base">
+                {intl.formatMessage({ id: "calendar.panel.noRecipesFound" })}
+              </Text>
+            )}
+          </View>
+        )
+      }
+      ListFooterComponent={<View className="h-8" />}
+      ListHeaderComponent={header}
+      contentContainerClassName="px-5 pt-5"
+      contentInsetAdjustmentBehavior="never"
+      data={recipes}
+      keyExtractor={(recipe) => recipe.id}
+      keyboardDismissMode="on-drag"
+      keyboardShouldPersistTaps="handled"
+      renderItem={({ item: recipe, index }) => (
+        <Button
+          accessibilityLabel={recipe.name}
+          className={`border-separator bg-surface h-auto justify-start gap-3 rounded-none border-t px-3.5 py-2.5 ${index === recipes.length - 1 ? "rounded-b-[22px]" : ""}`}
+          testID={`plan-recipe-${recipe.id}`}
+          variant="ghost"
+          onPress={() => planRecipe(recipe, slot)}
+        >
+          <CardPhoto className="size-11 rounded-xl" image={recipe.image} />
+          <Text className="text-foreground flex-1 text-base" numberOfLines={1}>
+            {recipe.name}
+          </Text>
+          <View className="bg-default size-8 items-center justify-center rounded-full">
+            <Ionicons color={foreground} name="add" size={17} />
+          </View>
+        </Button>
+      )}
+      showsVerticalScrollIndicator={false}
+      testID="plan-recipe-sheet"
+      onEndReached={loadMore}
+      onEndReachedThreshold={0.6}
+    />
   );
 }
 
@@ -237,11 +238,11 @@ function ActionRow({
   const [accent] = useThemeColor(["accent"] as const);
 
   return (
-    <Pressable
-      accessibilityRole="button"
-      className="flex-row items-center gap-3 px-3.5 py-2.5"
-      disabled={busy}
+    <Button
+      className="h-auto justify-start gap-3 rounded-none px-3.5 py-2.5"
+      isDisabled={busy}
       testID={testID}
+      variant="ghost"
       onPress={onPress}
     >
       <View className="bg-default size-11 items-center justify-center rounded-xl">
@@ -250,6 +251,6 @@ function ActionRow({
       <Text className="text-foreground flex-1 text-base font-medium" numberOfLines={1}>
         {label}
       </Text>
-    </Pressable>
+    </Button>
   );
 }
