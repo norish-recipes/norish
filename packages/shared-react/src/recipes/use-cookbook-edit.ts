@@ -43,7 +43,9 @@ export function useCookbookEdit(
   // Every staged edit commits through the same seam, so the edit has one way to write.
   const { updateCookbook, uploadCookbookImage, setMembership } = useCookbooksMutations();
   const members = useCookbookRecipesQuery(cookbook.id, {}, { enabled: withMembers });
-  const [title, setTitle] = useState(cookbook.title);
+  // Null until the reader types, so an untouched title follows a rename made elsewhere.
+  const [typed, setTitle] = useState<string | null>(null);
+  const title = typed ?? cookbook.title;
   const [removed, setRemoved] = useState<string[]>([]);
   const [picked, setPicked] = useState<CookbookCover | null>(null);
   const [clearImage, setClearImage] = useState(false);

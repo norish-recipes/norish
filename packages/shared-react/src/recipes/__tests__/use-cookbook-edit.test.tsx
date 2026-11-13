@@ -115,6 +115,22 @@ describe("useCookbookEdit", () => {
     expect(order).toEqual(["upload", "update", "membership", "remove"]);
   });
 
+  it("does not write back a title that was never typed, after the cookbook is renamed", async () => {
+    let current = cookbook;
+    const { result, rerender } = renderHook(() => useCookbookEdit(current), {
+      wrapper: createTestWrapper(createTestQueryClient()),
+    });
+
+    current = { ...cookbook, title: "Suppers", version: 4 };
+    rerender();
+    await act(() => result.current.save(new Blob(["x"])));
+
+    expect(result.current.title).toBe("Suppers");
+    expect(spies.updateCookbook).toHaveBeenCalledWith(
+      expect.objectContaining({ title: "Suppers", version: 4 })
+    );
+  });
+
   it("toggles a removal back and forth", () => {
     const { result } = render();
 
