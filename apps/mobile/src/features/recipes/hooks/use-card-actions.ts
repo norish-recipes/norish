@@ -1,4 +1,3 @@
-import { Alert } from "react-native";
 import { useRouter } from "expo-router";
 import { useIntl } from "react-intl";
 
@@ -10,6 +9,8 @@ import {
   useRecipeMutationErrorToast,
   useRecipesMutations,
 } from "@norish/shared-react/recipes";
+
+import { useConfirm } from "./use-confirm";
 
 type Recipe = Pick<RecipeDashboardDTO, "id" | "name" | "version" | "userId">;
 type Cookbook = Pick<CookbookSummaryDTO, "id" | "title" | "version" | "userId">;
@@ -23,16 +24,7 @@ export function useCardActions() {
   const { setMembership, deleteCookbook } = useCookbooksMutations();
   const { canEditRecipe, canDeleteRecipe } = useRecipePermissions();
 
-  // The native alert: destructive button on the right, as the board draws it.
-  const confirm = (title: string, message: string, onConfirm: () => void) =>
-    Alert.alert(title, message, [
-      { text: intl.formatMessage({ id: "common.actions.cancel" }), style: "cancel" },
-      {
-        text: intl.formatMessage({ id: "common.actions.delete" }),
-        style: "destructive",
-        onPress: onConfirm,
-      },
-    ]);
+  const confirm = useConfirm();
 
   return {
     canDelete: (owned: Pick<Recipe, "userId">) => ownerAllows(owned.userId, canDeleteRecipe),
@@ -46,21 +38,24 @@ export function useCardActions() {
     removeFromCookbook: (cookbook: Cookbook, recipe: Recipe) =>
       setMembership({ cookbookId: cookbook.id, recipeIds: [recipe.id], isMember: false }),
     deleteRecipe: (recipe: Recipe) =>
-      confirm(
-        intl.formatMessage({ id: "recipes.deleteModal.alertTitle" }, { name: recipe.name }),
-        intl.formatMessage({ id: "recipes.deleteModal.warning" }),
-        () => deleteRecipes([{ id: recipe.id, version: recipe.version }])
-      ),
+      confirm({
+        title: intl.formatMessage({ id: "recipes.deleteModal.alertTitle" }, { name: recipe.name }),
+        message: intl.formatMessage({ id: "recipes.deleteModal.warning" }),
+        onConfirm: () => deleteRecipes([{ id: recipe.id, version: recipe.version }]),
+      }),
     addRecipes: (cookbook: Cookbook) =>
       router.push({ pathname: "/cookbook-add-recipes", params: { cookbookId: cookbook.id } }),
     renameCookbook: (cookbook: Cookbook) =>
       router.push({ pathname: "/cookbook-rename", params: { cookbookId: cookbook.id } }),
     deleteCookbook: (cookbook: Cookbook) =>
-      confirm(
-        intl.formatMessage({ id: "recipes.cookbooks.deleteAlertTitle" }, { title: cookbook.title }),
-        intl.formatMessage({ id: "recipes.cookbooks.deleteKeepsRecipes" }),
-        () => deleteCookbook({ id: cookbook.id, version: cookbook.version })
-      ),
+      confirm({
+        title: intl.formatMessage(
+          { id: "recipes.cookbooks.deleteAlertTitle" },
+          { title: cookbook.title }
+        ),
+        message: intl.formatMessage({ id: "recipes.cookbooks.deleteKeepsRecipes" }),
+        onConfirm: () => deleteCookbook({ id: cookbook.id, version: cookbook.version }),
+      }),
   };
 }
 
