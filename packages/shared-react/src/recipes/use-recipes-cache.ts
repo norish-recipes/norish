@@ -136,9 +136,11 @@ export function useRecipesCacheHelpers(): RecipesCacheHelpers {
 
         // The import's own link arrives with its started event, after the placeholder.
         if (existing) {
-          return existing.url || !url
-            ? arr
-            : arr.map((pending) => (pending === existing ? { ...pending, url } : pending));
+          const learnsLink = !existing.url && url;
+
+          if (!learnsLink) return arr;
+
+          return arr.map((pending) => (pending === existing ? { ...pending, url } : pending));
         }
 
         const optimisticPending = arr.find((pending) =>
