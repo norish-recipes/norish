@@ -124,16 +124,16 @@ export function CookbookCard({
   const tap = useTapGesture({ runOnJS: true, onActivate: open });
 
   return (
-    <CardMenu href={{ pathname: "/cookbook/[id]", params: { id: cookbook.id } }} items={items}>
-      <View
-        accessible
-        {...accessibilityProps}
-        accessibilityLabel={cookbook.title}
-        accessibilityRole="button"
-        className={variant === "grid" ? "flex-1" : undefined}
-        testID={`cookbook-card-${cookbook.id}`}
-        onAccessibilityTap={open}
-      >
+    <View
+      accessible
+      {...accessibilityProps}
+      accessibilityLabel={cookbook.title}
+      accessibilityRole="button"
+      className={variant === "grid" ? "flex-1" : undefined}
+      testID={`cookbook-card-${cookbook.id}`}
+      onAccessibilityTap={open}
+    >
+      <CardMenu href={{ pathname: "/cookbook/[id]", params: { id: cookbook.id } }} items={items}>
         <GestureDetector gesture={tap}>
           {variant === "grid" ? (
             <View className="bg-surface border-border h-[286px] overflow-hidden rounded-3xl border">
@@ -159,7 +159,7 @@ export function CookbookCard({
             </View>
           )}
         </GestureDetector>
-      </View>
-    </CardMenu>
+      </CardMenu>
+    </View>
   );
 }

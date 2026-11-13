@@ -35,6 +35,7 @@ export function PendingCard({
 
   return variant === "grid" ? (
     <View
+      accessible
       accessibilityLabel={`${title} ${host}`}
       className="bg-surface border-border h-[286px] flex-1 overflow-hidden rounded-3xl border"
       testID={`pending-card-${id}`}
@@ -52,6 +53,7 @@ export function PendingCard({
     </View>
   ) : (
     <View
+      accessible
       accessibilityLabel={`${title} ${host}`}
       className="bg-surface h-[116px] flex-row overflow-hidden rounded-[20px]"
       testID={`pending-card-${id}`}

@@ -85,25 +85,25 @@ export function RecipeCard({ recipe, variant, isFavorite, allergies, actions, co
 
   return (
     <SwipeActions actions={swipe} variant={variant}>
-      <CardMenu href={{ pathname: "/recipe/[id]", params: { id: recipe.id } }} items={items}>
-        <View
-          accessible
-          {...accessibilityProps}
-          accessibilityLabel={
-            isFavorite
-              ? `${recipe.name}, ${intl.formatMessage({ id: "recipes.actions.favourite" })}`
-              : recipe.name
-          }
-          accessibilityRole="button"
-          className={variant === "grid" ? "flex-1" : undefined}
-          testID={`recipe-card-${recipe.id}`}
-          onAccessibilityTap={open}
-        >
+      <View
+        accessible
+        {...accessibilityProps}
+        accessibilityLabel={
+          isFavorite
+            ? `${recipe.name}, ${intl.formatMessage({ id: "recipes.actions.favourite" })}`
+            : recipe.name
+        }
+        accessibilityRole="button"
+        className={variant === "grid" ? "flex-1" : undefined}
+        testID={`recipe-card-${recipe.id}`}
+        onAccessibilityTap={open}
+      >
+        <CardMenu href={{ pathname: "/recipe/[id]", params: { id: recipe.id } }} items={items}>
           <GestureDetector gesture={singleTap}>
             <Card facts={facts} isFavorite={isFavorite} photoGesture={doubleTap} recipe={recipe} />
           </GestureDetector>
-        </View>
-      </CardMenu>
+        </CardMenu>
+      </View>
     </SwipeActions>
   );
 }
