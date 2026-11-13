@@ -13,7 +13,7 @@ import { offlineEngine } from "@/lib/offline/engine";
 
 import type { LibraryTypeFilter } from "@norish/shared/contracts";
 import type { PersistedRecipeFilters } from "@norish/shared/contracts/filter-contract";
-import { parseStoredRecipeFilters, RECIPE_FILTERS_STORAGE_KEY } from "@norish/shared-react/recipes";
+import { readStoredRecipeFilters } from "@norish/shared-react/recipes";
 import { DEFAULT_LIBRARY_TYPE_FILTER } from "@norish/shared/contracts";
 import { addBasePath, stripBasePath } from "@norish/shared/lib/base-path";
 
@@ -94,12 +94,14 @@ export function OfflineBootstrap(screens: OfflineScreens) {
 
   // With no server, the Library's filters come from the browser's storage.
   useEffect(() => {
-    void offlineEngine.cache.reconcileIdentity({ sessionUserId: null, isOffline: true }).then(() =>
-      setSurface({
-        pathname: stripBasePath(window.location.pathname),
-        filters: parseStoredRecipeFilters(browserStorage.getItem(RECIPE_FILTERS_STORAGE_KEY)),
-      })
-    );
+    void offlineEngine.cache
+      .reconcileIdentity({ sessionUserId: null, isOffline: true })
+      .then(async () =>
+        setSurface({
+          pathname: stripBasePath(window.location.pathname),
+          filters: await readStoredRecipeFilters(browserStorage),
+        })
+      );
   }, []);
 
   if (surface === null) {

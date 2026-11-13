@@ -22,10 +22,25 @@ export function parseStoredRecipeFilters(raw: string | null): PersistedRecipeFil
   }
 }
 
+/** The stored copy, read from a synchronous or asynchronous storage; the defaults when it throws. */
+export function readStoredRecipeFilters(
+  storage: PlatformStorage
+): PersistedRecipeFilters | null | Promise<PersistedRecipeFilters | null> {
+  try {
+    const raw = storage.getItem(RECIPE_FILTERS_STORAGE_KEY);
+
+    return raw instanceof Promise
+      ? raw.then(parseStoredRecipeFilters, () => null)
+      : parseStoredRecipeFilters(raw);
+  } catch {
+    return null;
+  }
+}
+
 /**
  * Applies the device's stored filters to the Library's store, then writes every change back.
  * `resumed` stores already hold this document's own filters, so storage is not read for them.
- * `onKeep` is the platform's extra copy (web's cookie for the server render).
+ * `onKeep` is the platform's extra copy, search text included: web strips it for the cookie.
  */
 export function useLibraryFiltersPersistence({
   storage,
@@ -53,9 +68,9 @@ export function useLibraryFiltersPersistence({
         if (state.filters !== previous.filters) keep(state.filters);
       });
     };
-    const applyThenStart = (raw: string | null) => {
+    const applyThenStart = (stored: PersistedRecipeFilters | null) => {
       if (cancelled) return;
-      store.getState().applyStored(parseStoredRecipeFilters(raw));
+      store.getState().applyStored(stored);
       start();
     };
 
@@ -63,10 +78,10 @@ export function useLibraryFiltersPersistence({
       start();
     } else {
       // A synchronous storage applies within this effect, so the first frame is not held a tick.
-      const raw = storage.getItem(RECIPE_FILTERS_STORAGE_KEY);
+      const stored = readStoredRecipeFilters(storage);
 
-      if (raw instanceof Promise) void raw.then(applyThenStart);
-      else applyThenStart(raw);
+      if (stored instanceof Promise) void stored.then(applyThenStart);
+      else applyThenStart(stored);
     }
 
     return () => {

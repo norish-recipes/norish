@@ -78,6 +78,27 @@ describe("useLibraryFiltersPersistence", () => {
     expect(written).not.toHaveProperty("rawInput");
   });
 
+  it("starts from the defaults when storage throws on read", () => {
+    const { storage } = memoryStorage({});
+    const throwing: PlatformStorage = {
+      ...storage,
+      getItem: () => {
+        throw new Error("denied");
+      },
+    };
+    const { result } = render(throwing);
+
+    expect(result.current.getState().hydrated).toBe(true);
+  });
+
+  it("starts from the defaults when an asynchronous storage rejects", async () => {
+    const { storage } = memoryStorage({});
+    const rejecting: PlatformStorage = { ...storage, getItem: () => Promise.reject(new Error("x")) };
+    const { result } = render(rejecting);
+
+    await waitFor(() => expect(result.current.getState().hydrated).toBe(true));
+  });
+
   it("leaves storage unread for a resumed store", () => {
     const { storage } = memoryStorage({ [RECIPE_FILTERS_STORAGE_KEY]: stored("titleAsc") });
     const { result } = render(storage, true);
