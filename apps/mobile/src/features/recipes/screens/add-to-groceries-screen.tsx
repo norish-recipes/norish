@@ -1,7 +1,8 @@
 import type { ReactNode } from "react";
 import React from "react";
-import { ScrollView, Text, View } from "react-native";
+import { Text, View } from "react-native";
 import { ServingsStepper } from "@/components/servings-stepper";
+import { Sheet, SheetScrollView } from "@/components/sheet";
 import Ionicons from "@expo/vector-icons/Ionicons";
 import { useLocalSearchParams, useRouter } from "expo-router";
 import { Button, Spinner, useThemeColor } from "heroui-native";
@@ -26,16 +27,11 @@ import {
   GroceryLinesSection,
   GroceryLinesSectionSkeleton,
 } from "../components/grocery-lines-section";
-import { SheetHeader } from "../components/sheet-header";
 
 /** Lines are only ever edited on web; the sheet takes each as the recipe has it. */
 const AS_WRITTEN = {};
 
-/** The pinned header and servings take 132 pt, the pinned footer 82 pt. */
-const HEADER_SPACE = "mt-[132px]";
-const PINNED_SPACE = "h-[214px]";
-
-/** The header and servings pinned on top, the lines scrolling between them and the footer. */
+/** The sheet with its servings row above the lines. */
 function Frame({
   subtitle,
   servings,
@@ -51,46 +47,23 @@ function Frame({
   const router = useRouter();
 
   return (
-    <>
-      {/* react-native-screens sizes the scroll view minus this first child and moves it down by that
-          height, so the child is header plus footer tall and the scroll view's margin undoes it. */}
-      <View
-        className={`absolute inset-x-0 top-0 ${PINNED_SPACE}`}
-        collapsable={false}
-        pointerEvents="box-none"
-      >
-        <View className="px-4 pt-[27px] pb-3.5">
-          <SheetHeader
-            closeTestID="add-to-groceries-close"
-            subtitle={subtitle}
-            title={intl.formatMessage({ id: "recipes.detail.addToGroceries" })}
-            onClose={() => router.back()}
-          />
-        </View>
-        <View className="mx-6 mb-3 h-[34px] flex-row items-center justify-between">
+    <Sheet
+      actions={[footer]}
+      name="add-to-groceries"
+      subtitle={subtitle}
+      title={intl.formatMessage({ id: "recipes.detail.addToGroceries" })}
+      onClose={() => router.back()}
+    >
+      <SheetScrollView gapClassName="gap-3">
+        <View className="mx-2 h-[34px] flex-row items-center justify-between">
           <Text className="text-foreground text-[15px] font-medium">
             {intl.formatMessage({ id: "groceries.panel.servings" })}
           </Text>
           {servings}
         </View>
-      </View>
-      <ScrollView
-        className={HEADER_SPACE}
-        contentContainerClassName="gap-3 px-4 pb-3"
-        contentInsetAdjustmentBehavior="never"
-        showsVerticalScrollIndicator={false}
-        testID="add-to-groceries-sheet"
-      >
         {children}
-      </ScrollView>
-      <View
-        className="absolute inset-x-0 bottom-0 px-4 pt-3 pb-5"
-        collapsable={false}
-        pointerEvents="box-none"
-      >
-        {footer}
-      </View>
-    </>
+      </SheetScrollView>
+    </Sheet>
   );
 }
 
