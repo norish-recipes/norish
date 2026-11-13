@@ -1,8 +1,8 @@
 # Mobile redesign: the iPhone screens
 
-Status: sign-in tickets 01-06 done
+Status: sign-in tickets 01-06 done; Recipes tab tickets 07-17 open
 
-Settled in a `/grilling` session on 2026-11-12. The design is the "Norish iOS" canvas (https://claude.ai/artifact/PXzHGxBxCU4MmwF8scvixz); each section of this spec names the boards it builds. Vocabulary is CONTEXT.md's Accounts & Sign-in section (**Server Address**, **Account**, **Sign-in Method**, **Sign-out**, **Session Expiry**). Target Version: 0.27.0-beta. Branch `feat/mobile-redesign`, cut from `refactor/app-structure`; it rebases onto rc once app-structure merges. Each area gets its tickets once the one before it has landed, as app-structure did: 01–06 are sign-in.
+Settled in a `/grilling` session on 2026-11-12. The design is the "Norish iOS" canvas (https://claude.ai/artifact/PXzHGxBxCU4MmwF8scvixz); each section of this spec names the boards it builds. Vocabulary is CONTEXT.md's Accounts & Sign-in section (**Server Address**, **Account**, **Sign-in Method**, **Sign-out**, **Session Expiry**). Target Version: 0.27.0-beta. Branch `feat/mobile-redesign`, cut from `refactor/app-structure`; it rebases onto rc once app-structure merges. Each area gets its tickets once the one before it has landed, as app-structure did: 01–06 are sign-in, 07–17 the Recipes tab (Part 2 below).
 
 ## Problem Statement
 
@@ -86,3 +86,102 @@ The sign-in area is rebuilt from the canvas, iPhone only, at compact width. The 
 - Passkeys, magic links, password reset: the server offers none of them.
 - The Settings screen and its Server row (the Server Address rule above is all that lands now).
 - The remaining canvas areas, which get their own tickets later.
+
+---
+
+# Part 2: the Recipes tab
+
+Settled in a `/grilling` session on 2026-11-13. The tab carries web's label for its dashboard, **Recipes** (`navbar.nav.home`): Today on top, the **Library** below (CONTEXT.md's Library & Cookbooks section). The boards are the Home row of the canvas plus the ones ticket 07 adds.
+
+## Problem Statement
+
+Signed in, the app shows a smoke screen. A household member can't see their recipes, today's meals or their cookbooks, can't plan, add to groceries or import, and can't send a recipe to Norish from another app. Web has all of it, and most of its logic already sits in `packages/shared-react`; the rest is web-only glue that mobile would otherwise copy.
+
+## Solution
+
+The signed-in shell is built with native tabs and the "Add recipe" accessory, and its first real tab is Recipes: Today's four slots over the Library in list or grid, with filters, swipe and context-menu actions on every card, cookbooks, planning, adding to groceries and imports. A Share Extension imports a link, text or photos from any app without opening Norish. Every ticket first moves the web-only logic it needs into shared-react, so the mobile screens add only UI.
+
+## User Stories
+
+1. As a household member, I want to see today's meals at the top of Recipes, opened on the next meal, so that I know what's cooking.
+2. As a household member, I want to plan an empty slot of today from a recipe search, a random pick or a note, so that today gets filled in place.
+3. As a household member, I want to move or remove a planned item from today, so that a changed plan is two taps.
+4. As a household member, I want to browse my Library in a list or a grid, remembered on this device, so that it looks how I like it.
+5. As a household member, I want to filter the Library like on web, kept across launches, so that I find what fits tonight.
+6. As a household member, I want to swipe or long-press any card to plan it, add it to groceries, favourite it, add it to a cookbook or delete it, so that I act without opening it.
+7. As a household member, I want to plan a recipe on any day from last month to next month, so that I plan ahead.
+8. As a household member, I want to add a recipe's ingredients to groceries with servings scaled and pantry staples left off, so that the list is right.
+9. As a household member, I want to make, rename, fill, cover and delete cookbooks, so that I keep my collections on the phone too.
+10. As a household member, I want Add recipe to offer the link I just copied, so that importing takes one tap.
+11. As a household member, I want to import from a link, pasted text or photos, so that any source works.
+12. As a household member, I want to share a link, text or photos to Norish from any app and see it confirmed, so that I never leave the app I'm in.
+13. As a household member, I want imports, plans and deletes made offline to happen once I'm back, so that the app works in the kitchen without signal.
+
+## Implementation Decisions
+
+### Scope and order
+
+- Ticket 07 is a canvas session (Mike) that draws what the Home row lacks: an opened cookbook; Today with nothing planned and with all slots full; the Add recipe sheet with the copied-link row; From link, From text and From photos; the Plan this recipe sheet; the Filters sheet on Recipes; the Library empty and with no results; the Share Extension's states. Tickets 08–17 build against those boards.
+- The shell comes with this area. The tabs are Recipes, Groceries, Calendar and Settings, plus the separate Search tab; the last four are placeholders until their areas. Sign out moves to the Settings placeholder and the smoke screen goes.
+- A recipe tap opens a bare `/recipe/[id]` route (photo and name) that the Recipe area replaces. "Write it yourself" is on the Add recipe sheet and leads to a placeholder, as the editor belongs to the Recipe area.
+
+### Shared logic first
+
+- Each ticket starts by moving the logic it needs from `apps/web` into shared-react, as hooks or pure helpers with their unit tests, and switches web to them in separate commits (CONTRIBUTING "App architecture"). Platform-bound code stays on its platform: web's PDF page splitting, the filter cookie that seeds the server render, the browser clipboard helper.
+- Mobile's platform adapter implements `toast` (heroui-native) and `navigation.toRecipe`, and the shell mounts what web's shell mounts (`useRecipeOutcomesSubscription`, the config subscription, the library, ratings, cookbooks, pantry and calendar subscriptions).
+- `importRecipeFromImages` and `uploadCookbookImage` accept mobile's `expo-file-system` files as well as web's `File`/`Blob`.
+
+### Today
+
+- As on web: the four slots Breakfast to Snack, opened on the next meal for the hour, shown per the `todaySectionVisibility` device preference. Filled slots are photo cards (notes included), empty ones an add card that opens the board's Plan a recipe sheet for today and that slot (slot tabs, recipe search, Random recipe, note).
+- Long-press opens the native context menu: Open recipe, Move… (the Plan this recipe sheet), Remove. Remove confirms with the native alert.
+
+### Library
+
+- All / Recipes / Cookbooks, list or grid per the `recipeViewMode` device preference, running imports as pending cards first (not under Cookbooks), the web empty and no-results states. No search field: the Search tab owns search.
+- The Filters button opens the Filters sheet with web's filters minus "Search in", on `LibraryFiltersProvider`, persisted on the device through platform storage. No floating result-count pill.
+
+### Card actions
+
+- Both views swipe (Groceries, Plan, Delete) and long-press into the native context menu: Favourite/Unfavourite, Groceries, Plan, Add to cookbook, Delete, and Remove from cookbook inside a cookbook. Delete shows only when permitted and confirms with the native alert. Double-tapping the photo toggles Favourite with a light haptic; the heart shows only on favourites. No multi-select.
+- Cookbook cards get the same pattern: Add recipes, Rename, Delete.
+
+### Planning and groceries
+
+- Plan this recipe (from a card, and Move… from Today) is web's mini calendar: days from last month to next month, opened on today, each day card showing what's planned with an add per slot. Its day card is the component the Calendar area reuses.
+- Both plan sheets follow the "after planning" preference: nothing, open Add to groceries, or add at once.
+- Add to groceries is web's mini-groceries: servings stepper, to buy / in your pantry, "we keep this", add.
+
+### Cookbooks
+
+- Opening a cookbook shows the Library scoped to it under its cover and title. Create (from "+" and from a card's Add to cookbook), rename, delete, add recipes (picker sheet), remove from cookbook, upload a cover (off while offline, as on web).
+
+### Add recipe and imports
+
+- The accessory opens the Add recipe sheet: From a link, From photos (only when AI is on), From text, Write it yourself.
+- When the sheet opens, `expo-clipboard`'s `hasUrlAsync()` checks for a link; if there is one it is read (iOS's paste prompt is accepted) and shown as the first row, "Import ‹host›", which imports in one tap; From a link opens pre-filled with it. Links to the own server are skipped. There is no app-wide copied-link ask.
+- From photos takes several images from the library or the camera. PDFs are deferred: the server takes only JPEG, PNG and WebP, and web splits PDFs in the browser.
+- Imports show the pending card; a finished one a toast with View, a failed one a toast with the reason, on every tab.
+
+### Share Extension
+
+- A SwiftUI Share Extension (not React Native: extensions get about 120 MB) accepts links, text and images and calls `importFromUrl`, `importFromPaste` or `importFromImages` itself, shows a confirmation and closes. Implemented on Opus at high effort: it moves the session.
+- The Server Address and the session cookie reach it through an App Group and a shared keychain access group; Better Auth's SecureStore items move into that group once on upgrade.
+- Unreachable: it saves the item in the App Group and says Norish will import it when the server is reachable; the app drains saved items into the Outbox on foreground. Signed out or no Server Address, a too-old server, images with AI off, any other failure: one translated line and Close, no retry.
+- Its strings are generated from `packages/i18n` at prebuild.
+
+### Offline
+
+- As web: Recipes reads from the Warm Set, and every write, imports included, goes through the Outbox.
+
+## Testing Decisions
+
+- Gates per ticket as in Part 1. Moved logic keeps or gains unit tests next to it in shared-react; web's E2E stays green after each move.
+- Maestro flows: browse and filter, plan from Today, plan from a card, add to groceries, cookbook create and add, import from a link, delete, Recipes offline. They run once after the last ticket's review, each new flow repeatedly.
+- The Share Extension is checked by hand on a device; its App Group drain gets a unit test.
+
+## Out of Scope
+
+- The Recipe screen and the recipe editor (stubs only), Search, Groceries, Calendar and Settings beyond placeholders.
+- PDF import on mobile, multi-select, an app-wide copied-link ask.
+- Fold, iPad, Android.
