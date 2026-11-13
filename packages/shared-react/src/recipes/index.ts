@@ -18,6 +18,7 @@ export { useFavoritesMutation } from "./use-favorites-mutation";
 export { useFavoritesQuery } from "./use-favorites-query";
 export { libraryGridItems, recipeGridItems, type LibraryGridItem } from "./library-grid-items";
 export { recipeCardFacts } from "./recipe-card-facts";
+export { hasActiveLibraryFilters } from "./library-filters-active";
 export { useLibraryQuery } from "./use-library-query";
 export {
   useCookbookList,

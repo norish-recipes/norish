@@ -8,9 +8,8 @@ import { useIntl } from "react-intl";
 import type { LibraryTypeFilter } from "@norish/shared/contracts";
 import type { RecipeViewMode } from "@norish/shared/contracts/zod/device-preferences";
 import { useDevicePreference } from "@norish/shared-react/reader";
-import { useLibraryFilters } from "@norish/shared-react/recipes";
+import { hasActiveLibraryFilters, useLibraryFilters } from "@norish/shared-react/recipes";
 import { LIBRARY_TYPE_FILTERS } from "@norish/shared/contracts";
-import { hasAppliedRecipeFilters } from "@norish/shared/contracts/filter-contract";
 
 const HEADING_KEYS = {
   all: "recipes.dashboard.libraryTitle",
@@ -31,7 +30,7 @@ export function LibraryHeader() {
   const [foreground, muted] = useThemeColor(["foreground", "muted"] as const);
   const filters = useLibraryFilters((state) => state.filters);
   const setFilters = useLibraryFilters((state) => state.setFilters);
-  const filtersOn = hasAppliedRecipeFilters(filters);
+  const filtersOn = hasActiveLibraryFilters(filters);
 
   return (
     <View className="gap-3.5 pt-7 pb-4">

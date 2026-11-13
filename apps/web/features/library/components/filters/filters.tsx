@@ -4,15 +4,12 @@ import { useState } from "react";
 import { FunnelIcon } from "@heroicons/react/16/solid";
 import { Button } from "@heroui/react";
 
-import { useLibraryFilters } from "@norish/shared-react/recipes";
-import { hasAppliedRecipeFilters } from "@norish/shared/contracts/filter-contract";
+import { hasActiveLibraryFilters, useLibraryFilters } from "@norish/shared-react/recipes";
 
 import FiltersPanel from "./filters-panel";
 
 export default function Filters() {
-  const hasActiveFilters = useLibraryFilters(
-    ({ filters }) => hasAppliedRecipeFilters(filters) || filters.minRating !== null
-  );
+  const hasActiveFilters = useLibraryFilters(({ filters }) => hasActiveLibraryFilters(filters));
   const [isOpen, setIsOpen] = useState(false);
 
   return (
