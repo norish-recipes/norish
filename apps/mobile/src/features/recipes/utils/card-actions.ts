@@ -57,6 +57,22 @@ export function cookbookMenuActions({
   ];
 }
 
+export type CookbookPageAction = CookbookMenuAction | "changeCover";
+
+/** The cookbook page's header menu: the card's, with Change cover among the edits. */
+export function cookbookPageActions({
+  canEdit,
+  canDelete,
+}: {
+  canEdit: boolean;
+  canDelete: boolean;
+}): CookbookPageAction[] {
+  return [
+    ...(canEdit ? (["addRecipes", "rename", "changeCover"] as const) : []),
+    ...(canDelete ? (["delete"] as const) : []),
+  ];
+}
+
 const DELETE: ActionDefinition = {
   labelId: "recipes.actions.delete",
   icon: "trash",
@@ -83,8 +99,9 @@ export const RECIPE_ACTION_DEFINITIONS: Record<RecipeMenuAction | "unfavourite",
     delete: DELETE,
   };
 
-export const COOKBOOK_ACTION_DEFINITIONS: Record<CookbookMenuAction, ActionDefinition> = {
+export const COOKBOOK_ACTION_DEFINITIONS: Record<CookbookPageAction, ActionDefinition> = {
   addRecipes: { labelId: "recipes.cookbooks.addRecipes", icon: "plus" },
   rename: { labelId: "recipes.cookbooks.rename", icon: "pencil" },
+  changeCover: { labelId: "recipes.cookbooks.changeCover", icon: "photo" },
   delete: DELETE,
 };

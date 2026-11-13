@@ -22,9 +22,10 @@ import { FiltersButton, ViewToggle } from "../components/library-header";
 import { LibrarySkeleton } from "../components/library-skeleton";
 import { CookbookNoRecipes, LibraryNoResults } from "../components/library-states";
 import { RecipeCard } from "../components/recipe-card";
+import { useCardActionMenu } from "../hooks/use-card-action-menu";
 import { useCardActions } from "../hooks/use-card-actions";
 import { useCookbookCoverPicker } from "../hooks/use-cookbook-cover-picker";
-import { COOKBOOK_PAGE_DEFINITIONS, cookbookPageActions } from "../utils/cookbook-menu";
+import { COOKBOOK_ACTION_DEFINITIONS, cookbookPageActions } from "../utils/card-actions";
 
 /** The view toggle and Filters button under the title, at the page's right. */
 function Toolbar() {
@@ -71,32 +72,31 @@ function CookbookNotFound() {
 
 /** The header's menu: the cookbook's own actions, which the cards' long press shares. */
 function useCookbookMenu(cookbook: CookbookSummaryDTO) {
-  const intl = useIntl();
   const router = useRouter();
   const actions = useCardActions();
   const { saveCover, coverDisabled } = useCookbookCover(cookbook);
-  const handlers = {
-    addRecipes: () => actions.addRecipes(cookbook),
-    rename: () => actions.renameCookbook(cookbook),
-    changeCover: saveCover,
-    delete: () => actions.deleteCookbook(cookbook, () => router.back()),
-  };
+  const { items } = useCardActionMenu(
+    cookbookPageActions({
+      canEdit: actions.canEdit(cookbook),
+      canDelete: actions.canDelete(cookbook),
+    }),
+    (key) => COOKBOOK_ACTION_DEFINITIONS[key],
+    {
+      addRecipes: () => actions.addRecipes(cookbook),
+      rename: () => actions.renameCookbook(cookbook),
+      changeCover: saveCover,
+      delete: () => actions.deleteCookbook(cookbook, () => router.back()),
+    }
+  );
 
-  return cookbookPageActions({
-    canEdit: actions.canEdit(cookbook),
-    canDelete: actions.canDelete(cookbook),
-  }).map((key) => {
-    const { labelId, icon, destructive } = COOKBOOK_PAGE_DEFINITIONS[key];
-
-    return {
-      type: "action" as const,
-      label: intl.formatMessage({ id: labelId }),
-      icon: { type: "sfSymbol" as const, name: icon },
-      destructive,
-      disabled: key === "changeCover" && coverDisabled,
-      onPress: handlers[key],
-    };
-  });
+  return items.map(({ key, label, icon, destructive, onPress }) => ({
+    type: "action" as const,
+    label,
+    icon: icon ? { type: "sfSymbol" as const, name: icon } : undefined,
+    destructive,
+    disabled: key === "changeCover" && coverDisabled,
+    onPress,
+  }));
 }
 
 /** Picks a cover and saves it at once; off while Offline, as covers are uploaded. */
