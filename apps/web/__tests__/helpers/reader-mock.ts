@@ -54,10 +54,15 @@ export type MockReader = {
 
 /** The Reader's identity, permissions and allergies over the test's own state, read on every render. */
 export async function mockReader(read: () => MockReader = () => ({})) {
-  const { normalizePermissionsData, hiddenItemVisibility, HIDDEN_ITEMS, partitionHiddenItems } =
-    await vi.importActual<typeof import("@norish/shared-react/reader")>(
-      "@norish/shared-react/reader"
-    );
+  const {
+    normalizePermissionsData,
+    hiddenItemVisibility,
+    HIDDEN_ITEMS,
+    partitionHiddenItems,
+    ownerAllows,
+  } = await vi.importActual<typeof import("@norish/shared-react/reader")>(
+    "@norish/shared-react/reader"
+  );
   const permissions = (): ReaderPermissions => ({
     ...normalizePermissionsData(null),
     ...read().permissions,
@@ -67,6 +72,7 @@ export async function mockReader(read: () => MockReader = () => ({})) {
     HIDDEN_ITEMS,
     hiddenItemVisibility,
     partitionHiddenItems,
+    ownerAllows,
     useHiddenItemVisibility: () => hiddenItemVisibility([]),
     useReader: () => ({
       user: read().user ?? null,

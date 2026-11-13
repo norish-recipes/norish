@@ -22,7 +22,7 @@ import { Button, Card, Tooltip } from "@heroui/react";
 import { useTranslations } from "next-intl";
 
 import type { CookbookSummaryDTO } from "@norish/shared/contracts";
-import { useRecipePermissions } from "@norish/shared-react/reader";
+import { ownerAllows, useRecipePermissions } from "@norish/shared-react/reader";
 import { allergenSet, formatMinutesHM, isAllergenTag } from "@norish/shared/lib/helpers";
 
 import { CardFacts } from "./card-facts";
@@ -80,8 +80,8 @@ function CookbookCardComponent({
 
   // Cookbooks answer to the recipe permission policy, so the same two
   // predicates the recipe card uses decide the menu here (ADR-0027).
-  const canEdit = cookbook.userId ? canEditRecipe(cookbook.userId) : true;
-  const canDelete = cookbook.userId ? canDeleteRecipe(cookbook.userId) : true;
+  const canEdit = ownerAllows(cookbook.userId, canEditRecipe);
+  const canDelete = ownerAllows(cookbook.userId, canDeleteRecipe);
 
   const open = useCallback(() => {
     if (!rowOpen) router.push(withOrigin(`/cookbooks/${cookbook.id}`, pathname));

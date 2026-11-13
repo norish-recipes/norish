@@ -5,6 +5,7 @@ import { useTranslations } from "next-intl";
 
 import type { MeasurementSystem } from "@norish/shared/contracts";
 import {
+  ownerAllows,
   useHiddenItemVisibility,
   usePermissions,
   useProfileQuery,
@@ -120,7 +121,7 @@ export function useAutoConversion() {
     if (!recipe || !target || isLoading || isFetching || convertingTo) return;
     if (doneForRef.current === recipe.id) return;
     if (recipe.recipeIngredients.length === 0) return;
-    if (recipe.userId && !canEditRecipe(recipe.userId)) return;
+    if (!ownerAllows(recipe.userId, canEditRecipe)) return;
 
     doneForRef.current = recipe.id;
     if (recipe.systemUsed === target.system) return;
