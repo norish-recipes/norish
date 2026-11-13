@@ -1,13 +1,20 @@
 import React from "react";
 import { AccountAvatar } from "@/components/account-avatar";
-import { SHEET_DETENTS } from "@/components/sheet-detents";
+import { FIT_SHEET_OPTIONS, SHEET_OPTIONS } from "@/components/sheet-options";
 import { Stack } from "expo-router";
 
 import { AddAtOnceHost } from "./add-at-once-host";
 import { LibraryRoot } from "./library-root";
 
-// The sheets the card actions open; their tickets fill them.
-const SHEETS = ["add-to-cookbook", "cookbook-add-recipes", "cookbook-rename"] as const;
+// The sheets whose content can outgrow 62%; cookbook-rename's fits its content.
+const SHEETS = [
+  "filters",
+  "plan-recipe",
+  "plan",
+  "add-to-groceries",
+  "add-to-cookbook",
+  "cookbook-add-recipes",
+] as const;
 
 /** The Recipes tab's stack: a transparent native header with the account avatar pinned right; the screen draws its own large title. */
 export function RecipesStack() {
@@ -22,65 +29,10 @@ export function RecipesStack() {
             unstable_headerRightItems: () => [{ type: "custom", element: <AccountAvatar /> }],
           }}
         >
-          <Stack.Screen
-            name="filters"
-            options={{
-              presentation: "formSheet",
-              headerShown: false,
-              sheetGrabberVisible: true,
-              // A detent is a fraction of the sheet's ~800 pt maximum; the board's sheet is 664 pt.
-              sheetAllowedDetents: [0.83],
-              contentStyle: { backgroundColor: "transparent" },
-            }}
-          />
-          <Stack.Screen
-            name="plan-recipe"
-            options={{
-              presentation: "formSheet",
-              headerShown: false,
-              sheetGrabberVisible: true,
-              // The board's sheet is 619 pt (a 0.785 detent) of the ~800 pt maximum.
-              sheetAllowedDetents: [0.785],
-              contentStyle: { backgroundColor: "transparent" },
-            }}
-          />
-          <Stack.Screen
-            name="add-to-groceries"
-            options={{
-              presentation: "formSheet",
-              headerShown: false,
-              sheetGrabberVisible: true,
-              // Opens at the first detent; scrolling to the list's edge or the grabber takes it to the
-              // full one.
-              sheetAllowedDetents: SHEET_DETENTS,
-              sheetInitialDetentIndex: 0,
-              sheetExpandsWhenScrolledToEdge: true,
-              contentStyle: { backgroundColor: "transparent" },
-            }}
-          />
-          <Stack.Screen
-            name="plan"
-            options={{
-              presentation: "formSheet",
-              headerShown: false,
-              sheetGrabberVisible: true,
-              // Glass sheets stop at 0.98 (765 pt, the board has 804); 0.99 is the opaque full-width sheet.
-              sheetAllowedDetents: [0.98],
-              contentStyle: { backgroundColor: "transparent" },
-            }}
-          />
           {SHEETS.map((name) => (
-            <Stack.Screen
-              key={name}
-              name={name}
-              options={{
-                presentation: "formSheet",
-                headerShown: false,
-                sheetGrabberVisible: true,
-                sheetAllowedDetents: [0.5],
-              }}
-            />
+            <Stack.Screen key={name} name={name} options={SHEET_OPTIONS} />
           ))}
+          <Stack.Screen name="cookbook-rename" options={FIT_SHEET_OPTIONS} />
         </Stack>
       </AddAtOnceHost>
     </LibraryRoot>

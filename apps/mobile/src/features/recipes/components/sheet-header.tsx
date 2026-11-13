@@ -1,7 +1,6 @@
 import React from "react";
 import { Text, View } from "react-native";
-
-import { GlassCloseButton } from "./glass-close-button";
+import { GlassCloseButton } from "@/components/glass-close-button";
 
 /** A sheet's title, an optional line under it, and the native glass close button. */
 export function SheetHeader({
