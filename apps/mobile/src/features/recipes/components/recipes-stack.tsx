@@ -50,8 +50,8 @@ export function RecipesStack() {
               presentation: "formSheet",
               headerShown: false,
               sheetGrabberVisible: true,
-              // Opens at the first detent; scrolling the list to its edge or dragging the grabber takes it
-              // to the full one, and dragging down from the first dismisses it.
+              // Opens at the first detent; scrolling to the list's edge or the grabber takes it to the
+              // full one.
               sheetAllowedDetents: SHEET_DETENTS,
               sheetInitialDetentIndex: 0,
               sheetExpandsWhenScrolledToEdge: true,

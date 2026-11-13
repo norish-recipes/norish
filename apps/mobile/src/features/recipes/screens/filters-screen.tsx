@@ -50,8 +50,8 @@ export function FiltersScreen() {
 
   return (
     <>
-      {/* react-native-screens sizes a sheet's ScrollView as the content minus its first child (the footer, 84 pt),
-          and moves it to that child's height unless it has a margin, so the scroll ends above the buttons. */}
+      {/* react-native-screens sizes the scroll view minus this first child (84 pt) and moves it down
+          by that height, so its margin puts it back and the scroll ends above the buttons. */}
       <View
         className="absolute inset-x-0 bottom-0 flex-row gap-2.5 px-5 pt-3.5 pb-5"
         collapsable={false}
