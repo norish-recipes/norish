@@ -23,3 +23,4 @@ export {
   slotTranslationKeys,
 } from "./todays-meals";
 export { useTodaysMeals } from "./use-todays-meals";
+export { SLOT_TO_CATEGORY, useSlotPlanning } from "./use-slot-planning";
