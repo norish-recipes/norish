@@ -22,3 +22,4 @@ export {
   nextMealSlot,
   slotTranslationKeys,
 } from "./todays-meals";
+export { useTodaysMeals } from "./use-todays-meals";
