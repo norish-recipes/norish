@@ -1,13 +1,16 @@
+import type { ReactNode } from "react";
 import { useImportRecipe } from "@/components/imports/use-import-recipe";
 import { showActionToast } from "@/lib/ui/action-toast";
 import { renderHook } from "@testing-library/react";
+import { TRPCClientError } from "@trpc/client";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 
+import { PlatformProvider } from "@norish/shared-react/platform";
+import { fakePlatformAdapter } from "@norish/shared-react/platform/testing";
 import { useImportMutations } from "@norish/shared-react/recipes";
 
 const mocks = vi.hoisted(() => ({
   push: vi.fn(),
-  errorToast: vi.fn(),
   toast: vi.fn(),
   importRecipeFromPaste: vi.fn(),
   importRecipeFromImages: vi.fn(),
@@ -19,19 +22,24 @@ vi.mock("next-intl", () => ({
   useTranslations: (namespace: string) => (key: string) => `${namespace}.${key}`,
 }));
 vi.mock("@/lib/ui/action-toast", () => ({ showActionToast: vi.fn() }));
-vi.mock("@norish/shared-react/recipes", () => ({
-  useRecipeMutationErrorToast: () => mocks.errorToast,
+vi.mock("@norish/shared-react/recipes", async (importOriginal) => ({
+  ...(await importOriginal<typeof import("@norish/shared-react/recipes")>()),
   useImportMutations: vi.fn(() => ({
     importRecipeFromPaste: mocks.importRecipeFromPaste,
     importRecipeFromImages: mocks.importRecipeFromImages,
   })),
 }));
 
+const adapter = fakePlatformAdapter();
+const wrapper = ({ children }: { children: ReactNode }) => (
+  <PlatformProvider adapter={adapter}>{children}</PlatformProvider>
+);
+
 beforeEach(() => vi.clearAllMocks());
 
 describe("useImportRecipe", () => {
   it("imports pasted text, says so and goes to the Library", () => {
-    const { result } = renderHook(() => useImportRecipe());
+    const { result } = renderHook(() => useImportRecipe(), { wrapper });
 
     result.current.importFromPaste("soup");
 
@@ -45,7 +53,7 @@ describe("useImportRecipe", () => {
 
   it("imports images with the image toast, and stays when asked", () => {
     const files = [new File([""], "page.png")];
-    const { result } = renderHook(() => useImportRecipe({ stay: true }));
+    const { result } = renderHook(() => useImportRecipe({ stay: true }), { wrapper });
 
     result.current.importFromImages(files);
 
@@ -61,7 +69,7 @@ describe("useImportRecipe", () => {
     mocks.importRecipeFromPaste.mockImplementationOnce(() => {
       throw new Error("offline");
     });
-    const { result } = renderHook(() => useImportRecipe());
+    const { result } = renderHook(() => useImportRecipe(), { wrapper });
 
     expect(() => result.current.importFromPaste("soup")).toThrow("offline");
     expect(mocks.toast).not.toHaveBeenCalled();
@@ -69,7 +77,7 @@ describe("useImportRecipe", () => {
   });
 
   it("offers to open the recipe when the household already holds the URL", () => {
-    renderHook(() => useImportRecipe());
+    renderHook(() => useImportRecipe(), { wrapper });
     const onAlreadyExists = vi.mocked(useImportMutations).mock.calls.at(-1)![1]!;
 
     onAlreadyExists("recipe-held");
@@ -81,9 +89,32 @@ describe("useImportRecipe", () => {
     expect(mocks.push).toHaveBeenCalledWith("/recipes/recipe-held");
   });
 
-  it("hands the shared write-error toast to the import mutations", () => {
-    renderHook(() => useImportRecipe());
+  it("shows the error toast when an import fails", () => {
+    const { show } = adapter.toast;
+    renderHook(() => useImportRecipe(), { wrapper });
+    const onError = vi.mocked(useImportMutations).mock.calls.at(-1)![0];
 
-    expect(vi.mocked(useImportMutations).mock.calls.at(-1)![0]).toBe(mocks.errorToast);
+    onError(new Error("boom"), "importFromUrl");
+
+    expect(show).toHaveBeenCalledExactlyOnceWith({
+      severity: "default",
+      title: "common.errors.operationFailed",
+      description: "common.errors.technicalDetails",
+    });
+  });
+
+  it("says an import made while Offline is saved, not failed", () => {
+    const { show } = adapter.toast;
+    renderHook(() => useImportRecipe(), { wrapper });
+    const onError = vi.mocked(useImportMutations).mock.calls.at(-1)![0];
+
+    // No HTTP status: the backend-unreachable shape the Outbox link captures.
+    onError(new TRPCClientError("Failed to fetch"), "importFromUrl");
+
+    expect(show).toHaveBeenCalledExactlyOnceWith({
+      severity: "warning",
+      title: "common.queuedOffline.title",
+      description: "common.queuedOffline.description",
+    });
   });
 });
