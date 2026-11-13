@@ -133,6 +133,13 @@ export function createWebOfflineEngine(
 
 export const offlineEngine = createWebOfflineEngine();
 
+// Saves are throttled, so a hidden tab saves now: closing it may give no later chance.
+if (typeof document !== "undefined") {
+  document.addEventListener("visibilitychange", () => {
+    if (document.visibilityState === "hidden") void offlineEngine.cache.flush();
+  });
+}
+
 /** The seam handed to the provider bundle's `getQueryClient`. */
 export function getPersistedQueryClient(): QueryClient {
   // The engine's client is the browser's. Each server render gets its own, or a page the server

@@ -3,7 +3,7 @@
  * engine's own Outbox store and cache manager, so no adapter quietly behaves differently.
  */
 
-import { describe, expect, it, vi } from "vitest";
+import { describe, expect, it } from "vitest";
 
 import type { NewOutboxEntry } from "../outbox-types";
 import type { OfflineStorage } from "../storage";
@@ -203,18 +203,18 @@ export function describeOfflineStorageContract(name: string, harness: StorageCon
       // A stand-in read, not a tRPC one.
       const GREETING = ["greeting"];
 
-      /** Adopt `owner` and wait until a read it made has been persisted. */
+      /** Adopt `owner` and save a read it made. */
       async function readAs(storage: OfflineStorage, owner: string, value: string) {
         const manager = cacheOf(storage);
 
         await manager.reconcileIdentity({ sessionUserId: owner, isOffline: false });
         manager.queryClient.setQueryData(GREETING, value);
-        await vi.waitFor(async () => {
-          const restored = cacheOf(storage);
+        await manager.flush();
 
-          await restored.reconcileIdentity({ sessionUserId: owner, isOffline: false });
-          expect(restored.queryClient.getQueryData(GREETING)).toBe(value);
-        });
+        const restored = cacheOf(storage);
+
+        await restored.reconcileIdentity({ sessionUserId: owner, isOffline: false });
+        expect(restored.queryClient.getQueryData(GREETING)).toBe(value);
 
         return manager;
       }

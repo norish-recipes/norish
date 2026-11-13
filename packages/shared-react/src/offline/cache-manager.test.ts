@@ -8,7 +8,7 @@ import type { AppRouter } from "@norish/trpc/client";
 
 import type { OfflineStorage } from "./storage";
 import { queryCacheKey } from "./cache-identity";
-import { CACHE_MAX_AGE_MS, createCacheManager } from "./cache-manager";
+import { CACHE_MAX_AGE_MS, createCacheManager, PERSIST_THROTTLE_MS } from "./cache-manager";
 import { readLastWarmedAt, writeLastWarmedAt } from "./last-warmed";
 import { createMemoryStorage } from "./testing/memory-storage";
 
@@ -102,11 +102,57 @@ describe("createCacheManager", () => {
     await manager.reconcileIdentity({ sessionUserId: "u1", isOffline: false });
     manager.queryClient.setQueryData(["k"], "v");
 
-    // Give the persist subscription a tick to flush.
-    await new Promise((resolve) => setTimeout(resolve, 0));
+    await manager.flush();
 
     expect(manager.owner()).toBe("u1");
     expect(await storage.keyval.get(queryCacheKey("u1"))).toBeDefined();
+  });
+
+  it("saves a burst of changes inside one interval once, at its end", async () => {
+    vi.useFakeTimers();
+    const manager = createManager();
+    const set = vi.spyOn(storage.keyval, "set");
+
+    await manager.reconcileIdentity({ sessionUserId: "u1", isOffline: false });
+    for (let index = 0; index < 50; index += 1) {
+      manager.queryClient.setQueryData(["recipe", index], index);
+    }
+    await vi.advanceTimersByTimeAsync(PERSIST_THROTTLE_MS - 1);
+
+    expect(set).not.toHaveBeenCalled();
+    await vi.advanceTimersByTimeAsync(1);
+
+    expect(set).toHaveBeenCalledTimes(1);
+    const persisted = await storage.keyval.get<PersistedClient>(queryCacheKey("u1"));
+
+    expect(persisted?.clientState.queries).toHaveLength(50);
+  });
+
+  it("saves a pending change at once on a flush, and not again when the interval ends", async () => {
+    vi.useFakeTimers();
+    const manager = createManager();
+    const set = vi.spyOn(storage.keyval, "set");
+
+    await manager.reconcileIdentity({ sessionUserId: "u1", isOffline: false });
+    manager.queryClient.setQueryData(["k"], "v");
+    await manager.flush();
+
+    expect(set).toHaveBeenCalledTimes(1);
+    await vi.advanceTimersByTimeAsync(PERSIST_THROTTLE_MS);
+
+    expect(set).toHaveBeenCalledTimes(1);
+  });
+
+  it("never writes a pending save back after the read copy is reset", async () => {
+    vi.useFakeTimers();
+    const manager = createManager();
+
+    await manager.reconcileIdentity({ sessionUserId: "u1", isOffline: false });
+    manager.queryClient.setQueryData(["k"], "v");
+    await manager.resetOfflineCopy("sign-out");
+    await vi.advanceTimersByTimeAsync(PERSIST_THROTTLE_MS);
+
+    expect(await storage.keyval.get(queryCacheKey("u1"))).toBeUndefined();
   });
 
   it("restores last successful data after background refetches fail", async () => {
@@ -151,7 +197,7 @@ describe("createCacheManager", () => {
       ).rejects.toThrow("backend unavailable");
     }
 
-    await new Promise((resolve) => setTimeout(resolve, 0));
+    await manager.flush();
 
     const restored = createManager();
 
@@ -175,7 +221,7 @@ describe("createCacheManager", () => {
 
     void waiting.execute(undefined);
     manager.queryClient.setQueryData(["k"], "v");
-    await new Promise((resolve) => setTimeout(resolve, 0));
+    await manager.flush();
 
     expect(waiting.state.isPaused).toBe(true);
     const persisted = await storage.keyval.get<PersistedClient>(queryCacheKey("u1"));
@@ -199,7 +245,7 @@ describe("createCacheManager", () => {
       message: "checked",
     });
     manager.queryClient.setQueryData(kept, null);
-    await new Promise((resolve) => setTimeout(resolve, 0));
+    await manager.flush();
 
     const persisted = await storage.keyval.get<PersistedClient>(queryCacheKey("u1"));
     const persistedKeys = persisted?.clientState.queries.map((query) => query.queryKey);
@@ -221,7 +267,7 @@ describe("createCacheManager", () => {
         retry: false,
       })
     ).rejects.toThrow("backend unavailable");
-    await new Promise((resolve) => setTimeout(resolve, 0));
+    await manager.flush();
 
     const restored = createManager();
 
@@ -323,7 +369,7 @@ describe("createCacheManager", () => {
     expect(await storage.outbox.all()).toHaveLength(1);
 
     manager.queryClient.setQueryData(["rewarmed"], "read");
-    await new Promise((resolve) => setTimeout(resolve, 0));
+    await manager.flush();
 
     expect(manager.owner()).toBe("u1");
     expect(await storage.keyval.get(queryCacheKey("u1"))).toBeDefined();
@@ -364,7 +410,7 @@ describe("createCacheManager", () => {
     await manager.resetOfflineCopy("manual");
 
     manager.queryClient.setQueryData(["after-reset"], "fresh");
-    await new Promise((resolve) => setTimeout(resolve, 0));
+    await manager.flush();
 
     expect(manager.owner()).toBe("u1");
     expect(await storage.keyval.get(queryCacheKey("u1"))).toBeDefined();

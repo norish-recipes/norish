@@ -36,6 +36,11 @@ export const offlineEngine = createOfflineEngine({
 // reads such as `config.authProviders` included, before the next server's screens read them.
 subscribeServerAddressChange(() => offlineEngine.queryClient.clear());
 
+// Saves are throttled, so leaving the foreground saves now: a kill from the switcher sends no event.
+AppState.addEventListener("change", (state) => {
+  if (state !== "active") void offlineEngine.cache.flush();
+});
+
 // A network change or a return to the foreground only brings the next probe forward, because
 // Wi-Fi is not the backend.
 export function subscribeDeviceHints(probeNow: () => void): () => void {

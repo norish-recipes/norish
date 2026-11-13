@@ -4,7 +4,7 @@
 import type { Query } from "@tanstack/react-query";
 import {
   persistQueryClientRestore,
-  persistQueryClientSubscribe,
+  persistQueryClientSave,
 } from "@tanstack/query-persist-client-core";
 import { partialMatchKey, QueryClient } from "@tanstack/react-query";
 import { createTRPCClient } from "@trpc/client";
@@ -21,6 +21,9 @@ import { createPersister } from "./persister";
 export const CACHE_MAX_AGE_MS = 7 * 24 * 60 * 60 * 1000;
 
 export const QUERY_STALE_TIME_MS = 1000 * 60 * 5;
+
+/** Each save serializes the whole cache, so a burst of changes saves once per this interval. */
+export const PERSIST_THROTTLE_MS = 1000;
 
 /** Placeholder owner before any user is confirmed; never actually persisted. */
 const ANON_OWNER = "__anon__";
@@ -114,6 +117,8 @@ export interface CacheManager {
   resetOfflineCopy(cause: "manual" | "sign-out"): Promise<void>;
   /** Observe the one applied-owner value. */
   subscribe(listener: () => void): () => void;
+  /** Save a throttled pending change now, as the app leaves the foreground. */
+  flush(): Promise<void>;
 }
 
 interface CacheManagerOptions {
@@ -138,19 +143,42 @@ export function createCacheManager({
 
   let appliedOwner: string | null = null;
   let unsubscribe: (() => void) | null = null;
+  let flushPending: () => Promise<void> = async () => undefined;
   let inFlight: Promise<void> = Promise.resolve();
   const appliedListeners = new Set<() => void>();
 
   function subscribeToPersistence(): void {
     unsubscribe?.();
-    unsubscribe = persistQueryClientSubscribe({
-      queryClient,
-      persister,
-      buster,
-      // The Outbox is the durable write queue (ADR-0009); a restored paused mutation has no
-      // mutationFn and would block its scope.
-      dehydrateOptions: { shouldDehydrateQuery, shouldDehydrateMutation: () => false },
+
+    let timer: ReturnType<typeof setTimeout> | null = null;
+    const save = async () => {
+      if (timer === null) return;
+      clearTimeout(timer);
+      timer = null;
+      await persistQueryClientSave({
+        queryClient,
+        persister,
+        buster,
+        // The Outbox is the durable write queue (ADR-0009); a restored paused mutation has no
+        // mutationFn and would block its scope.
+        dehydrateOptions: { shouldDehydrateQuery, shouldDehydrateMutation: () => false },
+      });
+    };
+    // A trailing throttle: the first change of a burst schedules one save for the whole burst.
+    // Mutations are never persisted, so only the query cache's changes count.
+    const stopListening = queryClient.getQueryCache().subscribe(({ type }) => {
+      if (timer === null && (type === "added" || type === "removed" || type === "updated")) {
+        timer = setTimeout(() => void save(), PERSIST_THROTTLE_MS);
+      }
     });
+
+    flushPending = save;
+    unsubscribe = () => {
+      // A save still pending after a clear would write the purged cache back.
+      if (timer !== null) clearTimeout(timer);
+      timer = null;
+      stopListening();
+    };
   }
 
   function clearClient(): void {
@@ -297,6 +325,8 @@ export function createCacheManager({
 
       return inFlight;
     },
+
+    flush: () => flushPending(),
 
     subscribe(listener) {
       appliedListeners.add(listener);

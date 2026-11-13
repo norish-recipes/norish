@@ -31,6 +31,24 @@ function mutateUnreachable(engine: ReturnType<typeof engineOver>, input: unknown
 }
 
 describe("createOfflineEngine", () => {
+  it("stores a queued write at once while a read-cache save waits on its throttle", async () => {
+    vi.useFakeTimers();
+    const storage = createMemoryStorage();
+    const engine = engineOver(storage);
+    const set = vi.spyOn(storage.keyval, "set");
+
+    try {
+      await engine.cache.reconcileIdentity({ sessionUserId: "u1", isOffline: false });
+      engine.queryClient.setQueryData(["groceries"], []);
+      await mutateUnreachable(engine, { id: "g1" });
+
+      expect(await storage.outbox.all()).toHaveLength(1);
+      expect(set).not.toHaveBeenCalled();
+    } finally {
+      vi.useRealTimers();
+    }
+  });
+
   it("queues an unreachable mutation under the applied owner", async () => {
     const engine = engineOver();
 
