@@ -14,18 +14,20 @@ export function moveTargetIndex(
 }
 
 type MovePlannedItemOptions = {
-  item: PlannedItemFromQuery | undefined;
-  /** The planned items of the days on show, to find the end of the target slot. */
+  /** The item to move; one that is gone (deleted elsewhere) closes the sheet instead. */
+  itemId: string;
+  /** The planned items of the days on show: where the item is, and the end of the target slot. */
   items: PlannedItemFromQuery[];
   close: () => void;
 };
 
 /** Moves a planned item to the end of another day's slot, then closes. Offline it queues in the Outbox. */
-export function useMovePlannedItem({ item, items, close }: MovePlannedItemOptions) {
+export function useMovePlannedItem({ itemId, items, close }: MovePlannedItemOptions) {
   const { moveItem } = useCalendarMutations();
+  const item = items.find(({ id }) => id === itemId);
 
   return (dayKey: string, slot: Slot) => {
-    if (!item) return;
+    if (!item) return close();
     if (item.date !== dayKey || item.slot !== slot) {
       moveItem(item.id, dayKey, slot, moveTargetIndex(items, item, dayKey, slot));
     }

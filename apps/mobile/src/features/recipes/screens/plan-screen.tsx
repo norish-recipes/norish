@@ -43,7 +43,7 @@ export function PlanScreen() {
   const allItems = Object.values(calendarData).flat();
   const moved = plannedItemId ? allItems.find((item) => item.id === plannedItemId) : undefined;
   const planOnDay = usePlanOnDay({ recipe: recipeId ? { id: recipeId } : undefined, close: exit });
-  const moveTo = useMovePlannedItem({ item: moved, items: allItems, close: () => router.back() });
+  const moveTo = useMovePlannedItem({ itemId: plannedItemId ?? "", items: allItems, close: () => router.back() });
   const subject = moved ? plannedItemText(moved).title : (name ?? "");
   const isMove = Boolean(plannedItemId);
   const add = isMove ? moveTo : planOnDay;

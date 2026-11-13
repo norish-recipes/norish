@@ -45,7 +45,7 @@ describe("useMovePlannedItem", () => {
   beforeEach(() => vi.clearAllMocks());
 
   it("moves the item to the end of the slot and closes", () => {
-    const { result } = renderHook(() => useMovePlannedItem({ item: moved, items, close }));
+    const { result } = renderHook(() => useMovePlannedItem({ itemId: "m", items, close }));
 
     result.current("2026-11-14", "Dinner");
 
@@ -54,7 +54,7 @@ describe("useMovePlannedItem", () => {
   });
 
   it("only closes when the item is already there", () => {
-    const { result } = renderHook(() => useMovePlannedItem({ item: moved, items, close }));
+    const { result } = renderHook(() => useMovePlannedItem({ itemId: "m", items, close }));
 
     result.current("2026-11-13", "Lunch");
 
@@ -62,12 +62,12 @@ describe("useMovePlannedItem", () => {
     expect(close).toHaveBeenCalled();
   });
 
-  it("does nothing without the item", () => {
-    const { result } = renderHook(() => useMovePlannedItem({ item: undefined, items, close }));
+  it("closes without moving when the item is gone", () => {
+    const { result } = renderHook(() => useMovePlannedItem({ itemId: "deleted", items, close }));
 
     result.current("2026-11-14", "Dinner");
 
     expect(moveItem).not.toHaveBeenCalled();
-    expect(close).not.toHaveBeenCalled();
+    expect(close).toHaveBeenCalled();
   });
 });
