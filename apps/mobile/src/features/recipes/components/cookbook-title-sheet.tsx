@@ -1,6 +1,7 @@
 import type { ComponentProps, ComponentRef } from "react";
-import React, { useEffect, useRef } from "react";
+import React from "react";
 import { Sheet, SheetBody } from "@/components/sheet";
+import { useFocusOnMount } from "@/hooks/use-focus-on-mount";
 import Ionicons from "@expo/vector-icons/Ionicons";
 import { useRouter } from "expo-router";
 import { Button, Input, Skeleton, TextField, useThemeColor } from "heroui-native";
@@ -40,10 +41,8 @@ export function CookbookTitleSheet({
     "accent-foreground",
   ] as const);
   const disabled = !canSubmit || isLoading || !onSubmit;
-  const fieldRef = useRef<ComponentRef<typeof Input>>(null);
-
   // The sheet opens on its field, so the keyboard is up as the board draws it.
-  useEffect(() => fieldRef.current?.focus(), []);
+  const fieldRef = useFocusOnMount<ComponentRef<typeof Input>>();
 
   return (
     <Sheet

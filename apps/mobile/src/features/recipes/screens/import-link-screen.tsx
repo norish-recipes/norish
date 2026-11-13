@@ -1,92 +1,52 @@
 import type { ComponentRef } from "react";
-import React, { useEffect, useRef, useState } from "react";
+import React, { useState } from "react";
 import { Pressable } from "react-native";
 import { Sheet, SheetBody } from "@/components/sheet";
-import { useAccentTextColor } from "@/hooks/use-accent-text-color";
+import { useFocusOnMount } from "@/hooks/use-focus-on-mount";
 import Ionicons from "@expo/vector-icons/Ionicons";
-import { useLocalSearchParams, useRouter } from "expo-router";
-import { Button, FieldError, InputGroup, Label, TextField, useThemeColor } from "heroui-native";
+import { useLocalSearchParams } from "expo-router";
+import { FieldError, InputGroup, Label, TextField, useThemeColor } from "heroui-native";
 import { useIntl } from "react-intl";
 
-import { usePermissions } from "@norish/shared-react/reader";
 import { useImportRecipe } from "@norish/shared-react/recipes";
 
-import { useStartOnce } from "../hooks/use-start-once";
+import { ImportActions } from "../components/import-actions";
+import { useStartImport } from "../hooks/use-start-import";
 import { isImportableLink } from "../utils/copied-link";
 
 /** Import from a link: opened with the copied link when Add recipe had one, else empty and focused. */
 export function ImportLinkScreen() {
   const intl = useIntl();
-  const router = useRouter();
   const { url: copiedUrl } = useLocalSearchParams<{ url?: string }>();
   const [link, setLink] = useState(copiedUrl ?? "");
   const [isInvalid, setIsInvalid] = useState(false);
-  const isAIEnabled = usePermissions((permissions) => permissions.isAIEnabled);
   const { importRecipe, importRecipeWithAI } = useImportRecipe({ stay: true });
-  const startOnce = useStartOnce();
-  const accentText = useAccentTextColor();
-  const [muted, foreground, accentForeground] = useThemeColor([
-    "muted",
-    "foreground",
-    "accent-foreground",
-  ] as const);
-  const fieldRef = useRef<ComponentRef<typeof InputGroup.Input>>(null);
-  const trimmed = link.trim();
-
+  const startImport = useStartImport();
+  const [muted, foreground] = useThemeColor(["muted", "foreground"] as const);
   // An empty sheet is there to be typed into; a copied link is imported with one tap.
-  useEffect(() => {
-    if (!copiedUrl) fieldRef.current?.focus();
-  }, [copiedUrl]);
+  const fieldRef = useFocusOnMount<ComponentRef<typeof InputGroup.Input>>(!copiedUrl);
+  const trimmed = link.trim();
 
   // A link that can't be opened is said under the field and starts nothing.
   const start = (run: (url: string) => void) =>
-    startOnce(() => {
+    startImport(() => {
       if (!isImportableLink(trimmed)) {
         setIsInvalid(true);
 
         return false;
       }
       run(trimmed);
-      router.back();
     });
 
   return (
     <Sheet
       actions={
-        <Sheet.Actions>
-          {isAIEnabled ? (
-            <Sheet.Action>
-              <Button
-                accessibilityLabel={intl.formatMessage({ id: "common.actions.aiImport" })}
-                className="bg-surface h-[50px]"
-                isDisabled={trimmed === ""}
-                testID="import-link-ai"
-                variant="secondary"
-                onPress={start(importRecipeWithAI)}
-              >
-                <Ionicons color={accentText} name="sparkles-outline" size={18} />
-                <Button.Label className="text-foreground font-medium">
-                  {intl.formatMessage({ id: "common.actions.aiImport" })}
-                </Button.Label>
-              </Button>
-            </Sheet.Action>
-          ) : null}
-          <Sheet.Action>
-            <Button
-              accessibilityLabel={intl.formatMessage({ id: "common.actions.import" })}
-              className="h-[50px]"
-              isDisabled={trimmed === ""}
-              testID="import-link-submit"
-              variant="primary"
-              onPress={start(importRecipe)}
-            >
-              <Ionicons color={accentForeground} name="download-outline" size={18} />
-              <Button.Label className="font-semibold">
-                {intl.formatMessage({ id: "common.actions.import" })}
-              </Button.Label>
-            </Button>
-          </Sheet.Action>
-        </Sheet.Actions>
+        <ImportActions
+          isDisabled={trimmed === ""}
+          name="import-link"
+          onAIImport={start(importRecipeWithAI)}
+          onImport={start(importRecipe)}
+        />
       }
       name="import-link"
       title={intl.formatMessage({ id: "recipes.addRecipe.linkTitle" })}

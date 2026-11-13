@@ -14,7 +14,7 @@ import { usePermissions } from "@norish/shared-react/reader";
 import { useImportRecipe } from "@norish/shared-react/recipes";
 
 import { useCopiedLink } from "../hooks/use-copied-link";
-import { useStartOnce } from "../hooks/use-start-once";
+import { useStartImport } from "../hooks/use-start-import";
 
 type IconName = ComponentProps<typeof Ionicons>["name"];
 
@@ -88,11 +88,10 @@ function OptionRow({ option, first }: { option: Option; first: boolean }) {
 /** Add recipe: the copied link when there is one, then From a link, photos (AI only), text, or by hand. */
 export function AddRecipeScreen() {
   const intl = useIntl();
-  const router = useRouter();
   const copiedLink = useCopiedLink();
   const isAIEnabled = usePermissions((permissions) => permissions.isAIEnabled);
   const { importRecipe } = useImportRecipe({ stay: true });
-  const startOnce = useStartOnce();
+  const startImport = useStartImport();
   const text = (id: string) => intl.formatMessage({ id });
 
   const options: Option[] = [
@@ -134,13 +133,7 @@ export function AddRecipeScreen() {
     <Sheet name="add-recipe" title={text("recipes.dashboard.addRecipe")}>
       <SheetBody contentClassName="gap-2.5">
         {copiedLink ? (
-          <CopiedLinkRow
-            url={copiedLink}
-            onPress={startOnce(() => {
-              importRecipe(copiedLink);
-              router.back();
-            })}
-          />
+          <CopiedLinkRow url={copiedLink} onPress={startImport(() => importRecipe(copiedLink))} />
         ) : null}
         <View className="bg-surface overflow-hidden rounded-3xl">
           {options.map((option, index) => (

@@ -8,7 +8,6 @@ import { useAccentTextColor } from "@/hooks/use-accent-text-color";
 import Ionicons from "@expo/vector-icons/Ionicons";
 import { File } from "expo-file-system";
 import { UIImagePickerPreferredAssetRepresentationMode } from "expo-image-picker";
-import { useRouter } from "expo-router";
 import { Button, useThemeColor } from "heroui-native";
 import { useIntl } from "react-intl";
 
@@ -19,7 +18,7 @@ import { fitOcrCap, refuseOcrImage } from "@norish/shared/lib/ocr-images";
 
 import type { PhotoSource } from "../utils/photo-source";
 import { usePhotoPicker } from "../hooks/use-photo-picker";
-import { useStartOnce } from "../hooks/use-start-once";
+import { useStartImport } from "../hooks/use-start-import";
 
 /** Three tiles a row with the board's 8 pt gaps, inside the sheet's 16 pt sides. */
 const COLUMNS = 3;
@@ -50,11 +49,10 @@ const SOURCE_TILE: Record<
 /** Import from photos (AI only): up to ten pages from the camera or the library, one recipe. */
 export function ImportPhotosScreen() {
   const intl = useIntl();
-  const router = useRouter();
   const [photos, setPhotos] = useState<File[]>([]);
   const { limits } = useUploadLimitsQuery();
   const { importFromImages } = useImportRecipe({ stay: true });
-  const startOnce = useStartOnce();
+  const startImport = useStartImport();
   const accentText = useAccentTextColor();
   const [muted, accentForeground] = useThemeColor(["muted", "accent-foreground"] as const);
   const tile = (useWindowDimensions().width - SIDES - GAP * (COLUMNS - 1)) / COLUMNS;
@@ -119,10 +117,7 @@ export function ImportPhotosScreen() {
           isDisabled={photos.length === 0}
           testID="import-photos-submit"
           variant="primary"
-          onPress={startOnce(() => {
-            importFromImages(photos);
-            router.back();
-          })}
+          onPress={startImport(() => importFromImages(photos))}
         >
           <Ionicons color={accentForeground} name="sparkles-outline" size={18} />
           <Button.Label className="font-semibold">

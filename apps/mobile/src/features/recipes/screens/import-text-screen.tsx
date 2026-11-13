@@ -1,30 +1,28 @@
 import type { ComponentRef } from "react";
-import React, { useEffect, useRef, useState } from "react";
+import React, { useState } from "react";
 import { Alert, Pressable, View } from "react-native";
 import { Sheet, SheetBody } from "@/components/sheet";
-import { useAccentTextColor } from "@/hooks/use-accent-text-color";
+import { useFocusOnMount } from "@/hooks/use-focus-on-mount";
 import Ionicons from "@expo/vector-icons/Ionicons";
-import { useRouter } from "expo-router";
-import { Button, FieldError, Label, TextArea, TextField, useThemeColor } from "heroui-native";
+import { FieldError, Label, TextArea, TextField, useThemeColor } from "heroui-native";
 import { useIntl } from "react-intl";
 
 import { usePermissions } from "@norish/shared-react/reader";
 import { isPasteTooLong, useImportRecipe } from "@norish/shared-react/recipes";
 import { MAX_RECIPE_PASTE_CHARS } from "@norish/shared/contracts/uploads";
 
-import { useStartOnce } from "../hooks/use-start-once";
+import { ImportActions } from "../components/import-actions";
+import { useStartImport } from "../hooks/use-start-import";
 
 /** Import from text: a field as tall as the sheet for a pasted recipe or JSON-LD. */
 export function ImportTextScreen() {
   const intl = useIntl();
-  const router = useRouter();
   const [text, setText] = useState("");
   const isAIEnabled = usePermissions((permissions) => permissions.isAIEnabled);
   const { importFromPaste, importFromPasteWithAI } = useImportRecipe({ stay: true });
-  const startOnce = useStartOnce();
-  const accentText = useAccentTextColor();
-  const [muted, accentForeground] = useThemeColor(["muted", "accent-foreground"] as const);
-  const fieldRef = useRef<ComponentRef<typeof TextArea>>(null);
+  const startImport = useStartImport();
+  const [muted] = useThemeColor(["muted"] as const);
+  const fieldRef = useFocusOnMount<ComponentRef<typeof TextArea>>();
   const trimmed = text.trim();
   // Only the AI import has a length cap, as on web; the field says so before a press can.
   const isTooLong = isAIEnabled && isPasteTooLong(text);
@@ -33,51 +31,18 @@ export function ImportTextScreen() {
     { max: intl.formatNumber(MAX_RECIPE_PASTE_CHARS) }
   );
 
-  useEffect(() => fieldRef.current?.focus(), []);
-
-  const start = (run: (text: string) => boolean | void) =>
-    startOnce(() => {
-      if (run(trimmed) === false) return false;
-      router.back();
-    });
+  const start = (run: (text: string) => boolean | void) => startImport(() => run(trimmed));
 
   return (
     <Sheet
       actions={
-        <Sheet.Actions>
-          {isAIEnabled ? (
-            <Sheet.Action>
-              <Button
-                accessibilityLabel={intl.formatMessage({ id: "common.actions.aiImport" })}
-                className="bg-surface h-[50px]"
-                isDisabled={trimmed === "" || isTooLong}
-                testID="import-text-ai"
-                variant="secondary"
-                onPress={start(importFromPasteWithAI)}
-              >
-                <Ionicons color={accentText} name="sparkles-outline" size={18} />
-                <Button.Label className="text-foreground font-medium">
-                  {intl.formatMessage({ id: "common.actions.aiImport" })}
-                </Button.Label>
-              </Button>
-            </Sheet.Action>
-          ) : null}
-          <Sheet.Action>
-            <Button
-              accessibilityLabel={intl.formatMessage({ id: "common.actions.import" })}
-              className="h-[50px]"
-              isDisabled={trimmed === ""}
-              testID="import-text-submit"
-              variant="primary"
-              onPress={start(importFromPaste)}
-            >
-              <Ionicons color={accentForeground} name="download-outline" size={18} />
-              <Button.Label className="font-semibold">
-                {intl.formatMessage({ id: "common.actions.import" })}
-              </Button.Label>
-            </Button>
-          </Sheet.Action>
-        </Sheet.Actions>
+        <ImportActions
+          isAIDisabled={trimmed === "" || isTooLong}
+          isDisabled={trimmed === ""}
+          name="import-text"
+          onAIImport={start(importFromPasteWithAI)}
+          onImport={start(importFromPaste)}
+        />
       }
       name="import-text"
       title={intl.formatMessage({ id: "recipes.addRecipe.textTitle" })}
