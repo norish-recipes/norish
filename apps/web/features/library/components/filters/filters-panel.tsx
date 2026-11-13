@@ -18,51 +18,13 @@ import { Button, Input } from "@heroui/react";
 import { motion } from "motion/react";
 import { useTranslations } from "next-intl";
 
-import type { FilterMode, RecipeCategory, SearchField, SortOrder } from "@norish/shared/contracts";
-import type { CanonicalRecipeFilters } from "@norish/shared/contracts/filter-contract";
+import type { FilterMode } from "@norish/shared/contracts";
 import { useCategoriesQuery, useTagsQuery } from "@norish/shared-react/config";
 import { useHiddenItemVisibility } from "@norish/shared-react/reader";
-import { useLibraryFilters } from "@norish/shared-react/recipes";
-import { DEFAULT_RECIPE_FILTERS } from "@norish/shared/contracts/filter-contract";
+import { COOKING_TIME_OPTIONS, useFiltersDraft } from "@norish/shared-react/recipes";
 import StarRating from "@norish/ui/star-rating";
 
 import SearchFieldToggles from "./search-field-toggles";
-
-const COOKING_TIME_OPTIONS: Array<{
-  value: number;
-  labelKey: string;
-}> = [
-  {
-    value: 15,
-    labelKey: "cookingTimeUnder15",
-  },
-  {
-    value: 30,
-    labelKey: "cookingTimeUnder30",
-  },
-  {
-    value: 60,
-    labelKey: "cookingTimeUnder60",
-  },
-  {
-    value: 120,
-    labelKey: "cookingTimeUnder120",
-  },
-];
-
-function normalizeSortMode(sortMode: SortOrder | null | undefined): SortOrder {
-  if (
-    sortMode === "titleAsc" ||
-    sortMode === "titleDesc" ||
-    sortMode === "dateAsc" ||
-    sortMode === "dateDesc" ||
-    sortMode === "none"
-  ) {
-    return sortMode;
-  }
-
-  return "none";
-}
 
 function FilterSearchInput({
   placeholder,
@@ -118,66 +80,35 @@ export default function FiltersPanel({ open, onOpenChange }: FiltersPanelProps) 
   );
 }
 
-/** What the panel edits before Apply: the filters, less the Library type the tabs set. */
-type Draft = Omit<CanonicalRecipeFilters, "libraryType">;
-
-function draftOf(filters: CanonicalRecipeFilters): Draft {
-  const { libraryType: _libraryType, ...draft } = filters;
-
-  return {
-    ...draft,
-    sortMode: normalizeSortMode(filters.sortMode),
-    maxCookingTime: filters.maxCookingTime ?? null,
-  };
-}
-
-const toggled = <T,>(list: T[], item: T) =>
-  list.includes(item) ? list.filter((other) => other !== item) : [...list, item];
-
 /** The panel's content, mounted while it is open: each opening starts from the applied filters. */
 function FiltersContent({ onOpenChange }: Omit<FiltersPanelProps, "open">) {
-  const filters = useLibraryFilters((state) => state.filters);
-  const setFilters = useLibraryFilters((state) => state.setFilters);
-  const clearFilters = useLibraryFilters((state) => state.clearFilters);
   const t = useTranslations("common.filters");
   const tActions = useTranslations("common.actions");
   const tRecipes = useTranslations("recipes.dashboard");
   const { showRatings, showFavorites } = useHiddenItemVisibility();
   const [tagFilter, setTagFilter] = useState("");
-  const [draft, setDraft] = useState(() => draftOf(filters));
+  const {
+    draft,
+    update,
+    toggleTag,
+    toggleCategory,
+    toggleCookingTime,
+    decideSortOrder,
+    reset,
+    apply,
+  } = useFiltersDraft();
   const { categories: householdCategories } = useCategoriesQuery();
   const categoryLabel = useCategoryLabel();
   // A stored filter stays visible, so it can be cleared, even once the list drops it.
   const categoryOptions = Array.from(new Set([...householdCategories, ...draft.categories]));
   const { tags: allTags, isLoading } = useTagsQuery();
-  const update = (patch: Partial<Draft>) => setDraft((previous) => ({ ...previous, ...patch }));
-  const toggleTag = (tag: string) =>
-    setDraft((previous) => ({ ...previous, searchTags: toggled(previous.searchTags, tag) }));
-  const toggleCategory = (category: RecipeCategory) =>
-    setDraft((previous) => ({ ...previous, categories: toggled(previous.categories, category) }));
-  const toggleCookingTime = (value: number) =>
-    setDraft((previous) => ({
-      ...previous,
-      maxCookingTime: previous.maxCookingTime === value ? null : value,
-    }));
-  const decideSortOrder = (type: "title" | "date") => {
-    const asc = `${type}Asc` as SortOrder;
-    const desc = `${type}Desc` as SortOrder;
-
-    update({ sortMode: draft.sortMode === asc ? desc : draft.sortMode === desc ? "none" : asc });
-  };
   const close = () => onOpenChange(false);
   const handleReset = () => {
-    clearFilters();
-    setDraft(draftOf(DEFAULT_RECIPE_FILTERS));
+    reset();
     close();
   };
-  const apply = () => {
-    setFilters({
-      ...draft,
-      showFavoritesOnly: showFavorites ? draft.showFavoritesOnly : false,
-      minRating: showRatings ? draft.minRating : null,
-    });
+  const handleApply = () => {
+    apply();
     close();
   };
 
@@ -439,7 +370,7 @@ function FiltersContent({ onOpenChange }: Omit<FiltersPanelProps, "open">) {
           <ActionButton action="reset" onPress={handleReset}>
             {tActions("reset")}
           </ActionButton>
-          <ActionButton action="apply" onPress={apply}>
+          <ActionButton action="apply" onPress={handleApply}>
             {tActions("apply")}
           </ActionButton>
         </ActionButtonGroup>
