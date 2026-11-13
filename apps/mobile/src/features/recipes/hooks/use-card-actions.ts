@@ -4,6 +4,7 @@ import { useIntl } from "react-intl";
 import type { CookbookSummaryDTO, RecipeDashboardDTO } from "@norish/shared/contracts";
 import { ownerAllows, useRecipePermissions } from "@norish/shared-react/reader";
 import {
+  useCookbookRecipesQuery,
   useCookbooksMutations,
   useFavoritesMutation,
   useRecipeMutationErrorToast,
@@ -15,14 +16,20 @@ import { useConfirm } from "./use-confirm";
 type Recipe = Pick<RecipeDashboardDTO, "id" | "name" | "version" | "userId">;
 type Cookbook = Pick<CookbookSummaryDTO, "id" | "title" | "version" | "userId">;
 
-/** What a recipe or cookbook card can do; writes are shared mutations, so offline they queue in the Outbox. */
-export function useCardActions() {
+/**
+ * What a recipe or cookbook card can do; writes are shared mutations, so offline they queue in the
+ * Outbox. Given the `cookbook` the cards are shown in, a recipe can also be taken out of it.
+ */
+export function useCardActions(cookbook?: CookbookSummaryDTO) {
   const intl = useIntl();
   const router = useRouter();
   const { toggleFavorite } = useFavoritesMutation();
   const { deleteRecipes } = useRecipesMutations(useRecipeMutationErrorToast());
   const { setMembership, deleteCookbook } = useCookbooksMutations();
   const { canEditRecipe, canDeleteRecipe } = useRecipePermissions();
+  // The page's member list is this cookbook's own read, so a removal drops the card now rather
+  // than waiting for a refetch that Offline never comes.
+  const { removeMember } = useCookbookRecipesQuery(cookbook?.id ?? "", {}, { enabled: false });
 
   const confirm = useConfirm();
 
@@ -39,8 +46,13 @@ export function useCardActions() {
         pathname: "/add-to-cookbook",
         params: { recipeId: recipe.id, name: recipe.name },
       }),
-    removeFromCookbook: (cookbook: CookbookSummaryDTO, recipe: Recipe) =>
-      setMembership({ cookbookId: cookbook.id, recipeIds: [recipe.id], isMember: false, cookbook }),
+    canRemoveFromCookbook: cookbook ? ownerAllows(cookbook.userId, canEditRecipe) : false,
+    removeFromCookbook: (recipe: Recipe) => {
+      if (!cookbook) return;
+
+      setMembership({ cookbookId: cookbook.id, recipeIds: [recipe.id], isMember: false, cookbook });
+      removeMember(recipe.id);
+    },
     deleteRecipe: (recipe: Recipe) =>
       confirm({
         title: intl.formatMessage({ id: "recipes.deleteModal.alertTitle" }, { name: recipe.name }),

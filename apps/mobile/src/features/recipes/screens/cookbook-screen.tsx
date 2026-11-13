@@ -112,23 +112,9 @@ function CookbookPage({ cookbook }: { cookbook: CookbookSummaryDTO }) {
   const filters = useLibraryFilters((state) => state.filters);
   const clearFilters = useLibraryFilters((state) => state.clearFilters);
   const { isFavorite, allergies } = useLibraryCards();
-  const cardActions = useCardActions();
-  const { recipes, isLoading, isFetchingNextPage, loadMore, removeMember } = useCookbookList(
-    cookbook.id
-  );
+  const actions = useCardActions(cookbook);
+  const { recipes, isLoading, isFetchingNextPage, loadMore } = useCookbookList(cookbook.id);
   const menu = useCookbookMenu(cookbook);
-  // The member list is this cookbook's own read, so a removal drops the card now rather than
-  // waiting for a refetch that Offline never comes.
-  const actions = {
-    ...cardActions,
-    removeFromCookbook: (
-      from: CookbookSummaryDTO,
-      recipe: Parameters<typeof cardActions.removeFromCookbook>[1]
-    ) => {
-      cardActions.removeFromCookbook(from, recipe);
-      removeMember(recipe.id);
-    },
-  };
 
   return (
     <CardList
@@ -168,7 +154,6 @@ function CookbookPage({ cookbook }: { cookbook: CookbookSummaryDTO }) {
         <RecipeCard
           actions={actions}
           allergies={allergies}
-          cookbook={cookbook}
           isFavorite={isFavorite(recipe.id)}
           recipe={recipe}
           variant={variant}

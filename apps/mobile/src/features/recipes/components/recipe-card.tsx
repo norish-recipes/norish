@@ -6,7 +6,7 @@ import { CardPhoto } from "@/components/card-photo";
 import * as Haptics from "expo-haptics";
 import { useIntl } from "react-intl";
 
-import type { CookbookSummaryDTO, RecipeDashboardDTO } from "@norish/shared/contracts";
+import type { RecipeDashboardDTO } from "@norish/shared/contracts";
 import type { RecipeViewMode } from "@norish/shared/contracts/zod/device-preferences";
 import { usePlatform } from "@norish/shared-react/platform";
 import { recipeCardFacts } from "@norish/shared-react/recipes";
@@ -32,12 +32,10 @@ type Props = {
   isFavorite: boolean;
   allergies: string[];
   actions: CardActions;
-  /** The cookbook the card is shown in, which adds Remove from cookbook to its menu. */
-  cookbook?: CookbookSummaryDTO;
 };
 
 /** A recipe in the Library as a row or grid card; its photo double-tap favourites, swipe and long press offer actions. */
-export function RecipeCard({ recipe, variant, isFavorite, allergies, actions, cookbook }: Props) {
+export function RecipeCard({ recipe, variant, isFavorite, allergies, actions }: Props) {
   const intl = useIntl();
   const { navigation } = usePlatform();
   const facts = recipeCardFacts(recipe, allergies);
@@ -48,7 +46,7 @@ export function RecipeCard({ recipe, variant, isFavorite, allergies, actions, co
     groceries: () => actions.addToGroceries(recipe),
     plan: () => actions.plan(recipe),
     addToCookbook: () => actions.addToCookbook(recipe),
-    removeFromCookbook: () => cookbook && actions.removeFromCookbook(cookbook, recipe),
+    removeFromCookbook: () => actions.removeFromCookbook(recipe),
     delete: () => actions.deleteRecipe(recipe),
   };
   const definition = (key: RecipeMenuAction) =>
@@ -56,7 +54,7 @@ export function RecipeCard({ recipe, variant, isFavorite, allergies, actions, co
   const { items, accessibilityProps } = useCardActionMenu(
     recipeMenuActions({
       canDelete,
-      canRemoveFromCookbook: cookbook ? actions.canEdit(cookbook) : false,
+      canRemoveFromCookbook: actions.canRemoveFromCookbook,
     }),
     definition,
     handlers
