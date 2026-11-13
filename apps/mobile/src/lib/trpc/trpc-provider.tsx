@@ -2,10 +2,9 @@ import type { QueryClient } from "@tanstack/react-query";
 import type { TRPCLink } from "@trpc/client";
 import React, { useMemo, useSyncExternalStore } from "react";
 import { getAuthTransportSnapshot, subscribeAuthTransport } from "@/lib/auth/auth-session-sync";
-import { AUTH_COOKIE_KEY, authStorage } from "@/lib/auth/auth-storage";
+import { authHeaders } from "@/lib/auth/auth-headers";
 import { getBackendWsUrl } from "@/lib/network/backend-ws-url";
 import { getServerAddress } from "@/lib/network/server-address";
-import { getCookie } from "@better-auth/expo/client";
 
 import type { AppRouter } from "@norish/trpc/client";
 import { expireSession } from "@norish/shared-react/reader";
@@ -43,7 +42,7 @@ function createMobileWebSocket(): typeof WebSocket | undefined {
 
   return class MobileWebSocketWithHeaders extends NativeWebSocket {
     constructor(url: string | URL, protocols?: string | string[]) {
-      const headers = trpcBundleGetHeaders();
+      const headers = authHeaders();
 
       if (Object.keys(headers).length === 0) {
         super(url, protocols);
@@ -60,23 +59,11 @@ function createMobileWebSocket(): typeof WebSocket | undefined {
   } as unknown as typeof WebSocket;
 }
 
-// The auth client's getCookie is async and tRPC asks for headers synchronously, so read the
-// chunked SecureStore entry the auth client writes directly.
-function trpcBundleGetHeaders(): Record<string, string> {
-  if (!getServerAddress()) {
-    return {};
-  }
-
-  const cookies = getCookie(authStorage().getItem(AUTH_COOKIE_KEY));
-
-  return cookies ? { Cookie: cookies } : {};
-}
-
 const { TRPCProviderWrapper } = createTRPCProviderBundle({
   logger: log,
   getBaseUrl: getServerAddress,
   getWsUrl: () => getBackendWsUrl(getServerAddress()),
-  getHeaders: trpcBundleGetHeaders,
+  getHeaders: authHeaders,
   getWebSocketImpl: createMobileWebSocket,
   wsLazyEnabled: true,
   enableLoggerLink: false,

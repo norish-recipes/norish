@@ -1,6 +1,6 @@
 import React from "react";
 import { Pressable } from "react-native";
-import { useServerUrl } from "@/lib/network/server-url";
+import { useServerImage } from "@/lib/network/server-url";
 import { useRouter } from "expo-router";
 import { Avatar } from "heroui-native";
 
@@ -10,7 +10,7 @@ import { useReader } from "@norish/shared-react/reader";
 export function AccountAvatar() {
   const router = useRouter();
   const { user } = useReader();
-  const toUrl = useServerUrl();
+  const toImage = useServerImage();
   const name = user?.name ?? "";
 
   return (
@@ -20,7 +20,7 @@ export function AccountAvatar() {
       onPress={() => router.navigate("/settings")}
     >
       <Avatar alt={name} className="size-9">
-        {user?.image ? <Avatar.Image source={{ uri: toUrl(user.image) }} /> : null}
+        {user?.image ? <Avatar.Image source={toImage(user.image)} /> : null}
         <Avatar.Fallback
           classNames={{ container: "bg-avatar", text: "text-foreground text-base font-semibold" }}
         >

@@ -1,7 +1,7 @@
 import React from "react";
 import { Image, Text, View } from "react-native";
 import { GestureDetector, useTapGesture } from "react-native-gesture-handler";
-import { useServerUrl } from "@/lib/network/server-url";
+import { useServerImage } from "@/lib/network/server-url";
 import Ionicons from "@expo/vector-icons/Ionicons";
 import { useRouter } from "expo-router";
 import { useThemeColor } from "heroui-native";
@@ -26,11 +26,11 @@ function CookbookCover({
   cookbook: CookbookSummaryDTO;
   className: string;
 }) {
-  const toUrl = useServerUrl();
+  const toImage = useServerImage();
   const [muted] = useThemeColor(["muted"] as const);
   const photos = cookbook.image ? [cookbook.image] : cookbook.coverImages.slice(0, 4);
   const tile = (uri: string, tileClass: string) => (
-    <Image key={uri} className={`bg-default ${tileClass}`} source={{ uri: toUrl(uri) }} />
+    <Image key={uri} className={`bg-default ${tileClass}`} source={toImage(uri)} />
   );
 
   if (photos.length === 0) {
