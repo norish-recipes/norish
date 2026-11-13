@@ -17,9 +17,16 @@ export function useAddAtOnceStarter() {
   return start;
 }
 
-function AddAtOnce({ recipeId, onDone }: { recipeId: string; onDone: () => void }) {
+function AddAtOnce({
+  recipeId,
+  servings,
+  onDone,
+}: {
+  recipeId: string;
+  servings: number;
+  onDone: () => void;
+}) {
   const router = useRouter();
-  const servings = plannedServings(useRecipeQuery(recipeId).recipe ?? {});
 
   const { scaledIngredients, isLoading, linkedLoading } = useRecipeFoodsToBuy(
     recipeId,
@@ -44,7 +51,9 @@ function AddAtOnce({ recipeId, onDone }: { recipeId: string; onDone: () => void 
 function PlannedAddAtOnce({ recipeId, onDone }: { recipeId: string; onDone: () => void }) {
   const { recipe } = useRecipeQuery(recipeId);
 
-  return recipe ? <AddAtOnce recipeId={recipeId} onDone={onDone} /> : null;
+  return recipe ? (
+    <AddAtOnce recipeId={recipeId} servings={plannedServings(recipe)} onDone={onDone} />
+  ) : null;
 }
 
 /**
