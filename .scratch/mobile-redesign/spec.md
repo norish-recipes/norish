@@ -174,6 +174,7 @@ The signed-in shell is built with native tabs and the "Add recipe" accessory, an
 
 - Every data-backed view paints in its first frame: the cached Warm Set data when there is any, otherwise a skeleton shaped like the content. The splash and the screens never wait on a data round trip.
 - Sheets are the native sheet's glass and nothing on them paints a background of its own: pinned actions sit directly on the sheet, with the scroll area ending above them. No solid footers.
+- A sheet can be resized by dragging: it opens at the tallest detent that stays glass (0.98; above that iOS draws it opaque and full-width) and has a grabber, and the full detent is one drag away. A board's sheet height beyond that is not chased.
 - Photos are proven to load on the device (cards, covers, the recipe route), signed in against a server that requires the session.
 
 ### Offline
