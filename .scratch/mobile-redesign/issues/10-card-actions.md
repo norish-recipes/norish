@@ -4,7 +4,7 @@
 
 **Blocked by:** 09
 
-**Status:** done (device pass pending)
+**Status:** done
 
 - [x] Moved first, in separate commits, web switched over with its unit tests: the ownership rule `userId ? canX(userId) : true` (five web components) and the mutation toasts (`hooks/use-recipes-mutations.ts`: queued offline vs safe error).
 - [x] Swipe in list and grid: Groceries, Plan, Delete, per the board's circles.
