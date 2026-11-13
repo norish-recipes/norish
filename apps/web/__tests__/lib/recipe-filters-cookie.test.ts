@@ -2,15 +2,12 @@ import {
   RECIPE_FILTERS_COOKIE,
   recipeFiltersCookieValue,
   recipeFiltersFromCookie,
+  writeRecipeFiltersCookie,
 } from "@/lib/recipe-filters-cookie";
-import { persistRecipeFilters, readStoredRecipeFilters } from "@/lib/recipe-filters-storage";
 import { afterEach, describe, expect, it } from "vitest";
 
 import type { PersistedRecipeFilters } from "@norish/shared/contracts/filter-contract";
-import {
-  canonicalRecipeFilters,
-  DEFAULT_PERSISTED_RECIPE_FILTERS,
-} from "@norish/shared/contracts/filter-contract";
+import { DEFAULT_PERSISTED_RECIPE_FILTERS } from "@norish/shared/contracts/filter-contract";
 
 describe("the Library filters cookie", () => {
   it("round-trips the stored filters, carrying only what differs from the defaults", () => {
@@ -50,32 +47,21 @@ describe("the Library filters cookie", () => {
   });
 });
 
-describe("the browser's filters storage", () => {
-  const cookie = () =>
-    document.cookie
-      .split("; ")
-      .find((entry) => entry.startsWith(`${RECIPE_FILTERS_COOKIE}=`))
-      ?.slice(RECIPE_FILTERS_COOKIE.length + 1);
-
+describe("writeRecipeFiltersCookie", () => {
   afterEach(() => {
-    localStorage.clear();
     document.cookie = `${RECIPE_FILTERS_COOKIE}=; max-age=0; path=/`;
   });
 
-  it("tells the server every filter it stores, through the cookie, and reads them back", () => {
+  it("tells the server the filters, which it reads back", () => {
     const filters = { ...DEFAULT_PERSISTED_RECIPE_FILTERS, sortMode: "titleAsc" as const };
 
-    persistRecipeFilters({ ...canonicalRecipeFilters(filters), rawInput: "soup" });
+    writeRecipeFiltersCookie(filters);
 
-    expect(readStoredRecipeFilters()).toEqual(filters);
-    expect(recipeFiltersFromCookie(cookie()!)).toEqual(filters);
-  });
+    const value = document.cookie
+      .split("; ")
+      .find((entry) => entry.startsWith(`${RECIPE_FILTERS_COOKIE}=`))!
+      .slice(RECIPE_FILTERS_COOKIE.length + 1);
 
-  it("reads nothing stored, or what doesn't parse, as nothing", () => {
-    expect(readStoredRecipeFilters()).toBeNull();
-
-    localStorage.setItem("norish:recipe-filters", "{not");
-
-    expect(readStoredRecipeFilters()).toBeNull();
+    expect(recipeFiltersFromCookie(value)).toEqual(filters);
   });
 });

@@ -1,8 +1,8 @@
 import { RECIPE_FILTERS_COOKIE, recipeFiltersFromCookie } from "@/lib/recipe-filters-cookie";
-import { readStoredRecipeFilters } from "@/lib/recipe-filters-storage";
 import { act, render, screen } from "@testing-library/react";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 
+import { parseStoredRecipeFilters, RECIPE_FILTERS_STORAGE_KEY } from "@norish/shared-react/recipes";
 import { DEFAULT_PERSISTED_RECIPE_FILTERS } from "@norish/shared/contracts/filter-contract";
 
 vi.mock("@norish/shared-react/recipes", async (importOriginal) => ({
@@ -84,7 +84,9 @@ describe("LibraryRoot", () => {
     act(() => sortByTitle());
 
     expect(screen.getByText("titleAsc")).toBeInTheDocument();
-    expect(readStoredRecipeFilters()?.sortMode).toBe("titleAsc");
+    expect(
+      parseStoredRecipeFilters(localStorage.getItem(RECIPE_FILTERS_STORAGE_KEY))?.sortMode
+    ).toBe("titleAsc");
     expect(cookie().sortMode).toBe("titleAsc");
   });
 

@@ -8,11 +8,12 @@ import CalendarPage from "@/app/(app)/calendar/page";
 import { OfflineCookbook } from "@/app/~offline/offline-cookbook";
 import { OfflineRecipeDetail } from "@/app/~offline/offline-recipe-detail";
 import { OfflineUnavailable } from "@/app/~offline/offline-unavailable";
+import { browserStorage } from "@/lib/browser-storage";
 import { offlineEngine } from "@/lib/offline/engine";
-import { readStoredRecipeFilters } from "@/lib/recipe-filters-storage";
 
 import type { LibraryTypeFilter } from "@norish/shared/contracts";
 import type { PersistedRecipeFilters } from "@norish/shared/contracts/filter-contract";
+import { parseStoredRecipeFilters, RECIPE_FILTERS_STORAGE_KEY } from "@norish/shared-react/recipes";
 import { DEFAULT_LIBRARY_TYPE_FILTER } from "@norish/shared/contracts";
 import { addBasePath, stripBasePath } from "@norish/shared/lib/base-path";
 
@@ -96,7 +97,7 @@ export function OfflineBootstrap(screens: OfflineScreens) {
     void offlineEngine.cache.reconcileIdentity({ sessionUserId: null, isOffline: true }).then(() =>
       setSurface({
         pathname: stripBasePath(window.location.pathname),
-        filters: readStoredRecipeFilters(),
+        filters: parseStoredRecipeFilters(browserStorage.getItem(RECIPE_FILTERS_STORAGE_KEY)),
       })
     );
   }, []);
