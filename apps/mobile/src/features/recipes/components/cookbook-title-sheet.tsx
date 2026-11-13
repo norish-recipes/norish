@@ -56,7 +56,7 @@ export function CookbookTitleSheet({
               onPress={() => router.back()}
             >
               <Ionicons color={foreground} name="close" size={18} />
-              <Button.Label className="font-medium">
+              <Button.Label className="text-foreground font-medium">
                 {intl.formatMessage({ id: "common.actions.cancel" })}
               </Button.Label>
             </Button>
