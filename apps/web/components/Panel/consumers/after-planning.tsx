@@ -1,14 +1,14 @@
 "use client";
 
 import type { ReactNode } from "react";
-import { useCallback, useState } from "react";
 import MiniGroceries from "@/components/Panel/consumers/mini-groceries";
 
-import { useReader } from "@norish/shared-react/reader";
+import type { Planned } from "@norish/shared-react/calendar";
+import {
+  plannedServings,
+  useAfterPlanning as useSharedAfterPlanning,
+} from "@norish/shared-react/calendar";
 import { useRecipeQuery } from "@norish/shared-react/recipes";
-import { getAfterPlanningPreference } from "@norish/shared/lib/user-preferences";
-
-type Planned = { key: number; recipeId: string; addAtOnce: boolean; open: boolean };
 
 /**
  * The groceries for a recipe just planned, at the recipe's own servings: the
@@ -24,7 +24,7 @@ function PlannedGroceries({
 
   if (!recipe) return null;
 
-  const servings = recipe.servings || 1;
+  const servings = plannedServings(recipe);
 
   return (
     <MiniGroceries
@@ -48,25 +48,7 @@ export function useAfterPlanning(): {
   afterPlanning: (recipeId: string) => void;
   afterPlanningPanel: ReactNode;
 } {
-  const choice = getAfterPlanningPreference(useReader().user);
-  const [planned, setPlanned] = useState<Planned | null>(null);
-
-  const afterPlanning = useCallback(
-    (recipeId: string) => {
-      if (choice === "nothing") return;
-      setPlanned((prev) => ({
-        key: (prev?.key ?? 0) + 1,
-        recipeId,
-        addAtOnce: choice === "addGroceries",
-        open: choice === "openGroceries",
-      }));
-    },
-    [choice]
-  );
-  const handleOpenChange = useCallback(
-    (open: boolean) => setPlanned((prev) => prev && { ...prev, open }),
-    []
-  );
+  const { afterPlanning, planned, setOpen } = useSharedAfterPlanning();
 
   return {
     afterPlanning,
@@ -76,7 +58,7 @@ export function useAfterPlanning(): {
         addAtOnce={planned.addAtOnce}
         open={planned.open}
         recipeId={planned.recipeId}
-        onOpenChange={handleOpenChange}
+        onOpenChange={setOpen}
       />
     ) : null,
   };
