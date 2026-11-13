@@ -25,13 +25,16 @@ function originOf(url: string): string | null {
   }
 }
 
+/** Whether an absolute URL is on the Server Address's origin, a longer host that starts alike not. */
+export function isOnServer(address: string | null, url: string): boolean {
+  return address !== null && originOf(url) !== null && originOf(url) === originOf(address);
+}
+
 /** An image as an `Image` source; the session cookie goes only to the Server Address's origin. */
 export function serverImage(address: string | null, path: string) {
   const uri = serverUrl(address, path);
-  const onServer =
-    address !== null && originOf(uri) !== null && originOf(uri) === originOf(address);
 
-  return onServer ? { uri, headers: authHeaders() } : { uri };
+  return isOnServer(address, uri) ? { uri, headers: authHeaders() } : { uri };
 }
 
 /** `serverImage` on the Server Address the app is rendered with. */
