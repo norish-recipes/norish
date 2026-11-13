@@ -134,7 +134,8 @@
     "toBuy": "Att köpa",
     "inPantry": "I ditt skafferi",
     "weKeepThis": "Det här har vi hemma",
-    "keepFailed": "Det gick inte att lägga till i skafferiet"
+    "keepFailed": "Det gick inte att lägga till i skafferiet",
+    "addCount": "{count, plural, one {Lägg till # artikel} other {Lägg till # artiklar}}"
   },
   "picker": {
     "unlink": "Ta bort produktkoppling",

@@ -134,7 +134,8 @@
     "toBuy": "Ostettavat",
     "inPantry": "Ruokakomerossasi",
     "weKeepThis": "Tätä on aina",
-    "keepFailed": "Sitä ei voitu lisätä ruokakomeroon"
+    "keepFailed": "Sitä ei voitu lisätä ruokakomeroon",
+    "addCount": "{count, plural, one {Lisää # tuote} other {Lisää # tuotetta}}"
   },
   "picker": {
     "unlink": "Poista tuotelinkitys",

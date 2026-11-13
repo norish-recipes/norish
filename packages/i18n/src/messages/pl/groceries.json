@@ -134,7 +134,8 @@
     "toBuy": "Do kupienia",
     "inPantry": "W Twojej spiżarni",
     "weKeepThis": "Zawsze to mamy",
-    "keepFailed": "Nie udało się dodać do spiżarni"
+    "keepFailed": "Nie udało się dodać do spiżarni",
+    "addCount": "{count, plural, one {Dodaj # pozycję} few {Dodaj # pozycje} many {Dodaj # pozycji} other {Dodaj # pozycji}}"
   },
   "picker": {
     "unlink": "Odłącz produkt",
