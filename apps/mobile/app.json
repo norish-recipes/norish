@@ -59,7 +59,15 @@
       "expo-system-ui",
       "expo-secure-store",
       "expo-font",
-      "expo-web-browser"
+      "expo-web-browser",
+      [
+        "expo-image-picker",
+        {
+          "photosPermission": "Norish uses your photos to set a cookbook's cover.",
+          "cameraPermission": "Norish uses the camera to take a cookbook's cover.",
+          "microphonePermission": false
+        }
+      ]
     ],
     "experiments": {
       "typedRoutes": true,
