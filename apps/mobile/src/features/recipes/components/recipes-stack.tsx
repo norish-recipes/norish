@@ -29,7 +29,8 @@ export function RecipesStack() {
             presentation: "formSheet",
             headerShown: false,
             sheetGrabberVisible: true,
-            sheetAllowedDetents: [0.92],
+            // The board's sheet opens 664 of 874 pt tall; the content scrolls inside.
+            sheetAllowedDetents: [0.76],
             contentStyle: { backgroundColor: "transparent" },
           }}
         />

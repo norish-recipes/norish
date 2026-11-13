@@ -2,6 +2,7 @@ import React from "react";
 import { Pressable, ScrollView, Text, View } from "react-native";
 import { FilterSection } from "@/features/recipes/components/filter-section";
 import { ToggleChip } from "@/features/recipes/components/toggle-chip";
+import { useWarningInkColor } from "@/hooks/use-warning-ink-color";
 import Ionicons from "@expo/vector-icons/Ionicons";
 import { useRouter } from "expo-router";
 import { Button, Skeleton, useThemeColor } from "heroui-native";
@@ -25,6 +26,7 @@ export function FiltersScreen() {
   const intl = useIntl();
   const router = useRouter();
   const [foreground, muted, star] = useThemeColor(["foreground", "muted", "warning"] as const);
+  const warningInk = useWarningInkColor();
   const { showRatings, showFavorites } = useHiddenItemVisibility();
   const {
     draft,
@@ -47,27 +49,29 @@ export function FiltersScreen() {
   const close = () => router.back();
 
   return (
-    <View className="flex-1 px-5 pt-5" testID="filters-sheet">
-      <View className="flex-row items-center justify-between pl-2">
-        <Text className="text-foreground text-[22px] font-semibold">
-          {intl.formatMessage({ id: "common.filters.title" })}
-        </Text>
-        <Pressable
-          accessibilityLabel={intl.formatMessage({ id: "common.actions.close" })}
-          accessibilityRole="button"
-          className="bg-surface size-10 items-center justify-center rounded-full"
-          testID="filters-close"
-          onPress={close}
-        >
-          <Ionicons color={foreground} name="close" size={20} />
-        </Pressable>
-      </View>
-
+    <View className="flex-1" testID="filters-sheet">
+      {/* Header inside the scroll content and a pinned footer, so neither depends on how the sheet sizes its children. */}
       <ScrollView
-        className="flex-1"
-        contentContainerClassName="gap-[18px] pt-4 pb-4"
+        className="absolute inset-0"
+        contentContainerClassName="gap-[18px] px-5 pt-5 pb-[100px]"
+        contentInsetAdjustmentBehavior="never"
         showsVerticalScrollIndicator={false}
       >
+        <View className="flex-row items-center justify-between pl-2">
+          <Text className="text-foreground text-[22px] font-semibold">
+            {intl.formatMessage({ id: "common.filters.title" })}
+          </Text>
+          <Pressable
+            accessibilityLabel={intl.formatMessage({ id: "common.actions.close" })}
+            accessibilityRole="button"
+            className="bg-surface size-10 items-center justify-center rounded-full"
+            testID="filters-close"
+            onPress={close}
+          >
+            <Ionicons color={foreground} name="close" size={20} />
+          </Pressable>
+        </View>
+
         <FilterSection title={intl.formatMessage({ id: "common.filters.sort" })}>
           <View className="flex-row flex-wrap gap-1.5">
             {(["title", "date"] as const).map((key) => {
@@ -230,7 +234,7 @@ export function FiltersScreen() {
         </FilterSection>
       </ScrollView>
 
-      <View className="flex-row gap-2.5 pt-3.5 pb-5">
+      <View className="bg-background absolute inset-x-0 bottom-0 flex-row gap-2.5 px-5 pt-3.5 pb-5">
         <Button
           className="bg-warning/20 h-[50px] flex-1"
           testID="filters-reset"
@@ -240,8 +244,8 @@ export function FiltersScreen() {
             close();
           }}
         >
-          <Ionicons color={foreground} name="refresh" size={18} />
-          <Button.Label className="text-warning-foreground">
+          <Ionicons color={warningInk} name="refresh" size={18} />
+          <Button.Label className="text-warning-ink">
             {intl.formatMessage({ id: "common.filters.clearFilters" })}
           </Button.Label>
         </Button>
