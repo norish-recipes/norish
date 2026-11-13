@@ -37,6 +37,6 @@ Rejected: the row/grid fork in the cards (it follows the boards); the favourite 
 
 Open for the device pass (both simulators were held by stale device sessions): the signed-in screens stayed light with the simulator in dark, and no cause could be proven from the code; the four board fixes above; the pending card; a cold start that showed the splash for over 10 seconds against a freshly started dev server.
 
-Asked: list rows show the favourite heart, while the board draws it only in the grid. Kept as built until answered.
+Asked and answered (maintainer, 2026-11-13): list rows keep the favourite heart, although the board draws it only in the grid.
 
 Final state `440f98ce6`: all 11 gates exit 0, mobile lint has no warnings.

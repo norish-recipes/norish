@@ -43,7 +43,7 @@ Rejected: separators and text size in the long-press menu and buttons with icons
 
 For ticket 14: the green "+" on the Cookbooks lens; the cookbook page must pass its cookbook to `RecipeCard`, or Remove from cookbook never shows; the bare `/cookbook/[id]` route's back button overlaps its title.
 
-Asked: cookbook cards have the long-press menu only, as the board draws; the spec's "same pattern" could also mean a swipe. Kept per the board until answered.
+Asked and answered (maintainer, 2026-11-13): cookbook cards have the long-press menu only, no swipe.
 
 Not seen on a device: a favourite's heart over a real photo; the pending card's accessibility node.
 
