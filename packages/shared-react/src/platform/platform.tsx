@@ -16,6 +16,8 @@ type ToastAdapter = {
     severity: ToastSeverity;
     title: string;
     description?: string;
+    /** What the toast is about, such as the imported recipe's name; an app may show it when there is no description. */
+    subject?: string;
     actionLabel?: string;
     onActionPress?: () => void;
   }) => void;

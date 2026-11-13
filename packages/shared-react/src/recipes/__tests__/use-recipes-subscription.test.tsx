@@ -393,11 +393,11 @@ describe("the recipe list events and recipe outcomes", () => {
     expect(platform.navigation.toRecipe).toHaveBeenCalledWith("recipe-2");
   });
 
-  it("confirms a complete import without a warning", () => {
-    emit("onImported", { recipe: dashboardRecipe({ id: "recipe-2" }) });
+  it("confirms a complete import without a warning, naming the recipe", () => {
+    emit("onImported", { recipe: dashboardRecipe({ id: "recipe-2", name: "Pad thai" }) });
 
     expect(platform.toast.show).toHaveBeenCalledWith(
-      expect.objectContaining({ severity: "success", description: undefined })
+      expect.objectContaining({ severity: "success", description: undefined, subject: "Pad thai" })
     );
   });
 

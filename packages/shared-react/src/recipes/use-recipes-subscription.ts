@@ -118,6 +118,7 @@ export function useRecipeOutcomesSubscription() {
         severity: payload.incomplete ? "warning" : "success",
         title: toast.translate("recipes.toasts.imported"),
         description: payload.incomplete ? toast.translate("recipes.toasts.incomplete") : undefined,
+        subject: payload.recipe.name,
         actionLabel: toast.translate("recipes.toasts.view"),
         onActionPress: () => navigation.toRecipe(payload.recipe.id),
       });
