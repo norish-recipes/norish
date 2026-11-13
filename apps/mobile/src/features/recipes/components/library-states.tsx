@@ -3,6 +3,7 @@ import { Pressable, Text, View } from "react-native";
 import { useAccentTextColor } from "@/hooks/use-accent-text-color";
 import { useWarningInkColor } from "@/hooks/use-warning-ink-color";
 import Ionicons from "@expo/vector-icons/Ionicons";
+import { useRouter } from "expo-router";
 import { useThemeColor } from "heroui-native";
 import { useIntl } from "react-intl";
 
@@ -29,22 +30,34 @@ export function LibraryEmpty() {
   );
 }
 
-/** The Cookbooks lens with no cookbook; making one arrives with the Cookbooks ticket. */
+/** The Cookbooks lens with no cookbook: the way to make the first one. */
 export function CookbooksEmpty() {
   const intl = useIntl();
+  const router = useRouter();
   const accentText = useAccentTextColor();
+  const [accentForeground] = useThemeColor(["accent-foreground"] as const);
 
   return (
-    <View
-      className="bg-surface mx-5 flex-row items-center gap-3.5 rounded-3xl p-[18px]"
-      testID="library-cookbooks-empty"
-    >
-      <View className="bg-accent/10 size-12 items-center justify-center rounded-2xl">
-        <Ionicons color={accentText} name="book-outline" size={24} />
+    <View className="bg-surface mx-5 gap-3.5 rounded-3xl p-[18px]" testID="library-cookbooks-empty">
+      <View className="flex-row items-center gap-3.5">
+        <View className="bg-accent/10 size-12 items-center justify-center rounded-2xl">
+          <Ionicons color={accentText} name="book-outline" size={24} />
+        </View>
+        <Text className="text-foreground min-w-0 flex-1 text-lg font-semibold">
+          {intl.formatMessage({ id: "recipes.empty.noCookbooks" })}
+        </Text>
       </View>
-      <Text className="text-foreground min-w-0 flex-1 text-lg font-semibold">
-        {intl.formatMessage({ id: "recipes.empty.noCookbooks" })}
-      </Text>
+      <Pressable
+        accessibilityRole="button"
+        className="bg-accent h-11 flex-row items-center justify-center gap-2 rounded-full"
+        testID="library-cookbooks-empty-new"
+        onPress={() => router.push("/new-cookbook")}
+      >
+        <Ionicons color={accentForeground} name="add" size={20} />
+        <Text className="text-accent-foreground text-[15px] font-semibold">
+          {intl.formatMessage({ id: "recipes.cookbooks.createTitle" })}
+        </Text>
+      </Pressable>
     </View>
   );
 }
