@@ -135,7 +135,8 @@
     "inPantry": "I spiskammeret ditt",
     "weKeepThis": "Har vi alltid",
     "keepFailed": "Det kunne ikke legges i spiskammeret",
-    "addCount": "{count, plural, one {Legg til # vare} other {Legg til # varer}}"
+    "addCount": "{count, plural, one {Legg til # vare} other {Legg til # varer}}",
+    "adding": "Legger til i handlelisten…"
   },
   "picker": {
     "unlink": "Fjern kobling til produkt",

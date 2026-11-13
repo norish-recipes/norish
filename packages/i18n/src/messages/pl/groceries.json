@@ -135,7 +135,8 @@
     "inPantry": "W Twojej spiżarni",
     "weKeepThis": "Zawsze to mamy",
     "keepFailed": "Nie udało się dodać do spiżarni",
-    "addCount": "{count, plural, one {Dodaj # pozycję} few {Dodaj # pozycje} many {Dodaj # pozycji} other {Dodaj # pozycji}}"
+    "addCount": "{count, plural, one {Dodaj # pozycję} few {Dodaj # pozycje} many {Dodaj # pozycji} other {Dodaj # pozycji}}",
+    "adding": "Dodawanie do listy zakupów…"
   },
   "picker": {
     "unlink": "Odłącz produkt",

@@ -135,7 +135,8 @@
     "inPantry": "In deiner Vorratskammer",
     "weKeepThis": "Haben wir immer",
     "keepFailed": "Das konnte nicht zur Vorratskammer hinzugefügt werden",
-    "addCount": "{count, plural, one {# Eintrag hinzufügen} other {# Einträge hinzufügen}}"
+    "addCount": "{count, plural, one {# Eintrag hinzufügen} other {# Einträge hinzufügen}}",
+    "adding": "Wird zur Einkaufsliste hinzugefügt…"
   },
   "picker": {
     "unlink": "Produkt entkoppeln",

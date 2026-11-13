@@ -135,7 +135,8 @@
     "inPantry": "Nella tua dispensa",
     "weKeepThis": "Lo abbiamo sempre",
     "keepFailed": "Impossibile aggiungerlo alla dispensa",
-    "addCount": "{count, plural, one {Aggiungi # articolo} other {Aggiungi # articoli}}"
+    "addCount": "{count, plural, one {Aggiungi # articolo} other {Aggiungi # articoli}}",
+    "adding": "Aggiunta alla lista della spesa…"
   },
   "picker": {
     "unlink": "Scollega prodotto",

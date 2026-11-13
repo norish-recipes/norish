@@ -135,7 +135,8 @@
     "inPantry": "팬트리에 있음",
     "weKeepThis": "늘 있어요",
     "keepFailed": "팬트리에 추가하지 못했습니다",
-    "addCount": "{count, plural, other {항목 #개 추가}}"
+    "addCount": "{count, plural, other {항목 #개 추가}}",
+    "adding": "장보기 목록에 추가하는 중…"
   },
   "picker": {
     "unlink": "상품 연결 해제",

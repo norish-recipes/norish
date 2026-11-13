@@ -135,7 +135,8 @@
     "inPantry": "I ditt skafferi",
     "weKeepThis": "Det här har vi hemma",
     "keepFailed": "Det gick inte att lägga till i skafferiet",
-    "addCount": "{count, plural, one {Lägg till # artikel} other {Lägg till # artiklar}}"
+    "addCount": "{count, plural, one {Lägg till # artikel} other {Lägg till # artiklar}}",
+    "adding": "Lägger till i inköpslistan…"
   },
   "picker": {
     "unlink": "Ta bort produktkoppling",
