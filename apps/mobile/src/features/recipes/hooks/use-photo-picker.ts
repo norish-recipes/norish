@@ -1,0 +1,55 @@
+import type { PhotoSource } from "@/features/recipes/utils/photo-source";
+import { Alert, Linking } from "react-native";
+import { photoSources, settlePhotoPick } from "@/features/recipes/utils/photo-source";
+import { isDevice } from "expo-device";
+import * as ImagePicker from "expo-image-picker";
+import { useIntl } from "react-intl";
+
+/**
+ * The photo sources this device has and a picker per source: a failure or a denied camera ends
+ * in a translated alert, a cancel in nothing, and the picked files go to `onPicked`.
+ */
+export function usePhotoPicker(onPicked: (assets: ImagePicker.ImagePickerAsset[]) => void) {
+  const intl = useIntl();
+  const run = async (pick: () => Promise<ImagePicker.ImagePickerResult>) => {
+    const outcome = await settlePhotoPick(pick);
+
+    if (outcome.kind === "picked") onPicked(outcome.assets);
+    if (outcome.kind === "failed") {
+      Alert.alert(
+        intl.formatMessage({ id: "recipes.cookbooks.coverPickFailedTitle" }),
+        intl.formatMessage({ id: "recipes.cookbooks.coverPickFailedMessage" })
+      );
+    }
+  };
+  const fromCamera = async (options: ImagePicker.ImagePickerOptions) => {
+    const { granted } = await ImagePicker.requestCameraPermissionsAsync();
+
+    if (granted) {
+      await run(() => ImagePicker.launchCameraAsync(options));
+
+      return;
+    }
+
+    // The photo library needs no permission here: the system picker hands over only what is chosen.
+    Alert.alert(
+      intl.formatMessage({ id: "recipes.cookbooks.cameraDeniedTitle" }),
+      intl.formatMessage({ id: "recipes.cookbooks.cameraDeniedMessage" }),
+      [
+        { text: intl.formatMessage({ id: "common.actions.cancel" }), style: "cancel" },
+        {
+          text: intl.formatMessage({ id: "recipes.cookbooks.openSettings" }),
+          onPress: () => void Linking.openSettings(),
+        },
+      ]
+    );
+  };
+
+  return {
+    sources: photoSources(isDevice),
+    pick: (source: PhotoSource, options: ImagePicker.ImagePickerOptions) =>
+      source === "camera"
+        ? fromCamera(options)
+        : run(() => ImagePicker.launchImageLibraryAsync(options)),
+  };
+}

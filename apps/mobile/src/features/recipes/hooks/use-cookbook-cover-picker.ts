@@ -1,9 +1,9 @@
-import { ActionSheetIOS, Alert, Linking } from "react-native";
-import { coverSources, settleCoverPick } from "@/features/recipes/utils/cover-source";
-import { isDevice } from "expo-device";
+import type * as ImagePicker from "expo-image-picker";
+import { ActionSheetIOS } from "react-native";
 import { File } from "expo-file-system";
-import * as ImagePicker from "expo-image-picker";
 import { useIntl } from "react-intl";
+
+import { usePhotoPicker } from "./use-photo-picker";
 
 const PICKER = {
   mediaTypes: ["images"],
@@ -15,43 +15,8 @@ const PICKER = {
 /** The cover's source: asks library or camera in the native action sheet, then hands the picked file over. */
 export function useCookbookCoverPicker(onPicked: (file: File) => void) {
   const intl = useIntl();
-  const run = async (pick: () => Promise<ImagePicker.ImagePickerResult>) => {
-    const outcome = await settleCoverPick(pick);
-
-    // An expo-file-system File is a Blob, so the shared upload takes it as it takes a browser's.
-    if (outcome.kind === "picked") onPicked(new File(outcome.uri));
-    if (outcome.kind === "failed") {
-      Alert.alert(
-        intl.formatMessage({ id: "recipes.cookbooks.coverPickFailedTitle" }),
-        intl.formatMessage({ id: "recipes.cookbooks.coverPickFailedMessage" })
-      );
-    }
-  };
-  const fromLibrary = () => run(() => ImagePicker.launchImageLibraryAsync(PICKER));
-  const fromCamera = async () => {
-    const { granted } = await ImagePicker.requestCameraPermissionsAsync();
-
-    if (granted) {
-      await run(() => ImagePicker.launchCameraAsync(PICKER));
-
-      return;
-    }
-
-    // The photo library needs no permission here: the system picker hands over only what is chosen.
-    Alert.alert(
-      intl.formatMessage({ id: "recipes.cookbooks.cameraDeniedTitle" }),
-      intl.formatMessage({ id: "recipes.cookbooks.cameraDeniedMessage" }),
-      [
-        { text: intl.formatMessage({ id: "common.actions.cancel" }), style: "cancel" },
-        {
-          text: intl.formatMessage({ id: "recipes.cookbooks.openSettings" }),
-          onPress: () => void Linking.openSettings(),
-        },
-      ]
-    );
-  };
-
-  const sources = coverSources(isDevice);
+  // An expo-file-system File is a Blob, so the shared upload takes it as it takes a browser's.
+  const { sources, pick } = usePhotoPicker(([asset]) => onPicked(new File(asset!.uri)));
 
   return () =>
     ActionSheetIOS.showActionSheetWithOptions(
@@ -73,8 +38,7 @@ export function useCookbookCoverPicker(onPicked: (file: File) => void) {
       (index) => {
         const source = sources[index];
 
-        if (source === "library") void fromLibrary();
-        if (source === "camera") void fromCamera();
+        if (source) void pick(source, PICKER);
       }
     );
 }
