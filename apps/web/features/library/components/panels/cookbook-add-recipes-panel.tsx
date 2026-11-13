@@ -1,7 +1,5 @@
 "use client";
 
-import type { ChangeEvent } from "react";
-import { useState, useTransition } from "react";
 import { SelectableRow } from "@/components/cookbooks/selectable-row";
 import Panel from "@/components/Panel/Panel";
 import { ActionButton, ActionButtonGroup } from "@/components/shared/action-button";
@@ -10,11 +8,7 @@ import { Button, Input, Spinner } from "@heroui/react";
 import { useTranslations } from "next-intl";
 
 import type { CookbookSummaryDTO } from "@norish/shared/contracts";
-import {
-  useCookbookMemberIdsQuery,
-  useCookbooksMutations,
-  useRecipesQuery,
-} from "@norish/shared-react/recipes";
+import { useCookbookAddRecipes } from "@norish/shared-react/recipes";
 import { addBasePath } from "@norish/shared/lib/base-path";
 
 /** Tall enough that the list is the panel rather than a strip under a field. */
@@ -68,40 +62,18 @@ function CookbookAddRecipesContent({
 }) {
   const t = useTranslations("recipes.cookbooks");
   const tActions = useTranslations("common.actions");
-  const { setMembership } = useCookbooksMutations();
-  const [rawInput, setRawInput] = useState("");
-  const [search, setSearch] = useState("");
-  const [, startTransition] = useTransition();
-  const [selected, setSelected] = useState<string[]>([]);
-  const { recipes, isLoading, hasMore, loadMore } = useRecipesQuery({
-    search: search || undefined,
-  });
-  const { memberIds, isLoading: isLoadingMembers } = useCookbookMemberIdsQuery(cookbook.id);
-  const members = new Set(memberIds);
-  const addable = recipes.filter((recipe) => !members.has(recipe.id));
-
-  const handleSearch = (event: ChangeEvent<HTMLInputElement>) => {
-    const value = event.target.value;
-
-    setRawInput(value);
-    // Re-querying the whole recipe list is not work the keystroke should wait
-    // on, so the field stays responsive while the results catch up.
-    startTransition(() => setSearch(value.trim()));
-  };
-
-  const toggle = (recipeId: string) => {
-    setSelected((previous) =>
-      previous.includes(recipeId)
-        ? previous.filter((id) => id !== recipeId)
-        : [...previous, recipeId]
-    );
-  };
-
-  const save = () => {
-    setMembership({ cookbookId: cookbook.id, recipeIds: selected, isMember: true, cookbook });
-
-    onOpenChange(false);
-  };
+  const {
+    input,
+    setInput,
+    addable,
+    hasRecipes,
+    isLoading,
+    hasMore,
+    loadMore,
+    selected,
+    toggle,
+    save,
+  } = useCookbookAddRecipes(cookbook);
 
   return (
     <>
@@ -111,19 +83,19 @@ function CookbookAddRecipesContent({
           data-testid="cookbook-recipe-search"
           placeholder={t("searchRecipes")}
           style={{ fontSize: "16px" }}
-          value={rawInput}
+          value={input}
           variant="secondary"
-          onChange={handleSearch}
+          onChange={(event) => setInput(event.target.value)}
         />
 
         <div className="mt-3 min-h-0 flex-1 overflow-y-auto">
-          {isLoading || isLoadingMembers ? (
+          {isLoading ? (
             <div className="flex h-full items-center justify-center py-6">
               <Spinner color="accent" size="sm" />
             </div>
           ) : addable.length === 0 ? (
             <div className="text-muted flex h-full items-center justify-center px-4 text-center text-base">
-              {recipes.length > 0 ? t("everythingAlreadyIn") : t("noRecipesToAdd")}
+              {hasRecipes ? t("everythingAlreadyIn") : t("noRecipesToAdd")}
             </div>
           ) : (
             <div className="divide-border/40 flex flex-col divide-y">
@@ -170,7 +142,10 @@ function CookbookAddRecipesContent({
             action="add"
             data-testid="save-cookbook-recipes"
             isDisabled={selected.length === 0}
-            onPress={save}
+            onPress={() => {
+              save();
+              onOpenChange(false);
+            }}
           >
             {selected.length > 0 ? t("addCount", { count: selected.length }) : tActions("add")}
           </ActionButton>
