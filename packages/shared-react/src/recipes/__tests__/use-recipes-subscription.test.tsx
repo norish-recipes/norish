@@ -228,6 +228,16 @@ describe("the recipe list events and recipe outcomes", () => {
     );
   });
 
+  it("keeps the import's link on its pending card, whichever of the placeholder and event comes first", () => {
+    queryClient.setQueryData(PENDING_KEY, [{ recipeId: "r-1", url: "", addedAt: 1 }]);
+
+    emit("onImportStarted", { recipeId: "r-1", url: "https://www.seriouseats.com/x" });
+
+    expect(queryClient.getQueryData(PENDING_KEY)).toEqual([
+      { recipeId: "r-1", url: "https://www.seriouseats.com/x", addedAt: 1 },
+    ]);
+  });
+
   it("writes an enrichment update straight into the recipe caches without invalidating", () => {
     const updated = fullRecipe({ name: "After enrichment", calories: 420, categories: ["Dinner"] });
 

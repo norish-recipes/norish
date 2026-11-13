@@ -18,7 +18,8 @@ export function PendingCard({
   variant: RecipeViewMode;
 }) {
   const intl = useIntl();
-  const host = url ? hostOf(url).replace(/^www\./, "") : "";
+  // Text and photo imports carry a label such as "[pasted]", not a link.
+  const host = url?.startsWith("http") ? hostOf(url).replace(/^www\./, "") : "";
   const title = intl.formatMessage({ id: "recipes.dashboard.importingCard" });
 
   const copy = (

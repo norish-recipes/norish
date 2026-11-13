@@ -101,8 +101,8 @@ export function useRecipeOutcomesSubscription() {
 
   useRealtimeSubscription<Payload<"importStarted">>(trpc.recipes.onImportStarted, {
     ...live,
-    onEvent: ({ recipeId }) => {
-      replaceOldestOptimisticPendingRecipe(recipeId);
+    onEvent: ({ recipeId, url }) => {
+      replaceOldestOptimisticPendingRecipe(recipeId, url);
     },
   });
 

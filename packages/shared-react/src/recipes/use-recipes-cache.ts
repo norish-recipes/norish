@@ -49,7 +49,7 @@ type RecipesCacheHelpers = {
   invalidate: () => void;
   addPendingRecipe: (id: string) => void;
   replacePendingRecipe: (fromId: string, toId: string) => void;
-  replaceOldestOptimisticPendingRecipe: (recipeId: string) => void;
+  replaceOldestOptimisticPendingRecipe: (recipeId: string, url?: string) => void;
   removePendingRecipe: (id: string) => void;
 };
 
@@ -129,12 +129,16 @@ export function useRecipesCacheHelpers(): RecipesCacheHelpers {
   );
 
   const replaceOldestOptimisticPendingRecipe = useCallback(
-    (recipeId: string) => {
+    (recipeId: string, url = "") => {
       queryClient.setQueryData<PendingRecipeDTO[]>(pendingKey, (prev) => {
         const arr = prev ?? [];
+        const existing = arr.find((pending) => pending.recipeId === recipeId);
 
-        if (arr.some((pending) => pending.recipeId === recipeId)) {
-          return arr;
+        // The import's own link arrives with its started event, after the placeholder.
+        if (existing) {
+          return existing.url || !url
+            ? arr
+            : arr.map((pending) => (pending === existing ? { ...pending, url } : pending));
         }
 
         const optimisticPending = arr.find((pending) =>
@@ -142,11 +146,11 @@ export function useRecipesCacheHelpers(): RecipesCacheHelpers {
         );
 
         if (!optimisticPending) {
-          return [...arr, { recipeId, url: "", addedAt: Date.now() }];
+          return [...arr, { recipeId, url, addedAt: Date.now() }];
         }
 
         return arr.map((pending) =>
-          pending.recipeId === optimisticPending.recipeId ? { ...pending, recipeId } : pending
+          pending.recipeId === optimisticPending.recipeId ? { ...pending, recipeId, url } : pending
         );
       });
     },
