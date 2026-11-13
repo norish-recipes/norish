@@ -133,11 +133,12 @@ export function createWebOfflineEngine(
 
 export const offlineEngine = createWebOfflineEngine();
 
-// Saves are throttled, so a hidden tab saves now: closing it may give no later chance.
+// Saves are throttled, so a hidden tab or an unloading page saves now: it may get no later chance.
 if (typeof document !== "undefined") {
   document.addEventListener("visibilitychange", () => {
     if (document.visibilityState === "hidden") void offlineEngine.cache.flush();
   });
+  window.addEventListener("pagehide", () => void offlineEngine.cache.flush());
 }
 
 /** The seam handed to the provider bundle's `getQueryClient`. */
