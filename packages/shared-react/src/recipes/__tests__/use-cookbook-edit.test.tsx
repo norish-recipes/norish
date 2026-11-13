@@ -131,6 +131,34 @@ describe("useCookbookEdit", () => {
     );
   });
 
+  it("saves against the cookbook as it is once the upload has finished", async () => {
+    let finish: (url: string) => void = () => {};
+
+    spies.uploadCookbookImage.mockReturnValue(new Promise<string>((resolve) => (finish = resolve)));
+    let current = cookbook;
+    const { result, rerender } = renderHook(() => useCookbookEdit(current), {
+      wrapper: createTestWrapper(createTestQueryClient()),
+    });
+    let saving: Promise<boolean> = Promise.resolve(false);
+
+    act(() => {
+      saving = result.current.save(new Blob(["x"]));
+    });
+    current = { ...cookbook, title: "Suppers", version: 4 };
+    rerender();
+    await act(async () => {
+      finish("/covers/new.png");
+      await saving;
+    });
+
+    expect(spies.updateCookbook).toHaveBeenCalledWith({
+      id: "cb-1",
+      title: "Suppers",
+      image: "/covers/new.png",
+      version: 4,
+    });
+  });
+
   it("toggles a removal back and forth", () => {
     const { result } = render();
 

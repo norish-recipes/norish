@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useRef, useState } from "react";
 
 import type { CookbookSummaryDTO } from "@norish/shared/contracts";
 
@@ -50,6 +50,12 @@ export function useCookbookEdit(
   const [picked, setPicked] = useState<CookbookCover | null>(null);
   const [clearImage, setClearImage] = useState(false);
   const [isSaving, setIsSaving] = useState(false);
+  // An upload takes seconds; the write that follows must see a rename made meanwhile.
+  const liveCookbook = useRef(cookbook);
+
+  useEffect(() => {
+    liveCookbook.current = cookbook;
+  }, [cookbook]);
 
   const plan = cookbookEditPlan(cookbook, {
     title,
@@ -61,12 +67,6 @@ export function useCookbookEdit(
   /** Resolves false when the cover could not be uploaded, and then writes nothing. */
   const save = async (chosen?: Blob) => {
     const cover = chosen ?? picked?.file ?? null;
-    const { trimmed, titleChanged, imageChanged } = cookbookEditPlan(cookbook, {
-      title,
-      removed,
-      hasCover: cover !== null,
-      clearImage,
-    });
     let image: string | null | undefined;
 
     if (cover) {
@@ -85,21 +85,29 @@ export function useCookbookEdit(
       }
 
       setIsSaving(false);
-    } else if (imageChanged) {
-      image = null;
     }
+
+    const live = liveCookbook.current;
+    const { trimmed, titleChanged, imageChanged } = cookbookEditPlan(live, {
+      title: typed ?? live.title,
+      removed,
+      hasCover: cover !== null,
+      clearImage,
+    });
+
+    if (!cover && imageChanged) image = null;
 
     if (titleChanged || imageChanged) {
       updateCookbook({
-        id: cookbook.id,
-        title: titleChanged ? trimmed : cookbook.title,
+        id: live.id,
+        title: titleChanged ? trimmed : live.title,
         image,
-        version: cookbook.version,
+        version: live.version,
       });
     }
 
     if (removed.length > 0) {
-      setMembership({ cookbookId: cookbook.id, recipeIds: removed, isMember: false, cookbook });
+      setMembership({ cookbookId: live.id, recipeIds: removed, isMember: false, cookbook: live });
       // The member list is this cookbook's own read, so drop the rows now rather than waiting
       // for a refetch that Offline never comes.
       for (const recipeId of removed) members.removeMember(recipeId);
