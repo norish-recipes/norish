@@ -6,6 +6,11 @@ import { usePlatform } from "../platform/platform";
 import { useImportMutations } from "./use-import-mutations";
 import { useRecipeMutationErrorToast } from "./use-recipe-mutation-error-toast";
 
+/** Whether pasted text is over what an AI import takes, the spaces around it aside. */
+export function isPasteTooLong(text: string): boolean {
+  return text.trim().length > MAX_RECIPE_PASTE_CHARS;
+}
+
 /**
  * Import a link, pasted text or images and say so; unless `stay`, go to the Library, where its
  * pending card shows.
@@ -62,7 +67,7 @@ export function useImportRecipe({ stay = false }: { stay?: boolean } = {}) {
     ),
     /** False, with a warning, when the text is over the AI import's length cap. */
     importFromPasteWithAI: (text: string): boolean => {
-      if (text.trim().length > MAX_RECIPE_PASTE_CHARS) {
+      if (isPasteTooLong(text)) {
         toast.show({
           severity: "warning",
           title: toast.translate("common.import.paste.tooLarge"),

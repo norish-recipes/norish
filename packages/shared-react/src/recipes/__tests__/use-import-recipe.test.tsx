@@ -8,7 +8,7 @@ import { fakePlatformAdapter } from "@norish/shared-react/platform/testing";
 import { MAX_RECIPE_PASTE_CHARS } from "@norish/shared/contracts/uploads";
 
 import { useImportMutations } from "../use-import-mutations";
-import { useImportRecipe } from "../use-import-recipe";
+import { isPasteTooLong, useImportRecipe } from "../use-import-recipe";
 
 const mocks = vi.hoisted(() => ({
   importRecipeFromPaste: vi.fn(),
@@ -144,5 +144,12 @@ describe("useImportRecipe", () => {
       title: "common.import.paste.importingWithAI",
       description: "common.import.paste.inProgress",
     });
+  });
+});
+
+describe("isPasteTooLong", () => {
+  it("measures the text without the spaces around it", () => {
+    expect(isPasteTooLong(` ${"a".repeat(MAX_RECIPE_PASTE_CHARS)}\n`)).toBe(false);
+    expect(isPasteTooLong("a".repeat(MAX_RECIPE_PASTE_CHARS + 1))).toBe(true);
   });
 });
