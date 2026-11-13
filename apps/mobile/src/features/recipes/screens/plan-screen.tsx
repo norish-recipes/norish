@@ -85,6 +85,8 @@ export function PlanScreen() {
       ListHeaderComponent={header}
       contentContainerClassName="px-5 pb-8"
       contentInsetAdjustmentBehavior="never"
+      // The first frame sits on today, 12 pt under the sheet's top (the card above ends there); the title is above it.
+      contentOffset={{ x: 0, y: isLoading || todayIndex < 0 ? 0 : offsets[todayIndex]! - 12 }}
       data={rows}
       getItemLayout={
         isLoading
@@ -95,6 +97,7 @@ export function PlanScreen() {
               index,
             })
       }
+      initialNumToRender={8}
       keyExtractor={(item) => (typeof item === "number" ? `skeleton-${item}` : dateKey(item))}
       maintainVisibleContentPosition={{ minIndexForVisible: 0 }}
       renderItem={({ item, index }) => {
@@ -126,9 +129,6 @@ export function PlanScreen() {
       }}
       showsVerticalScrollIndicator={false}
       testID="plan-sheet"
-      initialNumToRender={8}
-      // The first frame sits on today, 12 pt under the sheet's top (the card above ends there); the title is above it.
-      contentOffset={{ x: 0, y: isLoading || todayIndex < 0 ? 0 : offsets[todayIndex]! - 12 }}
     />
   );
 }
