@@ -170,6 +170,12 @@ The signed-in shell is built with native tabs and the "Add recipe" accessory, an
 - Unreachable: it saves the item in the App Group and says Norish will import it when the server is reachable; the app drains saved items into the Outbox on foreground. Signed out or no Server Address, a too-old server, images with AI off, any other failure: one translated line and Close, no retry.
 - Its strings are generated from `packages/i18n` at prebuild.
 
+### Loading and sheets
+
+- Every data-backed view paints in its first frame: the cached Warm Set data when there is any, otherwise a skeleton shaped like the content. The splash and the screens never wait on a data round trip.
+- Sheets are the native sheet's glass and nothing on them paints a background of its own: pinned actions sit directly on the sheet, with the scroll area ending above them. No solid footers.
+- Photos are proven to load on the device (cards, covers, the recipe route), signed in against a server that requires the session.
+
 ### Offline
 
 - As web: Recipes reads from the Warm Set, and every write, imports included, goes through the Outbox.

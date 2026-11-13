@@ -10,4 +10,5 @@
 - [ ] Days from last month to next month, opened on today; each day card shows what's planned and has an add per slot. The day card is a component the Calendar area can reuse.
 - [ ] Plan plans and closes; Move moves the Today item and closes.
 - [ ] Both plan sheets follow `getAfterPlanningPreference`: nothing, open Add to groceries (ticket 13), or add at once.
+- [ ] The sheet paints cached days or a skeleton in its first frame, and is glass with no solid footer.
 - [ ] Gates green, including mobile's lint, typecheck, test and `expo export --platform ios`.

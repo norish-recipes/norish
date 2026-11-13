@@ -10,4 +10,5 @@
 - [ ] Four slots Breakfast to Snack, opened on the next meal, per `todaySectionVisibility`; notes as cards.
 - [ ] An empty slot's add card opens Plan a recipe for today and that slot: slot tabs, recipe search, Random recipe, note.
 - [ ] Long-press: Open recipe, Move… (wired to ticket 12's sheet), Remove with the native alert.
+- [ ] Today paints cached slots or a skeleton in its first frame; the Plan a recipe sheet is glass with no solid footer.
 - [ ] Gates green, including mobile's lint, typecheck, test and `expo export --platform ios`.

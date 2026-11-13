@@ -10,4 +10,5 @@
 - [ ] `expo-clipboard` added through `expo install`. On open, `hasUrlAsync()`; with a link, read it and show "Import ‹host›" as the first row; own-server links skipped. From a link opens pre-filled.
 - [ ] From a link, From text; From photos (AI only) with several images from library or camera, uploads as `expo-file-system` files (`importRecipeFromImages` widened); Write it yourself to a placeholder route.
 - [ ] Imports show the pending card and the View / failure toasts on every tab; offline imports queue.
+- [ ] The sheets are glass with no solid footer.
 - [ ] Gates green, including mobile's lint, typecheck, test and `expo export --platform ios`.

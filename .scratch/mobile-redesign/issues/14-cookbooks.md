@@ -10,4 +10,5 @@
 - [ ] `uploadCookbookImage` takes mobile's `expo-file-system` file as well as a `Blob`.
 - [ ] Cookbook page: the Library scoped to it under its cover and title, with Remove from cookbook on its cards.
 - [ ] Create from "+" and from a card's Add to cookbook; rename; delete; add recipes; upload a cover (`expo-image-picker`, library and camera).
+- [ ] The cookbook page and the picker paint cached data or a skeleton in their first frame; covers load on the device; sheets are glass with no solid footer.
 - [ ] Gates green, including mobile's lint, typecheck, test and `expo export --platform ios`.
