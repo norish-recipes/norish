@@ -52,8 +52,8 @@ export function RecipesStack() {
             presentation: "formSheet",
             headerShown: false,
             sheetGrabberVisible: true,
-            // The board's sheet is 804 pt; the largest detent is an opaque full-width sheet, so stay under it.
-            sheetAllowedDetents: [0.95],
+            // Glass sheets stop at 0.98 (765 pt, the board has 804); 0.99 is the opaque full-width sheet.
+            sheetAllowedDetents: [0.98],
             contentStyle: { backgroundColor: "transparent" },
           }}
         />
