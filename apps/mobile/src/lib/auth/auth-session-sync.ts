@@ -39,19 +39,39 @@ export function subscribeAuthTransport(listener: () => void): () => void {
   };
 }
 
-/** Signed in, with one re-key so everything below rebuilds on the session; once until leave. */
-export function publishSignedIn(): void {
-  if (snapshot.hasActiveSession) return;
+// The account the tree below the tRPC provider renders for: null signed out, undefined not known yet.
+let keyedFor: string | null | undefined;
+
+/**
+ * Whether a session settling on `next` re-keys the tree rendered for `rendered`: only when it
+ * rendered another account or signed out, never when it first learns the account it shows.
+ */
+export function rekeysOnSettle(rendered: string | null | undefined, next: string | null): boolean {
+  return rendered !== undefined && rendered !== next;
+}
+
+/** Signed in as `userId`; re-keys only when the tree rendered signed out or another account. */
+export function publishSignedIn(userId: string): void {
+  const rekey = rekeysOnSettle(keyedFor, userId);
+
+  keyedFor = userId;
+  if (snapshot.hasActiveSession && !rekey) return;
 
   leftFrom = null;
-  snapshot = { hasActiveSession: true, version: snapshot.version + 1 };
+  snapshot = { hasActiveSession: true, version: snapshot.version + (rekey ? 1 : 0) };
 
   emitSnapshotChange();
+}
+
+/** The tree renders signed out, so the next sign-in re-keys it. */
+export function noteSignedOut(): void {
+  keyedFor = null;
 }
 
 /** Mobile's leave: signed out and one re-key, so everything below rebuilds on the cleared cache. */
 export function publishSignedOut(serverAddress: string | null): void {
   leftFrom = serverAddress;
+  keyedFor = null;
   fadingOut = false;
   snapshot = { hasActiveSession: false, version: snapshot.version + 1 };
 

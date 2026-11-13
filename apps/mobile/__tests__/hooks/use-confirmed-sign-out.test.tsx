@@ -20,7 +20,7 @@ const { publishSignedIn, publishSignedOut } = await import("@/lib/auth/auth-sess
 beforeEach(() => {
   buttons = [];
   signOut.mockClear();
-  publishSignedIn();
+  publishSignedIn("reader-1");
 });
 
 describe("useConfirmedSignOut", () => {

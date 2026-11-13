@@ -3,6 +3,7 @@ import { useEffect, useState, useSyncExternalStore } from "react";
 import {
   fadeOutSignedIn,
   getAuthTransportSnapshot,
+  noteSignedOut,
   publishSignedIn,
   subscribeAuthTransport,
 } from "@/lib/auth/auth-session-sync";
@@ -36,10 +37,13 @@ export function AuthProviders({ children }: { children: ReactNode }) {
   const session = ending ? ENDING : expired ? (shown ?? ENDING) : liveSession;
   const signedIn = session.user !== null;
 
-  // Publishing re-keys the tRPC provider, which remounts this one; signed out is leave's to publish.
+  const settledUser = session.isPending ? undefined : (session.user?.id ?? null);
+
+  // A sign-in re-keys the tRPC provider, which remounts this one; signed out is leave's to publish.
   useEffect(() => {
-    if (signedIn && !session.isPending) publishSignedIn();
-  }, [session.isPending, signedIn]);
+    if (settledUser) publishSignedIn(settledUser);
+    else if (settledUser === null) noteSignedOut();
+  }, [settledUser]);
 
   useEffect(() => {
     if (expired) void expireSession();
