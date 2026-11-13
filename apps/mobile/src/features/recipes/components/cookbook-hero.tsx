@@ -7,7 +7,7 @@ import type { CookbookSummaryDTO } from "@norish/shared/contracts";
 
 import { CookbookCover } from "./cookbook-cover";
 
-const FADE_BANDS = Array.from({ length: 29 }, (_, band) => (band + 1) / 29);
+const FADE_BANDS = Array.from({ length: 58 }, (_, band) => (band + 1) / 58);
 
 /** The cover's last 58% fades into the page, so the title sits on the ground: bands of rising opacity. */
 function CoverFade() {
