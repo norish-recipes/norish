@@ -24,6 +24,9 @@ type BodyLayout = {
   contentClassName?: string;
 };
 
+/** The body's side inset in points, the `px-4` below: for a layout that sizes itself to the sheet. */
+export const SHEET_INSET = 16;
+
 const contentClass = ({ inset = true, contentClassName = "" }: BodyLayout) =>
   `${inset ? "px-4" : ""} pb-4 ${contentClassName}`;
 

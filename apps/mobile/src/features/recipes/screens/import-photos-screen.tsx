@@ -3,7 +3,7 @@ import type { ComponentProps } from "react";
 import React, { useState } from "react";
 import { Alert, Image, Pressable, Text, useWindowDimensions, View } from "react-native";
 import { GlassCloseButton } from "@/components/glass-close-button";
-import { Sheet, SheetBody } from "@/components/sheet";
+import { Sheet, SHEET_INSET, SheetBody } from "@/components/sheet";
 import { useAccentTextColor } from "@/hooks/use-accent-text-color";
 import Ionicons from "@expo/vector-icons/Ionicons";
 import { File } from "expo-file-system";
@@ -20,10 +20,9 @@ import type { PhotoSource } from "../utils/photo-source";
 import { usePhotoPicker } from "../hooks/use-photo-picker";
 import { useStartImport } from "../hooks/use-start-import";
 
-/** Three tiles a row with the board's 8 pt gaps, inside the sheet's 16 pt sides. */
+/** Three tiles a row with the board's 8 pt gaps, inside the sheet's sides. */
 const COLUMNS = 3;
 const GAP = 8;
-const SIDES = 32;
 
 /** iOS hands HEIC over as JPEG, which the import takes; the camera's photo is one file. */
 const pickerOptions = (source: PhotoSource, room: number) =>
@@ -55,7 +54,7 @@ export function ImportPhotosScreen() {
   const startImport = useStartImport();
   const accentText = useAccentTextColor();
   const [muted, accentForeground] = useThemeColor(["muted", "accent-foreground"] as const);
-  const tile = (useWindowDimensions().width - SIDES - GAP * (COLUMNS - 1)) / COLUMNS;
+  const tile = (useWindowDimensions().width - 2 * SHEET_INSET - GAP * (COLUMNS - 1)) / COLUMNS;
   const isFull = photos.length >= MAX_OCR_FILES;
   const limitsText = intl.formatMessage(
     { id: "recipes.addRecipe.photoLimits" },
