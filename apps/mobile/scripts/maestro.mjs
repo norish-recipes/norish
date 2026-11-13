@@ -308,7 +308,8 @@ const oauthProvider = (await trpc("config.authProviders")).providers.find(
   (provider) => provider.type === "oauth"
 );
 
-if (!oauthProvider) throw new Error(`${server} lists no OAuth provider for the Sign-in failed flow`);
+if (!oauthProvider)
+  throw new Error(`${server} lists no OAuth provider for the Sign-in failed flow`);
 
 const appVersion = JSON.parse(readFileSync(path.join(flows, "../package.json"), "utf8")).version;
 // The app's minimum, as in src/features/auth/utils/server-version.ts.
