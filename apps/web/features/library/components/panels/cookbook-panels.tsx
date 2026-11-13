@@ -6,12 +6,11 @@ import { SelectableRow } from "@/components/cookbooks/selectable-row";
 import Panel from "@/components/Panel/Panel";
 import { ActionButton, ActionButtonGroup } from "@/components/shared/action-button";
 import { PhotoIcon, TrashIcon } from "@heroicons/react/24/outline";
-import { Button, Input, Label, Modal, Separator, Spinner, toast } from "@heroui/react";
+import { Button, Input, Label, Modal, Separator, Spinner } from "@heroui/react";
 import { useTranslations } from "next-intl";
 
 import type { CookbookSummaryDTO } from "@norish/shared/contracts";
-import { useConnectivity } from "@norish/shared-react/offline/react";
-import { useCookbookRecipesQuery, useCookbooksMutations } from "@norish/shared-react/recipes";
+import { useCookbookEdit } from "@norish/shared-react/recipes";
 import { ALLOWED_IMAGE_MIME_TYPES } from "@norish/shared/contracts";
 import { addBasePath } from "@norish/shared/lib/base-path";
 
@@ -154,24 +153,24 @@ function CookbookEditContent({
 }) {
   const t = useTranslations("recipes.cookbooks");
   const tActions = useTranslations("common.actions");
-  const cookbookId = cookbook.id;
   const initialTitle = cookbook.title;
-  const [title, setTitle] = useState(initialTitle);
-  const [removed, setRemoved] = useState<string[]>([]);
-  // The cover is staged like the rest: a picked file is only uploaded by Save,
-  // and clearing goes back to the member mosaic.
-  const [picked, setPicked] = useState<{ file: File; preview: string } | null>(null);
-  const file = picked?.file ?? null;
-  const preview = picked?.preview ?? null;
-  const [clearImage, setClearImage] = useState(false);
-  const [isSaving, setIsSaving] = useState(false);
   const pickerRef = useRef<HTMLInputElement>(null);
-  const { isOffline } = useConnectivity();
-  // Every staged edit commits through the same seam: routing only the rename
-  // back out through a prop would give one panel two ways to write.
-  const { updateCookbook, uploadCookbookImage, setMembership } = useCookbooksMutations();
-  const { recipes, isLoading, hasMore, loadMore, removeMember } =
-    useCookbookRecipesQuery(cookbookId);
+  const {
+    title,
+    setTitle,
+    removed,
+    toggleRemoved,
+    picked,
+    pickCover,
+    clearCover,
+    shownImage,
+    coverDisabled: isOffline,
+    isDirty,
+    isSaving,
+    members: { recipes, isLoading, hasMore, loadMore },
+    save,
+  } = useCookbookEdit(cookbook);
+  const preview = picked?.preview ?? null;
 
   useEffect(() => {
     if (!preview) return;
@@ -179,57 +178,8 @@ function CookbookEditContent({
     return () => URL.revokeObjectURL(preview);
   }, [preview]);
 
-  const toggleRemoved = (recipeId: string) => {
-    setRemoved((previous) =>
-      previous.includes(recipeId)
-        ? previous.filter((id) => id !== recipeId)
-        : [...previous, recipeId]
-    );
-  };
-
-  const trimmed = title.trim();
-  const titleChanged = trimmed.length > 0 && trimmed !== initialTitle;
-  const imageChanged = file !== null || (clearImage && cookbook.image !== null);
-  const isDirty = titleChanged || imageChanged || removed.length > 0;
-  const shownImage = preview ?? (clearImage ? null : cookbook.image);
-
   const submit = async () => {
-    let image: string | null | undefined;
-
-    if (file) {
-      setIsSaving(true);
-
-      try {
-        image = await uploadCookbookImage(cookbookId, file);
-      } catch {
-        setIsSaving(false);
-        toast(t("imageUploadFailed"), { variant: "danger" });
-
-        return;
-      }
-
-      setIsSaving(false);
-    } else if (imageChanged) {
-      image = null;
-    }
-
-    if (titleChanged || imageChanged) {
-      updateCookbook({
-        id: cookbookId,
-        title: titleChanged ? trimmed : initialTitle,
-        image,
-        version: cookbook.version,
-      });
-    }
-
-    if (removed.length > 0) {
-      setMembership({ cookbookId, recipeIds: removed, isMember: false, cookbook });
-      // The member list is this cookbook's own read, so drop the rows now
-      // rather than waiting for a refetch that Offline never comes.
-      for (const recipeId of removed) removeMember(recipeId);
-    }
-
-    onOpenChange(false);
+    if (await save()) onOpenChange(false);
   };
 
   return (
@@ -260,14 +210,7 @@ function CookbookEditContent({
                 {shownImage ? t("changeImage") : t("chooseImage")}
               </Button>
               {shownImage ? (
-                <Button
-                  size="sm"
-                  variant="tertiary"
-                  onPress={() => {
-                    setPicked(null);
-                    setClearImage(true);
-                  }}
-                >
+                <Button size="sm" variant="tertiary" onPress={clearCover}>
                   <TrashIcon className="size-4" />
                   {t("removeImage")}
                 </Button>
@@ -286,8 +229,7 @@ function CookbookEditContent({
 
               event.target.value = "";
               if (pickedFile) {
-                setPicked({ file: pickedFile, preview: URL.createObjectURL(pickedFile) });
-                setClearImage(false);
+                pickCover({ file: pickedFile, preview: URL.createObjectURL(pickedFile) });
               }
             }}
           />
