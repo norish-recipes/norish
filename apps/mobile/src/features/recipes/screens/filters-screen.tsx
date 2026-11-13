@@ -84,8 +84,8 @@ export function FiltersScreen() {
         </Button>
       </View>
       <ScrollView
+        className="mt-px"
         contentContainerClassName="gap-[18px] px-5 pt-5 pb-4"
-        style={{ marginTop: 1 }}
         testID="filters-sheet"
         contentInsetAdjustmentBehavior="never"
         showsVerticalScrollIndicator={false}
