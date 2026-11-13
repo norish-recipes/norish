@@ -175,6 +175,7 @@ The signed-in shell is built with native tabs and the "Add recipe" accessory, an
 - Every data-backed view paints in its first frame: the cached Warm Set data when there is any, otherwise a skeleton shaped like the content. The splash and the screens never wait on a data round trip.
 - Sheets are the native sheet's glass and nothing on them paints a background of its own: pinned actions sit directly on the sheet, with the scroll area ending above them. No solid footers.
 - A sheet whose content does not fit at once has two detents, 62% of the screen and full height, opens at 62% with a grabber, and expands to full when dragged or when its list is scrolled. A sheet whose content fits is as tall as its content and does not resize. Sheet heights do not follow the boards.
+- Every sheet is built from one shared sheet: one set of route options (form sheet, grabber, detents, transparent content) and one layout component that places the title, subtitle and close button, the scrolling body and the pinned actions. A screen supplies content only; no sheet sets its own height or button placement.
 - Photos are proven to load on the device (cards, covers, the recipe route), signed in against a server that requires the session.
 
 ### Offline
