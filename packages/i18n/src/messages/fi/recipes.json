@@ -27,7 +27,8 @@
       "all": "Kaikki",
       "recipes": "Reseptit",
       "cookbooks": "Keittokirjat"
-    }
+    },
+    "importingCard": "Tuodaan…"
   },
   "back": {
     "all": "Takaisin kirjastoon",
@@ -43,7 +44,8 @@
     "noResults": "Reseptejä ei löytynyt",
     "noResultsHint": "Kokeile muuttaa tai tyhjentää suodattimet.",
     "noCookbooks": "Ei vielä keittokirjoja",
-    "noCookbooksHint": "Keittokirja on nimetty kokoelma reseptejä. Tee ensimmäinen ja tuo kirjastoosi järjestystä."
+    "noCookbooksHint": "Keittokirja on nimetty kokoelma reseptejä. Tee ensimmäinen ja tuo kirjastoosi järjestystä.",
+    "descriptionMobile": "Lisää ensimmäinen reseptisi linkistä, tekstistä tai kuvista."
   },
   "card": {
     "noImage": "Ei kuvaa saatavilla",

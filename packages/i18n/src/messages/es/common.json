@@ -67,7 +67,8 @@
     "categories": "Categorías",
     "sortByTitle": "Título",
     "sortByDate": "Fecha",
-    "clearFilters": "Borrar filtros"
+    "clearFilters": "Borrar filtros",
+    "minRating": "Valoración mínima"
   },
   "time": {
     "minutes": "min",

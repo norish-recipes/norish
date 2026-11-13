@@ -27,7 +27,8 @@
       "all": "Wszystko",
       "recipes": "Przepisy",
       "cookbooks": "Książki kucharskie"
-    }
+    },
+    "importingCard": "Importowanie…"
   },
   "back": {
     "all": "Wróć do biblioteki",
@@ -43,7 +44,8 @@
     "noResults": "Nie znaleziono przepisów",
     "noResultsHint": "Spróbuj zmienić lub wyczyścić filtry.",
     "noCookbooks": "Brak książek kucharskich",
-    "noCookbooksHint": "Książka kucharska to nazwany zbiór przepisów. Utwórz pierwszą, aby uporządkować bibliotekę."
+    "noCookbooksHint": "Książka kucharska to nazwany zbiór przepisów. Utwórz pierwszą, aby uporządkować bibliotekę.",
+    "descriptionMobile": "Dodaj swój pierwszy przepis z linku, tekstu lub zdjęć."
   },
   "card": {
     "noImage": "Brak obrazu",

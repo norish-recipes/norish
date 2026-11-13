@@ -67,7 +67,8 @@
     "categories": "Категории",
     "sortByTitle": "Название",
     "sortByDate": "Дата",
-    "clearFilters": "Очистить фильтры"
+    "clearFilters": "Очистить фильтры",
+    "minRating": "Минимальная оценка"
   },
   "time": {
     "minutes": "мин",

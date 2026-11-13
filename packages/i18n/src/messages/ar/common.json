@@ -67,7 +67,8 @@
     "categories": "التصنيفات",
     "sortByTitle": "الاسم",
     "sortByDate": "التاريخ",
-    "clearFilters": "مسح عوامل التصفية"
+    "clearFilters": "مسح عوامل التصفية",
+    "minRating": "الحد الأدنى للتقييم"
   },
   "time": {
     "minutes": "د",

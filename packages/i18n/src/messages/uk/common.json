@@ -67,7 +67,8 @@
     "categories": "Категорії",
     "sortByTitle": "Назва",
     "sortByDate": "Дата",
-    "clearFilters": "Скинути фільтри"
+    "clearFilters": "Скинути фільтри",
+    "minRating": "Мінімальна оцінка"
   },
   "time": {
     "minutes": "хв",

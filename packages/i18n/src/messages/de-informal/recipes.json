@@ -27,7 +27,8 @@
       "all": "Alle",
       "recipes": "Rezepte",
       "cookbooks": "Kochbücher"
-    }
+    },
+    "importingCard": "Wird importiert…"
   },
   "back": {
     "all": "Zurück zur Bibliothek",
@@ -43,7 +44,8 @@
     "noResults": "Keine Rezepte gefunden",
     "noResultsHint": "Versuche, deine Filter anzupassen oder zu löschen.",
     "noCookbooks": "Noch keine Kochbücher",
-    "noCookbooksHint": "Ein Kochbuch ist eine benannte Sammlung von Rezepten. Erstelle dein erstes, um deine Bibliothek zu ordnen."
+    "noCookbooksHint": "Ein Kochbuch ist eine benannte Sammlung von Rezepten. Erstelle dein erstes, um deine Bibliothek zu ordnen.",
+    "descriptionMobile": "Füge dein erstes Rezept über einen Link, Text oder Fotos hinzu."
   },
   "card": {
     "noImage": "Kein Bild verfügbar",

@@ -27,7 +27,8 @@
       "all": "All",
       "recipes": "Recipes",
       "cookbooks": "Cookbooks"
-    }
+    },
+    "importingCard": "Importing…"
   },
   "back": {
     "all": "Back to library",
@@ -43,7 +44,8 @@
     "noResults": "No recipes found",
     "noResultsHint": "Try adjusting or clearing your filters.",
     "noCookbooks": "No cookbooks yet",
-    "noCookbooksHint": "A cookbook is a titled set of recipes. Make your first one to give your library some order."
+    "noCookbooksHint": "A cookbook is a titled set of recipes. Make your first one to give your library some order.",
+    "descriptionMobile": "Add your first recipe from a link, text or photos."
   },
   "card": {
     "noImage": "No image available",

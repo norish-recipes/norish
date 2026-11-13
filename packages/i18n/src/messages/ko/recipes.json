@@ -27,7 +27,8 @@
       "all": "전체",
       "recipes": "레시피",
       "cookbooks": "요리책"
-    }
+    },
+    "importingCard": "가져오는 중…"
   },
   "back": {
     "all": "라이브러리로 돌아가기",
@@ -43,7 +44,8 @@
     "noResults": "레시피를 찾을 수 없습니다.",
     "noResultsHint": "필터를 조정하거나 지워보세요.",
     "noCookbooks": "아직 요리책이 없습니다",
-    "noCookbooksHint": "요리책은 제목이 있는 레시피 모음입니다. 첫 요리책을 만들어 라이브러리를 정리해 보세요."
+    "noCookbooksHint": "요리책은 제목이 있는 레시피 모음입니다. 첫 요리책을 만들어 라이브러리를 정리해 보세요.",
+    "descriptionMobile": "링크, 텍스트 또는 사진으로 첫 레시피를 추가하세요."
   },
   "card": {
     "noImage": "이미지가 없습니다.",

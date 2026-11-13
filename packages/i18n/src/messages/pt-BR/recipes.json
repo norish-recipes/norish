@@ -27,7 +27,8 @@
       "all": "Tudo",
       "recipes": "Receitas",
       "cookbooks": "Livros de receitas"
-    }
+    },
+    "importingCard": "Importando…"
   },
   "back": {
     "all": "Voltar à biblioteca",
@@ -43,7 +44,8 @@
     "noResults": "Nenhuma receita encontrada",
     "noResultsHint": "Tente ajustar ou limpar seus filtros.",
     "noCookbooks": "Nenhum livro de receitas ainda",
-    "noCookbooksHint": "Um livro de receitas é um conjunto de receitas com título. Crie o primeiro para organizar sua biblioteca."
+    "noCookbooksHint": "Um livro de receitas é um conjunto de receitas com título. Crie o primeiro para organizar sua biblioteca.",
+    "descriptionMobile": "Adicione sua primeira receita a partir de um link, texto ou fotos."
   },
   "card": {
     "noImage": "Nenhuma imagem disponível",

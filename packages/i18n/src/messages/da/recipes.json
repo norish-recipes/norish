@@ -27,7 +27,8 @@
       "all": "Alt",
       "recipes": "Opskrifter",
       "cookbooks": "Kogebøger"
-    }
+    },
+    "importingCard": "Importerer…"
   },
   "back": {
     "all": "Tilbage til biblioteket",
@@ -43,7 +44,8 @@
     "noResults": "Ingen opskrifter fundet",
     "noResultsHint": "Prøv at justere eller rydde dine filtre.",
     "noCookbooks": "Ingen kogebøger endnu",
-    "noCookbooksHint": "En kogebog er et navngivet sæt opskrifter. Opret din første for at organisere dit bibliotek."
+    "noCookbooksHint": "En kogebog er et navngivet sæt opskrifter. Opret din første for at organisere dit bibliotek.",
+    "descriptionMobile": "Tilføj din første opskrift fra et link, tekst eller billeder."
   },
   "card": {
     "noImage": "Intet billede tilgængeligt",

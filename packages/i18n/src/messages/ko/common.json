@@ -67,7 +67,8 @@
     "categories": "카테고리",
     "sortByTitle": "제목",
     "sortByDate": "날짜",
-    "clearFilters": "필터 지우기"
+    "clearFilters": "필터 지우기",
+    "minRating": "최소 평점"
   },
   "time": {
     "minutes": "분",

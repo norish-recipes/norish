@@ -27,7 +27,8 @@
       "all": "Alt",
       "recipes": "Oppskrifter",
       "cookbooks": "Kokebøker"
-    }
+    },
+    "importingCard": "Importerer…"
   },
   "back": {
     "all": "Tilbake til biblioteket",
@@ -43,7 +44,8 @@
     "noResults": "Ingen oppskrifter funnet",
     "noResultsHint": "Prøv å justere eller tømme filtrene.",
     "noCookbooks": "Ingen kokebøker ennå",
-    "noCookbooksHint": "En kokebok er et navngitt sett med oppskrifter. Lag din første for å få orden i biblioteket."
+    "noCookbooksHint": "En kokebok er et navngitt sett med oppskrifter. Lag din første for å få orden i biblioteket.",
+    "descriptionMobile": "Legg til din første oppskrift fra en lenke, tekst eller bilder."
   },
   "card": {
     "noImage": "Ingen bilde tilgjengelig",

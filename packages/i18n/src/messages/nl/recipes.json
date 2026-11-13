@@ -27,7 +27,8 @@
       "all": "Alles",
       "recipes": "Recepten",
       "cookbooks": "Kookboeken"
-    }
+    },
+    "importingCard": "Importeren…"
   },
   "back": {
     "all": "Terug naar bibliotheek",
@@ -43,7 +44,8 @@
     "noResults": "Geen recepten gevonden",
     "noResultsHint": "Probeer je filters aan te passen of te wissen.",
     "noCookbooks": "Nog geen kookboeken",
-    "noCookbooksHint": "Een kookboek is een set recepten met een titel. Maak je eerste om je bibliotheek te ordenen."
+    "noCookbooksHint": "Een kookboek is een set recepten met een titel. Maak je eerste om je bibliotheek te ordenen.",
+    "descriptionMobile": "Voeg je eerste recept toe via een link, tekst of foto's."
   },
   "card": {
     "noImage": "Geen afbeelding beschikbaar",

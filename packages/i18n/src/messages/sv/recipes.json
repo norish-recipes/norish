@@ -27,7 +27,8 @@
       "all": "Alla",
       "recipes": "Recept",
       "cookbooks": "Kokböcker"
-    }
+    },
+    "importingCard": "Importerar…"
   },
   "back": {
     "all": "Tillbaka till biblioteket",
@@ -43,7 +44,8 @@
     "noResults": "Inga recept hittades",
     "noResultsHint": "Prova att ändra eller rensa dina filter.",
     "noCookbooks": "Inga kokböcker ännu",
-    "noCookbooksHint": "En kokbok är en samling recept med en titel. Skapa din första för att få ordning i biblioteket."
+    "noCookbooksHint": "En kokbok är en samling recept med en titel. Skapa din första för att få ordning i biblioteket.",
+    "descriptionMobile": "Lägg till ditt första recept från en länk, text eller bilder."
   },
   "card": {
     "noImage": "Ingen bild tillgänglig",
