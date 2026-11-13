@@ -157,7 +157,7 @@ function CookbookCardComponent({
   // Cook the whole cookbook and the smallest member is what it feeds without
   // scaling something up, so that is the honest number to put on the card.
   const servings = minServings;
-  const allergySet = useMemo(() => allergenSet(allergies), [allergies]);
+  const allergySet = allergenSet(allergies);
   // Only the reader's own allergens, not every tag the members carry: a
   // cookbook is a set of other people's recipes and the warning is the part
   // worth the space.
