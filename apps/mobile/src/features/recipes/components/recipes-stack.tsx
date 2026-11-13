@@ -31,6 +31,11 @@ export function RecipesStack() {
             unstable_headerRightItems: () => [{ type: "custom", element: <AccountAvatar /> }],
           }}
         >
+          {/* A cookbook opens inside this stack so its sheets present over it. */}
+          <Stack.Screen
+            name="cookbook/[id]"
+            options={{ title: "", headerBackButtonDisplayMode: "minimal" }}
+          />
           {SHEETS.map((name) => (
             <Stack.Screen key={name} name={name} options={SHEET_OPTIONS} />
           ))}
