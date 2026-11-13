@@ -1,3 +1,4 @@
+import type { ComponentProps } from "react";
 import React from "react";
 import { Pressable, Text, View } from "react-native";
 import { useAccentTextColor } from "@/hooks/use-accent-text-color";
@@ -7,26 +8,60 @@ import { useRouter } from "expo-router";
 import { useThemeColor } from "heroui-native";
 import { useIntl } from "react-intl";
 
-/** Nothing in the Library yet: the first recipe comes from a link, text or photos. */
-export function LibraryEmpty() {
-  const intl = useIntl();
+/** A centred card for a list with nothing in it: an icon, a title and at most one line under it. */
+function EmptyCard({
+  icon,
+  title,
+  description,
+  testID,
+}: {
+  icon: ComponentProps<typeof Ionicons>["name"];
+  title: string;
+  description?: string;
+  testID: string;
+}) {
   const accentText = useAccentTextColor();
 
   return (
     <View
       className="bg-surface mx-5 items-center gap-2 rounded-[26px] px-7 pt-8 pb-7"
-      testID="library-empty"
+      testID={testID}
     >
       <View className="bg-accent/10 mb-2 size-16 items-center justify-center rounded-[20px]">
-        <Ionicons color={accentText} name="book-outline" size={30} />
+        <Ionicons color={accentText} name={icon} size={30} />
       </View>
-      <Text className="text-foreground text-xl font-semibold">
-        {intl.formatMessage({ id: "recipes.empty.title" })}
-      </Text>
-      <Text className="text-muted text-center text-[15px] leading-[21px]">
-        {intl.formatMessage({ id: "recipes.empty.descriptionMobile" })}
-      </Text>
+      <Text className="text-foreground text-xl font-semibold">{title}</Text>
+      {description ? (
+        <Text className="text-muted text-center text-[15px] leading-[21px]">{description}</Text>
+      ) : null}
     </View>
+  );
+}
+
+/** Nothing in the Library yet: the first recipe comes from a link, text or photos. */
+export function LibraryEmpty() {
+  const intl = useIntl();
+
+  return (
+    <EmptyCard
+      description={intl.formatMessage({ id: "recipes.empty.descriptionMobile" })}
+      icon="book-outline"
+      testID="library-empty"
+      title={intl.formatMessage({ id: "recipes.empty.title" })}
+    />
+  );
+}
+
+/** A cookbook with no recipe in it. */
+export function CookbookNoRecipes() {
+  const intl = useIntl();
+
+  return (
+    <EmptyCard
+      icon="book-outline"
+      testID="cookbook-empty"
+      title={intl.formatMessage({ id: "recipes.cookbooks.empty" })}
+    />
   );
 }
 
