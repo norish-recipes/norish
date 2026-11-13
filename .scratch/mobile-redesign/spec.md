@@ -1,6 +1,6 @@
 # Mobile redesign: the iPhone screens
 
-Status: ready-for-agent
+Status: sign-in tickets 01-06 done
 
 Settled in a `/grilling` session on 2026-11-12. The design is the "Norish iOS" canvas (https://claude.ai/artifact/PXzHGxBxCU4MmwF8scvixz); each section of this spec names the boards it builds. Vocabulary is CONTEXT.md's Accounts & Sign-in section (**Server Address**, **Account**, **Sign-in Method**, **Sign-out**, **Session Expiry**). Target Version: 0.27.0-beta. Branch `feat/mobile-redesign`, cut from `refactor/app-structure`; it rebases onto rc once app-structure merges. Each area gets its tickets once the one before it has landed, as app-structure did: 01–06 are sign-in.
 
