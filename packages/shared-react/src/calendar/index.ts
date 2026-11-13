@@ -14,4 +14,4 @@ export {
 } from "./use-caldav-query";
 export { useCaldavSubscription } from "./use-caldav-subscription";
 export { useTodaysMeals } from "./use-todays-meals";
-export { SLOT_TO_CATEGORY, useSlotPlanning } from "./use-slot-planning";
+export { useSlotPlanning } from "./use-slot-planning";

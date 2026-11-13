@@ -6,7 +6,7 @@ import { dateKey } from "@norish/shared/lib/helpers";
 import { useCalendarMutations } from "./use-calendar-mutations";
 
 /** The recipe category a slot's Random recipe draws from. */
-export const SLOT_TO_CATEGORY: Record<Slot, RecipeCategory> = {
+const SLOT_TO_CATEGORY: Record<Slot, RecipeCategory> = {
   Breakfast: "Breakfast",
   Lunch: "Lunch",
   Dinner: "Dinner",
@@ -21,7 +21,8 @@ type SlotPlanningOptions = {
   getRandomRecipe: (category: RecipeCategory) => Promise<{ id: string } | null>;
   /** Closes the planning sheet, as an item is planned. */
   close: () => void;
-  onPlanned: (recipeId: string) => void;
+  /** Runs after an item is planned from a recipe, with its id. */
+  onPlanned?: (recipeId: string) => void;
 };
 
 /**
@@ -42,7 +43,7 @@ export function useSlotPlanning({
   const plan = (recipeId: string, target: Slot) => {
     planRecipe(day, target, recipeId);
     close();
-    onPlanned(recipeId);
+    onPlanned?.(recipeId);
   };
 
   return {
