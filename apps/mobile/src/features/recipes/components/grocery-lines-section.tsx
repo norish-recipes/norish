@@ -1,7 +1,24 @@
 import type { ReactNode } from "react";
 import React from "react";
 import { Text, View } from "react-native";
-import { Button } from "heroui-native";
+import { Button, Skeleton } from "heroui-native";
+
+const SECTION = "bg-surface overflow-hidden rounded-[22px]";
+const HEADER = "bg-default flex-row items-center gap-2.5 py-2.5 pr-2.5 pl-3.5";
+
+/** A section's shell while its lines load: the header's name and button over the rows given. */
+export function GroceryLinesSectionSkeleton({ children }: { children: ReactNode }) {
+  return (
+    <View className={SECTION}>
+      <View className={HEADER}>
+        <Skeleton className="h-5 w-24 rounded-md" />
+        <View className="flex-1" />
+        <Skeleton className="h-[30px] w-20 rounded-full" />
+      </View>
+      {children}
+    </View>
+  );
+}
 
 /** One section of the Add to groceries sheet: its name, how many lines are ticked, select-all, then its lines. */
 export function GroceryLinesSection({
@@ -20,8 +37,8 @@ export function GroceryLinesSection({
   children: ReactNode;
 }) {
   return (
-    <View className="bg-surface overflow-hidden rounded-[22px]" testID={testID}>
-      <View className="bg-default flex-row items-center gap-2.5 py-2.5 pr-2.5 pl-3.5">
+    <View className={SECTION} testID={testID}>
+      <View className={HEADER}>
         <Text className="text-foreground text-[15px] font-semibold">{title}</Text>
         <Text className="text-muted flex-1 text-[13px]" numberOfLines={1}>
           {count}

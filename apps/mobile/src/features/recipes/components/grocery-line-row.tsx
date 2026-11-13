@@ -1,8 +1,21 @@
 import React from "react";
 import { Pressable, Text, View } from "react-native";
 import Ionicons from "@expo/vector-icons/Ionicons";
-import { Checkbox, Chip, useThemeColor } from "heroui-native";
+import { Checkbox, Chip, Skeleton, useThemeColor } from "heroui-native";
 import { useIntl } from "react-intl";
+
+const ROW = "flex-row items-center gap-3 px-3.5 py-2.5";
+const rowClass = (first: boolean) => `${ROW} ${first ? "" : "border-separator border-t"}`;
+
+/** A row's shell while its line loads: the tick and the name, in the row's own layout. */
+export function GroceryLineRowSkeleton({ first }: { first: boolean }) {
+  return (
+    <View className={rowClass(first)}>
+      <Skeleton className="size-6 rounded-full" />
+      <Skeleton className="h-6 flex-1 rounded-md" />
+    </View>
+  );
+}
 
 /** The mark of a kept line whose food is already on the groceries list, as web's. */
 function OnTheList({ testID }: { testID: string }) {
@@ -44,9 +57,7 @@ export function GroceryLineRow({
   const [muted] = useThemeColor(["muted"] as const);
 
   return (
-    <View
-      className={`flex-row items-center gap-3 px-3.5 py-2.5 ${first ? "" : "border-separator border-t"}`}
-    >
+    <View className={rowClass(first)}>
       <Pressable
         accessibilityLabel={[amount, name].filter(Boolean).join(" ")}
         accessibilityRole="checkbox"

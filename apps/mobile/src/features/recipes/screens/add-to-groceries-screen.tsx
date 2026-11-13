@@ -4,12 +4,16 @@ import { ScrollView, Text, View } from "react-native";
 import { ServingsStepper } from "@/components/servings-stepper";
 import Ionicons from "@expo/vector-icons/Ionicons";
 import { useLocalSearchParams, useRouter } from "expo-router";
-import { Button, Skeleton, useThemeColor } from "heroui-native";
+import { Button, Spinner, useThemeColor } from "heroui-native";
 import { useIntl } from "react-intl";
 
+import type { ScaledFood } from "@norish/shared-react/groceries";
 import type { FullRecipeDTO } from "@norish/shared/contracts";
 import { plannedServings } from "@norish/shared-react/calendar";
-import { useLineSelection, useLinesToBuy, useOnTheList } from "@norish/shared-react/groceries";
+import {
+  useGroceriesPantryAndCatalogueSubscriptions,
+  useGroceryLines,
+} from "@norish/shared-react/groceries";
 import {
   useRecipeFoodsToBuy,
   useRecipeQuery,
@@ -17,8 +21,11 @@ import {
   useUnitFormatter,
 } from "@norish/shared-react/recipes";
 
-import { GroceryLineRow } from "../components/grocery-line-row";
-import { GroceryLinesSection } from "../components/grocery-lines-section";
+import { GroceryLineRow, GroceryLineRowSkeleton } from "../components/grocery-line-row";
+import {
+  GroceryLinesSection,
+  GroceryLinesSectionSkeleton,
+} from "../components/grocery-lines-section";
 import { SheetHeader } from "../components/sheet-header";
 
 /** Lines are only ever edited on web; the sheet takes each as the recipe has it. */
@@ -28,10 +35,7 @@ const AS_WRITTEN = {};
 const HEADER_SPACE = "mt-[132px]";
 const PINNED_SPACE = "h-[214px]";
 
-/**
- * The sheet's frame: the header and servings pinned on top, the lines scrolling between them and
- * the pinned footer, all directly on the sheet's glass.
- */
+/** The header and servings pinned on top, the lines scrolling between them and the footer. */
 function Frame({
   subtitle,
   servings,
@@ -48,9 +52,8 @@ function Frame({
 
   return (
     <>
-      {/* react-native-screens ends a sheet's scroll view above its first child's height and starts it
-          at that height unless it has a margin: this child is header plus footer tall, the margin
-          below puts the scroll view back under the header. */}
+      {/* react-native-screens sizes the scroll view minus this first child and moves it down by that
+          height, so the child is header plus footer tall and the scroll view's margin undoes it. */}
       <View
         className={`absolute inset-x-0 top-0 ${PINNED_SPACE}`}
         collapsable={false}
@@ -91,68 +94,96 @@ function Frame({
   );
 }
 
-/** What the lines look like while they load: two sections of rows. */
+/** What the lines look like while they load: two sections of rows, in the real shells. */
 function LinesSkeleton() {
   return (
     <View className="gap-3" testID="add-to-groceries-skeleton">
       {[5, 3].map((rows) => (
-        <Skeleton
-          key={rows}
-          className="w-full rounded-[22px]"
-          style={{ height: 50 + rows * 53 - 1 }}
-        />
+        <GroceryLinesSectionSkeleton key={rows}>
+          {Array.from({ length: rows }, (_, index) => (
+            <GroceryLineRowSkeleton key={index} first={index === 0} />
+          ))}
+        </GroceryLinesSectionSkeleton>
       ))}
     </View>
   );
 }
 
-function GroceriesSheet({ recipe }: { recipe: FullRecipeDTO }) {
+/** The Add button: disabled until lines are known and ticked, busy while they go on the list. */
+function AddButton({
+  count,
+  disabled,
+  busy,
+  onPress,
+}: {
+  count: number;
+  disabled: boolean;
+  busy: boolean;
+  onPress: () => void;
+}) {
   const intl = useIntl();
-  const router = useRouter();
   const [accentForeground] = useThemeColor(["accent-foreground"] as const);
-  const { formatAmountUnit } = useUnitFormatter(intl.locale);
-  const servings = plannedServings(recipe);
-  const {
-    isLoading,
-    servings: picked,
-    incrementServings,
-    decrementServings,
-    scaledIngredients,
-  } = useRecipeFoodsToBuy(recipe.id, servings, servings);
-  const { pantry, keptFor, keepLine, toBuy, inPantry, addLines } = useLinesToBuy(
-    scaledIngredients,
-    AS_WRITTEN
-  );
-  const onTheList = useOnTheList(pantry.items);
-  const { selectedIds, selectedCount, inPantrySelectedCount, toggleSelect, toggleSection } =
-    useLineSelection({
-      lines: scaledIngredients,
-      toBuy,
-      inPantry,
-      pantryLoading: pantry.isLoading,
-      pantryUnavailable: pantry.isUnavailable,
-    });
-  const loading = isLoading || pantry.isLoading;
-  const ticked = selectedCount + inPantrySelectedCount;
 
-  const sectionOf = (
-    section: typeof toBuy,
-    other: typeof toBuy,
-    { title, selected, testID }: { title: string; selected: number; testID: string }
-  ) => (
+  return (
+    <Button
+      className="h-[50px] rounded-full"
+      isDisabled={disabled || busy}
+      testID="add-to-groceries-add"
+      variant="primary"
+      onPress={onPress}
+    >
+      {busy ? <Spinner size="sm" /> : <Ionicons color={accentForeground} name="add" size={20} />}
+      <Button.Label className="text-base font-semibold">
+        {intl.formatMessage({ id: "groceries.panel.addCount" }, { count })}
+      </Button.Label>
+    </Button>
+  );
+}
+
+/** One section of the sheet: a heading with its select-all, then its lines. */
+function LineSection({
+  lines,
+  other,
+  title,
+  selected,
+  selectedIds,
+  testID,
+  keptFor,
+  onTheList,
+  formatAmountUnit,
+  onKeep,
+  onToggle,
+  onToggleSection,
+}: {
+  lines: ScaledFood[];
+  other: ScaledFood[];
+  title: string;
+  selected: number;
+  selectedIds: string[];
+  testID: string;
+  keptFor: (item: ScaledFood) => { id: string } | null;
+  onTheList: string[];
+  formatAmountUnit: (amount: number | null, unit: string | null) => string;
+  onKeep: (item: ScaledFood) => void;
+  onToggle: (id: string) => void;
+  onToggleSection: (section: ScaledFood[], other: ScaledFood[]) => void;
+}) {
+  const intl = useIntl();
+
+  return (
     <GroceryLinesSection
       count={intl.formatMessage(
         { id: "groceries.panel.selectedCount" },
-        { selected, total: section.length }
+        { selected, total: lines.length }
       )}
       testID={testID}
       title={title}
       toggleLabel={intl.formatMessage({
-        id: selected === section.length ? "common.actions.deselectAll" : "common.actions.selectAll",
+        id: selected === lines.length ? "common.actions.deselectAll" : "common.actions.selectAll",
       })}
-      onToggleAll={() => toggleSection(section, other)}
+      onToggleAll={() => onToggleSection(lines, other)}
     >
-      {section.map((item, index) => {
+      {lines.map((item, index) => {
         const kept = keptFor(item);
 
         return (
@@ -164,46 +195,79 @@ function GroceriesSheet({ recipe }: { recipe: FullRecipeDTO }) {
             name={item.ingredientName}
             selected={selectedIds.includes(item.id)}
             testID={`grocery-line-${item.id}`}
-            onKeep={() => keepLine(item)}
+            onKeep={() => onKeep(item)}
             onTheList={kept !== null && onTheList.includes(kept.id)}
-            onToggle={() => toggleSelect(item.id)}
+            onToggle={() => onToggle(item.id)}
           />
         );
       })}
     </GroceryLinesSection>
   );
+}
+
+function GroceriesSheet({ recipe }: { recipe: FullRecipeDTO }) {
+  const intl = useIntl();
+  const router = useRouter();
+  const { formatAmountUnit } = useUnitFormatter(intl.locale);
+  const servings = plannedServings(recipe);
+  const {
+    isLoading,
+    servings: picked,
+    incrementServings,
+    decrementServings,
+    scaledIngredients,
+  } = useRecipeFoodsToBuy(recipe.id, servings, servings);
+  const {
+    pantry,
+    keptFor,
+    keepLine,
+    toBuy,
+    inPantry,
+    addLines,
+    isAdding,
+    onTheList,
+    selectedIds,
+    selectedCount,
+    inPantrySelectedCount,
+    toggleSelect,
+    toggleSection,
+  } = useGroceryLines(scaledIngredients, AS_WRITTEN);
+
+  useGroceriesPantryAndCatalogueSubscriptions();
+
+  const loading = isLoading || pantry.isLoading;
+  const ticked = selectedCount + inPantrySelectedCount;
+  const section = {
+    selectedIds,
+    keptFor,
+    onTheList,
+    formatAmountUnit,
+    onKeep: keepLine,
+    onToggle: toggleSelect,
+    onToggleSection: toggleSection,
+  };
 
   return (
     <Frame
       footer={
-        loading || scaledIngredients.length === 0 ? null : (
-          <Button
-            className="h-[50px] rounded-full"
-            isDisabled={ticked === 0}
-            testID="add-to-groceries-add"
-            variant="primary"
-            onPress={() =>
-              void addLines(scaledIngredients.filter((line) => selectedIds.includes(line.id))).then(
-                (added) => added && router.back()
-              )
-            }
-          >
-            <Ionicons color={accentForeground} name="add" size={20} />
-            <Button.Label className="text-base font-semibold">
-              {intl.formatMessage({ id: "groceries.panel.addCount" }, { count: ticked })}
-            </Button.Label>
-          </Button>
-        )
+        <AddButton
+          busy={isAdding}
+          count={ticked}
+          disabled={loading || ticked === 0}
+          onPress={() =>
+            void addLines(scaledIngredients.filter((line) => selectedIds.includes(line.id))).then(
+              (added) => added && router.back()
+            )
+          }
+        />
       }
       servings={
-        loading ? null : (
-          <ServingsStepper
-            servings={picked}
-            testID="add-to-groceries-servings"
-            onDecrement={decrementServings}
-            onIncrement={incrementServings}
-          />
-        )
+        <ServingsStepper
+          servings={picked}
+          testID="add-to-groceries-servings"
+          onDecrement={decrementServings}
+          onIncrement={incrementServings}
+        />
       }
       subtitle={recipe.name}
     >
@@ -221,20 +285,26 @@ function GroceriesSheet({ recipe }: { recipe: FullRecipeDTO }) {
               {intl.formatMessage({ id: "groceries.panel.noIngredients" })}
             </Text>
           ) : null}
-          {toBuy.length > 0
-            ? sectionOf(toBuy, inPantry, {
-                title: intl.formatMessage({ id: "groceries.panel.toBuy" }),
-                selected: selectedCount,
-                testID: "add-to-groceries-to-buy",
-              })
-            : null}
-          {inPantry.length > 0
-            ? sectionOf(inPantry, toBuy, {
-                title: intl.formatMessage({ id: "groceries.panel.inPantry" }),
-                selected: inPantrySelectedCount,
-                testID: "add-to-groceries-pantry",
-              })
-            : null}
+          {toBuy.length > 0 ? (
+            <LineSection
+              {...section}
+              lines={toBuy}
+              other={inPantry}
+              selected={selectedCount}
+              testID="add-to-groceries-to-buy"
+              title={intl.formatMessage({ id: "groceries.panel.toBuy" })}
+            />
+          ) : null}
+          {inPantry.length > 0 ? (
+            <LineSection
+              {...section}
+              lines={inPantry}
+              other={toBuy}
+              selected={inPantrySelectedCount}
+              testID="add-to-groceries-pantry"
+              title={intl.formatMessage({ id: "groceries.panel.inPantry" })}
+            />
+          ) : null}
         </>
       )}
     </Frame>
@@ -251,7 +321,11 @@ export function AddToGroceriesScreen() {
   return recipe ? (
     <GroceriesSheet key={recipe.id} recipe={recipe} />
   ) : (
-    <Frame footer={null} servings={null} subtitle="">
+    <Frame
+      footer={<AddButton disabled busy={false} count={0} onPress={() => undefined} />}
+      servings={null}
+      subtitle=""
+    >
       <LinesSkeleton />
     </Frame>
   );
