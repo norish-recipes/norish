@@ -1,6 +1,13 @@
 export type { PickedFood } from "./types";
 
 export { mergePantryAdded, mergePantryRemoved } from "./pantry-merge";
+export type { EditedIngredient, GroceryIngredient } from "./recipe-lines";
+export {
+  extractLinkedRecipeIds,
+  formatEditableIngredient,
+  isGroceryIngredient,
+  parseEditedIngredientLine,
+} from "./recipe-lines";
 export { useGroceriesMutations } from "./use-groceries-mutations";
 export {
   useGroceriesQuery,
