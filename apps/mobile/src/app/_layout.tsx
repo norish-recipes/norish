@@ -39,7 +39,7 @@ import { PortalHost } from "heroui-native/portal";
 
 import { useCalendarSubscription } from "@norish/shared-react/calendar";
 import { useConfigSubscription } from "@norish/shared-react/config";
-import { useGroceriesPantryAndCatalogueSubscriptions } from "@norish/shared-react/groceries";
+import { usePantrySubscription } from "@norish/shared-react/groceries";
 import { usePlatform } from "@norish/shared-react/platform";
 import { useHouseholdSubscription, usePermissionsSubscription } from "@norish/shared-react/reader";
 import {
@@ -248,8 +248,7 @@ function AuthenticatedEffects() {
   useRecipeListSubscription();
   useRatingsSubscription();
   useCookbooksSubscription();
-  // The groceries, the Pantry and the ingredient catalogue: what Add to groceries draws.
-  useGroceriesPantryAndCatalogueSubscriptions();
+  usePantrySubscription();
   useCalendarSubscription();
 
   return null;
