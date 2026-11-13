@@ -1,13 +1,8 @@
 import React from "react";
-import { ScrollView } from "react-native";
 
-/** The Recipes tab; Today and the Library arrive with their tickets. */
+import { LibraryList } from "../components/library-list";
+
+/** The Recipes tab; Today sits above the Library as its list header when its ticket lands. */
 export function RecipesScreen() {
-  return (
-    <ScrollView
-      className="bg-background flex-1"
-      contentInsetAdjustmentBehavior="automatic"
-      testID="recipes-screen"
-    />
-  );
+  return <LibraryList testID="recipes-screen" />;
 }
