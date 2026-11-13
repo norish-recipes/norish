@@ -23,6 +23,9 @@ describe("usePlannedItemText", () => {
       title: "Pasta",
       subtitle: "2 calendar.timeline.servings",
     });
-    expect(result.current(undefined)).toEqual({ title: "calendar.timeline.untitled", subtitle: null });
+    expect(result.current(undefined)).toEqual({
+      title: "calendar.timeline.untitled",
+      subtitle: null,
+    });
   });
 });

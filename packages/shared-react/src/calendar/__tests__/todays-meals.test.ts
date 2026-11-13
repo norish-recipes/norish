@@ -94,6 +94,8 @@ describe("isRecipeItem", () => {
   it("is true only for a recipe that still has its recipe", () => {
     expect(isRecipeItem(item({}))).toBe(true);
     expect(isRecipeItem(item({ recipeId: null }))).toBe(false);
-    expect(isRecipeItem(item({ itemType: "note", recipeId: null, title: "Leftovers" }))).toBe(false);
+    expect(isRecipeItem(item({ itemType: "note", recipeId: null, title: "Leftovers" }))).toBe(
+      false
+    );
   });
 });
