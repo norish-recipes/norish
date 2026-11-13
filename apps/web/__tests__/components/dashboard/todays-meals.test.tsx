@@ -52,8 +52,11 @@ vi.mock("next-intl", () => ({
   },
 }));
 
-vi.mock("@norish/shared-react/calendar", () => ({
+// `useTodaysMeals` reads through these two files of its own package, so they are what is faked.
+vi.mock("../../../../../packages/shared-react/src/calendar/use-calendar-query", () => ({
   useCalendarQuery: (range: unknown) => useCalendarQueryMock(range),
+}));
+vi.mock("../../../../../packages/shared-react/src/calendar/use-calendar-subscription", () => ({
   useCalendarSubscription: vi.fn(),
 }));
 

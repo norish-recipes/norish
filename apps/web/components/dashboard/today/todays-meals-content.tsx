@@ -9,15 +9,12 @@ import { useLocale, useTranslations } from "next-intl";
 
 import type { Slot } from "@norish/shared/contracts";
 import type { TodaySectionVisibility } from "@norish/shared/contracts/zod/device-preferences";
-import { useCalendarQuery, useCalendarSubscription } from "@norish/shared-react/calendar";
+import { useTodaysMeals } from "@norish/shared-react/calendar";
 import {
   firstSlotFrom,
-  groupTodayItemsBySlot,
   nextMealSlot,
   slotTranslationKeys,
-  TODAY_MEAL_SLOTS,
 } from "@norish/shared-react/calendar/todays-meals";
-import { getInitialCalendarRange, parseDateKey } from "@norish/shared/lib/helpers";
 
 import TodayMealSlotCard from "./today-meal-slot-card";
 
@@ -30,12 +27,7 @@ export default function TodaysMealsContent({ visibility }: TodaysMealsContentPro
   const tCalendar = useTranslations("calendar");
   const tSlots = useTranslations("common.slots");
   const todayKey = useReaderToday();
-  const todayDate = parseDateKey(todayKey);
-  // The week the dashboard layout seeds, frozen at mount so a later today never reads an uncached one.
-  const [week] = useState(() => getInitialCalendarRange("desktop", todayKey));
-  const { calendarData: plannedItemsByDate, isLoading } = useCalendarQuery(week);
-
-  useCalendarSubscription();
+  const { todayDate, itemsBySlot, visibleSlots, isLoading } = useTodaysMeals(todayKey, visibility);
   const [planningSlot, setPlanningSlot] = useState<Slot | undefined>(undefined);
   const [planningOpen, setPlanningOpen] = useState(false);
 
@@ -48,16 +40,6 @@ export default function TodaysMealsContent({ visibility }: TodaysMealsContentPro
       }).format(todayDate),
     [locale, todayDate]
   );
-
-  const itemsBySlot = useMemo(
-    () => groupTodayItemsBySlot(plannedItemsByDate[todayKey] ?? []),
-    [plannedItemsByDate, todayKey]
-  );
-
-  const visibleSlots =
-    visibility === "planned"
-      ? TODAY_MEAL_SLOTS.filter((slot) => itemsBySlot[slot].length > 0)
-      : TODAY_MEAL_SLOTS;
 
   // A phone shows two and a half slots, so the row opens on the next meal
   // rather than always on breakfast. Once, when the day's plan has loaded.
