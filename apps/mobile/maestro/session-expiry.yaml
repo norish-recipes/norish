@@ -1,0 +1,21 @@
+# The Account's other sessions end on the server, which includes the app's: the next return to
+# the foreground lands on Sign in for the same server. `pnpm --filter @norish/mobile maestro` ends it.
+appId: dev.norish.app
+---
+- runFlow:
+    file: subflows/sign-in.yaml
+    env:
+      NORISH_SIGN_IN_URL: ${NORISH_SERVER_URL}
+- evalScript: "${http.post(NORISH_PROXY_CONTROL_URL + '/revoke-other-sessions', { body: '' })}"
+- pressKey: home
+- launchApp:
+    stopApp: false
+- extendedWaitUntil:
+    visible:
+      id: login-email
+    timeout: 30000
+- assertVisible:
+    id: server-chip
+    text: .*${NORISH_SERVER_HOST}.*
+- assertNotVisible:
+    id: smoke-user

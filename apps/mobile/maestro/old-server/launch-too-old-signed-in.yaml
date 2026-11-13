@@ -1,0 +1,28 @@
+# The same signed in: Update your server shows; its chip signs out, with nothing queued to
+# confirm, and opens Server address holding the saved address.
+appId: dev.norish.app
+---
+- evalScript: "${http.post(NORISH_PROXY_CONTROL_URL + '/real', { body: '' })}"
+- runFlow:
+    file: ../subflows/sign-in.yaml
+    env:
+      NORISH_SIGN_IN_URL: ${NORISH_VERSION_PROXY_URL}
+- evalScript: "${http.post(NORISH_PROXY_CONTROL_URL + '/old', { body: '' })}"
+- stopApp
+- launchApp
+- extendedWaitUntil:
+    visible:
+      id: update-server-description
+      text: .*${NORISH_VERSION_PROXY_HOST}.*${NORISH_OLD_SERVER_VERSION}.*${NORISH_MINIMUM_SERVER_VERSION}.*
+    timeout: 20000
+- assertVisible: ${NORISH_COPY_UPDATE_SERVER_TITLE}
+- tapOn:
+    id: server-chip
+- extendedWaitUntil:
+    visible:
+      id: connect-server-url
+      text: ${NORISH_VERSION_PROXY_URL}
+    timeout: 20000
+- assertNotVisible:
+    id: smoke-user
+- evalScript: "${http.post(NORISH_PROXY_CONTROL_URL + '/real', { body: '' })}"

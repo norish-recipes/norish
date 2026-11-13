@@ -1,0 +1,33 @@
+# On Update your server, the server becomes new enough; returning to the foreground continues
+# to Sign in for the same server.
+appId: dev.norish.app
+---
+- evalScript: "${http.post(NORISH_PROXY_CONTROL_URL + '/real', { body: '' })}"
+- runFlow:
+    file: ../subflows/connect.yaml
+    env:
+      NORISH_CONNECT_URL: ${NORISH_VERSION_PROXY_URL}
+- extendedWaitUntil:
+    visible:
+      id: login-email
+    timeout: 20000
+- evalScript: "${http.post(NORISH_PROXY_CONTROL_URL + '/old', { body: '' })}"
+- stopApp
+- launchApp
+- extendedWaitUntil:
+    visible:
+      id: update-server-description
+    timeout: 20000
+- evalScript: "${http.post(NORISH_PROXY_CONTROL_URL + '/real', { body: '' })}"
+- pressKey: home
+- launchApp:
+    stopApp: false
+- extendedWaitUntil:
+    visible:
+      id: login-email
+    timeout: 20000
+- assertVisible:
+    id: server-chip
+    text: .*${NORISH_VERSION_PROXY_HOST}.*
+- assertNotVisible:
+    id: update-server-description

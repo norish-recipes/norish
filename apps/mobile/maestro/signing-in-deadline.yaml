@@ -1,0 +1,29 @@
+# A callback with no sign-in pending shows Signing in, then Sign-in failed once its 15 s deadline
+# passes; Try again returns to Sign in.
+appId: dev.norish.app
+---
+- runFlow:
+    file: subflows/connect.yaml
+    env:
+      NORISH_CONNECT_URL: ${NORISH_SERVER_URL}
+- extendedWaitUntil:
+    visible:
+      id: login-email
+    timeout: 20000
+- openLink: norish://auth/callback
+- extendedWaitUntil:
+    visible:
+      id: signing-in-spinner
+    timeout: 10000
+- extendedWaitUntil:
+    visible:
+      id: sign-in-failed-title
+    timeout: 25000
+- assertNotVisible:
+    id: signing-in-spinner
+- tapOn:
+    id: sign-in-failed-retry
+- extendedWaitUntil:
+    visible:
+      id: login-email
+    timeout: 10000
