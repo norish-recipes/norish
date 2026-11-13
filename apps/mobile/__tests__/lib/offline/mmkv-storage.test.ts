@@ -233,4 +233,31 @@ describe("MMKV storage adapter", () => {
 
     expect((await store.loadAll()).map(({ id }) => id)).toEqual(["e", "later"]);
   });
+
+  it("keeps the name and type a native file reads through getters", async () => {
+    const store = createOutboxStore(
+      createMmkvStorage({ mmkv: fakeMmkv(), files: fakeFiles() }).outbox
+    );
+    const { uri } = pickPhoto("jpeg-bytes", "page.jpg", "image/jpeg");
+
+    // As expo-file-system's File: its fields are prototype getters, which a spread drops.
+    class NativeFile {
+      get uri() {
+        return uri;
+      }
+      get name() {
+        return "page.jpg";
+      }
+      get type() {
+        return "image/jpeg";
+      }
+    }
+
+    await store.enqueue(entry({ input: withPhoto(new NativeFile()) }));
+
+    const upload = await storedUpload(store);
+
+    expect(upload).toEqual({ uri: expect.any(String), name: "page.jpg", type: "image/jpeg" });
+    expect(disk.get(upload.uri)).toBe("jpeg-bytes");
+  });
 });

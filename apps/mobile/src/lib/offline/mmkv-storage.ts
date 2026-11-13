@@ -105,7 +105,8 @@ export function createMmkvStorage({
 
         await files.copy(value.uri, name);
         names.push(name);
-        entries.push([key, { ...value, uri: name }]);
+        // Read field by field: a native File's fields are getters, which a spread would drop.
+        entries.push([key, { uri: name, name: value.name, type: value.type }]);
       }
     } catch (error) {
       await deleteCopies(names);
