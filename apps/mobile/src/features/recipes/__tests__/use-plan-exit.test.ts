@@ -4,8 +4,12 @@ import { beforeEach, describe, expect, it, vi } from "vitest";
 
 const router = vi.hoisted(() => ({ back: vi.fn(), replace: vi.fn() }));
 const user = vi.hoisted(() => ({ current: {} as unknown }));
+const addAtOnce = vi.hoisted(() => vi.fn());
 
 vi.mock("expo-router", () => ({ useRouter: () => router }));
+vi.mock("@/features/recipes/components/add-at-once-host", () => ({
+  useAddAtOnceStarter: () => addAtOnce,
+}));
 vi.mock("@norish/shared-react/reader", () => ({ useReader: () => ({ user: user.current }) }));
 
 const { usePlanExit } = await import("@/features/recipes/hooks/use-plan-exit");
@@ -43,12 +47,18 @@ describe("usePlanExit", () => {
     expect(router.back).not.toHaveBeenCalled();
   });
 
-  it("asks Add to groceries to add at once when the choice says so", () => {
+  it("closes and puts the lines on the list at once when the choice says so", () => {
     exit("addGroceries")("r1");
 
-    expect(router.replace).toHaveBeenCalledWith({
-      pathname: "/add-to-groceries",
-      params: { recipeId: "r1", addAtOnce: "1" },
-    });
+    expect(router.back).toHaveBeenCalled();
+    expect(addAtOnce).toHaveBeenCalledWith("r1");
+    expect(router.replace).not.toHaveBeenCalled();
+  });
+
+  it("adds nothing at once for the other choices", () => {
+    exit("openGroceries")("r1");
+    exit("nothing")("r1");
+
+    expect(addAtOnce).not.toHaveBeenCalled();
   });
 });
