@@ -11,16 +11,13 @@ import {
   useCookbookList,
   useCookbookQuery,
   useCookbookTitleEdit,
-  useLibraryCards,
-  useLibraryFilters,
 } from "@norish/shared-react/recipes";
-import { hasAppliedRecipeFilters } from "@norish/shared/contracts/filter-contract";
 
-import { CardList } from "../components/card-list";
 import { CookbookHero, CookbookHeroSkeleton } from "../components/cookbook-hero";
+import { LibraryCards } from "../components/library-cards";
 import { LibraryHeader } from "../components/library-header";
 import { LibrarySkeleton } from "../components/library-skeleton";
-import { CookbookNoRecipes, LibraryNoResults } from "../components/library-states";
+import { CookbookNoRecipes } from "../components/library-states";
 import { RecipeCard } from "../components/recipe-card";
 import { useCardActionMenu } from "../hooks/use-card-action-menu";
 import { useCardActions } from "../hooks/use-card-actions";
@@ -98,25 +95,13 @@ function useCookbookCover(cookbook: CookbookSummaryDTO) {
 
 function CookbookPage({ cookbook }: { cookbook: CookbookSummaryDTO }) {
   const intl = useIntl();
-  const [variant] = useDevicePreference("recipeViewMode");
-  const filters = useLibraryFilters((state) => state.filters);
-  const clearFilters = useLibraryFilters((state) => state.clearFilters);
-  const { isFavorite, allergies } = useLibraryCards();
-  const actions = useCardActions(cookbook);
   const { recipes, isLoading, isFetchingNextPage, loadMore } = useCookbookList(cookbook.id);
   const menu = useCookbookMenu(cookbook);
 
   return (
-    <CardList
-      empty={
-        isLoading ? (
-          <LibrarySkeleton variant={variant} />
-        ) : hasAppliedRecipeFilters(filters) ? (
-          <LibraryNoResults onClear={clearFilters} />
-        ) : (
-          <CookbookNoRecipes />
-        )
-      }
+    <LibraryCards
+      cookbook={cookbook}
+      empty={<CookbookNoRecipes />}
       header={
         <>
           <Stack.Screen
@@ -140,7 +125,8 @@ function CookbookPage({ cookbook }: { cookbook: CookbookSummaryDTO }) {
         </>
       }
       isFetchingNextPage={isFetchingNextPage}
-      renderCard={(recipe) => (
+      isLoading={isLoading}
+      renderCard={(recipe, { variant, actions, allergies, isFavorite }) => (
         <RecipeCard
           actions={actions}
           allergies={allergies}
@@ -150,9 +136,8 @@ function CookbookPage({ cookbook }: { cookbook: CookbookSummaryDTO }) {
         />
       )}
       rowKey={(recipe) => recipe.id}
-      rows={isLoading ? [] : recipes}
+      rows={recipes}
       testID="cookbook-screen"
-      variant={variant}
       onEndReached={loadMore}
     />
   );

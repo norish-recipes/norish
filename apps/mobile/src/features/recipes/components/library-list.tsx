@@ -5,22 +5,18 @@ import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { Stack } from "expo-router";
 
 import type { LibraryGridItem } from "@norish/shared-react/recipes";
-import { useDevicePreference } from "@norish/shared-react/reader";
 import {
   libraryGridItems,
-  useLibraryCards,
   useLibraryFilters,
   useLibraryList,
   usePendingRecipesQuery,
 } from "@norish/shared-react/recipes";
-import { hasAppliedRecipeFilters } from "@norish/shared/contracts/filter-contract";
 
-import { useCardActions } from "../hooks/use-card-actions";
-import { CardList } from "./card-list";
+import type { CardContext } from "./library-cards";
 import { CookbookCard } from "./cookbook-card";
+import { LibraryCards } from "./library-cards";
 import { LibraryHeader } from "./library-header";
-import { LibrarySkeleton } from "./library-skeleton";
-import { CookbooksEmpty, LibraryEmpty, LibraryNoResults } from "./library-states";
+import { CookbooksEmpty, LibraryEmpty } from "./library-states";
 import { PendingCard } from "./pending-card";
 import { RecipeCard } from "./recipe-card";
 
@@ -43,17 +39,15 @@ export function LibraryList({
 }) {
   const insets = useSafeAreaInsets();
   const [titleScrolled, setTitleScrolled] = useState(false);
-  const [variant] = useDevicePreference("recipeViewMode");
   const filters = useLibraryFilters((state) => state.filters);
-  const clearFilters = useLibraryFilters((state) => state.clearFilters);
-  const { isFavorite, allergies } = useLibraryCards();
-  const actions = useCardActions();
   const { pendingRecipes, pendingRecipeIds } = usePendingRecipesQuery();
   const { items, isLoading, isFetchingNextPage, loadMore } = useLibraryList();
   const rows = libraryGridItems(items, pendingRecipeIds, filters.libraryType);
-  const hasAppliedFilters = hasAppliedRecipeFilters(filters);
 
-  const renderCard = (item: LibraryGridItem) =>
+  const renderCard = (
+    item: LibraryGridItem,
+    { variant, actions, allergies, isFavorite }: CardContext
+  ) =>
     item.kind === "recipe" ? (
       <RecipeCard
         actions={actions}
@@ -77,19 +71,9 @@ export function LibraryList({
       />
     );
 
-  const empty = isLoading ? (
-    <LibrarySkeleton variant={variant} />
-  ) : filters.libraryType === "cookbooks" && !hasAppliedFilters ? (
-    <CookbooksEmpty />
-  ) : hasAppliedFilters ? (
-    <LibraryNoResults onClear={clearFilters} />
-  ) : (
-    <LibraryEmpty />
-  );
-
   return (
-    <CardList
-      empty={empty}
+    <LibraryCards
+      empty={filters.libraryType === "cookbooks" ? <CookbooksEmpty /> : <LibraryEmpty />}
       header={
         <>
           <Stack.Screen options={{ title: titleScrolled ? title : "" }} />
@@ -106,11 +90,11 @@ export function LibraryList({
         </>
       }
       isFetchingNextPage={isFetchingNextPage}
+      isLoading={isLoading}
       renderCard={renderCard}
       rowKey={(row) => `${row.kind}-${row.id}`}
-      rows={isLoading ? [] : rows}
+      rows={rows}
       testID={testID}
-      variant={variant}
       onEndReached={loadMore}
       onScroll={(offset) => setTitleScrolled(offset > TITLE_SCROLLED_AT)}
     />
