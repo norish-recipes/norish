@@ -74,10 +74,10 @@ export function MobilePlatformProvider({
           severity,
           title,
           body:
-            mobileToastDescription(
-              description,
-              intl.formatMessage({ id: "common.errors.technicalDetails" })
-            ) ?? subject,
+            mobileToastDescription(description, [
+              intl.formatMessage({ id: "common.errors.technicalDetails" }),
+              intl.formatMessage({ id: "recipes.toasts.failedDescription" }),
+            ]) ?? subject,
           actionLabel,
           onAction: onActionPress,
         }),
