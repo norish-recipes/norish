@@ -15,6 +15,11 @@ type PlannedItemSubtitleLabels = {
   servings: string;
 };
 
+/** Whether a planned item opens a recipe; a note, or a recipe since deleted, has none. */
+export function isRecipeItem(item: PlannedItemFromQuery) {
+  return item.itemType === "recipe" && item.recipeId !== null;
+}
+
 export function getPlannedItemTitle(item: PlannedItemFromQuery | undefined, fallback: string) {
   if (!item) return fallback;
 

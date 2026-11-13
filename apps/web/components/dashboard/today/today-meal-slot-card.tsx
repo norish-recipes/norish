@@ -10,6 +10,7 @@ import { useTranslations } from "next-intl";
 import {
   buildPlannedItemSubtitle,
   getPlannedItemTitle,
+  isRecipeItem,
 } from "@norish/shared-react/calendar/todays-meals";
 
 import type { TodayMealSlotCardProps } from "./todays-meals-types";
@@ -41,7 +42,7 @@ export default function TodayMealSlotCard({
   const primaryItem = items[0];
   const remainingCount = Math.max(items.length - 1, 0);
   const isPlanned = Boolean(primaryItem);
-  const imageSrc = primaryItem?.itemType === "recipe" ? primaryItem.recipeImage : null;
+  const imageSrc = primaryItem && isRecipeItem(primaryItem) ? primaryItem.recipeImage : null;
   const title = getPlannedItemTitle(primaryItem, tCalendar("untitled"));
   const subtitle = buildPlannedItemSubtitle(primaryItem, {
     note: tCalendar("note"),
@@ -52,7 +53,7 @@ export default function TodayMealSlotCard({
   // A planned slot is a real link (#555); an empty one is a button that plans it.
   const href = !primaryItem
     ? null
-    : primaryItem.itemType === "recipe" && primaryItem.recipeId
+    : isRecipeItem(primaryItem)
       ? `/recipes/${primaryItem.recipeId}`
       : "/calendar";
 
