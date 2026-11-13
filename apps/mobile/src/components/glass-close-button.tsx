@@ -10,10 +10,30 @@ import {
 import { useThemeColor } from "heroui-native";
 import { useIntl } from "react-intl";
 
-/** The sheet's close button: a native glass circle, 40 pt as the board draws it. */
-export function GlassCloseButton({ onPress, testID }: { onPress: () => void; testID: string }) {
+/** The glyph's frame and size: the glass style pads the label 7 pt on each side. */
+const SIZES = {
+  /** 26 pt makes the board's 40 pt circle. */
+  regular: { frame: 26, glyph: 18 },
+  /** 14 pt makes the 28 pt circle the boards put on a photo. */
+  small: { frame: 14, glyph: 12 },
+} as const;
+
+/** A native glass circle with an ×: the sheet's close button, or a small one that removes a photo. */
+export function GlassCloseButton({
+  onPress,
+  testID,
+  label,
+  size = "regular",
+}: {
+  onPress: () => void;
+  testID: string;
+  /** What VoiceOver reads; Close by default. */
+  label?: string;
+  size?: keyof typeof SIZES;
+}) {
   const intl = useIntl();
   const [foreground] = useThemeColor(["foreground"] as const);
+  const { frame: side, glyph } = SIZES[size];
 
   return (
     <Host matchContents>
@@ -21,16 +41,15 @@ export function GlassCloseButton({ onPress, testID }: { onPress: () => void; tes
         modifiers={[
           buttonStyle("glass"),
           buttonBorderShape("circle"),
-          accessibilityLabel(intl.formatMessage({ id: "common.actions.close" })),
+          accessibilityLabel(label ?? intl.formatMessage({ id: "common.actions.close" })),
           accessibilityIdentifier(testID),
         ]}
         onPress={onPress}
       >
-        {/* The glass style pads the label 7 pt on each side, so 26 pt makes the board's 40 pt circle. */}
         <Image
           color={foreground}
-          modifiers={[frame({ width: 26, height: 26 })]}
-          size={18}
+          modifiers={[frame({ width: side, height: side })]}
+          size={glyph}
           systemName="xmark"
         />
       </Button>
