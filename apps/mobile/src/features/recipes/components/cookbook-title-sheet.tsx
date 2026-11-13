@@ -3,7 +3,7 @@ import React, { useEffect, useRef } from "react";
 import { Sheet, SheetBody } from "@/components/sheet";
 import Ionicons from "@expo/vector-icons/Ionicons";
 import { useRouter } from "expo-router";
-import { Button, Input, TextField, useThemeColor } from "heroui-native";
+import { Button, Input, Skeleton, TextField, useThemeColor } from "heroui-native";
 import { useIntl } from "react-intl";
 
 type IconName = ComponentProps<typeof Ionicons>["name"];
@@ -23,14 +23,15 @@ export function CookbookTitleSheet({
   /** The testID prefix of the sheet, its field and its buttons. */
   name: string;
   title: string;
-  value: string;
+  /** Absent while the cookbook loads. */
+  value?: string;
   submitLabelId: string;
   submitIcon: IconName;
   canSubmit: boolean;
-  /** The cookbook is not read yet, so the field shows its title but takes no edit. */
+  /** The cookbook is not read yet: the field is a skeleton, the action disabled, and no handler runs. */
   isLoading?: boolean;
-  onChange: (value: string) => void;
-  onSubmit: () => void;
+  onChange?: (value: string) => void;
+  onSubmit?: () => void;
 }) {
   const intl = useIntl();
   const router = useRouter();
@@ -38,7 +39,7 @@ export function CookbookTitleSheet({
     "foreground",
     "accent-foreground",
   ] as const);
-  const disabled = !canSubmit || isLoading;
+  const disabled = !canSubmit || isLoading || !onSubmit;
   const fieldRef = useRef<ComponentRef<typeof Input>>(null);
 
   // The sheet opens on its field, so the keyboard is up as the board draws it.
@@ -81,19 +82,23 @@ export function CookbookTitleSheet({
       title={title}
     >
       <SheetBody>
-        <TextField isDisabled={isLoading}>
-          <Input
-            ref={fieldRef}
-            accessibilityLabel={intl.formatMessage({ id: "recipes.cookbooks.titleLabel" })}
-            className="h-12 rounded-full px-4 text-base"
-            placeholder={intl.formatMessage({ id: "recipes.cookbooks.titlePlaceholder" })}
-            returnKeyType="done"
-            testID={`${name}-title`}
-            value={value}
-            onChangeText={onChange}
-            onSubmitEditing={disabled ? undefined : onSubmit}
-          />
-        </TextField>
+        {isLoading ? (
+          <Skeleton className="h-12 rounded-full" testID={`${name}-title-skeleton`} />
+        ) : (
+          <TextField>
+            <Input
+              ref={fieldRef}
+              accessibilityLabel={intl.formatMessage({ id: "recipes.cookbooks.titleLabel" })}
+              className="h-12 rounded-full px-4 text-base"
+              placeholder={intl.formatMessage({ id: "recipes.cookbooks.titlePlaceholder" })}
+              returnKeyType="done"
+              testID={`${name}-title`}
+              value={value}
+              onChangeText={onChange}
+              onSubmitEditing={disabled ? undefined : onSubmit}
+            />
+          </TextField>
+        )}
       </SheetBody>
     </Sheet>
   );

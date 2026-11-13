@@ -29,10 +29,10 @@ function RenameSheet({ cookbook }: { cookbook: CookbookSummaryDTO }) {
   );
 }
 
-/** Rename cookbook: the field holds the title at once, and takes edits once the cookbook is read. */
+/** Rename cookbook: the field is a skeleton until the cookbook is read. */
 export function CookbookRenameScreen() {
   const intl = useIntl();
-  const { cookbookId, title } = useLocalSearchParams<{ cookbookId: string; title?: string }>();
+  const { cookbookId } = useLocalSearchParams<{ cookbookId: string }>();
   const { cookbook } = useCookbookQuery(cookbookId ?? "");
 
   return cookbook ? (
@@ -46,9 +46,6 @@ export function CookbookRenameScreen() {
       submitIcon="checkmark"
       submitLabelId="common.actions.save"
       title={intl.formatMessage({ id: "recipes.cookbooks.renameTitle" })}
-      value={title ?? ""}
-      onChange={() => {}}
-      onSubmit={() => {}}
     />
   );
 }

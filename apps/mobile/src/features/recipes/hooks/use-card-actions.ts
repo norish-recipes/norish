@@ -53,10 +53,7 @@ export function useCardActions() {
         params: { cookbookId: cookbook.id, title: cookbook.title },
       }),
     renameCookbook: (cookbook: Cookbook) =>
-      router.push({
-        pathname: "/cookbook-rename",
-        params: { cookbookId: cookbook.id, title: cookbook.title },
-      }),
+      router.push({ pathname: "/cookbook-rename", params: { cookbookId: cookbook.id } }),
     deleteCookbook: (cookbook: Cookbook, onDeleted?: () => void) =>
       confirm({
         title: intl.formatMessage(
