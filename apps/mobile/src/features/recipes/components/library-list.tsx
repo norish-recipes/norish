@@ -26,8 +26,9 @@ import { RecipeCard } from "./recipe-card";
 
 /** The tab bar's Add recipe accessory floats over the list's end, so the last row scrolls clear of it. */
 const ACCESSORY_CLEARANCE = 72;
-/** UIKit no longer insets the list for the tab bar, so its 49 pt is added here. */
-const TAB_BAR = 49;
+/** UIKit no longer insets the list for the tab bar, so its full height is added here. */
+// ponytail: no docs-backed inset follows the minimised bar; 49 pt of extra space at the end then.
+const TAB_BAR_HEIGHT = 49;
 
 /** Scrolled this far (the title's 6 pt offset and 41 pt line, less a margin), the header shows the title. */
 const TITLE_SCROLLED_AT = 40;
@@ -107,6 +108,7 @@ export function LibraryList({
         <>
           <Stack.Screen options={{ title: titleScrolled ? title : "" }} />
           <Text
+            accessibilityRole="header"
             className="text-foreground px-5 text-[34px] leading-[41px] font-semibold tracking-[-0.75px]"
             style={{ paddingTop: insets.top + 6 }}
             testID="large-title"
@@ -118,7 +120,7 @@ export function LibraryList({
         </>
       }
       columnWrapperStyle={isGrid ? { gap: 12, paddingHorizontal: 20, marginBottom: 12 } : undefined}
-      contentContainerStyle={{ paddingBottom: insets.bottom + TAB_BAR + ACCESSORY_CLEARANCE }}
+      contentContainerStyle={{ paddingBottom: insets.bottom + TAB_BAR_HEIGHT + ACCESSORY_CLEARANCE }}
       contentInsetAdjustmentBehavior="never"
       data={isLoading ? [] : rows}
       keyExtractor={(row) => `${row.kind}-${row.id}`}
