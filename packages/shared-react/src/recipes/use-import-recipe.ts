@@ -1,0 +1,66 @@
+"use client";
+
+import { usePlatform } from "../platform/platform";
+import { useImportMutations } from "./use-import-mutations";
+import { useRecipeMutationErrorToast } from "./use-recipe-mutation-error-toast";
+
+/**
+ * Import a link, pasted text or images and say so; unless `stay`, go to the Library, where its
+ * pending card shows.
+ */
+export function useImportRecipe({ stay = false }: { stay?: boolean } = {}) {
+  const { toast, navigation } = usePlatform();
+  const showErrorToast = useRecipeMutationErrorToast();
+
+  // Importing a URL the household already holds is an answer, not a failure:
+  // say so, and offer the recipe the import was reaching for.
+  const showAlreadyExistsToast = (recipeId: string): void => {
+    toast.show({
+      severity: "default",
+      title: toast.translate("recipes.import.alreadyExists"),
+      actionLabel: toast.translate("recipes.import.openExisting"),
+      onActionPress: () => navigation.toRecipe(recipeId),
+    });
+  };
+  const mutations = useImportMutations(showErrorToast, showAlreadyExistsToast);
+
+  const start =
+    <T>(titleId: string, descriptionId: string, run: (input: T) => void) =>
+    (input: T) => {
+      run(input);
+      toast.show({
+        severity: "default",
+        title: toast.translate(titleId),
+        description: toast.translate(descriptionId),
+      });
+      if (!stay) navigation.toHome();
+    };
+
+  return {
+    importRecipe: start(
+      "common.import.paste.importing",
+      "common.import.paste.inProgress",
+      mutations.importRecipe
+    ),
+    importRecipeWithAI: start(
+      "common.import.paste.importingWithAI",
+      "common.import.paste.inProgress",
+      mutations.importRecipeWithAI
+    ),
+    importFromPaste: start(
+      "common.import.paste.importing",
+      "common.import.paste.inProgress",
+      mutations.importRecipeFromPaste
+    ),
+    importFromPasteWithAI: start(
+      "common.import.paste.importingWithAI",
+      "common.import.paste.inProgress",
+      mutations.importRecipeFromPasteWithAI
+    ),
+    importFromImages: start(
+      "common.import.image.importing",
+      "common.import.image.analyzing",
+      mutations.importRecipeFromImages
+    ),
+  };
+}
