@@ -23,8 +23,7 @@ import { useTranslations } from "next-intl";
 
 import type { CookbookSummaryDTO } from "@norish/shared/contracts";
 import { useRecipePermissions } from "@norish/shared-react/reader";
-import { allergenSet } from "@norish/shared-react/recipes";
-import { formatMinutesHM, isAllergenTag } from "@norish/shared/lib/helpers";
+import { allergenSet, formatMinutesHM, isAllergenTag } from "@norish/shared/lib/helpers";
 
 import { CardFacts } from "./card-facts";
 import {

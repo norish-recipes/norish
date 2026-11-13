@@ -2,7 +2,8 @@
 
 import { useQuery } from "@tanstack/react-query";
 
-import { allergenSet } from "../recipes/recipe-card-facts";
+import { allergenSet } from "@norish/shared/lib/helpers";
+
 import { useTRPC } from "../trpc";
 import { useAllergiesQuery } from "./use-allergies";
 

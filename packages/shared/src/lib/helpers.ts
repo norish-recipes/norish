@@ -512,6 +512,11 @@ export function normalizeUrl(url: string): string {
   }
 }
 
+/** The allergies lower-cased, for a case-insensitive lookup. */
+export function allergenSet(allergies: readonly string[]): Set<string> {
+  return new Set(allergies.map((allergy) => allergy.toLowerCase()));
+}
+
 /**
  * Sort tags with allergy priority - allergens first, then rest in original order.
  *
@@ -523,7 +528,7 @@ export function sortTagsWithAllergyPriority<T extends { name: string }>(
   tags: T[],
   allergies: string[]
 ): T[] {
-  const allergySet = new Set(allergies.map((a) => a.toLowerCase()));
+  const allergySet = allergenSet(allergies);
 
   // Separate allergens and non-allergens while preserving original order
   const allergenTags: T[] = [];

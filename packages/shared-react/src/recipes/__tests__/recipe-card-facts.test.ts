@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest";
 
-import { allergenSet, recipeCardFacts } from "../recipe-card-facts";
+import { recipeCardFacts } from "../recipe-card-facts";
 
 const recipe = (over: object = {}) =>
   ({
@@ -11,12 +11,6 @@ const recipe = (over: object = {}) =>
     servings: 4,
     ...over,
   }) as Parameters<typeof recipeCardFacts>[0];
-
-describe("allergenSet", () => {
-  it("lower-cases the allergies", () => {
-    expect([...allergenSet(["Lactose", "GLUTEN"])]).toEqual(["lactose", "gluten"]);
-  });
-});
 
 describe("recipeCardFacts", () => {
   it("states the trimmed description, empty when there is none", () => {

@@ -1,10 +1,9 @@
 import type { RecipeDashboardDTO } from "@norish/shared/contracts";
-import { formatMinutesHM, sortTagsWithAllergyPriority } from "@norish/shared/lib/helpers";
-
-/** The allergies lower-cased, for a case-insensitive lookup. */
-export function allergenSet(allergies: readonly string[]): Set<string> {
-  return new Set(allergies.map((allergy) => allergy.toLowerCase()));
-}
+import {
+  allergenSet,
+  formatMinutesHM,
+  sortTagsWithAllergyPriority,
+} from "@norish/shared/lib/helpers";
 
 /** What a Library card states about a recipe: the allergens' tags first, the description, the time and the servings. */
 export function recipeCardFacts(

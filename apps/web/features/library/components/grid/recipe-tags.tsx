@@ -4,8 +4,11 @@ import { useEffect, useMemo, useRef, useState } from "react";
 import { Chip } from "@heroui/react";
 import { motion, useMotionValue } from "motion/react";
 
-import { allergenSet } from "@norish/shared-react/recipes";
-import { isAllergenTag, sortTagsWithAllergyPriority } from "@norish/shared/lib/helpers";
+import {
+  allergenSet,
+  isAllergenTag,
+  sortTagsWithAllergyPriority,
+} from "@norish/shared/lib/helpers";
 
 interface RecipeTagsProps {
   tags: { name: string }[];

@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest";
 
-import { isVideoUrl } from "@norish/shared/lib/helpers";
+import { allergenSet, isVideoUrl } from "@norish/shared/lib/helpers";
 
 describe("isVideoUrl", () => {
   it.each([
@@ -72,5 +72,11 @@ describe("isVideoUrl", () => {
     expect(isVideoUrl("Chocolate cake with 200g flour")).toBe(false);
     expect(isVideoUrl("ftp://youtube.com/watch?v=abc")).toBe(false);
     expect(isVideoUrl("")).toBe(false);
+  });
+});
+
+describe("allergenSet", () => {
+  it("lower-cases the allergies", () => {
+    expect([...allergenSet(["Lactose", "GLUTEN"])]).toEqual(["lactose", "gluten"]);
   });
 });

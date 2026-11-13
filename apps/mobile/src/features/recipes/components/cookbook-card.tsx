@@ -7,8 +7,8 @@ import { useIntl } from "react-intl";
 
 import type { CookbookSummaryDTO } from "@norish/shared/contracts";
 import type { RecipeViewMode } from "@norish/shared/contracts/zod/device-preferences";
-import { allergenSet, coverMosaicColumns } from "@norish/shared-react/recipes";
-import { formatMinutesHM, isAllergenTag } from "@norish/shared/lib/helpers";
+import { coverMosaicColumns } from "@norish/shared-react/recipes";
+import { allergenSet, formatMinutesHM, isAllergenTag } from "@norish/shared/lib/helpers";
 
 import { Pill } from "./pill";
 
