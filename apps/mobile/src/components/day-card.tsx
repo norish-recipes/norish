@@ -1,3 +1,4 @@
+import type { IntlShape } from "react-intl";
 import React from "react";
 import { Text, View } from "react-native";
 import { CardPhoto } from "@/components/card-photo";
@@ -17,7 +18,13 @@ import {
   TODAY_MEAL_SLOTS,
 } from "@norish/shared-react/calendar/todays-meals";
 
+import { DAY_CARD_CLASS } from "./day-card-height";
 import { SLOT_GLYPHS, SLOT_SYMBOLS } from "./slot-icons";
+
+/** A day on one line, as the calendar writes it: "Wed, Oct 7". */
+export function formatDay(intl: IntlShape, date: Date) {
+  return intl.formatDate(date, { weekday: "short", month: "short", day: "numeric" });
+}
 
 /** One planned item: its photo, or a note's glyph, and its name. */
 function PlannedRow({ item }: { item: PlannedItemFromQuery }) {
@@ -25,7 +32,10 @@ function PlannedRow({ item }: { item: PlannedItemFromQuery }) {
   const { title } = usePlannedItemText()(item);
 
   return (
-    <View className="h-10 flex-row items-center gap-3" testID={`day-item-${item.id}`}>
+    <View
+      className={`flex-row items-center gap-3 ${DAY_CARD_CLASS.row}`}
+      testID={`day-item-${item.id}`}
+    >
       {isRecipeItem(item) ? (
         <CardPhoto className="size-10 rounded-[11px]" image={item.recipeImage} />
       ) : (
@@ -104,12 +114,12 @@ export function DayCard({
   onAdd: (slot: Slot) => void;
 }) {
   const intl = useIntl();
-  const formatted = intl.formatDate(date, { weekday: "short", month: "short", day: "numeric" });
+  const formatted = formatDay(intl, date);
   const bySlot = groupTodayItemsBySlot(items);
 
   return (
     <View
-      className="bg-surface rounded-3xl pt-0.5 pr-2 pb-1.5 pl-3.5"
+      className={`bg-surface rounded-3xl pr-2 pl-3.5 ${DAY_CARD_CLASS.card}`}
       testID={`day-card-${dateKey}`}
     >
       {isToday ? (
@@ -118,7 +128,7 @@ export function DayCard({
           pointerEvents="none"
         />
       ) : null}
-      <View className="h-[50px] flex-row items-center gap-2">
+      <View className={`flex-row items-center gap-2 ${DAY_CARD_CLASS.header}`}>
         <View className="min-w-0 flex-1 flex-row items-baseline gap-2">
           {isToday ? (
             <>
@@ -140,10 +150,10 @@ export function DayCard({
       {TODAY_MEAL_SLOTS.filter((slot) => bySlot[slot].length > 0).map((slot) => (
         <View
           key={slot}
-          className="border-separator gap-2 border-t py-2.5 pr-1.5"
+          className={`border-separator pr-1.5 ${DAY_CARD_CLASS.slot}`}
           testID={`day-slot-${dateKey}-${slot}`}
         >
-          <View className="h-4 flex-row items-center gap-1.5">
+          <View className={`flex-row items-center gap-1.5 ${DAY_CARD_CLASS.slotLabel}`}>
             <SlotGlyph slot={slot} />
             <Text className="text-muted text-[13px] font-semibold">
               {intl.formatMessage({ id: `common.slots.${slotTranslationKeys[slot]}` })}
@@ -167,7 +177,10 @@ function SlotGlyph({ slot }: { slot: Slot }) {
 /** A day card's shape while the plan is still being read: its date and one planned row. */
 export function DayCardSkeleton() {
   return (
-    <View className="bg-surface h-[143px] rounded-3xl pt-[19px] pl-3.5" testID="day-card-skeleton">
+    <View
+      className={`bg-surface rounded-3xl pt-[19px] pl-3.5 ${DAY_CARD_CLASS.skeleton}`}
+      testID="day-card-skeleton"
+    >
       <Skeleton className="h-5 w-32 rounded-md" />
       <View className="mt-9 flex-row items-center gap-3">
         <Skeleton className="size-10 rounded-[11px]" />

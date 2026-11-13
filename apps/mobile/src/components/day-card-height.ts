@@ -1,6 +1,16 @@
 import type { PlannedItemFromQuery } from "@norish/shared/contracts";
 
-/** The day card's fixed measures in points, each the same number as its class in `day-card.tsx`. */
+/** The classes that give a day card its measures; `DAY_CARD` below adds them up, and a test keeps the two equal. */
+export const DAY_CARD_CLASS = {
+  card: "pt-0.5 pb-1.5",
+  header: "h-[50px]",
+  slot: "gap-2 border-t py-2.5",
+  slotLabel: "h-4",
+  row: "h-10",
+  skeleton: "h-[143px]",
+} as const;
+
+/** The day card's fixed measures in points, as the classes above say them. */
 export const DAY_CARD = {
   header: 50,
   top: 2,
