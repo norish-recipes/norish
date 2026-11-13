@@ -136,7 +136,7 @@ function CookbookPage({ cookbook }: { cookbook: CookbookSummaryDTO }) {
             }}
           />
           <CookbookHero cookbook={cookbook} />
-          <LibraryHeader scoped />
+          {cookbook.memberCount > 0 ? <LibraryHeader scoped /> : null}
         </>
       }
       isFetchingNextPage={isFetchingNextPage}
