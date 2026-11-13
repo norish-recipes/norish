@@ -19,8 +19,8 @@ type SlotPlanningOptions = {
   slot?: Slot;
   /** Passed in because a domain imports no other: `useRandomRecipe` lives in recipes. */
   getRandomRecipe: (category: RecipeCategory) => Promise<{ id: string } | null>;
-  /** Closes the planning sheet, as an item is planned. */
-  close: () => void;
+  /** Closes the planning sheet, as an item is planned; a recipe's id comes with it. */
+  close: (plannedRecipeId?: string) => void;
   /** Runs after an item is planned from a recipe, with its id. */
   onPlanned?: (recipeId: string) => void;
 };
@@ -42,7 +42,7 @@ export function useSlotPlanning({
 
   const plan = (recipeId: string, target: Slot) => {
     planRecipe(day, target, recipeId);
-    close();
+    close(recipeId);
     onPlanned?.(recipeId);
   };
 
