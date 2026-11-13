@@ -89,7 +89,7 @@ export function useLineSelection<T extends Line>({
      * One section's select-all: every line ticked, or none once every line already is. Each
      * section answers for its own lines and leaves the other section's ticks exactly as they were.
      */
-    toggleSection: (section: T[], other: T[]) => {
+    toggleSection: (section: Line[], other: Line[]) => {
       const allOfSectionSelected = section.every((item) => selectedIds.includes(item.id));
       const otherSelected = other.map((item) => item.id).filter((id) => selectedIds.includes(id));
 

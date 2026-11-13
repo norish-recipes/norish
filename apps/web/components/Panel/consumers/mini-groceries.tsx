@@ -20,6 +20,7 @@ import {
   formatEditableIngredient,
   parseEditedIngredientLine,
   useGroceriesPantryAndCatalogueSubscriptions,
+  useLineSelection,
   useLinesToBuy,
   useOnTheList,
 } from "@norish/shared-react/groceries";
@@ -88,7 +89,6 @@ function MiniGroceriesContent({
   const tActions = useTranslations("common.actions");
   const tDetail = useTranslations("recipes.detail");
   const { formatAmountUnit } = useUnitFormatter();
-  const [selectedIds, setSelectedIds] = useState<string[]>([]);
   const [editingId, setEditingId] = useState<string | null>(null);
   const [editValue, setEditValue] = useState<string>("");
   const [editedIngredients, setEditedIngredients] = useState<Record<string, EditedIngredient>>({});
@@ -110,82 +110,16 @@ function MiniGroceriesContent({
   useRecipeSubscription(recipeId);
   useIngredientIcons(scaledIngredients.map((item) => item.ingredientId));
 
-  const hasInitializedRef = useRef(false);
-  const knownIngredientIdsRef = useRef<Set<string>>(new Set());
-  // Which lines the Pantry held when the ticks were last settled, so a line
-  // that crosses between the sections can be told from one that has not.
-  const knownInPantryIdsRef = useRef<Set<string>>(new Set());
   const onTheList = useOnTheList(pantry.items);
-  const pantryLoading = pantry.isLoading;
   const pantryUnavailable = pantry.isUnavailable;
-
-  useEffect(() => {
-    // Selection starts from what is to buy, so the Pantry has to have
-    // answered before the first pick: a line in the Pantry is never
-    // pre-ticked. A Pantry that cannot be read has not answered either, so
-    // nothing is ticked: the person ticks what they need, and is told why.
-    if (pantryLoading || pantryUnavailable) return;
-    const currentIds = scaledIngredients.map((i) => i.id).filter(Boolean);
-    const toBuyIds = new Set(toBuy.map((item) => item.id));
-    const inPantryIds = new Set(inPantry.map((item) => item.id));
-
-    if (currentIds.length > 0 && !hasInitializedRef.current) {
-      knownIngredientIdsRef.current = new Set(currentIds);
-      knownInPantryIdsRef.current = inPantryIds;
-      setSelectedIds(currentIds.filter((id) => toBuyIds.has(id)));
-      hasInitializedRef.current = true;
-
-      return;
-    }
-
-    /* A line takes its section's default the moment it joins one: a new line,
-       and a line that crossed because a housemate changed the Pantry or
-       because its name was edited here. A tick was only ever about the
-       section the line was in, so it does not travel with it — otherwise a
-       line the Pantry has just claimed would be bought anyway, pre-ticked by
-       a default that was about buying it. */
-    const isNew = (id: string) => !knownIngredientIdsRef.current.has(id);
-    const wasInPantry = (id: string) => knownInPantryIdsRef.current.has(id);
-    const tick = currentIds.filter((id) => toBuyIds.has(id) && (isNew(id) || wasInPantry(id)));
-    const untick = currentIds.filter((id) => inPantryIds.has(id) && !isNew(id) && !wasInPantry(id));
-
-    knownIngredientIdsRef.current = new Set(currentIds);
-    knownInPantryIdsRef.current = inPantryIds;
-
-    if (tick.length === 0 && untick.length === 0) return;
-
-    setSelectedIds((prev) => {
-      const next = new Set(prev);
-
-      for (const id of tick) next.add(id);
-      for (const id of untick) next.delete(id);
-
-      return Array.from(next);
+  const { selectedIds, selectedCount, inPantrySelectedCount, toggleSelect, toggleSection } =
+    useLineSelection({
+      lines: scaledIngredients,
+      toBuy,
+      inPantry,
+      pantryLoading: pantry.isLoading,
+      pantryUnavailable,
     });
-  }, [scaledIngredients, toBuy, inPantry, pantryLoading, pantryUnavailable]);
-  /* Count the visible rows that are selected rather than `selectedIds.length`,
-     so an id left behind by an ingredient that has since disappeared cannot
-     make the list look fully selected. The count, and "select all", are about
-     what is to buy; a line in the Pantry is ticked on its own. */
-  const selectedCount = toBuy.filter((item) => selectedIds.includes(item.id)).length;
-  const inPantrySelectedCount = inPantry.filter((item) => selectedIds.includes(item.id)).length;
-  const toggleSelect = (id: string) => {
-    setSelectedIds((prev) => (prev.includes(id) ? prev.filter((x) => x !== id) : [...prev, id]));
-  };
-  /**
-   * One section's select-all: every line ticked, or none once every line
-   * already is. Each section answers for its own lines and leaves the other
-   * section's ticks exactly as they were, which is why the other section's
-   * selection is carried across rather than recomputed.
-   */
-  const toggleSection = (section: GroceryIngredient[], other: GroceryIngredient[]) => {
-    const allOfSectionSelected = section.every((item) => selectedIds.includes(item.id));
-    const otherSelected = other.map((item) => item.id).filter((id) => selectedIds.includes(id));
-
-    setSelectedIds(
-      allOfSectionSelected ? otherSelected : [...otherSelected, ...section.map((item) => item.id)]
-    );
-  };
   const handleEditStart = (id: string) => {
     const item = scaledIngredients.find((i) => i.id === id);
 
