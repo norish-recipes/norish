@@ -6,6 +6,12 @@
     "today": "Idag",
     "scrollToToday": "Gå till idag"
   },
+  "today": {
+    "openRecipe": "Öppna recept",
+    "move": "Flytta…",
+    "removeTitle": "Ta bort från idag?",
+    "removeMessage": "{name} tas bort från {slot} på {day}."
+  },
   "editNote": {
     "title": "Redigera anteckning",
     "noteLabel": "Anteckning",
@@ -44,7 +50,10 @@
     "addNote": "Lägg till anteckning: {input}",
     "randomRecipe": "Slumpa recept",
     "noRecipesFound": "Inga recept hittades.",
-    "failedToLoadRecipes": "Det gick inte att hämta recepten."
+    "failedToLoadRecipes": "Det gick inte att hämta recepten.",
+    "planRecipe": "Planera ett recept",
+    "searchOrAddNote": "Sök recept eller lägg till en anteckning",
+    "random": "Slumpmässigt recept"
   },
   "caldav": {
     "syncStarted": "CalDAV-synkronisering startad",

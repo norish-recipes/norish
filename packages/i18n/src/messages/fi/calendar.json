@@ -6,6 +6,12 @@
     "today": "Tänään",
     "scrollToToday": "Siirry tähän päivään"
   },
+  "today": {
+    "openRecipe": "Avaa resepti",
+    "move": "Siirrä…",
+    "removeTitle": "Poistetaanko tältä päivältä?",
+    "removeMessage": "{name} poistetaan kohdasta {slot}, {day}."
+  },
   "editNote": {
     "title": "Muokkaa huomautusta",
     "noteLabel": "Huomautus",
@@ -44,7 +50,10 @@
     "addNote": "Lisää huomautus: {input}",
     "randomRecipe": "Satunnainen resepti",
     "noRecipesFound": "Reseptejä ei löytynyt.",
-    "failedToLoadRecipes": "Reseptien lataaminen epäonnistui."
+    "failedToLoadRecipes": "Reseptien lataaminen epäonnistui.",
+    "planRecipe": "Suunnittele resepti",
+    "searchOrAddNote": "Hae reseptejä tai lisää muistiinpano",
+    "random": "Satunnainen resepti"
   },
   "caldav": {
     "syncStarted": "CalDAV-synkronointi aloitettu",

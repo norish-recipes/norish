@@ -6,6 +6,12 @@
     "today": "Hoje",
     "scrollToToday": "Ir para hoje"
   },
+  "today": {
+    "openRecipe": "Abrir receita",
+    "move": "Mover…",
+    "removeTitle": "Remover de hoje?",
+    "removeMessage": "{name} sai de {slot} de {day}."
+  },
   "editNote": {
     "title": "Editar nota",
     "noteLabel": "Nota",
@@ -44,7 +50,10 @@
     "addNote": "Adicionar nota: {input}",
     "randomRecipe": "Receita aleatória",
     "noRecipesFound": "Nenhuma receita encontrada.",
-    "failedToLoadRecipes": "Falha ao carregar receitas."
+    "failedToLoadRecipes": "Falha ao carregar receitas.",
+    "planRecipe": "Planejar uma receita",
+    "searchOrAddNote": "Busque receitas ou adicione uma nota",
+    "random": "Receita aleatória"
   },
   "caldav": {
     "syncStarted": "Sincronização CalDAV iniciada",

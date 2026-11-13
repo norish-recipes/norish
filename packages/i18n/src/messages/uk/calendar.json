@@ -6,6 +6,12 @@
     "today": "Сьогодні",
     "scrollToToday": "Перейти до сьогодні"
   },
+  "today": {
+    "openRecipe": "Відкрити рецепт",
+    "move": "Перемістити…",
+    "removeTitle": "Прибрати із сьогоднішнього плану?",
+    "removeMessage": "«{name}» буде прибрано з прийому їжі «{slot}» ({day})."
+  },
   "editNote": {
     "title": "Редагувати нотатку",
     "noteLabel": "Нотатка",
@@ -44,7 +50,10 @@
     "addNote": "Додати нотатку: {input}",
     "randomRecipe": "Випадковий рецепт",
     "noRecipesFound": "Рецептів не знайдено.",
-    "failedToLoadRecipes": "Не вдалося завантажити рецепти."
+    "failedToLoadRecipes": "Не вдалося завантажити рецепти.",
+    "planRecipe": "Запланувати рецепт",
+    "searchOrAddNote": "Знайдіть рецепт або додайте нотатку",
+    "random": "Випадковий рецепт"
   },
   "caldav": {
     "syncStarted": "Синхронізацію CalDAV розпочато",

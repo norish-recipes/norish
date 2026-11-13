@@ -6,6 +6,12 @@
     "today": "Днес",
     "scrollToToday": "Към днес"
   },
+  "today": {
+    "openRecipe": "Отвори рецептата",
+    "move": "Премести…",
+    "removeTitle": "Да се премахне ли от днес?",
+    "removeMessage": "„{name}“ се премахва от {slot} ({day})."
+  },
   "editNote": {
     "title": "Редактиране на бележка",
     "noteLabel": "Бележка",
@@ -44,7 +50,10 @@
     "addNote": "Добавяне на бележка: {input}",
     "randomRecipe": "Случайна рецепта",
     "noRecipesFound": "Няма намерени рецепти.",
-    "failedToLoadRecipes": "Зареждането на рецептите не бе успешно."
+    "failedToLoadRecipes": "Зареждането на рецептите не бе успешно.",
+    "planRecipe": "Планирай рецепта",
+    "searchOrAddNote": "Търсете рецепти или добавете бележка",
+    "random": "Случайна рецепта"
   },
   "caldav": {
     "syncStarted": "Синхронизацията с CalDAV започна",

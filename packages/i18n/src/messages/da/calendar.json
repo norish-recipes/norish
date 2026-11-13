@@ -6,6 +6,12 @@
     "today": "I dag",
     "scrollToToday": "Gå til i dag"
   },
+  "today": {
+    "openRecipe": "Åbn opskrift",
+    "move": "Flyt…",
+    "removeTitle": "Fjern fra i dag?",
+    "removeMessage": "{name} fjernes fra {slot} på {day}."
+  },
   "editNote": {
     "title": "Rediger note",
     "noteLabel": "Note",
@@ -44,7 +50,10 @@
     "addNote": "Tilføj note: {input}",
     "randomRecipe": "Tilfældig opskrift",
     "noRecipesFound": "Ingen opskrifter fundet.",
-    "failedToLoadRecipes": "Kunne ikke indlæse opskrifter."
+    "failedToLoadRecipes": "Kunne ikke indlæse opskrifter.",
+    "planRecipe": "Planlæg en opskrift",
+    "searchOrAddNote": "Søg efter opskrifter eller tilføj en note",
+    "random": "Tilfældig opskrift"
   },
   "caldav": {
     "syncStarted": "CalDAV-synkronisering startet",

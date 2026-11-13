@@ -6,6 +6,12 @@
     "today": "Vandaag",
     "scrollToToday": "Ga naar vandaag"
   },
+  "today": {
+    "openRecipe": "Recept openen",
+    "move": "Verplaatsen…",
+    "removeTitle": "Van vandaag halen?",
+    "removeMessage": "{name} gaat van {slot} op {day} af."
+  },
   "editNote": {
     "title": "Notitie bewerken",
     "noteLabel": "Notitie",
@@ -44,7 +50,10 @@
     "addNote": "Notitie toevoegen: {input}",
     "randomRecipe": "Willekeurig recept",
     "noRecipesFound": "Geen recepten gevonden.",
-    "failedToLoadRecipes": "Kan recepten niet laden."
+    "failedToLoadRecipes": "Kan recepten niet laden.",
+    "planRecipe": "Recept plannen",
+    "searchOrAddNote": "Zoek recepten of voeg een notitie toe",
+    "random": "Willekeurig recept"
   },
   "caldav": {
     "syncStarted": "CalDAV-synchronisatie gestart",
