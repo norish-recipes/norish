@@ -1,8 +1,14 @@
 import React from "react";
-import { PlaceholderScreen } from "@/features/shell/screens/placeholder-screen";
+import { Sheet } from "@/components/sheet";
+import { useIntl } from "react-intl";
 
 export default function AddToCookbookSheet() {
+  const intl = useIntl();
+
   return (
-    <PlaceholderScreen testID="add-to-cookbook-sheet" titleId="recipes.cookbooks.panelTitle" />
+    <Sheet
+      name="add-to-cookbook"
+      title={intl.formatMessage({ id: "recipes.cookbooks.panelTitle" })}
+    />
   );
 }
