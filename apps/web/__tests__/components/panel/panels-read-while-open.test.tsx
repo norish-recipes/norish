@@ -25,7 +25,8 @@ vi.mock("@norish/shared-react/reader", async () =>
     reader: () => ({ user: { id: "reader" } }),
   })
 );
-vi.mock("@norish/shared-react/calendar", () => ({
+// `useSlotPlanning` reads the mutations through this file of its own package.
+vi.mock("../../../../../packages/shared-react/src/calendar/use-calendar-mutations", () => ({
   useCalendarMutations: () => ({ planRecipe: vi.fn(), planNote: vi.fn() }),
 }));
 vi.mock("next-intl", () => ({
