@@ -13,3 +13,12 @@ export {
   useCaldavSyncStatusQuery,
 } from "./use-caldav-query";
 export { useCaldavSubscription } from "./use-caldav-subscription";
+export {
+  TODAY_MEAL_SLOTS,
+  buildPlannedItemSubtitle,
+  firstSlotFrom,
+  getPlannedItemTitle,
+  groupTodayItemsBySlot,
+  nextMealSlot,
+  slotTranslationKeys,
+} from "./todays-meals";
