@@ -1,6 +1,5 @@
 "use client";
 
-import { useRef, useState } from "react";
 import CookbookCover from "@/components/cookbooks/cookbook-cover";
 import { SelectableRow } from "@/components/cookbooks/selectable-row";
 import Panel from "@/components/Panel/Panel";
@@ -9,11 +8,7 @@ import { PlusIcon, XMarkIcon } from "@heroicons/react/16/solid";
 import { Button, Input, Separator } from "@heroui/react";
 import { useTranslations } from "next-intl";
 
-import {
-  useCookbooksMutations,
-  useCookbooksSubscription,
-  useEditableCookbooksQuery,
-} from "@norish/shared-react/recipes";
+import { useCookbookMembership } from "@norish/shared-react/recipes";
 
 type MiniCookbooksProps = {
   open: boolean;
@@ -24,9 +19,6 @@ type MiniCookbooksProps = {
   excludeCookbookId?: string;
   onSaved?: (filed: Array<{ id: string; title: string }>) => void;
 };
-
-/** A cookbook the reader has asked for but that does not exist yet. */
-type PendingCookbook = { key: number; title: string };
 
 /** Sized to its list, scrolling past this. */
 const PANEL_HEIGHT = "max-h-[75dvh]";
@@ -75,65 +67,20 @@ function MiniCookbooksContent({
   const t = useTranslations("recipes.cookbooks");
   const tActions = useTranslations("common.actions");
   const tSelection = useTranslations("recipes.selection");
-  const singleId = recipeIds.length === 1 ? recipeIds[0]! : null;
-  const query = useEditableCookbooksQuery(singleId);
-  const cookbooks = query.cookbooks.filter((cookbook) => cookbook.id !== excludeCookbookId);
-  const { isLoading } = query;
-  const newLabel = singleId ? t("newWithRecipe") : tSelection("newCookbook");
-  const { createCookbook, setMembership } = useCookbooksMutations();
-  const [newTitle, setNewTitle] = useState("");
-  /** Only the cookbooks the reader has actually changed their mind about. */
-  const [staged, setStaged] = useState<Record<string, boolean>>({});
-  const [pending, setPending] = useState<PendingCookbook[]>([]);
-  // Monotonic, so removing a row cannot hand its key to the next one.
-  const nextKeyRef = useRef(0);
-
-  useCookbooksSubscription();
-
-  const stageNew = () => {
-    const title = newTitle.trim();
-
-    if (!title) return;
-    setNewTitle("");
-    setPending((previous) => [...previous, { key: nextKeyRef.current++, title }]);
-  };
-
-  const toggle = (cookbookId: string, isMember: boolean) => {
-    setStaged((previous) => ({ ...previous, [cookbookId]: isMember }));
-  };
-
-  const isDirty =
-    pending.length > 0 ||
-    cookbooks.some(
-      (cookbook) => cookbook.id in staged && staged[cookbook.id] !== cookbook.containsRecipe
-    );
-
-  const save = async () => {
-    const filed: Array<{ id: string; title: string }> = [];
-
-    for (const cookbook of cookbooks) {
-      const next = staged[cookbook.id];
-
-      if (next === undefined || next === cookbook.containsRecipe) continue;
-
-      setMembership({ cookbookId: cookbook.id, recipeIds, isMember: next, cookbook });
-      if (next) filed.push(cookbook);
-    }
-
-    onOpenChange(false);
-
-    // Only what is on screen as a pending row. Adding it is the moment the
-    // reader confirms a new cookbook, and a half-typed title is not that.
-    const created = await Promise.all(
-      pending.map((entry) =>
-        createCookbook({ title: entry.title, recipeIds })
-          .then((id) => (id ? { id, title: entry.title } : null))
-          .catch(() => null)
-      )
-    );
-
-    onSaved?.([...filed, ...created.filter((entry) => entry !== null)]);
-  };
+  const newLabel = recipeIds.length === 1 ? t("newWithRecipe") : tSelection("newCookbook");
+  const {
+    cookbooks,
+    isLoading,
+    isMember: isStaged,
+    toggle,
+    newTitle,
+    setNewTitle,
+    pending,
+    stageNew,
+    unstage,
+    isDirty,
+    save,
+  } = useCookbookMembership({ recipeIds, excludeCookbookId, onSaved });
 
   return (
     <>
@@ -193,9 +140,7 @@ function MiniCookbooksContent({
                   className="shrink-0 rounded-full"
                   size="sm"
                   variant="tertiary"
-                  onPress={() =>
-                    setPending((previous) => previous.filter((item) => item.key !== entry.key))
-                  }
+                  onPress={() => unstage(entry.key)}
                 >
                   <XMarkIcon className="size-4" />
                 </Button>
@@ -203,7 +148,7 @@ function MiniCookbooksContent({
             ))}
 
             {cookbooks.map((cookbook) => {
-              const isMember = staged[cookbook.id] ?? cookbook.containsRecipe;
+              const isMember = isStaged(cookbook.id);
 
               return (
                 <SelectableRow
@@ -234,7 +179,7 @@ function MiniCookbooksContent({
             action="save"
             data-testid="save-cookbook-membership"
             isDisabled={!isDirty}
-            onPress={() => void save()}
+            onPress={() => void save(() => onOpenChange(false))}
           >
             {tActions("save")}
           </ActionButton>
