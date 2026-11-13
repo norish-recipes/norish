@@ -8,9 +8,9 @@ import { useIntl } from "react-intl";
 import type { CookbookSummaryDTO } from "@norish/shared/contracts";
 import { useDevicePreference } from "@norish/shared-react/reader";
 import {
-  useCookbookEdit,
   useCookbookList,
   useCookbookQuery,
+  useCookbookTitleEdit,
   useLibraryCards,
   useLibraryFilters,
 } from "@norish/shared-react/recipes";
@@ -101,7 +101,7 @@ function useCookbookMenu(cookbook: CookbookSummaryDTO) {
 
 /** Picks a cover and saves it at once; off while Offline, as covers are uploaded. */
 function useCookbookCover(cookbook: CookbookSummaryDTO) {
-  const { save, coverDisabled } = useCookbookEdit(cookbook, { withMembers: false });
+  const { save, coverDisabled } = useCookbookTitleEdit(cookbook);
 
   return { saveCover: useCookbookCoverPicker((file) => void save(file)), coverDisabled };
 }

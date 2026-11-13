@@ -52,7 +52,7 @@ export { useSharePublicConfigQuery } from "./use-share-public-config-query";
 export { useSharedRecipeQuery } from "./use-shared-recipe-query";
 export { useWorkedOutNutrition } from "./use-worked-out-nutrition";
 export { useCookbookAddRecipes } from "./use-cookbook-add-recipes";
-export { useCookbookEdit, type CookbookCover } from "./use-cookbook-edit";
+export { useCookbookEdit, useCookbookTitleEdit, type CookbookCover } from "./use-cookbook-edit";
 export {
   useCookbookMembership,
   type FiledCookbook,

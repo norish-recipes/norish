@@ -145,3 +145,8 @@ export function useCookbookEdit(
     save,
   };
 }
+
+/** A cookbook's title-and-cover edit, without the member list a full edit reads: Rename and Change cover. */
+export function useCookbookTitleEdit(cookbook: CookbookSummaryDTO) {
+  return useCookbookEdit(cookbook, { withMembers: false });
+}
