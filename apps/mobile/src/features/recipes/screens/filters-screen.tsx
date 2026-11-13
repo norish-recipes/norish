@@ -51,41 +51,44 @@ export function FiltersScreen() {
 
   return (
     <Sheet
-      actions={[
-        <Button
-          key="reset"
-          className="bg-warning/20 h-[50px]"
-          testID="filters-reset"
-          variant="secondary"
-          onPress={() => {
-            reset();
-            close();
-          }}
-        >
-          <Ionicons color={warningInk} name="refresh" size={18} />
-          <Button.Label className="text-warning-ink">
-            {intl.formatMessage({ id: "common.filters.clearFilters" })}
-          </Button.Label>
-        </Button>,
-        <Button
-          key="apply"
-          className="h-[50px]"
-          testID="filters-apply"
-          variant="primary"
-          onPress={() => {
-            apply();
-            close();
-          }}
-        >
-          <Ionicons color="white" name="checkmark" size={20} />
-          <Button.Label>{intl.formatMessage({ id: "common.actions.apply" })}</Button.Label>
-        </Button>,
-      ]}
+      actions={
+        <Sheet.Actions>
+          <Sheet.Action>
+            <Button
+              className="bg-warning/20 h-[50px]"
+              testID="filters-reset"
+              variant="secondary"
+              onPress={() => {
+                reset();
+                close();
+              }}
+            >
+              <Ionicons color={warningInk} name="refresh" size={18} />
+              <Button.Label className="text-warning-ink">
+                {intl.formatMessage({ id: "common.filters.clearFilters" })}
+              </Button.Label>
+            </Button>
+          </Sheet.Action>
+          <Sheet.Action>
+            <Button
+              className="h-[50px]"
+              testID="filters-apply"
+              variant="primary"
+              onPress={() => {
+                apply();
+                close();
+              }}
+            >
+              <Ionicons color="white" name="checkmark" size={20} />
+              <Button.Label>{intl.formatMessage({ id: "common.actions.apply" })}</Button.Label>
+            </Button>
+          </Sheet.Action>
+        </Sheet.Actions>
+      }
       name="filters"
       title={intl.formatMessage({ id: "common.filters.title" })}
-      onClose={close}
     >
-      <SheetScrollView gapClassName="gap-[18px]">
+      <SheetScrollView contentClassName="gap-[18px]">
         <FilterSection title={intl.formatMessage({ id: "common.filters.sort" })}>
           <View className="flex-row flex-wrap gap-1.5">
             {(["title", "date"] as const).map((key) => {

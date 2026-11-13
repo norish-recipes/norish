@@ -1,9 +1,9 @@
 import React, { useDeferredValue, useState } from "react";
-import { Pressable, ScrollView, Text, View } from "react-native";
+import { Pressable, Text, View } from "react-native";
 import { CardPhoto } from "@/components/card-photo";
-import { Sheet, SheetList } from "@/components/sheet";
+import { Sheet, SheetList, SheetStrip } from "@/components/sheet";
 import Ionicons from "@expo/vector-icons/Ionicons";
-import { useLocalSearchParams, useRouter } from "expo-router";
+import { useLocalSearchParams } from "expo-router";
 import { Button, SearchField, Skeleton, Spinner, Tabs, useThemeColor } from "heroui-native";
 import { useIntl } from "react-intl";
 
@@ -31,7 +31,6 @@ const asSlot = (value: string | undefined): Slot =>
 /** Plan a recipe: a day, a slot, then a recipe from the search, a random one or a note. */
 export function PlanRecipeScreen() {
   const intl = useIntl();
-  const router = useRouter();
   const params = useLocalSearchParams<{ slot?: string }>();
   const [foreground] = useThemeColor(["foreground"] as const);
   const today = parseDateKey(useToday());
@@ -62,12 +61,9 @@ export function PlanRecipeScreen() {
   const header = (
     <View className="gap-3">
       {/* heroui-native has no day strip, so these chips are hand-built. */}
-      <ScrollView
-        horizontal
+      <SheetStrip
         accessibilityLabel={intl.formatMessage({ id: "calendar.panel.addToCalendar" })}
-        className="-mx-4"
-        contentContainerClassName="gap-2 px-4"
-        showsHorizontalScrollIndicator={false}
+        contentClassName="gap-2"
         testID="plan-recipe-days"
       >
         {days.map((day, offset) => {
@@ -104,7 +100,7 @@ export function PlanRecipeScreen() {
             </Pressable>
           );
         })}
-      </ScrollView>
+      </SheetStrip>
 
       <Tabs value={slot} onValueChange={(next) => setSlot(asSlot(next))}>
         <Tabs.List className="bg-default h-10 rounded-full p-[3px]">
@@ -166,11 +162,7 @@ export function PlanRecipeScreen() {
   );
 
   return (
-    <Sheet
-      name="plan-recipe"
-      title={intl.formatMessage({ id: "calendar.panel.planRecipe" })}
-      onClose={() => router.back()}
-    >
+    <Sheet name="plan-recipe" title={intl.formatMessage({ id: "calendar.panel.planRecipe" })}>
       <SheetList
         ListEmptyComponent={
           error ? undefined : (

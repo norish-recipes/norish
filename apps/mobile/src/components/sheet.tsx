@@ -1,60 +1,108 @@
 import type { ReactNode } from "react";
 import type { FlatListProps, ScrollViewProps } from "react-native";
-import React, { createContext, use } from "react";
+import React from "react";
 import { FlatList, ScrollView, Text, View } from "react-native";
+import { useRouter } from "expo-router";
 
 import { GlassCloseButton } from "./glass-close-button";
 
-/** The sheet's name, from which its body's testID comes. */
-const SheetNameContext = createContext("sheet");
+/** The props a body takes from the sheet rather than from the screen. */
+type SheetOwnedProps =
+  "className" | "contentContainerClassName" | "style" | "contentContainerStyle";
 
-/** What the sheet decides about its body: its place, its insets, its keyboard and its testID. */
-function useBodyProps() {
-  const name = use(SheetNameContext);
+/** How every body lays out its content. */
+type BodyLayout = {
+  /** False runs the content to the sheet's sides, for rows that bleed. */
+  inset?: boolean;
+  /** Added to the content's classes, such as its gap. */
+  contentClassName?: string;
+};
 
-  return {
-    className: "flex-1",
-    contentContainerClassName: "px-4 pb-4",
-    contentInsetAdjustmentBehavior: "never",
-    keyboardDismissMode: "on-drag",
-    keyboardShouldPersistTaps: "handled",
-    showsVerticalScrollIndicator: false,
-    testID: `${name}-sheet`,
-  } as const;
-}
+const contentClass = ({ inset = true, contentClassName = "" }: BodyLayout) =>
+  `${inset ? "px-4" : ""} pb-4 ${contentClassName}`;
 
-type Owned =
-  "className" | "contentContainerClassName" | "style" | "contentContainerStyle" | "testID";
+/** What both scrolling bodies share: they fill the sheet and meet the keyboard the same way. */
+const SCROLLER = {
+  className: "flex-1",
+  contentInsetAdjustmentBehavior: "never",
+  keyboardDismissMode: "on-drag",
+  keyboardShouldPersistTaps: "handled",
+  showsVerticalScrollIndicator: false,
+} as const;
 
-/** A sheet's body as a scroll view; `gapClassName` spaces its children. */
+/** A sheet's body that scrolls. */
 export function SheetScrollView({
-  gapClassName = "",
-  children,
+  inset,
+  contentClassName,
   ...props
-}: Omit<ScrollViewProps, Owned> & { gapClassName?: string }) {
-  const body = useBodyProps();
-
+}: Omit<ScrollViewProps, SheetOwnedProps> & BodyLayout) {
   return (
     <ScrollView
-      {...body}
+      {...SCROLLER}
       {...props}
-      contentContainerClassName={`${body.contentContainerClassName} ${gapClassName}`}
-    >
-      {children}
-    </ScrollView>
+      contentContainerClassName={contentClass({ inset, contentClassName })}
+    />
   );
 }
 
 /** A sheet's body as a virtualised list. */
-export function SheetList<T>(props: Omit<FlatListProps<T>, Owned>) {
-  return <FlatList {...useBodyProps()} {...props} />;
+export function SheetList<T>({
+  inset,
+  contentClassName,
+  ...props
+}: Omit<FlatListProps<T>, SheetOwnedProps> & BodyLayout) {
+  return (
+    <FlatList
+      {...SCROLLER}
+      {...props}
+      contentContainerClassName={contentClass({ inset, contentClassName })}
+    />
+  );
 }
 
-/**
- * The one sheet layout: the title, subtitle and close button on top, the body (a `SheetScrollView`
- * or `SheetList`) between, and the actions pinned below, each action taking an equal share. All
- * three are flex siblings of a sheet-sized column, so the body scrolls under neither.
- */
+/** A sheet's body that does not scroll, as tall as its content: the body of a fit sheet. */
+export function SheetBody({ children, ...layout }: BodyLayout & { children: ReactNode }) {
+  return <View className={contentClass(layout)}>{children}</View>;
+}
+
+/** A horizontal strip that runs to the sheet's sides, its content starting on the sheet's inset. */
+export function SheetStrip({
+  contentClassName = "",
+  ...props
+}: Omit<ScrollViewProps, SheetOwnedProps | "horizontal"> & { contentClassName?: string }) {
+  return (
+    <ScrollView
+      horizontal
+      className="-mx-4"
+      contentContainerClassName={`px-4 ${contentClassName}`}
+      showsHorizontalScrollIndicator={false}
+      {...props}
+    />
+  );
+}
+
+/** A row whose content lines up with the sheet's title. */
+export function SheetRow({
+  className = "",
+  children,
+}: {
+  className?: string;
+  children: ReactNode;
+}) {
+  return <View className={`px-2 ${className}`}>{children}</View>;
+}
+
+/** Several actions in one row; each `Sheet.Action` takes an equal share. */
+function SheetActions({ children }: { children: ReactNode }) {
+  return <View className="flex-row gap-2.5">{children}</View>;
+}
+
+function SheetAction({ children }: { children: ReactNode }) {
+  return <View className="flex-1">{children}</View>;
+}
+
+/** The one sheet layout: title, subtitle and close on top, the body between, the actions pinned
+ *  below, as flex siblings so the body scrolls under neither. */
 export function Sheet({
   name,
   title,
@@ -63,44 +111,44 @@ export function Sheet({
   actions,
   children,
 }: {
-  /** The testID prefix: `<name>-sheet` on the body, `<name>-close` on the close button. */
+  /** The testID prefix: `<name>-sheet` on the sheet, `<name>-close` on the close button. */
   name: string;
   title: string;
   subtitle?: string;
-  onClose: () => void;
-  /** Each action gets an equal share of the row; give each a key. */
-  actions?: ReactNode[];
-  children: ReactNode;
+  /** What the close button does; going back by default. */
+  onClose?: () => void;
+  /** One element, or a `Sheet.Actions` of `Sheet.Action`s sharing the row. */
+  actions?: ReactNode;
+  /** A `SheetScrollView`, `SheetList` or `SheetBody`. */
+  children?: ReactNode;
 }) {
+  const router = useRouter();
+
   return (
-    <SheetNameContext value={name}>
-      {/* Not flattened, so the body is never a direct child that react-native-screens resizes. */}
-      <View className="flex-1" collapsable={false}>
-        {/* Top-aligned, so the close button sits in one place with or without a subtitle; pt-1.5
-            centres the 28 pt title line on the 40 pt button. */}
-        <View className="flex-row items-start justify-between gap-2.5 px-4 pt-[27px] pb-3.5">
-          <View className="min-w-0 flex-1 pt-1.5 pl-2">
-            <Text className="text-foreground text-[22px] leading-7 font-semibold">{title}</Text>
-            {subtitle ? (
-              <Text className="text-muted text-sm leading-[17px]" numberOfLines={1}>
-                {subtitle}
-              </Text>
-            ) : null}
-          </View>
-          <GlassCloseButton testID={`${name}-close`} onPress={onClose} />
+    // Not flattened, so react-native-screens never resizes the body directly.
+    <View className="grow" collapsable={false} testID={`${name}-sheet`}>
+      {/* Top-aligned so the close button never moves; pt-1.5 centres the title on the button. */}
+      <View className="flex-row items-start justify-between gap-2.5 px-4 pt-[27px] pb-3.5">
+        <View className="min-w-0 flex-1 pt-1.5 pl-2">
+          <Text
+            accessibilityRole="header"
+            className="text-foreground text-[22px] leading-7 font-semibold"
+          >
+            {title}
+          </Text>
+          {subtitle ? (
+            <Text className="text-muted text-sm leading-[17px]" numberOfLines={1}>
+              {subtitle}
+            </Text>
+          ) : null}
         </View>
-        {children}
-        {actions ? (
-          <View className="flex-row gap-2.5 px-4 pt-3 pb-5">
-            {actions.map((action, index) => (
-              // eslint-disable-next-line @eslint-react/no-array-index-key -- the actions never reorder
-              <View key={index} className="flex-1">
-                {action}
-              </View>
-            ))}
-          </View>
-        ) : null}
+        <GlassCloseButton testID={`${name}-close`} onPress={onClose ?? (() => router.back())} />
       </View>
-    </SheetNameContext>
+      {children}
+      {actions ? <View className="px-4 pt-3 pb-5">{actions}</View> : null}
+    </View>
   );
 }
+
+Sheet.Actions = SheetActions;
+Sheet.Action = SheetAction;

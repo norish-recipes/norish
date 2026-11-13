@@ -2,7 +2,7 @@ import type { ReactNode } from "react";
 import React from "react";
 import { Text, View } from "react-native";
 import { ServingsStepper } from "@/components/servings-stepper";
-import { Sheet, SheetScrollView } from "@/components/sheet";
+import { Sheet, SheetRow, SheetScrollView } from "@/components/sheet";
 import Ionicons from "@expo/vector-icons/Ionicons";
 import { useLocalSearchParams, useRouter } from "expo-router";
 import { Button, Spinner, useThemeColor } from "heroui-native";
@@ -31,39 +31,17 @@ import {
 /** Lines are only ever edited on web; the sheet takes each as the recipe has it. */
 const AS_WRITTEN = {};
 
-/** The sheet with its servings row above the lines. */
-function Frame({
-  subtitle,
-  servings,
-  footer,
-  children,
-}: {
-  subtitle: string;
-  servings: ReactNode;
-  footer: ReactNode;
-  children: ReactNode;
-}) {
+/** The servings label, lined up with the title, and the stepper once the recipe is known. */
+function ServingsRow({ children }: { children?: ReactNode }) {
   const intl = useIntl();
-  const router = useRouter();
 
   return (
-    <Sheet
-      actions={[footer]}
-      name="add-to-groceries"
-      subtitle={subtitle}
-      title={intl.formatMessage({ id: "recipes.detail.addToGroceries" })}
-      onClose={() => router.back()}
-    >
-      <SheetScrollView gapClassName="gap-3">
-        <View className="mx-2 h-[34px] flex-row items-center justify-between">
-          <Text className="text-foreground text-[15px] font-medium">
-            {intl.formatMessage({ id: "groceries.panel.servings" })}
-          </Text>
-          {servings}
-        </View>
-        {children}
-      </SheetScrollView>
-    </Sheet>
+    <SheetRow className="h-[34px] flex-row items-center justify-between">
+      <Text className="text-foreground text-[15px] font-medium">
+        {intl.formatMessage({ id: "groceries.panel.servings" })}
+      </Text>
+      {children}
+    </SheetRow>
   );
 }
 
@@ -82,25 +60,26 @@ function LinesSkeleton() {
   );
 }
 
-/** The Add button: disabled until lines are known and ticked, busy while they go on the list. */
+/** The Add button: pressable only when given `onPress`, busy while the lines go on the list. */
 function AddButton({
   count,
-  disabled,
-  busy,
+  busy = false,
   onPress,
 }: {
   count: number;
-  disabled: boolean;
-  busy: boolean;
-  onPress: () => void;
+  busy?: boolean;
+  onPress?: () => void;
 }) {
   const intl = useIntl();
   const [accentForeground] = useThemeColor(["accent-foreground"] as const);
+  const disabled = !onPress || busy;
 
   return (
     <Button
+      accessibilityLabel={busy ? intl.formatMessage({ id: "groceries.panel.adding" }) : undefined}
+      accessibilityState={{ disabled, busy }}
       className="h-[50px] rounded-full"
-      isDisabled={disabled || busy}
+      isDisabled={disabled}
       testID="add-to-groceries-add"
       variant="primary"
       onPress={onPress}
@@ -191,67 +170,77 @@ function GroceriesSheet({ recipe }: { recipe: FullRecipeDTO }) {
   const ticked = selectedCount + inPantrySelectedCount;
 
   return (
-    <Frame
-      footer={
+    <Sheet
+      actions={
         <AddButton
           busy={isAdding}
           count={ticked}
-          disabled={loading || ticked === 0}
-          onPress={() => void addTicked().then((added) => added && router.back())}
+          onPress={
+            loading || ticked === 0
+              ? undefined
+              : () => void addTicked().then((added) => added && router.back())
+          }
         />
       }
-      servings={
-        <ServingsStepper
-          servings={picked}
-          testID="add-to-groceries-servings"
-          onDecrement={decrementServings}
-          onIncrement={incrementServings}
-        />
-      }
+      name="add-to-groceries"
       subtitle={recipe.name}
+      title={intl.formatMessage({ id: "recipes.detail.addToGroceries" })}
     >
-      {loading ? (
-        <LinesSkeleton />
-      ) : (
-        <>
-          {pantry.isUnavailable ? (
-            <Text className="text-muted px-2 text-xs" testID="add-to-groceries-pantry-unavailable">
-              {intl.formatMessage({ id: "groceries.panel.pantryUnavailable" })}
-            </Text>
-          ) : null}
-          {scaledIngredients.length === 0 ? (
-            <Text className="text-muted py-10 text-center text-base">
-              {intl.formatMessage({ id: "groceries.panel.noIngredients" })}
-            </Text>
-          ) : null}
-          {toBuy.length > 0 ? (
-            <LineSection
-              controls={controls}
-              lines={toBuy}
-              other={inPantry}
-              selected={selectedCount}
-              testID="add-to-groceries-to-buy"
-              title={intl.formatMessage({ id: "groceries.panel.toBuy" })}
-            />
-          ) : null}
-          {inPantry.length > 0 ? (
-            <LineSection
-              controls={controls}
-              lines={inPantry}
-              other={toBuy}
-              selected={inPantrySelectedCount}
-              testID="add-to-groceries-pantry"
-              title={intl.formatMessage({ id: "groceries.panel.inPantry" })}
-            />
-          ) : null}
-        </>
-      )}
-    </Frame>
+      <SheetScrollView contentClassName="gap-3">
+        <ServingsRow>
+          <ServingsStepper
+            servings={picked}
+            testID="add-to-groceries-servings"
+            onDecrement={decrementServings}
+            onIncrement={incrementServings}
+          />
+        </ServingsRow>
+        {loading ? (
+          <LinesSkeleton />
+        ) : (
+          <>
+            {pantry.isUnavailable ? (
+              <SheetRow>
+                <Text className="text-muted text-xs" testID="add-to-groceries-pantry-unavailable">
+                  {intl.formatMessage({ id: "groceries.panel.pantryUnavailable" })}
+                </Text>
+              </SheetRow>
+            ) : null}
+            {scaledIngredients.length === 0 ? (
+              <Text className="text-muted py-10 text-center text-base">
+                {intl.formatMessage({ id: "groceries.panel.noIngredients" })}
+              </Text>
+            ) : null}
+            {toBuy.length > 0 ? (
+              <LineSection
+                controls={controls}
+                lines={toBuy}
+                other={inPantry}
+                selected={selectedCount}
+                testID="add-to-groceries-to-buy"
+                title={intl.formatMessage({ id: "groceries.panel.toBuy" })}
+              />
+            ) : null}
+            {inPantry.length > 0 ? (
+              <LineSection
+                controls={controls}
+                lines={inPantry}
+                other={toBuy}
+                selected={inPantrySelectedCount}
+                testID="add-to-groceries-pantry"
+                title={intl.formatMessage({ id: "groceries.panel.inPantry" })}
+              />
+            ) : null}
+          </>
+        )}
+      </SheetScrollView>
+    </Sheet>
   );
 }
 
 /** Add to groceries: the recipe's lines at its servings, split into to buy and in your pantry. */
 export function AddToGroceriesScreen() {
+  const intl = useIntl();
   const { recipeId } = useLocalSearchParams<{ recipeId: string }>();
   const { recipe } = useRecipeQuery(recipeId ?? null);
 
@@ -260,12 +249,15 @@ export function AddToGroceriesScreen() {
   return recipe ? (
     <GroceriesSheet key={recipe.id} recipe={recipe} />
   ) : (
-    <Frame
-      footer={<AddButton disabled busy={false} count={0} onPress={() => undefined} />}
-      servings={null}
-      subtitle=""
+    <Sheet
+      actions={<AddButton count={0} />}
+      name="add-to-groceries"
+      title={intl.formatMessage({ id: "recipes.detail.addToGroceries" })}
     >
-      <LinesSkeleton />
-    </Frame>
+      <SheetScrollView contentClassName="gap-3">
+        <ServingsRow />
+        <LinesSkeleton />
+      </SheetScrollView>
+    </Sheet>
   );
 }

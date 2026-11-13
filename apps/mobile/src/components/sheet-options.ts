@@ -6,11 +6,8 @@ const FORM_SHEET = {
   headerShown: false,
 } as const satisfies NativeStackNavigationOptions;
 
-/**
- * A sheet whose content may not fit: opens at 62% with a grabber, and dragging or scrolling its
- * list to the edge takes it to full height. `bottom: 0` lets the content fill the sheet at every
- * detent, so the layout pins its header and actions with flexbox.
- */
+/** Opens at 62% and expands by drag or by scrolling to the edge; `bottom: 0` makes the content
+ *  fill the sheet at every detent, so `Sheet` pins its header and actions with flexbox. */
 export const SHEET_OPTIONS = {
   ...FORM_SHEET,
   sheetGrabberVisible: true,

@@ -85,7 +85,6 @@ function usePlanMode(items: PlannedItemFromQuery[]): Mode {
  */
 export function PlanCalendarScreen() {
   const intl = useIntl();
-  const router = useRouter();
   const today = parseDateKey(useToday());
   const { days, todayKey, todayIndex, calendarData, isLoading } = useMiniCalendar(today);
   const mode = usePlanMode(Object.values(calendarData).flat());
@@ -95,7 +94,7 @@ export function PlanCalendarScreen() {
   const offsets = dayCardOffsets(heights, 0);
 
   return (
-    <Sheet name="plan" subtitle={mode.subtitle} title={mode.title} onClose={() => router.back()}>
+    <Sheet name="plan" subtitle={mode.subtitle} title={mode.title}>
       <SheetList
         // The list remounts when the plan arrives, so it opens on today instead of jumping there.
         key={isLoading ? "loading" : "days"}
