@@ -52,11 +52,11 @@ export function CookbookTitleSheet({
             <Button
               className="h-12"
               testID={`${name}-cancel`}
-              variant="secondary"
+              variant="tertiary"
               onPress={() => router.back()}
             >
               <Ionicons color={foreground} name="close" size={18} />
-              <Button.Label className="text-foreground font-medium">
+              <Button.Label className="font-medium">
                 {intl.formatMessage({ id: "common.actions.cancel" })}
               </Button.Label>
             </Button>

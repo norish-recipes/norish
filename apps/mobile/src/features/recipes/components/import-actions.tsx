@@ -33,14 +33,14 @@ export function ImportActions({
         <Sheet.Action>
           <Button
             accessibilityLabel={intl.formatMessage({ id: "common.actions.aiImport" })}
-            className="bg-surface h-[50px]"
+            className="h-[50px]"
             isDisabled={isAIDisabled}
             testID={`${name}-ai`}
-            variant="secondary"
+            variant="tertiary"
             onPress={onAIImport}
           >
             <Ionicons color={accentText} name="sparkles-outline" size={18} />
-            <Button.Label className="text-foreground font-medium">
+            <Button.Label className="font-medium">
               {intl.formatMessage({ id: "common.actions.aiImport" })}
             </Button.Label>
           </Button>
