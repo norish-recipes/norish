@@ -236,7 +236,7 @@ function AuthenticatedProviders({ children }: { children: React.ReactNode }) {
   );
 }
 
-/** The signed-in shell's effects: the Reader's locale, the subscriptions every tab leans on, and Sign-out before a server change. */
+/** Effects every signed-in tab leans on: the Reader's locale and the realtime subscriptions. */
 function AuthenticatedEffects() {
   useSignOutBeforeServerChange();
   useUserLocaleSync();
