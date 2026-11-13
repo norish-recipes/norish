@@ -1,9 +1,8 @@
 import type { ReactNode } from "react";
 import React, { useState } from "react";
-import { FlatList, Text, View } from "react-native";
+import { Text } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { Stack } from "expo-router";
-import { Spinner } from "heroui-native";
 
 import type { LibraryGridItem } from "@norish/shared-react/recipes";
 import { useDevicePreference } from "@norish/shared-react/reader";
@@ -17,18 +16,13 @@ import {
 import { hasAppliedRecipeFilters } from "@norish/shared/contracts/filter-contract";
 
 import { useCardActions } from "../hooks/use-card-actions";
+import { CardList } from "./card-list";
 import { CookbookCard } from "./cookbook-card";
 import { LibraryHeader } from "./library-header";
 import { LibrarySkeleton } from "./library-skeleton";
 import { CookbooksEmpty, LibraryEmpty, LibraryNoResults } from "./library-states";
 import { PendingCard } from "./pending-card";
 import { RecipeCard } from "./recipe-card";
-
-/** The tab bar's Add recipe accessory floats over the list's end, so the last row scrolls clear of it. */
-const ACCESSORY_CLEARANCE = 72;
-/** UIKit no longer insets the list for the tab bar, so its full height is added here. */
-// ponytail: no docs-backed inset follows the minimised bar; 49 pt of extra space at the end then.
-const TAB_BAR_HEIGHT = 49;
 
 /** Scrolled this far (the title's 6 pt offset and 41 pt line, less a margin), the header shows the title. */
 const TITLE_SCROLLED_AT = 40;
@@ -58,35 +52,30 @@ export function LibraryList({
   const { items, isLoading, isFetchingNextPage, loadMore } = useLibraryList();
   const rows = libraryGridItems(items, pendingRecipeIds, filters.libraryType);
   const hasAppliedFilters = hasAppliedRecipeFilters(filters);
-  const isGrid = variant === "grid";
 
-  const renderRow = ({ item }: { item: LibraryGridItem }) => {
-    const card =
-      item.kind === "recipe" ? (
-        <RecipeCard
-          actions={actions}
-          allergies={allergies}
-          isFavorite={isFavorite(item.recipe.id)}
-          recipe={item.recipe}
-          variant={variant}
-        />
-      ) : item.kind === "cookbook" ? (
-        <CookbookCard
-          actions={actions}
-          allergies={allergies}
-          cookbook={item.cookbook}
-          variant={variant}
-        />
-      ) : (
-        <PendingCard
-          id={item.id}
-          url={pendingRecipes.find((pending) => pending.recipeId === item.id)?.url}
-          variant={variant}
-        />
-      );
-
-    return isGrid ? card : <View className="px-5 pb-3">{card}</View>;
-  };
+  const renderCard = (item: LibraryGridItem) =>
+    item.kind === "recipe" ? (
+      <RecipeCard
+        actions={actions}
+        allergies={allergies}
+        isFavorite={isFavorite(item.recipe.id)}
+        recipe={item.recipe}
+        variant={variant}
+      />
+    ) : item.kind === "cookbook" ? (
+      <CookbookCard
+        actions={actions}
+        allergies={allergies}
+        cookbook={item.cookbook}
+        variant={variant}
+      />
+    ) : (
+      <PendingCard
+        id={item.id}
+        url={pendingRecipes.find((pending) => pending.recipeId === item.id)?.url}
+        variant={variant}
+      />
+    );
 
   const empty = isLoading ? (
     <LibrarySkeleton variant={variant} />
@@ -99,12 +88,9 @@ export function LibraryList({
   );
 
   return (
-    // Remounted per view: a FlatList's column count can't change under it.
-    <FlatList
-      key={variant}
-      ListEmptyComponent={empty}
-      ListFooterComponent={isFetchingNextPage ? <Spinner className="py-4" /> : undefined}
-      ListHeaderComponent={
+    <CardList
+      empty={empty}
+      header={
         <>
           <Stack.Screen options={{ title: titleScrolled ? title : "" }} />
           <Text
@@ -119,23 +105,14 @@ export function LibraryList({
           <LibraryHeader />
         </>
       }
-      columnWrapperStyle={isGrid ? { gap: 12, paddingHorizontal: 20, marginBottom: 12 } : undefined}
-      contentContainerStyle={{
-        paddingBottom: insets.bottom + TAB_BAR_HEIGHT + ACCESSORY_CLEARANCE,
-      }}
-      contentInsetAdjustmentBehavior="never"
-      data={isLoading ? [] : rows}
-      keyExtractor={(row) => `${row.kind}-${row.id}`}
-      numColumns={isGrid ? 2 : 1}
-      renderItem={renderRow}
-      scrollEventThrottle={16}
-      style={{ flex: 1 }}
+      isFetchingNextPage={isFetchingNextPage}
+      renderCard={renderCard}
+      rowKey={(row) => `${row.kind}-${row.id}`}
+      rows={isLoading ? [] : rows}
       testID={testID}
+      variant={variant}
       onEndReached={loadMore}
-      onEndReachedThreshold={0.6}
-      onScroll={({ nativeEvent }) =>
-        setTitleScrolled(nativeEvent.contentOffset.y > TITLE_SCROLLED_AT)
-      }
+      onScroll={(offset) => setTitleScrolled(offset > TITLE_SCROLLED_AT)}
     />
   );
 }
