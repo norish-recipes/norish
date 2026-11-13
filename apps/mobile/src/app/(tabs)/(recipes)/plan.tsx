@@ -1,1 +1,1 @@
-export { PlanScreen as default } from "@/features/recipes/screens/plan-screen";
+export { PlanCalendarScreen as default } from "@/features/recipes/screens/plan-calendar-screen";
