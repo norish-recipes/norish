@@ -46,12 +46,12 @@ export function PlanRecipeScreen() {
   const search = useDeferredValue(input.trim());
   const { recipes, isLoading, error, loadMore } = useRecipesQuery({ search: search || undefined });
   const { getRandomRecipe } = useRandomRecipe();
-  const planExit = usePlanExit();
+  const exit = usePlanExit();
   const { isRandomLoading, planRecipe, planRandom, planNote } = useSlotPlanning({
     date,
     slot,
     getRandomRecipe,
-    close: planExit,
+    close: exit,
   });
 
   useRecipeListSubscription();
