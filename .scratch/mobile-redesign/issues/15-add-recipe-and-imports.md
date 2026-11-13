@@ -4,7 +4,7 @@
 
 **Blocked by:** 14
 
-**Status:** open
+**Status:** done
 
 - [x] Moved first, in separate commits, web switched over with its unit tests: the toasts and stay/navigate rule of `use-import-recipe.ts` (importing, already exists with Open), the image checks and `MAX_OCR_FILES` cap of `import-from-image-modal.tsx`, the paste length check.
 - [x] `expo-clipboard` added through `expo install`. On open, `hasUrlAsync()`; with a link, read it and show "Import ‹host›" as the first row; own-server links skipped. From a link opens pre-filled.
@@ -20,3 +20,25 @@
 - Every Add recipe sheet presents from the root stack, so it opens over any tab; picking a way replaces the Add recipe sheet. From text is the 62%/full sheet, the rest fit their content. The shared glass close button got a small size for the photo tiles.
 - Not seen on the device: the copied-link row. This iOS 27.2 simulator's pasteboard stays empty (`simctl pbcopy`, then `pbinfo`: "Pasteboard is empty", also after a reboot and after Safari's Copy), so `hasUrlAsync` answers false; the decision is unit-tested. Also unseen: the 100,000-character state (the driver can't type it), the camera (simulator), and the board's toast look: the shared heroui-native toast has no check circle or recipe name.
 - Labels: buttons reuse web's "AI Import" (the board says "AI import").
+
+### Review log (2026-11-13)
+
+Implementation `bc8db6dc0..53166ba9c` on Opus medium (the offline requirement), fixes `cd77298d4..2e6db2a00`. Standards on Sonnet low and Spec on Opus medium (the diff changed three lines of offline code, so not the high-effort review); the implementer and the fixer checked on the iPhone 18 Pro in light and dark.
+
+Fixed:
+- One toast for the whole app in the board's shape, in the platform adapter: an icon circle by severity, title, body and an optional action; the imported toast names the recipe; a toast with an action stays 8 seconds. Measured 12 pt from each side, 62-64 pt tall, a 40 pt circle and View pill. `cdf77cd02`, `755982fef`, `6864c9d3a`, `1c893bfb9`
+- A failed import is titled "Import failed" on both apps (an existing unused key). `779076fc2`
+- "AI import" in sentence case; a sheet's secondary action is heroui-native's tertiary variant, visible on glass and on the opaque full-height sheet. `3237ed088`, `ccbea0d44`
+- The four import paths share one start-and-close hook and one actions component; one link-stripping helper; the photo grid sizes from the sheet's exported inset; the picker's alert ids live under `common.photos`. `e347f3e64`, `4ceb726dc`, `04d0d7ebc`, `9b0c2f67b`
+
+Checked, no change needed: imports already queue through the Outbox on both apps; a queued link or text import is one entry written at queue time, a photo import's files are copied to the documents folder and removed when the entry leaves the Outbox (success, discard, sign-out), a retry keeps them; killed within a second of queueing and again after six, there was one pending card each time and one recipe after replay; the clipboard is read once per sheet open and only after `hasUrlAsync()`; the return key and the button share one start-once guard; web's imports behave as before and the deleted web test's six cases are in the shared test.
+
+Rejected: treating the same server under another scheme or hostname as the own server for the copied-link row; sharing mobile's "a link that opens" rule with web (web's rule requires a dotted host and checks its own page address).
+
+Asked: the toast's pill sits on an opaque fill, not glass. heroui-native draws toasts in a separate window so they stay above sheets, and `@expo/ui`'s native glass drew nothing inside it. Glass there needs a toast layer of our own.
+
+Not seen on a device: the copied-link row (the iOS 27.2 simulator's pasteboard stays empty after `simctl pbcopy`, a reboot and Safari's Copy; unit-tested only, needs a real iPhone); the camera; a failed write's toast; the secondary button at full height in light; the photo and text imports after the refactor; the 10-photo cap and the over-long text refusal (unit-tested).
+
+Commit `cdf77cd02`'s message says "glass pill"; `755982fef` replaced the glass with the fill.
+
+Final state `2e6db2a00`: all 11 gates exit 0 with the tests uncached, mobile lint has no warnings.
