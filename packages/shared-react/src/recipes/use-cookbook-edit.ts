@@ -44,7 +44,7 @@ export function useCookbookEdit(
   const { updateCookbook, uploadCookbookImage, setMembership } = useCookbooksMutations();
   const members = useCookbookRecipesQuery(cookbook.id, {}, { enabled: withMembers });
   // Null until the reader types, so an untouched title follows a rename made elsewhere.
-  const [typed, setTitle] = useState<string | null>(null);
+  const [typed, setTyped] = useState<string | null>(null);
   const title = typed ?? cookbook.title;
   const [removed, setRemoved] = useState<string[]>([]);
   const [picked, setPicked] = useState<CookbookCover | null>(null);
@@ -59,7 +59,8 @@ export function useCookbookEdit(
   });
 
   /** Resolves false when the cover could not be uploaded, and then writes nothing. */
-  const save = async (cover: Blob | null = picked?.file ?? null) => {
+  const save = async (chosen?: Blob) => {
+    const cover = chosen ?? picked?.file ?? null;
     const { trimmed, titleChanged, imageChanged } = cookbookEditPlan(cookbook, {
       title,
       removed,
@@ -109,7 +110,7 @@ export function useCookbookEdit(
 
   return {
     title,
-    setTitle,
+    setTitle: setTyped,
     removed,
     toggleRemoved: (recipeId: string) =>
       setRemoved((previous) =>
