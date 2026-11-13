@@ -1,8 +1,7 @@
 import React from "react";
 import { Text, View } from "react-native";
-import { useAccentTextColor } from "@/hooks/use-accent-text-color";
+import { ImportSpinner } from "@/features/recipes/components/import-spinner";
 import { hostOf } from "@/lib/network/host-of";
-import Ionicons from "@expo/vector-icons/Ionicons";
 import { Skeleton } from "heroui-native";
 import { useIntl } from "react-intl";
 
@@ -19,7 +18,6 @@ export function PendingCard({
   variant: RecipeViewMode;
 }) {
   const intl = useIntl();
-  const accentText = useAccentTextColor();
   const host = url ? hostOf(url).replace(/^www\./, "") : "";
   const title = intl.formatMessage({ id: "recipes.dashboard.importingCard" });
 
@@ -33,7 +31,6 @@ export function PendingCard({
       </Text>
     </>
   );
-  const icon = <Ionicons color={accentText} name="cloud-download-outline" size={28} />;
 
   return variant === "grid" ? (
     <View
@@ -41,7 +38,9 @@ export function PendingCard({
       className="bg-surface border-border h-[286px] flex-1 overflow-hidden rounded-3xl border"
       testID={`pending-card-${id}`}
     >
-      <View className="bg-default h-40 items-center justify-center">{icon}</View>
+      <View className="bg-default h-40 items-center justify-center">
+        <ImportSpinner size={30} />
+      </View>
       <View className="flex-1 gap-0.5 px-3 pt-2.5 pb-3">
         {copy}
         <View className="border-border mt-auto flex-row gap-1 border-t pt-2.5">
@@ -56,7 +55,9 @@ export function PendingCard({
       className="bg-surface h-[116px] flex-row overflow-hidden rounded-[20px]"
       testID={`pending-card-${id}`}
     >
-      <View className="bg-default h-[116px] w-[108px] items-center justify-center">{icon}</View>
+      <View className="bg-default h-[116px] w-[108px] items-center justify-center">
+        <ImportSpinner size={28} />
+      </View>
       <View className="min-w-0 flex-1 gap-[3px] px-3.5 py-3">
         {copy}
         <View className="mt-auto flex-row gap-1.5">
