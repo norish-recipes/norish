@@ -1,6 +1,6 @@
 import React from "react";
-import { hostOf } from "@/features/auth/utils/host-of";
 import { changeServerAddress } from "@/hooks/use-change-server-address";
+import { hostOf } from "@/lib/network/host-of";
 import { Button, Host, HStack, Image, Text } from "@expo/ui/swift-ui";
 import {
   accessibilityIdentifier,

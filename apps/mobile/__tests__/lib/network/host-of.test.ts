@@ -1,4 +1,4 @@
-import { hostOf } from "@/features/auth/utils/host-of";
+import { hostOf } from "@/lib/network/host-of";
 import { describe, expect, it } from "vitest";
 
 describe("hostOf", () => {
