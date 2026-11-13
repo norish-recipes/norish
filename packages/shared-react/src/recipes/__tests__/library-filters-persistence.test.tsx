@@ -93,7 +93,10 @@ describe("useLibraryFiltersPersistence", () => {
 
   it("starts from the defaults when an asynchronous storage rejects", async () => {
     const { storage } = memoryStorage({});
-    const rejecting: PlatformStorage = { ...storage, getItem: () => Promise.reject(new Error("x")) };
+    const rejecting: PlatformStorage = {
+      ...storage,
+      getItem: () => Promise.reject(new Error("x")),
+    };
     const { result } = render(rejecting);
 
     await waitFor(() => expect(result.current.getState().hydrated).toBe(true));
