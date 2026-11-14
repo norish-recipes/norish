@@ -15,6 +15,9 @@ const TAB_BAR_HEIGHT = 49;
 /** Scrolls the row a card sits in clear of the accessory and tab bar; a card outside a list does nothing. */
 export const RevealRowContext = createContext<() => void>(() => {});
 
+/** The height of the page-coloured fade over a list's end: one height, or one at rest and one once scrolled. */
+export type FadeHeight = number | { rest: number; scrolled: number };
+
 /** Where a revealed row's top lands below the status bar. */
 const REVEAL_OFFSET = 120;
 
@@ -40,8 +43,7 @@ export function CardList<Row>({
   rowKey: (row: Row) => string;
   renderCard: (row: Row) => ReactElement;
   onEndReached: () => void;
-  /** The height of the page-coloured fade over the list's end, at rest and once scrolled. */
-  fadeHeight: { rest: number; scrolled: number };
+  fadeHeight: FadeHeight;
   testID?: string;
 }) {
   const insets = useSafeAreaInsets();
@@ -71,7 +73,7 @@ export function CardList<Row>({
           const card = renderCard(item);
 
           return (
-            <RevealRowContext.Provider
+            <RevealRowContext
               value={() =>
                 listRef.current?.scrollToIndex({
                   index: Math.floor(index / (isGrid ? 2 : 1)),
@@ -81,7 +83,7 @@ export function CardList<Row>({
               }
             >
               {isGrid ? card : <View className="px-5 pb-3">{card}</View>}
-            </RevealRowContext.Provider>
+            </RevealRowContext>
           );
         }}
         scrollEventThrottle={32}
@@ -94,7 +96,14 @@ export function CardList<Row>({
       <View
         className="to-background from-background/0 absolute inset-x-0 bottom-0 bg-linear-to-b to-75%"
         pointerEvents="none"
-        style={{ height: scrolled ? fadeHeight.scrolled : fadeHeight.rest }}
+        style={{
+          height:
+            typeof fadeHeight === "number"
+              ? fadeHeight
+              : scrolled
+                ? fadeHeight.scrolled
+                : fadeHeight.rest,
+        }}
       />
     </View>
   );

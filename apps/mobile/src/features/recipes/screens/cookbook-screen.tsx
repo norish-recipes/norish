@@ -93,6 +93,9 @@ function useCookbookCover(cookbook: CookbookSummaryDTO) {
   return { saveCover: useCookbookCoverPicker((file) => void save(file)), coverDisabled };
 }
 
+/** The fade over a cookbook's list, the same at rest and scrolled. */
+const COOKBOOK_FADE_HEIGHT = 130;
+
 function CookbookPage({ cookbook }: { cookbook: CookbookSummaryDTO }) {
   const intl = useIntl();
   const { recipes, isLoading, isFetchingNextPage, loadMore } = useCookbookList(cookbook.id);
@@ -102,7 +105,7 @@ function CookbookPage({ cookbook }: { cookbook: CookbookSummaryDTO }) {
     <LibraryCards
       cookbook={cookbook}
       empty={<CookbookNoRecipes />}
-      fadeHeight={{ rest: 130, scrolled: 130 }}
+      fadeHeight={COOKBOOK_FADE_HEIGHT}
       header={
         <>
           <Stack.Screen

@@ -20,6 +20,9 @@ import { CookbooksEmpty, LibraryEmpty } from "./library-states";
 import { PendingCard } from "./pending-card";
 import { RecipeCard } from "./recipe-card";
 
+/** The fade over the Recipes tab's list: taller at rest than once scrolled. */
+const LIST_FADE_HEIGHT = { rest: 190, scrolled: 120 };
+
 /** The Recipes tab: `title` and the avatar, `header` (Today), then imports, recipes and cookbooks
  * as one paged list; the title and avatar are list content, so they scroll away with it. */
 export function LibraryList({
@@ -67,7 +70,7 @@ export function LibraryList({
   return (
     <LibraryCards
       empty={filters.libraryType === "cookbooks" ? <CookbooksEmpty /> : <LibraryEmpty />}
-      fadeHeight={{ rest: 190, scrolled: 120 }}
+      fadeHeight={LIST_FADE_HEIGHT}
       header={
         <>
           <View

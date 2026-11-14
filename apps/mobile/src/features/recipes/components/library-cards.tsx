@@ -8,6 +8,7 @@ import { useLibraryCards, useLibraryFilters } from "@norish/shared-react/recipes
 import { hasAppliedRecipeFilters } from "@norish/shared/contracts/filter-contract";
 
 import type { CardActions } from "../hooks/use-card-actions";
+import type { FadeHeight } from "./card-list";
 import { useCardActions } from "../hooks/use-card-actions";
 import { CardList } from "./card-list";
 import { LibrarySkeleton } from "./library-skeleton";
@@ -48,7 +49,7 @@ export function LibraryCards<Row>({
   rowKey: (row: Row) => string;
   renderCard: (row: Row, context: CardContext) => ReactElement;
   onEndReached: () => void;
-  fadeHeight: { rest: number; scrolled: number };
+  fadeHeight: FadeHeight;
   testID?: string;
 }) {
   const [variant] = useDevicePreference("recipeViewMode");
