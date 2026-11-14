@@ -139,9 +139,10 @@ export function LibraryHeader({ scoped = false }: { scoped?: boolean }) {
             </Pressable>
           );
         })}
-        <View className="flex-1" />
-        {filters.libraryType === "cookbooks" ? <NewCookbookButton /> : null}
-        <FiltersButton />
+        <View className="ml-auto flex-row items-center gap-2">
+          {filters.libraryType === "cookbooks" ? <NewCookbookButton /> : null}
+          <FiltersButton />
+        </View>
       </View>
     </View>
   );
