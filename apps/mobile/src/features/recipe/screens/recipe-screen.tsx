@@ -1,11 +1,8 @@
 import React, { useState } from "react";
 import { ScrollView, Text, View } from "react-native";
 import { useResolvedColorScheme } from "@/hooks/use-resolved-color-scheme";
-import Ionicons from "@expo/vector-icons/Ionicons";
-import { TRPCClientError } from "@trpc/client";
 import { Stack, useLocalSearchParams, useRouter } from "expo-router";
 import { Skeleton, useThemeColor } from "heroui-native";
-import { useIntl } from "react-intl";
 
 import { useIngredientIcons } from "@norish/shared-react/ingredients";
 import { useDevicePreference, useHiddenItemVisibility } from "@norish/shared-react/reader";
@@ -24,6 +21,7 @@ import { ProvenanceSection } from "../components/provenance-section";
 import { RatingSection } from "../components/rating-section";
 import { RecipeBottomBar } from "../components/recipe-bottom-bar";
 import { RecipeHeader } from "../components/recipe-header";
+import { isRecipeNotFound, RecipeNotFound } from "../components/recipe-not-found";
 import { HERO_HEIGHT, RecipeHero } from "../components/recipe-hero";
 import { SourceSection } from "../components/source-section";
 import { StepsSection } from "../components/steps-section";
@@ -43,26 +41,6 @@ function RecipeSkeleton() {
         <Skeleton className="h-[52px] w-full rounded-full" />
         <Skeleton className="h-60 w-full rounded-3xl" />
       </View>
-    </View>
-  );
-}
-
-function NotFound() {
-  const intl = useIntl();
-  const [muted] = useThemeColor(["muted"] as const);
-
-  return (
-    <View
-      className="bg-background flex-1 items-center justify-center gap-2 px-10"
-      testID="recipe-not-found"
-    >
-      <Ionicons color={muted} name="restaurant-outline" size={40} />
-      <Text className="text-foreground text-xl font-semibold">
-        {intl.formatMessage({ id: "recipes.detail.notFound" })}
-      </Text>
-      <Text className="text-muted text-center text-[15px]">
-        {intl.formatMessage({ id: "recipes.detail.notFoundMessage" })}
-      </Text>
     </View>
   );
 }
@@ -137,9 +115,7 @@ export function RecipeScreen() {
   const { id } = useLocalSearchParams<{ id: string }>();
   const { recipe, error } = useRecipeQuery(id);
 
-  if (!recipe && error instanceof TRPCClientError && error.data?.code === "NOT_FOUND") {
-    return <NotFound />;
-  }
+  if (!recipe && isRecipeNotFound(error)) return <RecipeNotFound />;
 
   return recipe ? <RecipePage key={recipe.id} /> : <RecipeSkeleton />;
 }

@@ -40,6 +40,7 @@ import { CookSteps } from "../components/cook-steps";
 import { FadeEdge } from "../components/fade-edge";
 import { GlassSurface } from "../components/glass-surface";
 import { Line, OptionsMenu, ServingsControl } from "../components/ingredients-section";
+import { isRecipeNotFound, RecipeNotFound } from "../components/recipe-not-found";
 import { sortTimers, TimerList } from "../components/timer-list";
 import { TimerRing } from "../components/timer-ring";
 import { TintContext, useTint } from "../components/tint";
@@ -486,14 +487,21 @@ function CookMode() {
   );
 }
 
+/** Cook mode once its recipe loads; until then, or when it is gone, a close so a notification tap never strands. */
 export function CookModeScreen() {
+  const router = useRouter();
   const { id } = useLocalSearchParams<{ id: string }>();
-  const { recipe } = useRecipeQuery(id);
-  const [background] = useThemeColor(["background"] as const);
+  const { recipe, error } = useRecipeQuery(id);
+  const { top } = useSafeAreaInsets();
 
-  return recipe ? (
-    <CookMode />
-  ) : (
-    <View className="flex-1" style={{ backgroundColor: background }} testID="cook-mode-loading" />
+  if (recipe) return <CookMode />;
+
+  return (
+    <View className="bg-background flex-1" testID="cook-mode-loading">
+      {isRecipeNotFound(error) ? <RecipeNotFound /> : null}
+      <View className="absolute right-4" style={{ top: top + 6 }}>
+        <GlassCloseButton testID="cook-close" onPress={() => router.back()} />
+      </View>
+    </View>
   );
 }
