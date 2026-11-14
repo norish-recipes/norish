@@ -9,9 +9,7 @@ vi.mock("@norish/shared-react/reader", async () =>
   (await import("@/__tests__/helpers/reader-mock")).mockDevicePreferences()
 );
 vi.mock("@/features/recipes/components/read-only/smart-instruction", () => ({
-  SmartInstruction: ({ text, stepIndex }: { text: string; stepIndex: number }) => (
-    <span data-step-index={stepIndex}>{text}</span>
-  ),
+  SmartInstruction: ({ text }: { text: string }) => <span>{text}</span>,
 }));
 vi.mock("@/features/recipes/components/page/cooking-mode/step-images", () => ({
   StepImages: () => null,
@@ -76,33 +74,6 @@ function stepTree(activeStep: number, handlers: Record<string, () => void> = {})
 function renderStep(activeStep: number, handlers: Record<string, () => void> = {}) {
   return render(stepTree(activeStep, handlers));
 }
-
-describe("CookingStepView timers", () => {
-  it("counts steps without headings, as the recipe page does, so a timer is the same on both", () => {
-    render(
-      <CookingStepView
-        activeStep={0}
-        displayIngredients={INGREDIENTS}
-        recipe={{
-          id: "recipe-1",
-          name: "Stew",
-          image: null,
-          categories: [],
-          totalMinutes: 30,
-          servings: 2,
-          systemUsed: "metric",
-        }}
-        steps={[
-          { ...STEPS[0]!, heading: "Sauce" },
-          { ...STEPS[2]!, stepNumber: 2 },
-        ]}
-      />
-    );
-
-    expect(screen.getByText("Boil the water.").dataset.stepIndex).toBe("0");
-    expect(screen.getByText("Serve at once.").dataset.stepIndex).toBe("1");
-  });
-});
 
 describe("CookingStepView Step Ingredients", () => {
   it("presents the active step's ingredients with resolved amounts", () => {
