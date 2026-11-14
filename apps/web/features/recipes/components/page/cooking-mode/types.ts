@@ -1,6 +1,6 @@
 import type { PointerEvent } from "react";
 
-import type { ResolvedCookingModeStep } from "./cooking-mode-steps";
+import type { ResolvedCookingModeStep } from "@norish/shared-react/recipes";
 
 /** Which of cooking mode's two views is on screen. */
 export type CookingModeView = "steps" | "ingredients";

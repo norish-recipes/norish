@@ -11,11 +11,11 @@ import { Button, Meter } from "@heroui/react";
 import { useLocale, useTranslations } from "next-intl";
 
 import { useTimersEnabledQuery } from "@norish/shared-react/config";
+import { clampStep } from "@norish/shared-react/recipes";
 import { useTimerStore } from "@norish/shared-react/recipes/timers";
 
 import type { CookingModeDialogProps } from "./types";
 import WakeLockToggle from "../wake-lock-toggle";
-import { clampStep } from "./utils";
 
 type CookingModeBottomBarProps = Pick<
   CookingModeDialogProps,

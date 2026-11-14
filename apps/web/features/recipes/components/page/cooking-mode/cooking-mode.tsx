@@ -12,16 +12,19 @@ import { motion } from "motion/react";
 import { useTranslations } from "next-intl";
 
 import { useDevicePreference } from "@norish/shared-react/reader";
-import { useLoadedPageRecipe, usePageIngredients } from "@norish/shared-react/recipes";
+import {
+  clampStep,
+  resolveCookingModeSteps,
+  useLoadedPageRecipe,
+  usePageIngredients,
+} from "@norish/shared-react/recipes";
 import { primaryRecipeImage } from "@norish/shared/lib/recipe-media";
 import { cssFloatingDockPill } from "@norish/web/config/css-tokens";
 
 import type { CookingModeView } from "./types";
 import { usePageWakeLock } from "../page-wake-lock";
-import { resolveCookingModeSteps } from "./cooking-mode-steps";
 import { DesktopCookingModeDialog } from "./desktop-cooking-mode-dialog";
 import { MobileCookingModeDialog } from "./mobile-cooking-mode-dialog";
-import { clampStep } from "./utils";
 
 type SwipePoint = {
   x: number;

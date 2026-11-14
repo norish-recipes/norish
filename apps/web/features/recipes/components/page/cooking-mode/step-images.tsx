@@ -7,10 +7,9 @@ import { Carousel } from "@/features/recipes/components/carousel";
 import ImageLightbox from "@/features/recipes/components/media/image-lightbox";
 import { Button } from "@heroui/react";
 
+import type { ResolvedCookingModeStep } from "@norish/shared-react/recipes";
 import { addBasePath } from "@norish/shared/lib/base-path";
 import { cssMediaControl } from "@norish/web/config/css-tokens";
-
-import type { ResolvedCookingModeStep } from "./cooking-mode-steps";
 
 type StepImagesProps = {
   className?: string;

@@ -10,7 +10,8 @@ import { Chip, ScrollShadow, Surface } from "@heroui/react";
 import { motion } from "motion/react";
 import { useTranslations } from "next-intl";
 
-import type { ResolvedCookingModeStep } from "./cooking-mode-steps";
+import type { ResolvedCookingModeStep } from "@norish/shared-react/recipes";
+
 import type { CookingModeDialogProps } from "./types";
 import { StepImages } from "./step-images";
 
