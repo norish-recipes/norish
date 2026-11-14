@@ -6,11 +6,13 @@ import ReactMarkdown from "react-markdown";
 
 import type { TimerKeywords, TimerMatch } from "@norish/shared/lib/timer-parser";
 import { createClientLogger } from "@norish/shared/lib/logger";
-import { parseTimerDurations } from "@norish/shared/lib/timer-parser";
+import {
+  markTimers,
+  parseTimerDurations,
+  TIMER_HREF_PREFIX,
+} from "@norish/shared/lib/timer-parser";
 
 const logger = createClientLogger("smart-markdown-renderer");
-const TIMER_HREF_PREFIX = "norish-timer:";
-const MARKDOWN_LABEL_ESCAPE = /[\\\[\]]/g;
 
 type SmartMarkdownLinkMode = "private" | "public" | "disabled";
 
@@ -64,7 +66,7 @@ export default function SmartMarkdownRenderer({
       },
     ])
   );
-  const processedText = preprocessText(applyTimerMarkup(text, timerMatches), resolvedLinkMode);
+  const processedText = preprocessText(markTimers(text, timerMatches), resolvedLinkMode);
 
   return (
     <span className={className}>
@@ -206,30 +208,6 @@ function parseTimerMatches(
 
     return [];
   }
-}
-
-function applyTimerMarkup(text: string, timerMatches: TimerMatch[]): string {
-  if (timerMatches.length === 0) return text;
-
-  let result = "";
-  let currentIndex = 0;
-
-  timerMatches
-    .slice()
-    .sort((a, b) => a.startIndex - b.startIndex)
-    .forEach((match, index) => {
-      if (match.startIndex < currentIndex) return;
-
-      result += text.slice(currentIndex, match.startIndex);
-      result += `[${escapeMarkdownLabel(match.originalText)}](${TIMER_HREF_PREFIX}${index})`;
-      currentIndex = match.endIndex;
-    });
-
-  return result + text.slice(currentIndex);
-}
-
-function escapeMarkdownLabel(value: string): string {
-  return value.replace(MARKDOWN_LABEL_ESCAPE, "\\$&");
 }
 
 function transformMarkdownUrl(url: string): string {
